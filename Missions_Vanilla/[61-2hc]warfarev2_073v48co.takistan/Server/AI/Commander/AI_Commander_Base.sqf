@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_econGateTowns","_econMyID","_econOpen"];
 
 _side = _this;
 _sideText = str _side;
@@ -57,20 +57,134 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 //--- 2) HQ deployed: walk the doctrine build order; build the first missing structure.
 _doctrine = _logik getVariable ["wfbe_aicom_doctrine", "LF"];
 _hqPos = getPos ((_side) Call WFBE_CO_FNC_GetSideHQ);
+//--- Marty 2026-06-13: _hqPos feeds _findBuildPos (ring placement) and, through it, the
+//--- createVehicle/setPos path in ConstructDefense. A malformed HQ position (GetSideHQ
+//--- briefly returning a non-object around HQ (re)deploy) makes the finder's surfaceIsWater
+//--- / select throw and hands back garbage, which then throws again at createVehicle - the
+//--- ~8x/round RPT spam. Fall back to the alive HQ object validated above; if that is somehow
+//--- unusable too, skip this construction tick entirely (next tick retries).
+if (typeName _hqPos != "ARRAY" || {count _hqPos < 2} || {typeName (_hqPos select 0) != "SCALAR"} || {typeName (_hqPos select 1) != "SCALAR"}) then {_hqPos = getPos _hq};
+if (typeName _hqPos != "ARRAY" || {count _hqPos < 2} || {typeName (_hqPos select 0) != "SCALAR"} || {typeName (_hqPos select 1) != "SCALAR"}) exitWith {};
 
 //--- V0.4: valid-position helper. Ring placement around the HQ, clearance-checked,
-//--- never in water and never on a road. _this = [rmin, rmax]; returns a position.
+//--- never in water. _this = [rmin, rmax] or [rmin, rmax, _nearRoad].
+//--- task #25 (road-aware): optional 3rd param _nearRoad biases the footprint vs roads.
+//---   absent/0 = OFF-road: flat-empty dry ground, reject only on a USABLE (paved) road
+//---              within 16m - dirt tracks no longer over-reject and shrink the ring.
+//---   1        = NEAR a road (Light/Heavy/Aircraft factories): sit BESIDE a USABLE road
+//---              on flat dry ground with a real perpendicular standoff (>=12m off the
+//---              carriageway, not the old 5m node check that let footprints straddle the
+//---              lane), so commander teams/trucks have a drivable egress apron. The road
+//---              point is NOT pre-snapped with GetEmptyPosition (that drifted the candidate
+//---              onto the flattest terrain = the track).
+//--- In BOTH modes the FIRST fully-valid candidate is kept; on try-budget failure fall back
+//--- to the best DRY-LAND candidate seen (never water). See _isUsableRoad below for the
+//--- paved-vs-dirt classification (junction connectivity, build-safe across A2/OA).
+//--- task #25b (road-type filter): A2 `nearRoads` returns EVERY segment - paved
+//--- highways AND unpaved dirt/forest tracks (Chernarus is full of dirt tracks), so a
+//--- bare `nearRoads` gate is "near a dirt path" = satisfied almost everywhere, and the
+//--- factory lands ON a track. There is no surface-type field we can rely on across all
+//--- three builds (Vanilla A2 / CombinedOps / Arrowhead), so we classify a road object as
+//--- USABLE (drivable carriageway, not a dead-end track stub or field path) by its junction
+//--- connectivity: a real road threads through (>=2 connected segments); dirt stubs and
+//--- pedestrian paths typically dead-end. `roadsConnectedTo` is OA-only, so it is guarded
+//--- with isNil-safe compile and degrades to "accept" on Vanilla A2 (where the old behaviour
+//--- stands rather than throwing). _this = road object -> bool.
+_isUsableRoad = {
+	private ["_road","_ok","_conn"];
+	_road = _this;
+	if (isNull _road) exitWith {false};
+	_ok = true;
+	//--- roadsConnectedTo exists only on OA-class builds; never let it throw on Vanilla.
+	if (!isNil {missionNamespace getVariable "WF_A2_Vanilla"} && {!WF_A2_Vanilla}) then {
+		_conn = [];
+		_conn = _road call {private "_c"; _c = []; if (!isNil {roadsConnectedTo _this}) then {_c = roadsConnectedTo _this}; _c};
+		//--- a usable carriageway connects onward to >=2 other road segments; a lone dirt
+		//--- stub / field-path end typically connects to <=1.
+		if (count _conn < 2) then {_ok = false};
+	};
+	_ok
+};
+
+//--- task #25b: nearest USABLE road object within _radius of a position (or objNull).
+//--- _this = [pos, radius] -> road object | objNull.
+_nearUsableRoad = {
+	private ["_pos","_rad","_rds","_best","_bestD","_d"];
+	_pos = _this select 0; _rad = _this select 1;
+	_rds = _pos nearRoads _rad;
+	_best = objNull; _bestD = 1e9;
+	{
+		if (_x call _isUsableRoad) then {
+			_d = (getPos _x) distance _pos;
+			if (_d < _bestD) then {_bestD = _d; _best = _x};
+		};
+	} forEach _rds;
+	_best
+};
+
 _findBuildPos = {
-	private ["_rmin","_rmax","_p","_ok","_try","_ang"];
+	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries"];
 	_rmin = _this select 0; _rmax = _this select 1;
-	_ok = false; _try = 0; _p = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
-	while {!_ok && _try < 24} do {
+	_nearRoad = if (count _this > 2) then {_this select 2} else {0};
+	//--- the USABLE-road filter rejects more candidates than the old bare nearRoads gate,
+	//--- so give the near-road mode more tries to find a paved lane to sit beside.
+	_tries = if (_nearRoad == 1) then {40} else {24};
+	_ok = false; _try = 0; _haveDry = false; _best = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+	_p = _best;
+	while {!_ok && _try < _tries} do {
 		_ang = random 360;
 		_p = [(_hqPos select 0) + (_rmin + random (_rmax - _rmin)) * sin _ang, (_hqPos select 1) + (_rmin + random (_rmax - _rmin)) * cos _ang, 0];
-		_p = [_p, 30] Call WFBE_CO_FNC_GetEmptyPosition;
-		if (!(surfaceIsWater _p) && {count (_p nearRoads 12) == 0}) then {_ok = true};
+		if (_nearRoad == 1) then {
+			//--- NEAR-road (Light/Heavy/Aircraft factories): BESIDE a USABLE road on flat,
+			//--- dry ground with a real standoff, never on/over the lane. Do NOT pre-snap with
+			//--- GetEmptyPosition here - roads are the flattest/emptiest terrain, so snapping
+			//--- first drifts the candidate ONTO the track (the old order-of-operations bug).
+			_rd = [_p, 36] Call _nearUsableRoad;
+			if (!isNull _rd) then {
+				//--- offset PERPENDICULAR to the road heading by a fixed standoff (>= a factory
+				//--- footprint, not the old 5m node check) so the building sits off the
+				//--- carriageway and the lane stays clear for egress.
+				_rp = getPos _rd;
+				_hd = ((_p select 0) - (_rp select 0)) atan2 ((_p select 1) - (_rp select 1)); //--- bearing road->candidate = the side we push out to
+				_ox = (_rp select 0) + 16 * sin _hd;
+				_oy = (_rp select 1) + 16 * cos _hd;
+				_cand = [_ox, _oy, 0];
+				//--- settle onto flat-empty ground with a SMALL radius so it cannot drift back
+				//--- onto the lane, then validate: dry, and a clear drivable strip between the
+				//--- build pos and the carriageway (sample the midpoint - not water/road-snapped).
+				_cand = [_cand, 8] Call WFBE_CO_FNC_GetEmptyPosition;
+				if (!(surfaceIsWater _cand)) then {
+					if (!_haveDry) then {_best = _cand; _haveDry = true};
+					_blocked = false;
+					_sx = (((_cand select 0) + (_rp select 0)) / 2);
+					_sy = (((_cand select 1) + (_rp select 1)) / 2);
+					if (surfaceIsWater [_sx, _sy, 0]) then {_blocked = true};
+					//--- standoff must survive the empty-pos settle (>= 12m off the carriageway).
+					if (((_cand distance _rp) < 12)) then {_blocked = true};
+					if (!_blocked) then {_p = _cand; _ok = true};
+				};
+			};
+		} else {
+			//--- OFF-road (CC/Barracks/Bank/CBR): flat-empty dry ground clear of ANY road
+			//--- (paved AND dirt). task #25b regressed by switching to a USABLE-only 16m gate:
+			//--- Chernarus dirt tracks are continuous multi-segment roads (roadsConnectedTo>=2),
+			//--- so _nearUsableRoad did NOT exclude them, and GetEmptyPosition (line 171) drifts
+			//--- the candidate onto the flat dirt carriageway before the gate runs. Reject on a
+			//--- bare nearRoads hit at 22m (vs old 16m) so dirt-track nodes ~10-25m apart cannot
+			//--- be skipped by a footprint straddling the lane between two nodes. roadsConnectedTo
+			//--- is NOT consulted here on purpose - paved or dirt, we want it clear. The same
+			//--- count(_p nearRoads N) idiom is already live in the HQ-deploy block, so the gate
+			//--- is a proven A2-OA pattern (no isOnRoad/getRoadInfo - those are A3-only).
+			_p = [_p, 30] Call WFBE_CO_FNC_GetEmptyPosition;
+			if (!(surfaceIsWater _p)) then {
+				if (!_haveDry) then {_best = _p; _haveDry = true};
+				if (count (_p nearRoads 22) == 0) then {_ok = true};
+			};
+		};
 		_try = _try + 1;
 	};
+	//--- try-budget failure: hand back the best dry-land candidate (never water).
+	if (!_ok && _haveDry) then {_p = _best};
 	_p
 };
 
@@ -147,12 +261,38 @@ if (_cbrIdx >= 0) then {
 		};
 	};
 };
+//--- ECON/ARTY GATE (owner 2026-06-14): AI commander defers Bank + ArtilleryRadar until it holds MORE than N towns. AI-commander build logic ONLY — human players are unaffected.
+_econGateTowns = missionNamespace getVariable ["WFBE_C_AICOM_ECON_GATE_TOWNS", 6];
+_econMyID = (_side) Call WFBE_CO_FNC_GetSideID;
+_econOpen = ({(_x getVariable "sideID") == _econMyID} count towns) > _econGateTowns;
 _bankIdx = _names find "Bank";
 if (_bankIdx >= 0) then {
 	//--- Supply gate: only attempt Bank when supply > 1.5x its construction cost.
 	_bankCost = _costs select _bankIdx;
-	if (_supply > _bankCost * 1.5) then {
+	if (_econOpen && {_supply > _bankCost * 1.5}) then {
 		_order = _order + ["Bank"];
+		_scaffoldActivated = true;
+	};
+};
+//--- RESERVE (owner request): humans can build it; let the AI build it too. Same plain
+//--- supply-multiple gate as Bank. `_names find "Reserve" == -1` (guard WFBE_C_STRUCTURES_RESERVE
+//--- off) is the natural no-op; the L274 builder loop then dedups/pays from _costs.
+_resIdx = _names find "Reserve";
+if (_resIdx >= 0) then {
+	_resCost = _costs select _resIdx;
+	if (_econOpen && {_supply > _resCost * 1.5}) then {
+		_order = _order + ["Reserve"];
+		_scaffoldActivated = true;
+	};
+};
+//--- ARTILLERYRADAR (owner request): humans can build it; let the AI build it too. No arty-threat
+//--- gate (unlike CBRadar) — owner just wants it in the AI's build order like a human's. Same
+//--- supply-multiple gate; `_names find "ArtilleryRadar" == -1` (guard off) is the natural no-op.
+_artradIdx = _names find "ArtilleryRadar";
+if (_artradIdx >= 0) then {
+	_artradCost = _costs select _artradIdx;
+	if (_econOpen && {_supply > _artradCost * 1.5}) then {
+		_order = _order + ["ArtilleryRadar"];
 		_scaffoldActivated = true;
 	};
 };
@@ -191,13 +331,101 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 						if (!(surfaceIsWater _pos)) then {_placed = true};
 					};
 				};
-				if (!_placed) then {_pos = [45, 75] Call _findBuildPos};
+				//--- task #25: production factories (Light/Heavy/Aircraft) are where commander
+				//--- teams spawn, so bias them NEAR a road for unit egress; everything else
+				//--- (CC/Barracks/Bank/CBR) keeps the default OFF-road placement.
+				if (!_placed) then {
+					if (_x in ["Light","Heavy","Aircraft"]) then {
+						_pos = [45, 75, 1] Call _findBuildPos;
+					} else {
+						_pos = [45, 75] Call _findBuildPos;
+					};
+				};
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};
 				_logik setVariable [Format ["wfbe_aicom_built_%1", _x], time];
 				_script = _scripts select _idx;
 				[_class, _side, _pos, random 360, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+				//--- FACTORY RALLY (task #25 / bug a). Warfare has no rally MARKER: "rally" = the
+				//--- destination spawned units inherit. Players set it (shift-click); the AI never
+				//--- did, so AI factory output (troop trucks, combat teams) spawned at the in-base
+				//--- factory with NO destination and sat forever. Here the commander SETS a
+				//--- strategic rally for each production factory it builds: a forward point toward
+				//--- the side's primary spearhead (wfbe_aicom_targets[0], published by
+				//--- AI_Commander_Strategy.sqf), snapped onto a USABLE road so the egress lane is
+				//--- one A2 PFM can actually drive. The construction is async, so we cannot stamp
+				//--- the not-yet-alive factory object now; a short watcher waits for the built
+				//--- _site to register at _pos, then writes wfbe_aicom_factory_rally onto it for
+				//--- the server buy path (Server_BuyUnit) to commandMove new units toward.
+				if (_x in ["Light","Heavy","Aircraft"]) then {
+					_factoryRally = [_side, _logik, _pos] Spawn {
+						private ["_side","_logik","_pos","_targets","_target","_tgtPos","_rally","_dx","_dy","_dist","_egX","_egY","_egN","_site","_wait"];
+						_side = _this select 0; _logik = _this select 1; _pos = _this select 2;
+						//--- 1) resolve the strategic target = primary spearhead town the
+						//--- commander already publishes (top of wfbe_aicom_targets), with a graceful
+						//--- fallback to the nearest enemy/neutral town, then the enemy HQ.
+						_targets = _logik getVariable ["wfbe_aicom_targets", []];
+						_target = objNull;
+						if (typeName _targets == "ARRAY" && {count _targets > 0}) then {_target = _targets select 0};
+						_tgtPos = if (!isNull _target) then {getPos _target} else {[]};
+						if (count _tgtPos < 2) then {
+							//--- fallback: nearest town not ours; else the enemy HQ position.
+							private ["_myID","_bestT","_bestD","_d"];
+							_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+							_bestT = objNull; _bestD = 1e9;
+							{ if ((_x getVariable ["sideID", -1]) != _myID) then {_d = _x distance _pos; if (_d < _bestD) then {_bestD = _d; _bestT = _x}} } forEach towns;
+							if (!isNull _bestT) then {_tgtPos = getPos _bestT} else {
+								private ["_eHQ"];
+								_eHQ = (if (_side == west) then {east} else {west}) Call WFBE_CO_FNC_GetSideHQ;
+								if (!isNull _eHQ) then {_tgtPos = getPos _eHQ};
+							};
+						};
+						if (count _tgtPos < 2) exitWith {}; //--- no front to point at this tick; leave unset, retried next build/strategy cycle.
+						//--- 2) egress point = a step (~180m) from the factory toward the front, then
+						//--- snapped onto the nearest USABLE road within 220m so the first leg is a
+						//--- drivable lane. Falls back to the toward-front point if no usable road near.
+						_dx = (_tgtPos select 0) - (_pos select 0);
+						_dy = (_tgtPos select 1) - (_pos select 1);
+						_dist = sqrt (_dx*_dx + _dy*_dy);
+						if (_dist < 1) then {_dist = 1};
+						_egN = 180 min _dist;
+						_egX = (_pos select 0) + (_dx / _dist) * _egN;
+						_egY = (_pos select 1) + (_dy / _dist) * _egN;
+						_rally = [_egX, _egY, 0];
+						//--- snap to the nearest USABLE road (same connectivity filter as placement),
+						//--- mirroring the ServicePoint road-snap pattern.
+						{
+							private ["_conn","_okr"];
+							_okr = true;
+							if (!isNil {missionNamespace getVariable "WF_A2_Vanilla"} && {!WF_A2_Vanilla}) then {
+								_conn = _x call {private "_c"; _c = []; if (!isNil {roadsConnectedTo _this}) then {_c = roadsConnectedTo _this}; _c};
+								if (count _conn < 2) then {_okr = false};
+							};
+							if (_okr && {!(surfaceIsWater (getPos _x))}) exitWith {_rally = getPos _x};
+						} forEach ([_rally, 220] call {private ["_p","_r","_rds","_out","_best","_bestD","_d"]; _p = _this select 0; _r = _this select 1; _rds = _p nearRoads _r; _out = []; _best = objNull; _bestD = 1e9; { _d = (getPos _x) distance _p; if (_d < _bestD) then {_bestD = _d; _best = _x} } forEach _rds; if (!isNull _best) then {_out = [_best]}; _out + (_rds - [_best])});
+						//--- 3) wait for the async factory to finish, then stamp the rally on the
+						//--- nearest matching structure registered at _pos. Bounded so a failed build
+						//--- never leaves a hung watcher.
+						_wait = 0;
+						_site = objNull;
+						while {isNull _site && _wait < 360} do {
+							sleep 5; _wait = _wait + 5;
+							{
+								if (((_x getVariable ["wfbe_structure_type", ""]) in ["Light","Heavy","Aircraft"]) && {alive _x} && {(_x distance _pos) < 25}) exitWith {_site = _x};
+							} forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+						};
+						if (!isNull _site) then {
+							_site setVariable ["wfbe_aicom_factory_rally", _rally, true];
+							["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] factory rally SET on %2 -> %3 (toward front).", str _side, typeOf _site, _rally]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("AICOMSTAT|v1|EVENT|" + str _side + "|" + str (round (time / 60)) + "|FACTORY_RALLY_SET|" + (typeOf _site) + "|" + str _rally);
+						};
+					};
+				};
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _x, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
-				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|" + _x);
+				//--- STRUCTURE cost/currency telemetry (claude-gaming 2026-06-15): Steff saw "the AI
+				//--- comms upgraded buildings and such" - surface the base-building SPEND. Structures
+				//--- are paid from supply when the dual-currency economy is on (_dual); otherwise the
+				//--- supply deduction is skipped (free). Rides the existing per-structure build event.
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|struct=" + _x + "|cost=" + str _cost + "|paidBy=" + (if (_dual) then {"supply"} else {"free"}) + "|branchOut=" + str _coreDone);
 			};
 		};
 	};
@@ -227,7 +455,7 @@ if (_defCount < _defMax) then {
 				//--- Steff 2026-06-13: face the defense OUTWARD (bearing HQ->pos) not a random heading,
 				//--- so manned statics engage outward threats and never fire across the base into friendly
 				//--- defenses/structures.
-				_defDir = (_pos select 0 - (_hqPos select 0)) atan2 (_pos select 1 - (_hqPos select 1));
+				private ["_defDx","_defDy"]; _defDx = (_pos select 0) - (_hqPos select 0); _defDy = (_pos select 1) - (_hqPos select 1); _defDir = if (abs _defDx < 0.01 && {abs _defDy < 0.01}) then {random 360} else {_defDx atan2 _defDy}; //--- BUG-FIX 2026-06-14: guard atan2(0,0) zero-divisor when build pos == HQ (left _defDir unset -> garbage heading).
 				[_defClass, _side, _pos, _defDir, true, true] Call ConstructDefense;
 				_logik setVariable ["wfbe_aicom_defenses", _defCount + 1];
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_AICOMLog;

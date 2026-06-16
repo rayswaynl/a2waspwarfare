@@ -44,7 +44,8 @@ while { !WFBE_GameOver } do {
 			_result = ["STORE", [getPlayerUID _x, _playerScoreDiff]] call WFBE_SE_FNC_CallDatabaseStore;
 			_perfDbCalls = _perfDbCalls + 1;
 		};
-	} forEach allUnits;
+	// Marty: PERF - iterate the player slot list, not allUnits (avoids scanning hundreds of AI per tick). isPlayer guard above keeps behaviour identical.
+	} forEach playableUnits;
 
 	// Marty: Performance Audit record for AntiStack database score flush.
 	if !(isNil "PerformanceAudit_Record") then {

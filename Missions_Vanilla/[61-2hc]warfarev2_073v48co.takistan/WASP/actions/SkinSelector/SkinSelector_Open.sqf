@@ -1,12 +1,13 @@
 /*
 	SkinSelector_Open.sqf
 	Opens the skin selector dialog (idd 27000) and runs the controller loop.
-	Mirrors the GUI_Menu_Voting.sqf structural pattern.
 	May be called from:
 	  - Skill_Init.sqf join hook (show-once on first join)
 	  - GUI_Menu.sqf MenuAction 21 (WF-menu SKIN button, re-open)
 	  - Init_Keybind.sqf User11 keybind
 */
+
+disableSerialization; //--- BUG-FIX 2026-06-14: suppress "_display does not support serialization" (dialog control held in a local).
 
 Private ["_display","_pool","_visiblePool","_i","_cls","_lbl","_isGhillie",
          "_selectedIdx","_selectedCls","_selectedLbl","_portrait",

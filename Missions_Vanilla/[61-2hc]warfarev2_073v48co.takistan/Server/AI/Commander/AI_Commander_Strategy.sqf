@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -43,29 +43,78 @@ _myStr = 0;
 _enStr = 0;
 { if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 
-//--- 1) SPEARHEADS: score every town we do not own; value high, far-from-front low.
+//--- 1) SPEARHEADS: COHERENT FRONT (V0.8, claude-gaming 2026-06-14). Rank enemy/neutral
+//--- towns by NEAREST-TO-OUR-FRONT first, with a small pull toward the enemy HQ, so the
+//--- army advances as a wave onto achievable nearby objectives instead of cherry-picking
+//--- the enemy's rich rear 7-8km away (the STUCKSTAT distTgt=8122 piecemeal bug).
+//---   score = supplyValue                 (town value: prefer richer of the NEARBY towns)
+//---         - dFront / DISTANCE_DIVISOR    (distance-to-front DOMINATES; divisor 50, was 150)
+//---         - dEnemyHQ / HQ_PULL_DIVISOR   (small spearhead bias toward the enemy capital)
+//---         - FAR_PENALTY if dFront > FRONTIER_RADIUS (deep towns can't buy their way over a near one)
+//--- GUARDRAIL: the far penalty is a deprioritiser, not a ban - if NO town is on the front
+//--- (front fully owned / island target), the deep towns still score and get picked, so
+//--- teams always have a valid target and never idle.
 _cands = [];
 { if ((_x getVariable "sideID") != _sideID) then {_cands = _cands + [_x]} } forEach towns;
-_want = 1 max (ceil ((count _teams) / (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN", 3])));
-_want = _want min 5 min (count _cands);
+_frontRad = missionNamespace getVariable ["WFBE_C_AICOM_FRONTIER_RADIUS", 3000];
+_distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50];
+if (_distDiv <= 0) then {_distDiv = 1};
+_hqDiv    = missionNamespace getVariable ["WFBE_C_AICOM_HQ_PULL_DIVISOR", 250];
+_farPen   = missionNamespace getVariable ["WFBE_C_AICOM_FAR_PENALTY", 1000];
+//--- Enemy HQ for the directional pull (cached once; nil-safe - 0 pull if no HQ object).
+_enemyHQForRank = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
+//--- Concentrate force: split across FEW towns (cap via SPEARHEAD_TOWNS_MAX), not the old
+//--- ceil(teams / per-town) which scattered into 3+ cities at one effective team each.
+_want = 1 max (missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]);
+_want = _want min (count _cands);
 _targets = [];
 for "_i" from 1 to _want do {
 	_bestScore = -1e9; _bestTown = objNull;
 	{
 		_t = _x;
 		if (!(_t in _targets)) then {
-			//--- Frontline distance = to our nearest OWN town (fallback: our HQ).
+			//--- Frontline distance = to our nearest OWN town (fallback: our HQ) = the
+			//--- coherent-front / adjacency signal. Small dNear = borders owned territory.
 			_dNear = 1e9;
 			{ if ((_x getVariable "sideID") == _sideID) then {_d = _t distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
 			if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
-			//--- V0.6 task 49a: town weight hook (nil-safe, zero on this mission;
-			//--- experital's airfield init can set wfbe_aicom_town_weight on a town object).
-			_score = (_t getVariable ["supplyValue", 0]) - (_dNear / 150) + (_t getVariable ["wfbe_aicom_town_weight", 0]);
+			//--- Distance toward the ENEMY HQ (avoid binary getDir per A2 rules - plain distance).
+			_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
+			//--- V0.6 task 49a: town weight hook (nil-safe, zero on this mission).
+			_score = (_t getVariable ["supplyValue", 0])
+			       - (_dNear / _distDiv)
+			       + (_t getVariable ["wfbe_aicom_town_weight", 0]);
+			if (_hqDiv > 0) then {_score = _score - (_dHQ / _hqDiv)};
+			//--- Off-front towns take a flat penalty so a fat deep city can't outrank a
+			//--- near contestable one. Towns on the front are unpenalised and win.
+			if (_dNear > _frontRad) then {_score = _score - _farPen};
 			if (_score > _bestScore) then {_bestScore = _score; _bestTown = _t};
 		};
 	} forEach _cands;
 	if (!isNull _bestTown) then {_targets = _targets + [_bestTown]};
 };
+//--- Telemetry: is the chosen primary actually on the front (vs a deep fallback)?
+_anyFront = false;
+if (count _targets > 0) then {
+	_t = _targets select 0;
+	_dNear = 1e9;
+	{ if ((_x getVariable "sideID") == _sideID) then {_d = _t distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
+	if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+	_anyFront = (_dNear <= _frontRad);
+};
+
+//--- AICOMDBG (claude-gaming 2026-06-13): trace the commander's spearhead target choices
+//--- (town + supply + distance-to-front + force) for the A/B ledger + debugging. Strategy
+//--- runs on a ~60s cadence so this is paced, not hot-loop spam.
+private ["_tDbg", "_dDbg", "_dd"];
+{
+	_tDbg = _x;
+	_dDbg = 1e9;
+	{ if ((_x getVariable "sideID") == _sideID) then {_dd = _tDbg distance _x; if (_dd < _dDbg) then {_dDbg = _dd}} } forEach towns;
+	if (_dDbg > 1e8) then {_dDbg = _tDbg distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};   //--- match the real scorer's HQ fallback (no 1e9 sentinel in telemetry)
+	diag_log ("AICOMDBG|v1|SPEARHEAD|" + (str _side) + "|" + str (round (time / 60)) + "|town=" + (_tDbg getVariable ["name", "?"]) + "|supply=" + str (_tDbg getVariable ["supplyValue", 0]) + "|distFront=" + str (round _dDbg) + "|onFront=" + str (_dDbg <= _frontRad) + "|teams=" + str (count _teams) + "|want=" + str _want + "|conc=" + str (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3]));
+} forEach _targets;
+
 _logik setVariable ["wfbe_aicom_targets", _targets];
 
 //--- 2) REACTIVE DEFENSE: relieve own towns under attack; release quiet reliefs.
@@ -177,6 +226,24 @@ if (_strikeOn) then {
 	};
 };
 _logik setVariable ["wfbe_aicom_strike_on", _strikeOn];
+
+//--- POSTURE + FRONT telemetry (claude-gaming 2026-06-15): the commander's strategic STANCE and
+//--- the war-state numbers that drive it. All metrics (_myTowns/_enemyTowns/_myStr/_enStr/_strikeOn/
+//--- _attacked/_anyFront/_targets) are already computed this tick, so these are pure string builds -
+//--- ZERO extra scan. POSTURE derives a 3-state stance from the already-computed ratios so the WHY
+//--- (pressing vs consolidating vs defending) is explicit; FRONT reconstructs the front line (held /
+//--- contested counts + the primary target's name and whether it borders our territory). Both ride
+//--- the existing AI_Commander_Strategy worker (per side / ~60s; gated in AI_Commander.sqf:133-134).
+private ["_posture","_primT"];
+_posture = if (_strikeOn) then {"HQ_STRIKE"} else {
+	if (_myTowns < _enemyTowns || {_myStr < _enStr}) then {"DEFEND"} else {
+		if (_myTowns >= (_enemyTowns * 1.2) && {_myStr >= _enStr}) then {"PRESS"} else {"HOLD"}
+	}
+};
+diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|strikeOn=" + str _strikeOn);
+_primT = if (count _targets > 0) then {_targets select 0} else {objNull};
+diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
+// END POSTURE + FRONT
 
 //--- 4) ARTILLERY: soften the spearhead town or the enemy HQ - never near friendlies.
 //--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.

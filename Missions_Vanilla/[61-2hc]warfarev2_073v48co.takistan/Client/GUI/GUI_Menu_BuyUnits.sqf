@@ -212,15 +212,30 @@ _IDCS = _IDCS - [_currentIDC];
 	//--- Task 33: cancel last queued order for this player in the current factory.
 	if (MenuAction == 501) then {
 		MenuAction = -1;
-		private ["_uid33","_q33","_qc33","_qp33","_ql33","_idx33","_paidCost33","_cpt33","_basePrice33","_refund33","_maxRefund33","_newArr33","_i33"];
+		private ["_uid33","_q33","_qc33","_qp33","_ql33","_idx33","_paidCost33","_cpt33","_basePrice33","_refund33","_maxRefund33","_newArr33","_i33","_uidPrefix33"];
 		_uid33 = getPlayerUID player;
+		//--- A2-safe "token starts with UID" test. `string find string` is ARMA 3-only and
+		//--- throws "Type String, expected Array" on A2 OA; compare leading bytes via toArray.
+		_uidPrefix33 = {
+			private ["_tokA","_uidA","_ul","_ok","_j"];
+			_tokA = toArray (_this select 0);
+			_uidA = toArray (_this select 1);
+			_ul = count _uidA;
+			_ok = (_ul > 0) && (_ul <= count _tokA);
+			if (_ok) then {
+				for "_j" from 0 to (_ul - 1) do {
+					if ((_tokA select _j) != (_uidA select _j)) exitWith {_ok = false};
+				};
+			};
+			_ok
+		};
 		_q33   = _closest getVariable ["queu",        []];
 		_qc33  = _closest getVariable ["queu_costs",  []];
 		_qp33  = _closest getVariable ["queu_cpts",   []];
 		_ql33  = _closest getVariable ["queu_labels",  []];
 		//--- Find the LAST entry belonging to this player.
 		_idx33 = -1;
-		{if (_x find _uid33 == 0) then {_idx33 = _forEachIndex}} forEach _q33;
+		{if ([_x, _uid33] call _uidPrefix33) then {_idx33 = _forEachIndex}} forEach _q33;
 		if (_idx33 == -1) exitWith {hint parseText "<t color='#ff9900'>You have no unit queued in this factory.</t>"};
 		_paidCost33 = if (_idx33 < count _qc33) then {_qc33 select _idx33} else {0};
 		_cpt33      = if (_idx33 < count _qp33) then {_qp33 select _idx33} else {1};
@@ -632,16 +647,30 @@ _IDCS = _IDCS - [_currentIDC];
 		} else {
 			{ctrlSetText [_x , ""]} forEach [12009,12033,12034,12035,12036,12037,12038,12039];
 			//--- Task 33: show queue list in the description panel when no unit is selected.
-			private ["_qLabels33","_qTokens33","_uid33","_qTxt33","_qEntry33"];
+			private ["_qLabels33","_qTokens33","_uid33","_qTxt33","_qEntry33","_uidPrefix33b"];
 			_qTokens33 = _closest getVariable ["queu", []];
 			_qLabels33 = _closest getVariable ["queu_labels", []];
 			_uid33 = getPlayerUID player;
+			//--- A2-safe "token starts with UID" test (string find is A3-only, throws on A2 OA).
+			_uidPrefix33b = {
+				private ["_tokA","_uidA","_ul","_ok","_j"];
+				_tokA = toArray (_this select 0);
+				_uidA = toArray (_this select 1);
+				_ul = count _uidA;
+				_ok = (_ul > 0) && (_ul <= count _tokA);
+				if (_ok) then {
+					for "_j" from 0 to (_ul - 1) do {
+						if ((_tokA select _j) != (_uidA select _j)) exitWith {_ok = false};
+					};
+				};
+				_ok
+			};
 			if (count _qTokens33 > 0) then {
 				_qTxt33 = "<t color='#42b6ff' shadow='1'>Queue (oldest first):</t><br/>";
 				{
 					_qEntry33 = if (_forEachIndex < count _qLabels33) then {_qLabels33 select _forEachIndex} else {"?"};
 					private "_mark33";
-					_mark33 = if (_x find _uid33 == 0) then {"<t color='#ffe066'>YOU</t>  "} else {"          "};
+					_mark33 = if ([_x, _uid33] call _uidPrefix33b) then {"<t color='#ffe066'>YOU</t>  "} else {"          "};
 					_qTxt33 = _qTxt33 + Format ["%1<t color='#eee58b'>%2. %3</t><br/>", _mark33, (_forEachIndex + 1), _qEntry33];
 				} forEach _qTokens33;
 				_qTxt33 = _qTxt33 + "<br/><t color='#aaaaaa' size='0.85'>Press 'Cancel Last' to remove your last order and get a refund.</t>";

@@ -365,6 +365,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							};
 							_team setVariable ["wfbe_aicom_route", _hcRoute, true];
 							_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];
+							//--- B37 (Ray 2026-06-16): INSTRUMENT the unstuck strike so we can VERIFY it triggers + at which
+							//--- tier. Pairs with UNSTUCK_FIRED (Common_RunCommanderTeam) + the existing ASSAULT_STRANDED
+							//--- moved/stuck line, giving the full strike -> fire -> recover lifecycle in the RPT.
+							if (_hcStrk > 0) then { diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNSTUCK_STRIKE|team=" + (str _team) + "|tier=" + str _hcStrk); };
 							_team setVariable ["wfbe_aicom_order", [((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "towns-target", _hcDest], true];
 						} else {
 							if (_useArc) then {

@@ -8,18 +8,30 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
+_auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
 
 while {!WFBE_GameOver} do {
 	sleep 60;
 
 	// --- Empty-group GC sweep ---
+	// GCSTAT counters (claude-gaming 2026-06-15): _gcEmptyFound = all zero-unit groups seen this
+	// pass (incl. persistent, which are NOT reaped); _gcReaped = non-persistent empties deleted.
+	_gcReaped = 0; _gcEmptyFound = 0;
 	{
 		_grp = _x;
-		if (!isNull _grp && {!(_grp getVariable ["wfbe_persistent", false])} && {(count (units _grp)) == 0}) then {
-			deleteGroup _grp;
+		if (!isNull _grp && {(count (units _grp)) == 0}) then {
+			_gcEmptyFound = _gcEmptyFound + 1;
+			// A2 OA: the [name,default] getVariable form is unreliable on GROUP objects (yields nil, not the
+			// default) - same trap fixed in the zombie-reaper at line ~46. Use single-arg + isNil guard.
+			private "_isPers"; _isPers = _grp getVariable "wfbe_persistent";
+			if (isNil "_isPers") then {_isPers = false};
+			if (!_isPers) then {
+				deleteGroup _grp;
+				_gcReaped = _gcReaped + 1;
+			};
 		};
 	} forEach allGroups;
 
@@ -31,8 +43,10 @@ while {!WFBE_GameOver} do {
 	if (_zombieTimeout > 0) then {
 		{
 			_grp = _x;
-			// A2 OA: the [name, default] form of getVariable is not supported on groups
-			// (objects/namespaces only) - it yields nil and the comparison below throws.
+			// Single-arg getVariable + isNil guard (works on groups in A2 OA). NOTE: the two-arg
+			// [name, default] form ALSO works on groups in this build (see the husk-reap at the top
+			// of this file and the persEmpty audit below, both live in production); this single-arg
+			// style is kept only for the explicit -1 sentinel the orphan-age math below relies on.
 			_orphanedAt = _grp getVariable "wfbe_orphaned_at";
 			if (isNil "_orphanedAt") then {_orphanedAt = -1};
 			if (_orphanedAt >= 0 && {(time - _orphanedAt) >= _zombieTimeout}) then {
@@ -64,13 +78,45 @@ while {!WFBE_GameOver} do {
 	_cntWest = 0;
 	_cntEast = 0;
 	_cntGuer = 0;
+	// untagged = groups with no wfbe_group_src (created outside the WFBE_CO_FNC_CreateGroup wrapper).
+	// Counted here on the cheap 60s pass so the dashboard gets a responsive untagged gauge (the full
+	// per-source breakdown only ships on the ~25-min GROUPAUDIT line). On a build where editor slots
+	// are tagged, a rising untagged count is a wrapper-bypass leak signal; UNTAGLEAK below isolates the
+	// NON-empty subset.
+	_untW = 0; _untE = 0; _untG = 0;
 	{
-		if (side _x == west)       then {_cntWest = _cntWest + 1};
-		if (side _x == east)       then {_cntEast = _cntEast + 1};
-		if (side _x == resistance) then {_cntGuer = _cntGuer + 1};
+		_gsrc = _x getVariable "wfbe_group_src";
+		if (side _x == west)       then {_cntWest = _cntWest + 1; if (isNil "_gsrc") then {_untW = _untW + 1}};
+		if (side _x == east)       then {_cntEast = _cntEast + 1; if (isNil "_gsrc") then {_untE = _untE + 1}};
+		if (side _x == resistance) then {_cntGuer = _cntGuer + 1; if (isNil "_gsrc") then {_untG = _untG + 1}};
 	} forEach allGroups;
 
+	//--- B7 efficiency (review 2026-06-15): publish per-side group counts so server_town_ai.sqf and
+	//--- AI_Commander.sqf can read this cache instead of each re-scanning allGroups every sweep/tick.
+	missionNamespace setVariable ["wfbe_grpcnt_west", _cntWest];
+	missionNamespace setVariable ["wfbe_grpcnt_east", _cntEast];
+	missionNamespace setVariable ["wfbe_grpcnt_guer", _cntGuer];
+	missionNamespace setVariable ["wfbe_grpcnt_t", time];
+
 	_now = time;
+
+	// --- GCSTAT (claude-gaming 2026-06-15): consolidated per-pass GC summary on the 60s sweep
+	// cadence. groups reaped THIS pass (non-persistent empties), empties found (incl. persistent),
+	// and current per-side group counts incl. GUER. Single cheap diag_log; all values already in
+	// hand (counters from the sweep above, per-side counts from the cap-warning pass). t = round min.
+	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|untW=" + str _untW + "|untE=" + str _untE + "|untG=" + str _untG + "|t=" + str (round (time / 60)));
+
+	// --- GUER soft-cap monitor (claude-gaming 2026-06-15) ---
+	// GUER's real ceiling is the SOFT cap WFBE_C_GUER_GROUPS_MAX (=80, raised 60->80), NOT the 144
+	// engine cap. At the soft cap, server_town_ai.sqf:62 DEFERS new resistance garrisons, so town
+	// defense silently degrades long before the 130/144 engine warning below would ever fire for GUER.
+	// GUERCAP feeds the dashboard's GUER gauge (60s cadence); the debounced WARNING is emitted with the
+	// other cap warnings further down. Recompute the cap each pass so a live param change is honoured.
+	_guerMax = missionNamespace getVariable ["WFBE_C_GUER_GROUPS_MAX", 80];
+	if (_guerMax < 1) then { _guerMax = 1 };
+	_guerPct = round ((_cntGuer / _guerMax) * 100);
+	_guerSoftThreshold = round (_guerMax * 0.9);
+	diag_log ("GUERCAP|v1|count=" + str _cntGuer + "|max=" + str _guerMax + "|pct=" + str _guerPct + "|t=" + str (round (time / 60)));
 
 	// Helper macro (inlined as code blocks) - warn if count >= threshold and debounce
 	// key has either never been set or expired.  Uses missionNamespace so the variable
@@ -134,6 +180,16 @@ while {!WFBE_GameOver} do {
 	if (isNil "_lastAudit") then { _lastAudit = -9999 };
 	if ((_now - _lastAudit) >= _auditInterval) then {
 		missionNamespace setVariable ["wfbe_groupaudit_last", _now];
+		// --- D2 server-FPS throttle (claude-gaming 2026-06-14) ---
+		// The 5-min WINDOW bookkeeping above (last-audit timestamp + window counter) keeps
+		// advancing every window, but the EXPENSIVE classification + per-faction dump below
+		// (auditMs ~2100ms on 276 groups) only runs every WFBE_C_GROUPAUDIT_EVERY-th window.
+		// The husk-reap GC, zombie-reap and cap-warning all ran earlier in this 60s cycle,
+		// OUTSIDE this branch, so they are completely unaffected by this throttle.
+		_auditN = _auditN + 1;
+		_every = missionNamespace getVariable ["WFBE_C_GROUPAUDIT_EVERY", 5];
+		if (_every < 1) then { _every = 1 };
+		if ((_auditN mod _every) == 0) then {
 		_auditT0 = diag_tickTime;
 
 		// Single allUnits pass: count units per side for audit line + TICK sharing.
@@ -150,10 +206,20 @@ while {!WFBE_GameOver} do {
 
 		// Build per-(side, src) counts in a flat key=value array: [side, src, count, ...]
 		// Using a simple parallel-arrays approach to avoid any A3-only constructs.
+		_emptyW = 0; _emptyE = 0; _emptyG = 0; _persEmptyW = 0; _persEmptyE = 0; _persEmptyG = 0; //--- EMPTYGRP tracking (Ray)
 		_srcCounts = []; // flat: [side0, src0, cnt0, side1, src1, cnt1, ...]
 
 		{
 			_auditSide = side _x;
+			if ((count units _x) == 0) then {
+				private "_pe"; _pe = _x getVariable "wfbe_persistent"; if (isNil "_pe") then {_pe = false}; //--- A2 group getVariable has no default form
+				switch (_auditSide) do {
+					case west:       { _emptyW = _emptyW + 1; if (_pe) then {_persEmptyW = _persEmptyW + 1} };
+					case east:       { _emptyE = _emptyE + 1; if (_pe) then {_persEmptyE = _persEmptyE + 1} };
+					case resistance: { _emptyG = _emptyG + 1; if (_pe) then {_persEmptyG = _persEmptyG + 1} };
+					default {};
+				};
+			};
 			_src = _x getVariable "wfbe_group_src";
 			if (isNil "_src") then { _src = "untagged" };
 
@@ -220,6 +286,7 @@ while {!WFBE_GameOver} do {
 		} forEach [west, east, resistance];
 
 		//--- Delegation split: prove the HC offload is alive. One extra allUnits pass (~300 units, trivial).
+		diag_log (Format ["EMPTYGRP|v1|west=%1|east=%2|guer=%3|persW=%4|persE=%5|persG=%6|t=%7", _emptyW, _emptyE, _emptyG, _persEmptyW, _persEmptyE, _persEmptyG, round (time / 60)]); //--- EMPTYGRP tracking (Ray)
 		_delegTotal = count allUnits;
 		_delegLocal = {local _x} count allUnits;
 		_delegRemote = _delegTotal - _delegLocal;
@@ -271,6 +338,7 @@ while {!WFBE_GameOver} do {
 		{
 			["INFORMATION", _x + " auditMs=" + str _auditMs] Call WFBE_CO_FNC_AICOMLog;
 		} forEach _auditLines;
+		}; // --- end D2 modulo gate (WFBE_C_GROUPAUDIT_EVERY) ---
 	};
 };
 

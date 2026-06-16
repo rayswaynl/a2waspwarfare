@@ -35,8 +35,10 @@ if (local player) then {
 	_color = "colorBlack";
 	if (_hq) then {_type = "Headquarters"};
 	_marker setMarkerTypeLocal _type;
+	private "_text";
 	_text = "";
 	if (!_hq) then {_text = [_structure, _side] Call GetStructureMarkerLabel;_marker setMarkerSizeLocal [0.5,0.5]};
+	if (isNil "_text") then {_text = ""};
 	if (_text != "") then {_marker setMarkerTextLocal _text};
 	_marker setMarkerColorLocal _color;
 

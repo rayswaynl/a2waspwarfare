@@ -90,6 +90,17 @@ _rearmor = {
 	};
 
 	if (_canCreate) then {
+		//--- claude-gaming 2026-06-14 (bug: "Cannot create non-ai vehicle Squad_2,"/"Squad_3,"):
+		//--- Guard the create dispatch against any roster token that is NOT a real CfgVehicles class.
+		//--- A leaked group-template KEY (e.g. "Squad_2"/"Squad_3", the suffixed WFBE_<side>_GROUPS_*
+		//--- lookup keys) is not a class, so `isKindOf 'Man'` is false and it would fall through to
+		//--- createVehicle -> the engine "Cannot create non-ai vehicle" RPT spam (7x per town activation).
+		//--- isClass keeps real classnames untouched (gameplay-transparent) and turns a hard engine
+		//--- error into one explicit WARNING. A2-safe: isClass + config path are 1.64 binaries.
+		if !(isClass (configFile >> "CfgVehicles" >> _x)) then {
+			_perfSkipped = _perfSkipped + 1;
+			["WARNING", Format ["Common_CreateTeam.sqf: roster token [%1] for side [%2] is not a CfgVehicles class (leaked group-template key?); skipped to avoid createVehicle error.", _x, _side]] Call WFBE_CO_FNC_LogContent;
+		} else {
 		if (_x isKindOf 'Man') then {
 			// Marty: Forward the team global-init flag so town AI infantry can skip client marker/action setup.
 			_unit = [_x,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
@@ -157,6 +168,7 @@ _rearmor = {
 				_perfVehicles = _perfVehicles + 1;
 			};
 		};
+			}; //--- claude-gaming: close the isClass(CfgVehicles) guard added above.
 	} else {
 		_perfSkipped = _perfSkipped + 1;
 	};

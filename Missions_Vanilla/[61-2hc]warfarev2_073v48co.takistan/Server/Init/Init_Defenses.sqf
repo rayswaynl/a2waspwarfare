@@ -68,7 +68,7 @@ _w = [
 if (WF_A2_Arrowhead) then {
 	_w = _w + [['Land_CncBlock_Stripes',[-1.4,-13.6,0],0],['Land_CncBlock_Stripes',[1.4,-12.4,0],0]];	//--- OA: chicane gate
 } else {
-	_w = _w + [['Land_BarGate2',[0,-13,0],0]];	//--- A2/CO: boom gate across the gap
+	_w = _w + [['Land_CncBlock_Stripes',[-1.4,-13.6,0],0],['Land_CncBlock_Stripes',[1.4,-12.4,0],0]];	//--- A2/CO: jersey chicane (was unverified Land_BarGate2); NOTE this _WALLS array is dead data (MediumSite.sqf:160 excludes ArtilleryRadar)
 };
 missionNamespace setVariable ['WFBE_NEURODEF_ARTILLERYRADAR_WALLS', _w];
 
@@ -92,6 +92,167 @@ if (WF_A2_Arrowhead) then {
 missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_WALLS', _w];
 
 //=============================================================================
+// Reserve & ArtilleryRadar COMPOSITION DRESSING — task 13 (WDDM starred presets
+//   reserve_tower_yard ⭐ and radar_gate_checkpoint ⭐ translated to in-mission
+//   dressing, faction-split US(WEST)/RU(EAST), authored exactly like BANK_/CBRADAR_).
+//
+// These convert the two under-dressed structures from walls-only to full composition
+// dressing (mirrors Bank/CBR). They REPLACE the faction-neutral _WALLS path for these
+// two _rlTypes — Construction_MediumSite.sqf now excludes 'Reserve'/'ArtilleryRadar'
+// from the auto-walls block, so walls + dressing never double up.
+//
+// Props are COSMETIC ONLY (0-AI presets per WDDM): walls, towers, lights, gate furniture.
+// No crew, no weapons, no AI → STANDING GUARDRAIL not engaged (nothing is inserted/
+//   dismounted here, so there is no unit to give a move/SAD order to).
+// Offsets are model-space (+Y front, +X right) relative to structure pos+dir; z is
+//   flattened to ground by WFBE_SE_FNC_SpawnStructureDressing. Same convention as BANK_/CBRADAR_.
+//
+// CLASSNAME DISCIPLINE: the raw WDDM presets used four OA props NOT present in this
+//   mission's content registries (Land_GuardShed, Land_Fire_barrel, RoadCone_L_EP1,
+//   Land_Misc_deerstand) plus the A2-only Land_BarGate2. To ship without a runtime
+//   sign-off these are substituted with mission-PROVEN equivalents (the same ones the
+//   existing _WALLS arrays already chose): RoadCone (Core_CIV) for RoadCone_L_EP1,
+//   Sign_Danger (defense lists) for the danger marker, Land_Fort_Watchtower_EP1
+//   (WFBE_C_CAMP) for watchtowers, Land_Ind_IlluminantTower (Core_CIV/TKCIV) for the
+//   light, and a Land_CncBlock_Stripes chicane for the boom-gate on OA. Base barriers
+//   are stock Warfare (Base_WarfareBBarrier5x/10x). See sign-off list in the task report.
+//=============================================================================
+
+private '_d';
+
+//--- ARTILLERY RADAR (WDDM radar_gate_checkpoint ⭐) — walled boom-gate checkpoint, 0 AI.
+//    HESCO 5x ring with a ~3 m front gap (origin local +Y = front), cones + danger sign
+//    at the entrance, OA chicane / A2 boom-gate across the gap. Faction marker = flag.
+//    Footprint ~26 x 29 m (wall ring ±13 X, +13..-16 Y); fits inside Bank-class siting.
+
+//--- WEST: US radar checkpoint.
+_d = [
+	//--- HESCO 5x perimeter ring (3 m front gap at y=-13).
+	['Base_WarfareBBarrier5x',	[-6,13,0],	0],		//--- Rear wall left (north/front)
+	['Base_WarfareBBarrier5x',	[6,13,0],	0],		//--- Rear wall right
+	['Base_WarfareBBarrier5x',	[-13,6,0],	90],	//--- West wall north
+	['Base_WarfareBBarrier5x',	[-13,-6,0],	90],	//--- West wall south
+	['Base_WarfareBBarrier5x',	[13,6,0],	90],	//--- East wall north
+	['Base_WarfareBBarrier5x',	[13,-6,0],	90],	//--- East wall south
+	['Base_WarfareBBarrier5x',	[-7.5,-13,0],0],	//--- Front wall left (gate gap centre)
+	['Base_WarfareBBarrier5x',	[7.5,-13,0],	0],		//--- Front wall right
+	//--- Gate furniture at the entrance (south, y<-13).
+	['RoadCone',				[-1.2,-16,0],0],	//--- Approach cone left (proven sub for RoadCone_L_EP1)
+	['RoadCone',				[1.2,-16,0],	0],		//--- Approach cone right
+	['Sign_Danger',				[4,-14.5,0],	0],		//--- Checkpoint danger sign (proven sub for guard furniture)
+	//--- US flag — front-right corner, faces the entrance.
+	['FlagCarrierGUE',			[6.5,-12,0],	180]	//--- Flag near gate (FlagCarrierGUE = proven live camp flag, COMBINEDOPS_W.sqf:6)
+];
+if (WF_A2_Arrowhead) then {
+	_d = _d + [['Land_CncBlock_Stripes',[-1.4,-13.6,0],0],['Land_CncBlock_Stripes',[1.4,-12.4,0],0]];	//--- OA: jersey chicane in the gap
+} else {
+	_d = _d + [['Land_CncBlock_Stripes',[-1.4,-13.6,0],0],['Land_CncBlock_Stripes',[1.4,-12.4,0],0]];	//--- A2/CO: jersey chicane (was unverified Land_BarGate2; CncBlock proven in HEADQUARTERS_WALLS)
+};
+missionNamespace setVariable ['WFBE_NEURODEF_ARTILLERYRADAR_WEST', _d];
+
+//--- EAST: RU radar checkpoint (identical layout, RU flag).
+_d = [
+	['Base_WarfareBBarrier5x',	[-6,13,0],	0],
+	['Base_WarfareBBarrier5x',	[6,13,0],	0],
+	['Base_WarfareBBarrier5x',	[-13,6,0],	90],
+	['Base_WarfareBBarrier5x',	[-13,-6,0],	90],
+	['Base_WarfareBBarrier5x',	[13,6,0],	90],
+	['Base_WarfareBBarrier5x',	[13,-6,0],	90],
+	['Base_WarfareBBarrier5x',	[-7.5,-13,0],0],
+	['Base_WarfareBBarrier5x',	[7.5,-13,0],	0],
+	['RoadCone',				[-1.2,-16,0],0],
+	['RoadCone',				[1.2,-16,0],	0],
+	['Sign_Danger',				[4,-14.5,0],	0],
+	['FlagCarrierGUE',			[6.5,-12,0],	180]	//--- Flag near gate (FlagCarrierGUE = proven live camp flag; was unverified FlagCarrierRU)
+];
+if (WF_A2_Arrowhead) then {
+	_d = _d + [['Land_CncBlock_Stripes',[-1.4,-13.6,0],0],['Land_CncBlock_Stripes',[1.4,-12.4,0],0]];
+} else {
+	_d = _d + [['Land_CncBlock_Stripes',[-1.4,-13.6,0],0],['Land_CncBlock_Stripes',[1.4,-12.4,0],0]];	//--- A2/CO: jersey chicane (was unverified Land_BarGate2)
+};
+missionNamespace setVariable ['WFBE_NEURODEF_ARTILLERYRADAR_EAST', _d];
+
+//--- RESERVE (WDDM reserve_tower_yard ⭐) — floodlit walled vehicle yard, 0 AI.
+//    HESCO 10x yard with a ~3 m front gap, corner watchtowers, illuminant tower over
+//    the bays. Footprint ~48 x 36 m (±24 X, ±18 Y) — Reserve is a large pad, fits.
+//    Watchtower variant is content-branched exactly like the _WALLS block above.
+
+//--- WEST: US reserve yard.
+_d = [
+	//--- HESCO 10x perimeter (gap centre on the front/south face).
+	['Base_WarfareBBarrier10x',	[-12,18,0],	0],		//--- Rear wall left (north/front)
+	['Base_WarfareBBarrier10x',	[12,18,0],	0],		//--- Rear wall right
+	['Base_WarfareBBarrier10x',	[-13.5,-18,0],0],	//--- Front wall left (gate gap centre)
+	['Base_WarfareBBarrier10x',	[13.5,-18,0],	0],		//--- Front wall right
+	['Base_WarfareBBarrier10x',	[-24,-7.5,0],90],	//--- West wall south
+	['Base_WarfareBBarrier10x',	[-24,7.5,0],	90],	//--- West wall north
+	['Base_WarfareBBarrier10x',	[24,-7.5,0],	90],	//--- East wall south
+	['Base_WarfareBBarrier10x',	[24,7.5,0],	90],	//--- East wall north
+	//--- Illuminant tower over the vehicle bays (centre).
+	['Land_Ind_IlluminantTower',[0,-9,0],	0],		//--- Yard floodlight
+	//--- US flag — front-right corner.
+	['FlagCarrierGUE',			[13.5,-15,0],180]	//--- Flag near entrance (FlagCarrierGUE = proven live camp flag; was unverified FlagCarrierUSA)
+];
+if (WF_A2_Arrowhead) then {
+	_d = _d + [['Land_Fort_Watchtower_EP1',[-21,15,0],45],['Land_Fort_Watchtower_EP1',[21,15,0],315]];	//--- OA corner towers (WFBE_C_CAMP class)
+} else {
+	_d = _d + [['Land_Fort_Watchtower',[-21,15,0],45],['Land_Fort_Watchtower',[21,15,0],315]];			//--- A2/CO corner towers
+};
+missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_WEST', _d];
+
+//--- EAST: RU reserve yard (identical layout, RU flag).
+_d = [
+	['Base_WarfareBBarrier10x',	[-12,18,0],	0],
+	['Base_WarfareBBarrier10x',	[12,18,0],	0],
+	['Base_WarfareBBarrier10x',	[-13.5,-18,0],0],
+	['Base_WarfareBBarrier10x',	[13.5,-18,0],	0],
+	['Base_WarfareBBarrier10x',	[-24,-7.5,0],90],
+	['Base_WarfareBBarrier10x',	[-24,7.5,0],	90],
+	['Base_WarfareBBarrier10x',	[24,-7.5,0],	90],
+	['Base_WarfareBBarrier10x',	[24,7.5,0],	90],
+	['Land_Ind_IlluminantTower',[0,-9,0],	0],
+	['FlagCarrierGUE',			[13.5,-15,0],180]	//--- Flag near entrance (FlagCarrierGUE = proven live camp flag; was unverified FlagCarrierRU)
+];
+if (WF_A2_Arrowhead) then {
+	_d = _d + [['Land_Fort_Watchtower_EP1',[-21,15,0],45],['Land_Fort_Watchtower_EP1',[21,15,0],315]];
+} else {
+	_d = _d + [['Land_Fort_Watchtower',[-21,15,0],45],['Land_Fort_Watchtower',[21,15,0],315]];
+};
+missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_EAST', _d];
+
+//--- OWNER OVERRIDE 2026-06-14: ArtyRadar + Reserve must be a TIGHT cluster of <=6 THEMED props (antenna/crate/etc),
+//--- NOT a walled HESCO compound with watchtowers. These re-set the four NEURODEF vars AFTER the WDDM dressing above,
+//--- so the compact themed cluster wins (core model + these <=5 small props = <=6 items, all within ~3.5 m, 0 AI, 0 walls).
+missionNamespace setVariable ['WFBE_NEURODEF_ARTILLERYRADAR_WEST', [
+	['Misc_cargo_cont_small',	[-3,2,0],	90],	//--- instrument / control box
+	['Land_CamoNetVar_NATO',	[-3,2.6,0],	0],		//--- camo net draped over the box
+	['USBasicAmmunitionBox_EP1',[2,2,0],	0],		//--- equipment crate
+	['Land_fort_bagfence_round',[0,2.4,0],	180],	//--- sandbag arc at the mast base
+	['FlagCarrierGUE',			[2.2,-1.5,0],180]	//--- faction flag
+]];
+missionNamespace setVariable ['WFBE_NEURODEF_ARTILLERYRADAR_EAST', [
+	['Misc_cargo_cont_small',	[-3,2,0],	90],
+	['Land_CamoNetVar_EAST',	[-3,2.6,0],	0],
+	['TKBasicAmmunitionBox_EP1',[2,2,0],	0],
+	['Land_fort_bagfence_round',[0,2.4,0],	180],
+	['FlagCarrierGUE',			[2.2,-1.5,0],180]
+]];
+missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_WEST', [
+	['USBasicAmmunitionBox_EP1',[-2,1.5,0],	0],		//--- supply crate
+	['USBasicAmmunitionBox_EP1',[-2,-0.5,0],90],	//--- supply crate
+	['Land_fort_bagfence_long',	[2,0.5,0],	90],	//--- short sandbag wall
+	['Land_Campfire',			[2,2.5,0],	0],		//--- watch-post lamp
+	['FlagCarrierGUE',			[0,-2.5,0],	180]	//--- faction flag
+]];
+missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_EAST', [
+	['TKBasicAmmunitionBox_EP1',[-2,1.5,0],	0],
+	['TKBasicAmmunitionBox_EP1',[-2,-0.5,0],90],
+	['Land_fort_bagfence_long',	[2,0.5,0],	90],
+	['Land_Campfire',			[2,2.5,0],	0],
+	['FlagCarrierGUE',			[0,-2.5,0],	180]
+]];
+
+//=============================================================================
 // CBR (Counter Battery Radar) composition dressing — task 37 visual rework.
 // Footprint ≤ 14 m radius. Core = Land_Antenna at origin for both sides (Land_telek1 rejected as likely absent).
 // WEST: NATO/US radar outpost — cornered sandbag ring, camo-netted shelter, razorwire perimeter.
@@ -110,8 +271,13 @@ missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_WALLS', _w];
 
 //--- WEST: NATO/US radar outpost — cornered sandbag ring enclosing the mast, camo-netted
 //--- instrument shelter set back from it, paired ammo crates, razorwire arcs at the perimeter.
-//--- All classnames confirmed present in this mission's content set.
-missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_WEST',[
+//--- task 27 WDDM pass: HESCO 5x mini-ring + one corner watchtower wrap the existing
+//--- sandbag outpost so it reads as the same WDDM family as Bank/Reserve/ArtyRadar.
+//--- Land_Fort_Watchtower(_EP1) content-branched like the _WALLS arrays. CBR is rarely
+//--- built (reactive arty-threat gate), so this is player-facing in practice.
+//--- All classnames VALIDATED (Base_WarfareBBarrier5x: barracks/artyradar walls; watchtowers: RESERVE).
+private '_c';
+_c = [
 	//--- Instrument shelter set back north-west; CamoNetVar drapes over it for a camouflaged look.
 	['Misc_cargo_cont_small',		[-5.5, 4.5, 0],	90],	//--- Control shelter / generator box
 	['Land_CamoNetVar_NATO',		[-5.5, 5.5, 0],	0],		//--- Camo net draped over shelter
@@ -124,16 +290,30 @@ missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_WEST',[
 	['Land_fort_bagfence_long',		[3.0, 0, 0],	90],	//--- Sandbag wall east side
 	['Land_fort_bagfence_corner',	[-3.0, 2.5, 0],	0],		//--- NW corner of ring
 	['Land_fort_bagfence_corner',	[3.0, 2.5, 0],	270],	//--- NE corner of ring
-	//--- Razorwire outer perimeter — two arcs south, one north of the shelter.
-	['Fort_RazorWire',				[-5.5, -5.0, 0],25],	//--- SW perimeter arc
-	['Fort_RazorWire',				[5.5, -5.0, 0],	335],	//--- SE perimeter arc
+	//--- HESCO 5x outer mini-ring (WDDM pass) — open south gate gap at y=-13.
+	['Base_WarfareBBarrier5x',		[-6, 13, 0],	0],		//--- Rear wall left
+	['Base_WarfareBBarrier5x',		[6, 13, 0],		0],		//--- Rear wall right
+	['Base_WarfareBBarrier5x',		[-13, 6, 0],	90],	//--- West wall north
+	['Base_WarfareBBarrier5x',		[-13, -6, 0],	90],	//--- West wall south
+	['Base_WarfareBBarrier5x',		[13, 6, 0],		90],	//--- East wall north
+	['Base_WarfareBBarrier5x',		[13, -6, 0],	90],	//--- East wall south
+	//--- Razorwire outer perimeter — two arcs south, closing the gate flanks.
+	['Fort_RazorWire',				[-5.5, -11.0, 0],25],	//--- SW perimeter arc
+	['Fort_RazorWire',				[5.5, -11.0, 0],335],	//--- SE perimeter arc
 	['Land_Campfire',				[7.0, 4.5, 0],	0]		//--- Operator watch-post / lamp (east)
-]];
+];
+if (WF_A2_Arrowhead) then {
+	_c = _c + [['Land_Fort_Watchtower_EP1',[-11, 11, 0],45]];	//--- OA corner tower (rear-left)
+} else {
+	_c = _c + [['Land_Fort_Watchtower',[-11, 11, 0],45]];		//--- A2/CO corner tower (rear-left)
+};
+missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_WEST', _c];
 
 //--- EAST: RU/TK radar outpost — L-shaped blast-wall screen behind the mast, camo-netted,
 //--- hedgehog tank traps forward, paired equipment crates, razorwire perimeter.
-//--- All classnames confirmed present in this mission's content set.
-missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_EAST',[
+//--- task 27 WDDM pass: HESCO 5x mini-ring + one corner watchtower (mirrors WEST).
+//--- All classnames VALIDATED in this mission's content set.
+_c = [
 	//--- Blast-wall L-screen behind and beside the mast (north + north-east).
 	['Land_HBarrier_large',			[0, 5.0, 0],	0],		//--- Back blast wall (north, perpendicular)
 	['Land_HBarrier_large',			[4.5, 2.5, 0],	90],	//--- East-flank blast wall
@@ -146,13 +326,26 @@ missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_EAST',[
 	['Land_fort_bagfence_long',		[-3.5, -1.5, 0],0],		//--- Sandbag south-west screen
 	['Land_fort_bagfence_long',		[0, -3.0, 0],	0],		//--- Sandbag south screen
 	['Land_fort_bagfence_corner',	[-3.5, -3.0, 0],270],	//--- SW corner sandbag
-	//--- Hedgehog tank traps on the open south approach.
-	['Hedgehog',					[-5.5, -4.5, 0],0],		//--- Tank trap SW
-	['Hedgehog',					[5.5, -4.5, 0],	0],		//--- Tank trap SE
-	//--- Razorwire arcs closing the south and far perimeter.
-	['Fort_RazorWire',				[0, -7.0, 0],	0],		//--- Razorwire south centre
+	//--- HESCO 5x outer mini-ring (WDDM pass) — open south gate gap at y=-13.
+	['Base_WarfareBBarrier5x',		[-6, 13, 0],	0],		//--- Rear wall left
+	['Base_WarfareBBarrier5x',		[6, 13, 0],		0],		//--- Rear wall right
+	['Base_WarfareBBarrier5x',		[-13, 6, 0],	90],	//--- West wall north
+	['Base_WarfareBBarrier5x',		[-13, -6, 0],	90],	//--- West wall south
+	['Base_WarfareBBarrier5x',		[13, 6, 0],		90],	//--- East wall north
+	['Base_WarfareBBarrier5x',		[13, -6, 0],	90],	//--- East wall south
+	//--- Hedgehog tank traps on the open south approach (gate flanks).
+	['Hedgehog',					[-5.5, -11.0, 0],0],	//--- Tank trap SW
+	['Hedgehog',					[5.5, -11.0, 0],0],		//--- Tank trap SE
+	//--- Razorwire arc closing the far south perimeter.
+	['Fort_RazorWire',				[0, -13.0, 0],	0],		//--- Razorwire south centre
 	['Land_Campfire',				[-7.0, 4.5, 0],	0]		//--- Operator position / lamp (west)
-]];
+];
+if (WF_A2_Arrowhead) then {
+	_c = _c + [['Land_Fort_Watchtower_EP1',[11, 11, 0],315]];	//--- OA corner tower (rear-right)
+} else {
+	_c = _c + [['Land_Fort_Watchtower',[11, 11, 0],315]];		//--- A2/CO corner tower (rear-right)
+};
+missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_EAST', _c];
 
 //--- Shielded HQ walls (WDDM: hq_concrete_walk_exit), tight funnel layout from PR8 live test.
 missionNamespace setVariable ['WFBE_NEURODEF_HEADQUARTERS_WALLS',[
@@ -356,8 +549,10 @@ missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_EAST',[
 // Classname confidence notes:
 //   Land_HBarrier_large      — HIGH (used extensively in defense templates above).
 //   Land_HBarrier5           — HIGH (used in COMMANDCENTER_WALLS template above).
-//   FlagCarrierUSA           — HIGH (~90%): standard US flag prop in A2OA USMC content.
-//   FlagCarrierRUS           — MEDIUM (~75%): RU flag variant; substitute FlagCarrierCDF if absent.
+//   FlagCarrierGUE           — PROVEN: live camp flag on this COMBINEDOPS_W server
+//                              (CombinedOps_W.sqf:6 / Vanilla.sqf:6). Replaced the
+//                              previously-unverified FlagCarrierUSA / FlagCarrierRU,
+//                              which were referenced ONLY in this file (no content registry).
 //   USBasicAmmunitionBox_EP1 — HIGH (confirmed in CBR template above).
 //   TKBasicAmmunitionBox_EP1 — HIGH (confirmed in CBR template above).
 //   Land_CamoNetB_NATO       — HIGH (confirmed in CBR template above).
@@ -368,75 +563,117 @@ missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_EAST',[
 //   Land_HBarrier5           — HIGH (from COMMANDCENTER_WALLS above).
 //=============================================================================
 
-//--- WEST: US Federal Reserve — HBarrier ring with gap, US flag, NATO camo net, ammo crates, sandags, lights.
-missionNamespace setVariable ['WFBE_NEURODEF_BANK_WEST',[
-	//--- North perimeter HBarrier wall (solid).
-	['Land_HBarrier_large',		[-14, 18, 0],	0],		//--- North wall left
-	['Land_HBarrier_large',		[-6, 18, 0],	0],		//--- North wall centre-left
-	['Land_HBarrier_large',		[2, 18, 0],		0],		//--- North wall centre-right
-	['Land_HBarrier_large',		[10, 18, 0],	0],		//--- North wall right
-	//--- West perimeter HBarrier wall (solid).
-	['Land_HBarrier_large',		[-18, 10, 0],	90],	//--- West wall north
-	['Land_HBarrier_large',		[-18, 2, 0],	90],	//--- West wall mid
-	['Land_HBarrier_large',		[-18, -6, 0],	90],	//--- West wall south
-	//--- East perimeter HBarrier wall (solid).
-	['Land_HBarrier_large',		[18, 10, 0],	90],	//--- East wall north
-	['Land_HBarrier_large',		[18, 2, 0],		90],	//--- East wall mid
-	['Land_HBarrier_large',		[18, -6, 0],	90],	//--- East wall south
-	//--- South wall with entrance gap in centre (infantry + satchel raidable).
-	['Land_HBarrier_large',		[-14, -18, 0],	0],		//--- South wall left
-	['Land_HBarrier_large',		[10, -18, 0],	0],		//--- South wall right (gap at centre ≈ 8 m wide)
-	//--- US flag pole — front-right.
-	['FlagCarrierUSA',			[12, -15, 0],	180],	//--- US flag near entrance
-	//--- NATO camo net over NW corner.
-	['Land_CamoNetB_NATO',		[-12, 14, 0],	270],	//--- Camo net NW
-	//--- Ammo/supply crates inside compound (east side).
-	['USBasicAmmunitionBox_EP1',	[10, 6, 0],		0],		//--- Supply crate
-	['USBasicAmmunitionBox_EP1',	[12, 6, 0],		0],		//--- Second supply crate
-	//--- Sandbag guard posts at entrance corners.
-	['Land_fort_bagfence_long',	[-4, -14, 0],	90],	//--- Entrance left sandbag
-	['Land_fort_bagfence_long',	[4, -14, 0],	90],	//--- Entrance right sandbag
-	//--- Razorwire perimeter outside wall south flanks.
-	['Fort_RazorWire',			[-16, -19, 0],	0],		//--- SW approach wire
-	['Fort_RazorWire',			[14, -19, 0],	0],		//--- SE approach wire
-	//--- Campfire/light for operator ambience.
-	['Land_Campfire',			[-15, 15, 0],	0]		//--- NW corner light
-]];
+//=============================================================================
+// BANK COMPOSITION DRESSING — task 27 WDDM rework (Bank is the ONLY one of the 4
+//   reskin targets the AI commander actually builds — AI_Commander_Base.sqf:184-192,
+//   confirmed live x4). Upgraded from the plain HBarrier box to the same WDDM
+//   "floodlit walled compound" aesthetic the Reserve/ArtyRadar reskin used:
+//   a full HESCO 10x perimeter ring with a south gate gap, two front-corner
+//   watchtowers, a central illuminant tower, and a gated entrance — keeping the
+//   bank-identity props (faction flag, camo net, supply crates, sandbags, wire).
+//
+//   CLASSNAME DISCIPLINE: every class below is VALIDATED — already spawned by an
+//   existing template in THIS mission file:
+//     Base_WarfareBBarrier10x        — RESERVE_WALLS/RESERVE_WEST (l.81-84/183-190)
+//     Land_Fort_Watchtower_EP1       — RESERVE_WALLS/WEST (l.88/197), WF_A2_Arrowhead branch
+//     Land_Fort_Watchtower           — RESERVE_WALLS/WEST (l.90/199), A2/CO branch
+//     Land_Ind_IlluminantTower       — RESERVE_WALLS/WEST (l.85/192)
+//     Land_CncBlock_Stripes — ARTILLERYRADAR/Bank gate furniture (proven; replaced unverified Land_BarGate2)
+//     RoadCone / Sign_Danger         — ARTILLERYRADAR gate (l.65-66/140-142)
+//     FlagCarrierGUE, Land_CamoNetB_NATO/EAST, US/TKBasicAmmunitionBox_EP1,
+//     Land_fort_bagfence_long, Fort_RazorWire, Land_Campfire — bank-identity props (prior BANK_).
+//   Footprint ~28 x 24 m (±14 X, ±12 Y) HESCO ring — Bank classname is now
+//   Land_fortified_nest_big_EP1 (~16x16 fortified compound, was Land_Mil_hangar_EP1),
+//   so the ring was tightened from ±24X/±18Y to hug the smaller model. Walls are skipped (MediumSite.sqf:160-166).
+//   Cosmetic / one-time spawn / 0-AI → STANDING GUARDRAIL not engaged (no unit inserted).
+//=============================================================================
 
-//--- EAST: Bank Rossii — HBarrier ring with entrance gap, RU flag, EAST camo net, TK crates.
-missionNamespace setVariable ['WFBE_NEURODEF_BANK_EAST',[
-	//--- North perimeter HBarrier wall (solid).
-	['Land_HBarrier_large',		[-14, 18, 0],	0],		//--- North wall left
-	['Land_HBarrier_large',		[-6, 18, 0],	0],		//--- North wall centre-left
-	['Land_HBarrier_large',		[2, 18, 0],		0],		//--- North wall centre-right
-	['Land_HBarrier_large',		[10, 18, 0],	0],		//--- North wall right
-	//--- West perimeter HBarrier wall (solid).
-	['Land_HBarrier_large',		[-18, 10, 0],	90],	//--- West wall north
-	['Land_HBarrier_large',		[-18, 2, 0],	90],	//--- West wall mid
-	['Land_HBarrier_large',		[-18, -6, 0],	90],	//--- West wall south
-	//--- East perimeter HBarrier wall (solid).
-	['Land_HBarrier_large',		[18, 10, 0],	90],	//--- East wall north
-	['Land_HBarrier_large',		[18, 2, 0],		90],	//--- East wall mid
-	['Land_HBarrier_large',		[18, -6, 0],	90],	//--- East wall south
-	//--- South wall with entrance gap in centre (infantry + satchel raidable).
-	['Land_HBarrier_large',		[-14, -18, 0],	0],		//--- South wall left
-	['Land_HBarrier_large',		[10, -18, 0],	0],		//--- South wall right (gap at centre ≈ 8 m wide)
-	//--- RU flag pole — front-right.
-	['FlagCarrierRU',			[12, -15, 0],	180],	//--- RU flag near entrance
-	//--- EAST camo net over NW corner.
-	['Land_CamoNetB_EAST',		[-12, 14, 0],	270],	//--- Camo net NW
-	//--- TK ammo/supply crates inside compound (east side).
-	['TKBasicAmmunitionBox_EP1',	[10, 6, 0],		0],		//--- Supply crate
-	['TKBasicAmmunitionBox_EP1',	[12, 6, 0],		0],		//--- Second supply crate
-	//--- Sandbag guard posts at entrance corners.
-	['Land_fort_bagfence_long',	[-4, -14, 0],	90],	//--- Entrance left sandbag
-	['Land_fort_bagfence_long',	[4, -14, 0],	90],	//--- Entrance right sandbag
-	//--- Razorwire perimeter outside wall south flanks.
-	['Fort_RazorWire',			[-16, -19, 0],	0],		//--- SW approach wire
-	['Fort_RazorWire',			[14, -19, 0],	0],		//--- SE approach wire
-	//--- Campfire/light for operator ambience.
-	['Land_Campfire',			[-15, 15, 0],	0]		//--- NW corner light
-]];
+//--- WEST: US Federal Reserve — floodlit walled compound, watchtowers + gated entrance, 0 AI.
+//--- Ring tightened from ±24X/±18Y to ±14X/±12Y to hug Land_fortified_nest_big_EP1 (~16x16).
+private '_b';
+_b = [
+	//--- HESCO 10x perimeter ring (gap centre on the front/south face, y=-12).
+	['Base_WarfareBBarrier10x',	[-7, 12, 0],	0],		//--- North wall left (rear)
+	['Base_WarfareBBarrier10x',	[7, 12, 0],		0],		//--- North wall right
+	['Base_WarfareBBarrier10x',	[-14, -5, 0],	90],	//--- West wall south
+	['Base_WarfareBBarrier10x',	[-14, 5, 0],	90],	//--- West wall north
+	['Base_WarfareBBarrier10x',	[14, -5, 0],	90],	//--- East wall south
+	['Base_WarfareBBarrier10x',	[14, 5, 0],		90],	//--- East wall north
+	['Base_WarfareBBarrier10x',	[-8, -12, 0],	0],		//--- South wall left (gate gap centre ≈ 5 m)
+	['Base_WarfareBBarrier10x',	[8, -12, 0],	0],		//--- South wall right
+	//--- Central illuminant tower — compound floodlight.
+	['Land_Ind_IlluminantTower',[0, 0, 0],		0],		//--- Compound floodlight (centre)
+	//--- US flag pole — front-right corner, faces entrance.
+	['FlagCarrierGUE',			[8, -10, 0],	180],	//--- Flag near gate (FlagCarrierGUE = proven live camp flag; was unverified FlagCarrierUSA)
+	//--- NATO camo net over NW corner (bank identity).
+	['Land_CamoNetB_NATO',		[-10, 9, 0],	270],	//--- Camo net NW
+	//--- Supply/vault crates inside compound (east side).
+	['USBasicAmmunitionBox_EP1',	[10, 4, 0],		0],		//--- Vault supply crate
+	['USBasicAmmunitionBox_EP1',	[11.5, 4, 0],	0],		//--- Second vault crate
+	//--- Sandbag guard posts flanking the gate gap.
+	['Land_fort_bagfence_long',	[-5, -10, 0],	90],	//--- Gate left sandbag
+	['Land_fort_bagfence_long',	[5, -10, 0],	90],	//--- Gate right sandbag
+	//--- Approach cones + danger sign at the entrance (south, y<-12).
+	['RoadCone',				[-1.5, -14, 0],	0],		//--- Approach cone left
+	['RoadCone',				[1.5, -14, 0],	0],		//--- Approach cone right
+	['Sign_Danger',				[5.5, -13, 0],	0],		//--- Checkpoint danger sign
+	//--- Razorwire perimeter outside the south flanks.
+	['Fort_RazorWire',			[-13, -13, 0],	0],		//--- SW approach wire
+	['Fort_RazorWire',			[11, -13, 0],	0],		//--- SE approach wire
+	//--- Campfire/operator light at the rear.
+	['Land_Campfire',			[-12, 10, 0],	0]		//--- NW corner light
+];
+if (WF_A2_Arrowhead) then {
+	_b = _b + [['Land_Fort_Watchtower_EP1',[-12, 10, 0],45],['Land_Fort_Watchtower_EP1',[12, 10, 0],315]];	//--- OA corner towers
+	_b = _b + [['Land_CncBlock_Stripes',[-1.6, -12.6, 0],0],['Land_CncBlock_Stripes',[1.6, -11.4, 0],0]];	//--- OA: jersey chicane in the gate gap
+} else {
+	_b = _b + [['Land_Fort_Watchtower',[-12, 10, 0],45],['Land_Fort_Watchtower',[12, 10, 0],315]];			//--- A2/CO corner towers
+	_b = _b + [['Land_CncBlock_Stripes',[-1.6, -12.6, 0],0],['Land_CncBlock_Stripes',[1.6, -11.4, 0],0]];	//--- A2/CO: jersey chicane in the gate gap (was unverified Land_BarGate2; CncBlock proven)
+};
+missionNamespace setVariable ['WFBE_NEURODEF_BANK_WEST', _b];
+
+//--- EAST: Bank Rossii — floodlit walled compound, watchtowers + gated entrance, 0 AI (identical layout, RU props).
+//--- Ring tightened from ±24X/±18Y to ±14X/±12Y to hug Land_fortified_nest_big_EP1 (~16x16).
+_b = [
+	//--- HESCO 10x perimeter ring (gap centre on the front/south face, y=-12).
+	['Base_WarfareBBarrier10x',	[-7, 12, 0],	0],		//--- North wall left (rear)
+	['Base_WarfareBBarrier10x',	[7, 12, 0],		0],		//--- North wall right
+	['Base_WarfareBBarrier10x',	[-14, -5, 0],	90],	//--- West wall south
+	['Base_WarfareBBarrier10x',	[-14, 5, 0],	90],	//--- West wall north
+	['Base_WarfareBBarrier10x',	[14, -5, 0],	90],	//--- East wall south
+	['Base_WarfareBBarrier10x',	[14, 5, 0],		90],	//--- East wall north
+	['Base_WarfareBBarrier10x',	[-8, -12, 0],	0],		//--- South wall left (gate gap centre ≈ 5 m)
+	['Base_WarfareBBarrier10x',	[8, -12, 0],	0],		//--- South wall right
+	//--- Central illuminant tower — compound floodlight.
+	['Land_Ind_IlluminantTower',[0, 0, 0],		0],		//--- Compound floodlight (centre)
+	//--- RU flag pole — front-right corner, faces entrance.
+	['FlagCarrierGUE',			[8, -10, 0],	180],	//--- Flag near gate (FlagCarrierGUE = proven live camp flag; was unverified FlagCarrierRU)
+	//--- EAST camo net over NW corner (bank identity).
+	['Land_CamoNetB_EAST',		[-10, 9, 0],	270],	//--- Camo net NW
+	//--- TK supply/vault crates inside compound (east side).
+	['TKBasicAmmunitionBox_EP1',	[10, 4, 0],		0],		//--- Vault supply crate
+	['TKBasicAmmunitionBox_EP1',	[11.5, 4, 0],	0],		//--- Second vault crate
+	//--- Sandbag guard posts flanking the gate gap.
+	['Land_fort_bagfence_long',	[-5, -10, 0],	90],	//--- Gate left sandbag
+	['Land_fort_bagfence_long',	[5, -10, 0],	90],	//--- Gate right sandbag
+	//--- Approach cones + danger sign at the entrance (south, y<-12).
+	['RoadCone',				[-1.5, -14, 0],	0],		//--- Approach cone left
+	['RoadCone',				[1.5, -14, 0],	0],		//--- Approach cone right
+	['Sign_Danger',				[5.5, -13, 0],	0],		//--- Checkpoint danger sign
+	//--- Razorwire perimeter outside the south flanks.
+	['Fort_RazorWire',			[-13, -13, 0],	0],		//--- SW approach wire
+	['Fort_RazorWire',			[11, -13, 0],	0],		//--- SE approach wire
+	//--- Campfire/operator light at the rear.
+	['Land_Campfire',			[-12, 10, 0],	0]		//--- NW corner light
+];
+if (WF_A2_Arrowhead) then {
+	_b = _b + [['Land_Fort_Watchtower_EP1',[-12, 10, 0],45],['Land_Fort_Watchtower_EP1',[12, 10, 0],315]];	//--- OA corner towers
+	_b = _b + [['Land_CncBlock_Stripes',[-1.6, -12.6, 0],0],['Land_CncBlock_Stripes',[1.6, -11.4, 0],0]];	//--- OA: jersey chicane in the gate gap
+} else {
+	_b = _b + [['Land_Fort_Watchtower',[-12, 10, 0],45],['Land_Fort_Watchtower',[12, 10, 0],315]];			//--- A2/CO corner towers
+	_b = _b + [['Land_CncBlock_Stripes',[-1.6, -12.6, 0],0],['Land_CncBlock_Stripes',[1.6, -11.4, 0],0]];	//--- A2/CO: jersey chicane in the gate gap (was unverified Land_BarGate2; CncBlock proven)
+};
+missionNamespace setVariable ['WFBE_NEURODEF_BANK_EAST', _b];
 
 //--- Anchor (build-menu placeholder classname) -> composition template map.
 // [anchorClassname, baseTemplateVar, factionSpecific?]  (factionSpecific appends _WEST / _EAST at build time)

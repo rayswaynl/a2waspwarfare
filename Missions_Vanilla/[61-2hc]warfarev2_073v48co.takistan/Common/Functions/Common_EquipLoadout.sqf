@@ -15,8 +15,9 @@ if (count _ammo > _cap) then {
 	_ammo = _capped;
 };
 
-{_unit addMagazine _x} forEach _ammo;
+//--- Weapons FIRST so each magazine binds to a matching muzzle (e.g. AT13 -> MetisLauncher); otherwise OA throws "Cannot use magazine X in muzzle Y".
 {_unit addWeapon _x} forEach _weapons;
+{_unit addMagazine _x} forEach _ammo;
 
 _use = primaryWeapon _unit;
 if (_use == "") then {

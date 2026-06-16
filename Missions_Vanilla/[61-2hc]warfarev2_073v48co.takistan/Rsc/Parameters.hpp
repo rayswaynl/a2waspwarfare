@@ -256,13 +256,13 @@
 		title = "$STR_WF_PARAMETER_BodiesTimeout";
 		values[] = {60,120,180,240,300,600,900,1200,1800,2400,3000,3600};
 		texts[] = {"1 Minute","2 Minutes","3 Minutes","4 Minutes","5 Minutes","10 Minutes","15 Minutes","20 Minutes","30 Minutes","40 Minutes","50 Minutes","1 Hour"};
-		default = 240;
+		default = 120; //--- B35: was 240; lobby wreck-timeout default lowered to match the restored TrashObject split (~120s effective). Operators can still raise it.
 	};
 	class WFBE_C_UNITS_EMPTY_TIMEOUT {
 		title = "$STR_WF_PARAMETER_VehicleDelay";
 		values[] = {60,120,180,240,300,600,900,1200,1800,2400,3000,3600};
 		texts[] = {"1 Minute","2 Minutes","3 Minutes","4 Minutes","5 Minutes","10 Minutes","15 Minutes","20 Minutes","30 Minutes","40 Minutes","50 Minutes","1 Hour"};
-		default = 600;
+		default = 300; //--- claude-gaming 2026-06-13: 10min->5min. Despawn abandoned empty AI vehicles faster to trim the ~161-vehicle count (network/sim load); supply/medevac trucks stay exempt at 2x. Reversible.
 	};
 	class WFBE_C_GAMEPLAY_FAST_TRAVEL {
 		title = "$STR_WF_PARAMETER_FastTravel";
@@ -564,6 +564,23 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		// Marty: Keep the audit opt-in while the client commander/AFK regressions are being stabilized.
 		default = 0;
+	};
+
+	// 2026-06-15 (Net_2 request): per-client FPS telemetry for the staged-deploy day/night perf study.
+	// When ON, each player client periodically reports its avg/min FPS to the server, which logs each
+	// sample tagged with the day/night cycle mode + in-game time so day-vs-night and cycle ON-vs-OFF
+	// can be compared from the RPT. Off by default; flip it in the admin lobby for the data-gathering run.
+	class WFBE_C_CLIENT_FPS_REPORT {
+		title = "Client FPS telemetry";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_CLIENT_FPS_REPORT_INTERVAL {
+		title = "Client FPS telemetry interval";
+		values[] = {15,30,60,120,300};
+		texts[] = {"15 Seconds","30 Seconds","60 Seconds","2 Minutes","5 Minutes"};
+		default = 60;
 	};
 
 };

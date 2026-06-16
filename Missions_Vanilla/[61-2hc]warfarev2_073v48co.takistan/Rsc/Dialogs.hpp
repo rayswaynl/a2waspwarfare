@@ -254,138 +254,6 @@ class WFBE_VoteMenu {
 			style = ST_RIGHT;
 			text = $STR_WF_VOTING_TimeLeft;
 		};
-		//--- Marty 2026-06-12: "More votes..." entry — opens the extended voting page (idd 25000).
-		class CA_MoreVotes_Button : RscButton_Main {
-			idc = 500104;
-			x = 0.273 + 0.35;
-			y = 0.134 + 0.762;
-			w = 0.13;
-			h = 0.037;
-			text = $STR_WF_VOTING_MoreVotes;
-			sizeEx = 0.022;
-			action = "WFBE_MenuAction = 2";
-		};
-	};
-};
-
-//--- Marty: Voting page — 5 vote types (idd 25000).
-class WFBE_VotingMenu {
-	movingEnable = 1;
-	idd = 25000;
-	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_Voting.sqf'";
-
-	class controlsBackground {
-		class CA_Background : RscText {
-			x = 0.273;
-			y = 0.104;
-			w = 0.5;
-			h = 0.83;
-			colorBackground[] = WFBE_Background_Color;
-			moving = 1;
-		};
-		class CA_Background_Header : CA_Background {
-			x = 0.273;
-			y = 0.104;
-			w = 0.5;
-			h = 0.06;
-			colorBackground[] = WFBE_Background_Color_Header;
-		};
-		class CA_Background_Footer : CA_Background {
-			x = 0.273;
-			y = 0.104 + 0.79;
-			w = 0.5;
-			h = 0.04;
-			colorBackground[] = WFBE_Background_Color_Sub;
-		};
-		class CA_Menu_Title : RscText_Title {
-			x = 0.28;
-			y = 0.104 + 0.01;
-			w = 0.48;
-			text = $STR_WF_VOTE_Title;
-			colorText[] = WFBE_Menu_Title_Color;
-		};
-		class CA_Quit_Button : RscButton_Main {
-			x = 0.273 + 0.45;
-			y = 0.104 + 0.0075;
-			w = 0.045;
-			h = 0.045;
-			text = "X";
-			shadow = 2;
-			sizeEx = 0.03;
-			onButtonClick = "closeDialog 0;";
-		};
-	};
-
-	class controls {
-		//--- Listbox: one row per vote type.
-		class CA_VotingList : RscListBox {
-			idc = 25100;
-			x = 0.28;
-			y = 0.104 + 0.07;
-			w = 0.489;
-			h = 0.38;
-			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
-		};
-		//--- Live tally / status line.
-		class CA_Status : RscText {
-			idc = 25101;
-			x = 0.28;
-			y = 0.104 + 0.465;
-			w = 0.489;
-			h = 0.04;
-			sizeEx = 0.026;
-			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
-			shadow = 2;
-		};
-		//--- Progress / countdown line.
-		class CA_Countdown : RscText {
-			idc = 25102;
-			x = 0.28;
-			y = 0.104 + 0.512;
-			w = 0.489;
-			h = 0.04;
-			sizeEx = 0.024;
-			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
-			shadow = 2;
-		};
-		//--- Cooldown notice line (shown when a type is on cooldown).
-		class CA_Cooldown : RscText {
-			idc = 25103;
-			x = 0.28;
-			y = 0.104 + 0.559;
-			w = 0.489;
-			h = 0.04;
-			sizeEx = 0.022;
-			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
-			shadow = 2;
-		};
-		//--- Start Vote / Vote YES button.
-		//--- RscButton_Main (plain RscButton type 1) so ctrlSetText works at runtime in A2 OA.
-		//--- RscShortcutButton (type 16) ignores ctrlSetText after dialog open.
-		class CA_ActionButton : RscButton_Main {
-			idc = 25104;
-			x = 0.28;
-			y = 0.104 + 0.62;
-			w = 0.489;
-			h = 0.06;
-			text = $STR_WF_VOTE_StartVote;
-			onButtonClick = "WFBE_MenuAction = 1";
-		};
-		//--- Footer status (cooldown or "voting in progress").
-		class CA_Footer : RscText {
-			idc = 25105;
-			x = 0.28;
-			y = 0.104 + 0.793;
-			w = 0.489;
-			h = 0.032;
-			sizeEx = 0.020;
-			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
-			shadow = 2;
-		};
 	};
 };
 
@@ -1384,8 +1252,6 @@ class WF_Menu {
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
 		};
-		//--- Marty 2026-06-12: CA_Vote_Button (idc 11020 / MenuAction 20) removed — entry point
-		//---   moved inside WFBE_VoteMenu (idd 500000) as "More votes..." (idc 500104).
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
 			idc = 11021;
@@ -1409,6 +1275,18 @@ class WF_Menu {
 			sizeEx = 0.026;
 			action = "MenuAction = 22";
 			tooltip = "Earplugs In/Out (lowers game volume)";
+		};
+		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
+		class CA_FPS_Button : RscButton_Main {
+			idc = 11023;
+			x = 0.503;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "FPS";
+			sizeEx = 0.026;
+			action = "MenuAction = 23";
+			tooltip = "Auto VD / target FPS";
 		};
 	};
 };
@@ -3465,6 +3343,7 @@ class WFBE_SkinSelectorMenu {
 			y = 0.08 + 0.07;
 			w = 0.22;
 			h = 0.65;
+			rowHeight = 0.03;
 			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
 			onLBSelChanged = "";
 		};
@@ -3535,6 +3414,139 @@ class WFBE_SkinSelectorMenu {
 			sizeEx = 0.026;
 			text = $STR_WF_SkinSelector_Skip;
 			action = "WFBE_MenuAction = 2";
+		};
+	};
+};
+
+//--- Adaptive View-Distance / Target-FPS picker (idd 28000). Opened from the WF-menu "FPS" button.
+//--- Labels (idc 28001 toggle, 28006 status) are set live by WASP\actions\FPSPicker\FPSPicker_Open.sqf.
+class WFBE_FPSPickerMenu {
+	movingEnable = 1;
+	idd = 28000;
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.32;
+			y = 0.30;
+			w = 0.36;
+			h = 0.40;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			y = 0.30 + 0.36;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		class CA_Border : RscText {
+			x = 0.32;
+			y = 0.30 + 0.06;
+			w = 0.36;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		//--- Header title.
+		class CA_Title : RscButton_Main {
+			idc = 28008;
+			x = 0.325;
+			y = 0.30 + 0.012;
+			w = 0.30;
+			h = 0.038;
+			text = "VD / FPS";
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		//--- Close (X).
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.32 + 0.315;
+			y = 0.30 + 0.0075;
+			w = 0.045;
+			h = 0.045;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 9;";
+		};
+		//--- Auto-VD on/off toggle (text set at runtime, idc 28001).
+		class CA_Toggle : RscButton_Main {
+			idc = 28001;
+			x = 0.345;
+			y = 0.30 + 0.085;
+			w = 0.31;
+			h = 0.05;
+			sizeEx = 0.028;
+			text = "Auto-VD: OFF";
+			action = "WFBE_MenuAction = 1";
+		};
+		//--- Explanatory line.
+		class CA_Status : RscText {
+			idc = 28002;
+			x = 0.345;
+			y = 0.30 + 0.145;
+			w = 0.31;
+			h = 0.03;
+			sizeEx = 0.020;
+			text = "Adapts VD to hold your target FPS.";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Target-FPS preset buttons.
+		class CA_FPS45 : RscButton_Main {
+			idc = 28003;
+			x = 0.345;
+			y = 0.30 + 0.20;
+			w = 0.095;
+			h = 0.05;
+			sizeEx = 0.026;
+			text = "45 FPS";
+			action = "WFBE_MenuAction = 2";
+		};
+		class CA_FPS50 : CA_FPS45 {
+			idc = 28004;
+			x = 0.4525;
+			text = "50 FPS";
+			action = "WFBE_MenuAction = 3";
+		};
+		class CA_FPS60 : CA_FPS45 {
+			idc = 28005;
+			x = 0.56;
+			text = "60 FPS";
+			action = "WFBE_MenuAction = 4";
+		};
+		//--- Current state (set at runtime, idc 28006).
+		class CA_Current : RscText {
+			idc = 28006;
+			x = 0.345;
+			y = 0.30 + 0.265;
+			w = 0.31;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Done / close.
+		class CA_Done : RscButton_Main {
+			idc = 28007;
+			x = 0.345;
+			y = 0.30 + 0.325;
+			w = 0.31;
+			h = 0.04;
+			sizeEx = 0.026;
+			text = "Close";
+			action = "WFBE_MenuAction = 9";
 		};
 	};
 };

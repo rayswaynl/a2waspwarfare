@@ -44,11 +44,13 @@ while {!WFBE_GameOver} do {
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 				//--- PERF dedupe REVERTED (caused capture-detection wedges twice); back to the proven
 				//--- direct scan. The server_town_ai cache-write remains but is simply unread now.
+				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
 				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight 10;
 
 				_west = west countSide _objects;
 				_east = east countSide _objects;
 				_resistance = resistance countSide _objects;
+				["town_capture_scan", diag_tickTime - _perfT0PA] call PerformanceAudit_Record; //--- FPS PROFILING (claude-gaming): self-gated, server-side, ~0.01ms overhead
 
 				_activeEnemies = switch (_sideID) do {
 					case WFBE_C_WEST_ID: {_east + _resistance};
@@ -237,6 +239,15 @@ while {!WFBE_GameOver} do {
 			};
 			// END WASPSTAT CAPTURE (Task 10)
 
+			//--- AICOMSTAT TOWN_FLIP (claude-gaming 2026-06-15): the war-narrative capture line on the
+			//--- AICOMSTAT war ledger - "at minute M, <newSide> took <town> from <oldSide>". Distinct from
+			//--- WASPSTAT|CAPTURE above (that is gated on WFBE_C_STATLOG, lives on the player-stats seq
+			//--- stream, and carries raw numeric sideIDs) and from FIRST_TOWN (once per side per round).
+			//--- Ungated, readable side names + minute, on the same proven if(_captured) flip cadence.
+			//--- Fires exactly once per real town/camp ownership flip - no loop, no PFH, no new scan.
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _newSide) + "|" + str (round (time / 60)) + "|TOWN_FLIP|town=" + (_location getVariable ["name","unknown"]) + "|from=" + (str _side) + "|to=" + (str _newSide) + "|fromID=" + str _sideID + "|toID=" + str _newSID);
+			// END AICOMSTAT TOWN_FLIP
+
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			//--- Also clear episode latch so the new owner's activation episode is not blocked.
 			_location setVariable ["wfbe_active", false];
@@ -281,6 +292,16 @@ while {!WFBE_GameOver} do {
 					};
 				};
 			} else {
+				//--- B36 (Ray 2026-06-15): capturing a GUER town as WEST/EAST grants NO inherited statics -
+				//--- delete the GUER-era emplacements so the captor cannot turtle behind them. GUER keeps its
+				//--- statics (recapture re-spawns them via ManageTownDefenses; the WEST/EAST path never calls it).
+				if (_sideID == WFBE_C_GUER_ID) then {
+					{
+						private "_def"; _def = _x getVariable "wfbe_defense";
+						if (!isNil "_def" && {!isNull _def}) then {deleteVehicle _def};
+						_x setVariable ["wfbe_defense", nil];
+					} forEach (_location getVariable ["wfbe_town_defenses", []]);
+				};
 				//--- Owned (west/east) town: lazy garrison per FINAL spec.
 				//--- Step 2: T+60s spawn exactly 1 owner-side infantry squad as mop-up detail.
 				//--- Step 3: Squad auto-despawns when no GUER/resistance detected for 2 consecutive 30s scans.

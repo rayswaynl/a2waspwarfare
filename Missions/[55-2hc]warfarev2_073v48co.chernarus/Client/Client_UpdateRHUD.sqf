@@ -132,14 +132,14 @@ _RHUDUpdateServerFPSRow = {
 		_hudFPSColor = [0, 1, 0, 1];
 		if (_clientFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 		if (_clientFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-		[14, format ["%1 / ...", _clientFPS]] call _RHUDSetText;
+		[14, format ["%1 / ...  VD %2", _clientFPS, round viewDistance]] call _RHUDSetText;
 		[14, _hudFPSColor] call _RHUDSetColor;
 	};
 
 	_hudFPSColor = [0, 1, 0, 1];
 	if (_clientFPS < 40 || _serverFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 	if (_clientFPS < 20 || _serverFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-	[14, format ["%1 / %2", _clientFPS, _serverFPS]] call _RHUDSetText;
+	[14, format ["%1 / %2  VD %3", _clientFPS, _serverFPS, round viewDistance]] call _RHUDSetText;
 	[14, _hudFPSColor] call _RHUDSetColor;
 };
 

@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_ordered"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered"];
 
 _side = _this;
 _sideText = str _side;
@@ -72,7 +72,16 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 	if (_canProduce && {({alive _x} count (units _team)) > 0}) then {
 		_hqP = (_side) Call WFBE_CO_FNC_GetSideHQ;
 		if (!isNull _hqP) then {
-			if ((leader _team) distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])) then {_canProduce = false};
+			_ldr = leader _team;
+			if (_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])) then {
+				//--- FORWARD-REINFORCE: a deep team beyond base range may still refill if its
+				//--- leader is hugging an owned town (front-line resupply), so spearheads stop
+				//--- bleeding out far from HQ. The refill spawn point is pulled forward below.
+				_nearFwd = false;
+				_fwdR = missionNamespace getVariable ["WFBE_C_AICOM_FWD_REINFORCE_RANGE", 500];
+				{ if (((_x getVariable "sideID") == _myID) && {(_ldr distance _x) < _fwdR}) exitWith {_nearFwd = true} } forEach towns;
+				if (!_nearFwd) then {_canProduce = false};
+			};
 		};
 	};
 	if (_canProduce) then {
@@ -80,11 +89,22 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 		_want = (count _template) min (missionNamespace getVariable "WFBE_C_AI_MAX");
 		_cur  = {alive _x} count (units _team);
 
+		//--- RANK-2 health-gated refill (claude-gaming 2026-06-13): a critically-weak or JUST-FOUNDED server-local
+		//--- team (alive < CRITICAL_STRENGTH of template) is rushed to FULL this cycle (effective batch = full
+		//--- deficit) so server-local teams form WHOLE instead of dribbling 1-3/cycle, and depleted teams stop
+		//--- lingering as 2-man remnants (cuts groups + drains the stuck war chest). Healthy teams keep the small
+		//--- batch. STILL bounded by the funds gate + factory + the per-side AI cap, so no spawn runaway; HC teams
+		//--- already skipped above. Set WFBE_C_AICOM_CRITICAL_STRENGTH <= 0 to disable (revert to flat batch cap).
+		_effBatch = _batchCap;
+		if (_want > 0 && {(_cur / _want) < (missionNamespace getVariable ["WFBE_C_AICOM_CRITICAL_STRENGTH", 0.30])}) then {
+			_effBatch = _want - _cur;
+		};
+
 		if (_cur < _want) then {
-			//--- V0.6.7: order up to batch cap units per team this cycle (deficit-capped).
+			//--- V0.6.7: order up to batch cap units per team this cycle (deficit-capped; RANK-2 raises it for weak teams).
 			_batchOrdered = 0;
 			_ordered = []; //--- E7: per-class pending-order tally (reset per team)
-			while {_cur < _want && _batchOrdered < _batchCap} do {
+			while {_cur < _want && _batchOrdered < _effBatch} do {
 				//--- First template classname the team is still short on.
 				_toBuild = "";
 				{
@@ -120,15 +140,30 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				_factories = [_side, _kind, _buildings] Call GetFactories;
 				if (count _factories == 0) exitWith {};
 
+				//--- FORWARD-REINFORCE: spawn the refill at the factory nearest this team's
+				//--- leader. A forward team hugging a captured town refills from that town's
+				//--- factory (resupplies the front) instead of a lone unit trekking from the
+				//--- rear. Null leader (wiped team) falls back to factory[0] = reform at base.
+				_facObj = _factories select 0;
+				_ldr = leader _team;
+				if (!isNull _ldr) then {
+					{ if ((_x distance _ldr) < (_facObj distance _ldr)) then {_facObj = _x} } forEach _factories;
+				};
+
 				_funds = (_side) Call GetAICommanderFunds;
 				if (_funds < _price) exitWith {}; //--- Cannot afford next unit; stop batch.
 
-				[_side, -_price] Call ChangeAICommanderFunds;
+				//--- W15 BLACK MARKET (claude-gaming 2026-06-13): honor a live 50% discount flag set by the wildcard deck.
+					private ["_w15Key","_w15Exp","_priceCharged"];
+					_w15Key = Format ["wfbe_aicom_discount_%1", _sideText];
+					_w15Exp = missionNamespace getVariable _w15Key;
+					_priceCharged = if (!isNil "_w15Exp" && {_w15Exp > time}) then {round (_price * 0.5)} else {_price};
+					[_side, -_priceCharged] Call ChangeAICommanderFunds;
 				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
 				_id = [floor (random 1000000)];
 				_q = (_team getVariable ["wfbe_queue", []]) + [_id];
 				_team setVariable ["wfbe_queue", _q];
-				[_id, (_factories select 0), _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
+				[_id, _facObj, _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
 

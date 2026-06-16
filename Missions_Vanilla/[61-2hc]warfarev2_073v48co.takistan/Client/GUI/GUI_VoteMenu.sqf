@@ -28,13 +28,6 @@ while {alive player && dialog} do {
 
 	for '_i' from 0 to WFBE_Client_Teams_Count do {_voteArray set [_i , 0]};
 
-	//--- "More votes..." button — open the extended voting page (idd 25000).
-	if (WFBE_MenuAction == 2) then {
-		WFBE_MenuAction = -1;
-		closeDialog 0;
-		createDialog "WFBE_VotingMenu";
-	};
-
 	//--- The client has voted for x.
 	if (WFBE_MenuAction == 1) then {
 		WFBE_MenuAction = -1;

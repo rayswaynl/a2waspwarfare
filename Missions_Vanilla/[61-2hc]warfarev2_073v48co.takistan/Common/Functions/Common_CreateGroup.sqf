@@ -34,7 +34,7 @@ if (_cnt >= 140) then {
 		if (side _x == _side) then {
 			_isPersistent = _x getVariable "wfbe_persistent";
 			if (isNil "_isPersistent") then { _isPersistent = false };
-			_liveCount = { alive _x } count (units _x);
+			_liveCount = count (units _x); //--- true emptiness only: A2 deleteGroup no-ops on a group still holding (even dead) units; {alive} would flag unreapable corpse-only groups and inflate the reap count
 			if (!_isPersistent && { _liveCount == 0 }) then {
 				_gcCands = _gcCands + [_x];
 			};

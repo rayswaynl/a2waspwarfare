@@ -56,6 +56,21 @@ if (isNull _unit) exitWith {
 
 _unit setSkill _skill;
 
+// Claude: weapon-backfill. Some specialist EP1 / crew classes come back from
+// createUnit with an EMPTY primary loadout (engine quirk), producing the
+// weaponless dismounts seen capturing towns. Re-apply the class's OWN config
+// loadout - faction/class-safe - but ONLY when it ended up with no rifle AND no
+// launcher, so it never touches intentionally pistol-only roles. Gameplay-
+// transparent: it can only ADD a weapon that should have been there.
+if (_unit isKindOf "Man" && {primaryWeapon _unit == "" && secondaryWeapon _unit == ""}) then {
+	private ["_cfgWeps", "_cfgMags"];
+	_cfgWeps = getArray (configFile >> "CfgVehicles" >> _type >> "weapons");
+	_cfgMags = getArray (configFile >> "CfgVehicles" >> _type >> "magazines");
+	{_unit addMagazine _x} forEach _cfgMags;
+	{if (!(_unit hasWeapon _x) && {!(_x in ["Throw", "Put"])}) then {_unit addWeapon _x}} forEach _cfgWeps;
+	["WARNING", Format ["Common_CreateUnit.sqf: weapon-backfill applied to weaponless [%1] (primary now [%2]).", _type, primaryWeapon _unit]] Call WFBE_CO_FNC_LogContent;
+};
+
 if(side _unit == east && !(_unit hasWeapon "NVGoggles")) then {
    _unit addWeapon "NVGoggles";
 };

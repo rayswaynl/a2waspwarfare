@@ -208,6 +208,13 @@ while {alive player && dialog} do {
 		};
 	};
 
+	//--- FPS / view-distance picker (re-open from WF menu footer).
+	if (MenuAction == 23) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		[] execVM "WASP\actions\FPSPicker\FPSPicker_Open.sqf";
+	};
+
 	//--- Help Menu
 	if (MenuAction == 13) exitWith { //added-spayker
 		MenuAction = -1;

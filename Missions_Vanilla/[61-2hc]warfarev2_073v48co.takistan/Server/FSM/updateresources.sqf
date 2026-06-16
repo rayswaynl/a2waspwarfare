@@ -19,6 +19,20 @@ if (_is == 3) then {
 
 while {!gameOver} do {
 
+	//--- B36.1 (Ray 2026-06-15): scale AI-commander CASH income INVERSELY to HUMAN player count. The team
+	//--- curve in AI_Commander_Teams.sqf fields the MOST teams at LOW pop, so the funding need is HIGHEST on
+	//--- a near-empty server. So the income boost is +BONUS per player UNDER the REF pop (highest at 0
+	//--- players, tapering to base income at REF+) - the MIRROR of a normal up-with-players scaler. Capped.
+	//--- + capped. Human count mirrors MonitorPlayerCount.sqf (isPlayer in allUnits minus live HCs).
+	private ["_pcN2","_hcN2","_pcMult","_baseMult"];
+	_pcN2 = {isPlayer _x} count allUnits;
+	_hcN2 = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+	_pcN2 = (_pcN2 - _hcN2) max 0;
+	_baseMult = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_MULT", 1.5];
+	_pcMult = _baseMult * (1 + ((if ((missionNamespace getVariable ["WFBE_C_AICOM_BANKING_VALVE", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_BONUS_VALVE", 0.045]} else {missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_BONUS", 0.06]}) * (((missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_REF", 10]) - _pcN2) max 0)));  //--- B36.1 INVERTED (Ray 2026-06-15): boost is +BONUS per player UNDER REF (default 10) so CASH income is HIGHEST at LOW pop (funds the 8-team curve flood), tapering to base at REF+ players. Was (* _pcN2) = boost-with-MORE-players; flipped to (* (REF-pc)).
+	_pcMult = _pcMult min (missionNamespace getVariable ["WFBE_C_AICOM_INCOME_MULT_MAX", 3.0]);
+
+
 	{
 		_logik = (_x) Call WFBE_CO_FNC_GetSideLogic;
 		_income = 0;
@@ -65,7 +79,7 @@ while {!gameOver} do {
 				} forEach (_logik getVariable "wfbe_teams");
 
 				if (isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) && _commander_enabled) then {
-					[_x, round(_income * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_MULT", 1.5]))] Call ChangeAICommanderFunds;
+					[_x, round(_income * _pcMult)] Call ChangeAICommanderFunds;
 				};
 			};
 
@@ -76,6 +90,22 @@ while {!gameOver} do {
 				[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds;
 			};
 
+		};
+
+		//--- TOWN-STALL FIX (funds-famine): AI-commander FUNDS must keep flowing even when the
+		//--- side's SUPPLY is at/over the cap. The supply-cap gate above correctly stops SUPPLY
+		//--- accumulation past the limit, but it ALSO suppressed the AI commander's funds income
+		//--- and stipend - so when the AI banked supply past the cap (it hoards supply), its funds
+		//--- drained to $0, it could no longer buy units, and the war stalled (towns stopped
+		//--- changing hands all night; AI stuck ~8 towns). Funds are a SEPARATE currency from
+		//--- supply, so top them up here whenever the cap suppressed them. Never synthesises supply.
+		if (_supply >= _supply_max_limit && {isNull(_x Call WFBE_CO_FNC_GetCommanderTeam)} && {_commander_enabled}) then {
+			_income = if (_is != 3) then {_supply} else {round(_supply * _incomeCoef)};
+			if (_is == 2) then {_income = round(_income / 2)};
+			if (_income > 0) then {
+				[_x, round(_income * _pcMult)] Call ChangeAICommanderFunds;
+			};
+			[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds;
 		};
 
 	} forEach WFBE_PRESENTSIDES;

@@ -1286,7 +1286,7 @@ class WF_Menu {
 			text = "FPS";
 			sizeEx = 0.026;
 			action = "MenuAction = 23";
-			tooltip = "Auto view-distance / target FPS";
+			tooltip = "Auto VD / target FPS";
 		};
 	};
 };
@@ -3459,7 +3459,7 @@ class WFBE_FPSPickerMenu {
 			y = 0.30 + 0.012;
 			w = 0.30;
 			h = 0.038;
-			text = "VIEW DISTANCE / FPS";
+			text = "VD / FPS";
 			sizeEx = 0.028;
 			colorBackground[] = {0, 0, 0, 0};
 			colorBackgroundFocus[] = {0, 0, 0, 0};
@@ -3498,7 +3498,7 @@ class WFBE_FPSPickerMenu {
 			w = 0.31;
 			h = 0.03;
 			sizeEx = 0.020;
-			text = "Adapts view distance to hold your target FPS.";
+			text = "Adapts VD to hold your target FPS.";
 			colorText[] = WFBE_Menu_Text_Color;
 			shadow = 2;
 		};

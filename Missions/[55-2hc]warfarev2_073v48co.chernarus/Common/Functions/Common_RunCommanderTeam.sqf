@@ -359,6 +359,14 @@ while {!WFBE_GameOver && _alive} do {
 						_uSide = _this select 2;
 						_uLdr  = leader _uTeam;
 						if (isNull _uLdr || {!alive _uLdr}) exitWith {};
+						//--- B37 (Ray 2026-06-16): log that the unstuck ACTION fired at this tier, so the
+						//--- strike -> fire -> recover lifecycle is visible (UNSTUCK_STRIKE -> UNSTUCK_FIRED ->
+						//--- next ASSAULT_STRANDED moved=).
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_FIRED|team=" + (str _uTeam) + "|tier=" + str _uTier);
+						//--- B37 RE-MOUNT (Ray's mechanized-infantry ask): any team member on foot but with a live,
+						//--- drivable assigned vehicle is ordered back in, so infantry that fell out during the stall
+						//--- actually rides to the objective instead of walking/idling.
+						{ if (alive _x && {vehicle _x == _x} && {!isNull (assignedVehicle _x)} && {alive (assignedVehicle _x)} && {canMove (assignedVehicle _x)}) then {[_x] orderGetIn true} } forEach (units _uTeam);
 						_uVeh = vehicle _uLdr;
 						//--- Tier 1: break a physical wedge on the lead hull.
 						if (!isNull _uVeh && {_uVeh != _uLdr} && {alive _uVeh} && {canMove _uVeh}) then {

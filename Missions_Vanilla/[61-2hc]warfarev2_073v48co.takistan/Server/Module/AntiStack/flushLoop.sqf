@@ -40,7 +40,8 @@ while { !WFBE_GameOver } do {
 				};
 			};
 		};
-	} forEach allUnits;
+	// Marty: PERF - iterate the player slot list, not allUnits (avoids scanning hundreds of AI per tick). isPlayer guard above keeps behaviour identical.
+	} forEach playableUnits;
 	// ["TEST", format ["CountPlayerScores.sqf: DEBUG: Contents of _playersOnServer ('SEND_PLAYERLIST'): %1", _playersOnServer]] Call WFBE_CO_FNC_LogContent;
 	["SEND_PLAYERLIST", _playersOnServer] call WFBE_SE_FNC_CallDatabaseSendPlayerList;
 	_perfDbCalls = _perfDbCalls + 1;

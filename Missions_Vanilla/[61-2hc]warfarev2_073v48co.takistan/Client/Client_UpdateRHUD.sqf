@@ -132,19 +132,19 @@ _RHUDUpdateServerFPSRow = {
 		_hudFPSColor = [0, 1, 0, 1];
 		if (_clientFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 		if (_clientFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-		[14, format ["%1 / ...", _clientFPS]] call _RHUDSetText;
+		[14, format ["%1 / ...  VD %2", _clientFPS, round viewDistance]] call _RHUDSetText;
 		[14, _hudFPSColor] call _RHUDSetColor;
 	};
 
 	_hudFPSColor = [0, 1, 0, 1];
 	if (_clientFPS < 40 || _serverFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 	if (_clientFPS < 20 || _serverFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-	[14, format ["%1 / %2", _clientFPS, _serverFPS]] call _RHUDSetText;
+	[14, format ["%1 / %2  VD %3", _clientFPS, _serverFPS, round viewDistance]] call _RHUDSetText;
 	[14, _hudFPSColor] call _RHUDSetColor;
 };
 
 _RHUDUpdateUpgrade = {
-	private ["_up","_id","_labels","_cachedEnd","_lbl","_remain","_mm","_ss","_txt","_queue","_upgrades"];
+	private ["_up","_id","_labels","_cachedEnd","_serverEnd","_lbl","_remain","_mm","_ss","_txt","_queue","_upgrades"];
 	_labels = missionNamespace getVariable "WFBE_C_UPGRADES_LABELS";
 	if (isNil "_labels") exitWith {};
 
@@ -156,12 +156,20 @@ _RHUDUpdateUpgrade = {
 	//--- Current (indices 23/24).
 	if (_up && _id >= 0 && _id < count _labels) then {
 		_lbl = _labels select _id;
-		if (_RHUD_upgId != _id) then {
-			// Marty: Use the end time cached by WFBE_CL_FNC_Upgrade_Started (anchored to the moment the client
-			// received the start message) rather than recomputing time+dur here.  This keeps the countdown stable
-			// across HUD redraws and avoids a fresh drift each time the upgrade ID first appears in the loop.
-			_cachedEnd = WFBE_Client_Logic getVariable "wfbe_upgrading_countdown_end_time";
-			if (isNil "_cachedEnd" || {_cachedEnd < 0}) then {_cachedEnd = time};
+		// Marty: Read the server-replicated authoritative end time (published by Server_ProcessUpgrade.sqf
+		// for player, queue AND AI upgrades) every tick. Re-anchor the HUD when the upgrade id changes,
+		// OR when the server end time jumps forward (chained same-id queue upgrades, or the replicated value
+		// arriving a tick after the id appeared - which would otherwise leave the HUD frozen at 0:00).
+		_serverEnd = WFBE_Client_Logic getVariable "wfbe_upgrading_end_time";
+		if (isNil "_serverEnd") then {_serverEnd = -1};
+		if (_RHUD_upgId != _id || (_serverEnd > time && _serverEnd > (_RHUD_upgEnd + 1))) then {
+			if (_serverEnd > time) then {
+				_cachedEnd = _serverEnd;
+			} else {
+				// Fall back to the local cache from WFBE_CL_FNC_Upgrade_Started (player-initiated path).
+				_cachedEnd = WFBE_Client_Logic getVariable "wfbe_upgrading_countdown_end_time";
+				if (isNil "_cachedEnd" || {_cachedEnd < 0}) then {_cachedEnd = time};
+			};
 			_RHUD_upgId = _id;
 			_RHUD_upgEnd = _cachedEnd;
 		};

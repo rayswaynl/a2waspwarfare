@@ -9,6 +9,22 @@ WFBE_Client_SideJoined = sideJoined;
 WFBE_Client_SideJoinedText = sideJoinedText;
 WFBE_Allow_HostileGearSaving = true;
 
+//--- DEADSPAWN SAFETY (2026-06-14): the joining player is parked on the side TempRespawnMarker /
+//--- deadspawn holding area (among the AI-slot bots) until the Task-35 logic below relocates them
+//--- to base. Make them INVULNERABLE for that whole transit so a holding-area bot can't kill them
+//--- ("AI killed <player> in the deadspawn" bug). Re-enabled once they've escaped to base (flag set
+//--- after the final move) OR after a hard 120s timeout - so a stalled join never leaves the player
+//--- permanently invulnerable. Initial join + JIP rejoin both pass through here; respawns do not.
+player allowDamage false;
+missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
+[] spawn {
+	private ["_t0"];
+	_t0 = time;
+	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
+	sleep 3;
+	if (alive player) then { player allowDamage true };
+};
+
 // Set the default target fps to 60
 missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
 
@@ -188,6 +204,11 @@ if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER > 97105 || ARMA_VERSION > 162) the
 
 // Marty : auto distance view feature deactivated at client start.
 missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
+//--- FPS picker (2026): default OFF, but restore the player's saved on/off choice if one was persisted.
+if (typeName (profileNamespace getVariable ["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", false]) == "BOOL") then {
+	missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", profileNamespace getVariable ["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", false]];
+	if (missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false]) then {missionNamespace setVariable ["SAVED_VIEW_DISTANCE", viewDistance]};
+};
 missionNamespace setVariable ["AUTO_SEND_SPAWNED_UNITS_TO_WAYPOINT", false];
 missionNamespace setVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION", []];
 missionNamespace setVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_GROUP", grpNull];
@@ -366,6 +387,10 @@ ExecVM "Client\Client_UpdateRHUD.sqf";
 // Marty: State-audit loop (PERF1 slice A) - 60s RPT line of script count vs accumulated state vs FPS.
 [] execVM "Client\Functions\Client_StateAudit.sqf";
 
+// Marty/claude-gaming: client-local empty-group reaper - each player client deletes its OWN orphaned empty groups
+// (deleteGroup only reaps EMPTY+LOCAL groups; the server/HC GC cannot reach client-owned husks against the 144/side cap).
+[] execVM "Client\Functions\Client_GroupsGC.sqf";
+
 //--- Disable Artillery Computer.
 Call Compile "enableEngineArtillery false;";
 
@@ -377,6 +402,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 /* Exec SQF|FSM Misc stuff. */
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
+[] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
 [] execFSM "Client\FSM\updateactions.fsm";
 //--- QoL trio feat.3: spawn advisor nudge loop after common init is done.
 [] spawn WFBE_CL_FNC_QOL_Advisor;
@@ -519,6 +545,7 @@ if (time < 30) then {
 
 /* Position the client at the previously defined location */
 player setPos ([_base,20,30] Call GetRandomPosition);
+missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true]; //--- DEADSPAWN SAFETY: escaped the holding area to base - let the spawn-protection watchdog re-enable damage.
 
 /* HQ Building Init. */
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_hq_deployed"}};
@@ -993,5 +1020,9 @@ hint parseText "v16052026 <br/><br/> <t color='#28ff14'>If you're a new player:<
 CLIENT_INIT_READY = player;
 
 publicVariableServer "CLIENT_INIT_READY";
+
+//--- Client FPS telemetry (staged-deploy day/night perf study, 2026-06-15). Self-gates on the
+//--- WFBE_C_CLIENT_FPS_REPORT lobby param; players only. Reports avg/min FPS to the server.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_FpsReport.sqf";
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

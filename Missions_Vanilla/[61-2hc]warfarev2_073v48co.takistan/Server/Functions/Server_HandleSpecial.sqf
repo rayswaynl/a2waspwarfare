@@ -213,7 +213,7 @@ switch (_args select 0) do {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cteam","_clogik"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
@@ -221,14 +221,34 @@ switch (_args select 0) do {
 			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 			if (!isNull _cteam) then {
 				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
+				//--- [leader, sideID, dir, team] so every client can draw a side-coloured
+				//--- mil_arrow2 at the commander team's leader. dir is patched later by the
+				//--- aicom-team-heading case once the HC's heading loop reports a bearing.
+				_cldr = leader _cteam;
+				if (!isNull _cldr) then {
+					_cdir = getDir _cldr;
+					_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+					missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
+					publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};
 	case "aicom-team-ended": {
-		Private ["_csideID","_cteam","_clogik"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
+		//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
+		//--- then re-broadcast so every client deletes the marker. Mirrors sidepatrol-ended.
+		_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+		_caicomNew = [];
+		{
+			if (!isNull (_x select 0) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
+		} forEach _caicomList;
+		missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
+		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
 			if (isNull _cteam) then {
@@ -236,11 +256,89 @@ switch (_args select 0) do {
 				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 			} else {
 				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) - [_cteam], true];
+				//--- GROUP-CAP LEAK FIX (claude-gaming 2026-06-13): founded + W8 Motor Pool teams carry
+				//--- wfbe_persistent=true so the GC will not reap them during the empty-while-FILLING window.
+				//--- But on team-END (wiped) the group was only DEREGISTERED, never deleted - leaving a
+				//--- permanent empty GC-EXEMPT husk that accumulates toward the 144/side cap on every team
+				//--- death (the dominant unbounded group leak). Now that the team is ended, clear the flag so
+				//--- the existing 60s server_groupsGC reaps the empty husk (locality-safe; avoids the A2 trap
+				//--- of `local` on a Group). Gameplay-transparent: the team already has zero living units.
+				if ((count units _cteam) == 0) then {_cteam setVariable ["wfbe_persistent", false]};
 				if ((_clogik getVariable ["wfbe_aicom_garrison", grpNull]) == _cteam) then {
 					_clogik setVariable ["wfbe_aicom_garrison", grpNull];
 				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 wiped and deregistered.", _csideID, _cteam]] Call WFBE_CO_FNC_AICOMLog;
 			};
+		};
+	};
+	//--- Patch a commander team's arrow heading. The HC's heading loop (Common_RunCommanderTeam.sqf)
+	//--- pushes [team, dir] whenever its objective bearing changes; we update the entry's slot 2 and
+	//--- only re-broadcast WFBE_ACTIVE_AICOM_TEAMS when the arrow actually moved >7 deg (cuts PV spam).
+	case "aicom-team-heading": {
+		Private ["_hteam","_hdir","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi"];
+		_hteam = (_args select 1) select 0;
+		_hdir  = (_args select 1) select 1;
+		if (!isNull _hteam) then {
+			_haicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+			_hchanged = false;
+			for "_hi" from 0 to (count _haicomList - 1) do {
+				_hentry = _haicomList select _hi;
+				if ((_hentry select 3) == _hteam) then {
+					_hold = _hentry select 2;
+					//--- Smallest signed angle between old and new heading (handles 0/360 wrap).
+					_hdelta = abs (((_hdir - _hold) + 180) % 360 - 180);
+					if (_hdelta > 7) then {
+						_hentry set [2, _hdir];
+						_haicomList set [_hi, _hentry];
+						_hchanged = true;
+					};
+				};
+			};
+			if (_hchanged) then {
+				missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _haicomList];
+				publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+			};
+		};
+	};
+	//--- HUSK-COLLECTOR (tasks #16/#2): a commander team abandoned a hull (truck-abandon
+	//--- at rally, or an immobile vehicle). Enroll it with the empty-vehicle collector so
+	//--- the existing delete timer reaps it. ENROLL UNCONDITIONALLY for any alive hull:
+	//--- do NOT gate on crew==0 — the HC-local dismount races this server read, so a
+	//--- crew==0 gate would let a still-replicating hull slip through and leak. WFBE_SE_FNC_
+	//--- HandleEmptyVehicle is crew-safe (its delete timer only advances while crew is 0),
+	//--- so enrolling a still-replicating hull is safe and self-corrects.
+	case "aicom-vehicle-abandoned": {
+		Private ["_avVeh","_avList"];
+		_avVeh = _args select 1;
+		//--- BUG FIX (claude-gaming 2026-06-14): the empty-vehicle collector (Server\FSM\
+		//--- emptyvehiclescollector.sqf) iterates the WF_Logic "emptyVehicles" PRODUCER list, NOT the
+		//--- emptyQueu de-dupe SET. This handler previously appended only to emptyQueu and spawned the
+		//--- handler inline, so the collector loop never saw the hull and the abandoned-hull enrollment
+		//--- never actually went through the collector. Retarget to enroll into "emptyVehicles" exactly
+		//--- like every other producer (Client_BuildUnit.sqf:314-315); the collector then owns dedupe
+		//--- (emptyQueu), the WFBE_SE_FNC_HandleEmptyVehicle spawn, and removal from the list - keeping
+		//--- the crew-safe delete timer authoritative and avoiding a double-spawn. The emptyQueu guard
+		//--- still skips a hull already in flight from a previous enrollment.
+		_avList = WF_Logic getVariable "emptyVehicles";
+		if (isNil "_avList") then {_avList = []};
+		if (!isNull _avVeh && {alive _avVeh} && {!(_avVeh in _avList)} && {!(_avVeh in emptyQueu)}) then {
+			WF_Logic setVariable ["emptyVehicles", _avList + [_avVeh], true];
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-vehicle-abandoned enrolled hull [%1] type [%2] into empty-collector.", _avVeh, typeOf _avVeh]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+	//--- HELI FLY-OFF REFUND (user request): a commander team's empty AIR transport flew off
+	//--- the map edge ALIVE and was deleted by Common_RunCommanderTeam.sqf. Refund its build
+	//--- cost to that side's server-authoritative AI-commander treasury. Server-routed so the
+	//--- treasury write is authoritative; mirrors AI_Commander_Wildcard salvage payback
+	//--- ([_side, _wkTotal] Call ChangeAICommanderFunds, L726).
+	case "aicom-heli-refunded": {
+		Private ["_rSideID","_rSide","_rCost"];
+		_rSideID = _args select 1;
+		_rCost   = _args select 2;
+		_rSide   = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
+		if (!isNull _rSide && {_rCost > 0}) then {
+			[_rSide, _rCost] Call ChangeAICommanderFunds;
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 to [%2] AI-commander treasury (transport flew off-map).", _rCost, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
 	case "sidepatrol-started": {
@@ -287,6 +385,23 @@ switch (_args select 0) do {
 		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
 	};
+	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
+	//--- line below so "did an HC land on WEST this boot, and did the script reseat fix it" is directly
+	//--- observable on the server RPT instead of inferred. _args select 1 is a 2/3-element sub-array packed
+	//--- by Init_HC.sqf (same shape as update-town-delegation / aicom-team-heading pack their payloads).
+	case "hc-preseat": {
+		Private ["_pName","_engineSide"];
+		_pName = (_args select 1) select 0;
+		_engineSide = (_args select 1) select 1;
+		diag_log (Format ["HCSIDE|v1|preseat|name=%1|engineSide=%2", _pName, _engineSide]);
+	};
+	case "hc-reseat-result": {
+		Private ["_rName","_rResult","_rSideNow"];
+		_rName = (_args select 1) select 0;
+		_rResult = (_args select 1) select 1;
+		_rSideNow = (_args select 1) select 2;
+		diag_log (Format ["HCSIDE|v1|reseat|name=%1|result=%2|sideNow=%3", _rName, _rResult, _rSideNow]);
+	};
 	case "connected-hc": {
 		Private ["_hc","_id","_uid","_hcOld","_hcList","_hcValid"];
 		_hc = _args select 1;
@@ -294,6 +409,7 @@ switch (_args select 0) do {
 		_uid = getPlayerUID _hc;
 
 		["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client is now connected [%1] [%2] with Owner ID [%3].", _hc, _uid, _id]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3", _uid, _id, str (side _hc)]); //--- diagnostic: is the HC actually mis-seated (WEST) or already CIV (cosmetic BLUFOR)?
 
 		if (_id != 0) then {
 			//--- Registry hygiene: an HC re-registers after every reconnect, and the old append-only

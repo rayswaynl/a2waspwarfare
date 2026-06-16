@@ -11,6 +11,17 @@ _builtByRepairTruck = if (count _this > 7) then {_this select 7} else {false};
 _wddmChild = if (count _this > 8) then {_this select 8} else {false};
 _sideID = (_side) Call GetSideID;
 
+//--- Marty 2026-06-13: guard the build position. A malformed _position (e.g. [] from a failed
+//--- _findBuildPos ring search, or an undeployed/relocating HQ) makes GetClosestEntity4 below
+//--- and the createVehicle/setDir/setPos triple throw, spamming the server RPT ~8x/round. Skip
+//--- the placement cleanly and return objNull so callers (which already null-check the result,
+//--- per Common_CreateVehicle's convention) treat it as a no-build. Low gameplay impact - one
+//--- static defense not placed this tick - but it clears the deploy keep/rollback error gate.
+if (isNil "_position" || {typeName _position != "ARRAY"} || {count _position < 2} || {typeName (_position select 0) != "SCALAR"} || {typeName (_position select 1) != "SCALAR"}) exitWith {
+	["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] skipped defense [%2] - invalid build position [%3].", str _side, _type, _position]] Call WFBE_CO_FNC_LogContent;
+	objNull
+};
+
 _area = [_position,((_side) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity4;
 _availweapons = _area getVariable "weapons";
 
@@ -115,10 +126,22 @@ if (!isNull _area) then {
 				_buildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				_closest = ['BARRACKSTYPE',_buildings,_manRange,_side,_defense] Call BuildingInRange;
 
-				//--- Manning Defenses.
-				if (alive _closest) then {
-					[_defense,_side,_team,_closest] Spawn HandleDefense;
+				//--- EAST/OPFOR empty-static fix (2026-06-14): manning used to be GATED behind
+				//--- `alive _closest` (a side-Barracks within WFBE_C_BASE_DEFENSE_MANNING_RANGE of the
+				//--- gun). AI-commander base guns are placed ~25-42m from the HQ, NOT measured from the
+				//--- barracks, so if the barracks was destroyed / never built / >250m away, HandleDefense
+				//--- was NEVER spawned and the gun sat empty FOREVER - silently (no log on the false
+				//--- branch). The working GUER TOWN path has no barracks gate. Since crews mount instantly
+				//--- AT the gun (Server_HandleDefense _moveInGunner=true, no walk), the barracks is
+				//--- irrelevant to manning. So always spawn the manning loop; fall back to the side HQ as a
+				//--- benign anchor when no barracks is in range, and WARN so empties become visible.
+				if (isNull _closest || !(alive _closest)) then {
+					_closest = (_side) Call WFBE_CO_FNC_GetSideHQ;
+					["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] no alive Barracks within %2m of [%3] - manning via HQ anchor instead (gun would previously sit empty).", str _side, _manRange, _type]] Call WFBE_CO_FNC_LogContent;
 				};
+
+				//--- Manning Defenses. Always start the loop for a manned gun with a free gunner slot.
+				[_defense,_side,_team,_closest] Spawn HandleDefense;
 			};
 		};
 	};

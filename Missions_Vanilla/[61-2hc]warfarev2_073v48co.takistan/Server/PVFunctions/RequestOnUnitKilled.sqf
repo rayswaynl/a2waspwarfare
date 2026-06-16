@@ -147,7 +147,7 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 	};
 	if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 	WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw;
+	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw + "|vc=" + _killed_type;
 	diag_log _wsk_line;
 };
 
@@ -160,6 +160,13 @@ if (WF_A2_Vanilla) then { //--- Garbage Collector.
 
 if (_killed_side in WFBE_PRESENTSIDES) then { //--- Update the statistics if needed.
 	if (_killed_isman) then {[str _killed_side,'Casualties',1] Call UpdateStatistics} else {[str _killed_side,'VehiclesLost',1] Call UpdateStatistics};
+};
+
+//--- B35 (claude-gaming 2026-06-15): kill-exchange attribution. Credit the KILLER side when it downs an
+//--- enemy (man or vehicle), so COMBATSTAT can report a per-side exchange ratio (killed/cas). Free counter,
+//--- same UpdateStatistics path as the casualties write above; guarded so neutral/friendly-fire isn't counted.
+if (_killer_iswfteam && {_killer_side in WFBE_PRESENTSIDES} && {_killer_side != _killed_side}) then {
+	[str _killer_side,'KilledEnemy',1] Call UpdateStatistics;
 };
 
 _get = missionNamespace getVariable _killed_type; //--- Get the killed informations.

@@ -85,6 +85,19 @@ if (_extra > _pcExtraCap) then {_extra = _pcExtraCap};
 _target = _base + _extra;
 _logik setVariable ["wfbe_aicom_pc", _pcN];
 
+	//--- B37 BANKING VALVE (Ray 2026-06-16, gated WFBE_C_AICOM_BANKING_VALVE default-ON): at LOW/MID pop a
+	//--- rich commander banks income it can't spend because the funds-extra is hard-capped (MAX_EXTRA=1).
+	//--- When enabled, recompute the extra UNCAPPED from funds and lift it to LOWPOP_EXTRA so banked cash
+	//--- converts to squads (livelier quiet nights). The high-pop caps (0/1) above are untouched, so a busy
+	//--- server never bloats. Toggle the flag to A/B legacy vs NEXT. The dyntarget log below records the lift.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_BANKING_VALVE", 1]) > 0 && {_pcN <= 5}) then {
+		private ["_valveCap","_valveExtra"];
+		_valveCap   = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_LOWPOP_EXTRA", 6];
+		_valveExtra = floor (_funds / _fundsPerExtraTeam);
+		if (_valveExtra > _valveCap) then {_valveExtra = _valveCap};
+		if (_valveExtra > _extra) then {_extra = _valveExtra; _target = _base + _extra};
+	};
+
 //--- Log only when the effective target changes (avoid RPT spam).
 _lastDynTarget = _logik getVariable ["wfbe_aicom_dyntarget", _base];
 if (_target > _base && {_target != _lastDynTarget}) then {

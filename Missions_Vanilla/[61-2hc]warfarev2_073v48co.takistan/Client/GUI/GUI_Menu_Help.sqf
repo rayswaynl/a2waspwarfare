@@ -4,7 +4,7 @@ _action = _this select 0;
 
 switch (_action) do {
 	case "onLoad": {
-		{((findDisplay 508000) displayCtrl 160001) lbAdd _x} forEach ["Introduction", "Respawn", "Towns", "Base Structures and Functions", "About the Mission","Server Rules"];
+		{((findDisplay 508000) displayCtrl 160001) lbAdd _x} forEach ["Introduction", "Respawn", "Towns", "Base Structures and Functions", "Experimental Changes", "About the Mission","Server Rules"];
 		((findDisplay 508000) displayCtrl 160001) lbSetCurSel 0;
 	};
 	case "onHelpLBSelChanged": {
@@ -82,7 +82,7 @@ A fully 'pushed' town creates a higher income of supplies and money for the <br 
 commander and if town is attacked, there will spawn more and better units to defend it. <br />
 <br />
 <br />
-Most of explanations refer to default parameters. If params are changed, some explanations are no longer valid. <br />
+Most of explanations refer to default parameters. If lobby settings are changed, some explanations are no longer valid. <br />
 <br />
 ",
 //------------------------------Base Structures
@@ -124,24 +124,85 @@ for commander: >>WF-Menu Economy to sell Base-Structures and distribution income
 >>WF-Menu Purchase Units (normally in range of 120m - if Command Center exists, helicopters can be purchased remote)<br />
 notice: airplanes can be purchased at hangars (displayed with a green symbol at airfields on map), if airfactory exists.<br />
 <br />
-<t size='1.2' color='#ffec1c' align='left'>Anti-Air-Radar [AA]</t><br />
-Displays Enemy aircraft which fly about 30 meters on the map. (Red diamond icon) <br />
+<t size='1.2' color='#ffec1c' align='left'>Anti-Air-Radar [AAR]</t><br />
+Tracks enemy aircraft above ~30 m altitude (red diamond on map). Required before building a Counter Battery Radar.<br />
+<br />
+<t size='1.2' color='#ffec1c' align='left'>Counter Battery Radar [CBR]</t><br />
+<br />
+2,400 supply. Detects and marks enemy artillery firing positions for 75 s. Requires your AAR to be alive. Upgrade 'CBR Radar' to extend detection radius: 750 m → 1,500 m → 2,000 m. Capturing an airfield gives a permanent 2,000 m CBR for free.<br />
+<br />
+<t size='1.2' color='#ffec1c' align='left'>Federal Reserve / Bank Rossii [Bank]</t><br />
+<br />
+9,500 supply. Must be placed more than 800 m from your HQ. One per side. While your HQ stands it pays $6,000 total every 5 minutes split among living players. Destroying the enemy bank awards +$40,000 side supply and $25,000 to the killer. Both banks are marked on the map for both sides.<br />
+<br />
+<t size='1.2' color='#ffec1c' align='left'>Servicepoint [SP]</t><br />
+<br />
+Reload and refuel supply trucks.<br />
+>>WF-Menu Servicepoint to Rearm, Refuel, Repair your vehicle and heal yourself and your units. Rearm cost is proportional to ammo missing (10% floor; artillery exempt).<br />
 <br />
 <br />
-<t size='1.2' color='#ffec1c' align='left'>Servicepoint</t><br />
+You may choose to buy a vehicle manned or empty (without driver, gunner, commander or turrets; locked or unlocked).<br />
 <br />
-Reload and Refuel Supplytrucks.<br />
->>WF-Menu Servicepoint to Rearm, Refuel, Repair your Vehicle and Heal yourself and your units.<br />
-<br />
-<br />
-<br />
-<br />
-You may choose to buy a vehicle manned or empty (you may also buy a vehicle without a driver, gunner, commander or turrets and you can choose whether locked or  unlocked ).<br />
-<br />
-Usefull Fast Commands From Construction Menu:<br />
+Useful fast commands from the Construction Menu:<br />
 - Auto Wall Construction Mode -> custom action 14<br />
 - Auto Manning Defence Mode -> custom action 16<br />
 - Sell Fortification, Static Defence -> custom action 17<br />
+<br />
+",
+//--------------------Experimental Changes
+"<t size='1.4' color='#2394ef' underline='true'>Experimental Changes</t><br />
+<br />
+This is the <t color='#F5D363'>WASP Experimental</t> build — an experimental test version featuring new structures, mechanics and balance changes.<br />
+<br />
+<t size='1.2' color='#ffec1c'>AI Commander</t><br />
+Any side can be run by an AI Commander - it manages the economy, builds the base, researches upgrades, and leads its combat teams assaulting towns. If no human takes the Commander slot within 5 minutes of the round start (re-armed when a player commander leaves), the AI takes over building. You can claim Commander any time; even then the AI keeps its own HQ teams fighting and never leaves them idle, while you run the economy and issue orders - any team you order directly stays yours.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Three Factions</t><br />
+GUER resistance is a living third faction, not just neutral garrisons. Its mechanized patrols grow MORE dangerous the more towns it loses - technicals while it holds the map, escalating to BRDM-2 armour + AT/AA and a second patrol once squeezed below 20 towns.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Clean Captures</t><br />
+Capturing a town from GUER no longer grants you its static weapon emplacements - you take the ground clean and bring or build your own defences (GUER rebuilds its statics on recapture).<br />
+<br />
+<t size='1.2' color='#ffec1c'>Wildcards</t><br />
+Random battlefield events fire through the round - veteran companies, uprisings, heliborne QRF and more.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Performance Telemetry</t><br />
+This build samples each client's FPS and reports it to the server for the day/night perf study (diagnostic only).<br />
+<br />
+<t size='1.2' color='#ffec1c'>Starting Economy</t><br />
+Both sides start with <t color='#F5D363'>$11,600 cash</t> and <t color='#F5D363'>7,400 supply</t>.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Bank (endgame objective)</t><br />
+Commander can build a Federal Reserve / Bank Rossii (9,500 supply, &gt;800 m from HQ, one per side). pays $6,000/5 min split among living players while HQ stands. Destroying enemy bank: +$40,000 side supply + $25,000 to the killer. Both banks are marked on the map.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Counter Battery Radar</t><br />
+2,400 supply; marks enemy artillery positions for 75 s. Requires AAR. CBR Radar upgrade: 750 m → 1,500 m → 2,000 m. Airfields give a free permanent 2,000 m CBR.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Airfields</t><br />
+NWAF, NEAF and Balota are capturable towns (50 SV, PMC garrison). Capturing gives a repair point and an exclusive hangar with unique aircraft (L-39, An-2, Mi-17 variants).<br />
+<br />
+<t size='1.2' color='#ffec1c'>Capture-to-Unlock Premium Units</t><br />
+Hold <t color='#F5D363'>Krasnostav</t>: Czech T-72 at Heavy Factory level 4 ($7,000).<br />
+Hold <t color='#F5D363'>NW Airfield</t>: RM-70 rocket artillery at Light Factory level 4 ($6,800, integrated fire missions).<br />
+Unlocks for the holding side only.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Patrols and Convoys</t><br />
+Upgrade: Patrols (300 / 1,600 / 2,400 / 3,200 supply for 4 levels). Up to 3 active patrols per side; each active patrol reduces every player's max AI by 1.<br />
+Level 4 Convoys: patrol fields a supply truck that pays $750 split equally at every town stop.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Factory Queue</t><br />
+Buy menu shows queue as N/CAP. Caps: Barracks min 10, Light Factory min 5, Heavy/Aircraft min 3. Cancel Last button refunds the most recent queued order (up to 50% for discounted orders).<br />
+<br />
+<t size='1.2' color='#ffec1c'>Classes</t><br />
+Class info shown on join and via 'Class Info' action. Tags (SOL/SUP/MED/ENG/SNI) visible on map and in Notes.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Other</t><br />
+- Medic Redeployment Truck: medic-only forward spawn (Light Factory, violet row).<br />
+- EASA loadout tags: [AA], [AG], [MR] prefixes on each loadout row.<br />
+- WDDM commander compositions capped at 3 per base area (cash refunded on over-cap).<br />
+- Defense budgets cap statics/fortifications/mines per category. Statics and mines blocked at 3+ enemy ground units in base range.<br />
+- Tanks and wheeled APCs come crewed by engineers.<br />
+- Earplugs toggle fades radio/voice and works while mounted.<br />
 <br />
 ",
 //--------------------WarFare Info

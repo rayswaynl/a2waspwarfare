@@ -23,7 +23,6 @@ _l = _l + ["RequestEnqueue"];
 _l = _l + ["RequestDequeue"];
 _l = _l + ["CounterBatteryFired"];
 _l = _l + ["RequestSiteClearance"];
-_l = _l + ["RequestVote"];
 _l = _l + ["RequestAIComDonate"];
 _l = _l + ["HCStat"];
 
@@ -47,6 +46,8 @@ _l = _l + ["RequestBaseArea"];
 _l = _l + ["NukeIncoming"];
 _l = _l + ["CounterBatteryContact"];
 _l = _l + ["BankPayout"];
+_l = _l + ["RestartAnnounce"];
+_l = _l + ["DashboardAnnounce"];
 
 _clientCommandPV = _l;
 

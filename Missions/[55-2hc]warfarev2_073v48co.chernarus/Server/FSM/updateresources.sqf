@@ -29,7 +29,7 @@ while {!gameOver} do {
 	_hcN2 = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 	_pcN2 = (_pcN2 - _hcN2) max 0;
 	_baseMult = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_MULT", 1.5];
-	_pcMult = _baseMult * (1 + ((missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_BONUS", 0.06]) * (((missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_REF", 10]) - _pcN2) max 0)));  //--- B36.1 INVERTED (Ray 2026-06-15): boost is +BONUS per player UNDER REF (default 10) so CASH income is HIGHEST at LOW pop (funds the 8-team curve flood), tapering to base at REF+ players. Was (* _pcN2) = boost-with-MORE-players; flipped to (* (REF-pc)).
+	_pcMult = _baseMult * (1 + ((if ((missionNamespace getVariable ["WFBE_C_AICOM_BANKING_VALVE", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_BONUS_VALVE", 0.045]} else {missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_BONUS", 0.06]}) * (((missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_REF", 10]) - _pcN2) max 0)));  //--- B36.1 INVERTED (Ray 2026-06-15): boost is +BONUS per player UNDER REF (default 10) so CASH income is HIGHEST at LOW pop (funds the 8-team curve flood), tapering to base at REF+ players. Was (* _pcN2) = boost-with-MORE-players; flipped to (* (REF-pc)).
 	_pcMult = _pcMult min (missionNamespace getVariable ["WFBE_C_AICOM_INCOME_MULT_MAX", 3.0]);
 
 

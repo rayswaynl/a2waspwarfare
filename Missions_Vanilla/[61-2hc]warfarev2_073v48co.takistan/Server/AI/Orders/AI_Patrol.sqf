@@ -4,9 +4,9 @@ _destination = _this select 1;
 _radius = if (count _this > 2) then {_this select 2} else {30};
 if (typeName _destination == 'OBJECT') then {_destination = getPos _destination};
 
-_team setCombatMode "RED";
-_team setBehaviour "COMBAT";
-_team setFormation "DIAMOND";
+_team setCombatMode "YELLOW";
+_team setBehaviour "AWARE";
+_team setFormation "COLUMN";
 _team setSpeedMode "NORMAL";
 
 _update = true;

@@ -127,8 +127,14 @@ _newUnit setVariable ["lastPosition",   getPosATL _newUnit];
 //--- Rejoin the original group BEFORE selectPlayer so the player transitions
 //--- with the correct group context. If the original group is empty or gone
 //--- (edge case: everyone left while selector was open) remain in _swapGrp.
-if (!(isNull _oldGrp) && {!(isNull (leader _oldGrp)) || {count units _oldGrp > 0}}) then {
-	_newUnit joinGroup _oldGrp;
+//--- A2-OA fix: && {code} / || {code} lazy-eval operands are Arma-3-only syntax and
+//--- produce "Missing ;" parse errors in A2 OA 1.64.  Use nested if instead.
+if (!(isNull _oldGrp)) then {
+	if (!(isNull (leader _oldGrp)) || (count units _oldGrp > 0)) then {
+		_newUnit joinGroup _oldGrp;
+	} else {
+		diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
+	};
 } else {
 	diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
 };

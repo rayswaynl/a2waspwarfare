@@ -142,15 +142,14 @@ if (isMultiplayer) then {
 		missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_START_EAST"];
 };
 
-//--- A/B EXPERIMENT (Steff 2026-06-13): ample starting economy so legacy-vs-next matches
-//--- develop fast (AI never economy-stalls -> quick captures -> rapid metric feedback).
+//--- STARTING ECONOMY (Ray B36.1): THIS block is the real dedicated-MP override - the Init_CommonConstants 12800/30000 fallbacks NEVER fire here (Init_Parameters sets them from paramsArray first). Was the AB-ample fast-feedback experiment (150000/80000); now Ray's lean values
 //--- Shared by BOTH arms (matched condition). Set WFBE_C_AB_AMPLE_ECON=0 to disable.
 if ((missionNamespace getVariable ["WFBE_C_AB_AMPLE_ECON", 1]) > 0) then {
-	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_WEST", 150000];
-	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_EAST", 150000];
-	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_WEST", 80000];
-	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_EAST", 80000];
-	diag_log "[WFBE (INIT)] AB-AMPLE-ECON ACTIVE: funds=150000 supply=80000 per side (fast-feedback test)";
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_WEST", 30000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_EAST", 30000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_WEST", 12800];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_EAST", 12800];
+	diag_log "[WFBE (INIT)] STARTING ECON (Ray B36.1): funds=30000 supply=12800 per side - the REAL dedicated-MP override (Init_CommonConstants never fires here). AI-cmdr seed = flat 200k (Init_Server).";
 };
 
 IS_air_war_event = false;

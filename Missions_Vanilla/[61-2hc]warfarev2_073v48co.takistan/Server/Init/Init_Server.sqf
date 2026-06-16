@@ -71,8 +71,6 @@ WFBE_SE_FNC_SetLocalityOwner = if !(WF_A2_Vanilla) then {Compile preprocessFileL
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
-WFBE_SE_FNC_VoteWatcher = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteWatcher.sqf";
-WFBE_SE_FNC_VotePassed  = Compile preprocessFileLineNumbers "Server\Functions\Server_VotePassed.sqf";
 WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
 WFBE_CO_FNC_LogGameEnd = Compile preprocessFileLineNumbers "Server\Functions\Server_LogGameEnd.sqf";
 // WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
@@ -115,6 +113,11 @@ if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
 	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
 };
+
+//--- Least-loaded HC picker (single source of truth for delegation balance). Compiled
+//--- unconditionally - the commander/patrol/wildcard delegation sites are not gated by the
+//--- version check below, so this must exist whenever any HC delegation can run.
+WFBE_CO_FNC_PickLeastLoadedHC = Compile preprocessFileLineNumbers "Server\Functions\Server_PickLeastLoadedHC.sqf";
 
 //--- Define Headless Client functions (server ones).
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER >= 101334 || ARMA_VERSION > 162) then {
@@ -208,7 +211,7 @@ if ((missionNamespace getVariable "WFBE_C_BASE_START_TOWN") > 0) then {
 
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
 
-Private ["_i", "_maxAttempts", "_minDist", "_rPosE", "_rPosW", "_setEast", "_setGuer", "_setWest", "_startE", "_startG", "_startW"];
+Private ["_i", "_maxAttempts", "_minDist", "_rPosE", "_rPosW", "_setEast", "_setGuer", "_setWest", "_startE", "_startG", "_startW", "_egressOK"];
 _i = 0;
 _maxAttempts = 2000;
 _minDist = startingDistance;
@@ -223,6 +226,43 @@ _setGuer = if (_present_res) then {true} else {false};
 _total = count _locationLogics;
 
 _use_random = false;
+
+//--- Egress-quality gate (A2-fix 2026-06-14, EAST-EGRESS): a random start (MODE=2) can box a side
+//--- into a map corner with a single egress road, leaving its AI-commander HC route empty and the
+//--- teams stalled near base. Before accepting a random candidate, require it to have a usable road
+//--- network nearby and to sit clear of the map edges. _this = start location object -> bool.
+//--- roadsConnectedTo is OA-only: guarded with the SAME WF_A2_Vanilla idiom as AI_Commander_Base.sqf:99
+//--- and degrades to "accept if any road is near" on Vanilla A2 (never throws).
+_egressOK = {
+	private ["_loc","_pos","_minRoads","_margin","_ws","_roads","_usable","_ok","_road","_conn"];
+	_loc = _this;
+	if (isNull _loc) exitWith {false};
+	_pos = getPos _loc;
+	_minRoads = missionNamespace getVariable ["WFBE_C_BASE_MIN_EGRESS_ROADS", 3];
+	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
+
+	//--- Reject candidates hugging any map edge (corner-box guard).
+	_ws = 12800;  //--- A2-fix 2026-06-14: worldSize is A3-only (undefined in A2 OA -> spammed "Undefined variable worldsize"); Takistan map size = 12800
+	if ((_pos select 0) < _margin || (_pos select 0) > (_ws - _margin)) exitWith {false};
+	if ((_pos select 1) < _margin || (_pos select 1) > (_ws - _margin)) exitWith {false};
+
+	_roads = _pos nearRoads 250;
+	_ok = false;
+	if (!isNil {missionNamespace getVariable "WF_A2_Vanilla"} && {!WF_A2_Vanilla}) then {
+		//--- OA: count USABLE segments (roadsConnectedTo>=2). Need >= _minRoads to call it an egress.
+		_usable = 0;
+		{
+			_road = _x;
+			_conn = _road call {private "_c"; _c = []; if (!isNil {roadsConnectedTo _this}) then {_c = roadsConnectedTo _this}; _c};
+			if (count _conn >= 2) then {_usable = _usable + 1};
+		} forEach _roads;
+		if (_usable >= _minRoads) then {_ok = true};
+	} else {
+		//--- Vanilla A2 (no roadsConnectedTo): degrade to "accept if any road is near".
+		if (count _roads > 0) then {_ok = true};
+	};
+	_ok
+};
 
 _spawn_north = objNull;
 _spawn_south = objNull;
@@ -275,13 +315,15 @@ if (_use_random) then {
 		//--- Determine west starting location if necessary.
 		if (_setWest) then {
 			_rPosW = _locationLogics select floor(random _total);
-			if (_rPosW distance _startE > _minDist && _rPosW distance _startG > _minDist) then {_startW = _rPosW; _setWest = false};
+			//--- Egress-quality gate (EAST-EGRESS fix): require distance spacing AND a usable egress road
+			//--- network clear of the map edges. Symmetric with east. Fallback below still guarantees placement.
+			if (_rPosW distance _startE > _minDist && _rPosW distance _startG > _minDist && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
 		};
 
 		// --- Determine west starting location if necessary.
 		if (_setEast) then {
 			_rPosE = _locationLogics select floor(random _total);
-			if (_rPosE distance _startW > _minDist && _rPosE distance _startG > _minDist) then {_startE = _rPosE; _setEast = false};
+			if (_rPosE distance _startW > _minDist && _rPosE distance _startG > _minDist && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
 		};
 
 		_i = _i + 1;
@@ -392,7 +434,7 @@ emptyQueu = [];
 		_logik setVariable ["wfbe_aicom_running", false];
 		//--- V0.4.1: synthetic MONEY is fine (PvE pacing) - synthetic SUPPLY is not.
 		//--- Funds seed = commander start funds x FUNDS_MULT; supply spending stays 100% real.
-		_logik setVariable ["wfbe_aicom_funds", round((missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side]) * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_MULT", 1.5]))];
+		_logik setVariable ["wfbe_aicom_funds", (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_START_FUNDS", 200000])]; //--- B36 hotfix (Ray): flat 200k AI-commander start cash (was FUNDS_START x FUNDS_MULT)
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.
@@ -406,6 +448,7 @@ emptyQueu = [];
 		WF_Logic setVariable [Format["%1Casualties",_side],0,true];
 		WF_Logic setVariable [Format["%1VehiclesCreated",_side],0,true];
 		WF_Logic setVariable [Format["%1VehiclesLost",_side],0,true];
+		WF_Logic setVariable [Format["%1KilledEnemy",_side],0,true]; //--- B35 (claude-gaming 2026-06-15): kill-exchange counter (enemies downed by this side); feeds COMBATSTAT.
 
 		//--- Parameters specific.
 		if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {_logik setVariable ["wfbe_basearea", [], true]};
@@ -532,9 +575,45 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 	};
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 
+//--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
+//--- mission.sqm are born by the engine at load with no createGroup, so WFBE_CO_FNC_CreateGroup never
+//--- tags them and they show as "untagged" in the server_groupsGC per-source audit - indistinguishable
+//--- from genuinely leaked groups. One-shot sweep tagging every still-untagged WEST/EAST group as
+//--- "editor-player-slot" (broadcast). They already carry wfbe_persistent=true (set above) so the GC
+//--- never reaps them; this is audit-only. The isNil guard skips any runtime group the wrapper already
+//--- tagged. GUER has 0 editor slots so resistance is intentionally excluded.
+if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
+	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
+	{
+		Private ["_src"];
+		_src = _x getVariable "wfbe_group_src";
+		if (isNil "_src" && {(side _x == west) || (side _x == east)}) then {
+			_x setVariable ["wfbe_group_src", "editor-player-slot", true];
+		};
+	} forEach allGroups;
+};
+
 [] Call Compile preprocessFile "Server\Config\Config_GUE.sqf";
 
 serverInitFull = true;
+
+//--- DEADSPAWN PHYSICAL PROTECTION (claude-gaming 2026-06-14): ring each per-side
+//--- TempRespawnMarker with tall H-barriers so an enemy-side AI-slot bot cannot shoot
+//--- a HUMAN parked on an adjacent side's holding marker during join (Smarty deadspawn
+//--- kill). One-shot, server-only, purely additive; players are teleported out by
+//--- Task-35 so the sealed ring never traps them, and the allowDamage-false transit
+//--- protection in Init_Client.sqf is left intact as the first layer.
+[] execVM "Server\Init\Init_DeadspawnWall.sqf";
+
+//--- AIRFIELD ON-LAND PROBE (claude-gaming 2026-06-14): DIAGNOSTIC ONLY.
+//--- One-shot server-only grid scan that logs surfaceIsWater + nearRoads for a
+//--- 5x5 grid of candidate camp positions around each airfield's
+//--- LocationLogicAirport (Balota id=7, NWAF id=8). Reads AIRFIELD_PROBE|... in
+//--- the RPT to pick a verified on-land, off-road apron. Changes NO coordinates.
+//--- TAKISTAN PORT (2026-06-16): the probe's airfield anchors are hardcoded
+//--- Chernarus coords (Balota/NWAF), so it is gated to the Chernarus map. On
+//--- Takistan it is a no-op (no valid anchors); diagnostic only, spawns nothing.
+if (IS_chernarus_map_dependent) then { [] execVM "Server\Init\Init_AirfieldProbe.sqf"; };
 
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
@@ -570,6 +649,36 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
+
+//--- Client FPS telemetry receiver (staged-deploy day/night perf study, 2026-06-15, Net_2 request).
+//--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
+//--- when the WFBE_C_CLIENT_FPS_REPORT lobby param is ON. We stamp it server-side with what the client
+//--- can't cheaply know - live player count, day/night MODE + current in-game time/sun - so the RPT can
+//--- be bucketed day-vs-night and day/night-cycle ON-vs-OFF. Raw diag_log so it lands regardless of
+//--- LOG_CONTENT_STATE; the lobby param is the single on/off gate. Name is logged LAST so a '|' in a
+//--- player name can't corrupt the earlier pipe-delimited fields.
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
+	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
+		private ["_d", "_players", "_hc"];
+		_d = _this select 1;
+		_players = { isPlayer _x } count playableUnits;
+		//--- hc= the live headless-client count (registry filtered to non-null, alive-leader HCs), so the
+		//--- planned 0-HC / 1-HC / 2-HC comparison days bucket cleanly even when an RPT spans several launches.
+		_hc = { !isNull _x && {!isNull leader _x} && {alive leader _x} } count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+		diag_log ("FPSREPORT|v1|uid=" + str (_d select 0)
+			+ "|fps=" + str (_d select 2)
+			+ "|fpsMin=" + str (_d select 3)
+			+ "|players=" + str _players
+			+ "|hc=" + str _hc
+			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
+			+ "|daytime=" + str (round (daytime * 100) / 100)
+			+ "|sun=" + str (round (sunOrMoon * 100) / 100)
+			+ "|srvFps=" + str (round diag_fps)
+			+ "|t=" + str (round (time / 60))
+			+ "|name=" + (_d select 1));
+	};
+	["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed (WFBE_C_CLIENT_FPS_REPORT=1)."] Call WFBE_CO_FNC_LogContent;
+};
 
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
@@ -616,6 +725,36 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_BIS_ALICE") > 0) then {
 //--- Waiting until that the game is launched.
 waitUntil {time > 0};
 
+//--- In-game restart announcer (work-order item 15): server-only countdown that warns every
+//--- player once per minute over the final WFBE_C_RESTART_WARN_MIN minutes before the scheduled
+//--- restart. Self-gates again internally, but we also gate the spawn here to avoid the thread.
+if ((missionNamespace getVariable ["WFBE_C_RESTART_ENABLED", 1]) == 1) then {
+	[] execVM "Server\FSM\server_restart_announcer.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Restart announcer FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Dashboard-link announcer (claude-gaming 2026-06-14): every WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL
+//--- seconds, broadcast the public live-stats URL to general chat so players know where to find updates.
+if ((missionNamespace getVariable ["WFBE_C_DASHBOARD_ANNOUNCE_ENABLED", 1]) == 1) then {
+	[] execVM "Server\FSM\server_dashboard_announcer.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Dashboard-link announcer FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Top-Players leaderboard emitter (claude-gaming 2026-06-14): every WFBE_C_PLAYERSTAT_INTERVAL
+//--- seconds, emit one PLAYERSTAT row per connected human player (name/uid/side/score). This is the
+//--- only telemetry carrying the display name, so it powers the public Top-Players leaderboard tab.
+if ((missionNamespace getVariable ["WFBE_C_PLAYERSTAT_ENABLED", 1]) == 1) then {
+	[] execVM "Server\FSM\server_playerstat_loop.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Player-stat leaderboard emitter FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- FPS PROFILING (claude-gaming 2026-06-13): enable the PerformanceAudit framework SERVER-SIDE ONLY so we
+//--- MEASURE where server frametime goes (uncached per-town capture scans suspected). Marty kept the GLOBAL
+//--- param off due to CLIENT-side AFK/commander regressions, so we force it here on the server only - clients
+//--- keep the param default (0) and never run the client audit. Server-local set, never broadcast.
+WFBE_C_PERFORMANCE_AUDIT_ENABLED = 1;
+PerformanceAuditEnabled = true;
+
 // Marty: Start the local server Performance Audit writer; metrics stay local and are written to the server RPT.
 [] Spawn {
 	waitUntil {!isNil "PerformanceAudit_Run"};
@@ -645,7 +784,7 @@ if (_antiStackEnabled) then {
 	// 0 = NONE
 	// 1 = CHERNARUS
 	// 2 = TAKISTAN
-	["SET_MAP", 2] call WFBE_SE_FNC_CallDatabaseSetMap;
+	["SET_MAP", 1] call WFBE_SE_FNC_CallDatabaseSetMap;
 };
 
 _logMatchWinPlayerCountThreshold = 10;
@@ -668,23 +807,6 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
-};
-
-//--- Marty: Vote system — JIP init and persistent server-time broadcast.
-//--- WFBE_VOTE_COOLDOWNS init ensures JIP clients receive the var even if no vote has run.
-if (isNil "WFBE_VOTE_COOLDOWNS") then {
-	WFBE_VOTE_COOLDOWNS = [];
-	publicVariable "WFBE_VOTE_COOLDOWNS";
-};
-//--- Persistent 10 s loop broadcasts WFBE_SERVER_TIME so client dialogs always have
-//--- a recent reference for cooldown and countdown display.  The per-vote watcher
-//--- supplements this with 2 s ticks while a vote window is open.
-[] Spawn {
-	while {true} do {
-		WFBE_SERVER_TIME = time;
-		publicVariable "WFBE_SERVER_TIME";
-		sleep 10;
-	};
 };
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
