@@ -29,6 +29,7 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 
 | Finding family | Meaning | Canonical page |
 | --- | --- | --- |
+| Client-visible indicator inventory | HUD/title resources, map/tactical markers, support markers, menu/list icons, status channels and image references need one owner/audience/update/cleanup matrix before indicator pruning or redesign. | [Client UI systems atlas](Client-UI-Systems-Atlas#indicator-exploration-backlog), [UI resource parity cleanup](UI-Resource-Parity-Cleanup) |
 | UI as authority surface | Player buys, structure sale, upgrades, supports, gear/EASA/service and some economy actions are client-originated or client-authoritative. | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Server authority map](Server-Authority-Migration-Map), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Duplicate/stale display resources | EASA/Economy share dialog ID, overlay/title resources share title ID/display handles, and old upgrade/menu resources remain stale. | [UI IDD collision repair](UI-IDD-Collision-Repair), [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Economy/help/main-menu cleanup | Missing economy controls, stale economy map-click latch, orphan main-menu GPS zoom cases and help unload mismatch are UI correctness debts. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |

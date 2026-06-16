@@ -1,12 +1,12 @@
 # Knowledge Platform Roadmap
 
-This page records the recommended long-term home for the developer wiki, agent context files and source-backed research notes.
+The recommended long-term home for the developer wiki, agent-context files and source-backed research notes.
 
 ## Recommendation
 
-Make `docs/wiki` in the main repo the canonical source of truth, publish it as a GitHub Pages site with MkDocs Material, and keep the GitHub Wiki as a compatibility front door until the Pages site is stable.
+Make `docs/wiki` in the main repo the canonical source of truth, publish it as a GitHub Pages site with MkDocs Material, and keep the GitHub Wiki as a compatibility front door until the Pages site is stable. Stay docs-as-code (PR review, generated validation, machine-readable agent bundles) rather than moving to a hosted SaaS docs product or a personal knowledge-garden tool.
 
-Do not move the canonical documentation to a SaaS docs platform or a separate knowledge garden yet. The project needs docs-as-code, PR review, generated validation and machine-readable agent bundles more than it needs a heavier publishing product.
+Rationale, in brief: the wiki is great as a public front door but weak as the long-term source of truth — its edits are not reviewed beside code, CI cannot enforce JSON/JSONL/link/drift checks on it, and agent bundles are easier to generate from a repo-owned tree. MkDocs Material fits because it is Markdown-first, static, searchable and easy to generate from the current page set (Docusaurus is heavier than needed; Quartz/Obsidian and Mintlify add graph-garden or vendor dependencies this repo does not need). References: [GitHub wiki docs](https://docs.github.com/en/communities/documenting-your-project-with-wikis/about-wikis), [MkDocs deploy](https://www.mkdocs.org/user-guide/deploying-your-docs/), [Material search](https://squidfunk.github.io/mkdocs-material/plugins/search/), [llms.txt proposal](https://llmstxt.org/).
 
 ## Target Shape
 
@@ -15,60 +15,36 @@ Do not move the canonical documentation to a SaaS docs platform or a separate kn
 | `docs/wiki` | Canonical Markdown documentation reviewed beside mission/tooling code. |
 | GitHub Pages + MkDocs Material | Human-readable docs site with fast navigation and search. |
 | GitHub Wiki | Legacy URL, lightweight landing page and temporary mirror. |
-| [`llms.txt`](llms.txt) | Curated LLM entrypoint with the highest-signal pages and machine files. |
-| [LLM agent entry pack](LLM-Agent-Entry-Pack) | Human/agent-readable bootstrap brief with load order, safety rules and task bundles. |
-| `llms-full.txt` | Generated full-docs bundle for deep agent ingestion. |
+| [`llms.txt`](llms.txt) / `llms-full.txt` | Curated LLM entrypoint + generated full-docs bundle for deep agent ingestion. |
+| [LLM agent entry pack](LLM-Agent-Entry-Pack) | Human/agent bootstrap brief with load order, safety rules and task bundles. |
 | `agent-context.json` | Compact machine-readable repo map and high-risk rules. |
-| `agent-knowledge.jsonl` / `agent-hardening-backlog.jsonl` | Append-only evidence and backlog streams for Codex, Claude and future agents. |
+| `agent-knowledge.jsonl` / `agent-hardening-backlog.jsonl` | Append-only evidence and backlog streams. |
 
 ## Agent-Readable Debt Found During Scout Waves
 
-The 2026-06-04 agent-readable scout found that the docs already have the right long-term direction, but the active-state layer is too heavy for future agents to ingest quickly.
+The 2026-06-04 agent-readable scout found the docs have the right long-term direction, but the active-state layer was too heavy for fast agent ingestion.
 
 | Finding | Evidence | Action |
 | --- | --- | --- |
-| Agent development pack alias is fixed | [Agent development pack](Agent-Development-Pack) now exists as a lightweight compatibility alias for prompts that ask for that name. | Keep it as a gateway only; update [LLM agent entry pack](LLM-Agent-Entry-Pack) for real boot-order changes. |
-| Active state history leak is mostly fixed | `agent-status.json`, `agent-collaboration.json` and `agent-context.json` now carry compact live lane snapshots after the 2026-06-05 dashboard current-lane cleanup. | Keep completed lanes in `agent-events.jsonl`, [Agent worklog](Agent-Worklog) and git history. Future work is schema naming/validation, not another large live-state archive. |
-| Machine records use mixed envelopes | Existing JSONL rows mix `ts` and `timestamp`, plus different actor/status/source fields. | [`agent-machine-index.json`](agent-machine-index.json) now documents the vNext JSONL envelope convention and the validator emits compact legacy-drift warnings while still tolerating old rows. Do not rewrite history blindly; add normalized records going forward. |
-| Page-to-source lookup is scattered | Canonical pages cite source evidence, but there was no compact machine index from page/system to source proof refs. | [`agent-machine-index.json`](agent-machine-index.json) now maps high-traffic systems to page ids, branch scope, source refs, machine refs, risk tier and next gate. Keep it small; add entries only when they reduce repeated broad-page loading. |
-
-## Why Not Keep GitHub Wiki Canonical
-
-The wiki is useful because it is public, familiar and easy to click through from GitHub. It is weaker as the long-term source of truth because:
-
-- Wiki edits are not reviewed beside code changes.
-- Navigation and search are limited for a large engineering handbook.
-- CI cannot easily enforce JSON/JSONL validity, internal links, generated drift and source-reference checks.
-- Agent-readable bundles are easier to generate from a repo-owned docs tree.
-
-Keep the wiki reachable, but make it a mirror or launch pad rather than the canonical editing surface.
-
-## Why MkDocs Material First
-
-MkDocs Material fits this project because it is Markdown-first, lightweight, static, searchable and easy to generate from the current page set. Docusaurus is strong but heavier than needed unless the mission docs become a versioned product site with React components. Quartz/Obsidian is excellent for personal graph navigation, but this repo needs source-backed engineering docs more than a knowledge garden. Mintlify has good `llms.txt` support, but adds a hosted/vendor dependency that is not needed for an open Arma mission repo.
-
-## External References
-
-- GitHub notes that wikis have limited search-engine indexing rules and a 5,000-file soft limit, and recommends GitHub Pages for larger/indexed docs: [GitHub wiki docs](https://docs.github.com/en/communities/documenting-your-project-with-wikis/about-wikis).
-- MkDocs documents GitHub Pages publishing for project docs: [MkDocs deploy docs](https://www.mkdocs.org/user-guide/deploying-your-docs/).
-- Material for MkDocs includes a built-in search plugin that builds an index from generated pages and sections: [Material search plugin](https://squidfunk.github.io/mkdocs-material/plugins/search/).
-- Docusaurus has strong docs-site support, but official search is centered on Algolia DocSearch with other options maintained by the community: [Docusaurus search](https://docusaurus.io/docs/search).
-- `llms.txt` is a proposal for a Markdown file that helps LLMs use a website at inference time: [llms.txt proposal](https://llmstxt.org/).
+| Agent development pack alias is fixed | [Agent development pack](Agent-Development-Pack) now exists as a lightweight compatibility alias. | Keep it as a gateway only; update [LLM agent entry pack](LLM-Agent-Entry-Pack) for real boot-order changes. |
+| Active state history leak is mostly fixed | `agent-status.json`, `agent-collaboration.json` and `agent-context.json` carry compact live lane snapshots after the 2026-06-05 cleanup. | Keep completed lanes in `agent-events.jsonl`, [Agent worklog](Agent-Worklog) and git history. Future work is schema naming/validation, not another large live-state archive. |
+| Machine records use mixed envelopes | Existing JSONL rows mix `ts`/`timestamp` and different actor/status/source fields. | [`agent-machine-index.json`](agent-machine-index.json) documents the vNext envelope; the validator emits compact legacy-drift warnings while tolerating old rows. Add normalized records going forward; do not rewrite history blindly. |
+| Page-to-source lookup is scattered | No compact machine index from page/system to source proof refs. | [`agent-machine-index.json`](agent-machine-index.json) maps high-traffic systems to page ids, branch scope, source refs, machine refs, risk tier and next gate. Keep it small. |
 
 ## Migration Plan
 
-1. Declare `docs/wiki` canonical in `README.md`, `Home.md`, `Agent-Context` and future contributor docs.
-2. Add `mkdocs.yml` with `docs_dir: docs/wiki` and a nav generated from the existing page map/sidebar.
+1. Declare `docs/wiki` canonical in `README.md`, `Home.md`, `Agent-Context` and contributor docs.
+2. Add `mkdocs.yml` with `docs_dir: docs/wiki` and a nav generated from the page map/sidebar.
 3. Publish GitHub Pages from Actions.
-4. Add validation checks: JSON parse, JSONL parse, internal wiki links, missing page references and optional wiki mirror parity. Local validator: `docs/validate-wiki.ps1`.
+4. Add validation checks: JSON parse, JSONL parse, internal wiki links, missing page references and optional wiki mirror parity (local validator: `docs/validate-wiki.ps1`).
 5. Keep [`llms.txt`](llms.txt) and [LLM agent entry pack](LLM-Agent-Entry-Pack) current, then generate `llms-full.txt` from the curated page map once the MkDocs build exists.
 6. After Pages is stable, reduce the GitHub Wiki to a small landing page linking to Pages, the repo docs and the machine-readable agent files.
 
 ## Authoring Rules
 
 - Source-backed claims live in canonical pages with direct file references or deep-review IDs.
-- The [Feature status register](Feature-Status-Register) stays short and dashboard-like; evidence belongs in linked pages.
-- Machine files must parse cleanly and should not carry stale optimistic statuses.
+- [Feature status register](Feature-Status-Register) stays short and dashboard-like; evidence belongs in linked pages.
+- Machine files must parse cleanly and must not carry stale optimistic statuses.
 - When a source patch cannot be propagated because LoadoutManager cannot run, write `source patched; propagation pending`, not `source + Vanilla patched`.
 - Run `docs/validate-wiki.ps1` after docs or machine-file edits.
 

@@ -2,7 +2,7 @@
 
 This page turns upstream development history from `Miksuu/a2waspwarfare` into practical guidance for future Wasp Warfare developers and AI agents.
 
-Evidence sources used for this page: the original deep pass covered upstream `master` through `8bcc42b1` (2026-06-02), GitHub PRs #1-#12, branch list from the upstream repository, merge/revert commits, commit messages and file-level deltas. The page was then refreshed on 2026-06-05 for `miksuu/master` `69e1958a` / `e4be1958` capture-state evidence. Treat all of this as developer-intent evidence, not a substitute for current-source inspection before code changes.
+Evidence sources used for this page: the original deep pass covered upstream `master` through `8bcc42b1` (2026-06-02), GitHub PRs #1-#12, branch list from the upstream repository, merge/revert commits, commit messages and file-level deltas. The page was then refreshed on 2026-06-05 for `miksuu/master` `69e1958a` / `e4be1958` capture-state evidence and on 2026-06-06 for `miksuu/master` / rayswaynl `origin/master` `89ae9dad` town-defense persistence evidence. Treat all of this as developer-intent and current-source evidence by ref, not a substitute for target-branch inspection before code changes.
 
 ## High-Signal Patterns
 

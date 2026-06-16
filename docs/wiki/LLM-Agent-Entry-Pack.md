@@ -24,7 +24,7 @@ Use this page first, then jump into the canonical pages and machine files it nam
 | --- | --- |
 | Start gameplay edits in `Missions/[55-2hc]warfarev2_073v48co.chernarus`. | This is the source mission. |
 | Treat `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` as generated/copy output. | Propagation should happen through `Tools/LoadoutManager`, not hand-edited drift. |
-| Do not claim Vanilla propagation unless LoadoutManager ran and generated diffs were inspected. | The tool now supports normal repo-root marker checkouts and can skip packaging with `A2WASP_SKIP_ZIP=1`; runtime smoke is still a separate gate. |
+| Do not claim Vanilla propagation unless LoadoutManager ran and generated diffs were inspected. | Current source/stable/Miksuu/perf need an `a2waspwarfare` ancestor; release `7ff18c49` adds marker-root discovery. Use `A2WASP_SKIP_ZIP=1` for propagation-only runs; runtime smoke is still a separate gate. |
 | Treat `Modded_Missions/*` as divergent/stubbed unless a tooling owner proves otherwise. | Current generation/package paths do not actively maintain modded missions. |
 | Use Arma 2 OA scripting references and the compatibility audit. | Arma 3 behavior is not a safe assumption; existing Arma 3 mentions are usually warnings, not implementation advice. |
 | Keep public-server hardening conservative. | PVF/direct PV/economy paths include client- or payload-authoritative legacy behavior. |

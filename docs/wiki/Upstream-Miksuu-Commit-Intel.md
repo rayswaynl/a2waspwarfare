@@ -2,7 +2,7 @@
 
 This page indexes source-backed upstream history from `Miksuu/a2waspwarfare` for documentation and future implementation planning. It is intentionally evidence-first: use it to find proven developer intent, then re-check current source before patching.
 
-Research snapshot: upstream `master` at `69e1958a` after the 2026-06-05 refetch, GitHub PRs #1-#12, branch list from GitHub, and local fetched upstream refs. Earlier sections still preserve their original point-in-time evidence.
+Research snapshot: upstream `master` at `89ae9dad` after the 2026-06-06 refetch, GitHub PRs #1-#12, branch list from GitHub, and local fetched upstream refs. Earlier sections still preserve their original point-in-time evidence.
 
 ## PR Ledger
 
@@ -49,7 +49,7 @@ Research snapshot: upstream `master` at `69e1958a` after the 2026-06-05 refetch,
 | `88e0749a`, `ff1ea838`, `62becdda`, `49aa1e53` | performance audit/analyzer | Diagnostics preceded major performance work. |
 | `4aaa814a` | `server_town_camp.sqf`, `server_town_ai.sqf`, town-unit creation/delegation | Server loop and town-AI optimizations intentionally reduced scans and marker work. |
 | `6189f3c5` | `server_town_ai.sqf` | Scan budgeting added per-cycle and per-town cadence. |
-| `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6`, `e4be1958` | `server_town.sqf`, `server_town_ai.sqf`, delegation/static-defense helpers | Town defense activation needed restoration, defender filtering and diagnostics after performance changes. The newest upstream patch also clears previous-side active town-AI state on capture so the new owner can spawn occupation teams. |
+| `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6`, `e4be1958`, `925f509f` | `server_town.sqf`, `server_town_ai.sqf`, delegation/static-defense helpers | Town defense activation needed restoration, defender filtering, diagnostics, captured-town state reset and old-defender persistence/cleanup after performance changes. |
 
 #### 2026-06-05 `miksuu/master` Capture-State Addendum
 
@@ -60,9 +60,22 @@ Evidence checked:
 | Branch / commit | Mission coverage | Source shape | Interpretation |
 | --- | --- | --- | --- |
 | `miksuu/master` `e4be1958` | Source Chernarus and maintained Vanilla Takistan | `Server/FSM/server_town.sqf:229-257` logs `capture_before`, copies `wfbe_town_teams` / `wfbe_active_vehicles`, deletes prior tracked groups/vehicles when they are not player-led, resets `wfbe_active`, `wfbe_active_air`, `wfbe_active_sideIDs`, `wfbe_active_override`, `wfbe_inactivity`, `wfbe_town_teams` and `wfbe_active_vehicles`, then logs `capture_cleanup`. | Upstream fix candidate for captured towns where old active AI state blocks new occupation AI. |
-| `rayswaynl/origin/master` `2cdf5fb8` | Source Chernarus baseline checked | `Server/FSM/server_town.sqf:226-245` goes from capture log to side messages, `sideID` write, `TownCaptured`, camp reassignment and defense replacement; it does not reset `wfbe_*` active-town AI variables during capture. | Source-unpatched in stable baseline. Do not claim this behavior is fixed until imported and smoked. |
+| `rayswaynl/origin/master` `2cdf5fb8` | Source Chernarus historical baseline checked | `Server/FSM/server_town.sqf:226-245` goes from capture log to side messages, `sideID` write, `TownCaptured`, camp reassignment and defense replacement; it does not reset `wfbe_*` active-town AI variables during capture. | Historical stable baseline only. A later 2026-06-06 fetch advanced remote `origin/master` to `89ae9dad`, so use the current-master addendum below for live remote-stable status. |
 
 Import caution: the upstream cleanup uses the same player-leader-only vehicle deletion shape as the known [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) issue. If this patch is ported, add a crew/cargo/turret player-occupancy guard before deleting `_captureVehicles` or explicitly smoke occupied captured-town AI vehicles.
+
+#### 2026-06-06 `miksuu/master` Town-Defense Persistence Addendum
+
+Refetch result: `miksuu/master` moved from `69e1958a` to `89ae9dad` by merging `Marty_town_defense_overhaul`. The new source commits include `decbc2a8` diagnostics, `f532f706` / `4124aac9` maintained Vanilla propagation and [`925f509f`](https://github.com/Miksuu/a2waspwarfare/commit/925f509f) (`Fix town defense persistence and add debug visibility`).
+
+Evidence checked:
+
+| Branch / commit | Mission coverage | Source shape | Interpretation |
+| --- | --- | --- | --- |
+| `miksuu/master` `89ae9dad` | Source Chernarus and maintained Vanilla Takistan | `Common/Init/Init_Common.sqf:106` compiles `WFBE_CO_FNC_MarkTownDefenseAsset`; `Server/Init/Init_Server.sqf:55,60` compile `WFBE_SE_FNC_CleanupExpiredTownDefenseAssets` and `WFBE_SE_FNC_SendTownDebugChat`; `Rsc/Parameters.hpp:484-485` exposes `WFBE_C_TOWN_DEFENSE_DIAGNOSTICS`. | Upstream adds a diagnosable captured-town defender persistence model, not just a capture-state reset. |
+| `miksuu/master` `89ae9dad` | Source Chernarus and maintained Vanilla Takistan | `server_town.sqf:234-267` copies active town teams/vehicles on capture, marks groups/units/vehicles with `WFBE_CO_FNC_MarkTownDefenseAsset`, stores `wfbe_persistent_town_defense_assets`, then clears `wfbe_active*`, `wfbe_town_teams` and `wfbe_active_vehicles` for the captured town. | New owner activation can proceed while old defenders persist temporarily; this is upstream lesson evidence until imported and smoked. |
+| `miksuu/master` `89ae9dad` | Source Chernarus and maintained Vanilla Takistan | `Server_CleanupExpiredTownDefenseAssets.sqf:57-64` deletes expired persistent groups/objects, but object deletion still checks only `isPlayer _asset` and `isPlayer leader group _asset`, not every crew/cargo/turret occupant. Normal inactivity cleanup also still deletes tracked town-AI vehicles with the player-leader-only guard at `server_town_ai.sqf:277-278`. | The upstream persistence model does not close DR-45; any import should add the [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) crew guard first or in the same patch. |
+| `rayswaynl/origin/master` `89ae9dad` | Source Chernarus and maintained Vanilla Takistan | Stable master now points at the same merge commit as `miksuu/master`; the helper compiles, capture-persistence block and incomplete player-occupancy guards above are present on current master. A recheck showed the local source checkout also at `89ae9dad`. | No longer upstream-only. Treat as current stable source evidence, but still not runtime-smoked or DR-45 complete. |
 
 ### UI, Markers And Locality
 

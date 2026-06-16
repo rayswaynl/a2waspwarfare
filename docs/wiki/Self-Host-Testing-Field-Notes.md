@@ -67,6 +67,35 @@ A single broken PBO in `MPMissions` **poisons the MP-browser scan for every miss
 
 See the [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) for the full command-availability scan.
 
+## 9. BattlEye "master not responding" → hosts redirect
+
+BattlEye — and the [BEC](https://github.com/TheGamingChief/BattlEye-Extended-Controls) RCON tool — contact **`ibattle.org`** on launch. When that host hangs or the master is unresponsive, BE stalls: symptoms run from `BE master not responding` to the BattlEye launcher hanging or never starting the game. The standard Arma-admin fix is to **blackhole the domain to localhost** so the lookup fails fast instead of blocking.
+
+Edit `C:\Windows\System32\drivers\etc\hosts` **as Administrator**, append the two lines, then `ipconfig /flushdns` (or reboot):
+
+```text
+127.0.0.1 ibattle.org
+127.0.0.1 www.ibattle.org
+```
+
+- This is the documented BEC hosts step — it does **not** disable BattlEye anti-cheat, only the legacy master/RCON-master lookup, so it is safe on a live server.
+- Apply it on whichever machine stalls: the **server** (if it runs BattlEye/BEC) and/or the **client**.
+- If BE still won't launch: re-acquire it via Steam → *Arma 2: Operation Arrowhead* → Properties → **Verify integrity of game files** (re-downloads BattlEye), confirm the firewall isn't blocking it, and remember a **reboot** can clear a stuck BE service/driver state. (Field tip credit: Miksuu.)
+- **Do NOT apply the `ibattle.org` redirect on a regular client PC** — it is a server/BEC fix only.
+
+### When the A2OA BE master itself is down (observed 2026-06-10)
+
+Symptoms, in matching pairs:
+
+- **Server log**: `Connected to BE Master` on each player join (GUIDs even get verified), then `Failed to receive from BE Master (0)` / `Master query timed out` ~60–75 s later, on repeat. The master answers short exchanges then goes silent.
+- **Client**: "Launch with BattlEye" shows the consent box, then **"Windows cannot access the specified device, path, or file"** on the game exe + `Failed to launch game` after ~19 s. Procmon shows why: `BEService.exe` sends hundreds of UDP packets to the BE master (`57.129.90.x:2329-2330`) with **zero replies** → the service never authorizes the launch → BattlEye's `BEDaisy` kernel driver vetoes the game's process creation. No file/ACL/AV problem on the PC — reinstalls, reboots, and permission fixes cannot help. The dialog's full (untruncated) caption can be read with Win32 `EnumWindows`+`GetWindowText`.
+
+Workarounds until the master recovers — three gotchas that all bite:
+
+1. **`BattlEye = 0;` in server.cfg is IGNORED by the 1.64 dedicated server** — the BE module still initializes and kicks no-BE clients ~20 s after join (right after `Verified GUID`). To truly disable server BE, rename `<OA>\BattlEye` **and** `<OA>\Expansion\BattlEye` to `BattlEye.disabled` and restart. Fully reversible.
+2. **Launching `ArmA2OA.exe` directly does not avoid BattlEye** — the Steam build relaunches itself through Steam, which re-enters the default (BattlEye) launch entry. Prevent it by setting the app-id env first in a `.cmd`: `set SteamAppId=33930` then `start "" "ArmA2OA.exe" <args>`.
+3. Clients then join the BE-stripped server normally (no BE handshake happens). Remember the **AFK kick depends on BattlEye** — it is inert while BE is off.
+
 ## Continue Reading
 
 Previous: [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow) | Next: [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide)

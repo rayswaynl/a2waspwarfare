@@ -17,7 +17,7 @@ Use this before release notes, generated mission propagation or any claim that a
 
 1. Read [Source fix propagation queue](Source-Fix-Propagation-Queue) for the human explanation.
 2. Load [`agent-release-readiness.json`](agent-release-readiness.json) for machine status.
-3. Run LoadoutManager from a checkout where root discovery succeeds; normal repo-root marker checkouts now work.
+3. Run LoadoutManager from a checkout where branch-specific root discovery succeeds; current source/stable/Miksuu/perf need an `a2waspwarfare` ancestor, while release `7ff18c49` also accepts the documented repo markers.
 4. Inspect generated diffs.
 5. Record Arma 2 OA smoke in the owning page and machine files.
 

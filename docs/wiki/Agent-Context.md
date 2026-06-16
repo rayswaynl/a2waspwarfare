@@ -72,7 +72,7 @@ This is the compact human-readable context file for AI coding agents. Start mach
 - AI commander/autonomous logistics revival audit: `AI-Commander-Autonomy-Audit.md`.
 - External Claude review: use `Claude-Goal.md` for a focused pass or `Claude-Long-Term-Goal.md` for a long-running counterpart, then update `Agent-Worklog.md`.
 - Cross-agent progress: read `Progress-Dashboard.md`, `agent-status.json` and `agent-release-readiness.json` first when you need the current Codex/Claude and release-readiness state.
-- Source-propagated smoke lane currently includes client skill init, hosted FPS, supply scan, paratrooper markers and commander-built ARTY ownership; none are release-complete until Arma 2 OA smoke is recorded.
+- Source-propagated smoke lane currently includes client skill init, hosted FPS, supply scan, paratrooper markers and commander-built ARTY ownership; none are release-complete until Arma 2 OA smoke is recorded. Commander ARTY is branch-shaped: docs/source uses a commander-team gunner handoff, release `7ff18c49` uses `WFBE_CommanderArtillery*` marker discovery, and current stable master still lacks both shapes.
 - Cross-agent coordination: read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json`, `agent-knowledge.jsonl` and `agent-events.jsonl` before starting a parallel pass.
 - Implementation lessons: read `Development-Lessons-Learned.md` before touching AI respawn/orders, cleanup queues, `Common/Config`, module wiring or other areas already indexed by the lesson-aware lane.
 - Independent review findings: `Deep-Review-Findings.md` records source-cited Claude findings that still need to be reconciled into owning atlas pages.

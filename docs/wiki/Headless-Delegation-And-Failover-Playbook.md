@@ -85,6 +85,12 @@ Authority edge: `Server_HandleSpecial.sqf:75-83` trusts the UID and FPS values f
 
 Do not copy this player-client session-counting model directly into HC mode without adapting it; HC mode currently stores HC groups, not per-HC delegated work records.
 
+### Release Branch Locality Guard Delta
+
+`origin/release/2026-06-feature-bundle` head `7ff18c49` has a narrow delegated-AI locality hardening delta in both maintained release roots. `Client_DelegateAIStaticDefence.sqf:27` and `Client_DelegateTownAI.sqf:27` now create a fallback group only when the passed group is null or empty. `Common_CreateUnit.sqf:34-36` and `Common_CreateUnitForStaticDefence.sqf:68-69` still protect non-local populated groups, but they key the fallback on the group leader's locality rather than replacing every non-local group before checking contents.
+
+Treat this as PR8 release-branch evidence, not as closure for DR-42. The static-defense update-back is still commented, no server `update-delegation-static_defence` receiver exists, and HC disconnect/failover work records are still design work. Add HC/town/static delegation smoke to any `7ff18c49` release test window before calling the branch safe.
+
 ## Mode Split Quick Reference
 
 | Runtime meaning | Mode / symbols | Live source path | Main risk |

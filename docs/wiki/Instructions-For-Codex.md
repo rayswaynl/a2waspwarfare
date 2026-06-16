@@ -59,7 +59,7 @@ Track pruning decisions in [Wiki pruning and relevance ledger](Wiki-Pruning-And-
 ## False Positives To Preserve
 
 - [Public variable channel index](Public-Variable-Channel-Index) PVF list ranges `:8-20` (server) and `:23-37` (client) are correct.
-- DR-15 is **not** a false positive: `RequestNewCommander.sqf:13` passes `[_side, _assigned_commander]`, while `Server_AssignNewCommander.sqf:3-5` treats the whole payload as `_side`.
+- DR-15 was **not** a false positive (the call-shape bug was real). **It is now FIXED on `master` (2026-06-07):** `Server_AssignNewCommander.sqf:4` reads `_side = _this select 0;`. Only the redundant `new-commander-assigned` broadcast remains. Do not re-open the call-shape bug as current.
 - Static reference hits are leads, not runtime proof. Confirm executable call sites before promoting missing files to release blockers.
 - Do not call a fix shipped on `master` unless `origin/master` proves it. Use branch-scoped status for docs branch, release branch, PR #1, source Chernarus and maintained Vanilla Takistan.
 

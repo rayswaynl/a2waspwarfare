@@ -335,6 +335,8 @@ Adversarial verification of Cicero's candidate — **confirmed live** by tracing
 
 **Impact:** when a human is assigned commander via `RequestNewCommander`, the AI-commander shutdown path mis-fires (mitigated in practice because the AI-commander FSM is itself dormant — DR-14 note). There's also a **redundant** `new-commander-assigned` broadcast (sent by both `RequestNewCommander.sqf` and `Server_AssignNewCommander.sqf`). **Fix:** `_side = _this select 0;`. One-line change in Chernarus source.
 
+> **RESOLVED on current `master` (source-confirmed 2026-06-07, megapass).** The primary call-shape bug is **fixed**: `Server/Functions/Server_AssignNewCommander.sqf:4` now reads `_side = _this select 0;` (with a Marty comment: *"the direct commander assignment receives [side, commanderTeam]"*) and `:5` `_commander = _this select 1;`, so `GetSideLogic` gets a real side and the AI-com shutdown block operates on the correct logic. The minor secondary item is **not** fixed: the `new-commander-assigned` broadcast is still sent by both `RequestNewCommander.sqf:14` and `Server_AssignNewCommander.sqf:10` (duplicate). DR-15's core defect is closed on master; only the redundant-broadcast cleanup remains (cosmetic). This is the one DR the resolved-issue sweep found genuinely fixed; DR-1..DR-14, DR-16..DR-57 remain open on master.
+
 ### Handoff
 
 Code owners: (DR-14) decide whether to route player purchases through a validated server PVF (large) or accept client-authority + add a BattlEye `scripts.txt` filter; (DR-15) one-line fix `_side = _this select 0` in `Server_AssignNewCommander.sqf` and drop the duplicate `new-commander-assigned` broadcast. Ledger: Factory/purchase Auth/PV advanced; AI-commander caveat cross-linked.
@@ -811,7 +813,7 @@ Lane `supply-missions-perf-jip-review`. Filled the Supply-missions Perf + JIP/HC
 
 **Abandoned-code: a dead twin.** Two near-identical supply-mission tracking loops exist. The **live** one is `supplyMissionStarted.sqf` — it self-registers `"WFBE_Client_PV_SupplyMissionStarted" addPublicVariableEventHandler { … }` (`:1`), so compiling it (Init_Server `:68` → `WFBE_SE_FNC_SupplyMissionStarted`) installs the handler. The **dead** one is `supplyMissionActive.sqf` — a plain function body (no PVEH; takes `_this select 0/1/2`, runs `while {alive _truck && !_completed} {sleep 2}`), compiled to `WFBE_SE_FNC_SupplyMissionActive` (Init_Server `:81`) but **never called anywhere** (grep-confirmed: no caller, no self-registration). It is the superseded older twin of `supplyMissionStarted`'s spawn body (same `LastSupplyMissionRun` set, same `SupplyMissionTimerForTown` spawn, same truck-alive poll). **Owner cleanup:** delete `supplyMissionActive.sqf` + its `Init_Server:81` compile, or wire it if a second path was intended. Adds to the abandoned-code inventory (DR-32/DR-34/DR-35 class).
 
-**Perf (live path).** Each active supply mission spawns one server-side `while {alive _associatedSupplyTruck} { sleep 3; ... }` loop (`supplyMissionStarted.sqf:20-69`). On `origin/master`, the per-tick cost is still `nearestObjects [(getPos _truck), [], 80]` at `supplyMissionStarted.sqf:24-28` — an **all-object-types** scan in an 80 m radius every 3 s, just to detect a `Base_WarfareBUAVterminal`. This docs/source branch and maintained Vanilla have already narrowed that command-center scan to `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` at `:28`; `origin/release/2026-06-feature-bundle` carries a PR #1-compatible narrowed scan at `:50-56`, including heli 400 m / truck 80 m radius selection and the heli 2D distance gate at `:52-54`. The 8 m nearby-player/object scan at current branch `:44` intentionally remains broad because it runs only once at delivery and is looking for player/vehicle occupants, not command-center structures.
+**Perf (live path).** Each active supply mission spawns one server-side `while {alive _associatedSupplyTruck} { sleep 3; ... }` loop (`supplyMissionStarted.sqf:20-69`). On current source/stable/upstream/perf, the per-tick cost is still `nearestObjects [(getPos _truck), [], 80]` at `supplyMissionStarted.sqf:24-28` — an **all-object-types** scan in an 80 m radius every 3 s, then a `Base_WarfareBUAVterminal` post-filter. Release `7ff18c49` carries a PR #1-compatible typed scan at `:52,58` in both maintained release roots, including heli 400 m / truck 80 m radius selection and the heli 2D distance gate. The 8 m nearby-player/object scan at current branch `:44` intentionally remains broad because it runs only once at delivery and is looking for player/vehicle occupants, not command-center structures.
 
 **JIP/HC — handled well (the positive counterexample to DR-34).** Supply-mission *cooldown status* uses an **on-demand request/response**, not a fire-and-forget push: a client broadcasts `WFBE_Client_PV_IsSupplyMissionActiveInTown`; the server PVEH (`isSupplyMissionActiveInTown.sqf`) computes the cooldown from `_sourceTown getVariable "LastSupplyMissionRun"` vs `WFBE_CO_VAR_SupplyMissionRegenInterval` and answers via `WFBE_Server_PV_IsSupplyMissionActiveInTown`; the client (`townSupplyStatus.sqf`) stores it per-town. So a **JIP joiner gets correct state simply by asking** — no replay logic needed, unlike the MASH marker (DR-34) which pushed once and missed joiners. The per-mission tracking loop is **server-side** and keyed on the truck object, so it correctly survives the starting player's disconnect (truck ownership migrates to the server, DR-21). Minor: the cooldown answer is broadcast to *all* clients (`publicVariable`, `:18`) rather than targeted to the requester — every client re-stores the town's cooldown on each query (small redundant network; could target the asker). The DR-18 `LastSupplyMissionRun` casing concern lives in this subsystem and is already filed.
 
@@ -915,7 +917,7 @@ Chain (source-cited):
 
 ## Round 36 — 2026-06-02 (Claude) — full wiki audit follow-through: DR-45 (town-AI vehicle despawn) + direct-PV surface closed + coverage-gap assessment
 
-Lane `wiki-audit-followthrough`. Three parallel audits of all 60 wiki pages (duplication already resolved by Codex; this pass = accuracy/consistency/coverage). The wiki is healthy (no broken links, no orphans, DR severities consistent everywhere). The `Public-Variable-Channel-Index` PVF line ranges (`:8-20`/`:23-37`) were a verified audit false positive and should not be "fixed." **Correction 2026-06-03:** this paragraph formerly grouped DR-15's `_side = _this` at `Server_AssignNewCommander.sqf:3` into that false-positive bucket; source recheck confirms that was stale. `RequestNewCommander.sqf:13` still passes `[_side, _assigned_commander]`, while `Server_AssignNewCommander.sqf:3-5` treats the full payload as `_side` and indexes element 1 as commander, so DR-15 remains patch-ready/source-unpatched. Real outcomes below.
+Lane `wiki-audit-followthrough`. Three parallel audits of all 60 wiki pages (duplication already resolved by Codex; this pass = accuracy/consistency/coverage). The wiki is healthy (no broken links, no orphans, DR severities consistent everywhere). The `Public-Variable-Channel-Index` PVF line ranges (`:8-20`/`:23-37`) were a verified audit false positive and should not be "fixed." **Correction 2026-06-03:** this paragraph formerly grouped DR-15's `_side = _this` at `Server_AssignNewCommander.sqf:3` into that false-positive bucket; source recheck confirms that was stale. `RequestNewCommander.sqf:13` still passes `[_side, _assigned_commander]`, while `Server_AssignNewCommander.sqf:3-5` treats the full payload as `_side` and indexes element 1 as commander, so DR-15 remains patch-ready/source-unpatched. Real outcomes below. **Update 2026-06-07:** DR-15's call-shape bug is now **fixed on master** (`Server_AssignNewCommander.sqf:4` reads `_side = _this select 0;`) — see the RESOLVED note on the DR-15 record; only the redundant `new-commander-assigned` broadcast remains.
 
 ### DR-45 — Town-AI inactivity despawn deletes vehicles with player passengers — **Medium (gameplay; player vehicle loss)**
 
@@ -935,13 +937,15 @@ Following DR-41/DR-44, the remaining client-touchable **direct** `publicVariable
 
 ### Coverage-gap & code-depth assessment (what remains unreviewed)
 
-Honest accounting of where the campaign has **not** gone deep, for the owner/Codex to prioritise:
-- **Server/AI respawn + orders** (`Server/AI/AI_AdvancedRespawn.sqf`, `AI_SquadRespawn.sqf`, `AI_AddMultiplayerRespawnEH.sqf`, `Orders/AI_*.sqf`, legacy `AI_TLWPHandler.sqs`) — listed in the Modules/Function index but not deep-reviewed for authority/perf/JIP.
-- **Cleaners/restorers Perf** (`Server/FSM/cleaners/*`, `buildings_restorer.sqf`) — source-level cadence/cost is now documented in [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation): high-cadence registry drains are separate from long-timer wide scans and the tracked mine queue. Live RPT samples remain pending before performance-tuning patches.
-- **Config data model** (`Common/Config/Core*/`, `Gear/`, `Loadout/`, `Defenses/`) — the faction/unit/upgrade data layer load-order is documented per-atlas but not as a coherent whole.
-- **`Server/FSM/basearea.sqf`, `groupsMonitor.sqf`, `Server/Support/Support_*` ** — purpose-mapped only; trigger chains not traced.
-- **PR#1 supply-helicopter** delta — reviewed at a high level (stacked `Killed` EH) but not line-by-line on the `feat/supply-helicopter` branch.
-- **Code depth note:** the economy/forgery and PVF classes are reviewed to *exploit-and-fix* depth; the AI/respawn and cleaner subsystems are at *map-only* depth. These are the next high-value review lanes if the campaign continues.
+> **CLEARED 2026-06-07 (Round 41, agent team).** Every item below has now been source-reviewed to finding depth; the residual list is empty. See [Round 41](#round-41--agent-team-clearance-of-the-coverage-gap-backlog--dr-51dr-54) for DR-51..DR-54 and the dead-code/correction routing.
+
+Original accounting (kept for provenance), now annotated with its clearance:
+- **Server/AI respawn + orders** — ✅ CLEARED (Round 41): DR-51 (both respawn paths orphaned/uncalled), AI_TLWPHandler dead, live water-loop traced to `Common_WaypointPatrolTown.sqf` (not the dead `Orders/AI_Patrol.sqf`).
+- **Cleaners/restorers Perf** (`Server/FSM/cleaners/*`, `buildings_restorer.sqf`) — already documented in [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation). Live RPT samples remain a code/test-owner perf-tuning gate (not a review gap).
+- **Config data model** (`Common/Config/Core*/`, `Gear/`, `Loadout/`, `Defenses/`) — ✅ CLEARED (Round 41): full load-order/data-model map produced and folded into [Assets/config atlas](Assets-Config-Localization-And-Parameters-Atlas); DR-54 (Core_US/USMC dedup guard + AH64D faction).
+- **`Server/FSM/basearea.sqf`, `groupsMonitor.sqf`, `Server/Support/Support_*`** — ✅ CLEARED (Round 41): DR-52 (support-special authority), groupsMonitor dead-code, basearea `_onAreaRemoved` accumulation (nuanced perf).
+- **PR#1 supply-helicopter** delta — ✅ CLEARED (Round 41): line-by-line on `feat/supply-helicopter` → DR-53 (forgeable SupplyAmount + non-cash double-reward); the suspected stacked `Killed` EH was **refuted**.
+- **Code depth note (updated 2026-06-07):** the AI/respawn, config, support and PR #1 subsystems are now at *finding* depth alongside the economy/forgery and PVF classes. The only remaining non-review gaps are owner decisions and live RPT/Arma smoke evidence.
 
 **Handoff for Codex.** Audit punch-list (Codex-lane accuracy fixes) recorded in [Wiki quality audit](Wiki-Quality-Audit) "Round 2"; DR-45 should be cross-linked from the Town-AI playbook + AI/headless atlas; the coverage-gap list seeds the next review queue.
 
@@ -998,6 +1002,180 @@ The client vote dialog presents different semantics: `Client/GUI/GUI_VoteMenu.sq
 **Fix shape.** Decide the intended rule first: plurality, strict majority, AI/no-commander as a real candidate, or no-commander only on row-0 win. Patch the server condition to match that rule, then smoke player-majority, no-commander-majority, equal-vote, player tie and late-join/revote restart cases. Keep this separate from DR-15 manual reassignment call shape and commander-authority hardening, though they share the same UX surface.
 
 **Codex closure.** Cross-linked from [Feature status](Feature-Status-Register) and [Commander/HQ lifecycle atlas](Commander-HQ-Lifecycle-Atlas). Source remains unpatched.
+
+## Round 39 — Town-defense overhaul capture-persistence cleanup re-introduces the occupancy-deletion class (Claude, 2026-06-07)
+
+Lane `town-defense-overhaul-capture-persistence-occupancy-review`. The `Marty_town_defense_overhaul` merge landed on stable/local `master` `89ae9dad` **after** the 2026-06-02 coverage milestone, adding three new files (`Common/Functions/Common_MarkTownDefenseAsset.sqf`, `Server/Functions/Server_CleanupExpiredTownDefenseAssets.sqf`, `Server/Functions/Server_SendTownDebugChat.sqf`) plus 17 modified files in Chernarus. This is freshly-landed, previously-unreviewed code, so it was source-reviewed for the DR-45 hazard class and new authority/perf surfaces.
+
+### DR-48 — Town-defense capture-persistence cleanup deletes occupied captured vehicles; OBJECT guard is occupancy-blind and the GROUP branch is unguarded — **Medium (gameplay; player vehicle loss, extends DR-45)**
+
+When a town is captured, its surviving defender groups, units and **vehicles** are registered for temporary persistence and given an expiry:
+
+```
+// Server/FSM/server_town.sqf:238-258
+_persistDelay = missionNamespace getVariable ["WFBE_C_TOWN_DEFENSE_CAPTURE_PERSIST_TIME", 600];
+if (WF_Debug) then {_persistDelay = 60};
+_persistUntil = time + _persistDelay;
+...
+{ ... [_location, _x, _sideID, "captured_mobile_vehicle", _persistUntil] Call WFBE_CO_FNC_MarkTownDefenseAsset; ... } forEach _captureVehicles;
+```
+
+`WFBE_SE_FNC_CleanupExpiredTownDefenseAssets` runs **per town, every town-AI loop iteration**, before the activity checks (`Server/FSM/server_town_ai.sqf:61`), so expired assets are reaped even in an actively-contested just-captured town — exactly when a capturing player is most likely riding a captured vehicle. The OBJECT delete branch is:
+
+```
+// Server/Functions/Server_CleanupExpiredTownDefenseAssets.sqf:61-64
+if (_assetType == "OBJECT") then {
+    if !(isPlayer _asset) then {
+        if !(isPlayer leader group _asset) then {deleteVehicle _asset};
+    };
+};
+```
+
+Two distinct gaps, both source-confirmed:
+
+1. **The OBJECT guard is occupancy-blind for vehicles.** `captured_mobile_vehicle` and `static_weapon` assets are vehicle objects, and the guard never inspects `crew`/`cargo`/turret occupants — it is the same class as DR-45. Worse, for a vehicle object `group _asset` is `grpNull` (group resolves a *person*, not a vehicle), so `isPlayer leader group _asset` evaluates `isPlayer objNull = false` and the delete always fires. Under that engine semantics the guard spares **no** occupant — not even a player **driver** — so a player who boarded a captured town vehicle has it deleted under them when the 10-minute persistence (60s under `WF_Debug`) expires. The repo's own occupancy primitive corroborates this: `Server/Functions/Server_HandleEmptyVehicle.sqf` keeps a vehicle alive while `{alive _x} count crew _vehicle > 0`, i.e. it uses `crew`, never `group`, to detect occupants. **Open verification:** the BIKI page for `group` could not be fetched live this pass (HTTP 403); confirm in-engine that `group <vehicle>` returns `grpNull` in Arma 2 OA 1.64. The recommended fix below is correct under either interpretation.
+
+2. **The GROUP branch has no player guard at all.** `static_group` / `captured_static_group` / `mobile_group` assets hit the GROUP branch, which deletes every member unconditionally:
+
+   ```
+   // Server/Functions/Server_CleanupExpiredTownDefenseAssets.sqf:57-60
+   if (_assetType == "GROUP") then {
+       {deleteVehicle _x} forEach units _asset;
+       deleteGroup _asset;
+   };
+   ```
+
+   Real-world player risk here is lower (town-defender groups are AI-created), but the asymmetry — OBJECT branch attempts a (broken) player guard while GROUP branch attempts none — is a latent gap if a player ever ends up in a marked group (e.g. team-switch/join into a defender group).
+
+**Relationship to DR-45.** DR-45 is the same occupancy-deletion class in the *inactivity* despawn path (`server_town_ai.sqf:278`); DR-48 is the *capture-persistence* path in the new overhaul, with distinct files and asset types, so it is filed separately. The `group <vehicle>` = `grpNull` observation, if confirmed, also sharpens DR-45: its `:278` guard `!(isPlayer leader group _x)` likewise iterates vehicle objects from `wfbe_active_vehicles`, so it too would spare no occupant rather than only "missing cargo/passengers." Both fixes converge on the same `crew`-based primitive.
+
+**Fix shape.** Before deleting an OBJECT asset, skip it if any occupant is a player: `if (({isPlayer _x} count crew _asset) == 0) then {deleteVehicle _asset};` (optionally retain the existing leader exception as a behavior-preserving addition, matching the DR-45 patch shape on [Town-AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety#safe-patch-shape)). For the GROUP branch, skip member deletion when any unit is a player: `if (({isPlayer _x} count units _asset) == 0) then { {deleteVehicle _x} forEach units _asset; deleteGroup _asset; };`. Patch Chernarus source, propagate to maintained Vanilla via LoadoutManager, then smoke: capture a town, board a `captured_mobile_vehicle` as driver and as cargo, and confirm it is not deleted under the player at expiry; verify empty captured vehicles are still reaped. Fix shape in [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) `#town-defense-overhaul-capture-persistence-occupancy`.
+
+**Branch scope.** Source-verified on current source/Vanilla and stable/Miksuu `89ae9dad`. The overhaul is not present on historical `2cdf5fb8`; `perf/quick-wins` `0076040f` and release `7ff18c49` predate this merge for these new files — branch presence of the overhaul on those heads should be confirmed by the next current-head refresh pass before cross-branch status wording.
+
+**Outcome:** DR-48 filed — the new town-defense overhaul re-introduces the DR-45 occupancy-deletion class in the capture-persistence cleanup, with an occupancy-blind OBJECT guard (illusory for vehicles, pending one in-engine confirmation) and an unguarded GROUP branch. Source unpatched; routed to the Town-AI playbook, coverage ledger and hardening backlog.
+
+## Round 40 — Audit Findings Queue verification sweep → DR-49, DR-50 (Claude, 2026-06-07)
+
+Lane `audit-findings-queue-verification-sweep`. The [Audit Findings Queue (2026-06-03)](Audit-Findings-Queue-2026-06-03) held ~48 previously-UNVERIFIED (`⬜`) audit claims flagged as "claims to check." This sweep source-checked every remaining row against current `master` (Chernarus) via read-only scouts, then adversarially re-verified the high-severity promotions at source. The queue page now carries the per-row verdicts; this round records the two genuinely-new confirmed exploits as numbered findings plus one correction.
+
+### DR-49 — Side-supply underflow guard *adds* supply instead of clamping (economy exploit) — **High (economy integrity)**
+
+`Common/Functions/Common_ChangeSideSupply.sqf:24-25` and the server-side handlers `Server/Functions/Server_ChangeSideSupply.sqf:12` (west) / `:36` (east):
+```
+_change = _currentSupply + _amount;
+if (_change < 0) then {_change = _currentSupply - _amount};
+```
+The second line is intended as an underflow guard, but for a **negative** `_amount` (a deduction), `_currentSupply - _amount` = `_currentSupply + |_amount|`. So any deduction large enough to drive supply below zero instead **increases** side supply by the deduction's magnitude. The correct clamp is `_change = 0`. This is the arithmetic logic of the supply mutation itself — distinct from DR-44, which covered the *forgeability* of the `wfbe_supply_temp_<side>` channel; DR-49 is wrong even for legitimate server-issued deductions. **Fix:** `if (_change < 0) then {_change = 0};` in all three sites (Common + both server handlers); propagate to maintained Vanilla. Smoke: drive a side's supply near zero and issue a deduction larger than the balance; confirm it clamps to 0, not jumps up. Fix shape in [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) `#side-supply-underflow-guard-inverts`. (Was audit row SG3.)
+
+### DR-50 — HQ kill awards score twice on a clean kill and once on a teamkill — **Medium (scoring integrity)**
+
+`Server/Functions/Server_OnHQKilled.sqf` awards HQ-kill score in two places:
+- `:23,46-47` — **unconditional** `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF` (900 at the default coef 3), awarded to `leader _killer_group` on **every** HQ kill, including teamkills;
+- `:74-81` — a **second** award `_score = 900` to `leader _killerGroup`, this one correctly guarded by `if (_side != side _killer)` (non-teamkill only).
+
+Net effect: a legitimate enemy HQ kill awards **1800** (900 + 900); a **teamkill** still awards **900** from the unconditional block, despite the `:62-71` message branch treating teamkills as punishable. **Fix:** move the `:46-47` award inside the non-teamkill guard (or delete one of the two awards so a clean kill pays once), and ensure teamkills award nothing. Smoke: kill an enemy HQ and confirm a single bounty; teamkill a friendly HQ and confirm zero score. Fix shape in [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) `#hq-kill-double-score`. (Was audit row SG2.)
+
+### Correction — NJ10 (JIP HQ killed-EH) is not a victory-blocker
+
+The audit row NJ10 (`Client/Init/Init_Client.sqf:512`, "JIP HQ killed-EH not added when deployed → victory may not fire") was flagged "high." Source re-verification shows the **authoritative** HQ-killed handler is server-local — `Server/Init/Init_Server.sqf:323`, `Server/Construction/Construction_HQSite.sqf:89` (comment: *"Killed EH fires localy, this is the server"*) and `Server/Functions/Server_MHQRepair.sqf:37` all add `killed → WFBE_SE_FNC_OnHQKilled` directly on the server. The client EH at `Init_Client.sqf:515` only **relays** `process-killed-hq` to the server (redundant with the server's own EH). The `!_isDeployed` gate means a post-deploy JIP client skips the redundant relay, but the server still processes the kill and fires victory. NJ10 is therefore a minor robustness/cleanup item (`⚠️ NUANCED`), **not** a victory failure. Recorded so future agents don't re-open it as critical.
+
+**Outcome:** The Audit Findings Queue is fully verified — no `⬜` rows remain. Two new source-confirmed exploits filed (DR-49 supply underflow, DR-50 HQ double-score); SG1 re-confirms DR-11/DR-13 and SG14 maps to DR-30; NJ10's "victory-blocker" framing corrected. Per-row verdicts, false positives (V8, V9, V12, NJ6), GONE/fixed (AI13) and nuanced/design items live on the [Audit Findings Queue](Audit-Findings-Queue-2026-06-03).
+
+## Round 41 — Agent-team clearance of the coverage-gap backlog → DR-51..DR-54 (Claude, 2026-06-07)
+
+Lane `clear-wiki-coverage-gap-backlog`. A five-agent team source-reviewed the weakly-understood subsystems listed in [Round 36's coverage-gap assessment](#coverage-gap--code-depth-assessment-what-remains-unreviewed) (AI respawn, AI orders/waypoints, the config data model, server support + misc FSM, and the PR #1 supply-helicopter branch); every candidate finding was then adversarially verified at source by a second agent. This round records the confirmed findings and two important corrections; the gap list above is now marked cleared.
+
+### DR-51 — AI respawn handlers are orphaned: the active respawn path never attaches, so AI leaders silently never respawn — **Medium (gameplay; AI never regenerates)**
+
+`Server/AI/AI_AddMultiplayerRespawnEH.sqf` is the only file that attaches the `MPRespawn` handler driving `AIAdvancedRespawn` (the non-vanilla/OA path), but it has **no call site** — a whole-tree grep for `AI_AddMultiplayerRespawnEH`, `AddMultiplayerRespawnEH` and `addMPEventHandler` returns zero hits outside the file itself. `AIAdvancedRespawn` is compiled at `Server/Init/Init_Server.sqf:12` but only ever referenced inside that orphaned EH body, so it is dead. The vanilla path `AISquadRespawn` (`Init_Server.sqf:11`) is gated by `WF_A2_Vanilla`, which `initJIPCompatible.sqf:91` sets `false` unconditionally (the only `true` path is `#ifdef VANILLA`, and `VANILLA` is never defined), and a grep for `spawn AISquadRespawn` returns nothing — so it never runs either. **Net: both server AI-respawn paths are compiled-but-uncalled; AI group leaders are never re-spawned by this subsystem on a dedicated server.** **Fix:** compile `AI_AddMultiplayerRespawnEH.sqf` and call it for each AI group leader at group creation (matching the `WF_A2_Vanilla` guard), or delete the dead path if AI leader respawn is intentionally disabled. Source-verified on current `master`; Arma smoke (kill an AI leader, confirm no respawn) recommended before patch. (From the AI-respawn review.)
+
+### DR-52 — Support-special spawn requests have no server-side authorization, and accept a client-supplied group handle — **High (authority; free support assets + cross-team injection)**
+
+The support-special request chain is `Client GUI → WFBE_PVF_RequestSpecial → Server_HandlePVF → RequestSpecial.sqf:1 (\`_this Spawn HandleSpecial\`) → Server_HandleSpecial.sqf` cases `Paratroops`/`ParaVehi`/`ParaAmmo`/`uav` (`:43-65`), each of which does only `_args spawn KAT_*` with **no commander check, no side verification, and no server-side funds deduction** (funds are deducted client-side in `GUI_Menu_Tactical.sqf:372,514,525`, and the GUI only gates the commander check for ICBM, not these four). The PVEH registration (`Init_PublicVariables.sqf:50`) extracts no sender identity. Worse, the support scripts read the **owning group from the client payload** — `Support_Paratroopers.sqf:5` (`_playerTeam = _this select 3`), `Support_ParaAmmo.sqf:7`, `Support_ParaVehicles.sqf:7`, `Support_UAV.sqf:9` — with no check that `side _playerTeam == _side` or that the group belongs to the sender, so a forged request can `createUnit`-join paratroopers into an arbitrary (enemy) group and route server→client marker messages to the enemy leader. The PVF dispatcher's `Call Compile` only resolves the `SRVFNC`-prefixed name, so this is a **data-authority** hole, not RCE — it shares the client-authoritative class with DR-1/DR-6/DR-27/DR-28/DR-41/DR-44. **Fix:** in `HandleSpecial`, derive the sender's side/group/commander-status from the PVEH sender identity (`_this select 0`), validate against the payload, and deduct funds server-side. Source-verified on current `master`. (From the server-support review.)
+
+### DR-53 — PR #1 supply-helicopter economy is client-forgeable and double-pays the pilot on non-cash heli runs — **High (economy; branch `feat/supply-helicopter`)**
+
+On `origin/feat/supply-helicopter`: the client sets `SupplyAmount` / `SupplyByHeli` as broadcast object variables on the supply vehicle (`Client/Module/supplyMission/supplyMissionStart.sqf:53-55`, `setVariable [...,true]`), and the server reads them back without re-derivation — `supplyMissionStarted.sqf:6` (`_byHeli`) and `supplyMissionCompleted.sqf:9` (`_supplyAmount`), which is then paid via `ChangeSideSupply` (`:38`). Any client can `setVariable ["SupplyAmount", <arbitrary>, true]` on the vehicle and the server pays it out (capped only by the global `WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT`, not per-mission). Separately, for **non-cash heli runs** (Air level 3): the server deposits the full `_supplyAmount` into the team pool via `ChangeSideSupply` **and** the client pays the pilot `_supplyAmount * WFBE_C_SUPPLY_HELI_REWARD_MULT` personal cash via `ChangePlayerFunds` (`supplyMissionCompletedMessage.sqf:19`) with no `_cashRun` guard — value is minted from both paths. (Air-4 cash runs skip `ChangeSideSupply` and are single-source/clean.) **Fix:** re-derive `_supplyAmount` server-side from the source town's `supplyValue` and re-check Air upgrade; gate the client pilot reward on `_cashRun`, or pay all rewards server-side. Branch-scoped to `feat/supply-helicopter`; must be resolved before PR #1 merge + Arma smoke. (From the PR #1 review.)
+
+### DR-54 — `Core_US.sqf` / `Core_USMC.sqf` unit-registration dedup guard is broken, and `AH64D_EP1` is mislabeled to the wrong faction — **Low (config correctness / buy-menu filter)**
+
+In `Common/Config/Core/Core_US.sqf:289` and `Core_USMC.sqf:239` the duplicate-detection read drops the `_get =` assignment (`missionNamespace getVariable (_c select _z);` with the result discarded), so `_get` stays `nil` every iteration and the `isNil '_get'` guard is always true — the duplicate-registration log branch is unreachable and every entry unconditionally overwrites any prior registration. The other 19 `Core/*.sqf` files use the correct `_get = …` form. Compounding this, `Core_US.sqf:205-206` registers `AH64D_EP1` with faction field (index 8, `QUERYUNITFACTION`) `'USMC'` instead of `'US'`, so the buy-menu filter (`Client_UIFillListBuyUnits.sqf:39`) shows it only under the `USMC` tab, not `US`. **Fix:** restore `_get =` on both lines; correct the `AH64D_EP1` faction string (or move the entry to `Core_USMC.sqf`). Source-verified on current `master`. (From the config-data-model review.)
+
+### Confirmed minor / dead code (routed, not separately numbered)
+
+- **`Server/AI/AI_TLWPHandler.sqs`** (legacy straggler-sync SQS) and **`Server/FSM/groupsMonitor.sqf`** (debug poll, launch commented at `Init_Server.sqf:571`) are **dead code** — no call site anywhere. Routed to [Dead/stale code register](Dead-Code-And-Stale-Code-Register).
+- **AI autonomous supply-truck is dead**: `Init_Server.sqf:387` does `[_side] Spawn UpdateSupplyTruck` but the only compile of `UpdateSupplyTruck` is commented at `:36`, so it spawns `nil`; and `AI_UpdateSupplyTruck.sqf:17` `ExecFSM "Server\FSM\supplytruck.fsm"` references a file that does not exist anywhere in the tree. This confirms and sharpens the existing [AI supply-truck branch matrix](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) (nil-Spawn site `:387` is the precise current-source symptom).
+- **Live unbounded water-avoidance loop**: the audit's AI11/AI_Patrol water-loop lead is real but the *dead* files are `Orders/AI_Patrol.sqf` / `AI_TownPatrol.sqf` (compiled-but-uncalled); the **live** instance is `Common/Functions/Common_WaypointPatrolTown.sqf:48-52` (and `Common_WaypointPatrol.sqf`), invoked from `server_town_patrol.sqf:43`. A `surfaceIsWater` spin with no iteration cap can starve its scheduler thread near water-adjacent towns. Perf-owner lane.
+- **Config init file-read cost**: each `Core/*.sqf` vehicle entry with crew-slot `-2` does `Call Compile preprocessFile` of the crew-slot helper (which itself recurses into two more `preprocessFile` helpers) — ~281 such entries across 21 Core files → ~850-1000+ synchronous file reads at startup. One-shot init cost; hoist the compile out of the loop if startup time matters.
+- **PR #1 branch carry-over**: `server_town_patrol.sqf:18` on `feat/supply-helicopter` flips the loop exit to `||` (`while {!WFBE_GameOver || _aliveTeam}`), leaking one zombie patrol thread per town-team after game-over (30 s sleep, so not a spin). Fix to `&&` before merge.
+
+### Corrections (refuted / downgraded long-standing assumptions — preserve)
+
+- **PR #1 "stacked `Killed` EH" is REFUTED.** The long-suspected duplicate-interdiction-handler-on-reload issue does **not** occur: `supplyMissionStarted.sqf:13-16` guards the add with `isNil {getVariable "wfbe_supply_killed_eh_set"}` and broadcasts the flag, so a second load on the same vehicle never re-adds the EH. The real residual issue is a double **cooldown timer** (`supplyMissionStart.sqf:6-9` reads the cooldown before the server PV round-trip returns) plus `SupplyAmount`/`SupplyFromTown` not being zeroed on abort — Medium, not the suspected High EH-stack.
+- **PR #1 interdiction `Killed` EH is server-safe.** A candidate "EH runs `ChangeSideSupply` on a client" was refuted: `ChangeSideSupply` → `Common_ChangeSideSupply.sqf:30` only `publicVariableServer`s `wfbe_supply_temp_<side>`; the economy write happens exclusively in the server-only `Server_ChangeSideSupply` PVEH. (The separate forgeability of `wfbe_supply_temp_*` is the already-filed DR-44, not this path.)
+- **AI loadout empty-array crash is a non-issue** (audit AI14 follow-up): every `WFBE_%1_AI_Loadout_*` across all 10 faction roots is non-empty and `Common_EquipUnit.sqf:18-19` guards the optional 4th/5th args with `count _this > 4/5`, so neither the `random count []` nor the EquipUnit else-branch is reachable. The literal `13` index equals `WFBE_UP_GEAR` (correct).
+
+**Outcome:** the coverage-gap backlog is cleared — all five weakly-understood subsystems are now source-reviewed to finding depth. DR-51..DR-54 filed; dead code and config bugs routed; two PR #1 assumptions corrected (Killed-EH no-stack; interdiction EH server-safe). Full per-subsystem maps, source anchors and open questions were produced by the agent team and are summarized on the owner pages ([AI/headless](AI-Headless-And-Performance), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Assets/config atlas](Assets-Config-Localization-And-Parameters-Atlas), [Current supply heli PR](Current-Work-Supply-Helicopters-PR1)).
+
+## Round 42 — Deeper hazard-class sweep (68-agent team) → DR-55..DR-57 + systemic authority result (Claude, 2026-06-07)
+
+Lane `deep-hazard-class-sweep`. An orthogonal pass: 7 agents swept the **whole** mission tree by hazard class (exhaustive PV/PVF authority enumeration, direct-channel forgery, call-compile/EH-stacking, JIP/HC missing-broadcast, perf busy-waits, logic inversions, whole-tree dead-code), each feeding adversarial verifiers, deduped against DR-1..DR-54 and the audit-queue confirmations. The headline is **systemic**.
+
+### DR-55 — The PVF / PVEH / direct-publicVariable handler surface systemically lacks server-side sender authentication — **Critical (authority; the economy/forgery class is the whole network surface, not a few channels)**
+
+Root cause: the dispatcher `Server/Functions/Server_HandlePVF.sqf:14` runs `_parameters Spawn (Call Compile _script)` and `Common/Init/Init_PublicVariables.sqf:50` registers `… addPublicVariableEventHandler {(_this select 1) Spawn WFBE_SE_FNC_HandlePVF}` — **the sender's machine/identity (`_this select 0`/`select 2`) is never extracted or forwarded**. So *every* server PVF handler and direct-PV EH that does not independently re-derive the sender's side/role from its own payload is forgeable by any connected client (including the enemy side). This generalizes DR-1 (RCE), DR-27, DR-41, DR-44, DR-52, DR-53 from "specific channels" to "the entire surface." Newly enumerated forgeable handlers (all source-verified, none previously catalogued):
+
+| Handler / channel | Source | Severity | Forged effect |
+| --- | --- | --- | --- |
+| `RequestVehicleLock` | `Server/PVFunctions/RequestVehicleLock.sqf:1-7` | **Critical** | lock/unlock **any** vehicle (incl. enemy MHQ) — `_vehicle lock _locked` with no side/owner check |
+| `RequestChangeScore` | `Server/PVFunctions/RequestChangeScore.sqf:3-8` | **Critical** | set **any** player's score to an arbitrary value (`addScore -_old; addScore _new`) |
+| `ATTACK_WAVE_DETAILS` (direct PV) | `Server/PVFunctions/AttackWave.sqf:19-42` | **Critical** | drain a side's entire supply to 0 + set arbitrary price modifier (e.g. 0.01) for arbitrary duration; distinct from DR-41 (`ATTACK_WAVE_INIT`) which is server-computed |
+| `WFBE_Server_PV_SupplyMissionCompleted` (direct PV) + `SupplyAmount` truck var | `supplyMissionCompleted.sqf:2,9,26`; `supplyMissionStart.sqf:34` | **Critical** | client broadcasts `SupplyAmount` on the truck and fires the completion PV directly → unlimited instant supply, bypassing the proximity loop; truck path, distinct from DR-53 (heli) |
+| `RequestMHQRepair` | `Server/PVFunctions/RequestMHQRepair.sqf:1`, `Server_MHQRepair.sqf:3` | High | rebuild **any** side's HQ (cross-side); no alive/side/count/in-progress guard |
+| `RequestNewCommander` (direct-assign path) | `Server/PVFunctions/RequestNewCommander.sqf:8-13` | High | force-assign commander to any team outside a vote window (no commander/admin/side check); distinct from DR-15/DR-47 vote paths |
+| `RequestTeamUpdate` | `Server/PVFunctions/RequestTeamUpdate.sqf:1-26` | High | reprogram behaviour/combat/formation/speed for **all** teams of any side (enemy AI sabotage) |
+| `RequestSpecial "RespawnST"` | `Server_HandleSpecial.sqf:55-60` | High | kill all supply trucks of any side |
+| `RequestSpecial "repair-camp"` | `Server_HandleSpecial.sqf:225-247` | High | flip any camp to any sideID + global `CampCaptured` (territory forgery) |
+| `RequestSpecial "upgrade-sync"` | `Server_HandleSpecial.sqf:67-73` + `Server_ProcessUpgrade.sqf:29` | High | instantly complete any in-progress upgrade for any side (timer bypass) |
+| `RequestSpecial "connected-hc"` | `Server_HandleSpecial.sqf:195-209` | High | inject own group into `WFBE_HEADLESSCLIENTS_ID` (HC-pool poisoning; only guard is `owner != 0`) |
+| `RequestSpecial "update-clientfps"` | `Server_HandleSpecial.sqf:75-84` | High | zero another player's `WFBE_AI_DELEGATION_<uid>` FPS slot via foreign UID (targeted delegation-DoS) |
+| `RequestSpecial "update-town-delegation"` | `Server_HandleSpecial.sqf:86-95` | High | append arbitrary vehicles to any town's `wfbe_active_vehicles` (deletion/grief) |
+| `RequestSpecial "update-teamleader"` | `Server_HandleSpecial.sqf:6-12` | Medium | poison `wfbe_teamleader` → `Server_OnPlayerDisconnected.sqf:57,102` deletes a live enemy unit on disconnect |
+| `Action_RepairMHQDepot` (client direct setVariable) | `WASP/actions/Action_RepairMHQDepot.sqf:23-28` | High | client broadcasts `cashrepaired=true` and `{_x setVariable ["supplyValue"…]}` draining all own-side towns; no server validation |
+| `WFBE_Client_PV_SupplyMissionStarted` | `supplyMissionStarted.sqf:8` | Medium | stamp `LastSupplyMissionRun` cooldown on any town (supply-mission DoS) |
+| `WFBE_C_PLAYER_OBJECT` | `playerObjectsList.sqf:1-34` | Medium | spoof `[ownObject, victimUID]` into `WFBE_SE_PLAYERLIST` (displaces victim's entry; reward-redirect blocked by live `getPlayerUID` recheck) |
+| `MARKER_CREATION` (direct PV) | `Common_CreateMarker.sqf:82-83` | Low | inject fake same-side map markers; global `createMarker` name-collision can overwrite real event markers |
+| `AFKthresholdExceededName` | `initAFKkickHandler.sqf:9-12` | Low | client log-injection (no enforcement sink) |
+
+**Fix (one architectural change):** make the PVF dispatcher capture the sender (the `addPublicVariableEventHandler` callback's `_this select 1` is the *value*; the owner is available via the channel — or re-architect `SendToServer` to embed `getPlayerUID player`/`owner player` and have the server cross-check it against `_this` origin). Then each handler must re-derive side/commander/funds server-side from the authenticated sender, not from payload fields. This is the same server-authority redesign already named for the economy class (DR-1/6/14/16/22/23/27/28/41/44/49/50/52/53) — DR-55 establishes that the redesign must cover the **entire** handler list above, not a subset. **Read/cosmetic channels confirmed clean** (server-originated, no client mutation): `PLAYER_RADIATED`, `REQUEST_SUPPLY_VALUE`/`SUPPLY_VALUE_REQUESTED`, `WFBE_DAYNIGHT_DATE`, `SERVER_FPS_GUI`, HQ-alive/marker-infos, stagnation/compensation displays, `wfbe_supply_<side>` (server→all). Fix shapes per-handler in [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) `#pvf-handler-sender-authentication`.
+
+### DR-56 — `ARTY_HandleSADARM.sqf`: infinite `while {true}` thread leak per air-kill + per-frame `setVelocity` busy-wait — **High (perf / scheduler exhaustion)**
+
+`Common/Module/Arty/ARTY_HandleSADARM.sqf` (spawned once per SADARM round via `Common_HandleArtillery.sqf:33`): `:137-141` is `if !(isNull _impactAreaSimulation) then { while {true} do { sleep 1; deleteVehicle _impactAreaSimulation } }` — the object is deleted on iteration 1 but the loop has no exit, leaking one permanently-sleeping scheduled thread **per SADARM air-kill** for the rest of the mission. Separately, `:38-44` is a `waitUntil` with no `sleep` that calls `getPos`/`velocity`/`setVelocity` **every frame** for the 10-20s parachute descent (the sibling loop at `:50-72` correctly uses `sleep 0.2`, confirming the omission). **Fix:** replace `:137-141` with a single `deleteVehicle`; add `sleep 0.1` inside the `:38` `waitUntil`. Fix shape in `agent-hardening-backlog.jsonl#arty-sadarm-thread-leak`.
+
+### DR-57 — Town patrols can never spawn: `wfbe_patrol_active_last` is reset to `time` every town-AI cycle — **High (gameplay; an entire AI feature is dead at runtime)**
+
+`Server/FSM/server_town_ai.sqf:67-68` unconditionally sets `wfbe_patrol_active = false` **and** `wfbe_patrol_active_last = time` on every pass of the per-town loop (~5s). The spawn gate at `:295-296` then requires `time - (_town getVariable "wfbe_patrol_active_last") > WFBE_C_PATROLS_DELAY_SPAWN` (360s), but the timestamp was just refreshed milliseconds earlier in the same iteration, so the delta is always ~0 and never reaches 360. **Town patrol groups never spawn for the entire match.** (Distinct from the known AI1 `||`-vs-`&&` loop bug in `server_patrols.sqf:26`, which is also confirmed still-unpatched on current master — see below.) **Fix:** remove the unconditional `:68` timestamp reset; stamp `wfbe_patrol_active_last` only on the active→inactive transition (the completion path `server_patrols.sqf:71-72` already does). Fix shape in `agent-hardening-backlog.jsonl#town-patrols-never-spawn`.
+
+### Confirmed-new minor (routed, not separately numbered)
+
+- **`PLAYER_RADIATED` broadcast** (`Client/Module/Nuke/radzone.sqf:102-104`): server `publicVariable`s the full player object to **all** clients per radiated player per 5s tick; should be `(owner _x) publicVariableClient`. Perf, Medium.
+- **`playerObjectsList` PVEH registered twice** (`Server/Init/Init_Server.sqf:73` **and** `:95` both `Call Compile` the installer): every client connect races two spawns on `WFBE_SE_PLAYERLIST` → duplicate entries. Remove `:95`. (Compounds known SG6.)
+- **`skillDiffCompensation.sqf:31,89`** inner `while` loops have no `WFBE_GameOver` exit → continue running (incl. `ChangeSideSupply`/DB calls) for minutes after game-over. Add `&& !WFBE_GameOver`.
+- **`monitorServerFPS.sqf`** broadcasts `WFBE_VAR_SERVER_FPS` every 8s but **nothing reads it** (the HUD uses `SERVER_FPS_GUI` from `serverFpsGUI.sqf`) — dead orphan broadcast, remove `Init_Server.sqf:599`.
+- **`Action_RepairMHQDepot.sqf:28`** writes the lowercase key `"supplyvalue"` (engine is case-sensitive; all readers use `"supplyValue"`) → the intended all-town SV reset is a silent no-op. Correct the case or delete the debug residue.
+- **`Client_BuildUnit.sqf:332,334`** duplicate `Fired→HandleReload` EH (current-master confirmation of audit **V2**, still unpatched here; PR #8 fixed it on the release branch only).
+- **`AI_SquadRespawn.sqf:1`** `Private ["_rcm'"]` apostrophe typo (no-op while spawned; refactor hazard).
+
+### Corrections / dedup notes (preserve)
+
+- Several audit-queue items confirmed **still unpatched on current `master`** (they were PR #8 / release-branch fixes, not merged to master): **SG5** (`server_town_camp.sqf:135` camp flag uses old `_side`), **AI1** (`server_patrols.sqf:26` `||` zombie loop), **AI2** (town mortar chain dead — `WFBE_SE_FNC_ManageTownMortars` never compiled + `Server_SpawnTownMortars.sqf:20` undefined `_positions`), **SG4** (`RequestOnUnitKilled.sqf:92` undefined `_objectType` on kill-assist bounty), **SG9** (`Common_ChangeSideSupply.sqf:12` `_reason` guard `count>3` should be `>2`, log-only, sole 3-arg caller is `AttackWave.sqf:40`).
+- **AntiStack DB `call compile` on raw `callExtension` output** (`callDatabaseRetrieve.sqf:30` etc., all 6 DB scripts) is a real server-side RCE-if-DLL-compromised surface — folded as a **sharper citation under DR-7..DR-10** (use `parseSimpleArray`, not `call compile`), not a new DR.
+- **`SEND_MESSAGE` receiver** `Client_onEventHandler_SEND_MESSAGE.sqf:27 call compile` — sharper citation under **DR-46** (the receiver side of the same channel; confirms the broadcast executes on *every* client, not just the sender).
+- JIP/HC: `LocalizeMessage.sqf:30` Teamstack `waitUntil` and the `Init_Client.sqf` `:406/:409/:502/:802` main-thread `waitUntil` chain have **no timeouts** → permanent client freeze if the relevant server broadcast is dropped or the server aborts mid-init. Owner hardening (bounded waits), extends DR-37's note.
+
+**Outcome:** the deeper pass established the **systemic** result (DR-55: the whole PVF/PVEH/direct-PV surface is client-forgeable, ~18 newly-enumerated handlers) plus DR-56 (ARTY perf) and DR-57 (town patrols dead). Minor perf/dead/logic findings routed; six known audit items confirmed still-unpatched on master; DR-7..10 and DR-46 given sharper citations. No gameplay source changed.
 
 ## Continue Reading
 

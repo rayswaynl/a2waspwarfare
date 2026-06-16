@@ -14,22 +14,22 @@ WASP is the community/server identity this fork is built for. The mission credit
 | --- | --- | --- |
 | `WASP/Init_Client.sqf` | Original WASP client entry point. | **Dead** — entire body commented (`WASP/Init_Client.sqf:5-21`). Superseded by direct wiring in `Client/Init/Init_Client.sqf`. |
 | `WASP/common/procInitComm.sqf` | MP-safe wrapper around `setVehicleInit`/`processInitCommands`/`clearVehicleInit` to run init code on a vehicle network-wide. | Compiled as `WASP_procInitComm` only in the commented block at `initJIPCompatible.sqf:243-245`, specifically `:243` → function is undefined at runtime. |
-| `WASP/actions/AddActions.sqf` | Re-adds player scroll actions on spawn/respawn. | **Live** (`Init_Client.sqf:575`). Most actions commented; only the HQ cash-recovery action is active. |
+| `WASP/actions/AddActions.sqf` | Re-adds player scroll actions on spawn/respawn. | **Live** (`Init_Client.sqf:589`). Most actions commented; only the HQ cash-recovery action is active. |
 | `WASP/actions/Action_RepairMHQDepot.sqf` | Commander-only: spend cash to paradrop-respawn a destroyed HQ near the player; resets all town SV to 10. | **Live** (via `AddActions.sqf`). |
 | `WASP/actions/OnKilled.sqf` | On player death, re-runs `AddActions.sqf` to reattach actions after respawn. | **Live** (`Client/Functions/Client_PreRespawnHandler.sqf:11`). |
 | `WASP/actions/GearYouUnit.sqf` | Open the gear dialog on a nearby AI subordinate. | **Orphan** — only caller is a commented line `AddActions.sqf:4`. |
 | `WASP/actions/car_wheel_new.sqf` | Wheel repair for immobilized cars; calls `WASP_procInitComm`. | **Broken orphan** — only caller is commented (`AddActions.sqf:6`); would also crash on the undefined `WASP_procInitComm`. |
-| `WASP/baserep/init.sqf` | Bootstraps base-repair: `#include`s `data.sqf` + `viem.sqf`. | **Live** (`Init_Client.sqf:574`). |
+| `WASP/baserep/init.sqf` | Bootstraps base-repair: `#include`s `data.sqf` + `viem.sqf`. | **Live** (`Init_Client.sqf:588`). |
 | `WASP/baserep/data.sqf` | Table mapping base building classnames → display name, interaction distance, repair-rate %. | Data include. |
 | `WASP/baserep/viem.sqf` | Commander-only loop: HUD building-health overlay; attaches/removes a "Repair" action near damaged structures. Spotters also see enemy building health at range. | Main baserep loop. |
 | `WASP/baserep/repair.sqf` | Performs the repair: medic animation, drains side supply, increments building HP per tick. | Called by `viem.sqf`. |
-| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:267`). Display wait still has a short busy-poll opportunity; see [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
+| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:279`). Display wait still has a short busy-poll opportunity; see [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
 | `WASP/rpg_dropping/DropRPG.sqf` | By DeraKOren (2012). (a) single-use AT-launcher weapon-swap, (b) pipe-bomb TK prevention near friendly bases, (c) mine time-tracking. | **Live** (`Init_Client.sqf:15` + recompiled on respawn at `Client_PreRespawnHandler.sqf:12`). |
 | `WASP/unsort/StartVeh.sqf` | Defines `EAST_StartVeh` / `WEST_StartVeh` classname pools for one random extra starting vehicle per side. | **Live** (compiled `Init_Server.sqf:306`, used `:425-459`). |
 
 > "**baserep**" is **base repair**, not base reputation. "**unsort**" is literally an unsorted dumping folder — `StartVeh.sqf` is live but the author never moved it into the proper `Common/Config/` hierarchy.
 
-Do not confuse WASP base repair with the stock `Server_HandleBuildingRepair.sqf` path. WASP base repair is live client-side wiring from `Init_Client.sqf:574` through `WASP/baserep/viem.sqf` and `repair.sqf`; `Server_HandleBuildingRepair.sqf` is compiled but no active source caller was found during the construction audit.
+Do not confuse WASP base repair with the stock `Server_HandleBuildingRepair.sqf` path. WASP base repair is live client-side wiring from `Init_Client.sqf:588` through `WASP/baserep/viem.sqf` and `repair.sqf`; `Server_HandleBuildingRepair.sqf` is compiled but no active source caller was found during the construction audit.
 
 ## How WASP is wired into the stock lifecycle
 
@@ -38,9 +38,9 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 | Call site | Wires |
 | --- | --- |
 | `Init_Client.sqf:15` | `WASP/rpg_dropping/DropRPG.sqf` |
-| `Init_Client.sqf:267` | `WASP/global_marking_monitor.sqf` |
-| `Init_Client.sqf:574` | `WASP/baserep/init.sqf` |
-| `Init_Client.sqf:575` | `WASP/actions/AddActions.sqf` |
+| `Init_Client.sqf:279` | `WASP/global_marking_monitor.sqf` |
+| `Init_Client.sqf:588` | `WASP/baserep/init.sqf` |
+| `Init_Client.sqf:589` | `WASP/actions/AddActions.sqf` |
 | `Client_PreRespawnHandler.sqf:11-12` | `WASP/actions/OnKilled.sqf` + recompile `DropRPG.sqf` |
 | `Init_Server.sqf:306,425-459` | `WASP/unsort/StartVeh.sqf` |
 | `updateclient.sqf:124-145` / `updateteamsmarkers.sqf:88` | `WASP_AFK` player variable (AFK detection + "(AFK)" marker suffix) |

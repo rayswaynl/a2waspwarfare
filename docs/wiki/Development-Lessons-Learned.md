@@ -66,7 +66,7 @@ Development rule: after the PVF dispatcher patch, claim "dispatcher RCE closed" 
 
 ## Lesson 3B: Branch-Scoped Fix Evidence Beats Generic "Shipped" Claims
 
-Supply mission scan narrowing is a good branch-scope trap. Current docs/source Chernarus and maintained Vanilla use the narrowed truck scan (`supplyMissionStarted.sqf:25-28`), `origin/master` still uses the older broad command-center scan, `origin/feat/supply-helicopter` head `262dc431` adds `SupplyByHeli` but does not clear it on completion, and `origin/release/2026-06-feature-bundle` head `a9219d88` has the heli-aware scan at `supplyMissionStarted.sqf:50-56` plus `SupplyByHeli` cleanup after release commit `4cf443fe`.
+Supply mission scan narrowing is a good branch-scope trap. Current source Chernarus and maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu `89ae9dad` and `perf/quick-wins` `0076040f` still use broad `nearestObjects [..., [], 80]` enumeration at `supplyMissionStarted.sqf:28`, then post-filter `Base_WarfareBUAVterminal` at `:25`; current release `7ff18c49` has the heli-aware typed scan at `supplyMissionStarted.sqf:52,58` plus `SupplyByHeli` cleanup in both maintained release roots.
 
 Development rule: when a docs page says "fixed", "shipped", "current" or "propagated", record which branch proves it. Use `origin/master`, docs/source Chernarus, maintained Vanilla, feature branch and release branch as separate evidence buckets. Do not convert a release-branch fix into a stable-master claim, and do not leave older "still open" remediation steps below a newer branch-scoped update banner.
 

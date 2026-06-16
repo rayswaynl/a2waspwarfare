@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T10:22:12+02:00",
+  "generatedAt": "2026-06-16T20:30:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,59 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "deploy-aicom-experital-merge-risk-audit",
+      "owner": "Codex",
+      "status": "active-review-reporting",
+      "sourceScope": [
+        "rayswaynl/a2waspwarfare PR #30",
+        "rayswaynl/a2waspwarfare PR #34",
+        "deploy/2026-06-12-aicom-experital@984195ae",
+        "origin/master@cf2a6d6a",
+        "origin/release/2026-06-feature-bundle@a96fdda2",
+        "origin/experital",
+        "origin/fix/wildcard-w4w5-outer-capture",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/AI_Commander_Wildcard.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Common_MarkerLoop.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI",
+        "EXPERITAL_BRANCH.md",
+        "docs/PATCHLOG-EXPERITAL.md"
+      ],
+      "outputs": [
+        "Source-backed merge-risk and code-quality findings for the deploy AI-commander Experital branch.",
+        "Compact GitHub PR updates, using PR #30 as the broad Experital reporting target unless a narrower owner target is chosen.",
+        "Explicit proposed-change notices before gameplay code edits; Claude remains lead for branch implementation decisions."
+      ],
+      "handoff": "Claude leads branch implementation. Codex is auditing and reporting first; any code change candidates will be posted as proposals with source paths, branch refs and risk before edits.",
+      "updated": "2026-06-15T11:07:15+02:00"
+    },
+    {
+      "lane": "wiki-mirror-current-wiki-sync",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "C:/Users/Chill/a2waspwarfare.wiki@3745638",
+        "C:/Users/Chill/Documents/GitHub/a2waspwarfare/docs/wiki@e2d994246",
+        "docs/wiki top-level mirror files",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl"
+      ],
+      "outputs": [
+        "Fast-forwarded the standalone human wiki to origin/master@3745638 before reading coordination state.",
+        "Found 35 top-level SHA256 drift candidates between the human wiki and the repo docs/wiki mirror.",
+        "Mechanically copied current wiki top-level files into docs/wiki without gameplay source edits.",
+        "Validation passed: JSON/JSONL parse, docs/validate-wiki.ps1, git diff --check in both worktrees and full top-level wiki/docs parity diffCount=0."
+      ],
+      "handoff": "Closed after validation. Future mirror work should compare the standalone wiki and docs/wiki by SHA256 first, copy only from the current human-wiki baseline, then validate parity before publishing.",
+      "updated": "2026-06-16T20:30:23+02:00"
+    },
     {
       "lane": "client-ui-atlas-current-source-scope-route-prune",
       "owner": "Codex",

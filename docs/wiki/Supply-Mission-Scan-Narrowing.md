@@ -1,12 +1,10 @@
 # Supply Mission Scan Narrowing
 
-This page records the branch-local source patch for the `supply-mission-scan-narrowing` lane. It is a contained performance cleanup inside the broader supply-mission authority cleanup work.
+This page records the branch-scoped state for the `supply-mission-scan-narrowing` lane. It is a contained performance cleanup candidate inside the broader supply-mission authority cleanup work.
 
 ## Status
 
-Canonical branch/root matrix: [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix).
-
-Short status: docs/source Chernarus and maintained Vanilla narrow the truck command-center scan at `supplyMissionStarted.sqf:25-28`; stable `origin/master`, `miksuu/master` and `origin/perf/quick-wins` still use `nearestObjects [..., [], 80]`; current release head `7195b331` carries a PR #1-compatible heli-aware narrowed scan in both maintained release roots at `:52,58`. Hosted/dedicated Arma 2 OA smoke is still pending.
+Canonical branch/root matrix: [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) — use it for branch/root truth, not this leaf page. In short: the typed 80 m command-center scan is present on docs/source (`f3e157f2`) and current release (`7ff18c49`, `:52,58`) in both maintained roots; local `HEAD` / stable `origin/master` / Miksuu (`89ae9dad`) and `perf/quick-wins` (`0076040f`) still broad-enumerate at `supplyMissionStarted.sqf:28` then post-filter `Base_WarfareBUAVterminal` at `:25`. Hosted/dedicated Arma 2 OA smoke is still pending.
 
 ## What I Read
 
@@ -27,46 +25,46 @@ Wiki/docs:
 
 ## What The Code Did
 
-The server supply-mission start handler owns the live return-to-base loop. Every 3 seconds, while the associated supply vehicle is alive, it looked for a nearby command center with:
+The server supply-mission start handler owns the live return-to-base loop. Every 3 seconds, while the associated supply vehicle is alive, local current source/stable/upstream/perf still look for a nearby command center with broad object enumeration plus a terminal class post-filter:
 
-- Branch-local `Server/Module/supplyMission/supplyMissionStarted.sqf:20`: `while { alive _associatedSupplyTruck }`
-- Branch-local `Server/Module/supplyMission/supplyMissionStarted.sqf:25`: `_x isKindOf "Base_WarfareBUAVterminal"`
-- Branch-local `Server/Module/supplyMission/supplyMissionStarted.sqf:28`: `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]`
+- Current source `Server/Module/supplyMission/supplyMissionStarted.sqf:20`: `while { alive _associatedSupplyTruck }`
+- Current source `Server/Module/supplyMission/supplyMissionStarted.sqf:25`: `_x isKindOf "Base_WarfareBUAVterminal"`
+- Current source `Server/Module/supplyMission/supplyMissionStarted.sqf:28`: `nearestObjects [(getPos _associatedSupplyTruck), [], 80]`
 
-On `origin/master`, each active supply mission scanned all nearby object classes inside 80 meters, then filtered the result in SQF at `supplyMissionStarted.sqf:24-28`. The intent was already one class family: command-center terminal objects. The mission's side configs define command centers as `*_WarfareBUAVterminal` classes in `Common/Config/Core_Structures/Structures_*.sqf:10`, other mission code uses `Base_WarfareBUAVterminal`, and `WASP/baserep/data.sqf:6` labels `Base_WarfareBUAVterminal` as the Command Center base class.
+The intent is already one class family: command-center terminal objects. The mission's side configs define command centers as `*_WarfareBUAVterminal` classes in `Common/Config/Core_Structures/Structures_*.sqf:10`, other mission code uses `Base_WarfareBUAVterminal`, and `WASP/baserep/data.sqf:6` labels `Base_WarfareBUAVterminal` as the Command Center base class.
 
-The nearby-player check at branch-local `supplyMissionStarted.sqf:44` still uses `nearestObjects [..., [], 8]`; that scan is intentionally left broad because it is looking for player objects/vehicle occupants near the truck, not command-center terminals.
+The nearby-player check at current-source `supplyMissionStarted.sqf:44` still uses `nearestObjects [..., [], 8]`; that scan is intentionally left broad because it is looking for player objects/vehicle occupants near the truck, not command-center terminals.
 
-Guardrail: keep the command-center completion scan as a class-filtered `nearestObjects`/`nearObjects` scan plus the `isKindOf "Base_WarfareBUAVterminal"` check (`supplyMissionStarted.sqf:25,28`). Do not replace it with `nearEntities`; this target is a command-center structure, while this mission uses `nearEntities` for entity/logics scans such as camps, towns, vehicles and units.
+Guardrail: if this performance cleanup is ported to current source, use a class-filtered `nearestObjects`/`nearObjects` scan plus the `isKindOf "Base_WarfareBUAVterminal"` check. Do not replace it with `nearEntities`; this target is a command-center structure, while this mission uses `nearEntities` for entity/logics scans such as camps, towns, vehicles and units.
 
 Scope note: this patch applies to the live supply mission return-to-base handler in `supplyMissionStarted.sqf`. The compiled dead twin `supplyMissionActive.sqf` still carries the older broad-scan logic; retire or annotate that path during the broader cleanup instead of treating it as a second live implementation.
 
 ## Patch Shape
 
-Patched branch-local source Chernarus:
+Release `7ff18c49` typed scan shape:
 
 ```sqf
 } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]);
 ```
 
-Maintained Vanilla Takistan was propagated by `Tools/LoadoutManager` on 2026-06-02 after the root-discovery and `A2WASP_SKIP_ZIP` tooling patch in this docs/source branch. `Modded_Missions/*` are not claimed by this propagation lane.
+Docs/source `f3e157f2` carries the 80 m typed scan in both maintained roots. Local `HEAD` / `origin/master` and the checked Miksuu/perf refs do not currently carry that typed scan; they still use broad enumeration plus post-filter at `supplyMissionStarted.sqf:25,28`. Root discovery for any future propagation run is documented as branch-sensitive in [Tools/build workflow](Tools-And-Build-Workflow): current source/stable/Miksuu/perf need an `a2waspwarfare` ancestor, while release `7ff18c49` has marker-root support. `Modded_Missions/*` are not claimed by this propagation lane.
 
 ## Why It Matters
 
-This removes an avoidable broad object scan from the live active supply mission handler without changing the completion trigger, cadence or reward path. It is small, source-backed and low-risk compared with the remaining supply-mission authority work.
+This is a small, source-backed performance cleanup candidate compared with the remaining supply-mission authority work: porting the release typed scan would remove an avoidable broad object enumeration from the live active supply mission handler without changing the completion trigger, cadence or reward path.
 
-Status: **docs/source and maintained Vanilla propagated for the truck scan; stable/upstream/perf still broad; current release `7195b331` narrowed in both maintained roots; hosted/dedicated smoke pending**.
+Status: **docs/source and current release carry typed command-center scans in both maintained roots; local current source/stable/Miksuu/perf still broad-enumerate then post-filter; hosted/dedicated smoke pending**.
 
 ## Validation
 
 Source/Vanilla checks completed:
 
-- This docs branch's source Chernarus has zero 80-meter broad command-center scans and one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan.
-- Maintained Vanilla Takistan contains the same narrowed 80-meter command-center scan after the 2026-06-02 propagation run.
-- `origin/master`, `miksuu/master` and `origin/perf/quick-wins` still have the broad command-center scan at `supplyMissionStarted.sqf:24-28`; current release `origin/release/2026-06-feature-bundle` head `7195b331` has the narrowed PR #1-compatible scan in both maintained roots at `:52,58`.
-- Source Chernarus still has the 8-meter broad nearby-player scan.
+- Docs/source `origin/docs/developer-wiki-index` `f3e157f2` Chernarus and maintained Vanilla both have the typed 80-meter command-center enumeration at `supplyMissionStarted.sqf:28`.
+- Local current source Chernarus and maintained Vanilla, stable `origin/master` `89ae9dad`, Miksuu `89ae9dad` and `origin/perf/quick-wins` `0076040f` all still have broad 80-meter command-center enumeration at `supplyMissionStarted.sqf:28`, with a `Base_WarfareBUAVterminal` post-filter at `:25`.
+- Current release `origin/release/2026-06-feature-bundle` head `7ff18c49` has the narrowed PR #1-compatible typed scan in both maintained roots at `:52,58`. The `7195b331..7ff18c49` delta does not touch the supply mission scan files.
+- Current source Chernarus still has the 8-meter broad nearby-player scan.
 - `git diff --check` passed.
-- `Tools/LoadoutManager` generation/copy now works from this checkout by detecting repo-root markers; set `A2WASP_SKIP_ZIP=1` for propagation-only runs.
+- `Tools/LoadoutManager` generation/copy can skip packaging with `A2WASP_SKIP_ZIP=1`; see [Tools/build workflow](Tools-And-Build-Workflow) for the current branch-specific root-discovery rule before running it from a generated Codex checkout.
 
 Hosted/dedicated/JIP smoke still needed:
 
@@ -82,7 +80,7 @@ Hosted/dedicated/JIP smoke still needed:
 Codex:
 
 - Keep this page linked from the performance sweep, supply mission pages, dashboard/status files, backlog and [propagated fix smoke pack](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
-- Do not mark `supply-mission-authority-cleanup` complete; only the command-center scan sub-step is patched in branch-local/release source, not in `origin/master`.
+- Do not mark `supply-mission-authority-cleanup` complete; the typed command-center scan is present on docs/source and release `7ff18c49`, not local current source/stable/Miksuu/perf.
 
 Claude:
 
@@ -91,7 +89,7 @@ Claude:
 
 Future code owner:
 
-- Smoke the patched scan in Arma 2 OA on dedicated or hosted test.
+- If porting the typed scan into local current source or stable master, smoke it in Arma 2 OA on dedicated or hosted test; docs/source and release `7ff18c49` still need the same truck/heli completion smoke before branch claims are release-complete.
 - Continue supply cleanup with server-owned loaded/tracking state, `Killed` handler idempotency, cooldown casing standardization and server-side cargo validation.
 
 ## Continue Reading

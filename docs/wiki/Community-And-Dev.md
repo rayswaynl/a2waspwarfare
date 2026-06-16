@@ -76,7 +76,7 @@ Do not treat `Arma2Warfare GPT`, `Mr. James`, `Contributor`, `Game Admin` or `Ve
 
 Upstream diagnostic style note: the freshest local `miksuu/master` delta on 2026-06-04 was the town-defense diagnostics branch (`913ecdf6` -> `d5bfe3a2` -> merge `8bcc42b1`). It added an opt-in `WFBE_C_TOWN_DEFENSE_DIAGNOSTICS` / `TownDefenseDiagnosticsEnabled` path around town-defense code rather than broad permanent logging. That is a useful pattern for hot-loop work: add narrow feature diagnostics, keep defaults quiet and propagate source-Chernarus changes deliberately to maintained Vanilla/Takistan.
 
-2026-06-05 refetch addendum: `miksuu/master` later moved to `69e1958a` by merging `Marty_town_defense_fix`. The new source commit `e4be1958` clears previous-side active town-AI state on town capture in both Chernarus and maintained Vanilla Takistan. This reinforces the same culture pattern: upstream town-performance work is being paired with targeted diagnostics and correctness repairs, but it is still upstream evidence until imported and smoked in rayswaynl source.
+2026-06-05/06 refetch addendum: `miksuu/master` moved first to `69e1958a` by merging `Marty_town_defense_fix`, then to `89ae9dad` by merging `Marty_town_defense_overhaul`. `e4be1958` clears previous-side active town-AI state on town capture in both Chernarus and maintained Vanilla Takistan; the later `89ae9dad` merge adds captured-defender persistence, cleanup helpers and diagnostics. A 2026-06-06 source recheck also showed local `origin/master` / `master` at `89ae9dad`, so this is now current rayswaynl stable source evidence, still gated by DR-45 player-occupancy hardening and Arma smoke.
 
 ### Upstream Process Capsule
 
@@ -94,7 +94,7 @@ The imported [Development process](Miksuu-Wiki-Archive-Development-Process) page
 
 The 2026-06-04 community scout verified the local remotes as `origin` = `rayswaynl/a2waspwarfare` and `miksuu` = `Miksuu/a2waspwarfare`. At that check, `miksuu/master` was three commits ahead of `origin/master`: `913ecdf6` town defense diagnostics, `d5bfe3a2` Takistan update and merge `8bcc42b1`. The local `master` branch was also 29 commits behind `origin/master`, so use remote branch refs for provenance checks instead of trusting the local branch pointer.
 
-The 2026-06-05 refetch updates the current upstream head to `69e1958a`, with `e4be1958` as the new source-bearing town-capture state reset. Treat the older `8bcc42b1` notes as point-in-time provenance, and use [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel#2026-06-05-miksuumaster-capture-state-addendum) for the current upstream-candidate routing.
+The 2026-06-05 refetch temporarily moved the current upstream head to `69e1958a`, with `e4be1958` as the source-bearing town-capture state reset. The 2026-06-06 refetch/recheck moved `miksuu/master`, `origin/master` and local `master` to `89ae9dad`, where the broader town-defense persistence/diagnostics model is current stable source evidence. Treat the older `8bcc42b1` and `69e1958a` notes as point-in-time provenance, and use [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel#2026-06-06-miksuumaster-town-defense-persistence-addendum) for current routing.
 
 This page, [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) and [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) now overlap enough that future upstream archaeology needs a single decision ledger. The missing page should track:
 

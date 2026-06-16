@@ -1133,3 +1133,16 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Claimed `client-ui-atlas-current-source-scope-route-prune` to keep [Client UI systems atlas](Client-UI-Systems-Atlas) as a current source-backed UI route map rather than a stale docs-head checkpoint.
 - Source-checked current docs head `68bd4dc5` against earlier UI atlas checkpoints `a03a1fb5` and `b5219d47`; targeted diffs over checked Chernarus and maintained Vanilla `description.ext`, `Rsc`, `Client/GUI`, `Init_Client.sqf`, `Client_UpdateRHUD.sqf`, client action/marker FSMs and core UI helper paths returned no source changes. Branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74`, perf `0076040f`, `wf-menu-ops-console` `0767c0b5` and BuyMenu/EASA QoL `a66d4691`.
 - Result: Client UI systems atlas now names `68bd4dc5` as the visible UI/Rsc source-continuity checkpoint while preserving `a03a1fb5`, `b5219d47`, `a71b42fe`, `2fef1e3d` and `f7bc72a8` provenance. Detailed resource parity, title-handle, vote/help/router, clickable-text and branch-only UI behavior remains routed to owner pages. No gameplay source changed.
+
+## 2026-06-15T11:07:15+02:00 - Codex - Deploy AI commander Experital merge-risk audit
+
+- Claimed `deploy-aicom-experital-merge-risk-audit` from Steff's request to work the `deploy/2026-06-12-aicom-experital` branch and report on GitHub every 30 minutes.
+- Operating scope: source-backed Arma 2 OA SQF review of `deploy/2026-06-12-aicom-experital@984195ae` against `origin/master@cf2a6d6a`, `origin/release/2026-06-feature-bundle@a96fdda2`, `origin/experital` and PR #34. Initial focus is AI commander, wildcard events, marker/performance loops, server FSM/PVF edges and merge-risk deltas.
+- Coordination note: Claude leads branch implementation. Codex is auditing/reporting first; any gameplay code change candidate will be posted as a proposed-change notice with source paths and branch refs before edits. GitHub issue tracking is disabled, so broad status uses PR #30 unless a narrower target is chosen.
+
+## 2026-06-16T20:30:23+02:00 - Codex - Wiki mirror current wiki sync
+
+- Claimed `wiki-mirror-current-wiki-sync` after fetching the standalone wiki to `origin/master@3745638` and finding `35` top-level SHA256 drift candidates against the repo `docs/wiki` mirror on `docs/developer-wiki-index@e2d994246`.
+- Scope is docs-only mirror reconciliation: copy current human-wiki pages into `docs/wiki`, keep coordination records compact, validate JSON/JSONL/wiki links where practical and avoid gameplay source edits.
+- Result: mechanical mirror copy touched only `docs/wiki` files in the repo mirror and the standalone wiki coordination log. No mission source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check` in both worktrees and full top-level wiki/docs SHA256 parity (`diffCount=0`). The validator emitted only the known non-failing legacy JSONL envelope warnings.
