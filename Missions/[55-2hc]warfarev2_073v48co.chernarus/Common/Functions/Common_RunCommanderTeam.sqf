@@ -349,7 +349,7 @@ while {!WFBE_GameOver && _alive} do {
 				//---           clear non-water road node - ONLY when no player is within 300 m
 				//---           (MEMORY guardrail: never a player-visible teleport / frozen AI).
 				//--- Every tier still ends in the road route below = the unit always holds a move.
-				_usTier = _team getVariable "wfbe_aicom_unstuck";
+				_usTier = if (count _order > 3) then {_order select 3} else {0}; //--- UNSTUCK FIX (Ray 2026-06-16): read the strike tier from the order seq (atomic), NOT the out-of-band wfbe_aicom_unstuck flag, which a later commander cycle reset to 0 before this fresh-seq block ran -> UNSTUCK_FIRED was ~never hit. Governor at ~459 still reads the flag for gear-slow (unaffected).
 				if (isNil "_usTier") then {_usTier = 0};
 				if (_usTier > 0) then {
 					[_team, _usTier, _side] Spawn {
