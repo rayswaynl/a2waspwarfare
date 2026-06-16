@@ -14,7 +14,7 @@
 
 private ["_building","_factory","_queu","_queuCosts","_queuCpts","_queuLabels","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i"];
 
-_building = _this select 1;               // object the action is attached to (the factory building)
+_building = _this select 0;               // object the action is attached to (the factory building)
 _factory  = (_this select 3) select 0;   // params[0] = factory type string (e.g. "Barracks")
 
 _uid = getPlayerUID player;
