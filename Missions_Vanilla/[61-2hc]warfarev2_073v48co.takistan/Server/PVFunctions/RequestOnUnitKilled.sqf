@@ -77,6 +77,27 @@ if (_killer_side != _killed_side) then {
 	};
 };
 
+//--- GUER "Insurgents" towns-denied (harass board): a GUER player killing an enemy within a GUER-held
+//--- town's range "denies" that town. Per-player object accumulator (broadcast), emitted by the playerstat loop.
+if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_isplayer} && {_killer_side != _killed_side}) then {
+	private ["_kpos","_denied"];
+	_kpos = getPosATL _killed;
+	_denied = false;
+	{
+		if (((_x getVariable ["sideID", -1]) == WFBE_C_GUER_ID) && {(_kpos distance _x) < ((_x getVariable ["range", 300]) max 300)}) then {_denied = true};
+	} forEach towns;
+	if (_denied) then {_killer setVariable ["wfbe_guer_td", (_killer getVariable ["wfbe_guer_td", 0]) + 1, true]};
+};
+
+//--- GUER kill bounty: credit the killer's GUER team for WEST/EAST kills (server-side; bypasses the WFBE_C_UNITS_BOUNTY coef gate).
+	if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_side != _killed_side} && {_killer_iswfteam}) then {
+		private ["_guerKillGet","_guerBounty"];
+		_guerKillGet = missionNamespace getVariable _killed_type;
+		_guerBounty = 0;
+		if !(isNil "_guerKillGet") then { _guerBounty = round ((_guerKillGet select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5])) };
+		if (_guerBounty > 0) then { [_killer_group, _guerBounty] Call WFBE_CO_FNC_ChangeTeamFunds };
+	};
+
 // Player-stats: record resolved enemy kills after delayed vehicle attribution. No-op unless stats are enabled.
 if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 	if (WFBE_C_STATS_ENABLED && (_killer_side != _killed_side)) then {
