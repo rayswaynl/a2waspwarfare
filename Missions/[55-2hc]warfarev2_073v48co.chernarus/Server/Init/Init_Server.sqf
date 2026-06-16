@@ -6,6 +6,12 @@ if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:
 createCenter resistance;
 resistance setFriend [west,0];
 resistance setFriend [east,0];
+//--- GUER harass: setFriend is one-directional, so WEST/EAST must ALSO treat resistance as hostile or their AI
+//--- won't return fire on GUER players. Gated on the GUER param so the base WEST-vs-EAST mission is unchanged when OFF.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+	west setFriend [resistance, 0];
+	east setFriend [resistance, 0];
+};
 
 AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
 if (WF_A2_Vanilla) then {AISquadRespawn = Compile preprocessFile "Server\AI\AI_SquadRespawn.sqf"};
