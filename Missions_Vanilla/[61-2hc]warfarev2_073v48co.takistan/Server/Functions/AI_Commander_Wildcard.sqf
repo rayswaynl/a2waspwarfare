@@ -841,7 +841,7 @@ while {!gameOver} do {
 								_w13Ang = random 360;
 								_w13SpawnPos = [(_hqPos select 0) + 4000 * sin _w13Ang, (_hqPos select 1) + 4000 * cos _w13Ang, 1500];
 								_w13Class = _w13AttackClasses select floor(random count _w13AttackClasses);
-								_w13Heli = [_w13Class, _w13SpawnPos, _side, random 360, true, true] Call Common_CreateVehicle;
+								_w13Heli = [_w13Class, _w13SpawnPos, _side, random 360, true, true] Call WFBE_CO_FNC_CreateVehicle;
 								if (!isNull _w13Heli) then {
 									_w13Grp = [_side, "aicom-gunship"] Call WFBE_CO_FNC_CreateGroup;
 									_w13PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
@@ -951,7 +951,7 @@ while {!gameOver} do {
 							_w17TruckClass = if (_side == west) then {"WarfareSupplyTruck_USMC"} else {"WarfareSupplyTruck_RU"};
 							_hqPos = getPos _hq; _w17Ang = random 360;
 							_w17SpawnPos = [(_hqPos select 0) + (40 + random 20) * sin _w17Ang, (_hqPos select 1) + (40 + random 20) * cos _w17Ang, 0];
-							_w17Truck = [_w17TruckClass, _w17SpawnPos, _side, random 360, false, true] Call Common_CreateVehicle;
+							_w17Truck = [_w17TruckClass, _w17SpawnPos, _side, random 360, false, true] Call WFBE_CO_FNC_CreateVehicle;
 							if (!isNull _w17Truck) then {
 								_soldierClass = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
 								_w17Grp = [_side, "aicom-convoy"] Call WFBE_CO_FNC_CreateGroup;
