@@ -332,7 +332,7 @@ _IDCS = _IDCS - [_currentIDC];
 				_closest = _sorted select 0;
 				//--- Task 12: If the nearest hangar is a captured airfield, show the exclusive roster instead of the faction airport list.
 				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && !(isNull _closest) && {((_closest getVariable ["wfbe_hangar", objNull]) getVariable ["wfbe_is_airfield_hangar", false])}) then {
-					_listUnits = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []];
+					_listUnits = if (sideJoined == resistance) then {missionNamespace getVariable ["WFBE_GUERAIRPORTUNITS", []]} else {missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []]}; //--- GUER: own air roster at held airfields
 
 					//--- Per-airfield specials: augment generic list with any classes mapped to this airfield's town.
 					//--- Resolve the airfield town name by finding the closest town to the airport logic object.

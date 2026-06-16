@@ -123,6 +123,17 @@ _c = _c + ['BTR40_TK_GUE_EP1'];
 _i = _i + [['','',700,22,-2,0,1,0,'Guerilla',[]]];
 _c = _c + ['Ka137_MG_PMC'];
 _i = _i + [['','',6000,40,-2,0,1,0,'Guerilla',[]]];
+/* GUER airfield air (transport cheap -> gunship expensive) */
+_c = _c + ['An2_1_TK_CIV_EP1'];
+_i = _i + [['','',2500,40,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['An2_2_TK_CIV_EP1'];
+_i = _i + [['','',2500,40,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['Mi17_Civilian'];
+_i = _i + [['','',6000,45,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['UH1H_TK_GUE_EP1'];
+_i = _i + [['','',9000,50,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['Mi24_P'];
+_i = _i + [['','',18000,60,-2,0,3,0,'Guerilla',[]]];
 
 /* Static Defenses */
 _c = _c + ['GUE_WarfareBMGNest_PK'];
