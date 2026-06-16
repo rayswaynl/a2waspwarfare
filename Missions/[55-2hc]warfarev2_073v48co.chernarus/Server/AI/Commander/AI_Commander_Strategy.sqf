@@ -207,7 +207,7 @@ if (_strikeOn) then {
 		[_best, "move"] Call SetTeamMoveMode;
 		[_best, getPos _enemyHQ] Call SetTeamMovePos;
 		if (_best getVariable ["wfbe_aicom_hc", false]) then {
-			_best setVariable ["wfbe_aicom_order", [((_best getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "towns-target", getPos _enemyHQ], true];
+			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", getPos _enemyHQ], true];
 		};
 		_strikeCount = _strikeCount + 1;
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] (%3 men) joins the HQ strike.", _sideText, _best, _bestN]] Call WFBE_CO_FNC_AICOMLog;
