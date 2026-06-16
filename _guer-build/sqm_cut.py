@@ -34,7 +34,9 @@ def proc(m):
     # DE-SLOT: drop the player= line + self-delete the unit; group Item stays (no renumber/sync change).
     deslotted[side] += 1
     new = re.sub(r'[ \t]*player="PLAY CDG";\r?\n', '', whole)
-    new = re.sub(r'init="([^"]*)"', lambda mm: 'init="' + mm.group(1) + '; deleteVehicle this"', new, count=1)
+    # NOTE: init values can contain ESCAPED quotes (""task"",""medic"") — match those too, else the
+    # append lands mid-string and produces a malformed init (the 2026-06-16 medic-deslot bug). See JOURNAL.
+    new = re.sub(r'init="((?:[^"]|"")*)"', lambda mm: 'init="' + mm.group(1) + '; deleteVehicle this"', new, count=1)
     return new
 
 out = re.sub(r'\bclass (Item\d+)\s*\{(.*?)\n\t\t\};', proc, txt, flags=re.S)

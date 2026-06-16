@@ -75,6 +75,43 @@ items=134, 1215/1215; WEST14/EAST14/GUER4/HC2 slots.
 6. cap-2-alive Ka-137 + towns-denied dashboard rendering (box-side parser must learn side=3 + |td=).
 7. Box-side dashboard parser update (side=3 GUER cohort + td= field) — separate, box-side.
 
+## HARDENING PASS (post-build adversarial review, 2026-06-16) — 25 candidates -> 9 confirmed; 4 FIXED + committed (0920d8197, pushed)
+FIXED now (commit 0920d8197):
+- CRITICAL: Root_GUE_PlayerOverlay gear keys `DefaultGear_Engineer/Sniper/Medic` -> `DefaultGearEngineer/Spot/Medic`
+  (must match Client_OnRespawnHandler Format keys; old keys -> nil -> `count nil` crash -> NAKED respawn every death).
+- HIGH: Init_Server:591 GUER team `wfbe_side` stored string "GUER" -> `resistance` side value (+broadcast); fixes GetSideID -> -1.
+- HIGH: mission.sqm 6 medic de-slot inits had `deleteVehicle this` spliced INSIDE `setVariable[]` (cut-script regex
+  bug — `[^"]*` stopped at the escaped `""`); rewritten as sequential statements. sqm_cut.py regex fixed too.
+- MEDIUM: server_playerstat_loop `|td=` now appended only when WFBE_C_GUER_PLAYERSIDE>0 (vanilla keeps 10-field
+  format); docstring documents side=3 + conditional td field.
+
+### DISCOVERED ISSUES — deferred (note for the 8AM session / post-test):
+- MEDIUM (mission.sqm GUER slots 312-315 not gate-suppressed when gate OFF): a player joining a GUER slot with the
+  gate OFF spawns as an armed GUE soldier with no economy. NOT fixed via .sqm init because `WFBE_C_GUER_PLAYERSIDE`
+  may not be readable when slot-init fields fire -> could wrongly delete the GUER slots even with gate ON (would break
+  today's gate-ON test). PROPER FIX = server-side delete-on-OFF block in Init_Server (param-timing-safe). Gate-ON
+  test is unaffected. Verify param-read timing first.
+- LOW (Init_CommonConstants marker-color block runs on dedicated server where player==objNull -> wrong else-branch):
+  pre-existing display-only block; wrap `if (!isServer)`. Cosmetic/server-debug only.
+- LOW + OUT-OF-LANE (PRE-EXISTING, NOT my file): Server/Config/Config_GUE.sqf:63-79 — the 4th AI reserve team
+  template uses PMC_* classnames (DLC-gated; nil price) instead of GUE_*. This is the AI-GUER config which the build
+  charter says DO NOT TOUCH. Flag to Steff as a pre-existing repo bug; do not fix here.
+- REJECTED/DOWNGRADED: 12 rejected + 4 downgraded by adversarial verify (A2 false-positives etc.).
+
+## TAKISTAN PORT (answer to Steff's question, 2026-06-16) — investigated, NOT started (Takistan = regen-later)
+- On Takistan the resistance side is **TKGUE** (Takistani Guerrillas, `TK_GUE_*_EP1`), NOT PMC. Mechanism: Takistan's
+  version.sqf has IS_CHERNARUS_MAP_DEPENDENT commented out -> `WFBE_C_UNITS_FACTION_GUER = 2` -> index 2 of
+  ['GUE','PMC','TKGUE'] -> Root_TKGUE.sqf. PMC (index 1) is a dead/reserve config — no code path selects it.
+- LoadoutManager (Tools/LoadoutManager) = wholesale recursive COPY Chernarus->Takistan, then overwrites 4 generated
+  files (EASA_Init.sqf, Common_BalanceInit.sqf, Common_ReturnAircraftNameFromItsType.sqf, version.sqf) + patches
+  Init_Server SET_MAP 1->2. It NEVER touches mission.sqm (FileManager skip) or Parameters.hpp.
+- So to ship GUER on Takistan: (1) Ka-137 EASA block will be ERASED on every LM run (EASA_Init is regenerated) ->
+  add Ka137_MG_PMC to the C# vehicle registry OR post-gen append; (2) faction routing — Takistan loads Root_TKGUE not
+  Root_GUE, so Root_GUE_PlayerOverlay is never reached -> either add Root_TKGUE_PlayerOverlay OR reroute GUER index;
+  (3) hand-add LocationLogicOwnerGuer + 4 RESISTANCE slots to Takistan mission.sqm (Takistan positions, ideally
+  TK_GUE_*_EP1 classnames); (4) run LoadoutManager; (5) verify Ka-137 survived; (6) Takistan smoke. Also check
+  WFBE_C_MODULE_BIS_PMC default on Takistan (Ka137_MG_PMC is PMC-DLC-gated there).
+
 ## Working state
 Steps 1-2 DONE + committed (both bracket-balanced). NEXT = Step 3, the mission.sqm surgery (highest risk):
 add LocationLogicOwnerGuer (id 308, text WFBE_L_GUE, near OwnerWest@3852/East@3871) + 4 RESISTANCE player
