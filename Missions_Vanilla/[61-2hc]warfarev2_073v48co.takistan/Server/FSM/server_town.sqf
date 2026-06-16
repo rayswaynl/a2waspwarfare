@@ -494,7 +494,7 @@ while {!WFBE_GameOver} do {
 					_newHangar setDir ((getDir _airfieldLogic) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
 					_newHangar setPos (getPos _airfieldLogic);
 					_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
-					_airfieldLogic setVariable ["wfbe_hangar", _newHangar, true];
+					_airfieldLogic setVariable ["wfbe_hangar", _newHangar, true]; _airfieldLogic setVariable ["wfbe_airfield_side", _newSide, true]; //--- C-1: GUER airfield ownership gate
 					_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
 				};
 
