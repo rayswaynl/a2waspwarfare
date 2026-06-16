@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-16T20:30:23+02:00",
+  "generatedAt": "2026-06-16T20:38:47+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "aicom-pr-board-current-state-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "PR-Cleanup-And-Integration-Lab.md now reflects 2026-06-16 GitHub PR metadata: PR #8 and PR #14 are merged history, PR #35 is the current deploy/2026-06-12-aicom-experital -> master umbrella, PR #34 and PR #36-#41 are deploy-child/review/note lanes, and PR #20/#21/#29-#41 have explicit triage rows. No gameplay source changed."
+    },
     {
       "lane": "wiki-mirror-current-wiki-sync",
       "owner": "Codex",

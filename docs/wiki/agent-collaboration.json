@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-16T20:30:23+02:00",
+  "generatedAt": "2026-06-16T20:38:47+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,37 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "aicom-pr-board-current-state-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR-Cleanup-And-Integration-Lab.md",
+        "gh pr list --repo rayswaynl/a2waspwarfare --state open --limit 100 --json number,title,headRefName,baseRefName,isDraft,updatedAt,url",
+        "gh pr view 8 --repo rayswaynl/a2waspwarfare --json number,state,title,headRefName,baseRefName,mergedAt,updatedAt,url",
+        "gh pr view 14 --repo rayswaynl/a2waspwarfare --json number,state,title,headRefName,baseRefName,mergedAt,updatedAt,url",
+        "rayswaynl/a2waspwarfare PR #8",
+        "rayswaynl/a2waspwarfare PR #14",
+        "rayswaynl/a2waspwarfare PR #29",
+        "rayswaynl/a2waspwarfare PR #30",
+        "rayswaynl/a2waspwarfare PR #34",
+        "rayswaynl/a2waspwarfare PR #35",
+        "rayswaynl/a2waspwarfare PR #36",
+        "rayswaynl/a2waspwarfare PR #37",
+        "rayswaynl/a2waspwarfare PR #38",
+        "rayswaynl/a2waspwarfare PR #39",
+        "rayswaynl/a2waspwarfare PR #40",
+        "rayswaynl/a2waspwarfare PR #41"
+      ],
+      "outputs": [
+        "Updated PR cleanup lab current board state to 2026-06-16 GitHub metadata.",
+        "Routed merged PR #8 and PR #14 as history instead of open release/test candidates.",
+        "Documented PR #35 as the current AICOM Experital deploy umbrella and PR #34/#36-#41 as deploy-child/review/note lanes.",
+        "Added current triage rows for PR #20, PR #21 and PR #29 through PR #41 while preserving older PR8 ancestry/lab history."
+      ],
+      "handoff": "Closed after validation. Future PR-board refreshes should start from GitHub PR metadata, then update this lab before making merge/test recommendations.",
+      "updated": "2026-06-16T20:38:47+02:00"
+    },
     {
       "lane": "deploy-aicom-experital-merge-risk-audit",
       "owner": "Codex",

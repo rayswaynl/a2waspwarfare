@@ -1146,3 +1146,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Scope is docs-only mirror reconciliation: copy current human-wiki pages into `docs/wiki`, keep coordination records compact, validate JSON/JSONL/wiki links where practical and avoid gameplay source edits.
 - Result: mechanical mirror copy touched only `docs/wiki` files in the repo mirror and the standalone wiki coordination log. No mission source files changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check` in both worktrees and full top-level wiki/docs normalized-content parity (`diffCount=0`). The validator emitted only the known non-failing legacy JSONL envelope warnings.
+
+## 2026-06-16T20:38:47+02:00 - Codex - AICOM PR board current-state refresh
+
+- Claimed `aicom-pr-board-current-state-refresh` after GitHub PR metadata showed [PR cleanup and integration lab](PR-Cleanup-And-Integration-Lab) still presented PR #8 and PR #14 as open release/test candidates.
+- Source scope: `gh pr list --repo rayswaynl/a2waspwarfare --state open --limit 100 --json number,title,headRefName,baseRefName,isDraft,updatedAt,url` plus `gh pr view 8` and `gh pr view 14`. PR #8 is merged from `release/2026-06-feature-bundle` into `master` at 2026-06-09T07:47:34Z; PR #14 is merged from `feat/ai-commander` into `master` at 2026-06-10T13:40:19Z.
+- Result: PR cleanup lab now routes current AICOM/Experital work through PR #35 as the `deploy/2026-06-12-aicom-experital` -> `master` umbrella, treats PR #34 and PR #36-#41 as deploy-child/review/note lanes, adds current rows for PR #20/#21/#29-#41 and preserves active `deploy-aicom-experital-merge-risk-audit` coordination. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check` and docs/wiki mirror parity after copying to the standalone wiki checkout. The wiki validator emitted only the known non-failing legacy JSONL envelope warnings.
