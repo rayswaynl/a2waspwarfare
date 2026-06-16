@@ -21,6 +21,19 @@ This page maps the main gameplay systems that make Warfare feel like Warfare: to
 
 Source refreshed on 2026-06-14 against docs head `2d88dd5a`; targeted diffs from `ca40f202` through `HEAD` over the checked Chernarus gameplay paths named on this page return no source changes. Branch refs still resolve to stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/release/2026-06-feature-bundle` `a96fdda2`. Source anchors below use `Missions/[55-2hc]warfarev2_073v48co.chernarus` from the docs checkout unless a row names another ref. Exact branch matrices stay on the owner pages above; this gateway keeps only routing guards.
 
+## Branch-Only GUER Insurgents Intake
+
+This is branch-review evidence for `origin/feat/guer-insurgents-faction`, not current stable behavior. Recheck the branch head before implementation or release decisions.
+
+| Area | Evidence | Review route |
+| --- | --- | --- |
+| Branch shape | `origin/feat/guer-insurgents-faction` head `41550bd33` (`fix(guer): WEST/EAST AI return fire on GUER (gated reciprocal setFriend)`, 2026-06-16T19:45:27+02:00) forks from `origin/master@cf2a6d6a`. Diff against `origin/master` is `462 files changed, 25816 insertions(+), 2249 deletions(-)`, including `241` Chernarus mission paths and `208` maintained Vanilla paths. | Treat as a broad branch review, not a small isolated faction patch. |
+| Chernarus playable-GUER gate | Chernarus adds `WFBE_C_GUER_PLAYERSIDE` at `Rsc/Parameters.hpp:587`; `mission.sqm:25` names `Warfare V48 Chernarus [GUER]`, `:27` sets `resistanceWest=0`, and GUER slots start at `mission.sqm:4938`. | Smoke disabled and enabled parameter states separately; do not assume normal WEST/EAST behavior is unchanged until `WFBE_C_GUER_PLAYERSIDE = 0` is run. |
+| Hostility and faction runtime | Chernarus `Server/Init/Init_Server.sqf:7-13` makes resistance hostile to WEST/EAST and gates reciprocal `west/east setFriend [resistance, 0]` behind `WFBE_C_GUER_PLAYERSIDE`; `Common/Init/Init_Common.sqf:292` sets three-way mode from the same gate. | Verify WEST/EAST AI return fire on GUER players after the gated reciprocal setFriend fix, plus JIP and side-state visibility. |
+| GUER economy and arsenal | Chernarus `Common/Config/Core_Root/Root_GUE.sqf:129-130` loads `Root_GUE_PlayerOverlay.sqf`; the overlay exits unless the gate is enabled at `:13` and rebuilds `WFBE_GUERDEPOTUNITS` from `WFBE_GUER_VEHICLE_TIER` at `Root_GUE_PlayerOverlay.sqf:34-51`. `Server/Server_GuerStipend.sqf:14,41-43,56` exits when disabled, broadcasts `WFBE_GUER_VEHICLE_TIER`, and pays living resistance players through `WFBE_CO_FNC_ChangeTeamFunds`. `Server/PVFunctions/RequestOnUnitKilled.sqf:82-93` adds GUER kill-funds behavior for WEST/EAST kills. | Smoke GUER join, JIP, no-base buy menu, tiered depot pool, stipend cadence, kill funds, town capture/harass stats and server logs. |
+| Maintained Vanilla scope | Branch grep found no `WFBE_C_GUER_PLAYERSIDE`, `Root_GUE_PlayerOverlay` or `Server_GuerStipend` hits under `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`; Vanilla only has the base `resistance setFriend [west/east,0]` lines at `Server/Init/Init_Server.sqf:7-8`. | Decide Chernarus-only experiment versus full maintained Vanilla propagation before any release wording. |
+| Branch hygiene | `git diff --check origin/master..origin/feat/guer-insurgents-faction` currently fails on new blank lines at EOF and trailing whitespace, including `Server/Functions/AI_Commander_Wildcard.sqf:1055,1085,1094,1102,1113`. | Clean whitespace before review/merge and run the branch-only smoke pack in [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack). |
+
 ## System Flow
 
 ```mermaid

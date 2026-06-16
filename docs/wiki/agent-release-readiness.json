@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-05T17:21:10+02:00",
-  "lastVerifiedAt": "2026-06-05T17:21:10+02:00",
+  "generatedAt": "2026-06-16T21:32:45+02:00",
+  "lastVerifiedAt": "2026-06-16T21:32:45+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -378,6 +378,45 @@
         "coverageLevel": [
           "dedicated-smoke",
           "jip-smoke",
+          "hc-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "guer-insurgents-branch",
+      "branch": "origin/feat/guer-insurgents-faction",
+      "head": "41550bd33",
+      "base": "origin/master@cf2a6d6a",
+      "state": "branch-review-needed-chernarus-first-playable-resistance",
+      "sourceScope": "broad-branch-chernarus-feature-gate-with-maintained-vanilla-drift",
+      "canonicalDocs": [
+        "Gameplay-Systems-Atlas.md#branch-only-guer-insurgents-intake",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/feat/guer-insurgents-faction@41550bd33",
+        "merge-base with origin/master is cf2a6d6a",
+        "origin/master..origin/feat/guer-insurgents-faction: 462 files changed, 25816 insertions, 2249 deletions",
+        "branch path counts: 241 Chernarus mission paths and 208 maintained Vanilla paths",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:587 adds WFBE_C_GUER_PLAYERSIDE",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm:25,27,4938+ adds GUER mission metadata and slots",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:7-13 gates reciprocal WEST/EAST hostility toward resistance",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Root/Root_GUE.sqf:129-130 and Root_GUE_PlayerOverlay.sqf:13,34-51 add the GUER player depot overlay",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Server_GuerStipend.sqf:14,41-43,56 adds gated stipend/tier economy",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf:82-93 adds GUER kill-funds hooks",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan has no WFBE_C_GUER_PLAYERSIDE, Root_GUE_PlayerOverlay or Server_GuerStipend hits",
+        "git diff --check origin/master..origin/feat/guer-insurgents-faction reports blank-EOF and trailing-whitespace failures"
+      ],
+      "ownerDecision": "Decide whether playable GUER stays a Chernarus-only experiment or must receive full maintained Vanilla propagation before merge/release wording.",
+      "promotionGate": "Clean whitespace/EOF failures, then smoke disabled/enabled WFBE_C_GUER_PLAYERSIDE, GUER slot join, JIP, friendly-town respawn, no-base depot/buy menu, stipend/tier pool, kill funds, town capture/harass stats, server logs and reciprocal WEST/EAST AI return fire before calling the branch stable or release-ready.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "jip-smoke",
+          "vanilla-parity-decision",
           "hc-smoke"
         ],
         "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"

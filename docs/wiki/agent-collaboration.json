@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-16T20:38:47+02:00",
+  "generatedAt": "2026-06-16T21:32:45+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "guer-insurgents-branch-intake",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Brain handoff: C:/Users/Chill/Documents/Codex/2026-06-16/look-for-work-in-brain-3/outputs/Guer-Insurgents-Branch-Intake.md",
+        "origin/feat/guer-insurgents-faction@41550bd33",
+        "origin/master@cf2a6d6a",
+        "Gameplay-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md",
+        "agent-release-readiness.json"
+      ],
+      "outputs": [
+        "Added a branch-only GUER Insurgents intake matrix to Gameplay-Systems-Atlas.md.",
+        "Added a compact broad Chernarus-first branch-review risk row to Feature-Status-Register.md.",
+        "Added planned GUER smoke gates to Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json.",
+        "Preserved source evidence that maintained Vanilla lacks WFBE_C_GUER_PLAYERSIDE, Root_GUE_PlayerOverlay and Server_GuerStipend hits."
+      ],
+      "handoff": "Future branch reviewers should decide Chernarus-only versus maintained Vanilla propagation, clean branch whitespace/EOF failures, then smoke disabled/enabled GUER parameter states, GUER slot/JIP/no-base buy menu, stipend/tiered depot pool, kill funds, town capture/harass stats and reciprocal WEST/EAST AI return fire before release wording.",
+      "updated": "2026-06-16T21:32:45+02:00"
+    },
     {
       "lane": "aicom-pr-board-current-state-refresh",
       "owner": "Codex",

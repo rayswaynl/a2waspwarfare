@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-16T20:38:47+02:00",
+  "generatedAt": "2026-06-16T21:32:45+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "guer-insurgents-branch-intake",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Integrated the Brain-ready origin/feat/guer-insurgents-faction@41550bd33 intake as branch-scoped docs. Gameplay-Systems-Atlas.md owns the branch matrix, Feature-Status-Register.md has one compact broad Chernarus-first branch-review row, and Testing-Debugging-And-Release-Workflow.md plus agent-release-readiness.json carry planned GUER smoke gates. Evidence names origin/master@cf2a6d6a, 462 changed files, 241 Chernarus mission paths, 208 maintained Vanilla paths, Chernarus-only WFBE_C_GUER_PLAYERSIDE/stipend/overlay anchors, no maintained Vanilla GUER gate/stipend hits and current branch whitespace/EOF cleanup requirements. No gameplay source changed."
+    },
     {
       "lane": "aicom-pr-board-current-state-refresh",
       "owner": "Codex",
