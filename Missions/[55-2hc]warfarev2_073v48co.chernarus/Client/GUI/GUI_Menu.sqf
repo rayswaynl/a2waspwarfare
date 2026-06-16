@@ -20,6 +20,7 @@ while {alive player && dialog} do {
 	ctrlEnable [11001,_enable];
 		if (sideJoined == resistance) then { ctrlEnable [11001, true] }; //--- GUER: base-less, buy always available (funds-only)
 	ctrlEnable [11002,gearInRange];
+		if (sideJoined == resistance) then { ctrlEnable [11002, true] }; //--- GUER: gear buy always available (funds-only)
 
 		if (sideJoined == resistance) then {
 			{ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008]; //--- GUER: hold commander/base/upgrade/economy/vote disabled

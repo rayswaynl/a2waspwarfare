@@ -587,7 +587,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 			if (!(isNull _x) && {_x isKindOf "Man"}) then {
 				_group = group _x;
 				[_guerTeams, _group] Call WFBE_CO_FNC_ArrayPush;
-				_group setVariable ["wfbe_funds", 0, true];
+				_group setVariable ["wfbe_funds", 50000, true]; //--- GUER starting funds
 				_group setVariable ["wfbe_side", resistance, true];
 				_group setVariable ["wfbe_persistent", true];
 				_group setVariable ["wfbe_queue", []];
