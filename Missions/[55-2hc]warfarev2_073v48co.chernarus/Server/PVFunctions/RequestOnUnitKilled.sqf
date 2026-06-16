@@ -89,7 +89,16 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 	if (_denied) then {_killer setVariable ["wfbe_guer_td", (_killer getVariable ["wfbe_guer_td", 0]) + 1, true]};
 };
 
-// Player-stats: record resolved enemy kills after delayed vehicle attribution. No-op unless stats are enabled.
+//--- GUER kill bounty: credit the killer's GUER team for WEST/EAST kills (server-side; bypasses the WFBE_C_UNITS_BOUNTY coef gate).
+	if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_side != _killed_side} && {_killer_iswfteam}) then {
+		private ["_guerKillGet","_guerBounty"];
+		_guerKillGet = missionNamespace getVariable _killed_type;
+		_guerBounty = 0;
+		if !(isNil "_guerKillGet") then { _guerBounty = round ((_guerKillGet select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5])) };
+		if (_guerBounty > 0) then { [_killer_group, _guerBounty] Call WFBE_CO_FNC_ChangeTeamFunds };
+	};
+
+	// Player-stats: record resolved enemy kills after delayed vehicle attribution. No-op unless stats are enabled.
 if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 	if (WFBE_C_STATS_ENABLED && (_killer_side != _killed_side)) then {
 		private ["_attrUid","_idx"];
