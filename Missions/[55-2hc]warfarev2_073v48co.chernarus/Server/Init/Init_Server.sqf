@@ -834,14 +834,14 @@ _logMatchWinPlayerCountThreshold = 10;
 
 WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 
-{_x Spawn WFBE_SE_FNC_VoteForCommander} forEach WFBE_PRESENTSIDES;
+{_x Spawn WFBE_SE_FNC_VoteForCommander} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: harass-only, no commander election
 
 //--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
-{_x Spawn WFBE_SE_FNC_AI_Commander} forEach WFBE_PRESENTSIDES;
+{_x Spawn WFBE_SE_FNC_AI_Commander} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: no HQ, loop was inert (perf win)
 
 //--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
-	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach WFBE_PRESENTSIDES;
+	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: base-less, no wildcard events
 	["INITIALIZATION", Format ["Init_Server.sqf: AI Commander Wildcard workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
 };
 
