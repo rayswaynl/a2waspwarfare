@@ -60,7 +60,7 @@
       "lane": "wiki-mirror-current-wiki-sync",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Fetched the standalone human wiki to origin/master@3745638, compared it with docs/wiki on docs/developer-wiki-index@e2d994246, found 35 top-level SHA256 drift candidates, and mechanically mirrored the current wiki files into docs/wiki. No gameplay source changed. Validation passed: JSON/JSONL parse, docs/validate-wiki.ps1, git diff --check in both worktrees and full top-level wiki/docs parity diffCount=0."
+      "output": "Fetched the standalone human wiki to origin/master@3745638, compared it with docs/wiki on docs/developer-wiki-index@e2d994246, found 35 top-level SHA256 drift candidates, and mechanically mirrored the current wiki files into docs/wiki. No gameplay source changed. Validation passed: JSON/JSONL parse, docs/validate-wiki.ps1, git diff --check in both worktrees and full top-level wiki/docs normalized-content parity diffCount=0."
     },
     {
       "lane": "client-ui-atlas-current-source-scope-route-prune",

@@ -70,7 +70,7 @@
         "Fast-forwarded the standalone human wiki to origin/master@3745638 before reading coordination state.",
         "Found 35 top-level SHA256 drift candidates between the human wiki and the repo docs/wiki mirror.",
         "Mechanically copied current wiki top-level files into docs/wiki without gameplay source edits.",
-        "Validation passed: JSON/JSONL parse, docs/validate-wiki.ps1, git diff --check in both worktrees and full top-level wiki/docs parity diffCount=0."
+        "Validation passed: JSON/JSONL parse, docs/validate-wiki.ps1, git diff --check in both worktrees and full top-level wiki/docs normalized-content parity diffCount=0."
       ],
       "handoff": "Closed after validation. Future mirror work should compare the standalone wiki and docs/wiki by SHA256 first, copy only from the current human-wiki baseline, then validate parity before publishing.",
       "updated": "2026-06-16T20:30:23+02:00"
