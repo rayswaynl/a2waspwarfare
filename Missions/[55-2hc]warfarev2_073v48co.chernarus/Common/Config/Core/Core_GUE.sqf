@@ -126,6 +126,9 @@ _i = _i + [['','',6000,40,-2,0,1,0,'Guerilla',[]]];
 /* VBIED: driver-detonated suicide truck (player buyable; Detonate action + cash-for-kills, mirrors AI wildcard W21). Cheap one-shot weapon. */
 _c = _c + ['hilux1_civil_2_covered'];
 _i = _i + [['','',400,18,-2,0,1,0,'Guerilla',[]]];
+/* VBIED (Takistan): datsun covered civilian pickup, same role/price tier as the Chernarus hilux above. */
+_c = _c + ['datsun1_civil_2_covered'];
+_i = _i + [['','',400,18,-2,0,1,0,'Guerilla',[]]];
 /* GUER airfield air (transport cheap -> gunship expensive) */
 _c = _c + ['An2_1_TK_CIV_EP1'];
 _i = _i + [['','',2500,40,-2,0,3,0,'Guerilla',[]]];

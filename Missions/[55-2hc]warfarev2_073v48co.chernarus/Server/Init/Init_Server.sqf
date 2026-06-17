@@ -606,6 +606,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 				["INITIALIZATION", Format ["Init_Server.sqf: GUER player team [%1] initialized.", _group]] Call WFBE_CO_FNC_LogContent;
 			};
 		} forEach (synchronizedObjects _guerLogic);
+		diag_log format ["[WFBE] GUER playable faction: registered %1 player teams (INITIALIZATION LogContent is filtered on this build, so this diag_log is the visibility).", count _guerTeams];
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
 		[] execVM "Server\Server_GuerStipend.sqf";

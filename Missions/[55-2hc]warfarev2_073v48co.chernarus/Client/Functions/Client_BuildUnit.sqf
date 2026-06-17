@@ -335,7 +335,7 @@ if (_isMan) then {
 	//--- asks the server to blast (mirrors AI wildcard W21) and pays the driver's GUER team cash-for-kills. Added on
 	//--- the buyer's client only (addAction is local), like the lock/stealth actions above. Gate-OFF / non-VBIED =
 	//--- no action added (byte-for-byte today's behaviour).
-	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) == "hilux1_civil_2_covered"}) then {
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 		_vehicle addAction ["<t color='#ff3333'>Detonate VBIED</t>","Client\Action\Action_GuerVbiedDetonate.sqf", [], 6, false, true, "", "driver _target == _this && {side _this == resistance}"];
 	};
 
