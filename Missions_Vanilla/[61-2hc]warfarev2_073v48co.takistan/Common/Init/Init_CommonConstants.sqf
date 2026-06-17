@@ -72,6 +72,9 @@ if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 2};  //--- 
 */
 with missionNamespace do {
 
+//--- GUER "Insurgents" playable faction master gate (0=off, 1=on). Default OFF = byte-for-byte today's behaviour.
+	if (isNil "WFBE_C_GUER_PLAYERSIDE") then {WFBE_C_GUER_PLAYERSIDE = 0};
+
 //--- Day/night cycles.
 	// Marty: Defaults used when mission parameters do not provide the accelerated day/night settings.
 	if (isNil "WFBE_DAYNIGHT_ENABLED") then {WFBE_DAYNIGHT_ENABLED = 1}; //--- Enable the hybrid accelerated day/night cycle.
@@ -625,11 +628,20 @@ missionNamespace setVariable ["WFBE_C_GUER_COLOR", "ColorBlue"];
 missionNamespace setVariable ["WFBE_C_CIV_COLOR", "ColorYellow"];
 missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 }else{
+if ((side group player == resistance) && ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0)) then {
+//--- GUER "Insurgents" player view: own side green; both main factions hostile (red).
+missionNamespace setVariable ["WFBE_C_WEST_COLOR", "ColorRed"];
+missionNamespace setVariable ["WFBE_C_EAST_COLOR", "ColorRed"];
+missionNamespace setVariable ["WFBE_C_GUER_COLOR", "ColorGreen"];
+missionNamespace setVariable ["WFBE_C_CIV_COLOR", "ColorYellow"];
+missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
+} else {
 missionNamespace setVariable ["WFBE_C_WEST_COLOR", "ColorRed"];
 missionNamespace setVariable ["WFBE_C_EAST_COLOR", "ColorGreen"];
 missionNamespace setVariable ["WFBE_C_GUER_COLOR", "ColorBlue"];
 missionNamespace setVariable ["WFBE_C_CIV_COLOR", "ColorYellow"];
 missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
+};
 };
 
 	/* Special Variables, Those are used after the typical declaration above. */

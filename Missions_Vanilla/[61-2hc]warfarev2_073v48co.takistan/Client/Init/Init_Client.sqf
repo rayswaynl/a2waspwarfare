@@ -415,11 +415,13 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 	/* Handle the map town markers */
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Towns Marker FSM"] Call WFBE_CO_FNC_LogContent;
 	[] execVM "Client\FSM\updatetownmarkers.sqf";
-	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_structures"}};
+	if (sideJoined != resistance) then {
+waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_structures"}};
 	if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
 		waitUntil {!isNil {missionNamespace getVariable format ["wfbe_supply_%1", sideJoinedText]}};
 	};
-	missionNamespace setVariable ["wfbe_supply", missionNamespace getVariable Format ["wfbe_supply_%1", sideJoinedText]];
+};
+	missionNamespace setVariable ["wfbe_supply", missionNamespace getVariable [Format ["wfbe_supply_%1", sideJoinedText], 0]];
 	/* Handle the client actions */
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Available Actions FSM"] Call WFBE_CO_FNC_LogContent;
 	[] execFSM "Client\FSM\updateavailableactions.fsm";
@@ -442,6 +444,7 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 [] Call Compile preprocessFile "briefing.sqf";
 
 //--- HQ Radio system.
+if (sideJoined != resistance) then {
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_radio_hq"}};
 _HQRadio = WFBE_Client_Logic getVariable "wfbe_radio_hq";
 ["INITIALIZATION", Format["Init_Client.sqf: Initialized the Radio Announcer [%1]", _HQRadio]] Call WFBE_CO_FNC_LogContent;
@@ -454,6 +457,7 @@ _HQRadio setGroupId ["HQ"];
 _HQRadio kbAddTopic [WFBE_V_HQTopicSide,"Client\kb\hq.bikb","Client\kb\hq.fsm",{call compile preprocessFileLineNumbers "Client\kb\hq.sqf"}];
 player kbAddTopic [WFBE_V_HQTopicSide,"Client\kb\hq.bikb","Client\kb\hq.fsm",{call compile preprocessFileLineNumbers "Client\kb\hq.sqf"}];
 sideHQ = _HQRadio;
+} else { sideHQ = objNull; };
 
 ["INITIALIZATION", "Init_Client.sqf: Radio announcer is initialized."] Call WFBE_CO_FNC_LogContent;
 
@@ -518,6 +522,12 @@ if (!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}) then {
 };
 ["INITIALIZATION", "Init_Client.sqf: Retrieving the client spawn location."] Call WFBE_CO_FNC_LogContent;
 _base = objNull;
+if (sideJoined == resistance) then {
+	private ["_fr"]; _fr = [];
+	{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_fr = _fr + [_x]} } forEach towns;
+	if (count _fr == 0) then {_fr = towns};
+	_base = if (count _fr > 0) then { getPos (_fr select (floor (random (count _fr)))) } else { getMarkerPos "GuerTempRespawnMarker" };
+} else {
 if (time < 30) then {
 	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}};
 	_base = WFBE_Client_Logic getVariable "wfbe_startpos";
@@ -540,6 +550,7 @@ if (time < 30) then {
 	    //--- FIX(deadspawn): if no live factory was found and the HQ is dead, fall back to the side start position instead of spawning on a wreck.
 	    if (isNull _base || {!alive _base}) then { _base = WFBE_Client_Logic getVariable "wfbe_startpos" };
 };
+};
 
 ["INITIALIZATION", Format["Init_Client.sqf: Client spawn location has been determined at [%1].", _base]] Call WFBE_CO_FNC_LogContent;
 
@@ -548,6 +559,7 @@ player setPos ([_base,20,30] Call GetRandomPosition);
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true]; //--- DEADSPAWN SAFETY: escaped the holding area to base - let the spawn-protection watchdog re-enable damage.
 
 /* HQ Building Init. */
+if (sideJoined != resistance) then {
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_hq_deployed"}};
 ["INITIALIZATION", "Init_Client.sqf: Initializing COIN Module."] Call WFBE_CO_FNC_LogContent;
 _isDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
@@ -555,6 +567,7 @@ if (_isDeployed) then {
 	[missionNamespace getVariable "WFBE_C_BASE_COIN_AREA_HQ_DEPLOYED",true,MCoin] Call Compile preprocessFile "Client\Init\Init_Coin.sqf";
 } else {
 	[missionNamespace getVariable "WFBE_C_BASE_COIN_AREA_HQ_UNDEPLOYED",false,MCoin] Call Compile preprocessFile "Client\Init\Init_Coin.sqf";
+};
 };
 
 //--- Add Killed EH to the HQ on each client if needed (JIP), skip LAN host.
@@ -844,9 +857,11 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 _video = ["Videos\intro720p.ogv"] call BIS_fnc_playVideo;
 
 /* Vote System, define whether a vote is already running or not */
+if (sideJoined != resistance) then {
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_votetime"}};
 ["INITIALIZATION", "Init_Client.sqf: Vote system is initialized."] Call WFBE_CO_FNC_LogContent;
 if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFBE_VoteMenu"};
+};
 
 //--- Marty: missile terrain masking pre-shot warning.
 //--- Runs once per client and warns the player while the current aimed/locked target is masked by terrain.

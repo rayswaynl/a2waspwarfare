@@ -583,4 +583,12 @@
 		default = 60;
 	};
 
+	// GUER "Insurgents" playable faction (harass-only 3rd side). OFF = no GUER slots; mission plays exactly as today.
+	class WFBE_C_GUER_PLAYERSIDE {
+		title = "GUER Insurgents (playable faction)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+
 };

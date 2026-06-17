@@ -59,6 +59,7 @@ for [{_i = 0},{(_i < 6) && !_break},{_i = _i + 1}] do {
 	};
 };
 
+if (sideJoined == resistance && _type == 'nil') then { _type = 'Depot'; _val = 4; _currentIDC = 12020 }; //--- GUER: base-less, force Depot pool (WFBE_GUERDEPOTUNITS)
 if (_type == 'nil') exitWith {closeDialog 0};
 
 //--- Destroy local variables.
@@ -85,7 +86,7 @@ _IDCS = _IDCS - [_currentIDC];
 
 	while {alive player && dialog} do {
 	//--- Nothing in range? exit!.
-	if (!barracksInRange && !lightInRange && !heavyInRange && !aircraftInRange && !hangarInRange && !depotInRange) exitWith {closeDialog 0};
+	if (sideJoined != resistance && !barracksInRange && !lightInRange && !heavyInRange && !aircraftInRange && !hangarInRange && !depotInRange) exitWith {closeDialog 0};
 	if (side group player != sideJoined || !dialog) exitWith {closeDialog 0};
 	
 	//--- Purchase.
@@ -115,7 +116,7 @@ _IDCS = _IDCS - [_currentIDC];
 
 			if (_funds < _currentCost) then {_skip = true;hint parseText(Format[localize 'STR_WF_INFO_Funds_Missing',_currentCost - _funds,_currentUnitLabelForFundsMissing])};
 			//--- Make sure that we own all camps before being able to purchase infantry.
-			if (_type == "Depot" && _isInfantry) then {
+			if (_type == "Depot" && _isInfantry && sideJoined != resistance) then {
 				_totalCamps = _closest Call GetTotalCamps;
 				_campsSide = [_closest,sideJoined] Call GetTotalCampsOnSide;
 				if (_totalCamps != _campsSide) then {_skip = true; hint parseText(localize 'STR_WF_INFO_Camps_Purchase')};
@@ -304,7 +305,7 @@ _IDCS = _IDCS - [_currentIDC];
 		_listUnits = missionNamespace getVariable Format ['WFBE_%1%2UNITS',sideJoinedText,_type];
 
 		[_comboFaction,_type] Call UIChangeComboBuyUnits;
-		[_listUnits,_type,_listBox,_val] Call UIFillListBuyUnits;
+		[_listUnits,_type,_listBox, (if (sideJoined == resistance) then {999} else {_val})] Call UIFillListBuyUnits; //--- GUER: bypass upgrade-gate (funds + time-tier, no upgrades)
 		
 		//--- Update tabs icons.
 		_IDCS = [12005,12006,12007,12008,12020,12021];
@@ -331,7 +332,7 @@ _IDCS = _IDCS - [_currentIDC];
 				_closest = _sorted select 0;
 				//--- Task 12: If the nearest hangar is a captured airfield, show the exclusive roster instead of the faction airport list.
 				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && !(isNull _closest) && {((_closest getVariable ["wfbe_hangar", objNull]) getVariable ["wfbe_is_airfield_hangar", false])}) then {
-					_listUnits = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []];
+					_listUnits = if (sideJoined == resistance) then {missionNamespace getVariable ["WFBE_GUERAIRPORTUNITS", []]} else {missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []]}; //--- GUER: own air roster at held airfields
 
 					//--- Per-airfield specials: augment generic list with any classes mapped to this airfield's town.
 					//--- Resolve the airfield town name by finding the closest town to the airport logic object.
