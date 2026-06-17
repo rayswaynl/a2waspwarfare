@@ -261,6 +261,9 @@ while {!WFBE_GameOver} do {
 						//--- Man the defenses.
 						[_town, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
 
+						//--- Cosmetic: faction smoke once per activation episode (guarded by the wfbe_episode_spawned latch above). Server-only, gated + capped + cooldown.
+						[getPos _town, _side] Call WFBE_CO_FNC_SpawnFactionSmoke;
+
 						//// end of creating
 					};
 					///

@@ -38,12 +38,14 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _type
 
 if !(_spawnInside) then {
 	if (sideJoined == resistance) then {
-		//--- GUER respawn: drop near the centre of a random FRIENDLY town (resistance-held or neutral; never WEST/EAST = safe haven).
+		//--- GUER respawn: honor the player's SELECTED town when valid; otherwise a random friendly town (resistance-held or neutral; never WEST/EAST = safe haven).
 		private ["_owned","_t"];
 		_owned = [];
 		{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_owned = _owned + [_x]} } forEach towns;
 		if (count _owned == 0) then {_owned = towns};
-		_t = _owned select (floor (random (count _owned)));
+		_t = objNull;
+		if (!isNull _spawn && {_spawn in _owned}) then {_t = _spawn};
+		if (isNull _t) then {_t = _owned select (floor (random (count _owned)))};
 		_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
 	} else {
 		_unit setPos ([getPos _spawn,10,20] Call GetRandomPosition);

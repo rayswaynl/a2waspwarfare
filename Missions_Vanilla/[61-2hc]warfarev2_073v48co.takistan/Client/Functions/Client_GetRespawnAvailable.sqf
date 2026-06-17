@@ -103,4 +103,13 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_CAMPS_MODE") > 0) then {
 	_availableSpawn = _availableSpawn + ([_deathLoc, _side] Call GetRespawnCamps);
 };
 
+//--- GUER (base-less): offer friendly towns (resistance-held or neutral) as selectable respawns.
+if (_side == resistance) then {
+	{
+		if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {
+			_availableSpawn = _availableSpawn + [_x];
+		};
+	} forEach towns;
+};
+
 _availableSpawn

@@ -142,6 +142,12 @@ lnbClear _listBox;
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.5, 0.25, 1.0]]
 	};
 
+	//--- GUER VBIED suicide truck: red name + [VBIED] tag so it reads as a weapon, not a civ car. Keyed off live WFBE_C_GUER_VBIED_TYPE (hilux CH / datsun TK).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
+		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
+		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - Suicide Truck]"];
+	};
+
 		if (_price > _funds) then {lnbSetColor [_listBox,[_i,0],[1,0.4,0.4,1]]}; //--- QoL: red price = can't afford base cost
 		_i = _i + 1;
 	};

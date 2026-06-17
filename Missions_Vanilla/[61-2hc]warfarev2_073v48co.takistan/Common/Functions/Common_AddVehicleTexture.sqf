@@ -250,11 +250,11 @@ switch (_type) do {
 //--- Miksuu vehicle SKINS (experital). Side-gated body retextures applied as an APPEND to
 //--- wfbe_pending_texture (same JIP-safe path as the salvage tint above). _side is read from
 //--- wfbe_side_id, stamped by Common_AddVehicleMarking.sqf which the create path runs just
-//--- BEFORE this function. Gate: WFBE_C_VEHICLE_MARKINGS.
+//--- BEFORE this function. Gate: WFBE_C_VEHICLE_TINTS (decoupled from WFBE_C_VEHICLE_MARKINGS, which gates the #lightpoint markings in Common_AddVehicleMarking.sqf).
 //--- NOTE: like the salvage tint, this only reaches clients on the GLOBAL non-defender path
 //--- (the path Common_CreateVehicle uses for player/commander vehicles).
 //--- ============================================================================
-if ((missionNamespace getVariable ["WFBE_C_VEHICLE_MARKINGS", 1]) == 1) then {
+if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0) then {
 	Private ["_skinCmd","_pendingSkin"];
 	_side    = _vehicle getVariable ["wfbe_side_id", -1];
 	_skinCmd = "";
@@ -265,9 +265,17 @@ if ((missionNamespace getVariable ["WFBE_C_VEHICLE_MARKINGS", 1]) == 1) then {
 		case WFBE_C_WEST_ID: {
 			_skinCmd = "this setObjectTexture [0,'#(argb,8,8,3)color(0.04,0.04,0.05,1,ca)']; this setObjectTexture [1,'#(argb,8,8,3)color(0.04,0.04,0.05,1,ca)']";
 		};
-		//--- EAST: soviet-green. STUB - fill Textures\mks_sov_green_co.paa from image-gen.
+		//--- EAST: dark olive/forest procedural tint. Zero art (procedural colour) - ships now.
+		//--- Mirrors the WEST block: same selection indices (0+1), known-safe on most A2 hulls.
+		//--- NEEDS-IN-ENGINE-VERIFY: body selections vary per class; 0+1 cover most A2 hulls.
 		case WFBE_C_EAST_ID: {
-			//_skinCmd = "this setObjectTexture [0,'Textures\mks_sov_green_co.paa']; this setObjectTexture [1,'Textures\mks_sov_green_co.paa']"; //--- fill from image-gen
+			_skinCmd = "this setObjectTexture [0,'#(argb,8,8,3)color(0.20,0.24,0.16,1,ca)']; this setObjectTexture [1,'#(argb,8,8,3)color(0.20,0.24,0.16,1,ca)']";
+		};
+		//--- GUER/resistance: desert tan/brown procedural tint. Zero art (procedural colour) - ships now.
+		//--- Mirrors the WEST block: same selection indices (0+1), known-safe on most A2 hulls.
+		//--- NEEDS-IN-ENGINE-VERIFY: body selections vary per class; 0+1 cover most A2 hulls.
+		case WFBE_C_GUER_ID: {
+			_skinCmd = "this setObjectTexture [0,'#(argb,8,8,3)color(0.46,0.40,0.28,1,ca)']; this setObjectTexture [1,'#(argb,8,8,3)color(0.46,0.40,0.28,1,ca)']";
 		};
 	};
 
