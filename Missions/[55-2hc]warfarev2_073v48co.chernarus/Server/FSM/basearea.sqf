@@ -76,6 +76,6 @@ while {!gameOver} do {
 		if (count _areas_old != count _areas) then {
 			_logik setVariable ["wfbe_basearea", _areas, true];
 		};
-	} forEach WFBE_PRESENTSIDES;
+	} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: base-less, no base-area maintenance
 	sleep 20;
 };

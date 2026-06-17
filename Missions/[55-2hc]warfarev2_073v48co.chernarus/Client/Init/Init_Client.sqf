@@ -121,6 +121,7 @@ WFBE_CL_FNC_ConfirmAction = Compile preprocessFileLineNumbers "Client\Functions\
 WFBE_CL_FNC_CanRepairCampNearby = Compile preprocessFileLineNumbers "Client\Functions\Client_CanRepairCampNearby.sqf";
 WFBE_CL_FNC_GetRepairTruckServicePoints = Compile preprocessFileLineNumbers "Client\Functions\Client_GetRepairTruckServicePoints.sqf";
 WFBE_CL_FNC_CanUseRepairPointEASA = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseRepairPointEASA.sqf";
+WFBE_CL_FNC_CanUseTownCenterEASA = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseTownCenterEASA.sqf";	//--- GUER-only: EASA at friendly town centers (base-less faction has no service points)
 WFBE_CL_FNC_GetClosestAirport = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestAirport.sqf";
 WFBE_CL_FNC_GetClosestCamp = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestCamp.sqf";
 WFBE_CL_FNC_GetClosestDepot = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestDepot.sqf";

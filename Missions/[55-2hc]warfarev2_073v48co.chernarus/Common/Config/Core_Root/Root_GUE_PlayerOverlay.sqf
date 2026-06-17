@@ -44,6 +44,7 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 //--- Dynamic buy pool: rebuild WFBE_GUERDEPOTUNITS whenever the server vehicle tier changes.
 //--- (The buy menu reads WFBE_GUERDEPOTUNITS at open time, so updating it dynamically time-gates vehicles.)
 //--- Map-branching: IS_CHERNARUS_MAP_DEPENDENT is defined in version.sqf for Chernarus; commented-out for Takistan.
+missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","hilux1_civil_2_covered","Ka137_MG_PMC"]]; //--- first-tick synchronous seed (tier loop below re-sets on tier change)
 [] spawn {
 	private ["_lastTier","_tier","_pool"];
 	_lastTier = -99;
@@ -57,7 +58,8 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 			_pool = [
 				"GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper",
 				"Offroad_DSHKM_Gue","V3S_Gue",
-				"Ka137_MG_PMC"
+				"hilux1_civil_2_covered",   //--- VBIED: driver-detonated suicide truck. "Detonate VBIED" action + cash-for-kills (mirrors AI wildcard W21). Always available (tier 0).
+				"Ka137_MG_PMC"   //--- armed recon heli, pilot-fired; EASA AG/AA loadouts at a service point (see 8AM note)
 			];
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1","BTR40_TK_GUE_EP1"]};

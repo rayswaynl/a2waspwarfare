@@ -30,7 +30,7 @@ while {!WFBE_GameOver} do {
 		_side = _x;
 		_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 		//--- GUER GROUP-CONDENSE (task #12): defender/resistance gets a lower concurrent patrol cap.
-		_maxSide = if (_side == WFBE_DEFENDER) then {if (({(_x getVariable "sideID") == _sideID} count towns) < 20) then {2} else {missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", 1]}} else {_max};
+		_maxSide = if (_side == WFBE_DEFENDER) then {if (({(_x getVariable "sideID") == _sideID} count towns) < 20) then {3} else {missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", 1]}} else {_max};
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _logik) then {
 			_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;

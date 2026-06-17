@@ -108,7 +108,7 @@ while {!gameOver} do {
 			[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds;
 		};
 
-	} forEach WFBE_PRESENTSIDES;
+	} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: funds-only stipend, no supply/commander economy
 
 	_awaits = (_ii) Call GetSleepFPS;
 	sleep _awaits;

@@ -256,6 +256,14 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_EASA") > 0) then {
 			};
 		};
 	};
+	//--- GUER Insurgents are base-less (no service points, no EASA upgrade economy above): grant EASA at FRIENDLY
+	//--- town centers instead. GUER-only (the resistance gate locks WEST/EAST out). No cooldown -> treated like a
+	//--- base service point, so WFBE_CL_V_RepairPointEASAActive stays false and the menu uses the normal buy path.
+	if (!_enable && (missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoined == resistance}) then {
+		if (typeOf(vehicle player) in (missionNamespace getVariable 'WFBE_EASA_Vehicles') && {driver (vehicle player) == player}) then {
+			if (!isNil "WFBE_CL_FNC_CanUseTownCenterEASA" && {[player, vehicle player] Call WFBE_CL_FNC_CanUseTownCenterEASA}) then {_enable = true};
+		};
+	};
 	WFBE_CL_V_RepairPointEASAActive = _enableRepairPointEASA;
 	ctrlEnable [20010,_enable];
 } else {

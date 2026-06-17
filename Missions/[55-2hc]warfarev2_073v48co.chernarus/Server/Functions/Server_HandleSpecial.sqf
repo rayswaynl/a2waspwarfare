@@ -470,4 +470,55 @@ switch (_args select 0) do {
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;
 		};
 	};
+
+	//--- GUER PLAYER VBIED manual detonation (Feature B player-side, Ray 2026-06-16). The GUER player driver
+	//--- requested detonation (the client already did the confirm + arm countdown). Mirror the AI wildcard W21
+	//--- blast EXACTLY: setDamage 1 on the truck + 3x stacked "Sh_122_HE" at its pos (122mm HE, the only HE round
+	//--- confirmed loaded on BOTH maps via the artillery configs - never Sh_125_HE/Bo_GBU12). CASH-FOR-KILLS
+	//--- (Ray's intent): snapshot the living WEST/EAST units in lethal radius BEFORE the blast, then after the HE
+	//--- resolves, credit the driver's GUER team funds for each one the blast killed = unit price x
+	//--- WFBE_C_GUER_KILL_BOUNTY_COEF, the SAME formula + WFBE_CO_FNC_ChangeTeamFunds path as the RequestOnUnitKilled
+	//--- GUER kill-bounty block (the blast shells have no instigator, so RequestOnUnitKilled never double-pays).
+	//--- Gate-guarded; the client only sends this for a GUER VBIED driver, so gate-OFF is a byte-for-byte no-op.
+	case "guer-vbied-detonate": {
+		Private ["_veh","_driver"];
+		_veh = _args select 1;
+		_driver = _args select 2;
+		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == "hilux1_civil_2_covered"}) then {
+			[_veh, _driver] spawn {
+				Private ["_veh","_driver","_drvGrp","_p","_radius","_coef","_victims","_payout","_get"];
+				_veh = _this select 0;
+				_driver = _this select 1;
+				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
+				_p = getPosATL _veh;
+				_radius = missionNamespace getVariable ["WFBE_C_GUER_VBIED_BLAST_RADIUS", 30];
+				_coef = missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5];
+				//--- snapshot living enemy WEST/EAST targets in lethal radius (man + land/air/sea vehicles).
+				_victims = [];
+				{
+					if (alive _x && {(side _x == east) || (side _x == west)}) then {_victims = _victims + [_x]};
+				} forEach (nearestObjects [_p, ["Man","LandVehicle","Air","Ship"], _radius]);
+				//--- BLAST (AI W21 idiom): pop the truck, then stack 3x 122mm HE for a large lethal crater.
+				_veh setDamage 1;
+				"Sh_122_HE" createVehicle _p;
+				"Sh_122_HE" createVehicle _p;
+				"Sh_122_HE" createVehicle _p;
+				//--- let the HE resolve kills, then pay the GUER driver's team for each victim the blast killed.
+				sleep 4;
+				if (!isNull _drvGrp) then {
+					_payout = 0;
+					{
+						if (!alive _x) then {
+							_get = missionNamespace getVariable (typeOf _x);
+							if (!isNil "_get") then {_payout = _payout + round ((_get select QUERYUNITPRICE) * _coef)};
+						};
+					} forEach _victims;
+					if (_payout > 0) then {
+						[_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+			};
+		};
+	};
 };
