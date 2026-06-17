@@ -23,6 +23,8 @@ Source refreshed on 2026-06-14 against docs head `2d88dd5a`; targeted diffs from
 
 ## Branch-Only GUER Insurgents Intake
 
+> **Status update (2026-06-17):** No longer branch-only — the GUER playable faction is MERGED to `master` @9af83596 and live on Chernarus (clean `ErrInExpr=0`). The intake notes below are retained as history; for the current shipped feature see [GUER Insurgents branch audit](GUER-Insurgents-Branch-Audit).
+
 This is branch-review evidence for `origin/feat/guer-insurgents-faction`, not current stable behavior. Recheck the branch head before implementation or release decisions.
 
 | Area | Evidence | Review route |

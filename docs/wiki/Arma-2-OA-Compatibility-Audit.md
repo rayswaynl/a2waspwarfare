@@ -61,6 +61,23 @@ The main audit catches Arma 3 features that must not be imported into OA. The in
 
 This does not weaken the PVF dispatch finding. `setVehicleInit` with hardcoded literals is a separate surface from DR-1's sender-chosen `Call Compile` dispatcher.
 
+## Classname Not Loaded — AT2 (Falanga) ATGM
+
+A separate trap from the version traps above: a classname can be perfectly valid Arma 2 OA syntax yet **not exist in this mission's loaded config set**. Referencing it does not throw an undefined-command error — it silently resolves to nothing (no weapon added, empty magazine, a missile that never fires).
+
+The clearest case is the **AT-2 "Falanga"** ATGM. Its classnames `AT2Launcher` / `4Rnd_AT2` are **deliberately not loaded** in this fork — the AT-2 was replaced by the Shturm/Ataka family. Confirmed absent (0 source hits). The AT missiles actually loaded in-mission:
+
+| Missile | Launcher | Magazine |
+| --- | --- | --- |
+| AT5 Konkurs | `AT5Launcher` | `5Rnd_AT5_BRDM2` |
+| AT6 Shturm | `AT6Launcher` | `4Rnd_AT6_Mi24V` |
+| AT9 Ataka | `AT9Launcher` | `4Rnd_AT9_Mi24P` |
+| Vikhr | — | `12Rnd_Vikhr_KA50` |
+| TOW | — | `6Rnd_TOW2` / `2Rnd_TOW2` |
+| Hellfire | — | `8Rnd_Hellfire` |
+
+Detection: before adding/reloading an AT classname, confirm it is loaded — grep the configs for the exact classname or guard at runtime with `isClass`. Treat `AT2Launcher` / `4Rnd_AT2` as removed in this fork; use the Shturm/Ataka classnames instead.
+
 ## Safe Wording For Future Agents
 
 Prefer:

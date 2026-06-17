@@ -123,6 +123,7 @@
   - [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit)
   - [Commander positions branch audit](Commander-Positions-Branch-Audit)
   - [Zargabad branch audit](Zargabad-Branch-Audit)
+  - [GUER Insurgents branch audit](GUER-Insurgents-Branch-Audit)
   - [Quad AI Commander concept](Quad-AI-Commander)
   - [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide)
   - [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)
