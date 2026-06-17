@@ -107,6 +107,16 @@ _i = _i + [['','',2800,35,-2,2,2,0,'Takistani Guerilla',[]]];
 _c = _c + ['UH1H_TK_GUE_EP1'];
 _i = _i + [['','',12500,30,-2,0,3,0,'Takistani Guerilla',[]]];
 
+//--- Ka-137 armed recon (PMC DLC) — registered here so non-PMC servers still offer it to GUER players
+//--- when Core_PMC.sqf is skipped (WFBE_C_MODULE_BIS_PMC == 0). If PMC IS enabled (the default on TK),
+//--- Core_PMC.sqf registers Ka137_MG_PMC first (line 254 in Init_Common.sqf, before line 259 Core_TKGUE),
+//--- and the Duplicated Element guard below will log a harmless diag_log and skip the second registration.
+//--- This is intentional: both paths leave Ka137_MG_PMC available in the buy menu with correct price.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+	_c = _c + ['Ka137_MG_PMC'];
+	_i = _i + [['','',6000,40,-2,0,3,0,'Takistani Guerilla',[]]];
+};
+
 /* Static Defenses */
 _c = _c + ['SearchLight_TK_GUE_EP1'];
 _i = _i + [['','',125,0,1,0,'Defense',0,'Takistani Guerilla',[]]];

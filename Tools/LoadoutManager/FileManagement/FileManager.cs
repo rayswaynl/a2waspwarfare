@@ -209,6 +209,39 @@ public class FileManager
         return _filePaths;
     }
 
+    // Returns the SQF block that injects the Ka-137 GUER EASA entries into EASA_Init.sqf.
+    // Called by BaseTerrain.cs via InsertGeneratedCodeInToAFile after WriteToFile writes EASA_Init.
+    // Returns the SQF block that injects Ka-137 into the EASA system when GUER playerside is enabled.
+    // Inserted between the //LoadoutManagerGuerEasaInsert marker pair in EASA_Init.sqf after the
+    // LoadoutManager has written the generated EASA content. This keeps the block regen-safe:
+    // even if EASA_Init.sqf is overwritten, the marker pair is regenerated and this call re-injects it.
+    //
+    // Ka-137 DLC notes (for smoke verification):
+    //   - Ka137_MG_PMC requires WFBE_C_MODULE_BIS_PMC > 0 (defaults to 1 on Takistan, see Init_CommonConstants.sqf:400).
+    //   - [MR] 'Ka137_MG' / '100Rnd_762x54_PKT' UNCONFIRMED — verify weapon/mag classnames in RPT on first regen+smoke.
+    //   - [AG] AT9Launcher / 4Rnd_AT9_Mi24P: Ataka missile fires from Ka-137 recon airframe only as pilot-fired;
+    //     missile lock geometry unconfirmed — if AG fails, fall back to 57mm rockets only.
+    //   - [AA] Igla_twice / 2Rnd_Igla: same lock caveat. EASA sets _is_AAMissile=true via airLock+MissileBase check.
+    public static string GenerateGuerEasaKa137Block()
+    {
+        return @"
+// Ka-137 [GUER Insurgents] - pilot-fired EASA recon/strike (Open Flag A; manual fire - no gunner turret).
+// [MR] stock-MG default (Ka137_MG / 100Rnd_762x54_PKT) UNCONFIRMED - verify classnames in RPT on smoke.
+// AG Ataka / AA Igla missile-lock geometry from recon airframe also unconfirmed - adjust if needed.
+if ((missionNamespace getVariable [""WFBE_C_GUER_PLAYERSIDE"", 0]) > 0) then {
+_easaVehi = _easaVehi + ['Ka137_MG_PMC'];
+_easaDefault = _easaDefault + [[[  'Ka137_MG'],[  '100Rnd_762x54_PKT']]];
+_easaLoadout = _easaLoadout + [
+[
+[0,'[MR] Recon (MG)',[['Ka137_MG'],['100Rnd_762x54_PKT']]],
+[2200,'[AG] AT-Strike - Ataka (4) | S-5 (64)',[['AT9Launcher','57mmLauncher'],['4Rnd_AT9_Mi24P','64Rnd_57mm']]],
+[1800,'[AA] Air Defence - Igla (4)',[['Igla_twice'],['2Rnd_Igla','2Rnd_Igla']]]
+]
+];
+};
+";
+    }
+
     public static void InsertGeneratedCodeInToAFile(string _generatedCode, string _targetPath, string _startReplaceFrom, string _endReplaceTo)
     {
         // Read the existing content from the file

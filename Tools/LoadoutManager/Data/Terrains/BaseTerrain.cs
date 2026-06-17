@@ -97,6 +97,19 @@ class CfgSounds
         // Write the content to the specified files
         // Maybe could use a bit more better data structure, maybe if needed, use the new replace content method instead of writing the whole file
         WriteToFile(_destinationDirection, _easaFileString, @"\Client\Module\EASA\EASA_Init.sqf");
+
+        // Inject Ka-137 GUER EASA block into the marker slot left by GenerateEndOfTheEasaFile().
+        // This is post-write so it survives regen: markers are regenerated, then this re-fills them.
+        // Only inject for vanilla (non-modded) terrains; modded maps don't carry GUER playerside.
+        if (terrainModStatus == TerrainModStatus.VANILLA || terrainModStatus == TerrainModStatus.MAIN)
+        {
+            FileManager.InsertGeneratedCodeInToAFile(
+                FileManager.GenerateGuerEasaKa137Block(),
+                _destinationDirection + @"\Client\Module\EASA\EASA_Init.sqf",
+                "//LoadoutManagerGuerEasaInsert",
+                "//LoadoutManagerGuerEasaInsert_END");
+        }
+
         WriteToFile(_destinationDirection, _commonBalanceFileString, @"\Common\Functions\Common_BalanceInit.sqf");
         WriteToFile(_destinationDirection, _aircraftDisplayNameStrings, @"\Common\Common_ReturnAircraftNameFromItsType.sqf");
         WriteToFile(_destinationDirection, GenerateAndWriteVersionSqf(), @"\version.sqf");

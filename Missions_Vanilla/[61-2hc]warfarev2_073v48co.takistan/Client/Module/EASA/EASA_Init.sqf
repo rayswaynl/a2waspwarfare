@@ -664,5 +664,22 @@ _easaLoadout = _easaLoadout + [
 [9000,'R-73 (2) | Vikhr (12)',[['R73Launcher_2','VikhrLauncher'],['2Rnd_R73','12Rnd_Vikhr_KA50']]]
 ]
 ];
+
+//LoadoutManagerGuerEasaInsert
+// Ka-137 [GUER Insurgents] - pilot-fired EASA recon/strike (Open Flag A; manual fire - no gunner turret).
+// [MR] stock-MG default (Ka137_MG / 100Rnd_762x54_PKT) UNCONFIRMED - verify classnames in RPT on smoke.
+// AG Ataka / AA Igla missile-lock geometry from recon airframe also unconfirmed - adjust if needed.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+_easaVehi = _easaVehi + ['Ka137_MG_PMC'];
+_easaDefault = _easaDefault + [[['Ka137_MG'],['100Rnd_762x54_PKT']]];
+_easaLoadout = _easaLoadout + [
+[
+[0,'[MR] Recon (MG)',[['Ka137_MG'],['100Rnd_762x54_PKT']]],
+[2200,'[AG] AT-Strike - Ataka (4) | S-5 (64)',[['AT9Launcher','57mmLauncher'],['4Rnd_AT9_Mi24P','64Rnd_57mm']]],
+[1800,'[AA] Air Defence - Igla (4)',[['Igla_twice'],['2Rnd_Igla','2Rnd_Igla']]]
+]
+];
+};
+//LoadoutManagerGuerEasaInsert_END
 for '_i' from 0 to count(_easaVehi)-1 do {	_loadout = _easaLoadout select _i;		for '_j' from 0 to count(_loadout)-1 do {		_loadout_line = _loadout select _j;		_is_AAMissile = false;				{			_ammo = getText(configFile >> "CfgMagazines" >> _x >> "ammo");						if (_ammo != "") then {				if (getNumber(configFile >> "CfgAmmo" >> _ammo >> "airLock") == 1 && configName(inheritsFrom(configFile >> "CfgAmmo" >> _ammo)) == "MissileBase") exitWith {_is_AAMissile = true};			};		} forEach ((_loadout_line select 2) select 1);				_loadout_line set [3, if (_is_AAMissile) then {true} else {false}];	};};
 missionNamespace setVariable ['WFBE_EASA_Vehicles',_easaVehi];missionNamespace setVariable ['WFBE_EASA_Loadouts',_easaLoadout];missionNamespace setVariable ['WFBE_EASA_Default',_easaDefault];

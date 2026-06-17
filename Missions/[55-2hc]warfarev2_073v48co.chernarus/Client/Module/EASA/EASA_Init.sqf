@@ -665,9 +665,10 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
+//LoadoutManagerGuerEasaInsert
 // Ka-137 [GUER Insurgents] - pilot-fired EASA recon/strike (Open Flag A; manual fire - no gunner turret).
-// AG/AA weapon+mag classes confirmed from existing EASA rows; the [MR] stock-MG default (Ka137_MG /
-// 100Rnd_762x54_PKT) is UNCONFIRMED - verify in-engine on the Hetzner dry-run + adjust if needed.
+// [MR] stock-MG default (Ka137_MG / 100Rnd_762x54_PKT) UNCONFIRMED - verify classnames in RPT on smoke.
+// AG Ataka / AA Igla missile-lock geometry from recon airframe also unconfirmed - adjust if needed.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
 _easaVehi = _easaVehi + ['Ka137_MG_PMC'];
 _easaDefault = _easaDefault + [[['Ka137_MG'],['100Rnd_762x54_PKT']]];
@@ -679,5 +680,6 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 };
+//LoadoutManagerGuerEasaInsert_END
 for '_i' from 0 to count(_easaVehi)-1 do {	_loadout = _easaLoadout select _i;		for '_j' from 0 to count(_loadout)-1 do {		_loadout_line = _loadout select _j;		_is_AAMissile = false;				{			_ammo = getText(configFile >> "CfgMagazines" >> _x >> "ammo");						if (_ammo != "") then {				if (getNumber(configFile >> "CfgAmmo" >> _ammo >> "airLock") == 1 && configName(inheritsFrom(configFile >> "CfgAmmo" >> _ammo)) == "MissileBase") exitWith {_is_AAMissile = true};			};		} forEach ((_loadout_line select 2) select 1);				_loadout_line set [3, if (_is_AAMissile) then {true} else {false}];	};};
 missionNamespace setVariable ['WFBE_EASA_Vehicles',_easaVehi];missionNamespace setVariable ['WFBE_EASA_Loadouts',_easaLoadout];missionNamespace setVariable ['WFBE_EASA_Default',_easaDefault];

@@ -39,10 +39,13 @@ public class SqfFileGenerator
     // GenerateEndOfTheEasaFile creates the concluding part of the SQF file.
     // It generates the logic for handling EASA vehicle loadouts and configurations.
     // The method returns a string that forms the concluding block of the SQF file.
+    // NOTE: The //LoadoutManagerGuerEasaInsert markers below are intentional — BaseTerrain.cs calls
+    // FileManager.InsertGeneratedCodeInToAFile to inject the Ka-137 GUER EASA block at post-write time.
     public static string GenerateEndOfTheEasaFile()
     {
         string endOfTheEasaFile = string.Empty;
 
+        endOfTheEasaFile += "\n//LoadoutManagerGuerEasaInsert\n//LoadoutManagerGuerEasaInsert_END\n";
         endOfTheEasaFile += "for '_i' from 0 to count(_easaVehi)-1 do {";
         endOfTheEasaFile += "\t_loadout = _easaLoadout select _i;";
         endOfTheEasaFile += "\t";
