@@ -330,6 +330,15 @@ if (_isMan) then {
 	_vehicle addAction [localize "STR_WF_Unlock","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target'];
 	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)'];
 
+	//--- GUER PLAYER VBIED: the buyable hilux1_civil_2_covered gets a driver-detonate action (Feature B player-side).
+	//--- The action is driver-only + resistance-only (condition) and does a confirm + short arm countdown before it
+	//--- asks the server to blast (mirrors AI wildcard W21) and pays the driver's GUER team cash-for-kills. Added on
+	//--- the buyer's client only (addAction is local), like the lock/stealth actions above. Gate-OFF / non-VBIED =
+	//--- no action added (byte-for-byte today's behaviour).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) == "hilux1_civil_2_covered"}) then {
+		_vehicle addAction ["<t color='#ff3333'>Detonate VBIED</t>","Client\Action\Action_GuerVbiedDetonate.sqf", [], 6, false, true, "", "driver _target == _this && {side _this == resistance}"];
+	};
+
 	//--- Salvage Truck.
 	if (_unit in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',sideJoinedText])) then {[_vehicle] execVM 'Client\FSM\updatesalvage.sqf'};
 

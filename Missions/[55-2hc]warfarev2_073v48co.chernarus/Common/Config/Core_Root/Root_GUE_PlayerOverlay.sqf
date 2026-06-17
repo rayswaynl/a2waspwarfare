@@ -43,6 +43,7 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 			_pool = [
 				"GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper",
 				"Offroad_DSHKM_Gue","V3S_Gue",
+				"hilux1_civil_2_covered",   //--- VBIED: driver-detonated suicide truck. "Detonate VBIED" action + cash-for-kills (mirrors AI wildcard W21). Always available (tier 0).
 				"Ka137_MG_PMC"   //--- armed recon heli, pilot-fired; EASA AG/AA loadouts at a service point (see 8AM note)
 			];
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue","T34_TK_GUE_EP1"]};
