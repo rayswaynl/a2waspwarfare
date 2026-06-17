@@ -47,26 +47,42 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSuppl
 
 //--- Server only.
 if (isServer) then {
-	//--- Patrols.
+	//--- Patrols. EAST revamp (task #23): archetype variation per tier
+	//--- (recon-foot / motorized / technical / mechanized / AT-hunter).
+	//--- BLOCKER FIX: every entry now carries >=1 Man-class soldier; the old all-armor
+	//--- entries (GAZ_Vodnik_HMG+GAZ_Vodnik, BTR90+BTR90, T72_RU+BMP3, T72_RU+T72_RU)
+	//--- were crewless to Common_RunSidePatrol (vehicle crews are not counted) and never spawned.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
+		//--- recon-foot: sniper-led scout team.
 		['RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_Sniper','RU_Soldier_Medic'],
+		//--- foot rifle squad.
 		['RU_Soldier_TL','RU_Soldier_AR','RU_Soldier_GL','RU_Soldier_LAT','RU_Soldier'],
-		['GAZ_Vodnik_HMG','GAZ_Vodnik'],
+		//--- technical pair (was crewless): Vodnik HMG + Vodnik with a dismounted AT gunner.
+		['GAZ_Vodnik_HMG','GAZ_Vodnik','RU_Soldier_TL','RU_Soldier_AT'],
+		//--- AT-hunter foot patrol.
 		['RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_AT','RU_Soldier_GL','RU_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['BTR90','BTR90'],
+		//--- mechanized (was crewless): twin BTR-90 + dismounted AT screen.
+		['BTR90','BTR90','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_Medic'],
+		//--- motorized AT-hunter: Kamaz + AT/MG team.
 		['Kamaz','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_MG','RU_Soldier_LAT'],
-		['BMP3','RU_Soldier_AA','RU_Soldier_AA','RU_Soldier_Medic'],
-		['BMP3','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_Medic']
+		//--- mechanized AAA: BMP-3 + MANPADS gunners.
+		['BMP3','RU_Soldier_AA','RU_Soldier_AA','RU_Soldier_Medic','RU_Soldier_TL'],
+		//--- BRDM AT-hunter: ATGM scout car + BMP-2 with infantry escort.
+		['BRDM2_ATGM_INS','BMP2_INS','RU_Soldier_AT','RU_Soldier_MG','RU_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['T72_RU','BMP3'],
-		['T72_RU','T72_RU'],
+		//--- armor (was crewless): T-72 + BMP-3 with mounted infantry.
+		['T72_RU','BMP3','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_Medic'],
+		//--- heavy armor (was crewless): twin T-72 + AT/HAT escort.
+		['T72_RU','T72_RU','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier_Medic'],
+		//--- mechanized assault: BMP-3 pair + full dismounted squad.
 		['BMP3','BMP3','RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_Marksman','RU_Soldier_Medic','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier'],
-		['BTR90','RU_Soldier_TL','RU_Soldier_Medic','RU_Soldier_GL','RU_Soldier','RU_Soldier_AR']
+		//--- mechanized AT-hunter: T-90 + BTR-90 with AT-led screen.
+		['T90','BTR90','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier_Medic']
 	]];
 
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

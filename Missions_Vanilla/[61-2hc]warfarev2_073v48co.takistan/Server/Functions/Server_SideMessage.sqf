@@ -6,7 +6,8 @@ _parameters = if (count _this > 2) then {_this select 2} else {[]};
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 
-_speaker = _logik getVariable "wfbe_radio_hq";
+_speaker = _logik getVariable ["wfbe_radio_hq", objNull];
+if (isNull _speaker) exitWith {}; //--- base-less GUER has no radio HQ -> skip the radio side-message (no-command-center guard, 2026-06-17)
 _receiver = _logik getVariable "wfbe_radio_hq_rec";
 _topicSide = _logik getVariable "wfbe_radio_hq_id";
 

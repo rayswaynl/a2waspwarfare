@@ -671,7 +671,7 @@ _easaLoadout = _easaLoadout + [
 // AG Ataka / AA Igla missile-lock geometry from recon airframe also unconfirmed - adjust if needed.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
 _easaVehi = _easaVehi + ['Ka137_MG_PMC'];
-_easaDefault = _easaDefault + [[['Ka137_MG'],['100Rnd_762x54_PKT']]];
+_easaDefault = _easaDefault + [[[  'Ka137_MG'],[  '100Rnd_762x54_PKT']]];
 _easaLoadout = _easaLoadout + [
 [
 [0,'[MR] Recon (MG)',[['Ka137_MG'],['100Rnd_762x54_PKT']]],

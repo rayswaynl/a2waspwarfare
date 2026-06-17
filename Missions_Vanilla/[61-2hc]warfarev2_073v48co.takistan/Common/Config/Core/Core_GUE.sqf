@@ -114,6 +114,30 @@ _i = _i + [['','',3400,28,-2,1,2,0,'Guerilla',[]]];
 _c = _c + ['T72_Gue'];
 _i = _i + [['','',5200,35,-2,3,2,0,'Guerilla',[]]];
 
+/* GUER player faction additions (Warlord roster) - not in the base GUE buy config */
+_c = _c + ['T34_TK_GUE_EP1'];
+_i = _i + [['','',3000,30,-2,0,2,0,'Guerilla',[]]];
+_c = _c + ['T55_TK_GUE_EP1'];
+_i = _i + [['','',4200,33,-2,0,2,0,'Guerilla',[]]];
+_c = _c + ['BTR40_TK_GUE_EP1'];
+_i = _i + [['','',700,22,-2,0,1,0,'Guerilla',[]]];
+_c = _c + ['Ka137_MG_PMC'];
+_i = _i + [['','',6000,40,-2,0,1,0,'Guerilla',[]]];
+/* VBIED: driver-detonated suicide truck (player buyable; Detonate action + cash-for-kills, mirrors AI wildcard W21). Cheap one-shot weapon. */
+_c = _c + ['hilux1_civil_2_covered'];
+_i = _i + [['','',400,18,-2,0,1,0,'Guerilla',[]]];
+/* GUER airfield air (transport cheap -> gunship expensive) */
+_c = _c + ['An2_1_TK_CIV_EP1'];
+_i = _i + [['','',2500,40,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['An2_2_TK_CIV_EP1'];
+_i = _i + [['','',2500,40,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['Mi17_Civilian'];
+_i = _i + [['','',6000,45,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['UH1H_TK_GUE_EP1'];
+_i = _i + [['','',9000,50,-2,0,3,0,'Guerilla',[]]];
+_c = _c + ['Mi24_P'];
+_i = _i + [['','',18000,60,-2,0,3,0,'Guerilla',[]]];
+
 /* Static Defenses */
 _c = _c + ['GUE_WarfareBMGNest_PK'];
 _i = _i + [['','',300,0,1,0,'Defense',0,'Guerilla',[]]];

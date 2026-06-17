@@ -480,13 +480,11 @@ switch (_args select 0) do {
 	//--- WFBE_C_GUER_KILL_BOUNTY_COEF, the SAME formula + WFBE_CO_FNC_ChangeTeamFunds path as the RequestOnUnitKilled
 	//--- GUER kill-bounty block (the blast shells have no instigator, so RequestOnUnitKilled never double-pays).
 	//--- Gate-guarded; the client only sends this for a GUER VBIED driver, so gate-OFF is a byte-for-byte no-op.
-	//--- (Takistan: shared server-side mirror per the slice-1 precedent; the player buy-pool entry rides with the
-	//--- deferred Takistan GUER client/config port - this case is a dormant no-op until then.)
 	case "guer-vbied-detonate": {
 		Private ["_veh","_driver"];
 		_veh = _args select 1;
 		_driver = _args select 2;
-		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == "hilux1_civil_2_covered"}) then {
 			[_veh, _driver] spawn {
 				Private ["_veh","_driver","_drvGrp","_p","_radius","_coef","_victims","_payout","_get"];
 				_veh = _this select 0;

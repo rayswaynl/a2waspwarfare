@@ -126,6 +126,13 @@ if (isMultiplayer) then {Call Compile preprocessFileLineNumbers "Common\Init\Ini
 
 Call Compile preprocessFileLineNumbers "Common\Init\Init_CommonConstants.sqf"; //--- Set the constants and the parameters, skip the params if they're already defined.
 
+//--- GUER PLAYERSIDE force (dedicated-MP): WFBE_C_GUER_PLAYERSIDE is the LAST mission param, so on a dedicated
+//--- server the cached paramsArray can be stale/short for it (an out-of-range `select` -> nil -> 0), which makes
+//--- the lobby value unreliable (esp. on a map that previously ran with fewer params). Re-read it from the param
+//--- DEFAULT the build sets (1 live / 0 git gate-off) - same dedicated-MP override pattern as the economy block
+//--- below; keeps the gate-off design working (git default stays 0).
+WFBE_C_GUER_PLAYERSIDE = getNumber (missionConfigFile >> "Params" >> "WFBE_C_GUER_PLAYERSIDE" >> "default");
+
 //--- AICOM: +50% starting economy. MUST live here: in MP Init_Parameters always sets these from paramsArray,
 //--- so the isNil fallbacks in Init_CommonConstants never fire on a dedicated server (why earlier raises had no effect).
 //--- Air-event/WF_Debug overrides below still take precedence. AI commander seed funds scale with this (FUNDS_START * 1.5 in Init_Server).
@@ -143,6 +150,7 @@ if (isMultiplayer) then {
 };
 
 //--- STARTING ECONOMY (Ray B36.1): THIS block is the real dedicated-MP override - the Init_CommonConstants 12800/30000 fallbacks NEVER fire here (Init_Parameters sets them from paramsArray first). Was the AB-ample fast-feedback experiment (150000/80000); now Ray's lean values
+//--- develop fast (AI never economy-stalls -> quick captures -> rapid metric feedback).
 //--- Shared by BOTH arms (matched condition). Set WFBE_C_AB_AMPLE_ECON=0 to disable.
 if ((missionNamespace getVariable ["WFBE_C_AB_AMPLE_ECON", 1]) > 0) then {
 	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_WEST", 30000];

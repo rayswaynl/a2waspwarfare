@@ -47,11 +47,6 @@ while {!gameOver} do {
 	{
 		_side = _x;
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-		//--- GUER-merge fix (smoke test 2026-06-16): skip base-area maintenance for sides with no
-		//--- command center (resistance/GUER has no base). Their WFBE_<side>COMMANDCENTERTYPE is
-		//--- undefined, so the GetFactories calls below threw "Undefined variable" every 20s loop
-		//--- (RPT spam). WEST/EAST unaffected.
-		if (isNil {missionNamespace getVariable Format["WFBE_%1COMMANDCENTERTYPE",str _side]}) then {} else {
 		_buildings = (_side Call WFBE_CO_FNC_GetSideStructures) + [_side Call WFBE_CO_FNC_GetSideHQ];
 		_command=[_side,missionNamespace getVariable Format["WFBE_%1COMMANDCENTERTYPE",str _side],_buildings] Call GetFactories;
 		_service=[_side,missionNamespace getVariable Format["WFBE_%1SERVICEPOINTTYPE",str _side],_buildings] Call GetFactories;
@@ -81,7 +76,6 @@ while {!gameOver} do {
 		if (count _areas_old != count _areas) then {
 			_logik setVariable ["wfbe_basearea", _areas, true];
 		};
-	}; //--- end GUER no-base-side guard
-		} forEach WFBE_PRESENTSIDES;
+	} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: base-less, no base-area maintenance
 	sleep 20;
 };

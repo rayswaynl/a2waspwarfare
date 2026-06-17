@@ -98,7 +98,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 		if (_guerBounty > 0) then { [_killer_group, _guerBounty] Call WFBE_CO_FNC_ChangeTeamFunds };
 	};
 
-// Player-stats: record resolved enemy kills after delayed vehicle attribution. No-op unless stats are enabled.
+	// Player-stats: record resolved enemy kills after delayed vehicle attribution. No-op unless stats are enabled.
 if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 	if (WFBE_C_STATS_ENABLED && (_killer_side != _killed_side)) then {
 		private ["_attrUid","_idx"];

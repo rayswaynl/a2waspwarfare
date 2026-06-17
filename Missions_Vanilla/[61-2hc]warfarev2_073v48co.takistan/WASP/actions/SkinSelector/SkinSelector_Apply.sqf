@@ -55,6 +55,16 @@ if (!(alive player)) exitWith {
 };
 
 _oldUnit = player;
+
+//--- RE-ENTRY GUARD 2026-06-16: a concurrent apply (double-click) or a respawn-race
+//--- second invocation would read this _oldUnit AFTER the first selectPlayer already
+//--- swapped the body — a stale-handle double-apply that corrupts player state. Block
+//--- it with a missionNamespace flag. The flag is set true here (no suspension between
+//--- the _oldUnit capture above and this line, so the window is atomic on A2's
+//--- cooperative scheduler) and reset false on EVERY exit path below so it never sticks.
+if (!(isNil "WFBE_SkinSelector_InProgress") && {WFBE_SkinSelector_InProgress}) exitWith { diag_log "[WFBE (SKIN)] ABORT: concurrent apply blocked"; };
+WFBE_SkinSelector_InProgress = true;
+
 _oldGrp  = group _oldUnit;
 
 //--- Capture position / orientation.
@@ -80,7 +90,7 @@ _wasLeader = (leader _oldGrp == _oldUnit);
 //--- createUnit into a non-local group fails silently (A2 OA group-locality trap).
 //--- A dedicated swap group is deleted after joinGroup restores squad membership.
 _swapGrp = createGroup (side _oldUnit);
-_swapGrp setVariable ["wfbe_group_src", "skin-swap"]; //--- audit clarity: transient client-local swap group, deleted < 0.5s later; a mid-swap GROUPAUDIT now shows "skin-swap" not "untagged".
+_swapGrp setVariable ["wfbe_group_src", "skin-swap", true]; //--- audit clarity: transient client-local swap group, deleted < 0.5s later. BROADCAST (3rd arg true) so the SERVER-side GROUPAUDIT/UNTAGLEAK actually sees the tag - a client-local setVariable would be invisible to the server's allGroups audit and the group would read as "untagged".
 
 diag_log format ["[WFBE (SKIN)] B2 createUnit: class='%1' swapGrp=%2 pos=%3 swapGrpLocal=%4",
 	_chosenClass, _swapGrp, _pos, local _oldUnit];
@@ -95,11 +105,13 @@ _newUnit = [_chosenClass, _swapGrp, _pos, WFBE_Client_SideID, false, "NONE"] cal
 if (isNil "_newUnit") exitWith {
 	diag_log format ["[WFBE (SKIN)] B2 ABORT: WFBE_CO_FNC_CreateUnit returned NIL for '%1' (unexpected)", _chosenClass];
 	deleteGroup _swapGrp;
+	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on early exit
 	hint "Skin swap failed (unit creation returned nil). Please try again.";
 };
 if (isNull _newUnit) exitWith {
 	diag_log format ["[WFBE (SKIN)] B2 ABORT: WFBE_CO_FNC_CreateUnit returned objNull for '%1' (unit/group cap?)", _chosenClass];
 	deleteGroup _swapGrp;
+	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on early exit
 	hint "Skin swap failed (server unit limit). Please try again later.";
 };
 
@@ -199,6 +211,13 @@ WFBE_PLAYERKEH = player addEventHandler ["Killed", {[_this select 0, _this selec
 player addEventHandler ["HandleDamage", format ["_this Call %1", WFBE_CL_VAR_ReArmorCode]];
 
 //--- Re-add vehicle Fired EHs on the new unit (it is on foot so vehicle player == player).
+//--- DEDUPE 2026-06-16: clear any existing Fired EHs first so repeated swaps do not
+//--- stack HandleAT/HandleRocketTraccer/blink (after N swaps the unit fired N+1 instances
+//--- per shot). The ONLY Fired EHs ever attached to the on-foot player are these three
+//--- (Init_Client.sqf:34/37/302, Client_PreRespawnHandler.sqf:13) — no other system owns
+//--- one — so removeAll is safe; the bomb/missile Fired EHs live on vehicles/AI via
+//--- Init_Unit.sqf, which the _global=false swap unit deliberately skips.
+player removeAllEventHandlers "Fired";
 (vehicle player) addEventHandler ["Fired", {_this Spawn HandleAT}];
 (vehicle player) addEventHandler ["Fired", {_this Spawn HandleRocketTraccer}];
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
@@ -231,6 +250,7 @@ if (!(isNull commanderTeam)) then {
 _uid = getPlayerUID player;
 missionNamespace setVariable [("WFBE_SkinSelector_Skin_" + _uid), _chosenClass];
 WFBE_SkinSelector_Applied = true;
+WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on successful completion
 
 diag_log format ["[WFBE (SKIN)] B6 COMPLETE: player='%1' class='%2' uid='%3'",
 	name player, typeOf player, _uid];

@@ -164,13 +164,12 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_SUPPLYRATE,2],
 	[WFBE_UP_HEAVY,1],
 	[WFBE_UP_HEAVY,2],
-	[WFBE_UP_ARTYTIMEOUT,1],
+	//--- ARTYTIMEOUT research stripped (owner): the AI commander's arty FIRE pipeline is OFF by
+	//--- default (WFBE_C_AI_COMMANDER_ARTILLERY=0), so an arty-cooldown upgrade was pure wasted spend.
 	[WFBE_UP_SUPPLYRATE,3],
 	[WFBE_UP_HEAVY,3],
-	[WFBE_UP_ARTYTIMEOUT,2],
 	[WFBE_UP_GEAR,3],
 	[WFBE_UP_RESPAWNRANGE,2],
-	[WFBE_UP_ARTYTIMEOUT,3],
 	[WFBE_UP_AIR,1],
 	[WFBE_UP_AIRLIFT,1],
 	[WFBE_UP_AIR,2],

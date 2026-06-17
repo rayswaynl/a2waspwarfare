@@ -6,7 +6,6 @@ if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:
 createCenter resistance;
 resistance setFriend [west,0];
 resistance setFriend [east,0];
-
 //--- GUER harass: setFriend is one-directional, so WEST/EAST must ALSO treat resistance as hostile or their AI
 //--- won't return fire on GUER players. Gated on the GUER param so the base WEST-vs-EAST mission is unchanged when OFF.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
@@ -249,7 +248,7 @@ _egressOK = {
 	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
 
 	//--- Reject candidates hugging any map edge (corner-box guard).
-	_ws = 12800;  //--- A2-fix 2026-06-14: worldSize is A3-only (undefined in A2 OA -> spammed "Undefined variable worldsize"); Takistan map size = 12800
+	_ws = 15360;  //--- A2-fix 2026-06-14: worldSize is A3-only (undefined in A2 OA -> spammed "Undefined variable worldsize"); Chernarus map size = 15360
 	if ((_pos select 0) < _margin || (_pos select 0) > (_ws - _margin)) exitWith {false};
 	if ((_pos select 1) < _margin || (_pos select 1) > (_ws - _margin)) exitWith {false};
 
@@ -607,6 +606,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 				["INITIALIZATION", Format ["Init_Server.sqf: GUER player team [%1] initialized.", _group]] Call WFBE_CO_FNC_LogContent;
 			};
 		} forEach (synchronizedObjects _guerLogic);
+		diag_log format ["[WFBE] GUER playable faction: registered %1 player teams (INITIALIZATION LogContent is filtered on this build, so this diag_log is the visibility).", count _guerTeams];
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
 		[] execVM "Server\Server_GuerStipend.sqf";
@@ -632,13 +632,13 @@ if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isN
 //--- from genuinely leaked groups. One-shot sweep tagging every still-untagged WEST/EAST group as
 //--- "editor-player-slot" (broadcast). They already carry wfbe_persistent=true (set above) so the GC
 //--- never reaps them; this is audit-only. The isNil guard skips any runtime group the wrapper already
-//--- tagged. GUER has 0 editor slots so resistance is intentionally excluded.
+//--- tagged. GUER's 4 player-slot editor groups are now included so they tag as editor-player-slot too.
 if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
 	{
 		Private ["_src"];
 		_src = _x getVariable "wfbe_group_src";
-		if (isNil "_src" && {(side _x == west) || (side _x == east)}) then {
+		if (isNil "_src" && {(side _x == west) || (side _x == east) || (side _x == resistance)}) then {
 			_x setVariable ["wfbe_group_src", "editor-player-slot", true];
 		};
 	} forEach allGroups;
@@ -661,10 +661,7 @@ serverInitFull = true;
 //--- 5x5 grid of candidate camp positions around each airfield's
 //--- LocationLogicAirport (Balota id=7, NWAF id=8). Reads AIRFIELD_PROBE|... in
 //--- the RPT to pick a verified on-land, off-road apron. Changes NO coordinates.
-//--- TAKISTAN PORT (2026-06-16): the probe's airfield anchors are hardcoded
-//--- Chernarus coords (Balota/NWAF), so it is gated to the Chernarus map. On
-//--- Takistan it is a no-op (no valid anchors); diagnostic only, spawns nothing.
-if (IS_chernarus_map_dependent) then { [] execVM "Server\Init\Init_AirfieldProbe.sqf"; };
+[] execVM "Server\Init\Init_AirfieldProbe.sqf";
 
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
@@ -835,7 +832,7 @@ if (_antiStackEnabled) then {
 	// 0 = NONE
 	// 1 = CHERNARUS
 	// 2 = TAKISTAN
-	["SET_MAP", 1] call WFBE_SE_FNC_CallDatabaseSetMap;
+	["SET_MAP", 2] call WFBE_SE_FNC_CallDatabaseSetMap;
 };
 
 _logMatchWinPlayerCountThreshold = 10;

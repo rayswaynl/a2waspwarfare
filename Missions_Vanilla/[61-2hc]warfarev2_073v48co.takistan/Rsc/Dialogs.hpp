@@ -1255,6 +1255,7 @@ class WF_Menu {
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
 			idc = 11021;
+			show = 0; //--- Skin Selector hidden 2026-06-17 (Ray: out until it works; WFBE_C_SKIN_SELECTOR=0)
 			x = 0.564;
 			y = 0.767144;
 			w = 0.057;

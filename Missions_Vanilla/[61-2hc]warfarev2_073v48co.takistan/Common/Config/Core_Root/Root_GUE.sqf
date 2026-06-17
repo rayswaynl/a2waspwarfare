@@ -36,18 +36,43 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSuppl
 
 //--- Server only.
 if (isServer) then {
-	//--- Patrols.
+	//--- Patrols. GUER revamp (task #17/#23): scary insurgents with technicals, an
+	//--- armored element, AT/MANPADS ambushers and foot raiders. EVERY entry carries
+	//--- at least one Man-class soldier (Common_RunSidePatrol rejects crew-only teams).
+	//--- Archetypes per tier: recon-foot / motorized / technical / mechanized / AT-hunter.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
-		['GUE_Soldier_1','GUE_Soldier_MG','GUE_Soldier_Sniper','GUE_Soldier_Medic'], 
-		['GUE_Soldier_CO','GUE_Soldier_AR','GUE_Soldier_3','GUE_Soldier_AT','GUE_Soldier_2']
+		//--- recon-foot: scout-led raiders.
+		['GUE_Soldier_Scout','GUE_Soldier_1','GUE_Soldier_MG','GUE_Soldier_AT','GUE_Soldier_Medic'],
+		//--- foot AT-hunter: RPG ambush team.
+		['GUE_Commander','GUE_Soldier_AT','GUE_Soldier_AT','GUE_Soldier_AR','GUE_Soldier_2'],
+		//--- technical: DSHKM gun-truck + dismounts.
+		['Offroad_DSHKM_Gue','GUE_Soldier_1','GUE_Soldier_3','GUE_Soldier_MG'],
+		//--- technical: PK pickup raiding party.
+		['Pickup_PK_GUE','GUE_Soldier_1','GUE_Soldier_AT','GUE_Soldier_2'],
+		//--- motorized: V3S truckload of fighters.
+		['V3S_Gue','GUE_Soldier_1','GUE_Soldier_2','GUE_Soldier_3','GUE_Soldier_MG','GUE_Soldier_AT']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['GUE_Soldier_CO','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_AT']
+		//--- technical AT-hunter: SPG-9 recoilless truck + RPG dismounts.
+		['Offroad_SPG9_Gue','GUE_Soldier_AT','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Medic'],
+		//--- MANPADS ambush: ZU-23 AAA truck + AA gunners (scary to air).
+		['Ural_ZU23_Gue','GUE_Soldier_AA','GUE_Soldier_AA','GUE_Soldier_AT','GUE_Soldier_1'],
+		//--- mechanized recon: BTR-40 MG armored car + riders.
+		['BTR40_MG_TK_GUE_EP1','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_2','GUE_Soldier_Medic'],
+		//--- two-technical column: DSHKM + PK with a sniper overwatch dismount.
+		['Offroad_DSHKM_Gue','Pickup_PK_GUE','GUE_Soldier_Sniper','GUE_Soldier_AT','GUE_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['GUE_Soldier_Sniper','GUE_Soldier_Scout','GUE_Soldier_Sniper']
+		//--- mechanized armor: BRDM-2 + AT/MANPADS escort (NO PMC armored SUV).
+		['BRDM2_Gue','GUE_Soldier_AT','GUE_Soldier_AA','GUE_Soldier_MG','GUE_Soldier_Medic','GUE_Soldier_1'],
+		//--- heavy mechanized: T-72 + BMP-2 with mounted infantry.
+		['T72_Gue','BMP2_Gue','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Medic'],
+		//--- armored AT-hunter: BRDM-2 + SPG-9 technical + RPG gunners.
+		['BRDM2_Gue','Offroad_SPG9_Gue','GUE_Soldier_AT','GUE_Soldier_AT','GUE_Soldier_AA','GUE_Soldier_Medic'],
+		//--- combined column: T-55 + ZU-23 AAA + sniper-led infantry screen.
+		['T55_TK_GUE_EP1','Ural_ZU23_Gue','GUE_Soldier_Sniper','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Medic']
 	]];
 	
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].
@@ -98,6 +123,11 @@ if (local player) then {
 	
 	if (WF_A2_CombinedOps) then {
 		(_side) Call Compile preprocessFileLineNumbers "Common\Config\Loadout\Loadout_TKGUE.sqf";
+	};
+
+	//--- GUER "Insurgents" player overlay (buy-menu pool + per-role gear). Only when the playable faction is on.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+		Call Compile preprocessFileLineNumbers "Common\Config\Core_Root\Root_GUE_PlayerOverlay.sqf";
 	};
 };
 

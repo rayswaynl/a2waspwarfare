@@ -4944,10 +4944,6 @@
 	       <English>Service Point</English>
 	       <Russian>Service Point</Russian>
 	  </Key>
-	  <Key ID="RB_Artillery_Radar">
-	       <English>Artillery Radar</English>
-	       <Russian>Artillery Radar</Russian>
-	  </Key>
 	  <Key ID="RB_Reserve">
 	       <English>Reserve</English>
 	       <Russian>Reserve</Russian>
@@ -9564,85 +9560,6 @@
     <!-- Marty: WDDM composition cap — max 3 compositions per base area (Task 18). %1 = current count, %2 = cap -->
     <Key ID="WddmCompositionCapReached">
       <English>Base composition limit reached (%1/%2). Commander composition not built.</English>
-    </Key>
-
-    <!-- Marty: Voting page — main menu button and dialog title -->
-    <Key ID="STR_WF_MAIN_VotingPageMenu">
-      <English>Vote</English>
-    </Key>
-    <Key ID="STR_WF_TOOLTIP_MainMenu_VotingPage">
-      <English>Open the voting menu (skip night, surrender, weather, restart, commander).</English>
-    </Key>
-    <!-- Marty 2026-06-12: "More votes..." button inside WFBE_VoteMenu (idd 500000) -->
-    <Key ID="STR_WF_VOTING_MoreVotes">
-      <English>More votes...</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_Title">
-      <English>Community Vote</English>
-    </Key>
-
-    <!-- Marty: Vote option labels (must match Format ["STR_WF_VOTE_OPT_%1", type] lookups in server scripts) -->
-    <Key ID="STR_WF_VOTE_OPT_skip-night">
-      <English>Skip Night (majority)</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_OPT_commander">
-      <English>Re-vote Commander (existing)</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_OPT_surrender">
-      <English>Surrender (100% your team)</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_OPT_weather">
-      <English>Change Weather (100% all)</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_OPT_mission-restart">
-      <English>Mission Restart (100% all)</English>
-    </Key>
-
-    <!-- Marty: Dialog UI labels -->
-    <Key ID="STR_WF_VOTE_StartVote">
-      <English>Start Vote</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_VoteYes">
-      <English>Vote YES</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_AlreadyVoted">
-      <English>Already Voted YES</English>
-    </Key>
-    <!-- %1 = yes count, %2 = needed -->
-    <Key ID="STR_WF_VOTE_Status">
-      <English>YES: %1 / %2 needed</English>
-    </Key>
-    <!-- %1 = seconds remaining -->
-    <Key ID="STR_WF_VOTE_Countdown">
-      <English>Time remaining: %1 s</English>
-    </Key>
-    <!-- %1 = seconds until unlocked -->
-    <Key ID="STR_WF_VOTE_Cooldown">
-      <English>On cooldown: %1 s remaining</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_SurrenderCommanderOnly">
-      <English>Only the commander can start a surrender vote</English>
-    </Key>
-    <!-- %1 = localized name of the other active vote type -->
-    <Key ID="STR_WF_VOTE_OtherActive">
-      <English>Another vote is in progress: %1</English>
-    </Key>
-
-    <!-- Marty: Chat broadcast messages (via LocalizeMessage) -->
-    <!-- %1 = player name, %2 = localized vote type -->
-    <Key ID="STR_WF_VOTE_Started">
-      <English>%1 has started a vote: %2</English>
-    </Key>
-    <!-- %1 = localized vote type -->
-    <Key ID="STR_WF_VOTE_Passed">
-      <English>Vote PASSED: %1</English>
-    </Key>
-    <!-- %1 = localized vote type -->
-    <Key ID="STR_WF_VOTE_Failed">
-      <English>Vote FAILED: %1 (not enough yes votes)</English>
-    </Key>
-    <Key ID="STR_WF_VOTE_NotNight">
-      <English>Skip Night vote is only available at night.</English>
     </Key>
 
     <!-- Special-unit info popups (data-driven WFBE_SPECIAL_UNIT_HINTS map) -->
