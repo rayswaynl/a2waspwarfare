@@ -484,7 +484,7 @@ switch (_args select 0) do {
 		Private ["_veh","_driver"];
 		_veh = _args select 1;
 		_driver = _args select 2;
-		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == "hilux1_civil_2_covered"}) then {
 			[_veh, _driver] spawn {
 				Private ["_veh","_driver","_drvGrp","_p","_radius","_coef","_victims","_payout","_get"];
 				_veh = _this select 0;
