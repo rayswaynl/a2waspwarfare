@@ -55,5 +55,5 @@ while {!WFBE_GameOver} do {
 			if (isNil {_g getVariable "wfbe_funds"}) then {_g setVariable ["wfbe_funds", 0, true]};
 			[_g, _rate] Call WFBE_CO_FNC_ChangeTeamFunds;
 		};
-	} forEach allPlayers;
+	} forEach playableUnits;
 };
