@@ -15,8 +15,14 @@ _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
 {
 	_team = _x;
-	_aliveCount = {alive _x} count (units _team);
-	if (!isPlayer (leader _team)) then {
+	//--- V0.6.5/V0.7 parity: wiped HC teams leave NULL groups in wfbe_teams (index-aligned
+	//--- registry - entries are nulled, not removed). In A2 OA, getVariable [name,default] on a
+	//--- null group returns nil (NOT the default) and units/leader on a null group misbehave, which
+	//--- threw + killed the sibling workers until they were guarded. Execute was the lone team-loop
+	//--- worker still missing the guard; match AssignTypes/AssignTowns/Produce/Strategy and skip nulls.
+	_aliveCount = 0;
+	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
+	if (!isNull _team && {!isPlayer (leader _team)}) then {
 		if (_aliveCount > 0) then {
 			_mode  = _team getVariable ["wfbe_teammode", "towns"];
 			_modeL = toLower _mode;
