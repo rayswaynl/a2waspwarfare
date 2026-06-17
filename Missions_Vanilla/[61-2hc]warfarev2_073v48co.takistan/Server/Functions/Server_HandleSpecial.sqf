@@ -336,7 +336,8 @@ switch (_args select 0) do {
 		_rSideID = _args select 1;
 		_rCost   = _args select 2;
 		_rSide   = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
-		if (!isNull _rSide && {_rCost > 0}) then {
+		//--- _rSide is a Side (not an Object) so isNull is the wrong test and throws; validate it is a real combatant treasury side instead.
+		if ((_rSide in [east,west,resistance]) && {_rCost > 0}) then {
 			[_rSide, _rCost] Call ChangeAICommanderFunds;
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 to [%2] AI-commander treasury (transport flew off-map).", _rCost, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
 		};
