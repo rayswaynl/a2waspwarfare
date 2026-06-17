@@ -42,7 +42,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=118;
+		items=123;
 		class Item0
 		{
 			side="WEST";
@@ -4181,6 +4181,113 @@ class Mission
 					skill=0.60000002;
 					init="this enableSimulation false;";
 					synchronizations[]={252};
+				};
+			};
+		};
+		class Item118
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12505.479,208.02589,12528.001};
+					id=254;
+					side="LOGIC";
+					vehicle="LocationLogicOwnerResistance";
+					leader=1;
+					skill=0.60000002;
+					text="WFBE_L_GUE";
+					synchronizations[]={255,256,257,258};
+				};
+			};
+		};
+		class Item119
+		{
+			side="GUER";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12503.479,208.02589,12528.001};
+					id=255;
+					side="GUER";
+					vehicle="TK_GUE_Soldier_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="CORPORAL";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Insurgent Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={254};
+				};
+			};
+		};
+		class Item120
+		{
+			side="GUER";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12507.479,208.02589,12528.001};
+					id=256;
+					side="GUER";
+					vehicle="TK_GUE_Soldier_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="CORPORAL";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Insurgent Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={254};
+				};
+			};
+		};
+		class Item121
+		{
+			side="GUER";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12503.479,208.02589,12532.001};
+					id=257;
+					side="GUER";
+					vehicle="TK_GUE_Soldier_Sniper_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="CORPORAL";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Insurgent Sniper (Spot marks, Lockpick, Camps restore)";
+					synchronizations[]={254};
+				};
+			};
+		};
+		class Item122
+		{
+			side="GUER";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12507.479,208.02589,12532.001};
+					id=258;
+					side="GUER";
+					vehicle="TK_GUE_Bonesetter_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="CORPORAL";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Insurgent Medic (Fast heal, Camps restore)";
+					synchronizations[]={254};
 				};
 			};
 		};
