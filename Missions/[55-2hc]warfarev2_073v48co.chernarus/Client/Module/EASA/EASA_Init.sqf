@@ -671,10 +671,10 @@ _easaLoadout = _easaLoadout + [
 // AG Konkurs/AT-5 / AA Igla missile-lock geometry from recon airframe also unconfirmed - adjust if needed.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
 _easaVehi = _easaVehi + ['Ka137_MG_PMC'];
-_easaDefault = _easaDefault + [[[  'Ka137_MG'],[  '100Rnd_762x54_PKT']]];
+_easaDefault = _easaDefault + [[[  'PKT'],[  '100Rnd_762x54_PKT']]];
 _easaLoadout = _easaLoadout + [
 [
-[0,'[MR] Recon (MG)',[['Ka137_MG'],['100Rnd_762x54_PKT']]],
+[0,'[MR] Recon (MG)',[['PKT'],['100Rnd_762x54_PKT']]],
 [2200,'[AG] AT-Strike - Konkurs/AT-5 (5) | S-5 (64)',[['AT5Launcher','57mmLauncher'],['5Rnd_AT5_BRDM2','64Rnd_57mm']]],
 [1800,'[AA] Air Defence - Igla (4)',[['Igla_twice'],['2Rnd_Igla','2Rnd_Igla']]]
 ]

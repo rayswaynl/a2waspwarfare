@@ -84,7 +84,7 @@ while {alive player && dialog} do {
 						//--- before re-adding, or the default loadout double-stacks (mirrors EASA_Equip.sqf).
 						[vehicle player, _defaultLoadout] Call EASA_RemoveLoadout;
 					};
-					if ((typeOf (vehicle player)) == "AW159_Lynx_BAF") then {
+					if (((typeOf (vehicle player)) == "AW159_Lynx_BAF") || {(typeOf (vehicle player)) == "Ka137_MG_PMC"}) then {
 						{(vehicle player) addMagazineTurret [_x, [-1]]} forEach (_defaultLoadout select 1);
 						{(vehicle player) addWeaponTurret [_x, [-1]]} forEach (_defaultLoadout select 0);
 					} else {

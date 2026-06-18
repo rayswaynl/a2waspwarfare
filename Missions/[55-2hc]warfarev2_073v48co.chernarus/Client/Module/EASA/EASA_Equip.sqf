@@ -23,8 +23,9 @@ if (_type != -1) then {
 	//--- Now we load the new EASA setup.
 	_loadout = (((missionNamespace getVariable 'WFBE_EASA_Loadouts') select _type) select _index) select 2;
 
-	// Check for wildcat, add weapons to its turret instead of the vehicle. Otherwise add them to the vehicle (just like before).
-	if ((typeOf _vehicle) == "AW159_Lynx_BAF") then {
+	// Turret-armed airframes (Wildcat + Ka-137): the occupant fires from MainTurret, so weapons MUST go on the turret
+	// (path [-1] = primary/MainTurret). Hull-level addWeapon leaves the turret empty -> pilot/operator has no usable weapon.
+	if (((typeOf _vehicle) == "AW159_Lynx_BAF") || {(typeOf _vehicle) == "Ka137_MG_PMC"}) then {
 		{_vehicle addMagazineTurret [_x, [-1]]} forEach (_loadout select 1);
 		{_vehicle addWeaponTurret [_x, [-1]]} forEach (_loadout select 0);
 	} else {

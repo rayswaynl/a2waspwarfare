@@ -81,7 +81,7 @@ with missionNamespace do {
 
 //--- Day/night cycles.
 	// Marty: Defaults used when mission parameters do not provide the accelerated day/night settings.
-	if (isNil "WFBE_DAYNIGHT_ENABLED") then {WFBE_DAYNIGHT_ENABLED = 1}; //--- Enable the hybrid accelerated day/night cycle.
+	WFBE_DAYNIGHT_ENABLED = 0; //--- Night mode removed (Ray 2026-06-18): hard-force the accelerated day/night cycle OFF (permanent daylight). SET (not isNil-guarded) so a stale lobby param / saved profile can't re-enable it; every cycle site gates on ==1.
 	// Marty: Match the mission parameter's 180-minute daytime default.
 	if (isNil "WFBE_DAY_DURATION") then {WFBE_DAY_DURATION = 180};    //--- Real-life duration of daytime in minutes
 	if (isNil "WFBE_NIGHT_DURATION") then {WFBE_NIGHT_DURATION = 30}; //--- Real-life duration of nighttime in minutes
