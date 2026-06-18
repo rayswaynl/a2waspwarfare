@@ -23,9 +23,9 @@ _wps = [];
 
 //--- Randomize the behaviours.
 if (random 100 > 50) then {_team setFormation "DIAMOND"} else {_team setFormation "STAG COLUMN"};
-if (random 100 > 50) then {_team setCombatMode "YELLOW"} else {_team setCombatMode "RED"};
-if (random 100 > 50) then {_team setBehaviour "AWARE"} else {_team setBehaviour "COMBAT"};
-if (random 100 > 50) then {_team setSpeedMode "NORMAL"} else {_team setSpeedMode "LIMITED"};
+_team setCombatMode "RED";
+_team setBehaviour "AWARE";
+_team setSpeedMode "NORMAL";
 
 //--- Dyn insert.
 _insertStep = if (count(_usable) != 0) then {floor(_maxWaypoints / count(_usable))} else {-1};

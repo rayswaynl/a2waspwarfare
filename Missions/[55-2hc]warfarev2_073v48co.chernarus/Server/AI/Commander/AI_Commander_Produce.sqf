@@ -78,8 +78,10 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				//--- leader is hugging an owned town (front-line resupply), so spearheads stop
 				//--- bleeding out far from HQ. The refill spawn point is pulled forward below.
 				_nearFwd = false;
-				_fwdR = missionNamespace getVariable ["WFBE_C_AICOM_FWD_REINFORCE_RANGE", 500];
-				{ if (((_x getVariable "sideID") == _myID) && {(_ldr distance _x) < _fwdR}) exitWith {_nearFwd = true} } forEach towns;
+				if (_ownTowns > 0) then {
+					_fwdR = missionNamespace getVariable ["WFBE_C_AICOM_FWD_REINFORCE_RANGE", 500];
+					{ if (((_x getVariable "sideID") == _myID) && {(_ldr distance _x) < _fwdR}) exitWith {_nearFwd = true} } forEach towns;
+				};
 				if (!_nearFwd) then {_canProduce = false};
 			};
 		};
