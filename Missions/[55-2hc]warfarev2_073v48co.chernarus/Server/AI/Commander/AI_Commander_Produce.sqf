@@ -86,8 +86,22 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 	};
 	if (_canProduce) then {
 		_template = _templates select _type;
-		_want = (count _template) min (missionNamespace getVariable "WFBE_C_AI_MAX");
 		_cur  = {alive _x} count (units _team);
+		//--- punchy-AICOM FOUNDING CLAMP (Ray 2026-06-17): a just-founded (empty) team is built to
+		//--- clamp(templateSize, MIN, MAX). MBT teams + ATTACK-HELI teams are EXEMPT from the MIN floor
+		//--- (vehicle+crew is the punch - never pad with riflemen). The MIN floor applies ONLY when the
+		//--- team is empty (_cur==0), so partial small templates (e.g. 5-man patrols) are not over-built.
+		//--- A2-OA detection: classname-literal isKindOf + getNumber transportSoldier (no A3 primitives).
+		private ["_tmplSize","_isMBT","_isAttackHeli","_floorN","_sizeMin","_sizeMax"];
+		_tmplSize = count _template;
+		_sizeMin  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
+		_sizeMax  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+		_isMBT = false;
+		{ if (_x isKindOf "Tank") exitWith {_isMBT = true} } forEach _template;
+		_isAttackHeli = false;
+		{ if (_x isKindOf "Helicopter" && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0}) exitWith {_isAttackHeli = true} } forEach _template;
+		_floorN = if (_cur == 0 && {!(_isMBT || _isAttackHeli)}) then {_sizeMin} else {1};
+		_want = ((_tmplSize max _floorN) min _sizeMax) min (missionNamespace getVariable "WFBE_C_AI_MAX");
 
 		//--- RANK-2 health-gated refill (claude-gaming 2026-06-13): a critically-weak or JUST-FOUNDED server-local
 		//--- team (alive < CRITICAL_STRENGTH of template) is rushed to FULL this cycle (effective batch = full

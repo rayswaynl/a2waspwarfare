@@ -105,7 +105,7 @@ with missionNamespace do {
 	//--- Protects eval/night sessions from accidental human takeover. Default 0 = normal play.
 	if (isNil "WFBE_C_AI_COMMANDER_LOCK") then {WFBE_C_AI_COMMANDER_LOCK = 1};
 	//--- ACTIVE-TOWN BUDGET: max concurrently active towns. FPS lever; 12 for the legacy-vs-next A/B (Steff 2026-06-13).
-	if (isNil "WFBE_C_TOWNS_ACTIVE_MAX") then {WFBE_C_TOWNS_ACTIVE_MAX = 12}; //--- 12 (Steff 2026-06-15): testing the camp-first capture cure at FULL load - the cure lets towns get captured -> deactivate -> garrisons despawn, so 12 stays sustainable. GUER cap (60) backstops the worst case.
+	if (isNil "WFBE_C_TOWNS_ACTIVE_MAX") then {WFBE_C_TOWNS_ACTIVE_MAX = 7}; //--- punchy-AICOM (Ray 2026-06-17): 12->7 to concentrate the front (fewer simultaneous active towns = denser fights). GUER cap (80) backstops the worst case. Rollback: 12.
 	//--- GUER GROUP CAP: hard ceiling on total resistance groups. Bounds runaway GUER growth toward the engine's ~144-groups/side
 	//--- limit over long stalled AI-vs-AI runs (garrisons + W9 uprising + side-patrols, none of which had a global cap).
 	//--- 90 is far above any single-front GUER force, well under the 144 ceiling; raise to 999 for an instant rollback.
@@ -117,7 +117,7 @@ with missionNamespace do {
 	WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600;
 	WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5;
 	//--- AI Commander revival (feat/ai-commander).
-	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 72;     //--- Per-side AI ceiling for AI-commander unit production (FPS safety cap).
+	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 130;    //--- punchy-AICOM (Ray 2026-06-17): 72->130. Sized for 10 teams x [8,12] units: worst case 10*12=120, +10 buffer so the side-gate in AI_Commander_Produce.sqf (:28-30) does not fire at 119 and starve the last team back below the 8-floor. DELIBERATE commander-AI raise (testing trade-off Ray accepts). Rollback: 72.
 	WFBE_C_AI_COMMANDER_USE_ARC_APPROACH = 1;  //--- 1: SetTownAttackPath arc approach; 0: simple AIMoveTo fallback.
 	WFBE_C_AI_COMMANDER_UPGRADE_INTERVAL = 120;
 	WFBE_C_AI_COMMANDER_TOWN_INTERVAL = 120;
@@ -129,23 +129,23 @@ with missionNamespace do {
 	WFBE_C_AI_COMMANDER_TEAMS_TARGET = 2;      //--- B36 (Ray 2026-06-15): HALVED 4->2 to cut HC saturation + group count. With MAX_EXTRA 1 the founding cap is 3 teams/side (was 6); teams stay big via AI_MAX 12. Rollback: 4.
 	//--- B36 (Ray 2026-06-15): seconds with NO human commander (from start, re-armed when a human leaves) before the AI builds/spends.
 	WFBE_C_AI_COMMANDER_BUILD_GRACE = 300;
-	WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA = 1;   //--- B36 (Ray 2026-06-15): TARGET(2)+MAX_EXTRA(1) = 3 teams/side cap, HALVED from B35's 6, to relieve HC saturation (HCs hit 20 fps at ~192 units). Teams stay big via AI_MAX 12. Rollback: 2.
+	WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA = 0;   //--- punchy-AICOM (Ray 2026-06-17): 1->0 to pin exactly 10 teams at low pop (base PC_LOW=10, no funds-extra). Rollback: 1.
 	WFBE_C_AI_COMMANDER_DEFENSES_MAX = 4;      //--- V0.2: manned base statics the AI places around its HQ.
 	//--- B36.1 (Ray 2026-06-15): DYNAMIC TEAM SCALING by live HUMAN player count (HCs excluded). The team
 	//--- count is the dominant server-FPS lever, so the AI commander's founding target scales INVERSELY
 	//--- with population: more players = more server pressure = FEWER HQ squads; low pop is efficient +
 	//--- boring, so flood it with many more AI teams. Buckets 0-2 / 3-5 / 6-9 / 10+. The 10+ value matches
 	//--- the old static target (2) = no high-pop regression. Consumed by AI_Commander_Teams.sqf.
-	WFBE_C_AICOM_TEAMS_PC_LOW  = 7;            //--- 0-2 players: dialed back to 5 (Ray 2026-06-16: server+HC cap-out relief at low pop; was 8).
+	WFBE_C_AICOM_TEAMS_PC_LOW  = 10;           //--- punchy-AICOM (Ray 2026-06-17): 0-2 players -> 10 teams while testing. Rollback: 7.
 	WFBE_C_AICOM_TEAMS_PC_MID  = 5;            //--- 3-5 players (Ray B36.1 tweak, was 4).
 	WFBE_C_AICOM_TEAMS_PC_HIGH = 3;
 	WFBE_C_AICOM_TEAMS_PC_FULL = 2;            //--- rollback the whole curve: set all four to 2.
-	WFBE_C_AICOM_DISBAND_SAFE_DIST = 600;      //--- B36.1 on-join cleanup: retire a rear AI team only when NO player is within this many metres of its leader AND it is not in combat (guardrail). The HC re-checks on its own machine before deleting local units.
+	WFBE_C_AICOM_DISBAND_SAFE_DIST = 1200;     //--- punchy-AICOM (Ray 2026-06-17): 600->1200 - wider no-retire radius so rear teams are kept (more standing army), only retiring when truly far from any player. Rollback: 600.
 	WFBE_C_AICOM_INCOME_PC_BONUS = 0.06;       //--- B36.1 income: +6% AI-commander CASH income per human player UNDER the REF pop (INVERTED - highest at LOW pop to fund the team-curve flood; 0 disables -> flat INCOME_MULT).
 	WFBE_C_AICOM_INCOME_PC_REF = 10;           //--- B36.1: player count at/above which the inverted income boost is ZERO (base income). Below it, AI-commander cash income rises +BONUS per player under REF. Mirrors the team curve's high-pop end (10+ = 2 teams).
 	//--- B37 BANKING VALVE (Ray 2026-06-16): convert low-pop banked funds into squads + a gentle income trim. Toggle to A/B.
 	WFBE_C_AICOM_BANKING_VALVE = 1;            //--- B37: 1=on (low-pop funds->squads valve + income trim); 0=B36.1 behaviour.
-	WFBE_C_AICOM_TEAMS_LOWPOP_EXTRA = 2;       //--- B37: max extra HQ teams a rich low/mid-pop (<=5) commander may field when the valve is on. Dialed back to 2 (Ray 2026-06-16: server+HC cap-out relief at low pop; was 6).
+	WFBE_C_AICOM_TEAMS_LOWPOP_EXTRA = 0;       //--- punchy-AICOM (Ray 2026-06-17): 2->0 so the banking-valve contributes no extra teams; PC_LOW=10 is the flat target while testing (=10 teams). Rollback: 2.
 	WFBE_C_AICOM_INCOME_PC_BONUS_VALVE = 0.045; //--- B37: gentler low-pop income boost when the valve is on (vs 0.06), so more-squads does not over-bank.
 	WFBE_C_AICOM_INCOME_MULT_MAX = 3.0;        //--- hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 4}; //--- Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
@@ -192,15 +192,15 @@ with missionNamespace do {
 	//--- attack overwhelms the garrison, then roll forward once it flips. Replaces "one team per
 	//--- distant town". The per-tier table scales the quota by garrison size (TinyTown needs ~2,
 	//--- a HugeTown needs ~5). CONCENTRATION is the global base; the tier table refines per target.
-	if (isNil "WFBE_C_AICOM_CONCENTRATION") then {WFBE_C_AICOM_CONCENTRATION = 3};           //--- base teams massed on the primary spearhead (used when a town's type is unknown).
-	if (isNil "WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX") then {WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX = 2};//--- cap on how many DISTINCT spearhead towns the army splits across (was implicitly 5). 1-2 keeps the punch concentrated early; raises naturally is left to AssignTowns spill-over.
+	if (isNil "WFBE_C_AICOM_CONCENTRATION") then {WFBE_C_AICOM_CONCENTRATION = 4};           //--- punchy-AICOM (Ray 2026-06-17): 3->4 base teams massed on the primary spearhead. Rollback: 3.
+	if (isNil "WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX") then {WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX = 1};//--- punchy-AICOM (Ray 2026-06-17): 2->1 - one spearhead town at a time, maximum concentration. Rollback: 2.
 	//--- V0.7 bootstrap: until the side owns >= 1 town, bias target selection to the
 	//--- nearest-to-base, lowest-value town so the AI captures its first income source fast.
 	if (isNil "WFBE_C_AICOM_BOOTSTRAP_BIAS") then {WFBE_C_AICOM_BOOTSTRAP_BIAS = 1};         //--- 1 enable, 0 disable.
 	//--- V0.7 bootstrap stipend: trickle funds+supply per supervisor tick while town count == 0.
 	if (isNil "WFBE_C_AICOM_BOOTSTRAP_FUNDS") then {WFBE_C_AICOM_BOOTSTRAP_FUNDS = 100};     //--- Funds per minute (scaled to tick spacing).
-	if (isNil "WFBE_C_AICOM_BOOTSTRAP_SUPPLY") then {WFBE_C_AICOM_BOOTSTRAP_SUPPLY = 50};    //--- Supply per minute (scaled to tick spacing).
-	if (isNil "WFBE_C_AICOM_BOOTSTRAP_MAXTIME") then {WFBE_C_AICOM_BOOTSTRAP_MAXTIME = 3600};//--- Hard cutoff (s): stipend stops even if no town yet.
+	if (isNil "WFBE_C_AICOM_BOOTSTRAP_SUPPLY") then {WFBE_C_AICOM_BOOTSTRAP_SUPPLY = 120};   //--- punchy-AICOM (Ray 2026-06-17): 50->120 supply/min while zero-town, so the AI tech-unlocks + builds faster out of the gate. Rollback: 50.
+	if (isNil "WFBE_C_AICOM_BOOTSTRAP_MAXTIME") then {WFBE_C_AICOM_BOOTSTRAP_MAXTIME = 7200};//--- punchy-AICOM (Ray 2026-06-17): 3600->7200 - keep the zero-town stipend alive for 2h so a stalled AI never goes broke. Rollback: 3600.
 	//--- TASK #6 (production): funds->supply UPGRADE FALLBACK. In dual-currency every upgrade costs
 	//--- ONLY supply, and supply comes only from owned towns - so a funds-rich 0-town AI can never
 	//--- research Light/Heavy/Air and stays infantry-only despite its factory tier. When this rate is
@@ -208,9 +208,28 @@ with missionNamespace do {
 	//--- * rate) out of its war chest when supply is dry, unlocking vehicle tech. AI-commander-only;
 	//--- never touches shared/human supply. Default 0 = DISABLED (no-op; preserves legacy<->next A/B
 	//--- parity). Suggested enable value ~2 (per the #6 investigation). Restart-safe nil-guard.
-	if (isNil "WFBE_C_AICOM_UPGRADE_FUNDS_RATE") then {WFBE_C_AICOM_UPGRADE_FUNDS_RATE = 2}; //--- ENABLED 2026-06-15: cash-rich/supply-starved AI converts funds->Light/Heavy/Air tech so OPFOR stops buying infantry-only. Set 0 to disable.
-	if (isNil "WFBE_C_AICOM_SUPPLY_RESERVE") then {WFBE_C_AICOM_SUPPLY_RESERVE = 8000}; //--- raised 2026-06-15 from 500: keep an 8k SUPPLY buffer for UNIT PRODUCTION so the AI can't drain its bootstrap supply on upgrades and stop building (it routes upgrades to FUNDS below this via FUNDS_RATE). Pairs with camp-first town supply income to cure the "AI stopped producing" supply-exhaustion.
-	WFBE_C_AI_COMMANDER_RELIEF_MAX = 2;           //--- V0.5: max simultaneous town-relief diversions.
+	if (isNil "WFBE_C_AICOM_UPGRADE_FUNDS_RATE") then {WFBE_C_AICOM_UPGRADE_FUNDS_RATE = 1}; //--- punchy-AICOM (Ray 2026-06-17): 2->1 - cheaper funds->tech conversion (supply price x1 instead of x2) so the cash-rich AI unlocks vehicle tech faster. 0 disables. Rollback: 2.
+	if (isNil "WFBE_C_AICOM_SUPPLY_RESERVE") then {WFBE_C_AICOM_SUPPLY_RESERVE = 1000}; //--- punchy-AICOM (Ray 2026-06-17): 8000->1000 - unblock economy. The old 8k reserve hoarded supply away from upgrades; with FUNDS_RATE=1 the AI can spend down to 1k and convert the rest to tech via funds. Rollback: 8000.
+	WFBE_C_AI_COMMANDER_RELIEF_MAX = 1;           //--- punchy-AICOM (Ray 2026-06-17): 2->1 - at most one team diverted to defense at a time; keep the rest on offense. Rollback: 2.
+	//--- punchy-AICOM (Ray 2026-06-17): NEW tunables.
+	//--- TIME-CURVE income boost: a gentle smoothstep multiplier on the commander's recurring
+	//--- funds income (updateresources.sqf _pcMult). FLAT (=FLOOR) until START, then S-curve ramp
+	//--- across WINDOW seconds up to CEIL. Late + gentle by design - NOT an early snowball.
+	if (isNil "WFBE_C_AICOM_TIMECURVE_FLOOR")  then {WFBE_C_AICOM_TIMECURVE_FLOOR  = 1.0};   //--- multiplier before the ramp (no early boost).
+	if (isNil "WFBE_C_AICOM_TIMECURVE_CEIL")   then {WFBE_C_AICOM_TIMECURVE_CEIL   = 1.8};   //--- peak multiplier at full ramp (late-game punch).
+	if (isNil "WFBE_C_AICOM_TIMECURVE_START")  then {WFBE_C_AICOM_TIMECURVE_START  = 7200};  //--- s before the ramp begins (7200 = 120 min ~ "after 2 hours").
+	if (isNil "WFBE_C_AICOM_TIMECURVE_WINDOW") then {WFBE_C_AICOM_TIMECURVE_WINDOW = 3600};  //--- ramp length (s); CEIL reached at START+WINDOW (= 180 min).
+	//--- FOUNDING TEAM-SIZE clamp [MIN,MAX]. MBT teams + ATTACK-HELI teams are EXEMPT from MIN
+	//--- (vehicle+crew is the punch; never pad them with riflemen). Applied in AI_Commander_Produce.sqf.
+	if (isNil "WFBE_C_AICOM_TEAM_SIZE_MIN") then {WFBE_C_AICOM_TEAM_SIZE_MIN = 8};   //--- founding floor for infantry/mixed teams.
+	if (isNil "WFBE_C_AICOM_TEAM_SIZE_MAX") then {WFBE_C_AICOM_TEAM_SIZE_MAX = 12};  //--- founding ceiling (matches WFBE_C_AI_MAX per-group cap).
+	//--- RELIEF HOLD: a team diverted to defend a town holds for this long, then - if the town is
+	//--- still ours but no longer actively attacked OR the hold expires - it is released back to
+	//--- OFFENSE instead of idling on a quiet town (never a standing-still AI). AI_Commander_Strategy.sqf.
+	if (isNil "WFBE_C_AICOM_RELIEF_HOLD") then {WFBE_C_AICOM_RELIEF_HOLD = 240};  //--- s.
+	//--- ASSAULT FINISH tunables (extracted from hard-coded literals in Common_RunCommanderTeam.sqf).
+	if (isNil "WFBE_C_AICOM_ASSAULT_HOLD") then {WFBE_C_AICOM_ASSAULT_HOLD = 360}; //--- s: camp-first + depot-center capture-hold loop budget (was two hard-coded 150s).
+	if (isNil "WFBE_C_AICOM_ASSAULT_SAD")  then {WFBE_C_AICOM_ASSAULT_SAD  = 80};  //--- m: approach-SAD radius on arrival (towns-target) (was hard-coded 250).
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 500;       //--- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.
 	WFBE_C_AICOM_CRITICAL_STRENGTH = 0.30;        //--- RANK-2 health-gated refill (claude-gaming 2026-06-13): a server-local AI-commander team below this fraction of its template size is rushed to FULL strength in one Produce cycle (full-deficit batch), so just-founded teams form WHOLE and depleted teams stop lingering as 2-man remnants (cuts group count + drains the stuck war chest). Bounded by funds/factory/AI-cap. 0 disables.

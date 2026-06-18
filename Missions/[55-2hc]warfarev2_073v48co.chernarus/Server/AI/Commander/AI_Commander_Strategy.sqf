@@ -124,12 +124,21 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 		_relTown = _team getVariable ["wfbe_aicom_relief", objNull];
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
-			if (_quiet || {(_relTown getVariable "sideID") != _sideID}) then {
-				//--- Town safe (or lost - it becomes an attack target again): release.
+			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
+			//--- has elapsed, so a diverted team returns to OFFENSE instead of idling on a town that
+			//--- is no longer actively contested. SetTeamMoveMode "towns" immediately re-tasks it
+			//--- (AssignTowns gives it a fresh attack order next cycle) - never a standing-still AI.
+			private ["_relUntil","_relExpired"];
+			_relUntil = _team getVariable "wfbe_aicom_relief_until";
+			if (isNil "_relUntil") then {_relUntil = 0};
+			_relExpired = (_relUntil > 0) && {time > _relUntil};
+			if (_quiet || {(_relTown getVariable "sideID") != _sideID} || _relExpired) then {
+				//--- Town safe / lost / hold expired: release back to offense.
 				_team setVariable ["wfbe_aicom_relief", objNull];
+				_team setVariable ["wfbe_aicom_relief_until", 0];
 				[_team, "towns"] Call SetTeamMoveMode;
 				_team setVariable ["wfbe_aicom_townorder", []];
-				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3].", _sideText, _team, _relTown getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
+				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3]%4.", _sideText, _team, _relTown getVariable ["name", "town"], if (_relExpired) then {" (hold expired -> offense)"} else {""}]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};
@@ -162,6 +171,7 @@ _relieved = 0;
 				[_free, "defense"] Call SetTeamMoveMode;
 				[_free, getPos _town] Call SetTeamMovePos;
 				_free setVariable ["wfbe_aicom_relief", _town];
+				_free setVariable ["wfbe_aicom_relief_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_HOLD", 240])]; //--- punchy-AICOM (Ray 2026-06-17): hold-window stamp; released back to offense when it expires.
 				_relieved = _relieved + 1;
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] diverted to RELIEVE [%3] (under attack).", _sideText, _free, _town getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF|" + (_town getVariable ["name", "town"]));

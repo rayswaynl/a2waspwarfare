@@ -540,7 +540,7 @@ while {!WFBE_GameOver && _alive} do {
 						if (_mode == "defense") then {
 							[_team, true, [[_dest, 'SAD', 100, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
-							[_team, true, [[_dest, 'SAD', 250, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring.
 						};
 					};
 				};
@@ -665,7 +665,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- hold a live SAD/move order here - never frozen/idle (MEMORY guardrail).
 						_unheldCamps = [];
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
-						_campFirstEnd = time + 150; //--- same order of magnitude as the center-hold timeout (150s)
+						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_nearCamp   = [leader _team, _unheldCamps] Call WFBE_CO_FNC_GetClosestEntity;
 							if (isNull _nearCamp) exitWith {};
@@ -742,7 +742,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- within the capture radius of the depot (the contested _skip clears -> the
 						//--- town drains and flips). Re-reveal enemy each tick. Every iteration leaves
 						//--- units on a live SAD order (never idle).
-						_holdEnd = time + 150;
+						_holdEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer depot-center hold = the team holds long enough to drain + flip the town.
 						_resNear = 1;
 						while {time < _holdEnd && {_resNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_enemyNear = (_townCenter nearEntities [["Man"], _capRange]) unitsBelowHeight 10;
