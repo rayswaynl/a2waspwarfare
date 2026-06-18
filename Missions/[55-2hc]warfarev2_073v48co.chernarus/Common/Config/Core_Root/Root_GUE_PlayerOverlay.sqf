@@ -53,7 +53,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 		if (_tier != _lastTier) then {
 			_lastTier = _tier;
 
-#ifdef IS_CHERNARUS_MAP_DEPENDENT
+			if (worldName == "Chernarus") then {  //--- GUER-MAPFIX (2026-06-18): preprocessFileLineNumbers (Root_GUE.sqf:130 / Root_TKGUE.sqf:104) loads this file STANDALONE, so IS_CHERNARUS_MAP_DEPENDENT (version.sqf) was UNDEFINED -> the #else (Takistan) branch ran on Chernarus too (TK classnames in the CH buy-roster + WFBE_C_GUER_VBIED_TYPE wrongly = datsun). Runtime worldName is map-correct on both maps.
 			//--- Chernarus GUER roster (GUE_* classnames).
 			_pool = [
 				"GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper",
@@ -64,7 +64,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1","BTR40_TK_GUE_EP1"]};
 			if (_tier >= 3) then {_pool = _pool + ["T72_Gue","BMP2_Gue"]};
-#else
+			} else {
 			//--- Takistan GUER roster (TK_GUE_*_EP1 classnames; no T72/BMP2 GUE on TK).
 			//--- TK VBIED uses the datsun covered civilian pickup; repoint WFBE_C_GUER_VBIED_TYPE so the
 			//--- client detonate-action gate + server blast guard both match the TK truck (Chernarus keeps the hilux).
@@ -78,7 +78,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_TK_GUE_EP1","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1","BTR40_MG_TK_GUE_EP1"]};
 			if (_tier >= 3) then {_pool = _pool + ["Ural_ZU23_TK_GUE_EP1"]};
-#endif
+			};
 			missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _pool];
 		};
 		sleep 10;
