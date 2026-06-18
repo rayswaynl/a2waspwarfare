@@ -26,18 +26,18 @@ if !(side group player == resistance) exitWith {};
 //--- Per-role default respawn gear: [weapons[], magazines[], [primary, sidearm]].
 //--- Gear is identical on both maps (AKS-74 family common to both GUER factions).
 missionNamespace setVariable ["WFBE_GUER_DefaultGearEngineer", [
-	["AKS_74_kobra","Makarov","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
-	["30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","HandGrenade_East","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
+	["AKS_74_kobra","RPG7V","Makarov","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
+	["30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","PG7V","PG7V","PG7V","HandGrenade_East","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
 	["AKS_74_kobra","Makarov"]
 ]];
 missionNamespace setVariable ["WFBE_GUER_DefaultGearSpot", [
-	["SVD","Makarov","Binocular","NVGoggles","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
-	["10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
+	["SVD","RPG18","Makarov","Binocular","NVGoggles","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
+	["10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","RPG18","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
 	["SVD","Makarov"]
 ]];
 missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
-	["AKS_74_kobra","Makarov","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
-	["30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
+	["AKS_74_kobra","RPG7V","Makarov","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
+	["30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","PG7V","PG7V","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
 	["AKS_74_kobra","Makarov"]
 ]];
 
