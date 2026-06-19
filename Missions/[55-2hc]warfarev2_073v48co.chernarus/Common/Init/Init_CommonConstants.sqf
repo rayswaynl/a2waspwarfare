@@ -230,6 +230,18 @@ with missionNamespace do {
 	//--- ASSAULT FINISH tunables (extracted from hard-coded literals in Common_RunCommanderTeam.sqf).
 	if (isNil "WFBE_C_AICOM_ASSAULT_HOLD") then {WFBE_C_AICOM_ASSAULT_HOLD = 360}; //--- s: camp-first + depot-center capture-hold loop budget (was two hard-coded 150s).
 	if (isNil "WFBE_C_AICOM_ASSAULT_SAD")  then {WFBE_C_AICOM_ASSAULT_SAD  = 80};  //--- m: approach-SAD radius on arrival (towns-target) (was hard-coded 250).
+	//--- WAVE-1 (2026-06-19) target-abandon + capture-loop break tunables.
+	//--- STUCK_ABANDON: after this many consecutive unstuck STRIKES on the SAME town (AssignTowns CAUSE-2),
+	//--- the team BLACKLISTS that town for a cooldown and re-picks the next-best reachable target, instead of
+	//--- grinding one unreachable/unflippable town forever (re-issue kept re-picking the same town). Guardrail:
+	//--- if every candidate is blacklisted the list is cleared so the team always gets a target (never idles).
+	if (isNil "WFBE_C_AICOM_STUCK_ABANDON") then {WFBE_C_AICOM_STUCK_ABANDON = 4};
+	//--- CAPTURE_MAXPASSES: max consecutive depot-hold passes (Common_RunCommanderTeam CAUSE-3) with
+	//--- res-near==0 AND the town still NOT ours before the team RELEASES the contested/uncapturable depot
+	//--- (same on-capture re-task idiom -> AssignTowns retargets) instead of holding the center forever.
+	if (isNil "WFBE_C_AICOM_CAPTURE_MAXPASSES") then {WFBE_C_AICOM_CAPTURE_MAXPASSES = 2};
+	//--- BLACKLIST_COOLDOWN: how long (s) an abandoned town stays excluded for THAT team (CAUSE-2 cooldown).
+	if (isNil "WFBE_C_AICOM_BLACKLIST_COOLDOWN") then {WFBE_C_AICOM_BLACKLIST_COOLDOWN = 600};
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 900;       //--- FILL-FIX 2026-06-18: 500->900 (rollback 500) - forward spearheads 500-900m out of the rear base couldn't refill and bled toward ~4 units; widen so front-line teams top up from the nearest forward factory. Still requires an OWNED town within range (never resupplies on enemy ground). --- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.
 	WFBE_C_AICOM_CRITICAL_STRENGTH = 0.55;        //--- FILL-FIX 2026-06-18: 0.30->0.55 (rollback 0.30) - a 4/10=40% team sat ABOVE the old 0.30 gate so only got the slow 3/cycle dribble and lingered at ~4; at 0.55 any team under ~55% rush-fills to full in one funds-permitting cycle. Bounded by funds/factory/AI-cap (130). --- RANK-2 health-gated refill (claude-gaming 2026-06-13): a server-local AI-commander team below this fraction of its template size is rushed to FULL strength in one Produce cycle (full-deficit batch), so just-founded teams form WHOLE and depleted teams stop lingering as 2-man remnants (cuts group count + drains the stuck war chest). Bounded by funds/factory/AI-cap. 0 disables.
