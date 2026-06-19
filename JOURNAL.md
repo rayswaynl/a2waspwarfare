@@ -1,5 +1,80 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-06-19 — Join failure ("Receiving mission") — root cause + fixes [INCIDENT / POSTMORTEM]
+
+**SYMPTOM.** Multiple players could not join the live Chernarus server: clients hung on
+"Receiving mission" / a permanent black screen and never finished loading. **Not load-related** —
+the server had been running fine under heavy AI (had soaked at ~600 AI without trouble). The failure
+was state/slot/timing dependent (it got more likely as lobby slots churned over a session), not
+correlated with player count or AI count.
+
+**ROOT CAUSE (high confidence — multi-agent RCA, confirmed in code + git).** Two things combined:
+
+1. **The deployed build was PRE-B49** and therefore lacked the join-robustness null-guard.
+2. **The Chernarus `mission.sqm` still offered ~26 dead "shell" lobby slots** (13 WEST + 13 EAST) —
+   leftovers of the GUER 27→14 de-slot (`sqm_cut.py`). That script removed `player="PLAY CDG"` from
+   13 units/side and appended `removeAllWeapons this; deleteVehicle this` to each, **but left all 27
+   ids/side synchronized to `LocationLogicOwnerWest/East`.** In Warfare, the units synced to the Owner
+   logic *are* the side's playable roster, so the lobby kept offering all 27 slots/side.
+
+   A JIP client that landed on one of these shell slots ran `deleteVehicle this` → **`player == objNull`**.
+   In the pre-B49 `Init_Client.sqf`, the very first real statement (`sideJoined = side player;`) on a
+   null player silently broke the entire client init. That meant the **BLACK FADED fade** opened in
+   `initJIPCompatible.sqf` (`12452 cutText [..., "BLACK FADED", 50000];`, ~50000s ≈ 13.9h) was **never
+   cleared** by the normal "BLACK IN" at the end of `Init_Client` → permanent black / stuck on
+   "Receiving mission."
+
+**FIX (shipped).** Two layers, both now on `claude/deslot-shellslots` (HEAD `b27c5c9e`):
+
+- **Roll FORWARD to the B49 join-robustness** (commit `f4308e6d`), which the bad build predated:
+  - `Client/Init/Init_Client.sqf`: a **45s fade watchdog** — `waitUntil { clientInitComplete ||
+    (time - _t0 > 45) }`, then `12452 cutText ["", "BLACK IN", 1]` so a stalled client clears the
+    screen instead of staring at black; **plus** `if (isNull player) exitWith {...}` *before* the
+    `side player` call, so a null-player join bails gracefully instead of breaking init.
+  - `Server/Functions/Server_OnPlayerConnected.sqf`: `!isNull _x` guard in the team-lookup loop.
+  - **Deployed commit `1e023fa0`** (`Revert "feat(B50): server-ready gate…"`) as the live HEAD —
+    it contains the B49 robustness without the B50 gate (see lessons).
+- **Proper hardening — remove the trap at the source** (commit `b27c5c9e`): drop the 26 shell ids
+  (13W+13E) from the two Owner LOGIC `synchronizations[]` lists (27→14 ids each) and clear the shells'
+  own back-reference sync. The empty self-deleting groups are left in place (no Unit class removed, no
+  `items=` recount → low-risk, no renumber), but the engine no longer enumerates them as side slots,
+  so **the lobby never offers a null-player trap again.**
+
+**WRONG TURNS / REFUTED HYPOTHESES (the "other stuff found").** Before the real cause was nailed,
+several theories were chased and then **disproven**:
+- mission name / cache collision,
+- heavy-AI JIP overload,
+- a ~10× server restart loop,
+- object-ID exhaustion,
+- convoy-truck (vehicle) leaks,
+- the B50 server-ready gate.
+
+Several of these came from a **stale / secondhand server log that did not match the live RPT** — the
+live RPT was actually healthy. Time was lost analyzing the wrong window.
+
+**LESSONS (read before debugging the next join failure):**
+1. **Triage on the failing-window RPT, not a stale or secondhand one.** A healthy live RPT next to a
+   scary old log = the old log is the red herring. Confirm the timestamps match the incident window.
+2. **When the failure is a recently-FIXED regression, roll FORWARD to the fix — do NOT roll back to an
+   older "known-good" that predates it.** Repeatedly restoring pre-B49 builds *made it worse* (each
+   restore re-introduced the missing null-guard).
+3. **Deploy a single coherent commit, not ad-hoc overlays onto stale on-disk files.** The live HEAD is
+   `1e023fa0`; know exactly what commit is running.
+4. **Don't hold client init behind a server-ready gate.** The B50 server-ready gate (`ede75180`)
+   caused deadspawn deaths and was reverted (`1e023fa0`). Client init must not block on server state.
+5. **Don't rename the live public mission.** Renaming invalidates the local cache of every returning
+   player (they re-download → look like new "Receiving mission" stalls). Keep the public mission name stable.
+6. **The box has scheduled tasks that can auto-redeploy / rename the mission** — these were disabled
+   during the incident so they couldn't silently overwrite the fix or churn the mission name. Re-check
+   them before declaring the box stable.
+
+Touched/relevant files: `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf`,
+`.../initJIPCompatible.sqf`, `.../Server/Functions/Server_OnPlayerConnected.sqf`, `.../mission.sqm`.
+Key commits: `f4308e6d` (B49 robustness), `ede75180`→`1e023fa0` (B50 gate added then reverted, = deployed HEAD),
+`b27c5c9e` (de-slot the 26 shell slots).
+
+---
+
 ## 2026-06-15 — Group-budget hygiene: 3 code extras (slot cut CANCELLED) [WORKING STATE]
 
 **Decision (Steff, 2026-06-15): SKIP the 27→21 editor player-slot cut.** Reason: the deep research

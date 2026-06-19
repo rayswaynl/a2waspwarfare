@@ -10,8 +10,15 @@ Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeploye
 [] spawn {
 	private "_t0"; _t0 = time;
 	waitUntil { sleep 0.5; clientInitComplete || (time - _t0 > 45) };
+	//--- JIP FADE FIX (B52 2026-06-19): clear the 12452 BLACK fade UNCONDITIONALLY once init completes
+	//--- (or after the 45s stall timeout) - NOT only on a stall. Some JIP joins finish init fine (player
+	//--- is in-game: can respawn / open the scoreboard / hear cues) but the normal L868 BLACK IN clear is
+	//--- raced/skipped (or initJIPCompatible re-sets the fade late) so the screen stays black. The short
+	//--- sleep lets any late JIP fade re-set settle first; then we always clear. Double-clear on the happy
+	//--- path is a harmless no-op.
+	sleep 3;
+	12452 cutText ["", "BLACK IN", 1];
 	if (!clientInitComplete) then {
-		12452 cutText ["", "BLACK IN", 1];
 		diag_log format ["[INIT SAFETY] Client init stalled >45s - force-cleared BLACK fade so the player is not stuck on black (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
 	};
 };
