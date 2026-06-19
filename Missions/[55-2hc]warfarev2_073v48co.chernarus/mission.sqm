@@ -3481,7 +3481,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Support (Supply run)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -3590,7 +3590,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -3765,7 +3765,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Support (Supply run)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -3850,7 +3850,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={229,239,230,231,240,241,232,233,242,243,234,235,236,237,238,257,258,259,260,261,270,274,273,283,285,286,287};
+					synchronizations[]={229,239,230,231,240,241,232,233,242,234,235,236,237,259};
 				};
 			};
 		};
@@ -3869,7 +3869,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_OPF";
-					synchronizations[]={244,251,245,246,252,253,247,248,254,249,250,262,264,265,263,266,267,269,272,271,275,276,277,284,288,289,290};
+					synchronizations[]={244,245,246,252,253,247,248,254,249,250,262,263,267,269};
 				};
 			};
 		};
@@ -3890,7 +3890,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Support (Supply run)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -3911,7 +3911,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -3954,7 +3954,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -3975,7 +3975,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4040,7 +4040,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4061,7 +4061,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4082,7 +4082,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4168,7 +4168,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4189,7 +4189,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Support (Supply run)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4210,7 +4210,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4231,7 +4231,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4252,7 +4252,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Support (Supply run)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4273,7 +4273,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4294,7 +4294,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4315,7 +4315,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Support (Supply run)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4426,7 +4426,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4447,7 +4447,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4468,7 +4468,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4489,7 +4489,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4510,7 +4510,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={255};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4531,7 +4531,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4552,7 +4552,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
@@ -4573,7 +4573,7 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={256};
+					synchronizations[]={};
 				};
 			};
 		};
