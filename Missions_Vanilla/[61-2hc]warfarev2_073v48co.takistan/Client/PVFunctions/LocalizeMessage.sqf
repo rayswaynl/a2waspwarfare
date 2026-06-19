@@ -179,7 +179,12 @@ switch (_localize) do {
 };
 
 if (_commandChat) then {
-	_txt Call CommandChatMessage;
+	//--- GUARD (2026-06-18): CommandChatMessage can be nil on a client where the command-chat
+	//--- function hasn't compiled yet (prior RPT logged 37x 'Error position: <CommandChatMessage').
+	//--- Skip the call rather than error out; the message is non-critical chat.
+	if (!isNil "CommandChatMessage") then {
+		_txt Call CommandChatMessage;
+	};
 } else {
 	_txt Call GroupChatMessage;
 };

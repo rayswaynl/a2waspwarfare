@@ -494,11 +494,14 @@ switch (_args select 0) do {
 				_p = getPosATL _veh;
 				_radius = missionNamespace getVariable ["WFBE_C_GUER_VBIED_BLAST_RADIUS", 30];
 				_coef = missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5];
-				//--- snapshot living enemy WEST/EAST targets in lethal radius (man + land/air/sea vehicles).
+				//--- C5 (over-pay bound): snapshot only living enemy WEST/EAST MAN-class targets in lethal radius.
+				//--- The old snapshot also captured LandVehicle/Air/Ship hulls, so any vehicle that died for ANY
+				//--- reason during the 4s settle window (or an already-wreck/empty hull) paid the driver's team -
+				//--- a large over-pay. Crediting infantry kills only keeps the cash-for-kills bounded + blast-caused.
 				_victims = [];
 				{
 					if (alive _x && {(side _x == east) || (side _x == west)}) then {_victims = _victims + [_x]};
-				} forEach (nearestObjects [_p, ["Man","LandVehicle","Air","Ship"], _radius]);
+				} forEach (nearestObjects [_p, ["Man"], _radius]);
 				//--- BLAST (AI W21 idiom): pop the truck, then stack 3x 122mm HE for a large lethal crater.
 				_veh setDamage 1;
 				"Sh_122_HE" createVehicle _p;

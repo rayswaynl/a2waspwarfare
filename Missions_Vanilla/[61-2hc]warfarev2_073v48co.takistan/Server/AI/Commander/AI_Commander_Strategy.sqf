@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -81,9 +81,33 @@ for "_i" from 1 to _want do {
 			//--- Distance toward the ENEMY HQ (avoid binary getDir per A2 rules - plain distance).
 			_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
 			//--- V0.6 task 49a: town weight hook (nil-safe, zero on this mission).
+			//--- A8 SOFT/VALUE PREFERENCE (claude-gaming): at COMPARABLE distance prefer softer +
+			//--- higher-value towns. Distance still dominates (FAR_PENALTY + divisor unchanged) so the
+			//--- coherent-front guardrail holds. hardness tier from wfbe_town_type (0 soft..4 hard) is
+			//--- SUBTRACTED (soft wins, and it cancels the accidental pro-Huge bias supplyValue added);
+			//--- the previously-dead _townValue (now wfbe_town_value) is ADDED to reward rich towns.
+			private ["_hardTier","_softW","_valDiv"];
+			_softW = missionNamespace getVariable ["WFBE_C_AICOM_SOFT_WEIGHT", 12];
+			_valDiv = missionNamespace getVariable ["WFBE_C_AICOM_VALUE_DIVISOR", 50];
+			if (_valDiv <= 0) then {_valDiv = 1};
+			_hardTier = switch (_t getVariable ["wfbe_town_type", ""]) do {
+				case "TinyTown1":   {0};
+				case "SmallTown1":  {1};
+				case "SmallTown2":  {1};
+				case "MediumTown1": {2};
+				case "MediumTown2": {2};
+				case "LargeTown1":  {3};
+				case "LargeTown2":  {3};
+				case "HugeTown1":   {4};
+				case "HugeTown2":   {4};
+				case "PMCAirfield": {2};
+				default {1};
+			};
 			_score = (_t getVariable ["supplyValue", 0])
 			       - (_dNear / _distDiv)
-			       + (_t getVariable ["wfbe_aicom_town_weight", 0]);
+			       + (_t getVariable ["wfbe_aicom_town_weight", 0])
+			       - (_hardTier * _softW)
+			       + ((_t getVariable ["wfbe_town_value", 0]) / _valDiv);
 			if (_hqDiv > 0) then {_score = _score - (_dHQ / _hqDiv)};
 			//--- Off-front towns take a flat penalty so a fat deep city can't outrank a
 			//--- near contestable one. Towns on the front are unpenalised and win.
@@ -124,12 +148,27 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 		_relTown = _team getVariable ["wfbe_aicom_relief", objNull];
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
-			if (_quiet || {(_relTown getVariable "sideID") != _sideID}) then {
-				//--- Town safe (or lost - it becomes an attack target again): release.
+			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
+			//--- has elapsed, so a diverted team returns to OFFENSE instead of idling on a town that
+			//--- is no longer actively contested. SetTeamMoveMode "towns" immediately re-tasks it
+			//--- (AssignTowns gives it a fresh attack order next cycle) - never a standing-still AI.
+			private ["_relUntil","_relExpired"];
+			_relUntil = _team getVariable "wfbe_aicom_relief_until";
+			if (isNil "_relUntil") then {_relUntil = 0};
+			_relExpired = (_relUntil > 0) && {time > _relUntil};
+			if (_quiet || {(_relTown getVariable "sideID") != _sideID} || _relExpired) then {
+				//--- Town safe / lost / hold expired: release back to offense.
 				_team setVariable ["wfbe_aicom_relief", objNull];
+				_team setVariable ["wfbe_aicom_relief_until", 0];
 				[_team, "towns"] Call SetTeamMoveMode;
 				_team setVariable ["wfbe_aicom_townorder", []];
-				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3].", _sideText, _team, _relTown getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
+				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
+				//--- back to a fresh "towns" seq here; AssignTowns then re-issues a real attack target next cycle.
+				//--- Server-local teams ignore the order var and are driven by SetTeamMoveMode above (harmless).
+				if (_team getVariable ["wfbe_aicom_hc", false]) then {
+					_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+				};
+				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3]%4.", _sideText, _team, _relTown getVariable ["name", "town"], if (_relExpired) then {" (hold expired -> offense)"} else {""}]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};
@@ -151,7 +190,9 @@ _relieved = 0;
 				_team = _x;
 				if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
 					if ((toLower (_team getVariable ["wfbe_teammode", "towns"])) == "towns") then {
-						if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])} && {!(_team getVariable ["wfbe_aicom_hc", false])}) then {
+						//--- WAVE-1 A3 (a): HC teams ARE now eligible for relief (the old !wfbe_aicom_hc exclusion made
+						//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
+						if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
 							_d = (leader _team) distance _town;
 							if (_d < _freeD) then {_freeD = _d; _free = _team};
 						};
@@ -161,7 +202,15 @@ _relieved = 0;
 			if (!isNull _free) then {
 				[_free, "defense"] Call SetTeamMoveMode;
 				[_free, getPos _town] Call SetTeamMovePos;
+				//--- WAVE-1 A3 (b): SetTeamMoveMode/MovePos only write wfbe_teammode/wfbe_teamgoto, which the HC
+				//--- driver loop does NOT read - it reads ONLY wfbe_aicom_order. So for an HC team ALSO broadcast
+				//--- a "defense" order at the town (mirror the HQ-strike order idiom below). Server-local teams
+				//--- ignore the order var and use the SetTeamMove* writes above, so both paths stay covered.
+				if (_free getVariable ["wfbe_aicom_hc", false]) then {
+					_free setVariable ["wfbe_aicom_order", [(if (isNil {_free getVariable "wfbe_aicom_order"}) then {-1} else {(_free getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _town], true];
+				};
 				_free setVariable ["wfbe_aicom_relief", _town];
+				_free setVariable ["wfbe_aicom_relief_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_HOLD", 240])]; //--- punchy-AICOM (Ray 2026-06-17): hold-window stamp; released back to offense when it expires.
 				_relieved = _relieved + 1;
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] diverted to RELIEVE [%3] (under attack).", _sideText, _free, _town getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF|" + (_town getVariable ["name", "town"]));
@@ -171,6 +220,59 @@ _relieved = 0;
 		};
 	};
 } forEach _attacked;
+
+//--- WAVE-1 CAUSE-4 RELIEF/STRIKE WEDGE WATCHDOG (2026-06-19): teams in "defense" (relief) or "move"
+//--- (HQ-strike) are EXCLUDED from the AssignTowns stuck detector (that only watches "towns"/"" mode),
+//--- so a relief/strike team that physically wedges en route sits forever. Per team, keep a breadcrumb
+//--- [leaderPos, time]; if it has not moved > WFBE_C_AICOM_STUCK_MOVED in > WFBE_C_AICOM_STUCK_SECS while
+//--- NOT in COMBAT (a firefight is legit stationary), RELEASE it back to "towns" + clear relief/strike +
+//--- refresh the HC order seq, so AssignTowns retargets it next cycle (never a standing-still AI).
+{
+	_wTeam = _x;
+	if (!isNull _wTeam && {!isPlayer (leader _wTeam)} && {({alive _x} count (units _wTeam)) > 0}) then {
+		_wMode = toLower (_wTeam getVariable ["wfbe_teammode", "towns"]);
+		if (_wMode == "defense" || {_wMode == "move"}) then {
+			_wLdr = leader _wTeam;
+			if (!isNull _wLdr && {alive _wLdr} && {behaviour _wLdr != "COMBAT"}) then {
+				//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
+				_wBc = _wTeam getVariable "wfbe_aicom_wedge_bc";
+				if (isNil "_wBc") then {
+					//--- First sighting in this mode: drop a breadcrumb, judge next pass.
+					_wTeam setVariable ["wfbe_aicom_wedge_bc", [getPos _wLdr, time]];
+				} else {
+					_wBcPos = _wBc select 0;
+					_wBcT   = _wBc select 1;
+					_wMoved = _wLdr distance _wBcPos;
+					if (_wMoved > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200])) then {
+						//--- It moved: refresh the breadcrumb, not wedged.
+						_wTeam setVariable ["wfbe_aicom_wedge_bc", [getPos _wLdr, time]];
+					} else {
+						if ((time - _wBcT) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
+							//--- Wedged in defense/move with no progress + no contact: release back to offense.
+							_wTeam setVariable ["wfbe_aicom_relief", objNull];
+							_wTeam setVariable ["wfbe_aicom_relief_until", 0];
+							_wTeam setVariable ["wfbe_aicom_strike", false];
+							[_wTeam, "towns"] Call SetTeamMoveMode;
+							_wTeam setVariable ["wfbe_aicom_townorder", []];
+							_wTeam setVariable ["wfbe_aicom_wedge_bc", nil];
+							if (_wTeam getVariable ["wfbe_aicom_hc", false]) then {
+								_wTeam setVariable ["wfbe_aicom_order", [(if (isNil {_wTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wTeam getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos _wLdr], true];
+							};
+							["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] WEDGE-WATCHDOG released from %3 (no move %4m in %5s, not in contact) -> offense.", _sideText, _wTeam, _wMode, round _wMoved, round (time - _wBcT)]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|WEDGE_RELEASE|team=" + (str _wTeam) + "|mode=" + _wMode + "|moved=" + str (round _wMoved));
+						};
+					};
+				};
+			} else {
+				//--- In COMBAT or null leader: reset the breadcrumb so a post-firefight stall is judged fresh.
+				_wTeam setVariable ["wfbe_aicom_wedge_bc", [getPos (leader _wTeam), time]];
+			};
+		} else {
+			//--- Not in defense/move (back on towns/patrol/etc): clear any stale breadcrumb.
+			if (!isNil {_wTeam getVariable "wfbe_aicom_wedge_bc"}) then {_wTeam setVariable ["wfbe_aicom_wedge_bc", nil]};
+		};
+	};
+} forEach _teams;
 
 //--- 3) HQ HUNT: strike when clearly winning; stand down when the edge is gone.
 _enemyHQ = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;

@@ -230,7 +230,13 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 				_bounty = (_get select QUERYUNITPRICE) * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF");
 				_bounty = _bounty - (_bounty % 1);
 				[_killer_group, _bounty] Call ChangeTeamFunds;
-				//--- W12 Spoils of War: double-bounty into AI war chest while flag is active.
+				//--- punchy-AICOM KILL-REWARD (Ray 2026-06-17): unconditionally trickle the kill bounty
+				//--- into the COMMANDER treasury (wfbe_aicom_funds) too. Separate bucket from the team
+				//--- wallet (wfbe_funds) above - NOT a double-credit. Already server-gated (:229) and
+				//--- enemy-only (:196). Credits any AI-led WF team (server-authoritative, enemy-only),
+				//--- so the AI commander banks for kills its squads make, every kill.
+				[_killer_side, _bounty] Call ChangeAICommanderFunds;
+				//--- W12 Spoils of War: EXTRA bonus bounty into the war chest while the flag is active.
 				private ["_w12Key","_w12Exp","_w12KillerSideText"];
 				_w12KillerSideText = str _killer_side;
 				_w12Key  = Format ["wfbe_aicom_spoils_%1", _w12KillerSideText];
@@ -250,5 +256,9 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 };
 
 if(!isPlayer(_killed) && _killed_type isKindOf "Infantry")then{
+	//--- D5 2026-06-19: index 0 is safe here. A2 OA EH indices are PER-TYPE, so this removes the
+	//--- FIRST "killed" handler regardless of any Fired/incomingMissile EHs on the unit. AI-created
+	//--- infantry get exactly one "killed" EH (Common_CreateUnit.sqf:125, added at creation), so
+	//--- index 0 is always the correct (and only) one. Left as-is to avoid shifting behaviour.
 	_killed removeEventHandler ["killed", 0];
 };

@@ -81,9 +81,33 @@ for "_i" from 1 to _want do {
 			//--- Distance toward the ENEMY HQ (avoid binary getDir per A2 rules - plain distance).
 			_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
 			//--- V0.6 task 49a: town weight hook (nil-safe, zero on this mission).
+			//--- A8 SOFT/VALUE PREFERENCE (claude-gaming): at COMPARABLE distance prefer softer +
+			//--- higher-value towns. Distance still dominates (FAR_PENALTY + divisor unchanged) so the
+			//--- coherent-front guardrail holds. hardness tier from wfbe_town_type (0 soft..4 hard) is
+			//--- SUBTRACTED (soft wins, and it cancels the accidental pro-Huge bias supplyValue added);
+			//--- the previously-dead _townValue (now wfbe_town_value) is ADDED to reward rich towns.
+			private ["_hardTier","_softW","_valDiv"];
+			_softW = missionNamespace getVariable ["WFBE_C_AICOM_SOFT_WEIGHT", 12];
+			_valDiv = missionNamespace getVariable ["WFBE_C_AICOM_VALUE_DIVISOR", 50];
+			if (_valDiv <= 0) then {_valDiv = 1};
+			_hardTier = switch (_t getVariable ["wfbe_town_type", ""]) do {
+				case "TinyTown1":   {0};
+				case "SmallTown1":  {1};
+				case "SmallTown2":  {1};
+				case "MediumTown1": {2};
+				case "MediumTown2": {2};
+				case "LargeTown1":  {3};
+				case "LargeTown2":  {3};
+				case "HugeTown1":   {4};
+				case "HugeTown2":   {4};
+				case "PMCAirfield": {2};
+				default {1};
+			};
 			_score = (_t getVariable ["supplyValue", 0])
 			       - (_dNear / _distDiv)
-			       + (_t getVariable ["wfbe_aicom_town_weight", 0]);
+			       + (_t getVariable ["wfbe_aicom_town_weight", 0])
+			       - (_hardTier * _softW)
+			       + ((_t getVariable ["wfbe_town_value", 0]) / _valDiv);
 			if (_hqDiv > 0) then {_score = _score - (_dHQ / _hqDiv)};
 			//--- Off-front towns take a flat penalty so a fat deep city can't outrank a
 			//--- near contestable one. Towns on the front are unpenalised and win.

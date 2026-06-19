@@ -91,7 +91,7 @@ if (random 100 > 50) then {
 };
 
 //--- Depot SAD.
-[_wp_sel, [([_wp_dest, 10, 150] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 35, 25, [], [], ["COMBAT","RED","FILE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): COMBAT/RED depot entry actually clears defenders (was AWARE/"").
+[_wp_sel, [([_wp_dest, 10, 60] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 35, 25, [], [], ["COMBAT","RED","FILE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): COMBAT/RED depot entry actually clears defenders (was AWARE/""). CAPTURE-FIX (2026-06-18): depot-SAD random offset 150->60m so the team prosecutes INSIDE the ~40m drain bubble instead of roving a 150m ring; RunCommanderTeam center-hold then finishes the flip.
 [_wp_sel, [([_wp_dest, 5, 25] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 35, 25, [], [], ["COMBAT","RED","FILE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): COMBAT/RED depot entry actually clears defenders (was AWARE/"").
 // [_wp_sel, [([_wp_dest, 10, 35] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 35, 25, [], [30,45,60], ["COMBAT","","FILE","LIMITED"]]] Call WFBE_CO_FNC_ArrayPush;
 

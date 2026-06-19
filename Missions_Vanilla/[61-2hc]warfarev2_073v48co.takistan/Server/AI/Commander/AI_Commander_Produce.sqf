@@ -78,16 +78,38 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				//--- leader is hugging an owned town (front-line resupply), so spearheads stop
 				//--- bleeding out far from HQ. The refill spawn point is pulled forward below.
 				_nearFwd = false;
-				_fwdR = missionNamespace getVariable ["WFBE_C_AICOM_FWD_REINFORCE_RANGE", 500];
-				{ if (((_x getVariable "sideID") == _myID) && {(_ldr distance _x) < _fwdR}) exitWith {_nearFwd = true} } forEach towns;
+				if (_ownTowns > 0) then {
+					_fwdR = missionNamespace getVariable ["WFBE_C_AICOM_FWD_REINFORCE_RANGE", 500];
+					{ if (((_x getVariable "sideID") == _myID) && {(_ldr distance _x) < _fwdR}) exitWith {_nearFwd = true} } forEach towns;
+				};
 				if (!_nearFwd) then {_canProduce = false};
 			};
 		};
 	};
 	if (_canProduce) then {
 		_template = _templates select _type;
-		_want = (count _template) min (missionNamespace getVariable "WFBE_C_AI_MAX");
 		_cur  = {alive _x} count (units _team);
+		//--- punchy-AICOM SIZE FLOOR (Ray 2026-06-17; deficit-fill 2026-06-18): an infantry/light-motorized
+		//--- team is built/topped-up to clamp(templateSize, MIN, MAX). MBT teams + ATTACK-HELI teams are
+		//--- EXEMPT from the MIN floor (vehicle+crew is the punch - never pad with riflemen).
+		//--- DEFICIT-FILL FIX (2026-06-18): the floor now applies on REFILL of an existing under-strength team
+		//--- too (not only when _cur==0). Previously _cur>0 refills used floor=1, so a team that founded small
+		//--- then refilled plateaued at its template size (~5.5) instead of 8-12; LIVE CMDRSTAT showed
+		//--- unitsPerTeam 5.4-5.8 with captures=0. Under-strength non-MBT/non-attack-heli teams now top up
+		//--- toward MIN (8). When the template composition is already complete but the team is still below the
+		//--- floor, the selector below pads with an extra dismount (FILL-TO-FLOOR) so small patrols actually
+		//--- reach 8-12. Still bounded by sizeMax/AI_MAX, the batch/funds caps, and the per-side AI ceiling.
+		//--- A2-OA detection: classname-literal isKindOf + getNumber transportSoldier (no A3 primitives).
+		private ["_tmplSize","_isMBT","_isAttackHeli","_floorN","_sizeMin","_sizeMax"];
+		_tmplSize = count _template;
+		_sizeMin  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
+		_sizeMax  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+		_isMBT = false;
+		{ if (_x isKindOf "Tank") exitWith {_isMBT = true} } forEach _template;
+		_isAttackHeli = false;
+		{ if (_x isKindOf "Helicopter" && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0}) exitWith {_isAttackHeli = true} } forEach _template;
+		_floorN = if (!(_isMBT || _isAttackHeli)) then {_sizeMin} else {1};
+		_want = ((_tmplSize max _floorN) min _sizeMax) min (missionNamespace getVariable "WFBE_C_AI_MAX");
 
 		//--- RANK-2 health-gated refill (claude-gaming 2026-06-13): a critically-weak or JUST-FOUNDED server-local
 		//--- team (alive < CRITICAL_STRENGTH of template) is rushed to FULL this cycle (effective batch = full
@@ -113,7 +135,17 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 					if (_have < ({_x == _d} count _template)) exitWith {_toBuild = _d};
 				} forEach _template;
 
-				if (_toBuild == "") exitWith {}; //--- Nothing more to order for this team.
+				//--- FILL-TO-FLOOR (deficit-fill 2026-06-18): the template composition is already satisfied
+				//--- but _cur is still below _want (the MIN floor raised the target above templateSize). Pad
+				//--- with one extra dismount so infantry/light-motorized teams actually reach 8-12 instead of
+				//--- plateauing at their template size. Pick the LAST man-class in the template (a basic
+				//--- rifleman/grenadier) - never duplicate a vehicle. MBT/attack-heli teams never reach here
+				//--- (floor=1 -> _want=templateSize). A2-OA safe: classname-literal isKindOf "Man".
+				if (_toBuild == "") then {
+					{ if (_x isKindOf "Man") then {_toBuild = _x} } forEach _template;
+				};
+
+				if (_toBuild == "") exitWith {}; //--- Nothing buildable (all-vehicle template) - stop batch.
 
 				//--- Which production factory builds it?
 				_fac = [];

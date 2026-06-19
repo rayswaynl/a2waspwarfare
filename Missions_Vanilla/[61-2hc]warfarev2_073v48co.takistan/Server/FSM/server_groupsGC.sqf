@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -192,10 +192,16 @@ while {!WFBE_GameOver} do {
 		if ((_auditN mod _every) == 0) then {
 		_auditT0 = diag_tickTime;
 
-		// Single allUnits pass: count units per side for audit line + TICK sharing.
+		// Single allUnits pass: count units per side for audit line + TICK sharing,
+		// AND the delegation split (total/server-local) used by DELEGSTAT below.
+		// B6: this folds the three former allUnits passes (per-side counts here + the
+		// two delegation passes that used to run near DELEGSTAT) into ONE iteration.
 		// Stored in missionNamespace so AI_Commander TICK can read them cheaply.
 		_uniWest = 0; _uniEast = 0; _uniGuer = 0;
+		_delegTotal = 0; _delegLocal = 0;
 		{
+			_delegTotal = _delegTotal + 1;
+			if (local _x) then { _delegLocal = _delegLocal + 1 };
 			if (side _x == west)       then { _uniWest = _uniWest + 1 };
 			if (side _x == east)       then { _uniEast = _uniEast + 1 };
 			if (side _x == resistance) then { _uniGuer = _uniGuer + 1 };
@@ -206,8 +212,14 @@ while {!WFBE_GameOver} do {
 
 		// Build per-(side, src) counts in a flat key=value array: [side, src, count, ...]
 		// Using a simple parallel-arrays approach to avoid any A3-only constructs.
+		// B6: the old inner `while` stride-scan over _srcCounts was O(groups * distinctKeys)
+		// (~2100ms/276 groups). Replace it with a parallel _srcKeys string array and a single
+		// native `find` per group — distinct (side,src) pairs are few, so find is effectively
+		// O(groups). _srcCounts keeps the identical flat [side, src, count, ...] layout so the
+		// downstream per-side breakdown loop is unchanged.
 		_emptyW = 0; _emptyE = 0; _emptyG = 0; _persEmptyW = 0; _persEmptyE = 0; _persEmptyG = 0; //--- EMPTYGRP tracking (Ray)
 		_srcCounts = []; // flat: [side0, src0, cnt0, side1, src1, cnt1, ...]
+		_srcKeys = [];   // parallel: one "sideStr|src" key per _srcCounts triple (entry N -> _srcCounts index N*3)
 
 		{
 			_auditSide = side _x;
@@ -223,24 +235,17 @@ while {!WFBE_GameOver} do {
 			_src = _x getVariable "wfbe_group_src";
 			if (isNil "_src") then { _src = "untagged" };
 
-			// Find existing entry
-			_srcIdx = -1;
-			_srcKey = 0;
-			while { _srcKey < count _srcCounts } do {
-				if ((_srcCounts select _srcKey) == _auditSide && { (_srcCounts select (_srcKey + 1)) == _src }) then {
-					_srcIdx = _srcKey;
-					_srcKey = count _srcCounts; // break
-				} else {
-					_srcKey = _srcKey + 3;
-				};
-			};
-
+			// Keyed accumulation: single native `find` instead of the per-group stride scan.
+			_srcKey = Format ["%1|%2", str _auditSide, _src];
+			_srcIdx = _srcKeys find _srcKey;
 			if (_srcIdx < 0) then {
+				[_srcKeys, _srcKey]      call WFBE_CO_FNC_ArrayPush;
 				[_srcCounts, _auditSide] call WFBE_CO_FNC_ArrayPush;
 				[_srcCounts, _src]       call WFBE_CO_FNC_ArrayPush;
 				[_srcCounts, 1]          call WFBE_CO_FNC_ArrayPush;
 			} else {
-				_srcCounts set [_srcIdx + 2, (_srcCounts select (_srcIdx + 2)) + 1];
+				//--- _srcKeys entry N maps to _srcCounts triple starting at N*3; +2 = the count slot.
+				_srcCounts set [(_srcIdx * 3) + 2, (_srcCounts select ((_srcIdx * 3) + 2)) + 1];
 			};
 		} forEach allGroups;
 
@@ -285,10 +290,9 @@ while {!WFBE_GameOver} do {
 			[_auditLines, _auditLine] call WFBE_CO_FNC_ArrayPush;
 		} forEach [west, east, resistance];
 
-		//--- Delegation split: prove the HC offload is alive. One extra allUnits pass (~300 units, trivial).
+		//--- Delegation split: prove the HC offload is alive. B6: _delegTotal/_delegLocal are
+		//--- now accumulated in the single allUnits pass above (no extra allUnits scans here).
 		diag_log (Format ["EMPTYGRP|v1|west=%1|east=%2|guer=%3|persW=%4|persE=%5|persG=%6|t=%7", _emptyW, _emptyE, _emptyG, _persEmptyW, _persEmptyE, _persEmptyG, round (time / 60)]); //--- EMPTYGRP tracking (Ray)
-		_delegTotal = count allUnits;
-		_delegLocal = {local _x} count allUnits;
 		_delegRemote = _delegTotal - _delegLocal;
 		_delegPct = 0;
 		if (_delegTotal > 0) then {_delegPct = round ((_delegRemote / _delegTotal) * 100)};

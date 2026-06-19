@@ -191,7 +191,7 @@ while {!gameOver} do {
 	         "_w18Eligible","_w18OfficerClass","_w18ParaL3","_w18Pos","_w18Grp","_w18HVT","_w18MarkerID","_w18Target","_w18Near","_w1Eligible",
 		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19","_wW20",
 		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
-				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang",
+				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang","_w21Try","_w21Roads",
 		         "_wNameMap","_wName"];
 
 				_side     = _this select 0;
@@ -975,7 +975,20 @@ while {!gameOver} do {
 									_w17Gunner = [_soldierClass, _w17Grp, _w17SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _w17Driver) then {_w17Driver moveInDriver _w17Truck};
 									if (!isNull _w17Gunner) then {_w17Gunner moveInGunner _w17Truck};
-									_w17Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
+									//--- FRONT TARGET (fix #7): find the OWNED town nearest the enemy front,
+									//--- not the REAR town nearest HQ that GetClosestEntity would return.
+									//--- Mirrors W18/W21: for each owned town compute its min-distance to any
+									//--- enemy town (_cands); the owned town with the smallest such distance
+									//--- IS the front-line town.  Fallback: nearest owned town to HQ (safe
+									//--- default identical to the old behaviour) when _cands is empty.
+									_w17Target = objNull; _nearD = 1e9;
+									{
+										_candTown = _x; _dd = 1e9;
+										{ _dd = _dd min (_candTown distance _x) } forEach _cands;
+										if (count _cands == 0) then {_dd = _candTown distance _hq};
+										if (_dd < _nearD) then {_nearD = _dd; _w17Target = _candTown};
+									} forEach _owned;
+									if (isNull _w17Target) then {_w17Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
 									_w17TargetPos = getPos _w17Target;
 									_w17MarkerName = Format ["aicom_convoy_%1_%2", _sideText, round time];
 									createMarker [_w17MarkerName, _w17SpawnPos];
@@ -1202,8 +1215,20 @@ while {!gameOver} do {
 							if (!isNull _w21Target && {_soldierClass != ""} && {!isNull _hq}) then {
 								_w21TargetPos = getPos _w21Target;
 								//--- SPAWN ANCHOR ~700m outside the enemy town on a random bearing (SVBIED drives in from the edge).
+								//--- FIX #8: re-roll bearing up to 20 times if the candidate lands in water
+								//--- (mirrors Common_WaypointPatrolTown.sqf:48-52); then snap to the nearest
+								//--- road node within 120m so the truck starts on a driveable surface.
 								_w21Ang      = random 360;
 								_w21SpawnPos = [(_w21TargetPos select 0) + 700 * sin _w21Ang, (_w21TargetPos select 1) + 700 * cos _w21Ang, 0];
+								_w21Try = 0;
+								while {surfaceIsWater _w21SpawnPos && {_w21Try < 20}} do {
+									_w21Ang      = random 360;
+									_w21SpawnPos = [(_w21TargetPos select 0) + 700 * sin _w21Ang, (_w21TargetPos select 1) + 700 * cos _w21Ang, 0];
+									_w21Try = _w21Try + 1;
+								};
+								//--- Snap to nearest road node (A2-OA nearRoads; safe even if list is empty).
+								_w21Roads = _w21SpawnPos nearRoads 120;
+								if (count _w21Roads > 0) then {_w21SpawnPos = getPos (_w21Roads select 0)};
 								//--- bounty=true (6th arg) -> killed-EH -> player who destroys it gets paid (RequestOnUnitKilled).
 								_w21Truck = [_w21VbiedClass, _w21SpawnPos, resistance, random 360, false, true] Call WFBE_CO_FNC_CreateVehicle;
 								if (!isNull _w21Truck) then {

@@ -26,7 +26,17 @@ _perfActive = 0;
 _diagEnabled = missionNamespace getVariable ["TownDefenseDiagnosticsEnabled", false];
 
 if (isNull _defence) exitWith {
-	["WARNING", Format["Common_CreateUnitForstaticDefence.sqf: [%1] skipped static defense creation because the defence object is null.", _side]] Call WFBE_CO_FNC_LogContent;
+	//--- D3 2026-06-19: a null defence object is an EXPECTED, benign no-op for sides/towns
+	//--- that simply have no static-weapon emplacements to man (observed recurring for GUER
+	//--- towns). The old per-call WARNING spammed the RPT (~repeated every defense tick). Log
+	//--- it ONCE per side at INFO so the signal survives without the flood; the early-return
+	//--- behaviour is unchanged (no gunner is created when there is nothing to man).
+	private ["_nullKey"];
+	_nullKey = Format ["WFBE_StaticDef_NullLogged_%1", _side];
+	if (isNil {missionNamespace getVariable _nullKey}) then {
+		missionNamespace setVariable [_nullKey, true];
+		["INFORMATION", Format["Common_CreateUnitForstaticDefence.sqf: [%1] no static-defense object to man (null defence) - skipping; suppressing further notices for this side.", _side]] Call WFBE_CO_FNC_LogContent;
+	};
 	[_teams]
 };
 

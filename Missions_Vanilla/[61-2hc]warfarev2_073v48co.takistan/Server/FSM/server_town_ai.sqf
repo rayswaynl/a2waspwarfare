@@ -144,11 +144,11 @@ while {!WFBE_GameOver} do {
 						_enemies_ground = 1;
 
 						//--- ACTIVE-TOWN BUDGET: skip activation if cap is reached.
-						//--- Recount live active towns at the moment of activation decision.
-						_activeTownCount = 0;
-						{
-							if (_x getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount + 1 };
-						} forEach towns;
+						//--- B4: use the incremental _activeTownCount (seeded from the top-of-sweep
+						//--- full count at L52-56 and +1 per town activated this sweep below) instead
+						//--- of a full `forEach towns` recount on every activation decision. Behaviour
+						//--- is identical: the only towns flipped to wfbe_active since the seed count
+						//--- are the ones this sweep activated, each of which bumped _activeTownCount.
 						if (_activeTownCount >= _activeTownsBudgetMax) then {
 							//--- Debounced log: at most once per 5 minutes to avoid RPT spam.
 							_now = time;
@@ -181,6 +181,10 @@ while {!WFBE_GameOver} do {
 							////
 							_town setVariable ["wfbe_active", true];
 							_town setVariable ["wfbe_episode_spawned", true];
+							//--- B4: keep the incremental active-town counter in step with the
+							//--- top-of-sweep seed (only wfbe_active towns are counted, matching
+							//--- the old `forEach towns` recount and the top-of-sweep count above).
+							_activeTownCount = _activeTownCount + 1;
 
 							if (_side == WFBE_DEFENDER) then {
 								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
@@ -280,6 +284,12 @@ while {!WFBE_GameOver} do {
 				//--- the 90-s window expire mid-fight.
 				if(_currentEnemies == 0 && time - (_town getVariable "wfbe_inactivity") > _unitsInactiveMax) then {
 					//// inner block
+					//--- B4: keep the incremental active-town counter exact. The old per-activation
+					//--- `forEach towns` recount observed live state, so a town deactivated earlier in
+					//--- THIS sweep reduced the count seen by later towns' activation decisions. Only
+					//--- wfbe_active towns are counted (matching the seed), so decrement only when this
+					//--- town was wfbe_active before we clear the flags.
+					if (_town getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount - 1 };
 					_town setVariable ["wfbe_active", false];
 					_town setVariable ["wfbe_active_air", false];
 

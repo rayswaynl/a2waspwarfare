@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_econGateTowns","_econMyID","_econOpen"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen"];
 
 _side = _this;
 _sideText = str _side;
@@ -285,13 +285,17 @@ if (_resIdx >= 0) then {
 		_scaffoldActivated = true;
 	};
 };
-//--- ARTILLERYRADAR (owner request): humans can build it; let the AI build it too. No arty-threat
-//--- gate (unlike CBRadar) — owner just wants it in the AI's build order like a human's. Same
-//--- supply-multiple gate; `_names find "ArtilleryRadar" == -1` (guard off) is the natural no-op.
+//--- ARTILLERYRADAR: humans can always build it; the AI now defers it until the ENEMY actually
+//--- fields/fires artillery, re-using the SAME wfbe_aicom_arty_threat flag the CBRadar block above
+//--- armed (cond-a killed-by-arty, cond-b >=3 fire missions, cond-c enemy-arty-piece scan). The flag
+//--- is never auto-cleared, so once the enemy fields arty this gate opens on the next tick (it CAN
+//--- build later). Default-ON; set WFBE_C_AICOM_ARTRAD_REQUIRE_ENEMY_ARTY = 0 for the old always-build.
 _artradIdx = _names find "ArtilleryRadar";
 if (_artradIdx >= 0) then {
 	_artradCost = _costs select _artradIdx;
-	if (_econOpen && {_supply > _artradCost * 1.5}) then {
+	_artradReqArty = (missionNamespace getVariable ["WFBE_C_AICOM_ARTRAD_REQUIRE_ENEMY_ARTY", 1]) > 0;
+	_artyThreat = _logik getVariable ["wfbe_aicom_arty_threat", false];
+	if (_econOpen && {_supply > _artradCost * 1.5} && {(!_artradReqArty) || _artyThreat}) then {
 		_order = _order + ["ArtilleryRadar"];
 		_scaffoldActivated = true;
 	};

@@ -18,7 +18,7 @@
 
 	Spawned from Init_Client.sqf after commonInitComplete.
 */
-Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed","_patrolNudgeDone","_upgrades","_townsHeld","_patrolLvl"];
+Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed","_patrolNudgeDone","_upgrades","_townsHeld","_patrolLvl","_inRangeKeys"];
 
 //--- Master toggle.
 if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) < 1) exitWith {};
@@ -27,22 +27,9 @@ if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) < 1) exitWith {};
 _interval = missionNamespace getVariable ["WFBE_C_QOL_ADVISOR_INTERVAL", 300];
 if (_interval <= 0) exitWith {};
 
-//--- Derive cheapest vehicle cost from the side's light-factory buy list (with fallback).
-_threshold = 0;
-{
-	_unitData = missionNamespace getVariable _x;
-	if !(isNil "_unitData") then {
-		_price = _unitData select QUERYUNITPRICE;
-		//--- Only consider actual light-factory vehicles (QUERYUNITFACTORY index 6 == 1).
-		if ((_unitData select QUERYUNITFACTORY) == 1) then {
-			if (_threshold == 0 || _price < _threshold) then {_threshold = _price};
-		};
-	};
-} forEach (missionNamespace getVariable [Format ["WFBE_%1LIGHTUNITS", WFBE_Client_SideJoinedText], []]);
-
-//--- Fallback: if no light-factory unit found, use a sensible default.
-if (_threshold <= 0) then {_threshold = 1000};
-_threshold = _threshold * 2;
+//--- E6: threshold is no longer a one-time light-factory derivation (wrong for infantry-only / GUER, who never see a light factory).
+//--- It is now recomputed each tick from whatever factory/depot pools are actually IN RANGE (the *InRange globals the buy
+//--- menu uses), so the nudge scales to what the player can really buy and is skipped entirely when nothing is in range.
 
 //--- Stamp a neutral start so the first interval is a full wait from mission start.
 if (isNil "WFBE_QOL_LAST_PURCHASE_TIME") then {
@@ -66,11 +53,37 @@ while {!gameOver} do {
 		_lastBuy = missionNamespace getVariable ["WFBE_QOL_LAST_PURCHASE_TIME", 0];
 		_elapsed = time - _lastBuy;
 		if (_elapsed >= _interval) then {
-			//--- Only nudge when funds exceed the threshold.
-			_funds = Call GetPlayerFunds;
-			if (_funds >= _threshold) then {
-				_nudgeText = Format ["You have $%1 unspent - visit a factory or the gear menu.", _funds];
-				hintSilent _nudgeText;
+			//--- E6: figure out which factory/depot pools are in range RIGHT NOW (same globals the buy menu reads).
+			//--- GUER (resistance) is base-less and always buys from the Depot pool, so treat depot as in-range for them.
+			_inRangeKeys = [];
+			if (barracksInRange) then {_inRangeKeys set [count _inRangeKeys, "Barracks"]};
+			if (lightInRange) then {_inRangeKeys set [count _inRangeKeys, "Light"]};
+			if (heavyInRange) then {_inRangeKeys set [count _inRangeKeys, "Heavy"]};
+			if (aircraftInRange) then {_inRangeKeys set [count _inRangeKeys, "Aircraft"]};
+			if (hangarInRange) then {_inRangeKeys set [count _inRangeKeys, "Airport"]};
+			if (depotInRange || sideJoined == resistance) then {_inRangeKeys set [count _inRangeKeys, "Depot"]};
+
+			//--- Derive the cheapest unit the player can actually buy from those in-range pools.
+			_threshold = 0;
+			{
+				{
+					_unitData = missionNamespace getVariable _x;
+					if !(isNil "_unitData") then {
+						_price = _unitData select QUERYUNITPRICE;
+						if (_threshold == 0 || _price < _threshold) then {_threshold = _price};
+					};
+				} forEach (missionNamespace getVariable [Format ["WFBE_%1%2UNITS", WFBE_Client_SideJoinedText, _x], []]);
+			} forEach _inRangeKeys;
+
+			//--- E6: nothing buyable in range -> skip the nudge entirely (don't spam infantry-only / out-of-base players).
+			if (_threshold > 0) then {
+				_threshold = _threshold * 2;
+				//--- Only nudge when funds exceed the threshold.
+				_funds = Call GetPlayerFunds;
+				if (_funds >= _threshold) then {
+					_nudgeText = Format ["You have $%1 unspent - visit a factory or the gear menu.", _funds];
+					hintSilent _nudgeText;
+				};
 			};
 		};
 

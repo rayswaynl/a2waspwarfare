@@ -19,7 +19,7 @@
 private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
-              "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi"];
+              "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -213,14 +213,19 @@ if (count _live > 0) then {
 	//--- nudge), degrade to a lower buildable class when the rolled one is empty, and never starve infantry.
 	_buckets = [[],[],[],[]]; //--- [infantry, light, heavy, air]
 	{
-		_eu = _tmplUpgrades select _x;
+		_ti = _x; _eu = _tmplUpgrades select _ti; //--- A1 (Ray 2026-06-19): _ti captured because the helicopters-only `count` below rebinds _x.
 		_bClass = 0; //--- infantry
 		if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
 			if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
 				if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
 			};
 		};
-		(_buckets select _bClass) set [count (_buckets select _bClass), _x];
+		//--- A1 helicopters-only AICOM air (Ray 2026-06-19): the CfgGroups Air category (via Squads_GetFactionGroups) pulls
+		//--- fixed-wing Su/plane + UAV groups the AI can't operate (no takeoff/RTB) so they pile up unused on the base. Drop
+		//--- any air template that contains a Plane -> only helicopter air teams are ever founded.
+		if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0})) then {
+			(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
+		};
 	} forEach _eligible;
 
 	_mix = WFBE_C_AICOM_TYPE_MIX;

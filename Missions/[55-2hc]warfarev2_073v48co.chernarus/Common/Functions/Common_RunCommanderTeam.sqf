@@ -954,6 +954,14 @@ while {!WFBE_GameOver && _alive} do {
 		};
 	};
 
+	//--- B48 SELF-SERVICE (default OFF: WFBE_C_AICOM_SERVICE_ENABLED). A damaged/low-ammo team
+	//--- detours to the nearest SAFE friendly town-centre, repairs+rearms+heals, then clears its
+	//--- goto so AssignTowns retargets it. The helper enforces every guardrail (never out of
+	//--- contact, never frozen, hard en-route timeout). HC-local: the team's units are local here.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_SERVICE_ENABLED", 0]) > 0) then {
+		[_team, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMServiceTick;
+	};
+
 	sleep 20;
 };
 

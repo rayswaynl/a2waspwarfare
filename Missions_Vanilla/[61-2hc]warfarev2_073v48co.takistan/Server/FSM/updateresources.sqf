@@ -32,6 +32,19 @@ while {!gameOver} do {
 	_pcMult = _baseMult * (1 + ((if ((missionNamespace getVariable ["WFBE_C_AICOM_BANKING_VALVE", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_BONUS_VALVE", 0.045]} else {missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_BONUS", 0.06]}) * (((missionNamespace getVariable ["WFBE_C_AICOM_INCOME_PC_REF", 10]) - _pcN2) max 0)));  //--- B36.1 INVERTED (Ray 2026-06-15): boost is +BONUS per player UNDER REF (default 10) so CASH income is HIGHEST at LOW pop (funds the 8-team curve flood), tapering to base at REF+ players. Was (* _pcN2) = boost-with-MORE-players; flipped to (* (REF-pc)).
 	_pcMult = _pcMult min (missionNamespace getVariable ["WFBE_C_AICOM_INCOME_MULT_MAX", 3.0]);
 
+	//--- punchy-AICOM TIME-CURVE (Ray 2026-06-17): gentle, LATE income boost composed onto _pcMult.
+	//--- Flat (=FLOOR) until START, then a smoothstep S-curve over WINDOW up to CEIL - rewards long
+	//--- matches with late-game punch, NOT an early snowball. 'time' = mission elapsed seconds (server clock).
+	private ["_tcFloor","_tcCeil","_tcStart","_tcWindow","_tcRamp","_tcMult"];
+	_tcFloor  = missionNamespace getVariable ["WFBE_C_AICOM_TIMECURVE_FLOOR", 1.0];
+	_tcCeil   = missionNamespace getVariable ["WFBE_C_AICOM_TIMECURVE_CEIL", 1.8];
+	_tcStart  = missionNamespace getVariable ["WFBE_C_AICOM_TIMECURVE_START", 7200];
+	_tcWindow = (missionNamespace getVariable ["WFBE_C_AICOM_TIMECURVE_WINDOW", 3600]) max 1;
+	_tcRamp   = (((time - _tcStart) max 0) min _tcWindow) / _tcWindow;   //--- 0.0 -> 1.0 linear within the window
+	_tcRamp   = _tcRamp * _tcRamp * (3 - (2 * _tcRamp));                 //--- smoothstep 3t^2-2t^3 (gentle start AND gentle finish)
+	_tcMult   = _tcFloor + ((_tcCeil - _tcFloor) * _tcRamp);
+	_pcMult   = _pcMult * _tcMult;
+
 
 	{
 		_logik = (_x) Call WFBE_CO_FNC_GetSideLogic;

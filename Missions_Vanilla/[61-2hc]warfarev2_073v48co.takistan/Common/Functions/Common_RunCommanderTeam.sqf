@@ -20,7 +20,8 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
-         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend"];
+         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend",
+         "_capPasses","_capMaxPasses","_capReleased"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -407,7 +408,7 @@ while {!WFBE_GameOver && _alive} do {
 				if (isNil "_usTier") then {_usTier = 0};
 				if (_usTier > 0) then {
 					[_team, _usTier, _side] Spawn {
-						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear"];
+						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode"];
 						_uTeam = _this select 0;
 						_uTier = _this select 1;
 						_uSide = _this select 2;
@@ -441,6 +442,33 @@ while {!WFBE_GameOver && _alive} do {
 										_uVeh setVelocity [0,0,0];
 										_uVeh setPos (getPos _uNode);
 										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 unstuck teleport-nudge to road node.", _uSide, _uTeam]] Call WFBE_CO_FNC_AICOMLog;
+									};
+								};
+							};
+						};
+						//--- WAVE-1 CAUSE-1 FOOT/DEAD-HULL UNSTUCK (2026-06-19): the vehicle Tier-3 above gates on
+						//--- !isNull _uVeh && alive _uVeh, so a wedged FOOT team (leader on foot) or a team whose hull
+						//--- is null/dead/immobile NEVER recovers (live: distStart=0, strikes climbed to ~43). Add a
+						//--- foot/dead-hull last-resort: if the leader is on foot (vehicle == leader) OR the hull is
+						//--- null / cannot move, teleport the LEADER to the nearest clear non-water road node within ~150m
+						//--- and re-form the squad on him. SAME guardrail as the vehicle branch: only when NO player is
+						//--- within 300m (MEMORY: never a player-visible teleport / frozen AI). The fresh road route below
+						//--- (laid after this Spawn) still hands the team a live MOVE order, so it is never left idle.
+						_uHullDead = isNull _uVeh || {!alive _uVeh} || {!(canMove _uVeh)};
+						_uOnFoot   = (vehicle _uLdr) == _uLdr;
+						if (_uTier >= 3 && {_uOnFoot || _uHullDead}) then {
+							_uFootPlayerNear = false;
+							{ if (isPlayer _x && {(_x distance _uLdr) < 300}) then {_uFootPlayerNear = true} } forEach playableUnits;
+							if (!_uFootPlayerNear) then {
+								_uFootRds = (getPos _uLdr) nearRoads 150;
+								if (count _uFootRds > 0) then {
+									_uFootNode = [getPos _uLdr, _uFootRds] Call WFBE_CO_FNC_GetClosestEntity;
+									if (!isNull _uFootNode && {!surfaceIsWater (getPos _uFootNode)}) then {
+										_uLdr setVelocity [0,0,0];
+										_uLdr setPos (getPos _uFootNode);
+										//--- Re-form the squad on the relocated leader so dismounts/stragglers regroup (never idle).
+										{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
+										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 FOOT/dead-hull unstuck teleport-nudge to road node (re-formed on leader).", _uSide, _uTeam]] Call WFBE_CO_FNC_AICOMLog;
 									};
 								};
 							};
@@ -540,7 +568,7 @@ while {!WFBE_GameOver && _alive} do {
 						if (_mode == "defense") then {
 							[_team, true, [[_dest, 'SAD', 100, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
-							[_team, true, [[_dest, 'SAD', 250, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring.
 						};
 					};
 				};
@@ -572,6 +600,10 @@ while {!WFBE_GameOver && _alive} do {
 				//--- 20s loop re-runs this phase next tick (units keep fighting at the center) so
 				//--- a single failed pass is never a dead end.
 				if (_arrived && !_captureDone && _mode == "towns-target") then {
+
+					//--- WAVE-1 CAUSE-3 EARLY-EXIT: bail the whole capture phase if the team is gone or has
+					//--- no live units (a wipe mid-phase would otherwise run scans/waypoints on a dead group).
+					if (isNull _team || {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) == 0}) exitWith {};
 
 					//--- Resolve the town object ROBUSTLY. wfbe_aicom_townorder is set server-side
 					//--- WITHOUT broadcast (AI_Commander_AssignTowns.sqf L117/L240 use the 2-arg
@@ -665,7 +697,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- hold a live SAD/move order here - never frozen/idle (MEMORY guardrail).
 						_unheldCamps = [];
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
-						_campFirstEnd = time + 150; //--- same order of magnitude as the center-hold timeout (150s)
+						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_nearCamp   = [leader _team, _unheldCamps] Call WFBE_CO_FNC_GetClosestEntity;
 							if (isNull _nearCamp) exitWith {};
@@ -734,7 +766,10 @@ while {!WFBE_GameOver && _alive} do {
 						//--- group SAD waypoint over the center (COMBAT/RED), move the foot units in, and
 						//--- reveal the garrison so they clear it. Then HOLD until resistance-near-center
 						//--- is zero (town drains + flips) OR a hard timeout, re-revealing each tick.
-						[_team, true, [[_townCenter, 'SAD', _capRange max 60, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+						//--- WAVE-1 A4 CAPTURE-HOLD: hold SAD radius = _capRange (was _capRange max 60). The town only
+						//--- drains within _capRange (40m), so a 60m hold ring left units orbiting the 40-60m band
+						//--- and never satisfying the depot-center presence scan. Tightening to _capRange pulls them in.
+						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						{if (alive _x) then {_x doMove _townCenter}} forEach _footInf;
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
 
@@ -742,7 +777,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- within the capture radius of the depot (the contested _skip clears -> the
 						//--- town drains and flips). Re-reveal enemy each tick. Every iteration leaves
 						//--- units on a live SAD order (never idle).
-						_holdEnd = time + 150;
+						_holdEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer depot-center hold = the team holds long enough to drain + flip the town.
 						_resNear = 1;
 						while {time < _holdEnd && {_resNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_enemyNear = (_townCenter nearEntities [["Man"], _capRange]) unitsBelowHeight 10;
@@ -754,7 +789,9 @@ while {!WFBE_GameOver && _alive} do {
 								};
 							} forEach _enemyNear;
 							//--- Keep stragglers pressing the center (cheap re-issue, prevents drift).
-							{if (alive _x && {(_x distance _townCenter) > (_capRange max 25)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+							//--- WAVE-1 A4: re-press units beyond ~60% of _capRange (was max 25). Units inside the 40m ring
+							//--- but past ~24m get pulled to the exact center so the depot-center presence scan ticks.
+							{if (alive _x && {(_x distance _townCenter) > (_capRange * 0.6)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 							//--- Early-out if the town already flipped to us.
 							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_resNear = 0};
 							sleep 10;
@@ -780,19 +817,60 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_aicom_strike", false, true];      //--- clear stale strike state so Strategy.sqf doesn't re-grab
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
 						} else {
-							//--- Not flipped: keep the SAD-at-center order live (units stay fighting,
-							//--- never idle) and retry on the next loop tick. No remount, no dead end.
-							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] capture pass at [%3] did not flip (res-near=%4) - holding + retrying.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _resNear]] Call WFBE_CO_FNC_AICOMLog;
+							//--- WAVE-1 CAUSE-3 BOUND-CAPTURE-LOOP: on a contested/uncapturable depot the old code held
+							//--- the center FOREVER ("did not flip res-near=0"). Track consecutive non-flip passes on a
+							//--- team var; after WFBE_C_AICOM_CAPTURE_MAXPASSES passes with res-near==0 AND the town still
+							//--- not ours, RELEASE via the SAME on-capture re-task idiom (success block above) so
+							//--- AssignTowns retargets this team next tick instead of grinding. A pass with res-near>0 is
+							//--- a live firefight (legit) -> reset the counter so we keep fighting a defended town.
+							_capMaxPasses = missionNamespace getVariable ["WFBE_C_AICOM_CAPTURE_MAXPASSES", 2];
+							if (_resNear > 0) then {
+								_team setVariable ["wfbe_aicom_cappasses", 0];
+							} else {
+								_capPasses = (_team getVariable ["wfbe_aicom_cappasses", 0]) + 1;
+								_team setVariable ["wfbe_aicom_cappasses", _capPasses];
+							};
+							_capReleased = false;
+							if ((_team getVariable ["wfbe_aicom_cappasses", 0]) >= _capMaxPasses) then {
+								//--- Bail this depot: same release idiom as the capture-success block above so AssignTowns
+								//--- retargets (isNull _goto => _needs=true), and clear strike/relief so Strategy will not re-grab.
+								_captureDone = true;     //--- stop re-running this phase for the dropped order
+								_capReleased = true;
+								_team setVariable ["wfbe_aicom_cappasses", 0];
+								_team setVariable ["wfbe_teamgoto", objNull, true];
+								_team setVariable ["wfbe_aicom_townorder", [], false];
+								_team setVariable ["wfbe_teammode", "towns", true];
+								_team setVariable ["wfbe_aicom_strike", false, true];
+								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RELEASED uncapturable depot at [%3] after %4 empty passes - retargeting.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _capMaxPasses]] Call WFBE_CO_FNC_AICOMLog;
+							};
+							if (!_capReleased) then {
+								//--- Not flipped, still worth retrying: keep the SAD-at-center order live (units stay
+								//--- fighting, never idle) and retry on the next loop tick. No remount, no dead end.
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] capture pass at [%3] did not flip (res-near=%4) - holding + retrying.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _resNear]] Call WFBE_CO_FNC_AICOMLog;
+							};
 						};
 					} else {
 						//--- Pure-armour team (no infantry at all): crew counts zero for the camp "Man"
 						//--- scan, but the HULL still counts for the TOWN scan (server_town.sqf L48
 						//--- scans Car/Tank/Air too). Park the hull dead-center so it registers WEST
-						//--- presence within 40m, and lay a SAD so it clears defenders. Latch so a
-						//--- crewless armour team doesn't spin (nothing more it can do on foot).
-						_captureDone = true;
-						[_team, true, [[_townCenter, 'SAD', _capRange max 60, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+						//--- presence within 40m, and lay a SAD so it clears defenders.
+						//--- WAVE-1 A5 ARMOUR-LATCH: only latch _captureDone if the town ACTUALLY flipped (mirror the
+						//--- infantry _townFlipped check above); the old code latched after ONE pass regardless of
+						//--- outcome, so a contested depot a lone tank could not crack was abandoned after one tick.
+						//--- Leaving it false lets the 20s loop re-run + keep the hull fighting at center. SAD radius
+						//--- tightened to _capRange (was max 60) so the hull parks IN the drain ring, not on its edge.
+						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
+						if ((!isNull _townObj) && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {
+							_captureDone = true;
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) CAPTURED [%3] - holding center.", _side, _team, _townObj getVariable ["name","?"]]] Call WFBE_CO_FNC_AICOMLog;
+							_team setVariable ["wfbe_teamgoto", objNull, true];
+							_team setVariable ["wfbe_aicom_townorder", [], false];
+							_team setVariable ["wfbe_teammode", "towns", true];
+							_team setVariable ["wfbe_aicom_strike", false, true];
+							_team setVariable ["wfbe_aicom_relief", objNull, true];
+						};
 					};
 				};
 
@@ -874,6 +952,14 @@ while {!WFBE_GameOver && _alive} do {
 				} forEach _vehicles;
 			};
 		};
+	};
+
+	//--- B48 SELF-SERVICE (default OFF: WFBE_C_AICOM_SERVICE_ENABLED). A damaged/low-ammo team
+	//--- detours to the nearest SAFE friendly town-centre, repairs+rearms+heals, then clears its
+	//--- goto so AssignTowns retargets it. The helper enforces every guardrail (never out of
+	//--- contact, never frozen, hard en-route timeout). HC-local: the team's units are local here.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_SERVICE_ENABLED", 0]) > 0) then {
+		[_team, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMServiceTick;
 	};
 
 	sleep 20;

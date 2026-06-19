@@ -9,7 +9,7 @@
 	Produce worker no-ops gracefully when the needed factory does not exist yet.
 */
 
-private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned","_doc","_track","_pref","_buckets","_eu","_bClass","_mix","_doctrineNudge","_dWeights","_wSum","_roll","_acc","_chosen","_order","_bi"];
+private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned","_doc","_track","_pref","_buckets","_eu","_bClass","_mix","_doctrineNudge","_dWeights","_wSum","_roll","_acc","_chosen","_order","_bi","_ti"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -62,14 +62,18 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 				//--- starved (foot are needed to capture camps).
 				_buckets = [[],[],[],[]]; //--- [infantry, light, heavy, air]
 				{
-					_eu = _tmplUpgrades select _x;
+					_ti = _x; _eu = _tmplUpgrades select _ti; //--- A1 (Ray 2026-06-19): _ti captured because the helicopters-only `count` below rebinds _x.
 					_bClass = 0; //--- infantry
 					if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
 						if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
 							if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
 						};
 					};
-					(_buckets select _bClass) set [count (_buckets select _bClass), _x];
+					//--- A1 helicopters-only AICOM air (Ray 2026-06-19): drop fixed-wing Su/plane + UAV air templates (CfgGroups
+					//--- Air pulls them via Squads_GetFactionGroups) - the AI can't fly planes, they pile up unused on base.
+					if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0})) then {
+						(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
+					};
 				} forEach _eligible;
 
 				//--- Base class weights from the tunable (copied so we can apply a small doctrine nudge).

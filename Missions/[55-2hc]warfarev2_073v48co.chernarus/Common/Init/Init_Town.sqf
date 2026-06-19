@@ -38,6 +38,9 @@ _town setVariable ["supplyMissionCoolDownEnabled", false];
 //--- If the town type is an array rather than a single value, pick a random template (see Server_GetTownGroupsDefender.sqf).
 if (typeName _town_type == "ARRAY") then {_town_type = _town_type select floor(random count _town_type)};
 _town setVariable ["wfbe_town_type", _town_type];
+//--- A8 (claude-gaming): wire in the previously-dead _townValue (Init_Town arg 6) so the
+//--- AI-commander spearhead ranking can reward high-value towns (read nil-safe in Strategy).
+_town setVariable ["wfbe_town_value", _townValue];
 
 waitUntil {commonInitComplete};
 

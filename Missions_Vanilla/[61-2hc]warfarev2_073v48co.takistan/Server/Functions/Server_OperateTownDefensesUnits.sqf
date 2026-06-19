@@ -79,7 +79,10 @@ switch (_action) do {
 							_unit assignAsGunner _defense;
 							[_unit] orderGetIn true;
 							_unit moveInGunner _defense;
-							[group _unit, 175, getPos _defense] spawn WFBE_CO_FNC_RevealArea;
+							//--- B5: per-gunner 175m reveal dropped — the town-wide reveal at the end of
+							//--- this "spawn" case (range = town range, covers every defense position) already
+							//--- reveals the same enemies to the gunner group, so this per-gunner pass was
+							//--- redundant RevealArea spam. Enemies are still revealed (just once, town-wide).
 							_x setVariable ["wfbe_defense_operator", _unit]; //--- Track the original gunner.
 						};
 					};
