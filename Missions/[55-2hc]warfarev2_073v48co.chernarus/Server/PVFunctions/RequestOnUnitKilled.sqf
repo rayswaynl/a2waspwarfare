@@ -256,5 +256,9 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 };
 
 if(!isPlayer(_killed) && _killed_type isKindOf "Infantry")then{
+	//--- D5 2026-06-19: index 0 is safe here. A2 OA EH indices are PER-TYPE, so this removes the
+	//--- FIRST "killed" handler regardless of any Fired/incomingMissile EHs on the unit. AI-created
+	//--- infantry get exactly one "killed" EH (Common_CreateUnit.sqf:125, added at creation), so
+	//--- index 0 is always the correct (and only) one. Left as-is to avoid shifting behaviour.
 	_killed removeEventHandler ["killed", 0];
 };

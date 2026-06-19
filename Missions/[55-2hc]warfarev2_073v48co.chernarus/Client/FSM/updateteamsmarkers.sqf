@@ -206,7 +206,11 @@ while {!gameOver} do {
 						//--- getDir when ~stationary so the arrow doesn't jitter at rest. A2-OA-1.64-safe.
 						_vel = velocity _leaderVehicle;
 						_spd = sqrt (((_vel select 0) * (_vel select 0)) + ((_vel select 1) * (_vel select 1)));
-						if (_spd > 1.2) then {
+						if (_spd > 1.2 && {_leaderVehicle != _leader}) then {
+							//--- MARKER-DIR FIX (Ray 2026-06-19): only use the velocity-derived MOVEMENT heading when
+							//--- actually in a VEHICLE. A2 infantry `velocity` is animation-driven (often ~0 or stale),
+							//--- so for an on-foot player the velocity branch could freeze the arrow; foot now falls to
+							//--- getDir = facing heading, which updates reliably as the player turns.
 							_dir = (_vel select 0) atan2 (_vel select 1);
 							if (_dir < 0) then {_dir = _dir + 360};
 						} else {

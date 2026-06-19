@@ -1,4 +1,6 @@
 Missions/\[55-2hc\]warfarev2_073v48co.chernarus/version.sqf
+# version.sqf.template is the TRACKED reference (live version.sqf stays ignored above)
+!Missions/\[55-2hc\]warfarev2_073v48co.chernarus/version.sqf.template
 
 Missions/\[61-2hc\]warfarev2_073v48co.takistan/version.sqf
 

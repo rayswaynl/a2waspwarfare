@@ -79,7 +79,11 @@ for '_i' from 0 to count(_groups)-1 do {
 		_team setVariable ["WFBE_TownAI_Side", _side, false];
 		_team setVariable ["WFBE_TownAI_Group", true, false];
 		[_town, _team, _sideID] execVM "Server\FSM\server_town_patrol.sqf";
-		[_team, 400, _position] spawn WFBE_CO_FNC_RevealArea;
+		//--- B5: per-group 400m reveal coalesced to ONE town-wide reveal per activation
+		//--- episode (after this loop). Each group used to fire its own RevealArea spawn,
+		//--- meaning one expensive nearEntities scan per group; for a town with many garrison
+		//--- groups that was N scans per activation. We instead reveal once below to every
+		//--- team created this episode (_town_teams). Enemies are still revealed (just once).
 		[_town_teams, _team] call WFBE_CO_FNC_ArrayPush;
 		_team allowFleeing 0; //--- Make the units brave.
 	};
@@ -91,6 +95,31 @@ for '_i' from 0 to count(_groups)-1 do {
 			_x setVariable ["WFBE_Taxi_Prohib", true];
 		};
 	} forEach _vehicles;
+};
+
+//--- B5: coalesced reveal — ONE nearEntities scan per activation episode (was one per
+//--- garrison group). Reveal the nearby entities to every town team created this episode.
+//--- Scan is town-centred with a radius that covers the union of the old per-group 400m
+//--- circles (groups spawn up to ~300m from the town, so 700m envelops them). The crew of
+//--- each revealed vehicle is revealed too, matching Common_RevealArea's behaviour.
+if (count _town_teams > 0) then {
+	[_town_teams, _town] spawn {
+		Private ["_teams","_town","_revealPos","_revealRange","_near","_reveal","_ent","_grp"];
+		_teams = _this select 0;
+		_town  = _this select 1;
+		_revealPos = getPos _town;
+		_revealRange = 700;
+		_near = _revealPos nearEntities _revealRange;
+		{
+			_ent = _x;
+			_reveal = [_ent];
+			if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			{
+				_grp = _x;
+				{_grp reveal _ent} forEach _reveal;
+			} forEach _teams;
+		} forEach _near;
+	};
 };
 
 if (_built > 0) then {[str _side,'UnitsCreated',_built] call UpdateStatistics};

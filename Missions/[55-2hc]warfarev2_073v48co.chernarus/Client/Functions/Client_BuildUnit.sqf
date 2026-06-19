@@ -331,12 +331,45 @@ if (_isMan) then {
 	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)'];
 
 	//--- GUER PLAYER VBIED: the buyable hilux1_civil_2_covered gets a driver-detonate action (Feature B player-side).
-	//--- The action is driver-only + resistance-only (condition) and does a confirm + short arm countdown before it
-	//--- asks the server to blast (mirrors AI wildcard W21) and pays the driver's GUER team cash-for-kills. Added on
-	//--- the buyer's client only (addAction is local), like the lock/stealth actions above. Gate-OFF / non-VBIED =
-	//--- no action added (byte-for-byte today's behaviour).
+	//--- The action is driver-only + resistance-only (condition) and asks the server to blast (mirrors AI wildcard W21)
+	//--- + pays the driver's GUER team cash-for-kills.
+	//--- C2 (persistence): addAction is LOCAL, so a single buyer-time add was lost the moment the buyer relogged
+	//--- (EHs/actions are not JIP-persistent) or any other client became the driver. We now (a) tag the vehicle with
+	//--- a global flag so any client can recognise it as a VBIED, and (b) attach a GetIn driver-path that re-adds the
+	//--- action to the *local* driver instance whenever a unit takes the wheel — so the buyer keeps it across
+	//--- get-out/get-in and re-driving, and a local player who inherits this truck as driver gets it on their own
+	//--- machine. Idempotent via wfbe_vbied_action (one action per local vehicle instance). Gate-OFF / non-VBIED =
+	//--- no flag, no EH, no action (byte-for-byte today's behaviour).
+	//--- NOTE (out of my file scope): for a teammate already standing on ANOTHER client when the truck spawns, the
+	//--- fully-correct delivery is an all-clients re-applier (the per-client updateclient.sqf MHQ-action pattern, or a
+	//--- registered PVFunction like SetMHQLock). That re-applier lives outside the GUER bundle's owned files.
 	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
-		_vehicle addAction ["<t color='#ff3333'>Detonate VBIED</t>","Client\Action\Action_GuerVbiedDetonate.sqf", [], 6, false, true, "", "driver _target == _this && {side _this == resistance}"];
+		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
+		_vehicle setVariable ["wfbe_is_guer_vbied", true, true];
+
+		//--- Local helper: add the detonate action once per local vehicle instance (dedupe via wfbe_vbied_action).
+		WFBE_CL_FNC_AddGuerVbiedAction = {
+			private ["_v"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (!(_v getVariable ["wfbe_is_guer_vbied", false])) exitWith {};
+			if ((_v getVariable ["wfbe_vbied_action", -1]) >= 0) exitWith {};   //--- already armed on this machine.
+			private ["_aid"];
+			_aid = _v addAction ["<t color='#ff3333'>Detonate VBIED</t>","Client\Action\Action_GuerVbiedDetonate.sqf", [], 6, false, true, "", "driver _target == _this && {side _this == resistance}"];
+			_v setVariable ["wfbe_vbied_action", _aid];
+		};
+
+		//--- Immediate buyer-local add (instant availability) + GetIn driver-path re-add for persistence.
+		_vehicle call WFBE_CL_FNC_AddGuerVbiedAction;
+		_vehicle addEventHandler ["GetIn", {
+			private ["_v","_pos","_u"];
+			_v = _this select 0;
+			_pos = _this select 1;
+			_u = _this select 2;
+			if (_pos == "driver" && {_u == player} && {side _u == resistance}) then {
+				_v call WFBE_CL_FNC_AddGuerVbiedAction;
+			};
+		}];
 	};
 
 	//--- Salvage Truck.

@@ -18,7 +18,8 @@ if (WF_A2_Vanilla) then {AISquadRespawn = Compile preprocessFile "Server\AI\AI_S
 if !(WF_A2_Vanilla) then {AIAdvancedRespawn = Compile preprocessFile "Server\AI\AI_AdvancedRespawn.sqf"};
 AIMoveTo = Compile preprocessFile "Server\AI\Orders\AI_MoveTo.sqf";
 AIPatrol = Compile preprocessFile "Server\AI\Orders\AI_Patrol.sqf";
-AITownPatrol = Compile preprocessFile "Server\AI\Orders\AI_TownPatrol.sqf";
+//--- NOT WIRED - AITownPatrol is never called anywhere; town patrols run via Server_GetTownPatrol. Compile shelved.
+//AITownPatrol = Compile preprocessFile "Server\AI\Orders\AI_TownPatrol.sqf";
 AITownResitance = Compile preprocessFile "Server\AI\AI_Resistance.sqf";
 AIWPAdd = Compile preprocessFile "Server\AI\Orders\AI_WPAdd.sqf";
 AIWPRemove = Compile preprocessFile "Server\AI\Orders\AI_WPRemove.sqf";
@@ -698,13 +699,12 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
 
-//--- Client FPS telemetry receiver (staged-deploy day/night perf study, 2026-06-15, Net_2 request).
+//--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
 //--- when the WFBE_C_CLIENT_FPS_REPORT lobby param is ON. We stamp it server-side with what the client
-//--- can't cheaply know - live player count, day/night MODE + current in-game time/sun - so the RPT can
-//--- be bucketed day-vs-night and day/night-cycle ON-vs-OFF. Raw diag_log so it lands regardless of
-//--- LOG_CONTENT_STATE; the lobby param is the single on/off gate. Name is logged LAST so a '|' in a
-//--- player name can't corrupt the earlier pipe-delimited fields.
+//--- can't cheaply know - live player count + HC count - so the RPT can be bucketed. Raw diag_log so it
+//--- lands regardless of LOG_CONTENT_STATE; the lobby param is the single on/off gate. Name is logged
+//--- LAST so a '|' in a player name can't corrupt the earlier pipe-delimited fields.
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
 		private ["_d", "_players", "_hc"];

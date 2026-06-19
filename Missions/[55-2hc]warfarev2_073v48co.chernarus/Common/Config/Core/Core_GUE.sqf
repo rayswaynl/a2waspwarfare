@@ -115,29 +115,16 @@ _c = _c + ['T72_Gue'];
 _i = _i + [['','',5200,35,-2,3,2,0,'Guerilla',[]]];
 
 /* GUER player faction additions (Warlord roster) - not in the base GUE buy config */
-_c = _c + ['T34_TK_GUE_EP1'];
-_i = _i + [['','',3000,30,-2,0,2,0,'Guerilla',[]]];
-_c = _c + ['T55_TK_GUE_EP1'];
-_i = _i + [['','',4200,33,-2,0,2,0,'Guerilla',[]]];
-_c = _c + ['BTR40_TK_GUE_EP1'];
-_i = _i + [['','',700,22,-2,0,1,0,'Guerilla',[]]];
+//--- C1 (price-collision fix): T34/T55/BTR40_TK_GUE_EP1, An2_1/2_TK_CIV_EP1, UH1H_TK_GUE_EP1 are
+//--- registered canonically by Core_TKGUE/Core_TKCIV (which load AFTER Core_GUE). Their Core_GUE copies
+//--- here only won the first-registration race with WRONG prices and spammed "Duplicated Element" in the
+//--- TK files - dropped so the canonical TK prices stand. hilux1_civil_2_covered / datsun1_civil_2_covered /
+//--- Mi17_Civilian are registered by Core_CIV (loads BEFORE Core_GUE -> Core_GUE copies were already dead
+//--- dups); their GUER-intended prices (400/400/6000) now live on the canonical Core_CIV entries. Ka137_MG_PMC
+//--- and Mi24_P are KEPT here on purpose: Core_GUE loads before Core_PMC/Core_RU, so these correctly win and
+//--- set the GUER-intended prices (6000 / 18000).
 _c = _c + ['Ka137_MG_PMC'];
 _i = _i + [['','',6000,40,-2,0,1,0,'Guerilla',[]]];
-/* VBIED: driver-detonated suicide truck (player buyable; Detonate action + cash-for-kills, mirrors AI wildcard W21). Cheap one-shot weapon. */
-_c = _c + ['hilux1_civil_2_covered'];
-_i = _i + [['','',400,18,-2,0,1,0,'Guerilla',[]]];
-/* VBIED (Takistan): datsun covered civilian pickup, same role/price tier as the Chernarus hilux above. */
-_c = _c + ['datsun1_civil_2_covered'];
-_i = _i + [['','',400,18,-2,0,1,0,'Guerilla',[]]];
-/* GUER airfield air (transport cheap -> gunship expensive) */
-_c = _c + ['An2_1_TK_CIV_EP1'];
-_i = _i + [['','',2500,40,-2,0,3,0,'Guerilla',[]]];
-_c = _c + ['An2_2_TK_CIV_EP1'];
-_i = _i + [['','',2500,40,-2,0,3,0,'Guerilla',[]]];
-_c = _c + ['Mi17_Civilian'];
-_i = _i + [['','',6000,45,-2,0,3,0,'Guerilla',[]]];
-_c = _c + ['UH1H_TK_GUE_EP1'];
-_i = _i + [['','',9000,50,-2,0,3,0,'Guerilla',[]]];
 _c = _c + ['Mi24_P'];
 _i = _i + [['','',18000,60,-2,0,3,0,'Guerilla',[]]];
 

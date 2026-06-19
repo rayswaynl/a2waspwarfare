@@ -86,7 +86,10 @@ for '_i' from 0 to count(_u)-1 do {
 		};
 		if !(_processed) then {["ERROR", Format["Config_Backpack.sqf : [%1] Entitie [%2] is not a valid Backpack",_faction,_u select _i], 3] Call WFBE_CO_FNC_LogContent;};
 	} else {
-		["ERROR", Format["Config_Backpack.sqf : [%1] Backpack [%2] is not a valid class within <CfgMagazines>",_faction,_u select _i], 3] Call WFBE_CO_FNC_LogContent;
+		//--- D4 2026-06-19: an absent backpack class is EXPECTED when its DLC (e.g. BAF) is not
+		//--- installed (~22x ERROR spam per init). Demoted ERROR -> WARNING: the entry is simply
+		//--- skipped (no such class to define), not a config fault. Behaviour unchanged.
+		["WARNING", Format["Config_Backpack.sqf : [%1] Backpack [%2] is not a valid class (DLC absent) - skipped.",_faction,_u select _i], 3] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

@@ -9411,31 +9411,6 @@
         <Italian>ICBM: Tempo prima dell'impatto dell'ICBM</Italian>
     </Key>
 
-    <!-- Marty: Mission parameter title for enabling or disabling the hybrid day/night cycle. -->
-    <Key ID="STR_WF_PARAMETER_DAYNIGHT_ENABLED">
-        <English>Day/night cycle</English>
-        <French>Cycle jour/nuit</French>
-        <German>Tag-/Nachtzyklus</German>
-        <Russian>Ð¦Ð¸ÐºÐ» Ð´Ð½Ñ/Ð½Ð¾Ñ‡Ð¸</Russian>
-        <Italian>Ciclo giorno/notte</Italian>
-    </Key>
-
-    <Key ID="STR_WF_PARAMETER_DAY_DURATION">
-    <English>Day/night cycle: Day duration</English>
-    <French>Cycle jour/nuit : durée du jour</French>
-    <German>Tag-/Nachtzyklus: Tagesdauer</German>
-    <Russian>Цикл дня/ночи: длительность дня</Russian>
-    <Italian>Ciclo giorno/notte: durata del giorno</Italian>
-    </Key>
-
-    <Key ID="STR_WF_PARAMETER_NIGHT_DURATION">
-        <English>Day/night cycle: Night duration</English>
-        <French>Cycle jour/nuit : durée de la nuit</French>
-        <German>Tag-/Nachtzyklus: Nachtdauer</German>
-        <Russian>Цикл дня/ночи: длительность ночи</Russian>
-        <Italian>Ciclo giorno/notte: durata della notte</Italian>
-    </Key>
-
     <Key ID="STR_WF_PARAMETER_RADZONE_TIME">
         <English>ICBM: Radiation effect duration</English>
         <French>ICBM : Durée des effets de radiation</French>

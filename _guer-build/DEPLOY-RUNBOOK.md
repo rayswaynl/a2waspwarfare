@@ -7,6 +7,14 @@ Gate: lobby param **WFBE_C_GUER_PLAYERSIDE** — set to **Enabled** for the test
 > A WASP mission only fully boots when a HUMAN joins a slot. So a test ALWAYS needs you in a GUER slot —
 > there is no purely-headless gameplay validation. Headless can only confirm the mission LOADS without script errors.
 
+> **PRE-DEPLOY VERSION GUARD (do this for every real/public build):** the live `version.sqf` is gitignored and
+> carried in by hand, so it's easy to ship a debug build by accident. Before deploy, ASSERT the live
+> `version.sqf` has `WF_DEBUG` commented OFF (the `// #define WF_DEBUG 1` line must stay commented) and that its
+> `WF_MISSIONNAME` matches the build label you intend to publish. The tracked
+> `Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template` is the reference for the correct,
+> non-debug shape — diff the live file against it if in doubt. WF_DEBUG ON is a smoke-test-only state (instant
+> funds + all tiers unlocked); never deploy it to players.
+
 ---
 ## OPTION A — Local LAN host (FASTEST, no blockers, ~5–10 min) ⭐ recommended for a pre-meeting smoke
 You have A2OA installed locally. This sidesteps the Hetzner access wall entirely.

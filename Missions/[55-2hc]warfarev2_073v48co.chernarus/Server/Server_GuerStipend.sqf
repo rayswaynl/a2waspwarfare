@@ -48,12 +48,20 @@ while {!WFBE_GameOver} do {
 	_deficit  = (_startTownCount - _curTowns) max 0;
 	_rate     = (_baseRate + (_deficit * _townBonus)) min (_baseRate * 3);
 
+	//--- C3 (double-pay fix): pay per UNIQUE GUER group, not per player. Two GUER players in one group
+	//--- share a single team treasury (wfbe_funds), so the old per-playableUnits loop credited that
+	//--- group's funds once for EACH member. Dedupe to distinct living-GUER-player groups and pay once.
+	private "_paidGroups";
+	_paidGroups = [];
 	{
 		if ((alive _x) && {side _x == resistance} && {isPlayer _x}) then {
 			private "_g";
 			_g = group _x;
-			if (isNil {_g getVariable "wfbe_funds"}) then {_g setVariable ["wfbe_funds", 0, true]};
-			[_g, _rate] Call WFBE_CO_FNC_ChangeTeamFunds;
+			if !(_g in _paidGroups) then {
+				_paidGroups = _paidGroups + [_g];
+				if (isNil {_g getVariable "wfbe_funds"}) then {_g setVariable ["wfbe_funds", 0, true]};
+				[_g, _rate] Call WFBE_CO_FNC_ChangeTeamFunds;
+			};
 		};
 	} forEach playableUnits;
 };
