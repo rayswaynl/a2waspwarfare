@@ -648,6 +648,16 @@ if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 
 serverInitFull = true;
 
+//--- B50 SERVER-READY GATE: settle window then broadcast WFBE_MissionReady (JIP-persistent) so joining
+//--- clients hold their dependent init until the server is past bootstrap. Spawned; never blocks init.
+if (isServer) then {
+	[] spawn {
+		sleep (missionNamespace getVariable ["WFBE_C_SERVER_READY_DELAY", 90]);
+		missionNamespace setVariable ["WFBE_MissionReady", true, true];
+		diag_log format ["[SERVER READY] WFBE_MissionReady broadcast at t=%1s.", round time];
+	};
+};
+
 //--- DEADSPAWN PHYSICAL PROTECTION (claude-gaming 2026-06-14): ring each per-side
 //--- TempRespawnMarker with tall H-barriers so an enemy-side AI-slot bot cannot shoot
 //--- a HUMAN parked on an adjacent side's holding marker during join (Smarty deadspawn

@@ -238,7 +238,8 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_SVC_REACH") then {WFBE_C_AICOM_SVC_REACH = 4000};            //--- m: max detour distance to a service point (else keep fighting).
 	if (isNil "WFBE_C_AICOM_SVC_TIMEOUT") then {WFBE_C_AICOM_SVC_TIMEOUT = 300};         //--- s: max EN-ROUTE drive time before the detour aborts + the team retargets the front.
 	if (isNil "WFBE_C_AICOM_SVC_ARMOUR_ONLY") then {WFBE_C_AICOM_SVC_ARMOUR_ONLY = 1};   //--- 1 = only teams with a Tank/APC/Air detour (costly to replace); 0 = any team.
-if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST = 300}; //--- B49: relaxed START gate (m) for the self-service detour (was the full SAFE_DIST=600). Hard en-route abort still uses SAFE_DIST; COMBAT teams never pulled out.
+if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST = 300};
+if (isNil "WFBE_C_SERVER_READY_DELAY") then {WFBE_C_SERVER_READY_DELAY = 90}; //--- B50: settle seconds before WFBE_MissionReady broadcast. //--- B49: relaxed START gate (m) for the self-service detour (was the full SAFE_DIST=600). Hard en-route abort still uses SAFE_DIST; COMBAT teams never pulled out.
 	WFBE_C_AICOM_PRODUCE_BATCH = 4;               //--- healthy-team refill batch (units/cycle above CRITICAL_STRENGTH).
 	WFBE_C_AI_DELEGATION_FPS_INTERVAL = 60 * 3; //--- A client send it's FPS average each x seconds to the server.
 	WFBE_C_AI_DELEGATION_FPS_MIN = 25; //--- A client can handle groups if it's FPS average is above x.
