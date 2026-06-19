@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -199,6 +199,24 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										_strk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
 										_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
 										diag_log (Format ["STUCKSTAT|v1|%1|%2|stuck|leader=%3|distStart=%4|distTgt=%5|reissue|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance (_ord select 2)), round (_ldr distance _goto), _strk]);
+										//--- WAVE-1 CAUSE-2 TARGET-ABANDON: a team grinding one unreachable/unflippable town forever
+										//--- (re-issue keeps re-picking the same _goto). Once strikes exceed WFBE_C_AICOM_STUCK_ABANDON,
+										//--- BLACKLIST this town for THIS team for a cooldown (stored [town,expiry] on wfbe_aicom_blacklist),
+										//--- reset the strike counter, and let the selector below pick the next-best reachable town. The
+										//--- selector clears the whole blacklist if it would otherwise leave the team with no candidate
+										//--- (GUARDRAIL: a team must always get a target - never idle).
+										if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])) then {
+											private ["_abCd","_abBl","_abKeep"];
+											_abCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
+											_abBl = _team getVariable ["wfbe_aicom_blacklist", []];
+											//--- prune expired entries + drop any prior entry for _goto, then add a fresh one.
+											_abKeep = [];
+											{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_abKeep set [count _abKeep, _x]} } forEach _abBl;
+											_abKeep set [count _abKeep, [_goto, time + _abCd]];
+											_team setVariable ["wfbe_aicom_blacklist", _abKeep];
+											_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|cooldown=" + str _abCd);
+										};
 									} else {
 										//--- progressing, arrived, or in contact: refresh the breadcrumb and
 										//--- reset the unstuck strike ladder (the team moved, so it is not stuck).
@@ -258,12 +276,29 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_reachFoot    = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500];
 					_reachMounted = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
 					_teamReach = if (_mounted) then {_reachMounted} else {_reachFoot};
+					//--- WAVE-1 CAUSE-2: live (non-expired) blacklist towns for THIS team. Prune expired entries
+					//--- back onto the team var, then build _uncapturedF = uncaptured minus blacklisted. GUARDRAIL:
+					//--- if excluding the blacklist would leave NO uncaptured town, clear the blacklist and fall back
+					//--- to the full list so the team always gets a target (never idle). _blTowns gates the spearhead
+					//--- pick too; bootstrap (0-town opening rush) is exempt - it never reaches here.
+					_blList = _team getVariable ["wfbe_aicom_blacklist", []];
+					_blKeep = [];
+					_blTowns = [];
+					{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_blKeep set [count _blKeep, _x]; _blTowns set [count _blTowns, (_x select 0)]} } forEach _blList;
+					_team setVariable ["wfbe_aicom_blacklist", _blKeep];
+					_uncapturedF = _uncaptured - _blTowns;
+					if (count _uncapturedF == 0) then {
+						//--- every uncaptured town is blacklisted: clear it so this team is never left without a target.
+						_team setVariable ["wfbe_aicom_blacklist", []];
+						_blTowns = [];
+						_uncapturedF = _uncaptured;
+					};
 					_spear = _logik getVariable ["wfbe_aicom_targets", []];
 					_concBase = missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3];
 					{
 						_spearT = _x;
 						if (isNull _target && {!isNull _spearT}) then {
-							if (((_spearT getVariable "sideID") != _sideID) && {(_ldrPos distance _spearT) <= _teamReach}) then {
+							if (((_spearT getVariable "sideID") != _sideID) && {!(_spearT in _blTowns)} && {(_ldrPos distance _spearT) <= _teamReach}) then {
 								//--- Per-target quota = base concentration scaled by garrison tier
 								//--- (wfbe_town_type maps to defender group count in
 								//--- Server_GetTownGroupsDefender.sqf: Tiny 3, Small 5, Medium 6,
@@ -291,8 +326,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- un-captured town WITHIN this team's reach, preferring towns not already saturated
 					//--- (_avail = uncaptured minus en-route mass) so freed teams spread to the next town.
 					if (isNull _target) then {
-						_avail = _uncaptured - _assigned;
-						if (count _avail == 0) then {_avail = _uncaptured};
+						_avail = _uncapturedF - _assigned;
+						if (count _avail == 0) then {_avail = _uncapturedF};
 						//--- Nearest town in reach (foot 3.5km / mounted 9km from THIS leader).
 						_nearReach = objNull; _nearReachD = 1e9;
 						{
@@ -304,7 +339,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						} else {
 							//--- GUARDRAIL: nothing in reach (isolated front / island target) - fall back to
 							//--- the absolute nearest so the team always has a valid order and never idles.
-							_target = [leader _team, _uncaptured] Call WFBE_CO_FNC_GetClosestEntity; //--- B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
+							_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity; //--- WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
 						};
 					};
 				};
