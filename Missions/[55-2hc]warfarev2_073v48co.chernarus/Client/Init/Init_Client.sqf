@@ -9,10 +9,10 @@ Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeploye
 //--- clientInitComplete (~L1032) long after the fade clears, so this only fires on a genuine stall.
 [] spawn {
 	private "_t0"; _t0 = time;
-	waitUntil { sleep 0.5; clientInitComplete || (time - _t0 > 240) };
+	waitUntil { sleep 0.5; clientInitComplete || (time - _t0 > 45) };
 	if (!clientInitComplete) then {
 		12452 cutText ["", "BLACK IN", 1];
-		diag_log format ["[INIT SAFETY] Client init stalled >240s - force-cleared BLACK fade so the player is not stuck on black (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
+		diag_log format ["[INIT SAFETY] Client init stalled >45s - force-cleared BLACK fade so the player is not stuck on black (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
 	};
 };
 
@@ -204,14 +204,6 @@ WFBE_CL_FNC_QOL_Advisor = Compile preprocessFileLineNumbers 'Client\Functions\Cl
 
 //--- UI Namespace release from previous possible games (only on titles dialog!).
 {uiNamespace setVariable [_x, displayNull]} forEach ["wfbe_title_capture"];
-
-//--- B50 SERVER-READY GATE: hold here (during the loading fade) until the server signals it finished
-//--- its bootstrap (WFBE_MissionReady, a JIP-persistent broadcast from Init_Server) so this client's
-//--- server-dependent init below does NOT run during the chaotic startup window (the JIP-stall /
-//--- black-screen cause). On a settled server the flag is already true => instant. Timeout-guarded
-//--- (150s); the top watchdog (240s) backstops the fade.
-private "_srvReady0"; _srvReady0 = time;
-waitUntil { sleep 1; (missionNamespace getVariable ["WFBE_MissionReady", false]) || (time - _srvReady0 > 150) };
 
 //--- Waiting for the common part to be executed.
 waitUntil {commonInitComplete};
