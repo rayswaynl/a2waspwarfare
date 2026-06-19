@@ -136,7 +136,7 @@ with missionNamespace do {
 	//--- with population: more players = more server pressure = FEWER HQ squads; low pop is efficient +
 	//--- boring, so flood it with many more AI teams. Buckets 0-2 / 3-5 / 6-9 / 10+. The 10+ value matches
 	//--- the old static target (2) = no high-pop regression. Consumed by AI_Commander_Teams.sqf.
-	WFBE_C_AICOM_TEAMS_PC_LOW  = 10;            //--- 0-2 players: dialed back to 5 (Ray 2026-06-16: server+HC cap-out relief at low pop; was 8).
+	WFBE_C_AICOM_TEAMS_PC_LOW  = 5;            //--- 0-2 players: dialed back to 5 (Ray 2026-06-16: server+HC cap-out relief at low pop; was 8).
 	WFBE_C_AICOM_TEAMS_PC_MID  = 5;            //--- 3-5 players (Ray B36.1 tweak, was 4).
 	WFBE_C_AICOM_TEAMS_PC_HIGH = 3;
 	WFBE_C_AICOM_TEAMS_PC_FULL = 2;            //--- rollback the whole curve: set all four to 2.
@@ -238,6 +238,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_SVC_REACH") then {WFBE_C_AICOM_SVC_REACH = 4000};            //--- m: max detour distance to a service point (else keep fighting).
 	if (isNil "WFBE_C_AICOM_SVC_TIMEOUT") then {WFBE_C_AICOM_SVC_TIMEOUT = 300};         //--- s: max EN-ROUTE drive time before the detour aborts + the team retargets the front.
 	if (isNil "WFBE_C_AICOM_SVC_ARMOUR_ONLY") then {WFBE_C_AICOM_SVC_ARMOUR_ONLY = 1};   //--- 1 = only teams with a Tank/APC/Air detour (costly to replace); 0 = any team.
+if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST = 300}; //--- B49: relaxed START gate (m) for the self-service detour (was the full SAFE_DIST=600). Hard en-route abort still uses SAFE_DIST; COMBAT teams never pulled out.
 	WFBE_C_AICOM_PRODUCE_BATCH = 4;               //--- healthy-team refill batch (units/cycle above CRITICAL_STRENGTH).
 	WFBE_C_AI_DELEGATION_FPS_INTERVAL = 60 * 3; //--- A client send it's FPS average each x seconds to the server.
 	WFBE_C_AI_DELEGATION_FPS_MIN = 25; //--- A client can handle groups if it's FPS average is above x.

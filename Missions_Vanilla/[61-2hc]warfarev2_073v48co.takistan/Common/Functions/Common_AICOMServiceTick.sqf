@@ -87,7 +87,13 @@ if (_state == "enroute") then {
 	//--- else: still driving; the MOVE waypoint laid below carries it (never frozen).
 } else {
 	//--- ============ IDLE: decide whether to detour ============
-	if (behaviour _ldr == "COMBAT" || {_enemyNear > 0}) exitWith {}; //--- never leave a fight
+	//--- B49 RELAX: use TRIGGER_DIST (smaller than SAFE_DIST) for the START gate so a DISENGAGED team can
+	//--- detour to service even with enemies 300-600m off (the old SAFE_DIST gate blocked every grinding
+	//--- team so this never fired). COMBAT teams are still never pulled out; the en-route abort below still
+	//--- uses the full SAFE_DIST. A2-safe (nearEntities + side/alive checks, same idiom as _enemyNear).
+	private "_enemyTrig";
+	_enemyTrig = {alive _x && {side _x == _enemySide}} count ((getPos _ldr) nearEntities [["Man","LandVehicle","Air"], (missionNamespace getVariable ["WFBE_C_AICOM_SVC_TRIGGER_DIST", 300])]);
+	if (behaviour _ldr == "COMBAT" || {_enemyTrig > 0}) exitWith {}; //--- never leave a fight; no enemy within trigger-dist
 	_armourOnly = (missionNamespace getVariable ["WFBE_C_AICOM_SVC_ARMOUR_ONLY", 1]) > 0;
 	_members    = (units _team) - [objNull];
 	_dmgT       = missionNamespace getVariable ["WFBE_C_AICOM_SVC_DMG_THRESH", 0.5];

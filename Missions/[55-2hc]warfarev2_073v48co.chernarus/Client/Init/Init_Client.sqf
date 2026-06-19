@@ -2,6 +2,25 @@ Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeploye
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
+//--- JOIN ROBUSTNESS (B49 2026-06-19): a stalled client init must NEVER leave the player on a permanent
+//--- black screen. The BLACK FADED fade (layer 12452, set in initJIPCompatible) is normally cleared at
+//--- ~L849 (BLACK IN). If client init stalls before that, this watchdog force-clears the fade after 45s
+//--- and logs it (so a recurring stall is visible in the client RPT). Happy-path joins set
+//--- clientInitComplete (~L1032) long after the fade clears, so this only fires on a genuine stall.
+[] spawn {
+	private "_t0"; _t0 = time;
+	waitUntil { sleep 0.5; clientInitComplete || (time - _t0 > 45) };
+	if (!clientInitComplete) then {
+		12452 cutText ["", "BLACK IN", 1];
+		diag_log format ["[INIT SAFETY] Client init stalled >45s - force-cleared BLACK fade so the player is not stuck on black (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
+	};
+};
+
+//--- JOIN ROBUSTNESS (B49): if this client landed on a deleted/shell slot, `player` is null and
+//--- `side player` below would silently break the whole init -> permanent black. Bail gracefully
+//--- (the watchdog above still clears the fade so the player can respawn/retry instead of staring at black).
+if (isNull player) exitWith {["ERROR", "Init_Client.sqf: player is NULL at init (joined a deleted/shell slot?) - aborting client init gracefully; fade watchdog clears the screen."] Call WFBE_CO_FNC_LogContent};
+
 sideJoined = side player;
 sideJoinedText = str sideJoined;
 //--- WF3 Compatible.

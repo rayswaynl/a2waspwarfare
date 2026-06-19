@@ -24,7 +24,7 @@ _team = grpNull;
 
 while {_max > 0 && isNull _team} do {
 	{
-		if ((getPlayerUID _x) == _uid) exitWith {_team = group _x};
+		if (!isNull _x && {(getPlayerUID _x) == _uid}) exitWith {_team = group _x};
 	} forEach playableUnits;
 
 	if (isNull _team) then {sleep 0.5};
