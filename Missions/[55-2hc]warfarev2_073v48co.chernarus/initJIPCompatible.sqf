@@ -76,7 +76,7 @@ if (isHostedServer || (!isHeadLessClient && !isDedicated)) then {
 	waitUntil {!isNull player};
 	["INITIALIZATION", "initJIPCompatible.sqf: Client is not null..."] Call WFBE_CO_FNC_LogContent;
 	//--- Client Init - Begin the blackout on Layer 12452.
-	12452 cutText [(localize 'STR_WF_Loading')+"...","BLACK FADED",50000];
+	12452 cutText [(localize 'STR_WF_Loading')+"...","BLACK FADED",180]; //--- B56: was 50000s. Bounded so a stalled JIP init can never strand a client on permanent black; the Init_Client fade-clear still cuts it early on success.
 };
 
 setViewDistance 3500; //--- Server & Client default View Distance.
@@ -260,12 +260,28 @@ if (isHostedServer || isDedicated) then { //--- Run the server's part.
 
 //--- Client initialization, either hosted or pure client. Part II
 if (isHostedServer || (!isHeadLessClient && !isDedicated)) then {
-	waitUntil {!isNil 'WFBE_PRESENTSIDES'}; //--- Await for teams to be set before processing the client init.
-	{
-		_logik = (_x) Call WFBE_CO_FNC_GetSideLogic;
-		waitUntil {!isNil {_logik getVariable "wfbe_teams"}};
-		missionNamespace setVariable [Format["WFBE_%1TEAMS",_x], _logik getVariable "wfbe_teams"];
-	} forEach WFBE_PRESENTSIDES;
+	//--- B56 JIP-HANG FIX: these waits are gated on server-synced team data. On a JIP client, a present side whose logic
+	//--- never resolves wfbe_teams (the harass-only GUER/resistance side - cf. upgradeQueue.sqf + the many
+	//--- "WFBE_PRESENTSIDES - [resistance]" exclusions elsewhere) would block here FOREVER, so Init_Client below + its
+	//--- black-fade clear never ran -> permanent black for every JIP joiner. Bounded uiSleep loops (real-time; they tick
+	//--- on the paused loading screen, unlike sleep/waitUntil/time) so the client init is ALWAYS reached.
+	private "_w"; _w = 0;
+	while {(isNil "WFBE_PRESENTSIDES") && (_w < 80)} do { uiSleep 0.25; _w = _w + 1; };
+	if (!isNil "WFBE_PRESENTSIDES") then {
+		{
+			private ["_logik","_ws"];
+			_logik = (_x) Call WFBE_CO_FNC_GetSideLogic;
+			_ws = 0;
+			while {(isNil {_logik getVariable "wfbe_teams"}) && (_ws < 120)} do { uiSleep 0.25; _ws = _ws + 1; };
+			if (!isNil {_logik getVariable "wfbe_teams"}) then {
+				missionNamespace setVariable [Format["WFBE_%1TEAMS",_x], _logik getVariable "wfbe_teams"];
+			} else {
+				diag_log format ["[WFBE][B56 JIP-FIX] side %1 wfbe_teams not synced in time - proceeding without it so the client never hangs on black.", _x];
+			};
+		} forEach WFBE_PRESENTSIDES;
+	} else {
+		diag_log "[WFBE][B56 JIP-FIX] WFBE_PRESENTSIDES not set in time - proceeding to client init anyway.";
+	};
 
 	["INITIALIZATION", "initJIPCompatible.sqf: Executing the Client Initialization."] Call WFBE_CO_FNC_LogContent;
 	execVM "Client\Init\Init_Client.sqf";
