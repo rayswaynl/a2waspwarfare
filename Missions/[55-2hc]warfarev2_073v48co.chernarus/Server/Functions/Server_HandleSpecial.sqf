@@ -404,33 +404,45 @@ switch (_args select 0) do {
 		diag_log (Format ["HCSIDE|v1|reseat|name=%1|result=%2|sideNow=%3", _rName, _rResult, _rSideNow]);
 	};
 	case "connected-hc": {
-		Private ["_hc","_id","_uid","_hcOld","_hcList","_hcValid"];
-		_hc = _args select 1;
-		_id = owner _hc;
-		_uid = getPlayerUID _hc;
+		// Marty: Spawned so the 3-second cold-start retry doesn't block the PVF dispatcher.
+		_args Spawn {
+			Private ["_hc","_id","_retries","_uid","_hcOld","_hcList","_hcValid"];
+			_hc = _this select 1;
+			_uid = getPlayerUID _hc;
 
-		["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client is now connected [%1] [%2] with Owner ID [%3].", _hc, _uid, _id]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3", _uid, _id, str (side _hc)]); //--- diagnostic: is the HC actually mis-seated (WEST) or already CIV (cosmetic BLUFOR)?
+			["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client is now connected [%1] [%2] with Owner ID [%3] (pre-retry).", _hc, _uid, owner _hc]] Call WFBE_CO_FNC_LogContent;
 
-		if (_id != 0) then {
-			//--- Registry hygiene: an HC re-registers after every reconnect, and the old append-only
-			//--- list kept dead groups forever - delegation could then pick a corpse and the town AI
-			//--- silently vanished. Drop this UID's previous group and prune any dead entries.
-			_hcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
-			_hcOld = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
-			if (!isNil "_hcOld") then {_hcList = _hcList - [_hcOld]};
-			_hcValid = [];
-			{
-				if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcValid = _hcValid + [_x]};
-			} forEach _hcList;
-			if (count _hcValid != count _hcList) then {
-				["INFORMATION", Format["Server_HandleSpecial.sqf: Pruned [%1] dead headless client entries from the registry.", (count _hcList) - (count _hcValid)]] Call WFBE_CO_FNC_LogContent;
+			//--- HC cold-start slot-race: the engine owner ID may be 0 for a brief window
+			//--- after the PVF fires. Retry up to 3 times (3 s total) before giving up.
+			_retries = 0;
+			waitUntil {sleep 1; _retries = _retries + 1; (owner _hc != 0) || (_retries >= 3)};
+
+			//--- Re-read the owner ID after the wait; the pre-spawn value is stale.
+			_id = owner _hc;
+
+			["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client [%1] [%2] Owner ID after retry [%3] (retries:%4).", _hc, _uid, _id, _retries]] Call WFBE_CO_FNC_LogContent;
+			diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3", _uid, _id, str (side _hc)]); //--- diagnostic: is the HC actually mis-seated (WEST) or already CIV (cosmetic BLUFOR)?
+
+			if (_id != 0) then {
+				//--- Registry hygiene: an HC re-registers after every reconnect, and the old append-only
+				//--- list kept dead groups forever - delegation could then pick a corpse and the town AI
+				//--- silently vanished. Drop this UID's previous group and prune any dead entries.
+				_hcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+				_hcOld = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
+				if (!isNil "_hcOld") then {_hcList = _hcList - [_hcOld]};
+				_hcValid = [];
+				{
+					if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcValid = _hcValid + [_x]};
+				} forEach _hcList;
+				if (count _hcValid != count _hcList) then {
+					["INFORMATION", Format["Server_HandleSpecial.sqf: Pruned [%1] dead headless client entries from the registry.", (count _hcList) - (count _hcValid)]] Call WFBE_CO_FNC_LogContent;
+				};
+				//--- Add the Headless client to our candidates.
+				missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], group _hc];
+				missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]];
+			} else {
+				["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] Owner ID is still [0] after %2 retries, it is server controlled.",_hc, _retries]] Call WFBE_CO_FNC_LogContent;
 			};
-			//--- Add the Headless client to our candidates.
-			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], group _hc];
-			missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]];
-		} else {
-			["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] Owner ID is [0], it is server controlled.",_hc]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	case "track-playerobject": {

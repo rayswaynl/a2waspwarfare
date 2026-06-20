@@ -73,7 +73,7 @@ while {!gameOver} do {
 
 			if (_income > 0) then {
 				// diag_log format ["Calling update tick (town supply income) for team %1, supply addition: %2",_x, _supply];
-				if (_currency_system == 0) then {[_x, _supply, format ["Update tick (town supply income) for team %1.",_x], true] Call ChangeSideSupply};
+				if (_currency_system == 0) then {[_x, round(_supply * (missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_INCOME_MULT", 1])), format ["Update tick (town supply income) for team %1.",_x], true] Call ChangeSideSupply};
 
 				_comTeam = (_x) Call WFBE_CO_FNC_GetCommanderTeam;
 				if (isNull _comTeam) then {_comTeam = grpNull};

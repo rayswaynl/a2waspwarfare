@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -42,6 +42,42 @@ _myStr = 0;
 { if (!isNull _x) then {_myStr = _myStr + ({alive _x} count (units _x))} } forEach _teams;
 _enStr = 0;
 { if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
+
+//--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.
+_lastStand = (_myTowns < 2) && (_myStr < (_enStr * 0.7));
+_stratMode = "spearhead"; //--- default; overridden below
+_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
+if (_lastStand) then {
+	_stratMode = "laststand";
+	_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
+	//--- Only set the flag the first time we enter last-stand.
+	if (!(_logik getVariable ["wfbe_aicom_laststand", false])) then {
+		_logik setVariable ["wfbe_aicom_laststand", true];
+		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] LAST-STAND - towns %2 strength %3v%4 - recalling all teams to HQ.", _sideText, _myTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
+	};
+	//--- Recall every non-garrison, non-HC AI team to HQ in defense posture.
+	{
+		_team = _x;
+		if (!isNull _team && {!isPlayer (leader _team)}) then {
+			//--- Clear relief and strike flags.
+			_team setVariable ["wfbe_aicom_relief", objNull];
+			_team setVariable ["wfbe_aicom_strike", false];
+			_team setVariable ["wfbe_aicom_townorder", []];
+			[_team, "defense"] Call SetTeamMoveMode;
+			[_team, getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)] Call SetTeamMovePos;
+		};
+	} forEach _teams;
+	_logik setVariable ["wfbe_aicom_strike_on", false];
+} else {
+	//--- Clear the last-stand flag once we recover above the threshold.
+	if (_logik getVariable ["wfbe_aicom_laststand", false]) then {
+		_logik setVariable ["wfbe_aicom_laststand", false];
+		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] last-stand lifted - towns %2 strength %3v%4.", _sideText, _myTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
+	};
+};
+
+//--- (Skipped while in last-stand posture - teams are defending HQ.)
+if (_lastStand) exitWith {};
 
 //--- 1) SPEARHEADS: COHERENT FRONT (V0.8, claude-gaming 2026-06-14). Rank enemy/neutral
 //--- towns by NEAREST-TO-OUR-FRONT first, with a small pull toward the enemy HQ, so the
@@ -212,6 +248,8 @@ _relieved = 0;
 				_free setVariable ["wfbe_aicom_relief", _town];
 				_free setVariable ["wfbe_aicom_relief_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_HOLD", 240])]; //--- punchy-AICOM (Ray 2026-06-17): hold-window stamp; released back to offense when it expires.
 				_relieved = _relieved + 1;
+				_stratMode = "relief";
+				_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] diverted to RELIEVE [%3] (under attack).", _sideText, _free, _town getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF|" + (_town getVariable ["name", "town"]));
 			};
@@ -280,12 +318,14 @@ _wasStrike = _logik getVariable ["wfbe_aicom_strike_on", false];
 _strikeOn = false;
 if (!isNull _enemyHQ && {alive _enemyHQ}) then {
 	if (_wasStrike) then {
-		_strikeOn = (_myTowns >= _enemyTowns * 1.2) && (_myStr >= _enStr);          //--- hysteresis: stay committed
+		_strikeOn = (_myTowns > 8) && (_myTowns >= _enemyTowns * 1.2) && (_myStr >= _enStr);          //--- hysteresis: stay committed; gate: must still own >8 towns
 	} else {
-		_strikeOn = (_myTowns >= 3) && (_myTowns >= _enemyTowns * 1.5) && (_myStr >= _enStr * 1.1);
+		_strikeOn = (_myTowns > 8) && (_myTowns >= _enemyTowns * 1.5) && (_myStr >= _enStr * 1.1);   //--- Steff's rule: never HQ-rush while behind on towns
 	};
 };
 if (_strikeOn) then {
+	_stratMode = "strike";
+	_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 	if (!_wasStrike) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched");

@@ -11,7 +11,7 @@
 
 scriptName "Server\FSM\server_side_patrols.sqf";
 
-private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide"];
+private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed"];
 
 waitUntil {townInitServer};
 sleep 30;
@@ -24,8 +24,32 @@ if (isNil "WFBE_ACTIVE_AICOM_TEAMS") then {WFBE_ACTIVE_AICOM_TEAMS = []; publicV
 
 _delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
 _max = missionNamespace getVariable "WFBE_C_SIDE_PATROLS_MAX";
+_scrubLast = -999;
 
 while {!WFBE_GameOver} do {
+	//--- PATROL-MARKER SCRUB: every ~20 s, purge dead-unit entries from WFBE_ACTIVE_PATROLS
+	//--- so HC-disconnect mid-patrol can't leave stale entries that JIP clients render.
+	//--- Uses explicit forEach (A2-safe; no select-with-code-filter).
+	if (time - _scrubLast > 20) then {
+		_kept = [];
+		_changed = false;
+		{
+			_entry = _x;
+			if (alive (_entry select 0)) then {
+				_kept set [count _kept, _entry];
+			} else {
+				_changed = true;
+			};
+		} forEach WFBE_ACTIVE_PATROLS;
+		if (_changed) then {
+			_removed = (count WFBE_ACTIVE_PATROLS) - (count _kept);
+			WFBE_ACTIVE_PATROLS = _kept;
+			publicVariable "WFBE_ACTIVE_PATROLS";
+			["INFORMATION", Format["server_side_patrols.sqf: scrub removed %1 dead-unit patrol entries from WFBE_ACTIVE_PATROLS.", _removed]] Call WFBE_CO_FNC_AICOMLog;
+		};
+		_scrubLast = time;
+	};
+
 	{
 		_side = _x;
 		_sideID = (_side) Call WFBE_CO_FNC_GetSideID;

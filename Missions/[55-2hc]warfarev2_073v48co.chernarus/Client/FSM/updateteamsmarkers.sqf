@@ -199,23 +199,13 @@ while {!gameOver} do {
 						} else {
 							_perfSkippedWrites = _perfSkippedWrites + 1;
 						};
-						//--- Marty/Claude: the orange arrow should point the way the player is MOVING, not
-						//--- where the unit FACES. getDir (vehicle/man heading) and movement heading diverge
-						//--- when strafing on foot, walking backwards, or sliding in a vehicle, so the arrow
-						//--- pointed wrong. Derive the heading from velocity while moving; fall back to
-						//--- getDir when ~stationary so the arrow doesn't jitter at rest. A2-OA-1.64-safe.
-						_vel = velocity _leaderVehicle;
-						_spd = sqrt (((_vel select 0) * (_vel select 0)) + ((_vel select 1) * (_vel select 1)));
-						if (_spd > 1.2 && {_leaderVehicle != _leader}) then {
-							//--- MARKER-DIR FIX (Ray 2026-06-19): only use the velocity-derived MOVEMENT heading when
-							//--- actually in a VEHICLE. A2 infantry `velocity` is animation-driven (often ~0 or stale),
-							//--- so for an on-foot player the velocity branch could freeze the arrow; foot now falls to
-							//--- getDir = facing heading, which updates reliably as the player turns.
-							_dir = (_vel select 0) atan2 (_vel select 1);
-							if (_dir < 0) then {_dir = _dir + 360};
-						} else {
-							_dir = getDir _leaderVehicle;
-						};
+						//--- MARKER-DIR FIX (Ray 2026-06-20): the arrow must point where the player is actually
+						//--- HEADING/FACING, not the way they are MOVING. The earlier velocity-derived heading
+						//--- diverged from the real bearing whenever the vehicle reversed, sideslipped or a heli
+						//--- slid, so the arrow pointed wrong. _leaderVehicle is `vehicle _leader`, so getDir on
+						//--- it is the player's facing heading and is correct ON FOOT and MOUNTED alike. This
+						//--- matches the patrol/AICOM arrow loops, which use plain getDir. A2-OA-1.64-safe.
+						_dir = getDir _leaderVehicle;
 						_lastDir = _lastDirs select _markerIndex;
 						_dirDiff = abs (_dir - _lastDir);
 						if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};

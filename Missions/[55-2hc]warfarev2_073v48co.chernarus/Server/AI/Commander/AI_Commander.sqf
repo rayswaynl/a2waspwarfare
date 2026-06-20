@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltBrief","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -69,7 +69,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	};
 };
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0;
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
@@ -78,6 +78,12 @@ _ltStipend = -1e9;
 _noHumanSince = -1;
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+
+//--- WAR-BRIEF: one-time [AICOM BOOT] snapshot (server groups, HC count, aiMax, starting funds).
+_grpCount = 0;
+{ if (side _x == _side) then {_grpCount = _grpCount + 1} } forEach allGroups;
+_hcCount = count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+["INFORMATION", Format ["AI_Commander.sqf: [AICOM BOOT] side=%1 serverGroups=%2 HCs=%3 aiMax=%4 startFunds=%5", str _side, _grpCount, _hcCount, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", -1], (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;
 
 //--- AI COMMANDER LOCK startup notice.
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
@@ -442,6 +448,20 @@ while {!gameOver} do {
 			_hRatio = if (_hMin > 0) then {(round ((_hMax / _hMin) * 10)) / 10} else {-1};
 			diag_log ("HCDELEG|v1|" + str (round (time / 60)) + "|liveHC=" + str (count _hcLive) + "|perHC=" + _hCsv + "|max=" + str _hMax + "|min=" + str _hMin + "|imbalance=" + str _hRatio);
 		};
+	};
+
+	//--- WAR-BRIEF: recurring [AICOM BRIEF] every ~300s (owned towns, funds, teams, doctrine, posture).
+	_briefTs = _logik getVariable ["wfbe_aicom_lastbrief", 0];
+	if (time - _briefTs > 300) then {
+		_briefTowns = 0;
+		_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+		{ if ((_x getVariable ["sideID", -1]) == _myID) then {_briefTowns = _briefTowns + 1} } forEach towns;
+		_briefFunds  = (_side) Call GetAICommanderFunds;
+		_briefTeams  = count (_logik getVariable ["wfbe_teams", []]);
+		_briefDoctrine = _logik getVariable ["wfbe_aicom_doctrine", "?"];
+		_briefStrat  = _logik getVariable ["wfbe_aicom_strat_mode", "?"];
+		["INFORMATION", Format ["AI_Commander.sqf: [AICOM BRIEF] side=%1 towns=%2 funds=%3 teams=%4 doctrine=%5 posture=%6", str _side, _briefTowns, _briefFunds, _briefTeams, _briefDoctrine, _briefStrat]] Call WFBE_CO_FNC_AICOMLog;
+		_logik setVariable ["wfbe_aicom_lastbrief", time];
 	};
 
 	sleep (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TICK");

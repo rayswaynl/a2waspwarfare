@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_crews", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_groups", "_i", "_lock", "_position", "_positions", "_retVal", "_side", "_sideID", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
+Private ["_built", "_builtveh", "_crews", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_groups", "_i", "_lock", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -86,6 +86,22 @@ for '_i' from 0 to count(_groups)-1 do {
 		//--- team created this episode (_town_teams). Enemies are still revealed (just once).
 		[_town_teams, _team] call WFBE_CO_FNC_ArrayPush;
 		_team allowFleeing 0; //--- Make the units brave.
+
+		//--- Town-defender skill spread: tight, near-baseline variation (garrison only).
+		{
+			if (_x isKindOf "Man") then {
+				_skillAcc     = 0.65 + random 0.30;
+				_skillScalar  = 0.80 + random 0.20;
+				_skillSpot    = 0.70 + random 0.25;
+				_skillSpeed   = 0.70 + random 0.25;
+				_skillCourage = 0.80 + random 0.20;
+				_x setSkill ["aimingAccuracy", _skillAcc];
+				_x setSkill ["aimingSpeed",    _skillSpeed];
+				_x setSkill ["spotDistance",   _skillSpot];
+				_x setSkill ["courage",        _skillCourage];
+				_x setSkill _skillScalar;
+			};
+		} forEach _units;
 	};
 
 	{

@@ -275,6 +275,28 @@ if (count _live > 0) then {
 	};
 	_template = _templates select _pick;
 
+	//--- B57 LARGER-GROUPS (Ray 2026-06-20): live teams are HC-founded at raw template size (3-6) and are NEVER
+	//--- filled afterwards (AI_Commander_Produce skips wfbe_aicom_hc teams = 100% of live teams). So pad infantry
+	//--- templates up to the team-size floor HERE, at founding, so every team founds at 8-12. Skip MBT/attack-heli
+	//--- templates (the vehicle is the punch). The price loop below then charges for the bigger team and CreateTeam
+	//--- builds it full on the HC. A2-OA-safe (no pushBack/A3 commands; +_template copies so the shared template isn't mutated).
+	private ["_sizeMin","_isBigVeh","_padClass"];
+	_sizeMin = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
+	_isBigVeh = false;
+	{
+		if (_x isKindOf "Tank") exitWith {_isBigVeh = true};
+		if ((_x isKindOf "Helicopter") && ((getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0)) exitWith {_isBigVeh = true};
+	} forEach _template;
+	if (!_isBigVeh) then {
+		_padClass = "";
+		{ if (_x isKindOf "Man") then {_padClass = _x} } forEach _template;
+		if ((_padClass != "") && (count _template < _sizeMin)) then {
+			_template = +_template;
+			while {count _template < _sizeMin} do { _template = _template + [_padClass] };
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B57 padded infantry team to floor (%2 units).", _sideText, count _template]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+
 	//--- Full template price from AI commander funds (whole-team purchase economics).
 	_price = 0;
 	{

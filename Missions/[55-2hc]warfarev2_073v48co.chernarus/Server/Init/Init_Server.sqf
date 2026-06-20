@@ -316,6 +316,17 @@ switch (missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE") do {
 };
 
 if (_use_random) then {
+	//--- B57 START-VARIETY FIX (Ray 2026-06-20): on a dedicated server each mission is a FRESH process, so A2's
+	//--- random() starts from the SAME deterministic state every match -> the "Random" start was always identical
+	//--- ("HQ always spawns at the same place"). Advance the RNG by a per-match-varying amount (a counter persisted
+	//--- in profileNamespace across restarts) so the start actually varies match-to-match. A2-OA-safe.
+	private ["_matchN","_dump"];
+	_matchN = (profileNamespace getVariable ["WFBE_MATCH_COUNTER", 0]) + 1;
+	profileNamespace setVariable ["WFBE_MATCH_COUNTER", _matchN];
+	saveProfileNamespace;
+	for "_b" from 1 to ((_matchN % 100) + 1) do { _dump = random 1 };
+	["INITIALIZATION", Format ["Init_Server.sqf: B57 start-RNG advanced %1 draws (match #%2) for start variety.", (_matchN % 100) + 1, _matchN]] Call WFBE_CO_FNC_LogContent;
+
 	while {true} do {
 		if (!_setWest && !_setEast && !_setGuer) exitWith {["INITIALIZATION", "Init_Server.sqf : All sides were placed [Random]."] Call WFBE_CO_FNC_LogContent};
 

@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder"];
 
 _side = _this;
 _sideText = str _side;
@@ -73,16 +73,27 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 		_hqP = (_side) Call WFBE_CO_FNC_GetSideHQ;
 		if (!isNull _hqP) then {
 			_ldr = leader _team;
-			if (_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])) then {
-				//--- FORWARD-REINFORCE: a deep team beyond base range may still refill if its
-				//--- leader is hugging an owned town (front-line resupply), so spearheads stop
-				//--- bleeding out far from HQ. The refill spawn point is pulled forward below.
-				_nearFwd = false;
-				if (_ownTowns > 0) then {
-					_fwdR = missionNamespace getVariable ["WFBE_C_AICOM_FWD_REINFORCE_RANGE", 500];
-					{ if (((_x getVariable "sideID") == _myID) && {(_ldr distance _x) < _fwdR}) exitWith {_nearFwd = true} } forEach towns;
+			_aliveNow = {alive _x} count (units _team);
+			//--- V0.6 RETREAT-AND-REFORM: badly depleted team far from HQ - order it back
+			//--- before trying to refill (refills spawn at the factory, not in the field).
+			if (_aliveNow < 2 && {(_ldr distance _hqP) > 800}) then {
+				_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
+				_retreatOrder = [_retreatSeq, "DEFENSE", getPosATL _hqP];
+				_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
+				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-and-reform ordered (alive=%3, dist=%4).", _sideText, _team, _aliveNow, (_ldr distance _hqP)]] Call WFBE_CO_FNC_AICOMLog;
+				_canProduce = false;
+			} else {
+				if (_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])) then {
+					//--- FORWARD-REINFORCE: a deep team beyond base range may still refill if its
+					//--- leader is hugging an owned town (front-line resupply), so spearheads stop
+					//--- bleeding out far from HQ. The refill spawn point is pulled forward below.
+					_nearFwd = false;
+					if (_ownTowns > 0) then {
+						_fwdR = missionNamespace getVariable ["WFBE_C_AICOM_FWD_REINFORCE_RANGE", 500];
+						{ if (((_x getVariable "sideID") == _myID) && {(_ldr distance _x) < _fwdR}) exitWith {_nearFwd = true} } forEach towns;
+					};
+					if (!_nearFwd) then {_canProduce = false};
 				};
-				if (!_nearFwd) then {_canProduce = false};
 			};
 		};
 	};
