@@ -7,22 +7,18 @@ Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeploye
 //--- ~L849 (BLACK IN). If client init stalls before that, this watchdog force-clears the fade after 45s
 //--- and logs it (so a recurring stall is visible in the client RPT). Happy-path joins set
 //--- clientInitComplete (~L1032) long after the fade clears, so this only fires on a genuine stall.
-//--- JIP FADE FIX v3 (2026-06-20 PERSISTENT): the 12452 BLACK fade (set in initJIPCompatible) is normally
-//--- cleared once at ~L868, but the client can RE-INIT repeatedly (HC-without-identity loop + role-count
-//--- mismatch -> ~24 re-inits observed), each re-applying a fresh 50000s BLACK FADED that OUTPACES a one-shot
-//--- clear -> player stranded on black while actually in-game (can walk / hear / read chat). So after init
-//--- (or the 45s stall timeout) keep clearing layer 12452 for ~45s so a late/re-applied fade can never
-//--- persist. Each re-init spawns a fresh window, so the clearing continues until the re-init loop settles.
-//--- Harmless no-op on healthy joins.
+//--- JIP FADE FIX v4 (2026-06-20): the v2/v3 watchdogs FROZE - they gated on waitUntil/sleep/clientInitComplete
+//--- before clearing, but while a JIP client sits on the stuck loading/black screen the SIM IS PAUSED: `sleep`
+//--- suspends, mission `time` never advances, and clientInitComplete never sets -> the gate never opens -> the
+//--- clear never runs (this is why B49/B52/B53 silently did nothing). v4 clears layer 12452 IMMEDIATELY and
+//--- repeatedly with `uiSleep` (real-time, keeps ticking while the sim is paused) and NO gate, so a
+//--- black-stranded JIP player is freed within ~1s even through the ~25x re-init churn. Harmless on healthy
+//--- joins. (Root cause - the re-init churn from the [55] name vs 34-role mismatch + HC-without-identity loop -
+//--- is a separate server-side fix; this frees the screen regardless.)
 [] spawn {
-	private "_t0"; _t0 = time;
-	waitUntil { sleep 0.5; clientInitComplete || (time - _t0 > 45) };
-	if (!clientInitComplete) then {
-		diag_log format ["[INIT SAFETY] Client init stalled >45s - force-clearing BLACK fade (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
-	};
-	for "_fk" from 1 to 30 do {
-		12452 cutText ["", "BLACK IN", 1];
-		sleep 1.5;
+	for "_fk" from 1 to 90 do {
+		12452 cutText ["", "PLAIN", 0];
+		uiSleep 1;
 	};
 };
 
