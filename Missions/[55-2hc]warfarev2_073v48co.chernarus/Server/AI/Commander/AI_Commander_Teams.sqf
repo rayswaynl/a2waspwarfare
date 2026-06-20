@@ -280,8 +280,16 @@ if (count _live > 0) then {
 	//--- templates up to the team-size floor HERE, at founding, so every team founds at 8-12. Skip MBT/attack-heli
 	//--- templates (the vehicle is the punch). The price loop below then charges for the bigger team and CreateTeam
 	//--- builds it full on the HC. A2-OA-safe (no pushBack/A3 commands; +_template copies so the shared template isn't mutated).
-	private ["_sizeMin","_isBigVeh","_padClass"];
-	_sizeMin = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
+	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): pad to FOUND_SIZE (midband), not the
+	//--- raw MIN floor. HC-founded teams are never refilled, so founding at the floor lets the live
+	//--- average dribble below the 8-12 band (soak measured 4.2-5.1). FOUND_SIZE defaults to MIN if unset
+	//--- and is clamped into [MIN,MAX]; behaviour is identical to before when FOUND_SIZE == MIN.
+	private ["_sizeMin","_sizeMax","_foundSize","_isBigVeh","_padClass"];
+	_sizeMin   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
+	_sizeMax   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+	_foundSize = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_FOUND_SIZE", _sizeMin];
+	if (_foundSize < _sizeMin) then {_foundSize = _sizeMin};
+	if (_foundSize > _sizeMax) then {_foundSize = _sizeMax};
 	_isBigVeh = false;
 	{
 		if (_x isKindOf "Tank") exitWith {_isBigVeh = true};
@@ -290,10 +298,10 @@ if (count _live > 0) then {
 	if (!_isBigVeh) then {
 		_padClass = "";
 		{ if (_x isKindOf "Man") then {_padClass = _x} } forEach _template;
-		if ((_padClass != "") && (count _template < _sizeMin)) then {
+		if ((_padClass != "") && (count _template < _foundSize)) then {
 			_template = +_template;
-			while {count _template < _sizeMin} do { _template = _template + [_padClass] };
-			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B57 padded infantry team to floor (%2 units).", _sideText, count _template]] Call WFBE_CO_FNC_AICOMLog;
+			while {count _template < _foundSize} do { _template = _template + [_padClass] };
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B57 padded infantry team to found-size (%2 units).", _sideText, count _template]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
 
