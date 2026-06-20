@@ -258,7 +258,7 @@ while {!gameOver} do {
 				_w6Eligible    = false;
 				_w6AirTemplate = [];          //--- resolved elite air-assault template (class array)
 				_w6AirTier     = -1;          //--- its air-upgrade requirement (higher = more elite)
-				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}}) then {
+				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])}) then {  //--- B59 (Ray 2026-06-20): gate W6 Air Cavalry on air research + established towns (mirror W13/Produce) so no early/ungated Mi-24
 					_w6Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
 					_w6TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
 					{
@@ -268,7 +268,7 @@ while {!gameOver} do {
 							//--- First class must be a troop-capable AIR transport (drives air-insertion).
 							if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
 							    && {_w6Lead isKindOf "Air"}
-							    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+							    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0} && {({_x isKindOf "Man"} count _w6Cand) > 0} && {({_x isKindOf "Plane"} count _w6Cand) == 0}) then {
 								//--- "Elite" = pick the template with the highest AIR-tier requirement
 								//--- (its WFBE_<side>AITEAMUPGRADES[3] slot); ties keep the first found.
 								_w6CandTier = 0;
@@ -658,7 +658,7 @@ while {!gameOver} do {
 									_w6Lead = _w6Cand select 0;
 									if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
 									    && {_w6Lead isKindOf "Air"}
-									    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+									    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0} && {({_x isKindOf "Man"} count _w6Cand) > 0} && {({_x isKindOf "Plane"} count _w6Cand) == 0}) then {
 										_w6CandTier = 0;
 										_w6Idx = _w6Tmpls find _w6Cand;
 										if (_w6Idx >= 0 && {_w6Idx < count _w6TmplUps}) then {
@@ -1085,7 +1085,7 @@ while {!gameOver} do {
 										_w6Lead = _w6Cand select 0;
 										if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
 										    && {_w6Lead isKindOf "Air"}
-										    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+										    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0} && {({_x isKindOf "Man"} count _w6Cand) > 0} && {({_x isKindOf "Plane"} count _w6Cand) == 0}) then {
 											_w6CandTier = 0;
 											_w6Idx = _w6Tmpls find _w6Cand;
 											if (_w6Idx >= 0 && {_w6Idx < count _w6TmplUps}) then {

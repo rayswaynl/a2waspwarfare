@@ -229,7 +229,7 @@ _rPosW = [0,0,0];
 _rPosE = [0,0,0];
 _setWest = if (_present_west) then {true} else {false};
 _setEast = if (_present_east) then {true} else {false};
-_setGuer = if (_present_res) then {true} else {false};
+_setGuer = false; //--- B59 (Ray 2026-06-20): was 'if (_present_res) then {true} else {false}'. GUER is base-less/harass-only and is NEVER placed in this loop, so _setGuer=true pinned the exit (L331) open -> the loop always ran to _maxAttempts and force-fell to the FIXED wfbe_default markers (=identical spawn every match). false lets it exit once WEST+EAST are placed = genuine random placement. Rollback: if (_present_res) then {true} else {false}.
 _total = count _locationLogics;
 
 _use_random = false;

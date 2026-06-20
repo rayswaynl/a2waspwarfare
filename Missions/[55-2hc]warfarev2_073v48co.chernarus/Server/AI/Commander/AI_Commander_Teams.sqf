@@ -204,6 +204,21 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith {};
 
+	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
+	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
+	//--- air factory. Mirror AI_Commander_Produce.sqf:47-52: until the side holds >= WFBE_C_AICOM_AIR_MIN_TOWNS
+	//--- towns, strip ALL air templates from _eligible (FPS-safe; air is a late, established-only asset).
+	private ["_rosterMyID","_rosterOwnTowns","_eligNoAir"];
+	_rosterMyID = (_side) Call WFBE_CO_FNC_GetSideID;
+	_rosterOwnTowns = 0;
+	{ if ((_x getVariable "sideID") == _rosterMyID) then {_rosterOwnTowns = _rosterOwnTowns + 1} } forEach towns;
+	if (_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+		_eligNoAir = [];
+		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
+		_eligible = _eligNoAir;
+	};
+	if (count _eligible == 0) exitWith {};
+
 	//--- P1 combined-arms picker (claude-gaming 2026-06-15). Mirror of AI_Commander_AssignTypes.sqf:
 	//--- the old doctrine-only weighting (70% one vehicle track, 30% UNIFORM over all eligible) averaged
 	//--- ~70% infantry because infantry templates unlock first and stay eligible all match while vehicle
@@ -268,6 +283,7 @@ if (count _live > 0) then {
 			_w7Idx = _x;
 			_w7U   = _tmplUpgrades select _w7Idx;
 			_w7Score = (_w7U select 0) + (_w7U select 1) + (_w7U select 2) + (_w7U select 3);
+			if (({_x isKindOf "Plane"} count (_templates select _w7Idx)) > 0) then {_w7Score = -1}; //--- B59 jet-spam fix (Ray 2026-06-20): demote fixed-wing so W7 never promotes a jet squadron (the W7 scan was unfiltered; mirrors the L226 helicopters-only bucket filter).
 			if (_w7Score > _w7Best) then {_w7Best = _w7Score; _w7BestIdx = _w7Idx};
 		} forEach _eligible;
 		_pick = _w7BestIdx;
