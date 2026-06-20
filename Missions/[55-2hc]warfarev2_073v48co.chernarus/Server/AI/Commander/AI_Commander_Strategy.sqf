@@ -385,6 +385,18 @@ _posture = if (_strikeOn) then {"HQ_STRIKE"} else {
 diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|strikeOn=" + str _strikeOn);
 _primT = if (count _targets > 0) then {_targets select 0} else {objNull};
 diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
+//--- B58 SOAK DRAFT (2026-06-21, claude-gaming, propose-only): surface the DOMINANT-BUT-PASSIVE stall.
+//--- The live soak FROZE at WEST 6 towns vs EAST 1 for ~5.5h with BOTH sides in DEFEND and ZERO new
+//--- captures. Mechanism: the territorial leader garrisons many towns, so its MANEUVER strength (_myStr)
+//--- dribbles BELOW the concentrated enemy's, which trips the "_myStr < _enStr -> DEFEND" gate above and
+//--- PRESS never fires - the side that is WINNING on holdings goes passive. This is telemetry-ONLY (no
+//--- behaviour change): emit a STALL flag whenever a side holds >=2x the enemy's towns yet is not PRESSing
+//--- and is not under HQ strike, so future soak ticks make the freeze greppable and we can size the real
+//--- fix (territory-weighted aggression / garrison-vs-maneuver strength split - see B57-SOAK-PROPOSALS.md).
+//--- A2-OA-safe: pure diag_log, all operands already computed this tick; no sim/distance-gating; no antistack.
+if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * 2)} && {_posture != "PRESS"} && {!_strikeOn}) then {
+	diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr);
+};
 // END POSTURE + FRONT
 
 //--- 4) ARTILLERY: soften the spearhead town or the enemy HQ - never near friendlies.

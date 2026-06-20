@@ -100,6 +100,25 @@ slot reorder, marker fix, and a paced economy.
   **NOT drafted in-code** this cycle: the unstuck path is delicate (a wrong touch risks a frozen/standing AI,
   which is forbidden) — investigate the stranded↔strike coupling with Ray before drafting.
 
+- 2026-06-21 00:15 [draft-coded] — **THE FRONT FROZE — dominant-but-passive stall, root-caused + diagnostic drafted.**
+  16h read (B58 ticks 13→28, ~20:00→00:00): **captures flatlined at WASPSTAT=7 for ~5.5h** (tick 17 onward) and
+  BOTH sides sat in **DEFEND** the entire back half despite WEST holding **6 towns vs EAST 1**. Root cause found in
+  `AI_Commander_Strategy.sqf:380-384`: PRESS is gated `_myTowns >= enTowns*1.2 && {_myStr >= _enStr}`, and DEFEND
+  triggers outright on `_myStr < _enStr`. WEST's maneuver strength ran **61–77 vs EAST 77–90** the whole back half —
+  i.e. the *territorial leader had the LOWER army strength* because it garrisons 6 towns while EAST concentrates in 1.
+  So WEST trips `_myStr < _enStr → DEFEND` and never PRESSes; EAST has fewer towns so it also DEFENDs → mutual freeze.
+  **Caveat:** that posture block is *telemetry-only* (it logs, it doesn't drive dispatch), so the behavioural fix lives
+  in the real target/assault path, not here. Drafted THIS cycle (additive, behaviour-neutral): a **STALL diag** emitted
+  whenever a side holds ≥2× the enemy's towns yet isn't PRESSing (`AI_Commander_Strategy.sqf`, after the FRONT line) so
+  the freeze is greppable next round. A2-OA-safe: pure `diag_log`, no sim/distance-gating, no antistack.
+  **Real fix (idea, NOT coded):** split strength into *garrison* vs *maneuver* and gate PRESS on maneuver mass only, OR
+  weight aggression by town-dominance so a 6:1 leader presses even at slightly-lower total strength. Review with Ray.
+- 2026-06-21 00:15 [idea] — **EAST spearhead STILL frozen on Berezino (distFront=1752) — now confirmed across the whole
+  overnight run.** Every tick 13→28 shows `EAST spearhead=Berezino distFront=1752 onFront=true` unchanged; EAST never
+  re-picks a nearer reachable town and never advances. This is the same frozen-spearhead bug filed at 8h, now with a
+  full-night of evidence — promote the "re-pick nearest-reachable when distFront doesn't shrink for N ticks" fix
+  (`AI_Commander_Strategy.sqf` spearhead block, lifting the reach rule from `AI_Commander_AssignTowns.sqf:254-345`).
+
 ## AI unit improvements
 <!-- per-unit/per-group behaviour: pathing, unstuck, garrison, engagement, rearm/heal detours. -->
 
@@ -184,6 +203,20 @@ slot reorder, marker fix, and a paced economy.
   on stock BIS building models (`housev_1i1_dam.p3d`, `mil_house_dam.p3d`) — not mission code. **Top error
   file+line: N/A — clean run.**
 
+- 2026-06-21 00:15 [idea] — **Server FPS green for the full overnight (16h+).** SRVPERF across ticks 13→28 held
+  **39–46** (band centre ~43), **min 35** at tick 15 (peak load 375 units / 108 groups / 70 veh), max 46 — same gentle
+  unit-count tracking, no leak, no degradation. **Both HCs alive the entire window, ZERO drops, ZERO disconnects.**
+  HC fps mostly 45–49 (earlier transient dip to 16 at tick 10 recovered). No crash / exception / OOM / access-violation
+  markers anywhere in the round. One `WaspCleanRestart` RERUN fired back at ~12:17 (B57, procs 1/3) and recovered
+  cleanly into B58 — stable since.
+- 2026-06-21 00:15 [idea] — **Founding-pad now firing at SCALE and visible in impressions.** Tick 28 impressions read
+  `padded=75 / sample=[WEST] B57 padded infantry team to found-size (10 units)` — the larger-group feature is confirmed
+  firing en masse, and the soak-parser match (the "to found-size" vs "to floor" gap flagged at 12h) is now catching it.
+  `foundedTeams=10` both sides every tick, `remnants=0`, `srvTeams=0` — clean HC-only lifecycle held all night.
+- 2026-06-21 00:15 [idea] — **Town-AI delegation to 2 HCs held perfectly.** Every Performance-Audit shows
+  `delegated == groups` (e.g. `groups:7;delegated:7;headless:2`), AVG_MS mostly 0–2ms with occasional 19–31ms
+  town-spawn spikes. 749 `ASSAULT_DISPATCH` over the round — AICOM is busy, not idle.
+
 ### Broken
 - 2026-06-20 20:00 [idea] — **#1 behavioural bug at 12h: recurring WEST assault-stranding.** 21
   `ASSAULT_STRANDED` (all WEST, same teams, `moved=0`), 156 unstuck-strikes + 700 retreat-reforms NOT freeing
@@ -215,6 +248,25 @@ slot reorder, marker fix, and a paced economy.
   `B58 founding: padded=0 / sample=empty` even though founding clearly fires (founded 5→49, 4–11-unit
   registrations). The soak parser's "padded" counter + sample string match the B57 log wording, not B58's.
   Fix the parser's match string so the larger-group feature stays visible in the next round's impressions.
+
+- 2026-06-21 00:15 [idea] — **#1 NEW bug at 16h: ~20.8k "Message not sent" failures to BOTH HCs — and the soak harness
+  is BLIND to it.** RPT current round: **10,413× `Message not sent - error 0, message ID = ffffffff, to 2087614107
+  (HC)`** + **10,413× `... to 1774952748 (HC2)`** = ~20,826 lines, which started partway through the round and now hold
+  steady at ~4,700–5,000 per 10k log lines (≈**50% of all log output** in the back half). The impressions accumulator
+  reports `err=0 undef=0` because its counter only matches `Error in expression` / `Undefined variable` — it does NOT
+  match this engine/network-layer class, so a log that is half-error reads as "clean". **Two actions:** (1) widen the
+  soak parser to count `Message not sent` (and the `Object … not found (message N)` family) so this surfaces in
+  impressions; (2) investigate the broadcast that's failing to reach both HCs — `error 0, ID=ffffffff` is a publicVariable
+  /netobject send to a target the server thinks is gone or never registered. It is NOT a script error (zero of those)
+  and FPS held ~43 through it, but 20k failed sends/round is a real signal — possibly a per-tick AICOM broadcast aimed
+  at a stale HC handle. Pair with the HC-load concentration note below.
+- 2026-06-21 00:15 [idea] — **505 stuck events overnight; the unstuck/abandon ladder works but a lot reach strike-5.**
+  STUCKSTAT this round: 505 stuck, escalating strike1=129→strike5=86, with **371 `UNSTUCK_STRIKE` reissues + 86
+  `TARGET_ABANDON`** (600s cooldown). The system IS resolving them (no permanent freeze), but 86 groups grinding to
+  strike-5 before abandoning — last lines show pilots/crew stuck at distTgt 2700–3700 — is the same long-leg
+  vehicle-wedge pattern as the 12h `ASSAULT_STRANDED` finding. The dismount-after-N-strikes idea (AI unit section)
+  and the stranded→strike-counter coupling (AI Commander section) both target this. Minor co-noise: 408×
+  `Object N:N not found (message 132)` + 190× client `Object not found` (benign net-sync races).
 
 ## Balance
 <!-- economy, team comps, vehicle mix, town garrison strength, side parity, capture pacing. -->
@@ -249,6 +301,19 @@ slot reorder, marker fix, and a paced economy.
   metric is shown to blend 10-man infantry with 4-man vehicle crews (see AICOM draft), the inf/veh split must
   land first. Tuning per-side template prices or the `PC_LOW` curve off the blended 6.3/7.3 would over-correct.
   Read `infPerTeam` (the real attrition signal) next round before any economy change.
+
+- 2026-06-21 00:15 [idea] — **The war stalemated, not because of parity but because the *winner* went passive.** WEST
+  reached 6:1 towns by ~18:00 then captures FROZE for ~5.5h with both sides DEFEND (full detail under *AI Commander*).
+  This is a *balance-shaped* problem too: holding towns saps maneuver strength (garrison drain) faster than the paced
+  economy (`SUPPLY_INCOME_MULT=0.35`) can refund it, so a 6-town leader can't muster a pushing fist. The lever isn't
+  garrison strength or drain — it's **decoupling "press" from total strength** (gate on maneuver mass, or give the
+  territorial leader an aggression bonus). Do NOT raise income or garrison numbers to paper over it; that just inflates
+  the stalemate. Re-measure flips/hour after the press-gate fix lands.
+- 2026-06-21 00:15 [idea] — **HC load still looks concentrated (re-confirm target for the top-up + spread work).** The
+  ~20.8k failed sends split EXACTLY evenly across both HCs (10,413 each), so both are addressed — but the earlier
+  `perHC=196:0` unit-load skew + HC-2 fps dips remain the leading late-soak instability candidate. With both HCs proven
+  to survive 16h+ here, this is now a *load-balance/tuning* item, not a stability emergency — fold it into the team-spread
+  proposal rather than treating it as a fire.
 
 ## Player spectacle & cinematics (incl. AI-generated cinematics)
 <!-- things that make the war feel alive for players to watch/join; ideas for AI-generated
@@ -296,6 +361,23 @@ slot reorder, marker fix, and a paced economy.
   (156 unstuck attempts side-wide)`. Feed the per-team `ASSAULT_STRANDED`/`UNSTUCK_STRIKE` streaks to the LLM
   recap as colour ("the team that wouldn't quit" / "the wedged BMP of Stary Sobor"). Free narrative texture
   from logs we already emit; makes the AI war feel like it has characters.
+
+- 2026-06-21 00:15 [idea] — **"Stalemate-breaker" auto-event for spectacle, driven by the new STALL flag.** The drafted
+  `AICOMSTAT|...|STALL` line (this cycle) makes a frozen front machine-detectable. Out-of-game, a STALL that persists N
+  ticks can trigger a scripted *spectacle beat* — e.g. an AI-narrated "the front has hardened at Stary Sobor; neither
+  commander will blink" interstitial, or an in-engine cue to spin the auto-director cam onto the contested town so
+  watchers see the deadlock as drama rather than a dead feed. The freeze that's a *bug* for the war is *tension* for the
+  audience — surface it deliberately instead of hiding it.
+- 2026-06-21 00:15 [idea] — **"Whole-night in 90 seconds" timelapse, now that we have a full overnight round.** This run
+  is a clean 16h+ continuous round: 7 captures, a 6:1 sweep, a 5.5h deadlock, 749 assault dispatches, 505 stuck/recover
+  beats. It's the perfect first input for the animated war-map timelapse + LLM voiceover pipeline already filed — the
+  arc (rapid WEST sweep → grinding freeze) is genuinely a *story*. Recommend making THIS round the proof-of-concept for
+  the end-of-round AI recap before the next soak. Pure log parse, zero server cost.
+- 2026-06-21 00:15 [idea] — **Director-cam priority = the *contested* town, not the spearhead.** With the front frozen,
+  "cut to the spearhead" shows two armies standing off at distFront=1752 doing nothing — boring. Better heuristic for the
+  auto-director: rank candidate cam targets by **live combat density** (`count nearEntities [["Man"],500]` × recent KILL
+  events near the town from `WASPSTAT`), so the camera always finds where bullets are actually flying even when the
+  strategic map is static. A2-OA-safe (camCreate/camSetTarget + nearEntities; read-only on AI, no gating).
 
 ## Bugs found
 <!-- script errors (Error in expression), broken markers, stuck teams, dropped HCs, etc.
@@ -348,3 +430,16 @@ slot reorder, marker fix, and a paced economy.
 - 2026-06-20 20:00 [idea] — **Still ZERO `Error in expression` / script errors at 12h.** Only engine messages
   are 2× cosmetic `Hitpoint Hitglass not found` on stock BIS building models — not mission code. **Top error
   file+line: N/A — clean run.** No dropped HCs, no disconnects, no JIP errors in the current round.
+
+- 2026-06-21 00:15 [idea] — **STILL zero SQF script errors at 16h, BUT the log is now ~50% engine "Message not sent"
+  noise.** Confirmed again: 0 `Error in expression`, 0 `Error position`, 0 `Undefined variable`, 0 `#file line`
+  offenders — the mission code is clean. The headline of the round is the **~20,826 `Message not sent - error 0,
+  message ID = ffffffff, to <HC>/<HC2>`** failures (10,413 each) detailed under *Functions → Broken*. **Top error
+  file+line: still N/A (no script error carries one)** — this class is engine/network-layer, not script. Action filed:
+  widen the soak parser to count it (so `err=` stops reading 0 on a half-error log) + investigate the failing HC
+  broadcast. No dropped HCs, no disconnects, no crash markers — the server is healthy, the *log* is noisy.
+- 2026-06-21 00:15 [idea] — **Soak-progress note (freshness caveat).** RPT round-tick reached **t=663**, slightly ahead
+  of impressions' last logged tick (t=648 @ tick 28, 23:48) — consistent with a live, continuing round. One oddity to
+  confirm with Ray: the RPT file's last-write mtime read as `2026-06-20 15:00:26` (a box clock/timezone skew vs the
+  23:48 impressions tick), so double-check the server is still writing/running before the next 4h slice rather than
+  trusting mtime. Round content itself is current (t advancing, FPS reports live).
