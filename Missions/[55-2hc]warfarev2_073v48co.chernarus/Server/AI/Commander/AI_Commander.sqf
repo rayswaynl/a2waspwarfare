@@ -349,7 +349,17 @@ while {!gameOver} do {
 		//--- Mirrors the proven group-getVariable[name,default] form on line 255; local() is checked on
 		//--- the LEADER (an Object) never on the group (A2 OA 1.64 trap); team-type index bounds-guarded.
 		private ["_srvTeams","_hcTeams","_foundedN","_aliveSum","_remnants","_cmdrTpl","_isHc","_isFounded","_aliveN","_tt","_tplSize","_upt","_ldr"];
+		//--- SOAK DRAFT (claude-gaming 2026-06-20, propose-only, behaviour-neutral): the blended
+		//--- unitsPerTeam reads BELOW the 8-12 floor (live 6.3/7.3) but RPT confirms infantry founds
+		//--- at 10 (founding-pad fires) while 4-man vehicle/armour teams (correctly NOT padded) drag
+		//--- the AVERAGE down. So the "below floor" alarm is partly a metric artifact. Split the live
+		//--- average into infantry vs vehicle so the AM review can see the real infantry dribble
+		//--- (attrition with no HC refill) separate from intended small vehicle crews. Pure additive
+		//--- diag_log fields appended AFTER unitsPerTeam= (parser-compatible). A2-OA-safe: isKindOf /
+		//--- getNumber / count only, no A3 commands, no sim/distance-gating, no antistack touch.
+		private ["_infSum","_infN","_vehSum","_vehN","_isVehTeam","_uptInf","_uptVeh"];
 		_srvTeams = 0; _hcTeams = 0; _foundedN = 0; _aliveSum = 0; _remnants = 0;
+		_infSum = 0; _infN = 0; _vehSum = 0; _vehN = 0;
 		_cmdrTpl = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", str _side], []];
 		{
 			if (!isNull _x) then {
@@ -363,16 +373,29 @@ while {!gameOver} do {
 					_aliveN = {alive _x} count (units _x);
 					_aliveSum = _aliveSum + _aliveN;
 					_tt = _x getVariable ["wfbe_teamtype", -1];
+					//--- SOAK DRAFT: classify the team as VEHICLE (Tank or non-transport heli in its
+					//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
+					//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>
+					//--- infantry bucket (the common case). First match wins (exitWith).
+					_isVehTeam = false;
 					if (_tt >= 0 && {_tt < (count _cmdrTpl)}) then {
 						_tplSize = count (_cmdrTpl select _tt);
 						if (_aliveN > 0 && {_tplSize > 0} && {_aliveN < (ceil (0.30 * _tplSize))}) then {_remnants = _remnants + 1};
+						{
+							if (_x isKindOf "Tank") exitWith {_isVehTeam = true};
+							if ((_x isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0}) exitWith {_isVehTeam = true};
+						} forEach (_cmdrTpl select _tt);
 					};
+					if (_isVehTeam) then {_vehSum = _vehSum + _aliveN; _vehN = _vehN + 1} else {_infSum = _infSum + _aliveN; _infN = _infN + 1};
 				};
 			};
 		} forEach (_logik getVariable ["wfbe_teams", []]);
 		_upt = 0;
 		if (_foundedN > 0) then {_upt = (round ((_aliveSum / _foundedN) * 10)) / 10};
-		diag_log ("CMDRSTAT|v1|" + (str _side) + "|" + str _elMin + "|srvTeams=" + str _srvTeams + "|hcTeams=" + str _hcTeams + "|foundedTeams=" + str _foundedN + "|unitsPerTeam=" + str _upt + "|remnants=" + str _remnants);
+		//--- SOAK DRAFT: per-bucket averages (0 when a side has no team of that bucket this tick).
+		_uptInf = 0; if (_infN > 0) then {_uptInf = (round ((_infSum / _infN) * 10)) / 10};
+		_uptVeh = 0; if (_vehN > 0) then {_uptVeh = (round ((_vehSum / _vehN) * 10)) / 10};
+		diag_log ("CMDRSTAT|v1|" + (str _side) + "|" + str _elMin + "|srvTeams=" + str _srvTeams + "|hcTeams=" + str _hcTeams + "|foundedTeams=" + str _foundedN + "|unitsPerTeam=" + str _upt + "|remnants=" + str _remnants + "|infPerTeam=" + str _uptInf + "|infTeams=" + str _infN + "|vehPerTeam=" + str _uptVeh + "|vehTeams=" + str _vehN);
 
 		//--- COMBATSTAT (claude-gaming 2026-06-15): periodic per-side combat-attrition delta from the
 		//--- FREE cumulative counters WF_Logic already maintains (Common_UpdateStatistics writes

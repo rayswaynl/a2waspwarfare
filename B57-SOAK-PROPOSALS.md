@@ -72,6 +72,34 @@ slot reorder, marker fix, and a paced economy.
   `AI_Commander_AssignTowns.sqf:254-345` — lift the same nearest-reachable rule into the spearhead picker).
   A2-OA-safe (selection logic only, no gating).
 
+- 2026-06-20 20:00 [draft-coded] — **`unitsPerTeam` is a BLENDED metric — the "below floor" alarm is partly an artifact.**
+  12h RPT (B58, one continuous round) DEFINITIVELY confirms the founding-pad fires: **19× `B57 padded
+  infantry team to found-size (10 units)`**, and the founding-size distribution is **76% at 8+, 16 teams at
+  10+, avg 8.59** (`AI_Commander_Teams.sqf:298-306`). Infantry founds BIG. The live `unitsPerTeam` still
+  reads ~6.3 (WEST)/7.3 (EAST) because the average BLENDS 10-man padded infantry with **8 teams that found at
+  exactly 4 units** — these are vehicle/armour crews the pad correctly skips (`_isBigVeh`, Teams.sqf:294-297).
+  So the headline "below floor" from the 4h/8h reports is partly a **measurement artifact**, not a founding
+  failure. Draft committed: CMDRSTAT now emits an additive **`infPerTeam`/`vehPerTeam`/`infTeams`/`vehTeams`**
+  split (`AI_Commander.sqf:351-396`), keeping `unitsPerTeam=` intact so the soak parser stays compatible.
+  Pure diag_log, behaviour-neutral, A2-OA-safe (`isKindOf`/`getNumber`/`count` only; no sim/distance-gating;
+  no antistack). Next round will show whether the *infantry* average alone is genuinely dribbling (→ promote
+  the HC top-up) or holding near 10 (→ stand down the alarm).
+- 2026-06-20 20:00 [idea] — **Recurring WEST assault-stranding the unstuck/abandon ladder is NOT resolving.**
+  12h RPT: **21× `ASSAULT_STRANDED`, ALL WEST** (zero EAST), recurring on the SAME teams (`B 1-3-G`, `B 1-3-A`,
+  `B 1-2-M`) toward Kabanino/Stary Sobor, `moved=0 stuck=true elapsed≈482` each time — e.g.
+  `ASSAULT_STRANDED|team=B 1-3-G|town=Kabanino|dist=1753|elapsed=483|moved=0|stuck=true`. Meanwhile the side
+  fired **156 `UNSTUCK_STRIKE` + 700 retreat-and-reform** and STILL the same teams re-strand. The
+  TARGET_ABANDON blacklist exists (`AI_Commander_AssignTowns.sqf:202-219`, fires after
+  `WFBE_C_AICOM_STUCK_ABANDON=4` strikes, cooldown 600s) but the dist=1753–4420 mounted long-legs suggest the
+  team's **vehicle is wedged** (moved=0) faster than the strike counter on the assign-towns tick accumulates,
+  OR the team blacklists Kabanino, waits out the 600s cooldown, then re-picks the same nearest spearhead and
+  re-grinds. Proposal: feed `ASSAULT_STRANDED` (moved≈0 over the ~482s window) DIRECTLY into the strike
+  counter so a genuinely-immobile team trips TARGET_ABANDON regardless of re-issue cadence; and on the Nth
+  strand of the SAME (team,town) pair, lengthen that pair's cooldown (escalating, not flat 600s) so it stops
+  cycling back. A2-OA-safe (selection/counter logic only, never freezes a team — abandon always re-targets).
+  **NOT drafted in-code** this cycle: the unstuck path is delicate (a wrong touch risks a frozen/standing AI,
+  which is forbidden) — investigate the stranded↔strike coupling with Ray before drafting.
+
 ## AI unit improvements
 <!-- per-unit/per-group behaviour: pathing, unstuck, garrison, engagement, rearm/heal detours. -->
 
@@ -94,6 +122,17 @@ slot reorder, marker fix, and a paced economy.
   Lightweight per-team self-preserve (heal/rearm detour when below strength, not in contact, near own
   vehicle/depot) — must re-wake to offense on enemy proximity (never a standing-still AI) and not sim-gate.
   Pairs with the top-up pass (top-up replaces the dead; heal/rearm slows the dying).
+
+- 2026-06-20 20:00 [idea] — **Unstuck ladder fires hard but can't free the *recurring* stranded teams.**
+  At 4h the ladder looked great (39 strikes, all recovered). At 12h it is at **156 `UNSTUCK_STRIKE` + 700
+  retreat-and-reform** yet the SAME WEST teams (`B 1-3-G`, `B 1-3-A`) re-strand with `moved=0` at the same
+  towns — the Tier1→3 ladder (`Common_RunCommanderTeam.sqf:449-475` / executor `wfbe_aicom_unstuck`) recovers
+  transient stucks but not these persistent ones. Hypothesis: it's the team's **vehicle** that is wedged on
+  terrain (these are mounted long-legs, dist 1753–4420). Proposal: after N unstuck strikes on a team that
+  still reports `moved≈0`, **force-dismount** (crew leaves the wedged vehicle and continues to the objective
+  on foot) instead of re-nudging the hull forever. A2-OA-safe (`moveOut`/`leaveVehicle`/`orderGetIn false`,
+  all 1.64) and never freezes AI — they immediately continue toward the town on foot. Verify it doesn't
+  strand them worse far from target before drafting; pairs with the AICOM stranded→abandon coupling above.
 
 ## Functions: working / broken
 <!-- which mission functions / features are confirmed WORKING vs BROKEN this soak, with evidence. -->
@@ -127,7 +166,32 @@ slot reorder, marker fix, and a paced economy.
   Founding pad fires (founded 5→49, registered 4–11 units). AICOM busy: ASSAULT 243, UPGRADE 110, TEAM 81,
   ECONOMY 72, WEDGE 15; AI peaked 446 units.
 
+- 2026-06-20 20:00 [idea] — **Founding-pad / larger-groups: CONFIRMED FIRING on B58 (corrects the record).**
+  The 4h/8h impressions logged `padded=0 / sample=empty` and the feature was suspected dead. 12h RPT proves
+  it WORKS: **19× `AI_Commander_Teams.sqf: [SIDE] B57 padded infantry team to found-size (10 units)`**, every
+  pad to 10; founding distribution avg 8.59, 76% at 8+, 16 teams at 10+. The impressions `padded=0` is a
+  **soak-parser bug** — the parser matches the old wording ("…to floor") but the live log says "…to
+  **found-size**". Fix the harness match string (in `wasp-b57-soak`, outside this repo) so the feature stays
+  visible; the feature itself is green. `foundedTeams=10` both sides, `remnants=0`, `srvTeams=0` (clean
+  HC-only lifecycle).
+- 2026-06-20 20:00 [idea] — **Server FPS still green at 12h.** SRVPERF flat **~43 (band 41–44)** across the
+  whole window, **min 35** (single dip at peak 375 units), max 45, zero degradation/leak. Both HCs alive the
+  whole window, **no drops**. HC fps mostly 44–48 with two transient single-tick dips (t=254 fps=36, t=342
+  fps=18) that recovered next tick. The largest server hitches are **antistack** (`antistack_main ~361ms`,
+  `antistack_flush ~353ms` in Performance-Audit) — hands-off per soak rules, logged for awareness only.
+- 2026-06-20 20:00 [idea] — **Clean error budget at 12h.** Zero `Error in expression`, zero `Error position`,
+  zero script errors, zero `Undefined variable`. Only engine noise = 2× cosmetic `Hitpoint Hitglass not found`
+  on stock BIS building models (`housev_1i1_dam.p3d`, `mil_house_dam.p3d`) — not mission code. **Top error
+  file+line: N/A — clean run.**
+
 ### Broken
+- 2026-06-20 20:00 [idea] — **#1 behavioural bug at 12h: recurring WEST assault-stranding.** 21
+  `ASSAULT_STRANDED` (all WEST, same teams, `moved=0`), 156 unstuck-strikes + 700 retreat-reforms NOT freeing
+  them. Full detail + proposal under *AI Commander improvements* and *AI unit improvements*. Front grinds on
+  the WEST side even though WEST is winning on holdings.
+- 2026-06-20 20:00 [idea] — **Soak-parser blind to the founding-pad (CONFIRMED, visibility-only).** Pad fires
+  19× to 10 units but impressions reads `padded=0` — parser matches "to floor" not the live "to found-size".
+  Harness fix (outside this repo). The feature is NOT broken; the *metric* is.
 - 2026-06-20 11:55 [idea] — **HC *unit-load* imbalance (watch, not yet confirmed-bug).** `HCDELEG ...
   perHC=7:196,7:0`, `imbalance=-1`: even team count (7:7) but one HC holds ~196 units while the other
   holds ~0; `HCSTAT HC-2:58 units=1 groups=0` (near-idle). Most likely **warm-up** (HC-2 registered late,
@@ -175,6 +239,17 @@ slot reorder, marker fix, and a paced economy.
   now — points at a per-side template cost/composition asymmetry rather than variance. Review WEST vs EAST
   template prices / the `PC_LOW` curve when tuning the founding economy.
 
+- 2026-06-20 20:00 [idea] — **WEST near-shut-out of EAST at 12h, but WEST's own front is grinding.** Latest
+  brief: WEST `towns=6 funds=2.42M teams=30 posture=spearhead` vs EAST `towns=1 funds=657k teams=28`. Captures
+  visible in the tail = 2 (`Kabanino`, `NWAF`, both WEST-from-neutral) — cadence still slow. The twist vs the
+  8h read (EAST frozen-spearhead): now it's **WEST** that holds the towns yet whose spearheads strand (all 21
+  `ASSAULT_STRANDED` are WEST). So WEST wins on economy/holdings while bleeding momentum to terrain, and EAST
+  can't capitalise. Don't tune garrison/drain until the stranding fix lands — re-measure flips/hour after.
+- 2026-06-20 20:00 [idea] — **Do NOT tune the founding economy off blended `unitsPerTeam`.** Now that the
+  metric is shown to blend 10-man infantry with 4-man vehicle crews (see AICOM draft), the inf/veh split must
+  land first. Tuning per-side template prices or the `PC_LOW` curve off the blended 6.3/7.3 would over-correct.
+  Read `infPerTeam` (the real attrition signal) next round before any economy change.
+
 ## Player spectacle & cinematics (incl. AI-generated cinematics)
 <!-- things that make the war feel alive for players to watch/join; ideas for AI-generated
      cinematics / highlight reels / camera work. -->
@@ -210,6 +285,18 @@ slot reorder, marker fix, and a paced economy.
   highlight-reel cut-list (timestamps of the biggest flips/armor trades) for an automated camera pass.
   Zero in-game cost (pure log parse), and it makes a 24h soak legible to anyone who wasn't watching.
 
+- 2026-06-20 20:00 [idea] — **Animated front-line timelapse for the round recap.** The RPT carries every
+  ownership transition: `WASPSTAT CAPTURE <town> <newSide> <oldSide>` (e.g. `CAPTURE Kabanino 2 0`),
+  `TOWN_FLIP`, and `server_town_ai.sqf: Town [X] DEACTIVATED (inactivity, teams=N)`. Out-of-game, parse those
+  into an **animated war-map** (town colours over time, front line sweeping) and post the GIF/MP4 with the
+  end-of-round AI recap. Zero in-game/server cost (pure log parse, the data already exists). Pairs with the
+  narrated recap already filed — the map is the visual, the LLM text is the voiceover.
+- 2026-06-20 20:00 [idea] — **"Hero/blooper team" beats for the recap.** The stranded/unstuck telemetry is
+  inherently dramatic and already team-tagged: `B 1-3-G fought the terrain outside Kabanino for 8 minutes
+  (156 unstuck attempts side-wide)`. Feed the per-team `ASSAULT_STRANDED`/`UNSTUCK_STRIKE` streaks to the LLM
+  recap as colour ("the team that wouldn't quit" / "the wedged BMP of Stary Sobor"). Free narrative texture
+  from logs we already emit; makes the AI war feel like it has characters.
+
 ## Bugs found
 <!-- script errors (Error in expression), broken markers, stuck teams, dropped HCs, etc.
      Include RPT evidence / file+line where known. -->
@@ -240,3 +327,24 @@ slot reorder, marker fix, and a paced economy.
   net-syncs (objects deleted while a remote message was in flight — normal), and a one-shot
   `cleaner_droppeditems 5517ms` cold-start hitch at round init (fired once, server FPS held). No action
   needed beyond optionally shipping the RU .wss.
+- 2026-06-20 20:00 [idea] — **Recurring WEST `ASSAULT_STRANDED` — top bug at 12h.** 21 events, all WEST, same
+  teams, `moved=0 stuck=true elapsed≈482`. RPT evidence:
+  `AICOMSTAT|v2|EVENT|WEST|257|ASSAULT_STRANDED|team=B 1-3-G|town=Kabanino|dist=1753|elapsed=483|moved=0|stuck=true`
+  (and `B 1-3-A`/`B 1-2-M` at Kabanino/Stary Sobor). 156 `UNSTUCK_STRIKE` + 700 retreat-and-reform fired
+  side-wide but the SAME teams re-strand → the unstuck/abandon ladder is not resolving persistent
+  (likely vehicle-wedged) stucks. Fix proposals filed under *AI Commander* + *AI unit improvements*. Not a
+  script error (zero of those) — a behavioural/pathing bug.
+- 2026-06-20 20:00 [idea] — **antistack is the biggest server hitch source (AWARENESS ONLY — hands-off).**
+  Performance-Audit peaks: `antistack_main ~361ms`, `antistack_flush ~353ms`, dwarfing everything else
+  (`cleaner_craters ~145ms`, `delegate_townai_headless ~76ms`, `createunit ~55ms avg / 69ms max` during
+  mass-spawns). Per soak rules antistack is NOT to be touched — logged so Ray has the number. Server FPS held
+  ~43 through these hitches, so no action; just visibility.
+- 2026-06-20 20:00 [idea] — **Town-AI `DEACTIVATED` volume high (73), incl. one owned WEST town with 9 teams.**
+  Mostly GUER (`server_town_ai.sqf: Town [Berezino] DEACTIVATED for [GUER] (inactivity, teams=6)`), but one
+  WEST: `Town [Vybor] DEACTIVATED for [WEST] (inactivity, teams=9)`. This is the town-AI sleeping an inactive
+  town — expected — but confirm a deactivated OWNED town **re-wakes its garrison on player/enemy proximity**
+  (no-frozen-AI rule) and doesn't leave a 9-team hole an enemy can walk into uncontested. Likely
+  working-as-designed; flagged for a proximity-rewake spot-check.
+- 2026-06-20 20:00 [idea] — **Still ZERO `Error in expression` / script errors at 12h.** Only engine messages
+  are 2× cosmetic `Hitpoint Hitglass not found` on stock BIS building models — not mission code. **Top error
+  file+line: N/A — clean run.** No dropped HCs, no disconnects, no JIP errors in the current round.
