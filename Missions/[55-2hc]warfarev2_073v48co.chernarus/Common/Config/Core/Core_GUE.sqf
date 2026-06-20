@@ -126,7 +126,7 @@ _i = _i + [['','',5200,35,-2,3,2,0,'Guerilla',[]]];
 _c = _c + ['Ka137_MG_PMC'];
 _i = _i + [['','',6000,40,-2,0,1,0,'Guerilla',[]]];
 _c = _c + ['Mi24_P'];
-_i = _i + [['','',18000,60,-2,0,3,0,'Guerilla',[]]];
+_i = _i + [['','',18000,60,-2,3,3,0,'Guerilla',[]]];   //--- B60 (Ray 2026-06-21): air-upgrade(idx5) 0->3. Core_GUE wins the Mi24_P registration race over Core_RU (load order) - the comment above keeps it to win the GUER PRICE (18000), but it also stamped air-level 0 onto the GLOBAL Mi24_P, which Squads_GetFactionGroups feeds to the AICOM founding/produce air-gate -> EAST/RU could field ungated Mi24_P (only B59's town-strip still blocked it). Price 18000 still wins; only the air-level is corrected to RU's canonical 3. GUER is base-less (no founding gate) so unaffected. Rollback: ...,0,3,0,...
 
 /* Static Defenses */
 _c = _c + ['GUE_WarfareBMGNest_PK'];
