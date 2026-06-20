@@ -115,6 +115,44 @@ if (isServer) then {
 //--- The created group is local to the HC for its entire lifetime, so waypoints,
 //--- doMove, assignAsCargo, and orderGetIn all execute with correct locality here.
 
+//--- B60 HELI CANNON-NUDGE (Ray 2026-06-21, default-ON): A2-OA heli gunners self-pick guided ATGMs at
+//--- standoff and ignore the cannon/rockets. For each alive non-transport attack heli in this team with a
+//--- live gunner and a revealed enemy within cannon band, drop to a low gun-run altitude and one-shot force
+//--- the gunner onto a NON-guided (cannon/gun) muzzle. HC-local, self-exits on team wipe; no disableAI, no
+//--- sim-gating - the heli stays fully active and re-engages on proximity.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) then {
+	[_team, _side, _vehicles] Spawn {
+		private ["_tm","_sd","_vehs","_h","_tgt","_cannon","_isGuided","_ammo","_band","_enSide"];
+		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
+		_enSide = if (_sd == west) then {east} else {west};
+		while {!WFBE_GameOver && !isNull _tm && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+			{
+				_h = _x;
+				if (!isNull _h && {alive _h} && {_h isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _h) >> "transportSoldier")) == 0} && {!isNull (gunner _h)} && {alive (gunner _h)}) then {
+					_cannon = "";
+					{
+						_isGuided = false;
+						{ _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo"); if (_ammo != "" && {(getNumber (configFile >> "CfgAmmo" >> _ammo >> "airLock")) == 1 || {(getNumber (configFile >> "CfgAmmo" >> _ammo >> "maxControlRange")) > 0}}) then {_isGuided = true} } forEach (getArray (configFile >> "CfgWeapons" >> _x >> "magazines"));
+						if (!_isGuided && {_cannon == ""}) then {_cannon = _x};
+					} forEach (weapons _h);
+					if (_cannon != "") then {
+						_band = missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_RANGE", 700];
+						_tgt = objNull;
+						{ if (alive _x && {side _x == _enSide} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Tank","Air"], _band]);
+						if (!isNull _tgt) then {
+							_h flyInHeight (missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUN_ALT", 35]);
+							(gunner _h) selectWeapon _cannon;
+							(gunner _h) doTarget _tgt;
+							(gunner _h) doFire _tgt;
+						};
+					};
+				};
+			} forEach _vehs;
+			sleep (missionNamespace getVariable ["WFBE_C_AICOM_HELI_NUDGE_PERIOD", 7]);
+		};
+	};
+};
+
 //--- Order-execution loop: apply each new order seq from the server brain.
 _lastSeq = -1;
 _arrived = false;

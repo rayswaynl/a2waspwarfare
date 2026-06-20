@@ -1,0 +1,228 @@
+/*
+	AI Commander - MOBILE HQ RELOCATION worker. Ray 2026-06-21. Server-side, per side.
+	Parameter: _this = side.  Called as:  _side Call WFBE_SE_FNC_AI_Com_MHQReloc
+
+	When the AI commander's front (primary spearhead town = wfbe_aicom_targets[0]) has
+	advanced FAR from its deployed HQ, MOBILIZE the static HQ into the MHQ vehicle, DRIVE it
+	forward to a safe standoff BEHIND an owned front town, then DEPLOY it again. Real driving
+	(an AI driver + doMove), default-ON.
+
+	SAFETY RAILS (all hard):
+	  - DISABLED guard: fully inert when WFBE_C_AICOM_MHQ_RELOCATE == 0.
+	  - SINGLE-FLIGHT: wfbe_mhqreloc_active flag + the engine wfbe_hqinuse lock.
+	  - ENEMY STANDOFF: never mobilize/deploy with an enemy within ENEMY_CLEAR of the current
+	    HQ or the planned destination.
+	  - STUCK TIMER: no >25m progress in STUCK_SECS -> deploy where it stands.
+	  - ABSOLUTE DEADLINE: DEADLINE s -> player-safe teleport-step to the target then deploy
+	    (never permanently stranded).
+	  - NEVER A FROZEN/IDLE MHQ IN PLAYER VIEW: every drive-loop exit converges on re-deploy or
+	    clean release; the teleport-step is gated on no player within DISBAND_SAFE_DIST.
+
+	The drive monitor runs in a self-contained Spawn (mirrors the heading-feed Spawn in
+	Common_RunCommanderTeam.sqf) so it never blocks the supervisor.
+	A2-OA 1.64 ONLY: no isEqualType/isEqualTo/findIf/selectRandom/pushBack/worldSize.
+*/
+
+private ["_side","_sideText","_logik","_enabled","_hq","_deployed","_targets","_front","_frontPos","_myID","_enemyID","_enemySideObj","_hqPos","_frontDist","_standoff","_enemyClear","_arriveDist","_deadline","_stuckSecs","_destPos","_dx","_dy","_d","_back","_eNear","_busy"];
+
+_side = _this;
+_sideText = str _side;
+_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+if (isNil "_logik") exitWith {};
+
+//--- RAIL 0: hard disable -> fully inert.
+_enabled = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_RELOCATE", 1];
+if (_enabled <= 0) exitWith {};
+
+//--- RAIL 1: single-flight.
+_busy = _logik getVariable ["wfbe_mhqreloc_active", false];
+if (_busy) exitWith {};
+if (_logik getVariable ["wfbe_hqinuse", false]) exitWith {};
+
+//--- Need a DEPLOYED static HQ to relocate.
+_deployed = (_side) Call WFBE_CO_FNC_GetSideHQDeployStatus;
+if (typeName _deployed != "BOOL") exitWith {};
+if (!_deployed) exitWith {};
+
+_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+if (isNull _hq || {!alive _hq}) exitWith {};
+_hqPos = getPos _hq;
+if (typeName _hqPos != "ARRAY" || {count _hqPos < 2}) exitWith {};
+
+//--- FRONT = primary spearhead town the strategy worker publishes.
+_targets = _logik getVariable ["wfbe_aicom_targets", []];
+if (typeName _targets != "ARRAY" || {count _targets == 0}) exitWith {};
+_front = _targets select 0;
+if (isNull _front) exitWith {};
+_frontPos = getPos _front;
+if (typeName _frontPos != "ARRAY" || {count _frontPos < 2}) exitWith {};
+
+_myID         = (_side) Call WFBE_CO_FNC_GetSideID;
+_enemySideObj = if (_side == west) then {east} else {west};
+_enemyID      = (_enemySideObj) Call WFBE_CO_FNC_GetSideID;
+
+_frontDist  = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_FRONT_DIST",   2500];
+_standoff   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STANDOFF",     800];
+_enemyClear = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ENEMY_CLEAR",  700];
+_arriveDist = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ARRIVE_DIST",  400];
+_deadline   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_DEADLINE",     600];
+_stuckSecs  = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STUCK_SECS",   210];
+
+//--- TRIGGER: only relocate once the front has advanced > FRONT_DIST from the HQ.
+if ((_hq distance _frontPos) <= _frontDist) exitWith {};
+
+//--- DESTINATION = STANDOFF metres back from the front town toward the current HQ.
+_dx = (_frontPos select 0) - (_hqPos select 0);
+_dy = (_frontPos select 1) - (_hqPos select 1);
+_d  = sqrt (_dx*_dx + _dy*_dy);
+if (_d < 1) exitWith {};
+_back = _standoff min (_d - 1);
+_destPos = [(_frontPos select 0) - (_dx / _d) * _back, (_frontPos select 1) - (_dy / _d) * _back, 0];
+
+//--- RAIL 2 (ENEMY STANDOFF) + no-water destination.
+if (surfaceIsWater _destPos) exitWith {};
+_eNear = false;
+{ if (side _x == _enemySideObj && {alive _x}) then {_eNear = true} } forEach (_destPos nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
+if (_eNear) exitWith {};
+_eNear = false;
+{ if (side _x == _enemySideObj && {alive _x}) then {_eNear = true} } forEach (_hqPos nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
+if (_eNear) exitWith {};
+
+//--- All gates passed: claim single-flight + LAUNCH the lifecycle Spawn.
+_logik setVariable ["wfbe_mhqreloc_active", true];
+diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|TRIGGER|frontDist=" + str (round (_hq distance _frontPos)) + "|dest=" + str _destPos + "|back=" + str (round _back));
+["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] relocation TRIGGERED - front %2m out, mobilizing toward %3.", _sideText, round (_hq distance _frontPos), _destPos]] Call WFBE_CO_FNC_AICOMLog;
+
+[_side, _sideText, _logik, _myID, _destPos, _arriveDist, _deadline, _stuckSecs, _enemyClear, _enemySideObj] Spawn {
+	private ["_side","_sideText","_logik","_myID","_destPos","_arriveDist","_deadline","_stuckSecs","_enemyClear","_enemySide","_mhq","_drvGrp","_drv","_soldier","_dir","_t0","_lastClose","_lastImprove","_done","_reason","_cur","_curD","_pNear","_safeDist","_hq0","_finPos","_finDir","_finTry","_finAng","_structClass"];
+	_side       = _this select 0;
+	_sideText   = _this select 1;
+	_logik      = _this select 2;
+	_myID       = _this select 3;
+	_destPos    = _this select 4;
+	_arriveDist = _this select 5;
+	_deadline   = _this select 6;
+	_stuckSecs  = _this select 7;
+	_enemyClear = _this select 8;
+	_enemySide  = _this select 9;
+	_safeDist   = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
+
+	//--- 1) MOBILIZE: flip the static HQ into the MHQ vehicle via the canonical toggle.
+	_hq0 = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	if (isNull _hq0) exitWith {_logik setVariable ["wfbe_mhqreloc_active", false]};
+	_dir = getDir _hq0;
+	[missionNamespace getVariable Format ["WFBE_%1MHQNAME", _side], _side, _hq0, _dir] ExecVM "Server\Construction\Construction_HQSite.sqf";
+	_t0 = time + 30;
+	waitUntil {sleep 1; time > _t0 || {!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)}};
+	if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) exitWith {
+		_logik setVariable ["wfbe_mhqreloc_active", false];
+		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|mobilize-timeout");
+		["WARNING", Format ["AI_Commander_MHQReloc.sqf: [%1] mobilize did not complete in time - aborting (HQ left deployed).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+	};
+	_mhq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	if (isNull _mhq || {!alive _mhq}) exitWith {
+		//--- MHQ vehicle missing after mobilize: release; the Base worker re-deploys (its
+		//--- first-deploy branch re-fires while wfbe_hq_deployed is false).
+		_logik setVariable ["wfbe_mhqreloc_active", false];
+		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|no-mhq-vehicle");
+		["WARNING", Format ["AI_Commander_MHQReloc.sqf: [%1] no MHQ vehicle after mobilize - aborting; Base worker will re-deploy.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+	};
+	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|MOBILIZED|mhq=" + (typeOf _mhq));
+
+	//--- 2) DRIVER: spawn an AI driver and seat him (W21 SVBIED idiom).
+	_soldier = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
+	_drv = objNull; _drvGrp = grpNull;
+	if (typeName _soldier == "STRING" && {_soldier != ""}) then {
+		_drvGrp = [_side, "aicom-mhqreloc"] Call WFBE_CO_FNC_CreateGroup;
+		if (!isNull _drvGrp) then {
+			_drv = [_soldier, _drvGrp, getPos _mhq, _myID] Call WFBE_CO_FNC_CreateUnit;
+			if (!isNull _drv) then {
+				_mhq lock false;
+				_drv moveInDriver _mhq;
+				_drvGrp setBehaviour "CARELESS";
+				_drvGrp setCombatMode "BLUE";
+				_drvGrp setSpeedMode "FULL";
+				{_drv disableAI _x} forEach ["AUTOTARGET","TARGET"];
+				_drv setVariable ["WFBE_Taxi_Prohib", true];
+			};
+		};
+	};
+
+	//--- 3) DRIVE + MONITOR.
+	if (!isNull _drv && {alive _drv}) then {(driver _mhq) doMove _destPos};
+
+	_t0          = time;
+	_curD        = if (!isNull _mhq) then {_mhq distance _destPos} else {1e9};
+	_lastClose   = _curD;
+	_lastImprove = time;
+	_done        = false;
+	_reason      = "arrive";
+
+	while {!_done && !gameOver} do {
+		sleep 5;
+		if (isNull _mhq || {!alive _mhq}) exitWith {_done = true; _reason = "mhq-lost"};
+		_cur  = getPos _mhq;
+		_curD = _mhq distance _destPos;
+
+		if (_curD <= _arriveDist) then {_done = true; _reason = "arrive"};
+
+		if (!_done) then {
+			if (_curD < (_lastClose - 25)) then {_lastClose = _curD; _lastImprove = time};
+			if ((time - _lastImprove) > _stuckSecs) then {_done = true; _reason = "stuck"};
+		};
+
+		if (!_done && {(time - _t0) > _deadline}) then {
+			_pNear = false;
+			{ if (isPlayer _x && {alive _x} && {!isNull _mhq} && {(_x distance _mhq) < _safeDist}) then {_pNear = true} } forEach playableUnits;
+			if (!_pNear && {!surfaceIsWater _destPos}) then {
+				if (!isNull (driver _mhq)) then {(driver _mhq) doMove _destPos};
+				_mhq setVelocity [0,0,0];
+				_mhq setPos _destPos;
+				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|TELEPORT_STEP|to=" + str _destPos);
+				["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] deadline reached - teleport-step to %2 (no player within %3m).", _sideText, _destPos, _safeDist]] Call WFBE_CO_FNC_AICOMLog;
+				_done = true; _reason = "deadline-teleport";
+			} else {
+				if (!isNull (driver _mhq)) then {(driver _mhq) doMove _destPos};
+				_t0 = time;
+				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|TELEPORT_BLOCKED|player-near");
+			};
+		};
+	};
+
+	//--- 4) RE-DEPLOY or clean release.
+	if (_reason == "mhq-lost") exitWith {
+		if (!isNull _drvGrp) then {{if (local _x) then {deleteVehicle _x}} forEach (units _drvGrp); deleteGroup _drvGrp};
+		_logik setVariable ["wfbe_mhqreloc_active", false];
+		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|RELEASE|mhq-lost");
+		["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] MHQ lost mid-drive - released (OnHQKilled rebuilds).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+	};
+
+	//--- Dismount + delete the driver BEFORE deploy.
+	if (!isNull _drv && {alive _drv}) then {unassignVehicle _drv; moveOut _drv};
+	if (!isNull _mhq && {!isNull (driver _mhq)}) then {moveOut (driver _mhq)};
+	if (!isNull _drvGrp) then {{if (local _x) then {deleteVehicle _x}} forEach (units _drvGrp); deleteGroup _drvGrp};
+
+	if (isNull _mhq) exitWith {
+		_logik setVariable ["wfbe_mhqreloc_active", false];
+		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|RELEASE|mhq-null-at-deploy");
+	};
+	_finPos = getPos _mhq;
+	_finDir = getDir _mhq;
+	if (surfaceIsWater _finPos) then {
+		_finTry = 0;
+		while {surfaceIsWater _finPos && {_finTry < 20}} do {
+			_finAng = random 360;
+			_finPos = [(getPos _mhq select 0) + (20 + random 30) * sin _finAng, (getPos _mhq select 1) + (20 + random 30) * cos _finAng, 0];
+			_finTry = _finTry + 1;
+		};
+		if (surfaceIsWater _finPos) then {_finPos = getPos _mhq};
+	};
+	_structClass = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText]) select 0;
+	[_structClass, _side, _finPos, _finDir] ExecVM "Server\Construction\Construction_HQSite.sqf";
+	_t0 = time + 30;
+	waitUntil {sleep 1; time > _t0 || {(_side) Call WFBE_CO_FNC_GetSideHQDeployStatus}};
+
+	_logik setVariable ["wfbe_mhqreloc_active", false];
+	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|DEPLOYED|reason=" + _reason + "|pos=" + str _finPos);
+	["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] HQ RE-DEPLOYED at %2 (reason: %3).", _sideText, _finPos, _reason]] Call WFBE_CO_FNC_AICOMLog;
+};

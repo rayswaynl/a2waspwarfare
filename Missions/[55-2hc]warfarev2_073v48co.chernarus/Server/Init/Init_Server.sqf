@@ -62,6 +62,7 @@ WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Comman
 WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
+WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_MHQReloc.sqf";
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";

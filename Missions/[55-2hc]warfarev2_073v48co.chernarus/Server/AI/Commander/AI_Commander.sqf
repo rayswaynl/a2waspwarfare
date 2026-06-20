@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltBrief","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -69,7 +69,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	};
 };
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltMHQReloc = 0;
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
@@ -151,6 +151,12 @@ while {!gameOver} do {
 			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
 			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Strategy; _ltStrat = time;
+			};
+			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
+			//--- mobilize -> DRIVE the MHQ forward to a standoff behind the front town -> re-deploy. Self-gates
+			//--- on WFBE_C_AICOM_MHQ_RELOCATE + single-flight + deployed-HQ + enemy-standoff; drive runs in its own Spawn.
+			if (time - _ltMHQReloc > (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_RELOCATE_INTERVAL", 180])) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_MHQReloc; _ltMHQReloc = time;
 			};
 			//--- V0.2: build the base (HQ deploy -> doctrine build order -> defenses).
 			if (time - _ltBase > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BASE_INTERVAL", 60])) then {

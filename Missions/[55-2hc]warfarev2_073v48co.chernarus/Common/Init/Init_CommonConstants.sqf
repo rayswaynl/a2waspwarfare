@@ -197,6 +197,25 @@ with missionNamespace do {
 	//--- a HugeTown needs ~5). CONCENTRATION is the global base; the tier table refines per target.
 	if (isNil "WFBE_C_AICOM_CONCENTRATION") then {WFBE_C_AICOM_CONCENTRATION = 6};           //--- B57 (Ray 2026-06-20): 4->6 teams massed on the primary spearhead. Towns stay HARD - the AI overwhelms via mass (bigger+more teams), not softer garrisons. Rollback: 4.
 	if (isNil "WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX") then {WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX = 1};//--- punchy-AICOM (Ray 2026-06-17): 2->1 - one spearhead town at a time, maximum concentration. Rollback: 2.
+	//--- B60 MHQ RELOCATION (Ray 2026-06-21, DEFAULT-ON): the commander mobilizes its static HQ into the MHQ,
+	//--- an AI driver DRIVES it forward to a standoff behind the front town, then it re-deploys. Safety rails:
+	//--- stuck-timer, deadline (player-safe teleport-step fallback), enemy-standoff, always re-deploys (never idle/frozen).
+	//--- Set WFBE_C_AICOM_MHQ_RELOCATE = 0 to make it fully inert.
+	if (isNil "WFBE_C_AICOM_MHQ_RELOCATE")          then {WFBE_C_AICOM_MHQ_RELOCATE          = 1};    //--- 1 = ON (Ray default), 0 = off (no-op).
+	if (isNil "WFBE_C_AICOM_MHQ_RELOCATE_INTERVAL") then {WFBE_C_AICOM_MHQ_RELOCATE_INTERVAL = 180};  //--- s between relocation evaluations per side.
+	if (isNil "WFBE_C_AICOM_MHQ_FRONT_DIST")        then {WFBE_C_AICOM_MHQ_FRONT_DIST        = 2500}; //--- m: relocate only once the front (spearhead town) is farther than this from the HQ.
+	if (isNil "WFBE_C_AICOM_MHQ_STANDOFF")          then {WFBE_C_AICOM_MHQ_STANDOFF          = 800};  //--- m: new base sits this far BEHIND the front town (toward the old HQ), capped so it never overshoots.
+	if (isNil "WFBE_C_AICOM_MHQ_ENEMY_CLEAR")       then {WFBE_C_AICOM_MHQ_ENEMY_CLEAR       = 700};  //--- m: do NOT mobilize/deploy if an enemy is within this of the current HQ or the destination.
+	if (isNil "WFBE_C_AICOM_MHQ_ARRIVE_DIST")       then {WFBE_C_AICOM_MHQ_ARRIVE_DIST       = 400};  //--- m: MHQ within this of the destination = arrived -> deploy.
+	if (isNil "WFBE_C_AICOM_MHQ_DEADLINE")          then {WFBE_C_AICOM_MHQ_DEADLINE          = 600};  //--- s of driving before the player-safe teleport-step fallback (then deploy).
+	if (isNil "WFBE_C_AICOM_MHQ_STUCK_SECS")        then {WFBE_C_AICOM_MHQ_STUCK_SECS        = 210};  //--- s with no >25m progress = stuck -> deploy where it stands (never idle).
+	//--- B60 HELI CANNON-NUDGE (Ray 2026-06-21, DEFAULT-ON): A2-OA heli gunners over-prefer guided ATGMs and
+	//--- ignore the cannon/rockets. When an enemy is within cannon range, drop the attack heli to a low gun-run
+	//--- altitude and one-shot force the gunner onto a non-guided muzzle. Set WFBE_C_AICOM_HELI_CANNON_NUDGE = 0 to disable.
+	if (isNil "WFBE_C_AICOM_HELI_CANNON_NUDGE") then {WFBE_C_AICOM_HELI_CANNON_NUDGE = 1};   //--- 1 = ON (Ray default).
+	if (isNil "WFBE_C_AICOM_HELI_CANNON_RANGE") then {WFBE_C_AICOM_HELI_CANNON_RANGE = 700}; //--- m: enemy within this band -> nudge gunner to cannon.
+	if (isNil "WFBE_C_AICOM_HELI_GUN_ALT")      then {WFBE_C_AICOM_HELI_GUN_ALT      = 35};  //--- m: low gun-run altitude so the engine acquires inside guided-min-range (tradeoff: more AA exposure).
+	if (isNil "WFBE_C_AICOM_HELI_NUDGE_PERIOD") then {WFBE_C_AICOM_HELI_NUDGE_PERIOD = 7};   //--- s between nudges.
 	//--- V0.7 bootstrap: until the side owns >= 1 town, bias target selection to the
 	//--- nearest-to-base, lowest-value town so the AI captures its first income source fast.
 	if (isNil "WFBE_C_AICOM_BOOTSTRAP_BIAS") then {WFBE_C_AICOM_BOOTSTRAP_BIAS = 1};         //--- 1 enable, 0 disable.
