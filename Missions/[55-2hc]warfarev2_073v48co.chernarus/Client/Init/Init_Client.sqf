@@ -7,19 +7,22 @@ Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeploye
 //--- ~L849 (BLACK IN). If client init stalls before that, this watchdog force-clears the fade after 45s
 //--- and logs it (so a recurring stall is visible in the client RPT). Happy-path joins set
 //--- clientInitComplete (~L1032) long after the fade clears, so this only fires on a genuine stall.
+//--- JIP FADE FIX v3 (2026-06-20 PERSISTENT): the 12452 BLACK fade (set in initJIPCompatible) is normally
+//--- cleared once at ~L868, but the client can RE-INIT repeatedly (HC-without-identity loop + role-count
+//--- mismatch -> ~24 re-inits observed), each re-applying a fresh 50000s BLACK FADED that OUTPACES a one-shot
+//--- clear -> player stranded on black while actually in-game (can walk / hear / read chat). So after init
+//--- (or the 45s stall timeout) keep clearing layer 12452 for ~45s so a late/re-applied fade can never
+//--- persist. Each re-init spawns a fresh window, so the clearing continues until the re-init loop settles.
+//--- Harmless no-op on healthy joins.
 [] spawn {
 	private "_t0"; _t0 = time;
 	waitUntil { sleep 0.5; clientInitComplete || (time - _t0 > 45) };
-	//--- JIP FADE FIX (B52 2026-06-19): clear the 12452 BLACK fade UNCONDITIONALLY once init completes
-	//--- (or after the 45s stall timeout) - NOT only on a stall. Some JIP joins finish init fine (player
-	//--- is in-game: can respawn / open the scoreboard / hear cues) but the normal L868 BLACK IN clear is
-	//--- raced/skipped (or initJIPCompatible re-sets the fade late) so the screen stays black. The short
-	//--- sleep lets any late JIP fade re-set settle first; then we always clear. Double-clear on the happy
-	//--- path is a harmless no-op.
-	sleep 3;
-	12452 cutText ["", "BLACK IN", 1];
 	if (!clientInitComplete) then {
-		diag_log format ["[INIT SAFETY] Client init stalled >45s - force-cleared BLACK fade so the player is not stuck on black (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
+		diag_log format ["[INIT SAFETY] Client init stalled >45s - force-clearing BLACK fade (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
+	};
+	for "_fk" from 1 to 30 do {
+		12452 cutText ["", "BLACK IN", 1];
+		sleep 1.5;
 	};
 };
 
