@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T17:46:00+02:00",
+  "generatedAt": "2026-06-21T17:49:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "clickabletext-soundpush-current-stable-closeout",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Ressources.hpp:541,556",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Ressources.hpp:541,556",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp RscClickableText inheritors",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Dialogs.hpp RscClickableText inheritors",
+        "source commits 1a5e0b40 and 9b49883c",
+        "Client-UI-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Corrected the current-state clickable-text matrix: current stable origin/master@0139a346 now has valid RscClickableText.soundPush[] = {\"\", 0.2, 1}; at Rsc/Ressources.hpp:556 in both maintained roots.",
+        "Chernarus fix provenance is 1a5e0b40; maintained Vanilla propagation provenance is 9b49883c; current master still has 14 derived RscClickableText controls per maintained root.",
+        "Updated Feature Status and Source Fix queue so current stable is source-present/smoke-pending and older docs/source, Miksuu, perf, release and UI theme evidence remains branch-scoped. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future UI owners should not reopen this base-class edit on current master; run representative Arma 2 OA dialog smoke before release-validated wording, and only port the valid value to older target branches that still carry the malformed array.",
+      "updated": "2026-06-21T17:43:28+02:00"
+    },
     {
       "lane": "wiki-mirror-and-guer-current-source-sync",
       "owner": "Codex",
