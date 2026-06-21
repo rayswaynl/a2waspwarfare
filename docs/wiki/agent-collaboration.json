@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T19:30:00+02:00",
+  "generatedAt": "2026-06-21T19:52:35+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-vote-current-stable-closeout-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "Miksuu upstream b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical AI-commander commit c20ce153; current origin exposes no feat/ai-commander head on 2026-06-21",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "Commander-Vote-And-Reassignment-Playbook.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Refreshed stale commander vote DR-47 current-stable wording after origin/master@0139a346 proved the server tautology is fixed in both maintained roots.",
+        "Kept GUI_VoteMenu preview/policy smoke and older branch tautology evidence explicit.",
+        "Updated Feature Status, Source Fix queue and machine rows. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should smoke player-majority, no-commander-majority, equal-vote and tie outcomes, then decide whether GUI_VoteMenu preview should match the current server AI-veto rule or a different owner policy before porting old branches.",
+      "updated": "2026-06-21T19:30:39+02:00"
+    },
     {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
       "owner": "Codex",

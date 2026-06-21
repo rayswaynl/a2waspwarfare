@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T19:30:00+02:00",
+  "generatedAt": "2026-06-21T19:52:35+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the victory/endgame current-stable refresh, Source Fix Propagation Queue current-stable scope refresh, attack-wave current-stable refresh, salvage current-stable refresh, DR-46 SEND_MESSAGE history, PVF dispatcher/cross-link follow-ups including exact blame/no-release-head evidence, and WASP marker wait refresh against origin/master@0139a346. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the commander vote current-stable closeout, victory/endgame current-stable refresh, refined Source Fix queue stable-scope refresh, PVF dispatcher partial closeout, attack-wave current-stable refresh, salvage current-stable refresh, DR-46 SEND_MESSAGE history, PVF cross-link follow-ups and WASP marker wait refresh against origin/master@0139a346. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -57,6 +57,12 @@
   },
   "laneSummary": [
     {
+      "lane": "commander-vote-current-stable-closeout-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-Vote-And-Reassignment-Playbook.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and matching machine rows after current stable origin/master@0139a346 proved the old DR-47 server vote tautology is fixed in both maintained roots. Current stable still counts _aiVotes at Server_VoteForCommander.sqf:18,26-27 but now requires _highest >= _aiVotes at :43; Chernarus blame points to cbc2294c4 and maintained Vanilla propagation to 91dc6a75. GUI_VoteMenu.sqf:88 preview/policy smoke remains open, and Miksuu b8389e74, origin/perf/quick-wins@0076040f, historical a96fdda2 and historical c20ce153 keep the old >= OR <= condition. No gameplay source changed."
+    },
+    {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -67,6 +73,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Source-Fix-Propagation-Queue.md current branch scope from stale stable cf2a6d6a/release-head wording to checked docs base d30d23466 and current stable origin/master@0139a346. Checked queue source families in Chernarus and maintained Vanilla: queue PVFs/paratrooper registration, Skill_Init/apply, one guarded FPS publisher, heli-aware supply scan, in-loop player-list counter, marker-based commander ARTY and Patrols v2 Server/FSM paths. Current origin exposes no release/* heads; a96fdda2 remains historical release evidence. No gameplay source changed."
+    },
+    {
+      "lane": "pvf-dispatch-current-stable-partial-closeout",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Extended PVF dispatcher status after current stable origin/master@0139a346 showed Chernarus and maintained Vanilla resolve handler strings with missionNamespace getVariable plus CODE guards at Server_HandlePVF.sqf:14-15 and Client_HandlePVF.sqf:32-33. Chernarus blame is 7d60b02b4; maintained Vanilla propagation is 9b49883cb. Init_PublicVariables.sqf:55-61 still lacks registered-handler allowlists/logging; DR-55 sender authentication and direct PV channels remain open; Miksuu b8389e74 and origin/perf/quick-wins@0076040f still use Spawn (Call Compile _script); current origin exposes no release/* heads on 2026-06-21. No gameplay source changed."
     },
     {
       "lane": "attack-wave-current-stable-refresh-2026-06-21",
@@ -85,12 +97,6 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Updated Hardening-Implementation-Roadmap.md, Pending-Owner-Decisions.md and Server-Authority-Migration-Map.md after the PVF current-stable closeout so routing pages no longer frame current stable work as replacing dispatcher Call Compile. Current stable origin/master@0139a346 uses missionNamespace getVariable plus CODE guards at Server_HandlePVF.sqf:14-15 and Client_HandlePVF.sqf:32-33; remaining dispatcher work is explicit registered SRVFNC*/CLTFNC* membership and forged-name rejection before Spawn _code. No gameplay source changed."
-    },
-    {
-      "lane": "pvf-dispatch-current-stable-partial-closeout",
-      "owner": "Codex",
-      "status": "published-validated-docs-only",
-      "output": "Extended PVF dispatcher status after current stable origin/master@0139a346 showed Chernarus and maintained Vanilla resolve handler strings with missionNamespace getVariable plus CODE guards at Server_HandlePVF.sqf:14-15 and Client_HandlePVF.sqf:32-33. Chernarus blame is 7d60b02b4; maintained Vanilla propagation is 9b49883cb. Init_PublicVariables.sqf:55-61 still lacks registered-handler allowlists/logging; DR-55 sender authentication and direct PV channels remain open; Miksuu b8389e74 and origin/perf/quick-wins@0076040f still use Spawn (Call Compile _script); current origin exposes no release/* heads on 2026-06-21. No gameplay source changed."
     },
     {
       "lane": "send-message-direct-compile-current-stable-refresh",

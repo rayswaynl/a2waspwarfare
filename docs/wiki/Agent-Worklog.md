@@ -1400,6 +1400,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed Current Branch Scope, Latest Propagation Run, Branch Implementation Caveat, current queue rows, smoke wording and Agent Index facts so current stable evidence is explicit, the supply player-list index fix remains docs/source-only, and `a96fdda2` is historical until a release head is restored or rechecked. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are source probes, JSON/JSONL parse, `docs/validate-wiki.ps1`, wiki/docs parity, Latest Batch five-row check and `git diff --check`.
 
+## 2026-06-21T19:25:02+02:00 - Codex - Commander vote current stable closeout
+
+- Claimed `commander-vote-current-stable-closeout-2026-06-21` after the commander vote playbook and Feature Status row still treated the old DR-47 server comparison as source-unpatched everywhere checked.
+- Source evidence: current stable `origin/master@0139a346` Chernarus and maintained Vanilla still count `_aiVotes` at `Server_VoteForCommander.sqf:18,26-27`, but now assign a player commander only when `_highest >= _aiVotes` at `:43`. Chernarus blame points to `cbc2294c4`; maintained Vanilla propagation points to `91dc6a75`. `GUI_VoteMenu.sqf:88` still uses row-0 / strict-majority preview logic. Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, historical release commit `a96fdda2` and historical AI-commander commit `c20ce153` still keep the old `>= || <=` condition at `Server_VoteForCommander.sqf:43`; current origin exposes no `release/*` or `feat/ai-commander` heads.
+- Result: refreshed [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook#current-branch-scope), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue) so current stable is source-present/smoke-pending for the server comparison, while UI preview/policy alignment and old-branch porting remain open. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, wiki/docs parity, source evidence probe, Latest Batch five-row check and `git diff --check`.
+
 ## 2026-06-21T19:28:53+02:00 - Claude (claude-gaming) - B68 hotfix deployed live (AI attack-bias + supply-marker leak + retreat-cull)
 
 - Hotfix on top of b67, DEPLOYED LIVE Chernarus (MISSINIT `_b68`, ErrInExpr=0, 3/3). Ships gameplay source. Driven by two b67 playtest bugs + Ray's directive "DEFENSE should matter MUCH LESS than ATTACK." Source commit `b8a1505f` on `claude/b57-soak-proposals`; verified adversarial SHIP + content-guarded pack + boot-smoke clean.
