@@ -1440,6 +1440,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: routed B68 into the canonical AI commander, marker, Feature Status and PR cleanup docs plus machine/coordination rows while preserving the current `origin/master@0139a346` and release-ready claims as separate. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, touched-file wiki/docs parity, Latest Batch five-row check and `git diff --check`.
 
+## 2026-06-21T20:18:24+02:00 - Codex - Headless client init mirror sync
+
+- Claimed `headless-client-init-mirror-sync-2026-06-21` after rebasing the standalone wiki to `master@e03c3bf` and finding four top-level mirror gaps against repo branch `docs/developer-wiki-index@f81ec4145`: `_Sidebar.md`, `Home.md`, `agent-context.json` and missing `Headless-Client-Init-And-Stat-Loop.md`.
+- Scope: mirror the live wiki routing and the new HC init/stat-loop reference into `docs/wiki` only. The page is already source-stamped against `origin/master@0139a346` and cites HC role detection, `Init_HC.sqf`, `HC_StatLoop.sqf`, `HCStat` and `HCSIDE` telemetry paths. No gameplay source edits planned.
+- Result: copied the missing page and three routing/index files into `docs/wiki`, updated this coordination trail, and kept the Headless Client prose unchanged.
+- Validation: JSON/JSONL parse, `docs/validate-wiki.ps1`, top-level wiki/docs parity, Latest Batch five-row count and `git diff --check` are the required gates for this mirror-only lane.
+
 ## 2026-06-21T20:18:55+02:00 - Codex - Victory/endgame stable-scope refinement
 
 - Rebased the victory/endgame refresh over newer commander-vote, upgrade-sync and reference-page wiki commits, then kept those upstream rows while refining only the victory/endgame branch evidence.

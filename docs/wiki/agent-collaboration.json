@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T20:04:23+02:00",
+  "generatedAt": "2026-06-21T20:18:55+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,43 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@d30d23466 checked victory/endgame paths unchanged from a0a86da2 and 2f2132f8",
+        "origin/master@0139a346 Chernarus and maintained Vanilla server_victory_threeway.sqf:18-22,29,37,39,41-49",
+        "docs/Miksuu/perf/historical a96fdda2 older server_victory_threeway.sqf:23-41",
+        "origin/claude/b57-soak-proposals@b8a1505f Chernarus-only live-support evidence",
+        "current origin exposes no release/* heads on 2026-06-21"
+      ],
+      "outputs": [
+        "Refined victory/endgame current-stable wording after newer wiki commits landed.",
+        "Kept current stable, old refs and B68 live-support branch evidence separate.",
+        "Updated dashboard/worklog/events and preserved mirror parity. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should keep explicit winner/loser computation, one accepted endgame exit and maintained Vanilla propagation separate from Chernarus-only B68 live-support evidence.",
+      "updated": "2026-06-21T20:18:55+02:00"
+    },
+    {
+      "lane": "headless-client-init-mirror-sync-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "live wiki master@e03c3bf",
+        "docs/developer-wiki-index@f81ec4145 before mirror sync",
+        "top-level SHA256 comparison found _Sidebar.md, Home.md, agent-context.json and missing Headless-Client-Init-And-Stat-Loop.md",
+        "Headless-Client-Init-And-Stat-Loop.md source stamp: origin/master@0139a346"
+      ],
+      "outputs": [
+        "Mirrored the live HC init/stat-loop reference and routing updates into docs/wiki.",
+        "Left the source-stamped page prose unchanged; this was a mirror-parity lane, not a source re-audit.",
+        "Updated dashboard, worklog, pruning ledger and machine records. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future HC documentation work should use Headless-Client-Init-And-Stat-Loop.md for boot/identity/stat-loop details and keep delegation/failover behavior on the existing HC delegation pages.",
+      "updated": "2026-06-21T20:18:24+02:00"
+    },
     {
       "lane": "b68-aicom-live-branch-route-2026-06-21",
       "owner": "Codex",
@@ -84,29 +121,6 @@
       ],
       "handoff": "Closed after validation. Future code owner should smoke player-majority, no-commander-majority, equal-vote and tie outcomes, then decide whether GUI_VoteMenu preview should match the current server AI-veto rule or a different owner policy before porting old branches.",
       "updated": "2026-06-21T19:30:39+02:00"
-    },
-    {
-      "lane": "victory-endgame-current-stable-refresh-2026-06-21",
-      "owner": "Codex",
-      "status": "published-validated-docs-only",
-      "sourceScope": [
-        "docs/developer-wiki-index@a0a86da2 and origin/docs/developer-wiki-index source-unchanged for checked victory paths",
-        "origin/master@0139a346",
-        "Miksuu upstream master@b8389e74",
-        "origin/perf/quick-wins@0076040f",
-        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
-        "current stable Chernarus and maintained Vanilla Server/FSM/server_victory_threeway.sqf:18-22,29-49",
-        "current stable Chernarus and maintained Vanilla Client/Client_EndGame.sqf:3-13",
-        "current stable Chernarus and maintained Vanilla Server/Functions/Server_LogGameEnd.sqf:9-44",
-        "old-shape docs/Miksuu/perf/historical release Server/FSM/server_victory_threeway.sqf:23-41"
-      ],
-      "outputs": [
-        "Refreshed Victory-And-Endgame-Atlas.md for the current-stable logger/telemetry branch split.",
-        "Updated Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so the current-stable patch-ready route is explicit winner/loser semantics, combined !WFBE_GameOver guard and one accepted endgame exit.",
-        "Updated agent-hardening-backlog.jsonl victory rows and coordination pages. Mirrored touched wiki files into docs/wiki. No gameplay source changed."
-      ],
-      "handoff": "Closed after validation. Future code owner should compute explicit winner/loser sides per branch, keep the legacy client loser payload only intentionally, set WF_Winner/WASPSTAT/LogGameEnd to the explicit winner, guard the full condition with !WFBE_GameOver and exit after one accepted endgame path.",
-      "updated": "2026-06-21T19:27:00+02:00"
     },
     {
       "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",

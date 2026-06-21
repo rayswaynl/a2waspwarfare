@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T20:04:23+02:00",
+  "generatedAt": "2026-06-21T20:18:55+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state routes PR #43 / origin/claude/b57-soak-proposals@b8a1505f B68 evidence while preserving the upgrade-sync and commander vote current-stable closeouts, origin/master@0139a346 and release-ready claims as separate. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the refined victory/endgame current-stable branch scope, the Headless Client init/stat-loop mirror sync from live wiki master@e03c3bf into docs/wiki, and PR #43 / origin/claude/b57-soak-proposals@b8a1505f B68 evidence. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -57,6 +57,18 @@
   },
   "laneSummary": [
     {
+      "lane": "victory-endgame-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refined the Victory-And-Endgame-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md current-stable route after origin/master@0139a346 proved older cf2a6d6a/release-head wording was stale. Docs/Miksuu/perf/historical a96fdda2 keep the older opposite-side logger block at server_victory_threeway.sqf:23-41; current stable adds HQ nil/null skip at :18-22 and uses condition-side _x for WASPSTAT/logger at :41-49, so HQ/factory eliminations still log the loser. origin/claude/b57-soak-proposals@b8a1505f is Chernarus-only live-support evidence, not stable/Vanilla propagation. No gameplay source changed."
+    },
+    {
+      "lane": "headless-client-init-mirror-sync-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Synced repo docs/wiki with live wiki master@e03c3bf after a top-level SHA256 comparison against docs/developer-wiki-index@f81ec4145 found four mirror gaps: _Sidebar.md, Home.md, agent-context.json and missing Headless-Client-Init-And-Stat-Loop.md. The source-stamped HC page already cites origin/master@0139a346 paths for role detection, Init_HC.sqf, HC_StatLoop.sqf, HCStat and HCSIDE telemetry; this lane mirrored it unchanged. No gameplay source changed."
+    },
+    {
       "lane": "b68-aicom-live-branch-route-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -73,12 +85,6 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Commander-Vote-And-Reassignment-Playbook.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and matching machine rows after current stable origin/master@0139a346 proved the old DR-47 server vote tautology is fixed in both maintained roots. Current stable still counts _aiVotes at Server_VoteForCommander.sqf:18,26-27 but now requires _highest >= _aiVotes at :43; Chernarus blame points to cbc2294c4 and maintained Vanilla propagation to 91dc6a75. GUI_VoteMenu.sqf:88 preview/policy smoke remains open, and Miksuu b8389e74, origin/perf/quick-wins@0076040f, historical a96fdda2 and historical c20ce153 keep the old >= OR <= condition. No gameplay source changed."
-    },
-    {
-      "lane": "victory-endgame-current-stable-refresh-2026-06-21",
-      "owner": "Codex",
-      "status": "published-validated-docs-only",
-      "output": "Refreshed Victory-And-Endgame-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and hardening backlog rows after current stable origin/master@0139a346 showed victory/endgame semantics remain patch-ready but branch-split. Current stable keeps the mixed condition/no side-loop break at server_victory_threeway.sqf:29-49, adds HQ nil guards at :18-22, emits WASPSTAT ROUNDEND with _x at :41-46 and calls LogGameEnd with [_x] at :49; this helps all-towns logging but makes HQ/factory elimination use the losing side. Old-shape docs/Miksuu/perf/historical release refs still invert _x before logging. No gameplay source changed."
     },
     {
       "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",
