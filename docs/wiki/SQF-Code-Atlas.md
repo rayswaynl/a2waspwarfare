@@ -201,7 +201,7 @@ PVF dispatch mechanics:
 - Client-bound packets use the command at index 1; `Common_SendToClient` and `Common_SendToClients` rewrite it to `CLTFNC<Command>`.
 - Hosted server paths call the handler locally and may also broadcast in multiplayer.
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
-- Current stable `origin/master@0139a346` dispatchers resolve `_script` through `missionNamespace getVariable` and spawn only `CODE` at `Server_HandlePVF.sqf:14-15` and `Client_HandlePVF.sqf:32-33`; docs head `94b09c73` plus older Miksuu `b8389e74`, perf `0076040f` and historical release commit `a96fdda2` still call `Call Compile _script`, and current stable still lacks explicit allowlist/logging plus sender authentication.
+- Current stable `origin/master@0139a346` dispatchers resolve `_script` through `missionNamespace getVariable` and spawn only `CODE` at `Server_HandlePVF.sqf:14-15` and `Client_HandlePVF.sqf:32-33`; docs head `94b09c73`, Miksuu `b8389e74`, perf `0076040f` and historical release commit `a96fdda2` still have the historical `Call Compile _script` dispatch shape. Current stable still lacks explicit allowlist/logging plus sender authentication; branch-specific status lives in [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix).
 
 PV-adjacent files outside the standard registered PVF command lists:
 

@@ -1319,6 +1319,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed the page header to current `origin/master@0139a346`, updated shifted source anchors, clarified the `Server/Init/Init_Towns.sqf` town-distribution path and preserved the existing boundary/off-map behavior summary. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are source-anchor spot checks, internal link/wiki validator, JSON/JSONL parse, wiki/docs parity and `git diff --check`.
 
+## 2026-06-21T18:36:15+02:00 - Codex - PVF dispatch current-stable partial closeout
+
+- Claimed `pvf-dispatch-current-stable-partial-closeout` after follow-up source checks sharpened the current-stable PVF matrix: `origin/master@0139a346` source Chernarus and maintained Vanilla no longer use dispatch-time `Call Compile` in `Server_HandlePVF.sqf` or `Client_HandlePVF.sqf`.
+- Source evidence: current stable resolves `_code = missionNamespace getVariable _script` and spawns only `CODE` at server `:14-15` and client `:32-33` in both maintained roots. Chernarus blame is `7d60b02b4`; maintained Vanilla propagation is `9b49883cb`. `Init_PublicVariables.sqf:55-61` still lacks registered-handler allowlists/logging. Miksuu `b8389e74` and `origin/perf/quick-wins@0076040f` still use `Spawn (Call Compile _script)` in both maintained roots, and current origin exposes no `release/*` heads on 2026-06-21.
+- Result: expanded the PVF closeout into the PVF playbook, Networking gateway, Public Variable Channel Index, Feature Status, Source Fix queue, Server Authority map, Hardening roadmap, Pending Owner Decisions, Deep Review notes, SQF atlas, Performance sweep and machine-readable PVF records so current stable is partial source-present rather than unpatched. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, source evidence probes, wiki/docs parity and `git diff --check`.
+
 ## 2026-06-21T18:34:47+02:00 - Claude (claude-gaming) - B67 built, verified and DEPLOYED LIVE on Chernarus
 
 - Built, verified and DEPLOYED build **b67** to the live Chernarus server (MISSINIT `_b67`, ErrInExpr=0, 3/3 up) via the freshname service flow. UNLIKE most worklog entries this one SHIPS GAMEPLAY SOURCE and is live, not docs-only. Packed by `_pack_b67.py` (overlay onto `_b54_ch.zip`; 40 content guards + brace check + round-trip). Source on branch `claude/b57-soak-proposals` (push pending). Verified by per-feature adversarial fleets (all SHIP) + a whole-build double-check fleet (GO, 0 critical).

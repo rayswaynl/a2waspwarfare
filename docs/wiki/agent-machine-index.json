@@ -130,7 +130,7 @@
       "id": "mission-entrypoints-lifecycle",
       "system": "mission boot and role split",
       "riskTier": "P1",
-      "branchScope": "master_current",
+      "branchScope": "origin/master@0139a346-partial-source-present",
       "canonicalDocs": [
         "Mission-Entrypoints-And-Lifecycle",
         "Lifecycle-Wait-Chain",
@@ -163,9 +163,11 @@
         "Feature-Status-Register"
       ],
       "sourceRefs": [
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:43-51",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf:14",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf:22",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:55-61",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf:14-15",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf:32-33",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandlePVF.sqf:14-15",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_HandlePVF.sqf:32-33",
         "BattlEyeFilter/publicvariable.txt"
       ],
       "machineRefs": [
@@ -173,7 +175,7 @@
         "agent-hardening-backlog.jsonl#pvf-dispatch-lookup",
         "agent-knowledge.jsonl#cluster-pv-network-trust"
       ],
-      "nextGate": "Patch dispatcher lookup in source Chernarus only when code work is in scope; smoke valid server/client commands and forged invalid names separately."
+      "nextGate": "Current stable has missionNamespace getVariable plus CODE guards in both maintained roots. Add registered-handler allowlists and rejection logging, smoke valid server/client commands plus forged invalid names, and keep DR-55 sender authentication/direct PV channels separate."
     },
     {
       "id": "send-message-direct-rce",

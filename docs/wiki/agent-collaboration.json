@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T19:03:59+02:00",
+  "generatedAt": "2026-06-21T19:12:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -89,6 +89,29 @@
       ],
       "handoff": "Closed after validation. Future network hardening owner should use the PVF playbook for the branch matrix, then implement registered-handler membership/logging separately from DR-55 sender authentication and direct-PV channels.",
       "updated": "2026-06-21T18:53:35+02:00"
+    },
+    {
+      "lane": "pvf-dispatch-current-stable-partial-closeout",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "upstream/master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "git ls-remote --heads origin release/* returned no release heads on 2026-06-21",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf:14-15",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf:32-33",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandlePVF.sqf:14-15",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_HandlePVF.sqf:32-33"
+      ],
+      "outputs": [
+        "Extended PVF playbook/status/queue/networking/authority docs after origin/master@0139a346 showed PVF dispatchers now use missionNamespace getVariable plus CODE guards in both maintained roots.",
+        "Distinguished the source-present Call Compile removal from still-open registered-handler allowlists, sender authentication, direct-PV channels and Miksuu/perf branch backports.",
+        "Mirrored touched wiki files into docs/wiki and validated JSON/JSONL, wiki validator, source probes, parity and git diff checks.",
+        "No gameplay source edits planned."
+      ],
+      "handoff": "Closed after validation. Future code-owner work should add registered-handler allowlists/logging on current stable, keep DR-55 sender authentication and direct-PV channels separate, and backport full lookup+allowlist to Miksuu/perf only if those branches become targets.",
+      "updated": "2026-06-21T19:12:21+02:00"
     },
     {
       "lane": "send-message-direct-compile-current-stable-refresh",

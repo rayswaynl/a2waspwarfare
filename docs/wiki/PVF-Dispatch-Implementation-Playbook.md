@@ -12,32 +12,33 @@ Use this with [Networking and public variables](Networking-And-Public-Variables)
 | --- | --- |
 | Finding | Confirmed high live-server hardening gap: DR-1. |
 | Performance note | Confirmed low/medium perf win: DR-38. |
-| Current code | Branch-split: docs checkout and `origin/perf/quick-wins` still use dispatch-time `Call Compile`; current stable `origin/master@0139a346` uses `missionNamespace getVariable` plus a `CODE` type check in both maintained roots, but has no explicit PVF allowlist and still needs smoke. |
-| Recommended fix | Keep the current stable namespace lookup, add/port a registered allowlist plus rejection logging where absent, and keep `Spawn`. |
-| What this fixes | Arbitrary handler-string compilation and avoidable per-message recompile in generic PVF dispatch. |
+| Current code | Branch-split: current stable `origin/master@0139a346` Chernarus and maintained Vanilla use `missionNamespace getVariable _script` plus a `typeName == "CODE"` guard in both PVF dispatchers; old docs/Miksuu/perf refs still use dispatch-time `Call Compile`. |
+| Remaining dispatcher fix | Add registered `SRVFNC*` / `CLTFNC*` allowlists and rejection logging before calling the current lookup fully hardened; backport the namespace lookup to old branches that still use `Call Compile`. |
+| What current stable fixes | Dispatch-time arbitrary SQF-text compilation and avoidable per-message recompilation in the generic PVF dispatch. |
+| What remains in this layer | Forged payloads can still name any existing global `CODE` value unless a registered-handler allowlist is added; bad names silently no-op instead of logging. |
 | What it does not fix | Payload forgery inside legitimate handlers, missing authenticated sender context (DR-55), direct publicVariable channels outside `WFBE_PVF_*`, or missing BattlEye defense-in-depth. |
 
 ## Current Branch Matrix
 
-Branch route `pvf-dispatcher-current-stable-closeout-2026-06-21` rechecked current stable after `origin/master` advanced to `0139a346`, then rechecked Miksuu `b8389e74`, perf `0076040f` and historical release commit `a96fdda2`. Current `origin` exposes no `release/*` heads on 2026-06-21:
+Branch routes `pvf-dispatcher-current-stable-closeout-2026-06-21` and `pvf-dispatch-current-stable-partial-closeout` rechecked the generic PVF dispatcher across maintained roots and active candidate branches on 2026-06-21 after `origin/master` advanced to `0139a346`; current `origin` exposes no `release/*` heads on 2026-06-21:
 
 | Scope checked | Server dispatcher | Client dispatcher | PVF init / registry | Practical meaning |
 | --- | --- | --- | --- | --- |
 | Docs checkout `docs/developer-wiki-index` Chernarus and maintained Vanilla Takistan | Both roots still read `_script` from payload index `0` and run `_parameters Spawn (Call Compile _script)` at `Server/Functions/Server_HandlePVF.sqf:14`. | Both roots still run `_parameters Spawn (Call Compile _script)` at `Client/Functions/Client_HandlePVF.sqf:22`. | Both roots keep the older registry shape; no `missionNamespace getVariable _script` / `PVF_ALLOWED` guard is present in the checked dispatcher files. | Patch/port is still required if this docs/source branch becomes the code target. |
-| Current stable `origin/master@0139a346` Chernarus and maintained Vanilla Takistan | Both roots read `_script` from payload index `0`, lookup `_code = missionNamespace getVariable _script` at `Server/Functions/Server_HandlePVF.sqf:14`, and spawn only when `typeName _code == "CODE"` at `:15`. | Both roots keep the headless-client destination filter, then lookup `_code = missionNamespace getVariable _script` at `Client/Functions/Client_HandlePVF.sqf:32` and spawn only when it is `CODE` at `:33`. | Current stable registers 19 server and 19 client PV command names in both maintained roots (`RequestEnqueue` at `Init_PublicVariables.sqf:22`, `RequestAIComDonate` at `:26`, `HCStat` at `:27`; client `DashboardAnnounce` at `:50`; PVEH wiring at `:56-57` and `:61-62`). `git grep` found no `PVF_ALLOWED` symbol in the checked maintained roots. | DR-1/DR-38 compile removal is source-present on current stable, but only as namespace+CODE lookup. Explicit allowlist/logging, Arma smoke, DR-55 sender authentication and direct-PV `SEND_MESSAGE` remain separate/open. |
+| Current `origin/master@0139a346` Chernarus and maintained Vanilla Takistan | Both roots read `_script` from payload index `0`, resolve `_code = missionNamespace getVariable _script` at `Server/Functions/Server_HandlePVF.sqf:14`, and spawn only when `typeName _code == "CODE"` at `:15`. Chernarus blame is `7d60b02b4`; maintained Vanilla propagation blame is `9b49883cb`. | Both roots keep the adjacent headless-client destination filter, then resolve `_code = missionNamespace getVariable _script` at `Client/Functions/Client_HandlePVF.sqf:32` and spawn only `CODE` at `:33`. | Both roots precompile 20 client handlers and 19 server handlers, then add PVEHs at `Common/Init/Init_PublicVariables.sqf:55-61`. No `WFBE_CL_PVF_ALLOWED`, `WFBE_SE_PVF_ALLOWED`, `PVF_ALLOWED` or warning log guard exists in current master. | DR-38 and the raw dispatch-time `Call Compile` part of DR-1 are source-present/fixed on current stable; registered-handler allowlist, warning logs, Arma smoke and DR-55 sender authentication remain open. |
 | Miksuu upstream `miksuu/master` `b8389e74` | Same server dispatcher compile at `Server_HandlePVF.sqf:14` in both maintained roots. | Same client dispatcher compile at `Client_HandlePVF.sqf:22` in both maintained roots. | Same precompile-and-PVEH registry shape at `Init_PublicVariables.sqf:45,50`; no allowlist or `missionNamespace getVariable` dispatch guard. | No upstream rescue exists. |
 | `origin/perf/quick-wins` `0076040f` | Same server dispatcher compile at `:14` in Chernarus and maintained Vanilla. | Same client dispatcher compile at `:22` in Chernarus and maintained Vanilla. | Same registry shape; Chernarus PVEH lines are `Init_PublicVariables.sqf:46,51`, Vanilla remains `:45,50`. | Performance branch does not cover DR-1/DR-38 despite this being a small perf/security patch. |
-| Historical release commit `a96fdda2` (no current `release/*` head on 2026-06-21) | Same server dispatcher compile at `:14` in release Chernarus and release maintained Vanilla. | Release keeps headless-client destination filtering, shifting the final compile to `Client_HandlePVF.sqf:32`, but still runs `Spawn (Call Compile _script)` in both release roots. | Release PVEH lines match the older stable shape at `Init_PublicVariables.sqf:48,53`; no allowlist or `missionNamespace getVariable` dispatch guard. | Historical release evidence is not fixed; its HC client filter is adjacent behavior, not a dispatcher hardening substitute. |
+| Current `origin` release heads | `git ls-remote --heads origin release/*` returned no `release/*` heads on 2026-06-21. | Same. | Same. | Older `origin/release/2026-06-feature-bundle@a96fdda2` evidence is historical target-commit evidence only, not a current remote branch head. Recheck that commit explicitly if it becomes a target again. |
 
-The historical `89ae9dad..cf2a6d6a` delta touches the client dispatcher, `Init_PublicVariables.sqf` and `updateclient.sqf`, but not `Server_HandlePVF.sqf`. The later `cf2a6d6a..origin/master@0139a346` delta changes all six maintained PVF dispatcher/init files checked in this lane. Current stable dispatcher replacement blame is `7d60b02b4` for Chernarus and `9b49883c` for maintained Vanilla; no maintained current-stable dispatcher still matched `Call Compile _script`.
+The current stable partial fix is split across two source commits: `7d60b02b4` changes the Chernarus dispatchers from `Spawn (Call Compile _script)` to `missionNamespace getVariable _script` plus a `CODE` guard, and `9b49883cb` propagates the same dispatcher change into maintained Vanilla Takistan. Neither commit adds a registered-handler allowlist or a rejected-handler warning log.
 
 Bohemia's Community Wiki lists `missionNamespace` as introduced with Arma 2 1.00 and shows `missionNamespace getVariable` as the supported namespace lookup shape, so the recommended lookup is Arma 2 OA-compatible rather than an Arma 3 import.
 
 ## What I Read
 
-- `Common/Init/Init_PublicVariables.sqf:9-24`, `:26-44`, `:46-54`
-- `Server/Functions/Server_HandlePVF.sqf:7-14`
-- `Client/Functions/Client_HandlePVF.sqf:7-32`
+- `Common/Init/Init_PublicVariables.sqf:9-29`, `:31-52`, `:54-62`
+- `Server/Functions/Server_HandlePVF.sqf:7-15`
+- `Client/Functions/Client_HandlePVF.sqf:7-33`
 - `Common/Functions/Common_SendToServer.sqf:12-18`
 - `Common/Functions/Common_SendToServerOptimized.sqf:12-18`
 - `Common/Functions/Common_SendToClient.sqf:13-21`
@@ -52,7 +53,7 @@ Bohemia's Community Wiki lists `missionNamespace` as introduced with Arma 2 1.00
 
 ## What The Code Actually Does
 
-`Init_PublicVariables.sqf` builds two command arrays. The server command list includes `RequestVehicleLock`, `RequestChangeScore`, `RequestStructure`, `RequestDefense`, `RequestJoin`, `RequestSpecial`, `RequestUpgrade` and related server handlers at `:9-23`. The current client command list has 15 active entries at `:25-40`: `AllCampsCaptured`, `AwardBounty`, `AwardBountyPlayer`, `CampCaptured`, `ChangeScore`, `HandleSpecial`, `LocalizeMessage`, `SetTask`, `SetVehicleLock`, `TownCaptured`, `SetMHQLock`, `Available`, `RequestBaseArea`, `HandleParatrooperMarkerCreation` and `NukeIncoming`. `DatabaseDebug` is still commented at `:30` and is not active.
+`Init_PublicVariables.sqf` builds two command arrays on current stable. The server command list has 19 active entries at `:9-27`, from `RequestVehicleLock` through `HCStat`. The client command list has 20 active entries at `:31-50`, from `AllCampsCaptured` through `DashboardAnnounce`; `DatabaseDebug` is still commented at `:36` and is not active.
 
 The same file already compiles every registered command into global code variables:
 
@@ -70,39 +71,35 @@ The send helpers rewrite a logical command name into one of those compiled funct
 - dedicated/multiplayer branches publish `WFBE_PVF_<Command>`;
 - hosted branches call the same handler locally with `Spawn WFBE_*_FNC_HandlePVF`.
 
-On docs checkout, `origin/perf/quick-wins` and the older Miksuu/release evidence rows above, the dispatchers compile the string from the payload on every message:
+On current stable, the dispatchers no longer compile the string from the payload. They look up the named missionNamespace value and only spawn it if it resolves to `CODE`. Docs checkout, `origin/perf/quick-wins` and the older Miksuu/release evidence rows above still use the old dispatch-time compile shape.
 
 ```sqf
-// Server_HandlePVF.sqf:11-14
+// Server_HandlePVF.sqf:11-15
 _script = _publicVar select 0;
 _parameters = if (count _publicVar > 1) then {_publicVar select 1} else {[]};
-_parameters Spawn (Call Compile _script);
+_code = missionNamespace getVariable _script;
+if (!(isNil "_code") && {typeName _code == "CODE"}) then {_parameters Spawn _code};
 
-// Client_HandlePVF.sqf:19-22, after destination filtering
+// Client_HandlePVF.sqf:13-33, after destination filtering
 _script = _publicVar select 1;
 _parameters = if (count _this > 2) then {_publicVar select 2} else {[]};
-_parameters Spawn (Call Compile _script);
-```
-
-Current stable `origin/master@0139a346` has already replaced that final dispatch in both maintained roots with namespace lookup plus a `CODE` type check:
-
-```sqf
-// Server_HandlePVF.sqf:14-15; Client_HandlePVF.sqf:32-33
 _code = missionNamespace getVariable _script;
 if (!(isNil "_code") && {typeName _code == "CODE"}) then {_parameters Spawn _code};
 ```
 
+This closes the dispatch-time arbitrary text compilation class on `origin/master@0139a346`, but it is not the full playbook patch yet because the lookup accepts any existing global `CODE` value and silently ignores bad names. Add a registered-handler allowlist before treating dispatch as fully hardened.
+
 ## Why It Matters
 
-DR-1 is the security boundary: on old-shape branches the receiver compiles a handler string chosen by the sender. Legitimate traffic names `SRVFNC*` or `CLTFNC*`, but those branches do not prove that before compiling.
+DR-1 is the security boundary: the receiver runs a handler name chosen by the sender. Current stable no longer compiles that string at dispatch time, but it still does not prove the name came from the registered `SRVFNC*` / `CLTFNC*` set before spawning the resolved `CODE` value.
 
-DR-38 is the performance angle: the compile is also redundant. Registered handlers were already compiled at init, so dispatch-time `Call Compile _script` is just doing a variable lookup in the slowest and riskiest way. Current stable removes that compile cost, but a plain namespace lookup can still resolve any global `CODE` variable named by a forged payload; an explicit registered allowlist is the remaining DR-1 closeout.
+DR-38 is the performance angle on old branches: registered handlers were already compiled at init, so dispatch-time `Call Compile _script` was just doing a variable lookup in the slowest and riskiest way. Current stable has removed that recompile class; the remaining current-stable work is allowlisting and logging.
 
-The source-backed opportunity is unusually clean: one bounded patch can close the arbitrary handler-string compilation class and remove per-message recompilation without changing legitimate PVF payload shape.
+The source-backed opportunity is now smaller on current stable: complete the existing namespace-lookup patch with a registered-handler allowlist and logging, then smoke valid traffic and forged unregistered names. Older target branches such as Miksuu and `perf/quick-wins` still need the full `Call Compile` replacement.
 
 ## Implementation Shape
 
-Patch all three files together on old-shape branches. On current stable `origin/master@0139a346`, the dispatcher lookup part is already present; finish with the allowlist/logging portion before treating the lane as fully hardened.
+For current `origin/master`, patch the registry and both dispatchers together to add explicit allowlists and rejection logs. For older branches that still use `Call Compile`, apply the lookup replacement and the allowlist in the same pass.
 
 ### 1. Export allowlists at PVF init
 
