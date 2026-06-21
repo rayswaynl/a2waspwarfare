@@ -192,6 +192,17 @@ The `Constructed`/`Destroyed` branch (`:34-56`) is where the structure-noun voca
 
 The .bikb is the shared vocabulary both producers draw from; the client GUI path and the server SideMessage path are independent triggers into it. The FSM and .sqf callback are stubs that add no behaviour in Warfare — the radio's entire observable output is the .bikb `text`/`speech[]` rendering. For the *event→class* decision table on the server side (which game event maps to `Lost` vs `CapturedNear` vs `Constructed`), see the SideMessage section of [Server-Gameplay-Runtime-Atlas](Server-Gameplay-Runtime-Atlas).
 
+## Muting the command voice (per-player toggle — design note)
+
+Because the entire HQ/command voice is the engine's **radio-protocol sentence** system (`kbTell`) and nothing else — the only three `kbTell` producers are `Server/Functions/Server_SideMessage.sqf`, `Client/GUI/GUI_Menu_Command.sqf`, and `Client/PVFunctions/SetTask.sqf` — a per-player on/off toggle is straightforward and collateral-free.
+
+- **Engine mechanism:** Arma 2 OA's `enableSentences false` disables the radio-protocol sentence channel that `kbTell` speaks through (`enableSentences true` re-enables it). It is a **local-effect** command, so a player who calls it mutes the command voice only on their own machine, affecting no one else. `enableRadio false` is the analogous toggle for formatted radio *messages*; the HQ voice is sentences, so `enableSentences` is the precise lever.
+- **No existing toggle / no conflict:** neither `enableSentences` nor `enableRadio` is called anywhere in the mission (`grep` over `*.sqf` → 0 hits), so the channel is fully on by default and there is currently no player-facing off switch to collide with.
+- **Scope caveat:** `enableSentences false` suppresses the **whole sentence (spoken samples *and* its subtitle)** — it is a true mute, not a voice-only/keep-subtitles option. Keeping subtitles while muting audio has no engine toggle and would require gating delivery (and `Server_SideMessage` broadcasts side-wide), so it is materially harder.
+- **Drop-in implementation pattern:** mirror the existing **Earplugs** client QoL toggle — `WASP/actions/EarplugToggle.sqf` (which already dampens radio to 12 % via `0.25 fadeRadio 0.12` at `EarplugToggle.sqf:17`, a combined ambient+radio earplug, *not* a dedicated voice mute) registered and respawn-re-applied through `WASP/actions/AddActions.sqf:33` onward. A dedicated voice toggle would be a sibling WASP scroll-menu action that flips a `missionNamespace` flag and calls `enableSentences`, with the preference persisted across sessions in `profileNamespace` and re-applied at client init so it survives JIP/respawn.
+
+This is a design note, not shipped behaviour — no `enableSentences` toggle exists on master `0139a346`.
+
 ## Continue Reading
 
 - [Server-Gameplay-Runtime-Atlas](Server-Gameplay-Runtime-Atlas) — the server-side SideMessage payload table: which game event maps to which sentence class, the sibling of this client-side spoken catalog.
@@ -199,3 +210,4 @@ The .bikb is the shared vocabulary both producers draw from; the client GUI path
 - [Mission-Audio-Catalog](Mission-Audio-Catalog) — the `CfgSounds`/`CfgMusic` registry and `playSound` cues, the other audio path distinct from kbTell speech samples.
 - [Commander-HQ-Lifecycle-Atlas](Commander-HQ-Lifecycle-Atlas) — the HQ/commander lifecycle behind the announcer logic and the `wfbe_radio_hq` per-side object.
 - [Quad-AI-Commander](Quad-AI-Commander) — the AI commander that drives many of the server events feeding the SideMessage radio announcements.
+- [Earplugs-Audio-Toggle-Reference](Earplugs-Audio-Toggle-Reference) — the existing client audio QoL toggle whose action/registration pattern a per-player command-voice mute would mirror.
