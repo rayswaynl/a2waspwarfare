@@ -1,5 +1,10 @@
-Private ["_lock","_position","_side","_type","_vehicle"];
+Private ["_createSide","_lock","_position","_side","_type","_vehicle"];
 _vehicle = _this select 0;
+//--- b67 faction DECALS: authoritative side id passed by Common_CreateVehicle.sqf (the create path
+//--- knows the buying side). REQUIRED because a freshly createVehicle'd hull is still CREWLESS, so
+//--- `side _vehicle` here is CIVILIAN -> a self-derived side yields CIV and any per-side block no-ops.
+//--- -1 when an older caller passes only [_vehicle] (none currently; CreateVehicle is the sole caller).
+_createSide = if (count _this > 1) then {_this select 1} else {-1};
 _type = typeof _vehicle;
 
 switch (_type) do {
@@ -298,6 +303,83 @@ if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0) then {
 		if (_pendingSkin != "") then {_pendingSkin = _pendingSkin + "; " + _skinCmd} else {_pendingSkin = _skinCmd};
 		_vehicle setVariable ["wfbe_pending_texture", _pendingSkin];
 	};
+};
+
+//--- ============================================================================
+//--- FACTION VEHICLE DECALS (WFBE_C_VEHICLE_DECALS, DEFAULT 0 / opt-in, decoupled from
+//--- WFBE_C_VEHICLE_TINTS + WFBE_C_VEHICLE_MARKINGS). Reuses STOCK A2/OA flag .paa art
+//--- (no new textures) applied to ONE secondary texture selection via setObjectTexture.
+//--- Stock paths corroborated in this build's faction Root files:
+//---   WEST/USMC flag '\Ca\Data\flag_usa_co.paa'      (Root_USMC.sqf:11, vanilla A2)
+//---   EAST/RU   flag '\Ca\Data\flag_rus_co.paa'      (Root_RU.sqf:11,  vanilla A2)
+//---   GUER      flag '\ca\ca_e\data\flag_tkg_co.paa' (Root_TKGUE.sqf:11 / Root_PMC.sqf:11, OA)
+//--- Absolute paths (NOT the usflag/ruflag .hpp macros, which are unavailable in .sqf and
+//--- resolve to flag_us_co under COMBINEDOPS, mismatching the Chernarus USMC faction).
+//--- DESIGN: a decal REPLACES a texture SELECTION, so it can only ride a selection the body
+//--- model actually exposes. To stay LEAST-DISRUPTIVE we apply the flag ONLY to a per-class
+//--- panel index that the class' own texture case above does NOT already paint with a real
+//--- body skin, and we apply it to ONE class per side (the most prominent commandable ground
+//--- vehicle on Chernarus). Every other class is INTENTIONALLY left undecaled (no safe panel
+//--- without overpainting the hull / clobbering its body retexture) and documented below.
+//--- JIP-safe: APPEND to wfbe_pending_texture (NEVER overwrite); Common_CreateVehicle.sqf
+//--- folds the accumulated string into the single Init_Unit setVehicleInit + processInitCommands.
+//--- ============================================================================
+if ((missionNamespace getVariable ["WFBE_C_VEHICLE_DECALS", 0]) > 0) then {
+	Private ["_decalSide","_flagPaa","_decalSel","_decalCmd","_pendingDecal"];
+	//--- Side resolution (authoritative): prefer the side PASSED by Common_CreateVehicle (_createSide),
+	//--- then the marking-stamped id, then (last resort) the engine side. The engine-side fallback
+	//--- resolves to CIVILIAN on a crewless freshly-created hull and will NOT match a faction case - it
+	//--- is only a guard, never the real source. A LOCAL var so we never clobber _side for later code.
+	//--- NOTE: the TINTS block above still relies solely on the broken wfbe_side_id/engine-side fallback
+	//--- when WFBE_C_VEHICLE_MARKINGS=0 (default) -> a SEPARATE pre-existing bug, deliberately left
+	//--- untouched here to keep this a decals-only change (flagged for a follow-up).
+	_decalSide = _createSide;
+	if (_decalSide < 0) then { _decalSide = _vehicle getVariable ["wfbe_side_id", -1]; };
+	if (_decalSide < 0) then { _decalSide = (side _vehicle) Call WFBE_CO_FNC_GetSideID; };
+
+	//--- Resolve the per-side stock flag .paa (string). Empty for CIV/UNKNOWN/no-match -> no-op.
+	_flagPaa = "";
+	switch (_decalSide) do {
+		case WFBE_C_WEST_ID: { _flagPaa = "\Ca\Data\flag_usa_co.paa"; };       //--- USMC (Chernarus WEST)
+		case WFBE_C_EAST_ID: { _flagPaa = "\Ca\Data\flag_rus_co.paa"; };       //--- RU (Chernarus EAST)
+		case WFBE_C_GUER_ID: { _flagPaa = "\ca\ca_e\data\flag_tkg_co.paa"; };  //--- GUER (Takistani-guerrilla proxy)
+	};
+
+	//--- Per-class SAFE secondary panel index (-1 == NO safe slot => skip, document only).
+	//--- Indices chosen to AVOID the body skins the texture cases above already set, so the
+	//--- decal lands on a spare/secondary panel rather than overpainting the hull.
+	//---   M2A3_EP1 (WEST heavy/MHQ): case paints 0,1,2 -> selection 3 is the free panel.  NEEDS-IN-ENGINE-VERIFY.
+	//---   T90 (EAST heavy/MHQ):      case paints 0,1,2 -> selection 3 is the free panel.  NEEDS-IN-ENGINE-VERIFY.
+	//---   BTR60_TK_EP1 (GUER-usable APC): case paints 0,1 -> selection 2 is the free panel. NEEDS-IN-ENGINE-VERIFY.
+	//--- HONEST NO-SLOT classes (left undecaled on purpose): M2A2_EP1 (0-4 all painted),
+	//---   HMMWV_M1151_M2_DES_EP1 (0-3 all painted), and any class whose only selections are 0/1
+	//---   (AAV/LAV25/BMP3/BTR90/Strykers/most HMMWVs) - those are the hull; a flag there uglifies
+	//---   the whole body, so we do NOT decal them. Air (Mi24_*/Mi17) excluded - see heli note below.
+	_decalSel = -1;
+	switch (_type) do {
+		case "M2A3_EP1":     { if (_decalSide == WFBE_C_WEST_ID) then { _decalSel = 3; }; };
+		case "T90":          { if (_decalSide == WFBE_C_EAST_ID) then { _decalSel = 3; }; };
+		case "BTR60_TK_EP1": { if (_decalSide == WFBE_C_GUER_ID) then { _decalSel = 2; }; };
+	};
+
+	//--- Only append when BOTH a flag and a safe panel resolved. A2-OA quoting: this command
+	//--- STRING is built by runtime concatenation and APPENDED to wfbe_pending_texture, which
+	//--- Common_CreateVehicle.sqf folds into ONE setVehicleInit string whose base path is itself
+	//--- SINGLE-quoted ('Common\Init\Init_Unit.sqf'). So the inner .paa literal is wrapped in
+	//--- SINGLE quotes - EXACTLY like the proven salvage tint (line 240) and the side TINTS
+	//--- (lines 270/276/282) on this same accumulator. (Do NOT use the doubled-double-quote ""
+	//--- idiom here; that is only for the source-literal setVehicleInit "..." cases at lines 8-225,
+	//--- not for a string assembled by + and re-injected.) str _decalSel yields a bare integer.
+	if (_flagPaa != "" && {_decalSel >= 0}) then {
+		_decalCmd     = "this setObjectTexture [" + (str _decalSel) + ",'" + _flagPaa + "']";
+		_pendingDecal = _vehicle getVariable ["wfbe_pending_texture", ""];
+		if (_pendingDecal != "") then {_pendingDecal = _pendingDecal + "; " + _decalCmd} else {_pendingDecal = _decalCmd};
+		_vehicle setVariable ["wfbe_pending_texture", _pendingDecal];
+	};
+	//--- HELI FALLBACK / best-effort: A2-OA helicopters frequently IGNORE setObjectTexture on
+	//--- body selections, so NO air class is given a decal slot above (all _decalSel stay -1 ->
+	//--- no-op). If a future air decal is wanted, add the class to the switch with selection 0
+	//--- (fuselage on most variants) and tag it NEEDS-IN-ENGINE-VERIFY; expect it may not render.
 };
 
 processinitcommands;
