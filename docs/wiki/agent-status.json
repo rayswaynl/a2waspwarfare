@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T18:53:35+02:00",
+  "generatedAt": "2026-06-21T19:01:35+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -63,10 +63,10 @@
       "output": "Updated Hardening-Implementation-Roadmap.md, Pending-Owner-Decisions.md and Server-Authority-Migration-Map.md after the PVF current-stable closeout so routing pages no longer frame current stable work as replacing dispatcher Call Compile. Current stable origin/master@0139a346 uses missionNamespace getVariable plus CODE guards at Server_HandlePVF.sqf:14-15 and Client_HandlePVF.sqf:32-33; remaining dispatcher work is explicit registered SRVFNC*/CLTFNC* membership and forged-name rejection before Spawn _code. No gameplay source changed."
     },
     {
-      "lane": "send-message-current-stable-refresh",
+      "lane": "send-message-direct-compile-current-stable-refresh",
       "owner": "Codex",
       "status": "published-validated-docs-only",
-      "output": "Refreshed Public-Variable-Channel-Index.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md after current stable origin/master@0139a346 showed DR-46 is still current-stable-unpatched in both maintained roots. Chernarus and maintained Vanilla register SEND_MESSAGE at Client/FSM/updateclient.sqf:12, compile receiver payload text at Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:27, and helper-compile/broadcast at Common/Functions/Common_SendMessage.sqf:26,38. Miksuu b8389e74, origin/perf/quick-wins@0076040f and historical release commit a96fdda2 keep the same shape; current origin exposes no release/* heads on 2026-06-21. No gameplay source changed."
+      "output": "Refreshed Public-Variable-Channel-Index.md, Networking-And-Public-Variables.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so DR-46 SEND_MESSAGE direct compile evidence names docs head 16247fc8f, current stable origin/master@0139a346, upstream/master@b8389e74, origin/perf/quick-wins@0076040f and the absent current release/* head state. Checked Chernarus plus maintained Vanilla still keep receiver registration, receiver/helper call compile and publicVariable broadcast. No gameplay source changed."
     },
     {
       "lane": "wasp-marker-wait-current-stable-refresh-2026-06-21",

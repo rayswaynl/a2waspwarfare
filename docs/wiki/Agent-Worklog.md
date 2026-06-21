@@ -1347,6 +1347,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed the WASP owner/status route so current stable evidence is explicit, older release wording is historical until a release head exists again, and future code-owner work remains scoped to the tiny display-54 wait/backoff patch plus marker-dialog smoke. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, wiki/docs parity, Latest Batch five-row check and `git diff --check`.
 
+## 2026-06-21T18:15:26+02:00 - Codex - SEND_MESSAGE direct compile current stable refresh
+
+- Claimed `send-message-direct-compile-current-stable-refresh` to update the DR-46 direct-channel RCE branch matrix from stale `cf2a6d6a` current-stable wording to current fetched `origin/master@0139a346`.
+- Source scope: docs head `16247fc8f`, current stable `origin/master@0139a346`, Miksuu `upstream/master@b8389e74` and `origin/perf/quick-wins@0076040f`, checked across Chernarus source and maintained Vanilla. `git ls-remote --heads origin release/*` returned no current release heads on 2026-06-21.
+- Planned result: refresh [Public variable channel index](Public-Variable-Channel-Index), [Networking/public variables](Networking-And-Public-Variables), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue) with exact current refs and the unchanged receiver/helper compile proof. No gameplay source edits planned.
+- Result: refreshed the DR-46 `SEND_MESSAGE` branch matrix and linked network/status rows so current stable is `origin/master@0139a346`, the checked docs/stable diffs do not touch the receiver/helper paths, Miksuu/perf remain unrescued, and older release `a96fdda2` is historical because current origin advertises no `release/*` heads. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, touched-file wiki/docs parity, Latest Batch five-row check and `git diff --check`.
+
 ## 2026-06-21T18:04:03+02:00 - Codex - PVF dispatcher current stable closeout
 
 - Claimed `pvf-dispatcher-current-stable-closeout-2026-06-21` after checking current `origin/master@0139a346` and finding registered PVF dispatch no longer uses `Call Compile _script` in the maintained Chernarus and Vanilla dispatcher files.
