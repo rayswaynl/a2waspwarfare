@@ -50,6 +50,28 @@
       "updated": "2026-06-21T18:25:19+02:00"
     },
     {
+      "lane": "wasp-marker-wait-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf:57,62,65,69-70,81",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/WASP/global_marking_monitor.sqf:57,62,65,69-70,81",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:309",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf:309",
+        "Miksuu upstream master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "git ls-remote --heads origin release/* returned no current release heads on 2026-06-21"
+      ],
+      "outputs": [
+        "Refreshed WASP-Marker-Wait-Cleanup.md, WASP-Overlay.md, Performance-Opportunity-Sweep.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md for current stable source evidence.",
+        "Updated live machine records for the WASP marker wait lane without editing append-only historical knowledge rows.",
+        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code-owner work should replace only the display-54 wait with a throttled wait/sleep shape, preserve key handlers plus final input unlock, propagate maintained Vanilla and smoke Enter/Escape/timeout marker-dialog behavior.",
+      "updated": "2026-06-21T18:23:24+02:00"
+    },
+    {
       "lane": "map-boundaries-current-head-refresh",
       "owner": "Codex",
       "status": "published-validated-docs-only",

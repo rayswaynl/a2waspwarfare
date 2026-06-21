@@ -25,7 +25,7 @@ WASP is the community/server identity this fork is built for. The mission credit
 | `WASP/baserep/data.sqf` | Table mapping base building classnames → display name, interaction distance, repair-rate %. | Data include. |
 | `WASP/baserep/viem.sqf` | Commander-only loop: HUD building-health overlay; attaches/removes a "Repair" action near damaged structures. Spotters also see enemy building health at range. | Main baserep loop. |
 | `WASP/baserep/repair.sqf` | Performs the repair: medic animation, drains side supply, increments building HP per tick. | Called by `viem.sqf`. |
-| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:279`). Display wait still has a short busy-poll opportunity; see [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
+| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Client/Init/Init_Client.sqf:309` on current `origin/master@0139a346`). Display wait still has a short busy-poll opportunity; see [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
 | `WASP/rpg_dropping/DropRPG.sqf` | By DeraKOren (2012). (a) single-use AT-launcher weapon-swap, (b) pipe-bomb TK prevention near friendly bases, (c) mine time-tracking. | **Live** (`Init_Client.sqf:15` + recompiled on respawn at `Client_PreRespawnHandler.sqf:12`). |
 | `WASP/unsort/StartVeh.sqf` | Defines `EAST_StartVeh` / `WEST_StartVeh` classname pools for one random extra starting vehicle per side. | **Live** (compiled `Init_Server.sqf:306`, used `:425-459`). |
 
@@ -40,7 +40,7 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 | Call site | Wires |
 | --- | --- |
 | `Init_Client.sqf:15` | `WASP/rpg_dropping/DropRPG.sqf` |
-| `Init_Client.sqf:279` | `WASP/global_marking_monitor.sqf` |
+| `Client/Init/Init_Client.sqf:309` | `WASP/global_marking_monitor.sqf` |
 | `Client/Init/Init_Client.sqf:649` | `WASP/baserep/init.sqf` |
 | `Client/Init/Init_Client.sqf:650` | `WASP/actions/AddActions.sqf` |
 | `Client_PreRespawnHandler.sqf:11-12` | `WASP/actions/OnKilled.sqf` + recompile `DropRPG.sqf` |

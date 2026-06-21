@@ -63,6 +63,12 @@
       "output": "Refreshed Public-Variable-Channel-Index.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md after current stable origin/master@0139a346 showed DR-46 is still current-stable-unpatched in both maintained roots. Chernarus and maintained Vanilla register SEND_MESSAGE at Client/FSM/updateclient.sqf:12, compile receiver payload text at Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:27, and helper-compile/broadcast at Common/Functions/Common_SendMessage.sqf:26,38. Miksuu b8389e74, origin/perf/quick-wins@0076040f and historical release commit a96fdda2 keep the same shape; current origin exposes no release/* heads on 2026-06-21. No gameplay source changed."
     },
     {
+      "lane": "wasp-marker-wait-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed WASP-Marker-Wait-Cleanup.md, WASP-Overlay.md, Performance-Opportunity-Sweep.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and live machine rows for current stable origin/master@0139a346. Both maintained roots still keep the display-54 busy wait at global_marking_monitor.sqf:57,62,65,69-70, display-12 throttling at :81 and helper launch at Client/Init/Init_Client.sqf:309. Miksuu b8389e74 and perf 0076040f remain unrescued; current origin exposes no release/* heads. No gameplay source changed."
+    },
+    {
       "lane": "map-boundaries-current-head-refresh",
       "owner": "Codex",
       "status": "published-validated-docs-only",
