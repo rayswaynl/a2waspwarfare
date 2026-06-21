@@ -8,7 +8,7 @@ The squad system lets players move between groups mid-mission. All client-side l
 
 ## Constants
 
-All constants are defined in `Common/Init/Init_CommonConstants.sqf` and overridden by mission parameters at start.
+All constants are defined in `Common/Init/Init_CommonConstants.sqf`. `WFBE_C_AI_TEAMS_ENABLED` is exposed as a lobby parameter (overrideable via `Rsc/Parameters.hpp`); the three squad constants (`WFBE_C_PLAYERS_SQUADS_MAX_PLAYERS`, `WFBE_C_PLAYERS_SQUADS_REQUEST_TIMEOUT`, `WFBE_C_PLAYERS_SQUADS_REQUEST_DELAY`) are hard-coded direct assignments and cannot be changed via mission parameters.
 
 | Constant | Default | Description | Source |
 |---|---|---|---|
@@ -52,7 +52,7 @@ The client calls `WFBE_CO_FNC_ChangeUnitGroup` locally (`Client_FNC_Groups.sqf:1
 2. Server (`Server_HandleSpecial.sqf:13-27`) forwards `["group-join-request", _player]` to the group leader via `HandleSpecial`.
 3. Leader's client receives `WFBE_CL_FNC_Groups_ReceiveRequest` (`HandleSpecial.sqf:23`) — adds `[uid, name]` to `WFBE_Client_PendingRequests` and spawns the timeout watcher.
 4. Leader acts via the Groups Menu (Accept or Deny).
-   - **Accept** (`WFBE_CL_FNC_UI_Groups_RequestAccept`, `Client_FNC_Groups.sqf:167-211`): checks the player cap again against `WFBE_Client_PendingRequests_Accepted + current players <= WFBE_C_PLAYERS_SQUADS_MAX_PLAYERS`; calls `WFBE_CO_FNC_ChangeUnitGroup` on the joining player, adds the UID to `WFBE_Client_PendingRequests_Accepted` for 6 seconds (`Client_FNC_Groups.sqf:191`), then sends `["group-join-accept", group player]` to the requester.
+   - **Accept** (`WFBE_CL_FNC_UI_Groups_RequestAccept`, `Client_FNC_Groups.sqf:167-211`): checks the player cap again against `WFBE_Client_PendingRequests_Accepted + current players <= WFBE_C_PLAYERS_SQUADS_MAX_PLAYERS`; adds the UID to `WFBE_Client_PendingRequests_Accepted` for 6 seconds (`Client_FNC_Groups.sqf:191`) first (lag-dedup guard), then calls `WFBE_CO_FNC_ChangeUnitGroup` on the joining player (`Client_FNC_Groups.sqf:203`), then sends `["group-join-accept", group player]` to the requester.
    - **Deny** (`WFBE_CL_FNC_UI_Groups_RequestDeny`, `Client_FNC_Groups.sqf:215-246`): removes the request from `WFBE_Client_PendingRequests` and sends `["group-join-deny", group player]` to the requester.
 5. Requester receives accept/deny via `HandleSpecial.sqf:20-21`, which calls `WFBE_CL_FNC_Groups_JoinAccepted` or `WFBE_CL_FNC_Groups_JoinDenied` — both show a hint and, on accept, flush `WFBE_Client_PendingRequests` (`Client_FNC_Groups.sqf:11`).
 

@@ -2832,7 +2832,7 @@ Key conclusions:
 
 ## 2026-06-04T11:58:00+02:00 - Codex - UI scout clickthrough routing
 - Harvested the returned UI scout as navigation/clickthrough polish instead of duplicate bug prose.
-- Updated [UI HUD and dialogs](UI-HUD-And-Dialogs), [Client UI, HUD and menus](Client-UI-HUD-And-Menus) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) so stale `RscMenu_Upgrade` and duplicate IDD/EASA rows route directly to [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review) and [UI IDD collision repair](UI-IDD-Collision-Repair).
+- Updated [UI HUD and dialogs](UI-HUD-And-Dialogs), [Client UI, HUD and menus](Client-UI-HUD-And-Menus) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) so stale `RscMenu_Upgrade` and duplicate IDD/EASA rows route directly to [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog) and [UI IDD collision repair](UI-IDD-Collision-Repair).
 - No gameplay source files changed.
 
 ## 2026-06-04T23:40:22+02:00 - Codex - base-area machine ledger split

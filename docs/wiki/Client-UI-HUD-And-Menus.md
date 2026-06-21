@@ -31,10 +31,10 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 | --- | --- | --- |
 | Client-visible indicator inventory | HUD/title resources, map/tactical markers, support markers, menu/list icons, status channels and image references need one owner/audience/update/cleanup matrix before indicator pruning or redesign. | [Client UI systems atlas](Client-UI-Systems-Atlas#indicator-exploration-backlog), [UI resource parity cleanup](UI-Resource-Parity-Cleanup) |
 | UI as authority surface | Player buys, structure sale, upgrades, supports, gear/EASA/service and some economy actions are client-originated or client-authoritative. | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Server authority map](Server-Authority-Migration-Map), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
-| Duplicate/stale display resources | EASA/Economy share dialog ID, overlay/title resources share title ID/display handles, and old upgrade/menu resources remain stale. | [UI IDD collision repair](UI-IDD-Collision-Repair), [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Duplicate/stale display resources | EASA/Economy share dialog ID, overlay/title resources share title ID/display handles, and old upgrade/menu resources remain stale. | [UI IDD collision repair](UI-IDD-Collision-Repair), [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog), [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Economy/help/main-menu cleanup | Missing economy controls, stale economy map-click latch, orphan main-menu GPS zoom cases and help unload mismatch are UI correctness debts. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
 | Gear/EASA/service partials | EASA unsupported-vehicle fail-open, exact-funds rejection, gear template filtering and service affordability guards are routed to the equipment pages. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Service menu affordability guards](Service-Menu-Affordability-Guards), [Gear template profile filter](Gear-Template-Profile-Filter) |
-| Command task partial | Commander task controls are visible, but the `SetTask` send path is commented out. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
+| Command task partial | Commander task controls are visible and the `SetTask` send/receive pipeline is active (send in `GUI_Menu_Command.sqf` lines 336 and 344, receive in `Client/PVFunctions/SetTask.sqf`, registered in `Common/Init/Init_PublicVariables.sqf` line 40). | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
 
 ## UI Risk Index
 
@@ -46,7 +46,7 @@ Use this as the fast route before touching UI:
 | Service affordability and action-time guards | [Service menu affordability guards](Service-Menu-Affordability-Guards) |
 | Command task controls / dormant task system | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Gear/EASA/template/cargo partials | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Gear template profile filter](Gear-Template-Profile-Filter), [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) |
-| Stale legacy dialogs | [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Feature status](Feature-Status-Register) |
+| Stale legacy dialogs | [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog), [Feature status](Feature-Status-Register) |
 
 ## Continue Reading
 

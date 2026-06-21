@@ -18,10 +18,10 @@ Town markers on the map show `SV: <current>/<max>`. When a town is eligible for 
 
 | You are playing | Marker text (cooldown OFF) | Marker text (cooldown ON) |
 |---|---|---|
-| SpecOps | `SV: 40/100  [+SUPPLY]` | `SV: 40/100` |
+| SpecOps | `SV: 40/100  [+SUPPLY]` | `SV: 40/100  [MM:SS]` |
 | Any other role | `SV: 40/100  [+]` | `SV: 40/100` |
 
-The `[+SUPPLY]` label is set by `Client/FSM/updatetownmarkers.sqf:24-25` and is SpecOps-gated because only SpecOps can act on it. When cooldown is active — `supplyMissionCoolDownEnabled == true` on the town object — the `[+SUPPLY]` / `[+]` suffix disappears (`updatetownmarkers.sqf:30`). A town with no suffix cannot be collected from until the 30-minute cooldown expires (see [Cooldown](#cooldown) below).
+The `[+SUPPLY]` label is set by `Client/FSM/updatetownmarkers.sqf:24-25` and is SpecOps-gated because only SpecOps can act on it. When cooldown is active — `supplyMissionCoolDownEnabled == true` on the town object — the `[+SUPPLY]` suffix is replaced by a live `[MM:SS]` countdown for SpecOps players (`updatetownmarkers.sqf:46-58`); non-SpecOps roles see the plain `SV: 40/100` with no suffix (`updatetownmarkers.sqf:60`). A town with no suffix cannot be collected from until the 30-minute cooldown expires (see [Cooldown](#cooldown) below).
 
 ---
 

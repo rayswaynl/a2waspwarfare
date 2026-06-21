@@ -52,7 +52,7 @@ Partition caveat: `Common/Init/Init_Common.sqf` is not purely client-safe shared
 | Generated `version.sqf` contract | `description.ext:39` includes `version.sqf`; clean checkouts need LoadoutManager-generated target files before pack/test claims. | [Mission config/version include graph](Mission-Config-Version-Include-Graph), [Tools and build workflow](Tools-And-Build-Workflow#operator-checklist) |
 | LoadoutManager root | Branch-sensitive; this overview keeps only the docs-head anchor. Current docs head still accepts either an ancestor named `a2waspwarfare` or a repo-like root with `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj` (`FileManager.cs:153,158,166,176,184-188`). Stable/release/Miksuu/perf branch splits belong on the tooling owner pages. | [Tools and build workflow](Tools-And-Build-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue#current-branch-scope-2026-06-14) |
 | Maintained generated targets | `SqfFileGenerator.cs:128-129` writes Chernarus and Takistan terrain outputs; `:131-132` keeps modded terrain writing commented. | [Tools and build workflow](Tools-And-Build-Workflow#generated-mission-status-table) |
-| Packaging | `ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `Modded_Missions` is commented out. `ZipManager.cs:96-100` supports `A2WASP_SKIP_ZIP` for propagation-only runs. | [Tools and build workflow](Tools-And-Build-Workflow#packaging-and-deployment-notes) |
+| Packaging | `ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `Modded_Missions` is commented out. | [Tools and build workflow](Tools-And-Build-Workflow#packaging-and-deployment-notes) |
 
 ## Bootstrap Shape
 

@@ -2,7 +2,7 @@
 
 `Tools/PerformanceAuditAnalyzer` is the offline parser for Arma 2 OA RPT/log files that contain `[Performance Audit]` records. It is a read-only analysis tool, not a live server tailer or shipped mission runtime component.
 
-Mission-side rows are produced by the local `PerformanceAudit_*` writer family, which is indexed in [Function and module index](Function-And-Module-Index#performance-audit-writer-family). Server and clients write their own RPT rows; the analyzer only parses logs collected after the mission-side parameter/instrumentation was active.
+Mission-side rows are produced by the local `PerformanceAudit_*` writer family, which is indexed in [Function and module index](Function-And-Module-Index#common-function-families). Server and clients write their own RPT rows; the analyzer only parses logs collected after the mission-side parameter/instrumentation was active.
 
 ## Entry Points
 

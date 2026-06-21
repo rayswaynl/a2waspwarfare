@@ -147,7 +147,7 @@ A `while {!gameOver}` loop spawned once at client init (`Init_Client.sqf:968`). 
 
 The record is conditional on `PerformanceAuditEnabled` (defaults `true`) and skipped if `PerformanceAudit_Record` is nil. The payload includes group unit count and count of low-gear scripts started that tick.
 
-**Scalability note:** on a large group the manager spawns one `Common_AI_LowGear.sqf` script per un-assisted AI tank per iteration. Each spawned script self-terminates when the vehicle is destroyed, no longer local, or `AI_LowGear_Running` is false; it does not rely on the manager to clean it up.
+**Scalability note:** on a large group the manager spawns one `Common_AI_LowGear.sqf` script per un-assisted AI tank per iteration. Each spawned script self-terminates when the vehicle becomes null, is destroyed (`!alive`), can no longer move (`!canMove`), or is no longer local to this client; it does not rely on the manager to clean it up. `AI_LowGear_Running` is a re-entry guard only — it is not a live termination signal.
 
 ---
 

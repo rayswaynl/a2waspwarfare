@@ -20,7 +20,7 @@ Each faction loads a set of AI team templates into `missionNamespace` during fac
 
 Source: `Common/Config/Core_Squads/Squad_USMC.sqf:53-57`, same pattern in all faction files.
 
-The `%1` substitution key is the string passed as `_side` when the Squad file is called (e.g. `"West"`, `"East"`, `"Guerrila"`). It is **not** the faction shorthand — see the faction-to-variable table below.
+The `%1` substitution key is the string passed as `_side` when the Squad file is called (e.g. `"WEST"`, `"EAST"`, `"GUER"`). It is **not** the faction shorthand — see the faction-to-variable table below.
 
 ### Upgrade level constants (`WFBE_UP_*`)
 
@@ -75,18 +75,18 @@ Templates are populated by two mechanisms:
 **Squad file:** `Common/Config/Core_Squads/Squad_USMC.sqf`  
 **`CfgGroups` source:** `"West" >> "USMC"`, blacklist: `["USMC_MQ9Squadron","USMC_FRTeam_Razor"]`  
 **CfgGroups-derived templates:** all non-blacklisted USMC infantry, motorized, mechanized, armor, and air groups from game config (resolved at init, contents depend on installed DLC).  
-**Custom templates appended:**
+**Custom templates appended (selected named entries; see Squad_USMC.sqf:13-418 for full 24-template list):**
+
+> **Note:** The pure "Armor - M1A1 Section" (two bare M1A1 tanks with no dismount infantry) was **REMOVED** in the 2026-06-14 combined-arms rebuild — it could not capture towns. All current armor templates carry dismount infantry and a cargo carrier. Source: `Squad_USMC.sqf:14-18`.
 
 | Name | Units (classnames) | Type | Factory gate (requires) | Upgrade required |
 |---|---|---|---|---|
-| Armor - M1A1 Section | `M1A1`, `M1A1` | 2 (Heavy) | Heavy | Heavy ≥ 1 |
 | Air - Infantry UH1Y Squadron | `UH1Y`, `USMC_Soldier_TL`, `USMC_Soldier_AR`, `USMC_Soldier_LAT`, `USMC_Soldier_Medic`, `USMC_Soldier` ×3 | 3 (Air) | Barracks + Air | Air ≥ 1 |
 | Air - Infantry MH-60S Squadron | `MH60S`, `USMC_Soldier_TL`, `USMC_Soldier_MG`, `USMC_Soldier_AT`, `USMC_Soldier_Medic`, `USMC_Soldier` ×3 | 3 (Air) | Barracks + Air | Barracks ≥ 2 |
 
-Sources: `Squad_USMC.sqf:13-51`
+Sources: `Squad_USMC.sqf:13-418`
 
-**Requires/upgrades arrays verbatim:**
-- Armor M1A1 Section: requires `[false,false,true,false]`, upgrades `[0,0,1,0]`
+**Requires/upgrades arrays verbatim (legacy named entries):**
 - UH1Y Squadron: requires `[true,false,false,true]`, upgrades `[0,0,0,1]`
 - MH-60S Squadron: requires `[true,false,false,true]`, upgrades `[2,0,0,0]`
 
@@ -100,19 +100,17 @@ Sources: `Squad_USMC.sqf:13-51`
 
 | Name | Units (classnames) | Type | Factory gate (requires) | Upgrade required |
 |---|---|---|---|---|
-| Armor - Anti Air Platoon | `2S6M_Tunguska` ×2 | 2 (Heavy) | Heavy | Heavy ≥ 3 |
-| Armor - Tank Platoon (Light) | `T72_RU` ×2 | 2 (Heavy) | Heavy | Heavy ≥ 1 |
-| Air - Infantry Mi-8 Squadron | `Mi17_Ins`, `MVD_Soldier_TL`, `MVD_Soldier_GL`, `MVD_Soldier_MG` ×2, `MVD_Soldier_Marksman`, `MVD_Soldier_AT` ×2 | 3 (Air) | Barracks + Air | Barracks ≥ 2 |
-| Air - Infantry Mi-8 Squadron (Rockets) | `Mi17_rockets_RU`, `RU_Soldier_TL`, `RU_Soldier_AA`, `RU_Soldier_LAT` ×2, `RU_Soldier_MG` ×2 | 3 (Air) | Barracks + Air | Barracks ≥ 2, Air ≥ 1 |
+| Armor - Anti Air Platoon | `2S6M_Tunguska`, `ZSU_INS` | 2 (Heavy) | Heavy | Heavy ≥ 2 |
+| Air - Infantry Mi-8 Squadron | `Mi17_Ins`, `MVD_Soldier_TL`, `MVD_Soldier_GL`, `MVD_Soldier_MG` ×2, `MVD_Soldier_Marksman`, `MVD_Soldier_AT` ×2 | 3 (Air) | Air only | Air ≥ 2 |
+| Air - Mi-8 Rocket Assault | `Mi17_rockets_RU`, `RU_Soldier_TL`, `RU_Soldier_AA`, `RU_Soldier_LAT` ×2, `RU_Soldier_MG` ×2 | 3 (Air) | Air only | Air ≥ 2 |
 | Air - Ka-52 Squadron | `Ka52Black`, `Ka52` | 3 (Air) | Air | Air ≥ 3 |
 
-Sources: `Squad_RU.sqf:13-68`
+Sources: `Squad_RU.sqf:13-401`
 
-> **Note:** The Mi-8 Infantry template uses `MVD_Soldier_AT` as an RPG-7VR carrier (comment at `Squad_RU.sqf:38-39`). The comment at line 38 reads: `// MVD_Soldier_AT acts as RPG-7VR soldier now`.
+> **Note:** The Mi-8 Infantry template includes two `MVD_Soldier_AT` slots (lines 197–198 of `Squad_RU.sqf`), making it the heaviest anti-tank loadout among the RU air templates. The "Armor - Tank Platoon (Light)" (`T72_RU` ×2) was removed in the 2026-06-14 combined-arms rebuild (see `Squad_RU.sqf:13-14` comment); it no longer exists in this faction.
 
 **Requires/upgrades arrays verbatim:**
-- Anti Air Platoon: requires `[false,false,true,false]`, upgrades `[0,0,3,0]`
-- Tank Platoon (Light): requires `[false,false,true,false]`, upgrades `[0,0,1,0]`
+- Anti Air Platoon: requires `[false,false,true,false]`, upgrades `[0,0,2,0]`
 - Mi-8 Infantry: requires `[true,false,false,true]`, upgrades `[2,0,0,0]`
 - Mi-8 (Rockets): requires `[true,false,false,true]`, upgrades `[2,0,0,1]`
 - Ka-52 Squadron: requires `[false,false,false,true]`, upgrades `[0,0,0,3]`
@@ -248,8 +246,8 @@ The four upgrade slots used across all custom templates map as follows. "Upgrade
 
 | Faction | Map | Side key | Custom templates | Notes |
 |---|---|---|---|---|
-| USMC | Chernarus | `West` | 3 | M1A1 Section, UH1Y, MH-60S |
-| RU | Chernarus | `East` | 5 | Two armor + three air; Ka-52 needs Air 3 |
+| USMC | Chernarus | `West` | 26 | Infantry/Motorized/Mechanized/Armor/Air archetypes; UH1Y and MH-60S retained; M1A1 Section removed |
+| RU | Chernarus | `East` | 25 | Infantry/Motorized/Mechanized/Armor/Air archetypes (2026-06-14 combined-arms rebuild); Ka-52 Attack Squadron still needs Air ≥ 3; Anti Air Platoon (Tunguska+ZSU) needs Heavy ≥ 2 |
 | GUE | Chernarus | `Guerrila` | 0 | CfgGroups auto only |
 | CDF | Combined Ops | `West` | 3 | BMP2, ZSU, Mi-8 |
 | INS | Combined Ops | `East` | 3 | BMP2, ZSU, Mi-8 |

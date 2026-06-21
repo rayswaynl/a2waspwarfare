@@ -7,7 +7,7 @@
 | Property | Value | Source |
 |---|---|---|
 | Mission file | `[61-2hc]warfarev2_073v48co.takistan` | `folder name` |
-| Slot count | 62 (`player="PLAY CDG"` entries) | `mission.sqm:58,80,…` |
+| Slot count | 66 (`player="PLAY CDG"` entries) | `mission.sqm:58,80,…` |
 | Total towns (`totalTowns`) | 31 | `mission.sqm:633` |
 | Airport logic objects | 2 (`LocationLogicAirport`) | `mission.sqm:1241,1423` |
 | Naval flag (`isNavalTerrain`) | `false` — no boat classes generated | `Tools/LoadoutManager/Data/Terrains/Implementations/VanillaMaps/TAKISTAN.cs:10` |
@@ -65,8 +65,8 @@ One random vehicle is spawned per playable side from the respective pool at miss
 
 | Classname | Source line |
 |---|---|
-| `UAZ_MG_TK_EP1` | `WASP/unsort/StartVeh.sqf:2` |
-| `UAZ_AGS30_TK_EP1` | `:3` |
+| `UAZ_MG_INS` | `WASP/unsort/StartVeh.sqf:2` |
+| `UAZ_AGS30_RU` | `:3` |
 | `UAZ_SPG9_INS` | `:4` |
 | `BTR40_MG_TK_INS_EP1` | `:5` |
 | `LandRover_MG_TK_EP1` | `:6` |
@@ -74,7 +74,7 @@ One random vehicle is spawned per playable side from the respective pool at miss
 | `BRDM2_TK_EP1` | `:8` |
 | `GAZ_Vodnik_HMG` | `:9` |
 | `BTR60_TK_EP1` | `:10` |
-| `Ural_ZU23_TK_EP1` | `:11` |
+| `Ural_ZU23_INS` | `:12` |
 | `BTR90` | `:12` |
 
 ### WEST (US) Pool — 10 vehicles
@@ -87,10 +87,10 @@ One random vehicle is spawned per playable side from the respective pool at miss
 | `M1135_ATGMV_EP1` | `:19` |
 | `HMMWV_M1151_M2_DES_EP1` | `:20` |
 | `HMMWV_M998_crows_MK19_DES_EP1` | `:21` |
-| `HMMWV_TOW_DES_EP1` | `:22` |
+| `HMMWV_TOW` | `:23` |
 | `LAV25` | `:23` |
 | `Pandur2_ACR` | `:24` |
-| `BAF_Jackal2_L2A1_D` | `:25` |
+| `BAF_Jackal2_L2A1_W` | `:25` |
 
 ## Town Catalog
 
@@ -168,7 +168,7 @@ Key differences relevant to cross-map development work:
 | Property | Chernarus | Takistan | Source |
 |---|---|---|---|
 | Mission file | `[55-2hc]…chernarus` | `[61-2hc]…takistan` | folder names |
-| Slot count | 56 (`player="PLAY CDG"` count in Chernarus `mission.sqm`) | 62 (`player="PLAY CDG"` count) | `mission.sqm` |
+| Slot count | 34 (`player="PLAY CDG"` count in Chernarus `mission.sqm` — master Chernarus is an AI-vs-AI eval build with reduced slots) | 62 (`player="PLAY CDG"` count) | `mission.sqm` |
 | `totalTowns` | 43 | 31 | `mission.sqm:3265` (Chernarus), `mission.sqm:633` (Takistan) |
 | Boundary | 15360 m | 12800 m | `Common/Init/Init_Boundaries.sqf:5,8` |
 | `IS_chernarus_map_dependent` | `true` | `false` | `initJIPCompatible.sqf:114-116` |

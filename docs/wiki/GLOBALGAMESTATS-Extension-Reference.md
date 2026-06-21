@@ -145,7 +145,7 @@ After routing, the `_args` array passed to `GLOBALGAMESTATS.ActivateExtensionMet
 
 ---
 
-## 5. Player Count: One-HC Subtraction
+## 5. Player Count: Dynamic HC Subtraction
 
 The player count sent to the extension is not the raw `BIS_fnc_listPlayers` count. GlobalGameStats.sqf applies two transforms:
 
@@ -156,18 +156,19 @@ The player count sent to the extension is not the raw `BIS_fnc_listPlayers` coun
     }
 } forEach call BIS_fnc_listPlayers;
 
-_playerCount = abs(_playerCount - 1); // Exclude headless client
+_hcCount = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+_playerCount = (_playerCount - _hcCount) max 0;
 ```
 
-Source: GlobalGameStats.sqf:14-20.
+Source: GlobalGameStats.sqf:14-24.
+
+The HC count is read dynamically from the `WFBE_HEADLESSCLIENTS_ID` mission variable (the same registry used by Server_HandleSpecial.sqf). Only HCs whose group leader is non-null and alive are counted, matching the validity check used elsewhere in the mission. The result is floored at 0 via `max 0` to prevent a transient over-subtract from reporting a negative player count.
 
 | Condition | Effect |
 |-----------|--------|
-| Standard deployment (1 HC) | Correct: HC is counted by `BIS_fnc_listPlayers`, subtracted by `-1`, result is human players only |
-| No HC (listen server / dev) | `abs(0 - 1)` = `1`, which is wrong — player count will show 1 even with 0 players |
-| Two HCs (not a standard WASP setup) | Subtracts only one; the second HC is counted as a human player |
-
-The `abs()` prevents a negative result but does not prevent the no-HC off-by-one. Operators running without a headless client will see the Discord status show one extra phantom player.
+| Standard deployment (1+ HC) | Correct: live HC count subtracted from raw player total; floored at 0 |
+| No HC (listen server / dev) | Correct: `_hcCount` resolves to 0, result equals the raw `isPlayer` count |
+| Two HCs | Correct: both are present in the registry and both are subtracted |
 
 ---
 

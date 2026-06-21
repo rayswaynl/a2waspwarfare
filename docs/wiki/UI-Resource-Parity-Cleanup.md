@@ -26,7 +26,7 @@ Current docs/source note: as of docs checkout `docs/developer-wiki-index` `b5219
 
 - Live upgrade path: `WFBE_UpgradeMenu` loads `Client/GUI/GUI_UpgradeMenu.sqf` (`Rsc/Dialogs.hpp:4-7`), and the main menu opens it with `createDialog "WFBE_UpgradeMenu"` (`Client/GUI/GUI_Menu.sqf:165`).
 - Old upgrade path: no `Client/GUI/GUI_Menu_Upgrade.sqf` exists in current Chernarus or maintained Vanilla, and no `Client/Images/wf_*.paa` files exist under current Chernarus `Client/Images`.
-- Economy declared controls: current `RscMenu_Economy` declares `23002`, `23003`, `23008`, `23009`, `23010`, `23011`, `23012`, `23013`, `23014`, `23015`, `23016`, not `23004`-`23006`.
+- Economy declared controls: current `RscMenu_Economy` declares `23002`, `23003`, `23008`, `23009`, `23010`, `23011`, `23012`, `23013`, `23014`, `23015`, `23016`, `23020`, not `23004`-`23006`.
 - Display lookup caveat: the 2026-06-14 maintained-root search found no `findDisplay 23000` or `findDisplay 10200` caller in docs checkout `b5219d47` (unchanged from `2fef1e3d` for these paths), stable `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` or release `a96fdda2`, so duplicate IDD cleanup is maintenance/future-proofing rather than a proven live lookup bug.
 
 ## Recommended Patch Order

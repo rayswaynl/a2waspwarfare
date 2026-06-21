@@ -67,7 +67,7 @@ Both handlers receive `[_projectile, _landDestination, _velocity]` as `_this` an
 | 5 | Record deploy position, delete the original shell | `ARTY_HandleILLUM.sqf:21-22` |
 | 6 | Spawn `"ARTY_Flare_Medium"` at deploy position and re-set its position | `ARTY_HandleILLUM.sqf:25-26` |
 
-The shell is replaced by the flare at exactly 310 m altitude above the target grid. No further physics manipulation of the flare is performed; it uses its own CfgAmmo simulation from there.
+The shell is replaced by the flare when its altitude first drops below 310 m above the target grid. No further physics manipulation of the flare is performed; it uses its own CfgAmmo simulation from there.
 
 ---
 
@@ -110,7 +110,7 @@ The seeker treats the following base classes as air targets — a distinct hit p
 | 9 | Loop exits when altitude < 10 m (miss) or `_targetFound = true` | `ARTY_HandleSADARM.sqf:72` |
 | 10 | If target found and barrel still alive: delete barrel + parachute, spawn `"ARTY_SADARM_BURST"` +5 m above barrel position | `ARTY_HandleSADARM.sqf:76-87` |
 | 11 | **Hit path branches on target type** (air vs ground — see below) | `ARTY_HandleSADARM.sqf:89-131` |
-| 12 | Unconditional cleanup: `deleteVehicle _barrel; deleteVehicle _parachute` (guarded nil-checks) | `ARTY_HandleSADARM.sqf:135-136` |
+| 12 | Cleanup: `deleteVehicle _barrel` (unconditional); `if !(isNull _parachute) then {deleteVehicle _parachute}` (nil-guarded) | `ARTY_HandleSADARM.sqf:135-136` |
 | 13 | If air path: `sleep 1; deleteVehicle _impactAreaSimulation` (DR-56 fix — was a leaking `while {true}` thread) | `ARTY_HandleSADARM.sqf:138-141` |
 
 ### SADARM Scan Parameters

@@ -4,7 +4,7 @@ This page records the branch-scoped state for the `supply-mission-scan-narrowing
 
 ## Status
 
-Canonical branch/root matrix: [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) — use it for branch/root truth, not this leaf page. In short: the typed 80 m command-center scan is present on docs/source (`f3e157f2`) and current release (`7ff18c49`, `:52,58`) in both maintained roots; local `HEAD` / stable `origin/master` / Miksuu (`89ae9dad`) and `perf/quick-wins` (`0076040f`) still broad-enumerate at `supplyMissionStarted.sqf:28` then post-filter `Base_WarfareBUAVterminal` at `:25`. Hosted/dedicated Arma 2 OA smoke is still pending.
+Canonical branch/root matrix: [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) — use it for branch/root truth, not this leaf page. In short: the typed 80 m command-center scan is present on docs/source (`f3e157f2`) and current release (`7ff18c49`, `:52,58`) in both maintained roots; local `HEAD` / stable `origin/master` / Miksuu (`89ae9dad`) and `perf/quick-wins` (`0076040f`) already use a typed `nearestObjects(["Base_WarfareBUAVterminal"])` scan at `supplyMissionStarted.sqf:61`, with a conditional radius of 80 m for trucks and 400 m for helicopters; an `isKindOf "Base_WarfareBUAVterminal"` guard remains at `:55` as a secondary check inside the `forEach`, but no broad-enumeration post-filter path exists in this branch. Hosted/dedicated Arma 2 OA smoke is still pending.
 
 ## What I Read
 
@@ -25,7 +25,7 @@ Wiki/docs:
 
 ## What The Code Did
 
-The server supply-mission start handler owns the live return-to-base loop. Every 3 seconds, while the associated supply vehicle is alive, local current source/stable/upstream/perf still look for a nearby command center with broad object enumeration plus a terminal class post-filter:
+The server supply-mission start handler owns the live return-to-base loop. Every 1 second, while the associated supply vehicle is alive, local current source/stable/upstream/perf still look for a nearby command center with broad object enumeration plus a terminal class post-filter:
 
 - Current source `Server/Module/supplyMission/supplyMissionStarted.sqf:20`: `while { alive _associatedSupplyTruck }`
 - Current source `Server/Module/supplyMission/supplyMissionStarted.sqf:25`: `_x isKindOf "Base_WarfareBUAVterminal"`
@@ -37,14 +37,14 @@ The nearby-player check at current-source `supplyMissionStarted.sqf:44` still us
 
 Guardrail: if this performance cleanup is ported to current source, use a class-filtered `nearestObjects`/`nearObjects` scan plus the `isKindOf "Base_WarfareBUAVterminal"` check. Do not replace it with `nearEntities`; this target is a command-center structure, while this mission uses `nearEntities` for entity/logics scans such as camps, towns, vehicles and units.
 
-Scope note: this patch applies to the live supply mission return-to-base handler in `supplyMissionStarted.sqf`. The compiled dead twin `supplyMissionActive.sqf` still carries the older broad-scan logic; retire or annotate that path during the broader cleanup instead of treating it as a second live implementation.
+Scope note: this patch applies to the live supply mission return-to-base handler in `supplyMissionStarted.sqf`. (If a compiled dead twin `supplyMissionActive.sqf` ever existed, it is not present on master; verify its existence on any working branch before treating it as a live or legacy handler, and retire or annotate it if found during the broader cleanup.)
 
 ## Patch Shape
 
 Release `7ff18c49` typed scan shape:
 
 ```sqf
-} forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]);
+} forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], (if (_byHeli) then {400} else {80})]);
 ```
 
 Docs/source `f3e157f2` carries the 80 m typed scan in both maintained roots. Local `HEAD` / `origin/master` and the checked Miksuu/perf refs do not currently carry that typed scan; they still use broad enumeration plus post-filter at `supplyMissionStarted.sqf:25,28`. Root discovery for any future propagation run is documented as branch-sensitive in [Tools/build workflow](Tools-And-Build-Workflow): current source/stable/Miksuu/perf need an `a2waspwarfare` ancestor, while release `7ff18c49` has marker-root support. `Modded_Missions/*` are not claimed by this propagation lane.

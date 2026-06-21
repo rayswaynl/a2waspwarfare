@@ -146,17 +146,15 @@ Inside the server victory block, the code writes:
 
 ```sqf
 WF_Logic setVariable ["WF_Winner", _x];
+gameOver = true;
+WFBE_GameOver = true;
 ...
-_side = west;
-if (_x == west) then {
-    _side = east;
-};
-[_side] call WFBE_CO_FNC_LogGameEnd;
+[_x] call WFBE_CO_FNC_LogGameEnd;
 ```
 
-The live logger expects its first argument to be the winning side (`Server_LogGameEnd.sqf:9-12`). It increments `profileNamespace` key `"%1_WIN_CHERNARUS"` for that side when `WFBE_Server_LogMatchWin` is enabled (`Server_LogGameEnd.sqf:21-44`).
+The live logger (`Server_LogGameEnd.sqf:9-12`) treats its first argument as `_winnerTeam` and increments `profileNamespace` key `"%1_WIN_CHERNARUS"` for that side when `WFBE_Server_LogMatchWin` is enabled (`Server_LogGameEnd.sqf:21-44`). The source passes `_x` directly in both branches — there is no intermediate `_side` variable or west/east flip before the call.
 
-This is correct for a side being eliminated: if `_x` is the loser, the opposite side should be logged as winner. It is wrong for an all-towns victory: if `_x` holds all towns, `_x` is the winner, but the current block still logs the opposite side. Treat `WF_Winner` in current source as branch-dependent and therefore unreliable: it stores the condition side, not a consistently named winner.
+Because `_x` is passed verbatim: in the elimination branch `_x` is the side whose HQ died and factories reached zero — the loser — so the logger incorrectly credits the loser with the win. In the all-towns branch `_x` is the side holding all towns — the winner — so the logger correctly credits the winner. `WF_Winner` stores `_x` verbatim without correction, so it is only reliable (equals the actual winner) in the all-towns branch. Treat both variables as branch-dependent and patch both when fixing winner/loser correctness.
 
 Deep Review DR-11 owns this impact, and DR-36 owns the exact guard/precedence/no-break mechanism.
 

@@ -91,7 +91,7 @@ Evidence:
 
 ### Template Risk
 
-`Client_UI_Gear_SaveTemplateProfile.sqf` references `_u_upgrade` at `:33`, `:52` and `:75`, but the variable is not defined in that function. The focused patch and smoke plan live in [Gear template profile filter](Gear-Template-Profile-Filter). Treat profile-template save filtering as suspect until this variable is replaced with an item- or template-upgrade comparison.
+The `_u_upgrade` undefined-variable bug was fixed in master (task 44). The weapon, magazine and backpack loops in `Client_UI_Gear_SaveTemplateProfile.sqf` now compare `_get select 3` (the item's own required upgrade level) against both `_upgrade_barracks` and `_upgrade_gear`. The focused patch shape and smoke plan remain in [Gear template profile filter](Gear-Template-Profile-Filter) for reference, but the core undefined-variable gate is resolved on master.
 
 The visible template list also filters by current gear upgrade (`Client_UI_Gear_FillTemplates.sqf:15-22`). Higher-upgrade saved templates can be valid but hidden until the side upgrades gear again; support/debug docs should distinguish hidden-by-upgrade from deleted profile data.
 
@@ -123,7 +123,7 @@ Focused EASA review found two local correctness edges in the menu flow:
 
 - `GUI_Menu_EASA.sqf:40-53` uses `_funds > price`, so an exact-funds purchase is rejected and can display "missing $0" even though the player has the listed price.
 - The service menu opens EASA from a cached vehicle/context snapshot, and `EASA_Equip.sqf:8-38` silently exits if the current vehicle is unsupported. Without an action-time recheck, a stale menu can debit/show success while equipping nothing.
-- `GUI_Menu_EASA.sqf:3-4` has an earlier fail-open variant: when the dialog loads on an unsupported current vehicle, it exits after logging `"Invalid vehicle type for EASA Menu"` but does not `closeDialog 0`. Treat blank/partial EASA surfaces as stale-context evidence, not just cosmetic UI weirdness.
+- `GUI_Menu_EASA.sqf:3-4` has an earlier fail-open variant: when the dialog loads on an unsupported current vehicle, it exits after logging `"GUI_Menu_EASA.sqf: Player vehicle [%1] was not found within the list."` but does not `closeDialog 0`. Treat blank/partial EASA surfaces as stale-context evidence, not just cosmetic UI weirdness.
 
 `origin/feat/buymenu-easa-qol` head `a66d4691` adds EASA current-loadout highlighting/preselect in the menu (`GUI_Menu_EASA.sqf:29-40`) but does not change the purchase action at `GUI_Menu_EASA.sqf:46-50` or `EASA_Equip.sqf`. Treat it as UI orientation only; exact-funds and stale/unsupported context gates remain open. See [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit).
 
@@ -133,7 +133,7 @@ Claude DR-28 completed the source review for EASA and vehicle service actions. T
 
 - `GUI_Menu_EASA.sqf:46-50` performs the affordability check on the client, calls `EASA_Equip`, then debits via `ChangePlayerFunds`.
 - `EASA_Equip.sqf:28-36` mutates the local aircraft with `addWeapon` / `addMagazine` or turret variants, then only broadcasts the chosen `WFBE_EASA_Setup` index.
-- `GUI_Menu_Service.sqf:196-200` rearm and `:217-219` refuel debit funds unconditionally before running local effect threads; unlike repair and heal, they do not first check that the player can afford the action. The patch-ready local guard is documented in [Service menu affordability guards](Service-Menu-Affordability-Guards).
+- `GUI_Menu_Service.sqf` rearm (MenuAction == 1, ~line 482) and refuel (MenuAction == 3, ~line 505) both guard the debit with an explicit `_funds >= price` check in master (comment: "QoL: affordability guard (parity with repair/heal)"). Repair (MenuAction == 2, ~line 493) debits when `_repairPrice > 0` and heal (MenuAction == 5, ~line 516) when `_healPrice > 0`, relying on button-disable state rather than an action-time funds comparison. The residual gap — repair and heal lacking explicit action-time funds checks — is documented in [Service menu affordability guards](Service-Menu-Affordability-Guards).
 
 This is not a separate one-off bug class. It completes the economy authority map: build, buy, sell, side supply, upgrades, ICBM/special weapons, gear, EASA and service actions all rely on client-side spend/effect authority unless a future hardening pass moves the ledger and effect validation server-side or constrains the client with BattlEye script filters.
 
@@ -207,7 +207,7 @@ Treat `WARNING_GAME_CRASH_DO_NOT_USE_IN_LOADOUTS_*` as hard blockers, not normal
 - Edit gear catalog SQF for infantry/vehicle cargo metadata; edit LoadoutManager C# for aircraft/EASA/balance metadata.
 - After changing mission SQF, remember the Chernarus source mission is canonical; generated missions require LoadoutManager propagation.
 - After changing LoadoutManager, inspect generated `EASA_Init.sqf` and `Common_BalanceInit.sqf` diffs before trusting the output.
-- Do not rely on dialog IDD `23000` to identify EASA until the duplicate Economy IDD is resolved.
+- Do not confuse `RscMenu_Economy` (idd 23000) with `RscMenu_EASA` (idd 24000) when scripting display-ID lookups. On branches that predate [UI IDD collision repair](UI-IDD-Collision-Repair), verify actual IDD values before using numeric display-ID targets.
 - Do not assume server-side validation exists for gear/EASA funds or upgrade gates.
 
 ## Agent Index Facts

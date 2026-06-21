@@ -48,7 +48,7 @@ Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-2
 
 Terminology warning: current docs use "HC" for headless-client delegation, but the source also contains a separate Arma high-command UI path. `Client/FSM/updateavailableactions.fsm:47` initializes `_hc_enabled = false`, and the only `HCSetGroup` add path is gated by that flag at `:115-117`; no current source assignment was found that flips it true. Cleanup still removes high-command groups when commander state changes (`Client/FSM/updateclient.sqf:204,228`). Do not confuse this inert high-command UI ownership path with live headless-client AI creation/delegation.
 
-HC timing caveat: the headless-client entry point currently sleeps for a fixed 20 seconds and then sends `["RequestSpecial", ["connected-hc", player]]` (`Headless/Init/Init_HC.sqf:12-15`). The server only sets `serverInitFull = true` later in `Server/Init/Init_Server.sqf:507`, so HC registration is not protected by a real full-server barrier. Treat HC startup bugs as lifecycle issues too; the canonical wait-chain view is [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+HC timing caveat: the headless-client entry point currently sleeps for a fixed 20 seconds (`Headless/Init/Init_HC.sqf:14`), then runs a bounded reseat-to-civilian poll (up to ~60 s), parks the HC body in the deadspawn ring, and only after all that sends `["RequestSpecial", ["connected-hc", player]]` at line 129. The server only sets `serverInitFull = true` later in `Server/Init/Init_Server.sqf:507`, so HC registration is not protected by a real full-server barrier. Treat HC startup bugs as lifecycle issues too; the canonical wait-chain view is [Lifecycle wait-chain](Lifecycle-Wait-Chain).
 
 Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
 
@@ -78,7 +78,7 @@ Legacy AI order notes from the 2026-06-04 scout:
 
 - `Server/AI/AI_TLWPHandler.sqs:9-31` still exists and teleports stragglers toward a team leader, but no static Chernarus caller or compile reference was found. Treat it as a legacy/orphan candidate unless a dynamic caller is proven.
 - `Server/AI/Orders/AI_WPAdd.sqf:35-36` can apply waypoint scripts/statements, but current static callers pass empty script/statement values (`AI_MoveTo.sqf:21`; `AI_Patrol.sqf:32,37`; `AI_TownPatrol.sqf:64,69`; `AI_Resistance.sqf:14`). No current client/network-controlled path to those statement strings was found in this pass.
-- The queued water-avoidance finding remains branch-sensitive: current checked-out source still shows uncapped water-avoidance loops in `AI_Patrol.sqf:26-30` and `AI_TownPatrol.sqf:50-54`; if another branch claims it fixed, re-check that branch before closing the current-source row.
+- The water-avoidance loops in `AI_Patrol.sqf:27` and `AI_TownPatrol.sqf:51` are capped at 20 retries on master (`while {surfaceIsWater _pos && _wtr < 20} do` with `_wtr = _wtr + 1` inside) and fall back to the town/destination centre position when still in water after 20 attempts. This is not an open uncapped-loop finding on master; verify any branch that modifies these files before re-opening it.
 
 ## Town AI
 
@@ -144,7 +144,7 @@ Claude's review sharpened several assumptions about AI performance and HC behavi
 
 Town AI is not simulation-cached. `enableSimulation false` is used on invisible town logic entities in `mission.sqm`, not as the town AI cache. The active mechanism is `Server/FSM/server_town_ai.sqf`:
 
-- Spawn: nearby `"Man"`, `"Car"`, `"Motorcycle"`, `"Tank"` and `"Ship"` entities inside `600 * detection_coef` wake a town; aircraft are filtered out so flyovers do not activate towns.
+- Spawn: nearby `"Man"`, `"Car"`, `"Motorcycle"`, `"Tank"`, `"Air"` and `"Ship"` entities inside `600 * detection_coef` wake a town; Air-class entities are included in the scan but filtered by `unitsBelowHeight 20`, so only aircraft below 20 m altitude activate towns — high-altitude flyovers do not.
 - Despawn: after `time - wfbe_inactivity > WFBE_C_TOWNS_UNITS_INACTIVE` with no enemies, units and groups are deleted.
 - Confirmed DR-45 risk: the vehicle cleanup in `server_town_ai.sqf:191-223`, especially `:211-216`, iterates `wfbe_active_vehicles` and deletes each alive vehicle when `!(isPlayer leader group _x)`. It does not check `crew`, cargo or turret occupants, so a player riding in a town-AI vehicle while not group leader can still be inside a vehicle that gets deleted. This is separate from `Server_HandleEmptyVehicle.sqf:26-30`, which has its own empty-vehicle wait and is not the source of this bug. See [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) for the source chain, patch shape and validation gates.
 

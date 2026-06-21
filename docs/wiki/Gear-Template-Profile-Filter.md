@@ -31,7 +31,7 @@ flowchart TD
 | `Client/Functions/Client_UI_Gear_AddTemplate.sqf:15,37,83,110,136-148` | Builds `_u_upgrade` as the maximum required upgrade in the new template, then appends the template and sets `_need_save = true`. |
 | `Client/GUI/GUI_BuyGearMenu.sqf:509` | Spawns `WFBE_CL_FNC_UI_Gear_SaveTemplateProfile` after the dialog closes when `_need_save` is true. |
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:17-19` | Privates and sets `_template_upgrade = _x select 3`. |
-| `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` | Uses `_u_upgrade`, which is not private or assigned in this function. |
+| `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82` | Fixed (task 44): all three per-item upgrade checks now use `(_get select 3)` on both sides of the AND; `_u_upgrade` is no longer referenced in this function. |
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:94-95` | Writes the filtered array to `profileNamespace` and calls `saveProfileNamespace`. |
 | `Client/Functions/Client_UI_Gear_FillTemplates.sqf:15-22` | The visible template list only adds templates whose stored upgrade level is at or below current `WFBE_UP_GEAR`. |
 
@@ -41,7 +41,7 @@ flowchart TD
 | --- | --- | --- | --- |
 | Current docs/source Chernarus `8b71e2a1` | `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still reference undefined `_u_upgrade`. | `Init_ProfileGear.sqf:17` accepts `count _x >= 6`, then `:25` reads `_x select 6`. | Patch-ready; source is still unpatched. |
 | Maintained Vanilla Takistan `8b71e2a1` | Same save-filter `_u_upgrade` references. | Same six-field guard before index-6 read. | Propagate deliberately after Chernarus source fix. |
-| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Same in both maintained roots. | Same in both maintained roots. | Stable/release do not rescue the profile-template debt, even though they differ on nearby service/cargo behavior. |
+| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Save-filter `_u_upgrade` bug fixed on master (task 44): all three checks now use `(_get select 3)` directly. Release branch `a96fdda2` not independently verified — check separately. | Same in both maintained roots. | Stable/release do not rescue the profile-template debt, even though they differ on nearby service/cargo behavior. |
 | Miksuu `b8389e74`, perf `0076040f` and EASA QoL `a66d4691` | Same in both maintained roots. | Same in both maintained roots. | No upstream/perf/QoL rescue exists; QoL only changes Chernarus EASA menu orientation. |
 
 ### Creation Gate Branch Matrix
@@ -58,13 +58,13 @@ Refreshed 2026-06-14 for docs checkout `8b71e2a1`, stable `origin/master` `cf2a6
 
 ## Bug Shape
 
-`Client_UI_Gear_SaveTemplateProfile.sqf` intends to filter templates so only side-valid and currently unlocked items are saved to the player's profile. The function has a correctly named `_template_upgrade` value, but the three per-item upgrade checks reference `_u_upgrade` instead:
+`Client_UI_Gear_SaveTemplateProfile.sqf` intends to filter templates so only side-valid and currently unlocked items are saved to the player's profile. The function has a correctly named `_template_upgrade` value, but the original three per-item upgrade checks referenced `_u_upgrade` instead (pre-fix shape):
 
 ```sqf
 if ((_get select 3) > _upgrade_barracks && _u_upgrade > _upgrade_gear) then {_can_save = false};
 ```
 
-`_u_upgrade` exists in `Client_UI_Gear_AddTemplate.sqf`, where it is the computed max upgrade for a newly created template. It does not exist in `Client_UI_Gear_SaveTemplateProfile.sqf`.
+`_u_upgrade` exists in `Client_UI_Gear_AddTemplate.sqf`, where it is the computed max upgrade for a newly created template. It does not exist in `Client_UI_Gear_SaveTemplateProfile.sqf`. **This bug is already fixed on master (task 44).** All three loops (weapon, magazine, backpack-content) now use `(_get select 3)` on both sides of the AND, matching the corrected form shown in the Patch Options section below. The Source Evidence row for `:33,52,75` and the Branch Matrix rows stating master "still reference undefined `_u_upgrade`" reflect the pre-fix state and are no longer accurate for `origin/master`.
 
 Separate creation-gate nuance: `Client_UI_Gear_AddTemplate.sqf:135-136` accepts a new template when the computed requirement is below either current Barracks upgrade or current Gear upgrade:
 

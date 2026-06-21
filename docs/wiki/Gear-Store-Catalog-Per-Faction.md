@@ -27,7 +27,7 @@ Three processors each store one metadata array per item into `missionNamespace`,
 | Weapons / items | `Config_Weapons.sqf` | `<class>` | `Config_Weapons.sqf:42` |
 | Backpacks | `Config_Backpack.sqf` | `<class>` | `Config_Backpack.sqf:64`, `:81` |
 
-In every stored array, index `[2]` is the price and index `[3]` is the upgrade level (`Config_Magazines.sqf:26-27`, `Config_Weapons.sqf:36-37`, `Config_Backpack.sqf:27-28`). No weapon in any faction file forces magazines — every weapon entry uses `_m = -1` (auto).
+In every stored array, index `[2]` is the price and index `[3]` is the upgrade level (`Config_Magazines.sqf:26-27`, `Config_Weapons.sqf:36-37`, `Config_Backpack.sqf:27-28`). Most weapon entries use `_m = -1` (auto), letting `Config_Weapons.sqf` derive magazines from the config. Three entries use forced arrays: `VSS_vintorez` (RU) forces `["20Rnd_9x39_SP5_VSS"]`, `UZI_EP1` (TKA) forces `["30Rnd_9x19_UZI","30Rnd_9x19_UZI_SD"]`, and `UZI_SD_EP1` (TKA) forces `["30Rnd_9x19_UZI_SD"]`.
 
 ### The "Min level" gate
 

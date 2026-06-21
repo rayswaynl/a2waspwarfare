@@ -29,7 +29,7 @@ The VBIED chassis is a tier-0 "always available" entry in the GUER buy pool: `hi
 | Sanity guard | `isNull _veh || {!alive _veh}` → exit | `Client/Action/Action_GuerVbiedDetonate.sqf:18` |
 | Driver guard | `driver _veh != _player` → exit (belt-and-braces vs the action condition) | `Client/Action/Action_GuerVbiedDetonate.sqf:19` |
 | Re-entry lock | `_veh getVariable ["wfbe_vbied_arming", false]` → exit (already counting down) | `Client/Action/Action_GuerVbiedDetonate.sqf:20` |
-| Step 1 — arm window | if `time > wfbe_vbied_confirm` (no/expired window): set `wfbe_vbied_confirm = time + 5`, `titleText` "VBIED ARMED — select again within 5s", then exit. Nothing detonates. | `Client/Action/Action_GuerVbiedDetonate.sqf:22-29` |
+| Step 1 — arm window | if `time > wfbe_vbied_confirm` (no/expired window): set `wfbe_vbied_confirm = time + 5`, `titleText` "VBIED ARMED — select 'Detonate VBIED' again within 5s to confirm.", then exit. Nothing detonates. | `Client/Action/Action_GuerVbiedDetonate.sqf:22-29` |
 | Step 2 — confirm | second selection inside the 5s window: set `wfbe_vbied_arming = true`, read `WFBE_C_GUER_VBIED_ARM_DELAY` (default 3), then `spawn` the countdown | `Client/Action/Action_GuerVbiedDetonate.sqf:31-35` |
 
 The arm/confirm state is stored as plain (local) object variables on the truck: `wfbe_vbied_confirm` (the `time +5` deadline, default `-1`) and `wfbe_vbied_arming` (the re-entry lock, default `false`). Neither is broadcast — they only need to be consistent on the activating client, which is the same machine for every selection of a local addAction.

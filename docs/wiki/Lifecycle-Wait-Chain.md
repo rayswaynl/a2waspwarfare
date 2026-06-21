@@ -69,7 +69,7 @@ Block on `WFBE_PRESENTSIDES` + `wfbe_teams` → `Init_Client` compiles functions
 
 ### Headless client
 
-`Init_HC.sqf` compiles the three delegation handlers (`Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. See [AI, headless and performance](AI-Headless-And-Performance) for the runtime source router and [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) for DR-21/DR-42 patch policy.
+`Init_HC.sqf` compiles four delegation handlers (`Client_CleanupDelegatedTownAI`, `Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. See [AI, headless and performance](AI-Headless-And-Performance) for the runtime source router and [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) for DR-21/DR-42 patch policy.
 
 Source-check note: `Init_HC.sqf:12` is the fixed sleep and `:15` sends the HC registration request. `serverInitFull` is not set until `Server/Init/Init_Server.sqf:507`, after `serverInitComplete` at `:117` and the `commonInitComplete && townInit` wait at `:127`.
 
@@ -106,7 +106,7 @@ Bernoulli's 2026-06-02 wait-chain audit split the client join gates into two cla
 
 ## Known ordering hazards
 
-- **Debug-only economy override:** `initJIPCompatible.sqf:151-162` raises starting funds/supply and other test parameters only inside `if (WF_Debug)`. Confirm `WF_Debug` state before comparing economy behavior against mission parameters.
+- **Always-on economy override (`WFBE_C_AB_AMPLE_ECON`):** `initJIPCompatible.sqf:151-162` forces starting funds to 30000 and supply to 12800 per side whenever `WFBE_C_AB_AMPLE_ECON > 0` (default 1, i.e. active on every run). This block is NOT gated on `WF_Debug`. A separate `if (WF_Debug)` block at `:189-200` further overrides funds/supply to 999999 and sets gameplay parameters (upgrades clearance, town occupation, AI delegation, town starting mode, EASA). Set `WFBE_C_AB_AMPLE_ECON=0` to disable the always-on override; confirm both variable states before comparing economy behavior against mission parameters.
 - **Server-only code inside Common:** `Init_Common.sqf:303-308` runs an `if (isServer)` town-group load from the *common* path. Functionally correct but architecturally surprising.
 - **Mission object init can look invisible in SQF-only scans:** town setup begins from `mission.sqm` object `init` fields. Audit `mission.sqm` together with `Init_Town*.sqf` before changing town startup, town-mode filters, town count assumptions or generated mission propagation.
 - **Duplicate compiles in `Init_Server`:** several functions are compiled twice (e.g. `WFBE_SE_FNC_PlayerObjectsList`, `WFBE_CO_FNC_LogGameEnd`); harmless (second overwrites first) but wasteful.

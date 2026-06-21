@@ -6,7 +6,7 @@ All paths are relative to the source mission root `Missions/[55-2hc]warfarev2_07
 
 ## What "WASP" is
 
-WASP is the community/server identity this fork is built for. The mission credits itself as "Warfare WASP-AWESOME EDITION" in `Client/GUI/GUI_Menu_Help.sqf:149`, and `mission.sqm:26` reads `briefingDescription="by Benny and Awesome&WASP"`. The `WASP/` folder holds custom features added on top of stock WFBE, contributed over time by several authors (English additions by "Marty", Russian-language contributions with Cyrillic comments, and DeraKOren for the RPG-dropping system). It is unrelated to "WASP" as any engine term.
+WASP is the community/server identity this fork is built for. The mission credits itself as "Warfare WASP-AWESOME EDITION" in `Client/GUI/GUI_Menu_Help.sqf:149`, and `mission.sqm:25` has `briefingName="Warfare V48 Chernarus [GUER]"`; the old `briefingDescription="by Benny and Awesome&WASP"` attribution is no longer present in master (line 26 now reads the AI-eval build description). The `WASP/` folder holds custom features added on top of stock WFBE, contributed over time by several authors (English additions by "Marty", Russian-language contributions with Cyrillic comments, and DeraKOren for the RPG-dropping system). It is unrelated to "WASP" as any engine term.
 
 ## Subtree map
 

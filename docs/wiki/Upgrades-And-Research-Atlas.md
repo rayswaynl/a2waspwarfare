@@ -82,6 +82,8 @@ Checked 2026-06-14 against docs checkout `1b07716d`, stable `origin/master` `cf2
 | 19 | `WFBE_UP_AIRAAM` | Aircraft AA missiles |
 | 20 | `WFBE_UP_AAR` | Anti-air radar |
 | 21 | `WFBE_UP_UNITCOST` | Unit cost modifier/filter hook |
+| 22 | `WFBE_UP_CBRADAR` | Counter-battery radar |
+| 23 | `WFBE_UP_PATROLS` | Side patrol teams |
 
 Treat these as array indexes, not namespaced objects. Adding, removing or reordering one upgrade means auditing every `WFBE_UP_*` consumer.
 
@@ -116,7 +118,7 @@ Each `Common/Config/Core_Upgrades/Upgrades_*.sqf` side file populates:
 
 ### Config Drift Warning
 
-The constants define 22 upgrade indexes through `WFBE_UP_UNITCOST = 21`, while the representative `Upgrades_USMC.sqf` arrays visible in Chernarus are not perfectly uniform: `ENABLED` and `COSTS` include Anti Air Radar, but the shown `LEVELS`, `LINKS` and `TIMES` arrays stop before `WFBE_UP_AAR` in that file (`Upgrades_USMC.sqf:5-76`, `Upgrades_USMC.sqf:78-132`). Other side configs may differ. Do not publish a new upgrade, price, level, or unit-cost feature until every `Upgrades_*.sqf` side file is checked for array length, index alignment and generated-mission propagation.
+The constants define 24 upgrade indexes (0–23) through `WFBE_UP_PATROLS = 23` (`Init_CommonConstants.sqf:36-60`). All six arrays in `Upgrades_USMC.sqf` extend through all 24 indexes: `WFBE_UP_UNITCOST` (21) and `WFBE_UP_CBRADAR` (22) use index-padding stubs (level 0, cost 999999, time 0, empty links) because USMC has no unit-cost modifier or counter-battery radar upgrade, while `WFBE_UP_PATROLS` (23) carries real values (`Upgrades_USMC.sqf:26-29, 54-57, 82-85, 118-121, 146-149`). Other side configs may differ. Do not publish a new upgrade, price, level, or unit-cost feature until every `Upgrades_*.sqf` side file is checked for array length, index alignment across all 24 slots, and generated-mission propagation.
 
 ## Live Player Flow
 

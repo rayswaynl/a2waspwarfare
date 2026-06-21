@@ -63,7 +63,7 @@ Four distinct call sites resolve a side-specific template name via `Format` and 
 | `Server/Construction/Construction_SmallSite.sqf` | `114` | `CBRadar` | `WFBE_NEURODEF_CBRADAR_%1` (WEST/EAST) | Gated on `_rlType == "CBRadar" && WFBE_C_STRUCTURES_COUNTERBATTERY > 0` (`:111`); also registers the core in the per-side `WFBE_CBR_WEST/EAST` array |
 | `Server/FSM/server_town.sqf` | `543` | airfield CBR (captured town) | `WFBE_NEURODEF_CBRADAR_%1` (WEST/EAST) | Indestructible `Land_Antenna` placed on town capture; **reuses the buildable CBRADAR templates** for side identity; `_dir` passed as `0` (`:542-543`) |
 
-The `server_town.sqf` caller is the only one that is not a player construction. On town recapture it first deletes the previous radar's dressing explicitly (`server_town.sqf:514-515`, because the `Killed` EH won't fire on `deleteVehicle`), removes the old radar from both side registries (`:511-512`), spawns a fresh indestructible `Land_Antenna` 60 m off the airfield logic (`:521,528-535`), then calls the dressing helper with `_dir = 0` (`:543`).
+The `server_town.sqf` caller is the only one that is not a player construction. On town recapture it first removes the old radar from both side registries (`:511-512`), then deletes the previous radar's dressing explicitly (`server_town.sqf:514-515`, because the `Killed` EH won't fire on `deleteVehicle`), spawns a fresh indestructible `Land_Antenna` 60 m off the airfield logic (`:521,528-535`), then calls the dressing helper with `_dir = 0` (`:543`).
 
 ## WFBE_NEURODEF_*_WEST/_EAST dressing template family
 
@@ -103,7 +103,7 @@ The `BANK` and `CBRADAR` templates branch on `WF_A2_Arrowhead` to swap watchtowe
 |---|---|---|---|
 | Purpose | Cosmetic props | Combat defense + AI | Wall rings |
 | Spawns AI | No | Yes (`ConstructDefense`) | No |
-| Storage var on core | `wfbe_dressing` (`Server_SpawnStructureDressing.sqf:58`) | `wfbe_defense` | — |
+| Storage var on core | `wfbe_dressing` (`Server_SpawnStructureDressing.sqf:58`) | `WFBE_WDDMPositionAnchor` per child (`:67`) | `wfbe_defense` per prop (`:33`) |
 | Cleanup | Inline `Killed` EH (`:61-67`) | — | — |
 | Templates | `WFBE_NEURODEF_*_WEST/_EAST` (dressing) | `WFBE_NEURODEF_*POS*` | `WFBE_NEURODEF_*_WALLS` |
 | Missing-class behavior | Log WARNING + continue (`:48-50`) | — | — |

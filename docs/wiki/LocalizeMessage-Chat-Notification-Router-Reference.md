@@ -109,7 +109,7 @@ Six cases mutate the receiving player's funds locally rather than waiting on a s
 | `BuildingTeamkill`, `BankDestroyed`, `HeadHunterReceiveBounty`, `HeadHunterReceiveBountyInSupplies` | building-killed handler | `Server/Functions/Server_BuildingKilled.sqf:19,55,56,61,108` |
 | `BuildingTeamkill`, `HeadHunterReceiveBounty` | HQ-killed handler | `Server/Functions/Server_OnHQKilled.sqf:71,75` |
 | `CommanderDisconnected` | disconnect handler | `Server/Functions/Server_OnPlayerDisconnected.sqf:148` |
-| `SiteClearance*` (7 tags) | site-clearance flow | `Server/Functions/Server_SiteClearance.sqf:46,57,78,136,145,167` |
+| `SiteClearance*` (6 tags) | site-clearance flow | `Server/Functions/Server_SiteClearance.sqf:46,57,78,136,145,167` |
 | `Teamstack` | anti-stack comparator | `Server/Module/AntiStack/compareTeamScores.sqf:73,80` |
 | `AttackModeActiveJIP`, `AttackModeActivated`, `AttackModeEnd` | attack-wave PVF | `Server/PVFunctions/AttackWave.sqf:9,13,46,60` |
 | `AIComDonation` | AI-commander donate | `Server/PVFunctions/RequestAIComDonate.sqf:88` |

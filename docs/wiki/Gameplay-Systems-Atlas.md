@@ -148,7 +148,7 @@ Performance note: this loop deliberately sleeps `0.05` between towns and records
 
 `server_town_ai.sqf` is separate from town ownership/capture. Source anchors: `Server/Init/Init_Server.sqf:514` starts the loop when enabled; `Server/FSM/server_town_ai.sqf:17` reads `WFBE_C_AI_DELEGATION`; `:27-30` initializes active-side and active-vehicle state; `:85` scans nearby non-air entities; `:107` publishes side-scoped active visibility; `:159-179` covers client/headless/server delegation paths; `:185` operates static defenses; `:199-222` cleans up active state/vehicles/defenses; `:230` starts patrols; and `:245-247` records performance-audit data. It:
 
-- initializes `wfbe_active`, `wfbe_active_air`, `wfbe_active_sideIDs`, `wfbe_inactivity`, `wfbe_active_vehicles` and `wfbe_town_teams`;
+- initializes `wfbe_active`, `wfbe_active_air`, `wfbe_inactivity`, `wfbe_active_override`, `wfbe_active_vehicles`, `wfbe_town_teams` and `wfbe_episode_spawned`;
 - scans each town for enemies, excluding aircraft from activation scans to prevent fly-by spawns;
 - publishes side-scoped active visibility through `wfbe_active_sideIDs`;
 - chooses defender or occupation group templates;
@@ -180,7 +180,7 @@ Owner pages:
 - [Economy authority first cut](Economy-Authority-First-Cut) owns the smallest patch order for side-supply clamps and server-led migration candidates.
 - [Towns, camps and capture atlas](Towns-Camps-And-Capture-Atlas) owns town lifecycle details that feed the economy.
 
-Runtime shape: `Server/Init/Init_Server.sqf:531` starts `Server/FSM/updateresources.sqf` only when there are at least two present sides. The loop reads economy parameters, gets town supply, can route side-supply changes through `ChangeSideSupply`, pays teams, optionally pays AI commander funds and sleeps through `GetSleepFPS`.
+Runtime shape: `Server/Init/Init_Server.sqf:531` starts `Server/FSM/updateresources.sqf` unconditionally once `townInit` is true (no present-sides guard at the launch site; the loop body in `updateresources.sqf` iterates `WFBE_PRESENTSIDES - [resistance]`, so it is a no-op when no sides are populated). The loop reads economy parameters, gets town supply, can route side-supply changes through `ChangeSideSupply`, pays teams, optionally pays AI commander funds and sleeps through `GetSleepFPS`.
 
 Docs-checkout tuning constants worth checking before balance work. Line refs are preserved from `ca40f202`; current docs head `2d88dd5a` is source-unchanged for the checked gameplay paths, while branch line drift and balance interpretation belong on the economy owner pages before code work.
 

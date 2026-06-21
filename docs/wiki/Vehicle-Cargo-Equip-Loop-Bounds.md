@@ -23,8 +23,8 @@ flowchart TD
 | `Client/GUI/GUI_BuyGearMenu.sqf:94,102,108` | Reads current vehicle cargo through `Client_GetVehicleContent.sqf` and stores selected cargo arrays. |
 | `Client/GUI/GUI_BuyGearMenu.sqf:439` | Applies selected vehicle cargo with `[vehicle _target, _gear_sel_vehicle] Call WFBE_CO_FNC_EquipVehicle`. |
 | `Client/Functions/Client_GetVehicleContent.sqf:20-22` | Reads cargo with safe `for '_i' from 0 to count(_items)-1` loops. The collector is not the bug. |
-| `Common/Functions/Common_EquipVehicle.sqf:27,33,39` | Applies weapon, magazine and backpack cargo with inclusive `for '_i' from 0 to count(_items)` loops. |
-| `Common/Functions/Common_EquipBackpack.sqf:35,41` | Applies backpack weapon and magazine contents with the same inclusive `for '_i' from 0 to count(_items)` loops. |
+| `Common/Functions/Common_EquipVehicle.sqf:27,33,39` | Applies weapon, magazine and backpack cargo with corrected `for '_i' from 0 to (count(_items) - 1)` loops. (Bug existed on docs checkout `8b71e2a1`; `origin/master` `cf2a6d6a` carries the fix.) |
+| `Common/Functions/Common_EquipBackpack.sqf:35,41` | On docs checkout `8b71e2a1`: applies backpack weapon and magazine contents with the same inclusive `for '_i' from 0 to count(_items)` loops. `origin/master` `cf2a6d6a` already carries `(count(_items) - 1)` at both lines; see Branch Matrix. |
 | `Client/Functions/Client_BuildUnit.sqf:229` | Calls `WFBE_CO_FNC_EquipBackpack` for soldier purchases when a backpack is present. |
 | `Common/Functions/Common_EquipUnit.sqf:38` | Calls `WFBE_CO_FNC_EquipBackpack` for unit loadout application. |
 

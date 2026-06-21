@@ -101,7 +101,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | Artillery | Working/partial | Local/client fire authority with upgrade-gated UI/ammo/timeout behavior. |
 | Anti-air radar (AAR) | Working/partial | Base structure and client marker feature are live when enabled; upgrade levels change marker detail and refresh rate, but the per-aircraft marker loops are client-local and should be performance-smoked on busy air games. |
 | ICBM/Nuke | Partial/high-risk | Client deducts funds and sends `RequestSpecial ["ICBM", ...]`; server applies nuke damage from payload. Stale adjunct paths remain. |
-| MASH | Partial/stale | Local officer deploy path supports respawn lookup, but marker sender/relay/receiver are split or disabled. |
+| MASH | Removed (officer deploy) | The officer MASH deploy skill action was removed in the June bundle (`Skill_Apply.sqf:43`); no portable deploy path remains in master. The `WFBE_%1MASHES` config vars are commented out in all Core_Root/*.sqf files. Stringtable stubs (`STR_WF_ACTION_DeployMASH` / `STR_WF_ACTION_UndeployMASH`) and marker relay/receiver stubs are orphaned. MASH as a buildable base defense structure in Core_Structures configs is a separate system and is unaffected. |
 | ZetaCargo/airlift | Broken/partial | Hook attaches nearby unmanned land vehicle; detach action does not pass the lifted vehicle even though unhook expects it. |
 | Service menu | Working/partial | Repair/refuel/rearm/heal effects and deductions are client-side; local support scripts recheck world state but not full money authority. |
 | Supply mission | Partial | Server validates return proximity but trusts client-set `SupplyFromTown` / `SupplyAmount`. |
@@ -127,7 +127,7 @@ Do not treat those UI checks as security boundaries. Public-server hardening sho
 
 ### Anti-Air Radar
 
-AAR is a live base-support system, not only a historical changelog item. The build/action layer recognizes `AARadar` structures (`RequestStructure.sqf:14`; `updateavailableactions.fsm:189-222`), and unit init starts `Common_AARadarMarkerUpdate.sqf` for opposite-side aircraft when `WFBE_C_STRUCTURES_ANTIAIRRADAR > 0` (`Init_Unit.sqf:111-114`). The marker loop hides work while the map is closed, requires an AAR in range, applies the configured detection altitude, and reads `WFBE_UP_AAR` to move from speed-only markers at 5 seconds to altitude at 3 seconds and aircraft type at 1 second (`Common_AARadarMarkerUpdate.sqf:53-121`). It also records `PerformanceAuditAARMarkerScripts` and `aar_marker_update` samples, so large-aircraft smoke should include map-open/map-closed performance.
+AAR is a live base-support system, not only a historical changelog item. The build/action layer recognizes `AARadar` structures (`RequestStructure.sqf:14`; `updateavailableactions.fsm:189-222`), and unit init starts `Common_AARadarMarkerUpdate.sqf` for opposite-side aircraft when `WFBE_C_STRUCTURES_ANTIAIRRADAR > 0` (`Init_Unit.sqf:111-114`). The marker loop hides work while the map is closed, requires an AAR in range, applies the configured detection altitude, and reads `WFBE_UP_AAR` to move from speed-only markers at 5 seconds to altitude at 3 seconds and aircraft type at 1 second (`Common_MarkerLoop.sqf`). `Common_AARadarMarkerUpdate.sqf` is now a registrar that records `PerformanceAuditAARMarkerScripts` and `aar_marker_start`; `aar_marker_update` samples are recorded by `Common_MarkerLoop.sqf`, so large-aircraft smoke should include map-open/map-closed performance.
 
 ### UAV
 

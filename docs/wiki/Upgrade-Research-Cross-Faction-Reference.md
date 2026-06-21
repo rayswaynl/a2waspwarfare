@@ -32,7 +32,8 @@ Each faction has a dedicated upgrade config file under `Common/Config/Core_Upgra
 | 19 | `WFBE_UP_AIRAAM` | Aircraft AA Missiles |
 | 20 | `WFBE_UP_AAR` | Anti-Air Radar |
 | 21 | `WFBE_UP_UNITCOST` | Unit Cost Modifier |
-| 22 | `WFBE_UP_PATROLS` | Patrols |
+| 22 | `WFBE_UP_CBRADAR` | Counter-Battery Radar |
+| 23 | `WFBE_UP_PATROLS` | Patrols |
 
 Sources: `Common/Init/Init_CommonConstants.sqf:37-59`, `Common/Config/Core_Upgrades/Labels_Upgrades.sqf:54-78`.
 
@@ -46,19 +47,19 @@ Each upgrade config file receives the faction string as `_this` (the `_side` par
 |------|------------------------|--------------------------|-----------------|-----------------|
 | `Upgrades_CO_US.sqf` | CO_US | **Yes** (LEVELS[20] = 2) | 8,000 | GEAR 5 |
 | `Upgrades_CO_RU.sqf` | CO_RU | **Yes** (LEVELS[20] = 2) | 8,000 | GEAR 5 |
-| `Upgrades_GUE.sqf` | GUE | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
-| `Upgrades_CO_GUE.sqf` | CO_GUE | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
-| `Upgrades_INS.sqf` | INS | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
-| `Upgrades_CDF.sqf` | CDF | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
-| `Upgrades_RU.sqf` | RU | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
-| `Upgrades_OA_US.sqf` | OA_US | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
+| `Upgrades_GUE.sqf` | GUE | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
+| `Upgrades_CO_GUE.sqf` | CO_GUE | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
+| `Upgrades_INS.sqf` | INS | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
+| `Upgrades_CDF.sqf` | CDF | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
+| `Upgrades_RU.sqf` | RU | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
+| `Upgrades_OA_US.sqf` | OA_US | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
 | `Upgrades_OA_TKA.sqf` | OA_TKA | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
-| `Upgrades_OA_TKGUE.sqf` | OA_TKGUE | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
-| `Upgrades_USMC.sqf` | USMC | **No** (LEVELS[20] = 0) | 6,000 | GEAR 2 |
+| `Upgrades_OA_TKGUE.sqf` | OA_TKGUE | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
+| `Upgrades_USMC.sqf` | USMC | **Yes** (LEVELS[20] = 2) | 6,000 | GEAR 2 |
 
-**AAR disabled pattern**: AAR-disabled factions leave `ENABLED[20] = true` and `COSTS[20]` at real values (`[[5000,0],[12500,0]]`) but set `LEVELS[20] = 0`, which prevents any purchase. The index-21 slot (UNITCOST) uses cost `[999999,0]` as a guard (`Upgrades_GUE.sqf:54`) and `ENABLED[21] = false` (`Upgrades_GUE.sqf:27`) because UNITCOST is also disabled in those factions. The correct citation for AAR disable is `Upgrades_GUE.sqf:80` (LEVELS[20] = 0); `Upgrades_CO_US.sqf:80` shows the enabled form (LEVELS[20] = 2).
+**AAR availability note**: All factions have `LEVELS[20] = 2` (`Upgrades_GUE.sqf:82` — confirmed identical in CO_GUE, INS, CDF, RU, OA_US, OA_TKGUE, USMC). AAR is purchasable in every faction. The index-21 slot (UNITCOST) is disabled in INS/CDF/RU/OA_US/OA_TKGUE/USMC via `ENABLED[21] = false` and `COSTS[21] = [[999999,0]]`; GUE and CO_GUE have UNITCOST and CBR (idx 22) enabled at level 2.
 
-**Module-gated upgrades**: nine module-gated upgrade slots resolve their `ENABLED` value at runtime from module constants, not hardcoded booleans. See `Upgrades_CO_US.sqf:11-28` for the full pattern. The nine slots are: UAV (`WFBE_<side>UAV` nil-check), Custom Flares (`WFBE_C_MODULE_WFBE_FLARES == 1`), Artillery Timeout (`WFBE_C_ARTILLERY > 0`), ICBM (`WFBE_C_MODULE_WFBE_ICBM > 0`), Fast Travel (`WFBE_C_GAMEPLAY_FAST_TRAVEL > 0`), EASA (`WFBE_C_MODULE_WFBE_EASA > 0`), Artillery Ammo (`WFBE_C_ARTILLERY > 0`), IR Smoke (`WFBE_C_MODULE_WFBE_IRSMOKE > 0`), Aircraft AA Missiles (`WFBE_C_MODULE_WFBE_FLARES == 1` — same gate as Custom Flares). Custom Flares and Aircraft AA Missiles share one module gate.
+**Module-gated upgrades**: ten module-gated upgrade slots resolve their `ENABLED` value at runtime from module constants, not hardcoded booleans. See `Upgrades_CO_US.sqf:11-28` for the full pattern. The ten slots are: UAV (`WFBE_<side>UAV` nil-check), Custom Flares (`WFBE_C_MODULE_WFBE_FLARES == 1`), Artillery Timeout (`WFBE_C_ARTILLERY > 0`), ICBM (`WFBE_C_MODULE_WFBE_ICBM > 0`), Fast Travel (`WFBE_C_GAMEPLAY_FAST_TRAVEL > 0`), EASA (`WFBE_C_MODULE_WFBE_EASA > 0`), Artillery Ammo (`WFBE_C_ARTILLERY > 0`), IR Smoke (`WFBE_C_MODULE_WFBE_IRSMOKE > 0`), Aircraft AA Missiles (`WFBE_C_MODULE_WFBE_FLARES == 1` — same gate as Custom Flares), Counter-Battery Radar (`WFBE_C_STRUCTURES_COUNTERBATTERY > 0`). Custom Flares and Aircraft AA Missiles share one module gate.
 
 ---
 
@@ -94,7 +95,7 @@ All faction files share costs for most upgrades; the two meaningful differences 
 | Aircraft AA Missiles | 7,500 | — | — | — | — | — |
 | Anti-Air Radar | 5,000 | 12,500 | — | — | — | — |
 | Unit Cost Modifier | 25,000 | 50,000 | — | — | — | — |
-| Patrols | 300 | 1,000 | 2,000 | — | — | — |
+| Patrols | 300 | 1,600 | 2,400 | 3,200 | — | — |
 
 All costs are `[cash, 0]` except ICBM which costs `[49500, 80000]`. `Upgrades_CO_US.sqf:31-56`.
 
@@ -149,9 +150,9 @@ OA_TKA is the only faction that combines AAR enabled (`ENABLED[20] = true`, cost
 | Aircraft AA Missiles | 1 | 1 |
 | **Anti-Air Radar** | **2** (CO_US, CO_RU, OA_TKA) | **0** (all others) |
 | Unit Cost Modifier | 2 | 0 (same factions that have AAR unavailable) |
-| Patrols | 3 | 3 |
+| Patrols | 4 | 4 |
 
-**Disable mechanism differs between AAR and UNITCOST.** AAR (idx 20) is disabled in non-CO factions using only `LEVELS[20] = 0` (`Upgrades_GUE.sqf:80`); `ENABLED[20]` remains `true` and `COSTS[20]` holds real values. UNITCOST (idx 21) uses a full three-layer disable in those same factions: `ENABLED[21] = false` (`Upgrades_GUE.sqf:27`), `COSTS[21] = [[999999,0]]` (`Upgrades_GUE.sqf:54`), and `LEVELS[21] = 0` (`Upgrades_GUE.sqf:81`). The note "same disable pattern" in older documentation is inaccurate — they share only the LEVELS = 0 layer.
+**Disable mechanism differs between AAR and UNITCOST.** AAR (idx 20) is disabled in non-CO factions using only `LEVELS[20] = 0` (`Upgrades_GUE.sqf:80`); `ENABLED[20]` remains `true` and `COSTS[20]` holds real values. UNITCOST (idx 21) is disabled in GUE (and the same AAR-disabled factions) solely via `ENABLED[21] = false` (`Upgrades_GUE.sqf:27`); COSTS[21] retains the real values `[[25000,0],[50000,0]]` (`Upgrades_GUE.sqf:55`) and LEVELS[21] = 2 (`Upgrades_GUE.sqf:83`). The `999999` cost guard does not appear on UNITCOST in any faction; it appears in OA_TKA at index 22 (`Upgrades_OA_TKA.sqf:56`), which is the CBR index-padding slot for that faction.
 
 ---
 
@@ -185,7 +186,7 @@ Two distinct time profiles exist. CO_US and CO_RU share the same faster progress
 | Aircraft AA Missiles | 120 s | 120 s |
 | Anti-Air Radar | 50 / 125 s (CO_US/CO_RU); also 50/125 (OA_TKA) | 0 (padded, not shown) |
 | Unit Cost Modifier | 120 / 200 s (CO_US/CO_RU); OA_TKA same | 0 (padded) |
-| Patrols | 90 / 150 / 240 s | 90 / 150 / 240 s |
+| Patrols | 90 / 150 / 240 / 240 s | 90 / 150 / 240 / 240 s |
 
 Bold entries mark where CO_US/CO_RU diverge from the other factions. The Heavy Factory sequence is notably reversed: CO_US/CO_RU are faster at early levels but level 1 takes only 30 s vs. 50 s for other factions. Light Factory and Aircraft Factory are slower in CO_US/CO_RU at high levels than the standard profile.
 
@@ -230,6 +231,7 @@ The two groupings below cover all meaningful link differences.
 | Patrols | 1 | *(none)* |
 | Patrols | 2 | LIGHT 1 |
 | Patrols | 3 | HEAVY 2 |
+| Patrols | 4 | HEAVY 2 |
 
 ### 6b. All other factions (GUE, CO_GUE, INS, CDF, RU, OA_US, OA_TKA, OA_TKGUE, USMC)
 
@@ -260,14 +262,14 @@ Two distinct orders exist:
 ```
 BARRACKS 1, GEAR 1, LIGHT 1, SUPPLY 1, BARRACKS 2, GEAR 2, LIGHT 2,
 BARRACKS 3, LIGHT 3, RESPAWNRANGE 1, SUPPLY 2, HEAVY 1, HEAVY 2,
-ARTYTIMEOUT 1, SUPPLY 3, HEAVY 3, ARTYTIMEOUT 2, GEAR 3,
-RESPAWNRANGE 2, ARTYTIMEOUT 3, AIR 1, AIRLIFT 1, AIR 2,
+SUPPLY 3, HEAVY 3, GEAR 3,
+RESPAWNRANGE 2, AIR 1, AIRLIFT 1, AIR 2,
 FLARESCM 1, PARATROOPERS 1, PARATROOPERS 2, AIR 3, UAV 1,
 PARATROOPERS 3, EASA 1, SUPPLYPARADROP 1, AIRAAM 1,
 GEAR 4, LIGHT 4, AAR 1, AAR 2
 ```
 
-Note: CO_US/CO_RU explicitly order RESPAWNRANGE 1 and 2 (lines 158, 167). There is no RESPAWNRANGE 3 for this faction (LEVELS[7] = 2); Check_Upgrades.sqf has nothing to append for that index. GEAR 4 and LIGHT 4 are at the tail of the explicit list; AAR 1 and AAR 2 are the final two entries.
+Note: CO_US/CO_RU explicitly order RESPAWNRANGE 1 and 2 (lines 158, 172). There is no RESPAWNRANGE 3 for this faction (LEVELS[7] = 2); Check_Upgrades.sqf has nothing to append for that index. GEAR 4 and LIGHT 4 are at the tail of the explicit list; AAR 1 and AAR 2 are the final two entries. **ARTYTIMEOUT is absent from the CO_US and CO_RU AI order entirely** — all three levels were stripped because `WFBE_C_AI_COMMANDER_ARTILLERY=0` by default disables the AI arty fire pipeline, making arty-cooldown upgrades a wasted spend for the AI commander (`Upgrades_CO_US.sqf:167-168`, `Upgrades_CO_RU.sqf:167-168`).
 
 ### 7b. All other factions AI order
 
@@ -279,13 +281,14 @@ BARRACKS 3, LIGHT 3, RESPAWNRANGE 1, SUPPLY 2, HEAVY 1, HEAVY 2,
 ARTYTIMEOUT 1, SUPPLY 3, HEAVY 3, ARTYTIMEOUT 2, GEAR 3,
 RESPAWNRANGE 2, ARTYTIMEOUT 3, AIR 1, AIRLIFT 1, RESPAWNRANGE 3,
 AIR 2, FLARESCM 1, PARATROOPERS 1, PARATROOPERS 2, AIR 3, UAV 1,
-PARATROOPERS 3, EASA 1, SUPPLYPARADROP 1, AIRAAM 1
+PARATROOPERS 3, EASA 1, SUPPLYPARADROP 1, AIRAAM 1,
+PATROLS 1, PATROLS 2, PATROLS 3, PATROLS 4
 ```
 
 Key differences from CO_US/CO_RU:
 - RESPAWNRANGE 3 is explicitly ordered (after AIRLIFT 1, before AIR 2).
 - GEAR 4, LIGHT 4, AAR 1, AAR 2 are absent (AAR not available; Gear/Light level 4 left to Check_Upgrades.sqf auto-append).
-- Total explicit entries: 33 vs. 36 for CO_US/CO_RU.
+- Total explicit entries: 37 vs. 36 for CO_US/CO_RU.
 
 ---
 

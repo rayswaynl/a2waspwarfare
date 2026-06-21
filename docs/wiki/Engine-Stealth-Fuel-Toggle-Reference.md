@@ -19,7 +19,7 @@ The Engines module is the "STEALTH ON" / "STEALTH OFF" vehicle fuel toggle under
 | --- | --- | --- |
 | `STEALTH ON` action | `Stopengine.sqf` resolves the caller's current vehicle, stores the action id in vehicle variable `ID`, calls `EngineOn false`, and sets vehicle variable `stopped` to `true`. | `Client/Module/Engines/Stopengine.sqf:2-7` |
 | Engine event follow-up | `Engine.sqf` receives the vehicle and the new engine state. It only proceeds when vehicle variable `ID` exists, and only saves/drains fuel when `_isOn` is false. | `Client/Module/Engines/Engine.sqf:3-7` |
-| Fuel save and forced shutdown state | On the engine-off event, `Engine.sqf` stores `fuel _vehicle` in vehicle variable `Fuel`, calls `setFuel 0`, adds a `STEALTH OFF` action pointing at `Startengine.sqf`, then clears vehicle variable `ID`. | `Client/Module/Engines/Engine.sqf:8-11` |
+| Fuel save and forced shutdown state | On the engine-off event, `Engine.sqf` stores `fuel _vehicle` in vehicle variable `Fuel`, calls `setFuel 0`, adds a `STEALTH OFF` action pointing at `Startengine.sqf`. After the inner engine-off block exits, `Engine.sqf` clears vehicle variable `ID` at the outer `if (!isNil "_get")` level — so `ID` is also cleared if an engine-on event fires while `ID` is set (no fuel-save path runs in that case, leaving `stopped=true` with no STEALTH OFF action present). | `Client/Module/Engines/Engine.sqf:8-11` |
 | `STEALTH OFF` action | `Startengine.sqf` resolves the caller's current vehicle, reads vehicle variable `Fuel`, restores it with `setFuel _fuel`, removes the current action id, and sets vehicle variable `stopped` to `false`. | `Client/Module/Engines/Startengine.sqf:2-7` |
 
 ## Vehicle State Keys

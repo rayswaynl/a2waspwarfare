@@ -28,10 +28,11 @@ Wiki/docs:
 
 `WASP/global_marking_monitor.sqf` is a client-local helper loaded from `Client/Init/Init_Client.sqf`. When a local player double-clicks the map, it temporarily disables user input, waits for Arma's marker text dialog (`findDisplay 54`) and attaches key handlers so pressing Enter prefixes the marker text with the player's name.
 
-Current source still has the short polling window without a sleep:
+Current source uses a `while {time < _this} do` loop with a `sleep 0.1` throttle — functionally sound, but the `waitUntil` form below is the cleaner idiom already used for display 12:
 
 - `global_marking_monitor.sqf`: `disableUserInput true`
 - `global_marking_monitor.sqf`: `while {time < _this} do`
+- `global_marking_monitor.sqf`: `sleep 0.1`
 - `global_marking_monitor.sqf`: `_display = findDisplay 54`
 - `global_marking_monitor.sqf`: `disableUserInput false`
 

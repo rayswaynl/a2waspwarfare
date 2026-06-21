@@ -39,7 +39,7 @@ The small local fix is still useful, but it is only a correctness patch. Full pu
 
 The person heal branch has the same stale-price shape: `GUI_Menu_Service.sqf:130-133` enables the heal button before recomputing `_healPrice`.
 
-## Current Action Matrix
+## Current Action Matrix (docs/source checkout 8b71e2a1)
 
 | Action | Current debit guard | Missing local guard |
 | --- | --- | --- |
@@ -74,7 +74,7 @@ if (MenuAction == 1) then {
 };
 ```
 
-Use the same shape for refuel, repair and heal. For `Man` healing, `_canBeUsed` is not defined in the current branch, so either use a separate `_canHealMan` boolean or make the action guard branch-specific.
+Use the same shape for refuel, repair and heal. For `Man` healing, `_canBeUsed` is defined in scope (assigned at line 414, before the `isKindOf "Man"` split at line 416), but it is not referenced in the Man button-enable check or the heal action branch. Include it in the Man action guard the same way as for vehicle actions.
 
 ## What Not To Claim
 
@@ -109,7 +109,7 @@ This page is the small local guard for DR-28's service-menu inconsistency. The l
 ```json
 [
   {"fact":"service_menu_stale_enable_prices","source":"GUI_Menu_Service.sqf:140-190","summary":"Service action buttons are enabled from funds and cached price variables before the loop recalculates repair/rearm/refuel prices."},
-  {"fact":"service_rearm_refuel_unconditional_debit","source":"GUI_Menu_Service.sqf:196-222","summary":"Rearm and refuel action branches debit money and spawn support threads without price, affordability or action-time usable-state guards."},
+  {"fact":"service_rearm_refuel_partial_guard","source":"GUI_Menu_Service.sqf:196-222 (docs checkout 8b71e2a1); GUI_Menu_Service.sqf:482-513 (stable/master cf2a6d6a)","summary":"On docs checkout 8b71e2a1, rearm and refuel action branches debit money and spawn support threads without price, affordability or action-time usable-state guards. On stable/master (and release), both branches guard the debit with `_funds >= _price` before calling ChangePlayerFunds; no `_price > 0` guard exists on these two branches (unlike repair/heal which check positive price). Neither branch adds a `_canBeUsed` or action-time context recheck at the debit point."},
   {"fact":"service_support_scripts_no_funds_check","source":"Client_SupportRearm.sqf:56-72; Client_SupportRefuel.sqf:61-77; Client_SupportRepair.sqf:56-72; Client_SupportHeal.sqf:56-76","summary":"Support scripts re-check distance/alive/airborne state during timed work, but funds were already debited by the menu."},
   {"fact":"service_easa_branch_matrix_2026_06_14","source":"docs 8b71e2a1 GUI_Menu_Service.sqf:198,208,219,229; stable/release GUI_Menu_Service.sqf:157,197,466,478,489,501; Miksuu/perf/QoL GUI_Menu_Service.sqf:326-358; GUI_Menu_EASA.sqf:47-49,58-60,76-78","summary":"Docs checkout keeps the old unguarded service action shape; stable/release partially guard rearm/refuel in both maintained roots; Miksuu/perf/QoL do not; strict exact-funds EASA rejection and client debit remain everywhere checked."}
 ]

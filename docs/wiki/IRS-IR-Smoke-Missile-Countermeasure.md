@@ -187,7 +187,7 @@ The deflection handler runs on the machine that is **local to the missile** (not
 1. Waits until the missile enters `WFBE_IRS_AUTO_DETECT_RANGE` (200 m) of the vehicle. `IRS_HandleMissile.sqf:21`.
 2. Checks that at least one `SmokeShellVehicle` exists within `WFBE_IRS_AREA_OPERATING` (35 m) of the vehicle. If none, exits without deflection. `IRS_HandleMissile.sqf:26-27`.
 3. Rolls `random 100` against the vehicle's dodge chance (`_get select 0`). `IRS_HandleMissile.sqf:29`.
-4. On a successful roll, applies iterative deflection via `setVectorDirAndUp` on the missile over 10 ticks (0.01 s each), scaled by the ammo's `maneuvrability` config value over 10 ticks (0.01 s each), scaled by the ammo's `maneuvrability` config value (defaults to `20` if not set). `IRS_HandleMissile.sqf:31-67`.
+4. On a successful roll, applies iterative deflection via `setVectorDirAndUp` on the missile over 10 ticks (0.01 s each), scaled by the ammo's `maneuvrability` config value (defaults to `20` if not set). `IRS_HandleMissile.sqf:31-67`.
 
 The dodge check is probabilistic — the table value is a **percentage chance per missile event**, not a guarantee.
 

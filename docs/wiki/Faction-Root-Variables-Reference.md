@@ -49,7 +49,7 @@ Each `Common/Config/Core_Root/Root_<faction>.sqf` file runs once at mission init
 | `WFBE_%1_DefaultGearLock` | Array | All machines | LMG / lock player loadout |
 | `WFBE_%1_DefaultGearMedic` | Array | All machines | Medic player loadout |
 
-`WFBE_%1MASHES` appears commented out in all Root files — it is latent and never set at runtime.
+`WFBE_%1MASHES` is never set at runtime: it appears as a commented-out stub in `Root_US.sqf`, `Root_US_Camo.sqf`, `Root_USMC.sqf`, `Root_CDF.sqf`, `Root_GUE.sqf`, and `Root_TKA.sqf`, and is absent entirely from `Root_RU.sqf`, `Root_INS.sqf`, `Root_PMC.sqf`, and `Root_TKGUE.sqf`.
 
 ---
 
@@ -61,7 +61,7 @@ Each `Common/Config/Core_Root/Root_<faction>.sqf` file runs once at mission init
 | US (Chernarus/USMC overlay) | `Root_US_Camo.sqf` | `WEST` | `HMMWV_Ambulance`, `HMMWV_Ambulance_DES_EP1`, `UH60M_MEV_EP1`, `M1133_MEV_EP1` | `MtvrRepair`, `MtvrRepair_DES_EP1` | `WarfareSalvageTruck_USMC`, `MtvrSalvage_DES_EP1` | `WarfareSupplyTruck_USMC`, `MtvrSupply_DES_EP1` |
 | USMC | `Root_USMC.sqf` | `WEST` | `HMMWV_Ambulance`, `HMMWV_Ambulance_DES_EP1`, `UH60M_MEV_EP1`, `M1133_MEV_EP1` | `MtvrRepair`, `MtvrRepair_DES_EP1` | `WarfareSalvageTruck_USMC`, `MtvrSalvage_DES_EP1` | `WarfareSupplyTruck_USMC`, `MtvrSupply_DES_EP1` |
 | CDF | `Root_CDF.sqf` | `WEST` | `BMP2_Ambul_CDF` | `UralRepair_CDF` | `WarfareSalvageTruck_CDF` | `WarfareSupplyTruck_CDF` |
-| Russia | `Root_RU.sqf` | `EAST` | `GAZ_Vodnik_MedEvac`, `M113Ambul_TK_EP1`, `Mi17_medevac_RU`, `M113Ambul_TK_EP1` | `KamazRepair`, `UralRepair_TK_EP1` | `WarfareSalvageTruck_RU`, `UralSalvage_TK_EP1` | `WarfareSupplyTruck_RU`, `UralSupply_TK_EP1` |
+| Russia | `Root_RU.sqf` | `EAST` | `GAZ_Vodnik_MedEvac`, `M113Ambul_TK_EP1`, `Mi17_medevac_RU`, `M113Ambul_TK_EP1` | `KamazRepair`, `UralRepair_TK_EP1` | `WarfareSalvageTruck_RU`, `UralSalvage_TK_EP1`, `Mi17_medevac_CDF` | `WarfareSupplyTruck_RU`, `UralSupply_TK_EP1` |
 | Takistani Army | `Root_TKA.sqf` | `EAST` | `GAZ_Vodnik_MedEvac`, `M113Ambul_TK_EP1`, `Mi17_medevac_RU`, `M113Ambul_TK_EP1` | `KamazRepair`, `UralRepair_TK_EP1` | `WarfareSalvageTruck_RU`, `UralSalvage_TK_EP1` | `WarfareSupplyTruck_RU`, `UralSupply_TK_EP1` |
 | Insurgents | `Root_INS.sqf` | `EAST` | `BMP2_Ambul_INS` | `UralRepair_INS` | `WarfareSalvageTruck_INS` | `WarfareSupplyTruck_INS` |
 | Guerilla (Chernarus) | `Root_GUE.sqf` | `GUER` | `V3S_TK_GUE_EP1`, `V3S_Gue` | `WarfareRepairTruck_Gue`, `V3S_Repair_TK_GUE_EP1` | `WarfareSalvageTruck_Gue`, `V3S_Salvage_TK_GUE_EP1` | `WarfareSupplyTruck_Gue`, `V3S_Supply_TK_GUE_EP1` |
@@ -79,10 +79,10 @@ Only factions that explicitly set these variables are shown. GUE, PMC, and TKGUE
 | Faction | UAV | Lift vehicles | Artillery vehicles |
 |---|---|---|---|
 | US (OA) | `MQ9PredatorB_US_EP1` | `MH60S`, `MV22`, `C130J`, `UH60M_EP1`, `UH60M_MEV_EP1`, `CH_47F_EP1`, `C130J_US_EP1`, `BAF_Merlin_HC3_D`, `CH_47F_BAF`, `Mi17_Civilian` | `MLRS_DES_EP1`, `MLRS`, `M1129_MC_EP1` |
-| US_Camo | `MQ9PredatorB_US_EP1` | (same as US OA) | `MLRS_DES_EP1`, `MLRS`, `M1129_MC_EP1` |
+| US_Camo | `MQ9PredatorB_US_EP1` | (same as US OA) | `MLRS_DES_EP1`, `MLRS`, `M1129_MC_EP1`, `RM70_ACR` |
 | USMC | `MQ9PredatorB` | (same as US OA) | `MLRS_DES_EP1`, `MLRS`, `M1129_MC_EP1` |
 | CDF | `MQ9PredatorB` | _(not set)_ | _(not set)_ |
-| Russia | `Pchela1T` | `Mi17_Ins`, `Mi17_medevac_RU`, `Mi17_TK_EP1` | `GRAD_TK_EP1`, `GRAD_RU` |
+| Russia | `Pchela1T` | `Mi17_Ins`, `Mi17_medevac_RU`, `Mi17_TK_EP1` | `GRAD_TK_EP1`, `GRAD_RU`, `RM70_ACR` |
 | TKA | _(not set)_ | `Mi17_Ins`, `Mi17_medevac_RU`, `Mi17_TK_EP1` | `GRAD_TK_EP1`, `GRAD_RU` |
 | INS | `Pchela1T` | _(not set)_ | _(not set)_ |
 
@@ -92,7 +92,7 @@ Sources: `Root_US.sqf:18,23-24`, `Root_US_Camo.sqf:19,23-24`, `Root_USMC.sqf:18,
 
 ## Paradrop Variables
 
-The supply-paradrop system uses five variables. `WFBE_%1PARAAMMO` for Russia (EAST, `Root_RU.sqf:36`) is never set: on that physical line the `STARTINGVEHICLES` assignment is followed immediately by `//--- Starting Vehicles.` and then the `PARAAMMO` setVariable call — because SQF `//` comments extend to end-of-line, the `PARAAMMO` call sits inside the comment token and is not executed at runtime. The ammo-box values `RUBasicAmmunitionBox`, `RUBasicWeaponsBox`, `RULaunchersBox` appear in the source but are unreachable dead code.
+The supply-paradrop system uses five variables. On current `origin/master`, Russia's `WFBE_%1PARAAMMO` (EAST) is set on its own line at `Root_RU.sqf:42`, after the `STARTINGVEHICLES` assignment and its end-of-line `//--- Starting Vehicles.` comment; because SQF `//` comments end at the line break, the `PARAAMMO` call executes normally. The ammo-box values `RUBasicAmmunitionBox`, `RUBasicWeaponsBox`, `RULaunchersBox` are live.
 
 | Faction | File | PARAAMMO (ammo boxes dropped) | PARAVEHICARGO (vehicle dropped) | PARAVEHI (delivery aircraft) | PARACHUTE |
 |---|---|---|---|---|---|
@@ -100,7 +100,7 @@ The supply-paradrop system uses five variables. `WFBE_%1PARAAMMO` for Russia (EA
 | US_Camo | `Root_US_Camo.sqf:39-42` | `USBasicAmmunitionBox`, `USBasicWeaponsBox`, `USLaunchersBox` | `MtvrRepair` | `MH60S` | `ParachuteMediumWest` |
 | USMC | `Root_USMC.sqf:38-41` | `USBasicAmmunitionBox`, `USBasicWeaponsBox`, `USLaunchersBox` | `MtvrRepair` | `MH60S` | `ParachuteMediumWest` |
 | CDF | `Root_CDF.sqf:32-35` | `RUBasicAmmunitionBox`, `RUBasicWeaponsBox`, `RULaunchersBox` | `BRDM2_CDF` | `Mi17_CDF` | `ParachuteMediumWest` |
-| Russia | `Root_RU.sqf:36-39` | _(not set — dead code, see note above)_ | `KamazRepair` | `Mi17_Ins` | `ParachuteMediumEast` |
+| Russia | `Root_RU.sqf:42-45` | `RUBasicAmmunitionBox`, `RUBasicWeaponsBox`, `RULaunchersBox` | `KamazRepair` | `Mi17_Ins` | `ParachuteMediumEast` |
 | TKA | `Root_TKA.sqf:38-41` | `TKBasicAmmunitionBox_EP1`, `TKBasicWeapons_EP1`, `TKLaunchers_EP1` | `UralRepair_TK_EP1` | `Mi17_TK_EP1` | `ParachuteMediumEast_EP1` |
 | INS | `Root_INS.sqf:31-34` | `RUBasicAmmunitionBox`, `RUBasicWeaponsBox`, `RULaunchersBox` | `BRDM2_INS` | `Mi17_Ins` | `ParachuteMediumEast` |
 | GUE | `Root_GUE.sqf:31-34` | `RUBasicAmmunitionBox`, `RUBasicWeaponsBox`, `RULaunchersBox` | `BRDM2_Gue` | `Mi17_Civilian` | `ParachuteC` |

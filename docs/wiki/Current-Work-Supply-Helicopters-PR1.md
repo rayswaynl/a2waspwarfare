@@ -24,7 +24,7 @@ Current local head `262dc431` changes important mechanics from the older `ffeea4
 - Heli-specific gating now uses Aircraft Factory upgrade levels: `Client/Module/supplyMission/supplyMissionStart.sqf:21-29` denies heli loading until Aircraft Factory upgrade level 3.
 - `Common/Init/Init_CommonConstants.sqf:172-173` adds load/unload timers, and `:176-180` records the "one supply helicopter per side" / Air 3 load / Air 4 cash-run intent.
 - `Server/Module/supplyMission/supplyMissionCompleted.sqf:24-35` treats heli delivery at Air upgrade level 4 as a cash run, with commander-team tithe through `WFBE_CO_FNC_ChangeTeamFunds`.
-- Current head writes `SupplyByHeli` at `supplyMissionStart.sqf:54` and reads it at `supplyMissionStarted.sqf:7` / `supplyMissionCompleted.sqf:24`, but completion only clears `SupplyAmount` and `SupplyFromTown` (`supplyMissionCompleted.sqf:40-41`). Clearing or deliberately retaining `SupplyByHeli` is an open merge gate.
+- Current head writes `SupplyByHeli` at `supplyMissionStart.sqf:54` and reads it at `supplyMissionStarted.sqf:7` / `supplyMissionCompleted.sqf:24`, but completion only clears `SupplyAmount` and `SupplyFromTown` (`supplyMissionCompleted.sqf:40-41`). Note: master already clears `SupplyByHeli` immediately after (`supplyMissionCompleted.sqf:44`, XR3 comment: "clear the heli flag too, so a reused vehicle's next run isn't mis-classified as a cash-run"); verify that the PR branch preserves this line before merge.
 - Maintained Vanilla still has no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` hits on this branch, so any Vanilla release claim needs propagation first.
 
 ## Supply-Heli Core Files
@@ -87,7 +87,7 @@ On `master`, server delivery already tracks a vehicle object and checks command-
 | --- | --- |
 | Start authority | Still client initiated. The client performs eligibility checks and writes object variables before the server tracking loop starts. |
 | Completion authority | Server verifies proximity to a command center, then trusts vehicle state such as `SupplyAmount`, `SupplyFromTown` and PR #1's `SupplyByHeli`. |
-| Cooldown | Still town-var based; the existing `lastSupplyMissionRun` / `LastSupplyMissionRun` casing mismatch remains a master and PR concern. |
+| Cooldown | Still town-var based; the `lastSupplyMissionRun` / `LastSupplyMissionRun` casing mismatch was fixed in master (XR4 in `Common/Init/Init_Town.sqf`); confirm the fix is also present on this PR branch before merge. |
 | Cash runs | On current head `262dc431`, heli delivery at Air upgrade level 4 can route commander-tithe value to commander team funds when a commander exists. If no commander team exists, current PR code has no side-supply fallback; decide whether that pilot-only outcome is intended. |
 | Interdiction | Destroying a loaded enemy supply vehicle pays a fraction of cargo value. Current branch sets `wfbe_supply_killed_eh_set` before adding the handler, so older unguarded-stacking wording is stale. Repeated load/deliver/destroy smoke is still required because the guard is persistent and no handler-ID removal/re-arm plan is documented. |
 | State cleanup | Completion clears `SupplyAmount` and `SupplyFromTown` but not `SupplyByHeli`. Current head writes `SupplyByHeli` only at start and reads it in started/completed handlers. Decide whether retained `SupplyByHeli` on a completed vehicle is harmless because `SupplyAmount` is zeroed, or clear it explicitly for cleaner state. |

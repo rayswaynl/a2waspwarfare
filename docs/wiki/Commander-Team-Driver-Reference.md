@@ -41,7 +41,7 @@ This is the per-team driver. The header states the contract precisely: it runs o
 |---|---|---|
 | Resolve side | `_side = _sideID Call WFBE_CO_FNC_GetSideFromID` | `Common/Functions/Common_RunCommanderTeam.sqf:28` |
 | Jitter spawn | `GetRandomPosition` (30–120m) then `GetEmptyPosition` (40m) | `Common/Functions/Common_RunCommanderTeam.sqf:30-31` |
-| Build team | `CreateGroup "aicom"` then `CreateTeam` (skill 90) | `Common/Functions/Common_RunCommanderTeam.sqf:33-37` |
+| Build team | `[_side, "aicom"] Call WFBE_CO_FNC_CreateGroup` then `WFBE_CO_FNC_CreateTeam` (skill 90) | `Common/Functions/Common_RunCommanderTeam.sqf:33-37` |
 | Fail-safe | empty/null team → log WARNING and emit `aicom-team-ended` to release the slot | `Common/Functions/Common_RunCommanderTeam.sqf:39-46` |
 | No fleeing | `_team allowFleeing 0` | `Common/Functions/Common_RunCommanderTeam.sqf:48` |
 | W7 veteran skill | optional 4th arg: if a positive SCALAR, `setSkill` it on every unit (typeName guard, not A3 `isEqualType`) | `Common/Functions/Common_RunCommanderTeam.sqf:54-59` |

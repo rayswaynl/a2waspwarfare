@@ -199,7 +199,7 @@ The embed is built by `GameStatusMessage.GenerateMessage()` (`GAMESTATUSMESSAGE.
 <emoji>  <playerCount>︱<maxPlayerCount>  <TerrainDisplayName>
 ```
 
-Separator between counts is U+FE30 TWO DOT LEADER (`︱`) — a Unicode character, not a pipe — following the literal spaces in `GameData.cs:134`.
+Separator between counts is U+FE31 PRESENTATION FORM FOR VERTICAL EM DASH (`︱`) — a Unicode character, not a pipe — following the literal spaces in `GameData.cs:134`.
 
 Example: `🌲  12︱55  Chernarus` or `🏜️  8︱61  Takistan`
 
@@ -290,11 +290,11 @@ DiscordBot  (60-second poll)
 | `[1]` | `_scoreSideEast` (OPFOR score) | `GameData.cs:170` | `"0"` |
 | `[2]` | `worldName` (map name string) | `GameData.cs:150-156` | defaults to `TAKISTAN` |
 | `[3]` | `round(time)` (server uptime, seconds) | `GameData.cs:184-191` | `"00:00:00"` |
-| `[4]` | `abs(_playerCount - 1)` | `GameData.cs:80-83` | `"0"` |
+| `[4]` | `_playerCount` (after subtracting live HC count from `WFBE_HEADLESSCLIENTS_ID` registry, floored at 0) | `GameData.cs:80-83` | `"0"` |
 
 > Mission source: `Server/CallExtensions/GlobalGameStats.sqf:1-25`. Extension writer: `Extension/src/GameData.cs:29` (array size `new string[2]` — stale declaration; runtime fills all five slots). Bot reader: `DiscordBot/src/ExtensionData/GameData/GameData.cs:30` (array size `new string[4]` — also stale; index `[4]` is guarded at runtime).
 
-**Player-count heuristic:** `GlobalGameStats.sqf:20` uses `abs(_playerCount - 1)` to exclude one assumed headless client. This under-reports on servers with zero or more than one HC, and does not use `WFBE_C_*` gate constants — it is an unconditional arithmetic adjustment.
+**Player-count heuristic:** `GlobalGameStats.sqf:23-24` counts live headless clients from the `WFBE_HEADLESSCLIENTS_ID` registry (`missionNamespace getVariable`) and subtracts the live HC count from `_playerCount`, floored at 0 via `max 0`. This correctly handles multiple HCs and avoids negative counts on transient over-subtract. It does not use a hardcoded offset.
 
 ---
 
@@ -325,7 +325,7 @@ All log output goes to:
 
 - **Console** (colour-coded by level via `Pastel`).
 - **File** under `.logs/` relative to the `.exe` — one file per log level plus an `EVERYTHING` file. `FileConfiguration.cs:3`, `Log.cs:61-65`.
-- **Discord channel** — only messages at `WARNING` (1) or below (i.e., `WARNING` and `ERROR`) are sent to a Discord channel if `BotMessageLogging.loggingChannelId` is non-zero. `LoggingParameters.cs:4`. `WARNING`-level messages also ping the hardcoded user ID `111788167195033600` (`BotMessageLogging.cs:13-16`).
+- **Discord channel** — only messages at `WARNING` (1) or below (i.e., `WARNING` and `ERROR`) are sent to a Discord channel if `BotMessageLogging.loggingChannelId` is non-zero. `LoggingParameters.cs:4`. `WARNING` and `ERROR`-level messages also ping the hardcoded user ID `111788167195033600` (`BotMessageLogging.cs:13-16`).
 
 **Note:** `BotMessageLogging.loggingChannelId` defaults to `0` (`BotMessageLogging.cs:5`) and has no setter in `preferences.json`. The Discord log channel feature is effectively inactive unless the field is set in code before deployment.
 

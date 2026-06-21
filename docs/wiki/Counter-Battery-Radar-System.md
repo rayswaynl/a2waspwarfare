@@ -51,13 +51,14 @@ The per-object `wfbe_cbr_radius` override is read first in detection (`Server_Co
 enemy artillery fires
         │  ('Fired' EH installed by Common_FireArtillery.sqf when gate on)
         ▼
- server-local gun ──► WFBE_SE_FNC_CounterBatteryCheck   (AI arty is server-local)
- player-crewed gun ─► "CounterBatteryFired" SendToServer ─► CounterBatteryFired.sqf ─► same check
+ server-local AI gun ──► WFBE_SE_FNC_CounterBatteryCheck   (AI arty is server-local)
+ non-server AI gun  ─► "CounterBatteryFired" SendToServer ─► CounterBatteryFired.sqf ─► same check
+ (player-crewed gun — NOT detected; Common_FireArtillery.sqf exits at line 14 for human gunners)
         ▼
  Server_CounterBattery.sqf: rate-limit ► count fire missions ► scan opposing CBR registry ► notify
 ```
 
-The Fired event handler is installed on the artillery vehicle only when the gate is on (`Common/Functions/Common_FireArtillery.sqf:45-53`). Because the EH fires in the vehicle's locality, AI artillery (server-local) calls the check directly, while a player-crewed gun routes the event to the server through `WFBE_CO_FNC_SendToServer` → the `CounterBatteryFired` PVF (`Server/PVFunctions/CounterBatteryFired.sqf:15`). Both paths converge on `WFBE_SE_FNC_CounterBatteryCheck`, which always runs server-side (`Server/Functions/Server_CounterBattery.sqf`).
+The Fired event handler is installed only when the gate is on and only for AI-driven artillery (`Common/Functions/Common_FireArtillery.sqf:45-53`). The function exits immediately when `isPlayer _gunner` is true (line 14), so **player-crewed guns do not trigger CBR detection**. Line 8 also ejects any player crew before the check runs. AI artillery that is server-local calls `WFBE_SE_FNC_CounterBatteryCheck` directly via the EH; AI artillery not local to the server routes through `WFBE_CO_FNC_SendToServer` → the `CounterBatteryFired` PVF (`Server/PVFunctions/CounterBatteryFired.sqf:15`). Both AI paths converge on `WFBE_SE_FNC_CounterBatteryCheck`, which always runs server-side (`Server/Functions/Server_CounterBattery.sqf`).
 
 ### What the check does
 

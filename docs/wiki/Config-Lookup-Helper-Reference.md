@@ -8,7 +8,7 @@ WASP provides a family of compiled config-reading helpers that sit above the raw
 
 ## Function Registration
 
-All six functions are compiled at init time on both the server and headless client from `Common/Init/Init_Common.sqf`. Two use the legacy bare-name convention; four use the `WFBE_CO_FNC_*` prefix.
+Five of the six functions are compiled at init time on both the server and headless client from `Common/Init/Init_Common.sqf`; the sixth (`GetConfigVehicleCrewSlot`) is never pre-compiled and has no global name. Of the five registered functions, two use the legacy bare-name convention and three use the `WFBE_CO_FNC_*` prefix.
 
 | Global name | Source file | Registration line |
 |---|---|---|
@@ -19,7 +19,7 @@ All six functions are compiled at init time on both the server and headless clie
 | `WFBE_CO_FNC_GetVehicleTurretsGear` | `Common/Functions/Common_GetVehicleTurretsGear.sqf` | `Common/Init/Init_Common.sqf:141` |
 | *(inline — not compiled to a global)* | `Common/Functions/Common_GetConfigVehicleCrewSlot.sqf` | called via `Compile preprocessFile` at each call site |
 
-`GetConfigVehicleCrewSlot` is never assigned a global name; every faction Core file invokes it with a fresh `Compile preprocessFile` at startup. See the [Crew Slot section](#common_getconfigvehiclecrewslot) below.
+`GetConfigVehicleCrewSlot` is never assigned a global name; every faction Core file invokes it with a fresh `Compile preprocessFile` at startup. See the [Crew Slot section](#common_getconfigvehiclecrewslot-inline-no-global-name) below.
 
 ---
 

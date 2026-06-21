@@ -139,11 +139,16 @@ For each child entry `[_cls, _relPos, _relDir]`, `Server_ConstructPosition` call
 
 Every crewable child (guns, AA pods) passes through `ConstructDefense` identically to a single player-built defense: AI manning, score registration, and artillery-enable all apply. Props (walls, sandbags, ammo boxes) are also handled by the same path.
 
-**Object tagging:** Each returned OBJECT is tagged with the anchor classname so downstream systems can identify its WDDM parent composition (`Server_ConstructPosition.sqf:62-64`):
+**Object tagging:** Each returned object is tagged with a per-placement composite ID so downstream systems can count distinct placed compositions (`Server_ConstructPosition.sqf:43-45,67`):
 
 ```sqf
-_one setVariable ["WFBE_WDDMPositionAnchor", _anchorType, true];
+WFBE_WDDMPlacementCounter = WFBE_WDDMPlacementCounter + 1;
+_placementID = format ["%1_%2", _anchorType, str WFBE_WDDMPlacementCounter];
+// ...
+_one setVariable ["WFBE_WDDMPositionAnchor", _placementID, true];
 ```
+
+The ID is the anchor classname plus a global monotonic counter (e.g. `"Land_Ind_BoardsPack1_1"`, `"Land_Ind_BoardsPack1_2"`). All child objects from the same placement share one ID; two separate placements of the same anchor type get different IDs. `RequestDefense.sqf` (lines 156-160) deduplicates these values into `_seenIDs` to count the number of distinct compositions near a base — a count that requires unique-per-placement IDs, not bare classnames.
 
 ---
 
@@ -232,7 +237,7 @@ This incremental-rebuild pattern means calling `CreateDefenseTemplate` again wit
 | Medium (Barracks, Factory, etc.) | `Server/Construction/Construction_MediumSite.sqf` | 126 |
 | Small (Service point, light factory) | `Server/Construction/Construction_SmallSite.sqf` | 111 |
 
-All callers resolve the wall template via `missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]`. The `AARadar` type is explicitly excluded from auto-wall construction at both medium and small site callers regardless of the `isAutoWallConstructingEnabled` flag.
+The Medium and Small site callers resolve the wall template via `missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]`. The HQ caller passes the hardcoded string `"WFBE_NEURODEF_HEADQUARTERS_WALLS"` directly (no `format` call, no `_rlType` variable). The `AARadar` type is explicitly excluded from auto-wall construction at both medium and small site callers regardless of the `isAutoWallConstructingEnabled` flag.
 
 **Auto-wall gate:** `isAutoWallConstructingEnabled` is initialized `true` at `Common/Init/Init_Common.sqf:202`. Players with the commander role can toggle it via `User14` keybind; the new value is sent to the server via the `RequestAutoWallConstructinChange` public variable (`Common/Init/Init_PublicVariables.sqf:21`).
 

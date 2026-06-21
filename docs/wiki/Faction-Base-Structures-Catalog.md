@@ -24,7 +24,7 @@ Every Structures_*.sqf builds eleven parallel arrays and publishes them to `miss
 | `WFBE_<side>FARP` | FARP/MASH building classname (deployed state) |
 | `WFBE_<side>CONSTRUCTIONSITE` | Construction-crate classname |
 
-The type index for each slot is also published as `WFBE_<side><Slot>TYPE` (e.g. `WFBE_WESTHQTYPE = 0`). `Common/Config/Core_Structures/Structures_CO_US.sqf:97-99`; variable publish block at `Structures_CO_GUE.sqf:105-114` (pattern identical in all files).
+The type index for each slot is also published as `WFBE_<side><Slot>TYPE` (e.g. `WFBE_WESTHeadquartersType = 0`). `Common/Config/Core_Structures/Structures_CO_US.sqf:97-99`; variable publish block at `Structures_CO_GUE.sqf:105-114` (pattern identical in all files).
 
 ---
 
@@ -45,7 +45,7 @@ Costs are identical across all factions. Build times depend on the specific file
 
 ¹ Standard 60 s files: `Structures_CO_US.sqf`, `Structures_CO_RU.sqf`, `Structures_CO_INS.sqf`, `Structures_USMC.sqf`, `Structures_RU.sqf`, `Structures_CDF.sqf`. `Structures_CO_US.sqf:32-95`, `Structures_CO_INS.sqf:32-95`
 
-² Slow files: `Structures_CO_GUE.sqf`, `Structures_CO_CDF.sqf`, `Structures_GUE.sqf`, `Structures_INS.sqf`. `Structures_CO_GUE.sqf:36-94`, `Structures_INS.sqf:32-95`
+² Slow files: `Structures_CO_GUE.sqf`, `Structures_CO_CDF.sqf`, `Structures_GUE.sqf`, `Structures_INS.sqf`, `Structures_OA_TKGUE.sqf`. `Structures_CO_GUE.sqf:36-94`, `Structures_INS.sqf:32-95`, `Structures_OA_TKGUE.sqf:36-91`
 
 The HQ cost constant fallback (when the mission parameter is absent) is 100 Supply. `Common/Init/Init_CommonConstants.sqf:307`
 
@@ -298,7 +298,7 @@ After populating all arrays each Structures_*.sqf also publishes per-faction sho
 } forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR]];
 ```
 
-`Common/Config/Core_Structures/Structures_CO_US.sqf:101-103` (pattern is identical in all files)
+`Common/Config/Core_Structures/Structures_CO_US.sqf:101-103` (pattern differs by file: CO_US and CO_RU publish 12 pairs — adding `<side>CBR`, `<side>BANK`, `<side>ARTRAD`, and `<side>RES` for counter-battery radar, bank, artillery radar, and reserve shorthand; USMC and RU publish 10 pairs — adding only `<side>CBR` and `<side>BANK`; all other files publish the standard 8 pairs ending at `<side>AAR`)
 
 This produces variables of the form `<side>HQ`, `<side>BAR`, `<side>LVF`, `<side>CC`, `<side>HEAVY`, `<side>AIR`, `<side>SP`, `<side>AAR` — useful when null-guarding or comparing classnames in construction scripts.
 

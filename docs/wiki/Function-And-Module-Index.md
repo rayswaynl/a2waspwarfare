@@ -44,7 +44,7 @@ Unless a row names another ref, line refs below are from the Chernarus source mi
 - `Server_HandlePVF`: server-side PVF dispatcher.
 - `Server_HandleDefense`, `Server_SpawnTownDefense`, `Server_ManageTownDefenses`: town/static defense systems.
 - `Server_AI_SetTownAttackPath*`: AI attack path selection and safety checks.
-- `Server_AI_Com_Upgrade`: live AI commander upgrade worker; selects from `Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side]` (`Server/Functions/Server_AI_Com_Upgrade.sqf:12`), checks AI commander funds/supply and debits, but no obvious live scheduler has been found.
+- `Server_AI_Com_Upgrade`: live AI commander upgrade worker; selects from `Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side]` (`Server/Functions/Server_AI_Com_Upgrade.sqf:12`), checks AI commander funds/supply and debits; called on a timed interval by the main AI commander loop (`Server/AI/Commander/AI_Commander.sqf:160-162`, interval constant `WFBE_C_AI_COMMANDER_UPGRADE_INTERVAL`).
 - `Server_DelegateAI*`: delegation to headless/client workers.
 - `Server_FNC_Delegation`: selects delegation targets for town/player AI. No `setGroupOwner` rebalancing path has been found.
 - `Server_AssignNewCommander`: commander assignment notification/AI-commander stop helper. Current docs-head anchors remain `Server_AssignNewCommander.sqf:3-4`; exact DR-15 branch status, duplicate notification and UI identity risks live on [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) and [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook#current-branch-scope).
@@ -61,7 +61,7 @@ Unless a row names another ref, line refs below are from the Chernarus source mi
 - `Client/Module/CoIn`
 - `Client/Module/EASA`
 - `Client/Module/Engines` - [Engine stealth fuel toggle reference](Engine-Stealth-Fuel-Toggle-Reference)
-- `Client/Module/MASH`
+- `Client/Module/MASH` — _(branch-only; not present on master; see [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay))_
 - `Client/Module/Nuke`
 - `Client/Module/Skill`
 - `Client/Module/supplyMission`
@@ -82,7 +82,7 @@ Unless a row names another ref, line refs below are from the Chernarus source mi
 - `Server/Module/AntiStack`
 - `Server/Module/MASH`
 - `Server/Module/NEURO`
-- `Server/Module/serverFPS`
+- ~~`Server/Module/serverFPS`~~ — removed in release fix #7; folder and file deleted from master; compile line is commented out at `Init_Server.sqf:82` and `:105`; `Init_Server.sqf:815` notes it was a redundant second FPS publisher — live HUD reads `SERVER_FPS_GUI` from `serverFpsGUI.sqf` instead.
 - `Server/Module/supplyMission`
 
 ## Module Status And Gates
@@ -108,6 +108,25 @@ Presence in the tree does not always mean enabled in the current mission mode. P
 - `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf`: purchase/spawn paths with many factory-specific assumptions.
 - `Server/Init/Init_Server.sqf`: long-lived server loops; duplicate or unconditional loops can hurt live performance.
 - `Tools/LoadoutManager`: generated mission copying/packing; accidental edits to generated mission folders can be overwritten.
+
+## Legacy Compiled Aliases With No Static Callers
+
+This page owns the source-backed legacy-alias table; [Dead/stale code register](Dead-Code-And-Stale-Code-Register) keeps a single route row that points here. A 2026-06-06 whole-symbol scan found these old global names still compiled at boot in the maintained roots but with **zero active static callers** once compile lines, comments and the helper file itself are excluded. The compiled globals below were re-confirmed on `origin/master` `0139a346` (2026-06-21).
+
+| Legacy global | Compiled at | Helper source | Status |
+| --- | --- | --- | --- |
+| `AITownResitance` | `Server/Init/Init_Server.sqf:22` | `Server/AI/AI_Resistance.sqf` | Compiled; no active static caller found. |
+| `EquipLoadout` | `Common/Init/Init_Common.sqf:22` | `Common/Functions/Common_EquipLoadout.sqf` | Compiled; no active static caller (helper file still reachable through newer names). |
+| `FireArtillery` | `Common/Init/Init_Common.sqf:23` | `Common/Functions/Common_FireArtillery.sqf` | Compiled; no active static caller found. |
+| `GetGroupFromConfig` | `Common/Init/Init_Common.sqf:32` | `Common/Functions/Common_GetGroupFromConfig.sqf` | Compiled; no active static caller found. |
+| `GetSafePlace` | `Common/Init/Init_Common.sqf:39` | `Common/Functions/Common_GetSafePlace.sqf` | Compiled; no active static caller found. |
+| `GetSideUpgrades` | `Common/Init/Init_Common.sqf:43` | `Common/Functions/Common_GetSideUpgrades.sqf` | Compiled; no active static caller (helper file still reachable through newer names). |
+| `GetUnitsBelowHeight` | `Common/Init/Init_Common.sqf:66` | `Common/Functions/Common_GetUnitsBelowHeight.sqf` | Compiled; no active static caller found. |
+| `UseStationaryDefense` | `Common/Init/Init_Common.sqf:87` | `Common/Functions/Common_UseStationaryDefense.sqf` | Compiled; no active static caller found. |
+| `ReplaceArray` | `Client/Init/Init_Client.sqf:86` | `Client/Functions/Client_ReplaceArray.sqf` | Compiled; no active static caller found. |
+| `HandlePVF` | `Client/Init/Init_Client.sqf:82` | `Client/Functions/Client_HandlePVF.sqf` | Compiled; no active static caller (PVF routing now flows through `WFBE_*` handlers). |
+
+Caveat: this is an inventory of unused **old global names**, not a dead-file claim. Several helper files (for example `Common_EquipLoadout.sqf`, `Common_GetSideUpgrades.sqf`, `Client_HandlePVF.sqf`) are still live because newer `WFBE_*` function names compile and call the same files. Dynamic/runtime invocation through `call compile`, string lookups or namespace dispatch remains an open uncertainty until an Arma smoke or namespace trace proves a global truly unreferenced. Treat removals as revive-or-delete candidates routed through [Dead/stale code register](Dead-Code-And-Stale-Code-Register), not automatic deletions.
 
 ## Continue Reading
 

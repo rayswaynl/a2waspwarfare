@@ -39,6 +39,7 @@ Sources: `Common/Config/Core_Root/Root_*.sqf` (artillery exec lines in each file
 | 1 | M252 | M252 | M252_US_EP1, M252 | 50 | 5500 | 4 | 4 | 235 | 60 |
 | 2 | MLRS | MLRS | MLRS, MLRS_DES_EP1 | 1200 | 9000 | 2 | 12 | 275 | 40 |
 | 3 | Stryker MC | M120 | M1129_MC_EP1 | 550 | 8000 | 4 | 8 | 235 | 55 |
+| 4 | RM70 | GRAD | RM70_ACR | 800 | 9000 | 2 | 10 | 275 | 40 |
 
 **Ammo sets** (`WFBE_WEST_ARTILLERY_AMMOS`, lines 18–23):
 
@@ -48,6 +49,7 @@ Sources: `Common/Config/Core_Root/Root_*.sqf` (artillery exec lines in each file
 | M252 | Sh_81_HE | Sh_81_WP, Sh_81_ILLUM |
 | MLRS | R_MLRS | — (no special rounds) |
 | Stryker MC | 120mmHE_M120 | — (no special rounds) |
+| RM70 | R_GRAD | — (no special rounds) |
 
 **Extended magazines** (loaded into vehicle, gated at WFBE_UP_ARTYAMMO = 1, lines 26–40):
 - M119: 30Rnd_105mmWP_M119, 30Rnd_105mmSADARM_M119, 30Rnd_105mmLASER_M119, 30Rnd_105mmSMOKE_M119, 30Rnd_105mmILLUM_M119
@@ -100,6 +102,7 @@ Note: vanilla mode uses `ARTY_`-prefixed classnames from the ACE/BAF compatibili
 | 0 | D30 | D30 | D30_TK_EP1, D30_RU | 1000 | 7000 | 7 | 10 | 250 | 50 |
 | 1 | 2B14 | 2B14 | 2b14_82mm_TK_EP1, 2b14_82mm | 50 | 5500 | 4 | 4 | 235 | 60 |
 | 2 | GRAD | GRAD | GRAD_RU, GRAD_TK_EP1 | 800 | 9000 | 2 | 10 | 275 | 40 |
+| 3 | RM70 | GRAD | RM70_ACR | 800 | 9000 | 2 | 10 | 275 | 40 |
 
 **Ammo sets** (lines 18–22):
 
@@ -108,6 +111,7 @@ Note: vanilla mode uses `ARTY_`-prefixed classnames from the ACE/BAF compatibili
 | D30 | Sh_122_HE | Sh_122_WP, Sh_122_SADARM, Sh_122_LASER, Sh_122_SMOKE, Sh_122_ILLUM |
 | 2B14 | Sh_82_HE | Sh_82_WP, Sh_82_ILLUM |
 | GRAD | R_GRAD | — (no special rounds) |
+| RM70 | R_GRAD | — (no special rounds) |
 
 **Extended magazines** (lines 25–37):
 - D30: 30Rnd_122mmWP_D30, 30Rnd_122mmSADARM_D30, 30Rnd_122mmLASER_D30, 30Rnd_122mmSMOKE_D30, 30Rnd_122mmILLUM_D30

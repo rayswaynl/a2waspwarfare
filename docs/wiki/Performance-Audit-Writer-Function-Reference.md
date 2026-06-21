@@ -120,7 +120,7 @@ Buffer row shape: `[name, calls, total_seconds, max_seconds, extra]`.
 Signature: `[_scope] call PerformanceAudit_Flush` (`Common_PerformanceAudit.sqf:196-220`). Exits if disabled (`Common_PerformanceAudit.sqf:199`). Steps:
 
 1. Build a fresh snapshot for `_scope` (`Common_PerformanceAudit.sqf:202`) and resolve the buffer (`Common_PerformanceAudit.sqf:203-204`).
-2. Emit one `snapshot` row with the EXTRA `"periodic"` and zeroed call/ms metrics (`Common_PerformanceAudit.sqf:206`) — this is the per-flush environment heartbeat.
+2. Emit one `snapshot` row with the EXTRA `"periodic"`, `calls=1`, and zeroed ms metrics (`avgMs=0`, `maxMs=0`) (`Common_PerformanceAudit.sqf:206`: `[_snap, "snapshot", 1, 0, 0, "periodic"] call PerformanceAudit_Log`) — this is the per-flush environment heartbeat.
 3. For each buffered metric with `calls > 0`, compute `avgMs = (total/calls)*1000` and `maxMs = max*1000`, both rounded via `PerformanceAudit_Round2`, and emit a row (`Common_PerformanceAudit.sqf:208-217`).
 4. **Clear** the buffer back to `[]` (`Common_PerformanceAudit.sqf:219`) so each flush window reports only its own activity.
 

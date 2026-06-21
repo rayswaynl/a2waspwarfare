@@ -21,7 +21,7 @@ All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/
 This is not a clean "unsupported by design" feature. The common economy layer contains resistance/GUER scaffolding:
 
 - `Init_CommonConstants.sqf:157-159` defines starting supplies for west, east and GUER.
-- `Common_GetSideSupply.sqf:36-48` can read resistance supply.
+- `Common_GetSideSupply.sqf:36-41` contains a resistance branch that always returns 0 (hardcoded default via two-argument `getVariable`); the in-source comment marks GUER as funds-only with `wfbe_supply_resistance` never published. The branch exists to prevent the blocking `publicVariableServer`+`waitUntil` path from executing on the resistance side, not to return a live supply value.
 - `Init_Common.sqf:274-282` builds `WFBE_PRESENTSIDES` from `WFBE_L_BLU`, `WFBE_L_OPF` and `WFBE_L_GUE` when side owner logics exist.
 
 But the server temp-channel receiver is only wired for west/east:
@@ -31,7 +31,7 @@ But the server temp-channel receiver is only wired for west/east:
 - `Server_ChangeSideSupply.sqf:25-47` registers `wfbe_supply_temp_east`.
 - No `wfbe_supply_temp_resistance` handler is registered.
 
-Source Chernarus also does not define `WFBE_L_GUE` as a present economy-side owner logic in `mission.sqm`; it has resistance start/respawn markers, but no present-side owner logic matching west/east.
+Source Chernarus defines `WFBE_L_GUE` as a `LocationLogicOwnerResistance` logic in `mission.sqm` (line 4931), synchronized to the four GUER player slots — the same owner-logic pattern as west (`LocationLogicOwnerWest`) and east (`LocationLogicOwnerEast`). Because `WFBE_L_GUE` is non-nil, `Init_Common.sqf` line 290 includes resistance in `WFBE_PRESENTSIDES`. The actual gap is the server temp-channel receiver: no `wfbe_supply_temp_resistance` PVEH handler is registered in `Server_ChangeSideSupply.sqf`.
 
 ## Why It Matters
 

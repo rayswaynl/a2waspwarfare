@@ -43,15 +43,15 @@ On HC disconnect, `Server_OnPlayerDisconnected.sqf:22-29` removes that group fro
 
 When town AI wakes in HC mode, `server_town_ai.sqf:164-170` checks whether `WFBE_HEADLESSCLIENTS_ID` is non-empty. If an HC exists, the server calls `Server_DelegateAITownHeadless.sqf`; otherwise it falls back to server-side `CreateTownUnits`.
 
-`Server_DelegateAITownHeadless.sqf:22-30` picks a random HC group for each delegation batch and sends `['delegate-townai', ...]` to the HC leader. The HC/client receiver is `Client_DelegateTownAI.sqf`:
+`Server_DelegateAITownHeadless.sqf:22-30` calls `WFBE_CO_FNC_PickLeastLoadedHC` once to find the lightest HC, then distributes this town's groups across all live HCs via a round-robin anchored at that lightest HC, and sends each group's `['delegate-townai', ...]` to the selected HC leader. The HC/client receiver is `Client_DelegateTownAI.sqf`:
 
 - creates town units locally at `:26`;
 - records created vehicles in `_town_vehicles` at `:27`;
-- sends `["RequestSpecial", ["update-town-delegation", _town, _town_vehicles]]` back to the server at `:35`.
+- sends `["RequestSpecial", ["update-town-delegation", _town, _town_teams, _town_vehicles]]` back to the server (line 44).
 
-The server handles that update in `Server_HandleSpecial.sqf:86-96`: it appends vehicles to `wfbe_active_vehicles`, starts empty-vehicle cleanup, and marks taxi prohibition. This is the most complete HC path, but still lacks disconnect failover.
+The server handles that update in `Server_HandleSpecial.sqf:86-115`: it appends received groups to `wfbe_town_teams` (with a dedupe guard), appends vehicles to `wfbe_active_vehicles`, starts empty-vehicle cleanup, and marks taxi prohibition. This is the most complete HC path, but still lacks disconnect failover.
 
-Random selection is load-spreading only, not work tracking. There is no visible server-side record tying a delegated town batch to the selected HC, and disconnect cleanup only removes the HC from the candidate list. A future failover patch needs work records before it can safely redistribute or clean orphaned groups.
+The round-robin anchored at the least-loaded HC is load-spreading only, not work tracking. There is no visible server-side record tying a delegated town batch to the selected HC, and disconnect cleanup only removes the HC from the candidate list. A future failover patch needs work records before it can safely redistribute or clean orphaned groups.
 
 ### Static Defense Through HC
 
@@ -62,7 +62,7 @@ Static-defense delegation is triggered from two server paths:
 | `Server_OperateTownDefensesUnits.sqf:41-57` | Town defense spawn delegates gunners to HC when HC mode is enabled and a HC candidate exists. |
 | `Server_HandleDefense.sqf:19-24` | Base/structure defense remanning delegates a replacement gunner to HC when candidates exist. |
 
-`Server_DelegateAIStaticDefenceHeadless.sqf:21-27` also chooses a random HC group for the batch, then sends `['delegate-ai-static-defence', ...]` to that HC leader. The receiver `Client_DelegateAIStaticDefence.sqf:25-28` creates units locally, but the intended server update-back is commented:
+`Server_DelegateAIStaticDefenceHeadless.sqf:21-27` routes each group to the least-loaded live HC via WFBE_CO_FNC_PickLeastLoadedHC (evaluated once per group), then sends `['delegate-ai-static-defence', ...]` to that HC leader. The receiver `Client_DelegateAIStaticDefence.sqf:25-28` creates units locally, but the intended server update-back is commented:
 
 ```sqf
 //["RequestSpecial", ["update-delegation-static_defence", _teams]] Call WFBE_CO_FNC_SendToServer;
@@ -105,7 +105,7 @@ Treat this as PR8 release-branch evidence, not as closure for DR-42. The static-
 | --- | --- | --- |
 | HC disconnect has no mission-level re-delegation. | `Server_OnPlayerDisconnected.sqf:22-29` only removes the HC from the candidate pool. | Already-created HC-local groups may fall back to engine locality behavior, but the mission does not redistribute them to another HC. |
 | HC registration can miss the candidate pool. | `Headless/Init/Init_HC.sqf:11-15` sends one `connected-hc`; `Server_HandleSpecial.sqf:125-130` rejects owner id `0` with only a warning. | Add retry/delayed registration or a server-side reconciliation pass before relying on HC availability. |
-| HC registration can duplicate entries. | `Server_HandleSpecial.sqf:127-128` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` without a visible dedupe guard; disconnect cleanup removes the stored group once through `Server_OnPlayerDisconnected.sqf:22-28`. | Repeated `connected-hc` publication could leave duplicate candidate rows. Make registration idempotent before adding retries. |
+| HC re-registration is now idempotent. | `Server_HandleSpecial.sqf` connected-hc case (lines 416-431): drops the previous group for this UID (`_hcList - [_hcOld]`), prunes all dead/null entries, then appends the new group via `missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]]`. Disconnect cleanup in `Server_OnPlayerDisconnected.sqf:22-29` still removes the group from the candidate pool. | Remaining risk: the persistent-watcher re-announce in `Init_HC.sqf` may fire while the HC is mid-reseat; the new civ group may not yet be visible to the server, briefly producing a prune-then-miss window. Verify registration telemetry (`HCSIDE|v1|connect`) in production after each re-announce. |
 | Client-FPS delegation trusts payload UID/FPS. | `updateavailableactions.fsm:121-125`; `Server_HandleSpecial.sqf:75-83`; `Server_FNC_Delegation.sqf:153-158`. | Treat mode `1` as authority-light; validate sender/UID/rate before using it on a hostile public server. |
 | Static-defense HC units are untracked server-side. | `Client_DelegateAIStaticDefence.sqf:28` comments out update-back; `Server_HandleSpecial.sqf` has `update-town-delegation` but no `update-delegation-static_defence` case. | Cleanup/accounting/re-delegation cannot reason about HC-created static-defense units. |
 | Delegated group cleanup is local and unbounded. | `Client_DelegateTownAI.sqf:42-43`, `Client_DelegateAI.sqf:29-30` and `Client_DelegateAIStaticDefence.sqf:35-36` wait until the created group has no units, then delete the group. | A leaked or engine-stuck unit can leave a long-running cleanup poll on the HC/client. Add timeout/diagnostics when building work records. |

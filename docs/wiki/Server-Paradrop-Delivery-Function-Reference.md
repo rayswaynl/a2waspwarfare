@@ -6,7 +6,7 @@ Three server-side scripts deliver air support to a clicked map position: `Suppor
 
 ## Dispatch and binding
 
-All three are compiled at server init and invoked from the `RequestSpecial` → `HandleSpecial` server router. The argument array is `[nil, _side, _destination, _playerTeam]` (`select 1/2/3`), where `_destination` is the clicked position and `_playerTeam` is the requesting commander's group.
+All three are compiled at server init and invoked from the `RequestSpecial` → `HandleSpecial` server router. The argument array is `[<caseKey>, _side, _destination, _playerTeam]` (`select 1/2/3`), where `<caseKey>` is the dispatch string (`"Paratroops"`, `"ParaAmmo"`, or `"ParaVehi"`) consumed by `Server_HandleSpecial.sqf:5`'s `switch (_args select 0)` before the full array is passed on; `_destination` is the clicked position and `_playerTeam` is the requesting commander's group. (The AI wildcard W4 bypasses this router and calls `Support_Paratroopers.sqf` directly with `nil` at element 0 — see table row below.)
 
 | Fact | Value | Citation |
 | --- | --- | --- |

@@ -80,7 +80,7 @@ Use an explicit vehicle local variable so the nested `crew` count does not reuse
 {
 	private ["_vehicle", "_hasPlayerCrew"];
 	_vehicle = _x;
-	if (alive _vehicle) then {
+	if (alive _vehicle && {local _vehicle}) then {
 		_hasPlayerCrew = ({isPlayer _x} count crew _vehicle) > 0;
 		if (!_hasPlayerCrew && !(isPlayer leader group _vehicle)) then {deleteVehicle _vehicle};
 	};

@@ -2,7 +2,7 @@
 
 Generated from `git ls-files` in the main repository checkout.
 
-Snapshot: `2026-06-02T20:30:00+02:00` on `docs/developer-wiki-index`.
+Snapshot: `2026-06-02T19:25:13+02:00` on `docs/developer-wiki-index`.
 
 Total tracked files: **3432**.
 

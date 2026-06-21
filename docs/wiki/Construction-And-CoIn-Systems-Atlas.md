@@ -103,7 +103,7 @@ CoIn is reinitialized from several lifecycle points:
 
 | Entry | Behavior |
 | --- | --- |
-| `Client/Action/Action_Build.sqf` | Runs CoIn from player/HQ context: `[player, player, 2, MCoin, getpos player, side HQ] ExecVM "Client\Module\CoIn\coin_interface.sqf"`. |
+| `Client/Action/Action_Build.sqf` | Runs CoIn from player/HQ context: `[player, player, 2, MCoin, getpos player, (sideJoined) Call WFBE_CO_FNC_GetSideHQ] ExecVM "Client\Module\CoIn\coin_interface.sqf"`. |
 | `Client/Action/Action_BuildRepair.sqf` | Runs CoIn from a repair truck using `RCoin`. |
 | `Common/Init/Init_Unit.sqf:56-68` | Adds repair-truck build and MHQ repair actions to repair trucks. |
 | `Client/FSM/updateclient.sqf:220` | Adds commander build menu action only for the commander, gated by `hqInRange`, `canBuildWHQ` and target player. |
@@ -159,7 +159,7 @@ These are preview/client rules. The server creation handlers do not repeat most 
 | Request | Server behavior |
 | --- | --- |
 | `RequestStructure` | Reads side, classname, position and direction from the client payload; maps classname to logical structure and construction script; sends `building-started` messages for major structures; executes `Server\Construction\Construction_<script>.sqf` if the classname exists. See `Server/PVFunctions/RequestStructure.sqf:3-21`. |
-| `RequestDefense` | Looks up the classname in `WFBE_<side>DEFENSENAMES`; calls `ConstructDefense` when found. See `Server/PVFunctions/RequestDefense.sqf:2-10`. |
+| `RequestDefense` | Looks up the classname in `WFBE_<side>DEFENSENAMES`; for WDDM composition anchors (classnames in `WFBE_POSITION_ANCHOR_NAMES`) calls `Server_ConstructPosition`; for single defenses calls `ConstructDefense`. A defense-budget gate (`WFBE_C_DEFENSE_BUDGET`) may reject and refund before either call. See `Server/PVFunctions/RequestDefense.sqf`. |
 | `RequestMHQRepair` | Spawns `MHQRepair` with the received side. See `Server/PVFunctions/RequestMHQRepair.sqf:1`. |
 
 ### Authority Boundary

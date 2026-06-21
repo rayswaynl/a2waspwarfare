@@ -1,4 +1,4 @@
-﻿# SQF Code Atlas
+# SQF Code Atlas
 
 Historical guardrail: before changing supply mission, JIP, town-AI, marker or performance-sensitive SQF, read [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons). Miksuu history shows repeated follow-up fixes in those areas, so code changes should cite current source and upstream evidence separately.
 
@@ -156,9 +156,9 @@ Server init owns AI, town, building, construction, special support, supply missi
 Important categories:
 
 - Legacy server functions: AI buy, AI respawn, AI orders, building damage/killed, defense construction, special supports and team updates.
-- AI order helpers are compiled as plain `preprocessFile` binds at `Server/Init/Init_Server.sqf:13-18`; their source-backed caller/status table lives in [Function and module index](Function-And-Module-Index#server-ai-order-helpers).
+- AI order helpers are compiled as plain `preprocessFile` binds at `Server/Init/Init_Server.sqf:13-18`; their source-backed caller/status table lives in [Function and module index](Function-And-Module-Index#server-function-families).
 - New `WFBE_SE_FNC_*` functions: town attack pathing, town groups, empty vehicle handling, PVF dispatch, town defenses, commander voting, upgrades and HQ death/repair flows.
-- Supply mission handlers: `supplyMissionStarted`, `supplyMissionCompleted`, `supplyMissionActive`, `isSupplyMissionActiveInTown`, `playerObjectsList`, `supplyMissionTimerForTown`.
+- Supply mission handlers: `supplyMissionStarted`, `supplyMissionCompleted`, `isSupplyMissionActiveInTown`, `playerObjectsList`, `supplyMissionTimerForTown`.
 - AntiStack handlers: database retrieve/store/flush/set-map, player score sampling, team score compare, launch-side ACK.
 - Direct event-channel systems: attack waves, MASH marker, server FPS, day/night, global game stats.
 
@@ -187,7 +187,7 @@ Risk notes:
 
 ### `Headless/Init/Init_HC.sqf`
 
-Headless init compiles the same delegation helpers used by clients plus `WFBE_CL_FNC_HandlePVF`. Headless support is version-gated earlier in `initJIPCompatible.sqf`; see [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#headless-client) for the boot wait and [AI, headless and performance](AI-Headless-And-Performance#hc-delegation-routing) for delegation mechanics.
+Headless init compiles the same delegation helpers used by clients plus `WFBE_CL_FNC_HandlePVF`. Headless support is version-gated earlier in `initJIPCompatible.sqf`; see [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#headless-client) for the boot wait and [AI, headless and performance](AI-Headless-And-Performance#hc-delegation-source-router) for delegation mechanics.
 
 ## PVF Contract
 
@@ -222,7 +222,7 @@ This table is a triage map only. Owner pages hold branch matrices, implementatio
 | --- | --- | --- | --- |
 | `Server/Init/Init_Server.sqf:36,383`; `Server/AI/AI_UpdateSupplyTruck.sqf:17` | `Server/AI/AI_UpdateSupplyTruck.sqf`; `Server/FSM/supplytruck.fsm` | Compile is commented, docs checkout still raw-spawns the worker when the config gate opens, and the worker calls a missing FSM. | [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) |
 | `Client/Init/Init_Client.sqf:75,744` | `Client/Functions/Client_TaskSystem.sqf` | Compile and old town-task spawn are commented; target file still exists. | [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Client UI systems atlas](Client-UI-Systems-Atlas#known-ui-risks-and-partial-work) |
-| `Client/Init/Init_Client.sqf:132` | `Client/Module/MASH/receiverMASHmarker.sqf` | Receiver compile is commented while the receiver file exists; shared MASH marker relay remains orphaned on docs-shaped roots. | [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) |
+| `Client/Init/Init_Client.sqf:132` | `Client/Module/MASH/receiverMASHmarker.sqf` | Receiver compile reference and target file are both absent from master; Client/Module/MASH/ does not exist on origin/master. The commented compile and orphaned relay described here exist only on docs-checkout/docs-shaped branches, not on stable/master Chernarus. | [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) |
 | `Client/Init/Init_Client.sqf:138,782` | `Client/Functions/Client_BlinkMapIcons.sqf` | Old full-map icon blinking compile/exec comments point at a missing plural helper; guarded singular blinking remains separate. | [Dead/stale code register](Dead-Code-And-Stale-Code-Register#current-findings), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas) |
 | `Client/Init/Init_Client.sqf:140` | `Client/Functions/Client_AddUnitToTrack.sqf` | Old unit-tracking compile comment points at a missing helper. | [Dead/stale code register](Dead-Code-And-Stale-Code-Register#current-findings) |
 | `Common/Init/Init_Common.sqf:10` | `Common/Functions/Common_HandleATReloadVehicle.sqf` | Compile is commented and the helper file still exists, so this is archive/revive work rather than a missing-file error. | [Abandoned feature revival](Abandoned-Feature-Revival-Review#decision-matrix), [Dead/stale code register](Dead-Code-And-Stale-Code-Register#sqf-reachability-findings) |

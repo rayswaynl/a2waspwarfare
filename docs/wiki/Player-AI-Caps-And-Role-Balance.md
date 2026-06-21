@@ -32,7 +32,7 @@ The cap is checked against live group units plus queued units. A solo player alr
 
 Important naming trap: `WFBE_C_PLAYERS_AI_MAX` is the player follower cap. `WFBE_C_AI_MAX` is a separate AI-group knob exposed in `Rsc/Parameters.hpp:56-60` with a fallback at `Init_CommonConstants.sqf:92`; the 2026-06-05 branch check found no active maintained-root runtime consumer for that value across current source/Vanilla, `origin/master`, `miksuu/master` or release. Do not use `WFBE_C_AI_MAX` when answering how many AI a normal player can personally command; use [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs) for the cleanup route.
 
-Scout recheck 2026-06-04: the current Chernarus source still matches the table below. `GetLiveUnits.sqf:1-8` counts the player as one live group unit, so the Discord table intentionally reports AI followers rather than total group cap.
+Scout recheck 2026-06-04: the current Chernarus source still matches the table below. `Common/Functions/Common_GetLiveUnits.sqf:1-8` counts the player as one live group unit, so the Discord table intentionally reports AI followers rather than total group cap.
 
 ## Discord Table
 
@@ -73,7 +73,7 @@ Fallback baseline if the lobby parameter layer is absent: `WFBE_C_PLAYERS_AI_MAX
 | Level 2 | 11 AI | 21 AI | 17 AI | 27 AI |
 | Level 3 | 15 AI | 25 AI | 23 AI | 33 AI |
 
-Lobby/default note: the lobby parameters default AI teams and AI commander to off, while the fallback constants in `Init_CommonConstants.sqf` default them on if the parameter layer is absent. Do not use the fallback defaults as proof of live multiplayer settings unless the parameter include failed or was intentionally bypassed.
+Lobby/default note: the lobby parameter defaults AI teams to off (`WFBE_C_AI_TEAMS_ENABLED` default 0) while AI commander defaults to on (`WFBE_C_AI_COMMANDER_ENABLED` default 1), while the fallback constants in `Init_CommonConstants.sqf` default them on if the parameter layer is absent. Do not use the fallback defaults as proof of live multiplayer settings unless the parameter include failed or was intentionally bypassed.
 
 ## Adjacent Limits That Are Not The Player Cap
 

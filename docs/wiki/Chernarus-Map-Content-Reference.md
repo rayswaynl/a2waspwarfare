@@ -46,11 +46,11 @@ Three `LocationLogicAirport` logic objects are placed in `mission.sqm`. Position
 
 | Airport object (SQM id) | Position (x, z) | mission.sqm line |
 |---|---|---|
-| id=7 | 4824, 2500 (SW — Balota airstrip area) | mission.sqm:189–193 |
+| id=7 | 4550, 2280 (SW — Balota airstrip area) | mission.sqm:189–193 |
 | id=8 | 4479, 10618 (NW — Zeleno/Vybor airfield area) | mission.sqm:207–212 |
 | id=9 | 11812, 12623 (NE — Krasnostav airfield area) | mission.sqm:225–231 |
 
-All three objects have `init="this enableSimulation false;"` and no additional init logic beyond placement.
+All three objects have `init="this setVariable [\"wfbe_skip_auto_hangar\",true,true];this enableSimulation false;"` — they set `wfbe_skip_auto_hangar` to `true` (broadcast globally) before disabling simulation.
 
 ---
 
@@ -117,7 +117,7 @@ Init call signature: `[logicObject, townName, dubbingName, startSV, maxSV, townV
 - **townType** — Defense template(s); governs which composition spawns to defend the town. A single string means one template; an array means a pool to pick from.
 - **dubbingName** — Localization alias used for audio/text. `"+"` means use townName directly.
 
-The `totalTowns` counter is set to **43** on the TownMode logic object (mission.sqm:3265), but only 40 `LocationLogicDepot` objects exist with `Init_Town.sqf` calls. The remaining 3 entries in the `totalTowns` count include entries referenced in `Towns_Removed*` pool lists (Pogorevka, Kozlovka, Orlovets) that appear in pool management arrays but have no active `LocationLogicDepot` logic objects placed in the SQM.
+The `totalTowns` counter is set to **43** on the TownMode logic object (mission.sqm:3265). There are 43 `LocationLogicDepot` objects with `Init_Town.sqf` calls: the 40 regular towns catalogued below, plus three airfield depot logics — NWAF (id=304, mission.sqm:4811), NEAF (id=305, mission.sqm:4845), and Balota (id=306, mission.sqm:4879). These airfield depots use townType `["PMCAirfield"]` and dubbing name `"++"`. Pogorevka, Kozlovka, and Orlovets appear in `Towns_Removed*` pool arrays but have no placed `LocationLogicDepot` and are not counted in `totalTowns`.
 
 | # | Town name | Dubbing name | Start SV | Max SV | Town value | Town type(s) | mission.sqm line |
 |---|---|---|---|---|---|---|---|
@@ -196,7 +196,7 @@ The TownMode logic object (mission.sqm:3265) defines `Towns_Removed*` arrays use
 | `Towns_RemovedCentralLine` | Towns along the central corridor; excluded for edge-biased games |
 | `Towns_RemovedSmallTowns` | Small/tiny towns excluded for high-value-only games |
 
-Three names appear in these lists but have no `Init_Town.sqf` logic object: `Pogorevka`, `Kozlovka`, `Orlovets`. These are referenced in `Towns_Removed*` pool management but are not placed as active towns in the current mission. The `totalTowns` counter of 43 (mission.sqm:3265) includes them.
+Three names appear in these lists but have no `Init_Town.sqf` logic object: `Pogorevka`, `Kozlovka`, `Orlovets`. These are referenced in `Towns_Removed*` pool management but are not placed as active towns in the current mission and are not counted in `totalTowns`.
 
 ---
 

@@ -179,7 +179,7 @@ This patch is the PVF foundation, not the whole server-authority migration.
 | Layer | Fixed by this playbook? | Example |
 | --- | --- | --- |
 | Sender-chosen arbitrary handler string | Yes | Forged payload trying to compile arbitrary SQF text instead of `SRVFNCRequestJoin`. |
-| Avoidable per-message compile | Yes | `Server_HandlePVF.sqf:14`, `Client_HandlePVF.sqf:22`. |
+| Avoidable per-message compile | Already resolved on master | Dispatchers use `missionNamespace getVariable` + CODE guard; no `Call Compile` at dispatch time. |
 | Legitimate handler with forged payload | No | `RequestSpecial` `ICBM` branch, `RequestStructure`, `RequestUpgrade`, `RequestChangeScore`. |
 | Missing authenticated sender context | No | DR-55: `Init_PublicVariables.sqf:51-53` forwards only the public-variable value into `WFBE_SE_FNC_HandlePVF`, and `Server_HandlePVF.sqf:9-14` forwards only handler parameters. |
 | Direct publicVariable channel outside PVF | No | `ATTACK_WAVE_INIT`, side-supply temp PVs, supply mission PVs, MASH marker relay, HQ state channels. |

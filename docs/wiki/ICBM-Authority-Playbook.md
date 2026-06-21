@@ -25,7 +25,7 @@ Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches t
 | `Client/Module/Nuke/ICBM_Init.sqf:6-13` | Compiles `NukeIncoming`, marker/message handlers, radiation and `NukeDammage`. |
 | `Common/Init/Init_PublicVariables.sqf:18,39` | Registers `RequestSpecial` server-bound and `NukeIncoming` client-bound PVF command names. |
 | `Client/GUI/GUI_Menu_Tactical.sqf:252-260` | UI enables ICBM only when module is enabled, current side upgrade level is > 0, player group is commander team, and local funds cover `_currentFee`. |
-| `Client/GUI/GUI_Menu_Tactical.sqf:463-499` | On map click, client debits local funds, creates a local marker object and spawns `NukeIncoming`. |
+| `Client/GUI/GUI_Menu_Tactical.sqf:463-499` | On map click, client debits local funds, creates a local `HeliHEmpty` vehicle as the impact-position anchor and spawns `NukeIncoming` with that vehicle; a separate map marker is created via `WF_createMarker` for display only. |
 | `Client/Module/Nuke/nukeincoming.sqf:7-23` | Client sleeps for impact time, creates a cruise object locally and sends `["RequestSpecial", ["ICBM", sideJoined, _target, _cruise, clientTeam]]`. |
 | `Server/Functions/Server_HandleSpecial.sqf:97-111` | Server trusts `_side`, `_base`, `_target` and `_playerTeam`; after `_target` dies or nulls, it runs `[_base] Spawn NukeDammage`. |
 | `Client/Module/Nuke/damage.sqf:13-34` | `NukeDammage` uses the supplied object as the impact center, finds nearby objects with `nearestObjects [_target, [], ICBM_DAMAGE_RADIUS]`, damages almost everything and starts radiation. |

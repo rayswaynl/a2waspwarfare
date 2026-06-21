@@ -135,7 +135,7 @@ if (_positiondis < _borderdis) then {true} else {false}
 
 - `_sqrradH` is half the terrain XY value. For Chernarus this is `7680` — both the X and Y centre coordinates in world space.
 - The polar decomposition (`atan`, then a cosine correction on each axis) computes the radius of the inscribed square at the player's bearing rather than a circle. A player directly on a diagonal can be further from the centre than one at a cardinal heading while both are at the same `_positiondis`.
-- The check is **not** a circle radius test. On Chernarus a player at bearing 45° can be roughly 3.5% further from centre before triggering than a player at bearing 0° or 90°.
+- The check is **not** a circle radius test. On Chernarus a player at bearing 45° can be roughly 41% further from centre before triggering than a player at bearing 0° or 90° (a factor of sqrt(2), since the effective boundary at 45° is 7680/cos(45°) ≈ 10 860 m versus 7 680 m at cardinal headings).
 - The function is called with no arguments: `Call BoundariesIsOnMap`. Returns `true` (inside) or `false` (outside).
 
 ---

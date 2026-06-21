@@ -84,7 +84,7 @@ Each `CM_Flares` call dispenses one flare per `flare_launcher` selection found o
 | Smoke emitter | `#particlesource` billboard (Universal particle set) at the flare, `setDropInterval 0.02` | `Client/Module/CM/CM_Flares.sqf:25-28` |
 | Spark emitter | second `#particlesource`, `setDropInterval 0.001` | `Client/Module/CM/CM_Flares.sqf:30-33` |
 | Light point | `#lightpoint` attached to the flare, amber color `[1, 0.5, 0.2]`, brightness `0.1` | `Client/Module/CM/CM_Flares.sqf:35-39` |
-| Auto-cleanup | All emitters + flares `spawn { sleep 4.5 + random 1; deleteVehicle each }` | `Client/Module/CM/CM_Flares.sqf:43-45` |
+| Auto-cleanup | All emitters + flares `spawn { sleep 4.5 + random 1; {deleteVehicle _x} forEach _this }` | `Client/Module/CM/CM_Flares.sqf:43-45` |
 
 Because `CM_Countermeasures` calls `CM_Flares` 8 times and `CM_Flares` decrements `FlareCount` once per `flare_launcher` selection, a single incoming-missile event spends `8 ×` (number of launcher selections) flares from the pool. All objects are `createVehicleLocal` / local emitters, so the effect is purely client-side and not network-replicated.
 

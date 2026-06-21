@@ -315,7 +315,7 @@ _delay
 
 ### Design rationale
 
-Under server load the `diag_fps` metric falls. Shorter sleep intervals allow server loops to process more work per real-time second, partially compensating for performance degradation. The function is only called by `Server/FSM/updateresources.sqf:74`:
+Under server load the `diag_fps` metric falls. Shorter sleep intervals allow server loops to process more work per real-time second, partially compensating for performance degradation. The function is called from two sites: `Server/FSM/updateresources.sqf:113` (economy income loop) and `Client/Module/AFKkick/monitorAFK.sqf:29` (AFK polling loop, base interval 60 s). The server call:
 
 ```sqf
 _awaits = (_ii) Call GetSleepFPS;

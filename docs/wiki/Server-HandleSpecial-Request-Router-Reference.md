@@ -38,7 +38,7 @@ These cases are thin: they `spawn` a compiled worker bound in `Init_Server.sqf`.
 | `ParaAmmo` | full `_args` | `_args spawn KAT_ParaAmmo` | `Init_Server.sqf:46` → `Support_ParaAmmo.sqf` | `:51-53` |
 | `uav` | full `_args` | `_args spawn KAT_UAV` | `Init_Server.sqf:49` → `Support_UAV.sqf` | `:63-65` |
 | `RespawnST` | `[_, _side]` | Force-respawns that side's AI supply trucks: reads `wfbe_ai_supplytrucks` off the side logic, then `driver _x setDammage 1; _x setDammage 1` on each. Logs the forced respawn. | (inline) | `:55-61` |
-| `ICBM` | `[_, _side, _base, _target, _playerTeam]` | Logs the nuke call, `exitWith` if `_target` null/dead, `waitUntil {!alive _target ...}`, then `[_base] Spawn NukeDammage`. `NukeDammage` is compiled client-side at `Client/Module/Nuke/ICBM_Init.sqf:13` from `damage.sqf`. | `:117-132` |
+| `ICBM` | `[_, _side, _base, _target, _playerTeam]` | Logs the nuke call, `exitWith` if `_target` null/dead, `waitUntil {!alive _target ...}`, then `[_base] Spawn NukeDammage`. `NukeDammage` is compiled server-side at `Client/Module/Nuke/ICBM_Init.sqf:13` from `damage.sqf`. | `:117-132` |
 
 ## Headless-client lifecycle and delegation cases
 

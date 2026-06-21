@@ -91,7 +91,7 @@ Keep the first patch small:
 4. Assign a distinct `idd` to either `RscOverlay` or `OptionsAvailable`; release Chernarus did not already solve this title-resource collision.
 5. Keep title IDD cleanup separate from title display-variable cleanup.
 6. Split title display handles so `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` do not share `currentCutDisplay`. Either add separate helper scripts/keys or make the helper accept the key name explicitly.
-7. Before reviving or deleting stale resource classes, check script targets and assets as well as IDs. Current source example: `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf` and missing `Client\Images\wf_*.paa` upgrade icons (`Dialogs.hpp:2425-2428`, `:2634-2821`).
+7. Before reviving or deleting stale resource classes, check script targets and assets as well as IDs. The active upgrade dialog on master is `WFBE_UpgradeMenu` (`Dialogs.hpp:4`, `idd = 504000`); its script `Client/GUI/GUI_UpgradeMenu.sqf` exists. No class named `RscMenu_Upgrade` exists in master `Dialogs.hpp`, `GUI_Menu_Upgrade.sqf` does not exist in the mission tree, and `Dialogs.hpp:2425-2428` / `:2634-2821` contain unrelated controls (`CA_SupportCost_Label`, `CA_HealAll_Button`). If a stale-class example is needed, verify it against the target branch before documenting it here.
 8. If the minimal patch instead gates RHUD/action-icon recreation during endgame, still avoid making endgame stat rendering depend on an action-HUD-owned key.
 
 Do not combine this with EASA balance generation or Economy authority changes. This is resource hygiene and future-proofing.

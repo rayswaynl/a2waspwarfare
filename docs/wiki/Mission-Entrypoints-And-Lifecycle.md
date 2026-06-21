@@ -57,7 +57,7 @@ Verified anchors:
 
 | Source | Runtime role |
 | --- | --- |
-| `mission.sqm:128` and following town logic entries | Town objects call `Common\Init\Init_Town.sqf` with name, dubbing name, start SV, max SV, range and group templates. Current source scan found 40 such explicit `Init_Town.sqf` calls. |
+| `mission.sqm:128` and following town logic entries | Town objects call `Common\Init\Init_Town.sqf` with name, dubbing name, start SV, max SV, range and group templates. Current source scan found 43 such explicit `Init_Town.sqf` calls. |
 | `mission.sqm:3265` | `WF_Logic` sets `totalTowns = 43`, disables simulation and seeds `Towns_Removed*` lists before `ExecVM "Common\Init\Init_TownMode.sqf"`. |
 | `Common/Init/Init_Town.sqf:18` | Each town waits for `townModeSet && WFBE_Parameters_Ready` before applying town state. |
 | `Common/Init/Init_Town.sqf:42` | Town object setup then waits for `commonInitComplete`. |
@@ -65,8 +65,6 @@ Verified anchors:
 | `Common/Init/Init_Town.sqf:134` | AI/patrol follow-up waits for `townInitServer`. |
 
 This means town lifecycle bugs can live in mission object init, town init scripts and server FSMs together. Regex-only scans of SQF files will miss the `mission.sqm` entry layer.
-
-Count verification note: a 2026-06-04 lifecycle scout suggested the count might be 42, but a direct source recheck with `Select-String -LiteralPath "Missions\[55-2hc]warfarev2_073v48co.chernarus\mission.sqm" -Pattern "Common\\Init\\Init_Town\.sqf"` returned 40. Keep this count source-verified before using it in balance or capture-mode assumptions.
 
 ## Common Init
 
@@ -117,9 +115,9 @@ Client init has several `waitUntil` gates on replicated state with no local time
 
 Headless support is gated by the OA version check in `initJIPCompatible.sqf`. When supported and configured, `Headless/Init/Init_HC.sqf` loads client PVF handling and common init pieces needed for delegated AI.
 
-`Headless/Init/Init_HC.sqf` currently uses a fixed delay and then sends `["RequestSpecial", ["connected-hc", player]]` to the server. There is no explicit `waitUntil {serverInitFull}` barrier in that file, so HC timing bugs should be investigated against [Lifecycle wait-chain](Lifecycle-Wait-Chain) and [AI/headless](AI-Headless-And-Performance) together.
+`Headless/Init/Init_HC.sqf` does not use a simple fixed delay before sending `["RequestSpecial", ["connected-hc", player]]` to the server. After `sleep 20` the HC waits for the player object (`waitUntil {!isNull player}`), emits a pre-seat telemetry call, then executes a bounded reseat-to-civilian polling loop (up to ~60 s) before sending the `connected-hc` notify. A persistent watcher is also spawned before the notify. There is no explicit `waitUntil {serverInitFull}` barrier in that file, so HC timing bugs should be investigated against [Lifecycle wait-chain](Lifecycle-Wait-Chain) and [AI/headless](AI-Headless-And-Performance) together.
 
-Source verification: `Headless/Init/Init_HC.sqf:12` is `sleep 20`; `:15` sends the `connected-hc` request. The server sets `serverInitComplete = true` early at `Server/Init/Init_Server.sqf:117`, waits for `commonInitComplete && townInit` at `:127`, and only later sets `serverInitFull = true` at `:507`. Treat the HC sleep as a timing proxy, not a real dependency barrier.
+Source verification: `Headless/Init/Init_HC.sqf:14` is `sleep 20`. After the sleep the HC guards on `waitUntil {!isNull player}` (`:28`), executes a bounded reseat-to-civilian polling loop (`:35-101`, up to ~60 s), parks the HC body, and spawns a persistent reseat watcher before sending the `connected-hc` notify at `:129` (`["RequestSpecial", ["connected-hc", player]] Call WFBE_CO_FNC_SendToServer`). The real timing proxy before `connected-hc` is therefore `sleep 20` plus up to ~60 s of reseat polling, not a fixed delay alone. The server sets `serverInitComplete = true` early at `Server/Init/Init_Server.sqf:117`, waits for `commonInitComplete && townInit` at `:127`, and only later sets `serverInitFull = true` at `:507`. Treat the HC sleep as a timing proxy, not a real dependency barrier.
 
 Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-37 is the boot wait-chain review; use [Lifecycle wait-chain](Lifecycle-Wait-Chain) before reordering init flags or replacing waits.
 

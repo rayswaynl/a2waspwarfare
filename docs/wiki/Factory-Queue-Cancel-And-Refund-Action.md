@@ -76,7 +76,7 @@ Normally the refund equals the price paid (`_refund = _paidCost`, `Action_Cancel
 | Stage | What it does | Citation |
 |---|---|---|
 | Enqueue | Builds the token, appends to `queu` + the three cost/cpt/label arrays; adds `unitQueu += _cpt` | `Client_BuildUnit.sqf:11,168-186` |
-| Add cancel action | `addAction ["Cancel last queued unit", "Client\Action\Action_CancelQueue.sqf", [_factory], 50, false, true, "", "cursorObject == _target && player distance _target < 25"]`; the action id is stored as `wfbe_cancel_action_<UID>` | `Client_BuildUnit.sqf:187-199` |
+| Add cancel action | `addAction ["<t color='#ff9900'>Cancel last queued unit</t>", "Client\Action\Action_CancelQueue.sqf", [_factory], 50, false, true, "", "cursorObject == _target && player distance _target < 25"]`; the action id is stored as `wfbe_cancel_action_<UID>` | `Client_BuildUnit.sqf:187-199` |
 | Normal-completion sync | On actual spawn, finds `_qIdx = _queu find _unique` and removes that index from `queu_costs/cpts/labels` to keep them aligned | `Client_BuildUnit.sqf:232-259` |
 | Remove cancel action | Removes the per-player `wfbe_cancel_action_<UID>` action once the slot resolves | `Client_BuildUnit.sqf:260-267` |
 | Cancelled-mid-build guard (E1) | If `_qIdx < 0` (the token is gone — `Action_CancelQueue` already removed it, decremented counters, and refunded), `exitWith {}` **without spawning** so the player can't keep both the refund and the unit | `Client_BuildUnit.sqf:269-273` |

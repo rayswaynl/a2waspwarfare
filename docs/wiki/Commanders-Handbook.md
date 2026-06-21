@@ -27,7 +27,7 @@ Source: `Guides/CommanderGuide/commanderGuide.md:3-11`
 ## The Commander Role
 
 - The commander controls team strategy, moves and deploys the MHQ, builds and sells bases, and manages upgrades.
-- The AI commander feature has been removed; the slot now reads "No Commander" if unfilled. Any player should take it rather than leave it empty.
+- When no human player is elected commander, the AI Commander automatically takes control of the side — it builds bases, researches upgrades, fields teams, and executes tactical events. Electing a player commander overrides the AI. The vote menu shows "No Commander" as the option to leave the AI in charge. `Common/Init/Init_CommonConstants.sqf:103` (`WFBE_C_AI_COMMANDER_ENABLED = 1`); `Server/Init/Init_Server.sqf:846-847`.
 - Commander income is based on a configurable percentage (`wfbe_commander_percent`, default **70%**) of total town income, split via the income system (default system 3 — Commander System). The remainder is divided among team players. The commander-percent slider is capped at `WFBE_C_ECONOMY_INCOME_PERCENT_MAX = 30` **from above** (the percent the commander claims is stored separately as a percentage of total; verify in-game).
 
 Source: `Client/Init/Init_Client.sqf:365` (default 70); `Common/Init/Init_CommonConstants.sqf:160,167-168` (income system 3, divided factor 1.2, max slider 30)
@@ -83,7 +83,7 @@ All limits derive from `WFBE_C_STRUCTURES_MAX = 3` unless overridden per-type.
 
 | Structure type | Max per side | Source |
 |---|---|---|
-| HQ (deployed base) | **3** | `WFBE_C_STRUCTURES_MAX = 3`. `Common/Init/Init_CommonConstants.sqf:309` |
+| HQ (deployed base) | **1** (unique per side) | Each side has exactly one MHQ that deploys/mobilizes via `Construction_HQSite.sqf`. HQ is the first entry in the structures array and is explicitly excluded from the per-type build-limit system: `coin_interface.sqf:93-96` strips element 0 from both `_buildingsNames` and `_buildingsType` before the limit loop, so `_find` is always -1 for HQ and no `WFBE_C_STRUCTURES_MAX_*` lookup ever runs for it. `WFBE_C_STRUCTURES_MAX = 3` (`Init_CommonConstants.sqf:462`) does not apply to HQ. |
 | Barracks (B) | 3 | `WFBE_C_STRUCTURES_MAX_BARRACKS = WFBE_C_STRUCTURES_MAX`. Line 447 |
 | Light Factory (LF) | 3 | `WFBE_C_STRUCTURES_MAX_LIGHT = WFBE_C_STRUCTURES_MAX`. Line 448 |
 | Command Center (CC) | 3 | `WFBE_C_STRUCTURES_MAX_COMMANDCENTER = WFBE_C_STRUCTURES_MAX`. Line 449 |
@@ -91,7 +91,7 @@ All limits derive from `WFBE_C_STRUCTURES_MAX = 3` unless overridden per-type.
 | Aircraft Factory (AF) | 3 | `WFBE_C_STRUCTURES_MAX_AIRCRAFT = WFBE_C_STRUCTURES_MAX`. Line 451 |
 | Service Point (SP) | **6** | `WFBE_C_STRUCTURES_MAX_SERVICEPOINT = WFBE_C_STRUCTURES_MAX * 2`. Line 452 |
 | Tents | 3 | `WFBE_C_STRUCTURES_MAX_TENTS = 3`. Line 453 |
-| AARadar (AAR) | 4 (default fallback) | No specific variable; `Server_HandleBuildingRepair.sqf:40` falls back to 4 when the per-type variable is nil. |
+| AARadar (AAR) | **1** | `WFBE_C_STRUCTURES_MAX_AARadar = 1`. `Common/Init/Init_CommonConstants.sqf:675` |
 
 Source: `Common/Init/Init_CommonConstants.sqf:447-453`; `Server/Functions/Server_HandleBuildingRepair.sqf:39-40`
 
@@ -132,11 +132,10 @@ Structure sale refund: **50%** of supply cost. `WFBE_C_STRUCTURES_SALE_PERCENT =
 
 ## Starting Supply
 
-- Default supply at game start: **1,200 supply** per side (`WFBE_C_ECONOMY_SUPPLY_START_WEST/EAST = 1200`). `Common/Init/Init_CommonConstants.sqf:161-162`
-- The in-repo guide states "6,000 supply start which is default." This is a **LLM-draft error** — the verified code default is 1,200. Server operators may configure a different value.
-- With 1,200 supply you can deploy the HQ (100 S) and build a B (200 S) + CC (1,200 S) only if sequenced carefully; or B (200 S) + LF (600 S) = 800 S + deploy (100 S) = 900 S total, leaving 300 S reserve.
+- Default supply at game start: **12,800 supply** per side (`WFBE_C_ECONOMY_SUPPLY_START_WEST/EAST = 12800`). `Common/Init/Init_CommonConstants.sqf:314-315`
+- Server operators may configure a different value via mission parameters before this block runs.
 
-Source: `Common/Init/Init_CommonConstants.sqf:161`
+Source: `Common/Init/Init_CommonConstants.sqf:314-315`
 
 ---
 

@@ -4,7 +4,7 @@ This lane turns the abandoned-feature note for paratrooper drop markers into a m
 
 ## Status
 
-Branch-local source and maintained Vanilla are propagated; current release head `7ff18c49` also carries the registration in both maintained release roots. `origin/master` is **not** patched. On stable master, `Common/Init/Init_PublicVariables.sqf:39` is still `NukeIncoming` and `HandleParatrooperMarkerCreation` is absent from `_clientCommandPV`.
+Branch-local source and maintained Vanilla are propagated; current release head `7ff18c49` also carries the registration in both maintained release roots. `origin/master` is already patched. On stable master, `HandleParatrooperMarkerCreation` is registered in `_clientCommandPV` at `Common/Init/Init_PublicVariables.sqf:38`; `NukeIncoming` follows at line 46.
 
 | Surface | Status | Evidence |
 | --- | --- | --- |
@@ -41,7 +41,7 @@ The server-side paratrooper support flow creates transport aircraft, spawns para
 - `HandleParatrooperMarkerCreation.sqf:29-40` creates a local marker name and spawns `MarkerUpdate`.
 - `Common_MarkerUpdate.sqf:21` has an additional same-side/alive/null guard before creating the local marker.
 
-On `origin/master`, source Chernarus has the sender and handler file but not the registration entry, so `Init_PublicVariables.sqf` never compiles `CLTFNCHandleParatrooperMarkerCreation` and never attaches a PVEH for `WFBE_PVF_HandleParatrooperMarkerCreation`. Vanilla Takistan showed the same missing registration before branch-local propagation; it is now aligned with this docs branch's source.
+On `origin/master`, source Chernarus already carries all three elements: sender (`Support_Paratroopers.sqf`), handler file (`Client/PVFunctions/HandleParatrooperMarkerCreation.sqf`), and registration (`Init_PublicVariables.sqf` line 38: `_l = _l + ["HandleParatrooperMarkerCreation"];`). The forEach loop at lines 54–57 therefore compiles `CLTFNCHandleParatrooperMarkerCreation` and attaches the PVEH for `WFBE_PVF_HandleParatrooperMarkerCreation` on master. The patch described in this page was already present on master before this wiki page was written. Vanilla Takistan was aligned with the docs-branch source via a separate propagation run.
 
 ## Why It Matters
 
@@ -75,7 +75,7 @@ Branch-local source/Vanilla checks completed:
 
 - Chernarus source mission now has sender + registered client PVF + handler file.
 - Vanilla Takistan now has sender + handler file + registration after the propagation run.
-- `origin/master` still lacks the registration at `Init_PublicVariables.sqf:39`; do not call the revive shipped on master until that branch adopts it.
+- `origin/master` carries the registration at `Init_PublicVariables.sqf:38`; the feature is live on master. Runtime smoke in Arma 2 OA on a dedicated or hosted server remains the outstanding gate before declaring the feature fully validated.
 - Current release head `7ff18c49` has the registration in both maintained release roots at `Init_PublicVariables.sqf:34`, carried forward from the `7195b331` intermediate; runtime smoke remains pending.
 - Diff is scoped to one source `Init_PublicVariables.sqf` insertion plus docs/machine-readable handoff updates.
 - Earlier propagation was blocked by the checkout path, but `Tools/LoadoutManager` root discovery and `A2WASP_SKIP_ZIP=1` support were later patched; generation/copy completed for maintained Vanilla Takistan.

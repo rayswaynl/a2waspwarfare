@@ -14,7 +14,7 @@ The script is invoked once per created object, always with `[unit, sideID]`. It 
 | Generic unit creation (already-local path) | `Common/Functions/Common_CreateUnit.sqf:114` | `[_unit, _side] ExecVM 'Common\Init\Init_Unit.sqf'` |
 | Generic vehicle creation | `Common/Functions/Common_CreateVehicle.sqf:65` | builds `_initStr = Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side]` |
 | UAV spawn | `Client/Module/UAV/uav.sqf:30` | `_uav setVehicleInit Format[... Init_Unit.sqf ...]` |
-| Para-dropped ammo crate | `Server/Support/Support_ParaAmmo.sqf:40` | `setVehicleInit` |
+| Ammo paradrop delivery aircraft | `Server/Support/Support_ParaAmmo.sqf:40` | `setVehicleInit` |
 | Paratroopers | `Server/Support/Support_Paratroopers.sqf:52` | `setVehicleInit` |
 | Para-dropped vehicles | `Server/Support/Support_ParaVehicles.sqf:41` | `setVehicleInit` |
 

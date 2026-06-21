@@ -89,16 +89,11 @@ Side: `GUER`. (`Defenses_GUE.sqf:7-8`)
 
 | # | Classname | Price | Kind |
 |---|-----------|------:|------|
-| 1 | `GUE_WarfareBMGNest_PK` | $300 | `MGNest` |
-| 2 | `SearchLight_Gue` | $50 | *(none)* |
-| 3 | `DSHKM_Gue` | $200 | `MG` |
-| 4 | `SPG9_Gue` | $400 | `AT` |
-| 5 | `ZU23_Gue` | $600 | `AA` |
-| 6 | `2b14_82mm_GUE` | $1,100 | *(none)* |
+| 1 | `ZU23_Gue` | $600 | `AA` |
 
-Source lines: `Defenses_GUE.sqf:17-51`
+Source lines: `Defenses_GUE.sqf:22-26`
 
-**GUE has 6 entries, not 9.** It has no $150 light MG tripod, no $600 grenade launcher, and no artillery piece. The AA is `ZU23_Gue` (no `Igla`-equivalent). This is the shallowest defense catalog of all nine factions.
+**GUE has 1 entry only.** All other statics (MGNest `GUE_WarfareBMGNest_PK`, searchlight `SearchLight_Gue`, MG `DSHKM_Gue`, AT `SPG9_Gue`, mortar `2b14_82mm_GUE`) were removed 2026-06-16 for server-FPS relief (`Defenses_GUE.sqf:17-21`). GUER towns whose `wfbe_defense_kind` no longer resolves (MGNest/MG/AT) spawn nothing — handled gracefully by `Server_SpawnTownDefense.sqf`.
 
 ---
 
@@ -276,7 +271,7 @@ WFBE_<side>_Defenses_<kind>
 
 For example, US produces `WFBE_WEST_Defenses_MGNest = ['WarfareBMGNest_M240_US_EP1']`. (`Common/Config/Config_Defenses_Towns.sqf:22`)
 
-`Server_SpawnTownDefense.sqf` consults these variables to pick a random classname from a random kind when placing a defense at a captured town logic object. Critically, **spawning exits immediately if the active side is not `WFBE_C_GUER_ID`** (`Server/Functions/Server_SpawnTownDefense.sqf:18`), so the town-defense spawn system is **active only for the GUER side**. WEST and EAST build their town defenses through the player-facing construction menu, not via this auto-spawn path.
+`Server_SpawnTownDefense.sqf` consults these variables to pick a random classname from a random kind when placing a defense at a captured town logic object. Line 18 exits early only if the logic object's `wfbe_defense_kind` array is empty (`if (count _kinds == 0) exitWith {};`) — a generic empty-list guard with no side check. The function operates for any side: it accepts a side as its second parameter (`_side = _this select 1`) and builds the variable name as `Format ["WFBE_%1_Defenses_%2", _side, ...]` for whichever side is passed. There is no GUER-only restriction in the file.
 
 `Config_Defenses_Towns.sqf` also logs: `"Config_Defenses_Towns.sqf : [<side>] [<count>] Category defined."` (`Common/Config/Config_Defenses_Towns.sqf:24`).
 

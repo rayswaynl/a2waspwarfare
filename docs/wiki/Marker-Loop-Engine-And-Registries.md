@@ -127,8 +127,8 @@ The AAR markers are **filled red arrows**: `mil_arrow2`, `ColorRed`, size `[0.5,
 | Player-group infantry | base (1s typical) | `Common/Common_MarkerLoop.sqf:213-214` |
 | Other infantry | `max 3s` | `Common/Common_MarkerLoop.sqf:214` |
 | Distance >500m / >2000m (non-HQ) | `max 2s` / `max 5s` | `Common/Common_MarkerLoop.sqf:219` |
-| AICOM leader markers | ~8s | `Client/FSM/updateaicommarkers.sqf:10` (reuses `MarkerUpdate`) |
-| Patrol leader markers | 5s | `Client/FSM/updatepatrolmarkers.sqf:6` (reuses `MarkerUpdate`) |
+| AICOM leader markers | ~8s | `Client/FSM/updateaicommarkers.sqf:9-10` (self-contained loop; does not use `MarkerUpdate`) |
+| Patrol leader markers | 5s | `Client/FSM/updatepatrolmarkers.sqf:6` (self-contained loop, does not use `MarkerUpdate`) |
 | Paratrooper markers | 1s, trackDeath | `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf:40` |
 | AAR (enemy aircraft) | 5s / 3s / 1s by AAR upgrade | `Common/Common_MarkerLoop.sqf:444-446` |
 

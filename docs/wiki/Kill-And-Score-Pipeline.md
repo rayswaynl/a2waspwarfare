@@ -209,7 +209,7 @@ Once `_points` is computed, the server applies it to the group leader's Arma sco
 
 `SRVFNCREQUESTCHANGESCORE` is compiled by the PVF forEach loop in `Init_PublicVariables.sqf` (lines 51–54): each name in `_serverCommandPV` produces a `SRVFNC<Name>` variable via `Call Compile Format[...]`. The loop also registers `WFBE_PVF_RequestOnUnitKilled` (and every other server PVF) as a `addPublicVariableEventHandler` that spawns `WFBE_SE_FNC_HandlePVF` on receipt.
 
-`Server_HandlePVF.sqf:14` executes it: `_parameters Spawn (Call Compile _script)`.
+`Server_HandlePVF.sqf:14–15` executes it: `_code = missionNamespace getVariable _script;` then `_parameters Spawn _code` (guarded by `!(isNil "_code") && {typeName _code == "CODE"}`). The `SRVFNC<Name>` variables are pre-compiled CODE objects stored in missionNamespace during init — Server_HandlePVF retrieves and spawns the pre-compiled code; it does not compile the script string at dispatch time.
 
 `Server/PVFunctions/RequestChangeScore.sqf` then:
 1. Reads old score (`score _playerChanged`)

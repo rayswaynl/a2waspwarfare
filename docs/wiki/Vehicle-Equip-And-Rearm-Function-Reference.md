@@ -43,7 +43,7 @@ Registered at `Common/Init/Init_Common.sqf:110`.
 **Behavior** (`Common/Functions/Common_EquipUnit.sqf:22-37`)
 
 1. `removeAllWeapons` then `removeAllItems` on `_unit`.
-2. Adds all `_magazines` then all `_weapons`.
+2. Adds all `_weapons` first, then all `_magazines`. (Weapons must precede magazines so each magazine binds to a matching muzzle; reversing the order causes OA to throw "Cannot use magazine X in muzzle Y".)
 3. Iterates `_eligible`; on the first non-empty string, reads `CfgWeapons >> _use >> muzzles` — if the muzzle list contains `"this"` the weapon is selected directly, otherwise `_muzzles select 0` is selected.
 4. Delegates to `WFBE_CO_FNC_EquipBackpack` with `[_unit, _backpack, _backpack_content]`.
 
@@ -79,7 +79,7 @@ Registered at `Common/Init/Init_Common.sqf:22`. Legacy entry point; its call sit
 
 **Behavior** (`Common/Functions/Common_EquipLoadout.sqf:7-25`)
 
-Calls `removeAllWeapons` + `removeAllItems`, adds magazines then weapons, then selects a weapon as follows: first calls `primaryWeapon _unit`; if the result is non-empty it is used directly as `_use`. Only if `_use == ""` does it fall back to scanning `_weapons` for a `CfgWeapons >> type` in `[1,2,4,5]` (primary/handgun/GL/launcher). Unlike `EquipUnit`, it has no `_eligible` priority list and no backpack handling. **Status: effectively dead** — replaced by `WFBE_CO_FNC_EquipUnit` everywhere active.
+Calls `removeAllWeapons` + `removeAllItems`, adds weapons then magazines (weapons must be added first so each magazine binds to the correct muzzle in OA; the source has a `//--- Weapons FIRST` comment at line 18), then selects a weapon as follows: first calls `primaryWeapon _unit`; if the result is non-empty it is used directly as `_use`. Only if `_use == ""` does it fall back to scanning `_weapons` for a `CfgWeapons >> type` in `[1,2,4,5]` (primary/handgun/GL/launcher). Unlike `EquipUnit`, it has no `_eligible` priority list and no backpack handling. **Status: effectively dead** — replaced by `WFBE_CO_FNC_EquipUnit` everywhere active.
 
 Source: `Common/Functions/Common_EquipLoadout.sqf:1-25`
 

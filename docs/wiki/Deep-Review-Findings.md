@@ -941,7 +941,7 @@ Following DR-41/DR-44, the remaining client-touchable **direct** `publicVariable
 
 ### Coverage-gap & code-depth assessment (what remains unreviewed)
 
-> **CLEARED 2026-06-07 (Round 41, agent team).** Every item below has now been source-reviewed to finding depth; the residual list is empty. See [Round 41](#round-41--agent-team-clearance-of-the-coverage-gap-backlog--dr-51dr-54) for DR-51..DR-54 and the dead-code/correction routing.
+> **CLEARED 2026-06-07 (Round 41, agent team).** Every item below has now been source-reviewed to finding depth; the residual list is empty. See [Round 41](#round-41--agent-team-clearance-of-the-coverage-gap-backlog--dr-51dr-54-claude-2026-06-07) for DR-51..DR-54 and the dead-code/correction routing.
 
 Original accounting (kept for provenance), now annotated with its clearance:
 - **Server/AI respawn + orders** — ✅ CLEARED (Round 41): DR-51 (both respawn paths orphaned/uncalled), AI_TLWPHandler dead, live water-loop traced to `Common_WaypointPatrolTown.sqf` (not the dead `Orders/AI_Patrol.sqf`).
