@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase"];
 
 _side = _this;
 _sideText = str _side;
@@ -76,14 +76,24 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 			_aliveNow = {alive _x} count (units _team);
 			//--- V0.6 RETREAT-AND-REFORM: badly depleted team far from HQ - order it back
 			//--- before trying to refill (refills spawn at the factory, not in the field).
-			if (_aliveNow < 2 && {(_ldr distance _hqP) > 800}) then {
+			//--- B61 (Ray 2026-06-21) REFILL-AT-BASE: flag a depleted team for a base refit on retreat so
+			//--- Produce tops it back to the founding floor once it arrives home, then re-dispatches it,
+			//--- instead of parking it forever as a low-strength tracked remnant (the bulk of the base pile).
+			_homeR = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_HOME_RANGE", 800];
+			if (_aliveNow < 2 && {(_ldr distance _hqP) > _homeR}) then {
 				_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
 				_retreatOrder = [_retreatSeq, "DEFENSE", getPosATL _hqP];
 				_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
+				_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-and-reform ordered (alive=%3, dist=%4).", _sideText, _team, _aliveNow, (_ldr distance _hqP)]] Call WFBE_CO_FNC_AICOMLog;
 				_canProduce = false;
 			} else {
-				if (_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])) then {
+				//--- B61 (Ray 2026-06-21): treat the OWN HQ as an always-eligible reinforce point. A team
+				//--- that has retreated home (refit flag set + now within home-range of HQ) is forced
+				//--- in-range so it refills regardless of REINFORCE_RANGE, is topped to the floor below,
+				//--- then re-dispatched - rather than sitting at base as an un-refillable survivor.
+				_refitAtBase = (_team getVariable ["wfbe_aicom_refit", false]) && {(_ldr distance _hqP) <= _homeR};
+				if (!_refitAtBase && {_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])}) then {
 					//--- FORWARD-REINFORCE: a deep team beyond base range may still refill if its
 					//--- leader is hugging an owned town (front-line resupply), so spearheads stop
 					//--- bleeding out far from HQ. The refill spawn point is pulled forward below.
@@ -213,6 +223,13 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				_batchOrdered = _batchOrdered + 1;
 				_cur = _cur + 1; //--- Optimistic count so deficit loop terminates correctly.
 			};
+		};
+		//--- B61 (Ray 2026-06-21) REFILL-AT-BASE: once a base-refitting team is back at/above the
+		//--- founding floor, clear the refit flag so it stops being a special-case base hugger and the
+		//--- strategy layer (wfbe_teammode) re-dispatches it to the front like any other full team.
+		if ((_team getVariable ["wfbe_aicom_refit", false]) && {_cur >= _want}) then {
+			_team setVariable ["wfbe_aicom_refit", false, true];
+			["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] base-refit complete (cur=%3, floor=%4) - released for re-dispatch.", _sideText, _team, _cur, _want]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
 	}; //--- V0.6.5 null-team guard

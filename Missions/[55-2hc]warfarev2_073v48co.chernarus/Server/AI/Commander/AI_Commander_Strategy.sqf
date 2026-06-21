@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -92,6 +92,29 @@ if (_lastStand) exitWith {};
 //--- teams always have a valid target and never idle.
 _cands = [];
 { if ((_x getVariable "sideID") != _sideID) then {_cands = _cands + [_x]} } forEach towns;
+//--- B61 (Ray 2026-06-21) SPEARHEAD RE-PICK: side-level stall-blacklist. The picker re-scores
+//--- deterministically every ~60s with no progress memory, so it re-targets the SAME town forever
+//--- (live: EAST froze on one town for hours). Read this side's spearhead blacklist off the side LOGIC
+//--- (the [name,default] getVariable form is valid on the LOGIC object, unlike on a GROUP); prune expired
+//--- [town,expiry] entries; exclude live ones from the candidate set so the picker chooses the next-best
+//--- eligible town. GUARDRAIL (reuse of AssignTowns:290-295): if excluding the blacklist would EMPTY the
+//--- candidate set, clear the blacklist and fall back to the full list so a target ALWAYS exists.
+_spBl = _logik getVariable ["wfbe_aicom_spearhead_bl", []];
+_spBlKeep = [];
+_spBlTowns = [];
+{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_spBlKeep set [count _spBlKeep, _x]; _spBlTowns set [count _spBlTowns, (_x select 0)]} } forEach _spBl;
+_logik setVariable ["wfbe_aicom_spearhead_bl", _spBlKeep];
+if (count _spBlTowns > 0) then {
+	private ["_candsF"];
+	_candsF = _cands - _spBlTowns;
+	if (count _candsF == 0) then {
+		//--- every eligible town is blacklisted: clear it so the picker is never left without a target.
+		_logik setVariable ["wfbe_aicom_spearhead_bl", []];
+		_spBlTowns = [];
+	} else {
+		_cands = _candsF;
+	};
+};
 _frontRad = missionNamespace getVariable ["WFBE_C_AICOM_FRONTIER_RADIUS", 3000];
 _distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50];
 if (_distDiv <= 0) then {_distDiv = 1};
@@ -152,6 +175,144 @@ for "_i" from 1 to _want do {
 		};
 	} forEach _cands;
 	if (!isNull _bestTown) then {_targets = _targets + [_bestTown]};
+};
+//--- B61 (Ray 2026-06-21) SPEARHEAD RE-PICK: per-side progress memory + stall detection on the PRIMARY.
+//--- PROGRESS SIGNAL = the ASSAULTING TEAMS' best (min) approach to the primary target town - NOT raw
+//--- distFront (distance-to-OWN-town), which stays flat while a town is being contested and would yank the
+//--- fist off a town it is about to take. A team is "committed" if it is an alive AI team in offense posture
+//--- (towns/"" mode, not garrison/relief/strike). If the best approach has NOT improved by >= REPICK_MIN_GAIN
+//--- (~150m) for >= REPICK_STALL_EVALS (N>=4) consecutive evaluations, the primary is STALLED: blacklist it
+//--- (side-level wfbe_aicom_spearhead_bl, cooldown ~600s) and force the picker to choose the next-best eligible
+//--- town this same tick (selection/logging ONLY - this never changes how AI MOVES; AssignTowns reads the new
+//--- _targets next cycle). Empty-set guardrail above guarantees a target survives the blacklist.
+if (count _targets > 0) then {
+	private ["_prim","_spMinGain","_spEvals"];
+	_prim = _targets select 0;
+	_spMinGain = missionNamespace getVariable ["WFBE_C_AICOM_REPICK_MIN_GAIN", 150];
+	_spEvals   = missionNamespace getVariable ["WFBE_C_AICOM_REPICK_STALL_EVALS", 4];
+	_spBlCd    = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
+	//--- Best (min) approach of this side's COMMITTED offense teams to the primary town.
+	_spApproach = 1e9;
+	{
+		_team = _x;
+		if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
+			_wMode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+			//--- offense only: skip relief ("defense"), HQ-strike ("move") and the garrison team.
+			if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
+				_wLdr = leader _team;
+				if (!isNull _wLdr) then {_d = _wLdr distance _prim; if (_d < _spApproach) then {_spApproach = _d}};
+			};
+		};
+	} forEach _teams;
+	//--- Compare against the stored memory for this side: [primTown, bestApproach, sameCount].
+	_spPrevPrim = _logik getVariable ["wfbe_aicom_spear_prim", objNull];
+	_spBest     = _logik getVariable ["wfbe_aicom_spear_bestapproach", 1e9];
+	_spLast     = _logik getVariable ["wfbe_aicom_spear_stallcount", 0];
+	_spStall    = false;
+	if (isNull _spPrevPrim || {_spPrevPrim != _prim}) then {
+		//--- Primary changed (or first sighting): reset the progress baseline, no stall yet.
+		_logik setVariable ["wfbe_aicom_spear_prim", _prim];
+		_logik setVariable ["wfbe_aicom_spear_bestapproach", _spApproach];
+		_logik setVariable ["wfbe_aicom_spear_stallcount", 0];
+	} else {
+		//--- Same primary as last eval: did the assault get >= _spMinGain closer than its best so far?
+		if ((_spBest - _spApproach) >= _spMinGain) then {
+			//--- progress: record the improved approach, reset the stall counter.
+			_logik setVariable ["wfbe_aicom_spear_bestapproach", _spApproach];
+			_logik setVariable ["wfbe_aicom_spear_stallcount", 0];
+		} else {
+			//--- no meaningful progress this eval: bump the consecutive-stall counter.
+			_spLast = _spLast + 1;
+			_logik setVariable ["wfbe_aicom_spear_stallcount", _spLast];
+			if (_spLast >= _spEvals) then {_spStall = true};
+		};
+	};
+	if (_spStall) then {
+		//--- STALLED: blacklist the frozen primary (reuse the AssignTowns:208-219 [town,expiry] idiom) and
+		//--- re-pick the next-best eligible town RIGHT NOW (selection only - AI movement is untouched).
+		_spBl = _logik getVariable ["wfbe_aicom_spearhead_bl", []];
+		_spBlKeep = [];
+		{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _prim}) then {_spBlKeep set [count _spBlKeep, _x]} } forEach _spBl;
+		_spBlKeep set [count _spBlKeep, [_prim, time + _spBlCd]];
+		_logik setVariable ["wfbe_aicom_spearhead_bl", _spBlKeep];
+		//--- Rebuild the candidate set MINUS the live blacklist (same empty-set guardrail as AssignTowns:290-295).
+		_spBlTowns = [];
+		{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_spBlTowns set [count _spBlTowns, (_x select 0)]} } forEach _spBlKeep;
+		_cands = [];
+		{ if ((_x getVariable "sideID") != _sideID) then {_cands = _cands + [_x]} } forEach towns;
+		private ["_candsF"];
+		_candsF = _cands - _spBlTowns;
+		if (count _candsF == 0) then {
+			//--- only the just-blacklisted town was eligible: clear it so a target ALWAYS exists.
+			_logik setVariable ["wfbe_aicom_spearhead_bl", []];
+		} else {
+			_cands = _candsF;
+		};
+		_want = 1 max (missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]);
+		_want = _want min (count _cands);
+		//--- Re-run the SAME scorer (identical weights) over the trimmed candidate set.
+		_targets = [];
+		for "_i" from 1 to _want do {
+			_bestScore = -1e9; _bestTown = objNull;
+			{
+				_t = _x;
+				if (!(_t in _targets)) then {
+					_dNear = 1e9;
+					{ if ((_x getVariable "sideID") == _sideID) then {_d = _t distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
+					if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+					_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
+					private ["_hardTier","_softW","_valDiv"];
+					_softW = missionNamespace getVariable ["WFBE_C_AICOM_SOFT_WEIGHT", 12];
+					_valDiv = missionNamespace getVariable ["WFBE_C_AICOM_VALUE_DIVISOR", 50];
+					if (_valDiv <= 0) then {_valDiv = 1};
+					_hardTier = switch (_t getVariable ["wfbe_town_type", ""]) do {
+						case "TinyTown1":   {0};
+						case "SmallTown1":  {1};
+						case "SmallTown2":  {1};
+						case "MediumTown1": {2};
+						case "MediumTown2": {2};
+						case "LargeTown1":  {3};
+						case "LargeTown2":  {3};
+						case "HugeTown1":   {4};
+						case "HugeTown2":   {4};
+						case "PMCAirfield": {2};
+						default {1};
+					};
+					_score = (_t getVariable ["supplyValue", 0])
+					       - (_dNear / _distDiv)
+					       + (_t getVariable ["wfbe_aicom_town_weight", 0])
+					       - (_hardTier * _softW)
+					       + ((_t getVariable ["wfbe_town_value", 0]) / _valDiv);
+					if (_hqDiv > 0) then {_score = _score - (_dHQ / _hqDiv)};
+					if (_dNear > _frontRad) then {_score = _score - _farPen};
+					if (_score > _bestScore) then {_bestScore = _score; _bestTown = _t};
+				};
+			} forEach _cands;
+			if (!isNull _bestTown) then {_targets = _targets + [_bestTown]};
+		};
+		//--- Re-seed the progress memory on the NEW primary so we start fresh against it.
+		private ["_newPrim"];
+		_newPrim = if (count _targets > 0) then {_targets select 0} else {objNull};
+		_logik setVariable ["wfbe_aicom_spear_prim", _newPrim];
+		_logik setVariable ["wfbe_aicom_spear_stallcount", 0];
+		//--- best approach of committed teams to the NEW primary (fresh baseline; 1e9 if none committed).
+		private ["_newApproach"];
+		_newApproach = 1e9;
+		if (!isNull _newPrim) then {
+			{
+				_team = _x;
+				if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
+					_wMode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+					if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
+						_wLdr = leader _team;
+						if (!isNull _wLdr) then {_d = _wLdr distance _newPrim; if (_d < _newApproach) then {_newApproach = _d}};
+					};
+				};
+			} forEach _teams;
+		};
+		_logik setVariable ["wfbe_aicom_spear_bestapproach", _newApproach];
+		diag_log ("AICOMSTAT|v1|SPEARHEAD_REPICK|" + _sideText + "|" + str (round (time / 60)) + "|stalled=" + (_prim getVariable ["name","?"]) + "|approach=" + str (round _spApproach) + "|evals=" + str _spLast + "|newPrimary=" + (if (isNull _newPrim) then {"none"} else {_newPrim getVariable ["name","?"]}) + "|cooldown=" + str _spBlCd);
+	};
 };
 //--- Telemetry: is the chosen primary actually on the front (vs a deep fallback)?
 _anyFront = false;

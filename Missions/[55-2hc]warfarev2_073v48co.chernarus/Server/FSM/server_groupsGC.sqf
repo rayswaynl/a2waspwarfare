@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -34,6 +34,210 @@ while {!WFBE_GameOver} do {
 			};
 		};
 	} forEach allGroups;
+
+	// --- B61 (Ray 2026-06-21) BASE-GC / RE-ADOPT pass ---
+	// The legacy GC above reaps ONLY empty groups. The BASE fills with units the commander neither
+	// counts, re-tasks, nor reaps: (i) untracked NON-EMPTY side groups loitering at their own HQ, and
+	// (ii) crewed-idle helis/armor whose Server_HandleEmptyVehicle delete timer is reset while the crew
+	// is alive (immortal hulls). This per-side pass runs on the SAME 60s cadence. A candidate must sit
+	// CONTINUOUSLY idle-at-base for WFBE_C_BASEGC_IDLE_TIMEOUT before we ACT (first-seen stamp reset on
+	// leave/wake). ACTION: prefer RE-ADOPT untracked INFANTRY into the commander (re-task + register +
+	// count); DELETE only idle crewed AIR + abandoned hulls (mirrors the fly-off/deleteVehicle pattern in
+	// Common_RunCommanderTeam.sqf:318-320). NEVER deleteVehicle infantry. The combat guard + idle-timer
+	// ALWAYS apply; the player-proximity guard is tunable (default 0 = does NOT block cleanup).
+	_baseEnable = missionNamespace getVariable ["WFBE_C_BASEGC_ENABLE", 1];
+	if (_baseEnable > 0) then {
+		_baseRange       = missionNamespace getVariable ["WFBE_C_BASEGC_RANGE",        800];
+		_baseTimeout     = missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_TIMEOUT", 300];
+		_baseIdleSpeed   = missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED",   5];
+		_basePlayerGuard = missionNamespace getVariable ["WFBE_C_BASEGC_PLAYER_GUARD", 0];
+		_baseReadopted = 0; _baseRetasked = 0; _baseDeletedAir = 0;
+
+		{
+			_baseSide = _x;
+			_baseHQ   = _baseSide Call WFBE_CO_FNC_GetSideHQ;
+			//--- getPos on a non-object throws in A2 OA: always !isNull guard before getPos.
+			if (!isNull _baseHQ) then {
+				_baseHQPos = getPos _baseHQ;
+				_baseSideID = _baseSide Call WFBE_CO_FNC_GetSideID;
+				_baseLogik  = _baseSide Call WFBE_CO_FNC_GetSideLogic;
+
+				//--- Live side TEAM CAP (mirror AI_Commander_Teams' PC-bucket base). Re-adopt only while
+				//--- UNDER cap; at/over cap we still re-task the group toward the front (never idle), but do
+				//--- NOT register/count it (would bloat the side past its budget).
+				_baseFounded = 0;
+				_baseTeams = [];
+				if (!isNull _baseLogik) then {
+					_baseTeams = _baseLogik getVariable "wfbe_teams";
+					if (isNil "_baseTeams") then {_baseTeams = []};
+					{
+						if (!isNull _x) then {
+							if (([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+								_baseFounded = _baseFounded + 1;
+							};
+						};
+					} forEach _baseTeams;
+				};
+				private ["_basePcN","_baseHcN"];
+				_basePcN = {isPlayer _x} count allUnits;
+				_baseHcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+				_basePcN = (_basePcN - _baseHcN) max 0;
+				_baseCap = switch (true) do {
+					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  15]};
+					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  5]};
+					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
+					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
+				};
+
+				//--- Nearest uncaptured town to the HQ = the front objective for re-task (same OA-safe
+				//--- sideID filter as AI_Commander_AssignTowns:32). Fallback: enemy HQ direction is implicit
+				//--- in "nearest not-ours"; if NOTHING is uncaptured we fall back to the HQ pos (harmless MOVE).
+				_baseUncap = [];
+				{ if ((_x getVariable "sideID") != _baseSideID) then {_baseUncap set [count _baseUncap, _x]} } forEach towns;
+				_baseFrontTown = objNull;
+				if (count _baseUncap > 0) then {_baseFrontTown = [_baseHQ, _baseUncap] Call WFBE_CO_FNC_GetClosestEntity};
+				_baseFrontPos = _baseHQPos;
+				if (!isNull _baseFrontTown) then {_baseFrontPos = getPos _baseFrontTown};
+
+				// ============ (i) UNTRACKED NON-EMPTY GROUPS AT BASE ============
+				{
+					_baseG = _x;
+					if (!isNull _baseG && {(side _baseG) == _baseSide} && {(count (units _baseG)) > 0}) then {
+						_baseLdr = leader _baseG;
+						if (!isNull _baseLdr && {alive _baseLdr} && {!isPlayer _baseLdr}) then {
+							//--- within range of own HQ?
+							if ((_baseLdr distance _baseHQ) <= _baseRange) then {
+								//--- NOT commander-owned + NOT town/patrol-owned = "untracked". wfbe_persistent covers
+								//--- town garrisons AND founded server-local teams (skip wfbe_persistent); wfbe_aicom_hc /
+								//--- wfbe_aicom_founded mark commanded teams. GroupGetBool = A2-safe bool read on a GROUP.
+								_baseIsPers     = [_baseG, "wfbe_persistent",    false] Call WFBE_CO_FNC_GroupGetBool;
+								_baseIsTownTeam = ([_baseG, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_baseG, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool};
+								if (!_baseIsPers && {!_baseIsTownTeam}) then {
+									//--- COMBAT GUARD (always): skip if the group is fighting OR took damage / fired
+									//--- since the last pass. We detect "fired/took damage in last ~30s" via a stamped
+									//--- damage sum: any rise vs the stored value (or an active COMBAT behaviour / enemy
+									//--- within idle-speed* sense range) means it is engaged -> reset the idle stamp.
+									_baseInCombat = (behaviour _baseLdr == "COMBAT");
+									//--- enemy = any near entity whose side is NEITHER ours NOR civilian (explicit side
+									//--- compare, same A2-safe idiom as Common_AICOMServiceTick.sqf:95 - no getFriend).
+									_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian}} count ((getPos _baseLdr) nearEntities [["Man","LandVehicle","Air"], 300]);
+									_baseDmgNow = 0; { _baseDmgNow = _baseDmgNow + (damage _x) } forEach (units _baseG);
+									_baseDmgPrev = _baseG getVariable "wfbe_basegc_dmg";
+									if (isNil "_baseDmgPrev") then {_baseDmgPrev = _baseDmgNow};
+									_baseG setVariable ["wfbe_basegc_dmg", _baseDmgNow];
+
+									//--- PLAYER-PROXIMITY guard (tunable; 0 = does NOT block).
+									_basePlayerNear = false;
+									if (_basePlayerGuard > 0) then {
+										{ if (isPlayer _x && {alive _x} && {(_x distance _baseLdr) <= _basePlayerGuard}) exitWith {_basePlayerNear = true} } forEach allUnits;
+									};
+
+									if (_baseInCombat || {_baseEnemyNear > 0} || {_baseDmgNow > _baseDmgPrev} || {_basePlayerNear}) then {
+										//--- engaged / woke / damaged -> reset the first-seen stamp; do not act this pass.
+										_baseG setVariable ["wfbe_basegc_at", nil];
+									} else {
+										//--- idle-at-base: stamp first-seen, only ACT after the continuous timeout.
+										_baseSeen = _baseG getVariable "wfbe_basegc_at";
+										if (isNil "_baseSeen") then {
+											_baseG setVariable ["wfbe_basegc_at", time];
+										} else {
+											if ((time - _baseSeen) >= _baseTimeout) then {
+												//--- RE-TASK toward the front (always; never leave it idle).
+												_baseSeq = (([_baseG, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetBool) select 0) + 1;
+												_baseG setVariable ["wfbe_aicom_order", [_baseSeq, "towns-target", _baseFrontPos], true];
+												//--- RE-ADOPT into the commander only while UNDER the side cap (else just re-task).
+												if (!isNull _baseLogik && {_baseFounded < _baseCap} && {!(_baseG in _baseTeams)}) then {
+													_baseG setVariable ["wfbe_aicom_founded", true];
+													_baseG setVariable ["wfbe_persistent", true];
+													_baseG setVariable ["wfbe_side", _baseSide];
+													_baseLogik setVariable ["wfbe_teams", _baseTeams + [_baseG], true];
+													_baseTeams = _baseTeams + [_baseG];
+													_baseFounded = _baseFounded + 1;
+													_baseReadopted = _baseReadopted + 1;
+													["INFORMATION", Format ["server_groupsGC.sqf: B61 BASE-GC re-adopted untracked %1 group %2 into the commander (founded->%3/%4), re-tasked to front.", str _baseSide, _baseG, _baseFounded, _baseCap]] Call WFBE_CO_FNC_AICOMLog;
+												} else {
+													_baseRetasked = _baseRetasked + 1;
+												};
+												//--- clear the stamp so it is re-evaluated fresh after it moves out.
+												_baseG setVariable ["wfbe_basegc_at", nil];
+											};
+										};
+									};
+								};
+							} else {
+								//--- left the base radius -> clear any stale stamp.
+								if (!isNil {_baseG getVariable "wfbe_basegc_at"}) then {_baseG setVariable ["wfbe_basegc_at", nil]};
+							};
+						};
+					};
+				} forEach allGroups;
+
+				// ============ (ii) IDLE CREWED HELI/ARMOR AT BASE (delete only) ============
+				//--- These hulls keep crew alive so Server_HandleEmptyVehicle never reaps them; they idle at
+				//--- base forever. DELETE (not re-adopt) idle crewed AIR + immobile armor, mirroring the
+				//--- fly-off + deleteVehicle pattern in Common_RunCommanderTeam.sqf:318-320 (crew first, then hull).
+				{
+					_baseVeh = _x;
+					if (!isNull _baseVeh && {alive _baseVeh} && {(_baseVeh isKindOf "Air") || {_baseVeh isKindOf "Tank"} || {_baseVeh isKindOf "APC"}}) then {
+						_baseVcrew = crew _baseVeh;
+						if (count _baseVcrew > 0) then {
+							_baseVside = side ((_baseVcrew select 0));
+							//--- OWNERSHIP GUARD: never touch a hull whose crew belongs to a COMMANDER or TOWN/patrol
+							//--- group (a just-produced founded armor/air team idling at base, or a garrison vehicle).
+							//--- Only genuinely UNTRACKED crewed hulls are reapable. GroupGetBool = A2-safe on a GROUP.
+							private ["_baseVgrp","_baseVowned"];
+							_baseVgrp = group (_baseVcrew select 0);
+							_baseVowned = ([_baseVgrp, "wfbe_persistent", false] Call WFBE_CO_FNC_GroupGetBool) || {[_baseVgrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} || {[_baseVgrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool};
+							//--- own side, idle (speed < threshold OR immobile hull), within base radius, no player aboard.
+							private ["_baseHasPlayer"];
+							_baseHasPlayer = false;
+							{ if (isPlayer _x) exitWith {_baseHasPlayer = true} } forEach _baseVcrew;
+							if (_baseVside == _baseSide && {!_baseHasPlayer} && {!_baseVowned} && {(_baseVeh distance _baseHQ) <= _baseRange} && {((abs (speed _baseVeh)) < _baseIdleSpeed) || {!canMove _baseVeh}}) then {
+								//--- COMBAT GUARD (always): skip if the crew is fighting OR the hull took damage since
+								//--- last pass OR enemies are near.
+								_baseLdr = _baseVcrew select 0;
+								_baseInCombat  = (behaviour _baseLdr == "COMBAT");
+								_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian}} count ((getPos _baseVeh) nearEntities [["Man","LandVehicle","Air"], 300]);
+								_baseDmgNow  = damage _baseVeh;
+								_baseDmgPrev = _baseVeh getVariable "wfbe_basegc_dmg";
+								if (isNil "_baseDmgPrev") then {_baseDmgPrev = _baseDmgNow};
+								_baseVeh setVariable ["wfbe_basegc_dmg", _baseDmgNow];
+
+								_basePlayerNear = false;
+								if (_basePlayerGuard > 0) then {
+									{ if (isPlayer _x && {alive _x} && {(_x distance _baseVeh) <= _basePlayerGuard}) exitWith {_basePlayerNear = true} } forEach allUnits;
+								};
+
+								if (_baseInCombat || {_baseEnemyNear > 0} || {_baseDmgNow > _baseDmgPrev} || {_basePlayerNear}) then {
+									_baseVeh setVariable ["wfbe_basegc_at", nil];
+								} else {
+									_baseSeen = _baseVeh getVariable "wfbe_basegc_at";
+									if (isNil "_baseSeen") then {
+										_baseVeh setVariable ["wfbe_basegc_at", time];
+									} else {
+										if ((time - _baseSeen) >= _baseTimeout) then {
+											//--- DELETE: crew first, then hull (mirror Common_RunCommanderTeam.sqf:318-320).
+											{ if (!isPlayer _x) then {deleteVehicle _x} } forEach _baseVcrew;
+											deleteVehicle _baseVeh;
+											_baseDeletedAir = _baseDeletedAir + 1;
+											["INFORMATION", Format ["server_groupsGC.sqf: B61 BASE-GC deleted idle crewed %1 hull at base (%2).", str _baseSide, _baseVeh]] Call WFBE_CO_FNC_AICOMLog;
+										};
+									};
+								};
+							} else {
+								//--- moved / left base / boarded by player -> clear stamp.
+								if (!isNil {_baseVeh getVariable "wfbe_basegc_at"}) then {_baseVeh setVariable ["wfbe_basegc_at", nil]};
+							};
+						};
+					};
+				} forEach vehicles;
+			};
+		} forEach [west, east, resistance];
+
+		if ((_baseReadopted + _baseRetasked + _baseDeletedAir) > 0) then {
+			diag_log ("BASEGC|v1|readopted=" + str _baseReadopted + "|retasked=" + str _baseRetasked + "|deletedHulls=" + str _baseDeletedAir + "|t=" + str (round (time / 60)));
+		};
+	};
 
 	// --- Orphaned-team zombie reaper ---
 	// Reclaims AI teams whose player disconnected with WFBE_C_AI_TEAMS_JIP_PRESERVE==1

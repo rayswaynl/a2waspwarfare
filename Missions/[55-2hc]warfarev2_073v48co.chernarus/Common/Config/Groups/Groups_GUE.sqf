@@ -54,6 +54,17 @@ _u		= ["GUE_Soldier_Sniper"];
 
 _l = _l + [_u];
 
+//--- B61 (Ray 2026-06-21): Team_MG roster. The defender selector (Server_GetTownGroupsDefender.sqf) requests
+//--- "Team_MG" for GUER on most town sizes, but GUER had NO Team_MG roster -> the request resolved nil and was
+//--- silently dropped, under-garrisoning every GUER town. Mirrors Groups_INS Team_MG (CO + 2x MG + AR).
+_k = _k + ["Team_MG"];
+_u		= ["GUE_Soldier_CO"];
+_u = _u + ["GUE_Soldier_MG"];
+_u = _u + ["GUE_Soldier_MG"];
+_u = _u + ["GUE_Soldier_AR"];
+
+_l = _l + [_u];
+
 _k = _k + ["Motorized"];
 _u		= ["Offroad_DSHKM_Gue"];
 _u = _u + ["Offroad_SPG9_Gue"];
