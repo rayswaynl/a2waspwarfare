@@ -174,6 +174,7 @@
   - [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance)
   - [Old WarfareBE FPS comparison](Old-WarfareBE-Performance-Comparison)
   - [AI commander autonomy audit](AI-Commander-Autonomy-Audit)
+  - [AI commander capture & fun plan](AI-Commander-Capture-And-Fun-Improvement-Plan)
   - [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook)
   - [Commander reassignment call shape](Commander-Reassignment-Call-Shape)
 - Quality and operations
