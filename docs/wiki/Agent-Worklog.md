@@ -1160,9 +1160,101 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source-checked `origin/feat/guer-insurgents-faction@41550bd33` against `origin/master@cf2a6d6a`: merge-base `cf2a6d6a`, `462` changed files, `25816` insertions, `2249` deletions, `241` Chernarus mission paths and `208` maintained Vanilla paths. `git diff --check origin/master..origin/feat/guer-insurgents-faction` still reports blank-EOF/trailing-whitespace failures, including `Server/Functions/AI_Commander_Wildcard.sqf:1055,1085,1094,1102,1113`.
 - Result: [Gameplay systems atlas](Gameplay-Systems-Atlas#branch-only-guer-insurgents-intake) now owns the detailed branch-intake matrix; [Feature status](Feature-Status-Register) carries a compact broad Chernarus-first branch-review row; [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) and `agent-release-readiness.json` now carry planned GUER smoke gates. No gameplay source changed.
 
+## 2026-06-21T10:16:13+02:00 - Codex - Default gear template content catalog
+
+- Claimed `default-gear-template-content-catalog` after verifying the wiki covers gear-template profile bugs but does not catalog the shipped predefined template content itself.
+- Source scope: clean `master@0139a346`, `Common/Config/Loadout/Loadout_*.sqf`, `Common/Config/Config_SetTemplates.sqf`, `Common/Config/readme.txt`, `Client/GUI/GUI_BuyGearMenu.sqf`, `Client/Functions/Client_UI_Gear_FillTemplates.sqf` and `Client_UI_Gear_ParseTemplateContent.sqf`.
+- Planned result: one docs-only page, `Default-Gear-Template-Content-Catalog`, with source-cited tables showing that current master ships one empty seed template per loadout file and derives any visible price/label/upgrade behavior at runtime. No gameplay source changes planned.
+
+## 2026-06-21T10:25:25+02:00 - Codex - Default gear template content catalog complete
+
+- Result: added [Default gear template content catalog](Default-Gear-Template-Content-Catalog), wired it into [Home](Home), `_Sidebar.md` and `agent-context.json`, and left gameplay source untouched.
+- Source proof: clean `master@0139a346`; all ten `Common/Config/Loadout/Loadout_*.sqf` files ship the same empty predefined template seed and `Config_SetTemplates.sqf` keeps only the first per-side seed unless the caller passes the third `false` parameter.
+- Validation: citation line scan passed, A3-only term scan clean, JSON/JSONL parse passed, `git diff --check` passed with only normal Windows LF/CRLF warnings, and `Tools/ValidateWiki.ps1 -WikiPath <wiki> -SkipGitDiffCheck` reached `[OK] markdown links resolve` plus `[OK] agent-context page lists match wiki mirror` before the known pre-existing machine-reference failure.
+
+## 2026-06-21T10:16:11+02:00 - Codex - Gear store price and upgrade catalog
+
+- Claimed `gear-store-price-upgrade-catalog` after checking that [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas) maps the runtime/config flow but does not publish a gear-store content catalog; [Commanders handbook](Commanders-Handbook) only gives two coarse gear-level examples.
+- Scope is one source-cited docs-only page for current `master` Chernarus high-impact player gear-store prices and upgrade gates, sourced from `Common/Config/Gear/Gear_*.sqf`, then wired through sidebar, Home and `agent-context.json`. No gameplay source edits planned.
+- Result: added [Gear store price and upgrade catalog](Gear-Store-Price-And-Upgrade-Catalog) for current `master@0139a346` Chernarus gear rows with price `>= 300` or gear level `>= 4`; the documented table reconciles to `68` qualifying source rows with no missing or extra rows.
+- Validation: reopened every citation against `Missions/[55-2hc]warfarev2_073v48co.chernarus`, checked forbidden Arma 3-only constructs, confirmed all local wiki links resolve after repairing three stale temporary-path links in [Artillery reference](Artillery-Reference-Per-Faction#continue-reading), confirmed `agent-context.json` page-list parity and ran `git diff --check`.
+
+## 2026-06-21T10:15:50+02:00 - Codex - Earplugs audio toggle reference
+
+- Claimed `earplugs-audio-toggle-reference` after verifying no existing wiki markdown page covered `EarplugToggle`, `WFBE_WASP_Earplug*` variables or the current `fadeSound` / `fadeRadio` earplug behavior.
+- Source-checked stable `master@0139a346` Chernarus paths: `WASP/actions/AddActions.sqf`, `WASP/actions/EarplugToggle.sqf`, `Client/GUI/GUI_Menu.sqf`, `Rsc/Dialogs.hpp`, `briefing.html`, `Client/GUI/GUI_Menu_Help.sqf`, respawn and skin-selector re-add paths.
+- Result: [Earplugs audio toggle](Earplugs-Audio-Toggle-Reference) now documents the split between the WASP scroll/vehicle path (`WFBE_WASP_EarplugActive`, `fadeSound` plus `fadeRadio`) and the WF menu `EAR` path (`WFBE_Earplugs`, `fadeSound` only). [WASP overlay](WASP-Overlay) now routes earplugs instead of saying only HQ recovery is active from `AddActions.sqf`. No gameplay source changed.
+
+## 2026-06-21T10:16:25+02:00 - Codex - Gear store loadout route catalog
+
+- Claimed `gear-store-loadout-route-catalog` as a docs-only coverage-gap page after verifying existing gear pages describe runtime/data-model defects and the price catalog covers high-impact price/gate rows, but neither catalogs side-root loadout imports, row counts and dynamic/gated gear coverage together.
+- Source scope: current source `master@0139a346`, Chernarus mission `Common/Config/Gear`, `Common/Config/Loadout`, `Common/Config/Core_Root` and the `Config_Weapons`, `Config_Magazines`, `Config_Backpack`, `Config_SetTemplates`, `Config_SortWeapons` and `Config_SortMagazines` helpers.
+- Result: added [Gear store loadout route catalog](Gear-Store-Loadout-Route-Catalog) as a source-cited Chernarus `master@0139a346` content catalog for side-root loadout imports, loadout row counts, price/gate extrema and config-gated/dynamic gear content. Citation ranges, numeric counts/prices/gates, internal links and Arma 2-only language were checked before wiring the page into Home, sidebar, `agent-context.json` and [Gear store price and upgrade catalog](Gear-Store-Price-And-Upgrade-Catalog). No gameplay source changed.
+
+## 2026-06-21T10:49:29+02:00 - Codex - AutoFlip vehicle recovery reference
+
+- Claimed `autoflip-vehicle-recovery-reference` after confirming AutoFlip is only covered by a compact Modules Atlas row and historical mentions, not a dedicated live-feature page.
+- Source scope: clean `master@0139a346`, `Client/Module/AutoFlip/AutoFlip.sqf`, `Client/Init/Init_Client.sqf`, `Common/Init/Init_Unit.sqf`, `WASP/actions/FlipVehicle.sqf` and `stringtable.xml`.
+- Planned result: one docs-only page, `AutoFlip-Vehicle-Recovery-Reference`, with source-cited tables for automatic stuck-vehicle recovery and the separate manual Flip Vehicle action. No gameplay source changes planned.
+
+## 2026-06-21T10:53:03+02:00 - Codex - AutoFlip vehicle recovery reference complete
+
+- Result: added [AutoFlip vehicle recovery](AutoFlip-Vehicle-Recovery-Reference), wired it into [Home](Home), `_Sidebar.md` and `agent-context.json`, and left gameplay source untouched.
+- Source proof: clean `master@0139a346`; AutoFlip starts from client init, scans the player's mounted vehicle and mounted group vehicles, requires the documented tilt/speed/ground/water/cooldown/stuck gates, rights vehicles with `setVectorUp`, `setPos` and `setVelocity`, and is separate from the manual tank/car **Flip Vehicle** action.
+- Validation: reopened every citation against the Chernarus mission source, checked forbidden Arma 3-only constructs, confirmed local wiki links resolve, confirmed `agent-context.json` page-list parity and ran `git diff --check`.
+
+## 2026-06-21T10:48:46+02:00 - Codex - CIPHER sort utilities reference
+
+- Claimed `cipher-sort-utilities-reference` after confirming [Modules atlas](Modules-Atlas#cipher--stringarray-sort-utility-commonmodulecipher-by-benny) only gives a route-level CIPHER summary and no dedicated page owns the helper contracts, upgrade-label sort output or reverse-helper typo.
+- Scope is one source-cited docs-only page for current `master@0139a346` Chernarus CIPHER helpers and their active call site: `Common/Module/CIPHER/CIPHER_Init.sqf`, `Common/Module/CIPHER/CIPHER_Sort.sqf`, `Common/Config/Core_Upgrades/Labels_Upgrades.sqf` and `Common/Init/Init_Common.sqf`. No gameplay source edits planned.
+- Result: [CIPHER sort utilities reference](CIPHER-Sort-Utilities-Reference) documents the helper contracts, the `WFBE_C_UPGRADES_SORTED` build and the Upgrade menu consumer path, routes from Home/sidebar/agent-context plus the module owner pages, and corrects the stale [Modules atlas](Modules-Atlas#cipher--stringarray-sort-utility-commonmodulecipher-by-benny) `Labels_Upgrades.sqf:127` reference to current line `133`.
+- Validation: source citation range check passed for `29` page refs, local wiki links resolve, `agent-context.json` documentation pages match `187` top-level markdown pages, A3-only token scan for the new page returned no matches, JSON/JSONL parse passed, repo `docs/wiki` validator passed after mirror sync and `git diff --check` passed with line-ending warnings only.
+
+## 2026-06-21T10:54:11+02:00 - Codex - Operator monitor and CPU affinity tools reference
+
+- Claimed `operator-monitor-cpu-affinity-tools-reference` after verifying the wiki mentions RPT/performance workflows broadly but has no dedicated page for `Tools/Monitor/Get-WindowedRpt.ps1` or `Tools/Ops/Set-WaspCpuAffinity.ps1`.
+- Source-checked clean `master@0139a346` repo-root paths: `Tools/Monitor/Get-WindowedRpt.ps1`, `Tools/Ops/Set-WaspCpuAffinity.ps1` and `docs/testing/hc-scaling-test.md`.
+- Result: [Operator monitor and CPU affinity tools](Operator-Monitor-And-CPU-Affinity-Tools-Reference) now documents the RPT windowing parameters, non-locking `FileShare.ReadWrite` read, optional regex/tail filtering, dry-run-first affinity masks, `arma2oaserver.exe` / `ArmA2OA.exe -client` process targeting, connection-order HC masks and the not-applied live-host caution. Routed through [Home](Home), `_Sidebar.md` and `agent-context.json`. No gameplay source changed.
+- Validation: 54 citation ranges resolve against clean source, internal page links resolve, forbidden Arma 3-only token scan is clean, touched JSON/JSONL parse passes, `docs/validate-wiki.ps1` passes after mirroring the wiki into `docs/wiki` and `git diff --check` reports only normal Windows LF/CRLF warnings.
+
+## 2026-06-21T12:22:01+02:00 - Codex - Skin selector class swap reference
+
+- Claimed `skin-selector-class-swap-reference` after confirming the wiki had no dedicated Skin Selector page and only incidental mentions of skin-selector action restoration in [Earplugs audio toggle](Earplugs-Audio-Toggle-Reference).
+- Source scope: clean `master@0139a346`, canonical Chernarus `Common/Init/Init_CommonConstants.sqf`, `Rsc/Dialogs.hpp`, `Client/GUI/GUI_Menu.sqf`, `Client/GUI/GUI_SkinSelectorMenu.sqf`, `Client/Init/Init_Keybind.sqf`, `Client/Module/Skill/Skill_Init.sqf`, `Client/Functions/Client_OnRespawnHandler.sqf`, `Common/Functions/Common_CreateUnit.sqf`, `WASP/actions/SkinSelector/*` and representative maintained Vanilla parity paths.
+- Result: added [Skin selector and class swap](Skin-Selector-And-Class-Swap-Reference), documenting the default-off gate, hidden WF-menu shortcut, join/WF-menu/User11 openers, WEST/EAST class pools, Spotter-only ghillie filter, replacement-player apply lifecycle, handler/action restore, commander build-action restore and respawn persistence. Wired Home, sidebar, Player UI workflow, Player skill abilities, WASP overlay, Feature Status and `agent-context.json`. No gameplay source changed.
+- Validation: 49 source refs in the new page resolve against clean source, touched-page internal links resolve, `agent-context.json` page-list parity is `205/205`, JSON/JSONL parse checks pass, `git diff --check` reports only normal Windows LF/CRLF warnings, and this clean source checkout has no `docs/wiki` mirror or wiki validator script to run.
+
+## 2026-06-21T12:17:46+02:00 - Codex - Player vehicle and travel actions reference
+
+- Claimed `player-vehicle-travel-actions-reference` after verifying current wiki coverage is scattered: MHQ/camp repair has owner-page coverage, but Push, Taxi Reverse, HALO, Cargo Eject and basic lock/unlock behavior are mostly one-line route mentions.
+- Source scope: clean `master@0139a346`, Chernarus `Common/Init/Init_Unit.sqf`, `Client/Action/Action_Push.sqf`, `Action_TaxiReverse.sqf`, `Action_HALO.sqf`, `Action_EjectCargo.sqf`, `Action_ToggleLock.sqf`, `Action_ToggleMHQLock.sqf`, `Client/PVFunctions/SetVehicleLock.sqf`, `SetMHQLock.sqf` and `Server/PVFunctions/RequestVehicleLock.sqf`.
+- Planned result: one docs-only page, `Player-Vehicle-And-Travel-Actions-Reference`, with source-cited registration/effect tables and Continue Reading routes to Valhalla, AutoFlip, vehicle countermeasures, Commander/HQ lifecycle and Player skill abilities. No gameplay source changes planned.
+- Result: added [Player vehicle and travel actions](Player-Vehicle-And-Travel-Actions-Reference), wired it through [Home](Home), `_Sidebar.md`, [AutoFlip vehicle recovery](AutoFlip-Vehicle-Recovery-Reference), [Valhalla vehicle climbing-assist](Valhalla-Vehicle-Climbing-Assist), [Player UI workflow](Player-UI-Workflow-Map) and `agent-context.json`, and left gameplay source untouched. The stable `master` source tree has no `docs/wiki` mirror directory, so no repo mirror files were touched in this pass.
+- Validation: 48 citation ranges resolve against clean Chernarus source, touched internal links resolve, A3-only token scan is clean, touched JSON/JSONL parse passes, `agent-context.json` page count matches top-level markdown page count, and `git diff --check` reports only normal Windows LF/CRLF warnings.
+
 ## 2026-06-21T12:23:23+02:00 - Codex - Engine stealth fuel toggle reference
 
 - Claimed `engine-stealth-fuel-toggle-reference` after confirming `Client/Module/Engines` had live source files, current audit notes and only a compact [Modules atlas](Modules-Atlas#engines--stealth-engine-off-clientmoduleengines) summary, with no dedicated owner page.
 - Source-checked clean `master@0139a346` Chernarus paths: `Client/Module/Engines/Engine.sqf`, `Startengine.sqf`, `Stopengine.sqf`, `Client/Functions/Client_BuildUnit.sqf`, `Server/Init/Init_Server.sqf` and `Client/Functions/Client_SupportRefuel.sqf`.
 - Result: added [Engine stealth fuel toggle](Engine-Stealth-Fuel-Toggle-Reference) as a source-cited reference for the `STEALTH ON` / `STEALTH OFF` flow, vehicle state keys `ID` / `Fuel` / `stopped`, purchased tank/wheeled-APC attach, WASP extra start-vehicle attach and the refuel-service guard. Routed through [Home](Home), `_Sidebar.md`, [Modules atlas](Modules-Atlas), [Function and module index](Function-And-Module-Index) and `agent-context.json`. No gameplay source changed.
 - Validation: 27 source citation ranges resolve, internal links resolve, Arma 3-only token scan is clean, touched JSON/JSONL parse passes, standalone wiki validator reaches markdown link/page-list OK before the known machine-reference failure, current repo `docs/wiki` validator passes with known legacy JSONL warnings only, and `git diff --check` passes with line-ending warnings only.
+
+## 2026-06-21T12:42:33+02:00 - Codex - Engine stealth fuel toggle rebase enhancement
+
+- Rebased over parallel wiki commits that had already published the canonical [Engine stealth fuel toggle](Engine-Stealth-Fuel-Toggle-Reference) page; dropped the duplicate local `Engine-Stealth-Toggle-Reference` slug and kept all navigation/context on the canonical page.
+- Enhancement: added the `"stopped"` mission-variable caveat to separate it from unrelated Arma `stopped` command hits, plus a compact Smoke Targets table for action visibility, fuel-drain, fuel-restore/refuel-guard and WASP extra start-vehicle checks.
+- Validation: the enhanced canonical page now resolves `40` source citation ranges against clean `master@0139a346`; local links, JSON/JSONL, page-list parity, Arma 3-only token scan and `git diff --check` were rerun after rebase resolution.
+
+## 2026-06-21T12:51:02+02:00 - Codex - QoL trio player hints reference
+
+- Claimed `qol-trio-player-hints-reference` after verifying existing wiki coverage only indexed the QoL constants and scattered consumer line refs, without a canonical page for the live client-visible hint surfaces.
+- Source scope: clean `master@0139a346`, Chernarus `Common/Init/Init_CommonConstants.sqf`, `Client/Init/Init_Client.sqf`, `Client/FSM/updatesalvage.sqf`, `Client/GUI/GUI_Menu_BuyUnits.sqf`, `Client/Functions/Client_FNC_Special.sqf` and `Client/Functions/Client_QOL_Advisor.sqf`.
+- Result: added [QoL trio player hints](QoL-Trio-Player-Hints-Reference), documenting the master gates, salvage toast, upgrade banner/sound split, last-purchase timestamp coupling and advisor nudges, then wired Home, sidebar, Player UI workflow, Experimental feature flags and `agent-context.json`. No gameplay source changed.
+- Validation: source citation ranges resolve against clean Chernarus source, touched internal links resolve, A3-only token scan is clean, touched JSON/JSONL parse passes, `agent-context.json` page count matches top-level markdown page count, and `git diff --check` reports only normal Windows LF/CRLF warnings. The stable source tree has no `docs/wiki` mirror or wiki validator script.
+
+## 2026-06-21T17:27:47+02:00 - Codex - Wiki mirror current wiki sync
+
+- Claimed `wiki-mirror-current-wiki-sync-2026-06-21` after comparing live wiki `master@743daf4` with repo mirror branch `origin/docs/developer-wiki-index@11f535d9` and finding `116` top-level normalized-content differences.
+- Scope: reconcile the repo `docs/wiki` mirror to the current GitHub wiki checkout, then validate parity and JSON/JSONL. No gameplay source edits planned.
+- Result: copied `260` top-level wiki files into `docs/wiki`, removed the mirror-only `GUER-Insurgents-Branch-Audit.md`, and updated coordination records so the current human wiki and repo mirror carry the same top-level content again. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event; the required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, normalized wiki/docs parity and `git diff --check`.

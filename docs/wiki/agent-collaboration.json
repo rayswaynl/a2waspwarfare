@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T12:23:23+02:00",
+  "generatedAt": "2026-06-21T12:51:02+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,6 +23,48 @@
   },
   "activeClaims": [
     {
+      "lane": "wiki-mirror-current-wiki-sync-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "wiki master@743daf4",
+        "origin/docs/developer-wiki-index@11f535d9",
+        "normalized top-level wiki/docs comparison diffCount=116",
+        "Wiki-Mirror-Reconciliation-Plan.md"
+      ],
+      "outputs": [
+        "Reconciled the repo docs/wiki mirror to the current GitHub wiki checkout after detecting 116 top-level normalized-content differences.",
+        "Copied 260 top-level wiki files into docs/wiki and removed mirror-only GUER-Insurgents-Branch-Audit.md.",
+        "Updated dashboard, worklog, pruning ledger and machine records. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future wiki batches should compare touched files against docs/wiki first; broad syncs should name exact wiki and docs branch refs plus diff counts.",
+      "updated": "2026-06-21T17:32:00+02:00"
+    },
+    {
+      "lane": "qol-trio-player-hints-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "QoL-Trio-Player-Hints-Reference.md",
+        "origin/master@0139a346",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatesalvage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_FNC_Special.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_QOL_Advisor.sqf",
+        "Experimental-Feature-Flag-Constants-Reference.md",
+        "Player-UI-Workflow-Map.md"
+      ],
+      "outputs": [
+        "Added QoL-Trio-Player-Hints-Reference.md as the canonical source-backed reference for the live QoL trio player hint layer.",
+        "Documented WFBE_C_QOL_TRIO / WFBE_C_QOL_ADVISOR_INTERVAL gates, salvage payout toast, upgrade unlock banner and sound split, last-purchase timestamp coupling, unspent-funds advisor and commander Patrols nudge.",
+        "Routed the page through Home.md, _Sidebar.md, Player-UI-Workflow-Map.md, Experimental-Feature-Flag-Constants-Reference.md and agent-context.json. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future QoL hint edits should keep client-visible hints separate from salvage authority, upgrade economy and purchase authority owner pages.",
+      "updated": "2026-06-21T12:51:02+02:00"
+    },
+    {
       "lane": "engine-stealth-fuel-toggle-reference",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -41,10 +83,224 @@
       "outputs": [
         "Added Engine-Stealth-Fuel-Toggle-Reference.md as a source-cited reference for the live Engines stealth/fuel-toggle module.",
         "Documented purchased Tank / Wheeled_APC attach, WASP extra start-vehicle attach, stop/event/start fuel flow, vehicle state keys and refuel-service guard behavior.",
-        "Wired the page through Home.md, _Sidebar.md, Modules-Atlas.md, Function-And-Module-Index.md and agent-context.json."
+        "Wired the page through Home.md, _Sidebar.md, Modules-Atlas.md, Function-And-Module-Index.md and agent-context.json.",
+        "Rebased over a parallel canonical page, dropped the duplicate local Engine-Stealth-Toggle-Reference slug, and extended Engine-Stealth-Fuel-Toggle-Reference.md with the stopped-variable caveat and Smoke Targets table. Final page citation check resolves 40 source ranges."
       ],
       "handoff": "Closed after validation. Future engine-stealth edits should keep the saved-fuel and stopped/refuel contracts paired, preserve both purchased-vehicle and WASP start-vehicle attach paths, and smoke start/stop/refuel behavior before release wording.",
-      "updated": "2026-06-21T12:23:23+02:00"
+      "updated": "2026-06-21T12:42:33+02:00"
+    },
+    {
+      "lane": "skin-selector-class-swap-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Skin-Selector-And-Class-Swap-Reference.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_SkinSelectorMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Keybind.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_OnRespawnHandler.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/actions/SkinSelector/*",
+        "Feature-Status-Register.md",
+        "Player-UI-Workflow-Map.md",
+        "Player-Skill-Abilities-Reference.md",
+        "WASP-Overlay.md"
+      ],
+      "outputs": [
+        "Added Skin-Selector-And-Class-Swap-Reference.md as the canonical source-backed reference for the optional infantry Skin Selector and class-swap path.",
+        "Documented default-off gate, hidden WF-menu shortcut, join/WF-menu/User11 openers, WEST/EAST class pools, Spotter-only ghillie filtering, replacement-player apply lifecycle, action/handler restoration and respawn persistence.",
+        "Routed the page through Home.md, _Sidebar.md, Player-UI-Workflow-Map.md, Player-Skill-Abilities-Reference.md, WASP-Overlay.md, Feature-Status-Register.md and agent-context.json. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future Skin Selector edits should keep WFBE_C_SKIN_SELECTOR default/visibility, class-pool isClass filtering, Spotter ghillie gating, selectPlayer handler restoration and respawn persistence tied to current source line refs before enabling live-feature wording.",
+      "updated": "2026-06-21T12:22:01+02:00"
+    },
+    {
+      "lane": "player-vehicle-travel-actions-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Player-Vehicle-And-Travel-Actions-Reference.md",
+        "master@0139a346",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Unit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_Push.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_TaxiReverse.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_HALO.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_EjectCargo.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_ToggleLock.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_ToggleMHQLock.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestVehicleLock.sqf"
+      ],
+      "outputs": [
+        "Added Player-Vehicle-And-Travel-Actions-Reference.md as a source-cited action-map for live player-facing vehicle/travel scroll actions on stable master@0139a346.",
+        "Documented registration/effect routes for repair action handoffs, Low Gear, manual Flip Vehicle, boat Push, air-transport HALO, Cargo Eject, plane Taxi Reverse and lock/unlock paths.",
+        "Wired Home.md, _Sidebar.md, AutoFlip-Vehicle-Recovery-Reference.md, Valhalla-Vehicle-Climbing-Assist.md, Player-UI-Workflow-Map.md and agent-context.json. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future lock/vehicle-action hardening should source-check actual addAction registrations first; keep MHQ/camp repair authority detail on the existing owner pages.",
+      "updated": "2026-06-21T12:22:53+02:00"
+    },
+    {
+      "lane": "cipher-sort-utilities-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "CIPHER-Sort-Utilities-Reference.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/CIPHER/CIPHER_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/CIPHER/CIPHER_Sort.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Upgrades/Labels_Upgrades.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Modules-Atlas.md",
+        "Function-And-Module-Index.md"
+      ],
+      "outputs": [
+        "Published CIPHER-Sort-Utilities-Reference.md for current master Chernarus CIPHER helpers, WFBE_C_UPGRADES_SORTED build and Upgrade menu consumer path.",
+        "Routed through Home.md, _Sidebar.md, Modules-Atlas.md, Function-And-Module-Index.md and agent-context.json; corrected stale Modules Atlas Labels_Upgrades.sqf line reference.",
+        "Validation passed for 29 source citation ranges, local markdown links, agent-context page-list parity, JSON/JSONL parse, repo docs/wiki validator and git diff check. No gameplay source changed."
+      ],
+      "handoff": "Closed as docs-only reference work; future edits should keep CIPHER helper names and WFBE_C_UPGRADES_SORTED consumer claims tied to current Chernarus line refs.",
+      "updated": "2026-06-21T10:54:35+02:00"
+    },
+    {
+      "lane": "autoflip-vehicle-recovery-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "AutoFlip-Vehicle-Recovery-Reference.md",
+        "Client/Module/AutoFlip/AutoFlip.sqf",
+        "Client/Init/Init_Client.sqf",
+        "Common/Init/Init_Unit.sqf",
+        "WASP/actions/FlipVehicle.sqf",
+        "stringtable.xml",
+        "Modules-Atlas.md"
+      ],
+      "outputs": [
+        "Added AutoFlip-Vehicle-Recovery-Reference.md as a source-cited live-feature page for the automatic AutoFlip watcher and separate manual Flip Vehicle action.",
+        "Documented scan cadence, watched vehicles, tilt/speed/ground/water/cooldown/stuck gates, righting operation, local notification behavior and manual-action differences.",
+        "Wired the page through Home.md, _Sidebar.md and agent-context.json."
+      ],
+      "handoff": "Closed after validation. Future vehicle-QoL edits should keep automatic AutoFlip and manual Flip Vehicle behavior separate unless source first unifies their gates.",
+      "updated": "2026-06-21T10:53:03+02:00"
+    },
+    {
+      "lane": "operator-monitor-cpu-affinity-tools-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Operator-Monitor-And-CPU-Affinity-Tools-Reference.md",
+        "Tools/Monitor/Get-WindowedRpt.ps1",
+        "Tools/Ops/Set-WaspCpuAffinity.ps1",
+        "docs/testing/hc-scaling-test.md",
+        "Tools-And-Build-Workflow.md",
+        "Server-Ops-Runbook.md",
+        "Headless-Client-Scaling-And-Topology.md"
+      ],
+      "outputs": [
+        "Added Operator-Monitor-And-CPU-Affinity-Tools-Reference.md as a source-cited operator tooling reference for the windowed RPT reader and CPU-affinity helper.",
+        "Verified 54 source citations against clean master@0139a346.",
+        "Wired the page through Home.md, _Sidebar.md and agent-context.json."
+      ],
+      "handoff": "Closed after citation, link, A3-token, JSON/JSONL, docs/wiki validator and diff-check validation. Future ops/tooling edits should keep RPT windowing separate from PerformanceAuditAnalyzer parsing, and keep CPU-affinity application behind explicit live-host approval.",
+      "updated": "2026-06-21T10:54:11+02:00"
+    },
+    {
+      "lane": "gear-store-loadout-route-catalog",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Gear-Store-Loadout-Route-Catalog.md",
+        "origin/master@0139a346",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Loadout",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Root",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Config_Weapons.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Config_Magazines.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Config_Backpack.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Config_SetTemplates.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Config_SortWeapons.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Config_SortMagazines.sqf"
+      ],
+      "outputs": [
+        "Added Gear-Store-Loadout-Route-Catalog.md as a source-cited content catalog for current Chernarus master side-root loadout imports, row counts, price/gate extrema and config-gated/dynamic gear content.",
+        "Wired Gear-Store-Loadout-Route-Catalog.md into _Sidebar.md, Home.md, agent-context.json documentation.pages and the adjacent Gear-Store-Price-And-Upgrade-Catalog.md.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future gear-store route/loadout edits should update Gear-Store-Loadout-Route-Catalog.md from current Chernarus Common/Config/Gear, Common/Config/Loadout and Common/Config/Core_Root source lines; high-impact price/gate rows remain owned by Gear-Store-Price-And-Upgrade-Catalog.md.",
+      "updated": "2026-06-21T10:27:08+02:00"
+    },
+    {
+      "lane": "gear-store-price-upgrade-catalog",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Gear-Store-Price-And-Upgrade-Catalog.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear/Gear_USMC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear/Gear_RU.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear/Gear_US.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear/Gear_TKA.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear/Gear_BAF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear/Gear_PMC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Gear/Gear_GUE.sqf",
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "Commanders-Handbook.md"
+      ],
+      "outputs": [
+        "Added Gear-Store-Price-And-Upgrade-Catalog.md as a source-cited current master Chernarus high-impact buy-gear price and upgrade catalog.",
+        "Reconciled every documented classname, price and upgrade gate against Common/Config/Gear/Gear_*.sqf; 68 qualifying rows are documented and no qualifying source row is missing.",
+        "Wired the page through _Sidebar.md, Home.md and agent-context.json.",
+        "Fixed three stale temporary-path Continue Reading links in Artillery-Reference-Per-Faction.md so the wiki link gate resolves."
+      ],
+      "handoff": "Closed after wiki publish validation: citation existence, source-table reconciliation, JSON/JSONL parse, markdown link resolution, agent-context page-list match and git diff --check.",
+      "updated": "2026-06-21T10:27:03+02:00"
+    },
+    {
+      "lane": "default-gear-template-content-catalog",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Default-Gear-Template-Content-Catalog.md",
+        "initJIPCompatible.sqf",
+        "Common/Init/Init_Common.sqf",
+        "Common/Init/Init_CommonConstants.sqf",
+        "Common/Config/Loadout/Loadout_*.sqf",
+        "Common/Config/Config_SetTemplates.sqf",
+        "Common/Config/readme.txt",
+        "Client/GUI/GUI_BuyGearMenu.sqf",
+        "Client/Functions/Client_UI_Gear_AddTemplate.sqf",
+        "Client/Functions/Client_UI_Gear_FillTemplates.sqf",
+        "Client/Functions/Client_UI_Gear_ParseTemplateContent.sqf",
+        "Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf"
+      ],
+      "outputs": [
+        "Added Default-Gear-Template-Content-Catalog.md with source-cited tables for current master predefined gear-template seed content.",
+        "Documented that all ten Loadout_*.sqf files ship one empty seed row and that Chernarus routes keep only the first per-side seed by default.",
+        "Wired the page into Home.md, _Sidebar.md and agent-context.json documentation.pages."
+      ],
+      "handoff": "Docs-only lane complete. Validation: citation line scan passed, A3-only term scan clean, git diff --check clean except Windows LF/CRLF warnings, JSON/JSONL parse passed, and Tools/ValidateWiki.ps1 -WikiPath <wiki> -SkipGitDiffCheck reached OK for markdown links and agent-context page lists before the known pre-existing machine-reference failure.",
+      "updated": "2026-06-21T10:25:25+02:00"
+    },
+    {
+      "lane": "earplugs-audio-toggle-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Earplugs-Audio-Toggle-Reference.md",
+        "origin/master@0139a346",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/actions/AddActions.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/actions/EarplugToggle.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/briefing.html",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Help.sqf"
+      ],
+      "outputs": [
+        "Added Earplugs-Audio-Toggle-Reference.md for the live earplugs audio toggle and mounted-vehicle mirror behavior.",
+        "Verified no existing wiki markdown page covered EarplugToggle, WFBE_WASP_Earplug* variables or fadeSound/fadeRadio earplug behavior.",
+        "Updated Home.md, _Sidebar.md and agent-context.json navigation, and corrected WASP-Overlay.md AddActions scope."
+      ],
+      "handoff": "Closed after validation. Future earplugs edits should keep the WASP scroll/vehicle path and WF menu EAR path separate unless source first unifies WFBE_WASP_EarplugActive and WFBE_Earplugs.",
+      "updated": "2026-06-21T10:15:50+02:00"
     },
     {
       "lane": "guer-insurgents-branch-intake",

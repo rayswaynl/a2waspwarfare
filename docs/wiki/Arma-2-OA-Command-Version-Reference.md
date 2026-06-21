@@ -26,9 +26,6 @@ The fastest way to break OA mission SQF is to "fix" it with Arma 3 reflexes: man
 | `selectRandom` | Arma 3 · 1.56 | Use the repo idiom `_arr select floor(random count _arr)` (`Common/Init/Init_Town.sqf:39`, `Server/AI/AI_AdvancedRespawn.sqf`) **or** `_arr call BIS_fnc_selectRandom` (OA-safe, see below). **Confirmed absent** — the 4 `selectRandom` source hits are all `BIS_fnc_selectRandom`. ⚠ Do not "simplify" `call BIS_fnc_selectRandom` into the `selectRandom` *command*: the function is OA-safe, the command is not. |
 | `splitString` / `joinString` | Arma 3 · 1.50 | No OA native split/join — parse with `toArray`/`toString` + a manual `forEach`. **Confirmed absent (0 hits).** |
 | `trim` (+ `regexFind` / `regexMatch`) | Arma 3 · 2.02 (regex 2.x) | No OA equivalent; trim/match manually via `toArray`/`toString`. **Confirmed absent.** |
-| `allPlayers` | Arma 3 · 1.00 | `playableUnits` filtered by `isPlayer` (e.g. `{ alive _x && isPlayer _x } count playableUnits`), or iterate `playableUnits` directly. No single OA command returns every player unit. **Confirmed absent from source (0 hits).** |
-| `allMines` | Arma 3 · 1.00 | **No OA equivalent.** OA has no engine query for placed mines — track script-placed mines in a global array (the mission's own `mines` list) and maintain it on create/delete. **Confirmed absent from source (0 hits).** |
-| `worldSize` | Arma 3 · 1.00 | **No OA equivalent.** Hardcode the terrain extent per map: Chernarus `15360`, Takistan `12800`. **Confirmed absent from source (0 hits).** |
 
 ## Confirmed available in Arma 2 OA
 

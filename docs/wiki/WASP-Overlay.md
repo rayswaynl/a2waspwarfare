@@ -14,8 +14,10 @@ WASP is the community/server identity this fork is built for. The mission credit
 | --- | --- | --- |
 | `WASP/Init_Client.sqf` | Original WASP client entry point. | **Dead** — entire body commented (`WASP/Init_Client.sqf:5-21`). Superseded by direct wiring in `Client/Init/Init_Client.sqf`. |
 | `WASP/common/procInitComm.sqf` | MP-safe wrapper around `setVehicleInit`/`processInitCommands`/`clearVehicleInit` to run init code on a vehicle network-wide. | Compiled as `WASP_procInitComm` only in the commented block at `initJIPCompatible.sqf:243-245`, specifically `:243` → function is undefined at runtime. |
-| `WASP/actions/AddActions.sqf` | Re-adds player scroll actions on spawn/respawn. | **Live** (`Init_Client.sqf:589`). Most actions commented; only the HQ cash-recovery action is active. |
+| `WASP/actions/AddActions.sqf` | Re-adds player scroll actions on spawn/respawn and creates the class diary/earplug client conveniences. | **Live** (`Client/Init/Init_Client.sqf:650`). Legacy gear/wheel/on-armor actions are commented, while HQ recovery, the class diary, the on-foot earplug action and the mounted-vehicle earplug mirror are active (`WASP/actions/AddActions.sqf:15,21-30,37-39,50-65`). |
 | `WASP/actions/Action_RepairMHQDepot.sqf` | Commander-only: spend cash to paradrop-respawn a destroyed HQ near the player; resets all town SV to 10. | **Live** (via `AddActions.sqf`). |
+| `WASP/actions/EarplugToggle.sqf` | Local player audio toggle for earplugs; the WASP action path fades both sound and radio and refreshes the on-foot/vehicle action titles. | **Live** (via `AddActions.sqf`; see [Earplugs audio toggle](Earplugs-Audio-Toggle-Reference)). |
+| `WASP/actions/SkinSelector/*` | Optional infantry skin selector and player-body class swap. | **Source-present, default off**: `WFBE_C_SKIN_SELECTOR` defaults to `0`, the WF-menu shortcut is hidden, and the apply chain recreates the player body before restoring actions/handlers (`Common/Init/Init_CommonConstants.sqf:601`; `Rsc/Dialogs.hpp:1258`; `WASP/actions/SkinSelector/SkinSelector_Apply.sqf:207-257`; see [Skin selector/class swap](Skin-Selector-And-Class-Swap-Reference)). |
 | `WASP/actions/OnKilled.sqf` | On player death, re-runs `AddActions.sqf` to reattach actions after respawn. | **Live** (`Client/Functions/Client_PreRespawnHandler.sqf:11`). |
 | `WASP/actions/GearYouUnit.sqf` | Open the gear dialog on a nearby AI subordinate. | **Orphan** — only caller is a commented line `AddActions.sqf:4`. |
 | `WASP/actions/car_wheel_new.sqf` | Wheel repair for immobilized cars; calls `WASP_procInitComm`. | **Broken orphan** — only caller is commented (`AddActions.sqf:6`); would also crash on the undefined `WASP_procInitComm`. |
@@ -39,8 +41,8 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 | --- | --- |
 | `Init_Client.sqf:15` | `WASP/rpg_dropping/DropRPG.sqf` |
 | `Init_Client.sqf:279` | `WASP/global_marking_monitor.sqf` |
-| `Init_Client.sqf:588` | `WASP/baserep/init.sqf` |
-| `Init_Client.sqf:589` | `WASP/actions/AddActions.sqf` |
+| `Client/Init/Init_Client.sqf:649` | `WASP/baserep/init.sqf` |
+| `Client/Init/Init_Client.sqf:650` | `WASP/actions/AddActions.sqf` |
 | `Client_PreRespawnHandler.sqf:11-12` | `WASP/actions/OnKilled.sqf` + recompile `DropRPG.sqf` |
 | `Init_Server.sqf:306,425-459` | `WASP/unsort/StartVeh.sqf` |
 | `updateclient.sqf:124-145` / `updateteamsmarkers.sqf:88` | `WASP_AFK` player variable (AFK detection + "(AFK)" marker suffix) |
@@ -51,6 +53,7 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 | --- | --- | --- |
 | HQ recovery action | Mostly client-side. `Action_RepairMHQDepot.sqf` checks funds/HQ state, deducts player cash, moves the HQ and mutates town supply locally before sending the repair request. | Treat as an authority-light legacy action. If hardened, move commander/funds/HQ/town-SV validation to the server side through [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) and [Server authority map](Server-Authority-Migration-Map). |
 | Global marking monitor | Intentionally client-local map double-click helper. | Safe for UI behavior; do not expect it on HC/server. |
+| Earplugs action | Local player audio/action state split between the WASP scroll/vehicle path and the WF menu `EAR` button. | Use [Earplugs audio toggle](Earplugs-Audio-Toggle-Reference) before changing titles, action ids or volume values; current source uses separate `WFBE_WASP_EarplugActive` and `WFBE_Earplugs` state keys. |
 | Start vehicles | Server-owned spawn state from `WASP/unsort/StartVeh.sqf`, compiled/used in `Init_Server.sqf`. | Not a JIP UI feature; changes affect initial server-side vehicle spawning and generated mission skip-list mirroring. |
 | Respawn action re-add | `WASP/actions/OnKilled.sqf` re-runs `AddActions.sqf`; current wiring comes through `Client_PreRespawnHandler.sqf`. | Keep this dependency when changing respawn handlers, or the active HQ recovery action can disappear after respawn. |
 | Base repair action state | `WASP/baserep/viem.sqf:47-53` stores selected repair target/index in shared globals `obj` and `objnum`; `WASP/baserep/repair.sqf:16,20,24,27` consumes those globals during the timed repair. | Two overlapping repair flows can stomp target state. Convert to action arguments or player-local variables before making base repair more prominent. |

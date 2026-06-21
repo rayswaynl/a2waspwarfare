@@ -204,18 +204,6 @@ These are planned gates for branch features, not completed test evidence. Use th
 | Integrations | DiscordBot tokens/configs and extension DLLs are present only in deployment, never committed; DiscordBot JSON intake, in-repo extension writes, AntiStack DB and BattlEye claims are checked against [Integration trust boundary audit](Integration-Trust-Boundary-Audit), with AntiStack runtime/DB validation in [AntiStack database extension audit](AntiStack-Database-Extension-Audit). |
 | Rollback | Previous mission PBO/package and server config can be restored. |
 
-## Live Deploy Gotchas (operator-learned)
-
-Battle-learned rules from real WASP-box deploys. Each cost one or more failed live deploys (server left down, missions un-parked, or fixed errors silently reintroduced).
-
-| Gotcha | Why it bites | Do this instead |
-| --- | --- | --- |
-| Build by overlay, not from git | A zip built from a fresh git worktree omits `version.sqf` (an untracked build-stamp the mission `#include`s -> the mission will not preprocess) and any working-tree-only fixes. | Build by overlaying ONLY the changed files onto the last-good DEPLOYED zip on the box (`C:\WASP\staging\aicom-<map>-b361.zip`). Never rebuild the package from scratch out of git. |
-| Working-tree-only-clean trap | The live build can run edits committed to no branch; a `git reset` or branch build silently un-ships them and reintroduces fixed errors. | Commit live edits promptly so the working tree and a branch agree. |
-| Switch scripts run HELD | `chernarus-switch.ps1` / `takistan-switch.ps1` take ~4.5 min and STOP+PARK missions BEFORE checking their build-guard markers, so a wrong build throws with the server already down. | Run the switch HELD as the ssh command, never detached (a detached child dies when the ssh session closes -> server down). PRE-VERIFY the staged zip passes `SUPPLY_START_WEST` / `FUNDS_START_WEST` / `WFBE_C_AICOM_TEAMS_PC_LOW`. |
-| scp big scripts | `powershell -EncodedCommand` over ssh has a ~8 KB command-line cap; large scripts truncate. | scp the `.ps1` to the box and run `ssh powershell -File <path>`. |
-| Back up + boot-smoke | Without a rollback path and a real boot check, "deployed" is unproven. | Back up the current staging zip first. Boot-smoke ~95s after the switch: require `ErrInExpr=0`, `version.sqf` clean and `MISSINIT` / feature-active in the live RPT. Rollback = restore the backup zip + re-switch. |
-
 ## Agent Test Record Schema
 
 Use [`agent-test-plan.schema.json`](agent-test-plan.schema.json) for future machine-readable test evidence. The important distinction is `coverageLevel`: a finding marked `source-only` is useful, but it is not proof of in-game behavior.

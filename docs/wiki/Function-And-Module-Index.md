@@ -72,7 +72,7 @@ Unless a row names another ref, line refs below are from the Chernarus source mi
 ## Common Modules
 
 - `Common/Module/Arty`
-- `Common/Module/CIPHER`
+- `Common/Module/CIPHER` — [CIPHER sort utilities reference](CIPHER-Sort-Utilities-Reference)
 - `Common/Module/IRS`
 - `Common/Module/Reaktiv`
 

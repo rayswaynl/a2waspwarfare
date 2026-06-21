@@ -2,7 +2,7 @@
 
 > Canonical source-backed map for commander selection, commander-client affordances, HQ/MHQ deployment, HQ destruction, wreck tracking and MHQ repair. This page bridges [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Server authority migration map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index).
 
-Unless a branch/ref is named, source paths below are relative to current docs head `8c3942d2` Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Targeted commander/HQ source paths are unchanged from earlier line-anchor checkpoints `f82a9127` and `e2c9f6ed` through `8c3942d2`; older hashes remain branch-matrix provenance where named.
+Unless a branch/ref is named, source paths below are relative to the Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. The initial HQ/team-spawn section was refreshed against live mission `origin/master` `0139a3468` on 2026-06-21; older branch-matrix rows keep their named provenance.
 
 ## How To Use This Page
 
@@ -10,6 +10,7 @@ Unless a branch/ref is named, source paths below are relative to current docs he
 | --- | --- | --- |
 | Commander vote, no-commander outcome, manual reassignment | [Commander Vote Flow](#commander-vote-flow), [Manual Reassignment Flow](#manual-reassignment-flow) | [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), [Commander reassignment call shape](Commander-Reassignment-Call-Shape) |
 | HQ deploy, mobilize and base-area state | [HQ Deploy And Mobilize](#hq-deploy-and-mobilize) | [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [Server authority migration map](Server-Authority-Migration-Map) |
+| Initial HQ placement, editor team registration and first client spawn | [Initial HQ And Team Spawn Flow](#initial-hq-and-team-spawn-flow) | [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle), [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
 | HQ kill score, bounty and wreck markers | [HQ Destruction And Wreck Markers](#hq-destruction-and-wreck-markers), [HQ kill score matrix](#hq-kill-score-and-bounty-branch-matrix) | [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) |
 | MHQ repair and WASP cash HQ recovery | [MHQ Repair](#mhq-repair), [WASP Cash HQ Recovery](#wasp-cash-hq-recovery) | [Economy, towns and supply](Economy-Towns-And-Supply), [Server authority migration map](Server-Authority-Migration-Map) |
 | Commander task pings and old task-system residue | [Authority And Risk Register](#authority-and-risk-register) | [Client UI systems atlas](Client-UI-Systems-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
@@ -42,7 +43,10 @@ The useful mental model:
 
 | Role | Files |
 | --- | --- |
-| Server side init/state | `Server/Init/Init_Server.sqf:313-371,380,397-413,622` |
+| Server side init/state | `Server/Init/Init_Server.sqf:389-450,475-492,844` |
+| Initial start picker / HQ placement | `mission.sqm:50,250,267,284,302,320,323,4334-4788,5031-5043`, `Rsc/Parameters.hpp:153-164`, `Common/Init/Init_CommonConstants.sqf:242-250`, `Server/Init/Init_Server.sqf:153,205-218,236-368,389-502` |
+| Initial team-slot registration / JIP matching | `mission.sqm:3849,3868,4928`, `Server/Init/Init_Server.sqf:544-645`, `initJIPCompatible.sqf:263-271`, `Server/Functions/Server_OnPlayerConnected.sqf:14,21-39,65-83,95-103` |
+| Initial client placement / respawn split | `Client/Init/Init_Client.sqf:12-25,515-560`, `Client/Functions/Client_GetRespawnAvailable.sqf:7-113`, `Client/Functions/Client_OnRespawnHandler.sqf:29-52` |
 | Commander vote worker | `Server/Functions/Server_VoteForCommander.sqf:9-57` |
 | Vote restart request | `Client/GUI/GUI_Menu.sqf:75,91`, `Server/PVFunctions/RequestCommanderVote.sqf:3-22`, `Common/Init/Init_PublicVariables.sqf:12` |
 | Manual reassignment path | `Client/GUI/GUI_Commander_VoteMenu.sqf:46`, `Server/PVFunctions/RequestNewCommander.sqf:3-16`, `Server/Functions/Server_AssignNewCommander.sqf:3-14` |
@@ -62,27 +66,93 @@ The useful mental model:
 
 ## Startup State
 
-`Init_Server.sqf` creates each side's starting mobile HQ near the side start position, sets `WFBE_Taxi_Prohib`, `wfbe_side`, `wfbe_trashable`, `wfbe_structure_type = "Headquarters"`, killed and hit event handlers, and Chernarus-dependent west textures (`Init_Server.sqf:313-330`).
+`Init_Server.sqf` creates each side's starting mobile HQ at the side's selected start logic position, sets `WFBE_Taxi_Prohib`, `wfbe_side`, `wfbe_trashable`, `wfbe_structure_type = "Headquarters"`, killed and hit event handlers, and Chernarus-dependent west textures (`Init_Server.sqf:389-403`).
 
 The same side logic then publishes the baseline state:
 
 | Variable | Initial value | Source |
 | --- | --- | --- |
-| `wfbe_commander` | `objNull` | `Init_Server.sqf:356` |
-| `wfbe_hq` | starting MHQ object | `Init_Server.sqf:357` |
-| `wfbe_hq_deployed` | `false` | `Init_Server.sqf:358` |
-| `wfbe_hq_repair_count` | `1` | `Init_Server.sqf:359` |
-| `wfbe_hq_repairing` | `false` | `Init_Server.sqf:360` |
-| `wfbe_votetime` | `WFBE_C_GAMEPLAY_VOTE_TIME` | `Init_Server.sqf:370` |
-| `wfbe_hqinuse` | `false` | `Init_Server.sqf:371` |
-| `wfbe_basearea` | `[]` when base-area mode is enabled | `Init_Server.sqf:380` |
-| `wfbe_radio_hq`, `wfbe_radio_hq_id` | side radio logic and identity | `Init_Server.sqf:397-413` |
+| `wfbe_commander` | `objNull` | `Init_Server.sqf:432` |
+| `wfbe_hq` | starting MHQ object | `Init_Server.sqf:433` |
+| `wfbe_hq_deployed` | `false` | `Init_Server.sqf:434` |
+| `wfbe_hq_repair_count` | `1` | `Init_Server.sqf:435` |
+| `wfbe_hq_repairing` | `false` | `Init_Server.sqf:436` |
+| `wfbe_startpos` | selected side start logic position | `Init_Server.sqf:437` |
+| `wfbe_votetime` | `WFBE_C_GAMEPLAY_VOTE_TIME` | `Init_Server.sqf:449` |
+| `wfbe_hqinuse` | `false` | `Init_Server.sqf:450` |
+| `wfbe_basearea` | `[]` when base-area mode is enabled | `Init_Server.sqf:460` |
+| `wfbe_radio_hq`, `wfbe_radio_hq_id` | side radio logic and identity | `Init_Server.sqf:475-492` |
 
 This is why fresh clients can wait on side logic variables instead of rediscovering HQ state from world objects. `Common_GetSideHQ.sqf` and `Common_GetSideHQDeployStatus.sqf` are thin side-to-logic readers, not search functions (`Common_GetSideHQ.sqf:7-12`, `Common_GetSideHQDeployStatus.sqf:7-12`).
 
+## Initial HQ And Team Spawn Flow
+
+_Source pass: live mission `origin/master` at `0139a3468`, checked 2026-06-21. This section describes committed Chernarus behavior; local test-only overrides in other worktrees are not treated as canonical._
+
+Initial player arrival is a staged server/client handoff, not "spawn wherever the playable unit was placed in the editor." The editor slots and temp respawn markers get the engine safely into multiplayer, but the Warfare layer chooses the real start, creates the side HQ there, registers the synced playable groups as teams, and then moves the joining client out of the holding area.
+
+### Mission Boot Order
+
+`initJIPCompatible.sqf` starts common constants/config and towns first, then starts `Server/Init/Init_Server.sqf` on the server (`initJIPCompatible.sqf:252-258`). Clients do not enter `Init_Client.sqf` immediately: they wait for `WFBE_PRESENTSIDES`, then wait for each present side logic to publish `wfbe_teams` before caching `WFBE_%1TEAMS` and running client init (`initJIPCompatible.sqf:263-271`). That wait matters because client-side group menus, join placement, commander vote UI and later JIP cleanup all assume the side team registry already exists.
+
+### Start Location Selection
+
+The Chernarus `.sqm` contains many `LocationLogicStart` objects, side owner logics, and temp respawn markers. The important authored hints are `wfbe_spawn = "north"`, `"south"` or `"central"` on selected start logics, plus `wfbe_default` tags for fallback (`mission.sqm:323,4595,4684,4738`). The playable west/east/resistance groups are synchronized to `LocationLogicOwnerWest`, `LocationLogicOwnerEast` and `LocationLogicOwnerResistance` (`mission.sqm:3849,3868,4928`), while `WestTempRespawnMarker`, `EastTempRespawnMarker` and `GuerTempRespawnMarker` are just holding/respawn marker infrastructure (`mission.sqm:5031-5043`).
+
+Server start choice happens in `Init_Server.sqf`:
+
+1. It reads all `LocationLogicStart` objects into `startingLocations` (`Init_Server.sqf:153`).
+2. If `WFBE_C_BASE_START_TOWN` is enabled, it refines candidates to start logics within 2000m of towns, falling back to all starts if fewer than three survive (`Init_Server.sqf:205-218`). The parameter default is enabled (`Rsc/Parameters.hpp:153-158`; `Init_CommonConstants.sqf:242`).
+3. `WFBE_C_BASE_STARTING_MODE` selects west-north/east-south, west-south/east-north, or random; the default is random (`Rsc/Parameters.hpp:159-164`; `Init_CommonConstants.sqf:243`). In three-way mode the fixed north/south shortcut is skipped and random placement is used.
+4. Random placement must satisfy the side spacing check and the egress-quality gate: at least 400m from Chernarus map edges, roads within 250m, and on OA at least three usable road segments where `roadsConnectedTo` returns two or more connections (`Init_Server.sqf:236-271`; `Init_CommonConstants.sqf:244-250`).
+5. If random placement cannot settle within 2000 attempts, the fallback uses `.sqm` `wfbe_default` west/east tags, or random remaining starts if the defaults are missing (`Init_Server.sqf:337-365`).
+
+### HQ And Starting Vehicles
+
+For the committed Chernarus Combined Ops setup, common constants pick USMC for west and RU for east (`Init_CommonConstants.sqf:610-626`). Those roots compile side structure config, giving west `LAV25_HQ` / `LAV25_HQ_unfolded` and east `BTR90_HQ` / `BTR90_HQ_unfolded` (`Structures_USMC.sqf:6-7,127`; `Structures_RU.sqf:6-7,127`).
+
+During global side initialization, the server passes the selected start logic position into `WFBE_CO_FNC_CreateVehicle`, stores the returned object as `wfbe_hq`, and publishes `wfbe_startpos` on the side logic (`Init_Server.sqf:378-437`). `Common_CreateVehicle.sqf` is the shared wrapper over the engine `createVehicle` command: it normalizes object positions/side IDs, creates the vehicle, applies direction/lock/bounty handlers, and uses `setVehicleInit` plus `processInitCommands` for global unit initialization when requested (`Common_CreateVehicle.sqf:15-24,39-73`).
+
+After the MHQ is created, the server spawns configured starting vehicles near it. Current Chernarus roots give west `HMMWV_Ambulance` and `Pandur2_ACR`, east `GAZ_Vodnik_MedEvac` and `BTR90` (`Root_US_Camo.sqf:44`; `Root_RU.sqf:41`), then `Init_Server.sqf` places and cargo-clears them beside the HQ (`Init_Server.sqf:494-502`). WASP also runs `Wasp/unsort/StartVeh.sqf` and creates one random side-specific extra starting vehicle near the HQ before team registration (`Init_Server.sqf:506-542`).
+
+### Team Registration
+
+The initial west/east "teams" are editor-created groups, not newly spawned groups. For each present side, the server loops `synchronizedObjects _logik`, takes each synced man object's `group`, pushes that group into `_teams`, seeds funds, side, persistence, queue, vote, autonomy, respawn, team type and default move mode, then publishes `wfbe_teams` and `wfbe_teams_count` on the side logic (`Init_Server.sqf:544-580`).
+
+Resistance player slots are gated separately. If `WFBE_C_GUER_PLAYERSIDE > 0`, the server registers synced resistance groups as harass-only GUER teams with 50k funds and starts `Server_GuerStipend.sqf` (`Init_Server.sqf:584-616`; `Rsc/Parameters.hpp:586-592`). With the default gate off, the synced GUER playable units are deleted server-side so clients cannot join a non-functional insurgent side (`Init_Server.sqf:618-627`). After registration, all still-untagged west/east/resistance editor groups are tagged `wfbe_group_src = "editor-player-slot"` for group-GC/audit visibility; this is audit state, not the mechanism that registers teams (`Init_Server.sqf:629-645`).
+
+JIP player matching later depends on this registry. `Server_OnPlayerConnected.sqf` waits for `commonInitComplete && serverInitFull`, searches `playableUnits` for the joining UID, reads that unit's `group`, verifies `wfbe_side`, stores `wfbe_uid` / `wfbe_teamleader`, and seeds or restores `WFBE_JIP_USER<uid>` / `wfbe_funds` (`Server_OnPlayerConnected.sqf:14,21-39,65-83,95-103`). If team registration is broken, JIP symptoms often show up here rather than at the original server init line.
+
+### Client Initial Placement
+
+The player's first engine position is still the side's temp respawn/holding area. `Init_Client.sqf` immediately disables damage while the player is in that transit state, then a watchdog re-enables it once `WFBE_Client_DeadspawnEscaped` is set or after a 120-second timeout (`Init_Client.sqf:12-25`). The server also surrounds the three temp respawn markers with H-barriers after `serverInitFull` so side-slot bodies cannot shoot across the holding markers while clients are still joining (`Init_Server.sqf:649-657`).
+
+Once the join gate has passed, client init performs an interim move to `wfbe_startpos` if available, then determines the final initial placement (`Init_Client.sqf:515-560`):
+
+- resistance clients use a friendly/neutral town if possible, falling back to the GUER temp marker;
+- west/east clients during the first 30 seconds use `wfbe_startpos`;
+- later west/east joiners prefer the current side HQ, then scan side structures backward and use the newest live Barracks, Light, Heavy or Aircraft factory when one exists;
+- if no live factory exists and the HQ object is null/dead, the client falls back to `wfbe_startpos`.
+
+That final `setPos` sets `WFBE_Client_DeadspawnEscaped = true`, which lets the damage watchdog restore normal damage shortly after (`Init_Client.sqf:558-560`).
+
+### Initial Join Is Not Respawn
+
+Do not conflate the above client init placement with the later respawn menu. `Client_GetRespawnAvailable.sqf` builds a respawn list from HQ/factories, mobile respawn vehicles, redeploy trucks, leader respawn, three-way/defender special respawn, camps and GUER friendly/neutral towns (`Client_GetRespawnAvailable.sqf:7-113`). `Client_OnRespawnHandler.sqf` then either moves the player into cargo for eligible mobile/redeploy spawns or positions them near the selected spawn/town (`Client_OnRespawnHandler.sqf:29-52`). A bug in first-join deadspawn handling and a bug in later respawn availability can look similar in play, but they are different code paths.
+
+### Change And Smoke Checklist
+
+- Start-placement changes: smoke `WFBE_C_BASE_START_TOWN` on/off, start mode 0/1/2, north/south tag absence, the 2000-attempt fallback, and the edge/road egress gate.
+- HQ type or starting vehicle changes: verify `WFBE_%1MHQNAME`, `WFBE_%1STARTINGVEHICLES`, `Common_CreateVehicle` global init and side-specific `PlaceNear` behavior.
+- Slot/team changes: verify editor sync to side owner logics, `wfbe_teams_count`, commander vote rows, `Server_OnPlayerConnected` UID matching and JIP reconnect funds.
+- Deadspawn changes: smoke launch join, mid-game JIP after factories exist, JIP after HQ death, and the 120-second damage watchdog timeout.
+- Respawn changes: smoke the respawn menu separately from first join, especially mobile/redeploy cargo and GUER town selection.
+
+Relevant BI command references for this flow: [`createVehicle`](https://community.bistudio.com/wiki/createVehicle), [`createUnit`](https://community.bistudio.com/wiki/createUnit), [`setVehicleInit`](https://community.bistudio.com/wiki/setVehicleInit), [`processInitCommands`](https://community.bistudio.com/wiki/processInitCommands), [`nearRoads`](https://community.bistudio.com/wiki/nearRoads), [`roadsConnectedTo`](https://community.bistudio.com/wiki/roadsConnectedTo), [`setPos`](https://community.bistudio.com/wiki/setPos), [`moveInCargo`](https://community.bistudio.com/wiki/moveInCargo). Check each page's game-version icons/caveats before applying newer-engine behavior to Arma 2 OA.
+
 ## Commander Vote Flow
 
-At the end of server init, every present side starts `WFBE_SE_FNC_VoteForCommander` (`Init_Server.sqf:622`). The worker:
+At the end of server init, every present side starts `WFBE_SE_FNC_VoteForCommander` (`Init_Server.sqf:844`). The worker:
 
 1. reads the side's vote time (`Server_VoteForCommander.sqf:9-11`);
 2. counts down `wfbe_votetime` once per second and broadcasts it on side logic (`:13-14`);

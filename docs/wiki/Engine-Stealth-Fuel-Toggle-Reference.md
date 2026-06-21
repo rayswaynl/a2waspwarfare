@@ -30,7 +30,18 @@ The Engines module is the "STEALTH ON" / "STEALTH OFF" vehicle fuel toggle under
 | `Fuel` | `Engine.sqf` stores the current fuel value only inside the `_isOn == false` branch. | `Startengine.sqf` reads `Fuel` and immediately passes it to `setFuel`. | There is no fallback value in `Startengine.sqf` if a future source change lets the start action run without a stored `Fuel` value. Evidence: `Client/Module/Engines/Engine.sqf:7-10`; `Client/Module/Engines/Startengine.sqf:4-5`. |
 | `stopped` | `Stopengine.sqf` writes `true`; `Startengine.sqf` writes `false`. | `Client_SupportRefuel.sqf` reads `stopped` before starting the refuel flow. | The current refuel guard is checked at entry, before the refuel timing loop; the loop later refuels only if support remained in range. Evidence: `Client/Module/Engines/Stopengine.sqf:7`; `Client/Module/Engines/Startengine.sqf:7`; `Client/Functions/Client_SupportRefuel.sqf:8-9,60-79`. |
 
-All three module variables above are written with two-argument `setVariable` calls in the current source. Do not treat `Fuel`, `ID`, or `stopped` as intentionally published object state unless a future code change adds an explicit publication path and then smoke-tests owner changes, refuel service behavior, and start/stop actions (`Client/Module/Engines/Stopengine.sqf:5,7`; `Client/Module/Engines/Engine.sqf:8,11`; `Client/Module/Engines/Startengine.sqf:7`).
+All three module variables above are written with two-argument `setVariable` calls in the current source. Do not treat `Fuel`, `ID`, or `stopped` as intentionally published object state unless a future code change adds an explicit publication path and then smoke-tests owner changes, refuel service behavior, and start/stop actions (`Client/Module/Engines/Stopengine.sqf:5,7`; `Client/Module/Engines/Engine.sqf:8,11`; `Client/Module/Engines/Startengine.sqf:7`). For Arma locality, compare the missing public argument against Bohemia's [`setVariable`](https://community.bistudio.com/wiki/setVariable) reference.
+
+The mission variable name `"stopped"` is separate from the Arma `stopped` command used by AI and travel diagnostics elsewhere. Engine-stealth writers/readers are the `Stopengine.sqf`, `Startengine.sqf` and `Client_SupportRefuel.sqf` variable accesses above; unrelated command/state-string hits include `Client/GUI/GUI_Menu_Tactical.sqf:408`, `Client/Functions/Client_DiagnosePlayerAI.sqf:197-199` and `Server/AI/Commander/AI_Commander.sqf:252-255`.
+
+## Smoke Targets
+
+| Check | Expected source-backed result | Evidence |
+| --- | --- | --- |
+| Purchased tank or wheeled APC action appears only while alive and engine-on. | The purchased-vehicle attach block gates on `Tank` / `Wheeled_APC` and the action condition requires `alive _target &&(isEngineOn _target)`. | `Client/Functions/Client_BuildUnit.sqf:417-418` |
+| `STEALTH ON` stages the engine-off fuel-drain path. | The stop action stores `ID`, calls `EngineOn false` and marks `stopped=true`; the Engine EH then saves `Fuel`, calls `setFuel 0` and adds `STEALTH OFF`. | `Client/Module/Engines/Stopengine.sqf:5-7`; `Client/Module/Engines/Engine.sqf:5-10` |
+| `STEALTH OFF` restores fuel and clears the refuel guard. | The start action reads `Fuel`, calls `setFuel _fuel`, removes the current action and marks `stopped=false`; refuel exits only when `stopped` is true. | `Client/Module/Engines/Startengine.sqf:4-7`; `Client/Functions/Client_SupportRefuel.sqf:8-9` |
+| WASP extra start vehicles keep the same attach path. | West and East extra start vehicles both run the `Tank` / `Wheeled_APC` Engine EH and `STEALTH ON` action attach during server init. | `Server/Init/Init_Server.sqf:504-522`; `Server/Init/Init_Server.sqf:524-540` |
 
 ## Maintenance Notes
 
@@ -43,6 +54,7 @@ All three module variables above are written with two-argument `setVariable` cal
 ## Continue Reading
 
 - [Modules atlas](Modules-Atlas)
+- [Vehicle equip and rearm reference](Vehicle-Equip-And-Rearm-Function-Reference)
 - [Service menu affordability guards](Service-Menu-Affordability-Guards)
-- [Function and module index](Function-And-Module-Index)
-- [Testing workflow](Testing-Debugging-And-Release-Workflow)
+- [Vehicle countermeasure flares and spoofing](Vehicle-Countermeasure-Flares-And-Spoofing)
+- [Valhalla vehicle climbing assist](Valhalla-Vehicle-Climbing-Assist)

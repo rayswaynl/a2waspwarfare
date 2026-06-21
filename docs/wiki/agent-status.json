@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T12:23:23+02:00",
+  "generatedAt": "2026-06-21T17:32:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "deploy-aicom-experital-merge-risk-audit",
-      "currentWork": "Auditing deploy/2026-06-12-aicom-experital@984195ae against origin/master@cf2a6d6a, release/2026-06-feature-bundle@a96fdda2, origin/experital and PR #34 for Arma 2 OA SQF correctness, merge risk, code quality and performance opportunities. No gameplay source edits planned without explicit proposed-change notice; Claude remains lead for branch implementation decisions.",
-      "nextExpectedOutput": "Post a compact first GitHub status on PR #30 after initial source checks, then continue 30-minute heartbeat updates with source-backed findings and proposed-change notices before any gameplay edits."
+      "currentLane": "documentation-finisher-loop",
+      "currentWork": "Latest docs-only pass synced the repo docs/wiki mirror on origin/docs/developer-wiki-index@11f535d9 to the live wiki checkout master@743daf4 after detecting 116 top-level normalized-content differences. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap after this pushed batch; preserve docs/wiki parity when a mirror exists."
     },
     "Codex-2": {
       "status": "ready",
@@ -57,10 +57,70 @@
   },
   "laneSummary": [
     {
+      "lane": "wiki-mirror-current-wiki-sync-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Synced the repo docs/wiki mirror on origin/docs/developer-wiki-index@11f535d9 to live wiki master@743daf4 after a normalized top-level comparison found 116 differences. Copied 260 top-level wiki files into docs/wiki, removed mirror-only GUER-Insurgents-Branch-Audit.md, updated coordination records and left gameplay source untouched."
+    },
+    {
+      "lane": "qol-trio-player-hints-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added QoL-Trio-Player-Hints-Reference.md for stable master@0139a346. The page documents the hardcoded WFBE_C_QOL_TRIO / WFBE_C_QOL_ADVISOR_INTERVAL gates, salvage payout toast, factory-upgrade unlock banner, player-initiated upgrade sound split, last-purchase timestamp coupling and unspent-funds / commander Patrols advisor nudges. Routed through Home.md, _Sidebar.md, Player-UI-Workflow-Map.md, Experimental-Feature-Flag-Constants-Reference.md and agent-context.json. No gameplay source changed."
+    },
+    {
       "lane": "engine-stealth-fuel-toggle-reference",
       "owner": "Codex",
       "status": "published-validated-docs-only",
-      "output": "Added Engine-Stealth-Fuel-Toggle-Reference.md for stable master@0139a346. The page documents the live Client/Module/Engines stop/fuel-drain/start flow, purchased Tank / Wheeled_APC action attach, WASP extra start-vehicle attach, vehicle state keys ID / Fuel / stopped and the refuel-service guard that exits while stealth is marked stopped. Routed through Home.md, _Sidebar.md, Modules-Atlas.md, Function-And-Module-Index.md and agent-context.json. No gameplay source changed."
+      "output": "Added Engine-Stealth-Fuel-Toggle-Reference.md for stable master@0139a346, then rebased over the parallel canonical page and kept that slug instead of publishing a duplicate. The page documents the live Client/Module/Engines stop/fuel-drain/start flow, purchased Tank / Wheeled_APC action attach, WASP extra start-vehicle attach, vehicle state keys ID / Fuel / stopped, refuel-service guard, stopped-variable caveat and Smoke Targets table. Routed through Home.md, _Sidebar.md, Modules-Atlas.md, Function-And-Module-Index.md, Wiki-Pruning-And-Relevance-Ledger.md and agent-context.json. No gameplay source changed."
+    },
+    {
+      "lane": "skin-selector-class-swap-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added Skin-Selector-And-Class-Swap-Reference.md for stable master@0139a346. The page documents the default-off WFBE_C_SKIN_SELECTOR gate, hidden WF-menu shortcut, join/WF-menu/User11 openers, WEST/EAST class pools, Spotter-only ghillie filter, replacement-player apply lifecycle, action/handler restoration, commander build-action restore and respawn persistence. Routed Home/_Sidebar/Player UI/Player skill/WASP/Feature Status/agent-context. No gameplay source changed."
+    },
+    {
+      "lane": "player-vehicle-travel-actions-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added Player-Vehicle-And-Travel-Actions-Reference.md for stable master@0139a346: a source-cited map of live player-facing vehicle/travel scroll actions from Init_Unit, Push, Taxi Reverse, HALO, Cargo Eject and lock/unlock paths, with repair authority routed back to existing owner pages. Wired Home, _Sidebar, AutoFlip, Valhalla, Player UI workflow and agent-context. No gameplay source changed."
+    },
+    {
+      "lane": "cipher-sort-utilities-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published CIPHER-Sort-Utilities-Reference.md for stable master@0139a346: CIPHER helper contracts, boot-time WFBE_C_UPGRADES_SORTED index build and Upgrade menu consumer path. Routed via Home/sidebar/agent-context plus Modules Atlas and Function Index, corrected a stale Modules Atlas Labels_Upgrades line ref, and passed citation, link, page-list, JSON/JSONL and diff checks. No gameplay source changed."
+    },
+    {
+      "lane": "autoflip-vehicle-recovery-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added AutoFlip-Vehicle-Recovery-Reference.md for stable master@0139a346. The page documents the client-started AutoFlip watcher, scan cadence, watched vehicles, tilt/speed/ground/water/cooldown/stuck gates, righting operation, local notification behavior and the separate manual Flip Vehicle action, then wires Home, _Sidebar.md and agent-context.json. No gameplay source changed."
+    },
+    {
+      "lane": "operator-monitor-cpu-affinity-tools-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added Operator-Monitor-And-CPU-Affinity-Tools-Reference.md for stable master@0139a346. The page catalogs Tools/Monitor/Get-WindowedRpt.ps1, Tools/Ops/Set-WaspCpuAffinity.ps1 and docs/testing/hc-scaling-test.md boundaries, documenting RPT windowing parameters, non-locking reads, dry-run-first affinity masks, arma2oaserver.exe / ArmA2OA.exe -client process targeting and the not-applied live-host caution. Wired Home/_Sidebar/agent-context. No gameplay source changed."
+    },
+    {
+      "lane": "gear-store-loadout-route-catalog",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added Gear-Store-Loadout-Route-Catalog.md as a source-cited Chernarus master@0139a346 content catalog for side-root loadout imports, loadout row counts, price/gate extrema and config-gated/dynamic gear content. Wired it into _Sidebar.md, Home.md, agent-context.json documentation.pages and Gear-Store-Price-And-Upgrade-Catalog.md. No gameplay source changed."
+    },
+    {
+      "lane": "earplugs-audio-toggle-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added Earplugs-Audio-Toggle-Reference.md for stable master@0139a346. The page documents the split between the WASP scroll/vehicle path (WFBE_WASP_EarplugActive, fadeSound plus fadeRadio, mounted-vehicle mirror loop) and the WF menu EAR path (WFBE_Earplugs, fadeSound only), wires Home/_Sidebar/agent-context, and corrects WASP-Overlay.md so AddActions.sqf no longer says only HQ recovery is active. No gameplay source changed."
+    },
+    {
+      "lane": "gear-store-price-upgrade-catalog",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Added Gear-Store-Price-And-Upgrade-Catalog.md as a current master Chernarus high-impact player gear-store price and upgrade catalog. The page reconciles 68 qualifying rows from Common/Config/Gear/Gear_*.sqf, is wired through Home, _Sidebar.md and agent-context.json, and the publish batch also fixes three stale temporary-path links in Artillery-Reference-Per-Faction.md. No gameplay source changed."
     },
     {
       "lane": "guer-insurgents-branch-intake",
