@@ -12,7 +12,7 @@
 //--- IMPORTANT NOTES:
 //---   • setPosASL is used throughout for sea objects (NOT setPos/setPosATL which snap to seabed).
 //---   • All createVehicle calls are GLOBAL (server-authoritative, so AI/collision sees them).
-//---   • This file registers towns via the same pattern as Init_Town.sqf.
+//---   • Town logics are PRE-PLACED in mission.sqm and registered by Init_Town.sqf before this runs.
 //---   • The GUER CAP (Mi24_P + An2) is PROXIMITY-GATED: only arms at ~1500-2000m player range
 //---     and despawns on the inactivity timeout — never burns FPS over empty ocean.
 //---   • The SCUD addAction is added to the oil platform helipad for any team-leader of the
@@ -33,7 +33,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) != 1) exitWith {
 ["INITIALIZATION", "Init_NavalHVT.sqf : Naval HVT feature ENABLED — starting offshore asset spawn."] Call WFBE_CO_FNC_LogContent;
 
 //------------------------------------------------------------------------------------
-//--- WAIT: town init must be complete before we register new towns.
+//--- WAIT: town init must be complete before we look up pre-placed naval logics.
 //------------------------------------------------------------------------------------
 waitUntil { !isNil "townInit" && townInit };
 waitUntil { !isNil "towns" };
@@ -55,54 +55,6 @@ WFBE_NavalHVT_SpawnProp = {
 	_obj
 };
 
-//------------------------------------------------------------------------------------
-//--- HELPER: register a LocationLogicDepot as a capturable town.
-//--- Pattern mirrors Init_Town.sqf / how existing towns are registered.
-//------------------------------------------------------------------------------------
-WFBE_NavalHVT_RegisterTown = {
-	private ["_loc","_name","_sv","_maxSV","_townType","_sideID","_extra"];
-	_loc      = _this select 0;
-	_name     = _this select 1;
-	_sv       = _this select 2;
-	_maxSV    = _this select 3;
-	_townType = _this select 4;
-	_sideID   = _this select 5;
-	_extra    = if (count _this > 6) then {_this select 6} else {[]};
-
-	//--- Standard town variables (mirror Init_Town.sqf).
-	_loc setVariable ["name",               _name,     true];
-	_loc setVariable ["range",              600,       true];
-	_loc setVariable ["startingSupplyValue",_sv,       true];
-	_loc setVariable ["maxSupplyValue",     _maxSV,    true];
-	_loc setVariable ["supplyValue",        _sv,       true];
-	_loc setVariable ["wfbe_town_type",     _townType, true];
-	_loc setVariable ["sideID",             _sideID,   true];
-	_loc setVariable ["camps",              [],        true];
-	_loc setVariable ["wfbe_town_defenses", [],        true];
-	_loc setVariable ["LastSupplyMissionRun", 0];
-	_loc setVariable ["supplyMissionCoolDownEnabled", false];
-	_loc setVariable ["wfbe_active",        false,     true];
-	_loc setVariable ["wfbe_active_air",    false,     true];
-	_loc setVariable ["wfbe_episode_spawned", false,   true];
-	_loc setVariable ["wfbe_inactivity",    0];
-	_loc setVariable ["wfbe_active_override", false];
-	_loc setVariable ["wfbe_town_teams",    []];
-	_loc setVariable ["wfbe_is_naval_hvt",  true,      true];
-
-	//--- Apply any extra tagged variables [varName, value] pairs.
-	{
-		_loc setVariable [_x select 0, _x select 1, true];
-	} forEach _extra;
-
-	//--- Register in global towns array.
-	towns = towns + [_loc];
-
-	["INITIALIZATION", Format ["Init_NavalHVT.sqf : registered town [%1] sideID=%2 sv=%3.", _name, _sideID, _sv]] Call WFBE_CO_FNC_LogContent;
-};
-
-//------------------------------------------------------------------------------------
-//--- DEFINE ASSET POSITIONS
-//--- NEEDS REVIEW: verify each with surfaceIsWater in-engine before final deployment.
 //------------------------------------------------------------------------------------
 //--- LHD Hull: multi-part ship. Parts are laid linearly fore-to-aft.
 //--- !! TODO / NEEDS-REVIEW: these offsets are BEST-GUESS fore-to-aft linear layout —
@@ -149,47 +101,58 @@ WFBE_NavalHVT_SpawnLHD = {
 	_parts	//--- return list of spawned objects for cleanup/reference
 };
 
+WFBE_NavalHVT_Off = { [((_this select 0) select 0) + (_this select 1), ((_this select 0) select 1) + (_this select 2), 0] };
+
+//------------------------------------------------------------------------------------
+//--- FIND PRE-PLACED TOWN LOGICS
+//--- The 4 naval logics are pre-placed in mission.sqm and already registered in
+//--- towns[] by Init_Town.sqf. Locate them by their name variable.
+//------------------------------------------------------------------------------------
+private ["_lhdAlphaLogic","_pierFOBLogic","_oilLogic","_lhdBravoLogic","_x","_tName"];
+_lhdAlphaLogic = objNull;
+_pierFOBLogic  = objNull;
+_oilLogic      = objNull;
+_lhdBravoLogic = objNull;
+
+{
+	_tName = _x getVariable ["name", ""];
+	switch (_tName) do {
+		case "Khe Sanh Alpha": { _lhdAlphaLogic = _x; };
+		case "Naval FOB":      { _pierFOBLogic  = _x; };
+		case "Oil Platform":   { _oilLogic      = _x; };
+		case "Khe Sanh Bravo": { _lhdBravoLogic = _x; };
+	};
+} forEach towns;
+
+if (isNull _lhdAlphaLogic || isNull _pierFOBLogic || isNull _oilLogic || isNull _lhdBravoLogic) exitWith {
+	["WARNING", "Init_NavalHVT.sqf : pre-placed naval town logic(s) not found in towns[] — check mission.sqm."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Force sea level (z=0 ASL) on each logic for accurate capture-radius detection.
+_lhdAlphaLogic setPosASL [(getPos _lhdAlphaLogic) select 0, (getPos _lhdAlphaLogic) select 1, 0];
+_pierFOBLogic  setPosASL [(getPos _pierFOBLogic)  select 0, (getPos _pierFOBLogic)  select 1, 0];
+_oilLogic      setPosASL [(getPos _oilLogic)       select 0, (getPos _oilLogic)       select 1, 0];
+_lhdBravoLogic setPosASL [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1, 0];
+
+//--- Derive 2-element [x,y] anchors from logic positions (downstream structure code uses these
+//--- with WFBE_NavalHVT_Off, which reads select 0 / select 1, so must remain [x,y]).
+private ["_aAlpha","_aFOB","_aOil","_aBravo"];
+_aAlpha = [(getPos _lhdAlphaLogic) select 0, (getPos _lhdAlphaLogic) select 1];
+_aFOB   = [(getPos _pierFOBLogic)  select 0, (getPos _pierFOBLogic)  select 1];
+_aOil   = [(getPos _oilLogic)       select 0, (getPos _oilLogic)       select 1];
+_aBravo = [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1];
+
 //------------------------------------------------------------------------------------
 //--- SPAWN ALL 4 ASSETS
 //------------------------------------------------------------------------------------
-private ["_lhdAlpha","_lhdAlphaParts","_lhdAlphaLogic","_lhdAlphaAirLogic",
-         "_pierObj","_pierFOBLogic",
-         "_oilDeck1","_oilDeck2","_oilPump","_oilTower","_oilPad","_oilLogic",
-         "_lhdBravo","_lhdBravoParts","_lhdBravoLogic","_lhdBravoAirLogic",
-         "_allPlatformLogics","_loc","_i","_pad","_padPos","_x"];
-
-//------------------------------------------------------------------------------------
-//--- ANCHORS — 4 offshore spots spread along the EAST coast (open sea).
-//--- Each is validated with surfaceIsWater and nudged east (up to 4 km) if it lands on
-//--- terrain, so none can spawn on a beach/island. To re-position: change these 4 pairs.
-//------------------------------------------------------------------------------------
-WFBE_NavalHVT_ToWater = {
-	private ["_p","_n"];
-	_p = +_this; _n = 0;
-	while {!(surfaceIsWater [_p select 0, _p select 1, 0]) && {_n < 20}} do { _p set [0, (_p select 0) + 200]; _n = _n + 1; };
-	[_p select 0, _p select 1]
-};
-WFBE_NavalHVT_Off = { [((_this select 0) select 0) + (_this select 1), ((_this select 0) select 1) + (_this select 2), 0] };
-
-private ["_aAlpha","_aFOB","_aOil","_aBravo"];
-_aAlpha = [14700, 12500] Call WFBE_NavalHVT_ToWater;	//--- NE sea
-_aFOB   = [14900,  9800] Call WFBE_NavalHVT_ToWater;	//--- E sea (upper)
-_aOil   = [14900,  6800] Call WFBE_NavalHVT_ToWater;	//--- E sea (mid)
-_aBravo = [14800,  4000] Call WFBE_NavalHVT_ToWater;	//--- SE sea
+private ["_lhdAlpha","_lhdAlphaParts","_lhdBravoParts",
+         "_pierObj","_oilDeck1","_oilDeck2","_oilPump","_oilTower","_oilPad",
+         "_i","_pad","_pierClasses","_pierI","_pierCls"];
 
 //---
 //--- [A] KHE SANH ALPHA (LHD) — NE
 //---
 _lhdAlphaParts = [[_aAlpha select 0, _aAlpha select 1, 0], 90] Call WFBE_NavalHVT_SpawnLHD;
-
-//--- Deck logic: LocationLogicDepot for capture + LocationLogicAirport for aircraft sell.
-_lhdAlphaLogic = (createGroup sideLogic) createUnit ["LocationLogicDepot", ([_aAlpha, 0, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_lhdAlphaLogic setPosASL ([_aAlpha, 0, 0] Call WFBE_NavalHVT_Off);
-_lhdAlphaLogic setVariable ["wfbe_is_airfield", true, true];	//--- enables airfield-sell block in server_town.sqf
-
-_lhdAlphaAirLogic = (createGroup sideLogic) createUnit ["LocationLogicAirport", ([_aAlpha, 0, 30] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_lhdAlphaAirLogic setPosASL ([_aAlpha, 0, 30] Call WFBE_NavalHVT_Off);
-_lhdAlphaAirLogic setVariable ["wfbe_airfield_side", resistance, true];
 
 //--- Heli spawn pad on the deck.
 _pad = createVehicle ["HeliHCivil", ([_aAlpha, 10, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
@@ -197,16 +160,12 @@ _pad setPosASL ([_aAlpha, 10, 0] Call WFBE_NavalHVT_Off);
 _pad enableSimulation false;
 _pad allowDamage false;
 
-[_lhdAlphaLogic, "Khe Sanh Alpha", 10, 50, "HugeTown1", WFBE_C_GUER_ID,
- [["wfbe_is_carrier_hvt", true], ["wfbe_airfield_logic_ref", _lhdAlphaAirLogic]]] Call WFBE_NavalHVT_RegisterTown;
-
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [A] Khe Sanh Alpha (LHD) spawned at %1.", _aAlpha]] Call WFBE_CO_FNC_LogContent;
 
 //---
 //--- [B] PIER / FOB
 //--- A2-safe: no _forEachIndex; use for-loop with index counter.
 //---
-private ["_pierClasses","_pierI","_pierCls","_pierObj"];
 _pierClasses = ["Land_Nav_Boathouse", "Land_Nav_Boathouse_Pier", "Land_Nav_Boathouse_PierL", "Land_Nav_Boathouse_PierR", "Land_Nav_Boathouse_PierT"];
 for "_pierI" from 0 to (count _pierClasses - 1) do {
 	_pierCls = _pierClasses select _pierI;
@@ -216,12 +175,6 @@ for "_pierI" from 0 to (count _pierClasses - 1) do {
 	_pierObj enableSimulation false;
 	_pierObj allowDamage false;
 };
-
-_pierFOBLogic = (createGroup sideLogic) createUnit ["LocationLogicDepot", ([_aFOB, 0, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_pierFOBLogic setPosASL ([_aFOB, 0, 0] Call WFBE_NavalHVT_Off);
-
-[_pierFOBLogic, "Naval FOB", 10, 50, "LargeTown1", WFBE_C_GUER_ID,
- [["wfbe_is_naval_fob", true]]] Call WFBE_NavalHVT_RegisterTown;
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [B] Naval FOB (Pier) spawned at %1.", _aFOB]] Call WFBE_CO_FNC_LogContent;
 
@@ -254,12 +207,7 @@ _oilPad setPosASL ([_aOil, 0, -5] Call WFBE_NavalHVT_Off);
 _oilPad enableSimulation false;
 _oilPad allowDamage false;
 _oilPad setVariable ["wfbe_is_scud_pad", true, true];
-
-_oilLogic = (createGroup sideLogic) createUnit ["LocationLogicDepot", ([_aOil, 0, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_oilLogic setPosASL ([_aOil, 0, 0] Call WFBE_NavalHVT_Off);
-
-[_oilLogic, "Oil Platform", 10, 50, "LargeTown1", WFBE_C_GUER_ID,
- [["wfbe_is_oil_platform_hvt", true], ["wfbe_scud_pad_ref", _oilPad]]] Call WFBE_NavalHVT_RegisterTown;
+_oilLogic setVariable ["wfbe_scud_pad_ref", _oilPad, true];
 
 //--- Register oil platform in global SCUD-platform list (validated in Support_ScudStrike.sqf).
 missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_oilLogic]];
@@ -271,21 +219,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_oilLogic]];
 //---
 _lhdBravoParts = [[_aBravo select 0, _aBravo select 1, 0], 90] Call WFBE_NavalHVT_SpawnLHD;
 
-_lhdBravoLogic = (createGroup sideLogic) createUnit ["LocationLogicDepot", ([_aBravo, 0, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_lhdBravoLogic setPosASL ([_aBravo, 0, 0] Call WFBE_NavalHVT_Off);
-_lhdBravoLogic setVariable ["wfbe_is_airfield", true, true];
-
-_lhdBravoAirLogic = (createGroup sideLogic) createUnit ["LocationLogicAirport", ([_aBravo, 0, 30] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_lhdBravoAirLogic setPosASL ([_aBravo, 0, 30] Call WFBE_NavalHVT_Off);
-_lhdBravoAirLogic setVariable ["wfbe_airfield_side", resistance, true];
-
 _pad = createVehicle ["HeliHCivil", ([_aBravo, 10, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
 _pad setPosASL ([_aBravo, 10, 0] Call WFBE_NavalHVT_Off);
 _pad enableSimulation false;
 _pad allowDamage false;
-
-[_lhdBravoLogic, "Khe Sanh Bravo", 10, 50, "HugeTown1", WFBE_C_GUER_ID,
- [["wfbe_is_carrier_hvt", true], ["wfbe_airfield_logic_ref", _lhdBravoAirLogic]]] Call WFBE_NavalHVT_RegisterTown;
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [D] Khe Sanh Bravo (LHD) spawned at %1.", _aBravo]] Call WFBE_CO_FNC_LogContent;
 
@@ -293,41 +230,6 @@ _pad allowDamage false;
 //--- STORE ALL NAVAL HVT LOGICS for server_town.sqf capture-block lookup.
 //------------------------------------------------------------------------------------
 missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _pierFOBLogic, _oilLogic, _lhdBravoLogic]];
-
-//------------------------------------------------------------------------------------
-//--- MAP MARKERS (server-side GLOBAL markers — JIP-safe). Naval towns are server-only in
-//--- towns[], so the client-side Init_Markers.sqf one-shot never marks them. Each HVT gets
-//--- a town-center Depot marker (owner-coloured) + name label; carriers also get a yellow
-//--- airfield triangle. Recoloured on capture in server_town.sqf via wfbe_naval_marker.
-//------------------------------------------------------------------------------------
-private ["_mkrI","_nLoc","_nName","_nCar","_nSid","_nClr","_nMkr","_nTri"];
-_mkrI = 0;
-{
-	_nLoc  = _x select 0;
-	_nName = _x select 1;
-	_nCar  = _x select 2;
-	_nSid  = _nLoc getVariable ["sideID", WFBE_C_GUER_ID];
-	_nClr  = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _nSid Call WFBE_CO_FNC_GetSideFromID], "ColorGreen"];
-	_nMkr  = createMarker [Format ["WFBE_NavalMkr_%1", _mkrI], getPos _nLoc];
-	_nMkr setMarkerType "Depot";
-	_nMkr setMarkerColor _nClr;
-	_nMkr setMarkerText _nName;
-	_nLoc setVariable ["wfbe_naval_marker", _nMkr, true];
-	if (_nCar) then {
-		_nTri = createMarker [Format ["WFBE_NavalAir_%1", _mkrI], getPos _nLoc];
-		_nTri setMarkerType "mil_triangle";
-		_nTri setMarkerColor "ColorYellow";
-		_nTri setMarkerSize [0.6, 0.6];
-	};
-	_mkrI = _mkrI + 1;
-} forEach [
-	[_lhdAlphaLogic, "Khe Sanh Alpha", true],
-	[_pierFOBLogic,  "Naval FOB",      false],
-	[_oilLogic,      "Oil Platform",   false],
-	[_lhdBravoLogic, "Khe Sanh Bravo", true]
-];
-
-["INITIALIZATION", "Init_NavalHVT.sqf : map markers created for 4 naval HVTs."] Call WFBE_CO_FNC_LogContent;
 
 //------------------------------------------------------------------------------------
 //--- SCUD ADDACTION on oil platform helipad.
@@ -368,7 +270,7 @@ _mkrI = 0;
 								if (_funds < _cost) exitWith {
 									[localize "STR_WF_SCUD_NO_FUNDS"] call WFBE_CL_FNC_Hint;
 								};
-																	//--- Map-click target select; the SERVER deducts funds + re-validates ownership/cooldown.
+												//--- Map-click target select; the SERVER deducts funds + re-validates ownership/cooldown.
 									[localize "STR_WF_SCUD_SELECT_TARGET"] call WFBE_CL_FNC_Hint;
 									openMap true;
 									onMapSingleClick {
