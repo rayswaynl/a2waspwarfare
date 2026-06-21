@@ -1439,3 +1439,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Planned docs route: update the AI commander audit, marker content catalog, Feature Status and PR cleanup lab so B68 is visible as branch/live evidence without treating it as merged master or release-ready.
 - Result: routed B68 into the canonical AI commander, marker, Feature Status and PR cleanup docs plus machine/coordination rows while preserving the current `origin/master@0139a346` and release-ready claims as separate. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, touched-file wiki/docs parity, Latest Batch five-row check and `git diff --check`.
+
+## 2026-06-21T20:18:55+02:00 - Codex - Victory/endgame stable-scope refinement
+
+- Rebased the victory/endgame refresh over newer commander-vote, upgrade-sync and reference-page wiki commits, then kept those upstream rows while refining only the victory/endgame branch evidence.
+- Source evidence retained: docs head `d30d23466` is source-unchanged from `a0a86da2` / `2f2132f8` for checked victory files; docs/Miksuu/perf/historical `a96fdda2` keep the older opposite-side logger block at `server_victory_threeway.sqf:23-41`; current stable `origin/master@0139a346` uses condition-side `_x` for WASPSTAT/logger at `:41-49`, so HQ/factory eliminations still log the loser; `origin/claude/b57-soak-proposals@b8a1505f` remains Chernarus-only live-support evidence.
+- Result: kept the refined [Victory/endgame atlas](Victory-And-Endgame-Atlas#current-branch-scope), Feature Status, Source Fix queue, pruning ledger and machine backlog wording without changing gameplay source.
+- Validation: final post-rebase validation is recorded in `agent-events.jsonl`.
