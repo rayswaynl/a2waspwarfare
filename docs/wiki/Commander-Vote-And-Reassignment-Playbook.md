@@ -86,8 +86,8 @@ Manual reassignment is a separate flow from the vote result, but the fixes are a
 
 1. `RequestNewCommander.sqf` already writes `wfbe_commander`.
 2. It then spawns `Server_AssignNewCommander.sqf` with `[_side, _assigned_commander]`.
-3. The helper reads `_side = _this`, so side-logic routing receives an array instead of a side.
-4. Current stable unpacks the helper side correctly, so both caller and helper can send `new-commander-assigned`.
+3. Old-shape targets read `_side = _this`, so side-logic routing receives an array instead of a side.
+4. Current stable maintained roots unpack the helper side correctly, so both caller and helper can send `new-commander-assigned`.
 
 Patch or port the DR-15 helper call shape with [Commander reassignment call shape](Commander-Reassignment-Call-Shape) on old-shape targets. Current stable, Miksuu, perf, historical release and historical AI-commander already fix helper unpacking in both maintained roots, but still need one notification owner or clients can receive duplicate commander messages.
 
@@ -100,7 +100,7 @@ Patch the UI identity edge in the same implementation branch if possible. `GUI_C
 | 1 | Decide vote semantics and write the expected outcome matrix before editing SQF. | Owner decision recorded in [Pending owner decisions](Pending-Owner-Decisions). |
 | 2 | Patch `Server_VoteForCommander.sqf` so no-commander/tie/player-candidate outcomes match the chosen rule. | Dedicated or hosted smoke for player-majority, no-commander-majority, equal-vote and player-candidate tie cases. |
 | 3 | Align `GUI_VoteMenu.sqf` preview text and leading-row logic with the server rule. | Client preview matches server broadcast after countdown. |
-| 4 | Fix `Server_AssignNewCommander.sqf` payload unpacking per DR-15. | Manual reassignment affects the intended side. |
+| 4 | Preserve or port `Server_AssignNewCommander.sqf` payload unpacking per DR-15; current stable maintained roots already use `_this select 0`, while docs branch and modded full forks still need old-shape handling. | Manual reassignment affects the intended side on every claimed target root. |
 | 5 | Choose one `new-commander-assigned` sender after the helper works. | Clients receive exactly one reassignment message. |
 | 6 | Use row value/team identity in `GUI_Commander_VoteMenu.sqf`. | Duplicate/similar leader names cannot redirect reassignment. |
 | 7 | Propagate maintained Vanilla and inspect generated diffs. | Chernarus and maintained Vanilla share the same behavior. |

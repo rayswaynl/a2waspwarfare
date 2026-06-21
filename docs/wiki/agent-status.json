@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the Patrols v2 current-stable refresh, refined victory/endgame current-stable branch scope, the Headless Client init/stat-loop mirror sync from live wiki master@e03c3bf into docs/wiki, and PR #43 / origin/claude/b57-soak-proposals@b8a1505f B68 evidence. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the commander reassignment current-stable closeout, Patrols v2 current-stable refresh, refined victory/endgame current-stable branch scope, Headless Client init/stat-loop mirror sync from live wiki master@e03c3bf into docs/wiki, and PR #43 / origin/claude/b57-soak-proposals@b8a1505f B68 evidence. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-reassignment-current-stable-closeout-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-Reassignment-Call-Shape.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and matching machine rows after current stable origin/master@0139a346 proved maintained Chernarus and Vanilla already fix DR-15 helper unpacking at Server_AssignNewCommander.sqf:4-5. Docs branch b44aaaf8 and current stable full modded Napf/Eden/Lingor forks still use _side = _this; duplicate new-commander-assigned senders, visible-name UI targeting and requester authority remain open. No gameplay source changed."
+    },
     {
       "lane": "patrols-v2-current-stable-refresh-2026-06-21",
       "owner": "Codex",

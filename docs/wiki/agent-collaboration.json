@@ -23,6 +23,30 @@
   },
   "activeClaims": [
     {
+      "lane": "commander-reassignment-current-stable-closeout-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@b44aaaf8",
+        "origin/master@0139a346",
+        "Miksuu upstream b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "historical AI-commander commit c20ce153; current origin exposes no feat/ai-commander head on 2026-06-21",
+        "current stable Chernarus and maintained Vanilla Server/Functions/Server_AssignNewCommander.sqf:4-5,10",
+        "current stable Chernarus Server/PVFunctions/RequestNewCommander.sqf:13-14",
+        "current stable Chernarus Client/GUI/GUI_Commander_VoteMenu.sqf:33,38,46,63",
+        "current stable Modded_Missions Napf/Eden/Lingor Server/Functions/Server_AssignNewCommander.sqf:3-4"
+      ],
+      "outputs": [
+        "Refreshed Commander-Reassignment-Call-Shape.md so current stable maintained roots are partial source-present instead of helper-unpatched.",
+        "Updated Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows to keep old docs-branch/modded-fork helper drift separate from current stable maintained roots.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should avoid reopening helper unpacking on current stable maintained roots; choose one new-commander-assigned sender, switch GUI_Commander_VoteMenu to row value/team identity, keep requester authority separate, and handle modded forks only after a maintenance decision.",
+      "updated": "2026-06-21T20:11:38+02:00"
+    },
+    {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
