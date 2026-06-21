@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T18:23:54+02:00",
+  "generatedAt": "2026-06-21T18:25:19+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,33 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "send-message-current-stable-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "miksuu/master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf:12",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:27",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf:26,38",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updateclient.sqf:12",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:27",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Functions/Common_SendMessage.sqf:26,38",
+        "Public-Variable-Channel-Index.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Refreshed the DR-46 SEND_MESSAGE direct compile matrix after current stable origin/master@0139a346 proved the direct receiver/helper compile route remains in both maintained roots.",
+        "Updated Feature Status and Source Fix queue so current stable is explicitly patch-ready/current-stable-unpatched and the old release evidence is historical/branch-scoped because origin currently exposes no release/* heads.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future network hardening owner should patch SEND_MESSAGE as structured localization keys/args with no network-data call compile, propagate maintained Vanilla and smoke localized artillery/ICBM/side messages plus a forged SEND_MESSAGE payload treated as data.",
+      "updated": "2026-06-21T18:25:19+02:00"
+    },
     {
       "lane": "map-boundaries-current-head-refresh",
       "owner": "Codex",

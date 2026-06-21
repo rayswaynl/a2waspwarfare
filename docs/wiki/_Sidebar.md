@@ -68,6 +68,7 @@
   - [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas)
 - Content, reference and catalogs
   - [Faction unit/vehicle roster catalog](Faction-Unit-And-Vehicle-Roster-Catalog)
+  - [Auxiliary/SF/civilian unit catalog](Auxiliary-And-Special-Forces-Unit-Catalog)
   - [Gear store loadout route catalog](Gear-Store-Loadout-Route-Catalog)
   - [Upgrade research (cross-faction)](Upgrade-Research-Cross-Faction-Reference)
   - [Gear store price and upgrade catalog](Gear-Store-Price-And-Upgrade-Catalog)
@@ -134,6 +135,7 @@
   - [Factory queue cancel & refund](Factory-Queue-Cancel-And-Refund-Action)
   - [AI commander tunable constants](AI-Commander-Tunable-Constants-Reference)
   - [Experimental feature-flag constants](Experimental-Feature-Flag-Constants-Reference)
+  - [Mission tunable constants catalog](Mission-Tunable-Constants-Catalog)
   - [Gear parsing & cargo capacity](Client-Gear-Parsing-And-Cargo-Capacity-Function-Reference)
   - [Structure dressing function](Server-Structure-Dressing-Function-Reference)
   - [Paradrop delivery functions](Server-Paradrop-Delivery-Function-Reference)
@@ -168,6 +170,7 @@
   - [AI headless and performance](AI-Headless-And-Performance)
   - [Headless client scaling and topology](Headless-Client-Scaling-And-Topology)
   - [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map)
+  - [HC delegation target selection](Headless-Client-Delegation-Target-Selection)
   - [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance)
   - [Old WarfareBE FPS comparison](Old-WarfareBE-Performance-Comparison)
   - [AI commander autonomy audit](AI-Commander-Autonomy-Audit)
@@ -208,6 +211,7 @@
   - [Skin selector and class swap](Skin-Selector-And-Class-Swap-Reference)
   - [Earplugs audio toggle](Earplugs-Audio-Toggle-Reference)
   - [Mission audio catalog](Mission-Audio-Catalog)
+  - [HQ radio knowledge-base catalog](HQ-Radio-Knowledge-Base-Conversation-Catalog)
   - [QoL trio player hints](QoL-Trio-Player-Hints-Reference)
   - [Player vehicle/travel actions](Player-Vehicle-And-Travel-Actions-Reference)
 - Tooling / release / integrations
