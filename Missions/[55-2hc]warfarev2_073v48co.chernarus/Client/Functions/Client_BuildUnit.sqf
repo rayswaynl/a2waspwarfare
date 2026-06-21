@@ -347,6 +347,10 @@ if (_isMan) then {
 		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
 		_vehicle setVariable ["wfbe_is_guer_vbied", true, true];
 
+		//--- B67 (guer-reward): the VBIED is a Car, so enable Valhalla High Climbing on it (broadcast) so the
+		//--- suicide truck can scale steep terrain to reach targets. Mirrors LowGear_Toggle.sqf's enable path.
+		_vehicle setVariable ["WFBE_HighClimbingEnabled", true, true];
+
 		//--- Local helper: add the detonate action once per local vehicle instance (dedupe via wfbe_vbied_action).
 		WFBE_CL_FNC_AddGuerVbiedAction = {
 			private ["_v"];
@@ -368,6 +372,14 @@ if (_isMan) then {
 			_u = _this select 2;
 			if (_pos == "driver" && {_u == player} && {side _u == resistance}) then {
 				_v call WFBE_CL_FNC_AddGuerVbiedAction;
+				//--- B67 (guer-reward): start the Valhalla High Climbing loop for the local driver, exactly the way
+				//--- LowGear_Toggle.sqf does (set Local_HighClimbingModeOn, spawn VALHALLA_FNC_LowGear if not running).
+				if (_v getVariable ["WFBE_HighClimbingEnabled", false]) then {
+					Local_HighClimbingModeOn = true;
+					if (!Local_HighClimbingRunning) then {
+						_v spawn VALHALLA_FNC_LowGear;
+					};
+				};
 			};
 		}];
 	};

@@ -328,6 +328,69 @@ player setVariable ["lastPosition", position player];
 
 _display displayAddEventHandler ["KeyDown", "_this call WFBE_CO_FNC_HandleAFKkeys"];
 
+//--- ============================================================================
+//--- b67 item #3 (claude-gaming 2026-06-21): VEHICLE-TINT LEGEND (top-right pop-up).
+//--- Explains the faction body TINTS set in Common_AddVehicleTexture.sqf (WEST/BLUFOR = matte black,
+//--- EAST/OPFOR = dark olive, GUER = desert tan). Those tints are CHEAP one-shot setObjectTexture
+//--- colour strings gated by WFBE_C_VEHICLE_TINTS (default 1, ON) - DECOUPLED from the expensive
+//--- #lightpoint markings (WFBE_C_VEHICLE_MARKINGS, default 0) - so the coloured hulls are ALREADY
+//--- live with zero FPS cost; this just teaches players what the colours mean. Shown ONCE on first
+//--- spawn (per session) + toggled with "]" (DIK 0x1B = 27), mirroring the raw-DIK _display KeyDown
+//--- handlers above (the "[" debug-teleport key sits right next to it). Pure client cosmetic. Enabled
+//--- only when BOTH WFBE_C_VEHICLE_TINT_LEGEND (nil-guarded in Init_CommonConstants, A/B'able) AND the
+//--- tints themselves are ON. A2-OA 1.64 safe (no isEqualType/findIf/selectRandom/pushBack/select {CODE}).
+WFBE_CL_VAR_TintLegendLayer     = 12460; //--- dedicated cut layer (distinct from 1365/12450/12451/12452/600200).
+WFBE_CL_VAR_TintLegendVisible   = false;
+WFBE_CL_VAR_TintLegendAutoToken = 0;     //--- bumped by a manual toggle so the first-spawn auto-clear can stand down.
+WFBE_CL_VAR_TintLegendEnabled   = ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINT_LEGEND", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0};
+
+WFBE_CL_FNC_ShowTintLegend = {
+	//--- _this: true = show, false = hide. cutRsc/cutText share the dedicated layer.
+	if (_this) then {
+		WFBE_CL_VAR_TintLegendLayer cutRsc ["WFBE_VehicleTintLegend", "PLAIN", 0.3];
+		WFBE_CL_VAR_TintLegendVisible = true;
+	} else {
+		WFBE_CL_VAR_TintLegendLayer cutText ["", "PLAIN", 0.3];
+		WFBE_CL_VAR_TintLegendVisible = false;
+	};
+};
+
+WFBE_CL_FNC_ToggleTintLegend = {
+	private ["_key"];
+	_key = _this select 1;
+	//--- "]" = DIK 0x1B (27). Swallow the key (return true) only when we actually handle it.
+	if (_key == 27 && WFBE_CL_VAR_TintLegendEnabled) then {
+		WFBE_CL_VAR_TintLegendAutoToken = WFBE_CL_VAR_TintLegendAutoToken + 1; //--- cancel any pending auto-clear.
+		(!WFBE_CL_VAR_TintLegendVisible) call WFBE_CL_FNC_ShowTintLegend;
+		true
+	} else {
+		false
+	};
+};
+
+if (WFBE_CL_VAR_TintLegendEnabled) then {
+	_display displayAddEventHandler ["KeyDown", "_this call WFBE_CL_FNC_ToggleTintLegend"];
+
+	//--- First-spawn auto-show (once per session). uiSleep is real-time so it still fires even if a JIP
+	//--- client's sim is briefly paused; auto-clears after a few seconds UNLESS the player toggled it in
+	//--- the meantime (token mismatch => stand down, don't fight a manual toggle).
+	[] spawn {
+		private ["_tok"];
+		waitUntil {uiSleep 1; !isNull player && {alive player}};
+		if !(missionNamespace getVariable ["WFBE_CL_VAR_TintLegendAutoShown", false]) then {
+			missionNamespace setVariable ["WFBE_CL_VAR_TintLegendAutoShown", true];
+			uiSleep 6;                              //--- let the join / BLACK-IN loading titles clear first.
+			true call WFBE_CL_FNC_ShowTintLegend;
+			_tok = WFBE_CL_VAR_TintLegendAutoToken;
+			uiSleep 15;                             //--- linger, then auto-dismiss the first-spawn pop-up.
+			if (WFBE_CL_VAR_TintLegendVisible && {_tok == WFBE_CL_VAR_TintLegendAutoToken}) then {
+				false call WFBE_CL_FNC_ShowTintLegend;
+			};
+		};
+	};
+};
+//--- ============================================================================
+
 [] execVM "Client\Module\AFKkick\monitorAFK.sqf";
 
 (vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}];

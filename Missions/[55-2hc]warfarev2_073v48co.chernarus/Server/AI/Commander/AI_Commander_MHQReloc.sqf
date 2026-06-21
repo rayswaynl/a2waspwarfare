@@ -23,7 +23,7 @@
 	A2-OA 1.64 ONLY: no isEqualType/isEqualTo/findIf/selectRandom/pushBack/worldSize.
 */
 
-private ["_side","_sideText","_logik","_enabled","_hq","_deployed","_targets","_front","_frontPos","_myID","_enemyID","_enemySideObj","_hqPos","_frontDist","_standoff","_enemyClear","_arriveDist","_deadline","_stuckSecs","_destPos","_dx","_dy","_d","_back","_eNear","_busy"];
+private ["_side","_sideText","_logik","_enabled","_hq","_deployed","_targets","_front","_frontPos","_myID","_enemyID","_enemySideObj","_guerID","_hqPos","_frontDist","_standoff","_enemyClear","_arriveDist","_deadline","_stuckSecs","_destPos","_dx","_dy","_d","_back","_eNear","_busy","_townBuffer","_ringClear","_ownTowns","_t","_tD","_i","_j","_tmp","_cand","_clear","_etPos","_etD"];
 
 _side = _this;
 _sideText = str _side;
@@ -60,6 +60,10 @@ if (typeName _frontPos != "ARRAY" || {count _frontPos < 2}) exitWith {};
 _myID         = (_side) Call WFBE_CO_FNC_GetSideID;
 _enemySideObj = if (_side == west) then {east} else {west};
 _enemyID      = (_enemySideObj) Call WFBE_CO_FNC_GetSideID;
+//--- B67: resistance/GUER side id - towns held by GUER are HOSTILE for the relocation
+//--- safety sweep too (the old west-vs-east-only enemy derivation made GUER-held towns
+//--- invisible to the clear/buffer checks below). A2-OA-safe (helper returns WFBE_C_GUER_ID).
+_guerID       = (resistance) Call WFBE_CO_FNC_GetSideID;
 
 _frontDist  = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_FRONT_DIST",   2500];
 _standoff   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STANDOFF",     800];
@@ -71,13 +75,64 @@ _stuckSecs  = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STUCK_SECS",   210
 //--- TRIGGER: only relocate once the front has advanced > FRONT_DIST from the HQ.
 if ((_hq distance _frontPos) <= _frontDist) exitWith {};
 
-//--- DESTINATION = STANDOFF metres back from the front town toward the current HQ.
-_dx = (_frontPos select 0) - (_hqPos select 0);
-_dy = (_frontPos select 1) - (_hqPos select 1);
-_d  = sqrt (_dx*_dx + _dy*_dy);
-if (_d < 1) exitWith {};
-_back = _standoff min (_d - 1);
-_destPos = [(_frontPos select 0) - (_dx / _d) * _back, (_frontPos select 1) - (_dy / _d) * _back, 0];
+//--- B67: DESTINATION = a standoff position BEHIND the nearest OWN-SIDE-HELD town to the
+//--- front (a town whose sideID == this commander's side id), NOT a raw geometric point on the
+//--- front-to-HQ line (that point could fall inside an enemy/GUER town's activation ring).
+//--- Build own-held towns, then walk them nearest-to-front first; for each, place a standoff
+//--- point STANDOFF metres back from the town toward the current HQ (behind the town) and
+//--- validate it sits clear of EVERY enemy-held AND resistance-held town's 600m activation ring
+//--- by an extra WFBE_C_AICOM_MHQ_TOWN_BUFFER of margin. First town that yields a buffer-clear
+//--- standoff wins. If none does, ABORT this interval (never deploy into a ring).
+_townBuffer = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_TOWN_BUFFER", 1000];
+_ringClear  = 600 + _townBuffer;   //--- B67: required clearance from every hostile town centre.
+
+//--- Collect own-side-held towns (explicit forEach; no findIf/selectRandom - A2-OA-safe).
+_ownTowns = [];
+{ if ((_x getVariable "sideID") == _myID) then {_ownTowns set [count _ownTowns, _x]} } forEach towns;
+if (count _ownTowns == 0) exitWith {};   //--- no friendly town to base behind - nothing to do.
+
+//--- Insertion-sort own towns by distance to the front (nearest first). Plain index loops -
+//--- A2-OA-safe (no sort-by-CODE which is A3-only).
+for "_i" from 1 to ((count _ownTowns) - 1) do {
+	_cand = _ownTowns select _i;
+	_tD   = _cand distance _frontPos;
+	_j    = _i - 1;
+	while {_j >= 0 && {((_ownTowns select _j) distance _frontPos) > _tD}} do {
+		_ownTowns set [_j + 1, (_ownTowns select _j)];
+		_j = _j - 1;
+	};
+	_ownTowns set [_j + 1, _cand];
+};
+
+//--- Walk friendly towns nearest-to-front first; first buffer-clear standoff wins.
+_destPos = [];
+{
+	_t = _x;
+	//--- Standoff = STANDOFF metres from this town toward the current HQ (behind the town,
+	//--- away from the front). If HQ and town coincide, skip - no usable direction.
+	_dx = (_hqPos select 0) - (getPos _t select 0);
+	_dy = (_hqPos select 1) - (getPos _t select 1);
+	_d  = sqrt (_dx*_dx + _dy*_dy);
+	if (_d >= 1 && {count _destPos == 0}) then {
+		_back = _standoff min _d;
+		_cand = [(getPos _t select 0) + (_dx / _d) * _back, (getPos _t select 1) + (_dy / _d) * _back, 0];
+		//--- Validate: clear of EVERY enemy-held AND resistance-held town by _ringClear.
+		_clear = true;
+		{
+			if (((_x getVariable "sideID") == _enemyID) || {(_x getVariable "sideID") == _guerID}) then {
+				_etPos = getPos _x;
+				_etD   = sqrt (((_cand select 0) - (_etPos select 0))^2 + ((_cand select 1) - (_etPos select 1))^2);
+				if (_etD < _ringClear) then {_clear = false};
+			};
+		} forEach towns;
+		if (_clear && {!surfaceIsWater _cand}) then {_destPos = _cand};
+	};
+} forEach _ownTowns;
+
+//--- No friendly town yields a buffer-clear standoff -> ABORT (never deploy into a ring).
+if (count _destPos == 0) exitWith {
+	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|no-buffer-clear-standoff|ringClear=" + str (round _ringClear));
+};
 
 //--- RAIL 2 (ENEMY STANDOFF) + no-water destination.
 if (surfaceIsWater _destPos) exitWith {};

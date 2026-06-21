@@ -47,6 +47,7 @@ if (isNil '_sideJoined') exitWith {["WARNING", Format ["Server_PlayerConnected.s
 //--- every ~20s as a safety net. (_id = this client's network id, valid for publicVariableClient.)
 if (!isNil "WFBE_ACTIVE_AICOM_TEAMS") then {_id publicVariableClient "WFBE_ACTIVE_AICOM_TEAMS"};
 if (!isNil "WFBE_ACTIVE_PATROLS") then {_id publicVariableClient "WFBE_ACTIVE_PATROLS"};
+if (!isNil "WFBE_ACTIVE_GUER_AIR") then {_id publicVariableClient "WFBE_ACTIVE_GUER_AIR"}; //--- B67: GUER air-defense marker feed JIP catch-up.
 diag_log format ["[WFBE][B63 JIP-MARK] pushed marker feeds to joiner %1 (aicom=%2, patrols=%3)", _name, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
 
 //--- We attempt to get the player informations in case that he joined before.

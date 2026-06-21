@@ -41,6 +41,11 @@ _m = _m + ['1Rnd_SMOKEGREEN_GP25'];
 _m = _m + ['1Rnd_SMOKEYELLOW_GP25'];
 _m = _m + ['MineE'];
 _m = _m + ['PipeBomb'];
+//--- B67 (Ray 2026-06-21) item #2: GUER IED ladder in the gear-menu magazine list (priced in Gear_GUE.sqf at _z 0).
+_m = _m + ['BAF_ied_v1'];
+_m = _m + ['BAF_ied_v2'];
+_m = _m + ['BAF_ied_v3'];
+_m = _m + ['BAF_ied_v4'];
 
 _m = [_m, _side] Call Compile preprocessFile "Common\Config\Config_SortMagazines.sqf";
 

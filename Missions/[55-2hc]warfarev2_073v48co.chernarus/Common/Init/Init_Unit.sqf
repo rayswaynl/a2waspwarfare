@@ -136,6 +136,26 @@ if !(_isMan) then { //--- Vehicle Specific.
 	};
 };
 
+//--- B67 (Ray 2026-06-21) item #3: attach the IED anti-farm Fired EH on the LOCAL PLAYER man unit at INITIAL
+//--- spawn / JIP first life. The death-respawn path adds it via Client_OnRespawnHandler.sqf, but that is NOT
+//--- called on first life, so without this the first-life IED kills paid the full bounty (0.5) instead of the
+//--- 30% IED coef. Idempotent via wfbe_ied_eh_added (the respawn copy uses the same flag); gated on GUER playable
+//--- + resistance. Stamps wfbe_ied_recent (broadcast) on a BAF_ied detonation so RequestOnUnitKilled.sqf pays
+//--- only WFBE_C_GUER_IED_KILL_COEF. Mirrors the Client_OnRespawnHandler.sqf block exactly.
+if (_isMan && {isPlayer _unit} && {local _unit} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {side _unit == resistance}) then {
+	if !(_unit getVariable ["wfbe_ied_eh_added", false]) then {
+		_unit setVariable ["wfbe_ied_eh_added", true];
+		_unit addEventHandler ["Fired", {
+			private ["_shooter","_mag"];
+			_shooter = _this select 0;
+			_mag = _this select 5;
+			if (!isNil "_mag" && {typeName _mag == "STRING"} && {(_mag find "BAF_ied") == 0}) then {
+				_shooter setVariable ["wfbe_ied_recent", time, true];
+			};
+		}];
+	};
+};
+
 // --- 				[Side specific initialization] (Run on the desired client team).
 _perfSideMatch = sideID == _sideID;
 if !(isNil "PerformanceAudit_Record") then {

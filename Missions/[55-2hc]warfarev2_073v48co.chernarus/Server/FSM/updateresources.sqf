@@ -91,7 +91,7 @@ while {!gameOver} do {
 					};
 				} forEach (_logik getVariable "wfbe_teams");
 
-				if (isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) && _commander_enabled) then {
+				if ((isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
 					[_x, round(_income * _pcMult)] Call ChangeAICommanderFunds;
 				};
 			};
@@ -99,7 +99,7 @@ while {!gameOver} do {
 			//--- V0.4.1: synthetic MONEY drip for the AI commander - never synthetic supply.
 			//--- Flows even with zero town income so PvE on a near-empty server stays fun
 			//--- (the AI keeps fielding armies); supply remains the real shared war resource.
-			if (isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) && _commander_enabled) then {
+			if ((isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
 				[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds;
 			};
 
@@ -112,7 +112,7 @@ while {!gameOver} do {
 		//--- drained to $0, it could no longer buy units, and the war stalled (towns stopped
 		//--- changing hands all night; AI stuck ~8 towns). Funds are a SEPARATE currency from
 		//--- supply, so top them up here whenever the cap suppressed them. Never synthesises supply.
-		if (_supply >= _supply_max_limit && {isNull(_x Call WFBE_CO_FNC_GetCommanderTeam)} && {_commander_enabled}) then {
+		if (_supply >= _supply_max_limit && {isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}} && {_commander_enabled}) then {
 			_income = if (_is != 3) then {_supply} else {round(_supply * _incomeCoef)};
 			if (_is == 2) then {_income = round(_income / 2)};
 			if (_income > 0) then {

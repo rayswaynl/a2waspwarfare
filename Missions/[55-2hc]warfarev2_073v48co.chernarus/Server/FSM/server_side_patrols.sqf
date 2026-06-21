@@ -85,6 +85,16 @@ while {!WFBE_GameOver} do {
 		if (!isNull _logik) then {
 			_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 			_lvl = if (count _upgrades > WFBE_UP_PATROLS) then {_upgrades select WFBE_UP_PATROLS} else {0};
+			//--- B67 (Ray 2026-06-21): GUER players should SEE GUER patrols on the map. Root cause: GUER (resistance,
+			//--- = WFBE_DEFENDER) has NO upgrade/HQ system, so _lvl was ALWAYS 0 here -> the dispatch below never ran
+			//--- for GUER -> WFBE_ACTIVE_PATROLS never held a resistance entry -> updatepatrolmarkers.sqf (which already
+			//--- supports resistance: friendly gate on the stable WFBE_Client_SideID, JIP-durable feed) had nothing to
+			//--- paint. Give the defender side a fixed patrol level so the existing, already-tested dispatch runs. The
+			//--- effective concurrent cap is still min(_maxSide, _lvl) (see L83/L91), so this stays FPS-light. Gated on
+			//--- GUER playable; WFBE_C_GUER_PATROLS_LEVEL=0 fully reverts. (Tier is force-set HEAVY/MEDIUM for GUER at L106.)
+			if (_side == WFBE_DEFENDER && {_lvl <= 0} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+				_lvl = missionNamespace getVariable ["WFBE_C_GUER_PATROLS_LEVEL", 2];
+			};
 			if (_lvl > 0) then {
 				_active = _logik getVariable ["wfbe_side_patrols", 0];
 				_last = _logik getVariable ["wfbe_side_patrol_last", -(_delay)];

@@ -132,7 +132,7 @@ while {!gameOver} do {
 		if (_state != _prevState) then {
 			_logik setVariable ["wfbe_aicom_running", !_humanCmd];
 			if (_state == "full")   then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ACTIVE (full command).", str _side]] Call WFBE_CO_FNC_AICOMLog};
-			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander, executor only).", str _side]] Call WFBE_CO_FNC_AICOMLog};
+			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander; executor + town auto-assign + B67 team-found/refill quartermaster, base/upgrade OFF).", str _side]] Call WFBE_CO_FNC_AICOMLog};
 			_prevState = _state;
 		};
 
@@ -142,6 +142,26 @@ while {!gameOver} do {
 		//--- Town auto-assign: worker self-gates per team by delegation.
 		if (time - _ltTown > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOWN_INTERVAL")) then {
 			(_side) Call WFBE_SE_FNC_AI_Com_AssignTowns; _ltTown = time;
+		};
+
+		//--- B67 HYBRID-REFILL (full-send hybrid commander, item #5): while a HUMAN commands this side
+		//--- (assist state), the AI stays a quartermaster - it keeps FOUNDING and REFILLING its own teams
+		//--- so the side is never starved of AI bodies, but it does NOT build the base or research upgrades
+		//--- (the human owns those - AI_Com_Base / AI_Com_Upgrade stay OFF here). Gated separately from the
+		//--- full-economy _canBuild block on its own WFBE_C_AI_COMMANDER_HYBRID_REFILL switch (>0). Funds come
+		//--- from the SEPARATE AI-commander treasury (Teams/Produce charge GetAICommanderFunds), NOT the side
+		//--- funds the human spends, so there is no contention with the human's purchases. Reuses the same
+		//--- _ltTeams/_ltProd throttles as the full path (they are never both active in the same tick: this
+		//--- block runs only when _humanCmd, the _canBuild block only when !_humanCmd via _noHumanSince).
+		if (_humanCmd && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) then {
+			//--- Found AI combat teams up to the side target (self-gates on funds/HC/group-cap inside the worker).
+			if (time - _ltTeams > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_INTERVAL", 90])) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_Teams; _ltTeams = time;
+			};
+			//--- Refill under-strength AI teams at the factories (self-gates per team + AI-cap inside the worker).
+			if (time - _ltProd > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL")) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_Produce; _ltProd = time;
+			};
 		};
 
 		//--- Economy/build: full command AND only after the build-grace window (#3a, Ray 2026-06-15).

@@ -348,6 +348,7 @@ private ["_b66_egressPass","_b66_relax"];
 _b66_relax = 0;
 _b66_egressPass = 0;
 { if (_x call _egressOK) then {_b66_egressPass = _b66_egressPass + 1} } forEach _locationLogics;
+diag_log format ["## B67SPAWN: egress pool measure -> %1 of %2 candidates pass (relax=%3).", _b66_egressPass, count _locationLogics, _b66_relax];
 ["INITIALIZATION", Format ["Init_Server.sqf: B66 egress pool measure -> %1 of %2 start candidates pass the egress gate (minRoads relax=%3).", _b66_egressPass, count _locationLogics, _b66_relax]] Call WFBE_CO_FNC_LogContent;
 while {_b66_egressPass < 2 && {_b66_relax < 2}} do {
 	_b66_relax = _b66_relax + 1;
@@ -401,6 +402,20 @@ switch (missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE") do {
 	};
 };
 
+//--- B67 (Ray 2026-06-21) PHANTOM-GUER-ORIGIN FIX: in MODE 2 (Random, the live param default) _startG is
+//--- never assigned a real position (GUER is base-less; it is only set to _spawn_central in MODE 0/1), so it
+//--- stays [0,0,0]. The West/East placement checks below then require EVERY candidate to be >startingDistance
+//--- (7500m) from the MAP CORNER [0,0,0] = a whole SW quadrant sterilised, collapsing the viable pool to ~1-2
+//--- logics = "always the same 2 spots" (and frequent force-fall to the fixed wfbe_default markers). This is
+//--- the real cause behind the 3 prior blind fixes; it WORSENED in B66 because GUER-playable made three-way
+//--- active. _guerReal gates the _startG distance check so it only applies when GUER actually has a base.
+//--- A2-OA-safe: no isEqualTo; explicit origin test; lazy || {CODE} short-circuit.
+private ["_guerReal"];
+_guerReal = false;
+if (typeName _startG == "OBJECT") then { _guerReal = !(isNull _startG) };
+if (typeName _startG == "ARRAY" && {count _startG >= 2}) then { _guerReal = !(((_startG select 0) == 0) && {(_startG select 1) == 0}) };
+diag_log format ["## B67SPAWN: mode=%1 threeway=%2 present[W,E,G]=[%3,%4,%5] minDist=%6 candidates=%7 guerReal=%8", missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE", WFBE_ISTHREEWAY, _present_west, _present_east, _present_res, _minDist, _total, _guerReal];
+
 if (_use_random) then {
 	//--- B57 START-VARIETY FIX (Ray 2026-06-20): on a dedicated server each mission is a FRESH process, so A2's
 	//--- random() starts from the SAME deterministic state every match -> the "Random" start was always identical
@@ -414,26 +429,47 @@ if (_use_random) then {
 	["INITIALIZATION", Format ["Init_Server.sqf: B57 start-RNG advanced %1 draws (match #%2) for start variety.", (_matchN % 100) + 1, _matchN]] Call WFBE_CO_FNC_LogContent;
 
 	while {true} do {
-		if (!_setWest && !_setEast && !_setGuer) exitWith {["INITIALIZATION", "Init_Server.sqf : All sides were placed [Random]."] Call WFBE_CO_FNC_LogContent};
+		if (!_setWest && !_setEast && !_setGuer) exitWith {diag_log format ["## B67SPAWN: all sides placed [random] after %1 attempts.", _i]; ["INITIALIZATION", "Init_Server.sqf : All sides were placed [Random]."] Call WFBE_CO_FNC_LogContent};
 
 		//--- Determine west starting location if necessary.
 		if (_setWest) then {
 			_rPosW = _locationLogics select floor(random _total);
 			//--- Egress-quality gate (EAST-EGRESS fix): require distance spacing AND a usable egress road
 			//--- network clear of the map edges. Symmetric with east. Fallback below still guarantees placement.
-			if (_rPosW distance _startE > _minDist && _rPosW distance _startG > _minDist && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
+			if (_rPosW distance _startE > _minDist && {!_guerReal || {_rPosW distance _startG > _minDist}} && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
 		};
 
 		// --- Determine west starting location if necessary.
 		if (_setEast) then {
 			_rPosE = _locationLogics select floor(random _total);
-			if (_rPosE distance _startW > _minDist && _rPosE distance _startG > _minDist && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
+			if (_rPosE distance _startW > _minDist && {!_guerReal || {_rPosE distance _startG > _minDist}} && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
 		};
 
 		_i = _i + 1;
 
 		if (_i >= _maxAttempts) exitWith {
-			//--- Get the default locations.
+			//--- B67 (Ray 2026-06-21) NON-DEGENERATE FORCE-FALL: the legacy fallback picks the two FIXED
+			//--- wfbe_default markers (id297/id300) = the exact "same 2 spots" we are fixing, so an unlucky
+			//--- 2000-attempt seed could still reproduce the bug. First try to draw a spaced, egress-OK pair
+			//--- from the live filtered pool so even a force-fall varies match-to-match; the fixed wfbe_default
+			//--- markers stay the last resort. A2-OA-safe (explicit loops, isNull guards, no A3 commands).
+			private ["_ffPool","_ffW","_ffE"];
+			_ffPool = [];
+			{ if (_x call _egressOK) then { _ffPool set [count _ffPool, _x] } } forEach _locationLogics;
+			if (count _ffPool < 2) then { _ffPool = +_locationLogics }; //--- never operate on an empty pool
+			_ffW = objNull;
+			_ffE = objNull;
+			if (count _ffPool > 0) then {
+				_ffW = _ffPool select floor(random (count _ffPool));
+				_ffPool = _ffPool - [_ffW];
+			};
+			//--- partner spaced >_minDist from _ffW; accept any remaining if none is spaced.
+			{
+				if (isNull _ffE && {!(isNull _ffW)} && {_x distance _ffW > _minDist}) then { _ffE = _x };
+			} forEach _ffPool;
+			if (isNull _ffE && {count _ffPool > 0}) then { _ffE = _ffPool select floor(random (count _ffPool)) };
+
+			//--- Get the default locations (legacy last-resort).
 			Private ["_eastDefault", "_westDefault"];
 			_eastDefault = objNull;
 			_westDefault = objNull;
@@ -446,6 +482,10 @@ if (_use_random) then {
 					};
 				};
 			} forEach startingLocations;
+
+			//--- B67: prefer the varied pool draw over the fixed wfbe_default markers when available.
+			if (!(isNull _ffW)) then { _westDefault = _ffW };
+			if (!(isNull _ffE)) then { _eastDefault = _ffE };
 
 			// --- Ensure that everything is set, otherwise we randomly set the spawn.
 			if (isNull _eastDefault || isNull _westDefault) then {
@@ -460,6 +500,7 @@ if (_use_random) then {
 			if (_present_east && !_skip_e) then {_startE = _eastDefault};
 			if (_present_west && !_skip_w) then {_startW = _westDefault};
 
+			diag_log format ["## B67SPAWN: FORCE-FALL after %1 attempts; varied-pool used W=%2 E=%3 (fixed wfbe_default avoided when pool usable).", _i, !(isNull _ffW), !(isNull _ffE)];
 			["INITIALIZATION", "Init_Server.sqf : All sides were placed by force after that the attempts limit was reached."] Call WFBE_CO_FNC_LogContent;
 		};
 	};
@@ -478,6 +519,7 @@ _keyE = _startE call WFBE_FNC_B66_StartKey;
 if (_keyW != "") then { profileNamespace setVariable ["WFBE_LAST_START_W", _keyW] };
 if (_keyE != "") then { profileNamespace setVariable ["WFBE_LAST_START_E", _keyE] };
 saveProfileNamespace;
+diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; should vary match-to-match).", _keyW, _keyE];
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Starting location mode is on [%1].",missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE"]] Call WFBE_CO_FNC_LogContent;
 

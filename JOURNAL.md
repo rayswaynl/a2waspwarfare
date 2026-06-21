@@ -1,6 +1,159 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-06-20 — JOIN SAGA: definitive root causes + fixes (B54/B56) [INCIDENT / POSTMORTEM — CORRECTS THE B49 ENTRY BELOW]
+
+**READ THIS FIRST — it supersedes the 2026-06-19 B49 entry below.** The 2026-06-19 postmortem credited
+a "45s fade watchdog" (B49) with fixing the join. **It did not.** That watchdog SILENTLY FAILED, and the
+all-day black-screen-on-join was actually a **STACK of four distinct bugs**, each of which had to be peeled
+off in order. The de-slot (#1 below) was necessary but not sufficient; the build kept failing the join
+even after it. Here is the full, corrected record.
+
+### The bug stack (fixed in order)
+
+1. **Null-player "shell" slots in `mission.sqm` (the trap the B49 entry found).** The GUER 27→14 de-slot
+   left 26 dead slots (13 WEST + 13 EAST) — `deleteVehicle this` leftovers — still listed in the
+   `LocationLogicOwnerWest` / `LocationLogicOwnerEast` (ids 255/256) `synchronizations[]` rosters. In
+   Warfare the units synced to the Owner logic *are* the side's playable roster, so the lobby kept offering
+   all 27 slots/side. A JIP client that landed on a shell slot ran `deleteVehicle this` → **`player == objNull`**
+   → stuck. **Fix:** de-slot them (drop the 26 ids from the two Owner-logic `synchronizations[]` lists and
+   clear the shells' own back-reference sync). NECESSARY but NOT SUFFICIENT — the join still failed after this.
+
+2. **JIP network DELIVERY stall — `basic.cfg` `MaxSizeGuaranteed`.** `MaxSizeGuaranteed=1024` fragmented
+   guaranteed JIP messages above the MTU → the join state never landed; the server reported **199,511
+   "pending" messages**. **Fix:** lower `MaxSizeGuaranteed` to **512** so guaranteed JIP messages fit a
+   single datagram. CRITICAL: `basic.cfg` is **box-only and unversioned** — it lives on the server, not in
+   the repo. *This is why every git rollback "never helped":* the network-delivery half of the failure was
+   not in source control and no commit could touch it.
+
+3. **The `sleep`-vs-`uiSleep` trap (why the B49/B52/B53 watchdogs silently failed).** The B49 "45s fade
+   watchdog" and the B52/B53 fade-clear retries all gated on `sleep` / `waitUntil` / mission-`time`. **All
+   three are PAUSED while a client sits on the loading screen** (the sim clock does not advance for a client
+   still receiving the mission), so the watchdog's gate never opened and the screen-clear **never ran — with
+   no error, hence "silently failed."** The B49 entry below credited a fix that physically could not execute
+   on the stuck client. **Fix (B54):** clear the black fade layer **12452** with an **ungated `uiSleep`**
+   loop — `uiSleep` runs on real wall-clock time and ticks even while the sim is paused. Necessary, still
+   not sufficient on its own.
+
+4. **THE definitive cause — un-timed `waitUntil` on JIP-synced team data in client bootstrap (B56).** Found
+   only by reading the **joining player's CLIENT RPT** (not the server RPT). `initJIPCompatible.sqf` client-init
+   Part II ran, for **every** side in `WFBE_PRESENTSIDES`, an **un-timed**
+   `waitUntil {!isNil {_logik getVariable "wfbe_teams"}}` **BEFORE** `execVM "Client\Init\Init_Client.sqf"`
+   (which holds the fade-clear). With GUER playable, the harass-only resistance side's logic **never resolves
+   `wfbe_teams` on a JIP client**: `Init_Server` registers teams only for `[east, west]`; GUER is a separate
+   gated block keyed on `WFBE_L_GUE`, and the rest of the codebase already excludes resistance everywhere via
+   the `WFBE_PRESENTSIDES - [resistance]` idiom. So once GUER was a present side, **every JIP joiner blocked
+   on that `waitUntil` forever** → `Init_Client.sqf` (and its fade-clear) **never ran** → permanent black.
+   This is why #1–#3 each looked like progress but the join still died. **Fix (B56):** bound those waits with
+   `uiSleep`-counter timeouts so client init **always** reaches `Init_Client` even if a side's teams never
+   resolve. In `Missions\[55-2hc]warfarev2_073v48co.chernarus\initJIPCompatible.sqf` (~lines 265–287):
+   - `while {(isNil "WFBE_PRESENTSIDES") && (_w < 80)} do { uiSleep 0.25; _w = _w + 1; };` (≤20s)
+   - per-side `while {(isNil {_logik getVariable "wfbe_teams"}) && (_ws < 120)} do { uiSleep 0.25; _ws = _ws + 1; };` (≤30s)
+   - falls through to `execVM "Client\Init\Init_Client.sqf";` unconditionally, with a `[WFBE][B56 JIP-FIX]`
+     diag_log if `WFBE_PRESENTSIDES` was never set in time.
+
+### Delivery
+Shipped as a **fresh-named single `.pbo`** — both a cache-bust (returning players re-download cleanly instead
+of reusing a stale local copy) and a clean transfer to the box.
+
+### Lessons (the expensive ones)
+- **Server boot-smoke is structurally BLIND to the JIP client path.** HCs are box-local with no real network
+  hop, so they don't exercise guaranteed-message fragmentation or the client-side `waitUntil`. The server RPT
+  looked healthy the whole time. **Only the joining player's CLIENT RPT revealed bug #4.** Always pull the
+  failing client's RPT for a join failure — the server's is not enough.
+- **A2 LESSON (permanent-black landmine):** *any* un-timed `waitUntil` on JIP-synced data in the client
+  bootstrap is a permanent-black trap. **Bound it with a `uiSleep` counter.** `sleep` / `waitUntil` /
+  mission-`time` are **paused on the loading screen**; only `uiSleep` (real wall-clock) ticks while the sim
+  is paused — so any "rescue/watchdog" timer in the client bootstrap MUST use `uiSleep`, never `sleep`/`time`.
+- **Part of the failure lived OUTSIDE git** (`basic.cfg`, box-only). When git rollbacks "do nothing,"
+  suspect unversioned box-side config, not just stale source.
+- The 2026-06-19 entry's lesson "roll FORWARD to the fix" was directionally right, but the specific fix it
+  named (B49 watchdog) was a no-op on the stuck client. The real fixes were B54 (`uiSleep` fade-clear) and
+  **B56** (bounded client-bootstrap waits) plus the box-side `basic.cfg` change.
+
+Touched/relevant files: `Missions\[55-2hc]warfarev2_073v48co.chernarus\initJIPCompatible.sqf` (B56 bounded
+waits, ~265–287), `...\Client\Init\Init_Client.sqf` + the 12452 layer (B54 `uiSleep` fade-clear),
+`...\mission.sqm` (#1 de-slot of the 26 shell slots), and the **box-only** `basic.cfg` (`MaxSizeGuaranteed
+1024→512`, not in repo).
+
+---
+
+## 2026-06-20 — B57 — AICOM massive update [WORKING STATE / DEPLOYED]
+
+**Deployed as `[55-2hc]warfarev2_073v48co_b57.chernarus` (Chernarus).** Boot-smoke clean; runtime-confirmed:
+founding-pad logs *"B57 padded infantry team to floor (8 units)"*, **0 runtime errors**, **FPS 47 @ AI=84**.
+Server-side only; A2-OA-1.64-safe throughout (no `pushBack`/`isEqualType`/`isEqualTo`; `+_template` copies,
+`getDir`, `typeName ==`). Towns kept HARD by design — the AI overcomes them via **bigger + more concentrated
+teams**, not softened garrison/capture rates.
+
+### Centrepiece: LARGER AI-commander groups (the "thin team" fix)
+- **Root cause.** Live teams are HC-founded at raw template size (3–6) and **never refilled**:
+  `AI_Commander_Produce.sqf` (~line 63) skips `wfbe_aicom_hc` teams — which are **100% of live teams**
+  (`CMDRSTAT srvTeams=0`). So the `WFBE_C_AICOM_TEAM_SIZE_MIN=8` floor and the deficit-fill logic inside
+  Produce are on a **DEAD path** (they only fire for server-local teams, of which there are none in this build).
+- **Fix.** Pad infantry/mixed templates up to the floor (8–12) **AT FOUNDING**, in
+  `AI_Commander_Teams.sqf` (~lines 279–306, right after the template pick): find the team's `"Man"` class,
+  `_template = +_template` (copy so the shared template isn't mutated), then append that class until
+  `count _template >= WFBE_C_AICOM_TEAM_SIZE_MIN`. **Skips MBT and attack-heli templates** (the vehicle is the
+  punch; no infantry floor). Logs `B57 padded infantry team to floor (N units)`.
+
+### Constants (`Common\Init\Init_CommonConstants.sqf`)
+- `WFBE_C_AICOM_TEAMS_PC_LOW` **5 → 10** (line ~139) — max HQ teams/side at low pop; pairs with the
+  founding-pad so ~10 teams found at 8–12 each. ~10×8=80/side, under `TOTAL_AI_MAX` 130 (watch server FPS).
+- `WFBE_C_AICOM_CONCENTRATION` **4 → 6** (line ~198) — more teams massed on the primary spearhead.
+- `WFBE_C_AICOM_ASSAULT_REACH_FOOT` **3500 → 3000** (line ~335) — keeps thin foot teams on adjacent reachable
+  towns; cuts long death-marches, tighter contiguous front.
+- `WFBE_C_ECONOMY_SUPPLY_INCOME_MULT = 0.35` (line ~364) — throttles long-term town SUPPLY income (buildings/
+  upgrades pace). Applied at `Server\FSM\updateresources.sqf` line ~76 (only when `_currency_system == 0`).
+  **Cash/funds and the starting-supply seed are UNCHANGED** (Ray's split: cash = units, supply = buildings+upgrades).
+- (Note: the inline rationale comment on `TEAMS_PC_LOW` references "CONCENTRATION=4" in its prose — stale
+  comment text; the **active** value is 6.)
+
+### Adopted from `feat/aicom-fleet-improvements` (commit `cc5090be`), graded for legacy-fit + A2-safe
+- **Retreat-and-Reform** — `AI_Commander_Produce.sqf`.
+- **Last-Stand + HQ-strike → 8-towns gate + persisted `wfbe_aicom_strat_mode`** — `AI_Commander_Strategy.sqf`.
+  **DELETED** the branch's call to the non-existent `WFBE_CO_FNC_RadioMessage` (would have errored on legacy).
+- **HC cold-start retry** — `Server_HandleSpecial`.
+- **Town-defender skill spread** — `Common_CreateTownUnits`.
+- **Snappier team loop** — `Common_RunCommanderTeam`: arrival = capture-range; poll **20s → 8s**.
+- **Dead-patrol-marker scrub** — `server_side_patrols`.
+- **`[AICOM BOOT]` / `[BRIEF]` telemetry** — `AI_Commander.sqf`.
+
+### Deliberately SKIPPED from that branch (would regress legacy)
+- Its `initJIPCompatible` + `Init_Towns` (carry the `sleep`-trap — see the join saga above; legacy already
+  has the `uiSleep`-bounded B56 version).
+- `Client_HandlePVF` / `Server_HandlePVF` (deployed already has the CODE-guarded version).
+- `Init_CommonConstants` color change (would clobber the GUER 3-branch colors).
+
+### Other B57 changes
+- **Player map-marker direction fix** — `Client\FSM\updateteamsmarkers.sqf` (~line 208): the team marker used
+  the **velocity vector** (direction of *travel*), so the arrow pointed wrong when a unit strafed/slid. Now
+  `_dir = getDir _leaderVehicle` (`vehicle _leader`), correct on foot **and** mounted; matches the patrol/AICOM
+  arrow loops. A2-OA-safe.
+- **Lobby slot reorder** — grouped by **real role** per side. Classnames are misleading (`*_TL`/`*_CO` are
+  Engineers/Support per the slot *description*, not team-leaders/commanders). New order:
+  **Medic → Engineer → Support → Rifleman → Sniper**. Verified a **pure permutation** (ids, syncs, items,
+  braces all unchanged); the HC-parking CIV slots stay pinned.
+- **HQ start-variety** — `WFBE_C_BASE_STARTING_MODE` is already `2` (random) (line ~287), but A2's `random`
+  is **deterministic on a fresh dedicated-server process** → the same start every match. Fixed with a
+  per-match RNG perturbation in `Init_Server` (inside the `_use_random` block), seeded by a
+  `profileNamespace` counter so each match seeds differently.
+
+### Touched files
+`Server\AI\Commander\AI_Commander_Teams.sqf` (founding-pad), `...\AI_Commander_Produce.sqf` (Retreat-and-Reform),
+`...\AI_Commander_Strategy.sqf` (Last-Stand / HQ-strike / strat_mode), `...\AI_Commander.sqf` (telemetry),
+`Common\Init\Init_CommonConstants.sqf` (constants), `Server\FSM\updateresources.sqf` (supply mult),
+`Client\FSM\updateteamsmarkers.sqf` (marker dir), `Server\Init\Init_Server.sqf` (start-variety RNG),
+`Server_HandleSpecial` / `Common_CreateTownUnits` / `Common_RunCommanderTeam` / `server_side_patrols`
+(adopted helpers), `mission.sqm` (slot reorder).
+
+---
+
 ## 2026-06-19 — Join failure ("Receiving mission") — root cause + fixes [INCIDENT / POSTMORTEM]
+> **SUPERSEDED — see the 2026-06-20 "JOIN SAGA" entry above.** This entry's central claim (that the B49
+> "45s fade watchdog" fixed the join) is WRONG: that watchdog gated on `sleep`/`time`, which are paused on
+> the loading screen, so it silently never ran. The de-slot below was necessary but not sufficient; the
+> definitive fixes were B54 (`uiSleep` fade-clear), B56 (bounded client-bootstrap `waitUntil`s), and a
+> box-only `basic.cfg` `MaxSizeGuaranteed` 1024→512. Kept verbatim below for the historical record.
 
 **SYMPTOM.** Multiple players could not join the live Chernarus server: clients hung on
 "Receiving mission" / a permanent black screen and never finished loading. **Not load-related** —

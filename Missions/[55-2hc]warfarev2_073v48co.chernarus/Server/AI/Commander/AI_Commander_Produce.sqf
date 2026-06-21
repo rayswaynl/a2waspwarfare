@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose"];
 
 _side = _this;
 _sideText = str _side;
@@ -87,13 +87,60 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 			//--- instead of parking it forever as a low-strength tracked remnant (the bulk of the base pile).
 			_homeR = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_HOME_RANGE", 800];
 			if (_aliveNow < 2 && {(_ldr distance _hqP) > _homeR}) then {
-				_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
-				_retreatOrder = [_retreatSeq, "DEFENSE", getPosATL _hqP];
-				_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
-				_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
-				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-and-reform ordered (alive=%3, dist=%4).", _sideText, _team, _aliveNow, (_ldr distance _hqP)]] Call WFBE_CO_FNC_AICOMLog;
-				_canProduce = false;
+				//--- B67 RETREAT-CULL (retreat-thrash fix): a lone survivor far from HQ re-fires this
+				//--- retreat-and-reform order every produce cycle and never resolves (live: team O 1-2-F
+				//--- alive=1 dist=5566m looping forever - it can't path home and Produce can't refill it in
+				//--- the field). Add a per-team failure budget: count re-issues + check distance progress.
+				//--- After WFBE_C_AICOM_RETREAT_MAX_TRIES re-issues with NO meaningful close toward HQ, cull
+				//--- the survivor (deleteVehicle + deleteGroup) instead of re-ordering - the wfbe_teams entry
+				//--- becomes a null group, which every consumer already skips (same lifecycle as a wiped HC
+				//--- team), so net unit/group count DROPS (FPS-safe). A2-OA-safe: 1-arg getVariable + isNil
+				//--- guard for the new group vars (the 2-arg [name,default] form is unreliable for UNSET
+				//--- vars on a GROUP), explicit forEach for the cull, no A3-only array primitives.
+				_curDist = _ldr distance _hqP;
+				_rTries = _team getVariable "wfbe_aicom_retreat_tries"; if (isNil "_rTries") then {_rTries = 0};
+				_rLast  = _team getVariable "wfbe_aicom_retreat_lastdist"; if (isNil "_rLast") then {_rLast = -1};
+				_rBudget = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_MAX_TRIES", 4];
+				_rMinClose = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_MIN_CLOSE", 50];
+				//--- Progress = closed at least _rMinClose metres toward HQ since the last re-issue. A first
+				//--- attempt (_rLast < 0) counts as progress so we never cull on the very first order.
+				_rProgress = (_rLast < 0) || {(_rLast - _curDist) >= _rMinClose};
+				if (_rProgress) then {
+					//--- Making headway home (or first order): reset the failure counter, keep ordering.
+					_rTries = 0;
+				} else {
+					_rTries = _rTries + 1;
+				};
+				if (_rTries >= _rBudget) then {
+					//--- Budget exhausted with no progress: cull the stuck survivor. Non-player guard is
+					//--- belt-and-braces (this branch is already server-local non-HC, non-player-led).
+					{ if (!(isPlayer _x)) then {deleteVehicle _x} } forEach (units _team);
+					["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5) - no progress, recycled.", _sideText, _team, _aliveNow, _curDist, _rTries]] Call WFBE_CO_FNC_AICOMLog;
+					deleteGroup _team;
+					_canProduce = false;
+				} else {
+					//--- Still within budget: re-issue retreat + record this cycle's distance for the next
+					//--- progress check.
+					_team setVariable ["wfbe_aicom_retreat_tries", _rTries, true];
+					_team setVariable ["wfbe_aicom_retreat_lastdist", _curDist, true];
+					_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
+					_retreatOrder = [_retreatSeq, "DEFENSE", getPosATL _hqP];
+					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
+					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
+					["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-and-reform ordered (alive=%3, dist=%4, tries=%5).", _sideText, _team, _aliveNow, _curDist, _rTries]] Call WFBE_CO_FNC_AICOMLog;
+					_canProduce = false;
+				};
 			} else {
+				//--- B67 RETREAT-CULL: the team is no longer a stuck lone survivor far from HQ (it reformed
+				//--- to alive>=2, or is now within home-range). Reset the retreat failure counters to their
+				//--- sentinel defaults (matching the read-path defaults above) so a future depletion starts a
+				//--- fresh budget. Only touch them if a counter was actually set (read via the A2-safe 1-arg
+				//--- getVariable + isNil guard; the 2-arg [name,default] form is unreliable for UNSET group vars).
+				_rTries = _team getVariable "wfbe_aicom_retreat_tries";
+				if (!isNil "_rTries") then {
+					_team setVariable ["wfbe_aicom_retreat_tries", 0, true];
+					_team setVariable ["wfbe_aicom_retreat_lastdist", -1, true];
+				};
 				//--- B61 (Ray 2026-06-21): treat the OWN HQ as an always-eligible reinforce point. A team
 				//--- that has retreated home (refit flag set + now within home-range of HQ) is forced
 				//--- in-range so it refills regardless of REINFORCE_RANGE, is topped to the floor below,

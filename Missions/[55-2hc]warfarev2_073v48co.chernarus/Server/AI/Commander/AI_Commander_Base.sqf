@@ -166,6 +166,12 @@ _findBuildPos = {
 					if (surfaceIsWater [_sx, _sy, 0]) then {_blocked = true};
 					//--- standoff must survive the empty-pos settle (>= 12m off the carriageway).
 					if (((_cand distance _rp) < 12)) then {_blocked = true};
+					//--- B67: reject a candidate that crowds an existing friendly structure
+					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
+					//--- runs before the outer _structures local is assigned (line ~314).
+					if (!_blocked) then {
+						{ if ((_cand distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_blocked = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+					};
 					if (!_blocked) then {_p = _cand; _ok = true};
 				};
 			};
@@ -183,7 +189,13 @@ _findBuildPos = {
 			_p = [_p, 30] Call WFBE_CO_FNC_GetEmptyPosition;
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
-				if (count (_p nearRoads 22) == 0) then {_ok = true};
+				if (count (_p nearRoads 22) == 0) then {
+					//--- B67: reject a candidate that crowds an existing friendly structure
+					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
+					//--- runs before the outer _structures local is assigned (line ~314).
+					_ok = true;
+					{ if ((_p distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_ok = false} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+				};
 			};
 		};
 		_try = _try + 1;
@@ -345,9 +357,11 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				//--- (CC/Barracks/Bank/CBR) keeps the default OFF-road placement.
 				if (!_placed) then {
 					if (_x in ["Light","Heavy","Aircraft"]) then {
-						_pos = [45, 75, 1] Call _findBuildPos;
+						//--- B67: widen the factory placement ring (was 45..75) so production
+						//--- factories spread out from the HQ core and clear the spacing gate.
+						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
 					} else {
-						_pos = [45, 75] Call _findBuildPos;
+						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110])] Call _findBuildPos;
 					};
 				};
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};

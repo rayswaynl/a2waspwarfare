@@ -2,13 +2,11 @@ Private ['_HQ','_base','_blist','_camShotOrder','_camera','_nvgstate','_position
 
 _side = _this;
 
-//todo improve that script, _side is the looser.
-
-if (_side == west) then {
-	_side = east;
-} else {
-	if (_side == east) then {_side = west};
-};
+//--- B67 [wiki-wins]: the payload IS the winner. The old block inverted _side
+//--- (west<->east, with a "_side is the looser" comment), which named the WRONG
+//--- side in the victory banner and skipped resistance entirely. Inversion removed:
+//--- _side now stays the winner. The fly-over below still iterates the non-winner
+//--- sides via ([west,east,resistance] - [_side]), so it remains correct.
 
 [_side] ExecVM "Client\GUI\GUI_EndOfGameStats.sqf";
 //_track = if (WF_A2_Vanilla) then {"Track21_Rise_Of_The_Fallen"} else {"EP1_Track15"}; //---old

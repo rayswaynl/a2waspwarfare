@@ -69,6 +69,12 @@ _defenders = [];
 ["INITIALIZATION", Format ["Server_GuerAirDef.sqf: GUER air defense started (interval=%1 cap=%2 atChance=%3 mi24Chance=%4).", _interval, _maxAir, _atChance, _mi24Chance]] Call WFBE_CO_FNC_LogContent;
 diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|ka=%5|mi24=%6", _interval, _maxAir, _atChance, _mi24Chance, _classKa, _classMi24];
 
+//--- B67 (Ray 2026-06-21): publish the GUER-air list for the client map-marker loop (updatepatrolmarkers.sqf
+//--- reads WFBE_ACTIVE_GUER_AIR = [[vehicle, sideID], ...]). Init empty + broadcast so a JIP client never sees
+//--- nil; rebuilt + re-broadcast every interval below; targeted JIP catch-up in Server_OnPlayerConnected.sqf.
+WFBE_ACTIVE_GUER_AIR = [];
+publicVariable "WFBE_ACTIVE_GUER_AIR";
+
 while {!WFBE_GameOver} do {
 	sleep _interval;
 
@@ -233,4 +239,15 @@ while {!WFBE_GameOver} do {
 			};
 		};
 	} forEach towns;
+
+	//--- B67 (Ray 2026-06-21): rebuild + broadcast the GUER-air marker feed from the live registry (alive hulls
+	//--- only). Runs AFTER both the prune and the maintain passes, so it self-heals on despawn/spawn. The
+	//--- publicVariable each interval also serves as the JIP re-broadcast safety net (publicVariable is NOT
+	//--- JIP-replayed in A2-OA). sideID is always the GUER id; updatepatrolmarkers.sqf side-gates on
+	//--- WFBE_Client_SideID so only GUER players see these arrows.
+	private ["_airList"];
+	_airList = [];
+	{ if (!isNull (_x select 1) && {alive (_x select 1)}) then { _airList = _airList + [[(_x select 1), WFBE_C_GUER_ID]] } } forEach _defenders;
+	WFBE_ACTIVE_GUER_AIR = _airList;
+	publicVariable "WFBE_ACTIVE_GUER_AIR";
 };

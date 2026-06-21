@@ -510,10 +510,14 @@ switch (_args select 0) do {
 		_driver = _args select 2;
 		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 			[_veh, _driver] spawn {
-				Private ["_veh","_driver","_drvGrp","_p","_radius","_coef","_victims","_payout","_get"];
+				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2"];
 				_veh = _this select 0;
 				_driver = _this select 1;
 				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
+				//--- B67 (guer-reward): also pay the DETONATOR personally (cash bounty + score) alongside the
+				//--- team payout below. Capture the driver object + its UID NOW, while still alive, because the
+				//--- suicide driver is gone by the time we settle (getPlayerUID on a dead/deleted unit is unreliable).
+				_drvUID = getPlayerUID _driver;
 				_p = getPosATL _veh;
 				_radius = missionNamespace getVariable ["WFBE_C_GUER_VBIED_BLAST_RADIUS", 30];
 				_coef = missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5];
@@ -532,17 +536,46 @@ switch (_args select 0) do {
 				"Sh_122_HE" createVehicle _p;
 				//--- let the HE resolve kills, then pay the GUER driver's team for each victim the blast killed.
 				sleep 4;
+				//--- B67 (guer-reward): accumulate the detonator's PERSONAL bounty + score per dead enemy Man
+				//--- victim, mirroring the RequestOnUnitKilled personal path (AwardBounty.sqf Man formula):
+				//---   bounty = round(unitprice * 0.7 * WFBE_C_UNITS_BOUNTY_COEF), score = ceil(bounty / 100).
+				//--- Only Man victims count toward the personal reward (the snapshot is already Man-only).
+				_persBounty = 0;
+				_persScore = 0;
 				if (!isNull _drvGrp) then {
 					_payout = 0;
 					{
 						if (!alive _x) then {
 							_get = missionNamespace getVariable (typeOf _x);
 							if (!isNil "_get") then {_payout = _payout + round ((_get select QUERYUNITPRICE) * _coef)};
+							//--- B67: personal detonator reward (Man-class only victims).
+							if ((typeOf _x) isKindOf "Man") then {
+								_get2 = missionNamespace getVariable (typeOf _x);
+								if (!isNil "_get2") then {
+									private ["_b"];
+									_b = round ((_get2 select QUERYUNITPRICE) * 0.7 * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF"));
+									_persBounty = _persBounty + _b;
+									_persScore = _persScore + (ceil (_b / 100));
+								};
+							};
 						};
 					} forEach _victims;
 					if (_payout > 0) then {
 						[_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
 						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+				//--- B67: pay the detonator personally (cash to their wallet via the new client receiver, dispatched
+				//--- to the captured UID) + apply the accumulated score to the captured driver object if still valid.
+				if (_drvUID != "" && {_persBounty > 0}) then {
+					[_drvUID, "GuerVbiedBounty", _persBounty] Call WFBE_CO_FNC_SendToClients;
+					["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED personal bounty [%1] + score [%2] paid to detonator UID [%3].", _persBounty, _persScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
+				};
+				if (!isNull _driver && {_persScore > 0}) then {
+					if (isServer) then {
+						['SRVFNCREQUESTCHANGESCORE',[_driver, (score _driver) + _persScore]] Spawn WFBE_SE_FNC_HandlePVF;
+					} else {
+						["RequestChangeScore", [_driver, (score _driver) + _persScore]] Call WFBE_CO_FNC_SendToServer;
 					};
 				};
 			};

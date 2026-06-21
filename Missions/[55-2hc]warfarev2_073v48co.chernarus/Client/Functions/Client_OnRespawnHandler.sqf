@@ -52,6 +52,25 @@ if !(_spawnInside) then {
 	};
 };
 
+//--- B67 (Ray 2026-06-21) item #3: IED anti-farm kill tagging. The A2-OA "killed" EH does not name the ammo,
+//--- so we tag the killer here: when a GUER player detonates a BAF_ied magazine, stamp wfbe_ied_recent = time
+//--- (broadcast so the server can read it in RequestOnUnitKilled.sqf, which then pays only the 30% IED bounty).
+//--- Fired EH params (A2 OA): [unit, weapon, muzzle, mode, ammo, magazine, projectile]; index 5 = magazine class.
+//--- Idempotent across respawns via a per-unit flag (the unit is fresh each respawn, but belt-and-braces).
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoined == resistance}) then {
+	if !(_unit getVariable ["wfbe_ied_eh_added", false]) then {
+		_unit setVariable ["wfbe_ied_eh_added", true];
+		_unit addEventHandler ["Fired", {
+			private ["_shooter","_mag"];
+			_shooter = _this select 0;
+			_mag = _this select 5;
+			if (!isNil "_mag" && {typeName _mag == "STRING"} && {(_mag find "BAF_ied") == 0}) then {
+				_shooter setVariable ["wfbe_ied_recent", time, true];
+			};
+		}];
+	};
+};
+
 //--- Loadout.
 if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear && _allowCustom) then {
 	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";

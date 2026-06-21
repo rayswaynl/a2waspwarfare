@@ -363,12 +363,7 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
-	class WFBE_C_MODULE_BIS_HC {
-		title = "$STR_WF_PARAMETER_HighCommand";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
-	};
+	//--- B67 [dead-param-strings]: removed dead class WFBE_C_MODULE_BIS_HC (no runtime reader; HC delegation runs off WFBE_C_AI_DELEGATION). Lobby toggle did nothing.
 	class WFBE_C_MODULE_WFBE_ICBM {
 		title = "$STR_WF_PARAMETER_ICBM";
 		values[] = {0,1};
