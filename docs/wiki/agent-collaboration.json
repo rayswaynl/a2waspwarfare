@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T17:40:33+02:00",
+  "generatedAt": "2026-06-21T17:46:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-mirror-and-guer-current-source-sync",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "wiki master@e4fc668",
+        "origin/docs/developer-wiki-index@4c01dfb78",
+        "origin/master@0139a346",
+        "GUER-Insurgents-Branch-Audit.md",
+        "Feature-Status-Register.md",
+        "Gameplay-Systems-Atlas.md",
+        "_Sidebar.md",
+        "agent-context.json"
+      ],
+      "outputs": [
+        "Restored the docs-only GUER audit page after the broad mirror sync removed it and after rebasing over cf2-source-stamp-current-head-caveat.",
+        "Rewrote the page to current origin/master@0139a346 source evidence instead of preserving stale Chernarus-only wording.",
+        "Aligned Feature Status, Gameplay systems, sidebar and agent-context routes. No gameplay source changed.",
+        "Validation passed: JSON/JSONL parse in repo and clean wiki worktree, docs/validate-wiki.ps1 with known legacy JSONL warnings only, git diff --check with LF/CRLF warnings only, and final wiki/docs SHA parity across 261 files."
+      ],
+      "handoff": "Closed after validation. Future mirror syncs should preserve useful docs-only pages by source-refreshing them before publishing, and prove final parity before push.",
+      "updated": "2026-06-21T17:46:00+02:00"
+    },
     {
       "lane": "cf2-source-stamp-current-head-caveat",
       "owner": "Codex",

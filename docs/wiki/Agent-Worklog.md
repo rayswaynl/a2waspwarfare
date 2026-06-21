@@ -1266,3 +1266,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Planned validation: mirror touched wiki pages into `docs/wiki`, parse touched JSON/JSONL, run the wiki validator, verify wiki/docs parity and run `git diff --check`.
 - Result: updated `38` source-verification headers to preserve `cf2a6d6a4` as then-current/historical master evidence while warning that current `origin/master` is `0139a346`; also changed the [Player skill abilities](Player-Skill-Abilities-Reference) Officer/MASH note to snapshot wording so its stale line refs are not current-head proof.
 - Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, normalized touched-file wiki/docs parity and `git diff --check`.
+
+## 2026-06-21T17:31:00+02:00 - Codex - Wiki mirror and GUER current-source sync
+
+- Claimed `wiki-mirror-and-guer-current-source-sync` after the broad mirror sync removed the docs-only GUER audit, then source-checked whether that useful page should stay deleted or return in corrected form.
+- Scope: docs-only mirror reconciliation plus source-backed GUER status correction. Used a clean temporary wiki worktree so the existing dirty standalone checkout was not touched.
+- Result: rebased over live wiki `master@e4fc668`, restored the docs-only [GUER Insurgents branch audit](GUER-Insurgents-Branch-Audit) as a source-refreshed wiki page, rewrote it against current `origin/master@0139a346`, and aligned [Feature status](Feature-Status-Register), [Gameplay systems atlas](Gameplay-Systems-Atlas), `_Sidebar.md` and `agent-context.json`. No gameplay source changed.
+- Source proof: `9af83596` is an ancestor of `origin/master@0139a346`; `git grep` finds `WFBE_C_GUER_PLAYERSIDE`, `Root_GUE_PlayerOverlay`, `Server_GuerStipend`, `Action_GuerVbiedDetonate` and `guer-vbied-detonate` in both maintained roots, correcting the stale Chernarus-only/Takistan-dormant wording.
+- Validation: JSON/JSONL parse passed in both the repo mirror and clean wiki worktree; `docs/validate-wiki.ps1` passed with known legacy JSONL warnings only; `git diff --check` passed in both worktrees with LF/CRLF warnings only; final wiki/docs SHA parity is `261` files each with `0` missing and `0` differing common files.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T17:40:33+02:00",
+  "generatedAt": "2026-06-21T17:46:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only pass corrected broad cf2a6d6a4 source-verification stamps so they read as then-current/historical master evidence with a current origin/master@0139a346 recheck caveat. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap after this pushed batch; preserve docs/wiki parity when a mirror exists."
+      "currentWork": "Latest docs-only pass rebased over wiki master@e4fc668, restored the useful docs-only GUER Insurgents audit as a source-refreshed page, and corrected it to current origin/master@0139a346 source truth. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap after the pushed wiki/docs parity batch; preserve docs/wiki parity when a mirror exists."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-mirror-and-guer-current-source-sync",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Rebased over wiki master@e4fc668, restored GUER-Insurgents-Branch-Audit.md as a source-refreshed wiki page, and corrected it against current origin/master@0139a346: 9af83596 is merged and both Chernarus plus maintained Vanilla Takistan carry the GUER gate, overlay, economy loop, VBIED action/handler and buy/service hooks. Routed through Feature-Status-Register.md, Gameplay-Systems-Atlas.md, _Sidebar.md and agent-context.json. Validation passed: JSON/JSONL parse in repo and clean wiki worktree, docs/validate-wiki.ps1 with known legacy JSONL warnings only, git diff --check with LF/CRLF warnings only, and final wiki/docs SHA parity across 261 files. No gameplay source changed."
+    },
     {
       "lane": "cf2-source-stamp-current-head-caveat",
       "owner": "Codex",

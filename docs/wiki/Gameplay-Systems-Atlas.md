@@ -21,9 +21,9 @@ This page maps the main gameplay systems that make Warfare feel like Warfare: to
 
 Source refreshed on 2026-06-14 against docs head `2d88dd5a`; targeted diffs from `ca40f202` through `HEAD` over the checked Chernarus gameplay paths named on this page return no source changes. Branch refs still resolve to stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/release/2026-06-feature-bundle` `a96fdda2`. Source anchors below use `Missions/[55-2hc]warfarev2_073v48co.chernarus` from the docs checkout unless a row names another ref. Exact branch matrices stay on the owner pages above; this gateway keeps only routing guards.
 
-## Branch-Only GUER Insurgents Intake
+## Merged GUER Insurgents Source Status And Historical Intake
 
-This is branch-review evidence for `origin/feat/guer-insurgents-faction`, not current stable behavior. Recheck the branch head before implementation or release decisions.
+Status update (2026-06-21): the original `origin/feat/guer-insurgents-faction@41550bd33` intake below is historical. Current `origin/master@0139a346` contains the merged GUER lineage and later maintained-root parity: `git merge-base --is-ancestor 9af83596 origin/master` passes, and `git grep` finds the GUER gate, overlay, economy loop, VBIED action and `guer-vbied-detonate` handler in both Chernarus and maintained Vanilla Takistan. Use [GUER Insurgents branch audit](GUER-Insurgents-Branch-Audit) for current source status; use this table for original branch-review scope and risk memory.
 
 | Area | Evidence | Review route |
 | --- | --- | --- |

@@ -59,6 +59,7 @@
   - [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas)
   - [Construction logic list cleanup](Construction-Logic-List-Cleanup)
   - [Resistance supply scaffold](Resistance-Supply-Scaffold)
+  - [GUER Insurgents branch audit](GUER-Insurgents-Branch-Audit)
   - [GUER insurgent player economy](GUER-Insurgent-Player-Economy)
   - [Upgrades and research atlas](Upgrades-And-Research-Atlas)
   - [Supply mission architecture](Supply-Mission-Architecture)
