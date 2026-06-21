@@ -1,21 +1,22 @@
 # PR Cleanup And Integration Lab
 
-Last updated: 2026-06-16.
+Last updated: 2026-06-21.
 
 This page tracks the June 2026 PR cleanup pass for `rayswaynl/a2waspwarfare`. It exists so humans and AI agents can see which PRs are real features, which are superseded by the release bundle, which are docs-only, and which branches should be tested together.
 
-Current board state was refreshed from GitHub on 2026-06-16 with `gh pr list --repo rayswaynl/a2waspwarfare --state open --limit 100 --json number,title,headRefName,baseRefName,isDraft,updatedAt,url` plus `gh pr view` for PR #8 and PR #14. A later `git fetch --all --prune` removed local synthetic PR refs such as `origin/pr/*` and `miksuu/pr/*`; use the GitHub PR URLs, `headRefName`/`baseRefName` and remote branch heads as current evidence. Older ancestry notes below are preserved as historical results from the earlier PR-ref audit, not as refs future agents should expect to resolve locally.
+Current board state was refreshed from GitHub on 2026-06-21 with `gh pr list --repo rayswaynl/a2waspwarfare --state all --limit 80 --json number,title,state,headRefName,baseRefName,isDraft,updatedAt,mergedAt,url`. The returned set has `3` open PRs, `12` merged PRs and `28` closed PRs. A later `git fetch --all --prune` removed local synthetic PR refs such as `origin/pr/*` and `miksuu/pr/*`; use the GitHub PR URLs, `headRefName`/`baseRefName`, `mergedAt` / `updatedAt` and remote branch heads as current evidence. Older ancestry notes below are preserved as historical results from the earlier PR-ref audit, not as refs future agents should expect to resolve locally.
 
 ## Current PR Board State
 
 | State | PRs | Meaning |
 | --- | --- | --- |
-| Merged release/AICOM baselines | [#8](https://github.com/rayswaynl/a2waspwarfare/pull/8), [#14](https://github.com/rayswaynl/a2waspwarfare/pull/14) | No longer open board items. Keep their branch history as evidence, but do not route current work as if they still need merge decisions. |
-| Open AICOM / Experital stack | [#29](https://github.com/rayswaynl/a2waspwarfare/pull/29), [#30](https://github.com/rayswaynl/a2waspwarfare/pull/30), [#34](https://github.com/rayswaynl/a2waspwarfare/pull/34), [#35](https://github.com/rayswaynl/a2waspwarfare/pull/35), [#36](https://github.com/rayswaynl/a2waspwarfare/pull/36), [#37](https://github.com/rayswaynl/a2waspwarfare/pull/37), [#38](https://github.com/rayswaynl/a2waspwarfare/pull/38), [#39](https://github.com/rayswaynl/a2waspwarfare/pull/39), [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40), [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | Current AI commander / Experital review train. Treat PR #35 as the deploy-to-master umbrella and the deploy-based children as review/fix lanes, not independent release baselines. |
-| Other open release/test candidates | [#4](https://github.com/rayswaynl/a2waspwarfare/pull/4), [#9](https://github.com/rayswaynl/a2waspwarfare/pull/9), [#13](https://github.com/rayswaynl/a2waspwarfare/pull/13), [#18](https://github.com/rayswaynl/a2waspwarfare/pull/18), [#20](https://github.com/rayswaynl/a2waspwarfare/pull/20), [#21](https://github.com/rayswaynl/a2waspwarfare/pull/21), [#31](https://github.com/rayswaynl/a2waspwarfare/pull/31), [#32](https://github.com/rayswaynl/a2waspwarfare/pull/32), [#33](https://github.com/rayswaynl/a2waspwarfare/pull/33) | Real features/tooling/performance work that still need their own review or smoke windows. PR #18 remains open but is based on merged `feat/ai-commander`, so treat it as legacy stacked work until rebased or explicitly closed. |
-| Open docs/concept reference | [#17](https://github.com/rayswaynl/a2waspwarfare/pull/17) | Docs/concept only; keep outside gameplay release testing. |
-| Closed/superseded feature PRs | [#1](https://github.com/rayswaynl/a2waspwarfare/pull/1), [#5](https://github.com/rayswaynl/a2waspwarfare/pull/5), [#6](https://github.com/rayswaynl/a2waspwarfare/pull/6), [#7](https://github.com/rayswaynl/a2waspwarfare/pull/7), [#10](https://github.com/rayswaynl/a2waspwarfare/pull/10), [#11](https://github.com/rayswaynl/a2waspwarfare/pull/11), [#12](https://github.com/rayswaynl/a2waspwarfare/pull/12), [#15](https://github.com/rayswaynl/a2waspwarfare/pull/15), [#16](https://github.com/rayswaynl/a2waspwarfare/pull/16), [#19](https://github.com/rayswaynl/a2waspwarfare/pull/19) | Closed on the board; retain branch/head lessons where useful, but do not present them as open review items. |
-| Closed docs PRs | [#2](https://github.com/rayswaynl/a2waspwarfare/pull/2), [#3](https://github.com/rayswaynl/a2waspwarfare/pull/3) | Historical docs mirror/review work; current docs truth is this branch plus the wiki checkout, not the stale closed PR branches. |
+| Open master-target soak / proposals | [#43](https://github.com/rayswaynl/a2waspwarfare/pull/43) | Current open master-target review surface: `claude/b57-soak-proposals` -> `master`, updated 2026-06-21T14:22:01Z. Treat as the live B57 soak/proposals PR, not as proof that the whole AICOM/GUER source set is release-ready. |
+| Open stacked performance child | [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40) | Still open, but stacked on closed base `fix/aicom-review-batch-2026-06-15`. Rebase or owner decision is required before treating it as a clean master candidate. |
+| Open map/content candidate | [#9](https://github.com/rayswaynl/a2waspwarfare/pull/9) | Zargabad low-pop mission remains open against `master`, updated 2026-06-20T05:17:48Z. Keep as a separate map/content validation lane. |
+| Merged into `master` | [#8](https://github.com/rayswaynl/a2waspwarfare/pull/8), [#14](https://github.com/rayswaynl/a2waspwarfare/pull/14), [#22](https://github.com/rayswaynl/a2waspwarfare/pull/22), [#23](https://github.com/rayswaynl/a2waspwarfare/pull/23), [#24](https://github.com/rayswaynl/a2waspwarfare/pull/24), [#25](https://github.com/rayswaynl/a2waspwarfare/pull/25), [#26](https://github.com/rayswaynl/a2waspwarfare/pull/26), [#27](https://github.com/rayswaynl/a2waspwarfare/pull/27), [#28](https://github.com/rayswaynl/a2waspwarfare/pull/28), [#29](https://github.com/rayswaynl/a2waspwarfare/pull/29), [#31](https://github.com/rayswaynl/a2waspwarfare/pull/31) | No longer open board items. Their branch history remains useful source evidence, but current branch truth starts from fetched `origin/master@0139a346` unless a page names another ref. |
+| Merged into a non-master branch | [#42](https://github.com/rayswaynl/a2waspwarfare/pull/42) | `claude/guer-merge` -> `claude/b39`, merged 2026-06-16T19:56:21Z. Treat as branch-integration evidence, not as a master merge by itself. |
+| Closed former AICOM / Experital stack | [#30](https://github.com/rayswaynl/a2waspwarfare/pull/30), [#34](https://github.com/rayswaynl/a2waspwarfare/pull/34), [#35](https://github.com/rayswaynl/a2waspwarfare/pull/35), [#36](https://github.com/rayswaynl/a2waspwarfare/pull/36), [#37](https://github.com/rayswaynl/a2waspwarfare/pull/37), [#38](https://github.com/rayswaynl/a2waspwarfare/pull/38), [#39](https://github.com/rayswaynl/a2waspwarfare/pull/39), [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | The old deploy umbrella and deploy-child review/fix/note PRs are closed as of 2026-06-17. Keep their findings as history; do not route current work through them as active PRs. |
+| Closed feature/tooling/docs PRs | [#1](https://github.com/rayswaynl/a2waspwarfare/pull/1), [#2](https://github.com/rayswaynl/a2waspwarfare/pull/2), [#3](https://github.com/rayswaynl/a2waspwarfare/pull/3), [#4](https://github.com/rayswaynl/a2waspwarfare/pull/4), [#5](https://github.com/rayswaynl/a2waspwarfare/pull/5), [#6](https://github.com/rayswaynl/a2waspwarfare/pull/6), [#7](https://github.com/rayswaynl/a2waspwarfare/pull/7), [#10](https://github.com/rayswaynl/a2waspwarfare/pull/10), [#11](https://github.com/rayswaynl/a2waspwarfare/pull/11), [#12](https://github.com/rayswaynl/a2waspwarfare/pull/12), [#13](https://github.com/rayswaynl/a2waspwarfare/pull/13), [#15](https://github.com/rayswaynl/a2waspwarfare/pull/15), [#16](https://github.com/rayswaynl/a2waspwarfare/pull/16), [#17](https://github.com/rayswaynl/a2waspwarfare/pull/17), [#18](https://github.com/rayswaynl/a2waspwarfare/pull/18), [#19](https://github.com/rayswaynl/a2waspwarfare/pull/19), [#20](https://github.com/rayswaynl/a2waspwarfare/pull/20), [#21](https://github.com/rayswaynl/a2waspwarfare/pull/21), [#32](https://github.com/rayswaynl/a2waspwarfare/pull/32), [#33](https://github.com/rayswaynl/a2waspwarfare/pull/33) | Closed on the board. Retain branch/head lessons where useful, but do not present them as open review items. |
 
 ## Branches Created
 
@@ -34,24 +35,26 @@ The best current combined gameplay test branch is:
 dev/pr8-plus-testbed = PR #8 + PR #12 + PR #16
 ```
 
-For current AI commander work, use PR #35 (`deploy/2026-06-12-aicom-experital` -> `master`, draft) as the deploy-review umbrella. PR #29 and PR #30 are still useful high-level AICOM / Experital surfaces, but child/fix lanes PR #34 and PR #36-#41 need explicit owner ordering against the deploy branch. PR #14 is merged (`gh pr view 14`: merged 2026-06-10T13:40:19Z); PR #18 remains open on `feat/ai-commander` and should not be treated as the current AICOM deploy base without a rebase/owner decision.
+The old AICOM deploy route through PR #35 is closed. PR #29 (`ai-commander-main` -> `master`) and PR #31 (`perf/marker-consolidation` -> `master`) both merged on 2026-06-17T11:45:52Z; PR #30, PR #34, PR #35, PR #36, PR #37, PR #38, PR #39 and PR #41 are closed. Current source truth for merged AICOM/GUER work starts from `origin/master@0139a346`; current open review routing is PR #43 for B57 soak/proposals, PR #40 for the still-open client-FPS child stacked on a closed base, and PR #9 for Zargabad.
 
-Keep PR #4, PR #9, PR #13, PR #20, PR #21, PR #31, PR #32 and PR #33 separate until they have their own focused test windows. PR #19 is closed; preserve it as branch/context evidence for the AI commander chain rather than as an open board item.
+Keep closed PRs as historical evidence unless an owner explicitly reopens or rebases them. In particular, PR #40 needs a rebase/owner decision before it is treated as mergeable because its base branch `fix/aicom-review-batch-2026-06-15` is closed, and PR #42 is branch integration into `claude/b39`, not a master merge.
 
-### 2026-06-16 AICOM / Experital PR Board Refresh
+### 2026-06-21 AICOM / Experital PR Board Refresh
 
 | PR | Head -> base | Board state | Practical route |
 | --- | --- | --- | --- |
-| [#29](https://github.com/rayswaynl/a2waspwarfare/pull/29) | `ai-commander-main` -> `master` | Open | Live-verified AI Commander V0.6.6 surface. Review as AICOM source evidence, but current deploy-to-master routing now goes through PR #35. |
-| [#30](https://github.com/rayswaynl/a2waspwarfare/pull/30) | `experital` -> `release/2026-06-feature-bundle` | Open | Experital TEST mission branch. Useful for broad status/context, not the final deploy umbrella. |
-| [#35](https://github.com/rayswaynl/a2waspwarfare/pull/35) | `deploy/2026-06-12-aicom-experital` -> `master` | Open draft | Current Claude-led deploy review umbrella. Preserve the active `deploy-aicom-experital-merge-risk-audit` lane; do not merge solely from older #14/#18 wording. |
-| [#34](https://github.com/rayswaynl/a2waspwarfare/pull/34) | `fix/wildcard-w4w5-outer-capture` -> `deploy/2026-06-12-aicom-experital` | Open | Deploy-child W4/W5 wildcard fix. Needs owner choice for merge/cherry-pick ordering into #35. |
-| [#36](https://github.com/rayswaynl/a2waspwarfare/pull/36) | `fix/aicom-audit-verified-batch1` -> `deploy/2026-06-12-aicom-experital` | Open draft | Verified safe batch. Treat as deploy-child fixes, not a release baseline. |
-| [#37](https://github.com/rayswaynl/a2waspwarfare/pull/37) | `claude/aicom-review-fixes` -> `deploy/2026-06-12-aicom-experital` | Open draft | Lead-lane verified fixes. Coordinate with Claude before folding into deploy. |
-| [#38](https://github.com/rayswaynl/a2waspwarfare/pull/38) | `fix/aicom-review-batch-2026-06-15` -> `deploy/2026-06-12-aicom-experital` | Open | Review-fix batch against deploy. Also serves as base for PR #40. |
-| [#39](https://github.com/rayswaynl/a2waspwarfare/pull/39) | `review/aicom-deploy` -> `deploy/2026-06-12-aicom-experital` | Open | Pre-merge review fixes plus structure-refund proposal. Refund behavior needs MP/JIP/server smoke before release wording. |
-| [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40) | `feat/client-fps` -> `fix/aicom-review-batch-2026-06-15` | Open | Client FPS/perf child lane stacked on PR #38, not directly on deploy. Rebase/merge-order matters. |
-| [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | `notes/aicom-match-fixes` -> `deploy/2026-06-12-aicom-experital` | Open draft | Analysis and prepared patches from 8h test-server match. Treat as notes/proposals until owner selects fixes. |
+| [#29](https://github.com/rayswaynl/a2waspwarfare/pull/29) | `ai-commander-main` -> `master` | Merged 2026-06-17T11:45:52Z | Merged AICOM V0.6.6 source history. Use current `origin/master@0139a346` for current-head claims. |
+| [#30](https://github.com/rayswaynl/a2waspwarfare/pull/30) | `experital` -> `release/2026-06-feature-bundle` | Closed 2026-06-17T11:51:11Z | Historical Experital surface; do not use as active broad status target. |
+| [#35](https://github.com/rayswaynl/a2waspwarfare/pull/35) | `deploy/2026-06-12-aicom-experital` -> `master` | Closed draft 2026-06-17T11:51:11Z | Former deploy umbrella. Preserve its review history, but stop treating `deploy-aicom-experital-merge-risk-audit` as live dashboard work. |
+| [#34](https://github.com/rayswaynl/a2waspwarfare/pull/34) | `fix/wildcard-w4w5-outer-capture` -> `deploy/2026-06-12-aicom-experital` | Closed 2026-06-17T11:51:10Z | Former deploy-child fix; current source verification must start from `origin/master@0139a346` or the named branch, not from an open PR. |
+| [#36](https://github.com/rayswaynl/a2waspwarfare/pull/36) | `fix/aicom-audit-verified-batch1` -> `deploy/2026-06-12-aicom-experital` | Closed draft 2026-06-17T11:47:05Z | Closed deploy-child verified batch. Preserve as source-history evidence only. |
+| [#37](https://github.com/rayswaynl/a2waspwarfare/pull/37) | `claude/aicom-review-fixes` -> `deploy/2026-06-12-aicom-experital` | Closed draft 2026-06-17T11:47:03Z | Closed deploy-child fix lane. Future use needs branch/source recheck. |
+| [#38](https://github.com/rayswaynl/a2waspwarfare/pull/38) | `fix/aicom-review-batch-2026-06-15` -> `deploy/2026-06-12-aicom-experital` | Closed 2026-06-17T11:47:01Z | Closed review-fix batch. It still matters because PR #40 is stacked on this closed base. |
+| [#39](https://github.com/rayswaynl/a2waspwarfare/pull/39) | `review/aicom-deploy` -> `deploy/2026-06-12-aicom-experital` | Closed 2026-06-17T11:46:59Z | Closed pre-merge review/proposal lane. Keep refund behavior as source/smoke evidence only where separately verified. |
+| [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40) | `feat/client-fps` -> `fix/aicom-review-batch-2026-06-15` | Open, updated 2026-06-19T22:50:34Z | Current open child/perf lane, but its base is closed. Needs rebase or explicit owner decision before merge/test routing. |
+| [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | `notes/aicom-match-fixes` -> `deploy/2026-06-12-aicom-experital` | Closed draft 2026-06-17T11:46:57Z | Closed notes/prepared-patches lane. Preserve as analysis only. |
+| [#42](https://github.com/rayswaynl/a2waspwarfare/pull/42) | `claude/guer-merge` -> `claude/b39` | Merged 2026-06-16T19:56:21Z | Branch-integration evidence for GUER into `claude/b39`; not a master-target PR. |
+| [#43](https://github.com/rayswaynl/a2waspwarfare/pull/43) | `claude/b57-soak-proposals` -> `master` | Open, updated 2026-06-21T14:22:01Z | Current master-target soak/proposals PR. Use this for live PR-board routing unless a newer PR appears. |
 
 ### PR #8 Head Refresh: `a96fdda2`
 
@@ -76,7 +79,7 @@ A 2026-06-14 refetch found `origin/release/2026-06-feature-bundle` at `a96fdda2`
 | [#1](https://github.com/rayswaynl/a2waspwarfare/pull/1) | Supply helicopters | Closed | Superseded by PR #8 for board cleanup; branch-specific heli evidence remains useful in the supply-heli page. | Earlier PR-ref ancestry audit classified it as represented in PR #8; current board shows closed. |
 | [#2](https://github.com/rayswaynl/a2waspwarfare/pull/2) | Developer wiki mirror | Closed | Historical docs PR; do not use as live docs branch. | Closed 2026-06-05. Current docs truth is `docs/developer-wiki-index` plus wiki checkout. |
 | [#3](https://github.com/rayswaynl/a2waspwarfare/pull/3) | Claude wiki review | Closed | Historical/harvested Claude docs branch; do not merge wholesale over newer navigation. | Closed 2026-06-05. Targeted findings were harvested; branch is stale relative to current docs. |
-| [#4](https://github.com/rayswaynl/a2waspwarfare/pull/4) | Player stats phase 1 WIP | Open | Real feature, but keep separate from PR8 release test. | Clean merge candidate on top of PR8+12+16; adds DiscordBot stats pipeline and mission stat flush hooks. |
+| [#4](https://github.com/rayswaynl/a2waspwarfare/pull/4) | Player stats phase 1 WIP | Closed | Historical feature branch evidence only unless reopened or rebased. | 2026-06-21 GitHub metadata: `codex/ai-commander-logs` -> `master`, closed, updated 2026-06-17T11:47:31Z. Older scout notes still describe its off-by-default stats pipeline. |
 | [#5](https://github.com/rayswaynl/a2waspwarfare/pull/5) | Upgrade queue | Closed | Superseded by PR #8. | Ancestor of PR #8. |
 | [#6](https://github.com/rayswaynl/a2waspwarfare/pull/6) | Engineer EASA repair truck | Closed | Superseded by PR #8. | Ancestor of PR #8. |
 | [#7](https://github.com/rayswaynl/a2waspwarfare/pull/7) | Delayed vehicle damage rewards | Closed | Superseded by PR #8. | Ancestor of PR #8. |
@@ -85,39 +88,42 @@ A 2026-06-14 refetch found `origin/release/2026-06-feature-bundle` at `a96fdda2`
 | [#10](https://github.com/rayswaynl/a2waspwarfare/pull/10) | Commander buildable positions | Closed | Superseded by PR #8. | Ancestor of PR #8. |
 | [#11](https://github.com/rayswaynl/a2waspwarfare/pull/11) | Buy-menu/EASA QoL | Closed | Superseded by PR #8 for board cleanup; retain branch audit as UI evidence. | Closed 2026-06-05. Earlier ancestry audit classified it as represented in PR #8. |
 | [#12](https://github.com/rayswaynl/a2waspwarfare/pull/12) | Quick-wins fixes | Closed | Folded into `dev/pr8-plus-testbed`; still needs focused server/economy smoke before release wording. | Closed 2026-06-05. Conflicted in five Chernarus files during lab merge, resolved by preserving PR8 behavior plus PR12 fixes. |
-| [#13](https://github.com/rayswaynl/a2waspwarfare/pull/13) | Recon UAV | Open | Real feature train, but do not combine casually with PR8. | Brings drone saturation strike stack; conflicts in tactical menu, UAV module deletion, and parameters. |
-| [#14](https://github.com/rayswaynl/a2waspwarfare/pull/14) | AI Commander draft | Merged | Treat as merged AICOM history. Use current AICOM/Experital PRs #29/#30/#35 and deploy-child lanes for live routing. | `gh pr view 14` on 2026-06-16 reports merged 2026-06-10T13:40:19Z from `feat/ai-commander` into `master`. |
+| [#13](https://github.com/rayswaynl/a2waspwarfare/pull/13) | Recon UAV | Closed | Historical drone/recon branch evidence only unless reopened or rebased. | 2026-06-21 GitHub metadata: `feat/recon-uav` -> `feat/drone-saturation-strike`, closed, updated 2026-06-17T11:47:29Z. Older scout notes still preserve its branch-risk lessons. |
+| [#14](https://github.com/rayswaynl/a2waspwarfare/pull/14) | AI Commander draft | Merged | Treat as merged AICOM history. Current source claims should start from `origin/master@0139a346` or a named branch/PR. | `gh pr view 14` on 2026-06-16 reported merged 2026-06-10T13:40:19Z from `feat/ai-commander` into `master`; 2026-06-21 metadata still reports merged. |
 | [#15](https://github.com/rayswaynl/a2waspwarfare/pull/15) | WF menu ops-console reskin | Closed | Alternative UI direction only; cherry-pick ideas later if wanted. | Closed 2026-06-05. Conflicts with PR #16 in `Rsc/Dialogs.hpp` and `Rsc/Ressources.hpp` for both Chernarus and Takistan. |
 | [#16](https://github.com/rayswaynl/a2waspwarfare/pull/16) | WF menu UX phase 1, original style | Closed | Included in `dev/pr8-plus-testbed` lab branch; PR itself is closed. | Closed 2026-06-05. Clean merge on top of PR8+12; less brand-opinionated than PR #15. |
-| [#17](https://github.com/rayswaynl/a2waspwarfare/pull/17) | Quad AI commander docs | Open | Docs/concept only. Keep as reference, not gameplay merge material. | 23 docs/wiki files, no code. |
-| [#18](https://github.com/rayswaynl/a2waspwarfare/pull/18) | AI commander logs | Open draft | Legacy stacked AI commander logs. Rebase or close explicitly before using it as live deploy input. | 2026-06-16 GitHub metadata keeps base `feat/ai-commander`, which is already represented by merged PR #14; older PR8-lab conflict notes remain historical evidence. |
+| [#17](https://github.com/rayswaynl/a2waspwarfare/pull/17) | Quad AI commander docs | Closed | Docs/concept history; keep useful ideas in wiki pages instead of treating the PR as open. | 2026-06-21 GitHub metadata: `codex/quad-ai-commander` -> `master`, closed, updated 2026-06-17T11:47:27Z. |
+| [#18](https://github.com/rayswaynl/a2waspwarfare/pull/18) | AI commander logs | Closed draft | Legacy stacked AI commander logs. Preserve conflict/context lessons only. | 2026-06-21 GitHub metadata: `codex/ai-commander-logs` -> `feat/ai-commander`, closed, updated 2026-06-17T11:47:25Z. |
 | [#19](https://github.com/rayswaynl/a2waspwarfare/pull/19) | AI commander context beliefs | Closed | Treat as closed branch/context evidence for the PR #14/#18 AI commander chain. | Closed 2026-06-05. Base was `codex/ai-commander-logs`; conflicts in same commander upgrade function on PR8 lab. |
-| [#20](https://github.com/rayswaynl/a2waspwarfare/pull/20) | Reusable PR test harness | Open | Tooling lane. Keep separate from gameplay bundles unless a release owner wants the harness in-tree. | 2026-06-16 GitHub metadata: `tools/reusable-pr-test-harness` -> `master`, non-draft. |
-| [#21](https://github.com/rayswaynl/a2waspwarfare/pull/21) | July 2026 update WIP | Open draft | Future roadmap/feature branch. Keep outside current June/AICOM deploy routing. | 2026-06-16 GitHub metadata: `dev/july-2026-update` -> `release/2026-06-feature-bundle`, draft. |
-| [#29](https://github.com/rayswaynl/a2waspwarfare/pull/29) | AI Commander V0.6.6 | Open | Source/live-verification reference for AICOM. Route deploy-to-master through PR #35. | 2026-06-16 GitHub metadata: `ai-commander-main` -> `master`, non-draft. |
-| [#30](https://github.com/rayswaynl/a2waspwarfare/pull/30) | Experital TEST mission | Open | Broad Experital surface and status target. Do not confuse with the deploy-to-master umbrella. | 2026-06-16 GitHub metadata: `experital` -> `release/2026-06-feature-bundle`, non-draft. |
-| [#31](https://github.com/rayswaynl/a2waspwarfare/pull/31) | Marker consolidation perf | Open | Performance lane. Test separately from AICOM deploy unless an owner explicitly batches it. | 2026-06-16 GitHub metadata: `perf/marker-consolidation` -> `master`, non-draft. |
-| [#32](https://github.com/rayswaynl/a2waspwarfare/pull/32) | Marker relevance perf | Open | Stacked performance lane. Review after or with PR #31, not as a standalone master baseline. | 2026-06-16 GitHub metadata: `perf/marker-relevance` -> `perf/marker-consolidation`, non-draft. |
-| [#33](https://github.com/rayswaynl/a2waspwarfare/pull/33) | AI commander v06 hardening | Open | Older v06 hardening lane. Keep branch scope distinct from current deploy/Experital stack. | 2026-06-16 GitHub metadata: `ai-commander-v06-hardening` -> `ai-commander-v06`, non-draft. |
-| [#34](https://github.com/rayswaynl/a2waspwarfare/pull/34) | W4/W5 wildcard fix | Open | Deploy-child fix. Fold through #35 only after owner ordering is clear. | 2026-06-16 GitHub metadata: `fix/wildcard-w4w5-outer-capture` -> `deploy/2026-06-12-aicom-experital`, non-draft. |
-| [#35](https://github.com/rayswaynl/a2waspwarfare/pull/35) | Deploy AICOM Experital bundle | Open draft | Current deploy-to-master umbrella. Main live review route for AICOM/Experital. | 2026-06-16 GitHub metadata: `deploy/2026-06-12-aicom-experital` -> `master`, draft. Active audit lane is `deploy-aicom-experital-merge-risk-audit`. |
-| [#36](https://github.com/rayswaynl/a2waspwarfare/pull/36) | AICOM audit verified batch 1 | Open draft | Deploy-child verified safe batch. Merge/cherry-pick only after owner order is chosen. | 2026-06-16 GitHub metadata: `fix/aicom-audit-verified-batch1` -> `deploy/2026-06-12-aicom-experital`, draft. |
-| [#37](https://github.com/rayswaynl/a2waspwarfare/pull/37) | Lead-lane verified fixes | Open draft | Claude lead-lane fixes. Coordinate with Claude before folding. | 2026-06-16 GitHub metadata: `claude/aicom-review-fixes` -> `deploy/2026-06-12-aicom-experital`, draft. |
-| [#38](https://github.com/rayswaynl/a2waspwarfare/pull/38) | AICOM review fixes | Open | Deploy-child review batch and base for #40. | 2026-06-16 GitHub metadata: `fix/aicom-review-batch-2026-06-15` -> `deploy/2026-06-12-aicom-experital`, non-draft. |
-| [#39](https://github.com/rayswaynl/a2waspwarfare/pull/39) | AICOM pre-merge review / refund proposal | Open | Review fixes plus structure-refund proposal. Smoke refund behavior before release wording. | 2026-06-16 GitHub metadata: `review/aicom-deploy` -> `deploy/2026-06-12-aicom-experital`, non-draft. |
-| [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40) | Client FPS / marker-loop gating | Open | Child performance lane stacked on #38. Do not merge directly into deploy without rebase/order decision. | 2026-06-16 GitHub metadata: `feat/client-fps` -> `fix/aicom-review-batch-2026-06-15`, non-draft. |
-| [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | AICOM match-fix notes | Open draft | Notes/prepared patches from long test-server match. Treat as proposals until owner selects fixes. | 2026-06-16 GitHub metadata: `notes/aicom-match-fixes` -> `deploy/2026-06-12-aicom-experital`, draft. |
+| [#20](https://github.com/rayswaynl/a2waspwarfare/pull/20) | Reusable PR test harness | Closed | Tooling history; do not treat as an open harness PR. | 2026-06-21 GitHub metadata: `tools/reusable-pr-test-harness` -> `master`, closed, updated 2026-06-17T11:47:23Z. |
+| [#21](https://github.com/rayswaynl/a2waspwarfare/pull/21) | July 2026 update WIP | Closed draft | Historical July WIP branch. Use the dashboard July Update To-Do for current roadmap routing instead. | 2026-06-21 GitHub metadata: `dev/july-2026-update` -> `release/2026-06-feature-bundle`, closed, updated 2026-06-17T11:47:19Z. |
+| [#29](https://github.com/rayswaynl/a2waspwarfare/pull/29) | AI Commander V0.6.6 | Merged | Merged AICOM source history. Current AICOM claims should start from `origin/master@0139a346` or a named branch/PR. | 2026-06-21 GitHub metadata: `ai-commander-main` -> `master`, merged 2026-06-17T11:45:52Z. |
+| [#30](https://github.com/rayswaynl/a2waspwarfare/pull/30) | Experital TEST mission | Closed | Historical Experital surface; no longer a live broad status target. | 2026-06-21 GitHub metadata: `experital` -> `release/2026-06-feature-bundle`, closed, updated 2026-06-17T11:51:11Z. |
+| [#31](https://github.com/rayswaynl/a2waspwarfare/pull/31) | Marker consolidation perf | Merged | Merged performance source history. Verify current behavior from `origin/master@0139a346` before claiming runtime status. | 2026-06-21 GitHub metadata: `perf/marker-consolidation` -> `master`, merged 2026-06-17T11:45:52Z. |
+| [#32](https://github.com/rayswaynl/a2waspwarfare/pull/32) | Marker relevance perf | Closed | Stacked performance branch history; not an open PR. | 2026-06-21 GitHub metadata: `perf/marker-relevance` -> `perf/marker-consolidation`, closed, updated 2026-06-17T11:51:13Z. |
+| [#33](https://github.com/rayswaynl/a2waspwarfare/pull/33) | AI commander v06 hardening | Closed | Older v06 hardening history; do not use as live deploy route. | 2026-06-21 GitHub metadata: `ai-commander-v06-hardening` -> `ai-commander-v06`, closed, updated 2026-06-17T11:51:10Z. |
+| [#34](https://github.com/rayswaynl/a2waspwarfare/pull/34) | W4/W5 wildcard fix | Closed | Former deploy-child fix; verify current source directly before claiming it landed. | 2026-06-21 GitHub metadata: `fix/wildcard-w4w5-outer-capture` -> `deploy/2026-06-12-aicom-experital`, closed, updated 2026-06-17T11:51:10Z. |
+| [#35](https://github.com/rayswaynl/a2waspwarfare/pull/35) | Deploy AICOM Experital bundle | Closed draft | Former deploy umbrella. No longer the active dashboard route. | 2026-06-21 GitHub metadata: `deploy/2026-06-12-aicom-experital` -> `master`, closed, updated 2026-06-17T11:51:11Z. |
+| [#36](https://github.com/rayswaynl/a2waspwarfare/pull/36) | AICOM audit verified batch 1 | Closed draft | Closed deploy-child verified batch. Preserve only as source-review history. | 2026-06-21 GitHub metadata: `fix/aicom-audit-verified-batch1` -> `deploy/2026-06-12-aicom-experital`, closed, updated 2026-06-17T11:47:05Z. |
+| [#37](https://github.com/rayswaynl/a2waspwarfare/pull/37) | Lead-lane verified fixes | Closed draft | Closed deploy-child fix lane. Future use needs branch/source recheck. | 2026-06-21 GitHub metadata: `claude/aicom-review-fixes` -> `deploy/2026-06-12-aicom-experital`, closed, updated 2026-06-17T11:47:03Z. |
+| [#38](https://github.com/rayswaynl/a2waspwarfare/pull/38) | AICOM review fixes | Closed | Closed review-fix batch and stale base for PR #40. | 2026-06-21 GitHub metadata: `fix/aicom-review-batch-2026-06-15` -> `deploy/2026-06-12-aicom-experital`, closed, updated 2026-06-17T11:47:01Z. |
+| [#39](https://github.com/rayswaynl/a2waspwarfare/pull/39) | AICOM pre-merge review / refund proposal | Closed | Closed review/proposal lane. Smoke refund behavior only if separately source-verified on a current target. | 2026-06-21 GitHub metadata: `review/aicom-deploy` -> `deploy/2026-06-12-aicom-experital`, closed, updated 2026-06-17T11:46:59Z. |
+| [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40) | Client FPS / marker-loop gating | Open | Current open child/perf lane, but its base PR #38 is closed. Rebase or owner decision required before merge/test routing. | 2026-06-21 GitHub metadata: `feat/client-fps` -> `fix/aicom-review-batch-2026-06-15`, open, updated 2026-06-19T22:50:34Z. |
+| [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | AICOM match-fix notes | Closed draft | Closed notes/prepared-patches lane. Preserve as analysis only. | 2026-06-21 GitHub metadata: `notes/aicom-match-fixes` -> `deploy/2026-06-12-aicom-experital`, closed, updated 2026-06-17T11:46:57Z. |
+| [#42](https://github.com/rayswaynl/a2waspwarfare/pull/42) | GUER Insurgents faction -> B39 | Merged to branch | Branch-integration evidence only; not a master-target PR. | 2026-06-21 GitHub metadata: `claude/guer-merge` -> `claude/b39`, merged 2026-06-16T19:56:21Z. |
+| [#43](https://github.com/rayswaynl/a2waspwarfare/pull/43) | B57 soak proposals | Open | Current master-target review surface. | 2026-06-21 GitHub metadata: `claude/b57-soak-proposals` -> `master`, open, updated 2026-06-21T14:22:01Z. |
 
 ## Cleanup Actions
 
 Recommended PR board cleanup:
 
-1. Already closed/superseded on the board: PR #1, #5, #6, #7, #10, #11, #12, #15, #16 and #19.
-2. Already merged: PR #8 and PR #14. Keep them as history/source evidence, not open merge targets.
-3. Current AICOM route: use PR #35 as the deploy umbrella; treat PR #34 and #36-#41 as deploy-child review/fix/note lanes that need owner ordering.
-4. Keep docs-only outside gameplay testing: PR #17. Treat PR #2 and PR #3 as closed historical docs work.
-5. Test separately later: PR #4 player stats, PR #9 Zargabad, PR #13 drone/recon UAV, PR #18 legacy AI logs, PR #20 tooling, PR #21 July WIP, PR #31/#32 marker performance and PR #33 older AICOM v06 hardening.
-6. WF menu direction is no longer an open PR-board choice: PR #16-style original UX lives in `dev/pr8-plus-testbed`; PR #15 is a closed alternative branch whose style ideas can be cherry-picked later only after visual smoke.
+1. Current open PRs are only PR #43, PR #40 and PR #9 in the 2026-06-21 `gh pr list --state all --limit 80` result.
+2. Treat PR #43 as the live master-target soak/proposals route.
+3. Treat PR #40 as open but blocked on rebase/owner ordering because its base `fix/aicom-review-batch-2026-06-15` is closed.
+4. Treat PR #9 as the separate Zargabad map/content validation lane.
+5. Treat PR #35 and deploy-child PR #34/#36-#39/#41 as closed historical AICOM deploy evidence, not active lanes.
+6. Treat PR #42 as branch integration into `claude/b39`, not a master merge.
+7. Keep older closed PR lessons below as historical scouting evidence only.
 
 ## Scout Findings Addendum
 
@@ -125,7 +131,7 @@ Additional read-only scout passes refined the branch guidance:
 
 ### PR #4 Player Stats
 
-PR #4 is real, coherent, and off by default, but it should remain a separate feature lane. It adds a server-authoritative telemetry pipe:
+PR #4 is closed as of the 2026-06-21 board refresh. Its historical branch was real, coherent and off by default, but it is not an open PR lane. The preserved lesson is the server-authoritative telemetry pipe:
 
 ```text
 server SQF stat buffer -> WASPSTAT RPT lines -> DiscordBot RPT tailer/parser -> stats.json
@@ -166,13 +172,13 @@ These PRs are one experimental family, not standalone branches:
 - PR #18 adds structured AI commander logs.
 - PR #19 adds context/belief tracking.
 
-PR #14 is now merged into `master`, PR #18 is still open as a draft on `feat/ai-commander`, and PR #19 is closed but still useful as context/belief evidence for that family. The chain is not perfectly linear by ancestry, so do not treat PR #18 as the current deploy base unless it is explicitly rebased or folded by the owner. The repeated hard conflict from the earlier PR8 lab was:
+PR #14 is merged into `master`; PR #18 and PR #19 are closed but still useful as context/belief evidence for that family. The chain is not perfectly linear by ancestry, so do not treat PR #18 as a current deploy base unless a future owner reopens or rebases it. The repeated hard conflict from the earlier PR8 lab was:
 
 ```text
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf
 ```
 
-The conflict is around AI commander upgrade debit/cost handling. There are no automated tests for no-human commander mode, human-assist mode, upgrade-spend correctness, smoke/JIP handoff, or context-belief output, so current AICOM work should follow PR #35 and the deploy-child lanes with manual lab and telemetry-first review.
+The conflict is around AI commander upgrade debit/cost handling. There are no automated tests for no-human commander mode, human-assist mode, upgrade-spend correctness, smoke/JIP handoff, or context-belief output. Current AICOM/GUER source claims should start from `origin/master@0139a346` or PR #43, then use the closed deploy PRs only as historical review evidence.
 
 ### PR #15 vs PR #16 UI
 
@@ -196,17 +202,16 @@ Historical test branches:
 - dev/pr8-only-testbed: old PR8-only snapshot
 - dev/pr8-plus-testbed: old PR8 + closed PR12 quick fixes + closed PR16 WF menu UX snapshot
 
-Current AICOM route:
-- PR35 is the deploy/2026-06-12-aicom-experital -> master umbrella
-- PR34 and PR36-PR41 are child/review/note lanes around that deploy branch
-- PR29/PR30 are useful AICOM/Experital context, but not substitutes for PR35 ordering
+Current open PR route:
+- PR43 is the live master-target B57 soak/proposals PR
+- PR40 is still open, but it is stacked on a closed base and needs rebase/owner ordering
+- PR9 is the separate Zargabad map/content PR
+- PR35 and PR34/PR36-PR39/PR41 are closed AICOM deploy history
+- PR29 and PR31 are merged history; current source truth starts at origin/master@0139a346
 
 Keep separate for now:
-- PR4 player stats: real but WIP
 - PR9 Zargabad: real but huge map/content import
-- PR13 drone/recon UAV: real but conflicts with PR8 UI/UAV files
-- PR18 AI commander logs: open draft on merged PR14 base; rebase/close explicitly
-- PR20 test harness, PR21 July WIP, PR31/32 marker perf and PR33 v06 hardening: separate lanes
+- PR4 player stats, PR13 drone/recon UAV, PR18 logs, PR20 harness, PR21 July WIP, PR32 marker relevance and PR33 v06 hardening are closed historical PRs
 - PR15 ops-console UI: closed alternate to PR16, cherry-pick ideas only
 ```
 
@@ -214,6 +219,7 @@ Keep separate for now:
 
 - Fetched `origin` and `miksuu`, including PR refs during the original pass. A later prune removed synthetic PR refs; current refresh uses GitHub PR metadata and branch heads.
 - Refreshed GitHub PR metadata on 2026-06-16 with `gh pr list --repo rayswaynl/a2waspwarfare --state open --limit 100 --json number,title,headRefName,baseRefName,isDraft,updatedAt,url`; verified PR #8 and PR #14 merged with `gh pr view`.
+- Refreshed GitHub PR metadata again on 2026-06-21 with `gh pr list --repo rayswaynl/a2waspwarfare --state all --limit 80 --json number,title,state,headRefName,baseRefName,isDraft,updatedAt,mergedAt,url`; result count was `3` open, `12` merged and `28` closed. The open PRs were #9, #40 and #43.
 - Checked PR ancestry against PR #8.
 - Created isolated worktrees under `work/pr8-only-testbed` and `work/pr8-plus-testbed`.
 - Merged PR #12 into PR8 lab with manual conflict resolution in five files.
@@ -223,7 +229,7 @@ Keep separate for now:
 
 ## Adjacent Upstream Note
 
-`Miksuu/master` is ahead of `rayswaynl/master` by `Marty_town_defense_fix` as of this pass. That should be evaluated separately as an upstream-sync candidate before cutting a final gameplay release branch.
+The older upstream note below was written during the original PR cleanup pass. This checkout currently has only the `origin` remote configured, so re-add/fetch a Miksuu upstream remote before using any `Miksuu/master` ahead/behind claim for a new release decision.
 
 ## Continue Reading
 

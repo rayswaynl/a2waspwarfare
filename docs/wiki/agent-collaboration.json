@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T17:49:00+02:00",
+  "generatedAt": "2026-06-21T17:55:30+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr-board-aicom-closure-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "gh pr list --repo rayswaynl/a2waspwarfare --state all --limit 80 --json number,title,state,headRefName,baseRefName,isDraft,updatedAt,mergedAt,url",
+        "origin/master@0139a346",
+        "PR #29 merged 2026-06-17T11:45:52Z",
+        "PR #31 merged 2026-06-17T11:45:52Z",
+        "PR #35 closed 2026-06-17T11:51:11Z",
+        "PR #34/#36/#37/#38/#39/#41 closed 2026-06-17T11:46-11:51Z",
+        "PR #43 open against master",
+        "PR #40 open against closed base fix/aicom-review-batch-2026-06-15",
+        "PR #9 open against master"
+      ],
+      "outputs": [
+        "Refreshed PR-Cleanup-And-Integration-Lab.md, Progress-Dashboard.md and Wiki-Pruning-And-Relevance-Ledger.md so the old deploy-aicom-experital active lane is no longer presented as live.",
+        "Preserved PR #35/#34/#36-#41 as closed historical AICOM deploy evidence, marked PR #29/#31 as merged history, and routed current open PR-board work through PR #43, PR #40 and PR #9.",
+        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future AICOM/GUER source audits should start from origin/master@0139a346 or a named open PR/branch, and should treat PR #35 plus deploy-child PR #34/#36-#39/#41 as historical review evidence only.",
+      "updated": "2026-06-21T17:55:30+02:00"
+    },
     {
       "lane": "clickabletext-soundpush-current-stable-closeout",
       "owner": "Codex",
