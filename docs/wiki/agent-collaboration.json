@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T18:25:19+02:00",
+  "generatedAt": "2026-06-21T18:41:42+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -89,6 +89,27 @@
       ],
       "handoff": "Closed after validation. Future cf2 source-stamp cleanup can continue one compact page at a time, replacing historical caveats only after current-head source checks.",
       "updated": "2026-06-21T17:55:00+02:00"
+    },
+    {
+      "lane": "pvf-dispatcher-current-stable-closeout-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "PVF dispatch implementation",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Networking-And-Public-Variables.md",
+        "Public-Variable-Channel-Index.md",
+        "current Chernarus and maintained Vanilla PVF dispatcher paths"
+      ],
+      "outputs": [
+        "Refreshed PVF dispatcher owner/status pages after source checks showed origin/master@0139a346 no longer dispatches registered PVF handlers through Call Compile.",
+        "Current stable uses missionNamespace getVariable plus typeName CODE checks in both maintained roots, but no explicit PVF_ALLOWED allowlist exists.",
+        "DR-55 sender authentication and direct-PV SEND_MESSAGE compile remain separate open risks; docs checkout and origin/perf/quick-wins still need the full dispatcher port."
+      ],
+      "handoff": "Closed after validation. Future code-owner work should add explicit registered allowlists/logging and smoke current stable, or port the full allowlisted namespace lookup to old-shape branches; do not conflate this with DR-55 or SEND_MESSAGE direct-channel hardening.",
+      "updated": "2026-06-21T18:13:38+02:00"
     },
     {
       "lane": "hq-score-current-stable-refresh",
