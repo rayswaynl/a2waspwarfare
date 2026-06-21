@@ -77,6 +77,37 @@ while {!gameOver} do {
 		if (_updateAILeaders) then {_nextAIUpdate = time + 1};
 
 		_count = 1;
+		//--- B64 (Ray 2026-06-21) PLAYER-ARROW REGRESSION FIX. The B62 own-side reconciliation
+		//--- REBINDS the global clientTeams (Init_Client.sqf: clientTeams = _teams) once a slow-sync
+		//--- OPFOR/JIP joiner's wfbe_teams finally lands. This loop built _markerNames (and the
+		//--- _last* caches) ONCE at start sized to the THEN-empty clientTeams, so after the rebind
+		//--- the per-tick forEach clientTeams walks N>0 teams while _markerNames is still []/short:
+		//--- _markerNames select _markerIndex returns nil -> setMarkerDir/Pos no-op AND the
+		//--- _lastDirs/_lastPositions reads return nil -> abs()/distance throw -> the player own
+		//--- orange arrow never (re)creates or tracks heading ("direction not working again").
+		//--- Rebuild missing markers + grow ALL caches to match clientTeams when the lengths diverge.
+		if (count clientTeams != count _markerNames) then {
+			diag_log format ["[WFBE][B64 TEAM-MARK] clientTeams rebind detected: teams=%1 cache=%2 - rebuilding", count clientTeams, count _markerNames];
+			{
+				if ((_count - 1) >= count _markerNames) then {
+					_marker = Format["%1AdvancedSquad%2Marker", _sideText, _count];
+					createMarkerLocal [_marker,[0,0,0]];
+					_marker setMarkerTypeLocal "mil_arrow2";
+					_marker setMarkerDirLocal 0;
+					_marker setMarkerSizeLocal [0.7,0.7];
+					_marker setMarkerAlphaLocal 0;
+					_markerNames   set [_count - 1, _marker];
+					_lastLeaders   set [_count - 1, objNull];
+					_lastTexts     set [_count - 1, ""];
+					_lastAlphas    set [_count - 1, -1];
+					_lastColors    set [_count - 1, "ColorBlack"];
+					_lastPositions set [_count - 1, [-99999,-99999,0]];
+					_lastDirs      set [_count - 1, -999];
+				};
+				_count = _count + 1;
+			} forEach clientTeams;
+			_count = 1;
+		};
 		{
 			_markerIndex = _count - 1;
 			_marker = _markerNames select _markerIndex;

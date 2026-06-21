@@ -441,12 +441,18 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 //--- slow-sync/JIP/respawn miss therefore self-heals. A2-OA 1.64 safe (no isEqualType/findIf/pushBack; getPos
 //--- of objects only; groups read via plain getVariable). No frozen AI / no sim-gating touched.
 [] spawn {
-	private ["_t0","_logik","_teams","_sideText","_structures","_x","_built","_sideID2","_didTeams"];
-	waitUntil {!isNil "clientInitComplete" && {clientInitComplete}};
+	private ["_t0","_logik","_teams","_sideText","_structures","_x","_built","_sideID2","_didTeams","_hqObj","_loggedStructs"];
+	//--- B64 (Ray 2026-06-21): BOUNDED gate (B63 left this reconciliation on an unbounded
+	//--- clientInitComplete wait, so a stalled init suppressed the structure self-heal entirely).
+	//--- Proceed after 90s in-game at the latest, mirroring the B63 arrow-loop fix.
+	_t0 = time;
+	waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)};
+	diag_log format ["[WFBE][B64 RECON] reconciliation live after %1s cic=%2", round (time - _t0), (!isNil "clientInitComplete" && {clientInitComplete})];
 	waitUntil {!isNil "WFBE_Client_SideID"};
 	_sideText = WFBE_Client_SideJoinedText;
 	_logik = WFBE_Client_Logic;
 	_didTeams = false;
+	_loggedStructs = false;
 	_t0 = time;
 	//--- Re-check for ~120s after init (covers a slow JIP team-sync); cheap idle cadence.
 	while {(time - _t0) < 120} do {
@@ -470,7 +476,29 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 		//--- so JIP clients receive it) and re-trigger Init_BaseStructure for any LIVE structure that never had
 		//--- a marker built (no wfbe_b62_marker_built flag). The re-run sets the flag itself, so this is
 		//--- idempotent and will not duplicate markers for structures that already painted theirs.
+		//--- B64 (Ray 2026-06-21) CAUSE A2 FIX: the own-side HQ is the "HQ marker (UNDEPLOYED)" Ray
+		//--- still cannot see. The HQ object lives ONLY in wfbe_hq - it is NEVER pushed into
+		//--- wfbe_structures, and the boot/mobilized MHQ fires NO setVehicleInit running
+		//--- Init_BaseStructure (only the DEPLOY branch does), so the wfbe_structures walk below skips
+		//--- it entirely. Heal it explicitly: re-fire Init_BaseStructure for wfbe_hq with isHQ=true
+		//--- (literal true, because wfbe_structure_type is set WITHOUT broadcast = nil on a JIP client)
+		//--- and the stable WFBE_Client_SideID. Idempotent via the wfbe_b62_marker_built claim; on
+		//--- deploy/undeploy wfbe_hq swaps to a fresh unflagged object so the next ~5s tick re-fires.
+		_hqObj = WFBE_Client_Logic getVariable ["wfbe_hq", objNull];
+		if (!isNull _hqObj && {alive _hqObj} && {!(_hqObj getVariable ["wfbe_b62_marker_built", false])}) then {
+			[_hqObj, true, WFBE_Client_SideID] ExecVM "Client\Init\Init_BaseStructure.sqf";
+			diag_log format ["[WFBE][B64 HQ-MARK] reconciliation re-fired Init_BaseStructure for own HQ type=%1 deployed=%2 pos=%3", typeOf _hqObj, (WFBE_Client_Logic getVariable ["wfbe_hq_deployed", false]), getPos _hqObj];
+			sleep 0.1;
+		};
+
 		_structures = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideStructures;
+		//--- B64 (Ray 2026-06-21) factory diagnostic: log the own-side structure count ONCE so the next
+		//--- RPT proves whether the JIP client actually RECEIVES the factory objects in wfbe_structures
+		//--- (the prime remaining suspect if factory markers still miss after the gate-bounding).
+		if (!_loggedStructs) then {
+			_loggedStructs = true;
+			diag_log format ["[WFBE][B64 RECON-STRUCTS] own-side (%1) structure count on this client = %2", _sideText, (if (isNil "_structures") then {-1} else {count _structures})];
+		};
 		if (!isNil "_structures" && {typeName _structures == "ARRAY"}) then {
 			{
 				if (!isNull _x && {alive _x}) then {

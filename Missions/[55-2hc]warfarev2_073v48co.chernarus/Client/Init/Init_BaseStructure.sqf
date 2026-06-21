@@ -6,14 +6,21 @@ waitUntil {commonInitComplete}; //--- Wait for the common part.
 
 if (local player) then {
 	Private["_color","_hq","_marker","_markercc","_structure","_text","_type","_side","_sideID","_voteTime","_radius",
-	        "_isCBR","_cbrMarker","_cbrRadius","_cbrUp","_cbrUps","_cbrLvl","_cbrTiers","_cbrPrevR"];
+	        "_isCBR","_cbrMarker","_cbrRadius","_cbrUp","_cbrUps","_cbrLvl","_cbrTiers","_cbrPrevR","_bsT0"];
 
 	_structure = _this select 0;
 	_hq = _this select 1;
 	_sideID = _this select 2;
 	_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
     _radius = missionNameSpace getVariable "WFBE_C_STRUCTURES_COMMANDCENTER_RANGE";
-	waitUntil {clientInitComplete};
+	//--- B64 (Ray 2026-06-21): BOUNDED gate (mirrors the B63 arrow-loop fix). B63 left this one-shot
+	//--- structure-marker draw on an UNBOUNDED waitUntil {clientInitComplete}; if client init ever
+	//--- stalls, the factory/HQ marker would never paint. Proceed after 90s of in-game time at the
+	//--- latest (time is paused on the loading screen, so this can't fire during a genuine load). The
+	//--- diag_log makes the next RPT conclusively show whether the gate was ever the cause for factories.
+	_bsT0 = time;
+	waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _bsT0) > 90)};
+	diag_log format ["[WFBE][B64 STRUCT-MARK] Init_BaseStructure proceeding type=%1 hq=%2 sideID=%3 mySideID=%4 after %5s cic=%6", typeOf (_this select 0), (_this select 1), (_this select 2), (if (isNil "WFBE_Client_SideID") then {-99} else {WFBE_Client_SideID}), round (time - _bsT0), (!isNil "clientInitComplete" && {clientInitComplete})];
 	//--- B62 (Ray 2026-06-21): own-side gate uses the STABLE WFBE_Client_SideID (set once at client init,
 	//--- mirrors updateaicommarkers.sqf), NOT WFBE_Client_SideJoined. WFBE_Client_SideJoined / (side player)
 	//--- can drift on respawn/JIP-settle; because this script is a ONE-SHOT setVehicleInit, any drift at this
