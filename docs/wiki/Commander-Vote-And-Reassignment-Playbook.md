@@ -2,7 +2,7 @@
 
 Source-backed implementation playbook for commander election, no-commander vote semantics, manual reassignment and the nearby commander-authority boundary.
 
-Status: docs only; vote outcome semantics are unpatched in every checked maintained root, while the DR-15 reassignment helper is branch-split.
+Status: docs only; current stable `origin/master@0139a346` has the server-side DR-47 tautology removed in both maintained roots, but vote UI preview/policy smoke remains open and older checked refs still carry the old comparison.
 
 Scope: Arma 2 Operation Arrowhead 1.64 mission behavior. Gameplay patches should start in `Missions/[55-2hc]warfarev2_073v48co.chernarus`, then propagate maintained Vanilla through LoadoutManager.
 
@@ -21,12 +21,12 @@ Use this page with [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Comm
 
 ## Current Branch Scope
 
-Checked 2026-06-14 on current docs head `8c3942d2`; targeted vote/reassignment source files are unchanged from line-anchor checkpoint `e2c9f6ed`. Stable `origin/master` remains `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
+Checked 2026-06-21 after `git fetch --all --prune`. Current stable `origin/master@0139a346` differs from the older `8c3942d2` / `cf2a6d6a` branch evidence: the vote worker no longer uses the old `>= || <=` tautology, and the manual reassignment helper unpacking is present in both maintained roots. Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, historical release commit `a96fdda2` and historical AI-commander commit `c20ce153` still keep the old vote comparison; current origin exposes no `release/*` or `feat/ai-commander` heads on 2026-06-21.
 
 | Surface | Current branch truth | Route |
 | --- | --- | --- |
-| Commander vote AI/no-commander outcome | Every checked Chernarus and maintained Vanilla root still counts `wfbe_vote == -1` into `_aiVotes` and then uses the tautological `_highest >= _aiVotes` OR `_highest <= _aiVotes` player-candidate condition (`Server_VoteForCommander.sqf:18,27,43`). The client preview still treats row 0 or no strict majority as AI/no commander (`GUI_VoteMenu.sqf:88`). | This page owns the policy decision and smoke matrix. |
-| Manual reassignment helper shape | Current docs head `8c3942d2` is source-unchanged from `e2c9f6ed` and still has `_side = _this` in `Server_AssignNewCommander.sqf:3` in both maintained roots, while `RequestNewCommander.sqf:13-14` spawns the helper and also sends `new-commander-assigned`. Stable, Miksuu, perf, release and `feat/ai-commander` fix helper unpacking at `Server_AssignNewCommander.sqf:4-5` in both roots, but keep duplicate senders at helper `:10` plus caller `RequestNewCommander.sqf:14`. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) |
+| Commander vote AI/no-commander outcome | Current stable `origin/master@0139a346` Chernarus and maintained Vanilla still count `wfbe_vote == -1` into `_aiVotes` (`Server_VoteForCommander.sqf:18,26-27`) but now select a player commander only when `!_tie`, `_highestTeam != -1` and `_highest >= _aiVotes` (`:43`). Chernarus blame points to `cbc2294c4`; maintained Vanilla propagation points to `91dc6a75`. The client preview still treats row 0 or no strict majority as AI/no commander (`GUI_VoteMenu.sqf:88`), so UI/policy smoke remains open. Miksuu `b8389e74`, perf `0076040f`, historical `a96fdda2` and historical `c20ce153` still use the old `>= || <=` comparison at `Server_VoteForCommander.sqf:43`. | Current stable server comparison is source-present/smoke-pending; this page owns the remaining UI/policy smoke matrix and old-branch route. |
+| Manual reassignment helper shape | Current stable `origin/master@0139a346` Chernarus and maintained Vanilla unpack `_side = _this select 0` / `_commander = _this select 1` at `Server_AssignNewCommander.sqf:4-5`, while `RequestNewCommander.sqf:13-14` still spawns the helper and also sends `new-commander-assigned`. Duplicate senders remain at helper `:10` plus caller `RequestNewCommander.sqf:14`; the UI identity edge remains open. Older docs-head evidence for `_side = _this` is historical branch-scoped. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) |
 | Reassignment UI identity | Every checked root still stores team indexes with `lnbSetValue` (`GUI_Commander_VoteMenu.sqf:13,63`) but resolves the selected commander by visible leader-name text at `:33,37`. | Keep this smoke tied to DR-15; broader UI loop cleanup routes to [Client UI systems](Client-UI-Systems-Atlas#vote-help-and-main-menu-branch-matrix). |
 | Requester authority | `RequestCommanderVote` and `RequestNewCommander` remain payload-side/requester-light flows; this pass did not patch sender authentication or authority validation. | [Server authority map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) |
 | Objective Ping / old town tasks | Current docs head, Miksuu and perf still keep the commander-menu `SetTask` sends commented (`GUI_Menu_Command.sqf:335,337,343`) while registering `SetTask`; stable and release send targeted Objective Ping tasks at `GUI_Menu_Command.sqf:336,344` in both maintained roots. The old town `TaskSystem` remains commented in all checked roots. | [Client UI systems](Client-UI-Systems-Atlas#known-ui-risks-and-partial-work) |
@@ -35,9 +35,9 @@ Checked 2026-06-14 on current docs head `8c3942d2`; targeted vote/reassignment s
 
 | Area | Finding | Current status |
 | --- | --- | --- |
-| Commander vote resolution | DR-47: server counts AI/no-commander votes but then selects any non-tied player candidate. | Confirmed; owner decision needed before code. |
-| Vote UI preview | Client preview can show AI/no commander for a distribution the server resolves to a player. | Confirmed mismatch. |
-| Manual reassignment helper | DR-15: current docs head helper receives `[_side, _assigned_commander]` but treats the whole payload as `_side`; stable/Miksuu/perf/release/AI-commander fix only that unpacking. | Branch-split; dedicated page owns exact patch shape. |
+| Commander vote resolution | DR-47 server tautology is fixed on current stable `origin/master@0139a346`: player candidate assignment now requires `_highest >= _aiVotes`. Older checked refs still use `>= || <=`. | Source-present on current stable; Arma vote-smoke and UI/policy alignment still pending. |
+| Vote UI preview | Client preview can still show AI/no commander for a distribution the current stable server resolves to a player, because `GUI_VoteMenu.sqf:88` uses row 0 / strict-majority preview logic rather than the server `_highest >= _aiVotes` rule. | Confirmed remaining mismatch risk. |
+| Manual reassignment helper | DR-15 helper unpacking is source-present on current stable `origin/master@0139a346`, but duplicate `new-commander-assigned` senders and UI visible-name targeting remain open. | Partial source-present; dedicated page owns exact patch/smoke shape. |
 | Reassignment UI identity | UI stores team ids in rows but resolves selected commander by visible leader name text. | Confirmed UI correctness debt in every checked root. |
 | Requester authority | Vote/reassign PVFs use payload side/name/candidate. | Separate hardening pass; do not mix with vote semantics. |
 
@@ -51,21 +51,23 @@ All source refs below are from the Chernarus source mission unless the path star
 | --- | --- | --- |
 | Vote worker starts | `Server/Functions/Server_VoteForCommander.sqf:9-14` sets `_side`, reads the side logic vote timer and broadcasts `wfbe_votetime`. | Server owns the countdown and final commander assignment. |
 | Vote counting | `Server/Functions/Server_VoteForCommander.sqf:17-29` counts `wfbe_vote == -1` as `_aiVotes`; all other values increment a player-team vote bucket. | Row value `-1` represents AI/no commander in the worker. |
-| Winner selection | `Server/Functions/Server_VoteForCommander.sqf:31-43` finds `_highest`, `_highestTeam` and `_tie`, then checks `!_tie && _highest >= _aiVotes && _highestTeam != -1`. | Player candidate wins only when not tied, top vote count meets or exceeds AI/abstain votes, and a valid team index exists. The prior tautological `>= || <=` OR form is resolved in master (recorded in source comment on line 43); DR-47 vote-semantics assessment should be re-evaluated against the current master condition. |
-| Final assignment | `Server/Functions/Server_VoteForCommander.sqf:45-57` writes `wfbe_commander`, broadcasts `commander-vote`, and stops AI commander state if a player commander wins. | Vote semantics affect commander, UI and AI handoff state. |
+| Winner selection | Current stable `Server/Functions/Server_VoteForCommander.sqf:31-43` finds `_highest`, `_highestTeam` and `_tie`, then assigns a player commander only when `_highest >= _aiVotes` and the top player candidate is not tied. Older Miksuu/perf/historical release/AI refs still use `_highest >= _aiVotes` OR `_highest <= _aiVotes` at `:43`. | Current stable removed the tautology; old-branch code can still select any non-tied player candidate regardless of no-commander votes. |
+| Final assignment | Current stable `Server/Functions/Server_VoteForCommander.sqf:49,54,57,61` applies the AI-commander lock override, writes `wfbe_commander`, broadcasts `commander-vote`, and stops AI commander state if a player commander wins. | Vote semantics affect commander, UI and AI handoff state. |
 | Vote menu rows | `Client/GUI/GUI_VoteMenu.sqf:7-14` adds a No Commander row with value `-1` and player rows with team indexes. | Client row ids match the server's `wfbe_vote` value model. |
 | Vote preview | `Client/GUI/GUI_VoteMenu.sqf:42-49,87-89` offsets `wfbe_vote + 1`, then previews AI/no commander when row 0 wins or no option has more than half the player count. | UI preview and server resolver can disagree. |
 | Commander assign UI | `Client/GUI/GUI_Commander_VoteMenu.sqf:8-14,33-46` stores row team indexes but resolves the target by visible leader-name text before sending `RequestNewCommander`. | Duplicate or changed names can point the reassignment at the wrong team. |
 | Vote restart PVF | `Server/PVFunctions/RequestCommanderVote.sqf:3-22` trusts payload side/name, resets votes, seeds the current commander vote and spawns `VoteForCommander`. | Useful recovery path, but requester identity hardening is separate from vote resolution. |
 | Manual reassign PVF | `Server/PVFunctions/RequestNewCommander.sqf:3-14` reads side/candidate, writes `wfbe_commander`, spawns `[_side, _assigned_commander]` into the helper and sends `new-commander-assigned`. | The caller already mutates commander state before the helper runs. |
-| Assign helper | Current docs head `Server/Functions/Server_AssignNewCommander.sqf:4-5` uses `_this select 0` / `_this select 1`; the DR-15 unpacking fix is already present on master. The helper still sends `new-commander-assigned` at `:10` while `RequestNewCommander.sqf:14` also sends it. | DR-15 unpacking is already patched on master. Duplicate notification ownership remains unresolved across all checked roots and must still be decided. |
-| Vanilla parity | Maintained Vanilla matches the named Chernarus branch shapes: vote semantics are unpatched everywhere checked; the reassignment helper bug is present only on current docs head among this pass's checked refs; UI name-text selection and duplicate notification sender shape remain everywhere. | Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for branch status before claiming this lane fixed. |
+| Assign helper | Current stable `Server/Functions/Server_AssignNewCommander.sqf:4-5,10` unpacks `_side` / `_commander` correctly, then sends another `new-commander-assigned`. `RequestNewCommander.sqf:13-14` still spawns the helper and sends the caller notification too. | DR-15 helper shape is source-present on current stable, but duplicate notification ownership must still be decided. |
+| Vanilla parity | Maintained Vanilla matches the named Chernarus current-stable shapes: server vote comparison and helper unpacking are source-present; UI preview logic, visible-name reassignment targeting, duplicate notification senders and old-branch vote comparison remain as documented above. | Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for branch status before claiming the broader commander lane fixed. |
 
 ## Current Vote Behavior
 
-The server tracks no-commander votes, but the final comparison does not actually let `_aiVotes` beat a non-tied player candidate. The expression `_highest >= _aiVotes || _highest <= _aiVotes` is true for any pair of numeric counts, so the real server rule is closer to "any non-tied player candidate wins if at least one player candidate exists".
+On current stable `origin/master@0139a346`, the server tracks no-commander votes and now lets `_aiVotes` block a player candidate when the AI/no-commander count is greater than the highest player-candidate count. A player candidate can still win on equality because the current comparison is `_highest >= _aiVotes`.
 
-The client vote menu suggests a different rule. It previews AI/no commander when the leading row is the No Commander row or when no row has more than half of the counted player slots. That creates a player-facing mismatch: the UI can imply no commander while the server assigns a human commander.
+The client vote menu can still suggest a different rule. It previews AI/no commander when the leading row is the No Commander row or when no row has more than half of the counted player slots. That creates a remaining player-facing mismatch: the UI can imply no commander while the current stable server assigns a human commander under the `_highest >= _aiVotes` rule.
+
+Older checked refs still carry the worse server comparison. On Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, historical release commit `a96fdda2` and historical AI-commander commit `c20ce153`, `_highest >= _aiVotes || _highest <= _aiVotes` is true for any pair of numeric counts, so any non-tied player candidate can win if at least one player candidate exists.
 
 Before patching, choose the rule explicitly:
 
@@ -85,9 +87,9 @@ Manual reassignment is a separate flow from the vote result, but the fixes are a
 1. `RequestNewCommander.sqf` already writes `wfbe_commander`.
 2. It then spawns `Server_AssignNewCommander.sqf` with `[_side, _assigned_commander]`.
 3. The helper reads `_side = _this`, so side-logic routing receives an array instead of a side.
-4. Both caller and helper contain `new-commander-assigned` sends, but the helper send is partly blocked today by the bad side argument.
+4. Current stable unpacks the helper side correctly, so both caller and helper can send `new-commander-assigned`.
 
-Patch or port the DR-15 helper call shape with [Commander reassignment call shape](Commander-Reassignment-Call-Shape). Stable, Miksuu, perf, release and `feat/ai-commander` already fix helper unpacking in both maintained roots, but still need one notification owner or clients can receive duplicate commander messages.
+Patch or port the DR-15 helper call shape with [Commander reassignment call shape](Commander-Reassignment-Call-Shape) on old-shape targets. Current stable, Miksuu, perf, historical release and historical AI-commander already fix helper unpacking in both maintained roots, but still need one notification owner or clients can receive duplicate commander messages.
 
 Patch the UI identity edge in the same implementation branch if possible. `GUI_Commander_VoteMenu.sqf` should use the row value/team index already stored in the listbox instead of comparing visible leader names.
 
