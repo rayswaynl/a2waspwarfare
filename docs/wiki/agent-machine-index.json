@@ -28,12 +28,7 @@
       "agent-upstream-wiki-imports.jsonl"
     ],
     "jsonlEnvelopeGoingForward": {
-      "required": [
-        "schema",
-        "id",
-        "status",
-        "summary"
-      ],
+      "required": ["schema", "id", "status", "summary"],
       "recommended": [
         "ts",
         "actor",
@@ -360,6 +355,7 @@
         "AI-Headless-And-Performance",
         "Headless-Delegation-And-Failover-Playbook",
         "AI-Commander-Autonomy-Audit",
+        "AI-Commander-Capture-And-Fun-Improvement-Plan",
         "AI-Runtime-HC-Loop-Map",
         "Headless-Client-Scaling-And-Topology"
       ],
