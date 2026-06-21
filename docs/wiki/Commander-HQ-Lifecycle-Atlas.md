@@ -2,7 +2,7 @@
 
 > Canonical source-backed map for commander selection, commander-client affordances, HQ/MHQ deployment, HQ destruction, wreck tracking and MHQ repair. This page bridges [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Server authority migration map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index).
 
-Unless a branch/ref is named, source paths below are relative to the Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. The initial HQ/team-spawn section was refreshed against live mission `origin/master` `0139a3468` on 2026-06-21; older branch-matrix rows keep their named provenance.
+Unless a branch/ref is named, source paths below are relative to the Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. The initial HQ/team-spawn section and HQ score/bounty matrix were refreshed against live mission `origin/master` `0139a3468` on 2026-06-21; older branch-matrix rows keep their named provenance.
 
 ## How To Use This Page
 
@@ -20,11 +20,13 @@ Unless a branch/ref is named, source paths below are relative to the Chernarus m
 
 Checked 2026-06-14 against current docs head `8c3942d2` (targeted commander/HQ source paths unchanged from `f82a9127` and `e2c9f6ed`), stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
 
+HQ score/bounty was rechecked 2026-06-21 against current stable `origin/master@0139a346` in both maintained roots. Other rows keep their 2026-06-14 branch provenance until refreshed.
+
 | Surface | Current branch truth | Route |
 | --- | --- | --- |
 | Commander vote semantics | All checked maintained roots keep the `_highest >= _aiVotes` OR `_highest <= _aiVotes` winner condition, so a non-tied player candidate wins even when AI/no-commander votes are equal or higher (`Server_VoteForCommander.sqf:24-29,43`; `GUI_VoteMenu.sqf:88`). | [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook#current-branch-scope) |
 | Manual reassignment helper | Current docs head `8c3942d2` is source-unchanged from `e2c9f6ed`/`f82a9127` for this flow and still uses `_side = _this` in `Server_AssignNewCommander.sqf:3`; stable/Miksuu/perf/release/feat-ai unpack side + commander at `:4-5` in checked maintained roots, but duplicate `new-commander-assigned` senders remain. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) |
-| HQ score/bounty | Current docs head `8c3942d2`, stable, Miksuu, perf, release and feat-ai all keep the generic HQ building score plus second HQ bounty shape. Line drift is tracked below. | [HQ kill score and bounty branch matrix](#hq-kill-score-and-bounty-branch-matrix) |
+| HQ score/bounty | Current stable `origin/master@0139a346` still keeps the generic HQ building score plus second HQ bounty shape in Chernarus and maintained Vanilla. Older docs, Miksuu, perf, release and feat-ai rows are preserved below as branch-scoped evidence. | [HQ kill score and bounty branch matrix](#hq-kill-score-and-bounty-branch-matrix) |
 | Objective Ping / commander tasks | Current docs head `8c3942d2`, Miksuu, perf and feat-ai leave maintained-root `SetTask` sends commented at `GUI_Menu_Command.sqf:335,337,343`; stable and release send targeted Objective Ping tasks at `:336,344`. Old town `TaskSystem` remains commented everywhere checked. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
 | HQ repair and base-area authority | `RequestMHQRepair` still sends only side, and base-area accounting still depends on client-bound `RequestBaseArea`; treat both as authority-sensitive before expanding HQ recovery or deploy limits. | [Server authority migration map](Server-Authority-Migration-Map), [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas) |
 
@@ -55,7 +57,7 @@ The useful mental model:
 | HQ getters | `Common/Functions/Common_GetSideHQ.sqf:7-12`, `Common/Functions/Common_GetSideHQDeployStatus.sqf:7-12` |
 | Client commander/HQ watchers | `Client/Init/Init_Client.sqf:382-388,489-503`, `Client/FSM/updateclient.sqf:184-244` |
 | HQ deploy/mobilize worker | `Server/Construction/Construction_HQSite.sqf:13-104` |
-| HQ killed worker | `Server/Functions/Server_OnHQKilled.sqf:25-44,46-82,84-118` |
+| HQ killed worker | `Server/Functions/Server_OnHQKilled.sqf:26-48,51-86,89-119` |
 | MHQ repair worker | `Client/Action/Action_RepairMHQ.sqf:5-42`, `Server/Functions/Server_MHQRepair.sqf:7-79` |
 | Commander economy controls | `Client/GUI/GUI_Menu_Economy.sqf:24-27,74-79,104-150`, `Server/FSM/updateresources.sqf:36-43` |
 | HQ build/base-area authority | `Client/Module/CoIn/coin_interface.sqf:13-26,494,718`, `Server/PVFunctions/RequestStructure.sqf:3-21`, `Client/PVFunctions/RequestBaseArea.sqf:1-4`, `Server/FSM/basearea.sqf:46-78` |
@@ -237,25 +239,26 @@ The base-area limit itself is also only proven as a local client affordance at d
 
 ## HQ Destruction And Wreck Markers
 
-HQ death is handled by `Server_OnHQKilled.sqf`. If the destroyed object was a deployed HQ, the server creates a dead MHQ object at the structure position, marks it damaged, flips `wfbe_hq_deployed = false`, updates `wfbe_hq` to the wreck and schedules deletion of the deployed structure (`Server_OnHQKilled.sqf:25-44`).
+HQ death is handled by `Server_OnHQKilled.sqf`. If the destroyed object was a deployed HQ, the server creates a dead MHQ object at the structure position, marks it damaged, flips `wfbe_hq_deployed = false`, updates `wfbe_hq` to the wreck, deletes the deployed-HQ shield walls and schedules deletion of the deployed structure (`Server_OnHQKilled.sqf:26-48`).
 
-The same worker awards score/bounty messages (`:46-82`) and publishes allied-only HQ wreck marker state:
+The same worker awards score/bounty messages (`:51-86`) and publishes allied-only HQ wreck marker state:
 
 | Variable | Meaning | Source |
 | --- | --- | --- |
-| `IS_WEST_HQ_ALIVE` / `IS_EAST_HQ_ALIVE` | Whether allied clients should delete or show wreck marker. | `Server_OnHQKilled.sqf:97-114`, `Server_MHQRepair.sqf:60-76` |
-| `HQ_WEST_MARKER_INFOS` / `HQ_EAST_MARKER_INFOS` | Marker name, position, type, text, color, side and tracked wreck object. | `Server_OnHQKilled.sqf:84-114` |
+| `IS_WEST_HQ_ALIVE` / `IS_EAST_HQ_ALIVE` | Whether allied clients should delete or show wreck marker. | `Server_OnHQKilled.sqf:104-119`, `Server_MHQRepair.sqf:60-76` |
+| `HQ_WEST_MARKER_INFOS` / `HQ_EAST_MARKER_INFOS` | Marker name, position, type, text, color, side and tracked wreck object. | `Server_OnHQKilled.sqf:89-119` |
 
-`updateclient.sqf` polls these missionNamespace variables every client update tick. West clients delete `HQ_WRECK_WEST` when alive, otherwise update the local marker against the tracked HQ wreck object (`updateclient.sqf:41-69`). East clients do the equivalent for `HQ_WRECK_EAST` (`:72-100`). The server intentionally does not create a global marker because enemies should not see allied HQ wrecks (`Server_OnHQKilled.sqf:84-96`).
+`updateclient.sqf` polls these missionNamespace variables every client update tick. West clients delete `HQ_WRECK_WEST` when alive, otherwise update the local marker against the tracked HQ wreck object (`updateclient.sqf:41-69`). East clients do the equivalent for `HQ_WRECK_EAST` (`:72-100`). The server intentionally does not create a global marker because enemies should not see allied HQ wrecks (`Server_OnHQKilled.sqf:89-99`).
 
 ### HQ Kill Score And Bounty Branch Matrix
 
-DR-50 is branch-unrescued across the checked maintained roots. Current docs head `8c3942d2` is source-unchanged from `f82a9127` for `Server_OnHQKilled.sqf` and `Init_CommonConstants.sqf`: it sets `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF` at `Server_OnHQKilled.sqf:23`, awards it unconditionally at `:49`, then awards `_score = 900` again for non-teamkills at `:78-81`. The coefficient is `3` at `Init_CommonConstants.sqf:356`, so a clean enemy HQ kill pays `900 + 900 = 1800`; a friendly/teamkill HQ kill still gets the unconditional `900`.
+DR-50 is still branch-unrescued on current stable. Recheck 2026-06-21: `origin/master@0139a346` Chernarus and maintained Vanilla both set `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF` at `Server/Functions/Server_OnHQKilled.sqf:23`, award it at `:52` on the server path or `:54` through `RequestChangeScore`, then award `_score = 900` again for non-teamkills at `:83` / `:86` under the `:80` side guard. The coefficient is `3` at `Common/Init/Init_CommonConstants.sqf:529`, so a clean enemy HQ kill pays `900 + 900 = 1800`; a friendly/teamkill HQ kill still gets the generic `900`.
 
 | Ref / root | Evidence | Status |
 | --- | --- | --- |
-| Docs head `8c3942d2` Chernarus + maintained Vanilla, source-unchanged from `f82a9127` | `Server_OnHQKilled.sqf:23,49,78,81`; `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
-| Stable `origin/master` `cf2a6d6a` | `Server_OnHQKilled.sqf:23,54,83,86`; `Init_CommonConstants.sqf:376` | Double-award present in both roots. |
+| Current stable `origin/master@0139a346` Chernarus + maintained Vanilla | `Server/Functions/Server_OnHQKilled.sqf:23,52,54,80,83,86`; `Common/Init/Init_CommonConstants.sqf:529` | Double-award present in both maintained roots. |
+| Historical docs head `8c3942d2` Chernarus + maintained Vanilla, source-unchanged from `f82a9127` | `Server_OnHQKilled.sqf:23,49,78,81`; `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
+| Older stable `origin/master` `cf2a6d6a` | `Server_OnHQKilled.sqf:23,54,83,86`; `Init_CommonConstants.sqf:376` | Double-award present in both roots. |
 | Miksuu upstream `b8389e74` | Same two-award shape at `Server_OnHQKilled.sqf:23,49,78,81`; coefficient at `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
 | `origin/perf/quick-wins` `0076040f` | Same two-award shape at `Server_OnHQKilled.sqf:23,49,78,81`; coefficient at `Init_CommonConstants.sqf:356` | Not fixed by perf branch. |
 | `origin/release/2026-06-feature-bundle` `a96fdda2` | Same two-award shape at `Server_OnHQKilled.sqf:23,54,83,86`; coefficient at `Init_CommonConstants.sqf:372` | Not fixed by release branch. |
@@ -284,7 +287,7 @@ This is functionally coherent for honest clients, but authority-light: the serve
 
 The repair worker also lacks a server-side duplicate-entry guard before setting `wfbe_hq_repairing` inside `Server_MHQRepair.sqf:23`. The client actions check `wfbe_hq_repairing` locally (`Action_RepairMHQ.sqf:8-9`; `WASP/actions/Action_RepairMHQDepot.sqf:10-11`), but two near-simultaneous requests can still enter the side-only server worker unless the future hardening patch rechecks and sets the mutex before creating the replacement MHQ.
 
-The explicit alive/dead HQ marker broadcasts and client update branches are west/east only. Resistance HQ recovery is therefore not covered by this marker state machine (`Server_OnHQKilled.sqf:97`, `Server_MHQRepair.sqf:60`, `updateclient.sqf:42`).
+The explicit alive/dead HQ marker broadcasts and client update branches are west/east only. Resistance HQ recovery is therefore not covered by this marker state machine (`Server_OnHQKilled.sqf:104`, `Server_MHQRepair.sqf:60`, `updateclient.sqf:42`).
 
 ## WASP Cash HQ Recovery
 
@@ -306,9 +309,9 @@ This is not just "another repair UI." It mutates economy/town state and HQ posit
 | Authority-light/high impact | WASP cash HQ recovery moves the wreck and resets town SV client-side. | `WASP/actions/Action_RepairMHQDepot.sqf:19-29` | Move one-time flag, funds debit, HQ recovery position and town-SV side effects to a server-owned request. |
 | Mixed locality | Mobile-HQ killed EH can be forwarded by clients through `RequestSpecial`. | `Client/PVFunctions/HandleSpecial.sqf:34`; `Server_HandleSpecial.sqf:114-116` | If hardening `RequestSpecial`, preserve legitimate HQ-kill forwarding while rejecting forged/malformed payloads. |
 | Patch-ready scoring correctness | HQ kill score is awarded once through the generic building score path and again through the HQ bounty path; teamkills still get the generic award. | [HQ kill score and bounty branch matrix](#hq-kill-score-and-bounty-branch-matrix) | Keep one non-teamkill score award, zero teamkill score, propagate maintained Vanilla and smoke enemy/friendly HQ kills plus DR-20 idempotency. |
-| JIP-sensitive | HQ wreck markers are local client markers derived from server-published marker arrays and object refs. | `Server_OnHQKilled.sqf:84-114`; `updateclient.sqf:41-100` | Smoke late join after HQ kill, repaired HQ marker deletion, and moved wreck marker updates. |
+| JIP-sensitive | HQ wreck markers are local client markers derived from server-published marker arrays and object refs. | `Server_OnHQKilled.sqf:89-119`; `updateclient.sqf:41-100` | Smoke late join after HQ kill, repaired HQ marker deletion, and moved wreck marker updates. |
 | Cleanup risk | HQ wreck marker deletion/helper behavior mixes side-local intent with `deleteMarker`, and null wreck objects can leave stale markers. | `Server_MHQRepair.sqf:56`; `Client_Delete_Marker.sqf:24-25`; `Common_UpdateMarker.sqf:25` | Verify marker removal after repair and after wreck deletion; prefer local deletion for side-local markers if source smoke confirms intent. |
-| Side coverage gap | HQ alive/dead marker broadcasts cover west/east, not resistance. | `Server_OnHQKilled.sqf:97`; `Server_MHQRepair.sqf:60`; `updateclient.sqf:42-100` | Keep resistance HQ/economy disabled or design a full three-side marker state machine before enabling resistance HQ recovery. |
+| Side coverage gap | HQ alive/dead marker broadcasts cover west/east, not resistance. | `Server_OnHQKilled.sqf:104`; `Server_MHQRepair.sqf:60`; `updateclient.sqf:42-100` | Keep resistance HQ/economy disabled or design a full three-side marker state machine before enabling resistance HQ recovery. |
 | Multiplayer-sensitive | Base-area accounting is updated via client-bound `RequestBaseArea`, while deploy/build limits are first enforced through local client state. | `coin_interface.sqf:13-26`; `Construction_HQSite.sqf:54-59`; `RequestBaseArea.sqf:1-4`; `basearea.sqf:46-78` | Audit before changing defense availability, base area limits or server authority around CoIn; server should be able to reject stale or forged area/build requests. |
 | Partial/latent | AI commander variable state exists, but full autonomous commander ownership is not proven. | `wfbe_commander = objNull`; `Server_VoteForCommander.sqf:48-57`; [AI commander autonomy audit](AI-Commander-Autonomy-Audit) | Keep AI commander revival separate from commander/HQ correctness patches. |
 | Partial UI/order feature | Current docs head, Miksuu, perf and feat-ai Commander Set Task UI build task data and play HQ speech, but maintained-root `SetTask` sends are commented while `Client/PVFunctions/SetTask.sqf` still creates `CommanderOrder` if invoked. Stable `cf2a6d6a` and release `a96fdda2` re-enable targeted/client-bound sends as "Objective Ping" in both maintained roots, but old town `TaskSystem` remains disabled. | Docs `GUI_Menu_Command.sqf:315-344`; docs `Client/PVFunctions/SetTask.sqf:8-14`; docs `Common/Init/Init_PublicVariables.sqf:33`; stable/release `GUI_Menu_Command.sqf:336,344` and `Common/Init/Init_PublicVariables.sqf:36`; docs `Init_Client.sqf:75,744` | Hide the current-source affordance or deliberately port the stable/release Objective Ping shape with server/JIP/task-spam smoke; do not confuse it with revival of the old town TaskSystem. |

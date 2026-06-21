@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T17:55:30+02:00",
+  "generatedAt": "2026-06-21T18:15:48+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only pass refreshed the Dead-Code-And-Stale-Code-Register.md ICBM_launched PVEH row with exact current docs/stable/Miksuu/perf refs, no-sender evidence, current nuke-route anchors and the absent release-head caveat. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap after this pushed batch; preserve docs/wiki parity when a mirror exists."
+      "currentWork": "Latest docs-only pass refreshed DR-50 HQ-kill score evidence after current stable origin/master@0139a346 proved the double-award remains present in Chernarus and maintained Vanilla. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hq-score-current-stable-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-HQ-Lifecycle-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md after current stable origin/master@0139a346 showed DR-50 is still current-stable-unpatched in both maintained roots. Chernarus and maintained Vanilla keep _points at Server/Functions/Server_OnHQKilled.sqf:23, award generic score at :52/:54, gate only the second _score = 900 bounty at :80, set it at :83, award it at :86, and keep WFBE_C_BUILDINGS_SCORE_COEF = 3 at Common/Init/Init_CommonConstants.sqf:529. Older docs/Miksuu/perf/release/feat-ai evidence remains branch-scoped. No gameplay source changed."
+    },
     {
       "lane": "icbm-launched-pveh-branch-scope-refresh",
       "owner": "Codex",
