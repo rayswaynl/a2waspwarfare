@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T18:15:48+02:00",
+  "generatedAt": "2026-06-21T18:23:54+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "map-boundaries-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "cf2a6d6a4..origin/master changed constants/parameters/paradrop/stringtable anchors",
+        "Map-Boundaries-And-Offmap-Enforcement.md",
+        "docs/wiki/Map-Boundaries-And-Offmap-Enforcement.md"
+      ],
+      "outputs": [
+        "Refreshed Map-Boundaries-And-Offmap-Enforcement.md from historical cf2 source-stamp caveat wording to current origin/master@0139a346 evidence.",
+        "Updated shifted anchors for common init, boundary parameter/defaults, client compile bindings, off-map timeout, stringtable warning, paradrop support and server town distribution.",
+        "Clarified Server/Init/Init_Towns.sqf as the town-distribution reader. No gameplay source changed.",
+        "Mirrored the touched wiki file into docs/wiki and validated JSON/JSONL, wiki validator, diff check and wiki/docs parity."
+      ],
+      "handoff": "Closed after validation. Future cf2 source-stamp cleanup can continue one compact page at a time, replacing historical caveats only after current-head source checks.",
+      "updated": "2026-06-21T17:55:00+02:00"
+    },
     {
       "lane": "hq-score-current-stable-refresh",
       "owner": "Codex",

@@ -1,14 +1,16 @@
 # Map Boundaries and Off-Map Enforcement
 
-> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-refreshed 2026-06-21 against current `origin/master@0139a346` after the `cf2a6d6a4..0139a346` drift check. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless noted. Arma 2 OA 1.64.
 
 The boundaries system enforces a playable zone by shape-testing each client's position every 5 seconds, displaying a countdown hint when the player leaves the zone, and killing the vehicle/player when the countdown expires. It also clamps paradrop aircraft spawn points to map edges and drives the random-town distribution algorithm. The feature is parameter-controlled and silently self-disables on unregistered terrain.
+
+Current-head note: the post-`cf2a6d6a4` changes shifted constants, parameters, support-paradrop and stringtable anchors, but did not replace the boundary geometry or countdown handler shape checked below.
 
 ---
 
 ## Init and Terrain Lookup
 
-`Common/Init/Init_Boundaries.sqf` runs on every machine (client and server) from `Common/Init/Init_Common.sqf:317`. It sets the single missionNamespace variable that all consumers read.
+`Common/Init/Init_Boundaries.sqf` runs on every machine (client and server) from `Common/Init/Init_Common.sqf:326`. It sets the single missionNamespace variable that all consumers read.
 
 ```sqf
 // Common/Init/Init_Boundaries.sqf:1-37 (abridged)
@@ -70,9 +72,9 @@ The nil-out of `BoundariesIsOnMap`/`BoundariesHandleOnMap` only executes on the 
 
 | Parameter class | Default | Values | File |
 |---|---|---|---|
-| `WFBE_C_GAMEPLAY_BOUNDARIES_ENABLED` | `1` (Enabled) | `{0, 1}` | `Rsc/Parameters.hpp:285` |
+| `WFBE_C_GAMEPLAY_BOUNDARIES_ENABLED` | `1` (Enabled) | `{0, 1}` | `Rsc/Parameters.hpp:291` |
 
-The hardcoded fallback (if the mission starts without a lobby parameter value) is set at `Common/Init/Init_CommonConstants.sqf:234`:
+The hardcoded fallback (if the mission starts without a lobby parameter value) is set at `Common/Init/Init_CommonConstants.sqf:387`:
 
 ```sqf
 if (isNil "WFBE_C_GAMEPLAY_BOUNDARIES_ENABLED") then {WFBE_C_GAMEPLAY_BOUNDARIES_ENABLED = 1};
@@ -84,7 +86,7 @@ The timeout constant lives in the same file:
 WFBE_C_PLAYERS_OFFMAP_TIMEOUT = 50; //--- Player may remain x second outside of the map before being killed.
 ```
 
-`Common/Init/Init_CommonConstants.sqf:274`
+`Common/Init/Init_CommonConstants.sqf:427`
 
 ---
 
@@ -92,11 +94,11 @@ WFBE_C_PLAYERS_OFFMAP_TIMEOUT = 50; //--- Player may remain x second outside of 
 
 | Variable | Scope | Written by | Read by |
 |---|---|---|---|
-| `WFBE_BOUNDARIESXY` | missionNamespace | `Init_Boundaries.sqf` | `Client_IsOnMap.sqf`, three Support_Para*.sqf, `Init_Towns.sqf` |
+| `WFBE_BOUNDARIESXY` | missionNamespace | `Init_Boundaries.sqf` | `Client_IsOnMap.sqf`, three Support_Para*.sqf, `Server/Init/Init_Towns.sqf` |
 | `WFBE_C_GAMEPLAY_BOUNDARIES_ENABLED` | missionNamespace | Parameters / `Init_CommonConstants.sqf` | `Init_Boundaries.sqf`, `updateavailableactions.fsm` |
 | `WFBE_C_PLAYERS_OFFMAP_TIMEOUT` | missionNamespace | `Init_CommonConstants.sqf` | `Client_HandleOnMap.sqf` |
-| `BoundariesIsOnMap` | missionNamespace (global code var) | `Init_Client.sqf:50` (compiled) | `updateavailableactions.fsm:134`, `Client_HandleOnMap.sqf:8` |
-| `BoundariesHandleOnMap` | missionNamespace (global code var) | `Init_Client.sqf:51` (compiled) | `updateavailableactions.fsm:136` |
+| `BoundariesIsOnMap` | missionNamespace (global code var) | `Init_Client.sqf:69` (compiled) | `updateavailableactions.fsm:134`, `Client_HandleOnMap.sqf:8` |
+| `BoundariesHandleOnMap` | missionNamespace (global code var) | `Init_Client.sqf:70` (compiled) | `updateavailableactions.fsm:136` |
 | `paramBoundariesRunning` | missionNamespace (global bool) | `Client_HandleOnMap.sqf:4` (set on spawn) | `updateavailableactions.fsm:136,139` |
 
 ---
@@ -174,9 +176,9 @@ while {true} do {
 | Countdown reaches -1 | `exitWith` fires; `(vehicle player) setDamage 1` kills the player (and the vehicle if mounted) |
 | Player dies while off-map | `!(alive player)` guard exits the loop; `setDamage 1` is not double-applied |
 
-Default timeout: **50 seconds** (`Common/Init/Init_CommonConstants.sqf:274`).
+Default timeout: **50 seconds** (`Common/Init/Init_CommonConstants.sqf:427`).
 
-The hint text (`stringtable.xml:1104`) is red and localised: English reads `Warning! You are leaving the battlefield! <N> Seconds left.`
+The hint text (`stringtable.xml:1118`) is red and localised: English reads `Warning! You are leaving the battlefield! <N> Seconds left.`
 
 **Design note:** `setDamage 1` is applied to `vehicle player`, not `player` directly. If the player is on foot, `vehicle player` returns the player unit and the effect is identical. If mounted, the vehicle is destroyed along with the player.
 
@@ -251,9 +253,9 @@ The fallback `15000` value is a bare constant and does not reflect any registere
 
 ---
 
-## Town Distribution Usage (Init_Towns.sqf)
+## Town Distribution Usage (Server Init_Towns.sqf)
 
-When the random-towns parameter is active (case 3), `Init_Towns.sqf:71` reads `WFBE_BOUNDARIESXY` to compute a geometric centre and ellipse for allocating Resistance towns:
+When the random-towns parameter is active (case 3), `Server/Init/Init_Towns.sqf:71` reads `WFBE_BOUNDARIESXY` to compute a geometric centre and ellipse for allocating Resistance towns:
 
 ```sqf
 // Server/Init/Init_Towns.sqf:71
