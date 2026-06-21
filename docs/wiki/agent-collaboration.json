@@ -69,6 +69,24 @@
       "updated": "2026-06-21T17:46:00+02:00"
     },
     {
+      "lane": "source-fix-queue-docs-head-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Source-Fix-Propagation-Queue.md",
+        "docs/developer-wiki-index@4c01dfb7",
+        "docs source anchor 4bd37b98",
+        "checked propagation source paths unchanged from 4bd37b98 to 4c01dfb7"
+      ],
+      "outputs": [
+        "Claimed a compact docs-head refresh for Source-Fix-Propagation-Queue after the wiki mirror sync advanced the docs branch while the queue still names 4bd37b98 as the propagation source anchor.",
+        "Source check found no changes from 4bd37b98 to 4c01dfb7 in the queue's checked propagation source paths.",
+        "Added one source-scope note and updated the queue Agent Index fact instead of rewriting every branch row. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future queue refreshes should keep 4bd37b98 as source-line proof until a checked propagation source path actually changes, and should name the current docs branch head separately.",
+      "updated": "2026-06-21T17:44:00+02:00"
+    },
+    {
       "lane": "cf2-source-stamp-current-head-caveat",
       "owner": "Codex",
       "status": "published-validated-docs-only",

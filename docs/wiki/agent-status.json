@@ -69,6 +69,12 @@
       "output": "Rebased over wiki master@e4fc668, restored GUER-Insurgents-Branch-Audit.md as a source-refreshed wiki page, and corrected it against current origin/master@0139a346: 9af83596 is merged and both Chernarus plus maintained Vanilla Takistan carry the GUER gate, overlay, economy loop, VBIED action/handler and buy/service hooks. Routed through Feature-Status-Register.md, Gameplay-Systems-Atlas.md, _Sidebar.md and agent-context.json. Validation passed: JSON/JSONL parse in repo and clean wiki worktree, docs/validate-wiki.ps1 with known legacy JSONL warnings only, git diff --check with LF/CRLF warnings only, and final wiki/docs SHA parity across 261 files. No gameplay source changed."
     },
     {
+      "lane": "source-fix-queue-docs-head-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Updated Source-Fix-Propagation-Queue.md with a 2026-06-21 docs-head refresh: docs/developer-wiki-index is now 4c01dfb7 after the mirror sync, and the queue's checked propagation source paths are unchanged from 4bd37b98 to 4c01dfb7. Preserved 4bd37b98 as the line-anchor proof, updated the Agent Index fact and left gameplay source untouched."
+    },
+    {
       "lane": "cf2-source-stamp-current-head-caveat",
       "owner": "Codex",
       "status": "published-validated-docs-only",
