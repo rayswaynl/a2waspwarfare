@@ -76,7 +76,7 @@ if (isHostedServer || (!isHeadLessClient && !isDedicated)) then {
 	waitUntil {!isNull player};
 	["INITIALIZATION", "initJIPCompatible.sqf: Client is not null..."] Call WFBE_CO_FNC_LogContent;
 	//--- Client Init - Begin the blackout on Layer 12452.
-	12452 cutText [(localize 'STR_WF_Loading')+"...","BLACK FADED",180]; //--- B56: was 50000s. Bounded so a stalled JIP init can never strand a client on permanent black; the Init_Client fade-clear still cuts it early on success.
+	if (isNil "WFBE_CLIENT_BLACKFADE_APPLIED") then { WFBE_CLIENT_BLACKFADE_APPLIED = true; 12452 cutText [(localize 'STR_WF_Loading')+"...","BLACK FADED",180]; }; //--- B65 Fix-2 (one-shot black-fade guard): a JIP state re-push must not re-darken an already-initialised client. missionNamespace global persists across re-runs in a session; re-arms on a genuine new mission. A2-OA-safe. Original note: //--- B56: was 50000s. Bounded so a stalled JIP init can never strand a client on permanent black; the Init_Client fade-clear still cuts it early on success.
 };
 
 setViewDistance 3500; //--- Server & Client default View Distance.
