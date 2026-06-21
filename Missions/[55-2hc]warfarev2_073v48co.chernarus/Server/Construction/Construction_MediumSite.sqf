@@ -130,6 +130,9 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	//--- Register single-instance reference.
 	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
 	missionNamespace setVariable [_bankKey, _site];
+	//--- B66: clear the synchronous pending reservation set in RequestStructure.sqf now that the
+	//--- real bank is registered (the live-bank guard takes over from here).
+	missionNamespace setVariable [_bankKey + "_PENDING", -1e11];
 	//--- Global map marker visible to all players (createMarker is global on server).
 	_markerName = Format ["wfbe_bank_%1", if (_side == west) then {"west"} else {"east"}];
 	_markerColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};

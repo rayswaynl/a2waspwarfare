@@ -22,24 +22,24 @@ _limit_distance = missionNamespace getVariable "WFBE_C_GAMEPLAY_BOMBS_DISTANCE_R
 _unit_targeted =  cursorTarget; //the cursorTarget only work this way. We can't specify a player object as parameter, that's why it is necessary the local player.
 if (isNull _unit_targeted) exitWith {}; // if there is no lock on target, we quit.
 
-_distance_target_player = player distance _unit_targeted; 
-if (_distance_target_player < _limit_distance) exitWith {}; // if distance between player and the target is NOT restrictive, we have nothing to do then we quit.
+_distance_target_player = player distance _unit_targeted;
+//--- B66 distance + altitude are independent exploit guards; the distance branch no longer exitWiths
+//--- the whole script on the non-restrictive path, so the (now-live) altitude guard below can also run.
+if (_distance_target_player >= _limit_distance) then { // distance IS restrictive.
+	_vehicle = vehicle _unit_who_shot;
+	hint localize "STR_WF_MESSAGE_BombDistanceRestriction";
+	deleteVehicle _projectile ;
+};
 
-_vehicle = vehicle _unit_who_shot; 
-hint localize "STR_WF_MESSAGE_BombDistanceRestriction"; 
-deleteVehicle _projectile ;  
-
-/*
+//--- B66 altitude guard un-commented (was dead inside /* */ while its lobby param WFBE_C_GAMEPLAY_BOMBS_ALTITUDE
+//--- was live). Mirrors the distance branch above; getPos on the firing unit (_unit_who_shot) = real object.
 _objPosition = getPos _unit_who_shot;
 _objAltitude = _objPosition select 2;
 _limit = missionNamespace getVariable "WFBE_C_GAMEPLAY_BOMBS_ALTITUDE";
 
-
-if (_objAltitude < _limit) exitWith {}; // if altitude is NOT restrictive, we have nothing to do then we quit.
-
-_vehicle = vehicle _unit_who_shot; 
-//_vehicle vehicleChat "you can't shot this ammo at this altitude"; localize
-_vehicle vehicleChat localize "STR_WF_MESSAGE_BombAltitudeRestriction"; 
-deleteVehicle _projectile ;
-*/
+if (_limit > 0 && {_objAltitude >= _limit}) then { // _limit 0 = param "Disabled"; otherwise altitude IS restrictive.
+	_vehicle = vehicle _unit_who_shot;
+	_vehicle vehicleChat localize "STR_WF_MESSAGE_BombAltitudeRestriction";
+	deleteVehicle _projectile ;
+};
 

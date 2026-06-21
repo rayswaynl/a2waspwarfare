@@ -115,9 +115,14 @@ while {!WFBE_GameOver} do {
 		if (!_drop && {(_now - _eSpawn) > _lifetime}) then { _drop = true; _reason = "lifetime"; };
 
 		if (_drop) then {
-			//--- W13 self-clean: crew + hull + group.
-			if (!isNull _eVeh) then { {deleteVehicle _x} forEach (crew _eVeh); deleteVehicle _eVeh; };
-			if (!isNull _eGrp) then { {deleteVehicle _x} forEach (units _eGrp); deleteGroup _eGrp; };
+			//--- B66: isPlayer despawn guard. GUER is playable now, so a player could be
+			//--- crewing/occupying a defender hull or its group. NEVER deleteVehicle a player.
+			//--- If ANY crew member is a player, skip the hull teardown entirely (leave the air
+			//--- for the player; the registry entry is dropped either way so the maintain sweep
+			//--- stops tracking it). Group teardown only deletes non-player units.
+			//--- W13 self-clean: crew + hull + group (player-safe).
+			if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {deleteVehicle _x} forEach (crew _eVeh); deleteVehicle _eVeh; };
+			if (!isNull _eGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _eGrp); deleteGroup _eGrp; };
 			diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 		} else {
 			_kept         = _kept + [[_eTown, _eVeh, _eGrp, _eSpawn, _eLastEnemy]];
@@ -195,11 +200,15 @@ while {!WFBE_GameOver} do {
 						_veh setVariable ["wfbe_guer_airdef_town", _town];
 
 						//--- NEVER idle: immediate patrol + COMBAT/RED over the town.
+						//--- B66: order fixed. AIPatrol internally re-sets behaviour to AWARE/YELLOW,
+						//--- so it MUST run BEFORE the engage posture or it clobbers COMBAT/RED and the
+						//--- air just orbits passively. Patrol first, then stamp the engage posture last
+						//--- so the defender actually presses attacks.
 						_veh flyInHeight _flyHeight;
+						[_grp, _pos, ((_town getVariable ["range", 600]) max 400)] Call AIPatrol;
 						_grp setBehaviour "COMBAT";
 						_grp setCombatMode "RED";
 						_grp setSpeedMode "NORMAL";
-						[_grp, _pos, ((_town getVariable ["range", 600]) max 400)] Call AIPatrol;
 
 						_defenders  = _defenders + [[_town, _veh, _grp, time, time]];
 						_townsWithAir = _townsWithAir + [_town];
@@ -208,12 +217,15 @@ while {!WFBE_GameOver} do {
 						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|enemies=%5|large=%6|alive=%7", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _enemies, _isLarge, _aliveCount];
 					} else {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.
-						deleteVehicle _veh;
+						//--- B66: player-safe teardown (hull is freshly created with no moveIn yet,
+						//--- but guard anyway to never delete a player that somehow boarded).
+						if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {deleteVehicle _veh};
 						if (!isNull _grp) then {deleteGroup _grp};
 						diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=no_pilot", (_town getVariable ["name","?"]), _class];
 					};
 				} else {
-					deleteVehicle _veh;
+					//--- B66: player-safe teardown (freshly created empty hull).
+					if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {deleteVehicle _veh};
 					diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=no_group", (_town getVariable ["name","?"]), _class];
 				};
 			} else {

@@ -35,6 +35,9 @@
         _comTeam = (_sidePlayer) call WFBE_CO_FNC_GetCommanderTeam;
         if (!isNull _comTeam) then {
             [_comTeam, round (_supplyAmount * WFBE_C_SUPPLY_HELI_REWARD_MULT * WFBE_C_SUPPLY_CASHRUN_COMMANDER_CUT)] Call WFBE_CO_FNC_ChangeTeamFunds;
+        } else {
+            //--- B66: no commander to receive the tithe — route the supply to the side pool instead of silently losing it.
+            [_sidePlayer, _supplyAmount, format ["Cash-run supply (no commander) by %1. S %2 from %3 routed to pool for team %4.", _namePlayer, _supplyAmount, _sourceTown, _sidePlayer], false] Call ChangeSideSupply;
         };
     } else {
         [_sidePlayer, _supplyAmount, format ["Supply mission completed by %1. S %2 brought from %3 for team %4. ",_namePlayer, _supplyAmount, _sourceTown, _sidePlayer], false] Call ChangeSideSupply;

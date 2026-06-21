@@ -238,24 +238,41 @@ if (count _b62_filtered > 0) then {
 	["WARNING", "Init_Server.sqf: B62 airfield filter emptied the candidate set - keeping the unfiltered starts."] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- B62 (Ray 2026-06-21) ROTATION: exclude the WEST/EAST start keys used last match (persisted in
-//--- profileNamespace as the start object's string identity) so the random draw varies match-to-match
-//--- beyond the B57 RNG-advance. Fall back to the full filtered set if exclusion would empty it.
-//--- A2-OA-safe: plain string-compare via str + == (no A3-only equality/search/random commands).
+//--- B66 (Ray 2026-06-21) STABLE ROTATION KEY: the B62 rotation keyed on `str _x` of an unnamed
+//--- LocationLogicStart - the engine's str of an editor logic embeds a TRANSIENT object id that differs
+//--- every fresh dedicated process, so the persisted WFBE_LAST_START_W/E never matched the next match's
+//--- objects = the exclusion was a no-op (same dead spawn the B62 marker fix already saw). Key instead on
+//--- the start's ROUNDED map position: LocationLogicStart objects are static editor placements, so their
+//--- position is byte-identical every match = a durable cross-restart key. A2-OA-safe (plain str/round/+).
+WFBE_FNC_B66_StartKey = {
+	private ["_p"];
+	//--- A2-OA: getPos on a non-object array throws (MEMORY gotcha). Accept only real objects; the
+	//--- absent-side placeholder _startW/_startE = [0,0,0] (an ARRAY) and any nil/null return "" (never matched).
+	if (typeName _this != "OBJECT") exitWith {""};
+	if (isNull _this) exitWith {""};
+	_p = getPos _this;
+	if (typeName _p != "ARRAY" || {count _p < 2}) exitWith {""};
+	(str (round (_p select 0))) + "_" + (str (round (_p select 1)))
+};
+
+//--- B62/B66 ROTATION: exclude the WEST/EAST start keys used last match (persisted in profileNamespace as
+//--- the stable rounded-position key above) so the random draw varies match-to-match beyond the B57
+//--- RNG-advance. Fall back to the full filtered set if exclusion would empty it.
+//--- A2-OA-safe: plain string-compare via the stable key + == (no A3-only equality/search/random commands).
 private ["_b62_lastW","_b62_lastE","_b62_rotPool","_id"];
 _b62_lastW = profileNamespace getVariable ["WFBE_LAST_START_W", ""];
 _b62_lastE = profileNamespace getVariable ["WFBE_LAST_START_E", ""];
 //--- A2-OA 1.64: 'ARRAY select {CODE}' is A3-only -> explicit filter loop.
 _b62_rotPool = [];
 {
-	_id = str _x;
+	_id = _x call WFBE_FNC_B66_StartKey; //--- B66: stable rounded-pos key (was `str _x` transient id)
 	if (!((_id == _b62_lastW) || (_id == _b62_lastE))) then {
 		_b62_rotPool set [count _b62_rotPool, _x];
 	};
 } forEach _locationLogics;
 if (count _b62_rotPool > 1) then {
 	_locationLogics = _b62_rotPool;
-	["INITIALIZATION", Format ["Init_Server.sqf: B62 rotation excluded last-used starts -> %1 candidates remain.", count _b62_rotPool]] Call WFBE_CO_FNC_LogContent;
+	["INITIALIZATION", Format ["Init_Server.sqf: B62/B66 rotation excluded last-used starts -> %1 candidates remain.", count _b62_rotPool]] Call WFBE_CO_FNC_LogContent;
 };
 
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
@@ -287,7 +304,13 @@ _egressOK = {
 	_loc = _this;
 	if (isNull _loc) exitWith {false};
 	_pos = getPos _loc;
-	_minRoads = missionNamespace getVariable ["WFBE_C_BASE_MIN_EGRESS_ROADS", 3];
+	//--- B66: default LOWERED 3->2 (the Constants owner sets WFBE_C_BASE_MIN_EGRESS_ROADS=2) so the egress
+	//--- gate stops collapsing the candidate pool to a single corner. If a later relaxation pass (below) finds
+	//--- too few candidates even at 2, WFBE_B66_EGRESS_RELAX drops the requirement by a further step so the
+	//--- pool is NEVER reduced to 1 (start variety > strict egress on a thin map). Server-local, never broadcast.
+	_minRoads = missionNamespace getVariable ["WFBE_C_BASE_MIN_EGRESS_ROADS", 2];
+	_minRoads = _minRoads - (missionNamespace getVariable ["WFBE_B66_EGRESS_RELAX", 0]);
+	if (_minRoads < 1) then {_minRoads = 1};
 	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
 
 	//--- Reject candidates hugging any map edge (corner-box guard).
@@ -311,6 +334,27 @@ _egressOK = {
 		if (count _roads > 0) then {_ok = true};
 	};
 	_ok
+};
+
+//--- B66 (Ray 2026-06-21) POOL MEASURE + ANTI-COLLAPSE: count how many of the filtered start candidates
+//--- actually survive the egress gate, log it (so the RPT shows the real usable pool - the diagnostic Ray
+//--- asked for), and if FEWER THAN 2 distinct candidates pass we cannot even form a WEST/EAST pair -> relax
+//--- the egress requirement one step at a time (re-counting) until at least 2 pass or the requirement
+//--- bottoms out. This guarantees the random placement loop is never handed a pool of 1 (= identical spawn
+//--- every match, the very bug we are fixing). startingDistance(7500) spacing is also large on Chernarus, so
+//--- a thin egress-passing pool is realistic. A2-OA-safe (explicit count loop, no A3 commands).
+missionNamespace setVariable ["WFBE_B66_EGRESS_RELAX", 0];
+private ["_b66_egressPass","_b66_relax"];
+_b66_relax = 0;
+_b66_egressPass = 0;
+{ if (_x call _egressOK) then {_b66_egressPass = _b66_egressPass + 1} } forEach _locationLogics;
+["INITIALIZATION", Format ["Init_Server.sqf: B66 egress pool measure -> %1 of %2 start candidates pass the egress gate (minRoads relax=%3).", _b66_egressPass, count _locationLogics, _b66_relax]] Call WFBE_CO_FNC_LogContent;
+while {_b66_egressPass < 2 && {_b66_relax < 2}} do {
+	_b66_relax = _b66_relax + 1;
+	missionNamespace setVariable ["WFBE_B66_EGRESS_RELAX", _b66_relax];
+	_b66_egressPass = 0;
+	{ if (_x call _egressOK) then {_b66_egressPass = _b66_egressPass + 1} } forEach _locationLogics;
+	["WARNING", Format ["Init_Server.sqf: B66 egress pool too thin - relaxed minRoads by %1 -> now %2 candidates pass (never collapse to 1).", _b66_relax, _b66_egressPass]] Call WFBE_CO_FNC_LogContent;
 };
 
 _spawn_north = objNull;
@@ -421,11 +465,18 @@ if (_use_random) then {
 	};
 };
 
-//--- B62 (Ray 2026-06-21) ROTATION persist: store the chosen WEST/EAST start keys (string identity, matching
-//--- the exclusion filter above) so NEXT match's draw avoids them = guaranteed match-to-match start variety.
-//--- saveProfileNamespace is already used in the random block above. A2-OA-safe (str / plain set).
-if (!(isNull _startW)) then { profileNamespace setVariable ["WFBE_LAST_START_W", str _startW] };
-if (!(isNull _startE)) then { profileNamespace setVariable ["WFBE_LAST_START_E", str _startE] };
+//--- B62/B66 (Ray 2026-06-21) ROTATION persist: store the chosen WEST/EAST start keys (STABLE rounded-pos
+//--- key via WFBE_FNC_B66_StartKey, matching the exclusion filter above) so NEXT match's draw avoids them =
+//--- guaranteed match-to-match start variety. saveProfileNamespace is already used in the random block above.
+//--- A2-OA-safe. NOTE: _startW/_startE are LocationLogicStart objects when randomly placed; in MODE 0/1 they
+//--- can be the named spawn logics, which also resolve to a stable position key.
+//--- B66: gate on the (object-safe) key being non-empty rather than isNull - _startW/_startE may be the
+//--- [0,0,0] ARRAY placeholder for an absent side, and isNull on an array is unsafe in A2-OA.
+private ["_keyW","_keyE"];
+_keyW = _startW call WFBE_FNC_B66_StartKey;
+_keyE = _startE call WFBE_FNC_B66_StartKey;
+if (_keyW != "") then { profileNamespace setVariable ["WFBE_LAST_START_W", _keyW] };
+if (_keyE != "") then { profileNamespace setVariable ["WFBE_LAST_START_E", _keyE] };
 saveProfileNamespace;
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Starting location mode is on [%1].",missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE"]] Call WFBE_CO_FNC_LogContent;

@@ -58,7 +58,9 @@ if (isNull _team || {count _units == 0}) exitWith {
 };
 
 _team allowFleeing 0;
-_team setVariable ["WFBE_SidePatrol", true, false];
+//--- B66: broadcast=true so the server/GC can SEE the patrol flag and skip these groups
+//--- (was false=client/HC-local only -> server-invisible -> BASE-GC could mis-adopt/delete).
+_team setVariable ["WFBE_SidePatrol", true, true];
 
 //--- B36 (Ray 2026-06-15): fewer GUER patrols, but the ones that DO move are MORE DANGEROUS.
 //--- Max the combat skill of GUER (resistance) patrol units - sharper aim, spots farther, never

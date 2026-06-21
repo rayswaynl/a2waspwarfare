@@ -114,7 +114,20 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 	[missionNamespace getVariable Format ["WFBE_%1MHQNAME", _side], _side, _hq0, _dir] ExecVM "Server\Construction\Construction_HQSite.sqf";
 	_t0 = time + 30;
 	waitUntil {sleep 1; time > _t0 || {!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)}};
+	//--- B66: ORPHAN GUARD. The mobilize ExecVM is fire-and-forget and holds wfbe_hqinuse until its last line.
+	//--- If the 30s deadline fired while that lock is still held, the mobilize may complete AFTER we abort -
+	//--- leaving an undeployed (mobilized) MHQ with no driver. Give the in-flight mobilize a brief grace to
+	//--- finish (lock-release), bounded, then re-read deploy status so a late-completing mobilize is recognised
+	//--- as success rather than orphaned. A2-OA-safe (WFBE_CO_FNC_GroupGetBool is for groups; this is a
+	//--- side-logic bool set with a default so a plain getVariable[...,false] is reliable here).
+	if (time > _t0) then {
+		private ["_lockWait"];
+		_lockWait = time + 8;
+		waitUntil {sleep 1; time > _lockWait || {!(_logik getVariable ["wfbe_hqinuse", false])}};
+	};
 	if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) exitWith {
+		//--- Still deployed after the grace -> mobilize genuinely failed. Release single-flight cleanly; the
+		//--- HQ is left deployed (a valid resting state), so nothing is orphaned.
 		_logik setVariable ["wfbe_mhqreloc_active", false];
 		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|mobilize-timeout");
 		["WARNING", Format ["AI_Commander_MHQReloc.sqf: [%1] mobilize did not complete in time - aborting (HQ left deployed).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
@@ -172,8 +185,12 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 		};
 
 		if (!_done && {(time - _t0) > _deadline}) then {
+			//--- B66: the teleport STEP lands the MHQ on _destPos, but the old gate only checked players near
+			//--- the CURRENT _mhq (the source) - a player standing AT the destination would have an MHQ
+			//--- materialise on top of them. Require BOTH the current MHQ and the destination clear of players.
 			_pNear = false;
 			{ if (isPlayer _x && {alive _x} && {!isNull _mhq} && {(_x distance _mhq) < _safeDist}) then {_pNear = true} } forEach playableUnits;
+			{ if (isPlayer _x && {alive _x} && {(_x distance _destPos) < _safeDist}) then {_pNear = true} } forEach playableUnits; //--- B66: dest-clear too
 			if (!_pNear && {!surfaceIsWater _destPos}) then {
 				if (!isNull (driver _mhq)) then {(driver _mhq) doMove _destPos};
 				_mhq setVelocity [0,0,0];

@@ -394,6 +394,43 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
 
+//--- ============================================================================
+//--- B66 PREMIUM CAPTURE-UNLOCK TEMPLATES (Ray 2026-06-21): 2 high-tier teams the AICOM picker
+//--- can field once it owns the trigger town(s) (the picker implementer gates these on
+//--- trigger-town ownership - this file only REGISTERS them in the same parallel-array shape).
+//--- NOTE ON CLASSES: the B66 spec sketched ACR examples ("T72M4CZ", "RM70_ACR"). ACR is a
+//--- SHELVED/ABSENT DLC on this server (see [[acr-shelved]] + Core_ACR.sqf:132-135: those classes
+//--- log "DLC absent - skipped" ~70x and are NOT registered), so fielding them would spawn an empty/
+//--- broken team. Substituted the registered RU equivalents that ARE in Core_RU/Units_CO_RU on this
+//--- build: T90 (premium heavy tank) + BMP3 (heavy IFV carrier), and GRAD_RU (BM-21 Grad MLRS, the
+//--- registered rocket-artillery battery). Both type 2 (HEAVY factory tier), matching the existing shape.
+//--- ============================================================================
+
+//--- (26) Armor - T-90 Spearhead (premium heavy tank punch + BMP-3 carrying the dismounts that capture) [type2]
+_u		= ["T90"];
+_u = _u + ["BMP3"];
+_u = _u + ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_AR"];
+_u = _u + ["RU_Soldier_GL"];
+_u = _u + ["RU_Soldier_LAT"];
+_u = _u + ["RU_Soldier_AT"];
+_u = _u + ["RU_Soldier_HAT"];
+_u = _u + ["RU_Soldier_Medic"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Armor - T-90 Spearhead"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,3,0]];
+
+//--- (27) Artillery - Grad Rocket Battery (BM-21 Grad MLRS fire-support, crew-only - cannot capture) [type2]
+_u		= ["GRAD_RU"];
+_u = _u + ["GRAD_RU"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Artillery - Grad Rocket Battery"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,2,0]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];

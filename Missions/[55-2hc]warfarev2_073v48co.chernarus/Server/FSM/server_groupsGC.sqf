@@ -102,7 +102,11 @@ while {!WFBE_GameOver} do {
 				// ============ (i) UNTRACKED NON-EMPTY GROUPS AT BASE ============
 				{
 					_baseG = _x;
-					if (!isNull _baseG && {(side _baseG) == _baseSide} && {(count (units _baseG)) > 0}) then {
+					//--- B66 (Ray 2026-06-21): NEVER re-adopt an HC-local / remote group from the server.
+					//--- deleteVehicle + most setVariable retasking are locality-sensitive in A2 OA, and an
+					//--- HC-owned patrol/team re-adopted here would be mis-counted and its units orphaned.
+					//--- Gate the whole re-adopt block on the group's leader being SERVER-LOCAL.
+					if (!isNull _baseG && {(side _baseG) == _baseSide} && {(count (units _baseG)) > 0} && {local (leader _baseG)}) then {
 						_baseLdr = leader _baseG;
 						if (!isNull _baseLdr && {alive _baseLdr} && {!isPlayer _baseLdr}) then {
 							//--- within range of own HQ?
@@ -112,7 +116,11 @@ while {!WFBE_GameOver} do {
 								//--- wfbe_aicom_founded mark commanded teams. GroupGetBool = A2-safe bool read on a GROUP.
 								_baseIsPers     = [_baseG, "wfbe_persistent",    false] Call WFBE_CO_FNC_GroupGetBool;
 								_baseIsTownTeam = ([_baseG, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_baseG, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool};
-								if (!_baseIsPers && {!_baseIsTownTeam}) then {
+								//--- B66 (Ray 2026-06-21): also skip side-patrol groups. Common_RunSidePatrol now
+								//--- broadcasts WFBE_SidePatrol (broadcast=true) so the server can see it here; a patrol
+								//--- transiting/home at base must never be re-adopted/re-tasked by the BASE-GC.
+								private "_baseIsPatrol"; _baseIsPatrol = [_baseG, "WFBE_SidePatrol", false] Call WFBE_CO_FNC_GroupGetBool;
+								if (!_baseIsPers && {!_baseIsTownTeam} && {!_baseIsPatrol}) then {
 									//--- COMBAT GUARD (always): skip if the group is fighting OR took damage / fired
 									//--- since the last pass. We detect "fired/took damage in last ~30s" via a stamped
 									//--- damage sum: any rise vs the stored value (or an active COMBAT behaviour / enemy
@@ -186,7 +194,10 @@ while {!WFBE_GameOver} do {
 				//--- fly-off + deleteVehicle pattern in Common_RunCommanderTeam.sqf:318-320 (crew first, then hull).
 				{
 					_baseVeh = _x;
-					if (!isNull _baseVeh && {alive _baseVeh} && {(_baseVeh isKindOf "Air") || {_baseVeh isKindOf "Tank"} || {_baseVeh isKindOf "APC"}}) then {
+					//--- B66 (Ray 2026-06-21): deleteVehicle is locality-sensitive in A2 OA. Only delete a
+					//--- hull the SERVER owns; never reap a remote/HC-local vehicle (the delete would either
+					//--- no-op or desync). Gate the whole idle-hull delete pass on the hull being server-local.
+					if (!isNull _baseVeh && {local _baseVeh} && {alive _baseVeh} && {(_baseVeh isKindOf "Air") || {_baseVeh isKindOf "Tank"} || {_baseVeh isKindOf "APC"}}) then {
 						_baseVcrew = crew _baseVeh;
 						if (count _baseVcrew > 0) then {
 							_baseVside = side ((_baseVcrew select 0));

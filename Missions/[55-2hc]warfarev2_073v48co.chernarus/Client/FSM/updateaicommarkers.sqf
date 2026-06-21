@@ -56,7 +56,10 @@ while {true} do {
 		_sid  = _x select 1;
 		_dir  = _x select 2;
 		_team = _x select 3;
-		if (!isNull _unit && {alive _unit} && {!isNull _team} && {_sid == _mySid}) then {
+		//--- B66: ARROW-VANISH FIX. Key liveness on the TEAM, not on slot0 (the leader captured once
+		//--- at team-created and only refreshed server-side from B66 on). Test the team has a living
+		//--- member and draw at its CURRENT leader, so an original-leader death (team alive) keeps the arrow.
+		if (!isNull _team && {({alive _x} count units _team) > 0} && {_sid == _mySid}) then {
 			_known = false;
 			for "_k" from 0 to (count _tracked - 1) do {
 				if (((_tracked select _k) select 0) == _team) then {_known = true};
@@ -71,7 +74,7 @@ while {true} do {
 				};
 				_i = _i + 1;
 				_mk = Format["wfbe_aicommarker_%1", _i];
-				_pos = getPos _unit;
+				_pos = getPos (leader _team); //--- B66: draw at the team CURRENT leader (slot0 may be a dead/old leader)
 				createMarkerLocal [_mk, _pos];
 				_mk setMarkerTypeLocal "mil_arrow2"; //--- matches the patrol / team arrows.
 				_mk setMarkerColorLocal _color;
@@ -103,11 +106,15 @@ while {true} do {
 			};
 		} forEach _list;
 
-		if (_present && {!isNull _unit} && {alive _unit}) then {
+		//--- B66: ARROW-VANISH FIX. Key liveness on the TEAM (slot0 _unit is the server-fed leader,
+		//--- now refreshed on leader-swap from B66 on, but still test the team directly so a tick
+		//--- between leader-death and the next heading patch never drops the arrow). Draw at the
+		//--- team CURRENT leader.
+		if (_present && {!isNull _team} && {({alive _x} count units _team) > 0}) then {
 			//--- PERF4 - only re-write pos/dir when the team actually moved/turned. The header already
 			//--- promised "patched only when it moves >7 deg"; this makes the write match that intent and
 			//--- spares a stationary HQ team two setMarker* writes every ~8s for zero visible change.
-			_pos = getPos _unit;
+			_pos = getPos (leader _team); //--- B66: current leader, not the (possibly stale slot0) _unit
 			_lastPos = _x select 2;
 			if (isNil "_lastPos" || {(_pos distance _lastPos) > 3}) then {
 				_mk setMarkerPosLocal _pos;

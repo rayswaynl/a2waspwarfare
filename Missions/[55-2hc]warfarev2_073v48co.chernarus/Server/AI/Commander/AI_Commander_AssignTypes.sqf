@@ -9,12 +9,14 @@
 	Produce worker no-ops gracefully when the needed factory does not exist yet.
 */
 
-private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned","_doc","_track","_pref","_buckets","_eu","_bClass","_mix","_doctrineNudge","_dWeights","_wSum","_roll","_acc","_chosen","_order","_bi","_ti"];
+private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned","_doc","_track","_pref","_buckets","_eu","_bClass","_mix","_doctrineNudge","_dWeights","_wSum","_roll","_acc","_chosen","_order","_bi","_ti",
+              "_sideID","_storedTypes","_ownTowns","_hasAirfield","_afNames","_unlockList","_cn","_reqTown","_holdsTrigger"]; //--- B66
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
 _sideText = str _side;
+_sideID = (_side) Call WFBE_CO_FNC_GetSideID; //--- B66 (capture-unlock + airfield town-ownership scans).
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
@@ -26,6 +28,29 @@ if (isNil "_tmplUpgrades") exitWith {};
 if (count _templates == 0) exitWith {};
 
 _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+
+//--- B66 BUCKET-CLASSIFIER: load the AUTHORITATIVE per-template stored type (0=inf,1=light,2=heavy,
+//--- 3=air) from Squads_GetFactionGroups (the CfgGroups category) so the picker buckets by that instead
+//--- of the upgrade mask (which mis-buckets motorized templates as infantry). nil-guarded per template.
+_storedTypes = missionNamespace getVariable Format ["WFBE_%1AITEAMTYPES", _sideText]; //--- B66
+
+//--- B66 MATURITY-RAMP + AIRFIELD-AIR: precompute the side's OWN-TOWN count (for the mix tier) and whether
+//--- it holds an airfield-tagged town (for the fixed-wing plane gate), once per call. Airfield town names
+//--- are the capture-unlock/airfield anchors (NWAF/NEAF/Balota), reused from this side's CAPTURE_UNLOCKS.
+_ownTowns = 0;
+{ if ((_x getVariable ["sideID", -1]) == _sideID) then {_ownTowns = _ownTowns + 1} } forEach towns;
+_hasAirfield = false;
+if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0) then {
+	_afNames = ["NWAF","NEAF","Balota","Rasman AF"];
+	{
+		if (!((_x select 1) in _afNames)) then {_afNames = _afNames + [_x select 1]};
+	} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
+	{
+		if (((_x getVariable ["sideID", -1]) == _sideID) && {((_x getVariable ["name",""]) in _afNames) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
+	} forEach towns;
+} else {
+	_hasAirfield = true; //--- rule disabled -> planes ungated (old behaviour).
+};
 
 {
 	_team = _x;
@@ -45,6 +70,26 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 				for "_k" from 0 to 3 do {
 					if ((_u select _k) > (_upgrades select _k)) exitWith {_ok = false};
 				};
+				//--- B66 CAPTURE-UNLOCK eligibility: a template containing a CAPTURE_UNLOCKS premium
+				//--- class (T72M4CZ/RM70_ACR) is only eligible while this side HOLDS the trigger town.
+				//--- Mirror the client gate (Client_UIFillListBuyUnits): match class -> require town
+				//--- held (name+sideID scan). A2-OA-safe: forEach/exitWith, no findIf. Non-premium
+				//--- classes never gate (_reqTown stays ""). Premium TEMPLATES are added by the groups
+				//--- implementer; this only gates their eligibility.
+				if (_ok && {(missionNamespace getVariable ["WFBE_C_CAPTURE_UNLOCKS", 0]) > 0}) then {
+					_unlockList = missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []];
+					{
+						_cn = _x;
+						_reqTown = ""; //--- "" => _cn is not a capture-unlock class.
+						{ if ((_x select 0) == _cn) exitWith {_reqTown = _x select 1} } forEach _unlockList;
+						if (_reqTown != "") then {
+							_holdsTrigger = false;
+							{ if (((_x getVariable ["name",""]) == _reqTown) && {(_x getVariable ["sideID", -1]) == _sideID}) exitWith {_holdsTrigger = true} } forEach towns;
+							if (!_holdsTrigger) then {_ok = false};
+						};
+						if (!_ok) exitWith {};
+					} forEach (_templates select _i);
+				};
 				if (_ok) then {_eligible set [count _eligible, _i]};
 			};
 
@@ -63,21 +108,46 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 				_buckets = [[],[],[],[]]; //--- [infantry, light, heavy, air]
 				{
 					_ti = _x; _eu = _tmplUpgrades select _ti; //--- A1 (Ray 2026-06-19): _ti captured because the helicopters-only `count` below rebinds _x.
-					_bClass = 0; //--- infantry
-					if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
-						if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
-							if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
+					//--- B66 BUCKET-CLASSIFIER FIX: bucket by the AUTHORITATIVE CfgGroups stored type (0=inf,
+					//--- 1=light,2=heavy,3=air) instead of the upgrade mask (which mis-buckets motorized
+					//--- templates as infantry). nil-guarded per template to the old upgrade-mask logic.
+					_bClass = -1;
+					if (!isNil "_storedTypes" && {_ti < count _storedTypes}) then {_bClass = _storedTypes select _ti};
+					if (_bClass < 0) then {
+						_bClass = 0; //--- infantry (fallback to old upgrade-mask logic)
+						if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
+							if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
+								if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
+							};
 						};
 					};
 					//--- A1 helicopters-only AICOM air (Ray 2026-06-19): drop fixed-wing Su/plane + UAV air templates (CfgGroups
 					//--- Air pulls them via Squads_GetFactionGroups) - the AI can't fly planes, they pile up unused on base.
-					if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0})) then {
+					//--- B66 AIRFIELD-AIR RULE: a fixed-wing PLANE air template is admitted ONLY when the side holds an
+					//--- airfield-tagged town (_hasAirfield). No airfield = identical to the old blanket strip (helicopters
+					//--- only); choppers (air, no Plane) are unaffected.
+					if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {!_hasAirfield})) then {
 						(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
 					};
 				} forEach _eligible;
 
-				//--- Base class weights from the tunable (copied so we can apply a small doctrine nudge).
-				_mix = WFBE_C_AICOM_TYPE_MIX;
+				//--- B66 MATURITY-RAMPED MIX: select the [inf,light,heavy,air] weight tier by the side's OWN-TOWN
+				//--- count (_ownTowns): EARLY when towns < MATURE_MID, MID when towns < MATURE_LATE, else LATE.
+				//--- Fall back to the static WFBE_C_AICOM_TYPE_MIX if a tier const is nil. Copied below so the
+				//--- doctrine nudge never mutates the shared const.
+				private ["_matMid","_matLate"];
+				_matMid  = missionNamespace getVariable ["WFBE_C_AICOM_TYPE_MIX_MATURE_MID",  4];
+				_matLate = missionNamespace getVariable ["WFBE_C_AICOM_TYPE_MIX_MATURE_LATE", 8];
+				_mix = if (_ownTowns < _matMid) then {
+					missionNamespace getVariable "WFBE_C_AICOM_TYPE_MIX_EARLY"
+				} else {
+					if (_ownTowns < _matLate) then {
+						missionNamespace getVariable "WFBE_C_AICOM_TYPE_MIX_MID"
+					} else {
+						missionNamespace getVariable "WFBE_C_AICOM_TYPE_MIX_LATE"
+					};
+				};
+				if (isNil "_mix" || {count _mix < 4}) then {_mix = WFBE_C_AICOM_TYPE_MIX}; //--- B66: tier const nil -> static fallback.
 				if (isNil "_mix" || {count _mix < 4}) then {_mix = [0.65, 0.20, 0.12, 0.03]};
 				_dWeights = [_mix select 0, _mix select 1, _mix select 2, _mix select 3];
 				//--- Keep a light doctrine flavour: nudge the side's primary vehicle track up ~50% so HF

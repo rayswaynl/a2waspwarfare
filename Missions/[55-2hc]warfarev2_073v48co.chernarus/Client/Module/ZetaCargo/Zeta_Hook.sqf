@@ -31,7 +31,8 @@ _vehicle attachTo [_lifter,_position];
 _lifter setVariable ["Attached",true,false];
 _lifter removeAction _actionID;
 
-_action = _lifter addAction [localize "STR_WF_Lift_Detach","Client\Module\ZetaCargo\Zeta_Unhook.sqf"];
+//--- B66 pass the hooked vehicle as the addAction args array; Zeta_Unhook reads (_this select 3) select 0 and threw on the empty [] arg list.
+_action = _lifter addAction [localize "STR_WF_Lift_Detach","Client\Module\ZetaCargo\Zeta_Unhook.sqf",[_vehicle]];
 
 while {!gameOver} do {
 	sleep 2;

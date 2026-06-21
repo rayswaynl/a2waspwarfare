@@ -59,8 +59,14 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 	if (!isNull _team) then {
 	_type = _team getVariable ["wfbe_teamtype", -1];
 	_canProduce = false;
-	//--- V0.3: HC-resident commander teams are produced whole on the HC - never here.
-	if (!isPlayer (leader _team) && {!(_team getVariable ["wfbe_aicom_hc", false])}) then {
+	//--- V0.3: HC-resident commander teams are produced whole on the HC - never here. Produce
+	//--- (and the B61 REFILL-AT-BASE below) only ever serves the SERVER-LOCAL re-adopted teams
+	//--- (base-GC teams marked wfbe_aicom_founded) whose units are local to the SERVER, so AIBuyUnit
+	//--- can spawn refills at a factory for them. B66: the gate is the same (exclude HC teams) but the
+	//--- bool read is routed through WFBE_CO_FNC_GroupGetBool (A2-OA: the 2-arg [name,default] form is
+	//--- UNRELIABLE for UNSET vars on a GROUP), and the intent is relabelled: this branch is the
+	//--- server-local-team path, NOT the HC path.
+	if (!isPlayer (leader _team) && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- B66
 		if (_type >= 0) then {
 			if (_type < count _templates) then {
 				if (count (_team getVariable ["wfbe_queue", []]) == 0) then {_canProduce = true};
@@ -92,7 +98,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				//--- that has retreated home (refit flag set + now within home-range of HQ) is forced
 				//--- in-range so it refills regardless of REINFORCE_RANGE, is topped to the floor below,
 				//--- then re-dispatched - rather than sitting at base as an un-refillable survivor.
-				_refitAtBase = (_team getVariable ["wfbe_aicom_refit", false]) && {(_ldr distance _hqP) <= _homeR};
+				_refitAtBase = ([_team, "wfbe_aicom_refit", false] Call WFBE_CO_FNC_GroupGetBool) && {(_ldr distance _hqP) <= _homeR}; //--- B66: A2-safe GROUP bool read (was unreliable getVariable[name,default])
 				if (!_refitAtBase && {_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])}) then {
 					//--- FORWARD-REINFORCE: a deep team beyond base range may still refill if its
 					//--- leader is hugging an owned town (front-line resupply), so spearheads stop
@@ -227,7 +233,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 		//--- B61 (Ray 2026-06-21) REFILL-AT-BASE: once a base-refitting team is back at/above the
 		//--- founding floor, clear the refit flag so it stops being a special-case base hugger and the
 		//--- strategy layer (wfbe_teammode) re-dispatches it to the front like any other full team.
-		if ((_team getVariable ["wfbe_aicom_refit", false]) && {_cur >= _want}) then {
+		if (([_team, "wfbe_aicom_refit", false] Call WFBE_CO_FNC_GroupGetBool) && {_cur >= _want}) then { //--- B66: A2-safe GROUP bool read
 			_team setVariable ["wfbe_aicom_refit", false, true];
 			["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] base-refit complete (cur=%3, floor=%4) - released for re-dispatch.", _sideText, _team, _cur, _want]] Call WFBE_CO_FNC_AICOMLog;
 		};

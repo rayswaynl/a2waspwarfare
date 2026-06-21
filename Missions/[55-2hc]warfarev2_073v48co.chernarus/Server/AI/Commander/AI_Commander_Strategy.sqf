@@ -192,6 +192,13 @@ if (count _targets > 0) then {
 	_spEvals   = missionNamespace getVariable ["WFBE_C_AICOM_REPICK_STALL_EVALS", 4];
 	_spBlCd    = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
 	//--- Best (min) approach of this side's COMMITTED offense teams to the primary town.
+	//--- B66 STALL FALSE-POSITIVE: also track whether ANY offense team is actually committed to the
+	//--- primary this eval. When nothing is committed _spApproach stays 1e9 (sentinel) and the no-progress
+	//--- branch below would bump the stall counter every tick + eventually blacklist a good town for a
+	//--- NON-stall (no team had been dispatched yet). Only accrue stall when _anyCommitted is true;
+	//--- otherwise HOLD the counter (and skip re-baselining off the sentinel).
+	private ["_anyCommitted"]; //--- B66
+	_anyCommitted = false;     //--- B66
 	_spApproach = 1e9;
 	{
 		_team = _x;
@@ -200,7 +207,7 @@ if (count _targets > 0) then {
 			//--- offense only: skip relief ("defense"), HQ-strike ("move") and the garrison team.
 			if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 				_wLdr = leader _team;
-				if (!isNull _wLdr) then {_d = _wLdr distance _prim; if (_d < _spApproach) then {_spApproach = _d}};
+				if (!isNull _wLdr) then {_anyCommitted = true; _d = _wLdr distance _prim; if (_d < _spApproach) then {_spApproach = _d}}; //--- B66 mark committed
 			};
 		};
 	} forEach _teams;
@@ -215,17 +222,22 @@ if (count _targets > 0) then {
 		_logik setVariable ["wfbe_aicom_spear_bestapproach", _spApproach];
 		_logik setVariable ["wfbe_aicom_spear_stallcount", 0];
 	} else {
-		//--- Same primary as last eval: did the assault get >= _spMinGain closer than its best so far?
-		if ((_spBest - _spApproach) >= _spMinGain) then {
-			//--- progress: record the improved approach, reset the stall counter.
-			_logik setVariable ["wfbe_aicom_spear_bestapproach", _spApproach];
-			_logik setVariable ["wfbe_aicom_spear_stallcount", 0];
-		} else {
-			//--- no meaningful progress this eval: bump the consecutive-stall counter.
-			_spLast = _spLast + 1;
-			_logik setVariable ["wfbe_aicom_spear_stallcount", _spLast];
-			if (_spLast >= _spEvals) then {_spStall = true};
-		};
+		//--- Same primary as last eval. B66 STALL FALSE-POSITIVE: only judge progress/stall when an offense
+		//--- team is actually committed to the primary (_anyCommitted). With nothing committed _spApproach is
+		//--- the 1e9 sentinel, so the old unconditional code bumped the stall counter every tick and blacklisted
+		//--- a good town for a non-stall. When uncommitted we HOLD the counter (no progress test, no accrual).
+		if (_anyCommitted) then { //--- B66
+			if ((_spBest - _spApproach) >= _spMinGain) then {
+				//--- progress: record the improved approach, reset the stall counter.
+				_logik setVariable ["wfbe_aicom_spear_bestapproach", _spApproach];
+				_logik setVariable ["wfbe_aicom_spear_stallcount", 0];
+			} else {
+				//--- no meaningful progress this eval: bump the consecutive-stall counter.
+				_spLast = _spLast + 1;
+				_logik setVariable ["wfbe_aicom_spear_stallcount", _spLast];
+				if (_spLast >= _spEvals) then {_spStall = true};
+			};
+		}; //--- B66 (else: uncommitted -> hold the stall counter)
 	};
 	if (_spStall) then {
 		//--- STALLED: blacklist the frozen primary (reuse the AssignTowns:208-219 [town,expiry] idiom) and

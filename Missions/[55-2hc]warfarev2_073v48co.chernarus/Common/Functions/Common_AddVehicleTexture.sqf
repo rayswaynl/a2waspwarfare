@@ -256,7 +256,11 @@ switch (_type) do {
 //--- ============================================================================
 if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0) then {
 	Private ["_skinCmd","_pendingSkin"];
+	//--- B66 derive _side directly: wfbe_side_id is ONLY stamped by Common_AddVehicleMarking.sqf,
+	//--- which exits early when WFBE_C_VEHICLE_MARKINGS != 1 (default 0) — so the tints used to no-op.
+	//--- Prefer the stamped id if present (markings ran), else resolve from the vehicle's engine side.
 	_side    = _vehicle getVariable ["wfbe_side_id", -1];
+	if (_side < 0) then { _side = (side _vehicle) Call WFBE_CO_FNC_GetSideID; };
 	_skinCmd = "";
 
 	switch (_side) do {

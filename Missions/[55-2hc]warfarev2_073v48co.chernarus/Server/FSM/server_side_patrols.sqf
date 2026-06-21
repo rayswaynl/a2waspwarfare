@@ -52,7 +52,11 @@ while {!WFBE_GameOver} do {
 		//--- stale arrow on every client. Slots: [leader, sideID, dir, team].
 		_aKept = [];
 		{
-			if (!isNull (_x select 0) && {alive (_x select 0)} && {!isNull (_x select 3)}) then {_aKept set [count _aKept, _x]};
+			//--- B66 (Ray 2026-06-21): key the keep-test on the TEAM (slot3) having a LIVE member,
+			//--- NOT on the original leader being alive. A team whose founding leader died but still has
+			//--- live units must keep its arrow (pairs with the aicom-arrows fix); the B63 form
+			//--- `alive (_x select 0)` wrongly dropped a live team the instant its first leader fell.
+			if (!isNull (_x select 3) && {{alive _x} count (units (_x select 3)) > 0}) then {_aKept set [count _aKept, _x]};
 		} forEach WFBE_ACTIVE_AICOM_TEAMS;
 		WFBE_ACTIVE_AICOM_TEAMS = _aKept;
 

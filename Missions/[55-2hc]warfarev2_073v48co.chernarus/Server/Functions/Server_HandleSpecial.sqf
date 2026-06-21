@@ -275,7 +275,7 @@ switch (_args select 0) do {
 	//--- pushes [team, dir] whenever its objective bearing changes; we update the entry's slot 2 and
 	//--- only re-broadcast WFBE_ACTIVE_AICOM_TEAMS when the arrow actually moved >7 deg (cuts PV spam).
 	case "aicom-team-heading": {
-		Private ["_hteam","_hdir","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi"];
+		Private ["_hteam","_hdir","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi","_hldr"]; //--- B66 +_hldr
 		_hteam = (_args select 1) select 0;
 		_hdir  = (_args select 1) select 1;
 		if (!isNull _hteam) then {
@@ -284,6 +284,17 @@ switch (_args select 0) do {
 			for "_hi" from 0 to (count _haicomList - 1) do {
 				_hentry = _haicomList select _hi;
 				if ((_hentry select 3) == _hteam) then {
+					//--- B66: ARROW-VANISH FIX. slot0 (leader) was captured ONCE at aicom-team-created and
+					//--- never refreshed; when the original leader died (team still alive) the client keyed
+					//--- liveness/position on a dead/null unit and dropped the arrow. Re-resolve the CURRENT
+					//--- leader from the live team (slot3) and write it back whenever it changed, so a leader
+					//--- swap keeps the arrow alive.
+					_hldr = leader _hteam;
+					if (!isNull _hldr && {(_hentry select 0) != _hldr}) then {
+						_hentry set [0, _hldr];
+						_haicomList set [_hi, _hentry];
+						_hchanged = true;
+					};
 					_hold = _hentry select 2;
 					//--- Smallest signed angle between old and new heading (handles 0/360 wrap).
 					_hdelta = abs (((_hdir - _hold) + 180) % 360 - 180);

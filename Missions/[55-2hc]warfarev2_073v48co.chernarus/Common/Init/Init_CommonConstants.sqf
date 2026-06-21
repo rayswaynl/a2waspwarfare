@@ -73,7 +73,7 @@ if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 2};  //--- 
 with missionNamespace do {
 
 //--- GUER "Insurgents" playable faction master gate (0=off, 1=on). Default OFF = byte-for-byte today's behaviour.
-	if (isNil "WFBE_C_GUER_PLAYERSIDE") then {WFBE_C_GUER_PLAYERSIDE = 0};
+	if (isNil "WFBE_C_GUER_PLAYERSIDE") then {WFBE_C_GUER_PLAYERSIDE = 1}; //--- B66: 0->1 GUER playable ON (trial round).
 	if (isNil "WFBE_C_GUER_VBIED_ARM_DELAY") then {WFBE_C_GUER_VBIED_ARM_DELAY = 3};
 	if (isNil "WFBE_C_GUER_VBIED_BLAST_RADIUS") then {WFBE_C_GUER_VBIED_BLAST_RADIUS = 30};
 	if (isNil "WFBE_C_GUER_VBIED_TYPE") then {WFBE_C_GUER_VBIED_TYPE = "hilux1_civil_2_covered"};
@@ -163,7 +163,9 @@ with missionNamespace do {
 	WFBE_C_AICOM_TEAMS_LOWPOP_EXTRA = 0;       //--- punchy-AICOM (Ray 2026-06-17): 2->0 so the banking-valve contributes no extra teams; PC_LOW=10 is the flat target while testing (=10 teams). Rollback: 2.
 	WFBE_C_AICOM_INCOME_PC_BONUS_VALVE = 0.045; //--- B37: gentler low-pop income boost when the valve is on (vs 0.06), so more-squads does not over-bank.
 	WFBE_C_AICOM_INCOME_MULT_MAX = 3.0;        //--- hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
-	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 4}; //--- Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
+	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 3}; //--- B66: 4->3 - bring air online a town sooner. Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
+	//--- B66 airfield-air rule: choppers are allowed from an Aircraft-Factory at tier 2; fixed-wing PLANES are only buildable at an OWNED airfield with the Aircraft-Factory at tier 4 (NOT the base air factory). 1 = enforce; 0 = old behaviour (planes from base air factory).
+	if (isNil "WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD") then {WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD = 1};
 	if (isNil "WFBE_C_AICOM_ARTRAD_REQUIRE_ENEMY_ARTY") then {WFBE_C_AICOM_ARTRAD_REQUIRE_ENEMY_ARTY = 1}; //--- CB-GATE (Ray B48): 1 = AI commander defers the (cosmetic) ArtilleryRadar build until the ENEMY actually fields/fires artillery (re-uses wfbe_aicom_arty_threat). 0 = old human-like always-build. AI-commander build logic ONLY; humans unaffected.
 	//--- P1 combined-arms ratio (claude-gaming 2026-06-15): target CLASS mix for newly-typed AI teams,
 	//--- [infantry, light, heavy, air]. The type picker buckets the eligible templates by class and
@@ -174,6 +176,16 @@ with missionNamespace do {
 	//--- need not sum to 1 (they are normalised at pick time). Was effectively ~70% infantry from the old
 	//--- doctrine-only weighting; this defaults to ~65/20/12/3 of the achievable mix.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX") then {WFBE_C_AICOM_TYPE_MIX = [0.65, 0.20, 0.12, 0.03]};
+	//--- B66 combined-arms RAMP: the static TYPE_MIX above stays the fallback. The type picker selects an
+	//--- [inf,light,heavy,air] weight tier by the AI commander's OWN-TOWN count: EARLY (mostly foot, the
+	//--- opening land-grab), MID (armour/mech rising once factories exist), LATE (heavy+air heavy, an
+	//--- established war machine). MATURE_MID / MATURE_LATE are the own-town thresholds at/above which the
+	//--- MID / LATE tiers apply. Weights need not sum to 1 (normalised at pick time).
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_EARLY") then {WFBE_C_AICOM_TYPE_MIX_EARLY = [0.70, 0.22, 0.07, 0.01]};
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_MID")   then {WFBE_C_AICOM_TYPE_MIX_MID   = [0.45, 0.28, 0.22, 0.05]};
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE")  then {WFBE_C_AICOM_TYPE_MIX_LATE  = [0.28, 0.22, 0.35, 0.15]};
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_MID")  then {WFBE_C_AICOM_TYPE_MIX_MATURE_MID  = 4}; //--- own-town count at/above which the MID tier applies.
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_LATE") then {WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 8}; //--- own-town count at/above which the LATE tier applies.
 	//--- A/B EXPERIMENT (legacy-vs-next): arm label + sim-gating switch. LEGACY arm = control (gating off).
 	if (isNil "WFBE_C_AB_ARM") then {WFBE_C_AB_ARM = "NEXT-T1c"};
 	//--- Steff 2026-06-13: the AI must NOT be able to use artillery. Forced off (not a default)
@@ -304,7 +316,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_SVC_SAFE_DIST") then {WFBE_C_AICOM_SVC_SAFE_DIST = 600};     //--- m: no enemy within this of leader OR service point, else stay + fight (never pulled out of contact).
 	if (isNil "WFBE_C_AICOM_SVC_REACH") then {WFBE_C_AICOM_SVC_REACH = 4000};            //--- m: max detour distance to a service point (else keep fighting).
 	if (isNil "WFBE_C_AICOM_SVC_TIMEOUT") then {WFBE_C_AICOM_SVC_TIMEOUT = 300};         //--- s: max EN-ROUTE drive time before the detour aborts + the team retargets the front.
-	if (isNil "WFBE_C_AICOM_SVC_ARMOUR_ONLY") then {WFBE_C_AICOM_SVC_ARMOUR_ONLY = 1};   //--- 1 = only teams with a Tank/APC/Air detour (costly to replace); 0 = any team.
+	if (isNil "WFBE_C_AICOM_SVC_ARMOUR_ONLY") then {WFBE_C_AICOM_SVC_ARMOUR_ONLY = 0};   //--- B66: 1->0 - any team may self-service (was armour/air-only). 1 = only teams with a Tank/APC/Air detour (costly to replace); 0 = any team.
 if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST = 300}; //--- B49: relaxed START gate (m). A disengaged team detours to service if NO enemy within this (was the full SAFE_DIST=600, which blocked every grinding team so the feature never fired). The hard en-route abort still uses SAFE_DIST; COMBAT teams are still never pulled out.
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 900;       //--- FILL-FIX 2026-06-18: 500->900 (rollback 500) - forward spearheads 500-900m out of the rear base couldn't refill and bled toward ~4 units; widen so front-line teams top up from the nearest forward factory. Still requires an OWNED town within range (never resupplies on enemy ground). --- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.
@@ -342,7 +354,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- The Init_Server start-picker requires a candidate to have >= MIN_EGRESS_ROADS usable road
 	//--- segments (roadsConnectedTo>=2) within nearRoads 250 AND sit >= EDGE_MARGIN m from any map edge.
 	//--- Symmetric for both sides; degrades to accept on Vanilla A2 (no roadsConnectedTo). Fallback intact.
-	if (isNil "WFBE_C_BASE_MIN_EGRESS_ROADS") then {WFBE_C_BASE_MIN_EGRESS_ROADS = 3}; //--- Min usable road segments near a candidate start.
+	if (isNil "WFBE_C_BASE_MIN_EGRESS_ROADS") then {WFBE_C_BASE_MIN_EGRESS_ROADS = 2}; //--- B66 (Ray 2026-06-21): 3->2, loosen the egress gate so the random-start pool isn't collapsed to ~1 viable pair (the "always same 2 spots" cause). Min usable road segments near a candidate start.
 	if (isNil "WFBE_C_BASE_EDGE_MARGIN")      then {WFBE_C_BASE_EDGE_MARGIN      = 400}; //--- Min metres a candidate start must sit from any map edge.
 	WFBE_C_BASE_AREA_RANGE = 250; //--- A base area has a range of x meters.
 	WFBE_C_BASE_HQ_BUILD_RANGE = 120; //--- HQ Build range.
@@ -384,8 +396,16 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- the group) get REACH_MOUNTED so trucks/APCs can still cover the long leg. GUARDRAIL: never a ban -
 	//--- if NOTHING is in reach (isolated), the team still gets its nearest target so it never idles.
 	//--- BOOTSTRAP is exempt (0 towns owned -> the opening dogpile rush is unchanged).
-	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_FOOT')    then {WFBE_C_AICOM_ASSAULT_REACH_FOOT    = 3000};  //--- B57 (Ray 2026-06-20): 3500->3000m - keep thin foot teams on adjacent reachable towns (cut long death-marches; tighter contiguous front).
+	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_FOOT')    then {WFBE_C_AICOM_ASSAULT_REACH_FOOT    = 2500};  //--- B66 (3000->2500m): tighten foot reach further - keep thin foot teams on adjacent reachable towns (cut long death-marches; tighter contiguous front). [B57: 3500->3000.]
 	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_MOUNTED') then {WFBE_C_AICOM_ASSAULT_REACH_MOUNTED = 9000};  //--- m: teams with a drivable vehicle may take the long leg to a far spearhead.
+	//--- B66 INF-TRANSPORT: when 1, a pure-infantry AI team on a long approach (beyond REACH_FOOT but within
+	//--- REACH_MOUNTED) is given a faction troop-truck so foot teams can still cover the long leg instead of
+	//--- being skipped. The consumer resolves the per-side transport classname from the Core_USMC / Core_RU /
+	//--- Core_GUE transport classnames (MTVR / Kamaz / V3S_TK_Gue). 0 = old behaviour (foot teams capped at REACH_FOOT).
+	if (isNil 'WFBE_C_AICOM_INF_TRANSPORT') then {WFBE_C_AICOM_INF_TRANSPORT = 1};
+	//--- B66 (Ray 2026-06-21): tunables the b66 consumers read with safe inline defaults; defined here so they're tweakable.
+	if (isNil 'WFBE_C_AICOM_TRANSPORT_AVOID_RANGE') then {WFBE_C_AICOM_TRANSPORT_AVOID_RANGE = 350}; //--- mounted transport dismounts/routes around a hostile town within this range (don't drive trucks into GUER garrisons).
+	if (isNil 'WFBE_C_ECONOMY_BANK_PENDING_WINDOW') then {WFBE_C_ECONOMY_BANK_PENDING_WINDOW = 180}; //--- bank one-per-side reservation window (s) to close the duplicate-build race.
 	//--- Careful-gear governor (owner refinement): the HC commander executor downshifts a
 	//--- transit convoy from NORMAL to LIMITED only while the lead hull's surfaceNormal.z is
 	//--- below this (steep slope) OR a stuck-strike is active; back to NORMAL once flat/moving.

@@ -121,8 +121,16 @@ if (isServer) then {
 //--- the gunner onto a NON-guided (cannon/gun) muzzle. HC-local, self-exits on team wipe; no disableAI, no
 //--- sim-gating - the heli stays fully active and re-engages on proximity.
 if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) then {
+	//--- B66: the nudge Spawn used to start for EVERY team (an endless ~7s sleep-loop per team, even
+	//--- pure-infantry/armour teams with no aircraft). Gate it: only spawn the loop when this team
+	//--- actually HAS a NON-transport attack helicopter in its vehicles. A2-OA-safe: classname-literal
+	//--- isKindOf "Helicopter" + getNumber transportSoldier==0 (mirrors the per-tick test below).
+	private ["_hasAttackHeli"]; //--- B66
+	_hasAttackHeli = false;     //--- B66
+	{ if (!isNull _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) exitWith {_hasAttackHeli = true} } forEach _vehicles; //--- B66
+	if (_hasAttackHeli) then { //--- B66 only run the cannon-nudge loop for teams that own an attack heli
 	[_team, _side, _vehicles] Spawn {
-		private ["_tm","_sd","_vehs","_h","_tgt","_cannon","_isGuided","_ammo","_band","_enSide"];
+		private ["_tm","_sd","_vehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band","_enSide"]; //--- B66 +_cannonMuzzle/_muzzles
 		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
 		_enSide = if (_sd == west) then {east} else {west};
 		while {!WFBE_GameOver && !isNull _tm && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
@@ -141,7 +149,18 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 						{ if (alive _x && {side _x == _enSide} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Tank","Air"], _band]);
 						if (!isNull _tgt) then {
 							_h flyInHeight (missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUN_ALT", 35]);
-							(gunner _h) selectWeapon _cannon;
+							//--- B66 MUZZLE FIX: in OA selectWeapon wants a MUZZLE, not a weapon classname; a
+							//--- multi-muzzle cannon (e.g. M197/2A42 with HE+AP muzzles) is never switched if you
+							//--- pass the weapon name. Resolve the weapon`s muzzles (CfgWeapons >> _cannon >> muzzles):
+							//--- a single-muzzle weapon lists ["this"] -> the muzzle IS the weapon name; otherwise pick
+							//--- the first real muzzle. A2-OA-safe: getArray + count/select 0 (no findIf/selectRandom).
+							_cannonMuzzle = _cannon;
+							_muzzles = getArray (configFile >> "CfgWeapons" >> _cannon >> "muzzles");
+							if (count _muzzles > 0) then {
+								_cannonMuzzle = _muzzles select 0;
+								if ((toLower _cannonMuzzle) == "this") then {_cannonMuzzle = _cannon};
+							};
+							(gunner _h) selectWeapon _cannonMuzzle; //--- B66: muzzle, not weapon name
 							(gunner _h) doTarget _tgt;
 							(gunner _h) doFire _tgt;
 						};
@@ -151,6 +170,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 			sleep (missionNamespace getVariable ["WFBE_C_AICOM_HELI_NUDGE_PERIOD", 7]);
 		};
 	};
+	}; //--- B66 end if (_hasAttackHeli)
 };
 
 //--- Order-execution loop: apply each new order seq from the server brain.
@@ -352,13 +372,49 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 //--- double-assigned (bounced) across multiple ground vehicles.
 if (isNull _airVeh) then {
 	private ["_ridePool","_riders","_rIdx","_nRiders","_seatLeft","_rider","_assigned"];
+	//--- B66 TRANSPORT MOUNT-UP / GUER-AVOID (Ray constraint): a mounted road-march must NOT drive the
+	//--- unarmored troop-truck into a hostile (enemy/GUER-held) town`s STATIC GUNS. Before mounting,
+	//--- scan the straight-line drive path (team leader -> objective _pos) for any town NOT held by us
+	//--- (sideID != _sideID, i.e. enemy/GUER/neutral garrison) whose centre lies within a danger band of
+	//--- that path. If one blocks the route, KEEP the infantry ON FOOT for this leg (skip the seat-fill):
+	//--- they advance dismounted and fight, and the truck is never driven into the guns. The crewed hulls
+	//--- still get their normal road-march order from the order loop; overflow/foot infantry road-march as
+	//--- today. A2-OA-safe: point-to-segment distance via plain arithmetic (no worldSize/findIf), getVariable
+	//--- "sideID" on a TOWN object (objects support the 2-arg form; only GROUPS do not). NEVER-FROZEN: this
+	//--- only chooses ride-vs-walk; the infantry always hold their march order either way.
+	private ["_mountBlocked","_dangerR","_mLdr","_ax","_ay","_bx","_by","_segDX","_segDY","_segLen2","_tcx","_tcy","_proj","_clx","_cly","_pathD"];
+	_mountBlocked = false;
+	_dangerR = missionNamespace getVariable ["WFBE_C_AICOM_TRANSPORT_AVOID_RANGE", 350];
+	_mLdr = leader _team;
+	if (!isNull _mLdr && {alive _mLdr}) then {
+		_ax = (getPosATL _mLdr) select 0; _ay = (getPosATL _mLdr) select 1;
+		_bx = _pos select 0; _by = _pos select 1;
+		_segDX = _bx - _ax; _segDY = _by - _ay;
+		_segLen2 = (_segDX * _segDX) + (_segDY * _segDY);
+		{
+			if (!_mountBlocked && {!isNull _x} && {(_x getVariable ["sideID", -1]) != _sideID}) then {
+				_tcx = (getPos _x) select 0; _tcy = (getPos _x) select 1;
+				//--- closest point on segment A->B to the town centre (clamped t in [0,1]); guard zero-length leg.
+				_proj = if (_segLen2 <= 1) then {0} else {(((_tcx - _ax) * _segDX) + ((_tcy - _ay) * _segDY)) / _segLen2};
+				if (_proj < 0) then {_proj = 0}; if (_proj > 1) then {_proj = 1};
+				_clx = _ax + (_segDX * _proj); _cly = _ay + (_segDY * _proj);
+				_pathD = sqrt (((_tcx - _clx) * (_tcx - _clx)) + ((_tcy - _cly) * (_tcy - _cly)));
+				if (_pathD < _dangerR) then {_mountBlocked = true};
+			};
+		} forEach towns;
+	};
+	if (_mountBlocked) then {
+		//--- Hostile garrison astride the route: stay on foot (never ride the truck into static guns).
+		{if (alive _x && {vehicle _x == _x}) then {_x doMove _pos}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+		["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] MOUNT-UP SKIPPED - hostile town within %3m of the drive path; infantry advance on foot (GUER-avoid).", _side, _team, _dangerR]] Call WFBE_CO_FNC_AICOMLog;
+	};
 	//--- Drivable ground hulls with at least one free cargo seat (no Air, must be mobile).
 	_ridePool = [];
 	{
 		if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x}
 			&& {(_x emptyPositions "cargo") > 0}) then {_ridePool = _ridePool + [_x]};
 	} forEach _grndVehs;
-	if (count _ridePool > 0) then {
+	if (count _ridePool > 0 && {!_mountBlocked}) then { //--- B66: skip the seat-fill when a hostile town blocks the route
 		//--- On-foot, non-crew infantry only (crew already man their hulls; air-lift idiom L155-158).
 		_riders = [];
 		{
@@ -553,8 +609,14 @@ while {!WFBE_GameOver && _alive} do {
 					//--- Short leg or pure infantry: direct cross-country MOVE (A2 PFM handles
 					//--- short overland fine, and foot squads should not be road-locked).
 					//--- (A2-fix: removed the A3-only forceFollowRoad clear; short legs were never road-locked.)
-					[_team, _dest, 'MOVE', 50] Spawn WFBE_CO_FNC_WaypointSimple;
-					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4.", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
+					//--- B66 FAST-TRANSIT FOOT LEG: the old bare WaypointSimple shipped an EMPTY 7th props
+					//--- element, so the engine left a pure-infantry squad at its founding posture and it
+					//--- dawdled (AWARE/NORMAL, sometimes LIMITED) across the leg. Mirror the vehicle road-march
+					//--- final waypoint (~L549) with explicit [AWARE,RED,COLUMN,FULL] so foot squads transit FAST
+					//--- in column. The arrival branch (~L595-611) already re-lays a COMBAT/WEDGE SAD, so they
+					//--- still fight on arrival (never-frozen-AI safe - the squad always holds a live MOVE order).
+					[_team, true, [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- B66 (was [_team,_dest,'MOVE',50] Spawn WFBE_CO_FNC_WaypointSimple - empty props)
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT FAST-TRANSIT (column).", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			} else {
 				//--- CAREFUL-GEAR GOVERNOR (owner refinement, layered on the 20s loop):

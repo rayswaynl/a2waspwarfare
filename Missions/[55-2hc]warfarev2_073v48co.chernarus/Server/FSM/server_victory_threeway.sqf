@@ -8,7 +8,12 @@ _miniSleep = 0.05;
 
 while {!gameOver} do {
 
-	if (!gameOver && _victory == 0) then {
+	//--- B66 (Ray 2026-06-21) PARAM-TRAP FIX: the old gate `_victory == 0` meant ANY non-zero
+	//--- WFBE_C_VICTORY_THREEWAY silently disabled ALL victory detection - the round could never end
+	//--- (no supremacy win, no HQ-loss win). Supremacy/HQ-loss detection now runs UNCONDITIONALLY; the
+	//--- _victory param no longer gates it. We deliberately add NO new victory MODES here (Ray: no new
+	//--- modes) - this only stops the trap so the standard supremacy condition always works.
+	if (!gameOver) then {
 		{
 			_side = _x;
 			_hq = (_x) Call WFBE_CO_FNC_GetSideHQ;

@@ -246,7 +246,7 @@
 		title = "$STR_WF_PARAMETER_FastTravel";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Free","$STR_WF_PARAMETER_Fee"};
-		default = 0;
+		default = 2; //--- B66 trial: 0->2 (Fee).
 	};
 	class WFBE_C_GAMEPLAY_HANDLE_FRIENDLYFIRE {
 		title = "$STR_WF_PARAMETER_FriendlyFire";
@@ -325,7 +325,7 @@
 		title = "$STR_WF_PARAMETER_MapIconBlinking";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- B66 trial: 0->1 (combat-marker blinking on for this round).
 	};
 	class WFBE_C_UNITS_BALANCING {
 		title = "$STR_WF_PARAMETER_Balance";
@@ -535,7 +535,7 @@
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		// Marty: Keep the audit opt-in while the client commander/AFK regressions are being stabilized.
-		default = 0;
+		default = 1; //--- B66 trial: 0->1 (measurement window for this round).
 	};
 
 	// 2026-06-15 (Net_2 request): per-client FPS telemetry for the staged-deploy day/night perf study.
@@ -560,7 +560,7 @@
 		title = "GUER Insurgents (playable faction)";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
 	};
 
 };
