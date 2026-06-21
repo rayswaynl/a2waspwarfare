@@ -23,6 +23,30 @@
   },
   "activeClaims": [
     {
+      "lane": "salvage-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@10097961",
+        "origin/master@0139a346",
+        "Miksuu upstream master@b8389e74 fetched into FETCH_HEAD from https://github.com/Miksuu/a2waspwarfare.git",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Salvage.sqf:38",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatesalvage.sqf:10,46,50/51",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:53,91 or current-stable :72,110",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf:267 or current-stable :343",
+        "maintained Vanilla Takistan matching salvage paths"
+      ],
+      "outputs": [
+        "Refreshed Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md for current stable salvage evidence.",
+        "Updated live machine rows in agent-feature-status.jsonl and agent-hardening-backlog.jsonl so current stable is origin/master@0139a346 and release a96fdda2 is historical branch-scoped because origin currently exposes no release/* heads.",
+        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should fix ChangePlayerFunds casing in both salvage paths across source Chernarus and maintained Vanilla first, smoke manual engineer and salvage-truck payouts, then separately review loop exit and server-owned wreck deletion/reward authority.",
+      "updated": "2026-06-21T19:02:34+02:00"
+    },
+    {
       "lane": "pvf-dispatch-crosslink-followup-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
