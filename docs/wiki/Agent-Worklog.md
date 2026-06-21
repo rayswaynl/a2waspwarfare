@@ -1295,3 +1295,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Planned validation: mirror touched wiki pages into `docs/wiki`, parse touched JSON/JSONL, run the wiki validator, verify touched-file parity and run `git diff --check`.
 - Result: refreshed the PR cleanup lab and Progress Dashboard so PR #35 plus deploy-child PR #34/#36-#39/#41 are closed historical AICOM deploy evidence, PR #29/#31 are merged history, PR #43 is the live master-target soak/proposals route, PR #40 is open but stacked on a closed base, and PR #9 remains separate map/content work. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, touched-file wiki/docs parity, stale live-lane string scan and `git diff --check`.
+
+## 2026-06-21T17:41:14+02:00 - Codex - ICBM launched PVEH branch-scope refresh
+
+- Claimed `icbm-launched-pveh-branch-scope-refresh` to tighten the dead/stale-code row for the receiver-only `ICBM_launched` PVEH without touching gameplay source.
+- Source scope: `docs/developer-wiki-index@4c01dfb`, `origin/master@0139a346`, `upstream/master@b8389e74` and `origin/perf/quick-wins@0076040f`, checked across Chernarus source and maintained Vanilla. `git ls-remote --heads origin release/*` returned no current release heads on 2026-06-21.
+- Planned result: refresh [Dead/stale code register](Dead-Code-And-Stale-Code-Register) with exact refs, current `RequestSpecial "ICBM"` / `HandleSpecial "icbm-display"` route anchors and an explicit owner-decision handoff. No gameplay source edits planned.
+- Result: refreshed the receiver-only `ICBM_launched` row, the P1 backlog row and the revive-candidate row with exact refs, no-sender evidence, current nuke-route line drift and an explicit absent-release-head caveat. Dashboard, pruning ledger and machine records were updated; no gameplay source changed.
+- Validation: JSON/JSONL parse passed, `docs/validate-wiki.ps1` passed with pre-existing legacy JSONL warnings only, touched-file docs/wiki to wiki-checkout parity was verified after mirroring, and `git diff --check` passed with line-ending warnings only.

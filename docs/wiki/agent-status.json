@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only pass refreshed PR board/dashboard routing after 2026-06-21 GitHub metadata showed the old deploy-aicom-experital PR stack closed, PR #29/#31 merged and current open PRs are #43, #40 and #9. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
+      "currentWork": "Latest docs-only pass refreshed the Dead-Code-And-Stale-Code-Register.md ICBM_launched PVEH row with exact current docs/stable/Miksuu/perf refs, no-sender evidence, current nuke-route anchors and the absent release-head caveat. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap after this pushed batch; preserve docs/wiki parity when a mirror exists."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "icbm-launched-pveh-branch-scope-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Dead-Code-And-Stale-Code-Register.md for the receiver-only ICBM_launched PVEH: docs head 4c01dfb, origin/master@0139a346, upstream/master@b8389e74 and origin/perf/quick-wins@0076040f all keep the receiver in Chernarus plus maintained Vanilla, no checked root has an active sender, current nuke routing goes through RequestSpecial ICBM plus HandleSpecial icbm-display, and current origin exposes no release/* heads on 2026-06-21. No gameplay source changed."
+    },
     {
       "lane": "pr-board-aicom-closure-refresh-2026-06-21",
       "owner": "Codex",

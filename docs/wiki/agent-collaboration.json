@@ -23,6 +23,27 @@
   },
   "activeClaims": [
     {
+      "lane": "icbm-launched-pveh-branch-scope-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@4c01dfb",
+        "origin/master@0139a346",
+        "upstream/master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "git ls-remote --heads origin release/* returned no release heads on 2026-06-21",
+        "Chernarus source and maintained Vanilla ICBM_launched receiver paths",
+        "current nuke route via RequestSpecial ICBM and HandleSpecial icbm-display"
+      ],
+      "outputs": [
+        "Refreshed Dead-Code-And-Stale-Code-Register.md so the ICBM_launched receiver-only row names current checked docs/stable/Miksuu/perf refs and no longer treats an absent release branch as current proof.",
+        "Recorded no-sender evidence, current RequestSpecial ICBM / HandleSpecial icbm-display route line drift and the owner decision to retire the stale handler/comments or revive the channel with one sender plus ICBM smoke.",
+        "Mirrored touched wiki files into the GitHub wiki checkout. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future ICBM docs/source work should keep the stale ICBM_launched PVEH separate from the live RequestSpecial/HandleSpecial tactical nuke route unless a code owner deliberately revives the direct channel.",
+      "updated": "2026-06-21T17:42:36+02:00"
+    },
+    {
       "lane": "pr-board-aicom-closure-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
