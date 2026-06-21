@@ -31,15 +31,15 @@ Do not patch town capture, town AI, supply missions, income, victory, or marker 
 
 ## Current Branch Scope
 
-Checked 2026-06-14 after `git fetch --all --prune`. Docs head `5243f91d` has no checked town/camp/patrol/respawn/buy source-path changes from the earlier `3eefcb00` atlas checkpoint, so the docs-checkout line anchors below still apply. Treat older `89ae9dad` text below as historical unless this table preserves it for a still-relevant branch.
+Checked 2026-06-14 after `git fetch --all --prune`. Docs head `5243f91d` has no checked town/camp/patrol/respawn/buy source-path changes from the earlier `3eefcb00` atlas checkpoint, so the docs-checkout line anchors below still apply. Rechecked the Patrols v2 path on 2026-06-21: docs branch `docs/developer-wiki-index@d30d2346` is unchanged from `5243f91d` for the checked Patrols source paths, current stable is `origin/master@0139a346`, and current origin exposes no live `release/*` heads. Treat older `89ae9dad` text below as historical unless this table preserves it for a still-relevant branch.
 
 | Ref / root scope | Camp flag branch truth | Patrol branch truth | Zero-camp helper truth |
 | --- | --- | --- | --- |
 | Docs checkout `docs/developer-wiki-index` `5243f91d` (source unchanged from `3eefcb00` for the checked paths) | Chernarus and maintained Vanilla write captured camp `sideID` to `_newSID` at `server_town_camp.sqf:132`, then set the flag from old `_side` at `:135`; `repair-camp` changes `sideID` at `Server_HandleSpecial.sqf:165` and broadcasts at `:168` without a flag refresh. | No `Server/FSM/server_side_patrols.sqf` exists in either maintained root; old town-patrol source remains the docs-checkout shape. | Both maintained roots keep `Common_GetTotalCamps.sqf:10` and `Common_GetTotalCampsOnSide.sqf:16` returning `1`; consumers include `server_town.sqf:179-195`, `Common_GetRespawnThreeway.sqf:7`, `Client_GetRespawnAvailable.sqf:69` and `GUI_Menu_BuyUnits.sqf:111-112`. |
-| Stable `origin/master` `cf2a6d6a` | Chernarus and maintained Vanilla fix independent capture: `server_town_camp.sqf:83-86` writes `_newSID`, sets texture from `str _newSide` at `:84`, then broadcasts `CampCaptured`; `repair-camp` still changes side/broadcasts at `Server_HandleSpecial.sqf:305,308` without a flag refresh. | Patrols v2 is present in both maintained roots: `WFBE_UP_PATROLS` / `WFBE_C_SIDE_PATROLS_MAX` at `Init_CommonConstants.sqf:59,62`, runner compile at `Init_Common.sqf:104`, server driver start at `Init_Server.sqf:533`, and friendly marker loop at `Init_Client.sqf:370`. | Helper fallback is unchanged; current-master consumers line-drift to `server_town.sqf:163-179`, `Client_GetRespawnAvailable.sqf:56` and `GUI_Menu_BuyUnits.sqf:119-120`. |
+| Current stable `origin/master@0139a346` | Chernarus and maintained Vanilla fix independent capture: `server_town_camp.sqf:83-86` writes `_newSID`, sets texture from `str _newSide` at `:84`, then broadcasts `CampCaptured`; `repair-camp` still changes side/broadcasts at `Server_HandleSpecial.sqf:305,308` without a flag refresh. | Patrols v2 is present in both maintained roots: `WFBE_UP_PATROLS = 23` and `WFBE_C_SIDE_PATROLS_MAX = 2` at `Init_CommonConstants.sqf:60,63`, defender cap at `:683`, runner compile at `Init_Common.sqf:107`, server driver start at `Init_Server.sqf:690`, friendly marker loop at `Init_Client.sqf:405`, and level-4 convoy/camp-sweep hooks in `Common_RunSidePatrol.sqf:18,91,108,148,245,247`. | Helper fallback is unchanged; current-master consumers line-drift to `server_town.sqf:163-179`, `Client_GetRespawnAvailable.sqf:56` and `GUI_Menu_BuyUnits.sqf:119-120`. |
 | Miksuu `master` `b8389e74` | Chernarus and maintained Vanilla still set independent capture flags from old `_side` at `server_town_camp.sqf:89`; `repair-camp` still has no flag refresh at `Server_HandleSpecial.sqf:263,266`. | No Patrols v2 startup hits were found in the checked constants/init paths; treat it as the older town-patrol lineage for this atlas. | Helper fallback is unchanged; consumers are `server_town.sqf:163-179`, `Client_GetRespawnAvailable.sqf:69` and `GUI_Menu_BuyUnits.sqf:111-112`. |
 | `origin/perf/quick-wins` `0076040f` | Chernarus fixes independent capture at `server_town_camp.sqf:135`; maintained Vanilla still uses old `_side` at `:135`; `repair-camp` still has no flag refresh at `Server_HandleSpecial.sqf:243,246`. | No Patrols v2 startup hits were found in the checked constants/init paths; the older Chernarus patrol-worker loop fix is not the current side-upgrade driver. | Helper fallback is unchanged; consumers match the older docs-checkout line shape: `server_town.sqf:179-195`, `Client_GetRespawnAvailable.sqf:69` and `GUI_Menu_BuyUnits.sqf:111-112`. |
-| `origin/release/2026-06-feature-bundle` `a96fdda2` | Chernarus and maintained Vanilla fix independent capture at `server_town_camp.sqf:83-86`; `repair-camp` still changes side/broadcasts at `Server_HandleSpecial.sqf:263,266` without a flag refresh. | Release keeps the older release patrol changes and the maintained-root `server_patrols.sqf:26` loop-exit fix, but no Patrols v2 startup hits were found in the checked constants/init paths. | Helper fallback is unchanged; consumers line-drift to `server_town.sqf:163-179`, `Client_GetRespawnAvailable.sqf:56` and `GUI_Menu_BuyUnits.sqf:117-118`. |
+| Historical release commit `a96fdda2` | Chernarus and maintained Vanilla fix independent capture at `server_town_camp.sqf:83-86`; `repair-camp` still changes side/broadcasts at `Server_HandleSpecial.sqf:263,266` without a flag refresh. | The historical release commit keeps the older release patrol changes and the maintained-root `server_patrols.sqf:26` loop-exit fix, but no Patrols v2 startup hits were found in the checked constants/init paths. Current origin exposes no live `release/*` heads on 2026-06-21. | Helper fallback is unchanged; consumers line-drift to `server_town.sqf:163-179`, `Client_GetRespawnAvailable.sqf:56` and `GUI_Menu_BuyUnits.sqf:117-118`. |
 
 ## Source Files
 
@@ -50,7 +50,7 @@ Checked 2026-06-14 after `git fetch --all --prune`. Docs head `5243f91d` has no 
 | Per-town init | `Common/Init/Init_Town.sqf:1-165` |
 | Common town wait | `Common/Init/Init_Towns.sqf:3-15` |
 | Starting ownership / Patrols v2 handoff | `Server/Init/Init_Towns.sqf:3-185`; `Server/FSM/server_side_patrols.sqf:1-72` |
-| Server loop startup | `Server/Init/Init_Server.sqf:507-533` |
+| Server loop startup | Docs checkout `Server/Init/Init_Server.sqf:507-533`; current stable Patrols v2 line drift `Init_Server.sqf:676,690` |
 | Town capture / SV loop | `Server/FSM/server_town.sqf:12-276` |
 | Camp capture manager | `Server/FSM/server_town_camp.sqf:1-160` |
 | Town AI activation | `Server/FSM/server_town_ai.sqf:1-240` |
@@ -93,7 +93,7 @@ Example: `mission.sqm:124-128` initializes Kamenka with `Init_Town.sqf` and disa
 
 ## Starting Ownership
 
-After common town init, stable `origin/master` `cf2a6d6a` calls `Server\Init\Init_Towns.sqf` when a special starting mode or the patrol parameter is enabled; otherwise it sets `townInitServer = true` directly (`Init_Server.sqf:519`).
+After common town init, current stable `origin/master@0139a346` calls `Server\Init\Init_Towns.sqf` when a special starting mode or the patrol parameter is enabled; otherwise it sets `townInitServer = true` directly (`Init_Server.sqf:676`).
 
 `Server/Init/Init_Towns.sqf` implements starting modes:
 
@@ -110,7 +110,7 @@ Once side/base initialization is complete, server init starts the major town loo
 
 - `server_town.sqf` at `Init_Server.sqf:509-510`;
 - `server_town_ai.sqf` at `:512-515` when defender or occupation AI is enabled;
-- victory, resource, upgrade queue and side-patrol loops after `townInit` at `:526-533`; `server_side_patrols.sqf` starts at `:533`.
+- victory, resource, upgrade queue and side-patrol loops after `townInit`; on current stable `origin/master@0139a346`, `server_side_patrols.sqf` starts at `Init_Server.sqf:690`.
 
 This ordering matters. Capture/SV, town AI, resources and victory are separate loops with overlapping state, not one monolithic FSM.
 
@@ -215,42 +215,42 @@ For each eligible town, the AI loop scans nearby `Man`, `Car`, `Motorcycle`, `Ta
 
 When inactive long enough, it clears active state and deletes town teams/vehicles (`:191-223`). The current vehicle deletion check is known unsafe for player passengers; use [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) before touching that cleanup.
 
-Patrols v2 changed the current-master patrol ownership model. Current stable `origin/master` `cf2a6d6a` Chernarus and maintained Vanilla Takistan no longer launch town patrols from `server_town_ai.sqf`; that file now carries explicit retirement comments at `:44` and `:220`. The old worker `server_patrols.sqf` remains present and now uses `while {!WFBE_GameOver && _team_alive}` at `:26`, but the live current-master patrol path is the side-upgrade driver described below.
+Patrols v2 changed the current-master patrol ownership model. Current stable `origin/master@0139a346` Chernarus and maintained Vanilla Takistan no longer launch town patrols from `server_town_ai.sqf`; that file now carries explicit retirement comments at `:72` and `:327`. The old worker `server_patrols.sqf` remains present and now uses `while {!WFBE_GameOver && _team_alive}` at `:31`, but the live current-master patrol path is the side-upgrade driver described below.
 
 ### Resistance Patrol Branch Matrix
 
-Checked 2026-06-14 after fetching `origin` and Miksuu upstream.
+Checked 2026-06-14 after fetching `origin` and Miksuu upstream; current stable Patrols v2 line refs refreshed 2026-06-21 against `origin/master@0139a346`.
 
 | Root / branch | `server_town_ai.sqf` launch shape | `server_patrols.sqf` loop | Status |
 | --- | --- | --- | --- |
-| Current stable `origin/master` `cf2a6d6a` Chernarus | Old town-based launch is retired; `server_town_ai.sqf:44,220` route to `server_side_patrols.sqf`. | `server_patrols.sqf:26` now uses `&&`; Patrols v2 uses `Common_RunSidePatrol.sqf:53` with `&&`. | Current source has the maintained-root loop fix plus the new side-upgrade patrol path; Arma smoke still pending. |
-| Current stable `origin/master` `cf2a6d6a` maintained Vanilla Takistan | Same retired town-based launch and side-upgrade driver. | Same `&&` loop in `server_patrols.sqf`; same `Common_RunSidePatrol` path. | Maintained Vanilla has parity; smoke still pending. |
-| Previous stable/Miksuu baseline `89ae9dad` | Latches `wfbe_patrol_active` before `execVM` at `server_town_ai.sqf:295-298`. | Still `while {!WFBE_GameOver || _team_alive}` at `server_patrols.sqf:26`; reset remains after loop at `:71-72`. | Historical current-head evidence only; superseded by `cf2a6d6a` on rayswaynl `master`. |
+| Current stable `origin/master@0139a346` Chernarus | Old town-based launch is retired; `server_town_ai.sqf:72,327` route to `server_side_patrols.sqf`. | `server_patrols.sqf:31` now uses `&&`; Patrols v2 uses `Common_RunSidePatrol.sqf:119` with `&&` lifecycle plus side-slot release at `:54,264`. | Current source has the maintained-root loop fix plus the new side-upgrade patrol path; Arma smoke still pending. |
+| Current stable `origin/master@0139a346` maintained Vanilla Takistan | Same retired town-based launch and side-upgrade driver. | Same `&&` loop in `server_patrols.sqf`; same `Common_RunSidePatrol` path. | Maintained Vanilla has parity; smoke still pending. |
+| Previous stable/Miksuu baseline `89ae9dad` | Latches `wfbe_patrol_active` before `execVM` at `server_town_ai.sqf:295-298`. | Still `while {!WFBE_GameOver || _team_alive}` at `server_patrols.sqf:26`; reset remains after loop at `:71-72`. | Historical current-head evidence only; superseded by `0139a346` on rayswaynl `master`. |
 | Historical stable baseline `origin/master` `2cdf5fb8` | Launch/latch in both maintained roots at `server_town_ai.sqf:232-235`. | Same `||` loop and post-loop reset in both maintained roots at `server_patrols.sqf:26`, `:71-72`. | Historical line baseline only; current stable moved the launch block but not the bug. |
 | `origin/perf/quick-wins` `0076040f` | Chernarus keeps the same latch before launch at `:232-235`; Vanilla keeps the old shape. | Chernarus changes the loop to `while {!WFBE_GameOver && _team_alive}` at `:26`; Vanilla still uses `||`. | Chernarus-only fix candidate; not propagated to maintained Vanilla. |
-| `origin/release/2026-06-feature-bundle` `a96fdda2` | Chernarus and Vanilla carry the June release patrol changes before the later master Patrols v2 branch. | Chernarus and maintained Vanilla use `while {!WFBE_GameOver && _team_alive}` at `server_patrols.sqf:26`. | Release branch has maintained-root parity for the older loop-exit fix; current master has a newer side-upgrade implementation. |
+| Historical release commit `a96fdda2` | Chernarus and Vanilla carry the June release patrol changes before the later master Patrols v2 branch. | Chernarus and maintained Vanilla use `while {!WFBE_GameOver && _team_alive}` at `server_patrols.sqf:26`. | Historical release evidence has maintained-root parity for the older loop-exit fix; current master has a newer side-upgrade implementation and no live `release/*` head exists on origin. |
 
-Practical current-master rule: do not reopen DR-57/AI1 as current source-unpatched without checking the branch. For `cf2a6d6a`, smoke the new Patrols v2 side-upgrade path: research levels 1/2/3, confirm server or HC dispatch, verify `WFBE_ACTIVE_PATROLS` marker cleanup, kill the patrol and confirm the side slot/cooldown releases through `Server_HandleSpecial.sqf:225-242`.
+Practical current-master rule: do not reopen DR-57/AI1 as current source-unpatched without checking the branch. For `origin/master@0139a346`, smoke the new Patrols v2 side-upgrade path: research levels 1/2/3 plus the level-4 convoy/camp-sweep hooks, confirm server or HC dispatch, verify `WFBE_ACTIVE_PATROLS` marker cleanup, kill the patrol and confirm the side slot/cooldown releases through `Server_HandleSpecial.sqf:345-380`.
 
 ### Patrols v2 Side-Upgrade Path
 
-Patrols v2 is a side-owned upgrade feature, not the old random town flagger. Current `cf2a6d6a` source and maintained Vanilla both add `WFBE_UP_PATROLS = 22` and `WFBE_C_SIDE_PATROLS_MAX = 2` in `Init_CommonConstants.sqf:59-62`, default `WFBE_C_TOWNS_PATROLS = 6` at `:333`, compile `WFBE_CO_FNC_RunSidePatrol` at `Init_Common.sqf:104`, start the server driver at `Init_Server.sqf:533`, and run friendly patrol markers from `Init_Client.sqf:370`.
+Patrols v2 is a side-owned upgrade feature, not the old random town flagger. Current `origin/master@0139a346` source and maintained Vanilla both add `WFBE_UP_PATROLS = 23` and `WFBE_C_SIDE_PATROLS_MAX = 2` in `Init_CommonConstants.sqf:60,63`, default `WFBE_C_TOWNS_PATROLS = 6` at `:486`, defender cap `WFBE_C_SIDE_PATROLS_MAX_DEFENDER = 1` at `:683`, compile `WFBE_CO_FNC_RunSidePatrol` at `Init_Common.sqf:107`, start the server driver at `Init_Server.sqf:690`, and run friendly patrol markers from `Init_Client.sqf:405`.
 
 Runtime shape:
 
 | Stage | Source | Behavior |
 | --- | --- | --- |
-| Upgrade/config | `Labels_Upgrades.sqf:77,103`; representative `Upgrades_USMC.sqf:28,55,82,117,144` | Adds a 3-level `Patrols` upgrade. Current costs are `[[300,0],[1000,0],[2000,0]]`; level 2 requires Light Factory 1 and level 3 requires Heavy Factory 2 in the representative roots. |
-| Driver | `server_side_patrols.sqf:24-58` | Every 20 seconds, per present side, reads `WFBE_UP_PATROLS`, checks `wfbe_side_patrols` against the cap, selects the friendly town closest to the side HQ, chooses LIGHT/MEDIUM/HEAVY by upgrade level, and dispatches the patrol. |
-| Locality | `server_side_patrols.sqf:49-56`; `Client/PVFunctions/HandleSpecial.sqf:16` | Runs on a live HC through `delegate-sidepatrol` when one is registered; otherwise spawns on the server. |
-| Runner | `Common_RunSidePatrol.sqf:21-24,53-83` | Creates the team, publishes started/ended events through `HandleSpecial` / `RequestSpecial`, gravitates to enemy towns, exits on game over or dead patrol, and releases the slot. |
-| Markers | `Server_HandleSpecial.sqf:215-242`; `Client/FSM/updatepatrolmarkers.sqf:18-58` | Maintains `WFBE_ACTIVE_PATROLS` and shows friendly patrol markers only. |
+| Upgrade/config | `Labels_Upgrades.sqf:77,103`; representative `Upgrades_USMC.sqf:29,57,85,121,149`; `Init_CommonConstants.sqf:60,63,486,683` | Adds a 4-level `Patrols` upgrade: levels 1-3 choose LIGHT/MEDIUM/HEAVY side patrols, while level 4 enables the convoy support path. Current constants cap normal sides at 2 patrols and defenders at 1. |
+| Driver | `server_side_patrols.sqf:12,19,48,67,72` | Every 20 seconds, per present side, reads `WFBE_UP_PATROLS`, applies a level-aware side cap, waits/logs when no owned towns are available, selects the friendly town closest to the side HQ, chooses the patrol tier, and dispatches the patrol. |
+| Locality | `server_side_patrols.sqf:67`; `Client/PVFunctions/HandleSpecial.sqf:50` | Runs on a live HC through `delegate-sidepatrol` when one is registered; otherwise spawns on the server. |
+| Runner | `Common_RunSidePatrol.sqf:54,82,87,91,108,119,148,245,264` | Creates the team, publishes started/ended events through `HandleSpecial` / `RequestSpecial`, gravitates to enemy towns, runs level-4 convoy and Task 40 camp-sweep hooks, exits on game over or dead patrol, and releases the slot. |
+| Markers | `Server_HandleSpecial.sqf:345-380`; `Client/FSM/updatepatrolmarkers.sqf:3,19,31-48` | Maintains `WFBE_ACTIVE_PATROLS`, updates convoy stop state and shows friendly patrol markers only. |
 
 Smoke gate: confirm a side can research all three levels, each level spawns an appropriate patrol near the HQ-side frontline, markers appear only to the owning side, HC dispatch works when an HC is connected, slot/cooldown release after patrol death, and current Buy Units/RHUD AI-cap text matches the "running patrols reduce max AI by 1" rule.
 
 ## Upstream Miksuu Town-Defense Diagnostics
 
-This subsection preserves upstream provenance. For current branch-head claims in this atlas, use [Current Branch Scope](#current-branch-scope): current rayswaynl `origin/master` is `cf2a6d6a`, current Miksuu is `b8389e74`, and older `89ae9dad` wording below is historical context unless explicitly named.
+This subsection preserves upstream provenance. For current branch-head claims in this atlas, use [Current Branch Scope](#current-branch-scope): current rayswaynl `origin/master` is `0139a346`, current Miksuu is `b8389e74`, and older `89ae9dad` wording below is historical context unless explicitly named.
 
 Current [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) found `miksuu/master` ahead of the then-current `rayswaynl/master` by a focused town-defense diagnostics batch as of 2026-06-03. The key Chernarus commit is [`913ecdf6`](https://github.com/Miksuu/a2waspwarfare/commit/913ecdf6b55698ad8ea5de70dc1ecb33193b17ce), followed by Takistan propagation in [`d5bfe3a2`](https://github.com/Miksuu/a2waspwarfare/commit/d5bfe3a26d677d84c49188abe8d92c03b72f049f).
 
@@ -299,7 +299,7 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 | --- | --- | --- | --- |
 | Patch-ready | Town AI inactivity cleanup can delete a town-AI vehicle with a player passenger/crew member aboard if the player is not group leader. | `server_town_ai.sqf:211-216` | [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) |
 | Branch-split / repair-side open | Independent camp-capture and repair-side world-flag status is branch-sensitive. Stable `origin/master` and release fix independent capture in both maintained roots, docs head and Miksuu still use the old owner, perf fixes Chernarus only, and repair-side flag refresh remains open everywhere checked. | [Current Branch Scope](#current-branch-scope); docs `server_town_camp.sqf:132,135` and `Server_HandleSpecial.sqf:165,168` | This page, [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) |
-| Smoke pending | Current stable `origin/master` `cf2a6d6a` supersedes the old DR-57/AI1 resistance-patrol path with Patrols v2 side-upgrade patrols in both maintained roots. The old `89ae9dad` evidence remains historical; current source has the `&&` loop and a new `server_side_patrols` driver. | `server_town_ai.sqf:44,220`; `server_side_patrols.sqf:24-58`; `Common_RunSidePatrol.sqf:53-83`; `Server_HandleSpecial.sqf:215-242`; branch matrix above | This page, [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [Source fix propagation queue](Source-Fix-Propagation-Queue) |
+| Smoke pending | Current stable `origin/master@0139a346` supersedes the old DR-57/AI1 resistance-patrol path with Patrols v2 side-upgrade patrols in both maintained roots. The old `89ae9dad` evidence remains historical; current source has the `&&` loop, a level-aware `server_side_patrols` driver, friendly markers and level-4 convoy/camp-sweep hooks. | `server_town_ai.sqf:72,327`; `server_side_patrols.sqf:12,19,48,67,72`; `Common_RunSidePatrol.sqf:54,82,119,148,245,264`; `Server_HandleSpecial.sqf:345-380`; branch matrix above | This page, [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [Source fix propagation queue](Source-Fix-Propagation-Queue) |
 | Upstream candidate | Miksuu's latest `master` adds focused town-defense diagnostics plus `grpNull`/`objNull` creation guards and Vanilla propagation; `e4be1958` additionally clears previous-side active town-AI state when a town is captured so the new owner can spawn occupation teams. | [`913ecdf6`](https://github.com/Miksuu/a2waspwarfare/commit/913ecdf6b55698ad8ea5de70dc1ecb33193b17ce), [`d5bfe3a2`](https://github.com/Miksuu/a2waspwarfare/commit/d5bfe3a26d677d84c49188abe8d92c03b72f049f), [`e4be1958`](https://github.com/Miksuu/a2waspwarfare/commit/e4be1958668ade647dfec8a098a4743b4131f511) | [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) |
 | Patch-ready | Supply mission cooldown key casing differs between town init and supply mission code. | `Init_Town.sqf:35`; supply pages trace `LastSupplyMissionRun` | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
 | Authority gap | Town and camp capture bounties are awarded client-side after server capture broadcasts. | `TownCaptured.sqf:37-81`; `CampCaptured.sqf:19-40` | [Server authority map](Server-Authority-Migration-Map), [Feature status](Feature-Status-Register) |
@@ -335,7 +335,7 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 
 ## Historical Town Patrol Mechanic (pre-Patrols v2)
 
-> Historical mechanic write-up for the pre-Patrols v2 roaming-patrol feature. It still explains old `89ae9dad` / branch evidence, but it is not the current `cf2a6d6a` master path. For current master, use [Patrols v2 Side-Upgrade Path](#patrols-v2-side-upgrade-path).
+> Historical mechanic write-up for the pre-Patrols v2 roaming-patrol feature. It still explains old `89ae9dad` / branch evidence, but it is not the current `origin/master@0139a346` path. For current master, use [Patrols v2 Side-Upgrade Path](#patrols-v2-side-upgrade-path).
 
 **What patrols are.** Designated towns periodically launch a mobile AI group that wanders town-to-town and tries to **capture** enemy/neutral towns as it arrives — ambient, map-wide pressure not tied to a base assault. A patrol's side is the current owner of its origin town.
 
@@ -354,7 +354,7 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 **Three bugs made the old path dead before Patrols v2 (fix together only if reviving that path on an older branch):**
 
 - **DR-57 — patrols never spawn** ([Deep-review findings](Deep-Review-Findings)): old `server_town_ai.sqf:67-68` unconditionally re-stamped `wfbe_patrol_active_last=time` every ~5 s scan, so the `:296` `> 360s` gate was never met. This superseded the earlier "blocked after first launch" framing for old current-head evidence.
-- **AI1 — patrols never terminate** (if they did launch): old `server_patrols.sqf:26` used `while {!WFBE_GameOver || _team_alive}` (should be `&&`); the teardown reset never ran. Current `cf2a6d6a` Chernarus and Vanilla now use `&&` at `server_patrols.sqf:26`.
+- **AI1 — patrols never terminate** (if they did launch): old `server_patrols.sqf:26` used `while {!WFBE_GameOver || _team_alive}` (should be `&&`); the teardown reset never ran. Current `origin/master@0139a346` Chernarus and Vanilla now use `&&` at `server_patrols.sqf:31`.
 - **AI6 — SV exactly 60 yields no patrol type**: the `Server_GetTownPatrol.sqf:16-19` switch has cases `<= 30`, `> 30 && < 60`, `> 60` — `== 60` falls through and `_type` is unassigned.
 
 Patch rule for old branches only: remove the unconditional timestamp reset (DR-57), restore the `&&` loop exit (AI1), close the `== 60` case (AI6), then smoke launch, roam, capture, death and relaunch. Current master instead needs Patrols v2 smoke, not another port of the old branch matrix.

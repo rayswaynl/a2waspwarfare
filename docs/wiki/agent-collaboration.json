@@ -79,6 +79,34 @@
       "updated": "2026-06-21T20:02:13+02:00"
     },
     {
+      "lane": "patrols-v2-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@d30d23466",
+        "docs branch source unchanged from 5243f91d for checked Patrols paths",
+        "origin/master@0139a346",
+        "git ls-remote --heads origin release/* returned no heads on 2026-06-21",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:60,63,486,683 and maintained Vanilla matching lines",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf:107 and maintained Vanilla matching line",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:405 and maintained Vanilla matching line",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:40,690 and maintained Vanilla matching lines",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf:72,327 and maintained Vanilla matching lines",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_side_patrols.sqf:12,19,48,67,72 and maintained Vanilla matching lines",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunSidePatrol.sqf:54,82,87,91,108,119,148,245,264 and maintained Vanilla matching lines",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:345-380 and maintained Vanilla matching lines",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatepatrolmarkers.sqf:3,19,31-48 and maintained Vanilla matching lines",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_patrols.sqf:31 and maintained Vanilla matching line"
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md, AI-Runtime-HC-Loop-Map.md, AI-Headless-And-Performance.md and Server-Gameplay-Runtime-Atlas.md for Patrols v2 current-stable evidence.",
+        "Updated Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and coordination pages so current stable is origin/master@0139a346 and release evidence is historical until a live release head exists again.",
+        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should smoke Patrols upgrade levels 1/2/3, level-4 convoy/camp-sweep hooks, HC delegate-sidepatrol, friendly-only markers, patrol death, side-slot/cooldown release and Buy Units/RHUD AI-cap text before release-ready wording.",
+      "updated": "2026-06-21T19:44:25+02:00"
+    },
+    {
       "lane": "upgrade-sync-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
