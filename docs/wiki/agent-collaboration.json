@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T20:18:55+02:00",
+  "generatedAt": "2026-06-21T20:42:34+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -45,6 +45,31 @@
       ],
       "handoff": "Closed after validation. Future code owner should avoid reopening helper unpacking on current stable maintained roots; choose one new-commander-assigned sender, switch GUI_Commander_VoteMenu to row value/team identity, keep requester authority separate, and handle modded forks only after a maintenance decision.",
       "updated": "2026-06-21T20:11:38+02:00"
+    },
+    {
+      "lane": "factory-destroyed-purchase-refund-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@ebd86fad0",
+        "8d611092..HEAD has no changes in checked Chernarus/Vanilla GUI_Menu_BuyUnits.sqf or Client_BuildUnit.sqf paths",
+        "origin/master@0139a346",
+        "upstream/master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "intermediate historical release commit 7ff18c49 only refunded the empty/crewless branch and is superseded by a96fdda2 for the dead/null refund closure",
+        "current origin exposes no feat/buymenu-easa-qol head on 2026-06-21",
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Refreshed the destroyed-factory refund branch matrix, compact Feature Status and Source Fix queue rows, and the hardening backlog row.",
+        "Updated adjacent BuyMenu/EASA QoL and price/key branch labels to historical/current-stable wording where they route through the same factory matrix.",
+        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owners targeting old-shape roots should port the current-stable/a96fdda2 dead/null refund payload, not 7ff18c49's superseded empty/crewless refund, and should keep full player purchase authority migration separate.",
+      "updated": "2026-06-21T20:42:34+02:00"
     },
     {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
