@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T19:15:49+02:00",
+  "generatedAt": "2026-06-21T19:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@a0a86da2 and origin/docs/developer-wiki-index source-unchanged for checked victory paths",
+        "origin/master@0139a346",
+        "Miksuu upstream master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "current stable Chernarus and maintained Vanilla Server/FSM/server_victory_threeway.sqf:18-22,29-49",
+        "current stable Chernarus and maintained Vanilla Client/Client_EndGame.sqf:3-13",
+        "current stable Chernarus and maintained Vanilla Server/Functions/Server_LogGameEnd.sqf:9-44",
+        "old-shape docs/Miksuu/perf/historical release Server/FSM/server_victory_threeway.sqf:23-41"
+      ],
+      "outputs": [
+        "Refreshed Victory-And-Endgame-Atlas.md for the current-stable logger/telemetry branch split.",
+        "Updated Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so the current-stable patch-ready route is explicit winner/loser semantics, combined !WFBE_GameOver guard and one accepted endgame exit.",
+        "Updated agent-hardening-backlog.jsonl victory rows and coordination pages. Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should compute explicit winner/loser sides per branch, keep the legacy client loser payload only intentionally, set WF_Winner/WASPSTAT/LogGameEnd to the explicit winner, guard the full condition with !WFBE_GameOver and exit after one accepted endgame path.",
+      "updated": "2026-06-21T19:27:00+02:00"
+    },
     {
       "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",
       "owner": "Codex",
