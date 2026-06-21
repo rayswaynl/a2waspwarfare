@@ -34,7 +34,9 @@
 	count, forEach, select floor(random count); getPos guarded behind !isNull.
 */
 if !(isServer) exitWith {};
-if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
+//--- B62 (Ray 2026-06-21): DROPPED the WFBE_C_GUER_PLAYERSIDE<1 self-guard. This loop keys
+//--- entirely off town sideID==WFBE_C_GUER_ID(2)+wfbe_active, so GUER-as-AI-defender air must
+//--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
 private ["_interval","_maxAir","_atChance","_mi24Chance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders"];
@@ -165,14 +167,16 @@ while {!WFBE_GameOver} do {
 			if (!isNull _veh) then {
 				_grp = [resistance, "guer-airdef"] Call WFBE_CO_FNC_CreateGroup;
 				if (!isNull _grp) then {
-					//--- Pilot (driver) always; gunner too for the Mi-24 (manned turret gunship).
+					//--- Pilot (driver) always; gunner too for BOTH airframes (manned turret).
+					//--- B62 (Ray 2026-06-21): the Ka-137 MainTurret is GUNNER-fired (recon MG or the
+					//--- swapped AT-5 set), so a pilot-only Ka-137 flies but never engages. Add a gunner
+					//--- for the Ka-137 path too, exactly like the Mi-24 path (WFBE_GUERRESCREW). Teardown
+					//--- below already deletes ALL crew, so the extra crewman is cleaned on despawn.
 					_pilot = [_pilotClass, _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 					if (!isNull _pilot) then {
 						_pilot moveInDriver _veh;
-						if (_useMi24) then {
-							_gunner = [_crewClass, _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
-							if (!isNull _gunner) then { _gunner moveInGunner _veh; };
-						};
+						_gunner = [_crewClass, _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+						if (!isNull _gunner) then { _gunner moveInGunner _veh; };
 
 						//--- Apply the EASA AT loadout to the Ka-137 (server-side turret swap; see header).
 						//--- Strip the default recon MG (PKT/100Rnd_762x54_PKT) then add the AT-5 set, using the

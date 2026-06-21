@@ -217,6 +217,47 @@ if ((missionNamespace getVariable "WFBE_C_BASE_START_TOWN") > 0) then {
 	_locationLogics = startingLocations;
 };
 
+//--- B62 (Ray 2026-06-21) AIRFIELD FILTER (Bug B): 3 of the 19 LocationLogicStart sit on airfields
+//--- (id 278/279=NWAF, id 300=NE) -> HQ/base spawning ON the runway. Drop any candidate within ~1500m of
+//--- a map airport anchor, terrain-independent (LocationLogicAirport). A2-OA-safe. GUARD: if the filter
+//--- empties the set, keep the unfiltered set (never zero candidates).
+private ["_b62_airports","_b62_filtered","_s"];
+_b62_airports = nearestObjects [[7680,7680,0], ["LocationLogicAirport"], 99999];
+//--- A2-OA 1.64: 'ARRAY select {CODE}' is A3-only (see Server_CounterBattery.sqf:101) -> explicit filter loop.
+_b62_filtered = [];
+{
+	_s = _x;
+	if (({ (getPos _s) distance (getPos _x) < 1500 } count _b62_airports) == 0) then {
+		_b62_filtered set [count _b62_filtered, _s];
+	};
+} forEach _locationLogics;
+if (count _b62_filtered > 0) then {
+	_locationLogics = _b62_filtered;
+	["INITIALIZATION", Format ["Init_Server.sqf: B62 airfield filter kept %1 start candidates (dropped %2 on/near airfields).", count _b62_filtered, count _b62_airports]] Call WFBE_CO_FNC_LogContent;
+} else {
+	["WARNING", "Init_Server.sqf: B62 airfield filter emptied the candidate set - keeping the unfiltered starts."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- B62 (Ray 2026-06-21) ROTATION: exclude the WEST/EAST start keys used last match (persisted in
+//--- profileNamespace as the start object's string identity) so the random draw varies match-to-match
+//--- beyond the B57 RNG-advance. Fall back to the full filtered set if exclusion would empty it.
+//--- A2-OA-safe: plain string-compare via str + == (no A3-only equality/search/random commands).
+private ["_b62_lastW","_b62_lastE","_b62_rotPool","_id"];
+_b62_lastW = profileNamespace getVariable ["WFBE_LAST_START_W", ""];
+_b62_lastE = profileNamespace getVariable ["WFBE_LAST_START_E", ""];
+//--- A2-OA 1.64: 'ARRAY select {CODE}' is A3-only -> explicit filter loop.
+_b62_rotPool = [];
+{
+	_id = str _x;
+	if (!((_id == _b62_lastW) || (_id == _b62_lastE))) then {
+		_b62_rotPool set [count _b62_rotPool, _x];
+	};
+} forEach _locationLogics;
+if (count _b62_rotPool > 1) then {
+	_locationLogics = _b62_rotPool;
+	["INITIALIZATION", Format ["Init_Server.sqf: B62 rotation excluded last-used starts -> %1 candidates remain.", count _b62_rotPool]] Call WFBE_CO_FNC_LogContent;
+};
+
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
 
 Private ["_i", "_maxAttempts", "_minDist", "_rPosE", "_rPosW", "_setEast", "_setGuer", "_setWest", "_startE", "_startG", "_startW", "_egressOK"];
@@ -366,8 +407,10 @@ if (_use_random) then {
 			if (isNull _eastDefault || isNull _westDefault) then {
 				Private ["_tempWork"];
 				_tempWork = +(startingLocations) - [_westDefault, _eastDefault];
-				if (isNull _eastDefault && _present_east) then {_eastDefault = _tempWork select floor(random _total); _tempWork = _tempWork - [_eastDefault]};
-				if (isNull _westDefault && _present_west) then {_westDefault = _tempWork select floor(random _total); _tempWork = _tempWork - [_westDefault]};
+				//--- B62 (Ray 2026-06-21) INDEX BUG: index _tempWork by (count _tempWork), NOT _total
+					//--- (=count _locationLogics) - a size mismatch that could index out of range / pick a filtered-out start.
+					if (isNull _eastDefault && _present_east) then {_eastDefault = _tempWork select floor(random (count _tempWork)); _tempWork = _tempWork - [_eastDefault]};
+				if (isNull _westDefault && _present_west) then {_westDefault = _tempWork select floor(random (count _tempWork)); _tempWork = _tempWork - [_westDefault]};
 			};
 
 			if (_present_east && !_skip_e) then {_startE = _eastDefault};
@@ -377,6 +420,13 @@ if (_use_random) then {
 		};
 	};
 };
+
+//--- B62 (Ray 2026-06-21) ROTATION persist: store the chosen WEST/EAST start keys (string identity, matching
+//--- the exclusion filter above) so NEXT match's draw avoids them = guaranteed match-to-match start variety.
+//--- saveProfileNamespace is already used in the random block above. A2-OA-safe (str / plain set).
+if (!(isNull _startW)) then { profileNamespace setVariable ["WFBE_LAST_START_W", str _startW] };
+if (!(isNull _startE)) then { profileNamespace setVariable ["WFBE_LAST_START_E", str _startE] };
+saveProfileNamespace;
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Starting location mode is on [%1].",missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE"]] Call WFBE_CO_FNC_LogContent;
 
@@ -623,13 +673,10 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
 		[] execVM "Server\Server_GuerStipend.sqf";
-		//--- B61 (Ray 2026-06-21): GUER AIR DEFENSE — standalone server loop (self-guards isServer +
-		//--- WFBE_C_GUER_AIRDEF_ENABLE) that keeps a Ka-137 (or a Mi-24 over a large town under attack)
-		//--- over active GUER-held towns. Capped + self-cleaning; GUER has no AI commander so it can't ride
-		//--- the wildcard deck.
-		if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) > 0) then {
-			[] execVM "Server\Server_GuerAirDef.sqf";
-		};
+			//--- B62 (Ray 2026-06-21): GUER air-def execVM MOVED out of this WFBE_C_GUER_PLAYERSIDE>0 block to
+			//--- its own gate AFTER the GUER-OFF block below (keyed only on isServer + WFBE_C_GUER_AIRDEF_ENABLE).
+			//--- GUER is ALWAYS the AI town-defender (towns with sideID==GUER), so the air-def loop must run in
+			//--- production even when the playable-side param is 0 - previously it was DEAD because PLAYERSIDE=0.
 	} else {
 		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerResistance missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
 	};
@@ -644,6 +691,15 @@ if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isN
 	if (!(isNull _guerLogicOff)) then {
 		{ if (!(isNull _x)) then { deleteVehicle _x }; } forEach (synchronizedObjects _guerLogicOff);
 	};
+};
+
+//--- B62 (Ray 2026-06-21): GUER AIR DEFENSE (moved out of the WFBE_C_GUER_PLAYERSIDE block). GUER is always
+//--- the AI town-defender (the script loop is keyed off town sideID==GUER), so this must run in production
+//--- where the playable-side param is 0. Gated only on isServer (this file already runs server-side) +
+//--- WFBE_C_GUER_AIRDEF_ENABLE. The loop self-guards isServer/AIRDEF_ENABLE internally too. A2-OA-safe.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) > 0}) then {
+	[] execVM "Server\Server_GuerAirDef.sqf";
+	["INITIALIZATION", "Init_Server.sqf: B62 GUER air-def loop launched (un-gated from PLAYERSIDE)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in

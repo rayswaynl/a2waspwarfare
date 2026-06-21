@@ -32,6 +32,11 @@ if (isNil "_names" || isNil "_classes" || isNil "_costs" || isNil "_scripts") ex
 //--- 1) Deploy the HQ where it stands (the MHQ starts at the side's start location).
 if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 	if (_logik getVariable ["wfbe_hqinuse", false]) exitWith {};
+	//--- B62 (Ray 2026-06-21): MHQ/Base double-deploy lock. If an MHQ relocation is mid-drive
+	//--- (AI_Commander_MHQReloc set wfbe_mhqreloc_active), do NOT re-deploy a fresh HQ at the old
+	//--- spot - that races the relocation and double-deploys. The reloc worker clears the flag on
+	//--- finish/abort; until then the Base worker stands down on the deploy path.
+	if (_logik getVariable ["wfbe_mhqreloc_active", false]) exitWith {};
 	_deployCost = _costs select 0;
 	if (_supply >= _deployCost) then {
 		//--- V0.6.5 owner report: HQ deployed ON a road (MHQ start spot). Nudge the

@@ -429,6 +429,69 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
+
+//--- B62 (Ray 2026-06-21): OWN-SIDE MARKER RECONCILIATION / SELF-HEAL.
+//--- THE BUG (Ray RPT, OPFOR/insurgent JIP join): own-side FACTORY/structure markers AND own-side HQ-team
+//--- arrows were missing. Two slow-sync misses: (a) Init_BaseStructure is a ONE-SHOT setVehicleInit, so a
+//--- structure whose marker was skipped (side not settled / the find=-1 crash) is NEVER retried; (b) the B56
+//--- bounded JIP wait in initJIPCompatible can proceed WITHOUT wfbe_teams ("not synced in time"), leaving
+//--- WFBE_%1TEAMS / WFBE_Client_Teams empty so the team data the HQ arrows rely on is absent.
+//--- This bounded client loop re-checks AFTER init until the data lands, then (re)populates the own-side team
+//--- arrays and rescans WarfareBBaseStructure own-side objects to (re)create any MISSED structure marker. A
+//--- slow-sync/JIP/respawn miss therefore self-heals. A2-OA 1.64 safe (no isEqualType/findIf/pushBack; getPos
+//--- of objects only; groups read via plain getVariable). No frozen AI / no sim-gating touched.
+[] spawn {
+	private ["_t0","_logik","_teams","_sideText","_structures","_x","_built","_sideID2","_didTeams"];
+	waitUntil {!isNil "clientInitComplete" && {clientInitComplete}};
+	waitUntil {!isNil "WFBE_Client_SideID"};
+	_sideText = WFBE_Client_SideJoinedText;
+	_logik = WFBE_Client_Logic;
+	_didTeams = false;
+	_t0 = time;
+	//--- Re-check for ~120s after init (covers a slow JIP team-sync); cheap idle cadence.
+	while {(time - _t0) < 120} do {
+		//--- (b) HEAL OWN-SIDE TEAM DATA. If the B56 wait skipped wfbe_teams, WFBE_%1TEAMS is empty/nil here.
+		//--- Repopulate it (and the WFBE_Client_Teams mirror init_client captured at startup) once the side
+		//--- logic finally carries wfbe_teams. resistance/GUER is harass-only and may never resolve teams - that
+		//--- is expected, the loop simply never fires this branch for it (no block, no error).
+		if (!_didTeams && {!isNull _logik} && {!isNil {_logik getVariable "wfbe_teams"}}) then {
+			_teams = _logik getVariable "wfbe_teams";
+			if (!isNil "_teams") then {
+				missionNamespace setVariable [Format ["WFBE_%1TEAMS", _sideText], _teams];
+				WFBE_Client_Teams = _teams;
+				clientTeams = _teams;
+				WFBE_Client_Teams_Count = count _teams;
+				_didTeams = true;
+				["INITIALIZATION", Format ["Init_Client.sqf: B62 reconciliation populated own-side teams (count %1) after JIP slow-sync.", count _teams]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
+
+		//--- (a) HEAL MISSED STRUCTURE MARKERS. Walk the side logic's own-side structure registry (broadcast,
+		//--- so JIP clients receive it) and re-trigger Init_BaseStructure for any LIVE structure that never had
+		//--- a marker built (no wfbe_b62_marker_built flag). The re-run sets the flag itself, so this is
+		//--- idempotent and will not duplicate markers for structures that already painted theirs.
+		_structures = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideStructures;
+		if (!isNil "_structures" && {typeName _structures == "ARRAY"}) then {
+			{
+				if (!isNull _x && {alive _x}) then {
+					_built = _x getVariable ["wfbe_b62_marker_built", false];
+					if (!_built) then {
+						_sideID2 = (WFBE_Client_SideJoined) Call GetSideID;
+						//--- Re-fire the SAME one-shot script; its compare-and-claim guard (wfbe_b62_marker_built)
+						//--- makes this idempotent - if the original spawn claims first, this re-run exits without
+						//--- drawing, and vice-versa, so no duplicate BaseMarker is ever created.
+						[_x, ((_x getVariable ["wfbe_structure_type", ""]) == "Headquarters"), _sideID2] ExecVM "Client\Init\Init_BaseStructure.sqf";
+						["INITIALIZATION", Format ["Init_Client.sqf: B62 reconciliation re-fired Init_BaseStructure for a possibly-missed own-side structure [%1].", typeOf _x]] Call WFBE_CO_FNC_LogContent;
+						sleep 0.1; //--- let the re-fired spawn reach its claim before this loop re-reads the registry.
+					};
+				};
+			} forEach _structures;
+		};
+
+		sleep 5;
+	};
+};
+
 [] execFSM "Client\FSM\updateactions.fsm";
 //--- QoL trio feat.3: spawn advisor nudge loop after common init is done.
 [] spawn WFBE_CL_FNC_QOL_Advisor;

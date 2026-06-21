@@ -14,7 +14,19 @@ if (local player) then {
 	_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
     _radius = missionNameSpace getVariable "WFBE_C_STRUCTURES_COMMANDCENTER_RANGE";
 	waitUntil {clientInitComplete};
-	if (_side != WFBE_Client_SideJoined) exitWith {};
+	//--- B62 (Ray 2026-06-21): own-side gate uses the STABLE WFBE_Client_SideID (set once at client init,
+	//--- mirrors updateaicommarkers.sqf), NOT WFBE_Client_SideJoined. WFBE_Client_SideJoined / (side player)
+	//--- can drift on respawn/JIP-settle; because this script is a ONE-SHOT setVehicleInit, any drift at this
+	//--- instant PERMANENTLY skipped the own-side marker (Ray RPT: OPFOR/insurgent JIP could not see own FACTORY
+	//--- markers). _sideID is the server-fed structure side; compare it directly to the joined side id.
+	waitUntil {!isNil "WFBE_Client_SideID"};
+	if (_sideID != WFBE_Client_SideID) exitWith {};
+	//--- B62 (Ray 2026-06-21): compare-and-claim so the Init_Client reconciliation rescan and the original
+	//--- setVehicleInit spawn never BOTH draw a marker for the same structure (no duplicate BaseMarker). Whichever
+	//--- reaches here first claims the structure; a second run for an already-claimed structure exits. The rescan
+	//--- only re-fires this script for structures still UNclaimed, so a slow-sync miss self-heals exactly once.
+	if (_structure getVariable ["wfbe_b62_marker_built", false]) exitWith {};
+	_structure setVariable ["wfbe_b62_marker_built", true];
 
 	sleep 2;
 

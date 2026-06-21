@@ -150,6 +150,14 @@ while {!WFBE_GameOver} do {
 													_baseG setVariable ["wfbe_aicom_founded", true];
 													_baseG setVariable ["wfbe_persistent", true];
 													_baseG setVariable ["wfbe_side", _baseSide];
+													//--- B62 (Ray 2026-06-21): a re-adopted team must also carry a teammode + a VALID
+													//--- teamtype, or it cannot refill. AI_Commander_Produce skips production when
+													//--- wfbe_teamtype < 0 (default -1) or >= count templates (Produce.sqf:60,64-65); template
+													//--- index 0 (the basic rifle squad) is ALWAYS present, so it is the safe always-buildable
+													//--- value. wfbe_teammode "towns" lets AI_Commander_Strategy re-dispatch it like a normal
+													//--- town team (Strategy/AssignTowns default-read it as "towns").
+													_baseG setVariable ["wfbe_teammode", "towns"];
+													_baseG setVariable ["wfbe_teamtype", 0];
 													_baseLogik setVariable ["wfbe_teams", _baseTeams + [_baseG], true];
 													_baseTeams = _baseTeams + [_baseG];
 													_baseFounded = _baseFounded + 1;
