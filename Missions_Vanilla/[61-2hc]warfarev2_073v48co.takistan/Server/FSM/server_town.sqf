@@ -4,6 +4,8 @@
 
 _timeAttacked = 0;
 _activeEnemies = 0;
+_contested = false;
+_sidesPresent = 0;
 _force = 0;
 _lastUp = 0;
 _skipTimeSupply = false;
@@ -57,6 +59,25 @@ while {!WFBE_GameOver} do {
 					case WFBE_C_EAST_ID: {_west + _resistance};
 					case WFBE_C_GUER_ID: {_east + _west};
 				};
+
+				//--- CONTESTED stamp (wasp-dash-safe-telemetry, claude-gaming 2026-06-21): mark this town as
+				//--- actively fought over, for the public /wasp dashboard's ANONYMIZED contested COUNT (read
+				//--- once / 60s in server_groupsGC.sqf -> CONTESTED|v1). Mutual-knowledge only: no town
+				//--- name/side/position is ever exported, just whether the town is in conflict. Reuses the
+				//--- per-side presence counts already in hand above (no extra nearEntities scan). Definition:
+				//---   owned town  -> enemies present eroding it (capture-in-progress / under attack)
+				//---   neutral town -> 2+ sides physically clashing over it.
+				_contested = false;
+				if (_sideID == WFBE_C_UNKNOWN_ID) then {
+					_sidesPresent = 0;
+					if (_west > 0) then {_sidesPresent = _sidesPresent + 1};
+					if (_east > 0) then {_sidesPresent = _sidesPresent + 1};
+					if (_resistance > 0) then {_sidesPresent = _sidesPresent + 1};
+					_contested = (_sidesPresent >= 2);
+				} else {
+					_contested = (_activeEnemies > 0);
+				};
+				_location setVariable ["wfbe_contested", _contested];
 
 				_supplyValue = _location getVariable "supplyValue";
 

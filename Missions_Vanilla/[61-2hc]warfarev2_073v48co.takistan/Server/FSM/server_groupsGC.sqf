@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_contestedTowns"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -105,6 +105,21 @@ while {!WFBE_GameOver} do {
 	// and current per-side group counts incl. GUER. Single cheap diag_log; all values already in
 	// hand (counters from the sweep above, per-side counts from the cap-warning pass). t = round min.
 	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|untW=" + str _untW + "|untE=" + str _untE + "|untG=" + str _untG + "|t=" + str (round (time / 60)));
+
+	// --- Public /wasp dashboard - SAFE live telemetry (wasp-dash-safe-telemetry, claude-gaming 2026-06-21).
+	// Competitive-integrity rule (Steff 2026-06-21): the public dashboard/JSON must NEVER expose
+	// win-advantage intel (base/town ownership, positions, per-side force/economy, AICOM targets). Only
+	// MUTUAL-KNOWLEDGE that both sides already see in-game is allowed live. Two such extras on the 60s
+	// cadence, next to GCSTAT:
+	//   1) SCORE     - the mutual kill-score both sides read off the in-game scoreboard (scoreSide).
+	//   2) CONTESTED - an ANONYMIZED aggregate COUNT of towns in conflict (no names/sides/positions);
+	//                  stamped per-town by server_town.sqf's existing capture scan (wfbe_contested).
+	// A2 OA 1.64: build strings with + / str only (no joinString); towns are Locations so the [name,
+	// default] getVariable form is valid (the nil-default trap is GROUPS only).
+	diag_log ("SCORE|v1|west=" + str (scoreSide west) + "|east=" + str (scoreSide east) + "|t=" + str (round (time / 60)));
+	_contestedTowns = 0;
+	{ if (_x getVariable ["wfbe_contested", false]) then {_contestedTowns = _contestedTowns + 1} } forEach towns;
+	diag_log ("CONTESTED|v1|count=" + str _contestedTowns + "|t=" + str (round (time / 60)));
 
 	// --- GUER soft-cap monitor (claude-gaming 2026-06-15) ---
 	// GUER's real ceiling is the SOFT cap WFBE_C_GUER_GROUPS_MAX (=80, raised 60->80), NOT the 144
