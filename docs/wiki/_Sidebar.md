@@ -100,6 +100,7 @@
   - [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas)
   - [Service menu affordability guards](Service-Menu-Affordability-Guards)
   - [WASP overlay](WASP-Overlay)
+  - [Engine stealth fuel toggle](Engine-Stealth-Fuel-Toggle-Reference)
 - Tooling / release / integrations
   - [Tools and build workflow](Tools-And-Build-Workflow)
   - [Tooling release readiness audit](Tooling-Release-Readiness-Audit)

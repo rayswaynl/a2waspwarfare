@@ -40,6 +40,7 @@ This page is the front door. It should help you choose the right owner page quic
 | Factories, purchases, upgrades | [Factory/purchase](Factory-And-Purchase-Systems-Atlas) -> [Upgrades/research](Upgrades-And-Research-Atlas) -> [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas) |
 | AI, HC, performance | [AI/headless/performance](AI-Headless-And-Performance) -> [Headless client scaling](Headless-Client-Scaling-And-Topology) -> [Performance opportunity sweep](Performance-Opportunity-Sweep) |
 | UI, HUD, menus | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [UI IDD collision repair](UI-IDD-Collision-Repair) |
+| Player QoL and vehicle modules | [Modules atlas](Modules-Atlas) -> [Engine stealth fuel toggle](Engine-Stealth-Fuel-Toggle-Reference) -> [Player UI workflow](Player-UI-Workflow-Map) |
 | Tools, build, release | [Tools/build workflow](Tools-And-Build-Workflow) -> [Source fix propagation queue](Source-Fix-Propagation-Queue) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) |
 | Integrations and ops | [External integrations](External-Integrations) -> [Integration trust boundary audit](Integration-Trust-Boundary-Audit) -> [Server runtime and operations](Server-Runtime-And-Operations) |
 

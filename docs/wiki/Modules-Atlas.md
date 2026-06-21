@@ -48,7 +48,7 @@ Branch check refreshed 2026-06-14:
 | release `a96fdda2` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 
 ### Engines — "stealth" engine-off (`Client/Module/Engines/`)
-`Engine.sqf` toggles a stealth mode: saves current fuel into the vehicle's `Fuel` variable and `setFuel 0` (engine cannot run), swapping the addAction to `STEALTH OFF` → `Startengine.sqf` which restores fuel. Added to built tanks/wheeled-APCs (`Client_BuildUnit.sqf:336-337`). Client addAction-driven, local.
+`Engine.sqf` toggles a stealth mode: saves current fuel into the vehicle's `Fuel` variable and `setFuel 0` (engine cannot run), swapping the addAction to `STEALTH OFF` -> `Startengine.sqf` which restores fuel. Added to purchased tanks/wheeled-APCs (`Client_BuildUnit.sqf:417-418`) and WASP extra start vehicles (`Server/Init/Init_Server.sqf:521-522,539-540`). Details and refuel-state caveats: [Engine stealth fuel toggle](Engine-Stealth-Fuel-Toggle-Reference).
 
 ### AutoFlip — auto-right flipped vehicles (`Client/Module/AutoFlip/AutoFlip.sqf`, by Marty)
 Client polling loop that rights nearby flipped ground vehicles after they stay stuck briefly. Parameters (`:9-13`): `_scanDelay=3`, `_tiltLimit=0.35`, `_stuckDelay=10`, `_cooldown=45`, `_maxSpeed=2`. Per-vehicle linear checks (tilt/speed/grounded/dry/cooldown) before flipping. Local, bounded by scan delay.

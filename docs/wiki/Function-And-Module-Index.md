@@ -60,7 +60,7 @@ Unless a row names another ref, line refs below are from the Chernarus source mi
 - `Client/Module/CM`
 - `Client/Module/CoIn`
 - `Client/Module/EASA`
-- `Client/Module/Engines`
+- `Client/Module/Engines` - [Engine stealth fuel toggle reference](Engine-Stealth-Fuel-Toggle-Reference)
 - `Client/Module/MASH`
 - `Client/Module/Nuke`
 - `Client/Module/Skill`

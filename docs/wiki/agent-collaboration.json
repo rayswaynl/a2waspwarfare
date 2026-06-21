@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-16T21:32:45+02:00",
+  "generatedAt": "2026-06-21T12:23:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "engine-stealth-fuel-toggle-reference",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Engine-Stealth-Fuel-Toggle-Reference.md",
+        "origin/master@0139a346",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Engines/Engine.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Engines/Startengine.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Engines/Stopengine.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportRefuel.sqf",
+        "Modules-Atlas.md",
+        "Function-And-Module-Index.md"
+      ],
+      "outputs": [
+        "Added Engine-Stealth-Fuel-Toggle-Reference.md as a source-cited reference for the live Engines stealth/fuel-toggle module.",
+        "Documented purchased Tank / Wheeled_APC attach, WASP extra start-vehicle attach, stop/event/start fuel flow, vehicle state keys and refuel-service guard behavior.",
+        "Wired the page through Home.md, _Sidebar.md, Modules-Atlas.md, Function-And-Module-Index.md and agent-context.json."
+      ],
+      "handoff": "Closed after validation. Future engine-stealth edits should keep the saved-fuel and stopped/refuel contracts paired, preserve both purchased-vehicle and WASP start-vehicle attach paths, and smoke start/stop/refuel behavior before release wording.",
+      "updated": "2026-06-21T12:23:23+02:00"
+    },
     {
       "lane": "guer-insurgents-branch-intake",
       "owner": "Codex",
