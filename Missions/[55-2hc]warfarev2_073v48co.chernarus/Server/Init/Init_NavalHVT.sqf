@@ -52,22 +52,20 @@ WFBE_NavalHVT_SpawnProp = {
 };
 
 //------------------------------------------------------------------------------------
-//--- LHD Hull: multi-part ship. Parts are laid linearly fore-to-aft.
-//--- !! TODO / NEEDS-REVIEW: these offsets are BEST-GUESS fore-to-aft linear layout —
-//--- the exact relative offsets require in-engine fitting (no on-disk reference found).
-//--- Flag this in your review before deploying. Each section is ~20-25m long.
+//--- A2's LHD is 9 part-objects placed at the SAME world point; the model geometry holds the
+//--- ~250 m layout internally (confirmed via the stock BIS createLHD + community assembly
+//--- scripts). Spreading them with offsets is what made it look like several carriers stacked.
+//--- Land_LHD_elev_L / Land_LHD_house_2_CP are not part of the standard set -> dropped.
 WFBE_C_NAVAL_LHD_OFFSETS = [
-	["Land_LHD_1",  [  0,   0, 0]],	//--- bow section
-	["Land_LHD_2",  [  0,  22, 0]],	//--- forward hull
-	["Land_LHD_3",  [  0,  44, 0]],	//--- mid-forward hull
-	["Land_LHD_4",  [  0,  66, 0]],	//--- mid-aft hull
-	["Land_LHD_5",  [  0,  88, 0]],	//--- aft hull
-	["Land_LHD_6",  [  0, 110, 0]],	//--- stern
-	["Land_LHD_elev_L",  [-12,  44, 0]],	//--- port elevator
-	["Land_LHD_elev_R",  [ 12,  44, 0]],	//--- starboard elevator
-	["Land_LHD_house_1",   [  8,  80, 0]],	//--- island base
-	["Land_LHD_house_2",   [  8,  88, 0]],	//--- island mid
-	["Land_LHD_house_2_CP",[ 8,  96, 0]]	//--- island bridge/CP
+	["Land_LHD_1",       [0, 0, 0]],
+	["Land_LHD_2",       [0, 0, 0]],
+	["Land_LHD_3",       [0, 0, 0]],
+	["Land_LHD_4",       [0, 0, 0]],
+	["Land_LHD_5",       [0, 0, 0]],
+	["Land_LHD_6",       [0, 0, 0]],
+	["Land_LHD_house_1", [0, 0, 0]],
+	["Land_LHD_house_2", [0, 0, 0]],
+	["Land_LHD_elev_R",  [0, 0, 0]]
 ];
 
 //------------------------------------------------------------------------------------
@@ -150,7 +148,7 @@ _nmI = 0;
 	_nmName = _x select 1;
 	_nmP    = getPos _nmLoc;
 	_nmMkr  = createMarker [Format ["WFBE_NavalName_%1", _nmI], [(_nmP select 0), (_nmP select 1) + 160, 0]];
-	_nmMkr setMarkerType "Empty";
+	_nmMkr setMarkerType "mil_dot";
 	_nmMkr setMarkerColor "ColorBlack";
 	_nmMkr setMarkerText _nmName;
 	_nmI = _nmI + 1;
@@ -174,7 +172,7 @@ _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdAlphaParts select 3;
-_bb = [[0,0,0],[0,0,16]];
+_bb = [[0,0,0],[0,0,20]];
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdAlphaLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdAlphaLogic setVariable ["wfbe_is_naval_hvt", true, true];
@@ -194,7 +192,7 @@ _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdBravoParts select 3;
-_bb = [[0,0,0],[0,0,16]];
+_bb = [[0,0,0],[0,0,20]];
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdBravoLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdBravoLogic setVariable ["wfbe_is_naval_hvt", true, true];
