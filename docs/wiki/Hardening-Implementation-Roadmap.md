@@ -16,7 +16,7 @@ Every authority patch should follow the same rules before touching code:
 | --- | --- |
 | Client UI is affordance | Menus may show prices and buttons, but final acceptance, debit and effect belong on the server. |
 | Server recomputes truth | Re-derive side, role, funds, supply, costs, upgrade state, object validity, range and placement from server-held state. |
-| Dispatch and payloads are different | PVF dispatcher hardening closes sender-chosen handler strings; legitimate handlers and direct PV channels still need per-flow validation. |
+| Dispatch and payloads are different | Current stable has removed PVF dispatcher-time text compilation, but explicit registered-handler membership, legitimate-handler payload validation and direct PV channels still need per-flow validation. |
 | Sender identity is weak in Arma 2 OA PVEHs | Include requester context where safe and cross-check group, side, ownership and UID instead of trusting a payload scalar. |
 | Logging is part of the patch | Accepted high-value transactions and rejected malformed/unauthorized requests need compact, non-spammy logs. |
 | BattlEye is defense in depth | Filters reduce public-server exposure but are not the mission's source of truth; shipped filter evidence lives in [External integrations](External-Integrations). |
@@ -27,7 +27,7 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 
 | Priority | Work package | Why first |
 | --- | --- | --- |
-| P0 | PVF dispatcher lookup hardening | Smallest behavior-preserving change that closes DR-1 arbitrary code execution and DR-38 per-message recompilation; branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix). |
+| P0 | PVF dispatcher registered-handler membership | Current stable already removed dispatcher-time `Call Compile`, but still needs explicit `SRVFNC*` / `CLTFNC*` membership before spawning the resolved `CODE`; branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix). |
 | P0 | `SEND_MESSAGE` direct-PV compile removal | DR-46 is a second network-data RCE outside the PVF dispatcher; dispatcher lookup does not close it. |
 | P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. Use [ICBM authority](ICBM-Authority-Playbook). |
 | P1 | Victory/endgame correctness (DR-11 / DR-36) | Small source change with large match-outcome/stat impact. |
@@ -50,7 +50,7 @@ The [Progress dashboard](Progress-Dashboard#july-update-to-do) currently names t
 
 Dedicated playbook: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook).
 
-Roadmap summary: replace dispatch-time `Call Compile _script` in `Server_HandlePVF.sqf` and `Client_HandlePVF.sqf` with a validated allowlist / namespace lookup while preserving `Spawn`. Branch recheck 2026-06-05 found current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `7195b331` still compile the sender-provided handler string; release only adds adjacent HC client filtering. This closes DR-1 arbitrary handler-string compilation and DR-38 avoidable per-message recompilation. It does **not** validate forged payloads sent to legitimate handlers and does **not** touch direct publicVariable channels like `ATTACK_WAVE_INIT`.
+Roadmap summary: current stable `origin/master@0139a346` already replaces dispatch-time `Call Compile _script` in both maintained-root `Server_HandlePVF.sqf:14-15` and `Client_HandlePVF.sqf:32-33` with `missionNamespace getVariable` plus a `CODE` guard (`7d60b02b`). The remaining current-stable dispatcher task is an explicit registered-handler allowlist/rejection path before `Spawn _code`; Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and historical release commit `a96fdda2` still need the lookup port because they keep `Spawn (Call Compile _script)`. This lane does **not** validate forged payloads sent to legitimate handlers and does **not** touch direct publicVariable channels like `ATTACK_WAVE_INIT`.
 
 Validation:
 

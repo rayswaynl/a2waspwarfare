@@ -44,7 +44,7 @@ These rows are merge/release gates for useful branch work. They are not stable-`
 ## 1. The big one — economy/forgery authority (one decision, whole class)
 
 **Decision:** add server-side authority to spend/effect paths, **or** accept client-authoritative economy and ship a real BattlEye filter set. The forgery class has **two surfaces** and the decision must cover both:
-- **PVF dispatcher** — `Server/Functions/Server_HandlePVF.sqf` / `Client/Functions/Client_HandlePVF.sqf` `Call Compile` the sender's command string (DR-1). Fix: validate against the known `SRVFNC*`/`CLTFNC*` set + re-derive authority in each handler. (Same change removes a per-message recompile, DR-38.)
+- **PVF dispatcher** — current stable `origin/master@0139a346` has removed dispatcher-time `Call Compile` in `Server/Functions/Server_HandlePVF.sqf` / `Client/Functions/Client_HandlePVF.sqf`, but it still accepts any resolved missionNamespace `CODE` name. Remaining owner decision: validate against the known `SRVFNC*`/`CLTFNC*` set, reject/log forged names, then re-derive authority in each handler. Miksuu/perf/historical-release refs still need the `Call Compile` removal port. (The current stable lookup removes the per-message recompile, DR-38.)
 - **Direct `publicVariableServer` channels** — e.g. `ATTACK_WAVE_INIT` (DR-41); each needs its own server re-derivation. See [Public variable channel index](Public-Variable-Channel-Index).
 
 | Path | Finding | Severity |
