@@ -253,18 +253,25 @@ switch (_type) do {
 
 //--- ============================================================================
 //--- Miksuu vehicle SKINS (experital). Side-gated body retextures applied as an APPEND to
-//--- wfbe_pending_texture (same JIP-safe path as the salvage tint above). _side is read from
-//--- wfbe_side_id, stamped by Common_AddVehicleMarking.sqf which the create path runs just
-//--- BEFORE this function. Gate: WFBE_C_VEHICLE_TINTS (decoupled from WFBE_C_VEHICLE_MARKINGS, which gates the #lightpoint markings in Common_AddVehicleMarking.sqf).
+//--- wfbe_pending_texture (same JIP-safe path as the salvage tint above). _side is resolved from
+//--- the authoritative _createSide passed by Common_CreateVehicle (see the side-resolution block
+//--- below); the old wfbe_side_id/engine-side read was broken because markings are default-off and
+//--- the hull is crewless here. Gate: WFBE_C_VEHICLE_TINTS (decoupled from WFBE_C_VEHICLE_MARKINGS, which gates the #lightpoint markings in Common_AddVehicleMarking.sqf).
 //--- NOTE: like the salvage tint, this only reaches clients on the GLOBAL non-defender path
 //--- (the path Common_CreateVehicle uses for player/commander vehicles).
 //--- ============================================================================
-if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0) then {
+if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 0]) > 0) then {
 	Private ["_skinCmd","_pendingSkin"];
-	//--- B66 derive _side directly: wfbe_side_id is ONLY stamped by Common_AddVehicleMarking.sqf,
-	//--- which exits early when WFBE_C_VEHICLE_MARKINGS != 1 (default 0) — so the tints used to no-op.
-	//--- Prefer the stamped id if present (markings ran), else resolve from the vehicle's engine side.
-	_side    = _vehicle getVariable ["wfbe_side_id", -1];
+	//--- B67 side resolution (authoritative; now MIRRORS the DECALS block below). Prefer the side
+	//--- PASSED by Common_CreateVehicle (_createSide) — the create path knows the buying side. The old
+	//--- B66 path read wfbe_side_id then fell back to (side _vehicle), but BOTH are broken at this point:
+	//--- wfbe_side_id is ONLY stamped by Common_AddVehicleMarking.sqf, which exits early when
+	//--- WFBE_C_VEHICLE_MARKINGS != 1 (default 0) so it is usually unset; and the hull is still CREWLESS
+	//--- here, so (side _vehicle) resolves to CIVILIAN -> WFBE_C_CIV_ID -> no faction case matches -> the
+	//--- tints silently no-op. So: _createSide first, then the marking-stamped id, then engine side as a
+	//--- last-resort guard only (it can only resolve to a real faction once the hull is crewed).
+	_side    = _createSide;
+	if (_side < 0) then { _side = _vehicle getVariable ["wfbe_side_id", -1]; };
 	if (_side < 0) then { _side = (side _vehicle) Call WFBE_CO_FNC_GetSideID; };
 	_skinCmd = "";
 
@@ -330,9 +337,7 @@ if ((missionNamespace getVariable ["WFBE_C_VEHICLE_DECALS", 0]) > 0) then {
 	//--- then the marking-stamped id, then (last resort) the engine side. The engine-side fallback
 	//--- resolves to CIVILIAN on a crewless freshly-created hull and will NOT match a faction case - it
 	//--- is only a guard, never the real source. A LOCAL var so we never clobber _side for later code.
-	//--- NOTE: the TINTS block above still relies solely on the broken wfbe_side_id/engine-side fallback
-	//--- when WFBE_C_VEHICLE_MARKINGS=0 (default) -> a SEPARATE pre-existing bug, deliberately left
-	//--- untouched here to keep this a decals-only change (flagged for a follow-up).
+	//--- NOTE: the TINTS block above now uses this SAME _createSide-first resolution (B67 follow-up).
 	_decalSide = _createSide;
 	if (_decalSide < 0) then { _decalSide = _vehicle getVariable ["wfbe_side_id", -1]; };
 	if (_decalSide < 0) then { _decalSide = (side _vehicle) Call WFBE_CO_FNC_GetSideID; };
