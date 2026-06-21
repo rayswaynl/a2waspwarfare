@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T19:16:27+02:00",
+  "generatedAt": "2026-06-21T19:15:49+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,30 +23,26 @@
   },
   "activeClaims": [
     {
-      "lane": "source-fix-queue-current-stable-refresh-2026-06-21",
+      "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "sourceScope": [
-        "docs/developer-wiki-index@3bd17b22",
-        "docs source anchor 4bd37b98 unchanged across checked propagation paths",
+        "docs/developer-wiki-index@d30d23466",
+        "4bd37b98..d30d23466 has no changes in the checked queue propagation source path families",
         "origin/master@0139a346",
-        "git ls-remote --heads origin release/* returned no current release heads on 2026-06-21",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:38 and maintained Vanilla matching line",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:624,647 and maintained Vanilla matching lines",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf:4 and maintained Vanilla matching line; old monitorServerFPS.sqf absent",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:55,61,83 and maintained Vanilla matching lines",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/playerObjectsList.sqf:18 and maintained Vanilla matching line",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf:166-168 and maintained Vanilla matching lines",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf:46-78 and maintained Vanilla matching shape",
-        "Tools/LoadoutManager/FileManagement/FileManager.cs:145,150,158,165,170-176"
+        "upstream/master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; git ls-remote --heads origin release/* returned no heads on 2026-06-21",
+        "Chernarus source and maintained Vanilla queue path families for public variables, client init, FPS publishers, supply mission, commander ARTY, Patrols v2 and LoadoutManager"
       ],
       "outputs": [
-        "Refreshed Source-Fix-Propagation-Queue.md Current Branch Scope, Branch Implementation Caveat, current propagated queue rows, validation wording and Agent Index facts.",
-        "Updated dashboard, pruning ledger, worklog and compact machine status so current stable is origin/master@0139a346, docs mirror head is 3bd17b22 and a96fdda2 is historical release evidence only.",
-        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+        "Refreshed Source-Fix-Propagation-Queue.md Current Branch Scope, Latest Propagation Run, Branch Implementation Caveat, current queue rows, smoke wording and Agent Index facts.",
+        "Kept 4bd37b98 as the line-anchor proof while naming current checked docs base d30d23466 and current stable origin/master@0139a346.",
+        "Corrected Patrols v2 routing to the current Server/FSM/Common/Client marker paths and kept the supply player-list index fix docs/source-only.",
+        "No gameplay source changed."
       ],
-      "handoff": "Closed after validation. Future propagation queue refreshes should keep 4bd37b98 as docs/source line-anchor proof until a checked source path changes, and should recheck a live release branch before using release-ready wording.",
-      "updated": "2026-06-21T19:16:27+02:00"
+      "handoff": "Closed after validation. Future propagation work should use the queue's Current Branch Scope first, recheck any restored release/* head before release wording, and keep source implementation lanes separate from this docs-only evidence refresh.",
+      "updated": "2026-06-21T19:15:49+02:00"
     },
     {
       "lane": "attack-wave-current-stable-refresh-2026-06-21",
@@ -344,7 +340,7 @@
         "checked propagation source paths unchanged from 4bd37b98 to 4c01dfb7"
       ],
       "outputs": [
-        "Claimed a compact docs-head refresh for Source-Fix-Propagation-Queue after the wiki mirror sync advanced the docs branch while the queue still names 4bd37b98 as the propagation source anchor.",
+        "Claimed a compact docs-source refresh for Source-Fix-Propagation-Queue after the wiki mirror sync advanced the docs branch while the queue still names 4bd37b98 as the propagation source anchor.",
         "Source check found no changes from 4bd37b98 to 4c01dfb7 in the queue's checked propagation source paths.",
         "Added one source-scope note and updated the queue Agent Index fact instead of rewriting every branch row. No gameplay source changed."
       ],

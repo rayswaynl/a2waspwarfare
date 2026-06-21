@@ -1282,11 +1282,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed [Client UI systems](Client-UI-Systems-Atlas#clickable-text-soundpush-branch-matrix), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue) so current stable is source-present/smoke-pending, while older docs/source, Miksuu, perf, release and UI theme evidence remains branch-scoped until rechecked or merged. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, wiki/docs parity for touched files and `git diff --check`.
 
-## 2026-06-21T17:41:55+02:00 - Codex - Source fix queue docs-head refresh
+## 2026-06-21T17:41:55+02:00 - Codex - Source fix queue docs-source refresh
 
 - Claimed `source-fix-queue-docs-head-refresh-2026-06-21` after the mirror sync advanced the docs branch to `docs/developer-wiki-index@4c01dfb7` while [Source fix propagation queue](Source-Fix-Propagation-Queue) still used `4bd37b98` as the propagation source anchor.
 - Source check: `git diff --name-only 4bd37b98..4c01dfb7` returned no changes for the queue's checked propagation path families: public-variable init, client init, FPS publishers, supply mission start/player list, commander ARTY construction/discovery in Chernarus and maintained Vanilla, plus LoadoutManager root discovery.
-- Result: added a compact docs-head refresh note and Agent Index fact update to [Source fix propagation queue](Source-Fix-Propagation-Queue), preserving `4bd37b98` as line-anchor proof while making the current mirror head explicit. No gameplay source changed.
+- Result: added a compact docs-source refresh note and Agent Index fact update to [Source fix propagation queue](Source-Fix-Propagation-Queue), preserving `4bd37b98` as line-anchor proof while making the current mirror head explicit. No gameplay source changed.
 
 ## 2026-06-21T17:47:40+02:00 - Codex - PR board AICOM closure refresh
 
@@ -1392,13 +1392,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed [Attack-wave authority](Attack-Wave-Authority-Playbook#branch--root-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Public variable channel index](Public-Variable-Channel-Index) and [Server authority migration map](Server-Authority-Migration-Map) so DR-41 remains patch-ready/current-stable-unpatched with current line refs and historical branch scope. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, touched-file wiki/docs parity, source evidence probe and `git diff --check`.
 
-## 2026-06-21T19:16:27+02:00 - Codex - Source Fix queue current stable refresh
+## 2026-06-21T19:15:49+02:00 - Codex - Source fix queue current stable scope refresh
 
-- Claimed `source-fix-queue-current-stable-refresh-2026-06-21` after the central [Source fix propagation queue](Source-Fix-Propagation-Queue) still used `origin/master@cf2a6d6a`, docs mirror head `4c01dfb7` and live release-branch wording in its current branch scope, while fetched stable is `origin/master@0139a346`, docs mirror head is `3bd17b22` and current origin exposes no `release/*` heads.
-- Source scope: `docs/developer-wiki-index@3bd17b22` is unchanged from the queue's `4bd37b98` source anchor for the checked propagation paths. Current stable `origin/master@0139a346` was rechecked for `Init_PublicVariables.sqf`, `Init_Client.sqf`, `serverFpsGUI.sqf`, absent `monitorServerFPS.sqf`, `supplyMissionStarted.sqf`, `playerObjectsList.sqf`, `Construction_StationaryDefense.sqf`, `Common_GetTeamArtillery.sqf`, Patrols v2 anchors and `Tools/LoadoutManager/FileManagement/FileManager.cs` in source Chernarus plus maintained Vanilla.
-- Finding: current stable still carries the propagated families but with shifted anchors: paratrooper registration `Init_PublicVariables.sqf:38`, `Skill_Init` / apply `Init_Client.sqf:624,647`, one guarded FPS publisher `serverFpsGUI.sqf:4`, old monitor absent, heli-aware supply scan `supplyMissionStarted.sqf:55,61,83`, player-list reset still inside the loop at `playerObjectsList.sqf:18`, marker-based commander ARTY at `Construction_StationaryDefense.sqf:166-168` plus `Common_GetTeamArtillery.sqf:46-78`, and marker-root LoadoutManager discovery at `FileManager.cs:145,150,158,165,170-176`.
-- Result: refreshed the queue's Current Branch Scope, Branch Implementation Caveat, current propagated queue rows, validation wording and Agent Index facts. `a96fdda2` is preserved as historical release evidence only until a live release head exists again. No gameplay source changed.
-- Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, full wiki/docs parity, Latest Batch five-row check, source evidence probes and `git diff --check`.
+- Claimed `source-fix-queue-current-stable-scope-refresh-2026-06-21` after [Source fix propagation queue](Source-Fix-Propagation-Queue) still named older `origin/master@cf2a6d6a` / current release wording in its branch-scope area while fetched stable is `origin/master@0139a346` and current origin exposes no `release/*` heads.
+- Source scope: `docs/developer-wiki-index@d30d23466`, `origin/master@0139a346`, `upstream/master@b8389e74`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, Chernarus source and maintained Vanilla queue path families.
+- Source evidence: checked queue PVFs/paratrooper registration, `Skill_Init`/apply, guarded FPS publisher shape, heli-aware supply scan, supply player-list index placement, commander ARTY marker variables/discovery and Patrols v2 `Server/FSM` route line refs in current stable; `git diff --name-only 4bd37b98..d30d23466` is empty for the queue's checked propagation path families.
+- Result: refreshed Current Branch Scope, Latest Propagation Run, Branch Implementation Caveat, current queue rows, smoke wording and Agent Index facts so current stable evidence is explicit, the supply player-list index fix remains docs/source-only, and `a96fdda2` is historical until a release head is restored or rechecked. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event; required gates are source probes, JSON/JSONL parse, `docs/validate-wiki.ps1`, wiki/docs parity, Latest Batch five-row check and `git diff --check`.
 
 ## 2026-06-21T19:28:53+02:00 - Claude (claude-gaming) - B68 hotfix deployed live (AI attack-bias + supply-marker leak + retreat-cull)
 

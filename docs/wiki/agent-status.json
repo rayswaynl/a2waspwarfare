@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T19:16:27+02:00",
+  "generatedAt": "2026-06-21T19:15:49+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state refreshes the Source Fix queue's current-stable propagation scope to origin/master@0139a346 and docs mirror head 3bd17b22 while preserving PVF dispatcher partial-closeout, attack-wave and salvage current-stable refreshes. No gameplay source changed.",
+      "currentWork": "Latest docs-only state refreshes the Source Fix Propagation Queue current-stable scope to checked docs base d30d23466 and origin/master@0139a346 while preserving attack-wave, salvage, PVF dispatcher/cross-link, DR-46 and WASP current-stable batches. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -57,10 +57,10 @@
   },
   "laneSummary": [
     {
-      "lane": "source-fix-queue-current-stable-refresh-2026-06-21",
+      "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
-      "output": "Refreshed Source-Fix-Propagation-Queue.md after its central propagation branch-scope table still named stable origin/master@cf2a6d6a, docs mirror head 4c01dfb7 and a live release branch. Current docs branch head is 3bd17b22 with checked propagation source paths unchanged from 4bd37b98; current stable origin/master@0139a346 carries paratrooper registration at Init_PublicVariables.sqf:38, Skill_Init/apply at Init_Client.sqf:624,647, one guarded FPS publisher at serverFpsGUI.sqf:4 with old monitorServerFPS absent, heli-aware supply scan at supplyMissionStarted.sqf:55,61,83, in-loop player-list reset at playerObjectsList.sqf:18, marker-based commander ARTY at Construction_StationaryDefense.sqf:166-168 plus Common_GetTeamArtillery.sqf:46-78, Patrols v2 shifted anchors and marker-root LoadoutManager discovery at FileManager.cs:145,150,158,165,170-176. Current origin exposes no release/* heads; a96fdda2 is historical release evidence only. No gameplay source changed."
+      "output": "Refreshed Source-Fix-Propagation-Queue.md current branch scope from stale stable cf2a6d6a/release-head wording to checked docs base d30d23466 and current stable origin/master@0139a346. Checked queue source families in Chernarus and maintained Vanilla: queue PVFs/paratrooper registration, Skill_Init/apply, one guarded FPS publisher, heli-aware supply scan, in-loop player-list counter, marker-based commander ARTY and Patrols v2 Server/FSM paths. Current origin exposes no release/* heads; a96fdda2 remains historical release evidence. No gameplay source changed."
     },
     {
       "lane": "attack-wave-current-stable-refresh-2026-06-21",
@@ -144,7 +144,7 @@
       "lane": "source-fix-queue-docs-head-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
-      "output": "Updated Source-Fix-Propagation-Queue.md with a 2026-06-21 docs-head refresh: docs/developer-wiki-index is now 4c01dfb7 after the mirror sync, and the queue's checked propagation source paths are unchanged from 4bd37b98 to 4c01dfb7. Preserved 4bd37b98 as the line-anchor proof, updated the Agent Index fact and left gameplay source untouched."
+      "output": "Updated Source-Fix-Propagation-Queue.md with a 2026-06-21 docs-source refresh: docs/developer-wiki-index is now 4c01dfb7 after the mirror sync, and the queue's checked propagation source paths are unchanged from 4bd37b98 to 4c01dfb7. Preserved 4bd37b98 as the line-anchor proof, updated the Agent Index fact and left gameplay source untouched."
     },
     {
       "lane": "cf2-source-stamp-current-head-caveat",
