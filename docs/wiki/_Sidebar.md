@@ -174,6 +174,9 @@
   - [Client FPS & state telemetry](Client-FPS-And-State-Telemetry-Reference)
   - [Client service-proximity getters](Client-Service-Structure-Proximity-Getters)
   - [Airfield-exclusive roster & unit hints](Airfield-Exclusive-Roster-And-Special-Unit-Hints)
+  - [Unit-camera spectator system](Unit-Camera-Spectator-System-Reference)
+  - [Town-garrison patrol/defense worker](Town-Garrison-Patrol-Defense-Worker)
+  - [RequestTeamUpdate squad-discipline](Request-Team-Update-Squad-Discipline-Handler)
 - AI / HC
   - [AI headless and performance](AI-Headless-And-Performance)
   - [Headless client scaling and topology](Headless-Client-Scaling-And-Topology)
