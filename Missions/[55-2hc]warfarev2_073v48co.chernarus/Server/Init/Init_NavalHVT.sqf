@@ -279,6 +279,41 @@ _pad allowDamage false;
 missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _pierFOBLogic, _oilLogic, _lhdBravoLogic]];
 
 //------------------------------------------------------------------------------------
+//--- MAP MARKERS (server-side GLOBAL markers — JIP-safe). Naval towns are server-only in
+//--- towns[], so the client-side Init_Markers.sqf one-shot never marks them. Each HVT gets
+//--- a town-center Depot marker (owner-coloured) + name label; carriers also get a yellow
+//--- airfield triangle. Recoloured on capture in server_town.sqf via wfbe_naval_marker.
+//------------------------------------------------------------------------------------
+private ["_mkrI","_nLoc","_nName","_nCar","_nSid","_nClr","_nMkr","_nTri"];
+_mkrI = 0;
+{
+	_nLoc  = _x select 0;
+	_nName = _x select 1;
+	_nCar  = _x select 2;
+	_nSid  = _nLoc getVariable ["sideID", WFBE_C_GUER_ID];
+	_nClr  = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _nSid Call WFBE_CO_FNC_GetSideFromID], "ColorGreen"];
+	_nMkr  = createMarker [Format ["WFBE_NavalMkr_%1", _mkrI], getPos _nLoc];
+	_nMkr setMarkerType "Depot";
+	_nMkr setMarkerColor _nClr;
+	_nMkr setMarkerText _nName;
+	_nLoc setVariable ["wfbe_naval_marker", _nMkr, true];
+	if (_nCar) then {
+		_nTri = createMarker [Format ["WFBE_NavalAir_%1", _mkrI], getPos _nLoc];
+		_nTri setMarkerType "mil_triangle";
+		_nTri setMarkerColor "ColorYellow";
+		_nTri setMarkerSize [0.6, 0.6];
+	};
+	_mkrI = _mkrI + 1;
+} forEach [
+	[_lhdAlphaLogic, "Khe Sanh Alpha", true],
+	[_pierFOBLogic,  "Naval FOB",      false],
+	[_oilLogic,      "Oil Platform",   false],
+	[_lhdBravoLogic, "Khe Sanh Bravo", true]
+];
+
+["INITIALIZATION", "Init_NavalHVT.sqf : map markers created for 4 naval HVTs."] Call WFBE_CO_FNC_LogContent;
+
+//------------------------------------------------------------------------------------
 //--- SCUD ADDACTION on oil platform helipad.
 //--- Only team-leaders of the OWNING side see it; server validates everything.
 //--- NEEDS REVIEW: addAction on a simulation-off object may be invisible in some client
