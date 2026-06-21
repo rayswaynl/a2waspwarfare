@@ -33,7 +33,7 @@ Use this page first, then jump into the canonical pages and machine files it nam
 
 | Lane | Read | Current posture |
 | --- | --- | --- |
-| PVF dispatch trust boundary | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook), [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index) | P0. Replace sender-chosen dispatch compile with allowlist / namespace lookup. |
+| PVF dispatch trust boundary | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook), [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index) | P0. Current stable `origin/master@0139a346` has namespace/CODE lookup; finish explicit registered allowlist/logging if desired, port older compile-shaped refs and keep DR-55 sender authentication separate. |
 | ICBM/Nuke authority | [ICBM authority](ICBM-Authority-Playbook), [Server authority map](Server-Authority-Migration-Map) | P0. Server must validate commander/upgrade/funds/side before damage. |
 | Side-supply clamp | [Economy authority first cut](Economy-Authority-First-Cut), [Resistance supply scaffold](Resistance-Supply-Scaffold), [Server authority map](Server-Authority-Migration-Map) | P0 first economy hardening slice; resistance economy is scaffolded but unsupported. |
 | Upgrade request authority | [Upgrades/research atlas](Upgrades-And-Research-Atlas), [Economy authority first cut](Economy-Authority-First-Cut), [Server authority map](Server-Authority-Migration-Map) | P1. Client menu validates/debits; server worker owns timer/state but must accept/reject authoritatively. |

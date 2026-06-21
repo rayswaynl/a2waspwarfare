@@ -37,7 +37,7 @@ This page is the source map for compiled SQF entrypoints and runtime handoffs. U
 
 Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs head `94b09c73`: targeted `git diff --name-only 34212d6a..HEAD` and `4277a2ad..HEAD` checks over checked Chernarus and maintained Vanilla PVF, bootstrap, common/client/server/headless init, AI supply-truck, server-FPS, MASH marker, `SEND_MESSAGE`, `AttackWave`, `SetTask` and `LogGameEnd` paths returned no source changes. The count command still returns the same numbers below (`738` total, `460` `preprocessFileLineNumbers`, `278` plain `preprocessFile`, `22` commented). This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
 
-This snapshot is branch-local. Stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` and release `a96fdda2` have branch/root-specific server-init differences, so rerun the command on each target branch before using these counts as branch evidence.
+This snapshot is branch-local. Current stable `origin/master@0139a346` has PVF dispatcher differences from the older docs-head snapshot below, while Miksuu `b8389e74`, perf `0076040f` and historical release commit `a96fdda2` have their own branch/root-specific server-init and PVF shapes. Rerun the command on each target branch before using these counts as branch evidence.
 
 The source mission in this checkout contains 738 `preprocessFile` references:
 
@@ -193,7 +193,7 @@ Headless init compiles the same delegation helpers used by clients plus `WFBE_CL
 
 `Common/Init/Init_PublicVariables.sqf` builds the registered PVF command lists and registers `WFBE_PVF_<Command>` event handlers. This atlas keeps only the ownership shape; [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) owns the command inventory, branch splits and authority notes.
 
-The compile summary above owns the current docs-head no-drift proof for checked PVF/init source paths. For local orientation, the source registry anchors remain `Common/Init/Init_PublicVariables.sqf:23` for `_serverCommandPV`, `:39` for `HandleParatrooperMarkerCreation`, `:42` for `_clientCommandPV` and `:46-52` for the PVEH registration loops. Branch command counts, queue PVFs and paratrooper-registration splits live in the [current branch registry matrix](Public-Variable-Channel-Index#current-branch-registry-matrix); do not restate them here.
+The compile summary above owns the older docs-head no-drift proof for checked PVF/init source paths. For local orientation, the source registry anchors remain `Common/Init/Init_PublicVariables.sqf:23` for `_serverCommandPV`, `:39` for `HandleParatrooperMarkerCreation`, `:42` for `_clientCommandPV` and `:46-52` for the PVEH registration loops. For current stable `origin/master@0139a346`, orientation anchors are `Init_PublicVariables.sqf:29` for `_serverCommandPV`, `:38` for `HandleParatrooperMarkerCreation`, `:52` for `_clientCommandPV` and `:55-61` for PVEH registration loops. Branch command counts, queue PVFs and paratrooper-registration splits live in the [current branch registry matrix](Public-Variable-Channel-Index#current-branch-registry-matrix); do not restate them here.
 
 PVF dispatch mechanics:
 
@@ -201,7 +201,7 @@ PVF dispatch mechanics:
 - Client-bound packets use the command at index 1; `Common_SendToClient` and `Common_SendToClients` rewrite it to `CLTFNC<Command>`.
 - Hosted server paths call the handler locally and may also broadcast in multiplayer.
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
-- Both client and server dispatch call `Call Compile _script` (`Server/Functions/Server_HandlePVF.sqf:14`, `Client/Functions/Client_HandlePVF.sqf:22` in docs head `94b09c73`), so malformed function names or unsanitized command names would be high-risk.
+- Current stable `origin/master@0139a346` dispatchers resolve `_script` through `missionNamespace getVariable` and spawn only `CODE` at `Server_HandlePVF.sqf:14-15` and `Client_HandlePVF.sqf:32-33`; docs head `94b09c73` plus older Miksuu `b8389e74`, perf `0076040f` and historical release commit `a96fdda2` still call `Call Compile _script`, and current stable still lacks explicit allowlist/logging plus sender authentication.
 
 PV-adjacent files outside the standard registered PVF command lists:
 
