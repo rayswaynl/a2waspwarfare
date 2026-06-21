@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T19:52:35+02:00",
+  "generatedAt": "2026-06-21T19:58:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,6 +23,27 @@
   },
   "activeClaims": [
     {
+      "lane": "upgrade-sync-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@ad05401a3",
+        "ff8dd884..ad05401a3 has no changes in checked Server_HandleSpecial.sqf, GUI_UpgradeMenu.sqf or Server_ProcessUpgrade.sqf paths",
+        "origin/master@0139a346",
+        "upstream/master@b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "historical upgrade-queue commit b061c905; current origin exposes no feat/upgrade-queue-stacking head on 2026-06-21"
+      ],
+      "outputs": [
+        "Refreshed upgrade-sync branch/status evidence in Support-Specials-And-Tactical-Modules-Atlas.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md.",
+        "Kept the issue classified as RequestSpecial parser-contract cleanup debt rather than a proven runtime break because _args aliases _this.",
+        "Updated dashboard, worklog, pruning ledger and live machine rows, then mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should normalize Server_HandleSpecial.sqf upgrade-sync to read side/id/level from _args only, optionally add malformed/short-payload guards, propagate maintained Vanilla and smoke commander upgrades plus non-server timer sync.",
+      "updated": "2026-06-21T19:50:55+02:00"
+    },    {
       "lane": "commander-vote-current-stable-closeout-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -43,8 +64,7 @@
       ],
       "handoff": "Closed after validation. Future code owner should smoke player-majority, no-commander-majority, equal-vote and tie outcomes, then decide whether GUI_VoteMenu preview should match the current server AI-veto rule or a different owner policy before porting old branches.",
       "updated": "2026-06-21T19:30:39+02:00"
-    },
-    {
+    },    {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -66,8 +86,7 @@
       ],
       "handoff": "Closed after validation. Future code owner should compute explicit winner/loser sides per branch, keep the legacy client loser payload only intentionally, set WF_Winner/WASPSTAT/LogGameEnd to the explicit winner, guard the full condition with !WFBE_GameOver and exit after one accepted endgame path.",
       "updated": "2026-06-21T19:27:00+02:00"
-    },
-    {
+    },    {
       "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
