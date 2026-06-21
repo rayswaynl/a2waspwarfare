@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T19:01:35+02:00",
+  "generatedAt": "2026-06-21T19:03:59+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "attack-wave-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a346",
+        "Miksuu upstream b8389e74",
+        "origin/perf/quick-wins@0076040f",
+        "historical AI-commander commit c20ce153; current origin exposes no feat/ai-commander head on 2026-06-21",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21",
+        "Attack-Wave-Authority-Playbook.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Refreshed stale attack-wave direct-PV authority branch wording against current stable origin/master@0139a346.",
+        "Kept DR-41 patch-ready/current-stable-unpatched with exact maintained-root line refs and historical branch scope for c20ce153/a96fdda2/994150da.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should treat ATTACK_WAVE_INIT as a request, server-derive side/supply, guard forged ATTACK_WAVE_DETAILS, propagate maintained Vanilla and smoke valid activation, forged supply >= 70000, wrong-side payloads, duplicate active waves and JIP replay.",
+      "updated": "2026-06-21T19:03:59+02:00"
+    },
     {
       "lane": "salvage-current-stable-refresh-2026-06-21",
       "owner": "Codex",

@@ -19,29 +19,28 @@ Scope: current source `Missions/[55-2hc]warfarev2_073v48co.chernarus` plus maint
 
 | File | Evidence |
 | --- | --- |
-| `Client/FSM/updateclient.sqf:240` | Adds the `HEAVY ATTACK MODE` action on the side HQ. The action condition is client-side only: `((sideJoined) Call GetSideSupply) >= 25000` and nearby cursor target. |
+| `Client/FSM/updateclient.sqf:260` | Adds the `HEAVY ATTACK MODE` action on the side HQ. The action condition is client-side only: `((sideJoined) Call GetSideSupply) >= 25000` and nearby cursor target. |
 | `Common/Functions/Common_AttackWaveActivate.sqf:3-8` | Reads `_supply` and `_side` from action arguments, assigns `ATTACK_WAVE_INIT = [_supply, _side]`, then broadcasts `publicVariableServer "ATTACK_WAVE_INIT"`. |
 | `Server/Functions/Server_AttackWave.sqf:1-15` | Direct PVEH receives `ATTACK_WAVE_INIT`, trusts payload `_supply` / `_side`, and computes `_discountPercentage` from client `_supply`. |
 | `Server/Functions/Server_AttackWave.sqf:19-27` | Writes global `ATTACK_WAVE_PRICE_MODIFIER`, publishes `ATTACK_WAVE_DETAILS`, then sleeps for the computed attack-wave length. |
 | `Server/PVFunctions/AttackWave.sqf:19-62` | Handles `ATTACK_WAVE_DETAILS`, trusts `_side`, `_priceModifier` and `_attackLength`, stores per-side active/modifier state, spends side supply, sends client `HandleSpecial` / `LocalizeMessage`, then resets state when length reaches `0`. |
-| `Client/GUI/GUI_Menu_BuyUnits.sqf:90,261` | Multiplies unit cost by `ATTACK_WAVE_PRICE_MODIFIER`. |
-| `Client/Functions/Client_UIFillListBuyUnits.sqf:60` | Displays buy-list price using `ATTACK_WAVE_PRICE_MODIFIER`. |
-| `Common/Init/Init_CommonConstants.sqf:166,197-199` | Sets `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000`, default `ATTACK_WAVE_PRICE_MODIFIER = 1`, and active flags false. |
+| `Client/GUI/GUI_Menu_BuyUnits.sqf:99,416` | Multiplies unit cost by `ATTACK_WAVE_PRICE_MODIFIER`. |
+| `Client/Functions/Client_UIFillListBuyUnits.sqf:90` | Displays buy-list price using `ATTACK_WAVE_PRICE_MODIFIER`. |
+| `Common/Init/Init_CommonConstants.sqf:323,367-369` | Sets `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000`, default `ATTACK_WAVE_PRICE_MODIFIER = 1`, and active flags false. |
 | `BattlEyeFilter/publicvariable.txt` | Does not include `ATTACK_WAVE_INIT`; the repo filter only carries the AFK feature rule. |
 
 ## Branch / Root Matrix
 
-Checked on 2026-06-13 after `git fetch --all --prune`. No checked branch or maintained root fixes the direct-PV authority issue.
+Checked on 2026-06-21 after `git fetch --all --prune`. No checked branch or maintained root fixes the direct-PV authority issue.
 
 | Ref | Chernarus source | Maintained Vanilla | Result |
 | --- | --- | --- | --- |
-| Current docs/source `HEAD` `f3e157f2` | `updateclient.sqf:240` gates the action client-side; `Common_AttackWaveActivate.sqf:6,8` sends `ATTACK_WAVE_INIT`; `Server_AttackWave.sqf:1,5,15,27` trusts `_supply` and publishes details; `AttackWave.sqf:19,23-25,40` trusts details and debits side supply. | Same maintained-root line shape. | Patch-ready, current-source-unpatched. |
-| Stable `origin/master` `cf2a6d6a` | Same trust shape; action line drifts to `updateclient.sqf:260`, supply cap to `Init_CommonConstants.sqf:170`. | Same maintained-root shape. | Stable remains unpatched. |
-| Miksuu upstream `upstream/master` `b8389e74` | Same trust shape; action line `updateclient.sqf:260`, supply cap `Init_CommonConstants.sqf:166`. | Same maintained-root shape. | No upstream rescue in current Miksuu head. |
-| `origin/perf/quick-wins` `0076040f` | Same trust shape; action line `updateclient.sqf:223`. | Same maintained-root shape. | Perf branch side-supply/factory fixes do not touch attack-wave authority. |
-| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same trust shape; action line `updateclient.sqf:260`, supply cap `Init_CommonConstants.sqf:166`. | Same maintained-root shape. | Current release head does not rescue this lane. |
-| AI commander branch `origin/feat/ai-commander` `c20ce153` | Same trust shape; action line `updateclient.sqf:223`, Chernarus supply cap line drifts to `Init_CommonConstants.sqf:174`. | Same maintained-root attack-wave shape; Vanilla supply cap remains `:166`. | AI commander work is unrelated to attack-wave authority. |
-| Historical Miksuu `upstream/AttackWave` `994150da` | Same trust shape; action line `updateclient.sqf:203`, supply cap `Init_CommonConstants.sqf:145`. | Same maintained-root shape. | Treat as inherited feature debt, not a fix branch. |
+| Current stable `origin/master` / local `master` `0139a346` | `updateclient.sqf:260` gates the action client-side; `Common_AttackWaveActivate.sqf:6,8` sends `ATTACK_WAVE_INIT`; `Server_AttackWave.sqf:5-6,15,23,27,36,38` trusts payload `_supply` / `_side` and publishes details; `AttackWave.sqf:19,23-25,40` trusts detail payload and debits side supply; constants are at `Init_CommonConstants.sqf:323,367-369`. | Same maintained-root line shape. | Patch-ready, current-stable-unpatched. |
+| Miksuu upstream `miksuu/master` `b8389e74` | Same trust shape; action line `updateclient.sqf:260`; constants at `Init_CommonConstants.sqf:166,197-199`. | Same maintained-root shape. | No upstream rescue in current Miksuu head. |
+| `origin/perf/quick-wins` `0076040f` | Same trust shape; action line `updateclient.sqf:223`; constants at `Init_CommonConstants.sqf:166,197-199`. | Same maintained-root shape. | Perf branch side-supply/factory fixes do not touch attack-wave authority. |
+| Historical AI-commander commit `c20ce153` (current origin exposes no `feat/ai-commander` head on 2026-06-21) | Same trust shape; action line `updateclient.sqf:223`; Chernarus constants drift to `Init_CommonConstants.sqf:174,205-207`. | Same maintained-root attack-wave shape; Vanilla constants remain `:166,197-199`. | Treat as branch-scoped historical AI-commander evidence, not a live head. |
+| Historical release commit `a96fdda2` (current origin exposes no `release/*` heads on 2026-06-21) | Same trust shape; action line `updateclient.sqf:260`; constants at `Init_CommonConstants.sqf:166,210-212`. | Same maintained-root shape. | Branch-scoped historical release evidence; no live release head rescues this lane. |
+| Historical Miksuu `upstream/AttackWave` commit `994150da` | Same trust shape; action line `updateclient.sqf:203`; constants at `Init_CommonConstants.sqf:145,174-176`. | Same maintained-root shape. | Treat as inherited feature debt, not a fix branch. |
 
 Fixed-string grep also found no `ATTACK_WAVE` entry in `BattlEyeFilter/publicvariable.txt` for the checked refs. Treat this as still patch-ready current-source debt, not a propagated fix.
 
@@ -54,7 +53,7 @@ The unsafe path exists when all of these are true:
 | A client can broadcast `ATTACK_WAVE_INIT` | The channel is a direct publicVariable, not a registered PVF command. |
 | Payload contains forged `_supply` | `Server_AttackWave.sqf:5` uses `_this select 1 select 0` directly. |
 | Payload contains forged `_side` | `Server_AttackWave.sqf:6` uses `_this select 1 select 1` directly. |
-| Client-side gate is bypassed | The `GetSideSupply >= 25000` check is only the addAction condition in `updateclient.sqf:240`. |
+| Client-side gate is bypassed | The `GetSideSupply >= 25000` check is only the addAction condition in `updateclient.sqf:260` on current stable. |
 | Modifier math accepts impossible supply | Formula is `0.7 * (0.4 + ((50000 - _supply) * (1 / 50000)))`. At `_supply = 70000`, modifier becomes `0`; larger values become negative. |
 | Buy menus consume the modifier | Unit purchase UI multiplies costs by `ATTACK_WAVE_PRICE_MODIFIER`, so a forged side modifier affects all buyers for that side. |
 
@@ -68,7 +67,7 @@ The intended spend model is not a fixed 25,000 supply cost in current source.
 
 | Behavior | Source |
 | --- | --- |
-| 25,000 supply is only the minimum action gate. | `updateclient.sqf:240` |
+| 25,000 supply is only the minimum action gate. | `updateclient.sqf:260` |
 | The discount is based on the side supply value sent into the wave. | `Server_AttackWave.sqf:15-17` |
 | The side spends all current side supply when the wave starts. | `AttackWave.sqf:40`, `[_side, -(_side call GetSideSupply), ...] Call ChangeSideSupply` |
 
