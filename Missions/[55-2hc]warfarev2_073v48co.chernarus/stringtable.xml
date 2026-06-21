@@ -9584,6 +9584,49 @@
       <English>SKIN</English>
     </Key>
 
+    <!-- NAVAL HVT OBJECTIVES (feat/naval-hvt-objectives) -->
+    <Key ID="STR_WF_SCUD_ACTION">
+      <English>SCUD Strike ($25,000)</English>
+      <French>Frappe SCUD (25 000 $)</French>
+      <German>SCUD-Angriff (25.000 $)</German>
+      <Russian>Удар СКАД (25 000 $)</Russian>
+      <Italian>Attacco SCUD (25.000 $)</Italian>
+    </Key>
+    <Key ID="STR_WF_SCUD_NO_FUNDS">
+      <English>Insufficient funds for SCUD Strike ($25,000 required).</English>
+      <French>Fonds insuffisants pour la frappe SCUD (25 000 $ requis).</French>
+      <German>Unzureichende Mittel für SCUD-Angriff (25.000 $ erforderlich).</German>
+      <Russian>Недостаточно средств для удара СКАД (требуется 25 000 $).</Russian>
+      <Italian>Fondi insufficienti per l'attacco SCUD (richiesti 25.000 $).</Italian>
+    </Key>
+    <Key ID="STR_WF_SCUD_SELECT_TARGET">
+      <English>SCUD ready -- click the map to designate the target.</English>
+    </Key>
+    <Key ID="STR_WF_SCUD_LAUNCHED">
+      <English>SCUD launch authorized -- saturation inbound.</English>
+    </Key>
+    <Key ID="STR_WF_SCUD_COOLDOWN">
+      <English>SCUD Strike on cooldown. Wait before firing again.</English>
+      <French>Frappe SCUD en recharge. Attendez avant de retirer.</French>
+      <German>SCUD-Angriff aufgeladen. Warten Sie vor dem nächsten Angriff.</German>
+      <Russian>Удар СКАД на перезарядке. Подождите перед повторным выстрелом.</Russian>
+      <Italian>Attacco SCUD in ricarica. Attendere prima di sparare di nuovo.</Italian>
+    </Key>
+    <Key ID="STR_WF_NAVAL_HVT_CAPTURED">
+      <English>Naval asset captured!</English>
+      <French>Actif naval capturé !</French>
+      <German>Marineanlage eingenommen!</German>
+      <Russian>Морской объект захвачен!</Russian>
+      <Italian>Risorsa navale conquistata!</Italian>
+    </Key>
+    <Key ID="STR_WF_SCUD_NEED_OIL">
+      <English>SCUD Strike requires ownership of the Oil Platform.</English>
+      <French>La frappe SCUD nécessite la possession de la plate-forme pétrolière.</French>
+      <German>SCUD-Angriff erfordert Kontrolle der Ölplattform.</German>
+      <Russian>Удар СКАД требует контроля над нефтяной платформой.</Russian>
+      <Italian>L'attacco SCUD richiede il controllo della piattaforma petrolifera.</Italian>
+    </Key>
+
     </Container>
   </Package>
 </Project>

@@ -64,6 +64,16 @@ switch (_args select 0) do {
 		_args spawn KAT_UAV;
 	};
 
+	//--- NAVAL HVT: SCUD saturation strike (feat/naval-hvt-objectives).
+	//--- Server validates ownership + cooldown inside KAT_ScudStrike before firing.
+	case "ScudStrike": {
+		if (!isNil "KAT_ScudStrike") then {
+			_args spawn KAT_ScudStrike;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: ScudStrike received but KAT_ScudStrike is nil (WFBE_C_NAVAL_HVT=0?)."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+
 	case "upgrade-sync": {
 		Private ["_side","_upgrade_id","_upgrade_level"];
 		_side = _args select 1;

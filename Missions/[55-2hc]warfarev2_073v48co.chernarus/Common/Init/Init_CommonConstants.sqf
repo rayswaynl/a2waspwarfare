@@ -696,5 +696,22 @@ WFBE_STAT_PLAYTIME         = 14;
 WFBE_STAT_FIELD_COUNT      = 15;
 WFBE_STATS_DIRTY_UIDS = [];
 
+//--- NAVAL HVT OBJECTIVES (feat/naval-hvt-objectives)
+//--- Master gate: set to 0 to fully disable all naval HVT content (no objects, no logic, no CAP, no SCUD).
+//--- Default 1 for testing; flip to 0 for a byte-for-byte vanilla session.
+	if (isNil "WFBE_C_NAVAL_HVT") then {WFBE_C_NAVAL_HVT = 1};
+
+//--- SCUD Strike tunables (oil-platform payoff).
+	if (isNil "WFBE_C_SCUD_COST")     then {WFBE_C_SCUD_COST     = 25000};	//--- server-validated funds cost
+	if (isNil "WFBE_C_SCUD_COOLDOWN") then {WFBE_C_SCUD_COOLDOWN = 300};	//--- per-platform cooldown (s)
+	if (isNil "WFBE_C_SCUD_ZONE_RADIUS") then {WFBE_C_SCUD_ZONE_RADIUS = 300};	//--- target acquisition radius (m)
+
+//--- SCUD warhead constants (confirmed mission ammo classes — do NOT change without RPT verification).
+//--- NEEDS REVIEW: Sh_125_HE confirmed in A2/OA artillery configs; Bo_GBU12_LGB confirmed in drone-strike.
+//--- Verify both createVehicle in RPT on first live test; substitute if "class not found" appears.
+	WFBE_C_SCUD_WARHEAD_HE    = "Sh_125_HE";		//--- HE area burst (even-phase warheads)
+	WFBE_C_SCUD_WARHEAD_SADARM = "Bo_GBU12_LGB";	//--- Top-attack precision (odd-phase warheads)
+	WFBE_C_SCUD_WARHEAD_WP    = "SmokeShellWhite";	//--- WP/incendiary smoke layer (final phase)
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
