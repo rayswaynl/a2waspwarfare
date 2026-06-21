@@ -92,6 +92,25 @@
       "updated": "2026-06-21T20:42:34+02:00"
     },
     {
+      "lane": "side-supply-current-stable-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@7047da5d9; checked side-supply/reason paths unchanged from f52ccee8",
+        "origin/master@0139a346 Chernarus and maintained Vanilla Common_ChangeSideSupply.sqf:8-14,25,28,30 and Server_ChangeSideSupply.sqf:1,4-12,25,28-36",
+        "upstream/master@b8389e74 same old side-supply floor/direct-channel/reason shape in both maintained roots",
+        "origin/perf/quick-wins@0076040f fixes only Chernarus Common_ChangeSideSupply.sqf:25 and Server_ChangeSideSupply.sqf:12,36 to floor to 0; Vanilla and direct-channel validation remain old-shape",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-21"
+      ],
+      "outputs": [
+        "Refreshed Economy-Authority-First-Cut.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md for current stable side-supply evidence.",
+        "Updated pruning ledger, dashboard/worklog/events and side-supply machine rows.",
+        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should clamp negative results to 0 in source Chernarus plus maintained Vanilla, preserve the max cap, validate west/east temp-channel side/amount shape, parse reason at count _this > 2, and keep broader spend acceptance/server-ledger work separate.",
+      "updated": "2026-06-21T20:38:31+02:00"
+    },
+    {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
