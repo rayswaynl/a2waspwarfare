@@ -47,22 +47,22 @@ switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force
 		_groups_max = 6;
 	};
 	case "LargeTown1": {
-		_units = [["Squad", 1, 0],["Team", 2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["AA_Light", 2, 1],["Team_AT", 1, 0],["Mechanized_Heavy", 2, 1],["Armored_Light", 2, 1],["Armored_Heavy", 1, 1]];
+		_units = [["Squad", 1, 0],["Team", 2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Light", 2, 1],["Team_AT", 1, 0],["Mechanized_Heavy", 2, 1],["Armored_Light", 2, 1],["Armored_Heavy", 1, 1]];
 		_percentage_inf = 75;
 		_groups_max = 7;
 	};
 	case "LargeTown2": {
-		_units = [["Squad_Advanced", 1, 0],["Team", 2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["AA_Light", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 1, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad_Advanced", 1, 0],["Team", 2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Light", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 1, 1],["Armored_Heavy", 2, 1]];
 		_percentage_inf = 75;
 		_groups_max = 7;
 	};
 	case "HugeTown1": {
-		_units = [["Squad", 3, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["AA_Heavy", 2, 0],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad", 3, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Heavy", 2, 0],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
 		_percentage_inf = 75;
 		_groups_max = 8;
 	};
 	case "HugeTown2": {
-		_units = [["Squad", 2, 0],["Team", 3, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["AA_Heavy", 2, 0],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad", 2, 0],["Team", 3, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Heavy", 2, 0],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
 		_percentage_inf = 75;
 		_groups_max = 8;
 	};

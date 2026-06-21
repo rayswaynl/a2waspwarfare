@@ -623,6 +623,13 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
 		[] execVM "Server\Server_GuerStipend.sqf";
+		//--- B61 (Ray 2026-06-21): GUER AIR DEFENSE — standalone server loop (self-guards isServer +
+		//--- WFBE_C_GUER_AIRDEF_ENABLE) that keeps a Ka-137 (or a Mi-24 over a large town under attack)
+		//--- over active GUER-held towns. Capped + self-cleaning; GUER has no AI commander so it can't ride
+		//--- the wildcard deck.
+		if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) > 0) then {
+			[] execVM "Server\Server_GuerAirDef.sqf";
+		};
 	} else {
 		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerResistance missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
 	};

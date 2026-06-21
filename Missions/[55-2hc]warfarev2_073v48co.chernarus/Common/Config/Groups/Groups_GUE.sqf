@@ -65,10 +65,38 @@ _u = _u + ["GUE_Soldier_AR"];
 
 _l = _l + [_u];
 
+//--- B61 (Ray 2026-06-21): Squad_Contractor roster. Hired-PMC flavor for GUER town defense
+//--- (PMC-in-GUER is already precedented: Squad_Advanced uses Soldier_*_PMC; Motorized has
+//--- ArmoredSUV_PMC; a Groups_PMC.sqf keyed to GUER exists). Wired as a RARE (weight 1) elite
+//--- garrison on Large/Huge towns only via Server_GetTownGroupsDefender.sqf. All 5 classnames are
+//--- registered in Core_PMC.sqf. Rides the merge pass (additive, no group-count bloat).
+_k = _k + ["Squad_Contractor"];
+_u		= ["Soldier_TL_PMC"];
+_u = _u + ["Soldier_MG_PMC"];
+_u = _u + ["Soldier_AT_PMC"];
+_u = _u + ["Soldier_Medic_PMC"];
+_u = _u + ["Soldier_M4A3_PMC"];
+
+_l = _l + [_u];
+
 _k = _k + ["Motorized"];
 _u		= ["Offroad_DSHKM_Gue"];
 _u = _u + ["Offroad_SPG9_Gue"];
 _u = _u + ["ArmoredSUV_PMC"];
+
+_l = _l + [_u];
+
+//--- B61 (Ray 2026-06-21): second Motorized variant - fast PMC scout technical. SUV_PMC (fast) +
+//--- ArmoredSUV_PMC with 2-3 dismounts (TL/MG/AT). Aggregated into WFBE_GUER_GROUPS_Motorized
+//--- (Config_Groups.sqf pushes same-kind entries into one array; the defender selector picks one
+//--- roster at random), so it rides the existing Motorized requests without a new town-table slot.
+//--- All classnames registered in Core_PMC.sqf / Core_GUE.sqf.
+_k = _k + ["Motorized"];
+_u		= ["SUV_PMC"];
+_u = _u + ["ArmoredSUV_PMC"];
+_u = _u + ["Soldier_TL_PMC"];
+_u = _u + ["Soldier_MG_PMC"];
+_u = _u + ["Soldier_AT_PMC"];
 
 _l = _l + [_u];
 
