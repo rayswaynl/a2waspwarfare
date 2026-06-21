@@ -8,9 +8,12 @@
 
 scriptName "Client\FSM\updatepatrolmarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_mk","_known","_i","_k","_pos","_dir","_lastPos","_lastDir","_dirDiff"];
+private ["_list","_tracked","_keep","_unit","_sid","_mk","_known","_i","_k","_pos","_dir","_lastPos","_lastDir","_dirDiff","_t0"];
 
-waitUntil {!isNil "clientInitComplete" && {clientInitComplete}};
+//--- B63 (Ray 2026-06-21): bounded gate (mirrors updateaicommarkers) so a stalled client init can't
+//--- suppress the friendly patrol arrows forever; proceed after 90s of in-game time at the latest.
+_t0 = time;
+waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)};
 
 _tracked = []; //--- [unit, markerName] pairs
 _i = 0;

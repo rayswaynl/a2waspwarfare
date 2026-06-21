@@ -38,6 +38,17 @@ if (isNull _team) exitWith {["WARNING", Format ["Server_PlayerConnected.sqf: Pla
 _sideJoined = _team getVariable "wfbe_side";
 if (isNil '_sideJoined') exitWith {["WARNING", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] side couldn't be determined from team [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent};
 
+//--- B63 (Ray 2026-06-21): INSTANT JIP catch-up for the own-side MARKER feeds. In A2-OA a
+//--- publicVariable is not replayed to a client that joined after the broadcast, so a fresh
+//--- joiner's WFBE_ACTIVE_AICOM_TEAMS / WFBE_ACTIVE_PATROLS are empty and their own commander-team
+//--- + patrol arrows never draw (the long-standing "OPFOR can't see own team markers" bug). Push the
+//--- current lists straight to THIS client so its marker loops paint at once. Placed BEFORE the
+//--- first-join exitWith below so it runs for every warfare joiner. server_side_patrols re-broadcasts
+//--- every ~20s as a safety net. (_id = this client's network id, valid for publicVariableClient.)
+if (!isNil "WFBE_ACTIVE_AICOM_TEAMS") then {_id publicVariableClient "WFBE_ACTIVE_AICOM_TEAMS"};
+if (!isNil "WFBE_ACTIVE_PATROLS") then {_id publicVariableClient "WFBE_ACTIVE_PATROLS"};
+diag_log format ["[WFBE][B63 JIP-MARK] pushed marker feeds to joiner %1 (aicom=%2, patrols=%3)", _name, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
+
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
 

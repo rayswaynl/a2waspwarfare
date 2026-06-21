@@ -12,12 +12,20 @@
 
 scriptName "Client\FSM\updateaicommarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff"];
+private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN"];
 
-waitUntil {!isNil "clientInitComplete" && {clientInitComplete}};
+//--- B63 (Ray 2026-06-21): BOUNDED gate. The loop must wait for client init, but if a blocking
+//--- init waitUntil ever stalls, the old unbounded `waitUntil {clientInitComplete}` would suppress
+//--- the own-side commander-team arrows forever. Proceed anyway after 90s of in-game time so the
+//--- arrows are never permanently gated. (time is paused on the loading screen, so this can't fire
+//--- prematurely during a genuine load.)
+_t0 = time;
+waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)};
+diag_log format ["[WFBE][B63 AICOM-MARK] loop live after %1s (clientInitComplete=%2)", round (time - _t0), (!isNil "clientInitComplete" && {clientInitComplete})];
 
 _tracked = []; //--- [team, markerName] pairs (team is the stable key; leader can change)
 _i = 0;
+_diagTicks = 0;
 
 while {true} do {
 	_list = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
@@ -32,6 +40,15 @@ while {true} do {
 	//--- compare against nil.
 	waitUntil {!isNil "WFBE_Client_SideID"};
 	_mySid = WFBE_Client_SideID;
+
+	//--- B63 (Ray 2026-06-21) diag: first 6 ticks, report feed health so a JIP RPT is conclusive about
+	//--- whether the own-team arrows fail at the FEED (count 0 = PV not arriving), the FILTER (ownSide 0
+	//--- while feed>0) or DRAWING (ownSide>0 but tracked 0). count CODE ARRAY is A2-OA-safe.
+	if (_diagTicks < 6) then {
+		_diagTicks = _diagTicks + 1;
+		_ownN = {(_x select 1) == _mySid} count _list;
+		diag_log format ["[WFBE][B63 AICOM-MARK] tick %1: WFBE_Client_SideID=%2 feed=%3 ownSide=%4 tracked=%5", _diagTicks, _mySid, count _list, _ownN, count _tracked];
+	};
 
 	//--- New commander teams - FRIENDLY side only (matches the friendly-only patrol markers).
 	{

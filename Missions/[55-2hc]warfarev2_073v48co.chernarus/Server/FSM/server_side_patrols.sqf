@@ -11,7 +11,7 @@
 
 scriptName "Server\FSM\server_side_patrols.sqf";
 
-private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed"];
+private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept"];
 
 waitUntil {townInitServer};
 sleep 30;
@@ -44,9 +44,31 @@ while {!WFBE_GameOver} do {
 		if (_changed) then {
 			_removed = (count WFBE_ACTIVE_PATROLS) - (count _kept);
 			WFBE_ACTIVE_PATROLS = _kept;
-			publicVariable "WFBE_ACTIVE_PATROLS";
 			["INFORMATION", Format["server_side_patrols.sqf: scrub removed %1 dead-unit patrol entries from WFBE_ACTIVE_PATROLS.", _removed]] Call WFBE_CO_FNC_AICOMLog;
 		};
+
+		//--- B63 (Ray 2026-06-21): also scrub dead-leader AICOM-team entries. Previously these were
+		//--- dropped ONLY on the aicom-team-ended event; a leader killed without that event left a
+		//--- stale arrow on every client. Slots: [leader, sideID, dir, team].
+		_aKept = [];
+		{
+			if (!isNull (_x select 0) && {alive (_x select 0)} && {!isNull (_x select 3)}) then {_aKept set [count _aKept, _x]};
+		} forEach WFBE_ACTIVE_AICOM_TEAMS;
+		WFBE_ACTIVE_AICOM_TEAMS = _aKept;
+
+		//--- B63 (Ray 2026-06-21) JIP-DURABILITY FIX (THE no-own-markers root cause). In A2-OA a
+		//--- `publicVariable` is NOT replayed to a client that JIP-joins AFTER the broadcast (there is
+		//--- no JIP PV queue like A3). On a dedicated server EVERY player is a JIP joiner, so each one
+		//--- starts with an EMPTY WFBE_ACTIVE_AICOM_TEAMS / WFBE_ACTIVE_PATROLS and the own-side
+		//--- commander-team + patrol ARROW loops (updateaicommarkers/updatepatrolmarkers) have nothing
+		//--- to paint until the server happens to re-broadcast on a team/heading event. Town & structure
+		//--- markers work because they ride setVariable [...,true] (engine-replicated, JIP-durable). Fix:
+		//--- re-broadcast BOTH feeds every cycle so any late joiner gets the current lists within ~20s.
+		//--- Small arrays at 20s cadence = negligible bandwidth. Server_OnPlayerConnected does an
+		//--- instant targeted catch-up on top of this so a fresh joiner doesn't wait the full cycle.
+		publicVariable "WFBE_ACTIVE_PATROLS";
+		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+
 		_scrubLast = time;
 	};
 
