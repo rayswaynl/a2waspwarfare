@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T20:42:34+02:00",
+  "generatedAt": "2026-06-21T20:53:09+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the commander reassignment current-stable closeout, factory destroyed-purchase refund current-stable refresh, Patrols v2 current-stable refresh, refined victory/endgame scope, Headless Client mirror sync and PR #43 / origin/claude/b57-soak-proposals@b8a1505f B68 evidence. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the gear template current-stable branch split, factory destroyed-purchase refund current-stable refresh, commander reassignment current-stable closeout, Patrols v2 current-stable refresh, refined victory/endgame scope, Headless Client mirror sync and PR #43 / origin/claude/b57-soak-proposals@b8a1505f B68 evidence. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "gear-template-current-stable-scope-refresh-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Gear-Template-Profile-Filter.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and gear machine rows after source checks split old docs/source profile-template evidence from current stable. Docs branch docs/developer-wiki-index@43c3ba05 is source-unchanged from 8b71e2a1 and still carries undefined _u_upgrade at Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75 plus Init_ProfileGear.sqf:17,25 import-bound debt in both maintained roots. Current stable origin/master@0139a346 fixes the save-filter comparisons at :34,57,82 in both maintained roots, but keeps the import guard and AddTemplate/FillTemplates policy split. Miksuu b8389e74, perf 0076040f, historical release a96fdda2 and historical EASA QoL a66d4691 keep the old save-filter shape. No gameplay source changed."
+    },
     {
       "lane": "commander-reassignment-current-stable-closeout-2026-06-21",
       "owner": "Codex",

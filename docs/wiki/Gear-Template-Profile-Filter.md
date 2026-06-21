@@ -31,7 +31,7 @@ flowchart TD
 | `Client/Functions/Client_UI_Gear_AddTemplate.sqf:15,37,83,110,136-148` | Builds `_u_upgrade` as the maximum required upgrade in the new template, then appends the template and sets `_need_save = true`. |
 | `Client/GUI/GUI_BuyGearMenu.sqf:509` | Spawns `WFBE_CL_FNC_UI_Gear_SaveTemplateProfile` after the dialog closes when `_need_save` is true. |
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:17-19` | Privates and sets `_template_upgrade = _x select 3`. |
-| `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82` | Fixed (task 44): all three per-item upgrade checks now use `(_get select 3)` on both sides of the AND; `_u_upgrade` is no longer referenced in this function. |
+| Current docs/source `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` | Still uses undefined `_u_upgrade` in the three per-item upgrade checks. Current stable `origin/master@0139a346` fixes this in both maintained roots at `:34,57,82` by comparing `(_get select 3)` against both upgrade lanes. |
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:94-95` | Writes the filtered array to `profileNamespace` and calls `saveProfileNamespace`. |
 | `Client/Functions/Client_UI_Gear_FillTemplates.sqf:15-22` | The visible template list only adds templates whose stored upgrade level is at or below current `WFBE_UP_GEAR`. |
 
@@ -39,22 +39,23 @@ flowchart TD
 
 | Root / branch | Save filter | Profile import guard | Practical meaning |
 | --- | --- | --- | --- |
-| Current docs/source Chernarus `8b71e2a1` | `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still reference undefined `_u_upgrade`. | `Init_ProfileGear.sqf:17` accepts `count _x >= 6`, then `:25` reads `_x select 6`. | Patch-ready; source is still unpatched. |
-| Maintained Vanilla Takistan `8b71e2a1` | Same save-filter `_u_upgrade` references. | Same six-field guard before index-6 read. | Propagate deliberately after Chernarus source fix. |
-| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Save-filter `_u_upgrade` bug fixed on master (task 44): all three checks now use `(_get select 3)` directly. Release branch `a96fdda2` not independently verified — check separately. | Same in both maintained roots. | Stable/release do not rescue the profile-template debt, even though they differ on nearby service/cargo behavior. |
-| Miksuu `b8389e74`, perf `0076040f` and EASA QoL `a66d4691` | Same in both maintained roots. | Same in both maintained roots. | No upstream/perf/QoL rescue exists; QoL only changes Chernarus EASA menu orientation. |
+| Current docs/source Chernarus `docs/developer-wiki-index@43c3ba05` | Source-unchanged from `8b71e2a1`; `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still reference undefined `_u_upgrade`. | `Init_ProfileGear.sqf:17` accepts `count _x >= 6`, then `:25` reads `_x select 6`. | Patch-ready in the docs/source target. |
+| Maintained Vanilla Takistan `docs/developer-wiki-index@43c3ba05` | Same save-filter `_u_upgrade` references. | Same six-field guard before index-6 read. | Propagate deliberately after Chernarus source fix. |
+| Current stable `origin/master@0139a346` | Save-filter `_u_upgrade` bug fixed in both maintained roots (task 44): `Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82` use `(_get select 3)` directly. Only comments mention the old `_u_upgrade` shape. | Same six-field guard/index-6 read at `Init_ProfileGear.sqf:17,25` in both maintained roots. | Source-present for the save-filter fix; import-bound and template-policy work remains open. |
+| Miksuu `b8389e74`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2` and historical EASA QoL commit `a66d4691` | Old save-filter `_u_upgrade` references remain in both maintained roots at `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75`. | Same six-field guard before index-6 read. | No old-ref rescue exists. Current origin exposes no `release/*` or `feat/buymenu-easa-qol` heads on 2026-06-21, so those commits are historical evidence. |
 
 ### Creation Gate Branch Matrix
 
-Refreshed 2026-06-14 for docs checkout `8b71e2a1`, stable `origin/master` `cf2a6d6a`, upstream `miksuu/master` `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `origin/release/2026-06-feature-bundle` `a96fdda2` and `origin/feat/buymenu-easa-qol` `a66d4691`.
+Refreshed 2026-06-21 for docs checkout `43c3ba05` (source-unchanged from `8b71e2a1` for checked template paths), current stable `origin/master@0139a346`, upstream Miksuu `b8389e74`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2` and historical EASA QoL commit `a66d4691`. Current origin exposes no `release/*` or `feat/buymenu-easa-qol` heads on 2026-06-21.
 
 | Scope | Add-template gate | Fill/save contrast | Practical meaning |
 | --- | --- | --- | --- |
-| Current source Chernarus + maintained Vanilla | `Client_UI_Gear_AddTemplate.sqf:15,37,83,110` computes `_u_upgrade`, then `:136` accepts a new template when `_u_upgrade <= WFBE_UP_BARRACKS` **or** `_u_upgrade <= WFBE_UP_GEAR`. | `Client_UI_Gear_FillTemplates.sqf:17` displays templates only when stored upgrade `<= WFBE_UP_GEAR`; `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still tries to filter with undefined `_u_upgrade`. | Owner-decision consistency debt: choose whether templates are unlocked by either Barracks/Gear lane or Gear-only display should be changed. |
-| Stable `origin/master` and upstream `miksuu/master` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | No stable/upstream rescue found. |
+| Docs/source Chernarus + maintained Vanilla | `Client_UI_Gear_AddTemplate.sqf:15,37,83,110` computes `_u_upgrade`, then `:136` accepts a new template when `_u_upgrade <= WFBE_UP_BARRACKS` **or** `_u_upgrade <= WFBE_UP_GEAR`. | `Client_UI_Gear_FillTemplates.sqf:17` displays templates only when stored upgrade `<= WFBE_UP_GEAR`; `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still tries to filter with undefined `_u_upgrade`. | Owner-decision consistency debt: choose whether templates are unlocked by either Barracks/Gear lane or Gear-only display should be changed. |
+| Current stable `origin/master@0139a346` | Same OR gate in both maintained roots. | Same Gear-only fill in both maintained roots; save-filter `_u_upgrade` is fixed at `Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82`, but the import guard remains old-shape. | Stable rescues the local save-filter bug, not the creation/display policy or import-bound issue. |
+| Upstream Miksuu `b8389e74` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | No upstream rescue found. |
 | `origin/perf/quick-wins` `0076040f` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Perf branch does not touch gear-template semantics. |
-| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Release branch does not resolve the creation/display/save contract. |
-| EASA QoL `origin/feat/buymenu-easa-qol` `a66d4691` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | The branch changes EASA menu orientation in Chernarus only; it does not change template semantics. |
+| Historical release commit `a96fdda2` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Historical release evidence only until a live release head is restored or rechecked. |
+| Historical EASA QoL commit `a66d4691` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | The old branch changed EASA menu orientation in Chernarus only; it did not change template semantics. |
 
 ## Bug Shape
 
@@ -64,7 +65,7 @@ Refreshed 2026-06-14 for docs checkout `8b71e2a1`, stable `origin/master` `cf2a6
 if ((_get select 3) > _upgrade_barracks && _u_upgrade > _upgrade_gear) then {_can_save = false};
 ```
 
-`_u_upgrade` exists in `Client_UI_Gear_AddTemplate.sqf`, where it is the computed max upgrade for a newly created template. It does not exist in `Client_UI_Gear_SaveTemplateProfile.sqf`. **This bug is already fixed on master (task 44).** All three loops (weapon, magazine, backpack-content) now use `(_get select 3)` on both sides of the AND, matching the corrected form shown in the Patch Options section below. The Source Evidence row for `:33,52,75` and the Branch Matrix rows stating master "still reference undefined `_u_upgrade`" reflect the pre-fix state and are no longer accurate for `origin/master`.
+`_u_upgrade` exists in `Client_UI_Gear_AddTemplate.sqf`, where it is the computed max upgrade for a newly created template. It does not exist in `Client_UI_Gear_SaveTemplateProfile.sqf`. This bug is still present on the current docs/source branch, Miksuu, perf, historical release and historical EASA QoL refs. It is already fixed on current stable `origin/master@0139a346` in both maintained roots: all three loops (weapon, magazine, backpack-content) now use `(_get select 3)` on both sides of the AND, matching the corrected form shown in the Patch Options section below.
 
 Separate creation-gate nuance: `Client_UI_Gear_AddTemplate.sqf:135-136` accepts a new template when the computed requirement is below either current Barracks upgrade or current Gear upgrade:
 
@@ -72,12 +73,12 @@ Separate creation-gate nuance: `Client_UI_Gear_AddTemplate.sqf:135-136` accepts 
 if (_u_upgrade <= (_upgrades select WFBE_UP_BARRACKS) || _u_upgrade <= (_upgrades select WFBE_UP_GEAR)) then {
 ```
 
-That may be intentional because some infantry equipment gates are Barracks-led while others are Gear-led. It still needs owner confirmation before profile/template cleanup: `Client_UI_Gear_FillTemplates.sqf:15-22` later hides visible templates above current `WFBE_UP_GEAR` only, and `Client_UI_Gear_SaveTemplateProfile.sqf` has its own undefined `_u_upgrade` filter bug. If the intended rule is "unlocked by either relevant tech lane," keep the OR and document which item classes use which lane. If the intended rule is "both infantry tech and gear tech must support it," change AddTemplate, FillTemplates and SaveTemplateProfile together.
+That may be intentional because some infantry equipment gates are Barracks-led while others are Gear-led. It still needs owner confirmation before profile/template cleanup: `Client_UI_Gear_FillTemplates.sqf:15-22` later hides visible templates above current `WFBE_UP_GEAR` only. On old-shape refs, `Client_UI_Gear_SaveTemplateProfile.sqf` also has the undefined `_u_upgrade` filter bug; on current stable that save filter is fixed but still follows the same broad Barracks-or-Gear policy. If the intended rule is "unlocked by either relevant tech lane," keep the OR and document which item classes use which lane. If the intended rule is "both infantry tech and gear tech must support it," change AddTemplate, FillTemplates and SaveTemplateProfile together.
 
 Practical impact:
 
-- The save pass can hit an undefined-variable script error when a template item's upgrade exceeds the current barracks upgrade and the expression evaluates the second operand.
-- Even when no error is hit, saved-template upgrade filtering cannot be trusted as written because the intended second comparison reads the wrong variable.
+- On docs/source and old-shape refs, the save pass can hit an undefined-variable script error when a template item's upgrade exceeds the current barracks upgrade and the expression evaluates the second operand.
+- On docs/source and old-shape refs, saved-template upgrade filtering cannot be trusted as written because the intended second comparison reads the wrong variable.
 - `Init_ProfileGear.sqf` still validates profile templates on load, so this is mainly a persistence/filter correctness bug, not proof that the live buy-gear UI lets locked gear equip by itself.
 - `Client_UI_Gear_FillTemplates.sqf` intentionally hides templates above the current gear upgrade instead of showing them as locked. This can make valid saved templates look missing until the side upgrades gear again.
 - The broader gear/EASA/service authority issue remains separate: purchases and effects are still client-authoritative legacy flows, covered by [Server authority migration map](Server-Authority-Migration-Map) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas).
@@ -90,7 +91,7 @@ Practical impact:
 | Use template max upgrade | Replace `_u_upgrade` with `_template_upgrade`. | Matches the already-read template field, but rejects based on the template max when checking each item. This is close to `AddTemplate` behavior. |
 | Recompute local max | Initialize `_u_upgrade = _template_upgrade` or recompute max before per-item checks. | More churn than needed unless the owner wants to normalize stale profile data during save. |
 
-Recommended first patch:
+Recommended first patch for docs/source or old-shape refs:
 
 ```sqf
 if ((_get select 3) > _upgrade_barracks && (_get select 3) > _upgrade_gear) then {_can_save = false};
@@ -127,7 +128,7 @@ Validation for this paired fix:
 
 Source checks:
 
-1. `Client_UI_Gear_SaveTemplateProfile.sqf` has no `_u_upgrade` reference.
+1. `Client_UI_Gear_SaveTemplateProfile.sqf` has no live `_u_upgrade` comparison, except comments documenting the old shape if retained.
 2. The function still writes `WFBE_PERSISTENT_%SIDE_GEAR_TEMPLATE`.
 3. `Client_UI_Gear_AddTemplate.sqf` still computes and stores template max upgrade in field 3.
 4. `Init_ProfileGear.sqf` still recalculates stored profile price and max upgrade on load.
@@ -154,7 +155,7 @@ Generated mission:
 - The import-bound issue is a paired profile persistence bug, not proof that live gear purchase authority is hardened or broken in a new way.
 - It is not the same as full gear purchase authority. Do not claim public-server gear hardening after this patch.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
-- Branch check 2026-06-14 found no rescue branch for profile/template semantics: docs checkout `8b71e2a1`, stable `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f`, release `a96fdda2` and EASA QoL `a66d4691` all keep the undefined `_u_upgrade` save filter plus six-field import guard in checked maintained roots. They also keep the Barracks-or-Gear AddTemplate creation gate while FillTemplates displays against Gear only. Treat save/import repair as paired patch work, and treat creation/display semantics as a separate owner decision before changing code.
+- Branch check 2026-06-21 split the old flattened finding: docs checkout `43c3ba05` is source-unchanged from `8b71e2a1` and still keeps undefined `_u_upgrade` plus the six-field import guard in both maintained roots; current stable `origin/master@0139a346` fixes the save-filter comparisons at `Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82` but still keeps the six-field import guard and Barracks-or-Gear creation versus Gear-only display policy. Miksuu `b8389e74`, perf `0076040f`, historical release `a96fdda2` and historical EASA QoL `a66d4691` keep the old save-filter shape.
 
 ## Continue Reading
 
