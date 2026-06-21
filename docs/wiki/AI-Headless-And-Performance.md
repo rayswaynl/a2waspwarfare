@@ -66,6 +66,10 @@ Safety note: these loops are server-owned maintenance, not headless delegation. 
 
 `Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented (`Server/Init/Init_Server.sqf:65`, `:90`), but `Init_Server.sqf` later executes `serverFpsGUI.sqf` and the FPS module directly (`:578`, `:595`). DR-19 found both files put `sleep 8` inside the `isDedicated` branch, so hosted/listen servers can spin without yielding. Current source Chernarus and Vanilla Takistan still have that loop-first shape; see [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). Remaining work is source/Vanilla patch, and Arma smoke for dedicated RHUD updates and hosted/listen no-spin behavior.
 
+## Memory Allocator
+
+The dedicated server and headless clients select a memory allocator through the Arma 2 OA `-malloc` parameter (server `mimalloc`, headless clients `tbb4malloc_bi`). A missing allocator DLL silently drops a process to the default Windows heap with no RPT line, and the obvious "is it loaded" checks (`tasklist /m`, file-lock open) return false negatives on a 32-bit process. See [Server memory allocator](Server-Memory-Allocator) for the load mechanism, the default-heap gotcha and the reliable verification methods (`EnumProcessModulesEx`, `listdlls`, delete test).
+
 ## Performance Caveats
 
 - Do not compare client and server audit rows as if they measured the same impact.
