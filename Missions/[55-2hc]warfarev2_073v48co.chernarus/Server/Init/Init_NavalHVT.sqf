@@ -1,6 +1,6 @@
 //--- Init_NavalHVT.sqf — Naval HVT Objectives orchestrator.
 //--- Called once from Init_Server.sqf, guarded by WFBE_C_NAVAL_HVT.
-//--- Creates 4 offshore capturable HVTs on Chernarus south coast, defaulting to GUER ownership.
+//--- Creates 4 offshore capturable HVTs on Chernarus east coast, defaulting to GUER ownership.
 //---
 //--- Assets:
 //---   [A] Khe Sanh Alpha (LHD)  — NE sea        — carrier, aircraft sell
@@ -172,10 +172,10 @@ WFBE_NavalHVT_ToWater = {
 WFBE_NavalHVT_Off = { [((_this select 0) select 0) + (_this select 1), ((_this select 0) select 1) + (_this select 2), 0] };
 
 private ["_aAlpha","_aFOB","_aOil","_aBravo"];
-_aAlpha = [13900, 12500] Call WFBE_NavalHVT_ToWater;	//--- NE sea
-_aFOB   = [14300,  9800] Call WFBE_NavalHVT_ToWater;	//--- E sea (upper)
-_aOil   = [14500,  6800] Call WFBE_NavalHVT_ToWater;	//--- E sea (mid)
-_aBravo = [14200,  4000] Call WFBE_NavalHVT_ToWater;	//--- SE sea
+_aAlpha = [14700, 12500] Call WFBE_NavalHVT_ToWater;	//--- NE sea
+_aFOB   = [14900,  9800] Call WFBE_NavalHVT_ToWater;	//--- E sea (upper)
+_aOil   = [14900,  6800] Call WFBE_NavalHVT_ToWater;	//--- E sea (mid)
+_aBravo = [14800,  4000] Call WFBE_NavalHVT_ToWater;	//--- SE sea
 
 //---
 //--- [A] KHE SANH ALPHA (LHD) — NE
@@ -197,7 +197,7 @@ _pad setPosASL ([_aAlpha, 10, 0] Call WFBE_NavalHVT_Off);
 _pad enableSimulation false;
 _pad allowDamage false;
 
-[_lhdAlphaLogic, "Khe Sanh Alpha", 120, 240, "HugeTown1", WFBE_C_GUER_ID,
+[_lhdAlphaLogic, "Khe Sanh Alpha", 10, 50, "HugeTown1", WFBE_C_GUER_ID,
  [["wfbe_is_carrier_hvt", true], ["wfbe_airfield_logic_ref", _lhdAlphaAirLogic]]] Call WFBE_NavalHVT_RegisterTown;
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [A] Khe Sanh Alpha (LHD) spawned at %1.", _aAlpha]] Call WFBE_CO_FNC_LogContent;
@@ -220,7 +220,7 @@ for "_pierI" from 0 to (count _pierClasses - 1) do {
 _pierFOBLogic = (createGroup sideLogic) createUnit ["LocationLogicDepot", ([_aFOB, 0, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
 _pierFOBLogic setPosASL ([_aFOB, 0, 0] Call WFBE_NavalHVT_Off);
 
-[_pierFOBLogic, "Naval FOB", 80, 160, "LargeTown1", WFBE_C_GUER_ID,
+[_pierFOBLogic, "Naval FOB", 10, 50, "LargeTown1", WFBE_C_GUER_ID,
  [["wfbe_is_naval_fob", true]]] Call WFBE_NavalHVT_RegisterTown;
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [B] Naval FOB (Pier) spawned at %1.", _aFOB]] Call WFBE_CO_FNC_LogContent;
@@ -258,7 +258,7 @@ _oilPad setVariable ["wfbe_is_scud_pad", true, true];
 _oilLogic = (createGroup sideLogic) createUnit ["LocationLogicDepot", ([_aOil, 0, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
 _oilLogic setPosASL ([_aOil, 0, 0] Call WFBE_NavalHVT_Off);
 
-[_oilLogic, "Oil Platform", 100, 200, "LargeTown1", WFBE_C_GUER_ID,
+[_oilLogic, "Oil Platform", 10, 50, "LargeTown1", WFBE_C_GUER_ID,
  [["wfbe_is_oil_platform_hvt", true], ["wfbe_scud_pad_ref", _oilPad]]] Call WFBE_NavalHVT_RegisterTown;
 
 //--- Register oil platform in global SCUD-platform list (validated in Support_ScudStrike.sqf).
@@ -284,7 +284,7 @@ _pad setPosASL ([_aBravo, 10, 0] Call WFBE_NavalHVT_Off);
 _pad enableSimulation false;
 _pad allowDamage false;
 
-[_lhdBravoLogic, "Khe Sanh Bravo", 120, 240, "HugeTown1", WFBE_C_GUER_ID,
+[_lhdBravoLogic, "Khe Sanh Bravo", 10, 50, "HugeTown1", WFBE_C_GUER_ID,
  [["wfbe_is_carrier_hvt", true], ["wfbe_airfield_logic_ref", _lhdBravoAirLogic]]] Call WFBE_NavalHVT_RegisterTown;
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [D] Khe Sanh Bravo (LHD) spawned at %1.", _aBravo]] Call WFBE_CO_FNC_LogContent;
