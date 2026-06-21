@@ -134,6 +134,14 @@ _pierFOBLogic  setPosASL [(getPos _pierFOBLogic)  select 0, (getPos _pierFOBLogi
 _oilLogic      setPosASL [(getPos _oilLogic)       select 0, (getPos _oilLogic)       select 1, 0];
 _lhdBravoLogic setPosASL [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1, 0];
 
+//--- Sanity: diag_log (always hits the RPT) a WARN if any town logic is NOT over water,
+//--- so a bad mission.sqm coord (on land) is caught server-side without a visual check.
+{
+	if (!(surfaceIsWater (getPos _x))) then {
+		diag_log Format ["NAVALHVT-WARN: town [%1] is NOT over water at %2 - fix mission.sqm coord.", _x getVariable ["name","?"], getPos _x];
+	};
+} forEach [_lhdAlphaLogic, _pierFOBLogic, _oilLogic, _lhdBravoLogic];
+
 //--- Derive 2-element [x,y] anchors from logic positions (downstream structure code uses these
 //--- with WFBE_NavalHVT_Off, which reads select 0 / select 1, so must remain [x,y]).
 private ["_aAlpha","_aFOB","_aOil","_aBravo"];
@@ -141,6 +149,24 @@ _aAlpha = [(getPos _lhdAlphaLogic) select 0, (getPos _lhdAlphaLogic) select 1];
 _aFOB   = [(getPos _pierFOBLogic)  select 0, (getPos _pierFOBLogic)  select 1];
 _aOil   = [(getPos _oilLogic)       select 0, (getPos _oilLogic)       select 1];
 _aBravo = [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1];
+
+//------------------------------------------------------------------------------------
+//--- NAME LABELS — sea towns have no built-in map label, so add a global text marker per
+//--- town (the SV text comes from updatetownmarkers.sqf on the CityMarker). Offset N so the
+//--- name does not sit on top of the SV readout.
+//------------------------------------------------------------------------------------
+private ["_nmI","_nmLoc","_nmName","_nmP","_nmMkr"];
+_nmI = 0;
+{
+	_nmLoc  = _x select 0;
+	_nmName = _x select 1;
+	_nmP    = getPos _nmLoc;
+	_nmMkr  = createMarker [Format ["WFBE_NavalName_%1", _nmI], [(_nmP select 0), (_nmP select 1) + 160, 0]];
+	_nmMkr setMarkerType "Empty";
+	_nmMkr setMarkerColor "ColorBlack";
+	_nmMkr setMarkerText _nmName;
+	_nmI = _nmI + 1;
+} forEach [[_lhdAlphaLogic, "Khe Sanh Alpha"], [_pierFOBLogic, "Naval FOB"], [_oilLogic, "Oil Platform"], [_lhdBravoLogic, "Khe Sanh Bravo"]];
 
 //------------------------------------------------------------------------------------
 //--- SPAWN ALL 4 ASSETS
