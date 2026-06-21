@@ -991,10 +991,10 @@ while {!gameOver} do {
 									if (isNull _w17Target) then {_w17Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
 									_w17TargetPos = getPos _w17Target;
 									_w17MarkerName = Format ["aicom_convoy_%1_%2", _sideText, round time];
-									createMarker [_w17MarkerName, _w17SpawnPos];
-									_w17MarkerName setMarkerType "mil_destroy";
-									_w17MarkerName setMarkerColor (if (_side == west) then {"ColorBlue"} else {"ColorRed"});
-									_w17MarkerName setMarkerText Format ["Supply Convoy (%1)", _sideText];
+									//--- B68 (Ray 2026-06-21) MARKER-LEAK FIX: this W17 supply-convoy marker was GLOBAL (createMarker / setMarker*, non-Local) = visible to ENEMY clients too (Ray: hostile teams must not see your supply patrols). The convoy truck already shows to its OWN side via the standard friendly unit-marker (Init_Unit SupplyVehicle path), so the global marker was a leak + redundant - removed. _w17MarkerName stays defined; the despawn block's deleteMarker on the now-uncreated name is a harmless no-op.
+									//--- B68: (convoy marker removed - was enemy-visible global)
+									//--- B68: (convoy marker removed)
+									//--- B68: (convoy marker removed)
 									[_w17Grp, _w17TargetPos, 100] Call AIPatrol;
 									_w17Grp setBehaviour "AWARE"; _w17Grp setCombatMode "YELLOW";
 									[_w17Truck, _w17Grp, _w17Target, _side, _w17MarkerName, _humanCmd] spawn {

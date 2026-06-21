@@ -271,6 +271,17 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_UPGRADE_FUNDS_RATE") then {WFBE_C_AICOM_UPGRADE_FUNDS_RATE = 1}; //--- B67 (Ray 2026-06-21): REVERTED 2->1. This is a tech-cost funds surcharge, NOT a tech-pacing or income knob; at 2 it drained the cash that should field units and only DELAYED interval-gated upgrades. Back to cheap supply->tech conversion so the cash-rich AI keeps funds for units. 0 disables.
 	if (isNil "WFBE_C_AICOM_SUPPLY_RESERVE") then {WFBE_C_AICOM_SUPPLY_RESERVE = 1000}; //--- punchy-AICOM (Ray 2026-06-17): 8000->1000 - unblock economy. The old 8k reserve hoarded supply away from upgrades; with FUNDS_RATE=1 the AI can spend down to 1k and convert the rest to tech via funds. Rollback: 8000.
 	WFBE_C_AI_COMMANDER_RELIEF_MAX = 1;           //--- punchy-AICOM (Ray 2026-06-17): 2->1 - at most one team diverted to defense at a time; keep the rest on offense. Rollback: 2.
+	//--- B68 (Ray 2026-06-21) ATTACK-BIAS: "defense should matter MUCH LESS than attack." LAST-STAND (recall-all-
+	//--- to-HQ) + the maneuver-strength compare that gates it now fire only in genuinely dire cases; teams ASSAULT
+	//--- by default. Consumed in AI_Commander_Strategy.sqf. All default-ON, tunable, rollback-documented.
+	if (isNil "WFBE_C_AICOM_LASTSTAND_TOWNS") then {WFBE_C_AICOM_LASTSTAND_TOWNS = 1};    //--- recall-all only at <= this many owned towns (old implicit gate <2). Rollback to old behaviour: 1 + RATIO 0.7.
+	if (isNil "WFBE_C_AICOM_LASTSTAND_RATIO") then {WFBE_C_AICOM_LASTSTAND_RATIO = 0.45}; //--- AND maneuver strength below this fraction of the enemy's. Was 0.7 (too eager - winning sides went passive). Lower = last-stand rarer = more aggressive. Rollback: 0.7.
+	if (isNil "WFBE_C_AICOM_STR_LONE_ALIVE") then {WFBE_C_AICOM_STR_LONE_ALIVE = 2};      //--- a team with fewer than this many alive...
+	if (isNil "WFBE_C_AICOM_STR_LONE_FARHQ") then {WFBE_C_AICOM_STR_LONE_FARHQ = 1500};   //--- ...AND farther than this (m) from HQ is a stranded remnant, EXCLUDED from the _myStr maneuver-strength count so it does not deflate strength + trip the defensive gates. 0 disables the exclusion.
+	//--- B68 (Ray 2026-06-21) RETREAT-CULL hardening: the B67 progress-gated budget never culls a lone survivor
+	//--- that slowly crawls home from far away (re-issues retreat forever, milling at base, never assaulting).
+	if (isNil "WFBE_C_AICOM_RETREAT_MAX_ISSUES") then {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 8}; //--- cull a lone survivor after this many retreat re-issues regardless of slow progress.
+	if (isNil "WFBE_C_AICOM_RETREAT_MAX_DIST") then {WFBE_C_AICOM_RETREAT_MAX_DIST = 6000};  //--- cull a lone survivor immediately if farther than this (m) from HQ - not worth a multi-km walk home.
 	//--- B67 (Ray 2026-06-21) BUILD PLACEMENT (item #10): minimum centre-to-centre spacing between AI-built
 	//--- structures + a wider factory placement ring, so factories stop piling on top of each other.
 	if (isNil "WFBE_C_AICOM_STRUCT_SPACING") then {WFBE_C_AICOM_STRUCT_SPACING = 45};       //--- m between AI structures (big hangars reach ~30m).
@@ -305,7 +316,7 @@ with missionNamespace do {
 	//--- RELIEF HOLD: a team diverted to defend a town holds for this long, then - if the town is
 	//--- still ours but no longer actively attacked OR the hold expires - it is released back to
 	//--- OFFENSE instead of idling on a quiet town (never a standing-still AI). AI_Commander_Strategy.sqf.
-	if (isNil "WFBE_C_AICOM_RELIEF_HOLD") then {WFBE_C_AICOM_RELIEF_HOLD = 240};  //--- s.
+	if (isNil "WFBE_C_AICOM_RELIEF_HOLD") then {WFBE_C_AICOM_RELIEF_HOLD = 180};  //--- s. B68 attack-bias (Ray 2026-06-21): 240->180 so a team diverted to defend returns to offense sooner. Rollback: 240.
 	//--- ASSAULT FINISH tunables (extracted from hard-coded literals in Common_RunCommanderTeam.sqf).
 	if (isNil "WFBE_C_AICOM_ASSAULT_HOLD") then {WFBE_C_AICOM_ASSAULT_HOLD = 360}; //--- s: camp-first + depot-center capture-hold loop budget (was two hard-coded 150s).
 	if (isNil "WFBE_C_AICOM_ASSAULT_SAD")  then {WFBE_C_AICOM_ASSAULT_SAD  = 80};  //--- m: approach-SAD radius on arrival (towns-target) (was hard-coded 250).

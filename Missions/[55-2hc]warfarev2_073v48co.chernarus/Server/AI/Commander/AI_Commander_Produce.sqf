@@ -102,6 +102,13 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				_rLast  = _team getVariable "wfbe_aicom_retreat_lastdist"; if (isNil "_rLast") then {_rLast = -1};
 				_rBudget = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_MAX_TRIES", 4];
 				_rMinClose = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_MIN_CLOSE", 50];
+				//--- B68 (Ray 2026-06-21): the B67 progress-gated budget never culls a lone survivor that slowly
+				//--- crawls home from far away (it closes >MIN_CLOSE/cycle, so tries keep resetting = retreats
+				//--- forever, milling at base, never assaulting). Add an ABSOLUTE re-issue count (NOT reset by
+				//--- progress) + a hard distance cap so far-stranded remnants get recycled instead of looping.
+				_rIssues = _team getVariable "wfbe_aicom_retreat_issues"; if (isNil "_rIssues") then {_rIssues = 0};
+				_rMaxIssues = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_MAX_ISSUES", 8];
+				_rMaxDist = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_MAX_DIST", 6000];
 				//--- Progress = closed at least _rMinClose metres toward HQ since the last re-issue. A first
 				//--- attempt (_rLast < 0) counts as progress so we never cull on the very first order.
 				_rProgress = (_rLast < 0) || {(_rLast - _curDist) >= _rMinClose};
@@ -111,17 +118,18 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				} else {
 					_rTries = _rTries + 1;
 				};
-				if (_rTries >= _rBudget) then {
+				if (_rTries >= _rBudget || {_rIssues >= _rMaxIssues} || {_curDist > _rMaxDist}) then {
 					//--- Budget exhausted with no progress: cull the stuck survivor. Non-player guard is
 					//--- belt-and-braces (this branch is already server-local non-HC, non-player-led).
 					{ if (!(isPlayer _x)) then {deleteVehicle _x} } forEach (units _team);
-					["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5) - no progress, recycled.", _sideText, _team, _aliveNow, _curDist, _rTries]] Call WFBE_CO_FNC_AICOMLog;
+					["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
 					deleteGroup _team;
 					_canProduce = false;
 				} else {
 					//--- Still within budget: re-issue retreat + record this cycle's distance for the next
 					//--- progress check.
 					_team setVariable ["wfbe_aicom_retreat_tries", _rTries, true];
+					_team setVariable ["wfbe_aicom_retreat_issues", _rIssues + 1, true]; //--- B68: monotonic re-issue count, never reset by progress.
 					_team setVariable ["wfbe_aicom_retreat_lastdist", _curDist, true];
 					_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
 					_retreatOrder = [_retreatSeq, "DEFENSE", getPosATL _hqP];
@@ -140,6 +148,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				if (!isNil "_rTries") then {
 					_team setVariable ["wfbe_aicom_retreat_tries", 0, true];
 					_team setVariable ["wfbe_aicom_retreat_lastdist", -1, true];
+					_team setVariable ["wfbe_aicom_retreat_issues", 0, true]; //--- B68: reset the monotonic re-issue count when the team reforms / returns in-range.
 				};
 				//--- B61 (Ray 2026-06-21): treat the OWN HQ as an always-eligible reinforce point. A team
 				//--- that has retreated home (refit flag set + now within home-range of HQ) is forced

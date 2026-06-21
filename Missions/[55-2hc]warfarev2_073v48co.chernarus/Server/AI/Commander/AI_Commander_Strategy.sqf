@@ -38,13 +38,32 @@ _myTowns = 0; _enemyTowns = 0;
 	if ((_x getVariable "sideID") == _sideID) then {_myTowns = _myTowns + 1};
 	if ((_x getVariable "sideID") == _enemyID) then {_enemyTowns = _enemyTowns + 1};
 } forEach towns;
+//--- B68 (Ray 2026-06-21) ATTACK-BIAS: _myStr is the MANEUVER strength that gates LAST-STAND (and the HQ-strike).
+//--- Exclude stranded lone-survivor remnants (alive < N AND far from HQ) and in-refit teams so a few far-flung
+//--- survivors do not deflate strength below the enemy and falsely trip the defensive gates (the b67 "EAST amasses
+//--- but never attacks" stall). A2-OA: plain get + isNil for the GROUP refit var ([name,default] is unreliable on groups).
+private ["_myHQ","_loneAlive","_loneFar","_tAlive","_rf","_isRemnant"];
+_myHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+_loneAlive = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_ALIVE", 2];
+_loneFar   = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_FARHQ", 1500];
 _myStr = 0;
-{ if (!isNull _x) then {_myStr = _myStr + ({alive _x} count (units _x))} } forEach _teams;
+{
+	if (!isNull _x) then {
+		_tAlive = {alive _x} count (units _x);
+		if (_tAlive > 0) then {
+			_isRemnant = false;
+			_rf = _x getVariable "wfbe_aicom_refit";
+			if (!isNil "_rf" && {_rf}) then {_isRemnant = true};
+			if (!_isRemnant && {_tAlive < _loneAlive} && {_loneFar > 0} && {!isNull (leader _x)} && {!isNull _myHQ} && {((leader _x) distance _myHQ) > _loneFar}) then {_isRemnant = true};
+			if (!_isRemnant) then {_myStr = _myStr + _tAlive};
+		};
+	};
+} forEach _teams;
 _enStr = 0;
 { if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 
 //--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.
-_lastStand = (_myTowns < 2) && (_myStr < (_enStr * 0.7));
+_lastStand = (_myTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1])) && (_myStr < (_enStr * (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
 _stratMode = "spearhead"; //--- default; overridden below
 _logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 if (_lastStand) then {
