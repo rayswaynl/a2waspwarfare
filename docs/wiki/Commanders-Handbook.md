@@ -1,6 +1,6 @@
 # Commander's Handbook
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 **Audience:** player-facing. This page surfaces the content of `Guides/CommanderGuide/commanderGuide.md` (repo root) with costs and limits cross-verified against source. The upstream guide document was originally LLM-drafted and carries several WIP markers; sections with confirmed source values are noted here with citations. Sections that remain unverified in the guide text are marked **[guide-draft]**.
 

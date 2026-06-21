@@ -1,6 +1,6 @@
 # Position And Proximity Function Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
 
 This page catalogs the shared helper family that picks random positions, finds nearby objects or towns, checks build/service ranges and counts nearby enemy presence. It complements [Spawn Primitive Function Reference](Spawn-Primitive-Function-Reference) and [Waypoint Helper Function Reference](Waypoint-Helper-Function-Reference): those pages cover how units/vehicles/waypoints are created, while this page covers the position and proximity helpers they often depend on.
 

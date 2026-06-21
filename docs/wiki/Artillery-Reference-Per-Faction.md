@@ -1,6 +1,6 @@
 # Artillery Reference Per Faction (pieces, ranges, ammo, upgrade gates)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Each faction's artillery configuration is loaded by its Root file at mission start. The firing stats, projectile lists, and upgrade gates are all set via `missionNamespace setVariable` keyed on the side string (`WEST`, `EAST`, `GUER`). The function `Common/Functions/Common_GetArtilleryAmmoOptions.sqf` reads these variables at fire-mission time and filters available ammo against the current upgrade level `WFBE_UP_ARTYAMMO` (index 17 in the upgrades array, `Common/Init/Init_CommonConstants.sqf:54`).
 

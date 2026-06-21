@@ -1,6 +1,6 @@
 # Spawn Primitive Function Reference (CreateUnit / CreateVehicle / CreateTeam)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Three wrappers in `Common/Functions/` form the sole authoritative path for spawning AI units and vehicles at runtime. Direct engine calls (`createUnit`, `createVehicle`, `createGroup`) appear elsewhere only for player-side construction or editor stubs. All town AI, static defense, and factory-bought AI funnels through these three functions.
 

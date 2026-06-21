@@ -1,6 +1,6 @@
 # Array and Collection Utility Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 This page documents the foundational collection helpers that underpin nearly every system in WASP. All functions listed here are registered in `Common/Init/Init_Common.sqf` (lines 94–145) via `Compile preprocessFileLineNumbers`. They are available on every machine type (server, headless client, client) immediately after `Init_Common.sqf` executes. Two additional client-only helpers (`WFBE_CL_FNC_FindVariableInNestedArray` and `ReplaceArray`) are covered at the end.
 

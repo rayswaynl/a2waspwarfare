@@ -1,6 +1,6 @@
 # Defense Structures Catalog (per-faction classnames, prices, categories)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Every buildable static defense available in WASP Warfare, enumerated per faction with classname, price, category, and town-defense kind. The `_n` (name) array is always `''` for every entry across all factions — the engine auto-generates display names from the classname's CfgVehicles config.
 

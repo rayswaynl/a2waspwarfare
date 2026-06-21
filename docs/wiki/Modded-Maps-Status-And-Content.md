@@ -1,6 +1,6 @@
 # Modded Maps Status and Content
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Modded_Missions/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Modded_Missions/ unless noted. Arma 2 OA 1.64.
 
 Seven modded-terrain variants exist under `Modded_Missions/`. None are packaged in the current release archive (see [Tools and build workflow](Tools-And-Build-Workflow)) and none have a generated `version.sqf` in the tracked checkout. They range from near-playable to bare stubs. This page catalogs terrain parameters, required mod addons, mission.sqm status, and the specific boot-blocking files missing from each folder.
 

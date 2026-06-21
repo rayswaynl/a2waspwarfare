@@ -1,6 +1,6 @@
 # LoadoutManager Data-Model Contributor Guide
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths under `Tools/LoadoutManager/` are relative to the repo root. Paths under `Missions/[55-2hc]warfarev2_073v48co.chernarus/` are relative to the Chernarus mission dir. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths under `Tools/LoadoutManager/` are relative to the repo root. Paths under `Missions/[55-2hc]warfarev2_073v48co.chernarus/` are relative to the Chernarus mission dir. Arma 2 OA 1.64.
 
 The LoadoutManager is a C# console application (`Tools/LoadoutManager/`) that reads vehicle and terrain data-model classes and **generates** four SQF files per terrain:
 

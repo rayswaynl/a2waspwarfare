@@ -1,6 +1,6 @@
 # Valhalla — Vehicle Climbing Assist and Low-Gear System
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The Valhalla module is a client-side velocity-boost system that assists player-driven and AI-driven vehicles over steep terrain. It applies a progressive speed multiplier when the vehicle is already moving forward but too slowly — it does not cap top speed and does not brake above the target assist speed. Only `Tank` and `Car` class vehicles are eligible.
 

@@ -1,6 +1,6 @@
 # BattlEye Filter Setup and OA File Taxonomy
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 This page is the operator guide for BattlEye filter setup on a public WASP Warfare server. It documents the one shipped filter file, the complete AFK-kick flow it enables, the OA-era filter file taxonomy an operator must supply, and how to verify that filters load. The security posture summary lives in [External Integrations](External-Integrations); this page is the actionable setup companion to it.
 

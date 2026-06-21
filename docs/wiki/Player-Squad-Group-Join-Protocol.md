@@ -1,6 +1,6 @@
 # Player Squad / Group Join Protocol
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The squad system lets players move between groups mid-mission. All client-side logic lives in `Client/Functions/Client_FNC_Groups.sqf`. Server arbitration runs through `Server/Functions/Server_HandleSpecial.sqf`. Client-to-client notifications travel via `Client/PVFunctions/HandleSpecial.sqf`.
 

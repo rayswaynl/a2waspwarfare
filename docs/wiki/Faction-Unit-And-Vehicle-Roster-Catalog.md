@@ -1,6 +1,6 @@
 # Faction Unit and Vehicle Roster Catalog
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Each faction is initialized by a `Core_<ID>.sqf` file under `Common/Config/Core/`. That file builds two parallel arrays, `_c` (class names) and `_i` (metadata arrays), then calls `missionNamespace setVariable [_c select _z, _i select _z]` for every valid class (`Common/Config/Core/Core_US.sqf:287-308`). The metadata array layout is:
 

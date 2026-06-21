@@ -1,6 +1,6 @@
 # Discord Status Bot — Operator Setup and Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. All DiscordBot paths are relative to DiscordBot/ in the repo root (not the Chernarus mission dir). Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. All DiscordBot paths are relative to DiscordBot/ in the repo root (not the Chernarus mission dir). Arma 2 OA 1.64.
 
 The `DiscordBot` component is a .NET 9 executable that reads mission telemetry from a shared JSON file written by the `a2waspwarfare_Extension` Arma extension, and publishes a live status embed to a Discord channel. This page covers everything an operator needs to deploy and run it from scratch.
 

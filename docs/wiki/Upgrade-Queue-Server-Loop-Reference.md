@@ -1,6 +1,6 @@
 # UpgradeQueue Server Loop — Scan Algorithm and Stacking Semantics
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 `Server/FSM/upgradeQueue.sqf` is the server-side driver introduced with PR8 that lets commanders queue upgrades for automatic sequential execution. Every 5 seconds it walks each present side's queue, applies stacking semantics, and fires the first startable entry via `WFBE_SE_FNC_ProcessUpgrade`. It is the only code path that does so outside of direct player interaction (`RequestUpgrade`) and the AI commander (`Server_AI_Com_Upgrade.sqf`).
 

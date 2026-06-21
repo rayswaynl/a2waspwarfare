@@ -1,6 +1,6 @@
 # Zeta Cargo Sling-Load Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 ZetaCargo is the airlift module labelled "Zeta Cargo by Benny" in its init file and compiled from client init (`Client/Module/ZetaCargo/Zeta_Init.sqf:1`; `Client/Init/Init_Client.sqf:551-552`). The live action grant checks `Zeta_Lifter` plus `WFBE_UP_AIRLIFT`, then adds `Client\Module\ZetaCargo\Zeta_Hook.sqf` as the localized lift action (`Common/Init/Init_Unit.sqf:51-53`). The hook path attaches one nearby unmanned land vehicle to the lifter (`Client/Module/ZetaCargo/Zeta_Hook.sqf:15-17,28,30`), while the manual detach path is currently partial because `Zeta_Hook.sqf` adds the detach action without an argument payload and `Zeta_Unhook.sqf` expects `_this select 3 select 0` to be the lifted vehicle (`Client/Module/ZetaCargo/Zeta_Hook.sqf:34`; `Client/Module/ZetaCargo/Zeta_Unhook.sqf:3-7`).
 

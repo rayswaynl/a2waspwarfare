@@ -1,6 +1,6 @@
 # AI Squad Team Templates Catalog (per-faction compositions, types, upgrade requirements)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Each faction loads a set of AI team templates into `missionNamespace` during faction initialisation. These templates are the pre-built squad compositions that the AI commander can deploy. This page catalogs every template per faction, its unit composition, factory-gate, team type, and upgrade requirement.
 

@@ -1,6 +1,6 @@
 # Faction Base Structures Catalog (HQ/factory/structure classnames)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Each faction has its own set of 3D object classnames for every base structure. This catalog lists the exact classnames, costs, and build times across twelve active Structures_*.sqf files (plus one unreferenced file, `Structures_OA_US.sqf` — see the OA_US note below), so developers can look up a classname without opening each file individually.
 

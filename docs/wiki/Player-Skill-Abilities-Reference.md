@@ -1,6 +1,6 @@
 # Player Skill Abilities Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The Skill module is a client-side player-role layer. Client init compiles `Client\Module\Skill\Skill_Init.sqf`, uses `WFBE_SK_V_Type` to choose the class default gear, then calls `WFBE_SK_FNC_Apply` on the player (`Client/Init/Init_Client.sqf:563-587`). Respawn reapplies skill actions by calling `WFBE_SK_FNC_Apply` on the new unit (`Client/Functions/Client_PreRespawnHandler.sqf:1-5`).
 
@@ -79,7 +79,7 @@ The Skill module is a client-side player-role layer. Client init compiles `Clien
 | --- | --- |
 | The Skill module's class comments are not always the current action truth: the `SpecOps` class comment says lockpick, but the current `SpecOps` apply branch wires supply load/unload plus fast repair and does not add the lockpick action. | `Client/Module/Skill/Skill_Init.sqf:15`; `Client/Module/Skill/Skill_Apply.sqf:48-83`; `Client/Module/Skill/Skill_Apply.sqf:97-107` |
 | The lockpick script gives the `-20` initial chance only when `WFBE_SK_V_Type == "SpecOps"`, but the current lockpick action is wired from the Spotter branch. | `Client/Module/Skill/Skill_SpecOps.sqf:10-16`; `Client/Module/Skill/Skill_Apply.sqf:84-107` |
-| The older Officer MASH player action should not be documented as live on `master@cf2a6d6a4`: the current `Officer` apply branch says MASH deploy was removed, and the current initializer does not assign the `Officer` type. | `Client/Module/Skill/Skill_Init.sqf:39-45`; `Client/Module/Skill/Skill_Apply.sqf:42-45` |
+| The older Officer MASH player action should not be documented as live for the `cf2a6d6a4` snapshot: the `Officer` apply branch says MASH deploy was removed, and that snapshot's initializer does not assign the `Officer` type. Recheck current `origin/master` before using these line refs as current-head evidence. | `Client/Module/Skill/Skill_Init.sqf:39-45`; `Client/Module/Skill/Skill_Apply.sqf:42-45` |
 | Soldier's current Skill-module AI-cap boost is the 1.5x local multiplier; the player constants block also defines `WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 6`, so do not substitute that value for the applied Skill-module formula. | `Client/Module/Skill/Skill_Init.sqf:47-49`; `Common/Init/Init_CommonConstants.sqf:259-280` |
 
 ## Continue Reading

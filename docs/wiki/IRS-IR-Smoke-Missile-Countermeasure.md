@@ -1,6 +1,6 @@
 # IRS — IR-Smoke Missile Countermeasure System (per-vehicle table, upgrade-level behavior)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The IRS (IR Smoke) module is WASP's ground-vehicle missile countermeasure system. When an IR-guided missile is fired at a qualifying vehicle, the system deploys smoke grenades and attempts to deflect the missile's trajectory. It is entirely distinct from the vanilla CM (`WFBE_C_MODULE_WFBE_FLARES`) flare path used by air vehicles.
 

@@ -1,6 +1,6 @@
 # GLOBALGAMESTATS Extension — Build, Deployment, and Data Contract Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Extension/ and DiscordBot/ paths are relative to the repo root. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Extension/ and DiscordBot/ paths are relative to the repo root. Arma 2 OA 1.64.
 
 The WASP Warfare stats pipeline is a three-part system: the Arma 2 server calls an unmanaged x86 .NET DLL once per minute, the DLL writes `database.json` to disk, and a separate DiscordBot process reads that file and updates a Discord channel embed plus channel name. This page is the canonical reference for building the DLL, deploying it to the server, and understanding the exact data contract all three components share.
 

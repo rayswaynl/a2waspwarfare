@@ -1,6 +1,6 @@
 # Namespace, Profile Persistence and Diagnostic Utilities
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 This page documents six platform-layer utility functions registered during common initialisation. Contributors frequently treat them as standard SQF builtins; they are not. Each carries non-obvious behaviour that has caused subtle bugs.
 

@@ -1,6 +1,6 @@
 # Tactical Support Menu Player Guide
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The Tactical Support Menu is the commander's primary special-action surface. It is opened from the main WF Menu (the Special button is enabled only for the team leader). The menu lists up to nine support options; items are greyed out when their prerequisite upgrade is missing, their personal fund balance is too low, or the cooldown has not elapsed.
 

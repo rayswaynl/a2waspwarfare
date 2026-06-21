@@ -1,6 +1,6 @@
 # Takistan Map Content Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/ unless noted. Paths prefixed `Common/` without a mission qualifier share source with Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/ unless noted. Paths prefixed `Common/` without a mission qualifier share source with Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/. Arma 2 OA 1.64.
 
 ## Mission Profile
 

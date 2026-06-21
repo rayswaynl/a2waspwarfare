@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T17:32:00+02:00",
+  "generatedAt": "2026-06-21T17:40:33+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only pass synced the repo docs/wiki mirror on origin/docs/developer-wiki-index@11f535d9 to the live wiki checkout master@743daf4 after detecting 116 top-level normalized-content differences. No gameplay source changed.",
+      "currentWork": "Latest docs-only pass corrected broad cf2a6d6a4 source-verification stamps so they read as then-current/historical master evidence with a current origin/master@0139a346 recheck caveat. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap after this pushed batch; preserve docs/wiki parity when a mirror exists."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "cf2-source-stamp-current-head-caveat",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Corrected 38 broad source-verification headers that called cf2a6d6a4 simply master after current origin/master advanced to 0139a346. The pages now preserve cf2a6d6a4 as then-current/historical master evidence with a current-head recheck caveat, and Player-Skill-Abilities.md marks its Officer/MASH note as cf2a6d6a4 snapshot evidence. Mirrored touched files into docs/wiki. No gameplay source changed."
+    },
     {
       "lane": "wiki-mirror-current-wiki-sync-2026-06-21",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 # Map Boundaries and Off-Map Enforcement
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The boundaries system enforces a playable zone by shape-testing each client's position every 5 seconds, displaying a countdown hint when the player leaves the zone, and killing the vehicle/player when the countdown expires. It also clamps paradrop aircraft spawn points to map edges and drives the random-town distribution algorithm. The feature is parameter-controlled and silently self-disables on unregistered terrain.
 

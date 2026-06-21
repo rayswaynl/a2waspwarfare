@@ -1,6 +1,6 @@
 # Side Team State Function Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
 
 This page documents the shared side and team-state helpers compiled from `Common/Functions/`. Use it when a change touches side logic objects, side supply caches, group money, command-menu orders, AI respawn state, or side/team ID conversion.
 

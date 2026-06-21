@@ -1,6 +1,6 @@
 # Arty Module — Special Artillery Munitions (SADARM and ILLUM handlers)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The `Common/Module/Arty/` directory contains four scripts that implement special artillery munition simulation. They run entirely outside the fire-mission UI path documented in [Support-Specials-And-Tactical-Modules-Atlas](Support-Specials-And-Tactical-Modules-Atlas). All four are compiled at mission start by `Common/Init/Init_Common.sqf` (lines 88–91) and invoked from the Fired event-handler dispatcher `Common/Functions/Common_HandleArtillery.sqf` or the mobile-gun emplacement wrapper `Common/Functions/Common_FireArtillery.sqf`.
 

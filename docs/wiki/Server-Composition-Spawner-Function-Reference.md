@@ -1,6 +1,6 @@
 # Server Composition Spawner Function Reference
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Four closely related functions handle the spawning and destruction lifecycle of all server-side base structures and commander-placed WDDM positions. `Server_ConstructPosition` and `CreateDefenseTemplate` build objects; `BuildingDamaged` and `BuildingKilled` process the hit/killed event handlers attached to every structure after it is constructed.
 

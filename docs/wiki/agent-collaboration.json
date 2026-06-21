@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T12:51:02+02:00",
+  "generatedAt": "2026-06-21T17:40:33+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "cf2-source-stamp-current-head-caveat",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "wiki master@d531bc5",
+        "repo origin/master@0139a346",
+        "historical source stamp cf2a6d6a4 is an ancestor of origin/master@0139a346",
+        "38 wiki pages with the broad cf2a6d6a4 master source stamp"
+      ],
+      "outputs": [
+        "Marked 38 broad cf2a6d6a4 source-verification headers as then-current/historical master evidence instead of current-head truth.",
+        "Changed the Player-Skill-Abilities Officer/MASH note to snapshot wording so its cf2a6d6a4 line refs are not presented as current-head proof.",
+        "Mirrored touched wiki pages and coordination records into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future source-refresh work can recheck individual pages against origin/master@0139a346 or newer and replace the caveat with fresh current-head evidence.",
+      "updated": "2026-06-21T17:40:33+02:00"
+    },
     {
       "lane": "wiki-mirror-current-wiki-sync-2026-06-21",
       "owner": "Codex",

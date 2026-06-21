@@ -1,6 +1,6 @@
 # Player AI Watchdog and Recovery System
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 The Player AI Watchdog and Recovery system is a WASP-original feature that automatically detects stuck player-owned AI units and issues corrective movement orders, and also exposes a manual mouse-wheel action so the group leader can trigger recovery on demand. It comprises three source files:
 

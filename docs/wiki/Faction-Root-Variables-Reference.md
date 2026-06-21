@@ -1,6 +1,6 @@
 # Faction Root Variables Reference (per-faction Core_Root config)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4 (rayswaynl/a2waspwarfare). Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims (rayswaynl/a2waspwarfare). Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Each `Common/Config/Core_Root/Root_<faction>.sqf` file runs once at mission init and writes per-faction runtime variables into `missionNamespace` using the pattern `Format["WFBE_%1<VAR>", _side]`. This page catalogues every variable set, the value each faction assigns, and the execution context in which it is written.
 

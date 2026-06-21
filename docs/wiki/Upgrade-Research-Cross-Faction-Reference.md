@@ -1,6 +1,6 @@
 # Upgrade Research Reference (cross-faction cost, level, and dependency tables)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Each faction has a dedicated upgrade config file under `Common/Config/Core_Upgrades/`. Every file sets five missionNamespace arrays (ENABLED, COSTS, LEVELS, LINKS, TIMES) and one AI_ORDER array, then calls `Check_Upgrades.sqf` to patch any gaps in the AI build order. The 23 array positions map to constants defined in `Common/Init/Init_CommonConstants.sqf:37-59`.
 

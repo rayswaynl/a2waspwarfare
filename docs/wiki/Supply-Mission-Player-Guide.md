@@ -1,6 +1,6 @@
 # Supply Missions (mechanics and reward reference)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Supply missions are the primary way non-commander players inject **team supply** directly into the economy. Only the **SpecOps** role has the scroll-menu actions to load and deliver supplies. A single successful run on a high-SV town can move the side's supply total more than several minutes of passive income.
 

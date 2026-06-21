@@ -1,6 +1,6 @@
 # Waypoint Helper Function Reference (WaypointsAdd / WaypointPatrol family)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 Every AI group movement in WASP routes through five compiled waypoint helpers registered in `Common/Init/Init_Common.sqf` (lines 153–157). This page documents each function's call contract, the shared waypoint tuple format, and the live-caller map.
 

@@ -1,6 +1,6 @@
 # Missile and Ordnance Fired-EH Reference (combat handler family)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 This page documents fourteen compiled functions and one dead-code file (Common_HandleMissiles.sqf) that form the missile, ordnance, and air-combat enforcement layer: every handler in the `HandleAT` / `HandleAAMissiles` / `HandleShootBombs` family, the two utility strippers (`RemoveAAMissiles`, `RemoveCountermeasures`), the jet damage mechanic (`JetAADamage`), and the legacy dead-code file (`HandleMissiles`). All are compiled in `Common/Init/Init_Common.sqf` lines 6–68 and attached to vehicles in `Client/Functions/Client_BuildUnit.sqf` and `Common/Init/Init_Unit.sqf`.
 

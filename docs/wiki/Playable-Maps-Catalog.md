@@ -1,6 +1,6 @@
 # Playable Maps Master Catalog
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 This page is the single cross-map reference table. It lists every terrain the mission supports, its LoadoutManager classification, generated slot count, terrain type, naval flag, boundary size, faction family, and completeness tier. Detailed per-map content lives in the linked deep-dive pages; this page answers "which maps exist and in what state."
 

@@ -1,6 +1,6 @@
 # Config Lookup Helper Reference (GetConfigEntry / GetConfigInfo / GetGroupFromConfig / turret family)
 
-> Source-verified 2026-06-21 against master cf2a6d6a4. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 WASP provides a family of compiled config-reading helpers that sit above the raw `configFile >>` operator. This page documents all six functions, their call contracts, their registration names, and where each is consumed in the codebase.
 

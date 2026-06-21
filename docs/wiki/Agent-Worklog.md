@@ -1258,3 +1258,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Scope: reconcile the repo `docs/wiki` mirror to the current GitHub wiki checkout, then validate parity and JSON/JSONL. No gameplay source edits planned.
 - Result: copied `260` top-level wiki files into `docs/wiki`, removed the mirror-only `GUER-Insurgents-Branch-Audit.md`, and updated coordination records so the current human wiki and repo mirror carry the same top-level content again. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event; the required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, normalized wiki/docs parity and `git diff --check`.
+
+## 2026-06-21T17:38:27+02:00 - Codex - cf2 source stamp current-head caveat
+
+- Claimed `cf2-source-stamp-current-head-caveat` after fetching clean source/wiki/docs worktrees and confirming `cf2a6d6a4` is an ancestor of current `origin/master@0139a346`.
+- Scope: docs-only correction for broad page headers that still used the `cf2a6d6a4` master stamp, so they read as then-current/historical master evidence with a current-head recheck caveat. No gameplay source edits planned.
+- Planned validation: mirror touched wiki pages into `docs/wiki`, parse touched JSON/JSONL, run the wiki validator, verify wiki/docs parity and run `git diff --check`.
+- Result: updated `38` source-verification headers to preserve `cf2a6d6a4` as then-current/historical master evidence while warning that current `origin/master` is `0139a346`; also changed the [Player skill abilities](Player-Skill-Abilities-Reference) Officer/MASH note to snapshot wording so its stale line refs are not current-head proof.
+- Validation: final validation is recorded in the matching `complete` event; required gates are JSON/JSONL parse, `docs/validate-wiki.ps1`, normalized touched-file wiki/docs parity and `git diff --check`.
