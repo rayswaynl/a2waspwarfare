@@ -172,8 +172,7 @@ _lhdAlphaAirLogic = (createGroup sideLogic) createUnit ["LocationLogicAirport", 
 _lhdAlphaAirLogic setPosASL [3000, 630, 0];
 _lhdAlphaAirLogic setVariable ["wfbe_airfield_side", resistance, true];
 
-//--- Heli spawn pads on the deck (2 pads).
-"HeliHCivil" Call WFBE_NavalHVT_SpawnProp;	//--- deck spawn pad 1
+//--- Heli spawn pads on the deck.
 _pad = createVehicle ["HeliHCivil", [3010, 600, 0], [], 0, "NONE"];
 _pad setPosASL [3010, 600, 0];
 _pad enableSimulation false;
@@ -277,7 +276,7 @@ _pad allowDamage false;
 //------------------------------------------------------------------------------------
 //--- STORE ALL NAVAL HVT LOGICS for server_town.sqf capture-block lookup.
 //------------------------------------------------------------------------------------
-missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _pierFOBLogic, _oilLogic, _lhdBravoLogic], true];
+missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _pierFOBLogic, _oilLogic, _lhdBravoLogic]];
 
 //------------------------------------------------------------------------------------
 //--- SCUD ADDACTION on oil platform helipad.
@@ -324,7 +323,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _pierFOB
 									onMapSingleClick {
 										onMapSingleClick {};
 										openMap false;
-										["RequestSpecial", ["ScudStrike", sideJoined, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
+										["RequestSpecial", ["ScudStrike", playerSide, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
 										[localize "STR_WF_SCUD_LAUNCHED"] call WFBE_CL_FNC_Hint;
 										false
 									};
