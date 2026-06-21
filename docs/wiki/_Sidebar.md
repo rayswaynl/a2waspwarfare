@@ -178,6 +178,7 @@
   - [AI headless and performance](AI-Headless-And-Performance)
   - [Headless client scaling and topology](Headless-Client-Scaling-And-Topology)
   - [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map)
+  - [Headless client init and stat loop](Headless-Client-Init-And-Stat-Loop)
   - [HC delegation target selection](Headless-Client-Delegation-Target-Selection)
   - [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance)
   - [Old WarfareBE FPS comparison](Old-WarfareBE-Performance-Comparison)

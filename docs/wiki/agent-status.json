@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-21T19:58:00+02:00",
+  "generatedAt": "2026-06-21T20:04:23+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the upgrade-sync current-stable refresh, commander vote current-stable closeout, victory/endgame current-stable refresh, refined Source Fix queue stable-scope refresh, PVF dispatcher partial closeout, attack-wave and related current-stable batches against origin/master@0139a346. No gameplay source changed.",
+      "currentWork": "Latest docs-only state routes PR #43 / origin/claude/b57-soak-proposals@b8a1505f B68 evidence while preserving the upgrade-sync and commander vote current-stable closeouts, origin/master@0139a346 and release-ready claims as separate. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -57,21 +57,30 @@
   },
   "laneSummary": [
     {
+      "lane": "b68-aicom-live-branch-route-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Routed source-backed B68 PR #43 / origin/claude/b57-soak-proposals@b8a1505f evidence into AI-Commander-Autonomy-Audit.md, Map-Marker-Families-Content-Catalog.md, Feature-Status-Register.md, PR-Cleanup-And-Integration-Lab.md and machine rows. B68 removes the W17 global Supply Convoy marker, tightens AICOM last-stand/relief/stranded-remnant handling and adds retreat-cull absolute issue/distance caps in Chernarus only; current master origin/master@0139a346 and release-ready claims remain separate. No gameplay source changed."
+    },
+    {
       "lane": "upgrade-sync-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md after current stable origin/master@0139a346 showed RequestSpecial upgrade-sync still keeps the mixed _args/_this parser in both maintained roots. Docs-source base ad05401a3 is unchanged from ff8dd884 for the checked handler/caller/process-upgrade paths; current stable caller is GUI_UpgradeMenu.sqf:292 and sync lifecycle is Server_ProcessUpgrade.sqf:32,35,41. Miksuu b8389e74 and perf 0076040f callers remain :241; a96fdda2 and b061c905 are historical because current origin exposes no release/* or feat/upgrade-queue-stacking heads. No gameplay source changed."
-    },    {
+    },
+    {
       "lane": "commander-vote-current-stable-closeout-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Commander-Vote-And-Reassignment-Playbook.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and matching machine rows after current stable origin/master@0139a346 proved the old DR-47 server vote tautology is fixed in both maintained roots. Current stable still counts _aiVotes at Server_VoteForCommander.sqf:18,26-27 but now requires _highest >= _aiVotes at :43; Chernarus blame points to cbc2294c4 and maintained Vanilla propagation to 91dc6a75. GUI_VoteMenu.sqf:88 preview/policy smoke remains open, and Miksuu b8389e74, origin/perf/quick-wins@0076040f, historical a96fdda2 and historical c20ce153 keep the old >= OR <= condition. No gameplay source changed."
-    },    {
+    },
+    {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Victory-And-Endgame-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and hardening backlog rows after current stable origin/master@0139a346 showed victory/endgame semantics remain patch-ready but branch-split. Current stable keeps the mixed condition/no side-loop break at server_victory_threeway.sqf:29-49, adds HQ nil guards at :18-22, emits WASPSTAT ROUNDEND with _x at :41-46 and calls LogGameEnd with [_x] at :49; this helps all-towns logging but makes HQ/factory elimination use the losing side. Old-shape docs/Miksuu/perf/historical release refs still invert _x before logging. No gameplay source changed."
-    },    {
+    },
+    {
       "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",

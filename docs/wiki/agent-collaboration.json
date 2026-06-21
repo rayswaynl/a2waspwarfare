@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T19:58:00+02:00",
+  "generatedAt": "2026-06-21T20:04:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,6 +23,25 @@
   },
   "activeClaims": [
     {
+      "lane": "b68-aicom-live-branch-route-2026-06-21",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR #43 open: claude/b57-soak-proposals -> master, headRefOid b8a1505f8a89881f487a03262f066c8b33eca94d, updated 2026-06-21T17:26:33Z from gh pr view",
+        "origin/master@0139a346",
+        "origin/claude/b57-soak-proposals@b8a1505f",
+        "B68 commit b8a1505f changes four Chernarus files only: Common/Init/Init_CommonConstants.sqf, Server/AI/Commander/AI_Commander_Produce.sqf, Server/AI/Commander/AI_Commander_Strategy.sqf and Server/Functions/AI_Commander_Wildcard.sqf",
+        "B68 removes W17 global Supply Convoy marker creation in Chernarus AI_Commander_Wildcard.sqf:994; origin/master still creates it at :981-984",
+        "B68 Chernarus AICOM constants at Init_CommonConstants.sqf:277-284,319; Strategy at :41-68,99,441,571-590; Produce at :90-151"
+      ],
+      "outputs": [
+        "Routed B68 branch evidence into AI-Commander-Autonomy-Audit.md, Map-Marker-Families-Content-Catalog.md, Feature-Status-Register.md, PR-Cleanup-And-Integration-Lab.md and coordination pages.",
+        "Mirrored touched wiki files into docs/wiki. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Keep B68 scope branch-specific: origin/master@0139a346 still creates the W17 global marker, B68 branch head b8a1505f removes it in Chernarus only, and merge/release wording still needs maintained Vanilla propagation plus Arma smoke.",
+      "updated": "2026-06-21T20:02:13+02:00"
+    },
+    {
       "lane": "upgrade-sync-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -43,7 +62,8 @@
       ],
       "handoff": "Closed after validation. Future code owner should normalize Server_HandleSpecial.sqf upgrade-sync to read side/id/level from _args only, optionally add malformed/short-payload guards, propagate maintained Vanilla and smoke commander upgrades plus non-server timer sync.",
       "updated": "2026-06-21T19:50:55+02:00"
-    },    {
+    },
+    {
       "lane": "commander-vote-current-stable-closeout-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -64,7 +84,8 @@
       ],
       "handoff": "Closed after validation. Future code owner should smoke player-majority, no-commander-majority, equal-vote and tie outcomes, then decide whether GUI_VoteMenu preview should match the current server AI-veto rule or a different owner policy before porting old branches.",
       "updated": "2026-06-21T19:30:39+02:00"
-    },    {
+    },
+    {
       "lane": "victory-endgame-current-stable-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -86,7 +107,8 @@
       ],
       "handoff": "Closed after validation. Future code owner should compute explicit winner/loser sides per branch, keep the legacy client loser payload only intentionally, set WF_Winner/WASPSTAT/LogGameEnd to the explicit winner, guard the full condition with !WFBE_GameOver and exit after one accepted endgame path.",
       "updated": "2026-06-21T19:27:00+02:00"
-    },    {
+    },
+    {
       "lane": "source-fix-queue-current-stable-scope-refresh-2026-06-21",
       "owner": "Codex",
       "status": "published-validated-docs-only",

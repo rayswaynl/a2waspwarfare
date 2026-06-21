@@ -23,6 +23,18 @@ Autonomous supply trucks are still not revived, but current `origin/master` is n
 
 Separate concept note: [Quad AI Commander concept](Quad-AI-Commander) indexes `origin/codex/quad-ai-commander` head `d4e0fa38`. It is a future log/intel/context-store design sketch, not stable source behavior and not proof that AI commander autonomy is implemented.
 
+## PR #43 / B68 Live Soak Branch
+
+PR #43 is the current master-target soak/proposals surface: `claude/b57-soak-proposals` -> `master`, open, head `b8a1505f8a89881f487a03262f066c8b33eca94d` from `gh pr view 43` on 2026-06-21. Treat this as branch/live-Chernarus evidence, not as `origin/master@0139a346` or release-complete proof. The worklog records B68 deployed live on Chernarus; the source branch remains the review target.
+
+| Branch piece | Evidence | Meaning |
+| --- | --- | --- |
+| B68 Supply Convoy marker leak fix | Current `origin/master@0139a346` creates a global W17 Supply Convoy marker in `Server/Functions/AI_Commander_Wildcard.sqf:981-984`. Branch head `b8a1505f` removes that route at Chernarus `AI_Commander_Wildcard.sqf:994`, leaving convoy visibility to the friendly unit-marker path. | Good branch fix for own-side-only logistics intel. Keep [marker catalog](Map-Marker-Families-Content-Catalog#aicom-wildcard-events-server-global) current by branch, and smoke that enemy clients no longer see W17 while friendly clients still track the convoy. |
+| B68 attack-bias controls | Chernarus `Common/Init/Init_CommonConstants.sqf:277-284,319` adds/tunes `WFBE_C_AICOM_LASTSTAND_TOWNS = 1`, `WFBE_C_AICOM_LASTSTAND_RATIO = 0.45`, stranded-remnant strength constants and `WFBE_C_AICOM_RELIEF_HOLD = 180`. `AI_Commander_Strategy.sqf:41-68,99,441,571-590` excludes refit/stranded remnants from `_myStr`, makes last-stand an explicit town-and-strength gate and leaves `_posture`/`AICOMSTAT` as telemetry. | This clarifies that attack-vs-defend behavior is driven by last-stand, relief diversion and maneuver-strength gates, not by the posture label alone. Smoke winning-side pressure, relief release and no-human/human-assist behavior before merge. |
+| B68 retreat-cull cap | Chernarus `Server/AI/Commander/AI_Commander_Produce.sqf:90-151` adds monotonic `wfbe_aicom_retreat_issues`, `WFBE_C_AICOM_RETREAT_MAX_ISSUES = 8` and `WFBE_C_AICOM_RETREAT_MAX_DIST = 6000` handling so far lone survivors are recycled instead of reissuing retreats indefinitely. | Branch fix candidate for stranded-team stalls. Smoke far lone survivor, near returning survivor, refit reset, transport truck behavior and side AI-cap recovery. |
+
+The B68 commit itself changes four Chernarus files only. The broader PR #43 branch contains other Chernarus/Vanilla deltas, but this section should not be used to claim full maintained-Vanilla parity for the B68 hotfix until a propagation diff and Arma smoke are recorded.
+
 ## Branch Refresh - `feat/ai-commander`
 
 Snapshot refreshed: 2026-06-04. Branch head `c20ce153` compares against `origin/master` `2cdf5fb8`. Diff from stable master is 9 Chernarus-source files, +416/-5; no `Missions_Vanilla` files are touched. The later cleanup series after `4dba060e` changes only the five AI commander scripts, adding 141 lines and removing 91 lines to avoid lazy condition blocks.

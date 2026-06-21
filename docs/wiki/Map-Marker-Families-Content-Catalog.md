@@ -11,7 +11,7 @@ A content lookup of every map-marker **family** the mission produces: marker-nam
 | Verb | Replicates? | Used by |
 |------|-------------|---------|
 | `createMarkerLocal` | No — marker exists on the calling client only | Almost every family below (town, camp, base, unit, team, patrol, AICOM, sniper, CBR-contact, ICBM-warning, UAV-spotted, respawn, airport, FT, defense rings, sell-preview) |
-| `createMarker` | **Yes** — existence + position replicate to all clients | AICOM-wildcard convoy/HVT, Bank, UAV self-marker, and `WF_createMarker` callers (fire mission, commander ICBM, radzone) |
+| `createMarker` | **Yes** — existence + position replicate to all clients | Current master AICOM-wildcard convoy/HVT, Bank, UAV self-marker, and `WF_createMarker` callers (fire mission, commander ICBM, radzone). PR #43 B68 removes the W17 convoy global marker. |
 | `setMarker*Local` | No — style/text/pos local only | local recolor, live text, capture recolor |
 | `setMarker*` (bare) | **Yes** | the GLOBAL families' initial style; sniper text (`setMarkerText`, `Skill_Sniper.sqf:16`) on an otherwise-local marker |
 
@@ -176,14 +176,14 @@ File `Client/FSM/updateaicommarkers.sqf`; tracks `WFBE_ACTIVE_AICOM_TEAMS` (`:23
 
 ## AICOM WILDCARD events (server-global)
 
-File `Server/Functions/AI_Commander_Wildcard.sqf`. These are the only **GLOBAL, fully-cross-side-visible** wildcard markers (created with bare `createMarker`/`setMarker*` server-side — intentional cross-side intel).
+File `Server/Functions/AI_Commander_Wildcard.sqf`. On current `origin/master@0139a346`, these are the **GLOBAL, fully-cross-side-visible** wildcard markers created with bare `createMarker`/`setMarker*` server-side. PR #43 / B68 branch head `b8a1505f` removes the W17 Supply Convoy global marker route at Chernarus `AI_Commander_Wildcard.sqf:994` because own-side convoy visibility already comes through friendly unit markers; W18 remains intentionally global branch evidence until separately changed.
 
 | Sub-family | Name | Type | Color | Text | Creator / delete |
 |------------|------|------|-------|------|------------------|
 | Supply Convoy (W17) | `aicom_convoy_<sideText>_<round time>` (`:980`) | `"mil_destroy"` (`:982`) | `"ColorBlue"` west / `"ColorRed"` (`:983`) | `"Supply Convoy (<side>)"` (`:984`) | create `:981`; `deleteMarker` `:1006` |
 | Bounty HVT (W18) | `hvt_<sideText>_<round time>` (`:1036`) | `"mil_dot"` (`:1038`) | `"ColorBlue"` west / `"ColorRed"` (`:1039`) | `"HVT (<enemySide>)"` (`:1040`) | create `:1037`; `deleteMarker` `:1045` |
 
-**Locality:** GLOBAL (visible to all sides).
+**Locality:** GLOBAL (visible to all sides) on current master. Branch note: `origin/claude/b57-soak-proposals@b8a1505f` removes W17 creation, so smoke PR #43 for friendly-only convoy visibility and enemy non-visibility before merging or release wording.
 
 ## SUPPLY / ECONOMY
 
