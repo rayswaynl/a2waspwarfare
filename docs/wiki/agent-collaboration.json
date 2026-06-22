@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T09:40:00+02:00",
+  "generatedAt": "2026-06-22T09:40:35+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b69-patch-a2-capture-interrupt-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69@edb9f776",
+        "origin/claude/b57-soak-proposals@b8a1505f is an ancestor of origin/claude/b69",
+        "35547c47..edb9f776 changes only Chernarus Common/Functions/Common_RunCommanderTeam.sqf, +16 / -1",
+        "b8a1505f..edb9f776 changes 4 files / +101 / -8 and remains Chernarus-only",
+        "no b8a1505f..origin/claude/b69 diff under Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "gh pr list --head claude/b69 --state all returned [] on 2026-06-22"
+      ],
+      "outputs": [
+        "Updated B69 branch-status notes in AI-Commander-Autonomy-Audit.md, AI-Commander-B69-Improvement-Roadmap.md and AI-Commander-B69-Implementation-Sketches.md.",
+        "Updated Feature-Status-Register.md and agent-feature-status.jsonl so capture interrupt is branch source-present, not merely planned.",
+        "Preserved no-PR/no-Vanilla/smoke-pending caveats. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future B69 owners should review and smoke the Chernarus capture interrupt, propagate or explicitly scope maintained Vanilla, and open/update a PR route before release wording.",
+      "updated": "2026-06-22T09:40:35+02:00"
+    },
     {
       "lane": "resource-income-current-stable-refresh-2026-06-22",
       "owner": "Codex",

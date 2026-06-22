@@ -1560,4 +1560,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source scope: docs branch `d7a30e15`, current stable `origin/master@0139a346`, Miksuu `master@b8389e74` fetched from `https://github.com/miksuu/a2waspwarfare.git`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, and no current `release/*` heads on 2026-06-22.
 - Finding: docs/Miksuu/perf/historical release keep the old `updateresources.sqf:31` guard over side supply, team paychecks and AI commander funds. Current stable still guards side supply and team paychecks at `updateresources.sqf:45,63,77`, but AI commander over-cap income/stipend fallback is source-present at `:102-109`; income-system `4` display drift remains in all checked refs.
 - Result: refreshed [Economy towns/supply](Economy-Towns-And-Supply#resource-income-branch-matrix), [Economy authority first cut](Economy-Authority-First-Cut), Feature Status, Source Fix queue, dashboard and pruning ledger. No gameplay source changed.
+
+## 2026-06-22T09:40:35+02:00 - Codex - B69 Patch A-2 capture-interrupt branch refresh
+
+- Claimed `b69-patch-a2-capture-interrupt-2026-06-22` after `git fetch` advanced `origin/claude/b69` from the documented Patch A head `35547c47` to `edb9f776`.
+- Source scope: `edb9f776` is one new Chernarus-only commit over `35547c47`; `35547c47..edb9f776` changes only `Common/Functions/Common_RunCommanderTeam.sqf`, +16 / -1. The full B69 branch delta from B68 head `b8a1505f` is now 4 files / +101 / -8, still Chernarus-only.
+- Finding: capture-phase interrupt now has branch executor code: order-seq snapshot at `Common_RunCommanderTeam.sqf:708-713`, camp-first abort at `:809-811`, `doFollow` release and bail at `:867-868`, depot-hold abort at `:894-896` and pre-`_captureDone` bail at `:916`. There is still no maintained Vanilla diff and no PR for `claude/b69`.
+- Result: refreshed the B69 audit, roadmap, sketches, Feature Status and machine rows so Patch A-2 is source-present but remains branch-only / smoke-pending / propagation-pending. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.

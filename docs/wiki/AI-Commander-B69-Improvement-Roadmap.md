@@ -4,12 +4,12 @@
 
 ## Current Branch Status
 
-2026-06-22 refresh: `origin/claude/b69@35547c47` lands a first branch-only Patch A on top of B68 head `b8a1505f`. The isolated diff `b8a1505f..35547c47` is 3 files / +85 / -7: it adds `B69-IMPLEMENTATION-PLAN.md`, changes Chernarus `Common/Init/Init_CommonConstants.sqf` and changes Chernarus `Server/AI/Commander/AI_Commander_Strategy.sqf`. There is no maintained Vanilla diff and no PR for `claude/b69` as of `gh pr list --head claude/b69 --state all` on 2026-06-22.
+2026-06-22 refresh: `origin/claude/b69@edb9f776` lands a branch-only Patch A/A-2 series on top of B68 head `b8a1505f`. The isolated diff `b8a1505f..edb9f776` is 4 files / +101 / -8: it adds `B69-IMPLEMENTATION-PLAN.md`, changes Chernarus `Common/Init/Init_CommonConstants.sqf`, changes Chernarus `Server/AI/Commander/AI_Commander_Strategy.sqf` and changes Chernarus `Common/Functions/Common_RunCommanderTeam.sqf`. The new delta after `35547c47` is one Chernarus `Common_RunCommanderTeam.sqf` diff, +16 / -1. There is no maintained Vanilla diff and no PR for `claude/b69` as of `gh pr list --head claude/b69 --state all` on 2026-06-22.
 
 | Item | Branch evidence | Status |
 | --- | --- | --- |
 | HQ-strike order/gate/picker core | `Init_CommonConstants.sqf:229-231` defines `WFBE_C_AICOM_HQSTRIKE_TOWN_FRAC`, `WFBE_C_AICOM_HQSTRIKE_TOWN_FLOOR` and `WFBE_C_AICOM_STRIKE_VEH_BONUS`; `AI_Commander_Strategy.sqf:511-521` uses `ceil ((count towns) * _hqFrac)`, `:540-547` adds the vehicle-punch score and `:557-559` changes HC strike orders to `"defense"` at `getPos _enemyHQ`. | Source-present on `origin/claude/b69` Chernarus only. Needs HQ-strike smoke, review and maintained Vanilla propagation or explicit Chernarus-only scope before release wording. |
-| Capture-phase interrupt | `WFBE_C_AICOM_CAPTURE_INTERRUPT` is declared at Chernarus `Init_CommonConstants.sqf:232`, but `b8a1505f..35547c47` has no `Common_RunCommanderTeam.sqf` diff and grep finds no executor-side `CAPTURE_INTERRUPT` / `_capSeq` usage. | Not implemented by Patch A yet; keep item 4 as planned/sketch evidence. |
+| Capture-phase interrupt | `WFBE_C_AICOM_CAPTURE_INTERRUPT` is declared at Chernarus `Init_CommonConstants.sqf:232`; Patch A-2 snapshots the current `wfbe_aicom_order` seq at `Common_RunCommanderTeam.sqf:708-713`, aborts camp-first on changed seq at `:809-811`, releases `doStop` infantry with `doFollow` before bailing at `:867-868`, aborts depot hold on changed seq at `:894-896` and exits before `_captureDone` latching at `:916`. | Source-present on `origin/claude/b69` Chernarus only. Needs review, capture/HQ-strike smoke, maintained Vanilla propagation or explicit Chernarus-only scope and PR routing before release wording. |
 
 ## How this was produced
 
