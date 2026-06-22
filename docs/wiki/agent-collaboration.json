@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T15:01:41+02:00",
+  "generatedAt": "2026-06-22T15:32:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-hc-runtime-current-stable-line-anchor-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs HEAD 4b6f5ca9 has no checked AI/HC source-path changes from ca028bff, d30d2346 or ff5b95dabb06",
+        "origin/master@0139a3468609 Chernarus and maintained Vanilla HC/runtime files are identical for checked paths",
+        "current stable Headless/Init/Init_HC.sqf:94-129 reseats, parks, persistently watches for mission-restart re-grabs and re-announces connected-hc; Server_HandleSpecial.sqf:406-431 handles idempotent connected-hc registration",
+        "current stable server_town_ai.sqf:242-248 enters HC mode, Server_DelegateAITownHeadless.sqf:22-56 selects least-loaded HC once and round-robins live HCs, and Server_HandleSpecial.sqf:86-115 accepts town update-back",
+        "current stable Server_OperateTownDefensesUnits.sqf:55-67 delegates active-side town static gunners without a west/east/resistance side gate; static-defense update-back remains absent",
+        "current stable Patrols v2 exists only on origin/master among checked docs/Miksuu/perf/historical refs and dispatches HC/local at server_side_patrols.sqf:64-69",
+        "current Miksuu master is b8389e748243; current origin exposes no live release/* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed stale current-stable line anchors and wording in AI runtime/HC gateway docs.",
+        "No gameplay source changes planned."
+      ],
+      "handoff": "Closed after validation. Future HC/static-defense owner should not add a side gate as a docs-derived fix; current stable already passes the active town side and has no side gate. Remaining work is DR-21/DR-42 work records, callback/failback, static-defense update-back/accounting, late-HC behavior and Arma 2 OA smoke across west/east/resistance plus Patrols v2 HC dispatch.",
+      "updated": "2026-06-22T15:32:39+02:00"
+    },
     {
       "lane": "headless-patrols-v2-topology-current-stable-refresh-2026-06-22",
       "owner": "Codex",

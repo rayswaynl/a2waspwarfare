@@ -26,14 +26,14 @@ Use this page before editing:
 | `1` | Client-FPS delegation. | Players report FPS; server picks player clients as delegators. |
 | `2` | Headless-client delegation. | HC creates delegated units locally after server sends `HandleSpecial` messages. |
 
-`initJIPCompatible.sqf:164-171` downgrades HC mode to disabled when the OA build does not support headless clients. `Headless/Init/Init_HC.sqf:11-15` waits 20 seconds, then sends `["RequestSpecial", ["connected-hc", player]]` to the server.
+Docs source downgrades HC mode to disabled at `initJIPCompatible.sqf:164-171` when the OA build does not support headless clients. Current stable line-drifts that gate to `initJIPCompatible.sqf:202-209`. `Headless/Init/Init_HC.sqf:14` still waits 20 seconds, but current stable then runs bounded reseat/deadspawn parking, starts a 15-second rewatch loop and sends `["RequestSpecial", ["connected-hc", player]]` at `:122` after re-reseat or `:129` after initial setup.
 
-The server registers a connected HC in `Server_HandleSpecial.sqf:117-131` by storing:
+The docs-source server registers a connected HC in `Server_HandleSpecial.sqf:117-128`. Current stable line-drifts and hardens that case at `Server_HandleSpecial.sqf:406-431` by storing:
 
 - `WFBE_HEADLESS_<uid>` = `group _hc`
-- `WFBE_HEADLESSCLIENTS_ID` += `[group _hc]`
+- `WFBE_HEADLESSCLIENTS_ID` = pruned live candidates plus `[group _hc]`
 
-Registration edge: the append only happens when `owner _hc` is not `0` (`Server_HandleSpecial.sqf:120-128`). If the owner id is `0`, the server logs a warning at `:129-130` and no retry, delayed registration or fallback registration is visible in current source. In HC mode, a missed registration means later town-AI HC selection sees no HC groups and falls back to server-side creation in `server_town_ai.sqf:164-180`.
+Registration edge: current stable still only appends when `owner _hc` is not `0` (`Server_HandleSpecial.sqf:415-431`). If the owner id is `0`, the server logs a warning at `:432-434`; the HC-side persistent watcher may re-announce after reseat, but no server-side delayed registration queue is visible. In HC mode, a missed registration means later town-AI HC selection sees no HC groups and falls back to server-side creation (`server_town_ai.sqf:242-254` on current stable).
 
 On HC disconnect, `Server_OnPlayerDisconnected.sqf:22-29` removes that group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`. It does not reclaim, re-track, or re-delegate units that were already created by the HC.
 
@@ -41,13 +41,13 @@ On HC disconnect, `Server_OnPlayerDisconnected.sqf:22-29` removes that group fro
 
 ### Town AI Through HC
 
-When town AI wakes in HC mode, `server_town_ai.sqf:164-170` checks whether `WFBE_HEADLESSCLIENTS_ID` is non-empty. If an HC exists, the server calls `Server_DelegateAITownHeadless.sqf`; otherwise it falls back to server-side `CreateTownUnits`.
+When town AI wakes in HC mode, current stable `server_town_ai.sqf:242-248` checks whether `WFBE_HEADLESSCLIENTS_ID` is non-empty. If an HC exists, the server calls `Server_DelegateAITownHeadless.sqf`; otherwise it falls back to server-side `CreateTownUnits` at `:252-258`.
 
-`Server_DelegateAITownHeadless.sqf:22-30` calls `WFBE_CO_FNC_PickLeastLoadedHC` once to find the lightest HC, then distributes this town's groups across all live HCs via a round-robin anchored at that lightest HC, and sends each group's `['delegate-townai', ...]` to the selected HC leader. The HC/client receiver is `Client_DelegateTownAI.sqf`:
+`Server_DelegateAITownHeadless.sqf:22-56` calls `WFBE_CO_FNC_PickLeastLoadedHC` once to find the lightest HC, then distributes this town's groups across all live HCs via a round-robin anchored at that lightest HC, and sends each group's `['delegate-townai', ...]` to the selected HC leader. The HC/client receiver is `Client_DelegateTownAI.sqf`:
 
-- creates town units locally at `:26`;
-- records created vehicles in `_town_vehicles` at `:27`;
-- sends `["RequestSpecial", ["update-town-delegation", _town, _town_teams, _town_vehicles]]` back to the server (line 44).
+- creates town units locally at `:29`;
+- records created groups and vehicles at `:31-32`;
+- sends `["RequestSpecial", ["update-town-delegation", _town, _town_teams, _town_vehicles]]` back to the server at `:44`.
 
 The server handles that update in `Server_HandleSpecial.sqf:86-115`: it appends received groups to `wfbe_town_teams` (with a dedupe guard), appends vehicles to `wfbe_active_vehicles`, starts empty-vehicle cleanup, and marks taxi prohibition. This is the most complete HC path, but still lacks disconnect failover.
 
@@ -59,10 +59,10 @@ Static-defense delegation is triggered from two server paths:
 
 | Caller | Source behavior |
 | --- | --- |
-| `Server_OperateTownDefensesUnits.sqf:41-57` | Town defense spawn delegates gunners to HC when HC mode is enabled and a HC candidate exists. |
+| `Server_OperateTownDefensesUnits.sqf:55-67` on current stable | Town defense spawn delegates active-side gunners to HC when HC mode is enabled and a HC candidate exists. There is no west/east/resistance side gate in that delegate branch. |
 | `Server_HandleDefense.sqf:19-24` | Base/structure defense remanning delegates a replacement gunner to HC when candidates exist. |
 
-`Server_DelegateAIStaticDefenceHeadless.sqf:21-27` routes each group to the least-loaded live HC via WFBE_CO_FNC_PickLeastLoadedHC (evaluated once per group), then sends `['delegate-ai-static-defence', ...]` to that HC leader. The receiver `Client_DelegateAIStaticDefence.sqf:25-28` creates units locally, but the intended server update-back is commented:
+`Server_DelegateAIStaticDefenceHeadless.sqf:21-28` routes each group to the least-loaded live HC via WFBE_CO_FNC_PickLeastLoadedHC (evaluated once per group), then sends `['delegate-ai-static-defence', ...]` to that HC leader. The receiver `Client_DelegateAIStaticDefence.sqf:25-39` creates units locally and tags created units, but the intended server update-back is commented:
 
 ```sqf
 //["RequestSpecial", ["update-delegation-static_defence", _teams]] Call WFBE_CO_FNC_SendToServer;
@@ -70,7 +70,7 @@ Static-defense delegation is triggered from two server paths:
 
 Unlike town AI, static-defense HC creation does not tell the server what was created. DR-42 confirms the server has no current record of HC-created static-defense units for cleanup, accounting, or re-delegation.
 
-Do not restore this by uncommenting it alone. `Client_DelegateAIStaticDefence.sqf:25-26` assigns `_teams` from `_retVal select 0`, and `Common_CreateUnitForStaticDefence.sqf:69` returns only `[_teams]`. That payload can identify created groups, but it does not carry the defense object, side, move-in mode or cleanup/accounting context, and `Server_HandleSpecial.sqf:86-96` only implements the town-vehicle `update-town-delegation` receiver. A real restore needs a deliberate payload and a new server branch.
+Do not restore this by uncommenting it alone. `Client_DelegateAIStaticDefence.sqf:30-31` assigns `_teams` from `_retVal select 0`, and current stable `Common_CreateUnitForStaticDefence.sqf:205` returns only `[_teams]`. That payload can identify created groups, but it does not carry the defense object, side, move-in mode or cleanup/accounting context, and `Server_HandleSpecial.sqf:86-115` only implements the town `update-town-delegation` receiver. A real restore needs a deliberate payload and a new server branch.
 
 ### Client-FPS Delegation Mode
 
@@ -85,17 +85,17 @@ Authority edge: `Server_HandleSpecial.sqf:75-83` trusts the UID and FPS values f
 
 Do not copy this player-client session-counting model directly into HC mode without adapting it; HC mode currently stores HC groups, not per-HC delegated work records.
 
-### Release Branch Locality Guard Delta
+### Historical Release-Line Locality Guard Delta
 
-`origin/release/2026-06-feature-bundle` head `7ff18c49` has a narrow delegated-AI locality hardening delta in both maintained release roots. `Client_DelegateAIStaticDefence.sqf:27` and `Client_DelegateTownAI.sqf:27` now create a fallback group only when the passed group is null or empty. `Common_CreateUnit.sqf:34-36` and `Common_CreateUnitForStaticDefence.sqf:68-69` still protect non-local populated groups, but they key the fallback on the group leader's locality rather than replacing every non-local group before checking contents.
+Historical/local release-line commit `7ff18c49` has a narrow delegated-AI locality hardening delta in both maintained release roots, but current origin exposes no live `release/*` head on 2026-06-22. In that historical commit, `Client_DelegateAIStaticDefence.sqf:27` and `Client_DelegateTownAI.sqf:27` create a fallback group only when the passed group is null or empty. `Common_CreateUnit.sqf:34-36` and `Common_CreateUnitForStaticDefence.sqf:68-69` still protect non-local populated groups, but they key the fallback on the group leader's locality rather than replacing every non-local group before checking contents.
 
-Treat this as PR8 release-branch evidence, not as closure for DR-42. The static-defense update-back is still commented, no server `update-delegation-static_defence` receiver exists, and HC disconnect/failover work records are still design work. Add HC/town/static delegation smoke to any `7ff18c49` release test window before calling the branch safe.
+Treat this as historical PR8 release-line evidence, not as closure for DR-42 or current-release proof. The static-defense update-back is still commented, no server `update-delegation-static_defence` receiver exists, and HC disconnect/failover work records are still design work. Add HC/town/static delegation smoke to any restored `7ff18c49`-shaped release test window before calling the branch safe.
 
 ## Mode Split Quick Reference
 
 | Runtime meaning | Mode / symbols | Live source path | Main risk |
 | --- | --- | --- | --- |
-| Headless-client registration | `WFBE_C_AI_DELEGATION == 2`, `WFBE_HEADLESS_<uid>`, `WFBE_HEADLESSCLIENTS_ID` | `Init_HC.sqf:15`; `Server_HandleSpecial.sqf:117-128`; town/static delegation call sites in `server_town_ai.sqf:165-170`, `Server_OperateTownDefensesUnits.sqf:53-57`, `Server_HandleDefense.sqf:19-23` | Owner-id `0` miss, no dedupe/retry and no work-record failover. |
+| Headless-client registration | `WFBE_C_AI_DELEGATION == 2`, `WFBE_HEADLESS_<uid>`, `WFBE_HEADLESSCLIENTS_ID` | Current stable `Init_HC.sqf:94-129`; `Server_HandleSpecial.sqf:406-431`; town/static delegation call sites in `server_town_ai.sqf:242-248`, `Server_OperateTownDefensesUnits.sqf:55-67`, `Server_HandleDefense.sqf:19-23` | Owner-id `0` miss can still happen; registration is now idempotent/pruned, but there is no work-record failover. |
 | Player-client FPS delegation | `WFBE_C_AI_DELEGATION == 1`, `WFBE_AI_DELEGATION_<uid>` | `updateavailableactions.fsm:121-129`; `Server_HandleSpecial.sqf:75-84`; `Server_GetDelegators.sqf:20-27`; `Server_FNC_Delegation.sqf:30-47,82-95,104-115` | Client-stated UID/FPS and group counts influence delegation selection. |
 | Arma High Command UI | `_hc_enabled`, `HCSetGroup`, `HCRemoveAllGroups` | `_hc_enabled = false` at `updateavailableactions.fsm:47`; `HCSetGroup` gated at `:115-119`; cleanup at `updateclient.sqf:204,228` | Add path is inert by default while removal still runs; do not confuse this with headless-client delegation. |
 
@@ -104,13 +104,13 @@ Treat this as PR8 release-branch evidence, not as closure for DR-42. The static-
 | Risk | Evidence | Impact |
 | --- | --- | --- |
 | HC disconnect has no mission-level re-delegation. | `Server_OnPlayerDisconnected.sqf:22-29` only removes the HC from the candidate pool. | Already-created HC-local groups may fall back to engine locality behavior, but the mission does not redistribute them to another HC. |
-| HC registration can miss the candidate pool. | `Headless/Init/Init_HC.sqf:11-15` sends one `connected-hc`; `Server_HandleSpecial.sqf:125-130` rejects owner id `0` with only a warning. | Add retry/delayed registration or a server-side reconciliation pass before relying on HC availability. |
+| HC registration can miss the candidate pool. | Current stable `Headless/Init/Init_HC.sqf:94-129` sends `connected-hc` after initial setup and after re-reseat; `Server_HandleSpecial.sqf:432-434` still rejects owner id `0` with only a warning. | Add server-side delayed registration/reconciliation before relying on HC availability, or prove the HC-side re-announce is enough with telemetry. |
 | HC re-registration is now idempotent. | `Server_HandleSpecial.sqf` connected-hc case (lines 416-431): drops the previous group for this UID (`_hcList - [_hcOld]`), prunes all dead/null entries, then appends the new group via `missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]]`. Disconnect cleanup in `Server_OnPlayerDisconnected.sqf:22-29` still removes the group from the candidate pool. | Remaining risk: the persistent-watcher re-announce in `Init_HC.sqf` may fire while the HC is mid-reseat; the new civ group may not yet be visible to the server, briefly producing a prune-then-miss window. Verify registration telemetry (`HCSIDE|v1|connect`) in production after each re-announce. |
 | Client-FPS delegation trusts payload UID/FPS. | `updateavailableactions.fsm:121-125`; `Server_HandleSpecial.sqf:75-83`; `Server_FNC_Delegation.sqf:153-158`. | Treat mode `1` as authority-light; validate sender/UID/rate before using it on a hostile public server. |
-| Static-defense HC units are untracked server-side. | `Client_DelegateAIStaticDefence.sqf:28` comments out update-back; `Server_HandleSpecial.sqf` has `update-town-delegation` but no `update-delegation-static_defence` case. | Cleanup/accounting/re-delegation cannot reason about HC-created static-defense units. |
-| Delegated group cleanup is local and unbounded. | `Client_DelegateTownAI.sqf:42-43`, `Client_DelegateAI.sqf:29-30` and `Client_DelegateAIStaticDefence.sqf:35-36` wait until the created group has no units, then delete the group. | A leaked or engine-stuck unit can leave a long-running cleanup poll on the HC/client. Add timeout/diagnostics when building work records. |
-| Late HC join does not automatically re-enable mode. | `initJIPCompatible.sqf:164-171` can downgrade unsupported HC mode once; the server initializes `WFBE_HEADLESSCLIENTS_ID` only when mode is `2`. | If HC mode was disabled or no candidate was present during spawn decisions, later HC presence does not retroactively move existing AI. |
-| Static-defense removal may miss original operators. | `Server_OperateTownDefensesUnits.sqf:62-69` stores `wfbe_defense_operator` only for server-created gunners; HC-created static gunners do not pass through that assignment. | Removal path deletes current gunner when it is not a player/funded group, but the original-operator bookkeeping differs between server and HC paths. |
+| Static-defense HC units are untracked server-side. | Current stable `Client_DelegateAIStaticDefence.sqf:39` comments out update-back; `Server_HandleSpecial.sqf:86-115` has `update-town-delegation` but no `update-delegation-static_defence` case. | Cleanup/accounting/re-delegation cannot reason about HC-created static-defense units. |
+| Delegated group cleanup is local and unbounded. | Current stable `Client_DelegateTownAI.sqf:52-53`, `Client_DelegateAI.sqf:29-30` and `Client_DelegateAIStaticDefence.sqf:57-58` wait until the created group has no units, then delete the group. | A leaked or engine-stuck unit can leave a long-running cleanup poll on the HC/client. Add timeout/diagnostics when building work records. |
+| Late HC join does not automatically re-enable mode. | Docs source `initJIPCompatible.sqf:164-171` / current stable `:202-209` can downgrade unsupported HC mode once; the server initializes `WFBE_HEADLESSCLIENTS_ID` only when mode is `2`. | If HC mode was disabled or no candidate was present during spawn decisions, later HC presence does not retroactively move existing AI. |
+| Static-defense removal may miss original operators. | Current stable `Server_OperateTownDefensesUnits.sqf:83` stores `wfbe_defense_operator` only for server-created gunners; HC-created static gunners do not pass through that assignment. Removal clears that variable at `:116-118`. | Removal path deletes current gunner when it is not a player/funded group, but the original-operator bookkeeping differs between server and HC paths. |
 
 ## Patch Shape
 
@@ -120,7 +120,7 @@ Choose one of two designs:
 
 | Option | Implementation |
 | --- | --- |
-| Restore tracking | Add a deliberate `RequestSpecial` update from `Client_DelegateAIStaticDefence.sqf` and add a server `update-delegation-static_defence` case. Do not merely uncomment the current line: the current helper returns only `[_teams]` (`Common_CreateUnitForStaticDefence.sqf:69`), while the server will need enough data to clean/reassign units later: defense object, created team/group, created units, side, and whether `moveInGunner` was used. |
+| Restore tracking | Add a deliberate `RequestSpecial` update from `Client_DelegateAIStaticDefence.sqf` and add a server `update-delegation-static_defence` case. Do not merely uncomment the current line: the current helper returns only `[_teams]` (`Common_CreateUnitForStaticDefence.sqf:205` on current stable), while the server will need enough data to clean/reassign units later: defense object, created team/group, created units, side, and whether `moveInGunner` was used. |
 | Declare fire-and-forget | Leave the one-way behavior, but remove or annotate the commented send-back and document that static HC units are only locally lifecycle-managed by the HC. |
 
 Prefer restore tracking if the mission will support public dedicated servers with HCs.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T15:01:41+02:00",
+  "generatedAt": "2026-06-22T15:32:39+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Patrols v2 HC topology refresh. Headless-Client-Scaling-And-Topology.md now treats current stable origin/master@0139a346 Patrols v2 as partial HC create-local support, with exact current line refs, and keeps docs HEAD ff5b95dabb06, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 scoped as refs that lack Patrols v2 files. The same pass corrected stale town static-defence side-gate and multi-HC random-selection wording: current stable has no west/east/resistance side gate in Server_OperateTownDefensesUnits.sqf:55-67, and town delegation uses least-loaded + round-robin selection at Server_DelegateAITownHeadless.sqf:22-56. DR-42 report-back/accounting and smoke remain open. No gameplay source changed.",
+      "currentWork": "Published validated docs-only AI/HC runtime line-anchor refresh. AI-Runtime-HC-Loop-Map.md, AI-Headless-And-Performance.md and Headless-Delegation-And-Failover-Playbook.md now separate docs-source, current-stable and historical refs for HC registration, town delegation, static-defense delegation, Patrols v2 and AI supply trucks. Docs HEAD 4b6f5ca9 is unchanged from ca028bff/d30d2346/ff5b95dabb06 for checked AI/HC source paths; current stable origin/master@0139a346 has identical Chernarus/maintained-Vanilla HC/runtime files for checked paths, idempotent HC registration at Server_HandleSpecial.sqf:406-431, active-side static-defense delegation without a side gate at Server_OperateTownDefensesUnits.sqf:55-67, and Patrols v2 HC/local dispatch at server_side_patrols.sqf:64-69. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ai-hc-runtime-current-stable-line-anchor-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed AI-Runtime-HC-Loop-Map.md, AI-Headless-And-Performance.md and Headless-Delegation-And-Failover-Playbook.md so stale docs-source / historical cf2a6d6a line refs are branch-scoped and current stable origin/master@0139a346 HC registration, town delegation, static-defense active-side/no-side-gate behavior, Patrols v2 HC dispatch and AI supply-truck warning-disable shape have exact anchors. No gameplay source changed."
+    },
     {
       "lane": "headless-patrols-v2-topology-current-stable-refresh-2026-06-22",
       "owner": "Codex",
