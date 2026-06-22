@@ -411,7 +411,11 @@ if (count _live > 0) then {
 	//--- CreateTeam crews it and the existing HC mount-up seats the infantry. Truck classname resolves
 	//--- per-side from the Core transport lists (WFBE_%1REDEPLOYTRUCKS = MTVR/Kamaz; GUER falls back to
 	//--- its V3S troop truck). A2-OA-safe: classname-literal isKindOf, +_template copy (no shared mutation).
-	if ((missionNamespace getVariable ["WFBE_C_AICOM_INF_TRANSPORT", 1]) > 0) then {
+	//--- ARMED-TRANSPORT-ONLY conflict fix (2026-06-22, Ray "trucks that linger"): when
+	//--- WFBE_C_AICOM_ARMED_TRANSPORT_ONLY is ON the ride-pool (Common_RunCommanderTeam) refuses unarmed
+	//--- trucks, so this prepended troop-truck is NEVER boarded and LINGERS empty beside the team. Skip the
+	//--- prepend entirely when armed-transport-only is on -> the infantry road-march on foot, no dead truck.
+	if (((missionNamespace getVariable ["WFBE_C_AICOM_INF_TRANSPORT", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0}) then {
 		private ["_pureInf","_hasLightPlus","_facNamesT","_structuresT","_truck","_truckList"];
 		_pureInf = true;
 		{ if (!(_x isKindOf "Man")) exitWith {_pureInf = false} } forEach _template;
