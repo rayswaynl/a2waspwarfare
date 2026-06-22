@@ -23,8 +23,8 @@ flowchart TD
 | `Client/GUI/GUI_BuyGearMenu.sqf:94,102,108` | Reads current vehicle cargo through `Client_GetVehicleContent.sqf` and stores selected cargo arrays. |
 | `Client/GUI/GUI_BuyGearMenu.sqf:439` | Applies selected vehicle cargo with `[vehicle _target, _gear_sel_vehicle] Call WFBE_CO_FNC_EquipVehicle`. |
 | `Client/Functions/Client_GetVehicleContent.sqf:20-22` | Reads cargo with safe `for '_i' from 0 to count(_items)-1` loops. The collector is not the bug. |
-| `Common/Functions/Common_EquipVehicle.sqf:27,33,39` | Applies weapon, magazine and backpack cargo with corrected `for '_i' from 0 to (count(_items) - 1)` loops. (Bug existed on docs checkout `8b71e2a1`; `origin/master` `cf2a6d6a` carries the fix.) |
-| `Common/Functions/Common_EquipBackpack.sqf:35,41` | On docs checkout `8b71e2a1`: applies backpack weapon and magazine contents with the same inclusive `for '_i' from 0 to count(_items)` loops. `origin/master` `cf2a6d6a` already carries `(count(_items) - 1)` at both lines; see Branch Matrix. |
+| `Common/Functions/Common_EquipVehicle.sqf:27,33,39` | Applies weapon, magazine and backpack cargo. Docs branch `b2544207`, historical Miksuu `b8389e74` and historical EASA QoL `a66d4691` still use inclusive `count(_items)` loops; current stable `origin/master@0139a346` and current Miksuu `d9506078` use corrected `(count(_items) - 1)` loops in both maintained roots. |
+| `Common/Functions/Common_EquipBackpack.sqf:35,41` | Applies backpack weapon and magazine contents. The same branch split applies: old-shape docs/EASA/perf-Vanilla targets still overrun by one, while current stable and current Miksuu are already fixed in both maintained roots. |
 | `Client/Functions/Client_BuildUnit.sqf:229` | Calls `WFBE_CO_FNC_EquipBackpack` for soldier purchases when a backpack is present. |
 | `Common/Functions/Common_EquipUnit.sqf:38` | Calls `WFBE_CO_FNC_EquipBackpack` for unit loadout application. |
 
@@ -32,13 +32,12 @@ flowchart TD
 
 | Root / branch | `Common_EquipVehicle.sqf` | `Common_EquipBackpack.sqf` | Practical meaning |
 | --- | --- | --- | --- |
-| Current docs/source Chernarus `8b71e2a1` | Inclusive weapon, magazine and backpack loops at `:27`, `:33`, `:39`. | Inclusive weapon and magazine loops at `:35`, `:41`. | Patch-ready on the docs checkout; source is still unpatched here. |
-| Maintained Vanilla Takistan `8b71e2a1` | Same three inclusive vehicle loops. | Same two inclusive backpack loops. | Propagate deliberately after Chernarus source fix. |
-| Stable `origin/master` `cf2a6d6a` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Stable branch already carries the local loop-bound fix; preserve it when merging. |
-| Miksuu upstream `miksuu/master` `b8389e74` | Same inclusive loops in both maintained roots. | Same inclusive loops in both maintained roots. | No upstream rescue exists. |
+| Docs branch `docs/developer-wiki-index@b2544207` | Inclusive weapon, magazine and backpack loops at `:27`, `:33`, `:39` in Chernarus and maintained Vanilla. | Inclusive weapon and magazine loops at `:35`, `:41` in Chernarus and maintained Vanilla. | Patch-ready on the docs branch and any target derived from it. |
+| Current stable `origin/master@0139a346` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Do not reopen this defect on current stable; preserve the fix when merging older branches. |
+| Current Miksuu upstream `miksuu/master@d9506078` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. Older checkpoint `b8389e74` was still inclusive. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. Older checkpoint `b8389e74` was still inclusive. | Upstream now carries the loop-bound rescue; use the current fetched head, not the older `b8389e74` checkpoint, for merge guidance. |
 | `origin/perf/quick-wins` `0076040f` | Chernarus fixes all three loops to `count(_items)-1`; maintained Vanilla still carries inclusive loops. | Chernarus fixes both loops to `count(_items)-1`; maintained Vanilla still carries inclusive loops. | Perf branch is Chernarus-only for this fix; Vanilla propagation remains open there. |
-| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Release already carries the local loop-bound fix in both maintained roots. |
-| EASA QoL `origin/feat/buymenu-easa-qol` `a66d4691` | Same inclusive loops in both maintained roots. | Same inclusive loops in both maintained roots. | QoL branch does not touch cargo helpers. |
+| Historical release commit `a96fdda2` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Historical fixed checkpoint only; current origin exposes no `release/*` head on 2026-06-22. |
+| Historical EASA QoL commit `a66d4691` | Same inclusive loops in both maintained roots. | Same inclusive loops in both maintained roots. | Historical old-shape checkpoint only; current origin exposes no `feat/buymenu-easa-qol` head on 2026-06-22. |
 
 ## Bug Shape
 
@@ -50,12 +49,12 @@ for '_i' from 0 to count(_items) do {_vehicle addWeaponCargoGlobal [_items selec
 
 For an array with `N` entries, valid indexes are `0` through `N - 1`. Index `N` is out of range.
 
-Confirmed current-source locations:
+Confirmed old-shape locations:
 
 | Helper | Loops |
 | --- | --- |
-| `Common_EquipVehicle.sqf` | weapon cargo `:27`, magazine cargo `:33`, backpack cargo `:39` |
-| `Common_EquipBackpack.sqf` | backpack weapon cargo `:35`, backpack magazine cargo `:41` |
+| `Common_EquipVehicle.sqf` | weapon cargo `:27`, magazine cargo `:33`, backpack cargo `:39` on docs branch `b2544207`, historical EASA QoL `a66d4691` and perf Vanilla |
+| `Common_EquipBackpack.sqf` | backpack weapon cargo `:35`, backpack magazine cargo `:41` on docs branch `b2544207`, historical EASA QoL `a66d4691` and perf Vanilla |
 
 Likely impact:
 
@@ -66,7 +65,7 @@ Likely impact:
 
 ## Patch Shape
 
-Recommended first patch:
+Recommended first patch for old-shape targets:
 
 ```sqf
 for '_i' from 0 to count(_items)-1 do {
@@ -74,7 +73,7 @@ for '_i' from 0 to count(_items)-1 do {
 };
 ```
 
-Apply the `count(_items)-1` bound to all five confirmed loops.
+Apply the `count(_items)-1` bound to all five confirmed old-shape loops. Current stable, current Miksuu and historical `a96fdda2` already carry this shape in both maintained roots.
 
 Optional guard if the code owner wants clearer empty-array behavior:
 
@@ -111,7 +110,7 @@ Arma smoke:
 
 ## Generated And Modded Missions
 
-On docs checkout `8b71e2a1`, `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` carries the same inclusive loops in `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`. Stable `cf2a6d6a` and release `a96fdda2` already fix both maintained roots; perf `0076040f` fixes Chernarus only.
+On docs branch `b2544207`, `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` carries the same inclusive loops in `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`. Current stable `origin/master@0139a346`, current Miksuu `d9506078` and historical release `a96fdda2` already fix both maintained roots; perf `0076040f` fixes Chernarus only.
 
 Per project rules:
 
@@ -124,7 +123,7 @@ Per project rules:
 - This is a small, patch-ready reliability bug.
 - It should be safe to patch independently from the server-authority/economy redesign because it only fixes loop bounds in cargo-application helpers.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
-- Branch check 2026-06-14 is branch-split: docs checkout `8b71e2a1`, Miksuu `b8389e74` and EASA QoL `a66d4691` still carry the five inclusive loops in both maintained roots; stable `cf2a6d6a` and release `a96fdda2` fix both maintained roots; perf `0076040f` fixes Chernarus only.
+- Branch check refreshed 2026-06-22: docs branch `b2544207`, older Miksuu checkpoint `b8389e74` and historical EASA QoL `a66d4691` still carry the five inclusive loops in both maintained roots. Current stable `origin/master@0139a346`, current Miksuu `d9506078` and historical release `a96fdda2` fix both maintained roots; perf `0076040f` fixes Chernarus only. Current origin exposes no live `release/*` or `feat/buymenu-easa-qol` heads.
 
 ## Continue Reading
 

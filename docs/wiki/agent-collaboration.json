@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T11:12:00+02:00",
+  "generatedAt": "2026-06-22T11:14:35+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "vehicle-cargo-loop-bounds-current-miksuu-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@b2544207 Chernarus and maintained Vanilla Common_EquipVehicle.sqf:27,33,39 plus Common_EquipBackpack.sqf:35,41 still use inclusive count(_items) loops",
+        "origin/master@0139a346 Chernarus and maintained Vanilla use corrected (count(_items) - 1) loops at the same five cargo-application lines",
+        "Miksuu master fetched to d9506078 on 2026-06-22 and now also uses corrected (count(_items) - 1) loops in both maintained roots",
+        "origin/perf/quick-wins@0076040f fixes the five loops in Chernarus only while maintained Vanilla still uses inclusive count(_items) loops",
+        "historical a96fdda2 fixes both maintained roots; historical a66d4691 keeps inclusive loops in both maintained roots",
+        "current origin exposes no release/* or feat/buymenu-easa-qol heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Vehicle-Cargo-Equip-Loop-Bounds.md so current stable and current Miksuu are no longer documented as unpatched.",
+        "Updated Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Wiki-Pruning-And-Relevance-Ledger.md and machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future gear/cargo owner should port the count(_items)-1 shape only to old-shape targets, propagate maintained Vanilla where still old-shape, and smoke vehicle/backpack cargo without bundling gear authority redesign.",
+      "updated": "2026-06-22T11:14:35+02:00"
+    },
     {
       "lane": "construction-smallsite-logic-current-stable-refresh-2026-06-22",
       "owner": "Codex",
