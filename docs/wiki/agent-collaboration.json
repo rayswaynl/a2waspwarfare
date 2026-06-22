@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T18:53:11+02:00",
+  "generatedAt": "2026-06-22T19:09:20+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mash-marker-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@2b5139219faa is unchanged from db3015f18ea3 for checked Chernarus/Vanilla MASH deploy, marker relay, init and respawn availability paths",
+        "docs/source, current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep local MASH deploy plus orphaned marker relay in both maintained roots",
+        "current stable origin/master@0139a3468609, historical a96fdda28087 and current B69 origin/claude/b69@8d465fcede7f expose only Skill_Apply.sqf:43 MASH-deploy-removed wording in checked maintained roots and no Client/Module/MASH, Server/Module/MASH or Skill_Officer.sqf paths",
+        "B69 diffs 0a1ccb4d..origin/claude/b69 and 80d3267c..origin/claude/b69 touch Init_Client.sqf but contain no MASH-related hunks",
+        "current origin exposes no release/*, feat/*mash*, feat/*respawn* or feat/*marker* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed existing MASH split owner/status/PV/dead-code/machine rows so current B69 head evidence is 8d465fce while 0a1ccb4d and 80d3267c remain provenance.",
+        "Preserve the old-shape local MASH respawn versus current-stable/current-B69 deploy-removal split.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future MASH owner should revive shared markers only with server-held state, unique ids, delete resend and explicit JIP resend/pull on old-shape targets, or finish removing stale relay residue. Current-stable/current-B69-shaped targets need an explicit deploy revival decision first.",
+      "updated": "2026-06-22T19:09:20+02:00"
+    },
     {
       "lane": "service-affordability-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
@@ -539,7 +558,7 @@
         "origin/master@0139a3468609 Chernarus and maintained Vanilla remove the maintained MASH deploy module path and keep the Skill_Apply.sqf:43 MASH deploy ability removed comment",
         "Miksuu master fetched 2026-06-22 at b8389e748243 keeps the old deploy/relay shape in both maintained roots",
         "origin/perf/quick-wins@0076040f8a5e keeps the old deploy/relay shape in both maintained roots",
-        "historical a96fdda28087 and B69-family refs 0a1ccb4d05c5 / 80d3267c1b2b carry the current-stable MASH deploy removed shape in both maintained roots"
+        "historical a96fdda28087 and older B69 refs 0a1ccb4d05c5 / 80d3267c1b2b carry the current-stable MASH deploy removed shape in both maintained roots; superseded for current-B69 wording by mash-marker-current-b69-head-refresh-2026-06-22"
       ],
       "outputs": [
         "Refreshed Respawn lifecycle, Feature Status, Abandoned Feature Revival, Dead/stale code, Public Variable Channel Index, Support Specials and adjacent module/UI/hardening route wording.",
