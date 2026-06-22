@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T21:49:22+02:00",
+  "generatedAt": "2026-06-22T22:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "client-skill-init-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@b2738971 Chernarus/Vanilla Client/Init/Init_Client.sqf keeps one Skill_Init.sqf call at :547 followed by WFBE_SK_FNC_Apply at :571",
+        "current stable origin/master@0139a346 Chernarus/Vanilla has one Skill_Init.sqf call at :624 and apply at :647",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f have one Skill_Init.sqf call at :805 and apply at :828 in both maintained roots",
+        "live origin/feat/client-fps@709258e7 touches both maintained Init_Client.sqf files but keeps one Skill_Init/apply shape at Chernarus :613/:636 and Vanilla :583/:606",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical feat-ai c20ce153 still duplicate Skill_Init before apply in both maintained roots; historical a96fdda2 and 7ff18c49 carry one-call release-line evidence but no live release/* head is exposed"
+      ],
+      "outputs": [
+        "Refreshed Client-Skill-Init-Idempotency, Feature Status, Source Fix queue, Current Source snapshot, Testing workflow and machine rows for current stable/B69/B74/client-fps release-scope wording.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future client/runtime owner should smoke Soldier/non-Soldier AI caps, respawn reapply and target-branch init order before release-complete wording. Current Miksuu/perf/historical feat-ai remain old-shape if promoted or merged; release-line evidence is historical until a live release/* ref is restored or rechecked.",
+      "updated": "2026-06-22T22:10:00+02:00"
+    },
     {
       "lane": "paratrooper-marker-current-b69-b74-refresh-2026-06-22",
       "owner": "Codex",
