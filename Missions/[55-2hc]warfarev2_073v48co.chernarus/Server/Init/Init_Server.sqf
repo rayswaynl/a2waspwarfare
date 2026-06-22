@@ -1014,6 +1014,43 @@ WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 //--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
 {_x Spawn WFBE_SE_FNC_AI_Commander} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: no HQ, loop was inert (perf win)
 
+//--- B69 AICOM SUPERVISOR WATCHDOG: a single standalone loop that re-Spawns a per-side
+//--- supervisor whose heartbeat has gone stale (uncaught error killed its while-loop).
+//--- Self-limiting against double-spawn: a fresh supervisor stamps hb on its first tick,
+//--- and a per-side cooldown bars a second restart inside the recovery window.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
+	[] Spawn {
+		private ["_scan","_cool","_stale","_x","_myID","_hb","_lastR","_thresh","_age"];
+		waitUntil {sleep 1; !(isNil "serverInitFull")};
+		_scan = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_SCAN", 30];
+		_cool = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_COOLDOWN", 120];
+		//--- generous threshold: 3 healthy ticks + 30s margin (75s at default TICK=15). No
+		//--- healthy tick blocks >TICK, so this never false-trips on a normal slow tick.
+		_thresh = (3 * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TICK", 15])) + 30;
+		while {!gameOver} do {
+			sleep _scan;
+			{
+				_myID = _x Call WFBE_CO_FNC_GetSideID;
+				_hb   = missionNamespace getVariable [Format ["wfbe_aicom_hb_%1", _myID], -1];
+				//--- _hb > 0 means the supervisor has stamped at least once: never fire during
+				//--- the boot / serverInitFull wait (the loop hasn't reached its first stamp yet).
+				if (_hb > 0) then {
+					_age   = time - _hb;
+					_stale = _age > _thresh;
+					_lastR = missionNamespace getVariable [Format ["wfbe_aicom_wd_restart_%1", _myID], -1e9];
+					if (_stale && {(time - _lastR) > _cool}) then {
+						missionNamespace setVariable [Format ["wfbe_aicom_wd_restart_%1", _myID], time];
+						_x Spawn WFBE_SE_FNC_AI_Commander;
+						diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|WATCHDOG|restart-stale-hb age=" + str (round _age));
+						["WARNING", Format ["AICOM watchdog: %1 supervisor heartbeat stale (%2s) - restarting.", str _x, round _age]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				};
+			} forEach (WFBE_PRESENTSIDES - [resistance]);
+		};
+	};
+	["INITIALIZATION", "Init_Server.sqf: AICOM supervisor watchdog started (B69)."] Call WFBE_CO_FNC_AICOMLog;
+};
+
 //--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
 	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: base-less, no wildcard events

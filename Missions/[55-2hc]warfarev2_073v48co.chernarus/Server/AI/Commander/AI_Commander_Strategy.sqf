@@ -417,14 +417,32 @@ _relieved = 0;
 			{
 				_team = _x;
 				if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-					if ((toLower (_team getVariable ["wfbe_teammode", "towns"])) == "towns") then {
-						//--- WAVE-1 A3 (a): HC teams ARE now eligible for relief (the old !wfbe_aicom_hc exclusion made
-						//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
-						if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
-							_d = (leader _team) distance _town;
-							if (_d < _freeD) then {_freeD = _d; _free = _team};
+					//--- B69 (relief-reliever-strength-gate): strength floor. Count alive bodies; exempt MBT/attack-heli
+					//--- teams (vehicle is the punch). A2-OA safe: classname-literal isKindOf + getNumber transportSoldier
+					//--- (no A3 primitives), classified off the team's LIVE assigned vehicles (mirror AssignTowns:275 idiom).
+					private ["_relMinAlive","_relAlive","_relIsBigVeh","_veh"];
+					_relMinAlive = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 4];
+					_relAlive    = {alive _x} count (units _team);
+					_relIsBigVeh = false;
+					{
+						if (alive _x) then {
+							_veh = vehicle _x;
+							if (_veh != _x) then {
+								if (_veh isKindOf "Tank") exitWith {_relIsBigVeh = true};
+								if ((_veh isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _veh) >> "transportSoldier")) == 0}) exitWith {_relIsBigVeh = true};
+							};
 						};
-					};
+					} forEach (units _team);
+					if (_relIsBigVeh || {_relAlive >= _relMinAlive}) then {
+						if ((toLower (_team getVariable ["wfbe_teammode", "towns"])) == "towns") then {
+							//--- WAVE-1 A3 (a): HC teams ARE now eligible for relief (the old !wfbe_aicom_hc exclusion made
+							//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
+							if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
+								_d = (leader _team) distance _town;
+								if (_d < _freeD) then {_freeD = _d; _free = _team};
+							};
+						};
+					}; //--- B69: close strength-floor if
 				};
 			} forEach _teams;
 			if (!isNull _free) then {
@@ -582,13 +600,31 @@ _logik setVariable ["wfbe_aicom_strike_on", _strikeOn];
 //--- (pressing vs consolidating vs defending) is explicit; FRONT reconstructs the front line (held /
 //--- contested counts + the primary target's name and whether it borders our territory). Both ride
 //--- the existing AI_Commander_Strategy worker (per side / ~60s; gated in AI_Commander.sqf:133-134).
-private ["_posture","_primT"];
+private ["_posture","_primT","_townStr","_myEff","_enEff","_garBodies","_garTeams"];
+//--- B69 territory-credited-press-gate: effective strength credits held towns (garrison bodies never counted in _myStr).
+//--- POSTURE-gate ONLY; last-stand (l.66) + HQ-strike keep reading raw _myStr (those are maneuver-commit gates).
+_townStr = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2];
+_myEff = _myStr + (_myTowns * _townStr);
+_enEff = _enStr + (_enemyTowns * _townStr);
 _posture = if (_strikeOn) then {"HQ_STRIKE"} else {
-	if (_myTowns < _enemyTowns || {_myStr < _enStr}) then {"DEFEND"} else {
-		if (_myTowns >= (_enemyTowns * 1.2) && {_myStr >= _enStr}) then {"PRESS"} else {"HOLD"}
+	if (_myTowns < _enemyTowns || {_myEff < _enEff}) then {"DEFEND"} else {
+		if (_myTowns >= (_enemyTowns * 1.2) && {_myEff >= _enEff}) then {"PRESS"} else {"HOLD"}
 	}
 };
-diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|strikeOn=" + str _strikeOn);
+//--- B69 garrison-body telemetry (stall-telemetry-add-garrison-bodies): how many bodies the leader has tied up in
+//--- town OCCUPATION vs its maneuver _myStr. Pure observation, no behaviour change. Mirrors the existing _myStr idiom
+//--- (L52): {alive _x} count (units _x), guarded by !isNull. One forEach over towns (~30) per side per ~60s strategy
+//--- tick - negligible, server-side, paced. wfbe_town_teams may briefly hold null/empty groups -> guarded by !isNull.
+_garBodies = 0;
+{
+	if ((_x getVariable "sideID") == _sideID) then {
+		_garTeams = _x getVariable ["wfbe_town_teams", []];
+		{
+			if (!isNull _x) then { _garBodies = _garBodies + ({alive _x} count (units _x)) };
+		} forEach _garTeams;
+	};
+} forEach towns;
+diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|townStr=" + str _townStr + "|garBodies=" + str _garBodies + "|strikeOn=" + str _strikeOn);
 _primT = if (count _targets > 0) then {_targets select 0} else {objNull};
 diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
 //--- B58 SOAK DRAFT (2026-06-21, claude-gaming, propose-only): surface the DOMINANT-BUT-PASSIVE stall.
@@ -601,7 +637,7 @@ diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|
 //--- fix (territory-weighted aggression / garrison-vs-maneuver strength split - see B57-SOAK-PROPOSALS.md).
 //--- A2-OA-safe: pure diag_log, all operands already computed this tick; no sim/distance-gating; no antistack.
 if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * 2)} && {_posture != "PRESS"} && {!_strikeOn}) then {
-	diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr);
+	diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
 };
 // END POSTURE + FRONT
 

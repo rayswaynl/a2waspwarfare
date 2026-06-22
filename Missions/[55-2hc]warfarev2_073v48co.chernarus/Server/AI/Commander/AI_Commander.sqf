@@ -22,6 +22,25 @@ _myID = (_side) Call WFBE_CO_FNC_GetSideID;
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
 
+//--- SUPERVISOR HEARTBEAT (B69): seed the per-side liveness beat BEFORE the loop so the
+//--- variable exists the moment the loop starts (closes the 'never stamped yet' ambiguity).
+//--- Server-only; integer key by side ID; a watchdog reads time-(this) > N*TICK => loop dead.
+missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
+diag_log ("AICOMHB|v1|" + (str _side) + "|" + (str _myID) + "|SEED|" + (str (round time)));
+
+//--- B69 worker-stagger: one-time per-side phase jitter so the two supervisors' economy
+//--- workers fall on different frames (mirrors AI_Commander_Wildcard.sqf de-correlation idiom).
+//--- Skip when only one AI side is present (nothing to de-correlate). random/sleep = A2-OA core.
+if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
+	private "_phaseJitter";
+	_phaseJitter = random (missionNamespace getVariable ["WFBE_C_AICOM_SUPERVISOR_JITTER", 7]);
+	if (_phaseJitter > 0) then {
+		["INFORMATION", Format ["AI_Commander.sqf: [%1] spawn phase-jitter %2s (worker de-correlation).", str _side, _phaseJitter]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SUPERVISOR_JITTER|" + str _phaseJitter);
+		sleep _phaseJitter;
+	};
+};
+
 //--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	_doctrine = if (random 1 > 0.5) then {"HF"} else {"LF"};
@@ -91,6 +110,14 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
 };
 
 while {!gameOver} do {
+	//--- SUPERVISOR HEARTBEAT (B69): unconditional per-tick liveness beat. MUST be the first
+	//--- statement, above the _active gate and before EVERY worker Call, so even a worker that
+	//--- throws (e.g. createVehicle on a malformed classname, AI_Commander_Base.sqf:503-516)
+	//--- leaves this tick's stamp behind; the loop then dies and the beat freezes. A watchdog
+	//--- treats time - (missionNamespace getVariable ['wfbe_aicom_hb_<id>', -1]) > k*TICK as DEAD.
+	//--- Distinct from wfbe_aicom_lastbrief (300s, written inside the loop -> useless as liveness).
+	missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
+
 	_active = false;
 	if ((missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
 		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
@@ -142,6 +169,54 @@ while {!gameOver} do {
 		//--- Town auto-assign: worker self-gates per team by delegation.
 		if (time - _ltTown > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOWN_INTERVAL")) then {
 			(_side) Call WFBE_SE_FNC_AI_Com_AssignTowns; _ltTown = time;
+		};
+
+		//--- B69 (bootstrap-stipend-out-of-canbuild): the 0-town survival drip is a LIFELINE, not a
+		//--- 'spend'. It runs on the _active gate (HQ alive + AICOM enabled) so a one-tick human
+		//--- blip that re-arms _noHumanSince (zeroing _canBuild for 300s) cannot suspend the only income
+		//--- a broke 0-town side has. Internal guards unchanged: 0 towns AND time<MAXTIME AND 60s rate.
+		//--- Funds route to the SEPARATE AICOM treasury (ChangeAICommanderFunds) -> no contention with a
+		//--- human commander's spend in assist state (same treasury separation HYBRID-REFILL relies on).
+		//--- V0.7 BOOTSTRAP STIPEND: trickle funds+supply while the side owns 0 towns AND
+		//--- time < WFBE_C_AICOM_BOOTSTRAP_MAXTIME.  Scales the per-minute amounts to the
+		//--- actual tick spacing so the grant is tick-rate-independent.
+		//--- supply is only granted when the dual-currency economy is active (system == 0).
+		_stipendMaxTime = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_MAXTIME", 3600];
+		_stipendTowns = 0;
+		{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
+		_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
+		if (_stipendActive && !_prevStipendActive) then {
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
+		};
+		if (!_stipendActive && _prevStipendActive) then {
+			if (_stipendTowns > 0) then {
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - first town captured.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-first-town");
+			} else {
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - max time %2 s reached.", str _side, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-timeout");
+			};
+		};
+		_prevStipendActive = _stipendActive;
+		if (_stipendActive) then {
+			//--- Grant once per 60 s (last-stipend timestamp guards the rate).
+			if (time - _ltStipend >= 60) then {
+				//--- Scale configured per-minute amounts by actual elapsed time since last grant
+				//--- so a missed tick doesn't silently drop income (capped at 3x to avoid windfalls).
+				_tickS = (time - _ltStipend) min 180;
+				if (_ltStipend < -1e8) then {_tickS = 60}; //--- first grant: treat as one minute.
+				_stipendFunds  = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS",  100];
+				_stipendSupply = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY",  50];
+				_stipendFundsGrant  = round (_stipendFunds  * (_tickS / 60));
+				_stipendSupplyGrant = round (_stipendSupply * (_tickS / 60));
+				[_side, _stipendFundsGrant] Call ChangeAICommanderFunds;
+				_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+				if (_dual) then {
+					[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
+				};
+				_ltStipend = time;
+			};
 		};
 
 		//--- B67 HYBRID-REFILL (full-send hybrid commander, item #5): while a HUMAN commands this side
@@ -222,48 +297,6 @@ while {!gameOver} do {
 			};
 			if (!_richFlag && _prevRich) then {
 				_logik setVariable ["wfbe_aicom_reinforce_rich", false];
-			};
-
-			//--- V0.7 BOOTSTRAP STIPEND: trickle funds+supply while the side owns 0 towns AND
-			//--- time < WFBE_C_AICOM_BOOTSTRAP_MAXTIME.  Scales the per-minute amounts to the
-			//--- actual tick spacing so the grant is tick-rate-independent.
-			//--- supply is only granted when the dual-currency economy is active (system == 0).
-			_stipendMaxTime = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_MAXTIME", 3600];
-			_stipendTowns = 0;
-			{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
-			_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
-			if (_stipendActive && !_prevStipendActive) then {
-				["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
-				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
-			};
-			if (!_stipendActive && _prevStipendActive) then {
-				if (_stipendTowns > 0) then {
-					["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - first town captured.", str _side]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-first-town");
-				} else {
-					["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - max time %2 s reached.", str _side, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-timeout");
-				};
-			};
-			_prevStipendActive = _stipendActive;
-			if (_stipendActive) then {
-				//--- Grant once per 60 s (last-stipend timestamp guards the rate).
-				if (time - _ltStipend >= 60) then {
-					//--- Scale configured per-minute amounts by actual elapsed time since last grant
-					//--- so a missed tick doesn't silently drop income (capped at 3x to avoid windfalls).
-					_tickS = (time - _ltStipend) min 180;
-					if (_ltStipend < -1e8) then {_tickS = 60}; //--- first grant: treat as one minute.
-					_stipendFunds  = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS",  100];
-					_stipendSupply = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY",  50];
-					_stipendFundsGrant  = round (_stipendFunds  * (_tickS / 60));
-					_stipendSupplyGrant = round (_stipendSupply * (_tickS / 60));
-					[_side, _stipendFundsGrant] Call ChangeAICommanderFunds;
-					_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
-					if (_dual) then {
-						[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
-					};
-					_ltStipend = time;
-				};
 			};
 
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program

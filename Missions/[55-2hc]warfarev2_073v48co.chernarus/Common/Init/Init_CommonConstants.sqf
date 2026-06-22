@@ -356,6 +356,32 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_AI_PATROL_RANGE = 400;
 	WFBE_C_AI_TOWN_ATTACK_HOPS_WP = 4; //--- AI may use up to x WP to attack a town.
 
+	//--- B69 (Ray 2026-06-22) Patch C/D/E/F constants. New AICOM tunables for the Patch C/D/E/F sketches;
+	//--- each isNil-guarded so a lobby param / saved profile cannot be overridden. Consumed by the matching
+	//--- B69 server logic (see per-line sketch notes); inert until that logic ships.
+	//--- Patch C: relief reliever-strength gate. Don't divert a team to relief unless it has at least this
+	//--- many alive (a stranded 1-2 man remnant can't relieve anything; keep it on offense / let it be culled).
+	if (isNil "WFBE_C_AICOM_RELIEF_MIN_ALIVE") then {WFBE_C_AICOM_RELIEF_MIN_ALIVE = 4};
+	//--- Patch C: territory-credited press gate. POSTURE (AI_Commander_Strategy.sqf) presses the attack when
+	//--- own maneuver strength >= this multiple of enemy strength (territory-credited). 0 disables the gate.
+	if (isNil "WFBE_C_AICOM_TOWN_STRENGTH") then {WFBE_C_AICOM_TOWN_STRENGTH = 2};
+	//--- Patch D: MHQ re-drive unstuck nudge. While driving, if no >25m progress for NUDGE_SECS the driver
+	//--- gets a short steering nudge (NUDGE_TURN degrees) before the STUCK_SECS deploy-where-it-stands fires,
+	//--- so a momentarily-wedged MHQ tries to free itself first (never left frozen).
+	if (isNil "WFBE_C_AICOM_MHQ_NUDGE_SECS") then {WFBE_C_AICOM_MHQ_NUDGE_SECS = 45}; //--- s of no >25m progress before a steering nudge.
+	if (isNil "WFBE_C_AICOM_MHQ_NUDGE_TURN") then {WFBE_C_AICOM_MHQ_NUDGE_TURN = 25}; //--- degrees to swing the heading on a nudge.
+	//--- Patch E: AICOM supervisor watchdog restart loop. A standalone watchdog re-spawns a side's commander
+	//--- supervisor PFM if its heartbeat goes stale, with a per-side cooldown (restart-storm guard).
+	if (isNil "WFBE_C_AICOM_WATCHDOG") then {WFBE_C_AICOM_WATCHDOG = 1};                 //--- 1 = watchdog on (default); 0 = inert (instant rollback).
+	if (isNil "WFBE_C_AICOM_WATCHDOG_SCAN") then {WFBE_C_AICOM_WATCHDOG_SCAN = 30};      //--- s between watchdog scans.
+	if (isNil "WFBE_C_AICOM_WATCHDOG_COOLDOWN") then {WFBE_C_AICOM_WATCHDOG_COOLDOWN = 120}; //--- per-side min s between two restarts (restart-storm guard).
+	//--- Patch E: supervisor spawn-phase jitter. Random 0..JITTER s stagger on supervisor (re)spawn so both
+	//--- sides' heavy worker passes don't land on the same frame (smooths the server-FPS sawtooth).
+	if (isNil "WFBE_C_AICOM_SUPERVISOR_JITTER") then {WFBE_C_AICOM_SUPERVISOR_JITTER = 7}; //--- s max random spawn-phase stagger.
+	//--- Patch F: pending-slot timeout reaper. A reserved (pending) team-build slot that never materialises is
+	//--- reaped after this many s so it can't permanently occupy the team budget (3 * TEAMS_INTERVAL[=90]).
+	if (isNil "WFBE_C_AICOM_PENDING_TIMEOUT") then {WFBE_C_AICOM_PENDING_TIMEOUT = 270}; //--- s before a never-filled pending team slot is reaped.
+
 //--- Artillery.
 	if (isNil "WFBE_C_ARTILLERY") then {WFBE_C_ARTILLERY = 1}; //--- Enable or disable Artillery fire missions (0: Disabled, 1: Short, 2: Medium, 3: Long).
 	if (isNil "WFBE_C_ARTILLERY_UI") then {WFBE_C_ARTILLERY_UI = 0}; //--- Enable or disable Artillery UI for direct fire missions.

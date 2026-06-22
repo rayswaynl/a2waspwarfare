@@ -149,7 +149,7 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 ["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] relocation TRIGGERED - front %2m out, mobilizing toward %3.", _sideText, round (_hq distance _frontPos), _destPos]] Call WFBE_CO_FNC_AICOMLog;
 
 [_side, _sideText, _logik, _myID, _destPos, _arriveDist, _deadline, _stuckSecs, _enemyClear, _enemySideObj] Spawn {
-	private ["_side","_sideText","_logik","_myID","_destPos","_arriveDist","_deadline","_stuckSecs","_enemyClear","_enemySide","_mhq","_drvGrp","_drv","_soldier","_dir","_t0","_lastClose","_lastImprove","_done","_reason","_cur","_curD","_pNear","_safeDist","_hq0","_finPos","_finDir","_finTry","_finAng","_structClass"];
+	private ["_side","_sideText","_logik","_myID","_destPos","_arriveDist","_deadline","_stuckSecs","_enemyClear","_enemySide","_mhq","_drvGrp","_drv","_soldier","_dir","_t0","_lastClose","_lastImprove","_done","_reason","_cur","_curD","_pNear","_safeDist","_hq0","_finPos","_finDir","_finTry","_finAng","_structClass","_nudgeSecs","_nudgeTurn","_lastNudge"];
 	_side       = _this select 0;
 	_sideText   = _this select 1;
 	_logik      = _this select 2;
@@ -225,6 +225,9 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 	_lastImprove = time;
 	_done        = false;
 	_reason      = "arrive";
+	_nudgeSecs   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_NUDGE_SECS", 45];
+	_nudgeTurn   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_NUDGE_TURN", 25];
+	_lastNudge   = 0;   //--- last nudge time; 0 = none yet.
 
 	while {!_done && !gameOver} do {
 		sleep 5;
@@ -236,6 +239,24 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 
 		if (!_done) then {
 			if (_curD < (_lastClose - 25)) then {_lastClose = _curD; _lastImprove = time};
+
+			//--- (a) Re-issue the move EVERY tick (idempotent re-path; guard a live driver).
+			if (!isNull (driver _mhq)) then {(driver _mhq) doMove _destPos};
+
+			//--- (b) Sub-window UNSTUCK NUDGE: no >25m progress for _nudgeSecs, still inside the
+			//--- stuck rail, and not nudged within the last _nudgeSecs -> brief velocity-zero +
+			//--- re-doMove (+ optional corner turn). Rate-limited so it does NOT fire every 5s tick.
+			if ( (time - _lastImprove) > _nudgeSecs
+			     && {(time - _lastImprove) <= _stuckSecs}
+			     && {(time - _lastNudge)  > _nudgeSecs}
+			     && {!isNull (driver _mhq)} ) then {
+				_mhq setVelocity [0,0,0];
+				if (_nudgeTurn > 0) then {_mhq setDir ((getDir _mhq) + _nudgeTurn)};
+				(driver _mhq) doMove _destPos;
+				_lastNudge = time;
+				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|NUDGE|stalled=" + str (round (time - _lastImprove)) + "|d=" + str (round _curD));
+			};
+
 			if ((time - _lastImprove) > _stuckSecs) then {_done = true; _reason = "stuck"};
 		};
 

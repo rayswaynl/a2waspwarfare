@@ -457,6 +457,18 @@ while {alive player && dialog} do {
 				
 				_camera cameraEffect["TERMINATE","BACK"];
 				camDestroy _camera;
+
+				//--- Q9 (B69): arrival confirmation for the dropped squad (all client-local).
+				if (!_skip) then {
+					_destName = "destination";
+					if (!isNull _destination) then {
+						_dn = _destination getVariable ["name",""];
+						if (typeName _dn == "STRING" && {_dn != ""}) then {_destName = _dn};
+					};
+					titleText [Format ["Arrived: %1", _destName], "PLAIN DOWN"];
+					playSound "cashierSound"; //--- soft confirmation chime (project CfgSounds, already used for FundsTransfer)
+					systemChat Format ["Fast travel complete - %1 unit(s) moved to %2.", count _travelingWith, _destName];
+				};
 			};
 		};
 		//--- ICBM Strike.

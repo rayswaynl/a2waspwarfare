@@ -48,6 +48,18 @@ if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) then {
 	(_structure) Spawn {sleep 10; deleteVehicle _this};
 };
 
+//--- B69 S6 : base-fall spectacle. This fires ONCE per (rare) HQ destruction, so spawning
+//--- a single server-side black smoke column on the wreck is count-safe (one object, no loop).
+//--- _wreckObject already tracks the persistent wreck (the dead MHQ for a deployed HQ, else the
+//--- structure itself). SmokeShellBlack is a vanilla A2-OA class. Toggleable via a missionNamespace
+//--- constant so the dedicated constants agent can default/disable it without touching this file;
+//--- the [name,default] getVariable form is reliable on missionNamespace.
+if (isServer && (missionNamespace getVariable ["WFBE_C_BASEFALL_SMOKE_ENABLED", true])) then {
+	Private ["_smoke"];
+	_smoke = "SmokeShellBlack" createVehicle (getPos _wreckObject);
+	_smoke setPos (getPos _wreckObject);
+};
+
 if (isServer) then {
 	['SRVFNCREQUESTCHANGESCORE',[leader _killer_group, (score leader _killer_group) + _points]] Spawn WFBE_SE_FNC_HandlePVF;
 } else {
@@ -75,6 +87,20 @@ if ((!isNull _killer) && (isPlayer _killer)) then
         [nil, "LocalizeMessage", ["HeadHunterReceiveBounty", (name _killer), 30000, _structure_kind, _side]] call WFBE_CO_FNC_SendToClients;
     };
 };
+
+//--- B69 S6 : server-wide audible sting for the base fall. Reuses the exact SendToClients idiom
+//--- already used above (nil recipient = all clients) and the existing LocalizeMessage dispatch.
+//--- "inbound" is a confirmed CfgSounds class (Sounds/description.ext; also used by
+//--- Common_HandleAlarm.sqf and CampCaptured.sqf). The client plays the sound; no chat line.
+//--- REQUIRED COMPANION EDIT (do NOT make it here — different owner's file):
+//---   Client/PVFunctions/LocalizeMessage.sqf must add a matching case BEFORE this ships:
+//---     case "BaseFallSting": { playSound ["inbound", true]; _commandChat = false; };
+//---   (_txt stays "" + _commandChat=false => the sound plays with NO chat line.)
+//---   WITHOUT that case the switch falls through with _commandChat still true and _txt="",
+//---   which would print a BLANK command-chat line on every client per HQ kill — so the
+//---   companion case is a hard prerequisite, not optional. The broadcast itself uses the same
+//---   nil-recipient SendToClients idiom as the HeadHunter bounty broadcast above.
+[nil, "LocalizeMessage", ["BaseFallSting"]] call WFBE_CO_FNC_SendToClients;
 
 // Only awards score for non-teamkills of the HQ
 if (_side != side _killer) then

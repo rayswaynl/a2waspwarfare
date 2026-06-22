@@ -120,6 +120,13 @@ if (_pending > 0) then {
 	_pendSince = _logik getVariable ["wfbe_aicom_pending_since", -1];
 	if (_pendSince < 0) then {_pendSince = time; _logik setVariable ["wfbe_aicom_pending_since", _pendSince]};
 	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH|pending=" + str _pending + "|founded=" + str _foundedTeams + "|target=" + str _target + "|pendingAgeSec=" + str (round (time - _pendSince)));
+	//--- B69 (pending-slot-timeout-reaper): a lost HC dispatch ack would pin _pending>0 forever, starving founding via the (_foundedTeams+_pending)>=_target guard below. After a timeout, reap the oldest still-pending slot so founding resumes. (_pending is a single per-side counter, so this ages the oldest pending slot, not a per-slot timer.)
+	if ((time - _pendSince) > (missionNamespace getVariable ["WFBE_C_AICOM_PENDING_TIMEOUT", 270])) then {
+		_pending = _pending - 1;
+		_logik setVariable ["wfbe_aicom_pending", _pending];
+		if (_pending > 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]} else {_logik setVariable ["wfbe_aicom_pending_since", -1]};
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP|pending->" + str _pending + "|reason=ack-timeout");
+	};
 } else {
 	_logik setVariable ["wfbe_aicom_pending_since", -1];
 };
@@ -488,7 +495,16 @@ if (count _live > 0) then {
 	_w7SkillSend = _logik getVariable "wfbe_aicom_veteran_skill";
 	if (isNil "_w7SkillSend") then {_w7SkillSend = 0};
 	_logik setVariable ["wfbe_aicom_veteran_skill", 0]; // consume
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend]] Call WFBE_CO_FNC_SendToClient;
+	//--- B69 hctopup-stamp: carry the template index + refill pad-class so the HC can stamp the
+	//--- founded group (HCTopUp/merge can then resolve class without the template round-trip).
+	//--- _padClass = LAST Man-class in the FINAL _template (the basic dismount), "" for all-vehicle teams.
+	//--- APPENDED as trailing args (slots 5/6 of the inner array) so the W7 skill arg stays at slot 3 and
+	//--- the 3-arg server-local CreateTeam calls (which never reach this delegate) are unaffected. Purely
+	//--- additive: no current reader, so default behaviour is unchanged. A2-OA-safe (isKindOf/select/forEach).
+	private ["_padClass"];
+	_padClass = "";
+	{ if (_x isKindOf "Man") then {_padClass = _x} } forEach _template;
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades
