@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T09:29:34+02:00",
+  "generatedAt": "2026-06-22T09:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the auto-wall current-stable scope refresh, indicator status-counter branch split, B69 Patch A branch-status refresh, visible-parameter runtime-consumer current-stable refresh, B69 AICOM routing/mirror work and current-stable AICOM correction. Auto-wall evidence splits old docs/perf false-default/no-exclusion rows from current stable origin/master@0139a346 and current Miksuu master@d9506078 true-default global rows with broader no-wall exclusions; B69 Patch A is branch-only Chernarus code on origin/claude/b69@35547c47, not stable/Vanilla/release proof; status-counter docs separate player HUD SERVER_FPS_GUI, compatibility WFBE_VAR_SERVER_FPS, admin/status signals and PerformanceAudit RPT/tooling output; AICOM evidence treats origin/master@0139a346 as source-present for the maintained-root supervisor route at Init_Server.sqf:64,847 and AI_Commander.sqf:127,253,161. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the resource-income current-stable branch split, auto-wall current-stable scope refresh, indicator status-counter branch split, B69 Patch A branch-status refresh, visible-parameter runtime-consumer current-stable refresh and B69 AICOM routing/mirror work. Resource-income docs now separate old-shape refs from current stable origin/master@0139a346, where AI commander over-cap funds fallback is source-present but side-supply/team-paycheck cap intent and income-system 4 display drift remain open. Auto-wall evidence splits old docs/perf false-default/no-exclusion rows from current stable/current Miksuu true-default global rows with broader no-wall exclusions. B69 Patch A is branch-only Chernarus code on origin/claude/b69@35547c47, not stable/Vanilla/release proof. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "resource-income-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Economy-Towns-And-Supply.md, Economy-Authority-First-Cut.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so current stable is no longer documented as old-shaped for AI commander over-cap funds. Docs branch d7a30e15, Miksuu b8389e74, perf/quick-wins 0076040f and historical a96fdda2 keep AI commander funds inside the cap guard; current stable origin/master@0139a346 still guards side supply/team paychecks but has AI commander income/stipend fallback at updateresources.sqf:102-109. No gameplay source changed."
+    },
     {
       "lane": "auto-wall-current-stable-scope-refresh-2026-06-22",
       "owner": "Codex",
