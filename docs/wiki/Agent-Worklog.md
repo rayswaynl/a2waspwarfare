@@ -1501,3 +1501,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Finding: docs/current stable/Miksuu keep `_currentSupply - _amount` at `Common_ChangeSideSupply.sqf:25` and `Server_ChangeSideSupply.sqf:12,36` plus payload-side trust in both maintained roots. `origin/perf/quick-wins@0076040f` fixes only the Chernarus arithmetic floor to `0`; Vanilla propagation, side/channel/requester validation and reason parsing remain open.
 - Result: refreshed [Economy authority first cut](Economy-Authority-First-Cut#side-supply-branch-matrix), Feature Status, Source Fix queue, pruning ledger and side-supply machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T08:54:39+02:00 - Codex - B69 AI commander mirror sync
+
+- Claimed `b69-ai-commander-mirror-sync-2026-06-22` after a fresh comparison showed live wiki `master@3be04f1` and repo mirror `origin/docs/developer-wiki-index@77b38d07` were no longer in parity.
+- Scope: mirror-only docs sync. The wiki has `AI-Commander-B69-Implementation-Sketches.md` and `AI-Commander-B69-Improvement-Roadmap.md`; `docs/wiki` missed both, and `_Sidebar.md` differed. No gameplay source edits planned.
+- Result: copied only those mirror gaps into `docs/wiki`, kept the B69 source-backed pages unchanged, updated dashboard/status/collaboration/pruning records and left gameplay source untouched.
+- Validation: JSON/JSONL parse passed in the wiki checkout and docs mirror; `docs/validate-wiki.ps1` passed with known legacy JSONL warnings only; top-level wiki/docs parity reports `290` files on each side with no missing/differing files; Latest Batch has five rows; `git diff --check` passed in both worktrees with LF/CRLF warnings only.

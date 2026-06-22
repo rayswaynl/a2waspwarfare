@@ -187,6 +187,8 @@
   - [Old WarfareBE FPS comparison](Old-WarfareBE-Performance-Comparison)
   - [AI commander autonomy audit](AI-Commander-Autonomy-Audit)
   - [AI commander capture & fun plan](AI-Commander-Capture-And-Fun-Improvement-Plan)
+  - [**AI commander B69 improvement roadmap**](AI-Commander-B69-Improvement-Roadmap)
+  - [AI commander B69 implementation sketches](AI-Commander-B69-Implementation-Sketches)
   - [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook)
   - [Commander reassignment call shape](Commander-Reassignment-Call-Shape)
 - Quality and operations

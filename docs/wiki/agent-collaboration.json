@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-21T20:53:09+02:00",
+  "generatedAt": "2026-06-22T08:54:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,22 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b69-ai-commander-mirror-sync-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "live wiki master@3be04f1",
+        "origin/docs/developer-wiki-index@77b38d07 before mirror sync",
+        "top-level normalized wiki/docs comparison found missing docs mirror files AI-Commander-B69-Implementation-Sketches.md and AI-Commander-B69-Improvement-Roadmap.md plus differing _Sidebar.md"
+      ],
+      "outputs": [
+        "Mirrored AI-Commander-B69-Implementation-Sketches.md, AI-Commander-B69-Improvement-Roadmap.md and _Sidebar.md into docs/wiki.",
+        "Updated dashboard, worklog, pruning ledger and coordination records. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future mirror sync lanes should compare live wiki against docs/wiki after each wiki batch and copy only confirmed gaps.",
+      "updated": "2026-06-22T08:54:39+02:00"
+    },
     {
       "lane": "gear-template-current-stable-scope-refresh-2026-06-21",
       "owner": "Codex",
