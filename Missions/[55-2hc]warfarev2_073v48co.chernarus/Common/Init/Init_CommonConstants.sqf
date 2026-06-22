@@ -398,6 +398,10 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- rather than walking home / being culled; same merge payload contract. Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_STRANDED_MERGE")       then {WFBE_C_AICOM_STRANDED_MERGE       = 1};    //--- 1 = ON (default), 0 = off.
 	if (isNil "WFBE_C_AICOM_STRANDED_MERGE_RANGE") then {WFBE_C_AICOM_STRANDED_MERGE_RANGE = 1200}; //--- m: a stranded remnant within this of a friendly team is merged into it.
+	//--- ARMED-TRANSPORT-ONLY (default-ON, Ray 2026-06-22): in the road-march ride-pool only a hull WITH WEAPONS
+	//--- (count weapons > 0 -> APC/IFV/armed technical) may carry troops. Unarmed troop-trucks no longer ferry
+	//--- infantry into the town centre to be evaporated; unmounted infantry advance on foot. 0 = old behaviour.
+	if (isNil "WFBE_C_AICOM_ARMED_TRANSPORT_ONLY") then {WFBE_C_AICOM_ARMED_TRANSPORT_ONLY = 1}; //--- 1 = ON (default), 0 = any drivable hull rides.
 
 //--- Artillery.
 	if (isNil "WFBE_C_ARTILLERY") then {WFBE_C_ARTILLERY = 1}; //--- Enable or disable Artillery fire missions (0: Disabled, 1: Short, 2: Medium, 3: Long).
