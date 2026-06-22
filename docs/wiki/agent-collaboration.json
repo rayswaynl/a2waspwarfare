@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T20:43:12+02:00",
+  "generatedAt": "2026-06-22T21:02:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "vote-help-router-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@087152f5 is unchanged from 68bd4dc5 for checked vote/help/main-menu UI paths in Chernarus and maintained Vanilla",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f still keep inclusive WFBE_Client_Teams_Count vote loops, GUI_VoteMenu row-color [_i+1,0], help onLoad/onUnload namespace mismatch and handler-only MenuAction 17/18 GPS zoom routes in both maintained roots",
+        "origin/claude/b69..origin/claude/b74-aicom-spend is empty for checked vote/help/main-menu UI paths",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 also keep the same vote/help/router cleanup debt with branch-specific action-19 line drift",
+        "fresh branch scan exposes UI theme heads origin/feat/wf-menu-ops-console and origin/feat/wf-menu-ux-phase1, but no current release/* or vote/help rescue head"
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas vote/help/main-menu branch matrix plus Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and machine rows.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future UI owner should fix vote loops and row-color target, clean help onLoad/onUnload namespace state, decide remove-vs-revive for GPS MenuAction 17/18, propagate maintained Vanilla and smoke vote refresh, help open/close and main-menu HUD/GPS behavior. Keep commander vote outcome semantics on Commander-Vote-And-Reassignment-Playbook and WASP marker wait on WASP-Marker-Wait-Cleanup unless explicitly widening scope.",
+      "updated": "2026-06-22T21:02:39+02:00"
+    },
     {
       "lane": "salvage-w10-branch-status-refresh-2026-06-22",
       "owner": "Codex",
