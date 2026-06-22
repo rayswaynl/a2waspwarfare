@@ -327,6 +327,13 @@ if (count _live > 0) then {
 		_track = if (_doc == "HF") then {2} else {1};
 		_dWeights set [_track, (_dWeights select _track) * 1.5];
 	};
+	//--- B69 #16 TOWN-PUNCH BIAS (HC-resident path, mirrors AssignTypes): nudge the roll toward
+	//--- combat vehicles by scaling the heavy (idx 2) and light (idx 1) bucket weights. Applied AFTER
+	//--- the doctrine nudge and BEFORE the zero-out/safety-walk so an empty bucket still zeroes out and
+	//--- the degrade-walk still guarantees a buildable pick. Default 1.0 => exact no-op before the const
+	//--- exists (missionNamespace getVariable [name,default], A2-OA-safe). Buckets [inf,light,heavy,air].
+	_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])];
+	_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
 	for "_bi" from 0 to 3 do {
 		if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 	};

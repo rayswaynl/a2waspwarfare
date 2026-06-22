@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -119,12 +119,51 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 					_rTries = _rTries + 1;
 				};
 				if (_rTries >= _rBudget || {_rIssues >= _rMaxIssues} || {_curDist > _rMaxDist}) then {
-					//--- Budget exhausted with no progress: cull the stuck survivor. Non-player guard is
-					//--- belt-and-braces (this branch is already server-local non-HC, non-player-led).
-					{ if (!(isPlayer _x)) then {deleteVehicle _x} } forEach (units _team);
-					["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
-					deleteGroup _team;
-					_canProduce = false;
+					//--- B68 STRANDED-MERGE (item stranded-survivor-merge-into-nearest-team-before-cull):
+					//--- before throwing away a live trained body, try to JOIN the survivor into the nearest
+					//--- healthy same-side SERVER-LOCAL team. Net groups DROP by one and the body keeps fighting.
+					//--- A2-OA-safe: distance/count/select, GroupGetBool, `join` on a unit array, local on the
+					//--- LEADER object (never on the group). Fall through to the existing cull if no eligible target.
+					_mergeOn    = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE", 1];
+					_mergeRange = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE_RANGE", 1200];
+					_sizeMax    = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12]; //--- _sizeMax is declared later inside if(_canProduce); read a local copy here for the 8-12 ceiling guard.
+					_mergeTeam  = grpNull;
+					_mergeBest  = _mergeRange;  //--- only accept candidates strictly inside the range cap
+					if (_mergeOn > 0) then {
+						{
+							_cand = _x;
+							if (!isNull _cand && {_cand != _team}) then {
+								_candLdr = leader _cand;
+								//--- (b) server-local + non-HC: leader local to server AND not an HC team.
+								if (local _candLdr && {!(isPlayer _candLdr)} && {(behaviour _candLdr) != "COMBAT"} && {!([_cand, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+									_candAlive = {alive _x} count (units _cand);
+									//--- (c) alive>=2 healthy, (d) below the 12 ceiling so the merge can't overflow
+									//--- 8-12 policy: surviving body count must still fit (_candAlive + _aliveNow <= MAX).
+									if (_candAlive >= 2 && {(_candAlive + _aliveNow) <= _sizeMax}) then {
+										_d2 = _candLdr distance _ldr;
+										if (_d2 < _mergeBest) then {_mergeBest = _d2; _mergeTeam = _cand};
+									};
+								};
+							};
+						} forEach _teams;
+					};
+					if (!isNull _mergeTeam) then {
+						//--- MERGE: the survivor's live units join the healthy team; the now-empty old group is
+						//--- deleted (its wfbe_teams entry becomes a null group, which every consumer already skips
+						//--- -- same lifecycle as a wiped HC team / the existing cull). Net groups -1, body preserved.
+						_mergedInto = _mergeTeam;  //--- capture for the log before _team is gutted
+						(units _team) join _mergeTeam;
+						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
+						deleteGroup _team;
+						_canProduce = false;
+					} else {
+						//--- No eligible nearby team: existing cull, unchanged (guardrail = never strands the survivor).
+						//--- Non-player guard is belt-and-braces (this branch is already server-local non-HC, non-player-led).
+						{ if (!(isPlayer _x)) then {deleteVehicle _x} } forEach (units _team);
+						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
+						deleteGroup _team;
+						_canProduce = false;
+					};
 				} else {
 					//--- Still within budget: re-issue retreat + record this cycle's distance for the next
 					//--- progress check.

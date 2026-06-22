@@ -381,6 +381,23 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- Patch F: pending-slot timeout reaper. A reserved (pending) team-build slot that never materialises is
 	//--- reaped after this many s so it can't permanently occupy the team budget (3 * TEAMS_INTERVAL[=90]).
 	if (isNil "WFBE_C_AICOM_PENDING_TIMEOUT") then {WFBE_C_AICOM_PENDING_TIMEOUT = 270}; //--- s before a never-filled pending team slot is reaped.
+	//--- B69 FINAL PIECES (Ray 2026-06-22). New AICOM tunables; isNil-guarded so a lobby param / saved profile
+	//--- cannot override them. Inert until the matching B69 server logic ships.
+	//--- #16 town-assault PUNCH: per-tier strength multipliers on the assault-team punch score (the AICOM weights
+	//--- a HEAVY/armour assault team UP and a LIGHT/thin foot team DOWN when picking/sizing a town assault). INITIAL
+	//--- TUNING ONLY - validate in soak before locking. Consumed by the B69 town-punch logic.
+	if (isNil "WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT") then {WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT = 1.8}; //--- initial tuning, validate in soak.
+	if (isNil "WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT") then {WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT = 0.7}; //--- initial tuning, validate in soak.
+	//--- HC depleted-team MERGE (default-OFF). Server picks a same-side pair of depleted HC teams (A keep, B donor)
+	//--- and broadcasts a HandleSpecial 'aicom-team-merge' [A,B] to every live HC; the HC consumer self-gates on
+	//--- both leaders LOCAL, then (units B) joinSilent A (empty B reaped by existing GC). Group-count DOWN.
+	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 0};   //--- 1 = ON, 0 = off (default; ships dark).
+	if (isNil "WFBE_C_AICOM_HC_MERGE_FRAC")   then {WFBE_C_AICOM_HC_MERGE_FRAC   = 0.6}; //--- a team at/below this fraction of its template size is "depleted" (merge candidate).
+	if (isNil "WFBE_C_AICOM_HC_MERGE_RANGE")  then {WFBE_C_AICOM_HC_MERGE_RANGE  = 300}; //--- m: only merge a depleted pair whose leaders are within this of each other.
+	//--- STRANDED-survivor merge (default-ON). A lone stranded remnant near another friendly team is folded in
+	//--- rather than walking home / being culled; same merge payload contract. Group-count DOWN.
+	if (isNil "WFBE_C_AICOM_STRANDED_MERGE")       then {WFBE_C_AICOM_STRANDED_MERGE       = 1};    //--- 1 = ON (default), 0 = off.
+	if (isNil "WFBE_C_AICOM_STRANDED_MERGE_RANGE") then {WFBE_C_AICOM_STRANDED_MERGE_RANGE = 1200}; //--- m: a stranded remnant within this of a friendly team is merged into it.
 
 //--- Artillery.
 	if (isNil "WFBE_C_ARTILLERY") then {WFBE_C_ARTILLERY = 1}; //--- Enable or disable Artillery fire missions (0: Disabled, 1: Short, 2: Medium, 3: Long).
