@@ -27,7 +27,7 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 
 | Priority | Work package | Why first |
 | --- | --- | --- |
-| P0 | PVF dispatcher registered-handler membership | Current stable already removed dispatcher-time `Call Compile`, but still needs explicit `SRVFNC*` / `CLTFNC*` membership before spawning the resolved `CODE`; branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix). |
+| P0 | PVF dispatcher registered-handler membership | Current stable/B69/B74 already removed dispatcher-time `Call Compile`, but still need explicit `SRVFNC*` / `CLTFNC*` membership before spawning the resolved `CODE`; branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix). |
 | P0 | `SEND_MESSAGE` direct-PV compile removal | DR-46 is a second network-data RCE outside the PVF dispatcher; dispatcher lookup does not close it. |
 | P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. Use [ICBM authority](ICBM-Authority-Playbook). |
 | P1 | Victory/endgame correctness (DR-11 / DR-36) | Small source change with large match-outcome/stat impact. |
@@ -50,7 +50,7 @@ The [Progress dashboard](Progress-Dashboard#july-update-to-do) currently names t
 
 Dedicated playbook: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook).
 
-Roadmap summary: complete the PVF dispatcher lookup hardening without changing the high-level PVF payload shape. Current stable recheck 2026-06-21 found `origin/master@0139a346` Chernarus and maintained Vanilla already use `missionNamespace getVariable _script` plus `typeName == "CODE"` guards at `Server_HandlePVF.sqf:14-15` and `Client_HandlePVF.sqf:32-33`; Chernarus blame is `7d60b02b4` and maintained Vanilla propagation blame is `9b49883cb`. That removes dispatch-time arbitrary SQF-text compilation and the DR-38 per-message recompile on current stable, but `Init_PublicVariables.sqf:55-61` still does not export a registered-handler allowlist or warning-log rejected names. Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` still compile the sender-provided handler string in both maintained roots; current origin exposes no `release/*` heads on 2026-06-21. This does **not** validate forged payloads sent to legitimate handlers and does **not** touch direct publicVariable channels like `ATTACK_WAVE_INIT`.
+Roadmap summary: complete the PVF dispatcher lookup hardening without changing the high-level PVF payload shape. Current stable/B69/B74 recheck 2026-06-22 found `origin/master@0139a346`, `origin/claude/b69@8d465fce` and `origin/claude/b74-aicom-spend@b23f557f` Chernarus plus maintained Vanilla use `missionNamespace getVariable _script` plus `typeName == "CODE"` guards at `Server_HandlePVF.sqf:14-15` and `Client_HandlePVF.sqf:32-33`; Chernarus blame is `7d60b02b4` and maintained Vanilla propagation blame is `9b49883cb`, with an empty checked B69..B74 generic PVF dispatcher/init delta. That removes dispatch-time arbitrary SQF-text compilation and the DR-38 per-message recompile on these current stable-shaped branches, but `Init_PublicVariables.sqf:55-61` still does not export a registered-handler allowlist or warning-log rejected names, and `:56,61` still forwards only value tuples. Docs/source `HEAD@a0721301d4f5`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and historical `a96fdda2` still compile the sender-provided handler string in both maintained roots; current origin exposes no `release/*`, `*pvf*`, `*network*`, `*auth*` or `*public*` heads on 2026-06-22. This does **not** validate forged payloads sent to legitimate handlers and does **not** touch direct publicVariable channels like `ATTACK_WAVE_INIT`.
 
 Validation:
 
@@ -67,7 +67,7 @@ Raw evidence: [Deep-review findings](Deep-Review-Findings) DR-46. Channel invent
 
 Roadmap summary: remove `call compile` from both `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf` and `Common/Functions/Common_SendMessage.sqf`. The current multi-language branch treats message text as executable code. Because `SEND_MESSAGE` is a direct `publicVariable` channel, this is independent of the PVF dispatcher fix.
 
-Branch/root status: the 2026-06-22 matrix in [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix) confirms docs/source `HEAD@40c477be`, current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, Miksuu `b8389e748243`, `perf/quick-wins@0076040f` and historical `a96fdda2` release evidence all still keep the direct receiver/helper compile route in both maintained roots. Current stable/B69 PVF dispatcher lookup changes do not close this direct channel.
+Branch/root status: the 2026-06-22 matrix in [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix) confirms docs/source `HEAD@40c477be`, current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, Miksuu `b8389e748243`, `perf/quick-wins@0076040f` and historical `a96fdda2` release evidence all still keep the direct receiver/helper compile route in both maintained roots. Current stable/B69/B74 PVF dispatcher lookup changes do not close this direct channel.
 
 Implementation shape:
 

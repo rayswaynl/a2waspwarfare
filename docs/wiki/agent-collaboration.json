@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T23:01:56+02:00",
+  "generatedAt": "2026-06-22T23:22:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pvf-dispatch-current-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@a0721301d4f5 keeps the older generic PVF dispatcher shape in both maintained roots: Server_HandlePVF.sqf:14 and Client_HandlePVF.sqf:22 still run Spawn (Call Compile _script); Init_PublicVariables.sqf keeps value-only PVEH callbacks.",
+        "current stable origin/master@0139a3468609 uses missionNamespace getVariable plus CODE guards at Server_HandlePVF.sqf:14-15 and Client_HandlePVF.sqf:32-33 in both maintained roots, while Init_PublicVariables.sqf:56,61 still forwards only the public-variable value tuple.",
+        "current B69 origin/claude/b69@8d465fcede7f and adjacent B74 origin/claude/b74-aicom-spend@b23f557fc912 match current stable for checked generic PVF dispatcher/init paths; git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend is empty for those paths.",
+        "No WFBE_CL_PVF_ALLOWED, WFBE_SE_PVF_ALLOWED, PVF_ALLOWED, allowlist or rejected-unregistered warning symbols were found in the checked current stable/B69/B74 dispatcher/init files.",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f8a5e and historical a96fdda28087 still use dispatch-time Call Compile in both maintained roots; current remotes expose no release/PVF/network/auth/public heads."
+      ],
+      "outputs": [
+        "Refreshed PVF dispatch implementation, Networking and public variables, Public variable channel index, Server authority migration map, Hardening roadmap, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and PVF machine rows.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future network-hardening owner should treat stable/B69/B74 namespace lookup as a partial dispatcher fix only: add registered SRVFNC*/CLTFNC* allowlists and rejected-name logging before calling DR-1 fully hardened; keep DR-55 sender authentication and direct publicVariable channels separate.",
+      "updated": "2026-06-22T23:22:00+02:00"
+    },
     {
       "lane": "wasp-marker-wait-current-b74-clientfps-refresh-2026-06-22",
       "owner": "Codex",

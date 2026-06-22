@@ -2028,3 +2028,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch note: current Miksuu and perf remain old-shape in both maintained roots, and the remote branch scan exposed no live `release/*` head. Older release evidence is historical until a release ref is restored or rechecked.
 - Result: refreshed WASP marker wait cleanup, performance sweep, WASP overlay, current source snapshot, Feature Status cross-link, Source Fix queue, dashboard, pruning ledger and WASP marker machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T23:22:00+02:00 - Codex - PVF dispatcher current B74 refresh
+
+- Claimed `pvf-dispatch-current-b74-refresh-2026-06-22` after PVF dispatcher and sender-auth rows named current stable/B69 but did not include adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`.
+- Source scope: docs/source `HEAD@a0721301d4f5` remains old-shape for checked Chernarus/Vanilla PVF init/dispatcher paths; current stable is `origin/master@0139a3468609`; current B69 is `origin/claude/b69@8d465fcede7f`; adjacent B74 is `origin/claude/b74-aicom-spend@b23f557fc912`; current Miksuu is `b8389e748243`; perf is `origin/perf/quick-wins@0076040f8a5e`; historical release evidence is `a96fdda28087`.
+- Findings: current stable/B69/B74 use `missionNamespace getVariable _script` plus `typeName == "CODE"` guards at `Server_HandlePVF.sqf:14-15` and `Client_HandlePVF.sqf:32-33` in both maintained roots. They still forward only value tuples at `Init_PublicVariables.sqf:56,61`, and no `WFBE_CL_PVF_ALLOWED`, `WFBE_SE_PVF_ALLOWED`, `PVF_ALLOWED`, allowlist or rejected-unregistered warning symbol was found in checked dispatcher/init files. The checked B69..B74 generic PVF dispatcher/init delta is empty.
+- Branch note: docs/source, current Miksuu, perf and historical `a96fdda2` still use dispatch-time `Call Compile` in both maintained roots. Current origin exposes no live `release/*`, PVF, network, auth or public feature head. DR-55 authenticated requester context and direct publicVariable channels remain separate from dispatcher lookup/allowlist work.
+- Result: refreshed PVF dispatch implementation, Networking and public variables, Public variable channel index, Server authority migration map, Hardening roadmap, Feature Status, Source Fix queue, dashboard, pruning ledger and PVF machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
