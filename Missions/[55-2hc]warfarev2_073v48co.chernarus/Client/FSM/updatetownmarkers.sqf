@@ -62,6 +62,10 @@ while {!gameOver} do {
 			};
 		} else {_marker setMarkerTextLocal ""};
 
+			if (_town getVariable ["wfbe_is_naval_hvt", false]) then {
+				_marker setMarkerTextLocal ((_town getVariable ["name",""]) + (markerText _marker));
+			};
+
 	} forEach towns;
 
 	sleep 5;
