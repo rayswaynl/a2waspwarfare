@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-22T14:39:44+02:00",
-  "lastVerifiedAt": "2026-06-22T14:39:44+02:00",
+  "generatedAt": "2026-06-22T16:06:53+02:00",
+  "lastVerifiedAt": "2026-06-22T16:06:53+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -21,15 +21,15 @@
     },
     {
       "id": "july-takistan-airfield-fpv-drone",
-      "branch": "origin/dev/july-takistan-airfield-fpv-drone",
-      "state": "queued-design-captured-no-runtime-evidence-yet",
+      "branch": "origin/dev/july-2026-update@e3f530ed via closed draft PR #21; no current origin/dev/july-takistan-airfield-fpv-drone head found on 2026-06-22",
+      "state": "queued-design-captured-current-route-is-roadmap-scaffold-no-runtime-evidence-yet",
       "canonicalDocs": [
         "Progress-Dashboard.md#july-update-to-do",
         "Takistan-Airfield-FPV-Drone-Design.md",
         "Hardening-Implementation-Roadmap.md#july-update-candidate-route",
         "Testing-Debugging-And-Release-Workflow.md#july-update-candidate-smoke-route"
       ],
-      "releaseGate": "Takistan boot/capture/JIP, server-side ownership/funds/upgrade/cap/range/base-protection rejection tests, economy debit/reward smoke and AA/radar counterplay are recorded before release wording.",
+      "releaseGate": "Create or restore a Takistan implementation branch before code work. Then record Takistan boot/capture/JIP, server-side ownership/funds/upgrade/cap/range/base-protection rejection tests, economy debit/reward smoke and AA/radar counterplay before release wording.",
       "smokeStatus": "planned-not-run"
     }
   ],

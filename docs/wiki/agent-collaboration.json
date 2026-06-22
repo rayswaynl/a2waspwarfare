@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T15:54:23+02:00",
+  "generatedAt": "2026-06-22T16:10:57+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "july-fpv-branch-route-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "no current origin/dev/july-takistan-airfield-fpv-drone remote head was found on 2026-06-22",
+        "origin/dev/july-2026-update current head is e3f530ed5bb6c80da9d4b184086b493d946baf23",
+        "PR #21 is a closed unmerged draft from dev/july-2026-update to release/2026-06-feature-bundle with head e3f530ed and base 1701586d",
+        "origin/dev/july-2026-update:docs/july-2026-update.md is a roadmap scaffold that names the Takistan captured-airfield FPV drone as flagship and says planning/no gameplay code yet",
+        "origin/feat/drone-saturation-strike@8ca4be90 and origin/feat/recon-uav@563418ea remain separate branch-only drone/UAV features"
+      ],
+      "outputs": [
+        "Refreshed July FPV route pages and machine records so future code owners do not assume the stale per-feature branch exists.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future July FPV owner should create or restore an implementation branch before code work, keep the feature Takistan-only and server-authoritative until runtime evidence proves otherwise, and record Takistan boot/capture/JIP/economy/upgrade/authority/range/base-protection/AA-radar smoke before release-ready wording.",
+      "updated": "2026-06-22T16:10:57+02:00"
+    },
     {
       "lane": "b69-takistan-aicom-port-current-head-refresh-2026-06-22",
       "owner": "Codex",

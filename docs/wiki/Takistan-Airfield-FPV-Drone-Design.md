@@ -1,14 +1,15 @@
 # Takistan Airfield FPV Drone Design
 
-> July update planning note for Steff's Takistan captured-airfield FPV drone concept. This page records owner answers from the 2026-06-05 questionnaire and keeps the implementation scope separate from shipped source until the DEV branch is implemented and smoked.
+> July update planning note for Steff's Takistan captured-airfield FPV drone concept. This page records owner answers from the 2026-06-05 questionnaire and keeps the implementation scope separate from shipped source until an implementation branch is created, implemented and smoked.
 
 ## Status
 
 | Field | Value |
 | --- | --- |
 | Planning lane | `july-takistan-airfield-fpv-drone` |
-| DEV branch | `dev/july-takistan-airfield-fpv-drone` |
-| Release target | July update candidate |
+| Current planning branch | `origin/dev/july-2026-update@e3f530ed` via closed draft PR [#21](https://github.com/rayswaynl/a2waspwarfare/pull/21) |
+| Stale branch caveat | No current `origin/dev/july-takistan-airfield-fpv-drone` remote head was found on 2026-06-22 |
+| Release target | July update candidate; planning/no-gameplay-code status until a future implementation branch proves otherwise |
 | Terrain scope | Takistan first |
 | Gameplay source changed by this note | No |
 | Required authority posture | Server-authoritative spawn, purchase, caps, ownership and range validation |
@@ -19,6 +20,7 @@
 - `Common/Init/Init_Airports.sqf` currently creates the hangar model and local yellow airport marker for each airport logic. It does not create side ownership or capture state.
 - Existing UAV support is not a sufficient authority model for this feature: current stable UAV spawn and spend are mostly client-owned, while the wiki's drone branch lessons call out server-side validation as the safer path.
 - EASA is useful as a progression/loadout inspiration, but the actual drone buy path should use a separate Drone Bay menu unless a future owner deliberately extends generated EASA data.
+- Branch route rechecked 2026-06-22: `origin/dev/july-2026-update@e3f530ed` carries `docs/july-2026-update.md` as a July roadmap scaffold that names this feature as the flagship and says no gameplay code exists yet; PR #21 is closed, draft and unmerged.
 
 ## Decided Design
 

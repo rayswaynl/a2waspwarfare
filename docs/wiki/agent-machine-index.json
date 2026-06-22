@@ -100,7 +100,7 @@
       "id": "july-update-candidate-route",
       "system": "July update dev-branch planning and smoke routing",
       "riskTier": "route",
-      "branchScope": "planned hosted-FPS dev branch missing on 2026-06-22 plus origin/dev/july-takistan-airfield-fpv-drone",
+      "branchScope": "planned hosted-FPS dev branch missing on 2026-06-22 plus Takistan FPV planning routed through origin/dev/july-2026-update@e3f530ed closed draft PR #21; no current origin/dev/july-takistan-airfield-fpv-drone head",
       "canonicalDocs": [
         "Progress-Dashboard",
         "Hardening-Implementation-Roadmap",
@@ -110,7 +110,9 @@
       ],
       "sourceRefs": [
         "planned dev/july-update-hosted-server-fps-loop-fix; no origin/dev head found on 2026-06-22",
-        "origin/dev/july-takistan-airfield-fpv-drone",
+        "origin/dev/july-2026-update@e3f530ed; PR #21 closed draft and not merged",
+        "origin/dev/july-2026-update:docs/july-2026-update.md roadmap scaffold says planning/no gameplay code yet",
+        "no current origin/dev/july-takistan-airfield-fpv-drone head found on 2026-06-22",
         "docs/wiki/Progress-Dashboard.md#july-update-to-do",
         "docs/wiki/Testing-Debugging-And-Release-Workflow.md#july-update-candidate-smoke-route"
       ],
@@ -119,7 +121,7 @@
         "agent-release-readiness.json#julyUpdateCandidates",
         "agent-hardening-backlog.jsonl#server-fps-hosted-loop-sleep"
       ],
-      "nextGate": "Use the July smoke route before implementation or release wording: create or restore the hosted-FPS branch first, then prove target-branch-specific dedicated publishing plus hosted no-spin behavior; Takistan FPV must stay server-authoritative and Takistan-scoped until runtime evidence says otherwise."
+      "nextGate": "Use the July smoke route before implementation or release wording: create or restore the hosted-FPS branch first, and create or restore a Takistan FPV implementation branch before code work. Then prove target-branch-specific dedicated publishing plus hosted no-spin behavior; Takistan FPV must stay server-authoritative and Takistan-scoped until runtime evidence says otherwise."
     },
     {
       "id": "mission-entrypoints-lifecycle",
