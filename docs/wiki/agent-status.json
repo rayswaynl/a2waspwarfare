@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T22:10:00+02:00",
+  "generatedAt": "2026-06-22T22:17:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only client Skill_Init branch refresh. Docs/source HEAD@b2738971 keeps one Skill_Init.sqf call at Client/Init/Init_Client.sqf:547 followed by WFBE_SK_FNC_Apply at :571 in both maintained roots. Current stable origin/master@0139a346 carries :624/:647; current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f carry :805/:828; live origin/feat/client-fps@709258e7 keeps one-call/apply with Chernarus :613/:636 and Vanilla :583/:606. Current Miksuu/perf/historical feat-ai still duplicate; historical a96fdda2/7ff18c49 release-line evidence has no live release/* head. No gameplay source changed.",
+      "currentWork": "Published docs-only Server Init duplicate bind branch refresh. Docs/source HEAD@d830379768 and current Miksuu b8389e748243 still keep duplicate live LogGameEnd, PlayerObjectsList and AwardScorePlayer binds in both maintained roots. Current stable origin/master@0139a346 carries one live bind per checked function at Init_Server.sqf:81,:86,:99; current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f carry :83,:88,:101; perf/quick-wins fixes Chernarus only while maintained Vanilla remains old-shape; historical a96fdda2 has one-live-bind evidence but no live release/* head. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress-Dashboard.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and the pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "server-init-duplicate-binds-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Server init bind cleanup, Feature Status, Hardening roadmap and machine rows with current stable/B69/B74 evidence. Docs/source HEAD@d830379768 and current Miksuu b8389e748243 keep duplicate live LogGameEnd (:64/:89), PlayerObjectsList (:69/:91) and AwardScorePlayer (:83/:93) binds in both maintained roots. Current stable origin/master@0139a346 keeps one live bind at Init_Server.sqf:81,:86,:99; current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f keep :83,:88,:101. origin/perf/quick-wins@0076040f fixes Chernarus only while maintained Vanilla remains old-shape. Historical a96fdda2 has one-live-bind evidence but no live release/* head. No gameplay source changed."
+    },
     {
       "lane": "client-skill-init-current-b69-b74-refresh-2026-06-22",
       "owner": "Codex",

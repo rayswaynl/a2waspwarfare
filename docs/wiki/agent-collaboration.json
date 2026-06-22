@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T22:10:00+02:00",
+  "generatedAt": "2026-06-22T22:17:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "server-init-duplicate-binds-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@d830379768 Chernarus/Vanilla Init_Server.sqf still has live duplicate LogGameEnd binds at :64/:89, PlayerObjectsList at :69/:91 and AwardScorePlayer at :83/:93; commented server-FPS remnants sit at :65/:90 and MASH marker is active/commented at :70/:92",
+        "current stable origin/master@0139a346 has one live bind per checked function in both maintained roots at Init_Server.sqf:81,86,99 while commented monitorServerFPS remnants remain at :82/:105",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f have one live bind per checked function in both maintained roots at Init_Server.sqf:83,88,101 while commented monitorServerFPS remnants remain at :84/:107",
+        "current Miksuu b8389e748243 keeps the old duplicate bind shape in both maintained roots; origin/perf/quick-wins@0076040f fixes Chernarus only and leaves maintained Vanilla old-shape; historical a96fdda2 has one live bind per checked function in both maintained roots but no live release/* head is exposed"
+      ],
+      "outputs": [
+        "Refreshed Server-Init-Bind-Cleanup, Feature Status, Hardening roadmap/backlog, dashboard/worklog/pruning ledger and machine rows for current stable/B69/B74 branch evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future server-init code owner should de-duplicate old-shape docs/Miksuu/perf-Vanilla targets if code work is requested, preserve current stable/B69/B74 one-live-bind shape, keep LogGameEnd behavior semantics separate from init hygiene, and avoid re-enabling commented AFK/server-FPS/MASH remnants.",
+      "updated": "2026-06-22T22:17:00+02:00"
+    },
     {
       "lane": "client-skill-init-current-b69-b74-refresh-2026-06-22",
       "owner": "Codex",
