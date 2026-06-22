@@ -2055,3 +2055,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch note: `git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend` is empty for checked service/EASA paths; `origin/master..origin/claude/b74-aicom-spend` changes only `GUI_Menu_EASA.sqf` in both maintained roots among checked paths. Current origin exposes no live `release/*`, service, EASA, gear, buy or QoL feature head.
 - Result: refreshed Service menu affordability guards, Gear/loadout/EASA atlas, Feature Status, Source Fix queue, dashboard, pruning ledger and service/EASA machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T00:00:29+02:00 - Codex - SEND_MESSAGE direct compile current B74 refresh
+
+- Claimed `send-message-direct-compile-current-b74-refresh-2026-06-23` after `SEND_MESSAGE` rows named current B69 but did not include adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`.
+- Source scope: docs/source `HEAD@3a32be92beec`; current stable `origin/master@0139a3468609`; current B69 `origin/claude/b69@8d465fcede7f`; adjacent B74 `origin/claude/b74-aicom-spend@b23f557fc912`; current Miksuu `b8389e748243`; perf `origin/perf/quick-wins@0076040f8a5e`; historical release `a96fdda28087`.
+- Findings: docs/source is source-unchanged from `40c477be` / `16247fc8f` for checked `SEND_MESSAGE` receiver/helper paths. Docs/source, current stable, B69, B74, Miksuu, perf and historical release all keep direct `"SEND_MESSAGE" addPublicVariableEventHandler` at `Client/FSM/updateclient.sqf:12`, receiver `_messageText = call compile _messageText` at `Client_onEventHandler_SEND_MESSAGE.sqf:27`, and helper compile/broadcast at `Common_SendMessage.sqf:26,38` in both maintained roots.
+- Branch note: `40c477be..HEAD`, `16247fc8f..HEAD`, `origin/claude/b69..origin/claude/b74-aicom-spend`, `origin/master..origin/claude/b74-aicom-spend`, `0a1ccb4d..origin/claude/b69` and `b8530477..origin/claude/b69` are empty for checked `SEND_MESSAGE` receiver/helper paths. Current origin exposes no live `release/*`, message, send, network, public, PVF or security rescue branch.
+- Result: refreshed Public variable channel index, Networking/public variables, Feature Status, Source Fix queue, Hardening roadmap, dashboard, pruning ledger and `SEND_MESSAGE` machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
