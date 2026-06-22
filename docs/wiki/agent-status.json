@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T14:18:00+02:00",
+  "generatedAt": "2026-06-22T14:29:13+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only resistance supply scaffold branch refresh. Docs branch e46a7330, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 have the present-side loop but no checked maintained-root WFBE_L_GUE mission owner logic and no resistance temp handler. Current stable origin/master@0139a346 adds WFBE_L_GUE owner logic and a funds-only non-blocking resistance read but still has no resistance temp handler. B69 origin/claude/b69@39eed5c0 adds wfbe_supply_temp_resistance only in Chernarus; maintained Vanilla and side/channel/requester validation remain open. No gameplay source changed.",
+      "currentWork": "Published docs-only resistance side-supply Feature Status follow-up. Docs HEAD 56370c44 is source-unchanged from 4db90f1c for checked mission paths; docs/current Miksuu b8389e748243/perf 0076040f/historical a96fdda2 have generic temp publishing but no checked maintained-root WFBE_L_GUE owner logic, no resistance handler and blocking resistance reads. Current stable origin/master@0139a346 has owner logic and funds-only 0 reads but no handler. B69 origin/claude/b69@39eed5c0 adds the handler only in Chernarus. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "resistance-side-supply-feature-status-followup-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed the stale Feature Status resistance side-supply row and side-supply-clamp-first machine row so current stable and B69 are branch-scoped through Resistance-Supply-Scaffold.md. Docs HEAD 56370c44 is source-unchanged from 4db90f1c for checked mission paths; docs/current Miksuu/perf/historical have generic temp publishing but no checked maintained-root WFBE_L_GUE owner logic, no resistance handler and blocking resistance reads; current stable has owner logic plus funds-only 0 reads but no handler; B69 adds the handler only in Chernarus. No gameplay source changed."
+    },
     {
       "lane": "resistance-supply-scaffold-b69-branch-refresh-2026-06-22",
       "owner": "Codex",

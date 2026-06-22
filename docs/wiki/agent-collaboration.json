@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T14:18:00+02:00",
+  "generatedAt": "2026-06-22T14:29:13+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "resistance-side-supply-feature-status-followup-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs HEAD 56370c44 is source-unchanged from 4db90f1c for checked Missions/Missions_Vanilla paths",
+        "docs/current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 publish generic wfbe_supply_temp_<side> at Common_ChangeSideSupply.sqf:28,30 but have no checked maintained-root WFBE_L_GUE owner logic, no resistance temp handler and blocking resistance reads at Common_GetSideSupply.sqf:40-43",
+        "current stable origin/master@0139a346 Chernarus mission.sqm:4928,4931 and Vanilla mission.sqm:4198,4201 define WFBE_L_GUE; Common_GetSideSupply.sqf:36-40 returns funds-only 0 for resistance; Server_ChangeSideSupply.sqf still has only west/east handlers",
+        "B69 origin/claude/b69@39eed5c0 adds Chernarus wfbe_supply_temp_resistance at Server_ChangeSideSupply.sqf:25-45; maintained Vanilla remains west/east only"
+      ],
+      "outputs": [
+        "Refreshed Feature-Status-Register.md resistance side-supply row.",
+        "Updated side-supply-clamp-first in agent-feature-status.jsonl.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future economy owner should use Resistance-Supply-Scaffold.md for branch truth, decide funds-only 0 versus live resistance supply state, propagate maintained Vanilla or explicitly scope Chernarus, and validate west/east/resistance channels plus requester authority before side-supply hardening claims.",
+      "updated": "2026-06-22T14:29:13+02:00"
+    },
     {
       "lane": "resistance-supply-scaffold-b69-branch-refresh-2026-06-22",
       "owner": "Codex",
