@@ -508,11 +508,17 @@ _relieved = 0;
 _enemyHQ = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 _wasStrike = _logik getVariable ["wfbe_aicom_strike_on", false];
 _strikeOn = false;
+//--- B69 (hqstrike-town-gate-fraction): scale the HQ-strike town gate to the live town count (was a dead literal _myTowns > 8). count towns = all capturable towns (40+ on live Chernarus).
+private ["_hqFrac","_hqFloor","_strikeMinTowns"];
+_hqFrac = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FRAC", 0.5];
+_hqFloor = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FLOOR", 3];
+_strikeMinTowns = ceil ((count towns) * _hqFrac);
+if (_strikeMinTowns < _hqFloor) then {_strikeMinTowns = _hqFloor};
 if (!isNull _enemyHQ && {alive _enemyHQ}) then {
 	if (_wasStrike) then {
-		_strikeOn = (_myTowns > 8) && (_myTowns >= _enemyTowns * 1.2) && (_myStr >= _enStr);          //--- hysteresis: stay committed; gate: must still own >8 towns
+		_strikeOn = (_myTowns >= _strikeMinTowns) && (_myTowns >= _enemyTowns * 1.2) && (_myStr >= _enStr);          //--- B69 hysteresis: stay committed; gate now scales to ~half the map (was >8)
 	} else {
-		_strikeOn = (_myTowns > 8) && (_myTowns >= _enemyTowns * 1.5) && (_myStr >= _enStr * 1.1);   //--- Steff's rule: never HQ-rush while behind on towns
+		_strikeOn = (_myTowns >= _strikeMinTowns) && (_myTowns >= _enemyTowns * 1.5) && (_myStr >= _enStr * 1.1);   //--- B69 entry; Steff's rule: never HQ-rush while behind on towns (gate was >8, now ~half-map fraction)
 	};
 };
 if (_strikeOn) then {
@@ -520,7 +526,7 @@ if (_strikeOn) then {
 	_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 	if (!_wasStrike) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched");
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
 	};
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
@@ -532,19 +538,27 @@ if (_strikeOn) then {
 			if (!isNull _team && {!isPlayer (leader _team)} && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
 				if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
-					if (_alive > _bestN) then {_bestN = _alive; _best = _team};
+					if (_alive > 0) then {
+						//--- B69 (hqstrike-picker-weight-vehicle-punch): rank by PUNCH score, not raw bodycount. Heavy-detect idiom matches Common_AICOMServiceTick.sqf:103 (A2-OA-safe). _bestN now carries a score; inf 2 scores 2>1 (passes), 1-man remnant scores 1 (rejected), armour/attack-heli gets +bonus and outranks infantry.
+						private ["_hasHeavy","_score"];
+						_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"}}} count (units _team);
+						_score = _alive;
+						if (_hasHeavy > 0) then {_score = _score + (missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_VEH_BONUS", 100])};
+						if (_score > _bestN) then {_bestN = _score; _best = _team};
+					};
 				};
 			};
 		} forEach _teams;
 		if (isNull _best) exitWith {};
-		_best setVariable ["wfbe_aicom_strike", true];
+		private "_bestAlive"; _bestAlive = {alive _x} count (units _best);
+			_best setVariable ["wfbe_aicom_strike", true];
 		[_best, "move"] Call SetTeamMoveMode;
 		[_best, getPos _enemyHQ] Call SetTeamMovePos;
 		if (_best getVariable ["wfbe_aicom_hc", false]) then {
-			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", getPos _enemyHQ], true];
+			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _enemyHQ], true];
 		};
 		_strikeCount = _strikeCount + 1;
-		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] (%3 men) joins the HQ strike.", _sideText, _best, _bestN]] Call WFBE_CO_FNC_AICOMLog;
+		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] (%3 men) joins the HQ strike.", _sideText, _best, _bestAlive]] Call WFBE_CO_FNC_AICOMLog;
 	};
 } else {
 	if (_wasStrike) then {
