@@ -2037,3 +2037,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch note: docs/source, current Miksuu, perf and historical `a96fdda2` still use dispatch-time `Call Compile` in both maintained roots. Current origin exposes no live `release/*`, PVF, network, auth or public feature head. DR-55 authenticated requester context and direct publicVariable channels remain separate from dispatcher lookup/allowlist work.
 - Result: refreshed PVF dispatch implementation, Networking and public variables, Public variable channel index, Server authority migration map, Hardening roadmap, Feature Status, Source Fix queue, dashboard, pruning ledger and PVF machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T23:35:13+02:00 - Codex - Commander vote current B74 refresh
+
+- Claimed `commander-vote-current-b74-refresh-2026-06-22` after commander vote rows named current stable/B69 server comparison evidence but did not include adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, and the Commander/HQ gateway still carried older all-branches-unpatched wording.
+- Source scope: docs/source `HEAD@e0d82714b0f6`; current stable `origin/master@0139a3468609`; current B69 `origin/claude/b69@8d465fcede7f`; adjacent B74 `origin/claude/b74-aicom-spend@b23f557fc912`; current Miksuu `b8389e748243`; perf `origin/perf/quick-wins@0076040f8a5e`; historical release `a96fdda28087`; historical AI commander `c20ce1534be0`.
+- Findings: current stable/B69/B74 count `_aiVotes` at `Server_VoteForCommander.sqf:18,26-27` and use the non-tautological `_highest >= _aiVotes` comparison at `:43` in both maintained roots, while `GUI_VoteMenu.sqf:88` still previews AI/no commander with row-0/strict-majority logic. Docs/source, current Miksuu, perf, historical release and historical AI commander still use the old `>= || <=` comparison at `:43`. The checked B69..B74 vote worker/preview delta is empty.
+- Branch note: current origin exposes no live `release/*`, vote or reassignment rescue head on 2026-06-22; broad `commander` matches are Codex AI-commander context/log branches, not vote-worker fixes. Reassignment helper details remain on the dedicated call-shape page.
+- Result: refreshed Commander vote/reassignment, Commander/HQ lifecycle, Feature Status, Source Fix queue, Pending owner decisions, Hardening roadmap, dashboard, pruning ledger and commander vote machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

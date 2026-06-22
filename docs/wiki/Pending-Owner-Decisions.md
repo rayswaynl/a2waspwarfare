@@ -80,7 +80,7 @@ These rows are merge/release gates for useful branch work. They are not stable-`
 | --- | --- | --- | --- |
 | Victory winner-inversion + duplicate game-end | DR-11, DR-13 (mechanism DR-36) | High | one-line: parenthesize/guard both win clauses with `!WFBE_GameOver` + `exitWith` the side `forEach` on win |
 | Threeway mode has no victory detection | DR-12 | Medium | enable detection when `WFBE_C_VICTORY_THREEWAY != 0` |
-| [Commander vote AI/no-commander semantics](Commander-Vote-And-Reassignment-Playbook) | DR-47 | Medium | `Server_VoteForCommander.sqf:24-29,43` counts AI/no-commander votes but selects any non-tied player candidate; `GUI_VoteMenu.sqf:87-89` previews stricter AI/no-commander behavior. Decide plurality/majority/tie/no-commander rules before patching. |
+| [Commander vote AI/no-commander semantics](Commander-Vote-And-Reassignment-Playbook) | DR-47 | Medium | Branch split: current stable/B69/B74 already use `_highest >= _aiVotes` at `Server_VoteForCommander.sqf:43`, while docs/source/Miksuu/perf/historical refs still use `>= || <=`; `GUI_VoteMenu.sqf:87-89` still previews stricter AI/no-commander behavior. Decide plurality/majority/tie/no-commander rules before further patching or porting old branches. |
 | [Commander-assign call-shape bug](Commander-Reassignment-Call-Shape) | DR-15 | Medium | `_side = _this` -> `_this select 0`; use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) for adjacent vote/UI/notification smoke. |
 | Supply-mission cooldown key casing | DR-18 | Medium | align `lastSupplyMissionRun` vs `LastSupplyMissionRun` (case-sensitive getVariable) |
 | HQ-killed non-idempotent score exploit | DR-20 | Medium | idempotency guard on the killed-EH |
