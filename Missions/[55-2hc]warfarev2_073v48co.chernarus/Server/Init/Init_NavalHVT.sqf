@@ -255,6 +255,28 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_lhdCharlieLogic]];
 };
 
 //------------------------------------------------------------------------------------
+//--- VISUAL SCUD: an erect 9P117 SCUD-B launcher standing on Charlie's deck (thematic payoff for
+//--- owning her). Placed ~50m along the deck from the spawn/pad point; raise the missile via the
+//--- scudLaunch action, re-seat it, then freeze it static so it can't drive/fall/explode.
+//------------------------------------------------------------------------------------
+private ["_scudModel"];
+_scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_aCharlie select 0) + 50, _aCharlie select 1, 0], [], 0, "NONE"];
+_scudModel setPosASL [(_aCharlie select 0) + 50, _aCharlie select 1, 16];
+_scudModel setDir 90;
+_scudModel allowDamage false;
+[_scudModel, (_aCharlie select 0) + 50, (_aCharlie select 1)] spawn {
+	private ["_s","_px","_py"];
+	_s  = _this select 0;
+	_px = _this select 1;
+	_py = _this select 2;
+	_s action ["scudLaunch", _s];	//--- raise the missile to vertical
+	sleep 6;						//--- let the erect animation finish
+	_s setPosASL [_px, _py, 16];	//--- correct any physics drift during the erect
+	_s setVectorUp [0,0,1];			//--- re-level the launcher
+	_s enableSimulation false;		//--- freeze it static (erect)
+};
+
+//------------------------------------------------------------------------------------
 //--- STORE NAVAL HVT LOGICS for server_town.sqf capture-block lookup.
 //------------------------------------------------------------------------------------
 missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic]];
