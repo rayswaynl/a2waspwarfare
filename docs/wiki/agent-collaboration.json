@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T00:55:31+02:00",
+  "generatedAt": "2026-06-23T01:09:38+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "empty-supply-truck-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@7e7aebec is unchanged from b4e10b5f for checked Chernarus/Vanilla emptyvehiclescollector.sqf and Server_HandleEmptyVehicle.sqf paths.",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f keep emptyvehiclescollector.sqf:9,12,15-17,19,30 and Server_HandleEmptyVehicle.sqf:29-31,37-38,41 in both maintained roots.",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 keep the docs-shaped 24-hour handler policy in both maintained roots.",
+        "git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend, 0094647d..origin/claude/b74-aicom-spend and 80d3267c..origin/claude/b74-aicom-spend are empty for checked maintained collector/handler paths.",
+        "current origin exposes no live release, cleanup or supply rescue head; historical a96fdda2 remains historical source evidence rather than current release proof."
+      ],
+      "outputs": [
+        "Refreshed Marker cleanup/restoration, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and empty supply-truck machine rows with adjacent B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future runtime/logistics owner should decide keep-and-label versus shorter/parameterized supply-truck timeout before any gameplay patch, then propagate maintained Vanilla and smoke ordinary empty vehicles, medical/repair double-timeout vehicles, supply trucks in supply/logistics use and long-match object counts.",
+      "updated": "2026-06-23T01:03:04+02:00"
+    },
     {
       "lane": "mash-marker-current-b74-refresh-2026-06-23",
       "owner": "Codex",
