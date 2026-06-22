@@ -1531,6 +1531,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Finding: docs/perf/historical release refs keep the old shape; current stable and current Miksuu maintained roots read `WFBE_C_AI_MAX` in `Server/AI/Commander/AI_Commander_Produce.sqf:89` and `WFBE_C_UNITS_CLEAN_TIMEOUT` in `Common_TrashObject.sqf:21`. Player follower caps still use `WFBE_C_PLAYERS_AI_MAX`, and empty vehicles still use `WFBE_C_UNITS_EMPTY_TIMEOUT`.
 - Result: refreshed the owner/status/queue/machine wording so current stable is not routed as no-op/comment-only debt, while old-shape refs still have target-specific port/hide/label decisions. No gameplay source changed.
 
+## 2026-06-22T09:12:09+02:00 - Codex - B69 Patch A branch-status refresh
+
+- Claimed `b69-patch-a-branch-status-2026-06-22` after fetch exposed `origin/claude/b69@35547c47`, while the B69 wiki pages still mostly described the slate as roadmap/sketch material.
+- Source scope: `origin/claude/b69@35547c47` is one Patch A commit on top of B68 head `b8a1505f`; `b8a1505f..35547c47` changes 3 files / +85 / -7: `B69-IMPLEMENTATION-PLAN.md`, Chernarus `Common/Init/Init_CommonConstants.sqf` and Chernarus `Server/AI/Commander/AI_Commander_Strategy.sqf`.
+- Finding: Patch A order/gate/picker is source-present on the branch (`Init_CommonConstants.sqf:229-231`; `AI_Commander_Strategy.sqf:511-521,540-547,557-559`), but no maintained Vanilla diff exists, no PR exists for `claude/b69`, and capture interrupt remains unimplemented because only `WFBE_C_AICOM_CAPTURE_INTERRUPT` is declared while `Common_RunCommanderTeam.sqf` has no branch diff.
+- Result: refreshed the AI commander audit, B69 roadmap/sketch pages, Feature Status and machine rows to preserve the branch proof without claiming stable/Vanilla/release readiness. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
+
 ## 2026-06-22T09:16:49+02:00 - Codex - Indicator status-counter branch split
 
 - Claimed `indicator-status-counter-branch-split-2026-06-22` from the open indicator backlog to split the status/debug/admin counter family instead of restarting a broad "all indicators" checklist.

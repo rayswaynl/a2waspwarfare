@@ -2,6 +2,8 @@
 
 A2-OA-1.64-safe implementation sketch for each of the 78 verified items in the [[AI Commander B69 Improvement Roadmap|AI-Commander-B69-Improvement-Roadmap]]. Drafts for an engineer, not committed code. SQF bodies trimmed for page size.
 
+Branch landing note, 2026-06-22: `origin/claude/b69@35547c47` partially supersedes the HQ-strike sketches for Patch A order/gate/picker. The branch changes only Chernarus `Common/Init/Init_CommonConstants.sqf` and `Server/AI/Commander/AI_Commander_Strategy.sqf` over B68 head `b8a1505f`: constants at `Init_CommonConstants.sqf:229-231`, fractional gate at `AI_Commander_Strategy.sqf:511-521`, punch picker at `:540-547` and HC `"defense"` order at `:557-559`. `WFBE_C_AICOM_CAPTURE_INTERRUPT` exists at `Init_CommonConstants.sqf:232`, but the branch has no `Common_RunCommanderTeam.sqf` executor diff yet, so capture-interrupt and the other sketches remain implementation guidance rather than committed gameplay code.
+
 ### `aicom-supervisor-heartbeat-stamp`
 **Per-tick heartbeat stamp at the top of the supervisor loop (the signal a watchdog needs)**
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T09:16:49+02:00",
+  "generatedAt": "2026-06-22T09:29:34+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -40,6 +40,25 @@
       ],
       "handoff": "Closed after validation. Future indicator work should pick another surface family from the matrix; future FPS code work should smoke the chosen target branch and decide whether WFBE_VAR_SERVER_FPS compatibility publishing is still required before consolidation.",
       "updated": "2026-06-22T09:16:49+02:00"
+    },
+    {
+      "lane": "b69-patch-a-branch-status-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69@35547c47",
+        "B68 base origin/claude/b57-soak-proposals@b8a1505f is an ancestor of origin/claude/b69",
+        "isolated diff b8a1505f..35547c47 changes B69-IMPLEMENTATION-PLAN.md plus Chernarus Init_CommonConstants.sqf and AI_Commander_Strategy.sqf only",
+        "no b8a1505f..35547c47 diff under Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "gh pr list --head claude/b69 --state all returned [] on 2026-06-22"
+      ],
+      "outputs": [
+        "Added B69 Patch A branch-status notes to AI-Commander-Autonomy-Audit.md, AI-Commander-B69-Improvement-Roadmap.md and AI-Commander-B69-Implementation-Sketches.md.",
+        "Added a Feature-Status-Register.md row for origin/claude/b69@35547c47.",
+        "Recorded that order/gate/picker is branch source-present, capture interrupt is not implemented, and maintained Vanilla propagation/smoke remain open. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future B69 code work should smoke HQ_STRIKE launch/order behavior, propagate or explicitly scope maintained Vanilla, and implement capture-loop executor logic before claiming item 4 complete.",
+      "updated": "2026-06-22T09:12:09+02:00"
     },
     {
       "lane": "visible-parameter-runtime-consumer-current-stable-refresh-2026-06-22",
