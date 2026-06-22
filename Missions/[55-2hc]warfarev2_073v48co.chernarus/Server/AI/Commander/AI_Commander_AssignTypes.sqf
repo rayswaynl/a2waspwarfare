@@ -157,6 +157,14 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 					_track = if (_doc == "HF") then {2} else {1};
 					_dWeights set [_track, (_dWeights select _track) * 1.5];
 				};
+				//--- B69 #16 TOWN-ASSAULT PUNCH-BIAS: scale the heavy/armour bucket (select 2) and the
+				//--- light/transport-truck bucket (select 1) by server-local multipliers so town-assault
+				//--- pressure skews toward armour+trucks without re-weighting the const. Applied AFTER the
+				//--- doctrine nudge and BEFORE the zero-out loop, so a class with no buildable template is
+				//--- still zeroed below -> the bias is a no-op when the side cannot build armour (infantry
+				//--- never starved/frozen). Defaults 1.0 => byte-identical until the consts land.
+				_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])];
+				_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
 				//--- Zero out classes with no buildable template so the roll only lands on achievable types.
 				for "_bi" from 0 to 3 do {
 					if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};

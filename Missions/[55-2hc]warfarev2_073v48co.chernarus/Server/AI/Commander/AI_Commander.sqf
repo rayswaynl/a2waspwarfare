@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -89,6 +89,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 };
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltMHQReloc = 0;
+_ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
@@ -216,6 +217,25 @@ while {!gameOver} do {
 					[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
 				};
 				_ltStipend = time;
+			};
+		};
+
+		//--- B69 SAME-HC MERGE PASS (fewer+bigger, group-count DOWN): consolidate two depleted same-side
+		//--- HC infantry teams that sit close together out of combat into one squad (joinSilent B -> A on the
+		//--- owning HC). FREE (no spawn) FPS lever, so it runs on the _active gate alongside the Executor /
+		//--- town auto-assign / stipend (NOT gated by _canBuild or _humanCmd) - consolidation is always worth
+		//--- doing when the side is alive. Slow ~120s cadence. HARD-gated default-OFF behind
+		//--- WFBE_C_AICOM_HC_MERGE_ENABLE (absent => false => worker early-exits, inert). The worker also runs
+		//--- the (skipped) top-up path internally, both behind their own ENABLE flags. Call is nil-guarded so it
+		//--- is a no-op until the DRAFT worker function is registered in the AICOM compile list (cross-file dep).
+		//--- A2-OA: no isEqualTo - read the flags and test typeName=="BOOL" + truthiness (same idiom the worker uses).
+		_mergeOn = missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_ENABLE", false];
+		_topupOn = missionNamespace getVariable ["WFBE_C_AICOM_HC_TOPUP_ENABLE", false];
+		_mergeWorkerOn = ((if (typeName _mergeOn == "SCALAR") then {_mergeOn} else {0}) > 0) || ((if (typeName _topupOn == "SCALAR") then {_topupOn} else {0}) > 0); //--- B69 fix: enable flags ship as Number 0/1 (SCALAR), not BOOL; the old typeName==BOOL test never fired, so the worker was never called even when the flag was set.
+		if (_mergeWorkerOn) then {
+			if (time - _ltMerge > (missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_INTERVAL", 120])) then {
+				if (!isNil "WFBE_SE_FNC_AI_Com_HCTopUp") then {(_side) Call WFBE_SE_FNC_AI_Com_HCTopUp};
+				_ltMerge = time;
 			};
 		};
 

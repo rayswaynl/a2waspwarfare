@@ -412,7 +412,8 @@ if (isNull _airVeh) then {
 	_ridePool = [];
 	{
 		if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x}
-			&& {(_x emptyPositions "cargo") > 0}) then {_ridePool = _ridePool + [_x]};
+			&& {(_x emptyPositions "cargo") > 0}
+			&& {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (weapons _x)) > 0}}) then {_ridePool = _ridePool + [_x]}; //--- B69 (Ray 2026-06-22): ONLY armed hulls (count weapons > 0 -> APC/IFV/armed technical) carry troops; skip unarmed troop-trucks that drove infantry into the town centre and evaporated. Unmounted infantry advance ON FOOT via the group road-march order (never frozen). Air transport (helis) is a separate path, untouched. Tunable/reversible via WFBE_C_AICOM_ARMED_TRANSPORT_ONLY (0 = old behaviour).
 	} forEach _grndVehs;
 	if (count _ridePool > 0 && {!_mountBlocked}) then { //--- B66: skip the seat-fill when a hostile town blocks the route
 		//--- On-foot, non-crew infantry only (crew already man their hulls; air-lift idiom L155-158).
