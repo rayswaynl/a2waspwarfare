@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T21:02:39+02:00",
+  "generatedAt": "2026-06-22T21:19:13+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-arty-current-b69-marker-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@f5bcaf91 is unchanged from 4bd37b98 for checked Chernarus/Vanilla commander ARTY construction/discovery paths and keeps the commander-team gunner handoff at Construction_StationaryDefense.sqf:91-94 plus Tactical fire mission spawn at GUI_Menu_Tactical.sqf:547",
+        "current stable origin/master@0139a346 sets WFBE_CommanderArtillery variables at Construction_StationaryDefense.sqf:166-168 and scans marked same-side artillery from Common_GetTeamArtillery.sqf:46,56 in both maintained roots",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f match the current-stable marker path for construction/discovery while Tactical fire mission line drifts to GUI_Menu_Tactical.sqf:559",
+        "current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f expose Tactical fire mission calls but no checked GetCommanderTeam handoff or WFBE_CommanderArtillery marker variables",
+        "historical a96fdda2 and 7ff18c49 carry the marker-based path at Construction_StationaryDefense.sqf:133-135 and Common_GetTeamArtillery.sqf:46,56 in both maintained roots; current origin exposes no release/* or artillery rescue heads"
+      ],
+      "outputs": [
+        "Refreshed Construction-And-CoIn-Systems-Atlas, Feature-Status-Register, Source-Fix-Propagation-Queue, Testing-Debugging-And-Release-Workflow, Current-Source-Status-Snapshot and commander ARTY machine rows.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future construction/artillery owner should smoke the exact target branch shape: docs/source commander-team handoff or current-stable/B69/B74/historical-release marker-based discovery, including repair-truck exclusion and maintained Vanilla parity.",
+      "updated": "2026-06-22T21:19:13+02:00"
+    },
     {
       "lane": "vote-help-router-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",

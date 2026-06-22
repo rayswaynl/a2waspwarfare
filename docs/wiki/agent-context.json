@@ -562,15 +562,17 @@
     },
     "commanderBuiltArtilleryOwnership": {
       "page": "Construction-And-CoIn-Systems-Atlas.md",
-      "status": "docs-source-propagated-absent-on-master-and-release-smoke-pending",
-      "summary": "docs/source Chernarus and maintained Vanilla Takistan route manned artillery-class base-area defense gunners to the current commander team when one exists, matching Tactical fire-mission group discovery. Stable master and release 3282ff3f keep the old DefenseTeam-only path; Arma smoke remains pending.",
+      "status": "branch-split-docs-source-current-stable-b69-b74-marker-path-smoke-pending",
+      "summary": "Docs/source HEAD@f5bcaf91 Chernarus and maintained Vanilla Takistan route manned artillery-class base-area defense gunners to the current commander team when one exists, matching Tactical fire-mission group discovery. Current stable origin/master@0139a346, B69 origin/claude/b69@8d465fce and B74 origin/claude/b74-aicom-spend@b23f557f instead use marker-based commander ARTY discovery. Historical a96fdda2/7ff18c49 keeps the older marker line shape; Miksuu/perf keep old DefenseTeam-only discovery. Arma smoke remains pending.",
       "sourceRefs": [
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf:91-93",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Construction/Construction_StationaryDefense.sqf:91-93",
-        "origin/master Construction_StationaryDefense.sqf has no GetCommanderTeam handoff",
-        "origin/release/2026-06-feature-bundle 3282ff3f Construction_StationaryDefense.sqf has no GetCommanderTeam handoff",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf:10-30",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:544,565,594"
+        "origin/docs/developer-wiki-index@f5bcaf91 Chernarus/Vanilla Construction_StationaryDefense.sqf:91-94 commander-team gunner handoff",
+        "origin/docs/developer-wiki-index@f5bcaf91 Chernarus/Vanilla Common_GetTeamArtillery.sqf:10-30 group-player Tactical discovery",
+        "origin/master@0139a346 Chernarus/Vanilla Construction_StationaryDefense.sqf:166-168 WFBE_CommanderArtillery marker variables",
+        "origin/master@0139a346 Chernarus/Vanilla Common_GetTeamArtillery.sqf:46,56 marked same-side commander artillery discovery",
+        "origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f match current stable marker construction/discovery shape; Tactical RequestFireMission drifts to GUI_Menu_Tactical.sqf:559",
+        "historical a96fdda2 and 7ff18c49 Chernarus/Vanilla Construction_StationaryDefense.sqf:133-135 plus Common_GetTeamArtillery.sqf:46,56 marker path",
+        "current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f expose Tactical RequestFireMission but no checked GetCommanderTeam handoff or WFBE_CommanderArtillery marker rescue",
+        "Current origin exposed no live release/* or artillery feature head on 2026-06-22"
       ]
     },
     "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md remains the no-blind-copy policy. The active _wasp_wiki_tmp checkout is restored by scoped sync for current docs surfaces; alternate _wasp_wiki_claude still has broad divergence and must be reconciled file by file."

@@ -896,8 +896,8 @@
     {
       "id": "commander-built-artillery-ownership",
       "priority": "P2",
-      "sourceStatus": "branch-split-docs-source-and-stable-release-carry-different-supported-shapes",
-      "vanillaStatus": "docs-source-stable-and-release-vanilla-carry-supported-shapes",
+      "sourceStatus": "branch-split-docs-source-current-stable-b69-b74-and-historical-release-carry-different-supported-shapes",
+      "vanillaStatus": "docs-source-current-stable-b69-b74-and-historical-release-vanilla-carry-supported-shapes",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Construction-And-CoIn-Systems-Atlas.md",
@@ -907,19 +907,24 @@
         "Source-Fix-Propagation-Queue.md"
       ],
       "evidenceRefs": [
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf:91-93",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Construction/Construction_StationaryDefense.sqf:91-93",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf:10-30",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:544,565,594",
-        "origin/master@cf2a6d6a and origin/release/2026-06-feature-bundle@a96fdda2 Chernarus/Vanilla Construction_StationaryDefense.sqf:132-135 set WFBE_CommanderArtillery* on non-repair-truck artillery defenses",
-        "origin/master@cf2a6d6a and origin/release/2026-06-feature-bundle@a96fdda2 Chernarus/Vanilla Common_GetTeamArtillery.sqf:46-78 scan same-side marked commander artillery inside HQ/base-area radius"
+        "origin/docs/developer-wiki-index@f5bcaf91 Chernarus/Vanilla Construction_StationaryDefense.sqf:91-94 commander-team gunner handoff",
+        "origin/docs/developer-wiki-index@f5bcaf91 Chernarus/Vanilla Common_GetTeamArtillery.sqf:10-30 group-player Tactical discovery",
+        "origin/master@0139a346 Chernarus/Vanilla Construction_StationaryDefense.sqf:166-168 WFBE_CommanderArtillery marker variables",
+        "origin/master@0139a346 Chernarus/Vanilla Common_GetTeamArtillery.sqf:46,56 marked same-side commander artillery discovery",
+        "origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f match current stable marker construction/discovery shape; Tactical RequestFireMission drifts to GUI_Menu_Tactical.sqf:559",
+        "historical a96fdda2 and 7ff18c49 Chernarus/Vanilla Construction_StationaryDefense.sqf:133-135 plus Common_GetTeamArtillery.sqf:46,56 marker path",
+        "current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f expose Tactical RequestFireMission but no checked GetCommanderTeam handoff or WFBE_CommanderArtillery marker rescue",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:547",
+        "origin/claude/b69@8d465fce Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:559",
+        "Current origin exposed no live release/* or artillery feature head on 2026-06-22"
       ],
-      "releaseGate": "Smoke commander-built manned artillery inside the HQ/base circle, Tactical fire-mission listing, ammo loading, direct fire, non-artillery DefenseTeam behavior and HC static-defense fallback.",
+      "releaseGate": "Smoke commander-built manned artillery inside the HQ/base circle, Tactical fire-mission listing, ammo loading, direct fire, non-artillery DefenseTeam behavior, HC static-defense fallback and marker-path repair-truck exclusion on marker-based branches.",
       "branchStatus": {
-        "stableMaster": "cf2a6d6a-marker-based-commander-artillery-discovery-in-chernarus-and-vanilla",
-        "releaseBranch": "a96fdda2-marker-based-commander-artillery-discovery-in-chernarus-and-vanilla",
-        "docsSource": "chernarus-and-vanilla-carry-commander-team-artillery-handoff",
-        "evidence": "Current-Source-Status-Snapshot.md#2026-06-14-current-ref-snapshot"
+        "stableMaster": "0139a346-marker-based-commander-artillery-discovery-in-chernarus-and-vanilla-at-Construction_StationaryDefense-166-168-and-Common_GetTeamArtillery-46-78",
+        "b69B74": "8d465fce-and-b23f557f-match-current-stable-marker-construction-discovery-shape-with-Tactical-RequestFireMission-line-559",
+        "releaseBranch": "historical-a96fdda2-7ff18c49-marker-based-commander-artillery-discovery-at-Construction_StationaryDefense-133-135-until-release-head-restored",
+        "docsSource": "f5bcaf91-chernarus-and-vanilla-carry-commander-team-artillery-handoff-and-basearea-null-guard",
+        "evidence": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-22"
       }
     }
   ],
