@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T09:40:35+02:00",
+  "generatedAt": "2026-06-22T09:46:27+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "fast-travel-fee-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@a489e6ff Chernarus and maintained Vanilla Tactical fast-travel paths",
+        "origin/master@0139a346 current stable Chernarus and maintained Vanilla Tactical fast-travel paths",
+        "Miksuu master@b8389e74 fetched from https://github.com/miksuu/a2waspwarfare.git",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* or fast-travel feature heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and fast-travel machine rows for current stable origin/master@0139a346 line drift.",
+        "Recorded that current stable keeps paid-mode hide/marker/debit behavior but no longer carries the old completed TODO, while docs/Miksuu/perf/historical release still carry it.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future UI owner should not reopen stale-TODO removal on current stable; remaining work is hide-vs-disabled/prompt policy, optional final local funds/context recheck, maintained Vanilla propagation if patched and fast-travel smoke.",
+      "updated": "2026-06-22T09:38:43+02:00"
+    },
     {
       "lane": "b69-patch-a2-capture-interrupt-2026-06-22",
       "owner": "Codex",
@@ -4125,7 +4144,7 @@
     {
       "lane": "fast-travel-fee-stable-head-refresh",
       "owner": "Codex",
-      "status": "published-validated",
+      "status": "published-validated-superseded-current-stable",
       "updated": "2026-06-06T23:55:00+02:00",
       "sourceScope": [
         "origin/master@89ae9dad and local source HEAD@89ae9dad current stable source refs",
@@ -4142,11 +4161,11 @@
         "origin/release/2026-06-feature-bundle@7ff18c49 same maintained-root GUI_Menu_Tactical.sqf shape; constants drift to Init_CommonConstants.sqf:231,240-243"
       ],
       "outputs": [
-        "Refreshed current-facing Tactical fast-travel fee branch-head wording from stable origin/master 2cdf5fb8 to current 89ae9dad where source shape remains unchanged.",
-        "Updated Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and matching machine rows.",
+        "Historical current-head refresh from stable origin/master 2cdf5fb8 to then-current 89ae9dad.",
+        "Superseded for current-stable wording by fast-travel-fee-current-stable-refresh-2026-06-22, which uses origin/master@0139a346 and records that current stable keeps paid-mode hide/marker/debit behavior but no longer carries the stale TODO.",
         "No gameplay source changed."
       ],
-      "handoff": "Keep this as branch-status documentation only; hide-vs-disabled/prompt policy, action-time recheck, maintained Vanilla propagation and fast-travel smoke remain future UI owner work."
+      "handoff": "Use the 2026-06-22 refresh for current-stable refs; keep this row as historical branch-status evidence only."
     },
     {
       "lane": "clickabletext-soundpush-stable-head-refresh",
@@ -5995,10 +6014,16 @@
   "queuedReports": [],
   "lanes": [
     {
+      "lane": "fast-travel-fee-current-stable-refresh-2026-06-22",
+      "suggestedOwner": "Codex",
+      "status": "published-validated-docs-only",
+      "summary": "Refreshed Tactical fast-travel fee current-stable branch evidence to origin/master@0139a346 without gameplay source changes."
+    },
+    {
       "lane": "fast-travel-fee-stable-head-refresh",
       "suggestedOwner": "Codex",
-      "status": "published-validated",
-      "summary": "Refreshed Tactical fast-travel fee stable-head branch evidence to current origin/master/local master 89ae9dad without gameplay source changes."
+      "status": "published-validated-superseded-current-stable",
+      "summary": "Historical June 6 Tactical fast-travel fee stable-head refresh; use fast-travel-fee-current-stable-refresh-2026-06-22 for current origin/master@0139a346 evidence."
     },
     {
       "lane": "clickabletext-soundpush-stable-head-refresh",

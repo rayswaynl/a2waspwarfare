@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T09:40:35+02:00",
+  "generatedAt": "2026-06-22T09:46:27+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the B69 Patch A-2 capture-interrupt refresh, resource-income current-stable branch split, auto-wall current-stable scope refresh, indicator status-counter branch split, visible-parameter runtime-consumer current-stable refresh and B69 AICOM routing/mirror work. B69 Patch A/A-2 is branch-only Chernarus code on origin/claude/b69@edb9f776, not stable/Vanilla/release proof; resource-income docs separate old-shape refs from current stable origin/master@0139a346, where AI commander over-cap funds fallback is source-present but side-supply/team-paycheck cap intent and income-system 4 display drift remain open; auto-wall evidence splits old docs/perf false-default/no-exclusion rows from current stable/current Miksuu true-default global rows with broader no-wall exclusions. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the fast-travel fee current-stable refresh, B69 Patch A-2 capture-interrupt refresh, resource-income current-stable branch split, auto-wall current-stable scope refresh and indicator status-counter branch split. Fast-travel evidence splits current stable origin/master@0139a346, where paid-mode UX/debit remains but the stale TODO is absent, from docs/Miksuu/perf/historical release refs that still carry the TODO; B69 Patch A/A-2 remains branch-only Chernarus code on origin/claude/b69@edb9f776, not stable/Vanilla/release proof. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "fast-travel-fee-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and fast-travel machine rows so Tactical fast-travel fee evidence uses current stable origin/master@0139a346. Current stable Chernarus and maintained Vanilla hide unaffordable paid-mode destinations and draw $fee marker text at GUI_Menu_Tactical.sqf:185,195-196,215, then locally recalculate/debit at :403-404; constants sit at Init_CommonConstants.sqf:388,398-400 and the old completed TODO is absent. Docs branch a489e6ff, Miksuu b8389e74, perf 0076040f and historical release a96fdda2 keep the stale TODO and old line shape. No gameplay source changed."
+    },
     {
       "lane": "b69-patch-a2-capture-interrupt-2026-06-22",
       "owner": "Codex",
@@ -881,8 +887,8 @@
     {
       "lane": "fast-travel-fee-stable-head-refresh",
       "owner": "Codex",
-      "status": "published-validated",
-      "output": "Refreshed current-facing Tactical fast-travel fee rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked GUI_Menu_Tactical.sqf or Init_CommonConstants.sqf file changes from historical 2cdf5fb8. Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route fee-mode TODOs, hidden unaffordable destinations, marker-only fee text and local travel debit through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+      "status": "published-validated-superseded-current-stable",
+      "output": "Historical June 6 current-head refresh for Tactical fast-travel fee rows. Superseded for current-stable wording by fast-travel-fee-current-stable-refresh-2026-06-22, which uses origin/master@0139a346 and records that current stable keeps paid-mode hide/marker/debit behavior but no longer carries the old completed TODO. No gameplay source changed."
     },
     {
       "lane": "clickabletext-soundpush-stable-head-refresh",

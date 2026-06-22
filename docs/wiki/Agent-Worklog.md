@@ -1553,6 +1553,7 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source scope: docs branch `origin/docs/developer-wiki-index@89aadf8c`, current stable `origin/master@0139a346`, current Miksuu `master@d9506078` fetched on 2026-06-22, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2` and B69 branch `origin/claude/b69@35547c47`.
 - Finding: every checked maintained root still routes CoIn `User14` through `RequestAutoWallConstructinChange.sqf:3-7` into one global `isAutoWallConstructingEnabled`. Docs/perf default it `false` and consume it at SmallSite `:110` / MediumSite `:125`; current stable and Miksuu default it `true` and consume it at SmallSite `:123` / MediumSite `:160` with AARadar plus related exclusions; historical `a96fdda2` only adds the AARadar guard; B69 matches current-stable global scope with line drift.
 - Result: refreshed [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), Feature Status, Source Fix queue and machine rows so current stable is not routed through old line anchors. The global-vs-side/requester policy decision remains future construction-owner work; no gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
 
 ## 2026-06-22T09:34:00+02:00 - Codex - Resource income current-stable refresh
 
@@ -1567,4 +1568,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source scope: `edb9f776` is one new Chernarus-only commit over `35547c47`; `35547c47..edb9f776` changes only `Common/Functions/Common_RunCommanderTeam.sqf`, +16 / -1. The full B69 branch delta from B68 head `b8a1505f` is now 4 files / +101 / -8, still Chernarus-only.
 - Finding: capture-phase interrupt now has branch executor code: order-seq snapshot at `Common_RunCommanderTeam.sqf:708-713`, camp-first abort at `:809-811`, `doFollow` release and bail at `:867-868`, depot-hold abort at `:894-896` and pre-`_captureDone` bail at `:916`. There is still no maintained Vanilla diff and no PR for `claude/b69`.
 - Result: refreshed the B69 audit, roadmap, sketches, Feature Status and machine rows so Patch A-2 is source-present but remains branch-only / smoke-pending / propagation-pending. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T09:38:43+02:00 - Codex - Fast travel fee current-stable refresh
+
+- Claimed `fast-travel-fee-current-stable-refresh-2026-06-22` after [Client UI systems](Client-UI-Systems-Atlas#tactical-fast-travel-fee-branch-matrix), Feature Status, Source Fix queue and fast-travel machine rows still mixed older `origin/master@cf2a6d6a` / `89ae9dad` stable wording with current stable `origin/master@0139a346`.
+- Source scope: docs branch `docs/developer-wiki-index@a489e6ff`, current stable `origin/master@0139a346`, Miksuu `master@b8389e74` fetched from `https://github.com/miksuu/a2waspwarfare.git`, `origin/perf/quick-wins@0076040f` and historical release commit `a96fdda2`; current origin exposes no live `release/*` or fast-travel feature heads on 2026-06-22.
+- Finding: current stable Chernarus and maintained Vanilla still hide unaffordable paid-mode destinations and draw `$fee` marker text at `GUI_Menu_Tactical.sqf:185,195-196,215`, then locally recalculate/debit at `:403-404`; constants now sit at `Init_CommonConstants.sqf:388,398-400`. The old completed fee-policy TODO is absent on current stable, but docs/Miksuu/perf/historical release still carry it at `GUI_Menu_Tactical.sqf:147` with the old fee/debit line shape.
+- Result: refreshed the owner matrix, Feature Status, Source Fix queue, hardening/status/knowledge machine rows and coordination records so future code owners focus on hide-vs-disabled/prompt policy, final local funds/context recheck and Vanilla smoke instead of reopening current-stable TODO removal. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
