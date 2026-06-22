@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T12:14:10+02:00",
+  "generatedAt": "2026-06-22T12:24:08+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -39,6 +39,25 @@
       ],
       "handoff": "Closed after validation. Future agents must treat d9506078 as local origin/claude/* branch evidence only unless a future direct Miksuu fetch proves otherwise. Current stable origin/master@0139a346 remains separate fixed/source-present evidence where documented.",
       "updated": "2026-06-22T12:14:10+02:00"
+    },
+    {
+      "lane": "mash-marker-current-stable-branch-scope-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs checkout HEAD@db3015f18ea3 Chernarus and maintained Vanilla keep local MASH deploy plus commented receiver/orphaned marker relay",
+        "origin/master@0139a3468609 Chernarus and maintained Vanilla remove the maintained MASH deploy module path and keep the Skill_Apply.sqf:43 MASH deploy ability removed comment",
+        "Miksuu master fetched 2026-06-22 at b8389e748243 keeps the old deploy/relay shape in both maintained roots",
+        "origin/perf/quick-wins@0076040f8a5e keeps the old deploy/relay shape in both maintained roots",
+        "historical a96fdda28087 and B69-family refs 0a1ccb4d05c5 / 80d3267c1b2b carry the current-stable MASH deploy removed shape in both maintained roots"
+      ],
+      "outputs": [
+        "Refreshed Respawn lifecycle, Feature Status, Abandoned Feature Revival, Dead/stale code, Public Variable Channel Index, Support Specials and adjacent module/UI/hardening route wording.",
+        "Updated dashboard, worklog, pruning ledger and machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future MASH owners should keep local deploy/respawn, shared marker relay and current-stable deploy removal separate; revive old-shape markers only with server-held marker state, delete resend and explicit JIP resend, or finish removal/cleanup on the target branch.",
+      "updated": "2026-06-22T12:01:07+02:00"
     },
     {
       "lane": "salvage-payout-current-head-refresh-2026-06-22",

@@ -1697,3 +1697,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Findings: current Miksuu `b8389e748243` is old-shape for the checked rows: inclusive vehicle/backpack cargo loops in both maintained roots, auto-wall false default/no SmallSite/MediumSite exclusions, no live maintained-root `WFBE_C_AI_MAX` reader, `WFBE_C_UNITS_CLEAN_TIMEOUT` comment-only cleanup split and ancestor-name-only LoadoutManager root discovery. Current stable `origin/master@0139a346` remains separate source-present/fixed evidence where documented.
 - Result: refreshed cargo-loop, gear/loadout, construction/CoIn, mission-parameter, dead/stale, Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows. Historical Worklog/event entries that mentioned `d9506078` are superseded by this entry rather than rewritten. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T11:53:18+02:00 - Codex - MASH marker current-stable branch-scope refresh
+
+- Claimed `mash-marker-current-stable-branch-scope-refresh-2026-06-22` after the MASH marker relay row still used older stable/release wording while current stable `origin/master@0139a346` and B69-family heads now show the maintained MASH deploy module path removed.
+- Initial source scope: docs checkout `HEAD@db3015f1`, current stable `origin/master@0139a346`, current Miksuu fetched from `https://github.com/miksuu/a2waspwarfare.git` at `b8389e748243`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, `origin/claude/b69` and `origin/claude/b69-finalpieces`.
+- Initial finding: docs/perf/Miksuu-shaped maintained roots keep local MASH deploy plus commented client receiver and server marker relay; current stable, historical release and B69-family maintained roots carry `Skill_Apply.sqf:43` MASH-deploy-removed wording, with residual config/string MASH/FARP entries still present.
+- Result: refreshed Respawn lifecycle, Feature Status, Abandoned Feature Revival, Dead/stale code, Public Variable Channel Index, Support Specials, adjacent module/UI/hardening routes and machine rows so old-shape MASH deploy/relay evidence is no longer flattened with current stable/B69 deploy-path removal. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

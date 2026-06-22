@@ -102,7 +102,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | Artillery | Working/partial | Local/client fire authority with upgrade-gated UI/ammo/timeout behavior. |
 | Anti-air radar (AAR) | Working/partial | Base structure and client marker feature are live when enabled; upgrade levels change marker detail and refresh rate, but the per-aircraft marker loops are client-local and should be performance-smoked on busy air games. |
 | ICBM/Nuke | Partial/high-risk | Client deducts funds and sends `RequestSpecial ["ICBM", ...]`; server applies nuke damage from payload. Stale adjunct paths remain. |
-| MASH | Removed (officer deploy) | The officer MASH deploy skill action was removed in the June bundle (`Skill_Apply.sqf:43`); no portable deploy path remains in master. The `WFBE_%1MASHES` config vars are commented out in all Core_Root/*.sqf files. Stringtable stubs (`STR_WF_ACTION_DeployMASH` / `STR_WF_ACTION_UndeployMASH`) and marker relay/receiver stubs are orphaned. MASH as a buildable base defense structure in Core_Structures configs is a separate system and is unaffected. |
+| MASH | Branch-split / removed on current stable | Current stable removed the officer MASH deploy skill action in the June bundle (`Skill_Apply.sqf:43`); no portable deploy path remains there. Old-shape docs/Miksuu/perf roots still carry local deploy plus orphaned marker relay/receiver stubs. The `WFBE_%1MASHES` config vars are commented out in all Core_Root/*.sqf files, and MASH as a buildable base defense structure in Core_Structures configs is a separate system. |
 | ZetaCargo/airlift | Broken/partial | Hook attaches nearby unmanned land vehicle; detach action does not pass the lifted vehicle even though unhook expects it. |
 | Service menu | Working/partial | Repair/refuel/rearm/heal effects and deductions are client-side; local support scripts recheck world state but not full money authority. |
 | Supply mission | Partial | Server validates return proximity but trusts client-set `SupplyFromTown` / `SupplyAmount`. |
@@ -140,7 +140,7 @@ AAR is a live base-support system, not only a historical changelog item. The bui
 
 ### MASH
 
-`Client/Module/Skill/*` owns officer MASH/supply actions. MASH deploy creates local tent state used by respawn lookup. Marker sync is stale: the server relay exists, the client receiver compile is commented, and no maintained Chernarus/Vanilla sender was found. The 2026-06-05 branch recheck found the same orphaned relay shape on stable, Miksuu upstream and the current release branch; modded `eden`/`lingor` sender lines are drift, not maintained-marker proof. Use [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) for the live respawn split.
+`Client/Module/Skill/*` owns officer MASH/supply actions on old-shape docs/Miksuu/perf roots. There, MASH deploy creates local tent state used by respawn lookup, while marker sync is stale: the server relay exists, the client receiver compile is commented, and no maintained Chernarus/Vanilla sender was found. Current stable `origin/master@0139a3468609`, historical `a96fdda28087` and B69-family refs remove the maintained-root deploy/module path and keep only `Skill_Apply.sqf:43` removal wording plus residues. Modded `eden`/`lingor` sender lines are drift, not maintained-marker proof. Use [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) for the branch-sensitive respawn split.
 
 ### ZetaCargo Airlift
 

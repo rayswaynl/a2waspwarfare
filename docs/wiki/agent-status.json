@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T12:14:10+02:00",
+  "generatedAt": "2026-06-22T12:24:08+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Miksuu current-head correction after several rows treated local d9506078 as current Miksuu. Direct git ls-remote against https://github.com/miksuu/a2waspwarfare.git shows master@b8389e748243 on 2026-06-22, while local d9506078 is contained by origin/claude/* branches only. Cargo, auto-wall, visible-parameter and LoadoutManager root-discovery docs/machine rows now treat current Miksuu as old-shape; no gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the Miksuu current-head provenance correction plus the MASH marker/deploy branch split. Miksuu: direct ls-remote shows master@b8389e748243 on 2026-06-22 while local d9506078 is origin/claude/* evidence only, so cargo, auto-wall, visible-parameter and LoadoutManager rows treat current Miksuu as old-shape. MASH: docs head db3015f18ea3, Miksuu b8389e748243 and perf/quick-wins 0076040f8a5e keep local deploy plus orphaned relay; current stable origin/master@0139a3468609, historical a96fdda28087, B69 0a1ccb4d05c5 and finalpieces 80d3267c1b2b remove the maintained-root deploy/module path. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -61,6 +61,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Corrected current-facing Miksuu provenance after direct git ls-remote showed current upstream master@b8389e748243 while local d9506078 is only origin/claude/* branch evidence. Refreshed cargo-loop, gear/loadout, construction/CoIn, mission-parameter, dead/stale, Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so current Miksuu remains old-shape for inclusive cargo loops, auto-wall false default/no exclusions, visible AI/cleanup parameter readers and LoadoutManager ancestor-name-only root discovery. Current stable origin/master@0139a346 remains separate fixed/source-present evidence where documented. No gameplay source changed."
+    },
+    {
+      "lane": "mash-marker-current-stable-branch-scope-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Respawn-And-Death-Lifecycle-Atlas.md, Feature-Status-Register.md, Abandoned-Feature-Revival-Review.md, Dead-Code-And-Stale-Code-Register.md, Public-Variable-Channel-Index.md, Support-Specials-And-Tactical-Modules-Atlas.md, adjacent module/UI/hardening routes and machine rows so MASH marker/deploy evidence is branch-sensitive. Docs head db3015f18ea3, Miksuu b8389e748243 and perf/quick-wins 0076040f8a5e keep local deploy plus orphaned marker relay in both maintained roots; current stable origin/master@0139a3468609, historical a96fdda28087, B69 0a1ccb4d05c5 and finalpieces 80d3267c1b2b remove the maintained-root deploy/module path. No gameplay source changed."
     },
     {
       "lane": "salvage-payout-current-head-refresh-2026-06-22",
