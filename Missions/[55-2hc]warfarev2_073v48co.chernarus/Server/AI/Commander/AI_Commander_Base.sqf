@@ -333,7 +333,14 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 		//--- site paid for last tick is not alive yet - the pending timestamp guards the
 		//--- 5-min build window so we never pay for the same structure twice.
 		_have = false;
-		{ if (typeOf _x == _class && {alive _x}) exitWith {_have = true} } forEach _structures;
+		//--- B74 REBASE (Ray 2026-06-22): when REBASE_ON, only count a structure as 'already have' if it sits within
+		//--- BASE_RADIUS of the CURRENT HQ - so after an MHQ relocation the old base's far factories no longer block a
+		//--- rebuild and the new forward base re-establishes its own production (supply-gated). Structures build in the
+		//--- 60-110m HQ ring (well inside BASE_RADIUS), so normal non-relocated play is unchanged (HQ-local == side-wide).
+		private ["_rebaseLocal","_baseR"];
+		_rebaseLocal = (missionNamespace getVariable ["WFBE_C_AICOM_REBASE_ON", 1]) > 0;
+		_baseR = missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450];
+		{ if (typeOf _x == _class && {alive _x} && {(!_rebaseLocal) || {((getPos _x) distance _hqPos) <= _baseR}}) exitWith {_have = true} } forEach _structures;
 		if (!_have) then {
 			if (time - (_logik getVariable [Format ["wfbe_aicom_built_%1", _x], -1e6]) < 300) then {_have = true};
 		};

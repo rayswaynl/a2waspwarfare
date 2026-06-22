@@ -160,6 +160,15 @@ if (_foundedTeams > _target) then {
 	};
 };
 
+//--- B74 VETERAN-SLOT (Ray 2026-06-22, review fix): the rich flag (AI_Commander.sqf) arms wfbe_aicom_veteran_next
+//--- when the team target is already MET - but the founding gate just below early-exits at target, so the W7 premium
+//--- branch never ran and the flag was INERT (review w0e91uqds, MED). When the Veteran flag is armed, grant ONE extra
+//--- founding slot THIS tick so the premium platoon actually founds; the downstream W7 branch consumes the flag and
+//--- promotes _pick to the top-tier template. Transient: next tick the flag is consumed/false and the target returns
+//--- to normal (no permanent target inflation). Placed AFTER the PC-cleanup block so the +1 never triggers a retire.
+//--- A2-OA-safe: boolean getVariable on the side-logic OBJECT _logik is reliable (not a group); plain if, no Bool ==.
+if (_logik getVariable ["wfbe_aicom_veteran_next", false]) then {_target = _target + 1};
+
 if ((_foundedTeams + _pending) >= _target) exitWith {};
 
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
@@ -200,11 +209,18 @@ if (count _live > 0) then {
 			if (!((_x select 1) in _afNames)) then {_afNames = _afNames + [_x select 1]};
 		} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
 		{
-			if (((_x getVariable ["sideID", -1]) == _sideID) && {((_x getVariable ["name",""]) in _afNames) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
+			if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {(_x getVariable ["name",""]) in _afNames} || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true}; //--- B74: PRIMARY check is the authoritative baked wfbe_is_airfield flag (set per-airfield in mission.sqm); name-list + hangar-obj kept as fallback.
 		} forEach towns;
 	} else {
 		_hasAirfield = true; //--- rule disabled -> planes ungated (old behaviour).
 	};
+
+	//--- B74 AIRFIELD FREE-BUY (Ray 2026-06-22): holding a captured airfield lets the side buy JETS+HELIS
+	//--- there even WITHOUT the Aircraft Factory and without the AIR_MIN_TOWNS wait (the field IS the air
+	//--- enabler). When false (no field held) the normal gates stand, so an Aircraft Factory alone still
+	//--- yields HELICOPTERS ONLY (planes need a held field via the plane-gate below).
+	private ["_freeAirWaive"];
+	_freeAirWaive = _hasAirfield && {(missionNamespace getVariable ["WFBE_C_AICOM_AIRFIELD_FREE_AIR", 1]) > 0};
 
 	//--- V0.6.2: gate templates on REAL unit data too (same rule Produce uses) - the
 	//--- hand-authored squad metadata is stale (RU tank platoon claims heavy 1; the
@@ -226,7 +242,7 @@ if (count _live > 0) then {
 					{
 						_unitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
 						if (_cn in _unitList) exitWith {
-							if ((_ud select QUERYUNITUPGRADE) > (_upgrades select (_x select 1))) then {_ok = false};
+							if (((_ud select QUERYUNITUPGRADE) > (_upgrades select (_x select 1))) && {!(_freeAirWaive && {(_x select 1) == WFBE_UP_AIR})}) then {_ok = false}; //--- B74: at a captured airfield (free-buy) waive the AIR factory-tier requirement so jets+helis are buildable without the Aircraft Factory; non-air factory tiers still apply.
 						};
 					} forEach _facMap;
 				};
@@ -263,7 +279,7 @@ if (count _live > 0) then {
 	_rosterMyID = (_side) Call WFBE_CO_FNC_GetSideID;
 	_rosterOwnTowns = 0;
 	{ if ((_x getVariable "sideID") == _rosterMyID) then {_rosterOwnTowns = _rosterOwnTowns + 1} } forEach towns;
-	if (_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+	if ((_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) && {!_freeAirWaive}) then { //--- B74: a captured airfield (free-buy) exempts the AIR_MIN_TOWNS strip so air comes online immediately on field capture.
 		_eligNoAir = [];
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
@@ -353,7 +369,41 @@ if (count _live > 0) then {
 		_clsOrder = [2,1,3,0];
 		{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _clsOrder;
 	};
-	_pick = (_buckets select _chosen) select (floor (random (count (_buckets select _chosen))));
+	//--- B74 COST/TIER-WEIGHTED DRAW (Ray 2026-06-22): the chosen bucket pick WAS a UNIFORM coin-flip, so a
+	//--- cheap 2800 squad was fielded as often as a 10310 premium platoon - the commander hoarded ~1.3M funds
+	//--- and only ever fielded the cheap subset. Weight each candidate template by (summed unit price)^EXP and
+	//--- roll, so it preferentially founds its EXPENSIVE unlocked units once the cash exists. EXP=0 (or a single
+	//--- candidate) reproduces the old uniform draw. Price uses the same QUERYUNITPRICE sum the founding charge
+	//--- below uses. A2-OA-safe: ^ power op, manual index counter, outer _x captured into _cwIdx before the
+	//--- inner price forEach rebinds _x (the documented _ti gotcha at L282).
+	private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwPrice","_cwW","_cwRoll","_cwAcc","_cwI","_cwUd"];
+	_cwBucket = _buckets select _chosen;
+	_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_TIER_BIAS_EXP", 1.5];
+	_pick = -1;
+	if (_cwExp <= 0 || {count _cwBucket <= 1}) then {
+		_pick = _cwBucket select (floor (random (count _cwBucket)));
+	} else {
+		_cwWeights = [];
+		_cwSum = 0;
+		{
+			_cwIdx  = _x;                       //--- capture: the inner forEach below rebinds _x to the unit classname.
+			_cwTmpl = _templates select _cwIdx;
+			_cwPrice = 0;
+			{ _cwUd = missionNamespace getVariable _x; if (!isNil "_cwUd") then {_cwPrice = _cwPrice + (_cwUd select QUERYUNITPRICE)} } forEach _cwTmpl;
+			if (_cwPrice < 1) then {_cwPrice = 1};
+			_cwW = _cwPrice ^ _cwExp;
+			_cwWeights set [count _cwWeights, _cwW];
+			_cwSum = _cwSum + _cwW;
+		} forEach _cwBucket;
+		_cwRoll = random _cwSum;
+		_cwAcc = 0; _cwI = 0;
+		{
+			_cwAcc = _cwAcc + (_cwWeights select _cwI);
+			if (_pick < 0 && {_cwRoll < _cwAcc}) then {_pick = _x};
+			_cwI = _cwI + 1;
+		} forEach _cwBucket;
+		if (_pick < 0) then {_pick = _cwBucket select (count _cwBucket - 1)};
+	};
 
 	//--- W7 Veteran Company: one-shot flag on logik -> use highest-upgrade eligible template.
 	private ["_w7Flag","_w7Skill","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best"];
