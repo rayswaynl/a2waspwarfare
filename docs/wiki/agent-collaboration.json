@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T10:05:31+02:00",
+  "generatedAt": "2026-06-22T10:25:42+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "camp-count-helper-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@ade4d356 Chernarus and maintained Vanilla helper/consumer paths unchanged from 5243f91d for this lane: helpers at Common_GetTotalCamps.sqf:10 and Common_GetTotalCampsOnSide.sqf:16; consumers at server_town.sqf:179-195, Client_GetRespawnAvailable.sqf:69 and GUI_Menu_BuyUnits.sqf:111-112",
+        "origin/master@0139a346 current stable Chernarus and maintained Vanilla helpers still exitWith {1}; consumers line-drift to server_town.sqf:167-183, Client_GetRespawnAvailable.sqf:92 and GUI_Menu_BuyUnits.sqf:120-121",
+        "Miksuu master@b8389e74 fetched from https://github.com/miksuu/a2waspwarfare.git keeps helper fallback with consumers at server_town.sqf:163-179, Client_GetRespawnAvailable.sqf:69 and GUI_Menu_BuyUnits.sqf:111-112",
+        "origin/perf/quick-wins@0076040f keeps helper fallback with docs-shaped consumers at server_town.sqf:179-195, Client_GetRespawnAvailable.sqf:69 and GUI_Menu_BuyUnits.sqf:111-112",
+        "historical release commit a96fdda2 keeps helper fallback with consumers at server_town.sqf:163-179, Client_GetRespawnAvailable.sqf:56 and GUI_Menu_BuyUnits.sqf:117-118; current origin exposes no release/* heads on 2026-06-22",
+        "origin/claude/b69@0a1ccb4d keeps helper fallback with consumers at server_town.sqf:188-204, Client_GetRespawnAvailable.sqf:92 and GUI_Menu_BuyUnits.sqf:120-121",
+        "current origin exposes no feat/*camp* or feat/*town* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md current branch scope and camp-helper risk prose for current stable line drift and active B69 branch caveat.",
+        "Refreshed Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future town/respawn code owner should decide real-count versus safe-denominator semantics, split helpers or add caller-specific zero-camp guards, propagate maintained Vanilla, and smoke capture mode 2, threeway defender respawn and depot infantry buys on zero, partial and all-camp towns.",
+      "updated": "2026-06-22T10:25:42+02:00"
+    },
     {
       "lane": "pvf-sender-auth-current-stable-refresh-2026-06-22",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T10:05:31+02:00",
+  "generatedAt": "2026-06-22T10:25:42+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the PVF sender-auth current-stable refresh, AI supply-truck current-stable anchor split, fast-travel fee current-stable refresh, B69 Patch A-2 capture-interrupt refresh and resource-income current-stable branch split. DR-55 remains P0 open: current stable origin/master@0139a346 and B69 0a1ccb4d removed dispatch-time Call Compile but still forward only the PVEH value tuple into HandlePVF, while docs HEAD@ade4d356, Miksuu b8389e74 and perf 0076040f keep value-only PVEHs plus old dispatchers. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
+      "currentWork": "Latest docs-only state adds the camp-count helper current-stable refresh on top of the PVF sender-auth current-stable refresh, AI supply-truck current-stable anchor split, fast-travel fee refresh and B69 Patch A-2 capture-interrupt refresh. Camp-count evidence now separates docs branch ade4d356, current stable origin/master@0139a346, Miksuu b8389e74, perf/quick-wins 0076040f, historical release a96fdda2 and active B69 origin/claude/b69@0a1ccb4d; all keep the zero-camp helper fallback at Common_GetTotalCamps.sqf:10 and Common_GetTotalCampsOnSide.sqf:16, with current-stable caller line drift at server_town.sqf:167-183, Client_GetRespawnAvailable.sqf:92 and GUI_Menu_BuyUnits.sqf:120-121. PVF DR-55 remains open because current stable and B69 still forward only value tuples into HandlePVF. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed documentation lane from Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep wiki/docs mirror parity."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "camp-count-helper-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Towns-Camps-And-Capture-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows so camp-count helper fallback evidence no longer cites stale origin/master cf2a6d6a or older current-head anchors. Docs branch ade4d356, current stable origin/master@0139a346, Miksuu b8389e74, perf/quick-wins 0076040f, historical a96fdda2 and active B69 origin/claude/b69@0a1ccb4d all keep Common_GetTotalCamps.sqf:10 and Common_GetTotalCampsOnSide.sqf:16 returning 1 for zero-camp towns. Future work remains real-count versus safe-denominator semantics plus 0/partial/all-camp smoke. No gameplay source changed."
+    },
     {
       "lane": "pvf-sender-auth-current-stable-refresh-2026-06-22",
       "owner": "Codex",
