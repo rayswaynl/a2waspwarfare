@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T21:19:13+02:00",
+  "generatedAt": "2026-06-22T21:49:22+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only commander ARTY current stable/B69/B74 marker refresh. Docs/source HEAD@f5bcaf91 is unchanged from 4bd37b98 for checked commander ARTY paths and keeps the commander-team gunner handoff at Construction_StationaryDefense.sqf:91-94 plus group-based Tactical discovery at Common_GetTeamArtillery.sqf:10-30. Current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f use marker discovery at Construction_StationaryDefense.sqf:166-168 plus Common_GetTeamArtillery.sqf:46,56; historical a96fdda2/7ff18c49 uses :133-135; current Miksuu/perf keep old DefenseTeam-only discovery. No gameplay source changed.",
+      "currentWork": "Published docs-only paratrooper marker current stable/B69/B74 refresh. Docs/source HEAD@7e88d609 registers HandleParatrooperMarkerCreation at Common/Init/Init_PublicVariables.sqf:39 in both maintained roots, sends it from Support_Paratroopers.sqf:117 and records paratrooper_marker_spawn in the handler at :45. Current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f register at :38 in both maintained roots; historical a96fdda2/7ff18c49 registers at :34 without a live release/* head; current Miksuu omits the checked registration and perf is Chernarus-only. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress-Dashboard.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and the pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "paratrooper-marker-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Paratrooper marker revival, Feature Status, Source Fix queue, Current Source Status Snapshot, Testing workflow and machine rows with current stable/B69/B74 evidence. Docs/source HEAD@7e88d609 registers HandleParatrooperMarkerCreation at Common/Init/Init_PublicVariables.sqf:39 in both maintained roots, sends it from Support_Paratroopers.sqf:117 and records paratrooper_marker_spawn in the handler at :45. Current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f register at :38 in both maintained roots. Historical a96fdda2/7ff18c49 registers at :34 without a live release/* head; current Miksuu omits the checked registration and perf is Chernarus-only. No gameplay source changed."
+    },
     {
       "lane": "commander-arty-current-b69-marker-refresh-2026-06-22",
       "owner": "Codex",

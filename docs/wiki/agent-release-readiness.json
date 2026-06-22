@@ -761,8 +761,8 @@
     {
       "id": "paratrooper-marker-revival",
       "priority": "P2",
-      "sourceStatus": "docs-source-and-current-stable-carry-change",
-      "vanillaStatus": "docs-source-and-current-stable-vanilla-carry-change",
+      "sourceStatus": "docs-source-current-stable-b69-b74-carry-change",
+      "vanillaStatus": "docs-source-current-stable-b69-b74-vanilla-carry-change",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Paratrooper-Marker-Revival.md",
@@ -770,15 +770,21 @@
         "Feature-Status-Register.md"
       ],
       "evidenceRefs": [
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf:39",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf:117",
-        "origin/master@cf2a6d6a and origin/release/2026-06-feature-bundle@a96fdda2 Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:34 register HandleParatrooperMarkerCreation"
+        "docs/source HEAD@7e88d609 Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:39 register HandleParatrooperMarkerCreation",
+        "docs/source HEAD@7e88d609 Chernarus/Vanilla Server/Support/Support_Paratroopers.sqf:117 send HandleParatrooperMarkerCreation",
+        "docs/source HEAD@7e88d609 Chernarus/Vanilla Client/PVFunctions/HandleParatrooperMarkerCreation.sqf:45 records paratrooper_marker_spawn",
+        "origin/master@0139a346, origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:38 register HandleParatrooperMarkerCreation",
+        "historical a96fdda2 and 7ff18c49 Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:34 register HandleParatrooperMarkerCreation; no live origin release/* head on 2026-06-22",
+        "current Miksuu b8389e748243 keeps sender/handler but no checked maintained-root Init_PublicVariables registration; origin/perf/quick-wins@0076040f registers Chernarus only at :40"
       ],
       "releaseGate": "Trigger paratrooper support and confirm the client marker appears without an unregistered-client-PVF error.",
       "branchStatus": {
-        "stableMaster": "cf2a6d6a-registers-in-chernarus-and-vanilla",
-        "releaseBranch": "a96fdda2-registers-in-chernarus-and-vanilla",
+        "stableMaster": "0139a346-registers-in-chernarus-and-vanilla",
+        "b69": "8d465fce-registers-in-chernarus-and-vanilla",
+        "b74": "b23f557f-registers-in-chernarus-and-vanilla",
+        "historicalReleaseLine": "a96fdda2-and-7ff18c49-register-in-chernarus-and-vanilla-no-live-release-head",
+        "currentMiksuu": "b8389e748243-sender-handler-present-registration-not-found-in-checked-maintained-roots",
+        "perfQuickWins": "0076040f-registers-chernarus-only",
         "docsSource": "chernarus-and-vanilla-carry-registration",
         "evidence": "Current-Source-Status-Snapshot.md#2026-06-14-current-ref-snapshot"
       }

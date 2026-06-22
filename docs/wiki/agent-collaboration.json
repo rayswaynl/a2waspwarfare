@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T21:19:13+02:00",
+  "generatedAt": "2026-06-22T21:49:22+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "paratrooper-marker-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@7e88d609 is source-present in both maintained roots: Init_PublicVariables.sqf:39 registers HandleParatrooperMarkerCreation, Support_Paratroopers.sqf:117 sends it, and the handler file records paratrooper_marker_spawn at HandleParatrooperMarkerCreation.sqf:45",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f register HandleParatrooperMarkerCreation at Init_PublicVariables.sqf:38 in both maintained roots and keep the same sender/handler line shape",
+        "current Miksuu b8389e748243 keeps the sender/handler files but no checked maintained-root Init_PublicVariables registration; origin/perf/quick-wins@0076040f registers Chernarus only at Init_PublicVariables.sqf:40 while maintained Vanilla omits it",
+        "historical a96fdda2 and 7ff18c49 register HandleParatrooperMarkerCreation at Init_PublicVariables.sqf:34 in both maintained roots; current origin exposes no release/* or paratrooper/marker rescue head"
+      ],
+      "outputs": [
+        "Refreshed Paratrooper-Marker-Revival, Feature Status, Source Fix queue, Current Source snapshot, Testing workflow and marker machine rows for a current stable/B69/B74 branch refresh.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future support/marker owner should smoke the exact target branch: support drop, client marker creation, no nil-code/unregistered-PVF error, maintained Vanilla parity and modded-folder drift where relevant.",
+      "updated": "2026-06-22T21:49:22+02:00"
+    },
     {
       "lane": "commander-arty-current-b69-marker-refresh-2026-06-22",
       "owner": "Codex",
