@@ -23,6 +23,28 @@
   },
   "activeClaims": [
     {
+      "lane": "auto-wall-current-stable-scope-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/docs/developer-wiki-index@89aadf8c",
+        "origin/master@0139a346",
+        "current Miksuu master@d9506078 fetched 2026-06-22",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2",
+        "origin/claude/b69@35547c47",
+        "docs/perf Chernarus and maintained Vanilla keep false-default/no-exclusion global at SmallSite :110 / MediumSite :125",
+        "current stable/Miksuu keep true-default global at SmallSite :123 / MediumSite :160 with AARadar plus related structure exclusions",
+        "B69 matches current-stable global scope with line drift"
+      ],
+      "outputs": [
+        "Refreshed Construction and CoIn, Feature Status, Source Fix queue and auto-wall machine rows so current stable is not routed through stale cf2a6d6a/b8389e74 line anchors.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future construction owner should decide global match switch versus side/requester preference, then label UI behavior or key/validate state and smoke two players/sides toggling before SmallSite and MediumSite construction.",
+      "updated": "2026-06-22T09:22:00+02:00"
+    },
+    {
       "lane": "indicator-status-counter-branch-split-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",

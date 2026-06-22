@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the indicator status-counter branch split, B69 Patch A branch-status refresh, visible-parameter runtime-consumer current-stable refresh, B69 AICOM routing/mirror work and current-stable AICOM correction. B69 Patch A is branch-only Chernarus code on origin/claude/b69@35547c47, not stable/Vanilla/release proof; parameter evidence now splits old docs/perf/historical release readless/comment-only rows from current stable/Miksuu live readers; status-counter docs separate player HUD SERVER_FPS_GUI, compatibility WFBE_VAR_SERVER_FPS, admin/status signals and PerformanceAudit RPT/tooling output; AICOM evidence treats origin/master@0139a346 as having a source-present maintained-root supervisor route at Init_Server.sqf:64,847 and AI_Commander.sqf:127,253,161. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the auto-wall current-stable scope refresh, indicator status-counter branch split, B69 Patch A branch-status refresh, visible-parameter runtime-consumer current-stable refresh, B69 AICOM routing/mirror work and current-stable AICOM correction. Auto-wall evidence splits old docs/perf false-default/no-exclusion rows from current stable origin/master@0139a346 and current Miksuu master@d9506078 true-default global rows with broader no-wall exclusions; B69 Patch A is branch-only Chernarus code on origin/claude/b69@35547c47, not stable/Vanilla/release proof; status-counter docs separate player HUD SERVER_FPS_GUI, compatibility WFBE_VAR_SERVER_FPS, admin/status signals and PerformanceAudit RPT/tooling output; AICOM evidence treats origin/master@0139a346 as source-present for the maintained-root supervisor route at Init_Server.sqf:64,847 and AI_Commander.sqf:127,253,161. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "auto-wall-current-stable-scope-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and auto-wall machine rows after source checks split stale cf2a6d6a/b8389e74 wording from current 2026-06-22 refs. Docs branch origin/docs/developer-wiki-index@89aadf8c and origin/perf/quick-wins@0076040f keep the old false-default/no-exclusion global at SmallSite :110 / MediumSite :125; current stable origin/master@0139a346 and current Miksuu master@d9506078 keep one global but default it true and consume it at :123 / :160 with AARadar plus related exclusions. Historical a96fdda2 only adds the AARadar guard; B69 origin/claude/b69@35547c47 matches current-stable global scope with line drift. No gameplay source changed."
+    },
     {
       "lane": "indicator-status-counter-branch-split-2026-06-22",
       "owner": "Codex",
