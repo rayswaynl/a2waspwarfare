@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T15:32:39+02:00",
+  "generatedAt": "2026-06-22T15:54:23+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -19,10 +19,10 @@
   },
   "agents": {
     "Codex": {
-      "status": "active",
-      "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published validated docs-only AI/HC runtime line-anchor refresh. AI-Runtime-HC-Loop-Map.md, AI-Headless-And-Performance.md and Headless-Delegation-And-Failover-Playbook.md now separate docs-source, current-stable and historical refs for HC registration, town delegation, static-defense delegation, Patrols v2 and AI supply trucks. Docs HEAD 4b6f5ca9 is unchanged from ca028bff/d30d2346/ff5b95dabb06 for checked AI/HC source paths; current stable origin/master@0139a346 has identical Chernarus/maintained-Vanilla HC/runtime files for checked paths, idempotent HC registration at Server_HandleSpecial.sqf:406-431, active-side static-defense delegation without a side gate at Server_OperateTownDefensesUnits.sqf:55-67, and Patrols v2 HC/local dispatch at server_side_patrols.sqf:64-69. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
+      "status": "ready",
+      "currentLane": "none",
+      "currentWork": "Published docs-only B69/Takistan AI commander current-head route refresh after PR #50 merged claude/tk-aicom-port into claude/b69 at b8530477. Feature Status and the B69 route now treat AI commander work as branch-propagated across current Chernarus plus maintained Vanilla/Takistan, still not master/stable or Arma-smoked proof. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed wiki lane, claim it in coordination records, keep docs/wiki and the wiki checkout in parity, and avoid gameplay source edits unless Steff explicitly asks."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b69-takistan-aicom-port-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed B69/Takistan AI commander route pages after PR #50 merged claude/tk-aicom-port into claude/b69 at b8530477ce4f8cc66c60a5d310a85d25c9cbc27c. The 39eed5c0..b8530477 delta is 22 maintained Vanilla/Takistan files / +2499 / -147; the full B68..current-B69 route is 44 files / +3198 / -238 across B69 plan, current Chernarus and maintained Vanilla/Takistan. Feature Status, AI commander roadmap/audit/sketches and PR cleanup lab now state branch-propagated current B69 evidence with master/stable/Arma-smoke gates still open. No gameplay source changed."
+    },
     {
       "lane": "ai-hc-runtime-current-stable-line-anchor-refresh-2026-06-22",
       "owner": "Codex",

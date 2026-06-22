@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T15:32:39+02:00",
+  "generatedAt": "2026-06-22T15:54:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b69-takistan-aicom-port-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69 current head is b8530477ce4f8cc66c60a5d310a85d25c9cbc27c",
+        "origin/claude/tk-aicom-port current head is 3b1106a1123e877e95d7abe11b817179b5761c50 and the b8530477 merge tree matches it",
+        "PR #50 merged claude/tk-aicom-port into claude/b69 on 2026-06-22T13:33:48Z from base 39eed5c0b389dd57c1a81ff68af60374f1f29d10",
+        "39eed5c0..b8530477 is 22 maintained Vanilla/Takistan files / +2499 / -147; b8a1505f..b8530477 is 44 files / +3198 / -238 across B69 plan, current Chernarus and maintained Vanilla/Takistan",
+        "Takistan B69 now has AICOM constants, supervisor compile/spawn/watchdog, GUER air-defense launch/worker and client marker/PV support; HC top-up remains draft/uncompiled because Init_Server.sqf:58-67 still does not compile WFBE_SE_FNC_AI_Com_HCTopUp"
+      ],
+      "outputs": [
+        "Refreshed Feature-Status-Register.md, AI-Commander-B69-Improvement-Roadmap.md, AI-Commander-Autonomy-Audit.md and AI-Commander-B69-Implementation-Sketches.md so current B69 is branch-propagated across current Chernarus plus maintained Vanilla/Takistan, not master/stable or Arma-smoked proof.",
+        "Refreshed PR-Cleanup-And-Integration-Lab.md and coordination records with PR #50 and branch-delta evidence.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future B69 owner should treat origin/claude/b69@b8530477 as branch evidence only, review/smoke Chernarus plus Takistan, decide master/stable integration route, and keep HCTopUp scoped as uncompiled draft scaffolding until source changes prove otherwise.",
+      "updated": "2026-06-22T15:54:23+02:00"
+    },
     {
       "lane": "ai-hc-runtime-current-stable-line-anchor-refresh-2026-06-22",
       "owner": "Codex",
