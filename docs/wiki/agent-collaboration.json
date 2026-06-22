@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T11:06:08+02:00",
+  "generatedAt": "2026-06-22T11:12:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -62,6 +62,25 @@
       ],
       "handoff": "Closed after validation. Future code owners should treat current stable origin/master@0139a346 as still open for DR-45, treat B69 as Chernarus-only candidate evidence until maintained Vanilla propagation and Arma town-despawn smoke are done, and treat 89ae9dad persistence-helper evidence as historical unless a target branch actually contains the helper.",
       "updated": "2026-06-22T11:03:03+02:00"
+    },
+    {
+      "lane": "dead-code-task-mapblink-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@3406ffa0 current checkout keeps TaskSystem comments at Client/Init/Init_Client.sqf:75,744 and TownCaptured.sqf:35,87; Client_TaskSystem.sqf remains present",
+        "docs/developer-wiki-index@3406ffa0 current checkout keeps old plural map-blink/AddUnitToTrack comments at Client/Init/Init_Client.sqf:138,140,782 and server map-blink comment at Server/Init/Init_Server.sqf:593 while live singular Client_BlinkMapIcon compiles at :139",
+        "origin/master@0139a346 still leaves TaskSystem comments at Client/Init/Init_Client.sqf:94,819 and TownCaptured.sqf:36,88, but Client_TaskSystem.sqf is absent in both maintained roots",
+        "origin/master@0139a346 removes the old plural Client_BlinkMapIcons/AddUnitToTrack and server Server_MapBlinkingUnits comments in checked maintained roots while preserving live singular Client_BlinkMapIcon at Client/Init/Init_Client.sqf:163",
+        "Miksuu b8389e74 and origin/perf/quick-wins@0076040f keep the old docs-style commented TaskSystem and map-blink residue; historical a96fdda2 keeps TaskSystem residue but has no old plural/server map-blink comments in checked maintained roots"
+      ],
+      "outputs": [
+        "Refreshed Dead-Code-And-Stale-Code-Register.md, Feature-Status-Register.md and Abandoned-Feature-Revival-Review.md so old TaskSystem and old map-blink residue no longer cite stale universal branch evidence.",
+        "Updated dashboard, worklog, pruning ledger and coordination records.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Keep old town TaskSystem, old plural map-blink loop, current-stable Objective Ping and live singular combat blinking separated; do not claim marker blinking is wholly dead.",
+      "updated": "2026-06-22T11:12:00+02:00"
     },
     {
       "lane": "dead-code-ai-supply-truck-current-stable-refresh-2026-06-22",

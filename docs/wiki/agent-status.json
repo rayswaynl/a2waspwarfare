@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T11:06:08+02:00",
+  "generatedAt": "2026-06-22T11:12:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the construction SmallSite logic and Town AI vehicle despawn current-stable refreshes, plus camp flag texture, dead-code AI supply-truck, camp-count helper, AI upgrade debit, B69 current-head and PVF sender-auth refreshes. Construction SmallSite still adds _nearLogic at Construction_SmallSite.sqf:70,99 while MediumSite removes at Construction_MediumSite.sqf:70,114 across all checked maintained roots. Town-AI-Vehicle-Despawn-Safety.md now cites current stable origin/master@0139a346 for the open tracked-vehicle delete at server_town_ai.sqf:309, marks B69 origin/claude/b69@0a1ccb4d as Chernarus-only candidate evidence, and demotes the 89ae9dad persistence helper to historical branch archaeology. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed documentation lane from Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep wiki/docs mirror parity."
+      "currentWork": "Latest docs-only state preserves the dead-code TaskSystem/map-blink refresh, construction SmallSite logic refresh, Town AI vehicle despawn current-stable refresh, camp flag texture refresh and dead-code AI supply-truck refresh. TaskSystem/map-blink now separates docs/Miksuu/perf old helper/comment residue from current stable origin/master@0139a346, where Client_TaskSystem.sqf is absent and old plural/server map-blink comments are gone while live singular Client_BlinkMapIcon remains. Construction SmallSite still adds _nearLogic at Construction_SmallSite.sqf:70,99 while MediumSite removes at Construction_MediumSite.sqf:70,114 across all checked maintained roots. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
       "status": "ready",
@@ -67,6 +67,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Town-AI-Vehicle-Despawn-Safety.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Current-Source-Status-Snapshot.md, Upstream-Miksuu-Commit-Intel.md and hardening rows so DR-45 no longer cites stale origin/master cf2a6d6a or 89ae9dad helper evidence as current. Current stable origin/master@0139a346 Chernarus and maintained Vanilla still delete tracked town-AI vehicles at server_town_ai.sqf:309 without a player crew check; B69 origin/claude/b69@0a1ccb4d has a Chernarus candidate guard at :325 but maintained Vanilla remains unsafe at :319. No gameplay source changed."
+    },
+    {
+      "lane": "dead-code-task-mapblink-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Dead-Code-And-Stale-Code-Register.md, Feature-Status-Register.md and Abandoned-Feature-Revival-Review.md so old TaskSystem and old map-blink residue no longer cite stale universal branch evidence. Docs checkout 3406ffa0, Miksuu b8389e74 and perf 0076040f keep old TaskSystem helper/comment residue and old plural/server map-blink comments; current stable origin/master@0139a346 keeps TaskSystem comment residue but no Client_TaskSystem.sqf, carries Objective Ping as a separate commander UI path, and has removed old plural/server map-blink comments while preserving live singular Client_BlinkMapIcon. No gameplay source changed."
     },
     {
       "lane": "dead-code-ai-supply-truck-current-stable-refresh-2026-06-22",
