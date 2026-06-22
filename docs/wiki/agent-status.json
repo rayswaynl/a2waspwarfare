@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T14:48:39+02:00",
+  "generatedAt": "2026-06-22T15:01:41+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only hosted-FPS current-stable/dev-branch route refresh. Docs HEAD d0161083 is source-unchanged from a27086cd for checked FPS paths; current stable origin/master@0139a346 uses the guarded single-publisher shape, starts serverFpsGUI from Init_Server.sqf:769 and documents monitor removal at :815-817. No current origin/dev/july-update-hosted-server-fps-loop-fix or release/* head was found. Miksuu b8389e748243 and perf 0076040f remain old-loop-shaped. No gameplay source changed.",
+      "currentWork": "Published docs-only Patrols v2 HC topology refresh. Headless-Client-Scaling-And-Topology.md now treats current stable origin/master@0139a346 Patrols v2 as partial HC create-local support, with exact current line refs, and keeps docs HEAD ff5b95dabb06, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 scoped as refs that lack Patrols v2 files. The same pass corrected stale town static-defence side-gate and multi-HC random-selection wording: current stable has no west/east/resistance side gate in Server_OperateTownDefensesUnits.sqf:55-67, and town delegation uses least-loaded + round-robin selection at Server_DelegateAITownHeadless.sqf:22-56. DR-42 report-back/accounting and smoke remain open. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "headless-patrols-v2-topology-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Headless-Client-Scaling-And-Topology.md after it still said patrols were structurally server-pinned and cited stale cf2a6d6a Patrols v2 HC anchors. Current stable origin/master@0139a346 carries the same Patrols v2 files/handlers in Chernarus and maintained Vanilla, dispatches HC/local at server_side_patrols.sqf:64-69, receives delegate-sidepatrol at Client/PVFunctions/HandleSpecial.sqf:50 and manages slot/marker state through Common_RunSidePatrol.sqf, Server_HandleSpecial.sqf:345-372 and updatepatrolmarkers.sqf:3,19. Docs HEAD, current Miksuu, perf and a96fdda2 lack Patrols v2 files; cf2a6d6a is historical stable evidence only. The pass also corrected stale static-defence side-gate and multi-HC random-selection wording. No gameplay source changed."
+    },
     {
       "lane": "hosted-fps-current-stable-dev-branch-route-2026-06-22",
       "owner": "Codex",

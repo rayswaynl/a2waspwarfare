@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T14:48:39+02:00",
+  "generatedAt": "2026-06-22T15:01:41+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "headless-patrols-v2-topology-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@0139a3468609 carries Patrols v2 in Chernarus and maintained Vanilla: Init_Server.sqf:690 starts the driver; server_side_patrols.sqf:64-69 dispatches HC/local; Client/PVFunctions/HandleSpecial.sqf:50 receives delegate-sidepatrol",
+        "Common_RunSidePatrol.sqf:5-8 keeps lifecycle local to the creator, and :54-56, :82-84, :245-247, :264-266 report slot/marker/convoy events to the server",
+        "Server_HandleSpecial.sqf:345-372 updates WFBE_ACTIVE_PATROLS and slot counters; Client/FSM/updatepatrolmarkers.sqf:3,19 reads the public marker list",
+        "docs HEAD ff5b95dabb06, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda28087 lack Patrols v2 files in checked maintained roots; cf2a6d6a4f96 is historical stable evidence only",
+        "current stable static-defence spawn uses the active town side at server_town.sqf:290 and server_town_ai.sqf:262, with no side gate in Server_OperateTownDefensesUnits.sqf:55-67; DR-42 report-back/accounting and smoke remain open",
+        "current stable Server_DelegateAITownHeadless.sqf:22-56 hoists the least-loaded HC scan and round-robins town groups from that seed; remaining Mode 2 debt is tracking/fallback, not the old blind random selector"
+      ],
+      "outputs": [
+        "Refreshed stale Headless-Client-Scaling-And-Topology.md Patrols v2 row, TL;DR and server-pinned-load wording.",
+        "Corrected stale town static-defence side-gate wording on the same topology page.",
+        "Corrected stale multi-HC random-selection wording to the current stable least-loaded/round-robin shape.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future tester should smoke Patrols upgrade levels, HC delegate-sidepatrol dispatch/fallback, death and crewless slot release, convoy-stop payout and friendly marker cleanup before treating Patrols v2 HC offload as a proven FPS win. Static-defence work should fix DR-42 report-back/accounting and smoke west/east/resistance instead of adding a side-gate patch.",
+      "updated": "2026-06-22T15:01:41+02:00"
+    },
     {
       "lane": "hosted-fps-current-stable-dev-branch-route-2026-06-22",
       "owner": "Codex",
