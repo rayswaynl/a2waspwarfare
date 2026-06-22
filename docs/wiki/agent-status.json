@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T13:53:10+02:00",
+  "generatedAt": "2026-06-22T14:02:46+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only B69 PR #49 / B72 tints-on head refresh after final fetch showed origin/claude/b69 advanced from 4dcc10b143a0 to merge commit 39eed5c02d8ba9c5a27b7a4173607526edc0677e. PR #49 is MERGED as claude/b72-tints-on -> claude/b69 at 2026-06-22T11:47:23Z; the 4dcc10b..39eed5c delta is one Chernarus constants file / +1 / -1 with no maintained Vanilla diff, and gh pr list --head claude/b69 --state all still returns no direct master-target PR. No gameplay source changed.",
+      "currentWork": "Published docs-only side-supply B69 current-head refresh. Docs branch 4db90f1c is source-unchanged from 7047da5d9 / f52ccee8 for checked side-supply and reason paths; current stable origin/master@0139a346 and current Miksuu b8389e748243 remain old-shape in both maintained roots. Perf fixes only Chernarus arithmetic. B69 origin/claude/b69@39eed5c0 fixes Chernarus server arithmetic and adds Chernarus wfbe_supply_temp_resistance, but maintained Vanilla, side/channel/requester validation and reason parsing remain open. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "side-supply-b69-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Economy-Authority-First-Cut.md, Economy-Towns-And-Supply.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so side-supply clamp/reason evidence includes current B69. Docs branch 4db90f1c is source-unchanged from 7047da5d9 / f52ccee8; current stable origin/master@0139a346 and current Miksuu b8389e748243 remain old-shape in both maintained roots; perf/quick-wins@0076040f fixes only Chernarus arithmetic; B69 origin/claude/b69@39eed5c0 fixes Chernarus server arithmetic and wires Chernarus resistance temp supply, but maintained Vanilla and DR-44 validation remain open. No gameplay source changed."
+    },
     {
       "lane": "b69-pr49-b72-tints-head-refresh-2026-06-22",
       "owner": "Codex",

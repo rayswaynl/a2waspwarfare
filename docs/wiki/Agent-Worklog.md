@@ -1763,3 +1763,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Follow-up finding: `4dcc10b143a0..39eed5c0` is one current Chernarus constants file / +1 / -1 with no maintained Vanilla diff. It flips `WFBE_C_VEHICLE_TINTS` from nil-guard default `0` to `1` at `Common/Init/Init_CommonConstants.sqf:795`; the adjacent comment still carries the older default-off / in-engine cosmetic-check caveat, so this is B69/B72 A/B branch evidence only.
 - Result: refreshed the AI commander audit, B69 roadmap/sketch note, Feature Status, PR cleanup lab, dashboard, pruning ledger and machine rows so PR #49 is recorded as the current `claude/b69` head while B69 remains Chernarus-only, smoke-pending and not master/stable evidence. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T14:02:46+02:00 - Codex - Side-supply B69 current-head refresh
+
+- Claimed `side-supply-b69-current-head-refresh-2026-06-22` after the dashboard still named side-supply clamp as a next lane and the side-supply matrix did not include current B69 evidence.
+- Source scope: docs branch `4db90f1c`, current stable `origin/master@0139a346`, current Miksuu `master@b8389e748243`, `origin/perf/quick-wins@0076040f`, B69 `origin/claude/b69@39eed5c0`, historical release commit `a96fdda2`, and no live origin `release/*` heads.
+- Findings: docs/source is source-unchanged from `7047da5d9` / `f52ccee8` for checked side-supply and reason paths; docs/current stable/current Miksuu/historical release still keep `_currentSupply - _amount` and payload-side trust in both maintained roots. Perf fixes only the Chernarus arithmetic floor. B69 fixes Chernarus server arithmetic at `Server_ChangeSideSupply.sqf:12,36,60` and adds Chernarus `wfbe_supply_temp_resistance` at `:25-45`, but maintained Vanilla remains old-shape and side/channel/requester validation plus reason parsing remain open.
+- Result: refreshed [Economy authority first cut](Economy-Authority-First-Cut), [Economy, towns and supply](Economy-Towns-And-Supply), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
