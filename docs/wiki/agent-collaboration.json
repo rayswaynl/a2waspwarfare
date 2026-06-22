@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T10:57:23+02:00",
+  "generatedAt": "2026-06-22T11:03:03+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "town-ai-vehicle-despawn-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index current checkout Chernarus and maintained Vanilla initialize wfbe_active_vehicles at server_town_ai.sqf:30, append at :161/:179, delete tracked vehicles at :214 with only !(isPlayer leader group _x), and clear at :219",
+        "origin/master@0139a346 current stable Chernarus and maintained Vanilla initialize at :41, append at :238/:257, delete tracked vehicles at :309 with only !(isPlayer leader group _x), and clear at :315",
+        "Miksuu master@b8389e748243 Chernarus and maintained Vanilla keep the same unsafe shape with delete at :195 and clear at :201",
+        "origin/perf/quick-wins@0076040f Chernarus keeps the unsafe vehicle delete at :219 and clear at :224",
+        "historical release commit a96fdda2 keeps the unsafe vehicle delete at :200 and clear at :206",
+        "origin/feat/aicom-fleet-improvements@cc5090bed4ad keeps the unsafe current-stable-era shape in both maintained roots at delete :207 and clear :213",
+        "origin/claude/b69@0a1ccb4d Chernarus has a candidate crew guard at server_town_ai.sqf:325, but maintained Vanilla still deletes with only the leader-player guard at :319"
+      ],
+      "outputs": [
+        "Refreshed Town-AI-Vehicle-Despawn-Safety.md current branch matrix and Source Chain line refs.",
+        "Aligned Feature Status, Source Fix queue, Current Source Snapshot, Miksuu upstream intel, hardening backlog, dashboard/worklog/pruning ledger and machine coordination rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owners should treat current stable origin/master@0139a346 as still open for DR-45, treat B69 as Chernarus-only candidate evidence until maintained Vanilla propagation and Arma town-despawn smoke are done, and treat 89ae9dad persistence-helper evidence as historical unless a target branch actually contains the helper.",
+      "updated": "2026-06-22T11:03:03+02:00"
+    },
     {
       "lane": "dead-code-ai-supply-truck-current-stable-refresh-2026-06-22",
       "owner": "Codex",

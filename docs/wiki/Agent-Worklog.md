@@ -1632,3 +1632,16 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source scope: current docs checkout Chernarus and maintained Vanilla still comment the `UpdateSupplyTruck` compile at `Init_Server.sqf:36`, initialize `wfbe_ai_supplytrucks` at `:382` and raw-spawn `UpdateSupplyTruck` at `:383`; current stable `origin/master@0139a346` comments the compile at `:43` and warning-disables legacy logistics at `:462-463` in both maintained roots; `AI_UpdateSupplyTruck.sqf:17` still points at missing `Server/FSM/supplytruck.fsm`.
 - Result: refreshed [Dead/stale code](Dead-Code-And-Stale-Code-Register#sqf-reachability-findings), dashboard, pruning ledger and coordination records so the dormant worker row matches the latest AI supply-truck current-stable anchor split. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T10:56:14+02:00 - Codex - Town AI vehicle despawn current-stable refresh
+
+- Claimed `town-ai-vehicle-despawn-current-stable-refresh-2026-06-22` after [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety) and queue/status rows still cited stable `origin/master cf2a6d6a` as current DR-45 evidence.
+- Source scope: docs checkout Chernarus/Vanilla still initializes `wfbe_active_vehicles` at `server_town_ai.sqf:30`, appends at `:161,:179`, deletes tracked vehicles at `:214` with only `!(isPlayer leader group _x)`, and clears at `:219`. Current stable `origin/master@0139a346` line-drifts to initialize `:41`, append `:238,:257`, delete `:309` and clear `:315` in both maintained roots. Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f`, historical `a96fdda2` and `origin/feat/aicom-fleet-improvements@cc5090bed4ad` remain unsafe with their own line drift.
+- B69 note: active `origin/claude/b69@0a1ccb4d` has a Chernarus candidate crew guard at `server_town_ai.sqf:325`, plus player-unit guard at `:312`, but maintained Vanilla still deletes tracked vehicles with only the leader-player guard at `:319`. Treat B69 as branch evidence, not DR-45 closure.
+- Result: in progress; no gameplay source changes planned.
+
+## 2026-06-22T11:03:03+02:00 - Codex - Town AI vehicle despawn current-stable refresh complete
+
+- Result: refreshed [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety#current-branch-matrix), Feature Status, Source Fix queue, Current Source Snapshot, Miksuu upstream intel and hardening rows so DR-45 now routes through current stable `origin/master@0139a346` instead of stale `cf2a6d6a` / `89ae9dad` evidence.
+- Finding: current stable still deletes tracked `wfbe_active_vehicles` at `server_town_ai.sqf:309` without a player `crew` check in both maintained roots. Miksuu `b8389e748243`, `perf/quick-wins@0076040f`, historical `a96fdda2` and live `origin/feat/aicom-fleet-improvements@cc5090bed4ad` remain unsafe; B69 `origin/claude/b69@0a1ccb4d` is Chernarus candidate evidence only because maintained Vanilla remains old-shape.
+- Validation: final validation is recorded in the matching `complete` event.

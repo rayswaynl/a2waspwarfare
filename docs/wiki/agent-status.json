@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T10:57:23+02:00",
+  "generatedAt": "2026-06-22T11:03:03+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves dead-code AI supply-truck, camp flag texture, camp-count helper, AI upgrade debit and B69 current-head refreshes. Dead-Code now cites current stable origin/master@0139a346 for the AI supply-truck safe-disable at Init_Server.sqf:43,462-463 while preserving docs/perf raw-spawn evidence and the missing supplytruck.fsm caveat. Camp flag evidence separates old-owner docs/Miksuu targets, perf Chernarus-only, and current stable/historical/B69/naval independent-capture fixes while repair-camp flag refresh remains open. B69 current-head docs distinguish source-present Chernarus branch code from stable/master, maintained Vanilla and release-ready proof. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
+      "currentWork": "Latest docs-only state preserves the Town AI vehicle despawn current-stable refresh. Town-AI-Vehicle-Despawn-Safety.md now cites current stable origin/master@0139a346 for the open tracked-vehicle delete at server_town_ai.sqf:309, marks B69 origin/claude/b69@0a1ccb4d as Chernarus-only candidate evidence, and demotes the 89ae9dad persistence helper to historical branch archaeology. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed documentation lane from Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep wiki/docs mirror parity."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "town-ai-vehicle-despawn-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Town-AI-Vehicle-Despawn-Safety.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Current-Source-Status-Snapshot.md, Upstream-Miksuu-Commit-Intel.md and hardening rows so DR-45 no longer cites stale origin/master cf2a6d6a or 89ae9dad helper evidence as current. Current stable origin/master@0139a346 Chernarus and maintained Vanilla still delete tracked town-AI vehicles at server_town_ai.sqf:309 without a player crew check; B69 origin/claude/b69@0a1ccb4d has a Chernarus candidate guard at :325 but maintained Vanilla remains unsafe at :319. No gameplay source changed."
+    },
     {
       "lane": "dead-code-ai-supply-truck-current-stable-refresh-2026-06-22",
       "owner": "Codex",
