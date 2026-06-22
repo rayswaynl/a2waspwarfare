@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T17:01:15+02:00",
+  "generatedAt": "2026-06-22T17:15:28+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "town-ai-vehicle-despawn-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69 current head is 8d465fcede7fc20a7fcb97bd7d02e5211de8d1bf",
+        "git diff --name-status 0a1ccb4d..origin/claude/b69 for checked server_town_ai.sqf paths is empty, so later B69 PR movement did not change this cleanup surface",
+        "origin/claude/b69 Chernarus server_town_ai.sqf:325 uses a full crew player scan before deleting tracked active town-AI vehicles",
+        "origin/claude/b69 maintained Vanilla server_town_ai.sqf:319 still deletes with only !(isPlayer leader group _x)",
+        "docs/source HEAD@948db4ab, origin/master@0139a346, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2 and origin/feat/aicom-fleet-improvements@cc5090bed4ad still keep the unsafe leader-only vehicle delete in both maintained roots"
+      ],
+      "outputs": [
+        "Refreshed Town-AI-Vehicle-Despawn-Safety.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and machine rows with current B69 head evidence.",
+        "Preserved Chernarus-only, no-maintained-Vanilla-propagation and smoke-pending caveats.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should port/propagate the player crew guard to maintained roots, preserve empty AI-only cleanup and smoke driver/gunner/cargo/turret occupancy plus empty vehicle cleanup before release-ready wording.",
+      "updated": "2026-06-22T17:15:28+02:00"
+    },
     {
       "lane": "side-supply-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",

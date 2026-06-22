@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T17:01:15+02:00",
+  "generatedAt": "2026-06-22T17:15:28+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only side-supply current B69 head refresh. Current B69 origin/claude/b69@8d465fce is unchanged from 39eed5c0 for checked side-supply paths: Chernarus has the floor-to-zero/resistance-handler candidate, maintained Vanilla remains old-shape, and stable/Miksuu/perf branch scopes are unchanged. No gameplay source changed.",
+      "currentWork": "Published docs-only town AI vehicle despawn current B69 head refresh. Current B69 origin/claude/b69@8d465fce is unchanged from 0a1ccb4d for checked server_town_ai.sqf paths: Chernarus keeps the crew-scan candidate at :325 while maintained Vanilla remains leader-only unsafe at :319. Current stable, docs/source, Miksuu, perf, historical release and aicom-fleet refs remain old-shape; no checked current ref contains Server_CleanupExpiredTownDefenseAssets.sqf. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from the dashboard, Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep gameplay source untouched unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "town-ai-vehicle-despawn-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed town AI vehicle despawn safety owner/status/queue/machine rows after current B69 remained origin/claude/b69@8d465fce while checked server_town_ai.sqf paths were unchanged from 0a1ccb4d. B69 Chernarus keeps the crew-scan candidate at server_town_ai.sqf:325, but B69 maintained Vanilla remains leader-only at :319; docs/source HEAD@948db4ab, current stable origin/master@0139a346, current Miksuu b8389e748243, perf 0076040f, historical a96fdda2 and aicom-fleet cc5090bed4ad remain unsafe in both maintained roots. No gameplay source changed."
+    },
     {
       "lane": "side-supply-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
