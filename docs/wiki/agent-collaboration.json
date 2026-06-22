@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T00:14:14+02:00",
+  "generatedAt": "2026-06-23T00:32:42+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "hq-score-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@9b7eb4bc is source-unchanged from 97e4cdd0 and 4d4610f1 for checked HQ score files.",
+        "current stable origin/master@0139a346, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 keep generic HQ building score plus a second HQ bounty in both maintained roots.",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f have no Server_OnHQKilled.sqf delta; both keep the B69 base-fall smoke/sting code plus the same double-award shape.",
+        "B69..B74 changes checked HQ constants only in Chernarus CommonConstants line drift; WFBE_C_BUILDINGS_SCORE_COEF remains 3 in both maintained roots.",
+        "current origin exposes no live release, HQ, score, bounty or base rescue head."
+      ],
+      "outputs": [
+        "Refreshed Commander-HQ-Lifecycle, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and HQ score machine rows with adjacent B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future commander/HQ owner should still keep one non-teamkill HQ score award, make friendly/teamkill HQ kills score zero, propagate maintained Vanilla and smoke enemy/friendly HQ kills plus DR-20 idempotency.",
+      "updated": "2026-06-23T00:32:42+02:00"
+    },
     {
       "lane": "side-supply-current-b74-refresh-2026-06-23",
       "owner": "Codex",

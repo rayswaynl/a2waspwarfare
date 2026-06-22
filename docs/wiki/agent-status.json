@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T00:14:14+02:00",
+  "generatedAt": "2026-06-23T00:32:42+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only side-supply current B74 refresh. Docs/source HEAD@a908284c is source-unchanged from 4db90f1c / 7047da5d9 / f52ccee8 for checked side-supply files. Current stable origin/master@0139a346 and current Miksuu b8389e748243 remain old-shape in both maintained roots; perf fixes only Chernarus arithmetic. Current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f have no checked side-supply path delta and both fix only Chernarus server arithmetic plus wfbe_supply_temp_resistance. Maintained Vanilla, side/channel/requester validation and reason parsing remain open. No gameplay source changed.",
+      "currentWork": "Published docs-only HQ score current B74 refresh. Docs/source HEAD@9b7eb4bc is source-unchanged from 97e4cdd0 / 4d4610f1 for checked HQ-score files. Current stable origin/master@0139a346, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 keep generic HQ building score plus a second HQ bounty in both maintained roots. Current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f have no Server_OnHQKilled.sqf delta; both keep the B69 base-fall spectacle code and double-award lines. B74 only line-drifts Chernarus constants and WFBE_C_BUILDINGS_SCORE_COEF remains 3. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress-Dashboard.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and the pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hq-score-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-HQ-Lifecycle-Atlas, Feature Status, Source Fix queue and machine rows with current B74 HQ-score evidence. Docs/source HEAD@9b7eb4bc is source-unchanged from 97e4cdd0/4d4610f1; current stable 0139a346, Miksuu b8389e748243, perf 0076040f and historical a96fdda2 keep the double-award shape in both maintained roots. B69 8d465fce and B74 b23f557f have no Server_OnHQKilled.sqf delta; both keep generic award :64/:66 plus second bounty :112 and base-fall spectacle code. Coefficient remains 3. No gameplay source changed."
+    },
     {
       "lane": "side-supply-current-b74-refresh-2026-06-23",
       "owner": "Codex",
