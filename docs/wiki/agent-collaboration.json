@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T11:27:50+02:00",
+  "generatedAt": "2026-06-22T11:48:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "salvage-payout-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/docs/developer-wiki-index@fb8d4ebc Chernarus and maintained Vanilla Skill_Salvage.sqf:34,38; updatesalvage.sqf:10,46,50; Init_Client.sqf:53,91; Client_BuildUnit.sqf:267",
+        "origin/master@0139a346 Chernarus and maintained Vanilla Skill_Salvage.sqf:34,38; updatesalvage.sqf:10,46,51; Init_Client.sqf:72,110; Client_BuildUnit.sqf:343",
+        "current Miksuu master verified by ls-remote as b8389e748243 on 2026-06-22 and keeps the docs-shaped salvage payout/loop/local-delete shape in both maintained roots",
+        "origin/perf/quick-wins@0076040f keeps the docs-shaped salvage payout/loop/local-delete shape in both maintained roots",
+        "historical release commit a96fdda2 keeps the mismatch in both maintained roots; current origin exposes no release/* or feat/*salvage* heads on 2026-06-22",
+        "Miksuu still exposes historical EngineerSalvageAbility@99bfaeb8 and SalvageRuTranslationFix@291c6cb4 heads as inherited salvage-feature debt"
+      ],
+      "outputs": [
+        "Refreshed Construction-And-CoIn-Systems-Atlas.md salvage matrix and current-branch scope.",
+        "Updated Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and salvage machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future salvage owner should patch ChangePlayerFunds casing in source Chernarus plus maintained Vanilla first, then smoke manual engineer and salvage-truck payouts. Keep updatesalvage loop-exit review and server-owned delete/reward authority as separate work unless explicitly claimed together.",
+      "updated": "2026-06-22T11:48:21+02:00"
+    },
     {
       "lane": "b69-finalpieces-current-head-refresh-2026-06-22",
       "owner": "Codex",

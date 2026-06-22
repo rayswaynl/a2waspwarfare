@@ -1681,3 +1681,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Findings: finalpieces adds Chernarus town-punch multipliers, default armed-hull troop transport filtering and stranded survivor merge-before-cull. HC depleted-team merge/top-up remains default-off draft scaffolding because `AI_Commander.sqf:232-238` calls `WFBE_SE_FNC_AI_Com_HCTopUp` only if defined and `Init_Server.sqf:58-66` does not compile `AI_Commander_HCTopUp.DRAFT.sqf`.
 - Result: refreshed the AI commander audit, B69 roadmap/sketch note, Feature Status, PR cleanup lab, dashboard, pruning ledger and machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T11:48:21+02:00 - Codex - Salvage payout current-head refresh
+
+- Claimed `salvage-payout-current-head-refresh-2026-06-22` after salvage payout/loop rows still carried 2026-06-21 current-head wording.
+- Source scope: docs branch `docs/developer-wiki-index@fb8d4ebc`, current stable `origin/master@0139a346`, current Miksuu `master@b8389e748243` verified by direct `git ls-remote` on 2026-06-22, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, no current origin `release/*` or `feat/*salvage*` heads, and historical Miksuu salvage heads `EngineerSalvageAbility@99bfaeb8` / `SalvageRuTranslationFix@291c6cb4`.
+- Finding: all checked maintained roots still keep lowercase `ChangePlayerfunds` in both manual engineer and salvage-truck payout paths while client init compiles `ChangePlayerFunds`; all checked roots keep `updatesalvage.sqf:10` as `while {!gameOver || !(alive _vehicle)}` plus client-local wreck deletion/reward.
+- Result: refreshed [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas#salvage-branch-matrix), Feature Status, Source Fix queue, dashboard, pruning ledger and salvage machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

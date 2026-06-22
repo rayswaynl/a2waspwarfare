@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T11:27:50+02:00",
+  "generatedAt": "2026-06-22T11:48:21+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the B69 finalpieces current-head refresh, vehicle cargo loop-bounds current/Miksuu refresh, dead-code TaskSystem/map-blink refresh, construction SmallSite logic refresh and Town AI vehicle despawn current-stable refresh. B69 finalpieces origin/claude/b69-finalpieces@80d3267c1b2b descends from origin/claude/b69@0a1ccb4d05c5; 0a1ccb4d..80d3267c is 8 Chernarus AI commander/client files / +242 / -13 with no maintained Vanilla diff, and PR #47 is open as claude/b69-finalpieces -> claude/b69. Vehicle cargo docs split old-shape docs branch b2544207 / historical EASA QoL / perf Vanilla targets from fixed current stable origin/master@0139a346 and current Miksuu master@d9506078. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the salvage payout current-head refresh, B69 finalpieces branch refresh, vehicle cargo loop-bounds current/Miksuu refresh, dead-code TaskSystem/map-blink refresh and construction SmallSite logic refresh. Salvage checks show docs branch fb8d4ebc, current stable origin/master@0139a346, current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 all keep lowercase ChangePlayerfunds payout calls, updatesalvage.sqf:10 OR-loop and client-local delete/reward shape. B69 finalpieces origin/claude/b69-finalpieces@80d3267c1b2b has PR #47 into claude/b69 and no maintained Vanilla diff. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "salvage-payout-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and salvage machine rows. Docs branch fb8d4ebc, current stable origin/master@0139a346, current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 all keep lowercase ChangePlayerfunds payout calls, updatesalvage.sqf:10 OR-loop and client-local delete/reward shape in both maintained roots. Current origin exposes no release/* or feat/*salvage* heads; historical Miksuu salvage heads 99bfaeb8 and 291c6cb4 remain inherited debt. No gameplay source changed."
+    },
     {
       "lane": "b69-finalpieces-current-head-refresh-2026-06-22",
       "owner": "Codex",
