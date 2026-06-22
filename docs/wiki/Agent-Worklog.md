@@ -1594,6 +1594,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed [Feature status](Feature-Status-Register), [Server authority migration map](Server-Authority-Migration-Map), [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook), [Networking and public variables](Networking-And-Public-Variables), dashboard, pruning ledger and PVF machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
 
+## 2026-06-22T10:17:04+02:00 - Codex - AI upgrade debit current-stable resolution refresh
+
+- Claimed `ai-upgrade-debit-current-stable-resolution-refresh-2026-06-22` after the AI commander upgrade debit/cost rows still treated current stable as debit-fixed but cost-index-open.
+- Source scope: docs branch `docs/developer-wiki-index@ade4d356`, current stable `origin/master@0139a346`, Miksuu `master@b8389e74` fetched from `https://github.com/miksuu/a2waspwarfare.git`, `origin/perf/quick-wins@0076040f`, historical commits `a96fdda2`, `b061c905` and `c20ce153`, and no current `release/*`, `feat/upgrade-queue-stacking` or `feat/ai-commander` heads on 2026-06-22.
+- Finding: docs branch/Miksuu/perf still keep raw AI-order cost lookup and swapped debit at `Server_AI_Com_Upgrade.sqf:27,47,50`. Current stable resolves both maintained roots: current-level lookup at `:75`, affordability gates at `:89,92,97`, AI funds debit at `:125`, side supply debit at `:136` and opt-in funds-fallback surcharge at `:131-132`. Historical `a96fdda2`/`b061c905` fix debit order only, while historical `c20ce153` fixes cost/debit only in Chernarus.
+- Result: refreshed [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix), [Upgrades and research](Upgrades-And-Research-Atlas#current-branch-scope), Feature Status, Source Fix queue, dashboard and pruning ledger. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
+
 ## 2026-06-22T10:18:37+02:00 - Codex - Camp-count helper current-stable refresh
 
 - Claimed `camp-count-helper-current-stable-refresh-2026-06-22` after [Feature status](Feature-Status-Register) and [Source fix queue](Source-Fix-Propagation-Queue) still cited stable `origin/master cf2a6d6a` as current camp-count fallback evidence.

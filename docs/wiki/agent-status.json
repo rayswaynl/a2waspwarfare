@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state adds the camp-count helper current-stable refresh on top of the PVF sender-auth current-stable refresh, AI supply-truck current-stable anchor split, fast-travel fee refresh and B69 Patch A-2 capture-interrupt refresh. Camp-count evidence now separates docs branch ade4d356, current stable origin/master@0139a346, Miksuu b8389e74, perf/quick-wins 0076040f, historical release a96fdda2 and active B69 origin/claude/b69@0a1ccb4d; all keep the zero-camp helper fallback at Common_GetTotalCamps.sqf:10 and Common_GetTotalCampsOnSide.sqf:16, with current-stable caller line drift at server_town.sqf:167-183, Client_GetRespawnAvailable.sqf:92 and GUI_Menu_BuyUnits.sqf:120-121. PVF DR-55 remains open because current stable and B69 still forward only value tuples into HandlePVF. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the camp-count helper current-stable refresh, AI upgrade debit current-stable resolution refresh, PVF sender-auth current-stable refresh, AI supply-truck current-stable anchor split and fast-travel fee refresh. Camp-count evidence now separates docs branch ade4d356, current stable origin/master@0139a346, Miksuu b8389e74, perf/quick-wins 0076040f, historical release a96fdda2 and active B69 origin/claude/b69@0a1ccb4d; all keep the zero-camp helper fallback at Common_GetTotalCamps.sqf:10 and Common_GetTotalCampsOnSide.sqf:16. AI upgrade docs now mark current stable origin/master@0139a346 resolved for current-level cost lookup and corrected funds/supply debit at Server_AI_Com_Upgrade.sqf:75,125,136. PVF DR-55 remains open because current stable and B69 still forward only value tuples into HandlePVF. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed documentation lane from Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep wiki/docs mirror parity."
     },
     "Codex-2": {
@@ -61,6 +61,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Towns-Camps-And-Capture-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows so camp-count helper fallback evidence no longer cites stale origin/master cf2a6d6a or older current-head anchors. Docs branch ade4d356, current stable origin/master@0139a346, Miksuu b8389e74, perf/quick-wins 0076040f, historical a96fdda2 and active B69 origin/claude/b69@0a1ccb4d all keep Common_GetTotalCamps.sqf:10 and Common_GetTotalCampsOnSide.sqf:16 returning 1 for zero-camp towns. Future work remains real-count versus safe-denominator semantics plus 0/partial/all-camp smoke. No gameplay source changed."
+    },
+    {
+      "lane": "ai-upgrade-debit-current-stable-resolution-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed AI-Commander-Autonomy-Audit.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so current stable is no longer documented as missing the AI upgrade cost-index correction. Docs branch ade4d356, Miksuu b8389e74 and perf/quick-wins 0076040f still keep raw AI-order lookup plus swapped debit at Server_AI_Com_Upgrade.sqf:27,47,50; current stable origin/master@0139a346 resolves both maintained roots at :75,125,136 with funds-fallback surcharge at :131-132. Historical a96fdda2, b061c905 and c20ce153 are commit-only lessons. No gameplay source changed."
     },
     {
       "lane": "pvf-sender-auth-current-stable-refresh-2026-06-22",
