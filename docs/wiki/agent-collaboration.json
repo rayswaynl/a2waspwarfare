@@ -63,6 +63,25 @@
       "updated": "2026-06-22T09:09:00+02:00"
     },
     {
+      "lane": "b69-aicom-wiki-mirror-catchup-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "remote b69-ai-commander-mirror-sync-2026-06-22 supplied the B69 page files and sidebar parity from live wiki master@3be04f1",
+        "remote b69-aicom-routing-followup-2026-06-22 supplied the AI-Commander-Autonomy-Audit.md B69 route and LLM-Agent-Entry-Pack.md task-bundle links",
+        "origin/master@0139a346 Chernarus and maintained Vanilla Server/Init/Init_Server.sqf:55,64,847",
+        "origin/master@0139a346 Chernarus and maintained Vanilla Server/AI/Commander/AI_Commander.sqf:127,134,138,147,151,155,158,161,165,253",
+        "current origin exposes no feat/ai-commander or release/* heads on 2026-06-22; claude/b57-soak-proposals remains PR #43 branch/live-Chernarus evidence"
+      ],
+      "outputs": [
+        "Wired the B69 route through Home.md and agent-context.json after mirror/routing lanes supplied the pages, sidebar, owner-page route and LLM entry-pack route.",
+        "Corrected AI-Commander-Autonomy-Audit.md and machine context wording that still said current stable had no active AICOM loop.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future AICOM owners should treat origin/master@0139a346 as having a source-present supervisor route, keep B69 as planning/branch evidence until selected patches land, and smoke maintained Chernarus plus Vanilla before release-ready wording.",
+      "updated": "2026-06-22T09:08:31+02:00"
+    },
+    {
       "lane": "b69-aicom-routing-followup-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",

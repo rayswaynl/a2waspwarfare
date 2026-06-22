@@ -1509,6 +1509,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: copied only those mirror gaps into `docs/wiki`, kept the B69 source-backed pages unchanged, updated dashboard/status/collaboration/pruning records and left gameplay source untouched.
 - Validation: JSON/JSONL parse passed in the wiki checkout and docs mirror; `docs/validate-wiki.ps1` passed with known legacy JSONL warnings only; top-level wiki/docs parity reports `290` files on each side with no missing/differing files; Latest Batch has five rows; `git diff --check` passed in both worktrees with LF/CRLF warnings only.
 
+## 2026-06-22T08:57:00+02:00 - Codex - B69 AICOM wiki mirror catch-up
+
+- Claimed `b69-aicom-wiki-mirror-catchup-2026-06-22` as a follow-up to the mirror-only lane after the B69 pages were present but [Home](Home), `agent-context.json` and the AI commander autonomy audit still needed current-stable routing/evidence correction.
+- Scope: route the B69 roadmap/sketch pages through Home and machine context, correct stale no-active-loop wording, and update coordination records. No gameplay source edits planned.
+- Planned validation: JSON/JSONL parse for touched agent files, `docs/validate-wiki.ps1`, touched-file wiki/docs parity, Progress Dashboard Latest Batch five-row check and `git diff --check` in both worktrees.
+- Result: wired the B69 pages through Home and agent context, preserved the later [AI commander autonomy audit](AI-Commander-Autonomy-Audit#b69-roadmap-and-sketch-route) routing section, and corrected the audit plus `agent-context.json` so current stable `origin/master@0139a346` is described as having a source-present maintained-root supervisor route (`Init_Server.sqf:64,847`; `AI_Commander.sqf:127,253,161`) instead of the older no-active-loop wording. No gameplay source changed.
+- Validation: final wiki/docs parity, `docs/validate-wiki.ps1`, Latest Batch five-row check and `git diff --check` are recorded in the matching `complete` event.
+
 ## 2026-06-22T09:03:41+02:00 - Codex - B69 AICOM routing follow-up
 
 - Claimed `b69-aicom-routing-followup-2026-06-22` after the B69 pages were mirrored/sidebar-linked but not yet routed from the canonical AI commander owner page or the AI/headless task bundle in the LLM entry pack.

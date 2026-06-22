@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the indicator status-counter branch split, visible-parameter runtime-consumer current-stable refresh, B69 AICOM routing follow-up, B69 AI commander docs mirror sync, gear template current-stable branch split and other recent branch/status refreshes. Parameter evidence now splits old docs/perf/historical release readless/comment-only rows from current stable/Miksuu live readers; status-counter docs separate player HUD SERVER_FPS_GUI, compatibility WFBE_VAR_SERVER_FPS, admin/status signals and PerformanceAudit RPT/tooling output. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the indicator status-counter branch split, visible-parameter runtime-consumer current-stable refresh, B69 AICOM routing/mirror work and current-stable AICOM correction. Parameter evidence now splits old docs/perf/historical release readless/comment-only rows from current stable/Miksuu live readers; status-counter docs separate player HUD SERVER_FPS_GUI, compatibility WFBE_VAR_SERVER_FPS, admin/status signals and PerformanceAudit RPT/tooling output; AICOM evidence treats origin/master@0139a346 as having a source-present maintained-root supervisor route at Init_Server.sqf:64,847 and AI_Commander.sqf:127,253,161. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -67,6 +67,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed Mission-Parameters-Localization-And-Generated-Build-Inputs.md, Mission-Start-Parameters-Index.md, Dead-Code-And-Stale-Code-Register.md, Player-AI-Caps-And-Role-Balance.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows after source checks split old docs/perf/historical release parameter evidence from current stable. Docs branch origin/docs/developer-wiki-index@ac932fbe, origin/perf/quick-wins@0076040f and historical release a96fdda2 keep WFBE_C_AI_MAX readless and WFBE_C_UNITS_CLEAN_TIMEOUT comment-only; current stable origin/master@0139a346 and current Miksuu master@d9506078 read WFBE_C_AI_MAX in AI_Commander_Produce.sqf:89 and WFBE_C_UNITS_CLEAN_TIMEOUT in Common_TrashObject.sqf:21 in both maintained roots. No gameplay source changed."
+    },
+    {
+      "lane": "b69-aicom-wiki-mirror-catchup-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Extended the B69 mirror/routing work with Home.md and agent-context.json routing, preserved the AI-Commander-Autonomy-Audit.md B69 route, then corrected AI-Commander-Autonomy-Audit.md plus machine-context no-loop wording after source checks showed current stable origin/master@0139a346 compiles/spawns WFBE_SE_FNC_AI_Commander in Chernarus and maintained Vanilla at Init_Server.sqf:64,847, sets/clears wfbe_aicom_running at AI_Commander.sqf:127,253 and calls the upgrade worker at :161. B69 remains branch/live-Chernarus planning evidence until merged, propagated and smoked. No gameplay source changed."
     },
     {
       "lane": "b69-aicom-routing-followup-2026-06-22",

@@ -6,20 +6,21 @@ Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
 ## Verdict
 
-Current `origin/master` AI commander support is **partial, not absent**:
+Current `origin/master@0139a346` AI commander support is **active, but still partial / smoke-pending**:
 
 - Real side-level AI commander state exists.
 - AI commander funds are initialized and can receive income.
-- The AI commander upgrade worker is compiled and can debit funds/supply when called.
+- The AI commander supervisor and worker family are compiled and spawned in both maintained roots.
+- The supervisor sets `wfbe_aicom_running` true while it has full command, clears it when stopped/human-commanded, and calls the execute, town assignment, strategy, base, team, type, upgrade and production workers on cadence.
 - The server buy worker for AI production is compiled.
 
-But the source audit did **not** find a live owner loop/FSM that starts full autonomous commander behavior, calls the upgrade worker on a cadence, produces units through `AIBuyUnit`, or sets `wfbe_aicom_running = true`.
+The old "no live owner loop" audit wording is historical for earlier refs. Current stable Chernarus and maintained Vanilla compile `WFBE_SE_FNC_AI_Commander` at `Server/Init/Init_Server.sqf:64`, spawn it per present non-GUER side at `:847`, set `wfbe_aicom_running` at `Server/AI/Commander/AI_Commander.sqf:127,253`, call the upgrade worker at `:161`, and keep the worker compile at `Init_Server.sqf:55`.
 
 Human commander state is live: vote/reassignment, commander-side economy controls, HQ/MHQ affordances and income split all run through the normal Warfare flow. Full autonomous commander behavior is the partial/latent part.
 
 Autonomous supply trucks are still not revived, but current `origin/master` is now safe-disabled: the old `UpdateSupplyTruck` compile remains commented and the worker still references missing `Server\FSM\supplytruck.fsm`, but current `cf2a6d6a` initializes `wfbe_ai_supplytrucks` and logs a warning instead of spawning the missing worker in both maintained roots. Miksuu/perf still keep the older raw-spawn trap; see the matrix below.
 
-`origin/feat/ai-commander` is the current branch-only revival attempt. It changes the status of the branch, not stable `master`: the branch adds a server-side commander supervisor, assignment workers, production worker and explicit order executor, but it is source-Chernarus-only and needs dedicated/JIP/Vanilla smoke before the wiki can call AI commander revived.
+The old `origin/feat/ai-commander` section below is historical branch evidence. Current origin exposes no `feat/ai-commander` head on 2026-06-22; current stable has since absorbed a maintained-root supervisor/worker route, while PR #43 / B68 and the B69 pages remain separate branch/live-Chernarus evidence until merged, propagated and smoked.
 
 Separate concept note: [Quad AI Commander concept](Quad-AI-Commander) indexes `origin/codex/quad-ai-commander` head `d4e0fa38`. It is a future log/intel/context-store design sketch, not stable source behavior and not proof that AI commander autonomy is implemented.
 
@@ -44,9 +45,19 @@ The B69 pages are the current planning gateway for work that starts from the liv
 | [AI Commander B69 improvement roadmap](AI-Commander-B69-Improvement-Roadmap) | Review the 15-item recommended slate, the atomic HQ-strike package, HC-team merge/refill direction, supervisor heartbeat/watchdog route, garrison-vs-maneuver strength split and worker-stagger/FPS leads. | The page states it was produced on 2026-06-22 from a live B68 Chernarus audit. Before code work, re-check every touched path in the target branch and maintained Vanilla scope. |
 | [AI Commander B69 implementation sketches](AI-Commander-B69-Implementation-Sketches) | Use as an engineer handoff for A2-OA-safe SQF patch shapes and soak-test expectations for the verified B69 items. | Sketches are not committed gameplay code. Do not paste blindly; verify line anchors, branch drift, generated-target propagation and Arma smoke gates first. |
 
+## Current Stable Supervisor Route - 2026-06-22
+
+This section supersedes only the old "no active AI commander loop" conclusion. It does not make the whole AI commander release-complete.
+
+| Surface | Current `origin/master@0139a346` evidence | Meaning |
+| --- | --- | --- |
+| Supervisor compile and spawn | Chernarus and maintained Vanilla compile `WFBE_SE_FNC_AI_Commander` at `Server/Init/Init_Server.sqf:64`, compile the wildcard helper at `:65`, and spawn the supervisor once per present non-GUER side at `:847`; wildcard supervisors spawn at `:851`. | Current stable has a real side-level AICOM owner loop. Do not use older no-loop wording for current master. |
+| Running latch and worker cadence | In both maintained roots, `Server/AI/Commander/AI_Commander.sqf:127` sets `wfbe_aicom_running` to `!_humanCmd`, `:134,138,147,151,155,158,161,165` call the execute, town assignment, strategy, base, team, type, upgrade and production workers, and `:253` clears the latch when stopped. | The core commander brain is source-present, but branch/live B69 hardening still needs implementation choice, propagation and Arma smoke. |
+| Upgrade worker | `Server/Init/Init_Server.sqf:55` compiles `WFBE_SE_FNC_AI_Com_Upgrade`; `AI_Commander.sqf:161` calls it when `wfbe_upgrading` is false. | The old "compiled but no caller" statement is no longer current-stable truth. Keep debit/cost-index details in the AI upgrade matrix below. |
+
 ## Branch Refresh - `feat/ai-commander`
 
-Snapshot refreshed: 2026-06-04. Branch head `c20ce153` compares against `origin/master` `2cdf5fb8`. Diff from stable master is 9 Chernarus-source files, +416/-5; no `Missions_Vanilla` files are touched. The later cleanup series after `4dba060e` changes only the five AI commander scripts, adding 141 lines and removing 91 lines to avoid lazy condition blocks.
+Historical snapshot refreshed: 2026-06-04. Branch head `c20ce153` compared against `origin/master` `2cdf5fb8`; current origin exposes no `feat/ai-commander` head on 2026-06-22. Diff from that older stable master was 9 Chernarus-source files, +416/-5; no `Missions_Vanilla` files were touched. The later cleanup series after `4dba060e` changed only the five AI commander scripts, adding 141 lines and removing 91 lines to avoid lazy condition blocks.
 
 | Branch piece | Evidence | Meaning |
 | --- | --- | --- |
@@ -57,7 +68,7 @@ Snapshot refreshed: 2026-06-04. Branch head `c20ce153` compares against `origin/
 | AI team production | `c20ce153`; `AI_Commander_Produce.sqf:18-21,77-90`; `Server/Init/Init_Server.sqf:10` | Produces under-strength AI teams through `AIBuyUnit` while respecting a per-side AI cap and AI commander funds. Review this alongside factory queue/token cleanup before merge. |
 | Lazy-condition cleanup series | `b4b0333f`, `27d25a28`, `dbaf9150`, `4626c036`, `c20ce153`; files under `Server/AI/Commander/AI_Commander*.sqf` | Rewrites supervisor, town assignment, order executor, type assignment and production-worker condition paths into stepwise guards. This improves branch static/syntax readiness, but it does not change branch-only status, Vanilla propagation or smoke requirements. |
 
-2026-06-04 branch scout clarification: the branch supervisor keeps running in assist mode with a human commander, but `wfbe_aicom_running` is deliberately used as the **full-command latch**, not a simple "commander brain exists" marker. `AI_Commander.sqf:43-49` sets it false while a human commander exists even though the executor/assist loop continues. Stable master still only initializes/clears this flag (`Init_Server.sqf:364-365`, `Server_VoteForCommander.sqf:54-57`, `Server_AssignNewCommander.sqf:11-14`) and has no source-proven supervisor.
+2026-06-04 branch scout clarification: the historical branch supervisor kept running in assist mode with a human commander, but `wfbe_aicom_running` was deliberately used as the **full-command latch**, not a simple "commander brain exists" marker. Current stable has since absorbed a maintained-root supervisor route; use the 2026-06-22 current-stable section above for `origin/master@0139a346`, and keep this paragraph as branch-history context.
 
 Branch-only review risks:
 
@@ -91,25 +102,26 @@ Patch direction: for docs checkout, Miksuu and perf targets, port or recreate th
 | Fallback constant | `Common/Init/Init_CommonConstants.sqf:91` sets `WFBE_C_AI_COMMANDER_ENABLED = 1` only if the variable is nil. | If the MP parameter path does not provide the variable, the fallback enables it. Do not confuse this with the parameter default. |
 | Move interval constant | `Common/Init/Init_CommonConstants.sqf:96` defines `WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600`. | A legacy cadence constant exists, but no source-read scheduler was found using it. |
 | Supply truck max constant | `Common/Init/Init_CommonConstants.sqf:97` defines `WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5`. | Old logistics sizing remains. |
-| Side state | `Server/Init/Init_Server.sqf:364-365` initializes `wfbe_aicom_running = false` and `wfbe_aicom_funds`. | Side logic can hold AI commander runtime state. |
-| Human commander stop hooks | `Server_VoteForCommander.sqf:48-57`, `Server_AssignNewCommander.sqf:11-14` clear `wfbe_aicom_running` when a player commander exists. | Player commander assignment is live and suppresses any future AI commander loop, but these hooks still do not prove an AI start path. |
+| Side state | `Server/Init/Init_Server.sqf:440-443` initializes `wfbe_aicom_running = false` and `wfbe_aicom_funds`. | Side logic holds AI commander runtime state and starting funds. |
+| Human commander stop hooks | `Server_VoteForCommander.sqf:48-57`, `Server_AssignNewCommander.sqf:11-14` clear `wfbe_aicom_running` when a player commander exists. | Player commander assignment is live and suppresses full-command AICOM mode. Current stable also has a start/supervisor path; see the current-stable section above. |
 | AI commander income | `Server/FSM/updateresources.sqf:67` adds income to AI commander funds when no player commander exists and AI commander is enabled. | AI commander money can grow without a player commander. |
-| Upgrade worker compile | `Server/Init/Init_Server.sqf:48` compiles `WFBE_SE_FNC_AI_Com_Upgrade`. | The worker is available after server init. |
+| Upgrade worker compile | `Server/Init/Init_Server.sqf:55` compiles `WFBE_SE_FNC_AI_Com_Upgrade`. | The worker is available after server init and current stable calls it from the supervisor when no upgrade is already running. |
 | Upgrade order data | `Common/Config/Core_Upgrades/Upgrades_*.sqf` define `WFBE_C_UPGRADES_%SIDE_AI_ORDER`; `Check_Upgrades.sqf:7-40` fills missing enabled upgrade levels. | AI upgrade preference data exists. |
-| Upgrade worker behavior | `Server/Functions/Server_AI_Com_Upgrade.sqf:12-50` reads `WFBE_C_UPGRADES_%SIDE_AI_ORDER`, selects the first upgrade whose current level is below the target level, checks funds/supply and calls `WFBE_SE_FNC_ProcessUpgrade`. | The worker is real and deterministic, but needs a caller/owner cadence. It is upgrade-only, not base building, defense, factory or unit-buy AI. |
+| Upgrade worker behavior | `Server/Functions/Server_AI_Com_Upgrade.sqf:12-50` reads `WFBE_C_UPGRADES_%SIDE_AI_ORDER`, selects the first upgrade whose current level is below the target level, checks funds/supply and calls `WFBE_SE_FNC_ProcessUpgrade`. | The worker is real and deterministic. Current stable calls it from `AI_Commander.sqf:161`; debit/cost-index status remains branch-sensitive in the matrix below. |
 | Upgrade processing callee | `Server/Functions/Server_ProcessUpgrade.sqf:10-47,49-83` owns timing/state progression and artillery refresh side effects. | It does not create bases, defenses, factories or units; do not infer production behavior from the AI upgrade path. |
 | AI buy worker compile | `Server/Init/Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`. | Server-side AI production helper exists. |
 | AI buy worker behavior | `Server/Functions/Server_BuyUnit.sqf:1-180` queues, waits and creates units/vehicles for an AI team. | Useful if a future AI commander production loop intentionally calls it. |
-| Stop hooks | `Server_VoteForCommander.sqf:54-57` and `Server_AssignNewCommander.sqf:11-14` clear `wfbe_aicom_running` when a player commander exists. | Stop/reset hooks exist, but they do not prove a start loop exists. |
+| Supervisor start path | `Server/Init/Init_Server.sqf:64,847` compiles and spawns `WFBE_SE_FNC_AI_Commander` for present non-GUER sides. | Current stable has the start loop that earlier audits did not find. |
+| Stop hooks | `Server_VoteForCommander.sqf:54-57`, `Server_AssignNewCommander.sqf:11-14` and `AI_Commander.sqf:253` clear `wfbe_aicom_running` when a player commander or stop condition exists. | Stop/reset hooks coexist with the current supervisor route. |
 
-## What Was Not Proven Live
+## Still Needs Proof / Owner Review
 
 | Missing/uncertain owner | Evidence | Development implication |
 | --- | --- | --- |
-| AI commander start loop | Source search found `wfbe_aicom_running` initialized and cleared, but not set to `true`. | Do not claim autonomous commander brain is live until a dynamic/runtime caller is proven. |
-| AI commander upgrade scheduler | Source search found the worker compile and function body, but no static caller for `WFBE_SE_FNC_AI_Com_Upgrade` outside docs. `Init_Server.sqf:622` starts `WFBE_SE_FNC_VoteForCommander`, not the AI upgrade worker. | Reviving upgrades needs an explicit server-owned cadence and stop conditions. |
-| AI unit production scheduler | `AIBuyUnit` is compiled, but source search found no static caller outside `Server_BuyUnit.sqf` itself. | AI commander unit production needs an intentional design, not just a docs claim. |
-| AI commander movement scheduler | `WFBE_C_AI_COMMANDER_MOVE_INTERVALS` exists, but no audited source path uses it to move/command teams. | Treat movement autonomy as missing until a source owner is found or implemented. |
+| AI commander release readiness | Current stable has a supervisor route, but B69 roadmap/sketch pages identify supervisor heartbeat/watchdog, HQ-strike, HC-team merge and posture/garrison issues as live B68 improvement candidates. | Treat the core loop as source-present, not release-finished. B69 work needs owner selection, source patches, maintained Vanilla propagation and Arma smoke. |
+| AI upgrade cost-index semantics | Current stable calls `WFBE_SE_FNC_AI_Com_Upgrade`, but the cost-index/debit matrix below remains branch-sensitive. | Keep upgrade smoke and cost-index review separate from the existence of the scheduler. |
+| AI unit production smoke | `AIBuyUnit` is compiled and current AICOM production workers exist, but queue/factory/AI-cap behavior still needs runtime smoke before release wording. | Smoke AI team production, destroyed factory, insufficient funds, full AI cap, vehicle/man production and human takeover separately. |
+| Legacy movement interval constant | `WFBE_C_AI_COMMANDER_MOVE_INTERVALS` exists, but this page has not re-proven it as the current movement cadence owner. Current movement/order behavior should be read through `AI_Commander_AssignTowns.sqf`, `AI_Commander_Execute.sqf`, `AI_Commander_Strategy.sqf` and the B69 route. | Do not use the legacy constant alone as evidence for movement cadence or lack of movement. |
 
 ## Stable Master Order Plumbing
 
@@ -120,7 +132,7 @@ Mini-scout follow-up 2026-06-04 separated live order plumbing from missing auton
 - Waypoint execution lives in helpers such as `Server/AI/Orders/AI_MoveTo.sqf:13-17`, `AI_Patrol.sqf:14`, `AI_TownPatrol.sqf:23` and `Common_WaypointsAdd.sqf:18`.
 - `Server_UpdateTeam.sqf:5` is shallow behavior randomization, not a full order scheduler.
 
-The safe wording is therefore: stable master has usable order primitives and a human command UI, but no source-proven autonomous commander loop that schedules those primitives for the side.
+Current safe wording is therefore: stable master has usable order primitives, a human command UI and a source-present AICOM supervisor route. Release-quality claims still need exact worker-behavior smoke and B69/PR #43 branch changes must stay branch-scoped until merged, propagated and validated.
 
 Another dormant-looking primitive is `WFBE_SE_FNC_AI_SetTownAttackPath`. `Init_Server.sqf:45-47` compiles the attack-path helper and its safety helpers, but the current stable-master static scan found no live caller outside compile/docs. The helper itself removes existing team waypoints near the start (`Server_AI_SetTownAttackPath.sqf:18`) before attempting the longer arced path branch and later depot/camp waypoints (`:41,80-109`). If a future AI commander branch wires this function back into town orders, smoke the random and unsafe-path branches so a failed route attempt does not silently leave the team without useful waypoints.
 
