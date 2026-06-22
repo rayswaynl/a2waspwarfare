@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T22:17:00+02:00",
+  "generatedAt": "2026-06-22T22:31:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "objective-ping-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@86ab85b9d0b1 keeps Commander SetTask sends commented at GUI_Menu_Command.sqf:335,337,343 in both maintained roots while registering SetTask at Init_PublicVariables.sqf:33",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f send targeted Objective Ping tasks at GUI_Menu_Command.sqf:336,344 and register SetTask at Init_PublicVariables.sqf:40 in both maintained roots",
+        "live origin/feat/naval-hvt-objectives@2e1c59317186 matches current stable for checked SetTask paths",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical c20ce1534be0 keep the commented SetTask sends and Init_PublicVariables.sqf:33 registration in both maintained roots",
+        "historical a96fdda2 carries targeted Objective Ping sends at GUI_Menu_Command.sqf:336,344 and Init_PublicVariables.sqf:36 registration, but no live release/* head is exposed"
+      ],
+      "outputs": [
+        "Refreshed Feature Status, Client UI systems, Commander/HQ lifecycle, Networking and public variables, Player UI workflow, PVF send-helper contract, Abandoned feature revival and commander task machine rows.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future commander/UI owner should keep old town TaskSystem revival separate from commander Objective Ping and smoke the exact target branch: selected-team/all-player-led sends, receiver task lifecycle, JIP/late join behavior, side/audience filtering and spam controls.",
+      "updated": "2026-06-22T22:31:00+02:00"
+    },
     {
       "lane": "server-init-duplicate-binds-current-b69-b74-refresh-2026-06-22",
       "owner": "Codex",

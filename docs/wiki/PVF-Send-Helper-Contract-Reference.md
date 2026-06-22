@@ -38,7 +38,7 @@ This rewrite is the contract the dispatcher depends on: legitimate traffic alway
 | Remote path | `:16-17` | When `!isHostedServer`: `Call Compile Format ["WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';", _func]` — assigns the per-command channel variable and fires it only to `_id`. |
 | Hosted path | `:18-20` | On a hosted (listen) server: `_pvf Spawn WFBE_CL_FNC_HandlePVF` runs the client dispatcher locally; then `if (isMultiplayer)` also re-broadcasts via `publicVariableClient` so remote clients still receive it. A pure single-player host skips the network fire. |
 
-Typical call sites pass `leader X` (or `leader commanderTeam`) as the index-0 target, e.g. `Client/GUI/GUI_Menu_Command.sqf:336,344` (`"SetTask"`), `Client/Module/CoIn/coin_interface.sqf:264,738` (`"Available"`), and the headless-delegation hand-offs `Server/AI/Commander/AI_Commander_Teams.sqf:328` and `Server/FSM/server_side_patrols.sqf:67` (`"HandleSpecial"` to a specific HC unit).
+Typical current-stable-shaped call sites pass `leader X` (or `leader commanderTeam`) as the index-0 target, e.g. `Client/GUI/GUI_Menu_Command.sqf:336,344` (`"SetTask"` on current stable/B69/B74/naval-HVT; docs/source, Miksuu and perf still comment those sends), `Client/Module/CoIn/coin_interface.sqf:264,738` (`"Available"`), and the headless-delegation hand-offs `Server/AI/Commander/AI_Commander_Teams.sqf:328` and `Server/FSM/server_side_patrols.sqf:67` (`"HandleSpecial"` to a specific HC unit).
 
 ## Common_SendToClients — broadcast
 
