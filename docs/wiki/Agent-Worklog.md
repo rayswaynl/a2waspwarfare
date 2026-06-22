@@ -1618,6 +1618,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed [Towns, camps and capture](Towns-Camps-And-Capture-Atlas#current-branch-scope), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so future work stays focused on real-count versus safe-denominator semantics and 0/partial/all-camp smoke. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
 
+## 2026-06-22T10:41:06+02:00 - Codex - Camp flag texture current-stable refresh
+
+- Claimed `camp-flag-texture-current-stable-refresh-2026-06-22` after Feature Status and Source Fix queue still cited stable `origin/master cf2a6d6a` as current camp-flag drift evidence.
+- Source scope: docs branch `docs/developer-wiki-index@28a7d9c5`, current stable `origin/master@0139a346`, Miksuu `master@b8389e74`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, active B69 `origin/claude/b69@0a1ccb4d`, new `origin/feat/naval-hvt-objectives@2e1c5931`, and no current origin `release/*`, `feat/*camp*` or `feat/*town*` heads on 2026-06-22.
+- Finding: docs branch and Miksuu still set independent camp-capture flag texture from old `_side`, perf fixes only Chernarus, and current stable/historical release/B69/naval HVT use `str _newSide` in both maintained roots. Every checked `repair-camp` path still changes camp `sideID` and broadcasts `CampCaptured` without `setFlagTexture`; current stable line drift is `Server_HandleSpecial.sqf:468,471`.
+- Result: refreshed [Towns, camps and capture](Towns-Camps-And-Capture-Atlas#current-branch-scope), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so future code owners preserve the already-fixed independent capture branches while keeping repair-side flag refresh open. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
+
 ## 2026-06-22T10:47:03+02:00 - Codex - Dead-code AI supply-truck current-stable refresh
 
 - Claimed `dead-code-ai-supply-truck-current-stable-refresh-2026-06-22` after [Dead/stale code](Dead-Code-And-Stale-Code-Register#sqf-reachability-findings) still cited current `origin/master cf2a6d6a` for the AI supply-truck safe-disable row.

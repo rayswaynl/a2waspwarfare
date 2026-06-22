@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T10:48:54+02:00",
+  "generatedAt": "2026-06-22T10:57:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -41,6 +41,27 @@
       ],
       "handoff": "Closed after validation. Future AI logistics owner should preserve/port the current-stable safe-disable when merging older raw-spawn branches, or redesign the feature around a real server-owned loop/FSM before revival.",
       "updated": "2026-06-22T10:48:54+02:00"
+    },
+    {
+      "lane": "camp-flag-texture-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index HEAD for current docs mirror camp capture and repair-side flag paths",
+        "origin/master@0139a346 current stable Chernarus and maintained Vanilla camp capture and Server_HandleSpecial repair-camp paths",
+        "Miksuu master fetched to FETCH_HEAD on 2026-06-22",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2; current origin exposes no release/* heads on 2026-06-22",
+        "origin/claude/b69@0a1ccb4d",
+        "origin/feat/naval-hvt-objectives@2e1c5931 relevance check for town/camp path drift"
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md current branch scope and camp flag risk prose for current stable line drift plus B69/naval caveats.",
+        "Refreshed Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future town/capture code owner should preserve current-stable/release/B69/naval independent-capture fixes, patch docs/Miksuu/old-owner targets where relevant, add repair-side setFlagTexture when repair-camp changes sideID, propagate maintained Vanilla and smoke independent capture plus camp repair.",
+      "updated": "2026-06-22T10:46:58+02:00"
     },
     {
       "lane": "camp-count-helper-current-stable-refresh-2026-06-22",
