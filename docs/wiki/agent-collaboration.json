@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T11:03:03+02:00",
+  "generatedAt": "2026-06-22T11:06:08+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "construction-smallsite-logic-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@3406ffa0 Chernarus and maintained Vanilla SmallSite add/add at Construction_SmallSite.sqf:70,99 and MediumSite add/remove at Construction_MediumSite.sqf:70,114",
+        "origin/master@0139a346 Chernarus and maintained Vanilla match the same SmallSite add/add and MediumSite add/remove line shape at :70,:99 and :70,:114",
+        "Miksuu master@b8389e74 and origin/perf/quick-wins@0076040f match the same maintained-root line shape",
+        "historical release commit a96fdda2 matches the same maintained-root line shape; current origin exposes no release/* heads on 2026-06-22",
+        "origin/claude/b69@0a1ccb4d matches the same maintained-root line shape",
+        "git ls-remote --heads origin release/* feat/*construction* feat/*coin* feat/*small* returned no heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Construction-Logic-List-Cleanup.md current branch matrix and acceptance criteria.",
+        "Updated Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so SmallSite cleanup evidence uses current stable origin/master@0139a346 instead of cf2a6d6a.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine rows. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future construction owner should patch only the post-completion SmallSite add-to-remove line first, propagate maintained Vanilla, and smoke small/medium construction plus structure kill/repair/JIP behavior before runtime-impact wording.",
+      "updated": "2026-06-22T11:06:08+02:00"
+    },
     {
       "lane": "town-ai-vehicle-despawn-current-stable-refresh-2026-06-22",
       "owner": "Codex",

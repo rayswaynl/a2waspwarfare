@@ -1644,4 +1644,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 
 - Result: refreshed [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety#current-branch-matrix), Feature Status, Source Fix queue, Current Source Snapshot, Miksuu upstream intel and hardening rows so DR-45 now routes through current stable `origin/master@0139a346` instead of stale `cf2a6d6a` / `89ae9dad` evidence.
 - Finding: current stable still deletes tracked `wfbe_active_vehicles` at `server_town_ai.sqf:309` without a player `crew` check in both maintained roots. Miksuu `b8389e748243`, `perf/quick-wins@0076040f`, historical `a96fdda2` and live `origin/feat/aicom-fleet-improvements@cc5090bed4ad` remain unsafe; B69 `origin/claude/b69@0a1ccb4d` is Chernarus candidate evidence only because maintained Vanilla remains old-shape.
+## 2026-06-22T11:03:45+02:00 - Codex - Construction SmallSite logic current-stable refresh
+
+- Claimed `construction-smallsite-logic-current-stable-refresh-2026-06-22` after [Source fix queue](Source-Fix-Propagation-Queue) and Feature Status still cited old stable `origin/master cf2a6d6a` evidence for the SmallSite/MediumSite `wfbe_structures_logic` asymmetry.
+- Source scope: docs `3406ffa0`, current stable `origin/master@0139a346`, Miksuu `b8389e74`, `origin/perf/quick-wins@0076040f`, historical release `a96fdda2` and active B69 `origin/claude/b69@0a1ccb4d`; current origin exposes no `release/*`, `feat/*construction*`, `feat/*coin*` or `feat/*small*` heads on 2026-06-22.
+- Finding: every checked maintained root still has SmallSite add/add at `Construction_SmallSite.sqf:70,99` and MediumSite add/remove at `Construction_MediumSite.sqf:70,114`; no checked branch rescues the one-line cleanup debt.
+- Result: refreshed [Construction logic list cleanup](Construction-Logic-List-Cleanup#current-branch-matrix), [Construction and CoIn](Construction-And-CoIn-Systems-Atlas#smallsite--mediumsite), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
