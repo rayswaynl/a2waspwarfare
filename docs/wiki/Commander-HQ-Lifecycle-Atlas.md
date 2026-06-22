@@ -2,7 +2,7 @@
 
 > Canonical source-backed map for commander selection, commander-client affordances, HQ/MHQ deployment, HQ destruction, wreck tracking and MHQ repair. This page bridges [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Server authority migration map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index).
 
-Unless a branch/ref is named, source paths below are relative to the Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. The initial HQ/team-spawn section and HQ score/bounty matrix were refreshed against live mission `origin/master` `0139a3468` on 2026-06-21; older branch-matrix rows keep their named provenance.
+Unless a branch/ref is named, source paths below are relative to the Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. The initial HQ/team-spawn section was refreshed against live mission `origin/master` `0139a3468` on 2026-06-21. The HQ score/bounty matrix was refreshed against docs/source `HEAD@97e4cdd0`, current stable `origin/master@0139a346` and current B69 `origin/claude/b69@8d465fce` on 2026-06-22; older branch-matrix rows keep their named provenance.
 
 ## How To Use This Page
 
@@ -20,13 +20,13 @@ Unless a branch/ref is named, source paths below are relative to the Chernarus m
 
 Checked 2026-06-14 against current docs head `8c3942d2` (targeted commander/HQ source paths unchanged from `f82a9127` and `e2c9f6ed`), stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
 
-HQ score/bounty was rechecked 2026-06-21 against current stable `origin/master@0139a346` in both maintained roots. Other rows keep their 2026-06-14 branch provenance until refreshed.
+HQ score/bounty was rechecked 2026-06-22 against docs/source `HEAD@97e4cdd0`, current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` in both maintained roots. Other rows keep their 2026-06-14 branch provenance until refreshed.
 
 | Surface | Current branch truth | Route |
 | --- | --- | --- |
 | Commander vote semantics | All checked maintained roots keep the `_highest >= _aiVotes` OR `_highest <= _aiVotes` winner condition, so a non-tied player candidate wins even when AI/no-commander votes are equal or higher (`Server_VoteForCommander.sqf:24-29,43`; `GUI_VoteMenu.sqf:88`). | [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook#current-branch-scope) |
 | Manual reassignment helper | Current docs head `8c3942d2` is source-unchanged from `e2c9f6ed`/`f82a9127` for this flow and still uses `_side = _this` in `Server_AssignNewCommander.sqf:3`; stable/Miksuu/perf/release/feat-ai unpack side + commander at `:4-5` in checked maintained roots, but duplicate `new-commander-assigned` senders remain. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) |
-| HQ score/bounty | Current stable `origin/master@0139a346` still keeps the generic HQ building score plus second HQ bounty shape in Chernarus and maintained Vanilla. Older docs, Miksuu, perf, release and feat-ai rows are preserved below as branch-scoped evidence. | [HQ kill score and bounty branch matrix](#hq-kill-score-and-bounty-branch-matrix) |
+| HQ score/bounty | Docs/source `HEAD@97e4cdd0`, current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` still keep the generic HQ building score plus second HQ bounty shape in both maintained roots. B69 adds base-fall smoke/sting code around the handler, but not a scoring fix. | [HQ kill score and bounty branch matrix](#hq-kill-score-and-bounty-branch-matrix) |
 | Objective Ping / commander tasks | Current docs head `8c3942d2`, Miksuu, perf and feat-ai leave maintained-root `SetTask` sends commented at `GUI_Menu_Command.sqf:335,337,343`; stable and release send targeted Objective Ping tasks at `:336,344`. Old town `TaskSystem` remains commented everywhere checked. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
 | HQ repair and base-area authority | `RequestMHQRepair` still sends only side, and base-area accounting still depends on client-bound `RequestBaseArea`; treat both as authority-sensitive before expanding HQ recovery or deploy limits. | [Server authority migration map](Server-Authority-Migration-Map), [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas) |
 
@@ -241,7 +241,7 @@ The base-area limit itself is also only proven as a local client affordance at d
 
 HQ death is handled by `Server_OnHQKilled.sqf`. If the destroyed object was a deployed HQ, the server creates a dead MHQ object at the structure position, marks it damaged, flips `wfbe_hq_deployed = false`, updates `wfbe_hq` to the wreck, deletes the deployed-HQ shield walls and schedules deletion of the deployed structure (`Server_OnHQKilled.sqf:26-48`).
 
-The same worker awards score/bounty messages (`:51-86`) and publishes allied-only HQ wreck marker state:
+The same worker awards score/bounty messages (`:47-81` on docs/source; line drift is named in the branch matrix) and publishes allied-only HQ wreck marker state:
 
 | Variable | Meaning | Source |
 | --- | --- | --- |
@@ -252,17 +252,16 @@ The same worker awards score/bounty messages (`:51-86`) and publishes allied-onl
 
 ### HQ Kill Score And Bounty Branch Matrix
 
-DR-50 is still branch-unrescued on current stable. Recheck 2026-06-21: `origin/master@0139a346` Chernarus and maintained Vanilla both set `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF` at `Server/Functions/Server_OnHQKilled.sqf:23`, award it at `:52` on the server path or `:54` through `RequestChangeScore`, then award `_score = 900` again for non-teamkills at `:83` / `:86` under the `:80` side guard. The coefficient is `3` at `Common/Init/Init_CommonConstants.sqf:529`, so a clean enemy HQ kill pays `900 + 900 = 1800`; a friendly/teamkill HQ kill still gets the generic `900`.
+DR-50 remains branch-unrescued after the 2026-06-22 current-B69 refresh. Every checked current maintained-root target still sets `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF`, awards that generic HQ building score regardless of teamkill, then awards `_score = 900` again under the non-teamkill guard. The coefficient is still `3`, so a clean enemy HQ kill pays `900 + 900 = 1800`; a friendly/teamkill HQ kill still gets the generic `900`.
 
 | Ref / root | Evidence | Status |
 | --- | --- | --- |
-| Current stable `origin/master@0139a346` Chernarus + maintained Vanilla | `Server/Functions/Server_OnHQKilled.sqf:23,52,54,80,83,86`; `Common/Init/Init_CommonConstants.sqf:529` | Double-award present in both maintained roots. |
-| Historical docs head `8c3942d2` Chernarus + maintained Vanilla, source-unchanged from `f82a9127` | `Server_OnHQKilled.sqf:23,49,78,81`; `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
-| Older stable `origin/master` `cf2a6d6a` | `Server_OnHQKilled.sqf:23,54,83,86`; `Init_CommonConstants.sqf:376` | Double-award present in both roots. |
-| Miksuu upstream `b8389e74` | Same two-award shape at `Server_OnHQKilled.sqf:23,49,78,81`; coefficient at `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
-| `origin/perf/quick-wins` `0076040f` | Same two-award shape at `Server_OnHQKilled.sqf:23,49,78,81`; coefficient at `Init_CommonConstants.sqf:356` | Not fixed by perf branch. |
-| `origin/release/2026-06-feature-bundle` `a96fdda2` | Same two-award shape at `Server_OnHQKilled.sqf:23,54,83,86`; coefficient at `Init_CommonConstants.sqf:372` | Not fixed by release branch. |
-| `origin/feat/ai-commander` `c20ce153` | Same two-award shape at `Server_OnHQKilled.sqf:23,49,78,81`; coefficient at `Init_CommonConstants.sqf:364` in Chernarus and `:356` in maintained Vanilla | Not fixed by AI-commander branch. |
+| Docs/source `HEAD@97e4cdd0` Chernarus + maintained Vanilla | `Server/Functions/Server_OnHQKilled.sqf:23,47,49,75,78,81`; `Common/Init/Init_CommonConstants.sqf:356`. Checked HQ-kill score paths are unchanged from prior docs `4d4610f1`. | Double-award present in both maintained roots. |
+| Current stable `origin/master@0139a346` Chernarus + maintained Vanilla | `Server/Functions/Server_OnHQKilled.sqf:23,52,54,80,83,86`; `Common/Init/Init_CommonConstants.sqf:529`. | Double-award present in both maintained roots. |
+| Current B69 `origin/claude/b69@8d465fce` Chernarus + maintained Vanilla | `Server/Functions/Server_OnHQKilled.sqf:23,64,66,106,109,112`; coefficient line drift is Chernarus `Common/Init/Init_CommonConstants.sqf:721` and maintained Vanilla `:555`. B69 also has base-fall smoke/sting code at `Server_OnHQKilled.sqf:57,103`. | Double-award still present in both maintained roots; B69 spectacle code is not a DR-50 scoring fix. |
+| Current Miksuu `b8389e748243` | `Server_OnHQKilled.sqf:23,47,49,75,78,81`; coefficient at `Init_CommonConstants.sqf:356`. Verified direct upstream `master` still resolves to `b8389e748243` on 2026-06-22. | Double-award present in both maintained roots. |
+| `origin/perf/quick-wins@0076040f` | Same two-award shape at `Server_OnHQKilled.sqf:23,47,49,75,78,81`; coefficient at `Init_CommonConstants.sqf:356`. | Not fixed by perf branch. |
+| Historical release commit `a96fdda2` | Same two-award shape at `Server_OnHQKilled.sqf:23,52,54,80,83,86`; coefficient at `Init_CommonConstants.sqf:372`. Current origin exposes no live `release/*`, `feat/*hq*`, `feat/*commander*`, `feat/*score*` or `feat/*bounty*` heads on 2026-06-22. | Historical evidence only; no current release head to treat as a rescue branch. |
 | Historical score branches | `upstream/ScoreForKillingFactories` `f17445c1` and `upstream/Fix0ScoreBountyBug` `415615c9` carry the older single-HQ-bounty path only. | Useful provenance, not a current maintained-root rescue. |
 
 Patch shape: keep a single non-teamkill HQ score award, make friendly/teamkill HQ destruction award zero score, propagate maintained Vanilla, then smoke enemy HQ kill, friendly HQ teamkill and DR-20 idempotency/replayed-HQ-kill interactions.

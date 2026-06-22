@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T17:54:53+02:00",
+  "generatedAt": "2026-06-22T18:13:10+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only PVF/PVEH sender-auth current B69 head refresh. Docs/source HEAD@4d4610f1 is unchanged from ade4d356 for checked PVF init/dispatcher paths; current B69 origin/claude/b69@8d465fce matches current stable origin/master@0139a346 for namespace/CODE PVF dispatch while still forwarding only the PVEH value tuple at Init_PublicVariables.sqf:56,61. B69 changed only Client/PVFunctions/HandleSpecial.sqf among checked PVF/PVEH paths, adding default-off aicom-team-merge at :57,59. No gameplay source changed.",
+      "currentWork": "Published docs-only DR-50/HQ-kill score current B69 refresh. Docs/source HEAD@97e4cdd0, current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, current Miksuu b8389e748243, perf/quick-wins@0076040f and historical a96fdda2 all still keep generic HQ building score plus a separate 900-point HQ bounty in both maintained roots. B69 base-fall smoke/sting code is not a scoring fix. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from the dashboard, Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep gameplay source untouched unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hq-score-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed DR-50/HQ-kill score double-award owner/status/queue/machine rows with current docs/source HEAD@97e4cdd0 and current B69 origin/claude/b69@8d465fce evidence. Docs/source, current stable origin/master@0139a346, current B69, current Miksuu b8389e748243, perf/quick-wins@0076040f and historical a96fdda2 all keep generic HQ building score plus a separate _score = 900 HQ bounty in both maintained roots. Current B69 line drift is generic award Server_OnHQKilled.sqf:64,66, non-teamkill guard :106, _score = 900 at :109 and second award :112; base-fall smoke/sting at :57,103 is not a scoring fix. No gameplay source changed."
+    },
     {
       "lane": "pvf-sender-auth-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
