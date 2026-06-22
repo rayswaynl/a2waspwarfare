@@ -1,6 +1,6 @@
 # Commander Reassignment Call Shape
 
-Status: branch-split. Current stable `origin/master@0139a346` has the DR-15 helper unpacking fix in the maintained Chernarus and Vanilla roots, but the docs branch snapshot and current stable full modded forks still carry the old helper shape. Duplicate reassignment notifications, visible-name UI targeting, requester authority and smoke remain open.
+Status: branch-split. Current stable `origin/master@0139a346` and current B69 `origin/claude/b69@8d465fce` have the DR-15 helper unpacking fix in the maintained Chernarus and Vanilla roots, but docs/source `HEAD@337ed166` and current stable/B69 full modded forks still carry the old helper shape. Duplicate reassignment notifications, visible-name UI targeting, requester authority and smoke remain open.
 
 All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
@@ -40,28 +40,29 @@ _side = _this;
 _commander = _this select 1;
 ```
 
-Current stable `origin/master@0139a346` fixes the maintained-root helper unpacking:
+Current stable `origin/master@0139a346` and current B69 `origin/claude/b69@8d465fce` fix the maintained-root helper unpacking:
 
 ```sqf
 _side = _this select 0;
 _commander = _this select 1;
 ```
 
-`Common_GetSideLogic.sqf` expects a real `SIDE` value and otherwise falls back to `objNull`. On old-shape targets, passing the whole array as `_side` means helper-side side-logic work and notification routing use an invalid side value. On current stable, the helper-side destination is valid, so the remaining current-stable defects are the duplicate `new-commander-assigned` senders, visible-name UI selection and requester-authority checks.
+`Common_GetSideLogic.sqf` expects a real `SIDE` value and otherwise falls back to `objNull`. On old-shape targets, passing the whole array as `_side` means helper-side side-logic work and notification routing use an invalid side value. On current stable/current B69 maintained roots, the helper-side destination is valid, so the remaining defects are the duplicate `new-commander-assigned` senders, visible-name UI selection and requester-authority checks.
 
 ## Current Branch Matrix
 
-Branch route `commander-reassignment-current-stable-closeout-2026-06-21` rechecked maintained Chernarus and Vanilla roots on 2026-06-21. Current docs branch head `b44aaaf8` still has the old helper unpacking. Current stable is `origin/master@0139a346`; current origin exposes no live `release/*` or `feat/ai-commander` heads, so `a96fdda2` and `c20ce153` are historical evidence unless those refs are restored.
+Branch route `commander-reassignment-current-b69-head-refresh-2026-06-22` rechecked maintained Chernarus and Vanilla roots after `git fetch --all --prune` on 2026-06-22. Docs/source `HEAD@337ed166` is unchanged from `b44aaaf8` for the checked reassignment paths and still has the old helper unpacking. Current stable is `origin/master@0139a346`; current B69 is `origin/claude/b69@8d465fce`; current origin exposes no live `release/*`, `feat/*commander*`, `feat/*vote*` or `feat/*reassign*` heads, so `a96fdda2` and `c20ce153` are historical evidence unless those refs are restored.
 
 | Root / branch | Helper call shape | Remaining commander reassignment risks | Practical meaning |
 | --- | --- | --- | --- |
-| Docs branch `b44aaaf8` Chernarus and maintained Vanilla | Still broken: `Server_AssignNewCommander.sqf:3-5` uses `_side = _this` and `_commander = _this select 1`. | Vote menu resolves by visible leader name (`GUI_Commander_VoteMenu.sqf:33-46`); `RequestNewCommander.sqf:14` and helper `:9` both send `new-commander-assigned`. | Patch-ready on the docs branch source snapshot; not current-stable proof. |
+| Docs/source `HEAD@337ed166` Chernarus and maintained Vanilla | Still broken and unchanged from `b44aaaf8` for checked reassignment paths: `Server_AssignNewCommander.sqf:3-5` uses `_side = _this` and `_commander = _this select 1`. | Vote menu resolves by visible leader name (`GUI_Commander_VoteMenu.sqf:33-46`); `RequestNewCommander.sqf:14` and helper `:9` both send `new-commander-assigned`. | Patch-ready on the docs/source snapshot; not current-stable or current-B69 proof. |
 | Current stable `origin/master@0139a346` Chernarus and maintained Vanilla | Helper unpacking is fixed: `_side = _this select 0`, `_commander = _this select 1` (`Server_AssignNewCommander.sqf:4-5`). | UI still selects by leader-name text, and both `RequestNewCommander.sqf:14` plus helper `:10` still send `new-commander-assigned`. | Current stable is source-present for DR-15 helper shape, but not release-complete for reassignment. |
-| Current stable full modded forks Napf/Eden/Lingor | Still old-shape: `_side = _this` at `Modded_Missions/*/Server/Functions/Server_AssignNewCommander.sqf:3`. | Same duplicate sender and visible-name UI shape where the files exist. | Do not claim modded propagation; current tooling does not actively maintain these forks. |
-| Miksuu upstream `b8389e74` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape. | Upstream is a helper-fix source, not a complete reassignment fix. |
-| `origin/perf/quick-wins` `0076040f` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape. | Perf branch does not close reassignment UI/notification/authority risks. |
-| Historical release commit `a96fdda2` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable at `Server_AssignNewCommander.sqf:4-5`; no live `origin/release/*` head existed during this refresh. | Same visible-name selector and duplicate sender shape. | Treat as historical partial cleanup until a release head is restored or rechecked. |
-| Historical AI-commander commit `c20ce153` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable at `Server_AssignNewCommander.sqf:4-5`; no live `origin/feat/ai-commander` head existed during this refresh. | Same visible-name selector and duplicate sender shape; AI commander supervisor behavior is separate. | Do not route reassignment closure through AI commander revival without the UI/notification smoke here. |
+| Current B69 `origin/claude/b69@8d465fce` Chernarus and maintained Vanilla | Matches current stable helper shape: `_side = _this select 0`, `_commander = _this select 1` (`Server_AssignNewCommander.sqf:4-5`). B69 path deltas `0a1ccb4d..8d465fce` and `b8530477..8d465fce` are empty for checked commander reassignment paths. | UI still selects by leader-name text, and both `RequestNewCommander.sqf:14` plus helper `:10` still send `new-commander-assigned`. | Do not reopen helper unpacking on B69 maintained roots; keep notification ownership, row identity and requester authority open. |
+| Current stable/B69 full modded forks Napf/Eden/Lingor | Still old-shape: `_side = _this` at `Modded_Missions/*/Server/Functions/Server_AssignNewCommander.sqf:3`. | Same duplicate sender and visible-name UI shape where the files exist. | Do not claim modded propagation; current tooling does not actively maintain these forks. |
+| Miksuu upstream `b8389e748243` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable/B69 at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape. | Upstream is a helper-fix source, not a complete reassignment fix. |
+| `origin/perf/quick-wins@0076040f` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable/B69 at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape. | Perf branch does not close reassignment UI/notification/authority risks. |
+| Historical release commit `a96fdda2` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable/B69 at `Server_AssignNewCommander.sqf:4-5`; no live `origin/release/*` head existed during this refresh. | Same visible-name selector and duplicate sender shape. | Treat as historical partial cleanup until a release head is restored or rechecked. |
+| Historical AI-commander commit `c20ce153` Chernarus and maintained Vanilla | Same fixed helper unpacking as current stable/B69 at `Server_AssignNewCommander.sqf:4-5`; no live `origin/feat/*commander*` head existed during this refresh. | Same visible-name selector and duplicate sender shape; AI commander supervisor behavior is separate. | Do not route reassignment closure through AI commander revival without the UI/notification smoke here. |
 
 This means future code work can either port the fixed helper shape from stable/release or implement it directly, but it still needs one notification owner and a row-value/team-identity selector before the reassignment path is clean.
 
@@ -73,10 +74,10 @@ This means future code work can either port the fixed helper shape from stable/r
 | `Client/GUI/GUI_Commander_VoteMenu.sqf:33-46` | Resolves the selected commander by visible leader name text before sending. |
 | `Common/Init/Init_PublicVariables.sqf:13,29,59-62` | Line 13 adds `RequestNewCommander` to the server PV list; line 29 seals `_serverCommandPV`; lines 59-62 compile `SRVFNCRequestNewCommander` and register `addPublicVariableEventHandler` for each server PV. |
 | `Server/Functions/Server_HandlePVF.sqf:14` | Spawns PVF parameters into the compiled handler. |
-| `Server/PVFunctions/RequestNewCommander.sqf:3,12-14` | Reads `_side = _this select 0`, sets `wfbe_commander`, spawns `WFBE_SE_FNC_AssignForCommander` with `[_side, _assigned_commander]`, and sends a `new-commander-assigned` message. Current stable keeps the same caller notification at `:14`. |
+| `Server/PVFunctions/RequestNewCommander.sqf:3,12-14` | Reads `_side = _this select 0`, sets `wfbe_commander`, spawns `WFBE_SE_FNC_AssignForCommander` with `[_side, _assigned_commander]`, and sends a `new-commander-assigned` message. Current stable/current B69 keep the same caller notification at `:14`. |
 | Docs branch `Server/Functions/Server_AssignNewCommander.sqf:3-5` | Uses `_side = _this` while also indexing `_this select 1`. |
-| Current stable `Server/Functions/Server_AssignNewCommander.sqf:4-5,10` | Uses `_side = _this select 0`, `_commander = _this select 1`, then sends a second `new-commander-assigned` message. |
-| Current stable `Modded_Missions/*/Server/Functions/Server_AssignNewCommander.sqf:3-4` | Napf, Eden and Lingor still use `_side = _this`, `_commander = _this select 1`. |
+| Current stable/current B69 `Server/Functions/Server_AssignNewCommander.sqf:4-5,10` | Uses `_side = _this select 0`, `_commander = _this select 1`, then sends a second `new-commander-assigned` message. |
+| Current stable/current B69 `Modded_Missions/*/Server/Functions/Server_AssignNewCommander.sqf:3-4` | Napf, Eden and Lingor still use `_side = _this`, `_commander = _this select 1`. |
 | `Common/Functions/Common_GetSideLogic.sqf:7` | Side-logic lookup only handles actual side values and defaults to `objNull`. |
 
 ## Likely Impact
@@ -87,7 +88,7 @@ On old-shape targets, the assignment itself probably lands because `RequestNewCo
 - The helper's `new-commander-assigned` client notification uses the bad side destination.
 - The caller also sends a correct `new-commander-assigned` notification.
 
-On current stable maintained roots, the helper-side routing now reaches the intended side, but clients can receive duplicate commander messages because both the caller and helper send `new-commander-assigned`.
+On current stable/current B69 maintained roots, the helper-side routing now reaches the intended side, but clients can receive duplicate commander messages because both the caller and helper send `new-commander-assigned`.
 
 The client selector also needs a small identity cleanup while this flow is open. `GUI_Commander_VoteMenu.sqf` stores the team index in the list row, but on submit it reads `lnbText` and matches `name leader _x`. Duplicate player names or a name change while the dialog is open can select the wrong team or fail the intended lookup. Use the stored row value/team index when patching the reassignment flow.
 
@@ -103,11 +104,11 @@ _commander = _this select 1;
 
 Then remove or suppress one `new-commander-assigned` send. Prefer keeping notification in `AssignNewCommander` if the helper is intended to own assignment side effects; otherwise keep it in `RequestNewCommander` and remove it from the helper. Do not leave both after the side fix.
 
-For current stable maintained roots, do not reopen the helper unpacking edit. The remaining reassignment cleanup is notification ownership, row-value/team-identity selection and requester authority. Do not combine this with PVF dispatcher hardening unless the branch is explicitly about networking authority.
+For current stable/current B69 maintained roots, do not reopen the helper unpacking edit. The remaining reassignment cleanup is notification ownership, row-value/team-identity selection and requester authority. Do not combine this with PVF dispatcher hardening unless the branch is explicitly about networking authority.
 
 ## Generated And Modded Copies
 
-Current stable maintained Chernarus and Vanilla Takistan roots match for the helper fix. Current stable full modded Napf/Eden/Lingor copies still carry `_side = _this`; other modded folders are partial overlays and may not contain this helper.
+Current stable/current B69 maintained Chernarus and Vanilla Takistan roots match for the helper fix. Current stable/current B69 full modded Napf/Eden/Lingor copies still carry `_side = _this`; other modded folders are partial overlays and may not contain this helper.
 
 Patch source Chernarus, then run `Tools/LoadoutManager` from a checkout with an ancestor folder literally named `a2waspwarfare` so Vanilla Takistan is generated from source. Treat modded full copies as a separate owner decision because the current generation/package path does not actively maintain them.
 
@@ -132,9 +133,9 @@ Arma smoke:
 
 ```json
 [
-  {"fact":"commander_reassignment_docs_branch_old_shape","source":"docs/developer-wiki-index@b44aaaf8 Server_AssignNewCommander.sqf:3-5; RequestNewCommander.sqf:13-14; GUI_Commander_VoteMenu.sqf:33-46","summary":"The docs branch source snapshot still has the old helper side argument, duplicate notification senders and visible-name commander selection."},
-  {"fact":"commander_reassignment_current_stable_partial_source_present","source":"origin/master@0139a346 Server_AssignNewCommander.sqf:4-5,10; RequestNewCommander.sqf:13-14; GUI_Commander_VoteMenu.sqf:33-46","summary":"Current stable Chernarus and maintained Vanilla fix the helper payload unpacking, but the UI still resolves by visible leader-name text and both caller/helper notification senders remain."},
-  {"fact":"commander_reassignment_modded_fork_drift","source":"origin/master@0139a346 Modded_Missions/*/Server/Functions/Server_AssignNewCommander.sqf:3-4","summary":"Current stable full modded Napf/Eden/Lingor forks still use _side = _this; do not claim modded propagation from the maintained-root helper fix."}
+  {"fact":"commander_reassignment_docs_branch_old_shape","source":"docs/developer-wiki-index@337ed166 Server_AssignNewCommander.sqf:3-5; RequestNewCommander.sqf:13-14; GUI_Commander_VoteMenu.sqf:33-46","summary":"The docs/source snapshot remains unchanged from b44aaaf8 for checked reassignment paths and still has the old helper side argument, duplicate notification senders and visible-name commander selection."},
+  {"fact":"commander_reassignment_current_stable_b69_partial_source_present","source":"origin/master@0139a346 and origin/claude/b69@8d465fce Server_AssignNewCommander.sqf:4-5,10; RequestNewCommander.sqf:13-14; GUI_Commander_VoteMenu.sqf:33-46","summary":"Current stable/current B69 Chernarus and maintained Vanilla fix the helper payload unpacking, but the UI still resolves by visible leader-name text and both caller/helper notification senders remain."},
+  {"fact":"commander_reassignment_modded_fork_drift","source":"origin/master@0139a346 and origin/claude/b69@8d465fce Modded_Missions/*/Server/Functions/Server_AssignNewCommander.sqf:3-4","summary":"Current stable/current B69 full modded Napf/Eden/Lingor forks still use _side = _this; do not claim modded propagation from the maintained-root helper fix."}
 ]
 ```
 

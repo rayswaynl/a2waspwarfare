@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T19:33:31+02:00",
+  "generatedAt": "2026-06-22T19:53:22+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-reassignment-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@337ed16633e7 still has old helper unpacking at Server_AssignNewCommander.sqf:3-4 in Chernarus and maintained Vanilla",
+        "current stable origin/master@0139a3468609 and current B69 origin/claude/b69@8d465fcede7f both use _side = _this select 0 and _commander = _this select 1 at Server_AssignNewCommander.sqf:4-5 in both maintained roots",
+        "current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2 and historical c20ce153 keep the same fixed maintained-root helper shape",
+        "all checked refs still keep RequestNewCommander.sqf:14 and Server_AssignNewCommander.sqf:10 new-commander-assigned senders plus GUI_Commander_VoteMenu.sqf:33 visible-name selection",
+        "B69 diffs 0a1ccb4d..origin/claude/b69 and b8530477..origin/claude/b69 are empty for checked commander reassignment paths"
+      ],
+      "outputs": [
+        "Refreshed existing commander reassignment owner/status/queue/machine rows with current B69 head evidence.",
+        "Preserved the distinction between helper unpacking source-present status and still-open UI identity, duplicate notification and requester-authority work.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future commander owner should keep current stable/B69 helper unpacking, patch docs/source or other old-shape targets separately, choose one notification owner, switch UI selection to row value/team identity and smoke one reassignment message.",
+      "updated": "2026-06-22T19:53:22+02:00"
+    },
     {
       "lane": "send-message-direct-compile-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
