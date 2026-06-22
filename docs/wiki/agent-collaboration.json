@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T20:24:32+02:00",
+  "generatedAt": "2026-06-22T20:43:12+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "salvage-w10-branch-status-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "fresh fetch on 2026-06-22 exposes live origin/claude/salvage-w10-manfilter@2e0242b3b93e while current stable is origin/master@0139a3468609, current B69 is origin/claude/b69@8d465fcede7f, adjacent B74 is origin/claude/b74-aicom-spend@b23f557fc912 and perf is origin/perf/quick-wins@0076040f",
+        "origin/claude/salvage-w10-manfilter has merge-base 8fac20dfa4d2 with both origin/master and origin/claude/b69, so it is stale branch evidence rather than direct current-stable propagation",
+        "commit 2e0242b3 changes only Server/Functions/AI_Commander_Wildcard.sqf in both maintained roots, adding !(_wk isKindOf \"Man\") to the W10 lucky-salvage apply filter at :794",
+        "origin/claude/salvage-w10-manfilter still keeps lowercase ChangePlayerfunds at Skill_Salvage.sqf:38 and updatesalvage.sqf:51, the updatesalvage.sqf:10 OR loop and client-local delete/reward shape in both maintained roots",
+        "B69..B74 diff is empty for checked manual/truck salvage and AI_Commander_Wildcard paths"
+      ],
+      "outputs": [
+        "Refreshed Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, AI-Commander-Treasury-Fund-Accessors.md, dashboard/worklog/pruning ledger and salvage machine rows.",
+        "Preserved the existing manual/truck ChangePlayerfunds payout and authority lane as open while documenting the branch-only W10 Man-filter patch.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future salvage owner should fix ChangePlayerFunds casing in source Chernarus plus maintained Vanilla first, then smoke manual engineer and salvage-truck payouts. Treat origin/claude/salvage-w10-manfilter as branch-only W10 corpse-filter evidence and keep server-owned delete/reward authority as separate work unless explicitly claimed together.",
+      "updated": "2026-06-22T20:43:12+02:00"
+    },
     {
       "lane": "attack-wave-authority-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",

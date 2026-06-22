@@ -1,6 +1,6 @@
 # AI Commander Treasury Fund Accessors
 
-> Source-verified 2026-06-21 against master 0139a346. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-22 against master 0139a346, B69 8d465fce, B74 b23f557f and salvage-w10-manfilter 2e0242b3. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
 `ChangeAICommanderFunds` and `GetAICommanderFunds` are the read/write pair for the AI commander's private money pool, `wfbe_aicom_funds`. They are the AI-side mirror of the player team's `ChangeTeamFunds`/`GetTeamFunds` pair, with one load-bearing difference: the AI write is **server-local** (no broadcast flag), so the value never reaches clients. This page documents the accessor contract, the storage object, the locality gotcha, and the full producer/consumer catalog.
 
@@ -41,7 +41,7 @@ A second gotcha: `GetAICommanderFunds` has no nil-guard. If `GetSideLogic` retur
 | Funds-famine stipend | `Server\FSM\updateresources.sqf:108` | `WFBE_C_AI_COMMANDER_INCOME_STIPEND` (25) | Stipend half of the famine branch. |
 | Bootstrap stipend | `Server\AI\Commander\AI_Commander.sqf:228` | `round(_stipendFunds * (_tickS/60))` | Once-per-60s bootstrap grant scaled by elapsed time (`WFBE_C_AICOM_BOOTSTRAP_FUNDS`, default 100), capped at 3x. The supervisor-loop owner is `AI-Commander-Execution-Loop-Reference`. |
 | Heli fly-off refund | `Server\Functions\Server_HandleSpecial.sqf:341` | `_rCost` | Refunds a commander team's empty AIR transport build cost when it flew off-map alive and was reaped. Validates `_rSide in [east,west,resistance]` and `_rCost > 0`. Documented in `Server-HandleSpecial-Request-Router-Reference`. |
-| Wildcard salvage / bonus | `Server\Functions\AI_Commander_Wildcard.sqf:530`, `:823`, `:1003` | `_bonus` / `_wkTotal` / `5000` | W-series wildcard payouts (losing-side catch-up bonus, salvage payback, flat grant). |
+| Wildcard salvage / bonus | `Server\Functions\AI_Commander_Wildcard.sqf:530`, `:823`, `:1003` on current stable; current B69/B74 drift the flat grant to `:1016`; `origin/claude/salvage-w10-manfilter@2e0242b3` drifts these to `:515`, `:808`, `:988` | `_bonus` / `_wkTotal` / `5000` | W-series wildcard payouts (losing-side catch-up bonus, W10 salvage payback, flat grant). W10 is weight-zero/inert on current stable/B69/B74; the live `salvage-w10-manfilter` branch only adds a `Man` exclusion at `AI_Commander_Wildcard.sqf:794` in both maintained roots, not a manual/truck salvage payout fix. |
 | Kill bounty (W12 Spoils) | `Server\PVFunctions\RequestOnUnitKilled.sqf:239` | `_bounty` | Double-bounty into the AI war chest while the W12 "Spoils of War" flag is active for that side. |
 | AICOM donate | `Server\PVFunctions\RequestAIComDonate.sqf:76` | `_amount` | Player-initiated donation into the AI commander treasury (read-back logged at `:73`/`:78`). |
 

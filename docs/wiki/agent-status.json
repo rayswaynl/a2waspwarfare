@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T20:24:32+02:00",
+  "generatedAt": "2026-06-22T20:43:12+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only attack-wave authority current B69 head refresh. Docs/source HEAD@1c1ea559 remains unchanged from f3e157f2 for checked attack-wave request/detail/client-price paths; current stable origin/master@0139a346 and current B69 origin/claude/b69@8d465fce still trust ATTACK_WAVE_INIT side/supply and ATTACK_WAVE_DETAILS side/modifier/duration in both maintained roots. B69 path deltas 0a1ccb4d..8d465fce and b8530477..8d465fce are empty. Adjacent B74 origin/claude/b74-aicom-spend@b23f557fc912 changes only Chernarus constants among checked attack-wave paths and keeps request/detail trust unchanged. No gameplay source changed.",
+      "currentWork": "Published docs-only salvage W10 branch-status refresh. Docs/source HEAD@98eb9607 is unchanged from fb8d4ebc for checked manual/truck salvage files; current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 still keep lowercase ChangePlayerfunds, updatesalvage.sqf:10 OR-loop and client-local delete/reward in both maintained roots. Live origin/claude/salvage-w10-manfilter@2e0242b3 only adds !(_wk isKindOf \"Man\") to inert W10 AI_Commander_Wildcard.sqf:794 and does not rescue manual/truck payout or authority. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress-Dashboard.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and the pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "salvage-w10-branch-status-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed salvage branch/status/queue/machine rows after fresh fetch exposed live origin/claude/salvage-w10-manfilter@2e0242b3. Docs/source HEAD@98eb9607 is unchanged from fb8d4ebc for checked manual/truck salvage paths; current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 all keep lowercase ChangePlayerfunds, updatesalvage.sqf:10 OR-loop and client-local delete/reward in both maintained roots. The live W10 branch is older B39/GUER-based branch evidence with merge-base 8fac20df; it changes only AI_Commander_Wildcard.sqf in both maintained roots, adding !(_wk isKindOf \"Man\") at :794, and does not rescue manual/truck payout or authority. No gameplay source changed."
+    },
     {
       "lane": "attack-wave-authority-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
