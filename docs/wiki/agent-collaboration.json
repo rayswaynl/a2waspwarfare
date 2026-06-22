@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T14:02:46+02:00",
+  "generatedAt": "2026-06-22T14:18:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "resistance-supply-scaffold-b69-branch-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs branch e46a7330 has Init_Common.sqf:280 present-side loop but no checked Chernarus/Vanilla WFBE_L_GUE mission owner logic and no wfbe_supply_temp_resistance handler",
+        "current stable origin/master@0139a346 Chernarus mission.sqm:4928,4931 and Vanilla mission.sqm:4198,4201 define LocationLogicOwnerResistance / WFBE_L_GUE; Common_GetSideSupply.sqf:36-40 returns funds-only 0 for resistance; Server_ChangeSideSupply.sqf still has only west/east handlers",
+        "current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 match the old no-owner/no-handler shape in checked maintained roots; their resistance read branch still uses REQUEST_SUPPLY_VALUE / waitUntil",
+        "B69 origin/claude/b69@39eed5c0 adds Chernarus wfbe_supply_temp_resistance at Server_ChangeSideSupply.sqf:25-45 and floors west/resistance/east negatives at :12,36,60; maintained Vanilla remains west/east only and old-shape"
+      ],
+      "outputs": [
+        "Refreshed Resistance-Supply-Scaffold.md with a branch matrix for owner logic, read behavior and temp-channel receiver scope.",
+        "Cross-linked Economy-Towns-And-Supply.md and Source-Fix-Propagation-Queue.md to the resistance scaffold matrix.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future economy owner should treat B69 resistance supply as Chernarus candidate evidence only, decide whether resistance reads should remain funds-only 0 or become live supply state, propagate maintained Vanilla or explicitly scope Chernarus, and validate west/east/resistance channels plus requester authority before calling side-supply hardened.",
+      "updated": "2026-06-22T14:18:00+02:00"
+    },
     {
       "lane": "side-supply-b69-current-head-refresh-2026-06-22",
       "owner": "Codex",

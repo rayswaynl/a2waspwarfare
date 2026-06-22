@@ -10,7 +10,7 @@ Town object initialization, capture/SV state, camp capture, marker visibility an
 | Resource-income tick algorithm, AI commander over-cap funds fallback and income-system `4` display mismatch | [Resource income tick distribution engine](Resource-Income-Tick-Distribution-Engine), [resource income branch matrix](#resource-income-branch-matrix) |
 | Supply mission cooldowns, JIP, cargo vars and completion trust | [Supply mission architecture](Supply-Mission-Architecture) |
 | Supply authority patch shape | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
-| Side-supply clamp, reason strings, direct temp channels and first patch order | [Economy authority first cut](Economy-Authority-First-Cut) |
+| Side-supply clamp, reason strings, direct temp channels and first patch order | [Economy authority first cut](Economy-Authority-First-Cut), [Resistance supply scaffold](Resistance-Supply-Scaffold) |
 | AI commander upgrades and AI logistics | [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Upgrades and research](Upgrades-And-Research-Atlas) |
 | Client-trusted economy surfaces outside towns/supply | [Server authority migration map](Server-Authority-Migration-Map), [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 
@@ -26,7 +26,7 @@ Resource-income evidence was refreshed again on 2026-06-22 in [the branch matrix
 | Current stable `origin/master@0139a346` | Resource-income cap/display drift is partially fixed only for AI commander over-cap funds; supply missions include heli/cash-run state, `SupplyByHeli`, guarded killed-handler setup and typed heli-aware command-center scan in both maintained roots; AI commander upgrade debit order is fixed; side-supply arithmetic/reason validation and supply player-list indexing remain open. |
 | Current Miksuu `master@b8389e748243`, `origin/perf/quick-wins@0076040f` and B69 `origin/claude/b69@39eed5c0` | Miksuu/perf resource-income guard/display drift remains; supply missions are truck-only and still use the broad command-center scan on Miksuu/perf; AI commander upgrade debit remains swapped on Miksuu/perf. Perf floors side-supply negatives in Chernarus only. B69 also fixes Chernarus server-side side-supply arithmetic and wires a Chernarus resistance temp handler, but Vanilla propagation and authority validation remain open. |
 
-Exact branch matrices live on owner pages: [Economy authority first cut](Economy-Authority-First-Cut#side-supply-branch-matrix) for side supply, [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) for truck/heli supply flow, and [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix) for AI upgrade debit.
+Exact branch matrices live on owner pages: [Economy authority first cut](Economy-Authority-First-Cut#side-supply-branch-matrix) for side supply, [Resistance supply scaffold](Resistance-Supply-Scaffold#current-branch-matrix) for GUER/resistance owner/read/write scope, [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) for truck/heli supply flow, and [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix) for AI upgrade debit.
 
 ## Town Supply Model
 
