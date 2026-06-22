@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T11:14:35+02:00",
+  "generatedAt": "2026-06-22T11:27:50+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b69-finalpieces-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69-finalpieces@80d3267c1b2b is a descendant of origin/claude/b69@0a1ccb4d05c5",
+        "git diff --stat origin/claude/b69..origin/claude/b69-finalpieces shows 8 Chernarus AI commander/client files changed, +242/-13",
+        "git diff --name-status origin/claude/b69..origin/claude/b69-finalpieces -- Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan returned no paths",
+        "PR #47 is open as claude/b69-finalpieces -> claude/b69, updated 2026-06-22T09:20:42Z",
+        "rg found no b69-finalpieces / finalpieces wiki mention before this lane"
+      ],
+      "outputs": [
+        "Refreshed AI-Commander-Autonomy-Audit.md, AI-Commander-B69-Improvement-Roadmap.md and AI-Commander-B69-Implementation-Sketches.md with finalpieces scope and caveats.",
+        "Updated Feature-Status-Register.md, PR-Cleanup-And-Integration-Lab.md, Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Treat finalpieces as Chernarus-only stacked PR #47 evidence into B69. Town-punch, armed transport and stranded merge code is source-present; HC merge/top-up remains default-off draft scaffolding because WFBE_SE_FNC_AI_Com_HCTopUp is not compiled by Init_Server.sqf:58-66. Future B69 owner should smoke, review and propagate maintained Vanilla or explicitly scope Chernarus before release wording.",
+      "updated": "2026-06-22T11:27:50+02:00"
+    },
     {
       "lane": "vehicle-cargo-loop-bounds-current-miksuu-refresh-2026-06-22",
       "owner": "Codex",

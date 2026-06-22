@@ -1667,3 +1667,17 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Finding: docs branch and historical EASA QoL still carry inclusive cargo loops in both maintained roots at `Common_EquipVehicle.sqf:27,33,39` and `Common_EquipBackpack.sqf:35,41`; current stable and current Miksuu now use corrected `count(_items)-1` bounds in both maintained roots. Perf remains Chernarus-only for this fix.
 - Result: refreshed [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so current stable/current Miksuu are not reopened as unpatched while docs/EASA/perf-Vanilla old-shape targets remain patch-ready. No gameplay source changed.
 - Validation: JSON/JSONL parse passed in wiki and docs mirror; `docs/validate-wiki.ps1` passed with known legacy JSONL envelope warnings; Latest Batch has five rows; touched-file SHA parity and top-level normalized wiki/docs parity passed; `git diff --check` passed in both worktrees with line-ending warnings only.
+
+## 2026-06-22T11:22:03+02:00 - Codex - B69 finalpieces current-head refresh
+
+- Claimed `b69-finalpieces-current-head-refresh-2026-06-22` after `origin/claude/b69-finalpieces` advanced to `80d3267c` and no `b69-finalpieces` / `finalpieces` wiki mention was found.
+- Initial source scope: `origin/claude/b69-finalpieces@80d3267c` is a descendant of `origin/claude/b69@0a1ccb4d`; `git diff --stat origin/claude/b69..origin/claude/b69-finalpieces` reports 8 Chernarus AI commander/client files changed with +242 / -13 and no immediate maintained Vanilla path in that diff.
+- Result: in progress; no gameplay source changes planned.
+
+## 2026-06-22T11:27:50+02:00 - Codex - B69 finalpieces current-head refresh complete
+
+- Verified `origin/claude/b69-finalpieces@80d3267c1b2b` as a descendant of `origin/claude/b69@0a1ccb4d05c5`; `0a1ccb4d..80d3267c` is 8 Chernarus AI commander/client files / +242 / -13 with no maintained Vanilla diff.
+- PR route: GitHub PR #47 is open as `claude/b69-finalpieces` -> `claude/b69`, updated 2026-06-22T09:20:42Z. `gh pr list --head claude/b69 --state all` still returned no direct PR for `claude/b69`.
+- Findings: finalpieces adds Chernarus town-punch multipliers, default armed-hull troop transport filtering and stranded survivor merge-before-cull. HC depleted-team merge/top-up remains default-off draft scaffolding because `AI_Commander.sqf:232-238` calls `WFBE_SE_FNC_AI_Com_HCTopUp` only if defined and `Init_Server.sqf:58-66` does not compile `AI_Commander_HCTopUp.DRAFT.sqf`.
+- Result: refreshed the AI commander audit, B69 roadmap/sketch note, Feature Status, PR cleanup lab, dashboard, pruning ledger and machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
