@@ -720,11 +720,11 @@
     },
     {
       "id": "supply-helicopter-current-head",
-      "branch": "origin/feat/supply-helicopter",
+      "branch": "historical origin/feat/supply-helicopter",
       "head": "262dc431",
       "base": "f5985b77",
-      "state": "branch-review-needed-current-head-reviewed-vanilla-open",
-      "sourceScope": "source-chernarus-supply-heli-plus-broad-branch-baggage",
+      "state": "historical-branch-evidence-no-live-head-current-stable-refreshed",
+      "sourceScope": "historical-source-chernarus-supply-heli-plus-broad-branch-baggage",
       "canonicalDocs": [
         "Current-Work-Supply-Helicopters-PR1.md",
         "Feature-Status-Register.md",
@@ -733,17 +733,19 @@
         "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       ],
       "evidenceRefs": [
-        "origin/master..origin/feat/supply-helicopter: 82 files +462/-2056",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:4-10 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:168-180 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf:62-72 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf:16-60 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:7-30,42-60,93-95 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf:24-41 on origin/feat/supply-helicopter",
-        "No SupplyByHeli/WFBE_C_SUPPLY_HELI/wfbe_supply_killed_eh_set hits under maintained Vanilla on origin/feat/supply-helicopter"
+        "2026-06-22 git ls-remote --heads origin refs/heads/feat/supply-helicopter refs/heads/*supply* refs/heads/release/* returned no heads",
+        "historical origin/feat/supply-helicopter@262dc431",
+        "historical origin/master..origin/feat/supply-helicopter: 82 files +462/-2056",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:4-10 on historical head 262dc431",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:168-180 on historical head 262dc431",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf:62-72 on historical head 262dc431",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf:16-60 on historical head 262dc431",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:7-30,42-60,93-95 on historical head 262dc431",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf:24-41 on historical head 262dc431",
+        "No SupplyByHeli/WFBE_C_SUPPLY_HELI/wfbe_supply_killed_eh_set hits under maintained Vanilla on historical head 262dc431"
       ],
-      "ownerDecision": "Decide Air upgrade 3/4 semantics, cash-run economy, timer UX, retained SupplyByHeli cleanup, Vanilla propagation and non-supply branch baggage.",
-      "promotionGate": "Smoke truck control, heli disabled/enabled, Air 2/3 load gate, Air 4 cash run, timer interruption, pilot/commander payout, interdiction, same-vehicle reload after completion and JIP before merge.",
+      "ownerDecision": "If reviving the historical branch, decide Air upgrade 3/4 semantics, cash-run economy, timer UX, retained SupplyByHeli cleanup, Vanilla propagation and non-supply branch baggage.",
+      "promotionGate": "Historical branch only: re-create or restore a live head, rebase against current stable, then smoke truck control, heli disabled/enabled, Air 2/3 load gate, Air 4 cash run, timer interruption, pilot/commander payout, interdiction, same-vehicle reload after completion and JIP before merge.",
       "plannedSmoke": {
         "status": "planned-not-run",
         "coverageLevel": [
@@ -759,8 +761,8 @@
     {
       "id": "paratrooper-marker-revival",
       "priority": "P2",
-      "sourceStatus": "docs-source-carries-change",
-      "vanillaStatus": "docs-source-vanilla-carries-change",
+      "sourceStatus": "docs-source-and-current-stable-carry-change",
+      "vanillaStatus": "docs-source-and-current-stable-vanilla-carry-change",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Paratrooper-Marker-Revival.md",
@@ -849,17 +851,18 @@
         "Feature-Status-Register.md"
       ],
       "evidenceRefs": [
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28",
-        "origin/master@cf2a6d6a and origin/release/2026-06-feature-bundle@a96fdda2 Chernarus/Vanilla Server/Module/supplyMission/supplyMissionStarted.sqf:53,59 narrowed to Base_WarfareBUAVterminal with truck 80m / heli 400m distance",
-        "origin/master@cf2a6d6a and origin/release/2026-06-feature-bundle@a96fdda2 Chernarus/Vanilla Server/Init/Init_Server.sqf:81 comments the dead SupplyMissionActive compile; supplyMissionActive.sqf and checkCCProximity.sqf absent"
+        "origin/docs/developer-wiki-index@15563691 Chernarus/Vanilla Server/Module/supplyMission/supplyMissionStarted.sqf:25,28,44 truck-only typed scan",
+        "origin/master@0139a346 Chernarus/Vanilla Server/Module/supplyMission/supplyMissionStarted.sqf:7,55,61,83 heli-aware typed scan",
+        "direct current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f Chernarus/Vanilla supplyMissionStarted.sqf:25,28,44 broad enumeration/post-filter shape",
+        "historical a96fdda2 Chernarus/Vanilla Server/Module/supplyMission/supplyMissionStarted.sqf:7,53,59,81; local release-line 7ff18c49 uses :7,52,58,80",
+        "origin/master@0139a346 Chernarus/Vanilla Server/Init/Init_Server.sqf:97 comments the dead SupplyMissionActive compile; supplyMissionActive.sqf and checkCCProximity.sqf absent"
       ],
       "releaseGate": "Smoke delivery at a real command center and no completion near unrelated objects.",
       "branchStatus": {
-        "stableMaster": "cf2a6d6a-narrowed-heli-aware-scan-in-chernarus-and-vanilla",
-        "releaseBranch": "a96fdda2-narrowed-heli-aware-scan-in-chernarus-and-vanilla",
+        "stableMaster": "0139a346-narrowed-heli-aware-scan-in-chernarus-and-vanilla",
+        "releaseBranch": "historical-a96fdda2-and-7ff18c49-narrowed-heli-aware-scan-no-live-release-head",
         "docsSource": "chernarus-and-vanilla-narrowed-scan",
-        "evidence": "Current-Source-Status-Snapshot.md#2026-06-14-current-ref-snapshot"
+        "evidence": "Supply-Mission-Architecture.md#current-branch-matrix"
       }
     },
     {
@@ -950,22 +953,22 @@
     }
   ],
   "branchScope": {
-    "checkedAt": "2026-06-14T04:44:00+02:00",
+    "checkedAt": "2026-06-22T12:55:05+02:00",
     "docsSource": {
-      "commit": "f2773aa9",
+      "commit": "15563691",
       "branch": "docs/developer-wiki-index",
-      "meaning": "Docs checkout keeps the source-propagated commander-team ARTY handoff plus current wiki/documentation updates; no gameplay source changed in the latest docs batches."
+      "meaning": "Docs checkout keeps the source-propagated command-center scan and related propagated-fix line anchors; latest checked supply-start files are source-unchanged from the older queue anchors through 15563691."
     },
     "stableMaster": {
-      "commit": "cf2a6d6a",
+      "commit": "0139a346",
       "branch": "origin/master",
       "meaning": "Stable baseline now carries hosted FPS single-publisher cleanup, supply scan narrowing, client Skill_Init idempotency, paratrooper marker registration and marker-based commander-built ARTY discovery in both maintained missions; Arma smoke remains pending."
     },
     "releaseBranch": {
-      "commit": "a96fdda2",
-      "branch": "origin/release/2026-06-feature-bundle",
-      "meaning": "Current release head carries paratrooper marker registration, single Skill_Init, hosted FPS guard/removal, narrowed supply scan and marker-based commander-built ARTY discovery in both maintained missions. Later release work beyond the old GPS-toggle head includes delegated AI/town-defense, AFK, WDDM, MASH-removal, jet-AA and economy/perf changes. Arma smoke remains pending."
+      "commit": "a96fdda2 / 7ff18c49",
+      "branch": "historical local release-line evidence; no live origin release/* head on 2026-06-22",
+      "meaning": "Historical release-line commits carry paratrooper marker registration, single Skill_Init, hosted FPS guard/removal, narrowed supply scan and marker-based commander-built ARTY discovery in both maintained missions, but must be rechecked if a release ref is restored. Arma smoke remains pending."
     },
-    "canonicalDoc": "Current-Source-Status-Snapshot.md#2026-06-14-current-ref-snapshot"
+    "canonicalDoc": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-22"
   }
 }

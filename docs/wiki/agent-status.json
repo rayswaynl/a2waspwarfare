@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T13:07:32+02:00",
+  "generatedAt": "2026-06-22T13:07:36+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only gear-template profile current-head refresh after Gear-Template-Profile-Filter, Gear-Loadout-And-EASA-Atlas, Feature Status and Source Fix queue still used the 2026-06-21 docs-head anchor. Docs head 72b5f0de98f9 is source-unchanged from 43c3ba05 for checked template paths and still keeps undefined _u_upgrade save filtering plus Init_ProfileGear six-field import guard/index-6 read in both maintained roots. Current stable origin/master@0139a3468609 fixes only the save-filter comparisons; current Miksuu master@b8389e748243, perf 0076040f8a5e, historical release a96fdda28087 and historical EASA QoL a66d46912e2a remain old-shape. No live release/gear/template rescue head was found. No gameplay source changed.",
+      "currentWork": "Published docs-only supply scan current-stable refresh after supply scan owner/status rows still mixed older 89ae9dad/cf2a6d6a/live-release wording with current stable origin/master@0139a346. Docs HEAD@15563691 keeps the truck-only typed scan at supplyMissionStarted.sqf:25,28,44; current stable origin/master@0139a346 carries the heli-aware typed scan at :7,55,61,83; direct current Miksuu master@b8389e748243 and perf/quick-wins@0076040f still broad-enumerate/post-filter at :25,28,44; historical a96fdda2/7ff18c49 remain release-line evidence because current origin exposes no release/* head. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "supply-scan-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Supply-Mission-Scan-Narrowing.md, Supply-Mission-Architecture.md, Supply-Mission-Authority-Cleanup-Playbook.md, Performance-Opportunity-Sweep.md, Current-Source-Status-Snapshot.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and supply machine rows. Docs HEAD@15563691 carries the truck-only typed command-center scan; current stable origin/master@0139a346 carries the heli-aware typed scan; current Miksuu b8389e748243 and perf/quick-wins@0076040f remain broad-scan old-shape; historical a96fdda2/7ff18c49 are release-line evidence only. No gameplay source changed."
+    },
     {
       "lane": "gear-template-profile-current-head-refresh-2026-06-22",
       "owner": "Codex",

@@ -1730,6 +1730,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed the owner matrix, Feature Status, Source Fix queue, dashboard and pruning ledger so future work stays focused on the keep-and-label versus shorter/parameterized logistics decision, not stale stable/release anchors. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
 
+## 2026-06-22T12:55:05+02:00 - Codex - Supply scan current-stable refresh
+
+- Claimed `supply-scan-current-stable-refresh-2026-06-22` after supply scan owner/status rows still mixed older `89ae9dad`, `cf2a6d6a` and live-release wording with current stable `origin/master@0139a346`.
+- Source scope: docs branch `origin/docs/developer-wiki-index@15563691`, current stable `origin/master@0139a346`, direct current Miksuu `master@b8389e748243`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, local release-line commit `7ff18c49`, and no current origin `release/*` or supply feature heads.
+- Findings: docs/source keeps the truck-only typed command-center scan at `supplyMissionStarted.sqf:25,28,44`; current stable carries the heli-aware typed scan at `:7,55,61,83`; current Miksuu and perf still broad-enumerate/post-filter at `:25,28,44`; historical release-line commits carry the heli-aware typed shape but are not live release heads.
+- Result: refreshed [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [Supply mission architecture](Supply-Mission-Architecture), [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Current source snapshot](Current-Source-Status-Snapshot), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
+
 ## 2026-06-22T13:05:42+02:00 - Codex - Gear template profile current-head refresh
 
 - Claimed `gear-template-profile-current-head-refresh-2026-06-22` after the gear profile/template rows still used a 2026-06-21 docs-head anchor while current docs head is `72b5f0de98f9`.

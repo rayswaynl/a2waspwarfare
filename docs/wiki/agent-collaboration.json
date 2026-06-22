@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T13:07:32+02:00",
+  "generatedAt": "2026-06-22T13:07:36+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "supply-scan-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/docs/developer-wiki-index@15563691 Chernarus and maintained Vanilla use the truck-only typed command-center scan at supplyMissionStarted.sqf:25,28 and keep the nearby-player scan broad at :44",
+        "origin/master@0139a346 Chernarus and maintained Vanilla use the heli-aware typed command-center scan at supplyMissionStarted.sqf:7,55,61,83",
+        "direct current Miksuu master fetched from https://github.com/miksuu/a2waspwarfare.git resolves to b8389e74 and still broad-enumerates command-center candidates at supplyMissionStarted.sqf:25,28,44",
+        "origin/perf/quick-wins@0076040f still matches the broad-enumeration/post-filter command-center scan shape in both maintained roots",
+        "current origin exposes no release/* or supply feature heads; historical a96fdda2 and 7ff18c49 remain local release-line evidence for the heli-aware typed scan"
+      ],
+      "outputs": [
+        "Refreshed Supply-Mission-Scan-Narrowing.md, Supply-Mission-Architecture.md, Supply-Mission-Authority-Cleanup-Playbook.md, Performance-Opportunity-Sweep.md, Current-Source-Status-Snapshot.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and supply machine rows.",
+        "Mirrored touched wiki files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future supply owner should treat current stable origin/master@0139a346 as source-present for the heli-aware typed scan, treat current Miksuu/perf as old-shape broad-scan targets, and keep historical a96fdda2/7ff18c49 release-line evidence separate from live release-head wording. Truck/heli command-center smoke and broader authority hardening remain open.",
+      "updated": "2026-06-22T13:07:36+02:00"
+    },
     {
       "lane": "gear-template-profile-current-head-refresh-2026-06-22",
       "owner": "Codex",
