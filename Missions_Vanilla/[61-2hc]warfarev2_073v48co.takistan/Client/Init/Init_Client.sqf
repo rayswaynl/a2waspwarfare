@@ -3,18 +3,29 @@ Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeploye
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
 //--- JOIN ROBUSTNESS (B49 2026-06-19): a stalled client init must NEVER leave the player on a permanent
-//--- black screen. The BLACK FADED fade (layer 12452) is normally cleared at ~L849 (BLACK IN). If client
-//--- init stalls before that, this watchdog force-clears the fade after 45s and logs it.
+//--- black screen. The BLACK FADED fade (layer 12452, set in initJIPCompatible) is normally cleared at
+//--- ~L849 (BLACK IN). If client init stalls before that, this watchdog force-clears the fade after 45s
+//--- and logs it (so a recurring stall is visible in the client RPT). Happy-path joins set
+//--- clientInitComplete (~L1032) long after the fade clears, so this only fires on a genuine stall.
+//--- JIP FADE FIX v4 (2026-06-20): the v2/v3 watchdogs FROZE - they gated on waitUntil/sleep/clientInitComplete
+//--- before clearing, but while a JIP client sits on the stuck loading/black screen the SIM IS PAUSED: `sleep`
+//--- suspends, mission `time` never advances, and clientInitComplete never sets -> the gate never opens -> the
+//--- clear never runs (this is why B49/B52/B53 silently did nothing). v4 clears layer 12452 IMMEDIATELY and
+//--- repeatedly with `uiSleep` (real-time, keeps ticking while the sim is paused) and NO gate, so a
+//--- black-stranded JIP player is freed within ~1s even through the ~25x re-init churn. Harmless on healthy
+//--- joins. (Root cause - the re-init churn from the [55] name vs 34-role mismatch + HC-without-identity loop -
+//--- is a separate server-side fix; this frees the screen regardless.)
 [] spawn {
-	private "_t0"; _t0 = time;
-	waitUntil { sleep 0.5; clientInitComplete || (time - _t0 > 45) };
-	if (!clientInitComplete) then {
-		12452 cutText ["", "BLACK IN", 1];
-		diag_log format ["[INIT SAFETY] Client init stalled >45s - force-cleared BLACK fade (clientInitComplete=%1, playerNull=%2).", clientInitComplete, isNull player];
+	for "_fk" from 1 to 90 do {
+		12452 cutText ["", "PLAIN", 0];
+		uiSleep 1;
 	};
 };
 
-if (isNull player) exitWith {["ERROR", "Init_Client.sqf: player is NULL at init (deleted/shell slot?) - aborting gracefully; fade watchdog clears the screen."] Call WFBE_CO_FNC_LogContent};
+//--- JOIN ROBUSTNESS (B49): if this client landed on a deleted/shell slot, `player` is null and
+//--- `side player` below would silently break the whole init -> permanent black. Bail gracefully
+//--- (the watchdog above still clears the fade so the player can respawn/retry instead of staring at black).
+if (isNull player) exitWith {["ERROR", "Init_Client.sqf: player is NULL at init (joined a deleted/shell slot?) - aborting client init gracefully; fade watchdog clears the screen."] Call WFBE_CO_FNC_LogContent};
 
 sideJoined = side player;
 sideJoinedText = str sideJoined;
@@ -317,6 +328,69 @@ player setVariable ["lastPosition", position player];
 
 _display displayAddEventHandler ["KeyDown", "_this call WFBE_CO_FNC_HandleAFKkeys"];
 
+//--- ============================================================================
+//--- b67 item #3 (claude-gaming 2026-06-21): VEHICLE-TINT LEGEND (top-right pop-up).
+//--- Explains the faction body TINTS set in Common_AddVehicleTexture.sqf (WEST/BLUFOR = matte black,
+//--- EAST/OPFOR = dark olive, GUER = desert tan). Those tints are CHEAP one-shot setObjectTexture
+//--- colour strings gated by WFBE_C_VEHICLE_TINTS (default 1, ON) - DECOUPLED from the expensive
+//--- #lightpoint markings (WFBE_C_VEHICLE_MARKINGS, default 0) - so the coloured hulls are ALREADY
+//--- live with zero FPS cost; this just teaches players what the colours mean. Shown ONCE on first
+//--- spawn (per session) + toggled with "]" (DIK 0x1B = 27), mirroring the raw-DIK _display KeyDown
+//--- handlers above (the "[" debug-teleport key sits right next to it). Pure client cosmetic. Enabled
+//--- only when BOTH WFBE_C_VEHICLE_TINT_LEGEND (nil-guarded in Init_CommonConstants, A/B'able) AND the
+//--- tints themselves are ON. A2-OA 1.64 safe (no isEqualType/findIf/selectRandom/pushBack/select {CODE}).
+WFBE_CL_VAR_TintLegendLayer     = 12460; //--- dedicated cut layer (distinct from 1365/12450/12451/12452/600200).
+WFBE_CL_VAR_TintLegendVisible   = false;
+WFBE_CL_VAR_TintLegendAutoToken = 0;     //--- bumped by a manual toggle so the first-spawn auto-clear can stand down.
+WFBE_CL_VAR_TintLegendEnabled   = ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINT_LEGEND", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0};
+
+WFBE_CL_FNC_ShowTintLegend = {
+	//--- _this: true = show, false = hide. cutRsc/cutText share the dedicated layer.
+	if (_this) then {
+		WFBE_CL_VAR_TintLegendLayer cutRsc ["WFBE_VehicleTintLegend", "PLAIN", 0.3];
+		WFBE_CL_VAR_TintLegendVisible = true;
+	} else {
+		WFBE_CL_VAR_TintLegendLayer cutText ["", "PLAIN", 0.3];
+		WFBE_CL_VAR_TintLegendVisible = false;
+	};
+};
+
+WFBE_CL_FNC_ToggleTintLegend = {
+	private ["_key"];
+	_key = _this select 1;
+	//--- "]" = DIK 0x1B (27). Swallow the key (return true) only when we actually handle it.
+	if (_key == 27 && WFBE_CL_VAR_TintLegendEnabled) then {
+		WFBE_CL_VAR_TintLegendAutoToken = WFBE_CL_VAR_TintLegendAutoToken + 1; //--- cancel any pending auto-clear.
+		(!WFBE_CL_VAR_TintLegendVisible) call WFBE_CL_FNC_ShowTintLegend;
+		true
+	} else {
+		false
+	};
+};
+
+if (WFBE_CL_VAR_TintLegendEnabled) then {
+	_display displayAddEventHandler ["KeyDown", "_this call WFBE_CL_FNC_ToggleTintLegend"];
+
+	//--- First-spawn auto-show (once per session). uiSleep is real-time so it still fires even if a JIP
+	//--- client's sim is briefly paused; auto-clears after a few seconds UNLESS the player toggled it in
+	//--- the meantime (token mismatch => stand down, don't fight a manual toggle).
+	[] spawn {
+		private ["_tok"];
+		waitUntil {uiSleep 1; !isNull player && {alive player}};
+		if !(missionNamespace getVariable ["WFBE_CL_VAR_TintLegendAutoShown", false]) then {
+			missionNamespace setVariable ["WFBE_CL_VAR_TintLegendAutoShown", true];
+			uiSleep 6;                              //--- let the join / BLACK-IN loading titles clear first.
+			true call WFBE_CL_FNC_ShowTintLegend;
+			_tok = WFBE_CL_VAR_TintLegendAutoToken;
+			uiSleep 15;                             //--- linger, then auto-dismiss the first-spawn pop-up.
+			if (WFBE_CL_VAR_TintLegendVisible && {_tok == WFBE_CL_VAR_TintLegendAutoToken}) then {
+				false call WFBE_CL_FNC_ShowTintLegend;
+			};
+		};
+	};
+};
+//--- ============================================================================
+
 [] execVM "Client\Module\AFKkick\monitorAFK.sqf";
 
 (vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}];
@@ -339,8 +413,10 @@ buildingMarker = 0;
 CCMarker = 0;
 CBRCircleMarker = 0;
 gearCost = 0;
-currentTG = 50;
-if (currentTG == 50) then {setTerrainGrid currentTG};
+//--- PR #40: removed the unconditional `currentTG = 50; setTerrainGrid 50` override that used to sit here, so
+//--- the profile-aware fallback below governs instead: it no longer clobbers a player's saved terrain-grid
+//--- value, and a profile-less player gets the mission's designed default (isNil 'currentTG' ->
+//--- min(WFBE_C_ENVIRONMENT_MAX_CLUTTER,25) = 25). NB: 25 is a FINER grid than 50 (intended look), not an FPS cut.
 lastBuilt = [];
 unitQueu = 0;
 fireMissionTime = -1000;
@@ -418,6 +494,97 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
+
+//--- B62 (Ray 2026-06-21): OWN-SIDE MARKER RECONCILIATION / SELF-HEAL.
+//--- THE BUG (Ray RPT, OPFOR/insurgent JIP join): own-side FACTORY/structure markers AND own-side HQ-team
+//--- arrows were missing. Two slow-sync misses: (a) Init_BaseStructure is a ONE-SHOT setVehicleInit, so a
+//--- structure whose marker was skipped (side not settled / the find=-1 crash) is NEVER retried; (b) the B56
+//--- bounded JIP wait in initJIPCompatible can proceed WITHOUT wfbe_teams ("not synced in time"), leaving
+//--- WFBE_%1TEAMS / WFBE_Client_Teams empty so the team data the HQ arrows rely on is absent.
+//--- This bounded client loop re-checks AFTER init until the data lands, then (re)populates the own-side team
+//--- arrays and rescans WarfareBBaseStructure own-side objects to (re)create any MISSED structure marker. A
+//--- slow-sync/JIP/respawn miss therefore self-heals. A2-OA 1.64 safe (no isEqualType/findIf/pushBack; getPos
+//--- of objects only; groups read via plain getVariable). No frozen AI / no sim-gating touched.
+[] spawn {
+	private ["_t0","_logik","_teams","_sideText","_structures","_x","_built","_sideID2","_didTeams","_hqObj","_loggedStructs"];
+	//--- B64 (Ray 2026-06-21): BOUNDED gate (B63 left this reconciliation on an unbounded
+	//--- clientInitComplete wait, so a stalled init suppressed the structure self-heal entirely).
+	//--- Proceed after 90s in-game at the latest, mirroring the B63 arrow-loop fix.
+	_t0 = time;
+	waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)};
+	diag_log format ["[WFBE][B64 RECON] reconciliation live after %1s cic=%2", round (time - _t0), (!isNil "clientInitComplete" && {clientInitComplete})];
+	waitUntil {!isNil "WFBE_Client_SideID"};
+	_sideText = WFBE_Client_SideJoinedText;
+	_logik = WFBE_Client_Logic;
+	_didTeams = false;
+	_loggedStructs = false;
+	_t0 = time;
+	//--- Re-check for ~120s after init (covers a slow JIP team-sync); cheap idle cadence.
+	while {(time - _t0) < 120} do {
+		//--- (b) HEAL OWN-SIDE TEAM DATA. If the B56 wait skipped wfbe_teams, WFBE_%1TEAMS is empty/nil here.
+		//--- Repopulate it (and the WFBE_Client_Teams mirror init_client captured at startup) once the side
+		//--- logic finally carries wfbe_teams. resistance/GUER is harass-only and may never resolve teams - that
+		//--- is expected, the loop simply never fires this branch for it (no block, no error).
+		if (!_didTeams && {!isNull _logik} && {!isNil {_logik getVariable "wfbe_teams"}}) then {
+			_teams = _logik getVariable "wfbe_teams";
+			if (!isNil "_teams") then {
+				missionNamespace setVariable [Format ["WFBE_%1TEAMS", _sideText], _teams];
+				WFBE_Client_Teams = _teams;
+				clientTeams = _teams;
+				WFBE_Client_Teams_Count = count _teams;
+				_didTeams = true;
+				["INITIALIZATION", Format ["Init_Client.sqf: B62 reconciliation populated own-side teams (count %1) after JIP slow-sync.", count _teams]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
+
+		//--- (a) HEAL MISSED STRUCTURE MARKERS. Walk the side logic's own-side structure registry (broadcast,
+		//--- so JIP clients receive it) and re-trigger Init_BaseStructure for any LIVE structure that never had
+		//--- a marker built (no wfbe_b62_marker_built flag). The re-run sets the flag itself, so this is
+		//--- idempotent and will not duplicate markers for structures that already painted theirs.
+		//--- B64 (Ray 2026-06-21) CAUSE A2 FIX: the own-side HQ is the "HQ marker (UNDEPLOYED)" Ray
+		//--- still cannot see. The HQ object lives ONLY in wfbe_hq - it is NEVER pushed into
+		//--- wfbe_structures, and the boot/mobilized MHQ fires NO setVehicleInit running
+		//--- Init_BaseStructure (only the DEPLOY branch does), so the wfbe_structures walk below skips
+		//--- it entirely. Heal it explicitly: re-fire Init_BaseStructure for wfbe_hq with isHQ=true
+		//--- (literal true, because wfbe_structure_type is set WITHOUT broadcast = nil on a JIP client)
+		//--- and the stable WFBE_Client_SideID. Idempotent via the wfbe_b62_marker_built claim; on
+		//--- deploy/undeploy wfbe_hq swaps to a fresh unflagged object so the next ~5s tick re-fires.
+		_hqObj = WFBE_Client_Logic getVariable ["wfbe_hq", objNull];
+		if (!isNull _hqObj && {alive _hqObj} && {!(_hqObj getVariable ["wfbe_b62_marker_built", false])}) then {
+			[_hqObj, true, WFBE_Client_SideID] ExecVM "Client\Init\Init_BaseStructure.sqf";
+			diag_log format ["[WFBE][B64 HQ-MARK] reconciliation re-fired Init_BaseStructure for own HQ type=%1 deployed=%2 pos=%3", typeOf _hqObj, (WFBE_Client_Logic getVariable ["wfbe_hq_deployed", false]), getPos _hqObj];
+			sleep 0.1;
+		};
+
+		_structures = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideStructures;
+		//--- B64 (Ray 2026-06-21) factory diagnostic: log the own-side structure count ONCE so the next
+		//--- RPT proves whether the JIP client actually RECEIVES the factory objects in wfbe_structures
+		//--- (the prime remaining suspect if factory markers still miss after the gate-bounding).
+		if (!_loggedStructs) then {
+			_loggedStructs = true;
+			diag_log format ["[WFBE][B64 RECON-STRUCTS] own-side (%1) structure count on this client = %2", _sideText, (if (isNil "_structures") then {-1} else {count _structures})];
+		};
+		if (!isNil "_structures" && {typeName _structures == "ARRAY"}) then {
+			{
+				if (!isNull _x && {alive _x}) then {
+					_built = _x getVariable ["wfbe_b62_marker_built", false];
+					if (!_built) then {
+						_sideID2 = (WFBE_Client_SideJoined) Call GetSideID;
+						//--- Re-fire the SAME one-shot script; its compare-and-claim guard (wfbe_b62_marker_built)
+						//--- makes this idempotent - if the original spawn claims first, this re-run exits without
+						//--- drawing, and vice-versa, so no duplicate BaseMarker is ever created.
+						[_x, ((_x getVariable ["wfbe_structure_type", ""]) == "Headquarters"), _sideID2] ExecVM "Client\Init\Init_BaseStructure.sqf";
+						["INITIALIZATION", Format ["Init_Client.sqf: B62 reconciliation re-fired Init_BaseStructure for a possibly-missed own-side structure [%1].", typeOf _x]] Call WFBE_CO_FNC_LogContent;
+						sleep 0.1; //--- let the re-fired spawn reach its claim before this loop re-reads the registry.
+					};
+				};
+			} forEach _structures;
+		};
+
+		sleep 5;
+	};
+};
+
 [] execFSM "Client\FSM\updateactions.fsm";
 //--- QoL trio feat.3: spawn advisor nudge loop after common init is done.
 [] spawn WFBE_CL_FNC_QOL_Advisor;

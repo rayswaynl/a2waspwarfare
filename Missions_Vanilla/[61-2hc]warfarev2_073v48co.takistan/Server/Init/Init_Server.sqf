@@ -1,4 +1,4 @@
-if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:%1 | ticktime:%2] Init_Server: The server initialization cannot be called more than once.",diag_frameno,diag_tickTime]};
+﻿if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:%1 | ticktime:%2] Init_Server: The server initialization cannot be called more than once.",diag_frameno,diag_tickTime]};
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
@@ -18,7 +18,8 @@ if (WF_A2_Vanilla) then {AISquadRespawn = Compile preprocessFile "Server\AI\AI_S
 if !(WF_A2_Vanilla) then {AIAdvancedRespawn = Compile preprocessFile "Server\AI\AI_AdvancedRespawn.sqf"};
 AIMoveTo = Compile preprocessFile "Server\AI\Orders\AI_MoveTo.sqf";
 AIPatrol = Compile preprocessFile "Server\AI\Orders\AI_Patrol.sqf";
-AITownPatrol = Compile preprocessFile "Server\AI\Orders\AI_TownPatrol.sqf";
+//--- NOT WIRED - AITownPatrol is never called anywhere; town patrols run via Server_GetTownPatrol. Compile shelved.
+//AITownPatrol = Compile preprocessFile "Server\AI\Orders\AI_TownPatrol.sqf";
 AITownResitance = Compile preprocessFile "Server\AI\AI_Resistance.sqf";
 AIWPAdd = Compile preprocessFile "Server\AI\Orders\AI_WPAdd.sqf";
 AIWPRemove = Compile preprocessFile "Server\AI\Orders\AI_WPRemove.sqf";
@@ -61,6 +62,7 @@ WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Comman
 WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
+WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_MHQReloc.sqf";
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
@@ -215,6 +217,64 @@ if ((missionNamespace getVariable "WFBE_C_BASE_START_TOWN") > 0) then {
 	_locationLogics = startingLocations;
 };
 
+//--- B62 (Ray 2026-06-21) AIRFIELD FILTER (Bug B): 3 of the 19 LocationLogicStart sit on airfields
+//--- (id 278/279=NWAF, id 300=NE) -> HQ/base spawning ON the runway. Drop any candidate within ~1500m of
+//--- a map airport anchor, terrain-independent (LocationLogicAirport). A2-OA-safe. GUARD: if the filter
+//--- empties the set, keep the unfiltered set (never zero candidates).
+private ["_b62_airports","_b62_filtered","_s"];
+_b62_airports = nearestObjects [[7680,7680,0], ["LocationLogicAirport"], 99999];
+//--- A2-OA 1.64: 'ARRAY select {CODE}' is A3-only (see Server_CounterBattery.sqf:101) -> explicit filter loop.
+_b62_filtered = [];
+{
+	_s = _x;
+	if (({ (getPos _s) distance (getPos _x) < 1500 } count _b62_airports) == 0) then {
+		_b62_filtered set [count _b62_filtered, _s];
+	};
+} forEach _locationLogics;
+if (count _b62_filtered > 0) then {
+	_locationLogics = _b62_filtered;
+	["INITIALIZATION", Format ["Init_Server.sqf: B62 airfield filter kept %1 start candidates (dropped %2 on/near airfields).", count _b62_filtered, count _b62_airports]] Call WFBE_CO_FNC_LogContent;
+} else {
+	["WARNING", "Init_Server.sqf: B62 airfield filter emptied the candidate set - keeping the unfiltered starts."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- B66 (Ray 2026-06-21) STABLE ROTATION KEY: the B62 rotation keyed on `str _x` of an unnamed
+//--- LocationLogicStart - the engine's str of an editor logic embeds a TRANSIENT object id that differs
+//--- every fresh dedicated process, so the persisted WFBE_LAST_START_W/E never matched the next match's
+//--- objects = the exclusion was a no-op (same dead spawn the B62 marker fix already saw). Key instead on
+//--- the start's ROUNDED map position: LocationLogicStart objects are static editor placements, so their
+//--- position is byte-identical every match = a durable cross-restart key. A2-OA-safe (plain str/round/+).
+WFBE_FNC_B66_StartKey = {
+	private ["_p"];
+	//--- A2-OA: getPos on a non-object array throws (MEMORY gotcha). Accept only real objects; the
+	//--- absent-side placeholder _startW/_startE = [0,0,0] (an ARRAY) and any nil/null return "" (never matched).
+	if (typeName _this != "OBJECT") exitWith {""};
+	if (isNull _this) exitWith {""};
+	_p = getPos _this;
+	if (typeName _p != "ARRAY" || {count _p < 2}) exitWith {""};
+	(str (round (_p select 0))) + "_" + (str (round (_p select 1)))
+};
+
+//--- B62/B66 ROTATION: exclude the WEST/EAST start keys used last match (persisted in profileNamespace as
+//--- the stable rounded-position key above) so the random draw varies match-to-match beyond the B57
+//--- RNG-advance. Fall back to the full filtered set if exclusion would empty it.
+//--- A2-OA-safe: plain string-compare via the stable key + == (no A3-only equality/search/random commands).
+private ["_b62_lastW","_b62_lastE","_b62_rotPool","_id"];
+_b62_lastW = profileNamespace getVariable ["WFBE_LAST_START_W", ""];
+_b62_lastE = profileNamespace getVariable ["WFBE_LAST_START_E", ""];
+//--- A2-OA 1.64: 'ARRAY select {CODE}' is A3-only -> explicit filter loop.
+_b62_rotPool = [];
+{
+	_id = _x call WFBE_FNC_B66_StartKey; //--- B66: stable rounded-pos key (was `str _x` transient id)
+	if (!((_id == _b62_lastW) || (_id == _b62_lastE))) then {
+		_b62_rotPool set [count _b62_rotPool, _x];
+	};
+} forEach _locationLogics;
+if (count _b62_rotPool > 1) then {
+	_locationLogics = _b62_rotPool;
+	["INITIALIZATION", Format ["Init_Server.sqf: B62/B66 rotation excluded last-used starts -> %1 candidates remain.", count _b62_rotPool]] Call WFBE_CO_FNC_LogContent;
+};
+
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
 
 Private ["_i", "_maxAttempts", "_minDist", "_rPosE", "_rPosW", "_setEast", "_setGuer", "_setWest", "_startE", "_startG", "_startW", "_egressOK"];
@@ -228,7 +288,7 @@ _rPosW = [0,0,0];
 _rPosE = [0,0,0];
 _setWest = if (_present_west) then {true} else {false};
 _setEast = if (_present_east) then {true} else {false};
-_setGuer = if (_present_res) then {true} else {false};
+_setGuer = false; //--- B59 (Ray 2026-06-20): was 'if (_present_res) then {true} else {false}'. GUER is base-less/harass-only and is NEVER placed in this loop, so _setGuer=true pinned the exit (L331) open -> the loop always ran to _maxAttempts and force-fell to the FIXED wfbe_default markers (=identical spawn every match). false lets it exit once WEST+EAST are placed = genuine random placement. Rollback: if (_present_res) then {true} else {false}.
 _total = count _locationLogics;
 
 _use_random = false;
@@ -244,7 +304,13 @@ _egressOK = {
 	_loc = _this;
 	if (isNull _loc) exitWith {false};
 	_pos = getPos _loc;
-	_minRoads = missionNamespace getVariable ["WFBE_C_BASE_MIN_EGRESS_ROADS", 3];
+	//--- B66: default LOWERED 3->2 (the Constants owner sets WFBE_C_BASE_MIN_EGRESS_ROADS=2) so the egress
+	//--- gate stops collapsing the candidate pool to a single corner. If a later relaxation pass (below) finds
+	//--- too few candidates even at 2, WFBE_B66_EGRESS_RELAX drops the requirement by a further step so the
+	//--- pool is NEVER reduced to 1 (start variety > strict egress on a thin map). Server-local, never broadcast.
+	_minRoads = missionNamespace getVariable ["WFBE_C_BASE_MIN_EGRESS_ROADS", 2];
+	_minRoads = _minRoads - (missionNamespace getVariable ["WFBE_B66_EGRESS_RELAX", 0]);
+	if (_minRoads < 1) then {_minRoads = 1};
 	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
 
 	//--- Reject candidates hugging any map edge (corner-box guard).
@@ -268,6 +334,28 @@ _egressOK = {
 		if (count _roads > 0) then {_ok = true};
 	};
 	_ok
+};
+
+//--- B66 (Ray 2026-06-21) POOL MEASURE + ANTI-COLLAPSE: count how many of the filtered start candidates
+//--- actually survive the egress gate, log it (so the RPT shows the real usable pool - the diagnostic Ray
+//--- asked for), and if FEWER THAN 2 distinct candidates pass we cannot even form a WEST/EAST pair -> relax
+//--- the egress requirement one step at a time (re-counting) until at least 2 pass or the requirement
+//--- bottoms out. This guarantees the random placement loop is never handed a pool of 1 (= identical spawn
+//--- every match, the very bug we are fixing). startingDistance(7500) spacing is also large on Chernarus, so
+//--- a thin egress-passing pool is realistic. A2-OA-safe (explicit count loop, no A3 commands).
+missionNamespace setVariable ["WFBE_B66_EGRESS_RELAX", 0];
+private ["_b66_egressPass","_b66_relax"];
+_b66_relax = 0;
+_b66_egressPass = 0;
+{ if (_x call _egressOK) then {_b66_egressPass = _b66_egressPass + 1} } forEach _locationLogics;
+diag_log format ["## B67SPAWN: egress pool measure -> %1 of %2 candidates pass (relax=%3).", _b66_egressPass, count _locationLogics, _b66_relax];
+["INITIALIZATION", Format ["Init_Server.sqf: B66 egress pool measure -> %1 of %2 start candidates pass the egress gate (minRoads relax=%3).", _b66_egressPass, count _locationLogics, _b66_relax]] Call WFBE_CO_FNC_LogContent;
+while {_b66_egressPass < 2 && {_b66_relax < 2}} do {
+	_b66_relax = _b66_relax + 1;
+	missionNamespace setVariable ["WFBE_B66_EGRESS_RELAX", _b66_relax];
+	_b66_egressPass = 0;
+	{ if (_x call _egressOK) then {_b66_egressPass = _b66_egressPass + 1} } forEach _locationLogics;
+	["WARNING", Format ["Init_Server.sqf: B66 egress pool too thin - relaxed minRoads by %1 -> now %2 candidates pass (never collapse to 1).", _b66_relax, _b66_egressPass]] Call WFBE_CO_FNC_LogContent;
 };
 
 _spawn_north = objNull;
@@ -314,28 +402,74 @@ switch (missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE") do {
 	};
 };
 
+//--- B67 (Ray 2026-06-21) PHANTOM-GUER-ORIGIN FIX: in MODE 2 (Random, the live param default) _startG is
+//--- never assigned a real position (GUER is base-less; it is only set to _spawn_central in MODE 0/1), so it
+//--- stays [0,0,0]. The West/East placement checks below then require EVERY candidate to be >startingDistance
+//--- (7500m) from the MAP CORNER [0,0,0] = a whole SW quadrant sterilised, collapsing the viable pool to ~1-2
+//--- logics = "always the same 2 spots" (and frequent force-fall to the fixed wfbe_default markers). This is
+//--- the real cause behind the 3 prior blind fixes; it WORSENED in B66 because GUER-playable made three-way
+//--- active. _guerReal gates the _startG distance check so it only applies when GUER actually has a base.
+//--- A2-OA-safe: no isEqualTo; explicit origin test; lazy || {CODE} short-circuit.
+private ["_guerReal"];
+_guerReal = false;
+if (typeName _startG == "OBJECT") then { _guerReal = !(isNull _startG) };
+if (typeName _startG == "ARRAY" && {count _startG >= 2}) then { _guerReal = !(((_startG select 0) == 0) && {(_startG select 1) == 0}) };
+diag_log format ["## B67SPAWN: mode=%1 threeway=%2 present[W,E,G]=[%3,%4,%5] minDist=%6 candidates=%7 guerReal=%8", missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE", WFBE_ISTHREEWAY, _present_west, _present_east, _present_res, _minDist, _total, _guerReal];
+
 if (_use_random) then {
+	//--- B57 START-VARIETY FIX (Ray 2026-06-20): on a dedicated server each mission is a FRESH process, so A2's
+	//--- random() starts from the SAME deterministic state every match -> the "Random" start was always identical
+	//--- ("HQ always spawns at the same place"). Advance the RNG by a per-match-varying amount (a counter persisted
+	//--- in profileNamespace across restarts) so the start actually varies match-to-match. A2-OA-safe.
+	private ["_matchN","_dump"];
+	_matchN = (profileNamespace getVariable ["WFBE_MATCH_COUNTER", 0]) + 1;
+	profileNamespace setVariable ["WFBE_MATCH_COUNTER", _matchN];
+	saveProfileNamespace;
+	for "_b" from 1 to ((_matchN % 100) + 1) do { _dump = random 1 };
+	["INITIALIZATION", Format ["Init_Server.sqf: B57 start-RNG advanced %1 draws (match #%2) for start variety.", (_matchN % 100) + 1, _matchN]] Call WFBE_CO_FNC_LogContent;
+
 	while {true} do {
-		if (!_setWest && !_setEast && !_setGuer) exitWith {["INITIALIZATION", "Init_Server.sqf : All sides were placed [Random]."] Call WFBE_CO_FNC_LogContent};
+		if (!_setWest && !_setEast && !_setGuer) exitWith {diag_log format ["## B67SPAWN: all sides placed [random] after %1 attempts.", _i]; ["INITIALIZATION", "Init_Server.sqf : All sides were placed [Random]."] Call WFBE_CO_FNC_LogContent};
 
 		//--- Determine west starting location if necessary.
 		if (_setWest) then {
 			_rPosW = _locationLogics select floor(random _total);
 			//--- Egress-quality gate (EAST-EGRESS fix): require distance spacing AND a usable egress road
 			//--- network clear of the map edges. Symmetric with east. Fallback below still guarantees placement.
-			if (_rPosW distance _startE > _minDist && _rPosW distance _startG > _minDist && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
+			if (_rPosW distance _startE > _minDist && {!_guerReal || {_rPosW distance _startG > _minDist}} && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
 		};
 
 		// --- Determine west starting location if necessary.
 		if (_setEast) then {
 			_rPosE = _locationLogics select floor(random _total);
-			if (_rPosE distance _startW > _minDist && _rPosE distance _startG > _minDist && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
+			if (_rPosE distance _startW > _minDist && {!_guerReal || {_rPosE distance _startG > _minDist}} && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
 		};
 
 		_i = _i + 1;
 
 		if (_i >= _maxAttempts) exitWith {
-			//--- Get the default locations.
+			//--- B67 (Ray 2026-06-21) NON-DEGENERATE FORCE-FALL: the legacy fallback picks the two FIXED
+			//--- wfbe_default markers (id297/id300) = the exact "same 2 spots" we are fixing, so an unlucky
+			//--- 2000-attempt seed could still reproduce the bug. First try to draw a spaced, egress-OK pair
+			//--- from the live filtered pool so even a force-fall varies match-to-match; the fixed wfbe_default
+			//--- markers stay the last resort. A2-OA-safe (explicit loops, isNull guards, no A3 commands).
+			private ["_ffPool","_ffW","_ffE"];
+			_ffPool = [];
+			{ if (_x call _egressOK) then { _ffPool set [count _ffPool, _x] } } forEach _locationLogics;
+			if (count _ffPool < 2) then { _ffPool = +_locationLogics }; //--- never operate on an empty pool
+			_ffW = objNull;
+			_ffE = objNull;
+			if (count _ffPool > 0) then {
+				_ffW = _ffPool select floor(random (count _ffPool));
+				_ffPool = _ffPool - [_ffW];
+			};
+			//--- partner spaced >_minDist from _ffW; accept any remaining if none is spaced.
+			{
+				if (isNull _ffE && {!(isNull _ffW)} && {_x distance _ffW > _minDist}) then { _ffE = _x };
+			} forEach _ffPool;
+			if (isNull _ffE && {count _ffPool > 0}) then { _ffE = _ffPool select floor(random (count _ffPool)) };
+
+			//--- Get the default locations (legacy last-resort).
 			Private ["_eastDefault", "_westDefault"];
 			_eastDefault = objNull;
 			_westDefault = objNull;
@@ -349,21 +483,43 @@ if (_use_random) then {
 				};
 			} forEach startingLocations;
 
+			//--- B67: prefer the varied pool draw over the fixed wfbe_default markers when available.
+			if (!(isNull _ffW)) then { _westDefault = _ffW };
+			if (!(isNull _ffE)) then { _eastDefault = _ffE };
+
 			// --- Ensure that everything is set, otherwise we randomly set the spawn.
 			if (isNull _eastDefault || isNull _westDefault) then {
 				Private ["_tempWork"];
 				_tempWork = +(startingLocations) - [_westDefault, _eastDefault];
-				if (isNull _eastDefault && _present_east) then {_eastDefault = _tempWork select floor(random _total); _tempWork = _tempWork - [_eastDefault]};
-				if (isNull _westDefault && _present_west) then {_westDefault = _tempWork select floor(random _total); _tempWork = _tempWork - [_westDefault]};
+				//--- B62 (Ray 2026-06-21) INDEX BUG: index _tempWork by (count _tempWork), NOT _total
+					//--- (=count _locationLogics) - a size mismatch that could index out of range / pick a filtered-out start.
+					if (isNull _eastDefault && _present_east) then {_eastDefault = _tempWork select floor(random (count _tempWork)); _tempWork = _tempWork - [_eastDefault]};
+				if (isNull _westDefault && _present_west) then {_westDefault = _tempWork select floor(random (count _tempWork)); _tempWork = _tempWork - [_westDefault]};
 			};
 
 			if (_present_east && !_skip_e) then {_startE = _eastDefault};
 			if (_present_west && !_skip_w) then {_startW = _westDefault};
 
+			diag_log format ["## B67SPAWN: FORCE-FALL after %1 attempts; varied-pool used W=%2 E=%3 (fixed wfbe_default avoided when pool usable).", _i, !(isNull _ffW), !(isNull _ffE)];
 			["INITIALIZATION", "Init_Server.sqf : All sides were placed by force after that the attempts limit was reached."] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 };
+
+//--- B62/B66 (Ray 2026-06-21) ROTATION persist: store the chosen WEST/EAST start keys (STABLE rounded-pos
+//--- key via WFBE_FNC_B66_StartKey, matching the exclusion filter above) so NEXT match's draw avoids them =
+//--- guaranteed match-to-match start variety. saveProfileNamespace is already used in the random block above.
+//--- A2-OA-safe. NOTE: _startW/_startE are LocationLogicStart objects when randomly placed; in MODE 0/1 they
+//--- can be the named spawn logics, which also resolve to a stable position key.
+//--- B66: gate on the (object-safe) key being non-empty rather than isNull - _startW/_startE may be the
+//--- [0,0,0] ARRAY placeholder for an absent side, and isNull on an array is unsafe in A2-OA.
+private ["_keyW","_keyE"];
+_keyW = _startW call WFBE_FNC_B66_StartKey;
+_keyE = _startE call WFBE_FNC_B66_StartKey;
+if (_keyW != "") then { profileNamespace setVariable ["WFBE_LAST_START_W", _keyW] };
+if (_keyE != "") then { profileNamespace setVariable ["WFBE_LAST_START_E", _keyE] };
+saveProfileNamespace;
+diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; should vary match-to-match).", _keyW, _keyE];
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Starting location mode is on [%1].",missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE"]] Call WFBE_CO_FNC_LogContent;
 
@@ -610,6 +766,10 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
 		[] execVM "Server\Server_GuerStipend.sqf";
+			//--- B62 (Ray 2026-06-21): GUER air-def execVM MOVED out of this WFBE_C_GUER_PLAYERSIDE>0 block to
+			//--- its own gate AFTER the GUER-OFF block below (keyed only on isServer + WFBE_C_GUER_AIRDEF_ENABLE).
+			//--- GUER is ALWAYS the AI town-defender (towns with sideID==GUER), so the air-def loop must run in
+			//--- production even when the playable-side param is 0 - previously it was DEAD because PLAYERSIDE=0.
 	} else {
 		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerResistance missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
 	};
@@ -624,6 +784,15 @@ if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isN
 	if (!(isNull _guerLogicOff)) then {
 		{ if (!(isNull _x)) then { deleteVehicle _x }; } forEach (synchronizedObjects _guerLogicOff);
 	};
+};
+
+//--- B62 (Ray 2026-06-21): GUER AIR DEFENSE (moved out of the WFBE_C_GUER_PLAYERSIDE block). GUER is always
+//--- the AI town-defender (the script loop is keyed off town sideID==GUER), so this must run in production
+//--- where the playable-side param is 0. Gated only on isServer (this file already runs server-side) +
+//--- WFBE_C_GUER_AIRDEF_ENABLE. The loop self-guards isServer/AIRDEF_ENABLE internally too. A2-OA-safe.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) > 0}) then {
+	[] execVM "Server\Server_GuerAirDef.sqf";
+	["INITIALIZATION", "Init_Server.sqf: B62 GUER air-def loop launched (un-gated from PLAYERSIDE)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
@@ -698,13 +867,12 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
 
-//--- Client FPS telemetry receiver (staged-deploy day/night perf study, 2026-06-15, Net_2 request).
+//--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
 //--- when the WFBE_C_CLIENT_FPS_REPORT lobby param is ON. We stamp it server-side with what the client
-//--- can't cheaply know - live player count, day/night MODE + current in-game time/sun - so the RPT can
-//--- be bucketed day-vs-night and day/night-cycle ON-vs-OFF. Raw diag_log so it lands regardless of
-//--- LOG_CONTENT_STATE; the lobby param is the single on/off gate. Name is logged LAST so a '|' in a
-//--- player name can't corrupt the earlier pipe-delimited fields.
+//--- can't cheaply know - live player count + HC count - so the RPT can be bucketed. Raw diag_log so it
+//--- lands regardless of LOG_CONTENT_STATE; the lobby param is the single on/off gate. Name is logged
+//--- LAST so a '|' in a player name can't corrupt the earlier pipe-delimited fields.
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
 		private ["_d", "_players", "_hc"];
@@ -845,6 +1013,43 @@ WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 
 //--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
 {_x Spawn WFBE_SE_FNC_AI_Commander} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: no HQ, loop was inert (perf win)
+
+//--- B69 AICOM SUPERVISOR WATCHDOG: a single standalone loop that re-Spawns a per-side
+//--- supervisor whose heartbeat has gone stale (uncaught error killed its while-loop).
+//--- Self-limiting against double-spawn: a fresh supervisor stamps hb on its first tick,
+//--- and a per-side cooldown bars a second restart inside the recovery window.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
+	[] Spawn {
+		private ["_scan","_cool","_stale","_x","_myID","_hb","_lastR","_thresh","_age"];
+		waitUntil {sleep 1; !(isNil "serverInitFull")};
+		_scan = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_SCAN", 30];
+		_cool = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_COOLDOWN", 120];
+		//--- generous threshold: 3 healthy ticks + 30s margin (75s at default TICK=15). No
+		//--- healthy tick blocks >TICK, so this never false-trips on a normal slow tick.
+		_thresh = (3 * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TICK", 15])) + 30;
+		while {!gameOver} do {
+			sleep _scan;
+			{
+				_myID = _x Call WFBE_CO_FNC_GetSideID;
+				_hb   = missionNamespace getVariable [Format ["wfbe_aicom_hb_%1", _myID], -1];
+				//--- _hb > 0 means the supervisor has stamped at least once: never fire during
+				//--- the boot / serverInitFull wait (the loop hasn't reached its first stamp yet).
+				if (_hb > 0) then {
+					_age   = time - _hb;
+					_stale = _age > _thresh;
+					_lastR = missionNamespace getVariable [Format ["wfbe_aicom_wd_restart_%1", _myID], -1e9];
+					if (_stale && {(time - _lastR) > _cool}) then {
+						missionNamespace setVariable [Format ["wfbe_aicom_wd_restart_%1", _myID], time];
+						_x Spawn WFBE_SE_FNC_AI_Commander;
+						diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|WATCHDOG|restart-stale-hb age=" + str (round _age));
+						["WARNING", Format ["AICOM watchdog: %1 supervisor heartbeat stale (%2s) - restarting.", str _x, round _age]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				};
+			} forEach (WFBE_PRESENTSIDES - [resistance]);
+		};
+	};
+	["INITIALIZATION", "Init_Server.sqf: AICOM supervisor watchdog started (B69)."] Call WFBE_CO_FNC_AICOMLog;
+};
 
 //--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {

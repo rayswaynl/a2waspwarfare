@@ -19,7 +19,8 @@
 private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
-              "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti"];
+              "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
+              "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -119,6 +120,13 @@ if (_pending > 0) then {
 	_pendSince = _logik getVariable ["wfbe_aicom_pending_since", -1];
 	if (_pendSince < 0) then {_pendSince = time; _logik setVariable ["wfbe_aicom_pending_since", _pendSince]};
 	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH|pending=" + str _pending + "|founded=" + str _foundedTeams + "|target=" + str _target + "|pendingAgeSec=" + str (round (time - _pendSince)));
+	//--- B69 (pending-slot-timeout-reaper): a lost HC dispatch ack would pin _pending>0 forever, starving founding via the (_foundedTeams+_pending)>=_target guard below. After a timeout, reap the oldest still-pending slot so founding resumes. (_pending is a single per-side counter, so this ages the oldest pending slot, not a per-slot timer.)
+	if ((time - _pendSince) > (missionNamespace getVariable ["WFBE_C_AICOM_PENDING_TIMEOUT", 270])) then {
+		_pending = _pending - 1;
+		_logik setVariable ["wfbe_aicom_pending", _pending];
+		if (_pending > 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]} else {_logik setVariable ["wfbe_aicom_pending_since", -1]};
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP|pending->" + str _pending + "|reason=ack-timeout");
+	};
 } else {
 	_logik setVariable ["wfbe_aicom_pending_since", -1];
 };
@@ -173,6 +181,31 @@ if (count _live > 0) then {
 	if (isNil "_templates" || isNil "_tmplUpgrades") exitWith {};
 	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 
+	//--- B66 BUCKET-CLASSIFIER: load the AUTHORITATIVE per-template stored type (0=inf,1=light,
+	//--- 2=heavy,3=air) built in Squads_GetFactionGroups (the CfgGroups category). The old picker
+	//--- bucketed by the upgrade MASK, which mis-buckets motorized CfgGroups templates as infantry
+	//--- (they often need no light-factory upgrade). Bucket by this stored value instead, nil-guarded
+	//--- to the old upgrade-mask logic per template. Air ELIGIBILITY still rides the upgrade mask.
+	_storedTypes = missionNamespace getVariable Format ["WFBE_%1AITEAMTYPES", _sideText]; //--- B66 (may be nil -> per-template fallback below).
+
+	//--- B66 AIRFIELD-AIR RULE: precompute whether the side holds an airfield-tagged town. Airfield
+	//--- town names are the capture-unlock/airfield anchors (e.g. NWAF/NEAF/Balota). Build the name
+	//--- list from this side's CAPTURE_UNLOCKS data (the RM70_ACR anchor town is an airfield) plus the
+	//--- well-known airfield names, then run the existing town-name+sideID forEach/exitWith scan. Also
+	//--- accept a town that already carries the airfield hangar object (map-independent runtime marker).
+	_hasAirfield = false;
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0) then {
+		_afNames = ["NWAF","NEAF","Balota","Rasman AF"];
+		{
+			if (!((_x select 1) in _afNames)) then {_afNames = _afNames + [_x select 1]};
+		} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
+		{
+			if (((_x getVariable ["sideID", -1]) == _sideID) && {((_x getVariable ["name",""]) in _afNames) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
+		} forEach towns;
+	} else {
+		_hasAirfield = true; //--- rule disabled -> planes ungated (old behaviour).
+	};
+
 	//--- V0.6.2: gate templates on REAL unit data too (same rule Produce uses) - the
 	//--- hand-authored squad metadata is stale (RU tank platoon claims heavy 1; the
 	//--- T72_RU unit data says heavy 3 for humans). Track = factory unit-list membership.
@@ -197,10 +230,43 @@ if (count _live > 0) then {
 						};
 					} forEach _facMap;
 				};
+				//--- B66 CAPTURE-UNLOCK eligibility: a template containing a CAPTURE_UNLOCKS class
+				//--- (premium ACR units: T72M4CZ/RM70_ACR) is only eligible while this side HOLDS the
+				//--- trigger town. Mirror the client gate (Client_UIFillListBuyUnits): match the class
+				//--- in WFBE_%1_CAPTURE_UNLOCKS, then require the trigger town held (name+sideID scan).
+				//--- A2-OA-safe: forEach/exitWith locate, no findIf. _holdsTrigger defaults true so a
+				//--- non-premium class never gates. NOTE: the premium TEMPLATES are added by the groups
+				//--- implementer; this only gates their eligibility.
+				if (_ok && {(missionNamespace getVariable ["WFBE_C_CAPTURE_UNLOCKS", 0]) > 0}) then {
+					_unlockList = missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []];
+					private ["_reqTown"];
+					_reqTown = ""; //--- "" => _cn is not a capture-unlock class.
+					{ if ((_x select 0) == _cn) exitWith {_reqTown = _x select 1} } forEach _unlockList;
+					if (_reqTown != "") then {
+						_holdsTrigger = false;
+						{ if (((_x getVariable ["name",""]) == _reqTown) && {(_x getVariable ["sideID", -1]) == _sideID}) exitWith {_holdsTrigger = true} } forEach towns;
+						if (!_holdsTrigger) then {_ok = false};
+					};
+				};
 				if (!_ok) exitWith {};
 			} forEach (_templates select _i);
 		};
 		if (_ok) then {_eligible set [count _eligible, _i]};
+	};
+	if (count _eligible == 0) exitWith {};
+
+	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
+	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
+	//--- air factory. Mirror AI_Commander_Produce.sqf:47-52: until the side holds >= WFBE_C_AICOM_AIR_MIN_TOWNS
+	//--- towns, strip ALL air templates from _eligible (FPS-safe; air is a late, established-only asset).
+	private ["_rosterMyID","_rosterOwnTowns","_eligNoAir"];
+	_rosterMyID = (_side) Call WFBE_CO_FNC_GetSideID;
+	_rosterOwnTowns = 0;
+	{ if ((_x getVariable "sideID") == _rosterMyID) then {_rosterOwnTowns = _rosterOwnTowns + 1} } forEach towns;
+	if (_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+		_eligNoAir = [];
+		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
+		_eligible = _eligNoAir;
 	};
 	if (count _eligible == 0) exitWith {};
 
@@ -214,21 +280,46 @@ if (count _live > 0) then {
 	_buckets = [[],[],[],[]]; //--- [infantry, light, heavy, air]
 	{
 		_ti = _x; _eu = _tmplUpgrades select _ti; //--- A1 (Ray 2026-06-19): _ti captured because the helicopters-only `count` below rebinds _x.
-		_bClass = 0; //--- infantry
-		if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
-			if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
-				if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
+		//--- B66 BUCKET-CLASSIFIER FIX: bucket by the AUTHORITATIVE CfgGroups stored type (0=inf,1=light,
+		//--- 2=heavy,3=air) instead of the upgrade mask (which mis-buckets motorized templates that need
+		//--- no light upgrade as infantry). nil-guarded per-template to the old upgrade-mask logic.
+		_bClass = -1;
+		if (!isNil "_storedTypes" && {_ti < count _storedTypes}) then {_bClass = _storedTypes select _ti};
+		if (_bClass < 0) then {
+			_bClass = 0; //--- infantry (fallback to old upgrade-mask logic)
+			if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
+				if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
+					if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
+				};
 			};
 		};
 		//--- A1 helicopters-only AICOM air (Ray 2026-06-19): the CfgGroups Air category (via Squads_GetFactionGroups) pulls
-		//--- fixed-wing Su/plane + UAV groups the AI can't operate (no takeoff/RTB) so they pile up unused on the base. Drop
-		//--- any air template that contains a Plane -> only helicopter air teams are ever founded.
-		if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0})) then {
+		//--- fixed-wing Su/plane + UAV groups the AI can't operate (no takeoff/RTB) so they pile up unused on the base.
+		//--- B66 AIRFIELD-AIR RULE: a fixed-wing PLANE air template is admitted ONLY when the side holds an
+		//--- airfield-tagged town (_hasAirfield, computed above from CAPTURE_UNLOCKS/airfield anchors). With no
+		//--- airfield held this is identical to the old blanket strip (helicopters-only). Choppers (air, no Plane)
+		//--- are unaffected and remain gated by the normal tier + AIR_MIN_TOWNS roster gate above.
+		if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {!_hasAirfield})) then {
 			(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
 		};
 	} forEach _eligible;
 
-	_mix = WFBE_C_AICOM_TYPE_MIX;
+	//--- B66 MATURITY-RAMPED MIX: select the [inf,light,heavy,air] weight tier by the side's OWN-TOWN count
+	//--- (reuse _rosterOwnTowns from the air-gate above): EARLY when towns < MATURE_MID, MID when towns <
+	//--- MATURE_LATE, else LATE. Fall back to the static WFBE_C_AICOM_TYPE_MIX if a tier const is nil.
+	private ["_matMid","_matLate"];
+	_matMid  = missionNamespace getVariable ["WFBE_C_AICOM_TYPE_MIX_MATURE_MID",  4];
+	_matLate = missionNamespace getVariable ["WFBE_C_AICOM_TYPE_MIX_MATURE_LATE", 8];
+	_mix = if (_rosterOwnTowns < _matMid) then {
+		missionNamespace getVariable "WFBE_C_AICOM_TYPE_MIX_EARLY"
+	} else {
+		if (_rosterOwnTowns < _matLate) then {
+			missionNamespace getVariable "WFBE_C_AICOM_TYPE_MIX_MID"
+		} else {
+			missionNamespace getVariable "WFBE_C_AICOM_TYPE_MIX_LATE"
+		};
+	};
+	if (isNil "_mix" || {count _mix < 4}) then {_mix = WFBE_C_AICOM_TYPE_MIX}; //--- B66: tier const nil -> static fallback.
 	if (isNil "_mix" || {count _mix < 4}) then {_mix = [0.65, 0.20, 0.12, 0.03]};
 	_dWeights = [_mix select 0, _mix select 1, _mix select 2, _mix select 3];
 	_doc = _logik getVariable ["wfbe_aicom_doctrine", ""];
@@ -236,6 +327,13 @@ if (count _live > 0) then {
 		_track = if (_doc == "HF") then {2} else {1};
 		_dWeights set [_track, (_dWeights select _track) * 1.5];
 	};
+	//--- B69 #16 TOWN-PUNCH BIAS (HC-resident path, mirrors AssignTypes): nudge the roll toward
+	//--- combat vehicles by scaling the heavy (idx 2) and light (idx 1) bucket weights. Applied AFTER
+	//--- the doctrine nudge and BEFORE the zero-out/safety-walk so an empty bucket still zeroes out and
+	//--- the degrade-walk still guarantees a buildable pick. Default 1.0 => exact no-op before the const
+	//--- exists (missionNamespace getVariable [name,default], A2-OA-safe). Buckets [inf,light,heavy,air].
+	_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])];
+	_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
 	for "_bi" from 0 to 3 do {
 		if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 	};
@@ -268,12 +366,86 @@ if (count _live > 0) then {
 			_w7Idx = _x;
 			_w7U   = _tmplUpgrades select _w7Idx;
 			_w7Score = (_w7U select 0) + (_w7U select 1) + (_w7U select 2) + (_w7U select 3);
+			if (({_x isKindOf "Plane"} count (_templates select _w7Idx)) > 0) then {_w7Score = -1}; //--- B59 jet-spam fix (Ray 2026-06-20): demote fixed-wing so W7 never promotes a jet squadron (the W7 scan was unfiltered; mirrors the L226 helicopters-only bucket filter).
 			if (_w7Score > _w7Best) then {_w7Best = _w7Score; _w7BestIdx = _w7Idx};
 		} forEach _eligible;
 		_pick = _w7BestIdx;
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W7 VeteranCompany applied - premium template %2.", _sideText, _pick]] Call WFBE_CO_FNC_AICOMLog;
 	};
 	_template = _templates select _pick;
+
+	//--- B57 LARGER-GROUPS (Ray 2026-06-20): live teams are HC-founded at raw template size (3-6) and are NEVER
+	//--- filled afterwards (AI_Commander_Produce skips wfbe_aicom_hc teams = 100% of live teams). So pad infantry
+	//--- templates up to the team-size floor HERE, at founding, so every team founds at 8-12. Skip MBT/attack-heli
+	//--- templates (the vehicle is the punch). The price loop below then charges for the bigger team and CreateTeam
+	//--- builds it full on the HC. A2-OA-safe (no pushBack/A3 commands; +_template copies so the shared template isn't mutated).
+	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): pad to FOUND_SIZE (midband), not the
+	//--- raw MIN floor. HC-founded teams are never refilled, so founding at the floor lets the live
+	//--- average dribble below the 8-12 band (soak measured 4.2-5.1). FOUND_SIZE defaults to MIN if unset
+	//--- and is clamped into [MIN,MAX]; behaviour is identical to before when FOUND_SIZE == MIN.
+	private ["_sizeMin","_sizeMax","_foundSize","_isBigVeh","_padClass"];
+	_sizeMin   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
+	_sizeMax   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+	_foundSize = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_FOUND_SIZE", _sizeMin];
+	if (_foundSize < _sizeMin) then {_foundSize = _sizeMin};
+	if (_foundSize > _sizeMax) then {_foundSize = _sizeMax};
+	_isBigVeh = false;
+	{
+		if (_x isKindOf "Tank") exitWith {_isBigVeh = true};
+		if ((_x isKindOf "Helicopter") && ((getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0)) exitWith {_isBigVeh = true};
+	} forEach _template;
+	if (!_isBigVeh) then {
+		_padClass = "";
+		{ if (_x isKindOf "Man") then {_padClass = _x} } forEach _template;
+		if ((_padClass != "") && (count _template < _foundSize)) then {
+			_template = +_template;
+			while {count _template < _foundSize} do { _template = _template + [_padClass] };
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B57 padded infantry team to found-size (%2 units).", _sideText, count _template]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+
+	//--- B66 INF-TRANSPORT TRUCK: a PURE-INFANTRY team (every template entry is Man-class) on a long
+	//--- approach needs wheels - AssignTowns caps a footed team at REACH_FOOT, skipping far targets. When
+	//--- WFBE_C_AICOM_INF_TRANSPORT>0 AND the side has a Light+ factory (Light/Heavy/Aircraft) AND the
+	//--- template has NO ground vehicle, prepend a faction troop-truck to a COPY of the template so
+	//--- CreateTeam crews it and the existing HC mount-up seats the infantry. Truck classname resolves
+	//--- per-side from the Core transport lists (WFBE_%1REDEPLOYTRUCKS = MTVR/Kamaz; GUER falls back to
+	//--- its V3S troop truck). A2-OA-safe: classname-literal isKindOf, +_template copy (no shared mutation).
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_INF_TRANSPORT", 1]) > 0) then {
+		private ["_pureInf","_hasLightPlus","_facNamesT","_structuresT","_truck","_truckList"];
+		_pureInf = true;
+		{ if (!(_x isKindOf "Man")) exitWith {_pureInf = false} } forEach _template;
+		if (_pureInf && {count _template > 0}) then {
+			//--- Light+ factory existence (mirror the spawn-factory scan below): any alive Light/Heavy/Aircraft.
+			_hasLightPlus = false;
+			_facNamesT    = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
+			_structuresT  = (_side) Call WFBE_CO_FNC_GetSideStructures;
+			if (!isNil "_facNamesT") then {
+				{
+					_facIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find _x;
+					if (_facIdx >= 0) then {
+						_facClass = _facNamesT select _facIdx;
+						{ if (typeOf _x == _facClass && {alive _x}) exitWith {_hasLightPlus = true} } forEach _structuresT;
+					};
+					if (_hasLightPlus) exitWith {};
+				} forEach ["Light","Heavy","Aircraft"];
+			};
+			if (_hasLightPlus) then {
+				//--- Resolve a per-side troop truck. WFBE_%1REDEPLOYTRUCKS is the faction transport (MTVR/Kamaz);
+				//--- GUER has none defined, so fall back to its V3S troop carrier classnames.
+				_truck = "";
+				_truckList = missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS", _sideText], []];
+				if (count _truckList > 0) then {_truck = _truckList select 0};
+				if (_truck == "") then {
+					{ if (isClass (configFile >> "CfgVehicles" >> _x)) exitWith {_truck = _x} } forEach ["V3S_TK_GUE_EP1","V3S_Gue","WarfareSupplyTruck_Gue"];
+				};
+				if (_truck != "" && {isClass (configFile >> "CfgVehicles" >> _truck)}) then {
+					_template = [_truck] + _template; //--- prepend on a fresh array (no shared-template mutation).
+					["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B66 prepended troop-truck %2 to pure-infantry founding template (%3 units total).", _sideText, _truck, count _template]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			};
+		};
+	};
 
 	//--- Full template price from AI commander funds (whole-team purchase economics).
 	_price = 0;
@@ -330,7 +502,16 @@ if (count _live > 0) then {
 	_w7SkillSend = _logik getVariable "wfbe_aicom_veteran_skill";
 	if (isNil "_w7SkillSend") then {_w7SkillSend = 0};
 	_logik setVariable ["wfbe_aicom_veteran_skill", 0]; // consume
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend]] Call WFBE_CO_FNC_SendToClient;
+	//--- B69 hctopup-stamp: carry the template index + refill pad-class so the HC can stamp the
+	//--- founded group (HCTopUp/merge can then resolve class without the template round-trip).
+	//--- _padClass = LAST Man-class in the FINAL _template (the basic dismount), "" for all-vehicle teams.
+	//--- APPENDED as trailing args (slots 5/6 of the inner array) so the W7 skill arg stays at slot 3 and
+	//--- the 3-arg server-local CreateTeam calls (which never reach this delegate) are unaffected. Purely
+	//--- additive: no current reader, so default behaviour is unchanged. A2-OA-safe (isKindOf/select/forEach).
+	private ["_padClass"];
+	_padClass = "";
+	{ if (_x isKindOf "Man") then {_padClass = _x} } forEach _template;
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

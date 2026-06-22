@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -21,6 +21,25 @@ _myID = (_side) Call WFBE_CO_FNC_GetSideID;
 
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
+
+//--- SUPERVISOR HEARTBEAT (B69): seed the per-side liveness beat BEFORE the loop so the
+//--- variable exists the moment the loop starts (closes the 'never stamped yet' ambiguity).
+//--- Server-only; integer key by side ID; a watchdog reads time-(this) > N*TICK => loop dead.
+missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
+diag_log ("AICOMHB|v1|" + (str _side) + "|" + (str _myID) + "|SEED|" + (str (round time)));
+
+//--- B69 worker-stagger: one-time per-side phase jitter so the two supervisors' economy
+//--- workers fall on different frames (mirrors AI_Commander_Wildcard.sqf de-correlation idiom).
+//--- Skip when only one AI side is present (nothing to de-correlate). random/sleep = A2-OA core.
+if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
+	private "_phaseJitter";
+	_phaseJitter = random (missionNamespace getVariable ["WFBE_C_AICOM_SUPERVISOR_JITTER", 7]);
+	if (_phaseJitter > 0) then {
+		["INFORMATION", Format ["AI_Commander.sqf: [%1] spawn phase-jitter %2s (worker de-correlation).", str _side, _phaseJitter]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SUPERVISOR_JITTER|" + str _phaseJitter);
+		sleep _phaseJitter;
+	};
+};
 
 //--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
@@ -69,7 +88,8 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	};
 };
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltMHQReloc = 0;
+_ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
@@ -79,12 +99,26 @@ _noHumanSince = -1;
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 
+//--- WAR-BRIEF: one-time [AICOM BOOT] snapshot (server groups, HC count, aiMax, starting funds).
+_grpCount = 0;
+{ if (side _x == _side) then {_grpCount = _grpCount + 1} } forEach allGroups;
+_hcCount = count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+["INFORMATION", Format ["AI_Commander.sqf: [AICOM BOOT] side=%1 serverGroups=%2 HCs=%3 aiMax=%4 startFunds=%5", str _side, _grpCount, _hcCount, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", -1], (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;
+
 //--- AI COMMANDER LOCK startup notice.
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
 	["INFORMATION", Format ["AI_Commander.sqf: [%1] WFBE_C_AI_COMMANDER_LOCK=1 - AI retains full command regardless of human slot occupancy.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 while {!gameOver} do {
+	//--- SUPERVISOR HEARTBEAT (B69): unconditional per-tick liveness beat. MUST be the first
+	//--- statement, above the _active gate and before EVERY worker Call, so even a worker that
+	//--- throws (e.g. createVehicle on a malformed classname, AI_Commander_Base.sqf:503-516)
+	//--- leaves this tick's stamp behind; the loop then dies and the beat freezes. A watchdog
+	//--- treats time - (missionNamespace getVariable ['wfbe_aicom_hb_<id>', -1]) > k*TICK as DEAD.
+	//--- Distinct from wfbe_aicom_lastbrief (300s, written inside the loop -> useless as liveness).
+	missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
+
 	_active = false;
 	if ((missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
 		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
@@ -126,7 +160,7 @@ while {!gameOver} do {
 		if (_state != _prevState) then {
 			_logik setVariable ["wfbe_aicom_running", !_humanCmd];
 			if (_state == "full")   then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ACTIVE (full command).", str _side]] Call WFBE_CO_FNC_AICOMLog};
-			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander, executor only).", str _side]] Call WFBE_CO_FNC_AICOMLog};
+			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander; executor + town auto-assign + B67 team-found/refill quartermaster, base/upgrade OFF).", str _side]] Call WFBE_CO_FNC_AICOMLog};
 			_prevState = _state;
 		};
 
@@ -138,6 +172,93 @@ while {!gameOver} do {
 			(_side) Call WFBE_SE_FNC_AI_Com_AssignTowns; _ltTown = time;
 		};
 
+		//--- B69 (bootstrap-stipend-out-of-canbuild): the 0-town survival drip is a LIFELINE, not a
+		//--- 'spend'. It runs on the _active gate (HQ alive + AICOM enabled) so a one-tick human
+		//--- blip that re-arms _noHumanSince (zeroing _canBuild for 300s) cannot suspend the only income
+		//--- a broke 0-town side has. Internal guards unchanged: 0 towns AND time<MAXTIME AND 60s rate.
+		//--- Funds route to the SEPARATE AICOM treasury (ChangeAICommanderFunds) -> no contention with a
+		//--- human commander's spend in assist state (same treasury separation HYBRID-REFILL relies on).
+		//--- V0.7 BOOTSTRAP STIPEND: trickle funds+supply while the side owns 0 towns AND
+		//--- time < WFBE_C_AICOM_BOOTSTRAP_MAXTIME.  Scales the per-minute amounts to the
+		//--- actual tick spacing so the grant is tick-rate-independent.
+		//--- supply is only granted when the dual-currency economy is active (system == 0).
+		_stipendMaxTime = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_MAXTIME", 3600];
+		_stipendTowns = 0;
+		{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
+		_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
+		if (_stipendActive && !_prevStipendActive) then {
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
+		};
+		if (!_stipendActive && _prevStipendActive) then {
+			if (_stipendTowns > 0) then {
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - first town captured.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-first-town");
+			} else {
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - max time %2 s reached.", str _side, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-timeout");
+			};
+		};
+		_prevStipendActive = _stipendActive;
+		if (_stipendActive) then {
+			//--- Grant once per 60 s (last-stipend timestamp guards the rate).
+			if (time - _ltStipend >= 60) then {
+				//--- Scale configured per-minute amounts by actual elapsed time since last grant
+				//--- so a missed tick doesn't silently drop income (capped at 3x to avoid windfalls).
+				_tickS = (time - _ltStipend) min 180;
+				if (_ltStipend < -1e8) then {_tickS = 60}; //--- first grant: treat as one minute.
+				_stipendFunds  = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS",  100];
+				_stipendSupply = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY",  50];
+				_stipendFundsGrant  = round (_stipendFunds  * (_tickS / 60));
+				_stipendSupplyGrant = round (_stipendSupply * (_tickS / 60));
+				[_side, _stipendFundsGrant] Call ChangeAICommanderFunds;
+				_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+				if (_dual) then {
+					[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
+				};
+				_ltStipend = time;
+			};
+		};
+
+		//--- B69 SAME-HC MERGE PASS (fewer+bigger, group-count DOWN): consolidate two depleted same-side
+		//--- HC infantry teams that sit close together out of combat into one squad (joinSilent B -> A on the
+		//--- owning HC). FREE (no spawn) FPS lever, so it runs on the _active gate alongside the Executor /
+		//--- town auto-assign / stipend (NOT gated by _canBuild or _humanCmd) - consolidation is always worth
+		//--- doing when the side is alive. Slow ~120s cadence. HARD-gated default-OFF behind
+		//--- WFBE_C_AICOM_HC_MERGE_ENABLE (absent => false => worker early-exits, inert). The worker also runs
+		//--- the (skipped) top-up path internally, both behind their own ENABLE flags. Call is nil-guarded so it
+		//--- is a no-op until the DRAFT worker function is registered in the AICOM compile list (cross-file dep).
+		//--- A2-OA: no isEqualTo - read the flags and test typeName=="BOOL" + truthiness (same idiom the worker uses).
+		_mergeOn = missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_ENABLE", false];
+		_topupOn = missionNamespace getVariable ["WFBE_C_AICOM_HC_TOPUP_ENABLE", false];
+		_mergeWorkerOn = ((if (typeName _mergeOn == "SCALAR") then {_mergeOn} else {0}) > 0) || ((if (typeName _topupOn == "SCALAR") then {_topupOn} else {0}) > 0); //--- B69 fix: enable flags ship as Number 0/1 (SCALAR), not BOOL; the old typeName==BOOL test never fired, so the worker was never called even when the flag was set.
+		if (_mergeWorkerOn) then {
+			if (time - _ltMerge > (missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_INTERVAL", 120])) then {
+				if (!isNil "WFBE_SE_FNC_AI_Com_HCTopUp") then {(_side) Call WFBE_SE_FNC_AI_Com_HCTopUp};
+				_ltMerge = time;
+			};
+		};
+
+		//--- B67 HYBRID-REFILL (full-send hybrid commander, item #5): while a HUMAN commands this side
+		//--- (assist state), the AI stays a quartermaster - it keeps FOUNDING and REFILLING its own teams
+		//--- so the side is never starved of AI bodies, but it does NOT build the base or research upgrades
+		//--- (the human owns those - AI_Com_Base / AI_Com_Upgrade stay OFF here). Gated separately from the
+		//--- full-economy _canBuild block on its own WFBE_C_AI_COMMANDER_HYBRID_REFILL switch (>0). Funds come
+		//--- from the SEPARATE AI-commander treasury (Teams/Produce charge GetAICommanderFunds), NOT the side
+		//--- funds the human spends, so there is no contention with the human's purchases. Reuses the same
+		//--- _ltTeams/_ltProd throttles as the full path (they are never both active in the same tick: this
+		//--- block runs only when _humanCmd, the _canBuild block only when !_humanCmd via _noHumanSince).
+		if (_humanCmd && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) then {
+			//--- Found AI combat teams up to the side target (self-gates on funds/HC/group-cap inside the worker).
+			if (time - _ltTeams > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_INTERVAL", 90])) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_Teams; _ltTeams = time;
+			};
+			//--- Refill under-strength AI teams at the factories (self-gates per team + AI-cap inside the worker).
+			if (time - _ltProd > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL")) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_Produce; _ltProd = time;
+			};
+		};
+
 		//--- Economy/build: full command AND only after the build-grace window (#3a, Ray 2026-06-15).
 		//--- rule A still holds (no AI spend under a human); the AI also waits the build-grace with no
 		//--- human commander (from start, re-armed when a human leaves) before it starts building.
@@ -145,6 +266,12 @@ while {!gameOver} do {
 			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
 			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Strategy; _ltStrat = time;
+			};
+			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
+			//--- mobilize -> DRIVE the MHQ forward to a standoff behind the front town -> re-deploy. Self-gates
+			//--- on WFBE_C_AICOM_MHQ_RELOCATE + single-flight + deployed-HQ + enemy-standoff; drive runs in its own Spawn.
+			if (time - _ltMHQReloc > (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_RELOCATE_INTERVAL", 180])) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_MHQReloc; _ltMHQReloc = time;
 			};
 			//--- V0.2: build the base (HQ deploy -> doctrine build order -> defenses).
 			if (time - _ltBase > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BASE_INTERVAL", 60])) then {
@@ -190,48 +317,6 @@ while {!gameOver} do {
 			};
 			if (!_richFlag && _prevRich) then {
 				_logik setVariable ["wfbe_aicom_reinforce_rich", false];
-			};
-
-			//--- V0.7 BOOTSTRAP STIPEND: trickle funds+supply while the side owns 0 towns AND
-			//--- time < WFBE_C_AICOM_BOOTSTRAP_MAXTIME.  Scales the per-minute amounts to the
-			//--- actual tick spacing so the grant is tick-rate-independent.
-			//--- supply is only granted when the dual-currency economy is active (system == 0).
-			_stipendMaxTime = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_MAXTIME", 3600];
-			_stipendTowns = 0;
-			{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
-			_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
-			if (_stipendActive && !_prevStipendActive) then {
-				["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
-				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
-			};
-			if (!_stipendActive && _prevStipendActive) then {
-				if (_stipendTowns > 0) then {
-					["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - first town captured.", str _side]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-first-town");
-				} else {
-					["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - max time %2 s reached.", str _side, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-timeout");
-				};
-			};
-			_prevStipendActive = _stipendActive;
-			if (_stipendActive) then {
-				//--- Grant once per 60 s (last-stipend timestamp guards the rate).
-				if (time - _ltStipend >= 60) then {
-					//--- Scale configured per-minute amounts by actual elapsed time since last grant
-					//--- so a missed tick doesn't silently drop income (capped at 3x to avoid windfalls).
-					_tickS = (time - _ltStipend) min 180;
-					if (_ltStipend < -1e8) then {_tickS = 60}; //--- first grant: treat as one minute.
-					_stipendFunds  = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS",  100];
-					_stipendSupply = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY",  50];
-					_stipendFundsGrant  = round (_stipendFunds  * (_tickS / 60));
-					_stipendSupplyGrant = round (_stipendSupply * (_tickS / 60));
-					[_side, _stipendFundsGrant] Call ChangeAICommanderFunds;
-					_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
-					if (_dual) then {
-						[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
-					};
-					_ltStipend = time;
-				};
 			};
 
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
@@ -343,7 +428,17 @@ while {!gameOver} do {
 		//--- Mirrors the proven group-getVariable[name,default] form on line 255; local() is checked on
 		//--- the LEADER (an Object) never on the group (A2 OA 1.64 trap); team-type index bounds-guarded.
 		private ["_srvTeams","_hcTeams","_foundedN","_aliveSum","_remnants","_cmdrTpl","_isHc","_isFounded","_aliveN","_tt","_tplSize","_upt","_ldr"];
+		//--- SOAK DRAFT (claude-gaming 2026-06-20, propose-only, behaviour-neutral): the blended
+		//--- unitsPerTeam reads BELOW the 8-12 floor (live 6.3/7.3) but RPT confirms infantry founds
+		//--- at 10 (founding-pad fires) while 4-man vehicle/armour teams (correctly NOT padded) drag
+		//--- the AVERAGE down. So the "below floor" alarm is partly a metric artifact. Split the live
+		//--- average into infantry vs vehicle so the AM review can see the real infantry dribble
+		//--- (attrition with no HC refill) separate from intended small vehicle crews. Pure additive
+		//--- diag_log fields appended AFTER unitsPerTeam= (parser-compatible). A2-OA-safe: isKindOf /
+		//--- getNumber / count only, no A3 commands, no sim/distance-gating, no antistack touch.
+		private ["_infSum","_infN","_vehSum","_vehN","_isVehTeam","_uptInf","_uptVeh"];
 		_srvTeams = 0; _hcTeams = 0; _foundedN = 0; _aliveSum = 0; _remnants = 0;
+		_infSum = 0; _infN = 0; _vehSum = 0; _vehN = 0;
 		_cmdrTpl = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", str _side], []];
 		{
 			if (!isNull _x) then {
@@ -357,16 +452,29 @@ while {!gameOver} do {
 					_aliveN = {alive _x} count (units _x);
 					_aliveSum = _aliveSum + _aliveN;
 					_tt = _x getVariable ["wfbe_teamtype", -1];
+					//--- SOAK DRAFT: classify the team as VEHICLE (Tank or non-transport heli in its
+					//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
+					//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>
+					//--- infantry bucket (the common case). First match wins (exitWith).
+					_isVehTeam = false;
 					if (_tt >= 0 && {_tt < (count _cmdrTpl)}) then {
 						_tplSize = count (_cmdrTpl select _tt);
 						if (_aliveN > 0 && {_tplSize > 0} && {_aliveN < (ceil (0.30 * _tplSize))}) then {_remnants = _remnants + 1};
+						{
+							if (_x isKindOf "Tank") exitWith {_isVehTeam = true};
+							if ((_x isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0}) exitWith {_isVehTeam = true};
+						} forEach (_cmdrTpl select _tt);
 					};
+					if (_isVehTeam) then {_vehSum = _vehSum + _aliveN; _vehN = _vehN + 1} else {_infSum = _infSum + _aliveN; _infN = _infN + 1};
 				};
 			};
 		} forEach (_logik getVariable ["wfbe_teams", []]);
 		_upt = 0;
 		if (_foundedN > 0) then {_upt = (round ((_aliveSum / _foundedN) * 10)) / 10};
-		diag_log ("CMDRSTAT|v1|" + (str _side) + "|" + str _elMin + "|srvTeams=" + str _srvTeams + "|hcTeams=" + str _hcTeams + "|foundedTeams=" + str _foundedN + "|unitsPerTeam=" + str _upt + "|remnants=" + str _remnants);
+		//--- SOAK DRAFT: per-bucket averages (0 when a side has no team of that bucket this tick).
+		_uptInf = 0; if (_infN > 0) then {_uptInf = (round ((_infSum / _infN) * 10)) / 10};
+		_uptVeh = 0; if (_vehN > 0) then {_uptVeh = (round ((_vehSum / _vehN) * 10)) / 10};
+		diag_log ("CMDRSTAT|v1|" + (str _side) + "|" + str _elMin + "|srvTeams=" + str _srvTeams + "|hcTeams=" + str _hcTeams + "|foundedTeams=" + str _foundedN + "|unitsPerTeam=" + str _upt + "|remnants=" + str _remnants + "|infPerTeam=" + str _uptInf + "|infTeams=" + str _infN + "|vehPerTeam=" + str _uptVeh + "|vehTeams=" + str _vehN);
 
 		//--- COMBATSTAT (claude-gaming 2026-06-15): periodic per-side combat-attrition delta from the
 		//--- FREE cumulative counters WF_Logic already maintains (Common_UpdateStatistics writes
@@ -442,6 +550,20 @@ while {!gameOver} do {
 			_hRatio = if (_hMin > 0) then {(round ((_hMax / _hMin) * 10)) / 10} else {-1};
 			diag_log ("HCDELEG|v1|" + str (round (time / 60)) + "|liveHC=" + str (count _hcLive) + "|perHC=" + _hCsv + "|max=" + str _hMax + "|min=" + str _hMin + "|imbalance=" + str _hRatio);
 		};
+	};
+
+	//--- WAR-BRIEF: recurring [AICOM BRIEF] every ~300s (owned towns, funds, teams, doctrine, posture).
+	_briefTs = _logik getVariable ["wfbe_aicom_lastbrief", 0];
+	if (time - _briefTs > 300) then {
+		_briefTowns = 0;
+		_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+		{ if ((_x getVariable ["sideID", -1]) == _myID) then {_briefTowns = _briefTowns + 1} } forEach towns;
+		_briefFunds  = (_side) Call GetAICommanderFunds;
+		_briefTeams  = count (_logik getVariable ["wfbe_teams", []]);
+		_briefDoctrine = _logik getVariable ["wfbe_aicom_doctrine", "?"];
+		_briefStrat  = _logik getVariable ["wfbe_aicom_strat_mode", "?"];
+		["INFORMATION", Format ["AI_Commander.sqf: [AICOM BRIEF] side=%1 towns=%2 funds=%3 teams=%4 doctrine=%5 posture=%6", str _side, _briefTowns, _briefFunds, _briefTeams, _briefDoctrine, _briefStrat]] Call WFBE_CO_FNC_AICOMLog;
+		_logik setVariable ["wfbe_aicom_lastbrief", time];
 	};
 
 	sleep (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TICK");

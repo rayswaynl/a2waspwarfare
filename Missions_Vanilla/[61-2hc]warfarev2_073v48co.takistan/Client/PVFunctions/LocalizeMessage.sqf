@@ -8,6 +8,7 @@ _totalSkillBLUFOR = "";
 _totalSkillOPFOR = "";
 
 switch (_localize) do {
+	case "BaseFallSting": { playSound "inbound"; _commandChat = false; }; //--- B69 S6: HQ-fall server-wide audible sting (sound only, no chat text). Companion to the Server_OnHQKilled.sqf SendToClients broadcast. "inbound" is a registered CfgSounds class (also used by CampCaptured/Common_HandleAlarm).
 	case "BuildingTeamkill": {_txt = Format [Localize "STR_WF_CHAT_Teamkill_Building",_this select 1, _this select 2, [_this select 3, 'displayName'] Call GetConfigInfo]};
     case "AttackModeActivated": {_txt = Format ["Commander has activated heavy attack mode! You get %1 %2 discount from all units for the next %3 minutes!", (100 - floor (_this select 1)), "%", _this select 2]; playSound "attackMode";};
     case "AttackModeActiveJIP": {_txt = Format ["Your team is currently in heavy attack mode! Buy units with discount before the time runs out!"]; playSound "attackMode";};
