@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T00:32:42+02:00",
+  "generatedAt": "2026-06-23T00:55:31+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only HQ score current B74 refresh. Docs/source HEAD@9b7eb4bc is source-unchanged from 97e4cdd0 / 4d4610f1 for checked HQ-score files. Current stable origin/master@0139a346, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 keep generic HQ building score plus a second HQ bounty in both maintained roots. Current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f have no Server_OnHQKilled.sqf delta; both keep the B69 base-fall spectacle code and double-award lines. B74 only line-drifts Chernarus constants and WFBE_C_BUILDINGS_SCORE_COEF remains 3. No gameplay source changed.",
+      "currentWork": "Published docs-only MASH marker current B74 refresh. Docs/source HEAD@443055cf is unchanged from 2b5139219faa / db3015f18ea3 for checked MASH deploy, marker relay, init and respawn-availability paths. Docs/source, Miksuu b8389e748243 and perf 0076040f keep local MASH deploy plus orphaned marker relay in both maintained roots. Current stable origin/master@0139a346, B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f and historical a96fdda2 expose only Skill_Apply.sqf:43 MASH-deploy-removed wording and no maintained-root Client/Module/MASH, Server/Module/MASH or Skill_Officer.sqf paths. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress-Dashboard.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and the pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "mash-marker-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Respawn-And-Death-Lifecycle-Atlas, Feature Status, Abandoned Feature Revival, Public Variable Channel Index, Dead/stale code register and machine rows with current B74 MASH evidence. Docs/source HEAD@443055cf is unchanged from 2b5139219faa/db3015f18ea3 for checked MASH paths; docs/source, Miksuu b8389e748243 and perf 0076040f keep local MASH deploy plus orphaned marker relay. Current stable 0139a346, B69 8d465fce, B74 b23f557f and historical a96fdda2 expose only Skill_Apply.sqf:43 deploy-removed wording and no maintained-root MASH module/deploy paths. No gameplay source changed."
+    },
     {
       "lane": "hq-score-current-b74-refresh-2026-06-23",
       "owner": "Codex",
