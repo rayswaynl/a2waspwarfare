@@ -181,7 +181,7 @@ This patch is the PVF foundation, not the whole server-authority migration.
 | Sender-chosen arbitrary handler string | Yes | Forged payload trying to compile arbitrary SQF text instead of `SRVFNCRequestJoin`. |
 | Avoidable per-message compile | Already resolved on master | Dispatchers use `missionNamespace getVariable` + CODE guard; no `Call Compile` at dispatch time. |
 | Legitimate handler with forged payload | No | `RequestSpecial` `ICBM` branch, `RequestStructure`, `RequestUpgrade`, `RequestChangeScore`. |
-| Missing authenticated sender context | No | DR-55: `Init_PublicVariables.sqf:51-53` forwards only the public-variable value into `WFBE_SE_FNC_HandlePVF`, and `Server_HandlePVF.sqf:9-14` forwards only handler parameters. |
+| Missing authenticated sender context | No | DR-55: docs `HEAD@ade4d356`, Miksuu `b8389e74` and perf `0076040f` forward only the public-variable value into `WFBE_SE_FNC_HandlePVF` and keep old dispatcher `Call Compile`; current stable `origin/master@0139a346` and B69 `0a1ccb4d` use namespace/CODE dispatch but still pass only `(_this select 1)` at `Init_PublicVariables.sqf:56,61`, so handlers receive parameters without publisher context. |
 | Direct publicVariable channel outside PVF | No | `ATTACK_WAVE_INIT`, side-supply temp PVs, supply mission PVs, MASH marker relay, HQ state channels. |
 | BattlEye defense-in-depth | No | Repo `BattlEyeFilter/publicvariable.txt` still only ships the `kickAFK` feature rule. |
 
@@ -189,7 +189,7 @@ After this patch, a forged command name should be rejected. A forged payload sen
 
 ## Sender Authentication Boundary
 
-Do not treat handler-name allowlisting as full PVF hardening. DR-55 found that the server PVEH registration calls `(_this select 1) Spawn WFBE_SE_FNC_HandlePVF`, so the dispatcher receives the value tuple without the publisher identity. The server dispatcher then selects `_script` and `_parameters` and spawns the handler, which leaves legitimate handlers unable to distinguish a real requester from a forged client payload unless each handler re-derives authority from trusted server state.
+Do not treat handler-name allowlisting as full PVF hardening. DR-55 found that the server PVEH registration calls `(_this select 1) Spawn WFBE_SE_FNC_HandlePVF`, so the dispatcher receives the value tuple without the publisher identity. The 2026-06-22 branch refresh keeps that split: current stable `origin/master@0139a346` and B69 `0a1ccb4d` removed dispatch-time `Call Compile` but still register value-only PVEHs at `Init_PublicVariables.sqf:56,61`, while docs `HEAD@ade4d356`, Miksuu `b8389e74` and perf `0076040f` keep both value-only PVEHs and old compile dispatchers. The server dispatcher then selects `_script` and `_parameters` and spawns the handler, which leaves legitimate handlers unable to distinguish a real requester from a forged client payload unless each handler re-derives authority from trusted server state.
 
 The DR-55 lane belongs in [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) and `agent-hardening-backlog.jsonl#pvf-handler-sender-authentication`: carry authenticated requester context to the server handler layer, then validate side, commander/team role, funds, target objects and ownership per handler.
 

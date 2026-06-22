@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T10:05:14+02:00",
+  "generatedAt": "2026-06-22T10:05:31+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pvf-sender-auth-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs HEAD@ade4d356 Chernarus Init_PublicVariables.sqf:46,51 value-only PVEHs and Server_HandlePVF.sqf:14 / Client_HandlePVF.sqf:22 Call Compile dispatch",
+        "origin/master@0139a346 maintained roots Init_PublicVariables.sqf:56,61 value-only PVEHs and Server_HandlePVF.sqf:14-15 / Client_HandlePVF.sqf:32-33 missionNamespace/CODE dispatch",
+        "Miksuu master@b8389e74 fetched from https://github.com/miksuu/a2waspwarfare.git and origin/perf/quick-wins@0076040f keep value-only PVEHs plus Call Compile dispatchers",
+        "origin/claude/b69@0a1ccb4d matches current-stable PVF sender-auth boundary; edb9f776..0a1ccb4d has no checked PVF-path diff",
+        "current origin exposes no release/* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed DR-55/PVF sender-auth evidence in Feature-Status-Register.md, Server-Authority-Migration-Map.md, PVF-Dispatch-Implementation-Playbook.md and Networking-And-Public-Variables.md.",
+        "Updated dashboard, worklog, pruning ledger and PVF machine rows so dispatcher lookup is no longer read as sender-auth closure.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future network-hardening owner should carry authenticated requester context to server handlers and re-derive side, commander/team role, funds and object ownership inside high-risk handlers; keep this separate from registered-handler allowlist/logging.",
+      "updated": "2026-06-22T10:05:31+02:00"
+    },
     {
       "lane": "ai-supply-truck-current-stable-anchor-refresh-2026-06-22",
       "owner": "Codex",

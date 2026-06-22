@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T10:05:14+02:00",
+  "generatedAt": "2026-06-22T10:05:31+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the AI supply-truck current-stable anchor split, fast-travel fee current-stable refresh, B69 Patch A-2 capture-interrupt refresh, resource-income current-stable branch split and auto-wall current-stable scope refresh. AI supply-truck docs separate docs branch ea0e0f1b/Miksuu/perf raw-spawn evidence from current stable origin/master@0139a346 safe-disable at Init_Server.sqf:43,462-463, and Feature Status now aligns AI commander automation with current stable's source-present supervisor route. Fast-travel evidence splits current stable from old TODO refs; B69 remains branch-only Chernarus code on origin/claude/b69@edb9f776. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the PVF sender-auth current-stable refresh, AI supply-truck current-stable anchor split, fast-travel fee current-stable refresh, B69 Patch A-2 capture-interrupt refresh and resource-income current-stable branch split. DR-55 remains P0 open: current stable origin/master@0139a346 and B69 0a1ccb4d removed dispatch-time Call Compile but still forward only the PVEH value tuple into HandlePVF, while docs HEAD@ade4d356, Miksuu b8389e74 and perf 0076040f keep value-only PVEHs plus old dispatchers. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pvf-sender-auth-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed DR-55 PVF/PVEH sender-authentication docs after a 2026-06-22 source pass split current-stable dispatcher lookup from requester context. Docs HEAD@ade4d356, Miksuu b8389e74 and perf 0076040f keep value-only PVEHs plus Call Compile dispatchers; current stable origin/master@0139a346 and B69 0a1ccb4d use missionNamespace/CODE dispatch but still forward only the value tuple at Init_PublicVariables.sqf:56,61. Updated Feature Status, Server Authority, PVF dispatch, Networking and machine rows. No gameplay source changed."
+    },
     {
       "lane": "ai-supply-truck-current-stable-anchor-refresh-2026-06-22",
       "owner": "Codex",
