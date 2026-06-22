@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T17:29:26+02:00",
+  "generatedAt": "2026-06-22T17:42:43+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "camp-count-helper-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD is 91d1ccf2a04d after the prior docs commit; git diff --name-status ade4d356..HEAD returned zero paths for checked Chernarus/Vanilla camp helper and caller files",
+        "origin/claude/b69 current head is 8d465fcede7fc20a7fcb97bd7d02e5211de8d1bf; git diff --name-status 0a1ccb4d..origin/claude/b69 returned zero paths for checked camp helper and caller files",
+        "docs/source HEAD@91d1ccf2, current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, origin/perf/quick-wins@0076040f, historical a96fdda2 and direct Miksuu master@b8389e748243 all keep Common_GetTotalCamps.sqf:10 and Common_GetTotalCampsOnSide.sqf:16 returning 1 for zero-camp towns in both maintained roots",
+        "affected caller families remain capture mode 2/capture-rate math, Common_GetRespawnThreeway via Client_GetRespawnAvailable and depot infantry buy gates",
+        "current origin exposes no release/*, feat/*camp* or feat/*town* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and machine rows with current B69 head evidence.",
+        "Preserved 0a1ccb4d and ade4d356 as provenance while marking HEAD@91d1ccf2 and origin/claude/b69@8d465fce as current evidence.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should still decide real-count versus safe-denominator semantics, split helpers or add caller-specific zero-camp guards, propagate maintained roots and smoke capture mode 2, threeway respawn and depot infantry buys on zero/partial/all-camp towns.",
+      "updated": "2026-06-22T17:42:43+02:00"
+    },
     {
       "lane": "construction-smallsite-logic-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
