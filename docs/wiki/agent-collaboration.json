@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T17:42:43+02:00",
+  "generatedAt": "2026-06-22T17:54:53+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pvf-sender-auth-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@4d4610f1e429 is unchanged from ade4d356 for checked Chernarus/Vanilla PVF init/dispatcher paths",
+        "current stable origin/master@0139a346 and current B69 origin/claude/b69@8d465fce both use missionNamespace/CODE dispatch at Server_HandlePVF.sqf:14-15 and Client_HandlePVF.sqf:32-33 in both maintained roots",
+        "current stable and current B69 still pass only (_this select 1) at Init_PublicVariables.sqf:56,61, so DR-55 authenticated requester context remains open",
+        "git diff --name-status 0a1ccb4d..origin/claude/b69 changes only Client/PVFunctions/HandleSpecial.sqf in both maintained roots among checked PVF/PVEH paths, adding default-off aicom-team-merge at :57,59",
+        "current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f keep old value-only PVEHs plus Call Compile dispatchers; current origin exposes no release/*, feat/*pvf*, feat/*network*, feat/*auth* or feat/*public* heads"
+      ],
+      "outputs": [
+        "Refreshed Feature-Status-Register.md, Server-Authority-Migration-Map.md, PVF-Dispatch-Implementation-Playbook.md, Networking-And-Public-Variables.md, Public-Variable-Channel-Index.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and machine rows with current B69 head evidence.",
+        "Preserved 0a1ccb4d and ade4d356 as provenance while marking HEAD@4d4610f1 and origin/claude/b69@8d465fce as current evidence.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future network-hardening owner should carry authenticated requester context to server handlers, re-derive side/commander/team/funds/object state inside high-risk handlers, and keep that separate from registered-handler allowlists/logging and the B69 client aicom-team-merge tag.",
+      "updated": "2026-06-22T17:54:53+02:00"
+    },
     {
       "lane": "camp-count-helper-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
