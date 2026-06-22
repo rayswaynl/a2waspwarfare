@@ -47,7 +47,7 @@ Release `7ff18c49` typed scan shape:
 } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], (if (_byHeli) then {400} else {80})]);
 ```
 
-Docs/source `f3e157f2` carries the 80 m typed scan in both maintained roots. Local `HEAD` / `origin/master` and the checked Miksuu/perf refs do not currently carry that typed scan; they still use broad enumeration plus post-filter at `supplyMissionStarted.sqf:25,28`. Root discovery for any future propagation run is documented as branch-sensitive in [Tools/build workflow](Tools-And-Build-Workflow): current source/stable/Miksuu/perf need an `a2waspwarfare` ancestor, while release `7ff18c49` has marker-root support. `Modded_Missions/*` are not claimed by this propagation lane.
+Docs/source `f3e157f2` carries the 80 m typed scan in both maintained roots. Local `HEAD` / `origin/master` and the checked Miksuu/perf refs do not currently carry that typed scan; they still use broad enumeration plus post-filter at `supplyMissionStarted.sqf:25,28`. Root discovery for any future propagation run is documented as branch-sensitive in [Tools/build workflow](Tools-And-Build-Workflow): docs/current source and current stable `origin/master@0139a346` accept either an `a2waspwarfare` ancestor or repo markers, while direct current Miksuu `b8389e74` and `origin/perf/quick-wins@0076040f` still need the ancestor. `Modded_Missions/*` are not claimed by this propagation lane.
 
 ## Why It Matters
 
