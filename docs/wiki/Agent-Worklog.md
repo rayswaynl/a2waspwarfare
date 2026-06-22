@@ -2046,3 +2046,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch note: current origin exposes no live `release/*`, vote or reassignment rescue head on 2026-06-22; broad `commander` matches are Codex AI-commander context/log branches, not vote-worker fixes. Reassignment helper details remain on the dedicated call-shape page.
 - Result: refreshed Commander vote/reassignment, Commander/HQ lifecycle, Feature Status, Source Fix queue, Pending owner decisions, Hardening roadmap, dashboard, pruning ledger and commander vote machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T23:58:40+02:00 - Codex - Service/EASA affordability current B74 refresh
+
+- Claimed `service-easa-affordability-current-b74-refresh-2026-06-22` after service/EASA rows named current B69 but did not include adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`.
+- Source scope: docs/source `HEAD@e9dd7f37d1f5`; current stable `origin/master@0139a3468609`; current B69 `origin/claude/b69@8d465fcede7f`; adjacent B74 `origin/claude/b74-aicom-spend@b23f557fc912`; current Miksuu `b8389e748243`; perf `origin/perf/quick-wins@0076040f8a5e`; historical release `a96fdda28087`; historical EASA QoL `a66d46912e2a`.
+- Findings: docs/source is source-unchanged from `8906ee89`, `9b3fc38e` and `8b71e2a1` for checked `GUI_Menu_Service.sqf` / `GUI_Menu_EASA.sqf` paths and keeps old direct service debits plus strict EASA `_funds > price` at `GUI_Menu_EASA.sqf:47`. Current stable/B69/B74 partially guard service rearm/refuel at `GUI_Menu_Service.sqf:484,507`, while repair/heal still debit on positive price at `:496-500,:519-523`. B69/B74 are unchanged for checked paths: Chernarus exact-funds EASA uses `_funds >= price` at `GUI_Menu_EASA.sqf:118`, maintained Vanilla remains strict `>`.
+- Branch note: `git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend` is empty for checked service/EASA paths; `origin/master..origin/claude/b74-aicom-spend` changes only `GUI_Menu_EASA.sqf` in both maintained roots among checked paths. Current origin exposes no live `release/*`, service, EASA, gear, buy or QoL feature head.
+- Result: refreshed Service menu affordability guards, Gear/loadout/EASA atlas, Feature Status, Source Fix queue, dashboard, pruning ledger and service/EASA machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
