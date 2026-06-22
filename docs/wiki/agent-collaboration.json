@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T09:09:00+02:00",
+  "generatedAt": "2026-06-22T09:16:49+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "indicator-status-counter-branch-split-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@a27086cd current Chernarus and maintained Vanilla FPS/status counter paths",
+        "origin/master@0139a346 current stable single-publisher FPS shape in both maintained roots",
+        "Miksuu master@b8389e74 fetched from https://github.com/miksuu/a2waspwarfare.git and origin/perf/quick-wins@0076040f old two-publisher shape",
+        "historical release commit a96fdda2 single-publisher FPS shape; current origin exposes no release/* heads on 2026-06-22",
+        "Client-UI-Systems-Atlas.md indicator surface matrix status/debug/admin row"
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md with a status-counter audience split and current branch/root status.",
+        "Refreshed Hosted-Server-FPS-Loop-Sleep.md and Performance-Opportunity-Sweep.md so current stable is no longer documented as old-loop-shaped.",
+        "Updated Feature Status, hosted-FPS machine row, dashboard, worklog, pruning ledger and coordination records. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future indicator work should pick another surface family from the matrix; future FPS code work should smoke the chosen target branch and decide whether WFBE_VAR_SERVER_FPS compatibility publishing is still required before consolidation.",
+      "updated": "2026-06-22T09:16:49+02:00"
+    },
     {
       "lane": "visible-parameter-runtime-consumer-current-stable-refresh-2026-06-22",
       "owner": "Codex",
