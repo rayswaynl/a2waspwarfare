@@ -705,6 +705,13 @@ while {!WFBE_GameOver && _alive} do {
 					//--- no live units (a wipe mid-phase would otherwise run scans/waypoints on a dead group).
 					if (isNull _team || {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) == 0}) exitWith {};
 
+					//--- B69 (capture-phase-seq-interrupt): snapshot the order seq we entered the capture phase on. If a fresh order (bumped seq) arrives mid-capture (e.g. the team is pulled into the HQ strike), abort this phase so the outer ~8s order loop re-reads within one tick instead of finishing a multi-minute hold. A2-OA: plain single-arg getVariable on the GROUP + isNil (the [name,default] form is unreliable on groups). _capAbort is set inside the hold loops (child scopes write the parent private) and bails the phase via exitWith after each loop.
+					private ["_capInt","_capSeq","_capAbort","_capOrd0","_capOrdN"];
+					_capInt = (missionNamespace getVariable ["WFBE_C_AICOM_CAPTURE_INTERRUPT", 1]) > 0;
+					_capOrd0 = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrd0") then {_capOrd0 = []};
+					_capSeq = if (count _capOrd0 >= 1) then {_capOrd0 select 0} else {-1};
+					_capAbort = false;
+
 					//--- Resolve the town object ROBUSTLY. wfbe_aicom_townorder is set server-side
 					//--- WITHOUT broadcast (AI_Commander_AssignTowns.sqf L117/L240 use the 2-arg
 					//--- setVariable), so on a Headless Client it reads nil. The order dest _dest IS
@@ -799,6 +806,9 @@ while {!WFBE_GameOver && _alive} do {
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
 						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
+							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
+							if (_capAbort) exitWith {}; //--- B69: re-tasked mid camp-first -> bail; outer loop re-reads the new order
 							_nearCamp   = [leader _team, _unheldCamps] Call WFBE_CO_FNC_GetClosestEntity;
 							if (isNull _nearCamp) exitWith {};
 							_campTgtPos = getPos _nearCamp;
@@ -854,7 +864,8 @@ while {!WFBE_GameOver && _alive} do {
 						};
 						//--- Release the plant so the depot-centre hold below can march these units on
 						//--- (setUnitPos "UP" pins stance; "AUTO" hands movement back to the AI).
-						{if (alive _x) then {_x setUnitPos "AUTO"}} forEach _footInf;
+						{if (alive _x) then {_x setUnitPos "AUTO"; _x doFollow (leader _team)}} forEach _footInf; //--- B69: doFollow clears the sticky doStop from the camp plant (setUnitPos alone does NOT), so an interrupted team is never left frozen; the next order's waypoints take over.
+							if (_capAbort) exitWith {}; //--- B69: camp-first interrupted (plant released above so no frozen units) -> bail capture phase; outer loop re-tasks.
 						if (count _unheldCamps > 0) then {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first window expired with %3 camp(s) un-held at [%4] - proceeding to center.", _side, _team, count _unheldCamps, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}]] Call WFBE_CO_FNC_AICOMLog;
 						};
@@ -880,6 +891,9 @@ while {!WFBE_GameOver && _alive} do {
 						_holdEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer depot-center hold = the team holds long enough to drain + flip the town.
 						_resNear = 1;
 						while {time < _holdEnd && {_resNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
+							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
+							if (_capAbort) exitWith {}; //--- B69: re-tasked mid depot-hold -> bail; outer loop re-reads the new order
 							_enemyNear = (_townCenter nearEntities [["Man"], _capRange]) unitsBelowHeight 10;
 							_resNear = 0;
 							{
@@ -899,6 +913,7 @@ while {!WFBE_GameOver && _alive} do {
 
 						//--- Latch only if the town is now OURS; otherwise leave _captureDone false so
 						//--- the 20s order loop re-runs this whole phase next tick and keeps fighting.
+						if (_capAbort) exitWith {}; //--- B69: depot-hold interrupted -> bail BEFORE latching captureDone; outer loop re-reads the new order
 						_townFlipped = (!isNull _townObj) && {(_townObj getVariable ["sideID", -1]) == _sideID};
 						if (_townFlipped) then {
 							_captureDone = true;
