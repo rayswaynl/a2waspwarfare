@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T22:31:00+02:00",
+  "generatedAt": "2026-06-22T22:46:01+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Commander Objective Ping / SetTask branch refresh. Docs/source HEAD@86ab85b9d0b1, Miksuu b8389e748243, perf/quick-wins@0076040f and historical c20ce1534be0 keep SetTask sends commented at GUI_Menu_Command.sqf:335,337,343 with Init_PublicVariables.sqf:33 registration. Current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f and origin/feat/naval-hvt-objectives@2e1c59317186 send targeted Objective Ping tasks at GUI_Menu_Command.sqf:336,344 and register SetTask at Init_PublicVariables.sqf:40 in both maintained roots. Historical a96fdda2 has live sends with :36 registration but no live release/* head. No gameplay source changed.",
+      "currentWork": "Published docs-only resource income payout/display current stable/B69/B74 refresh. Docs/source HEAD@c8ec223ab2ba, Miksuu b8389e748243, perf/quick-wins@0076040f and historical a96fdda2 keep the old updateresources.sqf cap guard over side supply, team paychecks and AI commander funds. Current stable origin/master@0139a346 keeps side supply/team paychecks gated but has AI commander over-cap income/stipend fallback outside the gate. Current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f are identical for checked income files, adding fallback at :115-121 plus Chernarus hybrid-refill cash checks and Chernarus supply multiplier behavior while maintained Vanilla remains raw-supply/non-hybrid. Client_GetIncome.sqf still omits the system-4 1.5 display multiplier. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress-Dashboard.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and the pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "resource-income-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Economy-Towns-And-Supply, Economy-Authority-First-Cut, Feature Status, Source Fix queue, Resource-Income-Tick-Distribution-Engine and machine rows with current stable/B69/B74 resource-income branch evidence. Docs/source HEAD@c8ec223a, Miksuu b8389e748243, perf 0076040f and historical a96fdda2 keep the old guard/display shape. Current stable origin/master@0139a346 keeps side supply/team paychecks gated but has AI commander fallback at :102-109. B69 8d465fce and B74 b23f557f are identical for checked income files, with fallback at :115-121 and Chernarus-only hybrid-refill/supply-multiplier differences from maintained Vanilla. No gameplay source changed."
+    },
     {
       "lane": "objective-ping-current-b69-b74-refresh-2026-06-22",
       "owner": "Codex",

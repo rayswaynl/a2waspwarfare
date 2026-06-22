@@ -1,6 +1,6 @@
 # Resource Income Tick Distribution Engine (updateresources.sqf)
 
-> Source-verified 2026-06-21 against master 0139a346. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-22 against current stable master 0139a346. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64. B69/B74 branch differences are routed through [Economy, Towns And Supply](Economy-Towns-And-Supply#resource-income-branch-matrix).
 
 `Server/FSM/updateresources.sqf` is the only loop that *grows* the WASP economy on a timer. Each interval it reads every present side's pooled town supply, gates the whole payout on a supply cap, branches the income by the configured income system (1/2/3/4), then writes three distinct sinks: **side supply** (the shared war resource), **per-team player paychecks** (`wfbe_funds`), and the **AI-commander treasury** (`wfbe_aicom_funds`). It is launched exactly once, from `Server/Init/Init_Server.sqf:688` (`[] ExecVM "Server\FSM\updateresources.sqf"`), and runs server-side for the whole match.
 

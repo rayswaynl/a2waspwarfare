@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T22:31:00+02:00",
+  "generatedAt": "2026-06-22T22:46:01+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "resource-income-current-b69-b74-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@c8ec223ab2ba Chernarus and maintained Vanilla updateresources.sqf keep the old cap guard at :31 over side supply :49, team paychecks :63 and AI commander funds :67; system-4 server multiplier is at :42-43 while Client_GetIncome.sqf:24-28 omits the display multiplier",
+        "current stable origin/master@0139a3468609 keeps the cap gate at updateresources.sqf:45 over side supply :63 and team paychecks :77, but AI commander income/stipend fallback is outside the gate at :102-109; Client_GetIncome.sqf remains display-unmultiplied at :24-28",
+        "current B69 origin/claude/b69@8d465fcede7f and adjacent B74 origin/claude/b74-aicom-spend@b23f557fc912 are identical for checked income files; both keep the gate at updateresources.sqf:58, side supply at :76, team paychecks at :90 and hybrid-refill AI commander cash/fallback at :94-103 and :115-121",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f8a5e and historical a96fdda28087 keep the old maintained-root guard/display shape; perf Chernarus changes only resource-loop wait cadence at updateresources.sqf:74"
+      ],
+      "outputs": [
+        "Refreshed Economy-Towns-And-Supply, Economy-Authority-First-Cut, Feature Status, Source Fix queue, Resource-Income-Tick-Distribution-Engine and resource-income machine rows.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future economy owner should decide cap-guard intent for side supply/team paychecks, keep current-stable AI commander funds-famine fallback distinct from old-shape refs, account for B69/B74 hybrid-refill and Chernarus supply-multiplier behavior, and align actual paychecks with Client_GetIncome/RHUD/menu display for income system 4.",
+      "updated": "2026-06-22T22:46:01+02:00"
+    },
     {
       "lane": "objective-ping-current-b69-b74-refresh-2026-06-22",
       "owner": "Codex",
