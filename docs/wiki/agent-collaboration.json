@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T18:13:10+02:00",
+  "generatedAt": "2026-06-22T18:27:14+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "upgrade-sync-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@bc21f5207650 is unchanged from ff8dd884 for checked Chernarus/Vanilla Server_HandleSpecial.sqf, GUI_UpgradeMenu.sqf and Server_ProcessUpgrade.sqf paths",
+        "current stable origin/master@0139a3468609 and current B69 origin/claude/b69@8d465fcede7f both keep _args = _this at Server_HandleSpecial.sqf:3, case upgrade-sync at :67, _side from _args select 1 at :69, _upgrade_id/_upgrade_level from _this select 2/3 at :70-71 and sync setVariable at :73 in both maintained roots",
+        "current stable and current B69 caller line is GUI_UpgradeMenu.sqf:292 in both maintained roots; Server_ProcessUpgrade.sqf owns the sync lifecycle at :32, :35 and :41",
+        "git diff --name-status 0a1ccb4d..origin/claude/b69 is empty for checked upgrade-sync handler/caller/process-upgrade paths",
+        "current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep the same parser with caller line GUI_UpgradeMenu.sqf:241 and Server_ProcessUpgrade.sqf sync lifecycle at :26, :29 and :35",
+        "historical release a96fdda2 keeps caller line :254 and historical upgrade-queue b061c905 keeps caller line :268; current origin exposes no release/*, feat/*upgrade*, feat/*special* or feat/*queue* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and machine rows with current B69 head evidence.",
+        "Preserved RequestUpgrade authority migration as separate from the upgrade-sync tuple parser cleanup.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should normalize Server_HandleSpecial.sqf:67-73 to one tuple source, keep RequestUpgrade authority migration separate, propagate maintained Vanilla and smoke upgrade completion/non-server timer sync plus malformed payload rejection.",
+      "updated": "2026-06-22T18:27:14+02:00"
+    },
     {
       "lane": "hq-score-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
