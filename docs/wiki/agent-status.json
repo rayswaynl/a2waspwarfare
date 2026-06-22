@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the dead-code AI supply-truck current-stable refresh, camp-count helper current-stable refresh, AI upgrade debit current-stable resolution refresh, PVF sender-auth current-stable refresh and AI supply-truck current-stable anchor split. The Dead-Code register now cites current stable origin/master@0139a346 for the AI supply-truck safe-disable at Init_Server.sqf:43,462-463, preserves docs/perf raw-spawn evidence, and notes AI_UpdateSupplyTruck.sqf:17 still points at missing Server/FSM/supplytruck.fsm. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the dead-code AI supply-truck current-stable refresh, camp-count helper current-stable refresh, AI upgrade debit current-stable resolution refresh, B69 current-head 0a1ccb4d branch refresh and PVF sender-auth current-stable refresh. The Dead-Code register now cites current stable origin/master@0139a346 for the AI supply-truck safe-disable at Init_Server.sqf:43,462-463, preserves docs/perf raw-spawn evidence, and notes AI_UpdateSupplyTruck.sqf:17 still points at missing Server/FSM/supplytruck.fsm. B69 current-head docs distinguish source-present Chernarus branch code from stable/master, maintained Vanilla and release-ready proof. PVF DR-55 remains open because current stable and B69 still forward only value tuples into HandlePVF. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed documentation lane from Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep wiki/docs mirror parity."
     },
     "Codex-2": {
@@ -73,6 +73,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed AI-Commander-Autonomy-Audit.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so current stable is no longer documented as missing the AI upgrade cost-index correction. Docs branch ade4d356, Miksuu b8389e74 and perf/quick-wins 0076040f still keep raw AI-order lookup plus swapped debit at Server_AI_Com_Upgrade.sqf:27,47,50; current stable origin/master@0139a346 resolves both maintained roots at :75,125,136 with funds-fallback surcharge at :131-132. Historical a96fdda2, b061c905 and c20ce153 are commit-only lessons. No gameplay source changed."
+    },
+    {
+      "lane": "b69-current-head-0a1ccb4d-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed B69 AI commander branch-status docs after origin/claude/b69 advanced to 0a1ccb4d. Full isolated B69 delta from B68 b8a1505f is 13 files / +417 / -65, all current Chernarus mission files plus B69-IMPLEMENTATION-PLAN.md; post-edb9f776 delta is 11 Chernarus files / +316 / -57. Updated AI commander audit, B69 roadmap/sketch note, Feature Status and coordination rows so source-present Chernarus branch code is not mistaken for stable/master, maintained Vanilla or release-ready proof. No gameplay source changed."
     },
     {
       "lane": "pvf-sender-auth-current-stable-refresh-2026-06-22",

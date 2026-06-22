@@ -1602,6 +1602,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix), [Upgrades and research](Upgrades-And-Research-Atlas#current-branch-scope), Feature Status, Source Fix queue, dashboard and pruning ledger. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
 
+## 2026-06-22T10:18:00+02:00 - Codex - B69 current-head 0a1ccb4d branch refresh
+
+- Claimed `b69-current-head-0a1ccb4d-refresh-2026-06-22` after `origin/claude/b69` advanced beyond the documented Patch A/A-2 head `edb9f776`.
+- Source scope: `origin/claude/b69@0a1ccb4d`, B68 base `origin/claude/b57-soak-proposals@b8a1505f`, prior B69 head `edb9f776`, empty maintained Vanilla diff for `b8a1505f..origin/claude/b69`, and `gh pr list --head claude/b69 --state all` returning `[]` on 2026-06-22.
+- Finding: full B69 branch delta from B68 is now 13 files / +417 / -65, all Chernarus current mission plus `B69-IMPLEMENTATION-PLAN.md`; the post-`edb9f776` delta is 11 Chernarus files / +316 / -57. The branch now has source code for supervisor heartbeat/watchdog/jitter, territory-credit posture/garrison telemetry, relief min-alive, MHQ nudge, pending-slot reaper and bootstrap stipend hoist, plus branch-only QoL/FX additions. The HC-team metadata append is scaffolding until a top-up/merge consumer and smoke are recorded.
+- Result: refreshed the AI commander audit, B69 roadmap/sketch note, Feature Status, dashboard, pruning ledger and machine rows so current B69 code is recorded without claiming stable, maintained Vanilla or release readiness. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
+
 ## 2026-06-22T10:18:37+02:00 - Codex - Camp-count helper current-stable refresh
 
 - Claimed `camp-count-helper-current-stable-refresh-2026-06-22` after [Feature status](Feature-Status-Register) and [Source fix queue](Source-Fix-Propagation-Queue) still cited stable `origin/master cf2a6d6a` as current camp-count fallback evidence.

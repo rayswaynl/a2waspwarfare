@@ -83,6 +83,27 @@
       "updated": "2026-06-22T10:22:06+02:00"
     },
     {
+      "lane": "b69-current-head-0a1ccb4d-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69@0a1ccb4d",
+        "origin/claude/b57-soak-proposals@b8a1505f is ancestor of origin/claude/b69",
+        "edb9f776 is ancestor of origin/claude/b69",
+        "b8a1505f..origin/claude/b69 changes 13 files / +417 / -65, all current Chernarus mission files plus B69-IMPLEMENTATION-PLAN.md",
+        "edb9f776..origin/claude/b69 changes 11 Chernarus files / +316 / -57",
+        "no b8a1505f..origin/claude/b69 diff under Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "gh pr list --head claude/b69 --state all returned [] on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed B69 current-head status in AI-Commander-Autonomy-Audit.md, AI-Commander-B69-Improvement-Roadmap.md, AI-Commander-B69-Implementation-Sketches.md and Feature-Status-Register.md.",
+        "Updated dashboard, worklog, pruning ledger and machine rows so source-present Chernarus branch code is separated from stable/master, maintained Vanilla and release-ready proof.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future B69 owner should review and smoke HQ-strike/capture interrupt, supervisor heartbeat/watchdog/jitter, posture/garrison telemetry, relief min-alive, MHQ nudge, pending-slot reaper, bootstrap stipend hoist and QoL/FX defaults; then propagate maintained Vanilla or explicitly scope Chernarus and open/update a PR route before release wording.",
+      "updated": "2026-06-22T10:18:00+02:00"
+    },
+    {
       "lane": "pvf-sender-auth-current-stable-refresh-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",
