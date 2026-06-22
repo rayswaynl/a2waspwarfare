@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T01:09:38+02:00",
+  "generatedAt": "2026-06-23T01:24:24+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-reassignment-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@60c35c05 is unchanged from 337ed166 and b44aaaf8 for checked Chernarus/Vanilla GUI_Commander_VoteMenu.sqf, RequestNewCommander.sqf, Server_AssignNewCommander.sqf, Common_GetSideLogic.sqf and Init_PublicVariables.sqf paths.",
+        "docs/source still uses _side = _this at Server_AssignNewCommander.sqf:3 in both maintained roots, while current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, Miksuu b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2 and historical c20ce153 unpack _side/_commander at Server_AssignNewCommander.sqf:4-5 in both maintained roots.",
+        "all checked maintained roots still keep duplicate new-commander-assigned senders at RequestNewCommander.sqf:14 and helper :9/:10.",
+        "B74 GUI_Commander_VoteMenu.sqf still resolves reassignment by visible lnbText at :33 despite row values at :63, and Common_GetSideLogic.sqf still only handles side values before objNull default.",
+        "git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend, 0a1ccb4d..origin/claude/b74-aicom-spend, b8530477..origin/claude/b74-aicom-spend and origin/master..origin/claude/b74-aicom-spend are empty for checked maintained reassignment paths; B74 full modded Napf/Eden/Lingor helpers remain old-shape."
+      ],
+      "outputs": [
+        "Refreshed Commander reassignment call shape, Commander vote/reassignment, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and commander reassignment machine rows with adjacent B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future commander owner should not reopen helper unpacking on current stable/B69/B74 maintained roots. Patch docs/source or other old-shape targets separately, choose exactly one reassignment notification owner, switch GUI_Commander_VoteMenu to stored row/team identity, keep requester authority separate and do not claim full modded fork parity until maintained.",
+      "updated": "2026-06-23T01:24:24+02:00"
+    },
     {
       "lane": "empty-supply-truck-current-b74-refresh-2026-06-23",
       "owner": "Codex",
