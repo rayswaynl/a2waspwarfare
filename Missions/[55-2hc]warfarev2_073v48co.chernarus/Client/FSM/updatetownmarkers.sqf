@@ -1,6 +1,6 @@
 // Marty: Restore pre-May 2026 town SV marker behavior; keep supply-role labels without recent visibility/cache changes.
 // QoL S3: SpecOps gets a cooldown MM:SS countdown on town markers + ARTY_cooldown_over sound when supply becomes ready.
-private["_tcarm","_units","_canCollectSupply","_supplyCooldownWasActive"];
+private["_tcarm","_units","_canCollectSupply","_supplyCooldownWasActive","_mapVisible","_isSpecOps"];
 
 _tcarm = missionNamespace getVariable "WFBE_C_PLAYERS_MARKER_TOWN_RANGE";
 //--- Per-town cooldown-was-active cache (parallel to towns array); used to detect the active->ready transition.
@@ -8,6 +8,12 @@ _supplyCooldownWasActive = [];
 {_supplyCooldownWasActive set [_forEachIndex, false]} forEach towns;
 
 while {!gameOver} do {
+	//--- client-FPS (PR #40): town SV markers are map-only; skip the per-town distance scan + marker
+	//--- writes while the map is closed. SpecOps keeps running so its supply-ready cue + MM:SS countdown
+	//--- still fire off-map. visibleMap/shownGPS are A2-OA-safe (already used across the marker scripts).
+	_mapVisible = visibleMap || shownGPS;
+	_isSpecOps = (!isNil "WFBE_SK_V_Type") && {WFBE_SK_V_Type == 'SpecOps'};
+	if (!_mapVisible && !_isSpecOps) then { sleep 0.5 } else {
 	_units = (Units Group player) Call GetLiveUnits;
 
 	{
@@ -65,4 +71,5 @@ while {!gameOver} do {
 	} forEach towns;
 
 	sleep 5;
+	};
 };

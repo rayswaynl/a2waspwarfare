@@ -1,5 +1,10 @@
-Private ["_lock","_position","_side","_type","_vehicle"];
+Private ["_createSide","_lock","_position","_side","_type","_vehicle"];
 _vehicle = _this select 0;
+//--- b67 faction visuals: authoritative side id passed by Common_CreateVehicle.sqf (the create path
+//--- knows the buying side). REQUIRED because a freshly createVehicle'd hull is still CREWLESS, so
+//--- `side _vehicle` here is CIVILIAN -> a self-derived side yields CIV and any per-side block no-ops.
+//--- -1 when an older caller passes only [_vehicle] (none currently; CreateVehicle is the sole caller).
+_createSide = if (count _this > 1) then {_this select 1} else {-1};
 _type = typeof _vehicle;
 
 switch (_type) do {
@@ -254,12 +259,17 @@ switch (_type) do {
 //--- NOTE: like the salvage tint, this only reaches clients on the GLOBAL non-defender path
 //--- (the path Common_CreateVehicle uses for player/commander vehicles).
 //--- ============================================================================
-if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0) then {
+if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 0]) > 0) then {
 	Private ["_skinCmd","_pendingSkin"];
-	//--- B66 derive _side directly: wfbe_side_id is ONLY stamped by Common_AddVehicleMarking.sqf,
-	//--- which exits early when WFBE_C_VEHICLE_MARKINGS != 1 (default 0) — so the tints used to no-op.
-	//--- Prefer the stamped id if present (markings ran), else resolve from the vehicle's engine side.
-	_side    = _vehicle getVariable ["wfbe_side_id", -1];
+	//--- B67 side resolution (authoritative). Prefer the side PASSED by Common_CreateVehicle (_createSide)
+	//--- - the create path knows the buying side. The old B66 path read wfbe_side_id then fell back to
+	//--- (side _vehicle), but BOTH are broken here: wfbe_side_id is ONLY stamped by Common_AddVehicleMarking.sqf,
+	//--- which exits early when WFBE_C_VEHICLE_MARKINGS != 1 (default 0) so it is usually unset; and the hull
+	//--- is still CREWLESS here, so (side _vehicle) resolves to CIVILIAN -> WFBE_C_CIV_ID -> no faction case
+	//--- matches -> the tints silently no-op. So: _createSide first, then the marking-stamped id, then engine
+	//--- side as a last-resort guard only (it can only resolve to a real faction once the hull is crewed).
+	_side    = _createSide;
+	if (_side < 0) then { _side = _vehicle getVariable ["wfbe_side_id", -1]; };
 	if (_side < 0) then { _side = (side _vehicle) Call WFBE_CO_FNC_GetSideID; };
 	_skinCmd = "";
 
