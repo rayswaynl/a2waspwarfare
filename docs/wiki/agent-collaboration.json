@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T10:25:42+02:00",
+  "generatedAt": "2026-06-22T10:48:54+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dead-code-ai-supply-truck-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index current checkout Chernarus and maintained Vanilla still comment UpdateSupplyTruck compile at Init_Server.sqf:36, initialize wfbe_ai_supplytrucks at :382 and raw-spawn UpdateSupplyTruck at :383",
+        "origin/master@0139a346 Chernarus and maintained Vanilla comment UpdateSupplyTruck compile at Init_Server.sqf:43 and warning-disable legacy AI supply-truck logistics at :462-463",
+        "origin/master@0139a346 Chernarus and maintained Vanilla AI_UpdateSupplyTruck.sqf:17 still references missing Server/FSM/supplytruck.fsm; ls-tree found no supplytruck.fsm",
+        "origin/perf/quick-wins@0076040f still raw-spawns UpdateSupplyTruck in Chernarus at Init_Server.sqf:377-378 and maintained Vanilla at :382-383",
+        "historical a96fdda2 safe-disables at Init_Server.sqf:37,383-384; historical c20ce153 guards Chernarus only and leaves maintained Vanilla raw",
+        "current origin exposes no release/* or feat/ai-commander heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Dead-Code-And-Stale-Code-Register.md so the AI supply-truck worker row no longer cites stale current origin/master cf2a6d6a.",
+        "Updated dashboard, worklog, pruning ledger and coordination records.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future AI logistics owner should preserve/port the current-stable safe-disable when merging older raw-spawn branches, or redesign the feature around a real server-owned loop/FSM before revival.",
+      "updated": "2026-06-22T10:48:54+02:00"
+    },
     {
       "lane": "camp-count-helper-current-stable-refresh-2026-06-22",
       "owner": "Codex",

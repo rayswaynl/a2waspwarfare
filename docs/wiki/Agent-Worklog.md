@@ -1609,3 +1609,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Finding: every checked maintained root still returns `1` for zero-camp towns at `Common_GetTotalCamps.sqf:10` and `Common_GetTotalCampsOnSide.sqf:16`. Current-stable consumers line-drift to `server_town.sqf:167-183`, `Client_GetRespawnAvailable.sqf:92` and `GUI_Menu_BuyUnits.sqf:120-121`; docs/perf, Miksuu, historical release and B69 each keep the same helper semantics with their own caller line drift.
 - Result: refreshed [Towns, camps and capture](Towns-Camps-And-Capture-Atlas#current-branch-scope), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so future work stays focused on real-count versus safe-denominator semantics and 0/partial/all-camp smoke. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T10:47:03+02:00 - Codex - Dead-code AI supply-truck current-stable refresh
+
+- Claimed `dead-code-ai-supply-truck-current-stable-refresh-2026-06-22` after [Dead/stale code](Dead-Code-And-Stale-Code-Register#sqf-reachability-findings) still cited current `origin/master cf2a6d6a` for the AI supply-truck safe-disable row.
+- Source scope: current docs checkout Chernarus and maintained Vanilla still comment the `UpdateSupplyTruck` compile at `Init_Server.sqf:36`, initialize `wfbe_ai_supplytrucks` at `:382` and raw-spawn `UpdateSupplyTruck` at `:383`; current stable `origin/master@0139a346` comments the compile at `:43` and warning-disables legacy logistics at `:462-463` in both maintained roots; `AI_UpdateSupplyTruck.sqf:17` still points at missing `Server/FSM/supplytruck.fsm`.
+- Result: refreshed [Dead/stale code](Dead-Code-And-Stale-Code-Register#sqf-reachability-findings), dashboard, pruning ledger and coordination records so the dormant worker row matches the latest AI supply-truck current-stable anchor split. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
