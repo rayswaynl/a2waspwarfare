@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T11:48:21+02:00",
+  "generatedAt": "2026-06-22T12:14:10+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "miksuu-current-head-d950-correction-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "git ls-remote https://github.com/miksuu/a2waspwarfare.git refs/heads/master returned b8389e7482438edd00f420c5bb795ac0a642971f on 2026-06-22",
+        "refs/remotes/miksuu/master fetched from the Miksuu repository resolves to b8389e74 in the source checkout",
+        "local d9506078 is contained by origin/claude/a2a3-execute-nullguard, origin/claude/guer-build-coolunits and origin/claude/guer-build-vbied, not by current Miksuu master",
+        "affected docs previously mentioned current Miksuu d9506078 in cargo-loop, auto-wall, visible-parameter and LoadoutManager-root-discovery evidence"
+      ],
+      "outputs": [
+        "Refreshed cargo-loop, gear/loadout, construction/CoIn, mission-parameter, dead/stale, Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows.",
+        "Current Miksuu b8389e748243 is documented as old-shape for inclusive cargo loops, auto-wall false default/no exclusions, visible AI/cleanup parameter readers and LoadoutManager ancestor-name-only root discovery.",
+        "No gameplay source changes planned."
+      ],
+      "handoff": "Closed after validation. Future agents must treat d9506078 as local origin/claude/* branch evidence only unless a future direct Miksuu fetch proves otherwise. Current stable origin/master@0139a346 remains separate fixed/source-present evidence where documented.",
+      "updated": "2026-06-22T12:14:10+02:00"
+    },
     {
       "lane": "salvage-payout-current-head-refresh-2026-06-22",
       "owner": "Codex",
@@ -68,17 +86,17 @@
       "sourceScope": [
         "docs/developer-wiki-index@b2544207 Chernarus and maintained Vanilla Common_EquipVehicle.sqf:27,33,39 plus Common_EquipBackpack.sqf:35,41 still use inclusive count(_items) loops",
         "origin/master@0139a346 Chernarus and maintained Vanilla use corrected (count(_items) - 1) loops at the same five cargo-application lines",
-        "Miksuu master fetched to d9506078 on 2026-06-22 and now also uses corrected (count(_items) - 1) loops in both maintained roots",
+        "Superseded by miksuu-current-head-d950-correction-2026-06-22: direct Miksuu upstream is b8389e748243 and still old-shape for the five cargo loops; local d9506078 is origin/claude/* branch evidence, not current Miksuu upstream",
         "origin/perf/quick-wins@0076040f fixes the five loops in Chernarus only while maintained Vanilla still uses inclusive count(_items) loops",
         "historical a96fdda2 fixes both maintained roots; historical a66d4691 keeps inclusive loops in both maintained roots",
         "current origin exposes no release/* or feat/buymenu-easa-qol heads on 2026-06-22"
       ],
       "outputs": [
-        "Refreshed Vehicle-Cargo-Equip-Loop-Bounds.md so current stable and current Miksuu are no longer documented as unpatched.",
+        "Superseded by miksuu-current-head-d950-correction-2026-06-22. Current stable is fixed; current Miksuu b8389e748243 remains old-shape.",
         "Updated Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Wiki-Pruning-And-Relevance-Ledger.md and machine rows.",
         "No gameplay source changed."
       ],
-      "handoff": "Closed after validation. Future gear/cargo owner should port the count(_items)-1 shape only to old-shape targets, propagate maintained Vanilla where still old-shape, and smoke vehicle/backpack cargo without bundling gear authority redesign.",
+      "handoff": "Closed after validation, then superseded by miksuu-current-head-d950-correction-2026-06-22 for current-Miksuu provenance. Future gear/cargo owner should port the count(_items)-1 shape to old-shape targets including current Miksuu b8389e748243, propagate maintained Vanilla where still old-shape, and smoke vehicle/backpack cargo without bundling gear authority redesign.",
       "updated": "2026-06-22T11:14:35+02:00"
     },
     {
@@ -348,19 +366,19 @@
       "sourceScope": [
         "origin/docs/developer-wiki-index@89aadf8c",
         "origin/master@0139a346",
-        "current Miksuu master@d9506078 fetched 2026-06-22",
+        "current Miksuu master@b8389e748243 verified by direct ls-remote on 2026-06-22",
         "origin/perf/quick-wins@0076040f",
         "historical release commit a96fdda2",
         "origin/claude/b69@35547c47",
-        "docs/perf Chernarus and maintained Vanilla keep false-default/no-exclusion global at SmallSite :110 / MediumSite :125",
-        "current stable/Miksuu keep true-default global at SmallSite :123 / MediumSite :160 with AARadar plus related structure exclusions",
+        "docs/current-Miksuu/perf Chernarus and maintained Vanilla keep false-default/no-exclusion global at SmallSite :110 / MediumSite :125",
+        "current stable keeps true-default global at SmallSite :123 / MediumSite :160 with AARadar plus related structure exclusions",
         "B69 matches current-stable global scope with line drift"
       ],
       "outputs": [
         "Refreshed Construction and CoIn, Feature Status, Source Fix queue and auto-wall machine rows so current stable is not routed through stale cf2a6d6a/b8389e74 line anchors.",
         "No gameplay source changed."
       ],
-      "handoff": "Closed after validation. Future construction owner should decide global match switch versus side/requester preference, then label UI behavior or key/validate state and smoke two players/sides toggling before SmallSite and MediumSite construction.",
+      "handoff": "Closed after validation, then superseded by miksuu-current-head-d950-correction-2026-06-22 for current-Miksuu provenance. Future construction owner should decide global match switch versus side/requester preference, then label UI behavior or key/validate state and smoke two players/sides toggling before SmallSite and MediumSite construction.",
       "updated": "2026-06-22T09:22:00+02:00"
     },
     {
@@ -408,18 +426,18 @@
       "sourceScope": [
         "origin/docs/developer-wiki-index@ac932fbe",
         "origin/master@0139a346",
-        "current Miksuu master@d9506078 fetched 2026-06-22",
+        "current Miksuu master@b8389e748243 verified by direct ls-remote on 2026-06-22",
         "origin/perf/quick-wins@0076040f",
         "historical release commit a96fdda2",
-        "current stable and current Miksuu Chernarus/Vanilla AI_Commander_Produce.sqf:89 read WFBE_C_AI_MAX",
-        "current stable and current Miksuu Chernarus/Vanilla Common_TrashObject.sqf:21 read WFBE_C_UNITS_CLEAN_TIMEOUT for non-man wreck cleanup",
-        "docs/perf/historical release keep old readless/comment-only shape"
+        "current stable Chernarus/Vanilla AI_Commander_Produce.sqf:89 reads WFBE_C_AI_MAX",
+        "current stable Chernarus/Vanilla Common_TrashObject.sqf:21 reads WFBE_C_UNITS_CLEAN_TIMEOUT for non-man wreck cleanup",
+        "docs/current-Miksuu/perf/historical release keep old readless/comment-only shape"
       ],
       "outputs": [
         "Refreshed mission parameter, start-parameter, dead-code, Player AI cap, Feature Status, Source Fix queue and machine records so current stable is not routed as no-op/comment-only parameter debt.",
         "No gameplay source changed."
       ],
-      "handoff": "Closed after validation. Future owners should port or hide/label the old docs/perf/historical-release parameter shape where relevant, and smoke current stable/Miksuu host parameter display, AI commander production sizing, player cap UI/RHUD, body cleanup, wreck cleanup and empty-vehicle cleanup before release-complete wording.",
+      "handoff": "Closed after validation, then superseded by miksuu-current-head-d950-correction-2026-06-22 for current-Miksuu provenance. Future owners should port or hide/label the old docs/current-Miksuu/perf/historical-release parameter shape where relevant, and smoke current-stable host parameter display, AI commander production sizing, player cap UI/RHUD, body cleanup, wreck cleanup and empty-vehicle cleanup before release-complete wording.",
       "updated": "2026-06-22T09:09:00+02:00"
     },
     {

@@ -1689,3 +1689,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Finding: all checked maintained roots still keep lowercase `ChangePlayerfunds` in both manual engineer and salvage-truck payout paths while client init compiles `ChangePlayerFunds`; all checked roots keep `updatesalvage.sqf:10` as `while {!gameOver || !(alive _vehicle)}` plus client-local wreck deletion/reward.
 - Result: refreshed [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas#salvage-branch-matrix), Feature Status, Source Fix queue, dashboard, pruning ledger and salvage machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T12:02:19+02:00 - Codex - Miksuu current-head `d9506078` correction
+
+- Claimed `miksuu-current-head-d950-correction-2026-06-22` after several current-facing rows treated local `d9506078` as current Miksuu.
+- Source scope: direct `git ls-remote https://github.com/miksuu/a2waspwarfare.git refs/heads/master` verified current Miksuu as `b8389e748243` on 2026-06-22. Local `d9506078` is contained by `origin/claude/a2a3-execute-nullguard`, `origin/claude/guer-build-coolunits` and `origin/claude/guer-build-vbied`, not current Miksuu upstream.
+- Findings: current Miksuu `b8389e748243` is old-shape for the checked rows: inclusive vehicle/backpack cargo loops in both maintained roots, auto-wall false default/no SmallSite/MediumSite exclusions, no live maintained-root `WFBE_C_AI_MAX` reader, `WFBE_C_UNITS_CLEAN_TIMEOUT` comment-only cleanup split and ancestor-name-only LoadoutManager root discovery. Current stable `origin/master@0139a346` remains separate source-present/fixed evidence where documented.
+- Result: refreshed cargo-loop, gear/loadout, construction/CoIn, mission-parameter, dead/stale, Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows. Historical Worklog/event entries that mentioned `d9506078` are superseded by this entry rather than rewritten. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

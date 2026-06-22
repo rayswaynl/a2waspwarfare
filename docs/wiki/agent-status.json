@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T11:48:21+02:00",
+  "generatedAt": "2026-06-22T12:14:10+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the salvage payout current-head refresh, B69 finalpieces branch refresh, vehicle cargo loop-bounds current/Miksuu refresh, dead-code TaskSystem/map-blink refresh and construction SmallSite logic refresh. Salvage checks show docs branch fb8d4ebc, current stable origin/master@0139a346, current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 all keep lowercase ChangePlayerfunds payout calls, updatesalvage.sqf:10 OR-loop and client-local delete/reward shape. B69 finalpieces origin/claude/b69-finalpieces@80d3267c1b2b has PR #47 into claude/b69 and no maintained Vanilla diff. No gameplay source changed.",
+      "currentWork": "Published docs-only Miksuu current-head correction after several rows treated local d9506078 as current Miksuu. Direct git ls-remote against https://github.com/miksuu/a2waspwarfare.git shows master@b8389e748243 on 2026-06-22, while local d9506078 is contained by origin/claude/* branches only. Cargo, auto-wall, visible-parameter and LoadoutManager root-discovery docs/machine rows now treat current Miksuu as old-shape; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -57,6 +57,12 @@
   },
   "laneSummary": [
     {
+      "lane": "miksuu-current-head-d950-correction-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Corrected current-facing Miksuu provenance after direct git ls-remote showed current upstream master@b8389e748243 while local d9506078 is only origin/claude/* branch evidence. Refreshed cargo-loop, gear/loadout, construction/CoIn, mission-parameter, dead/stale, Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so current Miksuu remains old-shape for inclusive cargo loops, auto-wall false default/no exclusions, visible AI/cleanup parameter readers and LoadoutManager ancestor-name-only root discovery. Current stable origin/master@0139a346 remains separate fixed/source-present evidence where documented. No gameplay source changed."
+    },
+    {
       "lane": "salvage-payout-current-head-refresh-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -71,8 +77,8 @@
     {
       "lane": "vehicle-cargo-loop-bounds-current-miksuu-refresh-2026-06-22",
       "owner": "Codex",
-      "status": "published-validated-docs-only",
-      "output": "Refreshed Vehicle-Cargo-Equip-Loop-Bounds.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows. Docs branch b2544207, older Miksuu b8389e74 and historical EASA QoL a66d4691 remain old-shape; current stable origin/master@0139a346, current Miksuu d9506078 and historical a96fdda2 fix all five loops in both maintained roots; perf/quick-wins@0076040f fixes Chernarus only. No gameplay source changed."
+      "status": "superseded-corrected-docs-only",
+      "output": "Superseded by miksuu-current-head-d950-correction-2026-06-22. Correct branch split: docs branch b2544207, current Miksuu b8389e748243 and historical EASA QoL a66d4691 remain old-shape; current stable origin/master@0139a346 and historical a96fdda2 fix all five loops in both maintained roots; perf/quick-wins@0076040f fixes Chernarus only. No gameplay source changed."
     },
     {
       "lane": "dead-code-task-mapblink-current-stable-refresh-2026-06-22",
@@ -156,7 +162,7 @@
       "lane": "auto-wall-current-stable-scope-refresh-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",
-      "output": "Refreshed Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and auto-wall machine rows after source checks split stale cf2a6d6a/b8389e74 wording from current 2026-06-22 refs. Docs branch origin/docs/developer-wiki-index@89aadf8c and origin/perf/quick-wins@0076040f keep the old false-default/no-exclusion global at SmallSite :110 / MediumSite :125; current stable origin/master@0139a346 and current Miksuu master@d9506078 keep one global but default it true and consume it at :123 / :160 with AARadar plus related exclusions. Historical a96fdda2 only adds the AARadar guard; B69 origin/claude/b69@35547c47 matches current-stable global scope with line drift. No gameplay source changed."
+      "output": "Superseded by miksuu-current-head-d950-correction-2026-06-22 for current-Miksuu provenance. Correct branch split: docs branch origin/docs/developer-wiki-index@89aadf8c, current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep the old false-default/no-exclusion global at SmallSite :110 / MediumSite :125; current stable origin/master@0139a346 keeps one global but defaults it true and consumes it at :123 / :160 with AARadar plus related exclusions. Historical a96fdda2 only adds the AARadar guard; B69 origin/claude/b69@35547c47 matches current-stable global scope with line drift. No gameplay source changed."
     },
     {
       "lane": "indicator-status-counter-branch-split-2026-06-22",
@@ -174,7 +180,7 @@
       "lane": "visible-parameter-runtime-consumer-current-stable-refresh-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",
-      "output": "Refreshed Mission-Parameters-Localization-And-Generated-Build-Inputs.md, Mission-Start-Parameters-Index.md, Dead-Code-And-Stale-Code-Register.md, Player-AI-Caps-And-Role-Balance.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows after source checks split old docs/perf/historical release parameter evidence from current stable. Docs branch origin/docs/developer-wiki-index@ac932fbe, origin/perf/quick-wins@0076040f and historical release a96fdda2 keep WFBE_C_AI_MAX readless and WFBE_C_UNITS_CLEAN_TIMEOUT comment-only; current stable origin/master@0139a346 and current Miksuu master@d9506078 read WFBE_C_AI_MAX in AI_Commander_Produce.sqf:89 and WFBE_C_UNITS_CLEAN_TIMEOUT in Common_TrashObject.sqf:21 in both maintained roots. No gameplay source changed."
+      "output": "Superseded by miksuu-current-head-d950-correction-2026-06-22 for current-Miksuu provenance. Correct branch split: docs branch origin/docs/developer-wiki-index@ac932fbe, current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f and historical release a96fdda2 keep WFBE_C_AI_MAX readless and WFBE_C_UNITS_CLEAN_TIMEOUT comment-only; current stable origin/master@0139a346 reads WFBE_C_AI_MAX in AI_Commander_Produce.sqf:89 and WFBE_C_UNITS_CLEAN_TIMEOUT in Common_TrashObject.sqf:21 in both maintained roots. No gameplay source changed."
     },
     {
       "lane": "b69-aicom-wiki-mirror-catchup-2026-06-22",
