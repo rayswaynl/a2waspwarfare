@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T12:46:28+02:00",
+  "generatedAt": "2026-06-22T13:07:32+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "gear-template-profile-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@72b5f0de98f9 Chernarus and maintained Vanilla keep Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75 undefined _u_upgrade checks and Init_ProfileGear.sqf:17,25 six-field import guard/index-6 read",
+        "targeted diff 43c3ba05..HEAD over checked gear-template profile paths returned no paths, so the 2026-06-21 source line anchors still hold at current docs head",
+        "current stable origin/master@0139a3468609 fixes only the save-filter comparisons in both maintained roots at Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82 and still keeps Init_ProfileGear.sqf:17,25",
+        "current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f8a5e, historical release a96fdda28087 and historical EASA QoL a66d46912e2a keep the old save-filter/import-guard shape in both maintained roots",
+        "git ls-remote --heads origin release/* feat/buymenu-easa-qol feat/*gear* feat/*template* feature/*gear* feature/*template* returned no heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Gear-Template-Profile-Filter.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and gear profile/template machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future gear/profile owner should patch SaveTemplateProfile only on docs/source or old-shape refs, add an Init_ProfileGear import guard/default on all target refs including current stable, and decide Barracks-or-Gear versus Gear-only template policy before changing AddTemplate/FillTemplates behavior.",
+      "updated": "2026-06-22T13:07:32+02:00"
+    },
     {
       "lane": "empty-supply-truck-timeout-current-stable-refresh-2026-06-22",
       "owner": "Codex",

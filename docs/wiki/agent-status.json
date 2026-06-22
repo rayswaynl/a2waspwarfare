@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T12:46:28+02:00",
+  "generatedAt": "2026-06-22T13:07:32+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only empty supply-truck timeout current-stable refresh after Marker-Cleanup-Restoration-Systems-Atlas, Feature Status and Source Fix queue still cited older cf2a6d6a stable evidence and live-release wording. Docs head b4e10b5f, current stable origin/master@0139a346, direct current Miksuu master@b8389e748243, perf 0076040f, B69 0094647d and B69 finalpieces 80d3267c all keep the collector drain plus supply-truck _delay = 86400 in both maintained roots. Current origin exposes no release/* or cleanup/supply feature heads; historical a96fdda2 matches the same 24-hour policy, but is not current release proof. No gameplay source changed.",
+      "currentWork": "Published docs-only gear-template profile current-head refresh after Gear-Template-Profile-Filter, Gear-Loadout-And-EASA-Atlas, Feature Status and Source Fix queue still used the 2026-06-21 docs-head anchor. Docs head 72b5f0de98f9 is source-unchanged from 43c3ba05 for checked template paths and still keeps undefined _u_upgrade save filtering plus Init_ProfileGear six-field import guard/index-6 read in both maintained roots. Current stable origin/master@0139a3468609 fixes only the save-filter comparisons; current Miksuu master@b8389e748243, perf 0076040f8a5e, historical release a96fdda28087 and historical EASA QoL a66d46912e2a remain old-shape. No live release/gear/template rescue head was found. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "gear-template-profile-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Gear-Template-Profile-Filter.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md and Wiki-Pruning-And-Relevance-Ledger.md so the gear profile/template branch matrix uses current docs head 72b5f0de98f9. Docs head is source-unchanged from 43c3ba05 for checked template paths and remains old-shape for undefined _u_upgrade plus Init_ProfileGear six-field import guard in both maintained roots. Current stable origin/master@0139a3468609 fixes only the save-filter comparisons; current Miksuu b8389e748243, perf 0076040f8a5e, historical release a96fdda28087 and historical EASA QoL a66d46912e2a remain old-shape. No gameplay source changed."
+    },
     {
       "lane": "empty-supply-truck-timeout-current-stable-refresh-2026-06-22",
       "owner": "Codex",

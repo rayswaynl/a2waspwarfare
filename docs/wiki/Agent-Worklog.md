@@ -1729,3 +1729,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Finding: every checked maintained root still drains `WF_Logic` `emptyVehicles` through `emptyvehiclescollector.sqf:9-19,30` and `WFBE_SE_FNC_HandleEmptyVehicle`; docs/Miksuu/perf use `Server_HandleEmptyVehicle.sqf:22-23,27,30,33`, while current stable and B69-family refs line-drift to `:30-31,35,38,41`. Both shapes still set supply-truck `_delay = 86400`.
 - Result: refreshed the owner matrix, Feature Status, Source Fix queue, dashboard and pruning ledger so future work stays focused on the keep-and-label versus shorter/parameterized logistics decision, not stale stable/release anchors. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T13:05:42+02:00 - Codex - Gear template profile current-head refresh
+
+- Claimed `gear-template-profile-current-head-refresh-2026-06-22` after the gear profile/template rows still used a 2026-06-21 docs-head anchor while current docs head is `72b5f0de98f9`.
+- Initial source scope: docs head `72b5f0de98f9`, current stable `origin/master@0139a3468609`, current Miksuu `master@b8389e748243`, `origin/perf/quick-wins@0076040f8a5e`, historical release `a96fdda28087` and historical EASA QoL `a66d46912e2a`.
+- Initial finding: docs head, current Miksuu, perf, historical release and EASA QoL still keep undefined `_u_upgrade` save filtering at `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` plus the six-field import guard/index-6 read at `Init_ProfileGear.sqf:17,25` in both maintained roots. Current stable fixes only the save-filter comparison at `Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82`; it still keeps the six-field import guard. No gameplay source changes planned.
+- Result: refreshed [Gear template profile filter](Gear-Template-Profile-Filter), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so the branch split uses current docs head `72b5f0de98f9` while preserving the current-stable save-filter/import-guard split. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
