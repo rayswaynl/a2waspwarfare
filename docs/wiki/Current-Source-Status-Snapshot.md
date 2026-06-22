@@ -40,6 +40,8 @@ Fresh checks for the Town AI despawn lane found current stable `origin/master@01
 
 Supply scan supersession from the 2026-06-22 refresh: docs/source `15563691` carries the truck-only typed scan at `supplyMissionStarted.sqf:25,28,44`, current stable `origin/master@0139a346` carries the heli-aware typed scan at `:7,55,61,83`, and direct current Miksuu `b8389e748243` plus perf `0076040f` still broad-enumerate/post-filter at `:25,28,44`. Current origin exposes no live `release/*` head, so `a96fdda2` / `7ff18c49` supply scan evidence is historical release-line proof only.
 
+WASP marker wait supersession from the 2026-06-22 refresh: docs/source `HEAD@46840f048bd4` still has the unslept display-54 loop in both maintained roots (`Init_Client.sqf:267`; `global_marking_monitor.sqf:57,62,64,68-69,80`). Current stable `origin/master@0139a3468609` and B69 `origin/claude/b69@8d465fcede7f` already carry `sleep 0.1` at `global_marking_monitor.sqf:64` in both maintained roots; stable launches the helper at `Init_Client.sqf:309` and B69 at `:397`. Current Miksuu `b8389e748243` and perf `0076040f8a5e` remain old-shape, and current origin exposes no live `release/*` head.
+
 ## 2026-06-14 Current Ref Snapshot
 
 Checked after `git fetch --all --prune`: docs checkout `docs/developer-wiki-index` `76674ae4`, stable `origin/master` `cf2a6d6a`, release `origin/release/2026-06-feature-bundle` `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f`. Use this as a routing snapshot only; owner pages and source refs still win for detailed rationale, patch shape and smoke status.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T16:31:38+02:00",
+  "generatedAt": "2026-06-22T16:49:21+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only B69/B73 current-head refresh after PR #51 merged claude/ch-truck-fix into claude/b69 at 8d465fce. B69 route pages now document the Chernarus-only AI_Commander_Teams.sqf:414-418 armed-transport-only troop-truck gate and preserve PR #50 as the maintained Vanilla/Takistan propagation proof.",
+      "currentWork": "Published docs-only WASP marker display-54 wait branch-split correction. Docs/source HEAD@46840f04, current Miksuu b8389e748243 and perf 0076040f8a5e remain old-shape; current stable origin/master@0139a346 and B69 8d465fce already carry sleep 0.1 in both maintained roots. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from the dashboard, Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; keep gameplay source untouched unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wasp-marker-wait-current-stable-propagation-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Corrected WASP marker wait docs and machine rows after fresh source checks showed current stable origin/master@0139a346 and B69 origin/claude/b69@8d465fce already carry sleep 0.1 at global_marking_monitor.sqf:64 in both maintained roots. Docs/source HEAD@46840f04, current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f8a5e remain old-shape; Chernarus fix proof is 4805c778876d and maintained Vanilla propagation proof is 9b49883cb936. No current release/* heads were exposed. No gameplay source changed."
+    },
     {
       "lane": "b69-b73-troop-truck-current-head-refresh-2026-06-22",
       "owner": "Codex",

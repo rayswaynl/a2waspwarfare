@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T16:31:38+02:00",
+  "generatedAt": "2026-06-22T16:49:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wasp-marker-wait-current-stable-propagation-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs HEAD 46840f048bd4 keeps the unslept display-54 wait in Chernarus and maintained Vanilla global_marking_monitor.sqf:62-73",
+        "origin/master@0139a3468609 and origin/claude/b69@8d465fcede7f carry sleep 0.1 at global_marking_monitor.sqf:64 in both maintained roots",
+        "Chernarus source fix is commit 4805c778876d; maintained Vanilla propagation is present via 9b49883cb936 regeneration",
+        "current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f8a5e still keep the unslept loop in checked maintained roots",
+        "origin exposes no current release/* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed WASP-Marker-Wait-Cleanup.md, Performance-Opportunity-Sweep.md, WASP-Overlay.md, Codebase-Coverage-Ledger.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Current-Source-Status-Snapshot.md with branch-split source truth.",
+        "Updated dashboard, worklog, pruning ledger and machine rows so future agents do not treat stable/B69 as still missing the one-line throttle.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should add the one-line sleep or an intentional waitUntil refactor only on old-shape targets, propagate maintained roots deliberately and smoke map double-click marker dialog input-lock/unlock behavior. On stable/B69, record smoke or optional style refactor only.",
+      "updated": "2026-06-22T16:49:21+02:00"
+    },
     {
       "lane": "b69-b73-troop-truck-current-head-refresh-2026-06-22",
       "owner": "Codex",
