@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T18:41:05+02:00",
+  "generatedAt": "2026-06-22T18:53:11+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "service-affordability-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD is 8906ee89690c after the previous docs commit and is unchanged from 9b3fc38e for checked Chernarus/Vanilla GUI_Menu_Service.sqf and GUI_Menu_EASA.sqf paths",
+        "current B69 origin/claude/b69@8d465fcede7f is unchanged from finalpieces 80d3267c for checked service/EASA paths; the older 0094647d..8d465fce path delta is also empty",
+        "origin/claude/b69 Chernarus GUI_Menu_EASA.sqf:118 uses _funds >= price, but maintained Vanilla GUI_Menu_EASA.sqf:118 remains strict _funds > price",
+        "origin/claude/b69 service menu behavior matches current stable in both maintained roots: rearm/refuel guard _funds >= price at GUI_Menu_Service.sqf:484 and :507, while repair/heal still debit on positive price at :496-497 and :519-520",
+        "current stable origin/master@0139a346, current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2, historical EASA QoL a66d4691 and local checkpoint d9506078 remain branch-scoped comparison refs"
+      ],
+      "outputs": [
+        "Refreshed Service-Menu-Affordability-Guards.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and machine rows.",
+        "Keeping B69 finalpieces 80d3267c as provenance while marking origin/claude/b69@8d465fce as current B69 head evidence.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner still needs to add/port service action-time affordability/context guards, decide whether exact-funds EASA >= should be propagated to both maintained roots, and keep server authority separate from this local correctness lane.",
+      "updated": "2026-06-22T18:53:11+02:00"
+    },
     {
       "lane": "empty-supply-truck-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
