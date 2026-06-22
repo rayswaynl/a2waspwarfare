@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T16:10:57+02:00",
+  "generatedAt": "2026-06-22T16:31:38+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b69-b73-troop-truck-current-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69 current head is 8d465fcede7fc20a7fcb97bd7d02e5211de8d1bf after PR #51 merged claude/ch-truck-fix",
+        "PR #51 merged claude/ch-truck-fix@70a1c8086b373f5394d1a805c2980dc078e47faf into claude/b69 on 2026-06-22T14:03:51Z from base b8530477",
+        "b8530477..8d465fce changes one Chernarus file, Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf, +5/-1",
+        "B73 gates the B66 infantry troop-truck prepend on WFBE_C_AICOM_ARMED_TRANSPORT_ONLY <= 0 so unarmed trucks are not spawned when Common_RunCommanderTeam refuses them",
+        "no maintained Vanilla/Takistan diff in the PR #51 delta; B69 remains branch-only and smoke/master pending"
+      ],
+      "outputs": [
+        "Refreshed B69 branch-status pages and machine records so current B69 points at PR #51 / 8d465fce, not PR #50 / b8530477.",
+        "Preserved PR #50 as the maintained Vanilla/Takistan propagation proof and marked the B73 guard Chernarus-only until propagated/smoked.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future B69 owner should treat origin/claude/b69@8d465fce as branch evidence only, smoke Chernarus armed-transport-only troop-truck behavior and no lingering empty trucks, decide whether to propagate the B73 guard to maintained Vanilla/Takistan, and record master/stable routing before release wording.",
+      "updated": "2026-06-22T16:31:38+02:00"
+    },
     {
       "lane": "july-fpv-branch-route-current-head-refresh-2026-06-22",
       "owner": "Codex",
