@@ -1705,3 +1705,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Initial finding: docs/perf/Miksuu-shaped maintained roots keep local MASH deploy plus commented client receiver and server marker relay; current stable, historical release and B69-family maintained roots carry `Skill_Apply.sqf:43` MASH-deploy-removed wording, with residual config/string MASH/FARP entries still present.
 - Result: refreshed Respawn lifecycle, Feature Status, Abandoned Feature Revival, Dead/stale code, Public Variable Channel Index, Support Specials, adjacent module/UI/hardening routes and machine rows so old-shape MASH deploy/relay evidence is no longer flattened with current stable/B69 deploy-path removal. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T12:18:09+02:00 - Codex - Service/EASA affordability current-stable refresh
+
+- Claimed `service-easa-affordability-current-stable-refresh-2026-06-22` after the service affordability owner page, Feature Status, Source Fix queue and hardening rows still mixed older `89ae9dad` / release wording with current stable `origin/master@0139a346`.
+- Source scope: docs checkout `db3015f18ea3`, current stable `origin/master@0139a346`, current Miksuu upstream `master@b8389e74` from the direct Miksuu correction lane, `origin/perf/quick-wins@0076040f`, historical release `a96fdda2`, historical EASA QoL `a66d4691`, local checkpoint `d9506078` and B69 finalpieces `origin/claude/b69-finalpieces@80d3267c`.
+- Findings: docs checkout and current Miksuu keep old direct service rearm/refuel debits and strict EASA `_funds > price`; current stable, local `d9506078` and historical release partially guard service rearm/refuel but still leave repair/heal and broader action-time context/funds authority open; B69 finalpieces has Chernarus-only exact-funds EASA candidate evidence while maintained Vanilla remains strict `>`.
+- Result: refreshed [Service menu affordability guards](Service-Menu-Affordability-Guards), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

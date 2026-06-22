@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T12:24:08+02:00",
+  "generatedAt": "2026-06-22T12:31:48+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the Miksuu current-head provenance correction plus the MASH marker/deploy branch split. Miksuu: direct ls-remote shows master@b8389e748243 on 2026-06-22 while local d9506078 is origin/claude/* evidence only, so cargo, auto-wall, visible-parameter and LoadoutManager rows treat current Miksuu as old-shape. MASH: docs head db3015f18ea3, Miksuu b8389e748243 and perf/quick-wins 0076040f8a5e keep local deploy plus orphaned relay; current stable origin/master@0139a3468609, historical a96fdda28087, B69 0a1ccb4d05c5 and finalpieces 80d3267c1b2b remove the maintained-root deploy/module path. No gameplay source changed.",
+      "currentWork": "Published docs-only service/EASA affordability current-stable refresh after Service-Menu-Affordability-Guards, Feature Status, Source Fix queue and hardening rows still mixed older 89ae9dad/release wording with current stable origin/master@0139a346. This lane builds on the Miksuu current-head correction: current Miksuu is master@b8389e748243, while local d9506078 is origin/claude/* comparison evidence. Docs HEAD and current Miksuu keep old direct service rearm/refuel debits and strict EASA funds > price checks; current stable partially guards service rearm/refuel but leaves repair/heal and broader action-time context/funds authority open; B69 finalpieces has a Chernarus-only exact-funds EASA candidate while maintained Vanilla remains strict >. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from Feature Status, Source Fix queue, PR cleanup lab, pruning ledger or the hardening backlog; keep docs/wiki mirror parity and avoid gameplay code unless explicitly requested."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "service-easa-affordability-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Service-Menu-Affordability-Guards.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and service/EASA machine rows. Docs HEAD@db3015f18ea3, current Miksuu upstream master@b8389e74, perf/quick-wins@0076040f and historical EASA QoL a66d4691 keep old direct service rearm/refuel debits and strict EASA funds > price. Current stable origin/master@0139a346, local checkpoint d9506078 and historical release a96fdda2 partially guard service rearm/refuel but leave repair/heal positive-price-only and strict EASA. B69 finalpieces fixes exact-funds EASA only in Chernarus. No gameplay source changed."
+    },
     {
       "lane": "miksuu-current-head-d950-correction-2026-06-22",
       "owner": "Codex",

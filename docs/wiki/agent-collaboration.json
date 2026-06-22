@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T12:24:08+02:00",
+  "generatedAt": "2026-06-22T12:31:48+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "service-easa-affordability-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@db3015f18ea3 Chernarus and maintained Vanilla still debit service rearm/refuel directly at GUI_Menu_Service.sqf:198,219 and use strict EASA funds > price at GUI_Menu_EASA.sqf:47-49",
+        "origin/master@0139a346 Chernarus and maintained Vanilla partially guard service rearm/refuel at GUI_Menu_Service.sqf:484,507, but repair/heal still debit behind positive-price checks at :496-497 and :519-520; EASA remains strict funds > price at GUI_Menu_EASA.sqf:118-120",
+        "current Miksuu upstream master is b8389e748243 per miksuu-current-head-d950-correction-2026-06-22 and keeps the old direct service debit shape in checked maintained roots",
+        "origin/perf/quick-wins@0076040f and historical EASA QoL a66d4691 keep the old direct service debit shape in checked maintained roots; local checkpoint d9506078 matches the current-stable partial service shape but is not current Miksuu upstream evidence",
+        "origin/claude/b69-finalpieces@80d3267c1b2b allows exact-funds EASA only in Chernarus at GUI_Menu_EASA.sqf:118 while maintained Vanilla remains strict >"
+      ],
+      "outputs": [
+        "Refreshed Service-Menu-Affordability-Guards.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Wiki-Pruning-And-Relevance-Ledger.md and service/EASA machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future gear/UI owner should treat this as local service/EASA correctness evidence, not server-authority closure. For old-shape docs/current-Miksuu/perf/QoL targets, port action-time funds/context guards. For current-stable-shaped targets, finish repair/heal guards and decide whether B69's Chernarus-only exact-funds EASA >= change should be ported to both maintained roots.",
+      "updated": "2026-06-22T12:31:48+02:00"
+    },
     {
       "lane": "miksuu-current-head-d950-correction-2026-06-22",
       "owner": "Codex",
