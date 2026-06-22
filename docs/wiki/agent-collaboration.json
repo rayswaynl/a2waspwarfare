@@ -31,7 +31,7 @@
         "origin/master@0139a346 Chernarus and maintained Vanilla keep emptyvehiclescollector.sqf:9-19,30 and Server_HandleEmptyVehicle.sqf:30-31,35,38,41 after handler line drift",
         "direct current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep the docs-shaped collector/handler anchors in both maintained roots",
         "origin/claude/b69@0094647d and origin/claude/b69-finalpieces@80d3267c match current-stable handler line drift and do not change empty supply-truck cleanup",
-        "git ls-remote --heads origin release/* feat/*cleanup* feat/*supply* feature/*cleanup* feature/*supply* returned no heads on 2026-06-22; historical a96fdda2 was not available as a local object in this checkout"
+        "git ls-remote --heads origin release/* feat/*cleanup* feat/*supply* feature/*cleanup* feature/*supply* returned no heads on 2026-06-22; historical a96fdda2 is available in the source checkout and matches the 24-hour policy, but remains historical-only rather than current release proof"
       ],
       "outputs": [
         "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md empty supply-truck matrix plus Feature Status and Source Fix queue rows.",
