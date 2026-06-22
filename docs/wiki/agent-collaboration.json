@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T09:03:41+02:00",
+  "generatedAt": "2026-06-22T09:09:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "visible-parameter-runtime-consumer-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/docs/developer-wiki-index@ac932fbe",
+        "origin/master@0139a346",
+        "current Miksuu master@d9506078 fetched 2026-06-22",
+        "origin/perf/quick-wins@0076040f",
+        "historical release commit a96fdda2",
+        "current stable and current Miksuu Chernarus/Vanilla AI_Commander_Produce.sqf:89 read WFBE_C_AI_MAX",
+        "current stable and current Miksuu Chernarus/Vanilla Common_TrashObject.sqf:21 read WFBE_C_UNITS_CLEAN_TIMEOUT for non-man wreck cleanup",
+        "docs/perf/historical release keep old readless/comment-only shape"
+      ],
+      "outputs": [
+        "Refreshed mission parameter, start-parameter, dead-code, Player AI cap, Feature Status, Source Fix queue and machine records so current stable is not routed as no-op/comment-only parameter debt.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future owners should port or hide/label the old docs/perf/historical-release parameter shape where relevant, and smoke current stable/Miksuu host parameter display, AI commander production sizing, player cap UI/RHUD, body cleanup, wreck cleanup and empty-vehicle cleanup before release-complete wording.",
+      "updated": "2026-06-22T09:09:00+02:00"
+    },
     {
       "lane": "b69-aicom-routing-followup-2026-06-22",
       "owner": "Codex",

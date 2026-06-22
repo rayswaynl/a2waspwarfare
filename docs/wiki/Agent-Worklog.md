@@ -1515,3 +1515,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Scope: docs routing only. Added [AI commander autonomy audit](AI-Commander-Autonomy-Audit#b69-roadmap-and-sketch-route) guidance that treats [B69 roadmap](AI-Commander-B69-Improvement-Roadmap) and [B69 implementation sketches](AI-Commander-B69-Implementation-Sketches) as live-B68 planning/sketch evidence, not merged `origin/master` or maintained Vanilla proof.
 - Result: AI/headless work now naturally reaches the B69 pages from both the subsystem owner page and [LLM agent entry pack](LLM-Agent-Entry-Pack#common-task-bundles). No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T09:08:00+02:00 - Codex - Visible parameter runtime-consumer current stable refresh
+
+- Claimed `visible-parameter-runtime-consumer-current-stable-refresh-2026-06-22` after Mission Parameters, Mission Start Parameters, Dead Code, Feature Status, Source Fix queue and Player AI cap pages still routed `WFBE_C_AI_MAX` and `WFBE_C_UNITS_CLEAN_TIMEOUT` as current no-op/comment-only parameter cleanup.
+- Source scope: docs branch `origin/docs/developer-wiki-index@ac932fbe`, current stable `origin/master@0139a346`, current Miksuu `master@d9506078` fetched on 2026-06-22, `origin/perf/quick-wins@0076040f` and historical release commit `a96fdda2`.
+- Finding: docs/perf/historical release refs keep the old shape; current stable and current Miksuu maintained roots read `WFBE_C_AI_MAX` in `Server/AI/Commander/AI_Commander_Produce.sqf:89` and `WFBE_C_UNITS_CLEAN_TIMEOUT` in `Common_TrashObject.sqf:21`. Player follower caps still use `WFBE_C_PLAYERS_AI_MAX`, and empty vehicles still use `WFBE_C_UNITS_EMPTY_TIMEOUT`.
+- Result: refreshed the owner/status/queue/machine wording so current stable is not routed as no-op/comment-only debt, while old-shape refs still have target-specific port/hide/label decisions. No gameplay source changed.
