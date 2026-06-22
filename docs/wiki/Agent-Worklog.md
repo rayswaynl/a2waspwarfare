@@ -1508,3 +1508,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Scope: mirror-only docs sync. The wiki has `AI-Commander-B69-Implementation-Sketches.md` and `AI-Commander-B69-Improvement-Roadmap.md`; `docs/wiki` missed both, and `_Sidebar.md` differed. No gameplay source edits planned.
 - Result: copied only those mirror gaps into `docs/wiki`, kept the B69 source-backed pages unchanged, updated dashboard/status/collaboration/pruning records and left gameplay source untouched.
 - Validation: JSON/JSONL parse passed in the wiki checkout and docs mirror; `docs/validate-wiki.ps1` passed with known legacy JSONL warnings only; top-level wiki/docs parity reports `290` files on each side with no missing/differing files; Latest Batch has five rows; `git diff --check` passed in both worktrees with LF/CRLF warnings only.
+
+## 2026-06-22T09:03:41+02:00 - Codex - B69 AICOM routing follow-up
+
+- Claimed `b69-aicom-routing-followup-2026-06-22` after the B69 pages were mirrored/sidebar-linked but not yet routed from the canonical AI commander owner page or the AI/headless task bundle in the LLM entry pack.
+- Scope: docs routing only. Added [AI commander autonomy audit](AI-Commander-Autonomy-Audit#b69-roadmap-and-sketch-route) guidance that treats [B69 roadmap](AI-Commander-B69-Improvement-Roadmap) and [B69 implementation sketches](AI-Commander-B69-Implementation-Sketches) as live-B68 planning/sketch evidence, not merged `origin/master` or maintained Vanilla proof.
+- Result: AI/headless work now naturally reaches the B69 pages from both the subsystem owner page and [LLM agent entry pack](LLM-Agent-Entry-Pack#common-task-bundles). No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

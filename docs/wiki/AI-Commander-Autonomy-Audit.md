@@ -35,6 +35,15 @@ PR #43 is the current master-target soak/proposals surface: `claude/b57-soak-pro
 
 The B68 commit itself changes four Chernarus files only. The broader PR #43 branch contains other Chernarus/Vanilla deltas, but this section should not be used to claim full maintained-Vanilla parity for the B68 hotfix until a propagation diff and Arma smoke are recorded.
 
+## B69 Roadmap And Sketch Route
+
+The B69 pages are the current planning gateway for work that starts from the live B68 Chernarus audit. Treat them as prioritization and implementation guidance, not as proof that `origin/master@0139a346` or maintained Vanilla already contain those changes.
+
+| Page | Use it for | Caveat |
+| --- | --- | --- |
+| [AI Commander B69 improvement roadmap](AI-Commander-B69-Improvement-Roadmap) | Review the 15-item recommended slate, the atomic HQ-strike package, HC-team merge/refill direction, supervisor heartbeat/watchdog route, garrison-vs-maneuver strength split and worker-stagger/FPS leads. | The page states it was produced on 2026-06-22 from a live B68 Chernarus audit. Before code work, re-check every touched path in the target branch and maintained Vanilla scope. |
+| [AI Commander B69 implementation sketches](AI-Commander-B69-Implementation-Sketches) | Use as an engineer handoff for A2-OA-safe SQF patch shapes and soak-test expectations for the verified B69 items. | Sketches are not committed gameplay code. Do not paste blindly; verify line anchors, branch drift, generated-target propagation and Arma smoke gates first. |
+
 ## Branch Refresh - `feat/ai-commander`
 
 Snapshot refreshed: 2026-06-04. Branch head `c20ce153` compares against `origin/master` `2cdf5fb8`. Diff from stable master is 9 Chernarus-source files, +416/-5; no `Missions_Vanilla` files are touched. The later cleanup series after `4dba060e` changes only the five AI commander scripts, adding 141 lines and removing 91 lines to avoid lazy condition blocks.
@@ -219,6 +228,8 @@ Minimum smoke:
 ## Related Pages
 
 - [AI, headless and performance](AI-Headless-And-Performance)
+- [AI Commander B69 improvement roadmap](AI-Commander-B69-Improvement-Roadmap)
+- [AI Commander B69 implementation sketches](AI-Commander-B69-Implementation-Sketches)
 - [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas)
 - [Abandoned feature revival](Abandoned-Feature-Revival-Review)
 - [Commander reassignment call shape](Commander-Reassignment-Call-Shape)

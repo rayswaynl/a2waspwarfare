@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T08:54:39+02:00",
+  "generatedAt": "2026-06-22T09:03:41+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b69-aicom-routing-followup-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "live wiki master@a1aab47 after B69 mirror sync",
+        "AI-Commander-B69-Improvement-Roadmap.md and AI-Commander-B69-Implementation-Sketches.md are present in wiki and docs/wiki",
+        "AI-Commander-Autonomy-Audit.md did not yet route readers to B69 pages before this lane",
+        "LLM-Agent-Entry-Pack.md AI/headless task bundle did not yet route readers to B69 pages before this lane"
+      ],
+      "outputs": [
+        "Added a B69 roadmap/sketch route to AI-Commander-Autonomy-Audit.md.",
+        "Added B69 roadmap/sketch links to the LLM-Agent-Entry-Pack.md AI/headless task bundle.",
+        "Updated dashboard, worklog, pruning ledger and coordination records. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future B69 implementation work must re-check target-branch source paths and maintained Vanilla propagation before changing gameplay code.",
+      "updated": "2026-06-22T09:03:41+02:00"
+    },
     {
       "lane": "b69-ai-commander-mirror-sync-2026-06-22",
       "owner": "Codex",
