@@ -1,21 +1,20 @@
 # PR Cleanup And Integration Lab
 
-Last updated: 2026-06-22 for PR #47 B69 finalpieces addendum.
+Last updated: 2026-06-22 for PR #47 B69 merged-head refresh.
 
 This page tracks the June 2026 PR cleanup pass for `rayswaynl/a2waspwarfare`. It exists so humans and AI agents can see which PRs are real features, which are superseded by the release bundle, which are docs-only, and which branches should be tested together.
 
-Current board state was refreshed from GitHub on 2026-06-21 with `gh pr list --repo rayswaynl/a2waspwarfare --state all --limit 80 --json number,title,state,headRefName,baseRefName,isDraft,updatedAt,mergedAt,url`. The returned set had `3` open PRs, `12` merged PRs and `28` closed PRs at that moment. A targeted 2026-06-22 lookup for `claude/b69-finalpieces` found PR #47 open as a stacked B69 branch route. A later `git fetch --all --prune` removed local synthetic PR refs such as `origin/pr/*` and `miksuu/pr/*`; use the GitHub PR URLs, `headRefName`/`baseRefName`, `mergedAt` / `updatedAt` and remote branch heads as current evidence. Older ancestry notes below are preserved as historical results from the earlier PR-ref audit, not as refs future agents should expect to resolve locally.
+Current board state was refreshed from GitHub on 2026-06-21 with `gh pr list --repo rayswaynl/a2waspwarfare --state all --limit 80 --json number,title,state,headRefName,baseRefName,isDraft,updatedAt,mergedAt,url`. The returned set had `3` open PRs, `12` merged PRs and `28` closed PRs at that moment. A targeted 2026-06-22 lookup for `claude/b69-finalpieces` first found PR #47 open as a stacked B69 branch route; a later `gh pr view 47` shows it merged into `claude/b69` at `0094647d7b641bb79202e77e7f480d6d39aadcdb` on 2026-06-22T10:23:16Z. A later `git fetch --all --prune` removed local synthetic PR refs such as `origin/pr/*` and `miksuu/pr/*`; use the GitHub PR URLs, `headRefName`/`baseRefName`, `mergedAt` / `updatedAt` and remote branch heads as current evidence. Older ancestry notes below are preserved as historical results from the earlier PR-ref audit, not as refs future agents should expect to resolve locally.
 
 ## Current PR Board State
 
 | State | PRs | Meaning |
 | --- | --- | --- |
 | Open master-target soak / proposals | [#43](https://github.com/rayswaynl/a2waspwarfare/pull/43) | Current open master-target review surface: `claude/b57-soak-proposals` -> `master`, head `b8a1505f8a89881f487a03262f066c8b33eca94d`, updated 2026-06-21T17:26:33Z. Treat as the live B57/B68 soak/proposals PR, not as proof that the whole AICOM/GUER source set is release-ready. |
-| Open stacked B69 finalpieces | [#47](https://github.com/rayswaynl/a2waspwarfare/pull/47) | Current stacked B69 addendum: `claude/b69-finalpieces` -> `claude/b69`, head `80d3267c1b2b`, updated 2026-06-22T09:20:42Z. Treat as Chernarus-only finalpieces review evidence on top of B69, not as a master/stable or maintained Vanilla route. |
 | Open stacked performance child | [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40) | Still open, but stacked on closed base `fix/aicom-review-batch-2026-06-15`. Rebase or owner decision is required before treating it as a clean master candidate. |
 | Open map/content candidate | [#9](https://github.com/rayswaynl/a2waspwarfare/pull/9) | Zargabad low-pop mission remains open against `master`, updated 2026-06-20T05:17:48Z. Keep as a separate map/content validation lane. |
 | Merged into `master` | [#8](https://github.com/rayswaynl/a2waspwarfare/pull/8), [#14](https://github.com/rayswaynl/a2waspwarfare/pull/14), [#22](https://github.com/rayswaynl/a2waspwarfare/pull/22), [#23](https://github.com/rayswaynl/a2waspwarfare/pull/23), [#24](https://github.com/rayswaynl/a2waspwarfare/pull/24), [#25](https://github.com/rayswaynl/a2waspwarfare/pull/25), [#26](https://github.com/rayswaynl/a2waspwarfare/pull/26), [#27](https://github.com/rayswaynl/a2waspwarfare/pull/27), [#28](https://github.com/rayswaynl/a2waspwarfare/pull/28), [#29](https://github.com/rayswaynl/a2waspwarfare/pull/29), [#31](https://github.com/rayswaynl/a2waspwarfare/pull/31) | No longer open board items. Their branch history remains useful source evidence, but current branch truth starts from fetched `origin/master@0139a346` unless a page names another ref. |
-| Merged into a non-master branch | [#42](https://github.com/rayswaynl/a2waspwarfare/pull/42) | `claude/guer-merge` -> `claude/b39`, merged 2026-06-16T19:56:21Z. Treat as branch-integration evidence, not as a master merge by itself. |
+| Merged into a non-master branch | [#42](https://github.com/rayswaynl/a2waspwarfare/pull/42), [#47](https://github.com/rayswaynl/a2waspwarfare/pull/47) | #42 merged `claude/guer-merge` -> `claude/b39` on 2026-06-16T19:56:21Z. #47 merged `claude/b69-finalpieces` -> `claude/b69` on 2026-06-22T10:23:16Z at `0094647d7b64`. Treat both as branch-integration evidence, not as master merges by themselves. |
 | Closed former AICOM / Experital stack | [#30](https://github.com/rayswaynl/a2waspwarfare/pull/30), [#34](https://github.com/rayswaynl/a2waspwarfare/pull/34), [#35](https://github.com/rayswaynl/a2waspwarfare/pull/35), [#36](https://github.com/rayswaynl/a2waspwarfare/pull/36), [#37](https://github.com/rayswaynl/a2waspwarfare/pull/37), [#38](https://github.com/rayswaynl/a2waspwarfare/pull/38), [#39](https://github.com/rayswaynl/a2waspwarfare/pull/39), [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | The old deploy umbrella and deploy-child review/fix/note PRs are closed as of 2026-06-17. Keep their findings as history; do not route current work through them as active PRs. |
 | Closed feature/tooling/docs PRs | [#1](https://github.com/rayswaynl/a2waspwarfare/pull/1), [#2](https://github.com/rayswaynl/a2waspwarfare/pull/2), [#3](https://github.com/rayswaynl/a2waspwarfare/pull/3), [#4](https://github.com/rayswaynl/a2waspwarfare/pull/4), [#5](https://github.com/rayswaynl/a2waspwarfare/pull/5), [#6](https://github.com/rayswaynl/a2waspwarfare/pull/6), [#7](https://github.com/rayswaynl/a2waspwarfare/pull/7), [#10](https://github.com/rayswaynl/a2waspwarfare/pull/10), [#11](https://github.com/rayswaynl/a2waspwarfare/pull/11), [#12](https://github.com/rayswaynl/a2waspwarfare/pull/12), [#13](https://github.com/rayswaynl/a2waspwarfare/pull/13), [#15](https://github.com/rayswaynl/a2waspwarfare/pull/15), [#16](https://github.com/rayswaynl/a2waspwarfare/pull/16), [#17](https://github.com/rayswaynl/a2waspwarfare/pull/17), [#18](https://github.com/rayswaynl/a2waspwarfare/pull/18), [#19](https://github.com/rayswaynl/a2waspwarfare/pull/19), [#20](https://github.com/rayswaynl/a2waspwarfare/pull/20), [#21](https://github.com/rayswaynl/a2waspwarfare/pull/21), [#32](https://github.com/rayswaynl/a2waspwarfare/pull/32), [#33](https://github.com/rayswaynl/a2waspwarfare/pull/33) | Closed on the board. Retain branch/head lessons where useful, but do not present them as open review items. |
 
@@ -36,7 +35,7 @@ The best current combined gameplay test branch is:
 dev/pr8-plus-testbed = PR #8 + PR #12 + PR #16
 ```
 
-The old AICOM deploy route through PR #35 is closed. PR #29 (`ai-commander-main` -> `master`) and PR #31 (`perf/marker-consolidation` -> `master`) both merged on 2026-06-17T11:45:52Z; PR #30, PR #34, PR #35, PR #36, PR #37, PR #38, PR #39 and PR #41 are closed. Current source truth for merged AICOM/GUER work starts from `origin/master@0139a346`; current open review routing is PR #43 for B57/B68 soak/proposals at `b8a1505f`, PR #47 for B69 finalpieces stacked into `claude/b69`, PR #40 for the still-open client-FPS child stacked on a closed base, and PR #9 for Zargabad.
+The old AICOM deploy route through PR #35 is closed. PR #29 (`ai-commander-main` -> `master`) and PR #31 (`perf/marker-consolidation` -> `master`) both merged on 2026-06-17T11:45:52Z; PR #30, PR #34, PR #35, PR #36, PR #37, PR #38, PR #39 and PR #41 are closed. Current source truth for merged AICOM/GUER work starts from `origin/master@0139a346`; current open review routing is PR #43 for B57/B68 soak/proposals at `b8a1505f`, PR #40 for the still-open client-FPS child stacked on a closed base, and PR #9 for Zargabad. PR #47 is now merged into branch `claude/b69`, not open and not a master/stable route.
 
 Keep closed PRs as historical evidence unless an owner explicitly reopens or rebases them. In particular, PR #40 needs a rebase/owner decision before it is treated as mergeable because its base branch `fix/aicom-review-batch-2026-06-15` is closed, and PR #42 is branch integration into `claude/b39`, not a master merge.
 
@@ -56,7 +55,7 @@ Keep closed PRs as historical evidence unless an owner explicitly reopens or reb
 | [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | `notes/aicom-match-fixes` -> `deploy/2026-06-12-aicom-experital` | Closed draft 2026-06-17T11:46:57Z | Closed notes/prepared-patches lane. Preserve as analysis only. |
 | [#42](https://github.com/rayswaynl/a2waspwarfare/pull/42) | `claude/guer-merge` -> `claude/b39` | Merged 2026-06-16T19:56:21Z | Branch-integration evidence for GUER into `claude/b39`; not a master-target PR. |
 | [#43](https://github.com/rayswaynl/a2waspwarfare/pull/43) | `claude/b57-soak-proposals` -> `master` | Open, head `b8a1505f`, updated 2026-06-21T17:26:33Z | Current master-target B57/B68 soak/proposals PR. Use this for live PR-board routing unless a newer PR appears; see [AI commander autonomy audit](AI-Commander-Autonomy-Audit#pr-43--b68-live-soak-branch) for the B68 AICOM/marker branch route. |
-| [#47](https://github.com/rayswaynl/a2waspwarfare/pull/47) | `claude/b69-finalpieces` -> `claude/b69` | Open, head `80d3267c1b2b`, updated 2026-06-22T09:20:42Z | Stacked B69 finalpieces route. The `0a1ccb4d..80d3267c` delta is 8 Chernarus AI commander/client files / +242 / -13 with no maintained Vanilla diff; use [B69 roadmap](AI-Commander-B69-Improvement-Roadmap#current-branch-status) and [AI commander autonomy audit](AI-Commander-Autonomy-Audit#b69-roadmap-and-sketch-route) for caveats. |
+| [#47](https://github.com/rayswaynl/a2waspwarfare/pull/47) | `claude/b69-finalpieces` -> `claude/b69` | Merged 2026-06-22T10:23:16Z, merge commit `0094647d7b64`; head `80d3267c1b2b` | Branch-integration route only. The `0a1ccb4d05c5..0094647d7b64` merge delta is 8 Chernarus AI commander/client files / +242 / -13 with no maintained Vanilla diff; use [B69 roadmap](AI-Commander-B69-Improvement-Roadmap#current-branch-status) and [AI commander autonomy audit](AI-Commander-Autonomy-Audit#b69-roadmap-and-sketch-route) for caveats. |
 
 ### PR #8 Head Refresh: `a96fdda2`
 
@@ -114,14 +113,14 @@ A 2026-06-14 refetch found `origin/release/2026-06-feature-bundle` at `a96fdda2`
 | [#41](https://github.com/rayswaynl/a2waspwarfare/pull/41) | AICOM match-fix notes | Closed draft | Closed notes/prepared-patches lane. Preserve as analysis only. | 2026-06-21 GitHub metadata: `notes/aicom-match-fixes` -> `deploy/2026-06-12-aicom-experital`, closed, updated 2026-06-17T11:46:57Z. |
 | [#42](https://github.com/rayswaynl/a2waspwarfare/pull/42) | GUER Insurgents faction -> B39 | Merged to branch | Branch-integration evidence only; not a master-target PR. | 2026-06-21 GitHub metadata: `claude/guer-merge` -> `claude/b39`, merged 2026-06-16T19:56:21Z. |
 | [#43](https://github.com/rayswaynl/a2waspwarfare/pull/43) | B57/B68 soak proposals | Open | Current master-target review surface. | 2026-06-21 GitHub metadata: `claude/b57-soak-proposals` -> `master`, open, head `b8a1505f8a89881f487a03262f066c8b33eca94d`, updated 2026-06-21T17:26:33Z. |
-| [#47](https://github.com/rayswaynl/a2waspwarfare/pull/47) | B69 final pieces | Open | Current stacked finalpieces route into `claude/b69`; not a master-target PR by itself. | 2026-06-22 targeted GitHub metadata: `claude/b69-finalpieces` -> `claude/b69`, open, head `80d3267c1b2b`, updated 2026-06-22T09:20:42Z. The branch delta is Chernarus-only for checked AI commander/client paths. |
+| [#47](https://github.com/rayswaynl/a2waspwarfare/pull/47) | B69 final pieces | Merged to branch | Merged into `claude/b69`; not a master-target PR by itself. | 2026-06-22 targeted GitHub metadata: `claude/b69-finalpieces` -> `claude/b69`, state `MERGED`, head `80d3267c1b2b`, merge commit `0094647d7b64`, mergedAt / updatedAt 2026-06-22T10:23:16Z. The merge delta is Chernarus-only for checked AI commander/client paths. |
 
 ## Cleanup Actions
 
 Recommended PR board cleanup:
 
-1. Current open PRs in the 2026-06-21 all-PR result were PR #43, PR #40 and PR #9; the 2026-06-22 targeted lookup adds open PR #47 for `claude/b69-finalpieces`.
-2. Treat PR #43 as the live master-target soak/proposals route, and PR #47 as a stacked B69 finalpieces review route into `claude/b69`.
+1. Current open PRs after the 2026-06-22 PR #47 merge are PR #43, PR #40 and PR #9 unless a fresh GitHub board refresh proves otherwise.
+2. Treat PR #43 as the live master-target soak/proposals route, and PR #47 as merged branch evidence inside `claude/b69`, not an open review route.
 3. Treat PR #40 as open but blocked on rebase/owner ordering because its base `fix/aicom-review-batch-2026-06-15` is closed.
 4. Treat PR #9 as the separate Zargabad map/content validation lane.
 5. Treat PR #35 and deploy-child PR #34/#36-#39/#41 as closed historical AICOM deploy evidence, not active lanes.
@@ -207,7 +206,7 @@ Historical test branches:
 
 Current open PR route:
 - PR43 is the live master-target B57/B68 soak/proposals PR at branch head `b8a1505f`
-- PR47 is the stacked B69 finalpieces PR at branch head `80d3267c1b2b`, targeting `claude/b69`
+- PR47 merged B69 finalpieces into `claude/b69` at merge commit `0094647d7b64`; it is branch evidence, not a master-target route
 - PR40 is still open, but it is stacked on a closed base and needs rebase/owner ordering
 - PR9 is the separate Zargabad map/content PR
 - PR35 and PR34/PR36-PR39/PR41 are closed AICOM deploy history
@@ -224,7 +223,7 @@ Keep separate for now:
 - Fetched `origin` and `miksuu`, including PR refs during the original pass. A later prune removed synthetic PR refs; current refresh uses GitHub PR metadata and branch heads.
 - Refreshed GitHub PR metadata on 2026-06-16 with `gh pr list --repo rayswaynl/a2waspwarfare --state open --limit 100 --json number,title,headRefName,baseRefName,isDraft,updatedAt,url`; verified PR #8 and PR #14 merged with `gh pr view`.
 - Refreshed GitHub PR metadata again on 2026-06-21 with `gh pr list --repo rayswaynl/a2waspwarfare --state all --limit 80 --json number,title,state,headRefName,baseRefName,isDraft,updatedAt,mergedAt,url`; result count was `3` open, `12` merged and `28` closed. The open PRs were #9, #40 and #43.
-- Ran a targeted 2026-06-22 `gh pr list --head claude/b69-finalpieces --state all --json number,state,title,headRefName,baseRefName,url,updatedAt`; PR #47 is open as `claude/b69-finalpieces` -> `claude/b69`, updated 2026-06-22T09:20:42Z.
+- Ran a targeted 2026-06-22 `gh pr view 47 --repo rayswaynl/a2waspwarfare --json number,state,title,headRefName,baseRefName,url,updatedAt,mergedAt,mergeCommit`; PR #47 is merged as `claude/b69-finalpieces` -> `claude/b69` with merge commit `0094647d7b64`, mergedAt / updatedAt 2026-06-22T10:23:16Z.
 - Checked PR ancestry against PR #8.
 - Created isolated worktrees under `work/pr8-only-testbed` and `work/pr8-plus-testbed`.
 - Merged PR #12 into PR8 lab with manual conflict resolution in five files.

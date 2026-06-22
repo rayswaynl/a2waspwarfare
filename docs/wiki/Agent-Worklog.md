@@ -1714,6 +1714,14 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Result: refreshed [Service menu affordability guards](Service-Menu-Affordability-Guards), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
 
+## 2026-06-22T12:32:37+02:00 - Codex - B69 PR47 merged head refresh
+
+- Claimed `b69-pr47-merged-head-refresh-2026-06-22` after `git fetch origin` advanced `origin/claude/b69` from `0a1ccb4d05c5` to merge commit `0094647d7b64`.
+- Initial source scope: PR #47 is now merged as `claude/b69-finalpieces` -> `claude/b69` with merge commit `0094647d7b641bb79202e77e7f480d6d39aadcdb` and `mergedAt` / `updatedAt` `2026-06-22T10:23:16Z`; `origin/claude/b69^1` is `0a1ccb4d05c5`, `origin/claude/b69^2` is `80d3267c1b2b`, and `origin/claude/b69-finalpieces` is an ancestor of the new B69 head.
+- Initial finding: the merge delta `0a1ccb4d05c5..0094647d7b64` is the previously documented finalpieces set, 8 Chernarus AI commander/client files / +242 / -13 with no maintained Vanilla diff. The branch is now B69-head evidence, not a still-open stacked PR; no gameplay source changes planned.
+- Result: refreshed the AI commander audit, B69 roadmap/sketch note, Feature Status, PR cleanup lab, dashboard, pruning ledger and machine rows so PR #47 is recorded as merged into `claude/b69` while B69 remains Chernarus-only, smoke-pending and not master/stable evidence. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
+
 ## 2026-06-22T12:46:28+02:00 - Codex - Empty supply-truck timeout current-stable refresh
 
 - Claimed `empty-supply-truck-timeout-current-stable-refresh-2026-06-22` after [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), Feature Status and Source Fix queue still cited older `cf2a6d6a` stable evidence and live-release wording for the 24-hour empty supply-truck cleanup timeout.

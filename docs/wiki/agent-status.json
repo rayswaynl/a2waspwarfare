@@ -63,6 +63,12 @@
       "output": "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md and Wiki-Pruning-And-Relevance-Ledger.md so the empty supply-truck cleanup timeout no longer cites stale origin/master cf2a6d6a or live-release wording. Docs head b4e10b5f, current stable origin/master@0139a346, direct current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f, B69 origin/claude/b69@0094647d and B69 finalpieces 80d3267c all keep emptyvehiclescollector.sqf:9-19,30 and supply-truck _delay = 86400 in both maintained roots. Current origin exposes no release/* or cleanup/supply feature heads; historical a96fdda2 release wording is not current release proof. No gameplay source changed."
     },
     {
+      "lane": "b69-pr47-merged-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed the B69/PR #47 route after PR #47 merged claude/b69-finalpieces into claude/b69 at merge commit 0094647d7b641bb79202e77e7f480d6d39aadcdb. Current B69 is origin/claude/b69@0094647d7b64; first parent 0a1ccb4d05c5 and second parent 80d3267c1b2b preserve the finalpieces evidence. The merge delta is 8 Chernarus AI commander/client files / +242 / -13 with no maintained Vanilla diff; full B69 from B68 b8a1505f is 17 files / +659 / -78. No gameplay source changed."
+    },
+    {
       "lane": "service-easa-affordability-current-stable-refresh-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",

@@ -42,6 +42,25 @@
       "updated": "2026-06-22T12:46:28+02:00"
     },
     {
+      "lane": "b69-pr47-merged-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69 advanced to merge commit 0094647d7b641bb79202e77e7f480d6d39aadcdb after PR #47 merged",
+        "PR #47 is MERGED as claude/b69-finalpieces -> claude/b69, mergedAt/updatedAt 2026-06-22T10:23:16Z",
+        "origin/claude/b69^1 is 0a1ccb4d05c5 and origin/claude/b69^2 is 80d3267c1b2b",
+        "0a1ccb4d05c5..0094647d7b64 is 8 Chernarus AI commander/client files, +242/-13, no maintained Vanilla diff",
+        "gh pr list --head claude/b69 --state all returned no direct PR for claude/b69 on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed B69 branch-status and PR-routing docs so finalpieces is treated as merged into B69.",
+        "Preserve Chernarus-only, no-maintained-Vanilla-diff and smoke-pending caveats.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future B69 owner should treat origin/claude/b69@0094647d7b64 as current branch evidence, not master/stable proof; review/smoke, decide maintained Vanilla propagation or explicit Chernarus-only scope, and wire/smoke HC top-up before calling depleted-team merge live.",
+      "updated": "2026-06-22T12:36:46+02:00"
+    },
+    {
       "lane": "service-easa-affordability-current-stable-refresh-2026-06-22",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -124,7 +143,7 @@
         "origin/claude/b69-finalpieces@80d3267c1b2b is a descendant of origin/claude/b69@0a1ccb4d05c5",
         "git diff --stat origin/claude/b69..origin/claude/b69-finalpieces shows 8 Chernarus AI commander/client files changed, +242/-13",
         "git diff --name-status origin/claude/b69..origin/claude/b69-finalpieces -- Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan returned no paths",
-        "PR #47 is open as claude/b69-finalpieces -> claude/b69, updated 2026-06-22T09:20:42Z",
+        "PR #47 was open as claude/b69-finalpieces -> claude/b69 at the 2026-06-22T09:20:42Z snapshot; superseded by b69-pr47-merged-head-refresh-2026-06-22 after it merged",
         "rg found no b69-finalpieces / finalpieces wiki mention before this lane"
       ],
       "outputs": [
@@ -132,7 +151,7 @@
         "Updated Feature-Status-Register.md, PR-Cleanup-And-Integration-Lab.md, Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records.",
         "No gameplay source changed."
       ],
-      "handoff": "Closed after validation. Treat finalpieces as Chernarus-only stacked PR #47 evidence into B69. Town-punch, armed transport and stranded merge code is source-present; HC merge/top-up remains default-off draft scaffolding because WFBE_SE_FNC_AI_Com_HCTopUp is not compiled by Init_Server.sqf:58-66. Future B69 owner should smoke, review and propagate maintained Vanilla or explicitly scope Chernarus before release wording.",
+      "handoff": "Closed after validation and superseded for current routing by b69-pr47-merged-head-refresh-2026-06-22. Treat finalpieces as Chernarus-only B69-head evidence after PR #47 merged into claude/b69; town-punch, armed transport and stranded merge code is source-present, while HC merge/top-up remains default-off draft scaffolding because WFBE_SE_FNC_AI_Com_HCTopUp is not compiled by Init_Server.sqf:58-66.",
       "updated": "2026-06-22T11:27:50+02:00"
     },
     {
