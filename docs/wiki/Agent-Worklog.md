@@ -1745,3 +1745,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Initial finding: docs head, current Miksuu, perf, historical release and EASA QoL still keep undefined `_u_upgrade` save filtering at `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` plus the six-field import guard/index-6 read at `Init_ProfileGear.sqf:17,25` in both maintained roots. Current stable fixes only the save-filter comparison at `Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82`; it still keeps the six-field import guard. No gameplay source changes planned.
 - Result: refreshed [Gear template profile filter](Gear-Template-Profile-Filter), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows so the branch split uses current docs head `72b5f0de98f9` while preserving the current-stable save-filter/import-guard split. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-22T13:09:06+02:00 - Codex - Supply mission economy/PR follow-up
+
+- Claimed `supply-mission-economy-pr-current-stable-followup-2026-06-22` after the concurrent `supply-scan-current-stable-refresh-2026-06-22` lane refreshed the canonical scan/architecture matrix but the economy overview and PR #1 page still carried older stable/release wording.
+- Source scope: docs/source `15563691`, current stable `origin/master@0139a346`, direct current Miksuu `master@b8389e748243`, `origin/perf/quick-wins@0076040f`, and PR #1 metadata (`feat/supply-helicopter` closed/unmerged, no live origin `release/*`, supply or heli feature heads on 2026-06-22).
+- Findings: current stable is the live supply-heli/cash-run baseline in both maintained roots, while PR #1 is historical branch-review evidence and docs/source, current Miksuu and perf remain truck-only. Economy copy needed to stop presenting stale stable/release rows as current branch truth.
+- Result: refreshed [Current PR #1 supply helicopters](Current-Work-Supply-Helicopters-PR1) and [Economy, towns and supply](Economy-Towns-And-Supply) to route current truth through the new supply architecture matrix. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

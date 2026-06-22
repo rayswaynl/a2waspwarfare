@@ -6,7 +6,9 @@ Branch: `feat/supply-helicopter`
 
 Base: `master`
 
-Status at original indexing: open, not draft, mergeable, no status checks reported by GitHub. A 2026-06-04 local branch recheck found `origin/feat/supply-helicopter` at head `262dc431`; the line-by-line source table below is now refreshed against that head. PR web state was not re-verified here.
+Status at original indexing: open, not draft, mergeable, no status checks reported by GitHub. A 2026-06-04 local branch recheck found `origin/feat/supply-helicopter` at head `262dc431`; the line-by-line source table below is refreshed against that historical head.
+
+2026-06-22 ref status: `gh pr view 1` reports PR #1 as `CLOSED`, unmerged, `feat/supply-helicopter` -> `master`, updated `2026-06-03T12:43:21Z`, and `git ls-remote --heads origin release/* feat/*supply* feature/*supply* feat/*heli* feature/*heli*` returned no live origin heads. Treat this page as historical PR branch-review evidence. Current live stable supply-heli/cash-run behavior is now documented in [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) against `origin/master@0139a346`.
 
 ## Summary
 
