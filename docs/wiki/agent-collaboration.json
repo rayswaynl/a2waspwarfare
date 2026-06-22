@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T16:49:21+02:00",
+  "generatedAt": "2026-06-22T17:01:15+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "side-supply-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69 current head is 8d465fcede7fc20a7fcb97bd7d02e5211de8d1bf",
+        "git diff --name-status 39eed5c0..origin/claude/b69 for checked side-supply paths is empty, so later B69 PR #50/#51 movement did not change those files",
+        "origin/claude/b69 Chernarus Server_ChangeSideSupply.sqf floors west/resistance/east negatives to 0 at :12,36,60 and adds wfbe_supply_temp_resistance at :25",
+        "origin/claude/b69 maintained Vanilla still keeps _currentSupply - _amount at Common_ChangeSideSupply.sqf:25 and Server_ChangeSideSupply.sqf:12,36",
+        "current stable origin/master@0139a346, current Miksuu b8389e748243 and perf/quick-wins@0076040f branch scopes remain unchanged for this lane"
+      ],
+      "outputs": [
+        "Refreshed stale B69 39eed5c0 wording in side-supply/resistance-supply owner/status/queue/machine rows so 39eed5c0 is provenance and 8d465fce is current B69 head evidence.",
+        "Mirrored docs/wiki changes to the GitHub wiki checkout and validated parity.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future economy owner should still treat B69 as branch-only Chernarus candidate evidence until maintained Vanilla propagation, side/channel/requester validation, reason parsing and Arma smoke are recorded.",
+      "updated": "2026-06-22T17:01:15+02:00"
+    },
     {
       "lane": "wasp-marker-wait-current-stable-propagation-refresh-2026-06-22",
       "owner": "Codex",
