@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T12:31:48+02:00",
+  "generatedAt": "2026-06-22T12:46:28+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "empty-supply-truck-timeout-current-stable-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@b4e10b5f Chernarus and maintained Vanilla keep emptyvehiclescollector.sqf:9-19,30 and Server_HandleEmptyVehicle.sqf:22-23,27,30,33 for supply-truck _delay = 86400",
+        "origin/master@0139a346 Chernarus and maintained Vanilla keep emptyvehiclescollector.sqf:9-19,30 and Server_HandleEmptyVehicle.sqf:30-31,35,38,41 after handler line drift",
+        "direct current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep the docs-shaped collector/handler anchors in both maintained roots",
+        "origin/claude/b69@0094647d and origin/claude/b69-finalpieces@80d3267c match current-stable handler line drift and do not change empty supply-truck cleanup",
+        "git ls-remote --heads origin release/* feat/*cleanup* feat/*supply* feature/*cleanup* feature/*supply* returned no heads on 2026-06-22; historical a96fdda2 was not available as a local object in this checkout"
+      ],
+      "outputs": [
+        "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md empty supply-truck matrix plus Feature Status and Source Fix queue rows.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future runtime/logistics owner should decide keep-and-label versus shorter/parameterized supply-truck timeout, then patch source Chernarus plus maintained Vanilla only if changing behavior and smoke ordinary empty vehicles, ambulance/repair double-timeout vehicles, supply/logistics trucks and long-match object counts.",
+      "updated": "2026-06-22T12:46:28+02:00"
+    },
     {
       "lane": "service-easa-affordability-current-stable-refresh-2026-06-22",
       "owner": "Codex",
