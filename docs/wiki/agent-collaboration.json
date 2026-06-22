@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T19:53:22+02:00",
+  "generatedAt": "2026-06-22T20:24:32+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "attack-wave-authority-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@1c1ea55970dc is unchanged from f3e157f2 for checked Chernarus/Vanilla attack-wave request/detail/client price paths",
+        "current stable origin/master@0139a3468609 and current B69 origin/claude/b69@8d465fcede7f both keep ATTACK_WAVE_INIT payload trust at Common_AttackWaveActivate.sqf:6,8 and Server_AttackWave.sqf:5-6,15,23,27 in both maintained roots",
+        "current B69 keeps ATTACK_WAVE_DETAILS payload trust at AttackWave.sqf:23-25,40 in both maintained roots; B69 line drift in Init_CommonConstants.sqf is unrelated AICOM/constant movement",
+        "B69 attack-wave request/detail/client path deltas 0a1ccb4d..origin/claude/b69 and b8530477..origin/claude/b69 are empty",
+        "late-fetch adjacent B74 origin/claude/b74-aicom-spend@b23f557fc912 changes only Chernarus Common/Init/Init_CommonConstants.sqf among checked attack-wave paths and keeps request/detail trust unchanged",
+        "current origin exposes no release/* or attack-wave feature heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed existing attack-wave authority owner/status/queue/PV/migration/machine rows with current B69 head evidence.",
+        "Preserved direct-PV/PVF-dispatch separation and marked current B69 as unpatched evidence, not a rescue.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future support/economy code owner should treat ATTACK_WAVE_INIT as request-only, re-derive side/supply server-side, clamp modifier/duration, guard ATTACK_WAVE_DETAILS from forged direct payloads, propagate maintained Vanilla and smoke valid activation, forged supply/wrong-side payloads, duplicate active waves and JIP replay.",
+      "updated": "2026-06-22T20:24:32+02:00"
+    },
     {
       "lane": "commander-reassignment-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
