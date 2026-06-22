@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T18:27:14+02:00",
+  "generatedAt": "2026-06-22T18:41:05+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "empty-supply-truck-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD is a3bbcd484eb5 after the previous docs commit and is unchanged from b4e10b5f for checked Chernarus/Vanilla empty-vehicle collector and handler paths",
+        "current stable origin/master@0139a3468609 and current B69 origin/claude/b69@8d465fcede7f both route WF_Logic emptyVehicles through emptyvehiclescollector.sqf:9,12,15-17,19 and set the supply-truck delay in Server_HandleEmptyVehicle.sqf:29,31,38 in both maintained roots",
+        "current B69 checked path deltas 0094647d..origin/claude/b69 and 80d3267c..origin/claude/b69 are empty for the maintained collector/handler paths",
+        "current Miksuu master@b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 keep the old line shape at Server_HandleEmptyVehicle.sqf:21,23,30 in both maintained roots",
+        "git ls-remote --heads origin release/* feat/*cleanup* feat/*supply* feature/*cleanup* feature/*supply* returned no current rescue heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and machine rows with current B69 head evidence.",
+        "Preserved 0094647d and 80d3267c as provenance while marking origin/claude/b69@8d465fce as current B69 head evidence.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner still needs an owner decision: keep and label 24-hour logistics persistence or shorten/parameterize the timeout, then propagate maintained Vanilla and smoke ordinary empty vehicles, medical/repair double-timeout vehicles and supply/logistics use.",
+      "updated": "2026-06-22T18:41:05+02:00"
+    },
     {
       "lane": "upgrade-sync-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
