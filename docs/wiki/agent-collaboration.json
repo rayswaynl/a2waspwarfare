@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T19:09:20+02:00",
+  "generatedAt": "2026-06-22T19:33:31+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "send-message-direct-compile-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@40c477be7e0a is unchanged from 16247fc8fb5f for checked Chernarus/Vanilla SEND_MESSAGE receiver/helper paths",
+        "current stable origin/master@0139a3468609 and current B69 origin/claude/b69@8d465fcede7f both keep updateclient.sqf:12 direct SEND_MESSAGE PVEH registration and Client_onEventHandler_SEND_MESSAGE.sqf:27 plus Common_SendMessage.sqf:26/38 call compile shape in both maintained roots",
+        "B69 diffs 0a1ccb4d..origin/claude/b69 and b8530477..origin/claude/b69 are empty for checked SEND_MESSAGE paths",
+        "current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep the same direct-channel compile shape in both maintained roots",
+        "current origin exposes no release/*, feat/*message*, feat/*network* or feat/*send* heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed existing SEND_MESSAGE direct compile owner/status/queue/machine rows with current B69 head evidence.",
+        "Preserve the direct-channel/PVF-dispatch separation: PVF allowlisting does not close SEND_MESSAGE.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should still replace receiver/helper call compile with structured localization key/args handling, propagate maintained Vanilla and smoke localized messages plus forged payload-as-data behavior.",
+      "updated": "2026-06-22T19:33:31+02:00"
+    },
     {
       "lane": "mash-marker-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
