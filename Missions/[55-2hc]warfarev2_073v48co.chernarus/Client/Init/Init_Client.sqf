@@ -413,8 +413,10 @@ buildingMarker = 0;
 CCMarker = 0;
 CBRCircleMarker = 0;
 gearCost = 0;
-currentTG = 50;
-if (currentTG == 50) then {setTerrainGrid currentTG};
+//--- PR #40: removed the unconditional `currentTG = 50; setTerrainGrid 50` override that used to sit here, so
+//--- the profile-aware fallback below governs instead: it no longer clobbers a player's saved terrain-grid
+//--- value, and a profile-less player gets the mission's designed default (isNil 'currentTG' ->
+//--- min(WFBE_C_ENVIRONMENT_MAX_CLUTTER,25) = 25). NB: 25 is a FINER grid than 50 (intended look), not an FPS cut.
 lastBuilt = [];
 unitQueu = 0;
 fireMissionTime = -1000;
