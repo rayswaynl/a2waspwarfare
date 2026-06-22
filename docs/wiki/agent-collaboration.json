@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T17:15:28+02:00",
+  "generatedAt": "2026-06-22T17:29:26+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "construction-smallsite-logic-current-b69-head-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b69 current head is 8d465fcede7fc20a7fcb97bd7d02e5211de8d1bf",
+        "git diff --name-status 0a1ccb4d..origin/claude/b69 for checked Chernarus/Vanilla Construction_SmallSite.sqf and Construction_MediumSite.sqf paths is empty",
+        "docs/source HEAD@6b8eba5e, origin/master@0139a346, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2 and current B69 all keep SmallSite add/add at Construction_SmallSite.sqf:70,99 while MediumSite removes at Construction_MediumSite.sqf:70,114 in both maintained roots",
+        "current origin exposes no release/*, construction, coin or small-site feature heads on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed Construction-Logic-List-Cleanup.md, Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and machine rows with current B69 head evidence.",
+        "Preserved 3406ffa0 and 0a1ccb4d as provenance while marking HEAD@6b8eba5e and origin/claude/b69@8d465fce as current evidence.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner should still patch only the post-completion SmallSite add-to-remove line, propagate maintained Vanilla and smoke small/medium construction before runtime-impact wording.",
+      "updated": "2026-06-22T17:29:26+02:00"
+    },
     {
       "lane": "town-ai-vehicle-despawn-current-b69-head-refresh-2026-06-22",
       "owner": "Codex",
