@@ -39,7 +39,7 @@ while {!WFBE_GameOver} do {
 				_lastCheck = "Camp";
 			};
 		} else {
-		_txt = Format [localize "STR_WF_TownSV", _curSV,_maxSV];
+		_txt = Format ["%1  -  %2", (_nearest getVariable ["name",""]), (Format [localize "STR_WF_TownSV", _curSV,_maxSV])];
 		_lastCheck = "Town";
 		};
 
