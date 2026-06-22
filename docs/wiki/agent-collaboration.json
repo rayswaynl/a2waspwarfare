@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T00:05:31+02:00",
+  "generatedAt": "2026-06-23T00:14:14+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "side-supply-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@a908284c is source-unchanged from 4db90f1c, 7047da5d9 and f52ccee8 for checked Chernarus/Vanilla side-supply and reason paths.",
+        "current stable origin/master@0139a346 and current Miksuu b8389e748243 keep old negative floors at Common_ChangeSideSupply.sqf:25 and Server_ChangeSideSupply.sqf:12,36 in both maintained roots, plus count _this > 3 reason parsing.",
+        "origin/perf/quick-wins@0076040f fixes only Chernarus arithmetic; maintained Vanilla remains old-shape.",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f have no checked side-supply path delta; both fix only Chernarus server arithmetic and add Chernarus wfbe_supply_temp_resistance, while maintained Vanilla remains old-shape.",
+        "current origin exposes no live release, supply or economy rescue head."
+      ],
+      "outputs": [
+        "Refreshed Economy-Authority-First-Cut, Resistance-Supply-Scaffold, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and side-supply machine rows.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future economy owner should treat B69/B74 as Chernarus-only candidate evidence: propagate maintained Vanilla or explicitly scope Chernarus, validate west/east/resistance channel/side/requester behavior, and fix reason parsing before any side-supply hardening claim.",
+      "updated": "2026-06-23T00:14:14+02:00"
+    },
     {
       "lane": "send-message-direct-compile-current-b74-refresh-2026-06-23",
       "owner": "Codex",
