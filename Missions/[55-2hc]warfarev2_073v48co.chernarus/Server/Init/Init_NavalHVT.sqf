@@ -1,10 +1,11 @@
 //--- Init_NavalHVT.sqf — Naval HVT Objectives orchestrator.
 //--- Called once from Init_Server.sqf, guarded by WFBE_C_NAVAL_HVT.
-//--- Creates 2 offshore capturable HVTs on Chernarus east coast, defaulting to GUER ownership.
+//--- Creates 3 offshore capturable HVTs on Chernarus east coast, defaulting to GUER ownership.
 //---
 //--- Assets:
-//---   [A] Khe Sanh Alpha (LHD)  — NE sea        — carrier, aircraft sell
-//---   [B] Khe Sanh Bravo (LHD)  — SE sea         — carrier, aircraft sell
+//---   [A] Khe Sanh Alpha   (LHD)  — NE sea        — carrier, aircraft sell
+//---   [B] Khe Sanh Bravo   (LHD)  — SE sea         — carrier, aircraft sell
+//---   [C] Khe Sanh Charlie (LHD)  — Skalisty sea   — carrier, SCUD strike pad
 //--- (exact anchors below; all surfaceIsWater-validated, spread along the east coast)
 //---
 //--- IMPORTANT NOTES:
@@ -102,25 +103,28 @@ WFBE_NavalHVT_Off = { [((_this select 0) select 0) + (_this select 1), ((_this s
 //--- The 2 naval logics are pre-placed in mission.sqm and already registered in
 //--- towns[] by Init_Town.sqf. Locate them by their name variable.
 //------------------------------------------------------------------------------------
-private ["_lhdAlphaLogic","_lhdBravoLogic","_x","_tName"];
-_lhdAlphaLogic = objNull;
-_lhdBravoLogic = objNull;
+private ["_lhdAlphaLogic","_lhdBravoLogic","_lhdCharlieLogic","_x","_tName"];
+_lhdAlphaLogic   = objNull;
+_lhdBravoLogic   = objNull;
+_lhdCharlieLogic = objNull;
 
 {
 	_tName = _x getVariable ["name", ""];
 	switch (_tName) do {
-		case "Khe Sanh Alpha": { _lhdAlphaLogic = _x; };
-		case "Khe Sanh Bravo": { _lhdBravoLogic = _x; };
+		case "Khe Sanh Alpha":   { _lhdAlphaLogic   = _x; };
+		case "Khe Sanh Bravo":   { _lhdBravoLogic   = _x; };
+		case "Khe Sanh Charlie": { _lhdCharlieLogic = _x; };
 	};
 } forEach towns;
 
-if (isNull _lhdAlphaLogic || isNull _lhdBravoLogic) exitWith {
+if (isNull _lhdAlphaLogic || isNull _lhdBravoLogic || isNull _lhdCharlieLogic) exitWith {
 	["WARNING", "Init_NavalHVT.sqf : pre-placed naval town logic(s) not found in towns[] — check mission.sqm."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- Force sea level (z=0 ASL) on each logic for accurate capture-radius detection.
-_lhdAlphaLogic setPosASL [(getPos _lhdAlphaLogic) select 0, (getPos _lhdAlphaLogic) select 1, 0];
-_lhdBravoLogic setPosASL [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1, 0];
+_lhdAlphaLogic   setPosASL [(getPos _lhdAlphaLogic)   select 0, (getPos _lhdAlphaLogic)   select 1, 0];
+_lhdBravoLogic   setPosASL [(getPos _lhdBravoLogic)   select 0, (getPos _lhdBravoLogic)   select 1, 0];
+_lhdCharlieLogic setPosASL [(getPos _lhdCharlieLogic) select 0, (getPos _lhdCharlieLogic) select 1, 0];
 
 //--- Sanity: diag_log (always hits the RPT) a WARN if any town logic is NOT over water,
 //--- so a bad mission.sqm coord (on land) is caught server-side without a visual check.
@@ -128,36 +132,19 @@ _lhdBravoLogic setPosASL [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLog
 	if (!(surfaceIsWater (getPos _x))) then {
 		diag_log Format ["NAVALHVT-WARN: town [%1] is NOT over water at %2 - fix mission.sqm coord.", _x getVariable ["name","?"], getPos _x];
 	};
-} forEach [_lhdAlphaLogic, _lhdBravoLogic];
+} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
 
 //--- Derive 2-element [x,y] anchors from logic positions (downstream structure code uses these
 //--- with WFBE_NavalHVT_Off, which reads select 0 / select 1, so must remain [x,y]).
-private ["_aAlpha","_aBravo"];
-_aAlpha = [(getPos _lhdAlphaLogic) select 0, (getPos _lhdAlphaLogic) select 1];
-_aBravo = [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1];
-
-//------------------------------------------------------------------------------------
-//--- NAME LABELS — sea towns have no built-in map label, so add a global text marker per
-//--- town (the SV text comes from updatetownmarkers.sqf on the CityMarker). Offset N so the
-//--- name does not sit on top of the SV readout.
-//------------------------------------------------------------------------------------
-private ["_nmI","_nmLoc","_nmName","_nmP","_nmMkr"];
-_nmI = 0;
-{
-	_nmLoc  = _x select 0;
-	_nmName = _x select 1;
-	_nmP    = getPos _nmLoc;
-	_nmMkr  = createMarker [Format ["WFBE_NavalName_%1", _nmI], [(_nmP select 0), (_nmP select 1) + 160, 0]];
-	_nmMkr setMarkerType "mil_dot";
-	_nmMkr setMarkerColor "ColorBlack";
-	_nmMkr setMarkerText _nmName;
-	_nmI = _nmI + 1;
-} forEach [[_lhdAlphaLogic, "Khe Sanh Alpha"], [_lhdBravoLogic, "Khe Sanh Bravo"]];
+private ["_aAlpha","_aBravo","_aCharlie"];
+_aAlpha   = [(getPos _lhdAlphaLogic)   select 0, (getPos _lhdAlphaLogic)   select 1];
+_aBravo   = [(getPos _lhdBravoLogic)   select 0, (getPos _lhdBravoLogic)   select 1];
+_aCharlie = [(getPos _lhdCharlieLogic) select 0, (getPos _lhdCharlieLogic) select 1];
 
 //------------------------------------------------------------------------------------
 //--- SPAWN BOTH LHD ASSETS
 //------------------------------------------------------------------------------------
-private ["_lhdAlphaParts","_lhdBravoParts","_pad","_deckPart","_deckZ","_bb"];
+private ["_lhdAlphaParts","_lhdBravoParts","_lhdCharlieParts","_pad","_deckPart","_deckZ","_bb","_scudPad"];
 
 //---
 //--- [A] KHE SANH ALPHA (LHD) — NE
@@ -172,7 +159,7 @@ _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdAlphaParts select 3;
-_bb = [[0,0,0],[0,0,20]];
+_bb = [[0,0,0],[0,0,16]];
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdAlphaLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdAlphaLogic setVariable ["wfbe_is_naval_hvt", true, true];
@@ -192,7 +179,7 @@ _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdBravoParts select 3;
-_bb = [[0,0,0],[0,0,20]];
+_bb = [[0,0,0],[0,0,16]];
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdBravoLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdBravoLogic setVariable ["wfbe_is_naval_hvt", true, true];
@@ -200,10 +187,77 @@ diag_log Format ["NAVALHVT-DECK: Khe Sanh Bravo partpos=%1 bbMin=%2 bbMax=%3 dec
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [B] Khe Sanh Bravo (LHD) spawned at %1.", _aBravo]] Call WFBE_CO_FNC_LogContent;
 
+//---
+//--- [C] KHE SANH CHARLIE (LHD) — Skalisty Island sea
+//---
+_lhdCharlieParts = [[_aCharlie select 0, _aCharlie select 1, 0], 90] Call WFBE_NavalHVT_SpawnLHD;
+
+//--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
+_deckPart = _lhdCharlieParts select 3;
+_bb = [[0,0,0],[0,0,16]];
+_deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
+_lhdCharlieLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
+_lhdCharlieLogic setVariable ["wfbe_is_naval_hvt", true, true];
+diag_log Format ["NAVALHVT-DECK: Khe Sanh Charlie partpos=%1 bbMin=%2 bbMax=%3 deckZ=%4", getPosASL _deckPart, _bb select 0, _bb select 1, _deckZ];
+
+["INITIALIZATION", Format ["Init_NavalHVT.sqf : [C] Khe Sanh Charlie (LHD) spawned at %1.", _aCharlie]] Call WFBE_CO_FNC_LogContent;
+
+//--- SCUD pad on Charlie's deck (addAction proximity reference).
+_scudPad = createVehicle ["HeliHCivil", [_aCharlie select 0, _aCharlie select 1, 0], [], 0, "NONE"];
+_scudPad setPosASL [_aCharlie select 0, _aCharlie select 1, 16];
+_scudPad enableSimulation false;
+_scudPad allowDamage false;
+_scudPad setVariable ["wfbe_is_scud_pad", true, true];
+_lhdCharlieLogic setVariable ["wfbe_scud_pad_ref", _scudPad, true];
+missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_lhdCharlieLogic]];
+
+//--- SCUD ADDACTION on Charlie's deck. Only team-leaders of the owning side near the pad see it.
+[_lhdCharlieLogic, _scudPad] spawn {
+	private ["_loc","_pad","_sideID","_ownerSide","_actionID","_team","_isLeader","_x"];
+	_loc = _this select 0;
+	_pad = _this select 1;
+	while { !WFBE_GameOver } do {
+		sleep 15;
+		_sideID    = _loc getVariable ["sideID", WFBE_C_GUER_ID];
+		_ownerSide = _sideID Call WFBE_CO_FNC_GetSideFromID;
+		{
+			if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _pad) < 50}) then {
+				_team = group _x;
+				_isLeader = (_x == leader _team);
+				if (_isLeader) then {
+					if (isNil {_x getVariable "wfbe_scud_action_armed"}) then {
+						_x setVariable ["wfbe_scud_action_armed", true];
+						_actionID = _x addAction [
+							localize "STR_WF_SCUD_ACTION",
+							{
+								private ["_caller","_cost","_funds"];
+								_caller = _this select 1;
+								_cost   = WFBE_C_SCUD_COST;
+								_funds  = (group _caller) getVariable ["wfbe_funds", 0];
+								if (_funds < _cost) exitWith { [localize "STR_WF_SCUD_NO_FUNDS"] call WFBE_CL_FNC_Hint; };
+								[localize "STR_WF_SCUD_SELECT_TARGET"] call WFBE_CL_FNC_Hint;
+								openMap true;
+								onMapSingleClick {
+									onMapSingleClick {};
+									openMap false;
+									["RequestSpecial", ["ScudStrike", playerSide, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
+									[localize "STR_WF_SCUD_LAUNCHED"] call WFBE_CL_FNC_Hint;
+									false
+								};
+							},
+							[], 6, true, true, "", "alive _target && isPlayer _this"
+						];
+					};
+				};
+			};
+		} forEach playableUnits;
+	};
+};
+
 //------------------------------------------------------------------------------------
 //--- STORE NAVAL HVT LOGICS for server_town.sqf capture-block lookup.
 //------------------------------------------------------------------------------------
-missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBravoLogic]];
+missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic]];
 
 //------------------------------------------------------------------------------------
 //--- GUER CAP: proximity-gated Mi24_P + An2 patrol for each naval HVT.
@@ -297,6 +351,6 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 			};
 		};
 	};
-} forEach [_lhdAlphaLogic, _lhdBravoLogic];
+} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
 
 ["INITIALIZATION", "Init_NavalHVT.sqf : All naval HVT assets spawned + CAP loops started."] Call WFBE_CO_FNC_LogContent;

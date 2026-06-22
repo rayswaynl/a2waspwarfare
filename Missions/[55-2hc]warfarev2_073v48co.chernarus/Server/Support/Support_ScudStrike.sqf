@@ -36,7 +36,7 @@ _warWP       = WFBE_C_SCUD_WARHEAD_WP;
 _hvtList = missionNamespace getVariable ["WFBE_NAVAL_HVT_PLATFORMS", []];
 _platform = objNull;
 {
-	if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID} && {_x getVariable ["wfbe_is_oil_platform_hvt", false]}) then {_platform = _x};
+	if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID} && {_x getVariable ["wfbe_is_naval_hvt", false]}) then {_platform = _x};
 } forEach _hvtList;
 if (isNull _platform) exitWith {
 	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- no owned oil platform.", str _side]] Call WFBE_CO_FNC_LogContent;
