@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-22T09:46:27+02:00",
+  "generatedAt": "2026-06-22T10:05:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only state preserves the fast-travel fee current-stable refresh, B69 Patch A-2 capture-interrupt refresh, resource-income current-stable branch split, auto-wall current-stable scope refresh and indicator status-counter branch split. Fast-travel evidence splits current stable origin/master@0139a346, where paid-mode UX/debit remains but the stale TODO is absent, from docs/Miksuu/perf/historical release refs that still carry the TODO; B69 Patch A/A-2 remains branch-only Chernarus code on origin/claude/b69@edb9f776, not stable/Vanilla/release proof. No gameplay source changed.",
+      "currentWork": "Latest docs-only state preserves the AI supply-truck current-stable anchor split, fast-travel fee current-stable refresh, B69 Patch A-2 capture-interrupt refresh, resource-income current-stable branch split and auto-wall current-stable scope refresh. AI supply-truck docs separate docs branch ea0e0f1b/Miksuu/perf raw-spawn evidence from current stable origin/master@0139a346 safe-disable at Init_Server.sqf:43,462-463, and Feature Status now aligns AI commander automation with current stable's source-present supervisor route. Fast-travel evidence splits current stable from old TODO refs; B69 remains branch-only Chernarus code on origin/claude/b69@edb9f776. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki gap from the dashboard, Feature Status, Source Fix queue or pruning ledger, and preserve docs/wiki parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ai-supply-truck-current-stable-anchor-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed AI-Commander-Autonomy-Audit.md, Abandoned-Feature-Revival-Review.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so AI supply-truck status no longer flattens docs-branch raw-spawn evidence with current stable safety. Docs branch ea0e0f1b, Miksuu b8389e74 and perf 0076040f still raw-spawn the commented/missing worker; current stable origin/master@0139a346 safe-disables it at Init_Server.sqf:43,462-463; historical a96fdda2/c20ce153 are commit-only evidence. Also aligned Feature Status AI commander automation wording with current stable's supervisor route. No gameplay source changed."
+    },
     {
       "lane": "fast-travel-fee-current-stable-refresh-2026-06-22",
       "owner": "Codex",

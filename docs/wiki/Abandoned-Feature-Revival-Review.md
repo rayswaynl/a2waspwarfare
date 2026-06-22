@@ -8,7 +8,7 @@ This page classifies dormant, broken and orphaned feature paths by what the sour
 | --- | --- | --- | --- |
 | MASH map markers | Source/Vanilla MASH tents are created and undeployed client-side, but the marker receiver is commented out and no live source/Vanilla sender for `WFBE_CL_MASH_MARKER_CREATED` was found. Wave S recheck found modded `eden` and `lingor` emit the marker-created PV; `Napf` does not currently show that sender in tracked source. | Broken marker edge; MASH respawn itself remains live. Some modded forks have sender-only drift. | Revive only with server-held marker records, unique marker ids, delete cleanup and JIP replay. Otherwise remove/annotate the dead marker relay and clean modded sender drift. |
 | Paratrooper drop markers | Server paratrooper support ejects units and sends `HandleParatrooperMarkerCreation`; source Chernarus and maintained Vanilla Takistan now register the existing client handler. | Small broken edge patched and propagated; Arma smoke pending. | Use [Paratrooper marker revival](Paratrooper-Marker-Revival) for evidence and validation. Modded missions still need maintenance-model cleanup because they register the callback but lack the handler file. |
-| AI commander supply trucks | `UpdateSupplyTruck` compile is commented and the update script references missing `Server\FSM\supplytruck.fsm`. Current `origin/master` `cf2a6d6a` and release `a96fdda2` log-disable the truck-supply + AI-commander branch in both maintained roots; Miksuu `b8389e74` and `perf/quick-wins` `0076040f` still raw-spawn the missing worker; `feat/ai-commander` head `c20ce153` guards only Chernarus and does not restore the old supply-truck FSM. | Broken/dormant logistics feature; current master is safe-disabled, not revived. Branch-only AI commander revival attempt is not a logistics revival. | Do not just uncomment. Use [AI commander autonomy audit](AI-Commander-Autonomy-Audit) before merging raw-spawn branches, changing the safe-disable, or redesigning autonomous logistics. |
+| AI commander supply trucks | `UpdateSupplyTruck` compile is commented and the update script references missing `Server\FSM\supplytruck.fsm`. Docs branch `ea0e0f1b`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f` still raw-spawn the missing worker in both maintained roots. Current stable `origin/master@0139a346` log-disables the truck-supply + AI-commander branch at `Init_Server.sqf:43,462-463`; historical release commit `a96fdda2` has the older safe-disable line shape, and historical `c20ce153` guards only Chernarus. | Broken/dormant logistics feature; current stable is safe-disabled, not revived. Docs/Miksuu/perf raw-spawn branches still need the caveat. | Do not just uncomment. Use [AI commander autonomy audit](AI-Commander-Autonomy-Audit) before merging raw-spawn branches, changing the safe-disable, or redesigning autonomous logistics. |
 | Task system | `TaskSystem` compile/start calls and town-capture task spawns are commented, while `Client_TaskSystem.sqf` remains in the tree. | Dormant legacy client UX path. | Treat as owner decision. Re-enable only with task-spam, JIP and notification UX smoke; otherwise remove/annotate the stale helper. |
 | Old map-icon tracking loop | Old plural blink/track compiles and exec are commented, old helper files are absent, and newer singular marker blinking remains active. | Replaced/dormant client marker path. | Do not restore the old loop without a performance review. Keep documentation clear that marker blinking is not wholly dead. |
 | AT/bomb common hooks | `HandleATReloadVehicle` and `HandleBombs` compiles are commented; bomb helper is missing and AT reload has no active wiring found. | Cut-off hook family. | Leave dormant unless a gameplay owner designs the reload/bomb feature and its authority/locality model. |
@@ -94,7 +94,8 @@ Validation:
 What was read:
 
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:37`
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:382-384`
+- Docs branch `ea0e0f1b`: `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:36,382-383`
+- Current stable `origin/master@0139a346`: `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:43,462-463`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf:1-20`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:95,165`
 - Missing path check: `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/supplytruck.fsm`
@@ -102,9 +103,9 @@ What was read:
 What the code does:
 
 - `UpdateSupplyTruck` is commented out at compile time.
-- The per-side server init still has the truck-supply + AI-commander branch, but current master initializes `wfbe_ai_supplytrucks` and logs that legacy AI supply-truck logistics are disabled instead of spawning `UpdateSupplyTruck`.
+- The per-side server init still has the truck-supply + AI-commander branch. The docs branch checkout still raw-spawns `UpdateSupplyTruck`; current stable initializes `wfbe_ai_supplytrucks` and logs that legacy AI supply-truck logistics are disabled instead of spawning it.
 - Mission parameter defaults appear to keep AI commander disabled (`Rsc/Parameters.hpp:99-104`), while constants fall back to automatic supply (`WFBE_C_ECONOMY_SUPPLY_SYSTEM = 1`) if no parameter overrides it. The broken branch is normally avoided, but the parameter/fallback distinction matters.
-- In current master the branch no longer hits undefined `UpdateSupplyTruck`; if someone restores the compile or reintroduces a raw spawn, the script later tries to `ExecFSM "Server\FSM\supplytruck.fsm"`, which is absent.
+- In current stable the branch no longer hits undefined `UpdateSupplyTruck`; if someone restores the compile or reintroduces a raw spawn, the script later tries to `ExecFSM "Server\FSM\supplytruck.fsm"`, which is absent.
 
 Why it matters:
 
@@ -112,7 +113,7 @@ This is the clearest "do not casually revive" feature. It is config-gated latent
 
 Detailed AI commander state, upgrade-worker and production/logistics readiness are now canonical in [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 
-Branch refresh 2026-06-13: current `origin/master` `cf2a6d6a` and release `a96fdda2` both carry the warning/disabled branch in Chernarus and maintained Vanilla. Miksuu upstream `b8389e74` and `perf/quick-wins` `0076040f` still raw-spawn; `origin/feat/ai-commander` `c20ce153` only guards Chernarus and leaves Vanilla raw. No checked branch restores `Server\FSM\supplytruck.fsm`; use [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) as the branch matrix.
+Branch refresh 2026-06-22: docs branch `docs/developer-wiki-index@ea0e0f1b`, Miksuu upstream `b8389e74` and `perf/quick-wins` `0076040f` still raw-spawn in both maintained roots. Current stable `origin/master@0139a346` carries the warning/disabled branch in Chernarus and maintained Vanilla; historical release commit `a96fdda2` has the older safe-disable line shape, but current origin exposes no `release/*` head. Historical `c20ce153` only guards Chernarus and leaves Vanilla raw, and current origin exposes no `feat/ai-commander` head. No checked branch restores `Server\FSM\supplytruck.fsm`; use [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) as the branch matrix.
 
 Safe implementation shape:
 

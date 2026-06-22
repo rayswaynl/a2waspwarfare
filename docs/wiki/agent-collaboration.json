@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T09:46:27+02:00",
+  "generatedAt": "2026-06-22T10:05:14+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-supply-truck-current-stable-anchor-refresh-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/developer-wiki-index@ea0e0f1b Chernarus and maintained Vanilla comment UpdateSupplyTruck at Init_Server.sqf:36, initialize wfbe_ai_supplytrucks at :382 and raw-spawn UpdateSupplyTruck at :383",
+        "origin/master@0139a346 Chernarus and maintained Vanilla comment UpdateSupplyTruck at Server/Init/Init_Server.sqf:43",
+        "origin/master@0139a346 Chernarus and maintained Vanilla initialize wfbe_ai_supplytrucks and warning-disable legacy AI supply-truck logistics at Server/Init/Init_Server.sqf:462-463",
+        "origin/master@0139a346 Chernarus and maintained Vanilla AI_UpdateSupplyTruck.sqf:17 still references missing Server/FSM/supplytruck.fsm; ls-tree found no supplytruck.fsm",
+        "Miksuu master@b8389e74 fetched from https://github.com/miksuu/a2waspwarfare.git raw-spawns UpdateSupplyTruck at Init_Server.sqf:382-383 in both maintained roots",
+        "origin/perf/quick-wins@0076040f raw-spawns in Chernarus at Init_Server.sqf:377-378 and maintained Vanilla at :382-383",
+        "historical release commit a96fdda2 safe-disables at Init_Server.sqf:37,383-384 in both maintained roots; current origin exposes no release/* heads on 2026-06-22",
+        "historical c20ce153 guards Chernarus at Init_Server.sqf:388-389 but leaves maintained Vanilla raw at :382-383; current origin exposes no feat/ai-commander head on 2026-06-22"
+      ],
+      "outputs": [
+        "Refreshed AI-Commander-Autonomy-Audit.md, Abandoned-Feature-Revival-Review.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so current-stable anchors no longer point at cf2a6d6a line numbers or call the docs checkout safe-disabled.",
+        "Aligned Feature-Status-Register.md AI commander automation row with current stable origin/master@0139a346 supervisor compile/spawn/latch/upgrade-call evidence.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and coordination records. No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Preserve current stable safe-disable when merging older raw-spawn branches; only reopen legacy AI logistics with a real server-owned loop/FSM and smoke. Treat docs branch/Miksuu/perf raw-spawn status as target-specific caveat or port work.",
+      "updated": "2026-06-22T10:05:14+02:00"
+    },
     {
       "lane": "fast-travel-fee-current-stable-refresh-2026-06-22",
       "owner": "Codex",
