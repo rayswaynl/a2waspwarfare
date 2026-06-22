@@ -2114,3 +2114,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source scope: `origin/claude/b74-aicom-spend@b23f557f` Chernarus `GUI_Commander_VoteMenu.sqf` resolves by visible `lnbText` at `:33`, sends `RequestNewCommander` at `:46`, and stores candidate row values with `lnbSetValue` at `:63`.
 - Result: corrected the stale `:53` row-value evidence to `:63` in the append-only worklog note above and `agent-feature-status.jsonl`. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T01:43:04+02:00 - Codex - Town AI despawn current B74 refresh
+
+- Claimed `town-ai-despawn-current-b74-refresh-2026-06-23` after the Town AI vehicle despawn owner/status/queue rows named current B69 evidence but did not include adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`.
+- Source scope: docs/source `HEAD@3a9ba92e6ea7`; current stable `origin/master@0139a3468609`; current B69 `origin/claude/b69@8d465fcede7f`; adjacent B74 `origin/claude/b74-aicom-spend@b23f557fc912`; current Miksuu `b8389e748243`; perf `origin/perf/quick-wins@0076040f8a5e`; historical release `a96fdda28087`; live AI fleet branch `origin/feat/aicom-fleet-improvements@cc5090bed4ad`.
+- Findings: docs/source, current stable, Miksuu, perf, historical release and AI fleet still delete tracked `wfbe_active_vehicles` without a player `crew` check in both maintained roots. Current stable line drift is `server_town_ai.sqf:309`; docs/source is `:214`; Miksuu is `:195`; perf is `:219`; historical release is `:200`; AI fleet is `:207`.
+- Branch note: B69 and B74 are identical for checked `server_town_ai.sqf` paths. Chernarus has the candidate crew-scan guard at `server_town_ai.sqf:325`, while maintained Vanilla remains unsafe at `:319`. Checked deltas `origin/claude/b69..origin/claude/b74-aicom-spend`, `0a1ccb4d..origin/claude/b74-aicom-spend` and `b8530477..origin/claude/b74-aicom-spend` are empty.
+- Helper note: no checked current ref contains `Server_CleanupExpiredTownDefenseAssets.sqf`; current origin exposes no live `release/*`, town, despawn or cleanup rescue head beyond the already-unsafe AI fleet branch. Older `89ae9dad` helper evidence remains historical.
+- Result: refreshed [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety#current-branch-matrix), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows with adjacent B74 evidence. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T01:24:24+02:00",
+  "generatedAt": "2026-06-23T01:43:04+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "town-ai-despawn-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@3a9ba92e still deletes tracked wfbe_active_vehicles at server_town_ai.sqf:214 in both maintained roots with alive _x plus !(isPlayer leader group _x) and no player crew check.",
+        "current stable origin/master@0139a346 keeps the same unsafe vehicle guard at server_town_ai.sqf:309 in both maintained roots.",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2 and origin/feat/aicom-fleet-improvements@cc5090bed4ad remain unsafe in both maintained roots.",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f are identical for checked server_town_ai.sqf paths: Chernarus has the candidate crew guard at :325, maintained Vanilla remains unsafe at :319.",
+        "git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend, 0a1ccb4d..origin/claude/b74-aicom-spend and b8530477..origin/claude/b74-aicom-spend are empty for checked server_town_ai.sqf paths; no checked current ref contains Server_CleanupExpiredTownDefenseAssets.sqf."
+      ],
+      "outputs": [
+        "Refreshed Town AI vehicle despawn safety, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and Town AI despawn machine rows with adjacent B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future town-AI owner should treat B69/B74 as Chernarus-only candidate evidence, add or port the player crew guard to maintained roots, preserve empty AI-only cleanup, smoke occupied driver/gunner/cargo/turret cases plus empty AI vehicle cleanup, and audit any future persistent town-defense helper as a separate cleanup surface.",
+      "updated": "2026-06-23T01:43:04+02:00"
+    },
     {
       "lane": "commander-reassignment-current-b74-refresh-2026-06-23",
       "owner": "Codex",
