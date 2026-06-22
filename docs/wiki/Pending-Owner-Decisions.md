@@ -111,7 +111,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | Decision | Finding | Note |
 | --- | --- | --- |
 | Post-join `wfbe_*` `waitUntil` chain has no timeouts | DR-37 | a never-set synced var hangs the JIP client; add defensive timeouts |
-| Server-FPS hosted/listen busy-loop | DR-19 | Docs checkout `db7667c9` Chernarus + Vanilla early-exit on `!isDedicated` in both FPS publishers (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`). Stable `origin/master` `cf2a6d6a` and release `a96fdda2` instead use one guarded `serverFpsGUI.sqf:4` publisher and have no maintained-root `monitorServerFPS.sqf`; Miksuu `b8389e74` and perf `0076040f` still keep the old two-loop shape. Arma smoke remains. |
+| Server-FPS hosted/listen busy-loop | DR-19 | Docs HEAD `d0161083` is source-unchanged from `a27086cd` and Chernarus + Vanilla early-exit on `!isDedicated` in both FPS publishers (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`). Current stable `origin/master@0139a346` uses one guarded `serverFpsGUI.sqf:4` publisher, starts it from `Init_Server.sqf:769`, documents monitor removal at `:815-817` and has no maintained-root `monitorServerFPS.sqf`; historical `a96fdda2` matches with older init anchors. No current `origin/dev/july-update-hosted-server-fps-loop-fix` head was found on 2026-06-22. Miksuu `b8389e74` and perf `0076040f` still keep the old two-loop shape. Arma smoke remains. |
 | WASP `global_marking_monitor.sqf:62` sleepless display-wait | DR-40 | use the throttled `waitUntil {sleep …; cond}` idiom |
 
 ## Agent Handoff Contract

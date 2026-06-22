@@ -620,7 +620,7 @@
     "AI commander automation current-stable correction: origin/master@0139a346 compiles and spawns WFBE_SE_FNC_AI_Commander in both maintained roots (Init_Server.sqf:64,847), sets wfbe_aicom_running from AI_Commander.sqf:127/253 and calls the upgrade worker at :161; B69 roadmap/sketch pages remain branch/live-Chernarus improvement guidance until owner-selected patches are merged, propagated and smoked.",
     "Server_AssignNewCommander DR-15 current status: current source/Vanilla still use _side = _this in Server_AssignNewCommander.sqf and RequestNewCommander still sends the duplicate caller-side notification; source patch, Vanilla propagation, requester/role validation and Arma smoke remain.",
     "Supply mission cooldown casing mismatch: town init seeds lastSupplyMissionRun while server supply mission code reads/writes LastSupplyMissionRun.",
-    "Hosted server FPS loop current status refreshed 2026-06-14: docs/source Chernarus and maintained Vanilla early-exit both serverFpsGUI.sqf and monitorServerFPS.sqf on !isDedicated before the loops. Stable origin/master cf2a6d6a and release a96fdda2 now carry a different fixed shape: one guarded serverFpsGUI.sqf publisher and no maintained-root monitorServerFPS.sqf file. Miksuu b8389e74 and perf/quick-wins 0076040f remain old-loop-shaped. Arma smoke remains.",
+    "Hosted server FPS loop current status refreshed 2026-06-22: docs HEAD d0161083 is source-unchanged from a27086cd and early-exits both serverFpsGUI.sqf and monitorServerFPS.sqf on !isDedicated before the loops in Chernarus and maintained Vanilla. Current stable origin/master@0139a346 carries a different fixed shape: one guarded serverFpsGUI.sqf publisher, Init_Server.sqf:769 start, Init_Server.sqf:815-817 monitor-removal note and no maintained-root monitorServerFPS.sqf file. Historical a96fdda2 matches the single-publisher shape but no live release/* head exists. No origin/dev/july-update-hosted-server-fps-loop-fix head was found on 2026-06-22. Miksuu b8389e74 and perf/quick-wins 0076040f remain old-loop-shaped. Arma smoke remains.",
     "LoadoutManager root discovery current status: the tool now accepts either an ancestor named a2waspwarfare or repo-root markers (Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj), so work/a style checkouts are runnable.",
     "LoadoutManager packaging current status: dotnet run still calls ZipManager after generation/copy, but A2WASP_SKIP_ZIP=1 skips _MISSIONS.7z creation so propagation-only runs do not require 7za.",
     "BattlEyeFilter/publicvariable.txt is feature-specific for kickAFK and is not a comprehensive PV hardening layer.",
@@ -803,7 +803,7 @@
         "AI commander current-stable supervisor exists in origin/master@0139a346: Init_Server.sqf:64,847 compiles/spawns WFBE_SE_FNC_AI_Commander and AI_Commander.sqf:127,253 owns wfbe_aicom_running; B69 improvement docs remain branch/live-Chernarus planning evidence.",
         "Server_AssignNewCommander DR-15 call-shape bug remains patch-ready/current-source-unpatched; remaining work is source patching, Vanilla propagation, RequestNewCommander authority validation and Arma smoke.",
         "Supply mission reward/cooldown logic has client-authority and variable-casing risks.",
-        "Hosted/non-dedicated server FPS publishers remain patch-ready/current-source-unpatched; source patch, Vanilla propagation and Arma smoke remain."
+        "Hosted/non-dedicated server FPS publishers are branch-split after later refreshes: docs/source carries two guarded publishers, current stable carries one guarded publisher, Miksuu/perf remain old-loop-shaped and Arma smoke remains."
       ]
     },
     {
@@ -891,7 +891,7 @@
       ],
       "findings": [
         "DR-18 confirmed: supply-cooldown key casing mismatch (lowercase seed vs capital readers; case-sensitive keys) -> nil-throw on first check; defeats the 0-seed guard.",
-        "DR-19 current status refreshed 2026-06-14: docs/source Chernarus and maintained Vanilla have the early !isDedicated exit before both FPS publisher loops; stable origin/master cf2a6d6a and release a96fdda2 have one guarded serverFpsGUI publisher and no maintained-root monitorServerFPS.sqf file; Miksuu b8389e74 and perf/quick-wins 0076040f remain old-loop-shaped. Docs/source still has two guarded publishers, so consolidation remains a separate compatibility decision.",
+        "DR-19 current status refreshed 2026-06-22: docs/source Chernarus and maintained Vanilla have the early !isDedicated exit before both FPS publisher loops; current stable origin/master@0139a346 has one guarded serverFpsGUI publisher, Init_Server.sqf:769 start and :815-817 monitor-removal note; historical a96fdda2 matches the single-publisher shape but no live release/* head exists; no origin/dev/july-update-hosted-server-fps-loop-fix head was found; Miksuu b8389e74 and perf/quick-wins 0076040f remain old-loop-shaped. Docs/source still has two guarded publishers, so consolidation remains a separate compatibility decision.",
         "Both were Cicero candidates from Server-Gameplay-Runtime-Atlas; verified at source with exact impact and one-line fixes."
       ]
     },

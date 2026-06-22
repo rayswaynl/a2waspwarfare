@@ -1,22 +1,22 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-16T21:32:45+02:00",
-  "lastVerifiedAt": "2026-06-16T21:32:45+02:00",
+  "generatedAt": "2026-06-22T14:39:44+02:00",
+  "lastVerifiedAt": "2026-06-22T14:39:44+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
   "julyUpdateCandidates": [
     {
       "id": "july-hosted-server-fps-loop-fix",
-      "branch": "origin/dev/july-update-hosted-server-fps-loop-fix",
-      "state": "queued-dev-branch-no-runtime-evidence-yet",
+      "branch": "planned dev/july-update-hosted-server-fps-loop-fix; no current origin/dev head found on 2026-06-22",
+      "state": "queued-branch-missing-no-runtime-evidence-yet",
       "canonicalDocs": [
         "Progress-Dashboard.md#july-update-to-do",
         "Hosted-Server-FPS-Loop-Sleep.md",
         "Hardening-Implementation-Roadmap.md#july-update-candidate-route",
         "Testing-Debugging-And-Release-Workflow.md#july-update-candidate-smoke-route"
       ],
-      "releaseGate": "Dedicated still publishes SERVER_FPS_GUI / WFBE_VAR_SERVER_FPS; hosted/listen exits before the publisher loops; Chernarus and maintained Vanilla parity are named before release wording.",
+      "releaseGate": "Create or restore the branch first. On a current-stable-shaped target, dedicated still publishes SERVER_FPS_GUI and monitorServerFPS remains absent; on a docs/source-shaped target, dedicated still publishes SERVER_FPS_GUI plus WFBE_VAR_SERVER_FPS. Hosted/listen exits before active publisher loops; Chernarus and maintained Vanilla parity are named before release wording.",
       "smokeStatus": "planned-not-run"
     },
     {
@@ -827,15 +827,18 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf:1",
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf:1",
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf:1",
-        "origin/master@cf2a6d6a Chernarus/Vanilla Server/GUI/serverFpsGUI.sqf:4 guarded; Server/Module/serverFPS/monitorServerFPS.sqf absent; Init_Server.sqf:596-598 documents redundant monitor removal",
-        "origin/release/2026-06-feature-bundle@a96fdda2 Chernarus/Vanilla Server/GUI/serverFpsGUI.sqf:4 guarded; Server/Module/serverFPS/monitorServerFPS.sqf absent; Init_Server.sqf:595-597 documents redundant monitor removal",
-        "miksuu/master@b8389e74 and origin/perf/quick-wins@0076040f still keep two old unguarded FPS publisher loops in checked maintained roots"
+        "docs HEAD@d0161083 is source-unchanged from a27086cd for checked hosted-FPS source paths",
+        "origin/master@0139a346 Chernarus/Vanilla Server/GUI/serverFpsGUI.sqf:4 guarded; Init_Server.sqf:769 starts serverFpsGUI; Init_Server.sqf:815-817 documents redundant monitor removal; Server/Module/serverFPS/monitorServerFPS.sqf absent",
+        "historical a96fdda2 Chernarus/Vanilla Server/GUI/serverFpsGUI.sqf:4 guarded; Server/Module/serverFPS/monitorServerFPS.sqf absent; Init_Server.sqf:579 and :595-597 use the same single-publisher shape",
+        "miksuu/master@b8389e74 and origin/perf/quick-wins@0076040f still keep two old unguarded FPS publisher loops in checked maintained roots",
+        "origin/dev/july-update-hosted-server-fps-loop-fix is not a current remote ref on 2026-06-22"
       ],
-      "releaseGate": "Smoke dedicated FPS publishing and confirm hosted/listen servers do not spin the FPS publisher loops.",
+      "releaseGate": "Create or restore the July target branch before code work. Smoke dedicated FPS publishing for the chosen branch shape and confirm hosted/listen servers do not spin the active FPS publisher loops.",
       "branchStatus": {
-        "stableMaster": "cf2a6d6a-guarded-single-publisher-in-chernarus-and-vanilla",
-        "releaseBranch": "a96fdda2-guarded-single-publisher-in-chernarus-and-vanilla",
-        "docsSource": "chernarus-and-vanilla-early-exit",
+        "stableMaster": "0139a346-guarded-single-publisher-in-chernarus-and-vanilla",
+        "releaseBranch": "historical-a96fdda2-guarded-single-publisher-in-chernarus-and-vanilla-no-live-release-head",
+        "docsSource": "d0161083-source-unchanged-from-a27086cd-two-publisher-early-exit",
+        "julyDevBranch": "missing-origin-dev-head-on-2026-06-22",
         "evidence": "Hosted-Server-FPS-Loop-Sleep.md#current-branch-scope"
       }
     },

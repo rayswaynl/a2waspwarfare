@@ -100,7 +100,7 @@
       "id": "july-update-candidate-route",
       "system": "July update dev-branch planning and smoke routing",
       "riskTier": "route",
-      "branchScope": "origin/dev/july-update-hosted-server-fps-loop-fix plus origin/dev/july-takistan-airfield-fpv-drone",
+      "branchScope": "planned hosted-FPS dev branch missing on 2026-06-22 plus origin/dev/july-takistan-airfield-fpv-drone",
       "canonicalDocs": [
         "Progress-Dashboard",
         "Hardening-Implementation-Roadmap",
@@ -109,7 +109,7 @@
         "Takistan-Airfield-FPV-Drone-Design"
       ],
       "sourceRefs": [
-        "origin/dev/july-update-hosted-server-fps-loop-fix",
+        "planned dev/july-update-hosted-server-fps-loop-fix; no origin/dev head found on 2026-06-22",
         "origin/dev/july-takistan-airfield-fpv-drone",
         "docs/wiki/Progress-Dashboard.md#july-update-to-do",
         "docs/wiki/Testing-Debugging-And-Release-Workflow.md#july-update-candidate-smoke-route"
@@ -119,7 +119,7 @@
         "agent-release-readiness.json#julyUpdateCandidates",
         "agent-hardening-backlog.jsonl#server-fps-hosted-loop-sleep"
       ],
-      "nextGate": "Use the July smoke route before implementation or release wording: hosted FPS must prove dedicated publishing plus hosted no-spin behavior; Takistan FPV must stay server-authoritative and Takistan-scoped until runtime evidence says otherwise."
+      "nextGate": "Use the July smoke route before implementation or release wording: create or restore the hosted-FPS branch first, then prove target-branch-specific dedicated publishing plus hosted no-spin behavior; Takistan FPV must stay server-authoritative and Takistan-scoped until runtime evidence says otherwise."
     },
     {
       "id": "mission-entrypoints-lifecycle",

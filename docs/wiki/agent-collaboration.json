@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-22T14:29:13+02:00",
+  "generatedAt": "2026-06-22T14:48:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "hosted-fps-current-stable-dev-branch-route-2026-06-22",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs HEAD d0161083035b is source-unchanged from a27086cd for checked hosted-FPS source paths",
+        "origin/master@0139a3468609 uses a single guarded serverFpsGUI publisher in both maintained roots, starts it at Init_Server.sqf:769 and documents monitorServerFPS removal at :815-817",
+        "origin/dev/july-update-hosted-server-fps-loop-fix is not a current remote ref on 2026-06-22; git ls-remote matched only feat/client-fps and perf/asr-ai-server-fps for FPS branch patterns",
+        "current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f still keep the old two-loop publisher shape in checked maintained roots"
+      ],
+      "outputs": [
+        "Refreshed hosted-FPS owner/status/runtime/roadmap/testing pages and machine records.",
+        "Routed July hosted-FPS work through a missing-branch caveat and target-branch-specific smoke gate.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Closed after validation. Future code owner must create or restore the July hosted-FPS target branch before code work, choose current-stable single-publisher versus docs/source two-publisher compatibility deliberately, then smoke the target branch shape instead of assuming both FPS variables are always published.",
+      "updated": "2026-06-22T14:48:39+02:00"
+    },
     {
       "lane": "resistance-side-supply-feature-status-followup-2026-06-22",
       "owner": "Codex",
