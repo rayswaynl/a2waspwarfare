@@ -35,6 +35,15 @@ Checked 2026-06-23 after fetch. Both Trello artillery UI candidates are branch-o
 | `origin/claude/trello-arty-cooldown-hud@471fc0580fd6` | Payload is four files / +134 / -8 and `git diff --check` clean against current stable. In source Chernarus plus maintained Vanilla, `Client_UpdateRHUD.sqf:27` extends the RHUD IDC cache with `1372/1373`, `:259-288` adds `_RHUDUpdateArty`, and `:452` calls it during the RHUD refresh. `Rsc/Titles.hpp:177` adds `RUBHUD_Arty` / `RUBHUD_Arty_Value` to `OptionsAvailable`, while `:478-490` defines those controls. | Branch-only UI candidate. It surfaces the existing local artillery timeout state on RHUD; it is not a server-authority change and needs visual/client smoke in source Chernarus plus maintained Vanilla before stable wording. |
 | `origin/claude/trello-arty-to-gunner@2dc3e7403399` | Payload is six files / +217 / -8 and `git diff --check` clean against current stable. In source Chernarus plus maintained Vanilla, `GUI_Menu_Tactical.sqf:571-626` adds `MenuAction == 50`, flattens `WFBE_%1_ARTILLERY_CLASSNAMES`, selects player-group artillery with empty driver/gunner seats, and uses existing group AI with `moveInDriver` / `moveInGunner`. `Rsc/Dialogs.hpp:2364-2371` adds button idc `17040`; `stringtable.xml:3192-3213` adds the crew-artillery label, tooltip and result hints. | Branch-only Tactical UI candidate. It seats existing dismounted group AI and spawns no new units. Smoke must cover player-owned artillery, empty/no-AI/no-artillery cases, locality, and maintained Vanilla parity before promotion. |
 
+### Trello Audio Cue Branch Intel
+
+Checked 2026-06-23 after fetch. `origin/claude/trello-audio-cues@a0e4fb458` is a one-commit branch on current stable merge-base `origin/master@f8a76de34`. Payload is four maintained-root files / +74 / -2 across source Chernarus plus maintained Vanilla, and `git diff --check f8a76de34..a0e4fb458` is clean. Treat it as branch-only player-feedback work, not support authority or marker-registration proof.
+
+| Branch slice | Evidence | Status |
+| --- | --- | --- |
+| Trello #90 paradrop cue | In both maintained roots, branch `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf:17-18` still gates the handler to the matching client side. Branch `:42-61` then adds a client-local one-shot `commanderNotification`, throttled by `WFBE_C_LastParatroopSound`, plus a `paraDZ_<time>` local `mil_objective` marker labeled `Paradrop` that deletes after 30 seconds. Current stable has no `WFBE_C_LastParatroopSound`, `paraDZ_` or hardcoded `Paradrop` marker text in this handler. | Branch-only support feedback candidate. Smoke needs friendly-side-only audience, multi-unit drop throttling, local marker cleanup, JIP/no-stale marker behavior and maintained Vanilla parity. The marker text is hardcoded English, so localization polish remains separate if the branch is promoted. |
+| Trello #91 IR-smoke ready cue | In both maintained roots, branch `Common/Module/IRS/IRS_OnIncomingMissile.sqf:51-61` spawns a client-local delayed check after `WFBE_IRS_FLARE_DELAY`; if the vehicle is alive, the player is still crew, flares remain and `wfbe_irs_disabled` is false/default, it plays `ARTY_cooldown_over`. Current stable already plays `inboundMissileGround` / `inboundMissileGround_cont` at `IRS_OnIncomingMissile.sqf:37/:45`, but has no ready-again cue. | Branch-only IR-smoke feedback candidate. Smoke needs crew leave/death, no-flare, cooldown, level-1/level-2 sound-loop and PR #61 IR-smoke toggle interactions. It reuses existing sound classes, not new media. |
+
 ## Source Snapshot
 
 Current docs checkout anchors for the maintained Chernarus root:
@@ -110,6 +119,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | Ammo paradrop | Working/partial | Client-gated by `WFBE_UP_SUPPLYPARADROP` and shared `lastSupplyCall`; server creates aircraft/crates. |
 | Vehicle paradrop | Working/partial | Similar to ammo paradrop; server creates cargo vehicle and empty-vehicle cleanup. |
 | UAV | Partial | Client creates UAV, deducts funds and sends tracking request; server mostly monitors cleanup and reveal broadcasts. |
+| Paratrooper / IR-smoke audio cues | Branch-only feedback candidates | `trello-audio-cues` adds local paradrop and IR-smoke-ready sounds in both maintained roots. It reuses existing `commanderNotification` and `ARTY_cooldown_over` sound classes and does not change support authority. |
 | Artillery | Working/partial | Local/client fire authority with upgrade-gated UI/ammo/timeout behavior. |
 | Anti-air radar (AAR) | Working/partial | Base structure and client marker feature are live when enabled; upgrade levels change marker detail and refresh rate, but the per-aircraft marker loops are client-local and should be performance-smoked on busy air games. |
 | ICBM/Nuke | Partial/high-risk | Client deducts funds and sends `RequestSpecial ["ICBM", ...]`; server applies nuke damage from payload. Stale adjunct paths remain. |
@@ -201,6 +211,7 @@ Wave N rechecked leaf support assets and found two source-level traps worth keep
 | Ordnance guardrails depend on local target state | Test lock/no-lock, pilot/gunner, AI crew, JIP and remote locality cases before tightening bomb or missile restrictions. |
 | AA missile gating is path-dependent | Verify start vehicles, purchased aircraft, client-built aircraft, rearmed aircraft, SAMs and EASA loadouts all pass the same `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` / `WFBE_UP_AIRAAM` policy before calling AA restrictions complete. |
 | RU ammo paradrop config is commented out | Split `Root_RU.sqf:36` so the starting-vehicle comment does not swallow `WFBE_%1PARAAMMO`; smoke RU para-ammo request after the fix. |
+| Audio cue branch candidates | If porting Trello #90/#91, keep the new cues client-local, verify the `Paradrop` marker deletes, confirm no sound spam across multi-unit drops, and smoke `wfbe_irs_disabled` interaction if the IR-smoke toggle branch is also present. |
 | `upgrade-sync` mixed argument source | Use the [upgrade-sync branch matrix](#upgrade-sync-branch-matrix). Normalize `Server_HandleSpecial.sqf:67-73` to read side/id/level from one payload shape, then smoke upgrade completion synchronization. |
 | Zeta Cargo branch split | Preserve source Chernarus detach-argument behavior, add maintained Vanilla parity before claiming manual detach fixed there, and smoke Trello #87 friendly-HQ filtering plus ground-drop behavior before promotion. |
 | Nuke in-progress construction branch candidate | If porting Trello #97, delete only in-progress construction logics that carry `WFBE_B_Type`, keep completed-structure damage behavior intact, and do not present it as ICBM authority closure. |
@@ -212,9 +223,11 @@ Wave N rechecked leaf support assets and found two source-level traps worth keep
 ## Validation Checklist
 
 - Paratrooper, ammo and vehicle paradrops with valid/invalid upgrade levels and insufficient funds.
+- If testing Trello #90, trigger paratrooper drops with several units and verify one friendly-side `commanderNotification`, a transient local `Paradrop` marker, no enemy-side cue and cleanup after 30 seconds.
 - UAV spawn, reveal, leader disconnect and cleanup.
 - Artillery request with each upgrade level and local/remote gunner state.
 - ICBM request from valid commander and forged/non-commander payload; if testing Trello #97, include an in-progress SmallSite/MediumSite inside the blast and a completed structure as control.
+- If testing Trello #91, spend IR smoke, wait `WFBE_IRS_FLARE_DELAY`, and verify `ARTY_cooldown_over` only plays for surviving crewed vehicles with remaining flares and no `wfbe_irs_disabled` flag.
 - MASH deploy, respawn availability and marker sync.
 - Zeta hook/unhook with vehicle attached, own-HQ proximity, normal-heli drop, C-130 drop, lifter-damage auto-detach and maintained Vanilla detach-argument parity.
 - Service actions with changing funds/world state between button enable and click.

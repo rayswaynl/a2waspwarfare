@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T12:31:53+02:00",
-  "lastVerifiedAt": "2026-06-23T12:31:53+02:00",
+  "generatedAt": "2026-06-23T12:57:23+02:00",
+  "lastVerifiedAt": "2026-06-23T12:57:23+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -426,6 +426,42 @@
           "client-vehicle-smoke",
           "construction-smoke",
           "icbm-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "trello-audio-cues-branch",
+      "branch": "origin/claude/trello-audio-cues",
+      "head": "a0e4fb458",
+      "base": "origin/master@f8a76de34",
+      "state": "branch-only-player-feedback-candidate-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-paratrooper-marker-and-irsmoke-audio-cues",
+      "canonicalDocs": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md#trello-audio-cue-branch-intel",
+        "Modules-Atlas.md#irs--ir-smoke-missile-countermeasure-commonmoduleirs",
+        "Assets-Config-Localization-And-Parameters-Atlas.md#current-branch-scope",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-audio-cues@a0e4fb458bd3; merge-base with origin/master is current stable f8a76de34",
+        "f8a76de34..a0e4fb458: 4 maintained-root files +74/-2; git diff --check clean",
+        "Branch Chernarus/Vanilla HandleParatrooperMarkerCreation.sqf:17-18 still exits on non-matching side; :42-61 adds WFBE_C_LastParatroopSound throttle, commanderNotification, local paraDZ marker, hardcoded Paradrop text and 30-second local marker delete",
+        "Branch Chernarus/Vanilla IRS_OnIncomingMissile.sqf:51-61 adds delayed ARTY_cooldown_over after WFBE_IRS_FLARE_DELAY when vehicle/player/flares/toggle state still allow it",
+        "Current stable lacks WFBE_C_LastParatroopSound, paraDZ_ and the IR-smoke ready-again cue in checked maintained-root handlers",
+        "Current stable Chernarus/Vanilla Sounds/description.ext:18-20 defines ARTY_cooldown_over and :84-86 defines commanderNotification"
+      ],
+      "ownerDecision": "Decide whether these client-local audio/marker cues are desired player feedback. Keep support authority, paratrooper reward logic and IR-smoke toggle behavior separate unless intentionally promoting together.",
+      "promotionGate": "Smoke friendly-side-only paratrooper sound/marker, multi-unit throttle, local marker cleanup after 30 seconds, no enemy/JIP leakage, IR-smoke ready cue after cooldown, crew-leave/death/no-flare/toggle-off cases, level-2 missile warning overlap and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-audio-smoke",
+          "paratrooper-smoke",
+          "irsmoke-smoke",
           "vanilla-parity-smoke",
           "branch-base-review"
         ],

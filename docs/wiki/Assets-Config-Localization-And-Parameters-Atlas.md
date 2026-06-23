@@ -21,6 +21,8 @@ Source anchors below were rechecked on docs checkout `85679dba` on 2026-06-14 in
 | Parameter branch debts | Docs `85679dba`, stable `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` and release `a96fdda2` all keep the `WFBE_C_MODULE_WFBE_IRS` lobby name versus `WFBE_C_MODULE_WFBE_IRSMOKE` runtime consumers, and all keep the bomb-distance live path beside the commented bomb-altitude enforcement block. |
 | Asset counts | Source Chernarus currently has 20 local texture `.paa`, 45 client image `.paa`, 26 sound `.ogg` and 2 music `.ogg` files. `Sounds/description.ext` defines 26 non-wrapper `CfgSounds` classes; `Rsc/Dialogs.hpp` has 18 top-level dialog classes and `Rsc/Titles.hpp` has 99 title class rows. |
 
+Trello audio-cues branch intel was added on 2026-06-23 for `origin/claude/trello-audio-cues@a0e4fb458`. The branch reuses existing sound classes rather than adding media: current source Chernarus and maintained Vanilla both define `ARTY_cooldown_over` at `Sounds/description.ext:18-20`, `commanderNotification` at `:84-86`, and the existing inbound-missile sounds at `:114-122`. The branch does add hardcoded local marker text `Paradrop` in `HandleParatrooperMarkerCreation.sqf:55`; localization polish remains a separate promotion decision.
+
 ## Entry Graph
 
 | Layer | Source | Runtime role |

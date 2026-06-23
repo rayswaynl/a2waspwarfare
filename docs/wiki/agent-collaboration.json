@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T12:56:49+02:00",
+  "generatedAt": "2026-06-23T12:57:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "trello-audio-cues-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/trello-audio-cues@a0e4fb458 is one commit on current stable origin/master@f8a76de34.",
+        "The branch changes four maintained-root files across source Chernarus plus maintained Vanilla paratrooper marker creation and IRS incoming-missile handler paths; diff is +74/-2 and git diff --check is clean.",
+        "Trello #90 adds a friendly-client paratrooper commanderNotification plus local paraDZ_ marker with hardcoded Paradrop text at HandleParatrooperMarkerCreation.sqf:42-61 after the existing side gate at :17-18.",
+        "Trello #91 adds delayed ARTY_cooldown_over IR-smoke-ready feedback at IRS_OnIncomingMissile.sqf:51-61, gated by alive/player crew/flares/wfbe_irs_disabled state.",
+        "Existing Chernarus/Vanilla sound classes define ARTY_cooldown_over at Sounds/description.ext:18-20 and commanderNotification at :84-86. No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md, Modules-Atlas.md, Assets-Config-Localization-And-Parameters-Atlas.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only audio cue evidence and smoke gates.",
+        "Refreshed Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future branch reviewer should treat the audio-cues branch as player-feedback only until Arma 2 OA smoke covers friendly-side-only paratrooper sound/marker, multi-drop throttle, 30-second local marker cleanup, no JIP/enemy leakage, IR-smoke ready cue timing, crew-leave/death/no-flare/toggle-off cases, warning overlap and maintained Vanilla parity.",
+      "updated": "2026-06-23T12:57:23+02:00"
+    },
     {
       "lane": "trello-upgrade-hqcost-info-branch-intel-2026-06-23",
       "owner": "Codex",
