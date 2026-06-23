@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T17:05:00+02:00",
+  "generatedAt": "2026-06-23T17:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "factory-refund-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh destroyed-factory purchase refund evidence from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Checked maintained-root GUI_Menu_BuyUnits.sqf and Client_BuildUnit.sqf across docs/source HEAD, current stable/B74.1, B74.2, B69, adjacent B74, Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 / 7ff18c49 where locally available.",
+        "Initial source checks show docs/source, Miksuu and perf old-shape refs debit without passing _currentCost to BuildUnit and do not refund the real dead/null factory abort. Current stable/B74.1, B69, B74 and B74.2 pass _currentCost into BuildUnit and refund the dead/null factory abort in both maintained roots; B74.2 only line-drifts source Chernarus buy-menu anchors among checked paths.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Factory-And-Purchase-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 destroyed-factory refund evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future factory/economy owner should preserve current stable/B74.1/B74.2 refund shape on stable-shaped targets, port it only to old-shape docs/Miksuu/perf-style targets that still miss the payload/refund, and keep this separate from server-side purchase authority and empty/crewless vehicle no-refund semantics.",
+      "updated": "2026-06-23T17:20:00+02:00"
+    },
     {
       "lane": "side-supply-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
