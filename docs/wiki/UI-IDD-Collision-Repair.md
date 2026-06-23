@@ -6,7 +6,7 @@ Combined UI cleanup route: [UI resource parity cleanup](UI-Resource-Parity-Clean
 
 All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
-Branch check 2026-06-14 after fresh fetch: current docs checkout `docs/developer-wiki-index` `b5219d47` keeps the `2fef1e3d` resource-parity line shape; docs/source, Miksuu `b8389e74` and perf `0076040f` still keep `RscMenu_EASA` and `RscMenu_Economy` both on `idd = 23000` in Chernarus and maintained Vanilla. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` move EASA to `idd = 24000` and keep Economy on `23000` in both maintained roots. The `RscOverlay` / `OptionsAvailable` title collision on `10200` remains present in every checked ref and root. No checked maintained root has a hard-coded `findDisplay 23000` or `findDisplay 10200` caller, so duplicate IDD cleanup remains maintenance/debug/future-control risk rather than a proven live lookup bug.
+Branch check 2026-06-23 after fresh fetch: current docs checkout `docs/developer-wiki-index` `edbd341e` keeps the `b5219d47` Dialogs/Titles line shape; docs/source, Miksuu `b8389e748243` and perf `0076040f` still keep `RscMenu_EASA` and `RscMenu_Economy` both on `idd = 23000` in Chernarus and maintained Vanilla. Current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical `a96fdda2` move EASA to `idd = 24000` and keep Economy on `23000` in both maintained roots. The `RscOverlay` / `OptionsAvailable` title collision on `10200` remains present in every checked ref and root. No checked maintained root has a hard-coded `findDisplay 23000`, `findDisplay 24000` or `findDisplay 10200` caller, so duplicate IDD cleanup remains maintenance/debug/future-control risk rather than a proven live lookup bug.
 
 ## What To Read
 
@@ -38,7 +38,7 @@ Two dialog classes share `idd = 23000`:
 | `RscMenu_EASA` | `Rsc/Dialogs.hpp:3209-3211` | `Client/GUI/GUI_Menu_EASA.sqf` |
 | `RscMenu_Economy` | `Rsc/Dialogs.hpp:3287-3289` | `Client/GUI/GUI_Menu_Economy.sqf` |
 
-Stable/release caveat: current stable `cf2a6d6a` moves EASA to `idd = 24000` and keeps Economy on `23000` in both maintained roots (`Dialogs.hpp:2887-2889`, `:2965-2967`). Release `a96fdda2` carries the same distinct dialog IDD shape in both maintained roots (`Dialogs.hpp:2862-2864`, `:2940-2942`). Docs checkout, Miksuu and perf still need the EASA/Economy parity cleanup if they remain target branches.
+Stable/B69/B74/release caveat: current stable `0139a346`, current B69 `8d465fce` and adjacent B74 `b23f557f` move EASA to `idd = 24000` and keep Economy on `23000` in both maintained roots (`Dialogs.hpp:2926-2928`, `:3004-3006`). Historical release evidence `a96fdda2` carries the same distinct dialog IDD shape in both maintained roots (`Dialogs.hpp:2862-2864`, `:2940-2942`). Docs checkout, Miksuu and perf still need the EASA/Economy parity cleanup if they remain target branches.
 
 Two title resources share `idd = 10200`:
 
@@ -57,11 +57,11 @@ This matrix is separate from the duplicate-IDD matrix above. It tracks the store
 
 | Root / branch | OptionsAvailable / RHUD / action icons | EndOfGameStats | Practical meaning |
 | --- | --- | --- | --- |
-| Docs checkout `b5219d47` Chernarus | Same line shape as `2fef1e3d`: `Rsc/Titles.hpp:170-171` calls `GUI_SetCurrentCutDisplay.sqf` / `GUI_ClearCurrentCutDisplay.sqf`; `Client_UpdateRHUD.sqf:89-92` and `updateavailableactions.fsm:225-230` read/write `currentCutDisplay`. | `Rsc/Titles.hpp:539-540` calls the same helpers; `GUI_EndOfGameStats.sqf:34-44,86-93` writes stat controls through `currentCutDisplay`. | Patch-ready. The lifecycle-handle collision remains in current docs/source. |
-| Maintained Vanilla Takistan at docs checkout `b5219d47` | Same helper/key shape as `2fef1e3d` in `Rsc/Titles.hpp:170-171,539-540`, `Client_UpdateRHUD.sqf:89-92`, `updateavailableactions.fsm:225-230` and `GUI_EndOfGameStats.sqf:34-44,86-93`. | Same. | Propagate deliberately after any source fix. |
-| Stable `origin/master` `cf2a6d6a` | Same in both maintained roots; title line refs drift to `Rsc/Titles.hpp:174-175,587-588` and the RHUD loop to `Client_UpdateRHUD.sqf:89-92,251-258`. | Same in both maintained roots. | Stable fixes the EASA dialog IDD but does not fix title-handle ownership. |
-| Miksuu `b8389e74` and perf `0076040f` | Same as docs/source in both maintained roots. | Same as docs/source. | No upstream/perf rescue for either title IDD or title handle ownership. |
-| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same in both maintained roots; line refs match stable for checked title/RHUD anchors. | Same in both maintained roots. | Release fixes the EASA dialog IDD but still carries duplicate title IDD and the handle collision. |
+| Docs checkout `edbd341e` Chernarus | Same line shape as `b5219d47`: `Rsc/Titles.hpp:170-171` calls `GUI_SetCurrentCutDisplay.sqf` / `GUI_ClearCurrentCutDisplay.sqf`; `Client_UpdateRHUD.sqf:89-92` and `updateavailableactions.fsm:225-230` read/write `currentCutDisplay`. | `Rsc/Titles.hpp:539-540` calls the same helpers; `GUI_EndOfGameStats.sqf:34-44,86-93` writes stat controls through `currentCutDisplay`. | Patch-ready. The lifecycle-handle collision remains in current docs/source. |
+| Maintained Vanilla Takistan at docs checkout `edbd341e` | Same helper/key shape in `Rsc/Titles.hpp:170-171,539-540`, `Client_UpdateRHUD.sqf:89-92`, `updateavailableactions.fsm:225-230` and `GUI_EndOfGameStats.sqf:34-44,86-93`. | Same. | Propagate deliberately after any source fix. |
+| Current stable `origin/master@0139a346`, B69 `8d465fce` and B74 `b23f557f` | Same in both maintained roots; title line refs drift to `Rsc/Titles.hpp:174-175,587-588` and the RHUD display refresh call to `Client_UpdateRHUD.sqf:266`. | Same in both maintained roots. | These refs fix the EASA dialog IDD but do not fix title-IDD or title-handle ownership. |
+| Miksuu `b8389e748243` and perf `0076040f` | Same as docs/source in both maintained roots. | Same as docs/source. | No upstream/perf rescue for either title IDD or title handle ownership. |
+| Historical release evidence `a96fdda2` | Same in both maintained roots; title refs match stable for checked title anchors and the RHUD display refresh call is at `Client_UpdateRHUD.sqf:258`. | Same in both maintained roots. | Release fixes the EASA dialog IDD but still carries duplicate title IDD and the handle collision. |
 
 Repair this with a display-variable split before or alongside any title-display work: for example `currentActionHudDisplay` for `OptionsAvailable` and `currentEndgameStatsDisplay` for `EndOfGameStats`, or a helper that takes the key name explicitly. Keep this separate from the `idd` uniqueness pass so smoke failures can be traced cleanly.
 
@@ -86,7 +86,7 @@ The title IDD collision is less likely to break creation because `cutRsc` addres
 Keep the first patch small:
 
 1. Assign a new unique `idd` to one of `RscMenu_EASA` or `RscMenu_Economy`.
-2. Re-run the current no-`findDisplay 23000/10200` grep before patching and keep it clean after the change.
+2. Re-run the current no-`findDisplay 23000/24000/10200` grep before patching and keep it clean after the change.
 3. Keep existing `idc` values unless a specific control collision is proven after the dialog ID change.
 4. Assign a distinct `idd` to either `RscOverlay` or `OptionsAvailable`; release Chernarus did not already solve this title-resource collision.
 5. Keep title IDD cleanup separate from title display-variable cleanup.
@@ -107,7 +107,7 @@ Source-only:
 - `RscMenu_EASA` and `RscMenu_Economy` have distinct `idd` values.
 - `RscOverlay` and `OptionsAvailable` have distinct `idd` values.
 - `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` no longer set/clear the same `uiNamespace` display key.
-- No `findDisplay 23000` / `findDisplay 10200` source references are introduced, or any deliberate hard-coded display lookup is updated to the new unique IDs and documented.
+- No `findDisplay 23000` / `findDisplay 24000` / `findDisplay 10200` source references are introduced, or any deliberate hard-coded display lookup is updated to the new unique IDs and documented.
 
 Arma smoke:
 

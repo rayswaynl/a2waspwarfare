@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T04:52:36+02:00",
+  "generatedAt": "2026-06-23T05:12:48+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ui-idd-collision-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@edbd341e is unchanged from b5219d47 for checked Chernarus/Vanilla Dialogs.hpp and Titles.hpp paths.",
+        "docs/source keeps RscMenu_EASA and RscMenu_Economy on idd 23000 at Rsc/Dialogs.hpp:3209-3211 and :3287-3289 in both maintained roots.",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f split EASA to idd 24000 and keep Economy on 23000 at Rsc/Dialogs.hpp:2926-2928 and :3004-3006 in both maintained roots.",
+        "current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep duplicate EASA/Economy 23000 at Rsc/Dialogs.hpp:3265-3267 and :3343-3345 in both maintained roots; historical a96fdda2 matches the stable split at :2862-2864 and :2940-2942.",
+        "RscOverlay and OptionsAvailable still duplicate title idd 10200 in every checked ref/root; no checked maintained root has findDisplay 23000, findDisplay 24000 or findDisplay 10200 callers."
+      ],
+      "outputs": [
+        "Refreshed UI-Resource-Parity-Cleanup, UI-IDD-Collision-Repair, Client UI Systems Atlas, Feature Status Register, Dead/stale code register, dashboard/worklog/pruning ledger and UI IDD machine rows with current B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future UI owner should preserve current stable/B69/B74/release EASA 24000 / Economy 23000 split, port it only to old-shape targets that still duplicate 23000, and handle title IDD/currentCutDisplay ownership as a separate smoke-gated patch.",
+      "updated": "2026-06-23T05:12:48+02:00"
+    },
     {
       "lane": "economy-dialog-controls-current-b74-refresh-2026-06-23",
       "owner": "Codex",

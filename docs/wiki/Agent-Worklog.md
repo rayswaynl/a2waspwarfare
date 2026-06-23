@@ -2239,3 +2239,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - No gameplay source edits planned; this is a docs/wiki mirror refresh lane.
 - Result: refreshed [UI resource parity cleanup](UI-Resource-Parity-Cleanup), [Client UI systems atlas](Client-UI-Systems-Atlas), Feature Status, Dead/stale code, dashboard, pruning ledger and Economy machine rows with current stable/B69/B74 evidence. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T05:01:48+02:00 - Codex - UI IDD collision current B74 refresh
+
+- Claimed `ui-idd-collision-current-b74-refresh-2026-06-23` after duplicate dialog/title IDD rows still used older 2026-06-14 stable/release wording and did not include current stable/B69/B74 branch tips.
+- Planned source scope: `Rsc/Dialogs.hpp` EASA/Economy dialog IDs plus `Rsc/Titles.hpp` `RscOverlay`/`OptionsAvailable` title IDs in source Chernarus plus maintained Vanilla, checked across docs/source `HEAD`, current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical release `a96fdda2`.
+- Initial findings: docs/source `HEAD@edbd341e` is unchanged from `b5219d47` for checked Dialogs/Titles paths and still keeps `RscMenu_EASA` and `RscMenu_Economy` on `idd = 23000` at `Rsc/Dialogs.hpp:3209-3211` and `:3287-3289` in both maintained roots. Current stable, B69 and B74 split EASA to `idd = 24000` and keep Economy on `23000` at `Dialogs.hpp:2926-2928` and `:3004-3006` in both maintained roots; historical `a96fdda2` carries the same split at `:2862-2864` and `:2940-2942`.
+- Branch note: current Miksuu `master` was rechecked by direct `git ls-remote` as `b8389e748243`; it and `origin/perf/quick-wins@0076040f` still duplicate EASA/Economy `23000` at `Dialogs.hpp:3265-3267` and `:3343-3345` in both maintained roots. `RscOverlay` and `OptionsAvailable` still share title `10200` in every checked ref/root (`Titles.hpp:44-46`, docs/Miksuu/perf `:164-165`, stable/B69/B74/release `:168-169`). No checked maintained root has `findDisplay 23000`, `findDisplay 24000` or `findDisplay 10200` callers.
+- No gameplay source edits planned; this is a docs/wiki mirror refresh lane.
+- Result: refreshed [UI resource parity cleanup](UI-Resource-Parity-Cleanup), [UI IDD collision repair](UI-IDD-Collision-Repair), [Client UI systems atlas](Client-UI-Systems-Atlas), Feature Status, Dead/stale code, dashboard, pruning ledger and UI IDD machine rows with current stable/B69/B74 evidence. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
