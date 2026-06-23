@@ -84,6 +84,12 @@ WFBE_PLAYERKEH = player addEventHandler [
 ];
 
 
+//--- Card #210: AnimChanged event handlers are flushed when the old unit dies, so re-attach the
+//--- auto-bipod-deploy handler to the fresh player unit. Guarded so it is a no-op if the bipod
+//--- script has not finished loading yet.
+if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
+
+
 //--- Call the pre respawn routine.
 // This will also re-add the player action menu entries.
 (player) Call PreRespawnHandler;

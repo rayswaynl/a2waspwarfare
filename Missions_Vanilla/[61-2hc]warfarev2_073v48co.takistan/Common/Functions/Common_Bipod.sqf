@@ -63,4 +63,20 @@ Bipod_ON = {
 //		HintSilent ""; 
 		player setUnitRecoilCoefficient 1;
 	};
-}; 
+};
+
+//--- Card #210: auto-deploy the bipod when going prone with a bipod-capable MG (no TAB needed).
+//--- This reuses the existing key-15 deploy path, which itself re-checks the prone stance and the
+//--- bipod-capable weapon list, so the handler only actually deploys for those weapons while lying.
+//--- Pure client-local (the deploy path only adjusts recoil coef + hint + say). The TAB display
+//--- handler above stays as the manual fallback. The EH is unit-local and is flushed on death, so
+//--- Client_OnKilled.sqf re-attaches it to the fresh player unit after each respawn.
+Bipod_AddAutoDeploy = {
+	if (isNil "Bipod_AutoEH") then {Bipod_AutoEH = -1};
+	if (Bipod_AutoEH >= 0) then {player removeEventHandler ["AnimChanged", Bipod_AutoEH]; Bipod_AutoEH = -1};
+	Bipod_AutoEH = player addEventHandler ["AnimChanged", {
+		if ((_this select 1) == "amovppnemstpsraswrfldnon") then {15 call Bipod_ON};
+	}];
+};
+
+[] call Bipod_AddAutoDeploy;
