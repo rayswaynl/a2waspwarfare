@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T18:10:45+02:00",
+  "generatedAt": "2026-06-23T18:28:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "ready",
-      "currentLane": "none",
-      "currentWork": "Published service-easa-current-b741-b742-branch-refresh-2026-06-23 docs-only batch. Service/EASA rows now use current stable/B74.1 origin/master@f8a76de34, B74.2 d472da6a and live Trello service/EASA branch-only scope; no gameplay source changed.",
+      "currentLane": "documentation-finisher-loop",
+      "currentWork": "Latest published lane: ai-upgrade-debit-current-b741-b742-refresh-2026-06-23. Refreshed AI commander upgrade debit/cost lookup current B74.1/B74.2 evidence and preserved old-shape docs/Miksuu/perf plus mixed side-branch caveats. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ai-upgrade-debit-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed AI commander upgrade debit/cost lookup evidence through AI commander autonomy, Upgrades and research, Feature Status and Source Fix queue. Docs/source HEAD@031a253fe is unchanged from ade4d356 for checked worker files and still keeps raw AI-order lookup plus swapped debit at Server_AI_Com_Upgrade.sqf:27,47,50; Miksuu b8389e748243 and perf 0076040f match. Current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6a, B69 and adjacent B74 resolve both maintained roots at :75,:89,:92,:97,:125,:131-132,:136. Live side branches are mixed branch-only evidence. No gameplay source changed."
+    },
     {
       "lane": "service-easa-current-b741-b742-branch-refresh-2026-06-23",
       "owner": "Codex",

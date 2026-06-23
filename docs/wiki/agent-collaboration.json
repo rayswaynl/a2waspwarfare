@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T18:10:45+02:00",
+  "generatedAt": "2026-06-23T18:28:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-upgrade-debit-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh AI commander upgrade debit/cost lookup rows from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Checked maintained-root Server_AI_Com_Upgrade.sqf plus GUI_UpgradeMenu.sqf tuple anchors across docs/source HEAD, current stable/B74.1, B74.2, B69, adjacent B74, Miksuu, perf, historical commits and live side branches that touch the worker.",
+        "Current stable/B74.1/B74.2/B69/B74 resolve both maintained roots; docs/source/Miksuu/perf stay old-shape; live side branches are mixed and branch-only.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed AI-Commander-Autonomy-Audit.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 AI upgrade debit/cost evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future AI/economy owner should not reopen this on current stable/B74-shaped refs. For docs/source, Miksuu, perf or old-shape side-branch targets, port current stable's maintained-root worker or recreate current-level cost lookup plus corrected funds/supply debit, then smoke affordability/debit and funds-fallback.",
+      "updated": "2026-06-23T18:15:00+02:00"
+    },
     {
       "lane": "service-easa-current-b741-b742-branch-refresh-2026-06-23",
       "owner": "Codex",
