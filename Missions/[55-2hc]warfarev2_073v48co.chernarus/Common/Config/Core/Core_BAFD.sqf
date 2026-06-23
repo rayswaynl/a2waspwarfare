@@ -24,7 +24,7 @@ _c = _c + ['BAF_Soldier_AMG_DDPM'];
 _i = _i + [['','',190,6,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AT_DDPM'];
-_i = _i + [['','',650,6,-1,1,0,1,'British (Desert)',[]]];
+_i = _i + [['AT Specialist (NLAW)','',650,6,-1,2,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_HAT_DDPM'];
 _i = _i + [['','',1050,6,-1,3,0,1,'British (Desert)',[]]];

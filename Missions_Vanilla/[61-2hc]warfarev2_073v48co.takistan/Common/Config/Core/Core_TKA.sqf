@@ -21,7 +21,7 @@ _c = _c + ['TK_Soldier_LAT_EP1'];
 _i = _i + [['','',225,5,-1,0,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_AT_EP1'];
-_i = _i + [['','',310,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['Rifleman (RPG-7 VL)','',310,5,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_AAT_EP1'];
 _i = _i + [['','',270,5,-1,1,0,1,'Takistani Army',[]]];

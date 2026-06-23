@@ -15,7 +15,7 @@ _c = _c + ['RU_Soldier_LAT'];
 _i = _i + [['','',220,5,-1,0,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_AT'];
-_i = _i + [['','',310,5,-1,1,0,1,'Russians',[]]];
+_i = _i + [['Rifleman (RPG-7 VL)','',310,5,-1,1,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_HAT'];
 _i = _i + [['','',1050,6,-1,3,0,1,'Russians',[]]];
