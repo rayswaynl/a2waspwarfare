@@ -41,6 +41,24 @@
       "updated": "2026-06-23T17:05:00+02:00"
     },
     {
+      "lane": "salvage-payout-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh salvage payout casing / salvage-truck loop docs from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a where checked.",
+        "Source scope is source Chernarus plus maintained Vanilla manual engineer salvage, salvage-truck update, client compile/caller paths and the branch-only origin/claude/salvage-w10-manfilter evidence across docs/source, current stable/B74.1, B74.2, B69, B74, Miksuu, origin/perf/quick-wins and historical a96fdda2.",
+        "Planned wiki targets are Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and matching coordination/machine rows.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current stable/B74.1/B74.2 salvage payout/casing, loop and client-local delete/reward evidence.",
+        "Added Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json branch-only gates for origin/claude/trello-salvage-truck-interlock@9e75c736e, keeping it separate from payout and authority closure.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; no gameplay source changed."
+      ],
+      "handoff": "Future salvage owner should patch ChangePlayerFunds casing in source Chernarus plus maintained Vanilla first, then smoke manual engineer and salvage-truck payouts. Treat updatesalvage loop exit and server-owned delete/reward authority as separate work. Keep origin/claude/salvage-w10-manfilter as W10-only evidence and origin/claude/trello-salvage-truck-interlock as branch-only manual-salvage friendly-truck UX/interlock evidence.",
+      "updated": "2026-06-23T16:56:00+02:00"
+    },
+    {
       "lane": "empty-supply-truck-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
       "status": "published-validated-docs-only",
