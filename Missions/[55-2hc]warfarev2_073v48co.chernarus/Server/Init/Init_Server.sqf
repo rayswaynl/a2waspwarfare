@@ -771,11 +771,15 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 		diag_log format ["[WFBE] GUER playable faction: registered %1 player teams (INITIALIZATION LogContent is filtered on this build, so this diag_log is the visibility).", count _guerTeams];
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
-		[] execVM "Server\Server_GuerStipend.sqf";
-			//--- B62 (Ray 2026-06-21): GUER air-def execVM MOVED out of this WFBE_C_GUER_PLAYERSIDE>0 block to
-			//--- its own gate AFTER the GUER-OFF block below (keyed only on isServer + WFBE_C_GUER_AIRDEF_ENABLE).
-			//--- GUER is ALWAYS the AI town-defender (towns with sideID==GUER), so the air-def loop must run in
-			//--- production even when the playable-side param is 0 - previously it was DEAD because PLAYERSIDE=0.
+			//--- B74.2: the GUER stipend/economy execVM was MOVED out of this team-registration block to its own
+			//--- isServer+WFBE_C_GUER_PLAYERSIDE gate below (beside the air-def launch). Rationale: the economy loop
+			//--- must NOT be coupled to the registration forEach above - a future registration change that errors
+			//--- mid-loop would otherwise silently suppress the entire GUER economy (no stipend, no vehicle tiers).
+			//--- The stipend self-gates (isServer + PLAYERSIDE) and self-waits (towns + WFBE_L_GUE) internally,
+			//--- exactly like Server_GuerAirDef.sqf, so launching it independently is safe and strictly more robust.
+			//--- B62 (Ray 2026-06-21): the GUER air-def execVM was likewise moved out of this block to its own gate
+			//--- below (keyed on isServer + WFBE_C_GUER_AIRDEF_ENABLE) - GUER is ALWAYS the AI town-defender, so its
+			//--- air must run even when the playable-side param is 0.
 	} else {
 		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerResistance missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
 	};
@@ -799,6 +803,15 @@ if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isN
 if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) > 0}) then {
 	[] execVM "Server\Server_GuerAirDef.sqf";
 	["INITIALIZATION", "Init_Server.sqf: B62 GUER air-def loop launched (un-gated from PLAYERSIDE)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- B74.2: GUER player ECONOMY (per-minute stipend + vehicle-tier broadcast). MOVED here from the GUER
+//--- team-registration block above so a registration error can't silently suppress the economy (same decoupling
+//--- rationale as the air-def launch). Gated on isServer + WFBE_C_GUER_PLAYERSIDE (the playable-side param); the
+//--- loop self-waits for towns + WFBE_L_GUE internally, so it is safe to launch independently of registration.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+	[] execVM "Server\Server_GuerStipend.sqf";
+	["INITIALIZATION", "Init_Server.sqf: B74.2 GUER stipend/economy loop launched (decoupled from team-registration)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
