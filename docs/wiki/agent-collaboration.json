@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T15:34:00+02:00",
+  "generatedAt": "2026-06-23T15:49:01+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "visible-parameter-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh visible mission-parameter runtime-consumer rows from previous current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Source scope is maintained-root WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT definitions/readers across docs/source HEAD@0da6ba431, current stable/B74.1, B74.2, B69, B74, Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Mission-Parameters-Localization-And-Generated-Build-Inputs.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Dead-Code-And-Stale-Code-Register.md with current B74.1/B74.2 visible-parameter evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future parameter/code owners should treat docs/source, current Miksuu, perf and historical release as old-shape targets for WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT, while current stable/B74.1/B74.2 already have maintained-root live readers. Smoke parameter display, AI commander production and body/wreck/empty cleanup before release wording.",
+      "updated": "2026-06-23T15:49:01+02:00"
+    },
     {
       "lane": "upgrade-sync-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

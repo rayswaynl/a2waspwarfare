@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T15:34:00+02:00",
+  "generatedAt": "2026-06-23T15:49:01+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: upgrade-sync-current-b741-b742-refresh-2026-06-23. Refreshed RequestSpecial upgrade-sync tuple-parser evidence to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a. No gameplay source changed.",
+      "currentWork": "Latest published lane: visible-parameter-current-b741-b742-refresh-2026-06-23. Refreshed WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT branch evidence to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "visible-parameter-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT runtime-consumer evidence across Mission Parameters, Feature Status, Source Fix queue, Dead/stale code register and machine rows. Docs/source HEAD@0da6ba431, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 keep old readless/comment-only evidence. Current stable/B74.1 origin/master@f8a76de34 equals origin/claude/b74.1-aicom@f8a76de34; B69 8d465fce, B74 b23f557f and B74.2 d472da6a read WFBE_C_AI_MAX at AI_Commander_Produce.sqf:234 and WFBE_C_UNITS_CLEAN_TIMEOUT at Common_TrashObject.sqf:21 in both maintained roots. Player follower caps still use WFBE_C_PLAYERS_AI_MAX. No gameplay source changed."
+    },
     {
       "lane": "upgrade-sync-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
