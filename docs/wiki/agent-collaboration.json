@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T22:28:27+02:00",
+  "generatedAt": "2026-06-23T22:45:42+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "patrols-v2-b742-current-head-followup-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh Patrols v2 rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only side-upgrade driver, town-AI retirement, Common_RunSidePatrol, marker worker, server_patrols loop, RequestSpecial side-slot release and B74.2 pop-tier cap UI/source-Chernarus paths.",
+        "Keep Towns-Camps-And-Capture-Atlas as canonical and update Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 Patrols evidence.",
+        "Recorded that d472da6a..21b62b04 is empty for checked Patrols/town-AI/marker/UI cap paths and that origin/master..B74.2 still has no maintained Vanilla Patrols payload.",
+        "Updated Progress Dashboard, pruning ledger, worklog and machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future town/AI owner should smoke Patrols upgrade levels 1/2/3, level-4 convoy/camp-sweep hooks, HC delegate-sidepatrol, friendly-only markers, patrol death, side-slot/cooldown release and B74.2 pop-tier cap transitions before release wording.",
+      "updated": "2026-06-23T22:45:42+02:00"
+    },
     {
       "lane": "camp-flag-b742-current-head-followup-2026-06-23",
       "owner": "Codex",

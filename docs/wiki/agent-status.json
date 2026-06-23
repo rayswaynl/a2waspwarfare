@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T22:28:27+02:00",
+  "generatedAt": "2026-06-23T22:45:42+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only lane published: camp-flag-b742-current-head-followup-2026-06-23. Camp flag texture drift rows now use current B74.2 origin/claude/b74.2-aicom@21b62b04 where checked camp/repair/client-handler paths prove continuity from d472da6a. No gameplay source changed.",
+      "currentWork": "Latest docs-only lane published: patrols-v2-b742-current-head-followup-2026-06-23. Patrols v2 rows now use current B74.2 origin/claude/b74.2-aicom@21b62b04 where checked Patrols/town-AI/marker/UI cap paths prove continuity from d472da6a. No gameplay source changed.",
       "nextExpectedOutput": "Continue the documentation-finisher loop from Progress Dashboard, Feature Status, Source Fix queue and pruning ledger with a fresh bounded source-backed lane."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "patrols-v2-b742-current-head-followup-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Patrols v2 B74.2 current-head rows from stale origin/claude/b74.2-aicom@d472da6a wording to current origin/claude/b74.2-aicom@21b62b04 for checked Patrols/town-AI/marker/UI cap paths. d472da6a..21b62b04 is empty for those paths; current B74.2 still adds source-Chernarus-only pop-tier cap reads and no maintained Vanilla Patrols payload. No gameplay source changed."
+    },
     {
       "lane": "camp-flag-b742-current-head-followup-2026-06-23",
       "owner": "Codex",
