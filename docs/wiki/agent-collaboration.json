@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T13:40:27+02:00",
+  "generatedAt": "2026-06-23T13:48:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "trello-map-radius-circles-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/trello-map-radius-circles@77dd71ba303f / draft PR #78 merge-bases directly on current stable origin/master@f8a76de34.",
+        "Payload versus current stable is six maintained-root files / +192 across source Chernarus plus maintained Vanilla Client_AmbulanceRedeployCircles.sqf, Init_BaseStructure.sqf and Init_Client.sqf; git diff --check is clean.",
+        "Branch Init_BaseStructure.sqf creates HQBuildRange local border ellipses at Chernarus :54-65 and Vanilla :35-46, then cleans them up at Chernarus :153-158 and Vanilla :134-139.",
+        "Branch Init_Client.sqf:1227 launches Client_AmbulanceRedeployCircles.sqf; the watcher gates on WFBE_C_RESPAWN_MOBILE, combines WFBE_%1AMBULANCES plus WFBE_%1REDEPLOYTRUCKS, sizes from WFBE_C_RESPAWN_RANGES by WFBE_UP_RESPAWNRANGE and updates/deletes yellow local ellipses at :12-18,:30-35,:41-48,:57-68.",
+        "Current stable has CCrange local ellipses plus the build/respawn constants, but no Client_AmbulanceRedeployCircles, HQBuildRange, AmbRange_ or launcher hits.",
+        "Current stable Client_GetRespawnAvailable.sqf keeps fuller ambulance/redeploy eligibility at :33-45 and :54-81, so the branch watcher is map-radius visibility only, not proof the respawn menu allows use.",
+        "No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Commander-HQ-Lifecycle-Atlas.md, Respawn-And-Death-Lifecycle-Atlas.md, Medic-Redeployment-Truck-Forward-Spawn.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only evidence and smoke gates.",
+        "Refreshed Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl.",
+        "Mirrored touched files into the GitHub wiki checkout and validated."
+      ],
+      "handoff": "Future PR #78 reviewer should treat this as client-local map-indicator work only until Arma 2 OA smoke verifies HQ build-ring radius/cleanup, ambulance/redeploy ring follow/delete/respawn-range resizing, own-side/enemy visibility, map/JIP behavior, maintained Vanilla parity and redeploy-truck mismatch cases against the real respawn menu gates.",
+      "updated": "2026-06-23T13:48:21+02:00"
+    },
     {
       "lane": "trello-upgrade-icons-branch-intel-2026-06-23",
       "owner": "Codex",

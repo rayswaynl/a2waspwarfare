@@ -75,6 +75,12 @@ Both the redeploy truck and the mobile ambulance are forward-spawn vehicles surf
 
 The ambulance block reads `WFBE_%1AMBULANCES` and only checks for an open cargo seat (Client/Functions/Client_GetRespawnAvailable.sqf:34-44); the redeploy truck is the stricter, medic-scoped forward post that must be parked and shut down in safe-ish ground. Note the redeploy truck is **not** keyed off the AMBULANCES array, so it is independent of the ambulance roster catalogued in the [Faction Root Variables Reference](Faction-Root-Variables-Reference).
 
+## Branch Intel - Map Radius Circle Candidate
+
+Draft PR #78 / `origin/claude/trello-map-radius-circles@77dd71ba3` adds a client-local map circle watcher in source Chernarus plus maintained Vanilla. The branch launches `Client_AmbulanceRedeployCircles.sqf` from `Init_Client.sqf:1227`; that watcher combines `WFBE_%1AMBULANCES` and `WFBE_%1REDEPLOYTRUCKS` (`Client_AmbulanceRedeployCircles.sqf:16-18`), sizes yellow `AmbRange_*` border ellipses with `WFBE_C_RESPAWN_RANGES select WFBE_UP_RESPAWNRANGE` (`:30-35,41-48`) and updates/removes them every five seconds (`:57-68`). Current stable has no `Client_AmbulanceRedeployCircles`, `AmbRange_` or launcher hits.
+
+Treat this as a branch-only visibility aid, not a proof that redeploy-truck eligibility is fully represented. The watcher does not check the Medic class gate, `WFBE_C_UNITS_REDEPLOYTRUCK`, parked/engine-off state, free cargo or the 500m non-friendly-town exclusion documented above. Before promotion, smoke non-Medic and Medic deaths near a parked valid truck, a moving/engine-on truck, a full truck and a truck inside the enemy-town exclusion, and verify the ring does not mislead players about actual respawn-menu availability.
+
 ## Advertised as a Medic ability (player-facing copy)
 
 The truck is surfaced to players as a Medic class perk in several places (text only — these strings do not reference the `REDEPLOYTRUCK` variable, they describe the feature):

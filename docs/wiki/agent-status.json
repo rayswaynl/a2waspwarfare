@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T13:40:27+02:00",
+  "generatedAt": "2026-06-23T13:48:21+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only branch intel for draft PR #77 / origin/claude/trello-upgrade-icons@baf8d9c304ad. The branch is one commit on current stable origin/master@f8a76de34, touches two maintained-root GUI_UpgradeMenu.sqf files (+8), uses existing WFBE_C_UPGRADES_IMAGES image paths from Labels_Upgrades.sqf and paints them into upgrade-list column 0 with lnbSetPicture. No gameplay source changed.",
+      "currentWork": "Latest published lane: trello-map-radius-circles-branch-intel-2026-06-23. Routed draft PR #78 / origin/claude/trello-map-radius-circles@77dd71ba303f through Client UI, Commander/HQ, respawn/medic, Feature Status, Testing workflow, release-readiness, dashboard, pruning ledger and machine rows. The branch is branch-only map-indicator work, not current stable behavior or full redeploy eligibility proof. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "trello-map-radius-circles-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Routed draft PR #78 / origin/claude/trello-map-radius-circles@77dd71ba303f through Client UI systems, Commander/HQ lifecycle, Respawn/death lifecycle, Medic redeployment truck, Feature Status Register, Testing workflow, release-readiness gates, Progress Dashboard, pruning ledger and machine rows. The branch merge-bases directly on current stable origin/master@f8a76de34; payload is six maintained-root files / +192 and git diff --check clean. It adds a side-colored HQ build-area ellipse plus own-side yellow ambulance/redeploy class-radius rings in source Chernarus and maintained Vanilla. Current stable has constants and CCrange only, with no HQBuildRange, AmbRange_ or watcher launcher hits. The watcher does not duplicate full redeploy eligibility gates, so smoke must cover mismatch cases before promotion. No gameplay source changed."
+    },
     {
       "lane": "trello-upgrade-icons-branch-intel-2026-06-23",
       "owner": "Codex",

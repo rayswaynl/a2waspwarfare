@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T13:22:09+02:00",
-  "lastVerifiedAt": "2026-06-23T13:22:09+02:00",
+  "generatedAt": "2026-06-23T13:48:21+02:00",
+  "lastVerifiedAt": "2026-06-23T13:48:21+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -354,6 +354,48 @@
   },
   "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "branchOnlyFeaturePromotionGates": [
+    {
+      "id": "trello-map-radius-circles-branch",
+      "branch": "origin/claude/trello-map-radius-circles",
+      "head": "77dd71ba303f",
+      "base": "f8a76de34; current stable origin/master",
+      "state": "branch-review-needed-map-radius-circles-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-hq-build-area-and-ambulance-redeploy-map-circles",
+      "canonicalDocs": [
+        "Client-UI-Systems-Atlas.md#current-branch-scope",
+        "Commander-HQ-Lifecycle-Atlas.md#current-branch-scope",
+        "Respawn-And-Death-Lifecycle-Atlas.md#branch-intel---mobile-respawn-map-circles",
+        "Medic-Redeployment-Truck-Forward-Spawn.md#branch-intel---map-radius-circle-candidate",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-map-radius-circles@77dd71ba303fdb3712fdbfb0e9dff2feebca075f; merge-base with origin/master is f8a76de349da6f8b871d079c828436c10afb221c",
+        "f8a76de34..77dd71ba303f: 6 maintained-root files +192 across Client_AmbulanceRedeployCircles.sqf, Init_BaseStructure.sqf and Init_Client.sqf; git diff --check clean",
+        "Branch Chernarus Init_BaseStructure.sqf:54-65 and Vanilla :35-46 create HQBuildRange local ellipses with WFBE_C_BASE_AREA_RANGE + WFBE_C_BASE_HQ_BUILD_RANGE",
+        "Branch Chernarus Init_BaseStructure.sqf:153-158 and Vanilla :134-139 delete the HQ build-area marker with the CC marker",
+        "Branch Chernarus/Vanilla Init_Client.sqf:1227 launches Client_AmbulanceRedeployCircles.sqf",
+        "Branch Chernarus/Vanilla Client_AmbulanceRedeployCircles.sqf:12-18 gates on WFBE_C_RESPAWN_MOBILE and combines WFBE_%1AMBULANCES plus WFBE_%1REDEPLOYTRUCKS",
+        "Branch Chernarus/Vanilla Client_AmbulanceRedeployCircles.sqf:30-35 reads WFBE_C_RESPAWN_RANGES by WFBE_UP_RESPAWNRANGE level; :41-48 creates yellow local border ellipses; :57-68 updates, resizes and deletes them",
+        "Current stable Chernarus/Vanilla has no Client_AmbulanceRedeployCircles, HQBuildRange or AmbRange_ hits",
+        "Current stable build radius refs: Common_GetClosestEntity2.sqf:14, Construction_HQSite.sqf:49, basearea.sqf:3-4,12-13; constants Chernarus Init_CommonConstants.sqf:455-456 and Vanilla :277-278",
+        "Current stable respawn availability refs: Client_GetRespawnAvailable.sqf:33-45 for ambulances and :54-81 for redeploy trucks; constants Chernarus Init_CommonConstants.sqf:44,674,678 and Vanilla :44,476,480"
+      ],
+      "ownerDecision": "Decide whether to promote the PR #78 map-indicator branch. It is client-local visibility work only; it does not change construction authority, respawn eligibility, redeploy-truck activation rules, economy or server validation.",
+      "promotionGate": "Smoke HQ build-ring placement/radius/cleanup, ambulance ring follow/delete/respawn-range resize, own-side/enemy visibility, map/JIP behavior and the redeploy-truck eligibility mismatch risk before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "map-marker-smoke",
+          "construction-smoke",
+          "respawn-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
     {
       "id": "trello-auto-bipod-branch",
       "branch": "origin/claude/trello-auto-bipod",
