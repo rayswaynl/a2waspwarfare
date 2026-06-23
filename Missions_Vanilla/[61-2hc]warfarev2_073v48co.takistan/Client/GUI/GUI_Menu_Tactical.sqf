@@ -39,7 +39,22 @@ _map = _display DisplayCtrl 17002;
 _listboxControl = _display DisplayCtrl _listBox;
 
 _pard = missionNamespace getVariable "WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY";
-{lbAdd[17008,_x]} forEach (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText]);
+// Marty: Show each artillery type's effective min-max range next to its name (Trello #115).
+// Effective max uses the same WFBE_C_ARTILLERY divisor the menu applies for _maxRange below,
+// so the printed number matches the in/out-of-range coloring in the cannon list.
+_artyNames    = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
+_artyRangeMin = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoinedText];
+_artyRangeMax = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoinedText];
+_artyDivisor  = missionNamespace getVariable "WFBE_C_ARTILLERY";
+for "_artyI" from 0 to (count _artyNames) - 1 do {
+	_artyRowName = _artyNames select _artyI;
+	if (!isNil "_artyRangeMin" && !isNil "_artyRangeMax" && _artyDivisor > 0 && _artyI < (count _artyRangeMin) && _artyI < (count _artyRangeMax)) then {
+		_rmin = _artyRangeMin select _artyI;
+		_rmax = round ((_artyRangeMax select _artyI) / _artyDivisor);
+		_artyRowName = Format ["%1 (%2-%3m)", _artyRowName, _rmin, _rmax];
+	};
+	lbAdd [17008, _artyRowName];
+};
 lbSetCurSel[17008,0];
 
 // Marty: Include the artillery ammo selector in the artillery enable/disable state.
