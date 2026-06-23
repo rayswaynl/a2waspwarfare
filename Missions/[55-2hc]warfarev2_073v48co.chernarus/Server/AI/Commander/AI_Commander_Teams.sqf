@@ -75,6 +75,15 @@ private ["_pcN","_hcN","_pcExtraCap"];
 _pcN = {isPlayer _x} count allUnits;
 _hcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 _pcN = (_pcN - _hcN) max 0;
+	//--- B74.2 UNIFIED POP-TIER publisher (Ray 2026-06-23): the live human count is already settled here, so compute
+	//--- the tier and broadcast it ONCE per change so every AI subsystem (TOTAL_AI cap, town defenders/active-cap,
+	//--- side-patrols, the per-player AI buy-cap) scales off ONE source. 0=LOW(0-2)/1=MID(3-5)/2=HIGH(6-9)/3=FULL(10+).
+	private "_popTier";
+	_popTier = switch (true) do { case (_pcN <= 2): {0}; case (_pcN <= 5): {1}; case (_pcN <= 9): {2}; default {3} };
+	if (_popTier != (missionNamespace getVariable ["WFBE_PopTier", -1])) then {
+		WFBE_PopTier = _popTier; publicVariable "WFBE_PopTier";
+		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
+	};
 _base = switch (true) do {
 	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  6]};
 	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
@@ -93,7 +102,7 @@ _logik setVariable ["wfbe_aicom_pc", _pcN];
 	//--- server never bloats. Toggle the flag to A/B legacy vs NEXT. The dyntarget log below records the lift.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_BANKING_VALVE", 1]) > 0 && {_pcN <= 5}) then {
 		private ["_valveCap","_valveExtra"];
-		_valveCap   = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_LOWPOP_EXTRA", 6];
+		_valveCap   = (missionNamespace getVariable ["WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER", [3,2,0,0]]) select _popTier;
 		_valveExtra = floor (_funds / _fundsPerExtraTeam);
 		if (_valveExtra > _valveCap) then {_valveExtra = _valveCap};
 		if (_valveExtra > _extra) then {_extra = _valveExtra; _target = _base + _extra};
@@ -170,6 +179,16 @@ if (_foundedTeams > _target) then {
 if (_logik getVariable ["wfbe_aicom_veteran_next", false]) then {_target = _target + 1};
 
 if ((_foundedTeams + _pending) >= _target) exitWith {};
+
+//--- B74.2 (Ray 2026-06-23): enforce the TIERED per-side TOTAL_AI ceiling AT FOUNDING. The HC founding path had NO
+//--- side-AI gate (only AI_Commander_Produce.sqf:28-30 did), so at low pop founding blew past the cap = the
+//--- "infinite teams" overshoot. Same count as Produce (side AI minus players); cap from the pop-tier array.
+private ["_aiCapTier","_sideAINow"];
+_aiCapTier = (missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]) select ((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0);
+_sideAINow = {(side _x == _side) && !(isPlayer _x)} count allUnits;
+if (_sideAINow >= _aiCapTier) exitWith {
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding skipped - side AI %2 >= tier cap %3 (tier %4, pc %5).", _sideText, _sideAINow, _aiCapTier, (missionNamespace getVariable ["WFBE_PopTier", 0]), _pcN]] Call WFBE_CO_FNC_AICOMLog;
+};
 
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
