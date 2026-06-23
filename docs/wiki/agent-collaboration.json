@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T00:52:00+02:00",
+  "generatedAt": "2026-06-24T01:15:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "resource-income-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh resource-income cap/payout/display rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Server/FSM/updateresources.sqf, Client/Functions/Client_GetIncome.sqf and related income constants in source Chernarus and maintained Vanilla.",
+        "Keep Economy-Towns-And-Supply and Resource-Income-Tick-Distribution-Engine as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Economy-Towns-And-Supply.md, Resource-Income-Tick-Distribution-Engine.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 resource-income evidence.",
+        "Recorded that checked d472da6a..21b62b04 is empty for income paths and constants, while origin/master..origin/claude/b74.2-aicom changes source-Chernarus AICOM/pop-tier constants only among checked income-adjacent files.",
+        "Updated Progress Dashboard, pruning ledger, worklog and machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future economy owner should preserve or deliberately change the current AI-commander funds-famine fallback and B74.1 taper, decide side-supply/team-paycheck cap intent, review Chernarus-only hybrid-refill/supply-multiplier behavior against maintained Vanilla, align actual payout versus Client_GetIncome/RHUD/menu display for income system 4, and smoke capped plus uncapped income ticks.",
+      "updated": "2026-06-24T01:15:23+02:00"
+    },
     {
       "lane": "side-supply-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
