@@ -54,6 +54,10 @@ _martyServiceGetPrice = {
 	};
 
 	if (_action == "REPAIR") exitWith {
+		//--- Trello #74: A vehicle already being repaired is not repair-eligible. Returning 0
+		//--- here disables the single Repair button and makes the batch builder skip it
+		//--- (the batch builder only adds entries with price > 0).
+		if (_veh getVariable ["wfbe_veh_repairing", false]) exitWith {0};
 		if (getDammage _veh <= 0) exitWith {0};
 		if (isNil "_get") exitWith {500};
 		round((getDammage _veh) * ((_get select QUERYUNITPRICE) / (missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_REPAIR_PRICE")))

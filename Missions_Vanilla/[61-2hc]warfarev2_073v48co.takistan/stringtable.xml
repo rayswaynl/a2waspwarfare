@@ -909,6 +909,13 @@
         <Russian>Информация:\n\n КШМ уже в ремонте.</Russian>
         <Italian>Informazioni:\n\n The MHQ is already being repaired.</Italian>
       </Key>
+      <Key ID="STR_WF_INFO_Repair_Veh_InProgress">
+        <English>Information:\n\n %1 is already being repaired.</English>
+        <French>Information:\n\n %1 est déjà en cours de réparation.</French>
+        <German>Information:\n\n %1 wird bereits repariert.</German>
+        <Russian>Информация:\n\n %1 уже в ремонте.</Russian>
+        <Italian>Informazioni:\n\n %1 is already being repaired.</Italian>
+      </Key>
       <Key ID="STR_WF_INFO_Repair_MHQ_Funds">
         <English>Information:\n\n %1 %2 Needed in order to repair the MHQ.</English>
         <French>Information:\n\n %1 %2 Manquant afin de réparer le PC.</French>

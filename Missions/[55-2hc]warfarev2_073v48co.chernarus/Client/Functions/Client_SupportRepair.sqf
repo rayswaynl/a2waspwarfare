@@ -3,6 +3,12 @@ _veh = _this select 0;
 _supports = _this select 1;
 _typeRepair = _this select 2;
 _spType = _this select 3;
+
+//--- Trello #74: Per-vehicle re-entry guard so a vehicle already being repaired is not
+//--- double-queued (repeated clicks would otherwise repair faster / double-charge). Local
+//--- flag (3rd arg false): each client tracks its own repair threads for its own vehicles.
+if (_veh getVariable ["wfbe_veh_repairing", false]) exitWith {hint parseText(Format[localize "STR_WF_INFO_Repair_Veh_InProgress",([typeOf _veh, 'displayName'] Call GetConfigInfo)])};
+_veh setVariable ["wfbe_veh_repairing", true, false];
 _supportRange = missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_RANGE";
 _repairRange = missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE";
 
@@ -68,8 +74,8 @@ while {true} do {
 	
 	_i = _i + 1;
 	
-	if (_cts == 0 || !(alive _veh) || (getPos _veh) select 2 > 2) exitWith {_cts = 0;hint parseText(Format[localize "STR_WF_INFO_Repair_Failed",_name])};
-	if (_i >= _repTime) exitWith {hint parseText(Format[localize "STR_WF_INFO_Repair_Success",_name])};
+	if (_cts == 0 || !(alive _veh) || (getPos _veh) select 2 > 2) exitWith {_cts = 0;_veh setVariable ["wfbe_veh_repairing", false, false];hint parseText(Format[localize "STR_WF_INFO_Repair_Failed",_name])};
+	if (_i >= _repTime) exitWith {_veh setVariable ["wfbe_veh_repairing", false, false];hint parseText(Format[localize "STR_WF_INFO_Repair_Success",_name])};
 };
 
 //--- Fix the damages?
@@ -82,3 +88,6 @@ if (_cts != 0) then {
 		_veh setVariable ["wfbe_jet_aa_lasthit", -100, true];
 	};
 };
+
+//--- Trello #74: Final guard clear (covers every exit path; safe to set twice).
+_veh setVariable ["wfbe_veh_repairing", false, false];
