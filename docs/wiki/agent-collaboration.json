@@ -41,6 +41,24 @@
       "updated": "2026-06-23T16:40:00+02:00"
     },
     {
+      "lane": "version-sqf-loadoutmanager-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh generated version.sqf and LoadoutManager release-gate docs from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a where checked.",
+        "Checked files are Tools/LoadoutManager/FileManagement/FileManager.cs, Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs, Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs, Tools/LoadoutManager/ZipManager.cs and maintained-root version.sqf/template presence.",
+        "Planned wiki targets are Mission-Config-Version-Include-Graph.md, Source-Fix-Propagation-Queue.md, Tools-And-Build-Workflow.md, agent-release-readiness.json and matching coordination/machine rows.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Mission-Config-Version-Include-Graph.md, Tools-And-Build-Workflow.md, Source-Fix-Propagation-Queue.md, Feature-Status-Register.md, agent-release-readiness.json, agent-context.json and agent-machine-index.json with current B74.1/B74.2 generated version.sqf and LoadoutManager branch evidence.",
+        "Updated Progress-Dashboard.md Latest Batch, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl; no gameplay source changed.",
+        "Mirrored touched files into docs/wiki and ran final validation."
+      ],
+      "handoff": "Future release/tooling owner should treat version.sqf as a required generated file in every claimed mission root, not as tracked source or as satisfied by the Chernarus template. Before running LoadoutManager, verify target-branch root discovery and A2WASP_SKIP_ZIP support; checked stable/B74/Miksuu/perf-style refs still require 7za for packaging.",
+      "updated": "2026-06-23T16:20:16+02:00"
+    },
+    {
       "lane": "fast-travel-fee-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
       "status": "published-validated-docs-only",

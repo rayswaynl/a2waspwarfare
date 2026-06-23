@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T15:45:19+02:00",
-  "lastVerifiedAt": "2026-06-23T15:45:19+02:00",
+  "generatedAt": "2026-06-23T16:15:00+02:00",
+  "lastVerifiedAt": "2026-06-23T16:15:00+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -192,26 +192,26 @@
     "defaultReleaseScope": "Stable release claims cover source Chernarus plus maintained generated Vanilla Takistan unless a branch-specific audit says otherwise.",
     "moddedReleaseGate": "Do not claim Modded_Missions support while modded generation is commented, packaging omits Modded_Missions, generated version.sqf files are absent and conflict/bootstrap blockers remain.",
     "freshCheckoutGate": "Because version.sqf is git-ignored but included by mission boot files, every target mission root needs generated version.sqf verification before pack/test claims.",
-    "packagingScope": "While Tools/LoadoutManager/ZipManager.cs:16 remains unchanged, _MISSIONS.7z packaging is expected to include Missions and Missions_Vanilla, not Modded_Missions."
+    "packagingScope": "While docs/source Tools/LoadoutManager/ZipManager.cs:16 and stable-shaped/Miksuu/perf/a96fdda2 ZipManager.cs:10 remain unchanged, _MISSIONS.7z packaging is expected to include Missions and Missions_Vanilla, not Modded_Missions."
   },
   "versionSqfGeneratedInput": {
     "status": "required-generated-ignored-input",
     "trackedByGit": false,
-    "currentCheckoutEvidence": "Fresh docs mirror checkout for version-sqf-current-b74-refresh-2026-06-23 had no present source Chernarus or maintained Vanilla Takistan version.sqf files; generated local files remain gitignored when present.",
-    "currentBranchEvidence": "Checked docs/source HEAD@ded20d3d, current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f do not track live Chernarus/Vanilla version.sqf files.",
-    "templateCaveat": "B69/B74 track Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template as a Chernarus reference, but that template is not the live generated version.sqf input and does not cover maintained Vanilla Takistan.",
+    "currentCheckoutEvidence": "Current workspace check for version-sqf-loadoutmanager-current-b741-refresh-2026-06-23 found no present Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf or Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf in docs/source checkout HEAD@7b1187d32; git status --ignored for those paths returned no ignored-present files.",
+    "currentBranchEvidence": "Checked docs/source HEAD@7b1187d32, current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6ae, B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 do not track live Chernarus/Vanilla version.sqf files.",
+    "templateCaveat": "Current stable/B74.1/B74.2/B69/B74 track Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template as a Chernarus reference, but that template is not the live generated version.sqf input and does not cover maintained Vanilla Takistan.",
     "whyItMatters": "description.ext and initJIPCompatible.sqf include version.sqf before mission boot continues; a fresh checkout, clean pack or generated target without that file can fail before later SQF systems initialize.",
     "releaseGate": "Before pack, smoke-test or release wording, verify every claimed mission target root has a generated version.sqf matching its terrain profile and player count.",
     "sourceRefs": [
-      ".gitignore:1,23 on docs/source, current stable, current Miksuu and perf",
-      ".gitignore:1-5,25 on B69/B74; :2-3 unignore the Chernarus template only",
-      "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext:39 on docs/source, Miksuu and perf; :38 on current stable/B69/B74",
+      ".gitignore:1,23 on docs/source, current Miksuu, perf and historical a96fdda2",
+      ".gitignore:1-5,25 on current stable/B74.1/B74.2/B69/B74; :2-3 unignore the Chernarus template only",
+      "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext:39 on docs/source, Miksuu and perf; :38 on current stable/B74.1/B74.2/B69/B74 and historical a96fdda2",
       "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf:4",
-      "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/description.ext:39 on docs/source, Miksuu and perf; :38 on current stable/B69/B74",
+      "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/description.ext:39 on docs/source, Miksuu and perf; :38 on current stable/B74.1/B74.2/B69/B74 and historical a96fdda2",
       "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/initJIPCompatible.sqf:4",
-      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102,346-367 on docs/source, Miksuu and perf",
-      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:115,359-380 on current stable/B69/B74",
-      "Tools/LoadoutManager/FileManagement/FileManager.cs:89-101",
+      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102,359,361,364 on docs/source, Miksuu, perf and historical a96fdda2",
+      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:115,372,374,377 on current stable/B74.1/B74.2/B69/B74",
+      "Tools/LoadoutManager/FileManagement/FileManager.cs:92,100",
       "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Header.hpp:5,9,21",
       "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Header.hpp:5,9,21"
     ],
@@ -319,7 +319,7 @@
   ],
   "toolingGate": {
     "tool": "Tools/LoadoutManager",
-    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or the marker-root shape for the target branch. Docs/source accepts Missions + Missions_Vanilla + Tools/LoadoutManager/LoadoutManager.csproj; current stable/B69/B74/release-shaped refs accept Missions/[55-2hc]warfarev2_073v48co.chernarus + Tools/LoadoutManager + AGENTS.md; current Miksuu/perf still require the named ancestor.",
+    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or the marker-root shape for the target branch. Docs/source HEAD@7b1187d32 accepts Missions + Missions_Vanilla + Tools/LoadoutManager/LoadoutManager.csproj; current stable/B74.1 origin/master@f8a76de34, B74.2 d472da6ae, B69/B74 and historical a96fdda2 accept Missions/[55-2hc]warfarev2_073v48co.chernarus + Tools/LoadoutManager + AGENTS.md; current Miksuu/perf still require the named ancestor.",
     "skipZipForPropagationOnly": {
       "environmentVariable": "A2WASP_SKIP_ZIP",
       "acceptedValues": [
@@ -327,14 +327,15 @@
         "true",
         "yes"
       ],
-      "effect": "Skips _MISSIONS.7z packaging after generation/copy."
+      "effect": "Skips _MISSIONS.7z packaging after generation/copy.",
+      "branchScope": "Implemented on docs/source HEAD@7b1187d32; absent in checked current stable/B74.1/B74.2/B69/B74, historical a96fdda2, current Miksuu, origin/perf/quick-wins and local feat/supply-helicopter refs."
     },
     "evidenceRefs": [
       "Tools/LoadoutManager/FileManagement/FileManager.cs",
       "Tools/LoadoutManager/ZipManager.cs",
       "Source-Fix-Propagation-Queue.md#rule"
     ],
-    "currentLocalCheckoutStatus": "branch-sensitive-root-discovery-docs-source-and-stable-shaped-refs-support-marker-roots-miksuu-perf-named-root-only"
+    "currentLocalCheckoutStatus": "branch-sensitive-root-discovery-docs-source-and-stable-shaped-refs-support-marker-roots-miksuu-perf-named-root-only; docs-source-skip-zip-only-in-checked-refs; generated-version-sqf-absent-in-clean-docs-source-checkout"
   },
   "latestLoadoutManagerPropagationRun": {
     "checkedAt": "2026-06-02T16:18:32+02:00",

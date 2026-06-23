@@ -456,7 +456,7 @@
         "agent-context.json",
         "agent-events.jsonl"
       ],
-      "nextGate": "After source mission edits, run LoadoutManager or explicitly record propagation pending; missing 7za is packaging-only when A2WASP_SKIP_ZIP=1 is used."
+      "nextGate": "After source mission edits, run LoadoutManager or explicitly record propagation pending; verify target-branch root discovery and A2WASP_SKIP_ZIP support first, because checked stable/B74/Miksuu/perf-style refs still need 7za for packaging while docs/source HEAD@7b1187d32 supports skip-zip."
     },
     {
       "id": "external-integrations-trust",

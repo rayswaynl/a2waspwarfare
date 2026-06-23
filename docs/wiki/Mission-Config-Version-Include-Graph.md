@@ -4,7 +4,7 @@ This page owns the small but important `version.sqf` contract that sits between 
 
 All source paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless another root is named.
 
-Current recheck on 2026-06-23 at docs mirror `HEAD@ded20d3d`: a fresh checkout has no present generated `version.sqf` in source Chernarus or maintained Vanilla Takistan, and checked refs do not track live Chernarus/Vanilla `version.sqf` files. Checked refs: docs/source `HEAD@ded20d3d`, current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, current Miksuu `b8389e748243` and `origin/perf/quick-wins@0076040f`. B69/B74 add a tracked Chernarus `version.sqf.template`, but that is only a reference template and does not satisfy the live generated `version.sqf` gate for source Chernarus or maintained Vanilla Takistan. LoadoutManager remains the generation path.
+Current recheck on 2026-06-23 at docs/source `HEAD@7b1187d32`: a fresh checkout has no present generated `version.sqf` in source Chernarus or maintained Vanilla Takistan, and checked refs do not track live Chernarus/Vanilla `version.sqf` files. Checked refs: docs/source `HEAD@7b1187d32`, current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34`, B74.2 `origin/claude/b74.2-aicom@d472da6ae`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2`. Current stable/B74.1/B74.2/B69/B74 add a tracked Chernarus `version.sqf.template`, but that is only a reference template and does not satisfy the live generated `version.sqf` gate for source Chernarus or maintained Vanilla Takistan. LoadoutManager remains the generation path.
 
 ## Include Chain
 
@@ -21,9 +21,9 @@ flowchart TD
 
 | Consumer | Evidence | Contract |
 | --- | --- | --- |
-| `description.ext` | `description.ext:39` on docs/source, Miksuu and perf; `:38` on current stable/B69/B74 | Includes generated terrain metadata before `Rsc/Header.hpp`. |
+| `description.ext` | `description.ext:39` on docs/source, Miksuu and perf; `:38` on current stable/B74.1/B74.2/B69/B74 and historical `a96fdda2` | Includes generated terrain metadata before `Rsc/Header.hpp`. |
 | `Rsc/Header.hpp` | `Rsc/Header.hpp:5,9,21` | Uses `WF_RESPAWNDELAY`, `WF_MISSIONNAME` and `WF_MAXPLAYERS` for mission header values. |
-| `initJIPCompatible.sqf` | `initJIPCompatible.sqf:4,31,111-113` | Includes `version.sqf`, logs `WF_MAXPLAYERS`, and converts `IS_CHERNARUS_MAP_DEPENDENT` into runtime `IS_chernarus_map_dependent`. |
+| `initJIPCompatible.sqf` | `initJIPCompatible.sqf:4`; mission/max-player logs at `:29,:31` on docs/Miksuu/perf/`a96fdda2` and `:29,:32` on stable-shaped refs; runtime map flag conversion at `:111-113` | Includes `version.sqf`, logs mission metadata, and converts `IS_CHERNARUS_MAP_DEPENDENT` into runtime `IS_chernarus_map_dependent`. |
 | Vanilla/CO UI gate | `description.ext:61-63`, `Rsc/Header.hpp:12-14` | Uses the `VANILLA` preprocessor macro for OA/CO-dependent config. This is separate from the `Missions_Vanilla` folder name. |
 
 ## Generated Contract Shape
@@ -33,7 +33,7 @@ flowchart TD
 | Source Chernarus | Expected generated `version.sqf` carries `WF_MAXPLAYERS = 55`, a Chernarus mission name, `IS_CHERNARUS_MAP_DEPENDENT` and `IS_NAVAL_MAP`. Verify the generated file in the target root before pack/smoke claims. |
 | Maintained Vanilla Takistan | Expected generated `version.sqf` carries `WF_MAXPLAYERS = 61` and a Takistan mission name; the sampled/generated Takistan shape comments out the Chernarus/naval flags. Verify the generated file in the target root before pack/smoke claims. |
 
-These generated files are ignored by git, so do not assume a clean checkout has them. Docs/source, Miksuu and perf write `version.sqf` from `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102,346-367`; current stable/B69/B74 use `:115,359-380`. `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats `version.sqf` as a generated/special terrain file during copy/delete.
+These generated files are ignored by git, so do not assume a clean checkout has them. Docs/source, Miksuu, perf and historical `a96fdda2` write `version.sqf` from `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102` and emit the checked map/naval/name defines at `:359,:361,:364`; current stable/B74.1/B74.2/B69/B74 use `BaseTerrain.cs:115` and `:372,:374,:377`. `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats `version.sqf` as a generated/special terrain file during copy/delete.
 
 Release gate: if any claimed mission root lacks a generated `version.sqf`, that root is blocked for pack, smoke and release wording. Verify the file exists and that its `WF_MAXPLAYERS`, `WF_MISSIONNAME`, `WF_RESPAWNDELAY`, map flags and debug/log flags match the terrain profile before treating later SQF validation as meaningful. The machine checklist is `agent-release-readiness.json` `versionSqfGeneratedInput`.
 
