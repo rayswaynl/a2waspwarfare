@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T10:25:17+02:00",
+  "generatedAt": "2026-06-23T10:52:30+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: pvf-sender-auth-current-b741-refresh-2026-06-23. Refreshed DR-55 PVF/PVEH sender-authentication evidence after origin/master advanced to f8a76de34 / B74.1; current stable still uses namespace/CODE PVF dispatch but forwards only the PVEH value tuple into server handlers. No gameplay source changed.",
+      "currentWork": "Latest published lane: hq-score-miksuu-branch-intel-2026-06-23. Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hq-score-miksuu-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-HQ-Lifecycle-Atlas, Feature Status Register, Source Fix Propagation Queue, Upstream Miksuu Commit Intel, Developer History, Progress Dashboard, pruning ledger and HQ-score machine rows with Miksuu score/HQ/bounty branch-name classification. Current Miksuu master@b8389e748243 still keeps the double-award handler in both maintained roots. ScoreForKillingFactories@f17445c15190, Fix0ScoreBountyBug@415615c9662a and FixNukeMoneyGain@2ad3a7d38837 are old-layout one-award ancestry; AntiHQTeamkillDisabledInDebugMode@5bafe566951a is branch-only current-layout one-award evidence; BountyModifierTo4@cc127ef40b4d predates the HQ score award. No gameplay source changed."
+    },
     {
       "lane": "pvf-sender-auth-current-b741-refresh-2026-06-23",
       "owner": "Codex",

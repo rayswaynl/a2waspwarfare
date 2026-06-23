@@ -2,7 +2,7 @@
 
 > Canonical source-backed map for commander selection, commander-client affordances, HQ/MHQ deployment, HQ destruction, wreck tracking and MHQ repair. This page bridges [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Server authority migration map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index).
 
-Unless a branch/ref is named, source paths below are relative to the Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. The initial HQ/team-spawn section was refreshed against live mission `origin/master` `0139a3468` on 2026-06-21. The HQ score/bounty matrix was refreshed against docs/source `HEAD@c2d513ecb`, current stable/B74.1 `origin/master@f8a76de34`, B69 `origin/claude/b69@8d465fce` and B74 `origin/claude/b74-aicom-spend@b23f557f` on 2026-06-23; older branch-matrix rows keep their named provenance.
+Unless a branch/ref is named, source paths below are relative to the Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. The initial HQ/team-spawn section was refreshed against live mission `origin/master` `0139a3468` on 2026-06-21. The HQ score/bounty matrix was refreshed against docs/source `HEAD@c2d513ecb`, current stable/B74.1 `origin/master@f8a76de34`, B69 `origin/claude/b69@8d465fce`, B74 `origin/claude/b74-aicom-spend@b23f557f` and Miksuu score/HQ/bounty branch-name candidates on 2026-06-23; older branch-matrix rows keep their named provenance.
 
 ## How To Use This Page
 
@@ -20,7 +20,7 @@ Unless a branch/ref is named, source paths below are relative to the Chernarus m
 
 Checked 2026-06-14 against current docs head `8c3942d2` (targeted commander/HQ source paths unchanged from `f82a9127` and `e2c9f6ed`), stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
 
-HQ score/bounty was rechecked 2026-06-23 against docs/source `HEAD@c2d513ecb` (source-unchanged from `9b7eb4bc` for checked HQ-score files), current stable/B74.1 `origin/master@f8a76de34`, B69 `origin/claude/b69@8d465fce`, B74 `origin/claude/b74-aicom-spend@b23f557f`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` in both maintained roots. Other rows keep their 2026-06-14 branch provenance until refreshed.
+HQ score/bounty was rechecked 2026-06-23 against docs/source `HEAD@c2d513ecb` (source-unchanged from `9b7eb4bc` for checked HQ-score files), current stable/B74.1 `origin/master@f8a76de34`, B69 `origin/claude/b69@8d465fce`, B74 `origin/claude/b74-aicom-spend@b23f557f`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` in both maintained roots. A same-day Miksuu branch-name scan classified score/HQ/bounty-looking branches as historical or branch-only evidence unless the table below says otherwise. Other rows keep their 2026-06-14 branch provenance until refreshed.
 
 | Surface | Current branch truth | Route |
 | --- | --- | --- |
@@ -254,6 +254,8 @@ The same worker awards score/bounty messages (`:47-81` on docs/source; line drif
 
 DR-50 remains branch-unrescued after the 2026-06-23 current-B74.1 refresh. Every checked current maintained-root target still sets `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF`, awards that generic HQ building score regardless of teamkill, then awards `_score = 900` again under the non-teamkill guard. The coefficient is still `3`, so a clean enemy HQ kill pays `900 + 900 = 1800`; a friendly/teamkill HQ kill still gets the generic `900`.
 
+Do not treat Miksuu score/HQ/bounty branch names as fixes without file-level proof. The same-day upstream scan found older one-award ancestry, but current Miksuu `master@b8389e748243` still has the double-award shape in both maintained roots. `f17445c15` and `b31539b46` are ancestors of current Miksuu; later folder-structure work such as `96809ac35` moved a generic `_points` award into the current mission layout, so ancestry alone is not a DR-50 rescue.
+
 | Ref / root | Evidence | Status |
 | --- | --- | --- |
 | Docs/source `HEAD@c2d513ecb` Chernarus + maintained Vanilla | `Server/Functions/Server_OnHQKilled.sqf:23,47,49,75,78,81`; `Common/Init/Init_CommonConstants.sqf:356`. Checked HQ-kill score paths are source-unchanged from prior docs `9b7eb4bc` / `97e4cdd0` / `4d4610f1`. | Double-award present in both maintained roots. |
@@ -262,7 +264,9 @@ DR-50 remains branch-unrescued after the 2026-06-23 current-B74.1 refresh. Every
 | Current Miksuu `b8389e748243` | `Server_OnHQKilled.sqf:23,47,49,75,78,81`; coefficient at `Init_CommonConstants.sqf:356`. Verified direct upstream `master` still resolves to `b8389e748243` on 2026-06-23. | Double-award present in both maintained roots. |
 | `origin/perf/quick-wins@0076040f` | Same two-award shape at `Server_OnHQKilled.sqf:23,47,49,75,78,81`; coefficient at `Init_CommonConstants.sqf:356`. | Not fixed by perf branch. |
 | Historical release commit `a96fdda2` | Same two-award shape at `Server_OnHQKilled.sqf:23,52,54,80,83,86`; coefficient at `Init_CommonConstants.sqf:372`. Current origin exposes no live `release/*`, `feat/*hq*`, `feat/*score*`, `feat/*bounty*` or `feat/*base*` heads on 2026-06-23; broad B74/commander matches are AI-commander context/log branches, not HQ-score rescue heads. | Historical evidence only; no current release head to treat as a rescue branch. |
-| Historical score branches | `upstream/ScoreForKillingFactories` `f17445c1` and `upstream/Fix0ScoreBountyBug` `415615c9` carry the older single-HQ-bounty path only. | Useful provenance, not a current maintained-root rescue. |
+| Historical Miksuu one-award ancestors | `miksuu/ScoreForKillingFactories@f17445c15190`, `miksuu/Fix0ScoreBountyBug@415615c9662a`, `miksuu/FixNukeMoneyGain@2ad3a7d38837` and `miksuu/TakistanNukeSoundFileMissing@f3eae47a24ad` share the older handler blob `12d33a8f87ee`: no `_points`, one `_score = 900`, and the award inside the non-teamkill guard. These branches use the old Chernarus plus old `Missions/[61-2hc]...takistan` layout, not the current `Missions_Vanilla/[61-2hc]...` maintained root. | Useful provenance only; not a current maintained-root rescue. |
+| Miksuu branch-only one-award current-layout evidence | `miksuu/AntiHQTeamkillDisabledInDebugMode@5bafe566951a` has current `Missions_Vanilla` layout and one-award/non-teamkill-guard shape. Adjacent branch blobs such as `5aeea270e25f` and `bbfc46060f8a` carry similar branch-only one-award handlers. | Branch-only evidence; current Miksuu master does not contain it, so DR-50 remains open. |
+| Miksuu bounty tune / non-fix branches | `miksuu/BountyModifierTo4@cc127ef40b4d` has no `_score = 900` and no `_points` in `Server_OnHQKilled.sqf`, so it predates the HQ score award rather than fixing the double-award. `96809ac35` is the relevant folder-structure history point for the current generic `_points` award shape. | Branch names are search leads only; file-level handler proof decides fix status. |
 
 Patch shape: keep a single non-teamkill HQ score award, make friendly/teamkill HQ destruction award zero score, propagate maintained Vanilla, then smoke enemy HQ kill, friendly HQ teamkill and DR-20 idempotency/replayed-HQ-kill interactions.
 

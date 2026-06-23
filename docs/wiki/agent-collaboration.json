@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T10:25:17+02:00",
+  "generatedAt": "2026-06-23T10:52:30+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "hq-score-miksuu-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Current Miksuu master@b8389e748243 still keeps the double-award Server_OnHQKilled.sqf shape in both maintained roots.",
+        "miksuu/ScoreForKillingFactories@f17445c15190, miksuu/Fix0ScoreBountyBug@415615c9662a, miksuu/FixNukeMoneyGain@2ad3a7d38837 and miksuu/TakistanNukeSoundFileMissing@f3eae47a24ad are old-layout one-award ancestry, not current maintained-root fixes.",
+        "miksuu/AntiHQTeamkillDisabledInDebugMode@5bafe566951a and adjacent current-layout branch blobs are branch-only one-award evidence; miksuu/BountyModifierTo4@cc127ef40b4d predates the HQ score award.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Commander-HQ-Lifecycle-Atlas, Feature Status Register, Source Fix Propagation Queue, Upstream Miksuu Commit Intel, Developer History, Progress Dashboard, Agent Worklog, pruning ledger and HQ-score machine rows with branch-name classification.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future commander/HQ code owner should treat Miksuu score/HQ/bounty branch names as search leads only. Close DR-50 only with file-level maintained-root proof, Vanilla propagation and enemy/friendly HQ kill smoke.",
+      "updated": "2026-06-23T10:52:30+02:00"
+    },
     {
       "lane": "pvf-sender-auth-current-b741-refresh-2026-06-23",
       "owner": "Codex",

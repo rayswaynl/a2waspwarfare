@@ -188,7 +188,7 @@ Evidence checked:
 | `f10d5bd9`, `8d74c332` | bomb restriction/debug branches, `Common_HandleIncomingMissile.sqf` | Bomb limiter/debug work was reverted and needs in-engine aircraft testing before revival. |
 | `f67f0399`, `c23ba233`, `afe91fb6` | `Construction_StationaryDefense.sqf` | Broad nil guards for repair-truck defense construction suppressed enough behavior to be reverted. |
 | `46f0a301`, `3a0b13f8` | `Server/Init/Init_Defenses.sqf` | Commenting array elements for factory walls caused syntax/runtime failure. |
-| `4e6d585f`, `79680595`, `f17445c1` | `Server_BuildingKilled.sqf`, `Server_OnHQKilled.sqf` | Factory-kill score work needed immediate syntax and teamkill-scope fixes. |
+| `4e6d585f`, `79680595`, `f17445c1`, `96809ac3` | `Server_BuildingKilled.sqf`, `Server_OnHQKilled.sqf` | Factory/HQ score work needed immediate syntax and teamkill-scope fixes; the old one-award HQ handler is ancestry only because later folder-structure history and current `miksuu/master@b8389e748243` keep the generic `_points` plus second bounty shape. |
 
 ### Compatibility And UI Locality
 
@@ -247,7 +247,7 @@ Evidence checked:
 | `67886498`, `82bb5daf`, current `Common_HandleAAMissiles.sqf` | Maverick missile handling | Extreme Maverick parameters were experimental and later replaced by current handler values. |
 | `4720880a`, current `EASA_Init.sqf` | Mavericks/Spikes loadouts | Mavericks-to-Spikes branch is not current master truth for aircraft. |
 | `0c14f001`, `82fbab1f`, `bc5f23d5`, `7fddb251` | bomb scripts and altitude/distance limits | Bomb restriction history is workaround/revert/re-add/near-disable churn, not clean policy. |
-| `f17445c1`, `b31539b4`, `cc127ef4`, `415615c9` | score, bounty, teamkill paths | Score/bounty changes affect AntiStack skill and economy, not only the scoreboard. |
+| `f17445c1`, `b31539b4`, `96809ac3`, `cc127ef4`, `415615c9` | score, bounty, teamkill paths | Score/bounty changes affect AntiStack skill and economy, not only the scoreboard. Branch names are not authority: `ScoreForKillingFactories` / `Fix0ScoreBountyBug` show old-layout one-award ancestry, `BountyModifierTo4` predates the HQ score award, and current Miksuu master still needs a DR-50 fix. |
 | `upstream/SkillDiffCompensation`, current `skillDiffCompensation.sqf`, `Common_ChangeSideSupply.sqf` | side supply, DB skill, compensation | Skill-diff compensation rides on side-supply channels that still need authority hardening. |
 
 ### AI, HC, Cleanup And Runtime
