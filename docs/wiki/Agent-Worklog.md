@@ -2548,3 +2548,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Findings: branch `Server_HandleSpecial.sqf` adds delayed server `deleteMarker` cleanup at Chernarus `:144-160` / Vanilla `:134-150`, and `stringtable.xml` updates `STR_WF_INFO_Arty_called_message` at Chernarus `:9304-9311` / Vanilla `:9304-9310`. Current stable has no `ArtyMarkerCleanup` hits.
 - Result: refreshed [Support specials](Support-Specials-And-Tactical-Modules-Atlas#trello-artillery-ui-branch-intel), [Client UI systems](Client-UI-Systems-Atlas#current-branch-scope), Feature Status, Testing workflow branch-only smoke pack, release-readiness gates, dashboard, pruning ledger and machine rows. The branch is documented as artillery UX/marker cleanup only, not fire-mission authority; the new `RequestSpecial` cleanup tag needs marker-name/forged-payload review before promotion. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T14:19:36+02:00 - Codex - Wiki remote reference mirror
+
+- Claimed `wiki-remote-reference-mirror-2026-06-23` after the live wiki fast-forwarded to `origin/master@4d4014a` while the repo mirror still lacked the new reference pages.
+- Initial payload scope: wiki commit `4d4014a` adds `Available-Actions-Client-Gate-FSM.md`, `Stringtable-Localization-Catalog.md` and `UI-Theme-Palette-And-Style-Macros-Catalog.md`, and updates `Home.md`, `_Sidebar.md` and `agent-context.json`.
+- Planned output: copy those exact wiki files into `docs/wiki`, keep touched-file SHA parity, run JSON/JSONL validation, `docs/validate-wiki.ps1` where available, and `git diff --check`. This is a mirror-maintenance lane only; no gameplay source edits planned.
+- Result: mirrored the wiki payload and matching coordination closeout into `docs/wiki`; [Home](Home), `_Sidebar.md` and `agent-context.json` now route the new reference pages in both surfaces. The new pages remain source-evidence pages authored by the live wiki commit; this lane did not re-verify or re-author their claims.
+- Validation: final validation is recorded in the matching `complete` event.

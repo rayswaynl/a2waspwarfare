@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T14:02:46+02:00",
+  "generatedAt": "2026-06-23T14:22:45+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-remote-reference-mirror-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Live wiki origin/master@4d4014a added Available-Actions-Client-Gate-FSM.md, Stringtable-Localization-Catalog.md and UI-Theme-Palette-And-Style-Macros-Catalog.md.",
+        "The same wiki commit modified Home.md, _Sidebar.md and agent-context.json to route those new reference pages.",
+        "Main repo docs/wiki is missing the three new pages and still has older Home, _Sidebar and agent-context.json copies.",
+        "Scope is exact mirror parity and validation only; no gameplay source changes planned."
+      ],
+      "outputs": [
+        "Copied the six wiki payload files from the clean wiki checkout into docs/wiki.",
+        "Copied matching coordination updates into docs/wiki so the mirror carries the lane claim and closeout.",
+        "Touched-file SHA parity passed between the wiki checkout and docs/wiki; final validation details are recorded in the complete event."
+      ],
+      "handoff": "Future docs agents should treat this lane as mirror maintenance for wiki commit 4d4014a, not new source verification; content evidence belongs to the newly mirrored reference pages.",
+      "updated": "2026-06-23T14:22:45+02:00"
+    },
     {
       "lane": "trello-artillery-ux-branch-intel-2026-06-23",
       "owner": "Codex",
