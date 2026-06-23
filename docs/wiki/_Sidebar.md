@@ -100,6 +100,7 @@
   - [LoadoutManager data-model contributor guide](LoadoutManager-Data-Model-Contributor-Guide)
   - [Discord status bot setup and reference](Discord-Status-Bot-Setup-And-Reference)
   - [GLOBALGAMESTATS extension reference](GLOBALGAMESTATS-Extension-Reference)
+  - [New player quickstart (player guide)](New-Player-Quickstart-Guide)
   - [Commander's handbook (player guide)](Commanders-Handbook)
   - [Tactical support menu](Tactical-Support-Menu-Player-Guide)
   - [Supply missions (player guide)](Supply-Mission-Player-Guide)
