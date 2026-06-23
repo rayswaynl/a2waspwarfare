@@ -372,6 +372,8 @@ Map UI is split across one-shot initialization, long-running refresh loops and e
 | `Client/Functions/Client_BookkeepBlinkingIcons.sqf` | Optional combat marker blinking bookkeeping. | Fully gated by `WFBE_C_MAP_ICON_BLINKING_ENABLED`. |
 | `WASP/global_marking_monitor.sqf` | Adds a display-12 map double-click handler that prefixes marker text with the player's name. | Polls for the marker dialog/display before attaching `mouseButtonDblClick`; current source disables all user input, then runs an unslept wait for up to two seconds before re-enabling input (`:57-73`). Add a tiny backoff and fail-safe unlock before expansion. |
 
+Branch intel 2026-06-23: `origin/claude/upstream-blinking-mapicons@6e31f7fd5` is a branch-only mounted-player blink candidate, not current stable behavior. Its merge-base with current stable is `be2bbd084`, which is an ancestor of `origin/master@f8a76de34`; direct diffs against current stable also include unrelated B74.1 `Init_CommonConstants.sqf:914-920` player-stats drift. The payload versus `be2bbd084` is only `Client_BookkeepBlinkingIcons.sqf` in source Chernarus and maintained Vanilla (+32, `git diff --check` clean): current stable pushes only active vehicles into `BLINKING_VEHICLES_*` at `Client_BookkeepBlinkingIcons.sqf:82-94`, while the branch also pushes a mounted player gunner/commander into `BLINKING_UNITS_*` at `:96-110` so the soldier marker blinks beside the active vehicle marker. Smoke with `WFBE_C_MAP_ICON_BLINKING_ENABLED = 1`, mounted gunner and commander seats, map/GPS open and closed, dismount, death/null cleanup and both maintained roots before promotion.
+
 ## Action Menus And Scroll Actions
 
 The scroll-action surface is part UI, part gameplay:

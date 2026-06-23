@@ -1,10 +1,19 @@
 # Valhalla — Vehicle Climbing Assist and Low-Gear System
 
-> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-21 against then-current master cf2a6d6a4; later branch-intel notes below name exact refs for current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
-The Valhalla module is a client-side velocity-boost system that assists player-driven and AI-driven vehicles over steep terrain. It applies a progressive speed multiplier when the vehicle is already moving forward but too slowly — it does not cap top speed and does not brake above the target assist speed. Only `Tank` and `Car` class vehicles are eligible.
+The Valhalla module is a client-side velocity-boost system that assists player-driven and AI-driven vehicles over steep terrain. It applies a progressive speed multiplier when the vehicle is already moving forward but too slowly — it does not cap top speed and does not brake above the target assist speed. Current stable `origin/master@f8a76de34` keeps player actions limited to `Tank` and `Car` class vehicles in both maintained roots.
 
 ---
+
+## Branch Intel - AN-2 Fast-Lift Candidate
+
+New upstream-mining branch `origin/claude/upstream-an2-climb-boost@63e6b4142` is a small branch-only candidate, not current stable behavior. Its merge-base with current stable is `be2bbd084`, which is an ancestor of `origin/master@f8a76de34`; direct diffs against current stable also include B74.1 `Init_CommonConstants.sqf:914-920` player-stats drift, so porting this branch must preserve current `WFBE_C_STATS_ENABLED = true`.
+
+| Ref | Payload | Status |
+| --- | --- | --- |
+| Current stable `origin/master@f8a76de34` | Chernarus and maintained Vanilla keep the tank target speed at `Func_Client_LowGear.sqf:64-66`, no `Air` target block before the loop at `:68`, and no AN-2 action block between `Init_Unit.sqf:79-87`. | Current stable has no AN-2 low-gear action or air-specific target speed. |
+| `origin/claude/upstream-an2-climb-boost@63e6b4142` | Against merge-base `be2bbd084`, payload is four files / +32 / -2 and `git diff --check` is clean. Both maintained roots add an `Air` target of `_min = 100` at `Func_Client_LowGear.sqf:68-75` and add `An2_TK_EP1` low-gear on/off actions at `Init_Unit.sqf:87-90` without adding the Flip action. | Branch-only candidate. Smoke AN-2 takeoff/climb with low gear off/on, heavy load, runway departure, normal cruise speed, action visibility and maintained Vanilla parity before promotion. |
 
 ## Bootstrap Sequence
 

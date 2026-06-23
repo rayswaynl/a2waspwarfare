@@ -355,6 +355,69 @@
   "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "branchOnlyFeaturePromotionGates": [
     {
+      "id": "upstream-an2-climb-boost-branch",
+      "branch": "origin/claude/upstream-an2-climb-boost",
+      "head": "63e6b4142",
+      "base": "be2bbd084; ancestor of origin/master@f8a76de34",
+      "state": "branch-review-needed-port-preserve-b741-stats",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-valhalla-an2-fast-lift",
+      "canonicalDocs": [
+        "Valhalla-Vehicle-Climbing-Assist.md#branch-intel---an-2-fast-lift-candidate",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/upstream-an2-climb-boost@63e6b4142; merge-base with origin/master is be2bbd084",
+        "origin/master@f8a76de34 is current stable and contains later B74.1 player-stats constants at Init_CommonConstants.sqf:914-920",
+        "be2bbd084..63e6b4142: 4 files +32/-2; git diff --check clean",
+        "Chernarus/Vanilla Func_Client_LowGear.sqf:68-75 adds Air _min = 100",
+        "Chernarus/Vanilla Init_Unit.sqf:87-90 adds An2_TK_EP1 LowGear actions"
+      ],
+      "ownerDecision": "Decide whether to port AN-2 fast-lift onto current stable while preserving B74.1 stats enablement.",
+      "promotionGate": "Smoke AN-2 takeoff/climb, normal cruise, action visibility and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-vehicle-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "upstream-blinking-mapicons-branch",
+      "branch": "origin/claude/upstream-blinking-mapicons",
+      "head": "6e31f7fd5",
+      "base": "be2bbd084; ancestor of origin/master@f8a76de34",
+      "state": "branch-review-needed-port-preserve-b741-stats",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-mounted-player-marker-blink",
+      "canonicalDocs": [
+        "Client-UI-Systems-Atlas.md#map-and-marker-ui",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/upstream-blinking-mapicons@6e31f7fd5; merge-base with origin/master is be2bbd084",
+        "origin/master@f8a76de34 is current stable and contains later B74.1 player-stats constants at Init_CommonConstants.sqf:914-920",
+        "be2bbd084..6e31f7fd5: 2 files +32; git diff --check clean",
+        "Current stable Client_BookkeepBlinkingIcons.sqf:82-94 pushes active vehicle markers only",
+        "Branch Chernarus/Vanilla Client_BookkeepBlinkingIcons.sqf:96-110 pushes mounted gunner/commander player markers into BLINKING_UNITS_*"
+      ],
+      "ownerDecision": "Decide whether mounted gunner/commander player markers should blink beside active vehicle markers and port only onto current stable if accepted.",
+      "promotionGate": "Smoke blinking enabled/disabled, mounted gunner/commander visibility, dismount cleanup, player-in-active-vehicle behavior and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "map-marker-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
       "id": "ai-commander-branch-revival",
       "branch": "origin/feat/ai-commander",
       "head": "c20ce153",
