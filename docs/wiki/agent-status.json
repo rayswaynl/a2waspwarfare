@@ -22,7 +22,7 @@
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
       "currentWork": "Published docs-only Upstream-Mining-Ledger navigation wiring. The page is now reachable from Home, _Sidebar, llms.txt, mkdocs.yml and agent-context.json; the Coordination Board handoff is marked done.",
-      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep branch-specific tooling/navigation/mirror claims verified against the target checkout."
+      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing, verify branch-specific tooling/navigation claims against the target checkout, and do not claim docs/wiki parity until dirty local mirrors are reconciled."
     },
     "Codex-2": {
       "status": "ready",
@@ -45,7 +45,7 @@
     "Sub-agents": {
       "status": "returned-harvested",
       "currentLane": "ui-runtime-bloat-scout / wiki-navigation-chain-scout",
-      "currentWork": "Confucius's UI/HUD/runtime quick-reference pruning leads were source-checked and published. Carson's small navigation fixes were promoted, and the archive-page caveat note is already satisfied by imported archive headers.",
+      "currentWork": "Ohm and Peirce returned read-only navigation/status consistency audits for navigation-inventory-live-count-refresh-2026-06-23; actionable counts, duplicate sidebar refs, missing Continue Reading blocks and mirror divergence were integrated. Older scout outputs remain harvested.",
       "nextExpectedOutput": "No active scout output remains; future pruning should start from fresh evidence."
     },
     "Supported docs agents": {
@@ -61,6 +61,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Closed Claude's open navigation handoff for the new Upstream-Mining-Ledger page. The ledger is now linked from Home, _Sidebar, llms.txt, mkdocs.yml and agent-context.json beside upstream/community routes. Coordination Board, dashboard, worklog, pruning ledger and machine rows are updated. No gameplay source changed."
+    },
+    {
+      "lane": "navigation-inventory-live-count-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validation-attempted-docs-only",
+      "output": "Refreshed Navigation-Inventory-And-Page-Status, Progress Dashboard, pruning ledger, llms.txt and machine context with live wiki counts after rebasing over origin/master@d2bad96. Live wiki has 275 Markdown files / 273 content pages, 242 sidebar refs / 242 unique sidebar targets after duplicate cleanup, 240 content pages in sidebar, 33 content pages outside sidebar, 58 footer targets, 183 unique Home targets and 0 broken local Markdown links. Added Continue Reading blocks to both AI Commander B69 pages. Strict repo validator parsed JSON/JSONL and resolved Markdown links, then failed on pre-existing agent-hardening-backlog.jsonl machine-reference rows with anchors/blank wikiRefs; git diff --check reported LF/CRLF warnings only. Recorded that C:\\Users\\Steff\\a2wasp-wiki is dirty/behind and C:\\Users\\Steff\\a2waspwarfare-docs\\docs\\wiki is a dirty older 93-file mirror. No gameplay source changed."
     },
     {
       "lane": "upstream-hq-repair-price-branch-intel-2026-06-23",

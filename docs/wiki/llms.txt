@@ -9,7 +9,7 @@ Important notes:
 - `Modded_Missions/*` exists in-tree but is not actively maintained by the current generation/package path.
 - Use Bohemia Interactive Arma 2 OA scripting references, not Arma 3 assumptions.
 - Treat publicVariable/PVF, economy authority, ICBM, side supply, attack waves and integration trust boundaries as high-risk public-server surfaces.
-- Current docs are mirrored between the GitHub Wiki and `docs/wiki`; the long-term recommendation is repo-canonical docs plus GitHub Pages/MkDocs.
+- The GitHub Wiki is currently ahead of the visible local `docs/wiki` mirror; preserve dirty local mirror changes before syncing. The long-term recommendation remains repo-canonical docs plus GitHub Pages/MkDocs.
 - Machine files split into snapshots and append-oriented logs. Treat `agent-status.json`, `agent-collaboration.json`, `agent-context.json`, `agent-release-readiness.json`, `agent-compatibility-audit.json` and `agent-machine-index.json` as snapshots; treat `agent-events.jsonl`, `agent-knowledge.jsonl`, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl` as evidence streams where later/superseding rows may refine older records.
 
 ## Start Here

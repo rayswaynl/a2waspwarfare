@@ -576,7 +576,7 @@
         "Current origin exposed no live release/* or artillery feature head on 2026-06-22"
       ]
     },
-    "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md remains the no-blind-copy policy. The active _wasp_wiki_tmp checkout is restored by scoped sync for current docs surfaces; alternate _wasp_wiki_claude still has broad divergence and must be reconciled file by file."
+    "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md remains the no-blind-copy policy. On 2026-06-23 the clean live wiki checkout used for docs work was C:\\Users\\Steff\\Documents\\Codex\\2026-06-23\\here-s-a-paste-ready-goal-2\\work\\a2wasp-wiki-live, rebased over origin/master@d2bad96 after upstream wiki commits landed. The older C:\\Users\\Steff\\a2wasp-wiki checkout was dirty and behind origin/master, and C:\\Users\\Steff\\a2waspwarfare-docs\\docs\\wiki was a dirty older mirror with 93 Markdown files; preserve those uncommitted changes before any sync."
   },
   "knownRisks": [
     "DR-43 (Low): external-research intake #2 (9 reports) corroborates the campaign (esp. report 8 = economy-authority thesis). Corrected 2026-06-04 source state: local ignored/generated Chernarus and Vanilla version.sqf files exist, but Git does not track them; clean checkouts and generated/target roots still need version-file verification before pack/test claims. Init_Server.sqf has duplicate compile/bind rows: LogGameEnd, PlayerObjectsList and AwardScorePlayer are live duplicate binds; InitAFKkickHandler, monitorServerFPS and MASH_MARKER are commented duplicate remnants. LogGameEnd dup ties DR-13.",

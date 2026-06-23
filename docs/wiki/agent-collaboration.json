@@ -155,6 +155,27 @@
       "updated": "2026-06-23T11:08:00+02:00"
     },
     {
+      "lane": "navigation-inventory-live-count-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validation-attempted-docs-only",
+      "sourceScope": [
+        "Fresh GitHub wiki checkout rebased over origin/master@d2bad96 after upstream-mining, footer/tooling caveat, HQ repair-price branch-intel and Trello pass-3 updates landed.",
+        "Navigation-Inventory-And-Page-Status.md current snapshot still names the 2026-06-13 docs/wiki count set.",
+        "Home, _Sidebar, _Footer, Progress Dashboard, agent-status.json and current machine files are in scope for navigation/status reconciliation only.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Navigation-Inventory-And-Page-Status.md with live wiki counts after rebasing over origin/master@d2bad96: 275 Markdown files, 273 content pages, 242 sidebar refs / 242 unique targets, 33 content pages outside the sidebar and 32 outside sidebar/footer.",
+        "Added Continue Reading blocks to AI-Commander-B69-Improvement-Roadmap.md and AI-Commander-B69-Implementation-Sketches.md.",
+        "Removed duplicate _Sidebar.md content/reference refs for Player vehicle/travel actions and QoL trio player hints, leaving the UI/player workflow refs.",
+        "Recorded local mirror divergence in Progress-Dashboard.md, Wiki-Pruning-And-Relevance-Ledger.md, Agent-Worklog.md, llms.txt, agent-context.json and agent-status.json.",
+        "Strict repo validator parsed JSON/JSONL and resolved Markdown links, then failed on pre-existing agent-hardening-backlog.jsonl machine-reference rows with anchors/blank wikiRefs; git diff --check reported LF/CRLF warnings only.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future docs/platform owner should sync the dirty local wiki/docs mirrors only after preserving their uncommitted work; this batch uses a fresh clean checkout and does not merge over existing local edits.",
+      "updated": "2026-06-23T11:32:57+02:00"
+    },
+    {
       "lane": "hq-score-miksuu-branch-intel-2026-06-23",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -8079,7 +8100,7 @@
     "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
     "Use Arma 2 OA scripting references only."
   ],
-  "currentStateNote": "activeClaims is intentionally compact current-state only. The completed dashboard-current-lanes-freshness and agent-worklog-append-only-guardrail cleanups are preserved in Agent-Worklog.md, agent-events.jsonl and git history; historical published lanes are not live claims.",
+  "currentStateNote": "activeClaims is a compact current/recent lane ledger in this wiki checkout. The newest entry should be treated as the current handoff surface; entries with published/validated statuses are historical completed lanes retained for continuity, not open work.",
   "completedLanes": [
     {
       "lane": "legacy-compiled-aliases-no-static-callers",

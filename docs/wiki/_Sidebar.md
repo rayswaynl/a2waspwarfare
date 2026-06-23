@@ -114,8 +114,6 @@
   - [Modded maps status and content](Modded-Maps-Status-And-Content)
   - [BattlEye filter setup and OA taxonomy](BattlEye-Filter-Setup-And-OA-Taxonomy)
   - [Player squad/group join protocol](Player-Squad-Group-Join-Protocol)
-  - [Player vehicle/travel actions](Player-Vehicle-And-Travel-Actions-Reference)
-  - [QoL trio player hints](QoL-Trio-Player-Hints-Reference)
   - [AutoFlip vehicle recovery](AutoFlip-Vehicle-Recovery-Reference)
   - [Engine stealth fuel toggle](Engine-Stealth-Fuel-Toggle-Reference)
   - [Valhalla vehicle climbing-assist](Valhalla-Vehicle-Climbing-Assist)

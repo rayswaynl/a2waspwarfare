@@ -1133,3 +1133,9 @@ The deep pass harvested 96 open AICOM items other fleet agents had already logge
 - `C:/Users/Game/a2waspwarfare.wiki/Old-WarfareBE-Performance-Comparison.md (lines 64,140)` (1)
 - `Audit-Findings-Queue-2026-06-03.md (AI6)` (1)
 - `Source-Fix-Propagation-Queue.md ('Resource income payout/display drift' row); Economy-Towns-And-Supply#resource-income-branch-matrix (linked)` (1)
+
+## Continue Reading
+
+Previous: [AI commander B69 improvement roadmap](AI-Commander-B69-Improvement-Roadmap) | Next: [AI commander capture and fun plan](AI-Commander-Capture-And-Fun-Improvement-Plan)
+
+Main map: [Home](Home) | AI route: [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) | Status: [Progress dashboard](Progress-Dashboard)

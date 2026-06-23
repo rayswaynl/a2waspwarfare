@@ -275,3 +275,9 @@ B69 IS READY for a focused first ship, and is materially MORE complete than the 
 
 A2-OA-safe SQF sketch for every item is on the companion page: [[AI Commander B69 Implementation Sketches|AI-Commander-B69-Implementation-Sketches]].
 
+## Continue Reading
+
+Previous: [AI commander autonomy audit](AI-Commander-Autonomy-Audit) | Next: [AI commander B69 implementation sketches](AI-Commander-B69-Implementation-Sketches)
+
+Main map: [Home](Home) | AI route: [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) | Status: [Progress dashboard](Progress-Dashboard)
+
