@@ -16,14 +16,15 @@ private[
 	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_baseStructures", "_baseHq", "_baseTotal", "_baseDamaged", "_clientFPS", "_clientFPSColor",
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
-	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd"
+	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd",
+	"_RHUDUpdateArty"
 ];
 
 _total = count towns;
 _display = displayNull;
 _lastDisplay = displayNull;
 _controls = [];
-_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371];
+_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371,1372,1373];
 _lastTexts = [];
 _lastColors = [];
 _lastShown = [];
@@ -239,7 +240,7 @@ _RHUDSetFullPosition = {
 
 	(_controls select 0) ctrlSetPosition [_labelX, _startY + (0.021 * safezoneH), 0.145 * safezoneW, 0.001 * safezoneH];
 
-	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[23,24],[25,26]];
+	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[23,24],[25,26],[27,28]];
 	for "_idx" from 0 to ((count _layoutPairs) - 1) do {
 		_rowY = _startY + (_idx * _rowH);
 		(_controls select ((_layoutPairs select _idx) select 0)) ctrlSetPosition [_labelX, _rowY, _labelW, _lineH];
@@ -249,6 +250,44 @@ _RHUDSetFullPosition = {
 	{
 		_x ctrlCommit 0;
 	} forEach _controls;
+};
+
+// Card #219: artillery cooldown row (indices 27 label / 28 value).
+// Client-local only: reads the global fireMissionTime (set in GUI_Menu_Tactical on request,
+// initialised to -1000 in Init_Client) and the upgrade-scaled reload interval that the fire
+// action itself uses to gate cooldown. No server round-trip, no publicVariable.
+_RHUDUpdateArty = {
+	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last", "_valTxt", "_valColor"];
+	//--- Only show the row when this side actually fields artillery.
+	if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) <= 0) exitWith {
+		[27, ""] call _RHUDSetText;
+		[28, ""] call _RHUDSetText;
+	};
+
+	_intervals = missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS";
+	if (isNil "_intervals") exitWith {
+		[27, ""] call _RHUDSetText;
+		[28, ""] call _RHUDSetText;
+	};
+	_ups = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
+	_fireTime = _intervals select (_ups select WFBE_UP_ARTYTIMEOUT);
+
+	_last = fireMissionTime;
+	if (isNil "_last") then {_last = -1000};
+	_elapsed = time - _last;
+
+	[27, "Arty:"] call _RHUDSetText;
+	if (_elapsed > _fireTime) then {
+		_valTxt = localize "STR_WF_TACTICAL_Available";
+		_valColor = [0.451, 1, 0.278, 1];
+	} else {
+		_remain = round (_fireTime - _elapsed);
+		if (_remain < 0) then {_remain = 0};
+		_valTxt = Format ["%1 %2", _remain, localize "STR_WF_Seconds"];
+		_valColor = [0.278, 0.510, 1, 1];
+	};
+	[28, _valTxt] call _RHUDSetText;
+	[28, _valColor] call _RHUDSetColor;
 };
 
 sleep 10;
@@ -410,6 +449,7 @@ while {true} do {
 
 			call _RHUDUpdateServerFPSRow;
 			call _RHUDUpdateUpgrade;
+			call _RHUDUpdateArty;
 			};
 		};
 
