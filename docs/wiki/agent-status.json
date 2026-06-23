@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T05:12:48+02:00",
+  "generatedAt": "2026-06-23T05:29:36+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: ui-idd-collision-current-b74-refresh-2026-06-23. Refreshed duplicate UI IDD owner/status/dead-code rows with current stable/B69/B74 evidence; no gameplay source changed.",
+      "currentWork": "Latest published lane: clickabletext-soundpush-current-b74-refresh-2026-06-23. Refreshed clickable-text RscClickableText.soundPush rows with current stable/B69/B74 source-present evidence and old-shape branch scope; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "clickabletext-soundpush-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Client-UI-Systems-Atlas, Feature Status, Source Fix queue, Dead/stale code, dashboard/worklog/pruning ledger and clickable-text machine rows with current stable/B69/B74 source-present evidence. Docs/source HEAD@0bb0f89f is source-unchanged from b5219d47 for checked resource/dialog paths and still keeps malformed RscClickableText.soundPush[] at Rsc/Ressources.hpp:556 in both maintained roots with 17 derived controls. Current stable origin/master@0139a346, B69 8d465fce and B74 b23f557f carry valid {\"\", 0.2, 1} at :556 in both maintained roots with 14 derived controls; stable blame is 1a5e0b40 / 9b49883c and checked stable/B69/B74 resource/dialog deltas are empty. Current Miksuu b8389e748243, perf 0076040f, historical release a96fdda2 and UI theme branches remain old-shape. No gameplay source changed."
+    },
     {
       "lane": "ui-idd-collision-current-b74-refresh-2026-06-23",
       "owner": "Codex",
