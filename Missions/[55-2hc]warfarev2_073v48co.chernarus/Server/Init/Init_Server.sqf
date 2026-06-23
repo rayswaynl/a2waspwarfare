@@ -909,6 +909,26 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed (WFBE_C_CLIENT_FPS_REPORT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- B74.2 (Ray 2026-06-23): OWN-SIDE MARKER FEED-GAP RECOVERY (the recurring "my player marker gone").
+//--- A publicVariable is NOT JIP-durable in A2-OA, and the B63 connect catch-up (Server_OnPlayerConnected
+//--- targeted publicVariableClient) can be MISSED on some joins (it races the connect/init path). When that
+//--- happens the joiner's WFBE_ACTIVE_AICOM_TEAMS / WFBE_ACTIVE_PATROLS stay empty for the first ~60s and the
+//--- own-side commander-team + patrol arrows never draw. updateaicommarkers.sqf now REQUESTS a rebroadcast when
+//--- its feed is still empty after the init gate (publicVariableServer "WFBE_ReqAicomFeed" carrying the player
+//--- object). Resolve `owner _player` to the network id and push BOTH feeds straight back to exactly that client -
+//--- the SAME proven targeted-reply pattern as REQUEST_SUPPLY_VALUE (Server_PV_RequestSupplyValue.sqf). Unconditional
+//--- (always armed); server_side_patrols also re-broadcasts every ~20s as a safety net.
+"WFBE_ReqAicomFeed" addPublicVariableEventHandler {
+	private ["_player","_id"];
+	_player = _this select 1;
+	if (isNull _player) exitWith {};
+	_id = owner _player;
+	if (!isNil "WFBE_ACTIVE_AICOM_TEAMS") then {_id publicVariableClient "WFBE_ACTIVE_AICOM_TEAMS"};
+	if (!isNil "WFBE_ACTIVE_PATROLS") then {_id publicVariableClient "WFBE_ACTIVE_PATROLS"};
+	diag_log format ["[WFBE][B74.2 REQ-MARK] rebroadcast marker feeds to requester %1 (aicom=%2, patrols=%3).", _id, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
+};
+["INITIALIZATION", "Init_Server.sqf: B74.2 WFBE_ReqAicomFeed handler armed (own-side marker feed-gap recovery)."] Call WFBE_CO_FNC_LogContent;
+
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
 // weaponholder cleaner

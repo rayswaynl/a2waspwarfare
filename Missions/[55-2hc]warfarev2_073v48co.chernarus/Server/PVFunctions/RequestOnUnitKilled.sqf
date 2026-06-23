@@ -131,6 +131,8 @@ if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 			if (_killed_isplayer) then {[_attrUid, WFBE_STAT_PVP_KILLS, 1] call WFBE_SE_FNC_RecordStat};
 		};
 	};
+	//--- B74.2: credit the DEATH to the killed player's own UID (any death cause; side-independent, so outside the enemy-only kills gate above).
+	if (WFBE_C_STATS_ENABLED && _killed_isplayer) then {private "_deadUid"; _deadUid = getPlayerUID _killed; if (_deadUid != "") then {[_deadUid, WFBE_STAT_DEATHS, 1] call WFBE_SE_FNC_RecordStat}};
 };
 
 // WASPSTAT KILL telemetry (Task 10). Gate: WFBE_C_STATLOG must be 1.

@@ -81,6 +81,13 @@ while {!WFBE_GameOver} do {
 					if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide,"CapturedNear",["Strongpoint",_town]] Spawn SideMessage};
 
 					_camp setVariable ["sideID",_newSID,true];
+
+					//--- B74.2: leaderboard CAMP-capture credit to each capturing player present on the new owner's side
+					//--- at flip. _objects here is already the "Man"-filtered range list; capture the outer side into a
+					//--- private so the nested forEach's magic _x stays safe.
+					private ["_capSideC","_capUidC"];
+					_capSideC = _newSide;
+					{ if (isPlayer _x && {alive _x} && {side _x == _capSideC}) then {_capUidC = getPlayerUID _x; if (_capUidC != "") then {[_capUidC, WFBE_STAT_CAPTURES_CAMP, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
 					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]);
 
 					[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;

@@ -205,7 +205,7 @@ _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
 //--- (14) Air - Mi-8 Rocket Assault (armed transport that also caps)
 _u		= ["Mi17_rockets_RU"];
 _u = _u + ["RU_Soldier_TL"];
-_u = _u + ["RU_Soldier_AA"];
+_u = _u + ["RU_Soldier"];     //--- B74.2 (Ray 2026-06-23): redundant RU_Soldier_AA -> rifleman (still loads of AA missile infantry; vehicle AA + the (3) Weapons Team manpad already cover air, halve the standalone AA bodies).
 _u = _u + ["RU_Soldier_LAT"];
 _u = _u + ["RU_Soldier_LAT"];
 _u = _u + ["RU_Soldier_MG"];

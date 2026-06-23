@@ -79,7 +79,22 @@ switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force
 };
 
 if (_randomize != 0) then {_groups_max = _groups_max + round(random _randomize - random _randomize)};
-_groups_max = round(_groups_max * (missionNamespace getVariable "WFBE_C_TOWNS_UNITS_DEFENDER_COEF"));
+//--- B74.2: re-derive the defender unit coef from the LIVE pop-tier instead of the static
+//--- WFBE_C_TOWNS_UNITS_DEFENDER_COEF (which was computed once at init from WFBE_C_TOWNS_DEFENDER).
+//--- WFBE_C_TOWNS_DEFENDER_BY_TIER is the tiered version of that same difficulty knob, so scaling the
+//--- coef per tier shrinks garrisons under load (FULL) and keeps them full at LOW. This builder is the
+//--- town-DEFENDER pool only (called solely when _side==WFBE_DEFENDER in server_town_ai.sqf); the WEST/EAST
+//--- AI-commander town pushes go through Server_GetTownGroups.sqf and are untouched.
+private "_defCoef"; _defCoef = missionNamespace getVariable "WFBE_C_TOWNS_UNITS_DEFENDER_COEF"; //--- fallback: the static init-time coef
+private "_defByTier"; _defByTier = missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER_BY_TIER";
+if (!isNil "_defByTier") then {
+	private "_pt"; _pt = missionNamespace getVariable ["WFBE_PopTier", 0]; if (_pt < 0) then {_pt = 0};
+	if (_pt <= ((count _defByTier) - 1)) then {
+		private "_diff"; _diff = _defByTier select _pt;
+		_defCoef = switch (_diff) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};
+	};
+};
+_groups_max = round(_groups_max * _defCoef);
 
 if (_aa_get) then {if (_groups_max > 3) then {_groups_max = 3}};
 

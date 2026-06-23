@@ -282,6 +282,42 @@ _scudModel allowDamage false;
 missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic]];
 
 //------------------------------------------------------------------------------------
+//--- B74.2: CARRIER AIR-SHOP. Make each captured carrier act like an airfield air-buy point by
+//--- reusing the existing airfield-hangar mechanism (no new shop UI):
+//---   • spawn the same WFBE_C_HANGAR hangar on the deck, flagged wfbe_is_airfield_hangar so
+//---     GUI_Menu_BuyUnits shows the airfield air-roster (WFBE_AIRFIELD_UNITS / WFBE_GUERAIRPORTUNITS);
+//---   • set wfbe_hangar + wfbe_airfield_side on the naval logic so Client_GetClosestAirport (extended
+//---     in B74.2 to scan naval-HVT depot logics) returns the deck as an "airport";
+//---   • set wfbe_is_carrier_hvt + wfbe_airfield_logic_ref + wfbe_airfield_hangar_obj so the EXISTING
+//---     carrier-capture block in server_town.sqf (~line 300) respawns the hangar for the new owner.
+//--- The logic IS its own airfield ref (the capture block respawns the hangar at getPosASL of the ref).
+//--- Initial owner side derived from the logic's current sideID (GUER at round start).
+{
+	private ["_navLoc","_navDeckZ","_navSide","_navHangar","_navPos"];
+	_navLoc   = _x;
+	_navDeckZ = _navLoc getVariable ["wfbe_naval_deckz", 16];
+	_navSide  = (_navLoc getVariable ["sideID", WFBE_C_GUER_ID]) Call WFBE_CO_FNC_GetSideFromID;
+	_navPos   = getPosASL _navLoc;
+
+	//--- Hangar on the deck (ASL deck height). Static + indestructible like the carrier props.
+	_navHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle [_navPos select 0, _navPos select 1, 0];
+	_navHangar setPosASL [_navPos select 0, _navPos select 1, _navDeckZ];
+	_navHangar setDir ((getDir _navLoc) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+	_navHangar enableSimulation false;
+	_navHangar allowDamage false;
+	_navHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+
+	//--- Wire the logic as an airfield + carrier-capture ref.
+	_navLoc setVariable ["wfbe_hangar", _navHangar, true];
+	_navLoc setVariable ["wfbe_airfield_side", _navSide, true];
+	_navLoc setVariable ["wfbe_is_carrier_hvt", true, true];
+	_navLoc setVariable ["wfbe_airfield_logic_ref", _navLoc, true];
+	_navLoc setVariable ["wfbe_airfield_hangar_obj", _navHangar, true];
+
+	["INITIALIZATION", Format ["Init_NavalHVT.sqf : carrier air-shop wired on [%1] (side %2, deckZ %3).", _navLoc getVariable ["name","?"], str _navSide, _navDeckZ]] Call WFBE_CO_FNC_LogContent;
+} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
+
+//------------------------------------------------------------------------------------
 //--- GUER CAP: proximity-gated Mi24_P + An2 patrol for each naval HVT.
 //--- Arms at ~1500-2000m player proximity; despawns on inactivity timeout.
 //--- One loop per asset, each spawned as a lightweight thread.

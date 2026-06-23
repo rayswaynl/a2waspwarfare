@@ -23,10 +23,20 @@ if (isNil "WFBE_ACTIVE_PATROLS") then {WFBE_ACTIVE_PATROLS = []; publicVariable 
 if (isNil "WFBE_ACTIVE_AICOM_TEAMS") then {WFBE_ACTIVE_AICOM_TEAMS = []; publicVariable "WFBE_ACTIVE_AICOM_TEAMS"};
 
 _delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
-_max = missionNamespace getVariable "WFBE_C_SIDE_PATROLS_MAX";
+//--- B74.2 (Ray 2026-06-23): WEST/EAST side-patrol cap is now POP-TIER aware (was the flat
+//--- WFBE_C_SIDE_PATROLS_MAX). Read WFBE_C_SIDE_PATROLS_MAX_BY_TIER select WFBE_PopTier per cycle (the
+//--- server publishes WFBE_PopTier 0=LOW/1=MID/2=HIGH/3=FULL, changing ~every 90s) so the concurrent
+//--- patrol cap eases off as population rises (BY_TIER = [2,2,2,1]); the EFFECTIVE cap stays level-aware =
+//--- min(this, patrol level) at L101. SAME consumer idiom as AI_Commander_Produce/Teams (B74.2). _max is
+//--- (re)assigned at the top of every loop cycle below. A2-OA-safe (plain getVariable+select, `max 0`).
+_max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
 _scrubLast = -999;
 
 while {!WFBE_GameOver} do {
+	//--- B74.2 (Ray 2026-06-23): re-read the pop-tier-scaled WEST/EAST cap each cycle so it tracks the live
+	//--- WFBE_PopTier (republished ~every 90s) instead of being frozen at the value read once at startup.
+	_max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
+
 	//--- PATROL-MARKER SCRUB: every ~20 s, purge dead-unit entries from WFBE_ACTIVE_PATROLS
 	//--- so HC-disconnect mid-patrol can't leave stale entries that JIP clients render.
 	//--- Uses explicit forEach (A2-safe; no select-with-code-filter).
@@ -70,6 +80,10 @@ while {!WFBE_GameOver} do {
 		//--- re-broadcast BOTH feeds every cycle so any late joiner gets the current lists within ~20s.
 		//--- Small arrays at 20s cadence = negligible bandwidth. Server_OnPlayerConnected does an
 		//--- instant targeted catch-up on top of this so a fresh joiner doesn't wait the full cycle.
+		//--- B74.2 (Ray 2026-06-23): this re-broadcast is INTENTIONALLY UNCONDITIONAL - it is NOT gated on
+		//--- patrols/teams existing (it sits in the unconditional ~20s timer block), so a joiner whose
+		//--- connect-time catch-up was missed always gets a fresh copy of BOTH feeds within one cycle. The
+		//--- WFBE_ReqAicomFeed request handler (Init_Server) provides an instant on-demand path on top of this.
 		publicVariable "WFBE_ACTIVE_PATROLS";
 		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 

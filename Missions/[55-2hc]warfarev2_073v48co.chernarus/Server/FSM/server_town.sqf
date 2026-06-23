@@ -232,6 +232,13 @@ while {!WFBE_GameOver} do {
 
 			_location setVariable ["sideID",_newSID,true];
 
+			//--- B74.2: leaderboard TOWN-capture credit to each capturing player physically present on the new
+			//--- owner's side at flip. _objects (the per-town capture scan above) holds the nearby entities; capture
+			//--- the outer side into a private so the nested forEach's magic _x stays safe.
+			private ["_capSide","_capUid"];
+			_capSide = _newSide;
+			{ if (isPlayer _x && {alive _x} && {side _x == _capSide}) then {_capUid = getPlayerUID _x; if (_capUid != "") then {[_capUid, WFBE_STAT_CAPTURES_TOWN, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
+
 			// AICOMSTAT FIRST_TOWN metric: emit once per side per round on its first capture.
 			// Plain logic getVariable with isNil guard (A2 OA safe; no == on Bool).
 			Private ["_ftLogik","_ftFlag","_ftKey","_ftMin","_ftSec","_ftTownName"];
@@ -305,8 +312,16 @@ while {!WFBE_GameOver} do {
 						if !(isNull _oldHangar) then { deleteVehicle _oldHangar };
 
 						//--- Spawn new hangar for the new owner (same pattern as ~line 492 airfield block).
-						_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPosASL _airLogicRef);
-						_newHangar setPosASL (getPosASL _airLogicRef);
+						//--- B74.2: place at the carrier DECK height (deckZ), not sea level, so the re-captured
+						//--- air-shop hangar stays on the deck; freeze + invuln to match the carrier props.
+						private ["_navDeckZ","_navRefPos"];
+						_navDeckZ  = _airLogicRef getVariable ["wfbe_naval_deckz", 16];
+						_navRefPos = getPosASL _airLogicRef;
+						_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle [_navRefPos select 0, _navRefPos select 1, 0];
+						_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
+						_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+						_newHangar enableSimulation false;
+						_newHangar allowDamage false;
 						_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
 						_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
 						_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];

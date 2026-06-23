@@ -12,7 +12,7 @@
 
 scriptName "Client\FSM\updateaicommarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN"];
+private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN","_reqSent","_reqTicks"];
 
 //--- B63 (Ray 2026-06-21): BOUNDED gate. The loop must wait for client init, but if a blocking
 //--- init waitUntil ever stalls, the old unbounded `waitUntil {clientInitComplete}` would suppress
@@ -27,8 +27,35 @@ _tracked = []; //--- [team, markerName] pairs (team is the stable key; leader ca
 _i = 0;
 _diagTicks = 0;
 
+//--- B74.2 (Ray 2026-06-23): FEED-GAP REQUEST. The B63 JIP catch-up (Server_OnPlayerConnected targeted
+//--- publicVariableClient) + the server_side_patrols ~20s re-broadcast usually deliver WFBE_ACTIVE_AICOM_TEAMS,
+//--- but a publicVariable is NOT JIP-durable in A2-OA and the catch-up can be MISSED on some joins (it races the
+//--- connect/init path) -> feed=0 for the first ~60s and the own-side arrows never draw (the recurring
+//--- "my player marker gone"). Belt-and-braces: if the loop is live and the feed is still empty, ask the server to
+//--- targeted-rebroadcast ONCE (publicVariableServer a request var carrying this client's network id), then re-check
+//--- on the next early ticks. Bounded so a genuinely-empty feed (no AICOM teams yet) doesn't request forever.
+_reqSent = false;
+_reqTicks = 0;
+
 while {true} do {
 	_list = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+
+	//--- B74.2: bounded feed-gap recovery. Only while the feed is empty AND we are still early (first ~12 ticks).
+	//--- Send the PLAYER OBJECT (not a network id) so the server can resolve `owner _player` for the targeted
+	//--- publicVariableClient - the SAME proven pattern as REQUEST_SUPPLY_VALUE (Server_PV_RequestSupplyValue.sqf),
+	//--- which avoids the A3-only `clientOwner` command (unreliable in A2-OA 1.64). The server handler
+	//--- (Init_Server WFBE_ReqAicomFeed) pushes BOTH WFBE_ACTIVE_AICOM_TEAMS and WFBE_ACTIVE_PATROLS back to exactly
+	//--- this client. Re-arm the request a couple of times in case the first request var is itself dropped
+	//--- (publicVariableServer is also not guaranteed), then stop (a quiet round legitimately has 0 teams).
+	if (count _list == 0 && {!isNull player} && {_reqTicks < 12}) then {
+		_reqTicks = _reqTicks + 1;
+		if (!_reqSent || {(_reqTicks % 4) == 0}) then {
+			_reqSent = true;
+			WFBE_ReqAicomFeed = player;
+			publicVariableServer "WFBE_ReqAicomFeed";
+			diag_log format ["[WFBE][B74.2 AICOM-MARK] feed empty after %1 ticks - requested targeted rebroadcast (player=%2).", _reqTicks, player];
+		};
+	};
 	//--- FRIENDLY-ONLY (intel-leak fix, hardened): a player only ever sees their OWN side's
 	//--- commander/HQ teams. Use the SAME stable joined-side id the working patrol-marker loop
 	//--- uses (WFBE_Client_SideID = sideID, captured at client init) instead of a per-tick
