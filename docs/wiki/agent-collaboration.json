@@ -41,6 +41,24 @@
       "updated": "2026-06-23T17:40:00+02:00"
     },
     {
+      "lane": "buy-menu-price-key-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refreshed buy-menu price/key alignment docs from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Checked maintained-root Client/GUI/GUI_Menu_BuyUnits.sqf, Client/Functions/Client_UIFillListBuyUnits.sqf and Common/Init/Init_CommonConstants.sqf across docs/source, current stable/B74.1, B74.2, B69, B74, Miksuu, origin/perf/quick-wins, historical a96fdda2 / a66d4691 and live origin/claude/trello-buymenu-gear-display.",
+        "Docs/source, Miksuu and perf remain old-shape for selected-detail price/key behavior; current stable/B74.1/B69/B74/B74.2 and historical a96fdda2 fix selected-detail display and driver-key mirroring in both maintained roots, but no checked ref resets UNIT_COST_MODIFIER to 1 for level 0. Trello #91 is branch-only special AT gear/ammo preview evidence, not price/key closure.",
+        "No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed Factory-And-Purchase-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 buy-menu price/key evidence and Trello #91 branch-only scope.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future factory/UI owner should preserve selected-detail and driver-key fixes on stable-shaped refs, add a level-0 UNIT_COST_MODIFIER reset or local price helper, keep Trello #91 gear-preview UI work separate, and smoke list/detail/charge, exact funds, unit-cost levels 0/1/2, crew toggles, max-out and reset.",
+      "updated": "2026-06-23T17:38:52+02:00"
+    },
+    {
       "lane": "factory-refund-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
       "status": "published-validated-docs-only",
