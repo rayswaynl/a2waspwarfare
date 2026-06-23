@@ -1,4 +1,4 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_paraCapCmd','_paraCapLevel','_paraCapMbu','_paraCapReal','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
 
 _side = _this select 1;
 _destination = _this select 2;
@@ -32,6 +32,28 @@ _units = missionNamespace getVariable Format ["WFBE_%1PARACHUTELEVEL%2", str _si
 _vehicle_model = missionNamespace getVariable Format ["WFBE_%1PARACARGO", str _side];
 
 if (isNil '_units' || isNil '_vehicle_model') exitWith {["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined.", _side]] Call WFBE_CO_FNC_LogContent};
+
+//--- Trello #39: authoritative AI-unit-cap re-check (the client gate in GUI_Menu_Tactical.sqf is the
+//--- primary block; this backstops a desynced/modified client). PLAYER teams only - the AI-commander
+//--- wildcard path reuses this script with an AI commander team and must NOT be capped here. The para
+//--- template is fixed-size, so it is all-or-nothing: if adding the whole drop would exceed the cap, abort.
+if ((missionNamespace getVariable ["WFBE_C_PARA_RESPECT_CAP", 1]) > 0 && {isPlayer (leader _playerTeam)}) then {
+	_paraCapMbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
+	if (count _currentUpgrades > WFBE_UP_PATROLS && {(_currentUpgrades select WFBE_UP_PATROLS) > 0}) then {_paraCapMbu = (_paraCapMbu - 1) max 1};
+	_paraCapLevel = _currentUpgrades select WFBE_UP_BARRACKS;
+	switch (_paraCapLevel) do {
+		case 0: {_paraCapReal = round(_paraCapMbu / 4)};
+		case 1: {_paraCapReal = round(_paraCapMbu / 4)*2};
+		case 2: {_paraCapReal = round(_paraCapMbu / 4)*3};
+		case 3: {_paraCapReal = _paraCapMbu};
+		default {_paraCapReal = _paraCapMbu};
+	};
+	_paraCapCmd = _side Call WFBE_CO_FNC_GetCommanderTeam; //--- server-side commander team (client-only `commanderTeam` global does not exist here).
+	if (!isNull _paraCapCmd) then {if (_paraCapCmd == _playerTeam) then {_paraCapReal = _paraCapReal + 10}};
+	if ((count units _playerTeam) + (count _units) > _paraCapReal) exitWith {
+		["INFORMATION", Format["Support_Paratroopers.sqf : [%1] Team [%2] para request blocked - would exceed AI cap (%3 live + %4 drop > %5).", _side, _playerTeam, count units _playerTeam, count _units, _paraCapReal]] Call WFBE_CO_FNC_LogContent;
+	};
+};
 
 //--- Determine how many vehicles do we need.
 _vehicle_cargo = getNumber(configFile >> 'CfgVehicles' >> _vehicle_model >> 'transportSoldier');

@@ -367,11 +367,32 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			_callPos = _map posScreenToWorld[mouseX,mouseY];
 			if (!surfaceIsWater _callPos) then {
-				lastParaCall = time;
-				-(_currentFee) Call ChangePlayerFunds;
-				["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
-				
-				hint (localize "STR_WF_INFO_Paratroop_Info");
+				//--- Trello #39: block the para call when the player is already at/over their AI unit cap.
+				//--- Mirrors the cap math in GUI_Menu_BuyUnits.sqf (WFBE_C_PLAYERS_AI_MAX scaled by the
+				//--- Barracks upgrade, +10 for the commander team, Patrols upgrade trades 1 max AI).
+				private ["_paraBlocked","_paraMbu","_paraRealSize","_paraSize"];
+				_paraBlocked = false;
+				if ((missionNamespace getVariable ["WFBE_C_PARA_RESPECT_CAP", 1]) > 0) then {
+					_paraMbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
+					if (count _currentUpgrades > WFBE_UP_PATROLS && {(_currentUpgrades select WFBE_UP_PATROLS) > 0}) then {_paraMbu = (_paraMbu - 1) max 1};
+					_paraRealSize = _currentUpgrades select WFBE_UP_BARRACKS;
+					switch (_paraRealSize) do {
+						case 0: {_paraRealSize = round(_paraMbu / 4)};
+						case 1: {_paraRealSize = round(_paraMbu / 4)*2};
+						case 2: {_paraRealSize = round(_paraMbu / 4)*3};
+						case 3: {_paraRealSize = _paraMbu};
+						default {_paraRealSize = _paraMbu};
+					};
+					if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_paraRealSize = _paraRealSize + 10}};
+					_paraSize = count ((units (group player)) Call GetLiveUnits);
+					if (_paraSize >= _paraRealSize) then {_paraBlocked = true;hint (localize "STR_WF_INFO_Para_MaxGroup")};
+				};
+				if (!_paraBlocked) then {
+					lastParaCall = time;
+					-(_currentFee) Call ChangePlayerFunds;
+					["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+					hint (localize "STR_WF_INFO_Paratroop_Info");
+				};
 			};
 		};
 		//--- Fast Travel.

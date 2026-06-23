@@ -1115,6 +1115,13 @@
         <Russian>&lt;t color='#F8D664'&gt;Информация:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; достигнут лимит отряда (&lt;t color='#85B5FA'&gt;%1&lt;/t&gt; чел.).</Russian>
         <Italian>&lt;t color='#F8D664'&gt;Informazioni:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Limite Unità Raggiunto (&lt;t color='#85B5FA'&gt;%1&lt;/t&gt; Unità).</Italian>
       </Key>
+      <Key ID="STR_WF_INFO_Para_MaxGroup">
+        <English>&lt;t color='#F8D664'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Cannot call paratroopers: AI unit limit reached.</English>
+        <French>&lt;t color='#F8D664'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Impossible d'appeler des parachutistes : limite d'unités IA atteinte.</French>
+        <German>&lt;t color='#F8D664'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Fallschirmjäger können nicht angefordert werden: KI-Einheitenlimit erreicht.</German>
+        <Russian>&lt;t color='#F8D664'&gt;Информация:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Невозможно вызвать десант: достигнут лимит ботов.</Russian>
+        <Italian>&lt;t color='#F8D664'&gt;Informazioni:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Impossibile chiamare i paracadutisti: limite unità IA raggiunto.</Italian>
+      </Key>
       <Key ID="STR_WF_INFO_OffmapWarning">
         <English>&lt;t color='#EB0606'&gt;Warning!&lt;/t&gt; &lt;br/&gt;&lt;br/&gt; You are leaving the battlefield!&lt;br/&gt;&lt;br/&gt; &lt;t color='#EB0606'&gt; %1 &lt;/t&gt; Seconds left.</English>
         <French>&lt;t color='#EB0606'&gt;Attention!&lt;/t&gt; &lt;br/&gt;&lt;br/&gt; Vous quittez le champs de bataille!&lt;br/&gt;&lt;br/&gt; &lt;t color='#EB0606'&gt;%1&lt;/t&gt; Secondes restantes.</French>

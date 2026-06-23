@@ -14,7 +14,7 @@ _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 while {_voteTime > -1} do {_voteTime = _voteTime - 1;_logic setVariable ["wfbe_votetime", _voteTime, true];sleep 1};
 
 //--- Get the most voted person.
-Private ["_aiVotes","_count","_highest","_highestTeam","_tie","_teams","_vote","_votes"];
+Private ["_aiVotes","_count","_highest","_highestTeam","_tie","_tiedTeams","_teams","_vote","_votes"];
 _aiVotes = 0;
 _votes = [];
 _teams = _logic getVariable "wfbe_teams";
@@ -36,6 +36,22 @@ _tie = false;
 	if (_x > _highest) then {_highestTeam = _count;_highest = _x;_tie = false};
 	_count = _count + 1;
 } forEach _votes;
+
+//--- Trello #42: a tie that still beats AI/abstain no longer silently hands command to the AI.
+//--- Collect every team whose count equals the top tally and pick ONE of them at random, then
+//--- clear the tie flag so the grant line below assigns that team.
+if (_tie && _highest >= _aiVotes && _highest > 0) then {
+	_tiedTeams = [];
+	_count = 0;
+	{
+		if (_x == _highest) then {[_tiedTeams, _count] Call WFBE_CO_FNC_ArrayPush};
+		_count = _count + 1;
+	} forEach _votes;
+	if (count _tiedTeams > 0) then {
+		_highestTeam = _tiedTeams select (floor (random (count _tiedTeams)));
+		_tie = false;
+	};
+};
 
 _commander = objNull;
 
