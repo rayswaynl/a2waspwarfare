@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T11:08:00+02:00",
+  "generatedAt": "2026-06-23T11:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "source-fix-queue-current-b741-scope-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh Source Fix Propagation Queue current-stable scope after origin/master advanced to f8a76de34, the same commit as origin/claude/b74.1-aicom.",
+        "Limit the branch check to existing propagated-fix queue paths: paratrooper PV registration, client Skill_Init/apply, server FPS publisher, supply scan, supply player-object list and commander-built ARTY discovery.",
+        "Initial scoped diff from origin/master@0139a346 to origin/master@f8a76de34 touches only maintained-root Client/Init/Init_Client.sqf among those paths; no gameplay source edits planned."
+      ],
+      "outputs": [
+        "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-23",
+        "Current-Source-Status-Snapshot.md#2026-06-22-current-head-caveat",
+        "Testing-Debugging-And-Release-Workflow.md#propagated-fix-smoke-pack",
+        "agent-release-readiness.json sourceOnlyFixes",
+        "Progress-Dashboard.md Latest Batch",
+        "Wiki-Pruning-And-Relevance-Ledger.md"
+      ],
+      "handoff": "Next agents should treat the refreshed queue rows as current-stable/B74.1 branch-scope evidence only. Arma smoke remains pending, and unrelated rows that still cite older commits preserve their own lane-specific evidence until refreshed.",
+      "updated": "2026-06-23T10:47:16+02:00"
+    },
     {
       "lane": "upstream-an2-mapicons-branch-intel-2026-06-23",
       "owner": "Codex",
