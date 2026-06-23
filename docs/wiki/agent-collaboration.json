@@ -41,6 +41,24 @@
       "updated": "2026-06-23T14:47:11+02:00"
     },
     {
+      "lane": "commander-reassignment-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh current-stable commander reassignment/vote docs from origin/master@0139a346 wording to current origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34.",
+        "Scoped diff 0139a3468609..origin/master touches no maintained-root RequestNewCommander, Server_AssignNewCommander or GUI_Commander_VoteMenu files.",
+        "Current stable f8a76de34 Chernarus and maintained Vanilla still unpack Server_AssignNewCommander payload as _this select 0 / _this select 1, still send new-commander-assigned from both RequestNewCommander.sqf:14 and Server_AssignNewCommander.sqf:10, and still resolve the submit target by visible leader-name text in GUI_Commander_VoteMenu.sqf:33-46.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Commander-Reassignment-Call-Shape.md, Commander-Vote-And-Reassignment-Playbook.md, Feature-Status-Register.md and Server-Authority-Migration-Map.md with current stable/B74.1 origin/master@f8a76de34 evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-release-readiness.json, agent-feature-status.jsonl and agent-knowledge.jsonl.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future code owner should keep DR-15 helper unpacking closed on current stable/B74.1 maintained roots, then patch notification ownership, row-value/team identity and requester authority as separate reassignment hardening steps.",
+      "updated": "2026-06-23T14:40:05+02:00"
+    },
+    {
       "lane": "wiki-remote-reference-mirror-2026-06-23",
       "owner": "Codex",
       "status": "published-validated-docs-only",

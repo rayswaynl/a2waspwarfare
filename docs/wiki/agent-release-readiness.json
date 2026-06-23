@@ -1423,7 +1423,7 @@
     {
       "id": "commander-reassignment-call-shape",
       "canonicalDoc": "Commander-Reassignment-Call-Shape.md",
-      "status": "patch-ready-not-current-code-change"
+      "status": "current-stable-b741-partial-source-present-docs-source-old-shape"
     },
     {
       "id": "gear-template-profile-filter",
