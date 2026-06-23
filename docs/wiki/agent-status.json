@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T04:05:37+02:00",
+  "generatedAt": "2026-06-23T04:21:11+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: vehicle-cargo-loop-current-b74-refresh-2026-06-23. Refreshed cargo equip loop owner/status/queue/machine rows with adjacent B74 evidence; no gameplay source changed.",
+      "currentWork": "Latest published lane: buy-menu-price-key-current-b74-refresh-2026-06-23. Refreshed buy-menu price/key owner/status/queue/machine rows with adjacent B74 evidence; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "buy-menu-price-key-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Factory-And-Purchase-Systems-Atlas, Feature Status, Source Fix queue and machine rows with adjacent B74 evidence. Docs/source HEAD@4120137f remains old-shape and source-unchanged from 8d611092 / ebd86fad0 for checked buy-menu controller/list-filler paths; current stable 0139a346, B69 8d465fce, B74 b23f557f and historical a96fdda2 fix selected-detail display and mirror both driver-default keys in both maintained roots, but no checked ref resets UNIT_COST_MODIFIER to 1 for level 0. Current Miksuu b8389e748243 and perf 0076040f remain old-shape; historical EASA QoL a66d46912e2a is Chernarus-only selected-detail evidence. Checked B69..B74 controller/list-filler deltas are empty; no gameplay source changed."
+    },
     {
       "lane": "vehicle-cargo-loop-current-b74-refresh-2026-06-23",
       "owner": "Codex",
