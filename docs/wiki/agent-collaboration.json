@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T05:29:36+02:00",
+  "generatedAt": "2026-06-23T05:58:09+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@4c87efd2 is old-shape and still gates default victory detection on _victory == 0 at server_victory_threeway.sqf:11, uses the mixed guard at :23, broadcasts HandleSpecial endgame with _x at :24, writes WF_Winner _x at :31 and logs the opposite side at :41 in both maintained roots.",
+        "current stable origin/master@0139a346 keeps the _victory == 0 gate at server_victory_threeway.sqf:11, adds HQ nil/null skip at :21-22, keeps the mixed guard at :29, writes WF_Winner at :37, WASPSTAT _x at :41-46 and LogGameEnd [_x] at :49 in both maintained roots.",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f partially patch Chernarus only: server_victory_threeway.sqf removes the _victory gate at :16, adds same-tick short-circuit at :26 and guards the combined condition at :45; maintained Vanilla remains stable-shaped at :11, :29 and :49.",
+        "B69/B74 remove client winner inversion in Client_EndGame.sqf:6-11 in both maintained roots, but add the GUER label only in Chernarus GUI_EndOfGameStats.sqf:8-10; maintained Vanilla still falls through to East label at :5-8.",
+        "B69..B74 checked victory-path delta only touches Chernarus Init_CommonConstants.sqf; direct Miksuu master remains b8389e748243 and perf/historical a96fdda2 keep the old-shape server/client paths."
+      ],
+      "outputs": [
+        "Refreshed Victory/endgame atlas, Feature Status Register, Source Fix Propagation Queue, dashboard/worklog/pruning ledger and machine rows with current stable/B69/B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future code owner should treat B69/B74 Chernarus as a partial rescue, not a maintained-root closure. Explicit winner/loser semantics, maintained Vanilla propagation, GUER label parity and Arma smoke remain required before release wording.",
+      "updated": "2026-06-23T05:58:09+02:00"
+    },
     {
       "lane": "rhud-endgame-title-handle-current-b74-refresh-2026-06-23",
       "owner": "Codex",

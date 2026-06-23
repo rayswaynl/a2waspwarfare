@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T05:44:18+02:00",
+  "generatedAt": "2026-06-23T05:58:09+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: rhud-endgame-title-handle-current-b74-refresh-2026-06-23. Refreshed RHUD/endgame currentCutDisplay title-handle rows with current stable/B69/B74 evidence and clarified that B74's Chernarus UI additions do not split the shared handle; no gameplay source changed.",
+      "currentWork": "Latest published lane: victory-endgame-current-b74-refresh-2026-06-23. Refreshed Victory/endgame rows with current stable/B69/B74 evidence and clarified that B69/B74 Chernarus is a partial rescue while maintained Vanilla still needs propagation; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "victory-endgame-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Victory-And-Endgame-Atlas, Feature Status Register, Source Fix Propagation Queue, dashboard/worklog/pruning ledger and victory/endgame machine rows with current stable/B69/B74 evidence. Docs/source HEAD@4c87efd2 remains old-shape for checked victory/endgame paths. Current stable origin/master@0139a346 keeps the gated default path with HQ nil/null skip and direct _x WASPSTAT/logger semantics in both maintained roots. Current B69 8d465fce and B74 b23f557f partially patch Chernarus only by removing the _victory == 0 gate, adding same-tick guard/short-circuit, removing client winner inversion and adding a Chernarus GUER label, while maintained Vanilla remains stable-shaped for the server loop and lacks the GUER label. Checked B69..B74 victory-path delta only touches Chernarus constants. No gameplay source changed."
+    },
     {
       "lane": "rhud-endgame-title-handle-current-b74-refresh-2026-06-23",
       "owner": "Codex",
