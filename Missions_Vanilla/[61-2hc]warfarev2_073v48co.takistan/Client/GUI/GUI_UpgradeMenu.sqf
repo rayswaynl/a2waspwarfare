@@ -24,6 +24,8 @@ _i = 0;
 	if (_upgrade_enabled select _x) then {
 		lnbAddRow [504001, [Format ["%1/%2",_upgrades select _x,_upgrade_levels select _x],_upgrade_labels select _x]];
 		lnbSetValue [504001, [_i, 0], _x];
+		//--- Card #164: paint the upgrade icon into the level cell (column 0), same cell-picture pattern as Client_UI_Gear_FillList. Skip empty image strings for graceful fallback.
+		if ((_upgrade_images select _x) != "") then {lnbSetPicture [504001, [_i, 0], (_upgrade_images select _x)]};
 		_i = _i + 1;
 	};
 } forEach _upgrade_sorted;
@@ -168,6 +170,8 @@ while {alive player && dialog} do {
 					};
 					if (_qtag != "") then {_qtag = Format [" [Q%1]", _qtag]};
 					lnbSetText[504001, [_i, 0], Format ["%1/%2%3",_upgrades select _x,_upgrade_levels select _x,_qtag]];
+						//--- Card #164: keep the icon painted on refresh (lnbSetText leaves the cell picture intact; repaint guards against reordering).
+						if ((_upgrade_images select _x) != "") then {lnbSetPicture [504001, [_i, 0], (_upgrade_images select _x)]};
 					_i = _i + 1;
 				};
 			} forEach _upgrade_sorted;
