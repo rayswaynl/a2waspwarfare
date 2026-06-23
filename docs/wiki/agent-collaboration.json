@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T23:46:17+02:00",
+  "generatedAt": "2026-06-24T00:00:43+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "rhud-endgame-title-handle-b742-current-head-followup-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh RHUD/endgame shared title display handle rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only title resource, RHUD/action title, endgame stats and shared currentCutDisplay helper paths in source Chernarus and maintained Vanilla.",
+        "Keep UI-IDD-Collision-Repair and Client-UI-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed UI-IDD-Collision-Repair.md and Client-UI-Systems-Atlas.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 title-handle evidence.",
+        "Recorded that d472da6a..21b62b04 is empty for checked Chernarus/Vanilla title-handle paths and that origin/master..B74.2 only changes source-Chernarus RHUD AI-cap display text among checked files.",
+        "Updated Feature Status, Source Fix queue, Progress Dashboard, pruning ledger, worklog and RHUD/endgame machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future UI owner should split or otherwise isolate the RHUD/action title display handle from endgame stats, then smoke RHUD/action icons, endgame stats display, unload cleanup and any IDD/display-owner assumptions before release wording.",
+      "updated": "2026-06-24T00:00:43+02:00"
+    },
     {
       "lane": "service-easa-b742-current-head-followup-2026-06-23",
       "owner": "Codex",
