@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T20:16:21+02:00",
+  "generatedAt": "2026-06-23T20:34:21+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: auto-wall-current-b741-b742-refresh-2026-06-23. Refreshed global auto-wall toggle current B74.1/B74.2 evidence and preserved the policy/smoke handoff. No gameplay source changed.",
+      "currentWork": "Latest published lane: camp-flag-texture-current-b741-b742-refresh-2026-06-23. Refreshed camp flag texture evidence through current stable/B74.1 and B74.2; repair-camp world-flag refresh remains open everywhere checked, and wildcard capture is marker/handler context only. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "camp-flag-texture-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed camp flag texture evidence through Towns-Camps-And-Capture-Atlas, Feature Status and Source Fix queue. Docs/source HEAD@7b635187c8a1 is unchanged from de911438 / 28a7d9c5 for checked camp flag, repair-camp and CampCaptured paths and still uses old _side at server_town_camp.sqf:135 after writing _newSID at :132. Current stable/B74.1 origin/master@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6a, B69, adjacent B74, historical a96fdda2 and naval HVT fix independent capture in maintained roots; Miksuu remains old-owner and perf fixes Chernarus only. Repair-camp world-flag refresh remains open everywhere checked, and wildcard capture ead7e854 is marker/handler context only. No gameplay source changed."
+    },
     {
       "lane": "auto-wall-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
