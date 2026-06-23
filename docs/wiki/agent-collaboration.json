@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T15:12:00+02:00",
+  "generatedAt": "2026-06-23T15:14:16+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b742-aicom-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b74.2-aicom@d472da6ae advanced over current stable origin/master@f8a76de34.",
+        "Initial branch shape is four commits / 26 source Chernarus files / +324 / -24 across AI commander, population-tier constants/consumers, client AICOM markers, towns/camps/server loops, construction sites, UI, squad configs and Init_NavalHVT.sqf; no Missions_Vanilla payload is present.",
+        "Scope is source-backed documentation only: route branch-only evidence through AI commander, Client UI/markers, Towns/camps, Construction, Support/Naval, Feature Status, testing/release gates and matching machine rows.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Updated AI-Commander-Autonomy-Audit.md, AI-Commander-Capture-And-Fun-Improvement-Plan.md, Client-UI-Systems-Atlas.md, Towns-Camps-And-Capture-Atlas.md, Player-Stats-Branch-Audit.md, Feature-Status-Register.md and Testing-Debugging-And-Release-Workflow.md with B74.2 branch-only evidence and smoke gates.",
+        "Updated Wiki-Pruning-And-Relevance-Ledger.md, agent-release-readiness.json, agent-feature-status.jsonl and agent-knowledge.jsonl with the branch-only promotion route.",
+        "Refreshed Progress-Dashboard.md, Agent-Worklog.md, agent-status.json, agent-collaboration.json and agent-events.jsonl; no gameplay source changed."
+      ],
+      "handoff": "Future reviewer should keep B74.2 behavior branch-only until Arma 2 OA smoke covers AICOM pop-tier publishing/consumers, side-AI cap/team founding, RHUD/Buy Units cap display, AICOM feed replay/JIP, camp anti-stall, tiered active towns/defenders/patrols, carrier air-shop/respawn, source Chernarus stat writers, tint defaults and maintained Vanilla/Takistan propagation or explicit non-propagation.",
+      "updated": "2026-06-23T15:09:53+02:00"
+    },
     {
       "lane": "ai-supply-truck-current-b741-refresh-2026-06-23",
       "owner": "Codex",

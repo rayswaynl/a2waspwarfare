@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T13:48:21+02:00",
-  "lastVerifiedAt": "2026-06-23T13:48:21+02:00",
+  "generatedAt": "2026-06-23T15:09:53+02:00",
+  "lastVerifiedAt": "2026-06-23T15:09:53+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -354,6 +354,52 @@
   },
   "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "branchOnlyFeaturePromotionGates": [
+    {
+      "id": "b742-aicom-branch",
+      "branch": "origin/claude/b74.2-aicom",
+      "head": "d472da6ae",
+      "base": "origin/master@f8a76de34",
+      "state": "branch-review-needed-source-chernarus-only-no-pr-smoke-open",
+      "sourceScope": "source-chernarus-only-no-missions-vanilla-payload",
+      "canonicalDocs": [
+        "AI-Commander-Autonomy-Audit.md#b69-roadmap-and-sketch-route",
+        "AI-Commander-Capture-And-Fun-Improvement-Plan.md",
+        "Client-UI-Systems-Atlas.md#current-branch-scope",
+        "Towns-Camps-And-Capture-Atlas.md#current-branch-scope",
+        "Player-Stats-Branch-Audit.md#current-status",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/b74.2-aicom@d472da6ae; merge-base/current stable origin/master@f8a76de34",
+        "gh pr list --head claude/b74.2-aicom --state all returned [] on 2026-06-23",
+        "origin/master..origin/claude/b74.2-aicom: 26 source Chernarus files +324/-24; git diff --check clean; no Missions_Vanilla payload",
+        "Init_CommonConstants.sqf:171-176 defines tier arrays; AI_Commander_Teams.sqf:83-84 publishes WFBE_PopTier and :105,187-190 consumes tiered team caps; AI_Commander_Produce.sqf:28 consumes tiered side-AI cap",
+        "server_side_patrols.sqf:32,38, server_town_ai.sqf:61-64 and Server_GetTownGroupsDefender.sqf:91 consume tiered patrol/active-town/defender caps",
+        "Init_CommonConstants.sqf:357 defines WFBE_C_AICOM_CAMP_STALL_PASSES = 3; Common_RunCommanderTeam.sqf:813,871-883 exits camp-first no-progress loops; WFBE_C_CAMPS_RANGE is 11.5 at Init_CommonConstants.sqf:487",
+        "updateaicommarkers.sqf:47-55 requests WFBE_ReqAicomFeed; Init_Server.sqf:921-930 targeted-replays AICOM feeds",
+        "Client_UpdateRHUD.sqf:354-360 and GUI_Menu_BuyUnits.sqf:37-43 display player AI caps from WFBE_C_PLAYERS_AI_MAX_BY_TIER through WFBE_PopTier",
+        "Init_NavalHVT.sqf:301-315 creates deck hangar/airfield state; Client_GetClosestAirport.sqf:27-35, Client_GetRespawnAvailable.sqf:117-124 and Client_OnRespawnHandler.sqf:50-61 add carrier air-shop/respawn behavior",
+        "Player stats fast-follow writers are source Chernarus only: Construction_MediumSite.sqf:200, Construction_SmallSite.sqf:161, RequestDefense.sqf:283,294,305, server_town.sqf:240, server_town_camp.sqf:90, supplyMissionCompleted.sqf:27, Server_BuildingKilled.sqf:65, Server_OnHQKilled.sqf:89 and RequestOnUnitKilled.sqf:135",
+        "Squad_RU.sqf:204 and Squad_USMC.sqf:200 trim one AA slot each; Init_CommonConstants.sqf:840 sets WFBE_C_VEHICLE_TINTS default to 0"
+      ],
+      "ownerDecision": "Decide whether to route/merge B74.2 as source Chernarus only or propagate maintained Vanilla/Takistan; decide stats/public enablement and carrier/naval scope before release wording.",
+      "promotionGate": "Smoke AICOM pop-tier publishing/consumers, side AI cap/team founding, client cap display, AICOM feed replay/JIP, camp anti-stall, tiered active towns/defenders/patrols, carrier HVT air-shop/respawn, stat writers, vehicle tint defaults and no Vanilla/stable claims before promotion.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "ai-commander-smoke",
+          "client-ui-smoke",
+          "map-marker-smoke",
+          "town-capture-smoke",
+          "naval-hvt-smoke",
+          "stats-smoke",
+          "vanilla-scope-decision"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
     {
       "id": "trello-map-radius-circles-branch",
       "branch": "origin/claude/trello-map-radius-circles",

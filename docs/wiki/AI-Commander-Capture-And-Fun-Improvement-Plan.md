@@ -4,6 +4,8 @@
 
 This page is a **design proposal**, not a behavior reference. For what the commander does today see [AI Commander Execution Loop Reference](AI-Commander-Execution-Loop-Reference), [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit), and [AI Commander Tunable Constants Reference](AI-Commander-Tunable-Constants-Reference). For the capture mechanic see [Towns, Camps and Capture Atlas](Towns-Camps-And-Capture-Atlas).
 
+2026-06-23 branch update: `origin/claude/b74.2-aicom@d472da6ae` implements several adjacent quick wins, but remains source Chernarus branch evidence only: no GitHub PR route was found, the merge-base/current stable is `origin/master@f8a76de34`, and the branch has no `Missions_Vanilla` payload. It adds a pop-tier AICOM cap model, `WFBE_C_AICOM_CAMP_STALL_PASSES = 3`, camp range 11.5, small AA trims in `Squad_RU.sqf` / `Squad_USMC.sqf`, marker-feed recovery, carrier air-shop/respawn hooks and stats fast-follow writers. Treat this as candidate evidence routed through [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit#b69-roadmap-and-sketch-route), not as a replacement for Hetzner smoke or maintained Vanilla propagation.
+
 ## How "capture" actually works (the binary bar)
 
 A town is **not** a flag you stand on. `Server/FSM/server_town.sqf` runs a per-town loop that, every ~5 s, scans `nearEntities` inside `WFBE_C_TOWNS_CAPTURE_RANGE = 40 m` (`unitsBelowHeight 10`), counts the attacker's presence, and drains the town's `supplyValue` by roughly `round(presence × rate)` per cycle — **but only while the defender's `_activeEnemies == 0`** inside that same 40 m circle. Ownership flips when `supplyValue` falls below 1. Supply *regenerates* on a separate 60 s tick whenever no enemy is present.

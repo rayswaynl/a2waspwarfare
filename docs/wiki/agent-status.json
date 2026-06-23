@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T15:12:00+02:00",
+  "generatedAt": "2026-06-23T15:14:16+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -19,9 +19,9 @@
   },
   "agents": {
     "Codex": {
-      "status": "ready",
+      "status": "active-docs-maintenance",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: ai-supply-truck-current-b741-refresh-2026-06-23. Refreshed autonomous AI supply-truck dead/stale-code evidence across AI commander autonomy, Abandoned Feature Revival, Feature Status, Source Fix queue, Dead/stale code register and machine rows. Current stable/B74.1 origin/master@f8a76de34 equals origin/claude/b74.1-aicom@f8a76de34 and safe-disables the truck-supply + AI-commander branch at Chernarus Init_Server.sqf:44,624-625 and maintained Vanilla :44,618-619; B74.2 origin/claude/b74.2-aicom@d472da6a keeps the same caller shape. Docs/source HEAD@6d4b514c12fc, Miksuu b8389e748243 and perf 0076040f still raw-spawn the commented worker, and no checked ref restores Server\\FSM\\supplytruck.fsm. No gameplay source changed.",
+      "currentWork": "Latest published lane: b742-aicom-branch-intel-2026-06-23. Published docs-only branch intel for origin/claude/b74.2-aicom@d472da6ae over current stable/B74.1 origin/master@f8a76de34. The branch is source Chernarus only, has no GitHub PR route and no Missions_Vanilla payload. Evidence now routes through AI commander, AI capture plan, Client UI/markers, Towns/camps, Player stats, Feature Status, branch-only smoke gates, release-readiness and machine rows. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -57,6 +57,12 @@
   },
   "laneSummary": [
     {
+      "lane": "b742-aicom-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Routed origin/claude/b74.2-aicom@d472da6ae as branch-only source Chernarus evidence over current stable/B74.1 origin/master@f8a76de34. No PR route was found and no Missions_Vanilla payload exists. Payload is 26 source Chernarus files / +324 / -24 and git diff --check clean. Owner pages now cover pop-tier AICOM caps, marker-feed replay, camp anti-stall/range tuning, tiered town pressure, carrier air-shop/respawn hooks, source Chernarus stats fast-follow writers, AA squad trims and tint defaults; promotion remains smoke- and scope-gated. No gameplay source changed."
+    },
+    {
       "lane": "ai-supply-truck-current-b741-refresh-2026-06-23",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -67,6 +73,12 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "output": "Refreshed DR-41 attack-wave direct-PV authority evidence across the playbook, Feature Status, Source Fix queue, Public Variable index, Server authority map and machine rows. Current stable/B74.1 origin/master@f8a76de34 equals origin/claude/b74.1-aicom@f8a76de34; scoped 0139a3468609..f8a76de34, B69..B74 and B74..B74.1 attack-wave path deltas only touch constants, not request/detail trust. Current stable/B74.1 still trusts ATTACK_WAVE_INIT client _supply/_side and ATTACK_WAVE_DETAILS side/modifier/duration in both maintained roots; repo-root BattlEyeFilter/publicvariable.txt still only filters kickAFK. No gameplay source changed."
+    },
+    {
+      "lane": "commander-reassignment-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-Reassignment-Call-Shape, Commander vote/reassignment, Feature Status and Server Authority Migration from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34. Scoped diff 0139a3468609..f8a76de34 touches no maintained-root commander vote/reassignment files, so DR-47 vote comparison and DR-15 helper unpacking remain source-present on current stable/B74.1/B69/B74 maintained roots. Duplicate reassignment notifications, visible-name target lookup, requester authority and old-shape docs/source/modded helpers remain open. No gameplay source changed."
     },
     {
       "lane": "wiki-remote-reference-mirror-2026-06-23",

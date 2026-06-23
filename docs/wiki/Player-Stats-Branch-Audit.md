@@ -1,6 +1,6 @@
 # Player Stats Branch Audit
 
-This page is a source-backed review of `origin/feat/player-stats` at head `e01e47e1`. It is branch evidence only: the feature is not present on stable `origin/master` and is not propagated to maintained Vanilla Takistan.
+This page began as a source-backed review of `origin/feat/player-stats` at head `e01e47e1`. Treat the original branch sections as historical branch evidence unless the current-status table below says otherwise: current stable/B74.1 `origin/master@f8a76de34` now has a mission-side stats pipeline in the source Chernarus mission and sets `WFBE_C_STATS_ENABLED = true`, while maintained Vanilla Takistan still carries the helper/constants path with `WFBE_C_STATS_ENABLED = false`. B74.2 adds source Chernarus fast-follow stat writers, but is branch-only and has no `Missions_Vanilla` payload.
 
 ## What It Is
 
@@ -11,7 +11,7 @@ This page is a source-backed review of `origin/feat/player-stats` at head `e01e4
 - The in-repo `DiscordBot` tails the RPT, parses batches, accumulates lifetime totals and writes `stats.json`.
 - `DiscordBot.Tests` covers the parser, tailer, accumulator, document writer and an end-to-end producer pipeline test.
 
-The branch contains 23 changed files, `+1919/-1`, and `git diff --check origin/master..origin/feat/player-stats` is clean.
+The original `origin/feat/player-stats` branch contains 23 changed files, `+1919/-1`, and `git diff --check origin/master..origin/feat/player-stats` is clean.
 
 ## Where It Lives
 
@@ -28,7 +28,7 @@ The branch contains 23 changed files, `+1919/-1`, and `git diff --check origin/m
 
 ## How It Runs
 
-The mission side is off by default. `Init_CommonConstants.sqf:442-444` defines `WFBE_C_STATS_ENABLED = false` and a 60-second flush interval. The stat index constants run from `WFBE_STAT_KILLS_INFANTRY = 0` through `WFBE_STAT_PLAYTIME = 14`, with `WFBE_STAT_FIELD_COUNT = 15` and `WFBE_STATS_DIRTY_UIDS = []` at `:445-461`.
+On the original branch, the mission side is off by default. `Init_CommonConstants.sqf:442-444` defines `WFBE_C_STATS_ENABLED = false` and a 60-second flush interval. The stat index constants run from `WFBE_STAT_KILLS_INFANTRY = 0` through `WFBE_STAT_PLAYTIME = 14`, with `WFBE_STAT_FIELD_COUNT = 15` and `WFBE_STATS_DIRTY_UIDS = []` at `:445-461`.
 
 `Init_Server.sqf:300-302` compiles `Server\Stats\RecordStat.sqf` and starts `Server\Stats\StatsFlush.sqf`. Both are guarded: `RecordStat.sqf:9-10,31-32` exits if stats are undefined or disabled, and `StatsFlush.sqf:6-7` exits before entering its loop unless the feature flag is true.
 
@@ -70,9 +70,10 @@ Result: `Passed! - Failed: 0, Passed: 13, Skipped: 0, Total: 13` on .NET 9.0.314
 
 | Target | Status |
 | --- | --- |
-| Stable `origin/master` | Absent. `git grep` finds no `WFBE_C_STATS_ENABLED`, `RecordStat`, `StatsFlush` or `WASPSTAT` in mission/DiscordBot source on `origin/master`. |
-| Source Chernarus on branch | Present and off by default. |
-| Maintained Vanilla Takistan on branch | Absent. `git grep` finds no stats hits under `Missions_Vanilla` on `origin/feat/player-stats`. |
+| Current stable/B74.1 source Chernarus `origin/master@f8a76de34` | Present and enabled. `Init_CommonConstants.sqf:920` sets `WFBE_C_STATS_ENABLED = true`; `Init_Server.sqf:534-536` compiles `Server\Stats\RecordStat.sqf` and starts `StatsFlush.sqf`; `RecordStat.sqf:7-32` guards record helpers; `StatsFlush.sqf:9-10,24-35` guards and emits batched `WASPSTAT` lines; `RequestOnUnitKilled.sqf:117-131` records kill/PvP deltas. This is mission-side source Chernarus evidence, not proof of a current DiscordBot stats ingester. |
+| Current stable/B74.1 maintained Vanilla Takistan `origin/master@f8a76de34` | Helper/constants path is present but off by default: `Init_CommonConstants.sqf:786` sets `WFBE_C_STATS_ENABLED = false`; `Init_Server.sqf:529-530` compiles/starts `RecordStat`/`StatsFlush`; `RequestOnUnitKilled.sqf:102-116` has kill/PvP hooks guarded by the disabled flag. |
+| Original `origin/feat/player-stats@e01e47e1` | Historical branch: source Chernarus present and off by default; DiscordBot ingest/tests present; maintained Vanilla Takistan absent on that branch audit. |
+| B74.2 source Chernarus `origin/claude/b74.2-aicom@d472da6ae` | Branch-only fast-follow writer hooks: structures built at `Construction_MediumSite.sqf:200` and `Construction_SmallSite.sqf:161`; defenses built at `RequestDefense.sqf:283,294,305`; town/camp captures at `server_town.sqf:240` and `server_town_camp.sqf:90`; supply runs/value at `supplyMissionCompleted.sqf:27`; factory/HQ kills at `Server_BuildingKilled.sqf:65` and `Server_OnHQKilled.sqf:89`; deaths at `RequestOnUnitKilled.sqf:135`. No `Missions_Vanilla` payload. |
 | Modded missions | Not reviewed; treat as absent unless a later branch proves propagation. |
 | Static whitespace | Clean. |
 | C# tests | Pass locally: 13/13. |
@@ -88,8 +89,8 @@ This branch is a good candidate for review because it is dark-launched and test-
 | Runtime log volume | `StatsFlush.sqf:48` writes one line per dirty batch every 60 seconds. Smoke with realistic player counts before enabling on a live server. |
 | Tail-state ownership | `StatsService.cs:23` stores tail state at `StatsJsonPath + ".tail.state"`. Moving `stats.json` changes the sidecar path and can affect duplicate/readback behavior. |
 | Corrupt `stats.json` recovery | `StatsDocument.Load:22-30` returns an empty document on any read/deserialization error. That protects bot startup, but can hide data loss unless operators back up the file or alert on parse failure. |
-| Mission propagation | The branch only changes source Chernarus; Vanilla Takistan does not carry the SQF instrumentation. Decide whether this feature is Chernarus-only or regenerate/propagate maintained Vanilla. |
-| Event coverage | The implemented branch records kills/PvP/playtime. The design docs list later stats such as deaths, supply runs, captures and builds, but this branch does not implement all of those hooks yet. |
+| Mission propagation | Current stable has source Chernarus stats enabled and maintained Vanilla helper code off by default. B74.2 fast-follow writers are source Chernarus only. Decide whether live stats are Chernarus-only, whether maintained Vanilla should stay off, and whether any generated/Vanilla propagation is required before release wording. |
+| Event coverage | Current stable records kills/PvP/playtime/side. B74.2 adds writers for deaths, supply, captures, builds and strategic kills, but only on a branch and only for source Chernarus. |
 | Runtime proof | Static tests do not prove Arma RPT format, dedicated-server timing, player UID edge cases or interaction with headless clients. |
 
 ## Smoke Checklist
@@ -101,12 +102,13 @@ This branch is a good candidate for review because it is dark-launched and test-
 5. Replace or rotate the RPT; confirm the first-line fingerprint/shrink logic reads the new session once.
 6. Corrupt `stats.json` deliberately in a private test; confirm operator-visible recovery behavior is acceptable before live use.
 7. Decide Chernarus-only versus maintained Vanilla propagation, then smoke the chosen target.
+8. For B74.2, enable source Chernarus stats in a private run and exercise town/camp capture, supply completion, small/medium construction, defense purchase, HQ/factory kill and player death paths; confirm expected `WASPSTAT` deltas and no duplicate credit loop.
 
 ## Development Lessons
 
 - Dark-launch flags help keep branch work merge-reviewable, but the docs must still separate "safe by default" from "safe to enable".
 - RPT-tail integrations need both parser tests and operational runbooks. Offset state, file rotation, corrupt JSON recovery and log volume are part of the feature, not deployment trivia.
-- Cross-language stat index maps need a single canonical owner. Here, `Init_CommonConstants.sqf:445-459`, `PlayerStat.cs:23-45` and `StatsPipelineIntegrationTests.cs:12-20,56-83` form the contract.
+- Cross-language stat index maps need a single canonical owner. On the original branch, `Init_CommonConstants.sqf:445-459`, `PlayerStat.cs:23-45` and `StatsPipelineIntegrationTests.cs:12-20,56-83` form the contract; on current stable/B74.1, mission-side index changes must be checked against whatever current external ingest route is actually deployed.
 
 ## Continue Reading
 
