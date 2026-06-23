@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T05:29:36+02:00",
+  "generatedAt": "2026-06-23T05:44:18+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: clickabletext-soundpush-current-b74-refresh-2026-06-23. Refreshed clickable-text RscClickableText.soundPush rows with current stable/B69/B74 source-present evidence and old-shape branch scope; no gameplay source changed.",
+      "currentWork": "Latest published lane: rhud-endgame-title-handle-current-b74-refresh-2026-06-23. Refreshed RHUD/endgame currentCutDisplay title-handle rows with current stable/B69/B74 evidence and clarified that B74's Chernarus UI additions do not split the shared handle; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "rhud-endgame-title-handle-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed UI-IDD-Collision-Repair, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and RHUD/endgame machine rows with current stable/B69/B74 title-handle evidence. Docs/source HEAD@92b52e73 is unchanged from edbd341e and b5219d47 for checked title-handle paths and still shares currentCutDisplay between OptionsAvailable/RHUD/action icons and EndOfGameStats in both maintained roots. Current stable origin/master@0139a346, B69 8d465fce, B74 b23f557f, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2 all keep the shared-handle shape in both maintained roots. Checked B69..B74 title-handle deltas are empty; origin/master..B74 only adds unrelated Chernarus GUER-label and vehicle-tint title content. No gameplay source changed."
+    },
     {
       "lane": "clickabletext-soundpush-current-b74-refresh-2026-06-23",
       "owner": "Codex",
