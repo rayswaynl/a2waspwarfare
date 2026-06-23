@@ -23,8 +23,8 @@ flowchart TD
 | `Client/GUI/GUI_BuyGearMenu.sqf:94,102,108` | Reads current vehicle cargo through `Client_GetVehicleContent.sqf` and stores selected cargo arrays. |
 | `Client/GUI/GUI_BuyGearMenu.sqf:439` | Applies selected vehicle cargo with `[vehicle _target, _gear_sel_vehicle] Call WFBE_CO_FNC_EquipVehicle`. |
 | `Client/Functions/Client_GetVehicleContent.sqf:20-22` | Reads cargo with safe `for '_i' from 0 to count(_items)-1` loops. The collector is not the bug. |
-| `Common/Functions/Common_EquipVehicle.sqf:27,33,39` | Applies weapon, magazine and backpack cargo. Docs/source `HEAD@bd0ec67d`, current Miksuu `b8389e748243` and historical EASA QoL `a66d4691` still use inclusive `count(_items)` loops; current stable `origin/master@0139a346`, B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical release `a96fdda2` use corrected `(count(_items) - 1)` loops in both maintained roots. |
-| `Common/Functions/Common_EquipBackpack.sqf:35,41` | Applies backpack weapon and magazine contents. The same branch split applies: old-shape docs/current-Miksuu/EASA/perf-Vanilla targets still overrun by one, while current stable/B69/B74 and historical release are already fixed in both maintained roots. |
+| `Common/Functions/Common_EquipVehicle.sqf:27,33,39` | Applies weapon, magazine and backpack cargo. Docs/source `HEAD@ebfdca96542f`, current Miksuu `b8389e748243` and historical EASA QoL `a66d4691` still use inclusive `count(_items)` loops; current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34`, visible B74.2 `origin/claude/b74.2-aicom@d472da6a`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical release `a96fdda2` use corrected `(count(_items) - 1)` loops in both maintained roots. |
+| `Common/Functions/Common_EquipBackpack.sqf:35,41` | Applies backpack weapon and magazine contents. The same branch split applies: old-shape docs/current-Miksuu/EASA/perf-Vanilla targets still overrun by one, while current stable/B74.1/B74.2/B69/B74 and historical release are already fixed in both maintained roots. |
 | `Client/Functions/Client_BuildUnit.sqf:229` | Calls `WFBE_CO_FNC_EquipBackpack` for soldier purchases when a backpack is present. |
 | `Common/Functions/Common_EquipUnit.sqf:38` | Calls `WFBE_CO_FNC_EquipBackpack` for unit loadout application. |
 
@@ -32,8 +32,8 @@ flowchart TD
 
 | Root / branch | `Common_EquipVehicle.sqf` | `Common_EquipBackpack.sqf` | Practical meaning |
 | --- | --- | --- | --- |
-| Docs/source `docs/developer-wiki-index@bd0ec67d` | Source-unchanged from `b2544207` for checked cargo helper paths; inclusive weapon, magazine and backpack loops remain at `:27`, `:33`, `:39` in Chernarus and maintained Vanilla. | Inclusive weapon and magazine loops remain at `:35`, `:41` in Chernarus and maintained Vanilla. | Patch-ready on the docs/source branch and any target derived from it. |
-| Current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce` and adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Do not reopen this defect on current stable/B69/B74; preserve the fix when merging older branches. Checked `origin/claude/b69..origin/claude/b74-aicom-spend` and `origin/master..origin/claude/b74-aicom-spend` cargo deltas are empty. |
+| Docs/source `docs/developer-wiki-index@ebfdca96542f` | Source-unchanged from `b2544207` for checked cargo helper paths; inclusive weapon, magazine and backpack loops remain at `:27`, `:33`, `:39` in Chernarus and maintained Vanilla. | Inclusive weapon and magazine loops remain at `:35`, `:41` in Chernarus and maintained Vanilla. | Patch-ready on the docs/source branch and any target derived from it. |
+| Current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34`, visible B74.2 `origin/claude/b74.2-aicom@d472da6a`, current B69 `origin/claude/b69@8d465fce` and adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Do not reopen this defect on current stable/B74-shaped refs; preserve the fix when merging older branches. Checked `0139a3468609..origin/master`, `origin/master..origin/claude/b74.2-aicom` and `origin/claude/b69..origin/claude/b74-aicom-spend` cargo deltas are empty. |
 | Current Miksuu upstream `miksuu/master@b8389e748243` | Inclusive loops at `:27`, `:33`, `:39` in both maintained roots. | Inclusive loops at `:35`, `:41` in both maintained roots. | Current Miksuu does not carry the loop-bound rescue. The previously documented `d9506078` is only local `origin/claude/*` branch evidence unless a future direct Miksuu fetch says otherwise. |
 | `origin/perf/quick-wins` `0076040f` | Chernarus fixes all three loops to `count(_items)-1`; maintained Vanilla still carries inclusive loops. | Chernarus fixes both loops to `count(_items)-1`; maintained Vanilla still carries inclusive loops. | Perf branch is Chernarus-only for this fix; Vanilla propagation remains open there. |
 | Historical release commit `a96fdda2` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Historical fixed checkpoint only; current origin exposes no `release/*` head on 2026-06-23. |
@@ -53,8 +53,8 @@ Confirmed old-shape locations:
 
 | Helper | Loops |
 | --- | --- |
-| `Common_EquipVehicle.sqf` | weapon cargo `:27`, magazine cargo `:33`, backpack cargo `:39` on docs/source `HEAD@bd0ec67d`, current Miksuu `b8389e748243`, historical EASA QoL `a66d4691` and perf Vanilla |
-| `Common_EquipBackpack.sqf` | backpack weapon cargo `:35`, backpack magazine cargo `:41` on docs/source `HEAD@bd0ec67d`, current Miksuu `b8389e748243`, historical EASA QoL `a66d4691` and perf Vanilla |
+| `Common_EquipVehicle.sqf` | weapon cargo `:27`, magazine cargo `:33`, backpack cargo `:39` on docs/source `HEAD@ebfdca96542f`, current Miksuu `b8389e748243`, historical EASA QoL `a66d4691` and perf Vanilla |
+| `Common_EquipBackpack.sqf` | backpack weapon cargo `:35`, backpack magazine cargo `:41` on docs/source `HEAD@ebfdca96542f`, current Miksuu `b8389e748243`, historical EASA QoL `a66d4691` and perf Vanilla |
 
 Likely impact:
 
@@ -73,7 +73,7 @@ for '_i' from 0 to count(_items)-1 do {
 };
 ```
 
-Apply the `count(_items)-1` bound to all five confirmed old-shape loops. Current stable and historical `a96fdda2` already carry this shape in both maintained roots; current Miksuu `b8389e748243` does not.
+Apply the `count(_items)-1` bound to all five confirmed old-shape loops. Current stable/B74.1/B74.2, current B69/B74 and historical `a96fdda2` already carry this shape in both maintained roots; current Miksuu `b8389e748243` does not.
 
 Optional guard if the code owner wants clearer empty-array behavior:
 
@@ -110,7 +110,7 @@ Arma smoke:
 
 ## Generated And Modded Missions
 
-On docs/source `HEAD@bd0ec67d`, `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` carries the same inclusive loops in `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`; checked cargo helper paths are source-unchanged from `b2544207`. Current Miksuu `b8389e748243` still matches that old shape; current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical release `a96fdda2` already fix both maintained roots; perf `0076040f` fixes Chernarus only.
+On docs/source `HEAD@ebfdca96542f`, `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` carries the same inclusive loops in `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`; checked cargo helper paths are source-unchanged from `b2544207`. Current Miksuu `b8389e748243` still matches that old shape; current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34`, visible B74.2 `origin/claude/b74.2-aicom@d472da6a`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical release `a96fdda2` already fix both maintained roots; perf `0076040f` fixes Chernarus only.
 
 Per project rules:
 
@@ -123,7 +123,7 @@ Per project rules:
 - This is a small, patch-ready reliability bug.
 - It should be safe to patch independently from the server-authority/economy redesign because it only fixes loop bounds in cargo-application helpers.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
-- Branch check refreshed 2026-06-23: docs/source `HEAD@bd0ec67d` is source-unchanged from `b2544207` for checked cargo helper paths; docs/source, current Miksuu `b8389e748243` and historical EASA QoL `a66d4691` still carry the five inclusive loops in both maintained roots. Current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical release `a96fdda2` fix both maintained roots; perf `0076040f` fixes Chernarus only. Checked `b2544207..HEAD`, B69..B74, master..B74 and older-B69-to-B74 cargo deltas are empty. Current origin exposes no live `release/*`, cargo, equip, gear, EASA or QoL rescue head, and `d9506078` is local `origin/claude/*` evidence rather than current Miksuu upstream.
+- Branch check refreshed 2026-06-23: docs/source `HEAD@ebfdca96542f` is source-unchanged from `b2544207` for checked cargo helper paths; docs/source, current Miksuu `b8389e748243` and historical EASA QoL `a66d4691` still carry the five inclusive loops in both maintained roots. Current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34`, visible B74.2 `origin/claude/b74.2-aicom@d472da6a`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical release `a96fdda2` fix both maintained roots; perf `0076040f` fixes Chernarus only. Checked `b2544207..HEAD`, `0139a3468609..origin/master`, `origin/master..origin/claude/b74.2-aicom` and `origin/claude/b69..origin/claude/b74-aicom-spend` cargo deltas are empty. Current origin exposes no live `release/*`, cargo or equip rescue head; live `origin/claude/trello-buymenu-gear-display@db1291beba` and `origin/claude/trello-easa-weapon-categories@08819118` have no checked cargo-helper delta and are not cargo-loop rescue branches. `d9506078` is local `origin/claude/*` evidence rather than current Miksuu upstream.
 
 ## Continue Reading
 

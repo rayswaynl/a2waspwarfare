@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T19:16:54+02:00",
+  "generatedAt": "2026-06-23T19:27:34+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: rhud-endgame-title-handle-current-b741-b742-refresh-2026-06-23. Refreshed RHUD/endgame currentCutDisplay evidence for current B74.1/B74.2 and preserved the remaining title display-key split/endgame gate as future UI runtime work. No gameplay source changed.",
+      "currentWork": "Latest published lane: vehicle-cargo-loop-current-b741-b742-refresh-2026-06-23. Refreshed vehicle/backpack cargo loop current B74.1/B74.2 evidence and preserved the old-shape docs/source, Miksuu, EASA QoL and perf-Vanilla propagation gates. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "vehicle-cargo-loop-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed vehicle/backpack cargo loop evidence through Vehicle-Cargo-Equip-Loop-Bounds, Gear-Loadout-And-EASA-Atlas, Feature Status and Source Fix queue. Docs/source HEAD@ebfdca96542f is unchanged from b2544207 for checked cargo helper paths and still carries inclusive Common_EquipVehicle.sqf:27,33,39 plus Common_EquipBackpack.sqf:35,41 loops in both maintained roots. Current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6a, B69, B74 and historical a96fdda2 fix all five loops to (count(_items) - 1) in both maintained roots. Current Miksuu and historical EASA QoL remain old-shape; perf fixes Chernarus only. Live Trello gear/EASA branches have no checked cargo-helper delta. No gameplay source changed."
+    },
     {
       "lane": "rhud-endgame-title-handle-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

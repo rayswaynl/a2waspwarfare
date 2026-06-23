@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T19:16:54+02:00",
+  "generatedAt": "2026-06-23T19:27:34+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "vehicle-cargo-loop-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh vehicle/backpack cargo loop rows from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Check maintained-root Common_EquipVehicle.sqf and Common_EquipBackpack.sqf across docs/source, current stable/B74.1, B74.2, B69, adjacent B74, current Miksuu, perf, historical release, historical EASA QoL and live Trello gear/EASA branches.",
+        "Keep Vehicle-Cargo-Equip-Loop-Bounds as canonical and update Gear-Loadout-And-EASA-Atlas, Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Vehicle-Cargo-Equip-Loop-Bounds.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 cargo loop evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future gear/cargo owner should not reopen cargo-loop bounds on current stable/B74-shaped maintained roots. Port the five-loop bound fix only to old-shape targets such as docs/source, current Miksuu, historical EASA QoL or perf Vanilla, propagate maintained Vanilla where still old-shape, then smoke vehicle weapon/magazine/backpack cargo plus unit backpack weapon/magazine cargo.",
+      "updated": "2026-06-23T19:27:34+02:00"
+    },
     {
       "lane": "rhud-endgame-title-handle-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
