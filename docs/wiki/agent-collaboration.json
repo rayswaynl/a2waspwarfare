@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T15:14:16+02:00",
+  "generatedAt": "2026-06-23T15:34:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "upgrade-sync-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh RequestSpecial upgrade-sync docs from current-B74/current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Source scope is maintained-root Server/Functions/Server_HandleSpecial.sqf, Client/GUI/GUI_UpgradeMenu.sqf and Server/Functions/Server_ProcessUpgrade.sqf across docs/source, current stable/B74.1, B74.2, B69, B74, Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md and Upgrades-And-Research-Atlas.md with current stable/B74.1/B74.2 upgrade-sync parser and end-time lifecycle evidence.",
+        "Updated Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future support/upgrades owner should treat upgrade-sync as parser consistency debt, not a P1 authority closure and not closed by B74.1 server end-time work; normalize tuple parsing only with maintained Vanilla propagation and commander upgrade-completion plus malformed-payload smoke.",
+      "updated": "2026-06-23T15:34:00+02:00"
+    },
     {
       "lane": "b742-aicom-branch-intel-2026-06-23",
       "owner": "Codex",
@@ -805,7 +822,7 @@
         "git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend and 0a1ccb4d..origin/claude/b74-aicom-spend are empty for checked upgrade-sync handler/caller/process-upgrade paths; origin/master..B74 Server_HandleSpecial changes are unrelated to upgrade-sync."
       ],
       "outputs": [
-        "Refreshed Support specials, Upgrades and research, Feature Status, Source Fix queue, dashboard/worklog/pruning ledger and upgrade-sync machine rows with adjacent B74 evidence.",
+        "Historical adjacent-B74 evidence pass, superseded for current-head wording by upgrade-sync-current-b741-b742-refresh-2026-06-23.",
         "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
         "No gameplay source changed."
       ],
