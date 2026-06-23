@@ -1,6 +1,6 @@
 # Resistance Supply Scaffold
 
-Status: branch-sensitive scaffold, not release-ready live economy support. This page owns the source evidence for the resistance/GUER side-supply gap and the B69/B74 Chernarus-only candidate.
+Status: branch-sensitive scaffold, not release-ready live economy support. This page owns the source evidence for the resistance/GUER side-supply gap and the current stable/B74.1/B74.2 Chernarus-only candidate.
 
 All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
@@ -22,23 +22,23 @@ This is not a clean "unsupported by design" feature. The common economy layer co
 
 - `Init_CommonConstants.sqf:157-159` defines starting supplies for west, east and GUER.
 - `Init_Common.sqf` builds `WFBE_PRESENTSIDES` from `WFBE_L_BLU`, `WFBE_L_OPF` and `WFBE_L_GUE` when side owner logics exist.
-- Current stable, B69 and adjacent B74 define `WFBE_L_GUE` owner logic in Chernarus and maintained Vanilla; docs/Miksuu/perf/historical refs checked here do not.
-- Current stable, B69 and adjacent B74 make the resistance supply read branch non-blocking and funds-only by returning a `0` default, while docs/Miksuu/perf/historical refs still use the blocking `REQUEST_SUPPLY_VALUE` wait path for resistance.
+- Current stable/B74.1/B74.2, B69 and adjacent B74 define `WFBE_L_GUE` owner logic in Chernarus and maintained Vanilla; docs/Miksuu/perf/historical refs checked here do not.
+- Current stable/B74.1/B74.2, B69 and adjacent B74 make the resistance supply read branch non-blocking and funds-only by returning a `0` default, while docs/Miksuu/perf/historical refs still use the blocking `REQUEST_SUPPLY_VALUE` wait path for resistance.
 
-The write path is still incomplete unless the target branch is B69/B74 Chernarus:
+The write path is still incomplete unless the target is current stable/B74.1/B74.2 Chernarus or B69/B74 Chernarus:
 
-- `Common_ChangeSideSupply.sqf:28-30` formats a generic `wfbe_supply_temp_<side>` public variable.
-- Current stable, docs/Miksuu/perf/historical refs and B69/B74 maintained Vanilla register only `wfbe_supply_temp_west` and `wfbe_supply_temp_east`.
-- B69/B74 Chernarus registers `wfbe_supply_temp_resistance` at `Server_ChangeSideSupply.sqf:25-45`, but it still trusts `_side` from the payload and has no channel/requester validation.
+- `Common_ChangeSideSupply.sqf` formats a generic `wfbe_supply_temp_<side>` public variable.
+- Docs/Miksuu/perf/historical refs and maintained Vanilla register only `wfbe_supply_temp_west` and `wfbe_supply_temp_east`.
+- Current stable/B74.1/B74.2 Chernarus and B69/B74 Chernarus register `wfbe_supply_temp_resistance` at `Server_ChangeSideSupply.sqf:25-45`, but it still trusts `_side` from the payload and has no channel/requester validation.
 
 ## Current Branch Matrix
 
 | Ref | Resistance owner logic | Supply read behavior | Temp-channel receiver |
 | --- | --- | --- | --- |
 | Docs branch `e46a7330` | No `WFBE_L_GUE` mission logic found in Chernarus or maintained Vanilla; Chernarus only has `WFBE_L_BLU` / `WFBE_L_OPF` at `mission.sqm:3855,3874`. | Resistance branch still reaches `REQUEST_SUPPLY_VALUE` / `waitUntil` at `Common_GetSideSupply.sqf:36-44`. | West/east only at `Server_ChangeSideSupply.sqf:1,25`; no resistance handler. |
-| Current stable `origin/master@0139a346` | Chernarus `mission.sqm:4928,4931` and Vanilla `mission.sqm:4198,4201` define `LocationLogicOwnerResistance` / `WFBE_L_GUE`; `Init_Common.sqf:290` includes it in the present-side loop. | `Common_GetSideSupply.sqf:36-40` marks GUER funds-only and returns a non-blocking `0` default. | West/east only at `Server_ChangeSideSupply.sqf:1,25`; no resistance handler; arithmetic floor still old-shape at `:12,36`. |
+| Current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34` | Chernarus `mission.sqm:4995,4998` and Vanilla `mission.sqm:4198,4201` define `LocationLogicOwnerResistance` / `WFBE_L_GUE`; `Init_Common.sqf:291` includes it in the present-side loop. | `Common_GetSideSupply.sqf:36-40` marks GUER funds-only and returns a non-blocking `0` default. | Chernarus registers `wfbe_supply_temp_resistance` at `Server_ChangeSideSupply.sqf:25-45` and floors west/resistance/east negatives to `0` at `:12,36,60`; maintained Vanilla remains west/east only and old-shape at `:12,36`. |
 | Current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f`, historical `a96fdda2` | No `WFBE_L_GUE` mission logic found in checked maintained roots; only the `Init_Common.sqf:280` present-side loop references the variable. | Resistance branch still uses the blocking request/wait path at `Common_GetSideSupply.sqf:36-44`. | West/east only. Perf fixes Chernarus arithmetic only, not Vanilla and not resistance wiring. |
-| Current B69 `origin/claude/b69@8d465fce` and adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` | B69..B74 has no checked side-supply path delta. Chernarus and maintained Vanilla define `WFBE_L_GUE` and include resistance in the present-side loop. | Chernarus and Vanilla use the current-stable funds-only `0` default read branch. | Chernarus adds `wfbe_supply_temp_resistance` at `Server_ChangeSideSupply.sqf:25-45` and floors west/resistance/east negatives to `0` at `:12,36,60`; maintained Vanilla remains west/east only and old-shape at `:12,36`. |
+| B74.2 `origin/claude/b74.2-aicom@d472da6a`; current B69 `origin/claude/b69@8d465fce`; adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` | B74.2 has no checked side-supply/resistance delta over current stable; B69..B74 is also empty for checked side-supply paths. Chernarus and maintained Vanilla define `WFBE_L_GUE` and include resistance in the present-side loop. | Chernarus and Vanilla use the current-stable funds-only `0` default read branch. | Same current-stable split: Chernarus has `wfbe_supply_temp_resistance` plus floor-to-zero; maintained Vanilla remains west/east only and old-shape. |
 
 ## Why It Matters
 
@@ -51,14 +51,14 @@ That creates a silent economy failure: code can appear to award or debit resista
 | File | Evidence |
 | --- | --- |
 | `Common/Functions/Common_ChangeSideSupply.sqf:16-30` | Applies positive-income stagnation, computes or forwards the change depending on branch, then publishes `wfbe_supply_temp_<side>` with `[_side, _amount, _reason]`. |
-| `Server/Functions/Server_ChangeSideSupply.sqf:1-47` | Docs/current-stable/Miksuu/perf/historical refs register west/east temp-channel handlers only; both trust payload `_side` and broadcast resulting side supply. |
-| B69/B74 Chernarus `Server/Functions/Server_ChangeSideSupply.sqf:25-45` | Adds a resistance temp-channel handler, but still trusts payload `_side`; B69/B74 Vanilla does not carry this handler. |
+| `Server/Functions/Server_ChangeSideSupply.sqf:1-71` | Current stable/B74.1/B74.2 Chernarus registers west/resistance/east temp-channel handlers and floors negatives to `0`, but still trusts payload `_side` and broadcasts resulting side supply. |
+| Old-shape / maintained Vanilla `Server/Functions/Server_ChangeSideSupply.sqf:1-47` | Docs/Miksuu/perf/historical refs and current maintained Vanilla register west/east temp-channel handlers only; both trust payload `_side`. |
 | `Server/Init/Init_Server.sqf:82` / current-stable `:98` / B69/B74 Chernarus `:100` | Compiles/registers `Server_ChangeSideSupply.sqf`; B69/B74 Vanilla uses `:98`. |
 | `Common/Functions/Common_GetSideSupply.sqf:36-44` | Docs/Miksuu/perf/historical refs still block on the request/wait branch for resistance. Current stable/B69/B74 use `:36-40` to return a funds-only `0` default instead. |
 | `Common/Init/Init_CommonConstants.sqf:157-159` | Defines west/east/GUER starting supply constants. |
-| `Common/Init/Init_Common.sqf:280` / current-stable `:290` / B69/B74 `:291` | Builds `WFBE_PRESENTSIDES` from BLU/OPF/GUE owner logics. |
+| `Common/Init/Init_Common.sqf:280` / current stable/B74.1/B74.2 `:291` | Builds `WFBE_PRESENTSIDES` from BLU/OPF/GUE owner logics. |
 | Docs branch `mission.sqm:3855,3874` | Defines BLU/OPF owner logics but no `WFBE_L_GUE` owner logic in checked Chernarus source. |
-| Current stable/B69/B74 Chernarus `mission.sqm:4928,4931`; Vanilla `:4198,4201` | Defines `LocationLogicOwnerResistance` / `WFBE_L_GUE`, so resistance can be present even while the write/read supply economy remains incomplete. |
+| Current stable/B74.1/B74.2 Chernarus `mission.sqm:4995,4998`; B69/B74 Chernarus `:4928,4931`; Vanilla `:4198,4201` | Defines `LocationLogicOwnerResistance` / `WFBE_L_GUE`, so resistance can be present even while the write/read supply economy remains incomplete. |
 
 ## Patch Shape
 

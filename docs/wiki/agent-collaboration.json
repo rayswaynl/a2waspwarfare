@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T16:55:00+02:00",
+  "generatedAt": "2026-06-23T17:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "side-supply-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh side-supply clamp, reason-string and resistance-supply docs from stale current-stable origin/master@0139a346/current-B74 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Source scope is maintained-root Common_ChangeSideSupply.sqf, Server_ChangeSideSupply.sqf, Common_GetSideSupply.sqf, Init_Common.sqf and mission.sqm across docs/source HEAD, current stable/B74.1, B74.2, B69, B74, Miksuu/perf/historical refs where locally available.",
+        "Initial checks show current stable/B74.1 is Chernarus-partial: server floor-to-zero and wfbe_supply_temp_resistance are present in source Chernarus, maintained Vanilla remains old-shape, and B74.2 adds no checked side-supply/resistance delta over current stable. DR-44 side/channel/requester validation remains open.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Economy-Authority-First-Cut.md, Resistance-Supply-Scaffold.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Public-Variable-Channel-Index.md and Server-Authority-Migration-Map.md with current B74.1/B74.2 side-supply evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future economy/security owner should preserve current Chernarus B66/B67 candidate evidence, propagate or explicitly scope maintained Vanilla, patch reason parsing with the clamp pass, validate direct temp channels by side/channel/amount/requester and decide funds-only resistance supply versus live resistance state before release wording.",
+      "updated": "2026-06-23T17:05:00+02:00"
+    },
     {
       "lane": "empty-supply-truck-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
