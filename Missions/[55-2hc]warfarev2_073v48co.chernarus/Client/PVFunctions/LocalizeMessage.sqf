@@ -177,6 +177,21 @@ switch (_localize) do {
         };
         _txt = Localize "DefenseThreatGate";
     };
+
+    case "BaseDefenseTrapGate": {
+        //--- Trello #104 anti-base-trap gate. Mirrors DefenseThreatGate refund handling:
+        //--- _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the
+        //--- price this client charged; covers WDDM anchors the server can't price). Refund, then warn.
+        private ["_refArg","_refGet"];
+        _refArg = _this select 1;
+        if (typeName _refArg == "STRING") then {
+            _refGet = missionNamespace getVariable _refArg;
+            if (!isNil "_refGet") then { (_refGet select QUERYUNITPRICE) Call ChangePlayerFunds };
+        } else {
+            if (_refArg > 0) then { _refArg Call ChangePlayerFunds };
+        };
+        _txt = Localize "BaseDefenseTrapGate";
+    };
 };
 
 if (_commandChat) then {

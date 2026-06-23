@@ -807,6 +807,14 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_DEFENSE_BUDGET = 1;            // Per-base-area defense caps scaling with barracks level
 	WFBE_C_BASE_DEFENSE_STATICS_CAP = 25; // Max player-placed static base defenses (MGs/AA/AAPOD) per base area (raised from 10)
 	WFBE_C_DEFENSE_THREAT_MIN = 3;        // Min enemy ground units (west/east, no Air/GUER) inside base range before the statics/mines threat gate fires
+	//--- Trello #104 ("Must") — ANTI-BASE-TRAP gate. SERVER-AUTHORITATIVE; runs independently of
+	//--- WFBE_C_DEFENSE_BUDGET. Blocks placing crewable STATIC weapons (WFBE_CO_FNC_GetDefenseCategory
+	//--- == "STATICS": MG nests / GL / AT-AA pods / cannons / mortars; WDDM anchors if any child is a
+	//--- static) within BUILD_BLOCK_RANGE of your own base/HQ while >= BUILD_BLOCK_ENEMYCOUNT enemy
+	//--- ground units (Man/Car/Motorcycle/Tank of the major opponent side) are nearby. Set either
+	//--- constant to 0 to disable the gate entirely. TUNE these (range / count / which-statics).
+	WFBE_C_BASE_DEFENSE_BUILD_BLOCK_RANGE      = 300; // Enemy-proximity radius (m) around base/HQ that arms the gate.
+	WFBE_C_BASE_DEFENSE_BUILD_BLOCK_ENEMYCOUNT = 1;   // Min enemy ground units within range to block static-defense builds.
 	WFBE_C_WDDM_COMP_CAP = 3;            //--- Max WDDM commander compositions per base area (size-independent).
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
 	WFBE_C_STATLOG = 1;                   // [WASPSTAT] structured telemetry RPT lines

@@ -1,4 +1,4 @@
-Private ["_builtByRepairTruck","_defenseType","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure"];
+Private ["_builtByRepairTruck","_defenseType","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure","_atReject"]; //--- #104: _atReject = anti-base-trap gate verdict
 _side            = _this select 0;
 _defenseType     = _this select 1;
 _pos             = _this select 2;
@@ -15,6 +15,123 @@ if (_index != -1) then {
 	//--- (manning range + builtByRepairTruck); the composition path is commander-built and does not need them.
 	//--- NOTE: Land_Pneu (Site Clearance) is handled client-side in coin_interface.sqf via the dedicated
 	//--- RequestSiteClearance PVF and never reaches this path.
+
+	//==========================================================================
+	// ANTI-BASE-TRAP GATE (Trello #104, "Must")  —  SERVER-AUTHORITATIVE, INDEPENDENT
+	//
+	// Block construction of crewable STATIC weapons (MG nests / GL / AT-AA pods /
+	// cannons / mortars — anything WFBE_CO_FNC_GetDefenseCategory classes "STATICS")
+	// within WFBE_C_BASE_DEFENSE_BUILD_BLOCK_RANGE of your own base/HQ while
+	// >= WFBE_C_BASE_DEFENSE_BUILD_BLOCK_ENEMYCOUNT enemy ground units are nearby.
+	// This is the anti tank-trap / anti team-kill rule and runs REGARDLESS of the
+	// WFBE_C_DEFENSE_BUDGET flag (the budget/threat block below is a separate system).
+	//
+	// Scope choice (documented for owner): ONLY the "STATICS" category is gated.
+	// Fortifications, mines and OTHER are NOT gated here. For WDDM composition
+	// anchors, the gate fires if ANY template child is a STATICS class.
+	//
+	// Gate constant 0 (range or count) -> feature OFF (behaviour exactly as before).
+	//==========================================================================
+	_atReject = false;
+	private ["_atBlockRange","_atBlockCount"];
+	_atBlockRange = missionNamespace getVariable ["WFBE_C_BASE_DEFENSE_BUILD_BLOCK_RANGE", 0];
+	_atBlockCount = missionNamespace getVariable ["WFBE_C_BASE_DEFENSE_BUILD_BLOCK_ENEMYCOUNT", 0];
+	if (_atBlockRange > 0 && _atBlockCount > 0) then {
+		//--- NOTE: _atReject is deliberately NOT in this private[] — it must stay the OUTER
+		//--- script-scope var (declared above) so setting it here suppresses the build below.
+		private ["_atLogik","_atStartPos","_atBaseAreas","_atCenters","_atNearestCenter","_atNearestDist",
+		         "_atIsAnchor","_atClsToCheck","_atTemplateVar","_atFactionSpecific","_atTplName",
+		         "_atTplChildren","_atIsStatic","_atCat","_atEnemySide","_atEnemyCount"];
+
+		//--- Resolve the classnames this request will actually place (single defense, or all
+		//--- WDDM composition children for an anchor — mirrors the budget block's B2 logic).
+		_atIsAnchor  = (!isNil "WFBE_POSITION_ANCHOR_NAMES" && {(WFBE_POSITION_ANCHOR_NAMES find _defenseType) != -1});
+		_atClsToCheck = [];
+		if (_atIsAnchor) then {
+			_atTemplateVar    = "";
+			_atFactionSpecific = false;
+			{
+				if ((_x select 0) == _defenseType) exitWith {
+					_atTemplateVar     = _x select 1;
+					_atFactionSpecific = _x select 2;
+				};
+			} forEach (if (isNil "WFBE_POSITION_TEMPLATE_MAP") then {[]} else {WFBE_POSITION_TEMPLATE_MAP});
+			if (_atTemplateVar != "") then {
+				_atTplName = if (_atFactionSpecific) then {
+					_atTemplateVar + (if (_side == west) then {"_WEST"} else {"_EAST"})
+				} else {
+					_atTemplateVar
+				};
+				_atTplChildren = missionNamespace getVariable _atTplName;
+				if !(isNil "_atTplChildren") then {
+					{ _atClsToCheck = _atClsToCheck + [_x select 0]; } forEach _atTplChildren;
+				};
+			};
+		} else {
+			_atClsToCheck = [_defenseType];
+		};
+
+		//--- Is any class to be placed a crewable static weapon?
+		_atIsStatic = false;
+		{
+			_atCat = [_x, _side] Call WFBE_CO_FNC_GetDefenseCategory;
+			if (_atCat == "STATICS") exitWith { _atIsStatic = true };
+		} forEach _atClsToCheck;
+
+		if (_atIsStatic) then {
+			//--- Nearest own base/HQ center to the placement position (startpos + extra base areas).
+			_atLogik     = _side Call WFBE_CO_FNC_GetSideLogic;
+			_atStartPos  = _atLogik getVariable ["wfbe_startpos", objNull];
+			_atBaseAreas = _atLogik getVariable ["wfbe_basearea", []];
+			_atCenters = [];
+			if (!isNil "_atStartPos" && {!(isNull _atStartPos)}) then { _atCenters = _atCenters + [getPos _atStartPos] };
+			{ _atCenters = _atCenters + [getPos _x] } forEach _atBaseAreas;
+
+			_atNearestCenter = [];
+			_atNearestDist   = 1e11;
+			{
+				private "_d";
+				_d = _pos distance _x;
+				if (_d < _atNearestDist) then { _atNearestDist = _d; _atNearestCenter = _x };
+			} forEach _atCenters;
+
+			//--- Only enforce when placing inside the protected radius around the base/HQ.
+			if (count _atNearestCenter > 0 && _atNearestDist < _atBlockRange) then {
+				//--- Count enemy GROUND units of the major opponent side(s) within the block range
+				//--- of the nearest base center. Ground classes only (no Air); no ambient GUER.
+				_atEnemySide  = [west, east] - [_side];
+				_atEnemyCount = 0;
+				{
+					_atEnemyCount = _atEnemyCount + (_x countSide (nearestObjects [_atNearestCenter, ["Man","Car","Motorcycle","Tank"], _atBlockRange]));
+				} forEach _atEnemySide;
+
+				if (_atEnemyCount >= _atBlockCount) then {
+					_atReject = true; //--- gate fired: build is suppressed below.
+					["INFORMATION", Format ["RequestDefense.sqf: [%1] anti-trap gate rejected [%2] (%3 enemy ground units within %4 m of base; need < %5).", str _side, _defenseType, _atEnemyCount, _atBlockRange, _atBlockCount]] Call WFBE_CO_FNC_LogContent;
+					//--- Refund the requesting player (charged optimistically client-side).
+					if (!(isNull _reqPlayer) && alive _reqPlayer) then {
+						private "_atGlobalEntry";
+						_atGlobalEntry = missionNamespace getVariable _defenseType;
+						if (!isNil "_atGlobalEntry") then {
+							//--- Server resolved the price: refund the number directly.
+							[_reqPlayer, "LocalizeMessage", ["BaseDefenseTrapGate", _atGlobalEntry select QUERYUNITPRICE]] Call WFBE_CO_FNC_SendToClient;
+						} else {
+							//--- Price not resolvable server-side (e.g. WDDM anchors): pass the
+							//--- classname so the client refunds via its own price lookup.
+							[_reqPlayer, "LocalizeMessage", ["BaseDefenseTrapGate", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+						};
+					};
+					//--- _atReject is set above; the budget/build block below is gated on !_atReject,
+					//--- so nothing is built. Cannot be bypassed client-side: this runs on the
+					//--- server (RequestDefense PVF) before any createVehicle.
+				};
+			};
+		};
+	};
+	//--- end anti-base-trap gate. If it fired (_atReject), the player was messaged+refunded
+	//--- above and the ENTIRE build path below is skipped; otherwise fall through as normal.
+
+	if (!_atReject) then {
 
 	//==========================================================================
 	// DEFENSE BUDGET + THREAT GATE (WFBE_C_DEFENSE_BUDGET = 1)
@@ -303,4 +420,6 @@ if (_index != -1) then {
 			[_defenseType,_side,_pos,_dir,_manned,false,missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE",_builtByRepairTruck] Call ConstructDefense;
 		};
 	};
+
+	}; //--- end if (!_atReject): the anti-base-trap gate (#104) suppressed the build when true.
 };
