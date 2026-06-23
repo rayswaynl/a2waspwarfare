@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T21:11:01+02:00",
+  "generatedAt": "2026-06-23T21:43:46+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "supply-pr1-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh Supply PR #1 killed-handler/heli/cash-run rows from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 plus B74.2 origin/claude/b74.2-aicom@21b62b04 where checked.",
+        "Check maintained-root supplyMissionStarted.sqf, supplyMissionStart.sqf, supplyMissionCompleted.sqf, Init_Server.sqf and Init_CommonConstants.sqf across current stable/B74.1, B74.2, B69, adjacent B74, current Miksuu, perf and historical release evidence already carried by the owner pages.",
+        "Keep Supply-Mission-Architecture as canonical and update Feature Status, Source Fix queue, playbook, dashboard/worklog/pruning ledger and machine rows only as needed.",
+        "Mirror the unrelated wiki-only f6614c4 pages into docs/wiki as parity cleanup, with no wiki content rewrite.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Supply-Mission-Architecture.md, Supply-Mission-Authority-Cleanup-Playbook.md, Supply-Mission-Scan-Narrowing.md, Supply-Mission-Player-Guide.md, Current-Work-Supply-Helicopters-PR1.md, Economy-Towns-And-Supply.md and Feature-Status-Register.md with current B74.1/B74.2 supply PR #1 evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "Mirrored wiki-only f6614c4 pages into docs/wiki as parity cleanup; no gameplay source changed."
+      ],
+      "handoff": "Future supply owner should preserve the guarded killed-handler sentinel, stable-shaped SupplyByHeli clear-on-completion and heli/cash-run reward semantics while still closing server-owned mission state, duplicate-start guard, cargo validation, friendly-CC checks, player-object cleanup and repeated load/deliver/destroy smoke.",
+      "updated": "2026-06-23T21:43:46+02:00"
+    },
     {
       "lane": "camp-count-helper-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
