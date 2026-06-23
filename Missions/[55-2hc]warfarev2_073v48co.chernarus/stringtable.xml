@@ -9327,6 +9327,15 @@
         <Spanish>No puedes lanzar bombas no guiadas a esta altitud</Spanish>
     </Key>
 
+    <Key ID="STR_WF_MESSAGE_BombAltitudeWarning">
+        <English>WARNING: above bomb altitude limit - do not drop</English>
+        <French>ATTENTION : au-dessus de la limite d'altitude de largage - ne pas larguer</French>
+        <German>WARNUNG: über der Bombenabwurfhöhengrenze - nicht abwerfen</German>
+        <Russian>ВНИМАНИЕ: выше предела высоты сброса - не сбрасывать</Russian>
+        <Italian>ATTENZIONE: sopra il limite di quota di sgancio - non sganciare</Italian>
+        <Spanish>ADVERTENCIA: por encima del límite de altitud de lanzamiento - no lanzar</Spanish>
+    </Key>
+
     <Key ID="STR_WF_MESSAGE_BombDistanceRestriction">
         <English>You cannot drop unguided bombs at this distance</English>
         <French>Vous ne pouvez pas larguer de bombes non guidées à cette distance</French>
