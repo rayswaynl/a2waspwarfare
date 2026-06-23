@@ -4,9 +4,9 @@ This page tracks the `wasp-marker-wait-cleanup` opportunity. It is a small clien
 
 ## Status
 
-Branch-split after the 2026-06-22 refresh. The docs/source checkout `HEAD@46840f048bd4` still has the unslept display-54 loop in Chernarus and maintained Vanilla, so that branch remains patch-ready. Current stable `origin/master@0139a3468609`, current B69 `origin/claude/b69@8d465fcede7f`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557fc912` and live `origin/feat/client-fps@709258e7e6f8` already carry the tiny `sleep 0.1` throttle in both maintained roots; they still need marker-dialog smoke before "verified in-game" wording.
+Branch-split after the 2026-06-23 current-B74.1/B74.2 refresh. The docs/source checkout `HEAD@c9df2a8b7264` is unchanged from `46840f048bd4` for the checked WASP paths and still has the unslept display-54 loop in Chernarus and maintained Vanilla, so that branch remains patch-ready. Current stable/B74.1 `origin/master@f8a76de349da` / `origin/claude/b74.1-aicom@f8a76de349da`, B74.2 `origin/claude/b74.2-aicom@21b62b04fee3`, current B69 `origin/claude/b69@8d465fcede7f`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557fc912` and live `origin/feat/client-fps@709258e7e6f8` already carry the tiny `sleep 0.1` throttle in both maintained roots; they still need marker-dialog smoke before "verified in-game" wording.
 
-Current-head refresh 2026-06-22: docs/source Chernarus and maintained Vanilla load `WASP\global_marking_monitor.sqf` from `Client/Init/Init_Client.sqf:267`, then keep `disableUserInput true`, the unslept `while {time < _this}` polling window, `findDisplay 54` and marker keyUp/keyDown handler attach at `global_marking_monitor.sqf:57,62,64,68-69`; display-12 is already throttled at `:80`. Stable `origin/master@0139a3468609` launches the helper at `Init_Client.sqf:309` and has `sleep 0.1` at `global_marking_monitor.sqf:64` before `findDisplay 54`, with display-12 at `:81`, in both Chernarus and maintained Vanilla. B69 `origin/claude/b69@8d465fcede7f` and B74 `origin/claude/b74-aicom-spend@b23f557fc912` match that throttled helper shape, with launch line drift to `Init_Client.sqf:397`. Live `origin/feat/client-fps@709258e7e6f8` also carries the throttled helper in both maintained roots; its launch lines are Chernarus `Init_Client.sqf:308` and maintained Vanilla `:287`. The Chernarus source fix is commit `4805c778876d`; maintained Vanilla propagation is present through Takistan regeneration commit `9b49883cb936`. Current Miksuu upstream `b8389e748243` and `origin/perf/quick-wins@0076040f8a5e` still keep the old unslept shape in both maintained roots (`Init_Client.sqf:278` on Miksuu, `:279` on perf; display-54 wait at `global_marking_monitor.sqf:57,62,64,68-69`; display-12 at `:80`). Current origin exposes no live `release/*` head on 2026-06-22, so older release evidence is historical until a release ref is restored.
+Current-head refresh 2026-06-23: docs/source Chernarus and maintained Vanilla load `WASP\global_marking_monitor.sqf` from `Client/Init/Init_Client.sqf:267`, then keep `disableUserInput true`, the unslept `while {time < _this}` polling window, `findDisplay 54` and marker keyUp/keyDown handler attach at `global_marking_monitor.sqf:57,62,64,68-69`; display-12 is already throttled at `:80`. Current stable/B74.1 launches the helper at `Init_Client.sqf:397` and has `sleep 0.1` at `global_marking_monitor.sqf:64` before `findDisplay 54` at `:65`, with handler attach at `:69-70`, input unlock at `:74` and display-12 at `:81`, in both Chernarus and maintained Vanilla. B74.2 keeps the same throttled helper in both maintained roots; only source Chernarus helper launch line-drifts to `Init_Client.sqf:403` because B74.2 changes unrelated vehicle-tint/join-ACK/intro-music client-init code, while maintained Vanilla remains at `:397`. Current B69 and adjacent B74 match the throttled helper shape at `Init_Client.sqf:397`; live `origin/feat/client-fps@709258e7e6f8` also carries the throttled helper, with launch lines Chernarus `Init_Client.sqf:308` and maintained Vanilla `:287`. The Chernarus source fix is commit `4805c778876d`; maintained Vanilla propagation is present through Takistan regeneration commit `9b49883cb936`. Current Miksuu upstream `b8389e748243`, `origin/perf/quick-wins@0076040f8a5e` and historical `a96fdda28087` still keep the old unslept shape in both maintained roots (`Init_Client.sqf:278` on Miksuu, `:279` on perf, `:282` on historical; display-54 wait at `global_marking_monitor.sqf:57,62,64,68-69`; display-12 at `:80`). Current origin exposes no live `release/*`, WASP or marker rescue head on 2026-06-23, so older release evidence is historical until a release ref is restored.
 
 ## What To Read
 
@@ -28,12 +28,12 @@ Wiki/docs:
 
 `WASP/global_marking_monitor.sqf` is a client-local helper loaded from `Client/Init/Init_Client.sqf`. When a local player double-clicks the map, it temporarily disables user input, waits for Arma's marker text dialog (`findDisplay 54`) and attaches key handlers so pressing Enter prefixes the marker text with the player's name.
 
-Unpatched refs use a `while {time < _this} do` loop with no sleep between display checks. Current stable/B69/B74/client-fps keep the same `while` shape but add `sleep 0.1` before `findDisplay 54`, which closes the hot-loop part while preserving behavior:
+Unpatched refs use a `while {time < _this} do` loop with no sleep between display checks. Current stable/B74.1/B74.2/B69/B74/client-fps keep the same `while` shape but add `sleep 0.1` before `findDisplay 54`, which closes the hot-loop part while preserving behavior:
 
 - `global_marking_monitor.sqf`: `disableUserInput true`
 - `global_marking_monitor.sqf`: `while {time < _this} do`
 - old-shape refs: no sleep inside the display-54 loop
-- stable/B69/B74/client-fps refs: `sleep 0.1`
+- stable/B74.1/B74.2/B69/B74/client-fps refs: `sleep 0.1`
 - `global_marking_monitor.sqf`: `_display = findDisplay 54`
 - `global_marking_monitor.sqf`: `disableUserInput false`
 
@@ -64,7 +64,7 @@ disableUserInput false;
 
 ## Why It Matters
 
-This is not a server-wide performance emergency; it is a short, local, player-triggered loop. On old-shape targets, adding the throttle removes avoidable busy polling under `disableUserInput`. On stable/B69/B74/client-fps-shaped targets, the remaining work is smoke and, only if desired, a style refactor toward the display-12 idiom.
+This is not a server-wide performance emergency; it is a short, local, player-triggered loop. On old-shape targets, adding the throttle removes avoidable busy polling under `disableUserInput`. On stable/B74.1/B74.2/B69/B74/client-fps-shaped targets, the remaining work is smoke and, only if desired, a style refactor toward the display-12 idiom.
 
 ## Validation Needed
 
@@ -84,7 +84,7 @@ In-game smoke:
 
 ## Handoff
 
-Do not expand this lane into broader WASP authority cleanup. `WASP/actions/Action_RepairMHQDepot.sqf` remains a separate authority-light legacy action. For current stable/B69/B74/client-fps, do not reopen the one-line sleep patch; record marker-dialog smoke or an intentional style refactor instead.
+Do not expand this lane into broader WASP authority cleanup. `WASP/actions/Action_RepairMHQDepot.sqf` remains a separate authority-light legacy action. For current stable/B74.1/B74.2/B69/B74/client-fps, do not reopen the one-line sleep patch; record marker-dialog smoke or an intentional style refactor instead.
 
 ## Continue Reading
 

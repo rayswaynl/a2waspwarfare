@@ -25,7 +25,7 @@ WASP is the community/server identity this fork is built for. The mission credit
 | `WASP/baserep/data.sqf` | Table mapping base building classnames → display name, interaction distance, repair-rate %. | Data include. |
 | `WASP/baserep/viem.sqf` | Commander-only loop: HUD building-health overlay; attaches/removes a "Repair" action near damaged structures. Spotters also see enemy building health at range. | Main baserep loop. |
 | `WASP/baserep/repair.sqf` | Performs the repair: medic animation, drains side supply, increments building HP per tick. | Called by `viem.sqf`. |
-| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Client/Init/Init_Client.sqf:309` on current `origin/master@0139a346`). Stable/B69/B74/client-fps have the display-54 `sleep 0.1` throttle; docs/source, current Miksuu and perf still need propagation or an intentional refactor. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
+| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live**. Docs/source `HEAD@c9df2a8b7264` loads it from `Client/Init/Init_Client.sqf:267` and remains old-shape. Current stable/B74.1 `origin/master@f8a76de34`, B74.2 `origin/claude/b74.2-aicom@21b62b04`, B69, B74 and client-fps have the display-54 `sleep 0.1` throttle; current Miksuu and perf still need propagation or an intentional refactor. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
 | `WASP/rpg_dropping/DropRPG.sqf` | By DeraKOren (2012). (a) single-use AT-launcher weapon-swap, (b) pipe-bomb TK prevention near friendly bases, (c) mine time-tracking. | **Live** (`Init_Client.sqf:15` + recompiled on respawn at `Client_PreRespawnHandler.sqf:12`). |
 | `WASP/unsort/StartVeh.sqf` | Defines `EAST_StartVeh` / `WEST_StartVeh` classname pools for one random extra starting vehicle per side. | **Live** (compiled `Init_Server.sqf:306`, used `:425-459`). |
 
@@ -40,7 +40,7 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 | Call site | Wires |
 | --- | --- |
 | `Init_Client.sqf:15` | `WASP/rpg_dropping/DropRPG.sqf` |
-| `Client/Init/Init_Client.sqf:309` | `WASP/global_marking_monitor.sqf` |
+| `Client/Init/Init_Client.sqf:267` on docs/source; `:397` on current stable/B74.1/B69/B74; B74.2 source Chernarus `:403` and maintained Vanilla `:397` | `WASP/global_marking_monitor.sqf` |
 | `Client/Init/Init_Client.sqf:649` | `WASP/baserep/init.sqf` |
 | `Client/Init/Init_Client.sqf:650` | `WASP/actions/AddActions.sqf` |
 | `Client_PreRespawnHandler.sqf:11-12` | `WASP/actions/OnKilled.sqf` + recompile `DropRPG.sqf` |
@@ -59,7 +59,7 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 | Base repair action state | `WASP/baserep/viem.sqf:47-53` stores selected repair target/index in shared globals `obj` and `objnum`; `WASP/baserep/repair.sqf:16,20,24,27` consumes those globals during the timed repair. | Two overlapping repair flows can stomp target state. Convert to action arguments or player-local variables before making base repair more prominent. |
 | Base repair supply gate | `WASP/baserep/repair.sqf:6-8` snapshots side supply once, then spends `-15` every tick at `:24` without rechecking; the exit check at `:23` still uses the old snapshot. | Repair can continue past available side supply. Re-read/clamp supply before each spend or move the repair ledger server-side. |
 
-[Deep-review findings](Deep-Review-Findings) DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62-72` is branch-sensitive after the 2026-06-22 refresh: current stable `origin/master@0139a346`, B69, B74 and `origin/feat/client-fps@709258e7` carry `sleep 0.1` in both maintained roots, while docs/source `HEAD@46840f048bd4`, current Miksuu `b8389e748243` and perf `0076040f` still need the throttle if they remain code targets. Smoke marker dialog open/Enter/Escape/timeout before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
+[Deep-review findings](Deep-Review-Findings) DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62-72` is branch-sensitive after the 2026-06-23 current-B74.1/B74.2 refresh: current stable/B74.1 `origin/master@f8a76de34`, B74.2 `origin/claude/b74.2-aicom@21b62b04`, B69, B74 and `origin/feat/client-fps@709258e7` carry `sleep 0.1` in both maintained roots, while docs/source `HEAD@c9df2a8b7264`, current Miksuu `b8389e748243` and perf `0076040f` still need the throttle if they remain code targets. Smoke marker dialog open/Enter/Escape/timeout before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
 
 ## Wave N Fragility Checks
 

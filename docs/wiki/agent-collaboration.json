@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T20:34:21+02:00",
+  "generatedAt": "2026-06-23T20:48:34+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wasp-marker-wait-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh WASP marker display-54 wait rows from stale current-stable origin/master@0139a346 / current-B74 wording to current stable/B74.1 origin/master@f8a76de34 plus current B74.2 origin/claude/b74.2-aicom@21b62b04f.",
+        "Check maintained-root Client/Init/Init_Client.sqf and WASP/global_marking_monitor.sqf across docs/source, current stable/B74.1, B74.2, B69, adjacent B74, current Miksuu, perf, historical a96fdda2 and live client-FPS/WASP/marker branch patterns.",
+        "Keep WASP-Marker-Wait-Cleanup as canonical and update Performance sweep, Current source snapshot, Feature Status, hardening backlog, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed WASP-Marker-Wait-Cleanup.md, Performance-Opportunity-Sweep.md, WASP-Overlay.md, Codebase-Coverage-Ledger.md, Current-Source-Status-Snapshot.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 WASP marker wait evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future UI/performance owner should add the one-line sleep or an intentional waitUntil refactor only on old-shape targets, propagate maintained roots deliberately and smoke marker dialog open/Enter/Escape/timeout behavior. Do not reopen the stable/B74.1/B74.2/B69/B74/client-fps one-line throttle; record smoke or optional style refactor there.",
+      "updated": "2026-06-23T20:48:34+02:00"
+    },
     {
       "lane": "camp-flag-texture-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
