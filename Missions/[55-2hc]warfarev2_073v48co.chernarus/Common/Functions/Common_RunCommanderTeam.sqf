@@ -806,6 +806,11 @@ while {!WFBE_GameOver && _alive} do {
 						_unheldCamps = [];
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
 						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
+						//--- B74.2 (Ray 2026-06-23) NO-PROGRESS tracker for the camp-first loop (don't get stuck on camps).
+						private ["_campStallPasses","_campLastUnheld","_campStallMax"];
+						_campStallPasses = 0;
+						_campLastUnheld  = count _unheldCamps;
+						_campStallMax    = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_STALL_PASSES", 3];
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
@@ -862,6 +867,20 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Re-evaluate: drop any camp that is now ours (or went null).
 							_unheldCamps = [];
 							{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
+							//--- B74.2 NO-PROGRESS BAIL (Ray 2026-06-23): if the un-held camp count did NOT drop this
+							//--- pass, count a stall; after WFBE_C_AICOM_CAMP_STALL_PASSES consecutive no-progress passes
+							//--- stop grinding the camps and fall through to the depot/town-centre hold (never STUCK on an
+							//--- uncapturable/heavily-defended camp). A pass that DID flip a camp resets the counter. The
+							//--- exitWith leaves the camp-first while (same idiom as the _capAbort bail above) -> the plant
+							//--- is released below and, with _capAbort still false, the team proceeds to the centre hold.
+							if (count _unheldCamps < _campLastUnheld) then {
+								_campStallPasses = 0; _campLastUnheld = count _unheldCamps;
+							} else {
+								_campStallPasses = _campStallPasses + 1;
+							};
+							if (_campStallMax > 0 && {_campStallPasses >= _campStallMax}) exitWith {
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first NO-PROGRESS after %3 passes (%4 camp(s) still un-held) - proceeding to town centre.", _side, _team, _campStallPasses, count _unheldCamps]] Call WFBE_CO_FNC_AICOMLog;
+							};
 						};
 						//--- Release the plant so the depot-centre hold below can march these units on
 						//--- (setUnitPos "UP" pins stance; "AUTO" hands movement back to the AI).

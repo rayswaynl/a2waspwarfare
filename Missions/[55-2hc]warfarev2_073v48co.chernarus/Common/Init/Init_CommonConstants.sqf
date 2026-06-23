@@ -342,6 +342,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_RELIEF_HOLD") then {WFBE_C_AICOM_RELIEF_HOLD = 180};  //--- s. B68 attack-bias (Ray 2026-06-21): 240->180 so a team diverted to defend returns to offense sooner. Rollback: 240.
 	//--- ASSAULT FINISH tunables (extracted from hard-coded literals in Common_RunCommanderTeam.sqf).
 	if (isNil "WFBE_C_AICOM_ASSAULT_HOLD") then {WFBE_C_AICOM_ASSAULT_HOLD = 360}; //--- s: camp-first + depot-center capture-hold loop budget (was two hard-coded 150s).
+	if (isNil "WFBE_C_AICOM_CAMP_STALL_PASSES") then {WFBE_C_AICOM_CAMP_STALL_PASSES = 3}; //--- B74.2 (Ray 2026-06-23): in the camp-first phase, if the count of UN-HELD camps does not DROP for this many consecutive passes (~30s each), the team stops grinding the camps and proceeds to the depot/town-centre hold so it never gets STUCK on an uncapturable/heavily-defended camp. The centre hold keeps its own WFBE_C_AICOM_CAPTURE_MAXPASSES release. 0 disables the early bail (camp-first then only ends on WFBE_C_AICOM_ASSAULT_HOLD).
 	if (isNil "WFBE_C_AICOM_ASSAULT_SAD")  then {WFBE_C_AICOM_ASSAULT_SAD  = 80};  //--- m: approach-SAD radius on arrival (towns-target) (was hard-coded 250).
 	//--- WAVE-1 (2026-06-19) target-abandon + capture-loop break tunables.
 	//--- STUCK_ABANDON: after this many consecutive unstuck STRIKES on the SAME town (AssignTowns CAUSE-2),
@@ -471,7 +472,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_CAMPS_CAPTURE_BOUNTY = 500; //--- Bounty received by player whenever he capture a camp.
 	WFBE_C_CAMPS_CAPTURE_RATE = 20;
 	WFBE_C_CAMPS_CAPTURE_RATE_MAX = 25;
-	WFBE_C_CAMPS_RANGE = 10;
+	WFBE_C_CAMPS_RANGE = 11.5;  //--- B74.2 (Ray 2026-06-23): 10 -> 11.5 (+15%). Widens the AI camp capture bubble so it registers the presence-based flip instead of orbiting the tight 10m ring (Ray: let the AI capture camps easier + not get stuck on them). PLAYERS are UNCHANGED - WFBE_C_CAMPS_RANGE_PLAYERS (below) still gates them at 5m (server_town_camp.sqf:29 filters players past that).
 	WFBE_C_CAMPS_RANGE_PLAYERS = 5;
 	//--- Commander stuck-reaction (Slot 2, task #14): the AssignTowns breadcrumb re-issues a
 	//--- parked team's order. Was hardcoded 600s (10min) = stalemate-slow. Now config-driven.
