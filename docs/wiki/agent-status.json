@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T19:39:21+02:00",
+  "generatedAt": "2026-06-23T19:49:21+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: construction-smallsite-current-b741-b742-refresh-2026-06-23. Refreshed construction SmallSite current B74.1/B74.2 evidence and preserved the one-line add-to-remove source patch route. No gameplay source changed.",
+      "currentWork": "Latest published lane: clickabletext-soundpush-current-b741-b742-refresh-2026-06-23. Refreshed ClickableText soundPush current B74.1/B74.2 evidence and preserved old-shape branch targets. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "clickabletext-soundpush-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Client-UI-Systems-Atlas, Feature Status, Source Fix queue, Dead/stale code, dashboard/worklog/pruning ledger and clickable-text machine rows with current stable/B74.1/B74.2 source-present evidence. Docs/source HEAD@1d4282eca8fd is source-unchanged from 0bb0f89f and b5219d47 for checked resource/dialog paths and still keeps malformed RscClickableText.soundPush[] at Rsc/Ressources.hpp:556 in both maintained roots with 17 derived controls. Current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, B74.2 d472da6a, B69 8d465fce and B74 b23f557f carry valid {\"\", 0.2, 1} at :556 in both maintained roots with 14 derived controls; checked stable/B74.2/B69/B74 resource/dialog deltas are empty. Current Miksuu b8389e748243, perf 0076040f, historical release a96fdda2 and UI theme branches remain old-shape. No gameplay source changed."
+    },
     {
       "lane": "construction-smallsite-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

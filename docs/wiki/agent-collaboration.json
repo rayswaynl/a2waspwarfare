@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T19:39:21+02:00",
+  "generatedAt": "2026-06-23T19:49:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "clickabletext-soundpush-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh clickable-text soundPush rows from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Check maintained-root Rsc/Ressources.hpp and Rsc/Dialogs.hpp across docs/source, current stable/B74.1, B74.2, B69, adjacent B74, current Miksuu, perf, historical a96fdda2 and UI theme branches.",
+        "Keep Client-UI-Systems-Atlas as canonical and update Feature Status, Source Fix queue, Dead/stale code, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Dead-Code-And-Stale-Code-Register.md with current B74.1/B74.2 clickable-text evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future UI owner should not reopen the base-class edit on current stable/B74-shaped maintained roots. Port the valid empty-sound array only to old-shape targets such as docs/source, current Miksuu, perf, historical release or UI theme branches, propagate maintained Vanilla, then smoke representative gear, WF menu/HUD toggle, construction/CoIn, artillery and economy clickable controls in Arma 2 OA.",
+      "updated": "2026-06-23T19:49:21+02:00"
+    },
     {
       "lane": "construction-smallsite-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
