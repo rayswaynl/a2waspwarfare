@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T09:58:05+02:00",
+  "generatedAt": "2026-06-23T10:09:18+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -38,6 +38,24 @@
       ],
       "handoff": "Future commander/HQ code owner should keep one non-teamkill HQ score award, zero friendly/teamkill HQ destruction score, propagate maintained Vanilla and smoke enemy/friendly HQ kills plus DR-20 idempotency.",
       "updated": "2026-06-23T09:58:05+02:00"
+    },
+    {
+      "lane": "reaktiv-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@c2d513ecb672 keeps maintained-root Common/Module/Reaktiv/Reaktiv_Init.sqf:5 and Reaktiv_OnHandleDamage.sqf:7 in source Chernarus plus maintained Vanilla, but Init_Common.sqf:319-323 initializes only ICBM, IRS and CIPHER.",
+        "current stable origin/master@f8a76de34 has no maintained-root Common/Module/Reaktiv hits; its module init line shape is Chernarus Init_Common.sqf:337-341 and maintained Vanilla :330-334 for ICBM/IRS/CIPHER only.",
+        "current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f also have no maintained-root Common/Module/Reaktiv hits and checked B69..B74 Reaktiv-path deltas are empty.",
+        "direct current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep maintained-root Reaktiv files with no init caller.",
+        "historical a96fdda2 has no maintained-root Common/Module/Reaktiv hits; every checked ref still carries stale modded Napf/Eden/Lingor Common/Module/Reaktiv copies."
+      ],
+      "outputs": [
+        "Refreshed Modules-Atlas.md Reaktiv table, Dead-Code-And-Stale-Code-Register.md Reaktiv rows, Progress Dashboard Latest Batch, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl with current stable/B69/B74 evidence.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future module/dead-code owner should revive Reaktiv only with a deliberate init path plus HandleDamage locality smoke, or archive/remove remaining maintained-root copies while handling stale modded copies under modded mission policy.",
+      "updated": "2026-06-23T09:58:00+02:00"
     },
     {
       "lane": "version-sqf-current-b74-refresh-2026-06-23",

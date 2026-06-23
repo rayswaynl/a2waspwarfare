@@ -1,6 +1,6 @@
 # Modules Atlas
 
-> Source-refreshed 2026-06-14 on docs head `86244c24`; targeted diffs from `20a19676` through `HEAD` over checked module init, unit-creation and module-folder paths return no source changes. Behavioral map of the `Client/Module/*`, `Server/Module/*` and `Common/Module/*` subsystems. Most modules are config-gated QoL/combat features (gate = a `WFBE_C_MODULE_WFBE_<X>` constant; see [Variable and naming conventions](Variable-And-Naming-Conventions)). Exact branch matrices stay on owner pages except the compact Reaktiv dormant-module table below. Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless a branch/root note says otherwise. Arma 2 OA 1.64.
+> Source-refreshed 2026-06-23 on docs head `c2d513ecb672`; targeted Reaktiv checks preserve the module as docs/perf/Miksuu-only maintained-root residue while current stable and B69/B74-shaped refs carry only stale modded copies. Behavioral map of the `Client/Module/*`, `Server/Module/*` and `Common/Module/*` subsystems. Most modules are config-gated QoL/combat features (gate = a `WFBE_C_MODULE_WFBE_<X>` constant; see [Variable and naming conventions](Variable-And-Naming-Conventions)). Exact branch matrices stay on owner pages except the compact Reaktiv dormant-module table below. Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless a branch/root note says otherwise. Arma 2 OA 1.64.
 
 ## How To Use This Atlas
 
@@ -37,13 +37,14 @@ Compiles `WFBE_CO_MOD_IRS_CreateSmoke/DeploySmoke/HandleMissile/OnIncomingMissil
 ### Reaktiv — reactive (ERA) armor (`Common/Module/Reaktiv/`)
 Current docs/source status: **dead / unreachable**. `Common/Module/Reaktiv/Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived` (`Reaktiv_OnHandleDamage.sqf`), but no current init or runtime file calls `Reaktiv_Init.sqf`. Current Chernarus and maintained Vanilla `Init_Common.sqf:319-323` initialize ICBM, IRS and CIPHER, with no Reaktiv compile path. If revived, it would apply a `HandleDamage`-based per-hit-selection damage model (the init's comment block enumerates hull/turret/track/engine selections for an Abrams under `R_M136_AT`) and alter how AT hits map to vehicle hitpoints.
 
-Branch check refreshed 2026-06-14:
+Branch check refreshed 2026-06-23:
 
 | Ref | Maintained-root Reaktiv files | Init caller | Modded copies |
 | --- | --- | --- | --- |
-| docs head `86244c24` (source-unchanged from `20a19676`) | Present in source Chernarus and maintained Vanilla (`Reaktiv_Init.sqf:5`, `Reaktiv_OnHandleDamage.sqf:7`) | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
-| stable `origin/master` `cf2a6d6a` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:320-324` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
-| Miksuu `b8389e74` | Present in source Chernarus and maintained Vanilla | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| docs/source `c2d513ecb672` | Present in source Chernarus and maintained Vanilla (`Reaktiv_Init.sqf:5`, `Reaktiv_OnHandleDamage.sqf:7`) | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| current stable `origin/master@f8a76de34` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at Chernarus `Init_Common.sqf:337-341` and Vanilla `:330-334` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| B69 `origin/claude/b69@8d465fce` and B74 `origin/claude/b74-aicom-spend@b23f557f` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at Chernarus `Init_Common.sqf:337-341` and Vanilla `:330-334` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`; checked `B69..B74` Reaktiv-path deltas are empty. |
+| direct current Miksuu `master@b8389e748243` | Present in source Chernarus and maintained Vanilla (`Reaktiv_Init.sqf:5`, `Reaktiv_OnHandleDamage.sqf:7`) | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 | `perf/quick-wins` `0076040f` | Present in source Chernarus and maintained Vanilla | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 | release `a96fdda2` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 
