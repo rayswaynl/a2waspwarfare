@@ -480,6 +480,10 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 				_vehicle setVariable ["wfbe_irs_flares", _getSelectOne, true];
 				_vehicle addEventHandler ["incomingMissile", {_this spawn WFBE_CO_MOD_IRS_OnIncomingMissile}];
+
+				//--- Trello #38: per-vehicle toggle for automatic IR smoke. addAction is LOCAL (re-adds on rebuy) - acceptable for a personal toggle.
+				_vehicle addAction [localize "STR_WF_Action_IRS_Disable","Client\Action\Action_ToggleIRSmoke.sqf", [true], 6, false, true, "", "alive _target && !(_target getVariable ['wfbe_irs_disabled', false])"];
+				_vehicle addAction [localize "STR_WF_Action_IRS_Enable","Client\Action\Action_ToggleIRSmoke.sqf", [false], 6, false, true, "", "alive _target && (_target getVariable ['wfbe_irs_disabled', false])"];
 			};
 		};
 	};

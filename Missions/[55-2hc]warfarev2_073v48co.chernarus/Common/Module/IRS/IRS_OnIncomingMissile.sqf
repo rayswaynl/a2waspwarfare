@@ -21,7 +21,7 @@ if (alive _vehicle) then {
 			if (alive driver _vehicle || alive gunner _vehicle || alive commander _vehicle) then {
 				_lastFired = _vehicle getVariable "wfbe_irs_lastfired";
 				if (isNil '_lastFired') then {_lastFired = -100};
-				if ((_vehicle getVariable "wfbe_irs_flares") > 0 && (time - _lastFired > (missionNamespace getVariable "WFBE_IRS_FLARE_DELAY"))) then {
+				if ((_vehicle getVariable "wfbe_irs_flares") > 0 && (time - _lastFired > (missionNamespace getVariable "WFBE_IRS_FLARE_DELAY")) && !(_vehicle getVariable ["wfbe_irs_disabled", false])) then {
 					(_vehicle) Spawn WFBE_CO_MOD_IRS_DeploySmoke;
 					_vehicle setVariable ["wfbe_irs_lastfired", time];
 					_vehicle setVariable ["wfbe_irs_flares", (_vehicle getVariable "wfbe_irs_flares") - 1, true];
