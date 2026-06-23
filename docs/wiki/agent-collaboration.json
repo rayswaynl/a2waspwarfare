@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T02:40:48+02:00",
+  "generatedAt": "2026-06-23T02:53:37+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "attack-wave-authority-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@6d263dc21093 is source-unchanged from 1c1ea55970dc and f3e157f2 for checked Chernarus/Vanilla attack-wave request/detail/client-price paths.",
+        "docs/source still gates the action client-side at updateclient.sqf:240, sends ATTACK_WAVE_INIT from Common_AttackWaveActivate.sqf:6,8, trusts _supply/_side in Server_AttackWave.sqf:5-6,15,23,27,36,38, trusts detail payloads in AttackWave.sqf:19,23-25,40 and applies ATTACK_WAVE_PRICE_MODIFIER in buy-price consumers Client_UIFillListBuyUnits.sqf:60 and GUI_Menu_BuyUnits.sqf:90,261.",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f keep the same request/detail trust in both maintained roots; stable/B69/B74 buy-price consumers are Client_UIFillListBuyUnits.sqf:90 and GUI_Menu_BuyUnits.sqf:99,416.",
+        "git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend, 0a1ccb4d..origin/claude/b74-aicom-spend and b8530477..origin/claude/b74-aicom-spend only line-drift constants for checked attack-wave paths; B74 Chernarus constants are Init_CommonConstants.sqf:528,572-574 while maintained Vanilla stays :349,393-395.",
+        "current origin exposes no live release, attack-wave or support rescue head; Miksuu b8389e748243, perf 0076040f, historical a96fdda2, c20ce153 and 994150da keep the same inherited trust shape."
+      ],
+      "outputs": [
+        "Refreshed Attack-Wave-Authority-Playbook, Feature Status Register, Source Fix queue, dashboard/worklog/pruning ledger and attack-wave machine rows with adjacent B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future support/economy code owner should treat ATTACK_WAVE_INIT as request-only, re-derive requester/side/supply server-side, clamp modifier/duration, guard ATTACK_WAVE_DETAILS from forged direct payloads, propagate maintained Vanilla and smoke valid activation, forged _supply >= 70000, wrong-side payloads, duplicate active waves and JIP replay.",
+      "updated": "2026-06-23T02:53:37+02:00"
+    },
     {
       "lane": "upgrade-sync-current-b74-refresh-2026-06-23",
       "owner": "Codex",
