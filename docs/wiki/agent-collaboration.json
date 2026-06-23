@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T21:43:46+02:00",
+  "generatedAt": "2026-06-23T22:02:53+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b742-aicom-current-head-delta-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh B74.2 AICOM/pop-tier/capture/naval/stats branch-candidate docs from previous head origin/claude/b74.2-aicom@d472da6a to current head origin/claude/b74.2-aicom@21b62b04.",
+        "Check current stable/B74.1 origin/master@f8a76de34, B74.2 d472da6a..21b62b04 delta, B69, adjacent B74 and maintained Vanilla scope for the candidate surfaces.",
+        "Keep Feature-Status-Register as the compact risk row and route detail through existing AI commander, client UI, town/capture, naval/respawn and player stats owner pages.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Feature-Status-Register.md, AI-Commander-Autonomy-Audit.md, Client-UI-Systems-Atlas.md, Player-Stats-Branch-Audit.md and Testing-Debugging-And-Release-Workflow.md with current B74.2 head origin/claude/b74.2-aicom@21b62b04.",
+        "Recorded the exact d472da6a..21b62b04 delta: GUER stipend/tier launch and JIP join/connect recovery only; no maintained Vanilla payload or PR route.",
+        "Updated Progress Dashboard, pruning ledger, worklog and machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future B74.2 branch reviewer should preserve source Chernarus-only scope, smoke GUER stipend/tier JIP, join/connect hang recovery, AICOM pop-tier/camp/marker/naval/stats paths and decide maintained Vanilla/Takistan propagation before release wording.",
+      "updated": "2026-06-23T22:02:53+02:00"
+    },
     {
       "lane": "supply-pr1-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

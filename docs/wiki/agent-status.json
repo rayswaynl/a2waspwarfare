@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T21:43:46+02:00",
+  "generatedAt": "2026-06-23T22:02:53+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published docs-only lane: supply-pr1-current-b741-b742-refresh-2026-06-23. Refreshed Supply PR #1 killed-handler/heli/cash-run scope from stale origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 plus B74.2 origin/claude/b74.2-aicom@21b62b04. No gameplay source changed.",
-      "nextExpectedOutput": "Select the next bounded source-backed wiki/docs mirror lane."
+      "currentWork": "Latest docs-only lane published: b742-aicom-current-head-delta-refresh-2026-06-23. B74.2 AICOM branch-candidate docs now use origin/claude/b74.2-aicom@21b62b04 with exact d472da6a..21b62b04 GUER/JIP delta scope. No gameplay source changed.",
+      "nextExpectedOutput": "Continue the documentation-finisher loop from Progress Dashboard, Feature Status, Source Fix queue and pruning ledger with a fresh bounded source-backed lane."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b742-aicom-current-head-delta-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed B74.2 AICOM branch-candidate docs from stale origin/claude/b74.2-aicom@d472da6a to current origin/claude/b74.2-aicom@21b62b04. Full payload is 29 source Chernarus files / +424 / -38 over origin/master@f8a76de34, no PR route, no Missions_Vanilla payload and git diff --check clean. d472da6a..21b62b04 adds GUER stipend/tier rebroadcast and JIP join/connect failovers only; pop-tier/camp/marker/naval/stat evidence remains branch-only source Chernarus and smoke/Vanilla-scope pending. No gameplay source changed."
+    },
     {
       "lane": "supply-pr1-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
