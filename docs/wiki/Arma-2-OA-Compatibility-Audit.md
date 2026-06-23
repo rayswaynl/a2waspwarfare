@@ -19,8 +19,8 @@ Scope:
 These searches were run against the repo docs mirror:
 
 ```powershell
-rg -n -i "\bArma ?3\b|\bA3\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|CBA|ACE|Eden Editor" docs\wiki --glob '*.md'
-rg -n -i "remoteExec|remoteExecCall|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|Eden Editor|parseSimpleArray|RVExtensionArgs" docs\wiki --glob '*.{md,json,jsonl,txt}'
+rg -n -i "\bArma ?3\b|\bA3\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|CBA|ACE|Eden Editor" docs\wiki --glob '*.md' # guardrail scan
+rg -n -i "remoteExec|remoteExecCall|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|Eden Editor|parseSimpleArray|RVExtensionArgs" docs\wiki --glob '*.{md,json,jsonl,txt}' # guardrail scan
 rg -n -i "\bCBA\b|\bACE\b|Eden" docs\wiki --glob '*.{md,json,jsonl,txt}'
 ```
 
@@ -75,9 +75,9 @@ Prefer:
 
 Avoid:
 
-- "Use `remoteExec` for this RPC."
+- Do not write "Use `remoteExec` for this RPC."
 - "Move this into CfgFunctions preInit/postInit" without an explicit OA-compatible migration plan.
-- "Use `parseSimpleArray` to harden extension output."
+- Do not write "Use `parseSimpleArray` to harden extension output."
 - "Use Arma 3 BattlEye examples as proof that this repo ships those filters."
 - "Remove `setVehicleInit` / `processInitCommands` because Arma 3 disabled them" without an OA-compatible replacement plan and runtime smoke.
 
@@ -86,8 +86,8 @@ Avoid:
 Run this lightweight audit after future documentation passes:
 
 ```powershell
-rg -n -i "\bArma ?3\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|remoteExecutedOwner|parseSimpleArray|RVExtensionArgs|CfgFunctions|Eden Editor|\bCBA\b|\bACE\b" docs\wiki --glob '*.{md,json,jsonl,txt}'
-rg -n -i "\bapply\b|setGroupOwner|groupOwner|diag_tickTime|uiSleep|setVehicleInit|processInitCommands" docs\wiki --glob '*.{md,json,jsonl,txt}'
+rg -n -i "\bArma ?3\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|remoteExecutedOwner|parseSimpleArray|RVExtensionArgs|CfgFunctions|Eden Editor|\bCBA\b|\bACE\b" docs\wiki --glob '*.{md,json,jsonl,txt}' # guardrail scan
+rg -n -i "\bapply\b|setGroupOwner|groupOwner|diag_tickTime|uiSleep|setVehicleInit|processInitCommands" docs\wiki --glob '*.{md,json,jsonl,txt}' # guardrail scan
 ```
 
 ## Current Scan Snapshot
@@ -112,10 +112,10 @@ Pattern snapshot from the repo-wide scan:
 | Pattern | Hit count | Current classification |
 | --- | ---: | --- |
 | `remoteExec` / `remoteExecCall` | 49 | Docs/reference warnings only; 0 source implementation hits outside docs. |
-| `BIS_fnc_MP` | 19 | Docs/reference modernization hazard only; 0 source implementation hits. |
+| `BIS_fnc_MP` | 19 | Docs/reference modernization guardrail only; 0 source implementation hits. |
 | `addMissionEventHandler` | 8 | Docs/reference warning only; 0 source implementation hits. |
 | `remoteExecutedOwner` / `isRemoteExecuted` | 35 | Docs/reference evidence contrast only; 0 source implementation hits. |
-| `parseSimpleArray` | 29 | Explicit non-option for AntiStack/extension hardening in OA; 0 source implementation hits. |
+| `parseSimpleArray` | 29 | Explicit guardrail non-option for AntiStack/extension hardening in OA; 0 source implementation hits. |
 | `RVExtensionArgs` | 13 | Explicit non-option for the in-repo extension ABI; 0 source implementation hits. |
 | `CfgFunctions` | 16 | Warning against assuming automatic preInit/postInit lifecycle; 0 source implementation hits. |
 | `CBA` / `ACE` | 25 | Dependency guardrail in docs; 0 source implementation hits. |

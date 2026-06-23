@@ -30,7 +30,7 @@ Command support scan: [Arma 2 OA command version reference](Arma-2-OA-Command-Ve
 3. For JIP, distinguish replayed public variables from live event-handler side effects. A late joiner can receive variable values without having seen the original event sequence.
 4. For object variables with `true`, ask who wrote the value. If the client wrote authority-bearing cargo, price, side or reward data, document it as a trust boundary.
 5. For event handlers, assume repeated initialization can stack handlers unless source shows a guard, a removed handler ID or a one-shot object lifecycle.
-6. For command syntax, check the command-version reference before using modern forms such as `apply`, `params`, `setGroupOwner`, multi-index `select` or inline `private _x = ...`.
+6. For command syntax, check the command-version reference before using modern forms such as `apply`, `params`, `setGroupOwner`, multi-index `select` or inline `private _x = ...`; do not use them without OA support proof.
 7. For object scans, avoid changing class filters or scan radii without checking inheritance behavior and runtime cadence.
 8. For performance code, preserve source-backed RPT/PerformanceAudit evidence instead of replacing it with unsupported profiling assumptions.
 
