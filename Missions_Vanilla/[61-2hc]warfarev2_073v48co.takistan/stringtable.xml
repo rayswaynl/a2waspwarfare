@@ -938,11 +938,11 @@
         <Italian>Informazioni:\n\n There is no MHQ to repair around.</Italian>
       </Key>
       <Key ID="STR_WF_INFO_Repair_MHQ_Repair">
-        <English>Information:\n\n The MHQ is being fixed...</English>
-        <French>Information:\n\n Le PC est en cours de réparation...</French>
-        <German>Information:\n\n Das MHQ wird repariert...</German>
-        <Russian>Информация:\n\n КШМ ремонтируется...</Russian>
-        <Italian>Informazioni:\n\n The MHQ is being fixed...</Italian>
+        <English>Information:\n\n The MHQ is being fixed... Next repair: %1</English>
+        <French>Information:\n\n Le PC est en cours de réparation... (%1)</French>
+        <German>Information:\n\n Das MHQ wird repariert... (%1)</German>
+        <Russian>Информация:\n\n КШМ ремонтируется... (%1)</Russian>
+        <Italian>Informazioni:\n\n The MHQ is being fixed... Next repair: %1</Italian>
       </Key>
     <Key ID="STR_WF_INFO_Bulldozer_used">
         <English>Information:\n\n THE AREA IS CLEAR NOW...</English>
@@ -4589,11 +4589,11 @@
         <Italian>&lt;t color='#F8D664'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Nessun campo vicino per la distruzione.</Italian>
       </Key>
       <Key ID="STR_WF_Repair_MHQ">
-        <English>Repair (MHQ)</English>
-        <French>Réparation (PC)</French>
-        <German>Reparatur (MHQ)</German>
-        <Russian>Восстановить (КШМ)</Russian>
-        <Italian>Riparazione (MHQ)</Italian>
+        <English>Repair (MHQ) - %1</English>
+        <French>Réparation (PC) - %1</French>
+        <German>Reparatur (MHQ) - %1</German>
+        <Russian>Восстановить (КШМ) - %1</Russian>
+        <Italian>Riparazione (MHQ) - %1</Italian>
       </Key>
 	  <Key ID="STR_WF_Repair_TruckIsDeadOrTooFar">
         <English>Information:\n\n The repair truck is either too far or destroyed.</English>
