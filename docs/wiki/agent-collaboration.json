@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T09:37:20+02:00",
+  "generatedAt": "2026-06-23T09:58:05+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "hq-score-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Current stable origin/master now resolves to f8a76de34, the same commit as origin/claude/b74.1-aicom.",
+        "Checked Chernarus and maintained Vanilla Server_OnHQKilled.sqf plus Init_CommonConstants.sqf across docs/source HEAD, origin/master@f8a76de34, origin/claude/b74.1-aicom@f8a76de34, B74 b23f557f, B69 8d465fce, current Miksuu b8389e748243, perf 0076040f and historical a96fdda2.",
+        "Initial evidence shows DR-50 remains open: current stable/B74.1 still awards _points at Server_OnHQKilled.sqf:64/66 and then _score = 900 at :109/112 in both maintained roots; WFBE_C_BUILDINGS_SCORE_COEF remains 3."
+      ],
+      "outputs": [
+        "Refreshed Commander-HQ-Lifecycle-Atlas, Feature Status Register, Source Fix Propagation Queue, dashboard/worklog/pruning ledger and machine rows with current stable/B74.1 HQ-score evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future commander/HQ code owner should keep one non-teamkill HQ score award, zero friendly/teamkill HQ destruction score, propagate maintained Vanilla and smoke enemy/friendly HQ kills plus DR-20 idempotency.",
+      "updated": "2026-06-23T09:58:05+02:00"
+    },
     {
       "lane": "version-sqf-current-b74-refresh-2026-06-23",
       "owner": "Codex",

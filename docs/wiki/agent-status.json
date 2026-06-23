@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T09:37:20+02:00",
+  "generatedAt": "2026-06-23T09:50:56+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: version-sqf-current-b74-refresh-2026-06-23. Refreshed generated version.sqf boot dependency evidence across Mission Config Version Include Graph, Feature Status, Source Fix queue and release-readiness machine gate; no gameplay source changed.",
+      "currentWork": "Latest published lane: hq-score-current-b741-refresh-2026-06-23. Refreshed DR-50 HQ-kill double-score evidence after origin/master advanced to f8a76de34 / B74.1; current stable still keeps the generic HQ building score plus second HQ bounty in both maintained roots. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hq-score-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-HQ-Lifecycle-Atlas, Feature Status Register, Source Fix Propagation Queue, Progress Dashboard, pruning ledger and HQ-score machine rows with current stable/B74.1 evidence. Docs/source HEAD@c2d513ecb is source-unchanged from 9b7eb4bc for checked HQ-score files. origin/master and origin/claude/b74.1-aicom both resolve to f8a76de34 and still keep generic _points at Server_OnHQKilled.sqf:64/:66 plus second _score = 900 at :109/:112 in both maintained roots. WFBE_C_BUILDINGS_SCORE_COEF remains 3; B74.1 only line-drifts Chernarus constants among checked HQ-score files. No gameplay source changed."
+    },
     {
       "lane": "version-sqf-current-b74-refresh-2026-06-23",
       "owner": "Codex",
