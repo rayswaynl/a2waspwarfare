@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T18:28:00+02:00",
+  "generatedAt": "2026-06-23T18:32:15+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "patrols-v2-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh Patrols v2 side-upgrade evidence from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Check maintained-root Patrols v2 constants, compiles, workers, side-patrol dispatcher, marker FSM and special-handler paths across docs/source, current stable/B74.1, B74.2, B69, B74, Miksuu, perf and historical refs where useful.",
+        "Planned outputs are Towns-Camps-And-Capture-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and matching coordination/machine rows.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current stable/B74.1, B74.2 and old-ref Patrols v2 evidence.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and Patrols machine rows; mirrored touched files into docs/wiki.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Future AI/town owner should smoke Patrols upgrade levels 1/2/3, level-4 convoy/camp-sweep hooks, side slot release, HC delegation, friendly marker audience, patrol death cleanup and Buy Units/RHUD AI-cap text. On B74.2, include pop-tier cap transitions and do not claim maintained Vanilla parity until propagated or separately checked.",
+      "updated": "2026-06-23T18:32:15+02:00"
+    },
     {
       "lane": "ai-upgrade-debit-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

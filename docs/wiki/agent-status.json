@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T18:28:00+02:00",
+  "generatedAt": "2026-06-23T18:32:15+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: ai-upgrade-debit-current-b741-b742-refresh-2026-06-23. Refreshed AI commander upgrade debit/cost lookup current B74.1/B74.2 evidence and preserved old-shape docs/Miksuu/perf plus mixed side-branch caveats. No gameplay source changed.",
+      "currentWork": "Latest published lane: patrols-v2-current-b741-b742-refresh-2026-06-23. Refreshed Patrols v2 current-stable/B74.1/B74.2 evidence and preserved old-shape docs/Miksuu/perf/historical no-startup caveats plus B74.2 source-Chernarus-only pop-tier scope. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "patrols-v2-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Patrols v2 current-stable/B74.1/B74.2 evidence across Towns-Camps-And-Capture-Atlas, Feature Status, Source Fix queue, Progress Dashboard, pruning ledger and machine rows. Docs/source HEAD@665df909, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 have no Patrols v2 startup hits. Current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 keeps Patrols v2 in both maintained roots: retired town-AI launch, active server_side_patrols driver, Common_RunSidePatrol runner, friendly marker feed, server_patrols.sqf:31 && loop and side-slot release through Server_HandleSpecial. B74.2 origin/claude/b74.2-aicom@d472da6a adds source-Chernarus pop-tier cap reads and has no Missions_Vanilla Patrols payload. No gameplay source changed."
+    },
     {
       "lane": "ai-upgrade-debit-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
