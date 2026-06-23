@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T03:49:37+02:00",
+  "generatedAt": "2026-06-23T04:05:37+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "vehicle-cargo-loop-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@bd0ec67d remains source-unchanged from b2544207 for checked Chernarus/Vanilla Common_EquipVehicle.sqf and Common_EquipBackpack.sqf paths.",
+        "docs/source still carries inclusive loops at Common_EquipVehicle.sqf:27,33,39 and Common_EquipBackpack.sqf:35,41 in both maintained roots.",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f and historical a96fdda2 fix all five loops to (count(_items) - 1) in both maintained roots.",
+        "current Miksuu master@b8389e748243 and historical EASA QoL a66d46912e2a keep inclusive loops in both maintained roots; origin/perf/quick-wins@0076040f fixes Chernarus only while maintained Vanilla remains old-shape.",
+        "checked b2544207..HEAD, B69..B74, master..B74 and older-B69-to-B74 cargo path deltas are empty; current origin exposes no live release, cargo, equip, gear, EASA or QoL rescue head."
+      ],
+      "outputs": [
+        "Refreshed Vehicle-Cargo-Equip-Loop-Bounds, Gear-Loadout-And-EASA-Atlas, Feature Status Register, Source Fix queue, dashboard/worklog/pruning ledger and cargo-loop machine rows with adjacent B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future gear/cargo owner should preserve current-stable/B69/B74/release fixed loops and port the five-loop count(_items)-1 fix only to old-shape targets such as docs/source, current Miksuu, historical EASA QoL or perf Vanilla.",
+      "updated": "2026-06-23T04:05:37+02:00"
+    },
     {
       "lane": "gear-template-profile-current-b74-refresh-2026-06-23",
       "owner": "Codex",
