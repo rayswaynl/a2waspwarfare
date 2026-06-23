@@ -2124,3 +2124,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Helper note: no checked current ref contains `Server_CleanupExpiredTownDefenseAssets.sqf`; current origin exposes no live `release/*`, town, despawn or cleanup rescue head beyond the already-unsafe AI fleet branch. Older `89ae9dad` helper evidence remains historical.
 - Result: refreshed [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety#current-branch-matrix), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows with adjacent B74 evidence. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T02:00:06+02:00 - Codex - Construction SmallSite current B74 refresh
+
+- Claimed `construction-smallsite-current-b74-refresh-2026-06-23` after the SmallSite logic-list owner/status/queue rows named current B69 evidence but did not include adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`.
+- Source scope: docs/source `HEAD@7562c803af80` source-unchanged from `6b8eba5e1a8f` and `3406ffa0` for checked construction paths; current stable `origin/master@0139a3468609`; current B69 `origin/claude/b69@8d465fcede7f`; adjacent B74 `origin/claude/b74-aicom-spend@b23f557fc912`; current Miksuu `b8389e748243`; perf `origin/perf/quick-wins@0076040f8a5e`; historical release `a96fdda28087`.
+- Findings: every checked maintained root keeps SmallSite add/add at `Construction_SmallSite.sqf:70,99` and MediumSite add/remove at `Construction_MediumSite.sqf:70,114` in both source Chernarus and maintained Vanilla.
+- Branch note: checked deltas `origin/claude/b69..origin/claude/b74-aicom-spend`, `0a1ccb4d..origin/claude/b74-aicom-spend`, `b8530477..origin/claude/b74-aicom-spend` and `3406ffa0..HEAD` are empty for the checked Chernarus/Vanilla SmallSite/MediumSite paths.
+- Rescue scan: current origin exposes no live `release/*`, `feat/*construction*`, `feat/*coin*`, `feat/*small*`, `feature/*construction*`, `feature/*coin*` or `feature/*small*` rescue head.
+- Result: refreshed [Construction logic list cleanup](Construction-Logic-List-Cleanup#current-branch-matrix), [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas#smallsite--mediumsite), Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows with adjacent B74 evidence. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

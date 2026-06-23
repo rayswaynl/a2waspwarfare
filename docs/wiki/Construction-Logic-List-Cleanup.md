@@ -33,14 +33,16 @@ Wave P also checked generated/parallel mission copies: source Chernarus, maintai
 
 ## Current Branch Matrix
 
+Current B74 refresh `construction-smallsite-current-b74-refresh-2026-06-23` rechecked the maintained roots after docs/source advanced to `HEAD@7562c803` and adjacent B74 landed at `origin/claude/b74-aicom-spend@b23f557f`. Checked construction paths are unchanged from the earlier `6b8eba5e` / `3406ffa0` docs proof and unchanged across B69 and B74: every checked maintained root still has SmallSite add/add while MediumSite removes.
+
 | Root / branch | SmallSite cleanup | MediumSite cleanup | Practical meaning |
 | --- | --- | --- | --- |
-| Docs/source `HEAD@6b8eba5e` Chernarus | Source-unchanged from `3406ffa0` for checked construction paths; `Construction_SmallSite.sqf:70` appends `_nearLogic`; `:99` says remove, then appends `_nearLogic` again. | `Construction_MediumSite.sqf:70` appends `_nearLogic`; `:114` removes `_nearLogic`. | Patch-ready; source is still unpatched. |
-| Maintained Vanilla Takistan at `HEAD@6b8eba5e` | Source-unchanged from `3406ffa0`; same SmallSite add/add shape at `Construction_SmallSite.sqf:70,99`. | Same MediumSite add/remove shape at `Construction_MediumSite.sqf:70,114`. | Propagate deliberately after Chernarus source fix. |
+| Docs/source `HEAD@7562c803` Chernarus | Source-unchanged from `6b8eba5e` and `3406ffa0` for checked construction paths; `Construction_SmallSite.sqf:70` appends `_nearLogic`; `:99` says remove, then appends `_nearLogic` again. | `Construction_MediumSite.sqf:70` appends `_nearLogic`; `:114` removes `_nearLogic`. | Patch-ready; source is still unpatched. |
+| Maintained Vanilla Takistan at `HEAD@7562c803` | Source-unchanged from `6b8eba5e` and `3406ffa0`; same SmallSite add/add shape at `Construction_SmallSite.sqf:70,99`. | Same MediumSite add/remove shape at `Construction_MediumSite.sqf:70,114`. | Propagate deliberately after Chernarus source fix. |
 | Current stable `origin/master@0139a346` | Same SmallSite add/add shape in both maintained roots at `:70,99`. | Same MediumSite add/remove shape in both maintained roots at `:70,114`. | No current-stable rescue exists. |
-| Miksuu upstream `b8389e74` and `origin/perf/quick-wins@0076040f` | Same SmallSite add/add shape in both maintained roots at `:70,99`. | Same MediumSite add/remove shape in both maintained roots at `:70,114`. | No upstream/perf rescue exists. |
-| Historical release commit `a96fdda2` | Same SmallSite add/add shape in both maintained roots at `:70,99`; current origin exposes no `release/*` heads on 2026-06-22. | Same MediumSite add/remove shape in both maintained roots at `:70,114`. | Historical release evidence still carries the one-line SmallSite cleanup debt, but there is no live release head to claim. |
-| Active B69 branch `origin/claude/b69@8d465fce` | Checked construction paths are unchanged from prior B69 proof `0a1ccb4d`; same SmallSite add/add shape in both maintained roots at `:70,99`. | Same MediumSite add/remove shape in both maintained roots at `:70,114`. | Current B69 does not rescue the construction logic-list asymmetry. |
+| Miksuu upstream `b8389e748243` and `origin/perf/quick-wins@0076040f` | Same SmallSite add/add shape in both maintained roots at `:70,99`. | Same MediumSite add/remove shape in both maintained roots at `:70,114`. | No upstream/perf rescue exists. |
+| Historical release commit `a96fdda2` | Same SmallSite add/add shape in both maintained roots at `:70,99`; current origin exposes no `release/*` heads on 2026-06-23. | Same MediumSite add/remove shape in both maintained roots at `:70,114`. | Historical release evidence still carries the one-line SmallSite cleanup debt, but there is no live release head to claim. |
+| Active B69 `origin/claude/b69@8d465fce` and adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` | Checked construction paths are unchanged from prior B69 proof `0a1ccb4d`; `git diff --name-status origin/claude/b69..origin/claude/b74-aicom-spend`, `0a1ccb4d..origin/claude/b74-aicom-spend` and `b8530477..origin/claude/b74-aicom-spend` are empty for checked construction paths. Both heads keep SmallSite add/add in both maintained roots at `:70,99`. | Same MediumSite add/remove shape in both maintained roots at `:70,114`. | Current B69/B74 do not rescue the construction logic-list asymmetry. |
 
 ## Why It Matters
 
@@ -113,7 +115,7 @@ Keep probes out of the final source patch unless the owner wants permanent debug
 - MediumSite behavior is unchanged.
 - No source claims are made about visible player impact until Arma 2 OA smoke records it.
 - Docs stay routed through this page, [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
-- Branch check 2026-06-22 found no rescue branch: docs/source `HEAD@6b8eba5e` is unchanged from `3406ffa0` for checked construction paths, and current stable `origin/master@0139a346`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2` and current B69 `origin/claude/b69@8d465fce` all keep SmallSite add/add while MediumSite removes in checked maintained roots. B69 construction paths are unchanged from prior proof `0a1ccb4d`.
+- Branch check 2026-06-23 found no rescue branch: docs/source `HEAD@7562c803` is unchanged from `6b8eba5e` and `3406ffa0` for checked construction paths, and current stable `origin/master@0139a346`, Miksuu upstream `b8389e748243`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, current B69 `origin/claude/b69@8d465fce` and adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` all keep SmallSite add/add while MediumSite removes in checked maintained roots. B69/B74 construction paths are unchanged from prior proof `0a1ccb4d`.
 
 ## Continue Reading
 

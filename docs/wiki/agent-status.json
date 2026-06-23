@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T01:43:04+02:00",
+  "generatedAt": "2026-06-23T02:00:06+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Town AI despawn current B74 refresh. Docs/source HEAD@3a9ba92e remains old-shape for checked server_town_ai.sqf paths; current stable origin/master@0139a346, Miksuu b8389e748243, perf/quick-wins@0076040f, historical a96fdda2 and live AI fleet cc5090bed4ad still delete tracked wfbe_active_vehicles without a player crew check in both maintained roots. Current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f are identical for checked paths: Chernarus has the candidate crew guard at :325, maintained Vanilla remains unsafe at :319, and no checked current ref contains Server_CleanupExpiredTownDefenseAssets.sqf. No gameplay source changed.",
+      "currentWork": "Published docs-only Construction SmallSite current B74 refresh. Docs/source HEAD@7562c803 is source-unchanged from 6b8eba5e/3406ffa0 for checked construction paths. Current stable origin/master@0139a346, Miksuu b8389e748243, perf/quick-wins@0076040f, historical a96fdda2, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f all keep SmallSite add/add at Construction_SmallSite.sqf:70,99 while MediumSite removes at Construction_MediumSite.sqf:70,114 in both maintained roots. Checked B69..B74 and older-B69-to-B74 construction deltas are empty; no gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress-Dashboard.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and the pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "construction-smallsite-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Construction-Logic-List-Cleanup, Construction-And-CoIn-Systems-Atlas, Feature Status, Source Fix queue and machine rows with adjacent B74 evidence. Docs/source HEAD@7562c803 is unchanged from 6b8eba5e/3406ffa0 for checked construction paths. Current stable 0139a346, Miksuu b8389e748243, perf 0076040f, historical a96fdda2, B69 8d465fce and B74 b23f557f all keep SmallSite add/add at Construction_SmallSite.sqf:70,99 and MediumSite add/remove at Construction_MediumSite.sqf:70,114 in both maintained roots. Checked B69..B74 and older-B69-to-B74 construction deltas are empty; no gameplay source changed."
+    },
     {
       "lane": "town-ai-despawn-current-b74-refresh-2026-06-23",
       "owner": "Codex",
