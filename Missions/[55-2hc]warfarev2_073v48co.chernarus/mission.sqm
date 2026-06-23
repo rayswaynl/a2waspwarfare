@@ -35,7 +35,74 @@ class Mission
 	};
 	class Groups
 	{
-		items=134;
+		items=137;
+		class Item134
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={14700,0,9400};
+					azimut=0;
+					special="NONE";
+					id=9001;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Khe Sanh Alpha";
+					init="nullReturn = [this,""Khe Sanh Alpha"",""+"",10,50,400,[""LargeTown1""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+				};
+			};
+			id=9002;
+		};
+		class Item135
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={10000,0,700};
+					azimut=0;
+					special="NONE";
+					id=9003;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Khe Sanh Bravo";
+					init="nullReturn = [this,""Khe Sanh Bravo"",""+"",10,50,400,[""LargeTown1""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+				};
+			};
+			id=9004;
+		};
+		class Item136
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={14700,0,2000};
+					azimut=0;
+					special="NONE";
+					id=9005;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Khe Sanh Charlie";
+					init="nullReturn = [this,""Khe Sanh Charlie"",""+"",10,50,400,[""LargeTown1""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+				};
+			};
+			id=9006;
+		};
+
 		class Item0
 		{
 			side="LOGIC";
@@ -3262,7 +3329,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WF_Logic";
-					init="this setVariable [""totalTowns"",43];this enableSimulation false;   this setVariable [""Towns_RemovedXSmall"",[""Zelenogorsk"",""Dolina"",""StarySobor"",""Myshkino"",""Chernogorsk"",""Dubrovka"",""Pogorevka"", ""Staroye"",""Khelm"",""Kamyshovo"",""Pavlovo"",""Nadezhdino"",""Mogilevka"",""Vyshnoye"",""Berezino"",""Krasnostav"",""Gorka"",""Elektrozavodsk"",""Msta"",""Komarovo"",""Petrovka"",""Shakhovka"",  ""Prigorodki"",""Olsha"",""Orlovets"",""Solnichniy"",""Tulga"",""Kozlovka"",""Polana"",""Kamenka"",""Gvozdno"",""NovySobor"",""Pusta"",""Guglovo""]];  this setVariable [""Towns_RemovedSmall"",[""Zelenogorsk"",""Dolina"",""StarySobor"",""Lopatino"",""Myshkino"",""Chernogorsk"",""Pogorevka"",  ""Kabanino"",""Staroye"",""Kamyshovo"",""Vybor"",""Pavlovo"",""Nadezhdino"",""Grishino"",""Mogilevka"",""Vyshnoye"",""Elektrozavodsk"",""Msta"",  ""Komarovo"",""Petrovka"",""Shakhovka"",""Prigorodki"",""Solnichniy"",""Tulga"",""Kozlovka"",""Pustoshka"",""Kamenka"",""NovySobor"",""Pusta"",""Guglovo""]];        this setVariable [""Towns_RemovedMedium"",[""Dolina"",""Dubrovka"",""Staroye"",""Elektrozavodsk"",  ""Berezino"",""Krasnostav"",""Khelm"",""Kamyshovo"",""Vyshnoye"",""Gorka"",""Msta"",  ""Petrovka"",""Shakhovka"",""Prigorodki"",""Olsha"",""Orlovets"",""Solnichniy"",""Tulga"",""Polana"",""Gvozdno"",""NovySobor"",""Pusta"",""Guglovo""]];        this setVariable [""Towns_RemovedLarge"",[""Msta"",""Prigorodki"",""Orlovets"",""Kozlovka"",""NovySobor"",""Kabanino"",""Vyshnoye"",""Pustoshka"",""Dolina"",""Shakhovka""]];this setVariable [""Towns_RemovedBigTowns"",[""Elektrozavodsk"",""Berezino"",""Krasnostav"",""Chernogorsk"",""Zelenogorsk"",""StarySobor"",""Lopatino"",""Mogilevka"",""Gorka"",""Staroye"",""Solnichniy"",""Grishino""]];     this setVariable [""Towns_RemovedCentralLine"",[""NovySobor"",""Kabanino"",""Dolina"",""Shakhovka"",""Msta"",""StarySobor"",""Lopatino"",""Tulga"",""Vybor"",""Guglovo"",""Komarovo"",""Pavlovo"",""Kamenka"",""Olsa"",""Myshkino""]];  this setVariable [""Towns_RemovedSmallTowns"",[""Pustoshka"",""Pavlovo"",""Prigorodki"",""Kamyshovo"",""Kabanino"",""Vybor"",""Vishnoye"",""Polana"",""Olsha"",""Dolina"",""Kamyshovo"",""Msta"",""Petrovka"",""Shakhovka"",""Tulga"",""Kamenka"",""NovySobor""]];  nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
+					init="this setVariable [""totalTowns"",46];this enableSimulation false;   this setVariable [""Towns_RemovedXSmall"",[""Zelenogorsk"",""Dolina"",""StarySobor"",""Myshkino"",""Chernogorsk"",""Dubrovka"",""Pogorevka"", ""Staroye"",""Khelm"",""Kamyshovo"",""Pavlovo"",""Nadezhdino"",""Mogilevka"",""Vyshnoye"",""Berezino"",""Krasnostav"",""Gorka"",""Elektrozavodsk"",""Msta"",""Komarovo"",""Petrovka"",""Shakhovka"",  ""Prigorodki"",""Olsha"",""Orlovets"",""Solnichniy"",""Tulga"",""Kozlovka"",""Polana"",""Kamenka"",""Gvozdno"",""NovySobor"",""Pusta"",""Guglovo""]];  this setVariable [""Towns_RemovedSmall"",[""Zelenogorsk"",""Dolina"",""StarySobor"",""Lopatino"",""Myshkino"",""Chernogorsk"",""Pogorevka"",  ""Kabanino"",""Staroye"",""Kamyshovo"",""Vybor"",""Pavlovo"",""Nadezhdino"",""Grishino"",""Mogilevka"",""Vyshnoye"",""Elektrozavodsk"",""Msta"",  ""Komarovo"",""Petrovka"",""Shakhovka"",""Prigorodki"",""Solnichniy"",""Tulga"",""Kozlovka"",""Pustoshka"",""Kamenka"",""NovySobor"",""Pusta"",""Guglovo""]];        this setVariable [""Towns_RemovedMedium"",[""Dolina"",""Dubrovka"",""Staroye"",""Elektrozavodsk"",  ""Berezino"",""Krasnostav"",""Khelm"",""Kamyshovo"",""Vyshnoye"",""Gorka"",""Msta"",  ""Petrovka"",""Shakhovka"",""Prigorodki"",""Olsha"",""Orlovets"",""Solnichniy"",""Tulga"",""Polana"",""Gvozdno"",""NovySobor"",""Pusta"",""Guglovo""]];        this setVariable [""Towns_RemovedLarge"",[""Msta"",""Prigorodki"",""Orlovets"",""Kozlovka"",""NovySobor"",""Kabanino"",""Vyshnoye"",""Pustoshka"",""Dolina"",""Shakhovka""]];this setVariable [""Towns_RemovedBigTowns"",[""Elektrozavodsk"",""Berezino"",""Krasnostav"",""Chernogorsk"",""Zelenogorsk"",""StarySobor"",""Lopatino"",""Mogilevka"",""Gorka"",""Staroye"",""Solnichniy"",""Grishino""]];     this setVariable [""Towns_RemovedCentralLine"",[""NovySobor"",""Kabanino"",""Dolina"",""Shakhovka"",""Msta"",""StarySobor"",""Lopatino"",""Tulga"",""Vybor"",""Guglovo"",""Komarovo"",""Pavlovo"",""Kamenka"",""Olsa"",""Myshkino""]];  this setVariable [""Towns_RemovedSmallTowns"",[""Pustoshka"",""Pavlovo"",""Prigorodki"",""Kamyshovo"",""Kabanino"",""Vybor"",""Vishnoye"",""Polana"",""Olsha"",""Dolina"",""Kamyshovo"",""Msta"",""Petrovka"",""Shakhovka"",""Tulga"",""Kamenka"",""NovySobor""]];  nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
 				};
 			};
 		};

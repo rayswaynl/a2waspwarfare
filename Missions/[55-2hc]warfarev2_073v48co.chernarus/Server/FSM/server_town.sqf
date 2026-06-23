@@ -278,6 +278,44 @@ while {!WFBE_GameOver} do {
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
 			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
 
+			//--- NAVAL HVT: post-capture actions for offshore assets (feat/naval-hvt-objectives).
+			//--- Guard: only fires if the feature is ON and this location is tagged as a naval HVT.
+			if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1 && {_location getVariable ["wfbe_is_naval_hvt", false]}) then {
+				private ["_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar","_navalMkr"];
+				_hvtName    = _location getVariable ["name", "Naval HVT"];
+				_hvtNewSide = _newSID Call WFBE_CO_FNC_GetSideFromID;
+
+				//--- Announce capture to all players (no inbound warning; just the flip notification).
+				[nil, "HandleSpecial", ["naval-hvt-captured", _location, _newSID, _hvtName]] Call WFBE_CO_FNC_SendToClients;
+				["INFORMATION", Format ["server_town.sqf: Naval HVT [%1] captured by sideID %2.", _hvtName, _newSID]] Call WFBE_CO_FNC_LogContent;
+
+				//--- Recolour the naval HVT map marker to the new owner.
+				_navalMkr = _location getVariable ["wfbe_naval_marker", ""];
+				if (_navalMkr != "") then {
+					_navalMkr setMarkerColor (missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _hvtNewSide], "ColorGreen"]);
+				};
+
+				//--- If this is a carrier HVT (LHD), update the airfield hangar for the new owner
+				//--- so the aircraft-sell block on next capture works correctly.
+				if (_location getVariable ["wfbe_is_carrier_hvt", false]) then {
+					_airLogicRef = _location getVariable ["wfbe_airfield_logic_ref", objNull];
+					if !(isNull _airLogicRef) then {
+						//--- Delete previous owner's hangar.
+						_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
+						if !(isNull _oldHangar) then { deleteVehicle _oldHangar };
+
+						//--- Spawn new hangar for the new owner (same pattern as ~line 492 airfield block).
+						_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPosASL _airLogicRef);
+						_newHangar setPosASL (getPosASL _airLogicRef);
+						_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+						_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
+						_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
+						_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
+						["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+			};
+
 			//--- Task 32: old defenders linger for WFBE_C_TOWNS_DEFENDER_LINGER seconds before cleanup.
 			//--- Fire-time guard: only clean up if the town has NOT flipped back to the old side.
 			[_location, _side, _newSID] spawn {

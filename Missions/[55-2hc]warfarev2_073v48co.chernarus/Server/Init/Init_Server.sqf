@@ -49,6 +49,12 @@ KAT_Paratroopers = Compile preprocessFile "Server\Support\Support_Paratroopers.s
 KAT_ParaVehicles = Compile preprocessFile "Server\Support\Support_ParaVehicles.sqf";
 KAT_UAV = Compile preprocessFile "Server\Support\Support_UAV.sqf";
 
+//--- NAVAL HVT: SCUD strike handler (feat/naval-hvt-objectives). Feature-flagged behind WFBE_C_NAVAL_HVT.
+if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
+	KAT_ScudStrike = Compile preprocessFile "Server\Support\Support_ScudStrike.sqf";
+	["INITIALIZATION", "Init_Server.sqf: KAT_ScudStrike compiled (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- New Fnc.
 WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";
@@ -824,6 +830,13 @@ serverInitFull = true;
 //--- Task-35 so the sealed ring never traps them, and the allowDamage-false transit
 //--- protection in Init_Client.sqf is left intact as the first layer.
 [] execVM "Server\Init\Init_DeadspawnWall.sqf";
+
+//--- NAVAL HVT: spawn offshore assets + register towns + start CAP loops (feat/naval-hvt-objectives).
+//--- Runs AFTER townInit (it calls waitUntil {townInit} internally), so no ordering conflict.
+if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
+	[] execVM "Server\Init\Init_NavalHVT.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- AIRFIELD ON-LAND PROBE (claude-gaming 2026-06-14): DIAGNOSTIC ONLY.
 //--- One-shot server-only grid scan that logs surfaceIsWater + nearRoads for a
