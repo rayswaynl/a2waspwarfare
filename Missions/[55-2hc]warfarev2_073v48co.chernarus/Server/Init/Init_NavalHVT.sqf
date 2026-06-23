@@ -19,8 +19,10 @@
 //---   • LHD multi-part hull relative offsets are BEST-GUESS linear fore-to-aft — must be
 //---     verified and adjusted in-engine.
 //---   • Candidate coordinates must be confirmed with surfaceIsWater in-engine.
-//---   • Air-sell integration requires WFBE_GUERAIRPORTUNITS vs WFBE_GUEAIRPORTUNITS typo fix
-//---     (noted in SPEC; not fixed here to stay in scope).
+//---   • B74.2: VERIFIED no var-name typo — the GUE/resistance roster setter (Units_CO_GUE.sqf:141,
+//---     setVariable [Format ["WFBE_%1AIRPORTUNITS", _side]]) resolves _side="GUER" (Root_GUE/TKGUE/PMC
+//---     all set _side="GUER", never "GUE"), so it writes WFBE_GUERAIRPORTUNITS — already matching the
+//---     reader in GUI_Menu_BuyUnits.sqf:341. No WFBE_GUEAIRPORTUNITS var exists. Nothing to fix.
 
 if (!isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) != 1) exitWith {
@@ -285,7 +287,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 //--- B74.2: CARRIER AIR-SHOP. Make each captured carrier act like an airfield air-buy point by
 //--- reusing the existing airfield-hangar mechanism (no new shop UI):
 //---   • spawn the same WFBE_C_HANGAR hangar on the deck, flagged wfbe_is_airfield_hangar so
-//---     GUI_Menu_BuyUnits shows the airfield air-roster (WFBE_AIRFIELD_UNITS / WFBE_GUERAIRPORTUNITS);
+//---     GUI_Menu_BuyUnits shows the airfield air-roster (WFBE_AIRFIELD_UNITS / WFBE_GUERAIRPORTUNITS —
+//---     B74.2: var name verified correct, GUE roster setter uses _side="GUER", no typo);
 //---   • set wfbe_hangar + wfbe_airfield_side on the naval logic so Client_GetClosestAirport (extended
 //---     in B74.2 to scan naval-HVT depot logics) returns the deck as an "airport";
 //---   • set wfbe_is_carrier_hvt + wfbe_airfield_logic_ref + wfbe_airfield_hangar_obj so the EXISTING
