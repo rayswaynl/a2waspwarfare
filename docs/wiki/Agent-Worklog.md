@@ -2290,3 +2290,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch note: checked `4bd37b98..HEAD`, `d30d23466..HEAD`, `origin/master..origin/claude/b69`, `origin/claude/b69..origin/claude/b74-aicom-spend` and `origin/master..origin/claude/b74-aicom-spend` have no `FileManager.cs` deltas. Current origin exposes no live `release/*` head; direct current Miksuu `master` was rechecked as `b8389e7482438edd00f420c5bb795ac0a642971f`.
 - Result: refreshed [Tools and build workflow](Tools-And-Build-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue#rule), [Testing workflow](Testing-Debugging-And-Release-Workflow), dashboard, pruning ledger and `agent-release-readiness.json` with branch-sensitive root-discovery evidence. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T09:37:20+02:00 - Codex - Generated version.sqf current B74 refresh
+
+- Claimed `version-sqf-current-b74-refresh-2026-06-23` after the generated `version.sqf` Feature Status row still cited a 2026-06-14 docs checkout and stable `cf2a6d6a` evidence, while the Source Fix queue already treated generated `version.sqf` as a release gate.
+- Source scope: docs/source `HEAD@ded20d3d`, current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, direct current Miksuu `master@b8389e748243` and `origin/perf/quick-wins@0076040f`.
+- Findings: no checked ref tracks live Chernarus or maintained Vanilla `version.sqf`, and this fresh docs mirror checkout has neither file present. Docs/source, Miksuu and perf include `version.sqf` from `description.ext:39`; stable/B69/B74 include it from `:38`; all checked roots include it again from `initJIPCompatible.sqf:4` and consume `WF_RESPAWNDELAY`, `WF_MISSIONNAME` and `WF_MAXPLAYERS` in `Rsc/Header.hpp:5,9,21`.
+- Branch note: B69/B74 add tracked `Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template` and unignore it in `.gitignore:2-3`, but live source Chernarus `version.sqf` remains ignored and maintained Vanilla Takistan has no template. Treat the template as a reference only, not a generated-input substitute.
+- Result: refreshed [Mission config/version graph](Mission-Config-Version-Include-Graph), Feature Status, Source Fix queue, dashboard, pruning ledger, release-readiness machine gate and version/generated machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

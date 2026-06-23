@@ -197,26 +197,30 @@
   "versionSqfGeneratedInput": {
     "status": "required-generated-ignored-input",
     "trackedByGit": false,
-    "currentCheckoutEvidence": "git status --ignored --short reports !! for source Chernarus and maintained Vanilla Takistan version.sqf files.",
+    "currentCheckoutEvidence": "Fresh docs mirror checkout for version-sqf-current-b74-refresh-2026-06-23 had no present source Chernarus or maintained Vanilla Takistan version.sqf files; generated local files remain gitignored when present.",
+    "currentBranchEvidence": "Checked docs/source HEAD@ded20d3d, current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f do not track live Chernarus/Vanilla version.sqf files.",
+    "templateCaveat": "B69/B74 track Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template as a Chernarus reference, but that template is not the live generated version.sqf input and does not cover maintained Vanilla Takistan.",
     "whyItMatters": "description.ext and initJIPCompatible.sqf include version.sqf before mission boot continues; a fresh checkout, clean pack or generated target without that file can fail before later SQF systems initialize.",
     "releaseGate": "Before pack, smoke-test or release wording, verify every claimed mission target root has a generated version.sqf matching its terrain profile and player count.",
     "sourceRefs": [
-      ".gitignore:1-3",
-      ".gitignore:23",
-      "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext:39",
+      ".gitignore:1,23 on docs/source, current stable, current Miksuu and perf",
+      ".gitignore:1-5,25 on B69/B74; :2-3 unignore the Chernarus template only",
+      "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext:39 on docs/source, Miksuu and perf; :38 on current stable/B69/B74",
       "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf:4",
-      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102",
-      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:168-182",
-      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:346-364",
+      "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/description.ext:39 on docs/source, Miksuu and perf; :38 on current stable/B69/B74",
+      "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/initJIPCompatible.sqf:4",
+      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102,346-367 on docs/source, Miksuu and perf",
+      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:115,359-380 on current stable/B69/B74",
       "Tools/LoadoutManager/FileManagement/FileManager.cs:89-101",
-      "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Header.hpp:5,9,21"
+      "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Header.hpp:5,9,21",
+      "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Header.hpp:5,9,21"
     ],
     "targetRoots": [
       {
         "path": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
         "role": "authoritative-source",
         "expectedGeneratedFile": "version.sqf",
-        "currentLocalStatus": "ignored-present",
+        "currentLocalStatus": "fresh-checkout-absent; generated file is ignored when present",
         "requiredDefines": [
           "WF_MAXPLAYERS 55",
           "WF_MISSIONNAME \"[55] Warfare V48 Chernarus\""
@@ -226,7 +230,7 @@
         "path": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
         "role": "maintained-generated-target",
         "expectedGeneratedFile": "version.sqf",
-        "currentLocalStatus": "ignored-present",
+        "currentLocalStatus": "fresh-checkout-absent; generated file is ignored when present",
         "requiredDefines": [
           "WF_MAXPLAYERS 61",
           "WF_MISSIONNAME \"[61] Warfare V48 Takistan\""

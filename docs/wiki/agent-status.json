@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T06:10:41+02:00",
+  "generatedAt": "2026-06-23T09:37:20+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: loadoutmanager-root-current-b74-refresh-2026-06-23. Refreshed branch-sensitive LoadoutManager root-discovery guidance across tooling/queue/testing docs and release-readiness machine gate; no gameplay source changed.",
+      "currentWork": "Latest published lane: version-sqf-current-b74-refresh-2026-06-23. Refreshed generated version.sqf boot dependency evidence across Mission Config Version Include Graph, Feature Status, Source Fix queue and release-readiness machine gate; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "version-sqf-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Mission-Config-Version-Include-Graph, Feature Status Register, Source Fix Propagation Queue, Progress Dashboard, pruning ledger and agent-release-readiness versionSqfGeneratedInput with current version.sqf evidence. Fresh docs mirror checkout HEAD@ded20d3d has no present source Chernarus or maintained Vanilla Takistan version.sqf. Checked docs/source HEAD@ded20d3d, current stable origin/master@0139a346, B69 8d465fce, B74 b23f557f, current Miksuu b8389e748243 and perf 0076040f do not track live Chernarus/Vanilla version.sqf files. B69/B74 track only a Chernarus version.sqf.template reference, not the live generated input and not a Vanilla gate closure. No gameplay source changed."
+    },
     {
       "lane": "loadoutmanager-root-current-b74-refresh-2026-06-23",
       "owner": "Codex",
