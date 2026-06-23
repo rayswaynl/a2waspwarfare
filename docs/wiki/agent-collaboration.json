@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T20:48:34+02:00",
+  "generatedAt": "2026-06-23T21:11:01+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "camp-count-helper-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh zero-camp helper fallback rows from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom scope.",
+        "Check maintained-root Common_GetTotalCamps.sqf, Common_GetTotalCampsOnSide.sqf and key capture/respawn/depot-buy consumers across docs/source, current stable/B74.1, B74.2, B69, adjacent B74, current Miksuu, perf and historical a96fdda2.",
+        "Keep Towns-Camps-And-Capture-Atlas as canonical and update Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 camp-count helper fallback evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future town/camp or respawn owner should decide real-count versus safe-denominator semantics, split helpers or add caller-specific zero-camp guards, propagate maintained roots and smoke capture mode 2, threeway defender respawn and depot infantry buys on zero, partial and all-camp towns. Do not treat B74.2 source-Chernarus pop-tier/naval/stat caller drift as helper closure.",
+      "updated": "2026-06-23T21:11:01+02:00"
+    },
     {
       "lane": "wasp-marker-wait-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
