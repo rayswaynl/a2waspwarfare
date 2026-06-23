@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T04:21:11+02:00",
+  "generatedAt": "2026-06-23T04:34:53+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: buy-menu-price-key-current-b74-refresh-2026-06-23. Refreshed buy-menu price/key owner/status/queue/machine rows with adjacent B74 evidence; no gameplay source changed.",
+      "currentWork": "Latest published lane: stale-upgrade-dialog-current-b74-refresh-2026-06-23. Refreshed stale RscMenu_Upgrade owner/status/dead-code rows with current stable/B69/B74 evidence; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "stale-upgrade-dialog-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed UI-Resource-Parity-Cleanup, Client UI Systems Atlas, Feature Status, Dead/stale code and machine rows with current stable/B69/B74 stale-upgrade evidence. Docs/source HEAD@0fdd5602 is unchanged from d4cfef80 for checked upgrade dialog/controller paths and still carries RscMenu_Upgrade at Rsc/Dialogs.hpp:2425 with missing GUI_Menu_Upgrade.sqf onLoad at :2428 in both maintained roots. Current Miksuu b8389e748243 and perf 0076040f keep the stale class at :2435/:2438. Current stable 0139a346, B69 8d465fce, B74 b23f557f, historical a96fdda2 and historical b061c905 have no checked maintained-root RscMenu_Upgrade or GUI_Menu_Upgrade.sqf hits and keep only live WFBE_UpgradeMenu at Rsc/Dialogs.hpp:4-7. Checked stable-to-B74 and B69-to-B74 dialog/controller deltas are empty; no gameplay source changed."
+    },
     {
       "lane": "buy-menu-price-key-current-b74-refresh-2026-06-23",
       "owner": "Codex",
