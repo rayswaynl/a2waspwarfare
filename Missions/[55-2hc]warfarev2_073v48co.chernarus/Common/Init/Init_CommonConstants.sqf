@@ -911,8 +911,13 @@ missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 	if (isNil 'WFBE_C_GROUPAUDIT_EVERY') then {WFBE_C_GROUPAUDIT_EVERY = 5}; //--- D2 server-FPS (claude-gaming 2026-06-14): run the EXPENSIVE per-faction group-classification AUDIT DUMP (server_groupsGC.sqf; auditMs ~2100ms on 276 groups) only every Nth 5-min audit window. The husk-reap GC + zombie-reap + cap-warning still run EVERY 60s cycle (they live outside the audit branch) - this throttles only diagnostic telemetry. 5 = full dump ~every 25 min instead of every 5 min. 1 = dump every window (old behavior); values < 1 are clamped to 1. Pure diagnostic throttle, no gameplay effect; instant rollback by setting to 1.
 };
 
-// --- Player stats (feature-flagged; OFF by default) ---
-WFBE_C_STATS_ENABLED = false;
+// --- Player stats (feature-flagged) ---
+//--- B74.1 (Ray 2026-06-23 "get the real leaderboard in"): ENABLED. Unlocks the WASPSTAT|v1 RPT
+//--- emit (StatsFlush.sqf, batched every 60s) that feeds the miksuu.com leaderboard ingest pipeline
+//--- (box poster -> /api/stats -> ingame_stats -> /leaderboard). Currently WIRED fields: kills
+//--- infantry/vehicle/air/static (RequestOnUnitKilled), pvp_kills, playtime, side. Captures/supply/
+//--- builds/deaths/factory/hq RecordStat call sites are NOT yet wired (emit 0) - fast-follow b74.2.
+WFBE_C_STATS_ENABLED = true;
 WFBE_C_STATS_FLUSH_INTERVAL = 60;
 WFBE_STAT_KILLS_INFANTRY   = 0;
 WFBE_STAT_KILLS_VEHICLE    = 1;
