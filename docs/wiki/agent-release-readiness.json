@@ -650,6 +650,45 @@
       }
     },
     {
+      "id": "trello-artillery-ux-branch",
+      "branch": "origin/claude/trello-artillery-ux",
+      "head": "c4459d4312ef",
+      "base": "origin/master@f8a76de34",
+      "state": "branch-only-artillery-ux-marker-cleanup-candidate-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-artillery-range-guncount-marker-cleanup",
+      "canonicalDocs": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md#trello-artillery-ui-branch-intel",
+        "Client-UI-Systems-Atlas.md#current-branch-scope",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-artillery-ux@c4459d4312ef; merge-base with origin/master is current stable f8a76de34",
+        "f8a76de34..c4459d4312ef: 8 maintained-root files +100/-20; git diff --check clean",
+        "Branch Chernarus/Vanilla GUI_Menu_Tactical.sqf:42-57 appends effective min/max meter range text to each artillery list row",
+        "Branch Chernarus/Vanilla Client_RequestFireMission.sqf:31-38 replaces caller-local barrage marker deletion with RequestSpecial ArtyMarkerCleanup",
+        "Branch Chernarus/Vanilla Client_RequestFireMission.sqf:58-60 passes _gunCount as %3 in STR_WF_INFO_Arty_called_message",
+        "Branch Server_HandleSpecial.sqf Chernarus :144-160 / Vanilla :134-150 adds delayed server deleteMarker cleanup",
+        "Branch stringtable.xml Chernarus :9304-9311 / Vanilla :9304-9310 updates the artillery called message with the gun-count placeholder",
+        "origin/master@f8a76de34 lists raw artillery display names at GUI_Menu_Tactical.sqf:42, deletes barrage markers through Client_Delete_Marker.sqf:24 from caller-local Client_RequestFireMission.sqf:32-33, formats the team warning with two args at Client_RequestFireMission.sqf:53 and has no ArtyMarkerCleanup hits"
+      ],
+      "ownerDecision": "Decide whether to promote PR #79 artillery UX and marker cleanup. Keep fire-mission authority and wider RequestSpecial hardening separate; review the new cleanup tag's marker-name/forged-payload scope before merge.",
+      "promotionGate": "Smoke Tactical per-type range text, one-gun and multi-gun artillery messages, caller disconnect/leave marker cleanup, JIP marker visibility, malformed/forged ArtyMarkerCleanup rejection or acceptable scoping, existing artillery cooldown/ammo loading and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "artillery-smoke",
+          "dedicated-smoke",
+          "jip-smoke",
+          "request-special-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
       "id": "upstream-hq-repair-price-branch",
       "branch": "origin/claude/upstream-hq-repair-price",
       "head": "440be3da0bda",

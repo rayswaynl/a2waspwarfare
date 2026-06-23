@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T13:48:21+02:00",
+  "generatedAt": "2026-06-23T14:02:46+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "trello-artillery-ux-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/trello-artillery-ux@c4459d4312ef / draft PR #79 merge-bases directly on current stable origin/master@f8a76de34.",
+        "Payload versus current stable is eight maintained-root files / +100 / -20 across source Chernarus plus maintained Vanilla Client_RequestFireMission.sqf, GUI_Menu_Tactical.sqf, Server_HandleSpecial.sqf and stringtable.xml; git diff --check is clean.",
+        "Branch GUI_Menu_Tactical.sqf:42-57 appends effective min/max range text to artillery list rows in both maintained roots.",
+        "Branch Client_RequestFireMission.sqf:31-38 routes barrage marker cleanup through RequestSpecial ArtyMarkerCleanup, while :58-60 passes firing gun count as %3 in the team warning.",
+        "Branch Server_HandleSpecial.sqf adds delayed server deleteMarker cleanup at Chernarus :144-160 / Vanilla :134-150; stringtable.xml updates STR_WF_INFO_Arty_called_message at Chernarus :9304-9311 / Vanilla :9304-9310.",
+        "Current stable lists raw artillery names, deletes these markers locally from the caller and has no ArtyMarkerCleanup hits. No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md, Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only PR #79 evidence and smoke gates.",
+        "Refreshed Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future reviewer should keep PR #79 branch-only until Arma 2 OA smoke covers per-artillery-type range display, gun-count fire-message text, marker cleanup when caller disconnects or leaves, JIP marker state, current artillery marker/cooldown behavior, maintained Vanilla parity and marker-name/forged-payload scope for the new ArtyMarkerCleanup RequestSpecial tag.",
+      "updated": "2026-06-23T14:02:46+02:00"
+    },
     {
       "lane": "trello-map-radius-circles-branch-intel-2026-06-23",
       "owner": "Codex",
