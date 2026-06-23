@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T17:57:00+02:00",
+  "generatedAt": "2026-06-23T18:10:45+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "service-easa-current-b741-b742-branch-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh service menu affordability and EASA exact-funds/stale-context docs from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Check maintained-root Client/GUI/GUI_Menu_Service.sqf, Client/GUI/GUI_Menu_EASA.sqf and service support scripts across docs/source, current stable/B74.1, B74.2, B69, B74, Miksuu, perf, historical a96fdda2 / a66d4691 and live origin/claude/trello-service-ammo-count / origin/claude/trello-easa-weapon-categories.",
+        "Route live Trello service/EASA branches as branch-only UI/evidence candidates unless source checks prove affordability or authority closure.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Service-Menu-Affordability-Guards.md and Gear-Loadout-And-EASA-Atlas.md with current stable/B74.1, B74.2 and live Trello branch-only service/EASA evidence.",
+        "Updated Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and service/EASA machine rows; mirrored touched files into docs/wiki.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Future service/EASA owner should patch action-time service guards and maintained Vanilla exact-funds deliberately, smoke exact-price, under-price, repair/heal funds, stale/unsupported vehicle, service ammo UI and EASA category tags, and keep Trello UI/wiring candidates separate from server authority closure.",
+      "updated": "2026-06-23T18:03:26+02:00"
+    },
     {
       "lane": "resource-income-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
