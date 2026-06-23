@@ -76,7 +76,7 @@ Use this page first, then jump into the canonical pages and machine files it nam
 - Put engine compatibility classifications in [`agent-compatibility-audit.json`](agent-compatibility-audit.json) when new Arma 3-era terms are intentionally added to docs.
 - If you discover a stale claim, correct the prose page and the machine file that would mislead future agents.
 - If you patch source Chernarus but cannot run LoadoutManager, write `source fix; propagation pending`; if LoadoutManager runs with inspected generated diffs but no Arma smoke, write `propagated; smoke pending`.
-- Before handoff, run `docs/validate-wiki.ps1` from the repo root when you changed docs or machine files.
+- Before handoff, run `docs/validate-wiki.ps1` from a repo checkout where the script exists when you changed docs or machine files. If the active gameplay branch has no `docs/wiki` mirror or validator, record that limitation, validate the wiki checkout with JSON/JSONL parsing, internal-link/page-existence checks and diff inspection, and do not claim repo-mirror parity.
 
 ## Continue Reading
 

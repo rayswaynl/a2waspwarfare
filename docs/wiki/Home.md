@@ -27,7 +27,7 @@ This page is the front door. It should help you choose the right owner page quic
 | Treat `Modded_Missions` as divergent/stubbed unless tooling proves otherwise. | Current generation/package paths do not actively maintain those folders. |
 | Use Arma 2 OA 1.64 scripting references. | Arma 3 assumptions are a common source of bad fixes. |
 | Check [Progress dashboard](Progress-Dashboard) before claiming work. | It prevents duplicate Codex/Claude/agent lanes. |
-| Keep `docs/wiki` and the GitHub wiki mirror in sync. | Humans use the wiki; agents use the repo mirror. |
+| Keep `docs/wiki` and the GitHub wiki mirror in sync when the mirror exists on the active branch. | Humans use the wiki; agents use the repo mirror, but some gameplay branches do not carry `docs/wiki`. |
 
 ## Main Routes
 
@@ -73,7 +73,7 @@ This page is the front door. It should help you choose the right owner page quic
 powershell -ExecutionPolicy Bypass -File docs\validate-wiki.ps1
 ```
 
-After meaningful docs or machine-file edits, also parse touched JSON/JSONL files, mirror touched wiki files, inspect diffs and keep gameplay source unchanged unless Steff explicitly asks for a code patch.
+Run the validator from a repo checkout that actually has `docs\validate-wiki.ps1`. If the active gameplay branch has no `docs/wiki` mirror or validator, say that explicitly, use the GitHub wiki checkout as the live docs surface, parse touched JSON/JSONL files, check internal links/page existence, inspect diffs and keep gameplay source unchanged unless Steff explicitly asks for a code patch.
 
 ## Navigation Notes
 

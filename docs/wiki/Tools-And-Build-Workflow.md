@@ -26,11 +26,13 @@ Build configurations:
 - `AIRWAR_SERVER_DEBUG`
 - `AIRWAR_RELEASE`
 
-Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`, or from the repo root with `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj`. If .NET SDK is missing, stop and tell the user. For propagation-only runs, set `A2WASP_SKIP_ZIP=1` so generation/copy completes without requiring `7za` or creating `_MISSIONS.7z`.
+Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`, or from the repo root with `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj`. If .NET SDK is missing, stop and tell the user. On branches where the tooling source implements it, `A2WASP_SKIP_ZIP=1` can make propagation-only runs skip `_MISSIONS.7z` packaging; verify the target branch's `Tools/LoadoutManager` source before relying on that shortcut.
 
 Upstream history warning: the second-wave [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) pass found concrete tooling hazards: current packaging is source Chernarus plus generated Vanilla/Takistan only, `Modded_Missions` packaging/generation is commented out, `ZipManager` depends on env var `7za`, `version.sqf` load order was reverted once, Takistan DB map ID needed generator-side post-copy repair, and sound generation assumes `ClassName-volume.ogg` filenames. Treat LoadoutManager console output plus `git diff --stat` as the release check, not a blind "DONE" signal.
 
 Local workspace note: root discovery is branch-sensitive. Current docs/source `FileManager.FindA2WaspWarfareDirectory` supports both an ancestor folder literally named `a2waspwarfare` and a normal repo root containing `Missions`, `Missions_Vanilla` and `Tools\LoadoutManager\LoadoutManager.csproj` (`FileManager.cs:153,158,166,176,186-188`). Current stable, B69/B74 and historical release refs use a sibling marker check: named-root still passes, otherwise the root must contain `Missions\[55-2hc]warfarev2_073v48co.chernarus`, `Tools\LoadoutManager` and `AGENTS.md` (`FileManager.cs:145,150,158,165,170-176`). Current Miksuu and `perf/quick-wins` still require an ancestor named `a2waspwarfare`.
+
+Current local `feat/supply-helicopter` checkout caveat: LoadoutManager is still old tooling shape at `HEAD@558fba343`. `A2WASP_SKIP_ZIP` is not referenced under `Tools/LoadoutManager`; `SqfFileGenerator.cs:135` calls `ZipManager.DoZipOperations()` unconditionally, `ZipManager.cs:38` calls `Create7zFromDirectory(...)`, and `ZipManager.cs:73-76` requires env var `7za` and throws if it is missing. Root discovery is also named-root-only in this checkout (`FileManager.cs:145-152`). Treat skip-zip support and marker-root discovery as branch-specific claims.
 
 ## Operator Checklist
 
@@ -39,7 +41,7 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | Item | Why it matters |
 | --- | --- |
 | Checkout path resolves to the repo root. | On docs/source, LoadoutManager accepts either an ancestor named `a2waspwarfare` or root markers `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. On current stable/B69/B74/release-shaped refs, the marker set is `Missions/[55-2hc]warfarev2_073v48co.chernarus`, `Tools/LoadoutManager` and `AGENTS.md`. On current Miksuu/perf-shaped refs, keep the checkout under an ancestor named `a2waspwarfare`. |
-| `A2WASP_SKIP_ZIP=1` is set for propagation-only runs. | Skips `_MISSIONS.7z` packaging and avoids a packaging-only `7za` dependency during docs/code propagation work. |
+| `A2WASP_SKIP_ZIP=1` is verified before propagation-only runs. | On branches that implement it, this skips `_MISSIONS.7z` packaging and avoids a packaging-only `7za` dependency. The local `feat/supply-helicopter` checkout does not implement it, so missing `7za` will still throw after generation/copy. |
 | `7za` is configured and available if packaging is required. | Required only when producing `_MISSIONS.7z` release archives. |
 | Existing `_MISSIONS.7z` is disposable or backed up before packaging. | `ZipManager.cs:26-33` deletes the existing archive before proving a new archive was created, while `ZipManager.cs:77-91` prints `7za` output without an exit-code gate. Keep a rollback copy before release packing. |
 | `version.sqf` exists for every claimed target root. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`; `Rsc/Header.hpp` consumes its `WF_RESPAWNDELAY`, `WF_MISSIONNAME` and `WF_MAXPLAYERS` defines. Missing `version.sqf` blocks pack/test/release claims for that root. |
@@ -96,7 +98,7 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 
 | Project | Runtime | Entry point | Inputs | Outputs / side effects | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `Tools/LoadoutManager` | .NET 8 executable | `Program.cs` -> `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()` | Terrain/loadout data classes, source Chernarus mission, terrain skip lists. | Generated `EASA_Init.sqf`, `Common_BalanceInit.sqf`, aircraft-name helper, per-terrain `version.sqf`, copied Takistan mission and optional `_MISSIONS.7z`. | Root discovery is branch-sensitive; use the local workspace note above. Set `A2WASP_SKIP_ZIP=1` to skip packaging. |
+| `Tools/LoadoutManager` | .NET 8 executable | `Program.cs` -> `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()` | Terrain/loadout data classes, source Chernarus mission, terrain skip lists. | Generated `EASA_Init.sqf`, `Common_BalanceInit.sqf`, aircraft-name helper, per-terrain `version.sqf`, copied Takistan mission and optional `_MISSIONS.7z`. | Root discovery and skip-zip behavior are branch-sensitive; use the local workspace note above and verify whether `A2WASP_SKIP_ZIP` is implemented before depending on it. |
 | `Tools/PerformanceAuditAnalyzer` | PowerShell | `Analyze-PerformanceAudit.ps1`, GUI launcher | Existing Arma RPT/log files containing `[Performance Audit]`. | CSV, Markdown, HTML and Word-friendly performance reports. | Safe read-only analyzer for logs; no shipped live tailer service was found in the tree. See [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer). |
 | `DiscordBot` | .NET 9 executable | `DiscordBot/src/Program.cs` -> `ProgramRuntime.ProgramRuntimeTask()` | `preferences.json`, `token.txt`, extension `database.json`. | Discord channel name, bot presence and status embed updates every 60 seconds. | Missing token/preferences are expected in repo; active status reads `Preferences.Instance.DataSourcePath` or the default data path, while `FileConfiguration.cs` is secondary until config ownership is cleaned up. |
 | `Extension` | .NET Framework 4.8 x86 Arma extension | `_RVExtension@12` export | Arma `callExtension` arguments from mission scripts. | Writes `C:\a2waspwarfare\Data\database.json` for DiscordBot. | Legacy Visual Studio/MSBuild target using `RGiesecke.DllExport`/`UnmanagedExports` from `../packages`; preserve x86. |
@@ -145,7 +147,7 @@ Use it after performance-sensitive mission changes or live-server audits.
 
 - `7za` environment variable points to `7za.exe`.
 - `ZipManager` packages mission directories after copy/generation and currently zips only `Missions` plus `Missions_Vanilla`, not `Modded_Missions`.
-- Missing `7za` causes the final packaging step to throw unless `A2WASP_SKIP_ZIP=1` is set; inspect generated/copied files before assuming the whole run did nothing.
+- Missing `7za` causes the final packaging step to throw unless the target branch implements and honors `A2WASP_SKIP_ZIP=1`; inspect generated/copied files before assuming the whole run did nothing. The local `feat/supply-helicopter` checkout does not implement the skip-zip environment variable.
 - Packaging success is not a strong release proof by itself: `ZipManager.cs:26-33` deletes an existing `_MISSIONS.7z`, `ZipManager.cs:34-44` stages a temp mission-copy directory, and `ZipManager.cs:77-92` starts `7za` and prints output but does not currently gate success on the process exit code. Confirm `_MISSIONS.7z` exists, has the expected mission folders and was produced by a successful 7-Zip run before calling a release archive complete.
 - File replacement warnings can still hard-fail later: `BaseTerrain.cs:275-301` logs "File not found!" for a missing expected file and then still calls `File.ReadAllText` on the same path. Treat missing replacement targets as real generator failures, not harmless warnings.
 - Generated aircraft damage insertion is marker-based: `BaseTerrain.cs:84-86` wires `Common_ModifyAirVehicle.sqf`, and `FileManager.cs:224-247` prints missing-content warnings without failing the run. Keep a marker-contract check in release validation before changing generated aircraft damage logic.
@@ -165,6 +167,8 @@ dotnet run -c SERVER_DEBUG
 $env:A2WASP_SKIP_ZIP = "1"
 dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj
 ```
+
+Use the skip-zip command only after confirming the target branch references `A2WASP_SKIP_ZIP` in `Tools/LoadoutManager`; otherwise configure `7za` or expect the packaging step to throw after generation/copy.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\PerformanceAuditAnalyzer\Analyze-PerformanceAudit.ps1 -InputPath ".\logs\arma2oa.rpt" -OutputPath ".\PerformanceAuditResults"

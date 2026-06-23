@@ -290,6 +290,15 @@ This is functionally coherent for honest clients, but authority-light: the serve
 
 The repair worker also lacks a server-side duplicate-entry guard before setting `wfbe_hq_repairing` inside `Server_MHQRepair.sqf:23`. The client actions check `wfbe_hq_repairing` locally (`Action_RepairMHQ.sqf:8-9`; `WASP/actions/Action_RepairMHQDepot.sqf:10-11`), but two near-simultaneous requests can still enter the side-only server worker unless the future hardening patch rechecks and sets the mutex before creating the replacement MHQ.
 
+### Branch Intel - Upstream HQ Repair Price Candidate
+
+`origin/claude/upstream-hq-repair-price@440be3da0bda` is a branch-only MHQ repair price/action-label candidate, not current stable behavior and not a server-authority fix. Its merge-base with current stable is `be2bbd084`, an ancestor of `origin/master@f8a76de34`; direct diffs against current stable also include unrelated B74.1 `Init_CommonConstants.sqf:914-920` player-stats drift, so any port must preserve `WFBE_C_STATS_ENABLED = true`.
+
+| Ref | Evidence | Status |
+| --- | --- | --- |
+| Current stable `origin/master@f8a76de34` | Source Chernarus and maintained Vanilla still register the repair-truck action as plain `localize 'STR_WF_Repair_MHQ'` at `Common/Init/Init_Unit.sqf:67`; `Action_RepairMHQ.sqf:42` hints `STR_WF_INFO_Repair_MHQ_Repair` without a next-price argument. The client-side repair prices are still `25000 / 40000 / 50000` at Chernarus `Common/Init/Init_CommonConstants.sqf:465-467` and maintained Vanilla `:287-289`; the client still debits and sends only `sideJoined` at `Action_RepairMHQ.sqf:24-35`, while `RequestMHQRepair.sqf:1` forwards that to `Server_MHQRepair.sqf:7-79`. | Current stable has the old label/hint shape and the same authority-light MHQ repair boundary. |
+| `origin/claude/upstream-hq-repair-price@440be3da0bda` | Against merge-base `be2bbd084`, payload is six files / +76 / -26 and `git diff --check` is clean. In both maintained roots, `Init_Unit.sqf:71-78` formats the repair-truck action label with the spawn-time next price, `Action_RepairMHQ.sqf:43-55` formats the post-repair hint with the live next price or `-`, and `stringtable.xml:940-945` plus Chernarus `:4592-4597` / Vanilla `:4591-4596` add `%1` to the repair hint/action strings. There is no branch payload under `Server/`, `RequestMHQRepair.sqf` or `Init_PublicVariables.sqf`. | Branch-only UI/economy candidate. Review repair-count semantics before promotion: the inherited `Action_RepairMHQ.sqf:22` cap check exits when the current price equals `WFBE_C_BASE_HQ_REPAIR_PRICE_3RD`, so the branch can display the third-price slot as a next price after the second repair even though the next attempt may hit `STR_WF_INFO_MHQ_Repairs_Used`. Smoke labels, insufficient funds, first/second/third-attempt messaging, side-supply vs player-funds mode and maintained Vanilla parity. |
+
 The explicit alive/dead HQ marker broadcasts and client update branches are west/east only. Resistance HQ recovery is therefore not covered by this marker state machine (`Server_OnHQKilled.sqf:104`, `Server_MHQRepair.sqf:60`, `updateclient.sqf:42`).
 
 ## WASP Cash HQ Recovery

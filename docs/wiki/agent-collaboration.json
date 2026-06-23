@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T11:10:00+02:00",
+  "generatedAt": "2026-06-23T11:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,80 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "upstream-hq-repair-price-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/upstream-hq-repair-price@440be3da0bda is one payload commit on merge-base be2bbd084, an ancestor of current stable origin/master@f8a76de34.",
+        "Payload versus merge-base changes source Chernarus and maintained Vanilla Client/Action/Action_RepairMHQ.sqf, Common/Init/Init_Unit.sqf and stringtable.xml; diff is six files, +76/-26, and git diff --check is clean.",
+        "Direct diff against current stable also shows later B74.1 Init_CommonConstants.sqf drift that is branch-base baggage, not part of the branch payload.",
+        "Classify the branch beside the existing PR #3 HQ repair price revert / server-authority warning; do not present it as current stable behavior or authority closure.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Commander/HQ lifecycle and Feature Status with exact branch diff evidence.",
+        "Refreshed branch-only smoke/release gates, dashboard, worklog, pruning ledger and machine rows.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future branch reviewer should treat repair price/action-label work as UI/economy candidate only. Port or rebase only if wanted, preserve current-stable/B74.1 WFBE_C_STATS_ENABLED = true, smoke first/second/third-attempt labels and hints in source Chernarus plus maintained Vanilla, and keep server-side MHQ repair authority/debit/mutex hardening separate.",
+      "updated": "2026-06-23T11:30:00+02:00"
+    },
+    {
+      "lane": "wiki-mirror-validator-availability-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Local gameplay checkout C:\\Users\\Steff\\a2waspwarfare is on feat/supply-helicopter and has no docs/wiki directory.",
+        "The same checkout has no docs/validate-wiki.ps1 script.",
+        "Standalone GitHub wiki checkout C:\\Users\\Steff\\Documents\\Codex\\2026-06-23\\write-a-long-term-goal-that-2\\work\\a2waspwarfare.wiki is the live docs surface for this batch.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Clarified Home, LLM agent entry pack, Progress Dashboard and Wiki Mirror Reconciliation Plan so agents do not claim repo-mirror parity or validator success on branches where the mirror/script is absent.",
+        "Validated touched wiki files with JSON/JSONL parsing, internal-link/page-existence checks, conflict-marker scan and git diff --check.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future docs/platform owner should run docs/validate-wiki.ps1 and touched-file SHA parity only from a mirror-bearing checkout; on gameplay branches without docs/wiki, use the standalone wiki checkout and record parity as not checked.",
+      "updated": "2026-06-23T10:55:02+02:00"
+    },
+    {
+      "lane": "loadoutmanager-skip-zip-local-branch-caveat-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Local C:\\Users\\Steff\\a2waspwarfare checkout is feat/supply-helicopter at HEAD@558fba343.",
+        "rg found no A2WASP_SKIP_ZIP hits under Tools/LoadoutManager in that checkout.",
+        "SqfFileGenerator.cs:135 calls ZipManager.DoZipOperations() unconditionally; ZipManager.cs:38 calls Create7zFromDirectory(...); ZipManager.cs:73-76 requires env var 7za and throws when missing.",
+        "FileManager.cs:145-152 in that checkout remains named-root-only.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Clarified Tools-And-Build-Workflow, Source-Fix-Propagation-Queue and Testing-Debugging-And-Release-Workflow so skip-zip and marker-root guidance is branch-specific.",
+        "Added local feat/supply-helicopter caveat and preserved earlier 2026-06-02 propagation evidence as checkout-specific history.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Before running LoadoutManager on any target branch, verify root-discovery shape and whether A2WASP_SKIP_ZIP is referenced in Tools/LoadoutManager; on local feat/supply-helicopter, configure 7za or expect packaging to throw after generation/copy.",
+      "updated": "2026-06-23T11:05:00+02:00"
+    },
+    {
+      "lane": "footer-support-page-nav-prune-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "_Footer.md global navigation listed Deep-Review-Findings and Claude-Loop-Goal.",
+        "Navigation-Inventory-And-Page-Status classifies Deep Review as archive/evidence-ledger and Claude Loop as agent-instruction/support-only.",
+        "Wiki-Pruning-And-Relevance-Ledger says Deep Review is valuable evidence but too large as a navigation surface.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Replaced Deep Review and Claude Loop in _Footer.md with Knowledge Platform Roadmap while keeping Coverage Ledger, Navigation Inventory, Pruning Ledger, Agent Context, Collab Protocol and Worklog routes.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Deep Review and Claude Loop remain reachable through inventory/pruning/coordination routes; keep the footer reserved for current owner/gateway pages.",
+      "updated": "2026-06-23T11:24:00+02:00"
+    },
     {
       "lane": "source-fix-queue-current-b741-scope-2026-06-23",
       "owner": "Codex",

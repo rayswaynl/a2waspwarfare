@@ -355,6 +355,40 @@
   "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "branchOnlyFeaturePromotionGates": [
     {
+      "id": "upstream-hq-repair-price-branch",
+      "branch": "origin/claude/upstream-hq-repair-price",
+      "head": "440be3da0bda",
+      "base": "be2bbd084; ancestor of origin/master@f8a76de34",
+      "state": "branch-review-needed-port-preserve-b741-stats-not-authority-closure",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-mhq-repair-ui-price-labels",
+      "canonicalDocs": [
+        "Commander-HQ-Lifecycle-Atlas.md#branch-intel---upstream-hq-repair-price-candidate",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/upstream-hq-repair-price@440be3da0bda; merge-base with origin/master is be2bbd084",
+        "origin/master@f8a76de34 is current stable and contains later B74.1 player-stats constants at Init_CommonConstants.sqf:914-920",
+        "be2bbd084..440be3da0bda: 6 files +76/-26; git diff --check clean",
+        "Chernarus/Vanilla Init_Unit.sqf:71-78 formats the repair-truck action label with a spawn-time repair price",
+        "Chernarus/Vanilla Action_RepairMHQ.sqf:43-55 formats the post-repair hint with a live next price or '-'",
+        "Chernarus/Vanilla stringtable.xml:940-945 plus Chernarus :4592-4597 / Vanilla :4591-4596 add the %1 placeholder to repair hint/action text",
+        "No payload exists under Server/, RequestMHQRepair.sqf or Init_PublicVariables.sqf"
+      ],
+      "ownerDecision": "Decide whether to port the MHQ repair price UI while keeping server-side MHQ repair authority work separate.",
+      "promotionGate": "Smoke repair-truck action labels, post-repair next-price hints, insufficient-funds formatting, repair-count cap semantics, side-supply/player-funds modes and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "economy-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
       "id": "upstream-an2-climb-boost-branch",
       "branch": "origin/claude/upstream-an2-climb-boost",
       "head": "63e6b4142",

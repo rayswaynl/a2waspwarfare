@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T11:10:00+02:00",
+  "generatedAt": "2026-06-23T11:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: source-fix-queue-current-b741-scope-2026-06-23. Refreshed the Source Fix Propagation Queue current-stable/B74.1 scope after origin/master advanced to f8a76de34 / origin/claude/b74.1-aicom. Scoped queue-path diff from 0139a3468609 to f8a76de34 touches only maintained-root Client/Init/Init_Client.sqf; no gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
+      "currentWork": "Published docs-only upstream HQ repair price branch intel. origin/claude/upstream-hq-repair-price@440be3da0bda is a branch-only MHQ repair UI/economy candidate from merge-base be2bbd084, not current stable origin/master@f8a76de34 behavior and not server-authority closure; porting must preserve later B74.1 player-stats constants and needs repair-label/hint/economy smoke.",
+      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep branch-specific tooling/navigation/mirror claims verified against the target checkout."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,30 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "upstream-hq-repair-price-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Commander-HQ-Lifecycle-Atlas, Feature Status Register, Testing workflow smoke pack, release-readiness branch-only gate, Progress Dashboard, Agent Worklog, pruning ledger and machine rows with upstream HQ repair price branch intel. origin/claude/upstream-hq-repair-price@440be3da0bda is one payload commit on merge-base be2bbd084, an ancestor of current stable origin/master@f8a76de34; it changes source Chernarus and maintained Vanilla Action_RepairMHQ.sqf, Init_Unit.sqf and stringtable.xml for repair price labels/hints, but has no Server, RequestMHQRepair or Init_PublicVariables payload. Direct current-stable diffs include B74.1 Init_CommonConstants.sqf drift from the older branch base. No gameplay source changed."
+    },
+    {
+      "lane": "wiki-mirror-validator-availability-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Clarified mirror/validator availability wording after the local gameplay checkout C:\\Users\\Steff\\a2waspwarfare on feat/supply-helicopter returned False for both docs\\wiki and docs\\validate-wiki.ps1. Home, LLM Agent Entry Pack, Progress Dashboard and Wiki Mirror Reconciliation Plan now tell agents to use the standalone GitHub wiki checkout as the live docs surface on such branches, avoid repo-mirror parity claims until a mirror-bearing checkout is inspected, and run fallback validation when the repo validator is unavailable. No gameplay source changed."
+    },
+    {
+      "lane": "loadoutmanager-skip-zip-local-branch-caveat-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Clarified LoadoutManager skip-zip/root-discovery guidance after local feat/supply-helicopter@558fba343 showed old tooling shape: no A2WASP_SKIP_ZIP hits under Tools/LoadoutManager, SqfFileGenerator.cs:135 calls ZipManager.DoZipOperations() unconditionally, ZipManager.cs:38/:73-76 still requires 7za for packaging, and FileManager.cs:145-152 remains named-root-only. Tools-And-Build-Workflow, Source-Fix-Propagation-Queue and Testing-Debugging-And-Release-Workflow now treat skip-zip and marker-root shortcuts as branch-specific claims. No gameplay source changed."
+    },
+    {
+      "lane": "footer-support-page-nav-prune-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Pruned support/archive pages from global footer navigation. _Footer.md no longer promotes Deep Review or Claude Loop as primary footer routes; it keeps docs-maintainer routes through Coverage Ledger, Navigation Inventory, Pruning Ledger, Knowledge Roadmap, Agent Context, Collaboration Protocol and Worklog. No gameplay source changed."
+    },
     {
       "lane": "source-fix-queue-current-b741-scope-2026-06-23",
       "owner": "Codex",
