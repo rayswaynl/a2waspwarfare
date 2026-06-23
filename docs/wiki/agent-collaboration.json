@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T16:04:10+02:00",
+  "generatedAt": "2026-06-23T16:40:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "vote-help-ui-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh vote/help/main-menu UI cleanup docs from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Source scope is maintained-root Client/Init/Init_Client.sqf, Client/GUI/GUI_VoteMenu.sqf, Client/GUI/GUI_Commander_VoteMenu.sqf, Client/GUI/GUI_Menu_Help.sqf, Client/GUI/GUI_Menu.sqf and Rsc/Dialogs.hpp across docs/source, current stable/B74.1, B74.2, B69, B74, Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 where useful.",
+        "Initial checks show 0139a3468609..origin/master only changes Init_Client.sqf among checked paths, origin/master..origin/claude/b74.2-aicom is empty for checked paths, and no live release/vote/help rescue head is exposed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Dead-Code-And-Stale-Code-Register.md with current B74.1/B74.2 vote/help/router evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future UI owner should fix vote loops and row-color target, clean help onLoad/onUnload namespace state, decide remove-vs-revive for GPS MenuAction 17/18, propagate maintained Vanilla and smoke vote refresh/list coloring, help open/close and main-menu HUD/GPS behavior. Keep commander vote outcome policy on the commander playbook.",
+      "updated": "2026-06-23T16:40:00+02:00"
+    },
     {
       "lane": "fast-travel-fee-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
