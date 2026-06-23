@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T03:28:00+02:00",
+  "generatedAt": "2026-06-23T03:49:37+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "gear-template-profile-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@c7f361f4 is unchanged from 72b5f0de98f9 and 43c3ba05 for checked Chernarus/Vanilla Client_UI_Gear_SaveTemplateProfile.sqf, Client_UI_Gear_AddTemplate.sqf, Client_UI_Gear_FillTemplates.sqf and Init_ProfileGear.sqf paths.",
+        "docs/source still references undefined _u_upgrade at Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75 and keeps Init_ProfileGear.sqf:17 accepting count _x >= 6 before :25 reads _x select 6 in both maintained roots.",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce and adjacent B74 origin/claude/b74-aicom-spend@b23f557f fix the save-filter comparisons at Client_UI_Gear_SaveTemplateProfile.sqf:34,57,82 in both maintained roots.",
+        "current stable/B69/B74 still keep Init_ProfileGear.sqf:17,25 import-bound shape, AddTemplate Barracks-or-Gear gate at Client_UI_Gear_AddTemplate.sqf:136 and Gear-only display at Client_UI_Gear_FillTemplates.sqf:17 in both maintained roots.",
+        "current Miksuu b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2 and historical EASA QoL a66d46912e2a keep the old save-filter/import/policy shape. Checked 72b5f0de98f9..HEAD, B69..B74, master..B74 and 0a1ccb4d..B74 path deltas are empty; no live release, gear or template rescue head is exposed."
+      ],
+      "outputs": [
+        "Refreshed Gear-Template-Profile-Filter, Gear-Loadout-And-EASA-Atlas, Feature Status Register, Source Fix queue, dashboard/worklog/pruning ledger and gear-template machine rows with adjacent B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future gear UI owner should not reopen the save-filter comparison on current stable/B69/B74; profile-template work there is import-bound handling plus owner policy for creation/display gates. Old-shape refs still need the save-filter patch before trusting saved-template upgrade filtering.",
+      "updated": "2026-06-23T03:49:37+02:00"
+    },
     {
       "lane": "camp-flag-current-b74-refresh-2026-06-23",
       "owner": "Codex",

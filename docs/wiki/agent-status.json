@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T03:28:00+02:00",
+  "generatedAt": "2026-06-23T03:49:37+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: camp-flag-current-b74-refresh-2026-06-23. Refreshed towns/camps, Feature Status, Source Fix queue and machine rows with adjacent B74 evidence; no gameplay source changed.",
+      "currentWork": "Latest published lane: gear-template-profile-current-b74-refresh-2026-06-23. Refreshed gear-template owner/status/queue/machine rows with adjacent B74 evidence; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "gear-template-profile-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Gear-Template-Profile-Filter, Gear-Loadout-And-EASA-Atlas, Feature Status, Source Fix queue and machine rows with adjacent B74 evidence. Docs/source HEAD@c7f361f4 is source-unchanged from 72b5f0de98f9 / 43c3ba05 for checked gear-template paths and still carries undefined _u_upgrade at SaveTemplateProfile.sqf:33,52,75 plus Init_ProfileGear.sqf:17,25 import-bound debt. Current stable 0139a346, B69 8d465fce and B74 b23f557f fix the save-filter comparison at :34,:57,:82 in both maintained roots, but keep the import guard and AddTemplate/FillTemplates policy split. B69..B74 and older-B69-to-B74 checked deltas are empty; no gameplay source changed."
+    },
     {
       "lane": "camp-flag-current-b74-refresh-2026-06-23",
       "owner": "Codex",
