@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T03:16:25+02:00",
+  "generatedAt": "2026-06-23T03:28:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only lane published: auto-wall-current-b74-refresh-2026-06-23 refreshed Construction/CoIn, Server Composition Spawner reference, Feature Status, Source Fix queue and machine rows with adjacent B74 evidence. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue, PR cleanup lab or pruning ledger; claim it before editing."
+      "currentWork": "Latest published lane: camp-flag-current-b74-refresh-2026-06-23. Refreshed towns/camps, Feature Status, Source Fix queue and machine rows with adjacent B74 evidence; no gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "camp-flag-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Towns-Camps-And-Capture-Atlas, Feature Status, Source Fix queue and machine rows with adjacent B74 camp-flag evidence. Docs/source HEAD@de911438 is unchanged from 28a7d9c5 for checked camp flag, repair-camp and CampCaptured client-handler paths and still flags old _side at server_town_camp.sqf:135. Current stable 0139a346, B69 8d465fce, B74 b23f557f, historical a96fdda2 and naval-HVT 2e1c5931 fix independent capture in both maintained roots at server_town_camp.sqf:83-86; Miksuu b8389e748243 remains old-owner and perf 0076040f fixes Chernarus only. Repair-side world-flag refresh remains open everywhere checked; B69..B74 and older-B69-to-B74 checked deltas are empty. No gameplay source changed."
+    },
     {
       "lane": "auto-wall-current-b74-refresh-2026-06-23",
       "owner": "Codex",
