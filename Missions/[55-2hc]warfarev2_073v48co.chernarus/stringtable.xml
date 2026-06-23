@@ -1970,6 +1970,9 @@
         <Russian>Модуль: Контрмеры</Russian>
         <Italian>Modulo: Contromisure</Italian>
       </Key>
+      <Key ID="STR_WF_PARAMETER_AutoCM_OA"><!---->
+        <English>MODULE: Auto-Countermeasures (OA aircraft)</English>
+      </Key>
 	<!--Respawn-->
       <Key ID="STR_WF_PARAMETER_Camp">
         <English>RESPAWN: Camps</English>

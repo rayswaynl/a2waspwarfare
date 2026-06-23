@@ -108,6 +108,22 @@ if (_unit isKindOf "Air") then { //--- Air units.
 		};
 	};
 
+	if (!WF_A2_Vanilla && (missionNamespace getVariable ["WFBE_C_MODULE_AUTO_CM_OA", 0]) > 0) then { //--- OA opt-in: AUTO-deploy flares on incoming IR missile (native OA flares are manual). Default OFF; shares the FLARES master switch + FlareCount budget.
+		if (isNil "WFBE_CL_FNC_AutoCM_OA") then {WFBE_CL_FNC_AutoCM_OA = compile preprocessFileLineNumbers "Client\Module\CM\CM_AutoCM_OA.sqf"};
+		switch (missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") do {
+			case 1: { //--- Enabled with upgrades.
+				if ((_upgrades select WFBE_UP_FLARESCM) > 0) then {
+					(_unit) ExecVM 'Client\Module\CM\CM_Set.sqf';
+					_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CL_FNC_AutoCM_OA}];
+				};
+			};
+			case 2: { //--- Enabled.
+				(_unit) ExecVM 'Client\Module\CM\CM_Set.sqf';
+				_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CL_FNC_AutoCM_OA}];
+			};
+		};
+	};
+
 	if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then { //--- AAR Tracking.
 		if (sideJoined != _side) then { //--- Track the unit via AAR System, skip if the unit side is the same as the player one.
 			_perfAARStarted = 1;
