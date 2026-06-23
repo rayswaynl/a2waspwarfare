@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T00:40:35+02:00",
+  "generatedAt": "2026-06-24T00:52:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "side-supply-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh side-supply direct-channel and reason-string rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Common_ChangeSideSupply.sqf, Server_ChangeSideSupply.sqf, Init_CommonConstants.sqf and direct side-supply temp-variable paths needed to prove side-supply/resistance/reason branch status in source Chernarus and maintained Vanilla.",
+        "Keep Economy-Authority-First-Cut, Resistance-Supply-Scaffold and Economy-Towns-And-Supply as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Economy-Authority-First-Cut.md, Resistance-Supply-Scaffold.md, Economy-Towns-And-Supply.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 side-supply evidence.",
+        "Recorded that checked d472da6a..21b62b04 is empty for side-supply/resistance/reason paths and origin/master..origin/claude/b74.2-aicom only line-drifts source-Chernarus supply-completion calls among checked files.",
+        "Added live origin/claude/faction-tint-sidefix@32acd272f92e as regression context because it diverges before current stable and removes the Chernarus wfbe_supply_temp_resistance handler.",
+        "Updated Progress Dashboard, pruning ledger, worklog and machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future economy/network owner should treat current stable/B74.1/B74.2 Chernarus as partial rescue only. Propagate maintained Vanilla or explicitly scope Chernarus, validate west/east/resistance side/channel/amount/requester behavior, restore/rebase the resistance handler on faction-tint-sidefix if revived, and fix reason parsing before any side-supply hardening claim.",
+      "updated": "2026-06-24T00:52:00+02:00"
+    },
     {
       "lane": "send-message-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
