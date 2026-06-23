@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T16:56:00+02:00",
-  "lastVerifiedAt": "2026-06-23T16:56:00+02:00",
+  "generatedAt": "2026-06-23T23:20:26+02:00",
+  "lastVerifiedAt": "2026-06-23T23:20:26+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -197,9 +197,9 @@
   "versionSqfGeneratedInput": {
     "status": "required-generated-ignored-input",
     "trackedByGit": false,
-    "currentCheckoutEvidence": "Current workspace check for version-sqf-loadoutmanager-current-b741-refresh-2026-06-23 found no present Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf or Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf in docs/source checkout HEAD@7b1187d32; git status --ignored for those paths returned no ignored-present files.",
-    "currentBranchEvidence": "Checked docs/source HEAD@7b1187d32, current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6ae, B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 do not track live Chernarus/Vanilla version.sqf files.",
-    "templateCaveat": "Current stable/B74.1/B74.2/B69/B74 track Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template as a Chernarus reference, but that template is not the live generated version.sqf input and does not cover maintained Vanilla Takistan.",
+    "currentCheckoutEvidence": "Current workspace check for loadoutmanager-b742-current-head-followup-2026-06-23 found no present Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf or Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf in docs/source checkout HEAD@101930f47; git status --ignored for those paths returned no ignored-present files.",
+    "currentBranchEvidence": "Checked docs/source HEAD@101930f47, current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, current B74.2 origin/claude/b74.2-aicom@21b62b04, B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 do not track live Chernarus/Vanilla version.sqf files. The scoped d472da6a..21b62b04 and origin/master..origin/claude/b74.2-aicom diffs are empty for checked tooling/generated-input paths.",
+    "templateCaveat": "Current stable/B74.1/B74.2/B69/B74 track the same Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template lines 1-14 as a Chernarus reference, but that template is not the live generated version.sqf input and does not cover maintained Vanilla Takistan.",
     "whyItMatters": "description.ext and initJIPCompatible.sqf include version.sqf before mission boot continues; a fresh checkout, clean pack or generated target without that file can fail before later SQF systems initialize.",
     "releaseGate": "Before pack, smoke-test or release wording, verify every claimed mission target root has a generated version.sqf matching its terrain profile and player count.",
     "sourceRefs": [
@@ -319,7 +319,7 @@
   ],
   "toolingGate": {
     "tool": "Tools/LoadoutManager",
-    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or the marker-root shape for the target branch. Docs/source HEAD@7b1187d32 accepts Missions + Missions_Vanilla + Tools/LoadoutManager/LoadoutManager.csproj; current stable/B74.1 origin/master@f8a76de34, B74.2 d472da6ae, B69/B74 and historical a96fdda2 accept Missions/[55-2hc]warfarev2_073v48co.chernarus + Tools/LoadoutManager + AGENTS.md; current Miksuu/perf still require the named ancestor.",
+    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or the marker-root shape for the target branch. Docs/source HEAD@101930f47 accepts Missions + Missions_Vanilla + Tools/LoadoutManager/LoadoutManager.csproj; current stable/B74.1 origin/master@f8a76de34, current B74.2 origin/claude/b74.2-aicom@21b62b04, B69/B74 and historical a96fdda2 accept Missions/[55-2hc]warfarev2_073v48co.chernarus + Tools/LoadoutManager + AGENTS.md; current Miksuu/perf still require the named ancestor. The checked d472da6a..21b62b04 delta is empty for this path.",
     "skipZipForPropagationOnly": {
       "environmentVariable": "A2WASP_SKIP_ZIP",
       "acceptedValues": [
@@ -328,7 +328,7 @@
         "yes"
       ],
       "effect": "Skips _MISSIONS.7z packaging after generation/copy.",
-      "branchScope": "Implemented on docs/source HEAD@7b1187d32; absent in checked current stable/B74.1/B74.2/B69/B74, historical a96fdda2, current Miksuu, origin/perf/quick-wins and local feat/supply-helicopter refs."
+      "branchScope": "Implemented on docs/source HEAD@101930f47; absent in checked current stable/B74.1/B74.2/B69/B74, historical a96fdda2, current Miksuu, origin/perf/quick-wins and local feat/supply-helicopter refs."
     },
     "evidenceRefs": [
       "Tools/LoadoutManager/FileManagement/FileManager.cs",

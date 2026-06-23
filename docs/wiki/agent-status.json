@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T23:05:41+02:00",
+  "generatedAt": "2026-06-23T23:22:46+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published docs-only lane is commander-vote-b742-current-head-followup-2026-06-23, which refreshed commander vote/reassignment rows to current B74.2 origin/claude/b74.2-aicom@21b62b04 without gameplay source edits.",
+      "currentWork": "Latest published docs-only lane is loadoutmanager-b742-current-head-followup-2026-06-23, which refreshed LoadoutManager root discovery / skip-zip / generated version.sqf rows to current B74.2 origin/claude/b74.2-aicom@21b62b04 without gameplay source edits.",
       "nextExpectedOutput": "Continue bounded source-backed wiki upkeep from Progress Dashboard, Feature Status, Source Fix queue, pruning ledger and machine rows."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "loadoutmanager-b742-current-head-followup-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed LoadoutManager root discovery, skip-zip packaging and generated version.sqf evidence from stale B74.2 origin/claude/b74.2-aicom@d472da6a wording to current origin/claude/b74.2-aicom@21b62b04. Checked d472da6a..21b62b04, origin/master..origin/claude/b74.2-aicom and B69..B74 deltas are empty for the tooling/generated-input path set. Docs/source HEAD@101930f47 implements marker-root discovery and A2WASP_SKIP_ZIP; current stable/B74-shaped refs keep marker-root discovery but no skip-zip support. Live version.sqf remains required generated input. No gameplay source changed."
+    },
     {
       "lane": "commander-vote-b742-current-head-followup-2026-06-23",
       "owner": "Codex",
