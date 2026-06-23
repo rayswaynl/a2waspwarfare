@@ -4,6 +4,16 @@
 
 A client-side, player-facing "deploy bipod" / weapon-resting mechanic. While carrying one of a fixed whitelist of machine guns and sniper rifles, a player who presses TAB in a valid stance (prone, or crouched directly behind a short solid object) has their weapon recoil zeroed and gets an audible/visual confirmation. The entire feature lives in a single function, `Common\Functions\Common_Bipod.sqf` (header credits `// -WASP-` and `// 3JIbIDEHb aka Smirnoff_ICE`, `Common_Bipod.sqf:1-2`), is `execVM`'d once at client init, and is invisible to the server — it only adjusts the local player's recoil coefficient.
 
+## Branch Intel - Trello Auto-Bipod Candidate
+
+2026-06-23 branch check: draft PR #76 / Trello #210 lives on `origin/claude/trello-auto-bipod@5af02b8438e1728724ce5e9d28acc77a98608b62`. It is one commit on current stable `origin/master@f8a76de34`, changes four maintained-root files / +46 / -2, and `git diff --check origin/master..origin/claude/trello-auto-bipod` is clean. The touched files are source Chernarus plus maintained Vanilla `Common/Functions/Common_Bipod.sqf` and `Client/Functions/Client_OnKilled.sqf`.
+
+The branch does not add a new server path, public variable, weapon list, sound, localization key or recoil model. Instead, it adds `Bipod_AddAutoDeploy` after the existing `Bipod_ON` handler in both maintained `Common_Bipod.sqf` copies (`:74-82`). The helper stores the local `AnimChanged` event-handler id in `Bipod_AutoEH`, removes any older local handler, attaches a fresh `AnimChanged` handler to `player`, and calls the existing `15 call Bipod_ON` path when the new animation is exactly `amovppnemstpsraswrfldnon`. That means auto-deploy still reuses the existing TAB case, whitelist, prone gate, `HintSilent`, `Bipod_ON` sound and recoil reset behavior.
+
+The branch also reattaches the local animation handler in the killed/respawn lifecycle. In both maintained `Client_OnKilled.sqf` copies, line `:90` guards `if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};` after the existing player killed handler is restored (`:77-84`) and before `PreRespawnHandler` runs (`:95`). Current stable lacks `Bipod_AddAutoDeploy`, `Bipod_AutoEH`, `AnimChanged` and `15 call Bipod_ON` hits in the maintained roots, so this is branch-only behavior.
+
+Promotion gates: smoke a whitelisted MG/sniper going prone without TAB, a non-whitelisted weapon going prone, the manual TAB fallback, crouched/object resting, death/respawn reattachment, repeated stance changes without sound spam, and source Chernarus plus maintained Vanilla parity. Keep the existing `str_bipod` localization debt and unconditional key-down recoil reset documented unless the owner intentionally fixes them in the same target branch.
+
 ## Wiring and lifecycle
 
 The function is launched once per client during client init, after the local `HandleDamage` rearmor handler is attached:

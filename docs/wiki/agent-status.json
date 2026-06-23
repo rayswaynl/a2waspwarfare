@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T12:57:23+02:00",
+  "generatedAt": "2026-06-23T13:22:09+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only branch intel for origin/claude/trello-audio-cues@a0e4fb458. The branch is one commit on current stable origin/master@f8a76de34, touches four maintained-root paratrooper marker and IRS incoming-missile handler files (+74/-2), reuses existing sound classes and is git diff --check clean. No gameplay source changed.",
+      "currentWork": "Published docs-only branch intel for draft PR #76 / origin/claude/trello-auto-bipod@5af02b8438e1. The branch is one commit on current stable origin/master@f8a76de34, touches four maintained-root Common_Bipod.sqf and Client_OnKilled.sqf files (+46/-2), reuses the existing TAB bipod path through local AnimChanged and is git diff --check clean. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "trello-auto-bipod-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Routed draft PR #76 / origin/claude/trello-auto-bipod@5af02b8438e1 through Deployable bipod / weapon resting, Feature Status Register, Testing workflow, release-readiness gates, Progress Dashboard, pruning ledger and machine rows. The branch is one commit on current stable origin/master@f8a76de34; payload is four maintained-root files / +46 / -2 and git diff --check clean. It adds Bipod_AddAutoDeploy at Common_Bipod.sqf:74-82, local AnimChanged prone detection and Client_OnKilled.sqf:90 reattachment while reusing the existing 15 call Bipod_ON path. It is not current stable behavior and does not change the whitelist, sound media, str_bipod debt, recoil reset, server state or PV channels. No gameplay source changed."
+    },
     {
       "lane": "trello-audio-cues-branch-intel-2026-06-23",
       "owner": "Codex",

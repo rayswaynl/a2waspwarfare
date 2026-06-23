@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T12:57:23+02:00",
+  "generatedAt": "2026-06-23T13:22:09+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "trello-auto-bipod-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/trello-auto-bipod@5af02b8438e1728724ce5e9d28acc77a98608b62 / draft PR #76 is one commit on current stable origin/master@f8a76de34.",
+        "Payload versus current stable is four maintained-root files / +46 / -2 across source Chernarus plus maintained Vanilla Common_Bipod.sqf and Client_OnKilled.sqf; git diff --check is clean.",
+        "Branch Chernarus/Vanilla Common_Bipod.sqf:74-82 adds Bipod_AddAutoDeploy, local Bipod_AutoEH cleanup, AnimChanged handler and 15 call Bipod_ON on prone animation amovppnemstpsraswrfldnon.",
+        "Branch Chernarus/Vanilla Client_OnKilled.sqf:90 reattaches Bipod_AddAutoDeploy if the helper exists after local event handlers are flushed.",
+        "Current stable maintained roots lack Bipod_AddAutoDeploy, Bipod_AutoEH, AnimChanged and 15 call Bipod_ON hits. The branch reuses the existing TAB path, whitelist, Bipod_ON sound, str_bipod debt and recoil reset behavior. No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed Deployable-Bipod-Weapon-Resting.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only auto-bipod evidence and smoke gates.",
+        "Refreshed Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future branch reviewer should keep PR #76 branch-only until Arma 2 OA smoke covers whitelisted prone auto-deploy, non-whitelisted no-op, manual TAB/crouched-object fallback, repeated stance changes, death/respawn reattachment, no server/PV state and maintained Vanilla parity.",
+      "updated": "2026-06-23T13:22:09+02:00"
+    },
     {
       "lane": "trello-audio-cues-branch-intel-2026-06-23",
       "owner": "Codex",

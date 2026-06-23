@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T12:57:23+02:00",
-  "lastVerifiedAt": "2026-06-23T12:57:23+02:00",
+  "generatedAt": "2026-06-23T13:22:09+02:00",
+  "lastVerifiedAt": "2026-06-23T13:22:09+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -354,6 +354,40 @@
   },
   "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "branchOnlyFeaturePromotionGates": [
+    {
+      "id": "trello-auto-bipod-branch",
+      "branch": "origin/claude/trello-auto-bipod",
+      "head": "5af02b8438e1",
+      "base": "origin/master@f8a76de34",
+      "state": "branch-only-client-qol-candidate-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-common-bipod-and-client-onkilled-auto-prone-handler",
+      "canonicalDocs": [
+        "Deployable-Bipod-Weapon-Resting.md#branch-intel---trello-auto-bipod-candidate",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-auto-bipod@5af02b8438e1728724ce5e9d28acc77a98608b62; merge-base with origin/master is current stable f8a76de34",
+        "f8a76de34..5af02b8438e1: 4 maintained-root files +46/-2 across Common_Bipod.sqf and Client_OnKilled.sqf; git diff --check clean",
+        "Branch Chernarus/Vanilla Common_Bipod.sqf:74-82 adds Bipod_AddAutoDeploy, local Bipod_AutoEH cleanup, AnimChanged handler and 15 call Bipod_ON on prone animation amovppnemstpsraswrfldnon",
+        "Branch Chernarus/Vanilla Client_OnKilled.sqf:90 reattaches Bipod_AddAutoDeploy if the helper exists after the local unit handler is flushed",
+        "Current stable maintained roots have no Bipod_AddAutoDeploy, Bipod_AutoEH, AnimChanged or 15 call Bipod_ON hits",
+        "Branch reuses the existing TAB path, whitelist, prone/crouch gates, HintSilent, Bipod_ON sound and recoil reset behavior; str_bipod remains commented in stringtable.xml"
+      ],
+      "ownerDecision": "Decide whether to promote the auto-prone bipod QoL branch. It is client-local convenience work only; it does not change server authority, public variables, weapon whitelist, sound media, localization or recoil semantics.",
+      "promotionGate": "Smoke whitelisted prone auto-deploy, non-whitelisted prone no-op, manual TAB fallback, crouched-object rest, repeated stance changes without sound spam, death/respawn reattachment, no server/PV state and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-input-smoke",
+          "animation-smoke",
+          "respawn-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
     {
       "id": "trello-upgrade-hqcost-info-branch",
       "branch": "origin/claude/trello-upgrade-hqcost-info",
