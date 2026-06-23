@@ -62,7 +62,16 @@ _maxBoostCoef = 1.30;
 
 // Tanks use a lower target assist speed.
 if (_vehicle isKindOf "Tank") then {
-	_min = 30; 
+	_min = 30;
+};
+
+// Air (AN-2 fast-lift): assist only the sluggish, just-above-stall takeoff/climb regime.
+// The AN-2 stalls ~85 km/h and cruises ~190 km/h (max ~258). A 100 km/h target keeps the
+// gentle (<=1.30x) boost active while the plane is heavy and slow getting airborne, then
+// disengages well below cruise. This makes it a climb/lift aid only and never a top-speed
+// or AA-evasion exploit (the boost contributes nothing at any normal flying speed).
+if (_vehicle isKindOf "Air") then {
+	_min = 100;
 };
 
 while {
