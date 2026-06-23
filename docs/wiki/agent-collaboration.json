@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T16:40:00+02:00",
+  "generatedAt": "2026-06-23T16:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "empty-supply-truck-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh empty supply-truck cleanup docs from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Source scope is maintained-root Server/FSM/emptyvehiclescollector.sqf and Server/Functions/Server_HandleEmptyVehicle.sqf across docs/source HEAD, current stable/B74.1, B74.2, B69, B74, Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2.",
+        "Initial checks show 0139a3468609..origin/master, origin/master..origin/claude/b74.2-aicom and origin/claude/b69..origin/claude/b74-aicom-spend are empty for checked collector/handler paths; no live release/cleanup/supply rescue head is exposed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 empty supply-truck evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future runtime/logistics owner should decide keep-and-label versus shorter/parameterized supply-truck timeout; if changing behavior, patch source Chernarus plus maintained Vanilla and smoke ordinary empty vehicles, double-timeout medical/repair vehicles, supply logistics and long-match object counts.",
+      "updated": "2026-06-23T16:55:00+02:00"
+    },
     {
       "lane": "vote-help-ui-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
