@@ -185,6 +185,50 @@ The remaining lower-value Tier-2 cards plus the big `Could` / `Backlog` long tai
 
 Across all four passes this loop has opened **22 draft PRs — #54–#75** — all **DRAFT** and **human-merge-gated**, all awaiting OA 1.64 in-engine smoke before any merge. The initial three-source sweep (upstream branches + Trello Tier-1 + Tier-2 long tail) is now **complete**; the loop from here is **delta-only** (new upstream commits / new board cards as they appear).
 
+## Pass 5 — deferred Tier-2 tail (closeout)
+
+> The closeout batch. Pass 4 deep-verified the Tier-2 long tail but **capped out** before finishing every codeable+missing candidate; **42** were triaged worth-a-deep-look but deferred. This pass deep-verified all **42** of that deferred tail, shipped the genuinely-ready slice as grouped **draft PRs**, and confirmed there is no remaining un-swept mineable surface. As with every prior pass, all PRs are **DRAFT** and **human-merge-gated**; **OA 1.64 in-engine smoke is pending** and is a merge precondition.
+
+### Funnel
+
+| Stage | Count |
+| --- | --- |
+| Deferred Tier-2 candidates (codeable+missing, capped out of Pass 4) | 42 |
+| Deep-verified against `origin/master` source | 42 |
+| **Ready → grouped draft PRs** | **7 cards / 4 PRs** |
+| Needs-design (owner/vote/art decision, no PR) | 22 |
+
+### 4 grouped draft PRs opened (7 cards)
+
+Cards are grouped where they share a file/subsystem so review stays single-purpose; the source card(s) are listed for traceability.
+
+| PR | What | Source card(s) |
+| --- | --- | --- |
+| [#76](https://github.com/rayswaynl/a2waspwarfare/pull/76) | Auto-deploy bipod when going prone with a bipod MG | #210 |
+| [#77](https://github.com/rayswaynl/a2waspwarfare/pull/77) | Show upgrade icons in the upgrade menu | #164 |
+| [#78](https://github.com/rayswaynl/a2waspwarfare/pull/78) | Map radius circles: HQ build area + ambulance redeploy range | #80, #76 |
+| [#79](https://github.com/rayswaynl/a2waspwarfare/pull/79) | Artillery UX: per-type range in menu, gun count in the "artillery called" message, and fix arty marker leaking when the caller disconnects mid-barrage | #115, #116, #171 |
+
+### 22 needs-design items (no PR — owner / vote / art decisions)
+
+These are real items but blocked on a decision that is not a coding call (a balance/economy owner decision, a community vote, or an art/SFX asset). They are catalogued in the mining artifacts; the notable ones:
+
+- **#216** — Federal Reserve passive-income endgame building
+- **#143** — ICBM impact countdown shown to both teams
+- **#178** — automatic minefield markers
+- **#174** — more-frequent house-wreck cleanup (perf)
+- **#165** — LoadoutManager data-driven missile-list refactor
+
+### Coverage confirmation (surface is exhausted)
+
+- **Miksuu GitHub Issues = 0** — the community runs its backlog on Trello, not Issues, so there is no second issue tracker to mine.
+- **Forks = 1** (ours) — there are no hidden contributor forks carrying un-mined work.
+- The only remaining un-swept Trello surface is **low-yield**: the `Low Priority (Won't)` list (53 cards) plus 202 archived cards — both explicitly out of the worth-doing bar.
+
+### Final cross-pass total
+
+Across all five passes this loop has opened **26 draft PRs — #54–#79** — all **DRAFT** and **human-merge-gated**, all awaiting OA 1.64 in-engine smoke before any merge. The full mineable surface — **490 upstream branches + Trello Tier-1 + Tier-2 (including the deferred tail)** — is now **EXHAUSTED**; the loop from here is **delta-only** (new upstream commits / new board cards as they appear).
+
 ## Continue Reading
 
 - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)

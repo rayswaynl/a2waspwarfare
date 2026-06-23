@@ -47,21 +47,22 @@
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "sourceScope": [
-        "origin/claude/trello-map-radius-circles@77dd71ba303f / draft PR #78 merge-bases directly on current stable origin/master@f8a76de34.",
-        "Payload versus current stable is six maintained-root files / +192 across source Chernarus plus maintained Vanilla Client_AmbulanceRedeployCircles.sqf, Init_BaseStructure.sqf and Init_Client.sqf; git diff --check is clean.",
-        "Branch Init_BaseStructure.sqf creates HQBuildRange local border ellipses at Chernarus :54-65 and Vanilla :35-46, then cleans them up at Chernarus :153-158 and Vanilla :134-139.",
-        "Branch Init_Client.sqf:1227 launches Client_AmbulanceRedeployCircles.sqf; the watcher gates on WFBE_C_RESPAWN_MOBILE, combines WFBE_%1AMBULANCES plus WFBE_%1REDEPLOYTRUCKS, sizes from WFBE_C_RESPAWN_RANGES by WFBE_UP_RESPAWNRANGE and updates/deletes yellow local ellipses at :12-18,:30-35,:41-48,:57-68.",
-        "Current stable has CCrange local ellipses plus the build/respawn constants, but no Client_AmbulanceRedeployCircles, HQBuildRange, AmbRange_ or launcher hits.",
+        "origin/claude/trello-map-radius-circles@77dd71ba303fdb3712fdbfb0e9dff2feebca075f / draft PR #78 is one commit on current stable origin/master@f8a76de34.",
+        "Payload versus current stable is six maintained-root files / +192 / -4 across source Chernarus plus maintained Vanilla Takistan; git diff --check is clean.",
+        "Branch scope is client-local HQ build-area map circles plus ambulance/redeploy mobile-respawn range circles. It is player feedback only, not construction authority or respawn eligibility.",
+        "Branch Chernarus/Vanilla Client_AmbulanceRedeployCircles.sqf:1-69 creates own-side local yellow AmbRange_ Ellipse/Border rings for ambulance and redeploy-truck classnames, driven by WFBE_C_RESPAWN_RANGES and WFBE_UP_RESPAWNRANGE.",
+        "Branch Chernarus Init_BaseStructure.sqf:54-68 / Vanilla :35-49 creates side-colored local HQBuildRange Ellipse/Border rings using WFBE_C_BASE_AREA_RANGE + WFBE_C_BASE_HQ_BUILD_RANGE, with cleanup at Chernarus :151-158 / Vanilla :132-139.",
+        "Current stable has the constants/lists and validation paths but no maintained-root Client_AmbulanceRedeployCircles, AmbRange_ or HQBuildRange symbols.",
         "Current stable Client_GetRespawnAvailable.sqf keeps fuller ambulance/redeploy eligibility at :33-45 and :54-81, so the branch watcher is map-radius visibility only, not proof the respawn menu allows use.",
         "No gameplay source changed."
       ],
       "outputs": [
-        "Refreshed Client-UI-Systems-Atlas.md, Commander-HQ-Lifecycle-Atlas.md, Respawn-And-Death-Lifecycle-Atlas.md, Medic-Redeployment-Truck-Forward-Spawn.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only evidence and smoke gates.",
+        "Refreshed Client-UI-Systems-Atlas.md, Commander-HQ-Lifecycle-Atlas.md, Construction-And-CoIn-Systems-Atlas.md, Respawn-And-Death-Lifecycle-Atlas.md, Medic-Redeployment-Truck-Forward-Spawn.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only evidence and smoke gates.",
         "Refreshed Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl.",
-        "Mirrored touched files into the GitHub wiki checkout and validated."
+        "No gameplay source changed."
       ],
-      "handoff": "Future PR #78 reviewer should treat this as client-local map-indicator work only until Arma 2 OA smoke verifies HQ build-ring radius/cleanup, ambulance/redeploy ring follow/delete/respawn-range resizing, own-side/enemy visibility, map/JIP behavior, maintained Vanilla parity and redeploy-truck mismatch cases against the real respawn menu gates.",
-      "updated": "2026-06-23T13:48:21+02:00"
+      "handoff": "Future PR #78 reviewer should keep this branch-only until Arma 2 OA smoke covers HQ build-area circle accuracy/cleanup, ambulance and redeploy-truck circle audience/range/resize/cleanup, map/GPS/JIP behavior, maintained Vanilla Takistan parity and redeploy-truck mismatch cases against the real respawn menu gates.",
+      "updated": "2026-06-23T13:55:27+02:00"
     },
     {
       "lane": "trello-upgrade-icons-branch-intel-2026-06-23",
