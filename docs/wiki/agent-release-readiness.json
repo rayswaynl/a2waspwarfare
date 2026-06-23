@@ -355,6 +355,43 @@
   "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "branchOnlyFeaturePromotionGates": [
     {
+      "id": "trello-upgrade-hqcost-info-branch",
+      "branch": "origin/claude/trello-upgrade-hqcost-info",
+      "head": "34fd202c8865",
+      "base": "f8a76de34; current stable origin/master",
+      "state": "branch-review-needed-upgrade-values-transfer-menu-hq-cost-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-upgrade-complete-chat-and-transfer-menu-info-text",
+      "canonicalDocs": [
+        "Client-UI-Systems-Atlas.md#current-branch-scope",
+        "Upgrades-And-Research-Atlas.md#current-branch-scope",
+        "Commander-HQ-Lifecycle-Atlas.md#current-branch-scope",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-upgrade-hqcost-info@34fd202c886513d2dfa12cdd39039f188362ff7b; merge-base with origin/master is f8a76de349da6f8b871d079c828436c10afb221c",
+        "f8a76de34..34fd202c8865: 6 maintained-root files +96 across Client_FNC_Special.sqf, GUI_TransferMenu.sqf and stringtable.xml; git diff --check clean",
+        "Branch Chernarus/Vanilla Client_FNC_Special.sqf:204 keeps generic upgrade complete chat; :212-223 adds value lines only for WFBE_UP_ARTYTIMEOUT and WFBE_UP_RESPAWNRANGE",
+        "Branch Chernarus/Vanilla GUI_TransferMenu.sqf:124-129 appends STR_WF_INFO_NewHQCost from WFBE_C_STRUCTURES_HQ_COST_DEPLOY",
+        "Branch Chernarus/Vanilla stringtable.xml:459-473 and :1055-1061 add upgrade-value and New HQ cost keys",
+        "Current stable Chernarus/Vanilla Client_FNC_Special.sqf:204 and GUI_TransferMenu.sqf:124-125 have generic lines only and no new string keys",
+        "Current stable Chernarus Init_CommonConstants.sqf:44,47,435,438,678,684 and maintained Vanilla :44,47,257,260,480,486 define the relevant upgrade IDs, arrays and HQ deploy-cost variable"
+      ],
+      "ownerDecision": "Decide whether to promote the PR #75 info-text branch. It is UI/helpfulness work only; it does not change upgrade authority, transfer authority, HQ deploy cost semantics or server-side validation.",
+      "promotionGate": "Smoke Artillery Timeout and Respawn Range upgrade completion values, at least one unrelated upgrade type, Transfer Menu layout/value under HQ deploy-cost settings, normal transfer behavior and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "upgrade-smoke",
+          "economy-ui-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
       "id": "trello-base-integrity-fixes-branch",
       "branch": "origin/claude/trello-base-integrity-fixes",
       "head": "66d80160",
