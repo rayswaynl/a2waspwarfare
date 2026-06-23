@@ -752,6 +752,13 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_UNITS_BOUNTY_COEF = 1; //--- Bounty is the unit price * coef.
 	WFBE_C_BUILDINGS_SCORE_COEF = 3; // Score for killing base structures and HQ is building bounty * coef
 	WFBE_C_UNITS_BOUNTY_ASSISTANCE_COEF = 0.5; //--- Bounty assistance is the unit price * coef * assist coef.
+	//--- Card #66 (killstreak bounty): killing a player who is on a killstreak pays MORE. The PvP bounty is
+	//--- multiplied by 1 + min(victimStreak, CAP) * COEF. At COEF=0.15 / CAP=10 a victim on a 10-kill streak
+	//--- pays 2.5x. Server-authoritative (RequestOnUnitKilled.sqf tracks wfbe_killstreak); applied client-side
+	//--- in AwardBountyPlayer.sqf. TUNABLE: raise COEF for steeper reward, raise CAP to let very long streaks
+	//--- keep scaling. Set COEF=0 to disable the feature (multiplier collapses to 1.0).
+	WFBE_C_UNITS_BOUNTY_STREAK_COEF = 0.15; //--- Per-streak bounty bonus fraction (0 disables).
+	WFBE_C_UNITS_BOUNTY_STREAK_CAP = 10;    //--- Streak value at which the bounty bonus stops growing.
 	WFBE_C_UNITS_COUNTERMEASURE_PLANES = 64;
 	WFBE_C_UNITS_COUNTERMEASURE_CHOPPERS = 32;
 	WFBE_C_UNITS_CREW_COST = 120;
