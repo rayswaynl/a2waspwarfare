@@ -2334,7 +2334,7 @@ class RscMenu_Tactical {
 		class CA_SetFMission_Button : RscButton {
 			idc = 17006;
 			x = 0.12047;
-			y = 0.515631;
+			y = 0.507631;
 			w = 0.25;
 			text = $STR_WF_TACTICAL_ArtillerySetFireMission;
 			action = "MenuAction = 1";
@@ -2346,7 +2346,7 @@ class RscMenu_Tactical {
 		class CA_FireMission_Button : RscButton {
 			idc = 17007;
 			x = 0.12047;
-			y = 0.566833;
+			y = 0.551631;
 			w = 0.25;
 			text = $STR_WF_TACTICAL_ArtilleryCallFireMission;
 			action = "MenuAction = 2";
@@ -2358,6 +2358,17 @@ class RscMenu_Tactical {
 			w = 0.147;
 			h = 0.029412;
 			onLBSelChanged = "MenuAction = 200";
+		};
+		// Card #113: one-click crew-all-artillery. Mounts available group AI into the empty
+		// driver/gunner seats of the player's own artillery pieces.
+		class CA_CrewArtillery_Button : RscButton {
+			idc = 17040;
+			x = 0.12047;
+			y = 0.595631;
+			w = 0.25;
+			text = $STR_WF_TACTICAL_CrewArtillery;
+			action = "MenuAction = 50";
+			tooltip = $STR_WF_TACTICAL_CrewArtilleryTooltip;
 		};
 		// Marty: Ammo selector applies the selected shell type to all matching player artillery units.
 		class CA_Artillery_Label_Ammo : RscText {
@@ -2378,7 +2389,7 @@ class RscMenu_Tactical {
 		class CA_Support_SubTitle : RscText_SubTitle {
 			idc = 17009;
 			x = 0.00518464;
-			y = 0.622955;
+			y = 0.646955;
 			w = 0.2;
 			text = $STR_WF_TACTICAL_Support;
 		};
@@ -2485,7 +2496,7 @@ class RscMenu_Tactical {
 		/* Separators */
 		class LineTRH1 : RscText {
 			x = 0.00638635;
-			y = 0.61566;
+			y = 0.63966;
 			w = 0.364063;
 			h = WFBE_SPT1;
 			colorBackground[] = WFBE_SPC1;
