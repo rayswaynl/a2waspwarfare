@@ -2514,3 +2514,13 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Current-stable comparison: `origin/master@f8a76de34` has manual TAB bipod only and no maintained-root `Bipod_AddAutoDeploy`, `Bipod_AutoEH`, `AnimChanged` or `15 call Bipod_ON` hits. The branch reuses the existing whitelist, TAB fallback, `Bipod_ON` sound, `str_bipod` localization debt and recoil reset behavior; no server/PV state is added.
 - Result: refreshed [Deployable bipod / weapon resting](Deployable-Bipod-Weapon-Resting#branch-intel---trello-auto-bipod-candidate), Feature Status, Testing workflow branch-only smoke pack, release-readiness gates, dashboard, pruning ledger and machine rows. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T13:32:28+02:00 - Codex - Trello upgrade icons branch intel
+
+- Claimed `trello-upgrade-icons-branch-intel-2026-06-23` after current fetch showed `origin/claude/trello-upgrade-icons@baf8d9c304ad`, draft PR #77 / Trello #164, on current stable merge-base `origin/master@f8a76de34`.
+- Initial branch shape: one commit (`baf8d9c30`), two maintained-root files / +8, and `git diff --check origin/master..origin/claude/trello-upgrade-icons` is clean.
+- Planned source scope: inspect source Chernarus plus maintained Vanilla `Client/GUI/GUI_UpgradeMenu.sqf`, confirm the existing `WFBE_C_UPGRADES_IMAGES` image array source, compare current-stable absence/presence, then route exact branch-only evidence through UI/upgrades owner pages, Feature Status, branch-only smoke/release gates and machine records. No gameplay source edits planned.
+- Findings: branch `GUI_UpgradeMenu.sqf:12` in both maintained roots reads `WFBE_C_UPGRADES_IMAGES`, `:27-28` paints non-empty images into listbox `504001` column `0` during initial fill, and `:173-174` repaints them after refresh/reordering. The image paths already come from `Labels_Upgrades.sqf:104-125`, including intentional empty strings for no-icon rows.
+- Current-stable comparison: `origin/master@f8a76de34` reads the same upgrade image array and uses the selected image in the detail pane, but has no maintained-root `lnbSetPicture` call in `GUI_UpgradeMenu.sqf`. The branch adds no image assets, no localization, no server/PV state, no upgrade-authority change and no stale `RscMenu_Upgrade` cleanup.
+- Result: refreshed [Client UI systems](Client-UI-Systems-Atlas#current-branch-scope), [Upgrades and research](Upgrades-And-Research-Atlas#current-branch-scope), Feature Status, Testing workflow branch-only smoke pack, release-readiness gates, dashboard, pruning ledger and machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.

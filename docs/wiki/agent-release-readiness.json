@@ -389,6 +389,42 @@
       }
     },
     {
+      "id": "trello-upgrade-icons-branch",
+      "branch": "origin/claude/trello-upgrade-icons",
+      "head": "baf8d9c304ad",
+      "base": "origin/master@f8a76de34",
+      "state": "branch-only-upgrade-list-visual-candidate-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-upgrade-menu-listbox-icons",
+      "canonicalDocs": [
+        "Client-UI-Systems-Atlas.md#current-branch-scope",
+        "Upgrades-And-Research-Atlas.md#current-branch-scope",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-upgrade-icons@baf8d9c304ad99cfd848d0a740c53b580d998933; merge-base with origin/master is current stable f8a76de34",
+        "f8a76de34..baf8d9c304ad: 2 maintained-root Client/GUI/GUI_UpgradeMenu.sqf files +8; git diff --check clean",
+        "Branch Chernarus/Vanilla GUI_UpgradeMenu.sqf:12 reads WFBE_C_UPGRADES_IMAGES",
+        "Branch Chernarus/Vanilla GUI_UpgradeMenu.sqf:27-28 paints non-empty upgrade images into listbox 504001 column 0 during initial fill",
+        "Branch Chernarus/Vanilla GUI_UpgradeMenu.sqf:173-174 repaints row icons after refresh/reordering",
+        "Chernarus/Vanilla Labels_Upgrades.sqf:104-125 already defines the image array and intentional empty strings",
+        "Current stable Chernarus/Vanilla GUI_UpgradeMenu.sqf has no maintained-root lnbSetPicture calls in the upgrade menu"
+      ],
+      "ownerDecision": "Decide whether to promote the PR #77 upgrade-list icon branch. It is visual/UI work only; it does not add image assets, change upgrade config semantics, fix stale RscMenu_Upgrade, alter upgrade authority or affect server-side validation.",
+      "promotionGate": "Smoke initial upgrade-list icons, empty-image fallback rows, queue/level refresh repaint, row selection/detail-pane behavior, missing-texture RPT cleanliness and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "upgrade-smoke",
+          "resource-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
       "id": "trello-upgrade-hqcost-info-branch",
       "branch": "origin/claude/trello-upgrade-hqcost-info",
       "head": "34fd202c8865",

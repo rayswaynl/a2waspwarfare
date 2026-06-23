@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T13:22:09+02:00",
+  "generatedAt": "2026-06-23T13:40:27+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "trello-upgrade-icons-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/trello-upgrade-icons@baf8d9c304ad99cfd848d0a740c53b580d998933 / draft PR #77 is one commit on current stable origin/master@f8a76de34.",
+        "Payload versus current stable is two maintained-root Client/GUI/GUI_UpgradeMenu.sqf files / +8 across source Chernarus plus maintained Vanilla; git diff --check is clean.",
+        "Branch Chernarus/Vanilla GUI_UpgradeMenu.sqf reads WFBE_C_UPGRADES_IMAGES at :12, paints non-empty images into listbox 504001 column 0 at :27-28 during initial fill, and repaints after list refresh at :173-174.",
+        "Current stable reads the same image array and shows selected details through ctrlSetText 504002, but does not paint list row icons. Existing Labels_Upgrades.sqf:104-125 supplies the image paths.",
+        "No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only upgrade-list icon evidence and smoke gates.",
+        "Refreshed Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future PR #77 reviewer should keep this branch-only until Arma 2 OA smoke covers upgrade list icon rendering, empty-image fallback, queue/level refresh repaint, detail-pane behavior, no missing texture errors and maintained Vanilla parity.",
+      "updated": "2026-06-23T13:40:27+02:00"
+    },
     {
       "lane": "trello-auto-bipod-branch-intel-2026-06-23",
       "owner": "Codex",
