@@ -9444,6 +9444,11 @@
         <Italian>Questo aggiornamento sblocca una funzionalità migliore e più veloce per il tuo radar anti-aereo (AAR).&lt;br/&gt; - Funzionalità e frequenza di aggiornamento:&lt;br/&gt;   Livello 0 = Posizione, direzione, velocità (3 secondi)&lt;br/&gt;   Livello 1 = Altitudine (2 secondi)&lt;br/&gt;   Livello 2 = Tipo di aeromobile (1 secondo)</Italian>
     </Key>
 
+    <!-- Trello card #66: one-shot AAR new-contact warning. -->
+    <Key ID="STR_WF_BE_AAR_NewContact">
+        <English>AAR: New air contact detected!</English>
+    </Key>
+
     <Key ID="STR_WF_UPGRADE_UnitCost">
       <English>Unit Cost</English>
       <French>Coût Unitaire</French>
