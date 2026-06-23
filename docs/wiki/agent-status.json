@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T22:45:42+02:00",
+  "generatedAt": "2026-06-23T23:05:41+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest docs-only lane published: patrols-v2-b742-current-head-followup-2026-06-23. Patrols v2 rows now use current B74.2 origin/claude/b74.2-aicom@21b62b04 where checked Patrols/town-AI/marker/UI cap paths prove continuity from d472da6a. No gameplay source changed.",
-      "nextExpectedOutput": "Continue the documentation-finisher loop from Progress Dashboard, Feature Status, Source Fix queue and pruning ledger with a fresh bounded source-backed lane."
+      "currentWork": "Latest published docs-only lane is commander-vote-b742-current-head-followup-2026-06-23, which refreshed commander vote/reassignment rows to current B74.2 origin/claude/b74.2-aicom@21b62b04 without gameplay source edits.",
+      "nextExpectedOutput": "Continue bounded source-backed wiki upkeep from Progress Dashboard, Feature Status, Source Fix queue, pruning ledger and machine rows."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-vote-b742-current-head-followup-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed commander vote/reassignment rows from stale B74.2 origin/claude/b74.2-aicom@d472da6a wording to current origin/claude/b74.2-aicom@21b62b04. Checked d472da6a..21b62b04 and origin/master..B74.2 diffs are empty for source Chernarus and maintained Vanilla vote/reassignment paths; current B74.2 keeps Server_VoteForCommander.sqf:43 and Server_AssignNewCommander.sqf:4-5 fixed shapes. Docs/source/full modded forks and GUI/authority notification risks remain open; trello-vote-para-guards is branch-only tie-break context. No gameplay source changed."
+    },
     {
       "lane": "patrols-v2-b742-current-head-followup-2026-06-23",
       "owner": "Codex",
