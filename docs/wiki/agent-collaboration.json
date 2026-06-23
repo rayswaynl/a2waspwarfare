@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T10:09:18+02:00",
+  "generatedAt": "2026-06-23T10:25:17+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pvf-sender-auth-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh DR-55 PVF/PVEH sender-authentication evidence after current stable advanced to origin/master@f8a76de34, which is also origin/claude/b74.1-aicom.",
+        "Check maintained Chernarus and maintained Vanilla PVF init/dispatcher paths plus high-risk server handler examples across docs/source HEAD, current stable/B74.1, B69, B74, current Miksuu, perf and historical refs.",
+        "Keep this separate from the registered-handler allowlist and direct publicVariable/SEND_MESSAGE hardening lanes."
+      ],
+      "outputs": [
+        "Refreshed Feature Status Register, Server Authority Migration Map, PVF Dispatch Implementation Playbook, Networking and Public Variable Channel Index with current stable/B74.1 DR-55 evidence.",
+        "Updated Source Fix Propagation Queue, dashboard/worklog/pruning ledger and machine rows.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future network-hardening owner should carry authenticated requester context to server handlers and re-derive side, role, funds and object ownership per handler; current stable/B74.1 namespace/CODE dispatch is not a DR-55 closure.",
+      "updated": "2026-06-23T10:17:10+02:00"
+    },
     {
       "lane": "hq-score-current-b741-refresh-2026-06-23",
       "owner": "Codex",

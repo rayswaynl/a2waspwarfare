@@ -2317,3 +2317,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch note: all checked refs still carry stale modded Napf/Eden/Lingor `Common/Module/Reaktiv` copies; checked `origin/claude/b69..origin/claude/b74-aicom-spend` Reaktiv-path deltas are empty. The current-stable maintained-root removal is consistent with older `923420969` removal precedent plus later stable history; modded copies are not release-proof.
 - Result: refreshed [Modules atlas](Modules-Atlas#reaktiv--reactive-era-armor-commonmodulereaktiv), [Dead/stale code register](Dead-Code-And-Stale-Code-Register), dashboard, pruning ledger and machine rows with current stable/B69/B74 Reaktiv evidence. No gameplay source changed.
 - Validation: final validation is recorded in the matching `complete` event.
+
+## 2026-06-23T10:17:10+02:00 - Codex - PVF sender auth current B74.1 refresh
+
+- Claimed `pvf-sender-auth-current-b741-refresh-2026-06-23` after current stable advanced to `origin/master@f8a76de34`, matching `origin/claude/b74.1-aicom`, while the DR-55/PVF rows still named `0139a346` as current.
+- Source scope: checked source Chernarus plus maintained Vanilla PVF init/dispatcher paths and high-risk handler examples across docs/source `HEAD@925d56e01a1e`, current stable/B74.1 `f8a76de34`, current B69 `8d465fce`, adjacent B74 `b23f557f`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2`.
+- Findings: docs/source remains old-shape for checked PVF paths (`Init_PublicVariables.sqf:46,51`; server dispatcher `:14`; client dispatcher `:22`). Current stable/B74.1, B69 and B74 use namespace/`CODE` dispatch at server `Server_HandlePVF.sqf:14-15` and client `Client_HandlePVF.sqf:32-33`, but still pass only `(_this select 1)` at `Init_PublicVariables.sqf:56,61`.
+- Branch note: checked B69..B74 and B74..B74.1 generic PVF init/dispatcher deltas are empty, and no allowlist/sender/requester symbol was found in checked current-stable/B69/B74 dispatcher/init files. Direct current Miksuu was rechecked as `b8389e748243`; current origin exposes no live `release/*`, `*pvf*`, `*network*`, `*auth*` or `*public*` head.
+- Result: refreshed Feature Status, Server Authority Migration Map, PVF Dispatch Implementation Playbook, Networking, Public Variable Channel Index, Source Fix queue, dashboard/pruning ledger and machine rows. No gameplay source changed.
+- Validation: final validation is recorded in the matching `complete` event.
