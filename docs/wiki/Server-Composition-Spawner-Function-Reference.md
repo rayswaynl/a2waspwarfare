@@ -237,9 +237,9 @@ This incremental-rebuild pattern means calling `CreateDefenseTemplate` again wit
 | Medium (Barracks, Factory, etc.) | `Server/Construction/Construction_MediumSite.sqf` | 126 |
 | Small (Service point, light factory) | `Server/Construction/Construction_SmallSite.sqf` | 111 |
 
-The Medium and Small site callers resolve the wall template via `missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]`. The HQ caller passes the hardcoded string `"WFBE_NEURODEF_HEADQUARTERS_WALLS"` directly (no `format` call, no `_rlType` variable). The `AARadar` type is explicitly excluded from auto-wall construction at both medium and small site callers regardless of the `isAutoWallConstructingEnabled` flag.
+The Medium and Small site callers resolve the wall template via `missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]`. The HQ caller passes the hardcoded string `"WFBE_NEURODEF_HEADQUARTERS_WALLS"` directly (no `format` call, no `_rlType` variable). Branch note from the 2026-06-23 auto-wall refresh: docs/source, current Miksuu and perf have no SmallSite/MediumSite structure exclusions beyond the global toggle, historical `a96fdda2` excludes only `AARadar`, and current stable/B69/B74 exclude `AARadar`/`CBRadar` for SmallSite plus `AARadar`/`Bank`/`Reserve`/`ArtilleryRadar` for MediumSite.
 
-**Auto-wall gate:** `isAutoWallConstructingEnabled` is initialized `true` at `Common/Init/Init_Common.sqf:202`. Players with the commander role can toggle it via `User14` keybind; the new value is sent to the server via the `RequestAutoWallConstructinChange` public variable (`Common/Init/Init_PublicVariables.sqf:21`).
+**Auto-wall gate:** `isAutoWallConstructingEnabled` is a mission-global value. Docs/source, current Miksuu and perf initialize it `false` at `Common/Init/Init_Common.sqf:201`; current stable initializes it `true` at `:213`; current B69/B74 initialize it `true` at `:214`; historical `a96fdda2` initializes it `true` at `:201`. Players with the commander role can toggle it via `User14` keybind (`coin_interface.sqf:180,207-217`); the new value is sent to the server via the `RequestAutoWallConstructinChange` public variable (`Common/Init/Init_PublicVariables.sqf:21`; handler writes one global at `RequestAutoWallConstructinChange.sqf:3-7`).
 
 **Per-structure wall templates (Init_Defenses.sqf):**
 
