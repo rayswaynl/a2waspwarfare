@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T23:22:46+02:00",
+  "generatedAt": "2026-06-23T23:46:17+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -19,10 +19,10 @@
   },
   "agents": {
     "Codex": {
-      "status": "ready",
+      "status": "ready-documentation-finisher-loop",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published docs-only lane is loadoutmanager-b742-current-head-followup-2026-06-23, which refreshed LoadoutManager root discovery / skip-zip / generated version.sqf rows to current B74.2 origin/claude/b74.2-aicom@21b62b04 without gameplay source edits.",
-      "nextExpectedOutput": "Continue bounded source-backed wiki upkeep from Progress Dashboard, Feature Status, Source Fix queue, pruning ledger and machine rows."
+      "currentWork": "Published docs-only service/EASA B74.2 current-head follow-up. Service menu affordability, Gear/Loadout/EASA, Feature Status, Source Fix queue, pruning ledger and machine rows now route checked service/EASA evidence through current origin/claude/b74.2-aicom@21b62b04. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or the hardening backlog before editing."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "service-easa-b742-current-head-followup-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed service/EASA affordability and branch-only service ammo/category evidence from stale B74.2 origin/claude/b74.2-aicom@d472da6a wording to current origin/claude/b74.2-aicom@21b62b04. Checked d472da6a..21b62b04 and origin/master..origin/claude/b74.2-aicom are empty for Chernarus/Vanilla service menu, EASA menu/module and stringtable paths. Stable-shaped refs still only partially guard service rearm/refuel and Chernarus EASA exact funds; repair/heal, maintained Vanilla exact-funds, stale context and authority remain open. No gameplay source changed."
+    },
     {
       "lane": "loadoutmanager-b742-current-head-followup-2026-06-23",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T23:22:46+02:00",
+  "generatedAt": "2026-06-23T23:46:17+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "service-easa-b742-current-head-followup-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh service/EASA affordability rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only service menu affordability, EASA exact-funds/client-debit, branch-only service ammo UI and EASA category wiring paths across current stable/B74.1, previous B74.2, current B74.2, B69, adjacent B74, Miksuu, perf and historical release evidence.",
+        "Keep Service-Menu-Affordability-Guards and Gear-Loadout-And-EASA-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Service-Menu-Affordability-Guards.md and Gear-Loadout-And-EASA-Atlas.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 service/EASA path evidence.",
+        "Recorded that d472da6a..21b62b04 and origin/master..origin/claude/b74.2-aicom are empty for checked Chernarus/Vanilla service menu, EASA menu/module and stringtable paths.",
+        "Updated Feature Status, Source Fix queue, Progress Dashboard, pruning ledger, worklog and service/EASA machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future service/EASA owner should patch action-time service price/funds/context guards, decide and propagate maintained Vanilla exact-funds EASA, and smoke service ammo UI plus EASA category wiring separately from affordability or server-authority closure.",
+      "updated": "2026-06-23T23:46:17+02:00"
+    },
     {
       "lane": "loadoutmanager-b742-current-head-followup-2026-06-23",
       "owner": "Codex",
