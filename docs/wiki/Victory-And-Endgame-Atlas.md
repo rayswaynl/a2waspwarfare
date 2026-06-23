@@ -17,14 +17,14 @@ Source anchors below are relative to `Missions/[55-2hc]warfarev2_073v48co.cherna
 
 ## Current Branch Scope
 
-Source refreshed: 2026-06-23. Checked refs: docs/source `HEAD@4c87efd2` (source-unchanged from `d30d23466` / `a0a86da2` / `2f2132f8` for the paths below), current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, direct Miksuu `master@b8389e748243`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, and live-support branch `origin/claude/b57-soak-proposals@b8a1505f`. Current origin exposes no `release/*` heads on 2026-06-23.
+Source refreshed: 2026-06-23. Checked refs: docs/source `HEAD@4c87efd2` (source-unchanged from `d30d23466` / `a0a86da2` / `2f2132f8` for the paths below), current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34`, B74.2 `origin/claude/b74.2-aicom@d472da6a`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, direct Miksuu `master@b8389e748243`, `origin/perf/quick-wins@0076040f`, historical release commit `a96fdda2`, and earlier live-support branch `origin/claude/b57-soak-proposals@b8a1505f`. Current origin exposes no `release/*` heads on 2026-06-23.
 
 | Scope | Current evidence | Development meaning |
 | --- | --- | --- |
-| Default victory condition | Docs/source, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` keep the older Chernarus/Vanilla shape: `_victory == 0` at `server_victory_threeway.sqf:11`, mixed elimination/all-towns condition at `:23`, `HandleSpecial ["endgame", sideID]` at `:24`, `WF_Winner` at `:31`, `WFBE_GameOver` at `:33`, and opposite-side logger call at `:35-41`. Current stable `origin/master@0139a346` adds an HQ nil/null boot skip at `:18-22`, keeps the mixed condition at `:29`, writes `WF_Winner` at `:37`, writes WASPSTAT `_x` at `:41-46`, and calls the live logger with `[_x]` at `:49` in both maintained roots. Current B69/B74 Chernarus remove the `_victory == 0` gate at `:16`, add a same-tick short-circuit at `:26`, and guard the combined condition at `:45`; B69/B74 maintained Vanilla still matches the stable-shaped gated server loop at `:11,:29,:49`. | The exact wrong-winner/double-fire symptom differs by branch. Current B69/B74 Chernarus are partial progress, but explicit winner/loser variables, maintained Vanilla propagation and branch-aligned client/logger/WASPSTAT semantics remain patch-ready. |
-| Victory constants | Docs/Miksuu/perf keep `WFBE_C_VICTORY_THREEWAY` at `Common/Init/Init_CommonConstants.sqf:401-402`; current stable uses `:631-632`; B69 uses Chernarus `:824-825` and Vanilla `:728-729`; B74 uses Chernarus `:837-838` and Vanilla `:728-729`; historical `a96fdda2` uses `:417-418`. | Cite the target branch when discussing line refs. Non-zero victory modes still need an owner decision or implementation; B69/B74 Chernarus stop the parameter from disabling standard detection, but they deliberately do not add new victory modes and Vanilla remains gated. |
-| B69/B74 and live-support partial fixes | `origin/claude/b69@8d465fce`, adjacent B74 `b23f557f` and `origin/claude/b57-soak-proposals@b8a1505f` share the Chernarus server guard shape (`server_victory_threeway.sqf:16,26,45`). B69/B74 remove client inversion in both maintained roots (`Client_EndGame.sqf:6-11`) and add a short cosmetic outro block at `:62-80`, but the GUER label is Chernarus-only (`GUI_EndOfGameStats.sqf:8-10`); maintained Vanilla still labels only West/East at `:5-8`. B69..B74 checked victory-path delta only touches Chernarus `Init_CommonConstants.sqf`. | Treat these branches as partial rescue evidence, not stable parity or release-ready closure. They still do not compute explicit `_winnerSide` / `_loserSide` before using `_x`, and the Chernarus/Vanilla split must be resolved before release wording. |
-| Stale `Server/PVFunctions/LogGameEnd.sqf` copy | Present in docs checkout, Miksuu and perf maintained roots; absent in current stable `origin/master@0139a346` and historical `a96fdda2` maintained roots. | Do not restore or wire this copy where it has already been removed; keep exact branch/removal proof in [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Server init bind cleanup](Server-Init-Bind-Cleanup). |
+| Default victory condition | Docs/source, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` keep the older Chernarus/Vanilla shape: `_victory == 0` at `server_victory_threeway.sqf:11`, mixed elimination/all-towns condition at `:23`, `HandleSpecial ["endgame", sideID]` at `:24`, `WF_Winner` at `:31`, `WFBE_GameOver` at `:33`, and opposite-side logger call at `:35-41`. Current stable/B74.1 Chernarus removes the `_victory == 0` trap (`server_victory_threeway.sqf:11-16`), short-circuits later sides after `WFBE_GameOver` (`:23-26`), guards the full combined condition (`:39-45`), then still writes `WF_Winner`, WASPSTAT and `LogGameEnd` with `_x` (`:53,:57-65`). Current stable/B74.1 maintained Vanilla remains gated/mixed at `:11,:29`, writes `WF_Winner` at `:37`, writes WASPSTAT `_x` at `:41-46`, and logs `[_x]` at `:49`. B74.2 adds no checked victory-path delta over current stable/B74.1. | Current stable/B74.1 is a partial rescue, not closure. Chernarus now has the guard/short-circuit, but explicit winner/loser variables, maintained Vanilla propagation and branch-aligned client/logger/WASPSTAT semantics remain patch-ready. |
+| Victory constants | Docs/Miksuu/perf keep `WFBE_C_VICTORY_THREEWAY` at `Common/Init/Init_CommonConstants.sqf:401-402`; current stable/B74.1 uses Chernarus `:856-857` and maintained Vanilla `:728-729`; B69 uses Chernarus `:824-825` and Vanilla `:728-729`; B74 uses Chernarus `:837-838` and Vanilla `:728-729`; historical `a96fdda2` uses `:417-418`. | Cite the target branch when discussing line refs. Non-zero victory modes still need an owner decision or implementation; current stable/B74.1/B69/B74 Chernarus stop the parameter from disabling standard detection, but they deliberately add no new victory modes and Vanilla remains gated. |
+| Current stable/B74.1 and B69/B74 partial fixes | Current stable/B74.1 Chernarus, B69 Chernarus, adjacent B74 Chernarus and older live-support `origin/claude/b57-soak-proposals@b8a1505f` share the server guard shape (`server_victory_threeway.sqf:16,26,45` on the B69/B74/B74.1 line family). Current stable/B74.1 and B69/B74 remove client inversion in both maintained roots (`Client_EndGame.sqf:5-11` on B74.1, `:6-11` on B69/B74) and add a short cosmetic outro block at `:62-80`, but the GUER label is Chernarus-only (`GUI_EndOfGameStats.sqf:8-9` on B74.1); maintained Vanilla still labels only West/East at `:5-8`. `origin/master..origin/claude/b74.2-aicom` has no checked victory-path delta. | Treat this as partial rescue evidence, not stable parity or release-ready closure. The code still does not compute explicit `_winnerSide` / `_loserSide` before using `_x`, and the Chernarus/Vanilla split must be resolved before release wording. |
+| Stale `Server/PVFunctions/LogGameEnd.sqf` copy | Present in docs checkout, Miksuu and perf maintained roots; absent in current stable/B74.1 `origin/master@f8a76de34` and historical `a96fdda2` maintained roots. | Do not restore or wire this copy where it has already been removed; keep exact branch/removal proof in [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Server init bind cleanup](Server-Init-Bind-Cleanup). |
 | Server init duplicate binds | Docs checkout and Miksuu keep old live duplicate binds in Chernarus and Vanilla (`Init_Server.sqf:64,89`). Current stable has one live bind at `Init_Server.sqf:81`; historical `a96fdda2` has one at `:65`. Perf fixes Chernarus with one bind at `:64` but leaves Vanilla old-shape. | Treat duplicate-bind cleanup as branch-split. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) for the authoritative DR-43b matrix. |
 
 ## Why This Matters
@@ -35,7 +35,7 @@ The important split:
 
 - `Server/FSM/server_victory_threeway.sqf` owns default server-side detection and mission shutdown.
 - `Client/Functions/Client_FNC_Special.sqf` receives the endgame special message and starts the client outro.
-- `Client/Client_EndGame.sqf` treats its input as the losing side and flips it to display winner stats/camera focus on docs/source, current stable, Miksuu, perf and historical release; B69/B74 remove that inversion and therefore change the payload contract.
+- `Client/Client_EndGame.sqf` treats its input as the losing side and flips it to display winner stats/camera focus on docs/source, Miksuu, perf and historical release; current stable/B74.1 and B69/B74 remove that inversion in both maintained roots and therefore require the server payload to be the winner.
 - `Server/Functions/Server_LogGameEnd.sqf` is the live win-stat logger.
 - `Server/PVFunctions/LogGameEnd.sqf` is a stale, buggy duplicate where still present; stable/release maintained roots have already removed it.
 
@@ -81,7 +81,7 @@ The victory loop is therefore separate from town capture, economy/resources and 
 - `_total = totalTowns` (`:4`);
 - `_loopTimer = 80` (`:6`).
 
-Every 80 seconds, when `_victory == 0`, it checks each present side except `WFBE_DEFENDER` (`server_victory_threeway.sqf:9-46` in the docs checkout). Current stable keeps that gate but inserts an HQ nil/null boot skip before factory counting, so the same detection condition has shifted to `server_victory_threeway.sqf:29`. B69/B74 Chernarus remove this gate and run standard supremacy/HQ-loss detection whenever `!gameOver` (`server_victory_threeway.sqf:16`), but maintained Vanilla still uses the stable-shaped gate at `:11`.
+Every 80 seconds, when `_victory == 0`, docs/source checks each present side except `WFBE_DEFENDER` (`server_victory_threeway.sqf:9-46` in the docs checkout). Current stable/B74.1 Chernarus removes this gate and runs standard supremacy/HQ-loss detection whenever `!gameOver` (`server_victory_threeway.sqf:11-16`), but current stable/B74.1 maintained Vanilla still uses the gated shape at `:11`.
 
 For each side `_x`, it computes:
 
@@ -90,9 +90,9 @@ For each side `_x`, it computes:
 | `_hq` | Side HQ/MHQ object from side logic. | `server_victory_threeway.sqf:14` |
 | `_structures` | Side base structures. | `:15` |
 | `_towns` | Count of towns held by side. | `:16` |
-| `_factories` | Count of barracks, light, heavy and aircraft factories found from side structures. | `:18-21` in the docs checkout; current stable line-drifts to `:24-27` after the HQ boot guard. |
+| `_factories` | Count of barracks, light, heavy and aircraft factories found from side structures. | `:18-21` in the docs checkout; current stable/B74.1 Chernarus line-drifts to `:34-37`, while maintained Vanilla uses `:24-27`. |
 
-The current condition is:
+The old/docs-source and current stable/B74.1 maintained Vanilla condition is:
 
 ```sqf
 if (!(alive _hq) && _factories == 0 || _towns == _total && !WFBE_GameOver) then {
@@ -104,7 +104,7 @@ Because SQF `&&` binds tighter than `||`, this behaves like:
 ((!alive _hq) && (_factories == 0)) || ((_towns == _total) && !WFBE_GameOver)
 ```
 
-That means `!WFBE_GameOver` guards only the all-towns clause, not the HQ/factory elimination clause. Current stable `origin/master@0139a346` keeps the same source shape at `server_victory_threeway.sqf:29`; the added HQ boot guard does not close the same-tick double-fire risk. B69/B74 Chernarus guard the combined expression at `server_victory_threeway.sqf:45` and add an early `WFBE_GameOver` side-loop exit at `:26`, but this has not been propagated to maintained Vanilla.
+That means `!WFBE_GameOver` guards only the all-towns clause, not the HQ/factory elimination clause. Current stable/B74.1 maintained Vanilla still has that source shape at `server_victory_threeway.sqf:29`. Current stable/B74.1 Chernarus and B69/B74 Chernarus guard the combined expression at `server_victory_threeway.sqf:45` and add an early `WFBE_GameOver` side-loop exit at `:26`, but this has not been propagated to maintained Vanilla and still lacks explicit winner/loser computation.
 
 ## Endgame Broadcast And Client Semantics
 
@@ -116,7 +116,7 @@ When the condition fires, the server broadcasts:
 
 The client receives `HandleSpecial` tag `"endgame"` and spawns `WFBE_CL_FNC_EndGame` (`Client/PVFunctions/HandleSpecial.sqf:16`). That function sets local `gameOver = true`, `WFBE_GameOver = true`, converts the side id to a side value and executes `Client\Client_EndGame.sqf` (`Client_FNC_Special.sqf:61-68`).
 
-`Client_EndGame.sqf` then flips the side it receives:
+On docs/source/Miksuu/perf/historical-release shape, `Client_EndGame.sqf` then flips the side it receives:
 
 ```sqf
 //todo improve that script, _side is the looser.
@@ -127,13 +127,13 @@ if (_side == west) then {
 };
 ```
 
-So the current client payload is semantically "loser side id", not "winner side id." This is easy to misread because the server also writes `WF_Winner` in the same block. Wave S tightened this further: `_x` is the eliminated/losing side in the HQ/factory branch, but `_x` is the winning side in the all-towns branch. Any patch must compute explicit `_winnerSide` and `_loserSide` per branch, then keep the client, logger and messages consistent.
+So old-shaped branches use a "loser side id" client payload. Current stable/B74.1 and B69/B74 remove that inversion in both maintained roots (`Client_EndGame.sqf:5-11` on B74.1, `:6-11` on B69/B74) and treat the payload as the winner. This is still easy to misread because the server writes `WF_Winner` in the same block while using `_x` directly. `_x` is the eliminated/losing side in the HQ/factory branch, but `_x` is the winning side in the all-towns branch. Any patch must compute explicit `_winnerSide` and `_loserSide` per branch, then keep the server broadcast, client script, GUER label, logger and messages consistent.
 
-Current stable still carries this client inversion in both maintained roots. The live-support `origin/claude/b57-soak-proposals` branch removes it in Chernarus only (`Client_EndGame.sqf:5-11`). B69/B74 remove the inversion in both maintained roots (`Client_EndGame.sqf:6-11`) and treat the payload as the winner, but their server loop still uses `_x` directly. Do not mix stable and branch payload semantics without checking the target branch, and do not treat the B69/B74 client parity as complete because the GUER stats label is still Chernarus-only.
+Do not mix old loser-payload and current winner-payload semantics without checking the target branch, and do not treat current stable/B74.1 client parity as complete because maintained Vanilla still has the old server loop and lacks the GUER stats label.
 
 The client outro:
 
-- runs end-of-game stats for the flipped side (`Client_EndGame.sqf:13`);
+- runs end-of-game stats for the payload side (`Client_EndGame.sqf:11` on current stable/B74.1; `:13` on old-shaped docs/source);
 - plays `wf_outro` (`:14-16`);
 - builds a camera target list from the winner and opponent HQ/structures (`:18-30`);
 - ejects and moves the player near friendly HQ as a safety position (`:40-45`);
@@ -159,7 +159,7 @@ That is the older docs/Miksuu/perf/historical-release shape: `_side` is set to t
 
 Because older-shape branches pass the opposite side: in the HQ/factory elimination branch `_x` is the loser and `_side` is the winner, so the logger is correct; in the all-towns branch `_x` is the winner and `_side` is the loser, so the logger credits the loser. The client still receives `_x`, flips it, and therefore also shows the wrong side for all-towns wins.
 
-Current stable `origin/master@0139a346` changed this logger call in both maintained roots: it removed the opposite-side `_side` block, writes WASPSTAT `ROUNDEND` with `_x` at `server_victory_threeway.sqf:41-46`, and calls `[_x] call WFBE_CO_FNC_LogGameEnd` at `:49`. That makes all-towns logging correct, but it makes HQ/factory elimination logging and WASPSTAT winner telemetry use the losing side. B69/B74 Chernarus keep the same `_x` logger/WASPSTAT semantics at `:57-65`, while B69/B74 maintained Vanilla stays stable-shaped at `:41-49`. `WF_Winner` still stores `_x` verbatim, so it remains branch-dependent rather than an explicit winner variable.
+Current stable/B74.1 uses direct `_x` logger/WASPSTAT semantics in both roots, but with different guard shape. Chernarus writes `WF_Winner` at `server_victory_threeway.sqf:53`, WASPSTAT `ROUNDEND` with `_x` at `:57-63`, and calls `[_x] call WFBE_CO_FNC_LogGameEnd` at `:65`; maintained Vanilla writes `WF_Winner` at `:37`, WASPSTAT `_x` at `:41-46`, and logs `[_x]` at `:49`. That makes all-towns logging correct, but it makes HQ/factory elimination logging and WASPSTAT winner telemetry use the losing side. `WF_Winner` still stores `_x` verbatim, so it remains branch-dependent rather than an explicit winner variable.
 
 Deep Review DR-11 owns this impact, and DR-36 owns the exact guard/precedence/no-break mechanism.
 
@@ -198,13 +198,13 @@ Do not wire this PVF copy. Delete or mark it retired where present, and preserve
 
 | Status | Risk | Evidence | Patch direction |
 | --- | --- | --- | --- |
-| P1 correctness | Winner/logging semantics are branch-dependent. Older docs/Miksuu/perf/historical-release shape logs all-towns wins as the loser; current stable `origin/master@0139a346` and B69/B74 Chernarus log HQ/factory eliminations and WASPSTAT round-end telemetry as the loser. | Older shape `server_victory_threeway.sqf:23-41`; current stable `:29-49`; B69/B74 Chernarus `:45-65`; `Server_LogGameEnd.sqf:9-44`; DR-11. | Split elimination and all-towns branches or compute `winnerSide` explicitly per branch before broadcast, `WF_Winner`, WASPSTAT and logger calls. |
-| P1 correctness | `!WFBE_GameOver` only guards the all-towns clause on docs/current-stable/Miksuu/perf/historical-release and on B69/B74 maintained Vanilla. B69/B74 Chernarus guard the full condition, but that partial branch fix is not maintained-root closure. | Older shape `server_victory_threeway.sqf:23`; current stable and B69/B74 Vanilla `:29`; B69/B74 Chernarus `:26,:45`; DR-36. | Parenthesize the full condition or compute booleans, guard the combined result with `!WFBE_GameOver`, then propagate maintained Vanilla. |
-| P1 correctness | Side loop has no break after a winner is recorded on docs/current-stable/Miksuu/perf/historical-release and on B69/B74 maintained Vanilla. B69/B74 Chernarus short-circuit later sides, but explicit winner/loser semantics are still missing. | Older shape `server_victory_threeway.sqf:12-43`; current stable and B69/B74 Vanilla `:12-51`; B69/B74 Chernarus `:17-65`; DR-36. | Exit the side loop and/or outer loop once `gameOver` is set, and keep the winner/loser computation explicit before the exit. |
-| Owner decision | Non-zero `WFBE_C_VICTORY_THREEWAY` skips the only detection block on docs/current-stable/Miksuu/perf/historical-release and B69/B74 maintained Vanilla. B69/B74 Chernarus remove the trap for standard detection but deliberately add no new victory modes. | Docs/Miksuu/perf `CommonConstants.sqf:401`, current stable `:631`, B69/B74 Chernarus `:824/:837`, B69/B74 Vanilla `:728`, historical release `:417`; `server_victory_threeway.sqf:3,11/16`; DR-12. | Implement non-default mode or keep it undocumented/disabled with a clear guardrail; if porting the B69/B74 trap fix, name it as standard-detection rescue, not threeway mode implementation. |
+| P1 correctness | Winner/logging semantics are branch-dependent. Older docs/Miksuu/perf/historical-release shape logs all-towns wins as the loser; current stable/B74.1 Chernarus, current stable/B74.1 Vanilla and B69/B74 Chernarus log HQ/factory eliminations and WASPSTAT round-end telemetry as the loser. | Older shape `server_victory_threeway.sqf:23-41`; current stable/B74.1 Chernarus `:45-65`; current stable/B74.1 Vanilla `:29-49`; `Server_LogGameEnd.sqf:9-44`; DR-11. | Split elimination and all-towns branches or compute `winnerSide` explicitly per branch before broadcast, `WF_Winner`, WASPSTAT and logger calls. |
+| P1 correctness | `!WFBE_GameOver` only guards the all-towns clause on docs/Miksuu/perf/historical-release and on current stable/B74.1 maintained Vanilla. Current stable/B74.1 Chernarus and B69/B74 Chernarus guard the full condition, but that partial fix is not maintained-root closure. | Older shape `server_victory_threeway.sqf:23`; current stable/B74.1 Vanilla `:29`; current stable/B74.1 Chernarus `:26,:45`; DR-36. | Parenthesize the full condition or compute booleans, guard the combined result with `!WFBE_GameOver`, then propagate maintained Vanilla. |
+| P1 correctness | Side loop has no break after a winner is recorded on docs/Miksuu/perf/historical-release and on current stable/B74.1 maintained Vanilla. Current stable/B74.1 Chernarus short-circuits later sides, but explicit winner/loser semantics are still missing. | Older shape `server_victory_threeway.sqf:12-43`; current stable/B74.1 Vanilla `:12-51`; current stable/B74.1 Chernarus `:17-65`; DR-36. | Exit the side loop and/or outer loop once `gameOver` is set, and keep the winner/loser computation explicit before the exit. |
+| Owner decision | Non-zero `WFBE_C_VICTORY_THREEWAY` skips the only detection block on docs/Miksuu/perf/historical-release and current stable/B74.1 maintained Vanilla. Current stable/B74.1 Chernarus and B69/B74 Chernarus remove the trap for standard detection but deliberately add no new victory modes. | Docs/Miksuu/perf `CommonConstants.sqf:401`, current stable/B74.1 Chernarus `:856`, current stable/B74.1 Vanilla `:728`, B69/B74 Chernarus `:824/:837`, historical release `:417`; `server_victory_threeway.sqf:3,11/16`; DR-12. | Implement non-default mode or keep it undocumented/disabled with a clear guardrail; if porting the Chernarus trap fix, name it as standard-detection rescue, not threeway mode implementation. |
 | Cleanup | Stale `Server/PVFunctions/LogGameEnd.sqf` is buggy if ever wired. | `PVFunctions/LogGameEnd.sqf:9-43`, DR-13, [Dead/stale code register](Dead-Code-And-Stale-Code-Register). | Delete/retire the duplicate where present; preserve stable/release branches where it is already gone. |
 | Cleanup | `WFBE_CO_FNC_LogGameEnd` is compiled twice in server init only on some refs/roots. | Docs checkout `Init_Server.sqf:64,89`, DR-43, [Server init bind cleanup](Server-Init-Bind-Cleanup). | De-duplicate live binds where still present; do not reintroduce duplicates into branches that already carry one live bind. |
-| Semantics risk | Current stable still has client endgame script expecting loser side, while server variable/comment paths increasingly treat `_x` as winner. B69/B74 switch `Client_EndGame.sqf` to winner-payload behavior in both roots, but server winner computation remains implicit and the GUER stats label is Chernarus-only. | Stable `Client_EndGame.sqf:3-13`, stable server `:30,37,41-49`; B69/B74 `Client_EndGame.sqf:6-11`, Chernarus `GUI_EndOfGameStats.sqf:8-10`, Vanilla `GUI_EndOfGameStats.sqf:5-8`. | Pick explicit payload naming and keep server broadcast, client stats/camera, GUER label, WASPSTAT and logger aligned on the target branch. |
+| Semantics risk | Current stable/B74.1 switches `Client_EndGame.sqf` to winner-payload behavior in both roots, but server winner computation remains implicit and the GUER stats label is Chernarus-only. Old-shaped docs/Miksuu/perf/historical-release still use loser-payload client inversion. | Current stable/B74.1 `Client_EndGame.sqf:5-11`, Chernarus `GUI_EndOfGameStats.sqf:8-9`, Vanilla `GUI_EndOfGameStats.sqf:5-8`; old-shaped docs/source `Client_EndGame.sqf:5-13`. | Pick explicit payload naming and keep server broadcast, client stats/camera, GUER label, WASPSTAT and logger aligned on the target branch. |
 
 ## Safer Patch Shape
 
@@ -217,7 +217,7 @@ Keep the first code patch small and source-first:
 3. Compute `_loserSide` and `_winnerSide` explicitly:
    - if eliminated, loser is `_x`, winner is the opposite active side;
    - if won by towns, winner is `_x`, loser is the opposite active side.
-4. Send the current client payload as loser side id unless you intentionally update `Client_EndGame.sqf` at the same time.
+4. Match the client payload contract for the target branch: old-shaped targets expect loser side id unless `Client_EndGame.sqf` is updated; current B74.1-shaped targets expect winner side id and therefore need server-side `_winnerSide`.
 5. Set `WF_Winner` to `_winnerSide` if keeping that variable.
 6. Write WASPSTAT `ROUNDEND` and call `WFBE_CO_FNC_LogGameEnd` with `_winnerSide`, not the condition side.
 7. `exitWith` after one accepted endgame path so only one endgame broadcast/log can happen per match.
@@ -229,8 +229,8 @@ Do not combine this with PVF dispatcher hardening or AntiStack DB wrapper harden
 
 | Scenario | Expected result |
 | --- | --- |
-| West eliminated by dead HQ plus zero barracks/light/heavy/air factories | One endgame broadcast with west as loser; east logged as winner once. |
-| East eliminated | One endgame broadcast with east as loser; west logged as winner once. |
+| West eliminated by dead HQ plus zero barracks/light/heavy/air factories | One endgame broadcast using the chosen payload contract; east logged as winner once. |
+| East eliminated | One endgame broadcast using the chosen payload contract; west logged as winner once. |
 | West holds all towns | West logged as winner, not east; client outro still shows correct winning side. |
 | East holds all towns | East logged as winner, not west. |
 | Same-tick mutual elimination | One winner decision only; no double `HandleSpecial ["endgame", ...]`, no double `LogGameEnd`, no overwritten `WF_Winner`. |

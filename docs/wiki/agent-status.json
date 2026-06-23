@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T15:49:01+02:00",
+  "generatedAt": "2026-06-23T15:51:26+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: visible-parameter-current-b741-b742-refresh-2026-06-23. Refreshed WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT branch evidence to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a. No gameplay source changed.",
-      "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
+      "currentWork": "Latest lane published: victory/endgame current-B74.1 branch-split refresh. Current stable/B74.1 Chernarus has the guard/short-circuit and winner-payload client rescue, but explicit winner/loser semantics and maintained Vanilla server/GUER-label propagation remain open. No gameplay source changed.",
+      "nextExpectedOutput": "Before the next pass, reread coordination surfaces and claim one fresh bounded source-backed docs lane."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "victory-endgame-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Victory-And-Endgame-Atlas, Feature Status, Source Fix queue, testing smoke row, release-readiness pointer and machine rows with current stable/B74.1 origin/master@f8a76de34 truth. Chernarus now carries _victory trap removal, same-tick guard/short-circuit and winner-payload client behavior, but still writes _x to WF_Winner, WASPSTAT and LogGameEnd; maintained Vanilla remains gated/mixed and lacks the GUER label. B74.2 adds no checked victory-path delta. No gameplay source changed."
+    },
     {
       "lane": "visible-parameter-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

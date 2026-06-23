@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T15:49:01+02:00",
+  "generatedAt": "2026-06-23T15:51:26+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh victory/endgame docs from previous current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34.",
+        "Checked paths are maintained-root Server/FSM/server_victory_threeway.sqf, Client/Client_EndGame.sqf, Client/GUI/GUI_EndOfGameStats.sqf and Common/Init/Init_CommonConstants.sqf across docs/source, current stable/B74.1, B74.2, B69, B74, current Miksuu, perf and historical release refs where locally available.",
+        "Initial diff shows current stable/B74.1 now carries partial Chernarus server guard/short-circuit, both-root winner-payload Client_EndGame and Chernarus-only GUER stats label, while B74.2 adds no checked victory-path delta over current stable.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Updated Victory-And-Endgame-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Testing-Debugging-And-Release-Workflow.md, agent-release-readiness.json and victory/endgame machine rows.",
+        "Refreshed Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json and agent-events.jsonl; no gameplay source changed.",
+        "Mirrored touched files into docs/wiki and ran final validation."
+      ],
+      "handoff": "Future code owner should treat current stable/B74.1 as partial rescue only: explicit winner/loser computation, maintained Vanilla server/GUER-label parity and match-end smoke remain required before release wording.",
+      "updated": "2026-06-23T15:47:59+02:00"
+    },
     {
       "lane": "visible-parameter-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

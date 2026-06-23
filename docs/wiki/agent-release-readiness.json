@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T15:09:53+02:00",
-  "lastVerifiedAt": "2026-06-23T15:09:53+02:00",
+  "generatedAt": "2026-06-23T15:45:19+02:00",
+  "lastVerifiedAt": "2026-06-23T15:45:19+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -1470,6 +1470,11 @@
       "id": "commander-reassignment-call-shape",
       "canonicalDoc": "Commander-Reassignment-Call-Shape.md",
       "status": "current-stable-b741-partial-source-present-docs-source-old-shape"
+    },
+    {
+      "id": "victory-endgame-winner-semantics",
+      "canonicalDoc": "Victory-And-Endgame-Atlas.md",
+      "status": "current-stable-b741-partial-chernarus-rescue-vanilla-server-and-explicit-winner-loser-open"
     },
     {
       "id": "gear-template-profile-filter",
