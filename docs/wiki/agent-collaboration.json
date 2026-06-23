@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T00:00:43+02:00",
+  "generatedAt": "2026-06-24T00:24:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "clickabletext-soundpush-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh clickable-text soundPush rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only RscClickableText base-class soundPush and derived clickable-text resource/dialog paths in source Chernarus and maintained Vanilla.",
+        "Keep Client-UI-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 clickable-text soundPush evidence.",
+        "Recorded that docs/source HEAD@14d74f9d2 remains old-shape, while current stable/B74.1/B74.2/B69/B74 and GUER branch hits carry valid RscClickableText.soundPush[] = {\"\", 0.2, 1}; in both maintained roots.",
+        "Updated Feature Status, Source Fix queue, Dead/stale code, Progress Dashboard, pruning ledger, worklog and clickable-text machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future UI owner should not reopen the base-class edit on current stable/B74.1/B74.2/B69/B74/GUER branch hits. For old-shape targets, port the current valid {\"\", 0.2, 1} value, propagate maintained Vanilla and smoke representative gear, WF menu/HUD toggle, construction/CoIn, artillery and economy clickable controls before release wording.",
+      "updated": "2026-06-24T00:24:00+02:00"
+    },
     {
       "lane": "rhud-endgame-title-handle-b742-current-head-followup-2026-06-23",
       "owner": "Codex",
