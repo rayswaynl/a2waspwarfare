@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T05:58:09+02:00",
+  "generatedAt": "2026-06-23T06:10:41+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "loadoutmanager-root-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@ffdfaa24 FileManager.cs:140-188 accepts an ancestor named a2waspwarfare or a repo-shaped root with Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj.",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f and historical a96fdda2 accept an ancestor named a2waspwarfare or markers Missions/[55-2hc]warfarev2_073v48co.chernarus, Tools/LoadoutManager and AGENTS.md at FileManager.cs:145,150,158,165,170-176.",
+        "current Miksuu master b8389e748243 and origin/perf/quick-wins 0076040f still require an ancestor folder named a2waspwarfare at FileManager.cs:145,150."
+      ],
+      "outputs": [
+        "Refreshed Tools-And-Build-Workflow, Source-Fix-Propagation-Queue, Testing-Debugging-And-Release-Workflow, Progress Dashboard, pruning ledger and agent-release-readiness tooling gate with current B74 root-discovery evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future tooling or propagation owner should choose the root-discovery rule for the target branch: docs/source marker root, stable/B69/B74/release-shaped marker root, or named-root-only for current Miksuu/perf.",
+      "updated": "2026-06-23T06:10:41+02:00"
+    },
     {
       "lane": "victory-endgame-current-b74-refresh-2026-06-23",
       "owner": "Codex",

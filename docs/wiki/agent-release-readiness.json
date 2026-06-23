@@ -315,7 +315,7 @@
   ],
   "toolingGate": {
     "tool": "Tools/LoadoutManager",
-    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or repo-root markers: Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj.",
+    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or the marker-root shape for the target branch. Docs/source accepts Missions + Missions_Vanilla + Tools/LoadoutManager/LoadoutManager.csproj; current stable/B69/B74/release-shaped refs accept Missions/[55-2hc]warfarev2_073v48co.chernarus + Tools/LoadoutManager + AGENTS.md; current Miksuu/perf still require the named ancestor.",
     "skipZipForPropagationOnly": {
       "environmentVariable": "A2WASP_SKIP_ZIP",
       "acceptedValues": [
@@ -330,7 +330,7 @@
       "Tools/LoadoutManager/ZipManager.cs",
       "Source-Fix-Propagation-Queue.md#rule"
     ],
-    "currentLocalCheckoutStatus": "runnable-from-normal-repo-root-marker-checkouts"
+    "currentLocalCheckoutStatus": "branch-sensitive-root-discovery-docs-source-and-stable-shaped-refs-support-marker-roots-miksuu-perf-named-root-only"
   },
   "latestLoadoutManagerPropagationRun": {
     "checkedAt": "2026-06-02T16:18:32+02:00",

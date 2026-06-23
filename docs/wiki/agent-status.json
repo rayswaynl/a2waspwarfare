@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T05:58:09+02:00",
+  "generatedAt": "2026-06-23T06:10:41+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: victory-endgame-current-b74-refresh-2026-06-23. Refreshed Victory/endgame rows with current stable/B69/B74 evidence and clarified that B69/B74 Chernarus is a partial rescue while maintained Vanilla still needs propagation; no gameplay source changed.",
+      "currentWork": "Latest published lane: loadoutmanager-root-current-b74-refresh-2026-06-23. Refreshed branch-sensitive LoadoutManager root-discovery guidance across tooling/queue/testing docs and release-readiness machine gate; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing and keep docs/wiki plus wiki checkout in parity."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "loadoutmanager-root-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Tools and build workflow, Source Fix Propagation Queue, Testing workflow, Progress Dashboard, pruning ledger and release-readiness tooling gate with branch-sensitive LoadoutManager root discovery. Docs/source HEAD@ffdfaa24 accepts named-root or Missions + Missions_Vanilla + Tools/LoadoutManager/LoadoutManager.csproj markers. Current stable 0139a346, B69 8d465fce, B74 b23f557f and historical a96fdda2 accept named-root or Chernarus mission + Tools/LoadoutManager + AGENTS.md markers. Current Miksuu b8389e748243 and perf 0076040f remain named-root-only. No gameplay source changed."
+    },
     {
       "lane": "victory-endgame-current-b74-refresh-2026-06-23",
       "owner": "Codex",
