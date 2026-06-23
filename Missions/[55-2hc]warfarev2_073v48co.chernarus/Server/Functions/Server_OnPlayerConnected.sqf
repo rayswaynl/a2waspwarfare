@@ -19,7 +19,10 @@ waitUntil {commonInitComplete && serverInitFull};
 if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
 
 //--- We try to get the player and it's group from the playableUnits.
-_max = 10;
+//--- B74.2.2: was 10 (a 5s ceiling). Widened to 60 (30s) so a JIP seat under heavy-AI / low-server-FPS
+//--- load has time to surface in playableUnits with a resolved getPlayerUID before we bail. 30s matches
+//--- the client-side join-retry cadence in Init_Client.sqf. Pure integer; the sleep 0.5 below is unchanged.
+_max = 60;
 _team = grpNull;
 
 while {_max > 0 && isNull _team} do {
@@ -32,11 +35,25 @@ while {_max > 0 && isNull _team} do {
 };
 
 //--- Make sure that we've found a team, otherwise we simply exit.
-if (isNull _team) exitWith {["WARNING", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] is not defined within the warfare teams.", _name, _uid]] Call WFBE_CO_FNC_LogContent};
+if (isNull _team) exitWith {
+	["WARNING", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] not in warfare teams after the lookup window - re-arming enrollment.", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+	//--- B74.2.2: self-heal instead of abandoning the player forever. onPlayerConnected fires only ONCE with
+	//--- no retry, so a JIP seat that was still slow to surface after 30s used to be stranded (no team / no
+	//--- money / no vote / no marker feed). Re-dispatch the handler, UID-keyed and capped at 3 attempts so it
+	//--- recovers a slow seat without ever looping forever. WFBE_SE_FNC_OnPlayerConnected is the compiled handler.
+	private "_reTry"; _reTry = missionNamespace getVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], 0];
+	if (_reTry < 3) then {
+		missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], _reTry + 1];
+		[_uid, _name, _id] spawn WFBE_SE_FNC_OnPlayerConnected;
+	};
+};
 
 //--- Make sure that our client is a warfare client, the side variable is only defined for warfare slots, otherwise we simply exit.
 _sideJoined = _team getVariable "wfbe_side";
 if (isNil '_sideJoined') exitWith {["WARNING", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] side couldn't be determined from team [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent};
+
+//--- B74.2.2: enrollment reached - clear the connect-retry budget so a later reconnect starts fresh.
+missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil];
 
 //--- B63 (Ray 2026-06-21): INSTANT JIP catch-up for the own-side MARKER feeds. In A2-OA a
 //--- publicVariable is not replayed to a client that joined after the broadcast, so a fresh
