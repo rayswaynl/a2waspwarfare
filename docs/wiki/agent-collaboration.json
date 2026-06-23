@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T01:35:00+02:00",
+  "generatedAt": "2026-06-24T01:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "construction-smallsites-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh Construction SmallSite logic-list rows that still name visible B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Construction_SmallSite.sqf, Construction_MediumSite.sqf and adjacent construction deltas needed to prove SmallSite add/add versus MediumSite remove/add behavior in source Chernarus and maintained Vanilla.",
+        "Keep Construction-Logic-List-Cleanup and Construction-And-CoIn-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Construction-Logic-List-Cleanup.md, Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 Construction SmallSite evidence.",
+        "Recorded that checked d472da6a..21b62b04 is empty for the four maintained-root SmallSite/MediumSite files and that origin/master..origin/claude/b74.2-aicom only adds source-Chernarus structure-built stats attribution among checked construction paths.",
+        "Updated Progress Dashboard, pruning ledger, worklog and construction machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future construction owner should patch the SmallSite logic-list add/remove mismatch deliberately, preserve maintained Vanilla parity, smoke small/medium construction plus JIP marker/init state, and keep unrelated bank/stat or auto-wall deltas separate.",
+      "updated": "2026-06-24T01:55:00+02:00"
+    },
     {
       "lane": "ai-supply-truck-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
