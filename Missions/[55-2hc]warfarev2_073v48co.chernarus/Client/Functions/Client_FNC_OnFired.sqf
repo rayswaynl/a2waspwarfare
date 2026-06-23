@@ -12,6 +12,9 @@
 WFBE_CL_FNC_OnFiredSatchel = {
 	Private ["_closest", "_projectile", "_side_structures", "_unit"];
 
+	//--- Debug: allow testers to place satchels near friendly structures.
+	if (WF_Debug) exitWith {};
+
 	_unit = _this select 0;
 	_projectile = _this select 1;
 

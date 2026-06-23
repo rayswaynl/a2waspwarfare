@@ -5,6 +5,8 @@ _dammages = _this select 1;
 _origin = _this select 2;
 _ammo = _this select 3;
 
+//--- Debug: let testers damage base structures (returns real damage unmodified).
+if (WF_Debug) exitWith {_dammages};
 
 _sideBuilding = _building getVariable "wfbe_side";
 _side = side _origin;
