@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T19:27:34+02:00",
+  "generatedAt": "2026-06-23T19:39:21+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: vehicle-cargo-loop-current-b741-b742-refresh-2026-06-23. Refreshed vehicle/backpack cargo loop current B74.1/B74.2 evidence and preserved the old-shape docs/source, Miksuu, EASA QoL and perf-Vanilla propagation gates. No gameplay source changed.",
+      "currentWork": "Latest published lane: construction-smallsite-current-b741-b742-refresh-2026-06-23. Refreshed construction SmallSite current B74.1/B74.2 evidence and preserved the one-line add-to-remove source patch route. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "construction-smallsite-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed construction SmallSite logic-list evidence through Construction-Logic-List-Cleanup, Construction-And-CoIn-Systems-Atlas, Feature Status and Source Fix queue. Docs/source HEAD@d81580cfbe61 is unchanged from 7562c803, 6b8eba5e and 3406ffa0 for checked construction paths. Current stable/B74.1 origin/master@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6a, current B69/B74, Miksuu, perf and historical a96fdda2 all keep SmallSite add/add at Construction_SmallSite.sqf:70,99 while MediumSite removes at Construction_MediumSite.sqf:70,114 in both maintained roots. Stable/B74.2 construction deltas are unrelated source-Chernarus bank/stat work; no live rescue head was exposed. No gameplay source changed."
+    },
     {
       "lane": "vehicle-cargo-loop-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

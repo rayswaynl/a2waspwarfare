@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T19:27:34+02:00",
+  "generatedAt": "2026-06-23T19:39:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "construction-smallsite-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh construction SmallSite logic-list rows from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Check maintained-root Construction_SmallSite.sqf and Construction_MediumSite.sqf across docs/source, current stable/B74.1, B74.2, B69, adjacent B74, current Miksuu, perf and historical a96fdda2.",
+        "Keep Construction-Logic-List-Cleanup as canonical and update Construction/CoIn atlas, Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Construction-Logic-List-Cleanup.md, Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 construction logic-list evidence.",
+        "Updated Progress Dashboard, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future construction owner should patch only the post-completion SmallSite add-to-remove line first, propagate maintained Vanilla, then smoke small/medium construction, structure kill cleanup, repair if live and JIP structure marker/init state. Do not treat B74.1 bank cleanup or B74.2 stats attribution as a logic-list rescue.",
+      "updated": "2026-06-23T19:39:21+02:00"
+    },
     {
       "lane": "vehicle-cargo-loop-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
