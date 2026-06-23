@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T17:20:00+02:00",
+  "generatedAt": "2026-06-23T17:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: factory-refund-current-b741-b742-refresh-2026-06-23. Refreshed destroyed-factory purchase refund evidence to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a. No gameplay source changed.",
+      "currentWork": "Latest published lane: send-message-current-b741-b742-refresh-2026-06-23. Refreshed DR-46 SEND_MESSAGE direct compile evidence to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "send-message-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed DR-46 SEND_MESSAGE direct compile evidence across Public-Variable-Channel-Index, Networking-And-Public-Variables, Feature Status, Source Fix queue, Progress Dashboard, pruning ledger and machine rows. Docs/source HEAD@cd9ba541d583 is unchanged from 3a32be92 / 40c477be / 16247fc8f for checked SEND_MESSAGE paths. Current stable/B74.1 origin/master@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6a, B69 8d465fce, B74 b23f557f, Miksuu b8389e748243, perf 0076040f and historical a96fdda2 all keep direct receiver registration at updateclient.sqf:12, receiver compile at Client_onEventHandler_SEND_MESSAGE.sqf:27 and helper compile/broadcast at Common_SendMessage.sqf:26,37-38 in both maintained roots. PVF dispatcher lookup/allowlisting does not close this direct channel. No gameplay source changed."
+    },
     {
       "lane": "factory-refund-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
