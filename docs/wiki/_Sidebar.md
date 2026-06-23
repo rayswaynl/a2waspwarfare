@@ -101,6 +101,8 @@
   - [Discord status bot setup and reference](Discord-Status-Bot-Setup-And-Reference)
   - [GLOBALGAMESTATS extension reference](GLOBALGAMESTATS-Extension-Reference)
   - [New player quickstart (player guide)](New-Player-Quickstart-Guide)
+  - [Earning funds and score (player guide)](Earning-Funds-And-Score-Player-Guide)
+  - [Vehicle service and logistics (player guide)](Vehicle-Service-And-Logistics-Player-Guide)
   - [Commander's handbook (player guide)](Commanders-Handbook)
   - [Tactical support menu](Tactical-Support-Menu-Player-Guide)
   - [Supply missions (player guide)](Supply-Mission-Player-Guide)
