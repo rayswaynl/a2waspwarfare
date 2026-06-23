@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T10:44:00+02:00",
-  "lastVerifiedAt": "2026-06-23T10:44:00+02:00",
+  "generatedAt": "2026-06-23T12:18:00+02:00",
+  "lastVerifiedAt": "2026-06-23T12:18:00+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -354,6 +354,47 @@
   },
   "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "branchOnlyFeaturePromotionGates": [
+    {
+      "id": "trello-base-integrity-fixes-branch",
+      "branch": "origin/claude/trello-base-integrity-fixes",
+      "head": "66d80160",
+      "base": "f8a76de34; current stable origin/master",
+      "state": "branch-review-needed-zeta-vanilla-detach-gap-and-nuke-integrity-not-authority-closure",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-zeta-cargo-and-nuke-damage-integrity",
+      "canonicalDocs": [
+        "Zeta-Cargo-Sling-Load-Reference.md#branch-intel---trello-base-integrity-candidate",
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "ICBM-Authority-Playbook.md#branch-intel---trello-97-in-progress-construction",
+        "Construction-And-CoIn-Systems-Atlas.md#current-branch-scope",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-base-integrity-fixes@66d80160; merge-base with origin/master is f8a76de349da6f8b871d079c828436c10afb221c",
+        "f8a76de34..66d80160: 6 files +70/-10 across source Chernarus plus maintained Vanilla ZetaCargo hook/unhook and Nuke damage files; git diff --check clean",
+        "0ae5edb2d #87 ZetaCargo: drop airlifted vehicles on ground, never lift own HQ",
+        "66d80160c #97 Nuke: destroy in-progress construction inside the blast",
+        "Current stable source Chernarus Zeta_Hook.sqf:34-35 passes [_vehicle] to Zeta_Unhook.sqf; maintained Vanilla stable Zeta_Hook.sqf:34 does not",
+        "Branch Chernarus/Vanilla Zeta_Hook.sqf:17-19 filters friendly HQ from lift candidates",
+        "Branch Chernarus/Vanilla Zeta_Unhook.sqf:12-29 drops at ground level behind the lifter and offsets further from a friendly HQ",
+        "Branch maintained Vanilla Zeta_Hook.sqf:37 still omits the detach action argument",
+        "Branch Chernarus/Vanilla Client/Module/Nuke/damage.sqf:33-42 deletes LocationLogicStart build logics with WFBE_B_Type inside the blast",
+        "Current stable damage.sqf:17 excludes LocationLogicStart from normal damage; Construction_SmallSite.sqf and Construction_MediumSite.sqf create those logics, set WFBE_B_Type and later create the real structure"
+      ],
+      "ownerDecision": "Decide whether to port #87 ZetaCargo and #97 Nuke integrity work. If promoting Zeta, add maintained Vanilla detach-argument parity before claiming manual detach fixed there. Keep ICBM RequestSpecial authority work separate.",
+      "promotionGate": "Smoke own-HQ filtering, valid nearby cargo selection, manual detach, normal-heli and C-130 ground drop, auto-detach, unfinished SmallSite/MediumSite destruction by nuke, completed-structure blast damage and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-vehicle-smoke",
+          "construction-smoke",
+          "icbm-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
     {
       "id": "upstream-hq-repair-price-branch",
       "branch": "origin/claude/upstream-hq-repair-price",

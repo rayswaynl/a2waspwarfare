@@ -137,6 +137,54 @@ The large lower-priority lists are untouched this pass: the **`Could` list (149)
 
 Across all three passes this loop has opened **12 draft PRs — #54–#65** — all DRAFT and human-merge-gated, all awaiting OA 1.64 in-engine smoke before any merge.
 
+## Pass 4 — deep backlog (deferred wins + needs-design + Tier-2)
+
+> The follow-through batch that drained the backlog Passes 1–3 had parked. It completed Ray's a/b/c asks: **deep-verified the ~34 deferred small codeable wins** held back in Pass 3, **re-examined the needs-design cards** (the Warfare a + c items), and **triaged the ~220-card Tier-2 long tail** (the `Could` (149) + `Backlog` (71) lists). The verified, genuinely-ready wins were built into **10 more grouped draft PRs**. As with every prior pass, all PRs are **DRAFT** and **human-merge-gated**; **OA 1.64 in-engine smoke is pending** and is a merge precondition.
+
+### 10 new draft PRs
+
+Each is grouped so review stays single-purpose; the source card(s) are listed for traceability.
+
+| PR | What | Source card(s) |
+| --- | --- | --- |
+| [#66](https://github.com/rayswaynl/a2waspwarfare/pull/66) | Bypass the anti-TK satchel & building scripts while in debug mode | #2, #3 |
+| [#67](https://github.com/rayswaynl/a2waspwarfare/pull/67) | Audio cues: paradrop-drop sound + IR-smoke-ready sound | #90, #91 |
+| [#68](https://github.com/rayswaynl/a2waspwarfare/pull/68) | Base-integrity bugfixes: airlift drop-on-HQ + nuke vs in-progress construction | #87, #97 |
+| [#69](https://github.com/rayswaynl/a2waspwarfare/pull/69) | Fix gear/ammo display for special AT soldier units in the buy menu | — |
+| [#70](https://github.com/rayswaynl/a2waspwarfare/pull/70) | EASA aircraft loadout role categories (AA / AG / multirole) — completed half-wired code | #59 |
+| [#71](https://github.com/rayswaynl/a2waspwarfare/pull/71) | Higher bounty for killing players on a killstreak (server-authoritative, tunable coefs) | — |
+| [#72](https://github.com/rayswaynl/a2waspwarfare/pull/72) | Restrict building static defenses near base when enemies are near (anti tank-trap, tunable consts) | #104 |
+| [#73](https://github.com/rayswaynl/a2waspwarfare/pull/73) | One-click crew-all-artillery button | #113 |
+| [#74](https://github.com/rayswaynl/a2waspwarfare/pull/74) | Show the player's artillery cooldown on the RHUD | #219 |
+| [#75](https://github.com/rayswaynl/a2waspwarfare/pull/75) | Clearer info text: upgrade result value + new-HQ cost in the transfer menu | #107, #204 |
+
+### Known caveat (PR #68)
+
+PR #68 surfaced a **pre-existing Takistan bug**: `Zeta_Hook.sqf` calls `Zeta_Unhook` **without** the `[_vehicle]` args array that the Chernarus B66 fix added. The airlift drop-on-HQ fix depends on that arg being passed, so on Takistan the fix needs the args folding-in (or a separate Takistan fix). Flagged in the PR; not silently shipped.
+
+### ~37 needs-design items (no PR — owner / vote / art decisions)
+
+These are real items but blocked on a decision that is not a coding call (a balance/economy owner decision, a community vote, or an art/SFX asset). They are catalogued in the mining artifacts; the notable ones:
+
+- **#105** — paratroop kill reward fix
+- **#26** — first-blood bonus
+- **#27** — OPFOR Hind re-tier
+- **#29** — town-depot supply trucks @10×
+- **#41** — radiation damages factories
+- **#63** — captured-town vehicle reward
+- **#64** — redeployment "barracks-on-wheels" truck
+- **#215** — sell-vehicles feature
+- **#120** — anti-illegal-loadout sanitiser
+- **#35** — static-count-by-barracks-level
+
+### Deferred / skip backlog
+
+The remaining lower-value Tier-2 cards plus the big `Could` / `Backlog` long tail are **recorded but not actioned** — they fell below the worth-doing bar for this loop and are the starting point if the backlog is re-mined. One small flagged bug noted along the way: `Core_MVD.sqf`'s `[Done]` log line **mislabels itself "Core_RU"**.
+
+### Cross-pass total
+
+Across all four passes this loop has opened **22 draft PRs — #54–#75** — all **DRAFT** and **human-merge-gated**, all awaiting OA 1.64 in-engine smoke before any merge. The initial three-source sweep (upstream branches + Trello Tier-1 + Tier-2 long tail) is now **complete**; the loop from here is **delta-only** (new upstream commits / new board cards as they appear).
+
 ## Continue Reading
 
 - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)

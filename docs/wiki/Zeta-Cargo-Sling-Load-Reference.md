@@ -1,8 +1,8 @@
 # Zeta Cargo Sling-Load Reference
 
-> Source-verified 2026-06-21 against then-current master cf2a6d6a4; current origin/master is 0139a346, so recheck cited paths before current-head claims. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
+> Source-verified 2026-06-23 against current stable `origin/master@f8a76de34` and branch `origin/claude/trello-base-integrity-fixes@66d80160`. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless maintained Vanilla is named explicitly. Arma 2 OA 1.64.
 
-ZetaCargo is the airlift module labelled "Zeta Cargo by Benny" in its init file and compiled from client init (`Client/Module/ZetaCargo/Zeta_Init.sqf:1`; `Client/Init/Init_Client.sqf:551-552`). The live action grant checks `Zeta_Lifter` plus `WFBE_UP_AIRLIFT`, then adds `Client\Module\ZetaCargo\Zeta_Hook.sqf` as the localized lift action (`Common/Init/Init_Unit.sqf:51-53`). The hook path attaches one nearby unmanned land vehicle to the lifter (`Client/Module/ZetaCargo/Zeta_Hook.sqf:15-17,28,30`), while the manual detach path is currently partial because `Zeta_Hook.sqf` adds the detach action without an argument payload and `Zeta_Unhook.sqf` expects `_this select 3 select 0` to be the lifted vehicle (`Client/Module/ZetaCargo/Zeta_Hook.sqf:34`; `Client/Module/ZetaCargo/Zeta_Unhook.sqf:3-7`).
+ZetaCargo is the airlift module labelled "Zeta Cargo by Benny" in its init file and compiled from client init (`Client/Module/ZetaCargo/Zeta_Init.sqf:1`; `Client/Init/Init_Client.sqf:551-552`). The live action grant checks `Zeta_Lifter` plus `WFBE_UP_AIRLIFT`, then adds `Client\Module\ZetaCargo\Zeta_Hook.sqf` as the localized lift action (`Common/Init/Init_Unit.sqf:51-53`). Current source Chernarus attaches one nearby unmanned land vehicle to the lifter and already passes the lifted vehicle into the manual detach action (`Client/Module/ZetaCargo/Zeta_Hook.sqf:15-17,28,30,34-35`; `Client/Module/ZetaCargo/Zeta_Unhook.sqf:3-7`). Maintained Vanilla Takistan is still older on this edge: `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/ZetaCargo/Zeta_Hook.sqf:34` adds the detach action without arguments while its `Zeta_Unhook.sqf:3-7` still expects `_this select 3 select 0`.
 
 ---
 
@@ -72,14 +72,14 @@ Side root files set `WFBE_%1LIFTVEHICLE` lists for UI coloring and buy-menu hint
 | --- | --- | --- |
 | Caller gate | The attach script exits unless the action caller is the driver of the lifter. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:3-9` |
 | Speed/altitude gate | `C130J` and `C130J_US_EP1` exit above speed `20`; other lifters exit above speed `20` or below altitude `2`. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:10-13`; `Client/Module/ZetaCargo/Zeta_Init.sqf:11` |
-| Target search | The live hook searches `nearObjects ["LandVehicle", 10]` and exits when none are found. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:15-17` |
+| Target search | Current source Chernarus searches `nearObjects ["LandVehicle", 10]` and exits when none are found; it does not filter the friendly HQ out of `_vehicles`. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:15-17` |
 | Closest target | The nearest searched vehicle is selected through `WFBE_CO_FNC_GetClosestEntity`. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:19` |
 | Enemy HQ wreck guard | WEST callers cannot airlift dead EAST HQ wreck classes `BTR90_HQ`, `BMP2_HQ_TK_EP1`, `BMP2_HQ_INS`; EAST callers cannot airlift dead WEST HQ wreck classes `LAV25_HQ`, `M1130_CV_EP1`, `BMP2_HQ_CDF`. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:6-7,21-22` |
 | Manned target guard | Any target with crew exits with localized `STR_WF_INFO_Hook_Manned`. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:28`; `stringtable.xml:849-855` |
 | Offset selection | Default attach offset is `[0,0,-10]`; `C130J` and `C130J_US_EP1` use special offset `[0,0,-2]`. | `Client/Module/ZetaCargo/Zeta_Init.sqf:8,11-12`; `Client/Module/ZetaCargo/Zeta_Hook.sqf:23-26` |
 | Attach and state | The target is attached to the lifter, and the lifter receives local variable `Attached = true`. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:30-31` |
-| Action swap | The attach action is removed, then a localized `STR_WF_Lift_Detach` action is added for `Client\Module\ZetaCargo\Zeta_Unhook.sqf`. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:32-34`; `stringtable.xml:4437-4449` |
-| Monitor loop | While the game is not over, the hook loop sleeps `2` seconds and detaches automatically if lifter damage is above `0.3`, `Attached` is false, or the lifter no longer has a driver. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:36-43` |
+| Action swap | Source Chernarus removes the attach action, then adds localized `STR_WF_Lift_Detach` for `Client\Module\ZetaCargo\Zeta_Unhook.sqf` with `[_vehicle]` as the action arguments. Maintained Vanilla still lacks that argument payload. | Chernarus `Client/Module/ZetaCargo/Zeta_Hook.sqf:32-35`; maintained Vanilla `Client/Module/ZetaCargo/Zeta_Hook.sqf:34`; `stringtable.xml:4437-4449` |
+| Monitor loop | While the game is not over, the hook loop sleeps `2` seconds and detaches automatically if lifter damage is above `0.3`, `Attached` is false, or the lifter no longer has a driver. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:37-44` |
 
 `Zeta_Types` declares `Car`, `Motorcycle`, `Tank`, and `Ship`, but the current hook search above is the `LandVehicle` near-object query. Treat `Zeta_Types` as module configuration, not proof that ships are reachable through the live attach action. Sources: `Client/Module/ZetaCargo/Zeta_Init.sqf:5-6`; `Client/Module/ZetaCargo/Zeta_Hook.sqf:15-17`.
 
@@ -87,13 +87,26 @@ Side root files set `WFBE_%1LIFTVEHICLE` lists for UI coloring and buy-menu hint
 
 | Path | Current behavior | Source |
 | --- | --- | --- |
-| Manual detach action | The detach action is added without an argument payload. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:34` |
+| Manual detach action | Current source Chernarus passes `[_vehicle]` to the detach action; maintained Vanilla still adds the detach action without an argument payload. | Chernarus `Client/Module/ZetaCargo/Zeta_Hook.sqf:34-35`; maintained Vanilla `Client/Module/ZetaCargo/Zeta_Hook.sqf:34` |
 | Unhook expectation | `Zeta_Unhook.sqf` expects `_this select 3`, then reads `_param select 0` as the lifted vehicle. | `Client/Module/ZetaCargo/Zeta_Unhook.sqf:3-7` |
 | Unhook state | If a lifted vehicle is supplied, the script sets `Attached = false`, detaches the vehicle, applies lifter velocity, removes the detach action, waits `1` second, and clamps below-ground drops back to Z `0` with downward velocity `-0.1`. | `Client/Module/ZetaCargo/Zeta_Unhook.sqf:9-20` |
 | C-130 drop position | For special lifters, the unhook path moves the lifted vehicle 15 meters behind the lifter's position using `getDir _vehicle`, then keeps the lifter's current Z position. | `Client/Module/ZetaCargo/Zeta_Unhook.sqf:11-13` |
 | Automatic detach | The hook loop can still detach without calling `Zeta_Unhook.sqf` when damage, missing driver, or `Attached = false` ends the loop. | `Client/Module/ZetaCargo/Zeta_Hook.sqf:36-43` |
 
-Patch caution: the page documents stable master, not a tested in-game fix. A future code change should either pass `[_vehicle]` when adding the detach action or make `Zeta_Unhook.sqf` recover the attached object safely, then smoke attach/manual-detach/auto-detach for a normal helicopter and a C-130 variant.
+Patch caution: source Chernarus and maintained Vanilla are split. If promoting ZetaCargo work, carry the source Chernarus detach-argument behavior into maintained Vanilla, then smoke attach/manual-detach/auto-detach for a normal helicopter and a C-130 variant.
+
+## Branch Intel - Trello Base Integrity Candidate
+
+`origin/claude/trello-base-integrity-fixes@66d80160` contains Trello #87 ZetaCargo work in source Chernarus plus maintained Vanilla, but it is still branch-only and not current stable behavior. The branch is based directly on current stable `origin/master@f8a76de34`.
+
+| Surface | Branch behavior | Evidence |
+| --- | --- | --- |
+| Friendly HQ lift filter | Removes the friendly side HQ from the nearby `LandVehicle` candidate list before choosing the closest lift target. | Branch Chernarus and maintained Vanilla `Client/Module/ZetaCargo/Zeta_Hook.sqf:17-19` |
+| Source Chernarus detach argument | Keeps the current source Chernarus `[_vehicle]` detach-argument shape. | Branch Chernarus `Client/Module/ZetaCargo/Zeta_Hook.sqf:37-38` |
+| Maintained Vanilla detach argument | Does not add the missing `[_vehicle]` argument in maintained Vanilla; the branch still has a no-argument detach action there. | Branch maintained Vanilla `Client/Module/ZetaCargo/Zeta_Hook.sqf:37`; `Zeta_Unhook.sqf:3-7` |
+| Ground drop | Replaces the special-lifter-only altitude reposition with a ground-level drop 15 meters behind the lifter for all lifters, then pushes another 25 meters back if the friendly HQ is within 25 meters of the drop point. | Branch Chernarus and maintained Vanilla `Client/Module/ZetaCargo/Zeta_Unhook.sqf:12-29` |
+
+Promotion gate: port/rebase only if the owner wants #87, preserve current-stable base changes, add the maintained Vanilla detach-argument parity if manual detach is part of the claim, then smoke own-HQ proximity, nearby non-HQ vehicle choice, normal-heli drop, C-130 drop, lifter-damage auto-detach and maintained Vanilla parity.
 
 ## Continue Reading
 

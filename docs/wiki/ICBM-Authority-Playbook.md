@@ -45,6 +45,19 @@ The unsafe boundary is the server's `"ICBM"` case in `Server_HandleSpecial.sqf:9
 
 `waitUntil {!alive _target || isNull _target}` is timing, not authority. A forged client can choose or create a disposable object for `_target`, then satisfy the wait by killing/deleting it.
 
+## Branch Intel - Trello #97 In-Progress Construction
+
+`origin/claude/trello-base-integrity-fixes@66d80160` carries a branch-only Nuke integrity candidate in source Chernarus plus maintained Vanilla. The branch is based on current stable `origin/master@f8a76de34`; its #97 payload adds `_buildLogics = nearestObjects [_target,["LocationLogicStart"],_range]` and deletes each nearby logic that has `WFBE_B_Type` before radiation starts (`Client/Module/Nuke/damage.sqf:33-42` on the branch).
+
+Why that matters: current stable `damage.sqf:17` includes `LocationLogicStart` in `_objects_to_not_remove`, so the normal `_objects_to_damage setDamage 1` pass at `:28-31` does not remove unfinished construction logics. Current construction workers create those server-side logics, mark the structure type, wait for completion, and only then create the real object:
+
+| Construction path | Stable evidence |
+| --- | --- |
+| SmallSite | Creates `LocationLogicStart` at `Construction_SmallSite.sqf:34`, sets `WFBE_B_Type` at `:47` / `:67`, waits on `WFBE_B_Completion` at `:75` / `:95`, then creates the real structure at `:104`. |
+| MediumSite | Creates `LocationLogicStart` at `Construction_MediumSite.sqf:34`, sets `WFBE_B_Type` at `:47` / `:67`, waits on `WFBE_B_Completion` at `:75`, `:90` and `:110`, then creates the real structure at `:119`. |
+
+Do not treat this branch as DR-27 closure. It changes what the blast does after a nuke is already accepted, but the `RequestSpecial ["ICBM", ...]` authority boundary still needs the server-side requester, commander, upgrade, funds, cooldown and impact-position validation below.
+
 ## Safe Patch Shape
 
 Patch the server branch first. Keep client markers/messages as presentation until the server accepts the request.

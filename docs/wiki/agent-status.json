@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T12:00:42+02:00",
+  "generatedAt": "2026-06-23T12:18:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: upstream-barracks-4th-level-branch-intel-2026-06-23, replayed after hardening-backlog-wikirefs-validator-cleanup-2026-06-23, upstream-mining-ledger-navigation-wire-2026-06-23 and navigation-inventory-live-count-refresh-2026-06-23. Barracks remains a branch-only candidate from origin/claude/upstream-barracks-4th-level@e83de9c4 on merge-base be2bbd084; current stable origin/master@f8a76de34 does not include it. Strict wiki validation now passes after the upstream hardening-backlog cleanup. No gameplay source changed.",
+      "currentWork": "Latest published lane: trello-base-integrity-branch-intel-2026-06-23. origin/claude/trello-base-integrity-fixes@66d80160 is branch-only evidence on current stable merge-base origin/master@f8a76de34: #87 adds ZetaCargo friendly-HQ filtering plus ground-drop behavior, and #97 deletes in-progress construction logics inside the nuke blast. It does not close ICBM authority, and maintained Vanilla still needs Zeta detach-argument parity before manual-detach fix claims. No gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or pruning ledger; claim before editing, verify branch-specific tooling/navigation/mirror claims against the target checkout, and preserve dirty local mirrors before any broad sync."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "trello-base-integrity-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Zeta-Cargo-Sling-Load-Reference, Support-Specials-And-Tactical-Modules-Atlas, ICBM-Authority-Playbook, Construction-And-CoIn-Systems-Atlas, Feature Status Register, Testing workflow, release-readiness promotion gates, Progress Dashboard, pruning ledger and machine rows with newly fetched Trello base-integrity branch intel. origin/claude/trello-base-integrity-fixes@66d80160 is two commits on current stable merge-base origin/master@f8a76de34, six maintained-root files / +70 / -10 and git diff --check clean. #87 adds ZetaCargo friendly-HQ filtering plus ground-drop behavior; #97 deletes in-progress construction logics inside the nuke blast. Maintained Vanilla still needs Zeta detach-argument parity, and ICBM RequestSpecial authority remains separate. No gameplay source changed."
+    },
     {
       "lane": "upstream-barracks-4th-level-branch-intel-2026-06-23",
       "owner": "Codex",

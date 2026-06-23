@@ -24,6 +24,8 @@ Targeted diffs `bc21f520..HEAD` and `ff8dd884..HEAD` over checked Chernarus and 
 
 This atlas carries support orientation and selected source anchors. Deep hardening status belongs on owner pages: [Server authority migration map](Server-Authority-Migration-Map) for `RequestSpecial`, [ICBM authority](ICBM-Authority-Playbook) for nuke, [Service menu affordability guards](Service-Menu-Affordability-Guards) for service actions, [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) for supply, [Feature status](Feature-Status-Register#partial--deferred--needs-review) for branch-only drone/recon support, and [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) for branch-only smoke.
 
+Trello base-integrity branch intel was added on 2026-06-23 for `origin/claude/trello-base-integrity-fixes@66d80160`, a two-commit branch on merge-base/current stable `origin/master@f8a76de34`. Its scoped payload is six files / +70 / -10 across source Chernarus plus maintained Vanilla ZetaCargo hook/unhook and Nuke damage files, with `git diff --check` clean. Treat it as branch-only evidence: #87 adds friendly-HQ lift filtering plus ground drop behavior, and #97 deletes in-progress construction logics inside the nuke blast. It does not close `RequestSpecial`/ICBM authority, and maintained Vanilla still lacks the source Chernarus Zeta detach-argument fix.
+
 ## Source Snapshot
 
 Current docs checkout anchors for the maintained Chernarus root:
@@ -34,7 +36,7 @@ Current docs checkout anchors for the maintained Chernarus root:
 | PVF transport | `Common/Functions/Common_SendToServer.sqf:12-18` wraps client requests as `SRVFNC*`; `Server/Functions/Server_HandlePVF.sqf:9-14` compiles/dispatches the handler; `Server/PVFunctions/RequestSpecial.sqf:1` forwards into `HandleSpecial`. |
 | Server special router | `Server/Functions/Server_HandleSpecial.sqf:13-31` handles `group-query`; `:43-64` handles paratroops/ammo/vehicle/UAV; `:67-73` handles `upgrade-sync`; `:97-111` handles ICBM; `:133-170` covers `track-playerobject` and `repair-camp`. |
 | Artillery path | `Common_GetTeamArtillery.sqf:10-32` discovers group-owned guns; `Client_RequestFireMission.sqf:8-13,50-72` starts local fire and cooldown; `Common_FireArtillery.sqf:9-23,37-72` validates gun/range/fire mechanics; `Common_GetArtilleryAmmoOptions.sqf:41-72` and `Common_LoadArtilleryAmmo.sqf:18-53` own ammo options/loading. |
-| Adjacent support modules | `Client/Module/UAV/uav.sqf:27-52` creates/debits/tracks UAVs and `Server/Support/Support_UAV.sqf:6-20` monitors cleanup; `Client/Module/Nuke/nukeincoming.sqf:7-23` sends the ICBM request and `Client/Module/Nuke/damage.sqf:13-34` applies nuke damage; `Client/Module/ZetaCargo/Zeta_Hook.sqf:34` and `Zeta_Unhook.sqf:1-20` show the detach-argument gap; `Common/Config/Core_Root/Root_RU.sqf:36` still comments out `WFBE_%1PARAAMMO` on the starting-vehicles line. |
+| Adjacent support modules | `Client/Module/UAV/uav.sqf:27-52` creates/debits/tracks UAVs and `Server/Support/Support_UAV.sqf:6-20` monitors cleanup; `Client/Module/Nuke/nukeincoming.sqf:7-23` sends the ICBM request and `Client/Module/Nuke/damage.sqf:13-34` applies current-stable nuke damage; current source Chernarus `Client/Module/ZetaCargo/Zeta_Hook.sqf:34-35` passes the detach vehicle while maintained Vanilla `Zeta_Hook.sqf:34` does not; `Common/Config/Core_Root/Root_RU.sqf:36` still comments out `WFBE_%1PARAAMMO` on the starting-vehicles line. |
 
 ## Tactical Menu Entry Points
 
@@ -103,7 +105,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | Anti-air radar (AAR) | Working/partial | Base structure and client marker feature are live when enabled; upgrade levels change marker detail and refresh rate, but the per-aircraft marker loops are client-local and should be performance-smoked on busy air games. |
 | ICBM/Nuke | Partial/high-risk | Client deducts funds and sends `RequestSpecial ["ICBM", ...]`; server applies nuke damage from payload. Stale adjunct paths remain. |
 | MASH | Branch-split / removed on current stable | Current stable removed the officer MASH deploy skill action in the June bundle (`Skill_Apply.sqf:43`); no portable deploy path remains there. Old-shape docs/Miksuu/perf roots still carry local deploy plus orphaned marker relay/receiver stubs. The `WFBE_%1MASHES` config vars are commented out in all Core_Root/*.sqf files, and MASH as a buildable base defense structure in Core_Structures configs is a separate system. |
-| ZetaCargo/airlift | Broken/partial | Hook attaches nearby unmanned land vehicle; detach action does not pass the lifted vehicle even though unhook expects it. |
+| ZetaCargo/airlift | Branch-split / partial | Source Chernarus current stable passes the lifted vehicle into manual detach; maintained Vanilla current stable still does not. Trello #87 branch adds friendly-HQ filtering and ground-drop behavior in both roots, but does not repair the Vanilla detach-argument gap. |
 | Service menu | Working/partial | Repair/refuel/rearm/heal effects and deductions are client-side; local support scripts recheck world state but not full money authority. |
 | Supply mission | Partial | Server validates return proximity but trusts client-set `SupplyFromTown` / `SupplyAmount`. |
 | Supply truck respawn | Safe-disabled / authority gap if revived | Economy menu requests `RequestSpecial ["RespawnST", sideJoined]`; `Server_HandleSpecial.sqf:55-60` still trusts the payload side and damages the side logic's `wfbe_ai_supplytrucks` list. Current `origin/master` `cf2a6d6a` and release `a96fdda2` initialize that list and log-disable old AI supply-truck logistics at `Init_Server.sqf:382-384` in both maintained roots instead of raw-spawning `UpdateSupplyTruck`; the old worker still points at missing `Server\FSM\supplytruck.fsm` at `AI_UpdateSupplyTruck.sqf:17`. Canonical branch matrix: [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix). |
@@ -138,13 +140,17 @@ AAR is a live base-support system, not only a historical changelog item. The bui
 
 `Client/Module/Nuke/*` owns launch UI/marker/object flow and sends the special request. `Client/FSM/updateclient.sqf:19-20` still registers an `ICBM_launched` event handler, but no current publisher was found. `NukeIncoming` PVF exists but the current launch path uses `RequestSpecial`.
 
+Branch-only integrity candidate: `origin/claude/trello-base-integrity-fixes@66d80160` adds Trello #97 logic in source Chernarus plus maintained Vanilla `Client/Module/Nuke/damage.sqf:33-42`, deleting nearby `LocationLogicStart` construction logics that carry `WFBE_B_Type` before radiation starts. This targets the stable behavior where `damage.sqf:17` excludes `LocationLogicStart` from normal damage and current `Construction_SmallSite.sqf` / `Construction_MediumSite.sqf` create those logics at `:34`, set `WFBE_B_Type` at `:47/:67`, wait on `WFBE_B_Completion` at `:75/:95` or `:75/:90/:110`, then create the real structure at `:104` / `:119`. It is not an ICBM authority fix.
+
 ### MASH
 
 `Client/Module/Skill/*` owns officer MASH/supply actions on old-shape docs/Miksuu/perf roots. There, MASH deploy creates local tent state used by respawn lookup, while marker sync is stale: the server relay exists, the client receiver compile is commented, and no maintained Chernarus/Vanilla sender was found. Current stable `origin/master@0139a3468609`, historical `a96fdda28087` and B69-family refs remove the maintained-root deploy/module path and keep only `Skill_Apply.sqf:43` removal wording plus residues. Modded `eden`/`lingor` sender lines are drift, not maintained-marker proof. Use [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) for the branch-sensitive respawn split.
 
 ### ZetaCargo Airlift
 
-`Client/Module/ZetaCargo/*` defines lifters/types and hook/unhook behavior. Airlift action is gated by `WFBE_UP_AIRLIFT`, but the detach action does not pass the lifted vehicle while `Zeta_Unhook.sqf` expects it in action arguments.
+`Client/Module/ZetaCargo/*` defines lifters/types and hook/unhook behavior. Airlift action is gated by `WFBE_UP_AIRLIFT`. Current source Chernarus already passes the lifted vehicle in the detach action (`Zeta_Hook.sqf:34-35`; `Zeta_Unhook.sqf:3-7`), while maintained Vanilla still has the older no-argument detach action at `Zeta_Hook.sqf:34`.
+
+Branch-only integrity candidate: `origin/claude/trello-base-integrity-fixes@66d80160` adds Trello #87 friendly-HQ filtering at branch `Zeta_Hook.sqf:17-19` and ground-level drop/HQ-offset behavior at branch `Zeta_Unhook.sqf:12-29` in both maintained roots. The branch keeps source Chernarus detach-argument behavior but leaves maintained Vanilla without the detach action argument, so do not call it a complete Zeta parity fix without an extra Vanilla patch and smoke.
 
 ## Logistics Supports
 
@@ -187,7 +193,8 @@ Wave N rechecked leaf support assets and found two source-level traps worth keep
 | AA missile gating is path-dependent | Verify start vehicles, purchased aircraft, client-built aircraft, rearmed aircraft, SAMs and EASA loadouts all pass the same `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` / `WFBE_UP_AIRAAM` policy before calling AA restrictions complete. |
 | RU ammo paradrop config is commented out | Split `Root_RU.sqf:36` so the starting-vehicle comment does not swallow `WFBE_%1PARAAMMO`; smoke RU para-ammo request after the fix. |
 | `upgrade-sync` mixed argument source | Use the [upgrade-sync branch matrix](#upgrade-sync-branch-matrix). Normalize `Server_HandleSpecial.sqf:67-73` to read side/id/level from one payload shape, then smoke upgrade completion synchronization. |
-| Zeta detach missing vehicle arg | Pass `[_vehicle]` when adding the detach action in `Zeta_Hook.sqf`, or revise `Zeta_Unhook.sqf` to find the lifted object safely. |
+| Zeta Cargo branch split | Preserve source Chernarus detach-argument behavior, add maintained Vanilla parity before claiming manual detach fixed there, and smoke Trello #87 friendly-HQ filtering plus ground-drop behavior before promotion. |
+| Nuke in-progress construction branch candidate | If porting Trello #97, delete only in-progress construction logics that carry `WFBE_B_Type`, keep completed-structure damage behavior intact, and do not present it as ICBM authority closure. |
 | Stale ICBM adjuncts | Either wire the `ICBM_launched` / `NukeIncoming` paths intentionally or remove/document them as dead. If revived, fix the missing `airRaid` sound reference first. |
 | MASH marker flow is split | Reconcile sender, server relay, client receiver, delete replay and JIP resend, or remove/archive the stale marker relay. |
 | Supply mission cargo/source trust | Recompute cargo/source/reward server-side from trusted truck/town state. |
@@ -198,9 +205,9 @@ Wave N rechecked leaf support assets and found two source-level traps worth keep
 - Paratrooper, ammo and vehicle paradrops with valid/invalid upgrade levels and insufficient funds.
 - UAV spawn, reveal, leader disconnect and cleanup.
 - Artillery request with each upgrade level and local/remote gunner state.
-- ICBM request from valid commander and forged/non-commander payload.
+- ICBM request from valid commander and forged/non-commander payload; if testing Trello #97, include an in-progress SmallSite/MediumSite inside the blast and a completed structure as control.
 - MASH deploy, respawn availability and marker sync.
-- Zeta hook/unhook with vehicle attached.
+- Zeta hook/unhook with vehicle attached, own-HQ proximity, normal-heli drop, C-130 drop, lifter-damage auto-detach and maintained Vanilla detach-argument parity.
 - Service actions with changing funds/world state between button enable and click.
 - Supply mission cargo reward and cooldown after truck reuse.
 
