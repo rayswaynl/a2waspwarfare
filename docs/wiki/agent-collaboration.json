@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T14:47:11+02:00",
+  "generatedAt": "2026-06-23T15:12:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-supply-truck-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refreshed autonomous AI supply-truck docs from current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Source scope is docs/source HEAD@6d4b514c12fc, current stable/B74.1, B74.2, B69, B74, Miksuu b8389e748243, origin/perf/quick-wins@0076040f, historical a96fdda2 and historical c20ce153 where locally available.",
+        "Checked paths are maintained-root Server/Init/Init_Server.sqf, Server/AI/AI_UpdateSupplyTruck.sqf and absent Server/FSM/supplytruck.fsm.",
+        "No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed AI-Commander-Autonomy-Audit.md, Abandoned-Feature-Revival-Review.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Dead-Code-And-Stale-Code-Register.md with current B74.1/B74.2 supply-truck evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future AI/logistics owner should preserve the current stable safe-disable shape when merging raw-spawn branches, or intentionally design a server-owned supply-truck loop/FSM before reviving autonomous logistics.",
+      "updated": "2026-06-23T15:12:00+02:00"
+    },
     {
       "lane": "attack-wave-authority-current-b741-refresh-2026-06-23",
       "owner": "Codex",
