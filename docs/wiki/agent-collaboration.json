@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T17:40:00+02:00",
+  "generatedAt": "2026-06-23T17:57:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "resource-income-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh resource-income payout/display evidence from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Checked maintained-root Server/FSM/updateresources.sqf and Client/Functions/Client_GetIncome.sqf across docs/source HEAD, current stable/B74.1, B74.2, B69, adjacent B74, Miksuu, perf and historical refs.",
+        "Initial checks show current stable/B74.1 and B74.2 match for checked income files; Chernarus carries B74 hybrid-refill plus B74.1 AICOM taper, while maintained Vanilla keeps non-hybrid fallback. Old-shape docs/Miksuu/perf/a96fdda2 still keep AI commander funds inside the cap guard.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Economy-Towns-And-Supply.md, Resource-Income-Tick-Distribution-Engine.md, Economy-Authority-First-Cut.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 resource-income evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future economy owner should treat current stable/B74.1/B74.2 as partial source-present behavior: preserve or deliberately change AICOM funds-famine fallback and B74.1 taper, decide side-supply/team-paycheck cap intent, align income-system 4 display math, and smoke capped/uncapped ticks in Chernarus plus maintained Vanilla.",
+      "updated": "2026-06-23T17:57:00+02:00"
+    },
     {
       "lane": "send-message-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
