@@ -95,6 +95,12 @@ if (_type == "MVD_Soldier_AT") then {
 	_unit addMagazine "PG7VR";
 };
 
+// Remove the HEDP rocket from the MAAWS soldier, and replace it with the HEAT rocket (upstream miksuu/BarracksInfantryRework)
+if (_type == "US_Soldier_AT_EP1") then {
+	_unit removeMagazine "R_MEEWS_HEDP";
+	_unit addMagazine "R_MEEWS_HEAT";
+};
+
 if (_global) then {
 	if (!isNil "isHeadLessClient" && {isHeadLessClient}) then {
 		//--- HC-created (delegated) AI skips the global Init_Unit broadcast entirely: the

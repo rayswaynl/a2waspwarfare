@@ -6,13 +6,13 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['TK_Special_Forces_EP1'];
-_i = _i + [['','',280,6,-1,2,0,1,'Takistani Special Forces',[]]];
+_i = _i + [['','',280,6,-1,3,0,1,'Takistani Special Forces',[]]];
 
 _c = _c + ['TK_Special_Forces_TL_EP1'];
-_i = _i + [['','',300,6,-1,2,0,1,'Takistani Special Forces',[]]];
+_i = _i + [['','',300,6,-1,3,0,1,'Takistani Special Forces',[]]];
 
 _c = _c + ['TK_Special_Forces_MG_EP1'];
-_i = _i + [['','',305,6,-1,2,0,1,'Takistani Special Forces',[]]];
+_i = _i + [['','',305,6,-1,3,0,1,'Takistani Special Forces',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {

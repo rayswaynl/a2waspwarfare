@@ -6,70 +6,70 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['GUE_Soldier_1'];
-_i = _i + [['','',150,4,-1,0,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_2'];
-_i = _i + [['','',120,4,-1,0,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_3'];
-_i = _i + [['','',140,4,-1,0,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_GL'];
-_i = _i + [['','',150,5,-1,1,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_AT'];
-_i = _i + [['','',220,5,-1,1,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_AA'];
-_i = _i + [['','',250,4,-1,0,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_AR'];
 _i = _i + [['','',150,4,-1,1,0,1,'Guerilla',[]]];
 
-_c = _c + ['GUE_Soldier_MG'];
-_i = _i + [['','',190,4,-1,0,0,1,'Guerilla',[]]];
+_c = _c + ['GUE_Soldier_2'];
+_i = _i + [['','',120,4,-1,1,0,1,'Guerilla',[]]];
 
-_c = _c + ['GUE_Soldier_Sniper'];
-_i = _i + [['','',175,6,-1,1,0,1,'Guerilla',[]]];
+_c = _c + ['GUE_Soldier_3'];
+_i = _i + [['','',140,4,-1,1,0,1,'Guerilla',[]]];
 
-_c = _c + ['GUE_Soldier_Medic'];
-_i = _i + [['','',160,6,-1,0,0,1,'Guerilla',[]]];
+_c = _c + ['GUE_Soldier_GL'];
+_i = _i + [['','',150,5,-1,2,0,1,'Guerilla',[]]];
 
-_c = _c + ['GUE_Soldier_Crew'];
-_i = _i + [['','',120,5,-1,0,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_Pilot'];
-_i = _i + [['','',120,5,-1,0,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_Scout'];
-_i = _i + [['','',260,5,-1,3,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_CO'];
-_i = _i + [['','',300,5,-1,1,0,1,'Guerilla',[]]];
-
-_c = _c + ['GUE_Soldier_Sab'];
+_c = _c + ['GUE_Soldier_AT'];
 _i = _i + [['','',220,5,-1,2,0,1,'Guerilla',[]]];
 
+_c = _c + ['GUE_Soldier_AA'];
+_i = _i + [['','',250,4,-1,1,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_AR'];
+_i = _i + [['','',150,4,-1,2,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_MG'];
+_i = _i + [['','',190,4,-1,1,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_Sniper'];
+_i = _i + [['','',175,6,-1,2,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_Medic'];
+_i = _i + [['','',160,6,-1,1,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_Crew'];
+_i = _i + [['','',120,5,-1,1,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_Pilot'];
+_i = _i + [['','',120,5,-1,1,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_Scout'];
+_i = _i + [['','',260,5,-1,4,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_CO'];
+_i = _i + [['','',300,5,-1,2,0,1,'Guerilla',[]]];
+
+_c = _c + ['GUE_Soldier_Sab'];
+_i = _i + [['','',220,5,-1,3,0,1,'Guerilla',[]]];
+
 _c = _c + ['GUE_Commander'];
-_i = _i + [['','',240,5,-1,0,0,1,'Guerilla',[]]];
+_i = _i + [['','',240,5,-1,1,0,1,'Guerilla',[]]];
 
 _c = _c + ['GUE_Worker2'];
-_i = _i + [['','',100,5,-1,0,0,1,'Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Guerilla',[]]];
 
 _c = _c + ['GUE_Woodlander3'];
-_i = _i + [['','',100,5,-1,0,0,1,'Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Guerilla',[]]];
 
 _c = _c + ['GUE_Villager3'];
-_i = _i + [['','',100,5,-1,0,0,1,'Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Guerilla',[]]];
 
 _c = _c + ['GUE_Woodlander2'];
-_i = _i + [['','',100,5,-1,0,0,1,'Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Guerilla',[]]];
 
 _c = _c + ['GUE_Woodlander1'];
-_i = _i + [['','',100,5,-1,0,0,1,'Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Guerilla',[]]];
 
 _c = _c + ['GUE_Villager4'];
-_i = _i + [['','',100,5,-1,0,0,1,'Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Guerilla',[]]];
 
 /* Light Vehicles */
 _c = _c + ['TT650_Gue'];

@@ -6,65 +6,65 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['Ins_Soldier_1'];
-_i = _i + [['','',150,4,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',150,4,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_2'];
-_i = _i + [['','',160,4,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',160,4,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_GL'];
-_i = _i + [['','',175,4,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',175,4,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_CO'];
-_i = _i + [['','',210,5,-1,1,0,1,'Insurgents',[]]];
+_i = _i + [['','',210,5,-1,2,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Commander'];
-_i = _i + [['','',250,5,-1,2,0,1,'Insurgents',[]]];
+_i = _i + [['','',250,5,-1,3,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_Medic'];
-_i = _i + [['','',175,4,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',175,4,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_AR'];
-_i = _i + [['','',180,4,-1,1,0,1,'Insurgents',[]]];
+_i = _i + [['','',180,4,-1,2,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_MG'];
-_i = _i + [['','',190,4,-1,1,0,1,'Insurgents',[]]];
+_i = _i + [['','',190,4,-1,2,0,1,'Insurgents',[]]];
 
 // Ins_Soldier_AT acts as Dragon soldier now
 _c = _c + ['Ins_Soldier_AT'];
-_i = _i + [['AT Specialist (Dragon)','',600,6,-1,2,0,1,'Insurgents',[]]];
+_i = _i + [['AT Specialist (Dragon)','',600,6,-1,3,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_AA'];
-_i = _i + [['','',300,6,-1,2,0,1,'Insurgents',[]]];
+_i = _i + [['','',300,6,-1,3,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_Sniper'];
-_i = _i + [['','',220,6,-1,1,0,1,'Insurgents',[]]];
+_i = _i + [['','',220,6,-1,2,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_Sapper'];
-_i = _i + [['','',190,5,-1,2,0,1,'Insurgents',[]]];
+_i = _i + [['','',190,5,-1,3,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_Sab'];
-_i = _i + [['','',180,5,-1,2,0,1,'Insurgents',[]]];
+_i = _i + [['','',180,5,-1,3,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_Pilot'];
-_i = _i + [['','',130,5,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',130,5,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['Ins_Soldier_Crew'];
-_i = _i + [['','',130,5,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',130,5,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['INS_Woodlander1'];
-_i = _i + [['','',100,5,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['INS_Woodlander2'];
-_i = _i + [['','',100,5,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['INS_Woodlander3'];
-_i = _i + [['','',100,5,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['INS_Villager3'];
-_i = _i + [['','',100,5,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Insurgents',[]]];
 
 _c = _c + ['INS_Villager4'];
-_i = _i + [['','',100,5,-1,0,0,1,'Insurgents',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Insurgents',[]]];
 
 /* Light Vehicles */
 _c = _c + ['TT650_Ins'];

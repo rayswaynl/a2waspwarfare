@@ -6,58 +6,58 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['RU_Soldier'];
-_i = _i + [['','',150,4,-1,0,0,1,'Russians',[]]];
+_i = _i + [['','',150,4,-1,1,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier2'];
-_i = _i + [['','',120,4,-1,0,0,1,'Russians',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_LAT'];
-_i = _i + [['','',220,5,-1,0,0,1,'Russians',[]]];
-
-_c = _c + ['RU_Soldier_AT'];
-_i = _i + [['','',310,5,-1,1,0,1,'Russians',[]]];
-
-_c = _c + ['RU_Soldier_HAT'];
-_i = _i + [['','',1050,6,-1,3,0,1,'Russians',[]]];
-
-_c = _c + ['RU_Soldier_AA'];
-_i = _i + [['','',425,6,-1,1,0,1,'Russians',[]]];
-
-_c = _c + ['RU_Soldier_AR'];
-_i = _i + [['','',210,5,-1,0,0,1,'Russians',[]]];
-
-_c = _c + ['RU_Soldier_MG'];
 _i = _i + [['','',220,5,-1,1,0,1,'Russians',[]]];
 
+_c = _c + ['RU_Soldier_AT'];
+_i = _i + [['','',310,5,-1,2,0,1,'Russians',[]]];
+
+_c = _c + ['RU_Soldier_HAT'];
+_i = _i + [['','',1050,6,-1,4,0,1,'Russians',[]]];
+
+_c = _c + ['RU_Soldier_AA'];
+_i = _i + [['','',425,6,-1,2,0,1,'Russians',[]]];
+
+_c = _c + ['RU_Soldier_AR'];
+_i = _i + [['','',210,5,-1,1,0,1,'Russians',[]]];
+
+_c = _c + ['RU_Soldier_MG'];
+_i = _i + [['','',220,5,-1,2,0,1,'Russians',[]]];
+
 _c = _c + ['RU_Soldier_GL'];
-_i = _i + [['','',160,5,-1,0,0,1,'Russians',[]]];
+_i = _i + [['','',160,5,-1,1,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_Marksman'];
-_i = _i + [['','',290,5,-1,1,0,1,'Russians',[]]];
+_i = _i + [['','',290,5,-1,2,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_Spotter'];
-_i = _i + [['','',295,5,-1,2,0,1,'Russians',[]]];
+_i = _i + [['','',295,5,-1,3,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_Sniper'];
-_i = _i + [['','',300,5,-1,2,0,1,'Russians',[]]];
+_i = _i + [['','',300,5,-1,3,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_SniperH'];
-_i = _i + [['','',330,5,-1,3,0,1,'Russians',[]]];
+_i = _i + [['','',330,5,-1,4,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_Medic'];
-_i = _i + [['','',190,4,-1,0,0,1,'Russians',[]]];
+_i = _i + [['','',190,4,-1,1,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_Crew'];
-_i = _i + [['','',120,4,-1,0,0,1,'Russians',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_Pilot'];
-_i = _i + [['','',120,4,-1,0,0,1,'Russians',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_TL'];
-_i = _i + [['','',240,5,-1,1,0,1,'Russians',[]]];
+_i = _i + [['','',240,5,-1,2,0,1,'Russians',[]]];
 
 _c = _c + ['RU_Soldier_SL'];
-_i = _i + [['','',220,5,-1,2,0,1,'Russians',[]]];
+_i = _i + [['','',220,5,-1,3,0,1,'Russians',[]]];
 
 /* Light Vehicles */
 _c = _c + ['UAZ_RU'];

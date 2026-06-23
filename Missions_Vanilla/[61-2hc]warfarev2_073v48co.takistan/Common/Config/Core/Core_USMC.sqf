@@ -6,64 +6,64 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['USMC_Soldier'];
-_i = _i + [['','',150,4,-1,0,0,1,'USMC',[]]];
+_i = _i + [['','',150,4,-1,1,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier2'];
-_i = _i + [['','',125,4,-1,0,0,1,'USMC',[]]];
+_i = _i + [['','',125,4,-1,1,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier_LAT'];
-_i = _i + [['','',225,5,-1,0,0,1,'USMC',[]]];
+_i = _i + [['','',225,5,-1,1,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier_AT'];
-_i = _i + [['','',700,5,-1,2,0,1,'USMC',[]]];
+_i = _i + [['','',700,5,-1,3,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier_HAT'];
-_i = _i + [['','',1050,6,-1,3,0,1,'USMC',[]]];
+_i = _i + [['','',1050,6,-1,4,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier_AA'];
-_i = _i + [['','',400,6,-1,2,0,1,'USMC',[]]];
-
-_c = _c + ['USMC_Soldier_AR'];
-_i = _i + [['','',210,5,-1,1,0,1,'USMC',[]]];
-
-_c = _c + ['USMC_Soldier_MG'];
-_i = _i + [['','',220,5,-1,1,0,1,'USMC',[]]];
-
-_c = _c + ['USMC_Soldier_GL'];
-_i = _i + [['','',160,5,-1,0,0,1,'USMC',[]]];
-
-_c = _c + ['USMC_SoldierS_Sniper'];
-_i = _i + [['','',320,6,-1,2,0,1,'USMC',[]]];
-
-_c = _c + ['USMC_SoldierM_Marksman'];
-_i = _i + [['','',350,6,-1,2,0,1,'USMC',[]]];
-
-_c = _c + ['USMC_SoldierS_SniperH'];
 _i = _i + [['','',400,6,-1,3,0,1,'USMC',[]]];
 
-_c = _c + ['USMC_Soldier_Medic'];
-_i = _i + [['','',190,4,-1,0,0,1,'USMC',[]]];
+_c = _c + ['USMC_Soldier_AR'];
+_i = _i + [['','',210,5,-1,2,0,1,'USMC',[]]];
 
-_c = _c + ['USMC_SoldierS_Engineer'];
-_i = _i + [['','',225,5,-1,0,0,1,'USMC',[]]];
+_c = _c + ['USMC_Soldier_MG'];
+_i = _i + [['','',220,5,-1,2,0,1,'USMC',[]]];
 
-_c = _c + ['USMC_SoldierS'];
-_i = _i + [['','',300,7,-1,1,0,1,'USMC',[]]];
+_c = _c + ['USMC_Soldier_GL'];
+_i = _i + [['','',160,5,-1,1,0,1,'USMC',[]]];
 
-_c = _c + ['USMC_SoldierS_Spotter'];
+_c = _c + ['USMC_SoldierS_Sniper'];
 _i = _i + [['','',320,6,-1,3,0,1,'USMC',[]]];
 
+_c = _c + ['USMC_SoldierM_Marksman'];
+_i = _i + [['','',350,6,-1,3,0,1,'USMC',[]]];
+
+_c = _c + ['USMC_SoldierS_SniperH'];
+_i = _i + [['','',400,6,-1,4,0,1,'USMC',[]]];
+
+_c = _c + ['USMC_Soldier_Medic'];
+_i = _i + [['','',190,4,-1,1,0,1,'USMC',[]]];
+
+_c = _c + ['USMC_SoldierS_Engineer'];
+_i = _i + [['','',225,5,-1,1,0,1,'USMC',[]]];
+
+_c = _c + ['USMC_SoldierS'];
+_i = _i + [['','',300,7,-1,2,0,1,'USMC',[]]];
+
+_c = _c + ['USMC_SoldierS_Spotter'];
+_i = _i + [['','',320,6,-1,4,0,1,'USMC',[]]];
+
 _c = _c + ['USMC_Soldier_Crew'];
-_i = _i + [['','',120,4,-1,0,0,1,'USMC',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier_Pilot'];
-_i = _i + [['','',120,4,-1,0,0,1,'USMC',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier_TL'];
-_i = _i + [['','',240,5,-1,1,0,1,'USMC',[]]];
+_i = _i + [['','',240,5,-1,2,0,1,'USMC',[]]];
 
 _c = _c + ['USMC_Soldier_SL'];
-_i = _i + [['','',220,5,-1,2,0,1,'USMC',[]]];
+_i = _i + [['','',220,5,-1,3,0,1,'USMC',[]]];
 
 /* Light Vehicles */
 _c = _c + ['MMT_USMC'];

@@ -6,53 +6,53 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['FR_GL'];
-_i = _i + [['','',260,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',260,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Corpsman'];
-_i = _i + [['','',270,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',270,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Commander'];
-_i = _i + [['','',295,6,-1,2,0,1.00,'USMC Force Recon',[]]];
+_i = _i + [['','',295,6,-1,3,0,1.00,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_TL'];
-_i = _i + [['','',285,6,-1,2,0,1.00,'USMC Force Recon',[]]];
+_i = _i + [['','',285,6,-1,3,0,1.00,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Assault_R'];
-_i = _i + [['','',280,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',280,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Assault_GL'];
-_i = _i + [['','',285,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',285,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_AR'];
-_i = _i + [['','',290,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',290,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_R'];
-_i = _i + [['','',300,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',300,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Sapper'];
-_i = _i + [['','',310,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',310,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_AC'];
-_i = _i + [['','',320,6,-1,2,0,1.0,'USMC Force Recon',[]]];
+_i = _i + [['','',320,6,-1,3,0,1.0,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Marksman'];
-_i = _i + [['','',340,6,-1,2,0,1,'USMC Force Recon',[]]];
+_i = _i + [['','',340,6,-1,3,0,1,'USMC Force Recon',[]]];
 
 /* Infantry - Special Characters */
 _c = _c + ['FR_Cooper'];
-_i = _i + [['','',400,6,-1,3,0,1.0,'USMC Force Recon',[]]];
+_i = _i + [['','',400,6,-1,4,0,1.0,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Miles'];
-_i = _i + [['','',300,6,-1,3,0,1.0,'USMC Force Recon',[]]];
+_i = _i + [['','',300,6,-1,4,0,1.0,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_OHara'];
-_i = _i + [['','',400,6,-1,3,0,1.0,'USMC Force Recon',[]]];
+_i = _i + [['','',400,6,-1,4,0,1.0,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Rodriguez'];
-_i = _i + [['','',400,6,-1,3,0,1.0,'USMC Force Recon',[]]];
+_i = _i + [['','',400,6,-1,4,0,1.0,'USMC Force Recon',[]]];
 
 _c = _c + ['FR_Sykes'];
-_i = _i + [['','',400,6,-1,3,0,1.0,'USMC Force Recon',[]]];
+_i = _i + [['','',400,6,-1,4,0,1.0,'USMC Force Recon',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {

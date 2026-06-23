@@ -6,37 +6,37 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['US_Delta_Force_EP1'];
-_i = _i + [['','',300,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',300,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_TL_EP1'];
-_i = _i + [['','',360,6,-1,3,0,1.00,'US Delta Force',[]]];
+_i = _i + [['','',360,6,-1,4,0,1.00,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_Medic_EP1'];
-_i = _i + [['','',320,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',320,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_Assault_EP1'];
-_i = _i + [['','',335,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',335,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_SD_EP1'];
-_i = _i + [['','',345,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',345,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_MG_EP1'];
-_i = _i + [['','',340,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',340,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_AR_EP1'];
-_i = _i + [['','',330,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',330,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_Night_EP1'];
-_i = _i + [['','',315,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',315,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_Marksman_EP1'];
-_i = _i + [['','',320,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',320,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_M14_EP1'];
-_i = _i + [['','',310,6,-1,3,0,1,'US Delta Force',[]]];
+_i = _i + [['','',310,6,-1,4,0,1,'US Delta Force',[]]];
 
 _c = _c + ['US_Delta_Force_Air_Controller_EP1'];
-_i = _i + [['','',350,6,-1,3,0,1.0,'US Delta Force',[]]];
+_i = _i + [['','',350,6,-1,4,0,1.0,'US Delta Force',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {

@@ -6,19 +6,19 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['GER_Soldier_MG_EP1'];
-_i = _i + [['','',340,6,-1,2,0,1,'KSK',[]]];
+_i = _i + [['','',340,6,-1,3,0,1,'KSK',[]]];
 
 _c = _c + ['GER_Soldier_Medic_EP1'];
-_i = _i + [['','',325,6,-1,2,0,1,'KSK',[]]];
+_i = _i + [['','',325,6,-1,3,0,1,'KSK',[]]];
 
 _c = _c + ['GER_Soldier_EP1'];
-_i = _i + [['','',310,6,-1,2,0,1,'KSK',[]]];
+_i = _i + [['','',310,6,-1,3,0,1,'KSK',[]]];
 
 _c = _c + ['GER_Soldier_Scout_EP1'];
-_i = _i + [['','',345,6,-1,2,0,1,'KSK',[]]];
+_i = _i + [['','',345,6,-1,3,0,1,'KSK',[]]];
 
 _c = _c + ['GER_Soldier_TL_EP1'];
-_i = _i + [['','',355,6,-1,2,0,1,'KSK',[]]];
+_i = _i + [['','',355,6,-1,3,0,1,'KSK',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {

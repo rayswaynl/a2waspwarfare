@@ -6,10 +6,10 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['TK_CIV_Worker01_EP1'];
-_i = _i + [['','',375,4,-1,0,0,0.4,'Takistani Civilians',[]]];
+_i = _i + [['','',375,4,-1,1,0,0.4,'Takistani Civilians',[]]];
 
 _c = _c + ['TK_CIV_Worker02_EP1'];
-_i = _i + [['','',375,4,-1,0,0,0.4,'Takistani Civilians',[]]];
+_i = _i + [['','',375,4,-1,1,0,0.4,'Takistani Civilians',[]]];
 
 /* Light Vehicles */
 _c = _c + ['Old_bike_TK_CIV_EP1'];

@@ -6,79 +6,79 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['BAF_Soldier_AA_DDPM'];
-_i = _i + [['','',410,6,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',410,6,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AAA_DDPM'];
-_i = _i + [['','',440,6,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',440,6,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AAT_DDPM'];
-_i = _i + [['','',190,4,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',190,4,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AHAT_DDPM'];
-_i = _i + [['','',190,6,-1,3,0,1,'British (Desert)',[]]];
+_i = _i + [['','',190,6,-1,4,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AAR_DDPM'];
-_i = _i + [['','',190,5,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',190,5,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AMG_DDPM'];
-_i = _i + [['','',190,6,-1,1,0,1,'British (Desert)',[]]];
+_i = _i + [['','',190,6,-1,2,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AT_DDPM'];
 _i = _i + [['','',650,6,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_HAT_DDPM'];
-_i = _i + [['','',1050,6,-1,3,0,1,'British (Desert)',[]]];
+_i = _i + [['','',1050,6,-1,4,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_AR_DDPM'];
-_i = _i + [['','',210,5,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',210,5,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_crewman_DDPM'];
-_i = _i + [['','',125,5,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',125,5,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_EN_DDPM'];
-_i = _i + [['','',230,5,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',230,5,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_GL_DDPM'];
-_i = _i + [['','',170,5,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',170,5,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_FAC_DDPM'];
-_i = _i + [['','',375,6,-1,3,0,1,'British (Desert)',[]]];
+_i = _i + [['','',375,6,-1,4,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_MG_DDPM'];
-_i = _i + [['','',210,5,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',210,5,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_scout_DDPM'];
-_i = _i + [['','',340,6,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',340,6,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_Marksman_DDPM'];
-_i = _i + [['','',370,6,-1,3,0,1,'British (Desert)',[]]];
+_i = _i + [['','',370,6,-1,4,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_Medic_DDPM'];
-_i = _i + [['','',200,6,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',200,6,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_Officer_DDPM'];
-_i = _i + [['','',265,6,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',265,6,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Pilot_DDPM'];
-_i = _i + [['','',125,6,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',125,6,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_DDPM'];
-_i = _i + [['','',155,6,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',155,6,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_ASoldier_DDPM'];
-_i = _i + [['','',160,6,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',160,6,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_L_DDPM'];
-_i = _i + [['','',130,6,-1,0,0,1,'British (Desert)',[]]];
+_i = _i + [['','',130,6,-1,1,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_N_DDPM'];
-_i = _i + [['','',175,6,-1,1,0,1,'British (Desert)',[]]];
+_i = _i + [['','',175,6,-1,2,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_SL_DDPM'];
-_i = _i + [['','',235,6,-1,2,0,1,'British (Desert)',[]]];
+_i = _i + [['','',235,6,-1,3,0,1,'British (Desert)',[]]];
 
 _c = _c + ['BAF_Soldier_TL_DDPM'];
-_i = _i + [['','',245,6,-1,1,0,1,'British (Desert)',[]]];
+_i = _i + [['','',245,6,-1,2,0,1,'British (Desert)',[]]];
 
 /* Light Vehicles */
 _c = _c + ['BAF_ATV_D'];

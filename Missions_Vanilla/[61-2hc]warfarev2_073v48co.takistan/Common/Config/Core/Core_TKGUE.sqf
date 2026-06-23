@@ -6,49 +6,49 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['TK_GUE_Soldier_EP1'];
-_i = _i + [['','',110,4,-1,0,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',110,4,-1,1,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_2_EP1'];
-_i = _i + [['','',120,4,-1,0,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_3_EP1'];
-_i = _i + [['','',110,4,-1,0,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',110,4,-1,1,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_4_EP1'];
-_i = _i + [['','',100,5,-1,0,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_5_EP1'];
-_i = _i + [['','',100,5,-1,0,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',100,5,-1,1,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_AT_EP1'];
-_i = _i + [['','',220,4,-1,1,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',220,4,-1,2,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_AAT_EP1'];
-_i = _i + [['','',210,4,-1,2,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',210,4,-1,3,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_AA_EP1'];
-_i = _i + [['','',270,4,-1,2,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',270,4,-1,3,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_AR_EP1'];
-_i = _i + [['','',190,5,-1,1,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',190,5,-1,2,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_MG_EP1'];
-_i = _i + [['','',200,6,-1,0,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',200,6,-1,1,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_Sniper_EP1'];
-_i = _i + [['','',180,5,-1,1,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',180,5,-1,2,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Bonesetter_EP1'];
-_i = _i + [['','',125,5,-1,0,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',125,5,-1,1,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_HAT_EP1'];
-_i = _i + [['','',350,5,-1,3,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',350,5,-1,4,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Soldier_TL_EP1'];
-_i = _i + [['','',200,5,-1,2,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',200,5,-1,3,0,1,'Takistani Guerilla',[]]];
 
 _c = _c + ['TK_GUE_Warlord_EP1'];
-_i = _i + [['','',210,5,-1,1,0,1,'Takistani Guerilla',[]]];
+_i = _i + [['','',210,5,-1,2,0,1,'Takistani Guerilla',[]]];
 
 /* Light Vehicles */
 _c = _c + ['V3S_TK_GUE_EP1'];

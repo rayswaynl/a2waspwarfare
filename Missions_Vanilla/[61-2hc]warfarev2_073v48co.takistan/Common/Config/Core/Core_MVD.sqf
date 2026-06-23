@@ -6,23 +6,23 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['MVD_Soldier_GL'];
-_i = _i + [['','',310,7,-1,3,0,1,'MVD',[]]];
+_i = _i + [['','',310,7,-1,4,0,1,'MVD',[]]];
 
 _c = _c + ['MVD_Soldier_MG'];
-_i = _i + [['','',320,7,-1,3,0,1,'MVD',[]]];
+_i = _i + [['','',320,7,-1,4,0,1,'MVD',[]]];
 
 _c = _c + ['MVD_Soldier_Marksman'];
-_i = _i + [['','',330,7,-1,2,0,1,'MVD',[]]];
+_i = _i + [['','',330,7,-1,3,0,1,'MVD',[]]];
 
 // MVD_Soldier_AT acts as RPG-7VR soldier now
 _c = _c + ['MVD_Soldier_AT'];
-_i = _i + [['Rifleman (RPG-7 VR)','',350,5,-1,2,0,1,'MVD',[]]];
+_i = _i + [['Rifleman (RPG-7 VR)','',350,5,-1,3,0,1,'MVD',[]]];
 
 _c = _c + ['MVD_Soldier_Sniper'];
-_i = _i + [['','',350,7,-1,3,0,1,'MVD',[]]];
+_i = _i + [['','',350,7,-1,4,0,1,'MVD',[]]];
 
 _c = _c + ['MVD_Soldier_TL'];
-_i = _i + [['','',360,7,-1,3,0,1,'MVD',[]]];
+_i = _i + [['','',360,7,-1,4,0,1,'MVD',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {

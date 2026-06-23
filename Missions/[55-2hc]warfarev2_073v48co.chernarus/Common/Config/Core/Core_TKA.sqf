@@ -6,67 +6,67 @@ _i = [];
 
 /* Infantry */
 _c = _c + ['TK_Soldier_EP1'];
-_i = _i + [['','',150,4,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',150,4,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_B_EP1'];
-_i = _i + [['','',125,4,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',125,4,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_TWS_EP1'];
-_i = _i + [['','',205,5,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',205,5,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_Engineer_EP1'];
-_i = _i + [['','',155,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',155,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_LAT_EP1'];
-_i = _i + [['','',225,5,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',225,5,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_AT_EP1'];
-_i = _i + [['','',310,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',310,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_AAT_EP1'];
-_i = _i + [['','',270,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',270,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_HAT_EP1'];
-_i = _i + [['','',1050,7,-1,3,0,1,'Takistani Army',[]]];
+_i = _i + [['','',1050,7,-1,4,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_AA_EP1'];
-_i = _i + [['','',425,6,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',425,6,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_AR_EP1'];
-_i = _i + [['','',210,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',210,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_AMG_EP1'];
-_i = _i + [['','',205,5,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',205,5,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_MG_EP1'];
-_i = _i + [['','',220,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',220,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_GL_EP1'];
-_i = _i + [['','',160,5,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',160,5,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_Sniper_EP1'];
-_i = _i + [['','',280,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',280,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_SniperH_EP1'];
-_i = _i + [['','',320,5,-1,3,0,1,'Takistani Army',[]]];
+_i = _i + [['','',320,5,-1,4,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_Spotter_EP1'];
-_i = _i + [['','',290,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',290,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_Medic_EP1'];
-_i = _i + [['','',190,4,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',190,4,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_Crew_EP1'];
-_i = _i + [['','',120,4,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_Pilot_EP1'];
-_i = _i + [['','',120,4,-1,0,0,1,'Takistani Army',[]]];
+_i = _i + [['','',120,4,-1,1,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_Officer_EP1'];
-_i = _i + [['','',240,5,-1,1,0,1,'Takistani Army',[]]];
+_i = _i + [['','',240,5,-1,2,0,1,'Takistani Army',[]]];
 
 _c = _c + ['TK_Soldier_SL_EP1'];
-_i = _i + [['','',220,5,-1,2,0,1,'Takistani Army',[]]];
+_i = _i + [['','',220,5,-1,3,0,1,'Takistani Army',[]]];
 
 /* Light Vehicles */
 _c = _c + ['TT650_TK_EP1'];
