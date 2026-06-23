@@ -26,6 +26,15 @@ This atlas carries support orientation and selected source anchors. Deep hardeni
 
 Trello base-integrity branch intel was added on 2026-06-23 for `origin/claude/trello-base-integrity-fixes@66d80160`, a two-commit branch on merge-base/current stable `origin/master@f8a76de34`. Its scoped payload is six files / +70 / -10 across source Chernarus plus maintained Vanilla ZetaCargo hook/unhook and Nuke damage files, with `git diff --check` clean. Treat it as branch-only evidence: #87 adds friendly-HQ lift filtering plus ground drop behavior, and #97 deletes in-progress construction logics inside the nuke blast. It does not close `RequestSpecial`/ICBM authority, and maintained Vanilla still lacks the source Chernarus Zeta detach-argument fix.
 
+### Trello Artillery UI Branch Intel
+
+Checked 2026-06-23 after fetch. Both Trello artillery UI candidates are branch-only and have `origin/master@f8a76de34` as their merge base, so the payloads are directly comparable to current stable and no older-base drift was found in these diffs. Current stable has the existing Tactical-menu artillery cooldown text in `GUI_Menu_Tactical.sqf:546-558` and initializes `fireMissionTime = -1000` at `Init_Client.sqf:422`, but it has no `RUBHUD_Arty`, `if (MenuAction == 50)` crew action or `STR_WF_TACTICAL_CrewArtillery*` string keys in the maintained roots.
+
+| Branch | Evidence | Status |
+| --- | --- | --- |
+| `origin/claude/trello-arty-cooldown-hud@471fc0580fd6` | Payload is four files / +134 / -8 and `git diff --check` clean against current stable. In source Chernarus plus maintained Vanilla, `Client_UpdateRHUD.sqf:27` extends the RHUD IDC cache with `1372/1373`, `:259-288` adds `_RHUDUpdateArty`, and `:452` calls it during the RHUD refresh. `Rsc/Titles.hpp:177` adds `RUBHUD_Arty` / `RUBHUD_Arty_Value` to `OptionsAvailable`, while `:478-490` defines those controls. | Branch-only UI candidate. It surfaces the existing local artillery timeout state on RHUD; it is not a server-authority change and needs visual/client smoke in source Chernarus plus maintained Vanilla before stable wording. |
+| `origin/claude/trello-arty-to-gunner@2dc3e7403399` | Payload is six files / +217 / -8 and `git diff --check` clean against current stable. In source Chernarus plus maintained Vanilla, `GUI_Menu_Tactical.sqf:571-626` adds `MenuAction == 50`, flattens `WFBE_%1_ARTILLERY_CLASSNAMES`, selects player-group artillery with empty driver/gunner seats, and uses existing group AI with `moveInDriver` / `moveInGunner`. `Rsc/Dialogs.hpp:2364-2371` adds button idc `17040`; `stringtable.xml:3192-3213` adds the crew-artillery label, tooltip and result hints. | Branch-only Tactical UI candidate. It seats existing dismounted group AI and spawns no new units. Smoke must cover player-owned artillery, empty/no-AI/no-artillery cases, locality, and maintained Vanilla parity before promotion. |
+
 ## Source Snapshot
 
 Current docs checkout anchors for the maintained Chernarus root:

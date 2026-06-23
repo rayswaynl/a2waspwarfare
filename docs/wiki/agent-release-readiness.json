@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-23T12:18:00+02:00",
-  "lastVerifiedAt": "2026-06-23T12:18:00+02:00",
+  "generatedAt": "2026-06-23T12:31:53+02:00",
+  "lastVerifiedAt": "2026-06-23T12:31:53+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -389,6 +389,75 @@
           "client-vehicle-smoke",
           "construction-smoke",
           "icbm-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "trello-arty-cooldown-hud-branch",
+      "branch": "origin/claude/trello-arty-cooldown-hud",
+      "head": "471fc0580fd6",
+      "base": "origin/master@f8a76de34",
+      "state": "branch-only-ui-candidate-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-rhud-artillery-cooldown-row",
+      "canonicalDocs": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md#trello-artillery-ui-branch-intel",
+        "Client-UI-Systems-Atlas.md#current-branch-scope",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-arty-cooldown-hud@471fc0580fd6; merge-base with origin/master is current stable f8a76de34",
+        "f8a76de34..471fc0580fd6: 4 files +134/-8; git diff --check clean",
+        "Branch Chernarus/Vanilla Client_UpdateRHUD.sqf:27 extends _rhudIDC with 1372/1373",
+        "Branch Chernarus/Vanilla Client_UpdateRHUD.sqf:259-288 adds _RHUDUpdateArty; :452 calls it during RHUD refresh",
+        "Branch Chernarus/Vanilla Rsc/Titles.hpp:177 adds RUBHUD_Arty and RUBHUD_Arty_Value to OptionsAvailable; :478-490 defines controls idc 1372/1373",
+        "origin/master@f8a76de34 keeps Tactical cooldown text at GUI_Menu_Tactical.sqf:546-558 and fireMissionTime init at Init_Client.sqf:422, but has no RUBHUD_Arty hits"
+      ],
+      "ownerDecision": "Decide whether to promote the RHUD artillery cooldown row as a player-facing UI convenience; this branch does not change fire-mission authority.",
+      "promotionGate": "Smoke RHUD row layout, available/countdown agreement with Tactical, disabled-artillery hiding, title-display ownership and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "hud-smoke",
+          "vanilla-parity-smoke",
+          "branch-base-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "trello-arty-to-gunner-branch",
+      "branch": "origin/claude/trello-arty-to-gunner",
+      "head": "2dc3e7403399",
+      "base": "origin/master@f8a76de34",
+      "state": "branch-only-tactical-ui-candidate-smoke-pending",
+      "sourceScope": "source-chernarus-plus-maintained-vanilla-tactical-crew-all-artillery-button",
+      "canonicalDocs": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md#trello-artillery-ui-branch-intel",
+        "Client-UI-Systems-Atlas.md#current-branch-scope",
+        "Feature-Status-Register.md",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/claude/trello-arty-to-gunner@2dc3e7403399; merge-base with origin/master is current stable f8a76de34",
+        "f8a76de34..2dc3e7403399: 6 files +217/-8; git diff --check clean",
+        "Branch Chernarus/Vanilla GUI_Menu_Tactical.sqf:571-626 adds MenuAction == 50 and seats existing dismounted group AI into empty artillery driver/gunner seats",
+        "Branch Chernarus/Vanilla Rsc/Dialogs.hpp:2364-2371 adds CA_CrewArtillery_Button idc 17040",
+        "Branch Chernarus/Vanilla stringtable.xml:3192-3213 adds STR_WF_TACTICAL_CrewArtillery, tooltip, done and no-AI hints",
+        "origin/master@f8a76de34 has WFBE_%1_ARTILLERY_CLASSNAMES data and existing player-buy moveInGunner paths, but no exact if (MenuAction == 50) tactical action or crew-artillery string keys"
+      ],
+      "ownerDecision": "Decide whether the Tactical menu should include one-click seating of existing player-group AI into owned artillery. Keep any broader AI artillery staffing or server-authority changes separate.",
+      "promotionGate": "Smoke player-owned artillery with empty/full seats, available/no available group AI, no-artillery cases, locality, fire-mission usability and maintained Vanilla parity before stable/release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "artillery-smoke",
+          "locality-smoke",
           "vanilla-parity-smoke",
           "branch-base-review"
         ],

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T12:18:00+02:00",
+  "generatedAt": "2026-06-23T12:31:53+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "trello-artillery-ui-branch-intel-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/trello-arty-cooldown-hud@471fc0580fd6 and origin/claude/trello-arty-to-gunner@2dc3e7403399 both merge-base directly on current stable origin/master@f8a76de34.",
+        "Cooldown HUD payload is four maintained-root files / +134 / -8 and git diff --check clean; it adds Client_UpdateRHUD.sqf:27,259-288,452 and Rsc/Titles.hpp:177,478-490 RHUD artillery controls in source Chernarus plus maintained Vanilla.",
+        "Crew-all artillery payload is six maintained-root files / +217 / -8 and git diff --check clean; it adds GUI_Menu_Tactical.sqf:571-626, Rsc/Dialogs.hpp:2364-2371 and stringtable.xml:3192-3213 controls/strings in both maintained roots.",
+        "Current stable has no RUBHUD_Arty hits, no exact if (MenuAction == 50) tactical action and no STR_WF_TACTICAL_CrewArtillery string keys.",
+        "No gameplay source changed."
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md, Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and agent-release-readiness.json with branch-only evidence and smoke gates.",
+        "Refreshed Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl.",
+        "Mirrored touched files into the GitHub wiki checkout and validated."
+      ],
+      "handoff": "Future artillery/UI reviewer should treat both Trello branches as UI convenience candidates only until RHUD cooldown display, Tactical crew-all seating, empty/no-AI/no-artillery cases, player-group locality, fire-mission usability and maintained Vanilla parity are smoked in Arma 2 OA.",
+      "updated": "2026-06-23T12:22:51+02:00"
+    },
     {
       "lane": "trello-base-integrity-branch-intel-2026-06-23",
       "owner": "Codex",
