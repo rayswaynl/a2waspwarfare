@@ -316,6 +316,8 @@ Patch order:
 
 `GUI_Menu_Economy.sqf` handles commander income percentage, structure selling and supply-truck respawn. The respawn supply-truck action sends `["RequestSpecial", ["RespawnST", sideJoined]]` (`:90-96`), which ties this UI directly to the partially broken AI/supply-truck feature described in [Feature status register](Feature-Status-Register).
 
+Current-B74 Economy-control refresh 2026-06-23: docs/source `HEAD@21f0d53b` is unchanged from `d2a3f995` / `b5219d47` for checked Economy controller/resource paths and still writes disabled-state controls `23004`, `23005` and `23006` from `GUI_Menu_Economy.sqf:7-8` in both maintained roots while `RscMenu_Economy` declares `23002`, `23003` and `23008` without `23020` at `Rsc/Dialogs.hpp:3327,3339,3346`. Current stable `origin/master@0139a346`, current B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f` and historical `a96fdda2` remove those stale writes in both maintained roots, read the dashboard with `DisplayCtrl 23020` at `GUI_Menu_Economy.sqf:25` and declare `23020` in `Rsc/Dialogs.hpp` (`:3070` on stable/B69/B74, `:3006` on historical release). Current Miksuu `b8389e748243` and perf `0076040f` remain old-shape. B74 changes only Chernarus dashboard label text versus stable among checked paths, not the control-map repair.
+
 Spark UI scout 2026-06-04 control/action map:
 
 | Menu | Control/action | Runtime effect |

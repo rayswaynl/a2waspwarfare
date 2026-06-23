@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T04:34:53+02:00",
+  "generatedAt": "2026-06-23T04:52:36+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "economy-dialog-controls-current-b74-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "docs/source HEAD@21f0d53b is unchanged from d2a3f995 and b5219d47 for checked Chernarus/Vanilla GUI_Menu_Economy.sqf and Rsc/Dialogs.hpp paths.",
+        "docs/source still writes disabled-state controls 23004, 23005 and 23006 from GUI_Menu_Economy.sqf:7-8 in both maintained roots while RscMenu_Economy declares 23002, 23003 and 23008 without 23020.",
+        "current stable origin/master@0139a346, current B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f and historical a96fdda2 use display control 23020 at GUI_Menu_Economy.sqf:25 and declare idc 23020 in RscMenu_Economy in both maintained roots.",
+        "current Miksuu master@b8389e748243 and origin/perf/quick-wins@0076040f keep the stale 23004/23005/23006 writes in both maintained roots.",
+        "origin/master..B74 changes only Chernarus Economy dashboard label text among checked paths; B69..B74 and older-B69-to-B74 checked Economy controller/resource deltas are empty."
+      ],
+      "outputs": [
+        "Refreshed UI-Resource-Parity-Cleanup, Client UI Systems Atlas, Feature Status Register, Dead/stale code register, dashboard/worklog/pruning ledger and Economy machine rows with current B74 evidence.",
+        "Mirrored docs/wiki changes into the GitHub wiki checkout after validation.",
+        "No gameplay source changes."
+      ],
+      "handoff": "Closed after validation. Future UI owner should preserve current stable/B69/B74/release Economy 23020 repair and port or recreate it only on old-shape targets such as docs/source, current Miksuu and perf, then smoke Economy disabled state, income controls, sell mode, supply-truck respawn and Vanilla parity.",
+      "updated": "2026-06-23T04:52:36+02:00"
+    },
     {
       "lane": "stale-upgrade-dialog-current-b74-refresh-2026-06-23",
       "owner": "Codex",
