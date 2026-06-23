@@ -15,7 +15,7 @@ This page is the front door. It should help you choose the right owner page quic
 | Feature or bug triager | [Feature status register](Feature-Status-Register) | [Dead/stale code register](Dead-Code-And-Stale-Code-Register), [Pending owner decisions](Pending-Owner-Decisions) |
 | Gameplay implementer | [Gameplay systems atlas](Gameplay-Systems-Atlas) | [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Factory/purchase](Factory-And-Purchase-Systems-Atlas), [Server runtime](Server-Runtime-And-Operations) |
 | Public-server hardening owner | [Hardening roadmap](Hardening-Implementation-Roadmap) | [Server authority map](Server-Authority-Migration-Map), [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Testing workflow](Testing-Debugging-And-Release-Workflow) |
-| Upstream/community archaeologist | [Community & Dev](Community-And-Dev) | [Miksuu wiki import](Miksuu-Upstream-Wiki-Import), [Developer history](Developer-History-And-Upstream-Lessons), [Upstream commit intel](Upstream-Miksuu-Commit-Intel) |
+| Upstream/community archaeologist | [Community & Dev](Community-And-Dev) | [Miksuu wiki import](Miksuu-Upstream-Wiki-Import), [Developer history](Developer-History-And-Upstream-Lessons), [Upstream commit intel](Upstream-Miksuu-Commit-Intel), [Upstream mining ledger](Upstream-Mining-Ledger) |
 | Docs/platform maintainer | [Navigation inventory](Navigation-Inventory-And-Page-Status) | [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Knowledge platform roadmap](Knowledge-Platform-Roadmap), [Wiki mirror plan](Wiki-Mirror-Reconciliation-Plan) |
 
 ## Non-Negotiables

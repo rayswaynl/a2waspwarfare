@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T11:30:00+02:00",
+  "generatedAt": "2026-06-23T11:36:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "upstream-mining-ledger-navigation-wire-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Coordination-Board.md has an open 2026-06-23 Claude -> Codex request to link Upstream-Mining-Ledger from _Sidebar, Home and agent-context.json.",
+        "docs/wiki/Upstream-Mining-Ledger.md exists and records the 2026-06-23 upstream-mining passes, draft PR outcomes and flagged/no-port/needs-design findings.",
+        "Current docs/wiki search shows no Home.md, _Sidebar.md or agent-context.json route to Upstream-Mining-Ledger before this lane.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Linked Upstream-Mining-Ledger from Home, _Sidebar, llms.txt, mkdocs.yml and agent-context.json.",
+        "Closed the open Coordination Board handoff and updated dashboard, worklog, pruning ledger and machine rows.",
+        "Mirrored touched wiki files into the GitHub wiki checkout after validation."
+      ],
+      "handoff": "Future upstream/mining reviewers should use Upstream-Mining-Ledger as the batch-level audit trail and continue routing branch-specific behavior through canonical owner pages and Feature Status rather than duplicating branch intel into broad navigation pages.",
+      "updated": "2026-06-23T11:36:00+02:00"
+    },
     {
       "lane": "upstream-hq-repair-price-branch-intel-2026-06-23",
       "owner": "Codex",

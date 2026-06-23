@@ -245,6 +245,7 @@
   - [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads)
   - [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
   - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
+  - [Upstream mining ledger](Upstream-Mining-Ledger)
   - [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
 - Compatibility and references
   - [HC upstream history and lessons](HC-Upstream-History-And-Lessons)

@@ -78,6 +78,65 @@ The full scan/triage/verify tables live under the mining lane at `C:/Users/Chill
 
 These are the audit trail for why each branch did or did not become a PR, and are the starting point if the loop is rerun against a fresh upstream fetch.
 
+## Pass 3 — Trello board (Miksuu's Warfare)
+
+> A second, **independent** mining pass that does not look at upstream branches at all — it mines the **Miksuu's Warfare Trello board** (the community's feature/bug backlog) for forward work worth doing in `rayswaynl/a2waspwarfare`, and delivers the worth-doing slice as grouped **draft, human-merge-gated** PRs. Passes 1–2 (above) mined the upstream parent's *git branches*; this pass mines the *idea backlog*.
+
+### Source & funnel
+
+- **Board:** Miksuu's Warfare — <https://trello.com/b/Si4okJLd/miksuus-warfare>. Exported via `curl -L https://trello.com/b/Si4okJLd.json` (public board JSON).
+- **Raw size:** 104 lists / **712 open cards**. Most lists are *version changelogs* (work already shipped in past releases) or the `Low Priority (Won't)` bucket — neither is forward work.
+- **Tier-1 forward cards (118):** the cards in the actionable lists — `Must`, `Should`, `Next`, `Needs-triage`, `Suggested`, `Draft`, plus the `perf` and `cleaning` lists.
+
+| Stage | Count |
+| --- | --- |
+| Open cards on the board | 712 |
+| Tier-1 forward cards (Must/Should/Next/Needs-triage/Suggested/Draft/perf/cleaning) | 118 |
+| Deep-verified against `origin/master` source | 22 |
+| **Ready → grouped draft PRs** | **8 cards / 6 PRs** |
+| Needs-design (owner/vote/art decision, no PR) | 8 |
+| Skip (false premise / not worth it) | 6 |
+
+The same discipline as passes 1–2 applies: each "ready" card was verified against `origin/master` source (feature actually missing, OA 1.64-safe, no MP/JIP/locality/server-authority regression) before a PR was opened. All PRs are **DRAFT** and **human-merge-gated**; **in-engine smoke is pending** and is a merge precondition.
+
+### 6 grouped draft PRs opened (8 cards)
+
+Cards are grouped where they share a file/subsystem so review stays single-purpose.
+
+| PR | Summary | Trello card(s) |
+| --- | --- | --- |
+| [#60](https://github.com/rayswaynl/a2waspwarfare/pull/60) | Show vehicle ammo % in the service menu | #99 |
+| [#61](https://github.com/rayswaynl/a2waspwarfare/pull/61) | Action to toggle automatic IR smoke off/on | #38 |
+| [#62](https://github.com/rayswaynl/a2waspwarfare/pull/62) | Flashing warning when FAB-250 / Mk82 is selected above the bomb altitude limit (a "Must") | #106 |
+| [#63](https://github.com/rayswaynl/a2waspwarfare/pull/63) | Anti-spam guards for building (#71) and vehicle (#74) repair — two exploit-fixes | #71, #74 |
+| [#64](https://github.com/rayswaynl/a2waspwarfare/pull/64) | Block engineer salvage when a friendly salvage truck is in range | #15 |
+| [#65](https://github.com/rayswaynl/a2waspwarfare/pull/65) | AAR upgrade enhancements — tiered detection height (#65) + new-contact warning (#66) | #65, #66 |
+
+### 8 needs-design (owner / vote / art decisions — no PR)
+
+Each is a real card but blocked on a decision that is not a coding call:
+
+- **#105 paratroop kill reward** — root cause was never pinned upstream; needs source-level diagnosis before a fix can be trusted.
+- **#26 first-blood bonus** — the reward numbers are a **vote** decision and the SFX is an **art** decision.
+- **#27 OPFOR Hind re-tier** — balance/owner call on which tier the Hind belongs in.
+- **#29 town-depot supply trucks @10x** — economy-tuning owner decision.
+- **#41 radiation damages factories** — scope/design owner decision.
+- **#111 free supply truck at spawn** — economy/owner decision.
+- **#113 all-arty-to-gunner key** — control-scheme owner decision.
+- **#91 IR-smoke "cooldown ready" cue** — **false premise**: there is no player-facing IR-smoke cooldown in current source for a cue to track, so the card as written has nothing to bind to.
+
+### ~34 deferred small codeable wins (later pass)
+
+Genuine, small, codeable wins held for a later batch to keep this pass focused — examples: **#87** airlift teleporting onto HQ, **#96** rearm-all-AI-at-cannon, **#85** max-cities visual bug, **#84** arty reload-ready sound, **#76** dead WF-menu HUD button, an **audio-cue cluster**, **#98** Linebacker/Tunguska markers.
+
+### Tier-2 — not yet triaged
+
+The large lower-priority lists are untouched this pass: the **`Could` list (149)**, the **`Backlog` list (71)**, and the **voting list**. They are the starting point if the Trello pass is rerun.
+
+### Cross-pass total
+
+Across all three passes this loop has opened **12 draft PRs — #54–#65** — all DRAFT and human-merge-gated, all awaiting OA 1.64 in-engine smoke before any merge.
+
 ## Continue Reading
 
 - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)

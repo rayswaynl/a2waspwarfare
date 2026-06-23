@@ -47,6 +47,7 @@ Important notes:
 - [Miksuu Chernarus architecture archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission): Marty-era architecture overview and external diagram/PDF links.
 - [Developer history and upstream lessons](https://github.com/rayswaynl/a2waspwarfare/wiki/Developer-History-And-Upstream-Lessons): Source-backed upstream lessons from commits, PRs, branches and reverts.
 - [Upstream Miksuu commit intel](https://github.com/rayswaynl/a2waspwarfare/wiki/Upstream-Miksuu-Commit-Intel): Miksuu repo commit/PR context and current upstream comparison.
+- [Upstream mining ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/Upstream-Mining-Ledger): Batch-level upstream-mining funnel, draft PR outcomes and no-port findings.
 - [PR8 and Drone upstream lesson match](https://github.com/rayswaynl/a2waspwarfare/wiki/PR8-And-Drone-Upstream-Lesson-Match): Upstream lesson checklist for PR #8 and drone branches.
 - [agent-upstream-wiki-imports.jsonl](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-upstream-wiki-imports.jsonl): Machine-readable upstream wiki import ledger.
 

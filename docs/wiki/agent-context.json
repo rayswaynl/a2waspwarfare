@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-21T12:22:01+02:00",
+  "generatedAt": "2026-06-23T11:34:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -264,6 +264,7 @@
       "Upgrades-And-Research-Atlas",
       "Upstream-Changelog-Feature-Leads",
       "Upstream-Miksuu-Commit-Intel",
+      "Upstream-Mining-Ledger",
       "Valhalla-Vehicle-Climbing-Assist",
       "Variable-And-Naming-Conventions",
       "Vehicle-Cargo-Equip-Loop-Bounds",
@@ -1368,7 +1369,8 @@
     "currentSourceStatusKnowledge": "agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
     "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
     "agentDevelopmentPackAlias": "Agent-Development-Pack.md",
-    "agentMachineIndex": "agent-machine-index.json"
+    "agentMachineIndex": "agent-machine-index.json",
+    "upstreamMiningLedger": "Upstream-Mining-Ledger.md"
   },
   "currentCoordination": {
     "liveOpenTaskRoute": [
