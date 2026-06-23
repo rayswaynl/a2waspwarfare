@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T14:22:45+02:00",
+  "generatedAt": "2026-06-23T14:47:11+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "attack-wave-authority-current-b741-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Current stable origin/master@f8a76de34 equals origin/claude/b74.1-aicom@f8a76de34, but direct attack-wave authority rows still cite previous current stable origin/master@0139a346 in several pages and machine records.",
+        "Scope is source-backed documentation only: refresh Attack-Wave-Authority-Playbook.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Public-Variable-Channel-Index.md, Server-Authority-Migration-Map.md and matching JSONL rows.",
+        "Evidence collection will compare source Chernarus plus maintained Vanilla Takistan across docs/source, current stable/B74.1, B69, B74, current Miksuu, perf/quick-wins and relevant historical refs.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Attack-Wave-Authority-Playbook.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Public-Variable-Channel-Index.md and Server-Authority-Migration-Map.md with current stable/B74.1 evidence.",
+        "Updated agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "Validation passed with known legacy JSONL envelope warnings only; no gameplay source changed."
+      ],
+      "handoff": "Future support/economy code owner should treat ATTACK_WAVE_INIT as request-only, re-derive requester/side/supply server-side, clamp modifier/duration, guard ATTACK_WAVE_DETAILS against forged direct payloads, propagate maintained Vanilla and smoke valid activation, forged _supply >= 70000, wrong-side payloads, duplicate active waves and JIP replay.",
+      "updated": "2026-06-23T14:47:11+02:00"
+    },
     {
       "lane": "wiki-remote-reference-mirror-2026-06-23",
       "owner": "Codex",
