@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T15:51:26+02:00",
+  "generatedAt": "2026-06-23T16:04:10+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest lane published: victory/endgame current-B74.1 branch-split refresh. Current stable/B74.1 Chernarus has the guard/short-circuit and winner-payload client rescue, but explicit winner/loser semantics and maintained Vanilla server/GUER-label propagation remain open. No gameplay source changed.",
-      "nextExpectedOutput": "Before the next pass, reread coordination surfaces and claim one fresh bounded source-backed docs lane."
+      "currentWork": "Latest published lane: fast-travel-fee-current-b741-b742-refresh-2026-06-23. Refreshed Tactical fast-travel fee evidence to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a. No gameplay source changed.",
+      "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "fast-travel-fee-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Tactical fast-travel fee UX evidence across Client UI systems, Feature Status, Source Fix queue and machine rows. Current stable/B74.1 origin/master@f8a76de34 equals origin/claude/b74.1-aicom@f8a76de34 and keeps the paid-mode local Tactical behavior in both maintained roots: hidden unaffordable destinations and price markers at GUI_Menu_Tactical.sqf:185,195-196,215, local debit at :403-404, source Chernarus constants at Init_CommonConstants.sqf:612,621-624 and maintained Vanilla at :414,423-426. B74.2 d472da6a only drifts source Chernarus constants to :625,634-637 among checked fast-travel paths. Docs/source, Miksuu, perf and historical a96fdda2 keep old TODO/line shape. No gameplay source changed."
+    },
     {
       "lane": "victory-endgame-current-b741-refresh-2026-06-23",
       "owner": "Codex",

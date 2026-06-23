@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T15:51:26+02:00",
+  "generatedAt": "2026-06-23T16:04:10+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "fast-travel-fee-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh Tactical fast-travel fee UX docs from current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Source scope is maintained-root Client/GUI/GUI_Menu_Tactical.sqf and Common/Init/Init_CommonConstants.sqf across docs/source old-shape refs, current stable/B74.1, B74.2, B69, B74, Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 where useful.",
+        "Initial source checks show docs/source keeps the stale Travel fee TODO plus fee/debit shape, current stable/B74.1 keeps the paid-mode hide/marker/local-debit shape with constants line drift, and B74.2 changes only source Chernarus constants among checked fast-travel paths.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 fast-travel fee evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future UI owner should keep this separate from RequestSpecial authority hardening, then decide hide-vs-disabled/prompt policy, add any final funds/context recheck deliberately, propagate maintained Vanilla and smoke fast-travel modes/funds/start points/range/group travel.",
+      "updated": "2026-06-23T16:04:10+02:00"
+    },
     {
       "lane": "victory-endgame-current-b741-refresh-2026-06-23",
       "owner": "Codex",
