@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-23T19:49:21+02:00",
+  "generatedAt": "2026-06-23T20:12:26+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "gear-template-profile-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh gear profile-template save/import rows from stale current-stable origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 plus visible B74.2 origin/claude/b74.2-aicom@d472da6a.",
+        "Check maintained-root Client_UI_Gear_SaveTemplateProfile.sqf, Client_UI_Gear_AddTemplate.sqf, Client_UI_Gear_FillTemplates.sqf and Init_ProfileGear.sqf across docs/source, current stable/B74.1, B74.2, B69, adjacent B74, current Miksuu, perf, historical release and historical EASA QoL refs.",
+        "Keep Gear-Template-Profile-Filter as canonical and update Gear/Loadout/EASA orientation, Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Gear-Template-Profile-Filter.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.1/B74.2 gear profile-template evidence.",
+        "Updated Progress Dashboard, Agent Worklog, pruning ledger, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki.",
+        "No gameplay source changed."
+      ],
+      "handoff": "Future gear owner should patch old-shape SaveTemplateProfile refs before trusting saved-template upgrade filtering. On current stable/B74-shaped targets, preserve the save-filter fix and address Init_ProfileGear import bounds/default plus the Barracks-or-Gear versus Gear-only template policy before changing AddTemplate/FillTemplates behavior.",
+      "updated": "2026-06-23T20:04:13+02:00"
+    },
     {
       "lane": "clickabletext-soundpush-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",

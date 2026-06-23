@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-23T19:49:21+02:00",
+  "generatedAt": "2026-06-23T20:12:26+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest published lane: clickabletext-soundpush-current-b741-b742-refresh-2026-06-23. Refreshed ClickableText soundPush current B74.1/B74.2 evidence and preserved old-shape branch targets. No gameplay source changed.",
+      "currentWork": "Latest published lane: gear-template-profile-current-b741-b742-refresh-2026-06-23. Refreshed gear profile-template save/import evidence through current stable/B74.1 and B74.2; old upstream Gear_template_error is adjacent Chernarus-only UI evidence, not profile persistence closure. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed docs passes from Progress Dashboard, Feature Status, Source Fix queue, Upstream mining ledger and pruning ledger."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "gear-template-profile-current-b741-b742-refresh-2026-06-23",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed gear profile-template save/import evidence through Gear template profile filter, Gear/loadout/EASA atlas, Feature Status and Source Fix queue. Docs/source HEAD@1d4282eca8fd is unchanged from 72b5f0de98f9 / 43c3ba05 for checked template paths and still carries undefined _u_upgrade at Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75 plus Init_ProfileGear.sqf:17,25 six-field import guard/index-6 read in both maintained roots. Current stable/B74.1 origin/master@f8a76de34, B74.2 origin/claude/b74.2-aicom@d472da6a, B69 and adjacent B74 keep the save-filter fix at :34,:57,:82 but not import guard/policy closure. Current Miksuu, perf, historical refs and miksuu/Gear_template_error@5b056013 are old-shape or adjacent non-rescues. No gameplay source changed."
+    },
     {
       "lane": "clickabletext-soundpush-current-b741-b742-refresh-2026-06-23",
       "owner": "Codex",
