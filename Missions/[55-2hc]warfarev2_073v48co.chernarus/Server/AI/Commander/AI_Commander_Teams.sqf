@@ -405,6 +405,18 @@ if (count _live > 0) then {
 		if (_pick < 0) then {_pick = _cwBucket select (count _cwBucket - 1)};
 	};
 
+	//--- B74.1 (Ray 2026-06-23) ANTI-REPEAT ("use differing templates"): if the cost-weighted draw landed on the
+	//--- SAME template this side founded last time, reroll ONCE within the same bucket so the army stops fielding
+	//--- identical squads back-to-back. The cost-weight already chose the price tier; this only breaks dead-repeats.
+	//--- A2-OA-safe: getVariable on the side-logic OBJECT _logik is reliable. Stored AFTER the W7 override below.
+	private ["_lastTmpl"];
+	_lastTmpl = _logik getVariable ["wfbe_aicom_last_template", -1];
+	if (_pick == _lastTmpl && {count (_buckets select _chosen) > 1}) then {
+		private ["_rrTry"];
+		_rrTry = (_buckets select _chosen) select (floor (random (count (_buckets select _chosen))));
+		if (_rrTry != _pick) then {_pick = _rrTry};
+	};
+
 	//--- W7 Veteran Company: one-shot flag on logik -> use highest-upgrade eligible template.
 	private ["_w7Flag","_w7Skill","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best"];
 	_w7Flag = _logik getVariable "wfbe_aicom_veteran_next";
@@ -423,6 +435,7 @@ if (count _live > 0) then {
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W7 VeteranCompany applied - premium template %2.", _sideText, _pick]] Call WFBE_CO_FNC_AICOMLog;
 	};
 	_template = _templates select _pick;
+	_logik setVariable ["wfbe_aicom_last_template", _pick]; //--- B74.1: record the actual founded template for the next founding's anti-repeat reroll.
 
 	//--- B57 LARGER-GROUPS (Ray 2026-06-20): live teams are HC-founded at raw template size (3-6) and are NEVER
 	//--- filled afterwards (AI_Commander_Produce skips wfbe_aicom_hc teams = 100% of live teams). So pad infantry

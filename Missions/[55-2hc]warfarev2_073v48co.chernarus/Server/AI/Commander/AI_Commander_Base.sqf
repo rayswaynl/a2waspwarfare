@@ -319,8 +319,18 @@ if (_artradIdx >= 0) then {
 };
 if (_scaffoldActivated) then {
 	_artyThreat = _logik getVariable ["wfbe_aicom_arty_threat", false];
-	["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR-in-order=%2 threat=%3 Bank=%4).", _sideText, ("CBRadar" in _order), _artyThreat, ("Bank" in _order)]] Call WFBE_CO_FNC_AICOMLog;
-	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str ("CBRadar" in _order) + " threat=" + str _artyThreat + " Bank=" + str ("Bank" in _order));
+	//--- B74.1 (2026-06-23) DE-SPAM: _scaffoldActivated is true whenever a structure is merely IN _order, even one
+	//--- that already exists (the actual build is dedup-gated downstream), so on a high-supply side this logged
+	//--- ~1/min for hours (935x in the b74 soak) with zero real builds, masking real signal. Only emit when the
+	//--- scaffold set CHANGES vs the last logged state. A2-OA-safe (str/in/getVariable on the side-logic object).
+	private ["_scaffoldSig","_scaffoldPrev"];
+	_scaffoldSig = str [("CBRadar" in _order), ("Bank" in _order), ("Reserve" in _order), ("ArtilleryRadar" in _order), _artyThreat];
+	_scaffoldPrev = _logik getVariable ["wfbe_aicom_scaffold_sig", ""];
+	if (_scaffoldSig != _scaffoldPrev) then {
+		_logik setVariable ["wfbe_aicom_scaffold_sig", _scaffoldSig];
+		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR-in-order=%2 threat=%3 Bank=%4).", _sideText, ("CBRadar" in _order), _artyThreat, ("Bank" in _order)]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str ("CBRadar" in _order) + " threat=" + str _artyThreat + " Bank=" + str ("Bank" in _order));
+	};
 };
 
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;

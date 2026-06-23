@@ -1258,9 +1258,9 @@ while {!gameOver} do {
 												if (!isNull _veh && {alive _veh}) then {
 													_p = getPosATL _veh;
 													_veh setDamage 1;                 //--- pop the truck; killed-EH still fires for kill-credit
-													"Sh_122_HE" createVehicle _p;     //--- stacked 122mm HE = large lethal crater (SADARM idiom)
-													"Sh_122_HE" createVehicle _p;
-													"Sh_122_HE" createVehicle _p;
+													"Bo_FAB_250" createVehicle _p;     //--- B74.1 (Ray 2026-06-23): 3x FAB-250 aerial bombs (loaded via the EASA plane loadouts on both maps) = far bigger crater than the old 3x 122mm HE shell.
+													"Bo_FAB_250" createVehicle _p;
+													"Bo_FAB_250" createVehicle _p;
 												};
 												sleep 3;
 												{deleteVehicle _x} forEach (crew _veh);

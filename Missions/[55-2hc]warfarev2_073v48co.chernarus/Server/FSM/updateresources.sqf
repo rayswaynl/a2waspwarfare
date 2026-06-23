@@ -54,6 +54,17 @@ while {!gameOver} do {
 		_supply = 0;
 
 		_supply =  (_x) Call WFBE_CO_FNC_GetTownsSupply;
+		//--- B74.1 (Ray 2026-06-23): AICOM income TAPER for the territorial leader - diminishing per-town funds above
+		//--- TAPER_TOWNS so a runaway leader's treasury can't compound unbounded (soak: leader ran to +281k/tick). Each
+		//--- town beyond the threshold contributes only TAPER_RATE of a normal town. AICOM-ONLY: applied ONLY to the
+		//--- ChangeAICommanderFunds calls below, never to player paychecks or supply. _aicomTaper = 1.0 at/below threshold.
+		private ["_aicomTaper","_taperTowns","_townCnt"];
+		_aicomTaper = 1;
+		_taperTowns = missionNamespace getVariable ["WFBE_C_AICOM_INCOME_TAPER_TOWNS", 8];
+		_townCnt = (_x) Call GetTownsHeld;
+		if (_townCnt > _taperTowns) then {
+			_aicomTaper = (_taperTowns + ((_townCnt - _taperTowns) * (missionNamespace getVariable ["WFBE_C_AICOM_INCOME_TAPER_RATE", 0.4]))) / _townCnt;
+		};
 		//////
 		if(_supply  < _supply_max_limit) then {
 
@@ -92,7 +103,7 @@ while {!gameOver} do {
 				} forEach (_logik getVariable "wfbe_teams");
 
 				if ((isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
-					[_x, round(_income * _pcMult)] Call ChangeAICommanderFunds;
+					[_x, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds;
 				};
 			};
 
@@ -116,7 +127,7 @@ while {!gameOver} do {
 			_income = if (_is != 3) then {_supply} else {round(_supply * _incomeCoef)};
 			if (_is == 2) then {_income = round(_income / 2)};
 			if (_income > 0) then {
-				[_x, round(_income * _pcMult)] Call ChangeAICommanderFunds;
+				[_x, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds;
 			};
 			[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds;
 		};

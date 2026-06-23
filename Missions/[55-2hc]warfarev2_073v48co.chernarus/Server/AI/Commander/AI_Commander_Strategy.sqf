@@ -403,7 +403,19 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 } forEach _teams;
 
 _attacked = [];
-{ if ((_x getVariable "sideID") == _sideID && {_x getVariable ["wfbe_active", false]}) then {_attacked = _attacked + [_x]} } forEach towns;
+private ["_atkTownCheck","_reliefEnemyDist"];
+	_reliefEnemyDist = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500];
+	//--- B74.1 (Ray 2026-06-23): only DEFEND a town that is ACTUALLY under attack, not merely "active". wfbe_active =
+	//--- "town near the front/players" (server_town_ai.sqf:182), NOT "enemy attacking" - so the old gate yanked up to
+	//--- RELIEF_MAX teams off offense to sit in QUIET front towns ("too defensive", Ray). Require a live hostile (enemy
+	//--- side OR resistance, not civilian) within _reliefEnemyDist of the town centre. _atkTownCheck captures the outer
+	//--- _x because the nearEntities count below rebinds _x. A2-OA-safe (nearEntities/side/alive/count).
+	{
+		_atkTownCheck = _x;
+		if ((_atkTownCheck getVariable "sideID") == _sideID && {_atkTownCheck getVariable ["wfbe_active", false]}) then {
+			if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _atkTownCheck) nearEntities [["Man","LandVehicle","Air"], _reliefEnemyDist])) > 0) then {_attacked = _attacked + [_atkTownCheck]};
+		};
+	} forEach towns;
 _relieved = 0;
 {
 	_town = _x;
@@ -530,7 +542,7 @@ _strikeOn = false;
 private ["_hqFrac","_hqFloor","_strikeMinTowns"];
 _hqFrac = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FRAC", 0.5];
 _hqFloor = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FLOOR", 3];
-_strikeMinTowns = ceil ((count towns) * _hqFrac);
+_strikeMinTowns = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 12]; //--- B74.1 (Ray 2026-06-23): was ceil((count towns)*0.5) = ~20 on Chernarus (40+ towns) = UNREACHABLE, so the HQ-strike NEVER fired and the round never ended. Launch at an ABSOLUTE 12+ towns. The _hqFrac/_hqFloor lines around this are now inert (the floor clamp below is a no-op since 12 > 3).
 if (_strikeMinTowns < _hqFloor) then {_strikeMinTowns = _hqFloor};
 if (!isNull _enemyHQ && {alive _enemyHQ}) then {
 	if (_wasStrike) then {
@@ -549,7 +561,14 @@ if (_strikeOn) then {
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
 	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
-	while {_strikeCount < 3} do {
+	//--- B74.1 (Ray 2026-06-23): commit HALF the side's live field teams (was a flat 3) so a dominant side throws
+		//--- real weight at the enemy base instead of a 3-team poke that never razed it. Floor at 3 for a small army.
+		private ["_strikeLive","_strikeTarget"];
+		_strikeLive = 0;
+		{ if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count (units _x)) > 0}) then {_strikeLive = _strikeLive + 1} } forEach _teams;
+		_strikeTarget = ceil (_strikeLive * (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.5]));
+		if (_strikeTarget < 3) then {_strikeTarget = 3};
+		while {_strikeCount < _strikeTarget} do {
 		_best = grpNull; _bestN = 1; //--- need at least 2 men to be worth sending
 		{
 			_team = _x;
@@ -592,6 +611,29 @@ if (_strikeOn) then {
 	};
 };
 _logik setVariable ["wfbe_aicom_strike_on", _strikeOn];
+
+//--- B74.1 (Ray 2026-06-23) BASE OVERRUN -> makes the HQ-strike round-ender actually CLOSE the match. The win is the
+//--- EXISTING supremacy condition (server_victory_threeway: enemy HQ dead + 0 factories), but A2 AI won't reliably
+//--- shoot empty buildings, so a strike could besiege the base forever without winning. When our strikers have
+//--- physically OVERRUN the enemy base - a striker unit on top of the enemy HQ AND the enemy cleared from it - raze the
+//--- HQ + its production structures so the supremacy win fires next victory tick. NOT a new victory mode (Ray's
+//--- constraint): it only destroys the structures the existing win already checks. A2-OA-safe (nearEntities/distance/setDamage).
+if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
+	private ["_ovrDist","_ovrClear","_ovrRaze","_eHQpos","_ovrStrikers","_ovrEnemies"];
+	_ovrDist  = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_DIST", 250];
+	_ovrClear = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_CLEAR", 200];
+	_ovrRaze  = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_RAZE", 400];
+	_eHQpos = getPos _enemyHQ;
+	_ovrStrikers = 0;
+	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]}) then { { if (alive _x && {(_x distance _eHQpos) < _ovrDist}) then {_ovrStrikers = _ovrStrikers + 1} } forEach (units _x) } } forEach _teams;
+	_ovrEnemies = {alive _x && {(side _x) == _enemySide}} count (_eHQpos nearEntities [["Man","LandVehicle","Air"], _ovrClear]);
+	if (_ovrStrikers > 0 && {_ovrEnemies == 0}) then {
+		_enemyHQ setDamage 1;
+		{ if (!isNull _x && {alive _x} && {(_x distance _eHQpos) < _ovrRaze}) then {_x setDamage 1} } forEach ((_enemySide) Call WFBE_CO_FNC_GetSideStructures);
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BASE_OVERRUN|enemy HQ+factories razed|strikers=" + str _ovrStrikers);
+		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] ENEMY BASE OVERRUN - razed enemy HQ + structures (strikers on objective, enemy cleared) -> supremacy win imminent.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+	};
+};
 
 //--- POSTURE + FRONT telemetry (claude-gaming 2026-06-15): the commander's strategic STANCE and
 //--- the war-state numbers that drive it. All metrics (_myTowns/_enemyTowns/_myStr/_enStr/_strikeOn/

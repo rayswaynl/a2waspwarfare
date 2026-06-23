@@ -510,7 +510,7 @@ switch (_args select 0) do {
 		_driver = _args select 2;
 		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 			[_veh, _driver] spawn {
-				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2"];
+				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand"];
 				_veh = _this select 0;
 				_driver = _this select 1;
 				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
@@ -526,14 +526,27 @@ switch (_args select 0) do {
 				//--- reason during the 4s settle window (or an already-wreck/empty hull) paid the driver's team -
 				//--- a large over-pay. Crediting infantry kills only keeps the cash-for-kills bounded + blast-caused.
 				_victims = [];
+				//--- B74.1 (Ray 2026-06-23): pay for ANY kill, not just infantry ("grant money whenever something is
+				//--- killed"). Snapshot living enemy MEN + CREWED vehicles in the (now FAB-250-sized) radius; crewed/alive
+				//--- only so empty wrecks never pay (keeps the C5 over-pay bound). _cand captures the outer _x because the
+				//--- crew-count below rebinds _x.
 				{
-					if (alive _x && {(side _x == east) || (side _x == west)}) then {_victims = _victims + [_x]};
-				} forEach (nearestObjects [_p, ["Man"], _radius]);
+					_cand = _x;
+					if (alive _cand && {(side _cand == east) || (side _cand == west)}) then {
+						if (_cand isKindOf "Man") then {
+							_victims = _victims + [_cand];
+						} else {
+							if (({alive _x} count (crew _cand)) > 0) then {_victims = _victims + [_cand]};
+						};
+					};
+				} forEach (nearestObjects [_p, ["Man","LandVehicle","Air"], _radius]);
 				//--- BLAST (AI W21 idiom): pop the truck, then stack 3x 122mm HE for a large lethal crater.
 				_veh setDamage 1;
-				"Sh_122_HE" createVehicle _p;
-				"Sh_122_HE" createVehicle _p;
-				"Sh_122_HE" createVehicle _p;
+				//--- B74.1 (Ray 2026-06-23): 3x Sh_122_HE -> 3x Bo_FAB_250 (the FAB-250 aerial bomb the EASA plane
+				//--- loadouts already carry, so it is loaded on both maps). Far bigger crater than the 122mm shell.
+				"Bo_FAB_250" createVehicle _p;
+				"Bo_FAB_250" createVehicle _p;
+				"Bo_FAB_250" createVehicle _p;
 				//--- let the HE resolve kills, then pay the GUER driver's team for each victim the blast killed.
 				sleep 4;
 				//--- B67 (guer-reward): accumulate the detonator's PERSONAL bounty + score per dead enemy Man

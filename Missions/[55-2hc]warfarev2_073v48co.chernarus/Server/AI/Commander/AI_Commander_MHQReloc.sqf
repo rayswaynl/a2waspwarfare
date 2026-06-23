@@ -272,7 +272,25 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|NUDGE|stalled=" + str (round (time - _lastImprove)) + "|d=" + str (round _curD));
 			};
 
-			if ((time - _lastImprove) > _stuckSecs) then {_done = true; _reason = "stuck"};
+			if ((time - _lastImprove) > _stuckSecs) then {
+					//--- B74.1 (2026-06-23): a STUCK MHQ used to deploy WHERE IT STALLED - and on Chernarus it stalls almost
+					//--- immediately, landing the new base back beside the OLD one (~0 advance), which nullified the forward
+					//--- relocation AND #9's forward-factory rebuild (the b74 soak saw 14/14 relocations deploy stuck near base).
+					//--- Teleport to _destPos instead (player-clear-gated, the same accepted step the deadline path uses) so a
+					//--- stuck relocation still lands FORWARD. Falls back to deploy-in-place only if a player blocks the dest.
+					_pNear = false;
+					{ if (isPlayer _x && {alive _x} && {!isNull _mhq} && {(_x distance _mhq) < _safeDist}) then {_pNear = true} } forEach playableUnits;
+					{ if (isPlayer _x && {alive _x} && {(_x distance _destPos) < _safeDist}) then {_pNear = true} } forEach playableUnits;
+					if (!_pNear && {!surfaceIsWater _destPos}) then {
+						_mhq setVelocity [0,0,0];
+						_mhq setPos _destPos;
+						diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|STUCK_TELEPORT|to=" + str _destPos);
+						_reason = "stuck-teleport";
+					} else {
+						_reason = "stuck";
+					};
+					_done = true;
+				};
 		};
 
 		if (!_done && {(time - _t0) > _deadline}) then {

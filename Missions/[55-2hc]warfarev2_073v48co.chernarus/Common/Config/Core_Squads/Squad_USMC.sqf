@@ -252,7 +252,7 @@ _aiTeamUpgrades = _aiTeamUpgrades + [[2,0,0,0]];
 //--- Infantry - Stinger MANPADS Team (pure infantry AA, captures as dismounts) [type0]
 _u		= ["US_Soldier_SL_EP1"];
 _u = _u + ["US_Soldier_AA_EP1"];
-_u = _u + ["US_Soldier_AA_EP1"];
+_u = _u + ["US_Soldier_EP1"];     //--- B74.1 (Ray 2026-06-23): 2x Stinger -> 1x Stinger + rifleman (spam less AA infantry; the team keeps real AA, just half the bodies).
 _u = _u + ["US_Soldier_AAR_EP1"];
 _u = _u + ["US_Soldier_AR_EP1"];
 _u = _u + ["US_Soldier_LAT_EP1"];

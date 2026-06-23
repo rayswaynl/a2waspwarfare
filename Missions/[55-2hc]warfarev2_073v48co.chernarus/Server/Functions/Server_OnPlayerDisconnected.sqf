@@ -118,7 +118,9 @@ _funds = _team Call GetTeamFunds;
 _get set [1,_funds];
 
 //--- We place the unit at the base now.
-_buildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
+_buildings = []; //--- B74.1 (Ray 2026-06-23) ERROR FIX: default [] so an unresolved _side on disconnect can't leave _buildings undefined (the "count _buildings" Undefined-variable error in the soak RPT).
+	if (!isNil "_side") then { _buildings = (_side) Call WFBE_CO_FNC_GetSideStructures };
+	if (isNil "_buildings") then { _buildings = [] };
 _respawnLoc = _hq;
 if (count _buildings > 0) then {
 	_respawnLoc = [_old_unit,_buildings] Call WFBE_CO_FNC_GetClosestEntity;
