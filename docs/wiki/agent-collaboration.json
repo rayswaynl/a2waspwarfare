@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T23:25:00+02:00",
+  "generatedAt": "2026-06-24T23:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr83-wiki-wins-batch-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR #83 / origin/claude/wiki-wins-batch@a61823265 branch topology and PR state",
+        "Feature-Status-Register.md branch-only bundle row",
+        "Current-Source-Status-Snapshot.md current branch-intake section",
+        "Testing-Debugging-And-Release-Workflow.md branch-only smoke gates",
+        "Existing owner pages touched only where PR #83 changes route status: commander vote/reassignment, construction/CoIn, economy/supply, support/service/gear/HC as evidence requires",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus paths touched by origin/master..origin/claude/wiki-wins-batch",
+        "Missions_Vanilla maintained-root comparison for propagation scope"
+      ],
+      "handoff": "Closed as published/validated docs-only branch intake. Treat PR #83 as open draft Chernarus-source branch evidence only until owner-sized smoke and propagation decisions prove otherwise. PR cleanup now shows the current open board (#83, #80, #74, #72, #66, #63, #59, #54, #53, #9) and marks #43/#40 closed; Feature Status, Current Source Status and Testing workflow route the Chernarus-only payload and smoke gates. Do not describe PR #83 as current stable, merged, release-ready or Vanilla-propagated.",
+      "updated": "2026-06-24T23:55:00+02:00",
+      "outputs": [
+        "Updated PR-Cleanup-And-Integration-Lab.md with the 2026-06-24 open PR board and PR #83 branch-intake section.",
+        "Updated Feature-Status-Register.md, Current-Source-Status-Snapshot.md, Testing-Debugging-And-Release-Workflow.md and Wiki-Pruning-And-Relevance-Ledger.md with PR #83 Chernarus-only branch scope and smoke gates.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "b745-b746-current-head-refresh-2026-06-24",
       "owner": "Codex",
