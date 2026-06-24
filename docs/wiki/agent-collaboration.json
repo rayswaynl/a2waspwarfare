@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T15:52:00+02:00",
+  "generatedAt": "2026-06-24T17:16:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,42 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b745-loadoutmanager-vanilla-merge-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@c4c9a6479 current-stable merge metadata and PR #85 + PR #86 + direct B75 + PR #87/B750 route state",
+        "origin/claude/b745@dd14018111f97c8c268447a02cb49e5cd5eab679 PR #85 merged branch head",
+        "origin/feat/b749-enrollment-bodyfix@2327e5c6aabcde4a962ea9235119d9757cceba91 PR #86 merged branch head",
+        "origin/VBIED_factory_kill_rewards@756d691823f4e46ea099582b8061f01848e0c3f2 direct B75 merged branch head",
+        "origin/feat/b750-factory-aicom@605ad7326707b9422303e60ca6c286d6e0700864 PR #87 merged branch head",
+        "PR #85 merged metadata and merge commit 96148edb4b532b25a73b5eb3122287557ea90b72",
+        "PR #86 merged metadata and merge commit 718596d5e96d97d9a4e91a031304da09f4dd4d13",
+        "B75 direct merge commit 6a34799b41e821b3f540d2ac911f02fd1f7b7b76 and gh pr list --head VBIED_factory_kill_rewards --state all returned []",
+        "PR #87 merged metadata and merge commit c4c9a64790c63fe264bd1a25f84f0b3ca7b49362",
+        "Previous branch-only origin/claude/b745@9199bfab8 metadata superseded by fetch-before-commit",
+        "Previous PR #85 current-stable baseline origin/master@96148edb4 superseded by fetch-before-commit",
+        "Scoped f8a76de34..34f652ae4, 34f652ae4..96148edb4, 96148edb4..718596d5e, 718596d5e..6a34799b4, 6a34799b4..c4c9a6479 and f8a76de34..origin/master diffs",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan broad propagation payload plus B749 enrollment/settings propagation",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/EASA/EASA_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Feature Status, Current Source Status, Source Fix queue, Tools/build workflow, Testing workflow and coordination docs as needed"
+      ],
+      "handoff": "Closed as published/validated docs-only B745/B748/B749/B75/B750 master-merge intake. Treat origin/master@c4c9a6479 as current-master source evidence for broad B745 Vanilla/tooling propagation, PR #85 B748 settings, PR #86 B749 client-body enrollment/settings propagation, direct B75 GUER VBIED factory/structure reward source and PR #87/B750 buy-list/AICOM effectiveness changes, not release-ready or full-modded proof. Maintained Vanilla now carries the checked B74.7.2 nil-side retry, B748 settings, B75 reward paths and B750 buy-list/AICOM changes, but exact package smoke, generated version.sqf and LoadoutManager output remain required before release-ready wording.",
+      "updated": "2026-06-24T17:16:00+02:00",
+      "outputs": [
+        "Updated Feature-Status-Register.md and Current-Source-Status-Snapshot.md with origin/master@c4c9a6479, PR #85, PR #86, direct B75, PR #87/B750, origin/claude/b745@dd1401811, origin/feat/b749-enrollment-bodyfix@2327e5c6a, origin/VBIED_factory_kill_rewards@756d6918 and origin/feat/b750-factory-aicom@605ad7326 topology; previous-stable..current-master, broad-B745, B748, B749, B75 and B750 delta stats; and post-B750 guardrails for older f8a76de34/96148edb4/718596d5e rows.",
+        "Updated Source-Fix-Propagation-Queue.md and Tools-And-Build-Workflow.md with current-master LoadoutManager root discovery, EASA LoadoutCat generation, no A2WASP_SKIP_ZIP support, version.sqf generated-input caveats and current-master Tools/Ops/RptTownDefenseAnalyzer status.",
+        "Updated Player-Join-Disconnect-And-AntiStack-Lifecycle.md, AI-Commander-Autonomy-Audit.md, Client-UI-Systems-Atlas.md and Performance-Opportunity-Sweep.md so maintained Vanilla propagation is recognized where present, PR #86 supersedes the earlier B74.7.2/B748 maintained-Vanilla gaps in source, B75 reward smoke is routed without misclassifying it as UI/AICOM work, and B750 buy-list/AICOM effectiveness smoke is routed to UI/AICOM owners.",
+        "Updated Testing-Debugging-And-Release-Workflow.md, Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-knowledge.jsonl and agent-feature-status.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "pr84-player-stats-name-stack-intake-2026-06-24",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T15:52:00+02:00",
+  "generatedAt": "2026-06-24T17:16:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "ready",
-      "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only PR #84 player-stats name stack intake after open PR scan found origin/feat/player-stats-names@177539ed targeting feat/player-stats.",
+      "currentLane": "none",
+      "currentWork": "B745/B748/B749/B75/B750 master merge intake is published/validated; no active lane is claimed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane after fresh coordination reads."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b745-loadoutmanager-vanilla-merge-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only B745/B748/B749/B75/B750 master-merge intake after fetch-before-commit showed current stable advanced again to origin/master@c4c9a6479 via PR #87 / origin/feat/b750-factory-aicom@605ad7326. PR #85 merged origin/claude/b745@dd1401811; PR #86 merged origin/feat/b749-enrollment-bodyfix@2327e5c6a; direct branch origin/VBIED_factory_kill_rewards@756d6918 has no PR route. Broad B745/LoadoutManager merge f8a76de34..34f652ae4 is 226 files / +7611 / -9082; PR #85 B748 settings delta 34f652ae4..96148edb4 is 9 files / +265 / -7; PR #86 B749 delta 96148edb4..718596d5e is 14 files / +308 / -21; B75 delta 718596d5e..6a34799b4 is 2 maintained-root files / +88 / -2; B750 delta 6a34799b4..c4c9a6479 is 8 maintained-root files / +72 / -54; full previous-stable..current-master is 238 files / +8316 / -9138. Docs now classify broad Vanilla/tooling propagation, B749 client-body enrollment, B748 maintained-Vanilla settings propagation, B75 GUER VBIED reward and B750 buy-list/AICOM effectiveness changes as current-master source evidence while preserving smoke/package/generated-version gates. No gameplay source changed."
+    },
     {
       "lane": "pr84-player-stats-name-stack-intake-2026-06-24",
       "owner": "Codex",
