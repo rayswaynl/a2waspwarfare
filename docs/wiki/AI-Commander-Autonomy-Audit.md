@@ -100,7 +100,7 @@ Historical snapshot refreshed: 2026-06-04. Branch head `c20ce153` compared again
 | AI team production | `c20ce153`; `AI_Commander_Produce.sqf:18-21,77-90`; `Server/Init/Init_Server.sqf:10` | Produces under-strength AI teams through `AIBuyUnit` while respecting a per-side AI cap and AI commander funds. Review this alongside factory queue/token cleanup before merge. |
 | Lazy-condition cleanup series | `b4b0333f`, `27d25a28`, `dbaf9150`, `4626c036`, `c20ce153`; files under `Server/AI/Commander/AI_Commander*.sqf` | Rewrites supervisor, town assignment, order executor, type assignment and production-worker condition paths into stepwise guards. This improves branch static/syntax readiness, but it does not change branch-only status, Vanilla propagation or smoke requirements. |
 
-2026-06-04 branch scout clarification: the historical branch supervisor kept running in assist mode with a human commander, but `wfbe_aicom_running` was deliberately used as the **full-command latch**, not a simple "commander brain exists" marker. Current stable has since absorbed a maintained-root supervisor route; use the 2026-06-22 current-stable section above for `origin/master@0139a346`, and keep this paragraph as branch-history context.
+2026-06-04 branch scout clarification: the historical branch supervisor kept running in assist mode with a human commander, but `wfbe_aicom_running` was deliberately used as the **full-command latch**, not a simple "commander brain exists" marker. Current stable/B74.1 has since absorbed a maintained-root supervisor route; use the current stable/B74.1 section above for `origin/master@f8a76de34`, and keep this paragraph as branch-history context.
 
 Branch-only review risks:
 

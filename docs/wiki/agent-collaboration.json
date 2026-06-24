@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T16:05:00+02:00",
+  "generatedAt": "2026-06-24T17:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-commander-supervisor-current-b742-route-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "AI-Headless-And-Performance.md branch scope and AI commander run-flag row",
+        "agent-context.json AI and implementation-plan compact strings",
+        "agent-feature-status.jsonl / agent-hardening-backlog.jsonl / agent-knowledge.jsonl AI commander rows only if current-head evidence changes stale wording",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Produce.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/AI/Commander/AI_Commander.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/AI/Commander/AI_Commander_Produce.sqf"
+      ],
+      "handoff": "Closed as published/validated docs-only. Treat current stable/B74.1/B74.2 as source-present but smoke-pending for release wording; B74.2 feature drift remains source-Chernarus-only until maintained Vanilla/Takistan propagation is explicitly decided. Future code-owner work should smoke no-human full command, human assist/no-spend, explicit orders, town assignment, AI production cap, upgrade affordability/debit, commander handoff, HQ death and JIP on the exact target branch.",
+      "updated": "2026-06-24T17:05:00+02:00",
+      "outputs": [
+        "Updated AI-Headless-And-Performance.md, AI-Commander-Autonomy-Audit.md and Feature-Status-Register.md with current stable/B74.1 and current B74.2 AI commander supervisor evidence.",
+        "Updated agent-context.json, agent-feature-status.jsonl, Wiki-Pruning-And-Relevance-Ledger.md, Progress-Dashboard.md, Agent-Worklog.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl for the published handoff.",
+        "Mirrored touched wiki files into docs/wiki and validated JSON/JSONL, wiki links/schema, parity, conflict markers and diff whitespace."
+      ]
+    },
     {
       "lane": "mash-marker-current-b742-route-refresh-2026-06-24",
       "owner": "Codex",
