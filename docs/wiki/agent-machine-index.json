@@ -100,7 +100,7 @@
       "id": "july-update-candidate-route",
       "system": "July update dev-branch planning and smoke routing",
       "riskTier": "route",
-      "branchScope": "planned hosted-FPS dev branch missing on 2026-06-22 plus Takistan FPV planning routed through origin/dev/july-2026-update@e3f530ed closed draft PR #21; no current origin/dev/july-takistan-airfield-fpv-drone head",
+      "branchScope": "planned hosted-FPS dev branch still missing on 2026-06-24 plus Takistan FPV planning routed through origin/dev/july-2026-update@e3f530ed closed draft PR #21; no current origin/dev/july-takistan-airfield-fpv-drone head",
       "canonicalDocs": [
         "Progress-Dashboard",
         "Hardening-Implementation-Roadmap",
@@ -109,7 +109,7 @@
         "Takistan-Airfield-FPV-Drone-Design"
       ],
       "sourceRefs": [
-        "planned dev/july-update-hosted-server-fps-loop-fix; no origin/dev head found on 2026-06-22",
+        "planned dev/july-update-hosted-server-fps-loop-fix; no origin/dev head found on 2026-06-24",
         "origin/dev/july-2026-update@e3f530ed; PR #21 closed draft and not merged",
         "origin/dev/july-2026-update:docs/july-2026-update.md roadmap scaffold says planning/no gameplay code yet",
         "no current origin/dev/july-takistan-airfield-fpv-drone head found on 2026-06-22",

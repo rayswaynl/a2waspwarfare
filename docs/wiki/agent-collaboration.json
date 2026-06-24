@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T11:45:00+02:00",
+  "generatedAt": "2026-06-24T12:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "hosted-fps-status-current-b742-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh hosted server FPS publisher/status-counter wording that still routes current stable through older origin/master@0139a346 or omits current origin/claude/b74.2-aicom@21b62b04 where relevant.",
+        "Check only Server/GUI/serverFpsGUI.sqf, Server/Module/serverFPS/monitorServerFPS.sqf, Server/Init/Init_Server.sqf and Client/Client_UpdateRHUD.sqf in source Chernarus plus maintained Vanilla, with scoped branch diffs for docs/source, current stable/B74.1, current B74.2, B69/B74, Miksuu, perf and historical evidence.",
+        "Keep Hosted-Server-FPS-Loop-Sleep canonical; update Client-UI-Systems-Atlas, Feature-Status-Register, Source-Fix-Propagation-Queue and compact machine handoff only as needed.",
+        "No gameplay source edits."
+      ],
+      "outputs": [
+        "Updated Hosted-Server-FPS-Loop-Sleep.md, Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Performance-Opportunity-Sweep.md, server runtime/testing gates and hosted-FPS machine rows with current stable/B74.1 f8a76de34 plus current B74.2 21b62b04 evidence.",
+        "Recorded repo docs branch HEAD@4a1bc13edde6 unchanged from d0161083 / a27086cd for checked FPS paths, with docs/source still using two guarded compatibility publishers in both maintained roots.",
+        "Recorded current stable/B74.1/B74.2/B69/B74, live client-fps, live ASR FPS and historical a96fdda2 as single-publisher-shaped; Miksuu b8389e748243 and perf quick-wins 0076040f remain old-loop-shaped."
+      ],
+      "handoff": "Future hosted-FPS/UI owner should smoke the exact target branch shape before release wording: docs/source publishes SERVER_FPS_GUI plus WFBE_VAR_SERVER_FPS from two guarded scripts, while stable/B74-shaped refs publish only SERVER_FPS_GUI from serverFpsGUI.sqf. Create or restore the July hosted-FPS branch before code work; do not consolidate WFBE_VAR_SERVER_FPS until generated/modded consumers are intentionally handled. No gameplay source changed in this docs lane.",
+      "updated": "2026-06-24T12:25:00+02:00"
+    },
     {
       "lane": "task-objective-ping-current-b742-refresh-2026-06-24",
       "owner": "Codex",
