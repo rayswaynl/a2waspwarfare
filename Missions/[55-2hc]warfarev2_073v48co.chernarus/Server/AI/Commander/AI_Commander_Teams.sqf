@@ -108,6 +108,11 @@ _logik setVariable ["wfbe_aicom_pc", _pcN];
 		if (_valveExtra > _extra) then {_extra = _valveExtra; _target = _base + _extra};
 	};
 
+//--- B747.1 HARD CAP (Ray 2026-06-24): clamp the founding target to a ceiling regardless of the PC curve +
+//--- banking valve. AICOM was fielding ~15 teams at low pop (base 12 + valve 3); Ray wants max 8 going forward.
+private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 8];
+if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
+
 //--- Log only when the effective target changes (avoid RPT spam).
 _lastDynTarget = _logik getVariable ["wfbe_aicom_dyntarget", _base];
 if (_target > _base && {_target != _lastDynTarget}) then {
