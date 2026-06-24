@@ -6,7 +6,8 @@ waitUntil {commonInitComplete}; //--- Wait for the common part.
 
 if (local player) then {
 	Private["_color","_hq","_marker","_markercc","_structure","_text","_type","_side","_sideID","_voteTime","_radius",
-	        "_isCBR","_cbrMarker","_cbrRadius","_cbrUp","_cbrUps","_cbrLvl","_cbrTiers","_cbrPrevR"];
+	        "_isCBR","_cbrMarker","_cbrRadius","_cbrUp","_cbrUps","_cbrLvl","_cbrTiers","_cbrPrevR",
+	        "_bldMarker","_bldRadius"];
 
 	_structure = _this select 0;
 	_hq = _this select 1;
@@ -30,6 +31,22 @@ if (local player) then {
 			  _markercc setMarkerShapeLocal "Ellipse";
               _markercc setMarkerColorLocal "ColorBlack";
               _markercc setMarkerSizeLocal [_radius,_radius];
+
+			  //--- HQ build-area circle (Trello #80): a SECOND local Ellipse on the HQ/UAV terminal that
+			  //--- shows exactly how far structures may be placed. The radius is the SAME sum the placement
+			  //--- validation uses (Common_GetClosestEntity2 / Construction_HQSite / basearea), so the ring
+			  //--- matches buildable distance precisely. Side-colored, Border brush, fully client-LOCAL.
+			  if (_hq) then {
+				  _bldMarker = Format ["HQBuildRange%1", _markercc];
+				  _bldRadius = (missionNamespace getVariable "WFBE_C_BASE_AREA_RANGE") + (missionNamespace getVariable "WFBE_C_BASE_HQ_BUILD_RANGE");
+				  createMarkerLocal [_bldMarker, getPos _structure];
+				  _bldMarker setMarkerShapeLocal "Ellipse";
+				  _bldMarker setMarkerBrushLocal "Border";
+				  _bldMarker setMarkerColorLocal (missionNamespace getVariable (Format ["WFBE_C_%1_COLOR", _side]));
+				  _bldMarker setMarkerSizeLocal [_bldRadius, _bldRadius];
+			  } else {
+				  _bldMarker = "";
+			  };
 	};
 	_type = "mil_box";
 	_color = "colorBlack";
@@ -115,5 +132,9 @@ if (local player) then {
 	while {!isNull _structure && alive _structure} do {sleep 2};
 
 	deleteMarkerLocal _marker;
-	if(typeOf _structure isKindOf "Base_WarfareBUAVterminal") then {deleteMarkerLocal _markercc};
+	if(typeOf _structure isKindOf "Base_WarfareBUAVterminal") then {
+		deleteMarkerLocal _markercc;
+		//--- Trello #80: remove the HQ build-area circle alongside the CC marker on structure death.
+		if (!isNil "_bldMarker" && {_bldMarker != ""}) then {deleteMarkerLocal _bldMarker};
+	};
 };

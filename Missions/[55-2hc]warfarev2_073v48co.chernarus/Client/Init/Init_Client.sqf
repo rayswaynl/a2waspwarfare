@@ -1354,4 +1354,8 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- WFBE_C_CLIENT_FPS_REPORT lobby param; players only. Reports avg/min FPS to the server.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_FpsReport.sqf";
 
+//--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
+//--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
+
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
