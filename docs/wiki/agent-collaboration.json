@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T02:58:00+02:00",
+  "generatedAt": "2026-06-24T03:15:22+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "buy-menu-price-key-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh buy-menu price/key rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Client/GUI/GUI_Menu_BuyUnits.sqf, Client/Functions/Client_UIFillListBuyUnits.sqf and Common/Init/Init_CommonConstants.sqf in source Chernarus and maintained Vanilla.",
+        "Keep Factory-And-Purchase-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Factory-And-Purchase-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 buy-menu price/key evidence.",
+        "Recorded that docs/source HEAD@b8180bb319ed is unchanged from 4120137f / 8d611092 / ebd86fad0 for checked buy-menu price/key paths and that d472da6a..21b62b04 is empty for buy-menu price/key paths plus Client_BuildUnit.sqf in both maintained roots.",
+        "Updated Progress Dashboard, pruning ledger, worklog and buy-menu machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future factory/UI owner should preserve current stable/B74-shaped selected-detail and driver-key fixes while deciding the still-open level-0 UNIT_COST_MODIFIER reset/local-price-helper policy. Keep Trello #91 gear-preview UI and destroyed-factory refund authority separate unless explicitly claimed.",
+      "updated": "2026-06-24T03:15:22+02:00"
+    },
     {
       "lane": "empty-supply-truck-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
