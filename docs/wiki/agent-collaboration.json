@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T17:16:00+02:00",
+  "generatedAt": "2026-06-24T17:48:59+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b750-factory-purchase-owner-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@c4c9a6479 current stable after PR #87",
+        "PR #87 / origin/feat/b750-factory-aicom@605ad7326",
+        "6a34799b4..origin/master scoped B750 diff",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching buy-list and buy-menu paths",
+        "Factory-And-Purchase-Systems-Atlas.md plus compact coordination/status records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Treat origin/master@c4c9a6479 as current-master source evidence that both maintained roots guard nil buy-list unit metadata before QUERYUNITUPGRADE and restore infantry cap growth to 10 + 2 per Barracks level, clamped to _mbu, with commander bonus still applied. Smoke source Chernarus plus maintained Vanilla before release-ready wording; keep older UNIT_COST_MODIFIER reset, queue-token, refund and server-authority work separate.",
+      "updated": "2026-06-24T17:48:59+02:00",
+      "outputs": [
+        "Updated Factory-And-Purchase-Systems-Atlas.md with the B750 buy-list and squad-cap current-master route, line refs and smoke gates.",
+        "Updated Feature-Status-Register.md, Progress-Dashboard.md, Wiki-Pruning-And-Relevance-Ledger.md and Agent-Worklog.md so buy-list/squad-cap questions route to the factory owner page while AICOM effectiveness stays on AI-Commander-Autonomy-Audit.md.",
+        "Updated agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "b745-loadoutmanager-vanilla-merge-intake-2026-06-24",
       "owner": "Codex",

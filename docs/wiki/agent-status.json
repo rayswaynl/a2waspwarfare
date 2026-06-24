@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T17:16:00+02:00",
+  "generatedAt": "2026-06-24T17:48:59+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "none",
-      "currentWork": "B745/B748/B749/B75/B750 master merge intake is published/validated; no active lane is claimed.",
+      "currentWork": "B750 factory/purchase owner-page route is published/validated; no active lane is claimed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane after fresh coordination reads."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b750-factory-purchase-owner-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only B750 factory/purchase owner-page route. Source check against origin/master@c4c9a6479 / PR #87 found the B750 purchase subset is four maintained-root files / +24 / -16 and clean under git diff --check. Factory-And-Purchase-Systems-Atlas.md now owns the buy-list nil _c guard at Client_UIFillListBuyUnits.sqf:88-92 and infantry cap restore at GUI_Menu_BuyUnits.sqf:137-138, with commander bonus still at :139-145, in source Chernarus plus maintained Vanilla. Feature Status, Progress Dashboard, pruning ledger and machine rows now route buy-list/squad-cap smoke through the factory owner page while AICOM effectiveness remains on AI Commander Autonomy. No gameplay source changed."
+    },
     {
       "lane": "b745-loadoutmanager-vanilla-merge-intake-2026-06-24",
       "owner": "Codex",
