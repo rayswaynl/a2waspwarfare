@@ -168,6 +168,46 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 				};
 			} forEach _vehs;
 			sleep (missionNamespace getVariable ["WFBE_C_AICOM_HELI_NUDGE_PERIOD", 7]);
+			//--- B74.2 HELI BASE-REAP (Ray 2026-06-24): the server-side BASE-GC cannot reap these hulls (HC-local +
+			//--- ownership-exempt at server_groupsGC.sqf:209), so do it HERE on the HC where the heli IS local. Any
+			//--- alive attack heli that has sat crewed-idle (speed < idle band, no enemy near) at its OWN base for
+			//--- WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT continuous seconds is deleted (crew first, then hull) so empties
+			//--- stop piling. First-seen stamp resets the moment it moves/engages. 0 = off. A2-OA-safe: getPos guarded
+			//--- by !isNull, nearEntities side-compare (no getFriend), deleteVehicle on HC-local crew+hull.
+			//--- FLAW-FIX: use _vehs (the Spawn-local rebind of _vehicles at L134), NOT _vehicles (not inherited).
+			private ["_reapTO"]; _reapTO = missionNamespace getVariable ["WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT", 0];
+			if (_reapTO > 0) then {
+				private ["_reapHQ","_reapVehs"];
+				_reapHQ = (_sd) Call WFBE_CO_FNC_GetSideHQ;
+				if (!isNull _reapHQ) then {
+					_reapVehs = _vehs;
+					{
+						private ["_rh","_rEnemy","_rSeen"];
+						_rh = _x;
+						if (!isNull _rh && {alive _rh} && {local _rh} && {_rh isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _rh) >> "transportSoldier")) == 0}) then {
+							if (((_rh distance _reapHQ) <= (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])) && {(abs (speed _rh)) < (missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED", 5])}) then {
+								_rEnemy = {alive _x && {(side _x) != _sd} && {(side _x) != civilian}} count ((getPos _rh) nearEntities [["Man","LandVehicle","Air"], 400]);
+								if (_rEnemy > 0) then {
+									_rh setVariable ["wfbe_heli_baseidle_at", nil];
+								} else {
+									_rSeen = _rh getVariable "wfbe_heli_baseidle_at";
+									if (isNil "_rSeen") then {
+										_rh setVariable ["wfbe_heli_baseidle_at", time];
+									} else {
+										if ((time - _rSeen) >= _reapTO) then {
+											{ if (!isPlayer _x) then {deleteVehicle _x} } forEach (crew _rh);
+											deleteVehicle _rh;
+											["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] B74.2 base-reaped idle attack heli %2 (idle %3s at base).", _sd, typeOf _rh, _reapTO]] Call WFBE_CO_FNC_AICOMLog;
+										};
+									};
+								};
+							} else {
+								_rh setVariable ["wfbe_heli_baseidle_at", nil];
+							};
+						};
+					} forEach _reapVehs;
+				};
+			};
 		};
 	};
 	}; //--- B66 end if (_hasAttackHeli)
@@ -806,6 +846,11 @@ while {!WFBE_GameOver && _alive} do {
 						_unheldCamps = [];
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
 						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
+						//--- B74.2 (Ray 2026-06-23) NO-PROGRESS tracker for the camp-first loop (don't get stuck on camps).
+						private ["_campStallPasses","_campLastUnheld","_campStallMax"];
+						_campStallPasses = 0;
+						_campLastUnheld  = count _unheldCamps;
+						_campStallMax    = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_STALL_PASSES", 3];
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
@@ -862,6 +907,20 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Re-evaluate: drop any camp that is now ours (or went null).
 							_unheldCamps = [];
 							{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
+							//--- B74.2 NO-PROGRESS BAIL (Ray 2026-06-23): if the un-held camp count did NOT drop this
+							//--- pass, count a stall; after WFBE_C_AICOM_CAMP_STALL_PASSES consecutive no-progress passes
+							//--- stop grinding the camps and fall through to the depot/town-centre hold (never STUCK on an
+							//--- uncapturable/heavily-defended camp). A pass that DID flip a camp resets the counter. The
+							//--- exitWith leaves the camp-first while (same idiom as the _capAbort bail above) -> the plant
+							//--- is released below and, with _capAbort still false, the team proceeds to the centre hold.
+							if (count _unheldCamps < _campLastUnheld) then {
+								_campStallPasses = 0; _campLastUnheld = count _unheldCamps;
+							} else {
+								_campStallPasses = _campStallPasses + 1;
+							};
+							if (_campStallMax > 0 && {_campStallPasses >= _campStallMax}) exitWith {
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first NO-PROGRESS after %3 passes (%4 camp(s) still un-held) - proceeding to town centre.", _side, _team, _campStallPasses, count _unheldCamps]] Call WFBE_CO_FNC_AICOMLog;
+							};
 						};
 						//--- Release the plant so the depot-centre hold below can march these units on
 						//--- (setUnitPos "UP" pins stance; "AUTO" hands movement back to the AI).

@@ -25,7 +25,7 @@ _richFlag = _logik getVariable ["wfbe_aicom_reinforce_rich", false];
 if (_richFlag) then {_batchCap = _batchCap * 2};
 
 //--- Safety cap: do not produce above the per-side AI ceiling.
-_cap = missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOTAL_AI_MAX";
+_cap = (missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]) select ((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0);   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
 _sideAI = {(side _x == _side) && !(isPlayer _x)} count allUnits;
 if (_sideAI >= _cap) exitWith {};
 

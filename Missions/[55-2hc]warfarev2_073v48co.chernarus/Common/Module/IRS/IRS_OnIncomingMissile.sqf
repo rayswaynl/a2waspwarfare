@@ -21,7 +21,7 @@ if (alive _vehicle) then {
 			if (alive driver _vehicle || alive gunner _vehicle || alive commander _vehicle) then {
 				_lastFired = _vehicle getVariable "wfbe_irs_lastfired";
 				if (isNil '_lastFired') then {_lastFired = -100};
-				if ((_vehicle getVariable "wfbe_irs_flares") > 0 && (time - _lastFired > (missionNamespace getVariable "WFBE_IRS_FLARE_DELAY"))) then {
+				if ((_vehicle getVariable "wfbe_irs_flares") > 0 && (time - _lastFired > (missionNamespace getVariable "WFBE_IRS_FLARE_DELAY")) && !(_vehicle getVariable ["wfbe_irs_disabled", false])) then {
 					(_vehicle) Spawn WFBE_CO_MOD_IRS_DeploySmoke;
 					_vehicle setVariable ["wfbe_irs_lastfired", time];
 					_vehicle setVariable ["wfbe_irs_flares", (_vehicle getVariable "wfbe_irs_flares") - 1, true];
@@ -40,11 +40,25 @@ if (alive _vehicle) then {
 						else { 
 							[_projectile] spawn {
 							_projectile = _this select 0;
-											
+
 							while {!(isNull _projectile)} do {
 								playSound["inboundMissileGround_cont",true];
 								sleep 0.2;
 								};
+							};
+						};
+
+						// --- Trello #91: IR-smoke "ready again" cue. After the flare cooldown elapses,
+						// chime once (client-local) if this vehicle still has flares and IRS is not disabled,
+						// and the player is still in the crew. Reuses the existing ARTY_cooldown_over sound.
+						// NOTE: wfbe_irs_disabled is introduced by open PR #61 (IR-smoke toggle); the getVariable
+						// default below keeps this safe if #61 is not yet merged.
+						[_vehicle] spawn {
+							private ["_v"];
+							_v = _this select 0;
+							sleep (missionNamespace getVariable "WFBE_IRS_FLARE_DELAY");
+							if (alive _v && {player in crew _v} && {(_v getVariable ["wfbe_irs_flares", 0]) > 0} && {!(_v getVariable ["wfbe_irs_disabled", false])}) then {
+								playSound "ARTY_cooldown_over";
 							};
 						};
                     };

@@ -133,6 +133,29 @@ if (_state == "enroute") then {
 			};
 		};
 	} forEach towns;
+
+	//--- B74 (Ray 2026-06-22): AIR teams rearm/repair at a captured AIRFIELD (the proper hangar) when one is held -
+	//--- prefer the nearest SAFE friendly airfield town over a generic town centre. Falls back to _best (nearest
+	//--- town) when no safe airfield is in reach. Ground teams are unaffected. Airfield = baked wfbe_is_airfield or
+	//--- the runtime hangar-obj marker (same test the founding air-rule uses).
+	private ["_hasAirSvc","_afBest","_afBestD","_twnA","_dA"];
+	_hasAirSvc = ({!isNull _x && {alive _x} && {_x isKindOf "Air"}} count _vehicles) > 0;
+	if (_hasAirSvc) then {
+		_afBest = objNull; _afBestD = 1e9;
+		{
+			_twnA = _x;
+			if (((_twnA getVariable ["sideID", -1]) == _sideID) && {(_twnA getVariable ["wfbe_is_airfield", false]) || {!(isNull (_twnA getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) then {
+				_dA = _ldr distance _twnA;
+				if (_dA < _afBestD && {_dA <= _reach}) then {
+					if (({alive _x && {side _x == _enemySide}} count ((getPos _twnA) nearEntities [["Man"], _safeDist])) == 0) then {
+						_afBest = _twnA; _afBestD = _dA;
+					};
+				};
+			};
+		} forEach towns;
+		if (!isNull _afBest) then {_best = _afBest; _bestD = _afBestD};
+	};
+
 	if (isNull _best) exitWith {}; //--- nothing safe in reach -> keep fighting
 
 	//--- DETOUR: road-march MOVE + stamp state/pos/deadline (en-route drive cap)

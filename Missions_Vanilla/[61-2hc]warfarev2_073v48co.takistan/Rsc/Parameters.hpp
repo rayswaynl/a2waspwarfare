@@ -8,28 +8,6 @@
 		texts[] = {"Disabled","Enabled"};
 		default = 1;
 	};
-	// Marty: Allow admins to run the mission with or without the accelerated day/night cycle.
-	class WFBE_DAYNIGHT_ENABLED {
-		title = "$STR_WF_PARAMETER_DAYNIGHT_ENABLED";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 1;
-	};
-	// Marty: Add the 180-minute day option and make it the default accelerated cycle length.
-	class WFBE_DAY_DURATION {
-		title = "$STR_WF_PARAMETER_DAY_DURATION";
-		values[] = {1,30,40,50,60,90,180};
-		texts[] = {"1 minute", "30 minutes", "40 minutes", "50 minutes", "60 minutes", "90 minutes", "180 minutes"};
-		default = 180;
-	};
-
-	// Marty: Add the optional 60-minute night while keeping 30 minutes as the default.
-	class WFBE_NIGHT_DURATION {
-		title = "$STR_WF_PARAMETER_NIGHT_DURATION";
-		values[] = {1,5,10,15,20,30,60};
-		texts[] = {"1 minute", "5 minutes", "10 minutes", "15 minutes", "20 minutes", "30 minutes", "60 minutes"};
-		default = 30;
-	};
 	class WFBE_AIR_EVENT_ENABLED {
 		title = "$STR_WF_PARAMETER_AIR_EVENT_ENABLED";
 		values[] = {0,1,2};
@@ -211,7 +189,7 @@
 		values[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
 		texts[] = {"00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00",
 		"12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"};
-		default = 9;
+		default = 8;
 	};
 	class WFBE_C_ENVIRONMENT_STARTING_MONTH {
 		title = "$STR_WF_PARAMETER_Month";
@@ -268,7 +246,7 @@
 		title = "$STR_WF_PARAMETER_FastTravel";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Free","$STR_WF_PARAMETER_Fee"};
-		default = 0;
+		default = 2; //--- B66 trial: 0->2 (Fee).
 	};
 	class WFBE_C_GAMEPLAY_HANDLE_FRIENDLYFIRE {
 		title = "$STR_WF_PARAMETER_FriendlyFire";
@@ -347,7 +325,7 @@
 		title = "$STR_WF_PARAMETER_MapIconBlinking";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- B66 trial: 0->1 (combat-marker blinking on for this round).
 	};
 	class WFBE_C_UNITS_BALANCING {
 		title = "$STR_WF_PARAMETER_Balance";
@@ -361,12 +339,6 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
-	/* class WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE {
-		title = "$STR_WF_PARAMETER_Upgrades";
-		values[] = {0,1,2,3,4,5,6,7};
-		texts[] = {"$STR_WF_Disabled","West","East","Resistance","West + East","West + Resistance","East + Resistance","All"};
-		default = 0;
-	}; */
 	class WFBE_C_GAMEPLAY_VICTORY_CONDITION {
 		title = "$STR_WF_PARAMETER_VictoryCondition";
 		values[] = {0,1,2,3};
@@ -391,12 +363,7 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
-	class WFBE_C_MODULE_BIS_HC {
-		title = "$STR_WF_PARAMETER_HighCommand";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
-	};
+	//--- B67 [dead-param-strings]: removed dead class WFBE_C_MODULE_BIS_HC (no runtime reader; HC delegation runs off WFBE_C_AI_DELEGATION). Lobby toggle did nothing.
 	class WFBE_C_MODULE_WFBE_ICBM {
 		title = "$STR_WF_PARAMETER_ICBM";
 		values[] = {0,1};
@@ -563,7 +530,7 @@
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		// Marty: Keep the audit opt-in while the client commander/AFK regressions are being stabilized.
-		default = 0;
+		default = 1; //--- B66 trial: 0->1 (measurement window for this round).
 	};
 
 	// 2026-06-15 (Net_2 request): per-client FPS telemetry for the staged-deploy day/night perf study.
@@ -588,7 +555,7 @@
 		title = "GUER Insurgents (playable faction)";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
 	};
 
 };

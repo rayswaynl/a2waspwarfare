@@ -1,5 +1,5 @@
 Private ["_ammo","_easaDefault","_easaLoadout","_easaVehi","_is_AAMissile","_loadout","_loadout_line","_vehicle"];
-EASA_Equip = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_Equip.sqf';EASA_RemoveLoadout = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_RemoveLoadout.sqf';
+EASA_Equip = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_Equip.sqf';EASA_RemoveLoadout = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_RemoveLoadout.sqf';WFBE_EASA_FNC_LoadoutCat = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_LoadoutCat.sqf';
 
 _easaDefault = [];
 _easaLoadout = [];
@@ -667,7 +667,7 @@ _easaLoadout = _easaLoadout + [
 
 //LoadoutManagerGuerEasaInsert
 // Ka-137 [GUER Insurgents] - pilot-fired EASA recon/strike (Open Flag A; manual fire - no gunner turret).
-// [MR] stock-MG default (Ka137_MG / 100Rnd_762x54_PKT) UNCONFIRMED - verify classnames in RPT on smoke.
+// [MR] stock-MG default (PKT / 100Rnd_762x54_PKT) - Ka137_MG is non-existent (confirmed live 2026-06-18).
 // AG Konkurs/AT-5 / AA Igla missile-lock geometry from recon airframe also unconfirmed - adjust if needed.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
 _easaVehi = _easaVehi + ['Ka137_MG_PMC'];

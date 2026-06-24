@@ -218,7 +218,7 @@ waitUntil {commonInitComplete};
 
 // Marty: Show the test build marker once in debug mode so testers can confirm the running PBO version.
 if (WF_Debug) then {
-	systemChat "TD Debug build: 2026-06-08 00:07";
+	systemChat "TD Debug build: 2026-06-09 01:56";
 };
 
 
@@ -281,7 +281,10 @@ missionNamespace setVariable ["WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC", 0];
 //--- Global Client Variables.
 sideID = sideJoined Call GetSideID;
 clientTeam = group player;
-clientTeams = missionNamespace getVariable Format['WFBE_%1TEAMS',sideJoinedText];
+clientTeams = missionNamespace getVariable [Format['WFBE_%1TEAMS',sideJoinedText], []]; //--- B74.2.5: default [] not nil. For a broken-JIP client WFBE_%1TEAMS is unset; the ungated vote-tally `forEach WFBE_Client_Teams` (GUI_VoteMenu) + the own-marker `forEach clientTeams` would `forEach nil` = THROW in A2-OA (count nil is 0 and safe, but forEach nil is not). [] makes them safe 0-iteration no-ops and still triggers the primitive-roster path (count 0). The two isNil "clientTeams" readers are diagnostics only.
+//--- B74.2.3 TELEMETRY: raw diag_log of the client's own-side team list AT INIT (the source of the no-cash/
+//--- no-vote cascade when it is empty). Pairs with the server TEAMREG log + the HEAL log below.
+diag_log format ["CLIENTTEAMS|atInit|side=%1|count=%2|isNil=%3", sideJoinedText, count (if (isNil "clientTeams") then {[]} else {clientTeams}), (isNil "clientTeams")];
 playerType = typeOf player;
 playerDead = false;
 paramBoundariesRunning = false;
@@ -342,7 +345,13 @@ _display displayAddEventHandler ["KeyDown", "_this call WFBE_CO_FNC_HandleAFKkey
 WFBE_CL_VAR_TintLegendLayer     = 12460; //--- dedicated cut layer (distinct from 1365/12450/12451/12452/600200).
 WFBE_CL_VAR_TintLegendVisible   = false;
 WFBE_CL_VAR_TintLegendAutoToken = 0;     //--- bumped by a manual toggle so the first-spawn auto-clear can stand down.
-WFBE_CL_VAR_TintLegendEnabled   = ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINT_LEGEND", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0};
+//--- Resource guard: ALSO require the RscTitle to be registered in this mission's config. A partial /
+//--- overlay build can ship this script (the cutRsc call) WITHOUT the updated Rsc\Titles.hpp that
+//--- defines WFBE_VehicleTintLegend -> cutRsc would then throw "Resource WFBE_VehicleTintLegend not
+//--- found". Gating on isClass makes the whole legend (keydown handler + first-spawn auto-show) stand
+//--- down silently when the class is missing, so a desynced build degrades gracefully instead of erroring.
+//--- isClass / missionConfigFile are A2-OA 1.64 safe.
+WFBE_CL_VAR_TintLegendEnabled   = ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINT_LEGEND", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 1]) > 0} && {isClass (missionConfigFile >> "RscTitles" >> "WFBE_VehicleTintLegend")};
 
 WFBE_CL_FNC_ShowTintLegend = {
 	//--- _this: true = show, false = hide. cutRsc/cutText share the dedicated layer.
@@ -534,6 +543,9 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 				WFBE_Client_Teams_Count = count _teams;
 				_didTeams = true;
 				["INITIALIZATION", Format ["Init_Client.sqf: B62 reconciliation populated own-side teams (count %1) after JIP slow-sync.", count _teams]] Call WFBE_CO_FNC_LogContent;
+				//--- B74.2.3 TELEMETRY: raw diag_log when the self-heal repopulates clientTeams (absence of this +
+				//--- atInit count=0 means the side-logic wfbe_teams never synced to this JIP client).
+				diag_log format ["CLIENTTEAMS|HEAL|side=%1|count=%2", _sideText, count _teams];
 			};
 		};
 
@@ -583,6 +595,45 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 
 		sleep 5;
 	};
+};
+
+//--- B74.2.4 (Ray 2026-06-24, P0 — lobby joiners get NO funds / NO marker / NOT in the commander-vote menu =
+//--- empty clientTeams = mission UNPLAYABLE). The B62/B64 reconciliation above only re-reads wfbe_teams for ~120s
+//--- AFTER a ~90s gate (~210s total) then GIVES UP. Under heavy AI load the side-logic wfbe_teams can take longer
+//--- than that to replicate to a client, so clientTeams stays empty PERMANENTLY. This dedicated spawn populates
+//--- the own-side team mirror EARLY (no 90s gate) and KEEPS polling (~2s cadence) until the data lands (cap ~30min)
+//--- so a client ALWAYS recovers whenever wfbe_teams arrives, however slow. Idempotent same-value writes with the
+//--- heal above; the WAIT/EARLYHEAL diag_logs prove (on the client RPT) whether the data arrives late vs never.
+//--- A2-OA-1.64 safe: plain getVariable on the logic OBJECT, typeName ==, count, mod; no A3 commands.
+[] spawn {
+	private ["_logik","_sideText","_teams","_n","_done","_lg"];
+	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_Logic"} && {!isNil "WFBE_Client_SideID"}};
+	_sideText = WFBE_Client_SideJoinedText;
+	_done = false;
+	_n = 0;
+	while {!_done && {_n < 900}} do {
+		_logik = WFBE_Client_Logic;
+		if (!isNull _logik && {!isNil {_logik getVariable "wfbe_teams"}}) then {
+			_teams = _logik getVariable "wfbe_teams";
+			if (!isNil "_teams" && {(typeName _teams) == "ARRAY"} && {(count _teams) > 0}) then {
+				missionNamespace setVariable [Format ["WFBE_%1TEAMS", _sideText], _teams];
+				WFBE_Client_Teams = _teams;
+				clientTeams = _teams;
+				WFBE_Client_Teams_Count = count _teams;
+				_done = true;
+				diag_log format ["CLIENTTEAMS|EARLYHEAL|side=%1|count=%2|at=%3s", _sideText, count _teams, round time];
+			};
+		};
+		if (!_done) then {
+			if ((_n mod 15) == 0) then {
+				_lg = WFBE_Client_Logic;
+				diag_log format ["CLIENTTEAMS|WAIT|side=%1|n=%2|t=%3s|logikNull=%4|teamsNil=%5", _sideText, _n, round time, (isNull _lg), (isNil {_lg getVariable "wfbe_teams"})];
+			};
+			_n = _n + 1;
+			sleep 2;
+		};
+	};
+	if (!_done) then { diag_log format ["CLIENTTEAMS|EARLYHEAL-GAVEUP|side=%1|afterPolls=%2", _sideText, _n]; };
 };
 
 [] execFSM "Client\FSM\updateactions.fsm";
@@ -645,7 +696,7 @@ sideHQ = _HQRadio;
 
 /* Wait for a valid signal (Teamswaping) with failover */
 if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DISABLE") > 0 && !WF_Debug) && time > 7) then {
-	Private ["_get","_timelaps"];
+	Private ["_get","_timelaps","_totalWait"];
 	_get = true;
 
 	sleep (random 0.1);
@@ -653,12 +704,22 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 	["RequestJoin", [player, sideJoined]] Call WFBE_CO_FNC_SendToServer;
 
 	_timelaps = 0;
+	_totalWait = 0;
 	while {true} do {
 		sleep 0.1;
 		_get = missionNamespace getVariable 'WFBE_P_CANJOIN';
 		if !(isNil '_get') exitWith {["INITIALIZATION", Format["Init_Client.sqf: [%1] Client [%2], Can join? [%3]",sideJoined,name player,_get]] Call WFBE_CO_FNC_LogContent};
 
 		_timelaps = _timelaps + 0.1;
+		_totalWait = _totalWait + 0.1;
+		//--- B74.2.2: HARD failover. This loop was while{true} with only a 30s re-request and NO total timeout,
+		//--- so if the server join-ACK never arrived (handshake stuck under heavy-AI load) Init_Client hung here
+		//--- forever -> clientInitComplete never set -> no team/vote/money/own-marker. After 120s, proceed
+		//--- (treat as can-join) so the client always finishes init rather than stalling permanently.
+		if (_totalWait > 120) exitWith {
+			_get = true;
+			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no join ACK after 120s - proceeding to avoid a permanent client stall.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
+		};
 		if (_timelaps > 30) then {
 			_timelaps = 0;
 			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] join is pending... no ACK was received from the server, a new request will be submitted.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
@@ -674,8 +735,9 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 		failMission "END1";
 	};
 } else {
-	Private ["_hasConnectedAtLaunchACK","_timelaps"];
+	Private ["_hasConnectedAtLaunchACK","_timelaps","_totalWait"];
 	_timelaps = 0;
+	_totalWait = 0;
 	WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player;
 	publicVariableServer "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH";
 	while {true} do {
@@ -684,6 +746,12 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 		if !(isNil '_hasConnectedAtLaunchACK') exitWith {["INITIALIZATION", Format["Init_Client.sqf: [%1] Client [%2], Can join? [%3]",sideJoined,name player,_hasConnectedAtLaunchACK]] Call WFBE_CO_FNC_LogContent};
 
 		_timelaps = _timelaps + 0.1;
+		_totalWait = _totalWait + 0.1;
+		//--- B74.2.2: HARD failover (same rationale as the RequestJoin branch) - never hang Init_Client on a
+		//--- missing connect-ACK; after 120s proceed so clientInitComplete is always reached.
+		if (_totalWait > 120) exitWith {
+			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no connect ACK after 120s - proceeding to avoid a permanent client stall.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
+		};
 		if (_timelaps > 30) then {
 			_timelaps = 0;
 			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] join is pending... no 'has connected at launch' ACK was received from the server, a new request will be submitted.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
@@ -1009,6 +1077,10 @@ WFBE_PLAYERKEH = player addEventHandler ['Killed', {[_this select 0,_this select
 
 //if (!WF_Debug) then {playMusic "Track11_Large_Scale_Assault";};
 
+/* B69 S2: Round-start intro music hook. SAFE NO-OP until Ray adds the track to Music/description.ext CfgMusic and sets WFBE_C_INTRO_MUSIC_TRACK. Plays nothing while the constant is "". */
+_introTrack = missionNamespace getVariable ["WFBE_C_INTRO_MUSIC_TRACK", ""];
+if (_introTrack != "") then { playMusic _introTrack; };
+
 
 waitUntil {!(isNull player)};
 
@@ -1036,7 +1108,7 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 	[] execVM "Client\Functions\Client_BookkeepBlinkingIcons.sqf";
 };
 
-_video = ["Videos\intro720p.ogv"] call BIS_fnc_playVideo;
+//--- B745 (Ray 2026-06-24): intro video removed (Videos\intro720p.ogv deleted, ~2.3MB mission shrink). Playback line disabled.
 
 /* Vote System, define whether a vote is already running or not */
 if (sideJoined != resistance) then {
@@ -1207,6 +1279,66 @@ if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFB
 };
 // Marty: end of glitch missiles warning script.
 
+//--- Trello #106: flashing center-screen warning when a restricted bomb (FAB-250 / Mk82) is the
+//--- selected weapon while the aircraft is at or above the bomb altitude limit. Pre-emptive only:
+//--- the actual drop is still deleted post-fire by Common_HandleShootBombs.sqf. Independent of the
+//--- missile terrain-masking loop above (its ammo filter excludes bombs by design). The short
+//--- re-issued titleText each tick produces the flashing effect.
+[] spawn {
+	private ["_bombAmmo"];
+
+	// Same restricted-bomb ammo set used in Common\Functions\Common_HandleShootBombs.sqf.
+	_bombAmmo = ["Bo_FAB_250","Bo_Mk82"];
+
+	while {!WFBE_gameover} do {
+		call {
+			private [
+				"_limit",
+				"_vehicle",
+				"_currentWeapon",
+				"_currentWeaponMagazines",
+				"_isBombSelected",
+				"_ammo"
+			];
+
+			_limit = missionNamespace getVariable "WFBE_C_GAMEPLAY_BOMBS_ALTITUDE";
+
+			// _limit 0 = param "Disabled"; nothing to warn about.
+			if (isNil "_limit") exitWith {};
+			if (_limit <= 0) exitWith {};
+
+			_vehicle = vehicle player;
+
+			if (_vehicle == player) exitWith {};
+			if !(player in crew _vehicle) exitWith {};
+
+			// Only warn while a restricted bomb is the currently selected weapon.
+			_currentWeapon = currentWeapon _vehicle;
+			if (_currentWeapon == "") exitWith {};
+
+			_currentWeaponMagazines = getArray (configFile >> "CfgWeapons" >> _currentWeapon >> "magazines");
+			_isBombSelected = false;
+
+			{
+				_ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
+				if (_ammo in _bombAmmo) exitWith {
+					_isBombSelected = true;
+				};
+			} forEach _currentWeaponMagazines;
+
+			if !(_isBombSelected) exitWith {};
+
+			// Above (or at) the altitude limit: warn the player not to drop.
+			if (((getPos _vehicle) select 2) >= _limit) then {
+				titleText [localize "STR_WF_MESSAGE_BombAltitudeWarning", "PLAIN DOWN", 0.2];
+			};
+		};
+
+		sleep 0.5;
+	};
+};
+//--- Trello #106: end of bomb altitude warning script.
+
 // Marty : initialise the low gear assist for local AI-driven tanks controlled by the player's group
 [] spawn Compile preprocessFileLineNumbers "Client\Module\Valhalla\Func_Client_AI_LowGear_Manager.sqf";
 
@@ -1221,5 +1353,9 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- Client FPS telemetry (staged-deploy day/night perf study, 2026-06-15). Self-gates on the
 //--- WFBE_C_CLIENT_FPS_REPORT lobby param; players only. Reports avg/min FPS to the server.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_FpsReport.sqf";
+
+//--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
+//--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

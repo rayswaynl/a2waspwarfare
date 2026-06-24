@@ -203,6 +203,29 @@ WFBE_CL_FNC_Upgrade_Complete = {
 
 	(Format [Localize "STR_WF_CHAT_Upgrade_Complete_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
 
+	//--- Trello #107: follow the opaque "Level N" line with the CONCRETE resulting value for the
+	//--- upgrade types that map to a clean client-side scalar array (same arrays the upgrade-menu
+	//--- descriptions use in Labels_Upgrades.sqf). The arrays are indexed by the stored upgrade
+	//--- level, and _level here is that new stored level (Server_ProcessUpgrade passes level+1),
+	//--- so a direct lookup gives the value now in effect. Conservative: only the two cleanly
+	//--- resolvable types are handled; every other upgrade keeps the level-only message untouched.
+	Private ["_artyIntervals","_respawnRanges"];
+	switch (_upgrade) do {
+		case WFBE_UP_ARTYTIMEOUT: {
+			_artyIntervals = missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS";
+			if (!isNil "_artyIntervals" && {_level < count _artyIntervals}) then {
+				(Format [Localize "STR_WF_CHAT_Upgrade_Value_ArtyReload", _artyIntervals select _level]) Call CommandChatMessage;
+			};
+		};
+		case WFBE_UP_RESPAWNRANGE: {
+			_respawnRanges = missionNamespace getVariable "WFBE_C_RESPAWN_RANGES";
+			if (!isNil "_respawnRanges" && {_level < count _respawnRanges}) then {
+				(Format [Localize "STR_WF_CHAT_Upgrade_Value_RespawnRange", _respawnRanges select _level]) Call CommandChatMessage;
+			};
+		};
+		default {};
+	};
+
 	//--- QoL trio feat.2: upgrade-complete banner with top-3 unit unlocks.
 	//--- BUG-FIX (build5 regression): banner is side-wide — shows for ALL of the player's own
 	//--- side's completed upgrades regardless of who triggered it.

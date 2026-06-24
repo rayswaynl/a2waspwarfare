@@ -339,6 +339,44 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 	_idx = _names find _x;
 	if (_idx >= 0) then {
 		_class = _classes select _idx;
+		//--- BUILD-LIMIT + BASE CAP (Ray 2026-06-24, directives #1 + #4): obey the SAME per-type structure caps as
+		//--- human players. _x here is the TYPE KEY (the order list + _names = WFBE_%1STRUCTURES are type keys, not
+		//--- model names), and wfbe_structure_type on each built site == that same type key (set as _rlType in
+		//--- Construction_*Site.sqf). Read the player cap WFBE_C_STRUCTURES_MAX_<type> (case-insensitive getVariable,
+		//--- same idiom as coin_interface.sqf:917); CommandCenter is additionally clamped to the AICOM base cap.
+		//--- FLAW-FIX: exitWith inside forEach exits the ENTIRE loop (CommandCenter is the first order item, so a
+		//--- capped CC would starve the whole base of all other production). Instead compute _capped and wrap the
+		//--- REST of the iteration body in if(!_capped) so ONLY the current type is skipped; the loop continues.
+		//--- Micro-opt: reuse the already-computed _structures local (line 336) for the type-count, no extra call.
+		//--- De-spammed via per-type quota signature on _logik (mirrors scaffold-sig de-spam, lines 326-333).
+		//--- Both gates run BEFORE any supply is paid below, so a capped build never spends.
+		private ["_otype","_typeLimit","_typeHave","_basesMax","_capped"];
+		_capped = false;
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_OBEY_BUILD_LIMITS", 1]) > 0) then {
+			_otype = _x;
+			_typeLimit = missionNamespace getVariable [Format ["WFBE_C_STRUCTURES_MAX_%1", _otype], 3];
+			if (typeName _typeLimit != "SCALAR") then {_typeLimit = 3};
+			//--- directive #1: a 'base' is a CommandCenter; clamp the per-type limit to the base cap.
+			if (_otype == "CommandCenter") then {
+				_basesMax = missionNamespace getVariable ["WFBE_C_AICOM_BASES_MAX", 2];
+				if (_basesMax > 0 && {_basesMax < _typeLimit}) then {_typeLimit = _basesMax};
+			};
+			//--- count LIVE structures of this type; use the already-computed _structures local (micro-opt).
+			_typeHave = {((_x getVariable ["wfbe_structure_type", ""]) == _otype) && {alive _x}} count _structures;
+			if (_typeHave >= _typeLimit) then {
+				_capped = true;
+				//--- de-spam: only log when the quota-full state for this type CHANGES on the side logic.
+				private ["_qSig","_qPrev"];
+				_qSig = _otype + "=" + str _typeHave + "/" + str _typeLimit;
+				_qPrev = _logik getVariable [Format ["wfbe_aicom_quota_%1", _otype], ""];
+				if (_qSig != _qPrev) then {
+					_logik setVariable [Format ["wfbe_aicom_quota_%1", _otype], _qSig];
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] build of %2 SKIPPED - cap reached (%3/%4).", _sideText, _otype, _typeHave, _typeLimit]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BUILD_CAP_SKIP|type=" + _otype + "|have=" + str _typeHave + "|max=" + str _typeLimit);
+				};
+			};
+		};
+		if (!_capped) then {
 		//--- Already have an ALIVE one of this type? V0.4.2: construction is ASYNC, so a
 		//--- site paid for last tick is not alive yet - the pending timestamp guards the
 		//--- 5-min build window so we never pay for the same structure twice.
@@ -468,6 +506,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|struct=" + _x + "|cost=" + str _cost + "|paidBy=" + (if (_dual) then {"supply"} else {"free"}) + "|branchOut=" + str _coreDone);
 			};
 		};
+		}; //--- end if (!_capped)
 	};
 } forEach _order;
 

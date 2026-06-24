@@ -5,7 +5,7 @@
 
 	The picker lets the player:
 	  - toggle the adaptive auto-view-distance feature on/off (persisted per-profile), and
-	  - pick the target FPS that auto-VD chases: 45 / 50 / 60 (persisted per-profile via WFBE_TARGET_FPS).
+	  - pick the target FPS that auto-VD chases: 30 / 45 / 50 / 60 (persisted per-profile via WFBE_TARGET_FPS).
 	Default stays OFF (Steff 2026): we only remember the player's explicit choice.
 */
 
@@ -43,9 +43,9 @@ while {alive player && dialog} do {
 		};
 	};
 
-	//--- Pick a target FPS (45 / 50 / 60) and persist it (same key Common_AdjustViewDistance already uses).
-	if (WFBE_MenuAction in [2, 3, 4]) then {
-		_target = switch (WFBE_MenuAction) do {case 2: {45}; case 3: {50}; default {60}};
+	//--- Pick a target FPS (30 / 45 / 50 / 60) and persist it (same key Common_AdjustViewDistance already uses).
+	if (WFBE_MenuAction in [2, 3, 4, 5]) then {
+		_target = switch (WFBE_MenuAction) do {case 2: {45}; case 3: {50}; case 5: {30}; default {60}};
 		WFBE_MenuAction = -1;
 		missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", _target];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {

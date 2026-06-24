@@ -64,7 +64,18 @@ if (_unit_kind in (missionNamespace getVariable "WFBE_REPAIRTRUCKS")) then { //-
 
 	if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_VICTORY_CONDITION") != 1) then { //--- Repair HQ Ability.
 		//--- Repair MHQ action.
-		_unit addAction [localize 'STR_WF_Repair_MHQ','Client\Action\Action_RepairMHQ.sqf', [], 98, false, true, '', 'alive _target'];
+		//--- Surface the NEXT repair price in the menu label. NOTE: the label string is baked at
+		//--- truck-spawn time (repair count is 0 then), so it reflects the FIRST repair price and
+		//--- does NOT live-update as the count climbs. The post-repair hint shows the live next price.
+		private ["_repCount","_repNextPrice","_repSym"];
+		_repCount = missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined];
+		_repNextPrice = [
+			missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_1ST',
+			missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_2ND',
+			missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_3RD'
+		] select (_repCount min 2);
+		_repSym = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {"S"} else {"$"};
+		_unit addAction [Format [localize 'STR_WF_Repair_MHQ', Format ["%1%2", _repSym, _repNextPrice]],'Client\Action\Action_RepairMHQ.sqf', [], 98, false, true, '', 'alive _target'];
 	};
 };
 
@@ -82,6 +93,12 @@ if (_unit isKindOf "Car") then { //--- Lights vehicles.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOff")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player==driver _target) && (_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
 	//--- Manual flip: on-demand righting, bypasses AutoFlip stuck-timer/cooldown.
 	_unit addAction ["Flip Vehicle", "WASP\actions\FlipVehicle.sqf", [], 5, false, true, "", "(vectorUp _target select 2) < 0.35 && _target distance player < 10"];
+};
+
+if (_unit_kind == 'An2_TK_EP1') then { //--- AN-2 fast-lift: player high-climb/low-gear boost (no Flip — nonsensical for a plane).
+	//--- Valhalla Low gear.
+	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player==driver _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
+	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOff")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player==driver _target) && (_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
 };
 
 if (_unit isKindOf "Ship") then { //--- Boats.

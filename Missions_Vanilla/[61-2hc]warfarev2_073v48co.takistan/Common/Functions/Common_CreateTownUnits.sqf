@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_crews", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_groups", "_i", "_lock", "_position", "_positions", "_retVal", "_side", "_sideID", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
+Private ["_built", "_builtveh", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -30,6 +30,45 @@ _lock = if (_side == WFBE_DEFENDER && (missionNamespace getVariable ["WFBE_C_TOW
 } else {
 	if ((missionNamespace getVariable "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") == 0 && _side == WFBE_DEFENDER) then {false} else {true}
 };
+
+// Marty: Record local group counts around town defense creation to diagnose Arma 2 OA per-side group pressure on server/HC.
+_logGroupCount = {
+	Private ["_event", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_level"];
+
+	_event = _this select 0;
+	_level = _this select 1;
+	_groupCountWest = 0;
+	_groupCountEast = 0;
+	_groupCountGuer = 0;
+	_groupCountCiv = 0;
+	_groupCountLogic = 0;
+	_groupCountUnknown = 0;
+
+	{
+		_groupSide = side _x;
+		switch (_groupSide) do {
+			case west: {_groupCountWest = _groupCountWest + 1};
+			case east: {_groupCountEast = _groupCountEast + 1};
+			case resistance: {_groupCountGuer = _groupCountGuer + 1};
+			case civilian: {_groupCountCiv = _groupCountCiv + 1};
+			case sideLogic: {_groupCountLogic = _groupCountLogic + 1};
+			default {_groupCountUnknown = _groupCountUnknown + 1};
+		};
+	} forEach allGroups;
+
+	_groupCountSide = switch (_side) do {
+		case west: {_groupCountWest};
+		case east: {_groupCountEast};
+		case resistance: {_groupCountGuer};
+		case civilian: {_groupCountCiv};
+		case sideLogic: {_groupCountLogic};
+		default {_groupCountUnknown};
+	};
+	_groupMachine = if (isServer) then {"SERVER"} else {if (hasInterface) then {"CLIENT"} else {"HC"}};
+	[_level, Format ["TOWN_GROUP_COUNT %1 machine:%2 town:%3 side:%4 sideGroups:%5 total:%6 west:%7 east:%8 guer:%9 civ:%10 logic:%11 unknown:%12", _event, _groupMachine, _town getVariable "name", _side, _groupCountSide, count allGroups, _groupCountWest, _groupCountEast, _groupCountGuer, _groupCountCiv, _groupCountLogic, _groupCountUnknown]] Call WFBE_CO_FNC_LogContent;
+};
+
+["activation_before", "INFORMATION"] call _logGroupCount;
 
 for '_i' from 0 to count(_groups)-1 do {
 	_position = _positions select _i;
@@ -86,6 +125,22 @@ for '_i' from 0 to count(_groups)-1 do {
 		//--- team created this episode (_town_teams). Enemies are still revealed (just once).
 		[_town_teams, _team] call WFBE_CO_FNC_ArrayPush;
 		_team allowFleeing 0; //--- Make the units brave.
+
+		//--- Town-defender skill spread: tight, near-baseline variation (garrison only).
+		{
+			if (_x isKindOf "Man") then {
+				_skillAcc     = 0.65 + random 0.30;
+				_skillScalar  = 0.80 + random 0.20;
+				_skillSpot    = 0.70 + random 0.25;
+				_skillSpeed   = 0.70 + random 0.25;
+				_skillCourage = 0.80 + random 0.20;
+				_x setSkill ["aimingAccuracy", _skillAcc];
+				_x setSkill ["aimingSpeed",    _skillSpeed];
+				_x setSkill ["spotDistance",   _skillSpot];
+				_x setSkill ["courage",        _skillCourage];
+				_x setSkill _skillScalar;
+			};
+		} forEach _units;
 	};
 
 	{
@@ -125,35 +180,12 @@ if (count _town_teams > 0) then {
 if (_built > 0) then {[str _side,'UnitsCreated',_built] call UpdateStatistics};
 if (_builtveh > 0) then {[str _side,'VehiclesCreated',_builtveh] call UpdateStatistics};
 
+// Marty: Record the post-spawn group count even when activation succeeds, so logs show if a side is approaching the 144 group limit.
+["activation_after", "INFORMATION"] call _logGroupCount;
+
 // Marty: When a town activates empty, print the machine-side group counts near the failure.
 if ((_built + _builtveh) == 0) then {
-	_groupCountWest = 0;
-	_groupCountEast = 0;
-	_groupCountGuer = 0;
-	_groupCountCiv = 0;
-	_groupCountLogic = 0;
-	_groupCountUnknown = 0;
-	{
-		_groupSide = side _x;
-		switch (_groupSide) do {
-			case west: {_groupCountWest = _groupCountWest + 1};
-			case east: {_groupCountEast = _groupCountEast + 1};
-			case resistance: {_groupCountGuer = _groupCountGuer + 1};
-			case civilian: {_groupCountCiv = _groupCountCiv + 1};
-			case sideLogic: {_groupCountLogic = _groupCountLogic + 1};
-			default {_groupCountUnknown = _groupCountUnknown + 1};
-		};
-	} forEach allGroups;
-	_groupCountSide = switch (_side) do {
-		case west: {_groupCountWest};
-		case east: {_groupCountEast};
-		case resistance: {_groupCountGuer};
-		case civilian: {_groupCountCiv};
-		case sideLogic: {_groupCountLogic};
-		default {_groupCountUnknown};
-	};
-	_groupMachine = if (isServer) then {"SERVER"} else {if (hasInterface) then {"CLIENT"} else {"HC"}};
-	["WARNING", Format ["TOWN_GROUP_COUNT town_empty machine:%1 town:%2 side:%3 sideGroups:%4 total:%5 west:%6 east:%7 guer:%8 civ:%9 logic:%10 unknown:%11", _groupMachine, _town getVariable "name", _side, _groupCountSide, count allGroups, _groupCountWest, _groupCountEast, _groupCountGuer, _groupCountCiv, _groupCountLogic, _groupCountUnknown]] Call WFBE_CO_FNC_LogContent;
+	["town_empty", "WARNING"] call _logGroupCount;
 };
 
 ["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] held by [%2] was activated witha total of [%3] units.", _town, _side, _built + _builtveh]] Call WFBE_CO_FNC_LogContent;

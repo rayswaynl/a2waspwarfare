@@ -27,7 +27,7 @@ missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL3", _side],['GUE_Sold
 
 missionNamespace setVariable [Format["WFBE_%1PARACARGO", _side], 'Mi17_Civilian'];	//--- Paratroopers, Vehicle.
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCK", _side], 'WarfareRepairTruck_Gue'];//--- Repair Truck model.
-missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['TT650_Gue','BTR90','Offroad_DSHKM_Gue']];//--- Starting Vehicles.
+missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['TT650_Gue','BRDM2_Gue','Offroad_DSHKM_Gue']];//--- Starting Vehicles. C7: BTR90 (BLUFOR/heavy, not a GUER asset) -> BRDM2_Gue (a registered GUER armoured car).
 missionNamespace setVariable [Format["WFBE_%1PARAAMMO", _side], ['RUBasicAmmunitionBox','RUBasicWeaponsBox','RULaunchersBox']];//--- Supply Paradropping, Dropped Ammunition.
 missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'BRDM2_Gue'];//--- Supply Paradropping, Dropped Vehicle.
 missionNamespace setVariable [Format["WFBE_%1PARAVEHI", _side], 'Mi17_Civilian'];//--- Supply Paradropping, Vehicle
@@ -160,4 +160,21 @@ if (WF_A2_CombinedOps) then {
 	(_side) Call Compile preprocessFileLineNumbers "Common\Config\Core_Structures\Structures_GUE.sqf";
 	//--- Upgrades.
 	(_side) Call Compile preprocessFileLineNumbers "Common\Config\Core_Upgrades\Upgrades_GUE.sqf";
+};
+
+//--- C6 (depot-race fix): Root_GUE_PlayerOverlay.sqf (loaded above in the client block) seeds the GUER
+//--- player buy pool into WFBE_GUERDEPOTUNITS, but the Units_*_GUE.sqf load that runs right after
+//--- (line ~145/156) calls setVariable [WFBE_GUERDEPOTUNITS, <AI roster>], clobbering the player pool for
+//--- a frame until the overlay's tier-watch loop re-sets it (up to 10s later). Re-apply the overlay's
+//--- first-tick synchronous seed HERE (after the AI roster load) so the player pool is correct from frame 0.
+//--- Gate is identical to the overlay (PLAYERSIDE>0 + local GUER player); worldName-branched to match the
+//--- overlay's seed exactly (CH GUE_* roster; TK TK_GUE_*_EP1 roster + datsun VBIED-type repoint). The
+//--- existing overlay loop still owns subsequent tier-change re-seeds.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {local player} && {side group player == resistance}) then {
+	if (worldName == "Chernarus") then {
+		missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","hilux1_civil_2_covered","Ka137_MG_PMC"]];
+	} else {
+		WFBE_C_GUER_VBIED_TYPE = "datsun1_civil_2_covered";
+		missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["TK_GUE_Soldier_EP1","TK_GUE_Bonesetter_EP1","TK_GUE_Soldier_MG_EP1","TK_GUE_Soldier_AT_EP1","TK_GUE_Soldier_AA_EP1","TK_GUE_Soldier_Sniper_EP1","Offroad_DSHKM_TK_GUE_EP1","Pickup_PK_TK_GUE_EP1","V3S_TK_GUE_EP1","datsun1_civil_2_covered","Ka137_MG_PMC"]];
+	};
 };

@@ -39,6 +39,28 @@ _params = [_type,_color,_size,_txt,_markerName,_unit,1,true,"DestroyedVehicle",_
 
 _params Spawn MarkerUpdate;
 
+// --- Trello #90: one-shot paradrop audio + transient drop-zone marker (client-local, friendly side only).
+// This file already runs only on the matching client (sideID != _sideID exitWith above).
+// Throttled via WFBE_C_LastParatroopSound so a stick of paratroopers does not stack one chime per trooper.
+Private ["_lastParaSound"];
+_lastParaSound = missionNamespace getVariable ["WFBE_C_LastParatroopSound", -1000];
+if (time - _lastParaSound > 8) then {
+	missionNamespace setVariable ["WFBE_C_LastParatroopSound", time];
+	playSound "commanderNotification";
+
+	Private ["_dzMarker"];
+	_dzMarker = createMarkerLocal [Format ["paraDZ_%1", round time], position _unit];
+	_dzMarker setMarkerTypeLocal "mil_objective";
+	_dzMarker setMarkerColorLocal _color;
+	_dzMarker setMarkerTextLocal "Paradrop";
+	[_dzMarker] spawn {
+		Private ["_m"];
+		_m = _this select 0;
+		sleep 30;
+		deleteMarkerLocal _m;
+	};
+};
+
 // Marty: Performance Audit counts paratrooper marker spawns separately from regular Init_Unit markers.
 if !(isNil "PerformanceAudit_Record") then {
 	if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {

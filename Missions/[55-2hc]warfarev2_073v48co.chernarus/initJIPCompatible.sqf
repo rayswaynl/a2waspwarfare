@@ -222,6 +222,50 @@ if (!isDedicated && ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1
 	};
 };
 
+//--- B74.2.5 (Ray 2026-06-24, P0): PRIMITIVE ROSTER RECEIVER. Installed in Part I (BEFORE the B56 wfbe_teams
+//--- wait and BEFORE Init_Client) so the server's on-connect publicVariableClient roster push is NEVER dropped
+//--- for arriving before the consumer existed. The handler stores the side-keyed primitive payload into globals
+//--- the vote menus read (WFBE_JIP_ROSTER_PRIMS = [[name,isPlayer,funds,gid],...], WFBE_JIP_ROSTER_COUNT). A
+//--- one-shot poll below also re-reads the var in case the push landed before this EH installed (PV vars persist
+//--- in missionNamespace, so a late-installed EH still sees the value). A2-OA-1.64-safe: typeName ==, count, no
+//--- A3 commands. Side-keyed to the TWO sides that have a commander vote (WEST/EAST); GUER has no vote roster.
+if (!isDedicated && !isHeadLessClient) then {
+	WFBE_JIP_ROSTER_PRIMS = [];
+	WFBE_JIP_ROSTER_COUNT = 0;
+	private "_rosterKeys";
+	_rosterKeys = ["WFBE_JIP_ROSTER_WEST", "WFBE_JIP_ROSTER_EAST"];
+	{
+		_x addPublicVariableEventHandler {
+			private ["_payload"];
+			_payload = _this select 1;
+			if ((typeName _payload) == "ARRAY" && {(count _payload) >= 2} && {(typeName (_payload select 1)) == "ARRAY"}) then {
+				WFBE_JIP_ROSTER_COUNT = _payload select 0;
+				WFBE_JIP_ROSTER_PRIMS = _payload select 1;
+				diag_log format ["CLIENTROSTER|RECV|key=%1|rows=%2|at=%3s", (_this select 0), count (_payload select 1), round time];
+			};
+		};
+	} forEach _rosterKeys;
+	//--- One-shot poll: a push that beat this EH still sits in missionNamespace under its key; adopt it once.
+	[] spawn {
+		private ["_n", "_v"];
+		private "_rosterKeys";
+		_rosterKeys = ["WFBE_JIP_ROSTER_WEST", "WFBE_JIP_ROSTER_EAST"];
+		_n = 0;
+		while {(count WFBE_JIP_ROSTER_PRIMS) == 0 && {_n < 150}} do {
+			{
+				_v = missionNamespace getVariable _x;
+				if (!isNil "_v" && {(typeName _v) == "ARRAY"} && {(count _v) >= 2} && {(typeName (_v select 1)) == "ARRAY"} && {(count (_v select 1)) > 0}) exitWith {
+					WFBE_JIP_ROSTER_COUNT = _v select 0;
+					WFBE_JIP_ROSTER_PRIMS = _v select 1;
+					diag_log format ["CLIENTROSTER|POLL-ADOPT|key=%1|rows=%2|at=%3s", _x, count (_v select 1), round time];
+				};
+			} forEach _rosterKeys;
+			_n = _n + 1;
+			uiSleep 0.5;
+		};
+	};
+};
+
 //--- Apply the time-environment (don't halt).
 [] Spawn {
 	waitUntil {time > 0}; //--- Await for the mission to start / JIP.
@@ -238,6 +282,27 @@ if (!isDedicated && ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1
 		setDate [(date select 0),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_MONTH"),(date select 2),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_HOUR"),(date select 4)]; //--- Apply the date and time.
 
 		if (local player) then {skipTime (time / 3600)}; //--- If we're dealing with a client, he may have JIP half way through the game. Sync him via skipTime with the mission time.
+
+		// Ray 2026-06-24 (directive #2): PERMANENT DAYLIGHT. With the accelerated cycle OFF the engine clock still drifts toward night over a long round, so the server clamps daytime into the [START, END] band (08:00->17:00) and loops back to START. Server-authoritative; setDate replicates to all clients/HC. Disable with WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP=0.
+		if (isServer && {(missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1}) then {
+			[] Spawn {
+				private ["_loStart","_loEnd","_check"];
+				_loStart = missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_START";
+				_loEnd   = missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_END";
+				_check   = missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CHECK";
+				if (isNil "_loStart") then {_loStart = 8};
+				if (isNil "_loEnd") then {_loEnd = 17};
+				if (isNil "_check") then {_check = 30};
+				diag_log format ["DAYLIGHT| clamp armed band=%1->%2 check=%3s start_daytime=%4", _loStart, _loEnd, _check, (round (daytime * 100) / 100)];
+				while {(missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1} do {
+					if (daytime >= _loEnd || daytime < _loStart) then {
+						setDate [(date select 0),(date select 1),(date select 2),_loStart,0];
+						diag_log format ["DAYLIGHT| looped to %1:00 (was daytime %2)", _loStart, (round (daytime * 100) / 100)];
+					};
+					sleep _check;
+				};
+			};
+		};
 	};
 	sleep 2;
 };

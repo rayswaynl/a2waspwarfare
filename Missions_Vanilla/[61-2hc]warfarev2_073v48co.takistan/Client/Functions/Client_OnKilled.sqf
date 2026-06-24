@@ -84,6 +84,12 @@ WFBE_PLAYERKEH = player addEventHandler [
 ];
 
 
+//--- Card #210: AnimChanged event handlers are flushed when the old unit dies, so re-attach the
+//--- auto-bipod-deploy handler to the fresh player unit. Guarded so it is a no-op if the bipod
+//--- script has not finished loading yet.
+if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
+
+
 //--- Call the pre respawn routine.
 // This will also re-add the player action menu entries.
 (player) Call PreRespawnHandler;
@@ -122,7 +128,17 @@ WFBE_PLAYERKEH = player addEventHandler [
 
 	"colorCorrections" ppEffectCommit _delay / 3;
 
+	//--- Guard: bail if the death position is invalid or camCreate failed to bind (prevents per-frame "Undefined variable wfbe_deathcamera" spam in the waitUntil below).
+	if (isNil "WFBE_DeathLocation" || {typeName WFBE_DeathLocation != "ARRAY"} || {count WFBE_DeathLocation < 3}) exitWith {
+		"dynamicBlur" ppEffectEnable false;
+		"colorCorrections" ppEffectEnable false;
+	};
+
 	WFBE_DeathCamera = "camera" camCreate WFBE_DeathLocation;
+	if (isNil "WFBE_DeathCamera") exitWith {
+		"dynamicBlur" ppEffectEnable false;
+		"colorCorrections" ppEffectEnable false;
+	};
 	WFBE_DeathCamera camSetDir 0;
 	WFBE_DeathCamera camSetFov 0.7;
 	WFBE_DeathCamera cameraEffect ["Internal", "TOP"];

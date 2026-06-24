@@ -258,7 +258,7 @@ while {!gameOver} do {
 				_w6Eligible    = false;
 				_w6AirTemplate = [];          //--- resolved elite air-assault template (class array)
 				_w6AirTier     = -1;          //--- its air-upgrade requirement (higher = more elite)
-				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}}) then {
+				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])}) then {  //--- B59 (Ray 2026-06-20): gate W6 Air Cavalry on air research + established towns (mirror W13/Produce) so no early/ungated Mi-24
 					_w6Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
 					_w6TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
 					{
@@ -268,7 +268,7 @@ while {!gameOver} do {
 							//--- First class must be a troop-capable AIR transport (drives air-insertion).
 							if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
 							    && {_w6Lead isKindOf "Air"}
-							    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+							    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0} && {({_x isKindOf "Man"} count _w6Cand) > 0} && {({_x isKindOf "Plane"} count _w6Cand) == 0}) then {
 								//--- "Elite" = pick the template with the highest AIR-tier requirement
 								//--- (its WFBE_<side>AITEAMUPGRADES[3] slot); ties keep the first found.
 								_w6CandTier = 0;
@@ -658,7 +658,7 @@ while {!gameOver} do {
 									_w6Lead = _w6Cand select 0;
 									if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
 									    && {_w6Lead isKindOf "Air"}
-									    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+									    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0} && {({_x isKindOf "Man"} count _w6Cand) > 0} && {({_x isKindOf "Plane"} count _w6Cand) == 0}) then {
 										_w6CandTier = 0;
 										_w6Idx = _w6Tmpls find _w6Cand;
 										if (_w6Idx >= 0 && {_w6Idx < count _w6TmplUps}) then {
@@ -991,10 +991,10 @@ while {!gameOver} do {
 									if (isNull _w17Target) then {_w17Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
 									_w17TargetPos = getPos _w17Target;
 									_w17MarkerName = Format ["aicom_convoy_%1_%2", _sideText, round time];
-									createMarker [_w17MarkerName, _w17SpawnPos];
-									_w17MarkerName setMarkerType "mil_destroy";
-									_w17MarkerName setMarkerColor (if (_side == west) then {"ColorBlue"} else {"ColorRed"});
-									_w17MarkerName setMarkerText Format ["Supply Convoy (%1)", _sideText];
+									//--- B68 (Ray 2026-06-21) MARKER-LEAK FIX: this W17 supply-convoy marker was GLOBAL (createMarker / setMarker*, non-Local) = visible to ENEMY clients too (Ray: hostile teams must not see your supply patrols). The convoy truck already shows to its OWN side via the standard friendly unit-marker (Init_Unit SupplyVehicle path), so the global marker was a leak + redundant - removed. _w17MarkerName stays defined; the despawn block's deleteMarker on the now-uncreated name is a harmless no-op.
+									//--- B68: (convoy marker removed - was enemy-visible global)
+									//--- B68: (convoy marker removed)
+									//--- B68: (convoy marker removed)
 									[_w17Grp, _w17TargetPos, 100] Call AIPatrol;
 									_w17Grp setBehaviour "AWARE"; _w17Grp setCombatMode "YELLOW";
 									[_w17Truck, _w17Grp, _w17Target, _side, _w17MarkerName, _humanCmd] spawn {
@@ -1085,7 +1085,7 @@ while {!gameOver} do {
 										_w6Lead = _w6Cand select 0;
 										if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
 										    && {_w6Lead isKindOf "Air"}
-										    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+										    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0} && {({_x isKindOf "Man"} count _w6Cand) > 0} && {({_x isKindOf "Plane"} count _w6Cand) == 0}) then {
 											_w6CandTier = 0;
 											_w6Idx = _w6Tmpls find _w6Cand;
 											if (_w6Idx >= 0 && {_w6Idx < count _w6TmplUps}) then {
@@ -1258,9 +1258,9 @@ while {!gameOver} do {
 												if (!isNull _veh && {alive _veh}) then {
 													_p = getPosATL _veh;
 													_veh setDamage 1;                 //--- pop the truck; killed-EH still fires for kill-credit
-													"Sh_122_HE" createVehicle _p;     //--- stacked 122mm HE = large lethal crater (SADARM idiom)
-													"Sh_122_HE" createVehicle _p;
-													"Sh_122_HE" createVehicle _p;
+													"Bo_FAB_250" createVehicle _p;     //--- B74.1 (Ray 2026-06-23): 3x FAB-250 aerial bombs (loaded via the EASA plane loadouts on both maps) = far bigger crater than the old 3x 122mm HE shell.
+													"Bo_FAB_250" createVehicle _p;
+													"Bo_FAB_250" createVehicle _p;
 												};
 												sleep 3;
 												{deleteVehicle _x} forEach (crew _veh);

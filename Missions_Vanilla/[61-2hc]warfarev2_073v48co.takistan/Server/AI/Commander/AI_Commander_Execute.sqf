@@ -7,7 +7,7 @@
 	issues waypoints for them, so this is the path that finally makes the command bar work.
 	Idempotent: an unchanged order (wfbe_exec_sig) is not re-issued. "towns"/"" modes belong to AssignTowns.
 */
-private ["_side","_logik","_teams","_team","_mode","_modeL","_goto","_sig","_prevSig","_wpType","_radius","_aliveCount","_realGoto"];
+private ["_side","_logik","_teams","_team","_mode","_modeL","_goto","_sig","_prevSig","_wpType","_radius","_aliveCount","_realGoto","_isHc","_hcMode","_hcSeq"]; //--- B67 +_isHc/_hcMode/_hcSeq
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
@@ -40,12 +40,35 @@ if (isNil "_teams") exitWith {};
 					_sig     = [_modeL, round (_goto select 0), round (_goto select 1)];
 					_prevSig = _team getVariable ["wfbe_exec_sig", []];
 					if (str _sig != str _prevSig) then {
-						_wpType = "MOVE"; _radius = 50;
-						if (_modeL == "patrol")  then {_wpType = "SAD";  _radius = 150};
-						if (_modeL == "defense") then {_wpType = "HOLD"; _radius = 30};
-						[_team, _goto, _wpType, _radius] Call AIMoveTo;
-						_team setVariable ["wfbe_exec_sig", _sig];
-						["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4.", _side, _team, _modeL, _goto]] Call WFBE_CO_FNC_AICOMLog;
+						//--- B67 HC-ORDER PATH (full-send hybrid commander, item #5 / part 3): an HC-delegated team's units
+						//--- are LOCAL to the headless client, so server-side AIMoveTo/waypoint commands on them are
+						//--- unreliable - the HC driver (Common_RunCommanderTeam) acts ONLY on the public wfbe_aicom_order
+						//--- group var, never on wfbe_teammode/wfbe_teamgoto. A human commander's order (set via
+						//--- SetTeamMoveMode/SetTeamMovePos -> those two vars) was therefore INERT on HC teams. So when this
+						//--- team is HC-resident, ALSO publish wfbe_aicom_order with the driver's [seq, mode, pos] contract
+						//--- (seq bumped only on a CHANGED order, gated by the _sig latch above, so we never spam re-issues).
+						//--- Mode mapping to the driver's vocab: human "defense" -> "defense" (driver HOLDs a tight SAD at pos);
+						//--- "move"/"patrol" pass through to the driver's non-"defense"/non-"towns-target" branch = a
+						//--- COMBAT/WEDGE assault SAD at pos (advance-and-engage, never idle). pos = the human-set goto array.
+						//--- Server-local teams keep the AIMoveTo path below unchanged. WFBE_CO_FNC_GroupGetBool guards the
+						//--- UNSET-on-group bool read (A2-OA "G1" trap).
+						_isHc = [_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool;
+						if (_isHc) then {
+							_hcMode = if (_modeL == "defense") then {"defense"} else {_modeL}; //--- "move"/"patrol" pass through to the driver's assault-SAD branch.
+							//--- A2: groups do not support the [name,default] getVariable form - plain get + isNil for the seq read.
+							_hcSeq = _team getVariable "wfbe_aicom_order";
+							_hcSeq = if (isNil "_hcSeq" || {count _hcSeq < 1}) then {0} else {(_hcSeq select 0) + 1};
+							_team setVariable ["wfbe_aicom_order", [_hcSeq, _hcMode, _goto], true];
+							_team setVariable ["wfbe_exec_sig", _sig];
+							["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] HC team [%2] human %3 order published via wfbe_aicom_order #%4 at %5.", _side, _team, _modeL, _hcSeq, _goto]] Call WFBE_CO_FNC_AICOMLog;
+						} else {
+							_wpType = "MOVE"; _radius = 50;
+							if (_modeL == "patrol")  then {_wpType = "SAD";  _radius = 150};
+							if (_modeL == "defense") then {_wpType = "HOLD"; _radius = 30};
+							[_team, _goto, _wpType, _radius] Call AIMoveTo;
+							_team setVariable ["wfbe_exec_sig", _sig];
+							["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4.", _side, _team, _modeL, _goto]] Call WFBE_CO_FNC_AICOMLog;
+						};
 					};
 				};
 			} else {

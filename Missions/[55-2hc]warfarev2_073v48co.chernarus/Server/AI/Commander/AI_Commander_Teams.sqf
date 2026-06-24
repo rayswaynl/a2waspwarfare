@@ -75,6 +75,15 @@ private ["_pcN","_hcN","_pcExtraCap"];
 _pcN = {isPlayer _x} count allUnits;
 _hcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 _pcN = (_pcN - _hcN) max 0;
+	//--- B74.2 UNIFIED POP-TIER publisher (Ray 2026-06-23): the live human count is already settled here, so compute
+	//--- the tier and broadcast it ONCE per change so every AI subsystem (TOTAL_AI cap, town defenders/active-cap,
+	//--- side-patrols, the per-player AI buy-cap) scales off ONE source. 0=LOW(0-2)/1=MID(3-5)/2=HIGH(6-9)/3=FULL(10+).
+	private "_popTier";
+	_popTier = switch (true) do { case (_pcN <= 2): {0}; case (_pcN <= 5): {1}; case (_pcN <= 9): {2}; default {3} };
+	if (_popTier != (missionNamespace getVariable ["WFBE_PopTier", -1])) then {
+		WFBE_PopTier = _popTier; publicVariable "WFBE_PopTier";
+		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
+	};
 _base = switch (true) do {
 	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  6]};
 	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
@@ -93,11 +102,16 @@ _logik setVariable ["wfbe_aicom_pc", _pcN];
 	//--- server never bloats. Toggle the flag to A/B legacy vs NEXT. The dyntarget log below records the lift.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_BANKING_VALVE", 1]) > 0 && {_pcN <= 5}) then {
 		private ["_valveCap","_valveExtra"];
-		_valveCap   = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_LOWPOP_EXTRA", 6];
+		_valveCap   = (missionNamespace getVariable ["WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER", [3,2,0,0]]) select _popTier;
 		_valveExtra = floor (_funds / _fundsPerExtraTeam);
 		if (_valveExtra > _valveCap) then {_valveExtra = _valveCap};
 		if (_valveExtra > _extra) then {_extra = _valveExtra; _target = _base + _extra};
 	};
+
+//--- B747.1 HARD CAP (Ray 2026-06-24): clamp the founding target to a ceiling regardless of the PC curve +
+//--- banking valve. AICOM was fielding ~15 teams at low pop (base 12 + valve 3); Ray wants max 8 going forward.
+private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 8];
+if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
 
 //--- Log only when the effective target changes (avoid RPT spam).
 _lastDynTarget = _logik getVariable ["wfbe_aicom_dyntarget", _base];
@@ -167,9 +181,19 @@ if (_foundedTeams > _target) then {
 //--- promotes _pick to the top-tier template. Transient: next tick the flag is consumed/false and the target returns
 //--- to normal (no permanent target inflation). Placed AFTER the PC-cleanup block so the +1 never triggers a retire.
 //--- A2-OA-safe: boolean getVariable on the side-logic OBJECT _logik is reliable (not a group); plain if, no Bool ==.
-if (_logik getVariable ["wfbe_aicom_veteran_next", false]) then {_target = _target + 1};
+if (_logik getVariable ["wfbe_aicom_veteran_next", false]) then {_target = (_target + 1) min _teamsHardCap}; //--- B747.1: veteran +1 must still respect the hard cap (never exceed max teams).
 
 if ((_foundedTeams + _pending) >= _target) exitWith {};
+
+//--- B74.2 (Ray 2026-06-23): enforce the TIERED per-side TOTAL_AI ceiling AT FOUNDING. The HC founding path had NO
+//--- side-AI gate (only AI_Commander_Produce.sqf:28-30 did), so at low pop founding blew past the cap = the
+//--- "infinite teams" overshoot. Same count as Produce (side AI minus players); cap from the pop-tier array.
+private ["_aiCapTier","_sideAINow"];
+_aiCapTier = (missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]) select ((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0);
+_sideAINow = {(side _x == _side) && !(isPlayer _x)} count allUnits;
+if (_sideAINow >= _aiCapTier) exitWith {
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding skipped - side AI %2 >= tier cap %3 (tier %4, pc %5).", _sideText, _sideAINow, _aiCapTier, (missionNamespace getVariable ["WFBE_PopTier", 0]), _pcN]] Call WFBE_CO_FNC_AICOMLog;
+};
 
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
@@ -283,6 +307,38 @@ if (count _live > 0) then {
 		_eligNoAir = [];
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
+	};
+	if (count _eligible == 0) exitWith {};
+
+	//--- B74.2 EMPTY-HELI CAP (Ray 2026-06-24): if the side already fields WFBE_C_AICOM_ATTACKHELI_MAX or more
+	//--- ALIVE attack helis (non-transport Helicopter), strip every air template from _eligible so the founding
+	//--- draw cannot create yet another premium AH1Z team that nothing retires/cleans. The bucket picker below
+	//--- degrade-walks to a buildable ground class, so founding continues normally. 0 = no cap (old behaviour).
+	//--- FLAW-FIX: count BOTH crewed AND crewless non-transport helis on this side. For crewed helis, side is
+	//--- resolved via (crew _x) select 0 (reliable). For crewless helis, wfbe_side on the vehicle object is
+	//--- checked first (falls back to sideUnknown if not tagged on this build, which is safe). A2-OA-safe:
+	//--- isKindOf/getNumber/transportSoldier mirrors the L477 detector; count over vehicles (not allUnits).
+	private ["_heliCap","_heliAlive","_eligNoAir2"];
+	_heliCap = missionNamespace getVariable ["WFBE_C_AICOM_ATTACKHELI_MAX", 0];
+	if (_heliCap > 0) then {
+		_heliAlive = 0;
+		{
+			if (alive _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) then {
+				if ((count crew _x) > 0 && {side ((crew _x) select 0) == _side}) then {
+					_heliAlive = _heliAlive + 1;
+				} else {
+					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side", sideUnknown]) == _side}) then {
+						_heliAlive = _heliAlive + 1;
+					};
+				};
+			};
+		} forEach vehicles;
+		if (_heliAlive >= _heliCap) then {
+			_eligNoAir2 = [];
+			{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir2 set [count _eligNoAir2, _x]} } forEach _eligible;
+			_eligible = _eligNoAir2;
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B74.2 attack-heli cap hit (alive %2 >= cap %3) - air templates stripped from founding this cycle.", _sideText, _heliAlive, _heliCap]] Call WFBE_CO_FNC_AICOMLog;
+		};
 	};
 	if (count _eligible == 0) exitWith {};
 

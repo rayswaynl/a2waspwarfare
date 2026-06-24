@@ -23,15 +23,16 @@ switch (WFBE_SK_V_Type) do {
 		];
 
 		/* Salvage Ability */
+		//--- Trello #15: grey out manual salvage while a FRIENDLY salvage truck is in range (it auto-salvages).
 		_unit addAction [
 			("<t color='#CC00CB'>" + localize 'STR_WF_ACTION_Salvage'+ "</t>"),
-			(WFBE_SK_V_Root + 'Salvage' + '.sqf'), 
-			[], 
-			80, 
-			false, 
-			true, 
-			"", 
-			"time - WFBE_SK_V_LastUse_Salvage > WFBE_SK_V_Reload_Salvage"
+			(WFBE_SK_V_Root + 'Salvage' + '.sqf'),
+			[],
+			80,
+			false,
+			true,
+			"",
+			"(time - WFBE_SK_V_LastUse_Salvage > WFBE_SK_V_Reload_Salvage) && !(({ alive _x && (side _x == side player) } count (nearestObjects [getPos player, (missionNamespace getVariable [Format ['WFBE_%1SALVAGETRUCK', sideJoinedText], []]), (missionNamespace getVariable 'WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE')])) > 0)"
 		];
 	
 	// Marty: Only show Repair Camp when the player is near a destroyed camp.

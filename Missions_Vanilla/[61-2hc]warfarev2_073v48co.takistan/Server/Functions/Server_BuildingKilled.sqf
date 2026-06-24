@@ -61,6 +61,9 @@ if ((!isNull _killer) && (isPlayer _killer)) then
             [_side_killer, "LocalizeMessage", ["HeadHunterReceiveBounty", (name _killer), _bounty, _type, _side]] call WFBE_CO_FNC_SendToClients;
        };
 
+       //--- B74.2: leaderboard FACTORY-kill credit to the destroying player (real UID, not the display-masked _killer_uid).
+       if ((_structure isKindOf "Base_WarfareBLightFactory") || (_structure isKindOf "Base_WarfareBHeavyFactory") || (_structure isKindOf "Base_WarfareBAircraftFactory") || (_structure isKindOf "Base_WarfareBBarracks")) then {private "_facUid"; _facUid = getPlayerUID _killer; if (_facUid != "") then {[_facUid, WFBE_STAT_KILLS_FACTORY, 1] call WFBE_SE_FNC_RecordStat}};
+
        // Increased the score gain a bit
        _score = _score * 3;
 

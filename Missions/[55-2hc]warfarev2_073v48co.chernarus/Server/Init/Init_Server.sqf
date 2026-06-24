@@ -33,6 +33,8 @@ CreateDefenseTemplate = Compile preprocessFile "Server\Functions\Server_CreateDe
 Server_ConstructPosition = Compile preprocessFile "Server\Functions\Server_ConstructPosition.sqf";
 HandleBuildingRepair = Compile preprocessFile "Server\Functions\Server_HandleBuildingRepair.sqf";
 GetAICommanderFunds = Compile preprocessFile "Server\Functions\Server_GetAICommanderFunds.sqf";
+//--- B74.2 (Ray 2026-06-24, directive #5): AI-commander structure-sell / recycle worker (dark by default, see WFBE_C_AICOM_BASE_SELL_ENABLE).
+WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BaseSell.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
 HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";
@@ -740,6 +742,10 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 
 		_logik setVariable ["wfbe_teams", _teams, true];
 		_logik setVariable ["wfbe_teams_count", count _teams];
+		//--- B74.2.3 TELEMETRY: raw diag_log of the per-side player-team registration count (LogContent is
+		//--- filtered on public builds, so the per-team init logs above are invisible). Lets us tell whether
+		//--- an empty client clientTeams is because registration produced 0 server-side, or a sync gap.
+		diag_log format ["TEAMREG|side=%1|registered=%2|syncedUnits=%3", _side, count _teams, count (synchronizedObjects _logik)];
 	};
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 
@@ -771,11 +777,15 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 		diag_log format ["[WFBE] GUER playable faction: registered %1 player teams (INITIALIZATION LogContent is filtered on this build, so this diag_log is the visibility).", count _guerTeams];
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
-		[] execVM "Server\Server_GuerStipend.sqf";
-			//--- B62 (Ray 2026-06-21): GUER air-def execVM MOVED out of this WFBE_C_GUER_PLAYERSIDE>0 block to
-			//--- its own gate AFTER the GUER-OFF block below (keyed only on isServer + WFBE_C_GUER_AIRDEF_ENABLE).
-			//--- GUER is ALWAYS the AI town-defender (towns with sideID==GUER), so the air-def loop must run in
-			//--- production even when the playable-side param is 0 - previously it was DEAD because PLAYERSIDE=0.
+			//--- B74.2: the GUER stipend/economy execVM was MOVED out of this team-registration block to its own
+			//--- isServer+WFBE_C_GUER_PLAYERSIDE gate below (beside the air-def launch). Rationale: the economy loop
+			//--- must NOT be coupled to the registration forEach above - a future registration change that errors
+			//--- mid-loop would otherwise silently suppress the entire GUER economy (no stipend, no vehicle tiers).
+			//--- The stipend self-gates (isServer + PLAYERSIDE) and self-waits (towns + WFBE_L_GUE) internally,
+			//--- exactly like Server_GuerAirDef.sqf, so launching it independently is safe and strictly more robust.
+			//--- B62 (Ray 2026-06-21): the GUER air-def execVM was likewise moved out of this block to its own gate
+			//--- below (keyed on isServer + WFBE_C_GUER_AIRDEF_ENABLE) - GUER is ALWAYS the AI town-defender, so its
+			//--- air must run even when the playable-side param is 0.
 	} else {
 		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerResistance missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
 	};
@@ -799,6 +809,15 @@ if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isN
 if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) > 0}) then {
 	[] execVM "Server\Server_GuerAirDef.sqf";
 	["INITIALIZATION", "Init_Server.sqf: B62 GUER air-def loop launched (un-gated from PLAYERSIDE)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- B74.2: GUER player ECONOMY (per-minute stipend + vehicle-tier broadcast). MOVED here from the GUER
+//--- team-registration block above so a registration error can't silently suppress the economy (same decoupling
+//--- rationale as the air-def launch). Gated on isServer + WFBE_C_GUER_PLAYERSIDE (the playable-side param); the
+//--- loop self-waits for towns + WFBE_L_GUE internally, so it is safe to launch independently of registration.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+	[] execVM "Server\Server_GuerStipend.sqf";
+	["INITIALIZATION", "Init_Server.sqf: B74.2 GUER stipend/economy loop launched (decoupled from team-registration)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
@@ -908,6 +927,26 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	};
 	["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed (WFBE_C_CLIENT_FPS_REPORT=1)."] Call WFBE_CO_FNC_LogContent;
 };
+
+//--- B74.2 (Ray 2026-06-23): OWN-SIDE MARKER FEED-GAP RECOVERY (the recurring "my player marker gone").
+//--- A publicVariable is NOT JIP-durable in A2-OA, and the B63 connect catch-up (Server_OnPlayerConnected
+//--- targeted publicVariableClient) can be MISSED on some joins (it races the connect/init path). When that
+//--- happens the joiner's WFBE_ACTIVE_AICOM_TEAMS / WFBE_ACTIVE_PATROLS stay empty for the first ~60s and the
+//--- own-side commander-team + patrol arrows never draw. updateaicommarkers.sqf now REQUESTS a rebroadcast when
+//--- its feed is still empty after the init gate (publicVariableServer "WFBE_ReqAicomFeed" carrying the player
+//--- object). Resolve `owner _player` to the network id and push BOTH feeds straight back to exactly that client -
+//--- the SAME proven targeted-reply pattern as REQUEST_SUPPLY_VALUE (Server_PV_RequestSupplyValue.sqf). Unconditional
+//--- (always armed); server_side_patrols also re-broadcasts every ~20s as a safety net.
+"WFBE_ReqAicomFeed" addPublicVariableEventHandler {
+	private ["_player","_id"];
+	_player = _this select 1;
+	if (isNull _player) exitWith {};
+	_id = owner _player;
+	if (!isNil "WFBE_ACTIVE_AICOM_TEAMS") then {_id publicVariableClient "WFBE_ACTIVE_AICOM_TEAMS"};
+	if (!isNil "WFBE_ACTIVE_PATROLS") then {_id publicVariableClient "WFBE_ACTIVE_PATROLS"};
+	diag_log format ["[WFBE][B74.2 REQ-MARK] rebroadcast marker feeds to requester %1 (aicom=%2, patrols=%3).", _id, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
+};
+["INITIALIZATION", "Init_Server.sqf: B74.2 WFBE_ReqAicomFeed handler armed (own-side marker feed-gap recovery)."] Call WFBE_CO_FNC_LogContent;
 
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 

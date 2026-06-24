@@ -27,6 +27,8 @@ public class SqfFileGenerator
             "'Client\\Module\\EASA\\EASA_Equip.sqf';";
         startOfTheEasaFile += "EASA_RemoveLoadout = Compile preprocessFileLineNumbers" +
             " 'Client\\Module\\EASA\\EASA_RemoveLoadout.sqf';";
+        startOfTheEasaFile += "WFBE_EASA_FNC_LoadoutCat = Compile preprocessFileLineNumbers " +
+            "'Client\\Module\\EASA\\EASA_LoadoutCat.sqf';";
         startOfTheEasaFile += "\n";
         startOfTheEasaFile += "\n_easaDefault = [];";
         startOfTheEasaFile += "\n_easaLoadout = [];";

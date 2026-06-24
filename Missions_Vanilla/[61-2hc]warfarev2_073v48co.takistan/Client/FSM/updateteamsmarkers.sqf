@@ -22,7 +22,14 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 	_marker = Format["%1AdvancedSquad%2Marker",_sideText,_count];
 	_leader = objNull;
 	createMarkerLocal [_marker,[0,0,0]];
-	_marker setMarkerTypeLocal "Arrow";
+	//--- MARKER-DIR ROOT-CAUSE FIX (Ray 2026-06-20, 3rd attempt): the previous two fixes only
+	//--- changed the _dir VALUE (velocity->getDir->getDir-vehicle) but the arrow stayed wrong
+	//--- because the marker ICON TYPE "Arrow" does not visibly rotate to setMarkerDir in A2-OA.
+	//--- Every arrow in this mission that DOES track heading (patrol/AICOM/AAR loops) uses the
+	//--- military marker "mil_arrow2" with setMarkerDirLocal; "Arrow" was the lone legacy type
+	//--- that never got converted, so setMarkerDirLocal was a no-op on it. Switch to mil_arrow2
+	//--- so the existing (correct) getDir heading below actually renders. A2-OA-1.64-safe.
+	_marker setMarkerTypeLocal "mil_arrow2";
 	_marker setMarkerDirLocal 0;
 	_marker setMarkerSizeLocal [0.7,0.7];
 	_marker setMarkerAlphaLocal 0;
@@ -70,6 +77,37 @@ while {!gameOver} do {
 		if (_updateAILeaders) then {_nextAIUpdate = time + 1};
 
 		_count = 1;
+		//--- B64 (Ray 2026-06-21) PLAYER-ARROW REGRESSION FIX. The B62 own-side reconciliation
+		//--- REBINDS the global clientTeams (Init_Client.sqf: clientTeams = _teams) once a slow-sync
+		//--- OPFOR/JIP joiner's wfbe_teams finally lands. This loop built _markerNames (and the
+		//--- _last* caches) ONCE at start sized to the THEN-empty clientTeams, so after the rebind
+		//--- the per-tick forEach clientTeams walks N>0 teams while _markerNames is still []/short:
+		//--- _markerNames select _markerIndex returns nil -> setMarkerDir/Pos no-op AND the
+		//--- _lastDirs/_lastPositions reads return nil -> abs()/distance throw -> the player own
+		//--- orange arrow never (re)creates or tracks heading ("direction not working again").
+		//--- Rebuild missing markers + grow ALL caches to match clientTeams when the lengths diverge.
+		if (count clientTeams != count _markerNames) then {
+			diag_log format ["[WFBE][B64 TEAM-MARK] clientTeams rebind detected: teams=%1 cache=%2 - rebuilding", count clientTeams, count _markerNames];
+			{
+				if ((_count - 1) >= count _markerNames) then {
+					_marker = Format["%1AdvancedSquad%2Marker", _sideText, _count];
+					createMarkerLocal [_marker,[0,0,0]];
+					_marker setMarkerTypeLocal "mil_arrow2";
+					_marker setMarkerDirLocal 0;
+					_marker setMarkerSizeLocal [0.7,0.7];
+					_marker setMarkerAlphaLocal 0;
+					_markerNames   set [_count - 1, _marker];
+					_lastLeaders   set [_count - 1, objNull];
+					_lastTexts     set [_count - 1, ""];
+					_lastAlphas    set [_count - 1, -1];
+					_lastColors    set [_count - 1, "ColorBlack"];
+					_lastPositions set [_count - 1, [-99999,-99999,0]];
+					_lastDirs      set [_count - 1, -999];
+				};
+				_count = _count + 1;
+			} forEach clientTeams;
+			_count = 1;
+		};
 		{
 			_markerIndex = _count - 1;
 			_marker = _markerNames select _markerIndex;
@@ -199,19 +237,13 @@ while {!gameOver} do {
 						} else {
 							_perfSkippedWrites = _perfSkippedWrites + 1;
 						};
-						//--- Marty/Claude: the orange arrow should point the way the player is MOVING, not
-						//--- where the unit FACES. getDir (vehicle/man heading) and movement heading diverge
-						//--- when strafing on foot, walking backwards, or sliding in a vehicle, so the arrow
-						//--- pointed wrong. Derive the heading from velocity while moving; fall back to
-						//--- getDir when ~stationary so the arrow doesn't jitter at rest. A2-OA-1.64-safe.
-						_vel = velocity _leaderVehicle;
-						_spd = sqrt (((_vel select 0) * (_vel select 0)) + ((_vel select 1) * (_vel select 1)));
-						if (_spd > 1.2) then {
-							_dir = (_vel select 0) atan2 (_vel select 1);
-							if (_dir < 0) then {_dir = _dir + 360};
-						} else {
-							_dir = getDir _leaderVehicle;
-						};
+						//--- MARKER-DIR FIX (Ray 2026-06-20): the arrow must point where the player is actually
+						//--- HEADING/FACING, not the way they are MOVING. The earlier velocity-derived heading
+						//--- diverged from the real bearing whenever the vehicle reversed, sideslipped or a heli
+						//--- slid, so the arrow pointed wrong. _leaderVehicle is `vehicle _leader`, so getDir on
+						//--- it is the player's facing heading and is correct ON FOOT and MOUNTED alike. This
+						//--- matches the patrol/AICOM arrow loops, which use plain getDir. A2-OA-1.64-safe.
+						_dir = getDir _leaderVehicle;
 						_lastDir = _lastDirs select _markerIndex;
 						_dirDiff = abs (_dir - _lastDir);
 						if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};

@@ -34,7 +34,13 @@ _updateDetails = true;
 _updateList = true;
 _updateMap = true;
 _val = 0;
-_mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
+//--- B74.2: per-player AI cap now follows the live pop-tier (WFBE_PopTier is publicVariable'd, read live on the client).
+_mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX'; //--- fallback scalar if the tiered array is unset
+_mbuByTier = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX_BY_TIER';
+if (!isNil '_mbuByTier') then {
+	_mbuPT = missionNamespace getVariable ['WFBE_PopTier', 0]; if (_mbuPT < 0) then {_mbuPT = 0};
+	if (_mbuPT <= ((count _mbuByTier) - 1)) then {_mbu = _mbuByTier select _mbuPT};
+};
 //--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 
@@ -548,7 +554,41 @@ _IDCS = _IDCS - [_currentIDC];
 				//--- Display a unit's loadout.
 				_weapons = (getArray (configFile >> 'CfgVehicles' >> _unit >> 'weapons')) - ['Put','Throw'];
 				_magazines = getArray (configFile >> 'CfgVehicles' >> _unit >> 'magazines');
-				
+
+				//--- Trello #91: gear/ammo preview fix for special AT soldiers whose actual loadout is
+				//--- re-armed at unit creation (Common\Functions\Common_CreateUnit.sqf), so the raw config
+				//--- class loadout shown here is wrong. Mirror those same removals/adds onto the preview
+				//--- arrays (client display only — no gameplay/PV/authority change). Data-driven: each entry
+				//--- is [classname,[wepRemove],[wepAdd],[[mag,count]...remove],[[mag,count]...add]].
+				private ["_gearFix","_gearIdx","_gearEntry","_drop","_amt","_n2"];
+				_gearFix = [
+					["Ins_Soldier_AT", ["RPG7V"], ["M47Launcher_EP1"], [["PG7VL",3]], [["Dragon_EP1",2]]],
+					["MVD_Soldier_AT", [], [], [["PG7VL",2],["OG7",1]], [["PG7VR",2]]]
+				];
+				_gearIdx = -1;
+				{ if ((_x select 0) == _unit) exitWith { _gearIdx = _forEachIndex } } forEach _gearFix;
+				if (_gearIdx >= 0) then {
+					_gearEntry = _gearFix select _gearIdx;
+					//--- Weapons: remove then add (preview launcher swap).
+					_weapons = _weapons - (_gearEntry select 1);
+					{ _weapons = _weapons + [_x] } forEach (_gearEntry select 2);
+					//--- Magazines: remove N single instances of each (one per pass, mirroring the
+					//--- per-call removeMagazine at creation), then append M instances of each.
+					{
+						_drop = _x select 0; _amt = _x select 1;
+						for "_n2" from 1 to _amt do {
+							if (_drop in _magazines) then {
+								_magazines set [_magazines find _drop, "wfbe_geardisplay_void"];
+								_magazines = _magazines - ["wfbe_geardisplay_void"];
+							};
+						};
+					} forEach (_gearEntry select 3);
+					{
+						_drop = _x select 0; _amt = _x select 1;
+						for "_n2" from 1 to _amt do { _magazines = _magazines + [_drop] };
+					} forEach (_gearEntry select 4);
+				};
+
 				_classMags = [];
 				_classMagsAmount = [];
 				_MagsLabel = [];

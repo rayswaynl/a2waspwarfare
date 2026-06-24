@@ -53,7 +53,15 @@ if !(_spawnInside) then {
 			_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
 		};
 	} else {
-		_unit setPos ([getPos _spawn,10,20] Call GetRandomPosition);
+		//--- B74.2: WEST/EAST naval carrier deck-respawn. If the selected/assigned respawn point is a
+		//--- naval-HVT town this side holds, deck-spawn on the carrier (mirror the resistance deckZ logic
+		//--- above); otherwise keep the normal town/base respawn. _spawn is an object here, so the
+		//--- getVariable[name,default] reads are reliable (object namespace, A2-OA-safe).
+		if (!isNull _spawn && {_spawn getVariable ["wfbe_is_naval_hvt", false]} && {(_spawn getVariable ["sideID", -1]) == WFBE_Client_SideID}) then {
+			_unit setPosASL [(getPos _spawn) select 0, (getPos _spawn) select 1, ((_spawn getVariable ["wfbe_naval_deckz", 16]) + 2)];
+		} else {
+			_unit setPos ([getPos _spawn,10,20] Call GetRandomPosition);
+		};
 	};
 };
 

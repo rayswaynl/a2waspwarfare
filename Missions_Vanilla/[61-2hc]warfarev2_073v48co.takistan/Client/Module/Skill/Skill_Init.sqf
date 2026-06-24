@@ -20,15 +20,20 @@ WFBE_SK_V_Medics = ['FR_Corpsman','US_Soldier_Medic_EP1','TK_Soldier_Medic_EP1',
 //--- Single dual-map source (#ifdef IS_CHERNARUS_MAP_DEPENDENT): Chernarus = GUE_Soldier_*, Takistan = TK_GUE_*_EP1.
 //--- LoadoutManager regen copies Chernarus->Takistan, so this stays correct on both maps.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
-#ifdef IS_CHERNARUS_MAP_DEPENDENT
-	WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["GUE_Soldier_Sab"];
-	WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["GUE_Soldier_Sniper"];
-	WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["GUE_Soldier_Medic"];
-#else
-	WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["TK_GUE_Soldier_EP1"];
-	WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["TK_GUE_Soldier_Sniper_EP1"];
-	WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["TK_GUE_Bonesetter_EP1"];
-#endif
+	//--- GUER-MAPFIX (2026-06-18): this file is preprocessFile'd standalone (Init_Client.sqf:624) WITHOUT
+	//--- #include "version.sqf", so IS_CHERNARUS_MAP_DEPENDENT was UNDEFINED here -> the #else (Takistan)
+	//--- branch ran even on Chernarus -> CH GUER classes never registered -> WFBE_SK_V_Type="" -> empty
+	//--- loadout -> GUER spawned with no ItemMap -> FULLY BLACK MAP. Runtime worldName check is map-correct
+	//--- on both maps and can't be silently broken by standalone loading.
+	if (worldName == "Chernarus") then {
+		WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["GUE_Soldier_Sab"];
+		WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["GUE_Soldier_Sniper"];
+		WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["GUE_Soldier_Medic"];
+	} else {
+		WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["TK_GUE_Soldier_EP1"];
+		WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["TK_GUE_Soldier_Sniper_EP1"];
+		WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["TK_GUE_Bonesetter_EP1"];
+	};
 };
 
 //--- Binoculars.

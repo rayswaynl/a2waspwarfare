@@ -39,7 +39,22 @@ _map = _display DisplayCtrl 17002;
 _listboxControl = _display DisplayCtrl _listBox;
 
 _pard = missionNamespace getVariable "WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY";
-{lbAdd[17008,_x]} forEach (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText]);
+// Marty: Show each artillery type's effective min-max range next to its name (Trello #115).
+// Effective max uses the same WFBE_C_ARTILLERY divisor the menu applies for _maxRange below,
+// so the printed number matches the in/out-of-range coloring in the cannon list.
+_artyNames    = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
+_artyRangeMin = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoinedText];
+_artyRangeMax = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoinedText];
+_artyDivisor  = missionNamespace getVariable "WFBE_C_ARTILLERY";
+for "_artyI" from 0 to (count _artyNames) - 1 do {
+	_artyRowName = _artyNames select _artyI;
+	if (!isNil "_artyRangeMin" && !isNil "_artyRangeMax" && _artyDivisor > 0 && _artyI < (count _artyRangeMin) && _artyI < (count _artyRangeMax)) then {
+		_rmin = _artyRangeMin select _artyI;
+		_rmax = round ((_artyRangeMax select _artyI) / _artyDivisor);
+		_artyRowName = Format ["%1 (%2-%3m)", _artyRowName, _rmin, _rmax];
+	};
+	lbAdd [17008, _artyRowName];
+};
 lbSetCurSel[17008,0];
 
 // Marty: Include the artillery ammo selector in the artillery enable/disable state.
@@ -563,6 +578,71 @@ while {alive player && dialog} do {
 		};			
 	};
 	
+	//--- Crew All Artillery (Card #113): mount available group AI into the empty driver/gunner
+	//--- seats of the player's own artillery pieces. Player-group AI and player-bought arty are
+	//--- buyer-local (see Client\Functions\Client_BuildUnit.sqf moveInDriver/moveInGunner), so the
+	//--- moveIn runs client-side here. No new units are spawned; only existing dismounted group AI
+	//--- are seated.
+	if (MenuAction == 50) then {
+		private ["_artyClassnames","_allTypes","_grp","_artyPieces","_available","_seated","_crewed","_piece"];
+		MenuAction = -1;
+
+		//--- Flatten every artillery family for this side into one classname list.
+		_artyClassnames = [];
+		_allTypes = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_CLASSNAMES",sideJoinedText];
+		if (isNil "_allTypes") then {_allTypes = []};
+		{_artyClassnames = _artyClassnames + _x} forEach _allTypes;
+
+		_grp = group player;
+
+		//--- Player-owned artillery pieces with at least one empty crew seat (driver or gunner).
+		_artyPieces = [];
+		{
+			_piece = vehicle _x;
+			if (typeOf _piece in _artyClassnames && !(_piece in _artyPieces) && canMove _piece) then {
+				if (isNull (driver _piece) || isNull (gunner _piece)) then {
+					_artyPieces = _artyPieces + [_piece];
+				};
+			};
+		} forEach (units _grp);
+
+		//--- Available, dismounted, alive group AI (never the human player).
+		_available = [];
+		{
+			if (alive _x && !(isPlayer _x) && (vehicle _x == _x)) then {_available = _available + [_x]};
+		} forEach (units _grp);
+
+		_seated = 0;
+		{
+			_piece = _x;
+			//--- Driver first, then gunner; pop a free AI for each empty seat.
+			if (isNull (driver _piece) && count _available > 0) then {
+				_crewed = _available select 0;
+				_available = _available - [_crewed];
+				[_crewed] allowGetIn true;
+				_crewed moveInDriver _piece;
+				_seated = _seated + 1;
+			};
+			if (isNull (gunner _piece) && count _available > 0) then {
+				_crewed = _available select 0;
+				_available = _available - [_crewed];
+				[_crewed] allowGetIn true;
+				_crewed moveInGunner _piece;
+				_seated = _seated + 1;
+			};
+		} forEach _artyPieces;
+
+		if (count _artyPieces == 0) then {
+			hint (localize "STR_WF_INFO_NoArty");
+		} else {
+			if (_seated > 0) then {
+				hint Format [localize "STR_WF_TACTICAL_CrewArtilleryDone",_seated];
+			} else {
+				hint (localize "STR_WF_TACTICAL_CrewArtilleryNoAI");
+			};
+		};
+	};
+
 	//--- Arty Combo Change or Script init.
 	if (MenuAction == 200 || _startLoad) then {
 		MenuAction = -1;

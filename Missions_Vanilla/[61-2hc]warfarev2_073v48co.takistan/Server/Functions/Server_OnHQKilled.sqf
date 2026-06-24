@@ -85,6 +85,8 @@ if ((!isNull _killer) && (isPlayer _killer)) then
     else
     {
         [nil, "LocalizeMessage", ["HeadHunterReceiveBounty", (name _killer), 30000, _structure_kind, _side]] call WFBE_CO_FNC_SendToClients;
+        //--- B74.2: leaderboard HQ-kill credit to the destroying player (real UID; _killer_uid is unmasked here).
+        if (_killer_uid != "") then {[_killer_uid, WFBE_STAT_KILLS_HQ, 1] call WFBE_SE_FNC_RecordStat};
     };
 };
 

@@ -1,4 +1,4 @@
-Private ["_currency","_currencySym","_currency_system","_hq","_repairPrice","_vehicle"];
+Private ["_currency","_currencySym","_currency_system","_hq","_repairPrice","_vehicle","_counter","_nextCount","_nextPrice"];
 
 _vehicle = _this select 0;
 
@@ -39,4 +39,18 @@ WF_Logic setVariable [Format ["%1MHQRepair",sideJoinedText],true,true];
 _counter = missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined];
 missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined], _counter + 1];
 
-hint (localize "STR_WF_INFO_Repair_MHQ_Repair");
+//--- LIVE next-repair price for the post-repair hint. _counter is the PRE-increment count, so the
+//--- next repair uses index (_counter + 1). When that reaches the cap (>= 3) there is no further
+//--- repair; show "-" here (the explicit cap message STR_WF_INFO_MHQ_Repairs_Used still fires on the
+//--- next attempt at line 22). This hint computes the price live, unlike the spawn-time menu label.
+_nextCount = _counter + 1;
+if (_nextCount >= 3) then {
+	hint Format [localize "STR_WF_INFO_Repair_MHQ_Repair", "-"];
+} else {
+	_nextPrice = [
+		missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_1ST',
+		missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_2ND',
+		missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_3RD'
+	] select _nextCount;
+	hint Format [localize "STR_WF_INFO_Repair_MHQ_Repair", Format ["%1%2", _currencySym, _nextPrice]];
+};

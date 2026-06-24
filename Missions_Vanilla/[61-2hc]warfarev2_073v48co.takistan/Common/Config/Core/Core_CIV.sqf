@@ -52,7 +52,7 @@ _c = _c + ['datsun1_civil_1_open'];
 _i = _i + [['','',250,22,-2,0,1,0,'Civilians',[]]];
 
 _c = _c + ['datsun1_civil_2_covered'];
-_i = _i + [['','',250,22,-2,0,1,0,'Civilians',[]]];
+_i = _i + [['','',400,22,-2,0,1,0,'Civilians',[]]]; //--- C1: canonical price (GUER VBIED uses this on Takistan; Core_GUE dup dropped, first-wins).
 
 _c = _c + ['datsun1_civil_3_open'];
 _i = _i + [['','',250,22,-2,0,1,0,'Civilians',[]]];
@@ -64,7 +64,7 @@ _c = _c + ['hilux1_civil_1_open'];
 _i = _i + [['','',340,25,-2,0,1,0,'Civilians',[]]];
 
 _c = _c + ['hilux1_civil_2_covered'];
-_i = _i + [['','',340,25,-2,0,1,0,'Civilians',[]]];
+_i = _i + [['','',400,25,-2,0,1,0,'Civilians',[]]]; //--- C1: canonical price (GUER VBIED uses this on Chernarus; Core_GUE dup dropped, first-wins).
 
 _c = _c + ['V3S_Civ'];
 _i = _i + [['','',380,22,-2,0,1,0,'Civilians',[]]];
@@ -86,7 +86,7 @@ _i = _i + [['','',800,30,-2,0,1,0,'Civilians',[]]];
 
 /* Air Vehicles */
 _c = _c + ['Mi17_Civilian'];
-_i = _i + [['','',9000,35,-2,0,3,0,'Civilians',[]]];
+_i = _i + [['','',6000,35,-2,0,3,0,'Civilians',[]]]; //--- C1: canonical price (shared with GUER air; Core_GUE dup dropped, first-wins).
 /* Defense Structures */
 _c = _c + ['Land_HBarrier3'];
 _i = _i + [['','',30,0,0,0,'Fortification',0,'Civilians',[]]];

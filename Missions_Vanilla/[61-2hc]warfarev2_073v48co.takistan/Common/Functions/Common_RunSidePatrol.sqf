@@ -58,7 +58,9 @@ if (isNull _team || {count _units == 0}) exitWith {
 };
 
 _team allowFleeing 0;
-_team setVariable ["WFBE_SidePatrol", true, false];
+//--- B66: broadcast=true so the server/GC can SEE the patrol flag and skip these groups
+//--- (was false=client/HC-local only -> server-invisible -> BASE-GC could mis-adopt/delete).
+_team setVariable ["WFBE_SidePatrol", true, true];
 
 //--- B36 (Ray 2026-06-15): fewer GUER patrols, but the ones that DO move are MORE DANGEROUS.
 //--- Max the combat skill of GUER (resistance) patrol units - sharper aim, spots farther, never
@@ -103,8 +105,12 @@ if (_upgLvl >= 4) then {
 		//--- Fix 2026-06-11: the driver was created with the TRUCK classname (a vehicle
 		//--- class as a soldier = no driver, truck never moves, convoy pay never fires).
 		//--- Use the side's crew soldier class instead (same source HandleDefense uses).
-		_truckDriver = (missionNamespace getVariable Format["WFBE_%1SOLDIER", _side]) createUnit [_position, _team, "", 0.6, "CORPORAL"];
-		_truckDriver moveInDriver _truckVeh;
+		//--- Fix 2026-06-19: the OFP/A1 string-form `_class createUnit [..]` RETURNS Nothing,
+		//--- so _truckDriver was undefined and moveInDriver did nothing (truck spawned
+		//--- driverless, never moved). Use the returning CreateUnit helper (same source
+		//--- Server_HandleDefense uses) and guard moveInDriver on a non-null result.
+		_truckDriver = [(missionNamespace getVariable Format["WFBE_%1SOLDIER", _side]), _team, _position, _sideID] Call WFBE_CO_FNC_CreateUnit;
+		if (!isNull _truckDriver) then {_truckDriver moveInDriver _truckVeh};
 		["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] convoy truck [%2] spawned for L4 patrol.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
 	};
 };

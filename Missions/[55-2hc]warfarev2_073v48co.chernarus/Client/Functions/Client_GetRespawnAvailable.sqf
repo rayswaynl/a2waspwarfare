@@ -112,4 +112,18 @@ if (_side == resistance) then {
 	} forEach towns;
 };
 
+//--- B74.2: WEST/EAST naval carrier respawn. Towns are not normally selectable respawns for
+//--- WEST/EAST, but a captured naval HVT (carrier) IS offered so its side can deck-respawn there
+//--- (Client_OnRespawnHandler reads wfbe_is_naval_hvt + wfbe_naval_deckz on the same logic object).
+//--- Only the carriers this side currently holds are added; regular towns stay non-selectable.
+if (_side != resistance) then {
+	private "_mySID";
+	_mySID = (_side) Call GetSideID;
+	{
+		if ((_x getVariable ["wfbe_is_naval_hvt", false]) && {(_x getVariable ["sideID",-1]) == _mySID}) then {
+			_availableSpawn = _availableSpawn + [_x];
+		};
+	} forEach towns;
+};
+
 _availableSpawn

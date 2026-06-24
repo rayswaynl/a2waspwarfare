@@ -330,7 +330,7 @@ _i = 0;
 			//--- QoL: open-time damage (and fuel, for vehicles) snapshot on each service-list row.
 			_svc = vehicle _x;
 			_state = " (dmg " + str (round ((getDammage _svc) * 100)) + "%";
-			if !(_svc isKindOf "Man") then {_state = _state + " fuel " + str (round ((fuel _svc) * 100)) + "%"};
+			if !(_svc isKindOf "Man") then {_state = _state + " fuel " + str (round ((fuel _svc) * 100)) + "% ammo " + str (round ((_svc Call WFBE_CO_FNC_GetAmmoFraction) * 100)) + "%"};
 			_state = _state + ")";
 			_txt = "["+_finalNumber+"] "+ _desc + _isInVehicle + _state;
 		lbAdd[20002,_txt];
@@ -471,9 +471,10 @@ while {true} do {
 		};
 		_damageText = str(round((getDammage _veh) * 100)) + "%";
 		_fuelText = if (_veh isKindOf "Man") then {"Inf"} else {str(round((fuel _veh) * 100)) + "%"};
+		_ammoText = if (_veh isKindOf "Man") then {"-"} else {str(round((_veh Call WFBE_CO_FNC_GetAmmoFraction) * 100)) + "%"};
 		_dialog = findDisplay 20000;
 		if (!isNull _dialog) then {
-			(_dialog displayCtrl 20021) ctrlSetStructuredText (parseText Format["<t color='#f0e68c' shadow='1'>%1 | Dmg %2 | Fuel %3</t><br /><t color='#f0e68c' shadow='1'>%4 | All Rm $%5 Rp $%6 Rf $%7 Hl $%8</t>",_desc,_damageText,_fuelText,_serviceState,_martyRearmPrice,_martyRepairPrice,_martyRefuelPrice,_martyHealPrice]);
+			(_dialog displayCtrl 20021) ctrlSetStructuredText (parseText Format["<t color='#f0e68c' shadow='1'>%1 | Dmg %2 | Fuel %3 | Ammo %9</t><br /><t color='#f0e68c' shadow='1'>%4 | All Rm $%5 Rp $%6 Rf $%7 Hl $%8</t>",_desc,_damageText,_fuelText,_serviceState,_martyRearmPrice,_martyRepairPrice,_martyRefuelPrice,_martyHealPrice,_ammoText]);
 		};
 		
 		_lastVeh = _veh;
