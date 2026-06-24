@@ -58,6 +58,7 @@ if (_veh isKindOf 'Air') then {_rearmTime = round(_rearmTime * _airCoef)};
 if (_veh isKindOf 'StaticWeapon') then {_rearmTime = round(_rearmTime * _artCoef)};
 if (_veh isKindOf 'Tank') then {_rearmTime = round(_rearmTime * _heaCoef)};
 if (_veh isKindOf 'Car' || _veh isKindOf 'Motorcycle') then {_rearmTime = round(_rearmTime * _ligCoef)};
+if (_veh isKindOf 'Ship') then {_rearmTime = round(_rearmTime * _ligCoef)}; //--- wiki-wins: boats fell through all isKindOf branches (flat base time); scale them like light vehicles
 
 //--- Inform the player.
 hint parseText(Format[localize "STR_WF_INFO_Rearming",_name,_rearmTime]);

@@ -14,8 +14,8 @@
 
 		// diag_log format ["WFBE_SE_PLAYERLIST: %1", WFBE_SE_PLAYERLIST];
 
+		_i = 0; //--- wiki-wins: was reset INSIDE the forEach, so _arrayPosMatch was always 0 (every UID match overwrote slot 0)
 		{
-			_i = 0;
 			_iteratedPlayerUID = _x select 1;
 
 			// diag_log format ["_iteratedPlayerUID: %1, _currentPlayerUID: %2", _iteratedPlayerUID, _currentPlayerUID];

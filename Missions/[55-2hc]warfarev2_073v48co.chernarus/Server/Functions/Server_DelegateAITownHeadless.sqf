@@ -46,7 +46,11 @@ _rr = 0;
 for '_i' from 0 to count(_groups) -1 do {
 	//--- No live HC at all: preserve the exact original drop/log behaviour per group.
 	if (_hcCount == 0) then {
-		["WARNING", Format["Server_DelegateAITownHeadless.sqf: No live headless client for town [%1] group %2 - delegation dropped.", _town getVariable "name", _i]] Call WFBE_CO_FNC_LogContent;
+		//--- wiki-wins: no live HC -> create this group on the SERVER instead of dropping it (towns used to spawn 0 AI until an HC reconnected). Mirrors Client_DelegateTownAI's CreateTownUnits call.
+			private "_fbTeam"; _fbTeam = _teams select _i;
+			if (isNull _fbTeam || {(count units _fbTeam) == 0}) then {_fbTeam = [_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup};
+			[_town, _side, [_groups select _i], [_positions select _i], [_fbTeam]] Call WFBE_CO_FNC_CreateTownUnits;
+			["WARNING", Format["Server_DelegateAITownHeadless.sqf: No live HC for town [%1] group %2 - created on SERVER (wiki-wins fallback).", _town getVariable "name", _i]] Call WFBE_CO_FNC_LogContent;
 	} else {
 		//--- Cheap local round-robin across the live HCs, anchored at the lightest one.
 		_hcUnit = _live select ((_seedIdx + _rr) mod _hcCount);

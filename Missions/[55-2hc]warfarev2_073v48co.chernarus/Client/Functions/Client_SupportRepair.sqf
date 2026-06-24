@@ -49,6 +49,7 @@ if (_veh isKindOf 'Air') then {_repTime = round(_repTime * (_airCoef + getDammag
 if (_veh isKindOf 'StaticWeapon') then {_repTime = round(_repTime * (_artCoef + getDammage _veh))};
 if (_veh isKindOf 'Tank') then {_repTime = round(_repTime * (_heaCoef + getDammage _veh))};
 if (_veh isKindOf 'Car' || _veh isKindOf 'Motorcycle') then {_repTime = round(_repTime * (_ligCoef + getDammage _veh))};
+if (_veh isKindOf 'Ship') then {_repTime = round(_repTime * (_ligCoef + getDammage _veh))}; //--- wiki-wins: boats fell through all isKindOf branches (flat base time); scale them like light vehicles
 
 //--- Inform the player.
 hint parseText(Format[localize "STR_WF_INFO_Repairing",_name,_repTime]);

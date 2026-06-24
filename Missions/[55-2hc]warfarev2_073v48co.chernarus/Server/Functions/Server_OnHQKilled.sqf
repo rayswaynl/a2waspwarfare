@@ -60,11 +60,9 @@ if (isServer && (missionNamespace getVariable ["WFBE_C_BASEFALL_SMOKE_ENABLED", 
 	_smoke setPos (getPos _wreckObject);
 };
 
-if (isServer) then {
-	['SRVFNCREQUESTCHANGESCORE',[leader _killer_group, (score leader _killer_group) + _points]] Spawn WFBE_SE_FNC_HandlePVF;
-} else {
-	["RequestChangeScore", [leader _killer_group, (score leader _killer_group) + _points]] Call WFBE_CO_FNC_SendToServer;
-};
+//--- wiki-wins (Ray's call: single 900, teamkills score 0): removed the UNCONDITIONAL _points award here.
+//--- It double-paid a legit HQ kill (_points + the 900 _score below = ~1800) and still paid teamkillers _points.
+//--- The single, teamkill-guarded 900 award now lives solely in the `_side != side _killer` block further down.
 
 //--- Spawn a radio message.
 [_side, "Destroyed", ["Base", _structure]] Spawn SideMessage;

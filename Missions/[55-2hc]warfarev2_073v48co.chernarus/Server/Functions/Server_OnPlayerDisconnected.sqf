@@ -124,6 +124,13 @@ _get set [1,_funds];
 //--- Update the new informations.
 missionNamespace setVariable [format["WFBE_JIP_USER%1",_uid], _get];
 
+//--- wiki-wins: prune the departing player's row from the supply player-list (it was never removed; the list grew with stale/null refs over a long session).
+if !(isNil "WFBE_SE_PLAYERLIST") then {
+	private "_prunedPL"; _prunedPL = [];
+	{ if ((_x select 1) != _uid) then {_prunedPL set [count _prunedPL, _x]} } forEach WFBE_SE_PLAYERLIST;
+	WFBE_SE_PLAYERLIST = _prunedPL;
+};
+
 //--- Release the UID.
 _team setVariable ["wfbe_uid", nil];
 _team setVariable ["wfbe_teamleader", nil];
