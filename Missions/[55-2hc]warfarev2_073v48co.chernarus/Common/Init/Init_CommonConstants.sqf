@@ -88,6 +88,11 @@ with missionNamespace do {
 	//--- in A2-OA, so this isNil-guarded 0 seed gives joiners a safe default until the per-kill broadcast / connect
 	//--- catch-up (Server_OnPlayerConnected.sqf) lands.
 		if (isNil "WFBE_GUER_PLAYER_KILLS") then {WFBE_GUER_PLAYER_KILLS = 0};
+		//--- Vehicle-tier kill thresholds. tier1 (>= KILLTIER_1 kills) = BRDM + T-34, tier2 = T-55, tier3 = T-72 + BMP2.
+		//--- These replace the old elapsed-time ladder (30m/90m/180m) that gated the GUER heavy vehicles.
+		if (isNil "WFBE_C_GUER_KILLTIER_1") then {WFBE_C_GUER_KILLTIER_1 = 15};
+		if (isNil "WFBE_C_GUER_KILLTIER_2") then {WFBE_C_GUER_KILLTIER_2 = 40};
+		if (isNil "WFBE_C_GUER_KILLTIER_3") then {WFBE_C_GUER_KILLTIER_3 = 80};
 		//--- Second VBIED: an UNARMED M113 with ~2x speed (driver-detonated, same blast + cash-for-kills as the hilux),
 		//--- kill-gated into the GUER depot. M113_UN_EP1 exists on both maps so the type is map-independent (no TK repoint).
 		if (isNil "WFBE_C_GUER_VBIED_M113_TYPE") then {WFBE_C_GUER_VBIED_M113_TYPE = "M113_UN_EP1"};
