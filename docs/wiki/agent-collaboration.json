@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T20:25:00+02:00",
+  "generatedAt": "2026-06-24T21:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b745-primitive-roster-vote-ui-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b745 B74.4 primitive team-roster and vote UI fallback paths",
+        "origin/claude/b745 Server_OnPlayerConnected.sqf JIP/enrollment rebroadcast paths",
+        "origin/claude/b745 initJIPCompatible.sqf early primitive roster handler path",
+        "Client-UI-Systems-Atlas.md current branch scope / vote UI routing",
+        "Player-Join-Disconnect-And-AntiStack-Lifecycle.md JIP lifecycle routing",
+        "Commander-Vote-And-Reassignment-Playbook.md only if vote-row semantics need a branch note",
+        "Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl",
+        "docs/wiki mirror copies"
+      ],
+      "handoff": "Closed as published/validated docs-only route split. Treat B74.5 primitive roster/vote/JIP evidence as source-Chernarus branch-only until smoke and owner scope decisions prove otherwise. UI fallback lives on Client-UI-Systems-Atlas.md; server/JIP lifecycle on Player-Join-Disconnect-And-AntiStack-Lifecycle.md; vote-outcome caveat on Commander-Vote-And-Reassignment-Playbook.md. Do not call primitive -1 display rows current stable, maintained Vanilla/Takistan, PR-routed, release-ready or a vote-policy fix.",
+      "updated": "2026-06-24T21:05:00+02:00",
+      "outputs": [
+        "Updated Client-UI-Systems-Atlas.md with B74.5 primitive vote-row branch scope and vote/help/main-menu matrix row.",
+        "Updated Player-Join-Disconnect-And-AntiStack-Lifecycle.md with B74.5 server roster push, early client receiver/poll-adopt, safe empty clientTeams default and vote UI consumer evidence.",
+        "Updated Commander-Vote-And-Reassignment-Playbook.md so primitive -1 rows are documented as branch-only display placeholders, not vote outcome-policy changes."
+      ]
+    },
     {
       "lane": "b745-branch-intake-2026-06-24",
       "owner": "Codex",

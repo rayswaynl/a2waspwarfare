@@ -15,7 +15,7 @@ Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 | Connect bookkeeping | `Server/Functions/Server_OnPlayerConnected.sqf:41+` creates or updates `WFBE_JIP_USER%UID`, funds, `wfbe_uid` and `wfbe_teamleader`. |
 | Disconnect cleanup | `Server/Functions/Server_OnPlayerDisconnected.sqf:31-175` deletes client objects, restores AI/group state, saves funds, clears commander/delegation and writes AntiStack side/score state. |
 | Launch-side raw PV | `Server/Module/AntiStack/clientHasConnectedAtLaunch.sqf:1+` records `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH`. |
-| Supply player object list | `Server/Module/supplyMission/playerObjectsList.sqf:1-29` maintains `WFBE_SE_PLAYERLIST` for supply mission lookup; Chernarus source and maintained Vanilla Takistan now keep the update index outside the loop, but disconnect cleanup still does not prune stale rows. |
+| Supply player object list | `Server/Module/supplyMission/playerObjectsList.sqf:1-29` maintains `WFBE_SE_PLAYERLIST` for supply mission lookup; on current master the update index still resets *inside* the loop (`_i = 0;` at `:18`, the first statement in the `forEach` at `:17`) so reconnect always overwrites slot 0 — see the Patch-Ready Findings row — and disconnect cleanup still does not prune stale rows. |
 | AFK intersection | `Client/FSM/updateclient.sqf:28-31,117-160`, `Client/Module/AFKkick/monitorAFK.sqf:24-30`, `Client/Module/AFKkick/handleKeys.sqf:11-15`, `Server/Module/afkKick/initAFKkickHandler.sqf:9-12`, `BattlEyeFilter/publicvariable.txt:1-2`. |
 
 ## Identity Model
@@ -37,6 +37,17 @@ The client derives `sideJoined` from `side player` early in `Client/Init/Init_Cl
 When the join request path is skipped at launch, the client instead publishes `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player`. The server records `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH = side _player` and ACKs the owner with `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`. The client ACK receiver stores the full public-variable event tuple (`_this`) into `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`, not only the boolean payload, so consumers that only need truthiness work but future code should not assume the variable is a plain bool (`Client/Module/AntiStack/hasConnectedAtLaunchACK.sqf:1-7`).
 
 For JIP/reconnect, `Server_OnPlayerConnected.sqf` waits for server init, matches groups by UID in `playableUnits`, assigns `wfbe_uid` and `wfbe_teamleader`, and creates or updates the `WFBE_JIP_USER%UID` session record.
+
+## Branch Intel - B745 Primitive Roster JIP
+
+`origin/claude/b745@b996bcb3` adds a source-Chernarus-only primitive team-roster path for late joiners whose side `wfbe_teams` group-object array is slow, empty or broken on the client. This is branch-only evidence from the included `4d16fad70` batch; no matching `WFBE_JIP_ROSTER_PRIMS`, `ROSTER-PUSH` or `CLIENTROSTER` symbols were found in current stable `origin/master@f8a76de34`, current B74.2 `origin/claude/b74.2-aicom@21b62b04`, `miksuu/master@b8389e74` or the maintained Vanilla Takistan checked paths.
+
+| Surface | B745 source evidence | What to verify before promotion |
+| --- | --- | --- |
+| Server connect push | `Server_OnPlayerConnected.sqf:70-80` re-broadcasts side-logic `wfbe_teams` for the joining owner; `:82-113` builds a side-keyed primitive payload `[count, rows]` and sends `WFBE_JIP_ROSTER_%1` with `publicVariableClient`. Rows are `[leaderName, isPlayer, funds, groupId]`; WEST/EAST only because GUER has no commander-vote menu. | Dedicated late-join/reconnect under heavy AI load must show the targeted roster push in server RPT and no stale/wrong-side payload on the other side. |
+| Early client receiver | `initJIPCompatible.sqf:225-247` installs WEST/EAST public-variable handlers before the B56 `wfbe_teams` wait and before `Init_Client`; `:248-266` polls once for a payload that arrived before handler install, then stores `WFBE_JIP_ROSTER_PRIMS` / `WFBE_JIP_ROSTER_COUNT`. | Join before and after team registration; prove the receiver or poll-adopt path fires before the vote menu opens. |
+| Client safe empty state | `Client/Init/Init_Client.sqf:284` defaults `clientTeams` to `[]` instead of nil so broken JIP clients avoid `forEach nil` in vote/marker loops and can still take the primitive-roster path. | RPT should stay clean for missing `WFBE_%1TEAMS`; funds/markers/vote UI must recover once live groups arrive, not stay permanently primitive. |
+| Vote UI consumer | `GUI_VoteMenu.sqf:10-35,75-99,119-125` and `GUI_Commander_VoteMenu.sqf:10-32,69-91` render primitive names until live player-led groups exist, then rebuild from real team indexes. | Smoke both vote menus; primitive rows should not blank out, should not be pruned within one tick, and should hand over to live team rows before treating selected player rows as normal vote/reassign targets. |
 
 ## Slot And Side Surfaces
 
