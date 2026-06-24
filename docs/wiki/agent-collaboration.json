@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T06:24:00+02:00",
+  "generatedAt": "2026-06-24T06:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh victory/endgame rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Server/FSM/server_victory_threeway.sqf, Client/Client_EndGame.sqf, Client/GUI/GUI_EndOfGameStats.sqf, Common/Init/Init_CommonConstants.sqf and direct logger/client special context in source Chernarus and maintained Vanilla.",
+        "Keep Victory-And-Endgame-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Victory-And-Endgame-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 victory/endgame evidence.",
+        "Recorded that docs/source HEAD@c2b614e8cc87 is unchanged from 4c87efd2 / d30d23466 / a0a86da2 / 2f2132f8 for checked victory/endgame paths and that d472da6a..21b62b04 is empty for maintained-root victory paths.",
+        "Recorded that origin/master..origin/claude/b74.2-aicom only line-drifts source-Chernarus victory constants to Init_CommonConstants.sqf:869-870 while maintained Vanilla stays :728-729; no gameplay source changed."
+      ],
+      "handoff": "Future victory/endgame owner should compute explicit winner/loser sides, align broadcast/client payload/GUER label/WF_Winner/WASPSTAT/logger, propagate maintained Vanilla and smoke HQ elimination, all-towns victory, same-tick mutual elimination and AntiStack enabled/disabled tails.",
+      "updated": "2026-06-24T06:55:00+02:00"
+    },
     {
       "lane": "vote-help-ui-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
