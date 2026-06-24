@@ -127,7 +127,7 @@ while {alive player && dialog} do {
 		MenuAction = -1;
 		_vehicle = vehicle player;
 		if (player != _vehicle) then {
-			if (getPos _vehicle select 2 > 3 && !surfaceIsWater (getPos _x)) then {
+			if (getPos _vehicle select 2 > 3 && !surfaceIsWater (getPos _vehicle)) then {
 				[_vehicle, getPos _vehicle, 15] Call PlaceSafe;
 			} else {
 				_vehicle setPos [getPos _vehicle select 0, getPos _vehicle select 1, 0.5];

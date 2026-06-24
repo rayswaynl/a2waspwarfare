@@ -37,7 +37,7 @@ lnbClear _listBox;
 	_addin = true;
 	_c = missionNamespace getVariable _x;
 	if (_filter != "nil") then {
-		if ((_c select QUERYUNITFACTION) != _filter) then {_addin = false};
+		if (isNil "_c") then {_addin = false} else {if ((_c select QUERYUNITFACTION) != _filter) then {_addin = false}}; //--- B751: guard nil _c (unregistered roster classname) before the faction-filter select.
 	};
 
 	_addit = false;
