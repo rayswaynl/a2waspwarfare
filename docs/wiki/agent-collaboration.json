@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T21:05:00+02:00",
+  "generatedAt": "2026-06-24T21:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b745-aicom-attack-heli-base-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b745 B74.4 AICOM attack-heli cap, AH1Z enrollment and base-reaper paths",
+        "origin/claude/b745 base sell and MHQ relocation helper compile/call paths",
+        "AI-Commander-Autonomy-Audit.md B74.5/B74.4 AICOM follow-up section",
+        "Commander-HQ-Lifecycle-Atlas.md only if MHQ/base helper evidence needs a lifecycle route",
+        "Construction-And-CoIn-Systems-Atlas.md or adjacent owner pages only if source evidence proves a construction/base ownership route",
+        "Feature-Status-Register.md only for a compact owner-route refinement",
+        "Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl",
+        "docs/wiki mirror copies"
+      ],
+      "handoff": "Closed as published/validated docs-only route split. Treat B74.5 attack-heli cap/base-reaper/AH1Z and AI redundant-base sell evidence as source-Chernarus branch-only until smoke and scope decisions prove otherwise. Do not describe the MHQ relocation worker itself as new in B74.5: current stable/B74.2/maintained Vanilla already carry it; B74.5 adds the Chernarus abort-cooldown retune. This is not current stable, maintained Vanilla/Takistan, PR-routed, release-ready or human sell-authority closure.",
+      "updated": "2026-06-24T21:45:00+02:00",
+      "outputs": [
+        "Updated AI-Commander-Autonomy-Audit.md with the B74.5 helper matrix for attack-heli cap/reaper, AI base sell and MHQ relocation abort cooldown.",
+        "Updated Commander-HQ-Lifecycle-Atlas.md with the AI-only MHQ relocation/base-helper boundary note.",
+        "Updated Construction-And-CoIn-Systems-Atlas.md with the branch-only AI structure recycling authority caveat.",
+        "Updated Feature-Status-Register.md and Wiki-Pruning-And-Relevance-Ledger.md with the compact owner-route split."
+      ]
+    },
     {
       "lane": "b745-primitive-roster-vote-ui-route-2026-06-24",
       "owner": "Codex",
