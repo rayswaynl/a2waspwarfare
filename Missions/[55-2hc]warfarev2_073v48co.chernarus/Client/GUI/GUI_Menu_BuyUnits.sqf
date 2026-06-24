@@ -144,6 +144,17 @@ _IDCS = _IDCS - [_currentIDC];
 			  
               };
 			};
+				//--- B75 (guer-tech): GUER barracks AI cap scales with cumulative GUER player kills, not the (always-0)
+				//--- Barracks production upgrade. GUER is base-less/commander-less so the upgrade switch above always hits
+				//--- case 0 (round mbu/4). Override here: base + one slot per N kills, clamped to the A2 12-per-group ceiling.
+				//--- Reads the server-broadcast WFBE_GUER_PLAYER_KILLS (RequestOnUnitKilled.sqf). Placed AFTER the upgrade
+				//--- switch + commander bonus so the kill-scaled value wins for resistance.
+				if (sideJoined == resistance) then {
+					private ["_guerKills","_guerCap"];
+					_guerKills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+					_guerCap = (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4]) + floor (_guerKills / (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10]));
+					_realSize = _guerCap min (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12]);
+				};
 				if (_isInfantry) then {if ((unitQueu + _size + 1) > _realSize) then {_skip = true;hint parseText(Format [localize 'STR_WF_INFO_MaxGroup',_realSize])}};
 
 				if (!_isInfantry && !_skip) then {
