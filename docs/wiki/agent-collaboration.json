@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T18:11:39+02:00",
+  "generatedAt": "2026-06-24T18:31:04+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b751-current-master-aicom-hardcap-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@7bfcf09a9 current stable after PR #88",
+        "PR #88 / origin/feat/b751-tk-aicom13-clientfixes@5aea1ce4016a862de413a198ba8bab0a1ce868c2",
+        "c4c9a6479..origin/master scoped B751 diff",
+        "source Chernarus plus maintained Vanilla touched Client_UIFillListBuyUnits.sqf and Init_CommonConstants.sqf paths",
+        "Current source/status/testing/AI/UI route pages plus compact coordination and machine records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Treat origin/master@7bfcf09a9 / PR #88 as current-master source evidence that both maintained roots raise the AICOM hard cap to 13 and add GUER/JIP client-error guards. Do not describe B751 as release-ready until package/version/Arma smoke proves it, and do not call the B751 source diff-check-clean until trailing whitespace in updateavailableactions.fsm:59 is repaired.",
+      "updated": "2026-06-24T18:31:04+02:00",
+      "outputs": [
+        "Updated Current-Source-Status-Snapshot.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, AI-Commander-Autonomy-Audit.md, Client-UI-Systems-Atlas.md and Testing-Debugging-And-Release-Workflow.md with B751 current-master source evidence, AICOM cap 13, GUER/JIP guard line refs, smoke gates and source whitespace caveat.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records so the lane is published/validated and no longer active.",
+        "Mirrored touched files into docs/wiki and validated JSON/JSONL, wiki links, touched-file parity and git diff checks."
+      ]
+    },
     {
       "lane": "buy-menu-price-key-current-master-b750-refresh-2026-06-24",
       "owner": "Codex",
