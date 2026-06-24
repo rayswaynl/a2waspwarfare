@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T02:24:45+02:00",
+  "generatedAt": "2026-06-24T02:44:46+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "vehicle-cargo-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh vehicle/backpack cargo loop-bound rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Common_EquipVehicle.sqf, Common_EquipBackpack.sqf and direct gear/cargo owner-doc paths in source Chernarus and maintained Vanilla.",
+        "Keep Vehicle-Cargo-Equip-Loop-Bounds and Gear-Loadout-And-EASA-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Vehicle-Cargo-Equip-Loop-Bounds.md, Gear-Loadout-And-EASA-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 cargo-loop evidence.",
+        "Recorded that docs/source HEAD@c96ee1670ddb is unchanged from ebfdca96542f / b2544207 for checked cargo helper paths and that d472da6a..21b62b04 is empty for Common_EquipVehicle.sqf and Common_EquipBackpack.sqf in both maintained roots.",
+        "Updated Progress Dashboard, pruning ledger, worklog and cargo-loop machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future gear/cargo owner should not reopen the five loop-bound fix on current stable/B74.1/B74.2/B69/B74-shaped refs. Port or preserve count(_items)-1 only on old-shape targets such as docs/source, current Miksuu, historical EASA QoL or perf Vanilla, then propagate maintained Vanilla and smoke vehicle/backpack cargo application.",
+      "updated": "2026-06-24T02:44:46+02:00"
+    },
     {
       "lane": "visible-parameter-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
