@@ -103,10 +103,25 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 
 //--- GUER kill bounty: credit the killer's GUER team for WEST/EAST kills (server-side; bypasses the WFBE_C_UNITS_BOUNTY coef gate).
 	if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_side != _killed_side} && {_killer_iswfteam}) then {
-		private ["_guerKillGet","_guerBounty"];
+		private ["_guerKillGet","_guerBounty","_guerCoef","_iedRecent","_isIedKill"];
+		//--- B67 (Ray 2026-06-21) item #3: IED anti-farm. If this kill was tagged as an IED kill by the killer's
+		//--- Fired EH (Client_OnRespawnHandler.sqf stamps wfbe_ied_recent = time on a BAF_ied detonation), and that
+		//--- stamp is within ~6s of now, pay only WFBE_C_GUER_IED_KILL_COEF (0.30) instead of the normal coef.
+		//--- Null-safe: _killer already gated alive above (line 34); explicit isNull guard + nil-check on the stamp read.
+		_isIedKill = false;
+		if (!isNull _killer) then {
+			_iedRecent = _killer getVariable ["wfbe_ied_recent", -1];
+			if (isNil "_iedRecent") then {_iedRecent = -1};
+			if (_iedRecent >= 0 && {(time - _iedRecent) <= 6}) then {_isIedKill = true};
+		};
+		_guerCoef = if (_isIedKill) then {
+			missionNamespace getVariable ["WFBE_C_GUER_IED_KILL_COEF", 0.30]
+		} else {
+			missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5]
+		};
 		_guerKillGet = missionNamespace getVariable _killed_type;
 		_guerBounty = 0;
-		if !(isNil "_guerKillGet") then { _guerBounty = round ((_guerKillGet select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5])) };
+		if !(isNil "_guerKillGet") then { _guerBounty = round ((_guerKillGet select QUERYUNITPRICE) * _guerCoef) };
 		if (_guerBounty > 0) then { [_killer_group, _guerBounty] Call WFBE_CO_FNC_ChangeTeamFunds };
 	};
 
@@ -128,6 +143,8 @@ if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 			if (_killed_isplayer) then {[_attrUid, WFBE_STAT_PVP_KILLS, 1] call WFBE_SE_FNC_RecordStat};
 		};
 	};
+	//--- B74.2: credit the DEATH to the killed player's own UID (any death cause; side-independent, so outside the enemy-only kills gate above).
+	if (WFBE_C_STATS_ENABLED && _killed_isplayer) then {private "_deadUid"; _deadUid = getPlayerUID _killed; if (_deadUid != "") then {[_deadUid, WFBE_STAT_DEATHS, 1] call WFBE_SE_FNC_RecordStat}};
 };
 
 // WASPSTAT KILL telemetry (Task 10). Gate: WFBE_C_STATLOG must be 1.

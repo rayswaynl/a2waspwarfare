@@ -2360,8 +2360,7 @@ class RscMenu_Tactical {
 			onLBSelChanged = "MenuAction = 200";
 		};
 		// Card #113: one-click crew-all-artillery. Mounts available group AI into the empty
-		// driver/gunner seats of the player's own artillery pieces. Sits in the gap below the
-		// Call Fire Mission button; the support section below was shifted down to make room.
+		// driver/gunner seats of the player's own artillery pieces.
 		class CA_CrewArtillery_Button : RscButton {
 			idc = 17040;
 			x = 0.12047;
@@ -3515,26 +3514,32 @@ class WFBE_FPSPickerMenu {
 			colorText[] = WFBE_Menu_Text_Color;
 			shadow = 2;
 		};
-		//--- Target-FPS preset buttons.
+		//--- Target-FPS preset buttons (30 / 45 / 50 / 60).
 		class CA_FPS45 : RscButton_Main {
 			idc = 28003;
-			x = 0.345;
+			x = 0.4225;
 			y = 0.30 + 0.20;
-			w = 0.095;
+			w = 0.07;
 			h = 0.05;
-			sizeEx = 0.026;
+			sizeEx = 0.024;
 			text = "45 FPS";
 			action = "WFBE_MenuAction = 2";
 		};
+		class CA_FPS30 : CA_FPS45 {
+			idc = 28009;
+			x = 0.345;
+			text = "30 FPS";
+			action = "WFBE_MenuAction = 5";
+		};
 		class CA_FPS50 : CA_FPS45 {
 			idc = 28004;
-			x = 0.4525;
+			x = 0.50;
 			text = "50 FPS";
 			action = "WFBE_MenuAction = 3";
 		};
 		class CA_FPS60 : CA_FPS45 {
 			idc = 28005;
-			x = 0.56;
+			x = 0.5775;
 			text = "60 FPS";
 			action = "WFBE_MenuAction = 4";
 		};

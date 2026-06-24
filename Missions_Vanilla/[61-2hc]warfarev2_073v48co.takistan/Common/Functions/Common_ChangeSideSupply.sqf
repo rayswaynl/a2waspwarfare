@@ -17,13 +17,9 @@ if (_amount > 0 && _includeStagnation) then {
 	_amount = [_amount, _side] call WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers;
 };
 
-_maxSupplyLimit = missionNameSpace getvariable "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT";
-
-_currentSupply = (_side) Call GetSideSupply;
-if (isNil '_currentSupply') then {_currentSupply = 0};
-_change = _currentSupply + _amount;
-if (_change < 0) then {_change = _currentSupply - _amount};
-if (_change >= _maxSupplyLimit) then {_change = _maxSupplyLimit};
+//--- B66: removed dead clamp arithmetic (_maxSupplyLimit/_currentSupply/_change). It was never
+//--- consumed — only the temp-channel publish below matters; the server-side handler in
+//--- Server_ChangeSideSupply.sqf recomputes + clamps the authoritative value.
 
 missionNamespace setVariable [format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason]];
 

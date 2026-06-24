@@ -43,12 +43,44 @@ if !(_spawnInside) then {
 		_owned = [];
 		{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_owned = _owned + [_x]} } forEach towns;
 		if (count _owned == 0) then {_owned = towns};
+		//--- B74.1 merge: keep the respawn-guard's _spawn preference (b71 harvest) AND Naval's HVT deck-spawn.
 		_t = objNull;
 		if (!isNull _spawn && {_spawn in _owned}) then {_t = _spawn};
 		if (isNull _t) then {_t = _owned select (floor (random (count _owned)))};
-		_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
+		if (_t getVariable ["wfbe_is_naval_hvt", false]) then {
+			_unit setPosASL [(getPos _t) select 0, (getPos _t) select 1, ((_t getVariable ["wfbe_naval_deckz", 16]) + 2)];
+		} else {
+			_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
+		};
 	} else {
-		_unit setPos ([getPos _spawn,10,20] Call GetRandomPosition);
+		//--- B74.2: WEST/EAST naval carrier deck-respawn. If the selected/assigned respawn point is a
+		//--- naval-HVT town this side holds, deck-spawn on the carrier (mirror the resistance deckZ logic
+		//--- above); otherwise keep the normal town/base respawn. _spawn is an object here, so the
+		//--- getVariable[name,default] reads are reliable (object namespace, A2-OA-safe).
+		if (!isNull _spawn && {_spawn getVariable ["wfbe_is_naval_hvt", false]} && {(_spawn getVariable ["sideID", -1]) == WFBE_Client_SideID}) then {
+			_unit setPosASL [(getPos _spawn) select 0, (getPos _spawn) select 1, ((_spawn getVariable ["wfbe_naval_deckz", 16]) + 2)];
+		} else {
+			_unit setPos ([getPos _spawn,10,20] Call GetRandomPosition);
+		};
+	};
+};
+
+//--- B67 (Ray 2026-06-21) item #3: IED anti-farm kill tagging. The A2-OA "killed" EH does not name the ammo,
+//--- so we tag the killer here: when a GUER player detonates a BAF_ied magazine, stamp wfbe_ied_recent = time
+//--- (broadcast so the server can read it in RequestOnUnitKilled.sqf, which then pays only the 30% IED bounty).
+//--- Fired EH params (A2 OA): [unit, weapon, muzzle, mode, ammo, magazine, projectile]; index 5 = magazine class.
+//--- Idempotent across respawns via a per-unit flag (the unit is fresh each respawn, but belt-and-braces).
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoined == resistance}) then {
+	if !(_unit getVariable ["wfbe_ied_eh_added", false]) then {
+		_unit setVariable ["wfbe_ied_eh_added", true];
+		_unit addEventHandler ["Fired", {
+			private ["_shooter","_mag"];
+			_shooter = _this select 0;
+			_mag = _this select 5;
+			if (!isNil "_mag" && {typeName _mag == "STRING"} && {(_mag find "BAF_ied") == 0}) then {
+				_shooter setVariable ["wfbe_ied_recent", time, true];
+			};
+		}];
 	};
 };
 

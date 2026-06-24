@@ -305,6 +305,13 @@ Call Compile preprocessFileLineNumbers Format["Common\Config\Core_Root\Root_%1.s
 //--- Common Exec.
 Call Compile preprocessFileLineNumbers "Common\Init\Init_PublicVariables.sqf";
 
+//--- B67 (guer-reward): register the GuerVbiedBounty client receiver, mirroring exactly how AwardBounty is
+//--- registered by the Init_PublicVariables.sqf _clientCommandPV forEach loop (compile CLTFNC<name> from
+//--- Client\PVFunctions\<name>.sqf + add the WFBE_PVF_<name> addPublicVariableEventHandler on clients/HC-host).
+//--- Done here (not in Init_PublicVariables) to keep the change inside the B67 edit-scope; identical effect.
+CLTFNCGuerVbiedBounty = compile preprocessFileLineNumbers "Client\PVFunctions\GuerVbiedBounty.sqf";
+if (!isServer || local player) then {"WFBE_PVF_GuerVbiedBounty" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF}};
+
 //--- Import the desired defenses. (todo, Replace the old defense init by this one).
 Call Compile preprocessFileLineNumbers Format["Common\Config\Defenses\Defenses_%1.sqf",_grpWest];
 Call Compile preprocessFileLineNumbers Format["Common\Config\Defenses\Defenses_%1.sqf",_grpEast];

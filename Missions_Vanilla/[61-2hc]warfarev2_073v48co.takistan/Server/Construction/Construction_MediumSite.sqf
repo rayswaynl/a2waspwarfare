@@ -130,6 +130,9 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	//--- Register single-instance reference.
 	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
 	missionNamespace setVariable [_bankKey, _site];
+	//--- B66: clear the synchronous pending reservation set in RequestStructure.sqf now that the
+	//--- real bank is registered (the live-bank guard takes over from here).
+	missionNamespace setVariable [_bankKey + "_PENDING", -1e11];
 	//--- Global map marker visible to all players (createMarker is global on server).
 	_markerName = Format ["wfbe_bank_%1", if (_side == west) then {"west"} else {"east"}];
 	_markerColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};
@@ -184,4 +187,15 @@ if (!IsNull _site) then {
 	Call Compile Format ["_site AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];",_type];
 	
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] Structure [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
+
+	//--- B74.2: leaderboard STRUCTURE-built credit. Builder UID is not threaded through the
+	//--- RequestStructure->Construction path; attribute to the nearest same-side player at the
+	//--- completed site (the placer stands at the build spot). Same idiom as Construction_SmallSite.sqf.
+	private ["_bAttrPos","_bAttrSide","_bAttrRange","_bNear","_bDist","_bUid"];
+	_bAttrPos   = _position;
+	_bAttrSide  = _side;
+	_bAttrRange = missionNamespace getVariable ["WFBE_C_STATS_BUILD_ATTR_RANGE", 150];
+	_bNear = objNull; _bDist = _bAttrRange + 1;
+	{ if (isPlayer _x && {alive _x} && {side _x == _bAttrSide} && {(_x distance _bAttrPos) < _bDist}) then {_bNear = _x; _bDist = _x distance _bAttrPos} } forEach playableUnits;
+	if (!isNull _bNear) then {_bUid = getPlayerUID _bNear; if (_bUid != "") then {[_bUid, WFBE_STAT_STRUCTURES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 };

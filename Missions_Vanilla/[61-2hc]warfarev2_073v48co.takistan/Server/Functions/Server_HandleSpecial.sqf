@@ -64,6 +64,16 @@ switch (_args select 0) do {
 		_args spawn KAT_UAV;
 	};
 
+	//--- NAVAL HVT: SCUD saturation strike (feat/naval-hvt-objectives).
+	//--- Server validates ownership + cooldown inside KAT_ScudStrike before firing.
+	case "ScudStrike": {
+		if (!isNil "KAT_ScudStrike") then {
+			_args spawn KAT_ScudStrike;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: ScudStrike received but KAT_ScudStrike is nil (WFBE_C_NAVAL_HVT=0?)."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+
 	case "upgrade-sync": {
 		Private ["_side","_upgrade_id","_upgrade_level"];
 		_side = _args select 1;
@@ -293,7 +303,7 @@ switch (_args select 0) do {
 	//--- pushes [team, dir] whenever its objective bearing changes; we update the entry's slot 2 and
 	//--- only re-broadcast WFBE_ACTIVE_AICOM_TEAMS when the arrow actually moved >7 deg (cuts PV spam).
 	case "aicom-team-heading": {
-		Private ["_hteam","_hdir","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi"];
+		Private ["_hteam","_hdir","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi","_hldr"]; //--- B66 +_hldr
 		_hteam = (_args select 1) select 0;
 		_hdir  = (_args select 1) select 1;
 		if (!isNull _hteam) then {
@@ -302,6 +312,17 @@ switch (_args select 0) do {
 			for "_hi" from 0 to (count _haicomList - 1) do {
 				_hentry = _haicomList select _hi;
 				if ((_hentry select 3) == _hteam) then {
+					//--- B66: ARROW-VANISH FIX. slot0 (leader) was captured ONCE at aicom-team-created and
+					//--- never refreshed; when the original leader died (team still alive) the client keyed
+					//--- liveness/position on a dead/null unit and dropped the arrow. Re-resolve the CURRENT
+					//--- leader from the live team (slot3) and write it back whenever it changed, so a leader
+					//--- swap keeps the arrow alive.
+					_hldr = leader _hteam;
+					if (!isNull _hldr && {(_hentry select 0) != _hldr}) then {
+						_hentry set [0, _hldr];
+						_haicomList set [_hi, _hentry];
+						_hchanged = true;
+					};
 					_hold = _hentry select 2;
 					//--- Smallest signed angle between old and new heading (handles 0/360 wrap).
 					_hdelta = abs (((_hdir - _hold) + 180) % 360 - 180);
@@ -422,33 +443,45 @@ switch (_args select 0) do {
 		diag_log (Format ["HCSIDE|v1|reseat|name=%1|result=%2|sideNow=%3", _rName, _rResult, _rSideNow]);
 	};
 	case "connected-hc": {
-		Private ["_hc","_id","_uid","_hcOld","_hcList","_hcValid"];
-		_hc = _args select 1;
-		_id = owner _hc;
-		_uid = getPlayerUID _hc;
+		// Marty: Spawned so the 3-second cold-start retry doesn't block the PVF dispatcher.
+		_args Spawn {
+			Private ["_hc","_id","_retries","_uid","_hcOld","_hcList","_hcValid"];
+			_hc = _this select 1;
+			_uid = getPlayerUID _hc;
 
-		["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client is now connected [%1] [%2] with Owner ID [%3].", _hc, _uid, _id]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3", _uid, _id, str (side _hc)]); //--- diagnostic: is the HC actually mis-seated (WEST) or already CIV (cosmetic BLUFOR)?
+			["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client is now connected [%1] [%2] with Owner ID [%3] (pre-retry).", _hc, _uid, owner _hc]] Call WFBE_CO_FNC_LogContent;
 
-		if (_id != 0) then {
-			//--- Registry hygiene: an HC re-registers after every reconnect, and the old append-only
-			//--- list kept dead groups forever - delegation could then pick a corpse and the town AI
-			//--- silently vanished. Drop this UID's previous group and prune any dead entries.
-			_hcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
-			_hcOld = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
-			if (!isNil "_hcOld") then {_hcList = _hcList - [_hcOld]};
-			_hcValid = [];
-			{
-				if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcValid = _hcValid + [_x]};
-			} forEach _hcList;
-			if (count _hcValid != count _hcList) then {
-				["INFORMATION", Format["Server_HandleSpecial.sqf: Pruned [%1] dead headless client entries from the registry.", (count _hcList) - (count _hcValid)]] Call WFBE_CO_FNC_LogContent;
+			//--- HC cold-start slot-race: the engine owner ID may be 0 for a brief window
+			//--- after the PVF fires. Retry up to 3 times (3 s total) before giving up.
+			_retries = 0;
+			waitUntil {sleep 1; _retries = _retries + 1; (owner _hc != 0) || (_retries >= 3)};
+
+			//--- Re-read the owner ID after the wait; the pre-spawn value is stale.
+			_id = owner _hc;
+
+			["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client [%1] [%2] Owner ID after retry [%3] (retries:%4).", _hc, _uid, _id, _retries]] Call WFBE_CO_FNC_LogContent;
+			diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3", _uid, _id, str (side _hc)]); //--- diagnostic: is the HC actually mis-seated (WEST) or already CIV (cosmetic BLUFOR)?
+
+			if (_id != 0) then {
+				//--- Registry hygiene: an HC re-registers after every reconnect, and the old append-only
+				//--- list kept dead groups forever - delegation could then pick a corpse and the town AI
+				//--- silently vanished. Drop this UID's previous group and prune any dead entries.
+				_hcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+				_hcOld = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
+				if (!isNil "_hcOld") then {_hcList = _hcList - [_hcOld]};
+				_hcValid = [];
+				{
+					if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcValid = _hcValid + [_x]};
+				} forEach _hcList;
+				if (count _hcValid != count _hcList) then {
+					["INFORMATION", Format["Server_HandleSpecial.sqf: Pruned [%1] dead headless client entries from the registry.", (count _hcList) - (count _hcValid)]] Call WFBE_CO_FNC_LogContent;
+				};
+				//--- Add the Headless client to our candidates.
+				missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], group _hc];
+				missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]];
+			} else {
+				["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] Owner ID is still [0] after %2 retries, it is server controlled.",_hc, _retries]] Call WFBE_CO_FNC_LogContent;
 			};
-			//--- Add the Headless client to our candidates.
-			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], group _hc];
-			missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]];
-		} else {
-			["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] Owner ID is [0], it is server controlled.",_hc]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	case "track-playerobject": {
@@ -505,10 +538,14 @@ switch (_args select 0) do {
 		_driver = _args select 2;
 		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 			[_veh, _driver] spawn {
-				Private ["_veh","_driver","_drvGrp","_p","_radius","_coef","_victims","_payout","_get"];
+				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand"];
 				_veh = _this select 0;
 				_driver = _this select 1;
 				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
+				//--- B67 (guer-reward): also pay the DETONATOR personally (cash bounty + score) alongside the
+				//--- team payout below. Capture the driver object + its UID NOW, while still alive, because the
+				//--- suicide driver is gone by the time we settle (getPlayerUID on a dead/deleted unit is unreliable).
+				_drvUID = getPlayerUID _driver;
 				_p = getPosATL _veh;
 				_radius = missionNamespace getVariable ["WFBE_C_GUER_VBIED_BLAST_RADIUS", 30];
 				_coef = missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5];
@@ -517,27 +554,69 @@ switch (_args select 0) do {
 				//--- reason during the 4s settle window (or an already-wreck/empty hull) paid the driver's team -
 				//--- a large over-pay. Crediting infantry kills only keeps the cash-for-kills bounded + blast-caused.
 				_victims = [];
+				//--- B74.1 (Ray 2026-06-23): pay for ANY kill, not just infantry ("grant money whenever something is
+				//--- killed"). Snapshot living enemy MEN + CREWED vehicles in the (now FAB-250-sized) radius; crewed/alive
+				//--- only so empty wrecks never pay (keeps the C5 over-pay bound). _cand captures the outer _x because the
+				//--- crew-count below rebinds _x.
 				{
-					if (alive _x && {(side _x == east) || (side _x == west)}) then {_victims = _victims + [_x]};
-				} forEach (nearestObjects [_p, ["Man"], _radius]);
+					_cand = _x;
+					if (alive _cand && {(side _cand == east) || (side _cand == west)}) then {
+						if (_cand isKindOf "Man") then {
+							_victims = _victims + [_cand];
+						} else {
+							if (({alive _x} count (crew _cand)) > 0) then {_victims = _victims + [_cand]};
+						};
+					};
+				} forEach (nearestObjects [_p, ["Man","LandVehicle","Air"], _radius]);
 				//--- BLAST (AI W21 idiom): pop the truck, then stack 3x 122mm HE for a large lethal crater.
 				_veh setDamage 1;
-				"Sh_122_HE" createVehicle _p;
-				"Sh_122_HE" createVehicle _p;
-				"Sh_122_HE" createVehicle _p;
+				//--- B74.1 (Ray 2026-06-23): 3x Sh_122_HE -> 3x Bo_FAB_250 (the FAB-250 aerial bomb the EASA plane
+				//--- loadouts already carry, so it is loaded on both maps). Far bigger crater than the 122mm shell.
+				"Bo_FAB_250" createVehicle _p;
+				"Bo_FAB_250" createVehicle _p;
+				"Bo_FAB_250" createVehicle _p;
 				//--- let the HE resolve kills, then pay the GUER driver's team for each victim the blast killed.
 				sleep 4;
+				//--- B67 (guer-reward): accumulate the detonator's PERSONAL bounty + score per dead enemy Man
+				//--- victim, mirroring the RequestOnUnitKilled personal path (AwardBounty.sqf Man formula):
+				//---   bounty = round(unitprice * 0.7 * WFBE_C_UNITS_BOUNTY_COEF), score = ceil(bounty / 100).
+				//--- Only Man victims count toward the personal reward (the snapshot is already Man-only).
+				_persBounty = 0;
+				_persScore = 0;
 				if (!isNull _drvGrp) then {
 					_payout = 0;
 					{
 						if (!alive _x) then {
 							_get = missionNamespace getVariable (typeOf _x);
 							if (!isNil "_get") then {_payout = _payout + round ((_get select QUERYUNITPRICE) * _coef)};
+							//--- B67: personal detonator reward (Man-class only victims).
+							if ((typeOf _x) isKindOf "Man") then {
+								_get2 = missionNamespace getVariable (typeOf _x);
+								if (!isNil "_get2") then {
+									private ["_b"];
+									_b = round ((_get2 select QUERYUNITPRICE) * 0.7 * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF"));
+									_persBounty = _persBounty + _b;
+									_persScore = _persScore + (ceil (_b / 100));
+								};
+							};
 						};
 					} forEach _victims;
 					if (_payout > 0) then {
 						[_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
 						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+				//--- B67: pay the detonator personally (cash to their wallet via the new client receiver, dispatched
+				//--- to the captured UID) + apply the accumulated score to the captured driver object if still valid.
+				if (_drvUID != "" && {_persBounty > 0}) then {
+					[_drvUID, "GuerVbiedBounty", _persBounty] Call WFBE_CO_FNC_SendToClients;
+					["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED personal bounty [%1] + score [%2] paid to detonator UID [%3].", _persBounty, _persScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
+				};
+				if (!isNull _driver && {_persScore > 0}) then {
+					if (isServer) then {
+						['SRVFNCREQUESTCHANGESCORE',[_driver, (score _driver) + _persScore]] Spawn WFBE_SE_FNC_HandlePVF;
+					} else {
+						["RequestChangeScore", [_driver, (score _driver) + _persScore]] Call WFBE_CO_FNC_SendToServer;
 					};
 				};
 			};

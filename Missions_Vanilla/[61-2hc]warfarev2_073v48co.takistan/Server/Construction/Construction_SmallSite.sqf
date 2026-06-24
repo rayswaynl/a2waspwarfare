@@ -147,4 +147,16 @@ if (!isNull _site) then {
 	Call Compile Format ["_site AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];",_type];
 	
 	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] Structure [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
+
+	//--- B74.2: leaderboard STRUCTURE-built credit. The builder UID is not threaded through the
+	//--- RequestStructure->Construction path, so attribute to the nearest same-side player at the
+	//--- completed site (the placer stands at the build spot). Nearest-player scan over playableUnits
+	//--- (codebase idiom); range is an inline tunable. _site/_side/_position in scope here.
+	private ["_bAttrPos","_bAttrSide","_bAttrRange","_bNear","_bDist","_bUid"];
+	_bAttrPos   = _position;
+	_bAttrSide  = _side;
+	_bAttrRange = missionNamespace getVariable ["WFBE_C_STATS_BUILD_ATTR_RANGE", 150];
+	_bNear = objNull; _bDist = _bAttrRange + 1;
+	{ if (isPlayer _x && {alive _x} && {side _x == _bAttrSide} && {(_x distance _bAttrPos) < _bDist}) then {_bNear = _x; _bDist = _x distance _bAttrPos} } forEach playableUnits;
+	if (!isNull _bNear) then {_bUid = getPlayerUID _bNear; if (_bUid != "") then {[_bUid, WFBE_STAT_STRUCTURES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 };

@@ -8,12 +8,22 @@ _miniSleep = 0.05;
 
 while {!gameOver} do {
 
-	if (!gameOver && _victory == 0) then {
+	//--- B66 (Ray 2026-06-21) PARAM-TRAP FIX: the old gate `_victory == 0` meant ANY non-zero
+	//--- WFBE_C_VICTORY_THREEWAY silently disabled ALL victory detection - the round could never end
+	//--- (no supremacy win, no HQ-loss win). Supremacy/HQ-loss detection now runs UNCONDITIONALLY; the
+	//--- _victory param no longer gates it. We deliberately add NO new victory MODES here (Ray: no new
+	//--- modes) - this only stops the trap so the standard supremacy condition always works.
+	if (!gameOver) then {
 		{
 			_side = _x;
 			_hq = (_x) Call WFBE_CO_FNC_GetSideHQ;
 			_structures = (_x) Call WFBE_CO_FNC_GetSideStructures;
 			_towns = (_x) Call GetTownsHeld;
+
+				//--- B67 [wiki-wins]: once a winner is set this tick, do not award again for
+				//--- any remaining side in this same forEach pass (belt-and-braces with the
+				//--- !WFBE_GameOver guard inside the award condition below).
+				if (WFBE_GameOver) exitWith {};
 
 			//--- HQ not registered yet (early boot) -> skip this side this tick. NOTE: do NOT
 			//--- treat nil as "HQ dead": at boot factories are 0 too, and that would end the
@@ -26,7 +36,13 @@ while {!gameOver} do {
 				_factories = _factories + count([_side,missionNamespace getVariable Format ["WFBE_%1%2TYPE",_side,_x], _structures] Call GetFactories);
 			} forEach ["BARRACKS","LIGHT","HEAVY","AIRCRAFT"];
 
-			if (!(alive _hq)  && _factories == 0 || _towns == _total && !WFBE_GameOver) then {
+			//--- B67 [wiki-wins]: explicit parenthesisation. The old expression
+			//---   !(alive _hq) && _factories==0 || _towns==_total && !WFBE_GameOver
+			//--- relies on left-to-right SQF precedence and reads ambiguously, and the
+			//--- forEach could fire the award block twice in one tick (once per side).
+			//--- Now: fire only while NOT already over, for a clear supremacy/HQ-loss win;
+			//--- WFBE_GameOver also short-circuits any later side in the same forEach pass.
+			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0) || (_towns == _total) ) ) then {
 				[nil, "HandleSpecial", ["endgame", (_x) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
 
 				// 0 = NONE

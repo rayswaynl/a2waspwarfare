@@ -30,6 +30,34 @@ _direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",
 _factoryType = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index;
 _waitTime = (missionNamespace getVariable _unitType) select QUERYUNITTIME;
 _position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
+//--- B67 OPEN SPAWN APRON: the fixed trig offset above has no flat/empty check, so AI
+//--- factory output can drop in trees / on a slope. For AI-owned factories ONLY
+//--- (!isPlayer (leader _team)) sweep for a flat, dry, object-clear apron near the
+//--- factory and use it; on failure fall back to the original fixed offset. The human
+//--- player path is byte-identical (this whole block is skipped when a player leads).
+if (!isPlayer (leader _team)) then {
+	private ["_apFac","_apBaseBrg","_apOk","_apTry","_apBrg","_apDist","_apCand","_apFlat"];
+	_apFac = getPos _building;
+	_apBaseBrg = getDir _building + _direction;
+	_apOk = false;
+	//--- first try the exact original offset position - if it is already flat/empty, keep it.
+	_apFlat = _position isFlatEmpty [8, 0, 2, 8, 0, false, objNull];
+	if ((count _apFlat) > 0 && {!(surfaceIsWater _position)}) then {_apOk = true};
+	//--- otherwise sweep the bearing (around the factory) and the standoff outward, up to
+	//--- ~12 tries, for the first flat dry spot. isFlatEmpty returns [] when not flat.
+	_apTry = 0;
+	while {!_apOk && {_apTry < 12}} do {
+		_apBrg = _apBaseBrg + (_apTry * 30);
+		_apDist = _distance + (8 * (floor (_apTry / 4)));
+		_apCand = [_apFac, _apDist, _apBrg] Call GetPositionFrom;
+		if (!(surfaceIsWater _apCand)) then {
+			_apFlat = _apCand isFlatEmpty [8, 0, 2, 8, 0, false, objNull];
+			if ((count _apFlat) > 0) then {_position = _apCand; _apOk = true};
+		};
+		_apTry = _apTry + 1;
+	};
+	//--- no flat dry apron found in budget: _position is left as the original fixed offset.
+};
 _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];  //--- queue-fix 2026-06-14: keys stored UPPERCASE (Init_Common.sqf:356) but _factoryType is mixed-case -> _longest was nil -> the stuck-head purge (_ret>_longest) NEVER fired. toUpper re-arms it.
 if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety floor so the deadline is always a real number
 

@@ -29,7 +29,14 @@ if (count _MARKER_infos > 6) then
 	_markerRadius		= _MARKER_infos select 7;
 };
 
-if (playerSide == _side_who_see_marker) then 
+//--- B62 (Ray 2026-06-21): gate own-side marker visibility on the STABLE WFBE_Client_SideID (mirror of
+//--- updateaicommarkers.sqf / Init_BaseStructure.sqf), NOT playerSide. playerSide can drift on respawn/JIP-settle,
+//--- and this handler fires once per broadcast - a drift at that instant permanently drops the own-side marker.
+//--- Compare the marker's intended side (converted to its id) against the joined-side id. Fall back to the old
+//--- playerSide test only if the joined-side id is not yet known (very early init).
+if (
+	(if (!isNil "WFBE_Client_SideID") then {(_side_who_see_marker Call GetSideID) == WFBE_Client_SideID} else {playerSide == _side_who_see_marker})
+) then
 {
 	// Construction of the marker : 
 	////_markerName = createMarkerLocal [_markerName, _markerPosition];

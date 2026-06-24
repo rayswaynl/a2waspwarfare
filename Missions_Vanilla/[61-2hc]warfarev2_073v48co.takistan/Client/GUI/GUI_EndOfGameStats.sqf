@@ -5,6 +5,8 @@ disableSerialization;
 _side = _this Select 0;
 _sideText = Localize "STR_WF_PARAMETER_Side_East";
 if (_side == West) then {_sideText = Localize "STR_WF_PARAMETER_Side_West"};
+//--- B67 [wiki-wins]: resistance previously fell through to the East label. Name it correctly.
+if (_side == Resistance) then {_sideText = Localize "STR_WF_PARAMETER_Side_Guer"};
 _sideName = Format[Localize "STR_WF_END_Victory",_sideText];
 
 _width = 0.4;
