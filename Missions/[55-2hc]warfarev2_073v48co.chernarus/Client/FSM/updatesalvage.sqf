@@ -7,7 +7,7 @@ _salvagerRange = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RA
 _percentage = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RATIO";
 
 
-while {!gameOver || !(alive _vehicle)} do {
+while {!gameOver && (alive _vehicle)} do { //--- wiki-wins: exit when the truck dies (was || !(alive _vehicle), which never exited mid-game)
 	// Marty: Performance Audit timing for salvage vehicle scanning.
 	_perfStart = diag_tickTime;
 	_perfVehicles = 0;

@@ -96,7 +96,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 	};
 	
 	//--- Remove the logic from the list since it's built. Add it back if destroyed.
-	_logik setVariable ["wfbe_structures_logic", (_logik getVariable "wfbe_structures_logic") + [_nearLogic]];
+	_logik setVariable ["wfbe_structures_logic", (_logik getVariable "wfbe_structures_logic") - [_nearLogic]]; //--- wiki-wins: was + (double-append); MediumSite uses -
 };
 	
 {if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;

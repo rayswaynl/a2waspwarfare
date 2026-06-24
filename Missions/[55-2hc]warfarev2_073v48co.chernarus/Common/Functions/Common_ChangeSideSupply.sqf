@@ -9,7 +9,7 @@ if (count _this > 3) then {
 	_includeStagnation = _this select 3;
 };
 
-if (count _this > 3) then {
+if (count _this > 2) then { //--- wiki-wins: _reason is index 2; 3-arg callers (e.g. AttackWave) were dropping it (was > 3)
 	_reason = _this select 2;
 };
 
