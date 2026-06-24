@@ -3245,6 +3245,34 @@
         <Russian>Вызвать арт. удар</Russian>
         <Italian>Richiedi Fuoco di Sbarramento</Italian>
       </Key>
+      <Key ID="STR_WF_TACTICAL_CrewArtillery">
+        <English>Crew All Artillery</English>
+        <French>Équiper Toute l'Artillerie</French>
+        <German>Artillerie bemannen</German>
+        <Russian>Укомплектовать артиллерию</Russian>
+        <Italian>Equipaggia Tutta l'Artiglieria</Italian>
+      </Key>
+      <Key ID="STR_WF_TACTICAL_CrewArtilleryTooltip">
+        <English>Move your available group AI into the empty driver/gunner seats of your artillery pieces.</English>
+        <French>Place l'IA disponible de votre groupe dans les sièges de pilote/tireur vides de votre artillerie.</French>
+        <German>Setzt verfügbare KI Ihrer Gruppe auf die freien Fahrer-/Schützenplätze Ihrer Artillerie.</German>
+        <Russian>Сажает доступный ИИ вашей группы на свободные места водителя/наводчика вашей артиллерии.</Russian>
+        <Italian>Sposta l'IA del tuo gruppo disponibile nei posti di pilota/artigliere vuoti della tua artiglieria.</Italian>
+      </Key>
+      <Key ID="STR_WF_TACTICAL_CrewArtilleryDone">
+        <English>Crewed %1 artillery seat(s) with group AI.</English>
+        <French>%1 siège(s) d'artillerie équipé(s) avec l'IA du groupe.</French>
+        <German>%1 Artillerieplatz/-plätze mit Gruppen-KI bemannt.</German>
+        <Russian>Укомплектовано мест артиллерии: %1 (ИИ группы).</Russian>
+        <Italian>Equipaggiati %1 posti d'artiglieria con l'IA del gruppo.</Italian>
+      </Key>
+      <Key ID="STR_WF_TACTICAL_CrewArtilleryNoAI">
+        <English>No available group AI to crew your artillery.</English>
+        <French>Aucune IA de groupe disponible pour équiper votre artillerie.</French>
+        <German>Keine verfügbare Gruppen-KI zum Bemannen der Artillerie.</German>
+        <Russian>Нет доступного ИИ группы для укомплектования артиллерии.</Russian>
+        <Italian>Nessuna IA di gruppo disponibile per equipaggiare l'artiglieria.</Italian>
+      </Key>
       <Key ID="STR_WF_TACTICAL_Artillery"><!--shared U-->
         <English>Artillery:</English>
         <French>Artillerie:</French>
