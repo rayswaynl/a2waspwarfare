@@ -9388,6 +9388,15 @@
         <Spanish>Jugabilidad: Limitación del lanzamiento de bombas.</Spanish>
     </Key>
 
+    <Key ID="STR_WF_PARAMETER_BombDistanceRestriction">
+        <English>Gameplay: Bomb drop distance restriction.</English>
+        <French>Jouabilité : Restriction de distance de largage des bombes.</French>
+        <German>Spielbarkeit: Einschränkung der Bombenabwurfentfernung.</German>
+        <Russian>Геймплей: Ограничение дистанции сброса бомб.</Russian>
+        <Italian>Giocabilità: Restrizione della distanza di sgancio delle bombe.</Italian>
+        <Spanish>Jugabilidad: Restricción de distancia de lanzamiento de bombas.</Spanish>
+    </Key>
+
     <Key ID="STR_WF_PARAMETER_CampnDepot">
         <English>Camps and Depot</English>
         <French>Camps et Dépôts</French>

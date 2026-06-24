@@ -279,7 +279,7 @@
 		default = 2000;
 	};
 	class WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION {
-		title = "$STR_WF_PARAMETER_BombAltitude";
+		title = "$STR_WF_PARAMETER_BombDistanceRestriction"; //--- wiki-wins: was the BombAltitude title (indistinguishable from the altitude param in the lobby)
 		values[] = {0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000};
 		texts[] = {"$STR_WF_Disabled","500m","1000m","1500m","2000m","2500m","3000m","3500m","4000m","4500m","5000m","5500m","6000m","6500m","7000m","7500m","8000m","8500m","9000m","9500m","10000m"};
 		default = 2000;
@@ -370,7 +370,7 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
-	class WFBE_C_MODULE_WFBE_IRS {
+	class WFBE_C_MODULE_WFBE_IRSMOKE { //--- wiki-wins: renamed from WFBE_C_MODULE_WFBE_IRS so the lobby toggle drives the var consumers actually read (WFBE_C_MODULE_WFBE_IRSMOKE)
 		title = "$STR_WF_PARAMETER_IRS";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
