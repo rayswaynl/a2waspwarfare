@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T20:31:00+02:00",
+  "generatedAt": "2026-06-24T20:58:12+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr63-repair-antispam-post-b751b-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR #63 / origin/claude/trello-repair-antispam@9ba13a662263346c7fc6754912eec8274348ce7b",
+        "origin/master@4a163bb65fb46b94916e28f0305774a6d526cd54 current stable after B75/GUER master move",
+        "post-B75 merge-base/divergence and scoped base-relative branch diff",
+        "repair anti-spam building/vehicle/service-menu/stringtable source anchors in source Chernarus plus maintained Vanilla where changed",
+        "PR-Cleanup-And-Integration-Lab.md, Feature-Status-Register.md, service/repair owner pages, Testing-Debugging-And-Release-Workflow.md and compact coordination records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Treat PR #63 as open draft branch-only stale-base repair anti-spam evidence after current master advanced to 4a163bb65; GitHub mergeability is currently null / unknown. Rebase/recheck against current master and run source Chernarus plus maintained Vanilla base-repair and vehicle-service repair smoke before stable or release-ready wording. This does not close service affordability, supply ledger or server authority. No gameplay source edits.",
+      "updated": "2026-06-24T20:58:12+02:00",
+      "outputs": [
+        "Updated WASP-Base-Repair-System-Reference.md, Service-Menu-Affordability-Guards.md, PR-Cleanup-And-Integration-Lab.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md, Wiki-Pruning-And-Relevance-Ledger.md and agent-feature-status.jsonl with PR #63 post-B751b branch status.",
+        "PR #63 remains stale-base: base/merge-base f8a76de34, current master 4a163bb65, GitHub mergeability null / unknown, local counts 95 1; base-relative payload is eight maintained-root files / +82 / -12 and clean under git diff --check."
+      ]
+    },
     {
       "lane": "pr66-debug-antitk-post-b751b-route-2026-06-24",
       "owner": "Codex",
