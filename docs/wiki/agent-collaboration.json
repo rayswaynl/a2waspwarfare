@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T19:00:05+02:00",
+  "generatedAt": "2026-06-24T19:15:33+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "open-pr-board-post-b751b-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@f39665d7950ddf14cb0bbfacb7ee1e40121e93b4 current stable after PR #89",
+        "Live GitHub open PR metadata for PR #84, #83, #80, #74, #72, #66, #63, #59, #54, #53 and #9",
+        "Live GitHub closed/merged metadata for PR #85, #86, #87, #88 and #89",
+        "PR-Cleanup-And-Integration-Lab.md, Progress-Dashboard.md and compact machine coordination records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Use PR-Cleanup-And-Integration-Lab.md#2026-06-24-post-b751b-open-board-refresh before treating older PR #83/#80/#84 intake rows as current. Rebase or source-recheck master-target PRs against origin/master@f39665d79 before merge/release wording; keep PR #84 on the player-stats stack and PR #9 on the Zargabad map/runtime lane.",
+      "updated": "2026-06-24T19:15:33+02:00",
+      "outputs": [
+        "Updated PR-Cleanup-And-Integration-Lab.md with the post-B751b open roster, PR #83/#9 dirty states, clean-but-stale-base caveats and PR #85-#89 merged-current-master route.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records so the lane is published and no longer active."
+      ]
+    },
     {
       "lane": "b751b-takistan-chernarus-slots-intake-2026-06-24",
       "owner": "Codex",
