@@ -4,10 +4,9 @@
 	1) Stipend: 150/min base, +10/min per GUER-held town below the starting count, capped at 3x base
 	   (~450/min at deep town deficit). Paid to each living GUER player's team (wfbe_funds).
 	2) Broadcasts WFBE_GUER_VEHICLE_TIER (0/1/2/3) so the buy menu can gate ground vehicles
-	   (technicals=0 / BRDM+T-34=1 / T-55=2 / T-72+BMP2=3). B75 (guer-tech): the tier is now driven by
-	   CUMULATIVE GUER PLAYER KILLS (WFBE_GUER_PLAYER_KILLS, thresholds WFBE_C_GUER_KILLTIER_1/2/3),
-	   combined with the legacy elapsed-time ladder via max() during the transition (the time ladder is
-	   removed in b75.5). Also re-broadcasts WFBE_GUER_PLAYER_KILLS each cycle for JIP durability.
+	   (technicals=0 / BRDM+T-34=1 / T-55=2 / T-72+BMP2=3). B75.5 (guer-tech): the tier is driven PURELY by
+	   CUMULATIVE GUER PLAYER KILLS (WFBE_GUER_PLAYER_KILLS, thresholds WFBE_C_GUER_KILLTIER_1/2/3) - the old
+	   elapsed-time ladder is removed. Also re-broadcasts WFBE_GUER_PLAYER_KILLS each cycle for JIP durability.
 
 	Spawned from Init_Server.sqf when WFBE_C_GUER_PLAYERSIDE > 0. A2 OA 1.62/1.63 safe (no inline private,
 	no params/pushBack/isEqualType). Uses `towns` (global town array) and WFBE_C_GUER_ID (=2, resistance).
@@ -15,7 +14,7 @@
 if !(isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
 
-private ["_interval","_baseRate","_townBonus","_startTownCount","_curTowns","_deficit","_rate","_tier","_elapsed","_kills","_killTier"];
+private ["_interval","_baseRate","_townBonus","_startTownCount","_curTowns","_deficit","_rate","_tier","_kills"];
 
 _interval  = 60;
 _baseRate  = 150;
@@ -39,41 +38,28 @@ diag_log format ["GUERSTIPEND|START|startTowns=%1|baseRate=%2|townBonus=%3|inter
 //--- Seed + broadcast the current tier IMMEDIATELY (before the first interval sleep) so already-connected GUER
 //--- players don't wait a whole cycle for tier 0; the per-loop re-broadcast inside the while then keeps any JIP
 //--- joiner in sync (publicVariable is NOT JIP-replayed in A2-OA - same gotcha GuerAirDef notes for its feed).
-_tier = 0;
-if (time >= 1800)  then {_tier = 1};
-if (time >= 5400)  then {_tier = 2};
-if (time >= 10800) then {_tier = 3};
-//--- B75 (guer-tech): the vehicle tier is now driven by CUMULATIVE GUER PLAYER KILLS (BRDM/T-34 @ killtier1, T-55 @
-//--- killtier2, T-72/BMP2 @ killtier3). Combined with the legacy elapsed-time ladder above via max() so the kill
-//--- unlock is ADDITIVE for now; the time ladder is removed in the follow-up commit (b75.5), leaving pure kill-gating.
+//--- B75.5 (guer-tech): the GUER vehicle tier is now PURELY kill-driven; the legacy elapsed-time ladder
+//--- (30m/90m/180m) is REMOVED. BRDM/T-34 @ killtier1, T-55 @ killtier2, T-72/BMP2 @ killtier3.
 _kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
-_killTier = 0;
-if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15])) then {_killTier = 1};
-if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40])) then {_killTier = 2};
-if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80])) then {_killTier = 3};
-_tier = _tier max _killTier;
+_tier = 0;
+if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15])) then {_tier = 1};
+if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40])) then {_tier = 2};
+if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80])) then {_tier = 3};
 missionNamespace setVariable ["WFBE_GUER_VEHICLE_TIER", _tier];
 publicVariable "WFBE_GUER_VEHICLE_TIER";
-diag_log format ["GUERSTIPEND|TIERSEED|tier=%1|killTier=%2|kills=%3|t=%4", _tier, _killTier, _kills, round time];
+diag_log format ["GUERSTIPEND|TIERSEED|tier=%1|kills=%2|t=%3", _tier, _kills, round time];
 
 while {!WFBE_GameOver} do {
 	sleep _interval;
 
 	//--- (1) Vehicle tier broadcast — buy menu reads WFBE_GUER_VEHICLE_TIER.
-	//--- B75 (guer-tech): tier = max(legacy elapsed-time ladder, cumulative-kill ladder). Kill unlock is additive for
-	//--- now; the time ladder is removed in b75.5 (then tier is pure kills). BRDM/T-34 @ killtier1, T-55 @ killtier2,
-	//--- T-72/BMP2 @ killtier3.
-	_elapsed = time;
-	_tier = 0;
-	if (_elapsed >= 1800)  then {_tier = 1};
-	if (_elapsed >= 5400)  then {_tier = 2};
-	if (_elapsed >= 10800) then {_tier = 3};
+	//--- B75.5 (guer-tech): tier is now PURELY cumulative GUER kills (the elapsed-time ladder is removed).
+	//--- BRDM/T-34 @ killtier1, T-55 @ killtier2, T-72/BMP2 @ killtier3.
 	_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
-	_killTier = 0;
-	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15])) then {_killTier = 1};
-	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40])) then {_killTier = 2};
-	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80])) then {_killTier = 3};
-	_tier = _tier max _killTier;
+	_tier = 0;
+	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15])) then {_tier = 1};
+	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40])) then {_tier = 2};
+	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80])) then {_tier = 3};
 	//--- B74.2 JIP DURABILITY: re-broadcast EVERY loop, not just on change. publicVariable is NOT JIP-replayed in
 	//--- A2-OA, and the GUER buy overlay (Root_GUE_PlayerOverlay.sqf) reads WFBE_GUER_VEHICLE_TIER with a default
 	//--- of 0 - so a GUER player who JIPs after a tier transition was silently stuck at tier 0 (no BRDM/T-55/T-72).
