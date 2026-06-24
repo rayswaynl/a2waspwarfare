@@ -1,5 +1,5 @@
 // Marty: Track artillery ammo locals used in the team notification payload.
-Private ["_ammoIndex","_ammoName","_ammoOption","_ammoOptions","_ammoSelection","_arty_countdown","_arty_radius","_count","_destination","_i","_index","_type","_units"];
+Private ["_ammoIndex","_ammoName","_ammoOption","_ammoOptions","_ammoSelection","_arty_countdown","_arty_radius","_count","_destination","_gunCount","_i","_index","_type","_units"];
 
 _destination 	= _this select 0;
 _index 			= _this select 1;
@@ -29,8 +29,13 @@ _markerRadius       = _arty_radius;
 _marker_ellipse_name= format["Elipse_%1", _marker_name];
 
 [_marker_name, _markerPosition, _markerType, _markerText, _markerColor, _markerSide, _marker_ellipse_name,_markerRadius ] call WF_createMarker ;
-[_marker_name, 80] call WFBE_CL_FNC_Delete_Marker ; // marker is removed after some time in seconds. Predifined time prevent weird exitwith condition in the arty script that could make the marker never removed!
-[_marker_ellipse_name, 80] call WFBE_CL_FNC_Delete_Marker ; 
+
+// Marty (Trello #171): The barrage markers are GLOBAL (WF_createMarker uses createMarker), but the
+// old WFBE_CL_FNC_Delete_Marker only ran deleteMarkerLocal in a timed spawn on THIS client, so if the
+// caller disconnected mid-barrage the markers leaked on every other client. Route the timed removal
+// through the SERVER instead: it deletes the markers globally regardless of the caller's connection.
+// 80s mirrors the previous predefined removal delay (prevents weird exitWith races in the arty script).
+["RequestSpecial", ["ArtyMarkerCleanup", [_marker_name, _marker_ellipse_name], 80]] Call WFBE_CO_FNC_SendToServer ;
 
 //Send audio + text message to the team side to warn them
 _playerName 	= name player;
@@ -50,7 +55,9 @@ for "_i" from 0 to (count _ammoOptions) - 1 do {
 	if ((_ammoOption select 3) == _ammoIndex) exitWith {_ammoName = _ammoOption select 0};
 };
 
-_Compile_Multi_language_message	= format [" format[localize ""STR_WF_INFO_Arty_called_message"", %1, %2 ];", str(_playerName), str(_ammoName)];
+// Marty: Pass the firing gun count as %3 so teammates know how many tubes are on the mission (Trello #116).
+_gunCount = count _units;
+_Compile_Multi_language_message	= format [" format[localize ""STR_WF_INFO_Arty_called_message"", %1, %2, %3 ];", str(_playerName), str(_ammoName), _gunCount];
 
 _audio_message 	= "ARTY_message_to_friendly_players_v2"; //In case of failure in conditions below, faction is considered as american by default to determine the audio message.
 if (IS_Takistan_Faction_On_This_Map  && playerSide == east) then {_audio_message 	= "ARTY_message_to_friendly_takistanish_v1"	};

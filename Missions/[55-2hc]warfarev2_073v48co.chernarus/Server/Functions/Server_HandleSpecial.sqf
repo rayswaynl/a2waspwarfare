@@ -141,6 +141,24 @@ switch (_args select 0) do {
 		[_base] Spawn NukeDammage;
 	};
 
+	//--- Marty (Trello #171): Server-side timed removal of the player-called artillery barrage markers.
+	//--- The markers are created globally on the caller's client (WF_createMarker), but the deletion used
+	//--- to be a client-local timed spawn that never ran if the caller disconnected, leaking the markers
+	//--- on everyone else. The server owns the delayed delete so it survives the caller leaving.
+	case "ArtyMarkerCleanup": {
+		Private ["_markerNames","_removeDelay"];
+		_markerNames = _args select 1;
+		_removeDelay = _args select 2;
+		if (typeName _markerNames != "ARRAY") exitWith {};
+		[_markerNames, _removeDelay] spawn {
+			Private ["_names","_delay"];
+			_names = _this select 0;
+			_delay = _this select 1;
+			sleep _delay;
+			{ if (typeName _x == "STRING") then { deleteMarker _x }; } forEach _names;
+		};
+	};
+
 	case "process-killed-hq": {
 		(_args select 1) Spawn WFBE_SE_FNC_OnHQKilled;
 	};

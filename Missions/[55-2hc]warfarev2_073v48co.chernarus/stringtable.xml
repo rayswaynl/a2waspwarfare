@@ -9303,11 +9303,11 @@
 
     <!-- Marty: Include the selected artillery ammunition in the team warning. -->
     <Key ID="STR_WF_INFO_Arty_called_message">
-        <English>%1 has initiated an artillery strike with %2. The impact location has been marked on the map.</English>
-        <French>%1 a déclenché une frappe d'artillerie avec %2. L'emplacement de l'impact a été marqué sur la carte.</French>
-        <German>%1 hat einen Feuerbefehl für die Artillerie mit %2 erteilt. Die Einschlagstelle wurde auf der Karte markiert.</German>
-        <Russian>%1 начал артиллерийский удар боеприпасом %2. Место попадания отмечено на карте.</Russian>
-        <Italian>%1 ha lanciato un attacco di artiglieria con %2. La posizione dell'impatto è stata segnata sulla mappa.</Italian>
+        <English>%1 has initiated an artillery strike with %2 (%3 gun(s) firing). The impact location has been marked on the map.</English>
+        <French>%1 a déclenché une frappe d'artillerie avec %2 (%3 pièce(s) en action). L'emplacement de l'impact a été marqué sur la carte.</French>
+        <German>%1 hat einen Feuerbefehl für die Artillerie mit %2 erteilt (%3 Geschütz(e) feuern). Die Einschlagstelle wurde auf der Karte markiert.</German>
+        <Russian>%1 начал артиллерийский удар боеприпасом %2 (ведут огонь орудий: %3). Место попадания отмечено на карте.</Russian>
+        <Italian>%1 ha lanciato un attacco di artiglieria con %2 (%3 pezzo/i in azione). La posizione dell'impatto è stata segnata sulla mappa.</Italian>
     </Key>
 
     <Key ID="STR_WF_INFO_Arty_cool_down_over">
