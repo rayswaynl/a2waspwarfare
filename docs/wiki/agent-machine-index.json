@@ -127,7 +127,7 @@
       "id": "mission-entrypoints-lifecycle",
       "system": "mission boot and role split",
       "riskTier": "P1",
-      "branchScope": "origin/master@0139a346-partial-source-present",
+      "branchScope": "docs-head@55cb55e2170f-current-stable-b741@f8a76de34-b742@21b62b04-same-front-door-topology-line-drift-and-HC-shape-split",
       "canonicalDocs": [
         "Mission-Entrypoints-And-Lifecycle",
         "Lifecycle-Wait-Chain",
@@ -140,13 +140,14 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf"
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching maintained-root boot paths"
       ],
       "machineRefs": [
         "agent-context.json",
         "agent-knowledge.jsonl#cluster-lifecycle-bootstrap"
       ],
-      "nextGate": "Before changing boot/JIP waits, prove producer and consumer flags, add timeouts only where they preserve JIP/HC flow, then run hosted/dedicated smoke."
+      "nextGate": "Before changing boot/JIP waits, prove producer and consumer flags on the exact target branch. Docs/source has simple HC sleep+notify, while current stable/B74.1/B74.2 use reseat/deadspawn/watchdog HC bootstrap; B74.2 boot deltas are source-Chernarus-only. Add timeouts only where they preserve JIP/HC flow, then run hosted/dedicated smoke."
     },
     {
       "id": "pvf-dispatch-trust-boundary",

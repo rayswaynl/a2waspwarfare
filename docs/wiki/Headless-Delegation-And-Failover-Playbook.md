@@ -26,7 +26,7 @@ Use this page before editing:
 | `1` | Client-FPS delegation. | Players report FPS; server picks player clients as delegators. |
 | `2` | Headless-client delegation. | HC creates delegated units locally after server sends `HandleSpecial` messages. |
 
-Docs source downgrades HC mode to disabled at `initJIPCompatible.sqf:164-171` when the OA build does not support headless clients. Current stable line-drifts that gate to `initJIPCompatible.sqf:202-209`. `Headless/Init/Init_HC.sqf:14` still waits 20 seconds, but current stable then runs bounded reseat/deadspawn parking, starts a 15-second rewatch loop and sends `["RequestSpecial", ["connected-hc", player]]` at `:122` after re-reseat or `:129` after initial setup.
+Docs source downgrades HC mode to disabled at `initJIPCompatible.sqf:168-170` when the OA build does not support headless clients. Its `Headless/Init/Init_HC.sqf` remains simple-shaped: `:12` waits 20 seconds and `:15` sends `["RequestSpecial", ["connected-hc", player]]`. Current stable/B74.1 and current B74.2 line-drift the HC-support gate to `initJIPCompatible.sqf:206-207` and use the newer HC bootstrap: `Headless/Init/Init_HC.sqf:14` waits 20 seconds, `:28` waits for the player object, `:35-101` runs bounded reseat/deadspawn setup, a persistent 15-second watcher can reannounce at `:122`, and initial setup sends `connected-hc` at `:129`.
 
 The docs-source server registers a connected HC in `Server_HandleSpecial.sqf:117-128`. Current stable line-drifts and hardens that case at `Server_HandleSpecial.sqf:406-431` by storing:
 

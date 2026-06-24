@@ -2,7 +2,7 @@
 
 > Claude deep-dive page (source-cited). This is the canonical page for precise boot ordering, the machine-role truth table, JIP waits and the global-flag dependency graph that enforces init order. Use [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) for the include graph, role dispatch and per-role init responsibility map.
 
-All paths below are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Unless another ref is named, line refs are from docs head `05664f17`, source-unchanged from `9da5f1d0` for the checked lifecycle paths. [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle#source-scope) owns the current checkpoint, checked path list and branch refs; use that source-scope note before turning these Chernarus line refs into branch-specific claims.
+All paths below are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Unless another ref is named, line refs are from docs branch `docs/developer-wiki-index` `HEAD@55cb55e2170f`; the 2026-06-24 entrypoint refresh found targeted diffs from earlier docs anchor `05664f17` through `HEAD` empty for the checked lifecycle paths. [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle#source-scope) owns the current checkpoint, checked path list and branch refs; use that source-scope note before turning these Chernarus line refs into branch-specific claims.
 
 ## Why this matters
 
@@ -59,6 +59,8 @@ Each row: a flag, where it is **set**, and the `waitUntil` barriers it **unblock
 | `serverInitFull` | `Init_Server.sqf:507` | signals all per-side setup done (HC `sleep 20` is a crude proxy) |
 | `clientInitComplete` | `Init_Client.sqf:956` | `Init_Unit.sqf:33`; then `CLIENT_INIT_READY` is set and `publicVariableServer`'d (`Init_Client.sqf:960-962`) |
 
+Current stable/B74.1 line-drift for the key boot barriers is `WFBE_Parameters_Ready` at `initJIPCompatible.sqf:250`, `commonInitComplete` at `Common/Init/Init_Common.sqf:427`, `serverInitComplete` at `Server/Init/Init_Server.sqf:156`, `serverInitFull` at `:824` and `clientInitComplete` at `Client/Init/Init_Client.sqf:1213`. Current B74.2 keeps maintained Vanilla stable-shaped and line-drifts source Chernarus to `serverInitFull` `:837` and `clientInitComplete` `:1240`.
+
 ### Ordered boot timeline (server)
 
 `Init_Version` → `WFBE_Parameters_Ready` → `Init_Common` (sets `WFBE_PRESENTSIDES`, then `commonInitComplete`) → `Init_Towns` (`townInit`) → `Init_Server` (`serverInitComplete` early, `serverInitFull` after per-side loop) → launch `server_town.sqf`, `server_town_ai.sqf`, cleaners/restorers, `updateresources.sqf`, victory loop.
@@ -69,9 +71,9 @@ Block on `WFBE_PRESENTSIDES` + `wfbe_teams` → `Init_Client` compiles functions
 
 ### Headless client
 
-`Init_HC.sqf` compiles four delegation handlers (`Client_CleanupDelegatedTownAI`, `Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. See [AI, headless and performance](AI-Headless-And-Performance) for the runtime source router and [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) for DR-21/DR-42 patch policy.
+Docs/source `Init_HC.sqf` compiles `Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence` plus `Client_HandlePVF`, then **`sleep 20`** and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. Current stable/B74-shaped refs add `Client_CleanupDelegatedTownAI`, then run the newer HC reseat/deadspawn/persistent-watcher bootstrap before the same registration notify. See [AI, headless and performance](AI-Headless-And-Performance) for the runtime source router and [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) for DR-21/DR-42 patch policy.
 
-Source-check note: `Init_HC.sqf:12` is the fixed sleep and `:15` sends the HC registration request. `serverInitFull` is not set until `Server/Init/Init_Server.sqf:507`, after `serverInitComplete` at `:117` and the `commonInitComplete && townInit` wait at `:127`.
+Source-check note: docs/source `Init_HC.sqf:12` is the fixed sleep and `:15` sends the HC registration request. Current stable/B74.1 and current B74.2 use `Init_HC.sqf:14` for the fixed sleep, `:28` for `waitUntil {!isNull player}`, `:35-101` for bounded reseat polling and `:122` / `:129` for `connected-hc` sends. Neither branch shape waits explicitly for `serverInitFull`.
 
 Page ownership note: this lifecycle page owns HC boot timing and wait-chain risk only. HC work tracking, update-back choices, disconnect policy and failover design intentionally live in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
 

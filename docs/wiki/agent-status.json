@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T18:45:00+02:00",
+  "generatedAt": "2026-06-24T19:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "none",
-      "currentWork": "Published docs-only Commander/HQ reassignment route current B74.2 refresh. Commander-HQ-Lifecycle-Atlas now routes manual reassignment through repo docs branch HEAD@1f07b39d, current stable/B74.1 origin/master@f8a76de34 and current B74.2 origin/claude/b74.2-aicom@21b62b04 evidence.",
+      "currentWork": "Published docs-only mission entrypoint/lifecycle current B74.2 route refresh. Mission-Entrypoints-And-Lifecycle, Lifecycle-Wait-Chain, Architecture-Overview, AI-Headless-And-Performance, Headless-Delegation-And-Failover-Playbook and agent-machine-index now route boot/HC evidence through docs HEAD@55cb55e2170f, current stable/B74.1 origin/master@f8a76de34 and current B74.2 origin/claude/b74.2-aicom@21b62b04.",
       "nextExpectedOutput": "Pick a fresh bounded source-backed docs lane after coordination reads."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "mission-entrypoints-lifecycle-current-b742-route-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only mission entrypoint/lifecycle current B74.2 route refresh. Boot/HC pages and agent-machine-index now distinguish repo docs branch HEAD@55cb55e2170f unchanged from 05664f17 / 2de2de92 for checked boot/runtime paths, current stable/B74.1 origin/master@f8a76de34, and current B74.2 origin/claude/b74.2-aicom@21b62b04. Current stable/B74.1/B74.2 keep the same initJIPCompatible front-door topology; B74.2 changes only source-Chernarus Init_Client.sqf / Init_Server.sqf among checked boot paths and maintained Vanilla stays stable-shaped. Docs/source/Miksuu/perf/historical refs keep simple HC sleep+notify; current stable/B74-shaped refs use reseat/deadspawn/watchdog HC bootstrap. No gameplay source changed."
+    },
     {
       "lane": "commander-hq-reassignment-route-current-b742-refresh-2026-06-24",
       "owner": "Codex",

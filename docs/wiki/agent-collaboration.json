@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T18:45:00+02:00",
+  "generatedAt": "2026-06-24T19:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,32 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mission-entrypoints-lifecycle-current-b742-route-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Mission-Entrypoints-And-Lifecycle.md Source Scope, description.ext/version.sqf note and role dispatch summary",
+        "Lifecycle-Wait-Chain.md HC timing and current branch line-drift note",
+        "Architecture-Overview.md Current Branch Scope",
+        "AI-Headless-And-Performance.md HC timing caveat and HC source router row",
+        "Headless-Delegation-And-Failover-Playbook.md current behavior HC bootstrap paragraph",
+        "agent-machine-index.json mission-entrypoints-lifecycle row",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching maintained-root entrypoint/init paths"
+      ],
+      "handoff": "Closed as published/validated docs-only. Treat Mission Entrypoints as the boot/include/role owner and Lifecycle Wait Chain as the flag graph. Do not flatten docs/source simple HC sleep+notify with current stable/B74-shaped reseat/deadspawn/watchdog HC bootstrap. Future boot/JIP work must prove producer/consumer flags on the exact target branch and smoke hosted/dedicated/JIP/HC registration before release wording.",
+      "updated": "2026-06-24T19:45:00+02:00",
+      "outputs": [
+        "Updated Mission-Entrypoints-And-Lifecycle.md, Lifecycle-Wait-Chain.md, Architecture-Overview.md, AI-Headless-And-Performance.md and Headless-Delegation-And-Failover-Playbook.md with current stable/B74.1/B74.2 boot and HC branch scope.",
+        "Updated agent-machine-index.json mission-entrypoints-lifecycle row, pruning/knowledge/worklog/status/collaboration/event surfaces, mirrored touched files into docs/wiki and validated JSON/JSONL, wiki links/schema, parity, conflict markers and diff whitespace."
+      ]
+    },
     {
       "lane": "commander-hq-reassignment-route-current-b742-refresh-2026-06-24",
       "owner": "Codex",

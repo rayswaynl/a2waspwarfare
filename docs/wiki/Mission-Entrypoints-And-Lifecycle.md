@@ -4,9 +4,9 @@
 
 ## Source Scope
 
-Unless a row names another ref, line refs on this page are from docs head `05664f17` and the Chernarus source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Rechecked 2026-06-14: targeted diffs from `9da5f1d0` through `HEAD` over `description.ext`, `initJIPCompatible.sqf`, `mission.sqm`, `Common/Init/Init_Town*.sqf`, `Common/Init/Init_Common.sqf`, `Common/Init/Init_Parameters.sqf`, `Common/Init/Init_Version.sqf`, `Common/Init/Init_Unit.sqf`, `Server/Init/Init_Server.sqf`, `Client/Init/Init_Client.sqf`, `Headless/Init/Init_HC.sqf` and `Headless/Functions/HC_IsHeadlessClient.sqf` returned no source changes.
+Unless a row names another ref, line refs on this page are from docs branch `docs/developer-wiki-index` `HEAD@55cb55e2170f` and the Chernarus source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Rechecked 2026-06-24: targeted diffs from the earlier docs anchor `05664f17` through `HEAD` over `description.ext`, `initJIPCompatible.sqf`, `Common/Init/Init_Common.sqf`, `Server/Init/Init_Server.sqf`, `Client/Init/Init_Client.sqf` and `Headless/Init/Init_HC.sqf` are empty, preserving the existing docs-source line anchors for those checked boot paths.
 
-Branch spot-check 2026-06-14: stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` keep the same front-door topology from `initJIPCompatible.sqf` (Common/Towns, then Server, Client and Headless branches), but line refs drift. For branch behavior claims, route through [Current source status snapshot](Current-Source-Status-Snapshot) and the narrower owner pages before citing branch-specific lines.
+Branch refresh 2026-06-24: current stable/B74.1 `origin/master@f8a76de34` / `origin/claude/b74.1-aicom@f8a76de34`, current B74.2 `origin/claude/b74.2-aicom@21b62b04`, B69 `origin/claude/b69@8d465fce`, adjacent B74 `origin/claude/b74-aicom-spend@b23f557f`, current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` / `7ff18c49` keep the same front-door topology from `initJIPCompatible.sqf` (Common/Towns, then Server, Client and Headless branches), but line refs and HC bootstrap shape differ. Current B74.2 changes only source-Chernarus `Client/Init/Init_Client.sqf` and `Server/Init/Init_Server.sqf` among the checked boot paths; maintained Vanilla stays stable-shaped. For branch behavior claims, route through [Current source status snapshot](Current-Source-Status-Snapshot), [AI/headless/performance](AI-Headless-And-Performance), [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) and narrower owner pages before citing branch-specific lines.
 
 ## `description.ext`
 
@@ -25,7 +25,7 @@ The mission metadata and UI resource graph is assembled from:
 
 It also sets `loadScreen`, disables spoken sentences, disables channels 3 and 6, and leaves `disabledAI=0`.
 
-`version.sqf` is included here and again by `initJIPCompatible.sqf`. The 2026-06-14 checkout has no tracked `version.sqf` rows and no generated `version.sqf` files present in the checked Chernarus or Vanilla Takistan roots; `.gitignore:1,23` still ignores those paths when generated. Treat it as required generated terrain metadata, not as optional decoration or durable checked-in source.
+`version.sqf` is included here and again by `initJIPCompatible.sqf`. The 2026-06-24 check found no tracked live `version.sqf` in docs/source `HEAD@55cb55e2170f`, current stable/B74.1 `f8a76de34` or current B74.2 `21b62b04` for either source Chernarus or maintained Vanilla Takistan. Current stable/B74.1 and B74.2 do track a source-Chernarus `version.sqf.template`, but that template does not satisfy the live generated include and no maintained Vanilla template was present in the checked refs. `.gitignore:1,23` still ignores generated rows. Treat `version.sqf` as required generated terrain metadata, not as optional decoration or durable checked-in source.
 
 Source verification: `description.ext:39` includes `version.sqf`; `:41-58` include sound, music and Rsc bundles; `:64-67` set `loadScreen`, `disableChannels[]` and `disabledAI`. The clean-checkout/release warning still stands: run/generate/check target roots before boot, pack or test claims.
 
@@ -36,6 +36,8 @@ Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-43
 This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts.
 
 Source anchors: role detection at `initJIPCompatible.sqf:52-56`, version wait at `:49`, parameter readiness at `:212`, Common/Towns startup at `:214-215`, server branch at `:218-220`, client branch at `:224-233` and headless branch at `:237-238`.
+
+Current stable/B74-shaped branch anchors line-drift: `initJIPCompatible.sqf:53-57` detects hosted/server/HC roles, `:250` sets `WFBE_Parameters_Ready`, `:252-253` starts Common/Towns, `:258` starts Server, `:262-287` gates Client startup and `:291-292` starts Headless in source Chernarus. Current B74.2 keeps the same `initJIPCompatible.sqf` anchors; its checked boot delta is later in source-Chernarus `Init_Client.sqf` / `Init_Server.sqf`, not in the front-door dispatcher.
 
 ### Boot Ordering Handoff
 
@@ -57,8 +59,8 @@ Verified anchors:
 
 | Source | Runtime role |
 | --- | --- |
-| `mission.sqm:128` and following town logic entries | Town objects call `Common\Init\Init_Town.sqf` with name, dubbing name, start SV, max SV, range and group templates. Current source scan found 43 such explicit `Init_Town.sqf` calls. |
-| `mission.sqm:3265` | `WF_Logic` sets `totalTowns = 43`, disables simulation and seeds `Towns_Removed*` lists before `ExecVM "Common\Init\Init_TownMode.sqf"`. |
+| `mission.sqm:56` and following town logic entries | Town objects call `Common\Init\Init_Town.sqf` with name, dubbing name, start SV, max SV, range and group templates. Current source scan found 46 such explicit `Init_Town.sqf` calls. |
+| `mission.sqm:3332` | `WF_Logic` sets `totalTowns = 46`, disables simulation and seeds `Towns_Removed*` lists before `ExecVM "Common\Init\Init_TownMode.sqf"`. |
 | `Common/Init/Init_Town.sqf:18` | Each town waits for `townModeSet && WFBE_Parameters_Ready` before applying town state. |
 | `Common/Init/Init_Town.sqf:42` | Town object setup then waits for `commonInitComplete`. |
 | `Common/Init/Init_Town.sqf:92` | Server-side town model/camp setup waits for `serverInitComplete`. |
@@ -95,9 +97,11 @@ Notable server loops:
 - `Server/FSM/emptyvehiclescollector.sqf`
 - dropped item, crater, ruin and mine cleaners;
 - building restorer;
-- `Server/Module/serverFPS/monitorServerFPS.sqf`.
+- `Server/Module/serverFPS/monitorServerFPS.sqf` on docs/source-shaped refs; current stable/B74-shaped refs use the single guarded `Server/GUI/serverFpsGUI.sqf` publisher and no maintained-root monitor file.
 
 Source anchors: `serverInitComplete = true` at `Server/Init/Init_Server.sqf:117`, `serverInitFull = true` at `:507`, town AI at `:514`, victory at `:528` and resource loop at `:531`.
+
+Current stable/B74.1 line-drift for the main barriers is `serverInitComplete = true` at Chernarus `Server/Init/Init_Server.sqf:156` and `serverInitFull = true` at `:824` (Vanilla `:150` / `:818`). Current B74.2 keeps maintained Vanilla stable-shaped and line-drifts source Chernarus `serverInitFull` to `:837` because its source-Chernarus-only boot delta adds GUER economy and AICOM marker-feed recovery code.
 
 Init hygiene note: the early server compile block still contains duplicate/legacy assignments such as `WFBE_CO_FNC_LogGameEnd` around `Server/Init/Init_Server.sqf:64-65` and `WFBE_SE_FNC_PlayerObjectsList` around `:88-91`. Treat duplicate compile cleanup as a small but real init-maintenance lane; do not mix it with behavior changes unless smoke coverage names the affected functions.
 
@@ -109,15 +113,15 @@ Global gameplay hotkeys are wired here through `findDisplay 46` `KeyDown` handle
 
 ### JIP Stall Risks
 
-Client init has several `waitUntil` gates on replicated state with no local timeout/retry path. The highest-risk waits are `townInit`, `wfbe_structures`, `wfbe_commander`, `wfbe_radio_hq`, `wfbe_startpos`, `wfbe_hq_deployed` and `wfbe_votetime` around `Client/Init/Init_Client.sqf:360-371`, `:467-490` and `:787-789`. Keep the detailed dependency table in [Lifecycle wait-chain](Lifecycle-Wait-Chain), but mention this risk in entrypoint work because broken replication can look like a client boot freeze rather than a later gameplay bug.
+Client init has several `waitUntil` gates on replicated state. On docs/source `HEAD@55cb55e2170f`, the highest-risk waits are `townInit`, `wfbe_structures`, `wfbe_commander`, `wfbe_radio_hq`, `wfbe_startpos`, `wfbe_hq_deployed` and `wfbe_votetime` around `Client/Init/Init_Client.sqf:360-371`, `:463-490` and `:787-789`. Current stable/B74.1 line-drifts those waits to `:593-609`, `:714-768` and `:1043-1045`; current B74.2 line-drifts source Chernarus further to `:599-609`, `:737-768` and `:1070-1072` while maintained Vanilla stays stable-shaped. Keep the detailed dependency table in [Lifecycle wait-chain](Lifecycle-Wait-Chain), but mention this risk in entrypoint work because broken replication can look like a client boot freeze rather than a later gameplay bug.
 
 ## Headless Init
 
 Headless support is gated by the OA version check in `initJIPCompatible.sqf`. When supported and configured, `Headless/Init/Init_HC.sqf` loads client PVF handling and common init pieces needed for delegated AI.
 
-`Headless/Init/Init_HC.sqf` does not use a simple fixed delay before sending `["RequestSpecial", ["connected-hc", player]]` to the server. After `sleep 20` the HC waits for the player object (`waitUntil {!isNull player}`), emits a pre-seat telemetry call, then executes a bounded reseat-to-civilian polling loop (up to ~60 s) before sending the `connected-hc` notify. A persistent watcher is also spawned before the notify. There is no explicit `waitUntil {serverInitFull}` barrier in that file, so HC timing bugs should be investigated against [Lifecycle wait-chain](Lifecycle-Wait-Chain) and [AI/headless](AI-Headless-And-Performance) together.
+The HC bootstrap is branch-sensitive. Docs/source `HEAD@55cb55e2170f` keeps the old simple shape: `Headless/Init/Init_HC.sqf:12` sleeps for 20 seconds and `:15` sends `["RequestSpecial", ["connected-hc", player]]` to the server. Current Miksuu `b8389e748243`, `origin/perf/quick-wins@0076040f` and historical `a96fdda2` / `7ff18c49` are still simple-shaped with minor line drift.
 
-Source verification: `Headless/Init/Init_HC.sqf:14` is `sleep 20`. After the sleep the HC guards on `waitUntil {!isNull player}` (`:28`), executes a bounded reseat-to-civilian polling loop (`:35-101`, up to ~60 s), parks the HC body, and spawns a persistent reseat watcher before sending the `connected-hc` notify at `:129` (`["RequestSpecial", ["connected-hc", player]] Call WFBE_CO_FNC_SendToServer`). The real timing proxy before `connected-hc` is therefore `sleep 20` plus up to ~60 s of reseat polling, not a fixed delay alone. The server sets `serverInitComplete = true` early at `Server/Init/Init_Server.sqf:117`, waits for `commonInitComplete && townInit` at `:127`, and only later sets `serverInitFull = true` at `:507`. Treat the HC sleep as a timing proxy, not a real dependency barrier.
+Current stable/B74.1 `origin/master@f8a76de34` and current B74.2 `21b62b04` use the newer maintained-root HC bootstrap: `Headless/Init/Init_HC.sqf:14` is still `sleep 20`, but after the sleep the HC waits for the player object at `:28`, emits `hc-preseat` telemetry, runs a bounded reseat-to-civilian poll (`:35-101`, up to roughly 60 seconds), parks the HC body, spawns a persistent 15-second reseat watcher and sends `connected-hc` at `:122` after re-reseat or `:129` after initial setup. There is still no explicit `waitUntil {serverInitFull}` barrier: current stable sets `serverInitFull = true` at Chernarus `Server/Init/Init_Server.sqf:824` / Vanilla `:818`, and current B74.2 line-drifts source Chernarus to `:837`. Treat HC startup bugs as lifecycle and headless-delegation issues together.
 
 Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-37 is the boot wait-chain review; use [Lifecycle wait-chain](Lifecycle-Wait-Chain) before reordering init flags or replacing waits.
 
