@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T17:48:59+02:00",
+  "generatedAt": "2026-06-24T18:11:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "buy-menu-price-key-current-master-b750-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@7bfcf09a9 current stable after PR #88",
+        "PR #87 / origin/feat/b750-factory-aicom@605ad7326",
+        "6a34799b4..origin/master scoped buy-list/buy-menu diff",
+        "PR #88 / origin/feat/b751-tk-aicom13-clientfixes@5aea1ce401 merged into current master during fetch-before-commit",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching buy-list, buy-menu and constants paths",
+        "Factory-And-Purchase-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and compact coordination/status records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Treat current master origin/master@7bfcf09a9 as selected-detail/key-mirroring fixed for the checked buy-menu price/key matrix: list price, purchase seed, selected detail and full price field use the modifier-bearing path in both maintained roots. The open current-master fix remains the level-0 UNIT_COST_MODIFIER reset/local price-helper decision. B751 is now source-present adjacent nil-data/AICOM-cap hardening, not a price/key/reset closure.",
+      "updated": "2026-06-24T18:11:39+02:00",
+      "outputs": [
+        "Updated Factory-And-Purchase-Systems-Atlas.md with a current-master B750/B751 price/key matrix row and B751 source-present note.",
+        "Updated Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Progress-Dashboard.md, Wiki-Pruning-And-Relevance-Ledger.md and Agent-Worklog.md to route current-master buy-menu price/key questions through the factory atlas.",
+        "Updated agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-feature-status.jsonl, agent-hardening-backlog.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "b750-factory-purchase-owner-route-2026-06-24",
       "owner": "Codex",

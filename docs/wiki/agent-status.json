@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T17:48:59+02:00",
+  "generatedAt": "2026-06-24T18:11:39+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "none",
-      "currentWork": "B750 factory/purchase owner-page route is published/validated; no active lane is claimed.",
+      "currentWork": "B750/B751 buy-menu price/key current-master refresh is published/validated; no active lane is claimed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane after fresh coordination reads."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "buy-menu-price-key-current-master-b750-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only current-master B750/B751 refresh for the buy-menu price/key matrix after fetch-before-commit advanced current stable to origin/master@7bfcf09a9 via PR #88 on top of PR #87. Current master keeps selected-detail display, list price and purchase debit on the modifier-bearing formula in both maintained roots (Client_UIFillListBuyUnits.sqf:96; GUI_Menu_BuyUnits.sqf:105,:420,:621) and mirrors driver-default compatibility writes at GUI_Menu_BuyUnits.sqf:48-49,:194-195,:443-444,:488,:494,:500,:533-534,:546-547. The remaining current-master price/key defect is still the level-0 UNIT_COST_MODIFIER reset: Init_CommonConstants.sqf:661 initializes once and Client_UIFillListBuyUnits.sqf:11,14 only write discounted levels. B751 is now source-present adjacent hardening: Client_UIFillListBuyUnits.sqf:40 guards nil _c before faction filtering and Init_CommonConstants.sqf:159 raises the AICOM hard cap; it is not a price/key closure. No gameplay source changed."
+    },
     {
       "lane": "b750-factory-purchase-owner-route-2026-06-24",
       "owner": "Codex",
