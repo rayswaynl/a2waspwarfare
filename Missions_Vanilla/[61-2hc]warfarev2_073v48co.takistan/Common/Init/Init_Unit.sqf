@@ -95,6 +95,12 @@ if (_unit isKindOf "Car") then { //--- Lights vehicles.
 	_unit addAction ["Flip Vehicle", "WASP\actions\FlipVehicle.sqf", [], 5, false, true, "", "(vectorUp _target select 2) < 0.35 && _target distance player < 10"];
 };
 
+if (_unit_kind == 'An2_TK_EP1') then { //--- AN-2 fast-lift: player high-climb/low-gear boost (no Flip — nonsensical for a plane).
+	//--- Valhalla Low gear.
+	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player==driver _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
+	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOff")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player==driver _target) && (_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
+};
+
 if (_unit isKindOf "Ship") then { //--- Boats.
 	//--- Push action.
 	_unit addAction [localize "STR_WF_Push","Client\Action\Action_Push.sqf", [], 93, false, true, "", 'driver _target == _this && alive _target && speed _target < 30'];
