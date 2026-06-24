@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-24T07:15:00+02:00",
-  "lastVerifiedAt": "2026-06-24T07:15:00+02:00",
+  "generatedAt": "2026-06-24T13:15:00+02:00",
+  "lastVerifiedAt": "2026-06-24T13:15:00+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -1474,8 +1474,8 @@
     {
       "id": "commander-built-artillery-ownership",
       "priority": "P2",
-      "sourceStatus": "branch-split-docs-source-current-stable-b741-b69-b74-and-historical-release-carry-different-supported-shapes",
-      "vanillaStatus": "docs-source-current-stable-b741-b69-b74-and-historical-release-vanilla-carry-supported-shapes",
+      "sourceStatus": "branch-split-docs-source-current-stable-b741-b742-b69-b74-and-historical-release-carry-different-supported-shapes",
+      "vanillaStatus": "docs-source-current-stable-b741-b742-b69-b74-and-historical-release-vanilla-carry-supported-shapes",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Construction-And-CoIn-Systems-Atlas.md",
@@ -1485,24 +1485,26 @@
         "Source-Fix-Propagation-Queue.md"
       ],
       "evidenceRefs": [
+        "origin/docs/developer-wiki-index@3dc43a3dca7d Chernarus/Vanilla commander ARTY paths unchanged from f5bcaf91",
         "origin/docs/developer-wiki-index@f5bcaf91 Chernarus/Vanilla Construction_StationaryDefense.sqf:91-94 commander-team gunner handoff",
         "origin/docs/developer-wiki-index@f5bcaf91 Chernarus/Vanilla Common_GetTeamArtillery.sqf:10-30 group-player Tactical discovery",
         "origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 Chernarus/Vanilla Construction_StationaryDefense.sqf:166-168 WFBE_CommanderArtillery marker variables",
         "origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 Chernarus/Vanilla Common_GetTeamArtillery.sqf:41-78 marked same-side commander artillery discovery, WFBE_CommanderArtillerySide read at :56",
-        "origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f match current stable marker construction/discovery shape; Tactical RequestFireMission drifts to GUI_Menu_Tactical.sqf:559",
+        "origin/claude/b74.2-aicom@21b62b04 matches current stable/B74.1 marker construction/discovery shape in both maintained roots; origin/master..B74.2 and d472da6a..21b62b04 checked ARTY diffs are empty",
+        "origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f match current stable marker construction/discovery shape; Tactical RequestFireMission is GUI_Menu_Tactical.sqf:559 on marker-shaped refs",
         "historical a96fdda2 and 7ff18c49 Chernarus/Vanilla Construction_StationaryDefense.sqf:133-135 plus Common_GetTeamArtillery.sqf:46,56 marker path",
         "current Miksuu b8389e748243 and origin/perf/quick-wins@0076040f expose Tactical RequestFireMission but no checked GetCommanderTeam handoff or WFBE_CommanderArtillery marker rescue",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:547",
-        "origin/claude/b69@8d465fce Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:559",
-        "Current origin exposed no live release/* or artillery feature head on 2026-06-23"
+        "Current origin exposed no live release/* or commander-built ARTY ownership rescue head on 2026-06-24; checked Trello artillery heads are UI-only for this ownership lane"
       ],
       "releaseGate": "Smoke commander-built manned artillery inside the HQ/base circle, Tactical fire-mission listing, ammo loading, direct fire, non-artillery DefenseTeam behavior, HC static-defense fallback and marker-path repair-truck exclusion on marker-based branches.",
       "branchStatus": {
         "stableMaster": "f8a76de34-b741-marker-based-commander-artillery-discovery-in-chernarus-and-vanilla-at-Construction_StationaryDefense-166-168-and-Common_GetTeamArtillery-41-78",
+        "b742": "21b62b04-matches-current-stable-marker-construction-discovery-shape-for-checked-maintained-root-artillery-paths",
         "b69B74": "8d465fce-and-b23f557f-match-current-stable-marker-construction-discovery-shape-with-Tactical-RequestFireMission-line-559",
         "releaseBranch": "historical-a96fdda2-7ff18c49-marker-based-commander-artillery-discovery-at-Construction_StationaryDefense-133-135-until-release-head-restored",
-        "docsSource": "f5bcaf91-chernarus-and-vanilla-carry-commander-team-artillery-handoff-and-basearea-null-guard",
-        "evidence": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-23"
+        "docsSource": "3dc43a3dca7d-source-unchanged-from-f5bcaf91-chernarus-and-vanilla-carry-commander-team-artillery-handoff-and-basearea-null-guard",
+        "miksuuPerf": "b8389e748243-and-0076040f-old-DefenseTeam-only-no-marker-or-handoff-rescue-found",
+        "evidence": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-24"
       }
     }
   ],
@@ -1544,7 +1546,7 @@
     }
   ],
   "branchScope": {
-    "checkedAt": "2026-06-23T10:44:00+02:00",
+    "checkedAt": "2026-06-24T13:15:00+02:00",
     "docsSource": {
       "commit": "15563691",
       "branch": "docs/developer-wiki-index",
@@ -1557,9 +1559,14 @@
     },
     "releaseBranch": {
       "commit": "a96fdda2 / 7ff18c49",
-      "branch": "historical local release-line evidence; no live origin release/* head on 2026-06-23",
+      "branch": "historical local release-line evidence; no live origin release/* head on 2026-06-24",
       "meaning": "Historical release-line commits carry paratrooper marker registration, single Skill_Init, hosted FPS guard/removal, narrowed supply scan and marker-based commander-built ARTY discovery in both maintained missions, but must be rechecked if a release ref is restored. Arma smoke remains pending."
     },
-    "canonicalDoc": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-23"
+    "canonicalDoc": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-24",
+    "b742": {
+      "commit": "21b62b04",
+      "branch": "origin/claude/b74.2-aicom",
+      "meaning": "For commander-built ARTY ownership/discovery, current B74.2 matches current stable/B74.1 in both maintained roots; scoped origin/master..B74.2 and d472da6a..21b62b04 diffs are empty for checked ARTY paths. Arma smoke remains pending."
+    }
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T12:25:00+02:00",
+  "generatedAt": "2026-06-24T13:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Hosted server FPS/status-counter current B74.2 refresh is published as docs-only wiki and machine-context work. No active Codex-specific lane is claimed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed documentation lane from Feature Status, Source Fix queue, pruning ledger or hardening backlog; claim before editing."
+      "currentWork": "Commander-built ARTY current B74.2 context refresh is published and mirrored; no active Codex docs lane is claimed.",
+      "nextExpectedOutput": "Read coordination surfaces and claim the next bounded source-backed wiki or machine-context lane."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-built-arty-current-b742-context-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only commander-built ARTY current B74.2 context refresh. Construction/CoIn, Source Fix queue, Feature Status, Testing workflow and machine rows now route current stable/B74.1 through origin/master@f8a76de34 and current B74.2 through origin/claude/b74.2-aicom@21b62b04 instead of older origin/master@0139a346 wording. Repo docs branch HEAD@3dc43a3dca7d is unchanged from f5bcaf91 for checked ARTY paths and keeps commander-team gunner handoff; current stable/B74.1/B74.2/B69/B74 share marker-based discovery; Miksuu/perf remain old DefenseTeam shape. No gameplay source changed."
+    },
     {
       "lane": "hosted-fps-status-current-b742-refresh-2026-06-24",
       "owner": "Codex",
