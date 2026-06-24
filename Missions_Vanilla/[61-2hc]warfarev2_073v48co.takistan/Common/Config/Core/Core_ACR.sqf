@@ -129,7 +129,10 @@ for '_z' from 0 to (count _c)-1 do {
 			diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_ACR: Duplicated Element found '%1'",(_c select _z),diag_frameno,diag_tickTime];
 		};
 	} else {
-		diag_log Format ["[WFBE (ERROR)][frameno:%2 | ticktime:%3] Core_ACR: Element '%1' is not a valid class.",(_c select _z),diag_frameno,diag_tickTime];
+		//--- D4 2026-06-19: ACR is a shelved/absent DLC on this server, so these classes are
+		//--- EXPECTED to be missing (~70x ERROR spam per init). Demoted ERROR -> WARNING: it is
+		//--- a benign skip (the class just isn't registered), not a fault. Behaviour unchanged.
+		diag_log Format ["[WFBE (WARNING)][frameno:%2 | ticktime:%3] Core_ACR: Element '%1' is not a valid class (DLC absent) - skipped.",(_c select _z),diag_frameno,diag_tickTime];
 	};
 };
 

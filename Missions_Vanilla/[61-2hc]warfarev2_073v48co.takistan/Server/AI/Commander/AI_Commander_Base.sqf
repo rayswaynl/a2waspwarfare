@@ -32,6 +32,11 @@ if (isNil "_names" || isNil "_classes" || isNil "_costs" || isNil "_scripts") ex
 //--- 1) Deploy the HQ where it stands (the MHQ starts at the side's start location).
 if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 	if (_logik getVariable ["wfbe_hqinuse", false]) exitWith {};
+	//--- B62 (Ray 2026-06-21): MHQ/Base double-deploy lock. If an MHQ relocation is mid-drive
+	//--- (AI_Commander_MHQReloc set wfbe_mhqreloc_active), do NOT re-deploy a fresh HQ at the old
+	//--- spot - that races the relocation and double-deploys. The reloc worker clears the flag on
+	//--- finish/abort; until then the Base worker stands down on the deploy path.
+	if (_logik getVariable ["wfbe_mhqreloc_active", false]) exitWith {};
 	_deployCost = _costs select 0;
 	if (_supply >= _deployCost) then {
 		//--- V0.6.5 owner report: HQ deployed ON a road (MHQ start spot). Nudge the
@@ -161,6 +166,12 @@ _findBuildPos = {
 					if (surfaceIsWater [_sx, _sy, 0]) then {_blocked = true};
 					//--- standoff must survive the empty-pos settle (>= 12m off the carriageway).
 					if (((_cand distance _rp) < 12)) then {_blocked = true};
+					//--- B67: reject a candidate that crowds an existing friendly structure
+					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
+					//--- runs before the outer _structures local is assigned (line ~314).
+					if (!_blocked) then {
+						{ if ((_cand distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_blocked = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+					};
 					if (!_blocked) then {_p = _cand; _ok = true};
 				};
 			};
@@ -178,7 +189,13 @@ _findBuildPos = {
 			_p = [_p, 30] Call WFBE_CO_FNC_GetEmptyPosition;
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
-				if (count (_p nearRoads 22) == 0) then {_ok = true};
+				if (count (_p nearRoads 22) == 0) then {
+					//--- B67: reject a candidate that crowds an existing friendly structure
+					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
+					//--- runs before the outer _structures local is assigned (line ~314).
+					_ok = true;
+					{ if ((_p distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_ok = false} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+				};
 			};
 		};
 		_try = _try + 1;
@@ -302,8 +319,18 @@ if (_artradIdx >= 0) then {
 };
 if (_scaffoldActivated) then {
 	_artyThreat = _logik getVariable ["wfbe_aicom_arty_threat", false];
-	["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR-in-order=%2 threat=%3 Bank=%4).", _sideText, ("CBRadar" in _order), _artyThreat, ("Bank" in _order)]] Call WFBE_CO_FNC_AICOMLog;
-	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str ("CBRadar" in _order) + " threat=" + str _artyThreat + " Bank=" + str ("Bank" in _order));
+	//--- B74.1 (2026-06-23) DE-SPAM: _scaffoldActivated is true whenever a structure is merely IN _order, even one
+	//--- that already exists (the actual build is dedup-gated downstream), so on a high-supply side this logged
+	//--- ~1/min for hours (935x in the b74 soak) with zero real builds, masking real signal. Only emit when the
+	//--- scaffold set CHANGES vs the last logged state. A2-OA-safe (str/in/getVariable on the side-logic object).
+	private ["_scaffoldSig","_scaffoldPrev"];
+	_scaffoldSig = str [("CBRadar" in _order), ("Bank" in _order), ("Reserve" in _order), ("ArtilleryRadar" in _order), _artyThreat];
+	_scaffoldPrev = _logik getVariable ["wfbe_aicom_scaffold_sig", ""];
+	if (_scaffoldSig != _scaffoldPrev) then {
+		_logik setVariable ["wfbe_aicom_scaffold_sig", _scaffoldSig];
+		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR-in-order=%2 threat=%3 Bank=%4).", _sideText, ("CBRadar" in _order), _artyThreat, ("Bank" in _order)]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str ("CBRadar" in _order) + " threat=" + str _artyThreat + " Bank=" + str ("Bank" in _order));
+	};
 };
 
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
@@ -312,11 +339,56 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 	_idx = _names find _x;
 	if (_idx >= 0) then {
 		_class = _classes select _idx;
+		//--- BUILD-LIMIT + BASE CAP (Ray 2026-06-24, directives #1 + #4): obey the SAME per-type structure caps as
+		//--- human players. _x here is the TYPE KEY (the order list + _names = WFBE_%1STRUCTURES are type keys, not
+		//--- model names), and wfbe_structure_type on each built site == that same type key (set as _rlType in
+		//--- Construction_*Site.sqf). Read the player cap WFBE_C_STRUCTURES_MAX_<type> (case-insensitive getVariable,
+		//--- same idiom as coin_interface.sqf:917); CommandCenter is additionally clamped to the AICOM base cap.
+		//--- FLAW-FIX: exitWith inside forEach exits the ENTIRE loop (CommandCenter is the first order item, so a
+		//--- capped CC would starve the whole base of all other production). Instead compute _capped and wrap the
+		//--- REST of the iteration body in if(!_capped) so ONLY the current type is skipped; the loop continues.
+		//--- Micro-opt: reuse the already-computed _structures local (line 336) for the type-count, no extra call.
+		//--- De-spammed via per-type quota signature on _logik (mirrors scaffold-sig de-spam, lines 326-333).
+		//--- Both gates run BEFORE any supply is paid below, so a capped build never spends.
+		private ["_otype","_typeLimit","_typeHave","_basesMax","_capped"];
+		_capped = false;
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_OBEY_BUILD_LIMITS", 1]) > 0) then {
+			_otype = _x;
+			_typeLimit = missionNamespace getVariable [Format ["WFBE_C_STRUCTURES_MAX_%1", _otype], 3];
+			if (typeName _typeLimit != "SCALAR") then {_typeLimit = 3};
+			//--- directive #1: a 'base' is a CommandCenter; clamp the per-type limit to the base cap.
+			if (_otype == "CommandCenter") then {
+				_basesMax = missionNamespace getVariable ["WFBE_C_AICOM_BASES_MAX", 2];
+				if (_basesMax > 0 && {_basesMax < _typeLimit}) then {_typeLimit = _basesMax};
+			};
+			//--- count LIVE structures of this type; use the already-computed _structures local (micro-opt).
+			_typeHave = {((_x getVariable ["wfbe_structure_type", ""]) == _otype) && {alive _x}} count _structures;
+			if (_typeHave >= _typeLimit) then {
+				_capped = true;
+				//--- de-spam: only log when the quota-full state for this type CHANGES on the side logic.
+				private ["_qSig","_qPrev"];
+				_qSig = _otype + "=" + str _typeHave + "/" + str _typeLimit;
+				_qPrev = _logik getVariable [Format ["wfbe_aicom_quota_%1", _otype], ""];
+				if (_qSig != _qPrev) then {
+					_logik setVariable [Format ["wfbe_aicom_quota_%1", _otype], _qSig];
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] build of %2 SKIPPED - cap reached (%3/%4).", _sideText, _otype, _typeHave, _typeLimit]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BUILD_CAP_SKIP|type=" + _otype + "|have=" + str _typeHave + "|max=" + str _typeLimit);
+				};
+			};
+		};
+		if (!_capped) then {
 		//--- Already have an ALIVE one of this type? V0.4.2: construction is ASYNC, so a
 		//--- site paid for last tick is not alive yet - the pending timestamp guards the
 		//--- 5-min build window so we never pay for the same structure twice.
 		_have = false;
-		{ if (typeOf _x == _class && {alive _x}) exitWith {_have = true} } forEach _structures;
+		//--- B74 REBASE (Ray 2026-06-22): when REBASE_ON, only count a structure as 'already have' if it sits within
+		//--- BASE_RADIUS of the CURRENT HQ - so after an MHQ relocation the old base's far factories no longer block a
+		//--- rebuild and the new forward base re-establishes its own production (supply-gated). Structures build in the
+		//--- 60-110m HQ ring (well inside BASE_RADIUS), so normal non-relocated play is unchanged (HQ-local == side-wide).
+		private ["_rebaseLocal","_baseR"];
+		_rebaseLocal = (missionNamespace getVariable ["WFBE_C_AICOM_REBASE_ON", 1]) > 0;
+		_baseR = missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450];
+		{ if (typeOf _x == _class && {alive _x} && {(!_rebaseLocal) || {((getPos _x) distance _hqPos) <= _baseR}}) exitWith {_have = true} } forEach _structures;
 		if (!_have) then {
 			if (time - (_logik getVariable [Format ["wfbe_aicom_built_%1", _x], -1e6]) < 300) then {_have = true};
 		};
@@ -340,9 +412,11 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				//--- (CC/Barracks/Bank/CBR) keeps the default OFF-road placement.
 				if (!_placed) then {
 					if (_x in ["Light","Heavy","Aircraft"]) then {
-						_pos = [45, 75, 1] Call _findBuildPos;
+						//--- B67: widen the factory placement ring (was 45..75) so production
+						//--- factories spread out from the HQ core and clear the spacing gate.
+						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
 					} else {
-						_pos = [45, 75] Call _findBuildPos;
+						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110])] Call _findBuildPos;
 					};
 				};
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};
@@ -432,6 +506,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|struct=" + _x + "|cost=" + str _cost + "|paidBy=" + (if (_dual) then {"supply"} else {"free"}) + "|branchOut=" + str _coreDone);
 			};
 		};
+		}; //--- end if (!_capped)
 	};
 } forEach _order;
 

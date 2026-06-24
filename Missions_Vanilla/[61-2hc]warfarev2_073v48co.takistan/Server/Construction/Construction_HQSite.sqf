@@ -91,6 +91,13 @@ if (!_deployed) then {
 	processinitcommands;
 	};
 
+	//--- B66: the DEPLOY branch (~:32) fires Init_BaseStructure via setVehicleInit so every client draws the
+	//--- HQ map marker; the MOBILIZE branch never did, so an undeployed/relocating MHQ had NO client marker
+	//--- (own-side + JIP players saw nothing). Mirror the deploy-branch call so the mobilized MHQ also gets a
+	//--- client marker (Init_BaseStructure handles the mobilized state). Matches the deploy-branch quoting.
+	_MHQ setVehicleInit Format["[this,true,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'",_sideID];
+	processInitCommands;
+
 	[_side,"Mobilized", ["Base", _MHQ]] Spawn SideMessage;
 	_MHQ addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}]; //--- Killed EH fires localy, this is the server.
 

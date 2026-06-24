@@ -46,7 +46,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 		if (!((_x select 1) in _afNames)) then {_afNames = _afNames + [_x select 1]};
 	} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
 	{
-		if (((_x getVariable ["sideID", -1]) == _sideID) && {((_x getVariable ["name",""]) in _afNames) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
+		if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {(_x getVariable ["name",""]) in _afNames} || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true}; //--- B74: authoritative baked wfbe_is_airfield flag primary; name-list + hangar-obj fallback.
 	} forEach towns;
 } else {
 	_hasAirfield = true; //--- rule disabled -> planes ungated (old behaviour).
@@ -188,7 +188,35 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 					_order = [2,1,3,0];
 					{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _order;
 				};
-				_pick = (_buckets select _chosen) select (floor (random (count (_buckets select _chosen))));
+				_pick = -1;
+					//--- B74 COST/TIER-WEIGHTED DRAW (Ray 2026-06-22): mirror of the founding picker in AI_Commander_Teams.sqf -
+					//--- weight the chosen bucket by (summed unit price)^EXP so server-local teams field their expensive unlocked
+					//--- units too (EXP=0 or a single candidate reproduces the old uniform draw). A2-OA-safe (^ op, manual counter, _x captured).
+					private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwPrice","_cwW","_cwRoll","_cwAcc","_cwI","_cwUd"];
+					_cwBucket = _buckets select _chosen;
+					_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_TIER_BIAS_EXP", 1.5];
+					if (_cwExp <= 0 || {count _cwBucket <= 1}) then {
+						_pick = _cwBucket select (floor (random (count _cwBucket)));
+					} else {
+						_cwWeights = []; _cwSum = 0;
+						{
+							_cwIdx  = _x;
+							_cwTmpl = _templates select _cwIdx;
+							_cwPrice = 0;
+							{ _cwUd = missionNamespace getVariable _x; if (!isNil "_cwUd") then {_cwPrice = _cwPrice + (_cwUd select QUERYUNITPRICE)} } forEach _cwTmpl;
+							if (_cwPrice < 1) then {_cwPrice = 1};
+							_cwW = _cwPrice ^ _cwExp;
+							_cwWeights set [count _cwWeights, _cwW];
+							_cwSum = _cwSum + _cwW;
+						} forEach _cwBucket;
+						_cwRoll = random _cwSum; _cwAcc = 0; _cwI = 0;
+						{
+							_cwAcc = _cwAcc + (_cwWeights select _cwI);
+							if (_pick < 0 && {_cwRoll < _cwAcc}) then {_pick = _x};
+							_cwI = _cwI + 1;
+						} forEach _cwBucket;
+						if (_pick < 0) then {_pick = _cwBucket select (count _cwBucket - 1)};
+					};
 				_team setVariable ["wfbe_teamtype", _pick, true];
 				["INFORMATION", Format ["AI_Commander_AssignTypes.sqf: [%1] assigned template %2 to AI team [%3] (doctrine %4).", _sideText, _pick, _team, _doc]] Call WFBE_CO_FNC_AICOMLog;
 				//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): a server-local team's

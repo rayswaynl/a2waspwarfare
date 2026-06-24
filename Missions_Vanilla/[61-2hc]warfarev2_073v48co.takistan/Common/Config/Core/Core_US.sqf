@@ -182,7 +182,7 @@ _i = _i + [['','',7500,35,-2,4,2,0,'US',[]]];
 
 /* Air Vehicles */
 _c = _c + ['MH6J_EP1'];
-_i = _i + [['','',4928,25,-2,0,3,0,'US',[]]];
+_i = _i + [['','',4928,25,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): MH6J_EP1 air-upgrade 0->1. Was a tier-0 heli, so the strict-> tech gate passed it at air-research 0; aircraft must require an air factory (AIR-1). Rollback: ...,0,3,0,...
 
 _c = _c + ['UH60M_EP1'];
 _i = _i + [['','',7168,30,-2,1,3,0,'US',[]]];
@@ -197,7 +197,7 @@ _c = _c + ['C130J_US_EP1'];
 _i = _i + [['','',9440,30,-2,1,3,0,'US',[]]];
 
 _c = _c + ['AH6X_EP1'];
-_i = _i + [['','',4416,50,-2,0,3,0,'US',[]]];
+_i = _i + [['','',4416,50,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): AH6X_EP1 air-upgrade 0->1 (same tier-0-heli fix as MH6J). Rollback: ...,0,3,0,...
 
 _c = _c + ['AH6J_EP1'];
 _i = _i + [['','',9119,35,-2,2,3,0,'US',[]]];

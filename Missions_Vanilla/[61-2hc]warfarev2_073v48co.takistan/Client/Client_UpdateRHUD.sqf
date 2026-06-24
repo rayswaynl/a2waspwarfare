@@ -12,7 +12,7 @@ private[
 	"_total", "_perfStart", "_display", "_lastDisplay", "_controls", "_rhudIDC", "_lastTexts", "_lastColors", "_lastShown", "_lastBackgroundColor",
 	"_labelsApplied", "_hiddenApplied", "_hudWasShown", "_lastTownRefresh", "_incomeText", "_supplyText", "_baseText", "_baseColor",
 	"_RHUDResetControlCache", "_RHUDSetShow", "_RHUDSetText", "_RHUDSetColor", "_RHUDGetDisplay", "_idx", "_player", "_side", "_bgColor",
-	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_mbu", "_currentUnitsCount", "_maxUnitsCount",
+	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_mbu", "_mbuByTier", "_mbuPT", "_currentUnitsCount", "_maxUnitsCount", //--- B74.2: _mbuByTier/_mbuPT for pop-tier per-player AI cap
 	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_baseStructures", "_baseHq", "_baseTotal", "_baseDamaged", "_clientFPS", "_clientFPSColor",
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
@@ -351,7 +351,13 @@ while {true} do {
 			[4, _commanderText] call _RHUDSetText;
 
 			//AI COUNT
-			_mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
+			//--- B74.2: per-player AI cap now follows the live pop-tier (WFBE_PopTier is publicVariable'd, read live on the client).
+			_mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX'; //--- fallback scalar if the tiered array is unset
+			_mbuByTier = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX_BY_TIER';
+			if (!isNil '_mbuByTier') then {
+				_mbuPT = missionNamespace getVariable ['WFBE_PopTier', 0]; if (_mbuPT < 0) then {_mbuPT = 0};
+				if (_mbuPT <= ((count _mbuByTier) - 1)) then {_mbu = _mbuByTier select _mbuPT};
+			};
 			//--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 			if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 			_currentUnitsCount = Count ((Units (group player)) Call GetLiveUnits);
@@ -379,6 +385,8 @@ while {true} do {
 				_incomeText = Format ["+ %1 $",sideJoined Call GetIncome];
 				_supplyText = Format ["%1",(sideJoined) Call GetSideSupply];
 				_baseStructures = sideJoined Call WFBE_CO_FNC_GetSideStructures;
+				if (isNil "_baseStructures") then {_baseStructures = []};
+				if (typeName _baseStructures != "ARRAY") then {_baseStructures = []};
 				_baseHq = sideJoined Call WFBE_CO_FNC_GetSideHQ;
 				if (!isNull _baseHq) then {_baseStructures = _baseStructures + [_baseHq]};
 				_baseTotal = 0;

@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast"];
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -20,6 +20,8 @@ _town_occupation_enabled = if ((missionNamespace getVariable "WFBE_C_TOWNS_OCCUP
 
 //--- ACTIVE-TOWN BUDGET: cap on concurrently active towns (FPS lever).
 //--- Tunable WFBE_C_TOWNS_ACTIVE_MAX; default 6. Set lower in params to cut spawn load.
+//--- B74.2: this is only the initial seed/fallback now - the live budget is re-read per sweep
+//--- from the pop-tier (WFBE_C_TOWNS_ACTIVE_MAX_BY_TIER) inside the while loop below.
 _activeTownsBudgetMax = missionNamespace getVariable "WFBE_C_TOWNS_ACTIVE_MAX";
 if (isNil "_activeTownsBudgetMax") then { _activeTownsBudgetMax = 6 };
 _budgetDeferLast = -9999; //--- Debounce timestamp for the "deferred" log line (1 per 5 min).
@@ -54,6 +56,16 @@ while {!WFBE_GameOver} do {
 		if (_x getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount + 1 };
 	} forEach towns;
 	missionNamespace setVariable ["wfbe_active_town_count", _activeTownCount];
+
+	//--- B74.2: re-read the active-town budget from the live pop-tier EVERY sweep (was cached once
+	//--- at FSM start above). WFBE_PopTier is publicVariable'd by the server and shifts ~every 90s;
+	//--- reading it here lets the active-town ceiling track LOW/MID/HIGH/FULL at runtime.
+	//--- Keep the isNil seed/fallback: if the tiered array is unset, retain whatever was last cached.
+	_popTier = missionNamespace getVariable ["WFBE_PopTier", 0]; if (_popTier < 0) then { _popTier = 0 };
+	_activeMaxByTier = missionNamespace getVariable "WFBE_C_TOWNS_ACTIVE_MAX_BY_TIER";
+	if (!isNil "_activeMaxByTier") then {
+		if (_popTier <= ((count _activeMaxByTier) - 1)) then { _activeTownsBudgetMax = _activeMaxByTier select _popTier };
+	};
 
 	//--- GUER GROUP CAP: recount live resistance groups ONCE per sweep (not per town).
 	//--- server_groupsGC.sqf computes a GUER group count only as a local (_cntGuer) and never
@@ -306,7 +318,10 @@ while {!WFBE_GameOver} do {
 					{
 						if !(isNil '_x') then {
 							if !(isNull _x) then {
-								{if (local _x) then {deleteVehicle _x}} forEach units _x;
+								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
+								//--- every server-local unit; a player whose unit is server-local (e.g. a
+								//--- JIP/HC-handoff edge) would be wiped on despawn. Guard with !isPlayer.
+								{if (local _x && !(isPlayer _x)) then {deleteVehicle _x}} forEach units _x;
 								if (({!(local _x)} count units _x) == 0) then {deleteGroup _x};
 							};
 						};
@@ -316,7 +331,10 @@ while {!WFBE_GameOver} do {
 					//--- Marty: same locality rule as above - HC-local vehicles die via cleanup-townai.
 					{
 						if (alive _x && {local _x}) then {
-							if (!(isPlayer leader group _x)) then {deleteVehicle _x};
+							//--- B67 [wiki-wins]: the old check tested only the group leader; a player
+							//--- riding as a non-leader passenger/gunner would have their vehicle deleted
+							//--- out from under them. Scan the whole crew: delete only if zero players aboard.
+							if (({isPlayer _x} count crew _x) == 0) then {deleteVehicle _x};
 						};
 					} forEach (_town getVariable 'wfbe_active_vehicles');
 

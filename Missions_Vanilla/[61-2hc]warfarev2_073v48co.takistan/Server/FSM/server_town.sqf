@@ -232,6 +232,13 @@ while {!WFBE_GameOver} do {
 
 			_location setVariable ["sideID",_newSID,true];
 
+			//--- B74.2: leaderboard TOWN-capture credit to each capturing player physically present on the new
+			//--- owner's side at flip. _objects (the per-town capture scan above) holds the nearby entities; capture
+			//--- the outer side into a private so the nested forEach's magic _x stays safe.
+			private ["_capSide","_capUid"];
+			_capSide = _newSide;
+			{ if (isPlayer _x && {alive _x} && {side _x == _capSide}) then {_capUid = getPlayerUID _x; if (_capUid != "") then {[_capUid, WFBE_STAT_CAPTURES_TOWN, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
+
 			// AICOMSTAT FIRST_TOWN metric: emit once per side per round on its first capture.
 			// Plain logic getVariable with isNil guard (A2 OA safe; no == on Bool).
 			Private ["_ftLogik","_ftFlag","_ftKey","_ftMin","_ftSec","_ftTownName"];
@@ -277,6 +284,52 @@ while {!WFBE_GameOver} do {
 
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
 			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
+
+			//--- NAVAL HVT: post-capture actions for offshore assets (feat/naval-hvt-objectives).
+			//--- Guard: only fires if the feature is ON and this location is tagged as a naval HVT.
+			if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1 && {_location getVariable ["wfbe_is_naval_hvt", false]}) then {
+				private ["_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar","_navalMkr"];
+				_hvtName    = _location getVariable ["name", "Naval HVT"];
+				_hvtNewSide = _newSID Call WFBE_CO_FNC_GetSideFromID;
+
+				//--- Announce capture to all players (no inbound warning; just the flip notification).
+				[nil, "HandleSpecial", ["naval-hvt-captured", _location, _newSID, _hvtName]] Call WFBE_CO_FNC_SendToClients;
+				["INFORMATION", Format ["server_town.sqf: Naval HVT [%1] captured by sideID %2.", _hvtName, _newSID]] Call WFBE_CO_FNC_LogContent;
+
+				//--- Recolour the naval HVT map marker to the new owner.
+				_navalMkr = _location getVariable ["wfbe_naval_marker", ""];
+				if (_navalMkr != "") then {
+					_navalMkr setMarkerColor (missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _hvtNewSide], "ColorGreen"]);
+				};
+
+				//--- If this is a carrier HVT (LHD), update the airfield hangar for the new owner
+				//--- so the aircraft-sell block on next capture works correctly.
+				if (_location getVariable ["wfbe_is_carrier_hvt", false]) then {
+					_airLogicRef = _location getVariable ["wfbe_airfield_logic_ref", objNull];
+					if !(isNull _airLogicRef) then {
+						//--- Delete previous owner's hangar.
+						_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
+						if !(isNull _oldHangar) then { deleteVehicle _oldHangar };
+
+						//--- Spawn new hangar for the new owner (same pattern as ~line 492 airfield block).
+						//--- B74.2: place at the carrier DECK height (deckZ), not sea level, so the re-captured
+						//--- air-shop hangar stays on the deck; freeze + invuln to match the carrier props.
+						private ["_navDeckZ","_navRefPos"];
+						_navDeckZ  = _airLogicRef getVariable ["wfbe_naval_deckz", 16];
+						_navRefPos = getPosASL _airLogicRef;
+						_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle [_navRefPos select 0, _navRefPos select 1, 0];
+						_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
+						_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+						_newHangar enableSimulation false;
+						_newHangar allowDamage false;
+						_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+						_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
+						_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
+						_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
+						["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+			};
 
 			//--- Task 32: old defenders linger for WFBE_C_TOWNS_DEFENDER_LINGER seconds before cleanup.
 			//--- Fire-time guard: only clean up if the town has NOT flipped back to the old side.

@@ -39,6 +39,15 @@ _busy = _logik getVariable ["wfbe_mhqreloc_active", false];
 if (_busy) exitWith {};
 if (_logik getVariable ["wfbe_hqinuse", false]) exitWith {};
 
+//--- B74.2 (night-soak item 7, anti-thrash): EVALUATION back-off. A prior interval's abort
+//--- (advance-below-min / no-buffer-clear-standoff) stamps wfbe_mhqreloc_abort_until; while that
+//--- stamp is in the future, skip the whole own-town scan + ring-clear sweep + re-log instead of
+//--- re-deriving the same dead result every interval (the 461 paired-abort thrash in the digest).
+//--- Inert when WFBE_C_AICOM_MHQ_ABORT_COOLDOWN <= 0 (default), so behaviour is unchanged until tuned.
+private "_abortUntil";
+_abortUntil = _logik getVariable ["wfbe_mhqreloc_abort_until", 0];
+if ((missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0]) > 0 && {time < _abortUntil}) exitWith {};
+
 //--- Need a DEPLOYED static HQ to relocate.
 _deployed = (_side) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 if (typeName _deployed != "BOOL") exitWith {};
@@ -129,8 +138,25 @@ _destPos = [];
 	};
 } forEach _ownTowns;
 
+//--- B74 MIN-ADVANCE (Ray 2026-06-22): reject a relocation that is not a real forward leap - the new base
+//--- must be at least MHQ_MIN_ADVANCE metres from the OLD HQ, else keep the current base. Ray saw the HQ
+//--- move ~800m and stack on the old base; a relocation should only fire when the front has genuinely run away.
+if (count _destPos > 0) then {
+	private ["_minAdv","_advDX","_advDY","_advD"];
+	_minAdv = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_MIN_ADVANCE", 3000];
+	_advDX = (_destPos select 0) - (_hqPos select 0);
+	_advDY = (_destPos select 1) - (_hqPos select 1);
+	_advD  = sqrt (_advDX*_advDX + _advDY*_advDY);
+	if (_advD < _minAdv) then {
+		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|advance-below-min|adv=" + str (round _advD) + "|min=" + str (round _minAdv));
+		_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
+		_destPos = [];
+	};
+};
+
 //--- No friendly town yields a buffer-clear standoff -> ABORT (never deploy into a ring).
 if (count _destPos == 0) exitWith {
+	_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
 	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|no-buffer-clear-standoff|ringClear=" + str (round _ringClear));
 };
 
@@ -257,7 +283,25 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|NUDGE|stalled=" + str (round (time - _lastImprove)) + "|d=" + str (round _curD));
 			};
 
-			if ((time - _lastImprove) > _stuckSecs) then {_done = true; _reason = "stuck"};
+			if ((time - _lastImprove) > _stuckSecs) then {
+					//--- B74.1 (2026-06-23): a STUCK MHQ used to deploy WHERE IT STALLED - and on Chernarus it stalls almost
+					//--- immediately, landing the new base back beside the OLD one (~0 advance), which nullified the forward
+					//--- relocation AND #9's forward-factory rebuild (the b74 soak saw 14/14 relocations deploy stuck near base).
+					//--- Teleport to _destPos instead (player-clear-gated, the same accepted step the deadline path uses) so a
+					//--- stuck relocation still lands FORWARD. Falls back to deploy-in-place only if a player blocks the dest.
+					_pNear = false;
+					{ if (isPlayer _x && {alive _x} && {!isNull _mhq} && {(_x distance _mhq) < _safeDist}) then {_pNear = true} } forEach playableUnits;
+					{ if (isPlayer _x && {alive _x} && {(_x distance _destPos) < _safeDist}) then {_pNear = true} } forEach playableUnits;
+					if (!_pNear && {!surfaceIsWater _destPos}) then {
+						_mhq setVelocity [0,0,0];
+						_mhq setPos _destPos;
+						diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|STUCK_TELEPORT|to=" + str _destPos);
+						_reason = "stuck-teleport";
+					} else {
+						_reason = "stuck";
+					};
+					_done = true;
+				};
 		};
 
 		if (!_done && {(time - _t0) > _deadline}) then {

@@ -226,7 +226,7 @@ while {alive player && dialog} do {
 			_lastDash = time;
 			_pool = (sideJoined) Call GetTownsIncome;
 			_perMin = round(_pool * 60 / _econInterval);
-			_dash ctrlSetStructuredText (parseText Format ["<t color='#9fb0bc' shadow='1'>Income pool: </t><t color='#e0b94f' shadow='1'>$%1/min</t><t color='#9fb0bc' shadow='1'>  ($%2/hr)</t><br/><t color='#9fb0bc' shadow='1'>Towns held: </t><t shadow='1'>%3 / %4</t><br/><t color='#9fb0bc' shadow='1'>Supply: </t><t shadow='1'>%5</t>", _perMin, (_perMin * 60), (sideJoined Call GetTownsHeld), _totalTowns, (missionNamespace getVariable [format ["wfbe_supply_%1", str sideJoined], "?"])]);	//--- FIX: non-blocking read (GetSideSupply does a publicVariableServer+waitUntil that can stall this loop)
+			_dash ctrlSetStructuredText (parseText Format ["<t color='#9fb0bc' shadow='1'>Side income pool: </t><t color='#e0b94f' shadow='1'>$%1/min</t><t color='#9fb0bc' shadow='1'>  ($%2/hr)</t><br/><t color='#9fb0bc' shadow='1'>Towns held: </t><t shadow='1'>%3 / %4</t><br/><t color='#9fb0bc' shadow='1'>Supply: </t><t shadow='1'>%5</t>", _perMin, (_perMin * 60), (sideJoined Call GetTownsHeld), _totalTowns, (missionNamespace getVariable [format ["wfbe_supply_%1", str sideJoined], "?"])]);	//--- FIX: non-blocking read (GetSideSupply does a publicVariableServer+waitUntil that can stall this loop)
 		};
 	};
 
