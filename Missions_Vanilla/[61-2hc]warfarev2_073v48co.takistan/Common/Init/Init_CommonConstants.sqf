@@ -98,6 +98,13 @@ with missionNamespace do {
 		if (isNil "WFBE_C_GUER_VBIED_M113_TYPE") then {WFBE_C_GUER_VBIED_M113_TYPE = "M113_UN_EP1"};
 		if (isNil "WFBE_C_GUER_VBIED_M113_KILLS") then {WFBE_C_GUER_VBIED_M113_KILLS = 25}; //--- GUER kills required before the M113 VBIED appears in the depot.
 		if (isNil "WFBE_C_GUER_VBIED_M113_SPEEDCOEF") then {WFBE_C_GUER_VBIED_M113_SPEEDCOEF = 2.0}; //--- target top-speed multiplier of the driver-local boost loop (~2x stock M113).
+		//--- Ka-137 (Ka137_MG_PMC) flares: the recon heli ships with NO countermeasures. The GUER player's bought Ka-137
+		//--- gets a CMFlareLauncher + a flare magazine sized by the kill tier (more kills => more flares). NB: A2-OA stock
+		//--- has no 30Rnd flare mag, so the floor is 60Rnd (closest available); the count still increases 60->120->240
+		//--- by kills as requested. Mags are indexed by WFBE_GUER_VEHICLE_TIER (clamped to the array bounds).
+		if (isNil "WFBE_C_GUER_KA137_TYPE") then {WFBE_C_GUER_KA137_TYPE = "Ka137_MG_PMC"};
+		if (isNil "WFBE_C_GUER_KA137_FLARE_LAUNCHER") then {WFBE_C_GUER_KA137_FLARE_LAUNCHER = "CMFlareLauncher"};
+		if (isNil "WFBE_C_GUER_KA137_FLARE_MAGS") then {WFBE_C_GUER_KA137_FLARE_MAGS = ["60Rnd_CMFlareMagazine","120Rnd_CMFlareMagazine","240Rnd_CMFlareMagazine"]};
 		//--- Barracks AI cap (per GUER player group): base + one extra slot per N kills, clamped to the A2 12-per-group engine ceiling.
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_BASE") then {WFBE_C_GUER_BARRACKS_AI_BASE = 4};
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_MAX") then {WFBE_C_GUER_BARRACKS_AI_MAX = 12};

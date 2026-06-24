@@ -456,6 +456,28 @@ if (_isMan) then {
 		};
 	};
 
+	//--- B75 (guer-tech): KILL-SCALED Ka-137 FLARES. The Ka137_MG_PMC ships with no countermeasures, and the GUER
+	//--- air CM-strip above (RemoveCountermeasures, fired because GUER has no flares upgrade) would also strip anything
+	//--- we add - so we arm flares HERE, AFTER that strip. Give the player's Ka-137 a CMFlareLauncher + a flare mag
+	//--- sized by the kill tier (60 -> 120 -> 240). The Ka-137 fires from its MainTurret, so turret-path [-1] is
+	//--- MANDATORY (hull addMagazine/addWeapon silently no-op on it - same special-case the EASA path keys on).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoined == resistance} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_KA137_TYPE", "Ka137_MG_PMC"])}) then {
+		private ["_ka137Tier","_ka137Mags","_ka137Mag","_ka137Launcher"];
+		_ka137Tier = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
+		_ka137Mags = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_MAGS", ["60Rnd_CMFlareMagazine","120Rnd_CMFlareMagazine","240Rnd_CMFlareMagazine"]];
+		if (_ka137Tier < 0) then {_ka137Tier = 0};
+		if (_ka137Tier > ((count _ka137Mags) - 1)) then {_ka137Tier = (count _ka137Mags) - 1};
+		_ka137Mag = _ka137Mags select _ka137Tier;
+		_ka137Launcher = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_LAUNCHER", "CMFlareLauncher"];
+		//--- Clear any flare mag/launcher already on the turret (idempotent), then arm launcher + the sized mag. Uses
+		//--- the same remove/add turret-path [-1] commands EASA_RemoveLoadout.sqf / Server_GuerAirDef.sqf use (A2-OA safe).
+		{_vehicle removeMagazineTurret [_x, [-1]]} forEach ["60Rnd_CMFlareMagazine","120Rnd_CMFlareMagazine","240Rnd_CMFlareMagazine"];
+		_vehicle removeWeaponTurret [_ka137Launcher, [-1]];
+		_vehicle addWeaponTurret [_ka137Launcher, [-1]];
+		_vehicle addMagazineTurret [_ka137Mag, [-1]];
+		["INFORMATION", Format ["Client_BuildUnit.sqf: GUER Ka-137 armed with flares [%1] at tier [%2].", _ka137Mag, _ka137Tier]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	//--- Are we dealing with an artillery unit.
 
 	_isArtillery = [_unit,sideJoinedText] Call IsArtillery;
