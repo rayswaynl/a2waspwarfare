@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T08:15:00+02:00",
+  "generatedAt": "2026-06-24T08:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,6 +23,23 @@
   },
   "activeClaims": [
     {
+      "lane": "stale-upgrade-dialog-current-b742-head-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refreshed stale old upgrade dialog / UI resource parity rows that still routed current stable through older origin/master@0139a346 wording and did not name current origin/claude/b74.2-aicom@21b62b04.",
+        "Checked only stale RscMenu_Upgrade, missing Client/GUI/GUI_Menu_Upgrade.sqf, live WFBE_UpgradeMenu / GUI_UpgradeMenu.sqf and old Client/Images/wf_*.paa icon-block evidence in source Chernarus and maintained Vanilla.",
+        "Kept UI-Resource-Parity-Cleanup and Client-UI-Systems-Atlas canonical; updated Feature Status, Dead/stale code, pruning and coordination records only as needed.",
+        "No gameplay source edits."
+      ],
+      "outputs": [
+        "Updated UI-Resource-Parity-Cleanup.md, Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Dead-Code-And-Stale-Code-Register.md and stale upgrade dialog machine rows with current stable/B74.1 f8a76de34 plus current B74.2 21b62b04 evidence.",
+        "Recorded that repo docs branch HEAD@208062b4e is unchanged from 427346b0d / 0fdd5602 / d4cfef80 for checked upgrade paths and still carries stale RscMenu_Upgrade, missing GUI_Menu_Upgrade.sqf onLoad and missing wf_*.paa icon refs in both maintained roots.",
+        "Recorded that current stable/B74.1, previous/current B74.2, B69, B74 and historical a96fdda2 have no checked maintained-root stale-class hits and keep only live WFBE_UpgradeMenu; checked B74.2/current-stable/B69-B74 upgrade-dialog diffs are empty."
+      ],
+      "handoff": "Future UI owner should preserve current stable/B74.1/B74.2/B69/B74/release stale-class deletion and port it only to old-shape docs/Miksuu/perf targets or add an explicit alias; then smoke Upgrade menu opening, list/detail, RequestUpgrade and maintained Vanilla parity.",
+      "updated": "2026-06-24T08:55:00+02:00"
+    },    {
       "lane": "economy-dialog-current-b742-head-refresh-2026-06-24",
       "owner": "Codex",
       "status": "published-validated-docs-only",
