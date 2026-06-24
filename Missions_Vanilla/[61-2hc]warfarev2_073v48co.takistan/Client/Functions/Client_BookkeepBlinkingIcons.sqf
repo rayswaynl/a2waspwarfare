@@ -92,6 +92,22 @@ while { !WFBE_GameOver } do {
                                 [BLINKING_VEHICLES_EAST, _vehicleUnit] call BIS_fnc_arrayPush;
                             };
                         };
+
+                        // Upstream miksuu/BlinkingMapIconsV2: also blink the mounted player's own
+                        // soldier marker, so their map icon blinks alongside the active vehicle's.
+                        if (isPlayer _x && (_x == gunner _vehicleUnit || _x == commander _vehicleUnit)) then {
+                            if (side player == west) then {
+                                if (BLINKING_UNITS_WEST find _x == -1) then {
+                                    [BLINKING_UNITS_WEST, _x] call BIS_fnc_arrayPush;
+                                };
+                            };
+
+                            if (side player == east) then {
+                                if (BLINKING_UNITS_EAST find _x == -1) then {
+                                    [BLINKING_UNITS_EAST, _x] call BIS_fnc_arrayPush;
+                                };
+                            };
+                        };
                     } else {
                         if (side player == west) then {
                             {
