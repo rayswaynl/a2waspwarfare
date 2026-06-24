@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T19:15:33+02:00",
+  "generatedAt": "2026-06-24T19:29:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr83-pr80-post-b751b-status-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@f39665d7950ddf14cb0bbfacb7ee1e40121e93b4 current stable after PR #89",
+        "Live GitHub connector/API metadata for PR #83 and PR #80",
+        "Local merge-base and rev-list divergence for origin/master...origin/claude/wiki-wins-batch and origin/master...origin/claude/trello-vote-para-guards",
+        "Feature-Status-Register.md, Current-Source-Status-Snapshot.md, Testing-Debugging-And-Release-Workflow.md and compact coordination records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Preserve older PR #83/#80 source-path evidence as f8a76de34 base-relative branch-intake proof, but use the post-B751b route before merge/release wording: PR #83 is dirty/not mergeable with local counts 80 8; PR #80 is clean but stale-base with local counts 80 1 and must be rebased or rechecked before promotion.",
+      "updated": "2026-06-24T19:29:21+02:00",
+      "outputs": [
+        "Updated Feature-Status-Register.md, Current-Source-Status-Snapshot.md and Testing-Debugging-And-Release-Workflow.md so PR #83/#80 rows no longer call f8a76de34 current stable or imply post-B751b merge readiness.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records."
+      ]
+    },
     {
       "lane": "open-pr-board-post-b751b-refresh-2026-06-24",
       "owner": "Codex",
