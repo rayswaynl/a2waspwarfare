@@ -1,9 +1,7 @@
 ﻿
 While {!(Alive Player)} do {sleep 2;};
 
-//player addAction [localize "STR_WF_Gear", "WASP\actions\GearYouUnit.sqf", [], 1, false, false, "", "cursorTarget distance player < 3 && cursorTarget in units player"];
 
-//player addAction [localize "STR_WASP_actions_ChangeWheels", "WASP\actions\car_wheel_new.sqf", [], 1, false, true, "", "(cursorTarget isKindOf 'Car')&&(player distance cursorTarget<5)"];
 
 
 //OnArmor
