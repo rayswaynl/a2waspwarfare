@@ -1,6 +1,6 @@
 # Player Stats Branch Audit
 
-This page began as a source-backed review of `origin/feat/player-stats` at head `e01e47e1`. Treat the original branch sections as historical branch evidence unless the current-status table below says otherwise: current stable/B74.1 `origin/master@f8a76de34` now has a mission-side stats pipeline in the source Chernarus mission and sets `WFBE_C_STATS_ENABLED = true`, while maintained Vanilla Takistan still carries the helper/constants path with `WFBE_C_STATS_ENABLED = false`. B74.2 adds source Chernarus fast-follow stat writers, but is branch-only and has no `Missions_Vanilla` payload.
+This page began as a source-backed review of `origin/feat/player-stats` at head `e01e47e1`. Treat the original branch sections as historical branch evidence unless the current-status table below says otherwise: current stable/B74.1 `origin/master@f8a76de34` now has a mission-side stats pipeline in the source Chernarus mission and sets `WFBE_C_STATS_ENABLED = true`, while maintained Vanilla Takistan still carries the helper/constants path with `WFBE_C_STATS_ENABLED = false`. B74.2 adds source Chernarus fast-follow stat writers, but is branch-only and has no `Missions_Vanilla` payload. PR #84 is a later stack on the original player-stats branch that adds optional in-game names to the in-repo `stats.json` producer; keep it branch-only until merge/deploy/runtime smoke proves otherwise.
 
 ## What It Is
 
@@ -60,6 +60,20 @@ dotnet test "C:\Users\Steff\Documents\Codex\2026-06-01\github-plugin-github-open
 
 Result: `Passed! - Failed: 0, Passed: 13, Skipped: 0, Total: 13` on .NET 9.0.314. The build emitted nullable warnings in existing DiscordBot files, but the test suite passed.
 
+## PR #84 Player Name Stack
+
+Open non-draft [PR #84](https://github.com/rayswaynl/a2waspwarfare/pull/84) is `feat/player-stats-names` -> `feat/player-stats`, head `177539ed5585acdb086c9cfdacf1e671459a686a`, base `e01e47e12a767c3406f8b89b7df5ea9d95260b87`, GitHub clean merge state, updated 2026-06-24T12:51:37Z. Local checks confirm merge-base `e01e47e12a767c3406f8b89b7df5ea9d95260b87`, one commit, `git diff --shortstat origin/feat/player-stats..origin/feat/player-stats-names` = 6 files / +57 / -7, and clean `git diff --check` for the scoped stack. The scoped diff has no `Missions_Vanilla`, `Modded_Missions`, `Tools` or `Extension` payload.
+
+| Layer | PR #84 evidence | Meaning |
+| --- | --- | --- |
+| SQF flush producer | `StatsFlush.sqf:24-25,44-50` on `origin/feat/player-stats-names` | The playtime loop caches `name _x` under `WFBE_STAT_NAME_<uid>`, appends `~<name>` after the numeric CSV/side payload, then clears the cached name with the stat buffer. |
+| Parser wire format | `StatsBatchParser.cs:5,31-40,49` | `StatSegment` gains nullable `Name`; parsing splits the segment after `:` on the first `~`, preserving tildes inside the name while keeping numeric fields before the suffix. A player name containing `|` still truncates the name because the outer wire split is pipe-based, but the stat numbers remain before the suffix. |
+| Accumulator | `StatsAccumulator.cs:21-23` | Deltas and side still apply first; a non-null parsed name overwrites the stored latest-seen name, while absent names preserve the previous value. |
+| JSON contract | `PlayerStat.cs:22-24` | Adds nullable `[DataMember(Name = "name")] public string? Name`, matching the in-repo `stats.json` producer contract. |
+| Tests | `StatsBatchParserTests.cs:43-69`; `StatsPipelineIntegrationTests.cs:77-83` | Parser tests cover name suffix, absent suffix and internal `~`; the integration contract now asserts the `name` key appears in `stats.json`. |
+
+This pass could not re-run the PR #84 test suite locally: the detached worktree at `177539ed` failed immediately because `dotnet --info` reports runtime 8.0.28 but **no .NET SDKs installed**. The PR body reports `dotnet test` 16/16; treat that as PR-author evidence until a local SDK-backed run is recorded. The external website receiver named in the PR body is not present in this repo (`git ls-tree` found no `web/`, `bot/`, `api/stats`, `stats_reader` or `display_name` path on the branch), so this audit verifies only the in-repo producer/DiscordBot side.
+
 ## What Depends On It
 
 - The DiscordBot must run on, or have file access to, the Arma 2 OA server RPT path.
@@ -73,6 +87,7 @@ Result: `Passed! - Failed: 0, Passed: 13, Skipped: 0, Total: 13` on .NET 9.0.314
 | Current stable/B74.1 source Chernarus `origin/master@f8a76de34` | Present and enabled. `Init_CommonConstants.sqf:920` sets `WFBE_C_STATS_ENABLED = true`; `Init_Server.sqf:534-536` compiles `Server\Stats\RecordStat.sqf` and starts `StatsFlush.sqf`; `RecordStat.sqf:7-32` guards record helpers; `StatsFlush.sqf:9-10,24-35` guards and emits batched `WASPSTAT` lines; `RequestOnUnitKilled.sqf:117-131` records kill/PvP deltas. This is mission-side source Chernarus evidence, not proof of a current DiscordBot stats ingester. |
 | Current stable/B74.1 maintained Vanilla Takistan `origin/master@f8a76de34` | Helper/constants path is present but off by default: `Init_CommonConstants.sqf:786` sets `WFBE_C_STATS_ENABLED = false`; `Init_Server.sqf:529-530` compiles/starts `RecordStat`/`StatsFlush`; `RequestOnUnitKilled.sqf:102-116` has kill/PvP hooks guarded by the disabled flag. |
 | Original `origin/feat/player-stats@e01e47e1` | Historical branch: source Chernarus present and off by default; DiscordBot ingest/tests present; maintained Vanilla Takistan absent on that branch audit. |
+| PR #84 `origin/feat/player-stats-names@177539ed` | Open non-draft stack on `origin/feat/player-stats@e01e47e1`: source Chernarus `StatsFlush.sqf` appends optional `~<name>` suffix; DiscordBot parser/accumulator/`PlayerStat` preserve nullable `name`; parser/integration tests are updated. Branch-only; no maintained Vanilla, Modded, Tools or Extension payload. Local test rerun blocked by missing .NET SDK. |
 | B74.2 source Chernarus `origin/claude/b74.2-aicom@21b62b04` | Branch-only fast-follow writer hooks: structures built at `Construction_MediumSite.sqf:200` and `Construction_SmallSite.sqf:161`; defenses built at `RequestDefense.sqf:283,294,305`; town/camp captures at `server_town.sqf:240` and `server_town_camp.sqf:90`; supply runs/value at `supplyMissionCompleted.sqf:27`; factory/HQ kills at `Server_BuildingKilled.sqf:65` and `Server_OnHQKilled.sqf:89`; deaths at `RequestOnUnitKilled.sqf:135`. `d472da6a..21b62b04` does not touch the checked stat-writer paths. No `Missions_Vanilla` payload. |
 | Modded missions | Not reviewed; treat as absent unless a later branch proves propagation. |
 | Static whitespace | Clean. |
@@ -86,6 +101,7 @@ This branch is a good candidate for review because it is dark-launched and test-
 | Gate | Why |
 | --- | --- |
 | Privacy and retention | `stats.json` is keyed by Steam UID64. Decide retention, publication and whether UID-to-name joins happen outside this repo. |
+| Player-name handling | PR #84 adds a nullable in-game `name` field. Decide whether player names are acceptable to publish alongside UID-keyed records, and record retention/redaction policy before enabling a public feed. |
 | Runtime log volume | `StatsFlush.sqf:48` writes one line per dirty batch every 60 seconds. Smoke with realistic player counts before enabling on a live server. |
 | Tail-state ownership | `StatsService.cs:23` stores tail state at `StatsJsonPath + ".tail.state"`. Moving `stats.json` changes the sidecar path and can affect duplicate/readback behavior. |
 | Corrupt `stats.json` recovery | `StatsDocument.Load:22-30` returns an empty document on any read/deserialization error. That protects bot startup, but can hide data loss unless operators back up the file or alert on parse failure. |
@@ -97,12 +113,13 @@ This branch is a good candidate for review because it is dark-launched and test-
 
 1. Run with `WFBE_C_STATS_ENABLED = false` and `Preferences.StatsEnabled = false`; generate kills and confirm no `WASPSTAT` lines and no `stats.json` changes.
 2. Enable mission stats only; generate AI and player kills; confirm one batched RPT line appears after the flush interval.
-3. Enable DiscordBot stats with a throwaway `ServerRptPath` and `StatsJsonPath`; confirm `stats.json` accumulates the expected kill/PvP/playtime deltas.
-4. Restart the bot without replacing the RPT; confirm tail state prevents duplicate accumulation.
-5. Replace or rotate the RPT; confirm the first-line fingerprint/shrink logic reads the new session once.
-6. Corrupt `stats.json` deliberately in a private test; confirm operator-visible recovery behavior is acceptable before live use.
-7. Decide Chernarus-only versus maintained Vanilla propagation, then smoke the chosen target.
-8. For B74.2, enable source Chernarus stats in a private run and exercise town/camp capture, supply completion, small/medium construction, defense purchase, HQ/factory kill and player death paths; confirm expected `WASPSTAT` deltas and no duplicate credit loop.
+3. On PR #84 or any branch that adopts it, join with normal names plus edge-case names containing `~` and `|`; confirm RPT `WASPSTAT` lines keep numeric fields intact, `~` inside a name is preserved by the parser, and `|` only truncates the name portion.
+4. Enable DiscordBot stats with a throwaway `ServerRptPath` and `StatsJsonPath`; confirm `stats.json` accumulates the expected kill/PvP/playtime deltas and includes the latest non-null `name` value when the PR #84 stack is in scope.
+5. Restart the bot without replacing the RPT; confirm tail state prevents duplicate accumulation.
+6. Replace or rotate the RPT; confirm the first-line fingerprint/shrink logic reads the new session once.
+7. Corrupt `stats.json` deliberately in a private test; confirm operator-visible recovery behavior is acceptable before live use.
+8. Decide Chernarus-only versus maintained Vanilla propagation, then smoke the chosen target.
+9. For B74.2, enable source Chernarus stats in a private run and exercise town/camp capture, supply completion, small/medium construction, defense purchase, HQ/factory kill and player death paths; confirm expected `WASPSTAT` deltas and no duplicate credit loop.
 
 ## Development Lessons
 

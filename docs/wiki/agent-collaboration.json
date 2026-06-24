@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T15:35:00+02:00",
+  "generatedAt": "2026-06-24T15:52:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr84-player-stats-name-stack-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR #84 / origin/feat/player-stats-names@177539ed5585acdb086c9cfdacf1e671459a686a metadata and GitHub state",
+        "Base branch origin/feat/player-stats@e01e47e12a767c3406f8b89b7df5ea9d95260b87",
+        "Scoped origin/feat/player-stats..origin/feat/player-stats-names diff",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Stats/StatsFlush.sqf",
+        "DiscordBot/src/Stats/StatsBatchParser.cs",
+        "DiscordBot/src/Stats/StatsAccumulator.cs",
+        "DiscordBot/src/Stats/PlayerStat.cs",
+        "DiscordBot.Tests stats parser/accumulator/integration contract tests",
+        "Player-Stats-Branch-Audit.md, PR-Cleanup-And-Integration-Lab.md, Feature-Status-Register.md, Current-Source-Status-Snapshot.md and Testing-Debugging-And-Release-Workflow.md"
+      ],
+      "handoff": "Closed as published/validated docs-only branch-stack intake. Treat PR #84 as an open clean stack on the branch-only player-stats feature until merge/deploy/runtime smoke proves otherwise. Do not describe the name field as current stable, deployed mission behavior, maintained Vanilla/Takistan propagation, external website proof or release-ready behavior.",
+      "updated": "2026-06-24T15:52:00+02:00",
+      "outputs": [
+        "Updated PR-Cleanup-And-Integration-Lab.md with PR #84 in the current open board and a branch-stack intake section.",
+        "Updated Player-Stats-Branch-Audit.md with PR #84 name-suffix producer/parser/accumulator/JSON/test evidence and the missing local .NET SDK test gap.",
+        "Updated Feature-Status-Register.md, Current-Source-Status-Snapshot.md and Testing-Debugging-And-Release-Workflow.md with PR #84 branch-only scope, smoke gates and privacy/name handling caveats.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl, agent-knowledge.jsonl and agent-feature-status.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "b745-b7472-enrollment-stamped-slot-refresh-2026-06-24",
       "owner": "Codex",

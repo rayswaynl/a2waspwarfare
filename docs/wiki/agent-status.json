@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T15:35:00+02:00",
+  "generatedAt": "2026-06-24T15:52:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only B74.7.2 stamped-slot enrollment current-head refresh after origin/claude/b745 advanced to d52f65466.",
+      "currentWork": "Published docs-only PR #84 player-stats name stack intake after open PR scan found origin/feat/player-stats-names@177539ed targeting feat/player-stats.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane after fresh coordination reads."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pr84-player-stats-name-stack-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only route for open PR #84 / origin/feat/player-stats-names@177539ed. PR cleanup, Player Stats Branch Audit, Feature Status, Current Source Status, Testing workflow and pruning ledger now classify PR #84 as a stack on origin/feat/player-stats@e01e47e1, not current stable or deployed behavior. Scoped stack diff is 6 files / +57 / -7, clean under git diff --check, with no Missions_Vanilla, Modded_Missions, Tools or Extension payload. Source Chernarus appends optional ~name in StatsFlush.sqf; DiscordBot parses/accumulates/serializes nullable name; local test rerun was blocked by missing .NET SDK. No gameplay source changed."
+    },
     {
       "lane": "b745-b7472-enrollment-stamped-slot-refresh-2026-06-24",
       "owner": "Codex",
