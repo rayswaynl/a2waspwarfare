@@ -26,10 +26,18 @@ _max = 240;
 _team = grpNull;
 
 while {_max > 0 && isNull _team} do {
-	//--- Primary: find the seat in playableUnits by UID.
-	{
-		if (!isNull _x && {(getPlayerUID _x) == _uid}) exitWith {_team = group _x};
-	} forEach playableUnits;
+	//--- B748.1 PRIMARY (Ray 2026-06-24, the 6th-time fix): use the body the CLIENT handed us via RequestJoin
+	//--- (Init_Client sends [player, side]; RequestJoin stores WFBE_JIP_BODY_<uid> = the real networked unit).
+	//--- This ELIMINATES the playableUnits/wfbe_teams find-race that intermittently bailed "unresolved" -> no team/markers.
+	private "_clientBody"; _clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+	if (!isNull _clientBody && {alive _clientBody} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {_team = group _clientBody};
+
+	//--- Fallback A: find the seat in playableUnits by UID.
+	if (isNull _team) then {
+		{
+			if (!isNull _x && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
+		} forEach playableUnits;
+	};
 
 	//--- B746 fallback (ROOT-CAUSE FIX for EAST mid-game JIP: no team / no money): under heavy AI a freshly
 	//--- seated body can live in its registered wfbe_teams slot group before it surfaces in playableUnits, so
@@ -68,7 +76,12 @@ if (isNull _team) exitWith {
 
 //--- Make sure that our client is a warfare client, the side variable is only defined for warfare slots, otherwise we simply exit.
 _sideJoined = _team getVariable "wfbe_side";
-if (isNil '_sideJoined') exitWith {["WARNING", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] side couldn't be determined from team [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent};
+if (isNil '_sideJoined') exitWith {
+	diag_log Format ["[WFBE][B747.2 CONNECT] BAIL: [%1] [%2] resolved team %3 has nil wfbe_side (transient/non-slot group) - re-arming.", _name, _uid, _team];
+	private "_reTryS"; _reTryS = missionNamespace getVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], 0];
+	if (_reTryS < 3) then {missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], _reTryS + 1]; [_uid, _name, _id] spawn WFBE_SE_FNC_OnPlayerConnected};
+	["WARNING", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] side couldn't be determined from team [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- B74.2.2: enrollment reached - clear the connect-retry budget so a later reconnect starts fresh.
 missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil];

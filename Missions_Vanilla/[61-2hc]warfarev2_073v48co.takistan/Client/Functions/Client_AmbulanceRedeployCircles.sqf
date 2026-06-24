@@ -27,6 +27,12 @@ _lastLvl = -1;
 _range = 0;
 
 while {true} do {
+	//--- B748: per-player Settings opt-out. OFF = tear down live rings + idle until re-enabled.
+	if !(missionNamespace getVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", true]) then {
+		{deleteMarkerLocal (_x select 1)} forEach (+_rings);
+		_rings = []; _known = []; _lastLvl = -1;
+		sleep 1;
+	} else {
 	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 	_lvl = 0;
 	if (!isNil "WFBE_UP_RESPAWNRANGE" && count _upgrades > WFBE_UP_RESPAWNRANGE) then {
@@ -66,4 +72,5 @@ while {true} do {
 
 	_lastLvl = _lvl;
 	sleep 5;
+	};
 };

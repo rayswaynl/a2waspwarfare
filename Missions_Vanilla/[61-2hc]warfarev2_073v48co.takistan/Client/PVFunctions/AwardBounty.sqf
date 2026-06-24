@@ -44,9 +44,10 @@ sleep (random 3);
 //--- Are we dealing with a kill assist or a full kill.
 if (_assist) then {
 	_bounty = _bounty * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_ASSISTANCE_COEF");
-	Format[Localize "STR_WF_CHAT_Award_Bounty_Assist", _bounty, _name] Call GroupChatMessage;
+	//--- B748: Kill Feed Settings opt-out gates ONLY the chat line; the bounty payout below is NEVER gated.
+	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty_Assist", _bounty, _name] Call GroupChatMessage};
 } else {
-	Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage;
+	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage};
 };
 
 (_bounty) Call ChangePlayerFunds;

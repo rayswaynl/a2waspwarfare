@@ -1255,15 +1255,16 @@ class WF_Menu {
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
 			idc = 11021;
-			show = 0; //--- Skin Selector hidden 2026-06-17 (Ray: out until it works; WFBE_C_SKIN_SELECTOR=0)
+			//--- B748 (Ray 2026-06-24): revived the hidden skins-button slot as the SETTINGS GEAR -> WFBE_SettingsMenu (idd 29000) via MenuAction 24.
+			show = 1;
 			x = 0.564;
 			y = 0.767144;
 			w = 0.057;
 			h = 0.045;
-			text = $STR_WF_SkinSelector_MenuButton;
+			text = "SETUP";
 			sizeEx = 0.022;
-			action = "MenuAction = 21";
-			tooltip = $STR_WF_SkinSelector_Title;
+			action = "MenuAction = 24";
+			tooltip = "Settings (view distance, HUD, markers, warnings)";
 		};
 		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
 		class CA_EAR_Button : RscButton_Main {
@@ -3426,6 +3427,90 @@ class WFBE_SkinSelectorMenu {
 			sizeEx = 0.026;
 			text = $STR_WF_SkinSelector_Skip;
 			action = "WFBE_MenuAction = 2";
+		};
+	};
+};
+
+//--- Per-player Settings menu (idd 29000). Opened from the WF-menu GEAR button (revived skins slot, MenuAction 24).
+//--- All labels (29010-29014 toggles, 29020 VD) set live by WASP\actions\Settings\Settings_Open.sqf (sub-dialog global WFBE_MenuAction).
+class WFBE_SettingsMenu {
+	movingEnable = 1;
+	idd = 29000;
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.30; y = 0.18; w = 0.40; h = 0.60;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Border : RscText {
+			x = 0.30; y = 0.18 + 0.06; w = 0.40; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		class CA_Title : RscButton_Main {
+			idc = 29001;
+			x = 0.305; y = 0.18 + 0.012; w = 0.30; h = 0.038;
+			text = "SETTINGS";
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.30 + 0.355; y = 0.18 + 0.0075; w = 0.045; h = 0.045;
+			text = "X";
+			shadow = 2; sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 9;";
+		};
+		//--- Toggle rows (text set live by the controller; click flips the pref).
+		class CA_HUD : RscButton_Main {
+			idc = 29010;
+			x = 0.325; y = 0.18 + 0.085; w = 0.35; h = 0.05;
+			sizeEx = 0.026;
+			text = "HUD Overlay: ON";
+			action = "WFBE_MenuAction = 1";
+		};
+		class CA_AAR  : CA_HUD { idc = 29011; y = 0.18 + 0.145; text = "AAR Map Markers: ON";   action = "WFBE_MenuAction = 2"; };
+		class CA_Bomb : CA_HUD { idc = 29012; y = 0.18 + 0.205; text = "Bomb Alt Warning: ON";   action = "WFBE_MenuAction = 3"; };
+		class CA_Amb  : CA_HUD { idc = 29013; y = 0.18 + 0.265; text = "Ambulance Circles: ON";  action = "WFBE_MenuAction = 4"; };
+		class CA_Kill : CA_HUD { idc = 29014; y = 0.18 + 0.325; text = "Kill Feed: ON";          action = "WFBE_MenuAction = 5"; };
+		//--- View-distance label + choice row.
+		class CA_VDLabel : RscText {
+			idc = 29020;
+			x = 0.325; y = 0.18 + 0.39; w = 0.35; h = 0.03;
+			sizeEx = 0.022;
+			text = "View Distance:";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_VD1 : RscButton_Main {
+			idc = 29021;
+			x = 0.325; y = 0.18 + 0.43; w = 0.066; h = 0.05;
+			sizeEx = 0.022;
+			text = "1000";
+			action = "WFBE_MenuAction = 11";
+		};
+		class CA_VD2 : CA_VD1 { idc = 29022; x = 0.325 + 0.070; text = "2000"; action = "WFBE_MenuAction = 12"; };
+		class CA_VD3 : CA_VD1 { idc = 29023; x = 0.325 + 0.140; text = "3000"; action = "WFBE_MenuAction = 13"; };
+		class CA_VD4 : CA_VD1 { idc = 29024; x = 0.325 + 0.210; text = "4000"; action = "WFBE_MenuAction = 14"; };
+		class CA_VD5 : CA_VD1 { idc = 29025; x = 0.325 + 0.280; text = "5000"; action = "WFBE_MenuAction = 15"; };
+		//--- Done.
+		class CA_Done : RscButton_Main {
+			idc = 29009;
+			x = 0.325; y = 0.18 + 0.52; w = 0.35; h = 0.04;
+			sizeEx = 0.026;
+			text = "Done";
+			action = "WFBE_MenuAction = 9";
 		};
 	};
 };
