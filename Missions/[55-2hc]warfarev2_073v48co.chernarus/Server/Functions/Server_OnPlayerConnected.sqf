@@ -22,20 +22,37 @@ if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
 //--- B74.2.2: was 10 (a 5s ceiling). Widened to 60 (30s) so a JIP seat under heavy-AI / low-server-FPS
 //--- load has time to surface in playableUnits with a resolved getPlayerUID before we bail. 30s matches
 //--- the client-side join-retry cadence in Init_Client.sqf. Pure integer; the sleep 0.5 below is unchanged.
-_max = 60;
+_max = 240;
 _team = grpNull;
 
 while {_max > 0 && isNull _team} do {
+	//--- Primary: find the seat in playableUnits by UID.
 	{
 		if (!isNull _x && {(getPlayerUID _x) == _uid}) exitWith {_team = group _x};
 	} forEach playableUnits;
 
+	//--- B746 fallback (ROOT-CAUSE FIX for EAST mid-game JIP: no team / no money): under heavy AI a freshly
+	//--- seated body can live in its registered wfbe_teams slot group before it surfaces in playableUnits, so
+	//--- the old playableUnits-only lookup bailed and skipped team/funds/roster-push. Scan the side-logic slot
+	//--- groups directly - mirrors Server_OnPlayerDisconnected.sqf (UID match here, wfbe_uid not stamped yet).
+	if (isNull _team) then {
+		{
+			{
+				{ if ((getPlayerUID _x) == _uid) exitWith {_team = group _x}; } forEach (units _x);
+				if !(isNull _team) exitWith {};
+			} forEach ((_x Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_teams", []]);
+			if !(isNull _team) exitWith {};
+		} forEach WFBE_PRESENTSIDES;
+	};
+
 	if (isNull _team) then {sleep 0.5};
 	_max = _max - 1;
 };
+if (!isNull _team) then {diag_log Format ["[WFBE][B746 CONNECT] team resolved for [%1] [%2] (%3 budget left)", _name, _uid, _max]};
 
 //--- Make sure that we've found a team, otherwise we simply exit.
 if (isNull _team) exitWith {
+	diag_log Format ["[WFBE][B746 CONNECT] BAIL: [%1] [%2] unresolved after playableUnits + wfbe_teams fallback window.", _name, _uid];
 	["WARNING", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] not in warfare teams after the lookup window - re-arming enrollment.", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 	//--- B74.2.2: self-heal instead of abandoning the player forever. onPlayerConnected fires only ONCE with
 	//--- no retry, so a JIP seat that was still slow to surface after 30s used to be stranded (no team / no
@@ -43,6 +60,7 @@ if (isNull _team) exitWith {
 	//--- recovers a slow seat without ever looping forever. WFBE_SE_FNC_OnPlayerConnected is the compiled handler.
 	private "_reTry"; _reTry = missionNamespace getVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], 0];
 	if (_reTry < 3) then {
+		diag_log Format ["[WFBE][B746 CONNECT] re-arming enrollment for [%1] [%2] (attempt %3/3).", _name, _uid, _reTry + 1];
 		missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], _reTry + 1];
 		[_uid, _name, _id] spawn WFBE_SE_FNC_OnPlayerConnected;
 	};
