@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T19:29:21+02:00",
+  "generatedAt": "2026-06-24T19:45:05+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "source-fix-current-branch-scope-post-b751b-wording-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@f39665d7950ddf14cb0bbfacb7ee1e40121e93b4 current stable after PR #89",
+        "f8a76de34 pre-B745/B751b B74.1/B74.2 baseline wording in Source-Fix-Propagation-Queue.md and Progress-Dashboard.md July hosted-FPS row",
+        "7bfcf09a9..origin/master Takistan-only B751b mission/texture delta",
+        "Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and compact machine coordination records"
+      ],
+      "handoff": "Closed as published/validated docs-only wording cleanup. Use origin/master@f39665d79 for current-stable queue-family wording; keep exact f8a76de34 rows as pre-B745/B751b B74.1/B74.2 baseline evidence unless a later source pass refreshes them.",
+      "updated": "2026-06-24T19:45:05+02:00",
+      "outputs": [
+        "Updated Source-Fix-Propagation-Queue.md current-branch scope wording and branch matrix so current master is origin/master@f39665d79 and the f8a76de34 row is baseline evidence.",
+        "Updated Progress-Dashboard.md July hosted-FPS wording, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records."
+      ]
+    },
     {
       "lane": "pr83-pr80-post-b751b-status-route-2026-06-24",
       "owner": "Codex",
