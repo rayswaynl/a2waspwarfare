@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T22:30:00+02:00",
+  "generatedAt": "2026-06-24T23:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,33 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b745-b746-current-head-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Feature-Status-Register.md B74.5 bundle branch intake row",
+        "Current-Source-Status-Snapshot.md B74.5 branch-intake section",
+        "Testing-Debugging-And-Release-Workflow.md branch-only smoke route if B74.6 changes gates",
+        "Client-UI-Systems-Atlas.md RHUD/status-counter context only if the B74.6 Client_UpdateRHUD delta changes the route",
+        "Respawn-And-Death-Lifecycle-Atlas.md only if the B74.6 Client_OnKilled notes need owner routing",
+        "AI-Commander-Autonomy-Audit.md / Commander-HQ-Lifecycle-Atlas.md only if B74.6 common helper deltas affect the prior B74.5 owner split",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_OnKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetClosestEntity.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetFactories.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetSideStructures.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_OnKilled.sqf",
+        "Modded_Missions Napf/Eden/Lingor Client_OnKilled.sqf touched by 712a7a668"
+      ],
+      "handoff": "Closed as published/validated docs-only current-head refresh. origin/claude/b745 now points at 712a7a668, one B74.6 client RPT/FPS regression-fix commit past documented b996bcb3. Source Chernarus gets RHUD/common helper nil guards plus death-camera guards; maintained Vanilla and touched full modded forks get death-camera guards only. Keep B74.6 branch-only until target-package smoke records RPT/FPS, RHUD/action/factory scans, death-camera fallback and scope decisions.",
+      "updated": "2026-06-24T23:25:00+02:00",
+      "outputs": [
+        "Updated Feature Status, Current Source Status, Client UI systems, Respawn/death lifecycle, Performance opportunity sweep and Testing workflow with current origin/claude/b745@712a7a668 evidence.",
+        "Updated AI/HQ/Construction/Tools route notes so previous B74.5 evidence remains included but not mistaken for the new B74.6 delta.",
+        "Updated coordination and machine surfaces; docs/wiki mirror and validation passed."
+      ]
+    },
     {
       "lane": "attack-wave-authority-current-b742-refresh-2026-06-24",
       "owner": "Codex",

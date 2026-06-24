@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T22:30:00+02:00",
+  "generatedAt": "2026-06-24T23:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest bounded pass attack-wave-authority-current-b742-refresh-2026-06-24 is published/validated; no gameplay source changed.",
+      "currentWork": "Latest bounded pass b745-b746-current-head-refresh-2026-06-24 is published/validated; no gameplay source edits are active.",
       "nextExpectedOutput": "Claim a new narrow source-backed docs lane before editing."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b745-b746-current-head-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only B74.5/B74.6 current-head refresh. origin/claude/b745 now points at 712a7a668, one B74.6 client RPT/FPS regression-fix commit past documented b996bcb3. Feature Status, Current Source Status, Client UI systems, Respawn/death lifecycle, Performance opportunity sweep and Testing workflow now route the single 9-file B74.6 delta separately from the older B74.5 bundle. Source Chernarus gets RHUD/common helper nil guards plus death-camera guards; maintained Vanilla and touched full modded forks get death-camera guards only. Prior B74.4/B74.5 AICOM/JIP/tooling evidence remains included but unchanged by B74.6. No gameplay source changed."
+    },
     {
       "lane": "attack-wave-authority-current-b742-refresh-2026-06-24",
       "owner": "Codex",
