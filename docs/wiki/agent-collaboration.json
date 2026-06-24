@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T05:58:00+02:00",
+  "generatedAt": "2026-06-24T06:24:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "vote-help-ui-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh vote/help/main-menu UI edge rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only GUI_VoteMenu.sqf, GUI_Commander_VoteMenu.sqf, help-menu onLoad/onUnload state, GUI_Menu.sqf, Rsc/Dialogs.hpp and direct GPS MenuAction 17/18/19 context in source Chernarus and maintained Vanilla.",
+        "Keep Client-UI-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 vote/help/main-menu evidence.",
+        "Recorded that docs/source HEAD@72007de93f00 is unchanged from 322ef95e / 087152f5 / 68bd4dc5 for checked vote/help/router paths and that d472da6a..21b62b04 only touches source-Chernarus Init_Client.sqf vehicle-tint guard, join/connect ACK failover and intro-music hook among checked paths.",
+        "Updated Progress Dashboard, pruning ledger, worklog and vote/help/main-menu machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future UI owner should patch vote loop bounds/row coloring and help namespace cleanup, then decide remove-vs-revive for GPS MenuAction 17/18 routes; keep commander vote outcome semantics and WASP marker wait on their dedicated owner routes.",
+      "updated": "2026-06-24T06:24:00+02:00"
+    },
     {
       "lane": "salvage-payout-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
