@@ -320,6 +320,34 @@
         <Russian>Активирована дымовая защита! %1 зарядов осталось.</Russian>
         <Italian>Deploying IR Smoke! %1 ammunitions remaining.</Italian>
       </Key>
+      <Key ID="STR_WF_Action_IRS_Disable">
+        <English>Disable IR Smoke</English>
+        <French>Disable IR Smoke</French>
+        <German>Disable IR Smoke</German>
+        <Russian>Disable IR Smoke</Russian>
+        <Italian>Disable IR Smoke</Italian>
+      </Key>
+      <Key ID="STR_WF_Action_IRS_Enable">
+        <English>Enable IR Smoke</English>
+        <French>Enable IR Smoke</French>
+        <German>Enable IR Smoke</German>
+        <Russian>Enable IR Smoke</Russian>
+        <Italian>Enable IR Smoke</Italian>
+      </Key>
+      <Key ID="STR_WF_CHAT_IRS_Disabled">
+        <English>Automatic IR Smoke DISABLED.</English>
+        <French>Automatic IR Smoke DISABLED.</French>
+        <German>Automatic IR Smoke DISABLED.</German>
+        <Russian>Automatic IR Smoke DISABLED.</Russian>
+        <Italian>Automatic IR Smoke DISABLED.</Italian>
+      </Key>
+      <Key ID="STR_WF_CHAT_IRS_Enabled">
+        <English>Automatic IR Smoke ENABLED.</English>
+        <French>Automatic IR Smoke ENABLED.</French>
+        <German>Automatic IR Smoke ENABLED.</German>
+        <Russian>Automatic IR Smoke ENABLED.</Russian>
+        <Italian>Automatic IR Smoke ENABLED.</Italian>
+      </Key>
       <Key ID="STR_WF_CHAT_Penalty">
         <English>$%1 Lost for a civilian neutralization! Go to the ophthalmologist...</English>
         <French>$%1 Perdu pour la neutralisation d'un civil! soyer prudent!</French>
