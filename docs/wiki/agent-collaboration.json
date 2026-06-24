@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T20:16:53+02:00",
+  "generatedAt": "2026-06-24T20:31:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr66-debug-antitk-post-b751b-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR #66 / origin/claude/trello-debug-antitk@98440121c0468e13676c4de5fd2838edaab75167",
+        "origin/master@f39665d7950ddf14cb0bbfacb7ee1e40121e93b4 current stable after PR #89",
+        "post-B751b merge-base/divergence and scoped base-relative branch diff",
+        "debug-mode anti-TK satchel/building source anchors in source Chernarus plus maintained Vanilla where changed",
+        "Structure-Damage-Reduction-And-Friendly-Fire.md, PR-Cleanup-And-Integration-Lab.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md and compact coordination records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Treat PR #66 as open draft branch-only clean-but-stale-base debug anti-TK evidence after B751b. Rebase/recheck against current master and run source Chernarus plus maintained Vanilla debug/non-debug satchel and structure-damage smoke before stable or release-ready wording. This does not change production friendly-fire semantics. No gameplay source edits.",
+      "updated": "2026-06-24T20:31:00+02:00",
+      "outputs": [
+        "Updated Structure-Damage-Reduction-And-Friendly-Fire.md, PR-Cleanup-And-Integration-Lab.md, Feature-Status-Register.md, Testing-Debugging-And-Release-Workflow.md, Wiki-Pruning-And-Relevance-Ledger.md and agent-feature-status.jsonl with PR #66 post-B751b branch status.",
+        "PR #66 remains GitHub-clean but stale-base: base/merge-base f8a76de34, current master f39665d79, local counts 80 1; base-relative payload is four maintained-root files / +10 / -0 and clean under git diff --check."
+      ]
+    },
     {
       "lane": "pr72-antibasetrap-post-b751b-route-2026-06-24",
       "owner": "Codex",

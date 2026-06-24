@@ -2,6 +2,14 @@
 
 > Source-verified 2026-06-23 against master f8a76de3. Paths relative to Missions/[55-2hc]warfarev2_073v48co.chernarus/ unless noted. Arma 2 OA 1.64.
 
+## 2026-06-24 PR #66 Debug Anti-TK Branch Addendum
+
+PR [#66](https://github.com/rayswaynl/a2waspwarfare/pull/66) / `origin/claude/trello-debug-antitk@98440121c0468e13676c4de5fd2838edaab75167` is open draft branch-only evidence, not current stable behavior. GitHub reports `mergeable=true` / `clean`, but the PR base and local merge-base remain `f8a76de349da6f8b871d079c828436c10afb221c`; current master is `origin/master@f39665d7950ddf14cb0bbfacb7ee1e40121e93b4`, and local `origin/master...origin/claude/trello-debug-antitk` counts are `80 1`. Base-relative payload is four maintained-root files / +10 / -0, clean under `git diff --check f8a76de34..origin/claude/trello-debug-antitk`, with no `Modded_Missions`, `Tools` or `Extension` payload.
+
+In source Chernarus and maintained Vanilla, the branch adds `if (WF_Debug) exitWith {};` inside `WFBE_CL_FNC_OnFiredSatchel` before the existing friendly-structure scan, deletion and `StructureTK` message path (`Client_FNC_OnFired.sqf:12,16,35,41` on the branch). It also adds `if (WF_Debug) exitWith {_dammages};` inside `Server_BuildingHandleDamages.sqf` before the own-side/`sideEnemy` nulling gate and enemy-hit `HandleBuildingDamage` call (`Server_BuildingHandleDamages.sqf:4,9,11-17` on the branch). Current master keeps the same functions without the debug bypass (`Client_FNC_OnFired.sqf:12,32,38`; `Server_BuildingHandleDamages.sqf:4,9-15`), and `WF_Debug` defaults false in both maintained roots at `initJIPCompatible.sqf:110`, only becoming true under the existing debug condition at `:112`.
+
+Before promotion, rebase or recheck the branch against post-B751b master and smoke both roots with `WF_Debug=false` and `WF_Debug=true`: normal mode should still delete same-side PipeBomb attempts near friendly structures, emit the existing `StructureTK` client message and null own-side base-structure damage; debug mode should bypass that client satchel guard and return the raw incoming damage from `Server_BuildingHandleDamages` without changing production defaults. Treat this as a debug/tester bypass only, not a general friendly-fire authority fix or a replacement for the `WFBE_C_GAMEPLAY_HANDLE_FRIENDLYFIRE` production semantics below.
+
 ## Overview
 
 Every constructed base structure (CoIn site, headquarters, deployed/mobile HQ) carries a server-side `handleDamage` event handler. Unlike a `hit`/`killed` EH, an Arma 2 `handleDamage` closure is a **rule**: its return value *is* the new damage state the engine applies for that hit-selection. WASP uses this to do two things at once:
