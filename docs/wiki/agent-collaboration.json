@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T07:15:00+02:00",
+  "generatedAt": "2026-06-24T07:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-reassignment-agent-context-current-head-cleanup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refreshed stale DR-15 commander reassignment compact context that still overgeneralized helper-unpacking debt after canonical Commander-Reassignment-Call-Shape evidence split docs/source old-shape from current stable/B74-shaped maintained-root fixes.",
+        "Check only RequestNewCommander.sqf, Server_AssignNewCommander.sqf, GUI_Commander_VoteMenu.sqf and direct branch diffs needed to support agent-context wording.",
+        "Keep Commander-Reassignment-Call-Shape and Commander-Vote-And-Reassignment-Playbook canonical; update coordination/pruning rows only as needed.",
+        "No gameplay source edits."
+      ],
+      "outputs": [
+        "Refreshed agent-context.json DR-15 strings so docs/source helper-unpacking propagation remains distinct from current stable/B74.1/B74.2/B69/B74/Miksuu/perf/historical fixed helper unpacking.",
+        "Recorded that docs/source tree HEAD@1e08d0d91 still uses _side = _this at Server_AssignNewCommander.sqf:3 in both maintained roots, while checked current stable/B74-shaped refs use _side = _this select 0 at :4.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and coordination/event files; no gameplay source changed."
+      ],
+      "handoff": "Future commander owner should keep Commander-Reassignment-Call-Shape and Commander-Vote-And-Reassignment-Playbook canonical, then address duplicate RequestNewCommander/helper notifications, visible-name GUI targeting, requester/role validation, docs/source propagation, modded forks and Arma smoke on the chosen code branch.",
+      "updated": "2026-06-24T07:45:00+02:00"
+    },
     {
       "lane": "loadoutmanager-agent-context-b742-current-head-cleanup-2026-06-24",
       "owner": "Codex",
