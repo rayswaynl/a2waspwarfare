@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T23:59:59+02:00",
+  "generatedAt": "2026-06-24T15:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b745-b7471-veteran-cap-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b745@a9145e4da6327d8868097ea38dcda01edd608190 current-head metadata and no-PR route state",
+        "Previous documented B74.7.1 head 29ca9519bf1bd17ed1ef3f52a689fb2e8574db69",
+        "Scoped 29ca9519..origin/claude/b745 diff",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf",
+        "Feature Status, Current Source Status, AI Commander Autonomy, Testing workflow, Performance opportunity and coordination docs as needed"
+      ],
+      "handoff": "Closed as published/validated docs-only current-head refresh. Treat B74.7.1 veteran-slot cap as branch-only source-Chernarus evidence until AICOM hard-cap smoke covers normal founding, banked-funds low-pop founding and veteran-slot-armed founding. Do not describe it as current stable, maintained Vanilla/Takistan, PR-routed or release-ready behavior.",
+      "updated": "2026-06-24T15:20:00+02:00",
+      "outputs": [
+        "Updated Feature-Status-Register.md, Current-Source-Status-Snapshot.md and AI-Commander-Autonomy-Audit.md with origin/claude/b745@a9145e4da current-head evidence and AI_Commander_Teams.sqf:184 veteran-slot cap proof.",
+        "Updated Performance-Opportunity-Sweep.md and Testing-Debugging-And-Release-Workflow.md so AICOM hard-cap smoke includes veteran-slot armed cases.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "b745-b747-current-head-refresh-2026-06-24",
       "owner": "Codex",
