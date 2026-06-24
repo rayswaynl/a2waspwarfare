@@ -9,7 +9,7 @@
 	It's purpose is to annhilate everything around a specific range	including building, trees, factories...
 	It will NOT destroy ALL logic objects in order to preserved the game mechanic.   
 */
-Private ["_range","_all_objects_in_range","_objects_to_not_remove","_bo","_objects_to_damage","_target","_z"];
+Private ["_range","_all_objects_in_range","_objects_to_not_remove","_bo","_objects_to_damage","_target","_z","_buildLogics"];
 _target = _this select 0;
 _range = missionNamespace getVariable "ICBM_DAMAGE_RADIUS";
 //destruction nuke range around target.
@@ -29,6 +29,17 @@ _objects_to_damage = _all_objects_in_range;
 	_x setDamage 1;
 	//"Bo_GBU12_LGB" createVehicle (getPos _x);
 } forEach _objects_to_damage;
+
+//--- Trello #97: kill IN-PROGRESS construction inside the blast. Players were placing factories
+//--- right before impact and the half-built structure survived because the build-logic completion
+//--- wait (Construction_*Site.sqf) was still pending. Construction logics are server-owned, and
+//--- NukeDammage runs server-side (Spawn'd from Server_HandleSpecial.sqf case "ICBM"), so deleting
+//--- the LocationLogicStart here makes the WFBE_B_Completion wait fail -> no structure ever spawns.
+//--- Completed structures already die via the _objects_to_damage setDamage pass above.
+_buildLogics = nearestObjects [_target,["LocationLogicStart"],_range];
+{
+	if (!isNil {_x getVariable "WFBE_B_Type"}) then {deleteVehicle _x};
+} forEach _buildLogics;
 
 //--- Radiations.
 [_target] Spawn NukeRadiation;
