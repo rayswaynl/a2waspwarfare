@@ -382,6 +382,14 @@ while {true} do {
 			_isCommanderTeam = false;
 			if (!isNull commanderTeam) then {_isCommanderTeam = commanderTeam == group player};
 			if (_isCommanderTeam) then {_maxUnitsCount = _maxUnitsCount + 10};
+				//--- B75 (guer-tech): the real GUER barracks cap is kill-scaled (GUI_Menu_BuyUnits.sqf), not the always-0
+				//--- Barracks upgrade. Mirror it here so the HUD "AI: X / Y" max + colour match what the player can buy.
+				if (_side == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+					private ["_gK","_gCap"];
+					_gK = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+					_gCap = (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4]) + floor (_gK / (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10]));
+					_maxUnitsCount = _gCap min (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12]);
+				};
 
 			_aiText = format ["%1 / %2", _currentUnitsCount, _maxUnitsCount];
 			_aiColor = [0, 1, 0, 1];

@@ -106,7 +106,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 //--- this REPLACES the old elapsed-time tier. Server-authoritative; publicVariable so every client (incl. the buy
 //--- overlay + RHUD) reads it live. A2-OA publicVariable is NOT JIP-replayed, so Server_OnPlayerConnected.sqf seeds
 //--- joiners and Server_GuerStipend.sqf re-broadcasts as a safety net. Same gate as the towns-denied block above.
-if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_isplayer} && {_killer_side != _killed_side}) then {
+if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_isplayer} && {_killer_side != _killed_side} && {_killed_side in [west, east]}) then {
 	WFBE_GUER_PLAYER_KILLS = (missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) + 1;
 	publicVariable "WFBE_GUER_PLAYER_KILLS";
 	["INFORMATION", Format ["RequestOnUnitKilled.sqf: GUER tech kill credited (player [%1] killed [%2]). Total GUER kills = %3.", name _killer, _killed_type, WFBE_GUER_PLAYER_KILLS]] Call WFBE_CO_FNC_LogContent;

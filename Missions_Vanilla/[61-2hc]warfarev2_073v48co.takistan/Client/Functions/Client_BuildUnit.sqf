@@ -391,7 +391,11 @@ if (_isMan) then {
 						_dir = direction _v;
 						_fwd = (_vel select 0) * sin _dir + (_vel select 1) * cos _dir;   //--- forward velocity component (only boost when actually moving forward).
 						if (_fwd > 0) then {
-							_v setVelocity [(_vel select 0) * 1.07, (_vel select 1) * 1.07, (_vel select 2)];
+							//--- add 7% of the forward speed ALONG the heading only, so a turning/skidding tracked APC
+							//--- doesn't get its lateral drift amplified (self-limited by the speed < _target guard above).
+							private ["_add"];
+							_add = _fwd * 0.07;
+							_v setVelocity [(_vel select 0) + (_add * sin _dir), (_vel select 1) + (_add * cos _dir), (_vel select 2)];
 						};
 					};
 					sleep 0.1;

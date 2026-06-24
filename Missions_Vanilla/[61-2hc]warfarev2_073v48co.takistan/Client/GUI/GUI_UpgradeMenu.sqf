@@ -50,9 +50,12 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 					_desc = "Cumulative kills made by GUER PLAYERS against WEST/EAST. This single number drives every field-tech line below - there is no cash upgrade, you simply fight for it.";
 				};
 				case 1: {
-					_next = if (_tier < 1) then {Format ["%1 kills -> BRDM-2 + T-34", _k1]} else {if (_tier < 2) then {Format ["%1 kills -> T-55", _k2]} else {if (_tier < 3) then {Format ["%1 kills -> T-72 + BMP-2", _k3]} else {"all unlocked"}}};
+					//--- tier-3 roster differs by map: Chernarus GUE has T-72 + BMP-2; Takistan GUE caps at a ZU-23 Ural (no T-72/BMP-2).
+					private ["_t3"];
+					_t3 = if (worldName == "Takistan") then {"ZU-23 Ural (heavy weapons)"} else {"T-72 + BMP-2"};
+					_next = if (_tier < 1) then {Format ["%1 kills -> BRDM-2 + T-34", _k1]} else {if (_tier < 2) then {Format ["%1 kills -> T-55", _k2]} else {if (_tier < 3) then {Format ["%1 kills -> %2", _k3, _t3]} else {"all unlocked"}}};
 					_html = Format ["<t color='#B6F563' size='1.1'>Heavy Vehicles - Tier %1 / 3</t><br/><t color='#F5D363'>Next: %2</t>", _tier, _next];
-					_desc = Format ["Tier 1 (%1 kills): BRDM-2 + T-34.<br/>Tier 2 (%2 kills): T-55.<br/>Tier 3 (%3 kills): T-72 + BMP-2.<br/>Unlocked vehicles appear in the depot.", _k1, _k2, _k3];
+					_desc = Format ["Tier 1 (%1 kills): BRDM-2 + T-34.<br/>Tier 2 (%2 kills): T-55.<br/>Tier 3 (%3 kills): %4.<br/>Unlocked vehicles appear in the depot.", _k1, _k2, _k3, _t3];
 				};
 				case 2: {
 					_html = Format ["<t color='#B6F563' size='1.1'>M113 VBIED: %1</t>", if (_kills >= _m113k) then {"UNLOCKED"} else {Format ["locked (%1 / %2 kills)", _kills, _m113k]}];
