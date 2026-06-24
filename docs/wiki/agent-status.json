@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T03:54:46+02:00",
+  "generatedAt": "2026-06-24T04:15:32+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready / docs finisher loop",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published fast-travel fee UX B74.2 current-head follow-up through Client UI systems, Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows; no gameplay source changed.",
+      "currentWork": "Published town AI vehicle despawn B74.2 current-head follow-up through Town AI Vehicle Despawn Safety, Feature Status, Source Fix queue, dashboard, pruning ledger and machine rows; no gameplay source changed.",
       "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or the pruning ledger before editing."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "town-ai-vehicle-despawn-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed town AI vehicle despawn evidence from stale B74.2 origin/claude/b74.2-aicom@d472da6a wording to current origin/claude/b74.2-aicom@21b62b04. Docs/source HEAD@ce3cf871e1e7 is unchanged from 2a4020586 / 3a9ba92e for checked server_town_ai.sqf paths and remains old-shape unsafe at :214 in both maintained roots. Current stable/B74.1/current B74.2/B69/B74 carry the crew-count guard only in source Chernarus; maintained Vanilla remains leader-only at :319. Checked d472da6a..21b62b04 is empty for both checked town-AI files. No gameplay source changed."
+    },
     {
       "lane": "fast-travel-fee-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
