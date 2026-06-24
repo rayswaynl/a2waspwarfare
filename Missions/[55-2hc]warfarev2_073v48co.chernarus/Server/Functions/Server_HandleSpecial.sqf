@@ -538,7 +538,7 @@ switch (_args select 0) do {
 		_driver = _args select 2;
 		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 			[_veh, _driver] spawn {
-				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand"];
+				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore"];
 				_veh = _this select 0;
 				_driver = _this select 1;
 				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
@@ -568,6 +568,21 @@ switch (_args select 0) do {
 						};
 					};
 				} forEach (nearestObjects [_p, ["Man","LandVehicle","Air"], _radius]);
+				//--- B75 (guer-reward): also snapshot living ENEMY (WEST/EAST) base structures (factories/barracks/etc.)
+				//--- in the blast radius, taken from each enemy side logic's authoritative wfbe_structures list. After the
+				//--- blast settles we pay the detonator the SAME per-type bounty + score a normal building kill grants
+				//--- (Server_BuildingKilled.sqf). PROXIMITY is required: the FAB-250 blast carries NO instigator, so the
+				//--- structure's own "killed" EH fires with a null killer and pays nothing - and the suicide driver is dead
+				//--- by settle time, so we must capture the credit here (folded into the death-proof personal payout below).
+				_structVictims = [];
+				{
+					_sStructs = (_x Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_structures";   //--- _x = enemy side; plain getVariable (logic may be a Group - no [name,default] form).
+					if (!isNil "_sStructs") then {
+						{
+							if (!isNull _x && {alive _x} && {(_x distance _p) <= _radius}) then {_structVictims = _structVictims + [_x]};   //--- _x = structure here (inner forEach rebinds it).
+						} forEach _sStructs;
+					};
+				} forEach [west, east];
 				//--- BLAST (AI W21 idiom): pop the truck, then stack 3x 122mm HE for a large lethal crater.
 				_veh setDamage 1;
 				//--- B74.1 (Ray 2026-06-23): 3x Sh_122_HE -> 3x Bo_FAB_250 (the FAB-250 aerial bomb the EASA plane
@@ -606,6 +621,34 @@ switch (_args select 0) do {
 						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
+				//--- B75 (guer-reward): FACTORY/STRUCTURE kill credit. Any enemy base structure that was alive in the
+				//--- blast radius before detonation and is now dead was levelled by THIS VBIED. Credit the detonator the
+				//--- SAME per-type bounty + score a normal building kill grants (mirror Server_BuildingKilled.sqf), folded
+				//--- into _persBounty/_persScore so it rides the death-proof payout below (cash by UID, score on driver).
+				{
+					_struct = _x;
+					if (isNull _struct || {!alive _struct}) then {
+						_facBounty = switch (true) do {
+							case (_struct isKindOf "Base_WarfareBBarracks"):{3000};
+							case (_struct isKindOf "Base_WarfareBLightFactory"):{4500};
+							case (_struct isKindOf "Base_WarfareBHeavyFactory"):{7000};
+							case (_struct isKindOf "Base_WarfareBAircraftFactory"):{8000};
+							case (_struct isKindOf "Base_WarfareBUAVterminal"):{5000};
+							case (_struct isKindOf "Base_WarfareBVehicleServicePoint"):{3000};
+							case (_struct isKindOf "BASE_WarfareBAntiAirRadar"):{8000};
+							default {3000};
+						};
+						//--- score mirrors Server_BuildingKilled.sqf: bounty * WFBE_C_UNITS_BOUNTY_COEF / 100, then x3.
+						_facScore = (_facBounty * (missionNamespace getVariable ["WFBE_C_UNITS_BOUNTY_COEF", 1]) / 100) * 3;
+						_persBounty = _persBounty + _facBounty;
+						_persScore = _persScore + _facScore;
+						//--- leaderboard FACTORY-kill credit (same structure set Server_BuildingKilled.sqf records) to the detonator UID.
+						if (((_struct isKindOf "Base_WarfareBLightFactory") || (_struct isKindOf "Base_WarfareBHeavyFactory") || (_struct isKindOf "Base_WarfareBAircraftFactory") || (_struct isKindOf "Base_WarfareBBarracks")) && {_drvUID != ""}) then {
+							[_drvUID, WFBE_STAT_KILLS_FACTORY, 1] Call WFBE_SE_FNC_RecordStat;
+						};
+						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED levelled enemy structure [%1] - factory bounty [%2] + score [%3] credited to detonator UID [%4].", typeOf _struct, _facBounty, _facScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
+					};
+				} forEach _structVictims;
 				//--- B67: pay the detonator personally (cash to their wallet via the new client receiver, dispatched
 				//--- to the captured UID) + apply the accumulated score to the captured driver object if still valid.
 				if (_drvUID != "" && {_persBounty > 0}) then {
