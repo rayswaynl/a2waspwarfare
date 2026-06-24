@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T10:20:00+02:00",
+  "generatedAt": "2026-06-24T11:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "WASP marker wait compact-context current B74.2 refresh is published as docs-only coordination/machine-context work. No active Codex-specific lane is claimed.",
+      "currentWork": "PVF dispatch compact-context current B74.2 refresh is published as docs-only coordination/machine-context work. No active Codex-specific lane is claimed.",
       "nextExpectedOutput": "Pick the next bounded source-backed documentation lane from Feature Status, Source Fix queue, pruning ledger or hardening backlog; claim before editing."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pvf-dispatch-agent-context-current-b742-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed stale compact PVF dispatcher context in agent-context.json from older origin/master@0139a346 wording to current stable/B74.1 origin/master@f8a76de34 plus current B74.2 origin/claude/b74.2-aicom@21b62b04. Repo docs branch HEAD@af208505c229 is unchanged from 925d56e01a1e / a0721301d4f5 for checked PVF init/dispatcher/send-helper paths and still uses Spawn (Call Compile _script) at Server_HandlePVF.sqf:14 and Client_HandlePVF.sqf:22 in both maintained roots. Current stable/B74.1/B74.2/B69/B74 use missionNamespace getVariable plus CODE guards at Server_HandlePVF.sqf:14-15 and Client_HandlePVF.sqf:32-33; Miksuu b8389e748243, perf 0076040f and historical a96fdda2 remain old-shape. Allowlists/logging and sender/requester authentication remain separate open hardening. No gameplay source changed."
+    },
     {
       "lane": "wasp-marker-wait-agent-context-current-b742-refresh-2026-06-24",
       "owner": "Codex",
