@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T14:20:00+02:00",
+  "generatedAt": "2026-06-24T15:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "factory-buy-refund-current-b742-feature-status-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Feature-Status-Register.md factory buy authority/refund rows",
+        "Factory-And-Purchase-Systems-Atlas.md destroyed-factory refund branch matrix",
+        "Source-Fix-Propagation-Queue.md factory destroyed-purchase refund contract",
+        "agent-feature-status.jsonl factory buy/refund rows",
+        "agent-hardening-backlog.jsonl destroyed-factory purchase/refund rows",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_BuildUnit.sqf"
+      ],
+      "outputs": [
+        "Updated Factory-And-Purchase-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and factory machine rows with current B74.2 21b62b04 refund evidence.",
+        "Recorded docs/source as unchanged through repo docs branch HEAD@f9601c92e0a4 for checked buy/build paths, still old-shape with no dead/null refund.",
+        "Corrected Server_BuyUnit/AIBuyUnit branch scope: current stable/B74.1/B74.2/B69/B74 use it for AI-team production, not player-buy authority."
+      ],
+      "handoff": "Future factory/economy owner should port the dead/null refund only to old-shape docs/Miksuu/perf-style targets if those remain targets; keep DR-33 queue cleanup, AI commander AIBuyUnit production and server-side player purchase authority separate. Smoke factory death, buyer disconnect, empty/crewless abort and normal completion before release wording.",
+      "updated": "2026-06-24T15:20:00+02:00"
+    },
     {
       "lane": "client-skill-init-current-b742-context-refresh-2026-06-24",
       "owner": "Codex",

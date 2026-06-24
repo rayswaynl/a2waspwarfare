@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T14:20:00+02:00",
+  "generatedAt": "2026-06-24T15:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Client skill-init current B74.2 context refresh is published and mirrored; no active Codex docs lane is claimed.",
+      "currentWork": "Factory buy/refund current B74.2 Feature Status refresh is published, mirrored and validated; no active Codex docs lane is claimed.",
       "nextExpectedOutput": "Read coordination surfaces and claim the next bounded source-backed wiki or machine-context lane."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "factory-buy-refund-current-b742-feature-status-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only factory buy/refund current B74.2 Feature Status refresh. Factory-And-Purchase-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route current B74.2 through origin/claude/b74.2-aicom@21b62b04 instead of previous d472da6a wording. Repo docs branch HEAD@f9601c92e0a4 is unchanged from b8180bb319ed / cacd46f09163 / 4120137f / 8d611092 for checked buy/build paths and remains old-shape. Current stable/B74.1, current B74.2, B69, adjacent B74 and historical a96fdda2 refund the real dead/null factory abort; docs/source, Miksuu, perf and historical QoL a66d4691 remain old-shape. Current stable/B74.1/B74.2/B69/B74 call AIBuyUnit from AI_Commander_Produce.sqf:320 for AI-team production, but player buys remain client-local with no RequestBuyUnit/RequestBuildUnit PVF. No gameplay source changed."
+    },
     {
       "lane": "client-skill-init-current-b742-context-refresh-2026-06-24",
       "owner": "Codex",

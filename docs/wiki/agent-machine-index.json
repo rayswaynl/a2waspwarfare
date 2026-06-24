@@ -345,7 +345,7 @@
         "agent-hardening-backlog.jsonl#factory-queue-cleanups",
         "agent-feature-status.jsonl"
       ],
-      "nextGate": "Fix queue cleanup/token identity before broadcast reduction; do not equate latent Server_BuyUnit/AIBuyUnit with the live player-buy path."
+      "nextGate": "Fix queue cleanup/token identity before broadcast reduction; do not equate branch-scoped Server_BuyUnit/AIBuyUnit AI production with the live player-buy path."
     },
     {
       "id": "ai-headless-runtime",
