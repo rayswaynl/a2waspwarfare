@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T17:05:00+02:00",
+  "generatedAt": "2026-06-24T17:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "supply-cooldown-current-b742-context-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Supply-Mission-Architecture.md cooldown/current branch wording",
+        "agent-context.json DR-18 / supply authority compact strings",
+        "agent-feature-status.jsonl supply-mission-authority-cleanup row",
+        "agent-hardening-backlog.jsonl supply-mission-authority-cleanup row",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching maintained-root supply cooldown/start/completion/init paths"
+      ],
+      "handoff": "Closed as published/validated docs-only. Keep current stable/B74-shaped cooldown casing, dead-twin retirement, typed command-center scan and killed-handler sentinel separate from docs/source/Miksuu/perf old-shape debt and from broader server-owned supply authority hardening. Future supply owner should smoke truck/heli/JIP flows on the exact target branch before release wording.",
+      "updated": "2026-06-24T17:25:00+02:00",
+      "outputs": [
+        "Updated Supply-Mission-Architecture.md with branch-scoped cooldown wording and current repo docs HEAD@915f4441c1c9 context.",
+        "Updated agent-context.json, agent-feature-status.jsonl and agent-hardening-backlog.jsonl so DR-18/current supply authority rows no longer route through older origin/master@0139a346 wording.",
+        "Added pruning-ledger and knowledge records, updated Progress Dashboard/Agent Worklog/status/collaboration/event surfaces, mirrored touched files into docs/wiki and validated JSON/JSONL, wiki links/schema, parity, conflict markers and diff whitespace."
+      ]
+    },
     {
       "lane": "ai-commander-supervisor-current-b742-route-refresh-2026-06-24",
       "owner": "Codex",
