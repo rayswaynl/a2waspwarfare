@@ -1279,6 +1279,66 @@ if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFB
 };
 // Marty: end of glitch missiles warning script.
 
+//--- Trello #106: flashing center-screen warning when a restricted bomb (FAB-250 / Mk82) is the
+//--- selected weapon while the aircraft is at or above the bomb altitude limit. Pre-emptive only:
+//--- the actual drop is still deleted post-fire by Common_HandleShootBombs.sqf. Independent of the
+//--- missile terrain-masking loop above (its ammo filter excludes bombs by design). The short
+//--- re-issued titleText each tick produces the flashing effect.
+[] spawn {
+	private ["_bombAmmo"];
+
+	// Same restricted-bomb ammo set used in Common\Functions\Common_HandleShootBombs.sqf.
+	_bombAmmo = ["Bo_FAB_250","Bo_Mk82"];
+
+	while {!WFBE_gameover} do {
+		call {
+			private [
+				"_limit",
+				"_vehicle",
+				"_currentWeapon",
+				"_currentWeaponMagazines",
+				"_isBombSelected",
+				"_ammo"
+			];
+
+			_limit = missionNamespace getVariable "WFBE_C_GAMEPLAY_BOMBS_ALTITUDE";
+
+			// _limit 0 = param "Disabled"; nothing to warn about.
+			if (isNil "_limit") exitWith {};
+			if (_limit <= 0) exitWith {};
+
+			_vehicle = vehicle player;
+
+			if (_vehicle == player) exitWith {};
+			if !(player in crew _vehicle) exitWith {};
+
+			// Only warn while a restricted bomb is the currently selected weapon.
+			_currentWeapon = currentWeapon _vehicle;
+			if (_currentWeapon == "") exitWith {};
+
+			_currentWeaponMagazines = getArray (configFile >> "CfgWeapons" >> _currentWeapon >> "magazines");
+			_isBombSelected = false;
+
+			{
+				_ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
+				if (_ammo in _bombAmmo) exitWith {
+					_isBombSelected = true;
+				};
+			} forEach _currentWeaponMagazines;
+
+			if !(_isBombSelected) exitWith {};
+
+			// Above (or at) the altitude limit: warn the player not to drop.
+			if (((getPos _vehicle) select 2) >= _limit) then {
+				titleText [localize "STR_WF_MESSAGE_BombAltitudeWarning", "PLAIN DOWN", 0.2];
+			};
+		};
+
+		sleep 0.5;
+	};
+};
+//--- Trello #106: end of bomb altitude warning script.
+
 // Marty : initialise the low gear assist for local AI-driven tanks controlled by the player's group
 [] spawn Compile preprocessFileLineNumbers "Client\Module\Valhalla\Func_Client_AI_LowGear_Manager.sqf";
 
