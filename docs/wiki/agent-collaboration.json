@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T15:20:00+02:00",
+  "generatedAt": "2026-06-24T15:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b745-b7472-enrollment-stamped-slot-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b745@d52f65466e86662fdda328add80ef9c6f7082163 current-head metadata and no-PR route state",
+        "Previous documented B74.7.1 head a9145e4da6327d8868097ea38dcda01edd608190",
+        "Scoped a9145e4da..origin/claude/b745 diff",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerConnected.sqf",
+        "Feature Status, Current Source Status, Player join/disconnect, Testing workflow and coordination docs as needed"
+      ],
+      "handoff": "Closed as published/validated docs-only current-head refresh. Treat B74.7.2 stamped-slot enrollment as branch-only source-Chernarus evidence until EAST/mid-game JIP smoke proves team, money, markers and retry behavior. Do not describe it as current stable, maintained Vanilla/Takistan, PR-routed or release-ready behavior.",
+      "updated": "2026-06-24T15:35:00+02:00",
+      "outputs": [
+        "Updated Feature-Status-Register.md and Current-Source-Status-Snapshot.md with origin/claude/b745@d52f65466 current-head evidence and one-file B74.7.2 source-Chernarus top delta.",
+        "Updated Player-Join-Disconnect-And-AntiStack-Lifecycle.md and Testing-Debugging-And-Release-Workflow.md so the B74.7/B74.7.2 JIP smoke gate includes stamped-slot group acceptance, nil-side bounded retry diagnostics and no silent no-team exits.",
+        "Updated AI-Commander-Autonomy-Audit.md, Client-UI-Systems-Atlas.md and Performance-Opportunity-Sweep.md to clarify B74.7.2 is enrollment-only and does not touch checked AICOM, vote-menu, UI picker or performance paths.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "b745-b7471-veteran-cap-refresh-2026-06-24",
       "owner": "Codex",

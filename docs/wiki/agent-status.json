@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T15:20:00+02:00",
+  "generatedAt": "2026-06-24T15:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest bounded pass b745-b7471-veteran-cap-refresh-2026-06-24 is published/validated docs-only; no gameplay source changed.",
-      "nextExpectedOutput": "Claim the next narrow source-backed docs lane before editing."
+      "currentWork": "Published docs-only B74.7.2 stamped-slot enrollment current-head refresh after origin/claude/b745 advanced to d52f65466.",
+      "nextExpectedOutput": "Pick the next bounded source-backed docs lane after fresh coordination reads."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b745-b7472-enrollment-stamped-slot-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only B74.7.2 stamped-slot enrollment current-head refresh. origin/claude/b745 now points at d52f65466, one source-Chernarus Server_OnPlayerConnected.sqf follow-up past documented a9145e4da. Feature Status, Current Source Status, Player Join/Disconnect, Testing workflow, AI Commander Autonomy, Client UI systems, Performance opportunity sweep and the pruning ledger now route Server_OnPlayerConnected.sqf:31 stamped wfbe_side group acceptance plus :71-75 nil-side bounded retry diagnostics. No Missions_Vanilla, Modded_Missions or Tools payload. No gameplay source changed."
+    },
     {
       "lane": "b745-b7471-veteran-cap-refresh-2026-06-24",
       "owner": "Codex",
