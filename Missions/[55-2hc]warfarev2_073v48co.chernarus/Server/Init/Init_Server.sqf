@@ -33,6 +33,8 @@ CreateDefenseTemplate = Compile preprocessFile "Server\Functions\Server_CreateDe
 Server_ConstructPosition = Compile preprocessFile "Server\Functions\Server_ConstructPosition.sqf";
 HandleBuildingRepair = Compile preprocessFile "Server\Functions\Server_HandleBuildingRepair.sqf";
 GetAICommanderFunds = Compile preprocessFile "Server\Functions\Server_GetAICommanderFunds.sqf";
+//--- B74.2 (Ray 2026-06-24, directive #5): AI-commander structure-sell / recycle worker (dark by default, see WFBE_C_AICOM_BASE_SELL_ENABLE).
+WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BaseSell.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
 HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";
@@ -740,6 +742,10 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 
 		_logik setVariable ["wfbe_teams", _teams, true];
 		_logik setVariable ["wfbe_teams_count", count _teams];
+		//--- B74.2.3 TELEMETRY: raw diag_log of the per-side player-team registration count (LogContent is
+		//--- filtered on public builds, so the per-team init logs above are invisible). Lets us tell whether
+		//--- an empty client clientTeams is because registration produced 0 server-side, or a sync gap.
+		diag_log format ["TEAMREG|side=%1|registered=%2|syncedUnits=%3", _side, count _teams, count (synchronizedObjects _logik)];
 	};
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 

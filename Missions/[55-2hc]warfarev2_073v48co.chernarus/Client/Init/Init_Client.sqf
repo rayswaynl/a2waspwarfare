@@ -281,7 +281,10 @@ missionNamespace setVariable ["WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC", 0];
 //--- Global Client Variables.
 sideID = sideJoined Call GetSideID;
 clientTeam = group player;
-clientTeams = missionNamespace getVariable Format['WFBE_%1TEAMS',sideJoinedText];
+clientTeams = missionNamespace getVariable [Format['WFBE_%1TEAMS',sideJoinedText], []]; //--- B74.2.5: default [] not nil. For a broken-JIP client WFBE_%1TEAMS is unset; the ungated vote-tally `forEach WFBE_Client_Teams` (GUI_VoteMenu) + the own-marker `forEach clientTeams` would `forEach nil` = THROW in A2-OA (count nil is 0 and safe, but forEach nil is not). [] makes them safe 0-iteration no-ops and still triggers the primitive-roster path (count 0). The two isNil "clientTeams" readers are diagnostics only.
+//--- B74.2.3 TELEMETRY: raw diag_log of the client's own-side team list AT INIT (the source of the no-cash/
+//--- no-vote cascade when it is empty). Pairs with the server TEAMREG log + the HEAL log below.
+diag_log format ["CLIENTTEAMS|atInit|side=%1|count=%2|isNil=%3", sideJoinedText, count (if (isNil "clientTeams") then {[]} else {clientTeams}), (isNil "clientTeams")];
 playerType = typeOf player;
 playerDead = false;
 paramBoundariesRunning = false;
@@ -540,6 +543,9 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 				WFBE_Client_Teams_Count = count _teams;
 				_didTeams = true;
 				["INITIALIZATION", Format ["Init_Client.sqf: B62 reconciliation populated own-side teams (count %1) after JIP slow-sync.", count _teams]] Call WFBE_CO_FNC_LogContent;
+				//--- B74.2.3 TELEMETRY: raw diag_log when the self-heal repopulates clientTeams (absence of this +
+				//--- atInit count=0 means the side-logic wfbe_teams never synced to this JIP client).
+				diag_log format ["CLIENTTEAMS|HEAL|side=%1|count=%2", _sideText, count _teams];
 			};
 		};
 
@@ -589,6 +595,45 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 
 		sleep 5;
 	};
+};
+
+//--- B74.2.4 (Ray 2026-06-24, P0 — lobby joiners get NO funds / NO marker / NOT in the commander-vote menu =
+//--- empty clientTeams = mission UNPLAYABLE). The B62/B64 reconciliation above only re-reads wfbe_teams for ~120s
+//--- AFTER a ~90s gate (~210s total) then GIVES UP. Under heavy AI load the side-logic wfbe_teams can take longer
+//--- than that to replicate to a client, so clientTeams stays empty PERMANENTLY. This dedicated spawn populates
+//--- the own-side team mirror EARLY (no 90s gate) and KEEPS polling (~2s cadence) until the data lands (cap ~30min)
+//--- so a client ALWAYS recovers whenever wfbe_teams arrives, however slow. Idempotent same-value writes with the
+//--- heal above; the WAIT/EARLYHEAL diag_logs prove (on the client RPT) whether the data arrives late vs never.
+//--- A2-OA-1.64 safe: plain getVariable on the logic OBJECT, typeName ==, count, mod; no A3 commands.
+[] spawn {
+	private ["_logik","_sideText","_teams","_n","_done","_lg"];
+	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_Logic"} && {!isNil "WFBE_Client_SideID"}};
+	_sideText = WFBE_Client_SideJoinedText;
+	_done = false;
+	_n = 0;
+	while {!_done && {_n < 900}} do {
+		_logik = WFBE_Client_Logic;
+		if (!isNull _logik && {!isNil {_logik getVariable "wfbe_teams"}}) then {
+			_teams = _logik getVariable "wfbe_teams";
+			if (!isNil "_teams" && {(typeName _teams) == "ARRAY"} && {(count _teams) > 0}) then {
+				missionNamespace setVariable [Format ["WFBE_%1TEAMS", _sideText], _teams];
+				WFBE_Client_Teams = _teams;
+				clientTeams = _teams;
+				WFBE_Client_Teams_Count = count _teams;
+				_done = true;
+				diag_log format ["CLIENTTEAMS|EARLYHEAL|side=%1|count=%2|at=%3s", _sideText, count _teams, round time];
+			};
+		};
+		if (!_done) then {
+			if ((_n mod 15) == 0) then {
+				_lg = WFBE_Client_Logic;
+				diag_log format ["CLIENTTEAMS|WAIT|side=%1|n=%2|t=%3s|logikNull=%4|teamsNil=%5", _sideText, _n, round time, (isNull _lg), (isNil {_lg getVariable "wfbe_teams"})];
+			};
+			_n = _n + 1;
+			sleep 2;
+		};
+	};
+	if (!_done) then { diag_log format ["CLIENTTEAMS|EARLYHEAL-GAVEUP|side=%1|afterPolls=%2", _sideText, _n]; };
 };
 
 [] execFSM "Client\FSM\updateactions.fsm";

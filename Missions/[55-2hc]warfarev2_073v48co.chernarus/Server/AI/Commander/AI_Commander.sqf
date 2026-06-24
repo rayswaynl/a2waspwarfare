@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -88,7 +88,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	};
 };
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltMHQReloc = 0;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0;
 _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
@@ -213,7 +213,10 @@ while {!gameOver} do {
 				_stipendSupplyGrant = round (_stipendSupply * (_tickS / 60));
 				[_side, _stipendFundsGrant] Call ChangeAICommanderFunds;
 				_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
-				if (_dual) then {
+				//--- B74.2 (Ray 2026-06-24, directive #3): CASH-only AICOM boost. The bootstrap stipend's synthetic SUPPLY grant is
+				//--- the only supply the AI is ever handed that it did not earn from towns; gate it behind BOOTSTRAP_SUPPLY_ENABLE
+				//--- (default 0 = off) so AICOM keeps its funds trickle but no longer gets free supply. Town supply income is untouched.
+				if (_dual && {(missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE", 0]) > 0}) then {
 					[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
 				};
 				_ltStipend = time;
@@ -272,6 +275,12 @@ while {!gameOver} do {
 			//--- on WFBE_C_AICOM_MHQ_RELOCATE + single-flight + deployed-HQ + enemy-standoff; drive runs in its own Spawn.
 			if (time - _ltMHQReloc > (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_RELOCATE_INTERVAL", 180])) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_MHQReloc; _ltMHQReloc = time;
+			};
+			//--- B74.2 (Ray 2026-06-24, directive #5): structure-sell / recycle pass. Interval-gated, single-side, nil-guarded.
+			//--- Dark by default (WFBE_C_AICOM_BASE_SELL_ENABLE=0 -> the worker early-exits). Sells the lowest-cost redundant
+			//--- non-HQ/non-CC structure, refunds part of its cost to side supply, frees the build slot (wfbe_structures_live).
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_BASE_SELL_ENABLE", 0]) > 0 && {time - _ltBaseSell >= (missionNamespace getVariable ["WFBE_C_AICOM_BASE_SELL_INTERVAL", 120])}) then {
+				if (!isNil "WFBE_SE_FNC_AI_Com_BaseSell") then {(_side) Call WFBE_SE_FNC_AI_Com_BaseSell; _ltBaseSell = time};
 			};
 			//--- V0.2: build the base (HQ deploy -> doctrine build order -> defenses).
 			if (time - _ltBase > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BASE_INTERVAL", 60])) then {

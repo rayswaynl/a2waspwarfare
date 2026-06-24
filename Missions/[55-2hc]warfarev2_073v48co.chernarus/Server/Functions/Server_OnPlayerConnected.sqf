@@ -67,6 +67,52 @@ if (!isNil "WFBE_ACTIVE_PATROLS") then {_id publicVariableClient "WFBE_ACTIVE_PA
 if (!isNil "WFBE_ACTIVE_GUER_AIR") then {_id publicVariableClient "WFBE_ACTIVE_GUER_AIR"}; //--- B67: GUER air-defense marker feed JIP catch-up.
 diag_log format ["[WFBE][B63 JIP-MARK] pushed marker feeds to joiner %1 (aicom=%2, patrols=%3)", _name, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
 
+//--- B74.2.4 (Ray 2026-06-24, P0): re-broadcast the side's wfbe_teams to re-trigger object-state replication to
+//--- THIS joiner. The team roster lives on the side logic (object setVariable, broadcast) but under heavy AI load
+//--- it can be slow/stuck reaching a JIP/lobby client, leaving clientTeams empty (no funds/marker/vote-menu =
+//--- unplayable). A same-value re-set with the public flag marks the variable dirty so the engine re-syncs it; the
+//--- client's persistent B74.2.4 heal then applies it the moment it lands. A2-OA-safe: GetSideLogic -> side-logic
+//--- OBJECT, plain getVariable. Runs before the first-join exitWith, so it fires for every warfare joiner.
+private "_tlog"; _tlog = _sideJoined Call WFBE_CO_FNC_GetSideLogic;
+if (!isNull _tlog && {!isNil {_tlog getVariable "wfbe_teams"}}) then {
+	_tlog setVariable ["wfbe_teams", (_tlog getVariable "wfbe_teams"), true];
+	diag_log format ["[WFBE][B74.2.4 TEAMS-REBC] re-broadcast wfbe_teams (count %1) for side %2 on connect of %3", count (_tlog getVariable "wfbe_teams"), _sideJoined, _name];
+};
+
+//--- B74.2.5 (Ray 2026-06-24, P0): PRIMITIVE ROSTER PUSH. Object setVariable-broadcast of wfbe_teams is NOT
+//--- JIP-durable in A2-OA AND the array holds GROUP OBJECTS that arrive as broken/NULL refs on a late joiner,
+//--- so the client's vote roster (isPlayer leader / name leader) and every wfbe_teams heal read nil/broken
+//--- forever. Deliver a SIDE-KEYED PRIMITIVE roster the client can render WITHOUT group objects, over a channel
+//--- A2-OA guarantees to a connected client: publicVariableClient of a missionNamespace var. Per player-led team:
+//--- [leaderName(string), isPlayer(0/1), funds(number), groupId(string)]. Payload = [count, rows]. The client's
+//--- EARLY addPublicVariableEventHandler (initJIPCompatible Part I) consumes it; the vote menus render rows from
+//--- it and upgrade to live groups once wfbe_teams replicates (for vote CASTING). PRIMITIVES ONLY -> replicate
+//--- cleanly. _id = this client's network id (valid here). Only WEST and EAST have a commander vote; GUER/
+//--- resistance has no vote menu so no roster push is needed (also avoids a mismatched GUER key). A2-OA-1.64-safe:
+//--- GetSideLogic OBJECT, plain getVariable, typeName ==, forEach, str; no isEqualType/findIf/pushBack.
+if (_sideJoined in [west, east]) then {
+	private ["_rlog","_rteams","_rows","_lead","_keyName"];
+	_rlog = _sideJoined Call WFBE_CO_FNC_GetSideLogic;
+	_rows = [];
+	if (!isNull _rlog && {!isNil {_rlog getVariable "wfbe_teams"}}) then {
+		_rteams = _rlog getVariable "wfbe_teams";
+		if ((typeName _rteams) == "ARRAY") then {
+			{
+				if (!isNull _x) then {
+					_lead = leader _x;
+					if (!isNull _lead && {isPlayer _lead}) then {
+						_rows = _rows + [[name _lead, 1, (_x getVariable ["wfbe_funds", 0]), str _x]];
+					};
+				};
+			} forEach _rteams;
+		};
+	};
+	_keyName = Format ["WFBE_JIP_ROSTER_%1", _sideJoined];
+	missionNamespace setVariable [_keyName, [count _rows, _rows]];
+	_id publicVariableClient _keyName;
+	diag_log format ["[WFBE][B74.2.5 ROSTER-PUSH] pushed %1 player-team rows to joiner %2 (key %3, side %4)", count _rows, _name, _keyName, _sideJoined];
+};
+
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
 

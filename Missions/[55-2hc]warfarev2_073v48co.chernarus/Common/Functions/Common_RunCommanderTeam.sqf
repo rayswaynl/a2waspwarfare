@@ -168,6 +168,46 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 				};
 			} forEach _vehs;
 			sleep (missionNamespace getVariable ["WFBE_C_AICOM_HELI_NUDGE_PERIOD", 7]);
+			//--- B74.2 HELI BASE-REAP (Ray 2026-06-24): the server-side BASE-GC cannot reap these hulls (HC-local +
+			//--- ownership-exempt at server_groupsGC.sqf:209), so do it HERE on the HC where the heli IS local. Any
+			//--- alive attack heli that has sat crewed-idle (speed < idle band, no enemy near) at its OWN base for
+			//--- WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT continuous seconds is deleted (crew first, then hull) so empties
+			//--- stop piling. First-seen stamp resets the moment it moves/engages. 0 = off. A2-OA-safe: getPos guarded
+			//--- by !isNull, nearEntities side-compare (no getFriend), deleteVehicle on HC-local crew+hull.
+			//--- FLAW-FIX: use _vehs (the Spawn-local rebind of _vehicles at L134), NOT _vehicles (not inherited).
+			private ["_reapTO"]; _reapTO = missionNamespace getVariable ["WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT", 0];
+			if (_reapTO > 0) then {
+				private ["_reapHQ","_reapVehs"];
+				_reapHQ = (_sd) Call WFBE_CO_FNC_GetSideHQ;
+				if (!isNull _reapHQ) then {
+					_reapVehs = _vehs;
+					{
+						private ["_rh","_rEnemy","_rSeen"];
+						_rh = _x;
+						if (!isNull _rh && {alive _rh} && {local _rh} && {_rh isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _rh) >> "transportSoldier")) == 0}) then {
+							if (((_rh distance _reapHQ) <= (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])) && {(abs (speed _rh)) < (missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED", 5])}) then {
+								_rEnemy = {alive _x && {(side _x) != _sd} && {(side _x) != civilian}} count ((getPos _rh) nearEntities [["Man","LandVehicle","Air"], 400]);
+								if (_rEnemy > 0) then {
+									_rh setVariable ["wfbe_heli_baseidle_at", nil];
+								} else {
+									_rSeen = _rh getVariable "wfbe_heli_baseidle_at";
+									if (isNil "_rSeen") then {
+										_rh setVariable ["wfbe_heli_baseidle_at", time];
+									} else {
+										if ((time - _rSeen) >= _reapTO) then {
+											{ if (!isPlayer _x) then {deleteVehicle _x} } forEach (crew _rh);
+											deleteVehicle _rh;
+											["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] B74.2 base-reaped idle attack heli %2 (idle %3s at base).", _sd, typeOf _rh, _reapTO]] Call WFBE_CO_FNC_AICOMLog;
+										};
+									};
+								};
+							} else {
+								_rh setVariable ["wfbe_heli_baseidle_at", nil];
+							};
+						};
+					} forEach _reapVehs;
+				};
+			};
 		};
 	};
 	}; //--- B66 end if (_hasAttackHeli)

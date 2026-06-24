@@ -39,6 +39,15 @@ _busy = _logik getVariable ["wfbe_mhqreloc_active", false];
 if (_busy) exitWith {};
 if (_logik getVariable ["wfbe_hqinuse", false]) exitWith {};
 
+//--- B74.2 (night-soak item 7, anti-thrash): EVALUATION back-off. A prior interval's abort
+//--- (advance-below-min / no-buffer-clear-standoff) stamps wfbe_mhqreloc_abort_until; while that
+//--- stamp is in the future, skip the whole own-town scan + ring-clear sweep + re-log instead of
+//--- re-deriving the same dead result every interval (the 461 paired-abort thrash in the digest).
+//--- Inert when WFBE_C_AICOM_MHQ_ABORT_COOLDOWN <= 0 (default), so behaviour is unchanged until tuned.
+private "_abortUntil";
+_abortUntil = _logik getVariable ["wfbe_mhqreloc_abort_until", 0];
+if ((missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0]) > 0 && {time < _abortUntil}) exitWith {};
+
 //--- Need a DEPLOYED static HQ to relocate.
 _deployed = (_side) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 if (typeName _deployed != "BOOL") exitWith {};
@@ -140,12 +149,14 @@ if (count _destPos > 0) then {
 	_advD  = sqrt (_advDX*_advDX + _advDY*_advDY);
 	if (_advD < _minAdv) then {
 		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|advance-below-min|adv=" + str (round _advD) + "|min=" + str (round _minAdv));
+		_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
 		_destPos = [];
 	};
 };
 
 //--- No friendly town yields a buffer-clear standoff -> ABORT (never deploy into a ring).
 if (count _destPos == 0) exitWith {
+	_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
 	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|no-buffer-clear-standoff|ringClear=" + str (round _ringClear));
 };
 

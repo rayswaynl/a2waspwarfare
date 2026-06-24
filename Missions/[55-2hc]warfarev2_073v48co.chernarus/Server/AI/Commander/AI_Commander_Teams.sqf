@@ -305,6 +305,38 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith {};
 
+	//--- B74.2 EMPTY-HELI CAP (Ray 2026-06-24): if the side already fields WFBE_C_AICOM_ATTACKHELI_MAX or more
+	//--- ALIVE attack helis (non-transport Helicopter), strip every air template from _eligible so the founding
+	//--- draw cannot create yet another premium AH1Z team that nothing retires/cleans. The bucket picker below
+	//--- degrade-walks to a buildable ground class, so founding continues normally. 0 = no cap (old behaviour).
+	//--- FLAW-FIX: count BOTH crewed AND crewless non-transport helis on this side. For crewed helis, side is
+	//--- resolved via (crew _x) select 0 (reliable). For crewless helis, wfbe_side on the vehicle object is
+	//--- checked first (falls back to sideUnknown if not tagged on this build, which is safe). A2-OA-safe:
+	//--- isKindOf/getNumber/transportSoldier mirrors the L477 detector; count over vehicles (not allUnits).
+	private ["_heliCap","_heliAlive","_eligNoAir2"];
+	_heliCap = missionNamespace getVariable ["WFBE_C_AICOM_ATTACKHELI_MAX", 0];
+	if (_heliCap > 0) then {
+		_heliAlive = 0;
+		{
+			if (alive _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) then {
+				if ((count crew _x) > 0 && {side ((crew _x) select 0) == _side}) then {
+					_heliAlive = _heliAlive + 1;
+				} else {
+					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side", sideUnknown]) == _side}) then {
+						_heliAlive = _heliAlive + 1;
+					};
+				};
+			};
+		} forEach vehicles;
+		if (_heliAlive >= _heliCap) then {
+			_eligNoAir2 = [];
+			{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir2 set [count _eligNoAir2, _x]} } forEach _eligible;
+			_eligible = _eligNoAir2;
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B74.2 attack-heli cap hit (alive %2 >= cap %3) - air templates stripped from founding this cycle.", _sideText, _heliAlive, _heliCap]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+	if (count _eligible == 0) exitWith {};
+
 	//--- P1 combined-arms picker (claude-gaming 2026-06-15). Mirror of AI_Commander_AssignTypes.sqf:
 	//--- the old doctrine-only weighting (70% one vehicle track, 30% UNIFORM over all eligible) averaged
 	//--- ~70% infantry because infantry templates unlock first and stay eligible all match while vehicle

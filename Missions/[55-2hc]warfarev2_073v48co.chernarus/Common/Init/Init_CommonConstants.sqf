@@ -177,6 +177,17 @@ with missionNamespace do {
 	WFBE_C_AICOM_INCOME_PC_BONUS_VALVE = 0.045; //--- B37: gentler low-pop income boost when the valve is on (vs 0.06), so more-squads does not over-bank.
 	WFBE_C_AICOM_INCOME_MULT_MAX = 4.0;        //--- B67 (Ray 2026-06-21): 3.0->4.0 - lift the town-cash multiplier ceiling so the low-pop inverted bonus is not clipped (keeps near-empty-server PvE well-funded). CASH only. hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 3}; //--- B66: 4->3 - bring air online a town sooner. Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
+	//--- B74.2 EMPTY-HELI FIX (Ray 2026-06-24, AH1Z piling at base): hard per-side cap on how many attack-heli
+	//--- (non-transport Helicopter) airframes the commander may have ALIVE at once. Once at/over the cap the
+	//--- founding path strips air templates from _eligible (it degrade-walks to a buildable ground class), so it
+	//--- stops founding more premium AH1Z teams that the cost-weighted draw keeps picking and that nothing retires.
+	//--- 0 = no cap (old behaviour). Counts ALL alive non-transport helis on the side (founded teams + any others),
+	//--- so it is self-limiting regardless of where the airframe came from.
+	if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX") then {WFBE_C_AICOM_ATTACKHELI_MAX = 4};
+	//--- B74.2 HELI BASE-REAP: let the HC team-runner self-delete an attack heli that has idled crewed at its OWN
+	//--- base continuously for this many seconds (0 = off). This is the HC-LOCAL cleanup the server-side BASE-GC
+	//--- cannot do (HC-founded heli hulls are not server-local + are ownership-exempt at server_groupsGC.sqf:209).
+	if (isNil "WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT") then {WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT = 600};
 	//--- B66 airfield-air rule: choppers are allowed from an Aircraft-Factory at tier 2; fixed-wing PLANES are only buildable at an OWNED airfield with the Aircraft-Factory at tier 4 (NOT the base air factory). 1 = enforce; 0 = old behaviour (planes from base air factory).
 	if (isNil "WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD") then {WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD = 1};
 	if (isNil "WFBE_C_AICOM_AIRFIELD_FREE_AIR") then {WFBE_C_AICOM_AIRFIELD_FREE_AIR = 1}; //--- B74 (Ray 2026-06-22): when a side HOLDS a captured airfield it may buy JETS+HELIS there even WITHOUT the Aircraft Factory (free-buy at the field). An Aircraft Factory alone (no airfield) still yields HELICOPTERS ONLY (jets need a field to operate/rearm). 1=on, 0=old (factory-gated, planes need both).
@@ -273,6 +284,22 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS")    then {WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS    = 12};   //--- B74.1 (Ray 2026-06-23): a side launches the HQ-STRIKE round-ender once it holds this many towns. Replaces the DEAD ceil(count-towns*0.5)=~20 gate (unreachable on Chernarus' 40+ towns; sides peaked at 13), so a dominant side now actually goes for the kill instead of grinding forever. Absolute town count.
 	if (isNil "WFBE_C_AICOM_HQSTRIKE_CAP_FRAC")     then {WFBE_C_AICOM_HQSTRIKE_CAP_FRAC     = 0.5};  //--- B74.1 (Ray 2026-06-23): once striking, commit this FRACTION of the side's live field teams to the enemy-HQ assault (was a flat 3). 0.5 = half the army razes the enemy base (HQ+factories => the supremacy/HQ-loss win fires).
 	if (isNil "WFBE_C_AICOM_RELIEF_ENEMY_DIST")     then {WFBE_C_AICOM_RELIEF_ENEMY_DIST     = 500};  //--- B74.1 (Ray 2026-06-23): a team is only diverted to DEFEND an own town when a live hostile is within this many m of it (REACTIVE defense). Stops the old "too defensive" behaviour of pinning teams to quiet but 'active' (near-front) towns. m.
+	//--- B74.2 (Ray 2026-06-24, directive #3): AI commander gets a CASH boost only, never a SUPPLY boost. Every cash boost
+	//--- (updateresources.sqf INCOME_MULT x time-curve + INCOME_STIPEND 6000/9000) already routes through the SEPARATE AICOM
+	//--- treasury via ChangeAICommanderFunds. The ONLY synthetic SUPPLY the AI is ever handed (not earned from towns) is the
+	//--- V0.7 bootstrap-stipend supply grant in AI_Commander.sqf. This flag drops that supply portion while leaving the bootstrap
+	//--- FUNDS grant intact. 0 = no synthetic supply (Ray default), 1 = legacy bootstrap supply trickle. Town supply income
+	//--- (the side-wide shared credit at updateresources.sqf SUPPLY_INCOME_MULT) is UNTOUCHED - it funds human commanders + GUER
+	//--- too and is already throttled. Note: WFBE_C_AI_COMMANDER_FUNDS_MULT/INCOME_MULT at line 219-223 are CASH multipliers and stay.
+	if (isNil "WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE") then {WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE = 0};
+	//--- B74.2 (Ray 2026-06-24, directive #5): AI-commander STRUCTURE-SELL / recycle. When the side is over its redundant-
+	//--- structure threshold (or, once item 1/4 lands, over the base/building cap) the commander dismantles its LOWEST-COST
+	//--- non-HQ / non-CommandCenter structure, refunding a fraction of the build cost to side SUPPLY (mirrors a human recycle).
+	//--- Ships default-OFF (dark) so Ray can enable + tune the thresholds in soak. AI-commander build logic ONLY; humans unaffected.
+	if (isNil "WFBE_C_AICOM_BASE_SELL_ENABLE")      then {WFBE_C_AICOM_BASE_SELL_ENABLE      = 1};    //--- 1 = arm the sell worker (Ray armed it), 0 = inert (worker early-exits).
+	if (isNil "WFBE_C_AICOM_BASE_SELL_INTERVAL")    then {WFBE_C_AICOM_BASE_SELL_INTERVAL    = 120};  //--- s between sell evaluations per side (slow; selling is rare).
+	if (isNil "WFBE_C_AICOM_SELL_REFUND_FRAC")      then {WFBE_C_AICOM_SELL_REFUND_FRAC      = 0.5};  //--- fraction of the structure's build cost refunded to side SUPPLY on sell (0..1). Never over-refunds (clamped).
+	if (isNil "WFBE_C_AICOM_SELL_REDUNDANT_MAX")    then {WFBE_C_AICOM_SELL_REDUNDANT_MAX    = 2};    //--- self-contained trigger (pre-cap): sell only when the side holds MORE than this many DUPLICATE structures of any one sellable type (a 2nd+ Barracks/Light/Heavy/etc). Once item 1/4's base/building cap lands, the cap becomes the primary trigger and this is the floor.
 	if (isNil "WFBE_C_AICOM_INCOME_TAPER_TOWNS")    then {WFBE_C_AICOM_INCOME_TAPER_TOWNS    = 8};    //--- B74.1 (Ray 2026-06-23): AICOM income TAPER kicks in above this town count - diminishing per-town funds so a territorial LEADER's treasury can't compound unbounded (soak leader ran to +281k/tick). At/below = full income.
 	if (isNil "WFBE_C_AICOM_INCOME_TAPER_RATE")     then {WFBE_C_AICOM_INCOME_TAPER_RATE     = 0.4};  //--- B74.1: each town held ABOVE the taper threshold contributes only this fraction of a normal town's funds. 0.4 = strong damping; 1.0 = no taper. AICOM-ONLY (never touches player income or supply).
 	if (isNil "WFBE_C_AICOM_OVERRUN_DIST")          then {WFBE_C_AICOM_OVERRUN_DIST          = 250};  //--- B74.1 (Ray 2026-06-23): a striking side has OVERRUN the enemy base when a strike-team unit is within this many m of the enemy HQ...
@@ -282,6 +309,13 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_MHQ_ARRIVE_DIST")       then {WFBE_C_AICOM_MHQ_ARRIVE_DIST       = 400};  //--- m: MHQ within this of the destination = arrived -> deploy.
 	if (isNil "WFBE_C_AICOM_MHQ_DEADLINE")          then {WFBE_C_AICOM_MHQ_DEADLINE          = 600};  //--- s of driving before the player-safe teleport-step fallback (then deploy).
 	if (isNil "WFBE_C_AICOM_MHQ_STUCK_SECS")        then {WFBE_C_AICOM_MHQ_STUCK_SECS        = 210};  //--- s with no >25m progress = stuck -> deploy where it stands (never idle).
+	//--- B74.2 (night-soak item 7, anti-thrash): after a relocation EVALUATION aborts (advance-below-min or
+	//--- no-buffer-clear-standoff), the front/town layout almost never changes within one interval, so the
+	//--- worker re-ran the full own-town scan + insertion-sort + ring-clear sweep every RELOCATE_INTERVAL and
+	//--- re-logged the same ABORT (the 461 paired-abort thrash in the 11h digest). When >0, suppress re-eval
+	//--- for this many seconds after an abort (per side, stamped on the side logic). 0 = OFF (old behaviour:
+	//--- re-evaluate every interval). 600 = ~3 missed intervals of dead re-scan skipped. Rollback: 0.
+	if (isNil "WFBE_C_AICOM_MHQ_ABORT_COOLDOWN")    then {WFBE_C_AICOM_MHQ_ABORT_COOLDOWN    = 600};   //--- s to skip re-evaluation after an abort (0 = off). B74.2: activated at 600 (Ray pick; skips ~3 dead 180s re-scans per abort). Rollback: 0.
 	//--- B60 HELI CANNON-NUDGE (Ray 2026-06-21, DEFAULT-ON): A2-OA heli gunners over-prefer guided ATGMs and
 	//--- ignore the cannon/rockets. When an enemy is within cannon range, drop the attack heli to a low gun-run
 	//--- altitude and one-shot force the gunner onto a non-guided muzzle. Set WFBE_C_AICOM_HELI_CANNON_NUDGE = 0 to disable.
@@ -320,6 +354,17 @@ with missionNamespace do {
 	//--- B67 (Ray 2026-06-21) BUILD PLACEMENT (item #10): minimum centre-to-centre spacing between AI-built
 	//--- structures + a wider factory placement ring, so factories stop piling on top of each other.
 	if (isNil "WFBE_C_AICOM_STRUCT_SPACING") then {WFBE_C_AICOM_STRUCT_SPACING = 45};       //--- m between AI structures (big hangars reach ~30m).
+	//--- B74.2 (Ray 2026-06-24, directives #1 + #4): the AI commander obeys the SAME structure limits as human
+	//--- players. AI-commander-only (human build is gated client-side in coin_interface.sqf, unaffected by these).
+	//---   WFBE_C_AICOM_OBEY_BUILD_LIMITS = 1 -> AI_Commander_Base.sqf's per-type build gate reads the player cap
+	//---     WFBE_C_STRUCTURES_MAX_<type> (same getVariable lookup the COIN UI uses at coin_interface.sqf:917;
+	//---     getVariable is case-insensitive so the type key 'CommandCenter' resolves _MAX_COMMANDCENTER) and skips
+	//---     a structure once the side already owns >= that many. 0 = old unbounded AI build.
+	//---   WFBE_C_AICOM_BASES_MAX = N -> hard cap on BASES (= CommandCenter structures) the AI may stand up
+	//---     (directive #1: max 2). Counted as live CommandCenters; at/over the cap the CommandCenter build is skipped.
+	//---     <=0 disables the base cap.
+	if (isNil "WFBE_C_AICOM_OBEY_BUILD_LIMITS") then {WFBE_C_AICOM_OBEY_BUILD_LIMITS = 1};
+	if (isNil "WFBE_C_AICOM_BASES_MAX")         then {WFBE_C_AICOM_BASES_MAX         = 2};
 	if (isNil "WFBE_C_AICOM_FACTORY_RING_MIN") then {WFBE_C_AICOM_FACTORY_RING_MIN = 60};   //--- factory placement ring inner (was 45).
 	if (isNil "WFBE_C_AICOM_FACTORY_RING_MAX") then {WFBE_C_AICOM_FACTORY_RING_MAX = 110};  //--- factory placement ring outer (was 75).
 	//--- B67 (Ray 2026-06-21) MHQ RELOCATION (item #12): the new base must sit a GENEROUS buffer outside any
@@ -612,7 +657,12 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 //--- Environment.
 	if (isNil "WFBE_C_ENVIRONMENT_MAX_VIEW") then {WFBE_C_ENVIRONMENT_MAX_VIEW = 5000}; //--- Max view distance.
 	if (isNil "WFBE_C_ENVIRONMENT_MAX_CLUTTER") then {WFBE_C_ENVIRONMENT_MAX_CLUTTER = 50}; //--- Max Terrain grid.
-	if (isNil "WFBE_C_ENVIRONMENT_STARTING_HOUR") then {WFBE_C_ENVIRONMENT_STARTING_HOUR = 9}; //--- Starting Hour of the day.
+	if (isNil "WFBE_C_ENVIRONMENT_STARTING_HOUR") then {WFBE_C_ENVIRONMENT_STARTING_HOUR = 8}; //--- Starting Hour of the day. (Ray 2026-06-24: permanent-daylight band starts 08:00; see WFBE_C_ENVIRONMENT_DAYLIGHT_* below.)
+	// Ray 2026-06-24 (directive #2): permanent daylight runs 08:00->17:00 then loops back to 08:00, never night. Server clamps daytime to this band when the accelerated cycle is OFF (WFBE_DAYNIGHT_ENABLED != 1, which is the live hard-set state at line 100). Toggle WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP=0 to disable (reverts to the old one-shot setDate behaviour).
+	if (isNil "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") then {WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP = 1};   //--- 1 = enforce the 08:00->17:00 daylight loop on the disabled-cycle path.
+	if (isNil "WFBE_C_ENVIRONMENT_DAYLIGHT_START") then {WFBE_C_ENVIRONMENT_DAYLIGHT_START = 8};    //--- Reset hour when the clock passes the end of the daylight band.
+	if (isNil "WFBE_C_ENVIRONMENT_DAYLIGHT_END") then {WFBE_C_ENVIRONMENT_DAYLIGHT_END = 17};       //--- Loop back to START once daytime reaches/exceeds this hour (17:00).
+	if (isNil "WFBE_C_ENVIRONMENT_DAYLIGHT_CHECK") then {WFBE_C_ENVIRONMENT_DAYLIGHT_CHECK = 30};    //--- Seconds between daylight-band checks (cheap; light cadence).
 	if (isNil "WFBE_C_ENVIRONMENT_STARTING_MONTH") then {WFBE_C_ENVIRONMENT_STARTING_MONTH = 6}; //--- Starting Month of the year.
 	if (isNil "WFBE_C_ENVIRONMENT_WEATHER") then {WFBE_C_ENVIRONMENT_WEATHER = 0}; //--- Weather Type, 0: Clear, 1: Cloudy, 2: Rainy)
 	// Marty: Volumetric clouds are disabled globally; override any stale parameter value.
