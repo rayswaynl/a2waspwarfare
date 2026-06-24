@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T19:45:05+02:00",
+  "generatedAt": "2026-06-24T20:00:02+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "none",
-      "currentWork": "Published the Source Fix post-B751b current-stable wording cleanup; no active Codex docs lane remains.",
-      "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from current master, open PRs or patch-ready registers."
+      "currentWork": "Published docs-only post-B751b route check for open PR #74 / origin/claude/trello-arty-cooldown-hud.",
+      "nextExpectedOutput": "Claim a new bounded source-backed lane after fresh coordination reads; avoid gameplay source edits unless Steff explicitly asks."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pr74-artillery-cooldown-hud-post-b751b-route-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only post-B751b route check for open draft PR #74 / origin/claude/trello-arty-cooldown-hud@471fc0580fd6. GitHub reports mergeable=true / clean, but base SHA and local merge-base remain f8a76de34 while current master is origin/master@f39665d7950ddf14cb0bbfacb7ee1e40121e93b4; local counts are 80 1. Base-relative payload is four maintained-root UI files / +134 / -8, clean under git diff --check, with no Modded_Missions, Tools or Extension payload. Support Specials, Client UI, Feature Status, Testing workflow, PR cleanup and pruning ledger now route PR #74 as branch-only clean-but-stale-base RHUD artillery cooldown evidence. No gameplay source changed."
+    },
     {
       "lane": "source-fix-current-branch-scope-post-b751b-wording-2026-06-24",
       "owner": "Codex",
