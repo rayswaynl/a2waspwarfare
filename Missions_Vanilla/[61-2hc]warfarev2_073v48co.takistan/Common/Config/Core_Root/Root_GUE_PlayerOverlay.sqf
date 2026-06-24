@@ -46,12 +46,17 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 //--- Map-branching: IS_CHERNARUS_MAP_DEPENDENT is defined in version.sqf for Chernarus; commented-out for Takistan.
 missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","hilux1_civil_2_covered","Ka137_MG_PMC"]]; //--- first-tick synchronous seed (tier loop below re-sets on tier change)
 [] spawn {
-	private ["_lastTier","_tier","_pool"];
-	_lastTier = -99;
+	private ["_lastSig","_tier","_kills","_m113On","_sig","_pool"];
+	_lastSig = "";
 	while {!WFBE_GameOver && (local player) && {side group player == resistance}} do {
 		_tier = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
-		if (_tier != _lastTier) then {
-			_lastTier = _tier;
+		//--- B75 (guer-tech): the M113 VBIED is kill-gated INDEPENDENTLY of the vehicle tier, so rebuild the pool when
+		//--- EITHER the tier OR the M113 unlock state changes (a composite signature, not the old tier-only guard).
+		_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+		_m113On = _kills >= (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25]);
+		_sig = Format ["%1|%2", _tier, _m113On];
+		if (_sig != _lastSig) then {
+			_lastSig = _sig;
 
 			if (worldName == "Chernarus") then {  //--- GUER-MAPFIX (2026-06-18): preprocessFileLineNumbers (Root_GUE.sqf:130 / Root_TKGUE.sqf:104) loads this file STANDALONE, so IS_CHERNARUS_MAP_DEPENDENT (version.sqf) was UNDEFINED -> the #else (Takistan) branch ran on Chernarus too (TK classnames in the CH buy-roster + WFBE_C_GUER_VBIED_TYPE wrongly = datsun). Runtime worldName is map-correct on both maps.
 			//--- Chernarus GUER roster (GUE_* classnames).
@@ -79,6 +84,10 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1","BTR40_MG_TK_GUE_EP1"]};
 			if (_tier >= 3) then {_pool = _pool + ["Ural_ZU23_TK_GUE_EP1"]};
 			};
+			//--- B75 (guer-tech): kill-gated SECOND VBIED — an unarmed M113 with ~2x speed (driver-local boost loop in
+			//--- Client_BuildUnit.sqf). Map-independent class (M113_UN_EP1 on both maps), appended after the map branch;
+			//--- shown the same way as the hilux/datsun VBIED (red "[VBIED - APC]" tag in Client_UIFillListBuyUnits.sqf).
+			if (_m113On) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]]};
 			missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _pool];
 		};
 		sleep 10;

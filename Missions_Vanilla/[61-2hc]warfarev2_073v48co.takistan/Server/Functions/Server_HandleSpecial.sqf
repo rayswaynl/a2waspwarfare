@@ -536,7 +536,7 @@ switch (_args select 0) do {
 		Private ["_veh","_driver"];
 		_veh = _args select 1;
 		_driver = _args select 2;
-		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
+		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]))}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC).
 			[_veh, _driver] spawn {
 				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore"];
 				_veh = _this select 0;

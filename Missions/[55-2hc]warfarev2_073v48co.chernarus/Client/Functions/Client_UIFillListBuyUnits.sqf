@@ -147,6 +147,11 @@ lnbClear _listBox;
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
 		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - Suicide Truck]"];
 	};
+	//--- B75 (guer-tech): SECOND VBIED — the kill-gated unarmed M113 (~2x speed). Same red weapon styling as the hilux, distinct tag.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])}) then {
+		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
+		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - APC, 2x Speed]"];
+	};
 
 		if (_price > _funds) then {lnbSetColor [_listBox,[_i,0],[1,0.4,0.4,1]]}; //--- QoL: red price = can't afford base cost
 		_i = _i + 1;

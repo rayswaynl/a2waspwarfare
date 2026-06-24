@@ -343,13 +343,19 @@ if (_isMan) then {
 	//--- NOTE (out of my file scope): for a teammate already standing on ANOTHER client when the truck spawns, the
 	//--- fully-correct delivery is an all-clients re-applier (the per-client updateclient.sqf MHQ-action pattern, or a
 	//--- registered PVFunction like SetMHQLock). That re-applier lives outside the GUER bundle's owned files.
-	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]))}) then {  //--- B75: hilux/datsun truck VBIED OR the kill-gated M113 APC VBIED.
 		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
 		_vehicle setVariable ["wfbe_is_guer_vbied", true, true];
 
-		//--- B67 (guer-reward): the VBIED is a Car, so enable Valhalla High Climbing on it (broadcast) so the
-		//--- suicide truck can scale steep terrain to reach targets. Mirrors LowGear_Toggle.sqf's enable path.
-		_vehicle setVariable ["WFBE_HighClimbingEnabled", true, true];
+		//--- B75 (guer-tech): tag the VBIED variant so the GetIn path arms the right movement assist. The soft truck
+		//--- (a Car) keeps Valhalla high-climbing; the tracked M113 APC gets the dedicated ~2x-speed boost loop instead.
+		if ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) then {
+			_vehicle setVariable ["wfbe_vbied_m113", true, true];
+		} else {
+			//--- B67 (guer-reward): the truck VBIED is a Car, so enable Valhalla High Climbing on it (broadcast) so the
+			//--- suicide truck can scale steep terrain to reach targets. Mirrors LowGear_Toggle.sqf's enable path.
+			_vehicle setVariable ["WFBE_HighClimbingEnabled", true, true];
+		};
 
 		//--- Local helper: add the detonate action once per local vehicle instance (dedupe via wfbe_vbied_action).
 		WFBE_CL_FNC_AddGuerVbiedAction = {
@@ -361,6 +367,37 @@ if (_isMan) then {
 			private ["_aid"];
 			_aid = _v addAction ["<t color='#ff3333'>Detonate VBIED</t>","Client\Action\Action_GuerVbiedDetonate.sqf", [], 6, false, true, "", "driver _target == _this && {side _this == resistance}"];
 			_v setVariable ["wfbe_vbied_action", _aid];
+		};
+
+		//--- B75 (guer-tech): M113 VBIED ~2x-speed driver-local boost. A2-OA has NO setMaxSpeed, so mirror the Valhalla
+		//--- high-climbing setVelocity idiom: each tick, while the LOCAL player drives, nudge the forward velocity up
+		//--- until ~2x the M113's stock top speed (self-limiting). Idempotent via wfbe_m113_boost_running.
+		WFBE_CL_FNC_GuerVbiedM113Boost = {
+			private ["_v"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (_v getVariable ["wfbe_m113_boost_running", false]) exitWith {};   //--- already boosting on this machine.
+			_v setVariable ["wfbe_m113_boost_running", true];
+			[_v] spawn {
+				private ["_v","_coef","_baseMax","_target","_vel","_dir","_fwd"];
+				_v = _this select 0;
+				_coef = missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_SPEEDCOEF", 2.0];
+				_baseMax = getNumber (configFile >> "CfgVehicles" >> (typeOf _v) >> "maxSpeed");   //--- km/h
+				if (_baseMax <= 0) then {_baseMax = 60};
+				_target = _baseMax * _coef;
+				while {alive _v && {driver _v == player} && {canMove _v}} do {
+					if (isEngineOn _v && {(speed _v) > 3} && {(speed _v) < _target}) then {
+						_vel = velocity _v;
+						_dir = direction _v;
+						_fwd = (_vel select 0) * sin _dir + (_vel select 1) * cos _dir;   //--- forward velocity component (only boost when actually moving forward).
+						if (_fwd > 0) then {
+							_v setVelocity [(_vel select 0) * 1.07, (_vel select 1) * 1.07, (_vel select 2)];
+						};
+					};
+					sleep 0.1;
+				};
+				_v setVariable ["wfbe_m113_boost_running", false];
+			};
 		};
 
 		//--- Immediate buyer-local add (instant availability) + GetIn driver-path re-add for persistence.
@@ -379,6 +416,10 @@ if (_isMan) then {
 					if (!Local_HighClimbingRunning) then {
 						_v spawn VALHALLA_FNC_LowGear;
 					};
+				};
+				//--- B75 (guer-tech): start the M113 ~2x-speed boost for the local driver (mirrors the high-climb start above).
+				if (_v getVariable ["wfbe_vbied_m113", false]) then {
+					_v call WFBE_CL_FNC_GuerVbiedM113Boost;
 				};
 			};
 		}];

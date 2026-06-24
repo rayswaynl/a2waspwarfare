@@ -88,6 +88,11 @@ with missionNamespace do {
 	//--- in A2-OA, so this isNil-guarded 0 seed gives joiners a safe default until the per-kill broadcast / connect
 	//--- catch-up (Server_OnPlayerConnected.sqf) lands.
 		if (isNil "WFBE_GUER_PLAYER_KILLS") then {WFBE_GUER_PLAYER_KILLS = 0};
+		//--- Second VBIED: an UNARMED M113 with ~2x speed (driver-detonated, same blast + cash-for-kills as the hilux),
+		//--- kill-gated into the GUER depot. M113_UN_EP1 exists on both maps so the type is map-independent (no TK repoint).
+		if (isNil "WFBE_C_GUER_VBIED_M113_TYPE") then {WFBE_C_GUER_VBIED_M113_TYPE = "M113_UN_EP1"};
+		if (isNil "WFBE_C_GUER_VBIED_M113_KILLS") then {WFBE_C_GUER_VBIED_M113_KILLS = 25}; //--- GUER kills required before the M113 VBIED appears in the depot.
+		if (isNil "WFBE_C_GUER_VBIED_M113_SPEEDCOEF") then {WFBE_C_GUER_VBIED_M113_SPEEDCOEF = 2.0}; //--- target top-speed multiplier of the driver-local boost loop (~2x stock M113).
 		//--- Barracks AI cap (per GUER player group): base + one extra slot per N kills, clamped to the A2 12-per-group engine ceiling.
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_BASE") then {WFBE_C_GUER_BARRACKS_AI_BASE = 4};
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_MAX") then {WFBE_C_GUER_BARRACKS_AI_MAX = 12};
