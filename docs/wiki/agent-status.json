@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T01:55:00+02:00",
+  "generatedAt": "2026-06-24T02:10:02+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready / documentation-finisher loop",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Construction SmallSite B74.2 current-head follow-up is published and ready for the next bounded source-backed wiki lane. No gameplay source changed.",
-      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Feature Status, Source Fix queue or the pruning ledger after fresh coordination reads."
+      "currentWork": "Auto-wall B74.2 current-head follow-up is published; no gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Progress Dashboard, Feature Status, Source Fix queue or the pruning ledger before editing."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "auto-wall-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed global auto-wall toggle evidence from stale B74.2 origin/claude/b74.2-aicom@d472da6a wording to current origin/claude/b74.2-aicom@21b62b04. Docs/source HEAD@de471ea5ba96 is unchanged from eca0e4a7 / f3896116 / 89aadf8c for checked auto-wall paths. Current stable/B74.1/B74.2/B69/B74 still use one global toggle defaulted true with broader SmallSite/MediumSite exclusions; docs/source/Miksuu/perf keep false-default/no-exclusion shape; live origin/feat/oa-auto-countermeasures@2015a632 only changes default/AARadar gates. Checked d472da6a..21b62b04 is empty for auto-wall paths. No checked ref scopes by player, side or requester. No gameplay source changed."
+    },
     {
       "lane": "construction-smallsites-b742-current-head-followup-2026-06-24",
       "owner": "Codex",

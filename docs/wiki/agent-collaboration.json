@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T01:55:00+02:00",
+  "generatedAt": "2026-06-24T02:10:02+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "auto-wall-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh global auto-wall toggle rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only auto-wall toggle registration/state/consumer paths: Init_Common.sqf, Init_PublicVariables.sqf, coin_interface.sqf, Construction_SmallSite.sqf, Construction_MediumSite.sqf and wall-template owner context in source Chernarus and maintained Vanilla.",
+        "Keep Construction-And-CoIn-Systems-Atlas and Server-Composition-Spawner-Function-Reference as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Construction-And-CoIn-Systems-Atlas.md and Server-Composition-Spawner-Function-Reference.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 auto-wall evidence.",
+        "Recorded that checked d472da6a..21b62b04 is empty for auto-wall paths and origin/master..origin/claude/b74.2-aicom only adds source-Chernarus structure-built stats attribution among checked construction paths.",
+        "Updated Feature Status, Source Fix queue, Progress Dashboard, pruning ledger, worklog and auto-wall machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future construction owner should decide whether auto-wall is intentionally match-global or should be scoped by side/player/requester, then propagate maintained Vanilla and smoke two-player/two-side toggling before stable wording.",
+      "updated": "2026-06-24T02:10:02+02:00"
+    },
     {
       "lane": "construction-smallsites-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
