@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T18:31:04+02:00",
+  "generatedAt": "2026-06-24T19:00:05+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready",
       "currentLane": "none",
-      "currentWork": "Published the B751 current-master AICOM hard-cap and GUER/JIP client-error guard route; no active Codex docs lane remains.",
+      "currentWork": "Published the B751b Takistan playable-slot current-master route; no active Codex docs lane remains.",
       "nextExpectedOutput": "Pick the next bounded source-backed wiki lane from current master, open PRs or patch-ready registers."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b751b-takistan-chernarus-slots-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only B751b Takistan playable-slot current-master route. PR #89 / origin/feat/tk-chernarus-slots@05ded76601ea4f0d2ed9de50a53048dd590da210 merged as origin/master@f39665d7950ddf14cb0bbfacb7ee1e40121e93b4 on 2026-06-24T16:46:54Z. The scoped 7bfcf09a9..origin/master delta is 19 maintained Vanilla Takistan files / +511 / -1224 and clean under git diff --check: mission.sqm plus 18 added Textures/*.paa, with no source Chernarus, Modded, Tools or Extension payload. Merged Takistan mission.sqm now has 34 PLAY CDG slots, ids 7000-7033, owner syncs at mission.sqm:599, :618 and :2831. PR #89 reports B751b boot smoke, but package/hash, generated version.sqf, RPT, TEAMREG/GUER/HC/JIP and texture-load proof remain release gates. No gameplay source changed."
+    },
     {
       "lane": "b751-current-master-aicom-hardcap-intake-2026-06-24",
       "owner": "Codex",

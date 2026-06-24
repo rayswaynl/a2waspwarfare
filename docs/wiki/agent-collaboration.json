@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T18:31:04+02:00",
+  "generatedAt": "2026-06-24T19:00:05+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b751b-takistan-chernarus-slots-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/master@f39665d79 current stable after PR #89",
+        "PR #89 / origin/feat/tk-chernarus-slots@05ded7660",
+        "7bfcf09a9..origin/master scoped B751b diff",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/mission.sqm plus added Textures/*.paa",
+        "Current source/status/testing route pages plus compact coordination and machine records"
+      ],
+      "handoff": "Closed as published/validated docs-only route. Treat origin/master@f39665d79 / PR #89 as current-master maintained Vanilla Takistan source evidence for the 34-slot B751b roster and added texture payload. Do not describe B751b as a source Chernarus gameplay fix or release-ready until package/hash, generated version.sqf, RPT, TEAMREG/GUER/HC/JIP and texture-load smoke are recorded.",
+      "updated": "2026-06-24T19:00:05+02:00",
+      "outputs": [
+        "Updated Current-Source-Status-Snapshot.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Testing-Debugging-And-Release-Workflow.md with B751b current-master Takistan mission.sqm/texture evidence, roster counts, owner-sync line refs and release gates.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md and machine records so the lane is published/validated and no longer active.",
+        "Mirrored touched files into docs/wiki and validated JSON/JSONL, wiki links, touched-file parity and git diff checks."
+      ]
+    },
     {
       "lane": "b751-current-master-aicom-hardcap-intake-2026-06-24",
       "owner": "Codex",
