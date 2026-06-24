@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T05:32:00+02:00",
+  "generatedAt": "2026-06-24T05:58:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "salvage-payout-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh salvage payout casing, salvage-truck loop and client-local delete/reward authority rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Skill_Salvage.sqf, updatesalvage.sqf, Init_Client.sqf and direct BuildUnit/salvage branch context in source Chernarus and maintained Vanilla.",
+        "Keep Construction-And-CoIn-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 salvage payout evidence.",
+        "Recorded that docs/source HEAD@408479a914c7 is unchanged from 795cdbbf0 for checked salvage paths and that d472da6a..21b62b04 only touches unrelated source-Chernarus Init_Client.sqf client-init/tint/ACK/intro-music code among checked salvage-adjacent paths.",
+        "Updated Progress Dashboard, pruning ledger, worklog and salvage machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future salvage owner should patch ChangePlayerFunds casing in both manual and truck salvage payout paths across source Chernarus plus maintained Vanilla first, smoke manual engineer and salvage-truck payouts, and keep loop-exit/server-owned delete-reward authority as a separate code lane unless explicitly claimed together.",
+      "updated": "2026-06-24T05:58:00+02:00"
+    },
     {
       "lane": "gear-template-profile-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
