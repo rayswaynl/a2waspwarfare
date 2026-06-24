@@ -105,6 +105,13 @@ with missionNamespace do {
 		if (isNil "WFBE_C_GUER_KA137_TYPE") then {WFBE_C_GUER_KA137_TYPE = "Ka137_MG_PMC"};
 		if (isNil "WFBE_C_GUER_KA137_FLARE_LAUNCHER") then {WFBE_C_GUER_KA137_FLARE_LAUNCHER = "CMFlareLauncher"};
 		if (isNil "WFBE_C_GUER_KA137_FLARE_MAGS") then {WFBE_C_GUER_KA137_FLARE_MAGS = ["60Rnd_CMFlareMagazine","120Rnd_CMFlareMagazine","240Rnd_CMFlareMagazine"]};
+
+	//--- B75 (guer-tech): FOB (forward operating base) system. Each WEST/EAST factory the GUER side destroys grants one
+	//--- FOB build token of the matching type. WFBE_GUER_FOB_AVAIL = [barracks, lightFactory, heavyFactory] is the count
+	//--- of still-buildable FOBs per type (earned by factory kills, spent when a FOB is built). It gates the depot FOB
+	//--- trucks and feeds the RHUD "B n | LF n | HF n" row. Server-authoritative; publicVariable'd (NOT JIP-replayed in
+	//--- A2-OA, so isNil-seeded here, re-broadcast by Server_GuerStipend.sqf + pushed to joiners by OnPlayerConnected).
+		if (isNil "WFBE_GUER_FOB_AVAIL") then {WFBE_GUER_FOB_AVAIL = [0,0,0]};
 		//--- Barracks AI cap (per GUER player group): base + one extra slot per N kills, clamped to the A2 12-per-group engine ceiling.
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_BASE") then {WFBE_C_GUER_BARRACKS_AI_BASE = 4};
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_MAX") then {WFBE_C_GUER_BARRACKS_AI_MAX = 12};

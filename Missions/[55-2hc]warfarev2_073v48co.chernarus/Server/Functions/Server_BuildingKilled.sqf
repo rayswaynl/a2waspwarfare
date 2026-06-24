@@ -12,6 +12,26 @@ _side_killer = side _killer;
 _killer_uid = getPlayerUID _killer;
 if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_UID_SHOW") == 0) then {_killer_uid = "xxxxxxx"};
 
+//--- B75 (guer-tech FOB): PATH A (normal kills). A resistance kill of an ENEMY (WEST/EAST) Barracks / Light / Heavy
+//--- factory grants the GUER side one FOB build token of that type (drives the depot FOB-truck availability + the RHUD
+//--- counter). Counts player AND AI GUER kills; excludes teamkills. The null-instigator VBIED case (the FAB-250 blast
+//--- carries no killer, so side _killer == civilian here) is EXCLUDED by the resistance gate and credited instead by
+//--- PATH B in Server_HandleSpecial.sqf - so there is no double count. Only the three core factory types grant a FOB.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {!_teamkill} && {_side_killer == resistance} && {_side in [west, east]}) then {
+	private ["_fobIdx","_fobAvail"];
+	_fobIdx = -1;
+	if (_structure isKindOf "Base_WarfareBBarracks") then {_fobIdx = 0};
+	if (_structure isKindOf "Base_WarfareBLightFactory") then {_fobIdx = 1};
+	if (_structure isKindOf "Base_WarfareBHeavyFactory") then {_fobIdx = 2};
+	if (_fobIdx >= 0) then {
+		_fobAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]);
+		_fobAvail set [_fobIdx, (_fobAvail select _fobIdx) + 1];
+		missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _fobAvail];
+		publicVariable "WFBE_GUER_FOB_AVAIL";
+		["INFORMATION", Format ["Server_BuildingKilled.sqf: GUER FOB token granted (enemy %1 destroyed). Avail now [B %2 | LF %3 | HF %4].", _type, _fobAvail select 0, _fobAvail select 1, _fobAvail select 2]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 if ((!isNull _killer) && (isPlayer _killer)) then
 {
     if (_teamkill) then

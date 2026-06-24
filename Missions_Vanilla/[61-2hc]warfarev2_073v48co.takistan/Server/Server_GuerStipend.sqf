@@ -70,6 +70,9 @@ while {!WFBE_GameOver} do {
 	//--- B75 (guer-tech): re-broadcast the kill counter too (same A2-OA non-JIP-replay reason) so a JIP joiner's buy
 	//--- overlay + barracks cap + RHUD converge within one cycle even if they missed the per-kill broadcast.
 	if (!isNil "WFBE_GUER_PLAYER_KILLS") then {publicVariable "WFBE_GUER_PLAYER_KILLS"};
+	//--- B75 (guer-tech FOB): likewise re-broadcast the FOB availability counter so the depot FOB-truck pool + RHUD
+	//--- "B n | LF n | HF n" row stay correct for joiners who missed the per-factory-kill broadcast.
+	if (!isNil "WFBE_GUER_FOB_AVAIL") then {publicVariable "WFBE_GUER_FOB_AVAIL"};
 
 	//--- (2) Stipend, scaled by GUER town deficit.
 	_curTowns = {(_x getVariable ["sideID", -1]) == WFBE_C_GUER_ID} count towns;

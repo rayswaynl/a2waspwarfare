@@ -538,7 +538,7 @@ switch (_args select 0) do {
 		_driver = _args select 2;
 		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]))}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC).
 			[_veh, _driver] spawn {
-				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore"];
+				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail"];
 				_veh = _this select 0;
 				_driver = _this select 1;
 				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
@@ -646,7 +646,22 @@ switch (_args select 0) do {
 						if (((_struct isKindOf "Base_WarfareBLightFactory") || (_struct isKindOf "Base_WarfareBHeavyFactory") || (_struct isKindOf "Base_WarfareBAircraftFactory") || (_struct isKindOf "Base_WarfareBBarracks")) && {_drvUID != ""}) then {
 							[_drvUID, WFBE_STAT_KILLS_FACTORY, 1] Call WFBE_SE_FNC_RecordStat;
 						};
-						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED levelled enemy structure [%1] - factory bounty [%2] + score [%3] credited to detonator UID [%4].", typeOf _struct, _facBounty, _facScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
+						//--- B75 (guer-tech FOB): PATH B. A VBIED-levelled enemy Barracks/Light/Heavy also grants a GUER FOB
+						//--- build token of that type. The owning side is guaranteed WEST/EAST (the snapshot iterated only
+						//--- [west,east] logics) and the destroyer is guaranteed resistance (case guard), so no side gate is
+						//--- needed. The null-instigator blast never reaches Server_BuildingKilled's resistance gate, so this
+						//--- is the ONLY place a VBIED factory kill is credited toward FOB availability (no double count).
+						_fobIdx = -1;
+						if (_struct isKindOf "Base_WarfareBBarracks") then {_fobIdx = 0};
+						if (_struct isKindOf "Base_WarfareBLightFactory") then {_fobIdx = 1};
+						if (_struct isKindOf "Base_WarfareBHeavyFactory") then {_fobIdx = 2};
+						if (_fobIdx >= 0) then {
+							_fobAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]);
+							_fobAvail set [_fobIdx, (_fobAvail select _fobIdx) + 1];
+							missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _fobAvail];
+							publicVariable "WFBE_GUER_FOB_AVAIL";
+							["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER FOB token granted via VBIED (enemy %1 destroyed). Avail now [B %2 | LF %3 | HF %4].", typeOf _struct, _fobAvail select 0, _fobAvail select 1, _fobAvail select 2]] Call WFBE_CO_FNC_LogContent;
+						};
 					};
 				} forEach _structVictims;
 				//--- B67: pay the detonator personally (cash to their wallet via the new client receiver, dispatched
