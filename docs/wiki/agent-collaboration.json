@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T17:25:00+02:00",
+  "generatedAt": "2026-06-24T18:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "side-supply-compact-context-current-b742-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Economy-Authority-First-Cut.md side-supply compact wording only if stale branch scope remains",
+        "Resistance-Supply-Scaffold.md current-branch wording only if stale compact route needs owner-page cross-reference",
+        "agent-context.json DR-22 side-supply compact string",
+        "agent-machine-index.json side-supply branchScope",
+        "agent-feature-status.jsonl / agent-hardening-backlog.jsonl side-supply rows only if stale",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/AttackWave.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching maintained-root side-supply/resistance paths"
+      ],
+      "handoff": "Closed as published/validated docs-only. Treat current stable/B74.1/B74.2 Chernarus as a partial side-supply rescue only; maintained Vanilla remains old-shape. Future economy owner should preserve/port the floor-to-zero and resistance temp-channel shape deliberately, fix reason parsing, validate side/channel/amount/requester authority and restore/rebase the resistance handler if faction-tint-sidefix is revived.",
+      "updated": "2026-06-24T18:10:00+02:00",
+      "outputs": [
+        "Updated agent-context.json DR-22 compact summary from older origin/master@0139a346 wording to current stable/B74.1 and current B74.2 branch scope.",
+        "Updated agent-machine-index.json direct-PV/economy authority routes to name the current Chernarus-partial / Vanilla-old-shape side-supply split.",
+        "Added pruning-ledger and knowledge records, updated Progress Dashboard/Agent Worklog/status/collaboration/event surfaces, mirrored touched files into docs/wiki and validated JSON/JSONL, wiki links/schema, parity, touched-file conflict markers and diff whitespace."
+      ]
+    },
     {
       "lane": "supply-cooldown-current-b742-context-refresh-2026-06-24",
       "owner": "Codex",

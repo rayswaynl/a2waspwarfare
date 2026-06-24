@@ -152,7 +152,7 @@
       "id": "pvf-dispatch-trust-boundary",
       "system": "registered PVF dispatcher",
       "riskTier": "P0",
-      "branchScope": "master_current",
+      "branchScope": "current-b741-b742-direct-pv-open; side-supply is Chernarus-partial and Vanilla-old-shape",
       "canonicalDocs": [
         "PVF-Dispatch-Implementation-Playbook",
         "Networking-And-Public-Variables",
@@ -240,20 +240,22 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AttackWaveActivate.sqf:3-8",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AttackWave.sqf:1-38",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf"
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_ChangeSideSupply.sqf"
       ],
       "machineRefs": [
         "agent-feature-status.jsonl#attack-wave-authority",
         "agent-feature-status.jsonl#side-supply-clamp-first",
         "agent-hardening-backlog.jsonl#attack-wave-authority"
       ],
-      "nextGate": "Do not describe PVF dispatcher hardening as full PV security; direct channels need per-channel server recomputation or request redesign."
+      "nextGate": "Do not describe PVF dispatcher hardening as full PV security; direct channels need per-channel server recomputation or request redesign. For side supply, preserve/port the Chernarus floor-to-zero candidate, propagate or scope maintained Vanilla, validate side/channel/amount/requester consistency and keep reason parsing separate from authority closure."
     },
     {
       "id": "economy-authority-class",
       "system": "economy, side supply, spend and reward authority",
       "riskTier": "P0",
-      "branchScope": "master_current",
+      "branchScope": "current-b741-b742 economy class; side-supply Chernarus-partial and Vanilla-old-shape",
       "canonicalDocs": [
         "Economy-Authority-First-Cut",
         "Server-Authority-Migration-Map",
@@ -263,6 +265,8 @@
       "sourceRefs": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_ChangeSideSupply.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Service.sqf"
@@ -272,7 +276,7 @@
         "agent-hardening-backlog.jsonl#economy-authority-design",
         "agent-feature-status.jsonl#side-supply-clamp-first"
       ],
-      "nextGate": "Clamp side-supply first, then migrate spend/effect handlers under one server-ledger design instead of isolated UI checks."
+      "nextGate": "Clamp side-supply first where target refs remain old-shape, preserve current Chernarus floor-to-zero/resistance candidate where present, propagate or explicitly scope maintained Vanilla, then migrate spend/effect handlers under one server-ledger design instead of isolated UI checks."
     },
     {
       "id": "supply-mission-authority",
