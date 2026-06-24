@@ -6,12 +6,24 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak"];
 
 _killed = _this select 0;
 _killer = _this select 1;
 _killed_side = (_this select 2) Call GetSideFromID;
 _type = typeOf _killed;
+
+//--- Card #66 (killstreak bounty): server-authoritative killstreak tracking. Capture the VICTIM's
+//--- pre-reset streak (forwarded into the AwardBountyPlayer message below), then UNCONDITIONALLY clear
+//--- the killed player's streak for ANY death (enemy, friendly, environment, AI). Placed BEFORE the
+//--- killer-dead early exit so a death by drowning/crash/AI still resets the streak. Broadcast (true)
+//--- so every machine sees 0; the respawn object defaults to 0, making this JIP-safe. NEVER incremented
+//--- client-side - only the server writes wfbe_killstreak.
+_victimStreak = 0;
+if (isPlayer _killed) then {
+	_victimStreak = _killed getVariable ["wfbe_killstreak", 0];
+	_killed setVariable ["wfbe_killstreak", 0, true];
+};
 
 if (!(_killed isKindOf "Man") && (_killer == _killed || isNull _killer || !alive _killer)) then { //--- Vehicles may crash or burn out after a valid hit.
 	_last_hit = _killed getVariable ["wfbe_lasthitby", objNull];
@@ -215,7 +227,11 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 			if ((missionNamespace getVariable "WFBE_C_UNITS_BOUNTY") > 0) then {
 			//--- Award the bounty if needed.
 			if (_killed_isplayer && _killer_isplayer) then {
-				[_killer_uid, "AwardBountyPlayer", _killed] Call WFBE_CO_FNC_SendToClients;
+				//--- Card #66 (killstreak bounty): confirmed enemy player-vs-player kill. Increment the
+				//--- KILLER's streak server-side (broadcast), and forward the VICTIM's pre-reset streak so
+				//--- the client bounty award can multiply the payout by the killed player's streak.
+				_killer setVariable ["wfbe_killstreak", (_killer getVariable ["wfbe_killstreak", 0]) + 1, true];
+				[_killer_uid, "AwardBountyPlayer", [_killed, _victimStreak]] Call WFBE_CO_FNC_SendToClients;
 			};
 
 			[_killer_uid, "AwardBounty", [_killed_type, false, _killer_award]] Call WFBE_CO_FNC_SendToClients;
