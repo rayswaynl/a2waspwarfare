@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T18:10:00+02:00",
+  "generatedAt": "2026-06-24T18:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-hq-reassignment-route-current-b742-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Commander-HQ-Lifecycle-Atlas.md Current Branch Scope manual reassignment row",
+        "Commander-HQ-Lifecycle-Atlas.md Manual Reassignment Flow compact wording",
+        "Commander-Reassignment-Call-Shape.md as canonical route/evidence check only",
+        "Commander-Vote-And-Reassignment-Playbook.md as adjacent route/evidence check only",
+        "Feature-Status-Register.md commander reassignment rows as current status check only",
+        "Source-Fix-Propagation-Queue.md commander reassignment row as current status check only",
+        "agent-machine-index.json commander-specific row only if stale after source check",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching maintained-root commander reassignment paths"
+      ],
+      "handoff": "Closed as published/validated docs-only. Treat Commander-HQ-Lifecycle-Atlas as the gateway and Commander-Reassignment-Call-Shape as the canonical matrix. Do not reopen helper unpacking on current stable/B74.1/B74.2/B69/B74/Miksuu/perf/release-shaped maintained roots; remaining work is docs/source old-shape propagation if that target matters, exactly one reassignment notification owner, row-value/team-identity UI selection, requester authority and modded fork maintenance policy.",
+      "updated": "2026-06-24T18:45:00+02:00",
+      "outputs": [
+        "Updated Commander-HQ-Lifecycle-Atlas.md Current Branch Scope and Manual Reassignment Flow to route through current stable/B74.1 and current B74.2 reassignment evidence.",
+        "Added pruning-ledger and knowledge records, updated Progress Dashboard/Agent Worklog/status/collaboration/event surfaces, mirrored touched files into docs/wiki and validated JSON/JSONL, wiki links/schema, parity, touched-file conflict markers and diff whitespace."
+      ]
+    },
     {
       "lane": "side-supply-compact-context-current-b742-refresh-2026-06-24",
       "owner": "Codex",
