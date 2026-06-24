@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T04:30:02+02:00",
+  "generatedAt": "2026-06-24T04:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "aicom-capture-plan-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh AI commander capture/fun plan and release-readiness branch-only gate that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to origin/claude/b74.2-aicom@21b62b04.",
+        "Check only branch-wide B74.2 source Chernarus evidence, d472da6a..21b62b04 delta, PR route and maintained Vanilla/Takistan scope.",
+        "Keep AI-Commander-Autonomy-Audit, Feature Status and Testing workflow as canonical branch evidence; update only the stale capture-plan/release-readiness route plus coordination records.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed AI-Commander-Capture-And-Fun-Improvement-Plan.md and agent-release-readiness.json from stale B74.2 origin/claude/b74.2-aicom@d472da6a branch-gate wording to current origin/claude/b74.2-aicom@21b62b04.",
+        "Recorded that current B74.2 remains source-Chernarus-only: origin/master..origin/claude/b74.2-aicom is 29 files / +424 / -38, git diff --check clean, no Missions_Vanilla payload and no PR route.",
+        "Recorded that d472da6a..21b62b04 is four source Chernarus files / +100 / -14 for GUER stipend/tier startup/rebroadcast plus join/connect recovery; no gameplay source changed."
+      ],
+      "handoff": "Future AICOM reviewer should keep the B74.2 capture/pop-tier/naval/stats behavior branch-only until source Chernarus smoke and an explicit maintained Vanilla/Takistan scope decision exist.",
+      "updated": "2026-06-24T04:50:00+02:00"
+    },
     {
       "lane": "ai-commander-upgrade-debit-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
