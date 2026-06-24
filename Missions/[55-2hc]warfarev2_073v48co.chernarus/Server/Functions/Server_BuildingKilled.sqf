@@ -66,6 +66,16 @@ if ((!isNull _killer) && (isPlayer _killer)) then
         default {0};
 	   };
 
+	   //--- B75 (guer-tech FOB): clearing a GUER (resistance) FOB field-base shows a DISTINCT message with the SAME
+	   //--- reward - the GuerFobCleared handler pays the same cash bounty, and a FOB barracks keeps its +500 side-supply
+	   //--- bonus (granted silently here). All resistance Barracks/Light/Heavy factories in this mission are FOBs.
+	   if ((_side == resistance) && {(_structure isKindOf "Base_WarfareBBarracks") || (_structure isKindOf "Base_WarfareBLightFactory") || (_structure isKindOf "Base_WarfareBHeavyFactory")}) then
+	   {
+            if (_structure isKindOf "Base_WarfareBBarracks") then {[_side_killer, 500, "", false] Call ChangeSideSupply};
+            [_side_killer, "LocalizeMessage", ["GuerFobCleared", (name _killer), _bounty, _type, _side]] call WFBE_CO_FNC_SendToClients;
+       }
+       else
+       {
 	   if(typeof _structure == "Gue_WarfareBBarracks")then
 	   {
            	_bounty = 3000;
@@ -79,6 +89,7 @@ if ((!isNull _killer) && (isPlayer _killer)) then
        else
        {
             [_side_killer, "LocalizeMessage", ["HeadHunterReceiveBounty", (name _killer), _bounty, _type, _side]] call WFBE_CO_FNC_SendToClients;
+       };
        };
 
        //--- B74.2: leaderboard FACTORY-kill credit to the destroying player (real UID, not the display-masked _killer_uid).
@@ -145,6 +156,16 @@ if(_side != resistance)then{
     _logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") - [_structure, objNull], true];
 
     [_side, "Destroyed", ["Base", _structure]] Spawn SideMessage;
+} else {
+    //--- B75 (guer-tech FOB): a destroyed GUER FOB factory MUST leave the registry too, or it lingers as a phantom
+    //--- spawn/production point (the original code skipped resistance because GUER had no factories before FOBs). No
+    //--- commander cap to decrement. WFBE_L_GUE may be a Group -> plain getVariable (A2-OA-safe, mirrors Construction).
+    private ["_gLogik"];
+    _gLogik = (resistance) Call WFBE_CO_FNC_GetSideLogic;
+    if (!isNull _gLogik && {!isNil {_gLogik getVariable "wfbe_structures"}}) then {
+        _gLogik setVariable ["wfbe_structures", (_gLogik getVariable "wfbe_structures") - [_structure, objNull], true];
+    };
+    [resistance, "Destroyed", ["Base", _structure]] Spawn SideMessage;
 };
 sleep 10;
 
