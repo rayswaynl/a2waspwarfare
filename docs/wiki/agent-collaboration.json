@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T08:55:00+02:00",
+  "generatedAt": "2026-06-24T09:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,6 +23,24 @@
   },
   "activeClaims": [
     {
+      "lane": "ai-runtime-town-ai-b742-route-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh the AI runtime / HC route row that still names B74.2 origin/claude/b74.2-aicom@d472da6a for Town AI tracked-vehicle cleanup after the canonical Town AI evidence advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Server/FSM/server_town_ai.sqf in source Chernarus and maintained Vanilla plus scoped branch diffs needed to support route wording.",
+        "Keep Town-AI-Vehicle-Despawn-Safety canonical; update AI-Runtime-HC-Loop-Map and coordination records only as needed.",
+        "No gameplay source edits."
+      ],
+      "outputs": [
+        "Updated AI-Runtime-HC-Loop-Map.md so the Town AI tracked-vehicle cleanup route names current B74.2 origin/claude/b74.2-aicom@21b62b04 instead of older d472da6a wording.",
+        "Recorded that repo docs branch HEAD@6ee7c754abb6 is source-unchanged from ce3cf871e1e7 for both maintained-root server_town_ai.sqf files and remains old-shape at :214.",
+        "Recorded that current stable/B74.1, B69 and adjacent B74 protect source Chernarus at :312/:325; current B74.2 line-drifts source Chernarus to :324/:337; maintained Vanilla remains leader-only at :319; d472da6a..21b62b04 is empty for both maintained-root files."
+      ],
+      "handoff": "Future AI runtime owner should use Town-AI-Vehicle-Despawn-Safety as the detailed DR-45 matrix, keep the runtime map route-first and avoid calling current B74-shaped refs closed until maintained Vanilla propagation plus Arma occupancy smoke exist.",
+      "updated": "2026-06-24T09:10:00+02:00"
+    },
+    {
       "lane": "stale-upgrade-dialog-current-b742-head-refresh-2026-06-24",
       "owner": "Codex",
       "status": "published-validated-docs-only",
@@ -39,7 +57,8 @@
       ],
       "handoff": "Future UI owner should preserve current stable/B74.1/B74.2/B69/B74/release stale-class deletion and port it only to old-shape docs/Miksuu/perf targets or add an explicit alias; then smoke Upgrade menu opening, list/detail, RequestUpgrade and maintained Vanilla parity.",
       "updated": "2026-06-24T08:55:00+02:00"
-    },    {
+    },
+    {
       "lane": "economy-dialog-current-b742-head-refresh-2026-06-24",
       "owner": "Codex",
       "status": "published-validated-docs-only",
