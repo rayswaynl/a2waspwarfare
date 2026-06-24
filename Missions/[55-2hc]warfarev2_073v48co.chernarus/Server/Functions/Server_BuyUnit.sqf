@@ -156,7 +156,9 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 0) then { //--- AI8: use the buying side (_side), not client-side sideJoined (wrong/nil on a dedicated server). Make sure the unit is defined in IRS_Init and the upgrade is available.
 			_get = missionNamespace getVariable Format ["%1_IRS", (typeOf _vehicle)];
 			if !(isNil '_get') then {
-				_vehicle setVariable ["wfbe_irs_flares", _get select 1, true];
+				private "_irsFlares"; _irsFlares = _get select 1; //--- wiki-wins: apply the IRS lvl-2 doubling to AI-bought vehicles too (was base-only, half the player count). Mirror Client_BuildUnit.sqf:479.
+				if (((_side Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE) > 1) then {_irsFlares = _irsFlares * 2};
+				_vehicle setVariable ["wfbe_irs_flares", _irsFlares, true];
 				_vehicle addEventHandler ["incomingMissile", {_this spawn WFBE_CO_MOD_IRS_OnIncomingMissile}];
 			};
 		};

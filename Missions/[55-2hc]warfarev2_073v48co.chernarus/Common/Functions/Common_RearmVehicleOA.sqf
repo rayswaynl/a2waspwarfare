@@ -25,7 +25,10 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0) then {
 	//--- Make sure that the unit is defined in IRS_Init.
 	_get = missionNamespace getVariable Format ["%1_IRS", _type];
 	if (!isNil '_get' && !isNil {_vehicle getVariable "wfbe_irs_flares"}) then {
-		if ((_vehicle getVariable "wfbe_irs_flares") != (_get select 1)) then {_vehicle setVariable ["wfbe_irs_flares", _get select 1, true]};
+		//--- wiki-wins: restore the lvl-2 doubling on rearm (was resetting to base _get select 1, silently downgrading IRS-lvl2 vehicles). Mirror Client_BuildUnit.sqf:479; use _side (sideJoined is nil on dedicated).
+		private "_irsFlares"; _irsFlares = _get select 1;
+		if (((_side Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE) > 1) then {_irsFlares = _irsFlares * 2};
+		if ((_vehicle getVariable "wfbe_irs_flares") != _irsFlares) then {_vehicle setVariable ["wfbe_irs_flares", _irsFlares, true]};
 	};
 };
 
