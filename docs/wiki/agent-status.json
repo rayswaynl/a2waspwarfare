@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T09:10:00+02:00",
+  "generatedAt": "2026-06-24T09:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready / documentation finisher loop",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "AI runtime Town AI B74.2 route refresh is published. Continue by reading the coordination surfaces, claiming one bounded source-backed lane and avoiding active owners.",
+      "currentWork": "Paratrooper marker current stable/B74.2 register/context refresh is published. Continue by reading the coordination surfaces, claiming one bounded source-backed lane and avoiding active owners.",
       "nextExpectedOutput": "Pick the next narrow wiki/doc mirror lane, verify source evidence, update canonical owner pages or compact machine context in parity, validate and publish. No gameplay source edits unless Steff asks."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "paratrooper-marker-b742-context-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed Paratrooper-Marker-Revival.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, agent-context.json, agent-release-readiness.json, agent-feature-status.jsonl and agent-hardening-backlog.jsonl so paratrooper marker registration routes current stable/B74.1 through origin/master@f8a76de34 and current B74.2 through origin/claude/b74.2-aicom@21b62b04 instead of older origin/master@0139a346-only wording. Repo docs branch HEAD@d2da2a9c9388 is source-unchanged from 7e88d609 for checked sender/handler/registration paths. Current stable/B74.1/B74.2/B69/B74 register HandleParatrooperMarkerCreation at Init_PublicVariables.sqf:38 in both maintained roots; docs/source keeps :39; historical a96fdda2 keeps :34; Miksuu omits the checked registration and perf is Chernarus-only. No gameplay source changed."
+    },
     {
       "lane": "ai-runtime-town-ai-b742-route-refresh-2026-06-24",
       "owner": "Codex",

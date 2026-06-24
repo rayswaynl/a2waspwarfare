@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-24T07:15:00+02:00",
+  "generatedAt": "2026-06-24T09:25:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -570,14 +570,15 @@
     "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md ranks low-risk and high-value performance work: AI-source scoreboard, role-aware player-AI cap pilot, HC proof pack, low-SV town groups, static-defense HC accounting, cleanup/object-count evidence, PVF dispatcher lookup, hosted FPS loop sleep, supply scan narrowing, public queue broadcast review, target-specific WASP marker wait propagation/smoke and audit-first cleaner/marker-loop tuning. Old-WarfareBE-Performance-Comparison.md owns the old BennyBoy WarfareBE baseline and final FPS scout appendix; Testing-Debugging-And-Release-Workflow.md owns the full-server FPS benchmark pack. Current-state correction 2026-06-22: current stable origin/master@0139a346 already carries the heli-aware typed supply scan in both maintained roots, while current Miksuu b8389e74 and perf 0076040f still need old-shape scan backports if they remain targets; release a96fdda2/7ff18c49 evidence is historical without a live release/* head. All of these still need Arma smoke; factory queue counter/token cleanup remains current-code-change-needed/open. WASP display-54 wait refreshed 2026-06-22: current stable origin/master@0139a346 and B69 origin/claude/b69@8d465fce already carry sleep 0.1 in both maintained roots; docs/source HEAD@46840f048bd4, current Miksuu b8389e748243 and perf 0076040f remain old-shape.",
     "paratrooperMarkerRevival": {
       "page": "Paratrooper-Marker-Revival.md",
-      "status": "docs-source-current-stable-b69-b74-propagated-smoke-pending",
-      "summary": "docs/source Chernarus and Vanilla Takistan register HandleParatrooperMarkerCreation and ship the sender/handler pair. Current stable origin/master@0139a346, B69 origin/claude/b69@8d465fce and B74 origin/claude/b74-aicom-spend@b23f557f register it in both maintained roots too. Historical a96fdda2/7ff18c49 commits carry it, but no live origin release/* head was exposed on 2026-06-22. Current Miksuu keeps sender/handler without the checked maintained-root registration; perf/quick-wins is Chernarus-only. Arma smoke and modded mission drift cleanup remain.",
+      "status": "docs-source-current-stable-b742-b69-b74-propagated-smoke-pending",
+      "summary": "docs/source Chernarus and Vanilla Takistan register HandleParatrooperMarkerCreation and ship the sender/handler pair. Current stable/B74.1 origin/master@f8a76de34, current B74.2 origin/claude/b74.2-aicom@21b62b04, B69 origin/claude/b69@8d465fce and B74 origin/claude/b74-aicom-spend@b23f557f register it in both maintained roots too. Historical a96fdda2/7ff18c49 commits carry it, but no live origin release/* head was exposed on 2026-06-24. Current Miksuu keeps sender/handler without the checked maintained-root registration; perf/quick-wins is Chernarus-only. Arma smoke and modded mission drift cleanup remain.",
       "sourceRefs": [
         "docs/source HEAD@7e88d609 Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:39 register HandleParatrooperMarkerCreation",
         "docs/source HEAD@7e88d609 Chernarus/Vanilla Server/Support/Support_Paratroopers.sqf:117 send HandleParatrooperMarkerCreation",
         "docs/source HEAD@7e88d609 Chernarus/Vanilla Client/PVFunctions/HandleParatrooperMarkerCreation.sqf:45 records paratrooper_marker_spawn",
-        "origin/master@0139a346, origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:38 register HandleParatrooperMarkerCreation",
-        "historical a96fdda2 and 7ff18c49 Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:34 register HandleParatrooperMarkerCreation; no live origin release/* head on 2026-06-22",
+        "origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, origin/claude/b74.2-aicom@21b62b04, origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:38 register HandleParatrooperMarkerCreation",
+        "checked 7e88d609..HEAD, origin/master..origin/claude/b74.2-aicom, d472da6a..21b62b04 and origin/claude/b69..origin/claude/b74-aicom-spend diffs are empty for paratrooper sender/handler/registration paths",
+        "historical a96fdda2 and 7ff18c49 Chernarus/Vanilla Common/Init/Init_PublicVariables.sqf:34 register HandleParatrooperMarkerCreation; no live origin release/* head on 2026-06-24",
         "current Miksuu b8389e748243 keeps sender/handler but no checked maintained-root registration; origin/perf/quick-wins@0076040f registers Chernarus only at :40"
       ]
     },
@@ -633,7 +634,7 @@
     "DR-1 (High, hardening) current status 2026-06-21: current origin/master@0139a346 no longer Call Compiles PVF handler strings in source Chernarus or maintained Vanilla; Chernarus blame is 7d60b02b4 and Vanilla propagation is 9b49883cb. BattlEyeFilter/publicvariable.txt still has only the kickAFK feature rule, and the dispatcher still lacks a registered SRVFNC*/CLTFNC* allowlist/logging.",
     "DR-1 remaining dispatcher fix: add registered handler allowlists to Init_PublicVariables.sqf and require membership before spawning the current missionNamespace getVariable result; for older target branches, backport the lookup and allowlist together. See PVF-Dispatch-Implementation-Playbook#current-branch-matrix.",
     "Residual after DR-1 fix: the PVF model still trusts client-sent command names and payload values, for example RequestChangeScore sets score from payload. Arbitrary code execution is closed, but legitimate-command forgery needs separate per-handler sender/payload validation.",
-    "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
+    "DR-2 current status refreshed 2026-06-24: paratrooper drop markers are registered in docs/source, current stable/B74.1, current B74.2, B69 and B74 maintained roots but still need Arma marker smoke; Miksuu lacks the checked registration and perf is Chernarus-only. DR-3 MASH tent markers remain branch-sensitive broken/dormant marker work.",
     "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled.",
     "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects.",
     "DR-6 (High, gameplay integrity): RequestStructure/RequestDefense take _side (and _manned) from the client payload and RequestMHQRepair passes the raw payload to MHQRepair; no commander/funds/dead-HQ/base-area checks server-side. A modified client can forge free factories, AI-manned defenses/minefields and HQ repairs for any side. Root cause: payloads omit the player and Arma2 PVEH has no sender identity. Fix: add player to payload + validate side+commander+funds server-side. Pairs with DR-1 (DR-1 stops code execution; DR-6 stops forged legit commands). See Deep-Review-Findings Round 4.",
@@ -726,7 +727,7 @@
       ],
       "findings": [
         "DR-1 PV dispatch Call Compile trust boundary unmitigated by validation or BattlEye filter.",
-        "DR-2 paratrooper drop markers are source/Vanilla propagated and current stable/B69/B74 propagated: docs/source registers HandleParatrooperMarkerCreation at Init_PublicVariables.sqf:39 in both maintained roots, current stable origin/master@0139a346 plus B69/B74 register it at :38, historical a96fdda2/7ff18c49 commits register at :34 without a live release/* head, current Miksuu omits the checked registration and perf/quick-wins is Chernarus-only; Arma smoke and modded drift cleanup remain.",
+        "DR-2 paratrooper drop markers are source/Vanilla propagated and current stable/B74.1/B74.2/B69/B74 propagated: docs/source registers HandleParatrooperMarkerCreation at Init_PublicVariables.sqf:39 in both maintained roots, current stable origin/master@f8a76de34 plus B74.2/B69/B74 register it at :38, historical a96fdda2/7ff18c49 commits register at :34 without a live release/* head, current Miksuu omits the checked registration and perf/quick-wins is Chernarus-only; Arma smoke and modded drift cleanup remain.",
         "DR-3 MASH tent markers dead because receiverMASHmarker.sqf is only referenced by a commented client init compile.",
         "DR-4 Chernarus and Takistan are in sync except skip-list/blacklist differences; Modded_Missions are stale or stubbed.",
         "DR-5 atlas preprocessFile counts should be treated as point-in-time; FSM count of 3 verified accurate."
