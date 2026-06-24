@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T23:59:00+02:00",
+  "generatedAt": "2026-06-24T23:59:59+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Latest bounded pass pr80-vote-para-guards-intake-2026-06-24 is published/validated as docs-only branch intake for open draft PR #80 / origin/claude/trello-vote-para-guards@92101abe.",
-      "nextExpectedOutput": "Claim a new narrow source-backed docs lane before editing."
+      "currentWork": "Latest bounded pass b745-b747-current-head-refresh-2026-06-24 is published/validated docs-only; no gameplay source changed.",
+      "nextExpectedOutput": "Claim the next narrow source-backed docs lane before editing."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "b745-b747-current-head-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Published docs-only B74.7/B74.7.1 current-head refresh. origin/claude/b745 now points at 29ca9519, two source-Chernarus commits past documented 712a7a668. Feature Status, Current Source Status, AI Commander Autonomy, Player Join/Disconnect, Client UI systems, Performance opportunity sweep, Testing workflow and the pruning ledger now route the 5-file B74.7/B74.7.1 delta separately from prior B74.5/B74.6 evidence. Source Chernarus adds Server_OnPlayerConnected wfbe_teams UID fallback/connect diagnostics, FPS picker 30 FPS option and AICOM founding hard cap; no Missions_Vanilla, Modded_Missions or Tools payload. No gameplay source changed."
+    },
     {
       "lane": "pr80-vote-para-guards-intake-2026-06-24",
       "owner": "Codex",
