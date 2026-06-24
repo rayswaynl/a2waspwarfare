@@ -16,6 +16,12 @@ Before saying a fix is live, prove all of these:
 
 If any item is missing, use `patch-ready`, `branch-local`, `propagated-smoke-pending` or `source-unverified`, not `shipped`.
 
+## 2026-06-24 B74.5 Branch Intake
+
+New remote head `origin/claude/b745@b996bcb3ee9bd7100b5959a2688873f7b1e8c8b6` is branch-only intake evidence, not current stable or release wording. It branches from current stable `origin/master@f8a76de349da6f8b871d079c828436c10afb221c`, has no PR route from `gh pr list --head claude/b745 --state all`, and is clean under `git diff --check origin/master..origin/claude/b745`. The full branch is broad (126 files / +4029 / -4384) and includes `origin/claude/b74.2-aicom@21b62b04fee3690d66d5a3f6939b1fda0befa354` as an ancestor; the B74.2..B74.5 delta is still broad (105 files / +3605 / -4346).
+
+Use it as a bundle-routing branch until owner lanes split it apart. Current intake evidence says B74.5 deletes the old intro video asset and disables its playback line while leaving intro music (`Client/Init/Init_Client.sqf:1080-1082,1111`), folds in a source-Chernarus-only B74.4 AICOM/JIP batch, and adds branch-only operational tooling under `Tools/Ops` plus `Tools/RptTownDefenseAnalyzer`. Do not call any of that current stable, maintained Vanilla/Takistan, PR-routed or release-ready behavior without a later target-branch smoke record.
+
 ## High-Risk Status Checks
 
 | Lane | What to verify before changing wording | Owning page |

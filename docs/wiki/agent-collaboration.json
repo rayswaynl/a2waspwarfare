@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T19:45:00+02:00",
+  "generatedAt": "2026-06-24T20:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "b745-branch-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "origin/claude/b745 branch topology, merge-base, PR status and diff payload",
+        "Feature-Status-Register.md branch-candidate row if the branch is not already represented",
+        "Current-Source-Status-Snapshot.md current branch/status wording if needed",
+        "Testing-Debugging-And-Release-Workflow.md smoke routing only if the existing branch-only smoke route misses this branch",
+        "Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl",
+        "docs/wiki mirror copies"
+      ],
+      "handoff": "Closed as published/validated docs-only branch intake. Treat origin/claude/b745@b996bcb3 as a mixed branch-only bundle, not current stable, PR-routed, maintained Vanilla/Takistan or release-ready behavior. Split future implementation work into owner-sized lanes: B74.2 existing payload, B74.4 AICOM/JIP, intro-video asset shrink, branch-only tooling and any remaining Trello/upstream payload.",
+      "updated": "2026-06-24T20:25:00+02:00",
+      "outputs": [
+        "Updated Feature-Status-Register.md, Current-Source-Status-Snapshot.md, Testing-Debugging-And-Release-Workflow.md, AI-Commander-Autonomy-Audit.md and Tools-And-Build-Workflow.md with B74.5 branch-intake routing.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, Wiki-Pruning-And-Relevance-Ledger.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "mission-entrypoints-lifecycle-current-b742-route-refresh-2026-06-24",
       "owner": "Codex",
