@@ -425,16 +425,16 @@ if (count _live > 0) then {
 		_clsOrder = [2,1,3,0];
 		{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _clsOrder;
 	};
-	//--- B74 COST/TIER-WEIGHTED DRAW (Ray 2026-06-22): the chosen bucket pick WAS a UNIFORM coin-flip, so a
-	//--- cheap 2800 squad was fielded as often as a 10310 premium platoon - the commander hoarded ~1.3M funds
-	//--- and only ever fielded the cheap subset. Weight each candidate template by (summed unit price)^EXP and
-	//--- roll, so it preferentially founds its EXPENSIVE unlocked units once the cash exists. EXP=0 (or a single
-	//--- candidate) reproduces the old uniform draw. Price uses the same QUERYUNITPRICE sum the founding charge
-	//--- below uses. A2-OA-safe: ^ power op, manual index counter, outer _x captured into _cwIdx before the
-	//--- inner price forEach rebinds _x (the documented _ti gotcha at L282).
-	private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwPrice","_cwW","_cwRoll","_cwAcc","_cwI","_cwUd"];
+	//--- B750 EFFECTIVENESS-WEIGHTED DRAW (Ray 2026-06-24, "don't bias highest VALUE, bias most EFFECTIVE units +
+	//--- more variety"): the B74 draw weighted each template by (mission ECONOMY price)^1.5, so the commander spammed
+	//--- its single most EXPENSIVE platoon. Now weight by (summed BI CfgVehicles "cost" = combat-threat rating)^EXP,
+	//--- decoupled from what the economy charges, with a LOW exponent so the draw stays VARIED (a capable mix, not one
+	//--- premium template). EXP=0 (or a single candidate) reproduces a pure uniform draw. A2-OA-safe: ^ power op,
+	//--- configFile/getNumber are core 1.64 commands, manual index counter, outer _x captured into _cwIdx before the
+	//--- inner forEach rebinds _x to the unit classname (the documented _ti gotcha at L282).
+	private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwEff","_cwW","_cwRoll","_cwAcc","_cwI"];
 	_cwBucket = _buckets select _chosen;
-	_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_TIER_BIAS_EXP", 1.5];
+	_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_EFF_BIAS_EXP", 0.5];
 	_pick = -1;
 	if (_cwExp <= 0 || {count _cwBucket <= 1}) then {
 		_pick = _cwBucket select (floor (random (count _cwBucket)));
@@ -444,10 +444,10 @@ if (count _live > 0) then {
 		{
 			_cwIdx  = _x;                       //--- capture: the inner forEach below rebinds _x to the unit classname.
 			_cwTmpl = _templates select _cwIdx;
-			_cwPrice = 0;
-			{ _cwUd = missionNamespace getVariable _x; if (!isNil "_cwUd") then {_cwPrice = _cwPrice + (_cwUd select QUERYUNITPRICE)} } forEach _cwTmpl;
-			if (_cwPrice < 1) then {_cwPrice = 1};
-			_cwW = _cwPrice ^ _cwExp;
+			_cwEff = 0;
+			{ _cwEff = _cwEff + (getNumber (configFile >> "CfgVehicles" >> _x >> "cost")) } forEach _cwTmpl; //--- BI combat-threat value, NOT the mission economy price.
+			if (_cwEff < 1) then {_cwEff = 1}; //--- floor: classes with no config cost still keep a non-zero chance.
+			_cwW = _cwEff ^ _cwExp;
 			_cwWeights set [count _cwWeights, _cwW];
 			_cwSum = _cwSum + _cwW;
 		} forEach _cwBucket;

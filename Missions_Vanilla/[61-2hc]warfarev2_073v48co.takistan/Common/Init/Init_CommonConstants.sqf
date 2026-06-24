@@ -212,12 +212,17 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE")  then {WFBE_C_AICOM_TYPE_MIX_LATE  = [0.28, 0.22, 0.35, 0.15]};
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_MID")  then {WFBE_C_AICOM_TYPE_MIX_MATURE_MID  = 4}; //--- own-town count at/above which the MID tier applies.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_LATE") then {WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 8}; //--- own-town count at/above which the LATE tier applies.
-	//--- B74 COST/TIER BIAS (Ray 2026-06-22): within a chosen class bucket the old picker was a UNIFORM coin-flip over
-	//--- all eligible templates, so a 10310-cost premium platoon had the same odds as a 2800 squad - the commander
-	//--- hoarded ~1.3M funds and only ever fielded the cheap subset. Weight each template by (summed unit price)^EXP so
-	//--- it preferentially fields its EXPENSIVE unlocked units. 0 = uniform (old behaviour); ~1.5-2.0 = strong cost
-	//--- preference. Default-ON at 1.5; tune in soak. The price is looked up once per template and cached.
-	if (isNil "WFBE_C_AICOM_TIER_BIAS_EXP") then {WFBE_C_AICOM_TIER_BIAS_EXP = 1.5};
+	//--- B74 COST/TIER BIAS (Ray 2026-06-22) -> SUPERSEDED by the B750 effectiveness draw below. The B74 picker weighted
+	//--- each template by (mission ECONOMY price)^1.5, so the commander spammed its single most EXPENSIVE platoon and the
+	//--- army looked repetitive. Kept defined at 0 (no-op) for any external reference; the live draw now reads EFF_BIAS_EXP.
+	if (isNil "WFBE_C_AICOM_TIER_BIAS_EXP") then {WFBE_C_AICOM_TIER_BIAS_EXP = 0};
+	//--- B750 EFFECTIVENESS DRAW (Ray 2026-06-24, "don't bias highest VALUE, bias most EFFECTIVE units + more variety"):
+	//--- within a class bucket, weight each candidate template by (summed BI CfgVehicles "cost" = combat-threat rating)^EXP
+	//--- instead of by the mission ECONOMY price. Combat value is decoupled from what the economy charges (tier/balance
+	//--- inflation), and a LOW exponent flattens the draw so the commander fields a VARIED, capable mix rather than one
+	//--- premium template. 0 = pure uniform (max variety); 0.5 (default) = mild effectiveness lean; ~1.0+ = stronger.
+	//--- Tune live. The combat value is read from config once per template per founding (cheap; foundings are infrequent).
+	if (isNil "WFBE_C_AICOM_EFF_BIAS_EXP") then {WFBE_C_AICOM_EFF_BIAS_EXP = 0.5};
 	//--- A/B EXPERIMENT (legacy-vs-next): arm label + sim-gating switch. LEGACY arm = control (gating off).
 	if (isNil "WFBE_C_AB_ARM") then {WFBE_C_AB_ARM = "NEXT-T1c"};
 	//--- Steff 2026-06-13: the AI must NOT be able to use artillery. Forced off (not a default)
