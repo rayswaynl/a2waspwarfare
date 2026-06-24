@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T15:20:00+02:00",
+  "generatedAt": "2026-06-24T16:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mash-marker-current-b742-route-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Abandoned-Feature-Revival-Review.md MASH marker row and section",
+        "Respawn-And-Death-Lifecycle-Atlas.md MASH split matrix",
+        "Feature-Status-Register.md MASH marker relay rows",
+        "Public-Variable-Channel-Index.md MASH direct-channel rows",
+        "Dead-Code-And-Stale-Code-Register.md MASH marker relay rows",
+        "Support-Specials-And-Tactical-Modules-Atlas.md MASH module note",
+        "Modules-Atlas.md MASH/skill module note",
+        "agent-context.json and agent-feature-status.jsonl MASH compact records",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus maintained-root MASH deploy/relay/receiver/init/respawn paths",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan maintained-root MASH deploy/relay/receiver/init/respawn paths"
+      ],
+      "handoff": "Future respawn/marker owner should keep old-shape local MASH deploy plus orphaned marker sync separate from current-stable/B74-shaped deploy/module removal. Revive old-shape markers only with server-held marker state, unique IDs, delete resend and explicit JIP resend/pull; otherwise retire/archive the stale relay deliberately. No gameplay source changed.",
+      "updated": "2026-06-24T16:05:00+02:00",
+      "outputs": [
+        "Updated Respawn/death lifecycle, Abandoned Feature Revival, Feature Status, Public Variable channel index, Dead/stale code, Support specials and Modules atlas with current B74.2 MASH branch evidence.",
+        "Added a 2026-06-24 MASH B74.2 machine row and marked older B69/B74 MASH JSONL refresh rows as superseded history.",
+        "Mirrored touched wiki files into docs/wiki and validated JSON/JSONL, wiki links/schema, parity, conflict markers and diff whitespace."
+      ]
+    },
     {
       "lane": "factory-buy-refund-current-b742-feature-status-refresh-2026-06-24",
       "owner": "Codex",
