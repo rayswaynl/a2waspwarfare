@@ -128,6 +128,14 @@ _i = _i + [['','',6000,40,-2,1,1,0,'Guerilla',[]]];   //--- B66 (Ray 2026-06-21)
 _c = _c + ['Mi24_P'];
 _i = _i + [['','',18000,60,-2,3,3,0,'Guerilla',[]]];   //--- B60 (Ray 2026-06-21): air-upgrade(idx5) 0->3. Core_GUE wins the Mi24_P registration race over Core_RU (load order) - the comment above keeps it to win the GUER PRICE (18000), but it also stamped air-level 0 onto the GLOBAL Mi24_P, which Squads_GetFactionGroups feeds to the AICOM founding/produce air-gate -> EAST/RU could field ungated Mi24_P (only B59's town-strip still blocked it). Price 18000 still wins; only the air-level is corrected to RU's canonical 3. GUER is base-less (no founding gate) so unaffected. Rollback: ...,0,3,0,...
 
+//--- B75 (guer-tech) FOB delivery trucks: NOT registered here. The classnames (Ural_INS/UralOpen_INS/GAZ_Vodnik on CH,
+//--- TK_CIV/TKA on TK) are SHARED with active AI/EAST factions, and Core_GUE wins the first-write registration race,
+//--- so registering them with FOB price/upgrade/faction would clobber e.g. RU GAZ_Vodnik / TKA V3S_TK_EP1 (wrong price,
+//--- upgrade gate + faction tag) for those factions' players + AI commander. Instead the FOB trucks ride their CANONICAL
+//--- registration (the GUER depot has no faction filter + bypasses the upgrade gate, so they still appear), and the GUER
+//--- buy list relabels them "FOB (...)" in Client_UIFillListBuyUnits.sqf. A GUER-bought instance is distinguished from
+//--- an AI faction's same-class truck purely by the broadcast wfbe_is_guer_fob flag (set in Client_BuildUnit.sqf).
+
 /* Static Defenses */
 _c = _c + ['GUE_WarfareBMGNest_PK'];
 _i = _i + [['','',300,0,1,0,'Defense',0,'Guerilla',[]]];

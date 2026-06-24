@@ -2,6 +2,89 @@ scriptName "Client\GUI\GUI_UpgradeMenu.sqf";
 
 //--- Register the UI.
 uiNamespace setVariable ["wfbe_display_upgrades", _this select 0];
+
+//--- B75 (guer-tech): GUER has no commander and no standard upgrade economy, so the Upgrade Center is repurposed as a
+//--- READ-ONLY view of the kill-based field tech (current kills, what's unlocked, the next threshold + reward). This is
+//--- a self-contained branch that RETURNS (exitWith) before the commander upgrade machinery below; the purchase/queue
+//--- buttons are disabled and the back button still routes to the WF menu. A2-OA safe (lnb*/structuredText only).
+if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) exitWith {
+	disableSerialization;
+	private ["_disp","_names","_lastKey"];
+	_disp = _this select 0;
+	ctrlEnable [504007, false]; ctrlEnable [504008, false]; ctrlEnable [504009, false];
+	lnbClear 504001;
+	_names = ["Tech Kills","Heavy Vehicles","M113 VBIED","Ka-137 Flares","Barracks AI","FOB Field Bases"];
+	{ lnbAddRow [504001, ["", _x]] } forEach _names;
+	lnbSetCurSelRow [504001, 0];
+	((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504006) ctrlSetStructuredText (parseText "<t>GUER FIELD TECH - earned by kills (read-only). Select a line for details.</t>");
+	_lastKey = "";
+	WFBE_MenuAction = -1;
+	while {alive player && dialog} do {
+		private ["_kills","_tier","_avail","_k1","_k2","_k3","_m113k","_flare","_capAI","_baseAI","_perKills","_maxAI","_sel","_key","_next","_title","_html","_desc"];
+		_kills   = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+		_tier    = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
+		_avail   = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
+		if (typeName _avail != "ARRAY" || {count _avail < 3}) then {_avail = [0,0,0]};
+		_k1 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15];
+		_k2 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40];
+		_k3 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80];
+		_m113k = missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25];
+		_flare = [60,120,240] select (_tier min 2);
+		_baseAI   = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4];
+		_perKills = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10];
+		_maxAI    = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12];
+		_capAI = (_baseAI + floor (_kills / _perKills)) min _maxAI;
+
+		_sel = lnbCurSelRow 504001;
+		if (_sel < 0) then {_sel = 0};
+		//--- Re-render only when the selection or the live values change (cheap key).
+		_key = Format ["%1|%2|%3|%4", _sel, _kills, _tier, _avail];
+		if (_key != _lastKey) then {
+			_lastKey = _key;
+			_title = _names select _sel;
+			_html = "";
+			_desc = "";
+			switch (_sel) do {
+				case 0: {
+					_html = Format ["<t color='#B6F563' size='1.1'>Tech Kills: %1</t>", _kills];
+					_desc = "Cumulative kills made by GUER PLAYERS against WEST/EAST. This single number drives every field-tech line below - there is no cash upgrade, you simply fight for it.";
+				};
+				case 1: {
+					//--- tier-3 roster differs by map: Chernarus GUE has T-72 + BMP-2; Takistan GUE caps at a ZU-23 Ural (no T-72/BMP-2).
+					private ["_t3"];
+					_t3 = if (worldName == "Takistan") then {"ZU-23 Ural (heavy weapons)"} else {"T-72 + BMP-2"};
+					_next = if (_tier < 1) then {Format ["%1 kills -> BRDM-2 + T-34", _k1]} else {if (_tier < 2) then {Format ["%1 kills -> T-55", _k2]} else {if (_tier < 3) then {Format ["%1 kills -> %2", _k3, _t3]} else {"all unlocked"}}};
+					_html = Format ["<t color='#B6F563' size='1.1'>Heavy Vehicles - Tier %1 / 3</t><br/><t color='#F5D363'>Next: %2</t>", _tier, _next];
+					_desc = Format ["Tier 1 (%1 kills): BRDM-2 + T-34.<br/>Tier 2 (%2 kills): T-55.<br/>Tier 3 (%3 kills): %4.<br/>Unlocked vehicles appear in the depot.", _k1, _k2, _k3, _t3];
+				};
+				case 2: {
+					_html = Format ["<t color='#B6F563' size='1.1'>M113 VBIED: %1</t>", if (_kills >= _m113k) then {"UNLOCKED"} else {Format ["locked (%1 / %2 kills)", _kills, _m113k]}];
+					_desc = "An unarmed, armoured M113 driven as a suicide VBIED at ~2x its normal top speed. Bought from the depot like the truck VBIED. Tracked + fast, it reaches targets the soft truck can't.";
+				};
+				case 3: {
+					_html = Format ["<t color='#B6F563' size='1.1'>Ka-137 Flares: %1</t>", _flare];
+					_desc = "The bought Ka-137 gets countermeasure flares sized by tier: 60 (start) -> 120 (tier 1) -> 240 (tier 2+). Armed automatically when you buy the Ka-137.";
+				};
+				case 4: {
+					_html = Format ["<t color='#B6F563' size='1.1'>Barracks AI cap: %1</t>", _capAI];
+					_desc = Format ["Your barracks squad ceiling = %1 + 1 per %2 kills, capped at %3 (the engine group limit). More kills = a bigger fieldable GUER squad.", _baseAI, _perKills, _maxAI];
+				};
+				case 5: {
+					_html = Format ["<t color='#B6F563' size='1.1'>FOB bases available - B %1 | LF %2 | HF %3</t>", _avail select 0, _avail select 1, _avail select 2];
+					_desc = "Destroy an enemy Barracks / Light / Heavy factory to earn a FOB delivery truck of that type (buy it in the depot). Drive it to a valid spot and 'Build FOB' to raise a forward factory you can spawn on and produce from.";
+				};
+				default {};
+			};
+			((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504003) ctrlSetStructuredText (parseText _html);
+			((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504005) ctrlSetStructuredText (parseText (Format ["<t color='#42b6ff' underline='1'>%1</t><br/><br/>%2", _title, _desc]));
+		};
+
+		if (WFBE_MenuAction == 1000) exitWith {WFBE_MenuAction = -1; closeDialog 0; createDialog "WF_Menu"};
+		WFBE_MenuAction = -1; //--- swallow purchase/select actions (read-only view).
+		sleep 0.25;
+	};
+	uiNamespace setVariable ["wfbe_display_upgrades", nil];
+};
 _upgrade_lastsel = uiNamespace getVariable "wfbe_display_upgrades_sel";
 if (isNil '_upgrade_lastsel') then {_upgrade_lastsel = 0; uiNamespace setVariable ["wfbe_display_upgrades_sel", 0]};
 

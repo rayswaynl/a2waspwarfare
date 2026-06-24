@@ -239,7 +239,9 @@ _RHUDSetFullPosition = {
 
 	(_controls select 0) ctrlSetPosition [_labelX, _startY + (0.021 * safezoneH), 0.145 * safezoneW, 0.001 * safezoneH];
 
-	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[23,24],[25,26]];
+	//--- B75 (guer-tech): two GUER-only rows reuse the spare control pairs 15/16 (Tech Kills) and 17/18 (FOB) - kills
+	//--- ABOVE the FOB row. Positioned for everyone here; shown + filled only for resistance (hidden otherwise).
+	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[23,24],[25,26]];
 	for "_idx" from 0 to ((count _layoutPairs) - 1) do {
 		_rowY = _startY + (_idx * _rowH);
 		(_controls select ((_layoutPairs select _idx) select 0)) ctrlSetPosition [_labelX, _rowY, _labelW, _lineH];
@@ -305,7 +307,7 @@ while {true} do {
 				for "_idx" from 0 to ((count _rhudIDC) - 1) do {
 					[_idx, true] call _RHUDSetShow;
 				};
-				{[_x, false] call _RHUDSetShow} forEach [15,16,17,18,19,20,21,22];
+				{[_x, false] call _RHUDSetShow} forEach [19,20,21,22];
 				[1, "Health:"] call _RHUDSetText;
 				[3, "Commander:"] call _RHUDSetText;
 				[5, "AI:"] call _RHUDSetText;
@@ -313,6 +315,14 @@ while {true} do {
 				[9, "Supply:"] call _RHUDSetText;
 				[11, "Base:"] call _RHUDSetText;
 				[13, "FPS C/S:"] call _RHUDSetText;
+					//--- B75 (guer-tech): GUER-only Tech-Kills + FOB labels (rows 15/16 above 17/18). A resistance player
+					//--- gets the two extra rows; everyone else has those spare controls hidden.
+					if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+						[15, "Tech Kills:"] call _RHUDSetText;
+						[17, "FOB:"] call _RHUDSetText;
+					} else {
+						{[_x, false] call _RHUDSetShow} forEach [15,16,17,18];
+					};
 				_labelsApplied = true;
 				_hiddenApplied = false;
 			};
@@ -372,6 +382,14 @@ while {true} do {
 			_isCommanderTeam = false;
 			if (!isNull commanderTeam) then {_isCommanderTeam = commanderTeam == group player};
 			if (_isCommanderTeam) then {_maxUnitsCount = _maxUnitsCount + 10};
+				//--- B75 (guer-tech): the real GUER barracks cap is kill-scaled (GUI_Menu_BuyUnits.sqf), not the always-0
+				//--- Barracks upgrade. Mirror it here so the HUD "AI: X / Y" max + colour match what the player can buy.
+				if (_side == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+					private ["_gK","_gCap"];
+					_gK = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+					_gCap = (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4]) + floor (_gK / (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10]));
+					_maxUnitsCount = _gCap min (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12]);
+				};
 
 			_aiText = format ["%1 / %2", _currentUnitsCount, _maxUnitsCount];
 			_aiColor = [0, 1, 0, 1];
@@ -416,7 +434,20 @@ while {true} do {
 			[12, _baseText] call _RHUDSetText;
 			[12, _baseColor] call _RHUDSetColor;
 
-			call _RHUDUpdateServerFPSRow;
+			if (_side == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+					//--- B75 (guer-tech): GUER-only rows. Tech-Kills (cumulative kill total driving the kill-based tech)
+					//--- sits directly ABOVE the FOB availability row (B n | LF n | HF n = still-buildable field bases).
+					private ["_gKills","_gFob"];
+					_gKills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+					_gFob   = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
+					if (typeName _gFob != "ARRAY" || {count _gFob < 3}) then {_gFob = [0,0,0]};
+					[16, Format ["%1", _gKills]] call _RHUDSetText;
+					[16, [0.72, 0.96, 0.39, 1]] call _RHUDSetColor;
+					[18, Format ["B %1 | LF %2 | HF %3", _gFob select 0, _gFob select 1, _gFob select 2]] call _RHUDSetText;
+					[18, [0.46, 0.78, 1, 1]] call _RHUDSetColor;
+				};
+
+				call _RHUDUpdateServerFPSRow;
 			call _RHUDUpdateUpgrade;
 			};
 		};

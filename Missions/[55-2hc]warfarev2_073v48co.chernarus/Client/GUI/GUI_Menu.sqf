@@ -23,7 +23,8 @@ while {alive player && dialog} do {
 		if (sideJoined == resistance) then { ctrlEnable [11002, true] }; //--- GUER: gear buy always available (funds-only)
 
 		if (sideJoined == resistance) then {
-			{ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008]; //--- GUER: hold commander/base/upgrade/economy/vote disabled
+			{ctrlEnable [_x, false]} forEach [11004,11005,11006,11008]; //--- GUER: hold commander/base/economy/vote disabled
+				ctrlEnable [11007, true]; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};

@@ -142,6 +142,17 @@ _IDCS = _IDCS - [_currentIDC];
 			  
               };
 			};
+				//--- B75 (guer-tech): GUER barracks AI cap scales with cumulative GUER player kills, not the (always-0)
+				//--- Barracks production upgrade. GUER is base-less/commander-less so the upgrade switch above always hits
+				//--- case 0 (round mbu/4). Override here: base + one slot per N kills, clamped to the A2 12-per-group ceiling.
+				//--- Reads the server-broadcast WFBE_GUER_PLAYER_KILLS (RequestOnUnitKilled.sqf). Placed AFTER the upgrade
+				//--- switch + commander bonus so the kill-scaled value wins for resistance.
+				if (sideJoined == resistance) then {
+					private ["_guerKills","_guerCap"];
+					_guerKills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+					_guerCap = (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4]) + floor (_guerKills / (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10]));
+					_realSize = _guerCap min (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12]);
+				};
 				if (_isInfantry) then {if ((unitQueu + _size + 1) > _realSize) then {_skip = true;hint parseText(Format [localize 'STR_WF_INFO_MaxGroup',_realSize])}};
 
 				if (!_isInfantry && !_skip) then {
@@ -652,6 +663,10 @@ _IDCS = _IDCS - [_currentIDC];
 					};
 					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 						hintSilent parseText "VBIED - driver-detonated suicide truck. <br/> <br/>Buy it, drive it into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. After a short arm delay it explodes and your GUER team is paid for the kills. One-shot - truck + driver are lost.";
+					};
+					//--- B75 (guer-tech): kill-unlocked SECOND VBIED — the armoured M113 variant (~2x speed, no weapons).
+					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])}) then {
+						hintSilent parseText "VBIED (APC) - an unarmoured-crew but TRACKED suicide M113 that drives at roughly DOUBLE its normal top speed. <br/> <br/>Same one-shot use as the truck VBIED: drive into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its armour + speed let it punch through to a target the soft truck can't reach. Unlocked by GUER kills.";
 					};
 					
 					if (!(_unit in WFBE_C_SUPPLY_HELI_TYPES) && {_unit in (missionNamespace getVariable [format ["WFBE_%1LIFTVEHICLE", sideJoinedText], []])}) then {

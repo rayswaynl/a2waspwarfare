@@ -80,6 +80,91 @@ with missionNamespace do {
 	if (isNil "WFBE_C_GUER_KILL_BOUNTY_COEF") then {WFBE_C_GUER_KILL_BOUNTY_COEF = 0.5};
 	if (isNil "WFBE_C_GUER_IED_KILL_COEF") then {WFBE_C_GUER_IED_KILL_COEF = 0.30}; //--- B67 (Ray 2026-06-21) item #8: an IED kill pays only 30% of the normal vehicle/unit bounty (anti-farm) so spamming IEDs for cash is not worthwhile. Applied in RequestOnUnitKilled when the kill is tagged as an IED kill.
 
+	//--- B75 (guer-tech): KILL-BASED TECH PROGRESSION. The GUER faction earns better gear by KILLS instead of
+	//--- by elapsed match time (the old time-tier in Server_GuerStipend.sqf is removed). WFBE_GUER_PLAYER_KILLS is
+	//--- the cumulative count of enemy (WEST/EAST) units killed BY resistance PLAYERS (incremented server-side in
+	//--- RequestOnUnitKilled.sqf, publicVariable'd, JIP-seeded). It drives: the vehicle tier (BRDM/T-34/T-55/T-72),
+	//--- the M113 VBIED unlock, the Ka-137 flare amount and the barracks AI cap. publicVariable is NOT JIP-replayed
+	//--- in A2-OA, so this isNil-guarded 0 seed gives joiners a safe default until the per-kill broadcast / connect
+	//--- catch-up (Server_OnPlayerConnected.sqf) lands.
+		if (isNil "WFBE_GUER_PLAYER_KILLS") then {WFBE_GUER_PLAYER_KILLS = 0};
+		//--- Vehicle-tier kill thresholds. tier1 (>= KILLTIER_1 kills) = BRDM + T-34, tier2 = T-55, tier3 = T-72 + BMP2.
+		//--- These replace the old elapsed-time ladder (30m/90m/180m) that gated the GUER heavy vehicles.
+		if (isNil "WFBE_C_GUER_KILLTIER_1") then {WFBE_C_GUER_KILLTIER_1 = 15};
+		if (isNil "WFBE_C_GUER_KILLTIER_2") then {WFBE_C_GUER_KILLTIER_2 = 40};
+		if (isNil "WFBE_C_GUER_KILLTIER_3") then {WFBE_C_GUER_KILLTIER_3 = 80};
+		//--- Second VBIED: an UNARMED M113 with ~2x speed (driver-detonated, same blast + cash-for-kills as the hilux),
+		//--- kill-gated into the GUER depot. M113_UN_EP1 exists on both maps so the type is map-independent (no TK repoint).
+		if (isNil "WFBE_C_GUER_VBIED_M113_TYPE") then {WFBE_C_GUER_VBIED_M113_TYPE = "M113_UN_EP1"};
+		if (isNil "WFBE_C_GUER_VBIED_M113_KILLS") then {WFBE_C_GUER_VBIED_M113_KILLS = 25}; //--- GUER kills required before the M113 VBIED appears in the depot.
+		if (isNil "WFBE_C_GUER_VBIED_M113_SPEEDCOEF") then {WFBE_C_GUER_VBIED_M113_SPEEDCOEF = 2.0}; //--- target top-speed multiplier of the driver-local boost loop (~2x stock M113).
+		//--- Ka-137 (Ka137_MG_PMC) flares: the recon heli ships with NO countermeasures. The GUER player's bought Ka-137
+		//--- gets a CMFlareLauncher + a flare magazine sized by the kill tier (more kills => more flares). NB: A2-OA stock
+		//--- has no 30Rnd flare mag, so the floor is 60Rnd (closest available); the count still increases 60->120->240
+		//--- by kills as requested. Mags are indexed by WFBE_GUER_VEHICLE_TIER (clamped to the array bounds).
+		if (isNil "WFBE_C_GUER_KA137_TYPE") then {WFBE_C_GUER_KA137_TYPE = "Ka137_MG_PMC"};
+		if (isNil "WFBE_C_GUER_KA137_FLARE_LAUNCHER") then {WFBE_C_GUER_KA137_FLARE_LAUNCHER = "CMFlareLauncher"};
+		if (isNil "WFBE_C_GUER_KA137_FLARE_MAGS") then {WFBE_C_GUER_KA137_FLARE_MAGS = ["60Rnd_CMFlareMagazine","120Rnd_CMFlareMagazine","240Rnd_CMFlareMagazine"]};
+
+	//--- B75 (guer-tech): FOB (forward operating base) system. Each WEST/EAST factory the GUER side destroys grants one
+	//--- FOB build token of the matching type. WFBE_GUER_FOB_AVAIL = [barracks, lightFactory, heavyFactory] is the count
+	//--- of still-buildable FOBs per type (earned by factory kills, spent when a FOB is built). It gates the depot FOB
+	//--- trucks and feeds the RHUD "B n | LF n | HF n" row. Server-authoritative; publicVariable'd (NOT JIP-replayed in
+	//--- A2-OA, so isNil-seeded here, re-broadcast by Server_GuerStipend.sqf + pushed to joiners by OnPlayerConnected).
+		if (isNil "WFBE_GUER_FOB_AVAIL") then {WFBE_GUER_FOB_AVAIL = [0,0,0]};
+		//--- Unlock-notification feed: [seq, text]. The server sets it (seq = the kill count at unlock) + publicVariable's
+		//--- it when a kill threshold grants the next reward; the GUER overlay watcher shows it once. Seeded [0,""] so a
+		//--- joiner's watcher seeds its seen-seq to 0 and never re-pops an old unlock (publicVariable is not JIP-replayed).
+		if (isNil "WFBE_GUER_UNLOCK_MSG") then {WFBE_GUER_UNLOCK_MSG = [0, ""]};
+		//--- FOB delivery trucks: [Barracks, Light, Heavy] truck classnames (index-aligned with WFBE_GUER_FOB_AVAIL).
+		//--- Map-branched on worldName (the macro is unreliable in standalone-loaded files). These are trucks NOT in the
+		//--- GUER player roster; registered with "FOB (...)" labels in Core_GUE.sqf and shown ONLY in the depot when the
+		//--- matching FOB token is available. A GUER player buys one, drives it to a valid spot, then "Build FOB ...".
+		if (isNil "WFBE_C_GUER_FOB_TRUCKS") then {
+			WFBE_C_GUER_FOB_TRUCKS = if (worldName == "Takistan") then {
+				["Ural_TK_CIV_EP1","V3S_Open_TK_CIV_EP1","V3S_TK_EP1"]
+			} else {
+				["Ural_INS","UralOpen_INS","GAZ_Vodnik"]
+			};
+		};
+		if (isNil "WFBE_C_GUER_FOB_STRUCTS") then {WFBE_C_GUER_FOB_STRUCTS = ["Barracks","Light","Heavy"]}; //--- logical structure names per FOB index.
+		if (isNil "WFBE_C_GUER_FOB_BUILD_DIST") then {WFBE_C_GUER_FOB_BUILD_DIST = 22};   //--- metres in front of the truck where the FOB factory is placed.
+		if (isNil "WFBE_C_GUER_FOB_BUILD_RANGE") then {WFBE_C_GUER_FOB_BUILD_RANGE = 30}; //--- max player->truck distance to use the Build-FOB action.
+		if (isNil "WFBE_C_GUER_FOB_TOWN_BLOCK") then {WFBE_C_GUER_FOB_TOWN_BLOCK = 600};  //--- no FOB within this many metres of a WEST/EAST-held town.
+		//--- Shared placement gate (client preview + server authoritative): true if _pos (the world position passed as
+		//--- _this) is inside an enemy (WEST/EAST) build-restricted area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an
+		//--- enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-held towns are allowed (you can "extend"
+		//--- near a friendly GUE factory). No early-exit inside then{} (A2-OA gotcha) - plain flag accumulation.
+		WFBE_FNC_GuerFobBlocked = {
+			private ["_pos","_blocked","_tSideID","_eLogik","_eArea","_blockDist","_townList"];
+			_pos = _this;
+			_blocked = false;
+			_blockDist = missionNamespace getVariable ["WFBE_C_GUER_FOB_TOWN_BLOCK", 600];
+			//--- never on water.
+			if (surfaceIsWater _pos) then {_blocked = true};
+			//--- enemy-HELD (WEST/EAST) town within the block radius?
+			_townList = if (isNil "towns") then {[]} else {towns};
+			{
+				_tSideID = _x getVariable ["sideID", -1];
+				if (((_tSideID == (missionNamespace getVariable ["WFBE_C_WEST_ID", 0])) || (_tSideID == (missionNamespace getVariable ["WFBE_C_EAST_ID", 1]))) && {(_pos distance _x) < _blockDist}) then {_blocked = true};
+			} forEach _townList;
+			//--- inside a WEST or EAST base area?
+			if (!_blocked) then {
+				{
+					_eLogik = _x Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _eLogik) then {
+						_eArea = [_pos, _eLogik getVariable ["wfbe_basearea", []]] Call WFBE_CO_FNC_GetClosestEntity3;
+						if (!isNull _eArea) then {_blocked = true};
+					};
+				} forEach [west, east];
+			};
+			_blocked
+		};
+		//--- Barracks AI cap (per GUER player group): base + one extra slot per N kills, clamped to the A2 12-per-group engine ceiling.
+		if (isNil "WFBE_C_GUER_BARRACKS_AI_BASE") then {WFBE_C_GUER_BARRACKS_AI_BASE = 4};
+		if (isNil "WFBE_C_GUER_BARRACKS_AI_MAX") then {WFBE_C_GUER_BARRACKS_AI_MAX = 12};
+		if (isNil "WFBE_C_GUER_BARRACKS_AI_PER_KILLS") then {WFBE_C_GUER_BARRACKS_AI_PER_KILLS = 10};
+
 //--- B61 (Ray 2026-06-21): GUER AIR DEFENSE — standalone server loop (Server\Server_GuerAirDef.sqf) keeps a
 //--- Ka-137 (or, over a large town under attack, a Mi-24) over ACTIVE GUER-held towns. Default-ON but capped +
 //--- self-cleaning so it can't blow up FPS. Only relevant when the GUER playable faction is enabled.

@@ -114,6 +114,36 @@ switch (_localize) do {
 
     };
 
+    //--- B75 (guer-tech FOB): distinct message for clearing a GUER FOB field-base. SAME reward as a normal factory
+    //--- kill - the cash bounty is paid here exactly like HeadHunterReceiveBounty (the side-supply bonus, if any, is
+    //--- granted server-side in Server_BuildingKilled). Only the wording differs ("Guerrilla FOB cleared/overrun").
+    case "GuerFobCleared":
+    {
+        _killer_name = _this select 1; // _killer
+        _bounty = _this select 2;
+        _structure_kind = _this select 3;
+        _structure_side = _this select 4; // resistance (the FOB owner)
+
+        if ((name player) == _killer_name) then
+        {
+            _txt = format ["You cleared a Guerrilla FOB (%1) and earned %2!", ([_structure_kind, "displayName"] call GetConfigInfo), _bounty];
+            _bounty call ChangePlayerFunds;
+            _commandChat = false;
+        }
+        else
+        {
+            if ((side group player) == _structure_side) then
+            {
+                _txt = format ["A Guerrilla FOB (%1) has been overrun!", ([_structure_kind, "displayName"] call GetConfigInfo)];
+            }
+            else
+            {
+                _txt = format ["%1 cleared a Guerrilla FOB (%2)!", _killer_name, ([_structure_kind, "displayName"] call GetConfigInfo)];
+            };
+            _commandChat = true;
+        };
+    };
+
     case "BuildingKilledByError":
     {
         _structure_kind = _this select 1;
