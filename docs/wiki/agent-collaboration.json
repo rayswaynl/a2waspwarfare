@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T02:10:02+02:00",
+  "generatedAt": "2026-06-24T02:24:45+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "visible-parameter-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh visible mission-parameter runtime-consumer rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only WFBE_C_AI_MAX, WFBE_C_PLAYERS_AI_MAX, WFBE_C_UNITS_CLEAN_TIMEOUT, WFBE_C_UNITS_BODIES_TIMEOUT and direct cleanup/AI commander consumer paths in source Chernarus and maintained Vanilla.",
+        "Keep Mission-Parameters-Localization-And-Generated-Build-Inputs as canonical, updating Dead/stale code, Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Mission-Parameters-Localization-And-Generated-Build-Inputs.md, Dead-Code-And-Stale-Code-Register.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 visible-parameter evidence.",
+        "Recorded that checked d472da6a..21b62b04 is empty for the parameter-consumer path set and origin/master..origin/claude/b74.2-aicom changes only source-Chernarus tiered player-cap/AICOM surfaces among checked files.",
+        "Updated Progress Dashboard, pruning ledger, worklog and machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future parameter/code owner should port or hide/label WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT only on old-shape docs/Miksuu/perf/historical-style targets. On current stable/B74.1/B74.2, do not call these no-op/comment-only; smoke host parameter display, AI commander production, player-cap UI/RHUD, body cleanup, wreck cleanup and empty-vehicle cleanup before release wording.",
+      "updated": "2026-06-24T02:24:45+02:00"
+    },
     {
       "lane": "auto-wall-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
