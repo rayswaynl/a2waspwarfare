@@ -211,7 +211,9 @@ WFBE_Logic_Airfield = "LocationLogicAirport";
 WFBE_Logic_Camp = "LocationLogicCamp";
 WFBE_Logic_Depot = "LocationLogicDepot";
 
-isAutoWallConstructingEnabled = true;
+isAutoWallConstructingEnabled = true; //--- legacy global (client CoIn UI still reads this, per-client-side); the per-side server vars below are authoritative for construction
+//--- wiki-wins: per-side auto-wall toggle so one commander's toggle no longer flips every side's + the AI's builds. Default true per side.
+{ missionNamespace setVariable [Format["WFBE_AUTOWALL_%1", _x], true] } forEach [west, east, resistance];
 WFBE_CO_VAR_SupplyMissionRegenInterval = 1800;
 
 /* Wait for BIS Module Init */
