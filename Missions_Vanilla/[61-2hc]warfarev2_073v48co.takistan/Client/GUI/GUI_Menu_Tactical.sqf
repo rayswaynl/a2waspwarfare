@@ -169,6 +169,7 @@ while {alive player && dialog} do {
 			_lastUpdate = time;
 			_base = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
 			_isDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
+				if (isNil "_isDeployed") then {_isDeployed = false}; //--- B751: GetSideHQDeployStatus returns nil before wfbe_hq_deployed replicates (JIP) -> would throw "Undefined variable: _isdeployed".
 			if (player distance _base < _ftr && alive _base && vehicle player != _base && _isDeployed) then {
 				_canFT = true;
 				_startPoint = _base;

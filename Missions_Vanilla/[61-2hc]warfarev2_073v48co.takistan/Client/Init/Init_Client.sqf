@@ -809,6 +809,7 @@ player setPos ([_base,20,30] Call GetRandomPosition);
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true]; //--- DEADSPAWN SAFETY: escaped the holding area to base - let the spawn-protection watchdog re-enable damage.
 
 /* HQ Building Init. */
+_isDeployed = true; //--- B751: default so resistance/GUER (which skips the block below) never reads an undefined _isDeployed at the `!isServer && !_isDeployed` HQ-killed-EH guard (~L824). WEST/EAST reassign the real status below.
 if (sideJoined != resistance) then {
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_hq_deployed"}};
 ["INITIALIZATION", "Init_Client.sqf: Initializing COIN Module."] Call WFBE_CO_FNC_LogContent;

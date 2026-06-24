@@ -55,8 +55,8 @@ class FSM
        "" \n
        "_commandCenter = objNull;" \n
        "" \n
-       "_typeRepair = missionNamespace getVariable Format['WFBE_%1REPAIRTRUCKS',sideJoinedText];" \n
-	   "_typeAmmo = missionNamespace getVariable Format['WFBE_%1AMMOTRUCKS',sideJoinedText];" \n   
+       "_typeRepair = missionNamespace getVariable [Format['WFBE_%1REPAIRTRUCKS',sideJoinedText], []];" \n
+	   "_typeAmmo = missionNamespace getVariable [Format['WFBE_%1AMMOTRUCKS',sideJoinedText], []];" \n   
 	   "" \n
        "//--- Keep actions updated (GUI). - changed-MrNiceGuy " \n
        "12450 cutRsc [""OptionsAvailable"",""PLAIN"",0];" \n
