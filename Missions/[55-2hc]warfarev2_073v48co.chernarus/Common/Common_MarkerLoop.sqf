@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
+Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -18,6 +18,11 @@ if (isNil "WFBE_CL_UnitMarkerLedger") then {WFBE_CL_UnitMarkerLedger = []};
 _sweepNext = time + 60;
 _aarUpgradeCache = [sideUnknown, -1, -999]; // [side, level, lastCheck diag_tickTime]
 _height = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION";
+// Trello card #65: per-AAR-level minimum detection height. The height gate below selects
+// tiers[_aarLevel] (clamped to level 2); _height stays the nil-safe scalar fallback.
+_heightTiers = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION_TIERS";
+// Trello card #66: AAR upgrade level at/above which a one-shot new-contact warning fires.
+_aarWarnLevel = missionNamespace getVariable ["WFBE_C_AAR_WARN_LEVEL", 1];
 
 // Marty: PERF1 slice C - local refresh lever. Manual map-marker rebuild action plus an
 // automatic rebuild when client FPS stays under the threshold for 60s (mitigation AND
@@ -420,17 +425,9 @@ while {true} do {
 					_aarEntry set [11, _now + 5];
 				};
 
-				_currentPos = getPos _object;
-				if ((_currentPos select 2) <= _height) exitWith {
-					_aarEntry set [8, true];
-					if (_aarEntry select 4) then {
-						_markerName setMarkerAlphaLocal 0;
-						_aarEntry set [4, false];
-					};
-					_aarEntry set [11, _now + 5];
-				};
-
 				// Marty: One shared 5s upgrade-level cache per tick replaces the per-script caches.
+				// Trello card #65: relocated ABOVE the height gate so the per-tier detection
+				// height (tiers select _aarLevel) can be applied to the gate itself.
 				_oppositeSide = _aarEntry select 3;
 				// Marty: PR31 review caveat - key the cache by side so three-way AAR entries never read another side's level.
 				if ((_aarUpgradeCache select 0) != _oppositeSide || {(diag_tickTime - (_aarUpgradeCache select 2)) > 5}) then {
@@ -440,6 +437,23 @@ while {true} do {
 					_aarUpgradeCache set [2, diag_tickTime];
 				};
 				_aarLevel = _aarUpgradeCache select 1;
+
+				// Trello card #65: tier-indexed minimum detection height by AAR level (clamp to 2);
+				// fall back to the scalar constant if the tiers array is nil/short.
+				_aarHeight = _height;
+				if (!isNil "_heightTiers" && {(typeName _heightTiers) == "ARRAY"} && {(count _heightTiers) > (_aarLevel min 2)}) then {
+					_aarHeight = _heightTiers select (_aarLevel min 2);
+				};
+
+				_currentPos = getPos _object;
+				if ((_currentPos select 2) <= _aarHeight) exitWith {
+					_aarEntry set [8, true];
+					if (_aarEntry select 4) then {
+						_markerName setMarkerAlphaLocal 0;
+						_aarEntry set [4, false];
+					};
+					_aarEntry set [11, _now + 5];
+				};
 
 				_refreshRate = 5; // AAR0: 5, AAR1: 3, AAR2: 1
 				if (_aarLevel > 0) then {_refreshRate = 3};
@@ -464,6 +478,16 @@ while {true} do {
 					_markerName setMarkerAlphaLocal 1;
 					_aarEntry set [4, true];
 					_forceRefresh = true;
+
+					// Trello card #66: one-shot "new contact" warning, gated behind an AAR upgrade
+					// level. The sticky flag lives in dedicated slot 9 (entry-lifetime), NOT the
+					// 'visible' slot 4 - slot 4 is reset in the map-closed / out-of-range / below-
+					// height exit branches above, so keying off it would re-fire on every reacquire.
+					if (_aarLevel >= _aarWarnLevel && {!(_aarEntry select 9)}) then {
+						_aarEntry set [9, true];
+						titleText [localize "STR_WF_BE_AAR_NewContact", "PLAIN DOWN"];
+						playSound "inbound";
+					};
 				};
 
 				_markerText = format ["%1 %2 %3", _speed, _altitude, _aircraftName];

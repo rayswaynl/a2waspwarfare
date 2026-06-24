@@ -39,10 +39,11 @@ if (_sideID == 1) then {
 };
 
 // Marty: Registry entry consumed by Common_MarkerLoop.sqf.
-// [object, name, sideID, oppositeSide, lastVisible, lastText, lastPos, lastDir, forceRefresh, reserved, reserved, nextDue]
+// [object, name, sideID, oppositeSide, lastVisible, lastText, lastPos, lastDir, forceRefresh, newContactWarned(9), reserved(10), nextDue]
+// Trello card #66: slot 9 is a sticky, entry-lifetime "new contact already warned" flag (init false at registration).
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
 if (isNil "WFBE_CL_UnitMarkerLedger") then {WFBE_CL_UnitMarkerLedger = []};
-_aarEntry = [_object, _markerName, _sideID, _oppositeSide, false, "", [0,0,0], -1, true, 0, 0, time];
+_aarEntry = [_object, _markerName, _sideID, _oppositeSide, false, "", [0,0,0], -1, true, false, 0, time];
 WFBE_CL_AARMarkerRegistry = WFBE_CL_AARMarkerRegistry + [_aarEntry];
 WFBE_CL_UnitMarkerLedger = WFBE_CL_UnitMarkerLedger + [_markerName];
 
