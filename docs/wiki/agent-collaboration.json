@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T09:25:00+02:00",
+  "generatedAt": "2026-06-24T09:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "duplicate-ui-idd-current-b742-head-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh duplicate EASA/Economy dialog IDD and title-ID caveat rows that still route current stable through older origin/master@0139a346 wording and omit current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Rsc/Dialogs.hpp and Rsc/Titles.hpp duplicate-ID evidence plus the maintained-root no-findDisplay search in source Chernarus and maintained Vanilla.",
+        "Keep UI-Resource-Parity-Cleanup and UI-IDD-Collision-Repair canonical; update Feature Status, Dead/stale code, compact machine rows and coordination records only as needed.",
+        "No gameplay source edits."
+      ],
+      "outputs": [
+        "Updated UI-Resource-Parity-Cleanup.md, UI-IDD-Collision-Repair.md, Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Dead-Code-And-Stale-Code-Register.md and duplicate-ID machine rows with current stable/B74.1 f8a76de34 plus current B74.2 21b62b04 evidence.",
+        "Recorded that repo docs branch HEAD@5990557155b0 is unchanged from edbd341e / b5219d47 for checked Rsc/Dialogs.hpp and Rsc/Titles.hpp IDD paths, while docs/source, Miksuu and perf keep duplicate EASA/Economy idd 23000.",
+        "Recorded that current stable/B74.1/current B74.2/B69/B74 and historical a96fdda2 split EASA to idd 24000 while Economy remains 23000; title idd 10200 remains shared by RscOverlay/OptionsAvailable and no checked maintained-root source Chernarus or maintained Vanilla ref contains hard-coded findDisplay 23000/24000/10200 callers."
+      ],
+      "handoff": "Future UI owner should preserve or port the EASA 24000 / Economy 23000 split only to old-shape targets, keep title IDD and currentCutDisplay ownership as separate smoke-scoped work, avoid hard-coded findDisplay assumptions, and smoke EASA/Economy opening plus title overlay behavior in Arma 2 OA before declaring runtime closure.",
+      "updated": "2026-06-24T09:50:00+02:00"
+    },
     {
       "lane": "paratrooper-marker-b742-context-refresh-2026-06-24",
       "owner": "Codex",

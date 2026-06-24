@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T09:25:00+02:00",
+  "generatedAt": "2026-06-24T09:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "ready / documentation finisher loop",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Paratrooper marker current stable/B74.2 register/context refresh is published. Continue by reading the coordination surfaces, claiming one bounded source-backed lane and avoiding active owners.",
-      "nextExpectedOutput": "Pick the next narrow wiki/doc mirror lane, verify source evidence, update canonical owner pages or compact machine context in parity, validate and publish. No gameplay source edits unless Steff asks."
+      "currentWork": "Duplicate UI IDD current stable/B74.2 route refresh is published in UI resource parity cleanup, UI IDD collision repair, Client UI systems, Feature Status, Dead/stale code and compact machine rows. No gameplay source changed.",
+      "nextExpectedOutput": "Pick the next bounded source-backed docs lane from Feature Status, Source Fix queue, pruning ledger or hardening backlog; read coordination files and claim the lane before editing."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "duplicate-ui-idd-current-b742-head-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed duplicate EASA/Economy dialog IDD and title-ID caveat evidence in UI-Resource-Parity-Cleanup.md, UI-IDD-Collision-Repair.md, Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Dead-Code-And-Stale-Code-Register.md, agent-context.json, agent-feature-status.jsonl and agent-hardening-backlog.jsonl so current stable/B74.1 routes through origin/master@f8a76de34 and current B74.2 routes through origin/claude/b74.2-aicom@21b62b04 instead of older origin/master@0139a346-only wording. Repo docs branch HEAD@5990557155b0 is unchanged from edbd341e / b5219d47 for checked Rsc/Dialogs.hpp and Rsc/Titles.hpp IDD paths. Docs/source, Miksuu and perf keep duplicate EASA/Economy idd 23000; current stable/B74.1/current B74.2/B69/B74 and historical a96fdda2 split EASA to 24000 while Economy remains 23000. RscOverlay and OptionsAvailable still share title idd 10200 across checked refs, and no checked maintained-root source Chernarus or maintained Vanilla ref contains hard-coded findDisplay 23000/24000/10200 callers. No gameplay source changed."
+    },
     {
       "lane": "paratrooper-marker-b742-context-refresh-2026-06-24",
       "owner": "Codex",
