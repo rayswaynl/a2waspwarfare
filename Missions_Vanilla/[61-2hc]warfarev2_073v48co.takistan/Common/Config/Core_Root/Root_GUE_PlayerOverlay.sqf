@@ -46,15 +46,17 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 //--- Map-branching: IS_CHERNARUS_MAP_DEPENDENT is defined in version.sqf for Chernarus; commented-out for Takistan.
 missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","hilux1_civil_2_covered","Ka137_MG_PMC"]]; //--- first-tick synchronous seed (tier loop below re-sets on tier change)
 [] spawn {
-	private ["_lastSig","_tier","_kills","_m113On","_sig","_pool"];
+	private ["_lastSig","_tier","_kills","_m113On","_fobAvail","_fobTrucks","_fi","_sig","_pool"];
 	_lastSig = "";
 	while {!WFBE_GameOver && (local player) && {side group player == resistance}} do {
 		_tier = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
-		//--- B75 (guer-tech): the M113 VBIED is kill-gated INDEPENDENTLY of the vehicle tier, so rebuild the pool when
-		//--- EITHER the tier OR the M113 unlock state changes (a composite signature, not the old tier-only guard).
+		//--- B75 (guer-tech): the M113 VBIED (kill-gated) and the FOB trucks (factory-kill-gated) are gated
+		//--- INDEPENDENTLY of the vehicle tier, so rebuild the pool when ANY of {tier, M113 unlock, FOB availability}
+		//--- changes - a composite signature, not the old tier-only guard.
 		_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
 		_m113On = _kills >= (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25]);
-		_sig = Format ["%1|%2", _tier, _m113On];
+		_fobAvail = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
+		_sig = Format ["%1|%2|%3", _tier, _m113On, _fobAvail];
 		if (_sig != _lastSig) then {
 			_lastSig = _sig;
 
@@ -88,6 +90,13 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 			//--- Client_BuildUnit.sqf). Map-independent class (M113_UN_EP1 on both maps), appended after the map branch;
 			//--- shown the same way as the hilux/datsun VBIED (red "[VBIED - APC]" tag in Client_UIFillListBuyUnits.sqf).
 			if (_m113On) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]]};
+			//--- B75 (guer-tech FOB): append the FOB delivery truck for each factory type that still has a token
+			//--- available (earned by destroying enemy factories, spent when a FOB is built). Depot-only - this pool IS
+			//--- the GUER depot. The map-correct truck trio comes from WFBE_C_GUER_FOB_TRUCKS (worldName-branched).
+			_fobTrucks = missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []];
+			for "_fi" from 0 to ((count _fobTrucks) - 1) do {
+				if (_fi < (count _fobAvail) && {(_fobAvail select _fi) > 0}) then {_pool = _pool + [_fobTrucks select _fi]};
+			};
 			missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _pool];
 		};
 		sleep 10;

@@ -43,6 +43,9 @@ if !(_spawnInside) then {
 		_owned = [];
 		{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_owned = _owned + [_x]} } forEach towns;
 		if (count _owned == 0) then {_owned = towns};
+		//--- B75 (guer-tech FOB): a selected FOB delivery truck is a valid MOBILE spawn candidate ("freely like any
+		//--- town"). Add it so the _spawn-in-_owned preference below picks it and setPos lands the player beside it.
+		if (!isNull _spawn && {alive _spawn} && {_spawn getVariable ["wfbe_is_guer_fob", false]}) then {_owned = _owned + [_spawn]};
 		//--- B74.1 merge: keep the respawn-guard's _spawn preference (b71 harvest) AND Naval's HVT deck-spawn.
 		_t = objNull;
 		if (!isNull _spawn && {_spawn in _owned}) then {_t = _spawn};

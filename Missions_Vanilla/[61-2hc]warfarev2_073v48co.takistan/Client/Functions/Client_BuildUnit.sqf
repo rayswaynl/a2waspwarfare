@@ -425,6 +425,13 @@ if (_isMan) then {
 		}];
 	};
 
+	//--- B75 (guer-tech FOB): tag a freshly-bought GUER FOB delivery truck (broadcast) so any machine can recognise it
+	//--- as a real FOB truck (vs an AI faction's Ural_INS that shares the classname). The flag gates the "Build FOB"
+	//--- action (Init_Unit.sqf) and the spawn-on-truck list (Client_GetRespawnAvailable.sqf).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []])}) then {
+		_vehicle setVariable ["wfbe_is_guer_fob", true, true];
+	};
+
 	//--- Salvage Truck.
 	if (_unit in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',sideJoinedText])) then {[_vehicle] execVM 'Client\FSM\updatesalvage.sqf'};
 

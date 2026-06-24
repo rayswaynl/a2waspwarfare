@@ -112,6 +112,50 @@ with missionNamespace do {
 	//--- trucks and feeds the RHUD "B n | LF n | HF n" row. Server-authoritative; publicVariable'd (NOT JIP-replayed in
 	//--- A2-OA, so isNil-seeded here, re-broadcast by Server_GuerStipend.sqf + pushed to joiners by OnPlayerConnected).
 		if (isNil "WFBE_GUER_FOB_AVAIL") then {WFBE_GUER_FOB_AVAIL = [0,0,0]};
+		//--- FOB delivery trucks: [Barracks, Light, Heavy] truck classnames (index-aligned with WFBE_GUER_FOB_AVAIL).
+		//--- Map-branched on worldName (the macro is unreliable in standalone-loaded files). These are trucks NOT in the
+		//--- GUER player roster; registered with "FOB (...)" labels in Core_GUE.sqf and shown ONLY in the depot when the
+		//--- matching FOB token is available. A GUER player buys one, drives it to a valid spot, then "Build FOB ...".
+		if (isNil "WFBE_C_GUER_FOB_TRUCKS") then {
+			WFBE_C_GUER_FOB_TRUCKS = if (worldName == "Takistan") then {
+				["Ural_TK_CIV_EP1","V3S_Open_TK_CIV_EP1","V3S_TK_EP1"]
+			} else {
+				["Ural_INS","UralOpen_INS","GAZ_Vodnik"]
+			};
+		};
+		if (isNil "WFBE_C_GUER_FOB_STRUCTS") then {WFBE_C_GUER_FOB_STRUCTS = ["Barracks","Light","Heavy"]}; //--- logical structure names per FOB index.
+		if (isNil "WFBE_C_GUER_FOB_BUILD_DIST") then {WFBE_C_GUER_FOB_BUILD_DIST = 22};   //--- metres in front of the truck where the FOB factory is placed.
+		if (isNil "WFBE_C_GUER_FOB_BUILD_RANGE") then {WFBE_C_GUER_FOB_BUILD_RANGE = 30}; //--- max player->truck distance to use the Build-FOB action.
+		if (isNil "WFBE_C_GUER_FOB_TOWN_BLOCK") then {WFBE_C_GUER_FOB_TOWN_BLOCK = 600};  //--- no FOB within this many metres of a WEST/EAST-held town.
+		//--- Shared placement gate (client preview + server authoritative): true if _pos (the world position passed as
+		//--- _this) is inside an enemy (WEST/EAST) build-restricted area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an
+		//--- enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-held towns are allowed (you can "extend"
+		//--- near a friendly GUE factory). No early-exit inside then{} (A2-OA gotcha) - plain flag accumulation.
+		WFBE_FNC_GuerFobBlocked = {
+			private ["_pos","_blocked","_tSideID","_eLogik","_eArea","_blockDist","_townList"];
+			_pos = _this;
+			_blocked = false;
+			_blockDist = missionNamespace getVariable ["WFBE_C_GUER_FOB_TOWN_BLOCK", 600];
+			//--- never on water.
+			if (surfaceIsWater _pos) then {_blocked = true};
+			//--- enemy-HELD (WEST/EAST) town within the block radius?
+			_townList = if (isNil "towns") then {[]} else {towns};
+			{
+				_tSideID = _x getVariable ["sideID", -1];
+				if (((_tSideID == (missionNamespace getVariable ["WFBE_C_WEST_ID", 0])) || (_tSideID == (missionNamespace getVariable ["WFBE_C_EAST_ID", 1]))) && {(_pos distance _x) < _blockDist}) then {_blocked = true};
+			} forEach _townList;
+			//--- inside a WEST or EAST base area?
+			if (!_blocked) then {
+				{
+					_eLogik = _x Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _eLogik) then {
+						_eArea = [_pos, _eLogik getVariable ["wfbe_basearea", []]] Call WFBE_CO_FNC_GetClosestEntity3;
+						if (!isNull _eArea) then {_blocked = true};
+					};
+				} forEach [west, east];
+			};
+			_blocked
+		};
 		//--- Barracks AI cap (per GUER player group): base + one extra slot per N kills, clamped to the A2 12-per-group engine ceiling.
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_BASE") then {WFBE_C_GUER_BARRACKS_AI_BASE = 4};
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_MAX") then {WFBE_C_GUER_BARRACKS_AI_MAX = 12};

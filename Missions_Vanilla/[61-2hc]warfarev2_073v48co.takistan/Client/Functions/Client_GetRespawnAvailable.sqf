@@ -110,6 +110,12 @@ if (_side == resistance) then {
 			_availableSpawn = _availableSpawn + [_x];
 		};
 	} forEach towns;
+	//--- B75 (guer-tech FOB): FOB delivery trucks are mobile spawn points "freely just like any town". Offer any
+	//--- living, flag-tagged GUER FOB truck (the flag keeps an AI faction's same-class truck off the list). No range
+	//--- gate (GUER towns have none either). Built FOB FACTORIES are already offered by the GetFactories block above.
+	{
+		if (alive _x && {_x getVariable ["wfbe_is_guer_fob", false]}) then {_availableSpawn = _availableSpawn + [_x]};
+	} forEach vehicles;
 };
 
 //--- B74.2: WEST/EAST naval carrier respawn. Towns are not normally selectable respawns for

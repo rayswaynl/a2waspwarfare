@@ -79,6 +79,23 @@ if (_unit_kind in (missionNamespace getVariable "WFBE_REPAIRTRUCKS")) then { //-
 	};
 };
 
+//--- B75 (guer-tech FOB): Build-FOB action on a GUER FOB delivery truck. Available to ANY nearby resistance player
+//--- (GUER has no commander), gated on the broadcast wfbe_is_guer_fob flag (set at buy in Client_BuildUnit.sqf) so an
+//--- AI faction's same-class truck never shows it. Added on every client (this section runs after the local-player
+//--- guard), so all GUER players see it. Action_BuildFOB.sqf resolves the factory type from the truck classname.
+if (_unit_kind in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []])) then {
+	_unit addAction [
+		"<t color='#76F563'>Build FOB</t>",
+		"Client\Action\Action_BuildFOB.sqf",
+		[],
+		99,
+		false,
+		true,
+		"",
+		Format ["(_target getVariable ['wfbe_is_guer_fob', false]) && side group player == resistance && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_GUER_FOB_BUILD_RANGE", 30]]
+	];
+};
+
 if (_unit isKindOf "Tank") then { //--- Tanks.
 	//--- Valhalla Low gear.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(vehicle player == _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
