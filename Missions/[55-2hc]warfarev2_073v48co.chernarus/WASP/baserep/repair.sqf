@@ -20,7 +20,8 @@ for "_j" from 0 to 1 do
     parseText format ["<t size='1'>%1</t><br /><t size='1.2'>%2:</t><t size='1.2' color='%3' align='center'> %4 %5</t>",(baseb select objnum) select 1,localize "RB_state",_color ,str (_dam), "%"]
     ];
     hintSilent _text;
-    if (_dam == 100 && _currentSupply == 0) exitWith {repairprocess = "no";};
+    _currentSupply = (sideJoined) Call GetSideSupply; //--- wiki-wins: re-read live supply each tick (was a stale one-time snapshot, so the depletion exit never fired)
+    if (_dam >= 100 || _currentSupply < 15) exitWith {repairprocess = "no";}; //--- wiki-wins: stop when fully repaired OR before overspending the next -15 (was `_dam==100 && _currentSupply==0`, unreachable)
 	[sideJoined, -15, "Factory being repaired. (It's normal for this message to show repeatedly.)", false] Call ChangeSideSupply;
     _dam = _dam + (baseb select objnum select 3);
     _dam = 1 - (_dam/100);	

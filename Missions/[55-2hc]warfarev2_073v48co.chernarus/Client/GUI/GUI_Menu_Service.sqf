@@ -493,7 +493,7 @@ while {true} do {
 		if (MenuAction == 2) then {
 			MenuAction = -1;
 
-			if (_repairPrice > 0) then {
+			if (_repairPrice > 0 && _funds >= _repairPrice) then { //--- wiki-wins: affordability guard (parity with rearm/refuel)
                 -_repairPrice Call ChangePlayerFunds;
 
                 //--- Spawn a Repair thread.
@@ -516,7 +516,7 @@ while {true} do {
 		if (MenuAction == 5) then {
 			MenuAction = -1;
 
-			if (_healPrice > 0) then {
+			if (_healPrice > 0 && _funds >= _healPrice) then { //--- wiki-wins: affordability guard (parity with rearm/refuel)
 			    -_healPrice Call ChangePlayerFunds;
 
 			    //--- Spawn a Healing thread.

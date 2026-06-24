@@ -6,6 +6,7 @@ _value = _this select 3;
 
 _unitCostUpgradeLevel = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_UNITCOST;
 
+UNIT_COST_MODIFIER = 1; //--- wiki-wins: reset to 1 each fill so a stale 0.75/0.5 discount does not persist when the unit-cost upgrade is at level 0
 if (_unitCostUpgradeLevel > 0) then {
 	if (_unitCostUpgradeLevel == 1) then {
 		UNIT_COST_MODIFIER = 0.75;
@@ -33,6 +34,17 @@ if (isNil '_filter') then {_filter = "nil"} else {
 
 _funds = Call GetPlayerFunds; //--- QoL: affordability reference (base price vs current funds)
 lnbClear _listBox;
+
+//--- wiki-wins: hoist the 8 per-side classlist lookups out of the per-row forEach (loop-invariant; sideJoinedText is constant during the fill)
+private ["_wlRepair","_wlAmmo","_wlLift","_wlAmbu","_wlRedeploy","_wlSalvage","_wlArty","_wlSupply"];
+_wlRepair   = missionNamespace getVariable [format["WFBE_%1REPAIRTRUCKS", sideJoinedText], []];
+_wlAmmo     = missionNamespace getVariable [format["WFBE_%1AMMOTRUCKS", sideJoinedText], []];
+_wlLift     = missionNamespace getVariable [format["WFBE_%1LIFTVEHICLE", sideJoinedText], []];
+_wlAmbu     = missionNamespace getVariable [format["WFBE_%1AMBULANCES", sideJoinedText], []];
+_wlRedeploy = missionNamespace getVariable [format["WFBE_%1REDEPLOYTRUCKS", sideJoinedText], []];
+_wlSalvage  = missionNamespace getVariable [format["WFBE_%1SALVAGETRUCK", sideJoinedText], []];
+_wlArty     = missionNamespace getVariable [format["WFBE_%1ARTYVEHICLE", sideJoinedText], []];
+_wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJoinedText], []];
 {
 	_addin = true;
 	_c = missionNamespace getVariable _x;
@@ -95,46 +107,46 @@ lnbClear _listBox;
 
 
 
-	if(_x in (missionNamespace getVariable [format["WFBE_%1REPAIRTRUCKS", sideJoinedText], []])) then {
+	if(_x in _wlRepair) then {
 		lnbSetColor [_listBox,[_i,1],[0.33, 0.33, 0.10, 1.0]]
 	};
 
-	if(_x in (missionNamespace getVariable [format["WFBE_%1AMMOTRUCKS", sideJoinedText], []])) then {
+	if(_x in _wlAmmo) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.0, 0.0, 0.6]]
 	};
 
 
 	if (_UpAirlift > 0) then {
 
-		if(_x in (missionNamespace getVariable [format["WFBE_%1LIFTVEHICLE", sideJoinedText], []])) then {
+		if(_x in _wlLift) then {
 			lnbSetColor [_listBox,[_i,1],[0.0, 0.26, 1.0, 1.0]]
 		};
 	};
 
-	if(_x in (missionNamespace getVariable [format["WFBE_%1AMBULANCES", sideJoinedText], []])) then {
+	if(_x in _wlAmbu) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 1.0, 0.0, 0.6]]
 
 	};
 
 	//--- Medic redeployment truck: violet tint (unique — ambulance=yellow, salvage=green) + medic-flavored label.
 	if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
-		if(_x in (missionNamespace getVariable [format["WFBE_%1REDEPLOYTRUCKS", sideJoinedText], []])) then {
+		if(_x in _wlRedeploy) then {
 			lnbSetColor [_listBox,[_i,1],[0.7, 0.4, 1.0, 0.6]];
 			lnbSetText [_listBox,[_i,1],_description + " [Medic Redeploy,Spawn]"];
 		};
 	};
 
 
-	if(_x in (missionNamespace getVariable [format["WFBE_%1SALVAGETRUCK", sideJoinedText], []])) then {
+	if(_x in _wlSalvage) then {
 		lnbSetColor [_listBox,[_i,1],[0.0, 1.0, 0.0, 0.6]]
 
 	};
 
-	if(_x in (missionNamespace getVariable [format["WFBE_%1ARTYVEHICLE", sideJoinedText], []])) then {
+	if(_x in _wlArty) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.3, 1.0, 0.4]]
 	};
 
-	if (_x in (missionNamespace getVariable Format ["WFBE_%1SUPPLYTRUCKS", sideJoinedText])) then {
+	if (_x in _wlSupply) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.5, 0.25, 1.0]]
 	};
 
