@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T03:36:03+02:00",
+  "generatedAt": "2026-06-24T03:54:46+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "fast-travel-fee-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh fast-travel fee UX rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Client/GUI/GUI_Menu_Tactical.sqf and Common/Init/Init_CommonConstants.sqf in source Chernarus and maintained Vanilla.",
+        "Keep Client-UI-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 fast-travel fee evidence.",
+        "Recorded that docs/source HEAD@003d0c4c044e is unchanged from 1154f5d43 for checked fast-travel paths and that d472da6a..21b62b04 is empty for GUI_Menu_Tactical.sqf and Init_CommonConstants.sqf in both maintained roots.",
+        "Updated Progress Dashboard, pruning ledger, worklog and fast-travel machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future UI/tactical owner should decide hide-vs-disabled/prompt policy, add a final local funds/context recheck if paid mode stays, propagate maintained Vanilla if source behavior changes and smoke modes 0/1/2 plus insufficient/exact/sufficient funds.",
+      "updated": "2026-06-24T03:46:19+02:00"
+    },
     {
       "lane": "requestspecial-upgrade-sync-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
