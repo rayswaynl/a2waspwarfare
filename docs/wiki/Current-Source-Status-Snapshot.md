@@ -34,6 +34,14 @@ Keep the scope Chernarus-only until an owner decides propagation. Representative
 
 Before promotion, split PR #83 into owner-sized decisions, run Chernarus dedicated smoke across commander voting, HC-present/absent town delegation, HQ scoring/teamkill, buy/service/repair/supply paths, IRS level-2 rearm/AI buy, auto-wall side scoping, camp/mines/AntiStack cleanup, and decide whether LoadoutManager or hand propagation should carry any fixes into maintained Vanilla/Takistan. Do not describe PR #83 as shipped, propagated, release-ready or Miksuu-proven without a later target-branch record.
 
+<a id="2026-06-24-pr80-vote-para-guards-intake"></a>
+
+## 2026-06-24 PR #80 Vote/Paratrooper Guard Intake
+
+Open draft [PR #80](https://github.com/rayswaynl/a2waspwarfare/pull/80) / `origin/claude/trello-vote-para-guards@92101abe9f7b83bd7f658d03e4160d5f030aa3c7` is branch-only evidence, not current stable or release wording. GitHub reports `claude/trello-vote-para-guards` -> `master`, base `f8a76de349da6f8b871d079c828436c10afb221c`, clean merge state and update time 2026-06-23T18:25:22Z. Local checks confirm merge-base `f8a76de349da6f8b871d079c828436c10afb221c`, one commit, 10 maintained-root files / +148 / -14 over current stable, clean `git diff --check origin/master..origin/claude/trello-vote-para-guards`, and no `Modded_Missions` or `Tools` payload.
+
+The branch is intentionally narrower than PR #83 and already includes maintained Vanilla Takistan. In both maintained roots it adds random tied-player commander selection at `Server_VoteForCommander.sqf:17,43-51,59`, a Tactical paratrooper client gate at `GUI_Menu_Tactical.sqf:373-393`, a server backstop at `Support_Paratroopers.sqf:40,53-54`, default-on `WFBE_C_PARA_RESPECT_CAP` at Chernarus `Init_CommonConstants.sqf:664` / Vanilla `:466`, and `STR_WF_INFO_Para_MaxGroup` at `stringtable.xml:1118`. Checked current stable, current B74.2, B69, adjacent B74, Miksuu and perf refs have no `WFBE_C_PARA_RESPECT_CAP`, `STR_WF_INFO_Para_MaxGroup` or `_tiedTeams` hits in the maintained roots. Before promotion, smoke player-candidate ties, AI/no-commander ties, normal clear winners, paratrooper client cap block with no fee/cooldown/request, server backstop rejection, `WFBE_C_PARA_RESPECT_CAP = 0` legacy behavior, AI commander wildcard paradrops, and maintained Vanilla parity.
+
 ## High-Risk Status Checks
 
 | Lane | What to verify before changing wording | Owning page |

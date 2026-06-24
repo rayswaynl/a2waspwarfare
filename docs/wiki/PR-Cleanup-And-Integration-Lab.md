@@ -1,6 +1,6 @@
 # PR Cleanup And Integration Lab
 
-Last updated: 2026-06-24 for PR #83 open-board refresh and wiki-wins batch intake.
+Last updated: 2026-06-24 for PR #80/#83 open-board refresh and branch-intake routing.
 
 This page tracks the June 2026 PR cleanup pass for `rayswaynl/a2waspwarfare`. It exists so humans and AI agents can see which PRs are real features, which are superseded by the release bundle, which are docs-only, and which branches should be tested together.
 
@@ -11,7 +11,8 @@ Current open board state was refreshed from GitHub on 2026-06-24 with `gh pr lis
 | State | PRs | Meaning |
 | --- | --- | --- |
 | Open draft branch-intake bundle | [#83](https://github.com/rayswaynl/a2waspwarfare/pull/83) | Current open draft master-target review surface: `claude/wiki-wins-batch` -> `master`, head `a61823265c82eb7e35c7c74d851647c2235cf169`, updated 2026-06-24T08:59:25Z. Merge base is current stable `origin/master@f8a76de349da6f8b871d079c828436c10afb221c`; diff is Chernarus source only, 46 files / +124 / -86, clean under `git diff --check`, with no `Missions_Vanilla`, `Modded_Missions` or `Tools` payload. Treat as broad branch-only draft evidence until owner-sized smoke and LoadoutManager/Vanilla scope decisions happen. |
-| Open draft Trello / upstream candidates | [#80](https://github.com/rayswaynl/a2waspwarfare/pull/80), [#74](https://github.com/rayswaynl/a2waspwarfare/pull/74), [#72](https://github.com/rayswaynl/a2waspwarfare/pull/72), [#66](https://github.com/rayswaynl/a2waspwarfare/pull/66), [#63](https://github.com/rayswaynl/a2waspwarfare/pull/63), [#59](https://github.com/rayswaynl/a2waspwarfare/pull/59), [#54](https://github.com/rayswaynl/a2waspwarfare/pull/54) | Current open draft master-target branch set from the 2026-06-24 open-board refresh. Route each through its existing owner page or a fresh bounded PR-intake lane before release wording; do not infer runtime proof from draft/open status. |
+| Open draft Trello vote/support candidate | [#80](https://github.com/rayswaynl/a2waspwarfare/pull/80) | Current open draft master-target review surface: `claude/trello-vote-para-guards` -> `master`, head `92101abe9f7b83bd7f658d03e4160d5f030aa3c7`, updated 2026-06-23T18:25:22Z. Merge base is current stable `origin/master@f8a76de349da6f8b871d079c828436c10afb221c`; diff is source Chernarus plus maintained Vanilla only, 10 files / +148 / -14, clean under `git diff --check`, with no `Modded_Missions` or `Tools` payload. Treat as branch-only commander tie-break and paratrooper AI-cap evidence until vote/support smoke and owner decisions happen. |
+| Open draft Trello / upstream candidates | [#74](https://github.com/rayswaynl/a2waspwarfare/pull/74), [#72](https://github.com/rayswaynl/a2waspwarfare/pull/72), [#66](https://github.com/rayswaynl/a2waspwarfare/pull/66), [#63](https://github.com/rayswaynl/a2waspwarfare/pull/63), [#59](https://github.com/rayswaynl/a2waspwarfare/pull/59), [#54](https://github.com/rayswaynl/a2waspwarfare/pull/54) | Current open draft master-target branch set from the 2026-06-24 open-board refresh. Route each through its existing owner page or a fresh bounded PR-intake lane before release wording; do not infer runtime proof from draft/open status. |
 | Open non-draft feature candidate | [#53](https://github.com/rayswaynl/a2waspwarfare/pull/53) | `feat/oa-auto-countermeasures` -> `master`, updated 2026-06-23T07:59:42Z. Keep as a separate OA countermeasure feature-smoke lane, not as part of PR #83 or the B74/B69 branch history. |
 | Open map/content candidate | [#9](https://github.com/rayswaynl/a2waspwarfare/pull/9) | Zargabad low-pop mission remains open against `master`, updated 2026-06-20T05:17:48Z. Keep as a separate map/content validation lane. |
 | Closed former open routes | [#43](https://github.com/rayswaynl/a2waspwarfare/pull/43), [#40](https://github.com/rayswaynl/a2waspwarfare/pull/40) | #43 (`claude/b57-soak-proposals` -> `master`) closed 2026-06-22T10:58:31Z. #40 (`feat/client-fps` -> `fix/aicom-review-batch-2026-06-15`) closed 2026-06-22T11:14:42Z. Treat earlier rows calling them open as historical PR-board audit output only. |
@@ -46,6 +47,12 @@ Keep closed PRs as historical evidence unless an owner explicitly reopens or reb
 PR #83 / `origin/claude/wiki-wins-batch@a61823265c82eb7e35c7c74d851647c2235cf169` is an open draft PR from `claude/wiki-wins-batch` to `master`. GitHub reports clean merge state, base `f8a76de349da6f8b871d079c828436c10afb221c`, and update time 2026-06-24T08:59:25Z. Local source checks confirm merge-base `f8a76de349da6f8b871d079c828436c10afb221c`, `git diff --shortstat origin/master..origin/claude/wiki-wins-batch` is 46 files / +124 / -86, `git diff --check origin/master..origin/claude/wiki-wins-batch` is clean, and the scoped diff has no `Missions_Vanilla`, `Modded_Missions` or `Tools` paths.
 
 Treat the branch as a Chernarus-source-only quick/medium-wins bundle until split. Representative source anchors include vote/commander UI (`GUI_Commander_VoteMenu.sqf:36`, `GUI_VoteMenu.sqf:80-82`, `RequestNewCommander.sqf:13`), HC fallback/watchers (`Init_HC.sqf:15-16`, `Server_DelegateAITownHeadless.sqf:49-53`, `Client_DelegateTownAI.sqf:52-53`), economy/service/supply (`Common_ChangeSideSupply.sqf:12`, `Server_OnHQKilled.sqf:63-65,104-110`, `Client_UIFillListBuyUnits.sqf:9,39-40`, `GUI_Menu_Service.sqf:496,519`, `playerObjectsList.sqf:17`, `Server_OnPlayerDisconnected.sqf:128-131`), IRS/countermeasure paths (`Common_RearmVehicle.sqf:38-40`, `Common_RearmVehicleOA.sqf:29-31`, `Server_BuyUnit.sqf:159-162`, `Rsc/Parameters.hpp:373`), construction auto-wall scope (`Init_Common.sqf:214-216`, `Construction_MediumSite.sqf:163`, `Construction_SmallSite.sqf:99,123`, `RequestAutoWallConstructinChange.sqf:9-11`) and cleanup/dead-code anchors (`mines_cleaner.sqf:17`, `updateScoreInternal.sqf:13`, `Init_Client.sqf:59,396`, `Init_Common.sqf:126,150`).
+
+### 2026-06-24 PR #80 Vote/Paratrooper Guard Intake
+
+PR #80 / `origin/claude/trello-vote-para-guards@92101abe9f7b83bd7f658d03e4160d5f030aa3c7` is an open draft PR from `claude/trello-vote-para-guards` to `master`. GitHub reports clean merge state, base `f8a76de349da6f8b871d079c828436c10afb221c`, and update time 2026-06-23T18:25:22Z. Local checks confirm merge-base `f8a76de349da6f8b871d079c828436c10afb221c`, one commit, 10 maintained-root files / +148 / -14, clean `git diff --check origin/master..origin/claude/trello-vote-para-guards`, and no `Modded_Missions` or `Tools` payload.
+
+Treat the branch as maintained-root branch evidence, not current stable or release wording. Commander vote tie-break evidence is `Server_VoteForCommander.sqf:17,43-51,59` in both source Chernarus and maintained Vanilla: a tied player-candidate set is collected and one tied team is selected randomly before the existing `_highest >= _aiVotes` grant line. Paratrooper cap evidence is `GUI_Menu_Tactical.sqf:373-393`, `Support_Paratroopers.sqf:40,53-54`, `Init_CommonConstants.sqf:664` in Chernarus / `:466` in Vanilla, and `stringtable.xml:1118`: the client gate blocks fee/cooldown/request send when the player group is already at cap, while the server backstop rejects player-team drops that would exceed the cap. Checked current stable, current B74.2, B69, adjacent B74, Miksuu and perf refs have no `WFBE_C_PARA_RESPECT_CAP`, `STR_WF_INFO_Para_MaxGroup` or `_tiedTeams` hits in the maintained roots.
 
 ### Historical 2026-06-21 AICOM / Experital PR Board Refresh With 2026-06-22 PR #47-#51 Addenda
 
@@ -133,11 +140,12 @@ Recommended PR board cleanup:
 
 1. Current open PRs after the 2026-06-24 open-board refresh are PR #83, #80, #74, #72, #66, #63, #59, #54, #53 and #9.
 2. Treat PR #83 as the broad draft Chernarus-only wiki-wins branch-intake bundle; split it into owner-sized smoke/propagation decisions before merge/release wording.
-3. Treat PR #80/#74/#72/#66/#63/#59/#54 as open draft Trello/upstream candidates and PR #53 as the open OA countermeasure candidate; each still needs its own branch-intake/owner route if not already documented.
-4. Treat PR #9 as the separate Zargabad map/content validation lane.
-5. Treat PR #35 and deploy-child PR #34/#36-#39/#41 as closed historical AICOM deploy evidence, not active lanes.
-6. Treat PR #42 as branch integration into `claude/b39`, not a master merge.
-7. Keep older closed PR lessons below as historical scouting evidence only.
+3. Treat PR #80 as the open draft vote/support branch-intake candidate; commander tie-break belongs on the commander vote playbook and paratrooper cap belongs on the support/tactical atlas until smoke proves promotion.
+4. Treat PR #74/#72/#66/#63/#59/#54 as open draft Trello/upstream candidates and PR #53 as the open OA countermeasure candidate; each still needs its own branch-intake/owner route if not already documented.
+5. Treat PR #9 as the separate Zargabad map/content validation lane.
+6. Treat PR #35 and deploy-child PR #34/#36-#39/#41 as closed historical AICOM deploy evidence, not active lanes.
+7. Treat PR #42 as branch integration into `claude/b39`, not a master merge.
+8. Keep older closed PR lessons below as historical scouting evidence only.
 
 ## Scout Findings Addendum
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T23:55:00+02:00",
+  "generatedAt": "2026-06-24T23:59:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr80-vote-para-guards-intake-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR #80 / origin/claude/trello-vote-para-guards@92101abe metadata and GitHub state",
+        "Current stable/base origin/master@f8a76de349da6f8b871d079c828436c10afb221c",
+        "Maintained-root diff payload in source Chernarus and Missions_Vanilla Takistan",
+        "Server/Functions/Server_VoteForCommander.sqf commander tie-break branch context",
+        "Client/GUI/GUI_Menu_Tactical.sqf paratrooper dispatch cap gate",
+        "Server/Support/Support_Paratroopers.sqf server backstop",
+        "Common/Init/Init_CommonConstants.sqf WFBE_C_PARA_RESPECT_CAP",
+        "stringtable.xml STR_WF_INFO_Para_MaxGroup",
+        "Commander vote/reassignment, support/tactical, Feature Status, Current Source Status, Testing workflow and PR cleanup docs as needed"
+      ],
+      "handoff": "Closed as published/validated docs-only branch intake. Treat PR #80 as open draft maintained-root branch evidence only until commander-vote and paratrooper support smoke prove outcome, opt-out and server-backstop behavior. PR cleanup, Feature Status, Current Source Status, Commander Vote/Reassignment, Support Specials and Testing workflow now route PR #80. Do not describe it as current stable, release-ready, Miksuu-proven or full-modded propagation.",
+      "updated": "2026-06-24T23:59:00+02:00",
+      "outputs": [
+        "Updated PR-Cleanup-And-Integration-Lab.md with the PR #80 branch-intake row and maintained-root evidence.",
+        "Updated Feature-Status-Register.md, Current-Source-Status-Snapshot.md, Commander-Vote-And-Reassignment-Playbook.md, Support-Specials-And-Tactical-Modules-Atlas.md, Testing-Debugging-And-Release-Workflow.md and Wiki-Pruning-And-Relevance-Ledger.md with PR #80 branch scope and smoke gates.",
+        "Updated Progress-Dashboard.md, Agent-Worklog.md, agent-status.json, agent-collaboration.json, agent-events.jsonl and agent-knowledge.jsonl; mirrored touched files into docs/wiki and validated."
+      ]
+    },
     {
       "lane": "pr83-wiki-wins-batch-intake-2026-06-24",
       "owner": "Codex",
