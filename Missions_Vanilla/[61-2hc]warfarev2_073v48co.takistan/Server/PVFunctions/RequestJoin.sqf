@@ -88,4 +88,11 @@ if (_canJoin) then {
 	missionNamespace setVariable [Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid], _side];
 	_result = ["STORE_SIDE", [_uid, _side]] call WFBE_SE_FNC_CallDatabaseStoreSide;
 
+	//--- B748.1 (Ray 2026-06-24): hand the actual player body to the enrollment handler so it never has to HUNT
+	//--- for the seat in playableUnits (the scan race that intermittently stranded JIP joiners with no team/markers).
+	//--- Server_OnPlayerConnected's resolution loop reads this body FIRST. _player is the real networked unit, so
+	//--- group _player is the wired slot group server-side. Idempotent: re-stored on every RequestJoin retry.
+	missionNamespace setVariable [Format ["WFBE_JIP_BODY_%1", _uid], _player];
+	diag_log Format ["[WFBE][B748.1 REQUESTJOIN] stored body for [%1] [%2] side %3 (slot-group=%4)", _name, _uid, _side, !isNil {(group _player) getVariable "wfbe_side"}];
+
 };

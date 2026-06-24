@@ -26,10 +26,18 @@ _max = 240;
 _team = grpNull;
 
 while {_max > 0 && isNull _team} do {
-	//--- Primary: find the seat in playableUnits by UID.
-	{
-		if (!isNull _x && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
-	} forEach playableUnits;
+	//--- B748.1 PRIMARY (Ray 2026-06-24, the 6th-time fix): use the body the CLIENT handed us via RequestJoin
+	//--- (Init_Client sends [player, side]; RequestJoin stores WFBE_JIP_BODY_<uid> = the real networked unit).
+	//--- This ELIMINATES the playableUnits/wfbe_teams find-race that intermittently bailed "unresolved" -> no team/markers.
+	private "_clientBody"; _clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+	if (!isNull _clientBody && {alive _clientBody} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {_team = group _clientBody};
+
+	//--- Fallback A: find the seat in playableUnits by UID.
+	if (isNull _team) then {
+		{
+			if (!isNull _x && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
+		} forEach playableUnits;
+	};
 
 	//--- B746 fallback (ROOT-CAUSE FIX for EAST mid-game JIP: no team / no money): under heavy AI a freshly
 	//--- seated body can live in its registered wfbe_teams slot group before it surfaces in playableUnits, so
