@@ -130,14 +130,12 @@ _IDCS = _IDCS - [_currentIDC];
 			if !(_skip) then {
 				_size = Count ((Units (group player)) Call GetLiveUnits);
 				//--- Get the infantry limit based off the infantry upgrade.
+				//--- B750 (Ray 2026-06-24): RESTORE the infantry squad-cap regression. round(_mbu/4) gave only 4 at barracks
+				//--- lvl 0 once _mbu (GroupSizePlayer) was pop-tiered down to 16 -> player capped at 4 AI ("max 4/10, can't
+				//--- build more"). Intent: START at 10 (lvl 0) and rise +2 per barracks level, clamped to the param (_mbu).
+				//--- The per-FACTORY QUEUE rate-caps (WFBE_C_QUEUE_*_MAX = barracks 10 / light 5 / heavy-air 3, below) are separate.
 				_realSize = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
-				switch (_realSize) do {
-					case 0: {_realSize = round(_mbu / 4)};
-					case 1: {_realSize = round(_mbu / 4)*2};
-					case 2: {_realSize = round(_mbu / 4)*3};
-					case 3: {_realSize = _mbu};
-					default {_realSize = _mbu};
-				};
+				_realSize = (10 + (_realSize * 2)) min _mbu;
 						if (!isNull(commanderTeam)) then {
 			  if (commanderTeam == group player) then {
               _realSize = _realSize + 10;
