@@ -102,3 +102,22 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 		sleep 10;
 	};
 };
+
+//--- B75 (guer-tech): UNLOCK-notification watcher. The server publicVariable's WFBE_GUER_UNLOCK_MSG = [seq, text] when a
+//--- kill threshold grants the next reward (Server\PVFunctions\RequestOnUnitKilled.sqf). Show it once - titleText + a
+//--- richer hint. The seen-seq is seeded to the CURRENT value so a JIP joiner never re-pops an old unlock (publicVariable
+//--- is not JIP-replayed, and the seed is [0,""], so a fresh joiner starts clean and only sees unlocks earned after join).
+[] spawn {
+	private ["_lastSeq","_msg"];
+	_msg = missionNamespace getVariable ["WFBE_GUER_UNLOCK_MSG", [0, ""]];
+	_lastSeq = if (count _msg >= 1) then {_msg select 0} else {-1};
+	while {!WFBE_GameOver && (local player) && {side group player == resistance}} do {
+		_msg = missionNamespace getVariable ["WFBE_GUER_UNLOCK_MSG", [0, ""]];
+		if (count _msg == 2 && {(_msg select 0) != _lastSeq} && {(_msg select 1) != ""}) then {
+			_lastSeq = _msg select 0;
+			titleText [Format ["GUER TECH UNLOCKED\n%1\n(at %2 kills)", _msg select 1, _msg select 0], "PLAIN DOWN"];
+			hintSilent parseText (Format ["<t color='#B6F563' size='1.3'>GUER TECH UNLOCKED</t><br/><br/><t color='#F5D363'>%1</t><br/><br/><t>at %2 cumulative GUER kills</t>", _msg select 1, _msg select 0]);
+		};
+		sleep 3;
+	};
+};

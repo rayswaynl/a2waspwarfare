@@ -112,6 +112,10 @@ with missionNamespace do {
 	//--- trucks and feeds the RHUD "B n | LF n | HF n" row. Server-authoritative; publicVariable'd (NOT JIP-replayed in
 	//--- A2-OA, so isNil-seeded here, re-broadcast by Server_GuerStipend.sqf + pushed to joiners by OnPlayerConnected).
 		if (isNil "WFBE_GUER_FOB_AVAIL") then {WFBE_GUER_FOB_AVAIL = [0,0,0]};
+		//--- Unlock-notification feed: [seq, text]. The server sets it (seq = the kill count at unlock) + publicVariable's
+		//--- it when a kill threshold grants the next reward; the GUER overlay watcher shows it once. Seeded [0,""] so a
+		//--- joiner's watcher seeds its seen-seq to 0 and never re-pops an old unlock (publicVariable is not JIP-replayed).
+		if (isNil "WFBE_GUER_UNLOCK_MSG") then {WFBE_GUER_UNLOCK_MSG = [0, ""]};
 		//--- FOB delivery trucks: [Barracks, Light, Heavy] truck classnames (index-aligned with WFBE_GUER_FOB_AVAIL).
 		//--- Map-branched on worldName (the macro is unreliable in standalone-loaded files). These are trucks NOT in the
 		//--- GUER player roster; registered with "FOB (...)" labels in Core_GUE.sqf and shown ONLY in the depot when the
