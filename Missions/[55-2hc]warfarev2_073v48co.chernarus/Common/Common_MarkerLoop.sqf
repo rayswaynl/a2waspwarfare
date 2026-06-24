@@ -397,6 +397,13 @@ while {true} do {
 					};
 				};
 
+				// B748: per-player Settings opt-out of AAR map markers (hide live + cheap re-check while OFF).
+				if !(missionNamespace getVariable ["WFBE_CL_ShowAARMarkers", true]) exitWith {
+					if (_aarEntry select 4) then {_markerName setMarkerAlphaLocal 0; _aarEntry set [4, false]};
+					_aarEntry set [8, true];
+					_aarEntry set [11, _now + 2];
+				};
+
 				if (_now < (_aarEntry select 11)) exitWith {};
 
 				// Marty: PERF3 token-bucket - shared budget counter with unit markers.

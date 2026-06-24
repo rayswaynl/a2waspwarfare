@@ -52,4 +52,35 @@ if !(isNil '_profile_var') then {
 	};
 };
 
+//--- B748 Settings menu: per-player client toggle prefs (default ON). typeName=="BOOL" sanitize = A2-OA-safe isEqualType substitute.
+//--- HUD overlay (RUBHUD - read each ~1s by Client_UpdateRHUD.sqf).
+RUBHUD = true;
+_profile_var = profileNamespace getVariable "WFBE_RUBHUD_ENABLED";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {RUBHUD = _profile_var}};
+missionNamespace setVariable ["RUBHUD", RUBHUD];
+
+//--- AAR map markers (gated live in Common_MarkerLoop.sqf).
+WFBE_CL_ShowAARMarkers = true;
+_profile_var = profileNamespace getVariable "WFBE_SHOW_AAR_MARKERS";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_CL_ShowAARMarkers = _profile_var}};
+missionNamespace setVariable ["WFBE_CL_ShowAARMarkers", WFBE_CL_ShowAARMarkers];
+
+//--- Bomb-altitude warning (cosmetic flash only; does NOT affect server anti-exploit bomb deletion).
+WFBE_BOMB_WARNING_ENABLED = true;
+_profile_var = profileNamespace getVariable "WFBE_BOMB_WARNING_ENABLED";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_BOMB_WARNING_ENABLED = _profile_var}};
+missionNamespace setVariable ["WFBE_BOMB_WARNING_ENABLED", WFBE_BOMB_WARNING_ENABLED];
+
+//--- Ambulance redeploy circles (gated live in Client_AmbulanceRedeployCircles.sqf).
+WFBE_AMBULANCE_CIRCLES_ENABLED = true;
+_profile_var = profileNamespace getVariable "WFBE_AMBULANCE_CIRCLES_ENABLED";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_AMBULANCE_CIRCLES_ENABLED = _profile_var}};
+missionNamespace setVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", WFBE_AMBULANCE_CIRCLES_ENABLED];
+
+//--- Kill feed (bounty chat lines; bounty CASH is never gated).
+WFBE_KILL_MESSAGES = true;
+_profile_var = profileNamespace getVariable "WFBE_KILL_MESSAGES_ENABLED";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_KILL_MESSAGES = _profile_var}};
+missionNamespace setVariable ["WFBE_KILL_MESSAGES", WFBE_KILL_MESSAGES];
+
 ["INITIALIZATION", "Init_ProfileVariables.sqf: Possible profile variables were defined."] Call WFBE_CO_FNC_LogContent;

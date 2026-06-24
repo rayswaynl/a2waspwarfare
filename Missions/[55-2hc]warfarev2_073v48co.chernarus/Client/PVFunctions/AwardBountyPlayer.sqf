@@ -28,5 +28,6 @@ _bounty = round (_bounty * _mult);
 
 sleep (random 3);
 
-Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage;
+//--- B748: Kill Feed Settings opt-out gates ONLY the chat line; the bounty payout below is NEVER gated.
+if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage};
 (_bounty) Call ChangePlayerFunds;
