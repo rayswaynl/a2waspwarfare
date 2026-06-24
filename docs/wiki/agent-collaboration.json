@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T06:55:00+02:00",
+  "generatedAt": "2026-06-24T07:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "loadoutmanager-agent-context-b742-current-head-cleanup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh compact LoadoutManager/root-discovery and skip-zip packaging strings in agent-context.json that still name B74.2 origin/claude/b74.2-aicom@d472da6a after canonical Source Fix queue and release-readiness evidence advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Tools/LoadoutManager/FileManager.cs, Tools/LoadoutManager/ZipManager.cs, generated version.sqf presence/template inputs and direct current branch refs needed to support the compact context wording.",
+        "Keep Source-Fix-Propagation-Queue and agent-release-readiness.json as canonical detailed evidence; update coordination/pruning rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed agent-context.json LoadoutManager root discovery and packaging strings from docs/source HEAD@7b1187d32 / B74.2 d472da6a wording to docs/source HEAD@101930f47 and current B74.2 origin/claude/b74.2-aicom@21b62b04.",
+        "Updated Source-Fix-Propagation-Queue.md agent index facts and agent-release-readiness.json currentBranchEvidence with the 101930f47..HEAD empty scoped diff and current B74.2 branch scope.",
+        "Recorded that origin/codex/version-sqf-current-b74@499c2543 is docs/wiki-tip evidence with docs-source tooling shape, not a current stable/B74.2 generated-input or packaging rescue."
+      ],
+      "handoff": "Future tooling/release owner should keep Source-Fix-Propagation-Queue and agent-release-readiness.json canonical for detailed LoadoutManager/generated-input rules, verify live version.sqf per claimed mission root, and configure 7za unless the target branch explicitly implements A2WASP_SKIP_ZIP.",
+      "updated": "2026-06-24T07:15:00+02:00"
+    },
     {
       "lane": "victory-endgame-b742-current-head-followup-2026-06-24",
       "owner": "Codex",

@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-24T04:48:00+02:00",
-  "lastVerifiedAt": "2026-06-24T04:48:00+02:00",
+  "generatedAt": "2026-06-24T07:15:00+02:00",
+  "lastVerifiedAt": "2026-06-24T07:15:00+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -198,7 +198,7 @@
     "status": "required-generated-ignored-input",
     "trackedByGit": false,
     "currentCheckoutEvidence": "Current workspace check for loadoutmanager-b742-current-head-followup-2026-06-23 found no present Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf or Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf in docs/source checkout HEAD@101930f47; git status --ignored for those paths returned no ignored-present files.",
-    "currentBranchEvidence": "Checked docs/source HEAD@101930f47, current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, current B74.2 origin/claude/b74.2-aicom@21b62b04, B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 do not track live Chernarus/Vanilla version.sqf files. The scoped d472da6a..21b62b04 and origin/master..origin/claude/b74.2-aicom diffs are empty for checked tooling/generated-input paths.",
+    "currentBranchEvidence": "Checked docs/source HEAD@101930f47, current stable/B74.1 origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34, current B74.2 origin/claude/b74.2-aicom@21b62b04, B69 origin/claude/b69@8d465fce, adjacent B74 origin/claude/b74-aicom-spend@b23f557f, current Miksuu b8389e748243, origin/perf/quick-wins@0076040f and historical a96fdda2 do not track live Chernarus/Vanilla version.sqf files. The scoped 101930f47..HEAD, d472da6a..21b62b04 and origin/master..origin/claude/b74.2-aicom diffs are empty for checked tooling/generated-input paths. 2026-06-24 branch-name check: origin/codex/version-sqf-current-b74@499c2543 is a docs/wiki tip whose tree keeps the docs/source tooling shape, not a current stable/B74.2 generated-input rescue.",
     "templateCaveat": "Current stable/B74.1/B74.2/B69/B74 track the same Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template lines 1-14 as a Chernarus reference, but that template is not the live generated version.sqf input and does not cover maintained Vanilla Takistan.",
     "whyItMatters": "description.ext and initJIPCompatible.sqf include version.sqf before mission boot continues; a fresh checkout, clean pack or generated target without that file can fail before later SQF systems initialize.",
     "releaseGate": "Before pack, smoke-test or release wording, verify every claimed mission target root has a generated version.sqf matching its terrain profile and player count.",

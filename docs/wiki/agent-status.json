@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-24T06:55:00+02:00",
+  "generatedAt": "2026-06-24T07:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "ready / docs finisher loop",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Victory/endgame B74.2 current-head evidence is published in the canonical atlas/status rows; no gameplay source changed.",
+      "currentWork": "LoadoutManager compact context and generated-input machine facts are refreshed against current B74.2 origin/claude/b74.2-aicom@21b62b04; no gameplay source changed.",
       "nextExpectedOutput": "Choose the next bounded source-backed wiki/status refresh after coordination reads, or wait for Steff to request gameplay code work."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "loadoutmanager-agent-context-b742-current-head-cleanup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "output": "Refreshed compact LoadoutManager/root-discovery, skip-zip and generated-input evidence in agent-context.json, Source Fix queue agent facts and agent-release-readiness.json from stale B74.2 d472da6a wording to current origin/claude/b74.2-aicom@21b62b04. Docs/source HEAD@101930f47 is unchanged through repo HEAD@025d5cf for checked tooling/generated-input paths; stable/B74.2/B69/B74 use marker-root discovery without checked A2WASP_SKIP_ZIP, Miksuu/perf remain named-root-only, and origin/codex/version-sqf-current-b74@499c2543 is docs/wiki-tip evidence with docs-source tooling shape rather than a current stable/B74.2 rescue. No gameplay source changed."
+    },
     {
       "lane": "victory-endgame-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
