@@ -128,7 +128,17 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 
 	"colorCorrections" ppEffectCommit _delay / 3;
 
+	//--- Guard: bail if the death position is invalid or camCreate failed to bind (prevents per-frame "Undefined variable wfbe_deathcamera" spam in the waitUntil below).
+	if (isNil "WFBE_DeathLocation" || {typeName WFBE_DeathLocation != "ARRAY"} || {count WFBE_DeathLocation < 3}) exitWith {
+		"dynamicBlur" ppEffectEnable false;
+		"colorCorrections" ppEffectEnable false;
+	};
+
 	WFBE_DeathCamera = "camera" camCreate WFBE_DeathLocation;
+	if (isNil "WFBE_DeathCamera") exitWith {
+		"dynamicBlur" ppEffectEnable false;
+		"colorCorrections" ppEffectEnable false;
+	};
 	WFBE_DeathCamera camSetDir 0;
 	WFBE_DeathCamera camSetFov 0.7;
 	WFBE_DeathCamera cameraEffect ["Internal", "TOP"];

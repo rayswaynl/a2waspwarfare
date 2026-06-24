@@ -385,6 +385,8 @@ while {true} do {
 				_incomeText = Format ["+ %1 $",sideJoined Call GetIncome];
 				_supplyText = Format ["%1",(sideJoined) Call GetSideSupply];
 				_baseStructures = sideJoined Call WFBE_CO_FNC_GetSideStructures;
+				if (isNil "_baseStructures") then {_baseStructures = []};
+				if (typeName _baseStructures != "ARRAY") then {_baseStructures = []};
 				_baseHq = sideJoined Call WFBE_CO_FNC_GetSideHQ;
 				if (!isNull _baseHq) then {_baseStructures = _baseStructures + [_baseHq]};
 				_baseTotal = 0;
