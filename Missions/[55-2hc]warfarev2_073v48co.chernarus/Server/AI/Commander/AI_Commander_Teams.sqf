@@ -181,7 +181,7 @@ if (_foundedTeams > _target) then {
 //--- promotes _pick to the top-tier template. Transient: next tick the flag is consumed/false and the target returns
 //--- to normal (no permanent target inflation). Placed AFTER the PC-cleanup block so the +1 never triggers a retire.
 //--- A2-OA-safe: boolean getVariable on the side-logic OBJECT _logik is reliable (not a group); plain if, no Bool ==.
-if (_logik getVariable ["wfbe_aicom_veteran_next", false]) then {_target = _target + 1};
+if (_logik getVariable ["wfbe_aicom_veteran_next", false]) then {_target = (_target + 1) min _teamsHardCap}; //--- B747.1: veteran +1 must still respect the hard cap (never exceed max teams).
 
 if ((_foundedTeams + _pending) >= _target) exitWith {};
 
