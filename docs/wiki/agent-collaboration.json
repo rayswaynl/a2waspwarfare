@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T09:50:00+02:00",
+  "generatedAt": "2026-06-24T10:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wasp-marker-wait-agent-context-current-b742-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh stale compact WASP display-54 wait context that still routes current stable through older origin/master@0139a346 wording and omits current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Client/Init/Init_Client.sqf and WASP/global_marking_monitor.sqf in source Chernarus plus maintained Vanilla, with scoped branch diffs for docs/source, current stable/B74.1, current B74.2, B69/B74, Miksuu, perf and historical release evidence.",
+        "Keep WASP-Marker-Wait-Cleanup and Source-Fix-Propagation-Queue canonical; update agent-context, coordination records and a compact knowledge/event handoff only as needed.",
+        "No gameplay source edits."
+      ],
+      "outputs": [
+        "Updated agent-context.json DR-40/performance compact wording so current stable/B74.1 routes through origin/master@f8a76de34 and current B74.2 routes through origin/claude/b74.2-aicom@21b62b04.",
+        "Recorded repo docs branch HEAD@8703f4c3b7d5 unchanged from 46840f048bd4 for checked Client/Init/Init_Client.sqf and WASP/global_marking_monitor.sqf paths, with docs/source still old-shape in both maintained roots.",
+        "Recorded current stable/B74.1/B74.2/B69/B74/client-fps as already carrying sleep 0.1 before findDisplay 54 in both maintained roots; Miksuu, perf and historical a96fdda2 remain old-shape patch targets."
+      ],
+      "handoff": "Future WASP/UI/performance owner should patch only old-shape targets, keep current stable/B74.1/B74.2/B69/B74/client-fps sleep shape intact, and smoke marker-dialog input lock/unlock in Arma 2 OA before release wording. No gameplay source changed in this docs lane.",
+      "updated": "2026-06-24T10:20:00+02:00"
+    },
     {
       "lane": "duplicate-ui-idd-current-b742-head-refresh-2026-06-24",
       "owner": "Codex",
