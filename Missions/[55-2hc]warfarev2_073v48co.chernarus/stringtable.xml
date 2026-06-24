@@ -376,6 +376,13 @@
         <Russian>$%1 Получено за утилизацию %2.</Russian>
         <Italian>$%1 Ricevuti recuperando i pezzi di un %2</Italian>
       </Key>
+      <Key ID="STR_WF_CHAT_Salvage_Truck_InRange">
+        <English>A friendly salvage truck is in range - it will salvage nearby wrecks automatically.</English>
+        <French>Un camion de recyclage allié est à portée - il recyclera automatiquement les épaves proches.</French>
+        <German>Ein freundlicher Bergungs-LKW ist in Reichweite - er birgt nahe Wracks automatisch.</German>
+        <Russian>Дружественный эвакуатор находится в зоне действия - он автоматически утилизирует ближайшие обломки.</Russian>
+        <Italian>Un camion di recupero alleato è nel raggio - recupererà automaticamente i relitti vicini.</Italian>
+      </Key>
       <Key ID="STR_WF_CHAT_Town_Captured"><!--shared U-->
         <English>%1 has been captured by %2 !</English>
         <French>%1 a été capturé par l'équipe %2 !</French>

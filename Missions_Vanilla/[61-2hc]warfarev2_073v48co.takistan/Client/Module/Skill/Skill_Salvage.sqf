@@ -1,9 +1,16 @@
-private["_salvagerRange","_percentage"];
+private["_salvagerRange","_percentage","_salvageTruckTypes"];
 
 WFBE_SK_V_LastUse_Salvage = time;
 
 _salvagerRange = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE";
 _percentage = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RATIO";
+
+//--- Trello #15: block engineer manual salvage when a FRIENDLY salvage truck is already in range
+//--- (it auto-salvages via Client\FSM\updatesalvage.sqf). Reuse the per-side truck class list.
+_salvageTruckTypes = missionNamespace getVariable [Format ["WFBE_%1SALVAGETRUCK", sideJoinedText], []];
+if (((count _salvageTruckTypes) > 0) && {({ alive _x && (side _x == side player) } count (nearestObjects [getPos player, _salvageTruckTypes, _salvagerRange])) > 0}) exitWith {
+	(localize "STR_WF_CHAT_Salvage_Truck_InRange") Call GroupChatMessage;
+};
 
 _vehicles = nearestObjects [getPos player, ['Car','Motorcycle','Ship','Air','Tank','StaticWeapon'],_salvagerRange];
 
