@@ -1108,7 +1108,7 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 	[] execVM "Client\Functions\Client_BookkeepBlinkingIcons.sqf";
 };
 
-_video = ["Videos\intro720p.ogv"] call BIS_fnc_playVideo;
+//--- B745 (Ray 2026-06-24): intro video removed (Videos\intro720p.ogv deleted, ~2.3MB mission shrink). Playback line disabled.
 
 /* Vote System, define whether a vote is already running or not */
 if (sideJoined != resistance) then {
