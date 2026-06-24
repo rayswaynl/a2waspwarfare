@@ -117,15 +117,9 @@ if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 _funds = _team Call GetTeamFunds;
 _get set [1,_funds];
 
-//--- We place the unit at the base now.
-_buildings = []; //--- B74.1 (Ray 2026-06-23) ERROR FIX: default [] so an unresolved _side on disconnect can't leave _buildings undefined (the "count _buildings" Undefined-variable error in the soak RPT).
-	if (!isNil "_side") then { _buildings = (_side) Call WFBE_CO_FNC_GetSideStructures };
-	if (isNil "_buildings") then { _buildings = [] };
-_respawnLoc = _hq;
-if (count _buildings > 0) then {
-	_respawnLoc = [_old_unit,_buildings] Call WFBE_CO_FNC_GetClosestEntity;
-};
-_old_unit setPos ([getPos _respawnLoc,20,30] Call GetRandomPosition);
+//--- wiki-wins: removed dead block — _old_unit was already deleteVehicle'd above (~line 102), so this
+//--- setPos (and the GetClosestEntity it fed with the now-null _old_unit) were no-ops. The B74.1
+//--- "_buildings undefined" guard was only masking that dead path.
 
 //--- Update the new informations.
 missionNamespace setVariable [format["WFBE_JIP_USER%1",_uid], _get];

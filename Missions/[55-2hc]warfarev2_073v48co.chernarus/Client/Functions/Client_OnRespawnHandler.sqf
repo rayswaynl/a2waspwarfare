@@ -110,7 +110,7 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 			};
 			
 			//--- Check that the player has enough funds.
-			if (_funds < _price) then {_skip = true};
+			if (_charge && _funds < _price) then {_skip = true}; //--- wiki-wins: only strip gear when actually charging (mode-5-at-base sets _charge=false and charges nothing)
 		};
 		
 		//--- Use the respawn loadout.

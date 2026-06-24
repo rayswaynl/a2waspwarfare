@@ -37,6 +37,8 @@ _bounty = switch  (true) do {
                    
 				    case (_type isKindOf "building"): {round((_get select QUERYUNITPRICE)*0.55*(missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF"));};
 
+					default {0}; //--- wiki-wins: unmatched (e.g. mod-added) classes no longer feed nil into ChangePlayerFunds
+
 };
 
 sleep (random 3);
