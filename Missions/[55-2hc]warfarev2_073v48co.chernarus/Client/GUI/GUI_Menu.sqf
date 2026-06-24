@@ -223,6 +223,13 @@ while {alive player && dialog} do {
 		[] execVM "WASP\actions\FPSPicker\FPSPicker_Open.sqf";
 	};
 
+	//--- B748: Settings menu (GEAR button = revived skins slot, idc 11021).
+	if (MenuAction == 24) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		[] execVM "WASP\actions\Settings\Settings_Open.sqf";
+	};
+
 	//--- Help Menu
 	if (MenuAction == 13) exitWith { //added-spayker
 		MenuAction = -1;

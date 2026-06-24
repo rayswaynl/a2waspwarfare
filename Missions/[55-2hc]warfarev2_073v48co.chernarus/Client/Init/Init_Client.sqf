@@ -1307,6 +1307,9 @@ if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFB
 			if (isNil "_limit") exitWith {};
 			if (_limit <= 0) exitWith {};
 
+			//--- B748: per-player Settings opt-out of the COSMETIC warning only. Server/Fired-EH anti-exploit bomb deletion (Common_HandleShootBombs.sqf) is unaffected.
+			if !(missionNamespace getVariable ["WFBE_BOMB_WARNING_ENABLED", true]) exitWith {};
+
 			_vehicle = vehicle player;
 
 			if (_vehicle == player) exitWith {};
