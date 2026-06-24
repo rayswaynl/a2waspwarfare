@@ -42,580 +42,8 @@ class Mission
 	};
 	class Groups
 	{
-		items=123;
+		items=91;
 		class Item0
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7182.2349,41.073147,12771.534};
-					id=0;
-					side="WEST";
-					vehicle="US_Delta_Force_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item1
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7182.1992,41.007263,12769.966};
-					id=1;
-					side="WEST";
-					vehicle="GER_Soldier_Scout_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item2
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7184.5591,41.122345,12771.722};
-					id=2;
-					side="WEST";
-					vehicle="US_Delta_Force_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item3
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7184.438,41.046597,12769.964};
-					id=3;
-					side="WEST";
-					vehicle="US_Delta_Force_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item4
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7186.751,41.195904,12771.721};
-					id=4;
-					side="WEST";
-					vehicle="US_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item5
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7186.8062,41.100983,12770.04};
-					id=5;
-					side="WEST";
-					vehicle="US_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item6
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7180.4102,41.031887,12771.605};
-					id=6;
-					side="WEST";
-					vehicle="US_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item7
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7180.5244,40.97039,12770.039};
-					id=7;
-					side="WEST";
-					vehicle="US_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item8
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7180.5913,40.92551,12768.79};
-					id=8;
-					side="WEST";
-					vehicle="US_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item9
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7180.54,40.885139,12767.36};
-					id=9;
-					side="WEST";
-					vehicle="US_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item10
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7190.7466,41.46674,12771.747};
-					id=10;
-					side="WEST";
-					vehicle="US_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item11
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7190.8032,41.30518,12768.868};
-					id=11;
-					side="WEST";
-					vehicle="BAF_Soldier_Medic_DDPM";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item12
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7190.877,41.391426,12770.27};
-					id=12;
-					side="WEST";
-					vehicle="GER_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item13
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7190.9316,41.277016,12767.672};
-					id=13;
-					side="WEST";
-					vehicle="GER_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item14
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7454.5591,270.25867,57.020081};
-					id=14;
-					side="EAST";
-					vehicle="TK_Special_Forces_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item15
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7454.4663,270.08139,50.622406};
-					id=15;
-					side="EAST";
-					vehicle="RUS_Commander";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item16
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7460.6475,269.99832,57.091583};
-					id=16;
-					side="EAST";
-					vehicle="TK_Special_Forces_TL_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item17
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7460.6685,269.89764,54.709045};
-					id=17;
-					side="EAST";
-					vehicle="TK_Special_Forces_TL_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item18
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7464.9556,269.91217,57.196747};
-					id=18;
-					side="EAST";
-					vehicle="TK_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item19
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7465.1099,269.79218,54.438721};
-					id=19;
-					side="EAST";
-					vehicle="TK_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item20
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7450.958,270.2233,47.373138};
-					id=20;
-					side="EAST";
-					vehicle="TK_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item21
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7451.1172,270.1778,45.455231};
-					id=21;
-					side="EAST";
-					vehicle="TK_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item22
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7454.6968,270.19006,54.781738};
-					id=22;
-					side="EAST";
-					vehicle="TK_Special_Forces_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item23
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7457.9888,269.93915,52.478638};
-					id=23;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item24
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7458.0234,269.87292,50.46994};
-					id=24;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item25
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7457.9614,269.79965,48.713409};
-					id=25;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item26
 		{
 			side="LOGIC";
 			class Vehicles
@@ -633,8 +61,8 @@ class Mission
 					init="this setVariable [""totalTowns"",31];this enableSimulation false;this setVariable [""Towns_RemovedXSmall"",[""FeeruzAbad"",""Nagara"",""Garmsar"",""Bastam"",""Zavarak"",""ChakChak"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Nur"",""Karachinar"",""Rasman"",""Ravanay"",""Imarat"",""Shamali"",""Gospandi"",""Landay"",""Jaza"",""Timurkalay"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedSmall"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Chardarakht"",""Karachinar"",""Ravanay"",""Imarat"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedMedium"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Chaman"",""Chardarakht"",""Nur"",""Karachinar"",""Ravanay"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedLarge"",[""Chaman"",""HazarBagh"",""Nur"",""Landay""]];nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
 				};
 			};
-		};
-		class Item27
+		}
+		class Item1
 		{
 			side="LOGIC";
 			class Vehicles
@@ -652,8 +80,8 @@ class Mission
 					init="this enableSimulation false;";
 				};
 			};
-		};
-		class Item28
+		}
+		class Item2
 		{
 			side="LOGIC";
 			class Vehicles
@@ -671,8 +99,8 @@ class Mission
 					init="this enableSimulation false;";
 				};
 			};
-		};
-		class Item29
+		}
+		class Item3
 		{
 			side="LOGIC";
 			class Vehicles
@@ -689,8 +117,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item30
+		}
+		class Item4
 		{
 			side="LOGIC";
 			class Vehicles
@@ -706,8 +134,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item31
+		}
+		class Item5
 		{
 			side="LOGIC";
 			class Vehicles
@@ -725,8 +153,8 @@ class Mission
 					init="this setVariable [""wfbe_default"", east]; this setVariable [""wfbe_spawn"", ""south""];";
 				};
 			};
-		};
-		class Item32
+		}
+		class Item6
 		{
 			side="LOGIC";
 			class Vehicles
@@ -742,8 +170,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item33
+		}
+		class Item7
 		{
 			side="LOGIC";
 			class Vehicles
@@ -759,8 +187,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item34
+		}
+		class Item8
 		{
 			side="LOGIC";
 			class Vehicles
@@ -779,8 +207,8 @@ class Mission
 					synchronizations[]={34};
 				};
 			};
-		};
-		class Item35
+		}
+		class Item9
 		{
 			side="LOGIC";
 			class Vehicles
@@ -873,8 +301,8 @@ class Mission
 					synchronizations[]={35};
 				};
 			};
-		};
-		class Item36
+		}
+		class Item10
 		{
 			side="LOGIC";
 			class Vehicles
@@ -955,8 +383,8 @@ class Mission
 					synchronizations[]={36};
 				};
 			};
-		};
-		class Item37
+		}
+		class Item11
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1001,8 +429,8 @@ class Mission
 					synchronizations[]={37};
 				};
 			};
-		};
-		class Item38
+		}
+		class Item12
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1082,8 +510,8 @@ class Mission
 					synchronizations[]={38};
 				};
 			};
-		};
-		class Item39
+		}
+		class Item13
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1152,8 +580,8 @@ class Mission
 					synchronizations[]={39};
 				};
 			};
-		};
-		class Item40
+		}
+		class Item14
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1168,11 +596,11 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,206,207,208,209,213,216,217,218,226,233,234,235,239,240,241,242};
+					synchronizations[]={7000,7001,7002,7003,7004,7005,7006,7007,7008,7009,7010,7011,7012,7013};
 				};
 			};
-		};
-		class Item41
+		}
+		class Item15
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1187,11 +615,11 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_OPF";
-					synchronizations[]={14,16,17,18,19,20,21,22,23,24,25,211,210,212,215,214,219,220,221,222,223,224,236,237,238,243,15,245,246,244};
+					synchronizations[]={7014,7015,7016,7017,7018,7019,7020,7021,7022,7023,7024,7025,7026,7028};
 				};
 			};
-		};
-		class Item42
+		}
+		class Item16
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1208,8 +636,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item43
+		}
+		class Item17
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1225,8 +653,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item44
+		}
+		class Item18
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1244,8 +672,8 @@ class Mission
 					init="this enableSimulation false;";
 				};
 			};
-		};
-		class Item45
+		}
+		class Item19
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1290,8 +718,8 @@ class Mission
 					synchronizations[]={67};
 				};
 			};
-		};
-		class Item46
+		}
+		class Item20
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1361,8 +789,8 @@ class Mission
 					synchronizations[]={70};
 				};
 			};
-		};
-		class Item47
+		}
+		class Item21
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1407,8 +835,8 @@ class Mission
 					synchronizations[]={75};
 				};
 			};
-		};
-		class Item48
+		}
+		class Item22
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1426,8 +854,8 @@ class Mission
 					init="this enableSimulation false;";
 				};
 			};
-		};
-		class Item49
+		}
+		class Item23
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1472,8 +900,8 @@ class Mission
 					synchronizations[]={79};
 				};
 			};
-		};
-		class Item50
+		}
+		class Item24
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1554,8 +982,8 @@ class Mission
 					synchronizations[]={82};
 				};
 			};
-		};
-		class Item51
+		}
+		class Item25
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1623,8 +1051,8 @@ class Mission
 					synchronizations[]={88};
 				};
 			};
-		};
-		class Item52
+		}
+		class Item26
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1705,8 +1133,8 @@ class Mission
 					synchronizations[]={93};
 				};
 			};
-		};
-		class Item53
+		}
+		class Item27
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1787,8 +1215,8 @@ class Mission
 					synchronizations[]={99};
 				};
 			};
-		};
-		class Item54
+		}
+		class Item28
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1869,8 +1297,8 @@ class Mission
 					synchronizations[]={105};
 				};
 			};
-		};
-		class Item55
+		}
+		class Item29
 		{
 			side="LOGIC";
 			class Vehicles
@@ -1939,8 +1367,8 @@ class Mission
 					synchronizations[]={111};
 				};
 			};
-		};
-		class Item56
+		}
+		class Item30
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2021,8 +1449,8 @@ class Mission
 					synchronizations[]={116};
 				};
 			};
-		};
-		class Item57
+		}
+		class Item31
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2102,8 +1530,8 @@ class Mission
 					synchronizations[]={122};
 				};
 			};
-		};
-		class Item58
+		}
+		class Item32
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2184,8 +1612,8 @@ class Mission
 					synchronizations[]={128};
 				};
 			};
-		};
-		class Item59
+		}
+		class Item33
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2266,8 +1694,8 @@ class Mission
 					synchronizations[]={134};
 				};
 			};
-		};
-		class Item60
+		}
+		class Item34
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2348,8 +1776,8 @@ class Mission
 					synchronizations[]={140};
 				};
 			};
-		};
-		class Item61
+		}
+		class Item35
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2429,8 +1857,8 @@ class Mission
 					synchronizations[]={146};
 				};
 			};
-		};
-		class Item62
+		}
+		class Item36
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2511,8 +1939,8 @@ class Mission
 					synchronizations[]={152};
 				};
 			};
-		};
-		class Item63
+		}
+		class Item37
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2581,8 +2009,8 @@ class Mission
 					synchronizations[]={158};
 				};
 			};
-		};
-		class Item64
+		}
+		class Item38
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2627,8 +2055,8 @@ class Mission
 					synchronizations[]={163};
 				};
 			};
-		};
-		class Item65
+		}
+		class Item39
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2685,8 +2113,8 @@ class Mission
 					synchronizations[]={166};
 				};
 			};
-		};
-		class Item66
+		}
+		class Item40
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2731,8 +2159,8 @@ class Mission
 					synchronizations[]={170};
 				};
 			};
-		};
-		class Item67
+		}
+		class Item41
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2801,8 +2229,8 @@ class Mission
 					synchronizations[]={173};
 				};
 			};
-		};
-		class Item68
+		}
+		class Item42
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2907,8 +2335,8 @@ class Mission
 					synchronizations[]={178};
 				};
 			};
-		};
-		class Item69
+		}
+		class Item43
 		{
 			side="LOGIC";
 			class Vehicles
@@ -2988,8 +2416,8 @@ class Mission
 					synchronizations[]={186};
 				};
 			};
-		};
-		class Item70
+		}
+		class Item44
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3105,8 +2533,8 @@ class Mission
 					synchronizations[]={192};
 				};
 			};
-		};
-		class Item71
+		}
+		class Item45
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3175,470 +2603,8 @@ class Mission
 					synchronizations[]={201};
 				};
 			};
-		};
-		class Item72
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7180.5503,40.85458,12766.228};
-					id=206;
-					side="WEST";
-					vehicle="US_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item73
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7180.6255,40.818298,12764.827};
-					id=207;
-					side="WEST";
-					vehicle="US_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item74
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7182.4014,40.951382,12768.528};
-					id=208;
-					side="WEST";
-					vehicle="GER_Soldier_Scout_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item75
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7184.4546,40.983212,12768.421};
-					id=209;
-					side="WEST";
-					vehicle="US_Delta_Force_TL_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item76
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7451.0049,270.25714,49.284302};
-					id=210;
-					side="EAST";
-					vehicle="TK_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item77
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7451.1172,270.29395,51.049866};
-					id=211;
-					side="EAST";
-					vehicle="TK_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item78
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7460.8032,269.70517,50.232758};
-					id=212;
-					side="EAST";
-					vehicle="TK_Special_Forces_TL_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item79
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7191.0791,41.252033,12766.42};
-					id=213;
-					side="WEST";
-					vehicle="BAF_Soldier_Medic_DDPM";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item80
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7457.9141,270.1171,57.111969};
-					id=214;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item81
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7457.9082,270.01236,54.611938};
-					id=215;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item82
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7180.6836,40.783688,12763.504};
-					id=216;
-					side="WEST";
-					vehicle="US_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item83
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7184.4639,40.924839,12766.957};
-					id=217;
-					side="WEST";
-					vehicle="US_Delta_Force_TL_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item84
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7186.7881,41.019985,12768.313};
-					id=218;
-					side="WEST";
-					vehicle="US_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item85
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7451.1333,270.32703,52.68811};
-					id=219;
-					side="EAST";
-					vehicle="TK_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item86
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7460.7661,269.62683,48.477783};
-					id=220;
-					side="EAST";
-					vehicle="TK_Special_Forces_TL_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item87
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7460.6826,269.79181,52.44223};
-					id=221;
-					side="EAST";
-					vehicle="TK_Special_Forces_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item88
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7465.0898,269.6944,52.301727};
-					id=222;
-					side="EAST";
-					vehicle="TK_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item89
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7451.2905,270.3558,54.531036};
-					id=223;
-					side="EAST";
-					vehicle="TK_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item90
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7451.2847,270.41925,56.925262};
-					id=224;
-					side="EAST";
-					vehicle="TK_Soldier_Officer_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item91
-		{
-			side="CIV";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={4738.8306,4.2693748,12540.03};
-					id=225;
-					side="CIV";
-					vehicle="TK_CIV_Takistani03_EP1";
-					player="PLAY CDG";
-					forceHeadlessClient=1;
-					leader=1;
-					skill=0.60000002;
-					text="HC";
-					init="this allowdamage false;this setPosATL (getPos this);";
-					description="Headless Client";
-				};
-			};
-		};
-		class Item92
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7184.415,40.868217,12765.553};
-					id=226;
-					side="WEST";
-					vehicle="US_Delta_Force_TL_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Support (Supply run)";
-					synchronizations[]={49,226};
-				};
-			};
-		};
-		class Item93
+		}
+		class Item46
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3658,8 +2624,8 @@ class Mission
 					synchronizations[]={122};
 				};
 			};
-		};
-		class Item94
+		}
+		class Item47
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3675,8 +2641,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item95
+		}
+		class Item48
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3692,8 +2658,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item96
+		}
+		class Item49
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3709,8 +2675,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item97
+		}
+		class Item50
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3726,8 +2692,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item98
+		}
+		class Item51
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3744,316 +2710,8 @@ class Mission
 					init="this setVariable [""wfbe_default"", west]; this setVariable [""wfbe_spawn"", ""north""];";
 				};
 			};
-		};
-		class Item99
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7191.0483,41.212936,12765.159};
-					id=233;
-					side="WEST";
-					vehicle="US_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item100
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7191.1768,41.176159,12763.963};
-					id=234;
-					side="WEST";
-					vehicle="US_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item101
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7191.3242,41.138805,12762.711};
-					id=235;
-					side="WEST";
-					vehicle="US_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item102
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7457.9102,269.74365,46.990051};
-					id=236;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item103
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7457.9448,269.68002,44.981354};
-					id=237;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item104
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7457.8828,269.63797,43.224823};
-					id=238;
-					side="EAST";
-					vehicle="TK_Soldier_Medic_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item105
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7182.3696,40.907455,12767.356};
-					id=239;
-					side="WEST";
-					vehicle="US_Delta_Force_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item106
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7186.6836,40.962727,12766.928};
-					id=240;
-					side="WEST";
-					vehicle="US_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={240,49};
-				};
-			};
-		};
-		class Item107
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7186.6655,40.893341,12765.201};
-					id=241;
-					side="WEST";
-					vehicle="US_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item108
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7182.3701,40.863903,12765.755};
-					id=242;
-					side="WEST";
-					vehicle="US_Delta_Force_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={49};
-				};
-			};
-		};
-		class Item109
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7454.355,270.14099,52.718964};
-					id=243;
-					side="EAST";
-					vehicle="TK_Special_Forces_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item110
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7454.3091,270.03751,48.667755};
-					id=244;
-					side="EAST";
-					vehicle="TK_Special_Forces_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item111
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7465.1523,269.60342,50.347839};
-					id=245;
-					side="EAST";
-					vehicle="TK_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item112
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={7465.0576,269.50781,48.078857};
-					id=246;
-					side="EAST";
-					vehicle="TK_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
-					synchronizations[]={50};
-				};
-			};
-		};
-		class Item113
+		}
+		class Item52
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4069,8 +2727,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item114
+		}
+		class Item53
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4086,34 +2744,8 @@ class Mission
 					skill=0.60000002;
 				};
 			};
-		};
-		class Item115
-		{
-			side="CIV";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={4748.8306,4.2693748,12540.03};
-					id=249;
-					side="CIV";
-					vehicle="TK_CIV_Takistani03_EP1";
-					player="PLAY CDG";
-					forceHeadlessClient=1;
-					leader=1;
-					skill=0.60000002;
-					text="HC";
-					init="this allowdamage false;this setPosATL (getPos this);";
-					description="Headless Client 2";
-				};
-			};
-		};
-		// --- Task-12 Takistan airfield capture logics (parity with Chernarus NWAF/NEAF/Balota) ---
-		// Loy Manara AF: depot capture point + single camp on apron east of runway.
-		// Nearest LocationLogicAirport (id=66) at {8191.4199,296.04001,1803.4586} is found by
-		//   server_town.sqf 1500m nearEntities search on depot pos — no changes needed to id=66.
-		class Item116
+		}
+		class Item54
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4146,11 +2778,8 @@ class Mission
 					synchronizations[]={250};
 				};
 			};
-		};
-		// Rasman AF: depot capture point + single camp on apron west of runway.
-		// Nearest LocationLogicAirport (id=78) at {5689.9028,83.046074,11181.199} is found
-		//   automatically by server_town.sqf nearEntities 1500m search.
-		class Item117
+		}
+		class Item55
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4183,8 +2812,8 @@ class Mission
 					synchronizations[]={252};
 				};
 			};
-		};
-		class Item118
+		}
+		class Item56
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4199,11 +2828,669 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_GUE";
-					synchronizations[]={255,256,257,258};
+					synchronizations[]={7030,7031,7032,7033};
 				};
 			};
-		};
-		class Item119
+		}
+		class Item57
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7000;
+					side="WEST";
+					vehicle="FR_Corpsman";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item58
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7001;
+					side="WEST";
+					vehicle="FR_Corpsman";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item59
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7002;
+					side="WEST";
+					vehicle="FR_Corpsman";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item60
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7003;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item61
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7004;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item62
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7005;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item63
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7006;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item64
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7007;
+					side="WEST";
+					vehicle="FR_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Support (Supply run)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item65
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7008;
+					side="WEST";
+					vehicle="FR_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Support (Supply run)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item66
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7009;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item67
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7010;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item68
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7011;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item69
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7012;
+					side="WEST";
+					vehicle="USMC_SoldierS_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item70
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7182.2349,41.073147,12771.534};
+					id=7013;
+					side="WEST";
+					vehicle="USMC_SoldierS_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item71
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7014;
+					side="EAST";
+					vehicle="RUS_Soldier_Medic";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item72
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7015;
+					side="EAST";
+					vehicle="RUS_Soldier_Medic";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item73
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7016;
+					side="EAST";
+					vehicle="RUS_Soldier_Medic";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item74
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7017;
+					side="EAST";
+					vehicle="Ins_Soldier_CO";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item75
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7018;
+					side="EAST";
+					vehicle="Ins_Soldier_CO";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item76
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7019;
+					side="EAST";
+					vehicle="Ins_Soldier_CO";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item77
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7020;
+					side="EAST";
+					vehicle="Ins_Soldier_CO";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item78
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7021;
+					side="EAST";
+					vehicle="RUS_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Support (Supply run)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item79
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7022;
+					side="EAST";
+					vehicle="RUS_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Support (Supply run)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item80
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7023;
+					side="EAST";
+					vehicle="RUS_Soldier1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item81
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7024;
+					side="EAST";
+					vehicle="RUS_Soldier1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item82
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7025;
+					side="EAST";
+					vehicle="RUS_Soldier1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item83
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7026;
+					side="EAST";
+					vehicle="RU_Soldier_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item84
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={4738.8306,4.2693748,12540.03};
+					id=7027;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client";
+				};
+			};
+		}
+		class Item85
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7454.5591,270.25867,57.020081};
+					id=7028;
+					side="EAST";
+					vehicle="RU_Soldier_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
+					synchronizations[]={50};
+				};
+			};
+		}
+		class Item86
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={4738.8306,4.2693748,12540.03};
+					id=7029;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 2";
+				};
+			};
+		}
+		class Item87
 		{
 			side="GUER";
 			class Vehicles
@@ -4212,75 +3499,9 @@ class Mission
 				class Item0
 				{
 					position[]={12503.479,208.02589,12528.001};
-					id=255;
+					id=7030;
 					side="GUER";
-					vehicle="TK_GUE_Soldier_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="CORPORAL";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Insurgent Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={254};
-				};
-			};
-		};
-		class Item120
-		{
-			side="GUER";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={12507.479,208.02589,12528.001};
-					id=256;
-					side="GUER";
-					vehicle="TK_GUE_Soldier_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="CORPORAL";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Insurgent Engineer (Repair, Salvage, Camps restore)";
-					synchronizations[]={254};
-				};
-			};
-		};
-		class Item121
-		{
-			side="GUER";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={12503.479,208.02589,12532.001};
-					id=257;
-					side="GUER";
-					vehicle="TK_GUE_Soldier_Sniper_EP1";
-					player="PLAY CDG";
-					leader=1;
-					rank="CORPORAL";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="Insurgent Sniper (Spot marks, Lockpick, Camps restore)";
-					synchronizations[]={254};
-				};
-			};
-		};
-		class Item122
-		{
-			side="GUER";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={12507.479,208.02589,12532.001};
-					id=258;
-					side="GUER";
-					vehicle="TK_GUE_Bonesetter_EP1";
+					vehicle="GUE_Soldier_Medic";
 					player="PLAY CDG";
 					leader=1;
 					rank="CORPORAL";
@@ -4290,7 +3511,73 @@ class Mission
 					synchronizations[]={254};
 				};
 			};
-		};
+		}
+		class Item88
+		{
+			side="GUER";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12503.479,208.02589,12528.001};
+					id=7031;
+					side="GUER";
+					vehicle="GUE_Soldier_Sab";
+					player="PLAY CDG";
+					leader=1;
+					rank="CORPORAL";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Insurgent Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={254};
+				};
+			};
+		}
+		class Item89
+		{
+			side="GUER";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12503.479,208.02589,12528.001};
+					id=7032;
+					side="GUER";
+					vehicle="GUE_Soldier_Sab";
+					player="PLAY CDG";
+					leader=1;
+					rank="CORPORAL";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Insurgent Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={254};
+				};
+			};
+		}
+		class Item90
+		{
+			side="GUER";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12503.479,208.02589,12528.001};
+					id=7033;
+					side="GUER";
+					vehicle="GUE_Soldier_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="CORPORAL";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Insurgent Sniper (Spot marks, Lockpick, Camps restore)";
+					synchronizations[]={254};
+				};
+			};
+		}
 	};
 	class Markers
 	{
