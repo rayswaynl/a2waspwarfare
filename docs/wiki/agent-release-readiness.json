@@ -1353,8 +1353,8 @@
     {
       "id": "client-skill-init-idempotency",
       "priority": "P2",
-      "sourceStatus": "docs-source-current-stable-b741-b69-b74-clientfps-carry-single-init",
-      "vanillaStatus": "docs-source-current-stable-b741-b69-b74-clientfps-vanilla-carry-single-init",
+      "sourceStatus": "docs-source-current-stable-b741-b742-b69-b74-clientfps-carry-single-init",
+      "vanillaStatus": "docs-source-current-stable-b741-b742-b69-b74-clientfps-vanilla-carry-single-init",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Client-Skill-Init-Idempotency.md",
@@ -1362,29 +1362,34 @@
         "Feature-Status-Register.md"
       ],
       "evidenceRefs": [
+        "repo docs branch HEAD@1df5200fa485 checked skill-init paths unchanged from b2738971",
         "docs/source@b2738971 Chernarus Client/Init/Init_Client.sqf:547 single Skill_Init and :571 WFBE_SK_FNC_Apply",
         "docs/source@b2738971 maintained Vanilla Client/Init/Init_Client.sqf:547 single Skill_Init and :571 WFBE_SK_FNC_Apply",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf:49",
+        "docs/source Skill_Init.sqf:49 multiplies local WFBE_C_PLAYERS_AI_MAX for Soldier class; Client_PreRespawnHandler.sqf:5 reapplies WFBE_SK_FNC_Apply without rerunning Skill_Init",
         "origin/master@f8a76de34 / origin/claude/b74.1-aicom@f8a76de34 Chernarus/Vanilla Client/Init/Init_Client.sqf:805 single Skill_Init and :828 WFBE_SK_FNC_Apply; scoped queue-path diff from 0139a3468609 to f8a76de34 touches only maintained-root Client/Init/Init_Client.sqf",
+        "origin/claude/b74.2-aicom@21b62b04 Chernarus Client/Init/Init_Client.sqf:828 single Skill_Init and :851 WFBE_SK_FNC_Apply; maintained Vanilla remains :805 and :828",
+        "origin/master..origin/claude/b74.2-aicom and d472da6a..21b62b04 touch source-Chernarus Init_Client.sqf among checked skill-init paths but do not add a duplicate Skill_Init call",
         "origin/claude/b69@8d465fce and origin/claude/b74-aicom-spend@b23f557f Chernarus/Vanilla Client/Init/Init_Client.sqf:805 single Skill_Init and :828 WFBE_SK_FNC_Apply",
         "origin/feat/client-fps@709258e7 Chernarus Client/Init/Init_Client.sqf:613 single Skill_Init and :636 WFBE_SK_FNC_Apply; Vanilla :583 and :606",
-        "historical release-line a96fdda2 Chernarus/Vanilla Client/Init/Init_Client.sqf:563/:586 and 7ff18c49 :564/:587; no live origin release/* head on 2026-06-23",
+        "historical release-line a96fdda2 Chernarus/Vanilla Client/Init/Init_Client.sqf:563/:586 and 7ff18c49 :564/:587; no live origin release/* head on 2026-06-24",
         "miksuu/master@b8389e748243 Chernarus/Vanilla Client/Init/Init_Client.sqf:560 and :584 duplicate Skill_Init before :585 apply",
         "origin/perf/quick-wins@0076040f and historical origin/feat/ai-commander@c20ce153 Chernarus/Vanilla Client/Init/Init_Client.sqf:561 and :585 duplicate Skill_Init before :586 apply"
       ],
       "releaseGate": "Smoke Soldier/non-Soldier AI caps and respawn skill reapply.",
       "branchStatus": {
         "stableMaster": "f8a76de34-b741-single-init-in-chernarus-and-vanilla-at-805-828",
-        "b69": "8d465fce-single-init-in-chernarus-and-vanilla",
-        "b74": "b23f557f-single-init-in-chernarus-and-vanilla",
+        "b742": "21b62b04-single-init-source-chernarus-828-851-vanilla-805-828",
+        "b69": "8d465fce-single-init-in-chernarus-and-vanilla-at-805-828",
+        "b74": "b23f557f-single-init-in-chernarus-and-vanilla-at-805-828",
         "clientFps": "709258e7-single-init-in-both-maintained-roots-with-line-drift",
         "historicalReleaseLine": "a96fdda2-and-7ff18c49-single-init-in-chernarus-and-vanilla-no-live-release-head",
         "currentMiksuu": "b8389e748243-duplicate-init-in-chernarus-and-vanilla",
         "perfQuickWins": "0076040f-duplicate-init-in-chernarus-and-vanilla",
         "historicalFeatAi": "c20ce153-duplicate-init-in-chernarus-and-vanilla",
-        "docsSource": "b2738971-single-init-in-chernarus-and-vanilla",
-        "evidence": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-23"
-      }
+        "docsSource": "1df5200fa485-source-unchanged-from-b2738971-single-init-in-chernarus-and-vanilla",
+        "evidence": "Source-Fix-Propagation-Queue.md#current-branch-scope-2026-06-24"
+      },
+      "updated": "2026-06-24T14:05:00+02:00"
     },
     {
       "id": "hosted-server-fps-loop-sleep",
