@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T21:45:00+02:00",
+  "generatedAt": "2026-06-24T22:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,33 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "attack-wave-authority-current-b742-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Attack-Wave-Authority-Playbook.md branch/root matrix and current branch scope",
+        "Feature-Status-Register.md attack-wave authority row",
+        "Source-Fix-Propagation-Queue.md attack-wave direct-PV authority row",
+        "Server-Authority-Migration-Map.md attack-wave authority row",
+        "Public-Variable-Channel-Index.md direct-channel inventory only if current B74.2 wording is stale",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AttackWaveActivate.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AttackWave.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/AttackWave.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan matching maintained-root attack-wave request/detail/client-price paths"
+      ],
+      "handoff": "Closed as published/validated docs-only current B74.2 refresh. Keep attack-wave direct publicVariable authority separate from generic PVF dispatcher lookup, SEND_MESSAGE direct compile and side-supply clamp work. B74.2 origin/claude/b74.2-aicom@21b62b04 keeps request/detail trust in both maintained roots and only line-drifts source-Chernarus buy-menu/constants context. No gameplay source changed.",
+      "updated": "2026-06-24T22:30:00+02:00",
+      "outputs": [
+        "Updated Attack-Wave-Authority-Playbook.md branch/root matrix with current B74.2 evidence.",
+        "Updated Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Server-Authority-Migration-Map.md and Public-Variable-Channel-Index.md with compact B74.2 route wording.",
+        "Updated attack-wave machine rows and coordination surfaces; docs/wiki mirror and validation passed."
+      ]
+    },
     {
       "lane": "b745-aicom-attack-heli-base-route-2026-06-24",
       "owner": "Codex",

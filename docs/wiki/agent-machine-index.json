@@ -230,7 +230,7 @@
       "id": "direct-publicvariable-channels",
       "system": "direct publicVariableServer/publicVariableClient/state channels",
       "riskTier": "P0",
-      "branchScope": "master_current",
+      "branchScope": "current-b741-b742-direct-pv-open",
       "canonicalDocs": [
         "Public-Variable-Channel-Index",
         "Networking-And-Public-Variables",
@@ -250,7 +250,7 @@
         "agent-feature-status.jsonl#side-supply-clamp-first",
         "agent-hardening-backlog.jsonl#attack-wave-authority"
       ],
-      "nextGate": "Do not describe PVF dispatcher hardening as full PV security; direct channels need per-channel server recomputation or request redesign. For side supply, preserve/port the Chernarus floor-to-zero candidate, propagate or scope maintained Vanilla, validate side/channel/amount/requester consistency and keep reason parsing separate from authority closure."
+      "nextGate": "Do not describe PVF dispatcher hardening as full PV security; direct channels need per-channel server recomputation or request redesign. For attack waves, current stable/B74.1 and current B74.2 still trust ATTACK_WAVE_INIT/DETAILS payloads; B74.2 only line-drifts source-Chernarus buy-menu/constants context. For side supply, preserve/port the Chernarus floor-to-zero candidate, propagate or scope maintained Vanilla, validate side/channel/amount/requester consistency and keep reason parsing separate from authority closure."
     },
     {
       "id": "economy-authority-class",
