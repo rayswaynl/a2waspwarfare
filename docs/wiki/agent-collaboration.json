@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T03:15:22+02:00",
+  "generatedAt": "2026-06-24T03:36:03+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "requestspecial-upgrade-sync-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh RequestSpecial upgrade-sync rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Client/GUI/GUI_UpgradeMenu.sqf, Server/Functions/Server_HandleSpecial.sqf and Server/Functions/Server_ProcessUpgrade.sqf in source Chernarus and maintained Vanilla.",
+        "Keep Support-Specials-And-Tactical-Modules-Atlas and Upgrades-And-Research-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 upgrade-sync evidence.",
+        "Recorded that docs/source HEAD@373e21c1274c is unchanged from a7f383b6 for checked handler/caller/process paths and that d472da6a..21b62b04, origin/master..B74.2 and B69..B74 are empty for those paths.",
+        "Updated Progress Dashboard, pruning ledger, worklog and upgrade-sync machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future upgrades/support owner should keep the B74.1 wfbe_upgrading_end_time improvement separate from the still-open RequestSpecial tuple-parser cleanup unless a code lane explicitly patches both maintained roots.",
+      "updated": "2026-06-24T03:36:03+02:00"
+    },
     {
       "lane": "buy-menu-price-key-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
