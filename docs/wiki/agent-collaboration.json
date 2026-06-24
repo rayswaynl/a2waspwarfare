@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T07:45:00+02:00",
+  "generatedAt": "2026-06-24T08:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "economy-dialog-current-b742-head-refresh-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refreshed Economy dialog stale-control/resource parity rows that still routed current stable through older origin/master@0139a346 wording and did not name current origin/claude/b74.2-aicom@21b62b04.",
+        "Checked only Client/GUI/GUI_Menu_Economy.sqf and Rsc/Dialogs.hpp in source Chernarus and maintained Vanilla, plus scoped branch diffs needed to support UI/resource parity wording.",
+        "Keep UI-Resource-Parity-Cleanup and Client-UI-Systems-Atlas canonical; update Feature Status, pruning and coordination records only as needed.",
+        "No gameplay source edits."
+      ],
+      "outputs": [
+        "Updated UI-Resource-Parity-Cleanup.md, Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Dead-Code-And-Stale-Code-Register.md and Economy dialog machine rows with current stable/B74.1 f8a76de34 plus current B74.2 21b62b04 evidence.",
+        "Recorded that repo docs branch HEAD@427346b0d is unchanged from 21f0d53b / d2a3f995 / b5219d47 for checked Economy paths and still writes stale 23004/23005/23006 while RscMenu_Economy lacks those controls and 23020.",
+        "Recorded that current stable/B74.1/current B74.2/B69/B74 and historical a96fdda2 use declared 23020 in both maintained roots; checked B74.2 head diffs are empty and 0139a3468609..origin/master only changes source-Chernarus dashboard label text."
+      ],
+      "handoff": "Future UI owner should preserve current stable/B74.1/B74.2/B69/B74/release 23020 repair and port it only to old-shape docs/Miksuu/perf targets that still write 23004/23005/23006; then smoke Economy commander/non-commander disabled state, income controls, sell mode, supply-truck respawn and maintained Vanilla parity.",
+      "updated": "2026-06-24T08:15:00+02:00"
+    },
     {
       "lane": "commander-reassignment-agent-context-current-head-cleanup-2026-06-24",
       "owner": "Codex",
