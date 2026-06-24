@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-24T02:44:46+02:00",
+  "generatedAt": "2026-06-24T02:58:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "empty-supply-truck-b742-current-head-followup-2026-06-24",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Refresh empty supply-truck cleanup timeout rows that still name B74.2 origin/claude/b74.2-aicom@d472da6a after the branch advanced to current origin/claude/b74.2-aicom@21b62b04.",
+        "Check only Server/FSM/emptyvehiclescollector.sqf and Server/Functions/Server_HandleEmptyVehicle.sqf in source Chernarus and maintained Vanilla, with branch-head probes for cleanup/supply rescue refs.",
+        "Keep Marker-Cleanup-Restoration-Systems-Atlas as canonical, updating Feature Status, Source Fix queue, pruning ledger and machine rows only as needed.",
+        "No gameplay source edits planned."
+      ],
+      "outputs": [
+        "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with current B74.2 origin/claude/b74.2-aicom@21b62b04 empty supply-truck cleanup evidence.",
+        "Recorded that docs/source HEAD@248baa289ca5 is unchanged from 499c2543 / b4e10b5f for checked collector/handler paths and that d472da6a..21b62b04 is empty for emptyvehiclescollector.sqf and Server_HandleEmptyVehicle.sqf in both maintained roots.",
+        "Updated Progress Dashboard, pruning ledger, worklog and machine rows; no gameplay source changed."
+      ],
+      "handoff": "Future runtime/logistics owner should decide keep-and-label versus shorter/parameterized supply-truck timeout, then patch source Chernarus plus maintained Vanilla only if changing behavior and smoke ordinary empty vehicles, double-timeout medical/repair vehicles, supply/logistics use and long-match object counts.",
+      "updated": "2026-06-24T02:58:00+02:00"
+    },
     {
       "lane": "vehicle-cargo-b742-current-head-followup-2026-06-24",
       "owner": "Codex",
