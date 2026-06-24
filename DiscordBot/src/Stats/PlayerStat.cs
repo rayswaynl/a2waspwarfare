@@ -19,6 +19,9 @@ public class PlayerStat
     [DataMember(Name = "defenses_built")]   public int DefensesBuilt;
     [DataMember(Name = "playtime_seconds")] public int PlaytimeSeconds;
     [DataMember(Name = "side")]             public int Side;
+    // In-game player name (latest seen). The website /api/stats reads this as `name`
+    // and stores it as display_name so unlinked players show a real name.
+    [DataMember(Name = "name")]             public string? Name;
 
     public const int FieldCount = 15;
 

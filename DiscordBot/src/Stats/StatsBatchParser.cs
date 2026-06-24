@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-public struct StatSegment { public string Uid; public int[] Deltas; public int Side; }
+public struct StatSegment { public string Uid; public int[] Deltas; public int Side; public string? Name; }
 public struct ParsedBatch { public int Seq; public List<StatSegment> Segments; }
 
 public static class StatsBatchParser
@@ -28,14 +28,25 @@ public static class StatsBatchParser
             if (colon <= 0) continue;
             var uid = parts[p].Substring(0, colon);
             if (!UidRe.IsMatch(uid)) continue;
-            var nums = parts[p].Substring(colon + 1).Split(',');
+            // Optional "~<name>" suffix after the numeric CSV. Split on the FIRST '~' so a
+            // tilde inside a name is preserved; the numeric fields are always before it.
+            var afterColon = parts[p].Substring(colon + 1);
+            string? segName = null;
+            var tilde = afterColon.IndexOf('~');
+            if (tilde >= 0)
+            {
+                segName = afterColon.Substring(tilde + 1);
+                afterColon = afterColon.Substring(0, tilde);
+                if (segName.Length == 0) segName = null;
+            }
+            var nums = afterColon.Split(',');
             if (nums.Length != PlayerStat.FieldCount + 1) continue;   // 15 deltas + side
             var deltas = new int[PlayerStat.FieldCount];
             bool ok = true;
             for (int k = 0; k < PlayerStat.FieldCount; k++)
                 if (!int.TryParse(nums[k], out deltas[k])) { ok = false; break; }
             if (!ok || !int.TryParse(nums[PlayerStat.FieldCount], out var side)) continue;
-            segments.Add(new StatSegment { Uid = uid, Deltas = deltas, Side = side });
+            segments.Add(new StatSegment { Uid = uid, Deltas = deltas, Side = side, Name = segName });
         }
         batch = new ParsedBatch { Seq = seq, Segments = segments };
         return true;

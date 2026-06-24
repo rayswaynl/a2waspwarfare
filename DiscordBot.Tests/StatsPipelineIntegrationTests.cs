@@ -79,7 +79,7 @@ public class StatsPipelineIntegrationTests
         foreach (var key in new[] {
             "kills_infantry","kills_vehicle","kills_air","kills_static","kills_factory","kills_hq",
             "deaths","pvp_kills","supply_runs","supply_value","captures_town","captures_camp",
-            "structures_built","defenses_built","playtime_seconds","side" })
+            "structures_built","defenses_built","playtime_seconds","side","name" })
             Assert.Contains($"\"{key}\"", json);
 
         Directory.Delete(dir, true);

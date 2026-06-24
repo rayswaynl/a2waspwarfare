@@ -20,6 +20,7 @@ public class StatsAccumulator
                 }
                 for (int i = 0; i < PlayerStat.FieldCount; i++) p.AddDelta(i, seg.Deltas[i]);
                 if (seg.Side >= 0) p.Side = seg.Side;
+                if (seg.Name != null) p.Name = seg.Name;   // latest-seen name; preserved when absent
                 Dirty = true;
             }
         }

@@ -21,6 +21,8 @@ while {true} do {
 				[_uid, WFBE_STAT_PLAYTIME, WFBE_C_STATS_FLUSH_INTERVAL] call WFBE_SE_FNC_RecordStat;
 				_sideNum = switch (side _x) do { case west: {1}; case east: {2}; default {0} };
 				[_uid, _sideNum] call WFBE_SE_FNC_RecordStatSide;
+				// cache the in-game name to attach to this UID's next flushed segment
+				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, name _x];
 			};
 		};
 	} forEach (call BIS_fnc_listPlayers);
@@ -31,7 +33,7 @@ while {true} do {
 		_seq = _seq + 1;
 		_line = "WASPSTAT|v1|" + str _seq;
 		{
-			private ["_uid","_buf","_sideNum","_csv"];
+			private ["_uid","_buf","_sideNum","_csv","_pname"];
 			_uid = _x;
 			_buf = missionNamespace getVariable ["WFBE_STAT_BUF_" + _uid, []];
 			if (count _buf >= WFBE_STAT_FIELD_COUNT) then {
@@ -39,8 +41,13 @@ while {true} do {
 				_csv = "";
 				{ _csv = _csv + (str _x) + ","; } forEach _buf;   // 15 deltas
 				_csv = _csv + (str _sideNum);                      // + trailing side
-				_line = _line + "|" + _uid + ":" + _csv;
-				missionNamespace setVariable ["WFBE_STAT_BUF_" + _uid, nil];   // clear buffer (delta sent)
+				// Attach the cached in-game name after a "~" separator. A name containing "|"
+				// degrades to a truncated name on the parser side (numeric stats stay intact),
+				// so no fragile A2 string-stripping is needed.
+				_pname = missionNamespace getVariable ["WFBE_STAT_NAME_" + _uid, ""];
+				_line = _line + "|" + _uid + ":" + _csv + "~" + _pname;
+				missionNamespace setVariable ["WFBE_STAT_BUF_" + _uid, nil];    // clear buffer (delta sent)
+				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, nil];   // clear cached name
 			};
 		} forEach WFBE_STATS_DIRTY_UIDS;
 		WFBE_STATS_DIRTY_UIDS = [];

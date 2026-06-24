@@ -39,4 +39,32 @@ public class StatsBatchParserTests
         Assert.True(StatsBatchParser.TryParseLine(line, out var batch));
         Assert.Empty(batch.Segments);
     }
+
+    [Fact]
+    public void Parses_optional_name_after_tilde()
+    {
+        var line = $"WASPSTAT|v1|9|{Seg}~Steffie";
+        Assert.True(StatsBatchParser.TryParseLine(line, out var batch));
+        var seg = Assert.Single(batch.Segments);
+        Assert.Equal("76561198000000000", seg.Uid);
+        Assert.Equal("Steffie", seg.Name);
+        Assert.Equal(60, seg.Deltas[14]);   // numeric fields unaffected by the name suffix
+        Assert.Equal(1, seg.Side);
+    }
+
+    [Fact]
+    public void Name_is_null_when_no_tilde_suffix()
+    {
+        var line = $"WASPSTAT|v1|9|{Seg}";
+        Assert.True(StatsBatchParser.TryParseLine(line, out var batch));
+        Assert.Null(Assert.Single(batch.Segments).Name);
+    }
+
+    [Fact]
+    public void Name_keeps_internal_tilde()
+    {
+        var line = $"WASPSTAT|v1|9|{Seg}~Foo~Bar";
+        Assert.True(StatsBatchParser.TryParseLine(line, out var batch));
+        Assert.Equal("Foo~Bar", Assert.Single(batch.Segments).Name);
+    }
 }
