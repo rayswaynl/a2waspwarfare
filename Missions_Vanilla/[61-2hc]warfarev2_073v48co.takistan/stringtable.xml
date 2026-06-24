@@ -463,6 +463,20 @@
         <Russian>%1 модернизация завершена, достигнут уровень %2.</Russian>
         <Italian>Aggiornamento %1 Completato, %1 è ora a Livello %2.</Italian>
       </Key>
+      <Key ID="STR_WF_CHAT_Upgrade_Value_ArtyReload">
+        <English>Artillery reload is now %1s.</English>
+        <French>Le rechargement de l'artillerie est maintenant de %1s.</French>
+        <German>Artillerie-Nachladezeit jetzt %1s.</German>
+        <Russian>Перезарядка артиллерии теперь %1с.</Russian>
+        <Italian>Il ricarico dell'artiglieria ora è di %1s.</Italian>
+      </Key>
+      <Key ID="STR_WF_CHAT_Upgrade_Value_RespawnRange">
+        <English>Respawn range is now %1m.</English>
+        <French>La portée de réapparition est maintenant de %1m.</French>
+        <German>Respawn-Reichweite jetzt %1m.</German>
+        <Russian>Радиус возрождения теперь %1м.</Russian>
+        <Italian>Il raggio di rinascita ora è di %1m.</Italian>
+      </Key>
       <Key ID="STR_WF_CHAT_VoteForNewCommander">
         <English>%1 is the Commander.</English>
         <French>%1 est le Commandeur.</French>
@@ -1044,6 +1058,13 @@
         <German>&lt;t align='left' color='#8A9269'&gt;My Funds: $&lt;t color='#76F563'&gt;%1&lt;/t&gt;.&lt;/t&gt;</German>
         <Russian>&lt;t align='left' color='#8A9269'&gt;Мой баланс: $&lt;t color='#76F563'&gt;%1&lt;/t&gt;.&lt;/t&gt;</Russian>
         <Italian>&lt;t align='left' color='#8A9269'&gt;My Funds: $&lt;t color='#76F563'&gt;%1&lt;/t&gt;.&lt;/t&gt;</Italian>
+      </Key>
+      <Key ID="STR_WF_INFO_NewHQCost">
+        <English>New HQ cost: $%1</English>
+        <French>Coût d'un nouveau QG: $%1</French>
+        <German>Kosten für neues HQ: $%1</German>
+        <Russian>Стоимость нового штаба: $%1</Russian>
+        <Italian>Costo nuovo QG: $%1</Italian>
       </Key>
       <Key ID="STR_WF_INFO_Funds_Missing"><!--shared W-->
         <English>&lt;t color='#F8D664'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; You are currently missing $&lt;t color='#85B5FA'&gt;%1&lt;/t&gt; in order to buy: &lt;t color='#85B5FA'&gt;%2&lt;/t&gt;.</English>

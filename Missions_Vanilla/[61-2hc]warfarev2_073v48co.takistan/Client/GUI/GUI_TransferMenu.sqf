@@ -123,6 +123,10 @@ while {alive player && dialog} do {
 		_cmdPercent = WFBE_Client_Logic getVariable ["wfbe_commander_percent", 0];
 		_fundsText = Format [localize "STR_WF_INFO_Funds", _funds];
 		_fundsText = _fundsText + Format ["<br />Team: $%1  |  Cmd share: %2%3", _teamTotal, _cmdPercent, "%"];
+		//--- Trello #204: surface the price of a new HQ so the commander can weigh a transfer
+		//--- against the cost of (re)deploying a base. Reads the same constant the structure
+		//--- configs charge for the HQ (Common\Config\Core_Structures\*: WFBE_C_STRUCTURES_HQ_COST_DEPLOY).
+		_fundsText = _fundsText + Format ["<br />" + (localize "STR_WF_INFO_NewHQCost"), missionNamespace getVariable "WFBE_C_STRUCTURES_HQ_COST_DEPLOY"];
 		((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505004) ctrlSetStructuredText (parseText _fundsText);
 	};
 
