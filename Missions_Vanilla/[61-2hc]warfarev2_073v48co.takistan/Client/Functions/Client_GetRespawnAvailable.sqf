@@ -2,6 +2,7 @@ Private ["_availableSpawn","_base_respawn","_buildings","_checks","_deathLoc","_
 
 _side = _this select 0;
 _deathLoc = _this select 1;
+if (isNil "_side") exitWith {[]}; //--- B754 (Ray 2026-06-25): never return nil; callers forEach the result, and a nil return spams "Undefined variable _x" client-side.
 _sideText = str _side;
 
 //--- Base.

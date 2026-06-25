@@ -551,6 +551,23 @@ if (!isNull _enemyHQ && {alive _enemyHQ}) then {
 		_strikeOn = (_myTowns >= _strikeMinTowns) && (_myTowns >= _enemyTowns * 1.5) && (_myStr >= _enStr * 1.1);   //--- B69 entry; Steff's rule: never HQ-rush while behind on towns (gate was >8, now ~half-map fraction)
 	};
 };
+//--- B754 (Ray 2026-06-25) RELATIVE ROUND-CLOSER GATE + STALL OVERRIDE. The absolute 12-town gate (above) is
+//--- unreachable in a lopsided game: the b753 soak had WEST hold 11 towns vs EAST's dug-in 2 (myEff 70 vs 53) yet
+//--- never hit 12, so HQ-strike NEVER armed and the round ran 8.4h with no winner. Let a runaway leader close BELOW
+//--- the absolute gate: fire when we out-town the enemy AND dominate on EFFECTIVE strength (maneuver + held-town
+//--- credit) AND (enemy collapsed to <= ENEMY_MAX towns OR we hold a >= TOWN_RATIO town lead); plus a stall-override
+//--- after STALL_OVERRIDE consecutive dominant-but-passive stalls. Effective strength is recomputed locally (the
+//--- POSTURE block's _myEff/_enEff is computed later in the worker). Never fires while behind on towns/strength.
+if (!isNull _enemyHQ && {alive _enemyHQ} && {_myTowns > _enemyTowns}) then {
+	private ["_rTownStr","_rMyEff","_rEnEff"];
+	_rTownStr = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2];
+	_rMyEff = _myStr + (_myTowns * _rTownStr);
+	_rEnEff = _enStr + (_enemyTowns * _rTownStr);
+	if (_rMyEff >= _rEnEff) then {
+		if ((_enemyTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 2])) || {_myTowns >= (_enemyTowns * (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 3]))}) then {_strikeOn = true};
+		if ((_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])) then {_strikeOn = true};
+	};
+};
 //--- B752 (Ray 2026-06-25): STICKY STRIKE. The recall gate used RAW maneuver _myStr, which dips below the concentrated
 //--- enemy the moment the leader garrisons towns -> the strike flapped off after ~30min (27x dominant-but-passive stall,
 //--- 0 round-enders in the 12h soak). Keep it committed while EFFECTIVE strength (maneuver + held-town credit) still
@@ -702,6 +719,9 @@ diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|
 //--- A2-OA-safe: pure diag_log, all operands already computed this tick; no sim/distance-gating; no antistack.
 if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * 2)} && {_posture != "PRESS"} && {!_strikeOn}) then {
 	diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
+	_logik setVariable ["wfbe_aicom_stall_streak", (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + 1]; //--- B754 (Ray 2026-06-25): count consecutive dominant-but-passive stalls; the HQ-strike relative gate uses this for a stall-triggered override. (No reset needed: the override only re-fires while still effective-strength-dominant, which is exactly when we want to close.)
+} else {
+	_logik setVariable ["wfbe_aicom_stall_streak", 0];
 };
 // END POSTURE + FRONT
 

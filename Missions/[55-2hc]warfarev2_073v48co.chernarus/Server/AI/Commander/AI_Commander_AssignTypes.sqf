@@ -165,6 +165,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 				//--- never starved/frozen). Defaults 1.0 => byte-identical until the consts land.
 				_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])];
 				_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
+					_dWeights set [3, (_dWeights select 3) * (1 + (((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT", 2.5]) - 1)))]; //--- B754: heli time-bias (mirror of Teams.sqf) for the no-HC fallback path.
 				//--- Zero out classes with no buildable template so the roll only lands on achievable types.
 				for "_bi" from 0 to 3 do {
 					if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};

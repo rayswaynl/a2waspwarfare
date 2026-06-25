@@ -25,6 +25,7 @@
 //---     reader in GUI_Menu_BuyUnits.sqf:341. No WFBE_GUEAIRPORTUNITS var exists. Nothing to fix.
 
 if (!isServer) exitWith {};
+if !(missionNamespace getVariable ["IS_naval_map", false]) exitWith {["INFORMATION", Format ["Init_NavalHVT.sqf : IS_naval_map=false (worldName=%1) - naval carriers are a NAVAL-MAP-ONLY feature, disabled here. B754 (Ray 2026-06-25): explicit guard (Takistan) instead of the incidental missing-Khe-Sanh-logic bail; kills the per-round WARNING.", worldName]] Call WFBE_CO_FNC_LogContent};
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) != 1) exitWith {
 	["INFORMATION", "Init_NavalHVT.sqf : WFBE_C_NAVAL_HVT=0 — feature is OFF, skipping."] Call WFBE_CO_FNC_LogContent;
 };
@@ -161,7 +162,7 @@ _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdAlphaParts select 3;
-_bb = [[0,0,0],[0,0,16]];
+_bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdAlphaLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdAlphaLogic setVariable ["wfbe_is_naval_hvt", true, true];
@@ -181,7 +182,7 @@ _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdBravoParts select 3;
-_bb = [[0,0,0],[0,0,16]];
+_bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdBravoLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdBravoLogic setVariable ["wfbe_is_naval_hvt", true, true];
@@ -196,7 +197,7 @@ _lhdCharlieParts = [[_aCharlie select 0, _aCharlie select 1, 0], 90] Call WFBE_N
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdCharlieParts select 3;
-_bb = [[0,0,0],[0,0,16]];
+_bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdCharlieLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdCharlieLogic setVariable ["wfbe_is_naval_hvt", true, true];
@@ -307,7 +308,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 	_navHangar setPosASL [_navPos select 0, _navPos select 1, _navDeckZ];
 	_navHangar setDir ((getDir _navLoc) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
 	_navHangar enableSimulation false;
-	_navHangar allowDamage false;
+	_navHangar allowDamage false; _navHangar hideObjectGlobal true; //--- B754 (Ray 2026-06-25): carrier air-shop = LOGIC ONLY. Keep the object alive (Client_GetClosestAirport needs !isNull && alive) but hide the hangar building's model+geometry globally (JIP-safe, OA 1.62+); all air-buy gates still find it.
 	_navHangar setVariable ["wfbe_is_airfield_hangar", true, true];
 
 	//--- Wire the logic as an airfield + carrier-capture ref.

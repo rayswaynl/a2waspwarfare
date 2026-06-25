@@ -321,7 +321,7 @@ while {!WFBE_GameOver} do {
 						_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
 						_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
 						_newHangar enableSimulation false;
-						_newHangar allowDamage false;
+						_newHangar allowDamage false; _newHangar hideObjectGlobal true; //--- B754 (Ray 2026-06-25): carrier hangar = logic only (hidden building); kept alive for the airport gate. Mirror of the Init_NavalHVT spawn site.
 						_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
 						_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
 						_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
