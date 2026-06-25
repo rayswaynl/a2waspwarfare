@@ -166,6 +166,12 @@ _findBuildPos = {
 					if (surfaceIsWater [_sx, _sy, 0]) then {_blocked = true};
 					//--- standoff must survive the empty-pos settle (>= 12m off the carriageway).
 					if (((_cand distance _rp) < 12)) then {_blocked = true};
+						//--- B752 (Ray 2026-06-25): also reject a candidate that SETTLED ONTO a road (paved OR DIRT).
+						//--- The 16m offset is from the CHOSEN usable road (kept >12m off above), but GetEmptyPosition can
+						//--- drift _cand onto an ADJACENT dirt track (flat+empty = preferred) = the "factory on a dirt road"
+						//--- Ray reported. nearRoads 9 catches any carriageway node under the footprint; the chosen road is
+						//--- >12m off so it is not caught; the 40-try near-road budget refinds a clean spot.
+						if (!_blocked && {count (_cand nearRoads 9) > 0}) then {_blocked = true};
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
