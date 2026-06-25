@@ -11,6 +11,8 @@
   /* ---------- menu: faction + difficulty pickers ------------------------- */
   let chosenFac = "USMC";
   let chosenDiff = "veteran";
+  let chosenMap = "chernarus";
+  let chosenWin = "conquest";
 
   function buildFactionPick() {
     const wrap = $("factionPick");
@@ -44,8 +46,34 @@
     }
   }
 
+  function buildMapPick() {
+    const wrap = $("mapPick"); wrap.innerHTML = "";
+    for (const id of Object.keys(DATA.MAPS)) {
+      const m = DATA.MAPS[id];
+      const el = document.createElement("button");
+      el.className = "pick-card pick-diff" + (chosenMap === id ? " sel" : "");
+      el.innerHTML = `<span class="pick-name">${m.name}</span>
+        <span class="pick-sub">${m.biome === "desert" ? "Arid · open" : "Forested · cover"}</span>`;
+      el.onclick = () => { chosenMap = id; buildMapPick(); };
+      wrap.appendChild(el);
+    }
+  }
+  function buildWinPick() {
+    const wrap = $("winPick"); wrap.innerHTML = "";
+    for (const id of Object.keys(DATA.WIN_CONDITIONS)) {
+      const w = DATA.WIN_CONDITIONS[id];
+      const el = document.createElement("button");
+      el.className = "pick-card pick-diff" + (chosenWin === id ? " sel" : "");
+      el.innerHTML = `<span class="pick-name">${w.name}</span><span class="pick-sub">${w.desc}</span>`;
+      el.onclick = () => { chosenWin = id; buildWinPick(); };
+      wrap.appendChild(el);
+    }
+  }
+
   buildFactionPick();
   buildDiffPick();
+  buildMapPick();
+  buildWinPick();
 
   /* ---------- canvas sizing ---------------------------------------------- */
   const board = $("board");
@@ -75,7 +103,8 @@
     $("endScreen").classList.add("hidden");
     $("pauseOverlay").classList.add("hidden");
 
-    game = createGame({ faction: chosenFac, difficulty: chosenDiff, seed: 1337 });
+    game = createGame({ faction: chosenFac, difficulty: chosenDiff,
+      map: chosenMap, winCond: chosenWin, seed: 1337 });
     game.ai = createAI(game);
 
     // HUD faction chrome
@@ -98,7 +127,7 @@
       pauseSpeedBtn: $("pauseSpeedBtn"), volSlider: $("volSlider"), muteBtn: $("muteBtn"),
     };
 
-    Sound.init(); Sound.resume();
+    Sound.init(); Sound.resume(); Sound.startMusic();
     if (UI && UI.destroy) UI.destroy(); // tear down a prior match's listeners
     sizeCanvas();
     UI = createUI(game, refs);
@@ -151,6 +180,7 @@
   function endGame() {
     running = false;
     $("pauseOverlay").classList.add("hidden");
+    Sound.stopMusic();
     const won = game.over.winner === game.playerFac;
     won ? Sound.win() : Sound.lose();
     const es = $("endScreen");

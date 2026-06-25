@@ -7,26 +7,23 @@ const Render = (() => {
   "use strict";
   const { FACTIONS } = DATA;
 
-  // Precomputed terrain decoration (forests / fields), generated once per world.
+  // Terrain decoration, rebuilt when the map changes. Gameplay forests (from the
+  // map data, where infantry get cover) render as dense canopy; ambient blobs and
+  // fields are cosmetic.
   let decor = null;
-  function buildDecor(world, seed) {
-    const rng = U.makeRng(seed);
-    const forests = [];
-    for (let i = 0; i < 46; i++) {
-      forests.push({
-        x: rng() * world.w, y: rng() * world.h,
-        r: 50 + rng() * 150, a: 0.06 + rng() * 0.06,
-      });
-    }
+  function buildDecor(game) {
+    const world = game.WORLD, M = game.MAP;
+    const rng = U.makeRng(M.id.length * 131 + 7);
+    const desert = M.biome === "desert";
+    const forests = (M.forests || []).map((f) => ({ x: f.x, y: f.y, r: f.r, gameplay: true }));
+    const ambient = [];
+    for (let i = 0; i < 34; i++) ambient.push({
+      x: rng() * world.w, y: rng() * world.h, r: 35 + rng() * 90, a: 0.03 + rng() * 0.05 });
     const fields = [];
-    for (let i = 0; i < 26; i++) {
-      fields.push({
-        x: rng() * world.w, y: rng() * world.h,
-        w: 120 + rng() * 260, h: 80 + rng() * 180, a: 0.04 + rng() * 0.05,
-        rot: rng() * 0.6 - 0.3,
-      });
-    }
-    decor = { forests, fields };
+    for (let i = 0; i < 26; i++) fields.push({
+      x: rng() * world.w, y: rng() * world.h,
+      w: 120 + rng() * 260, h: 80 + rng() * 180, a: 0.03 + rng() * 0.05, rot: rng() * 0.6 - 0.3 });
+    decor = { key: M.id, forests, ambient, fields, desert };
   }
 
   function nodePos(game, id) {
@@ -41,11 +38,8 @@ const Render = (() => {
     ctx.fillStyle = "#10160e";
     ctx.fillRect(0, 0, view.w, view.h);
 
-    if (!decor) buildDecor(game.WORLD, 99);
-
-    // visible world rect
-    const tl = cam.screenToWorld(0, 0);
-    const br = cam.screenToWorld(view.w, view.h);
+    if (!decor || decor.key !== game.MAP.id) buildDecor(game);
+    const tint = game.MAP.tint;
 
     ctx.save();
     ctx.translate(-cam.x * cam.zoom, -cam.y * cam.zoom);
@@ -53,8 +47,8 @@ const Render = (() => {
 
     // base ground tint
     const g = ctx.createLinearGradient(0, 0, 0, game.WORLD.h);
-    g.addColorStop(0, "#1a2415");
-    g.addColorStop(1, "#141d11");
+    g.addColorStop(0, tint.top);
+    g.addColorStop(1, tint.bot);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, game.WORLD.w, game.WORLD.h);
 
@@ -62,20 +56,36 @@ const Render = (() => {
     for (const f of decor.fields) {
       ctx.save();
       ctx.translate(f.x, f.y); ctx.rotate(f.rot);
-      ctx.fillStyle = `rgba(150,160,90,${f.a})`;
+      ctx.fillStyle = decor.desert ? `rgba(190,165,90,${f.a})` : `rgba(150,160,90,${f.a})`;
       ctx.fillRect(-f.w / 2, -f.h / 2, f.w, f.h);
       ctx.restore();
     }
-    // forests
-    for (const f of decor.forests) {
+    // ambient blobs
+    for (const f of decor.ambient) {
       ctx.beginPath();
-      ctx.fillStyle = `rgba(30,60,28,${f.a + 0.05})`;
-      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = tint.forest + (f.a + 0.03) + ")";
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+    }
+    // gameplay forests (cover) — denser canopy with a soft edge
+    for (const f of decor.forests) {
+      ctx.beginPath(); ctx.fillStyle = tint.forest + "0.22)";
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.fillStyle = tint.forest + "0.18)";
+      ctx.arc(f.x, f.y, f.r * 0.7, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = tint.forest + "0.3)"; ctx.lineWidth = 2 / cam.zoom;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.stroke();
     }
 
+    // craters (ground particles, under everything)
+    for (const p of game.parts) if (p.kind === "crater") {
+      ctx.globalAlpha = U.clamp(1 - p.t / p.life, 0, 0.6) * 0.7;
+      ctx.fillStyle = p.col + "0.7)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
     // grid
-    ctx.strokeStyle = "rgba(120,150,90,0.05)";
+    ctx.strokeStyle = tint.grid;
     ctx.lineWidth = 1 / cam.zoom;
     const step = 200;
     for (let x = 0; x <= game.WORLD.w; x += step) {
@@ -110,11 +120,29 @@ const Render = (() => {
 
     // fx on top
     for (const e of game.fx) drawFx(ctx, e);
+    // airborne particles (smoke, sparks)
+    for (const p of game.parts) {
+      if (p.kind === "crater") continue;
+      const k = p.t / p.life;
+      if (p.kind === "smoke") {
+        ctx.globalAlpha = (1 - k) * 0.5;
+        ctx.fillStyle = p.col + "1)";
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      } else if (p.kind === "spark") {
+        ctx.globalAlpha = 1 - k;
+        ctx.fillStyle = p.col + "1)";
+        ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+      }
+    }
+    ctx.globalAlpha = 1;
     for (const f of game.floats) {
       ctx.globalAlpha = U.clamp(1.1 - f.t, 0, 1);
       ctx.fillStyle = f.col; ctx.font = "bold 13px monospace";
       ctx.fillText(f.txt, f.x, f.y); ctx.globalAlpha = 1;
     }
+
+    // ---- fog of war + day/night (world space) ----
+    drawFog(ctx, game, cam, view);
 
     ctx.restore(); // world transform
 
@@ -212,10 +240,12 @@ const Render = (() => {
   }
 
   function drawUnit(ctx, game, u, ui) {
+    // fog of war: hide non-player units the player can't currently see
+    if (u.fac !== game.playerFac && !game.isVisible(u.x, u.y)) return;
     const isSel = ui.sel && ui.sel.has(u);
     const c = u.fac === "GARRISON" ? "#b9b9a0" : FACTIONS[u.fac].color;
     const cat = u.def.cat;
-    const size = cat === "inf" ? 5 : cat === "light" ? 8 : cat === "heavy" ? 10 : 9;
+    const size = u.outpost ? 13 : cat === "inf" ? 5 : cat === "light" ? 8 : cat === "heavy" ? 10 : 9;
 
     ctx.save();
     ctx.translate(u.x, u.y);
@@ -235,14 +265,19 @@ const Render = (() => {
     ctx.rotate(u.heading + Math.PI / 2);
     ctx.fillStyle = u.hitFlash > 0 ? "#fff" : c;
     ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1;
-    if (u.emplacement) {
-      // sandbag strongpoint: octagon ring + colored core
-      ctx.rotate(-(u.heading + Math.PI / 2)); // emplacements don't rotate
+    if (u.emplacement || u.outpost) {
+      // sandbag strongpoint / outpost: ring + colored core (never rotates)
+      ctx.rotate(-(u.heading + Math.PI / 2));
       ctx.fillStyle = "rgba(90,84,60,0.95)";
       U.roundRect(ctx, -size - 2, -size - 2, (size + 2) * 2, (size + 2) * 2, 3); ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.stroke();
       ctx.fillStyle = u.hitFlash > 0 ? "#fff" : c;
       U.roundRect(ctx, -size + 2, -size + 2, (size - 2) * 2, (size - 2) * 2, 2); ctx.fill();
+      if (u.outpost) { // flag on the outpost
+        ctx.fillStyle = "#2c2c2c"; ctx.fillRect(-1, -size - 12, 2, 12);
+        ctx.fillStyle = c;
+        ctx.beginPath(); ctx.moveTo(1, -size - 12); ctx.lineTo(11, -size - 8); ctx.lineTo(1, -size - 4); ctx.closePath(); ctx.fill();
+      }
       if (u.building) { // under construction: scaffolding hatch
         ctx.strokeStyle = "rgba(255,210,90,0.8)"; ctx.lineWidth = 1.4;
         ctx.beginPath(); ctx.moveTo(-size, -size); ctx.lineTo(size, size);
@@ -340,6 +375,38 @@ const Render = (() => {
   }
 
   /* ---- minimap ---------------------------------------------------------- */
+  /* ---- fog of war (smooth, via a small offscreen buffer) + day/night ----- */
+  let fogBuf = null, fogCtx = null, fogData = null, fogKey = "";
+  function ensureFog(game) {
+    const V = game.vision, key = V.cols + "x" + V.rows;
+    if (fogKey !== key) {
+      fogBuf = document.createElement("canvas");
+      fogBuf.width = V.cols; fogBuf.height = V.rows;
+      fogCtx = fogBuf.getContext("2d");
+      fogData = fogCtx.createImageData(V.cols, V.rows);
+      fogKey = key;
+    }
+  }
+  function drawFog(ctx, game, cam, view) {
+    const V = game.vision; ensureFog(game);
+    const d = fogData.data, n = V.cols * V.rows;
+    for (let i = 0; i < n; i++) {
+      const o = i * 4; d[o] = 5; d[o + 1] = 8; d[o + 2] = 6;
+      d[o + 3] = V.visible[i] ? 0 : (V.explored[i] ? 120 : 236);
+    }
+    fogCtx.putImageData(fogData, 0, 0);
+    const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(fogBuf, 0, 0, game.WORLD.w, game.WORLD.h);
+    ctx.imageSmoothingEnabled = sm;
+    // day/night blue tint over the visible world rectangle
+    const tl = cam.screenToWorld(0, 0), br = cam.screenToWorld(view.w, view.h);
+    const nightA = U.clamp((0.7 - game.daylight) * 0.7, 0, 0.5);
+    if (nightA > 0.01) {
+      ctx.fillStyle = `rgba(14,22,46,${nightA})`;
+      ctx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+    }
+  }
+
   function drawMinimap(ctx, game, cam, view, mmW, mmH) {
     ctx.clearRect(0, 0, mmW, mmH);
     ctx.fillStyle = "rgba(12,18,10,0.92)";
@@ -357,9 +424,10 @@ const Render = (() => {
       ctx.fillStyle = FACTIONS[fid].color;
       ctx.fillRect(hq.x * sx - 3, hq.y * sy - 3, 6, 6);
     }
-    // units
+    // units (enemy/neutral only shown where the player has vision)
     for (const u of game.units) {
       if (!u.alive) continue;
+      if (u.fac !== game.playerFac && !game.isVisible(u.x, u.y)) continue;
       ctx.fillStyle = u.fac === "GARRISON" ? "#b9b9a0" : FACTIONS[u.fac].color;
       ctx.fillRect(u.x * sx - 1, u.y * sy - 1, 2, 2);
     }

@@ -41,6 +41,7 @@ function createUI(game, refs) {
     refs.panelTabs.innerHTML = "";
     const tabs = CATEGORIES.map((c) => ({ id: c.id, label: c.tab, hot: c.hot }));
     tabs.push({ id: "base", label: "BASE", hot: "T" });
+    tabs.push({ id: "upgrade", label: "UPGRADE", hot: "Y" });
     for (const t of tabs) {
       const el = document.createElement("button");
       el.className = "ptab" + (state.tab === t.id ? " active" : "");
@@ -106,6 +107,40 @@ function createUI(game, refs) {
             <span class="btime">${d.sup} sup</span>
           </span>`;
         card.onclick = () => { armTargeting("defense", d.id, d); };
+        refs.panelBody.appendChild(card);
+      }
+      return;
+    }
+
+    if (state.tab === "upgrade") {
+      const note = document.createElement("div");
+      note.className = "panel-subhead"; note.style.borderTop = "none"; note.style.marginTop = "2px";
+      note.textContent = "COMMANDER UPGRADES — permanent, army-wide";
+      refs.panelBody.appendChild(note);
+      for (const up of DATA.UPGRADES) {
+        const info = game.upgInfo(facId, up.id);
+        const maxed = info.lvl >= info.max;
+        const afford = !maxed && side.funds >= info.cost;
+        const card = document.createElement("button");
+        card.className = "bcard" + (maxed ? " built" : afford ? "" : " poor");
+        card.disabled = maxed;
+        const pips = Array.from({ length: info.max }, (_, i) =>
+          `<i class="pip${i < info.lvl ? " on" : ""}"></i>`).join("");
+        card.innerHTML = `
+          <span class="bglyph up">${up.glyph}</span>
+          <span class="bmain">
+            <span class="bname">${up.name} <span class="uppips">${pips}</span></span>
+            <span class="bdesc">${up.desc}</span>
+          </span>
+          <span class="bcost">
+            <span class="bfunds ${afford ? "" : "no"}">${maxed ? "MAX" : "$" + U.fmtNum(info.cost)}</span>
+            <span class="btime">L${info.lvl}/${info.max}</span>
+          </span>`;
+        card.onclick = () => {
+          const r = game.buyUpgrade(facId, up.id);
+          if (!r.ok) { flash(r.reason); Sound.deny(); } else Sound.build();
+          renderPanel();
+        };
         refs.panelBody.appendChild(card);
       }
       return;
@@ -234,6 +269,13 @@ function createUI(game, refs) {
     refs.statSupply.textContent = game.supplyUsed(facId) + "/" + game.supplyCap(facId);
     refs.statTowns.textContent = game.townsOwned(facId) + "/" + game.towns.length;
     refs.statUnits.textContent = game.unitsOfSide(facId).length;
+    // domination progress (if that win condition is active)
+    const dp = game.domProgress && game.domProgress(facId);
+    if (dp != null) {
+      const ep = game.domProgress(game.enemyFac);
+      refs.statTowns.textContent += `  ⏱${Math.round(dp * 100)}%`;
+      refs.statTowns.style.color = dp > 0 ? "#7ef07e" : (ep > 0 ? "#ff8a6a" : "");
+    }
     refs.hudClock.textContent = U.fmtTime(game.clock);
     const supEl = refs.statSupply;
     supEl.style.color = game.supplyUsed(facId) >= game.supplyCap(facId) ? "#ff8a6a" : "";
@@ -253,10 +295,37 @@ function createUI(game, refs) {
     const rows = Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([n, c]) => `<span class="seltag">${c}× ${n}</span>`).join("");
+
+    const sel = [...state.sel];
+    const movable = sel.filter((u) => !u.emplacement && !u.outpost);
+    const hasTruck = sel.some((u) => u.def.supplyTruck);
+    // dominant stance among the selection
+    let stance = movable.length ? movable[0].stance : null;
+    for (const u of movable) if (u.stance !== stance) { stance = "mixed"; break; }
+    const stances = [["aggressive", "AGGR"], ["defensive", "DEF"], ["hold", "HOLD"], ["holdfire", "FIRE✕"]];
+    const stanceBtns = movable.length ? `<div class="cc-row">` +
+      stances.map(([s, lbl]) =>
+        `<button class="ccbtn${stance === s ? " on" : ""}" data-stance="${s}">${lbl}</button>`).join("") +
+      `</div>` : "";
+    const outpostBtn = hasTruck
+      ? `<div class="cc-row"><button class="ccbtn wide" data-outpost="1">⛏ Deploy Outpost (O)</button></div>` : "";
+
     refs.selInfo.innerHTML =
       `<div class="sel-head">${state.sel.size} SELECTED · ${Math.round(100 * hp / Math.max(1, maxhp))}% combat</div>
        <div class="sel-rows">${rows}</div>
-       <div class="sel-hint">right-click to move / attack · S stop · A attack-move</div>`;
+       ${stanceBtns}${outpostBtn}
+       <div class="sel-hint">right-click move/attack · S stop · A attack-move</div>`;
+
+    refs.selInfo.querySelectorAll("[data-stance]").forEach((b) =>
+      b.onclick = () => { game.setStance([...state.sel], b.dataset.stance); Sound.ui(); refreshSelInfo(); });
+    const ob = refs.selInfo.querySelector("[data-outpost]");
+    if (ob) ob.onclick = () => doDeployOutpost();
+  }
+
+  function doDeployOutpost() {
+    const n = game.deployOutposts([...state.sel]);
+    if (n) { flash(`Deploying ${n} forward outpost${n > 1 ? "s" : ""}`, "good"); Sound.power(); refreshSelInfo(); }
+    else { flash("Select a supply truck first", "warn"); Sound.deny(); }
   }
 
   /* ---------- ticker ------------------------------------------------------ */
@@ -415,7 +484,7 @@ function createUI(game, refs) {
   on(refs.minimap, "contextmenu", (ev) => ev.preventDefault());
 
   /* ---------- keyboard ---------------------------------------------------- */
-  const TAB_KEYS = { q: "inf", w: "light", e: "heavy", r: "air", t: "base" };
+  const TAB_KEYS = { q: "inf", w: "light", e: "heavy", r: "air", t: "base", y: "upgrade" };
   on(window, "keydown", (ev) => {
     const k = ev.key.toLowerCase();
     if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { panKeys[k] = true; return; }
@@ -430,6 +499,7 @@ function createUI(game, refs) {
     }
     if (k === "h") cam.centerOn(game.sides[facId].hq.x, game.sides[facId].hq.y);
     else if (k === "s" && state.sel.size) { game.issueStop([...state.sel]); Sound.ui(); }
+    else if (k === "o" && state.sel.size) doDeployOutpost();
     else if (k === "tab") { ev.preventDefault(); cycleIdle(); }
     else if (k in TAB_KEYS) { state.tab = TAB_KEYS[k]; renderPanel(); Sound.ui(); }
     else if (k in POWER_KEYS) {
@@ -584,7 +654,7 @@ function createUI(game, refs) {
     const side = game.sides[facId];
     const cards = refs.panelBody.querySelectorAll(".bcard");
     if (!cards.length) return;
-    if (state.tab === "base") { renderPanel(); return; }
+    if (state.tab === "base" || state.tab === "upgrade") { renderPanel(); return; }
     const list = ROSTER[facId].filter((u) => u.cat === state.tab);
     const unlocked = game.catUnlocked(facId, state.tab);
     cards.forEach((card, i) => {

@@ -97,6 +97,15 @@ function createAI(game) {
       const r = game.queueUnit(fac, id);
       if (!r.ok) break;
     }
+
+    // 3) Invest surplus into upgrades (economy first, then combat).
+    if (side.funds > 1200) {
+      const order = ["economy", "weapons", "armor", "logistics", "production"];
+      for (const uid of order) {
+        const info = game.upgInfo(fac, uid);
+        if (info.cost != null && side.funds > info.cost + 700) { game.buyUpgrade(fac, uid); break; }
+      }
+    }
   }
 
   function micro(dt) {

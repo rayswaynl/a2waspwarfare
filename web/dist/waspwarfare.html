@@ -1,0 +1,3692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WASP Warfare — Web Edition</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141a12'/%3E%3Ctext x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23e3c14a' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E" />
+<style>
+/* =============================================================================
+ * WASP WARFARE — WEB EDITION  ·  styles.css
+ * Dark tactical HUD. Olive/amber field, faction-accented chrome.
+ * ========================================================================== */
+
+:root {
+  --bg: #0c100a;
+  --panel: #141a12;
+  --panel-2: #1b2317;
+  --line: #2c3826;
+  --ink: #d7ddc8;
+  --ink-dim: #8b977b;
+  --amber: #e3c14a;
+  --good: #6ad06a;
+  --bad: #e8674f;
+  --side: #4ea3ff;
+  --enemy: #ff5a4d;
+  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); overflow: hidden; user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+.hidden { display: none !important; }
+kbd {
+  font-family: var(--mono); font-size: 11px; background: #222b1c; border: 1px solid var(--line);
+  border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: var(--ink);
+}
+
+/* ============ MENU / BRIEFING ============ */
+.screen {
+  position: fixed; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 50;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #1c2616 0%, transparent 60%),
+    repeating-linear-gradient(45deg, #0c100a 0 22px, #0e120b 22px 44px);
+}
+.menu-card {
+  width: min(680px, 92vw); background: linear-gradient(180deg, #161d12, #11160e);
+  border: 1px solid var(--line); border-radius: 14px; padding: 30px 34px 26px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.menu-brand { text-align: center; margin-bottom: 8px; }
+.brand-mark {
+  display: inline-block; font-family: var(--mono); letter-spacing: 6px; font-size: 13px;
+  color: var(--amber); background: #231f0c; border: 1px solid #4a3f12;
+  padding: 4px 14px; border-radius: 20px; margin-bottom: 10px;
+}
+.menu-brand h1 {
+  margin: 6px 0 2px; font-size: 52px; letter-spacing: 10px; font-weight: 800;
+  background: linear-gradient(180deg, #eef1e0, #aab394); -webkit-background-clip: text;
+  background-clip: text; color: transparent; text-shadow: 0 2px 30px rgba(227,193,74,0.1);
+}
+.brand-sub { margin: 0; color: var(--ink-dim); font-family: var(--mono); font-size: 12px; letter-spacing: 3px; }
+.menu-blurb { color: #b6bfa3; line-height: 1.55; font-size: 14px; text-align: center; margin: 14px auto 18px; max-width: 92%; }
+.menu-blurb em { color: var(--amber); font-style: normal; }
+
+.menu-faction { margin: 14px 0; }
+.menu-label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--ink-dim); margin-bottom: 8px; }
+.faction-pick, .diff-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.diff-pick { grid-template-columns: 1fr 1fr 1fr; }
+
+.pick-card {
+  display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; cursor: pointer; color: var(--ink); text-align: left; transition: .12s;
+}
+.pick-card:hover { border-color: #46583a; transform: translateY(-1px); }
+.pick-card.sel { border-color: var(--c, var(--amber)); box-shadow: 0 0 0 1px var(--c, var(--amber)) inset, 0 6px 20px rgba(0,0,0,0.4); background: #1f2818; }
+.pick-flag { font-size: 22px; line-height: 1; }
+.pick-name { font-weight: 700; font-size: 16px; letter-spacing: 1px; }
+.pick-sub { font-size: 11.5px; color: var(--ink-dim); line-height: 1.3; }
+.pick-diff.sel { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+
+.btn-primary {
+  margin-top: 20px; width: 100%; padding: 14px; font-family: var(--mono); font-size: 16px;
+  letter-spacing: 4px; font-weight: 700; color: #11160e; cursor: pointer;
+  background: linear-gradient(180deg, #e7c84f, #c9a52f); border: none; border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(201,165,47,0.3); transition: .12s;
+}
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.menu-help { margin-top: 16px; font-size: 13px; color: var(--ink-dim); }
+.menu-help summary { cursor: pointer; font-family: var(--mono); letter-spacing: 1px; color: var(--amber); }
+.menu-help ul { margin: 10px 0 0; padding-left: 18px; line-height: 1.7; }
+.menu-help b { color: var(--ink); }
+.menu-foot { margin-top: 18px; color: #586049; font-size: 11px; font-family: var(--mono); letter-spacing: 1px; }
+
+/* ============ GAME SHELL ============ */
+#game {
+  position: fixed; inset: 0; display: grid;
+  grid-template-rows: 56px 1fr; grid-template-columns: 1fr 320px;
+  grid-template-areas: "top top" "stage panel";
+}
+
+/* TOP HUD */
+#topbar {
+  grid-area: top; display: flex; align-items: center; gap: 18px; padding: 0 16px;
+  background: linear-gradient(180deg, #19211400, #141a12), var(--panel);
+  border-bottom: 1px solid var(--line); z-index: 5;
+}
+.hud-group { display: flex; align-items: center; gap: 10px; }
+.hud-faction { min-width: 150px; }
+.hud-flag {
+  font-size: 26px; width: 40px; height: 40px; display: grid; place-items: center;
+  background: #10160e; border: 1px solid var(--line); border-radius: 8px;
+}
+.hud-side { font-family: var(--mono); font-weight: 700; font-size: 16px; letter-spacing: 2px; color: var(--side); }
+.hud-side-sub { font-size: 9px; letter-spacing: 2px; color: var(--ink-dim); }
+
+.hud-stats { display: flex; gap: 8px; flex: 1; }
+.stat {
+  display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto;
+  align-items: center; gap: 0 8px; background: #10160e; border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 12px; min-width: 92px;
+}
+.stat-ico { grid-row: 1 / 3; font-size: 18px; color: var(--ink-dim); }
+.stat-val { font-family: var(--mono); font-weight: 700; font-size: 17px; line-height: 1; }
+.stat-lbl { font-size: 9px; letter-spacing: 1.5px; color: var(--ink-dim); }
+.stat-lbl i { font-style: normal; color: var(--good); margin-left: 4px; }
+
+.hud-right { margin-left: auto; gap: 8px; }
+.hud-clock { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--amber); min-width: 58px; text-align: center; }
+.hud-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line);
+  background: #10160e; color: var(--ink); cursor: pointer; font-size: 14px; transition: .12s;
+}
+.hud-btn:hover { border-color: #46583a; color: var(--amber); }
+.hud-btn.on { color: var(--amber); border-color: var(--amber); }
+
+/* STAGE / CANVAS */
+#stage { grid-area: stage; position: relative; overflow: hidden; background: #0a0d08; }
+#board { position: absolute; inset: 0; cursor: crosshair; display: block; }
+
+.sel-info {
+  position: absolute; left: 12px; bottom: 12px; background: rgba(12,18,8,0.88);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; max-width: 360px;
+  backdrop-filter: blur(4px); pointer-events: none;
+}
+.sel-head { font-family: var(--mono); font-size: 12px; letter-spacing: 1px; color: var(--amber); margin-bottom: 6px; }
+.sel-rows { display: flex; flex-wrap: wrap; gap: 5px; }
+.seltag { font-size: 11px; background: #1c2417; border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; color: var(--ink); }
+.sel-hint { margin-top: 7px; font-size: 10px; color: var(--ink-dim); }
+
+.minimap {
+  position: absolute; right: 12px; bottom: 12px; width: 220px; height: 144px;
+  border: 1px solid var(--line); border-radius: 8px; background: #0a0d08;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5); cursor: pointer;
+}
+
+.ticker {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; z-index: 4;
+}
+.tick-line {
+  font-family: var(--mono); font-size: 12.5px; padding: 6px 14px; border-radius: 20px;
+  background: rgba(12,18,8,0.9); border: 1px solid var(--line); color: var(--ink);
+  opacity: 0; transform: translateY(-8px); transition: .35s;
+}
+.tick-line.show { opacity: 1; transform: translateY(0); }
+.tick-line.good { border-color: #2f6a2f; color: var(--good); }
+.tick-line.bad { border-color: #6a2f2f; color: var(--bad); }
+.tick-line.warn { border-color: #6a5d2f; color: var(--amber); }
+
+/* PANEL */
+#panel {
+  grid-area: panel; display: flex; flex-direction: column; background: var(--panel);
+  border-left: 1px solid var(--line); min-height: 0;
+}
+.panel-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); }
+.ptab {
+  flex: 1 1 30%; min-width: 0; font-family: var(--mono); font-size: 10.5px; letter-spacing: 1px;
+  padding: 8px 4px; background: #10160e; color: var(--ink-dim); border: 1px solid var(--line);
+  border-radius: 7px; cursor: pointer; position: relative; transition: .12s;
+}
+.ptab:hover { color: var(--ink); }
+.ptab.active { background: #1f2818; color: var(--amber); border-color: #4a5a36; }
+.ptab-hot {
+  position: absolute; top: 3px; right: 4px; font-size: 8px; opacity: .5;
+  border: 1px solid currentColor; border-radius: 3px; padding: 0 2px;
+}
+
+.panel-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.panel-body::-webkit-scrollbar { width: 8px; }
+.panel-body::-webkit-scrollbar-thumb { background: #2c3826; border-radius: 4px; }
+
+.panel-lock {
+  font-size: 12px; color: var(--ink-dim); background: #181f13; border: 1px dashed var(--line);
+  border-radius: 8px; padding: 10px; line-height: 1.5;
+}
+.panel-lock b { color: var(--amber); }
+
+.bcard {
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px;
+  padding: 8px 10px; cursor: pointer; color: var(--ink); text-align: left; transition: .1s;
+}
+.bcard:hover { border-color: #46583a; background: #212a1a; }
+.bcard:active { transform: scale(0.99); }
+.bcard.poor { opacity: 0.5; }
+.bcard.poor:hover { border-color: var(--bad); }
+.bcard.built { opacity: 0.65; cursor: default; }
+.bcard.built:hover { border-color: var(--line); background: var(--panel-2); }
+.bglyph {
+  width: 34px; height: 34px; display: grid; place-items: center; font-family: var(--mono);
+  font-weight: 700; font-size: 15px; background: #10160e; border: 1px solid var(--line);
+  border-radius: 7px; color: var(--side);
+}
+.bmain { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bname { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bdesc { font-size: 10.5px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bcost { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.bfunds { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--amber); }
+.bfunds.no { color: var(--bad); }
+.btime { font-size: 10px; color: var(--ink-dim); font-family: var(--mono); }
+.bsup { font-size: 10px; color: var(--ink-dim); }
+
+.panel-foot { border-top: 1px solid var(--line); padding: 8px; background: #10160e; }
+.queue-title { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--ink-dim); margin-bottom: 6px; }
+.queue-list { display: flex; flex-direction: column; gap: 4px; max-height: 132px; overflow-y: auto; }
+.queue-empty { font-size: 11px; color: #4d553f; font-family: var(--mono); text-align: center; padding: 6px; }
+.qitem { display: grid; grid-template-columns: 22px 1fr 60px; align-items: center; gap: 8px; }
+.qglyph { font-family: var(--mono); font-weight: 700; font-size: 12px; color: var(--side); text-align: center; }
+.qstruct .qglyph { color: var(--amber); }
+.qname { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qbar { height: 6px; background: #10160e; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.qbar i { display: block; height: 100%; background: linear-gradient(90deg, #3f7f3f, #6ad06a); transition: width .12s linear; }
+.qstruct .qbar i { background: linear-gradient(90deg, #8a7220, #e3c14a); }
+
+/* END SCREEN */
+.end-card {
+  width: min(440px, 92vw); background: linear-gradient(180deg, #161d12, #11160e);
+  border: 1px solid var(--line); border-radius: 14px; padding: 30px; text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+.end-card h2 { font-size: 44px; letter-spacing: 8px; margin: 0 0 6px; }
+.end-card h2.win { color: var(--good); text-shadow: 0 0 30px rgba(106,208,106,0.3); }
+.end-card h2.lose { color: var(--bad); text-shadow: 0 0 30px rgba(232,103,79,0.3); }
+#endText { color: var(--ink-dim); margin: 0 0 18px; }
+.end-stats { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; text-align: left; }
+.es-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 12px; background: #10160e; border: 1px solid var(--line); border-radius: 7px; }
+.es-row span { color: var(--ink-dim); }
+.es-row b { font-family: var(--mono); color: var(--ink); }
+
+@media (max-width: 760px) {
+  #game { grid-template-columns: 1fr; grid-template-rows: 56px 1fr 230px; grid-template-areas: "top" "stage" "panel"; }
+  #panel { border-left: none; border-top: 1px solid var(--line); }
+  .minimap { width: 150px; height: 100px; }
+}
+
+/* =============================================================================
+ * BUILD-OUT ADDITIONS — powers, defenses, targeting, pause/settings, veterancy
+ * ========================================================================== */
+
+/* panel sub-heading + defense / arming states */
+.panel-subhead {
+  margin: 10px 2px 2px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  color: var(--ink-dim); border-top: 1px solid var(--line); padding-top: 10px;
+}
+.bglyph.def { color: var(--amber); }
+.bcard.arming { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; background: #221d0c; }
+
+/* support power bar (bottom-center of stage) */
+.power-bar {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 4;
+}
+.pwr {
+  position: relative; width: 88px; height: 60px; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  background: rgba(16,22,14,0.92); border: 1px solid var(--line); border-radius: 9px;
+  color: var(--ink); cursor: pointer; transition: .12s; backdrop-filter: blur(3px);
+}
+.pwr:hover { border-color: #46583a; transform: translateY(-1px); }
+.pwr.arming { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+.pwr.cooling { opacity: 0.55; cursor: default; }
+.pwr-key {
+  position: absolute; top: 3px; left: 5px; font-family: var(--mono); font-size: 9px;
+  color: var(--ink-dim); border: 1px solid var(--line); border-radius: 3px; padding: 0 3px;
+}
+.pwr-glyph { font-size: 20px; line-height: 1; color: var(--amber); }
+.pwr-name { font-size: 10px; letter-spacing: 0.5px; }
+.pwr-cost { font-family: var(--mono); font-size: 10px; color: var(--good); }
+.pwr-cd {
+  position: absolute; bottom: 0; left: 0; width: 100%;
+  background: rgba(20,26,16,0.78); pointer-events: none;
+}
+.pwr-cdtxt {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--mono); font-weight: 700; font-size: 16px; color: var(--amber); pointer-events: none;
+}
+
+/* targeting banner */
+.target-banner {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(40,33,8,0.95); border: 1px solid var(--amber); border-radius: 20px;
+  padding: 7px 16px; font-size: 12.5px; color: var(--amber); z-index: 6;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+.target-banner b { color: #fff; }
+
+/* pause / settings overlay */
+#pauseOverlay {
+  background: rgba(8,11,7,0.82);
+  backdrop-filter: blur(3px);
+}
+.pause-card {
+  width: min(440px, 92vw); background: linear-gradient(180deg, #161d12, #11160e);
+  border: 1px solid var(--line); border-radius: 14px; padding: 26px 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+.pause-card h2 { margin: 0 0 16px; text-align: center; letter-spacing: 8px; font-size: 30px; color: var(--amber); }
+.pause-settings { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--ink-dim); }
+.set-row input[type=range] { width: 150px; accent-color: var(--amber); }
+.toggle {
+  font-family: var(--mono); font-size: 12px; padding: 4px 12px; min-width: 54px;
+  background: #1f2818; color: var(--good); border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
+}
+.toggle.off { color: var(--ink-dim); }
+.pause-controls { border-top: 1px solid var(--line); padding-top: 14px; margin-bottom: 18px; }
+.pause-controls b { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--ink-dim); }
+.pc-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin-top: 8px; font-size: 12px; }
+.pc-grid span { color: var(--ink); font-family: var(--mono); }
+.pc-grid i { color: var(--ink-dim); font-style: normal; text-align: right; }
+.pause-btns { display: flex; gap: 8px; }
+.pause-btns .btn-primary { margin-top: 0; flex: 1; }
+.btn-ghost {
+  flex: 1; padding: 14px; font-family: var(--mono); font-size: 13px; letter-spacing: 2px;
+  background: #1b2317; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; transition: .12s;
+}
+.btn-ghost:hover { border-color: #46583a; color: var(--amber); }
+.btn-ghost.danger:hover { border-color: var(--bad); color: var(--bad); }
+
+@media (max-width: 760px) {
+  .power-bar { bottom: 6px; }
+  .pwr { width: 72px; height: 52px; }
+}
+
+/* =============================================================================
+ * EXPANSION ADDITIONS — map/win pickers, command card, upgrades
+ * ========================================================================== */
+.menu-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.diff-pick.two { grid-template-columns: 1fr 1fr; }
+
+/* command card buttons live inside the selection readout, so it needs clicks */
+.sel-info { pointer-events: auto; }
+.cc-row { display: flex; gap: 4px; margin-top: 7px; }
+.ccbtn {
+  flex: 1; font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px; padding: 5px 4px;
+  background: #1c2417; color: var(--ink-dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; transition: .1s;
+}
+.ccbtn:hover { color: var(--ink); border-color: #46583a; }
+.ccbtn.on { color: var(--amber); border-color: var(--amber); background: #221d0c; }
+.ccbtn.wide { flex: 1 1 100%; color: var(--good); }
+.ccbtn.wide:hover { border-color: var(--good); }
+
+/* upgrade cards */
+.bglyph.up { color: var(--good); }
+.uppips { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
+.pip { width: 6px; height: 6px; border-radius: 50%; background: #2c3826; display: inline-block; }
+.pip.on { background: var(--good); box-shadow: 0 0 4px rgba(106,208,106,0.6); }
+
+</style>
+</head>
+<body>
+
+<!-- ============ TITLE / BRIEFING SCREEN ============ -->
+<div id="menu" class="screen">
+  <div class="menu-card">
+    <div class="menu-brand">
+      <span class="brand-mark">W·A·S·P</span>
+      <h1>WARFARE</h1>
+      <p class="brand-sub">WEB EDITION &mdash; Combined Operations</p>
+    </div>
+
+    <p class="menu-blurb">
+      A browser tribute to the Arma&nbsp;2 <em>Warfare</em> game mode.
+      Seize towns to grow your income, requisition forces from your factories,
+      and grind the enemy commander back to his HQ.
+    </p>
+
+    <div class="menu-faction">
+      <span class="menu-label">CHOOSE YOUR SIDE</span>
+      <div class="faction-pick" id="factionPick"></div>
+    </div>
+
+    <div class="menu-grid2">
+      <div class="menu-faction">
+        <span class="menu-label">THEATRE</span>
+        <div class="diff-pick two" id="mapPick"></div>
+      </div>
+      <div class="menu-faction">
+        <span class="menu-label">VICTORY</span>
+        <div class="diff-pick two" id="winPick"></div>
+      </div>
+    </div>
+
+    <div class="menu-faction">
+      <span class="menu-label">DIFFICULTY</span>
+      <div class="diff-pick" id="diffPick"></div>
+    </div>
+
+    <button id="startBtn" class="btn-primary">DEPLOY</button>
+
+    <details class="menu-help">
+      <summary>Field Manual</summary>
+      <ul>
+        <li><b>Select</b> — left-click a unit, or drag a box to select many.</li>
+        <li><b>Move / Attack</b> — right-click the ground or an enemy.</li>
+        <li><b>Capture</b> — park units on a neutral or enemy town until the flag flips.</li>
+        <li><b>Buy</b> — pick a factory tab on the right, then click a unit to queue it. It spawns at your HQ (double-click the map to set a forward rally).</li>
+        <li><b>Veterancy</b> — units earn chevrons from kills, hitting harder and tankier.</li>
+        <li><b>Support powers</b> — <kbd>Z</kbd> artillery · <kbd>X</kbd> airstrike · <kbd>C</kbd> paradrop, then click a target. Cost funds + cooldown.</li>
+        <li><b>Defenses</b> — in the <b>BASE</b> tab, pick an emplacement and place it near your lines.</li>
+        <li><b>Economy</b> — towns pay <b>Funds</b> each tick; supply depots raise your <b>Supply</b> cap.</li>
+        <li><b>Win</b> — capture the enemy HQ or hold every town. Lose your HQ and it's over.</li>
+        <li><b>Hotkeys</b> — <kbd>Space</kbd> pause · <kbd>Q W E R T</kbd> factory tabs · <kbd>Ctrl+1-9</kbd>/<kbd>1-9</kbd> control groups · <kbd>Tab</kbd> idle · <kbd>H</kbd> HQ · arrows pan</li>
+      </ul>
+    </details>
+  </div>
+  <div class="menu-foot">No install. No mods. Just the war. — inspired by WFBE / WASP Warfare v0.73</div>
+</div>
+
+<!-- ============ GAME SHELL ============ -->
+<div id="game" class="hidden">
+
+  <!-- TOP HUD -->
+  <header id="topbar">
+    <div class="hud-group hud-faction">
+      <span class="hud-flag" id="hudFlag"></span>
+      <div>
+        <div class="hud-side" id="hudSide">USMC</div>
+        <div class="hud-side-sub">COMMANDER</div>
+      </div>
+    </div>
+
+    <div class="hud-stats">
+      <div class="stat" title="Cash on hand. Spent on units.">
+        <span class="stat-ico">$</span>
+        <span class="stat-val" id="statFunds">0</span>
+        <span class="stat-lbl">FUNDS <i id="statIncome">+0</i></span>
+      </div>
+      <div class="stat" title="Logistics cap. Each unit costs supply.">
+        <span class="stat-ico">▣</span>
+        <span class="stat-val" id="statSupply">0/0</span>
+        <span class="stat-lbl">SUPPLY</span>
+      </div>
+      <div class="stat" title="Towns you control.">
+        <span class="stat-ico">⚑</span>
+        <span class="stat-val" id="statTowns">0/0</span>
+        <span class="stat-lbl">TOWNS</span>
+      </div>
+      <div class="stat" title="Units in the field.">
+        <span class="stat-ico">✪</span>
+        <span class="stat-val" id="statUnits">0</span>
+        <span class="stat-lbl">FORCES</span>
+      </div>
+    </div>
+
+    <div class="hud-group hud-right">
+      <div class="hud-clock" id="hudClock">00:00</div>
+      <button class="hud-btn" id="pauseBtn" title="Pause (Space)">❚❚</button>
+      <button class="hud-btn" id="speedBtn" title="Game speed">1×</button>
+      <button class="hud-btn" id="quitBtn" title="Resign">⏻</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main id="stage">
+    <canvas id="board"></canvas>
+
+    <!-- floating selection / order readout -->
+    <div id="selInfo" class="sel-info hidden"></div>
+
+    <!-- ticker -->
+    <div id="ticker" class="ticker"></div>
+
+    <!-- minimap -->
+    <canvas id="minimap" class="minimap"></canvas>
+
+    <!-- commander support powers -->
+    <div id="powerBar" class="power-bar"></div>
+
+    <!-- targeting banner -->
+    <div id="targetBanner" class="target-banner hidden"></div>
+  </main>
+
+  <!-- BUILD / COMMAND PANEL -->
+  <aside id="panel">
+    <div class="panel-tabs" id="panelTabs"></div>
+    <div class="panel-body" id="panelBody"></div>
+    <div class="panel-foot">
+      <div class="queue-title">PRODUCTION QUEUE</div>
+      <div class="queue-list" id="queueList"><div class="queue-empty">idle</div></div>
+    </div>
+  </aside>
+
+  <!-- PAUSE / SETTINGS OVERLAY -->
+  <div id="pauseOverlay" class="screen hidden">
+    <div class="pause-card">
+      <h2>PAUSED</h2>
+      <div class="pause-settings">
+        <label class="set-row">
+          <span>Master volume</span>
+          <input type="range" id="volSlider" min="0" max="100" value="60" />
+        </label>
+        <label class="set-row">
+          <span>Sound</span>
+          <button id="muteBtn" class="toggle">ON</button>
+        </label>
+        <label class="set-row">
+          <span>Game speed</span>
+          <button id="pauseSpeedBtn" class="toggle">1×</button>
+        </label>
+      </div>
+      <div class="pause-controls">
+        <b>CONTROLS</b>
+        <div class="pc-grid">
+          <span>Left-click / drag</span><i>select</i>
+          <span>Right-click</span><i>move · attack</i>
+          <span>Shift + right-click</span><i>attack-move</i>
+          <span>Double-click map</span><i>set rally</i>
+          <span>Ctrl + 1-9 / 1-9</span><i>set / pick group</i>
+          <span>Q W E R T</span><i>factory tabs</i>
+          <span>Z X C</span><i>support powers</i>
+          <span>Space · H · S</span><i>pause · HQ · stop</i>
+        </div>
+      </div>
+      <div class="pause-btns">
+        <button class="btn-primary" id="resumeBtn">RESUME</button>
+        <button class="btn-ghost" id="restartBtn">RESTART</button>
+        <button class="btn-ghost danger" id="resignBtn">RESIGN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="endScreen" class="screen hidden">
+    <div class="end-card">
+      <h2 id="endTitle">VICTORY</h2>
+      <p id="endText"></p>
+      <div class="end-stats" id="endStats"></div>
+      <button class="btn-primary" id="endBtn">RETURN TO BRIEFING</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* === js/data.js === */
+/* =============================================================================
+ * WASP WARFARE — WEB EDITION
+ * data.js — factions, unit rosters, structures, map.
+ *
+ * Numbers are inspired by the Arma 2 "Warfare Benny Edition" (WFBE / WASP)
+ * mission found in the source repo, then compressed onto a web-friendly scale
+ * so a full match plays out in ~10–15 minutes instead of an hour.
+ *   - Dual economy: FUNDS (buy units) + SUPPLY (logistics cap / structures)
+ *   - Town Supply Value (SV) drives income, exactly like the original.
+ *   - Factory tiers: Barracks / Light / Heavy / Aircraft, gated by structures.
+ * ========================================================================== */
+
+const DATA = (() => {
+  "use strict";
+
+  /* ---- Factions ---------------------------------------------------------- */
+  // West = USMC, East = RU — the two stock Chernarus sides of the mission.
+  const FACTIONS = {
+    USMC: {
+      id: "USMC",
+      name: "USMC",
+      long: "US Marine Corps",
+      side: "WEST",
+      color: "#4ea3ff",
+      colorDim: "#1c3c5c",
+      accent: "#9ad0ff",
+      flag: "★",
+    },
+    RU: {
+      id: "RU",
+      name: "RU",
+      long: "Russian Federation",
+      side: "EAST",
+      color: "#ff5a4d",
+      colorDim: "#5c1f1c",
+      accent: "#ffb0a8",
+      flag: "☭",
+    },
+  };
+
+  /* ---- Unit categories (map to factories) -------------------------------- */
+  const CATEGORIES = [
+    { id: "inf",   tab: "BARRACKS",  hot: "Q", structure: "barracks" },
+    { id: "light", tab: "LIGHT",     hot: "W", structure: "light" },
+    { id: "heavy", tab: "HEAVY",     hot: "E", structure: "heavy" },
+    { id: "air",   tab: "AIRCRAFT",  hot: "R", structure: "air" },
+  ];
+
+  /* ---- Unit roster -------------------------------------------------------
+   * cost   : funds
+   * sup    : supply (logistics) the unit occupies while alive
+   * build  : seconds to produce
+   * hp     : hit points
+   * dmg    : damage per shot
+   * rof    : shots per second
+   * range  : engagement range (world px)
+   * speed  : world px / second
+   * sight  : vision radius (world px)
+   * armor  : flat damage reduction
+   * vs     : multiplier vs {inf, veh, air}
+   * air    : true if it flies (only hit by AA-capable / air units realistically;
+   *          here air can be hit by anything but takes reduced dmg from inf)
+   * ------------------------------------------------------------------------ */
+  function mk(o) {
+    return Object.assign(
+      { sup: 1, build: 4, armor: 0, sight: 230, air: false,
+        vs: { inf: 1, veh: 1, air: 1 }, glyph: "•" }, o);
+  }
+
+  // Shared archetypes, themed per faction. Keeps both sides balanced/symmetric
+  // while preserving the original's unit names.
+  const ROSTER = {
+    USMC: [
+      // --- Barracks ---
+      mk({ id:"usmc_rifle",  cat:"inf", name:"Rifleman",          cost:60,  sup:1, build:3,  hp:46,  dmg:7,  rof:2.2, range:165, speed:34, glyph:"r", vs:{inf:1.2,veh:0.25,air:0.15} }),
+      mk({ id:"usmc_ar",     cat:"inf", name:"Automatic Rifleman",cost:110, sup:1, build:4,  hp:50,  dmg:6,  rof:4.0, range:175, speed:32, glyph:"a", vs:{inf:1.35,veh:0.3,air:0.2} }),
+      mk({ id:"usmc_lat",    cat:"inf", name:"LAT Specialist",    cost:150, sup:1, build:4,  hp:48,  dmg:34, rof:0.5, range:195, speed:32, glyph:"l", vs:{inf:0.7,veh:1.7,air:0.3} }),
+      mk({ id:"usmc_hat",    cat:"inf", name:"HAT Specialist",    cost:330, sup:2, build:6,  hp:50,  dmg:62, rof:0.32,range:230, speed:30, glyph:"h", vs:{inf:0.6,veh:2.4,air:0.4} }),
+      mk({ id:"usmc_aa",     cat:"inf", name:"AA Specialist",     cost:240, sup:2, build:6,  hp:48,  dmg:55, rof:0.35,range:300, speed:30, glyph:"s", vs:{inf:0.4,veh:0.6,air:3.2} }),
+      mk({ id:"usmc_medic",  cat:"inf", name:"Corpsman",          cost:130, sup:1, build:4,  hp:52,  dmg:5,  rof:2.0, range:150, speed:34, glyph:"+", heal:5, vs:{inf:0.8,veh:0.2,air:0.1} }),
+      mk({ id:"usmc_engi",   cat:"inf", name:"Combat Engineer",   cost:170, sup:1, build:5,  hp:54,  dmg:5,  rof:2.0, range:150, speed:32, glyph:"e", repair:9, vs:{inf:0.7,veh:0.2,air:0.1} }),
+      mk({ id:"usmc_sniper", cat:"inf", name:"Scout Sniper",      cost:220, sup:1, build:6,  hp:42,  dmg:60, rof:0.5, range:300, sight:360, speed:30, glyph:"x", scout:true, vs:{inf:2.4,veh:0.3,air:0.15} }),
+      // --- Light Factory ---
+      mk({ id:"usmc_hmmwv",  cat:"light", name:"HMMWV M2",        cost:300, sup:2, build:8,  hp:160, dmg:9,  rof:5.0, range:210, speed:62, armor:3, glyph:"j", vs:{inf:1.3,veh:0.6,air:0.4} }),
+      mk({ id:"usmc_lav",    cat:"light", name:"LAV-25",          cost:760, sup:3, build:12, hp:300, dmg:24, rof:2.6, range:240, speed:52, armor:7, glyph:"v", vs:{inf:1.2,veh:1.3,air:0.5} }),
+      mk({ id:"usmc_tow",    cat:"light", name:"HMMWV TOW",       cost:620, sup:3, build:11, hp:150, dmg:80, rof:0.4, range:300, speed:58, armor:3, glyph:"t", vs:{inf:0.5,veh:2.6,air:0.3} }),
+      mk({ id:"usmc_avenger",cat:"light", name:"HMMWV Avenger",   cost:880, sup:3, build:13, hp:160, dmg:60, rof:0.7, range:340, speed:58, armor:3, glyph:"y", vs:{inf:0.4,veh:0.6,air:3.4} }),
+      mk({ id:"usmc_supply", cat:"light", name:"Supply Truck",    cost:380, sup:2, build:10, hp:200, dmg:0,  rof:0,   range:0,   speed:46, armor:2, glyph:"u", supplyTruck:18, vs:{inf:0,veh:0,air:0} }),
+      // --- Heavy Factory ---
+      mk({ id:"usmc_aav",    cat:"heavy", name:"AAV-7",           cost:1200,sup:4, build:16, hp:520, dmg:20, rof:3.0, range:240, speed:44, armor:10, glyph:"p", vs:{inf:1.3,veh:0.9,air:0.4} }),
+      mk({ id:"usmc_abrams", cat:"heavy", name:"M1A1 Abrams",     cost:2400,sup:6, build:24, hp:1000,dmg:150,rof:0.55,range:300, speed:40, armor:22, glyph:"A", vs:{inf:1.4,veh:2.4,air:0.5} }),
+      mk({ id:"usmc_tusk",   cat:"heavy", name:"M1A2 TUSK",       cost:3000,sup:7, build:28, hp:1180,dmg:160,rof:0.6, range:310, speed:40, armor:26, glyph:"T", vs:{inf:1.6,veh:2.6,air:0.6} }),
+      mk({ id:"usmc_mlrs",   cat:"heavy", name:"MLRS",            cost:3200,sup:6, build:30, hp:360, dmg:120,rof:0.18,range:560, sight:240, speed:36, armor:6, arty:true, glyph:"M", vs:{inf:2.6,veh:1.6,air:0} }),
+      // --- Aircraft Factory ---
+      mk({ id:"usmc_huey",   cat:"air", name:"UH-1Y Venom",       cost:1600,sup:4, build:20, hp:360, dmg:14, rof:4.0, range:250, speed:96, armor:4, air:true, glyph:"H", vs:{inf:1.5,veh:0.8,air:0.7} }),
+      mk({ id:"usmc_cobra",  cat:"air", name:"AH-1Z Viper",       cost:3400,sup:6, build:30, hp:520, dmg:46, rof:2.2, range:320, speed:104,armor:7, air:true, glyph:"C", vs:{inf:1.6,veh:2.2,air:1.1} }),
+      mk({ id:"usmc_apache", cat:"air", name:"AH-64 Apache",      cost:4200,sup:7, build:34, hp:620, dmg:56, rof:2.4, range:340, speed:108,armor:8, air:true, glyph:"K", vs:{inf:1.7,veh:2.4,air:1.2} }),
+      mk({ id:"usmc_harrier",cat:"air", name:"AV-8B Harrier",     cost:5200,sup:8, build:40, hp:520, dmg:110,rof:0.7, range:300, speed:150,armor:6, air:true, glyph:"J", vs:{inf:2.0,veh:2.6,air:1.0} }),
+    ],
+    RU: [
+      mk({ id:"ru_rifle",   cat:"inf", name:"Rifleman",           cost:60,  sup:1, build:3,  hp:46,  dmg:7,  rof:2.2, range:165, speed:34, glyph:"r", vs:{inf:1.2,veh:0.25,air:0.15} }),
+      mk({ id:"ru_ar",      cat:"inf", name:"Machinegunner",      cost:110, sup:1, build:4,  hp:50,  dmg:6,  rof:4.0, range:175, speed:32, glyph:"a", vs:{inf:1.35,veh:0.3,air:0.2} }),
+      mk({ id:"ru_lat",     cat:"inf", name:"RPG Soldier",        cost:150, sup:1, build:4,  hp:48,  dmg:34, rof:0.5, range:195, speed:32, glyph:"l", vs:{inf:0.7,veh:1.7,air:0.3} }),
+      mk({ id:"ru_hat",     cat:"inf", name:"HAT Specialist",     cost:330, sup:2, build:6,  hp:50,  dmg:62, rof:0.32,range:230, speed:30, glyph:"h", vs:{inf:0.6,veh:2.4,air:0.4} }),
+      mk({ id:"ru_aa",      cat:"inf", name:"Igla Gunner",        cost:240, sup:2, build:6,  hp:48,  dmg:55, rof:0.35,range:300, speed:30, glyph:"s", vs:{inf:0.4,veh:0.6,air:3.2} }),
+      mk({ id:"ru_medic",   cat:"inf", name:"Medic",              cost:130, sup:1, build:4,  hp:52,  dmg:5,  rof:2.0, range:150, speed:34, glyph:"+", heal:5, vs:{inf:0.8,veh:0.2,air:0.1} }),
+      mk({ id:"ru_engi",    cat:"inf", name:"Combat Engineer",    cost:170, sup:1, build:5,  hp:54,  dmg:5,  rof:2.0, range:150, speed:32, glyph:"e", repair:9, vs:{inf:0.7,veh:0.2,air:0.1} }),
+      mk({ id:"ru_sniper",  cat:"inf", name:"Sniper",             cost:220, sup:1, build:6,  hp:42,  dmg:60, rof:0.5, range:300, sight:360, speed:30, glyph:"x", scout:true, vs:{inf:2.4,veh:0.3,air:0.15} }),
+
+      mk({ id:"ru_uaz",     cat:"light", name:"UAZ DShKM",        cost:300, sup:2, build:8,  hp:150, dmg:9,  rof:5.0, range:210, speed:64, armor:2, glyph:"j", vs:{inf:1.3,veh:0.6,air:0.4} }),
+      mk({ id:"ru_btr",     cat:"light", name:"BTR-90",           cost:780, sup:3, build:12, hp:320, dmg:26, rof:2.6, range:240, speed:54, armor:8, glyph:"v", vs:{inf:1.2,veh:1.4,air:0.5} }),
+      mk({ id:"ru_vodnik",  cat:"light", name:"GAZ Vodnik AT",    cost:620, sup:3, build:11, hp:170, dmg:80, rof:0.4, range:300, speed:58, armor:4, glyph:"t", vs:{inf:0.5,veh:2.6,air:0.3} }),
+      mk({ id:"ru_tunguska",cat:"light", name:"2S6 Tunguska",     cost:900, sup:3, build:13, hp:240, dmg:62, rof:0.8, range:350, speed:48, armor:6, glyph:"y", vs:{inf:0.5,veh:0.9,air:3.4} }),
+      mk({ id:"ru_supply",  cat:"light", name:"Supply Truck",     cost:380, sup:2, build:10, hp:200, dmg:0,  rof:0,   range:0,   speed:46, armor:2, glyph:"u", supplyTruck:18, vs:{inf:0,veh:0,air:0} }),
+
+      mk({ id:"ru_bmp",     cat:"heavy", name:"BMP-3",            cost:1300,sup:4, build:16, hp:560, dmg:30, rof:2.4, range:250, speed:46, armor:11, glyph:"p", vs:{inf:1.4,veh:1.3,air:0.4} }),
+      mk({ id:"ru_t72",     cat:"heavy", name:"T-72",             cost:2300,sup:6, build:24, hp:960, dmg:148,rof:0.5, range:300, speed:40, armor:21, glyph:"A", vs:{inf:1.4,veh:2.3,air:0.5} }),
+      mk({ id:"ru_t90",     cat:"heavy", name:"T-90",             cost:3000,sup:7, build:28, hp:1180,dmg:160,rof:0.6, range:310, speed:42, armor:26, glyph:"T", vs:{inf:1.6,veh:2.6,air:0.6} }),
+      mk({ id:"ru_grad",    cat:"heavy", name:"BM-21 Grad",       cost:3200,sup:6, build:30, hp:340, dmg:120,rof:0.18,range:560, sight:240, speed:38, armor:5, arty:true, glyph:"M", vs:{inf:2.6,veh:1.6,air:0} }),
+
+      mk({ id:"ru_mi8",     cat:"air", name:"Mi-8 Hip",           cost:1600,sup:4, build:20, hp:380, dmg:14, rof:4.0, range:250, speed:96, armor:4, air:true, glyph:"H", vs:{inf:1.5,veh:0.8,air:0.7} }),
+      mk({ id:"ru_hind",    cat:"air", name:"Mi-24 Hind",         cost:3400,sup:6, build:30, hp:560, dmg:46, rof:2.2, range:320, speed:100,armor:8, air:true, glyph:"C", vs:{inf:1.6,veh:2.2,air:1.1} }),
+      mk({ id:"ru_ka52",    cat:"air", name:"Ka-52 Alligator",    cost:4200,sup:7, build:34, hp:640, dmg:58, rof:2.4, range:340, speed:108,armor:9, air:true, glyph:"K", vs:{inf:1.7,veh:2.4,air:1.2} }),
+      mk({ id:"ru_su25",    cat:"air", name:"Su-25 Frogfoot",     cost:5200,sup:8, build:40, hp:540, dmg:110,rof:0.7, range:300, speed:150,armor:6, air:true, glyph:"J", vs:{inf:2.0,veh:2.6,air:1.0} }),
+    ],
+  };
+
+  // Index by id for fast lookup.
+  const UNIT_BY_ID = {};
+  for (const f of Object.keys(ROSTER)) for (const u of ROSTER[f]) UNIT_BY_ID[u.id] = u;
+
+  /* ---- Structures (built with SUPPLY at your HQ) ------------------------- */
+  const STRUCTURES = [
+    { id:"barracks", name:"Barracks",        cost:180,  build:8,  unlocks:"inf",   glyph:"B",
+      desc:"Recruit infantry." },
+    { id:"light",    name:"Light Factory",   cost:420,  build:12, unlocks:"light", glyph:"L",
+      desc:"Build light vehicles & supply trucks." },
+    { id:"heavy",    name:"Heavy Factory",   cost:900,  build:16, unlocks:"heavy", glyph:"V",
+      desc:"Build tanks, IFVs and artillery." },
+    { id:"air",      name:"Aircraft Factory",cost:1400, build:20, unlocks:"air",   glyph:"A",
+      desc:"Build helicopters and jets." },
+    { id:"depot",    name:"Supply Depot",    cost:300,  build:10, unlocks:null,    glyph:"D",
+      supplyCap:6, desc:"+6 supply cap. Raises your logistics ceiling." },
+  ];
+  const STRUCT_BY_ID = {};
+  for (const s of STRUCTURES) STRUCT_BY_ID[s.id] = s;
+
+  /* ---- Map / theatre -----------------------------------------------------
+   * World is 2600 x 1700 px. Two HQs at opposite corners, a chain of towns
+   * between them. Town names lifted from Chernarus (the mission's map).
+   * sv = supply value tier; bigger towns pay more but defend harder.
+   * ------------------------------------------------------------------------ */
+  const WORLD = { w: 2600, h: 1700 };
+
+  // CHERNARUS — green, forested. Default theatre.
+  const MAP_CHERNARUS = {
+    id: "chernarus", name: "Chernarus", biome: "green",
+    world: WORLD,
+    tint: { top: "#1a2415", bot: "#141d11", grid: "rgba(120,150,90,0.05)", forest: "rgba(30,60,28," },
+    hq: { USMC: { x: 240, y: 1460 }, RU: { x: 2360, y: 240 } },
+    towns: [
+      { id:"t_chern",  name:"Chernogorsk",   x: 560,  y: 1180, sv: 26, garrison: 5 },
+      { id:"t_elektro",name:"Elektrozavodsk",x: 900,  y: 1380, sv: 22, garrison: 4 },
+      { id:"t_balota", name:"Balota",        x: 380,  y: 980,  sv: 14, garrison: 3 },
+      { id:"t_zelen",  name:"Zelenogorsk",   x: 760,  y: 760,  sv: 18, garrison: 4 },
+      { id:"t_sobor",  name:"Stary Sobor",   x: 1300, y: 860,  sv: 30, garrison: 6 },
+      { id:"t_vybor",  name:"Vybor",         x: 1080, y: 520,  sv: 20, garrison: 4 },
+      { id:"t_msta",   name:"Msta",          x: 1620, y: 1180, sv: 16, garrison: 3 },
+      { id:"t_bere",   name:"Berezino",      x: 2040, y: 1320, sv: 24, garrison: 5 },
+      { id:"t_krasno", name:"Krasnostav",    x: 1900, y: 720,  sv: 20, garrison: 4 },
+      { id:"t_grishino",name:"Grishino",     x: 1480, y: 420,  sv: 18, garrison: 4 },
+    ],
+    roads: [
+      ["hqW","t_chern"],["t_chern","t_elektro"],["t_chern","t_balota"],
+      ["t_balota","t_zelen"],["t_zelen","t_sobor"],["t_zelen","t_vybor"],
+      ["t_elektro","t_msta"],["t_sobor","t_msta"],["t_sobor","t_vybor"],
+      ["t_vybor","t_grishino"],["t_sobor","t_krasno"],["t_msta","t_bere"],
+      ["t_krasno","t_grishino"],["t_krasno","hqE"],["t_bere","hqE"],
+      ["t_grishino","hqE"],
+    ],
+    // Forests: tactical cover + concealment for infantry.
+    forests: [
+      { x: 700, y: 980, r: 150 }, { x: 980, y: 700, r: 130 }, { x: 1300, y: 1080, r: 170 },
+      { x: 1150, y: 660, r: 120 }, { x: 1700, y: 920, r: 150 }, { x: 1500, y: 1240, r: 140 },
+      { x: 1780, y: 560, r: 120 }, { x: 520, y: 760, r: 110 }, { x: 2000, y: 1080, r: 140 },
+    ],
+  };
+
+  // TAKISTAN — arid desert, sparse cover, more open fighting.
+  const MAP_TAKISTAN = {
+    id: "takistan", name: "Takistan", biome: "desert",
+    world: WORLD,
+    tint: { top: "#2b2412", bot: "#221c0e", grid: "rgba(180,150,80,0.05)", forest: "rgba(90,80,40," },
+    hq: { USMC: { x: 240, y: 240 }, RU: { x: 2360, y: 1460 } },
+    towns: [
+      { id:"t_rasman",  name:"Rasman",      x: 560,  y: 520,  sv: 24, garrison: 5 },
+      { id:"t_loy",     name:"Loy Manara",  x: 980,  y: 360,  sv: 20, garrison: 4 },
+      { id:"t_nagara",  name:"Nagara",      x: 720,  y: 880,  sv: 16, garrison: 3 },
+      { id:"t_zargabad",name:"Zargabad",    x: 1300, y: 820,  sv: 32, garrison: 6 },
+      { id:"t_feruz",   name:"Feruz Abad",  x: 1120, y: 1240, sv: 18, garrison: 4 },
+      { id:"t_chak",    name:"Chak Chak",   x: 1640, y: 460,  sv: 18, garrison: 4 },
+      { id:"t_garmsar", name:"Garmsar",     x: 1700, y: 1120, sv: 22, garrison: 5 },
+      { id:"t_sakhe",   name:"Sakhe",       x: 1980, y: 760,  sv: 20, garrison: 4 },
+      { id:"t_falar",   name:"Falar",       x: 1460, y: 1320, sv: 16, garrison: 3 },
+      { id:"t_shukurkalay",name:"Shukurkalay",x: 2020,y: 1280,sv: 24, garrison: 5 },
+    ],
+    roads: [
+      ["hqW","t_rasman"],["t_rasman","t_loy"],["t_rasman","t_nagara"],
+      ["t_loy","t_zargabad"],["t_nagara","t_zargabad"],["t_nagara","t_feruz"],
+      ["t_loy","t_chak"],["t_zargabad","t_chak"],["t_zargabad","t_garmsar"],
+      ["t_feruz","t_falar"],["t_chak","t_sakhe"],["t_garmsar","t_sakhe"],
+      ["t_garmsar","t_falar"],["t_falar","t_shukurkalay"],["t_sakhe","hqE"],
+      ["t_shukurkalay","hqE"],["t_garmsar","hqE"],
+    ],
+    forests: [
+      { x: 900, y: 760, r: 90 }, { x: 1400, y: 600, r: 80 }, { x: 1600, y: 980, r: 90 },
+      { x: 1180, y: 1040, r: 80 },
+    ],
+  };
+
+  const MAPS = { chernarus: MAP_CHERNARUS, takistan: MAP_TAKISTAN };
+  const MAP = MAP_CHERNARUS; // default / back-compat
+
+  /* ---- Forward Outpost (deployed from a supply truck) -------------------- */
+  const OUTPOST_DEF = {
+    id: "outpost", name: "Forward Outpost", cat: "def", emplacement: false, outpost: true,
+    speed: 0, sup: 0, build: 8, hp: 700, dmg: 7, rof: 3.0, range: 200, armor: 8, sight: 340,
+    air: false, vs: { inf: 1.2, veh: 0.4, air: 0.3 }, glyph: "O",
+    desc: "Forward base: vision, heal aura, +5 supply.",
+  };
+
+  /* ---- Commander upgrades (escalating funds cost per level) -------------- */
+  const UPGRADES = [
+    { id:"economy",    name:"War Economy",   glyph:"$", levels:3, baseCost:400, costMult:1.7, desc:"+22% town income per level." },
+    { id:"weapons",    name:"Weapons",       glyph:"⚔", levels:3, baseCost:450, costMult:1.7, desc:"+14% unit damage per level." },
+    { id:"armor",      name:"Armor",         glyph:"▣", levels:3, baseCost:450, costMult:1.7, desc:"+14% HP on new units per level." },
+    { id:"logistics",  name:"Logistics",     glyph:"▤", levels:3, baseCost:350, costMult:1.6, desc:"+6 supply cap per level." },
+    { id:"production",  name:"Production",   glyph:"⚙", levels:2, baseCost:500, costMult:1.8, desc:"-16% build time per level." },
+  ];
+  const UPGRADE_BY_ID = {};
+  for (const u of UPGRADES) UPGRADE_BY_ID[u.id] = u;
+
+  /* ---- Commander support powers (cooldown + funds cost) ------------------ */
+  const POWERS = [
+    { id:"artillery", name:"Artillery Barrage", glyph:"❂", cost:250, cd:50,
+      desc:"Saturate an area with 8 shells. Spares friendlies." },
+    { id:"airstrike", name:"Airstrike", glyph:"✈", cost:400, cd:70,
+      desc:"A jet strafes a line through the target." },
+    { id:"paradrop", name:"Paradrop", glyph:"☂", cost:300, cd:80,
+      desc:"Drop a 5-man squad anywhere on the map." },
+  ];
+  const POWER_BY_ID = {};
+  for (const p of POWERS) POWER_BY_ID[p.id] = p;
+
+  /* ---- Defensive emplacements (placed near owned territory) -------------- */
+  function mkDef(o) {
+    return Object.assign(
+      { cat:"def", emplacement:true, speed:0, sup:2, build:8, armor:6, sight:300,
+        air:false, vs:{ inf:1, veh:1, air:1 }, glyph:"#" }, o);
+  }
+  const DEFENSES = [
+    mkDef({ id:"d_mg",  name:"MG Nest",    cost:200, hp:280, dmg:8,  rof:5.0, range:220, build:6,
+            glyph:"#", vs:{inf:1.6,veh:0.4,air:0.3}, desc:"Cheap. Shreds infantry." }),
+    mkDef({ id:"d_at",  name:"AT Gun",     cost:420, hp:340, dmg:90, rof:0.5, range:300, build:9,
+            glyph:"=", vs:{inf:0.5,veh:2.6,air:0.3}, desc:"Stops armour cold." }),
+    mkDef({ id:"d_aa",  name:"AA Battery", cost:480, hp:300, dmg:60, rof:0.8, range:360, build:9,
+            glyph:"^", vs:{inf:0.4,veh:0.5,air:3.4}, desc:"Owns the sky overhead." }),
+    mkDef({ id:"d_bunker", name:"Bunker",  cost:300, hp:900, dmg:6,  rof:3.0, range:180, build:10, armor:14,
+            glyph:"B", vs:{inf:1.2,veh:0.3,air:0.2}, desc:"Tanky strongpoint." }),
+  ];
+  const DEFENSE_BY_ID = {};
+  for (const d of DEFENSES) DEFENSE_BY_ID[d.id] = d;
+
+  /* ---- Difficulty presets ------------------------------------------------ */
+  const DIFFICULTY = {
+    recruit:  { id:"recruit",  name:"Recruit",   aiFunds:0.75, aiAggro:0.7, startFunds:900, startSup:14, desc:"Forgiving. The AI builds slowly." },
+    veteran:  { id:"veteran",  name:"Veteran",   aiFunds:1.0,  aiAggro:1.0, startFunds:800, startSup:12, desc:"A fair fight. Recommended." },
+    elite:    { id:"elite",    name:"Elite",     aiFunds:1.35, aiAggro:1.3, startFunds:760, startSup:12, desc:"The AI pushes hard and early." },
+  };
+
+  /* ---- Economy / rules tuning ------------------------------------------- */
+  const RULES = {
+    incomeInterval: 4,      // seconds between paychecks
+    incomePerSV: 0.5,       // funds per SV per second  -> SV*interval*this each tick
+    captureRange: 95,       // world px: be this close to a town to contest it
+    captureRate: 12,        // capture progress / sec at parity (100 = owned)
+    baseSupplyCap: 16,      // starting supply ceiling (before depots)
+    hqHp: 2200,
+    hqRepair: 6,            // hp/sec HQ self-repairs when not under fire
+    startStructures: ["barracks"], // both sides begin with a barracks
+    captureFundsBonus: 6,   // one-off funds = sv * this on capture
+    dominationHold: 75,     // seconds you must hold the town majority to win
+  };
+
+  /* ---- Victory conditions ------------------------------------------------ */
+  const WIN_CONDITIONS = {
+    conquest:   { id:"conquest",   name:"Conquest",   desc:"Destroy the enemy HQ, or hold every town." },
+    domination: { id:"domination", name:"Domination", desc:"Hold a majority of towns for 75s straight — or take the HQ." },
+  };
+
+  return {
+    FACTIONS, CATEGORIES, ROSTER, UNIT_BY_ID,
+    STRUCTURES, STRUCT_BY_ID, MAP, WORLD, MAPS,
+    POWERS, POWER_BY_ID, DEFENSES, DEFENSE_BY_ID,
+    OUTPOST_DEF, UPGRADES, UPGRADE_BY_ID, WIN_CONDITIONS,
+    DIFFICULTY, RULES,
+  };
+})();
+
+
+/* === js/util.js === */
+/* =============================================================================
+ * util.js — math, camera, rng, small helpers. No game logic here.
+ * ========================================================================== */
+
+const U = (() => {
+  "use strict";
+
+  const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const dist2 = (ax, ay, bx, by) => {
+    const dx = ax - bx, dy = ay - by;
+    return dx * dx + dy * dy;
+  };
+  const dist = (ax, ay, bx, by) => Math.sqrt(dist2(ax, ay, bx, by));
+
+  // Deterministic-ish RNG (mulberry32) so matches can be seeded if desired.
+  function makeRng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const rngRange = (rng, lo, hi) => lo + rng() * (hi - lo);
+  const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
+
+  function fmtTime(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  function fmtNum(n) {
+    n = Math.floor(n);
+    if (n >= 10000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return n.toLocaleString("en-US");
+  }
+
+  /* Camera: maps world <-> screen with pan + zoom, clamped to world bounds. */
+  function makeCamera(world, view) {
+    return {
+      x: 0, y: 0, zoom: 1, minZoom: 0.45, maxZoom: 1.8,
+      world, view,
+      setView(w, h) { this.view = { w, h }; this.clampPan(); },
+      worldToScreen(wx, wy) {
+        return { x: (wx - this.x) * this.zoom, y: (wy - this.y) * this.zoom };
+      },
+      screenToWorld(sx, sy) {
+        return { x: sx / this.zoom + this.x, y: sy / this.zoom + this.y };
+      },
+      panBy(dx, dy) { this.x += dx; this.y += dy; this.clampPan(); },
+      centerOn(wx, wy) {
+        this.x = wx - this.view.w / (2 * this.zoom);
+        this.y = wy - this.view.h / (2 * this.zoom);
+        this.clampPan();
+      },
+      zoomAt(sx, sy, factor) {
+        const before = this.screenToWorld(sx, sy);
+        this.zoom = clamp(this.zoom * factor, this.minZoom, this.maxZoom);
+        const after = this.screenToWorld(sx, sy);
+        this.x += before.x - after.x;
+        this.y += before.y - after.y;
+        this.clampPan();
+      },
+      clampPan() {
+        const vw = this.view.w / this.zoom, vh = this.view.h / this.zoom;
+        if (vw >= this.world.w) this.x = (this.world.w - vw) / 2;
+        else this.x = clamp(this.x, 0, this.world.w - vw);
+        if (vh >= this.world.h) this.y = (this.world.h - vh) / 2;
+        else this.y = clamp(this.y, 0, this.world.h - vh);
+      },
+    };
+  }
+
+  // Round-rect path helper.
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  return { clamp, lerp, dist, dist2, makeRng, rngRange, pick, fmtTime, fmtNum, makeCamera, roundRect };
+})();
+
+
+/* === js/audio.js === */
+/* =============================================================================
+ * audio.js — procedural sound via WebAudio. No asset files: every sound is
+ * synthesised from oscillators + noise. Cheap, throttled, and fully optional.
+ * ========================================================================== */
+
+const Sound = (() => {
+  "use strict";
+  let ctx = null, master = null, enabled = true, volume = 0.6;
+  let noiseBuf = null, music = null;
+  let lastShot = 0, shotBudget = 0;
+
+  function load() {
+    try {
+      const v = localStorage.getItem("wasp_vol");
+      if (v != null) volume = Math.max(0, Math.min(1, parseFloat(v)));
+      const e = localStorage.getItem("wasp_snd");
+      if (e != null) enabled = e === "1";
+    } catch (_) {}
+  }
+  load();
+
+  function init() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { enabled = false; return; }
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = volume;
+    master.connect(ctx.destination);
+    // pre-bake a noise buffer
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  function resume() { if (ctx && ctx.state === "suspended") ctx.resume(); }
+
+  const now = () => (ctx ? ctx.currentTime : 0);
+
+  function noise(dur, gain, filterType, freq, q) {
+    if (!ctx) return;
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter();
+    f.type = filterType || "lowpass"; f.frequency.value = freq || 1000; f.Q.value = q || 1;
+    const g = ctx.createGain();
+    const t = now();
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t); src.stop(t + dur);
+  }
+
+  function tone(freq, dur, gain, type, slideTo) {
+    if (!ctx) return;
+    const o = ctx.createOscillator(); o.type = type || "sine";
+    const g = ctx.createGain();
+    const t = now();
+    o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur);
+  }
+
+  // --- public sound effects -------------------------------------------------
+  const api = {
+    get enabled() { return enabled; },
+    get volume() { return volume; },
+    init, resume,
+
+    setVolume(v) {
+      volume = Math.max(0, Math.min(1, v));
+      if (master) master.gain.value = enabled ? volume : 0;
+      try { localStorage.setItem("wasp_vol", String(volume)); } catch (_) {}
+    },
+    setEnabled(on) {
+      enabled = !!on;
+      if (master) master.gain.value = enabled ? volume : 0;
+      try { localStorage.setItem("wasp_snd", enabled ? "1" : "0"); } catch (_) {}
+    },
+
+    // gunfire — heavily throttled so 40 units don't blow out the mix
+    shot(kind, t) {
+      if (!enabled || !ctx) return;
+      // refill a small budget over time
+      shotBudget = Math.min(4, shotBudget + (t - lastShot) * 12);
+      lastShot = t;
+      if (shotBudget < 1) return;
+      shotBudget -= 1;
+      if (kind === "arty") { noise(0.18, 0.5, "lowpass", 600, 1); tone(120, 0.18, 0.25, "square", 60); }
+      else if (kind === "cannon") { noise(0.14, 0.45, "lowpass", 900, 1); tone(90, 0.12, 0.3, "sawtooth", 50); }
+      else noise(0.05, 0.22, "highpass", 1400, 0.7);
+    },
+
+    explosion(size) {
+      if (!enabled || !ctx) return;
+      const s = size || 1;
+      noise(0.4 * s, 0.6, "lowpass", 380, 0.8);
+      tone(70, 0.35 * s, 0.4, "sawtooth", 30);
+    },
+
+    capture(good) {
+      if (!enabled || !ctx) return;
+      const base = good ? 440 : 300;
+      tone(base, 0.16, 0.3, "triangle");
+      setTimeout(() => tone(good ? base * 1.5 : base * 0.7, 0.22, 0.3, "triangle"), 130);
+    },
+
+    build() { if (enabled && ctx) { tone(520, 0.1, 0.25, "square"); setTimeout(() => tone(780, 0.14, 0.22, "square"), 90); } },
+    ui() { if (enabled && ctx) tone(660, 0.04, 0.12, "square"); },
+    deny() { if (enabled && ctx) tone(180, 0.12, 0.2, "sawtooth", 120); },
+    alert() {
+      if (!enabled || !ctx) return;
+      tone(880, 0.12, 0.28, "square"); setTimeout(() => tone(880, 0.12, 0.28, "square"), 180);
+    },
+    power() {
+      if (!enabled || !ctx) return;
+      tone(300, 0.25, 0.3, "sawtooth", 700);
+    },
+    win() { if (enabled && ctx) { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.3, 0.3, "triangle"), i * 150)); } },
+    lose() { if (enabled && ctx) { [392, 330, 262, 196].forEach((f, i) => setTimeout(() => tone(f, 0.4, 0.3, "sawtooth"), i * 200)); } },
+
+    // ----- ambient military drone (low, sparse, non-intrusive) -----
+    startMusic() {
+      if (!ctx || music) return;
+      const g = ctx.createGain(); g.gain.value = 0.0; g.connect(master);
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
+      const lfoG = ctx.createGain(); lfoG.gain.value = 0.05;
+      lfo.connect(lfoG); lfoG.connect(g.gain);
+      const o1 = ctx.createOscillator(); o1.type = "sine"; o1.frequency.value = 55;     // A1
+      const o2 = ctx.createOscillator(); o2.type = "sine"; o2.frequency.value = 82.4;   // E2
+      const o3 = ctx.createOscillator(); o3.type = "triangle"; o3.frequency.value = 110; o3.detune.value = 4;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 320;
+      o1.connect(f); o2.connect(f); o3.connect(f); f.connect(g);
+      const t = now();
+      g.gain.setValueAtTime(0.0, t); g.gain.linearRampToValueAtTime(0.10, t + 4);
+      [o1, o2, o3, lfo].forEach((o) => o.start(t));
+      music = { g, nodes: [o1, o2, o3, lfo] };
+    },
+    stopMusic() {
+      if (!music) return;
+      const m = music; music = null;
+      try {
+        const t = now();
+        m.g.gain.cancelScheduledValues(t);
+        m.g.gain.setValueAtTime(m.g.gain.value, t);
+        m.g.gain.linearRampToValueAtTime(0.0001, t + 1.2);
+        m.nodes.forEach((o) => o.stop(t + 1.3));
+      } catch (_) {}
+    },
+  };
+  return api;
+})();
+
+
+/* === js/engine.js === */
+/* =============================================================================
+ * engine.js — the simulation. Owns all game state and the fixed update step.
+ * Rendering and input live elsewhere; they only read state + call commands.
+ * ========================================================================== */
+
+function createGame(opts) {
+  "use strict";
+  const { FACTIONS, ROSTER, UNIT_BY_ID, STRUCT_BY_ID, STRUCTURES, MAPS, DIFFICULTY, RULES,
+          POWERS, DEFENSES, DEFENSE_BY_ID, UPGRADES, UPGRADE_BY_ID, OUTPOST_DEF, WIN_CONDITIONS } = DATA;
+
+  const playerFac = opts.faction;                       // "USMC" | "RU"
+  const enemyFac  = playerFac === "USMC" ? "RU" : "USMC";
+  const diff      = DIFFICULTY[opts.difficulty] || DIFFICULTY.veteran;
+  const MAP       = MAPS[opts.map] || MAPS.chernarus;
+  const WORLD     = MAP.world;
+  const winCond   = WIN_CONDITIONS[opts.winCond] || WIN_CONDITIONS.conquest;
+  const rng       = U.makeRng(opts.seed || 1337);
+
+  let nextId = 1;
+
+  /* ---- per-side state --------------------------------------------------- */
+  function makeSide(facId, isPlayer) {
+    const fac = FACTIONS[facId];
+    return {
+      fac: facId, isPlayer, color: fac.color,
+      funds: diff.startFunds,
+      supplyCap: RULES.baseSupplyCap,
+      structures: new Set(RULES.startStructures),
+      queue: [],            // {kind:'unit', def, timeLeft, total}
+      building: [],         // {kind:'struct', struct, timeLeft, total}
+      depots: 0,
+      hq: null,             // set below
+      income: 0,            // last computed funds/sec (display)
+      kills: 0, losses: 0, spent: 0,
+    };
+  }
+
+  const sides = {
+    [playerFac]: makeSide(playerFac, true),
+    [enemyFac]:  makeSide(enemyFac, false),
+  };
+
+  /* ---- entities --------------------------------------------------------- */
+  const units = [];
+  const fx = [];            // transient visual effects (tracers, blasts)
+  const floats = [];        // floating combat text
+  const parts = [];         // particles (smoke, dust, sparks, craters)
+
+  /* ---- spatial hash: keeps acquisition/area queries near O(n) ----------- */
+  const GRID_CELL = 160;
+  const grid = {
+    cols: Math.ceil(WORLD.w / GRID_CELL), rows: Math.ceil(WORLD.h / GRID_CELL),
+    cells: null,
+    key(cx, cy) { return cy * this.cols + cx; },
+    build(list) {
+      this.cells = new Map();
+      for (const u of list) {
+        if (!u.alive) continue;
+        const cx = U.clamp((u.x / GRID_CELL) | 0, 0, this.cols - 1);
+        const cy = U.clamp((u.y / GRID_CELL) | 0, 0, this.rows - 1);
+        const k = this.key(cx, cy);
+        let b = this.cells.get(k); if (!b) this.cells.set(k, (b = []));
+        b.push(u);
+      }
+    },
+    forEachInRadius(x, y, r, fn) {
+      const minx = U.clamp(((x - r) / GRID_CELL) | 0, 0, this.cols - 1);
+      const maxx = U.clamp(((x + r) / GRID_CELL) | 0, 0, this.cols - 1);
+      const miny = U.clamp(((y - r) / GRID_CELL) | 0, 0, this.rows - 1);
+      const maxy = U.clamp(((y + r) / GRID_CELL) | 0, 0, this.rows - 1);
+      for (let cy = miny; cy <= maxy; cy++)
+        for (let cx = minx; cx <= maxx; cx++) {
+          const b = this.cells.get(this.key(cx, cy));
+          if (b) for (const u of b) fn(u);
+        }
+    },
+  };
+
+  function makeHQ(facId) {
+    const p = MAP.hq[facId];
+    return {
+      id: nextId++, kind: "hq", fac: facId,
+      x: p.x, y: p.y, hp: RULES.hqHp, maxHp: RULES.hqHp,
+      range: 300, dmg: 26, rof: 1.4, cd: 0, sight: 360,
+      lastHit: 999,
+    };
+  }
+  sides[playerFac].hq = makeHQ(playerFac);
+  sides[enemyFac].hq  = makeHQ(enemyFac);
+
+  /* ---- towns ------------------------------------------------------------ */
+  const towns = MAP.towns.map((t) => ({
+    def: t, id: t.id, name: t.name, x: t.x, y: t.y, sv: t.sv,
+    owner: null,            // facId | null
+    cap: 0,                 // 0..100 hold strength for current owner / capturer
+    capturer: null,         // facId currently pushing cap up when owner null
+    contested: false,
+    garrisonLeft: t.garrison,
+  }));
+  const townById = {};
+  towns.forEach((t) => (townById[t.id] = t));
+
+  /* ---- spawn helpers ---------------------------------------------------- */
+  function spawnUnit(facId, def, x, y, opt) {
+    opt = opt || {};
+    const hm = (facId === playerFac || facId === enemyFac) ? hpMult(facId) : 1;
+    const maxHp = Math.round(def.hp * hm);
+    const u = {
+      id: nextId++, kind: "unit", fac: facId, def,
+      x, y, hp: maxHp, maxHp,
+      cd: rng() * 0.5, alive: true,
+      order: { type: opt.order || "guard", x: null, y: null, target: null },
+      target: null,          // current acquired enemy
+      home: opt.home || null,
+      muzzle: 0, hitFlash: 0, supplyBoost: 0,
+      kills: 0, rank: 0,     // veterancy
+      stance: def.cat === "inf" || def.cat === "light" || def.cat === "heavy" || def.air ? "aggressive" : "hold",
+      emplacement: !!def.emplacement,
+      heading: opt.heading != null ? opt.heading : (facId === playerFac ? -Math.PI / 2 : Math.PI / 2),
+    };
+    units.push(u);
+    return u;
+  }
+
+  // Veterancy thresholds → rank 1/2/3. Higher rank = more damage + more HP.
+  const VET_KILLS = [3, 8, 16];
+  function creditKill(killer) {
+    if (!killer || killer.fac === "GARRISON" || !killer.def) return;
+    killer.kills++;
+    let nr = 0;
+    for (let i = 0; i < VET_KILLS.length; i++) if (killer.kills >= VET_KILLS[i]) nr = i + 1;
+    if (nr > killer.rank) {
+      killer.rank = nr;
+      const boost = 1 + 0.10 * nr;
+      const ratio = killer.hp / killer.maxHp;
+      killer.maxHp = Math.round(killer.def.hp * boost);
+      killer.hp = Math.min(killer.maxHp, killer.maxHp * ratio + killer.def.hp * 0.15);
+      floats.push({ txt: "PROMOTED", x: killer.x, y: killer.y - 14, t: 0, col: "#e3c14a" });
+    }
+  }
+
+  // Each side opens holding the towns nearest its HQ — this bootstraps the
+  // economy and forms a natural front line in the contested middle towns.
+  function assignStartingTowns() {
+    const taken = new Set();
+    const give = (facId, count) => {
+      const hq = MAP.hq[facId];
+      const ranked = towns
+        .filter((t) => !taken.has(t.id))
+        .sort((a, b) => U.dist2(a.x, a.y, hq.x, hq.y) - U.dist2(b.x, b.y, hq.x, hq.y));
+      for (let i = 0; i < count && i < ranked.length; i++) {
+        const t = ranked[i];
+        t.owner = facId; t.cap = 100; t.garrisonLeft = 0; taken.add(t.id);
+      }
+    };
+    give(playerFac, 2);
+    give(enemyFac, 2);
+  }
+  assignStartingTowns();
+
+  // Neutral garrisons defend the still-unclaimed (middle) towns. Side "GARRISON".
+  function seedGarrisons() {
+    for (const t of towns) {
+      if (t.owner) continue; // owned towns start undefended/secured
+      const baseDefs = ROSTER[playerFac].filter((d) => d.cat === "inf" && !d.heal);
+      for (let i = 0; i < t.def.garrison; i++) {
+        const def = i === 0 ? baseDefs.find((d) => d.id.includes("ar")) || baseDefs[0]
+                            : baseDefs[i % baseDefs.length];
+        const ang = rng() * Math.PI * 2, r = 20 + rng() * 45;
+        const g = spawnUnit("GARRISON", def, t.x + Math.cos(ang) * r, t.y + Math.sin(ang) * r,
+          { order: "hold", home: { x: t.x, y: t.y } });
+        g.garrison = true;
+      }
+    }
+  }
+
+  // Opening forces so the field isn't empty.
+  function seedStarters() {
+    for (const facId of [playerFac, enemyFac]) {
+      const hq = sides[facId].hq;
+      const roster = ROSTER[facId];
+      const starters = ["rifle", "rifle", "ar", "lat"];
+      starters.forEach((tag, i) => {
+        const def = roster.find((d) => d.id.endsWith(tag)) || roster[0];
+        const ang = facId === playerFac ? -Math.PI / 2 : Math.PI / 2;
+        spawnUnit(facId, def, hq.x + (i - 1.5) * 34, hq.y + (facId === playerFac ? -50 : 50),
+          { heading: ang });
+      });
+    }
+  }
+  seedGarrisons();
+  seedStarters();
+
+  /* ---- classification helpers ------------------------------------------ */
+  const targetClass = (u) => (u.def.air ? "air" : (u.def.cat === "inf" ? "inf" : "veh"));
+
+  // Throttled "HQ under attack" alert.
+  function maybeAlertHQ(hq) {
+    if (hq.fac !== playerFac) return;
+    if ((clock - (hq._alertT || -99)) < 12) return;
+    hq._alertT = clock;
+    emitSfx("alert", { x: hq.x, y: hq.y, msg: "Your HQ is under attack!" });
+  }
+  const isEnemySides = (a, b) => {
+    if (a === b) return false;
+    if (a === "GARRISON" || b === "GARRISON") return true; // garrison fights everyone
+    return true;
+  };
+
+  /* ---- combat ----------------------------------------------------------- */
+  function applyDamage(src, tgt, dt) {
+    if (!src.def || src.def.rof <= 0 || src.def.range <= 0) return;
+    src.cd -= dt;
+    if (src.cd > 0) return;
+    src.cd += 1 / src.def.rof;
+    const cls = tgt.kind === "hq" ? "veh" : targetClass(tgt);
+    let dmg = src.def.dmg * (src.def.vs[cls] || 1) * (1 + 0.12 * (src.rank || 0)) * dmgMult(src.fac);
+    const armor = tgt.kind === "hq" ? 4 : (tgt.def.armor || 0);
+    dmg = Math.max(1, dmg - armor) * (1 - 0.06 * (tgt.rank || 0));
+    // air is slippery vs unguided small arms
+    if (tgt.def && tgt.def.air && cls === "air" && src.def.cat === "inf" && !src.def.vs.air) dmg *= 0.4;
+    // forest cover: dug-in infantry take less fire
+    if (tgt.def && tgt.def.cat === "inf" && !tgt.emplacement && inForest(tgt.x, tgt.y)) dmg *= 0.6;
+    tgt.hp -= dmg;
+    tgt.hitFlash = 0.18;
+    if (tgt.hp <= 0 && !tgt._killer) tgt._killer = src;
+    if (tgt.kind === "hq") { tgt.lastHit = 0; maybeAlertHQ(tgt); }
+    src.muzzle = 0.09;
+    // impact spark
+    if (rng() < 0.5) particle({ kind: "spark", x: tgt.x, y: tgt.y, vx: (rng() - 0.5) * 40,
+      vy: -10 - rng() * 30, t: 0, life: 0.3, r: 1.5, col: "rgba(255,210,120," });
+    // visual tracer + occasional float
+    fx.push({ kind: src.def.arty ? "arty" : "tracer", x: src.x, y: src.y, tx: tgt.x, ty: tgt.y,
+      t: 0, life: src.def.arty ? 0.5 : 0.12, col: src.fac === "GARRISON" ? "#cfcf9a" : FACTIONS[src.fac].color });
+    if (src.def.arty) { fx.push({ kind: "blast", x: tgt.x, y: tgt.y, t: 0, life: 0.45, r: 36 }); smokeAt(tgt.x, tgt.y, 2); }
+  }
+
+  function healAround(medic, dt) {
+    for (const u of units) {
+      if (u === medic || u.fac !== medic.fac || !u.alive) continue;
+      if (U.dist2(u.x, u.y, medic.x, medic.y) < 90 * 90 && u.hp < u.maxHp) {
+        u.hp = Math.min(u.maxHp, u.hp + medic.def.heal * dt);
+      }
+    }
+  }
+
+  /* ---- acquisition ------------------------------------------------------ */
+  function acquire(u) {
+    // keep current target if still valid + in sight
+    const sightR = u.def.sight;
+    if (u.target && u.target.alive !== false && (u.target.hp > 0) &&
+        U.dist2(u.x, u.y, u.target.x, u.target.y) < (sightR * 1.25) ** 2) return u.target;
+    let best = null, bestD = (sightR) ** 2;
+    grid.forEachInRadius(u.x, u.y, sightR, (o) => {
+      if (!o.alive || !isEnemySides(u.fac, o.fac)) return;
+      const d = U.dist2(u.x, u.y, o.x, o.y);
+      // concealed infantry in forest are only spotted up close
+      if (o.def.cat === "inf" && !o.emplacement && inForest(o.x, o.y) && d > (sightR * 0.5) ** 2) return;
+      if (d < bestD) { bestD = d; best = o; }
+    });
+    // HQ as target if very close and we belong to the other side
+    for (const facId of Object.keys(sides)) {
+      if (facId === u.fac) continue;
+      const hq = sides[facId].hq;
+      if (hq.hp > 0) {
+        const d = U.dist2(u.x, u.y, hq.x, hq.y);
+        if (d < bestD && d < (sightR * 1.1) ** 2) { bestD = d; best = hq; }
+      }
+    }
+    u.target = best;
+    return best;
+  }
+
+  /* ---- movement --------------------------------------------------------- */
+  function moveToward(u, tx, ty, dt, stopDist) {
+    const dx = tx - u.x, dy = ty - u.y;
+    const d = Math.hypot(dx, dy);
+    if (d <= (stopDist || 2)) return true;
+    const sp = u.def.speed * dt;
+    const nx = dx / d, ny = dy / d;
+    u.x += nx * Math.min(sp, d);
+    u.y += ny * Math.min(sp, d);
+    u.x = U.clamp(u.x, 8, WORLD.w - 8);
+    u.y = U.clamp(u.y, 8, WORLD.h - 8);
+    u.heading = Math.atan2(ny, nx);
+    return false;
+  }
+
+  function updateUnit(u, dt) {
+    if (u.hitFlash > 0) u.hitFlash -= dt;
+    if (u.muzzle > 0) u.muzzle -= dt;
+    if (u._para > 0) u._para -= dt;
+
+    if (u.def.heal) healAround(u, dt);
+    if (u.def.repair) repairAround(u, dt);
+    // emplacements / outposts never move — engage only, then bail
+    if (u.emplacement || u.outpost) {
+      if (u.def.range > 0) {
+        const e = acquire(u);
+        if (e && U.dist2(u.x, u.y, e.x, e.y) < u.def.range ** 2) applyDamage(u, e, dt);
+      }
+      return;
+    }
+
+    const enemy = acquire(u);
+    const ord = u.order;
+
+    // Garrison: leash to home, defend.
+    if (u.garrison) {
+      if (enemy && U.dist2(u.x, u.y, enemy.x, enemy.y) < (u.def.range * 1.1) ** 2) {
+        applyDamage(u, enemy, dt);
+      } else if (enemy && U.dist2(u.x, u.y, u.home.x, u.home.y) < 160 * 160) {
+        moveToward(u, enemy.x, enemy.y, dt, u.def.range * 0.8);
+      } else {
+        moveToward(u, u.home.x, u.home.y, dt, 6);
+      }
+      return;
+    }
+
+    // Explicit move/attack-move order.
+    if (ord.type === "move" || ord.type === "attackmove") {
+      // attack-move: pause to engage things in range, else keep walking.
+      if (ord.type === "attackmove" && enemy &&
+          U.dist2(u.x, u.y, enemy.x, enemy.y) < (u.def.range) ** 2) {
+        applyDamage(u, enemy, dt);
+        return;
+      }
+      const arrived = moveToward(u, ord.x, ord.y, dt, 6);
+      // still shoot while moving if something is point-blank
+      if (enemy && u.def.range > 0 &&
+          U.dist2(u.x, u.y, enemy.x, enemy.y) < (u.def.range * 0.85) ** 2) applyDamage(u, enemy, dt);
+      if (arrived) u.order = { type: "guard", x: u.x, y: u.y, target: null };
+      return;
+    }
+
+    if (ord.type === "attack" && ord.target && ord.target.hp > 0 && ord.target.alive !== false) {
+      const t = ord.target;
+      if (U.dist2(u.x, u.y, t.x, t.y) < (u.def.range) ** 2) applyDamage(u, t, dt);
+      else moveToward(u, t.x, t.y, dt, u.def.range * 0.85);
+      return;
+    }
+
+    // Default behaviour shaped by stance:
+    //   aggressive — engage and chase within a leash
+    //   defensive  — engage in range, never chase
+    //   hold       — hold ground, engage in range
+    //   holdfire   — hold ground, do not fire (ambush / sneak)
+    const canFire = u.stance !== "holdfire";
+    if (enemy) {
+      const dd = U.dist2(u.x, u.y, enemy.x, enemy.y);
+      if (dd < (u.def.range) ** 2) {
+        if (canFire) applyDamage(u, enemy, dt);
+      } else if (u.stance === "aggressive" && ord.type !== "hold") {
+        const leashOk = !u.home || U.dist2(u.x, u.y, u.home.x, u.home.y) < 420 * 420;
+        if (leashOk) moveToward(u, enemy.x, enemy.y, dt, u.def.range * 0.85);
+      }
+    }
+  }
+
+  /* ---- HQ behaviour ----------------------------------------------------- */
+  function updateHQ(hq, dt) {
+    hq.lastHit += dt;
+    if (hq.lastHit > 3 && hq.hp < hq.maxHp) hq.hp = Math.min(hq.maxHp, hq.hp + RULES.hqRepair * dt);
+    // auto turret
+    hq.cd -= dt;
+    let best = null, bestD = hq.range ** 2;
+    grid.forEachInRadius(hq.x, hq.y, hq.range, (o) => {
+      if (!o.alive || o.fac === hq.fac) return;
+      const d = U.dist2(o.x, o.y, hq.x, hq.y);
+      if (d < bestD) { bestD = d; best = o; }
+    });
+    if (best && hq.cd <= 0) {
+      hq.cd += 1 / hq.rof;
+      const cls = targetClass(best);
+      let dmg = Math.max(1, hq.dmg * (cls === "air" ? 1.4 : 1) - (best.def.armor || 0));
+      best.hp -= dmg; best.hitFlash = 0.18;
+      fx.push({ kind: "tracer", x: hq.x, y: hq.y - 20, tx: best.x, ty: best.y, t: 0, life: 0.12,
+        col: FACTIONS[hq.fac].color });
+    }
+  }
+
+  /* ---- towns / capture -------------------------------------------------- */
+  function updateTown(t, dt) {
+    let pc = 0, ec = 0, gc = 0; // player, enemy, garrison counts (weighted)
+    grid.forEachInRadius(t.x, t.y, RULES.captureRange, (u) => {
+      if (!u.alive) return;
+      if (u.emplacement) return; // static defenses don't capture
+      if (U.dist2(u.x, u.y, t.x, t.y) > RULES.captureRange ** 2) return;
+      const w = u.def.air ? 0.5 : (u.def.cat === "inf" ? 1 : 1.5);
+      if (u.fac === playerFac) pc += w;
+      else if (u.fac === enemyFac) ec += w;
+      else gc += w;
+    });
+    t.garrisonLeft = gc;
+    t.contested = (pc > 0 && ec > 0) || (gc > 0 && (pc > 0 || ec > 0));
+    // Alert the player when one of their towns comes under enemy pressure.
+    if (t.owner === playerFac && ec > 0 && (clock - (t._alertT || -99)) > 14) {
+      t._alertT = clock;
+      emitSfx("alert", { x: t.x, y: t.y, msg: `${t.name} is under attack!` });
+    }
+    // Garrison blocks capture entirely while alive & present.
+    if (gc > 0.5) { t._ca = pc; t._ea = ec; return; }
+
+    const attackerFac = pc > ec ? playerFac : ec > pc ? enemyFac : null;
+    const attackerCount = Math.max(pc, ec), defenderCount = Math.min(pc, ec);
+
+    if (!attackerFac) return; // nobody, or perfectly contested -> frozen
+
+    if (t.owner === attackerFac) {
+      t.cap = Math.min(100, t.cap + RULES.captureRate * dt); // consolidate
+    } else {
+      const push = RULES.captureRate * dt * (1 + 0.25 * (attackerCount - defenderCount));
+      t.cap -= push;
+      if (t.cap <= 0) {
+        const flipped = t.owner != null;
+        t.owner = attackerFac;
+        t.cap = 0.01;
+        const s = sides[attackerFac];
+        s.funds += t.sv * RULES.captureFundsBonus;
+        log(`${FACTIONS[attackerFac].name} ${flipped ? "seized" : "secured"} ${t.name} (+${t.sv * RULES.captureFundsBonus} funds)`,
+          attackerFac === playerFac ? "good" : "bad");
+        emitSfx("capture", { good: attackerFac === playerFac, x: t.x, y: t.y });
+      }
+    }
+  }
+
+  /* ---- economy ---------------------------------------------------------- */
+  let incomeTimer = 0;
+  function tickEconomy(dt) {
+    // compute display income/sec
+    for (const facId of [playerFac, enemyFac]) {
+      let inc = 0;
+      for (const t of towns) if (t.owner === facId) inc += t.sv * RULES.incomePerSV;
+      let mult = (facId === enemyFac ? diff.aiFunds : 1) * incomeMult(facId);
+      sides[facId].income = inc * mult;
+    }
+    incomeTimer += dt;
+    if (incomeTimer >= RULES.incomeInterval) {
+      incomeTimer -= RULES.incomeInterval;
+      for (const facId of [playerFac, enemyFac]) {
+        sides[facId].funds += sides[facId].income * RULES.incomeInterval;
+      }
+    }
+  }
+
+  /* ---- production ------------------------------------------------------- */
+  function supplyUsed(facId) {
+    let s = 0;
+    for (const u of units) if (u.alive && u.fac === facId) s += u.def.sup;
+    for (const q of sides[facId].queue) s += q.def.sup;
+    return s;
+  }
+  function supplyCap(facId) {
+    // base ceiling + supply depots + per-town bonus + outposts + logistics upgrade,
+    // so taking ground and deploying outposts expands the army you can field.
+    let outposts = 0;
+    for (const u of units) if (u.alive && u.fac === facId && u.outpost && !u.building) outposts++;
+    return sides[facId].supplyCap + sides[facId].depots * 6 + townsOwned(facId) * 2
+      + outposts * 5 + upgSupply(facId);
+  }
+  function hasStructure(facId, id) { return sides[facId].structures.has(id); }
+
+  // A unit category is unlocked when a built structure unlocks it
+  // (e.g. category "inf" is unlocked by the "barracks" structure).
+  function catUnlocked(facId, cat) {
+    for (const sid of sides[facId].structures) {
+      const st = STRUCT_BY_ID[sid];
+      if (st && st.unlocks === cat) return true;
+    }
+    return false;
+  }
+
+  function queueUnit(facId, unitId) {
+    const def = UNIT_BY_ID[unitId];
+    const s = sides[facId];
+    if (!def) return { ok: false, reason: "unknown" };
+    if (!catUnlocked(facId, def.cat)) return { ok: false, reason: "Need " + structName(def.cat) };
+    if (s.funds < def.cost) return { ok: false, reason: "Not enough funds" };
+    if (supplyUsed(facId) + def.sup > supplyCap(facId)) return { ok: false, reason: "Supply full" };
+    s.funds -= def.cost; s.spent += def.cost;
+    const bt = def.build * buildMult(facId);
+    s.queue.push({ kind: "unit", def, timeLeft: bt, total: bt });
+    return { ok: true };
+  }
+
+  function queueStructure(facId, structId) {
+    const st = STRUCT_BY_ID[structId];
+    const s = sides[facId];
+    if (!st) return { ok: false, reason: "unknown" };
+    if (s.structures.has(structId) && structId !== "depot") return { ok: false, reason: "Already built" };
+    if (s.building.some((b) => b.struct.id === structId) && structId !== "depot")
+      return { ok: false, reason: "In progress" };
+    // structures cost SUPPLY (logistics), as in the source mission
+    if (supplyCap(facId) - supplyUsed(facId) < 0) { /* allow */ }
+    if (s.funds < st.cost) return { ok: false, reason: "Not enough funds" };
+    s.funds -= st.cost; s.spent += st.cost;
+    s.building.push({ kind: "struct", struct: st, timeLeft: st.build, total: st.build });
+    return { ok: true };
+  }
+
+  function structName(cat) {
+    const s = STRUCTURES.find((x) => x.unlocks === cat);
+    return s ? s.name : cat;
+  }
+
+  function advanceProduction(facId, dt) {
+    const s = sides[facId];
+    // units
+    if (s.queue.length) {
+      const head = s.queue[0];
+      head.timeLeft -= dt;
+      if (head.timeLeft <= 0) {
+        s.queue.shift();
+        const hq = s.hq;
+        const ang = facId === playerFac ? -Math.PI / 2 : Math.PI / 2;
+        const off = (rng() - 0.5) * 70;
+        const u = spawnUnit(facId, head.def,
+          hq.x + off, hq.y + (facId === playerFac ? -64 : 64), { heading: ang });
+        // player rally point
+        if (s.rally) u.order = { type: "attackmove", x: s.rally.x, y: s.rally.y, target: null };
+      }
+    }
+    // structures
+    if (s.building.length) {
+      const b = s.building[0];
+      b.timeLeft -= dt;
+      if (b.timeLeft <= 0) {
+        s.building.shift();
+        if (b.struct.id === "depot") s.depots++;
+        else s.structures.add(b.struct.id);
+        if (facId === playerFac) { log(`${b.struct.name} online`, "good"); emitSfx("build", {}); }
+      }
+    }
+  }
+
+  /* ---- cleanup / win-lose ---------------------------------------------- */
+  let over = null; // {winner, reason}
+  function cleanup() {
+    for (let i = units.length - 1; i >= 0; i--) {
+      const u = units[i];
+      if (u.hp <= 0) {
+        u.alive = false;
+        const big = u.def.cat !== "inf";
+        fx.push({ kind: "blast", x: u.x, y: u.y, t: 0, life: 0.4, r: big ? 26 : 14 });
+        emitSfx("explosion", { x: u.x, y: u.y, size: big ? 1 : 0.5 });
+        // wreckage: crater + smoke + sparks
+        if (big || u.emplacement || u.outpost) {
+          particle({ kind: "crater", x: u.x, y: u.y, vx: 0, vy: 0, t: 0, life: 18, r: 9 + rng() * 5, col: "rgba(20,16,12," });
+          smokeAt(u.x, u.y, 5);
+          for (let k = 0; k < 6; k++) particle({ kind: "spark", x: u.x, y: u.y,
+            vx: (rng() - 0.5) * 90, vy: -20 - rng() * 60, t: 0, life: 0.4 + rng() * 0.3, r: 1.5, col: "rgba(255,180,80," });
+        } else smokeAt(u.x, u.y, 1);
+        if (u.fac === playerFac || u.fac === enemyFac) {
+          sides[u.fac].losses++;
+          const killerSide = u.fac === playerFac ? enemyFac : playerFac;
+          sides[killerSide].kills++;
+        }
+        // credit the unit that landed the kill (veterancy)
+        if (u._killer && u._killer.alive && u._killer.fac !== u.fac) creditKill(u._killer);
+        units.splice(i, 1);
+      }
+    }
+  }
+
+  const domTimer = { [playerFac]: 0, [enemyFac]: 0 };
+  function checkEnd(dt) {
+    if (over) return;
+    if (sides[playerFac].hq.hp <= 0) { over = { winner: enemyFac, reason: "Your HQ was overrun." }; return; }
+    if (sides[enemyFac].hq.hp <= 0) { over = { winner: playerFac, reason: "Enemy HQ destroyed." }; return; }
+    if (towns.every((t) => t.owner === playerFac)) { over = { winner: playerFac, reason: "Total territorial control." }; return; }
+    if (towns.every((t) => t.owner === enemyFac)) { over = { winner: enemyFac, reason: "The enemy holds every town." }; return; }
+    if (winCond.id === "domination") {
+      const need = Math.ceil(towns.length / 2) + 1;
+      for (const f of [playerFac, enemyFac]) {
+        if (townsOwned(f) >= need) domTimer[f] += dt || 0; else domTimer[f] = 0;
+        if (domTimer[f] >= RULES.dominationHold) {
+          over = { winner: f, reason: `${FACTIONS[f].name} dominated the region.` }; return;
+        }
+      }
+    }
+  }
+  function domProgress(facId) {
+    if (winCond.id !== "domination") return null;
+    return U.clamp(domTimer[facId] / RULES.dominationHold, 0, 1);
+  }
+
+  /* ---- effects ---------------------------------------------------------- */
+  function updateFx(dt) {
+    for (let i = fx.length - 1; i >= 0; i--) {
+      fx[i].t += dt;
+      if (fx[i].t >= fx[i].life) fx.splice(i, 1);
+    }
+    for (let i = floats.length - 1; i >= 0; i--) {
+      floats[i].t += dt; floats[i].y -= 14 * dt;
+      if (floats[i].t > 1.1) floats.splice(i, 1);
+    }
+  }
+
+  /* ---- log + sfx -------------------------------------------------------- */
+  const logs = [];
+  function log(msg, type) {
+    logs.push({ msg, type: type || "info", t: clock });
+    if (logs.length > 60) logs.shift();
+    if (game.onLog) game.onLog(msg, type || "info");
+  }
+  function emitSfx(type, data) { if (game.onSfx) game.onSfx(type, data || {}); }
+
+  /* ---- delayed-action scheduler (for support powers) -------------------- */
+  const scheduled = [];
+  function schedule(delay, fn) { scheduled.push({ at: clock + delay, fn }); }
+  function runScheduled() {
+    for (let i = scheduled.length - 1; i >= 0; i--) {
+      if (clock >= scheduled[i].at) { const a = scheduled[i]; scheduled.splice(i, 1); a.fn(); }
+    }
+  }
+
+  // Area damage that spares the casting side (keeps support powers fun).
+  function damageArea(casterFac, x, y, radius, dmg) {
+    grid.forEachInRadius(x, y, radius, (u) => {
+      if (!u.alive || u.fac === casterFac) return;
+      const d = U.dist(u.x, u.y, x, y);
+      if (d <= radius) {
+        const fall = 1 - 0.5 * (d / radius);
+        u.hp -= Math.max(2, dmg * fall - (u.def.armor || 0) * 0.4);
+        u.hitFlash = 0.2;
+        if (u.hp <= 0 && !u._killer) u._killer = null; // power kills credit no unit
+      }
+    });
+    // also chip the enemy HQ if in blast
+    for (const fid of Object.keys(sides)) {
+      if (fid === casterFac) continue;
+      const hq = sides[fid].hq;
+      if (U.dist(hq.x, hq.y, x, y) <= radius) { hq.hp -= dmg * 0.5; hq.lastHit = 0; maybeAlertHQ(hq); }
+    }
+  }
+
+  /* ---- commander support powers ----------------------------------------- */
+  function powerState(facId, id) {
+    const s = sides[facId];
+    if (!s.powers) s.powers = {};
+    if (!s.powers[id]) s.powers[id] = { cd: 0 };
+    return s.powers[id];
+  }
+  function powerReady(facId, id) {
+    const def = POWERS.find((p) => p.id === id);
+    const ps = powerState(facId, id);
+    return ps.cd <= 0 && sides[facId].funds >= def.cost;
+  }
+  function usePower(facId, id, x, y) {
+    const def = POWERS.find((p) => p.id === id);
+    if (!def) return { ok: false, reason: "unknown" };
+    const ps = powerState(facId, id);
+    if (ps.cd > 0) return { ok: false, reason: "On cooldown" };
+    if (sides[facId].funds < def.cost) return { ok: false, reason: "Not enough funds" };
+    sides[facId].funds -= def.cost; sides[facId].spent += def.cost;
+    ps.cd = def.cd;
+    x = U.clamp(x, 10, WORLD.w - 10); y = U.clamp(y, 10, WORLD.h - 10);
+    if (facId === playerFac) emitSfx("power", { x, y, msg: def.name + " inbound" });
+
+    if (id === "artillery") {
+      for (let i = 0; i < 8; i++) {
+        const a = rng() * Math.PI * 2, r = rng() * 80;
+        const bx = x + Math.cos(a) * r, by = y + Math.sin(a) * r;
+        schedule(0.6 + i * 0.22, () => {
+          fx.push({ kind: "blast", x: bx, y: by, t: 0, life: 0.5, r: 40 });
+          damageArea(facId, bx, by, 60, 90);
+          emitSfx("explosion", { x: bx, y: by, size: 1.2 });
+        });
+      }
+    } else if (id === "airstrike") {
+      const hq = sides[facId].hq;
+      const ang = Math.atan2(y - hq.y, x - hq.x);
+      const dx = Math.cos(ang), dy = Math.sin(ang);
+      for (let i = -3; i <= 3; i++) {
+        const bx = x + dx * i * 55, by = y + dy * i * 55;
+        schedule(0.5 + (i + 3) * 0.12, () => {
+          fx.push({ kind: "blast", x: bx, y: by, t: 0, life: 0.45, r: 34 });
+          fx.push({ kind: "tracer", x: bx - dx * 40, y: by - dy * 40, tx: bx, ty: by, t: 0, life: 0.18, col: "#ffd27a" });
+          damageArea(facId, bx, by, 48, 75);
+          emitSfx("explosion", { x: bx, y: by, size: 1 });
+        });
+      }
+    } else if (id === "paradrop") {
+      const roster = ROSTER[facId];
+      const squad = ["ar", "rifle", "rifle", "lat", "rifle"];
+      squad.forEach((tag, i) => {
+        const ud = roster.find((d) => d.id.endsWith("_" + tag)) || roster[0];
+        schedule(0.3 + i * 0.15, () => {
+          const a = rng() * Math.PI * 2, r = rng() * 40;
+          const u = spawnUnit(facId, ud, x + Math.cos(a) * r, y + Math.sin(a) * r, { order: "guard" });
+          u._para = 0.8; // render parachute briefly
+          fx.push({ kind: "blast", x: u.x, y: u.y, t: 0, life: 0.3, r: 14 });
+        });
+      });
+    }
+    return { ok: true };
+  }
+  function tickPowers(dt) {
+    for (const fid of [playerFac, enemyFac]) {
+      const s = sides[fid]; if (!s.powers) continue;
+      for (const id in s.powers) if (s.powers[id].cd > 0) s.powers[id].cd -= dt;
+    }
+  }
+
+  /* ---- defensive emplacements ------------------------------------------- */
+  function canPlaceDefense(facId, x, y) {
+    // must be near owned territory (a held town or the HQ)
+    const hq = sides[facId].hq;
+    if (U.dist2(x, y, hq.x, hq.y) < 300 * 300) return true;
+    for (const t of towns) if (t.owner === facId && U.dist2(x, y, t.x, t.y) < 240 * 240) return true;
+    return false;
+  }
+  function buildDefense(facId, defId, x, y) {
+    const def = DEFENSE_BY_ID[defId];
+    const s = sides[facId];
+    if (!def) return { ok: false, reason: "unknown" };
+    if (!canPlaceDefense(facId, x, y)) return { ok: false, reason: "Must be near your HQ or a held town" };
+    if (s.funds < def.cost) return { ok: false, reason: "Not enough funds" };
+    if (supplyUsed(facId) + def.sup > supplyCap(facId)) return { ok: false, reason: "Supply full" };
+    s.funds -= def.cost; s.spent += def.cost;
+    // spawn as a stationary, building emplacement
+    const u = spawnUnit(facId, def, x, y, { order: "hold", home: { x, y } });
+    u.building = def.build; u.hp = Math.max(1, def.hp * 0.25); // weak while building, ramps up
+    if (facId === playerFac) emitSfx("build", {});
+    return { ok: true };
+  }
+  // ramp emplacement HP while "building"
+  function tickDefenses(dt) {
+    for (const u of units) {
+      if (!u.alive || !u.emplacement || !u.building) continue;
+      u.building -= dt;
+      u.hp = Math.min(u.maxHp, u.hp + (u.maxHp * 0.75 / DEFENSE_BY_ID[u.def.id].build) * dt);
+      if (u.building <= 0) { u.building = 0; u.hp = u.maxHp; }
+    }
+  }
+
+  /* ====================================================================== *
+   * COMMANDER UPGRADES — persistent, escalating-cost multipliers.
+   * ==================================================================== */
+  function upgLevel(facId, id) {
+    const s = sides[facId]; const u = s && s.upgrades; return (u && u[id]) || 0;
+  }
+  function upgInfo(facId, id) {
+    const def = UPGRADE_BY_ID[id]; const lvl = upgLevel(facId, id);
+    const next = lvl < def.levels ? Math.round(def.baseCost * Math.pow(def.costMult, lvl)) : null;
+    return { def, lvl, max: def.levels, cost: next };
+  }
+  function buyUpgrade(facId, id) {
+    const info = upgInfo(facId, id); const s = sides[facId];
+    if (info.lvl >= info.max) return { ok: false, reason: "Maxed" };
+    if (s.funds < info.cost) return { ok: false, reason: "Not enough funds" };
+    s.funds -= info.cost; s.spent += info.cost;
+    if (!s.upgrades) s.upgrades = {};
+    s.upgrades[id] = info.lvl + 1;
+    if (facId === playerFac) { emitSfx("build", {}); log(`${info.def.name} upgraded to L${info.lvl + 1}`, "good"); }
+    return { ok: true };
+  }
+  function dmgMult(f)    { return 1 + 0.14 * upgLevel(f, "weapons"); }
+  function hpMult(f)     { return 1 + 0.14 * upgLevel(f, "armor"); }
+  function incomeMult(f) { return 1 + 0.22 * upgLevel(f, "economy"); }
+  function buildMult(f)  { return Math.max(0.4, 1 - 0.16 * upgLevel(f, "production")); }
+  function upgSupply(f)  { return 6 * upgLevel(f, "logistics"); }
+
+  /* ====================================================================== *
+   * DAY / NIGHT — drives render tint and night vision penalty.
+   * ==================================================================== */
+  function daylight() {
+    // ~260s full cycle; ranges roughly 0.12 (night) .. 1.0 (midday). Starts at day.
+    return 0.56 + 0.44 * Math.sin(clock / 41.3 + Math.PI / 2);
+  }
+
+  /* ====================================================================== *
+   * FOG OF WAR — coarse visible/explored grid for the player side.
+   * ==================================================================== */
+  const VCELL = 88;
+  const vcols = Math.ceil(WORLD.w / VCELL), vrows = Math.ceil(WORLD.h / VCELL);
+  const visible = new Uint8Array(vcols * vrows);
+  const explored = new Uint8Array(vcols * vrows);
+  function markVis(x, y, r) {
+    const minx = U.clamp(((x - r) / VCELL) | 0, 0, vcols - 1);
+    const maxx = U.clamp(((x + r) / VCELL) | 0, 0, vcols - 1);
+    const miny = U.clamp(((y - r) / VCELL) | 0, 0, vrows - 1);
+    const maxy = U.clamp(((y + r) / VCELL) | 0, 0, vrows - 1);
+    const r2 = r * r;
+    for (let cy = miny; cy <= maxy; cy++)
+      for (let cx = minx; cx <= maxx; cx++) {
+        const px = cx * VCELL + VCELL / 2, py = cy * VCELL + VCELL / 2;
+        if (U.dist2(px, py, x, y) <= r2) { const i = cy * vcols + cx; visible[i] = 1; explored[i] = 1; }
+      }
+  }
+  let visT = 0;
+  function updateVision() {
+    visible.fill(0);
+    const night = 0.55 + 0.45 * daylight();   // sight scales down at night
+    for (const u of units) {
+      if (!u.alive || u.fac !== playerFac) continue;
+      markVis(u.x, u.y, u.def.sight * night * (u.def.scout ? 1.25 : 1));
+    }
+    for (const t of towns) if (t.owner === playerFac) markVis(t.x, t.y, 240);
+    const hq = sides[playerFac].hq; markVis(hq.x, hq.y, 360);
+  }
+  function vidx(x, y) {
+    const cx = U.clamp((x / VCELL) | 0, 0, vcols - 1), cy = U.clamp((y / VCELL) | 0, 0, vrows - 1);
+    return cy * vcols + cx;
+  }
+  const isVisible = (x, y) => !!visible[vidx(x, y)];
+  const isExplored = (x, y) => !!explored[vidx(x, y)];
+
+  /* ====================================================================== *
+   * TERRAIN — forests give infantry cover and conceal them a little.
+   * ==================================================================== */
+  function inForest(x, y) {
+    const F = MAP.forests || [];
+    for (const f of F) if (U.dist2(x, y, f.x, f.y) < f.r * f.r) return true;
+    return false;
+  }
+
+  /* ====================================================================== *
+   * PARTICLES — smoke, dust, sparks, craters (purely cosmetic).
+   * ==================================================================== */
+  function particle(p) { if (parts.length < 900) parts.push(p); }
+  function smokeAt(x, y, n, col) {
+    for (let i = 0; i < n; i++)
+      particle({ kind: "smoke", x: x + (rng() - 0.5) * 8, y: y + (rng() - 0.5) * 8,
+        vx: (rng() - 0.5) * 6, vy: -8 - rng() * 10, t: 0, life: 1.2 + rng() * 1.4,
+        r: 4 + rng() * 5, col: col || "rgba(40,40,40," });
+  }
+  function updateParticles(dt) {
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i]; p.t += dt;
+      if (p.t >= p.life) { parts.splice(i, 1); continue; }
+      if (p.kind !== "crater") { p.x += p.vx * dt; p.y += p.vy * dt; }
+      if (p.kind === "smoke") { p.vy *= (1 - 0.4 * dt); p.r += 6 * dt; }
+      if (p.kind === "spark") { p.vy += 60 * dt; }
+    }
+    // burning wrecks / damaged vehicles emit smoke
+    for (const u of units) {
+      if (!u.alive) continue;
+      if ((u.def.cat === "heavy" || u.def.cat === "light" || u.def.air) && u.hp < u.maxHp * 0.4) {
+        if (rng() < dt * 6) smokeAt(u.x, u.y, 1);
+      }
+    }
+  }
+
+  /* ====================================================================== *
+   * FORWARD OUTPOSTS — a supply truck deploys into a forward base:
+   * vision + heal aura + supply-cap bonus + production rally anchor.
+   * ==================================================================== */
+  function deployOutpost(truck) {
+    if (!truck || !truck.def.supplyTruck || truck.fac !== playerFac && truck.fac !== enemyFac) return { ok: false };
+    const facId = truck.fac;
+    truck.hp = -1;            // consume the truck
+    const u = spawnUnit(facId, OUTPOST_DEF, truck.x, truck.y, { order: "hold", home: { x: truck.x, y: truck.y } });
+    u.outpost = true; u.building = OUTPOST_DEF.build; u.hp = OUTPOST_DEF.hp * 0.3;
+    if (facId === playerFac) { log("Forward outpost deploying", "good"); emitSfx("build", {}); }
+    return { ok: true };
+  }
+  function tickOutposts(dt) {
+    for (const u of units) {
+      if (!u.alive || !u.outpost) continue;
+      if (u.building) {
+        u.building -= dt; u.hp = Math.min(u.maxHp, u.hp + (u.maxHp * 0.7 / OUTPOST_DEF.build) * dt);
+        if (u.building <= 0) { u.building = 0; u.hp = u.maxHp; }
+      }
+      // heal aura
+      grid.forEachInRadius(u.x, u.y, 120, (o) => {
+        if (o.alive && o.fac === u.fac && o !== u && o.hp < o.maxHp && U.dist2(o.x, o.y, u.x, u.y) < 120 * 120)
+          o.hp = Math.min(o.maxHp, o.hp + 6 * dt);
+      });
+    }
+  }
+
+  /* ====================================================================== *
+   * ENGINEER REPAIR — repairs friendly vehicles, emplacements, outposts.
+   * ==================================================================== */
+  function repairAround(eng, dt) {
+    grid.forEachInRadius(eng.x, eng.y, 90, (o) => {
+      if (!o.alive || o.fac !== eng.fac || o === eng) return;
+      const mech = o.def.cat !== "inf" || o.emplacement || o.outpost;
+      if (mech && o.hp < o.maxHp && U.dist2(o.x, o.y, eng.x, eng.y) < 90 * 90)
+        o.hp = Math.min(o.maxHp, o.hp + eng.def.repair * dt);
+    });
+  }
+
+  /* ---- main step -------------------------------------------------------- */
+  let clock = 0;
+  function update(dt) {
+    if (over) return;
+    clock += dt;
+    grid.build(units);                       // rebuild spatial hash once per step
+    for (const u of units) if (u.alive) updateUnit(u, dt);
+    updateHQ(sides[playerFac].hq, dt);
+    updateHQ(sides[enemyFac].hq, dt);
+    for (const t of towns) updateTown(t, dt);
+    tickEconomy(dt);
+    advanceProduction(playerFac, dt);
+    advanceProduction(enemyFac, dt);
+    tickPowers(dt);
+    tickDefenses(dt);
+    tickOutposts(dt);
+    runScheduled();
+    updateVision(dt);                        // fog of war
+    updateParticles(dt);
+    if (game.ai) game.ai.update(dt);
+    cleanup();
+    updateFx(dt);
+    checkEnd(dt);
+  }
+
+  /* ---- command API (used by UI) ---------------------------------------- */
+  function unitsOfSide(facId) { return units.filter((u) => u.alive && u.fac === facId); }
+  function townsOwned(facId) { return towns.filter((t) => t.owner === facId).length; }
+
+  function issueMove(sel, x, y, attackMove) {
+    // simple formation: spread around the click
+    const n = sel.length;
+    const cols = Math.ceil(Math.sqrt(n));
+    sel.forEach((u, i) => {
+      if (u.garrison) return;
+      const gx = (i % cols) - (cols - 1) / 2;
+      const gy = Math.floor(i / cols) - (Math.ceil(n / cols) - 1) / 2;
+      u.order = { type: attackMove ? "attackmove" : "move",
+        x: x + gx * 30, y: y + gy * 30, target: null };
+      u.target = null;
+    });
+  }
+  function issueAttack(sel, target) {
+    sel.forEach((u) => { if (!u.garrison) { u.order = { type: "attack", target }; u.target = target; } });
+  }
+  function issueStop(sel) {
+    sel.forEach((u) => { u.order = { type: "hold", x: u.x, y: u.y, target: null }; u.target = null; });
+  }
+  function setStance(sel, stance) {
+    sel.forEach((u) => { if (!u.garrison && !u.emplacement && !u.outpost) u.stance = stance; });
+  }
+  function deployOutposts(sel) {
+    let n = 0;
+    sel.forEach((u) => { if (u.alive && u.def.supplyTruck) { const r = deployOutpost(u); if (r.ok) n++; } });
+    return n;
+  }
+
+  const game = {
+    // identity
+    playerFac, enemyFac, diff, FAC: FACTIONS, winCond,
+    // state
+    sides, units, towns, townById, fx, floats, logs, parts, MAP, WORLD,
+    get clock() { return clock; },
+    get over() { return over; },
+    get daylight() { return daylight(); },
+    domProgress,
+    // fog of war
+    vision: { cell: VCELL, cols: vcols, rows: vrows, visible, explored },
+    isVisible, isExplored, inForest,
+    // queries
+    supplyUsed, supplyCap, hasStructure, catUnlocked, unitsOfSide, townsOwned,
+    powerReady, powerState, canPlaceDefense,
+    upgLevel, upgInfo, buyUpgrade,
+    // commands
+    queueUnit, queueStructure, issueMove, issueAttack, issueStop, setStance, deployOutposts,
+    usePower, buildDefense,
+    setRally(facId, x, y) { sides[facId].rally = { x, y }; },
+    // lifecycle
+    update,
+    spawnUnit,
+    onLog: null,
+    onSfx: null,
+    log,
+  };
+  return game;
+}
+
+
+/* === js/ai.js === */
+/* =============================================================================
+ * ai.js — the enemy commander. Macro (economy/build order) + tactics (orders).
+ * Reads/writes game state through the public engine API only.
+ * ========================================================================== */
+
+function createAI(game) {
+  "use strict";
+  const { ROSTER, STRUCT_BY_ID } = DATA;
+  const fac = game.enemyFac;
+  const side = game.sides[fac];
+  const aggro = game.diff.aiAggro;
+  const roster = ROSTER[fac];
+  const rng = U.makeRng(0xA15 ^ (fac === "USMC" ? 1 : 2));
+
+  // Build order of structures by priority (depot interleaved for supply).
+  const buildOrder = ["light", "depot", "heavy", "depot", "air", "depot"];
+
+  // Desired unit mix per economic phase. Picked by tag suffix on unit ids.
+  function phaseWants() {
+    const owned = game.townsOwned(fac);
+    if (!side.structures.has("heavy")) {
+      return ["rifle", "ar", "lat", "rifle", side.structures.has("light") ? "btr" : "ar",
+              side.structures.has("light") ? "uaz" : "rifle", "lat"];
+    }
+    if (!side.structures.has("air")) {
+      return ["abrams", "t72", "bmp", "lav", "hat", "aa", "ar", "tow", "vodnik"];
+    }
+    return ["abrams", "t72", "tusk", "t90", "apache", "ka52", "hat", "aa", "cobra", "hind", "harrier", "su25"];
+  }
+
+  function pickUnit(tags) {
+    // shuffle-ish by rng, find first affordable & unlockable
+    const order = tags.slice().sort(() => rng() - 0.5);
+    for (const tag of order) {
+      const def = roster.find((d) => d.id.endsWith("_" + tag) || d.id.endsWith(tag));
+      if (!def) continue;
+      if (!game.catUnlocked(fac, def.cat)) continue;
+      if (side.funds < def.cost) continue;
+      if (game.supplyUsed(fac) + def.sup > game.supplyCap(fac)) continue;
+      return def.id;
+    }
+    return null;
+  }
+
+  let macroT = 0, microT = 0, powerT = 12;
+
+  // Occasionally drop artillery on the densest cluster of player units.
+  function powers(dt) {
+    powerT -= dt;
+    if (powerT > 0) return;
+    powerT = 6;
+    if (!game.powerReady(fac, "artillery")) return;
+    const enemyUnits = game.unitsOfSide(game.playerFac).filter((u) => !u.garrison);
+    if (enemyUnits.length < 4) return;
+    let bestU = null, bestN = 3;
+    for (const u of enemyUnits) {
+      let n = 0;
+      for (const o of enemyUnits) if (U.dist2(u.x, u.y, o.x, o.y) < 90 * 90) n++;
+      if (n > bestN) { bestN = n; bestU = u; }
+    }
+    if (bestU) game.usePower(fac, "artillery", bestU.x, bestU.y);
+  }
+
+  function macro(dt) {
+    macroT -= dt;
+    if (macroT > 0) return;
+    macroT = 1.6 / aggro;
+
+    // 1) Structures: build the next missing one in the order when we can afford it
+    //    (keep a funds buffer so we still buy units).
+    for (const sid of buildOrder) {
+      const st = STRUCT_BY_ID[sid];
+      const alreadyBuilding = side.building.length > 0;
+      const has = sid === "depot" ? side.depots >= 1 + Math.floor(game.clock / 180)
+                                  : side.structures.has(sid);
+      if (!has && !alreadyBuilding && side.funds > st.cost + 300) {
+        // need supply headroom? build depot if near cap
+        if (game.supplyCap(fac) - game.supplyUsed(fac) <= 2 && sid !== "depot") {
+          game.queueStructure(fac, "depot");
+        } else {
+          game.queueStructure(fac, sid);
+        }
+        break;
+      }
+    }
+
+    // 2) Spend down funds on units, keeping the queue shallow.
+    let guard = 0;
+    while (side.queue.length < 3 && guard++ < 4) {
+      // top up supply with a depot if capped
+      if (game.supplyCap(fac) - game.supplyUsed(fac) <= 1 && side.funds > 320) {
+        game.queueStructure(fac, "depot");
+        break;
+      }
+      const id = pickUnit(phaseWants());
+      if (!id) break;
+      const r = game.queueUnit(fac, id);
+      if (!r.ok) break;
+    }
+
+    // 3) Invest surplus into upgrades (economy first, then combat).
+    if (side.funds > 1200) {
+      const order = ["economy", "weapons", "armor", "logistics", "production"];
+      for (const uid of order) {
+        const info = game.upgInfo(fac, uid);
+        if (info.cost != null && side.funds > info.cost + 700) { game.buyUpgrade(fac, uid); break; }
+      }
+    }
+  }
+
+  function micro(dt) {
+    microT -= dt;
+    if (microT > 0) return;
+    microT = 2.4;
+
+    const my = game.unitsOfSide(fac).filter((u) => !u.garrison);
+    if (!my.length) return;
+
+    // Units that are idle (guarding with nothing to do) get a fresh objective.
+    const idle = my.filter((u) => u.order.type === "guard" || u.order.type === "hold" ||
+      (u.order.type === "attackmove" && reached(u)));
+
+    // Choose objectives: prefer capturing towns; escalate to HQ when strong.
+    const enemyHQ = game.sides[game.playerFac].hq;
+    const myStrength = my.length;
+    const pushHQ = myStrength > 12 + 6 / aggro && game.clock > 120;
+
+    // Rank towns by desirability for the AI: not owned by us, weakest contest.
+    const targets = game.towns
+      .filter((t) => t.owner !== fac)
+      .map((t) => ({ t, score: townScore(t) }))
+      .sort((a, b) => a.score - b.score);
+
+    if (!idle.length) return;
+
+    // Send the bulk to the best 1-2 towns; peel a strike group to the HQ if pushing.
+    const groups = [];
+    if (pushHQ) groups.push({ x: enemyHQ.x, y: enemyHQ.y, share: 0.45 });
+    targets.slice(0, 2).forEach((o, i) => groups.push({ x: o.t.x, y: o.t.y, share: i === 0 ? 0.4 : 0.25 }));
+    if (!groups.length) groups.push({ x: enemyHQ.x, y: enemyHQ.y, share: 1 });
+
+    let idx = 0;
+    for (const g of groups) {
+      const cnt = Math.max(1, Math.round(idle.length * g.share));
+      const slice = idle.slice(idx, idx + cnt);
+      idx += cnt;
+      if (slice.length) game.issueMove(slice, g.x + (rng() - 0.5) * 60, g.y + (rng() - 0.5) * 60, true);
+    }
+    // leftovers -> best town
+    if (idx < idle.length && targets[0]) {
+      game.issueMove(idle.slice(idx), targets[0].t.x, targets[0].t.y, true);
+    }
+  }
+
+  function reached(u) {
+    return U.dist2(u.x, u.y, u.order.x, u.order.y) < 60 * 60;
+  }
+
+  function townScore(t) {
+    // lower = more attractive. distance from our HQ + ownership penalty.
+    const hq = side.hq;
+    let s = U.dist(t.x, t.y, hq.x, hq.y) * 0.01;
+    if (t.owner === game.playerFac) s -= 30;   // contesting enemy towns is valuable
+    if (t.owner == null) s -= 50;              // neutral towns are easiest wins
+    s -= t.sv * 0.6;                           // richer towns preferred
+    if (t.garrisonLeft > 0.5) s += 25;         // garrison makes it harder
+    return s;
+  }
+
+  return {
+    update(dt) {
+      if (game.over) return;
+      macro(dt);
+      micro(dt);
+      powers(dt);
+    },
+  };
+}
+
+
+/* === js/render.js === */
+/* =============================================================================
+ * render.js — all canvas drawing for the main board + minimap.
+ * Pure presentation: reads game state, never mutates it.
+ * ========================================================================== */
+
+const Render = (() => {
+  "use strict";
+  const { FACTIONS } = DATA;
+
+  // Terrain decoration, rebuilt when the map changes. Gameplay forests (from the
+  // map data, where infantry get cover) render as dense canopy; ambient blobs and
+  // fields are cosmetic.
+  let decor = null;
+  function buildDecor(game) {
+    const world = game.WORLD, M = game.MAP;
+    const rng = U.makeRng(M.id.length * 131 + 7);
+    const desert = M.biome === "desert";
+    const forests = (M.forests || []).map((f) => ({ x: f.x, y: f.y, r: f.r, gameplay: true }));
+    const ambient = [];
+    for (let i = 0; i < 34; i++) ambient.push({
+      x: rng() * world.w, y: rng() * world.h, r: 35 + rng() * 90, a: 0.03 + rng() * 0.05 });
+    const fields = [];
+    for (let i = 0; i < 26; i++) fields.push({
+      x: rng() * world.w, y: rng() * world.h,
+      w: 120 + rng() * 260, h: 80 + rng() * 180, a: 0.03 + rng() * 0.05, rot: rng() * 0.6 - 0.3 });
+    decor = { key: M.id, forests, ambient, fields, desert };
+  }
+
+  function nodePos(game, id) {
+    if (id === "hqW") return game.MAP.hq[game.playerFac === "USMC" ? "USMC" : (game.enemyFac === "USMC" ? "USMC" : "USMC")];
+    if (id === "hqE") return game.MAP.hq[game.playerFac === "RU" ? "RU" : (game.enemyFac === "RU" ? "RU" : "RU")];
+    return game.townById[id];
+  }
+
+  function drawBoard(ctx, game, cam, view, ui) {
+    ctx.save();
+    // --- background terrain ---
+    ctx.fillStyle = "#10160e";
+    ctx.fillRect(0, 0, view.w, view.h);
+
+    if (!decor || decor.key !== game.MAP.id) buildDecor(game);
+    const tint = game.MAP.tint;
+
+    ctx.save();
+    ctx.translate(-cam.x * cam.zoom, -cam.y * cam.zoom);
+    ctx.scale(cam.zoom, cam.zoom);
+
+    // base ground tint
+    const g = ctx.createLinearGradient(0, 0, 0, game.WORLD.h);
+    g.addColorStop(0, tint.top);
+    g.addColorStop(1, tint.bot);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, game.WORLD.w, game.WORLD.h);
+
+    // fields
+    for (const f of decor.fields) {
+      ctx.save();
+      ctx.translate(f.x, f.y); ctx.rotate(f.rot);
+      ctx.fillStyle = decor.desert ? `rgba(190,165,90,${f.a})` : `rgba(150,160,90,${f.a})`;
+      ctx.fillRect(-f.w / 2, -f.h / 2, f.w, f.h);
+      ctx.restore();
+    }
+    // ambient blobs
+    for (const f of decor.ambient) {
+      ctx.beginPath();
+      ctx.fillStyle = tint.forest + (f.a + 0.03) + ")";
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+    }
+    // gameplay forests (cover) — denser canopy with a soft edge
+    for (const f of decor.forests) {
+      ctx.beginPath(); ctx.fillStyle = tint.forest + "0.22)";
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.fillStyle = tint.forest + "0.18)";
+      ctx.arc(f.x, f.y, f.r * 0.7, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = tint.forest + "0.3)"; ctx.lineWidth = 2 / cam.zoom;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // craters (ground particles, under everything)
+    for (const p of game.parts) if (p.kind === "crater") {
+      ctx.globalAlpha = U.clamp(1 - p.t / p.life, 0, 0.6) * 0.7;
+      ctx.fillStyle = p.col + "0.7)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // grid
+    ctx.strokeStyle = tint.grid;
+    ctx.lineWidth = 1 / cam.zoom;
+    const step = 200;
+    for (let x = 0; x <= game.WORLD.w; x += step) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, game.WORLD.h); ctx.stroke();
+    }
+    for (let y = 0; y <= game.WORLD.h; y += step) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(game.WORLD.w, y); ctx.stroke();
+    }
+
+    // roads
+    ctx.strokeStyle = "rgba(180,170,140,0.10)";
+    ctx.lineWidth = 9 / 1;
+    ctx.lineCap = "round";
+    for (const [a, b] of game.MAP.roads) {
+      const pa = nodePos(game, a), pb = nodePos(game, b);
+      if (!pa || !pb) continue;
+      ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+    }
+
+    // towns
+    for (const t of game.towns) drawTown(ctx, game, t, ui);
+
+    // HQs
+    drawHQ(ctx, game, game.sides[game.playerFac].hq, game.playerFac);
+    drawHQ(ctx, game, game.sides[game.enemyFac].hq, game.enemyFac);
+
+    // rally flag
+    if (ui.rally) drawRally(ctx, ui.rally, game.sides[game.playerFac].color);
+
+    // units
+    for (const u of game.units) if (u.alive) drawUnit(ctx, game, u, ui);
+
+    // fx on top
+    for (const e of game.fx) drawFx(ctx, e);
+    // airborne particles (smoke, sparks)
+    for (const p of game.parts) {
+      if (p.kind === "crater") continue;
+      const k = p.t / p.life;
+      if (p.kind === "smoke") {
+        ctx.globalAlpha = (1 - k) * 0.5;
+        ctx.fillStyle = p.col + "1)";
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      } else if (p.kind === "spark") {
+        ctx.globalAlpha = 1 - k;
+        ctx.fillStyle = p.col + "1)";
+        ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+      }
+    }
+    ctx.globalAlpha = 1;
+    for (const f of game.floats) {
+      ctx.globalAlpha = U.clamp(1.1 - f.t, 0, 1);
+      ctx.fillStyle = f.col; ctx.font = "bold 13px monospace";
+      ctx.fillText(f.txt, f.x, f.y); ctx.globalAlpha = 1;
+    }
+
+    // ---- fog of war + day/night (world space) ----
+    drawFog(ctx, game, cam, view);
+
+    ctx.restore(); // world transform
+
+    // selection marquee (screen space)
+    if (ui.box) {
+      const b = ui.box;
+      ctx.strokeStyle = "rgba(150,230,140,0.9)";
+      ctx.fillStyle = "rgba(150,230,140,0.10)";
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.strokeRect(b.x, b.y, b.w, b.h);
+    }
+    ctx.restore();
+  }
+
+  function drawTown(ctx, game, t, ui) {
+    const owner = t.owner;
+    const oc = owner ? FACTIONS[owner].color : "#9aa0a6";
+    // footprint
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(60,60,55,0.5)";
+    ctx.arc(t.x, t.y, 46, 0, Math.PI * 2); ctx.fill();
+    // capture range hint when hovered/selected nearby
+    if (ui.hoverTown === t) {
+      ctx.beginPath(); ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.setLineDash([6, 8]); ctx.lineWidth = 1.5;
+      ctx.arc(t.x, t.y, DATA.RULES.captureRange, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // control ring
+    ctx.beginPath();
+    ctx.strokeStyle = oc; ctx.lineWidth = 4;
+    ctx.arc(t.x, t.y, 30, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (owner ? t.cap / 100 : 0.0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 4;
+    ctx.arc(t.x, t.y, 30, 0, Math.PI * 2); ctx.stroke();
+
+    // flag pole
+    ctx.fillStyle = "#2c2c2c"; ctx.fillRect(t.x - 1.5, t.y - 30, 3, 30);
+    ctx.fillStyle = owner ? oc : "#777";
+    ctx.beginPath();
+    ctx.moveTo(t.x + 1.5, t.y - 30); ctx.lineTo(t.x + 22, t.y - 25);
+    ctx.lineTo(t.x + 1.5, t.y - 20); ctx.closePath(); ctx.fill();
+
+    // contested pulse
+    if (t.contested) {
+      const p = (Math.sin(game.clock * 6) + 1) / 2;
+      ctx.beginPath(); ctx.strokeStyle = `rgba(255,210,60,${0.3 + 0.5 * p})`;
+      ctx.lineWidth = 2; ctx.arc(t.x, t.y, 36, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // label
+    ctx.font = "11px monospace"; ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillText(t.name, t.x + 1, t.y + 50);
+    ctx.fillStyle = "#d6dcc8";
+    ctx.fillText(t.name, t.x, t.y + 49);
+    ctx.fillStyle = "rgba(200,200,160,0.65)"; ctx.font = "9px monospace";
+    ctx.fillText("SV " + t.sv + (t.garrisonLeft > 0.5 ? "  ⚔" : ""), t.x, t.y + 61);
+    ctx.textAlign = "left";
+  }
+
+  function drawHQ(ctx, game, hq, facId) {
+    const c = FACTIONS[facId].color;
+    ctx.save();
+    ctx.translate(hq.x, hq.y);
+    // pad
+    ctx.fillStyle = "rgba(20,20,18,0.8)";
+    U.roundRect(ctx, -34, -28, 68, 56, 6); ctx.fill();
+    ctx.strokeStyle = c; ctx.lineWidth = 3;
+    U.roundRect(ctx, -34, -28, 68, 56, 6); ctx.stroke();
+    // building glyph
+    ctx.fillStyle = c; ctx.globalAlpha = 0.9;
+    ctx.fillRect(-18, -14, 36, 26);
+    ctx.fillStyle = "#10160e";
+    ctx.font = "bold 20px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("HQ", 0, 0);
+    ctx.globalAlpha = 1;
+    // hp bar
+    const w = 60, hp = U.clamp(hq.hp / hq.maxHp, 0, 1);
+    ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(-w / 2, -38, w, 6);
+    ctx.fillStyle = hp > 0.5 ? "#5ad15a" : hp > 0.25 ? "#e0c14a" : "#e05050";
+    ctx.fillRect(-w / 2, -38, w * hp, 6);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.restore();
+  }
+
+  function drawRally(ctx, r, col) {
+    ctx.save(); ctx.translate(r.x, r.y); ctx.globalAlpha = 0.8;
+    ctx.fillStyle = "#2c2c2c"; ctx.fillRect(-1, -22, 2, 22);
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(1, -22); ctx.lineTo(16, -17); ctx.lineTo(1, -12); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawUnit(ctx, game, u, ui) {
+    // fog of war: hide non-player units the player can't currently see
+    if (u.fac !== game.playerFac && !game.isVisible(u.x, u.y)) return;
+    const isSel = ui.sel && ui.sel.has(u);
+    const c = u.fac === "GARRISON" ? "#b9b9a0" : FACTIONS[u.fac].color;
+    const cat = u.def.cat;
+    const size = u.outpost ? 13 : cat === "inf" ? 5 : cat === "light" ? 8 : cat === "heavy" ? 10 : 9;
+
+    ctx.save();
+    ctx.translate(u.x, u.y);
+
+    // selection ring + order line
+    if (isSel) {
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(160,240,150,0.95)"; ctx.lineWidth = 1.6;
+      ctx.arc(0, 0, size + 6, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // shadow
+    ctx.beginPath(); ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.ellipse(0, size * 0.7, size + 1, (size + 1) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+
+    // body by category, oriented to heading
+    ctx.rotate(u.heading + Math.PI / 2);
+    ctx.fillStyle = u.hitFlash > 0 ? "#fff" : c;
+    ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1;
+    if (u.emplacement || u.outpost) {
+      // sandbag strongpoint / outpost: ring + colored core (never rotates)
+      ctx.rotate(-(u.heading + Math.PI / 2));
+      ctx.fillStyle = "rgba(90,84,60,0.95)";
+      U.roundRect(ctx, -size - 2, -size - 2, (size + 2) * 2, (size + 2) * 2, 3); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.stroke();
+      ctx.fillStyle = u.hitFlash > 0 ? "#fff" : c;
+      U.roundRect(ctx, -size + 2, -size + 2, (size - 2) * 2, (size - 2) * 2, 2); ctx.fill();
+      if (u.outpost) { // flag on the outpost
+        ctx.fillStyle = "#2c2c2c"; ctx.fillRect(-1, -size - 12, 2, 12);
+        ctx.fillStyle = c;
+        ctx.beginPath(); ctx.moveTo(1, -size - 12); ctx.lineTo(11, -size - 8); ctx.lineTo(1, -size - 4); ctx.closePath(); ctx.fill();
+      }
+      if (u.building) { // under construction: scaffolding hatch
+        ctx.strokeStyle = "rgba(255,210,90,0.8)"; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(-size, -size); ctx.lineTo(size, size);
+        ctx.moveTo(size, -size); ctx.lineTo(-size, size); ctx.stroke();
+      }
+      ctx.rotate(u.heading + Math.PI / 2);
+    } else if (u.def.air) {
+      // helicopter / jet: diamond + rotor
+      ctx.beginPath();
+      ctx.moveTo(0, -size - 3); ctx.lineTo(size, 0); ctx.lineTo(0, size + 3); ctx.lineTo(-size, 0);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "rgba(220,220,220,0.5)"; ctx.lineWidth = 1.4;
+      const rot = (game.clock * 30) % (Math.PI * 2);
+      ctx.beginPath(); ctx.moveTo(Math.cos(rot) * (size + 6), Math.sin(rot) * (size + 6));
+      ctx.lineTo(-Math.cos(rot) * (size + 6), -Math.sin(rot) * (size + 6)); ctx.stroke();
+    } else if (cat === "inf") {
+      ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // facing nub
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillRect(-1, -size - 2, 2, 4);
+    } else {
+      // vehicle: rounded rect hull + barrel
+      U.roundRect(ctx, -size, -size - 1, size * 2, size * 2 + 2, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillRect(-1.5, -size - 6, 3, size + 4);
+    }
+
+    // glyph
+    ctx.rotate(-(u.heading + Math.PI / 2));
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.font = `bold ${cat === "inf" ? 6 : 9}px monospace`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    if (cat !== "inf") ctx.fillText(u.def.glyph.toUpperCase(), 0, 0);
+
+    // muzzle flash
+    if (u.muzzle > 0) {
+      ctx.fillStyle = "rgba(255,230,120,0.9)";
+      ctx.beginPath();
+      ctx.arc(Math.cos(u.heading) * (size + 4), Math.sin(u.heading) * (size + 4), 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // hp bar when damaged
+    if (u.hp < u.maxHp) {
+      const w = size * 2 + 4, hp = U.clamp(u.hp / u.maxHp, 0, 1);
+      ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(-w / 2, -size - 8, w, 3);
+      ctx.fillStyle = hp > 0.5 ? "#5ad15a" : hp > 0.25 ? "#e0c14a" : "#e05050";
+      ctx.fillRect(-w / 2, -size - 8, w * hp, 3);
+    }
+
+    // veterancy chevrons
+    if (u.rank > 0) {
+      ctx.fillStyle = "#ffd24a"; ctx.strokeStyle = "rgba(0,0,0,0.6)"; ctx.lineWidth = 0.6;
+      for (let i = 0; i < u.rank; i++) {
+        const cy = size + 4 + i * 3;
+        ctx.beginPath();
+        ctx.moveTo(-3, cy + 2); ctx.lineTo(0, cy); ctx.lineTo(3, cy + 2);
+        ctx.stroke();
+      }
+    }
+
+    // parachute (just-dropped paratroopers)
+    if (u._para > 0) {
+      ctx.globalAlpha = U.clamp(u._para, 0, 1);
+      ctx.fillStyle = "rgba(220,220,210,0.85)";
+      ctx.beginPath(); ctx.arc(0, -size - 10, size + 4, Math.PI, 0); ctx.fill();
+      ctx.strokeStyle = "rgba(220,220,210,0.6)"; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-size - 4, -size - 10); ctx.lineTo(0, -size + 2);
+      ctx.lineTo(size + 4, -size - 10); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.restore();
+  }
+
+  function drawFx(ctx, e) {
+    const k = e.t / e.life;
+    if (e.kind === "tracer") {
+      ctx.strokeStyle = e.col; ctx.globalAlpha = 1 - k; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.tx, e.ty); ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else if (e.kind === "arty") {
+      ctx.strokeStyle = "rgba(255,180,90,0.8)"; ctx.globalAlpha = 1 - k; ctx.lineWidth = 2.4;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.tx, e.ty); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    } else if (e.kind === "blast") {
+      ctx.globalAlpha = 1 - k;
+      ctx.fillStyle = `rgba(255,${120 + 100 * (1 - k)},40,0.5)`;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (0.4 + k), 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "rgba(255,220,120,0.8)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (0.4 + k), 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  /* ---- minimap ---------------------------------------------------------- */
+  /* ---- fog of war (smooth, via a small offscreen buffer) + day/night ----- */
+  let fogBuf = null, fogCtx = null, fogData = null, fogKey = "";
+  function ensureFog(game) {
+    const V = game.vision, key = V.cols + "x" + V.rows;
+    if (fogKey !== key) {
+      fogBuf = document.createElement("canvas");
+      fogBuf.width = V.cols; fogBuf.height = V.rows;
+      fogCtx = fogBuf.getContext("2d");
+      fogData = fogCtx.createImageData(V.cols, V.rows);
+      fogKey = key;
+    }
+  }
+  function drawFog(ctx, game, cam, view) {
+    const V = game.vision; ensureFog(game);
+    const d = fogData.data, n = V.cols * V.rows;
+    for (let i = 0; i < n; i++) {
+      const o = i * 4; d[o] = 5; d[o + 1] = 8; d[o + 2] = 6;
+      d[o + 3] = V.visible[i] ? 0 : (V.explored[i] ? 120 : 236);
+    }
+    fogCtx.putImageData(fogData, 0, 0);
+    const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(fogBuf, 0, 0, game.WORLD.w, game.WORLD.h);
+    ctx.imageSmoothingEnabled = sm;
+    // day/night blue tint over the visible world rectangle
+    const tl = cam.screenToWorld(0, 0), br = cam.screenToWorld(view.w, view.h);
+    const nightA = U.clamp((0.7 - game.daylight) * 0.7, 0, 0.5);
+    if (nightA > 0.01) {
+      ctx.fillStyle = `rgba(14,22,46,${nightA})`;
+      ctx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+    }
+  }
+
+  function drawMinimap(ctx, game, cam, view, mmW, mmH) {
+    ctx.clearRect(0, 0, mmW, mmH);
+    ctx.fillStyle = "rgba(12,18,10,0.92)";
+    ctx.fillRect(0, 0, mmW, mmH);
+    const sx = mmW / game.WORLD.w, sy = mmH / game.WORLD.h;
+
+    // towns
+    for (const t of game.towns) {
+      ctx.fillStyle = t.owner ? FACTIONS[t.owner].color : "#888";
+      ctx.beginPath(); ctx.arc(t.x * sx, t.y * sy, 3.2, 0, Math.PI * 2); ctx.fill();
+    }
+    // HQs
+    for (const fid of [game.playerFac, game.enemyFac]) {
+      const hq = game.sides[fid].hq;
+      ctx.fillStyle = FACTIONS[fid].color;
+      ctx.fillRect(hq.x * sx - 3, hq.y * sy - 3, 6, 6);
+    }
+    // units (enemy/neutral only shown where the player has vision)
+    for (const u of game.units) {
+      if (!u.alive) continue;
+      if (u.fac !== game.playerFac && !game.isVisible(u.x, u.y)) continue;
+      ctx.fillStyle = u.fac === "GARRISON" ? "#b9b9a0" : FACTIONS[u.fac].color;
+      ctx.fillRect(u.x * sx - 1, u.y * sy - 1, 2, 2);
+    }
+    // viewport rect
+    const vw = view.w / cam.zoom, vh = view.h / cam.zoom;
+    ctx.strokeStyle = "rgba(230,230,210,0.8)"; ctx.lineWidth = 1;
+    ctx.strokeRect(cam.x * sx, cam.y * sy, vw * sx, vh * sy);
+  }
+
+  return { drawBoard, drawMinimap, buildDecor };
+})();
+
+
+/* === js/ui.js === */
+/* =============================================================================
+ * ui.js — in-game HUD, build panel, selection + order input, camera control.
+ * Owns no simulation state; issues commands through the engine API.
+ * ========================================================================== */
+
+function createUI(game, refs) {
+  "use strict";
+  const { CATEGORIES, STRUCTURES, ROSTER, FACTIONS, POWERS, DEFENSES } = DATA;
+  const facId = game.playerFac;
+  const fac = FACTIONS[facId];
+
+  const cam = U.makeCamera(game.WORLD, { w: refs.board.width, h: refs.board.height });
+  cam.centerOn(game.sides[facId].hq.x, game.sides[facId].hq.y);
+
+  const state = {
+    sel: new Set(),
+    box: null,           // screen-space marquee while dragging
+    rally: game.sides[facId].rally || null,
+    hoverTown: null,
+    tab: "inf",
+    paused: false,
+    speed: 1,
+    groups: {},          // control groups: { "1": [units], ... }
+    targeting: null,     // { kind:'power'|'defense', id, def } while aiming
+    cursorW: { x: 0, y: 0 },
+    _lastGroupKey: null, _lastGroupT: 0,
+  };
+
+  // map number key -> support power id (Z/X/C also bound below)
+  const POWER_KEYS = { z: POWERS[0].id, x: POWERS[1].id, c: POWERS[2].id };
+
+  // Track event listeners so a restart can tear them down (no leaks/dupes).
+  const _listeners = [];
+  function on(target, type, fn, opts) {
+    target.addEventListener(type, fn, opts);
+    _listeners.push([target, type, fn, opts]);
+  }
+
+  /* ---------- BUILD PANEL ------------------------------------------------- */
+  function buildTabs() {
+    refs.panelTabs.innerHTML = "";
+    const tabs = CATEGORIES.map((c) => ({ id: c.id, label: c.tab, hot: c.hot }));
+    tabs.push({ id: "base", label: "BASE", hot: "T" });
+    tabs.push({ id: "upgrade", label: "UPGRADE", hot: "Y" });
+    for (const t of tabs) {
+      const el = document.createElement("button");
+      el.className = "ptab" + (state.tab === t.id ? " active" : "");
+      el.innerHTML = `<span class="ptab-hot">${t.hot}</span>${t.label}`;
+      el.onclick = () => { state.tab = t.id; renderPanel(); };
+      refs.panelTabs.appendChild(el);
+    }
+  }
+
+  function renderPanel() {
+    buildTabs();
+    refs.panelBody.innerHTML = "";
+    const side = game.sides[facId];
+
+    if (state.tab === "base") {
+      for (const st of STRUCTURES) {
+        const built = side.structures.has(st.id) && st.id !== "depot";
+        const building = side.building.some((b) => b.struct.id === st.id);
+        const afford = side.funds >= st.cost;
+        const card = document.createElement("button");
+        card.className = "bcard" + (built ? " built" : "") + (!afford && !built ? " poor" : "");
+        card.disabled = built;
+        const extra = st.id === "depot" ? `<span class="bsup">+6 cap</span>` :
+          `<span class="bsup">unlock</span>`;
+        card.innerHTML = `
+          <span class="bglyph">${st.glyph}</span>
+          <span class="bmain">
+            <span class="bname">${st.name}</span>
+            <span class="bdesc">${st.desc}</span>
+          </span>
+          <span class="bcost">
+            <span class="bfunds">${U.fmtNum(st.cost)}</span>
+            <span class="btime">${built ? "BUILT" : building ? "…building" : st.build + "s"}</span>
+          </span>`;
+        card.onclick = () => {
+          const r = game.queueStructure(facId, st.id);
+          if (!r.ok) { flash(r.reason); Sound.deny(); } else Sound.ui();
+          renderPanel();
+        };
+        refs.panelBody.appendChild(card);
+      }
+
+      // --- Defensive emplacements (click to place near owned territory) ---
+      const hdr = document.createElement("div");
+      hdr.className = "panel-subhead";
+      hdr.textContent = "DEFENSES — click then place near your lines";
+      refs.panelBody.appendChild(hdr);
+      for (const d of DEFENSES) {
+        const afford = side.funds >= d.cost;
+        const supOk = game.supplyUsed(facId) + d.sup <= game.supplyCap(facId);
+        const ok = afford && supOk;
+        const card = document.createElement("button");
+        card.className = "bcard" + (ok ? "" : " poor") +
+          (state.targeting && state.targeting.id === d.id ? " arming" : "");
+        card.innerHTML = `
+          <span class="bglyph def">${d.glyph}</span>
+          <span class="bmain">
+            <span class="bname">${d.name}</span>
+            <span class="bdesc">${d.desc}</span>
+          </span>
+          <span class="bcost">
+            <span class="bfunds ${afford ? "" : "no"}">${U.fmtNum(d.cost)}</span>
+            <span class="btime">${d.sup} sup</span>
+          </span>`;
+        card.onclick = () => { armTargeting("defense", d.id, d); };
+        refs.panelBody.appendChild(card);
+      }
+      return;
+    }
+
+    if (state.tab === "upgrade") {
+      const note = document.createElement("div");
+      note.className = "panel-subhead"; note.style.borderTop = "none"; note.style.marginTop = "2px";
+      note.textContent = "COMMANDER UPGRADES — permanent, army-wide";
+      refs.panelBody.appendChild(note);
+      for (const up of DATA.UPGRADES) {
+        const info = game.upgInfo(facId, up.id);
+        const maxed = info.lvl >= info.max;
+        const afford = !maxed && side.funds >= info.cost;
+        const card = document.createElement("button");
+        card.className = "bcard" + (maxed ? " built" : afford ? "" : " poor");
+        card.disabled = maxed;
+        const pips = Array.from({ length: info.max }, (_, i) =>
+          `<i class="pip${i < info.lvl ? " on" : ""}"></i>`).join("");
+        card.innerHTML = `
+          <span class="bglyph up">${up.glyph}</span>
+          <span class="bmain">
+            <span class="bname">${up.name} <span class="uppips">${pips}</span></span>
+            <span class="bdesc">${up.desc}</span>
+          </span>
+          <span class="bcost">
+            <span class="bfunds ${afford ? "" : "no"}">${maxed ? "MAX" : "$" + U.fmtNum(info.cost)}</span>
+            <span class="btime">L${info.lvl}/${info.max}</span>
+          </span>`;
+        card.onclick = () => {
+          const r = game.buyUpgrade(facId, up.id);
+          if (!r.ok) { flash(r.reason); Sound.deny(); } else Sound.build();
+          renderPanel();
+        };
+        refs.panelBody.appendChild(card);
+      }
+      return;
+    }
+
+    const list = ROSTER[facId].filter((u) => u.cat === state.tab);
+    const unlocked = game.catUnlocked(facId, state.tab);
+    if (!unlocked) {
+      const sname = STRUCTURES.find((s) => s.unlocks === state.tab);
+      const note = document.createElement("div");
+      note.className = "panel-lock";
+      note.innerHTML = `🔒 Build a <b>${sname ? sname.name : state.tab}</b> in the BASE tab to unlock these.`;
+      refs.panelBody.appendChild(note);
+    }
+    for (const u of list) {
+      const afford = side.funds >= u.cost;
+      const supOk = game.supplyUsed(facId) + u.sup <= game.supplyCap(facId);
+      const ok = unlocked && afford && supOk;
+      const card = document.createElement("button");
+      card.className = "bcard" + (ok ? "" : " poor");
+      const role = roleTag(u);
+      card.innerHTML = `
+        <span class="bglyph ${u.def && u.def.air ? "" : ""}">${u.glyph.toUpperCase()}</span>
+        <span class="bmain">
+          <span class="bname">${u.name}</span>
+          <span class="bdesc">${role} · ${u.hp} hp · ${u.sup} sup</span>
+        </span>
+        <span class="bcost">
+          <span class="bfunds ${afford ? "" : "no"}">${U.fmtNum(u.cost)}</span>
+          <span class="btime">${u.build}s</span>
+        </span>`;
+      card.onclick = () => {
+        const r = game.queueUnit(facId, u.id);
+        if (!r.ok) { flash(r.reason); Sound.deny(); } else Sound.ui();
+        renderPanel();
+      };
+      refs.panelBody.appendChild(card);
+    }
+  }
+
+  /* ---------- support power bar ------------------------------------------- */
+  function renderPowers() {
+    const side = game.sides[facId];
+    refs.powerBar.innerHTML = "";
+    POWERS.forEach((p, i) => {
+      const ps = game.powerState(facId, p.id);
+      const cdLeft = Math.max(0, ps.cd || 0);
+      const ready = cdLeft <= 0 && side.funds >= p.cost;
+      const el = document.createElement("button");
+      el.className = "pwr" + (ready ? "" : " cooling") +
+        (state.targeting && state.targeting.id === p.id ? " arming" : "");
+      const pct = cdLeft > 0 ? Math.round(100 * cdLeft / p.cd) : 0;
+      el.innerHTML = `
+        <span class="pwr-key">${["Z", "X", "C"][i]}</span>
+        <span class="pwr-glyph">${p.glyph}</span>
+        <span class="pwr-name">${p.name.split(" ")[0]}</span>
+        <span class="pwr-cost">${p.cost}</span>
+        ${cdLeft > 0 ? `<span class="pwr-cd" style="height:${pct}%"></span><span class="pwr-cdtxt">${Math.ceil(cdLeft)}s</span>` : ""}`;
+      el.title = `${p.name} — ${p.desc} (cost ${p.cost}, cooldown ${p.cd}s)`;
+      el.onclick = () => { if (ready) armTargeting("power", p.id, p); else Sound.deny(); };
+      refs.powerBar.appendChild(el);
+    });
+  }
+
+  /* ---------- targeting (powers + defenses) ------------------------------ */
+  function armTargeting(kind, id, def) {
+    if (state.targeting && state.targeting.id === id) { cancelTargeting(); return; }
+    state.targeting = { kind, id, def };
+    Sound.ui();
+    refs.targetBanner.classList.remove("hidden");
+    refs.targetBanner.innerHTML = kind === "power"
+      ? `◎ <b>${def.name}</b> — left-click a target · right-click / Esc to cancel`
+      : `▣ <b>${def.name}</b> — click to place near your HQ or a held town · Esc to cancel`;
+    renderPanel(); renderPowers();
+  }
+  function cancelTargeting() {
+    if (!state.targeting) return;
+    state.targeting = null;
+    refs.targetBanner.classList.add("hidden");
+    renderPanel(); renderPowers();
+  }
+  function fireTargeting(wx, wy) {
+    const t = state.targeting; if (!t) return false;
+    let r;
+    if (t.kind === "power") r = game.usePower(facId, t.id, wx, wy);
+    else r = game.buildDefense(facId, t.id, wx, wy);
+    if (!r.ok) { flash(r.reason); Sound.deny(); return true; } // stay armed on failure
+    Sound.power();
+    cancelTargeting();
+    return true;
+  }
+
+  function roleTag(u) {
+    if (u.heal) return "Medic";
+    if (u.supplyTruck) return "Logistics";
+    if (u.arty) return "Artillery";
+    if (u.vs.air >= 3) return "Anti-Air";
+    if (u.vs.veh >= 2) return "Anti-Tank";
+    if (u.def && u.def.air) return "Air";
+    if (u.cat === "inf") return "Infantry";
+    if (u.cat === "heavy") return "Armor";
+    return "Vehicle";
+  }
+
+  function renderQueue() {
+    const side = game.sides[facId];
+    const items = [];
+    side.building.forEach((b) =>
+      items.push({ name: b.struct.name, glyph: b.struct.glyph, p: 1 - b.timeLeft / b.total, struct: true }));
+    side.queue.forEach((q) =>
+      items.push({ name: q.def.name, glyph: q.def.glyph.toUpperCase(), p: 1 - q.timeLeft / q.total }));
+    if (!items.length) { refs.queueList.innerHTML = `<div class="queue-empty">— idle —</div>`; return; }
+    refs.queueList.innerHTML = items.map((it) => `
+      <div class="qitem ${it.struct ? "qstruct" : ""}">
+        <span class="qglyph">${it.glyph}</span>
+        <span class="qname">${it.name}</span>
+        <span class="qbar"><i style="width:${Math.round(it.p * 100)}%"></i></span>
+      </div>`).join("");
+  }
+
+  /* ---------- HUD --------------------------------------------------------- */
+  function refreshHud() {
+    const side = game.sides[facId];
+    refs.statFunds.textContent = U.fmtNum(side.funds);
+    refs.statIncome.textContent = "+" + U.fmtNum(Math.round(side.income * 60)) + "/min";
+    refs.statSupply.textContent = game.supplyUsed(facId) + "/" + game.supplyCap(facId);
+    refs.statTowns.textContent = game.townsOwned(facId) + "/" + game.towns.length;
+    refs.statUnits.textContent = game.unitsOfSide(facId).length;
+    // domination progress (if that win condition is active)
+    const dp = game.domProgress && game.domProgress(facId);
+    if (dp != null) {
+      const ep = game.domProgress(game.enemyFac);
+      refs.statTowns.textContent += `  ⏱${Math.round(dp * 100)}%`;
+      refs.statTowns.style.color = dp > 0 ? "#7ef07e" : (ep > 0 ? "#ff8a6a" : "");
+    }
+    refs.hudClock.textContent = U.fmtTime(game.clock);
+    const supEl = refs.statSupply;
+    supEl.style.color = game.supplyUsed(facId) >= game.supplyCap(facId) ? "#ff8a6a" : "";
+  }
+
+  /* ---------- selection readout ------------------------------------------ */
+  function refreshSelInfo() {
+    if (!state.sel.size) { refs.selInfo.classList.add("hidden"); return; }
+    refs.selInfo.classList.remove("hidden");
+    // group by unit def
+    const counts = {};
+    let hp = 0, maxhp = 0;
+    for (const u of state.sel) {
+      counts[u.def.name] = (counts[u.def.name] || 0) + 1;
+      hp += u.hp; maxhp += u.maxHp;
+    }
+    const rows = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([n, c]) => `<span class="seltag">${c}× ${n}</span>`).join("");
+
+    const sel = [...state.sel];
+    const movable = sel.filter((u) => !u.emplacement && !u.outpost);
+    const hasTruck = sel.some((u) => u.def.supplyTruck);
+    // dominant stance among the selection
+    let stance = movable.length ? movable[0].stance : null;
+    for (const u of movable) if (u.stance !== stance) { stance = "mixed"; break; }
+    const stances = [["aggressive", "AGGR"], ["defensive", "DEF"], ["hold", "HOLD"], ["holdfire", "FIRE✕"]];
+    const stanceBtns = movable.length ? `<div class="cc-row">` +
+      stances.map(([s, lbl]) =>
+        `<button class="ccbtn${stance === s ? " on" : ""}" data-stance="${s}">${lbl}</button>`).join("") +
+      `</div>` : "";
+    const outpostBtn = hasTruck
+      ? `<div class="cc-row"><button class="ccbtn wide" data-outpost="1">⛏ Deploy Outpost (O)</button></div>` : "";
+
+    refs.selInfo.innerHTML =
+      `<div class="sel-head">${state.sel.size} SELECTED · ${Math.round(100 * hp / Math.max(1, maxhp))}% combat</div>
+       <div class="sel-rows">${rows}</div>
+       ${stanceBtns}${outpostBtn}
+       <div class="sel-hint">right-click move/attack · S stop · A attack-move</div>`;
+
+    refs.selInfo.querySelectorAll("[data-stance]").forEach((b) =>
+      b.onclick = () => { game.setStance([...state.sel], b.dataset.stance); Sound.ui(); refreshSelInfo(); });
+    const ob = refs.selInfo.querySelector("[data-outpost]");
+    if (ob) ob.onclick = () => doDeployOutpost();
+  }
+
+  function doDeployOutpost() {
+    const n = game.deployOutposts([...state.sel]);
+    if (n) { flash(`Deploying ${n} forward outpost${n > 1 ? "s" : ""}`, "good"); Sound.power(); refreshSelInfo(); }
+    else { flash("Select a supply truck first", "warn"); Sound.deny(); }
+  }
+
+  /* ---------- ticker ------------------------------------------------------ */
+  function flash(msg, type) {
+    const el = document.createElement("div");
+    el.className = "tick-line " + (type || "warn");
+    el.textContent = msg;
+    refs.ticker.appendChild(el);
+    setTimeout(() => el.classList.add("show"), 10);
+    setTimeout(() => { el.classList.remove("show"); setTimeout(() => el.remove(), 400); }, 3600);
+    while (refs.ticker.children.length > 5) refs.ticker.removeChild(refs.ticker.firstChild);
+  }
+  game.onLog = (msg, type) => flash(msg, type === "good" ? "good" : type === "bad" ? "bad" : "info");
+
+  /* ---------- input: selection & orders ---------------------------------- */
+  let dragging = null; // {sx,sy} screen start
+  let panKeys = {};
+
+  function boardPos(ev) {
+    const r = refs.board.getBoundingClientRect();
+    return { x: (ev.clientX - r.left) * (refs.board.width / r.width),
+             y: (ev.clientY - r.top) * (refs.board.height / r.height) };
+  }
+
+  function unitAtScreen(sx, sy, factionOnly) {
+    const w = cam.screenToWorld(sx, sy);
+    let best = null, bestD = 1e9;
+    for (const u of game.units) {
+      if (!u.alive) continue;
+      if (factionOnly && u.fac !== facId) continue;
+      const size = (u.def.cat === "inf" ? 6 : 11) + 6;
+      const d = U.dist2(w.x, w.y, u.x, u.y);
+      if (d < (size / cam.zoom) ** 2 && d < bestD) { bestD = d; best = u; }
+    }
+    return best;
+  }
+
+  function enemyAtScreen(sx, sy) {
+    const w = cam.screenToWorld(sx, sy);
+    for (const u of game.units) {
+      if (!u.alive || u.fac === facId) continue;
+      const size = (u.def.cat === "inf" ? 7 : 12) + 5;
+      if (U.dist2(w.x, w.y, u.x, u.y) < (size / cam.zoom) ** 2) return u;
+    }
+    // enemy HQ
+    const ehq = game.sides[game.enemyFac].hq;
+    if (U.dist2(w.x, w.y, ehq.x, ehq.y) < (40 / cam.zoom) ** 2) return ehq;
+    return null;
+  }
+
+  on(refs.board, "mousedown", (ev) => {
+    if (ev.button === 1) { ev.preventDefault(); panState.mid = boardPos(ev); return; }
+    if (ev.button !== 0) return;
+    const p = boardPos(ev);
+    // targeting mode consumes the left-click
+    if (state.targeting) {
+      const w = cam.screenToWorld(p.x, p.y);
+      fireTargeting(w.x, w.y);
+      return;
+    }
+    dragging = { sx: p.x, sy: p.y, x: p.x, y: p.y, add: ev.shiftKey };
+  });
+
+  on(window, "mousemove", (ev) => {
+    if (panState.mid) {
+      const p = boardPos(ev);
+      cam.panBy((panState.mid.x - p.x) / cam.zoom, (panState.mid.y - p.y) / cam.zoom);
+      panState.mid = p; return;
+    }
+    if (dragging) {
+      const p = boardPos(ev);
+      dragging.x = p.x; dragging.y = p.y;
+      const x = Math.min(dragging.sx, p.x), y = Math.min(dragging.sy, p.y);
+      const w = Math.abs(p.x - dragging.sx), h = Math.abs(p.y - dragging.sy);
+      state.box = w > 4 || h > 4 ? { x, y, w, h } : null;
+    }
+    // hover town for capture-range hint + track world cursor (targeting)
+    const r = refs.board.getBoundingClientRect();
+    if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
+      const p = boardPos(ev); const wpt = cam.screenToWorld(p.x, p.y);
+      state.cursorW = wpt;
+      state.hoverTown = game.towns.find((t) => U.dist2(wpt.x, wpt.y, t.x, t.y) < 46 * 46) || null;
+    }
+  });
+
+  on(window, "mouseup", (ev) => {
+    if (ev.button === 1) { panState.mid = null; return; }
+    if (ev.button !== 0 || !dragging) { dragging = null; return; }
+    const p = boardPos(ev);
+    if (!dragging.add) state.sel.clear();
+    if (state.box) {
+      // marquee select player units
+      const a = cam.screenToWorld(state.box.x, state.box.y);
+      const b = cam.screenToWorld(state.box.x + state.box.w, state.box.y + state.box.h);
+      for (const u of game.units) {
+        if (!u.alive || u.fac !== facId || u.garrison) continue;
+        if (u.x >= a.x && u.x <= b.x && u.y >= a.y && u.y <= b.y) state.sel.add(u);
+      }
+    } else {
+      const u = unitAtScreen(p.x, p.y, true);
+      if (u && !u.garrison) {
+        if (ev.shiftKey && state.sel.has(u)) state.sel.delete(u);
+        else state.sel.add(u);
+      }
+    }
+    state.box = null; dragging = null;
+    refreshSelInfo();
+  });
+
+  // right-click: orders (or cancel targeting)
+  on(refs.board, "contextmenu", (ev) => {
+    ev.preventDefault();
+    if (state.targeting) { cancelTargeting(); return; }
+    const p = boardPos(ev);
+    if (!state.sel.size) return;
+    const enemy = enemyAtScreen(p.x, p.y);
+    const sel = [...state.sel];
+    if (enemy) {
+      game.issueAttack(sel, enemy);
+      pingAt(p.x, p.y, "#ff6a5a");
+    } else {
+      const w = cam.screenToWorld(p.x, p.y);
+      game.issueMove(sel, w.x, w.y, ev.shiftKey);
+      pingAt(p.x, p.y, "#7ef07e");
+    }
+  });
+
+  // ping marker (screen-space, fades)
+  const pings = [];
+  function pingAt(sx, sy, col) {
+    const w = cam.screenToWorld(sx, sy);
+    pings.push({ x: w.x, y: w.y, col, t: 0 });
+  }
+
+  const panState = { mid: null };
+
+  // wheel zoom
+  on(refs.board, "wheel", (ev) => {
+    ev.preventDefault();
+    const p = boardPos(ev);
+    cam.zoomAt(p.x, p.y, ev.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+
+  // minimap navigation
+  function minimapNav(ev) {
+    const r = refs.minimap.getBoundingClientRect();
+    const mx = (ev.clientX - r.left) / r.width * game.WORLD.w;
+    const my = (ev.clientY - r.top) / r.height * game.WORLD.h;
+    if (ev.button === 2 && state.sel.size) {
+      const enemy = null; game.issueMove([...state.sel], mx, my, true);
+    } else {
+      cam.centerOn(mx, my);
+    }
+  }
+  on(refs.minimap, "mousedown", (ev) => { ev.preventDefault(); minimapNav(ev); });
+  on(refs.minimap, "contextmenu", (ev) => ev.preventDefault());
+
+  /* ---------- keyboard ---------------------------------------------------- */
+  const TAB_KEYS = { q: "inf", w: "light", e: "heavy", r: "air", t: "base", y: "upgrade" };
+  on(window, "keydown", (ev) => {
+    const k = ev.key.toLowerCase();
+    if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { panKeys[k] = true; return; }
+    if (k === "escape") { cancelTargeting(); return; }
+    if (k === " ") { ev.preventDefault(); togglePause(); return; }
+
+    // control groups: Ctrl+N assign, N select (double-tap centers)
+    if (/^[1-9]$/.test(k)) {
+      if (ev.ctrlKey || ev.metaKey) { ev.preventDefault(); assignGroup(k); }
+      else selectGroup(k);
+      return;
+    }
+    if (k === "h") cam.centerOn(game.sides[facId].hq.x, game.sides[facId].hq.y);
+    else if (k === "s" && state.sel.size) { game.issueStop([...state.sel]); Sound.ui(); }
+    else if (k === "o" && state.sel.size) doDeployOutpost();
+    else if (k === "tab") { ev.preventDefault(); cycleIdle(); }
+    else if (k in TAB_KEYS) { state.tab = TAB_KEYS[k]; renderPanel(); Sound.ui(); }
+    else if (k in POWER_KEYS) {
+      const pid = POWER_KEYS[k];
+      const p = POWERS.find((x) => x.id === pid);
+      if (game.powerReady(facId, pid)) armTargeting("power", pid, p); else Sound.deny();
+    }
+  });
+  on(window, "keyup", (ev) => { panKeys[ev.key.toLowerCase()] = false; });
+
+  /* ---------- control groups --------------------------------------------- */
+  function assignGroup(n) {
+    state.groups[n] = [...state.sel].filter((u) => u.alive);
+    flash(`Group ${n} set (${state.groups[n].length})`, "info");
+    Sound.ui();
+  }
+  function selectGroup(n) {
+    const g = (state.groups[n] || []).filter((u) => u.alive);
+    if (!g.length) return;
+    state.sel.clear(); g.forEach((u) => state.sel.add(u));
+    refreshSelInfo();
+    const t = game.clock;
+    if (state._lastGroupKey === n && (t - state._lastGroupT) < 0.4) {
+      // double-tap: center on the group
+      let cx = 0, cy = 0; g.forEach((u) => { cx += u.x; cy += u.y; });
+      cam.centerOn(cx / g.length, cy / g.length);
+    }
+    state._lastGroupKey = n; state._lastGroupT = t;
+  }
+
+  let idleIdx = 0;
+  function cycleIdle() {
+    const idle = game.unitsOfSide(facId).filter((u) => !u.garrison &&
+      (u.order.type === "guard" || u.order.type === "hold"));
+    if (!idle.length) return;
+    idleIdx = (idleIdx + 1) % idle.length;
+    const u = idle[idleIdx];
+    state.sel.clear(); state.sel.add(u);
+    cam.centerOn(u.x, u.y);
+    refreshSelInfo();
+  }
+
+  function togglePause(force) {
+    state.paused = force != null ? force : !state.paused;
+    refs.pauseBtn.textContent = state.paused ? "▶" : "❚❚";
+    refs.pauseBtn.classList.toggle("on", state.paused);
+    if (refs.pauseOverlay) refs.pauseOverlay.classList.toggle("hidden", !state.paused);
+    if (state.paused) cancelTargeting();
+  }
+  function setSpeed(s) {
+    state.speed = s;
+    refs.speedBtn.textContent = state.speed + "×";
+    if (refs.pauseSpeedBtn) refs.pauseSpeedBtn.textContent = state.speed + "×";
+  }
+
+  // double-click empty board sets a production rally point
+  on(refs.board, "dblclick", (ev) => {
+    const p = boardPos(ev);
+    if (unitAtScreen(p.x, p.y, true)) {
+      // double-click a unit => select all of same type on screen
+      const u = unitAtScreen(p.x, p.y, true);
+      state.sel.clear();
+      for (const o of game.unitsOfSide(facId))
+        if (o.def.id === u.def.id) state.sel.add(o);
+      refreshSelInfo();
+      return;
+    }
+    const w = cam.screenToWorld(p.x, p.y);
+    game.setRally(facId, w.x, w.y);
+    state.rally = { x: w.x, y: w.y };
+    flash("Rally point set — new units will deploy here", "info");
+  });
+
+  /* ---------- HUD buttons + pause overlay -------------------------------- */
+  const cycleSpeed = () => setSpeed(state.speed === 1 ? 2 : state.speed === 2 ? 3 : 1);
+  refs.pauseBtn.onclick = () => togglePause();
+  refs.speedBtn.onclick = cycleSpeed;
+  if (refs.resumeBtn) refs.resumeBtn.onclick = () => togglePause(false);
+  if (refs.pauseSpeedBtn) refs.pauseSpeedBtn.onclick = cycleSpeed;
+  if (refs.volSlider) {
+    refs.volSlider.value = Math.round(Sound.volume * 100);
+    refs.volSlider.oninput = () => { Sound.setVolume(refs.volSlider.value / 100); Sound.ui(); };
+  }
+  if (refs.muteBtn) {
+    const sync = () => { refs.muteBtn.textContent = Sound.enabled ? "ON" : "OFF";
+      refs.muteBtn.classList.toggle("off", !Sound.enabled); };
+    sync();
+    refs.muteBtn.onclick = () => { Sound.setEnabled(!Sound.enabled); sync(); if (Sound.enabled) Sound.ui(); };
+  }
+
+  /* ---------- SFX + alert routing ---------------------------------------- */
+  game.onSfx = (type, d) => {
+    if (type === "explosion") Sound.explosion(d.size || 1);
+    else if (type === "capture") { Sound.capture(d.good); }
+    else if (type === "build") Sound.build();
+    else if (type === "power") { Sound.power(); if (d.msg) flash(d.msg, "info"); }
+    else if (type === "alert") {
+      Sound.alert();
+      if (d.msg) flash(d.msg, "bad");
+      if (d.x != null) pings.push({ x: d.x, y: d.y, col: "#ff5a4d", t: 0, alert: true });
+    }
+  };
+
+  /* ---------- camera keys update ----------------------------------------- */
+  function updateCamera(dt) {
+    const sp = 680 * dt / cam.zoom;
+    if (panKeys["arrowup"]) cam.panBy(0, -sp);
+    if (panKeys["arrowdown"]) cam.panBy(0, sp);
+    if (panKeys["arrowleft"]) cam.panBy(-sp, 0);
+    if (panKeys["arrowright"]) cam.panBy(sp, 0);
+  }
+
+  /* ---------- prune dead from selection ---------------------------------- */
+  function pruneSel() {
+    let changed = false;
+    for (const u of [...state.sel]) if (!u.alive || u.hp <= 0) { state.sel.delete(u); changed = true; }
+    if (changed) refreshSelInfo();
+  }
+
+  /* ---------- per-frame tick (called by main loop) ----------------------- */
+  let hudT = 0, panelT = 0;
+  function tick(dt, realDt) {
+    updateCamera(realDt);
+    pruneSel();
+    playFxSounds();
+    // throttle DOM updates
+    hudT += realDt;
+    if (hudT > 0.12) { hudT = 0; refreshHud(); renderQueue(); renderPowers(); }
+    panelT += realDt;
+    if (panelT > 0.4) { panelT = 0; renderPanelAffordability(); }
+    // update pings (alert pings linger + pulse)
+    for (let i = pings.length - 1; i >= 0; i--) {
+      pings[i].t += realDt;
+      if (pings[i].t > (pings[i].alert ? 1.8 : 0.6)) pings.splice(i, 1);
+    }
+  }
+
+  // turn fresh tracer/arty effects into (throttled) gunfire sound
+  function playFxSounds() {
+    if (!Sound.enabled) return;
+    const t = game.clock;
+    for (const e of game.fx) {
+      if (e._snd) continue;
+      e._snd = true;
+      if (e.kind === "arty") Sound.shot("arty", t);
+      else if (e.kind === "tracer") Sound.shot("shot", t);
+    }
+  }
+
+  // lightweight affordability refresh without rebuilding the whole panel
+  function renderPanelAffordability() {
+    const side = game.sides[facId];
+    const cards = refs.panelBody.querySelectorAll(".bcard");
+    if (!cards.length) return;
+    if (state.tab === "base" || state.tab === "upgrade") { renderPanel(); return; }
+    const list = ROSTER[facId].filter((u) => u.cat === state.tab);
+    const unlocked = game.catUnlocked(facId, state.tab);
+    cards.forEach((card, i) => {
+      const u = list[i]; if (!u) return;
+      const afford = side.funds >= u.cost;
+      const supOk = game.supplyUsed(facId) + u.sup <= game.supplyCap(facId);
+      card.classList.toggle("poor", !(unlocked && afford && supOk));
+      const f = card.querySelector(".bfunds");
+      if (f) f.classList.toggle("no", !afford);
+    });
+  }
+
+  function drawPings(ctx) {
+    for (const p of pings) {
+      const s = cam.worldToScreen(p.x, p.y);
+      if (p.alert) {
+        const k = (p.t % 0.6) / 0.6;
+        ctx.strokeStyle = p.col; ctx.globalAlpha = (1 - k) * (p.t < 1.5 ? 1 : (1.8 - p.t) / 0.3);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(s.x, s.y, 6 + k * 26, 0, Math.PI * 2); ctx.stroke();
+      } else {
+        const k = p.t / 0.6;
+        ctx.strokeStyle = p.col; ctx.globalAlpha = 1 - k; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(s.x, s.y, 4 + k * 18, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // draw the targeting reticle / placement validity (world space, called by render)
+  function drawTargeting(ctx) {
+    if (!state.targeting) return;
+    const t = state.targeting;
+    const c = state.cursorW;
+    const s = cam.worldToScreen(c.x, c.y);
+    ctx.save();
+    if (t.kind === "power") {
+      const rad = (t.id === "artillery" ? 90 : t.id === "airstrike" ? 180 : 45) * cam.zoom;
+      ctx.strokeStyle = "rgba(255,210,90,0.9)"; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(s.x - 14, s.y); ctx.lineTo(s.x + 14, s.y);
+      ctx.moveTo(s.x, s.y - 14); ctx.lineTo(s.x, s.y + 14); ctx.stroke();
+    } else {
+      const valid = game.canPlaceDefense(facId, c.x, c.y);
+      ctx.strokeStyle = valid ? "rgba(120,240,120,0.95)" : "rgba(255,90,80,0.95)";
+      ctx.fillStyle = valid ? "rgba(120,240,120,0.12)" : "rgba(255,90,80,0.12)";
+      ctx.lineWidth = 2;
+      const r = 16 * cam.zoom;
+      ctx.beginPath(); ctx.rect(s.x - r, s.y - r, r * 2, r * 2); ctx.fill(); ctx.stroke();
+      const rng = (t.def.range || 0) * cam.zoom;
+      if (rng) { ctx.setLineDash([4, 6]); ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.arc(s.x, s.y, rng, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]); ctx.globalAlpha = 1; }
+    }
+    ctx.restore();
+  }
+
+  renderPanel();
+  renderPowers();
+  refreshHud();
+  setSpeed(state.speed); // sync HUD + overlay speed labels
+
+  function destroy() {
+    for (const [t, type, fn, opts] of _listeners) t.removeEventListener(type, fn, opts);
+    _listeners.length = 0;
+  }
+
+  return {
+    state, cam, tick, drawPings, drawTargeting, togglePause, setSpeed, destroy,
+    restart: null, // assigned by main
+    get paused() { return state.paused; },
+    get speed() { return state.speed; },
+    uiState() { return { sel: state.sel, box: state.box, rally: state.rally,
+      hoverTown: state.hoverTown, targeting: state.targeting }; },
+    renderPanel, renderPowers,
+  };
+}
+
+
+/* === js/main.js === */
+/* =============================================================================
+ * main.js — boot: briefing menu, canvas sizing, the rAF game loop, end screen.
+ * ========================================================================== */
+
+(function () {
+  "use strict";
+  const { FACTIONS, DIFFICULTY } = DATA;
+
+  const $ = (id) => document.getElementById(id);
+
+  /* ---------- menu: faction + difficulty pickers ------------------------- */
+  let chosenFac = "USMC";
+  let chosenDiff = "veteran";
+  let chosenMap = "chernarus";
+  let chosenWin = "conquest";
+
+  function buildFactionPick() {
+    const wrap = $("factionPick");
+    wrap.innerHTML = "";
+    for (const id of ["USMC", "RU"]) {
+      const f = FACTIONS[id];
+      const el = document.createElement("button");
+      el.className = "pick-card" + (chosenFac === id ? " sel" : "");
+      el.style.setProperty("--c", f.color);
+      el.innerHTML = `
+        <span class="pick-flag" style="color:${f.color}">${f.flag}</span>
+        <span class="pick-name">${f.name}</span>
+        <span class="pick-sub">${f.long}</span>`;
+      el.onclick = () => { chosenFac = id; buildFactionPick(); };
+      wrap.appendChild(el);
+    }
+  }
+
+  function buildDiffPick() {
+    const wrap = $("diffPick");
+    wrap.innerHTML = "";
+    for (const id of ["recruit", "veteran", "elite"]) {
+      const d = DIFFICULTY[id];
+      const el = document.createElement("button");
+      el.className = "pick-card pick-diff" + (chosenDiff === id ? " sel" : "");
+      el.innerHTML = `
+        <span class="pick-name">${d.name}</span>
+        <span class="pick-sub">${d.desc}</span>`;
+      el.onclick = () => { chosenDiff = id; buildDiffPick(); };
+      wrap.appendChild(el);
+    }
+  }
+
+  function buildMapPick() {
+    const wrap = $("mapPick"); wrap.innerHTML = "";
+    for (const id of Object.keys(DATA.MAPS)) {
+      const m = DATA.MAPS[id];
+      const el = document.createElement("button");
+      el.className = "pick-card pick-diff" + (chosenMap === id ? " sel" : "");
+      el.innerHTML = `<span class="pick-name">${m.name}</span>
+        <span class="pick-sub">${m.biome === "desert" ? "Arid · open" : "Forested · cover"}</span>`;
+      el.onclick = () => { chosenMap = id; buildMapPick(); };
+      wrap.appendChild(el);
+    }
+  }
+  function buildWinPick() {
+    const wrap = $("winPick"); wrap.innerHTML = "";
+    for (const id of Object.keys(DATA.WIN_CONDITIONS)) {
+      const w = DATA.WIN_CONDITIONS[id];
+      const el = document.createElement("button");
+      el.className = "pick-card pick-diff" + (chosenWin === id ? " sel" : "");
+      el.innerHTML = `<span class="pick-name">${w.name}</span><span class="pick-sub">${w.desc}</span>`;
+      el.onclick = () => { chosenWin = id; buildWinPick(); };
+      wrap.appendChild(el);
+    }
+  }
+
+  buildFactionPick();
+  buildDiffPick();
+  buildMapPick();
+  buildWinPick();
+
+  /* ---------- canvas sizing ---------------------------------------------- */
+  const board = $("board");
+  const mini = $("minimap");
+  const ctx = board.getContext("2d");
+  const mctx = mini.getContext("2d");
+
+  function sizeCanvas() {
+    const stage = $("stage");
+    const r = stage.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    board.width = Math.floor(r.width * dpr);
+    board.height = Math.floor(r.height * dpr);
+    board.style.width = r.width + "px";
+    board.style.height = r.height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (UI) UI.cam.setView(r.width, r.height);
+  }
+  window.addEventListener("resize", () => { if (running) sizeCanvas(); });
+
+  /* ---------- game lifecycle --------------------------------------------- */
+  let game = null, UI = null, running = false, raf = 0, last = 0;
+
+  function startGame() {
+    $("menu").classList.add("hidden");
+    $("game").classList.remove("hidden");
+    $("endScreen").classList.add("hidden");
+    $("pauseOverlay").classList.add("hidden");
+
+    game = createGame({ faction: chosenFac, difficulty: chosenDiff,
+      map: chosenMap, winCond: chosenWin, seed: 1337 });
+    game.ai = createAI(game);
+
+    // HUD faction chrome
+    const f = FACTIONS[chosenFac];
+    $("hudSide").textContent = f.name;
+    $("hudFlag").textContent = f.flag;
+    $("hudFlag").style.color = f.color;
+    document.documentElement.style.setProperty("--side", f.color);
+    document.documentElement.style.setProperty("--enemy", FACTIONS[game.enemyFac].color);
+
+    const refs = {
+      board, minimap: mini,
+      panelTabs: $("panelTabs"), panelBody: $("panelBody"), queueList: $("queueList"),
+      statFunds: $("statFunds"), statIncome: $("statIncome"), statSupply: $("statSupply"),
+      statTowns: $("statTowns"), statUnits: $("statUnits"), hudClock: $("hudClock"),
+      ticker: $("ticker"), selInfo: $("selInfo"),
+      pauseBtn: $("pauseBtn"), speedBtn: $("speedBtn"),
+      powerBar: $("powerBar"), targetBanner: $("targetBanner"),
+      pauseOverlay: $("pauseOverlay"), resumeBtn: $("resumeBtn"),
+      pauseSpeedBtn: $("pauseSpeedBtn"), volSlider: $("volSlider"), muteBtn: $("muteBtn"),
+    };
+
+    Sound.init(); Sound.resume(); Sound.startMusic();
+    if (UI && UI.destroy) UI.destroy(); // tear down a prior match's listeners
+    sizeCanvas();
+    UI = createUI(game, refs);
+    UI.restart = () => startGame();
+    sizeCanvas(); // re-apply view now UI/cam exists
+
+    game.log(`${f.long} deployed to Chernarus. Secure the towns, commander.`, "good");
+
+    // debug/testing handle (harmless in normal play)
+    window.WASP = { game, get ui() { return UI; } };
+
+    running = true; last = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
+  }
+
+  function loop(now) {
+    if (!running) return;
+    let realDt = (now - last) / 1000;
+    last = now;
+    realDt = Math.min(realDt, 0.05); // clamp big frame gaps
+
+    const speed = UI.speed;
+    const simDt = UI.paused ? 0 : realDt * speed;
+
+    if (simDt > 0) {
+      // step the sim in sub-steps for stability at high speed
+      let remaining = simDt;
+      const STEP = 1 / 30;
+      while (remaining > 1e-4) {
+        const d = Math.min(STEP, remaining);
+        game.update(d);
+        remaining -= d;
+      }
+    }
+
+    UI.tick(simDt, realDt);
+
+    const view = { w: board.clientWidth, h: board.clientHeight };
+    Render.drawBoard(ctx, game, UI.cam, view, UI.uiState());
+    UI.drawPings(ctx);
+    UI.drawTargeting(ctx);
+    Render.drawMinimap(mctx, game, UI.cam, view, mini.width, mini.height);
+
+    if (game.over) return endGame();
+
+    raf = requestAnimationFrame(loop);
+  }
+
+  function endGame() {
+    running = false;
+    $("pauseOverlay").classList.add("hidden");
+    Sound.stopMusic();
+    const won = game.over.winner === game.playerFac;
+    won ? Sound.win() : Sound.lose();
+    const es = $("endScreen");
+    es.classList.remove("hidden");
+    const title = $("endTitle");
+    title.textContent = won ? "VICTORY" : "DEFEAT";
+    title.className = won ? "win" : "lose";
+    $("endText").textContent = game.over.reason;
+
+    const me = game.sides[game.playerFac], foe = game.sides[game.enemyFac];
+    $("endStats").innerHTML = `
+      <div class="es-row"><span>Time</span><b>${U.fmtTime(game.clock)}</b></div>
+      <div class="es-row"><span>Towns held</span><b>${game.townsOwned(game.playerFac)} / ${game.towns.length}</b></div>
+      <div class="es-row"><span>Kills</span><b>${me.kills}</b></div>
+      <div class="es-row"><span>Losses</span><b>${me.losses}</b></div>
+      <div class="es-row"><span>Funds spent</span><b>${U.fmtNum(me.spent)}</b></div>
+      <div class="es-row"><span>Enemy kills</span><b>${foe.kills}</b></div>`;
+  }
+
+  /* ---------- buttons ----------------------------------------------------- */
+  $("startBtn").onclick = startGame;
+  $("endBtn").onclick = () => {
+    $("endScreen").classList.add("hidden");
+    $("game").classList.add("hidden");
+    $("menu").classList.remove("hidden");
+    running = false;
+    cancelAnimationFrame(raf);
+    if (UI && UI.destroy) { UI.destroy(); UI = null; }
+  };
+  function resign() {
+    if (!game || game.over) return;
+    $("pauseOverlay").classList.add("hidden");
+    game.sides[game.playerFac].hq.hp = 0;
+    game.update(0.001);
+    endGame();
+  }
+  $("quitBtn").onclick = resign;
+  $("resignBtn").onclick = resign;
+  $("restartBtn").onclick = () => { if (UI && UI.restart) UI.restart(); };
+
+  // allow Enter to deploy from the menu
+  window.addEventListener("keydown", (e) => {
+    if (!running && e.key === "Enter" && !$("menu").classList.contains("hidden")) startGame();
+  });
+})();
+
+</script>
+</body>
+</html>

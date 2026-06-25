@@ -21,18 +21,33 @@ python3 -m http.server 8099
 ```
 Or just double-click `index.html`.
 
+**Single-file build:** `dist/waspwarfare.html` is the whole game (HTML + CSS + JS)
+inlined into one file — download it and double-click to play offline, no server
+needed. Rebuild it after edits with `node build.js`.
+
 ## Features
 
-- **Real-time combat** on a Chernarus theatre with capturable, garrisoned towns.
+- **Two theatres** — Chernarus (forested, cover-heavy) and Takistan (arid, open) — pick on the menu.
+- **Two victory modes** — Conquest (raze the HQ / hold every town) or Domination (hold the town majority for 75s).
+- **Fog of war** — vision from your units, towns and HQ; the enemy is hidden until you scout. Forests
+  conceal infantry and give them cover; snipers see farther.
+- **Day / night cycle** — the battlefield darkens and sight tightens at night.
+- **Commander upgrades** — a 5-branch tech tree (economy, weapons, armor, logistics, production) you
+  invest funds into; the AI tech's up too.
+- **Commander support powers** — Artillery Barrage, Airstrike, and Paradrop, on funds + cooldown.
+- **Defensive emplacements** — MG nests, AT guns, AA batteries and bunkers placed on your lines.
+- **Forward outposts** — deploy a supply truck into a forward base (vision + heal aura + supply cap).
+- **Unit stances** — Aggressive / Defensive / Hold / Hold-fire, plus a Combat Engineer that repairs armour.
 - **Dual economy** — Funds (units) + Supply (logistics cap), driven by town Supply Value.
 - **Four factories** — Barracks, Light, Heavy, Aircraft — gated by structures you build.
-- **Commander support powers** — Artillery Barrage, Airstrike, and Paradrop, on funds + cooldown.
-- **Defensive emplacements** — MG nests, AT guns, AA batteries and bunkers you place on your lines.
 - **Unit veterancy** — units earn chevrons from kills and grow deadlier and tougher.
 - **Control groups** (Ctrl+1–9 / 1–9), rally points, attack-move, and a full RTS order set.
+- **Big battles, smoothly** — a spatial hash keeps 100+ units in the field running fast.
+- **Particles & weather of war** — smoke from wrecks, craters, sparks, tracers, blast waves.
 - **Threat alerts** with minimap pings when your towns or HQ come under fire.
-- **Procedural audio** — gunfire, explosions, capture stings and UI clicks, synthesised in-browser (no audio files).
-- **A real AI opponent** that runs a build order, masses forces, contests towns, and calls in its own artillery.
+- **Procedural audio + ambient score** — gunfire, explosions, capture stings and a low military drone,
+  all synthesised in-browser (no audio files).
+- **A real AI opponent** that runs a build order, techs up, masses forces, contests towns, and calls in artillery.
 - **Pause / settings / restart** overlay with a volume mixer and full controls reference.
 
 ## How it plays
@@ -65,10 +80,11 @@ by garrisons. Take them.
 - **Win** — destroy the enemy HQ, or hold every town. Lose your HQ and it's over.
 
 ### Hotkeys
-`Space` pause · `Q W E R T` factory tabs · `Ctrl+1-9` set control group · `1-9`
-select group (double-tap to centre) · `Z X C` support powers · `Tab` cycle idle ·
-`H` centre on HQ · `S` stop · arrow keys pan · mouse-wheel zoom · middle-drag or
-minimap to pan.
+`Space` pause · `Q W E R T Y` factory / base / upgrade tabs · `Ctrl+1-9` set
+control group · `1-9` select group (double-tap to centre) · `Z X C` support
+powers · `O` deploy outpost · `S` stop · `Tab` cycle idle · `H` centre on HQ ·
+arrow keys pan · mouse-wheel zoom · middle-drag or minimap to pan. Unit stances
+(Aggressive / Defensive / Hold / Hold-fire) are on the selection card.
 
 ## What's faithful to the source mission
 

@@ -6,7 +6,7 @@
 const Sound = (() => {
   "use strict";
   let ctx = null, master = null, enabled = true, volume = 0.6;
-  let noiseBuf = null;
+  let noiseBuf = null, music = null;
   let lastShot = 0, shotBudget = 0;
 
   function load() {
@@ -119,6 +119,35 @@ const Sound = (() => {
     },
     win() { if (enabled && ctx) { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.3, 0.3, "triangle"), i * 150)); } },
     lose() { if (enabled && ctx) { [392, 330, 262, 196].forEach((f, i) => setTimeout(() => tone(f, 0.4, 0.3, "sawtooth"), i * 200)); } },
+
+    // ----- ambient military drone (low, sparse, non-intrusive) -----
+    startMusic() {
+      if (!ctx || music) return;
+      const g = ctx.createGain(); g.gain.value = 0.0; g.connect(master);
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
+      const lfoG = ctx.createGain(); lfoG.gain.value = 0.05;
+      lfo.connect(lfoG); lfoG.connect(g.gain);
+      const o1 = ctx.createOscillator(); o1.type = "sine"; o1.frequency.value = 55;     // A1
+      const o2 = ctx.createOscillator(); o2.type = "sine"; o2.frequency.value = 82.4;   // E2
+      const o3 = ctx.createOscillator(); o3.type = "triangle"; o3.frequency.value = 110; o3.detune.value = 4;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 320;
+      o1.connect(f); o2.connect(f); o3.connect(f); f.connect(g);
+      const t = now();
+      g.gain.setValueAtTime(0.0, t); g.gain.linearRampToValueAtTime(0.10, t + 4);
+      [o1, o2, o3, lfo].forEach((o) => o.start(t));
+      music = { g, nodes: [o1, o2, o3, lfo] };
+    },
+    stopMusic() {
+      if (!music) return;
+      const m = music; music = null;
+      try {
+        const t = now();
+        m.g.gain.cancelScheduledValues(t);
+        m.g.gain.setValueAtTime(m.g.gain.value, t);
+        m.g.gain.linearRampToValueAtTime(0.0001, t + 1.2);
+        m.nodes.forEach((o) => o.stop(t + 1.3));
+      } catch (_) {}
+    },
   };
   return api;
 })();
