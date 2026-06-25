@@ -21,6 +21,20 @@ python3 -m http.server 8099
 ```
 Or just double-click `index.html`.
 
+## Features
+
+- **Real-time combat** on a Chernarus theatre with capturable, garrisoned towns.
+- **Dual economy** — Funds (units) + Supply (logistics cap), driven by town Supply Value.
+- **Four factories** — Barracks, Light, Heavy, Aircraft — gated by structures you build.
+- **Commander support powers** — Artillery Barrage, Airstrike, and Paradrop, on funds + cooldown.
+- **Defensive emplacements** — MG nests, AT guns, AA batteries and bunkers you place on your lines.
+- **Unit veterancy** — units earn chevrons from kills and grow deadlier and tougher.
+- **Control groups** (Ctrl+1–9 / 1–9), rally points, attack-move, and a full RTS order set.
+- **Threat alerts** with minimap pings when your towns or HQ come under fire.
+- **Procedural audio** — gunfire, explosions, capture stings and UI clicks, synthesised in-browser (no audio files).
+- **A real AI opponent** that runs a build order, masses forces, contests towns, and calls in its own artillery.
+- **Pause / settings / restart** overlay with a volume mixer and full controls reference.
+
 ## How it plays
 
 You command **USMC** or **RU** on a Chernarus theatre. Each side opens holding
@@ -42,12 +56,19 @@ by garrisons. Take them.
   units, **Supply** is your logistics ceiling (each living unit costs supply;
   depots and held towns raise the cap). Every town pays funds each tick based
   on its **Supply Value (SV)**.
+- **Support powers** — the bar at the bottom: **Artillery** (`Z`), **Airstrike**
+  (`X`), **Paradrop** (`C`). Click the power, then click a target. Each costs
+  funds and goes on cooldown. The AI uses artillery on your clustered troops too.
+- **Defenses** — in the **BASE** tab, pick an emplacement (MG nest, AT gun, AA
+  battery, bunker), then click to place it near your HQ or a held town.
+- **Veterancy** — units gain chevrons as they rack up kills, raising damage and HP.
 - **Win** — destroy the enemy HQ, or hold every town. Lose your HQ and it's over.
 
 ### Hotkeys
-`Space` pause · `Tab` cycle idle units · `1`–`5` factory tabs · `H` centre on
-HQ · `S` stop · `WASD`/arrows pan · mouse-wheel zoom · middle-drag or minimap
-to pan.
+`Space` pause · `Q W E R T` factory tabs · `Ctrl+1-9` set control group · `1-9`
+select group (double-tap to centre) · `Z X C` support powers · `Tab` cycle idle ·
+`H` centre on HQ · `S` stop · arrow keys pan · mouse-wheel zoom · middle-drag or
+minimap to pan.
 
 ## What's faithful to the source mission
 
@@ -70,13 +91,14 @@ scripts so it runs straight off the filesystem:
 
 | file | role |
 |------|------|
-| `js/data.js`   | factions, unit roster, structures, map, tuning |
+| `js/data.js`   | factions, unit roster, structures, powers, defenses, map, tuning |
 | `js/util.js`   | math, camera, RNG helpers |
-| `js/engine.js` | the simulation: combat, capture, economy, production |
-| `js/ai.js`     | the enemy commander (macro build-order + tactics) |
+| `js/audio.js`  | procedural WebAudio sound engine (no asset files) |
+| `js/engine.js` | the simulation: combat, capture, economy, production, powers, veterancy |
+| `js/ai.js`     | the enemy commander (macro build-order + tactics + artillery) |
 | `js/render.js` | all canvas drawing + minimap |
-| `js/ui.js`     | HUD, build panel, selection & order input, camera |
-| `js/main.js`   | menu, game loop, end screen |
+| `js/ui.js`     | HUD, build panel, power bar, selection & order input, camera |
+| `js/main.js`   | menu, game loop, pause/settings, end screen |
 
 ## Credit
 

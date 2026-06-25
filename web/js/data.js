@@ -40,10 +40,10 @@ const DATA = (() => {
 
   /* ---- Unit categories (map to factories) -------------------------------- */
   const CATEGORIES = [
-    { id: "inf",   tab: "BARRACKS",  hot: "1", structure: "barracks" },
-    { id: "light", tab: "LIGHT",     hot: "2", structure: "light" },
-    { id: "heavy", tab: "HEAVY",     hot: "3", structure: "heavy" },
-    { id: "air",   tab: "AIRCRAFT",  hot: "4", structure: "air" },
+    { id: "inf",   tab: "BARRACKS",  hot: "Q", structure: "barracks" },
+    { id: "light", tab: "LIGHT",     hot: "W", structure: "light" },
+    { id: "heavy", tab: "HEAVY",     hot: "E", structure: "heavy" },
+    { id: "air",   tab: "AIRCRAFT",  hot: "R", structure: "air" },
   ];
 
   /* ---- Unit roster -------------------------------------------------------
@@ -180,6 +180,37 @@ const DATA = (() => {
     ],
   };
 
+  /* ---- Commander support powers (cooldown + funds cost) ------------------ */
+  const POWERS = [
+    { id:"artillery", name:"Artillery Barrage", glyph:"❂", cost:250, cd:50,
+      desc:"Saturate an area with 8 shells. Spares friendlies." },
+    { id:"airstrike", name:"Airstrike", glyph:"✈", cost:400, cd:70,
+      desc:"A jet strafes a line through the target." },
+    { id:"paradrop", name:"Paradrop", glyph:"☂", cost:300, cd:80,
+      desc:"Drop a 5-man squad anywhere on the map." },
+  ];
+  const POWER_BY_ID = {};
+  for (const p of POWERS) POWER_BY_ID[p.id] = p;
+
+  /* ---- Defensive emplacements (placed near owned territory) -------------- */
+  function mkDef(o) {
+    return Object.assign(
+      { cat:"def", emplacement:true, speed:0, sup:2, build:8, armor:6, sight:300,
+        air:false, vs:{ inf:1, veh:1, air:1 }, glyph:"#" }, o);
+  }
+  const DEFENSES = [
+    mkDef({ id:"d_mg",  name:"MG Nest",    cost:200, hp:280, dmg:8,  rof:5.0, range:220, build:6,
+            glyph:"#", vs:{inf:1.6,veh:0.4,air:0.3}, desc:"Cheap. Shreds infantry." }),
+    mkDef({ id:"d_at",  name:"AT Gun",     cost:420, hp:340, dmg:90, rof:0.5, range:300, build:9,
+            glyph:"=", vs:{inf:0.5,veh:2.6,air:0.3}, desc:"Stops armour cold." }),
+    mkDef({ id:"d_aa",  name:"AA Battery", cost:480, hp:300, dmg:60, rof:0.8, range:360, build:9,
+            glyph:"^", vs:{inf:0.4,veh:0.5,air:3.4}, desc:"Owns the sky overhead." }),
+    mkDef({ id:"d_bunker", name:"Bunker",  cost:300, hp:900, dmg:6,  rof:3.0, range:180, build:10, armor:14,
+            glyph:"B", vs:{inf:1.2,veh:0.3,air:0.2}, desc:"Tanky strongpoint." }),
+  ];
+  const DEFENSE_BY_ID = {};
+  for (const d of DEFENSES) DEFENSE_BY_ID[d.id] = d;
+
   /* ---- Difficulty presets ------------------------------------------------ */
   const DIFFICULTY = {
     recruit:  { id:"recruit",  name:"Recruit",   aiFunds:0.75, aiAggro:0.7, startFunds:900, startSup:14, desc:"Forgiving. The AI builds slowly." },
@@ -203,6 +234,7 @@ const DATA = (() => {
   return {
     FACTIONS, CATEGORIES, ROSTER, UNIT_BY_ID,
     STRUCTURES, STRUCT_BY_ID, MAP, WORLD,
+    POWERS, POWER_BY_ID, DEFENSES, DEFENSE_BY_ID,
     DIFFICULTY, RULES,
   };
 })();

@@ -73,6 +73,7 @@
     $("menu").classList.add("hidden");
     $("game").classList.remove("hidden");
     $("endScreen").classList.add("hidden");
+    $("pauseOverlay").classList.add("hidden");
 
     game = createGame({ faction: chosenFac, difficulty: chosenDiff, seed: 1337 });
     game.ai = createAI(game);
@@ -92,10 +93,16 @@
       statTowns: $("statTowns"), statUnits: $("statUnits"), hudClock: $("hudClock"),
       ticker: $("ticker"), selInfo: $("selInfo"),
       pauseBtn: $("pauseBtn"), speedBtn: $("speedBtn"),
+      powerBar: $("powerBar"), targetBanner: $("targetBanner"),
+      pauseOverlay: $("pauseOverlay"), resumeBtn: $("resumeBtn"),
+      pauseSpeedBtn: $("pauseSpeedBtn"), volSlider: $("volSlider"), muteBtn: $("muteBtn"),
     };
 
+    Sound.init(); Sound.resume();
+    if (UI && UI.destroy) UI.destroy(); // tear down a prior match's listeners
     sizeCanvas();
     UI = createUI(game, refs);
+    UI.restart = () => startGame();
     sizeCanvas(); // re-apply view now UI/cam exists
 
     game.log(`${f.long} deployed to Chernarus. Secure the towns, commander.`, "good");
@@ -133,6 +140,7 @@
     const view = { w: board.clientWidth, h: board.clientHeight };
     Render.drawBoard(ctx, game, UI.cam, view, UI.uiState());
     UI.drawPings(ctx);
+    UI.drawTargeting(ctx);
     Render.drawMinimap(mctx, game, UI.cam, view, mini.width, mini.height);
 
     if (game.over) return endGame();
@@ -142,7 +150,9 @@
 
   function endGame() {
     running = false;
+    $("pauseOverlay").classList.add("hidden");
     const won = game.over.winner === game.playerFac;
+    won ? Sound.win() : Sound.lose();
     const es = $("endScreen");
     es.classList.remove("hidden");
     const title = $("endTitle");
@@ -168,15 +178,18 @@
     $("menu").classList.remove("hidden");
     running = false;
     cancelAnimationFrame(raf);
+    if (UI && UI.destroy) { UI.destroy(); UI = null; }
   };
-  $("quitBtn").onclick = () => {
-    if (!game) return;
-    game.over || (game.update(0), null);
-    // force resign
+  function resign() {
+    if (!game || game.over) return;
+    $("pauseOverlay").classList.add("hidden");
     game.sides[game.playerFac].hq.hp = 0;
     game.update(0.001);
     endGame();
-  };
+  }
+  $("quitBtn").onclick = resign;
+  $("resignBtn").onclick = resign;
+  $("restartBtn").onclick = () => { if (UI && UI.restart) UI.restart(); };
 
   // allow Enter to deploy from the menu
   window.addEventListener("keydown", (e) => {

@@ -5,7 +5,7 @@
 
 function createUI(game, refs) {
   "use strict";
-  const { CATEGORIES, STRUCTURES, ROSTER, FACTIONS } = DATA;
+  const { CATEGORIES, STRUCTURES, ROSTER, FACTIONS, POWERS, DEFENSES } = DATA;
   const facId = game.playerFac;
   const fac = FACTIONS[facId];
 
@@ -20,13 +20,27 @@ function createUI(game, refs) {
     tab: "inf",
     paused: false,
     speed: 1,
+    groups: {},          // control groups: { "1": [units], ... }
+    targeting: null,     // { kind:'power'|'defense', id, def } while aiming
+    cursorW: { x: 0, y: 0 },
+    _lastGroupKey: null, _lastGroupT: 0,
   };
+
+  // map number key -> support power id (Z/X/C also bound below)
+  const POWER_KEYS = { z: POWERS[0].id, x: POWERS[1].id, c: POWERS[2].id };
+
+  // Track event listeners so a restart can tear them down (no leaks/dupes).
+  const _listeners = [];
+  function on(target, type, fn, opts) {
+    target.addEventListener(type, fn, opts);
+    _listeners.push([target, type, fn, opts]);
+  }
 
   /* ---------- BUILD PANEL ------------------------------------------------- */
   function buildTabs() {
     refs.panelTabs.innerHTML = "";
     const tabs = CATEGORIES.map((c) => ({ id: c.id, label: c.tab, hot: c.hot }));
-    tabs.push({ id: "base", label: "BASE", hot: "5" });
+    tabs.push({ id: "base", label: "BASE", hot: "T" });
     for (const t of tabs) {
       const el = document.createElement("button");
       el.className = "ptab" + (state.tab === t.id ? " active" : "");
@@ -63,9 +77,35 @@ function createUI(game, refs) {
           </span>`;
         card.onclick = () => {
           const r = game.queueStructure(facId, st.id);
-          if (!r.ok) flash(r.reason);
+          if (!r.ok) { flash(r.reason); Sound.deny(); } else Sound.ui();
           renderPanel();
         };
+        refs.panelBody.appendChild(card);
+      }
+
+      // --- Defensive emplacements (click to place near owned territory) ---
+      const hdr = document.createElement("div");
+      hdr.className = "panel-subhead";
+      hdr.textContent = "DEFENSES — click then place near your lines";
+      refs.panelBody.appendChild(hdr);
+      for (const d of DEFENSES) {
+        const afford = side.funds >= d.cost;
+        const supOk = game.supplyUsed(facId) + d.sup <= game.supplyCap(facId);
+        const ok = afford && supOk;
+        const card = document.createElement("button");
+        card.className = "bcard" + (ok ? "" : " poor") +
+          (state.targeting && state.targeting.id === d.id ? " arming" : "");
+        card.innerHTML = `
+          <span class="bglyph def">${d.glyph}</span>
+          <span class="bmain">
+            <span class="bname">${d.name}</span>
+            <span class="bdesc">${d.desc}</span>
+          </span>
+          <span class="bcost">
+            <span class="bfunds ${afford ? "" : "no"}">$${U.fmtNum(d.cost)}</span>
+            <span class="btime">${d.sup} sup</span>
+          </span>`;
+        card.onclick = () => { armTargeting("defense", d.id, d); };
         refs.panelBody.appendChild(card);
       }
       return;
@@ -99,11 +139,63 @@ function createUI(game, refs) {
         </span>`;
       card.onclick = () => {
         const r = game.queueUnit(facId, u.id);
-        if (!r.ok) flash(r.reason);
+        if (!r.ok) { flash(r.reason); Sound.deny(); } else Sound.ui();
         renderPanel();
       };
       refs.panelBody.appendChild(card);
     }
+  }
+
+  /* ---------- support power bar ------------------------------------------- */
+  function renderPowers() {
+    const side = game.sides[facId];
+    refs.powerBar.innerHTML = "";
+    POWERS.forEach((p, i) => {
+      const ps = game.powerState(facId, p.id);
+      const cdLeft = Math.max(0, ps.cd || 0);
+      const ready = cdLeft <= 0 && side.funds >= p.cost;
+      const el = document.createElement("button");
+      el.className = "pwr" + (ready ? "" : " cooling") +
+        (state.targeting && state.targeting.id === p.id ? " arming" : "");
+      const pct = cdLeft > 0 ? Math.round(100 * cdLeft / p.cd) : 0;
+      el.innerHTML = `
+        <span class="pwr-key">${["Z", "X", "C"][i]}</span>
+        <span class="pwr-glyph">${p.glyph}</span>
+        <span class="pwr-name">${p.name.split(" ")[0]}</span>
+        <span class="pwr-cost">$${p.cost}</span>
+        ${cdLeft > 0 ? `<span class="pwr-cd" style="height:${pct}%"></span><span class="pwr-cdtxt">${Math.ceil(cdLeft)}s</span>` : ""}`;
+      el.title = `${p.name} — ${p.desc} (cost $${p.cost}, cooldown ${p.cd}s)`;
+      el.onclick = () => { if (ready) armTargeting("power", p.id, p); else Sound.deny(); };
+      refs.powerBar.appendChild(el);
+    });
+  }
+
+  /* ---------- targeting (powers + defenses) ------------------------------ */
+  function armTargeting(kind, id, def) {
+    if (state.targeting && state.targeting.id === id) { cancelTargeting(); return; }
+    state.targeting = { kind, id, def };
+    Sound.ui();
+    refs.targetBanner.classList.remove("hidden");
+    refs.targetBanner.innerHTML = kind === "power"
+      ? `◎ <b>${def.name}</b> — left-click a target · right-click / Esc to cancel`
+      : `▣ <b>${def.name}</b> — click to place near your HQ or a held town · Esc to cancel`;
+    renderPanel(); renderPowers();
+  }
+  function cancelTargeting() {
+    if (!state.targeting) return;
+    state.targeting = null;
+    refs.targetBanner.classList.add("hidden");
+    renderPanel(); renderPowers();
+  }
+  function fireTargeting(wx, wy) {
+    const t = state.targeting; if (!t) return false;
+    let r;
+    if (t.kind === "power") r = game.usePower(facId, t.id, wx, wy);
+    else r = game.buildDefense(facId, t.id, wx, wy);
+    if (!r.ok) { flash(r.reason); Sound.deny(); return true; } // stay armed on failure
+    Sound.power();
+    cancelTargeting();
+    return true;
   }
 
   function roleTag(u) {
@@ -215,14 +307,20 @@ function createUI(game, refs) {
     return null;
   }
 
-  refs.board.addEventListener("mousedown", (ev) => {
+  on(refs.board, "mousedown", (ev) => {
     if (ev.button === 1) { ev.preventDefault(); panState.mid = boardPos(ev); return; }
     if (ev.button !== 0) return;
     const p = boardPos(ev);
+    // targeting mode consumes the left-click
+    if (state.targeting) {
+      const w = cam.screenToWorld(p.x, p.y);
+      fireTargeting(w.x, w.y);
+      return;
+    }
     dragging = { sx: p.x, sy: p.y, x: p.x, y: p.y, add: ev.shiftKey };
   });
 
-  window.addEventListener("mousemove", (ev) => {
+  on(window, "mousemove", (ev) => {
     if (panState.mid) {
       const p = boardPos(ev);
       cam.panBy((panState.mid.x - p.x) / cam.zoom, (panState.mid.y - p.y) / cam.zoom);
@@ -235,15 +333,16 @@ function createUI(game, refs) {
       const w = Math.abs(p.x - dragging.sx), h = Math.abs(p.y - dragging.sy);
       state.box = w > 4 || h > 4 ? { x, y, w, h } : null;
     }
-    // hover town for capture-range hint
+    // hover town for capture-range hint + track world cursor (targeting)
     const r = refs.board.getBoundingClientRect();
     if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
       const p = boardPos(ev); const wpt = cam.screenToWorld(p.x, p.y);
+      state.cursorW = wpt;
       state.hoverTown = game.towns.find((t) => U.dist2(wpt.x, wpt.y, t.x, t.y) < 46 * 46) || null;
     }
   });
 
-  window.addEventListener("mouseup", (ev) => {
+  on(window, "mouseup", (ev) => {
     if (ev.button === 1) { panState.mid = null; return; }
     if (ev.button !== 0 || !dragging) { dragging = null; return; }
     const p = boardPos(ev);
@@ -267,9 +366,10 @@ function createUI(game, refs) {
     refreshSelInfo();
   });
 
-  // right-click: orders
-  refs.board.addEventListener("contextmenu", (ev) => {
+  // right-click: orders (or cancel targeting)
+  on(refs.board, "contextmenu", (ev) => {
     ev.preventDefault();
+    if (state.targeting) { cancelTargeting(); return; }
     const p = boardPos(ev);
     if (!state.sel.size) return;
     const enemy = enemyAtScreen(p.x, p.y);
@@ -294,7 +394,7 @@ function createUI(game, refs) {
   const panState = { mid: null };
 
   // wheel zoom
-  refs.board.addEventListener("wheel", (ev) => {
+  on(refs.board, "wheel", (ev) => {
     ev.preventDefault();
     const p = boardPos(ev);
     cam.zoomAt(p.x, p.y, ev.deltaY < 0 ? 1.12 : 1 / 1.12);
@@ -311,29 +411,54 @@ function createUI(game, refs) {
       cam.centerOn(mx, my);
     }
   }
-  refs.minimap.addEventListener("mousedown", (ev) => { ev.preventDefault(); minimapNav(ev); });
-  refs.minimap.addEventListener("contextmenu", (ev) => ev.preventDefault());
+  on(refs.minimap, "mousedown", (ev) => { ev.preventDefault(); minimapNav(ev); });
+  on(refs.minimap, "contextmenu", (ev) => ev.preventDefault());
 
   /* ---------- keyboard ---------------------------------------------------- */
-  window.addEventListener("keydown", (ev) => {
+  const TAB_KEYS = { q: "inf", w: "light", e: "heavy", r: "air", t: "base" };
+  on(window, "keydown", (ev) => {
     const k = ev.key.toLowerCase();
-    if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) panKeys[k] = true;
-    if (k === " ") { ev.preventDefault(); togglePause(); }
-    else if (k === "h") cam.centerOn(game.sides[facId].hq.x, game.sides[facId].hq.y);
-    else if (k === "s" && state.sel.size) game.issueStop([...state.sel]);
+    if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { panKeys[k] = true; return; }
+    if (k === "escape") { cancelTargeting(); return; }
+    if (k === " ") { ev.preventDefault(); togglePause(); return; }
+
+    // control groups: Ctrl+N assign, N select (double-tap centers)
+    if (/^[1-9]$/.test(k)) {
+      if (ev.ctrlKey || ev.metaKey) { ev.preventDefault(); assignGroup(k); }
+      else selectGroup(k);
+      return;
+    }
+    if (k === "h") cam.centerOn(game.sides[facId].hq.x, game.sides[facId].hq.y);
+    else if (k === "s" && state.sel.size) { game.issueStop([...state.sel]); Sound.ui(); }
     else if (k === "tab") { ev.preventDefault(); cycleIdle(); }
-    else if (["1", "2", "3", "4", "5"].includes(k)) {
-      const map = { "1": "inf", "2": "light", "3": "heavy", "4": "air", "5": "base" };
-      state.tab = map[k]; renderPanel();
-    } else if (k === "e" && state.sel.size) {
-      // set rally to first selected (rally for new production)
-    } else if (k === "f") {
-      // toggle follow? skip
-    } else if (k === "r") {
-      // set rally point at HQ? not needed
+    else if (k in TAB_KEYS) { state.tab = TAB_KEYS[k]; renderPanel(); Sound.ui(); }
+    else if (k in POWER_KEYS) {
+      const pid = POWER_KEYS[k];
+      const p = POWERS.find((x) => x.id === pid);
+      if (game.powerReady(facId, pid)) armTargeting("power", pid, p); else Sound.deny();
     }
   });
-  window.addEventListener("keyup", (ev) => { panKeys[ev.key.toLowerCase()] = false; });
+  on(window, "keyup", (ev) => { panKeys[ev.key.toLowerCase()] = false; });
+
+  /* ---------- control groups --------------------------------------------- */
+  function assignGroup(n) {
+    state.groups[n] = [...state.sel].filter((u) => u.alive);
+    flash(`Group ${n} set (${state.groups[n].length})`, "info");
+    Sound.ui();
+  }
+  function selectGroup(n) {
+    const g = (state.groups[n] || []).filter((u) => u.alive);
+    if (!g.length) return;
+    state.sel.clear(); g.forEach((u) => state.sel.add(u));
+    refreshSelInfo();
+    const t = game.clock;
+    if (state._lastGroupKey === n && (t - state._lastGroupT) < 0.4) {
+      // double-tap: center on the group
+      let cx = 0, cy = 0; g.forEach((u) => { cx += u.x; cy += u.y; });
+      cam.centerOn(cx / g.length, cy / g.length);
+    }
+    state._lastGroupKey = n; state._lastGroupT = t;
+  }
 
   let idleIdx = 0;
   function cycleIdle() {
@@ -347,14 +472,21 @@ function createUI(game, refs) {
     refreshSelInfo();
   }
 
-  function togglePause() {
-    state.paused = !state.paused;
+  function togglePause(force) {
+    state.paused = force != null ? force : !state.paused;
     refs.pauseBtn.textContent = state.paused ? "▶" : "❚❚";
     refs.pauseBtn.classList.toggle("on", state.paused);
+    if (refs.pauseOverlay) refs.pauseOverlay.classList.toggle("hidden", !state.paused);
+    if (state.paused) cancelTargeting();
+  }
+  function setSpeed(s) {
+    state.speed = s;
+    refs.speedBtn.textContent = state.speed + "×";
+    if (refs.pauseSpeedBtn) refs.pauseSpeedBtn.textContent = state.speed + "×";
   }
 
   // double-click empty board sets a production rally point
-  refs.board.addEventListener("dblclick", (ev) => {
+  on(refs.board, "dblclick", (ev) => {
     const p = boardPos(ev);
     if (unitAtScreen(p.x, p.y, true)) {
       // double-click a unit => select all of same type on screen
@@ -371,20 +503,43 @@ function createUI(game, refs) {
     flash("Rally point set — new units will deploy here", "info");
   });
 
-  /* ---------- HUD buttons ------------------------------------------------- */
-  refs.pauseBtn.onclick = togglePause;
-  refs.speedBtn.onclick = () => {
-    state.speed = state.speed === 1 ? 2 : state.speed === 2 ? 3 : 1;
-    refs.speedBtn.textContent = state.speed + "×";
+  /* ---------- HUD buttons + pause overlay -------------------------------- */
+  const cycleSpeed = () => setSpeed(state.speed === 1 ? 2 : state.speed === 2 ? 3 : 1);
+  refs.pauseBtn.onclick = () => togglePause();
+  refs.speedBtn.onclick = cycleSpeed;
+  if (refs.resumeBtn) refs.resumeBtn.onclick = () => togglePause(false);
+  if (refs.pauseSpeedBtn) refs.pauseSpeedBtn.onclick = cycleSpeed;
+  if (refs.volSlider) {
+    refs.volSlider.value = Math.round(Sound.volume * 100);
+    refs.volSlider.oninput = () => { Sound.setVolume(refs.volSlider.value / 100); Sound.ui(); };
+  }
+  if (refs.muteBtn) {
+    const sync = () => { refs.muteBtn.textContent = Sound.enabled ? "ON" : "OFF";
+      refs.muteBtn.classList.toggle("off", !Sound.enabled); };
+    sync();
+    refs.muteBtn.onclick = () => { Sound.setEnabled(!Sound.enabled); sync(); if (Sound.enabled) Sound.ui(); };
+  }
+
+  /* ---------- SFX + alert routing ---------------------------------------- */
+  game.onSfx = (type, d) => {
+    if (type === "explosion") Sound.explosion(d.size || 1);
+    else if (type === "capture") { Sound.capture(d.good); }
+    else if (type === "build") Sound.build();
+    else if (type === "power") { Sound.power(); if (d.msg) flash(d.msg, "info"); }
+    else if (type === "alert") {
+      Sound.alert();
+      if (d.msg) flash(d.msg, "bad");
+      if (d.x != null) pings.push({ x: d.x, y: d.y, col: "#ff5a4d", t: 0, alert: true });
+    }
   };
 
-  /* ---------- camera edge/keys update ------------------------------------ */
+  /* ---------- camera keys update ----------------------------------------- */
   function updateCamera(dt) {
-    const sp = 620 * dt / cam.zoom;
-    if (panKeys["w"] || panKeys["arrowup"]) cam.panBy(0, -sp);
-    if (panKeys["s"] || panKeys["arrowdown"]) cam.panBy(0, sp);
-    if (panKeys["a"] || panKeys["arrowleft"]) cam.panBy(-sp, 0);
-    if (panKeys["d"] || panKeys["arrowright"]) cam.panBy(sp, 0);
+    const sp = 680 * dt / cam.zoom;
+    if (panKeys["arrowup"]) cam.panBy(0, -sp);
+    if (panKeys["arrowdown"]) cam.panBy(0, sp);
+    if (panKeys["arrowleft"]) cam.panBy(-sp, 0);
+    if (panKeys["arrowright"]) cam.panBy(sp, 0);
   }
 
   /* ---------- prune dead from selection ---------------------------------- */
@@ -399,13 +554,29 @@ function createUI(game, refs) {
   function tick(dt, realDt) {
     updateCamera(realDt);
     pruneSel();
+    playFxSounds();
     // throttle DOM updates
     hudT += realDt;
-    if (hudT > 0.12) { hudT = 0; refreshHud(); renderQueue(); }
+    if (hudT > 0.12) { hudT = 0; refreshHud(); renderQueue(); renderPowers(); }
     panelT += realDt;
     if (panelT > 0.4) { panelT = 0; renderPanelAffordability(); }
-    // update pings
-    for (let i = pings.length - 1; i >= 0; i--) { pings[i].t += realDt; if (pings[i].t > 0.6) pings.splice(i, 1); }
+    // update pings (alert pings linger + pulse)
+    for (let i = pings.length - 1; i >= 0; i--) {
+      pings[i].t += realDt;
+      if (pings[i].t > (pings[i].alert ? 1.8 : 0.6)) pings.splice(i, 1);
+    }
+  }
+
+  // turn fresh tracer/arty effects into (throttled) gunfire sound
+  function playFxSounds() {
+    if (!Sound.enabled) return;
+    const t = game.clock;
+    for (const e of game.fx) {
+      if (e._snd) continue;
+      e._snd = true;
+      if (e.kind === "arty") Sound.shot("arty", t);
+      else if (e.kind === "tracer") Sound.shot("shot", t);
+    }
   }
 
   // lightweight affordability refresh without rebuilding the whole panel
@@ -429,21 +600,66 @@ function createUI(game, refs) {
   function drawPings(ctx) {
     for (const p of pings) {
       const s = cam.worldToScreen(p.x, p.y);
-      const k = p.t / 0.6;
-      ctx.strokeStyle = p.col; ctx.globalAlpha = 1 - k; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(s.x, s.y, 4 + k * 18, 0, Math.PI * 2); ctx.stroke();
+      if (p.alert) {
+        const k = (p.t % 0.6) / 0.6;
+        ctx.strokeStyle = p.col; ctx.globalAlpha = (1 - k) * (p.t < 1.5 ? 1 : (1.8 - p.t) / 0.3);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(s.x, s.y, 6 + k * 26, 0, Math.PI * 2); ctx.stroke();
+      } else {
+        const k = p.t / 0.6;
+        ctx.strokeStyle = p.col; ctx.globalAlpha = 1 - k; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(s.x, s.y, 4 + k * 18, 0, Math.PI * 2); ctx.stroke();
+      }
       ctx.globalAlpha = 1;
     }
   }
 
+  // draw the targeting reticle / placement validity (world space, called by render)
+  function drawTargeting(ctx) {
+    if (!state.targeting) return;
+    const t = state.targeting;
+    const c = state.cursorW;
+    const s = cam.worldToScreen(c.x, c.y);
+    ctx.save();
+    if (t.kind === "power") {
+      const rad = (t.id === "artillery" ? 90 : t.id === "airstrike" ? 180 : 45) * cam.zoom;
+      ctx.strokeStyle = "rgba(255,210,90,0.9)"; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(s.x - 14, s.y); ctx.lineTo(s.x + 14, s.y);
+      ctx.moveTo(s.x, s.y - 14); ctx.lineTo(s.x, s.y + 14); ctx.stroke();
+    } else {
+      const valid = game.canPlaceDefense(facId, c.x, c.y);
+      ctx.strokeStyle = valid ? "rgba(120,240,120,0.95)" : "rgba(255,90,80,0.95)";
+      ctx.fillStyle = valid ? "rgba(120,240,120,0.12)" : "rgba(255,90,80,0.12)";
+      ctx.lineWidth = 2;
+      const r = 16 * cam.zoom;
+      ctx.beginPath(); ctx.rect(s.x - r, s.y - r, r * 2, r * 2); ctx.fill(); ctx.stroke();
+      const rng = (t.def.range || 0) * cam.zoom;
+      if (rng) { ctx.setLineDash([4, 6]); ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.arc(s.x, s.y, rng, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]); ctx.globalAlpha = 1; }
+    }
+    ctx.restore();
+  }
+
   renderPanel();
+  renderPowers();
   refreshHud();
+  setSpeed(state.speed); // sync HUD + overlay speed labels
+
+  function destroy() {
+    for (const [t, type, fn, opts] of _listeners) t.removeEventListener(type, fn, opts);
+    _listeners.length = 0;
+  }
 
   return {
-    state, cam, tick, drawPings,
+    state, cam, tick, drawPings, drawTargeting, togglePause, setSpeed, destroy,
+    restart: null, // assigned by main
     get paused() { return state.paused; },
     get speed() { return state.speed; },
-    uiState() { return { sel: state.sel, box: state.box, rally: state.rally, hoverTown: state.hoverTown }; },
-    renderPanel,
+    uiState() { return { sel: state.sel, box: state.box, rally: state.rally,
+      hoverTown: state.hoverTown, targeting: state.targeting }; },
+    renderPanel, renderPowers,
   };
 }

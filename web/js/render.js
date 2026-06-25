@@ -235,7 +235,21 @@ const Render = (() => {
     ctx.rotate(u.heading + Math.PI / 2);
     ctx.fillStyle = u.hitFlash > 0 ? "#fff" : c;
     ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1;
-    if (u.def.air) {
+    if (u.emplacement) {
+      // sandbag strongpoint: octagon ring + colored core
+      ctx.rotate(-(u.heading + Math.PI / 2)); // emplacements don't rotate
+      ctx.fillStyle = "rgba(90,84,60,0.95)";
+      U.roundRect(ctx, -size - 2, -size - 2, (size + 2) * 2, (size + 2) * 2, 3); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.stroke();
+      ctx.fillStyle = u.hitFlash > 0 ? "#fff" : c;
+      U.roundRect(ctx, -size + 2, -size + 2, (size - 2) * 2, (size - 2) * 2, 2); ctx.fill();
+      if (u.building) { // under construction: scaffolding hatch
+        ctx.strokeStyle = "rgba(255,210,90,0.8)"; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(-size, -size); ctx.lineTo(size, size);
+        ctx.moveTo(size, -size); ctx.lineTo(-size, size); ctx.stroke();
+      }
+      ctx.rotate(u.heading + Math.PI / 2);
+    } else if (u.def.air) {
       // helicopter / jet: diamond + rotor
       ctx.beginPath();
       ctx.moveTo(0, -size - 3); ctx.lineTo(size, 0); ctx.lineTo(0, size + 3); ctx.lineTo(-size, 0);
@@ -277,6 +291,28 @@ const Render = (() => {
       ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(-w / 2, -size - 8, w, 3);
       ctx.fillStyle = hp > 0.5 ? "#5ad15a" : hp > 0.25 ? "#e0c14a" : "#e05050";
       ctx.fillRect(-w / 2, -size - 8, w * hp, 3);
+    }
+
+    // veterancy chevrons
+    if (u.rank > 0) {
+      ctx.fillStyle = "#ffd24a"; ctx.strokeStyle = "rgba(0,0,0,0.6)"; ctx.lineWidth = 0.6;
+      for (let i = 0; i < u.rank; i++) {
+        const cy = size + 4 + i * 3;
+        ctx.beginPath();
+        ctx.moveTo(-3, cy + 2); ctx.lineTo(0, cy); ctx.lineTo(3, cy + 2);
+        ctx.stroke();
+      }
+    }
+
+    // parachute (just-dropped paratroopers)
+    if (u._para > 0) {
+      ctx.globalAlpha = U.clamp(u._para, 0, 1);
+      ctx.fillStyle = "rgba(220,220,210,0.85)";
+      ctx.beginPath(); ctx.arc(0, -size - 10, size + 4, Math.PI, 0); ctx.fill();
+      ctx.strokeStyle = "rgba(220,220,210,0.6)"; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-size - 4, -size - 10); ctx.lineTo(0, -size + 2);
+      ctx.lineTo(size + 4, -size - 10); ctx.stroke();
+      ctx.globalAlpha = 1;
     }
     ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
     ctx.restore();

@@ -5,7 +5,8 @@
 
 function createGame(opts) {
   "use strict";
-  const { FACTIONS, ROSTER, UNIT_BY_ID, STRUCT_BY_ID, STRUCTURES, MAP, WORLD, DIFFICULTY, RULES } = DATA;
+  const { FACTIONS, ROSTER, UNIT_BY_ID, STRUCT_BY_ID, STRUCTURES, MAP, WORLD, DIFFICULTY, RULES,
+          POWERS, DEFENSES, DEFENSE_BY_ID } = DATA;
 
   const playerFac = opts.faction;                       // "USMC" | "RU"
   const enemyFac  = playerFac === "USMC" ? "RU" : "USMC";
@@ -76,10 +77,29 @@ function createGame(opts) {
       target: null,          // current acquired enemy
       home: opt.home || null,
       muzzle: 0, hitFlash: 0, supplyBoost: 0,
+      kills: 0, rank: 0,     // veterancy
+      emplacement: !!def.emplacement,
       heading: opt.heading != null ? opt.heading : (facId === playerFac ? -Math.PI / 2 : Math.PI / 2),
     };
     units.push(u);
     return u;
+  }
+
+  // Veterancy thresholds → rank 1/2/3. Higher rank = more damage + more HP.
+  const VET_KILLS = [3, 8, 16];
+  function creditKill(killer) {
+    if (!killer || killer.fac === "GARRISON" || !killer.def) return;
+    killer.kills++;
+    let nr = 0;
+    for (let i = 0; i < VET_KILLS.length; i++) if (killer.kills >= VET_KILLS[i]) nr = i + 1;
+    if (nr > killer.rank) {
+      killer.rank = nr;
+      const boost = 1 + 0.10 * nr;
+      const ratio = killer.hp / killer.maxHp;
+      killer.maxHp = Math.round(killer.def.hp * boost);
+      killer.hp = Math.min(killer.maxHp, killer.maxHp * ratio + killer.def.hp * 0.15);
+      floats.push({ txt: "PROMOTED", x: killer.x, y: killer.y - 14, t: 0, col: "#e3c14a" });
+    }
   }
 
   // Each side opens holding the towns nearest its HQ — this bootstraps the
@@ -136,6 +156,14 @@ function createGame(opts) {
 
   /* ---- classification helpers ------------------------------------------ */
   const targetClass = (u) => (u.def.air ? "air" : (u.def.cat === "inf" ? "inf" : "veh"));
+
+  // Throttled "HQ under attack" alert.
+  function maybeAlertHQ(hq) {
+    if (hq.fac !== playerFac) return;
+    if ((clock - (hq._alertT || -99)) < 12) return;
+    hq._alertT = clock;
+    emitSfx("alert", { x: hq.x, y: hq.y, msg: "Your HQ is under attack!" });
+  }
   const isEnemySides = (a, b) => {
     if (a === b) return false;
     if (a === "GARRISON" || b === "GARRISON") return true; // garrison fights everyone
@@ -149,14 +177,15 @@ function createGame(opts) {
     if (src.cd > 0) return;
     src.cd += 1 / src.def.rof;
     const cls = tgt.kind === "hq" ? "veh" : targetClass(tgt);
-    let dmg = src.def.dmg * (src.def.vs[cls] || 1);
+    let dmg = src.def.dmg * (src.def.vs[cls] || 1) * (1 + 0.12 * (src.rank || 0));
     const armor = tgt.kind === "hq" ? 4 : (tgt.def.armor || 0);
-    dmg = Math.max(1, dmg - armor);
+    dmg = Math.max(1, dmg - armor) * (1 - 0.06 * (tgt.rank || 0));
     // air is slippery vs unguided small arms
     if (tgt.def && tgt.def.air && cls === "air" && src.def.cat === "inf" && !src.def.vs.air) dmg *= 0.4;
     tgt.hp -= dmg;
     tgt.hitFlash = 0.18;
-    if (tgt.kind === "hq") tgt.lastHit = 0;
+    if (tgt.hp <= 0 && !tgt._killer) tgt._killer = src;
+    if (tgt.kind === "hq") { tgt.lastHit = 0; maybeAlertHQ(tgt); }
     src.muzzle = 0.09;
     // visual tracer + occasional float
     fx.push({ kind: src.def.arty ? "arty" : "tracer", x: src.x, y: src.y, tx: tgt.x, ty: tgt.y,
@@ -216,8 +245,15 @@ function createGame(opts) {
   function updateUnit(u, dt) {
     if (u.hitFlash > 0) u.hitFlash -= dt;
     if (u.muzzle > 0) u.muzzle -= dt;
+    if (u._para > 0) u._para -= dt;
 
     if (u.def.heal) healAround(u, dt);
+    // emplacements never move — engage only, then bail
+    if (u.emplacement) {
+      const e = acquire(u);
+      if (e && U.dist2(u.x, u.y, e.x, e.y) < u.def.range ** 2) applyDamage(u, e, dt);
+      return;
+    }
 
     const enemy = acquire(u);
     const ord = u.order;
@@ -305,6 +341,11 @@ function createGame(opts) {
     }
     t.garrisonLeft = gc;
     t.contested = (pc > 0 && ec > 0) || (gc > 0 && (pc > 0 || ec > 0));
+    // Alert the player when one of their towns comes under enemy pressure.
+    if (t.owner === playerFac && ec > 0 && (clock - (t._alertT || -99)) > 14) {
+      t._alertT = clock;
+      emitSfx("alert", { x: t.x, y: t.y, msg: `${t.name} is under attack!` });
+    }
     // Garrison blocks capture entirely while alive & present.
     if (gc > 0.5) { t._ca = pc; t._ea = ec; return; }
 
@@ -326,6 +367,7 @@ function createGame(opts) {
         s.funds += t.sv * RULES.captureFundsBonus;
         log(`${FACTIONS[attackerFac].name} ${flipped ? "seized" : "secured"} ${t.name} (+${t.sv * RULES.captureFundsBonus} funds)`,
           attackerFac === playerFac ? "good" : "bad");
+        emitSfx("capture", { good: attackerFac === playerFac, x: t.x, y: t.y });
       }
     }
   }
@@ -430,7 +472,7 @@ function createGame(opts) {
         s.building.shift();
         if (b.struct.id === "depot") s.depots++;
         else s.structures.add(b.struct.id);
-        if (facId === playerFac) log(`${b.struct.name} online`, "good");
+        if (facId === playerFac) { log(`${b.struct.name} online`, "good"); emitSfx("build", {}); }
       }
     }
   }
@@ -443,11 +485,14 @@ function createGame(opts) {
       if (u.hp <= 0) {
         u.alive = false;
         fx.push({ kind: "blast", x: u.x, y: u.y, t: 0, life: 0.4, r: u.def.cat === "inf" ? 14 : 26 });
+        emitSfx("explosion", { x: u.x, y: u.y, size: u.def.cat === "inf" ? 0.5 : 1 });
         if (u.fac === playerFac || u.fac === enemyFac) {
           sides[u.fac].losses++;
           const killerSide = u.fac === playerFac ? enemyFac : playerFac;
           sides[killerSide].kills++;
         }
+        // credit the unit that landed the kill (veterancy)
+        if (u._killer && u._killer.alive && u._killer.fac !== u.fac) creditKill(u._killer);
         units.splice(i, 1);
       }
     }
@@ -473,12 +518,142 @@ function createGame(opts) {
     }
   }
 
-  /* ---- log -------------------------------------------------------------- */
+  /* ---- log + sfx -------------------------------------------------------- */
   const logs = [];
   function log(msg, type) {
     logs.push({ msg, type: type || "info", t: clock });
     if (logs.length > 60) logs.shift();
     if (game.onLog) game.onLog(msg, type || "info");
+  }
+  function emitSfx(type, data) { if (game.onSfx) game.onSfx(type, data || {}); }
+
+  /* ---- delayed-action scheduler (for support powers) -------------------- */
+  const scheduled = [];
+  function schedule(delay, fn) { scheduled.push({ at: clock + delay, fn }); }
+  function runScheduled() {
+    for (let i = scheduled.length - 1; i >= 0; i--) {
+      if (clock >= scheduled[i].at) { const a = scheduled[i]; scheduled.splice(i, 1); a.fn(); }
+    }
+  }
+
+  // Area damage that spares the casting side (keeps support powers fun).
+  function damageArea(casterFac, x, y, radius, dmg) {
+    for (const u of units) {
+      if (!u.alive || u.fac === casterFac) continue;
+      const d = U.dist(u.x, u.y, x, y);
+      if (d <= radius) {
+        const fall = 1 - 0.5 * (d / radius);
+        u.hp -= Math.max(2, dmg * fall - (u.def.armor || 0) * 0.4);
+        u.hitFlash = 0.2;
+        if (u.hp <= 0 && !u._killer) u._killer = null; // power kills credit no unit
+      }
+    }
+    // also chip the enemy HQ if in blast
+    for (const fid of Object.keys(sides)) {
+      if (fid === casterFac) continue;
+      const hq = sides[fid].hq;
+      if (U.dist(hq.x, hq.y, x, y) <= radius) { hq.hp -= dmg * 0.5; hq.lastHit = 0; maybeAlertHQ(hq); }
+    }
+  }
+
+  /* ---- commander support powers ----------------------------------------- */
+  function powerState(facId, id) {
+    const s = sides[facId];
+    if (!s.powers) s.powers = {};
+    if (!s.powers[id]) s.powers[id] = { cd: 0 };
+    return s.powers[id];
+  }
+  function powerReady(facId, id) {
+    const def = POWERS.find((p) => p.id === id);
+    const ps = powerState(facId, id);
+    return ps.cd <= 0 && sides[facId].funds >= def.cost;
+  }
+  function usePower(facId, id, x, y) {
+    const def = POWERS.find((p) => p.id === id);
+    if (!def) return { ok: false, reason: "unknown" };
+    const ps = powerState(facId, id);
+    if (ps.cd > 0) return { ok: false, reason: "On cooldown" };
+    if (sides[facId].funds < def.cost) return { ok: false, reason: "Not enough funds" };
+    sides[facId].funds -= def.cost; sides[facId].spent += def.cost;
+    ps.cd = def.cd;
+    x = U.clamp(x, 10, WORLD.w - 10); y = U.clamp(y, 10, WORLD.h - 10);
+    if (facId === playerFac) emitSfx("power", { x, y, msg: def.name + " inbound" });
+
+    if (id === "artillery") {
+      for (let i = 0; i < 8; i++) {
+        const a = rng() * Math.PI * 2, r = rng() * 80;
+        const bx = x + Math.cos(a) * r, by = y + Math.sin(a) * r;
+        schedule(0.6 + i * 0.22, () => {
+          fx.push({ kind: "blast", x: bx, y: by, t: 0, life: 0.5, r: 40 });
+          damageArea(facId, bx, by, 60, 90);
+          emitSfx("explosion", { x: bx, y: by, size: 1.2 });
+        });
+      }
+    } else if (id === "airstrike") {
+      const hq = sides[facId].hq;
+      const ang = Math.atan2(y - hq.y, x - hq.x);
+      const dx = Math.cos(ang), dy = Math.sin(ang);
+      for (let i = -3; i <= 3; i++) {
+        const bx = x + dx * i * 55, by = y + dy * i * 55;
+        schedule(0.5 + (i + 3) * 0.12, () => {
+          fx.push({ kind: "blast", x: bx, y: by, t: 0, life: 0.45, r: 34 });
+          fx.push({ kind: "tracer", x: bx - dx * 40, y: by - dy * 40, tx: bx, ty: by, t: 0, life: 0.18, col: "#ffd27a" });
+          damageArea(facId, bx, by, 48, 75);
+          emitSfx("explosion", { x: bx, y: by, size: 1 });
+        });
+      }
+    } else if (id === "paradrop") {
+      const roster = ROSTER[facId];
+      const squad = ["ar", "rifle", "rifle", "lat", "rifle"];
+      squad.forEach((tag, i) => {
+        const ud = roster.find((d) => d.id.endsWith("_" + tag)) || roster[0];
+        schedule(0.3 + i * 0.15, () => {
+          const a = rng() * Math.PI * 2, r = rng() * 40;
+          const u = spawnUnit(facId, ud, x + Math.cos(a) * r, y + Math.sin(a) * r, { order: "guard" });
+          u._para = 0.8; // render parachute briefly
+          fx.push({ kind: "blast", x: u.x, y: u.y, t: 0, life: 0.3, r: 14 });
+        });
+      });
+    }
+    return { ok: true };
+  }
+  function tickPowers(dt) {
+    for (const fid of [playerFac, enemyFac]) {
+      const s = sides[fid]; if (!s.powers) continue;
+      for (const id in s.powers) if (s.powers[id].cd > 0) s.powers[id].cd -= dt;
+    }
+  }
+
+  /* ---- defensive emplacements ------------------------------------------- */
+  function canPlaceDefense(facId, x, y) {
+    // must be near owned territory (a held town or the HQ)
+    const hq = sides[facId].hq;
+    if (U.dist2(x, y, hq.x, hq.y) < 300 * 300) return true;
+    for (const t of towns) if (t.owner === facId && U.dist2(x, y, t.x, t.y) < 240 * 240) return true;
+    return false;
+  }
+  function buildDefense(facId, defId, x, y) {
+    const def = DEFENSE_BY_ID[defId];
+    const s = sides[facId];
+    if (!def) return { ok: false, reason: "unknown" };
+    if (!canPlaceDefense(facId, x, y)) return { ok: false, reason: "Must be near your HQ or a held town" };
+    if (s.funds < def.cost) return { ok: false, reason: "Not enough funds" };
+    if (supplyUsed(facId) + def.sup > supplyCap(facId)) return { ok: false, reason: "Supply full" };
+    s.funds -= def.cost; s.spent += def.cost;
+    // spawn as a stationary, building emplacement
+    const u = spawnUnit(facId, def, x, y, { order: "hold", home: { x, y } });
+    u.building = def.build; u.hp = Math.max(1, def.hp * 0.25); // weak while building, ramps up
+    if (facId === playerFac) emitSfx("build", {});
+    return { ok: true };
+  }
+  // ramp emplacement HP while "building"
+  function tickDefenses(dt) {
+    for (const u of units) {
+      if (!u.alive || !u.emplacement || !u.building) continue;
+      u.building -= dt;
+      u.hp = Math.min(u.maxHp, u.hp + (u.maxHp * 0.75 / DEFENSE_BY_ID[u.def.id].build) * dt);
+      if (u.building <= 0) { u.building = 0; u.hp = u.maxHp; }
+    }
   }
 
   /* ---- main step -------------------------------------------------------- */
@@ -493,6 +668,9 @@ function createGame(opts) {
     tickEconomy(dt);
     advanceProduction(playerFac, dt);
     advanceProduction(enemyFac, dt);
+    tickPowers(dt);
+    tickDefenses(dt);
+    runScheduled();
     if (game.ai) game.ai.update(dt);
     cleanup();
     updateFx(dt);
@@ -532,13 +710,16 @@ function createGame(opts) {
     get over() { return over; },
     // queries
     supplyUsed, supplyCap, hasStructure, catUnlocked, unitsOfSide, townsOwned,
+    powerReady, powerState, canPlaceDefense,
     // commands
     queueUnit, queueStructure, issueMove, issueAttack, issueStop,
+    usePower, buildDefense,
     setRally(facId, x, y) { sides[facId].rally = { x, y }; },
     // lifecycle
     update,
     spawnUnit,
     onLog: null,
+    onSfx: null,
     log,
   };
   return game;

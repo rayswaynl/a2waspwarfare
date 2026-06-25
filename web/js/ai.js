@@ -42,7 +42,24 @@ function createAI(game) {
     return null;
   }
 
-  let macroT = 0, microT = 0;
+  let macroT = 0, microT = 0, powerT = 12;
+
+  // Occasionally drop artillery on the densest cluster of player units.
+  function powers(dt) {
+    powerT -= dt;
+    if (powerT > 0) return;
+    powerT = 6;
+    if (!game.powerReady(fac, "artillery")) return;
+    const enemyUnits = game.unitsOfSide(game.playerFac).filter((u) => !u.garrison);
+    if (enemyUnits.length < 4) return;
+    let bestU = null, bestN = 3;
+    for (const u of enemyUnits) {
+      let n = 0;
+      for (const o of enemyUnits) if (U.dist2(u.x, u.y, o.x, o.y) < 90 * 90) n++;
+      if (n > bestN) { bestN = n; bestU = u; }
+    }
+    if (bestU) game.usePower(fac, "artillery", bestU.x, bestU.y);
+  }
 
   function macro(dt) {
     macroT -= dt;
@@ -146,6 +163,7 @@ function createAI(game) {
       if (game.over) return;
       macro(dt);
       micro(dt);
+      powers(dt);
     },
   };
 }

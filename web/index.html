@@ -42,10 +42,13 @@
         <li><b>Select</b> — left-click a unit, or drag a box to select many.</li>
         <li><b>Move / Attack</b> — right-click the ground or an enemy.</li>
         <li><b>Capture</b> — park units on a neutral or enemy town until the flag flips.</li>
-        <li><b>Buy</b> — pick a factory tab on the right, then click a unit to queue it. It spawns at your HQ.</li>
+        <li><b>Buy</b> — pick a factory tab on the right, then click a unit to queue it. It spawns at your HQ (double-click the map to set a forward rally).</li>
+        <li><b>Veterancy</b> — units earn chevrons from kills, hitting harder and tankier.</li>
+        <li><b>Support powers</b> — <kbd>Z</kbd> artillery · <kbd>X</kbd> airstrike · <kbd>C</kbd> paradrop, then click a target. Cost funds + cooldown.</li>
+        <li><b>Defenses</b> — in the <b>BASE</b> tab, pick an emplacement and place it near your lines.</li>
         <li><b>Economy</b> — towns pay <b>Funds</b> each tick; supply depots raise your <b>Supply</b> cap.</li>
         <li><b>Win</b> — capture the enemy HQ or hold every town. Lose your HQ and it's over.</li>
-        <li><b>Hotkeys</b> — <kbd>Space</kbd> pause · <kbd>Tab</kbd> cycle idle · <kbd>1-5</kbd> factory tabs · <kbd>H</kbd> centre HQ</li>
+        <li><b>Hotkeys</b> — <kbd>Space</kbd> pause · <kbd>Q W E R T</kbd> factory tabs · <kbd>Ctrl+1-9</kbd>/<kbd>1-9</kbd> control groups · <kbd>Tab</kbd> idle · <kbd>H</kbd> HQ · arrows pan</li>
       </ul>
     </details>
   </div>
@@ -108,6 +111,12 @@
 
     <!-- minimap -->
     <canvas id="minimap" class="minimap"></canvas>
+
+    <!-- commander support powers -->
+    <div id="powerBar" class="power-bar"></div>
+
+    <!-- targeting banner -->
+    <div id="targetBanner" class="target-banner hidden"></div>
   </main>
 
   <!-- BUILD / COMMAND PANEL -->
@@ -119,6 +128,45 @@
       <div class="queue-list" id="queueList"><div class="queue-empty">idle</div></div>
     </div>
   </aside>
+
+  <!-- PAUSE / SETTINGS OVERLAY -->
+  <div id="pauseOverlay" class="screen hidden">
+    <div class="pause-card">
+      <h2>PAUSED</h2>
+      <div class="pause-settings">
+        <label class="set-row">
+          <span>Master volume</span>
+          <input type="range" id="volSlider" min="0" max="100" value="60" />
+        </label>
+        <label class="set-row">
+          <span>Sound</span>
+          <button id="muteBtn" class="toggle">ON</button>
+        </label>
+        <label class="set-row">
+          <span>Game speed</span>
+          <button id="pauseSpeedBtn" class="toggle">1×</button>
+        </label>
+      </div>
+      <div class="pause-controls">
+        <b>CONTROLS</b>
+        <div class="pc-grid">
+          <span>Left-click / drag</span><i>select</i>
+          <span>Right-click</span><i>move · attack</i>
+          <span>Shift + right-click</span><i>attack-move</i>
+          <span>Double-click map</span><i>set rally</i>
+          <span>Ctrl + 1-9 / 1-9</span><i>set / pick group</i>
+          <span>Q W E R T</span><i>factory tabs</i>
+          <span>Z X C</span><i>support powers</i>
+          <span>Space · H · S</span><i>pause · HQ · stop</i>
+        </div>
+      </div>
+      <div class="pause-btns">
+        <button class="btn-primary" id="resumeBtn">RESUME</button>
+        <button class="btn-ghost" id="restartBtn">RESTART</button>
+        <button class="btn-ghost danger" id="resignBtn">RESIGN</button>
+      </div>
+    </div>
+  </div>
 
   <!-- END SCREEN -->
   <div id="endScreen" class="screen hidden">
@@ -133,6 +181,7 @@
 
 <script src="js/data.js"></script>
 <script src="js/util.js"></script>
+<script src="js/audio.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/render.js"></script>

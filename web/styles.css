@@ -252,3 +252,92 @@ kbd {
   #panel { border-left: none; border-top: 1px solid var(--line); }
   .minimap { width: 150px; height: 100px; }
 }
+
+/* =============================================================================
+ * BUILD-OUT ADDITIONS — powers, defenses, targeting, pause/settings, veterancy
+ * ========================================================================== */
+
+/* panel sub-heading + defense / arming states */
+.panel-subhead {
+  margin: 10px 2px 2px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  color: var(--ink-dim); border-top: 1px solid var(--line); padding-top: 10px;
+}
+.bglyph.def { color: var(--amber); }
+.bcard.arming { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; background: #221d0c; }
+
+/* support power bar (bottom-center of stage) */
+.power-bar {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 4;
+}
+.pwr {
+  position: relative; width: 88px; height: 60px; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  background: rgba(16,22,14,0.92); border: 1px solid var(--line); border-radius: 9px;
+  color: var(--ink); cursor: pointer; transition: .12s; backdrop-filter: blur(3px);
+}
+.pwr:hover { border-color: #46583a; transform: translateY(-1px); }
+.pwr.arming { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+.pwr.cooling { opacity: 0.55; cursor: default; }
+.pwr-key {
+  position: absolute; top: 3px; left: 5px; font-family: var(--mono); font-size: 9px;
+  color: var(--ink-dim); border: 1px solid var(--line); border-radius: 3px; padding: 0 3px;
+}
+.pwr-glyph { font-size: 20px; line-height: 1; color: var(--amber); }
+.pwr-name { font-size: 10px; letter-spacing: 0.5px; }
+.pwr-cost { font-family: var(--mono); font-size: 10px; color: var(--good); }
+.pwr-cd {
+  position: absolute; bottom: 0; left: 0; width: 100%;
+  background: rgba(20,26,16,0.78); pointer-events: none;
+}
+.pwr-cdtxt {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--mono); font-weight: 700; font-size: 16px; color: var(--amber); pointer-events: none;
+}
+
+/* targeting banner */
+.target-banner {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(40,33,8,0.95); border: 1px solid var(--amber); border-radius: 20px;
+  padding: 7px 16px; font-size: 12.5px; color: var(--amber); z-index: 6;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+.target-banner b { color: #fff; }
+
+/* pause / settings overlay */
+#pauseOverlay {
+  background: rgba(8,11,7,0.82);
+  backdrop-filter: blur(3px);
+}
+.pause-card {
+  width: min(440px, 92vw); background: linear-gradient(180deg, #161d12, #11160e);
+  border: 1px solid var(--line); border-radius: 14px; padding: 26px 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+.pause-card h2 { margin: 0 0 16px; text-align: center; letter-spacing: 8px; font-size: 30px; color: var(--amber); }
+.pause-settings { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--ink-dim); }
+.set-row input[type=range] { width: 150px; accent-color: var(--amber); }
+.toggle {
+  font-family: var(--mono); font-size: 12px; padding: 4px 12px; min-width: 54px;
+  background: #1f2818; color: var(--good); border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
+}
+.toggle.off { color: var(--ink-dim); }
+.pause-controls { border-top: 1px solid var(--line); padding-top: 14px; margin-bottom: 18px; }
+.pause-controls b { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--ink-dim); }
+.pc-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin-top: 8px; font-size: 12px; }
+.pc-grid span { color: var(--ink); font-family: var(--mono); }
+.pc-grid i { color: var(--ink-dim); font-style: normal; text-align: right; }
+.pause-btns { display: flex; gap: 8px; }
+.pause-btns .btn-primary { margin-top: 0; flex: 1; }
+.btn-ghost {
+  flex: 1; padding: 14px; font-family: var(--mono); font-size: 13px; letter-spacing: 2px;
+  background: #1b2317; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; transition: .12s;
+}
+.btn-ghost:hover { border-color: #46583a; color: var(--amber); }
+.btn-ghost.danger:hover { border-color: var(--bad); color: var(--bad); }
+
+@media (max-width: 760px) {
+  .power-bar { bottom: 6px; }
+  .pwr { width: 72px; height: 52px; }
+}
