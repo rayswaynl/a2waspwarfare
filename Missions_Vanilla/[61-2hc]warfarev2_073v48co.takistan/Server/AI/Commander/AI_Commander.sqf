@@ -321,7 +321,14 @@ while {!gameOver} do {
 			_prevRich = _logik getVariable ["wfbe_aicom_reinforce_rich", false];
 			if (_richFlag && !_prevRich) then {
 				_logik setVariable ["wfbe_aicom_reinforce_rich", true];
-				_logik setVariable ["wfbe_aicom_veteran_next", true]; //--- B74 (Ray 2026-06-22): re-point the rich flag (previously a NO-OP - it only doubled the Produce batch, and Produce skips HC teams = 100% of live teams) at the FOUNDING path: arm the one-shot Veteran pick so the next HC team founds the side's top-tier eligible template, converting surplus cash into a premium platoon. The #1 cost-weighted draw drains the rest on ordinary picks.
+					//--- B752 (Ray 2026-06-25): THROTTLE the veteran-premium override. At the trivial 30k threshold vs the 8-18M
+					//--- the commander hoards, this re-armed ~125x/round = 54% of foundings = the variety-killer (it spammed the
+					//--- single highest-tier template). Only RE-ARM past a COOLDOWN so the premium is rare again (~10-15%); the
+					//--- b750 effectiveness draw supplies the variety on every other founding.
+					if (time - (_logik getVariable ["wfbe_aicom_veteran_t0", -1e10]) > (missionNamespace getVariable ["WFBE_C_AICOM_VETERAN_COOLDOWN", 900])) then {
+						_logik setVariable ["wfbe_aicom_veteran_next", true];
+						_logik setVariable ["wfbe_aicom_veteran_t0", time];
+					};
 				["INFORMATION", Format ["AI_Commander.sqf: [%1] wealth conversion active (funds %2 > threshold %3, teams %4/%5) - Veteran founding armed.", str _side, _funds, _richThreshold, _fTeams, _dynTarget]] Call WFBE_CO_FNC_AICOMLog;
 				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|WEALTH_CONVERSION|funds" + str _funds);
 			};

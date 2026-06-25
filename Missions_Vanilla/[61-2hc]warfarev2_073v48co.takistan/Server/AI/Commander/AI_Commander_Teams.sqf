@@ -488,6 +488,10 @@ if (count _live > 0) then {
 			if (_w7Score > _w7Best) then {_w7Best = _w7Score; _w7BestIdx = _w7Idx};
 		} forEach _eligible;
 		_pick = _w7BestIdx;
+		//--- B752 (Ray 2026-06-25): VETERAN ANTI-REPEAT. The deterministic highest-score pick returns the SAME premium
+		//--- template every veteran tick (tmpl13 = 56% of WEST foundings = the variety-killer). If it would repeat the
+		//--- last-founded template, reroll to a random eligible candidate so premium platoons VARY across the round.
+		if (_pick == (_logik getVariable ["wfbe_aicom_last_template", -1]) && {count _eligible > 1}) then {_pick = _eligible select (floor (random (count _eligible)))};
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W7 VeteranCompany applied - premium template %2.", _sideText, _pick]] Call WFBE_CO_FNC_AICOMLog;
 	};
 	_template = _templates select _pick;
