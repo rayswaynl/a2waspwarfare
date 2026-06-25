@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WASP Warfare — Web Edition</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141a12'/%3E%3Ctext x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23e3c14a' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============ TITLE / BRIEFING SCREEN ============ -->
+<div id="menu" class="screen">
+  <div class="menu-card">
+    <div class="menu-brand">
+      <span class="brand-mark">W·A·S·P</span>
+      <h1>WARFARE</h1>
+      <p class="brand-sub">WEB EDITION &mdash; Combined Operations</p>
+    </div>
+
+    <p class="menu-blurb">
+      A browser tribute to the Arma&nbsp;2 <em>Warfare</em> game mode.
+      Seize towns to grow your income, requisition forces from your factories,
+      and grind the enemy commander back to his HQ.
+    </p>
+
+    <div class="menu-faction">
+      <span class="menu-label">CHOOSE YOUR SIDE</span>
+      <div class="faction-pick" id="factionPick"></div>
+    </div>
+
+    <div class="menu-faction">
+      <span class="menu-label">THEATRE / DIFFICULTY</span>
+      <div class="diff-pick" id="diffPick"></div>
+    </div>
+
+    <button id="startBtn" class="btn-primary">DEPLOY</button>
+
+    <details class="menu-help">
+      <summary>Field Manual</summary>
+      <ul>
+        <li><b>Select</b> — left-click a unit, or drag a box to select many.</li>
+        <li><b>Move / Attack</b> — right-click the ground or an enemy.</li>
+        <li><b>Capture</b> — park units on a neutral or enemy town until the flag flips.</li>
+        <li><b>Buy</b> — pick a factory tab on the right, then click a unit to queue it. It spawns at your HQ.</li>
+        <li><b>Economy</b> — towns pay <b>Funds</b> each tick; supply depots raise your <b>Supply</b> cap.</li>
+        <li><b>Win</b> — capture the enemy HQ or hold every town. Lose your HQ and it's over.</li>
+        <li><b>Hotkeys</b> — <kbd>Space</kbd> pause · <kbd>Tab</kbd> cycle idle · <kbd>1-5</kbd> factory tabs · <kbd>H</kbd> centre HQ</li>
+      </ul>
+    </details>
+  </div>
+  <div class="menu-foot">No install. No mods. Just the war. — inspired by WFBE / WASP Warfare v0.73</div>
+</div>
+
+<!-- ============ GAME SHELL ============ -->
+<div id="game" class="hidden">
+
+  <!-- TOP HUD -->
+  <header id="topbar">
+    <div class="hud-group hud-faction">
+      <span class="hud-flag" id="hudFlag"></span>
+      <div>
+        <div class="hud-side" id="hudSide">USMC</div>
+        <div class="hud-side-sub">COMMANDER</div>
+      </div>
+    </div>
+
+    <div class="hud-stats">
+      <div class="stat" title="Cash on hand. Spent on units.">
+        <span class="stat-ico">$</span>
+        <span class="stat-val" id="statFunds">0</span>
+        <span class="stat-lbl">FUNDS <i id="statIncome">+0</i></span>
+      </div>
+      <div class="stat" title="Logistics cap. Each unit costs supply.">
+        <span class="stat-ico">▣</span>
+        <span class="stat-val" id="statSupply">0/0</span>
+        <span class="stat-lbl">SUPPLY</span>
+      </div>
+      <div class="stat" title="Towns you control.">
+        <span class="stat-ico">⚑</span>
+        <span class="stat-val" id="statTowns">0/0</span>
+        <span class="stat-lbl">TOWNS</span>
+      </div>
+      <div class="stat" title="Units in the field.">
+        <span class="stat-ico">✪</span>
+        <span class="stat-val" id="statUnits">0</span>
+        <span class="stat-lbl">FORCES</span>
+      </div>
+    </div>
+
+    <div class="hud-group hud-right">
+      <div class="hud-clock" id="hudClock">00:00</div>
+      <button class="hud-btn" id="pauseBtn" title="Pause (Space)">❚❚</button>
+      <button class="hud-btn" id="speedBtn" title="Game speed">1×</button>
+      <button class="hud-btn" id="quitBtn" title="Resign">⏻</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main id="stage">
+    <canvas id="board"></canvas>
+
+    <!-- floating selection / order readout -->
+    <div id="selInfo" class="sel-info hidden"></div>
+
+    <!-- ticker -->
+    <div id="ticker" class="ticker"></div>
+
+    <!-- minimap -->
+    <canvas id="minimap" class="minimap"></canvas>
+  </main>
+
+  <!-- BUILD / COMMAND PANEL -->
+  <aside id="panel">
+    <div class="panel-tabs" id="panelTabs"></div>
+    <div class="panel-body" id="panelBody"></div>
+    <div class="panel-foot">
+      <div class="queue-title">PRODUCTION QUEUE</div>
+      <div class="queue-list" id="queueList"><div class="queue-empty">idle</div></div>
+    </div>
+  </aside>
+
+  <!-- END SCREEN -->
+  <div id="endScreen" class="screen hidden">
+    <div class="end-card">
+      <h2 id="endTitle">VICTORY</h2>
+      <p id="endText"></p>
+      <div class="end-stats" id="endStats"></div>
+      <button class="btn-primary" id="endBtn">RETURN TO BRIEFING</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/util.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
