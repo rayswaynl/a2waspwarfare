@@ -47,7 +47,8 @@ while {!WFBE_GameOver} do {
 				//--- PERF dedupe REVERTED (caused capture-detection wedges twice); back to the proven
 				//--- direct scan. The server_town_ai cache-write remains but is simply unread now.
 				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
-				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight 10;
+				private "_capH"; _capH = 10; if (_location getVariable ["wfbe_is_naval_hvt", false]) then {_capH = (_location getVariable ["wfbe_naval_deckz", 22]) + 12}; //--- B755 (Ray 2026-06-25): carrier decks sit ~16-22m ASL, so on-deck attackers were EXCLUDED by the flat 10m height filter - the carrier town could never be captured by units standing on its deck (now relevant with the b754 deck-spawn). Naval-HVT towns scan up to deckZ+12; normal towns keep 10.
+				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight _capH;
 
 				_west = west countSide _objects;
 				_east = east countSide _objects;
