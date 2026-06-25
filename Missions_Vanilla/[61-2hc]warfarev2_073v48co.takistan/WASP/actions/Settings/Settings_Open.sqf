@@ -11,7 +11,7 @@
 */
 
 disableSerialization;
-private ["_hud","_aar","_bomb","_amb","_kill","_curVD","_autoOn","_maxVD","_chosenVD"];
+private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_curVD","_autoOn","_maxVD","_chosenVD"];
 
 if (!alive player) exitWith {};
 if (dialog) exitWith {};
@@ -32,6 +32,12 @@ while {alive player && dialog} do {
 	ctrlSetText [29012, if (_bomb) then {"Bomb Alt Warning: ON"}   else {"Bomb Alt Warning: OFF"}];
 	ctrlSetText [29013, if (_amb)  then {"Ambulance Circles: ON"}  else {"Ambulance Circles: OFF"}];
 	ctrlSetText [29014, if (_kill) then {"Kill Feed: ON"}          else {"Kill Feed: OFF"}];
+	_irs  = missionNamespace getVariable ["WFBE_AUTO_IRSMOKE", true];
+	_bip  = missionNamespace getVariable ["WFBE_AUTO_BIPOD", true];
+	_acue = missionNamespace getVariable ["WFBE_AUDIO_CUES", false];
+	ctrlSetText [29015, if (_irs)  then {"Auto IR Smoke: ON"}      else {"Auto IR Smoke: OFF"}];
+	ctrlSetText [29016, if (_bip)  then {"Auto Deploy Bipod: ON"}  else {"Auto Deploy Bipod: OFF"}];
+	ctrlSetText [29017, if (_acue) then {"Audio Cues: ON"}         else {"Audio Cues: OFF"}];
 	_curVD  = round viewDistance;
 	_autoOn = missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
 	ctrlSetText [29020, format ["View Distance: %1 m%2", _curVD, if (_autoOn) then {"   (Auto-VD ON - pick a value to take manual control)"} else {""}]];
@@ -85,6 +91,28 @@ while {alive player && dialog} do {
 		_kill = !(missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]);
 		missionNamespace setVariable ["WFBE_KILL_MESSAGES", _kill];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_KILL_MESSAGES_ENABLED", _kill] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- Auto IR smoke (global default; IRS_OnIncomingMissile reads it client-side; nil on server -> AI vehicles unaffected).
+	if (WFBE_MenuAction == 6) then {
+		WFBE_MenuAction = -1;
+		_irs = !(missionNamespace getVariable ["WFBE_AUTO_IRSMOKE", true]);
+		missionNamespace setVariable ["WFBE_AUTO_IRSMOKE", _irs];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_AUTO_IRSMOKE", _irs] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+	//--- Auto deploy bipod (Common_Bipod auto-deploy EH reads it; manual TAB deploy is unaffected).
+	if (WFBE_MenuAction == 7) then {
+		WFBE_MenuAction = -1;
+		_bip = !(missionNamespace getVariable ["WFBE_AUTO_BIPOD", true]);
+		missionNamespace setVariable ["WFBE_AUTO_BIPOD", _bip];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_AUTO_BIPOD", _bip] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+	//--- Audio cues (opt-in factory/build sounds in Client_FNC_Special; default OFF, were removed as too intrusive).
+	if (WFBE_MenuAction == 8) then {
+		WFBE_MenuAction = -1;
+		_acue = !(missionNamespace getVariable ["WFBE_AUDIO_CUES", false]);
+		missionNamespace setVariable ["WFBE_AUDIO_CUES", _acue];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_AUDIO_CUES", _acue] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	//--- View distance manual choice (11=1000 .. 15=5000). Disables auto-VD (else it drifts the value back).

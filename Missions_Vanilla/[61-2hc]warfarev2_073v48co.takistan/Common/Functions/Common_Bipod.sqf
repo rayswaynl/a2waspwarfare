@@ -75,7 +75,7 @@ Bipod_AddAutoDeploy = {
 	if (isNil "Bipod_AutoEH") then {Bipod_AutoEH = -1};
 	if (Bipod_AutoEH >= 0) then {player removeEventHandler ["AnimChanged", Bipod_AutoEH]; Bipod_AutoEH = -1};
 	Bipod_AutoEH = player addEventHandler ["AnimChanged", {
-		if ((_this select 1) == "amovppnemstpsraswrfldnon") then {15 call Bipod_ON};
+		if ((_this select 1) == "amovppnemstpsraswrfldnon" && {missionNamespace getVariable ["WFBE_AUTO_BIPOD", true]}) then {15 call Bipod_ON}; //--- B751d: gated on the Auto-Deploy-Bipod client pref (Settings menu); default ON. Manual TAB still works.
 	}];
 };
 
