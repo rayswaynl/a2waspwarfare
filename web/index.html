@@ -45,6 +45,28 @@
       <div class="diff-pick" id="diffPick"></div>
     </div>
 
+    <details class="menu-skirmish">
+      <summary>Skirmish Options</summary>
+      <div class="sk-grid">
+        <div class="sk-field">
+          <span class="menu-label">WEATHER</span>
+          <div class="diff-pick sk-weather" id="weatherPick"></div>
+        </div>
+        <div class="sk-field">
+          <span class="menu-label">STARTING FUNDS — <i id="fundsVal">800</i></span>
+          <input type="range" id="fundsSlider" min="400" max="2500" step="100" value="800" />
+        </div>
+        <div class="sk-field">
+          <span class="menu-label">FOG OF WAR</span>
+          <button id="fogToggle" class="toggle">ON</button>
+        </div>
+        <div class="sk-field">
+          <span class="menu-label">GAME SPEED</span>
+          <div class="diff-pick sk-speed" id="speedPick"></div>
+        </div>
+      </div>
+    </details>
+
     <button id="startBtn" class="btn-primary">DEPLOY</button>
 
     <details class="menu-help">
@@ -55,11 +77,12 @@
         <li><b>Capture</b> — park units on a neutral or enemy town until the flag flips.</li>
         <li><b>Buy</b> — pick a factory tab on the right, then click a unit to queue it. It spawns at your HQ (double-click the map to set a forward rally).</li>
         <li><b>Veterancy</b> — units earn chevrons from kills, hitting harder and tankier.</li>
-        <li><b>Support powers</b> — <kbd>Z</kbd> artillery · <kbd>X</kbd> airstrike · <kbd>C</kbd> paradrop, then click a target. Cost funds + cooldown.</li>
-        <li><b>Defenses</b> — in the <b>BASE</b> tab, pick an emplacement and place it near your lines.</li>
-        <li><b>Economy</b> — towns pay <b>Funds</b> each tick; supply depots raise your <b>Supply</b> cap.</li>
-        <li><b>Win</b> — capture the enemy HQ or hold every town. Lose your HQ and it's over.</li>
-        <li><b>Hotkeys</b> — <kbd>Space</kbd> pause · <kbd>Q W E R T</kbd> factory tabs · <kbd>Ctrl+1-9</kbd>/<kbd>1-9</kbd> control groups · <kbd>Tab</kbd> idle · <kbd>H</kbd> HQ · arrows pan</li>
+        <li><b>Support powers</b> — <kbd>Z</kbd> artillery · <kbd>X</kbd> airstrike · <kbd>C</kbd> paradrop · <kbd>V</kbd> smoke, then click a target.</li>
+        <li><b>Strategic points</b> — capture the Radar (reveals fog), Oil (income) and Repair Depot (heals) dotted across the map.</li>
+        <li><b>Fog &amp; weather</b> — you only see what your forces scout; rain, sandstorms and nightfall cut your sight. Forests hide infantry.</li>
+        <li><b>Defenses &amp; upgrades</b> — the <b>BASE</b> tab places emplacements; the <b>UPGRADE</b> tab buys army-wide tech.</li>
+        <li><b>Win</b> — capture the enemy HQ or hold every town (or the town majority, in Domination).</li>
+        <li><b>Hotkeys</b> — <kbd>Q W E R T Y</kbd> tabs · <kbd>Ctrl+1-9</kbd>/<kbd>1-9</kbd> groups · <kbd>O</kbd> outpost · <kbd>Tab</kbd> idle · <kbd>H</kbd> HQ · <kbd>Space</kbd> pause · arrows pan</li>
       </ul>
     </details>
   </div>
@@ -166,9 +189,10 @@
           <span>Shift + right-click</span><i>attack-move</i>
           <span>Double-click map</span><i>set rally</i>
           <span>Ctrl + 1-9 / 1-9</span><i>set / pick group</i>
-          <span>Q W E R T</span><i>factory tabs</i>
-          <span>Z X C</span><i>support powers</i>
-          <span>Space · H · S</span><i>pause · HQ · stop</i>
+          <span>Q W E R T Y</span><i>build / upgrade tabs</i>
+          <span>Z X C V</span><i>arty · air · para · smoke</i>
+          <span>O · S</span><i>deploy outpost · stop</i>
+          <span>Space · H</span><i>pause · centre HQ</i>
         </div>
       </div>
       <div class="pause-btns">
@@ -183,6 +207,7 @@
   <div id="endScreen" class="screen hidden">
     <div class="end-card">
       <h2 id="endTitle">VICTORY</h2>
+      <div class="end-medal" id="endMedal"></div>
       <p id="endText"></p>
       <div class="end-stats" id="endStats"></div>
       <button class="btn-primary" id="endBtn">RETURN TO BRIEFING</button>

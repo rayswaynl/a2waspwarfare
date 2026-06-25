@@ -125,15 +125,17 @@ function createAI(game) {
     const myStrength = my.length;
     const pushHQ = myStrength > 12 + 6 / aggro && game.clock > 120;
 
-    // Rank towns by desirability for the AI: not owned by us, weakest contest.
+    // Rank towns + strategic points by desirability for the AI.
     const targets = game.towns
       .filter((t) => t.owner !== fac)
       .map((t) => ({ t, score: townScore(t) }))
+      .concat((game.points || []).filter((p) => p.owner !== fac)
+        .map((p) => ({ t: p, score: U.dist(p.x, p.y, side.hq.x, side.hq.y) * 0.01 - 22 })))
       .sort((a, b) => a.score - b.score);
 
     if (!idle.length) return;
 
-    // Send the bulk to the best 1-2 towns; peel a strike group to the HQ if pushing.
+    // Send the bulk to the best 1-2 objectives; peel a strike group to the HQ if pushing.
     const groups = [];
     if (pushHQ) groups.push({ x: enemyHQ.x, y: enemyHQ.y, share: 0.45 });
     targets.slice(0, 2).forEach((o, i) => groups.push({ x: o.t.x, y: o.t.y, share: i === 0 ? 0.4 : 0.25 }));

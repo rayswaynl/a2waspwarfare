@@ -365,3 +365,26 @@ kbd {
 .uppips { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
 .pip { width: 6px; height: 6px; border-radius: 50%; background: #2c3826; display: inline-block; }
 .pip.on { background: var(--good); box-shadow: 0 0 4px rgba(106,208,106,0.6); }
+
+/* =============================================================================
+ * PASS 3 — skirmish options, end medals, strategic-point chrome
+ * ========================================================================== */
+.menu-skirmish { margin-top: 14px; font-size: 13px; }
+.menu-skirmish > summary { cursor: pointer; font-family: var(--mono); letter-spacing: 1px; color: var(--amber); list-style: none; }
+.menu-skirmish > summary::-webkit-details-marker { display: none; }
+.menu-skirmish > summary::before { content: "▸ "; }
+.menu-skirmish[open] > summary::before { content: "▾ "; }
+.sk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.sk-field { display: flex; flex-direction: column; gap: 6px; }
+.sk-field .menu-label i { color: var(--amber); font-style: normal; }
+.sk-field input[type=range] { width: 100%; accent-color: var(--amber); }
+.sk-weather, .sk-speed { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.sk-speed { grid-template-columns: repeat(3, 1fr); }
+.sk-weather .pick-card, .sk-speed .pick-card { padding: 7px 4px; align-items: center; }
+.sk-weather .pick-name, .sk-speed .pick-name { font-size: 12px; }
+
+.end-medal { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: -4px 0 12px; }
+.medal-mark { font-size: 30px; letter-spacing: 4px; line-height: 1; }
+.medal-mark.win { color: var(--amber); text-shadow: 0 0 18px rgba(227,193,74,0.5); }
+.medal-mark.lose { color: var(--ink-dim); }
+.medal-title { font-family: var(--mono); font-size: 12px; letter-spacing: 3px; color: var(--ink-dim); }

@@ -26,8 +26,9 @@ function createUI(game, refs) {
     _lastGroupKey: null, _lastGroupT: 0,
   };
 
-  // map number key -> support power id (Z/X/C also bound below)
-  const POWER_KEYS = { z: POWERS[0].id, x: POWERS[1].id, c: POWERS[2].id };
+  // map number key -> support power id (Z/X/C/V also bound below)
+  const POWER_KEYS = { z: POWERS[0].id, x: POWERS[1].id, c: POWERS[2].id, v: POWERS[3] && POWERS[3].id };
+  const POWER_HOTLABELS = ["Z", "X", "C", "V"];
 
   // Track event listeners so a restart can tear them down (no leaks/dupes).
   const _listeners = [];
@@ -194,7 +195,7 @@ function createUI(game, refs) {
         (state.targeting && state.targeting.id === p.id ? " arming" : "");
       const pct = cdLeft > 0 ? Math.round(100 * cdLeft / p.cd) : 0;
       el.innerHTML = `
-        <span class="pwr-key">${["Z", "X", "C"][i]}</span>
+        <span class="pwr-key">${POWER_HOTLABELS[i] || ""}</span>
         <span class="pwr-glyph">${p.glyph}</span>
         <span class="pwr-name">${p.name.split(" ")[0]}</span>
         <span class="pwr-cost">$${p.cost}</span>
@@ -692,7 +693,7 @@ function createUI(game, refs) {
     const s = cam.worldToScreen(c.x, c.y);
     ctx.save();
     if (t.kind === "power") {
-      const rad = (t.id === "artillery" ? 90 : t.id === "airstrike" ? 180 : 45) * cam.zoom;
+      const rad = (t.id === "artillery" ? 90 : t.id === "airstrike" ? 180 : t.id === "smoke" ? 120 : 45) * cam.zoom;
       ctx.strokeStyle = "rgba(255,210,90,0.9)"; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
       ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);

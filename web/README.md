@@ -29,9 +29,16 @@ needed. Rebuild it after edits with `node build.js`.
 
 - **Two theatres** — Chernarus (forested, cover-heavy) and Takistan (arid, open) — pick on the menu.
 - **Two victory modes** — Conquest (raze the HQ / hold every town) or Domination (hold the town majority for 75s).
+- **Dynamic weather** — rain, sandstorms and overcast cut sight and accuracy and pour across the field.
+- **Strategic points** — capture a **Radar Station** (reveals the fog), **Oil Refinery** (bonus income) and
+  **Repair Depot** (heal aura) scattered between the towns.
+- **Smoke screens** — a support power that lays a concealing, fire-dampening cloud.
+- **Skirmish options** — choose weather, starting funds, default speed, and toggle fog of war on the menu.
+- **End-of-match medals** — a star grade (up to ★★★ Field Marshal) scored from your kills, tempo and K/D.
 - **Fog of war** — vision from your units, towns and HQ; the enemy is hidden until you scout. Forests
   conceal infantry and give them cover; snipers see farther.
-- **Day / night cycle** — the battlefield darkens and sight tightens at night.
+- **Day / night cycle with lighting** — the field darkens at night and muzzle flashes, tracers, explosions
+  and bases glow through the dark.
 - **Commander upgrades** — a 5-branch tech tree (economy, weapons, armor, logistics, production) you
   invest funds into; the AI tech's up too.
 - **Commander support powers** — Artillery Barrage, Airstrike, and Paradrop, on funds + cooldown.

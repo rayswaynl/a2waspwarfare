@@ -6,7 +6,8 @@
 function createGame(opts) {
   "use strict";
   const { FACTIONS, ROSTER, UNIT_BY_ID, STRUCT_BY_ID, STRUCTURES, MAPS, DIFFICULTY, RULES,
-          POWERS, DEFENSES, DEFENSE_BY_ID, UPGRADES, UPGRADE_BY_ID, OUTPOST_DEF, WIN_CONDITIONS } = DATA;
+          POWERS, DEFENSES, DEFENSE_BY_ID, UPGRADES, UPGRADE_BY_ID, OUTPOST_DEF, WIN_CONDITIONS,
+          WEATHER, POINT_TYPES } = DATA;
 
   const playerFac = opts.faction;                       // "USMC" | "RU"
   const enemyFac  = playerFac === "USMC" ? "RU" : "USMC";
@@ -14,7 +15,17 @@ function createGame(opts) {
   const MAP       = MAPS[opts.map] || MAPS.chernarus;
   const WORLD     = MAP.world;
   const winCond   = WIN_CONDITIONS[opts.winCond] || WIN_CONDITIONS.conquest;
+  const fogEnabled = opts.fog !== false;                 // skirmish toggle
   const rng       = U.makeRng(opts.seed || 1337);
+
+  // Weather: explicit choice, or "auto" → biome-appropriate roll.
+  function pickWeather() {
+    if (opts.weather && opts.weather !== "auto" && WEATHER[opts.weather]) return WEATHER[opts.weather];
+    const roll = rng();
+    if (MAP.biome === "desert") return roll < 0.4 ? WEATHER.sandstorm : roll < 0.7 ? WEATHER.clear : WEATHER.overcast;
+    return roll < 0.38 ? WEATHER.rain : roll < 0.68 ? WEATHER.overcast : WEATHER.clear;
+  }
+  const weather = pickWeather();
 
   let nextId = 1;
 
@@ -23,7 +34,7 @@ function createGame(opts) {
     const fac = FACTIONS[facId];
     return {
       fac: facId, isPlayer, color: fac.color,
-      funds: diff.startFunds,
+      funds: opts.startFunds || diff.startFunds,
       supplyCap: RULES.baseSupplyCap,
       structures: new Set(RULES.startStructures),
       queue: [],            // {kind:'unit', def, timeLeft, total}
@@ -99,6 +110,19 @@ function createGame(opts) {
   }));
   const townById = {};
   towns.forEach((t) => (townById[t.id] = t));
+
+  /* ---- strategic points (radar / oil / repair) -------------------------- */
+  const points = (MAP.points || []).map((p) => ({
+    def: p, id: p.id, name: p.name, type: p.type, x: p.x, y: p.y,
+    owner: null, cap: 0, contested: false,
+  }));
+
+  /* ---- smoke screens (vision-blocking, damage-reducing clouds) ----------- */
+  const smokes = [];   // { x, y, r, t, life }
+  function inSmoke(x, y) {
+    for (const s of smokes) if (U.dist2(x, y, s.x, s.y) < s.r * s.r) return true;
+    return false;
+  }
 
   /* ---- spawn helpers ---------------------------------------------------- */
   function spawnUnit(facId, def, x, y, opt) {
@@ -221,6 +245,9 @@ function createGame(opts) {
     if (tgt.def && tgt.def.air && cls === "air" && src.def.cat === "inf" && !src.def.vs.air) dmg *= 0.4;
     // forest cover: dug-in infantry take less fire
     if (tgt.def && tgt.def.cat === "inf" && !tgt.emplacement && inForest(tgt.x, tgt.y)) dmg *= 0.6;
+    // weather degrades aim; smoke screens cut incoming fire
+    dmg *= weather.accuracy;
+    if (smokes.length && (inSmoke(tgt.x, tgt.y) || inSmoke(src.x, src.y))) dmg *= 0.5;
     tgt.hp -= dmg;
     tgt.hitFlash = 0.18;
     if (tgt.hp <= 0 && !tgt._killer) tgt._killer = src;
@@ -256,6 +283,8 @@ function createGame(opts) {
       const d = U.dist2(u.x, u.y, o.x, o.y);
       // concealed infantry in forest are only spotted up close
       if (o.def.cat === "inf" && !o.emplacement && inForest(o.x, o.y) && d > (sightR * 0.5) ** 2) return;
+      // smoke conceals targets beyond short range
+      if (smokes.length && inSmoke(o.x, o.y) && d > (sightR * 0.35) ** 2) return;
       if (d < bestD) { bestD = d; best = o; }
     });
     // HQ as target if very close and we belong to the other side
@@ -424,6 +453,39 @@ function createGame(opts) {
     }
   }
 
+  /* ---- strategic points (no garrison; fast capture; passive effects) ---- */
+  function updatePoints(dt) {
+    for (const p of points) {
+      let pc = 0, ec = 0;
+      grid.forEachInRadius(p.x, p.y, RULES.pointCaptureRange, (u) => {
+        if (!u.alive || u.emplacement || u.outpost) return;
+        if (U.dist2(u.x, u.y, p.x, p.y) > RULES.pointCaptureRange ** 2) return;
+        const w = u.def.air ? 0.5 : 1;
+        if (u.fac === playerFac) pc += w; else if (u.fac === enemyFac) ec += w;
+      });
+      p.contested = pc > 0 && ec > 0;
+      const att = pc > ec ? playerFac : ec > pc ? enemyFac : null;
+      if (att) {
+        if (p.owner === att) p.cap = Math.min(100, p.cap + RULES.pointCaptureRate * dt);
+        else {
+          p.cap -= RULES.pointCaptureRate * dt;
+          if (p.cap <= 0) {
+            p.owner = att; p.cap = 0.01;
+            log(`${FACTIONS[att].name} captured the ${p.name}`, att === playerFac ? "good" : "bad");
+            emitSfx("capture", { good: att === playerFac, x: p.x, y: p.y });
+          }
+        }
+      }
+      // repair depot heal aura for the owner
+      if (p.type === "repair" && p.owner) {
+        grid.forEachInRadius(p.x, p.y, 150, (o) => {
+          if (o.alive && o.fac === p.owner && o.hp < o.maxHp && U.dist2(o.x, o.y, p.x, p.y) < 150 * 150)
+            o.hp = Math.min(o.maxHp, o.hp + RULES.pointRepairRate * dt);
+        });
+      }
+    }
+  }
+
   /* ---- economy ---------------------------------------------------------- */
   let incomeTimer = 0;
   function tickEconomy(dt) {
@@ -432,7 +494,9 @@ function createGame(opts) {
       let inc = 0;
       for (const t of towns) if (t.owner === facId) inc += t.sv * RULES.incomePerSV;
       let mult = (facId === enemyFac ? diff.aiFunds : 1) * incomeMult(facId);
-      sides[facId].income = inc * mult;
+      let oil = 0;
+      for (const p of points) if (p.owner === facId && p.type === "oil") oil += RULES.oilIncome;
+      sides[facId].income = inc * mult + oil;
     }
     incomeTimer += dt;
     if (incomeTimer >= RULES.incomeInterval) {
@@ -692,8 +756,23 @@ function createGame(opts) {
           fx.push({ kind: "blast", x: u.x, y: u.y, t: 0, life: 0.3, r: 14 });
         });
       });
+    } else if (id === "smoke") {
+      // lay a few overlapping smoke pots that linger
+      for (let i = 0; i < 4; i++) {
+        const a = rng() * Math.PI * 2, r = rng() * 70;
+        smokes.push({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, r: 95, t: 0, life: 16 });
+      }
+      for (let i = 0; i < 16; i++) smokeAt(x + (rng() - 0.5) * 120, y + (rng() - 0.5) * 120, 1, "rgba(150,150,150,");
     }
     return { ok: true };
+  }
+  function tickSmoke(dt) {
+    for (let i = smokes.length - 1; i >= 0; i--) {
+      const s = smokes[i]; s.t += dt;
+      if (s.t > s.life) { smokes.splice(i, 1); continue; }
+      // keep the cloud puffing while it lives
+      if (rng() < dt * 2.5) smokeAt(s.x + (rng() - 0.5) * s.r, s.y + (rng() - 0.5) * s.r, 1, "rgba(150,150,150,");
+    }
   }
   function tickPowers(dt) {
     for (const fid of [playerFac, enemyFac]) {
@@ -788,23 +867,28 @@ function createGame(opts) {
         if (U.dist2(px, py, x, y) <= r2) { const i = cy * vcols + cx; visible[i] = 1; explored[i] = 1; }
       }
   }
-  let visT = 0;
+  if (!fogEnabled) { visible.fill(1); explored.fill(1); }
   function updateVision() {
+    if (!fogEnabled) { visible.fill(1); return; }
     visible.fill(0);
-    const night = 0.55 + 0.45 * daylight();   // sight scales down at night
+    // sight scaled by night + weather
+    const sightK = (0.55 + 0.45 * daylight()) * weather.vision;
     for (const u of units) {
       if (!u.alive || u.fac !== playerFac) continue;
-      markVis(u.x, u.y, u.def.sight * night * (u.def.scout ? 1.25 : 1));
+      markVis(u.x, u.y, u.def.sight * sightK * (u.def.scout ? 1.25 : 1));
     }
     for (const t of towns) if (t.owner === playerFac) markVis(t.x, t.y, 240);
+    // held radar stations punch through the fog regardless of weather
+    for (const p of points) if (p.owner === playerFac && p.type === "radar") markVis(p.x, p.y, RULES.radarRadius);
+    for (const p of points) if (p.owner === playerFac) markVis(p.x, p.y, 150);
     const hq = sides[playerFac].hq; markVis(hq.x, hq.y, 360);
   }
   function vidx(x, y) {
     const cx = U.clamp((x / VCELL) | 0, 0, vcols - 1), cy = U.clamp((y / VCELL) | 0, 0, vrows - 1);
     return cy * vcols + cx;
   }
-  const isVisible = (x, y) => !!visible[vidx(x, y)];
-  const isExplored = (x, y) => !!explored[vidx(x, y)];
+  const isVisible = (x, y) => !fogEnabled || !!visible[vidx(x, y)];
+  const isExplored = (x, y) => !fogEnabled || !!explored[vidx(x, y)];
 
   /* ====================================================================== *
    * TERRAIN — forests give infantry cover and conceal them a little.
@@ -892,12 +976,14 @@ function createGame(opts) {
     updateHQ(sides[playerFac].hq, dt);
     updateHQ(sides[enemyFac].hq, dt);
     for (const t of towns) updateTown(t, dt);
+    updatePoints(dt);
     tickEconomy(dt);
     advanceProduction(playerFac, dt);
     advanceProduction(enemyFac, dt);
     tickPowers(dt);
     tickDefenses(dt);
     tickOutposts(dt);
+    tickSmoke(dt);
     runScheduled();
     updateVision(dt);                        // fog of war
     updateParticles(dt);
@@ -941,16 +1027,16 @@ function createGame(opts) {
 
   const game = {
     // identity
-    playerFac, enemyFac, diff, FAC: FACTIONS, winCond,
+    playerFac, enemyFac, diff, FAC: FACTIONS, winCond, weather, fogEnabled,
     // state
-    sides, units, towns, townById, fx, floats, logs, parts, MAP, WORLD,
+    sides, units, towns, townById, points, smokes, fx, floats, logs, parts, MAP, WORLD,
     get clock() { return clock; },
     get over() { return over; },
     get daylight() { return daylight(); },
     domProgress,
     // fog of war
     vision: { cell: VCELL, cols: vcols, rows: vrows, visible, explored },
-    isVisible, isExplored, inForest,
+    isVisible, isExplored, inForest, inSmoke,
     // queries
     supplyUsed, supplyCap, hasStructure, catUnlocked, unitsOfSide, townsOwned,
     powerReady, powerState, canPlaceDefense,

@@ -13,6 +13,10 @@
   let chosenDiff = "veteran";
   let chosenMap = "chernarus";
   let chosenWin = "conquest";
+  let chosenWeather = "auto";
+  let chosenFunds = 800;
+  let chosenFog = true;
+  let chosenSpeed = 1;
 
   function buildFactionPick() {
     const wrap = $("factionPick");
@@ -70,10 +74,38 @@
     }
   }
 
+  function buildWeatherPick() {
+    const wrap = $("weatherPick"); wrap.innerHTML = "";
+    const opts = [["auto", "Auto"], ["clear", "Clear"], ["rain", "Rain"], ["sandstorm", "Sand"]];
+    for (const [id, label] of opts) {
+      const el = document.createElement("button");
+      el.className = "pick-card pick-diff" + (chosenWeather === id ? " sel" : "");
+      el.innerHTML = `<span class="pick-name">${label}</span>`;
+      el.onclick = () => { chosenWeather = id; buildWeatherPick(); };
+      wrap.appendChild(el);
+    }
+  }
+  function buildSpeedPick() {
+    const wrap = $("speedPick"); wrap.innerHTML = "";
+    for (const s of [1, 2, 3]) {
+      const el = document.createElement("button");
+      el.className = "pick-card pick-diff" + (chosenSpeed === s ? " sel" : "");
+      el.innerHTML = `<span class="pick-name">${s}×</span>`;
+      el.onclick = () => { chosenSpeed = s; buildSpeedPick(); };
+      wrap.appendChild(el);
+    }
+  }
+  function syncFog() { $("fogToggle").textContent = chosenFog ? "ON" : "OFF"; $("fogToggle").classList.toggle("off", !chosenFog); }
+  $("fogToggle").onclick = () => { chosenFog = !chosenFog; syncFog(); };
+  $("fundsSlider").oninput = () => { chosenFunds = +$("fundsSlider").value; $("fundsVal").textContent = chosenFunds; };
+
   buildFactionPick();
   buildDiffPick();
   buildMapPick();
   buildWinPick();
+  buildWeatherPick();
+  buildSpeedPick();
+  syncFog();
 
   /* ---------- canvas sizing ---------------------------------------------- */
   const board = $("board");
@@ -104,7 +136,8 @@
     $("pauseOverlay").classList.add("hidden");
 
     game = createGame({ faction: chosenFac, difficulty: chosenDiff,
-      map: chosenMap, winCond: chosenWin, seed: 1337 });
+      map: chosenMap, winCond: chosenWin, weather: chosenWeather,
+      startFunds: chosenFunds, fog: chosenFog, seed: 1337 });
     game.ai = createAI(game);
 
     // HUD faction chrome
@@ -132,9 +165,10 @@
     sizeCanvas();
     UI = createUI(game, refs);
     UI.restart = () => startGame();
+    UI.setSpeed(chosenSpeed);
     sizeCanvas(); // re-apply view now UI/cam exists
 
-    game.log(`${f.long} deployed to Chernarus. Secure the towns, commander.`, "good");
+    game.log(`${f.long} deployed to ${game.MAP.name}. Weather: ${game.weather.name}.`, "good");
 
     // debug/testing handle (harmless in normal play)
     window.WASP = { game, get ui() { return UI; } };
@@ -191,11 +225,22 @@
     $("endText").textContent = game.over.reason;
 
     const me = game.sides[game.playerFac], foe = game.sides[game.enemyFac];
+    const kd = me.losses ? me.kills / me.losses : me.kills;
+    // medal/grade from performance
+    const grade = won
+      ? (kd >= 3 || game.clock < 360 ? { m: "★★★", t: "FIELD MARSHAL" }
+         : kd >= 1.5 ? { m: "★★", t: "GENERAL" } : { m: "★", t: "COMMANDER" })
+      : (game.townsOwned(game.playerFac) >= game.towns.length / 2 || kd >= 1
+         ? { m: "✠", t: "HONOURABLE STAND" } : { m: "—", t: "ROUTED" });
+    $("endMedal") && ($("endMedal").innerHTML =
+      `<span class="medal-mark ${won ? "win" : "lose"}">${grade.m}</span><span class="medal-title">${grade.t}</span>`);
     $("endStats").innerHTML = `
       <div class="es-row"><span>Time</span><b>${U.fmtTime(game.clock)}</b></div>
+      <div class="es-row"><span>Theatre / Weather</span><b>${game.MAP.name} · ${game.weather.name}</b></div>
       <div class="es-row"><span>Towns held</span><b>${game.townsOwned(game.playerFac)} / ${game.towns.length}</b></div>
       <div class="es-row"><span>Kills</span><b>${me.kills}</b></div>
       <div class="es-row"><span>Losses</span><b>${me.losses}</b></div>
+      <div class="es-row"><span>K / D ratio</span><b>${kd.toFixed(2)}</b></div>
       <div class="es-row"><span>Funds spent</span><b>$${U.fmtNum(me.spent)}</b></div>
       <div class="es-row"><span>Enemy kills</span><b>${foe.kills}</b></div>`;
   }

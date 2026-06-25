@@ -184,6 +184,12 @@ const DATA = (() => {
       { x: 1150, y: 660, r: 120 }, { x: 1700, y: 920, r: 150 }, { x: 1500, y: 1240, r: 140 },
       { x: 1780, y: 560, r: 120 }, { x: 520, y: 760, r: 110 }, { x: 2000, y: 1080, r: 140 },
     ],
+    // Capturable strategic points: radar (reveal), oil (income), repair (heal).
+    points: [
+      { id:"p_radar",  name:"Radar Station", type:"radar",  x: 1300, y: 1180 },
+      { id:"p_oil",    name:"Oil Refinery",  type:"oil",    x: 1080, y: 1000 },
+      { id:"p_repair", name:"Repair Depot",  type:"repair", x: 1560, y: 700 },
+    ],
   };
 
   // TAKISTAN — arid desert, sparse cover, more open fighting.
@@ -215,6 +221,11 @@ const DATA = (() => {
     forests: [
       { x: 900, y: 760, r: 90 }, { x: 1400, y: 600, r: 80 }, { x: 1600, y: 980, r: 90 },
       { x: 1180, y: 1040, r: 80 },
+    ],
+    points: [
+      { id:"p_radar",  name:"Radar Station", type:"radar",  x: 1300, y: 620 },
+      { id:"p_oil",    name:"Oil Refinery",  type:"oil",    x: 1480, y: 980 },
+      { id:"p_repair", name:"Repair Depot",  type:"repair", x: 1000, y: 920 },
     ],
   };
 
@@ -248,9 +259,19 @@ const DATA = (() => {
       desc:"A jet strafes a line through the target." },
     { id:"paradrop", name:"Paradrop", glyph:"☂", cost:300, cd:80,
       desc:"Drop a 5-man squad anywhere on the map." },
+    { id:"smoke", name:"Smoke Screen", glyph:"☁", cost:120, cd:35,
+      desc:"Lay concealing smoke — blocks vision and cuts incoming fire." },
   ];
   const POWER_BY_ID = {};
   for (const p of POWERS) POWER_BY_ID[p.id] = p;
+
+  /* ---- Weather presets (vision / accuracy modifiers + look) -------------- */
+  const WEATHER = {
+    clear:     { id:"clear",     name:"Clear",     vision:1.0,  accuracy:1.0,  desc:"Good visibility." },
+    overcast:  { id:"overcast",  name:"Overcast",  vision:0.9,  accuracy:1.0,  desc:"Grey skies." },
+    rain:      { id:"rain",      name:"Rain",      vision:0.72, accuracy:0.9,  desc:"Reduced sight, slicker aim." },
+    sandstorm: { id:"sandstorm", name:"Sandstorm", vision:0.55, accuracy:0.82, desc:"Choking dust — short sight." },
+  };
 
   /* ---- Defensive emplacements (placed near owned territory) -------------- */
   function mkDef(o) {
@@ -290,6 +311,18 @@ const DATA = (() => {
     startStructures: ["barracks"], // both sides begin with a barracks
     captureFundsBonus: 6,   // one-off funds = sv * this on capture
     dominationHold: 75,     // seconds you must hold the town majority to win
+    pointCaptureRange: 80,  // capture radius for strategic points
+    pointCaptureRate: 18,   // points capture faster than towns (no garrison)
+    oilIncome: 9,           // flat funds/sec while you hold an oil refinery
+    radarRadius: 520,       // fog reveal radius around a held radar
+    pointRepairRate: 10,    // hp/sec heal aura at a repair depot
+  };
+
+  /* ---- Strategic point types (capturable, non-town objectives) ----------- */
+  const POINT_TYPES = {
+    radar:  { id:"radar",  name:"Radar Station", glyph:"⌖", color:"#7ad0ff", desc:"Reveals the fog around it." },
+    oil:    { id:"oil",    name:"Oil Refinery",  glyph:"⬣", color:"#f2c14a", desc:"+9 funds/sec while held." },
+    repair: { id:"repair", name:"Repair Depot",  glyph:"✚", color:"#7ef07e", desc:"Heals nearby friendly units." },
   };
 
   /* ---- Victory conditions ------------------------------------------------ */
@@ -303,6 +336,7 @@ const DATA = (() => {
     STRUCTURES, STRUCT_BY_ID, MAP, WORLD, MAPS,
     POWERS, POWER_BY_ID, DEFENSES, DEFENSE_BY_ID,
     OUTPOST_DEF, UPGRADES, UPGRADE_BY_ID, WIN_CONDITIONS,
+    WEATHER, POINT_TYPES,
     DIFFICULTY, RULES,
   };
 })();

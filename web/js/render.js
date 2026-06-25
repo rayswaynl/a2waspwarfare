@@ -108,6 +108,9 @@ const Render = (() => {
     // towns
     for (const t of game.towns) drawTown(ctx, game, t, ui);
 
+    // strategic points
+    if (game.points) for (const p of game.points) drawPoint(ctx, game, p);
+
     // HQs
     drawHQ(ctx, game, game.sides[game.playerFac].hq, game.playerFac);
     drawHQ(ctx, game, game.sides[game.enemyFac].hq, game.enemyFac);
@@ -141,10 +144,26 @@ const Render = (() => {
       ctx.fillText(f.txt, f.x, f.y); ctx.globalAlpha = 1;
     }
 
+    // smoke screens (drawn over units, before fog)
+    if (game.smokes) for (const s of game.smokes) {
+      const a = U.clamp(Math.min(s.t / 1.2, (s.life - s.t) / 2), 0, 1) * 0.55;
+      const grd = ctx.createRadialGradient(s.x, s.y, s.r * 0.2, s.x, s.y, s.r);
+      grd.addColorStop(0, `rgba(180,180,180,${a})`);
+      grd.addColorStop(1, "rgba(180,180,180,0)");
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+
     // ---- fog of war + day/night (world space) ----
     drawFog(ctx, game, cam, view);
 
+    // ---- night lighting: additive glow that cuts the darkness ----
+    drawLights(ctx, game);
+
     ctx.restore(); // world transform
+
+    // ---- weather overlay (screen space) ----
+    drawWeather(ctx, game, cam, view);
 
     // selection marquee (screen space)
     if (ui.box) {
@@ -204,6 +223,89 @@ const Render = (() => {
     ctx.fillStyle = "rgba(200,200,160,0.65)"; ctx.font = "9px monospace";
     ctx.fillText("SV " + t.sv + (t.garrisonLeft > 0.5 ? "  ⚔" : ""), t.x, t.y + 61);
     ctx.textAlign = "left";
+  }
+
+  function drawPoint(ctx, game, p) {
+    const PT = DATA.POINT_TYPES[p.type];
+    const oc = p.owner ? FACTIONS[p.owner].color : "#9aa0a6";
+    ctx.beginPath(); ctx.fillStyle = "rgba(38,38,34,0.65)";
+    ctx.arc(p.x, p.y, 24, 0, Math.PI * 2); ctx.fill();
+    // control ring
+    ctx.beginPath(); ctx.strokeStyle = oc; ctx.lineWidth = 3;
+    ctx.arc(p.x, p.y, 18, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (p.owner ? p.cap / 100 : 0)); ctx.stroke();
+    ctx.beginPath(); ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 3;
+    ctx.arc(p.x, p.y, 18, 0, Math.PI * 2); ctx.stroke();
+    // owned radar shows its reveal radius faintly
+    if (p.owner === game.playerFac && p.type === "radar") {
+      ctx.strokeStyle = "rgba(122,208,255,0.10)"; ctx.lineWidth = 1.5; ctx.setLineDash([5, 9]);
+      ctx.beginPath(); ctx.arc(p.x, p.y, DATA.RULES.radarRadius, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // icon
+    ctx.fillStyle = PT.color; ctx.font = "bold 17px monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(PT.glyph, p.x, p.y + 1);
+    if (p.contested) {
+      const k = (Math.sin(game.clock * 6) + 1) / 2;
+      ctx.beginPath(); ctx.strokeStyle = `rgba(255,210,60,${0.3 + 0.5 * k})`;
+      ctx.lineWidth = 2; ctx.arc(p.x, p.y, 22, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.font = "9px monospace"; ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillText(PT.name, p.x + 1, p.y + 35);
+    ctx.fillStyle = "#cfd3c0"; ctx.fillText(PT.name, p.x, p.y + 34);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+
+  function drawLights(ctx, game) {
+    const night = U.clamp((0.6 - game.daylight) * 1.8, 0, 1);
+    if (night <= 0.02) return;
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const glow = (x, y, r, col, a) => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, col.replace("A", (a * night).toFixed(3)));
+      g.addColorStop(1, col.replace("A", "0"));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    };
+    for (const u of game.units) {
+      if (!u.alive) continue;
+      if (u.fac !== game.playerFac && !game.isVisible(u.x, u.y)) continue;
+      if (u.muzzle > 0) glow(u.x, u.y, 26, "rgba(255,220,130,A)", 0.55);
+    }
+    for (const e of game.fx) {
+      if (e.kind === "blast") glow(e.x, e.y, e.r * 2.4, "rgba(255,160,60,A)", (1 - e.t / e.life) * 0.8);
+      else if (e.kind === "tracer") glow(e.tx, e.ty, 9, "rgba(255,220,150,A)", 0.4);
+    }
+    for (const t of game.towns) if (t.owner) glow(t.x, t.y, 64, "rgba(255,220,150,A)", 0.16);
+    for (const fid of [game.playerFac, game.enemyFac]) {
+      const hq = game.sides[fid].hq;
+      if (fid !== game.playerFac && !game.isVisible(hq.x, hq.y)) continue;
+      glow(hq.x, hq.y, 84, "rgba(255,220,150,A)", 0.22);
+    }
+    ctx.restore();
+  }
+
+  function drawWeather(ctx, game, cam, view) {
+    const w = game.weather; if (!w || w.id === "clear") return;
+    const t = game.clock;
+    if (w.id === "overcast") { ctx.fillStyle = "rgba(40,44,52,0.12)"; ctx.fillRect(0, 0, view.w, view.h); return; }
+    if (w.id === "rain") {
+      ctx.fillStyle = "rgba(28,38,58,0.16)"; ctx.fillRect(0, 0, view.w, view.h);
+      ctx.strokeStyle = "rgba(170,190,220,0.22)"; ctx.lineWidth = 1;
+      const n = Math.min(900, Math.floor(view.w * view.h / 9000));
+      for (let i = 0; i < n; i++) {
+        const x = ((i * 137.5 + t * 900) % (view.w + 40)) - 20;
+        const y = ((i * 53.1 + t * 1500) % (view.h + 40)) - 20;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 13); ctx.stroke();
+      }
+    } else if (w.id === "sandstorm") {
+      ctx.fillStyle = "rgba(150,110,50,0.20)"; ctx.fillRect(0, 0, view.w, view.h);
+      ctx.fillStyle = "rgba(205,165,95,0.12)";
+      const n = Math.min(900, Math.floor(view.w * view.h / 6000));
+      for (let i = 0; i < n; i++) {
+        const x = ((i * 91.3 + t * 1150) % (view.w + 60)) - 30;
+        const y = (i * 47.7 + Math.sin(t * 0.8 + i) * 16) % view.h;
+        ctx.fillRect(x, y, 12, 2);
+      }
+    }
   }
 
   function drawHQ(ctx, game, hq, facId) {
@@ -417,6 +519,12 @@ const Render = (() => {
     for (const t of game.towns) {
       ctx.fillStyle = t.owner ? FACTIONS[t.owner].color : "#888";
       ctx.beginPath(); ctx.arc(t.x * sx, t.y * sy, 3.2, 0, Math.PI * 2); ctx.fill();
+    }
+    // strategic points (small diamonds)
+    if (game.points) for (const p of game.points) {
+      ctx.fillStyle = p.owner ? FACTIONS[p.owner].color : (DATA.POINT_TYPES[p.type].color);
+      ctx.save(); ctx.translate(p.x * sx, p.y * sy); ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-2, -2, 4, 4); ctx.restore();
     }
     // HQs
     for (const fid of [game.playerFac, game.enemyFac]) {
