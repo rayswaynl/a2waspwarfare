@@ -27,6 +27,8 @@ needed. Rebuild it after edits with `node build.js`.
 
 ## Features
 
+- **Plays on phones** — full touch controls (tap-select, tap-to-order, drag-pan, pinch-zoom,
+  long-press select-type) and a responsive portrait layout, alongside mouse + keyboard on desktop.
 - **Two theatres** — Chernarus (forested, cover-heavy) and Takistan (arid, open) — pick on the menu.
 - **Two victory modes** — Conquest (raze the HQ / hold every town) or Domination (hold the town majority for 75s).
 - **Dynamic weather** — rain, sandstorms and overcast cut sight and accuracy and pour across the field.
@@ -86,12 +88,19 @@ by garrisons. Take them.
 - **Veterancy** — units gain chevrons as they rack up kills, raising damage and HP.
 - **Win** — destroy the enemy HQ, or hold every town. Lose your HQ and it's over.
 
-### Hotkeys
+### Controls — desktop
 `Space` pause · `Q W E R T Y` factory / base / upgrade tabs · `Ctrl+1-9` set
-control group · `1-9` select group (double-tap to centre) · `Z X C` support
+control group · `1-9` select group (double-tap to centre) · `Z X C V` support
 powers · `O` deploy outpost · `S` stop · `Tab` cycle idle · `H` centre on HQ ·
 arrow keys pan · mouse-wheel zoom · middle-drag or minimap to pan. Unit stances
 (Aggressive / Defensive / Hold / Hold-fire) are on the selection card.
+
+### Controls — touch / phone
+Tap a unit to select; tap the ground or an enemy to order the selection. Drag to
+pan, pinch to zoom, long-press a unit to grab every unit of its type. The side
+buttons are **▢** box-select · **■** stop · **⌂** centre HQ · **≡** show/hide the
+build panel. Factory tabs, the build cards and the support-power bar are all tap
+targets; pause (top-right) opens volume + speed.
 
 ## What's faithful to the source mission
 

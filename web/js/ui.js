@@ -345,10 +345,12 @@ function createUI(game, refs) {
   let dragging = null; // {sx,sy} screen start
   let panKeys = {};
 
+  // CSS-pixel coordinates relative to the board — matches the camera's view
+  // space (the canvas applies device-pixel-ratio via setTransform separately),
+  // so input lines up at any DPR (retina desktops + phones).
   function boardPos(ev) {
     const r = refs.board.getBoundingClientRect();
-    return { x: (ev.clientX - r.left) * (refs.board.width / r.width),
-             y: (ev.clientY - r.top) * (refs.board.height / r.height) };
+    return { x: ev.clientX - r.left, y: ev.clientY - r.top };
   }
 
   function unitAtScreen(sx, sy, factionOnly) {
@@ -469,6 +471,116 @@ function createUI(game, refs) {
     const p = boardPos(ev);
     cam.zoomAt(p.x, p.y, ev.deltaY < 0 ? 1.12 : 1 / 1.12);
   }, { passive: false });
+
+  /* ---------- touch input (phones / tablets) ----------------------------- */
+  const isTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints || 0) > 0;
+  let selectMode = false;          // box-select toggle (the ▢ button)
+  let touch = null;                // active gesture state
+  const tPos = (t) => boardPos({ clientX: t.clientX, clientY: t.clientY });
+
+  function setSelectMode(on) {
+    selectMode = on;
+    const el = document.getElementById("tbSelect");
+    if (el) el.classList.toggle("on", selectMode);
+  }
+
+  // resolve a single tap into select / order / power
+  function tapAt(sx, sy) {
+    if (state.targeting) { const w = cam.screenToWorld(sx, sy); fireTargeting(w.x, w.y); return; }
+    const own = unitAtScreen(sx, sy, true);
+    if (own && !own.garrison) { state.sel.clear(); state.sel.add(own); refreshSelInfo(); Sound.ui(); return; }
+    if (state.sel.size) {
+      const enemy = enemyAtScreen(sx, sy);
+      const sel = [...state.sel];
+      if (enemy) { game.issueAttack(sel, enemy); pingAt(sx, sy, "#ff6a5a"); }
+      else { const w = cam.screenToWorld(sx, sy); game.issueMove(sel, w.x, w.y, true); pingAt(sx, sy, "#7ef07e"); }
+      Sound.ui();
+    }
+  }
+
+  on(refs.board, "touchstart", (ev) => {
+    ev.preventDefault();
+    const ts = ev.touches;
+    if (ts.length === 1) {
+      const p = tPos(ts[0]);
+      state.cursorW = cam.screenToWorld(p.x, p.y);
+      touch = { mode: selectMode ? "box" : "pending", sx: p.x, sy: p.y, x: p.x, y: p.y, moved: false };
+      if (selectMode) { state.box = null; }
+      touch.lp = setTimeout(() => {            // long-press: select all of type
+        if (touch && !touch.moved && touch.mode === "pending") {
+          const u = unitAtScreen(touch.sx, touch.sy, true);
+          if (u && !u.garrison) {
+            state.sel.clear();
+            for (const o of game.unitsOfSide(facId)) if (o.def.id === u.def.id) state.sel.add(o);
+            refreshSelInfo(); Sound.ui(); touch.mode = "consumed";
+          }
+        }
+      }, 450);
+    } else if (ts.length === 2) {
+      if (touch && touch.lp) clearTimeout(touch.lp);
+      const a = tPos(ts[0]), b = tPos(ts[1]);
+      touch = { mode: "pinch", dist: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+      state.box = null;
+    }
+  }, { passive: false });
+
+  on(refs.board, "touchmove", (ev) => {
+    ev.preventDefault();
+    const ts = ev.touches;
+    if (!touch) return;
+    if (touch.mode === "pinch" && ts.length >= 2) {
+      const a = tPos(ts[0]), b = tPos(ts[1]);
+      const dist = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      if (touch.dist > 0) cam.zoomAt(mx, my, dist / touch.dist);
+      cam.panBy((touch.mx - mx) / cam.zoom, (touch.my - my) / cam.zoom);
+      touch.dist = dist; touch.mx = mx; touch.my = my;
+      return;
+    }
+    if (ts.length !== 1) return;
+    const p = tPos(ts[0]);
+    if (!touch.moved && Math.hypot(p.x - touch.sx, p.y - touch.sy) > 12) {
+      touch.moved = true;
+      if (touch.lp) clearTimeout(touch.lp);
+      if (touch.mode === "pending") touch.mode = "pan";
+    }
+    if (touch.mode === "box") {
+      const x = Math.min(touch.sx, p.x), y = Math.min(touch.sy, p.y);
+      const w = Math.abs(p.x - touch.sx), h = Math.abs(p.y - touch.sy);
+      state.box = (w > 4 || h > 4) ? { x, y, w, h } : null;
+    } else if (touch.mode === "pan") {
+      cam.panBy((touch.x - p.x) / cam.zoom, (touch.y - p.y) / cam.zoom);
+    }
+    touch.x = p.x; touch.y = p.y;
+    state.cursorW = cam.screenToWorld(p.x, p.y);
+  }, { passive: false });
+
+  on(refs.board, "touchend", (ev) => {
+    ev.preventDefault();
+    if (!touch) return;
+    if (touch.lp) clearTimeout(touch.lp);
+    if (touch.mode === "box") {
+      if (state.box) {
+        state.sel.clear();
+        const a = cam.screenToWorld(state.box.x, state.box.y);
+        const b = cam.screenToWorld(state.box.x + state.box.w, state.box.y + state.box.h);
+        for (const u of game.units)
+          if (u.alive && u.fac === facId && !u.garrison && u.x >= a.x && u.x <= b.x && u.y >= a.y && u.y <= b.y) state.sel.add(u);
+        refreshSelInfo();
+      } else tapAt(touch.sx, touch.sy);
+      state.box = null; setSelectMode(false);
+    } else if (!touch.moved && touch.mode !== "consumed" && touch.mode !== "pinch") {
+      tapAt(touch.sx, touch.sy);
+    }
+    if (!ev.touches.length) touch = null;
+  }, { passive: false });
+
+  // touch command bar
+  const tbtn = (id, fn) => { const el = document.getElementById(id); if (el) on(el, "click", fn); };
+  tbtn("tbSelect", () => { setSelectMode(!selectMode); Sound.ui(); });
+  tbtn("tbStop", () => { if (state.sel.size) { game.issueStop([...state.sel]); Sound.ui(); } });
+  tbtn("tbHQ", () => { cam.centerOn(game.sides[facId].hq.x, game.sides[facId].hq.y); Sound.ui(); });
+  tbtn("tbPanel", () => { document.body.classList.toggle("panel-collapsed"); window.dispatchEvent(new Event("resize")); Sound.ui(); });
+  if (isTouch) document.body.classList.add("touch");
 
   // minimap navigation
   function minimapNav(ev) {
