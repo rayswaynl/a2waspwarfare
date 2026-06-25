@@ -319,7 +319,7 @@ if (count _live > 0) then {
 	//--- checked first (falls back to sideUnknown if not tagged on this build, which is safe). A2-OA-safe:
 	//--- isKindOf/getNumber/transportSoldier mirrors the L477 detector; count over vehicles (not allUnits).
 	private ["_heliCap","_heliAlive","_eligNoAir2"];
-	_heliCap = missionNamespace getVariable ["WFBE_C_AICOM_ATTACKHELI_MAX", 0];
+	_heliCap = missionNamespace getVariable ["WFBE_C_AICOM_ATTACKHELI_MAX", 0]; if (_heliCap > 0) then {_heliCap = _heliCap + floor((((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * (missionNamespace getVariable ["WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS", 0]))}; //--- B754: grow the attack-heli cap over match time so the late air push isn't throttled at the early cap (0 base cap still = no cap).
 	if (_heliCap > 0) then {
 		_heliAlive = 0;
 		{
@@ -406,6 +406,7 @@ if (count _live > 0) then {
 	//--- exists (missionNamespace getVariable [name,default], A2-OA-safe). Buckets [inf,light,heavy,air].
 	_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])];
 	_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
+		_dWeights set [3, (_dWeights select 3) * (1 + (((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT", 2.5]) - 1)))]; //--- B754 (Ray 2026-06-25) HELI TIME-BIAS: scale the AIR bucket (idx 3) up the longer the match runs (transport + attack both). Applied after town-punch, before the empty-bucket zero-out so an empty air bucket still zeroes safely. A2-OA-safe (time/min/^ arithmetic + getVariable default; RAMP_MIN floored at 1 to avoid /0).
 	for "_bi" from 0 to 3 do {
 		if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 	};
