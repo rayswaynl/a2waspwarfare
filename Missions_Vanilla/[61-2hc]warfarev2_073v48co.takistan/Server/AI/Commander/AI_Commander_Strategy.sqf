@@ -551,12 +551,24 @@ if (!isNull _enemyHQ && {alive _enemyHQ}) then {
 		_strikeOn = (_myTowns >= _strikeMinTowns) && (_myTowns >= _enemyTowns * 1.5) && (_myStr >= _enStr * 1.1);   //--- B69 entry; Steff's rule: never HQ-rush while behind on towns (gate was >8, now ~half-map fraction)
 	};
 };
+//--- B752 (Ray 2026-06-25): STICKY STRIKE. The recall gate used RAW maneuver _myStr, which dips below the concentrated
+//--- enemy the moment the leader garrisons towns -> the strike flapped off after ~30min (27x dominant-but-passive stall,
+//--- 0 round-enders in the 12h soak). Keep it committed while EFFECTIVE strength (maneuver + held-town credit) still
+//--- dominates, AND for a MIN_HOLD after launch regardless, so it can't abort mid-assault before the strikers reach the base.
+if (_wasStrike && !_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
+	private ["_sTownStr","_sMyEff","_sEnEff"];
+	_sTownStr = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2];
+	_sMyEff = _myStr + (_myTowns * _sTownStr);
+	_sEnEff = _enStr + (_enemyTowns * _sTownStr);
+	if ((_myTowns >= _strikeMinTowns) && {_myTowns >= _enemyTowns * 1.2} && {_sMyEff >= _sEnEff}) then {_strikeOn = true};
+	if (time - (_logik getVariable ["wfbe_aicom_strike_t0", -1e10]) < (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 600])) then {_strikeOn = true};
+};
 if (_strikeOn) then {
 	_stratMode = "strike";
 	_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 	if (!_wasStrike) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
+		_logik setVariable ["wfbe_aicom_strike_t0", time]; diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
 	};
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
@@ -627,10 +639,20 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	_ovrStrikers = 0;
 	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]}) then { { if (alive _x && {(_x distance _eHQpos) < _ovrDist}) then {_ovrStrikers = _ovrStrikers + 1} } forEach (units _x) } } forEach _teams;
 	_ovrEnemies = {alive _x && {(side _x) == _enemySide}} count (_eHQpos nearEntities [["Man","LandVehicle","Air"], _ovrClear]);
-	if (_ovrStrikers > 0 && {_ovrEnemies == 0}) then {
+	//--- B752 (Ray 2026-06-25): the old "0 enemy within 200m" razing gate was UNSATISFIABLE vs an entrenched/respawning
+	//--- home garrison (56-59 bodies) so a dominant strike besieged the base forever and the round NEVER closed (0 overruns
+	//--- in the 12h soak). Now raze on: cleared OR an overwhelming striker:enemy ratio OR a SUSTAINED SIEGE (strikers held
+	//--- at the base for N strategy ticks). A2-OA-safe (siege counter on the logik var); BASE_OVERRUN log records which path.
+	private ["_ovrRatio","_ovrSiege","_ovrSiegeNeed","_ovrVia"];
+	_ovrRatio = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_RATIO", 2];
+	_ovrSiegeNeed = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_SIEGE_TICKS", 5];
+	if (_ovrStrikers > 0) then {_ovrSiege = (_logik getVariable ["wfbe_aicom_overrun_siege", 0]) + 1} else {_ovrSiege = 0};
+	_logik setVariable ["wfbe_aicom_overrun_siege", _ovrSiege];
+	_ovrVia = if (_ovrEnemies == 0) then {"clear"} else {if (_ovrStrikers >= (_ovrEnemies * _ovrRatio)) then {"ratio"} else {"siege"}};
+	if (_ovrStrikers > 0 && {(_ovrEnemies == 0) || {_ovrStrikers >= (_ovrEnemies * _ovrRatio)} || {_ovrSiege >= _ovrSiegeNeed}}) then {
 		_enemyHQ setDamage 1;
 		{ if (!isNull _x && {alive _x} && {(_x distance _eHQpos) < _ovrRaze}) then {_x setDamage 1} } forEach ((_enemySide) Call WFBE_CO_FNC_GetSideStructures);
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BASE_OVERRUN|enemy HQ+factories razed|strikers=" + str _ovrStrikers);
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BASE_OVERRUN|enemy HQ+factories razed|strikers=" + str _ovrStrikers + "|enemies=" + str _ovrEnemies + "|via=" + _ovrVia + "|siege=" + str _ovrSiege);
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] ENEMY BASE OVERRUN - razed enemy HQ + structures (strikers on objective, enemy cleared) -> supremacy win imminent.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	};
 };
