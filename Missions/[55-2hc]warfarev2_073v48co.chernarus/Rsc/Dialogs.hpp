@@ -3439,7 +3439,7 @@ class WFBE_SettingsMenu {
 
 	class controlsBackground {
 		class CA_Background : RscText {
-			x = 0.30; y = 0.18; w = 0.40; h = 0.60;
+			x = 0.30; y = 0.18; w = 0.40; h = 0.66;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -3475,19 +3475,22 @@ class WFBE_SettingsMenu {
 		//--- Toggle rows (text set live by the controller; click flips the pref).
 		class CA_HUD : RscButton_Main {
 			idc = 29010;
-			x = 0.325; y = 0.18 + 0.085; w = 0.35; h = 0.05;
+			x = 0.325; y = 0.18 + 0.085; w = 0.35; h = 0.044;
 			sizeEx = 0.026;
 			text = "HUD Overlay: ON";
 			action = "WFBE_MenuAction = 1";
 		};
-		class CA_AAR  : CA_HUD { idc = 29011; y = 0.18 + 0.145; text = "AAR Map Markers: ON";   action = "WFBE_MenuAction = 2"; };
-		class CA_Bomb : CA_HUD { idc = 29012; y = 0.18 + 0.205; text = "Bomb Alt Warning: ON";   action = "WFBE_MenuAction = 3"; };
-		class CA_Amb  : CA_HUD { idc = 29013; y = 0.18 + 0.265; text = "Ambulance Circles: ON";  action = "WFBE_MenuAction = 4"; };
-		class CA_Kill : CA_HUD { idc = 29014; y = 0.18 + 0.325; text = "Kill Feed: ON";          action = "WFBE_MenuAction = 5"; };
+		class CA_AAR  : CA_HUD { idc = 29011; y = 0.18 + 0.135; text = "AAR Map Markers: ON";   action = "WFBE_MenuAction = 2"; };
+		class CA_Bomb : CA_HUD { idc = 29012; y = 0.18 + 0.185; text = "Bomb Alt Warning: ON";   action = "WFBE_MenuAction = 3"; };
+		class CA_Amb  : CA_HUD { idc = 29013; y = 0.18 + 0.235; text = "Ambulance Circles: ON";  action = "WFBE_MenuAction = 4"; };
+		class CA_Kill : CA_HUD { idc = 29014; y = 0.18 + 0.285; text = "Kill Feed: ON";          action = "WFBE_MenuAction = 5"; };
+		class CA_IRS   : CA_HUD { idc = 29015; y = 0.18 + 0.335; text = "Auto IR Smoke: ON";     action = "WFBE_MenuAction = 6"; };
+		class CA_Bipod : CA_HUD { idc = 29016; y = 0.18 + 0.385; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
+		class CA_Audio : CA_HUD { idc = 29017; y = 0.18 + 0.435; text = "Audio Cues: OFF";       action = "WFBE_MenuAction = 8"; };
 		//--- View-distance label + choice row.
 		class CA_VDLabel : RscText {
 			idc = 29020;
-			x = 0.325; y = 0.18 + 0.39; w = 0.35; h = 0.03;
+			x = 0.325; y = 0.18 + 0.49; w = 0.35; h = 0.03;
 			sizeEx = 0.022;
 			text = "View Distance:";
 			colorText[] = WFBE_Menu_Text_Color;
@@ -3495,7 +3498,7 @@ class WFBE_SettingsMenu {
 		};
 		class CA_VD1 : RscButton_Main {
 			idc = 29021;
-			x = 0.325; y = 0.18 + 0.43; w = 0.066; h = 0.05;
+			x = 0.325; y = 0.18 + 0.525; w = 0.066; h = 0.05;
 			sizeEx = 0.022;
 			text = "1000";
 			action = "WFBE_MenuAction = 11";
@@ -3507,7 +3510,7 @@ class WFBE_SettingsMenu {
 		//--- Done.
 		class CA_Done : RscButton_Main {
 			idc = 29009;
-			x = 0.325; y = 0.18 + 0.52; w = 0.35; h = 0.04;
+			x = 0.325; y = 0.18 + 0.60; w = 0.35; h = 0.04;
 			sizeEx = 0.026;
 			text = "Done";
 			action = "WFBE_MenuAction = 9";

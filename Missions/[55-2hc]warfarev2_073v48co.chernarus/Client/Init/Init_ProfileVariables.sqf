@@ -83,4 +83,22 @@ _profile_var = profileNamespace getVariable "WFBE_KILL_MESSAGES_ENABLED";
 if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_KILL_MESSAGES = _profile_var}};
 missionNamespace setVariable ["WFBE_KILL_MESSAGES", WFBE_KILL_MESSAGES];
 
+//--- B751d Settings menu: Auto IR smoke (default ON; IRS_OnIncomingMissile gates on it).
+WFBE_AUTO_IRSMOKE = true;
+_profile_var = profileNamespace getVariable "WFBE_AUTO_IRSMOKE";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_AUTO_IRSMOKE = _profile_var}};
+missionNamespace setVariable ["WFBE_AUTO_IRSMOKE", WFBE_AUTO_IRSMOKE];
+
+//--- Auto deploy bipod (default ON; Common_Bipod auto-deploy EH gates on it; manual TAB unaffected).
+WFBE_AUTO_BIPOD = true;
+_profile_var = profileNamespace getVariable "WFBE_AUTO_BIPOD";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_AUTO_BIPOD = _profile_var}};
+missionNamespace setVariable ["WFBE_AUTO_BIPOD", WFBE_AUTO_BIPOD];
+
+//--- Audio cues (default OFF; opt-in factory/build sounds re-enabled in Client_FNC_Special.sqf).
+WFBE_AUDIO_CUES = false;
+_profile_var = profileNamespace getVariable "WFBE_AUDIO_CUES";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_AUDIO_CUES = _profile_var}};
+missionNamespace setVariable ["WFBE_AUDIO_CUES", WFBE_AUDIO_CUES];
+
 ["INITIALIZATION", "Init_ProfileVariables.sqf: Possible profile variables were defined."] Call WFBE_CO_FNC_LogContent;

@@ -146,31 +146,31 @@ WFBE_CL_FNC_Building_Started = {
 	switch (_building) do {
 		case "Barracks": {
 			_localisedBuilding = localize "RB_Barracks";
-			//playSound ["barracksBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
+			if (missionNamespace getVariable ["WFBE_AUDIO_CUES", false]) then {playSound ["barracksBuildSound",true]}; //--- B751d: opt-in audio cue (Settings menu); default OFF (was removed 2026-06-11 as too intrusive).
 		};
 		case "Light": {
 			_localisedBuilding = localize "RB_Light_Factory";
-			//playSound ["lightFactoryBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
+			if (missionNamespace getVariable ["WFBE_AUDIO_CUES", false]) then {playSound ["lightFactoryBuildSound",true]};
 		};
 		case "CommandCenter": {
 			_localisedBuilding = localize "RB_Command_Center";
-			//playSound ["commandCenterBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
+			if (missionNamespace getVariable ["WFBE_AUDIO_CUES", false]) then {playSound ["commandCenterBuildSound",true]};
 		};
 		case "Heavy": {
 			_localisedBuilding = localize "RB_Heavy_Factory";
-			//playSound ["heavyFactoryBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
+			if (missionNamespace getVariable ["WFBE_AUDIO_CUES", false]) then {playSound ["heavyFactoryBuildSound",true]};
 		};
 		case "Aircraft": {
 			_localisedBuilding = localize "RB_Aircraft_factory";
-			//playSound ["aircraftFactoryBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
+			if (missionNamespace getVariable ["WFBE_AUDIO_CUES", false]) then {playSound ["aircraftFactoryBuildSound",true]};
 		};
 		case "ServicePoint": {
 			_localisedBuilding = localize "RB_Service_Point";
-			//playSound ["servicePointBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
+			if (missionNamespace getVariable ["WFBE_AUDIO_CUES", false]) then {playSound ["servicePointBuildSound",true]};
 		};
 		case "AARadar": {
 			_localisedBuilding = localize "STR_WF_UPGRADE_AntiAirRadar";
-			//playSound ["aaRadarBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
+			if (missionNamespace getVariable ["WFBE_AUDIO_CUES", false]) then {playSound ["aaRadarBuildSound",true]};
 		};
 		case "ArtilleryRadar": {
 			_localisedBuilding = localize "RB_Artillery_Radar";
