@@ -248,6 +248,7 @@ switch (true) do {
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_BAFD.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_BAFW.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_CDF.sqf';
+		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_DeltaForce.sqf'; //--- B755 (Ray 2026-06-25): Core_DeltaForce.sqf existed but was never loaded by this list -> Delta Force classes had no buy-menu metadata (nil lookups). Loaded like its siblings.
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_CIV.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_FR.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_GUE.sqf';
