@@ -406,7 +406,7 @@ if (count _live > 0) then {
 	//--- exists (missionNamespace getVariable [name,default], A2-OA-safe). Buckets [inf,light,heavy,air].
 	_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])];
 	_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
-		_dWeights set [3, (_dWeights select 3) * (1 + (((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT", 2.5]) - 1)))]; //--- B754 (Ray 2026-06-25) HELI TIME-BIAS: scale the AIR bucket (idx 3) up the longer the match runs (transport + attack both). Applied after town-punch, before the empty-bucket zero-out so an empty air bucket still zeroes safely. A2-OA-safe (time/min/^ arithmetic + getVariable default; RAMP_MIN floored at 1 to avoid /0).
+		_dWeights set [3, (_dWeights select 3) * (1 + (((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT", 2.5]) - 1))]; //--- B754 (Ray 2026-06-25) HELI TIME-BIAS: scale the AIR bucket (idx 3) up the longer the match runs (transport + attack both). Applied after town-punch, before the empty-bucket zero-out so an empty air bucket still zeroes safely. A2-OA-safe (time/min/^ arithmetic + getVariable default; RAMP_MIN floored at 1 to avoid /0).
 	for "_bi" from 0 to 3 do {
 		if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 	};

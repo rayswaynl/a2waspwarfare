@@ -317,11 +317,11 @@ while {!WFBE_GameOver} do {
 						private ["_navDeckZ","_navRefPos"];
 						_navDeckZ  = _airLogicRef getVariable ["wfbe_naval_deckz", 16];
 						_navRefPos = getPosASL _airLogicRef;
-						_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle [_navRefPos select 0, _navRefPos select 1, 0];
+						_newHangar = "HeliHEmpty" createVehicle [_navRefPos select 0, _navRefPos select 1, 0]; //--- B754b (Ray 2026-06-25): invisible-but-alive HeliHEmpty instead of the hangar building (A2-OA has no hideObjectGlobal). Mirror of the Init_NavalHVT spawn site.
 						_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
 						_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
 						_newHangar enableSimulation false;
-						_newHangar allowDamage false; _newHangar hideObjectGlobal true; //--- B754 (Ray 2026-06-25): carrier hangar = logic only (hidden building); kept alive for the airport gate. Mirror of the Init_NavalHVT spawn site.
+						_newHangar allowDamage false; //--- B754b: hangar suppressed via invisible HeliHEmpty above (no hideObjectGlobal in A2-OA).
 						_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
 						_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
 						_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];

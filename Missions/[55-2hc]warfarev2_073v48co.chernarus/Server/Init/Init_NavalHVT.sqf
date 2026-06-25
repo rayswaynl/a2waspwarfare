@@ -304,11 +304,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 	_navPos   = getPosASL _navLoc;
 
 	//--- Hangar on the deck (ASL deck height). Static + indestructible like the carrier props.
-	_navHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle [_navPos select 0, _navPos select 1, 0];
+	_navHangar = "HeliHEmpty" createVehicle [_navPos select 0, _navPos select 1, 0]; //--- B754b (Ray 2026-06-25): invisible-but-alive HeliHEmpty instead of the WFBE_C_HANGAR building (A2-OA has NO hideObjectGlobal - A3-only). Carries the wfbe_hangar/airfield vars so every air-buy gate works (Client_GetClosestAirport needs !isNull && alive), with NO visible hangar on the deck.
 	_navHangar setPosASL [_navPos select 0, _navPos select 1, _navDeckZ];
 	_navHangar setDir ((getDir _navLoc) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
 	_navHangar enableSimulation false;
-	_navHangar allowDamage false; _navHangar hideObjectGlobal true; //--- B754 (Ray 2026-06-25): carrier air-shop = LOGIC ONLY. Keep the object alive (Client_GetClosestAirport needs !isNull && alive) but hide the hangar building's model+geometry globally (JIP-safe, OA 1.62+); all air-buy gates still find it.
+	_navHangar allowDamage false; //--- B754b: hangar suppressed by using the invisible HeliHEmpty above (no hideObjectGlobal in A2-OA).
 	_navHangar setVariable ["wfbe_is_airfield_hangar", true, true];
 
 	//--- Wire the logic as an airfield + carrier-capture ref.
