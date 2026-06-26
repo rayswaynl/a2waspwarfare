@@ -75,14 +75,26 @@ while {_max > 0 && isNull _team} do {
 		if (isNull _team && {(missionNamespace getVariable ["WFBE_C_ENROLL_STAMP_ON_DEMAND", 1]) > 0}) then {
 			private ["_sod_body","_sod_g","_sod_side","_sod_logik","_sod_teams"];
 			_sod_body = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
-			if (!isNull _sod_body && {alive _sod_body}) then {
+			if (!isNull _sod_body && {alive _sod_body} && {(getPlayerUID _sod_body) == _uid}) then {
 				_sod_side = side _sod_body;
 				_sod_logik = _sod_side Call WFBE_CO_FNC_GetSideLogic;
-				if (!isNull _sod_logik && {_sod_body in (synchronizedObjects _sod_logik)}) then {
+				//--- b762: v1 keyed on synchronizedObjects membership, but the LIVE RPT proved a JIP body is NOT a
+				//--- synced editor object (it is a fresh controlled unit) so v1 MISSed. v2: the human's body sits in
+				//--- a STABLE, real, unstamped group of his side; make THAT group his team. Gate: real side + side
+				//--- logic exists + the body's group held identical for 2 consecutive checks (rides out the HC churn).
+				if (!isNull _sod_logik && {(side _sod_body) in [west, east, resistance]} && {(group _sod_body) == (missionNamespace getVariable [Format ["WFBE_SOD_LASTG_%1", _uid], grpNull])}) then {
 					_sod_g = group _sod_body;
 					if (isNil {_sod_g getVariable "wfbe_side"}) then {
 						_sod_g setVariable ["wfbe_side", _sod_side];
 						_sod_g setVariable ["wfbe_persistent", true];
+							_sod_g setVariable ["wfbe_funds", missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _sod_side], true];
+							_sod_g setVariable ["wfbe_queue", []];
+							_sod_g setVariable ["wfbe_vote", -1, true];
+							[_sod_g, false] Call SetTeamAutonomous;
+							[_sod_g, ""] Call SetTeamRespawn;
+							[_sod_g, -1] Call SetTeamType;
+							[_sod_g, "towns"] Call SetTeamMoveMode;
+							[_sod_g, [0,0,0]] Call SetTeamMovePos;
 					};
 					_sod_teams = _sod_logik getVariable ["wfbe_teams", []];
 					if (!(_sod_g in _sod_teams)) then {
@@ -90,9 +102,9 @@ while {_max > 0 && isNull _team} do {
 						_sod_logik setVariable ["wfbe_teams", _sod_teams, true];
 					};
 					_team = _sod_g;
-					diag_log Format ["[WFBE][B761 STAMP-ON-DEMAND] adopted [%1] [%2] into %3 synced slot-group; wfbe_teams now %4", _name, _uid, _sod_side, count _sod_teams];
+					missionNamespace setVariable [Format ["WFBE_SOD_LASTG_%1", _uid], nil]; diag_log Format ["[WFBE][B762 STAMP-ON-DEMAND] adopted [%1] [%2] OWN stable group as %3 team; wfbe_teams now %4", _name, _uid, _sod_side, count _sod_teams];
 				} else {
-					if (_max <= 1) then {diag_log Format ["[WFBE][B761 STAMP-ON-DEMAND] MISS [%1] [%2]: RequestJoin body not in %3 synchronizedObjects after window - escalate.", _name, _uid, _sod_side]};
+					missionNamespace setVariable [Format ["WFBE_SOD_LASTG_%1", _uid], group _sod_body]; if (_max <= 1) then {diag_log Format ["[WFBE][B762 STAMP-ON-DEMAND] MISS [%1] [%2]: own group never stabilised / no side logic after window - escalate.", _name, _uid, _sod_side]};
 				};
 			};
 		};
@@ -129,6 +141,7 @@ if (isNil '_sideJoined') exitWith {
 
 //--- B74.2.2: enrollment reached - clear the connect-retry budget so a later reconnect starts fresh.
 missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil];
+missionNamespace setVariable [Format ["WFBE_SOD_LASTG_%1", _uid], nil]; //--- b762: clear the stamp-on-demand stability tracker on enrollment success.
 
 //--- B63 (Ray 2026-06-21): INSTANT JIP catch-up for the own-side MARKER feeds. In A2-OA a
 //--- publicVariable is not replayed to a client that joined after the broadcast, so a fresh
