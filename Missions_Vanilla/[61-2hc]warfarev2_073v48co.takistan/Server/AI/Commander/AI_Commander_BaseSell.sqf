@@ -36,6 +36,33 @@ _counts = [];
 } forEach _structures;
 //--- 2) pick the lowest-cost structure whose TYPE is held in duplicate beyond the redundant threshold.
 _victim = objNull; _victimCost = 1e9; _victimIdx = -1; _victimType = "";
+//--- B758 (Ray 2026-06-26) HARDEN BASE-REBUILD: Pass 1 - prefer a STRANDED OLD-BASE structure: one now FAR
+//--- (> WFBE_C_AICOM_BASE_RADIUS) from the CURRENT/rebuilt HQ but whose TYPE still has a working copy NEAR the HQ.
+//--- After an MHQ relocate + REBASE this recoups the abandoned old base, which the >MAX-duplicate trigger misses
+//--- (a single relocate leaves only 2 of a type). A2-OA-safe: outer struct captured into _struc so the inner count's
+//--- _x can't clobber it; getPos/distance/count/find core commands; no isEqualTo/isEqualType.
+private ["_hq","_hqPos","_baseRad","_struc","_nearSame"];
+_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+if ((missionNamespace getVariable ["WFBE_C_AICOM_SELL_STRANDED", 1]) > 0 && {!isNull _hq}) then {
+	_hqPos = getPos _hq;
+	_baseRad = missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450];
+	{
+		_struc = _x;
+		if (!isNull _struc && {alive _struc}) then {
+			_stype = _struc getVariable ["wfbe_structure_type", ""];
+			if (!(_stype in _protected) && {(_struc distance _hqPos) > _baseRad}) then {
+				_nearSame = {alive _x && {(_x getVariable ["wfbe_structure_type", ""]) == _stype} && {(_x distance _hqPos) <= _baseRad}} count _structures;
+				if (_nearSame > 0) then {
+					_idx = _names find _stype;
+					_cost = if (_idx >= 0) then {_costs select _idx} else {0};
+					if (_cost < _victimCost) then {_victimCost = _cost; _victim = _struc; _victimIdx = _idx; _victimType = _stype};
+				};
+			};
+		};
+	} forEach _structures;
+};
+//--- Pass 2 (fallback): the original lowest-cost > SELL_REDUNDANT_MAX duplicate trigger when nothing is stranded.
+if (isNull _victim) then {
 {
 	if (!isNull _x && {alive _x}) then {
 		_stype = _x getVariable ["wfbe_structure_type", ""];
@@ -48,6 +75,7 @@ _victim = objNull; _victimCost = 1e9; _victimIdx = -1; _victimType = "";
 		};
 	};
 } forEach _structures;
+};
 if (isNull _victim) exitWith {};                  //--- nothing redundant to sell this tick.
 //--- 3) refund a fraction of the build cost to side SUPPLY (dual-currency only), clamped non-negative.
 _refund = round (_victimCost * ((missionNamespace getVariable ["WFBE_C_AICOM_SELL_REFUND_FRAC", 0.5]) max 0));
