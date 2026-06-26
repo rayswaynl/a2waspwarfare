@@ -402,7 +402,7 @@ if (WFBE_CL_VAR_TintLegendEnabled) then {
 
 [] execVM "Client\Module\AFKkick\monitorAFK.sqf";
 
-(vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}];
+//--- wiki-wins: removed duplicate HandleAT Fired EH (already added near the top of Init_Client); was double-spawning HandleAT per AT rocket
 execVM "WASP\global_marking_monitor.sqf";
 WFBE_Client_Logic = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideLogic;
 WFBE_Client_SideID = sideID;

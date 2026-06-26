@@ -49,6 +49,7 @@ if (_veh isKindOf 'Air') then {_healTime = round(_healTime * (_airCoef + getDamm
 if (_veh isKindOf 'StaticWeapon') then {_healTime = round(_healTime * (_artCoef + getDammage _veh))};
 if (_veh isKindOf 'Tank') then {_healTime = round(_healTime * (_heaCoef + getDammage _veh))};
 if (_veh isKindOf 'Car' || _veh isKindOf 'Motorcycle') then {_healTime = round(_healTime * (_ligCoef + getDammage _veh))};
+if (_veh isKindOf 'Ship') then {_healTime = round(_healTime * (_ligCoef + getDammage _veh))}; //--- wiki-wins: boats fell through all isKindOf branches (flat base time); scale them like light vehicles
 
 //--- Inform the player.
 hint parseText(Format[localize "STR_WF_INFO_Healing",_name,_healTime]);

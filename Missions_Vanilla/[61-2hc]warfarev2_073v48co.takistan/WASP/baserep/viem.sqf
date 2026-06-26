@@ -17,7 +17,7 @@ waitUntil
 		_obj = cursortarget;
 		_dis = player distance _obj;
 		if (!isNull _obj && !(side group player == side _obj) && (_dis < 1000) )then{
-			for "_i" from 0 to (count baseb) do {
+			for "_i" from 0 to ((count baseb) - 1) do {
 				if (_obj isKindOf (baseb select _i select 0)) then{
 					_dam = (1 - getDammage _obj)*100;
 					_color = "#00ff00";
@@ -35,7 +35,7 @@ waitUntil
 		if (repairprocess == "no") then {
 			_obj = cursorTarget;
 			if (!isNull _obj && side group player == side _obj) then {
-				for "_i" from 0 to (count baseb) do {
+				for "_i" from 0 to ((count baseb) - 1) do {
 					if (_obj isKindOf (baseb select _i select 0)) then {
 						_dam = (1 - getDammage _obj)*100;
 						_color = "#00ff00";

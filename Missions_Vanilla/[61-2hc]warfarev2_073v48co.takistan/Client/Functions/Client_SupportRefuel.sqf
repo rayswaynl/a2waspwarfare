@@ -50,6 +50,7 @@ if (_veh isKindOf 'Air') then {_refTime = round(_refTime * (_airCoef + (1 - fuel
 if (_veh isKindOf 'StaticWeapon') then {_refTime = round(_refTime * (_artCoef + (1 - fuel _veh)))};
 if (_veh isKindOf 'Tank') then {_refTime = round(_refTime * (_heaCoef + (1 - fuel _veh)))};
 if (_veh isKindOf 'Car' || _veh isKindOf 'Motorcycle') then {_refTime = round(_refTime * (_ligCoef + (1 - fuel _veh)))};
+if (_veh isKindOf 'Ship') then {_refTime = round(_refTime * (_ligCoef + (1 - fuel _veh)))}; //--- wiki-wins: boats fell through all isKindOf branches (flat base time); scale them like light vehicles
 
 //--- Inform the player.
 hint parseText(Format[localize "STR_WF_INFO_Refueling",_name,_refTime]);

@@ -9,14 +9,14 @@ WFBE_CL_FNC_Groups_JoinAccepted = {
 	Private ["_group"];
 	_group = _this select 0;
 	WFBE_Client_PendingRequests = [];//--- Flush all existing requests.
-	hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Your request to join the the group <t color='#BD63F5'>%1</t> has been <t color='#B6F563'>Accepted</t>.</t>", _group];
+	hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Your request to join the group <t color='#BD63F5'>%1</t> has been <t color='#B6F563'>Accepted</t>.</t>", _group];
 };
 
 //--- The client join request has been denied.
 WFBE_CL_FNC_Groups_JoinDenied = {
 	Private ["_group"];
 	_group = _this select 0;
-	hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Your request to join the the group <t color='#BD63F5'>%1</t> has been <t color='#B6F563'>Denied</t>.</t>", _group];
+	hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Your request to join the group <t color='#BD63F5'>%1</t> has been <t color='#B6F563'>Denied</t>.</t>", _group];
 };
 
 //--- The client get kicked back to his original group.

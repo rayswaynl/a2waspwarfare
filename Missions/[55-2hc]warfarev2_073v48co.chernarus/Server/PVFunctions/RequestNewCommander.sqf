@@ -10,7 +10,6 @@ if ((_logik getVariable "wfbe_votetime") <= 0) then {
 
 	//--- Set the commander
 	_logik setVariable ["wfbe_commander", _assigned_commander, true];
-	[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander;
-	[_side, "HandleSpecial", ["new-commander-assigned", _assigned_commander]] Call WFBE_CO_FNC_SendToClients;
+	[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander; //--- wiki-wins: AssignForCommander (Server_AssignNewCommander.sqf:10) already notifies clients; removed the duplicate SendToClients
 
 };

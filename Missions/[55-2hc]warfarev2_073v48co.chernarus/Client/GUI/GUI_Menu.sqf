@@ -275,14 +275,7 @@ while {alive player && dialog} do {
 		};
 	};
 
-	if (MenuAction == 17) then {
-		MenuAction = -1;
-	if ( zoomgps < 1 ) then { zoomgps = (zoomgps + 0.025); hint "zoom OUT";} else { zoomgps = 1; hint "GPS Zoom: \n MAX Value";};
-	};
-	if (MenuAction == 18) then {
-		MenuAction = -1;
-	if ( zoomgps >= 0.025) then { zoomgps = (zoomgps - 0.025); hint "zoom IN";} else { zoomgps = 0.025; hint "GPS Zoom: \n MIN Value";};
-	};
+	//--- wiki-wins: removed dormant GPS-zoom router cases (MenuAction 17/18) — no control or key ever sets those values, and zoomgps is never read elsewhere.
 
 	// Earplugs: fade game volume to 20% and back; state persists after the menu closes.
 	if (MenuAction == 22) then {

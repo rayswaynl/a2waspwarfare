@@ -10,7 +10,7 @@ if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWit
 	["INFORMATION", "UpdateScoreInternal.sqf: AntiStack is disabled; score sampling loop stopped before start."] Call WFBE_CO_FNC_LogContent;
 };
 
-while { true } do {
+while { !WFBE_GameOver } do { //--- wiki-wins: stop at game over, matching sibling AntiStack loops
 	uiSleep _sleep;
 	// Marty: Performance Audit timing for AntiStack score sampling.
 	_perfStart = diag_tickTime;

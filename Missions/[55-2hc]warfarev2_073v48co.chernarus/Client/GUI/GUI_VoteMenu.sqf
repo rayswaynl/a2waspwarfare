@@ -131,9 +131,9 @@ while {alive player && dialog} do {
 			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
 			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
 		if (((WFBE_Client_Teams select _i) getVariable "wfbe_vote") != -1) then {
-		lnbSetColor [500100, [_i+1,0], [0.9,0.5,0.1,1]]
+		lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
 		} else {
-		lnbSetColor [500100, [_i+1,0], [1,1,1,1]]
+		lnbSetColor [500100, [_i,0], [1,1,1,1]]
 		};
 
 		};

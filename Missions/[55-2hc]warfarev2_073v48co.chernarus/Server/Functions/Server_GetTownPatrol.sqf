@@ -16,7 +16,7 @@ _sv = _town getVariable "supplyValue";
 _type = switch (true) do {
 	case (_sv <= 30): {"LIGHT"};
 	case (_sv > 30 && _sv < 60): {"MEDIUM"};
-	case (_sv > 60): {"HEAVY"};
+	case (_sv >= 60): {"HEAVY"}; //--- wiki-wins: include SV==60 (was > 60, which left a nil switch gap)
 };
 
 _available = missionNamespace getVariable Format["WFBE_%1_PATROL_%2", _side, _type];

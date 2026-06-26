@@ -160,7 +160,7 @@ if (_rlType in ["Reserve","ArtilleryRadar"]) then {
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 composition dressing spawned via [%3].", str _side, _rlType, _dressTpl]] Call WFBE_CO_FNC_LogContent;
 };
 
-if(isAutoWallConstructingEnabled && !(_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]))then{
+if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
 	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
 	_site setVariable ["WFBE_Walls", _defenses];
 } else {

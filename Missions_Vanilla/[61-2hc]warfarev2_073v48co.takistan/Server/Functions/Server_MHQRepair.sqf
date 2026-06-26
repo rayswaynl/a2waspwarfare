@@ -45,6 +45,7 @@ if (isMultiplayer) then {[_side, "HandleSpecial", ["set-hq-killed-eh", _mhq]] Ca
 
 _logik setVariable ['wfbe_hq_deployed', false, true];
 _logik setVariable ['wfbe_hq_repairing',false, true];
+_logik setVariable ['cashrepaired', false, true]; //--- wiki-wins: reset so cash-repair works again after the HQ is rebuilt (Action_RepairMHQDepot set it true permanently)
 _logik setVariable ['wfbe_hq_repair_count', (_logik getVariable "wfbe_hq_repair_count") + 1, true];
 //--- [>1.62] Set the HQ to be local to the commander.
  _commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
