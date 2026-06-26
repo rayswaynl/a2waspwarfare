@@ -20,9 +20,27 @@
 
 	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
 
+	if (typeName (_this select 1) != "ARRAY" || {count (_this select 1) < 3}) exitWith {
+		["WARNING", "AttackWave.sqf: rejected ATTACK_WAVE_DETAILS - malformed payload."] Call WFBE_CO_FNC_LogContent;
+	};
+
 	_side = ((_this select 1) select 0);
 	_priceModifier = ((_this select 1) select 1);
     _attackLength = ((_this select 1) select 2);
+
+	//--- Anti-cheat (Layer 6b / DR-41): ATTACK_WAVE_DETAILS is directly client-broadcastable, so a forged
+	//--- packet could bypass the hardened ATTACK_WAVE_INIT. Validate the side/types and CLAMP the price
+	//--- modifier to the legitimate range so units can never be made free or negative-priced.
+	if (!(_side in [west, east])) exitWith {
+		["WARNING", Format ["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS - invalid side [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+	};
+	if (typeName _priceModifier != "SCALAR" || {typeName _attackLength != "SCALAR"}) exitWith {
+		["WARNING", "AttackWave.sqf: rejected ATTACK_WAVE_DETAILS - non-scalar fields."] Call WFBE_CO_FNC_LogContent;
+	};
+	if (_priceModifier < 0.28) then {_priceModifier = 0.28};
+	if (_priceModifier > 1) then {_priceModifier = 1};
+	if (_attackLength < 0) then {_attackLength = 0};
+	if (_attackLength > 2000) then {_attackLength = 2000};
 
     _priceModifierPercentage = round (_priceModifier * 100);
 

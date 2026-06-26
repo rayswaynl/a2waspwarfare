@@ -1,0 +1,39 @@
+//new
+// =====================================================================
+// WASP Warfare - scripts.txt  (anti-cheat Layer 2)
+// BattlEye scans the TEXT of every CLIENT-compiled/executed script.
+// Matching is SUBSTRING and case-insensitive.
+// Action codes: 0=none  1=log-only(file)  5=kick+log  7=kick+log+console.
+// Line 1 is the DEFAULT action for unmatched scripts: 0 = do nothing (no log spam).
+//
+// HARD KICKS below are tokens with ZERO occurrences in the WASP source tree
+// (verified) and which never appear in legitimate Arma 2 OA client code.
+// DUAL-USE commands that WASP itself uses are LOG-ONLY (1): review scripts.log,
+// add !"legit-substring" exceptions, then raise to 5/7. See README-anticheat.md.
+// =====================================================================
+0 ""
+
+// --- Hard kicks: Arma 3 / injection signatures, 0 legitimate occurrences in WASP ---
+7 "remoteExec"
+7 "remoteExecCall"
+7 "BIS_fnc_MP"
+7 "createAgent"
+7 "setGroupOwner"
+
+// --- Dual-use / cheat-favourite commands: LOG ONLY (WASP uses several legitimately) ---
+1 "createVehicle"
+1 "createUnit"
+1 "deleteVehicle"
+1 "setDamage"
+1 "allowDamage"
+1 "setPos"
+1 "setVelocity"
+1 "setVehicleInit"
+1 "addMagazineCargo"
+1 "addWeaponCargo"
+1 "addBackpackCargo"
+1 "call compile"
+1 "createDialog"
+1 "ppEffectCreate"
+1 "selectPlayer"
+1 "setAccTime"

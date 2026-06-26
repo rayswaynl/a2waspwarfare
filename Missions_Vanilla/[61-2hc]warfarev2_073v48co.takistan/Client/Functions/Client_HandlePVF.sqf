@@ -29,5 +29,9 @@ if (typeName(_destination) == 'STRING') then {if (isMultiplayer) then {if (getPl
 
 if (_exit) exitWith {};
 
+//--- Anti-cheat (Layer 3): drop any handler name not in the registered PVF allow-list.
+if (isNil "WFBE_CL_PVF_ALLOWED" || {!((toUpper _script) in WFBE_CL_PVF_ALLOWED)}) exitWith {
+	["WARNING", Format ["Client_HandlePVF.sqf: rejected unregistered PVF handler [%1].", _script]] Call WFBE_CO_FNC_LogContent;
+};
 _code = missionNamespace getVariable _script;
 if (!(isNil "_code") && {typeName _code == "CODE"}) then {_parameters Spawn _code};

@@ -314,6 +314,7 @@ Call Compile preprocessFileLineNumbers "Common\Init\Init_PublicVariables.sqf";
 //--- Done here (not in Init_PublicVariables) to keep the change inside the B67 edit-scope; identical effect.
 CLTFNCGuerVbiedBounty = compile preprocessFileLineNumbers "Client\PVFunctions\GuerVbiedBounty.sqf";
 if (!isServer || local player) then {"WFBE_PVF_GuerVbiedBounty" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF}};
+if (!isNil "WFBE_CL_PVF_ALLOWED") then {WFBE_CL_PVF_ALLOWED = WFBE_CL_PVF_ALLOWED + [toUpper "CLTFNCGuerVbiedBounty"]}; //--- Anti-cheat (Layer 3): out-of-band handler must be allow-listed too.
 
 //--- Import the desired defenses. (todo, Replace the old defense init by this one).
 Call Compile preprocessFileLineNumbers Format["Common\Config\Defenses\Defenses_%1.sqf",_grpWest];

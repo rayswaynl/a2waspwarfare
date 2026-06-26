@@ -52,13 +52,20 @@ _l = _l + ["DashboardAnnounce"];
 
 _clientCommandPV = _l;
 
+//--- Anti-cheat (Layer 3 / DR-1+DR-38): build strict allow-lists of the registered PVF handler
+//--- names so the dispatchers reject any forged handler string, not just non-CODE values.
+WFBE_CL_PVF_ALLOWED = [];
+WFBE_SE_PVF_ALLOWED = [];
+
 {
 	Call Compile Format["CLTFNC%1 = compile preprocessFileLineNumbers 'Client\PVFunctions\%1.sqf'", _x];
+	WFBE_CL_PVF_ALLOWED = WFBE_CL_PVF_ALLOWED + [toUpper Format["CLTFNC%1", _x]];
 	if (!isServer || local player) then {Format['WFBE_PVF_%1',_x] addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF}};
 } forEach _clientCommandPV;
 
 {
 	Call Compile Format["SRVFNC%1 = compile preprocessFileLineNumbers 'Server\PVFunctions\%1.sqf'", _x];
+	WFBE_SE_PVF_ALLOWED = WFBE_SE_PVF_ALLOWED + [toUpper Format["SRVFNC%1", _x]];
 	if (isServer) then {Format['WFBE_PVF_%1',_x] addPublicVariableEventHandler {(_this select 1) Spawn WFBE_SE_FNC_HandlePVF}};
 } forEach _serverCommandPV;
 

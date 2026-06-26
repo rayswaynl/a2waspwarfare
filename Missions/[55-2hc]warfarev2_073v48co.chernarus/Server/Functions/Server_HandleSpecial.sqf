@@ -125,16 +125,37 @@ switch (_args select 0) do {
 		} forEach _vehicles;
 	};
 	case "ICBM": {
-		Private ["_base","_playerTeam","_side","_target"];
+		Private ["_base","_playerTeam","_side","_target","_icbmLevel","_lastFire","_minInterval","_upgArr"];
 
 		_side = _args select 1;
 		_base = _args select 2;
 		_target = _args select 3;
 		_playerTeam = _args select 4;
 
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Team [%2] [%3] called in an ICBM Nuke.", str _side, _playerTeam, name (leader _playerTeam)]] Call WFBE_CO_FNC_LogContent;
+		//--- Anti-cheat (Layer 6a / DR-27): an ICBM is a map-wide kill. Arma 2 OA PVEHs carry no sender
+		//--- identity, so the payload team/side cannot be trusted. Gate on SERVER-derived state a forged
+		//--- request cannot fake: real upgrade ownership + a GLOBAL (not per-side) cooldown so a forged
+		//--- payload side cannot rotate cooldown keys to bypass the throttle. Residual (a cheater on a
+		//--- side that owns ICBM firing once per interval) needs the DR-55 sender-auth redesign.
+		if (!(_side in [west, east])) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: ICBM rejected - invalid side [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		_upgArr = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+		_icbmLevel = if (typeName _upgArr == "ARRAY" && {count _upgArr > WFBE_UP_ICBM}) then {_upgArr select WFBE_UP_ICBM} else {0};
+		if (_icbmLevel <= 0) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: ICBM rejected - side [%1] does not own the ICBM upgrade.", str _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		_minInterval = missionNamespace getVariable ["WFBE_C_ICBM_MIN_INTERVAL", 60];
+		_lastFire = missionNamespace getVariable ["WFBE_SE_ICBM_LASTFIRE", -100000];
+		if (time - _lastFire < _minInterval) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: ICBM rejected - global cooldown active (%1s).", _minInterval]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNull _target || !alive _target) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: ICBM rejected - invalid or dead target object."] Call WFBE_CO_FNC_LogContent;
+		};
+		missionNamespace setVariable ["WFBE_SE_ICBM_LASTFIRE", time];
 
-		if (isNull _target || !alive _target) exitWith {};
+		["INFORMATION", Format ["Server_HandleSpecial.sqf: side [%1] ICBM accepted.", str _side]] Call WFBE_CO_FNC_LogContent;
 
 		waitUntil {!alive _target || isNull _target};
 

@@ -11,5 +11,9 @@ _publicVar = _this;
 _script = _publicVar select 0;
 _parameters = if (count _publicVar > 1) then {_publicVar select 1} else {[]};
 
+//--- Anti-cheat (Layer 3): drop any handler name not in the registered PVF allow-list.
+if (isNil "WFBE_SE_PVF_ALLOWED" || {!((toUpper _script) in WFBE_SE_PVF_ALLOWED)}) exitWith {
+	["WARNING", Format ["Server_HandlePVF.sqf: rejected unregistered PVF handler [%1].", _script]] Call WFBE_CO_FNC_LogContent;
+};
 _code = missionNamespace getVariable _script;
 if (!(isNil "_code") && {typeName _code == "CODE"}) then {_parameters Spawn _code};

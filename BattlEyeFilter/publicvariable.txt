@@ -1,3 +1,20 @@
 //new
+// =====================================================================
+// WASP Warfare - publicvariable.txt  (anti-cheat Layer 1)
+// BattlEye matches the NAME of every CLIENT-broadcast public variable.
+// Action codes: 1=log-only(file)  5=kick+log  7=kick+log+console.
+//
+// POSTURE = LOG-ONLY (action 1). It NEVER kicks except the kickAFK
+// feature rule below. Run one full session, review publicvariable.log,
+// add any legitimate-but-unlisted channels (mods/engine) as !="name"
+// exceptions, THEN change the leading 1 to 5 to arm enforcement.
+// !="x" is an EXACT-match exception; matching is substring otherwise.
+// See README-anticheat.md in this folder.
+// =====================================================================
+
+// --- AFK kick feature plumbing: keep kicking clients that broadcast kickAFK ---
 5 "kickAFK"
 
+// --- Default catch-all: LOG every other client-broadcast PV; legitimate
+//     channels are exact-match exceptions (not logged). ARM = change 1 to 5. ---
+1 "" !="kickAFK" !="WFBE_PVF_RequestVehicleLock" !="WFBE_PVF_RequestOnUnitKilled" !="WFBE_PVF_RequestChangeScore" !="WFBE_PVF_RequestCommanderVote" !="WFBE_PVF_RequestNewCommander" !="WFBE_PVF_RequestStructure" !="WFBE_PVF_RequestFOBStructure" !="WFBE_PVF_RequestDefense" !="WFBE_PVF_RequestJoin" !="WFBE_PVF_RequestMHQRepair" !="WFBE_PVF_RequestSpecial" !="WFBE_PVF_RequestTeamUpdate" !="WFBE_PVF_RequestUpgrade" !="WFBE_PVF_RequestAutoWallConstructinChange" !="WFBE_PVF_RequestEnqueue" !="WFBE_PVF_RequestDequeue" !="WFBE_PVF_CounterBatteryFired" !="WFBE_PVF_RequestSiteClearance" !="WFBE_PVF_RequestAIComDonate" !="WFBE_PVF_HCStat" !="ATTACK_WAVE_INIT" !="WFBE_Client_PV_IsSupplyMissionActiveInTown" !="WFBE_Client_PV_SupplyMissionStarted" !="WFBE_Server_PV_SupplyMissionCompleted" !="wfbe_supply_temp_west" !="wfbe_supply_temp_east" !="wfbe_supply_temp_resistance" !="REQUEST_SUPPLY_VALUE" !="WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH" !="WFBE_C_PLAYER_OBJECT" !="CLIENT_INIT_READY" !="AFKthresholdExceededName" !="PLAYER_RADIATED" !="WFBE_FPS_REPORT" !="WFBE_ReqAicomFeed" !="MARKER_CREATION" !="SEND_MESSAGE" !="CBA_display_ingame_warnings"

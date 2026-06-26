@@ -1,8 +1,9 @@
 "wfbe_supply_temp_west" addPublicVariableEventHandler {
 	Private ['_amount','_change','_currentSupply','_side'];
 
-	_side = _this select 1 select 0;
+	_side = west; //--- Anti-cheat (T6): derive side from the channel; ignore the client-sent payload side.
 	_amount = _this select 1 select 1;
+	if (typeName _amount != "SCALAR") exitWith { ["WARNING", "Server_ChangeSideSupply.sqf: rejected non-scalar supply amount."] Call WFBE_CO_FNC_LogContent; };
 	_reason = if (_this select 1 select 2!= "") then {_this select 1 select 2} else {"No reason provided for supply value update! This might indicate a malicious supply update request. Check stuff if you see this message."};
 	_maxSupplyLimit = missionNameSpace getvariable "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT";
 
@@ -25,8 +26,9 @@
 "wfbe_supply_temp_resistance" addPublicVariableEventHandler {
 	Private ['_amount','_change','_currentSupply','_side']; //--- B67 [guer-side-supply]: wire GUER (resistance) side-supply; mirrors west/east. Additive plumbing, no-op until something credits GUER supply, does not touch west/east behavior.
 
-	_side = _this select 1 select 0;
+	_side = resistance; //--- Anti-cheat (T6): derive side from the channel; ignore the client-sent payload side.
 	_amount = _this select 1 select 1;
+	if (typeName _amount != "SCALAR") exitWith { ["WARNING", "Server_ChangeSideSupply.sqf: rejected non-scalar supply amount."] Call WFBE_CO_FNC_LogContent; };
 	_reason = if (_this select 1 select 2 != "") then {_this select 1 select 2} else {"No reason provided for supply value update! This might indicate a malicious supply update request. Check stuff if you see this message."};
 	_maxSupplyLimit = missionNameSpace getvariable "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT";
 
@@ -49,8 +51,9 @@
 "wfbe_supply_temp_east" addPublicVariableEventHandler {
 	Private ['_amount','_change','_currentSupply','_side'];
 
-	_side = _this select 1 select 0;
+	_side = east; //--- Anti-cheat (T6): derive side from the channel; ignore the client-sent payload side.
 	_amount = _this select 1 select 1;
+	if (typeName _amount != "SCALAR") exitWith { ["WARNING", "Server_ChangeSideSupply.sqf: rejected non-scalar supply amount."] Call WFBE_CO_FNC_LogContent; };
 	_reason = if (_this select 1 select 2 != "") then {_this select 1 select 2} else {"No reason provided for supply value update! This might indicate a malicious supply update request. Check stuff if you see this message."};
 	_maxSupplyLimit = missionNameSpace getvariable "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT";
 
