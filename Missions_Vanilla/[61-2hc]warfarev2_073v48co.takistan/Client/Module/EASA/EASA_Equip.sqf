@@ -1,4 +1,4 @@
-Private ["_get", "_index", "_loadout", "_loadout_old", "_type", "_vehicle"];
+Private ["_get", "_index", "_loadout", "_loadout_old", "_type", "_vehicle", "_row", "_kit"];
 
 _vehicle = _this select 0;
 _index = _this select 1;
@@ -21,7 +21,8 @@ if (_type != -1) then {
 	};
 	
 	//--- Now we load the new EASA setup.
-	_loadout = (((missionNamespace getVariable 'WFBE_EASA_Loadouts') select _type) select _index) select 2;
+	_row = ((missionNamespace getVariable 'WFBE_EASA_Loadouts') select _type) select _index; //--- full row: [price, desc, [[weapons],[mags]], isAA, kitSpec?]
+	_loadout = _row select 2;
 
 	// Turret-armed airframes (Wildcat + Ka-137): the occupant fires from MainTurret, so weapons MUST go on the turret
 	// (path [-1] = primary/MainTurret). Hull-level addWeapon leaves the turret empty -> pilot/operator has no usable weapon.
@@ -34,6 +35,12 @@ if (_type != -1) then {
 	};
 	
 	//--- We update the EASA setup on the vehicle for everyone if needed.
+	//--- Custom-kit layer (mounted weapon / appliqué armor / cosmetic). Empty spec clears any prior kit,
+	//--- so swapping a kit row back to a normal loadout tears the kit down cleanly. Kit rows carry empty
+	//--- weapon/mag arrays, so the addWeapon/addMagazine loops above are harmless no-ops for them.
+	_kit = if (count _row > 4) then {_row select 4} else {[]};
+	if (!isNil "EASA_ApplyKit") then {[_vehicle, _kit] call EASA_ApplyKit};
+
 	if (_get != _index) then {_vehicle setVariable ["WFBE_EASA_Setup", _index, true]};
  
 };

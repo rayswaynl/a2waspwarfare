@@ -665,6 +665,21 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
+
+// === EASA expansion: ground-vehicle custom kits (player vehicles, EASA stations only) ===
+_easaVehi = _easaVehi + ['Offroad_DSHKM_Gue'];
+_easaDefault = _easaDefault + [[[],[]]];
+_easaLoadout = _easaLoadout + [
+[
+[600,'Rocket pod (S-8 x12) [KIT]',[[],[]],false,['MOUNT',[['','Igla_AA_pod_East',[0,-1.35,0.55],0]],'R_S8T_AT',12,[0,-1.35,1.0],[0,3,0.45],2,180]],
+[100,'Camo netting [KIT]',[[],[]],false,['COSMETIC',[['','Land_CamoNet_EAST',[0,-1.0,0.65],0]]]]
+]];
+_easaVehi = _easaVehi + ['Pickup_PK_GUE'];
+_easaDefault = _easaDefault + [[[],[]]];
+_easaLoadout = _easaLoadout + [
+[
+[800,'Sandbag plating [KIT]',[[],[]],false,['ARMOR',[['','Land_fort_bagfence_round',[0.95,0.1,-0.1],90],['','Land_fort_bagfence_round',[-0.95,0.1,-0.1],90]],40,3,['_AT','PG7','PG9','TOW','AT13','Maverick','Hellfire','Javelin','Metis','RPG','Vikhr','Kornet']]]
+]];
 //LoadoutManagerGuerEasaInsert
 // Ka-137 [GUER Insurgents] - pilot-fired EASA recon/strike (Open Flag A; manual fire - no gunner turret).
 // [MR] stock-MG default (PKT / 100Rnd_762x54_PKT) - Ka137_MG is non-existent (confirmed live 2026-06-18).

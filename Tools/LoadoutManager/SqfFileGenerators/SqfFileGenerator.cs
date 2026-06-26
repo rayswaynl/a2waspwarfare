@@ -76,6 +76,33 @@ public class SqfFileGenerator
         return endOfTheEasaFile;
     }
 
+    // EASA expansion (v1): hand-authored ground-vehicle custom-kit EASA entries appended to the vanilla
+    // EASA_Init.sqf. These are non-combinatoric (kits, not pylon combos), so they are emitted as literal
+    // rows rather than run through the aircraft generator. Row shape matches the runtime contract:
+    //   [price, "desc", [[weapons],[mags]], isAAplaceholder, kitSpec]   (the footer overwrites index 3)
+    // kitSpec is consumed by EASA_Equip.sqf -> EASA_ApplyKit. Visual classes/offsets are NEEDS-IN-ENGINE-VERIFY.
+    public static string GenerateGroundVehicleAndKitEasaEntries()
+    {
+        string s = "\n\n// === EASA expansion: ground-vehicle custom kits (player vehicles, EASA stations only) ===";
+
+        // GUER technical: improvised rocket pod + camo netting.
+        s += "\n_easaVehi = _easaVehi + ['Offroad_DSHKM_Gue'];";
+        s += "\n_easaDefault = _easaDefault + [[[],[]]];";
+        s += "\n_easaLoadout = _easaLoadout + [\n[";
+        s += "\n[600,'Rocket pod (S-8 x12) [KIT]',[[],[]],false,['MOUNT',[['','Igla_AA_pod_East',[0,-1.35,0.55],0]],'R_S8T_AT',12,[0,-1.35,1.0],[0,3,0.45],2,180]],";
+        s += "\n[100,'Camo netting [KIT]',[[],[]],false,['COSMETIC',[['','Land_CamoNet_EAST',[0,-1.0,0.65],0]]]]";
+        s += "\n]];";
+
+        // GUER technical: improvised sandbag plating (finite AT mitigation).
+        s += "\n_easaVehi = _easaVehi + ['Pickup_PK_GUE'];";
+        s += "\n_easaDefault = _easaDefault + [[[],[]]];";
+        s += "\n_easaLoadout = _easaLoadout + [\n[";
+        s += "\n[800,'Sandbag plating [KIT]',[[],[]],false,['ARMOR',[['','Land_fort_bagfence_round',[0.95,0.1,-0.1],90],['','Land_fort_bagfence_round',[-0.95,0.1,-0.1],90]],40,3,['_AT','PG7','PG9','TOW','AT13','Maverick','Hellfire','Javelin','Metis','RPG','Vikhr','Kornet']]]";
+        s += "\n]];";
+
+        return s;
+    }
+
     public static string GenerateStartOfTheCoreFile()
     {
         string code = "Private ['_c','_get','_i','_p','_z'];\n";
@@ -229,6 +256,10 @@ case """ + vehicleName + @""":{
 
         properties.modded = easaFileString;
         properties.modded += aircraftEasaLoadoutsFileForModdedMaps;
+
+        // EASA expansion: ground-vehicle custom-kit rows (vanilla maps only), appended before the footer
+        // so the isAA pass + WFBE_EASA_* publish include them. Deliberately excluded from the modded path.
+        easaFileString += GenerateGroundVehicleAndKitEasaEntries();
 
         easaFileString += GenerateEndOfTheEasaFile();
         properties.modded += GenerateEndOfTheEasaFile();
