@@ -174,7 +174,7 @@ class RscTitles {
 		onLoad = "_this ExecVM ""Client\GUI\GUI_SetCurrentCutDisplay.sqf""";
 		onUnload = "_this ExecVM ""Client\GUI\GUI_ClearCurrentCutDisplay.sqf""";
 		controls[] = {"RUBHUD_Background","RUBHUD_Health","RUBHUD_Health_Value","RUBHUD_Uptime","RUBHUD_Uptime_Value","RUBHUD_Commander", "RUBHUD_Commander_Value","RUBHUD_AICOUNT","RUBHUD_AICOUNT_Value","RUBHUD_Money","RUBHUD_Money_Value","RUBHUD_Income","RUBHUD_Income_Value","RUBHUD_Supply","RUBHUD_Supply_Value","RUBHUD_SupplyMin","RUBHUD_SupplyMin_Value","RUBHUD_City","RUBHUD_City_Value",
-		"RUBHUD_FPS_Client","RUBHUD_FPS_Client_Value","RUBHUD_FPS_Server","RUBHUD_FPS_Server_Value","RUBHUD_Upgrade","RUBHUD_Upgrade_Value","RUBHUD_UpgradeNext","RUBHUD_UpgradeNext_Value",
+		"RUBHUD_FPS_Client","RUBHUD_FPS_Client_Value","RUBHUD_FPS_Server","RUBHUD_FPS_Server_Value","RUBHUD_Upgrade","RUBHUD_Upgrade_Value","RUBHUD_UpgradeNext","RUBHUD_UpgradeNext_Value","RUBHUD_Arty","RUBHUD_Arty_Value",
 		"OptionsIcon0", "OptionsIcon1", "OptionsIcon2", "OptionsIcon3", "OptionsIcon4", "OptionsIcon5", "OptionsIcon6", "OptionsIcon7", "OptionsIcon8", "OptionsIcon9", "OptionsIcon10",
 		"OptionsIcon11", "OptionsIcon12", "OptionsIcon13", "OptionsIcon14", "OptionsIcon15", "OptionsIcon16", "OptionsIcon17"};
 		controlsBackground[] = {};
@@ -468,6 +468,29 @@ class RscTitles {
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
 			y = 0.426000 * safezoneH + safezoneY;
+			w = 0.4401041 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.028;
+			colorText[] = {1,1,1,1};
+		};
+
+		// Card #219: artillery cooldown readout. Mirrors the RUBHUD_UpgradeNext_Value row geometry.
+		class RUBHUD_Arty: RscText {
+			idc = 1372;
+			text = "";
+			x = 0.881728 * safezoneW + safezoneX;
+			y = 0.446000 * safezoneH + safezoneY;
+			w = 0.1025 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.026;
+			colorText[] = {1,1,1,1};
+		};
+
+		class RUBHUD_Arty_Value: RscText {
+			idc = 1373;
+			text = "";
+			x = 0.925958 * safezoneW + safezoneX;
+			y = 0.446000 * safezoneH + safezoneY;
 			w = 0.4401041 * safezoneW;
 			h = 0.0255556 * safezoneH;
 			sizeEx = 0.028;
