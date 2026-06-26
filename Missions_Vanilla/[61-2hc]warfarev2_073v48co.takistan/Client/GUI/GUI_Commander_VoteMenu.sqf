@@ -50,16 +50,9 @@ while {alive player && dialog} do {
 
 		_player_name = lnbText [509100,[_index, 0]];
 
-		{
-			if (isPlayer leader _x) then {
-				if(_player_name == name leader (_x)) exitWith {
-					_voted_commander =  group leader (_x);
-				};
-				if(_player_name == "No Commander") exitWith {
-					_voted_commander = objNull;
-				};
-			};
-		} forEach WFBE_Client_Teams;
+		//--- wiki-wins: resolve by the row's stored team index, not a display-name match (duplicate names / mid-dialog renames picked the wrong commander)
+		_storedIndex = lnbValue [509100,[_index, 0]];
+		_voted_commander = if (_storedIndex < 0) then {objNull} else {group leader (WFBE_Client_Teams select _storedIndex)};
 
 		["RequestNewCommander", [side group player, _voted_commander]] Call WFBE_CO_FNC_SendToServer;
 		voted = true;

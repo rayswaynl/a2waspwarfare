@@ -67,7 +67,7 @@ switch (_request) do {
 			diag_log Format ["AICOMHCMERGE keeperA:%1 donorB:%2 movedUnits:%3 keeperSize:%4", _grpA, _grpB, _moved, count (units _grpA)];
 		};
 	};
-	case "delegate-ai": {_args spawn WFBE_CL_FNC_DelegateAI};
+	/*--- wiki-wins: removed dead "delegate-ai" case (no server sender repo-wide; superseded by delegate-townai / delegate-ai-static-defence) ---*/
 	case "delegate-ai-static-defence": {_args spawn WFBE_CL_FNC_DelegateAIStaticDefence};
 	case "endgame": {_args spawn WFBE_CL_FNC_EndGame};
 	case "group-join-accept": {_args call WFBE_CL_FNC_Groups_JoinAccepted};

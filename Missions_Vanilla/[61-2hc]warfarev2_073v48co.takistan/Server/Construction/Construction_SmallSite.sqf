@@ -96,7 +96,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 	};
 	
 	//--- Remove the logic from the list since it's built. Add it back if destroyed.
-	_logik setVariable ["wfbe_structures_logic", (_logik getVariable "wfbe_structures_logic") + [_nearLogic]];
+	_logik setVariable ["wfbe_structures_logic", (_logik getVariable "wfbe_structures_logic") - [_nearLogic]]; //--- wiki-wins: was + (double-append); MediumSite uses -
 };
 	
 {if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;
@@ -120,7 +120,7 @@ if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_CO
 	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] CBRadar registered. Registry size: %2.", str _side, count _cbrRegistry]] Call WFBE_CO_FNC_LogContent;
 };
 
-if(isAutoWallConstructingEnabled && !(_rlType in ["AARadar","CBRadar"]))then{
+if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","CBRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
 	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
 	_site setVariable ["WFBE_Walls", _defenses];
 } else {

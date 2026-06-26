@@ -1,7 +1,7 @@
 MenuAction = -1;
 
 _type = (missionNamespace getVariable 'WFBE_EASA_Vehicles') find (typeOf (vehicle player));
-if (_type == -1) exitWith {["ERROR", Format ["GUI_Menu_EASA.sqf: Player vehicle [%1] was not found within the list.", vehicle player]] Call WFBE_CO_FNC_LogContent};
+if (_type == -1) exitWith {closeDialog 0; ["ERROR", Format ["GUI_Menu_EASA.sqf: Player vehicle [%1] was not found within the list.", vehicle player]] Call WFBE_CO_FNC_LogContent}; //--- wiki-wins: close the blank dialog on unsupported vehicle
 _data = ((missionNamespace getVariable 'WFBE_EASA_Loadouts') select _type);
 _repairPointEASA = if (isNil "WFBE_CL_V_RepairPointEASAActive") then {false} else {WFBE_CL_V_RepairPointEASAActive};
 

@@ -508,7 +508,7 @@ switch (_args select 0) do {
 		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle (getPos _logic);
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
 		_townModel setPos (getPos _logic);
-		_townModel addEventHandler ["killed", {(_this select 0) Spawn WFBE_SE_FNC_OnBuildingKilled}];
+			/*--- wiki-wins: removed killed EH calling undefined WFBE_SE_FNC_OnBuildingKilled (threw a swallowed error on every bunker death); bunker dead-state is already polled via alive (_logic getVariable 'wfbe_camp_bunker') ---*/
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
 
@@ -517,6 +517,9 @@ switch (_args select 0) do {
 		if (_camp_sideID != _repairSideID) then {
 			Private ["_town"];
 			_logic setVariable ["sideID", _repairSideID, true];
+
+				//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
+				(_logic getVariable "wfbe_flag") setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]);
 
 			//--- Notify / update map if needed.
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;

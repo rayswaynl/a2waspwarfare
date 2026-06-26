@@ -10,8 +10,10 @@ WFBE_CL_FNC_HandlePVF = Compile preprocessFileLineNumbers "Client\Functions\Clie
 
 ["INITIALIZATION", "Init_HC.sqf: Running the headless client initialization."] Call WFBE_CO_FNC_LogContent;
 
-//--- We wait for the server full init (just in case!).
-sleep 20;
+//--- wiki-wins: was a blind `sleep 20` that raced server init. Wait (bounded ~20s) for the player
+//--- object instead of always blocking the full interval; proceeds early once seated, never hangs.
+private "_hcInitDeadline"; _hcInitDeadline = diag_tickTime + 20;
+waitUntil { uiSleep 0.5; (!isNull player) || (diag_tickTime > _hcInitDeadline) };
 
 //--- HC SIDE RESEAT (task #26): A2 OA auto-seats this -client into a random free playable slot, and one
 //--- HC reliably lands on a SYNCHRONIZED WEST warfare slot (mission.sqm id=229, sync 255). That makes the

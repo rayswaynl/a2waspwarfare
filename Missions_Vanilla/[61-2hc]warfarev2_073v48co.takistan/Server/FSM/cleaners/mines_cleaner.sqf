@@ -14,7 +14,7 @@ while {!WFBE_GameOver} do {
 		_mine_timer = _x select 1;
 		if((time - _mine_timer) >= _timer) then{
 			deleteVehicle (_x select 0);
-			mines = mines - _x;
+			mines = mines - [_x]; //--- wiki-wins: remove the [mine,time] pair itself, not its elements
 			_perfDeleted = _perfDeleted + 1;
 		};
 		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
