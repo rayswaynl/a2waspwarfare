@@ -383,15 +383,15 @@ while {true} do {
 			[2, _healthColor] call _RHUDSetColor;
 
 			//COMMANDER
-			_commanderText = " No Commander";
+			_commanderText = "No Commander";
 			if (!isNull commanderTeam) then {
-				_commanderText = Format [" %1", name (leader commanderTeam)];
+				_commanderText = Format ["%1", name (leader commanderTeam)];
 			} else {
 				//--- No human commander. The AI commander runs WEST/EAST when enabled (GUER is excluded
 				//--- server-side, Init_Server ~L1067), so show a stable, side-keyed human-like name + " (AI)"
 				//--- while the AI is actually in charge. Client-side deterministic = no server round-trip, JIP-safe.
 				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 1]) > 0 && {sideJoined in [west, east]}) then {
-					_commanderText = Format [" %1 (AI)", (switch (sideJoined) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
+					_commanderText = Format ["%1 (AI)", (switch (sideJoined) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
 				};
 			};
 			[4, [0.85, 0, 0, 1]] call _RHUDSetColor;
