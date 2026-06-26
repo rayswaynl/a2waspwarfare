@@ -146,6 +146,12 @@ WFBE_CL_FNC_CanRepairCampNearby = Compile preprocessFileLineNumbers "Client\Func
 WFBE_CL_FNC_GetRepairTruckServicePoints = Compile preprocessFileLineNumbers "Client\Functions\Client_GetRepairTruckServicePoints.sqf";
 WFBE_CL_FNC_CanUseRepairPointEASA = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseRepairPointEASA.sqf";
 WFBE_CL_FNC_CanUseTownCenterEASA = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseTownCenterEASA.sqf";	//--- GUER-only: EASA at friendly town centers (base-less faction has no service points)
+//--- EASA custom-kit framework (Client\Module\EASA\Kits): mounted weapons, appliqué armor, cosmetic field-mods.
+WFBE_CL_FNC_KitBuild = Compile preprocessFileLineNumbers "Client\Module\EASA\Kits\EASA_KitBuild.sqf";
+EASA_KitRemove = Compile preprocessFileLineNumbers "Client\Module\EASA\Kits\EASA_KitRemove.sqf";
+EASA_ApplyKit = Compile preprocessFileLineNumbers "Client\Module\EASA\Kits\EASA_ApplyKit.sqf";
+EASA_Kit_Fire = Compile preprocessFileLineNumbers "Client\Module\EASA\Kits\EASA_Kit_Fire.sqf";
+EASA_Kit_Armor = Compile preprocessFileLineNumbers "Client\Module\EASA\Kits\EASA_Kit_Armor.sqf";
 WFBE_CL_FNC_GetClosestAirport = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestAirport.sqf";
 WFBE_CL_FNC_GetClosestCamp = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestCamp.sqf";
 WFBE_CL_FNC_GetClosestDepot = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestDepot.sqf";
@@ -910,6 +916,18 @@ execVM "limitThirdPersonView.sqf";
 
 if ((missionNamespace getVariable "WFBE_C_ARTILLERY_UI") > 0) then {[] ExecVM "ca\modules\ARTY\data\scripts\init.sqf"}; //--- Artillery UI.
 if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_EASA") > 0) then {Call Compile preprocessFileLineNumbers "Client\Module\EASA\EASA_Init.sqf"}; //--- EASA.
+//--- EASA custom-kit propagation: rebuild a vehicle's LOCAL kit (visual + handlers) when its owner signals a change.
+"WFBE_KIT_SIGNAL" addPublicVariableEventHandler {
+	private ["_veh"];
+	_veh = _this select 1;
+	if (!isNull _veh && {!isNil "WFBE_CL_FNC_KitBuild"}) then {[_veh] call WFBE_CL_FNC_KitBuild};
+};
+//--- JIP reconcile: realise kits already present on vehicles at the moment this client finished joining.
+if (!isNil "WFBE_CL_FNC_KitBuild") then {
+	{
+		if (count (_x getVariable ["WFBE_KIT_Spec", []]) > 0) then {[_x] call WFBE_CL_FNC_KitBuild};
+	} forEach vehicles;
+};
 if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") > 0 && WF_A2_Vanilla) then {Call Compile preprocessFileLineNumbers "Client\Module\CM\CM_Init.sqf"}; //--- Countermeasures.
 
 /* Key Binding */

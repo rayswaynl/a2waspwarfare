@@ -241,7 +241,9 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_EASA") > 0) then {
 	WFBE_CL_V_RepairPointEASAActive = false;
 	_currentUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 	_easaLevel = _currentUpgrades select WFBE_UP_EASA;
-	if (_easaLevel > 0) then {
+	//--- EASA tier gate: aircraft loadouts require EASA L2; ground vehicles + custom kits unlock at L1.
+	_needLevel = if (vehicle player isKindOf "Air") then {2} else {1};
+	if (_easaLevel >= _needLevel) then {
 		if (typeOf(vehicle player) in (missionNamespace getVariable 'WFBE_EASA_Vehicles')) then {
 			if (driver (vehicle player) == player) then {
 				if (!(isNull _csp)) then {

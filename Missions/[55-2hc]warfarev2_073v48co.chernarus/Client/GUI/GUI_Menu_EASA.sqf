@@ -92,6 +92,7 @@ while {alive player && dialog} do {
 						{(vehicle player) addWeapon _x} forEach (_defaultLoadout select 0);
 					};
 					(vehicle player) setVariable ["WFBE_EASA_Setup", nil, true];
+					if (!isNil "EASA_ApplyKit") then {[vehicle player, []] call EASA_ApplyKit}; //--- strip any custom kit on factory-restore.
 					hint "Factory loadout restored.";
 				};
 				closeDialog 0;
