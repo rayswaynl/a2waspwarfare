@@ -594,10 +594,10 @@ while {!WFBE_GameOver} do {
 
 					//--- 2. SPAWN new radar (only for WEST/EAST — resistance has no CBR registry).
 					if (_newSide == west || _newSide == east) then {
-						//--- Both sides use Land_Antenna (confirmed-present whip mast). Land_telek1 assessed
+						//--- b760: airfield CBR radar model is now the GUER game-file artillery radar (was a Land_Antenna placeholder).
 						//---   as likely absent at runtime for this content set — using Land_Antenna for both.
 						//---   Visual distinctness is provided by the side-specific dressing template.
-						_radarClass = "Land_Antenna";
+						_radarClass = if (IS_chernarus_map_dependent) then {"Gue_WarfareBArtilleryRadar"} else {"TK_GUE_WarfareBArtilleryRadar_EP1"}; //--- Ray 2026-06-26: airfield CBR uses the GUER game-file artillery radar for BOTH sides (owning-side identity is carried by the WFBE_NEURODEF_CBRADAR_<SIDE> dressing below).
 
 						//--- Position: 60 m east of airfield logic (off the runway centerline).
 						_radarPos = if !(isNull _airfieldLogic) then {

@@ -24,6 +24,7 @@ while {true} do {
 				[_uid, WFBE_STAT_PLAYTIME, WFBE_C_STATS_FLUSH_INTERVAL] call WFBE_SE_FNC_RecordStat;
 				_sideNum = switch (side _x) do { case west: {1}; case east: {2}; case resistance: {3}; default {0} };
 				[_uid, _sideNum] call WFBE_SE_FNC_RecordStatSide;
+				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, name _x]; //--- PR#84: cache the in-game name to attach to this UID's next flushed segment.
 			};
 		};
 	} forEach (call BIS_fnc_listPlayers);
@@ -42,8 +43,9 @@ while {true} do {
 				_csv = "";
 				{ _csv = _csv + (str _x) + ","; } forEach _buf;   // 15 deltas
 				_csv = _csv + (str _sideNum);                      // + trailing side
-				_line = _line + "|" + _uid + ":" + _csv;
+				_line = _line + "|" + _uid + ":" + _csv + "~" + (missionNamespace getVariable ["WFBE_STAT_NAME_" + _uid, ""]); //--- PR#84: append ~<name> after the numeric csv+side (numeric stays before the ~).
 				missionNamespace setVariable ["WFBE_STAT_BUF_" + _uid, nil];   // clear buffer (delta sent)
+				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, nil]; //--- PR#84: clear cached name.
 			};
 		} forEach WFBE_STATS_DIRTY_UIDS;
 		WFBE_STATS_DIRTY_UIDS = [];
