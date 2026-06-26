@@ -18,6 +18,16 @@ waitUntil {commonInitComplete && serverInitFull};
 //--- Skip this script if the server is trying to run this.
 if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
 
+//--- b761 (Ray 2026-06-26): a headless client is NOT a warfare player and must never run the human enrollment
+//--- resolver - it reseats itself to a civilian group (Init_HC) so it always bails the 3-retry self-heal and
+//--- adds fresh-round seat-magnet churn. Skip it once registered. WFBE_HEADLESS_<uid> is set ONLY for HCs
+//--- (Server_HandleSpecial; cleared in Server_OnPlayerDisconnected), so a human can NEVER match this. (If the
+//--- connected-hc PVF hasn't landed yet the HC harmlessly runs the resolver once; the stamp-on-demand tier
+//--- below also excludes HCs because they never store a RequestJoin body.)
+if (!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil]}) exitWith {
+	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2].", _name, _uid];
+};
+
 //--- We try to get the player and it's group from the playableUnits.
 //--- B74.2.2: was 10 (a 5s ceiling). Widened to 60 (30s) so a JIP seat under heavy-AI / low-server-FPS
 //--- load has time to surface in playableUnits with a resolved getPlayerUID before we bail. 30s matches
@@ -53,8 +63,42 @@ while {_max > 0 && isNull _team} do {
 		} forEach WFBE_PRESENTSIDES;
 	};
 
-	if (isNull _team) then {sleep 0.5};
-	_max = _max - 1;
+	//--- b761 (Ray 2026-06-26) STAMP-ON-DEMAND: fresh-round HC seat-magnet churn (Init_HC reseat) can land a
+		//--- human's body in a REAL synchronized editor slot whose GROUP was never wfbe_side-stamped at boot
+		//--- (Init_Server ~718 stamps the boot-time group object only; nothing re-binds a connecting human), so
+		//--- all three lookups above miss and the handler bails forever on a fresh round (mature rounds inherit a
+		//--- bot's already-stamped slot and resolve instantly). Self-heal: if the RequestJoin body (humans only -
+		//--- HCs never RequestJoin, so this excludes them) is genuinely one of the side-logic's synchronizedObjects
+		//--- editor slots, re-stamp its CURRENT group in place (mirrors Init_Server 718-719) and adopt it into the
+		//--- side's wfbe_teams (append, no-dup, broadcast). Guarded on isNull _team so a normal/mature join never
+		//--- reaches here. A2-OA-1.64-safe: synchronizedObjects/side/group/getVariable/setVariable are all core.
+		if (isNull _team && {(missionNamespace getVariable ["WFBE_C_ENROLL_STAMP_ON_DEMAND", 1]) > 0}) then {
+			private ["_sod_body","_sod_g","_sod_side","_sod_logik","_sod_teams"];
+			_sod_body = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+			if (!isNull _sod_body && {alive _sod_body}) then {
+				_sod_side = side _sod_body;
+				_sod_logik = _sod_side Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _sod_logik && {_sod_body in (synchronizedObjects _sod_logik)}) then {
+					_sod_g = group _sod_body;
+					if (isNil {_sod_g getVariable "wfbe_side"}) then {
+						_sod_g setVariable ["wfbe_side", _sod_side];
+						_sod_g setVariable ["wfbe_persistent", true];
+					};
+					_sod_teams = _sod_logik getVariable ["wfbe_teams", []];
+					if (!(_sod_g in _sod_teams)) then {
+						_sod_teams = _sod_teams + [_sod_g];
+						_sod_logik setVariable ["wfbe_teams", _sod_teams, true];
+					};
+					_team = _sod_g;
+					diag_log Format ["[WFBE][B761 STAMP-ON-DEMAND] adopted [%1] [%2] into %3 synced slot-group; wfbe_teams now %4", _name, _uid, _sod_side, count _sod_teams];
+				} else {
+					if (_max <= 1) then {diag_log Format ["[WFBE][B761 STAMP-ON-DEMAND] MISS [%1] [%2]: RequestJoin body not in %3 synchronizedObjects after window - escalate.", _name, _uid, _sod_side]};
+				};
+			};
+		};
+
+		if (isNull _team) then {sleep 0.5};
+		_max = _max - 1;
 };
 if (!isNull _team) then {diag_log Format ["[WFBE][B746 CONNECT] team resolved for [%1] [%2] (%3 budget left)", _name, _uid, _max]};
 
