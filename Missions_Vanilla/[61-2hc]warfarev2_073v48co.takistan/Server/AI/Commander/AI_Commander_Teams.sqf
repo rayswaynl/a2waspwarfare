@@ -433,7 +433,7 @@ if (count _live > 0) then {
 	//--- premium template). EXP=0 (or a single candidate) reproduces a pure uniform draw. A2-OA-safe: ^ power op,
 	//--- configFile/getNumber are core 1.64 commands, manual index counter, outer _x captured into _cwIdx before the
 	//--- inner forEach rebinds _x to the unit classname (the documented _ti gotcha at L282).
-	private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwEff","_cwW","_cwRoll","_cwAcc","_cwI"];
+	private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwEff","_cwW","_cwRoll","_cwAcc","_cwI","_cwHasInf"];
 	_cwBucket = _buckets select _chosen;
 	_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_EFF_BIAS_EXP", 0.5];
 	_pick = -1;
@@ -445,10 +445,10 @@ if (count _live > 0) then {
 		{
 			_cwIdx  = _x;                       //--- capture: the inner forEach below rebinds _x to the unit classname.
 			_cwTmpl = _templates select _cwIdx;
-			_cwEff = 0;
-			{ _cwEff = _cwEff + (getNumber (configFile >> "CfgVehicles" >> _x >> "cost")) } forEach _cwTmpl; //--- BI combat-threat value, NOT the mission economy price.
+			_cwEff = 0; _cwHasInf = false;
+			{ _cwEff = _cwEff + (getNumber (configFile >> "CfgVehicles" >> _x >> "cost")); if (getText (configFile >> "CfgVehicles" >> _x >> "simulation") == "soldier") then {_cwHasInf = true} } forEach _cwTmpl; //--- BI combat-threat value, NOT the mission economy price.
 			if (_cwEff < 1) then {_cwEff = 1}; //--- floor: classes with no config cost still keep a non-zero chance.
-			_cwW = _cwEff ^ _cwExp;
+			_cwW = _cwEff ^ _cwExp; if (_cwHasInf) then {_cwW = _cwW * (missionNamespace getVariable ["WFBE_C_AICOM_DISMOUNT_BIAS", 1.6])}; //--- B756 (Ray 2026-06-26): boost dismount-carrying templates (IFV/APC + squad) over bare gun-vehicles, so "heavy" leans mechanized-infantry not bare MBT.
 			_cwWeights set [count _cwWeights, _cwW];
 			_cwSum = _cwSum + _cwW;
 		} forEach _cwBucket;

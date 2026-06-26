@@ -463,7 +463,7 @@ if (isNull _airVeh) then {
 		} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 		_nRiders  = count _riders;
 		_rIdx     = 0;
-		_assigned = 0;
+		_assigned = 0; private ["_totalSeats","_seatOK"]; _totalSeats = 0; { _totalSeats = _totalSeats + (_x emptyPositions "cargo") } forEach _ridePool; _seatOK = (_totalSeats >= (_nRiders * (missionNamespace getVariable ["WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC", 0.8]))); //--- B756 (Ray 2026-06-26) seat-capacity gate: only mount if the ride pool seats most of the squad; a PARTIAL mount splits the team (the hull drives off, the foot element strands -> ASSAULT_STRANDED). Below the fraction the squad stays foot-cohesive (the hull paces the group road-march).
 		{
 			_veh = _x;
 			_seatLeft = _veh emptyPositions "cargo";
@@ -471,7 +471,7 @@ if (isNull _airVeh) then {
 			while {_seatLeft > 0 && {_rIdx < _nRiders}} do {
 				_rider = _riders select _rIdx;
 				_rIdx  = _rIdx + 1;
-				if (alive _rider && {vehicle _rider == _rider}) then {
+				if (_seatOK && {alive _rider} && {vehicle _rider == _rider}) then { //--- B756: only board if the squad mostly fits (else stay foot-cohesive).
 					_rider assignAsCargo _veh;
 					[_rider] orderGetIn true;
 					_seatLeft = _seatLeft - 1;
@@ -628,21 +628,22 @@ while {!WFBE_GameOver && _alive} do {
 					//--- FOOT-MARCH a leg the hulls should DRIVE, splitting the team. Re-seat on-foot non-crew infantry into drivable (armed,
 					//--- if ARMED_TRANSPORT_ONLY) hulls with free cargo, mirroring the once-only ground mount-up below. No-op on the first
 					//--- march (already mounted). A2-OA-safe + NON-FROZEN: assignAsCargo/orderGetIn are instant; overflow/foot still road-march.
-					if ((missionNamespace getVariable ["WFBE_C_AICOM_REMOUNT_LONG_LEG", 1]) > 0) then {
+					private "_rmAssigned"; _rmAssigned = 0; if ((missionNamespace getVariable ["WFBE_C_AICOM_REMOUNT_LONG_LEG", 1]) > 0) then {
 						private ["_rmRiders","_rmIdx","_rmN","_rmSeat","_rmRider"];
 						_rmRiders = [];
 						{ if (alive _x && {vehicle _x == _x}) then {_rmRiders = _rmRiders + [_x]} } forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
-						_rmN = count _rmRiders; _rmIdx = 0;
+						_rmN = count _rmRiders; _rmIdx = 0; private ["_rmTot","_rmSeatOK"]; _rmTot = 0; { if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (weapons _x)) > 0}}) then {_rmTot = _rmTot + (_x emptyPositions "cargo")} } forEach _vehicles; _rmSeatOK = (_rmTot >= (_rmN * (missionNamespace getVariable ["WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC", 0.8]))); //--- B756 (Ray 2026-06-26): re-mount seat-capacity gate (don't re-seat into a partial mount that re-splits the team).
 						{
 							if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} && {(_x emptyPositions "cargo") > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (weapons _x)) > 0}}) then {
 								_rmSeat = _x emptyPositions "cargo";
 								while {_rmSeat > 0 && {_rmIdx < _rmN}} do {
 									_rmRider = _rmRiders select _rmIdx; _rmIdx = _rmIdx + 1;
-									if (alive _rmRider && {vehicle _rmRider == _rmRider}) then {_rmRider assignAsCargo _x; [_rmRider] orderGetIn true; _rmSeat = _rmSeat - 1};
+									if (_rmSeatOK && {alive _rmRider} && {vehicle _rmRider == _rmRider}) then {_rmRider assignAsCargo _x; [_rmRider] orderGetIn true; _rmSeat = _rmSeat - 1; _rmAssigned = _rmAssigned + 1};
 								};
 							};
 						} forEach _vehicles;
 					};
+					if (_rmAssigned > 0) then {diag_log ("AICOMSTAT|v1|EVENT|" + str (side _team) + "|" + str (round (time / 60)) + "|REMOUNT|seated=" + str _rmAssigned + "|leg=" + str (round ((leader _team) distance _dest)))}; //--- B756 (Ray 2026-06-26): REMOUNT telemetry - prove the long-leg re-seat fires + how many dismounted infantry it re-mounts before the far road-march.
 					//--- Road convoy: AWARE+COLUMN road-march posture for the long leg. A2-fix (2026-06-14):
 					//--- the A3-only forceFollowRoad was removed (it throws "Unknown operation" on OA); the
 					//--- road-bias comes from the road-SNAPPED MOVE nodes below + COLUMN formation (the same

@@ -275,7 +275,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					{ if (!_mounted && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "LandVehicle"} && {canMove (vehicle _x)}) then {_mounted = true} } forEach (units _team);
 					_reachFoot    = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500];
 					_reachMounted = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
-					_teamReach = if (_mounted) then {_reachMounted} else {_reachFoot};
+					_teamReach = if (_mounted) then {_reachMounted} else {_reachFoot}; private "_teamAir"; _teamAir = false; { if (!_teamAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_teamAir = true} } forEach (units _team); //--- B756 (Ray 2026-06-26): does this team carry a TRANSPORT heli? gates naval-HVT targets to air teams only (no ground sea-stranding).
 					//--- WAVE-1 CAUSE-2: live (non-expired) blacklist towns for THIS team. Prune expired entries
 					//--- back onto the team var, then build _uncapturedF = uncaptured minus blacklisted. GUARDRAIL:
 					//--- if excluding the blacklist would leave NO uncaptured town, clear the blacklist and fall back
@@ -298,7 +298,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					{
 						_spearT = _x;
 						if (isNull _target && {!isNull _spearT}) then {
-							if (((_spearT getVariable "sideID") != _sideID) && {!(_spearT in _blTowns)} && {(_ldrPos distance _spearT) <= _teamReach}) then {
+							if (((_spearT getVariable "sideID") != _sideID) && {!(_spearT in _blTowns)} && {(_ldrPos distance _spearT) <= _teamReach} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_spearT getVariable ["wfbe_is_naval_hvt", false])} || _teamAir}) then { //--- B756: naval-HVT targets are air-team-only (offshore decks) - a ground team skips them (no sea-stranding) and takes a land target instead.
 								//--- Per-target quota = base concentration scaled by garrison tier
 								//--- (wfbe_town_type maps to defender group count in
 								//--- Server_GetTownGroupsDefender.sqf: Tiny 3, Small 5, Medium 6,
@@ -332,7 +332,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_nearReach = objNull; _nearReachD = 1e9;
 						{
 							_tgtDist = _ldrPos distance _x;
-							if (_tgtDist <= _teamReach && {_tgtDist < _nearReachD}) then {_nearReachD = _tgtDist; _nearReach = _x};
+							if (_tgtDist <= _teamReach && {_tgtDist < _nearReachD} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _teamAir}) then {_nearReachD = _tgtDist; _nearReach = _x}; //--- B756: ground teams skip naval HVTs in the nearest-town fallback too.
 						} forEach _avail;
 						if (!isNull _nearReach) then {
 							_target = _nearReach;
