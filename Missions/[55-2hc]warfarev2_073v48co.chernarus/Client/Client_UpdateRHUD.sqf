@@ -127,22 +127,20 @@ _RHUDUpdateFPS = {
 };
 
 _RHUDUpdateServerFPSRow = {
-	private ["_artySuffix"];
-	_artySuffix = call _RHUDUpdateArty;	//--- b760: compute the compact arty-cooldown suffix once; both branches append it to the FPS value.
 	_clientFPS = round(diag_fps);
 	_serverFPS = missionNamespace getVariable "SERVER_FPS_GUI";
 	if (isNil {_serverFPS}) exitWith {
 		_hudFPSColor = [0, 1, 0, 1];
 		if (_clientFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 		if (_clientFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-		[14, format ["%1 / ...  VD %2%3", _clientFPS, round viewDistance, _artySuffix]] call _RHUDSetText;
+		[14, format ["%1 / ...  VD %2", _clientFPS, round viewDistance]] call _RHUDSetText;
 		[14, _hudFPSColor] call _RHUDSetColor;
 	};
 
 	_hudFPSColor = [0, 1, 0, 1];
 	if (_clientFPS < 40 || _serverFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 	if (_clientFPS < 20 || _serverFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-	[14, format ["%1 / %2  VD %3%4", _clientFPS, _serverFPS, round viewDistance, _artySuffix]] call _RHUDSetText;
+	[14, format ["%1 / %2  VD %3", _clientFPS, _serverFPS, round viewDistance]] call _RHUDSetText;
 	[14, _hudFPSColor] call _RHUDSetColor;
 };
 
@@ -470,7 +468,7 @@ while {true} do {
 			[8, [0, 0.825294, 0.449803, 1]] call _RHUDSetColor;
 			[10, _supplyText] call _RHUDSetText;
 			[10, [1, 0.8831, 0, 1]] call _RHUDSetColor;
-			[12, _baseText] call _RHUDSetText;
+			[12, _baseText + (call _RHUDUpdateArty)] call _RHUDSetText;	//--- b764 (Ray 2026-06-26): arty cooldown suffix ("  Arty Rdy" / "  Arty 12s") folded onto the Base row (computed per-tick for a smooth countdown; "" when the side fields no artillery).
 			[12, _baseColor] call _RHUDSetColor;
 
 			if (_side == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {

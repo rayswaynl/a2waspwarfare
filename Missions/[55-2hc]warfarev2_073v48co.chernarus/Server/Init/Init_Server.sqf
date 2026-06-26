@@ -18,8 +18,6 @@ if (WF_A2_Vanilla) then {AISquadRespawn = Compile preprocessFile "Server\AI\AI_S
 if !(WF_A2_Vanilla) then {AIAdvancedRespawn = Compile preprocessFile "Server\AI\AI_AdvancedRespawn.sqf"};
 AIMoveTo = Compile preprocessFile "Server\AI\Orders\AI_MoveTo.sqf";
 AIPatrol = Compile preprocessFile "Server\AI\Orders\AI_Patrol.sqf";
-//--- NOT WIRED - AITownPatrol is never called anywhere; town patrols run via Server_GetTownPatrol. Compile shelved.
-//AITownPatrol = Compile preprocessFile "Server\AI\Orders\AI_TownPatrol.sqf";
 AITownResitance = Compile preprocessFile "Server\AI\AI_Resistance.sqf";
 AIWPAdd = Compile preprocessFile "Server\AI\Orders\AI_WPAdd.sqf";
 AIWPRemove = Compile preprocessFile "Server\AI\Orders\AI_WPRemove.sqf";
@@ -31,7 +29,6 @@ ChangeAICommanderFunds = Compile preprocessFile "Server\Functions\Server_ChangeA
 ConstructDefense = Compile preprocessFile "Server\Construction\Construction_StationaryDefense.sqf";
 CreateDefenseTemplate = Compile preprocessFile "Server\Functions\Server_CreateDefenseTemplate.sqf";
 Server_ConstructPosition = Compile preprocessFile "Server\Functions\Server_ConstructPosition.sqf";
-HandleBuildingRepair = Compile preprocessFile "Server\Functions\Server_HandleBuildingRepair.sqf";
 GetAICommanderFunds = Compile preprocessFile "Server\Functions\Server_GetAICommanderFunds.sqf";
 //--- B74.2 (Ray 2026-06-24, directive #5): AI-commander structure-sell / recycle worker (dark by default, see WFBE_C_AICOM_BASE_SELL_ENABLE).
 WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BaseSell.sqf";
@@ -40,7 +37,6 @@ HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sq
 HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";
 MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
-SetTownPatrols = compile preprocessfilelinenumbers "Server\FSM\server_patrols.sqf";
 
 UpdateTeam = Compile preprocessFile "Server\Functions\Server_UpdateTeam.sqf";
 /* UpdateSupplyTruck = Compile preprocessFile "Server\AI\AI_UpdateSupplyTruck.sqf"; */
