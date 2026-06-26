@@ -94,7 +94,6 @@ ARTY_Prep = Compile preprocessFile "Common\Module\Arty\ARTY_mobileMissionPrep.sq
 ARTY_Finish = Compile preprocessFile "Common\Module\Arty\ARTY_mobileMissionFinish.sqf";
 
 //--- New Fnc.
-WFBE_CO_FNC_AreWaypointsComplete = Compile preprocessFileLineNumbers "Common\Functions\Common_AreWaypointsComplete.sqf";
 WFBE_CO_FNC_ArrayPush = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayPush.sqf";
 WFBE_CO_FNC_ArrayRemoveIndex = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayRemoveIndex.sqf";
 WFBE_CO_FNC_ArrayShift = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShift.sqf";
@@ -179,7 +178,6 @@ unitMarker = 0;
 
 //--- Load the profile variables if needed (Requires at least version 1.62 build 97105).
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER > 97105 || ARMA_VERSION > 162) then {
-	WFBE_CO_FNC_GetProfileVariable = Compile preprocessFileLineNumbers "Common\Functions\Common_GetProfileVariable.sqf";
 	WFBE_CO_FNC_SaveProfile = Compile preprocessFileLineNumbers "Common\Functions\Common_SaveProfile.sqf";
 	WFBE_CO_FNC_SetProfileVariable = Compile preprocessFileLineNumbers "Common\Functions\Common_SetProfileVariable.sqf";
 };

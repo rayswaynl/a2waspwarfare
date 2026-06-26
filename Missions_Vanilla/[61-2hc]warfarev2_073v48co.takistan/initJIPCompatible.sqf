@@ -357,12 +357,6 @@ if (isHeadLessClient) then {
 	execVM "Headless\Init\Init_HC.sqf";
 };
 
-/* Marty : old wasp script using resources unecessarely. Will be removed after some days if its ok.
-//// Wasp part
-WASP_procInitComm=Compile PreprocessFile "WASP\common\procInitComm.sqf";
-if(local player)then{ExecVM "WASP\Init_Client.sqf"};
-*/
-
 /* Marty : Creation of global variable than can be used everywhere to determine the faction on the map. */
 // If the map running is chernarus then east faction must be russian and NOT takistanish (useful to customize audio sounds and so on). West faction is always american whatever the map :
 IS_Takistan_Faction_On_This_Map = false;
