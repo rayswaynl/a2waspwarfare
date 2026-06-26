@@ -127,20 +127,22 @@ _RHUDUpdateFPS = {
 };
 
 _RHUDUpdateServerFPSRow = {
+	private ["_artySuffix"];
+	_artySuffix = call _RHUDUpdateArty;	//--- b760: compute the compact arty-cooldown suffix once; both branches append it to the FPS value.
 	_clientFPS = round(diag_fps);
 	_serverFPS = missionNamespace getVariable "SERVER_FPS_GUI";
 	if (isNil {_serverFPS}) exitWith {
 		_hudFPSColor = [0, 1, 0, 1];
 		if (_clientFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 		if (_clientFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-		[14, format ["%1 / ...  VD %2", _clientFPS, round viewDistance]] call _RHUDSetText;
+		[14, format ["%1 / ...  VD %2%3", _clientFPS, round viewDistance, _artySuffix]] call _RHUDSetText;
 		[14, _hudFPSColor] call _RHUDSetColor;
 	};
 
 	_hudFPSColor = [0, 1, 0, 1];
 	if (_clientFPS < 40 || _serverFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
 	if (_clientFPS < 20 || _serverFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
-	[14, format ["%1 / %2  VD %3", _clientFPS, _serverFPS, round viewDistance]] call _RHUDSetText;
+	[14, format ["%1 / %2  VD %3%4", _clientFPS, _serverFPS, round viewDistance, _artySuffix]] call _RHUDSetText;
 	[14, _hudFPSColor] call _RHUDSetColor;
 };
 
@@ -243,7 +245,7 @@ _RHUDSetFullPosition = {
 	//--- B75 (guer-tech): two GUER-only rows reuse the spare control pairs 15/16 (Tech Kills) and 17/18 (FOB) - kills
 	//--- ABOVE the FOB row. Positioned for everyone here; shown + filled only for resistance (hidden otherwise).
 	//--- b757 (Trello #219): + artillery-cooldown row pair 27/28 appended after master's GUER rows.
-	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[23,24],[25,26],[27,28]];
+	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[23,24],[25,26]];	//--- b760: arty pair [27,28] removed; the cooldown is now folded into the FPS C/S line (13/14).
 	for "_idx" from 0 to ((count _layoutPairs) - 1) do {
 		_rowY = _startY + (_idx * _rowH);
 		(_controls select ((_layoutPairs select _idx) select 0)) ctrlSetPosition [_labelX, _rowY, _labelW, _lineH];
@@ -260,18 +262,13 @@ _RHUDSetFullPosition = {
 // initialised to -1000 in Init_Client) and the upgrade-scaled reload interval that the fire
 // action itself uses to gate cooldown. No server round-trip, no publicVariable.
 _RHUDUpdateArty = {
-	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last", "_valTxt", "_valColor"];
-	//--- Only show the row when this side actually fields artillery.
-	if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) <= 0) exitWith {
-		[27, ""] call _RHUDSetText;
-		[28, ""] call _RHUDSetText;
-	};
+	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last"];
+	//--- b760: folded into the FPS C/S line as a compact "  Arty ..." suffix (no standalone box).
+	//--- Returns the suffix string ("" when this side fields no artillery); the FPS-row builder appends it.
+	if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) <= 0) exitWith {""};
 
 	_intervals = missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS";
-	if (isNil "_intervals") exitWith {
-		[27, ""] call _RHUDSetText;
-		[28, ""] call _RHUDSetText;
-	};
+	if (isNil "_intervals") exitWith {""};
 	_ups = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 	_fireTime = _intervals select (_ups select WFBE_UP_ARTYTIMEOUT);
 
@@ -279,18 +276,10 @@ _RHUDUpdateArty = {
 	if (isNil "_last") then {_last = -1000};
 	_elapsed = time - _last;
 
-	[27, "Arty:"] call _RHUDSetText;
-	if (_elapsed > _fireTime) then {
-		_valTxt = localize "STR_WF_TACTICAL_Available";
-		_valColor = [0.451, 1, 0.278, 1];
-	} else {
-		_remain = round (_fireTime - _elapsed);
-		if (_remain < 0) then {_remain = 0};
-		_valTxt = Format ["%1 %2", _remain, localize "STR_WF_Seconds"];
-		_valColor = [0.278, 0.510, 1, 1];
-	};
-	[28, _valTxt] call _RHUDSetText;
-	[28, _valColor] call _RHUDSetColor;
+	if (_elapsed > _fireTime) exitWith {"  Arty Rdy"};
+	_remain = round (_fireTime - _elapsed);
+	if (_remain < 0) then {_remain = 0};
+	Format ["  Arty %1s", _remain]
 };
 
 sleep 10;
@@ -363,6 +352,7 @@ while {true} do {
 					} else {
 						{[_x, false] call _RHUDSetShow} forEach [15,16,17,18];
 					};
+				{[_x, false] call _RHUDSetShow} forEach [27,28];	//--- b760: arty box folded into the FPS C/S line; keep its now-unused controls hidden.
 				_labelsApplied = true;
 				_hiddenApplied = false;
 			};
@@ -396,7 +386,16 @@ while {true} do {
 
 			//COMMANDER
 			_commanderText = " No Commander";
-			if (!isNull commanderTeam) then {_commanderText = Format [" %1", name (leader commanderTeam)]};
+			if (!isNull commanderTeam) then {
+				_commanderText = Format [" %1", name (leader commanderTeam)];
+			} else {
+				//--- No human commander. The AI commander runs WEST/EAST when enabled (GUER is excluded
+				//--- server-side, Init_Server ~L1067), so show a stable, side-keyed human-like name + " (AI)"
+				//--- while the AI is actually in charge. Client-side deterministic = no server round-trip, JIP-safe.
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 1]) > 0 && {sideJoined in [west, east]}) then {
+					_commanderText = Format [" %1 (AI)", (switch (sideJoined) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
+				};
+			};
 			[4, [0.85, 0, 0, 1]] call _RHUDSetColor;
 			[4, _commanderText] call _RHUDSetText;
 
@@ -489,7 +488,7 @@ while {true} do {
 
 				call _RHUDUpdateServerFPSRow;
 			call _RHUDUpdateUpgrade;
-			call _RHUDUpdateArty;
+			/* b760: arty cooldown is folded into the FPS C/S line via _RHUDUpdateServerFPSRow; no standalone row. */
 			};
 		};
 
