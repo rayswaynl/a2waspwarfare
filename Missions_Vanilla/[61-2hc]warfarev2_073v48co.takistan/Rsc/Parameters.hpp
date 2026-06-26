@@ -357,6 +357,12 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Enabled_Upgrade","$STR_WF_Enabled"};
 		default = 2;
 		};
+	class WFBE_C_MODULE_AUTO_CM_OA {
+		title = "$STR_WF_PARAMETER_AutoCM_OA";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
 	class WFBE_C_MODULE_WFBE_EASA {
 		title = "$STR_WF_PARAMETER_EASA";
 		values[] = {0,1};
