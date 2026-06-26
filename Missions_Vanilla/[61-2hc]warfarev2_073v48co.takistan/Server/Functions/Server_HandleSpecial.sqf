@@ -479,6 +479,40 @@ switch (_args select 0) do {
 				//--- Add the Headless client to our candidates.
 				missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], group _hc];
 				missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]];
+
+				//--- b763 (Ray 2026-06-26): PRUNE the HC's boot-orphaned magnet slot-team from each player side's
+				//--- wfbe_teams. The engine seat-magnets an HC onto a synchronized WEST/EAST playable slot BEFORE
+				//--- Init_Server's team loop, which stamps that slot-group into wfbe_teams (~L743); the connect-resolver
+				//--- then resolves the HC as a player-team and the roster-push lists it in the commander vote (an HC
+				//--- body returns isPlayer==true). Init_HC reseats the HC out to a civilian group but nothing removes
+				//--- the vacated slot-group -> it lingers in the vote roster / tally. Race-free: this runs in the
+				//--- connected-hc handler (post owner-retry), discriminating by the HC BODY _hc and the slot's
+				//--- wfbe_uid==this HC's UID. A real player team is NEVER matched (its leader is a live human != _hc,
+				//--- and an emptied real team carries the PLAYER's wfbe_uid, not the HC's). A2-OA-safe: GetSideLogic
+				//--- OBJECT, plain group getVariable (no [name,default] on a group), forEach, ==, typeName.
+				{
+					private ["_sd","_slog","_st","_keep","_lead","_drop","_us"];
+					_sd = _x;
+					_slog = _sd Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _slog && {!isNil {_slog getVariable "wfbe_teams"}}) then {
+						_st = _slog getVariable "wfbe_teams";
+						if (typeName _st == "ARRAY") then {
+							_keep = [];
+							{
+								_lead = leader _x;
+								_drop = false;
+								if (!isNull _lead && {_lead == _hc}) then {_drop = true};
+								if (isNull _lead) then {_us = _x getVariable "wfbe_uid"; if (!isNil "_us" && {_us == _uid}) then {_drop = true}};
+								if (!_drop) then {_keep = _keep + [_x]};
+							} forEach _st;
+							if (count _keep != count _st) then {
+								_slog setVariable ["wfbe_teams", _keep, true];
+								_slog setVariable ["wfbe_teams_count", count _keep];
+								diag_log (Format ["HCSIDE|v1|teamprune|uid=%1|side=%2|removed=%3", _uid, str _sd, (count _st) - (count _keep)]);
+							};
+						};
+					};
+				} forEach [west, east];
 			} else {
 				["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] Owner ID is still [0] after %2 retries, it is server controlled.",_hc, _retries]] Call WFBE_CO_FNC_LogContent;
 			};
