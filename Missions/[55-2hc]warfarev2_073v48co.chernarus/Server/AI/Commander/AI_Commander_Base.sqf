@@ -128,13 +128,13 @@ _nearUsableRoad = {
 };
 
 _findBuildPos = {
-	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries"];
+	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear"];
 	_rmin = _this select 0; _rmax = _this select 1;
 	_nearRoad = if (count _this > 2) then {_this select 2} else {0};
 	//--- the USABLE-road filter rejects more candidates than the old bare nearRoads gate,
 	//--- so give the near-road mode more tries to find a paved lane to sit beside.
 	_tries = if (_nearRoad == 1) then {40} else {24};
-	_ok = false; _try = 0; _haveDry = false; _best = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+	_ok = false; _try = 0; _haveDry = false; _haveClear = false; _best = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
 	_p = _best;
 	while {!_ok && _try < _tries} do {
 		_ang = random 360;
@@ -172,6 +172,7 @@ _findBuildPos = {
 						//--- Ray reported. nearRoads 9 catches any carriageway node under the footprint; the chosen road is
 						//--- >12m off so it is not caught; the 40-try near-road budget refinds a clean spot.
 						if (!_blocked && {count (_cand nearRoads 9) > 0}) then {_blocked = true};
+							if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true}; //--- AICOM v2 (Ray): track best ROAD-CLEAR dry candidate -> the fallback prefers it over an on-road _best.
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
@@ -196,6 +197,7 @@ _findBuildPos = {
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
 				if (count (_p nearRoads 22) == 0) then {
+						if (!_haveClear) then {_bestClear = _p; _haveClear = true}; //--- AICOM v2 (Ray): best road-clear dry candidate -> the fallback prefers it over an on-road _best.
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
@@ -207,7 +209,7 @@ _findBuildPos = {
 		_try = _try + 1;
 	};
 	//--- try-budget failure: hand back the best dry-land candidate (never water).
-	if (!_ok && _haveDry) then {_p = _best};
+	if (!_ok) then {_p = if (_haveClear) then {_bestClear} else {if (_haveDry) then {_best} else {_p}}}; //--- AICOM v2 (Ray): prefer the best ROAD-CLEAR fallback over an on-road _best, so structures stop landing on roads in road-dense base spots.
 	_p
 };
 
@@ -405,13 +407,11 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				_pos = [0,0,0];
 				_placed = false;
 				if (_x == "ServicePoint") then {
-					_roads = _hqPos nearRoads 200;
-					_cand = [];
-					{ if (((getPos _x) distance _hqPos) > 25) then {_cand = _cand + [_x]} } forEach _roads;
-					if (count _cand > 0) then {
-						_pos = getPos (_cand select (floor (random (count _cand))));
-						if (!(surfaceIsWater _pos)) then {_placed = true};
-					};
+					//--- AICOM v2 (Ray 2026-06-27): place the Service Point BESIDE a road (near-road mode: offset off
+					//--- the carriageway + road-rejected), NOT ON a road node. The old code set _pos = getPos roadNode,
+					//--- so the SP sat ON the road (Ray report). Vehicles still reach it; it no longer blocks the lane.
+					_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
+					if (!(surfaceIsWater _pos)) then {_placed = true};
 				};
 				//--- task #25: production factories (Light/Heavy/Aircraft) are where commander
 				//--- teams spawn, so bias them NEAR a road for unit egress; everything else
