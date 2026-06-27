@@ -84,6 +84,36 @@ switch (_request) do {
 		missionNamespace setVariable ['WFBE_OPFOR_SCORE_JOIN', (_args select 2)]
 	};
 	case "uav-reveal": {_args spawn WFBE_CL_FNC_Reveal_UAV};
+	//--- task46 (claude) N-FEAT-1: register the SCUD-strike addAction on the CLIENT.
+	//--- The server (Init_NavalHVT.sqf) does the proximity/leader/owner-side gate, then sends this
+	//--- signal to the player's UID; the action must live in the player's LOCAL space to be visible
+	//--- (a server-side addAction on a remote player unit is invisible on a dedicated server).
+	case "scud-action-add": {
+		if (isDedicated) exitWith {};
+		if (isNil "player") exitWith {};
+		if (player getVariable ["wfbe_scud_action_armed", false]) exitWith {}; //--- already added locally
+		player setVariable ["wfbe_scud_action_armed", true];
+		player addAction [
+			localize "STR_WF_SCUD_ACTION",
+			{
+				private ["_caller","_cost","_funds"];
+				_caller = _this select 1;
+				_cost   = WFBE_C_SCUD_COST;
+				_funds  = (group _caller) getVariable ["wfbe_funds", 0];
+				if (_funds < _cost) exitWith { hint localize "STR_WF_SCUD_NO_FUNDS"; };
+				hint localize "STR_WF_SCUD_SELECT_TARGET";
+				openMap true;
+				onMapSingleClick {
+					onMapSingleClick {};
+					openMap false;
+					["RequestSpecial", ["ScudStrike", playerSide, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
+					hint localize "STR_WF_SCUD_LAUNCHED";
+					false
+				};
+			},
+			[], 6, true, true, "", "alive _target && isPlayer _this"
+		];
+	};
 	case "upgrade-started": {_args spawn WFBE_CL_FNC_Upgrade_Started};
 	case "upgrade-complete": {_args spawn WFBE_CL_FNC_Upgrade_Complete};
 	case "building-started": {_args spawn WFBE_CL_FNC_Building_Started};

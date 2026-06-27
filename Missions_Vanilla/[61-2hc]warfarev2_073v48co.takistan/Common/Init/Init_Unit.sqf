@@ -199,7 +199,7 @@ if (_isMan && {isPlayer _unit} && {local _unit} && {(missionNamespace getVariabl
 			private ["_shooter","_mag"];
 			_shooter = _this select 0;
 			_mag = _this select 5;
-			if (!isNil "_mag" && {typeName _mag == "STRING"} && {(_mag find "BAF_ied") == 0}) then {
+			if (!isNil "_mag" && {typeName _mag == "STRING"} && {_mag in ["BAF_ied_v1","BAF_ied_v2","BAF_ied_v3","BAF_ied_v4"]}) then {
 				_shooter setVariable ["wfbe_ied_recent", time, true];
 			};
 		}];

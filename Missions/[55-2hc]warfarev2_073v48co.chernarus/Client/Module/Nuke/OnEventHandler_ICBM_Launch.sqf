@@ -19,9 +19,9 @@ _ICBM_infos = _this select 1; //This is fine : Value is in select 1.
 _ICBM_postion = _ICBM_infos select 0 ;
 _ICBM_side = _ICBM_infos select 1 ;
 
-if (playerSide == _ICBM_side) then 
-{ 
-	call ICBM_FriendySide_Message;
+if (playerSide == _ICBM_side) then
+{
+	[_ICBM_side] call ICBM_FriendySide_Message;
 	// Create de ICBM marker on map for each client of the west team :
 	_nukeMarker = createMarkerLocal ["icbmstrike", _ICBM_postion];
 	_nukeMarker setMarkerTypeLocal "mil_warning";
@@ -32,7 +32,10 @@ if (playerSide == _ICBM_side) then
 	_time_before_ICBM_impact = missionNamespace getVariable "WFBE_ICBM_TIME_TO_IMPACT";  //time in minutes.
 	_time_before_ICBM_impact = _time_before_ICBM_impact * 60 ; 							 //time in seconds.
 	[_nukeMarker,_time_before_ICBM_impact] call WFBE_CL_FNC_Delete_Marker ;				
-} else 
+} else
 {
-	call ICBM_EnemySide_Message;
+	//--- This branch runs only on NON-launcher clients (playerSide != _ICBM_side), i.e. the side that gets
+	//--- nuked. WF_sendMessage self-filters by playerSide == recipient, so the recipient must be THIS side,
+	//--- not the launcher side. playerSide is the correct local recipient (also handles the 3-side case).
+	[playerSide] call ICBM_EnemySide_Message;
 };

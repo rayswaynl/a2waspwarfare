@@ -23,5 +23,5 @@ while {true} do {
 			sleep (0.05 + random 0.05);
 			[sideJoined, "HandleSpecial", ["uav-reveal", _uav, _x]] Call WFBE_CO_FNC_SendToClients;
 		};
-	} forEach (_uav nearEntities _range);
+	} forEach (_uav nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], _range]);
 };

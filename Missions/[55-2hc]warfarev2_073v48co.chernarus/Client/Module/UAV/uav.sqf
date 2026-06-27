@@ -92,8 +92,8 @@ while {alive _uav} do {
 		_wp setWaypointCompletionRadius (1000/_wpcount);
 	};
 
-	_spawn = [_uav,_add,_step,_lastWPpos,_radius,_dir] spawn {
-		Private ['_add','_currentWP','_dir','_lastWPpos','_pos','_radius','_step','_uav','_wp'];
+	_spawn = [_uav,_add,_step,_lastWPpos,_radius,_dir,_cw] spawn {
+		Private ['_add','_currentWP','_cw','_dir','_lastWPpos','_pos','_radius','_step','_uav','_wp'];
 		scriptname "UAV Route planning";
 		_uav = _this select 0;
 		_add = _this select 1;
@@ -101,6 +101,7 @@ while {alive _uav} do {
 		_lastWPpos = _this select 3;
 		_radius = _this select 4;
 		_dir = _this select 5;
+		_cw = _this select 6;
 		_currentWP = currentWaypoint group _uav;
 		while {alive _uav} do {
 			waitUntil {_currentWP != currentWaypoint group _uav};

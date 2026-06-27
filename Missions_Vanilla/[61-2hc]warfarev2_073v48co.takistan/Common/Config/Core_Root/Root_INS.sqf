@@ -21,9 +21,9 @@ missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers", _side], ['WFHQ_
 missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers_Config", _side], 'RadioProtocolCZ'];
 
 //--- Paratroopers.
-missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL1", _side],['USMC_Soldier_SL','USMC_Soldier_LAT','USMC_Soldier','USMC_Soldier2','USMC_Soldier_AR','USMC_Soldier_Medic']];
-missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL2", _side],['USMC_Soldier_SL','USMC_Soldier_AT','USMC_Soldier_AT','USMC_Soldier_AT','USMC_Soldier_AA','USMC_Soldier_MG','USMC_Soldier_Medic','USMC_SoldierS_Spotter','USMC_SoldierS_Sniper']];
-missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL3", _side],['FR_Assault_R','USMC_Soldier_HAT','USMC_Soldier_HAT','USMC_Soldier_HAT','USMC_Soldier_HAT','USMC_Soldier_AA','USMC_Soldier_AA','FR_AR','FR_AC','USMC_Soldier_Medic','FR_Marksman','USMC_Soldier_AT','USMC_SoldierS_Sniper']];
+missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL1", _side],['Ins_Soldier_CO','Ins_Soldier_AT','Ins_Soldier_1','Ins_Soldier_2','Ins_Soldier_AR','Ins_Soldier_Medic']];
+missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL2", _side],['Ins_Soldier_CO','Ins_Soldier_AT','Ins_Soldier_AT','Ins_Soldier_AT','Ins_Soldier_AA','Ins_Soldier_MG','Ins_Soldier_Medic','Ins_Soldier_Sniper','Ins_Soldier_Sniper']];
+missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL3", _side],['Ins_Soldier_CO','Ins_Soldier_AT','Ins_Soldier_AT','Ins_Soldier_AT','Ins_Soldier_AT','Ins_Soldier_AA','Ins_Soldier_AA','Ins_Soldier_AR','Ins_Soldier_1','Ins_Soldier_Medic','Ins_Soldier_Sniper','Ins_Soldier_AT','Ins_Soldier_Sniper']];
 
 missionNamespace setVariable [Format["WFBE_%1PARACARGO", _side], 'Mi17_Ins'];	//--- Paratroopers, Vehicle.
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCK", _side], 'UralRepair_INS'];//--- Repair Truck model.

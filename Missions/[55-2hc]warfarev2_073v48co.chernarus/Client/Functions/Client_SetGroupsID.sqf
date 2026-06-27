@@ -8,6 +8,6 @@ _milalpha = ["Alpha","Bravo","Charlie","Delta","Echo","Foxtrot","Golf","Hotel","
 _u = 0;
 _m = count _milalpha;
 {
-	if !(isNil '_x' && _u < _m) then {_x setGroupID [_milalpha select _u]};
+	if (!(isNil '_x') && {_u < _m}) then {_x setGroupID [_milalpha select _u]};
 	_u = _u + 1;
 } forEach clientTeams

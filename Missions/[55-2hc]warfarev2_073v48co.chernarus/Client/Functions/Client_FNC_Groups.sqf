@@ -114,7 +114,7 @@ WFBE_CL_FNC_UI_Groups_Join = {
 				//--- Don't bother if the client try to join his original team.
 				if (_group == WFBE_Client_Team) then {
 					[player, _group, WFBE_Client_SideJoined] Call WFBE_CO_FNC_ChangeUnitGroup;
-					_group selectLeader _unit;
+					_group selectLeader player;
 					hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>You have joined back your original group (<t color='#BD63F5'>%1</t>) as a squad leader.</t>",_group];
 					_update_group = true;
 					_update_list = -1;

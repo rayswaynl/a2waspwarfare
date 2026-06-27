@@ -31,6 +31,7 @@ While {!isNull _rkt} do {
 	 _spd = _sltd - (_sltd-_sspd) * exp( (-1)*_acc*(_t));
     _rkt setvectorDirandUp [[(_wp select 0),(_wp select 1),(_wp select 2)],[0,0,1]];
     _rkt setVelocity [(_wp select 0)*_spd,(_wp select 1)*_spd,(_wp select 2)*_spd];
+    sleep 0.05;
 };
 exit;
 

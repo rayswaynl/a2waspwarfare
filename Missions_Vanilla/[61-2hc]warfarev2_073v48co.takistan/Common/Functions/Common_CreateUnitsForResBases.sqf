@@ -38,7 +38,7 @@ for '_i' from 0 to count(_groups)-1 do {
 
 	[_teams, _team] call WFBE_CO_FNC_ArrayPush;
 
-	_unit allowFleeing 0; //--- Make the units brave.
+	if (!isNull _unit) then {_unit allowFleeing 0;}; //--- Make the units brave.
 };
 
 if (_built > 0) then {[str _side,'UnitsCreated',_built] call UpdateStatistics};

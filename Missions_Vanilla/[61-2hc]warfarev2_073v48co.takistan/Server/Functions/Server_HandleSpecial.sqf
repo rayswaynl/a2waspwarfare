@@ -159,6 +159,22 @@ switch (_args select 0) do {
 		};
 	};
 
+	//--- N-FEATUREBUG-4: server-side artillery ammo load. addMagazineTurret/loadMagazine only take
+	//--- effect where the vehicle is local; AI artillery is server-local, so the commanding player's
+	//--- client forwards the load request here (see Common_LoadArtilleryAmmo.sqf locality gate). We
+	//--- re-run the same loader on the server, where `local _arty` is true and the ops actually apply.
+	case "LoadArtilleryAmmo": {
+		Private ["_arty","_sideText","_artilleryIndex","_ammoIndex"];
+		_arty = _args select 1;
+		_sideText = _args select 2;
+		_artilleryIndex = _args select 3;
+		_ammoIndex = _args select 4;
+		if (isNull _arty) exitWith {};
+		if !(local _arty) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: LoadArtilleryAmmo arty [%1] is not server-local; load skipped.", _arty]] Call WFBE_CO_FNC_LogContent;
+		};
+		[_arty, _sideText, _artilleryIndex, _ammoIndex] Call WFBE_CO_FNC_LoadArtilleryAmmo;
+	};
 	case "process-killed-hq": {
 		(_args select 1) Spawn WFBE_SE_FNC_OnHQKilled;
 	};

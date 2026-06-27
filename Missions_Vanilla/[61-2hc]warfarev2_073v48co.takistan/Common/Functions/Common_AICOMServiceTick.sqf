@@ -6,7 +6,8 @@
 	town-centre, REPAIRS + REARMS + HEALS with the same primitives players use, then clears
 	its goto so AI_Commander_AssignTowns retargets it back to the front.
 
-	DEFAULT OFF (WFBE_C_AICOM_SERVICE_ENABLED = 0). Ships dark for an A/B soak.
+	ENABLED for the soak: WFBE_C_AICOM_SERVICE_ENABLED is hard-set to 1 in Init_CommonConstants.sqf
+	(Ray 2026-06-19 all-day Chernarus soak). Rollback to dark = restore the "if (isNil ...) then {... = 0}" guard.
 
 	LOCALITY: HC-local. Called from Common_RunCommanderTeam.sqf's 20s order loop, where the
 	team's units are local to this machine, so setDamage / setVehicleAmmo / setFuel / doMove

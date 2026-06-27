@@ -12,10 +12,9 @@ _side = _this select 0 ;
 
 _time_before_ICBM_impact 					= missionNamespace getVariable "WFBE_ICBM_TIME_TO_IMPACT";
 //_friendly_Compile_Multi_language_message 	= " format[localize ""STR_WF_CHAT_ICBM_Launch_BY_OUR_TEAM"", _time_before_ICBM_impact]; " ; //contain de code that will be processed in the WF_sendMessage and the onEventHandler functions to customize the message.
-_friendly_Compile_Multi_language_message = format [
-    "format [localize ""STR_WF_CHAT_ICBM_Launch_BY_OUR_TEAM"", %1];",
-    _time_before_ICBM_impact
-];
+// SECURITY (RCE fix): multi-language payload is now structured data [stringtableKey, formatArgs] resolved
+// with localize + format on each receiver (never "call compile"). See Common_SendMessage.sqf.
+_friendly_Compile_Multi_language_message = ["STR_WF_CHAT_ICBM_Launch_BY_OUR_TEAM", [_time_before_ICBM_impact]];
 
 _friendly_Message_SoundName			= "ICBM_message_to_friendly_players";
 

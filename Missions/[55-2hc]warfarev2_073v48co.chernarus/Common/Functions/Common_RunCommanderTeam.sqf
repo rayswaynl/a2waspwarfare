@@ -354,7 +354,16 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			//--- helis are guarded out via the wfbe_aicom_transport flag set at lift time.
 			if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
 				//--- Clamp the heli's exit toward the CLOSEST of the four map edges (worldSize box).
-				_wsz = 15360;  //--- A2-fix 2026-06-14: worldSize is A3-only in A2 OA (latent bug, fired on heli off-map exit); Chernarus = 15360
+				//--- N-FEATUREBUG-43 fix 2026-06-27: was hardcoded 15360 (Chernarus only) -> the off-map edge math + the
+				//--- waitUntil off-map exit test below were 2560m wrong on Takistan/Zargabad (both 12800), so the heli
+				//--- either never registered as off-map or refunded early. worldSize is A3-ONLY (A2 OA latent bug), so
+				//--- branch the box size off worldName, matching Init_Boundaries.sqf (chernarus=15360, takistan/zargabad=12800).
+				_wsz = switch (toLower worldName) do {
+					case "chernarus": {15360};
+					case "takistan":  {12800};
+					case "zargabad":  {12800};
+					default {15360};
+				};
 				_ex  = (getPos _h) select 0;
 				_ey  = (getPos _h) select 1;
 				//--- distance to each edge: x=0, x=worldSize, y=0, y=worldSize.

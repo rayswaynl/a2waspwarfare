@@ -1,8 +1,11 @@
 /* SADARM Handler, Armor Killer */ 
-Private ['_altitude','_barrel','_burst','_chuteModel','_deployPos','_destination','_dir','_dx','_dy','_dz','_force','_hmag','_mag','_parachute','_projectile','_px','_py','_pz','_shell','_targetFound','_targets','_targetToHit','_ux','_uy','_uz','_v1','_velocity','_xoff','_yoff','_zcomp','_zoff', '_airTypes', '_impactAreaSimulation'];
+Private ['_altitude','_barrel','_burst','_chuteModel','_deployPos','_destination','_dir','_dx','_dy','_dz','_force','_hmag','_mag','_parachute','_projectile','_px','_py','_pz','_shell','_side','_targetFound','_targets','_targetToHit','_ux','_uy','_uz','_v1','_velocity','_xoff','_yoff','_zcomp','_zoff', '_airTypes', '_impactAreaSimulation'];
 _shell = _this select 0;
 _destination = _this select 1;
 _velocity = _this select 2;
+//--- N-FEATUREBUG-5: real firing side forwarded by Common_HandleArtillery.sqf. Replaces sideJoined,
+//--- which is sideEmpty on a dedicated server and produced a nil parachute model below.
+_side = _this select 3;
 
 _airTypes = ["Plane", "AH1_Base", "AH64_base_EP1", "AW159_Lynx_BAF", "BAF_Merlin_HC3_D",
 			"Kamov_Base", "Mi17_base", "Mi24_Base", "UH1Y", "UH60_Base"
@@ -28,7 +31,7 @@ _deployPos = getPos _shell;
 deleteVehicle _shell;
 
 //--- Deploy the model.
-_chuteModel = missionNamespace getVariable Format ["WFBE_%1PARACHUTE",sideJoined];
+_chuteModel = missionNamespace getVariable Format ["WFBE_%1PARACHUTE",_side];
 _parachute = _chuteModel createVehicle _deployPos;
 _parachute setPos _deployPos;
 _barrel = "Barrel4" createVehicle _deployPos;

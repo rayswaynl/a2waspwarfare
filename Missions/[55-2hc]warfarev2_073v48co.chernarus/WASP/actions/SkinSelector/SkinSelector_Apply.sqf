@@ -205,6 +205,11 @@ if (!isNull _oldUnit) then {
 };
 
 //--- Re-add Killed EH (mirrors Init_Client.sqf:771).
+//--- DEDUPE 2026-06-27: WFBE_CO_FNC_CreateUnit (-> Common_CreateUnit.sqf:125) already attaches a
+//--- 'Killed' EH that spawns WFBE_CO_FNC_OnUnitKilled. Re-adding here without clearing first would
+//--- fire OnUnitKilled TWICE on death (double kill credit/payout). Mirror the Fired-EH dedupe below:
+//--- remove all 'Killed' EHs first, then re-add the single combined OnKilled + OnUnitKilled handler.
+player removeAllEventHandlers "Killed";
 WFBE_PLAYERKEH = player addEventHandler ["Killed", {[_this select 0, _this select 1] Spawn WFBE_CL_FNC_OnKilled; [_this select 0, _this select 1, sideID] Spawn WFBE_CO_FNC_OnUnitKilled}];
 
 //--- Re-add HandleDamage EH (uses global WFBE_CL_VAR_ReArmorCode set in Init_Client.sqf).

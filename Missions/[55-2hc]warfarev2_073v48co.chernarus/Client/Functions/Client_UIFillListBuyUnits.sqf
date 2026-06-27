@@ -104,7 +104,7 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 	if (!isNil "_c") then {
 		_upgradePass = if (_value >= count _currentUpgrades) then {true} else {(_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value)};
 	};
-	if ((_upgradePass && _addin) || (_addit&&_addin)) then {
+	if ((!isNil "_c") && {(_upgradePass && _addin) || (_addit&&_addin)}) then {
 		_price = round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
 		lnbAddRow [_listBox,['$'+str _price,_description]];
 		lnbSetData [_listBox,[_i,0],_filler];

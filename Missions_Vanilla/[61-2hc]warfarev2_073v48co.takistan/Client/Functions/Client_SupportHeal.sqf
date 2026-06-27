@@ -76,6 +76,7 @@ while {true} do {
 //--- Heal the damages?
 if (_cts != 0) then {
 	if (_veh isKindOf "Man") then {_veh setDammage 0} else {
+		_veh setDammage 0; //--- wiki-wins: repair the vehicle HULL itself, not just the crew (was a no-op on the hull)
 		_crews = crew _veh;
 		if (count _crews > 0) then {{_x setDammage 0} forEach _crews};
 	};

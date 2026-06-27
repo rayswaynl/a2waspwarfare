@@ -34,7 +34,15 @@ if (_direction < 0) then {_direction = _direction + 360};
 _distance = sqrt ((_xcoord ^ 2) + (_ycoord ^ 2)) - _minRange;
 _angle = _distance / (_maxRange - _minRange) * 100 + 15;
 if (_angle > 70) then {_angle = 70};
-if (_distance < 0 || _distance + _minRange > _maxRange) exitWith {};
+//--- N-FEATUREBUG-39: out-of-range early exit. ARTY_Prep (above) already stopped the vehicle and
+//--- disabled the driver's AI, and line 7 set restricted=true. Returning here without undoing that
+//--- left the piece PERMANENTLY locked (engine off, driver AI dead, restricted flag stuck) and
+//--- unusable for the next fire mission. Run the SAME teardown the normal completion path uses:
+//--- ARTY_Finish (re-enable driver AI, lower the gun) + clear restricted, so the piece is reusable.
+if (_distance < 0 || _distance + _minRange > _maxRange) exitWith {
+	[_artillery] Call ARTY_Finish;
+	_artillery setVariable ["restricted",false];
+};
 
 _FEH = Call Compile Format ["_artillery addEventHandler ['Fired',{[_this select 4,_this select 6,%1,%2,%3,%4,%5,%6,%7,%8,%9] Spawn WFBE_CO_FNC_HandleArtillery}];",_ammo,_destination,_velocity,_dispersion,getPos _artillery,_distance,_radius,_maxRange,_side];
 

@@ -239,7 +239,7 @@ _aiTeamTemplateName = _aiTeamTemplateName + ["Air - Infantry MH-60S Squadron"];
 _aiTeamTemplates = _aiTeamTemplates + [_u];
 _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
-_aiTeamUpgrades = _aiTeamUpgrades + [[2,0,0,0]];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
 
 //--- ============================================================================
 //--- ARCHETYPE EXPANSION 2026-06-14 (claude-gaming): +10 NEW US archetypes with size-bump.

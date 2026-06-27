@@ -4,7 +4,7 @@
 		- Side.
 */
 
-private ["_supplyTeam"];
+private ["_supplyTeam", "_timeout"];
 
 switch (_this) do {
 	case west: {
@@ -14,8 +14,15 @@ switch (_this) do {
 			REQUEST_SUPPLY_VALUE = player;
 			publicVariableServer "REQUEST_SUPPLY_VALUE";
 
-			waitUntil {!isNil {missionNamespace getVariable format ["wfbe_supply_%1", str _this];}};
-			_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
+			//--- Bounded wait: a lost JIP packet must NOT hang this loop forever. Sleep-poll for up
+			//--- to ~10s, then fall back to a sane 0 default so callers never block indefinitely.
+			_timeout = 0;
+			while {isNil "_supplyTeam" && _timeout < 100} do {
+				sleep 0.1;
+				_timeout = _timeout + 1;
+				_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
+			};
+			if (isNil "_supplyTeam") then {_supplyTeam = 0};
 		};
 
 		_supplyTeam
@@ -27,8 +34,15 @@ switch (_this) do {
 			REQUEST_SUPPLY_VALUE = player;
 			publicVariableServer "REQUEST_SUPPLY_VALUE";
 
-			waitUntil {!isNil {missionNamespace getVariable format ["wfbe_supply_%1", str _this];}};
-			_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
+			//--- Bounded wait: a lost JIP packet must NOT hang this loop forever. Sleep-poll for up
+			//--- to ~10s, then fall back to a sane 0 default so callers never block indefinitely.
+			_timeout = 0;
+			while {isNil "_supplyTeam" && _timeout < 100} do {
+				sleep 0.1;
+				_timeout = _timeout + 1;
+				_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
+			};
+			if (isNil "_supplyTeam") then {_supplyTeam = 0};
 		};
 
 		_supplyTeam

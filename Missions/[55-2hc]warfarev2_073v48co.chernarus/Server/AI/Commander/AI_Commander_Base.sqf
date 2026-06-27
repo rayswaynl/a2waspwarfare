@@ -264,18 +264,26 @@ if (_cbrIdx >= 0) then {
 	if (!_artyThreat && {time > 3600}) then {
 		_enemySide = if (_side == west) then {east} else {west};
 		_enemySideText = str _enemySide;
-		{
-			if (!_artyThreat) then {
-				if ((_x getVariable ["WFBE_CommanderArtillery", false]) &&
-				    {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _enemySideText} &&
-				    {alive _x}) then {
-					_artyThreat = true;
-					_logik setVariable ["wfbe_aicom_arty_threat", true];
-					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] wfbe_aicom_arty_threat ARMED (cond-c: enemy arty piece exists at %2 min).", _sideText, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-c");
+		//--- N-FEATUREBUG-48 fix 2026-06-27: the counter-battery scan must look at the ENEMY base, not our own.
+		//--- Anchoring nearestObjects at OUR HQ (10km) only ever scanned our own structures and never reached
+		//--- the enemy arty 12.8-15km away, so cond-c could never arm. Anchor the scan at the ENEMY HQ instead.
+		private ["_eHQ","_scanPos"];
+		_eHQ = _enemySide Call WFBE_CO_FNC_GetSideHQ;
+		if (!isNull _eHQ) then {
+			_scanPos = getPos _eHQ;
+			{
+				if (!_artyThreat) then {
+					if ((_x getVariable ["WFBE_CommanderArtillery", false]) &&
+					    {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _enemySideText} &&
+					    {alive _x}) then {
+						_artyThreat = true;
+						_logik setVariable ["wfbe_aicom_arty_threat", true];
+						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] wfbe_aicom_arty_threat ARMED (cond-c: enemy arty piece exists at %2 min).", _sideText, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-c");
+					};
 				};
-			};
-		} forEach (nearestObjects [getPos (_side Call WFBE_CO_FNC_GetSideHQ), ["StaticWeapon","Tank","Car"], 10000]);
+			} forEach (nearestObjects [_scanPos, ["StaticWeapon","Tank","Car"], 10000]);
+		};
 	};
 
 	//--- CBR enters the build order only when: threat confirmed + round > min time + supply OK.

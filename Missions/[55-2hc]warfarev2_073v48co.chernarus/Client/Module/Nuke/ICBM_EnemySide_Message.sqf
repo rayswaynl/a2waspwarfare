@@ -12,10 +12,9 @@ _side = _this select 0 ;
 _time_before_ICBM_impact 			= missionNamespace getVariable "WFBE_ICBM_TIME_TO_IMPACT";
 
 //_enemy_Compile_Multi_language_message = " format[localize ""STR_WF_CHAT_ICBM_Launch_BY_ENEMY_TEAM"", _time_before_ICBM_impact]; " ;
-_enemy_Compile_Multi_language_message = format [
-    "format [localize ""STR_WF_CHAT_ICBM_Launch_BY_ENEMY_TEAM"", %1];",
-    _time_before_ICBM_impact
-];
+// SECURITY (RCE fix): multi-language payload is now structured data [stringtableKey, formatArgs] resolved
+// with localize + format on each receiver (never "call compile"). See Common_SendMessage.sqf.
+_enemy_Compile_Multi_language_message = ["STR_WF_CHAT_ICBM_Launch_BY_ENEMY_TEAM", [_time_before_ICBM_impact]];
 
 _enemy_Message_SoundName			= "ICBM_message_to_enemy_players";
 

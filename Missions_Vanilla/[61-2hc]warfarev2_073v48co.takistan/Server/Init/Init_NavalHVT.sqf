@@ -230,26 +230,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_lhdCharlieLogic]];
 				if (_isLeader) then {
 					if (isNil {_x getVariable "wfbe_scud_action_armed"}) then {
 						_x setVariable ["wfbe_scud_action_armed", true];
-						_actionID = _x addAction [
-							localize "STR_WF_SCUD_ACTION",
-							{
-								private ["_caller","_cost","_funds"];
-								_caller = _this select 1;
-								_cost   = WFBE_C_SCUD_COST;
-								_funds  = (group _caller) getVariable ["wfbe_funds", 0];
-								if (_funds < _cost) exitWith { [localize "STR_WF_SCUD_NO_FUNDS"] call WFBE_CL_FNC_Hint; };
-								[localize "STR_WF_SCUD_SELECT_TARGET"] call WFBE_CL_FNC_Hint;
-								openMap true;
-								onMapSingleClick {
-									onMapSingleClick {};
-									openMap false;
-									["RequestSpecial", ["ScudStrike", playerSide, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
-									[localize "STR_WF_SCUD_LAUNCHED"] call WFBE_CL_FNC_Hint;
-									false
-								};
-							},
-							[], 6, true, true, "", "alive _target && isPlayer _this"
-						];
+						//--- task46 (claude) N-FEAT-1: the addAction must be created on the CLIENT, not here.
+						//--- On a dedicated server _x is a remote player unit, so a server-side addAction is
+						//--- invisible to the actual client. Dispatch a signal to this player's UID; the client
+						//--- (HandleSpecial.sqf case "scud-action-add") adds the action to its local player.
+						//--- The proximity/leader/owner-side gate above stays SERVER-side; the wfbe_scud_action_armed
+						//--- latch (set just above) makes the server send this only once per player.
+						[getPlayerUID _x, "HandleSpecial", ["scud-action-add"]] Call WFBE_CO_FNC_SendToClients;
 					};
 				};
 			};

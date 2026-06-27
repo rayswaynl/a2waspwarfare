@@ -57,7 +57,12 @@ for "_i" from 0 to (count _ammoOptions) - 1 do {
 
 // Marty: Pass the firing gun count as %3 so teammates know how many tubes are on the mission (Trello #116).
 _gunCount = count _units;
-_Compile_Multi_language_message	= format [" format[localize ""STR_WF_INFO_Arty_called_message"", %1, %2, %3 ];", str(_playerName), str(_ammoName), _gunCount];
+// SECURITY (RCE fix): the player name (name player) is attacker-controllable, so embedding it via str()
+// into an SQF string that the receiver "call compile"d allowed a crafted name to break out and execute
+// arbitrary code on every teammate. The multi-language payload is now structured data
+// [stringtableKey, formatArgs]; the receiver resolves it with localize + format (never compiled), so the
+// name is treated as plain text. See Common_SendMessage.sqf / Client_onEventHandler_SEND_MESSAGE.sqf.
+_Compile_Multi_language_message	= ["STR_WF_INFO_Arty_called_message", [_playerName, _ammoName, _gunCount]];
 
 _audio_message 	= "ARTY_message_to_friendly_players_v2"; //In case of failure in conditions below, faction is considered as american by default to determine the audio message.
 if (IS_Takistan_Faction_On_This_Map  && playerSide == east) then {_audio_message 	= "ARTY_message_to_friendly_takistanish_v1"	};
