@@ -435,8 +435,8 @@ _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,2,0]];
 //--- touch the shared squads / player options): heavier armor + an attack heli + a heavy-weapons squad so a
 //--- 'strong' AI fields elite teams. Verified A2-OA classnames; gated behind TOP factory tiers so they
 //--- appear occasionally (the cost-weighted AICOM founding draw fields them as tech + funds allow).
-_u = ["T90"]; _u = _u + ["T90"];
-_aiTeamTemplateName = _aiTeamTemplateName + ["Armor - MBT Platoon (T-90)"];
+_u = ["T90"]; _u = _u + ["T90"]; _u = _u + ["BMP3"]; _u = _u + ["RU_Soldier_SL"]; _u = _u + ["RU_Soldier_AR"]; _u = _u + ["RU_Soldier_AT"]; _u = _u + ["RU_Soldier_Medic"]; //--- wiki cross-check fix: armor platoon now carries a BMP-3 + dismount squad so it can CAPTURE (bare-armor can't flip a town).
+_aiTeamTemplateName = _aiTeamTemplateName + ["Armor - MBT Platoon (T-90 + dismounts)"];
 _aiTeamTemplates = _aiTeamTemplates + [_u];
 _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
 _aiTeamTypes = _aiTeamTypes + [2];

@@ -305,7 +305,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						private ["_allocT","_allocTick"];
 						_allocT    = _team getVariable "wfbe_aicom_alloc_target";
 						_allocTick = _team getVariable "wfbe_aicom_alloc_tick";
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {(time - _allocTick) < 180} && {(_allocT getVariable ["sideID", _sideID]) != _sideID}) then {
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {(time - _allocTick) < 180} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)}) then { //--- wiki cross-check fix: respect this team's stuck-abandon blacklist (don't re-send it at a town it gave up on as unreachable).
 							_target = _allocT;
 						};
 					};

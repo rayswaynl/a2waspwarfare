@@ -61,11 +61,16 @@ if (!isNil "_focusTgt" && {!isNull _focusTgt} && {!isNil "_focusT0"}
 if (!_fromFocus) then {
 	//--- M5 SUPPORT-PUSH: if humans are on this side, pull the fist toward where they are massed (HC bodies
 	//--- are CIV-sided so the west/east side test excludes them). Supports the players' axis, not the geometry.
-	private ["_supportOn","_supportCen","_hN","_hx","_hy"];
+	private ["_supportOn","_supportCen","_hN","_hx","_hy","_hcU"];
 	_supportOn = false; _supportCen = [0,0,0];
-	if ((missionNamespace getVariable ["WFBE_C_AICOM2_SUPPORT_PUSH", 1]) > 0) then {
+	//--- M5 FIX (wiki cross-check): HC bodies report isPlayer=true + side west/east on this 2-HC mission, so
+	//--- the raw scan folded a parked HC into the support centroid and steered the fist toward it even on an
+	//--- AI-vs-AI round. Gate on the snapshot's HC-FILTERED myPlayers AND exclude HC unit bodies from the scan.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM2_SUPPORT_PUSH", 1]) > 0 && {(_snap select WFBE_SNAP_MYPLAYERS) > 0}) then {
+		_hcU = [];
+		{ if (!isNull _x) then { { _hcU set [count _hcU, _x] } forEach (units _x) } } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 		_hN = 0; _hx = 0; _hy = 0;
-		{ if (isPlayer _x && {(side _x) == _side} && {alive _x}) then {_hx = _hx + ((getPos _x) select 0); _hy = _hy + ((getPos _x) select 1); _hN = _hN + 1} } forEach playableUnits;
+		{ if (isPlayer _x && {(side _x) == _side} && {alive _x} && {!(_x in _hcU)}) then {_hx = _hx + ((getPos _x) select 0); _hy = _hy + ((getPos _x) select 1); _hN = _hN + 1} } forEach playableUnits;
 		if (_hN > 0) then {_supportCen = [_hx / _hN, _hy / _hN, 0]; _supportOn = true};
 	};
 	//--- AUTO scorer: nearest-front + value, with an optional support-push pull toward the human axis.

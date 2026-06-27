@@ -48,8 +48,8 @@ _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,0]];
 //--- touch the shared squads / player options): heavier armor + an attack heli + a spec-ops squad so a
 //--- 'strong' AI fields elite teams. Verified A2-OA classnames; gated behind TOP factory tiers so they
 //--- appear occasionally (the cost-weighted AICOM founding draw fields them as tech + funds allow).
-_u = ["M1A2_US_TUSK_MG_EP1"]; _u = _u + ["M1A2_US_TUSK_MG_EP1"];
-_aiTeamTemplateName = _aiTeamTemplateName + ["Armor - MBT Platoon (M1A2 TUSK)"];
+_u = ["M1A2_US_TUSK_MG_EP1"]; _u = _u + ["M1A2_US_TUSK_MG_EP1"]; _u = _u + ["M2A3_EP1"]; _u = _u + ["US_Soldier_TL_EP1"]; _u = _u + ["US_Soldier_AR_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_Medic_EP1"]; //--- wiki cross-check fix: armor platoon now carries a Bradley + dismount squad so it can CAPTURE (bare-armor can't flip a town - re-honours the 2026-06-14 rule).
+_aiTeamTemplateName = _aiTeamTemplateName + ["Armor - MBT Platoon (M1A2 TUSK + dismounts)"];
 _aiTeamTemplates = _aiTeamTemplates + [_u];
 _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
 _aiTeamTypes = _aiTeamTypes + [2];
