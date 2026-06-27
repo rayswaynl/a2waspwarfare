@@ -63,7 +63,9 @@ _enStr = 0;
 { if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 
 //--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.
-_lastStand = (_myTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1])) && (_myStr < (_enStr * (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
+//--- AICOM v2 M3 (Ray "almost never defensive"): gate last-stand on EFFECTIVE strength (maneuver + held-town credit), NOT raw maneuver _myStr - so a territory-leader that garrisons towns never trips the recall-all-to-HQ (the dominant-but-passive STALL the 18h soak showed). Last-stand now fires only at <=1 town AND genuinely effectively-crushed = base under real threat.
+private ["_lsTS","_lsMyEff","_lsEnEff"]; _lsTS = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2]; _lsMyEff = _myStr + (_myTowns * _lsTS); _lsEnEff = _enStr + (_enemyTowns * _lsTS);
+_lastStand = (_myTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1])) && (_lsMyEff < (_lsEnEff * (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
 _stratMode = "spearhead"; //--- default; overridden below
 _logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 if (_lastStand) then {
