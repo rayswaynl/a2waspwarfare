@@ -428,7 +428,12 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};
 				_logik setVariable [Format ["wfbe_aicom_built_%1", _x], time];
 				_script = _scripts select _idx;
-				[_class, _side, _pos, random 360, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+				//--- AICOM v2 (Ray, deliberate layout): face structures toward the FRONT (HQ->spearhead bearing) so
+				//--- spawn pads / doors point at the egress instead of a random spin. Falls back to random if no front.
+				private ["_facDir","_facTgt","_facP"];
+				_facTgt = (_logik getVariable ["wfbe_aicom_targets", []]);
+				_facDir = if (count _facTgt > 0 && {!isNull (_facTgt select 0)}) then {_facP = getPos (_facTgt select 0); ((_facP select 0) - (_hqPos select 0)) atan2 ((_facP select 1) - (_hqPos select 1))} else {random 360};
+				[_class, _side, _pos, _facDir, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
 				//--- FACTORY RALLY (task #25 / bug a). Warfare has no rally MARKER: "rally" = the
 				//--- destination spawned units inherit. Players set it (shift-click); the AI never
 				//--- did, so AI factory output (troop trucks, combat teams) spawned at the in-base
