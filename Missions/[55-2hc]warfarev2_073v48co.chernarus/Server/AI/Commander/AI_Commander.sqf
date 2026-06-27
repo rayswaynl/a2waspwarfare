@@ -272,6 +272,10 @@ while {!gameOver} do {
 				//--- immediately before the strategy worker. Behaviour-neutral until M3 reads it; emits AICOM2|SNAP.
 				if (!isNil "WFBE_SE_FNC_AICOM2_Snapshot") then {(_side) Call WFBE_SE_FNC_AICOM2_Snapshot};
 				(_side) Call WFBE_SE_FNC_AI_Com_Strategy; _ltStrat = time;
+				//--- AICOM v2 (M1): the single offensive Allocator runs AFTER Strategy so its concentrated
+				//--- fist choice wins (overwrites wfbe_aicom_targets) + assigns each team an alloc_target.
+				//--- Inert unless WFBE_C_AICOM2_ALLOCATE_ENABLE>0 (checked inside) -> legacy path = instant rollback.
+				if (!isNil "WFBE_SE_FNC_AICOM2_Allocate") then {(_side) Call WFBE_SE_FNC_AICOM2_Allocate};
 				//--- AICOM v2 PREVIEW: publish side-keyed INTENT + OBJECTIVE for the client RHUD row + map
 				//--- marker (friendly-only; the client filters by WFBE_Client_SideID). Offense-forward wording.
 				//--- Runs right after Strategy so strat_mode/targets are fresh; PV only on change (cheap).

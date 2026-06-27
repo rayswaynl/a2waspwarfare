@@ -440,6 +440,10 @@ with missionNamespace do {
 	WFBE_SNT_GROUP=0; WFBE_SNT_ALIVE=1; WFBE_SNT_LDRPOS=2; WFBE_SNT_ISHC=3; WFBE_SNT_ISFOUND=4;
 	WFBE_SNT_ISGAR=5; WFBE_SNT_MODE=6; WFBE_SNT_STRIKE=7; WFBE_SNT_RELIEF=8;
 	WFBE_SNT_HASGNDVEH=9; WFBE_SNT_MOUNTEDNOW=10; WFBE_SNT_HASHEAVY=11; WFBE_SNT_REPORT=12;
+	//--- M1 single-authority Allocator (AI_Commander_Allocate.sqf). 0 = inert (legacy Strategy/AssignTowns
+	//--- targeting runs unchanged = instant rollback); 1 = the Allocator concentrates force on a front fist.
+	if (isNil "WFBE_C_AICOM2_ALLOCATE_ENABLE") then {WFBE_C_AICOM2_ALLOCATE_ENABLE = 0};
+	if (isNil "WFBE_C_AICOM2_FIST_TOWNS")      then {WFBE_C_AICOM2_FIST_TOWNS      = 2};  //--- how many front towns the side concentrates on at once (the "fist").
 	//=================================================================================================
 	if (isNil "WFBE_C_AICOM_MHQ_ENEMY_CLEAR")       then {WFBE_C_AICOM_MHQ_ENEMY_CLEAR       = 700};  //--- m: do NOT mobilize/deploy if an enemy is within this of the current HQ or the destination.
 	if (isNil "WFBE_C_AICOM_MHQ_ARRIVE_DIST")       then {WFBE_C_AICOM_MHQ_ARRIVE_DIST       = 400};  //--- m: MHQ within this of the destination = arrived -> deploy.

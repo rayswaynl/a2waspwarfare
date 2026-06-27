@@ -293,6 +293,17 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_blTowns = [];
 						_uncapturedF = _uncaptured;
 					};
+					//--- AICOM v2 (M1): if the single-authority Allocator assigned THIS team a target this cycle,
+					//--- USE it (concentrate on the fist) and skip the legacy spearhead/nearest pick below. Fresh-gated
+					//--- (<180s) so a stale assignment (Allocator off / not run) falls through to legacy = instant rollback.
+					if (isNull _target && {(missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0}) then {
+						private ["_allocT","_allocTick"];
+						_allocT    = _team getVariable "wfbe_aicom_alloc_target";
+						_allocTick = _team getVariable "wfbe_aicom_alloc_tick";
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {(time - _allocTick) < 180} && {(_allocT getVariable ["sideID", _sideID]) != _sideID}) then {
+							_target = _allocT;
+						};
+					};
 					_spear = _logik getVariable ["wfbe_aicom_targets", []];
 					_concBase = missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3];
 					{
