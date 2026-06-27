@@ -528,11 +528,14 @@ if (_defCount < _defMax) then {
 	_have = false;
 	{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 	if (_have) then {
-		//--- Alternate MG / AA pods; classnames from the faction defense config (guarded).
-		_defClass = if (_defCount % 2 == 0) then {
-			missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText]
-		} else {
-			missionNamespace getVariable Format ["WFBE_%1DEFENSES_AAPOD", _sideText]
+		//--- AICOM v2 (Ray): BALANCED light defense within the 4-cap - rotate MG / AT / GL / AA so enemy armor (AT),
+		//--- massed infantry (GL) and air (AA) all meet resistance, not just MG/AA. AT/GL guarded (some factions
+		//--- lack the class -> fall back to MG). Classnames from the faction defense config.
+		_defClass = switch (_defCount % 4) do {
+			case 1: { private "_atC"; _atC = missionNamespace getVariable Format ["WFBE_%1DEFENSES_ATPOD", _sideText]; if (isNil "_atC") then {missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText]} else {_atC} };
+			case 2: { private "_glC"; _glC = missionNamespace getVariable Format ["WFBE_%1DEFENSES_GL", _sideText]; if (isNil "_glC") then {missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText]} else {_glC} };
+			case 3: { missionNamespace getVariable Format ["WFBE_%1DEFENSES_AAPOD", _sideText] };
+			default { missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText] };
 		};
 		if (!isNil "_defClass") then {
 			if (typeName _defClass == "ARRAY") then {_defClass = _defClass select 0};

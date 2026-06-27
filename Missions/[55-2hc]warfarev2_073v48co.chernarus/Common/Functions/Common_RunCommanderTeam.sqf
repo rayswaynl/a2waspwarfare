@@ -486,6 +486,23 @@ if (isNull _airVeh) then {
 //--- ===================================================================
 
 while {!WFBE_GameOver && _alive} do {
+	//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft. An airframe (heli OR plane) alive with NO alive crew is
+	//--- orphaned (crew killed/bailed/bugged) - it crashes, sits, or piles up over a long round. Delete it after a
+	//--- short grace so it can't accumulate. Stamp-on-first-seen avoids deleting a transient bail/reseat. HC-local.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_UNCREWED", 1]) > 0) then {
+		{
+			if (!isNull _x && {alive _x} && {local _x} && {_x isKindOf "Air"}) then {
+				if (({alive _x} count (crew _x)) == 0) then {
+					private ["_us"]; _us = _x getVariable "wfbe_air_uncrewed_at";
+					if (isNil "_us") then {_x setVariable ["wfbe_air_uncrewed_at", time]} else {
+						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {deleteVehicle _x};
+					};
+				} else {
+					_x setVariable ["wfbe_air_uncrewed_at", nil];
+				};
+			};
+		} forEach _vehicles;
+	};
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 	//--- B36.1 (Ray 2026-06-15): PC-scale retirement. The server flags a REAR team (wfbe_aicom_disband)
