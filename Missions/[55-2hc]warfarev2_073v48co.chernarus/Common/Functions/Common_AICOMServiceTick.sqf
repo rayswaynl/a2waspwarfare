@@ -79,7 +79,7 @@ if (_state == "enroute") then {
 				if (([(typeOf _x), _side] Call IsArtillery) != -1) then {
 					private ["_svcAL","_svcUL","_svcAF"];
 					_svcAL = (_side) Call WFBE_CO_FNC_GetSideLogic;
-					_svcUL = if (isNull _svcAL) then {0} else {(_svcAL getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
+					_svcUL = if (isNull _svcAL) then {0} else {(_svcAL getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
 					if (typeName _svcUL != "SCALAR") then {_svcUL = 0};
 					_svcAF = (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_AMMO_FRAC", [0.50,0.65,0.80,0.90,1.00,1.00,1.00]]) select (_svcUL min 6);
 					_x setVehicleAmmo _svcAF;

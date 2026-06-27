@@ -172,13 +172,16 @@ _findBuildPos = {
 						//--- Ray reported. nearRoads 9 catches any carriageway node under the footprint; the chosen road is
 						//--- >12m off so it is not caught; the 40-try near-road budget refinds a clean spot.
 						if (!_blocked && {count (_cand nearRoads 9) > 0}) then {_blocked = true};
-							if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true}; //--- AICOM v2 (Ray): track best ROAD-CLEAR dry candidate -> the fallback prefers it over an on-road _best.
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
 					if (!_blocked) then {
 						{ if ((_cand distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_blocked = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 					};
+					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND spacing-OK
+					//--- (moved BELOW the STRUCT_SPACING check). Otherwise the try-budget fallback could hand back a
+					//--- road-clear-but-CROWDED spot (<45m from another structure -> overlapping footprints).
+					if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true};
 					if (!_blocked) then {_p = _cand; _ok = true};
 				};
 			};
@@ -197,12 +200,14 @@ _findBuildPos = {
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
 				if (count (_p nearRoads 22) == 0) then {
-						if (!_haveClear) then {_bestClear = _p; _haveClear = true}; //--- AICOM v2 (Ray): best road-clear dry candidate -> the fallback prefers it over an on-road _best.
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
 					_ok = true;
 					{ if ((_p distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_ok = false} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND
+					//--- spacing-OK (_ok survives the STRUCT_SPACING forEach above) - prevents a crowded fallback.
+					if (_ok && {!_haveClear}) then {_bestClear = _p; _haveClear = true};
 				};
 			};
 		};

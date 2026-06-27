@@ -128,7 +128,7 @@ while {!gameOver} do {
 	missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
 
 	_active = false;
-	if ((missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
+	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0) then { //--- FIX7 (Ray): defaulted [..,0] - the bare single-arg getVariable threw if nil at an early-boot race.
 		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
 	};
 

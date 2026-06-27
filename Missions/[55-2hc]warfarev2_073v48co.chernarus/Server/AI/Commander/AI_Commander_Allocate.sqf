@@ -152,7 +152,10 @@ _assigned = 0; _harassAssigned = 0;
 			_reach = if (_hasVeh) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000]} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500]};
 			_tgt = objNull; _tgtD = 1e9;
 			//--- M2: the first few MOUNTED teams take the rear harass target (the long rear leg needs wheels).
-			if (!isNull _harassTgt && {_harassAssigned < _harassN} && {_hasVeh}) then {
+			//--- REACH GATE (Ray): only take the harass target if it is within _reach of the team leader; otherwise
+			//--- fall through to the fist else-branch (stay offensive on a REACHABLE town). Without this a mounted team
+			//--- could be sent on a cross-map death-march to the enemy's deepest town.
+			if (!isNull _harassTgt && {_harassAssigned < _harassN} && {_hasVeh} && {(_ldrPos distance _harassTgt) <= _reach}) then {
 				_tgt = _harassTgt; _harassAssigned = _harassAssigned + 1;
 			} else {
 				//--- concentrate on the fist: nearest in reach; else nearest outright (stay offensive, never idle).

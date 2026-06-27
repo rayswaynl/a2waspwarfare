@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -20,10 +20,14 @@ if (isNil "_logik") exitWith {};
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
 
-//--- AICOM v2 (consolidate, Ray): after the fist captures a town the Allocator stamps wfbe_aicom_consolidate_until;
-//--- skip this re-task pass while it's live so teams keep their current orders (regroup at the just-taken town)
-//--- ~a minute before advancing. Only when the v2 Allocator is live; harmless otherwise.
-if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0 && {time < (_logik getVariable ["wfbe_aicom_consolidate_until", -1e9])}) exitWith {};
+//--- AICOM v2 (consolidate, Ray): after the fist captures a town the Allocator stamps wfbe_aicom_consolidate_until.
+//--- PER-TEAM SCOPING FIX (Ray): the OLD side-wide exitWith froze EVERY team for the window (harasser + en-route +
+//--- relief), violating the never-standing-still-AI rule. Now we only flag it; inside the team loop a team keeps its
+//--- current orders (regroup) ONLY if it has ARRIVED at a FIST alloc_target. Harasser (alloc_target = deep enemy town,
+//--- not in the fist), en-route teams, relief and human-led teams all re-task normally. A2-OA-safe (plain getVariable).
+_consolidating = ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0) && (time < (_logik getVariable ["wfbe_aicom_consolidate_until", -1e9]));
+_fistSet = []; if (_consolidating) then {_fistSet = _logik getVariable ["wfbe_aicom_targets", []]; if (isNil "_fistSet") then {_fistSet = []}};
+_consolRad = missionNamespace getVariable ["WFBE_C_AICOM2_CONSOLIDATE_RADIUS", 250];
 
 //--- Hybrid: when a human commands this side, only auto-assign DELEGATED (autonomous) teams.
 _cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
@@ -122,6 +126,17 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	if (_modeNow == "move") then {_explicitMode = true};
 	if (_modeNow == "patrol") then {_explicitMode = true};
 	if (_modeNow == "defense") then {_explicitMode = true};
+
+	//--- CONSOLIDATE SKIP (per-team, Ray): during the post-capture hold window, a team that has ARRIVED at a FIST
+	//--- alloc_target is deliberately regrouping - preserve its current orders (treat as explicit) so it is NOT
+	//--- re-tasked this pass. Teams en-route (alloc_target set but not yet within _consolRad), the harasser
+	//--- (alloc_target NOT in the fist), relief and human-led teams fall through and re-task normally. A2-OA-safe.
+	if (_consolidating && {!isNull _team}) then {
+		_allocTgt = _team getVariable "wfbe_aicom_alloc_target";
+		if (!isNil "_allocTgt" && {typeName _allocTgt == "OBJECT"} && {!isNull _allocTgt} && {_allocTgt in _fistSet}) then {
+			if (!isNull (leader _team) && {((leader _team) distance _allocTgt) <= _consolRad}) then {_explicitMode = true};
+		};
+	};
 
 	//--- Drive only if AI-controllable (no human, or human delegated this team) AND the executor doesn't own it.
 	if (_aliveCount > 0) then {
