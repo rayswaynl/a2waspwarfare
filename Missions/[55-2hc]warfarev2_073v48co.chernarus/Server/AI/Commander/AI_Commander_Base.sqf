@@ -621,7 +621,7 @@ if (_fwdEnable && {_dual}) then {
 		_fwdMyID   = (_side) Call WFBE_CO_FNC_GetSideID;
 		_supply    = (_side) Call WFBE_CO_FNC_GetSideSupply; //--- re-read LIVE supply (the primary loop above already spent this tick).
 		_fwdCap    = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 40000];
-		_fwdSupplyGate = _fwdCap * (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FRAC", 0.80]);
+		_fwdSupplyGate = (_fwdCap min 50000) * (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FRAC", 0.80]); //--- clamp the cap at the realistic prod limit so DEBUG's inflated 900k supply-cap doesn't push the gate to 720k (unreachable); prod (40k cap) is unchanged at 32k.
 		if (_fwdSupplyGate < (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR", 24000])) then {_fwdSupplyGate = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR", 24000]};
 		_fwdReserve = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_RESERVE", 6000];
 		_fwdMinDist = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_MIN_DIST", 3500];
