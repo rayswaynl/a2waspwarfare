@@ -1105,6 +1105,25 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {
 	["INITIALIZATION", Format ["Init_Server.sqf: AI Commander Wildcard workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
 };
 
+//--- EASA try-out (test build): drop one GUER custom-kit technical (Offroad_DSHKM_Gue) next to the first
+//--- GUER player who spawns, so the EASA kit menu can be smoked from round start. Server-side one-shot.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+	[] spawn {
+		private ["_p","_pos","_veh"];
+		waitUntil {
+			sleep 3;
+			_p = objNull;
+			{ if (isPlayer _x && {alive _x} && {side _x == resistance}) exitWith {_p = _x} } forEach allUnits;
+			!isNull _p
+		};
+		if (!isNil "WFBE_EASA_TRYOUT_SPAWNED") exitWith {};
+		WFBE_EASA_TRYOUT_SPAWNED = true;
+		_pos = [getPos _p, 8, 14] Call WFBE_CO_FNC_GetRandomPosition;
+		_veh = ["Offroad_DSHKM_Gue", _pos, resistance, random 360, false, true] Call WFBE_CO_FNC_CreateVehicle;
+		diag_log Format ["EASA-TRYOUT| spawned GUER kit technical %1 at %2 near %3", typeOf _veh, _pos, name _p];
+	};
+};
+
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
