@@ -125,4 +125,16 @@ switch (_request) do {
 			[_unit] joinSilent grpNull;
 		};
 	};
+	//--- GUER mortar strike result (server -> caller). The server rejected the strike (e.g. the GUER team could not
+	//--- afford the call-in fee). Refund the client's optimistic cooldown stamp (set in Action_GuerMortarStrike.sqf
+	//--- before the request was sent) so the failed attempt does not burn the cooldown, and tell the player why.
+	case "guer-mortar-result": {
+		Private ["_ok","_msg"];
+		_ok  = _args select 0;
+		_msg = _args select 1;
+		if (!_ok) then {
+			player setVariable ["wfbe_mortar_last", -9999];   //--- un-stamp: the strike never fired.
+		};
+		if (typeName _msg == "STRING" && {_msg != ""}) then {titleText [_msg, "PLAIN"]};
+	};
 };
