@@ -71,6 +71,7 @@ WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Comma
 WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_MHQReloc.sqf";
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
+WFBE_SE_FNC_AI_Commander_Wildcard_GUER = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard_GUER.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
 WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroupsDefender.sqf";
 WFBE_SE_FNC_GetTownPatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownPatrol.sqf";
@@ -1103,8 +1104,16 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
 
 //--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
-	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: base-less, no wildcard events
+	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER runs its OWN base-less deck below (AI_Commander_Wildcard_GUER), not this HQ/funds-based worker
 	["INITIALIZATION", Format ["Init_Server.sqf: AI Commander Wildcard workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
+};
+
+//--- GUER (resistance) Wildcard events — base-less insurgent deck (Ray 2026-06-27). Independent of the
+//--- AI-commander gate (GUER has no commander); needs only resistance present + the toggle. Pays GUER
+//--- PLAYERS directly (see AI_Commander_Wildcard_GUER.sqf). All server-side; no client files added.
+if ((missionNamespace getVariable ["WFBE_C_GUER_WILDCARD", 1]) == 1 && {resistance in WFBE_PRESENTSIDES}) then {
+	[] Spawn WFBE_SE_FNC_AI_Commander_Wildcard_GUER;
+	["INITIALIZATION", Format ["Init_Server.sqf: GUER Wildcard worker started (interval=%1s).", missionNamespace getVariable ["WFBE_C_GUER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
