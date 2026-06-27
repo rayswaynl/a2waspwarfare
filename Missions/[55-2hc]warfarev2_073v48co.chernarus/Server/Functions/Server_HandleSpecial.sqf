@@ -674,7 +674,7 @@ switch (_args select 0) do {
 							_get = missionNamespace getVariable (typeOf _x);
 							if (!isNil "_get") then {_payout = _payout + round ((_get select QUERYUNITPRICE) * _coef)};
 							//--- B67: personal detonator reward (Man-class only victims).
-							if ((typeOf _x) isKindOf "Man") then {
+							if (!isNull _x) then {  //--- Ray 2026-06-27 DEFINITIVE GUER VBIED reward: was isKindOf "Man" -> now also pay the detonator WALLET for crewed-VEHICLE kills (VBIEDing a convoy paid the wallet nothing). _get2 reads the vehicle/unit config price.
 								_get2 = missionNamespace getVariable (typeOf _x);
 								if (!isNil "_get2") then {
 									private ["_b"];
@@ -686,7 +686,7 @@ switch (_args select 0) do {
 						};
 					} forEach _victims;
 					if (_payout > 0) then {
-						[_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						false; //--- Ray 2026-06-27: team-funds path DISABLED (paid group _driver captured PRE-suicide; never reaches the respawned base-less GUER detonator). Wallet/UID path below is the single channel. was: [_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
 						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
@@ -735,7 +735,8 @@ switch (_args select 0) do {
 				} forEach _structVictims;
 				//--- B67: pay the detonator personally (cash to their wallet via the new client receiver, dispatched
 				//--- to the captured UID) + apply the accumulated score to the captured driver object if still valid.
-				if (_drvUID != "" && {_persBounty > 0}) then {
+				diag_log ("GUERVBIED|v1|drvUID=" + (str _drvUID) + "|victims=" + (str (count _victims)) + "|payout=" + (str _payout) + "|persBounty=" + (str _persBounty) + "|persScore=" + (str _persScore)); //--- Ray 2026-06-27: definitive trace of a GUER VBIED payout (always-on).
+					if (_drvUID != "" && {_persBounty > 0}) then {
 					[_drvUID, "GuerVbiedBounty", _persBounty] Call WFBE_CO_FNC_SendToClients;
 					["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED personal bounty [%1] + score [%2] paid to detonator UID [%3].", _persBounty, _persScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
 				};
