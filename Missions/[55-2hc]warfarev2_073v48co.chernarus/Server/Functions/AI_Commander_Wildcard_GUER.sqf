@@ -16,8 +16,9 @@
 	                           * Resolution = faction PROGRESSION for the winner (Ray's model):
 	                               - Conventional team CLEARS it (wipes the manning force) -> that team's owning side
 	                                 gets a SUPPLY injection (fuels their research/upgrade ladder) + the kill-bounty.
-	                               - GUER HOLDS it to timeout -> GUER kill-progress bonus (WFBE_GUER_PLAYER_KILLS,
-	                                 which Server_GuerStipend converts to the next vehicle tier).
+	                               - GUER HOLDS it to timeout -> a FOB FACTORY TOKEN (WFBE_GUER_FOB_AVAIL), type scaled
+	                                 by the checkpoint tier: tier0-1 Barracks / tier2 Light Factory / tier3 Heavy Factory.
+	                                 i.e. a held checkpoint = captured materiel to deploy a forward factory of that type.
 
 	PAYOUT MODEL: GUER is base-less, so cash goes straight to GUER players via the EXISTING client PVFunction
 	  GuerVbiedBounty, sent to the resistance SIDE object (Client_HandlePVF matches a SIDE dest against sideJoined;
@@ -32,7 +33,7 @@
 	  WFBE_C_GUER_CP_TAX             default 60    (occupier supply drained per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_TOLL            default 250   (cash paid to GUER players per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_CLEAR           default 700   (supply granted to the clearing side, scaled by tier)
-	  WFBE_C_GUER_CP_HOLDKILLS       default 3     (GUER kill-progress bonus if held to timeout, scaled by tier)
+	  (held-to-timeout grants one FOB factory token of a tier-scaled type - no tunable; always exactly one)
 */
 
 private ["_enabled","_interval","_sideID"];
@@ -215,8 +216,8 @@ while {!gameOver} do {
 
 						//--- WATCHER: tax while it stands; resolve to faction progression on clear/timeout; clean up.
 						[_grp, _veh, _target, _occSide, _mk, _tier, _cpLabel] spawn {
-							private ["_g","_v","_town","_occ","_marker","_t","_label","_el","_window","_cleared","_taxTick",
-							         "_taxAmt","_toll","_clear","_holdK","_k","_nm","_x"];
+							private ["_g","_v","_town","_occ","_marker","_t","_label","_el","_window","_cleared",
+							         "_taxAmt","_toll","_clear","_fobIdx","_fobAvail","_fobName","_x"];
 							_g = _this select 0; _v = _this select 1; _town = _this select 2; _occ = _this select 3;
 							_marker = _this select 4; _t = _this select 5; _label = _this select 6;
 
@@ -224,7 +225,6 @@ while {!gameOver} do {
 							_taxAmt  = (missionNamespace getVariable ["WFBE_C_GUER_CP_TAX",  60])  * (1 + _t);
 							_toll    = (missionNamespace getVariable ["WFBE_C_GUER_CP_TOLL", 250])  * (1 + _t);
 							_clear   = (missionNamespace getVariable ["WFBE_C_GUER_CP_CLEAR",700])  * (1 + _t);
-							_holdK   = (missionNamespace getVariable ["WFBE_C_GUER_CP_HOLDKILLS",3]) * (1 + _t);
 
 							_el = 0; _cleared = false;
 							while {!_cleared && {_el < _window} && {!gameOver}} do {
@@ -242,14 +242,24 @@ while {!gameOver} do {
 								//--- WINNER = the occupier whose supply road it threatened: SUPPLY (research fuel) for their ladder.
 								[_occ, _clear, "Insurgent checkpoint cleared - supply recovered.", false] Call ChangeSideSupply;
 								[nil, "LocalizeMessage", ["Wildcard", Format ["[Wildcard] %1 cleared the Insurgent Checkpoint near %2 (+supply).", str _occ, _town getVariable ["name","?"]]]] Call WFBE_CO_FNC_SendToClients;
-								diag_log format ["AICOMSTAT|v2|EVENT|GUER|%1|GUERCP_CLEARED|%2|byOcc=%3|clearSupply=%4", round (time/60), _label, str _occ, _clear];
+								diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERCP_CLEARED|" + (str _label) + "|byOcc=" + (str _occ) + "|clearSupply=" + (str _clear)); //--- same format->concatenation fix as GUERCP_HELD.
 							} else {
-								//--- GUER HELD it to timeout: kill-progress bonus (-> next vehicle tier via Server_GuerStipend).
-								_k = (missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) + _holdK;
-								missionNamespace setVariable ["WFBE_GUER_PLAYER_KILLS", _k];
-								publicVariable "WFBE_GUER_PLAYER_KILLS";
-								[nil, "LocalizeMessage", ["Wildcard", Format ["[Wildcard] The Insurgent Checkpoint near %1 held - the insurgency tightens its grip.", _town getVariable ["name","?"]]]] Call WFBE_CO_FNC_SendToClients;
-								diag_log format ["AICOMSTAT|v2|EVENT|GUER|%1|GUERCP_HELD|%2|holdKills=%3|kills=%4", round (time/60), _label, _holdK, _k];
+								//--- GUER HELD it to timeout: grant a FOB FACTORY TOKEN (Ray 2026-06-27; REPLACES the old
+								//--- vehicle-tier kill-progress). Token TYPE scales with the checkpoint tier (= GUER vehicle tier):
+								//--- tier 0-1 Barracks, tier 2 Light Factory, tier 3 Heavy Factory. Mirrors the FOB grant in
+								//--- Server_BuildingKilled.sqf (copy [B,LF,HF], bump the index, publicVariable) so the depot FOB-truck
+								//--- pool + the RHUD "B|LF|HF" row both pick it up - i.e. a held checkpoint = captured materiel to
+								//--- deploy a forward factory of that type.
+								_fobIdx = 0;
+								if (_t >= 2) then {_fobIdx = 1};
+								if (_t >= 3) then {_fobIdx = 2};
+								_fobName  = ["Barracks","Light Factory","Heavy Factory"] select _fobIdx;
+								_fobAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]);
+								_fobAvail set [_fobIdx, (_fobAvail select _fobIdx) + 1];
+								missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _fobAvail];
+								publicVariable "WFBE_GUER_FOB_AVAIL";
+								[nil, "LocalizeMessage", ["Wildcard", Format ["[Wildcard] The Insurgent Checkpoint near %1 held - captured materiel: %2 FOB unlocked.", _town getVariable ["name","?"], _fobName]]] Call WFBE_CO_FNC_SendToClients;
+								diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERCP_HELD|" + (str _label) + "|fobToken=" + (str _fobName) + "|avail=" + (str _fobAvail)); //--- fix (Ray boot-smoke 2026-06-27): was diag_log format[...] which threw "Error in expression" at runtime; the + concatenation (str-safe) is the proven AICOM2 pattern.
 							}
 
 							//--- CLEANUP: husk + crew + foot + group + marker.
