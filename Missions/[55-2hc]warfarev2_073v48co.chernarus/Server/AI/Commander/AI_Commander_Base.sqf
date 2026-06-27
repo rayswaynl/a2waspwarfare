@@ -604,3 +604,118 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 		};
 	};
 };
+
+//--- ============================================================================================
+//--- 5) FORWARD OUTPOST (2nd base, AICOM v2 / Ray). When supply is ABUNDANT, stand up a SECOND
+//---    CommandCenter + its own doctrine factory + light defense at a DISTANT forward owned town, so
+//---    spare supply projects production toward the front. Self-contained, supply-guarded, idempotent.
+//---    REUSES _findBuildPos by repointing the _hqPos CLOSURE var to the forward center (the helper reads
+//---    _hqPos as a free var, L137/141). Runs LAST so _hqPos is free to repoint. FWDBASE_ENABLE=0 = inert.
+//--- ============================================================================================
+private ["_fwdEnable","_relocActive","_rearHQpos","_fwdMyID","_fwdCap","_fwdSupplyGate","_fwdReserve","_fwdMinDist","_ccCount","_basesMax","_frontF","_haveFront","_frontPosF","_bestFwdT","_bestFwdD","_dxF","_dyF","_dF","_standoffF","_fwdPos","_fwdOrder","_fwdHave","_ord","_fwdIdx","_fwdClass","_baseRF","_presentF","_fwdCost","_fwdFacP","_fwdScript","_fwdDir","_fwdCCpresent","_fwdDefMax","_fwdDefCount","_fwdDefClass","_fwdDefData","_fwdDefPrice","_fwdFunds","_fwdDefPos","_fwdDefDir","_fwdDx2","_fwdDy2"];
+_fwdEnable = (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_ENABLE", 1]) > 0;
+if (_fwdEnable && {_dual}) then {
+	_relocActive = _logik getVariable ["wfbe_mhqreloc_active", false];
+	if (!_relocActive && {(_side) Call WFBE_CO_FNC_GetSideHQDeployStatus} && {!(_logik getVariable ["wfbe_hqinuse", false])}) then {
+		_rearHQpos = +_hqPos;                               //--- capture the REAR HQ pos BEFORE any repoint.
+		_fwdMyID   = (_side) Call WFBE_CO_FNC_GetSideID;
+		_supply    = (_side) Call WFBE_CO_FNC_GetSideSupply; //--- re-read LIVE supply (the primary loop above already spent this tick).
+		_fwdCap    = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 40000];
+		_fwdSupplyGate = _fwdCap * (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FRAC", 0.80]);
+		if (_fwdSupplyGate < (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR", 24000])) then {_fwdSupplyGate = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR", 24000]};
+		_fwdReserve = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_RESERVE", 6000];
+		_fwdMinDist = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_MIN_DIST", 3500];
+		if (_supply >= _fwdSupplyGate) then {
+			_ccCount = {((_x getVariable ["wfbe_structure_type", ""]) == "CommandCenter") && {alive _x}} count _structures;
+			_basesMax = missionNamespace getVariable ["WFBE_C_AICOM_BASES_MAX", 2];
+			if (_ccCount >= 1 && {_ccCount < _basesMax}) then {
+				//--- FIND a forward owned town: own-held, >= MIN_DIST from the rear HQ, nearest the published front.
+				_frontF = objNull; _haveFront = false;
+				private "_tgF"; _tgF = _logik getVariable ["wfbe_aicom_targets", []];
+				if (typeName _tgF == "ARRAY" && {count _tgF > 0}) then {_frontF = _tgF select 0; if (!isNull _frontF) then {_haveFront = true}};
+				_frontPosF = if (_haveFront) then {getPos _frontF} else {[]};
+				_bestFwdT = objNull; _bestFwdD = 1e9;
+				{
+					if ((_x getVariable ["sideID", -1]) == _fwdMyID) then {
+						private ["_dHQ","_score"];
+						_dHQ = _x distance _rearHQpos;
+						if (_dHQ >= _fwdMinDist) then {
+							_score = if (_haveFront) then {_x distance _frontPosF} else {0 - _dHQ};
+							if (_score < _bestFwdD) then {_bestFwdD = _score; _bestFwdT = _x};
+						};
+					};
+				} forEach towns;
+				if (!isNull _bestFwdT) then {
+					//--- forward CENTER = standoff BEHIND the town toward the rear HQ (out of the town core).
+					_dxF = (_rearHQpos select 0) - (getPos _bestFwdT select 0);
+					_dyF = (_rearHQpos select 1) - (getPos _bestFwdT select 1);
+					_dF  = sqrt (_dxF*_dxF + _dyF*_dyF); if (_dF < 1) then {_dF = 1};
+					_standoffF = (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_TOWN_STANDOFF", 350]) min _dF;
+					_fwdPos = [(getPos _bestFwdT select 0) + (_dxF / _dF) * _standoffF, (getPos _bestFwdT select 1) + (_dyF / _dF) * _standoffF, 0];
+					if (((_fwdPos distance _rearHQpos) >= _fwdMinDist) && {!surfaceIsWater _fwdPos}) then {
+						_hqPos = _fwdPos;   //--- THE CRUX: _findBuildPos now rings the FORWARD center.
+						_fwdOrder = if (_doctrine == "HF") then {["CommandCenter","Heavy"]} else {["CommandCenter","Light"]};
+						_fwdHave = false;
+						{
+							_ord = _x;   //--- capture the order TYPE-KEY before the inner forEach clobbers _x.
+							if (!_fwdHave) then {
+								_fwdIdx = _names find _ord;
+								if (_fwdIdx >= 0) then {
+									_fwdClass = _classes select _fwdIdx;
+									_baseRF = missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450];
+									_presentF = false;
+									{ if (typeOf _x == _fwdClass && {alive _x} && {((getPos _x) distance _fwdPos) <= _baseRF}) exitWith {_presentF = true} } forEach _structures;
+									if (!_presentF && {(time - (_logik getVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], -1e6])) < 300}) then {_presentF = true};
+									if (!_presentF) then {
+										_fwdHave = true;   //--- one-per-pass latch (consume the slot whether or not affordable).
+										_fwdCost = _costs select _fwdIdx;
+										if (_supply >= (_fwdCost + _fwdReserve)) then {
+											_fwdFacP = if (_ord in ["Light","Heavy","Aircraft"]) then {
+												[(missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MAX", 110]), 1] Call _findBuildPos
+											} else {
+												[(missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MAX", 110])] Call _findBuildPos
+											};
+											if (_dual) then {[_side, -_fwdCost, Format ["AI commander forward outpost (%1).", _ord], false] Call ChangeSideSupply};
+											_logik setVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], time];
+											_fwdScript = _scripts select _fwdIdx;
+											_fwdDir = if (_haveFront) then {((_frontPosF select 0) - (_fwdPos select 0)) atan2 ((_frontPosF select 1) - (_fwdPos select 1))} else {random 360};
+											[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]);
+											["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST building %2 at %3 (town %4, cost %5, distRear %6).", _sideText, _ord, _fwdFacP, (_bestFwdT getVariable ["name","?"]), _fwdCost, round (_fwdPos distance _rearHQpos)]] Call WFBE_CO_FNC_AICOMLog;
+											diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_BUILD|struct=" + _ord + "|cost=" + str _fwdCost + "|town=" + (_bestFwdT getVariable ["name","?"]) + "|distRear=" + str (round (_fwdPos distance _rearHQpos)));
+										};
+									};
+								};
+							};
+						} forEach _fwdOrder;
+						//--- LIGHT forward defense: self-healing manned statics once the forward CC stands.
+						_fwdCCpresent = false;
+						{ if ((_x getVariable ["wfbe_structure_type", ""]) == "CommandCenter" && {alive _x} && {((getPos _x) distance _fwdPos) <= (missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450])}) exitWith {_fwdCCpresent = true} } forEach _structures;
+						if (_fwdCCpresent) then {
+							_fwdDefMax = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_DEF_MAX", 2];
+							_fwdDefCount = 0;
+							{ if (!isNull _x && {alive _x} && {(_x getVariable ["wfbe_defense", false])}) then {_fwdDefCount = _fwdDefCount + 1} } forEach (_fwdPos nearEntities [["StaticWeapon"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+							if (_fwdDefCount < _fwdDefMax) then {
+								_fwdDefClass = missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText];
+								if (!isNil "_fwdDefClass") then {
+									if (typeName _fwdDefClass == "ARRAY") then {_fwdDefClass = _fwdDefClass select 0};
+									_fwdDefData = missionNamespace getVariable _fwdDefClass;
+									_fwdDefPrice = if (!isNil "_fwdDefData") then {_fwdDefData select QUERYUNITPRICE} else {0};
+									_fwdFunds = (_side) Call GetAICommanderFunds;
+									if (_fwdFunds >= _fwdDefPrice) then {
+										[_side, -_fwdDefPrice] Call ChangeAICommanderFunds;
+										_fwdDefPos = [22, 40] Call _findBuildPos;
+										_fwdDx2 = (_fwdDefPos select 0) - (_fwdPos select 0); _fwdDy2 = (_fwdDefPos select 1) - (_fwdPos select 1);
+										_fwdDefDir = if (abs _fwdDx2 < 0.01 && {abs _fwdDy2 < 0.01}) then {random 360} else {_fwdDx2 atan2 _fwdDy2};
+										[_fwdDefClass, _side, _fwdDefPos, _fwdDefDir, true, true] Call ConstructDefense;
+										["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST defense %2/%3 [%4].", _sideText, _fwdDefCount + 1, _fwdDefMax, _fwdDefClass]] Call WFBE_CO_FNC_AICOMLog;
+										diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_DEFENSE|n=" + str (_fwdDefCount + 1) + "|max=" + str _fwdDefMax);
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
