@@ -44,6 +44,31 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,0]];
 
+//--- AICOM v2 ROSTER BOOST (Ray 2026-06-27, AI-COMMANDER-ONLY - appended to _aiTeamTemplates only, does NOT
+//--- touch the shared squads / player options): heavier armor + an attack heli + a spec-ops squad so a
+//--- 'strong' AI fields elite teams. Verified A2-OA classnames; gated behind TOP factory tiers so they
+//--- appear occasionally (the cost-weighted AICOM founding draw fields them as tech + funds allow).
+_u = ["M1A2_US_TUSK_MG_EP1"]; _u = _u + ["M1A2_US_TUSK_MG_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Armor - MBT Platoon (M1A2 TUSK)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,3,0]];
+
+_u = ["AH64D_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Attack Helicopter (AH-64D)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
+
+_u = ["US_Delta_Force_TL_EP1"]; _u = _u + ["US_Delta_Force_MG_EP1"]; _u = _u + ["US_Delta_Force_Assault_EP1"]; _u = _u + ["US_Delta_Force_Assault_EP1"]; _u = _u + ["US_Delta_Force_M14_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Infantry - Spec Ops (Delta Force)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
+_aiTeamTypes = _aiTeamTypes + [0];
+_aiTeamUpgrades = _aiTeamUpgrades + [[3,0,0,0]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];
