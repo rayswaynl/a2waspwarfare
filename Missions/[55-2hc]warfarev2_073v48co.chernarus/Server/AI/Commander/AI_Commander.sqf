@@ -43,7 +43,13 @@ if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
 
 //--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
-	_doctrine = if (random 1 > 0.5) then {"HF"} else {"LF"};
+	//--- AICOM v2 (wiki + Miksuu strategy): de-correlate the doctrine from the ENEMY's for varied matches (was a
+		//--- blind coin flip - both sides could roll identical plans). If the enemy already picked, take the OTHER route.
+		private ["_eSideD","_eLogikD","_eDocD"];
+		_eSideD = if (_side == west) then {east} else {west};
+		_eLogikD = (_eSideD) Call WFBE_CO_FNC_GetSideLogic;
+		_eDocD = if (isNil "_eLogikD" || {isNull _eLogikD}) then {""} else {_eLogikD getVariable ["wfbe_aicom_doctrine", ""]};
+		_doctrine = if (_eDocD == "HF") then {"LF"} else {if (_eDocD == "LF") then {"HF"} else {if (random 1 > 0.5) then {"HF"} else {"LF"}}};
 	_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
 	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -59,12 +65,14 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 			[WFBE_UP_BARRACKS,1],
 			[_factory,1],
 			[WFBE_UP_GEAR,1],
+			[WFBE_UP_SUPPLYRATE,1],
 			[WFBE_UP_PATROLS,1],
 			[_factory,2],
 			[WFBE_UP_GEAR,2],
 			[WFBE_UP_BARRACKS,2],
 			[_factory,3],
 			[WFBE_UP_GEAR,3],
+			[WFBE_UP_SUPPLYRATE,2],
 			[WFBE_UP_PATROLS,2],
 			[WFBE_UP_PATROLS,3]
 		];

@@ -518,7 +518,12 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 
 //--- 3) Base defenses: a few manned statics once the Barracks stands (crewed from it).
 _defMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_DEFENSES_MAX", 4];
-_defCount = _logik getVariable ["wfbe_aicom_defenses", 0];
+//--- AICOM v2 (Ray, SELF-HEALING within the 4-cap): count LIVE base defenses (StaticWeapon tagged wfbe_defense
+//--- near the HQ), NOT a monotonic counter, so a destroyed gun is REBUILT next pass and the base never erodes to
+//--- nothing over a long round. Mirror onto wfbe_aicom_defenses so the arty gate (~L558) reads the live value.
+_defCount = 0;
+{ if (!isNull _x && {alive _x} && {(_x getVariable ["wfbe_defense", false])}) then {_defCount = _defCount + 1} } forEach (_hqPos nearEntities [["StaticWeapon"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+_logik setVariable ["wfbe_aicom_defenses", _defCount];
 if (_defCount < _defMax) then {
 	_have = false;
 	{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
