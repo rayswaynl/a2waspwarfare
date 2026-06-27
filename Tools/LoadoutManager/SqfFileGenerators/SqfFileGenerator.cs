@@ -85,19 +85,14 @@ public class SqfFileGenerator
     {
         string s = "\n\n// === EASA expansion: ground-vehicle custom kits (player vehicles, EASA stations only) ===";
 
-        // GUER technical: improvised rocket pod + camo netting.
+        // GUER try-out technical: ONE vehicle offering all three kit types as selectable rows, so the
+        // whole system can be smoked from a single vehicle at a friendly town-center EASA point.
         s += "\n_easaVehi = _easaVehi + ['Offroad_DSHKM_Gue'];";
         s += "\n_easaDefault = _easaDefault + [[[],[]]];";
         s += "\n_easaLoadout = _easaLoadout + [\n[";
         s += "\n[600,'Rocket pod (S-8 x12) [KIT]',[[],[]],false,['MOUNT',[['','Igla_AA_pod_East',[0,-1.35,0.55],0]],'R_S8T_AT',12,[0,-1.35,1.0],[0,3,0.45],2,180]],";
+        s += "\n[800,'Sandbag plating [KIT]',[[],[]],false,['ARMOR',[['','Land_fort_bagfence_round',[0.95,0.1,-0.1],90],['','Land_fort_bagfence_round',[-0.95,0.1,-0.1],90]],40,3,['_AT','PG7','PG9','TOW','AT13','Maverick','Hellfire','Javelin','Metis','RPG','Vikhr','Kornet']]],";
         s += "\n[100,'Camo netting [KIT]',[[],[]],false,['COSMETIC',[['','Land_CamoNet_EAST',[0,-1.0,0.65],0]]]]";
-        s += "\n]];";
-
-        // GUER technical: improvised sandbag plating (finite AT mitigation).
-        s += "\n_easaVehi = _easaVehi + ['Pickup_PK_GUE'];";
-        s += "\n_easaDefault = _easaDefault + [[[],[]]];";
-        s += "\n_easaLoadout = _easaLoadout + [\n[";
-        s += "\n[800,'Sandbag plating [KIT]',[[],[]],false,['ARMOR',[['','Land_fort_bagfence_round',[0.95,0.1,-0.1],90],['','Land_fort_bagfence_round',[-0.95,0.1,-0.1],90]],40,3,['_AT','PG7','PG9','TOW','AT13','Maverick','Hellfire','Javelin','Metis','RPG','Vikhr','Kornet']]]";
         s += "\n]];";
 
         return s;
