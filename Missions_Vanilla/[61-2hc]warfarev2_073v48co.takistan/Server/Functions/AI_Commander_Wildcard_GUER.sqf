@@ -260,7 +260,7 @@ while {!gameOver} do {
 								publicVariable "WFBE_GUER_FOB_AVAIL";
 								[nil, "LocalizeMessage", ["Wildcard", Format ["[Wildcard] The Insurgent Checkpoint near %1 held - captured materiel: %2 FOB unlocked.", _town getVariable ["name","?"], _fobName]]] Call WFBE_CO_FNC_SendToClients;
 								diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERCP_HELD|" + (str _label) + "|fobToken=" + (str _fobName) + "|avail=" + (str _fobAvail)); //--- fix (Ray boot-smoke 2026-06-27): was diag_log format[...] which threw "Error in expression" at runtime; the + concatenation (str-safe) is the proven AICOM2 pattern.
-							}
+							};
 
 							//--- CLEANUP: husk + crew + foot + group + marker.
 							if (!isNull _v) then {{deleteVehicle _x} forEach (crew _v); deleteVehicle _v};
