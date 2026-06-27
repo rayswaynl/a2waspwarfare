@@ -392,6 +392,14 @@ while {true} do {
 				//--- while the AI is actually in charge. Client-side deterministic = no server round-trip, JIP-safe.
 				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 1]) > 0 && {sideJoined in [west, east]}) then {
 					_commanderText = Format ["%1 (AI)", (switch (sideJoined) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
+					//--- AICOM v2 PREVIEW: append the AI commander's LIVE INTENT (side-keyed PV, published by
+					//--- AI_Commander.sqf on the strategy tick; offense-forward wording). Friendly-only via the
+					//--- joined-side id. Cheap: a single Format on a value the client already has, no extra control.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0 && {!isNil "WFBE_Client_SideID"}) then {
+						private "_aiInt";
+						_aiInt = missionNamespace getVariable [Format ["WFBE_AICOM_INTENT_%1", WFBE_Client_SideID], ""];
+						if (_aiInt != "") then {_commanderText = Format ["%1 - %2", _commanderText, _aiInt]};
+					};
 				};
 			};
 			[4, [0.85, 0, 0, 1]] call _RHUDSetColor;

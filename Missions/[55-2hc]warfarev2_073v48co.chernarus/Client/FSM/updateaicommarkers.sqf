@@ -162,5 +162,34 @@ while {true} do {
 	} forEach _tracked;
 	_tracked = _keep;
 
+	//--- AICOM v2 PREVIEW: draw the AI commander's CURRENT OBJECTIVE town for the joined side as a
+	//--- single mil_objective marker (side-keyed PV published by AI_Commander.sqf). FRIENDLY-ONLY:
+	//--- reads only WFBE_AICOM_OBJ*_<_mySid> (the joined side), like the own-side arrow filter above -
+	//--- the enemy's objective var is never read, so no intel leak. One marker, moved/relabelled on change.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0) then {
+		private ["_objPos","_objNm","_objMk","_objCol"];
+		_objPos = missionNamespace getVariable [format ["WFBE_AICOM_OBJPOS_%1", _mySid], [0,0,0]];
+		_objNm  = missionNamespace getVariable [format ["WFBE_AICOM_OBJNAME_%1", _mySid], ""];
+		_objMk = "wfbe_aicom_objective_mk";
+		if (!gameOver && {_objNm != ""} && {(_objPos select 0) != 0}) then {
+			_objCol = switch (_mySid) do {
+				case WFBE_C_WEST_ID: {missionNamespace getVariable "WFBE_C_WEST_COLOR"};
+				case WFBE_C_EAST_ID: {missionNamespace getVariable "WFBE_C_EAST_COLOR"};
+				case WFBE_C_GUER_ID: {missionNamespace getVariable "WFBE_C_GUER_COLOR"};
+				default {"ColorBlack"};
+			};
+			if (markerType _objMk == "") then {
+				createMarkerLocal [_objMk, _objPos];
+				_objMk setMarkerTypeLocal "mil_objective";
+				_objMk setMarkerColorLocal _objCol;
+				_objMk setMarkerSizeLocal [1,1];
+			};
+			_objMk setMarkerPosLocal _objPos;
+			_objMk setMarkerTextLocal (Format ["AI OBJ: %1", _objNm]);
+		} else {
+			if (markerType _objMk != "") then {deleteMarkerLocal _objMk};
+		};
+	};
+
 	if (visibleMap || shownGPS) then {sleep 0.5} else {sleep 8};  //--- A2-fix 2026-06-14: map-aware cadence (smooth arrows while map open, idle slow otherwise)
 };

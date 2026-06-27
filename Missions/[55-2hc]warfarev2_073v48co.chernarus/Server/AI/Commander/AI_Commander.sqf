@@ -272,6 +272,32 @@ while {!gameOver} do {
 				//--- immediately before the strategy worker. Behaviour-neutral until M3 reads it; emits AICOM2|SNAP.
 				if (!isNil "WFBE_SE_FNC_AICOM2_Snapshot") then {(_side) Call WFBE_SE_FNC_AICOM2_Snapshot};
 				(_side) Call WFBE_SE_FNC_AI_Com_Strategy; _ltStrat = time;
+				//--- AICOM v2 PREVIEW: publish side-keyed INTENT + OBJECTIVE for the client RHUD row + map
+				//--- marker (friendly-only; the client filters by WFBE_Client_SideID). Offense-forward wording.
+				//--- Runs right after Strategy so strat_mode/targets are fresh; PV only on change (cheap).
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0) then {
+					private ["_sm","_tg","_objT","_objNm","_intent","_iKey","_nKey","_pKey"];
+					_sm = _logik getVariable ["wfbe_aicom_strat_mode", "spearhead"];
+					_tg = _logik getVariable ["wfbe_aicom_targets", []];
+					_objT = if (count _tg > 0) then {_tg select 0} else {objNull};
+					_objNm = if (!isNull _objT) then {_objT getVariable ["name", "?"]} else {""};
+					_intent = switch (_sm) do {
+						case "strike":    {"ASSAULTING HQ"};
+						case "laststand": {"DEFENDING BASE"};
+						case "relief":    {"DEFENDING"};
+						default { if (_objNm != "") then {"ATTACKING " + _objNm} else {"ADVANCING"} };
+					};
+					_iKey = format ["WFBE_AICOM_INTENT_%1", _myID];
+					_nKey = format ["WFBE_AICOM_OBJNAME_%1", _myID];
+					_pKey = format ["WFBE_AICOM_OBJPOS_%1", _myID];
+					if ((missionNamespace getVariable [_iKey, ""]) != _intent) then {
+						missionNamespace setVariable [_iKey, _intent]; publicVariable _iKey;
+					};
+					if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
+						missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
+						missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
+					};
+				};
 			};
 			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
 			//--- mobilize -> DRIVE the MHQ forward to a standoff behind the front town -> re-deploy. Self-gates
