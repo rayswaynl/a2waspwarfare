@@ -342,6 +342,38 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith {};
 
+	//--- ARTY CAP (Ray 2026-06-27): at most WFBE_C_AICOM_ARTY_MAX artillery batteries ALIVE per AI commander. Mirror
+	//--- of the attack-heli cap above: count alive arty hulls this side; at/over cap, strip every arty template from
+	//--- _eligible so the founding draw degrade-walks to a buildable ground class. Counting alive HULLS (not a flag)
+	//--- self-corrects - when the battery dies the count drops and arty is re-admitted next cycle.
+	private ["_artyCap","_artyCls","_artyAlive","_eligNoArty","_hasArty","_ei"];
+	_artyCap = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_MAX", 1];
+	if (_artyCap > 0) then {
+		_artyCls = ["MLRS","MLRS_DES_EP1","GRAD_RU","GRAD_TK_EP1"];
+		_artyAlive = 0;
+		{
+			if (alive _x && {(typeOf _x) in _artyCls}) then {
+				if ((count crew _x) > 0 && {side ((crew _x) select 0) == _side}) then {
+					_artyAlive = _artyAlive + 1;
+				} else {
+					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side", sideUnknown]) == _side}) then {_artyAlive = _artyAlive + 1};
+				};
+			};
+		} forEach vehicles;
+		if (_artyAlive >= _artyCap) then {
+			_eligNoArty = [];
+			{
+				_ei = _x;   //--- capture the eligible-INDEX before the inner forEach clobbers _x.
+				_hasArty = false;
+				{ if (_x in _artyCls) exitWith {_hasArty = true} } forEach (_templates select _ei);
+				if (!_hasArty) then {_eligNoArty set [count _eligNoArty, _ei]};
+			} forEach _eligible;
+			_eligible = _eligNoArty;
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] arty cap hit (alive %2 >= cap %3) - arty templates stripped this cycle.", _sideText, _artyAlive, _artyCap]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+	if (count _eligible == 0) exitWith {};
+
 	//--- P1 combined-arms picker (claude-gaming 2026-06-15). Mirror of AI_Commander_AssignTypes.sqf:
 	//--- the old doctrine-only weighting (70% one vehicle track, 30% UNIFORM over all eligible) averaged
 	//--- ~70% infantry because infantry templates unlock first and stay eligible all match while vehicle
@@ -371,7 +403,7 @@ if (count _live > 0) then {
 		//--- airfield-tagged town (_hasAirfield, computed above from CAPTURE_UNLOCKS/airfield anchors). With no
 		//--- airfield held this is identical to the old blanket strip (helicopters-only). Choppers (air, no Plane)
 		//--- are unaffected and remain gated by the normal tier + AIR_MIN_TOWNS roster gate above.
-		if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {!_hasAirfield})) then {
+		if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {(!_hasAirfield) || (time < (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) || (random 1 >= (((((time - (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) max 0) / (((missionNamespace getVariable ["WFBE_C_AICOM_JET_FULL_SECS", 18000]) - (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) max 1)) min 1)))})) then { //--- AICOM v2 JET TIME-RAMP: planes also gated by time (no jets <2h, ramp 2h->5h).
 			(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
 		};
 	} forEach _eligible;
@@ -639,7 +671,31 @@ if (count _live > 0) then {
 	private ["_padClass"];
 	_padClass = "";
 	{ if (_x isKindOf "Man") then {_padClass = _x} } forEach _template;
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
+	//--- AICOM v2 JET RUNWAY-SPAWN (Ray 2026-06-27): a fixed-wing (Plane) team spawns on the CAPTURED AIRFIELD
+	//--- runway (the owned airfield town's hangar/logic), not at the rear factory - so it can take off + operate.
+	//--- Self-contained + gated to jet teams only (inert for every existing ground/heli founding).
+	private ["_spawnPos","_isJetTeam"];
+	_isJetTeam = ({_x isKindOf "Plane"} count _template) > 0;
+	_spawnPos = getPos _facObj;
+	//--- AICOM v2 (Ray): spawn at the factory's SPAWN BEACON - the HeliH-family pad players use (the closest pad
+	//--- within 80m is THIS factory's own), so AI teams egress from the designated spot, not the raw factory hull.
+	//--- HeliHRescue/HeliHCivil inherit HeliH; Sr_border is the barracks pad. Jets override to the airfield below.
+	private ["_padList","_bestPad","_bestD"];
+	_padList = (_facObj nearObjects ["HeliH", 80]) + (_facObj nearObjects ["Sr_border", 80]);
+	_bestPad = objNull; _bestD = 1e9;
+	{ if (!isNull _x && {(_x distance _facObj) < _bestD}) then {_bestD = _x distance _facObj; _bestPad = _x} } forEach _padList;
+	if (!isNull _bestPad) then {_spawnPos = getPos _bestPad};
+	if (_isJetTeam && {_hasAirfield}) then {
+		private ["_afTown","_haObj"];
+		_afTown = objNull;
+		{ if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_afTown = _x} } forEach towns;
+		if (!isNull _afTown) then {
+			_haObj = _afTown getVariable ["wfbe_hangar", objNull];
+			if (isNull _haObj) then {_haObj = _afTown getVariable ["wfbe_airfield_hangar_obj", objNull]};
+			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
+		};
+	};
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

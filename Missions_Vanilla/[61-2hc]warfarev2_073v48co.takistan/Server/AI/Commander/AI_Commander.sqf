@@ -43,7 +43,13 @@ if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
 
 //--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
-	_doctrine = if (random 1 > 0.5) then {"HF"} else {"LF"};
+	//--- AICOM v2 (wiki + Miksuu strategy): de-correlate the doctrine from the ENEMY's for varied matches (was a
+		//--- blind coin flip - both sides could roll identical plans). If the enemy already picked, take the OTHER route.
+		private ["_eSideD","_eLogikD","_eDocD"];
+		_eSideD = if (_side == west) then {east} else {west};
+		_eLogikD = (_eSideD) Call WFBE_CO_FNC_GetSideLogic;
+		_eDocD = if (isNil "_eLogikD" || {isNull _eLogikD}) then {""} else {_eLogikD getVariable ["wfbe_aicom_doctrine", ""]};
+		_doctrine = if (_eDocD == "HF") then {"LF"} else {if (_eDocD == "LF") then {"HF"} else {if (random 1 > 0.5) then {"HF"} else {"LF"}}};
 	_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
 	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -59,12 +65,14 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 			[WFBE_UP_BARRACKS,1],
 			[_factory,1],
 			[WFBE_UP_GEAR,1],
+			[WFBE_UP_SUPPLYRATE,1],
 			[WFBE_UP_PATROLS,1],
 			[_factory,2],
 			[WFBE_UP_GEAR,2],
 			[WFBE_UP_BARRACKS,2],
 			[_factory,3],
 			[WFBE_UP_GEAR,3],
+			[WFBE_UP_SUPPLYRATE,2],
 			[WFBE_UP_PATROLS,2],
 			[WFBE_UP_PATROLS,3]
 		];
@@ -120,7 +128,7 @@ while {!gameOver} do {
 	missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
 
 	_active = false;
-	if ((missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
+	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0) then { //--- FIX7 (Ray): defaulted [..,0] - the bare single-arg getVariable threw if nil at an early-boot race.
 		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
 	};
 
@@ -141,6 +149,7 @@ while {!gameOver} do {
 		if (_prevHuman) then {
 			if (!_humanCmd) then {
 				{ [_x, "towns"] Call SetTeamMoveMode; _x setVariable ["wfbe_exec_sig", []] } forEach (_logik getVariable ["wfbe_teams", []]);
+					_logik setVariable ["wfbe_aicom_focus", objNull]; _logik setVariable ["wfbe_aicom_focus_t0", -1e9]; //--- AICOM v2 fix (wiki cross-check): clear the commander FOCUS when a human commander leaves so a departed commander's "Move All" doesn't tunnel-vision the auto-AI for the 600s TTL.
 			};
 		};
 		_prevHuman = _humanCmd;
@@ -268,7 +277,40 @@ while {!gameOver} do {
 		if (_canBuild) then {
 			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
 			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
+				//--- AICOM v2 (M0): refresh the server-authoritative world-model snapshot (wfbe_aicom2_snap)
+				//--- immediately before the strategy worker. Behaviour-neutral until M3 reads it; emits AICOM2|SNAP.
+				if (!isNil "WFBE_SE_FNC_AICOM2_Snapshot") then {(_side) Call WFBE_SE_FNC_AICOM2_Snapshot};
 				(_side) Call WFBE_SE_FNC_AI_Com_Strategy; _ltStrat = time;
+				//--- AICOM v2 (M1): the single offensive Allocator runs AFTER Strategy so its concentrated
+				//--- fist choice wins (overwrites wfbe_aicom_targets) + assigns each team an alloc_target.
+				//--- Inert unless WFBE_C_AICOM2_ALLOCATE_ENABLE>0 (checked inside) -> legacy path = instant rollback.
+				if (!isNil "WFBE_SE_FNC_AICOM2_Allocate") then {(_side) Call WFBE_SE_FNC_AICOM2_Allocate};
+				//--- AICOM v2 PREVIEW: publish side-keyed INTENT + OBJECTIVE for the client RHUD row + map
+				//--- marker (friendly-only; the client filters by WFBE_Client_SideID). Offense-forward wording.
+				//--- Runs right after Strategy so strat_mode/targets are fresh; PV only on change (cheap).
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0) then {
+					private ["_sm","_tg","_objT","_objNm","_intent","_iKey","_nKey","_pKey"];
+					_sm = _logik getVariable ["wfbe_aicom_strat_mode", "spearhead"];
+					_tg = _logik getVariable ["wfbe_aicom_targets", []];
+					_objT = if (count _tg > 0) then {_tg select 0} else {objNull};
+					_objNm = if (!isNull _objT) then {_objT getVariable ["name", "?"]} else {""};
+					_intent = switch (_sm) do {
+						case "strike":    {"ASSAULTING HQ"};
+						case "laststand": {"DEFENDING BASE"};
+						case "relief":    {"DEFENDING"};
+						default { if (_objNm != "") then {"ATTACKING " + _objNm} else {"ADVANCING"} };
+					};
+					_iKey = format ["WFBE_AICOM_INTENT_%1", _myID];
+					_nKey = format ["WFBE_AICOM_OBJNAME_%1", _myID];
+					_pKey = format ["WFBE_AICOM_OBJPOS_%1", _myID];
+					if ((missionNamespace getVariable [_iKey, ""]) != _intent) then {
+						missionNamespace setVariable [_iKey, _intent]; publicVariable _iKey;
+					};
+					if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
+						missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
+						missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
+					};
+				};
 			};
 			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
 			//--- mobilize -> DRIVE the MHQ forward to a standoff behind the front town -> re-deploy. Self-gates

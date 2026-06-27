@@ -73,7 +73,19 @@ if (_state == "enroute") then {
 		{if (alive _x) then {_x setDamage 0}} forEach (units _team);
 		{
 			if (!isNull _x && {alive _x}) then {
-				_x setDamage 0; _x setVehicleAmmo 1;
+				_x setDamage 0;
+				//--- AICOM v2 (Ray): a self-propelled artillery hull is REARMED only to its ARTYTIMEOUT-tier fraction
+				//--- (low tier = smaller reload, must research to earn full salvos); everything else rearms to full as before.
+				if (([(typeOf _x), _side] Call IsArtillery) != -1) then {
+					private ["_svcAL","_svcUL","_svcAF"];
+					_svcAL = (_side) Call WFBE_CO_FNC_GetSideLogic;
+					_svcUL = if (isNull _svcAL) then {0} else {(_svcAL getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
+					if (typeName _svcUL != "SCALAR") then {_svcUL = 0};
+					_svcAF = (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_AMMO_FRAC", [0.50,0.65,0.80,0.90,1.00,1.00,1.00]]) select (_svcUL min 6);
+					_x setVehicleAmmo _svcAF;
+				} else {
+					_x setVehicleAmmo 1;
+				};
 				if (_x isKindOf "Air") then {_x setFuel 1};
 			};
 		} forEach _vehicles;
@@ -100,7 +112,7 @@ if (_state == "enroute") then {
 	_ammoT      = missionNamespace getVariable ["WFBE_C_AICOM_SVC_AMMO_THRESH", 0.35];
 
 	//--- armour/heli gate (default: only service the costly teams)
-	_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"}}} count _members;
+	_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"} || {([(typeOf (vehicle _x)), _side] Call IsArtillery) != -1}}} count _members; //--- AICOM v2 (Ray): count a self-propelled artillery hull (e.g. the wheeled GRAD = Car-kind) as 'heavy' so a crew-only arty battery isn't skipped by the armour-only service exit -> arty auto-rearms at a Service Point.
 	if (_armourOnly && {_hasHeavy == 0}) exitWith {};
 
 	//--- needs-service: any wounded member, OR a weaponed combat vehicle low on ammo

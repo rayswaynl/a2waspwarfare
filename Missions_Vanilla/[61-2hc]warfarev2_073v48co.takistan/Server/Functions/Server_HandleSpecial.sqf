@@ -264,6 +264,22 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	case "aicom-focus": {
+		//--- AICOM v2 M4: the human commander set a side FOCUS town from the command center ("Move All"
+		//--- doubles as the AI focus). Stamp it on the side logic; the Allocator reads it (TTL'd) and makes
+		//--- it the side's fist - honoured every tick. side validated west/east (the command menu is commander-only).
+		private ["_fSide","_fTown","_fLogik"];
+		_fSide = _args select 1;
+		_fTown = _args select 2;
+		if (!isNil "_fTown" && {!isNull _fTown} && {_fSide in [west, east]}) then {
+			_fLogik = (_fSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _fLogik) then {
+				_fLogik setVariable ["wfbe_aicom_focus", _fTown];
+				_fLogik setVariable ["wfbe_aicom_focus_t0", time];
+				diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]));
+			};
+		};
+	};
 	case "aicom-team-ended": {
 		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew"];
 		_csideID = _args select 1;

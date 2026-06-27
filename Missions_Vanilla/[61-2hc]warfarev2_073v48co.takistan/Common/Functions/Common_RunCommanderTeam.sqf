@@ -236,8 +236,15 @@ _airVeh   = objNull;
 _grndVehs = [];
 {
 	if (!isNull _x && {alive _x}) then {
-		if (_x isKindOf "Air" && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0} && {isNull _airVeh}) then {
-			_airVeh = _x;
+		//--- FROZEN-AIR FIX (Ray): NO "Air" hull ever enters _grndVehs (jets + pure gunships -
+		//--- isKindOf "Air" but transportSoldier=0, e.g. A10/Su39/Su34/Ka52/AH64D - were getting
+		//--- ground doMove/taxi orders instead of flying). Transport air (transportSoldier>0)
+		//--- becomes the lift _airVeh; all other air is left out of BOTH lists and flies via the
+		//--- team's normal MOVE/SAD order loop. Only true ground hulls go to _grndVehs.
+		if (_x isKindOf "Air") then {
+			if ((getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0 && {isNull _airVeh}) then {
+				_airVeh = _x;
+			};
 		} else {
 			_grndVehs = _grndVehs + [_x];
 		};
@@ -486,6 +493,23 @@ if (isNull _airVeh) then {
 //--- ===================================================================
 
 while {!WFBE_GameOver && _alive} do {
+	//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft. An airframe (heli OR plane) alive with NO alive crew is
+	//--- orphaned (crew killed/bailed/bugged) - it crashes, sits, or piles up over a long round. Delete it after a
+	//--- short grace so it can't accumulate. Stamp-on-first-seen avoids deleting a transient bail/reseat. HC-local.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_UNCREWED", 1]) > 0) then {
+		{
+			if (!isNull _x && {alive _x} && {local _x} && {_x isKindOf "Air"}) then {
+				if (({alive _x} count (crew _x)) == 0) then {
+					private ["_us"]; _us = _x getVariable "wfbe_air_uncrewed_at";
+					if (isNil "_us") then {_x setVariable ["wfbe_air_uncrewed_at", time]} else {
+						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {deleteVehicle _x};
+					};
+				} else {
+					_x setVariable ["wfbe_air_uncrewed_at", nil];
+				};
+			};
+		} forEach _vehicles;
+	};
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 	//--- B36.1 (Ray 2026-06-15): PC-scale retirement. The server flags a REAR team (wfbe_aicom_disband)
@@ -1156,6 +1180,49 @@ while {!WFBE_GameOver && _alive} do {
 	//--- contact, never frozen, hard en-route timeout). HC-local: the team's units are local here.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_SERVICE_ENABLED", 0]) > 0) then {
 		[_team, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMServiceTick;
+	};
+
+	//--- AICOM ARTY FIRE (Ray 2026-06-27): if this team owns a self-propelled artillery hull, run tier-scaled fire
+	//--- missions on the nearest ENEMY-held town in range. Reuses WFBE_CO_FNC_FireArtillery + the exact ARTYTIMEOUT /
+	//--- RANGES_MAX idioms from AI_Commander_Strategy's base-gun path. COOLDOWN scales with the side's ARTYTIMEOUT
+	//--- upgrade (must research it); the gun runs dry and auto-rearms at a Service Point (tier-capped fill, above).
+	//--- Friendly-fire-guarded. Runs in this same sequential sleep-8 loop (no order fight); only the fire burst Spawns.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ENABLED", 0]) > 0) then {
+		private ["_artyHull","_aLogik","_upLvl","_cd","_last","_artyText","_idx2","_maxR","_minR","_tgtT","_tgtP","_ffClear"];
+		_artyHull = objNull;
+		{ if (alive _x && {([(typeOf _x), _side] Call IsArtillery) != -1} && {!isNull (gunner _x)} && {alive (gunner _x)} && {someAmmo _x}) exitWith {_artyHull = _x} } forEach _vehicles;
+		if (!isNull _artyHull) then {
+			_aLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+			_upLvl = if (isNull _aLogik) then {0} else {(_aLogik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
+			if (typeName _upLvl != "SCALAR") then {_upLvl = 0};
+			_cd = (missionNamespace getVariable ["WFBE_C_ARTILLERY_INTERVALS", [550,500,450,400,350,300,250]]) select (_upLvl min 6);
+			_last = _artyHull getVariable ["wfbe_aicom_arty_last", -1e9];
+			if ((time - _last) >= _cd) then {
+				_artyText = str _side;
+				_idx2 = [typeOf _artyHull, _side] Call IsArtillery;
+				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _artyText]) select _idx2) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1);
+				//--- MIN-RANGE GATE (Ray): a town inside the gun min range made FireArtillery a no-op but the cooldown was
+				//--- still stamped (burned the whole interval). Read the per-side RANGES_MIN (parallel to RANGES_MAX, same
+				//--- _idx2) and require the town be at least _minR away, so we never lock onto an un-shootable close target.
+				_minR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN", _artyText]) select _idx2);
+				if (typeName _minR != "SCALAR") then {_minR = 0};
+				_tgtT = objNull; _tgtP = [0,0,0];
+				{
+					if (((_x getVariable ["sideID", -1]) != _sideID) && {(_x getVariable ["sideID", -1]) >= 0} && {isNull _tgtT} && {(_artyHull distance _x) >= _minR} && {(_artyHull distance _x) <= _maxR}) then {_tgtT = _x; _tgtP = getPos _x};
+				} forEach towns;
+				if (!isNull _tgtT) then {
+					_ffClear = true;
+					//--- FF SCAN SHRINK (Ray): the old 400m ring around the TOWN CENTER vetoed every town the AI own infantry was
+					//--- assaulting (the normal case) so the gun almost never fired. Shrink to ~80m around the actual aim point.
+					{ if (alive _x && {side _x == _side} && {(_x distance _tgtP) < 80}) exitWith {_ffClear = false} } forEach (nearestObjects [_tgtP, ["Man","Car","Tank","Air"], 80]);
+					if (_ffClear) then {
+						[_artyHull, _tgtP, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
+						_artyHull setVariable ["wfbe_aicom_arty_last", time];
+						diag_log ("AICOMSTAT|v1|EVENT|" + _artyText + "|" + str (round (time / 60)) + "|FIRE_MISSION_MOBILE|" + (typeOf _artyHull) + "|tier=" + str _upLvl);
+					};
+				};
+			};
+		};
 	};
 
 	sleep 8;

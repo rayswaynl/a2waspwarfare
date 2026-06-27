@@ -309,6 +309,18 @@ while {alive player && dialog} do {
 			};
 
 			activeAnimMarker = false;
+			//--- AICOM v2 M4: a "Move All" order doubles as the AI commander's side FOCUS - concentrate the
+			//--- autonomous war on the nearest town to the click (the AI handles the details). Reuses this
+			//--- existing command-center action, no new dialog control. Only when the v2 Allocator is live.
+			if (_isAll && {_order == "MOVE"} && {(missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0}) then {
+				private ["_fTown","_fD","_fd2"];
+				_fTown = objNull; _fD = 1e9;
+				{ _fd2 = _position distance _x; if (_fd2 < _fD) then {_fD = _fd2; _fTown = _x} } forEach towns;
+				if (!isNull _fTown) then {
+					["RequestSpecial", ["aicom-focus", sideJoined, _fTown]] Call WFBE_CO_FNC_SendToServer;
+					hintSilent format ["AI Commander - focus set: %1", _fTown getVariable ["name", "?"]];
+				};
+			};
 			_array = if (_isAdded == "") then {["TempAnim",_position,"selector_selectedMission",1,_color,1,1.2]} else {["TempAnim",_position,"selector_selectedMission",1,_color,1,1.2,_isAdded]};
 			_array Spawn MarkerAnim;
 		};

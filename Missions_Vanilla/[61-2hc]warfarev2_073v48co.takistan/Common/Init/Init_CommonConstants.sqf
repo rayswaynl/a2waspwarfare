@@ -293,8 +293,8 @@ with missionNamespace do {
 	//--- established war machine). MATURE_MID / MATURE_LATE are the own-town thresholds at/above which the
 	//--- MID / LATE tiers apply. Weights need not sum to 1 (normalised at pick time).
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_EARLY") then {WFBE_C_AICOM_TYPE_MIX_EARLY = [0.70, 0.22, 0.07, 0.01]};
-	if (isNil "WFBE_C_AICOM_TYPE_MIX_MID")   then {WFBE_C_AICOM_TYPE_MIX_MID   = [0.45, 0.28, 0.22, 0.05]};
-	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE")  then {WFBE_C_AICOM_TYPE_MIX_LATE  = [0.28, 0.22, 0.35, 0.15]};
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_MID")   then {WFBE_C_AICOM_TYPE_MIX_MID   = [0.43, 0.25, 0.20, 0.12]};  //--- AICOM v2 (Ray): air 5%->12% mid so choppers start ramping in before the late tier.
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE")  then {WFBE_C_AICOM_TYPE_MIX_LATE  = [0.25, 0.15, 0.30, 0.30]};  //--- AICOM v2 (Ray): air 15%->30% late (inf/light/heavy/air) - choppers a defining late-game feature.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_MID")  then {WFBE_C_AICOM_TYPE_MIX_MATURE_MID  = 4}; //--- own-town count at/above which the MID tier applies.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_LATE") then {WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 8}; //--- own-town count at/above which the LATE tier applies.
 	//--- B74 COST/TIER BIAS (Ray 2026-06-22) -> SUPERSEDED by the B750 effectiveness draw below. The B74 picker weighted
@@ -307,10 +307,18 @@ with missionNamespace do {
 	//--- inflation), and a LOW exponent flattens the draw so the commander fields a VARIED, capable mix rather than one
 	//--- premium template. 0 = pure uniform (max variety); 0.5 (default) = mild effectiveness lean; ~1.0+ = stronger.
 	//--- Tune live. The combat value is read from config once per template per founding (cheap; foundings are infrequent).
-	if (isNil "WFBE_C_AICOM_EFF_BIAS_EXP") then {WFBE_C_AICOM_EFF_BIAS_EXP = 0.5};
+	if (isNil "WFBE_C_AICOM_EFF_BIAS_EXP") then {WFBE_C_AICOM_EFF_BIAS_EXP = 0.3};  //--- AICOM v2 (Ray "much more varied"): 0.5->0.3 - flatten the cost-effectiveness bias so the founding draw spreads across far more templates (less repetition).
 		//--- B754 (Ray 2026-06-25) HELI TIME-BIAS: field MORE helicopters (transport + attack) the longer the match runs. Scales the AIR class-bucket weight by a wall-clock factor ramping 1.0 -> MAXMULT over RAMP_MIN minutes, then holds (orthogonal to the own-town TYPE_MIX ramp). MAXMULT=1.0 => no-op.
-		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT")    then {WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT    = 2.5};
-		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN")   then {WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN   = 45};
+		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT")    then {WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT    = 4.5};  //--- AICOM v2 (Ray 2026-06-27 "lots of choppers late"): 2.5->4.5, the air bucket weight balloons late-game.
+		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN")   then {WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN   = 35};  //--- AICOM v2: 45->35 min so the air ramp peaks sooner.
+		//--- AICOM v2 JET TIME-GATE (Ray 2026-06-27): manned CAS jets (fixed-wing) only start founding after
+		//--- JET_START_SECS of match time, then ramp in (probability 0->1) to JET_FULL_SECS. Stacks ON TOP of the
+		//--- airfield-ownership gate (a side must hold an airfield to field planes AT ALL). 2h start -> 5h full.
+		if (isNil "WFBE_C_AICOM_JET_START_SECS") then {WFBE_C_AICOM_JET_START_SECS = 7200};  //--- 2h: no AI jets before this.
+		if (isNil "WFBE_C_AICOM_JET_FULL_SECS")  then {WFBE_C_AICOM_JET_FULL_SECS  = 18000}; //--- 5h: jets at full availability (ramped 2h->5h).
+		//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft (heli OR plane) so a long round can't pile up orphaned airframes.
+		if (isNil "WFBE_C_AICOM_AIR_REAP_UNCREWED") then {WFBE_C_AICOM_AIR_REAP_UNCREWED = 1};  //--- 1 = delete an alive air vehicle with no alive crew. 0 = off.
+		if (isNil "WFBE_C_AICOM_AIR_REAP_GRACE")    then {WFBE_C_AICOM_AIR_REAP_GRACE    = 45}; //--- s an aircraft must stay uncrewed before it's reaped (avoids deleting a transient bail/reseat).
 		//--- B754: also GROW the attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX) over the match so the late air push isn't throttled at the early cap. Only when a base cap > 0 exists (0 still = no cap). Effective cap = base + floor(timeRatio * BONUS).
 		if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS") then {WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS = 4};
 		//--- B754 (Ray 2026-06-25) RELATIVE ROUND-CLOSER GATE: the absolute 12-town HQ-strike gate is unreachable in a lopsided game (b753 soak: WEST held 11 vs EAST's dug-in 2, myEff 70 vs 53, never hit 12 -> 8.4h with no winner). Let a runaway leader close BELOW the absolute gate when dominant on EFFECTIVE strength AND (enemy collapsed to <= ENEMY_MAX towns OR own >= TOWN_RATIO town lead), plus a STALL_OVERRIDE after N dominant-but-passive stall ticks. Never fires while behind on towns/strength.
@@ -423,6 +431,33 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_HQSTRIKE_MIN_HOLD")     then {WFBE_C_AICOM_HQSTRIKE_MIN_HOLD     = 600};     //--- s: once HQ_STRIKE posture is entered, hold it at least this long before raw strength is allowed to flap it back off (anti-thrash; the sticky recall in AI_Commander_Strategy.sqf).
 	if (isNil "WFBE_C_AICOM_VETERAN_COOLDOWN")      then {WFBE_C_AICOM_VETERAN_COOLDOWN      = 900};     //--- s between veteran/premium-template founds per side (was unconditional => ~54% of teams). Throttles the spend spam + keeps team variety up.
 	if (isNil "WFBE_C_AICOM_WEALTH_CAP")            then {WFBE_C_AICOM_WEALTH_CAP            = 1500000}; //--- funds: above this, town income + stipend stop crediting the commander (anti-hoard; the side still has millions to spend, the number just stops ballooning to 18M).
+
+	//=== AI COMMANDER v2 (REBUILD, branch claude/aicom-v2-rebuild) =====================================
+	//--- Layout constants for the world-model SNAPSHOT array (AI_Commander_Snapshot.sqf -> side-logic
+	//--- var wfbe_aicom2_snap), read by the v2 stance machine + objective allocator + closer. Fixed
+	//--- layout, defined once at boot, global. Direct assignment (enum-style, like WFBE_UP_*).
+	WFBE_SNAP_TIME=0; WFBE_SNAP_SIDE=1; WFBE_SNAP_SIDEID=2; WFBE_SNAP_ENSIDE=3; WFBE_SNAP_ENID=4;
+	WFBE_SNAP_MYTOWNS=5; WFBE_SNAP_ENTOWNS=6; WFBE_SNAP_NEUTOWNS=7; WFBE_SNAP_TOTTOWNS=8;
+	WFBE_SNAP_MYSTR=9; WFBE_SNAP_ENSTR=10; WFBE_SNAP_MYEFF=11; WFBE_SNAP_ENEFF=12;
+	WFBE_SNAP_MYHQ=13; WFBE_SNAP_MYHQPOS=14; WFBE_SNAP_MYHQALIVE=15;
+	WFBE_SNAP_ENHQ=16; WFBE_SNAP_ENHQPOS=17; WFBE_SNAP_ENHQALIVE=18;
+	WFBE_SNAP_FUNDS=19; WFBE_SNAP_SUPPLY=20; WFBE_SNAP_PLAYERS=21; WFBE_SNAP_MYPLAYERS=22;
+	WFBE_SNAP_TEAMS=23; WFBE_SNAP_OWNTOWNOBJS=24; WFBE_SNAP_TGTTOWNOBJS=25;
+	//--- per-team digest layout (each element of WFBE_SNAP_TEAMS). WFBE_SNT_REPORT = HC-driver-reported
+	//--- execution facts, filled by the upward team-status channel (M1); [] until then.
+	WFBE_SNT_GROUP=0; WFBE_SNT_ALIVE=1; WFBE_SNT_LDRPOS=2; WFBE_SNT_ISHC=3; WFBE_SNT_ISFOUND=4;
+	WFBE_SNT_ISGAR=5; WFBE_SNT_MODE=6; WFBE_SNT_STRIKE=7; WFBE_SNT_RELIEF=8;
+	WFBE_SNT_HASGNDVEH=9; WFBE_SNT_MOUNTEDNOW=10; WFBE_SNT_HASHEAVY=11; WFBE_SNT_REPORT=12;
+	//--- M1 single-authority Allocator (AI_Commander_Allocate.sqf). 0 = inert (legacy Strategy/AssignTowns
+	//--- targeting runs unchanged = instant rollback); 1 = the Allocator concentrates force on a front fist.
+	if (isNil "WFBE_C_AICOM2_ALLOCATE_ENABLE") then {WFBE_C_AICOM2_ALLOCATE_ENABLE = 1};  //--- v2try (Ray 2026-06-27): brain ON for the live try-out. Rollback = set back to 0 (legacy targeting, instant).
+	if (isNil "WFBE_C_AICOM2_FIST_TOWNS")      then {WFBE_C_AICOM2_FIST_TOWNS      = 1};  //--- front towns the side concentrates on at once (Ray: 1 = STEAMROLLER, max local overmatch).
+	if (isNil "WFBE_C_AICOM2_HARASS_TEAMS")    then {WFBE_C_AICOM2_HARASS_TEAMS    = 1};  //--- M2: how many (mounted) teams peel off the fist to raid the enemy's deepest REAR town (supply hub). 0 = pure concentration.
+	if (isNil "WFBE_C_AICOM2_SUPPORT_PUSH")    then {WFBE_C_AICOM2_SUPPORT_PUSH    = 1};  //--- M5: 1 = when humans are on the side, bias the fist toward where they're massed (support their push). 0 = always auto-pick the front.
+	if (isNil "WFBE_C_AICOM2_SUPPORT_DIVISOR") then {WFBE_C_AICOM2_SUPPORT_DIVISOR = 50}; //--- M5: strength of the pull toward the human axis (smaller = stronger pull).
+	if (isNil "WFBE_C_AICOM2_FOCUS_TTL")       then {WFBE_C_AICOM2_FOCUS_TTL       = 600};//--- M4: s a commander FOCUS town stays in force before it auto-clears (so a forgotten focus doesn't tunnel-vision the AI forever).
+	if (isNil "WFBE_C_AICOM2_CONSOLIDATE_SECS") then {WFBE_C_AICOM2_CONSOLIDATE_SECS = 60}; //--- Ray: after the fist CAPTURES its town, hold ~this long (regroup at it) before advancing to the next. 0 = relentless roll-forward, no pause.
+	//=================================================================================================
 	if (isNil "WFBE_C_AICOM_MHQ_ENEMY_CLEAR")       then {WFBE_C_AICOM_MHQ_ENEMY_CLEAR       = 700};  //--- m: do NOT mobilize/deploy if an enemy is within this of the current HQ or the destination.
 	if (isNil "WFBE_C_AICOM_MHQ_ARRIVE_DIST")       then {WFBE_C_AICOM_MHQ_ARRIVE_DIST       = 400};  //--- m: MHQ within this of the destination = arrived -> deploy.
 	if (isNil "WFBE_C_AICOM_MHQ_DEADLINE")          then {WFBE_C_AICOM_MHQ_DEADLINE          = 600};  //--- s of driving before the player-safe teleport-step fallback (then deploy).
@@ -462,7 +497,8 @@ with missionNamespace do {
 	//--- to-HQ) + the maneuver-strength compare that gates it now fire only in genuinely dire cases; teams ASSAULT
 	//--- by default. Consumed in AI_Commander_Strategy.sqf. All default-ON, tunable, rollback-documented.
 	if (isNil "WFBE_C_AICOM_LASTSTAND_TOWNS") then {WFBE_C_AICOM_LASTSTAND_TOWNS = 1};    //--- recall-all only at <= this many owned towns (old implicit gate <2). Rollback to old behaviour: 1 + RATIO 0.7.
-	if (isNil "WFBE_C_AICOM_LASTSTAND_RATIO") then {WFBE_C_AICOM_LASTSTAND_RATIO = 0.45}; //--- AND maneuver strength below this fraction of the enemy's. Was 0.7 (too eager - winning sides went passive). Lower = last-stand rarer = more aggressive. Rollback: 0.7.
+	if (isNil "WFBE_C_AICOM_LASTSTAND_RATIO") then {WFBE_C_AICOM_LASTSTAND_RATIO = 0.30}; //--- AICOM v2 (Ray 2026-06-27 "almost never defensive"): 0.45->0.30, last-stand (recall-all-to-HQ) even rarer. AND maneuver strength below this fraction of the enemy's. Rollback: 0.45.
+	if (isNil "WFBE_C_AICOM_INTENT_HUD") then {WFBE_C_AICOM_INTENT_HUD = 1};       //--- AICOM v2 preview: 1 = publish the AI commander's INTENT (side-keyed) + show it in the RHUD commander row + draw the OBJECTIVE town as a friendly-only map marker. 0 = off.
 	if (isNil "WFBE_C_AICOM_STR_LONE_ALIVE") then {WFBE_C_AICOM_STR_LONE_ALIVE = 2};      //--- a team with fewer than this many alive...
 	if (isNil "WFBE_C_AICOM_STR_LONE_FARHQ") then {WFBE_C_AICOM_STR_LONE_FARHQ = 1500};   //--- ...AND farther than this (m) from HQ is a stranded remnant, EXCLUDED from the _myStr maneuver-strength count so it does not deflate strength + trip the defensive gates. 0 disables the exclusion.
 	//--- B68 (Ray 2026-06-21) RETREAT-CULL hardening: the B67 progress-gated budget never culls a lone survivor
@@ -485,6 +521,23 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_BASES_MAX")         then {WFBE_C_AICOM_BASES_MAX         = 2};
 	if (isNil "WFBE_C_AICOM_FACTORY_RING_MIN") then {WFBE_C_AICOM_FACTORY_RING_MIN = 60};   //--- factory placement ring inner (was 45).
 	if (isNil "WFBE_C_AICOM_FACTORY_RING_MAX") then {WFBE_C_AICOM_FACTORY_RING_MAX = 110};  //--- factory placement ring outer (was 75).
+	//--- 2ND BASE / FORWARD OUTPOST (AICOM v2, Ray): the AI stands up a SECOND CommandCenter + its own factory at a
+	//--- DISTANT forward owned town ONLY when supply is genuinely ABUNDANT, projecting spare economy toward the front.
+	//--- AICOM-only (humans build a 2nd base by hand, unaffected). FWDBASE_ENABLE=0 makes the sub-pass inert (rollback).
+	if (isNil "WFBE_C_AICOM_FWDBASE_ENABLE")         then {WFBE_C_AICOM_FWDBASE_ENABLE         = 1};
+	if (isNil "WFBE_C_AICOM_FWDBASE_SUPPLY_FRAC")    then {WFBE_C_AICOM_FWDBASE_SUPPLY_FRAC    = 0.80};  //--- gate = MAX(frac*supplyCap, floor); tracks the configured cap if it's raised.
+	if (isNil "WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR")   then {WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR   = 24000}; //--- absolute supply floor for "abundant" (rear base + full tech costs well under this).
+	if (isNil "WFBE_C_AICOM_FWDBASE_SUPPLY_RESERVE") then {WFBE_C_AICOM_FWDBASE_SUPPLY_RESERVE = 6000};  //--- supply that must REMAIN after each forward structure (never starves the rear economy/tech).
+	if (isNil "WFBE_C_AICOM_FWDBASE_MIN_DIST")       then {WFBE_C_AICOM_FWDBASE_MIN_DIST       = 3500};  //--- m: the 2nd base must be at least this far from the rear HQ (else just wasted supply).
+	if (isNil "WFBE_C_AICOM_FWDBASE_RING_MIN")       then {WFBE_C_AICOM_FWDBASE_RING_MIN       = 60};    //--- forward factory placement ring (same scale as the primary base).
+	if (isNil "WFBE_C_AICOM_FWDBASE_RING_MAX")       then {WFBE_C_AICOM_FWDBASE_RING_MAX       = 110};
+	if (isNil "WFBE_C_AICOM_FWDBASE_DEF_MAX")        then {WFBE_C_AICOM_FWDBASE_DEF_MAX        = 2};     //--- LIGHT defense: manned statics at the outpost (vs 4 at the primary base).
+	if (isNil "WFBE_C_AICOM_FWDBASE_TOWN_STANDOFF")  then {WFBE_C_AICOM_FWDBASE_TOWN_STANDOFF  = 350};   //--- m behind the forward town (toward rear HQ) so the outpost isn't built in the town core.
+	//--- AICOM TRACKED ARTILLERY (Ray 2026-06-27): one self-propelled artillery battery per commander, capped, with
+	//--- fire cooldown + salvo size scaled by the side's ARTYTIMEOUT upgrade level (they must research it to earn the perks).
+	if (isNil "WFBE_C_AICOM_ARTY_MAX")       then {WFBE_C_AICOM_ARTY_MAX       = 1};   //--- max arty batteries ALIVE per AI commander (0 = uncapped).
+	if (isNil "WFBE_C_AICOM_ARTY_ENABLED")   then {WFBE_C_AICOM_ARTY_ENABLED   = 1};   //--- 1 = AI runs directed arty FIRE missions (tier-cooldown, friendly-fire-guarded). 0 = battery still founds but only fires via normal AI.
+	if (isNil "WFBE_C_AICOM_ARTY_AMMO_FRAC") then {WFBE_C_AICOM_ARTY_AMMO_FRAC = [0.50,0.65,0.80,0.90,1.00,1.00,1.00]}; //--- ARTYTIMEOUT level 0..6 -> ammo fraction the battery is REARMED to at a Service Point (parallels WFBE_C_ARTILLERY_INTERVALS cooldowns); low tier = smaller reloads + faster runs-dry, so the AI must research to earn sustained fire.
 	//--- B67 (Ray 2026-06-21) MHQ RELOCATION (item #12): the new base must sit a GENEROUS buffer outside any
 	//--- enemy/GUER town activation ring (600m base ring + this margin). HQ routes only through own-side towns.
 	if (isNil "WFBE_C_AICOM_MHQ_TOWN_BUFFER") then {WFBE_C_AICOM_MHQ_TOWN_BUFFER = 1000};   //--- m beyond the 600m town ring before a relocation destination is accepted.
@@ -514,7 +567,7 @@ with missionNamespace do {
 	//--- RELIEF HOLD: a team diverted to defend a town holds for this long, then - if the town is
 	//--- still ours but no longer actively attacked OR the hold expires - it is released back to
 	//--- OFFENSE instead of idling on a quiet town (never a standing-still AI). AI_Commander_Strategy.sqf.
-	if (isNil "WFBE_C_AICOM_RELIEF_HOLD") then {WFBE_C_AICOM_RELIEF_HOLD = 180};  //--- s. B68 attack-bias (Ray 2026-06-21): 240->180 so a team diverted to defend returns to offense sooner. Rollback: 240.
+	if (isNil "WFBE_C_AICOM_RELIEF_HOLD") then {WFBE_C_AICOM_RELIEF_HOLD = 90};  //--- s. AICOM v2 (Ray 2026-06-27 "almost never defensive"): 180->90 so a team diverted to defend snaps back to offense fast. Rollback: 180.
 	//--- ASSAULT FINISH tunables (extracted from hard-coded literals in Common_RunCommanderTeam.sqf).
 	if (isNil "WFBE_C_AICOM_ASSAULT_HOLD") then {WFBE_C_AICOM_ASSAULT_HOLD = 360}; //--- s: camp-first + depot-center capture-hold loop budget (was two hard-coded 150s).
 	if (isNil "WFBE_C_AICOM_CAMP_STALL_PASSES") then {WFBE_C_AICOM_CAMP_STALL_PASSES = 3}; //--- B74.2 (Ray 2026-06-23): in the camp-first phase, if the count of UN-HELD camps does not DROP for this many consecutive passes (~30s each), the team stops grinding the camps and proceeds to the depot/town-centre hold so it never gets STUCK on an uncapturable/heavily-defended camp. The centre hold keeps its own WFBE_C_AICOM_CAPTURE_MAXPASSES release. 0 disables the early bail (camp-first then only ends on WFBE_C_AICOM_ASSAULT_HOLD).
@@ -1017,6 +1070,15 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {WFBE_C_PATROL_CONVOY_PAY = 750}; // Task 41: cash pool paid to the side each time a convoy patrol stops at a town (split equally among living players)
 	if (isNil "WFBE_C_SKIN_SELECTOR") then {WFBE_C_SKIN_SELECTOR = 0}; // Command Deck: join-time skin selector (1 enabled, 0 disabled)
 	if (isNil "WFBE_C_VEHICLE_MARKINGS") then {WFBE_C_VEHICLE_MARKINGS = 0}; // Miksuu vehicle visuals master gate: per-side recognition markings (Common_AddVehicleMarking.sqf) + side-gated body skins / WEST matte-black (Common_AddVehicleTexture.sqf). 1 enabled, 0 disabled. DEFAULT 0 (experimental, OFF): the marking impl attaches up to 3 dim local #lightpoints PER created vehicle and the WEST case repaints EVERY blufor hull matte-black - both are unverified in-engine and FPS-sensitive. Flip to 1 only after an in-engine attach/FPS test. (Infantry skin selector is separate: WFBE_C_SKIN_SELECTOR.)
+	//--- Vehicle FACTION FLAGS (Common_AddVehicleFlag.sqf): when ON, every created vehicle flies its side's
+	//--- FlagCarrier pole (WEST/EAST/GUER), attached locally on every client via the wfbe_pending_texture
+	//--- broadcast (JIP-safe). Independent gate from MARKINGS/TINTS so flags can be A/B'd on their own.
+	if (isNil "WFBE_C_VEHICLE_FLAGS") then {WFBE_C_VEHICLE_FLAGS = 0}; // Master toggle / mission setting. 1 enabled, 0 disabled. DEFAULT 0 (opt-in, like MARKINGS/TINTS): it attaches a flag OBJECT per created vehicle, so it is FPS-sensitive on heavy-AI servers. Flip to 1 only after an in-engine attach/FPS test.
+	//--- Per-side flag classes are TUNABLE so a host can match their faction set-up. Other valid examples:
+	//--- FlagCarrierCDF, FlagCarrierINS, FlagCarrierTakistan_EP1, FlagCarrierTKMilitia_EP1.
+	if (isNil "WFBE_C_VEHICLE_FLAG_WEST") then {WFBE_C_VEHICLE_FLAG_WEST = "FlagCarrierNATO_EP1"}; // BLUFOR flag class flown on WEST vehicles.
+	if (isNil "WFBE_C_VEHICLE_FLAG_EAST") then {WFBE_C_VEHICLE_FLAG_EAST = "FlagCarrierRU"}; // OPFOR flag class flown on EAST vehicles.
+	if (isNil "WFBE_C_VEHICLE_FLAG_GUER") then {WFBE_C_VEHICLE_FLAG_GUER = "FlagCarrierGUE"}; // Resistance/GUER flag class flown on GUER vehicles.
 	if (isNil "WFBE_C_VEHICLE_TINTS") then {WFBE_C_VEHICLE_TINTS = 0}; // B74.2 (Ray 2026-06-23): default OFF for now; switch preserved. [A/B: was flipped ON 2026-06-22 per Ray for the in-engine cosmetic check; revert to 0 if the look is bad] Vehicle faction body TINTS (cheap one-shot setObjectTexture colour strings in Common_AddVehicleTexture.sqf). Decoupled from WFBE_C_VEHICLE_MARKINGS so the tints can be LIVE while the expensive #lightpoint markings stay OFF. 1 enabled, 0 disabled. DEFAULT 0 (opt-in): the B66 side-resolve bug meant the tints were silently INERT in prod (resolved from a crewless hull = civilian -> no faction match); B67 fixed the resolution (now reads the authoritative _createSide passed by Common_CreateVehicle), so enabling this would for the FIRST TIME repaint selections 0+1 (often the whole hull) with a flat procedural colour on EVERY vehicle (WEST near-black / EAST olive / GUER tan) - unverified in-engine and possibly ugly. Flip to 1 only after an in-engine cosmetic check.
 	if (isNil "WFBE_C_VEHICLE_TINT_LEGEND") then {WFBE_C_VEHICLE_TINT_LEGEND = 1}; // b67 item #3: top-right client pop-up legend explaining the vehicle body TINTS above (WEST/BLUFOR=black, EAST/OPFOR=olive, GUER=tan). Shown once on first spawn + toggled with "]" (Init_Client.sqf, cutRsc "WFBE_VehicleTintLegend"). Pure client cosmetic, zero FPS cost; only appears when WFBE_C_VEHICLE_TINTS is also ON. Nil-guarded so it can be A/B'd independently: 1 enabled, 0 disabled.
 	//--- Triggered faction smoke (cosmetic): WFBE_CO_FNC_SpawnFactionSmoke drops ONE side-coloured smoke shell at assault onset / town garrison. Server-only, event-triggered, hard-capped + TTL + per-100m-grid cooldown. west=Green, east=Red, resistance=Orange. ON for live measurement.

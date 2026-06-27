@@ -164,8 +164,11 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_SUPPLYRATE,2],
 	[WFBE_UP_HEAVY,1],
 	[WFBE_UP_HEAVY,2],
-	//--- ARTYTIMEOUT research stripped (owner): the AI commander's arty FIRE pipeline is OFF by
-	//--- default (WFBE_C_AI_COMMANDER_ARTILLERY=0), so an arty-cooldown upgrade was pure wasted spend.
+	//--- ARTYTIMEOUT research RE-ADDED (Ray 2026-06-27): the AI now fields a tracked artillery battery whose fire
+	//--- cooldown + Service-Point reload size scale with this upgrade, so it must research it to earn the perks.
+	[WFBE_UP_ARTYTIMEOUT,1],
+	[WFBE_UP_ARTYTIMEOUT,2],
+	[WFBE_UP_ARTYTIMEOUT,3],
 	[WFBE_UP_SUPPLYRATE,3],
 	[WFBE_UP_HEAVY,3],
 	[WFBE_UP_GEAR,3],
