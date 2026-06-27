@@ -91,6 +91,20 @@ if (!_fromFocus) then {
 	};
 };
 if (count _fist == 0) exitWith {};
+
+//--- CONSOLIDATE (Ray): when the AUTO fist advances OFF a town we now own (= a fresh capture), stamp a hold
+//--- window so AssignTowns pauses re-tasking ~WFBE_C_AICOM2_CONSOLIDATE_SECS (teams regroup at the just-taken
+//--- town before pushing the next). Skipped under a commander FOCUS (they want the move now).
+if (!_fromFocus) then {
+	private ["_autoPrim","_prevAuto"];
+	_autoPrim = _fist select 0;
+	_prevAuto = _logik getVariable "wfbe_aicom_auto_primary";
+	if (!isNil "_prevAuto" && {!isNull _prevAuto} && {_prevAuto != _autoPrim} && {(_prevAuto getVariable ["sideID", -1]) == _sideID}) then {
+		_logik setVariable ["wfbe_aicom_consolidate_until", time + (missionNamespace getVariable ["WFBE_C_AICOM2_CONSOLIDATE_SECS", 60])];
+	};
+	_logik setVariable ["wfbe_aicom_auto_primary", _autoPrim];
+};
+
 _logik setVariable ["wfbe_aicom_targets", _fist];   //--- the fist is the side's published main effort
 
 //--- M2 HARASS TARGET: the enemy's DEEPEST capturable town (max front-distance), enemy-held weighted over

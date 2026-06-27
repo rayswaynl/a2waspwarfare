@@ -20,6 +20,11 @@ if (isNil "_logik") exitWith {};
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
 
+//--- AICOM v2 (consolidate, Ray): after the fist captures a town the Allocator stamps wfbe_aicom_consolidate_until;
+//--- skip this re-task pass while it's live so teams keep their current orders (regroup at the just-taken town)
+//--- ~a minute before advancing. Only when the v2 Allocator is live; harmless otherwise.
+if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0 && {time < (_logik getVariable ["wfbe_aicom_consolidate_until", -1e9])}) exitWith {};
+
 //--- Hybrid: when a human commands this side, only auto-assign DELEGATED (autonomous) teams.
 _cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 _humanCmd = false;
