@@ -34,6 +34,10 @@ if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call Com
 //--- its side-gated skins. Both APPEND to wfbe_pending_texture (gate: WFBE_C_VEHICLE_MARKINGS).
 [_vehicle, _side] Call Compile preprocessFile "Common\Functions\Common_AddVehicleMarking.sqf";
 
+//--- Vehicle faction flags (opt-in, gate WFBE_C_VEHICLE_FLAGS): attaches a per-side FlagCarrier pole
+//--- by APPENDING to wfbe_pending_texture, so it rides the same Init_Unit broadcast below (JIP-safe).
+[_vehicle, _side] Call Compile preprocessFile "Common\Functions\Common_AddVehicleFlag.sqf";
+
 //--- b67 faction visuals: pass the authoritative numeric _side so the texture pass can resolve the
 //--- owning faction. REQUIRED because the vehicle is still CREWLESS here, so `side _vehicle` inside
 //--- the texture pass is CIVILIAN and a self-derived side would silently no-op. (wfbe_side_id is only
