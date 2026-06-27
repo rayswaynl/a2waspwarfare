@@ -199,6 +199,10 @@ if (WF_Debug) then { //--- Debug.
 	missionNamespace setVariable ["WFBE_C_MODULE_WFBE_EASA", 1];
 };
 
+//--- claude-gaming 2026-06-27: ALWAYS-ON server WF_Debug state line so a boot-smoke can PROVE debug is OFF on a
+//--- real deploy (debug ON = 999999 funds/supply + all tiers unlocked = a misleading soak/economy).
+if (isServer) then {diag_log ("[WFBE (INIT)] WF_DEBUG_STATE WF_Debug=" + str WF_Debug + " upgradesClearance=" + str (missionNamespace getVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", -1]));};
+
 //--- Disable headless client if it is not supported.
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER >= 101334 || ARMA_VERSION > 162) then {
 	["INITIALIZATION", "initJIPCompatible.sqf: Headless client is supported."] Call WFBE_CO_FNC_LogContent
