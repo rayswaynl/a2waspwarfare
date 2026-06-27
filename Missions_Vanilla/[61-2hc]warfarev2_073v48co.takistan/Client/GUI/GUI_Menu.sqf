@@ -106,20 +106,30 @@ while {alive player && dialog} do {
 				createDialog "WFBE_VoteMenu";
 			};
 		}else{
+			//--- No human commander: the AI is running this side.
 			_skip = false;
 			if ((WFBE_Client_Logic getVariable "wfbe_votetime") <= 0) then {_skip = true};
 			if (!_skip) then {
+				//--- Round-start vote window still open: keep the normal vote menu.
 				closeDialog 0;
 				createDialog "WFBE_VoteMenu";
 			};
 
-			if !(_skip) exitWith {};
-			["RequestCommanderVote", [sideJoined, name player]] Call WFBE_CO_FNC_SendToServer;
-			voted = true;
-			waitUntil {(WFBE_Client_Logic getVariable "wfbe_votetime") > 0 || !dialog || !alive player};
-			if (!alive player || !dialog) exitWith {};
-			closeDialog 0;
-			createDialog "WFBE_VoteMenu";
+			if (!_skip) then {
+				//--- Round-start path: cast a vote (unchanged behaviour).
+				["RequestCommanderVote", [sideJoined, name player]] Call WFBE_CO_FNC_SendToServer;
+				voted = true;
+				waitUntil {(WFBE_Client_Logic getVariable "wfbe_votetime") > 0 || !dialog || !alive player};
+				if (alive player && dialog) then {
+					closeDialog 0;
+					createDialog "WFBE_VoteMenu";
+				};
+			} else {
+				//--- Mid-round: the vote window is permanently closed for JIP joiners, so
+				//--- there is no re-vote. Claim the empty AI commander seat ("TAKE COMMAND").
+				["RequestClaimCommander", [sideJoined, group player]] Call WFBE_CO_FNC_SendToServer;
+				closeDialog 0;
+			};
 		};
 	};
 
