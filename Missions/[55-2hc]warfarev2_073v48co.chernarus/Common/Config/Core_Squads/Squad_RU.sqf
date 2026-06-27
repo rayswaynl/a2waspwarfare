@@ -456,6 +456,23 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
 _aiTeamTypes = _aiTeamTypes + [0];
 _aiTeamUpgrades = _aiTeamUpgrades + [[3,0,0,0]];
 
+//--- AICOM v2 AIRFIELD JETS (Ray 2026-06-27): manned CAS/strike jets, fixed-wing -> auto-gated behind AIRFIELD
+//--- ownership (AIR_REQUIRE_AIRFIELD) AND the 2h->5h jet time-ramp. Spawn on the captured airfield runway
+//--- (AI_Commander_Teams jet runway-spawn). Pure gunships (no dismounts, cannot capture).
+_u = ["Su39"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Su-25 CAS (Airfield)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+_u = ["Su34"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Su-34 Strike (Airfield)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];

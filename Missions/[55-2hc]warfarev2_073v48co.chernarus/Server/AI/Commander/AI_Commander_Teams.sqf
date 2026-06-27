@@ -371,7 +371,7 @@ if (count _live > 0) then {
 		//--- airfield-tagged town (_hasAirfield, computed above from CAPTURE_UNLOCKS/airfield anchors). With no
 		//--- airfield held this is identical to the old blanket strip (helicopters-only). Choppers (air, no Plane)
 		//--- are unaffected and remain gated by the normal tier + AIR_MIN_TOWNS roster gate above.
-		if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {!_hasAirfield})) then {
+		if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {(!_hasAirfield) || (time < (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) || (random 1 >= (((((time - (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) max 0) / (((missionNamespace getVariable ["WFBE_C_AICOM_JET_FULL_SECS", 18000]) - (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) max 1)) min 1)))})) then { //--- AICOM v2 JET TIME-RAMP: planes also gated by time (no jets <2h, ramp 2h->5h).
 			(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
 		};
 	} forEach _eligible;
@@ -639,7 +639,23 @@ if (count _live > 0) then {
 	private ["_padClass"];
 	_padClass = "";
 	{ if (_x isKindOf "Man") then {_padClass = _x} } forEach _template;
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
+	//--- AICOM v2 JET RUNWAY-SPAWN (Ray 2026-06-27): a fixed-wing (Plane) team spawns on the CAPTURED AIRFIELD
+	//--- runway (the owned airfield town's hangar/logic), not at the rear factory - so it can take off + operate.
+	//--- Self-contained + gated to jet teams only (inert for every existing ground/heli founding).
+	private ["_spawnPos","_isJetTeam"];
+	_isJetTeam = ({_x isKindOf "Plane"} count _template) > 0;
+	_spawnPos = getPos _facObj;
+	if (_isJetTeam && {_hasAirfield}) then {
+		private ["_afTown","_haObj"];
+		_afTown = objNull;
+		{ if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_afTown = _x} } forEach towns;
+		if (!isNull _afTown) then {
+			_haObj = _afTown getVariable ["wfbe_hangar", objNull];
+			if (isNull _haObj) then {_haObj = _afTown getVariable ["wfbe_airfield_hangar_obj", objNull]};
+			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
+		};
+	};
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

@@ -101,6 +101,16 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
 
+//--- AICOM v2 AIRFIELD JET (Ray 2026-06-27): manned CAS jet, fixed-wing -> auto-gated behind AIRFIELD ownership
+//--- (AIR_REQUIRE_AIRFIELD strips Plane templates with no airfield) AND the 2h->5h jet time-ramp. Spawns on the
+//--- captured airfield runway (AI_Commander_Teams jet runway-spawn). Pure gunship (no dismounts, cannot capture).
+_u = ["A10_US_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - A-10 CAS (Airfield)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];
