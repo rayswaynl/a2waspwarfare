@@ -111,6 +111,16 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
 
+//--- AICOM TRACKED ARTILLERY (Ray 2026-06-27): ONE self-propelled tracked MLRS battery per AI commander. HEAVY-tier-
+//--- gated (unlocks at Heavy factory L3, matching MLRS_DES_EP1's own tier), AI-only, crew-only (no dismounts -> fire
+//--- support that CANNOT capture a town). Capped to 1 alive per side by the arty cap in AI_Commander_Teams.sqf.
+_u = ["MLRS_DES_EP1"];
+_aiTeamTemplateName     = _aiTeamTemplateName     + ["Artillery - Tracked MLRS Battery"];
+_aiTeamTemplates        = _aiTeamTemplates        + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes            = _aiTeamTypes            + [2];
+_aiTeamUpgrades         = _aiTeamUpgrades         + [[0,0,3,0]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];

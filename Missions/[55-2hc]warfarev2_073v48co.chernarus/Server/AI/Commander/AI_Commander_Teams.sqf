@@ -342,6 +342,38 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith {};
 
+	//--- ARTY CAP (Ray 2026-06-27): at most WFBE_C_AICOM_ARTY_MAX artillery batteries ALIVE per AI commander. Mirror
+	//--- of the attack-heli cap above: count alive arty hulls this side; at/over cap, strip every arty template from
+	//--- _eligible so the founding draw degrade-walks to a buildable ground class. Counting alive HULLS (not a flag)
+	//--- self-corrects - when the battery dies the count drops and arty is re-admitted next cycle.
+	private ["_artyCap","_artyCls","_artyAlive","_eligNoArty","_hasArty","_ei"];
+	_artyCap = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_MAX", 1];
+	if (_artyCap > 0) then {
+		_artyCls = ["MLRS","MLRS_DES_EP1","GRAD_RU","GRAD_TK_EP1"];
+		_artyAlive = 0;
+		{
+			if (alive _x && {(typeOf _x) in _artyCls}) then {
+				if ((count crew _x) > 0 && {side ((crew _x) select 0) == _side}) then {
+					_artyAlive = _artyAlive + 1;
+				} else {
+					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side", sideUnknown]) == _side}) then {_artyAlive = _artyAlive + 1};
+				};
+			};
+		} forEach vehicles;
+		if (_artyAlive >= _artyCap) then {
+			_eligNoArty = [];
+			{
+				_ei = _x;   //--- capture the eligible-INDEX before the inner forEach clobbers _x.
+				_hasArty = false;
+				{ if (_x in _artyCls) exitWith {_hasArty = true} } forEach (_templates select _ei);
+				if (!_hasArty) then {_eligNoArty set [count _eligNoArty, _ei]};
+			} forEach _eligible;
+			_eligible = _eligNoArty;
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] arty cap hit (alive %2 >= cap %3) - arty templates stripped this cycle.", _sideText, _artyAlive, _artyCap]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+	if (count _eligible == 0) exitWith {};
+
 	//--- P1 combined-arms picker (claude-gaming 2026-06-15). Mirror of AI_Commander_AssignTypes.sqf:
 	//--- the old doctrine-only weighting (70% one vehicle track, 30% UNIFORM over all eligible) averaged
 	//--- ~70% infantry because infantry templates unlock first and stay eligible all match while vehicle

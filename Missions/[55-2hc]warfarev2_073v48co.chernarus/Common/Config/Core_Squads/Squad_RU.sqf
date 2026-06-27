@@ -473,6 +473,17 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
 
+//--- AICOM SELF-PROPELLED ARTILLERY (Ray 2026-06-27): ONE BM-21 Grad battery per AI commander. NO tracked SP rocket-
+//--- arty class is registered on this build (RU's only SP rocket arty is the WHEELED GRAD_RU); use it + name it
+//--- honestly. LIGHT-tier-gated (unlocks at Light factory L4, matching GRAD_RU's tier), AI-only, crew-only -> fire
+//--- support, cannot capture. Capped to 1 alive per side by the arty cap.
+_u = ["GRAD_RU"];
+_aiTeamTemplateName     = _aiTeamTemplateName     + ["Artillery - Grad SP Rocket Battery"];
+_aiTeamTemplates        = _aiTeamTemplates        + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
+_aiTeamTypes            = _aiTeamTypes            + [1];
+_aiTeamUpgrades         = _aiTeamUpgrades         + [[0,4,0,0]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];
