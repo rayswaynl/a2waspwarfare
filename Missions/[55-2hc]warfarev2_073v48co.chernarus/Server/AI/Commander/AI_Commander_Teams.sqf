@@ -645,6 +645,14 @@ if (count _live > 0) then {
 	private ["_spawnPos","_isJetTeam"];
 	_isJetTeam = ({_x isKindOf "Plane"} count _template) > 0;
 	_spawnPos = getPos _facObj;
+	//--- AICOM v2 (Ray): spawn at the factory's SPAWN BEACON - the HeliH-family pad players use (the closest pad
+	//--- within 80m is THIS factory's own), so AI teams egress from the designated spot, not the raw factory hull.
+	//--- HeliHRescue/HeliHCivil inherit HeliH; Sr_border is the barracks pad. Jets override to the airfield below.
+	private ["_padList","_bestPad","_bestD"];
+	_padList = (_facObj nearObjects ["HeliH", 80]) + (_facObj nearObjects ["Sr_border", 80]);
+	_bestPad = objNull; _bestD = 1e9;
+	{ if (!isNull _x && {(_x distance _facObj) < _bestD}) then {_bestD = _x distance _facObj; _bestPad = _x} } forEach _padList;
+	if (!isNull _bestPad) then {_spawnPos = getPos _bestPad};
 	if (_isJetTeam && {_hasAirfield}) then {
 		private ["_afTown","_haObj"];
 		_afTown = objNull;
