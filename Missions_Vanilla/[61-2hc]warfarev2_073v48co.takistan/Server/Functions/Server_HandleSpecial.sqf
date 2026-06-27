@@ -717,4 +717,36 @@ switch (_args select 0) do {
 			};
 		};
 	};
+
+	//--- GUER PLAYER MORTAR STRIKE (improvised indirect fire). A GUER player driving a V3S_Gue designated an impact
+	//--- point on the map (Action_GuerMortarStrike.sqf already validated driver-only + within-range on the client);
+	//--- here the SERVER spawns a small scripted 82mm-HE barrage at that position. We reuse the SAME scripted-ordnance
+	//--- building block the VBIED case above proved out (createVehicle of a vanilla HE round at a position), just
+	//--- spread over a few shells with a small spread + short inter-shell delay so it reads as a barrage rather than a
+	//--- single blast. Sh_82_HE is the 82mm mortar HE round the mission's own GUER/INS artillery configs already load
+	//--- on BOTH maps (Common\Config\Core_Artillery\Artillery_*GUE*.sqf), so it is guaranteed present. Server-side, so
+	//--- kill credit + createVehicle damage behave normally. Gate-guarded; the client only sends this for a resistance
+	//--- V3S_Gue driver, so gate-OFF is a byte-for-byte no-op.
+	case "guer-mortar-strike": {
+		Private ["_pos","_player"];
+		_pos    = _args select 1;
+		_player = _args select 2;
+		if ((typeName _pos == "ARRAY") && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+			[_pos] spawn {
+				Private ["_pos","_shells","_i","_off","_sp"];
+				_pos = _this select 0;
+				_shells = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SHELLS", 6];
+				if (_shells < 1) then {_shells = 1};
+				//--- B-strike: walk the barrage in over a few seconds. Each shell is created at a random +/-25m offset
+				//--- around the designated point and at a high Z so it falls onto the target (mirrors how the VBIED/
+				//--- arty cases create ordnance with createVehicle at a position). Short random inter-shell delay.
+				for "_i" from 1 to _shells do {
+					_off = [(_pos select 0) + (-25 + random 50), (_pos select 1) + (-25 + random 50), 120];
+					_sp = "Sh_82_HE" createVehicle _off;
+					sleep (0.4 + random 0.6);
+				};
+			};
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike called by [%1] at %2 (%3 shells).", name _player, _pos, missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SHELLS", 6]]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
 };

@@ -80,6 +80,11 @@ with missionNamespace do {
 	if (isNil "WFBE_C_GUER_KILL_BOUNTY_COEF") then {WFBE_C_GUER_KILL_BOUNTY_COEF = 0.5};
 	if (isNil "WFBE_C_GUER_IED_KILL_COEF") then {WFBE_C_GUER_IED_KILL_COEF = 0.30}; //--- B67 (Ray 2026-06-21) item #8: an IED kill pays only 30% of the normal vehicle/unit bounty (anti-farm) so spamming IEDs for cash is not worthwhile. Applied in RequestOnUnitKilled when the kill is tagged as an IED kill.
 
+	//--- GUER improvised mortar strike (V3S_Gue driver call-in barrage; Action_GuerMortarStrike.sqf -> RequestSpecial -> Server_HandleSpecial "guer-mortar-strike").
+	if (isNil "WFBE_C_GUER_MORTAR_COOLDOWN") then {WFBE_C_GUER_MORTAR_COOLDOWN = 240};	//--- seconds between GUER mortar strikes (per player).
+	if (isNil "WFBE_C_GUER_MORTAR_RANGE")    then {WFBE_C_GUER_MORTAR_RANGE    = 1200};	//--- max designation range from the calling player (m).
+	if (isNil "WFBE_C_GUER_MORTAR_SHELLS")   then {WFBE_C_GUER_MORTAR_SHELLS   = 6};	//--- shells per barrage.
+
 	//--- B75 (guer-tech): KILL-BASED TECH PROGRESSION. The GUER faction earns better gear by KILLS instead of
 	//--- by elapsed match time (the old time-tier in Server_GuerStipend.sqf is removed). WFBE_GUER_PLAYER_KILLS is
 	//--- the cumulative count of enemy (WEST/EAST) units killed BY resistance PLAYERS (incremented server-side in
