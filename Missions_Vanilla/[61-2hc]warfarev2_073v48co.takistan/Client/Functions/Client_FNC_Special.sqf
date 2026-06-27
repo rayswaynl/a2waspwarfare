@@ -301,7 +301,7 @@ WFBE_CL_FNC_Upgrade_Complete = {
 		["INFORMATION", Format ["Client_FNC_Special.sqf: Refreshed [%1] local artillery pieces after Artillery Ammunition upgrade.", count _artilleryVehicles]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	if !(isNull commanderTeam) then { //--- Commander reward (if the player is the commander)
+	if (!isNil "commanderTeam" && {!(isNull commanderTeam)}) then { //--- Commander reward (if the player is the commander). Guard: commanderTeam is undefined for a JIP joiner before the commander FSM sets it -> "Undefined variable commanderteam" (Ray client RPT 2026-06-27).
 		if (commanderTeam == group player) then {
 		};
 	};

@@ -64,7 +64,8 @@ while {alive player && dialog} do {
 			_income_commander = 0;
 			switch (_incomeSystem) do {
 				case 3: {
-					_income_players = round(_calInc * (((100 - _income)/100)/WFBE_Client_Teams_Count));
+					private "_tc2"; _tc2 = WFBE_Client_Teams_Count; if (isNil "_tc2" || {_tc2 < 1}) then {_tc2 = 1};   //--- same div-by-zero guard as Client_GetIncome (WFBE_Client_Teams_Count=0 for an unsynced JIP joiner; Ray client RPT 2026-06-27).
+					_income_players = round(_calInc * (((100 - _income)/100)/_tc2));
 					_income_commander = round((_calInc * (_income/100)) / _incomeDividision) + _income_players;
 				};
 				case 4: {
