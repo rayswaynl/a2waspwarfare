@@ -69,6 +69,38 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
 _aiTeamTypes = _aiTeamTypes + [0];
 _aiTeamUpgrades = _aiTeamUpgrades + [[3,0,0,0]];
 
+//--- AICOM v2 AIR PARITY (Ray 2026-06-27 "lots of choppers late-game, insertions + attack, BOTH sides"):
+//--- the east (RU) roster is already air-rich; bring WEST up to match with troop insertions, light attack,
+//--- an elite air-assault, and a combined transport+gunship escort. AI-commander-only, verified A2-OA classes,
+//--- air-tier-gated. Dismount counts <= carrier cargo. The late-game air ramp (Init_CommonConstants) fields these heavily.
+_u = ["UH60M_EP1"]; _u = _u + ["US_Soldier_TL_EP1"]; _u = _u + ["US_Soldier_AR_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_Medic_EP1"]; _u = _u + ["US_Soldier_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Infantry UH-60 Squadron"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
+
+_u = ["AH6J_EP1"]; _u = _u + ["AH6J_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - AH-6 Little Bird Attack"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,1]];
+
+_u = ["MH60S"]; _u = _u + ["US_Delta_Force_TL_EP1"]; _u = _u + ["US_Delta_Force_MG_EP1"]; _u = _u + ["US_Delta_Force_Assault_EP1"]; _u = _u + ["US_Delta_Force_Assault_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Delta Air Assault (MH-60)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+_u = ["UH60M_EP1"]; _u = _u + ["AH64D_EP1"]; _u = _u + ["US_Soldier_TL_EP1"]; _u = _u + ["US_Soldier_AR_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - UH-60 Air Assault + AH-64 Escort"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];

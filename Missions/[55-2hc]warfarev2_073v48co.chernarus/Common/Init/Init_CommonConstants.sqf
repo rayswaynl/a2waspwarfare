@@ -293,8 +293,8 @@ with missionNamespace do {
 	//--- established war machine). MATURE_MID / MATURE_LATE are the own-town thresholds at/above which the
 	//--- MID / LATE tiers apply. Weights need not sum to 1 (normalised at pick time).
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_EARLY") then {WFBE_C_AICOM_TYPE_MIX_EARLY = [0.70, 0.22, 0.07, 0.01]};
-	if (isNil "WFBE_C_AICOM_TYPE_MIX_MID")   then {WFBE_C_AICOM_TYPE_MIX_MID   = [0.45, 0.28, 0.22, 0.05]};
-	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE")  then {WFBE_C_AICOM_TYPE_MIX_LATE  = [0.28, 0.22, 0.35, 0.15]};
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_MID")   then {WFBE_C_AICOM_TYPE_MIX_MID   = [0.43, 0.25, 0.20, 0.12]};  //--- AICOM v2 (Ray): air 5%->12% mid so choppers start ramping in before the late tier.
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE")  then {WFBE_C_AICOM_TYPE_MIX_LATE  = [0.25, 0.15, 0.30, 0.30]};  //--- AICOM v2 (Ray): air 15%->30% late (inf/light/heavy/air) - choppers a defining late-game feature.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_MID")  then {WFBE_C_AICOM_TYPE_MIX_MATURE_MID  = 4}; //--- own-town count at/above which the MID tier applies.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_LATE") then {WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 8}; //--- own-town count at/above which the LATE tier applies.
 	//--- B74 COST/TIER BIAS (Ray 2026-06-22) -> SUPERSEDED by the B750 effectiveness draw below. The B74 picker weighted
@@ -307,10 +307,10 @@ with missionNamespace do {
 	//--- inflation), and a LOW exponent flattens the draw so the commander fields a VARIED, capable mix rather than one
 	//--- premium template. 0 = pure uniform (max variety); 0.5 (default) = mild effectiveness lean; ~1.0+ = stronger.
 	//--- Tune live. The combat value is read from config once per template per founding (cheap; foundings are infrequent).
-	if (isNil "WFBE_C_AICOM_EFF_BIAS_EXP") then {WFBE_C_AICOM_EFF_BIAS_EXP = 0.5};
+	if (isNil "WFBE_C_AICOM_EFF_BIAS_EXP") then {WFBE_C_AICOM_EFF_BIAS_EXP = 0.3};  //--- AICOM v2 (Ray "much more varied"): 0.5->0.3 - flatten the cost-effectiveness bias so the founding draw spreads across far more templates (less repetition).
 		//--- B754 (Ray 2026-06-25) HELI TIME-BIAS: field MORE helicopters (transport + attack) the longer the match runs. Scales the AIR class-bucket weight by a wall-clock factor ramping 1.0 -> MAXMULT over RAMP_MIN minutes, then holds (orthogonal to the own-town TYPE_MIX ramp). MAXMULT=1.0 => no-op.
-		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT")    then {WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT    = 2.5};
-		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN")   then {WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN   = 45};
+		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT")    then {WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT    = 4.5};  //--- AICOM v2 (Ray 2026-06-27 "lots of choppers late"): 2.5->4.5, the air bucket weight balloons late-game.
+		if (isNil "WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN")   then {WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN   = 35};  //--- AICOM v2: 45->35 min so the air ramp peaks sooner.
 		//--- B754: also GROW the attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX) over the match so the late air push isn't throttled at the early cap. Only when a base cap > 0 exists (0 still = no cap). Effective cap = base + floor(timeRatio * BONUS).
 		if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS") then {WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS = 4};
 		//--- B754 (Ray 2026-06-25) RELATIVE ROUND-CLOSER GATE: the absolute 12-town HQ-strike gate is unreachable in a lopsided game (b753 soak: WEST held 11 vs EAST's dug-in 2, myEff 70 vs 53, never hit 12 -> 8.4h with no winner). Let a runaway leader close BELOW the absolute gate when dominant on EFFECTIVE strength AND (enemy collapsed to <= ENEMY_MAX towns OR own >= TOWN_RATIO town lead), plus a STALL_OVERRIDE after N dominant-but-passive stall ticks. Never fires while behind on towns/strength.
