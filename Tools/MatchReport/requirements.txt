@@ -1,0 +1,5 @@
+# WASP post-match report renderer
+pillow>=10.0
+numpy>=1.24
+imageio>=2.31
+imageio-ffmpeg>=0.4.9   # bundles an ffmpeg binary; no system ffmpeg needed
