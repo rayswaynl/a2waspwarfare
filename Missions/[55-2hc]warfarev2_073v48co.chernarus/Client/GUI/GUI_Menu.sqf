@@ -28,7 +28,7 @@ while {alive player && dialog} do {
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};
-	ctrlEnable [11005,_enable]; //--- Team Orders
+	ctrlEnable [11005,true]; //--- Command war-room: always openable on WEST/EAST; the dialog gates internally (Take Command vs war room). JIP-safe.
 	ctrlEnable [11008,_enable]; //--- Commander Menu
 	ctrlEnable [11006,commandInRange && (player == leader WFBE_Client_Team)]; //--- Special Menu
 	ctrlEnable [11007,commandInRange]; //--- Upgrade Menu
@@ -180,7 +180,10 @@ while {alive player && dialog} do {
 		createDialog "RscDisplay_Parameters";
 	};
 
-	//--- Command Menu.
+	//--- Command Menu (commander-only war room). Open UNCONDITIONALLY on WEST/EAST: the dialog's own
+	//--- gate (GUI_Menu_Command.sqf) shows the TAKE COMMAND button + explainer when you are not (yet) the
+	//--- commander, and the war room when you are. This is what fixes the JIP dead-button - a joiner whose
+	//--- commanderTeam has not replicated still gets a live claim button instead of a disabled/blank tab.
 	if (MenuAction == 5) exitWith { //added-MrNiceGuy
 		MenuAction = -1;
 		closeDialog 0;

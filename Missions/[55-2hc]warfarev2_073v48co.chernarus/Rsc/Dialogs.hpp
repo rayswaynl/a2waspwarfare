@@ -1953,113 +1953,131 @@ class RscMenu_Command {
 			h = 0.255000;
 			size = 0.030;
 		};
-		/* Posture toggle. */
-		class CA_Cmd_PostureLbl : RscText {
-			idc = 14606;
+		/* =====================================================================================
+		   WAR ROOM (commander-only). Two states, toggled by the controller (GUI_Menu_Command.sqf):
+		     STATE A (not commander): only the TAKE COMMAND button (14670) + the 14600 explainer show.
+		     STATE B (commander): the 14600 economy header + roster listbox (14660/14661) + order buttons.
+		   14605 title text is set at runtime ("COMMAND" / "WAR ROOM"). The controller ctrlShow's exactly
+		   the right control set per state, so the claim button (14670) overlaps the roster region cleanly.
+		   ===================================================================================== */
+		/* TAKE COMMAND button - shown ONLY in the not-commander state (controller toggles ctrlShow). */
+		class CA_Cmd_Claim : RscButton_Main {
+			idc = 14670;
 			x = 0.00561695;
 			y = 0.372000;
-			w = 0.150000;
-			text = "Posture:";
+			w = 0.459244;
+			h = 0.060000;
+			text = "TAKE COMMAND";
+			action = "MenuAction = 750";
+			tooltip = "Claim the empty AI commander seat and run this side yourself.";
 		};
-		class CA_Cmd_Push : RscButton_Main {
-			idc = 14610;
-			x = 0.160000;
-			y = 0.370000;
-			w = 0.148000;
-			h = 0.042000;
-			text = "PUSH";
-			action = "MenuAction = 710";
-			tooltip = "Tell the AI commander to press the attack (aggressive posture).";
+		/* ROSTER of your AI teams (commander state). Row = "leader | role | town | order". Click to select. */
+		class CA_Cmd_RosterTitle : RscText_SubTitle {
+			idc = 14660;
+			x = 0.00561695;
+			y = 0.372000;
+			w = 0.459244;
+			text = "YOUR TEAMS  (click a team, then click the map)";
 		};
-		class CA_Cmd_Hold : CA_Cmd_Push {
-			idc = 14611;
-			x = 0.317244;
-			text = "HOLD";
-			action = "MenuAction = 711";
-			tooltip = "Tell the AI commander to consolidate and hold (defensive posture).";
+		class CA_Cmd_Roster : RscListBox {
+			idc = 14661;
+			x = 0.00561695;
+			y = 0.410000;
+			w = 0.459244;
+			h = 0.230000;
+			onLBSelChanged = "WfRosterSel = _this select 1";
 		};
 		class LineCmd1 : RscText {
 			idc = 14690;
 			x = 0.00561695;
-			y = 0.424000;
+			y = 0.648000;
 			w = 0.459244;
 			h = WFBE_SPT1;
 			colorBackground[] = WFBE_SPC1;
 		};
-		/* Order buttons (map-click orders). */
-		class CA_Cmd_Focus : RscButton_Main {
+		/* Order buttons (map-click; act on the selected roster team, else nearest idle AI team). */
+		class CA_Cmd_Move : RscButton_Main {
 			idc = 14620;
 			x = 0.00561695;
-			y = 0.436000;
-			w = 0.459244;
+			y = 0.660000;
+			w = 0.224000;
 			h = 0.044000;
-			text = "Focus Attack  (click a town)";
+			text = "Attack / Move  (click map)";
 			action = "MenuAction = 720";
-			tooltip = "Press, then click the map: the AI commander concentrates its assault on the nearest town.";
+			tooltip = "Order the selected team to advance and assault toward the clicked point (mode: move).";
 		};
-		class CA_Cmd_Defend : CA_Cmd_Focus {
+		class CA_Cmd_Defend : CA_Cmd_Move {
 			idc = 14621;
-			y = 0.486000;
-			text = "Defend Town  (click a town)";
+			x = 0.241244;
+			y = 0.660000;
+			text = "Defend Here  (click map)";
 			action = "MenuAction = 721";
-			tooltip = "Press, then click the map: the AI commander biases a team to defend the nearest town.";
+			tooltip = "Order the selected team to hold and defend the clicked point (mode: defense).";
 		};
-		class CA_Cmd_Reinforce : CA_Cmd_Focus {
+		class CA_Cmd_Patrol : CA_Cmd_Move {
 			idc = 14622;
-			y = 0.536000;
-			text = "Reinforce Here  (click a town)";
+			x = 0.00561695;
+			y = 0.710000;
+			text = "Patrol Here  (click map)";
 			action = "MenuAction = 722";
-			tooltip = "Press, then click the map: the AI commander pushes a fresh team toward the nearest town.";
+			tooltip = "Order the selected team to patrol/search the clicked area (mode: patrol).";
 		};
-		class CA_Cmd_Arty : CA_Cmd_Focus {
+		class CA_Cmd_Release : CA_Cmd_Move {
+			idc = 14624;
+			x = 0.241244;
+			y = 0.710000;
+			text = "Release to Auto";
+			action = "MenuAction = 724";
+			tooltip = "Hand the selected team back to autonomous town-capture (mode: towns).";
+		};
+		class CA_Cmd_Arty : CA_Cmd_Move {
 			idc = 14623;
-			y = 0.586000;
+			x = 0.00561695;
+			y = 0.760000;
+			w = 0.459244;
 			text = "Artillery Here  (click map)";
 			action = "MenuAction = 723";
-			tooltip = "Press, then click the map: request an AI artillery strike at that spot (if artillery is enabled).";
+			tooltip = "Request an artillery strike at the clicked spot (if artillery is enabled).";
 		};
 		class LineCmd2 : LineCmd1 {
 			idc = 14691;
-			y = 0.642000;
+			y = 0.812000;
 		};
-		/* Donate + Request Unit. */
-		class CA_Cmd_Donate : RscButton_Main {
-			idc = 14630;
+		/* Bulk posture + Request-Unit (the two hybrid orders that still bite in assist-mode). */
+		class CA_Cmd_Push : RscButton_Main {
+			idc = 14610;
 			x = 0.00561695;
-			y = 0.654000;
-			w = 0.459244;
-			h = 0.044000;
-			text = "Donate Funds to AI";
-			action = "MenuAction = 730";
-			tooltip = "Move funds from your team wallet to the AI commander's treasury so it can field more.";
+			y = 0.824000;
+			w = 0.148000;
+			h = 0.040000;
+			text = "ALL PUSH";
+			action = "MenuAction = 710";
+			tooltip = "All idle AI teams resume autonomous town capture.";
 		};
-		class CA_Cmd_ReqLbl : RscText {
-			idc = 14607;
-			x = 0.00561695;
-			y = 0.708000;
-			w = 0.150000;
-			text = "Request:";
+		class CA_Cmd_Hold : CA_Cmd_Push {
+			idc = 14611;
+			x = 0.160244;
+			y = 0.824000;
+			text = "ALL HOLD";
+			action = "MenuAction = 711";
+			tooltip = "All AI teams dig in and defend where they stand.";
 		};
 		class CA_Cmd_ReqCombo : RscCombo {
 			idc = 14640;
-			x = 0.160000;
-			y = 0.706000;
-			w = 0.180000;
+			x = 0.317244;
+			y = 0.826000;
+			w = 0.090000;
 			h = 0.035;
 		};
 		class CA_Cmd_ReqBtn : RscButton_Main {
 			idc = 14641;
-			x = 0.348000;
-			y = 0.706000;
-			w = 0.117244;
+			x = 0.412244;
+			y = 0.824000;
+			w = 0.052561;
 			h = 0.040000;
-			text = "Request";
+			text = "Build";
 			action = "MenuAction = 740";
-			tooltip = "Ask the AI commander to prioritise building the selected unit type next.";
-		};
-		class LineCmd3 : LineCmd1 {
-			idc = 14692;
-			y = 0.764000;
+			tooltip = "Ask the war effort to prioritise building the selected unit type next.";
 		};
 		/* Status / hint line at the bottom of the console. */
 		class CA_Cmd_Help : RscStructuredText {
