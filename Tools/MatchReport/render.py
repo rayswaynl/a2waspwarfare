@@ -414,7 +414,7 @@ def render(m, out_path):
 
     def s_momentum(im,d,i,n):
         paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed)   # generated scene backdrop (seed rotates)
-        drift_silhouette(im,2,i,n,yfrac=0.72,wfrac=0.56,opacity=0.14,direction=(-1 if m.seed%2 else 1))  # jet w/ afterburner
+        drift_silhouette(im,2,i,n,yfrac=0.78,wfrac=0.46,opacity=0.40,direction=(-1 if m.seed%2 else 1))  # jet w/ afterburner, clear lower band
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
         prog=ease(min(1,i/(n-12))); nshow=max(2,int(len(m.ser_x)*prog))
