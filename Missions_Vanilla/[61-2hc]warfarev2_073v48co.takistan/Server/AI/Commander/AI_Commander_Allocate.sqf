@@ -20,7 +20,7 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassN","_frontDist"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst"];
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -34,6 +34,20 @@ _ownTowns = _snap select WFBE_SNAP_OWNTOWNOBJS;
 _myHQ     = _snap select WFBE_SNAP_MYHQ;
 _teams    = _logik getVariable ["wfbe_teams", []];
 if (count _tgtTowns == 0) exitWith { _logik setVariable ["wfbe_aicom_targets", []] };   //--- nothing to take
+
+//--- EXPANSION-FIRST GATE (Ray 2026-06-28): until this side OWNS >= WFBE_C_AICOM_ENGAGE_MIN_TOWNS towns it does NOT
+//--- attack the enemy - the fist + rear-harass target NEUTRAL towns only, so both commanders build an empire before
+//--- they clash (stops the early enemy-rush that ends matches prematurely). ANTI-STALL: if no neutral town remains
+//--- capturable it falls through and engages the enemy (never idle). The HQ-strike round-ender keeps its own gate.
+_myTowns   = _snap select WFBE_SNAP_MYTOWNS;
+_engageMin = missionNamespace getVariable ["WFBE_C_AICOM_ENGAGE_MIN_TOWNS", 10];
+_expandFirst = false;
+if (_engageMin > 0 && {_myTowns < _engageMin}) then {
+	private ["_neutPool","_sid"];
+	_neutPool = [];
+	{ _sid = _x getVariable ["sideID", -1]; if (_sid != _sideID && {_sid != _enemyID}) then {_neutPool set [count _neutPool, _x]} } forEach _tgtTowns;
+	if (count _neutPool > 0) then {_tgtTowns = _neutPool; _expandFirst = true};
+};
 
 //--- helper: a town's distance to OUR nearest front (own town, else our HQ) = how forward it is.
 _frontDist = {
@@ -115,6 +129,8 @@ _logik setVariable ["wfbe_aicom_targets", _fist];   //--- the fist is the side's
 //--- M2 HARASS TARGET: the enemy's DEEPEST capturable town (max front-distance), enemy-held weighted over
 //--- neutral, excluding the fist. A light mounted detachment raids it to pressure their rear / supply hub.
 _harassN  = missionNamespace getVariable ["WFBE_C_AICOM2_HARASS_TEAMS", 1];
+if (_expandFirst) then {_harassN = 0};   //--- expansion-first: no enemy-rear raid until the engage threshold
+_expandN  = missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3];
 _harassTgt = objNull;
 if (_harassN > 0) then {
 	private ["_harassFar"];
@@ -127,11 +143,24 @@ if (_harassN > 0) then {
 	} forEach _tgtTowns;
 };
 
-//--- ASSIGN every ELIGIBLE team: a light MOUNTED detachment to the rear harass target (M2), the rest
-//--- concentrated on the fist (reach-aware; never idle).
+//--- M? EXPANSION LANE (Ray, Issue 5): the capturable list includes ~42 NEUTRAL/uncaptured towns the all-in
+//--- fist ignores. Build _neutTowns = capturable towns whose sideID is NEITHER mine NOR the enemy's (so truly
+//--- neutral) and that are NOT the fist; up to _expandN teams peel off to take their nearest REACHABLE one.
+_neutTowns = [];
+{
+	private ["_tt","_sid"];
+	_tt = _x;
+	_sid = _tt getVariable ["sideID", -1];
+	if (_sid != _sideID && {_sid != _enemyID} && {!(_tt in _fist)}) then {
+		_neutTowns set [count _neutTowns, _tt];
+	};
+} forEach _tgtTowns;
+
+//--- ASSIGN every ELIGIBLE team: a light MOUNTED detachment to the rear harass target (M2), up to _expandN
+//--- teams to capture NEUTRAL towns (expansion lane), the rest concentrated on the fist (reach-aware; never idle).
 private ["_assigned","_harassAssigned"];
 _garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
-_assigned = 0; _harassAssigned = 0;
+_assigned = 0; _harassAssigned = 0; _expandCount = 0;
 {
 	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
 	_grp = _x;
@@ -158,9 +187,20 @@ _assigned = 0; _harassAssigned = 0;
 			if (!isNull _harassTgt && {_harassAssigned < _harassN} && {_hasVeh} && {(_ldrPos distance _harassTgt) <= _reach}) then {
 				_tgt = _harassTgt; _harassAssigned = _harassAssigned + 1;
 			} else {
-				//--- concentrate on the fist: nearest in reach; else nearest outright (stay offensive, never idle).
-				{ _v = _ldrPos distance _x; if (_v <= _reach && {_v < _tgtD}) then {_tgtD = _v; _tgt = _x} } forEach _fist;
-				if (isNull _tgt) then { { _v = _ldrPos distance _x; if (_v < _tgtD) then {_tgtD = _v; _tgt = _x} } forEach _fist };
+				//--- EXPANSION LANE (Issue 5): up to _expandN teams grab their NEAREST REACHABLE neutral town
+				//--- (manual min loop - no A3 sort/apply). Capped by _expandCount; falls through to the fist if
+				//--- this team has no reachable neutral town or the expansion quota is already spent.
+				if (_expandCount < _expandN) then {
+					private ["_eTgt","_eD","_ev"];
+					_eTgt = objNull; _eD = 1e9;
+					{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
+					if (!isNull _eTgt) then {_tgt = _eTgt; _expandCount = _expandCount + 1};
+				};
+				if (isNull _tgt) then {
+					//--- concentrate on the fist: nearest in reach; else nearest outright (stay offensive, never idle).
+					{ _v = _ldrPos distance _x; if (_v <= _reach && {_v < _tgtD}) then {_tgtD = _v; _tgt = _x} } forEach _fist;
+					if (isNull _tgt) then { { _v = _ldrPos distance _x; if (_v < _tgtD) then {_tgtD = _v; _tgt = _x} } forEach _fist };
+				};
 			};
 			if (!isNull _tgt) then {
 				_grp setVariable ["wfbe_aicom_alloc_target", _tgt];
@@ -171,4 +211,4 @@ _assigned = 0; _harassAssigned = 0;
 	};
 } forEach _teams;
 
-diag_log ("AICOM2|v1|ALLOC|" + str _side + "|" + str (round (time / 60)) + "|fist=" + str (count _fist) + "|primary=" + ((_fist select 0) getVariable ["name","?"]) + "|src=" + (if (_fromFocus) then {"FOCUS"} else {"auto"}) + "|harassTo=" + (if (!isNull _harassTgt) then {_harassTgt getVariable ["name","?"]} else {"none"}) + "|assigned=" + str _assigned + "|harass=" + str _harassAssigned + "|teams=" + str (count _teams));
+diag_log ("AICOM2|v1|ALLOC|" + str _side + "|" + str (round (time / 60)) + "|fist=" + str (count _fist) + "|primary=" + ((_fist select 0) getVariable ["name","?"]) + "|src=" + (if (_fromFocus) then {"FOCUS"} else {"auto"}) + "|harassTo=" + (if (!isNull _harassTgt) then {_harassTgt getVariable ["name","?"]} else {"none"}) + "|assigned=" + str _assigned + "|harass=" + str _harassAssigned + "|expand=" + str _expandCount + "|teams=" + str (count _teams) + "|myTowns=" + str _myTowns + "|expandFirst=" + str _expandFirst);

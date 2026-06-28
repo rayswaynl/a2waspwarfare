@@ -658,6 +658,14 @@ if (_fwdEnable && {_dual}) then {
 						};
 					};
 				} forEach towns;
+					//--- FALLBACK: prod town-start owns only a rear cluster; no owned town qualifies far out.
+					//--- Build the outpost toward the published FRONT town instead (standoff math already places it rearward of the town).
+					if (isNull _bestFwdT && {_haveFront} && {!isNull _frontF}) then {
+						if ((_frontF distance _rearHQpos) >= _fwdMinDist) then {_bestFwdT = _frontF};
+					};
+					if (isNull _bestFwdT) then {
+						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FWDBASE: no eligible forward town (owned/front) >= %2m - skipping.", _sideText, _fwdMinDist]] Call WFBE_CO_FNC_AICOMLog;
+					};
 				if (!isNull _bestFwdT) then {
 					//--- forward CENTER = standoff BEHIND the town toward the rear HQ (out of the town core).
 					_dxF = (_rearHQpos select 0) - (getPos _bestFwdT select 0);

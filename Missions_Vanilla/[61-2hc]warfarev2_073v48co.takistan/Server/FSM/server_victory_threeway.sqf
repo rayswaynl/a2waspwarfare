@@ -1,4 +1,4 @@
-private["_victory","_total","_side","_hq","_structures","_towns","_factories","_uid","_name"];
+private["_victory","_total","_side","_hq","_structures","_towns","_factories","_uid","_name","_winSide"];
 
 _victory = missionNamespace getVariable "WFBE_C_VICTORY_THREEWAY";
 _total = totalTowns;
@@ -43,26 +43,36 @@ while {!gameOver} do {
 			//--- Now: fire only while NOT already over, for a clear supremacy/HQ-loss win;
 			//--- WFBE_GameOver also short-circuits any later side in the same forEach pass.
 			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0) || (_towns == _total) ) ) then {
-				[nil, "HandleSpecial", ["endgame", (_x) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
+				//--- FIX D (winner backwards): the award block fires for the evaluated side _x.
+				//--- If the towns-supremacy sub-condition is true, _x is the WINNER. Otherwise the
+				//--- HQ-loss branch fired - _x is the side whose own HQ was razed = the LOSER, so the
+				//--- real winner is the OTHER side. GUER (defender) is excluded from this loop, so the
+				//--- winner is strictly the opposite of the two-sided WEST/EAST pair.
+				if (_towns == _total) then {
+					_winSide = _x;
+				} else {
+					if (_x == west) then { _winSide = east } else { _winSide = west };
+				};
+				[nil, "HandleSpecial", ["endgame", (_winSide) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
 
 				// 0 = NONE
 				// 1 = CHERNARUS
 				// 2 = TAKISTAN
 				["SET_MAP", 0] call WFBE_SE_FNC_CallDatabaseSetMap;
 
-				WF_Logic setVariable ["WF_Winner", _x];
+				WF_Logic setVariable ["WF_Winner", _winSide];
 				gameOver = true;
 				WFBE_GameOver = true;
 
-				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _x (the loop variable for the winning side).
+				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _winSide (the real winning side).
 				// durationSec = round(time) which mirrors GlobalGameStats.sqf's _uptime source.
 				if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 					if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 					WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _x + "|" + str round(time) + "|" + worldName);
+					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _winSide + "|" + str round(time) + "|" + worldName);
 				};
 
-				[_x] call WFBE_CO_FNC_LogGameEnd;
+				[_winSide] call WFBE_CO_FNC_LogGameEnd;
 			};
 		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
 	};
