@@ -30,9 +30,22 @@ def main():
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--sample", action="store_true", help="use the built-in demo match")
     src.add_argument("--waspstat", metavar="FILE", help="raw WASPSTAT telemetry ('-' = stdin)")
+    src.add_argument("--leaderboard", action="store_true", help="render the real server leaderboard from the live DB")
     ap.add_argument("--names", metavar="FILE", help="optional uid<TAB>name mapping")
     ap.add_argument("-o", "--out", help="output mp4 path")
     args = ap.parse_args()
+
+    if args.leaderboard:
+        from leaderboard_data import load_leaderboard
+        from render import render_leaderboard, caption_leaderboard
+        data = load_leaderboard()
+        if not data.players: sys.exit("No players in ingame_stats.")
+        out = args.out or "wasp_leaderboard.mp4"
+        t0 = time.time(); n = render_leaderboard(data, out)
+        print(f"rendered {n} frames ({n/30:.1f}s) in {time.time()-t0:.1f}s -> {out}")
+        with open(out + ".caption.txt", "w", encoding="utf-8") as fh: fh.write(caption_leaderboard(data))
+        print("caption -> " + out + ".caption.txt")
+        return
 
     if args.sample:
         from sample_match import build_sample

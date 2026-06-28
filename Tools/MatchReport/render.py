@@ -416,3 +416,98 @@ def render(m, out_path):
     # crf 24 keeps a 48s clip ~6 MB — comfortably under Discord's non-boosted upload limit
     # (10.9 MB was rejected) while staying crisp at 1080p. Bump lower (19) only for off-Discord exports.
     return len(frames)
+
+
+def render_leaderboard(data, out_path):
+    """Render the real server leaderboard (LeaderboardData) -> mp4. Reuses the branded helpers."""
+    frames=[]
+    def base(): im=Image.new("RGB",(W,H),BG); return im,ImageDraw.Draw(im,"RGBA")
+    def _fade(im,k): return im if k>=1 else Image.fromarray((np.asarray(im).astype(np.float32)*k).astype(np.uint8))
+    def scn(n,fn,fin=12,fout=10):
+        for i in range(n):
+            im,d=base(); fn(im,d,i,n); im=overlay_fx(im,i)
+            k=1.0
+            if i<fin: k=ease(i/fin)
+            if i>n-fout: k=ease((n-i)/fout)
+            frames.append(np.asarray(_fade(im,k)))
+
+    def s_intro(im,d,i,n):
+        mk=brand_logo("mark")
+        if mk is not None: m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
+        tracked(d,(W/2,H/2-92),"MIKSUU'S WARFARE",DISP(78),INK,anchor="mm",track=6)
+        tracked(d,(W/2,H/2+8),"SERVER LEADERBOARD",DISP(46),GOLD,anchor="mm",track=10)
+        tracked(d,(W/2,H/2+80),f"{data.n_players} OPERATORS      {data.total_kills} KILLS LOGGED",SANS(24,False),(150,150,138),anchor="mm",track=3)
+
+    def s_board(im,d,i,n):
+        header(d,"TOP OPERATORS","by total score"); top=data.players[:6]
+        if not top: return
+        mx=max(p["score"] for p in top) or 1; y0=320; bh=92; gap=22
+        for idx,p in enumerate(top):
+            y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-300)*p["score"]/mx*prog)
+            if idx==0 and paste_emblem(im,"icon_mvp",92,y+bh/2,52): pass
+            else: d.text((92,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
+            panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
+            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+16),p["name"],font=f_h3,fill=INK)
+            d.text((158,y+58),f'{SIDE_NAME[p["side"]]}   ·   {p["kills"]} kills   ·   {p["caps"]} caps',font=f_xs,fill=DIM)
+            d.text((W-84,y+bh/2),str(int(p["score"]*prog)),font=f_h3,fill=INK,anchor="rm")
+        footer(im,d)
+
+    def s_mvp(im,d,i,n):
+        if not data.mvp: return
+        paste_cover(im,"mvp_backdrop",opacity=0.5)
+        header(d,"SERVER MVP"); p=data.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
+        panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
+        if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
+            d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
+        d.text((352,342),p["name"],font=DISP(60),fill=INK); chip(d,354,420,p["side"],SANS(24,False))
+        gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
+        cells=[("KILLS",num(p["kills"]),col),("SCORE",num(p["score"]),GOLD),("INFANTRY",num(p["inf"]),INK),
+               ("VEHICLE",num(p["veh"]),col),("AIR",num(p["air"]),INK),("TOWN CAPS",num(p["caps"]),col)]
+        for idx,(lab,val,c) in enumerate(cells):
+            x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
+            d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
+        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),"TOP OPERATOR ON THE SERVER",SANS(22,False),(200,204,196),anchor="mm",track=6); footer(im,d)
+
+    def s_combat(im,d,i,n):
+        header(d,"COMBAT BREAKDOWN","all operators, all time"); kk=ease(min(1,i/26))
+        order=[("INF","Infantry",(198,178,142)),("VEH","Vehicle",(217,118,60)),("AIR","Air",(122,134,72)),("STATIC","Static",(120,128,138))]
+        tot=sum(data.catcount.values()) or 1; segs=[(data.catcount[c]/tot*kk,col) for c,_,col in order]
+        if kk<1: segs.append((1-kk,(40,46,56)))
+        cx,cy,r=W/2,540,210; donut(d,cx,cy,r,segs)
+        d.text((cx,cy-18),str(int(data.total_kills*kk)),font=f_h1,fill=INK,anchor="mm"); d.text((cx,cy+44),"TOTAL KILLS",font=f_xs,fill=DIM,anchor="mm")
+        lx,ly=160,820
+        for idx,(c,name,col) in enumerate(order):
+            x=lx+(idx%2)*420; y=ly+(idx//2)*70; d.rectangle([x,y+4,x+24,y+28],fill=col)
+            d.text((x+36,y),name,font=f_sm,fill=INK); d.text((x+360,y),f"{int(data.catcount[c]/tot*100)}%",font=f_sm,fill=DIM,anchor="ra")
+        gy=1010; cw=(W-220)//2; top=data.mvp
+        mostcaps=max(data.players,key=lambda p:p["caps"]) if data.players else None
+        cards=[("TOP FRAGGER",top["name"] if top else "—",f"{top['kills']} kills" if top else "",GOLD,"icon_kills"),
+               ("MOST CAPTURES",mostcaps["name"] if mostcaps else "—",f"{mostcaps['caps']} towns" if mostcaps else "",GUER,"icon_captures"),
+               ("OPERATORS",str(data.n_players),"tracked",INK,"icon_mvp"),
+               ("TOTAL CAPTURES",str(sum(p["caps"] for p in data.players)),"all time",WEST,"icon_towns")]
+        for idx,(lab,big,sub,c,ic) in enumerate(cards):
+            x=110+(idx%2)*cw; y=gy+(idx//2)*200; panel(d,x,y,x+cw-20,y+175)
+            paste_emblem(im,ic,x+cw-58,y+44,48)
+            d.text((x+26,y+22),lab,font=f_xs,fill=DIM); d.text((x+26,y+52),str(big),font=f_h3 if len(str(big))<12 else f_md,fill=c); d.text((x+26,y+120),sub,font=f_xs,fill=DIM)
+        footer(im,d)
+
+    def s_outro(im,d,i,n):
+        paste_cover(im,"outro_bg")
+        mk=brand_logo("mark")
+        if mk is not None: m2=mk.resize((220,220)); im.paste(m2,(int(W/2-110),int(H/2-360)),m2)
+        tracked(d,(W/2,H/2-90),"JOIN THE WAR",DISP(74),INK,anchor="mm",track=8)
+        tracked(d,(W/2,H/2+6),"MIKSUU'S WARFARE",DISP(44),GOLD,anchor="mm",track=10)
+        tracked(d,(W/2,H/2+86),"MIKSUUSWARFARE.COM",SANS(26,False),(200,204,196),anchor="mm",track=6)
+
+    scn(54,s_intro,fin=18,fout=10); scn(210,s_board); scn(156,s_mvp); scn(186,s_combat); scn(120,s_outro,fin=12,fout=2)
+    for _ in range(18): frames.append(frames[-1])
+    imageio.mimwrite(out_path,frames,fps=FPS,codec="libx264",macro_block_size=8,
+                     ffmpeg_params=["-crf","24","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
+    return len(frames)
+
+
+def caption_leaderboard(data):
+    mvp = f" Top operator: {data.mvp['name']} ({data.mvp['kills']}K)." if data.mvp else ""
+    return (f"MIKSUU'S WARFARE — server leaderboard. {data.n_players} operators, "
+            f"{data.total_kills} kills logged.{mvp}\n"
+            f"#arma2 #warfare #cti #miksuuswarfare #leaderboard #milsim")
