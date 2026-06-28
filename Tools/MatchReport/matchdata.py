@@ -36,12 +36,16 @@ def side_from_str(s):
 WORLD_SIZE = {"chernarus": 15360, "takistan": 12800, "default": 15360}
 
 TOWN_COORDS = {
+ # Accurate Chernarus map positions (metres, 0..15360, y=north). Used until the boot
+ # logger (WFBE_C_LOG_TOWN_COORDS) harvests the mission's exact getPos set.
  "chernarus": {
-  "Komarovo":(3700,2100),"Kamenka":(2150,2050),"Pavlovo":(2100,3750),"Zelenogorsk":(2550,5300),
-  "Pustoshka":(3050,8800),"Vybor":(3900,10300),"Chernogorsk":(6700,2550),"Mogilevka":(7100,5400),
-  "Stary Sobor":(6250,7700),"Novy Sobor":(7050,7950),"Vyshnoye":(5750,6900),"Elektrozavodsk":(10100,2300),
-  "Msta":(9900,7500),"Gvozdno":(9550,12050),"Polana":(10800,9950),"Berezino":(12100,9000),
-  "Krasnostav":(11500,12300),"Solnichniy":(13500,5000),"Dubrovka":(12800,10600),"Stary Yar":(9200,9700),
+  "Kamenka":(2092,1980),"Komarovo":(3673,2148),"Pavlovo":(2049,3759),"Chernogorsk":(6731,2653),
+  "Elektrozavodsk":(10303,2330),"Zelenogorsk":(2542,5267),"Bor":(3380,4570),"Mogilevka":(7159,5434),
+  "Solnichniy":(13507,5527),"Pogorevka":(4402,6196),"Vyshnoye":(5742,6892),"Msta":(9869,7565),
+  "Rogovo":(4490,7910),"Stary Sobor":(6192,7720),"Novy Sobor":(7037,7860),"Pustoshka":(3107,8806),
+  "Kabanino":(5294,8741),"Berezino":(12059,9072),"Stary Yar":(9230,9690),"Grishino":(6234,9992),
+  "Polana":(10846,9971),"Nadezhdino":(8540,10210),"Vybor":(3870,10300),"Orlovets":(10630,10810),
+  "Dubrovka":(12812,10610),"Lopatino":(5680,11100),"Gvozdno":(9583,12121),"Krasnostav":(11268,12346),
  },
  "takistan": {},   # TODO: fill from the boot-time town-position logger.
 }
