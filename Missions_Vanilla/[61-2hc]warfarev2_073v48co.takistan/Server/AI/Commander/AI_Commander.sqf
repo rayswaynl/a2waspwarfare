@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -98,6 +98,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0; _ltDisband = 0;
 _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
+_ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
@@ -175,6 +176,79 @@ while {!gameOver} do {
 
 		//--- Executor: every tick (responsive explicit orders, human or AI).
 		(_side) Call WFBE_SE_FNC_AI_Com_Execute;
+
+		//--- COMMAND CONSOLE: player war-room ARTILLERY-HERE resolver - every tick (so it bites under a HUMAN commander,
+		//--- where the autonomous Strategy arty block is dormant). Self-gates on WFBE_C_AICOM_PLAYER_ARTY + a fresh,
+		//--- friendly-fire-guarded, fire-once request; nil-guarded so it is inert until the function is registered.
+		if (!isNil "WFBE_SE_FNC_AI_Com_PlayerArty") then {(_side) Call WFBE_SE_FNC_AI_Com_PlayerArty};
+
+		//--- AI-INTENT PUBLISH (moved out of _canBuild, claude-gaming 2026-06-28): publish the side-keyed INTENT /
+		//--- OBJECTIVE / ACTIVE / FOCUS / TEAMS / FUNDS reads the client RHUD row + the command-console intent readout
+		//--- consume. Runs on the _active gate (HQ alive + AICOM on) every strategy interval, so it REFRESHES even
+		//--- under a human commander (assist) and reaches JIP joiners - the old _canBuild placement left it frozen/
+		//--- blank whenever the AI was not in full-build mode. PV only on change (cheap). The intent wording reflects
+		//--- the AI's own strat_mode/targets, which are fresh exactly when the AI holds command (when the readout shows).
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0 && {time - _ltIntent > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])}) then {
+			_ltIntent = time;
+			private ["_sm","_tg","_objT","_objNm","_intent","_iKey","_nKey","_pKey"];
+			_sm = _logik getVariable ["wfbe_aicom_strat_mode", "spearhead"];
+			_tg = _logik getVariable ["wfbe_aicom_targets", []];
+			_objT = if (count _tg > 0) then {_tg select 0} else {objNull};
+			_objNm = if (!isNull _objT) then {_objT getVariable ["name", "?"]} else {""};
+			_intent = switch (_sm) do {
+				case "strike":    {"ASSAULTING HQ"};
+				case "laststand": {"DEFENDING BASE"};
+				case "relief":    {"DEFENDING"};
+				default { if (_objNm != "") then {"ATTACKING " + _objNm} else {"ADVANCING"} };
+			};
+			_iKey = format ["WFBE_AICOM_INTENT_%1", _myID];
+			_nKey = format ["WFBE_AICOM_OBJNAME_%1", _myID];
+			_pKey = format ["WFBE_AICOM_OBJPOS_%1", _myID];
+			if ((missionNamespace getVariable [_iKey, ""]) != _intent) then {
+				missionNamespace setVariable [_iKey, _intent]; publicVariable _iKey;
+			};
+			if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
+				missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
+				missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
+			};
+			//--- ACTIVE = the AI actually HOLDS command this side now (no human commander) so a player's nudge will
+			//--- steer it; FOCUS_NAME = the player-set focus town (TTL'd) or "" when none/expired. PV only on change.
+			//--- A2-OA: == / != do NOT support Bool operands - never compare two Bools directly. Convert to a 0/1
+			//--- scalar and compare those (PV only when the flag actually flips), so this stays change-cheap + A2-safe.
+			private ["_aKey","_fKey","_active2","_activeN","_prevActiveN","_focusT","_focusT0","_focusNm"];
+			_aKey = format ["WFBE_AICOM_ACTIVE_%1", _myID];
+			_active2 = !_humanCmd;
+			_activeN = if (_active2) then {1} else {0};
+			//--- -1 sentinel default forces a publish the FIRST tick (var still nil), so JIP/early clients always
+			//--- read a real ACTIVE value instead of the client-side default.
+			private "_prevA"; _prevA = missionNamespace getVariable _aKey;
+			_prevActiveN = -1;
+			if (!isNil "_prevA") then {_prevActiveN = if (_prevA) then {1} else {0}};
+			if (_activeN != _prevActiveN) then {
+				missionNamespace setVariable [_aKey, _active2]; publicVariable _aKey;
+			};
+			_fKey = format ["WFBE_AICOM_FOCUS_NAME_%1", _myID];
+			_focusT  = _logik getVariable "wfbe_aicom_focus";
+			_focusT0 = _logik getVariable "wfbe_aicom_focus_t0";
+			_focusNm = "";
+			if (!isNil "_focusT" && {!isNull _focusT} && {!isNil "_focusT0"} && {(time - _focusT0) < (missionNamespace getVariable ["WFBE_C_AICOM2_FOCUS_TTL", 600])}) then {
+				_focusNm = _focusT getVariable ["name", "?"];
+			};
+			if ((missionNamespace getVariable [_fKey, ""]) != _focusNm) then {
+				missionNamespace setVariable [_fKey, _focusNm]; publicVariable _fKey;
+			};
+			private ["_tKey","_uKey","_teamsN","_fundsN"];
+			_tKey = format ["WFBE_AICOM_TEAMS_%1", _myID];
+			_uKey = format ["WFBE_AICOM_FUNDS_%1", _myID];
+			_teamsN = count (_logik getVariable ["wfbe_teams", []]);
+			_fundsN = (_side) Call GetAICommanderFunds;
+			if ((missionNamespace getVariable [_tKey, -1]) != _teamsN) then {
+				missionNamespace setVariable [_tKey, _teamsN]; publicVariable _tKey;
+			};
+			if ((missionNamespace getVariable [_uKey, -1]) != _fundsN) then {
+				missionNamespace setVariable [_uKey, _fundsN]; publicVariable _uKey;
+			};
+		};
 
 		//--- Town auto-assign: worker self-gates per team by delegation.
 		if (time - _ltTown > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOWN_INTERVAL")) then {
@@ -291,63 +365,9 @@ while {!gameOver} do {
 				//--- fist choice wins (overwrites wfbe_aicom_targets) + assigns each team an alloc_target.
 				//--- Inert unless WFBE_C_AICOM2_ALLOCATE_ENABLE>0 (checked inside) -> legacy path = instant rollback.
 				if (!isNil "WFBE_SE_FNC_AICOM2_Allocate") then {(_side) Call WFBE_SE_FNC_AICOM2_Allocate};
-				//--- AICOM v2 PREVIEW: publish side-keyed INTENT + OBJECTIVE for the client RHUD row + map
-				//--- marker (friendly-only; the client filters by WFBE_Client_SideID). Offense-forward wording.
-				//--- Runs right after Strategy so strat_mode/targets are fresh; PV only on change (cheap).
-				if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0) then {
-					private ["_sm","_tg","_objT","_objNm","_intent","_iKey","_nKey","_pKey"];
-					_sm = _logik getVariable ["wfbe_aicom_strat_mode", "spearhead"];
-					_tg = _logik getVariable ["wfbe_aicom_targets", []];
-					_objT = if (count _tg > 0) then {_tg select 0} else {objNull};
-					_objNm = if (!isNull _objT) then {_objT getVariable ["name", "?"]} else {""};
-					_intent = switch (_sm) do {
-						case "strike":    {"ASSAULTING HQ"};
-						case "laststand": {"DEFENDING BASE"};
-						case "relief":    {"DEFENDING"};
-						default { if (_objNm != "") then {"ATTACKING " + _objNm} else {"ADVANCING"} };
-					};
-					_iKey = format ["WFBE_AICOM_INTENT_%1", _myID];
-					_nKey = format ["WFBE_AICOM_OBJNAME_%1", _myID];
-					_pKey = format ["WFBE_AICOM_OBJPOS_%1", _myID];
-					if ((missionNamespace getVariable [_iKey, ""]) != _intent) then {
-						missionNamespace setVariable [_iKey, _intent]; publicVariable _iKey;
-					};
-					if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
-						missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
-						missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
-					};
-					//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): publish the two extra side-keyed reads the new "AI
-					//--- Commander" command-center sub-tab needs. ACTIVE = the AI actually HOLDS command this side right
-					//--- now (full command, no human commander) so a player's instructions will steer it; FOCUS_NAME = the
-					//--- name of the player-set focus town (TTL'd by the Allocator) or "" when none/expired. PV only on change.
-					private ["_aKey","_fKey","_active2","_focusT","_focusT0","_focusNm"];
-					_aKey = format ["WFBE_AICOM_ACTIVE_%1", _myID];
-					_active2 = !_humanCmd; //--- inside the _active gate (HQ alive + AICOM on); full command iff no human commander.
-					if (true /* FIX (Game 2026-06-28): was Bool!=Bool (A2-OA-forbidden) - threw EVERY strategy tick + aborted the worker before the AI-founding at ~L364, starving founding (teams=0). Publish unconditionally (cheap per-tick; also reaches JIP joiners). */) then {
-						missionNamespace setVariable [_aKey, _active2]; publicVariable _aKey;
-					};
-					_fKey = format ["WFBE_AICOM_FOCUS_NAME_%1", _myID];
-					_focusT  = _logik getVariable "wfbe_aicom_focus";
-					_focusT0 = _logik getVariable "wfbe_aicom_focus_t0";
-					_focusNm = "";
-					if (!isNil "_focusT" && {!isNull _focusT} && {!isNil "_focusT0"} && {(time - _focusT0) < (missionNamespace getVariable ["WFBE_C_AICOM2_FOCUS_TTL", 600])}) then {
-						_focusNm = _focusT getVariable ["name", "?"];
-					};
-					if ((missionNamespace getVariable [_fKey, ""]) != _focusNm) then {
-						missionNamespace setVariable [_fKey, _focusNm]; publicVariable _fKey;
-					};
-					private ["_tKey","_uKey","_teamsN","_fundsN"];
-					_tKey = format ["WFBE_AICOM_TEAMS_%1", _myID];
-					_uKey = format ["WFBE_AICOM_FUNDS_%1", _myID];
-					_teamsN = count (_logik getVariable ["wfbe_teams", []]);
-					_fundsN = (_side) Call GetAICommanderFunds;
-					if ((missionNamespace getVariable [_tKey, -1]) != _teamsN) then {
-						missionNamespace setVariable [_tKey, _teamsN]; publicVariable _tKey;
-					};
-					if ((missionNamespace getVariable [_uKey, -1]) != _fundsN) then {
-						missionNamespace setVariable [_uKey, _fundsN]; publicVariable _uKey;
-					};
-				};
+				//--- NOTE (claude-gaming 2026-06-28): the AI-INTENT publish block was MOVED OUT of this _canBuild gate
+				//--- (it used to live here) to the _active-gated block just below the Executor, so the command-console
+				//--- intent readout refreshes + reaches JIP/assist clients even when the AI is not in full-build mode.
 			};
 			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
 			//--- mobilize -> DRIVE the MHQ forward to a standoff behind the front town -> re-deploy. Self-gates

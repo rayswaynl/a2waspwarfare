@@ -313,14 +313,17 @@ switch (_args select 0) do {
 		};
 	};
 	case "aicom-arty-here": {
-		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a player called an ARTILLERY-HERE strike for the AI commander.
-		//--- Gated on WFBE_C_AI_COMMANDER_ARTILLERY>0 (same gate the brain's own artillery block uses). Wiring a full
-		//--- fire-mission here is too deep (the brain owns gun selection/range/cooldown in AI_Commander_Strategy.sqf), so
-		//--- we stamp a fresh [pos,time] request on the side logic for that block to consume next strategy tick + diag_log it.
+		//--- COMMAND CONSOLE: a player called an ARTILLERY-HERE strike from the war room. We stamp a fresh [pos,time]
+		//--- request on the side logic; the assist-mode resolver (AI_Com_PlayerArty, every supervisor tick) consumes it
+		//--- fire-once - so it works even under a HUMAN commander, where the brain's own Strategy arty block is dormant.
+		//--- PRODUCTION FIX (claude-gaming 2026-06-28): gate on the SEPARATE player-arty flag (WFBE_C_AICOM_PLAYER_ARTY),
+		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (which Steff hard-locks to 0 to keep the AI from using/building artillery).
+		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces that
+		//--- already exist (it never builds guns), so it does not reopen the locked AI-autonomous-artillery behaviour.
 		private ["_aSide","_aPos","_aLogik"];
 		_aSide = _args select 1;
 		_aPos  = _args select 2;
-		if ((typeName _aPos == "ARRAY") && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0}) then {
+		if ((typeName _aPos == "ARRAY") && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0}) then {
 			_aLogik = (_aSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _aLogik) then {
 				_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
@@ -388,69 +391,31 @@ switch (_args select 0) do {
 		//--- team - "armor" / "air" / "infantry". Stamp [type,time]; AssignTypes + Teams nudge the next founding type pick
 		//--- toward that class (a weight bias, NOT a hard force). Reuses the POSTURE TTL. AI-commander-run gate + west/east +
 		//--- class whitelist.
-		private ["_uSide","_uType","_uLogik","_uCmd","_uHuman","_uRun"];
+		//--- PRODUCTION FIX (claude-gaming 2026-06-28): the client sends aicom-request-unit ONLY from the war room
+		//--- (the player IS the commander). The old _uRun=!_uHuman gate rejected EXACTLY that case, so every Build
+		//--- press was silently dropped (a root cause of ORDERS(war-room)=0). The consumer is SELF-PROTECTING and
+		//--- reachable under a human commander: the HYBRID-REFILL team-founding worker (AI_Commander_Teams.sqf:467)
+		//--- reads this [type,time] stamp TTL-gated (WFBE_C_AICOM_POSTURE_TTL) and applies only a SOFT weight bias,
+		//--- so a player order can neither pin nor destabilise the brain. We therefore gate only on ENABLED + HQ-alive
+		//--- + side + class whitelist - no human-commander gate. The TTL ages the stamp out on its own.
+		private ["_uSide","_uType","_uLogik"];
 		_uSide = _args select 1;
 		_uType = _args select 2;
 		if ((typeName _uType == "STRING") && {(_uType == "armor") || (_uType == "air") || (_uType == "infantry")} && {_uSide in [west, east]}) then {
 			_uLogik = (_uSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _uLogik) then {
-				_uRun = false;
 				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_uSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
-					_uCmd = (_uSide) Call WFBE_CO_FNC_GetCommanderTeam; _uHuman = false;
-					if (!isNull _uCmd) then {if (isPlayer (leader _uCmd)) then {_uHuman = true}};
-					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_uHuman = false};
-					_uRun = !_uHuman;
-				};
-				if (_uRun) then {
 					_uLogik setVariable ["wfbe_aicom_request_type", [_uType, time]];
 					diag_log ("AICOM2|v1|ORDER|aicom-request-unit|" + str _uSide + "|" + str (round (time / 60)) + "|type=" + _uType);
 				};
 			};
 		};
 	};
-	case "aicom-donate": {
-		//--- COMMAND CONSOLE (PR backend): a player DONATES funds from their team wallet to the AI commander treasury.
-		//--- ChangePlayerFunds resolves to [clientTeam,_amt] Call ChangeTeamFunds (it adjusts the TEAM wallet, not a separate
-		//--- personal one), so this debits the donor TEAM and credits the AI treasury server-authoritatively - the exact pair
-		//--- the existing RequestAIComDonate.sqf PVF uses. The donor OBJECT is _args select 3 (the frontend forwards it the
-		//--- same way Paratroops forwards clientTeam); the amount is _args select 2 (defaults to WFBE_C_AICOM_DONATE_AMOUNT).
-		//--- All re-validated server-side: AI-commander-run, amount>0, team can afford it. Inert (logged + skipped) if the
-		//--- donor object is missing, so a 3-arg send never mis-charges anyone.
-		private ["_zSide","_zAmt","_zDonor","_zLogik","_zCmd","_zHuman","_zRun","_zTeam","_zFunds"];
-		_zSide  = _args select 1;
-		_zAmt   = _args select 2;
-		_zDonor = if (count _args > 3) then {_args select 3} else {objNull};
-		if (isNil "_zAmt") then {_zAmt = missionNamespace getVariable ["WFBE_C_AICOM_DONATE_AMOUNT", 10000]};
-		if ((typeName _zAmt == "SCALAR") && {_zAmt > 0} && {_zSide in [west, east]} && {!isNull _zDonor} && {isPlayer _zDonor}) then {
-			_zLogik = (_zSide) Call WFBE_CO_FNC_GetSideLogic;
-			if (!isNull _zLogik) then {
-				_zRun = false;
-				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_zSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
-					_zCmd = (_zSide) Call WFBE_CO_FNC_GetCommanderTeam; _zHuman = false;
-					if (!isNull _zCmd) then {if (isPlayer (leader _zCmd)) then {_zHuman = true}};
-					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_zHuman = false};
-					_zRun = !_zHuman;
-				};
-				_zTeam = group _zDonor;
-				//--- A2 OA 1.64: getVariable [name,default] is unreliable on a GROUP; plain get + isNil (mirrors RequestAIComDonate.sqf).
-				_zFunds = _zTeam getVariable "wfbe_funds"; if (isNil "_zFunds") then {_zFunds = 0};
-				if (_zRun && {!isNull _zTeam} && {_zFunds >= _zAmt}) then {
-					[_zTeam, -_zAmt] Call ChangeTeamFunds;
-					[_zSide, _zAmt] Call ChangeAICommanderFunds;
-					if (WF_A2_Vanilla) then {
-						[getPlayerUID _zDonor, "HandleSpecial", ["aicom-donate-confirm", _zAmt]] Call WFBE_CO_FNC_SendToClients;
-					} else {
-						[_zDonor, "HandleSpecial", ["aicom-donate-confirm", _zAmt]] Call WFBE_CO_FNC_SendToClient;
-					};
-					diag_log ("AICOM2|v1|ORDER|aicom-donate|" + str _zSide + "|" + str (round (time / 60)) + "|amount=" + str _zAmt + "|wallet_after=" + str ((_zSide) Call GetAICommanderFunds));
-				} else {
-					diag_log ("AICOM2|v1|ORDER|aicom-donate|REJECT|" + str _zSide + "|run=" + str _zRun + "|funds=" + str _zFunds + "|amount=" + str _zAmt);
-				};
-			};
-		} else {
-			diag_log ("AICOM2|v1|ORDER|aicom-donate|REJECT-ARGS|side=" + str _zSide + "|amount=" + str _zAmt + "|donorOk=" + str (!isNull _zDonor && {isPlayer _zDonor}));
-		};
-	};
+	//--- NOTE (claude-gaming 2026-06-28): the orphaned "aicom-donate" HandleSpecial case was REMOVED here. It had no
+	//--- client sender (the command console does not host donate) and carried the same inverted run-gate the other
+	//--- handlers had. The CANONICAL, live donate-to-AI-commander path is the RequestAIComDonate.sqf PVF, driven by
+	//--- the Transfer menu (GUI_TransferMenu.sqf) - it shares the same "aicom-donate-confirm" client confirm. Donating
+	//--- to the AI treasury only makes sense while the AI runs the side, which that path already enforces.
 	case "aicom-team-ended": {
 		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew"];
 		_csideID = _args select 1;

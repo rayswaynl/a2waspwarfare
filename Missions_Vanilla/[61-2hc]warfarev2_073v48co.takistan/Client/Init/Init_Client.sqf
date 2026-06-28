@@ -862,7 +862,7 @@ player Call WFBE_CL_FNC_AddPlayerAIActions;
 /* Set Groups ID. */
 [] Call Compile preprocessFile "Client\Functions\Client_SetGroupsID.sqf";
 
-sleep 1;
+waitUntil {!isNull group player};
 
 //--- Make sure that player is always the leader.
 if (leader(group player) != player) then {(group player) selectLeader player};
@@ -1050,7 +1050,6 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 	};
 };
 
-sleep 3;
 /* JIP System, initialize the camps and towns properly. */
 [] Spawn {
 	sleep 2;

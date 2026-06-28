@@ -1,22 +1,29 @@
 disableSerialization;
 
 /* =====================================================================================
-	WAR ROOM controller (commander-only rework).
+	COMMAND CONSOLE controller (the player <-> AI-commander war room). Production rework
+	(claude-gaming 2026-06-28): two states, each with the orders the SERVER actually honours
+	in that state, so every control bites end-to-end (no dead sends).
 
-	CORE FINDING this is built to: when YOU command (assist-mode), the AI allocator is
-	SUPPRESSED, so the old aicom-focus/defend/reinforce sends are INERT (nothing reads
-	them). The war room therefore tasks teams DIRECTLY via SetTeamMovePos + SetTeamMoveMode
-	(broadcast true) -> consumed every supervisor tick by AI_Commander_Execute.sqf (which
-	turns them into AIMoveTo waypoints for server-local teams and wfbe_aicom_order for HC
-	teams, REGARDLESS of _canBuild). That is the only human-order path that bites while you
-	command. Two orders stay HYBRID because they bypass the suppressed allocator: Artillery
-	(aicom-arty-here) and Request-Unit (aicom-request-unit). Donate is DROPPED.
-
-	TWO STATES, re-tested every loop so taking/losing command flips the UI live:
-	  STATE A - NOT commander (isNull commanderTeam || commanderTeam != group player):
-	            show TAKE COMMAND (14670) + an explainer; hide the war-room controls.
-	  STATE B - commander (commanderTeam == group player): the war room - economy header,
-	            roster listbox (click-to-select), and the direct-task orders.
+	WHY two control sets: the AI commander's strategic workers (Allocator/Strategy) run only
+	when the AI HOLDS command (no human commander). The team Executor runs EVERY tick (human
+	or AI). So:
+	  STATE A - NOT commander (the AI runs the side): the player ADVISES the still-running AI.
+	            -> live AI-INTENT readout (14607, from WFBE_AICOM_*_<sid>) + a POSTURE NUDGE
+	               (PUSH/HOLD -> aicom-posture; the Allocator shifts its engage gate while the
+	               nudge is fresh) + TAKE COMMAND (14670). These bite because the AI is running.
+	  STATE B - commander (commanderTeam == group player): the war room. The AI is a
+	            quartermaster (HYBRID-REFILL founds/refills teams) but its strategy is OFF, so
+	            the player drives teams DIRECTLY:
+	              - per-team map orders Attack/Move, Defend, Patrol, Release (SetTeamMovePos +
+	                SetTeamMoveMode -> AI_Commander_Execute turns them into waypoints EVERY tick,
+	                regardless of _canBuild) - the reliable direct-task path.
+	              - bulk ALL PUSH / ALL HOLD (direct, no allocator dependency).
+	              - HYBRID brain orders that still bite under a human commander: Artillery
+	                (aicom-arty-here, serviced by the assist-mode arty resolver IF guns exist)
+	                and Request-Unit / Build priority (aicom-request-unit, read by the HYBRID-
+	                REFILL team-founding worker).
+	    Donate is NOT in this console - it lives in the Transfer menu (RequestAIComDonate).
 
 	A2-OA-1.64 safe: no params / isEqualType / remoteExec / worldSize / "str find str" /
 	hideObjectGlobal / 3-arg group getVariable / inline private _x. posScreenToWorld and
@@ -28,16 +35,26 @@ disableSerialization;
 
 MenuAction = -1;
 mouseButtonUp = -1;
-WfRosterSel = -1;            //--- set by the roster listbox onLBSelChanged ("WfRosterSel = _this select 1").
+//--- Seed the shared map-click globals. mouseX/mouseY are written ONLY by the map control's onMouseMoving EH
+//--- (Dialogs.hpp 14002); a player who arms an order and clicks WITHOUT first moving the mouse this session would
+//--- otherwise read stale coords from a previous dialog (or nil on a fresh client) and the order would land at the
+//--- wrong spot / throw. Centre-seed so a no-move click is at worst the map centre, never nil. (mouseButtonUp reset
+//--- above covers the cross-dialog stale-click on open.)
+if (isNil "mouseX") then {mouseX = 0.5};
+if (isNil "mouseY") then {mouseY = 0.5};
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
-         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon"];
+         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture"];
 
 _display = _this select 0;
 _map = _display displayCtrl 14002;
 _sid = (sideJoined) Call WFBE_CO_FNC_GetSideID;
 _cool = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_COOLDOWN", 8];
-_artyOn = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0;
+//--- Artillery enable: a player war-room ARTILLERY-HERE request rides its OWN flag (WFBE_C_AICOM_PLAYER_ARTY),
+//--- SEPARATE from the hard-locked AI-autonomous-artillery flag (WFBE_C_AI_COMMANDER_ARTILLERY = 0, Steff). The
+//--- player request is serviced by an assist-mode resolver and only fires IF friendly artillery pieces exist; it
+//--- never re-enables the AI's own fire cadence or base-gun building. Button greys out when the flag is off.
+_artyOn = (missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0;
 
 //--- Request-Unit combo (idc 14640): the type strings sent verbatim as the aicom-request-unit arg.
 _reqTypes  = ["infantry","armor","air"];
@@ -51,11 +68,17 @@ _lastSend = -1000;
 _lastState = -1;        //--- 0 = take-command, 1 = war room, -1 = uninitialised (force first toggle).
 _lastRosterHash = "";
 _lastEcon = "";
+_lastIntent = "";           //--- change-hash for the AI-intent readout (control 14600 in STATE A / 14606 reused), so it updates live without churn.
+_posture = "";              //--- last posture the player nudged this session ("PUSH"/"HOLD"/""); reflected in the STATE-A advisory line.
 activeAnimMarker = false;
 
-//--- All war-room controls (shown only in the commander state). Roster, order buttons, request combo, lines.
+//--- All war-room controls (shown only in the commander STATE B). Roster, order buttons, request combo+label, lines.
 private "_warCtrls";
-_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14610,14611,14640,14641,14690,14691];
+_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14610,14611,14640,14641,14642,14690,14691];
+//--- STATE-A (NOT commander) advisory controls: the live AI-intent readout + the PUSH/HOLD posture nudge. Shown
+//--- only when the AI runs the side (so the nudge actually bites the brain) - hidden in STATE B.
+private "_adviseCtrls";
+_adviseCtrls = [14606,14607,14608,14609,14612];
 
 ctrlSetStructuredText [14650, parseText "Opening the war room..."];
 
@@ -77,8 +100,15 @@ while {alive player && dialog} do {
 	//--- form; robust to a missed change-edge). The heavier reset stays gated on a real state change.
 	private "_stateNow"; _stateNow = if (_isCmd) then {1} else {0};
 	{(_display displayCtrl _x) ctrlShow _isCmd} forEach _warCtrls;
+	{(_display displayCtrl _x) ctrlShow (!_isCmd)} forEach _adviseCtrls; //--- STATE-A advisory readout + posture nudge
 	(_display displayCtrl 14670) ctrlShow (!_isCmd);                 //--- TAKE COMMAND only when NOT commander
 	(_display displayCtrl 14605) ctrlSetText (if (_isCmd) then {"WAR ROOM"} else {"COMMAND"});
+	//--- The posture nudge only BITES the brain when the AI actually holds command of the side (the server handler
+	//--- honours it iff no human commander, treating LOCK as no-human). Mirror that: it bites when the seat is empty
+	//--- (AI runs it) OR the side is AI-LOCKED. Shown only in STATE A; greyed when a DIFFERENT human commands.
+	private "_postureBites"; _postureBites = (!_isCmd) && (_seatEmpty || _lockOn);
+	(_display displayCtrl 14609) ctrlEnable _postureBites;
+	(_display displayCtrl 14612) ctrlEnable _postureBites;
 	if (_stateNow != _lastState) then {
 		_lastState = _stateNow;
 		_armed = "";
@@ -104,7 +134,33 @@ while {alive player && dialog} do {
 			};
 		};
 		if (_msg != _lastEcon) then {ctrlSetStructuredText [14600, parseText _msg]; _lastEcon = _msg};
-		ctrlSetStructuredText [14650, parseText "<t color='#85B5FA'>You are not commanding this side.</t>"];
+
+		//--- ----- LIVE AI-INTENT READOUT (14607): read the side-keyed WFBE_AICOM_*_<sid> vars the server publishes
+		//--- every strategy tick (mirrors the RHUD idiom; reuses the cached _sid - never GetSideID per frame). PV-on-
+		//--- change means a JIP/pre-first-tick client reads "" -> render a neutral placeholder, never a blank panel. -----
+		private ["_aiInt","_aiObj","_aiActive","_aiFocus","_intentTxt"];
+		_aiInt    = missionNamespace getVariable [format ["WFBE_AICOM_INTENT_%1", _sid], ""];
+		_aiObj    = missionNamespace getVariable [format ["WFBE_AICOM_OBJNAME_%1", _sid], ""];
+		_aiActive = missionNamespace getVariable [format ["WFBE_AICOM_ACTIVE_%1", _sid], false];
+		_aiFocus  = missionNamespace getVariable [format ["WFBE_AICOM_FOCUS_NAME_%1", _sid], ""];
+		if (_aiInt == "") then {
+			if (typeName _aiActive == "BOOL" && {_aiActive}) then {
+				_intentTxt = "<t color='#85B5FA'>AI commander:</t> assessing the front...";
+			} else {
+				_intentTxt = "<t color='#85B5FA'>AI commander:</t> standing up...";
+			};
+		} else {
+			_intentTxt = "<t color='#A0E060'>" + _aiInt + "</t>";
+			if (_aiObj != "") then {_intentTxt = _intentTxt + "<br/><t color='#85B5FA'>Objective:</t> " + _aiObj};
+			if (_aiFocus != "") then {_intentTxt = _intentTxt + "<br/><t color='#85B5FA'>Focus town:</t> " + _aiFocus};
+		};
+		if (_posture != "") then {
+			_intentTxt = _intentTxt + "<br/><t color='#F8D664'>Your nudge:</t> " + _posture;
+		};
+		//--- change-hash so the readout updates live without per-frame churn.
+		if (_intentTxt != _lastIntent) then {ctrlSetStructuredText [14607, parseText _intentTxt]; _lastIntent = _intentTxt};
+
+		ctrlSetStructuredText [14650, parseText "<t color='#85B5FA'>You are not commanding this side. Nudge the AI's posture below, or take command.</t>"];
 
 		//--- TAKE COMMAND press -> claim the empty AI commander seat (server re-validates every guard).
 		if (MenuAction == 750) then {
@@ -117,6 +173,25 @@ while {alive player && dialog} do {
 			};
 		};
 
+		//--- ----- POSTURE NUDGE (PUSH / HOLD): steer the still-running AI's expansion-vs-consolidate bias. Sends
+		//--- aicom-posture; the server handler honours it ONLY while no human commands (exactly this STATE A), TTL'd.
+		//--- Same per-order cooldown as the war-room sends so it can't spam the brain. -----
+		if (MenuAction == 760 || MenuAction == 761) then {
+			private "_pb"; _pb = MenuAction; MenuAction = -1;
+			if (_seatEmpty || _lockOn) then {
+				if ((_now - _lastSend) >= _cool) then {
+					private "_pv"; _pv = if (_pb == 760) then {"PUSH"} else {"HOLD"};
+					["RequestSpecial", ["aicom-posture", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
+					_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new nudge line
+					hintSilent parseText (format ["<t color='#A0E060'>Posture nudge sent: %1.</t>", _pv]);
+				} else {
+					hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+				};
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Posture only steers the AI when it holds command of this side.</t>";
+			};
+		};
+
 		//--- Back / Exit still work in this state.
 		if (MenuAction == 4) exitWith {MenuAction = -1; activeAnimMarker = false; closeDialog 0; createDialog "WF_Menu"};
 		sleep 0.2;
@@ -126,8 +201,11 @@ while {alive player && dialog} do {
 	//--- ====================================================================
 
 		//--- ----- ECONOMY header (14600): funds / supply / income / towns. All client-readable, non-blocking. -----
-		private ["_funds","_supply","_income","_held","_total","_econ"];
-		_funds  = (clientTeam) Call GetTeamFunds;
+		private ["_funds","_supply","_income","_held","_total","_econ","_cmdW"];
+		//--- Show the SIDE COMMANDER treasury (the wallet the war effort actually spends from), not the player's own
+		//--- group wallet - they can diverge once a human has taken command. Fall back to clientTeam if the seat is null.
+		_cmdW = commanderTeam;
+		_funds  = if (!isNull _cmdW) then {_cmdW Call GetTeamFunds} else {(clientTeam) Call GetTeamFunds};
 		_supply = missionNamespace getVariable [format ["wfbe_supply_%1", sideJoined], 0]; //--- DIRECT read (never GetSideSupply in a UI loop).
 		if (isNil "_supply") then {_supply = 0};
 		_income = (sideJoined) Call GetIncome;
@@ -144,19 +222,20 @@ while {alive player && dialog} do {
 		private ["_rows","_cmdTeams","_hash"];
 		_rows = []; _cmdTeams = []; _hash = "";
 		{
-			if (!isNull _x && {!isPlayer (leader _x)} && {({alive _y} count units _x) > 0}) then {
+			private "_grp"; _grp = _x;                                    //--- FIX (clobber): capture the TEAM group into a stable local. The inner nearest-town forEach below rebinds _x to TOWN objects and A2-OA forEach does NOT save/restore _x, so every read after that loop must use _grp, not _x. Reading _x there stamped TOWN objects into _cmdTeams - the exact bug that made selected-team orders land on a town the Executor never reads.
+			if (!isNull _grp && {!isPlayer (leader _grp)} && {({alive _y} count units _grp) > 0}) then {
 				private ["_ld","_role","_tn","_td","_md","_ord","_lbl","_pos"];
-				_ld = leader _x;
+				_ld = leader _grp;
 				_role = [typeOf _ld, "displayName"] Call GetConfigInfo;
 				if (_role == "") then {_role = "Team"};
-				//--- nearest town name (engine-proven nearest-pick; inner forEach rebinds _x to the town, then restores).
+				//--- nearest town name (engine-proven nearest-pick; the inner forEach rebinds _x to the town - we keep using _grp for the team afterwards).
 				_pos = getPos _ld; _tn = "field"; _td = 1e9;
 				{
 					private "_d"; _d = _pos distance _x;
 					if (_d < _td) then {_td = _d; _tn = _x getVariable ["name", "?"]};
 				} forEach towns;
 				//--- current order from wfbe_teammode (default "towns" = autonomous). Proven group [name,default] read (executor line 27).
-				_md = _x getVariable ["wfbe_teammode", "towns"];
+				_md = _grp getVariable ["wfbe_teammode", "towns"];
 				if (isNil "_md") then {_md = "towns"};
 				_md = toLower _md;
 				_ord = switch (_md) do {
@@ -167,17 +246,28 @@ while {alive player && dialog} do {
 				};
 				_lbl = (name _ld) + "  |  " + _role + "  |  " + _tn + "  |  " + _ord;
 				_rows = _rows + [_lbl];
-				_cmdTeams = _cmdTeams + [_x];
+				_cmdTeams = _cmdTeams + [_grp];
 				_hash = _hash + _lbl + "#";
 			};
 		} forEach clientTeams;
-		//--- Repaint only on a content change (preserve selection; no per-frame lbClear churn).
+		//--- Repaint only on a content change (preserve selection BY TEAM IDENTITY, not row index; no per-frame lbClear churn).
 		if (_hash != _lastRosterHash) then {
 			_lastRosterHash = _hash;
-			private "_keep"; _keep = lbCurSel 14661;
+			//--- Capture the currently-selected TEAM object before the repaint, so if rows reorder (teams die/spawn)
+			//--- selection follows the same team rather than whatever now sits at the old index.
+			private ["_keepTeam","_keepIdx"];
+			_keepTeam = objNull;
+			private "_oldSel"; _oldSel = lbCurSel 14661;
+			if (_oldSel >= 0 && _oldSel < (count _cmdTeams)) then {_keepTeam = _cmdTeams select _oldSel};
 			lbClear 14661;
 			{lbAdd [14661, _x]} forEach _rows;
-			if (_keep >= 0 && _keep < (count _rows)) then {lbSetCurSel [14661, _keep]};
+			//--- Re-find the kept team in the freshly-built _cmdTeams; restore its new index, or clear if it died.
+			_keepIdx = -1;
+			if (!isNull _keepTeam) then {
+				private "_ci"; _ci = 0;
+				{ if (_x == _keepTeam) exitWith {_keepIdx = _ci}; _ci = _ci + 1 } forEach _cmdTeams;
+			};
+			if (_keepIdx >= 0) then {lbSetCurSel [14661, _keepIdx]};
 		};
 
 		//--- Resolve the currently selected team (roster row -> _cmdTeams), else objNull.

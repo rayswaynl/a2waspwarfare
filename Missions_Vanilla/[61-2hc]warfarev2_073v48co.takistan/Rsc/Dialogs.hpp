@@ -1931,13 +1931,19 @@ class RscMenu_Command {
 			text = $STR_WF_MAIN_CommandMenu;
 		};
 		/* =====================================================================================
-		   COMMAND CONSOLE (full rework). The old squad-order tab is gutted; the whole left column
-		   is now the player -> AI-commander console. The embedded map (idc 14002) shows the AI
-		   objective + the player's last order. All new controls live in the 14600-14699 band.
-		   Order buttons set MenuAction; the controller (GUI_Menu_Command.sqf) does press->click-map->
-		   snap-nearest-town->send. Buttons are ctrlEnable'd by the controller when no AI commander runs.
+		   COMMAND CONSOLE (production rework, claude-gaming 2026-06-28). The old squad-order tab is
+		   gutted; the whole left column is the player <-> AI-commander console. The embedded map
+		   (idc 14002) is the order-designation surface. All controls live in the 14600-14699 band.
+		   Order buttons set MenuAction; the controller (GUI_Menu_Command.sqf) does press -> click-map
+		   -> send / direct-team-task. Two STATES are toggled live by the controller (see below): the
+		   actual control set is STATE-dependent, so each order is shown only where the server honours it.
+		   The committed orders are: per-team Attack/Move, Defend, Patrol, Release; bulk ALL PUSH/HOLD;
+		   Artillery (player-arty flag); Request-Unit/Build priority; and a STATE-A PUSH/HOLD posture
+		   nudge. (Donate is NOT here - it lives in the Transfer menu via RequestAIComDonate.)
 		   ===================================================================================== */
-		/* AI INTENT read-out panel (refreshed in the menu loop from the WFBE_AICOM_*_<sid> vars). */
+		/* Console title band (14605 text set at runtime: "COMMAND" in STATE A / "WAR ROOM" in STATE B).
+		   14600 is dual-purpose: STATE A = the take-command explainer, STATE B = the economy header. The
+		   live AI-INTENT readout has its own STATE-A control (14607); the two never share a control. */
 		class CA_Cmd_IntentTitle : RscText_SubTitle {
 			idc = 14605;
 			x = 0.00561695;
@@ -1954,11 +1960,13 @@ class RscMenu_Command {
 			size = 0.030;
 		};
 		/* =====================================================================================
-		   WAR ROOM (commander-only). Two states, toggled by the controller (GUI_Menu_Command.sqf):
-		     STATE A (not commander): only the TAKE COMMAND button (14670) + the 14600 explainer show.
-		     STATE B (commander): the 14600 economy header + roster listbox (14660/14661) + order buttons.
-		   14605 title text is set at runtime ("COMMAND" / "WAR ROOM"). The controller ctrlShow's exactly
-		   the right control set per state, so the claim button (14670) overlaps the roster region cleanly.
+		   WAR ROOM controls. Two states, toggled by the controller (GUI_Menu_Command.sqf) via ctrlShow:
+		     STATE A (not commander, AI runs the side): TAKE COMMAND (14670) + the 14600 explainer + the
+		       live AI-intent readout (14606/14607) + the PUSH/HOLD posture nudge (14608/14609/14612).
+		     STATE B (commander): the 14600 economy header + roster listbox (14660/14661) + the order
+		       buttons (14620-14624), bulk push/hold (14610/14611), and Request-Unit combo+Build (14640-14642).
+		   The controller ctrlShow's exactly the right control set per state, so the STATE-A advisory block
+		   and the STATE-B roster/orders share the same screen region cleanly (only one set is ever visible).
 		   ===================================================================================== */
 		/* TAKE COMMAND button - shown ONLY in the not-commander state (controller toggles ctrlShow). */
 		class CA_Cmd_Claim : RscButton_Main {
@@ -1970,6 +1978,52 @@ class RscMenu_Command {
 			text = "TAKE COMMAND";
 			action = "MenuAction = 750";
 			tooltip = "Claim the empty AI commander seat and run this side yourself.";
+		};
+		/* =====================================================================================
+		   STATE A (NOT commander) ADVISORY block: a live AI-commander INTENT readout (14607, fed
+		   from the WFBE_AICOM_*_<sid> side-keyed vars) + a strategic POSTURE toggle (PUSH/HOLD,
+		   14609/14612) that nudges the still-running AI's expansion-vs-consolidate bias. The
+		   controller ctrlShow's these ONLY in STATE A (the AI runs the side, so the nudge bites);
+		   in STATE B (you command) they hide and the war-room roster/orders take this region. */
+		class CA_Cmd_IntentTitleA : RscText_SubTitle {
+			idc = 14606;
+			x = 0.00561695;
+			y = 0.444000;
+			w = 0.459244;
+			text = "AI COMMANDER INTENT";
+		};
+		class CA_Cmd_IntentA : RscStructuredText {
+			idc = 14607;
+			x = 0.00561695;
+			y = 0.486000;
+			w = 0.459244;
+			h = 0.140000;
+			size = 0.030;
+		};
+		class CA_Cmd_PostureTitle : RscText_SubTitle {
+			idc = 14608;
+			x = 0.00561695;
+			y = 0.636000;
+			w = 0.459244;
+			text = "NUDGE THE AI'S POSTURE";
+		};
+		class CA_Cmd_PosturePush : RscButton_Main {
+			idc = 14609;
+			x = 0.00561695;
+			y = 0.678000;
+			w = 0.224000;
+			h = 0.044000;
+			text = "PUSH (expand)";
+			action = "MenuAction = 760";
+			tooltip = "Advise the AI commander to lean AGGRESSIVE - engage the enemy sooner / shave the expand-first town gate.";
+		};
+		class CA_Cmd_PostureHold : CA_Cmd_PosturePush {
+			idc = 14612;
+			x = 0.241244;
+			y = 0.678000;
+			text = "HOLD (consolidate)";
+			action = "MenuAction = 761";
+			tooltip = "Advise the AI commander to lean DEFENSIVE - hold and consolidate towns longer before pushing the enemy.";
 		};
 		/* ROSTER of your AI teams (commander state). Row = "leader | role | town | order". Click to select. */
 		class CA_Cmd_RosterTitle : RscText_SubTitle {
@@ -1985,7 +2039,7 @@ class RscMenu_Command {
 			y = 0.414000;
 			w = 0.459244;
 			h = 0.230000;
-			onLBSelChanged = "WfRosterSel = _this select 1";
+			//--- selection is read live via lbCurSel 14661 in the controller loop; no onLBSelChanged needed.
 		};
 		class LineCmd1 : RscText {
 			idc = 14690;
@@ -2061,6 +2115,16 @@ class RscMenu_Command {
 			text = "ALL HOLD";
 			action = "MenuAction = 711";
 			tooltip = "All AI teams dig in and defend where they stand.";
+		};
+		/* Label for the Request-Unit (Build-priority) combo so a new commander knows what the dropdown does. */
+		class CA_Cmd_ReqLabel : RscText {
+			idc = 14642;
+			x = 0.317244;
+			y = 0.804000;
+			w = 0.148000;
+			h = 0.020000;
+			text = "Build priority:";
+			sizeEx = 0.024;
 		};
 		class CA_Cmd_ReqCombo : RscCombo {
 			idc = 14640;
