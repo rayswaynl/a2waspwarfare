@@ -19,6 +19,7 @@ SIDE_FROM_ID  = {0: "west", 1: "east", 2: "guer", 4: "neu"}
 SIDE_FROM_STR = {"WEST": "west", "EAST": "east", "RESISTANCE": "guer", "CIV": "neu"}
 # PLAYERSTATS trailing side field: 1=WEST, 2=EAST, 0=other.
 SIDE_FROM_PSTAT = {1: "west", 2: "east", 0: "guer"}
+SIDE_NAME = {"west": "BLUFOR", "east": "OPFOR", "guer": "GUER", "neu": "NEUTRAL"}
 
 def side_from_id(v):
     try: return SIDE_FROM_ID.get(int(v), "neu")
@@ -163,6 +164,45 @@ class MatchData:
                 gx = (c+0.5)/GC*S; gy = (1-(r+0.5)/GC)*S
                 near[r, c] = int(np.argmin([(gx-px)**2+(gy-py)**2 for px, py in tpos])) if tpos else 0
         self.nearest = near
+
+        # --- engagement derivations (fleet plan): cold-open hero stat, player superlatives, comeback arc ---
+        # superlatives: give up to 5 DIFFERENT players a punchy tag from their dominant stat -> "that's me".
+        self.awards = {}
+        lk_name = self.longest[1]
+        if lk_name and self.longest[5] > 0: self.awards[lk_name] = "THE SNIPER"   # owns the longest kill
+        for tag, fn in [("THE BUTCHER", lambda p: p["d"][0]),        # most infantry kills
+                        ("ARMOR HUNTER", lambda p: p["d"][1]),       # most vehicle kills
+                        ("ACE OF THE SKIES", lambda p: p["d"][2]),   # most air kills
+                        ("TIP OF THE SPEAR", lambda p: p["d"][10])]: # most town captures
+            if not self.players: break
+            cand = max(self.players, key=fn)
+            if fn(cand) > 0 and cand["name"] not in self.awards:
+                self.awards[cand["name"]] = tag
+        for p in self.players: p["award"] = self.awards.get(p["name"])
+        kdp = [p for p in self.players if p["kills"] >= 3]
+        self.kd_leader = max(kdp, key=lambda p: p["kd"]) if kdp else None
+
+        # cold-open HERO stat: the most extreme REAL number (longest shot > top fragger > total kills).
+        top = self.players[0] if self.players else None
+        if self.longest[5] >= 600 and lk_name:
+            self.hero = {"label": "LONGEST SHOT", "num": int(self.longest[5]), "suffix": "M", "who": lk_name}
+        elif top and top["kills"] >= 25:
+            self.hero = {"label": "TOP FRAGGER", "num": int(top["kills"]), "suffix": " KILLS", "who": top["name"]}
+        else:
+            self.hero = {"label": "TOTAL KILLS", "num": int(self.total_kills), "suffix": "", "who": None}
+
+        # comeback / lead-change arc from the momentum series (kills the old hardcoded, sometimes-lying subtitle).
+        wsign = 1 if self.winner == "west" else (-1 if self.winner == "east" else 0)
+        diff = [w - e for w, e in zip(self.ser_w, self.ser_e)]
+        fw, fe = (self.ser_w[-1], self.ser_e[-1]) if diff else (0, 0)
+        self.comeback = {"line": f"{SIDE_NAME.get(self.winner, self.winner.upper())} TOOK THE FIELD"}
+        if wsign and diff:
+            worst = min(d * wsign for d in diff)                    # most negative = furthest the winner was behind
+            changes = sum(1 for a, b in zip(diff, diff[1:]) if (a > 0) != (b > 0) and a and b)
+            if worst <= -3:   self.comeback = {"badge": "COMEBACK", "line": f"DOWN {abs(worst)} TOWNS — WON {max(fw,fe)}–{min(fw,fe)}"}
+            elif changes >= 3: self.comeback = {"badge": "SEE-SAW", "line": f"{changes} LEAD CHANGES — WON {max(fw,fe)}–{min(fw,fe)}"}
+            else:              self.comeback = {"line": f"WON {max(fw,fe)}–{min(fw,fe)} — NEVER TRAILED"}
+
         # deterministic per-match variety seed — drives backdrop/silhouette/music/hook
         # rotation so a feed of many reports never looks or sounds identical.
         import hashlib

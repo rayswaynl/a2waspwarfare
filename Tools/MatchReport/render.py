@@ -360,9 +360,16 @@ def caption(m):
     """Social caption built from the match — used as the Discord/TikTok post text."""
     mm, ss = divmod(m.duration, 60)
     side = SIDE_NAME.get(m.winner, m.winner.upper())
-    mvp = f"\n🎖 MVP {m.mvp['name']} — {m.mvp['kills']} kills" if m.mvp else ""
-    return (f"⚔ {side} WIN on {m.map_name.title()} — {m.total_kills} kills in {mm:02d}:{ss:02d}.{mvp}\n"
-            f"Full match recap every round — follow for more.\n"
+    h = getattr(m, "hero", None) or {}
+    if h.get("label") == "LONGEST SHOT":  hook = f"🎯 {h['num']}m ONE-SHOT by {h['who']}."
+    elif h.get("label") == "TOP FRAGGER": hook = f"🔥 {h['who']} dropped {h['num']} kills."
+    else:                                 hook = f"⚔ {side} WIN — {m.total_kills} kills."
+    cb = getattr(m, "comeback", {}) or {}
+    arc = f" {cb['line'].title()}." if cb.get("badge") else ""
+    mvp = (f"\n🎖 MVP {m.mvp['name']} ({m.mvp['kills']}K)"
+           f"{' — '+m.mvp['award'] if m.mvp.get('award') else ''}") if m.mvp else ""
+    return (f"{hook} {side} take {m.map_name.title()} in {mm:02d}:{ss:02d}.{arc}{mvp}\n"
+            f"New match recap every round — follow for more.\n"
             f"#arma2 #warfare #milsim #cti #miksuuswarfare #gaming #fyp")
 
 
@@ -380,16 +387,26 @@ def render(m, out_path):
             frames.append(np.asarray(fade(im,k)))
 
     def s_intro(im,d,i,n):
-        paste_cover(im,"intro_splash",seed=m.seed)   # generated background (seed rotates variants)
+        # COLD OPEN (fleet plan): no logo-first bumper — winner wash + the match's biggest REAL
+        # number counting up + a burned-in sound-off hook line. Brand shrunk to a top lockup.
+        col=SIDE_COL[m.winner]
+        wash=np.asarray(im).astype(np.float32); wash[:]=lerp(BG,col,0.18)
+        im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0))
+        paste_cover(im,"intro_splash",opacity=0.40,seed=m.seed)
+        d=ImageDraw.Draw(im,"RGBA")
         mk=brand_logo("mark")
         if mk is not None:
-            m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
-        tracked(d,(W/2,H/2-92),"MIKSUU'S WARFARE",DISP(82),INK,anchor="mm",track=6)
-        tracked(d,(W/2,H/2+10),m.map_name.upper(),DISP(50),GOLD,anchor="mm",track=14)
-        _kick=["POST-MATCH REPORT","AFTER-ACTION REPORT","FIELD DEBRIEF","MATCH DOSSIER"]
-        tracked(d,(W/2,H/2+80),_kick[m.seed%len(_kick)],SANS(26,False),DIM,anchor="mm",track=8)
+            m2=mk.resize((46,46)); im.paste(m2,(int(W/2-120),108),m2)
+        tracked(d,(W/2-60,131),"MIKSUU'S WARFARE",SANS(19,False),(196,196,184),anchor="lm",track=2)
+        h=m.hero; kk=ease(min(1,i/22))
+        tracked(d,(W/2,H/2-300),h["label"],SANS(31,False),INK,anchor="mm",track=12)
+        tracked(d,(W/2,H/2-138),str(int(h["num"]*kk)),DISP(180),col,anchor="mm",track=2)
+        unit="METRES" if h["label"]=="LONGEST SHOT" else "KILLS"
+        tracked(d,(W/2,H/2+22),(h["who"].upper()+"   ·   "+unit) if h["who"] else unit,SANS(28,False),INK,anchor="mm",track=6)
+        rule(d,W/2,H/2+98,half=170)
         mm,ss=divmod(m.duration,60)
-        tracked(d,(W/2,H/2+152),f"{len(m.players)} OPERATORS      {mm:02d}:{ss:02d}      {m.total_kills} KILLS",SANS(23,False),(150,150,138),anchor="mm",track=3)
+        tracked(d,(W/2,H/2+164),f"{SIDE_NAME[m.winner]} WIN   ·   {m.total_kills} KILLS   ·   {mm:02d}:{ss:02d}",SANS(25,False),INK,anchor="mm",track=3)
+        tracked(d,(W/2,H/2+222),m.map_name.upper(),SANS(21,False),DIM,anchor="mm",track=10)
 
     def s_battle(im,d,i,n):
         ts=i/n*m.duration; ft=None; fk=0
@@ -405,11 +422,9 @@ def render(m, out_path):
         d.rectangle([bx+bw-int(bw*e/t2),by,bx+bw,by+12],fill=EAST)
         R.control_map(d,im,ts,ft,fk)
         mm,ss=divmod(int(ts),60); d.text((W/2,1452),f"{mm:02d}:{ss:02d}",font=f_h1,fill=INK,anchor="ma")
-        tracked(d,(W/2,1566),"RECENT CONTACTS",SANS(20,False),(120,126,118),anchor="mm",track=5)
-        feed=[k for k in m.kills if k[0]<=ts][-4:]; y=1600
-        for (t,nm,s,wp,cat,dd) in feed:
-            c=SIDE_COL[s]; d.rectangle([60,y+7,74,y+31],fill=c); d.text((90,y),(nm or "AI"),font=f_sm,fill=c)
-            d.text((W-205,y),wp,font=f_sm,fill=DIM,anchor="ra"); d.text((W-60,y),f"{dd}m",font=f_sm,fill=(150,160,176),anchor="ra"); y+=56
+        # (fleet plan) the old RECENT CONTACTS kill-feed faked per-kill timing the data lacks — removed.
+        # Honest real totals instead:
+        tracked(d,(W/2,1582),f"{len(m.caps)} TOWN CAPTURES    ·    {m.total_kills} TOTAL KILLS",SANS(23,False),(150,156,148),anchor="mm",track=4)
         footer(im,d)
 
     def s_momentum(im,d,i,n):
@@ -430,7 +445,14 @@ def render(m, out_path):
         if m.ser_x[nshow-1]>=dt:
             mxp=px0+dt/m.duration*pw; d.line([(mxp,py0),(mxp,py0+ph)],fill=GOLD+(150,),width=2); d.text((mxp,py0-8),"supremacy",font=f_xs,fill=GOLD,anchor="mb")
         chip(d,px0,py0+ph+24,"west"); chip(d,px0+200,py0+ph+24,"east")
-        d.text((W/2,1280),f"{SIDE_NAME[m.winner]} took the lead at the mid-game and never gave it back.",font=f_sm,fill=DIM,anchor="ma")
+        # (fleet plan) replace the hardcoded subtitle (which sometimes lied) with the REAL arc.
+        cb=m.comeback
+        if cb.get("badge"):
+            d.rounded_rectangle([W/2-165,1236,W/2+165,1294],radius=16,fill=mix(GOLD,0.20),outline=GOLD,width=2)
+            tracked(d,(W/2,1265),cb["badge"],SANS(26,False),GOLD,anchor="mm",track=8)
+            tracked(d,(W/2,1342),cb["line"],SANS(27,False),INK,anchor="mm",track=3)
+        else:
+            tracked(d,(W/2,1300),cb["line"],SANS(27,False),INK,anchor="mm",track=3)
         footer(im,d)
 
     def s_mvp(im,d,i,n):
@@ -444,6 +466,8 @@ def render(m, out_path):
         # hero kill count fills the right of the card (the MVP's signature number, counts up)
         d.text((W-182,322),str(int(p["kills"]*kk)),font=DISP(80),fill=col,anchor="ra")
         d.text((W-182,442),"KILLS",font=SANS(22,False),fill=DIM,anchor="ra")
+        if p.get("award"):                                          # (fleet plan) superlative -> "that's me"
+            tracked(d,(W/2,506),p["award"],SANS(26,False),GOLD,anchor="mm",track=8)
         gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
         cells=[("SCORE",num(p["score"]),GOLD),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',col),
                ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",GOLD)]
@@ -462,6 +486,9 @@ def render(m, out_path):
             else: d.text((86,y+bh/2),f"{idx+1}",font=f_h1,fill=GOLD if idx==0 else DIM,anchor="mm")
             panel(d,132,y,W-60,y+bh); d.rounded_rectangle([132,y,132+bw+40,y+bh],radius=20,fill=mix(col,0.22),outline=col,width=2)
             d.rectangle([138,y+28,156,y+bh-28],fill=col); d.text((182,y+38),p["name"],font=f_h2,fill=INK)
+            if p.get("award"):                                      # (fleet plan) per-row superlative
+                _nw=sum(d.textlength(_c,font=f_h2) for _c in p["name"])
+                d.text((182+_nw+22,y+66),p["award"],font=f_xs,fill=GOLD,anchor="lm")
             _sub=f'{SIDE_NAME[p["side"]]}    ·    {p["kills"]} kills    ·    {p["d"][6]} deaths    ·    {p["d"][10]} caps'
             d.text((184,y+118),_sub,font=f_sm,fill=(14,16,20)); d.text((183,y+116),_sub,font=f_sm,fill=(198,202,192))
             d.text((W-88,y+bh/2-18),str(int(p["score"]*prog)),font=f_h1,fill=INK,anchor="rm")
