@@ -38,10 +38,10 @@ def add_sound(video_path, total_frames, climax_frames=None, seed=0, winner="west
     base = os.path.dirname(os.path.abspath(__file__))
     try: ff = imageio_ffmpeg.get_ffmpeg_exe()
     except Exception as e: print(f"(sound skipped, no ffmpeg: {e})"); return
-    track = audio.find_track(base); tmp_out = video_path + ".snd.mp4"
+    track = audio.find_track(base, seed); tmp_out = video_path + ".snd.mp4"
     if track:
         args = [ff,"-y","-i",video_path,"-stream_loop","-1","-i",track,"-map","0:v","-map","1:a",
-                "-c:v","copy","-c:a","aac","-b:a","192k","-shortest","-movflags","+faststart",tmp_out]
+                "-c:v","copy","-c:a","aac","-b:a","160k","-shortest","-movflags","+faststart",tmp_out]
         src = f"track {os.path.basename(track)}"
     else:
         cf = climax_frames if climax_frames is not None else int(total_frames*0.85)

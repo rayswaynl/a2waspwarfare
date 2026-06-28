@@ -139,10 +139,14 @@ def write_wav(path, stereo, sr=SR):
         w.writeframes(pcm.tobytes())
     return path
 
-def find_track(base_dir):
-    """Return a user-dropped real music track that should override the synth, if any."""
-    for sub, name in [("assets","music")]:
-        for ext in (".wav",".mp3",".m4a",".ogg",".flac"):
-            p = os.path.join(base_dir, sub, name+ext)
-            if os.path.exists(p): return p
-    return None
+def find_track(base_dir, seed=0):
+    """Return a seed-chosen real music track that overrides the synth, if any were dropped.
+    Looks for assets/music*.{m4a,mp3,wav,ogg,flac} — drop music_1, music_2, … and the renderer
+    rotates them by match seed so a feed of reports cycles through your tracks for variety."""
+    import glob
+    tracks = []
+    for ext in ("m4a","mp3","wav","ogg","flac"):
+        tracks += glob.glob(os.path.join(base_dir, "assets", "music*." + ext))
+    tracks = sorted(set(tracks))
+    if not tracks: return None
+    return tracks[abs(int(seed)) % len(tracks)]
