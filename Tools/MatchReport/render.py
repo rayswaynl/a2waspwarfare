@@ -161,6 +161,7 @@ def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10, directi
     hover=True keeps it on-screen with a gentle bob (showcases the spinning rotor)."""
     if not SILHOUETTES: return
     aid = SILHOUETTES[idx % len(SILHOUETTES)]
+    if aid == "silhouette_hind": return   # Hind pulled from the drift layer (too noisy)
     a = asset(aid)
     if a is None: return
     w = int(W*wfrac); h = max(1, int(a.height*w/a.width)); a2 = a.resize((w, h)).copy()
@@ -380,7 +381,6 @@ def render(m, out_path):
 
     def s_intro(im,d,i,n):
         paste_cover(im,"intro_splash",seed=m.seed)   # generated background (seed rotates variants)
-        drift_silhouette(im,0,i,n,yfrac=0.075,wfrac=0.58,opacity=0.52,direction=(1 if m.seed%2 else -1),hover=True)  # Hind hovering, animated rotor
         mk=brand_logo("mark")
         if mk is not None:
             m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
