@@ -249,6 +249,14 @@ def donut(d,cx,cy,r,segs):
     for frac,col in segs: a1=a0+frac*360; d.pieslice([cx-r,cy-r,cx+r,cy+r],a0,a1,fill=col); a0=a1
     d.ellipse([cx-r*0.58,cy-r*0.58,cx+r*0.58,cy+r*0.58],fill=BG)
 
+def caption(m):
+    """Social caption built from the match — used as the Discord/TikTok post text."""
+    mm, ss = divmod(m.duration, 60)
+    side = SIDE_NAME.get(m.winner, m.winner.upper())
+    mvp = f" MVP {m.mvp['name']} ({m.mvp['kills']}K)." if m.mvp else ""
+    return (f"{side} victory on {m.map_name.title()} — {m.total_kills} kills in {mm:02d}:{ss:02d}.{mvp}\n"
+            f"#arma2 #warfare #cti #miksuuswarfare #gaming #milsim")
+
 
 def render(m, out_path):
     R=Renderer(m)
@@ -403,5 +411,7 @@ def render(m, out_path):
     for _ in range(18): frames.append(frames[-1])
 
     imageio.mimwrite(out_path,frames,fps=FPS,codec="libx264",macro_block_size=8,
-                     ffmpeg_params=["-crf","19","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
+                     ffmpeg_params=["-crf","24","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
+    # crf 24 keeps a 48s clip ~6 MB — comfortably under Discord's non-boosted upload limit
+    # (10.9 MB was rejected) while staying crisp at 1080p. Bump lower (19) only for off-Discord exports.
     return len(frames)

@@ -8,10 +8,18 @@ drops the MP4 for you to post to TikTok.
 ```
 Hetzner server RPT (WASPSTAT lines)  ──ssh──►  produce-match-report.ps1 (gaming PC)
         │                                              │
-        └── newest ROUNDEND, de-duped on seq           ├─ slice match → render_report.py
-                                                        ├─ wasp-match-reports\*.mp4
-                                                        └─ Peach DM to Ray (optional)
+        └── newest ROUNDEND, de-duped on seq           ├─ slice match → render_report.py (mp4 + caption)
+                                                        ├─ POST mp4+caption → Warfare Discord #media
+                                                        │     (bot "Warfare Handler", REST multipart)
+                                                        ├─ wasp-match-reports\*.mp4 (archive)
+                                                        └─ Peach DM to Ray (optional, -Notify)
 ```
+
+Delivery is **Discord #media** (`1510573856275038228` in guild `1510513623800221857`), via the
+Warfare bot (`miksuus-warfare/bot/.env` `DISCORD_TOKEN`). Grab clips from there to post to TikTok.
+Verified end-to-end (test clip posted OK). Notes: Discord needs a real `User-Agent` header (else
+403), and the non-boosted upload limit is ~10 MB — the renderer encodes at crf 24 (~6 MB / 48 s) to
+stay safely under it. `-SkipDiscord` renders without posting; `-ChannelId` overrides the target.
 
 ## Components
 - `render_report.py` + `render.py` + `assets/` + `brand/` — the renderer (this folder).

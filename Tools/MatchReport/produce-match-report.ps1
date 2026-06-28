@@ -21,7 +21,9 @@ param(
   [string]$RptFile,                                   # local RPT/log; if omitted, SSH-pull from Hetzner
   [string]$OutDir   = 'C:\Users\Game\wasp-match-reports',
   [string]$NamesTsv,                                  # optional uid<TAB>name map (else Op-XXXX)
-  [switch]$Notify                                     # Peach DM Ray with the result
+  [string]$ChannelId = '1510573856275038228',         # Warfare Discord #media channel (in guild 1510513623800221857)
+  [switch]$SkipDiscord,                               # don't post to Discord (render only)
+  [switch]$Notify                                     # also Peach DM Ray with the result
 )
 $ErrorActionPreference = 'Stop'
 $ToolDir   = 'C:\Users\Game\a2waspwarfare-report\Tools\MatchReport'
@@ -72,6 +74,21 @@ if ($LASTEXITCODE -ne 0) { throw "render_report.py failed (exit $LASTEXITCODE)" 
 Set-Content -LiteralPath $StateFile -Value "$lastSeq"
 $sizeMB = [math]::Round((Get-Item $out).Length/1MB, 1)
 Write-Host "DONE: $out ($sizeMB MB)"
+
+# 5b. post the clip to the Warfare Discord channel via the warfare bot (REST multipart upload)
+if (-not $SkipDiscord) {
+  try {
+    $capFile = "$out.caption.txt"
+    $caption = if (Test-Path $capFile) { (Get-Content -LiteralPath $capFile -Raw).Trim() } else { "$winner victory on $map." }
+    $tokLine = Get-Content 'C:\Users\Game\miksuus-warfare\bot\.env' | Where-Object { $_ -match '^\s*DISCORD_TOKEN\s*=' } | Select-Object -First 1
+    $token   = ($tokLine -split '=',2)[1].Trim().Trim('"')
+    if ($sizeMB -ge 9.5) { Write-Warning "Clip $sizeMB MB is near/over the non-boosted Discord limit (~10 MB); post may 413." }
+    $form = @{ 'payload_json' = (@{ content = $caption } | ConvertTo-Json -Compress); 'files[0]' = Get-Item -LiteralPath $out }
+    $resp = Invoke-RestMethod -Uri "https://discord.com/api/v10/channels/$ChannelId/messages" -Method Post `
+              -Headers @{ Authorization = "Bot $token"; 'User-Agent' = 'WaspReport (https://miksuuswarfare.com, 1.0)' } -Form $form -TimeoutSec 120
+    Write-Host "Posted to Discord channel $ChannelId (message $($resp.id))."
+  } catch { Write-Warning "Discord post failed: $($_.Exception.Message)" }
+}
 
 # 6. optional Peach DM to Ray with the path (so it pings your phone)
 if ($Notify) {

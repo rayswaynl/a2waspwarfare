@@ -49,6 +49,11 @@ def main():
     t0 = time.time()
     n = render(m, out)
     print(f"rendered {n} frames ({n/30:.1f}s video) in {time.time()-t0:.1f}s -> {out}")
+    # sidecar caption for the Discord/TikTok post
+    from render import caption
+    cap = caption(m)
+    with open(out + ".caption.txt", "w", encoding="utf-8") as fh: fh.write(cap)
+    print("caption -> " + out + ".caption.txt")
 
 if __name__ == "__main__":
     main()
