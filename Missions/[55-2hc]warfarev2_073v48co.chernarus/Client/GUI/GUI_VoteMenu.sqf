@@ -5,7 +5,7 @@ uiNamespace setVariable ["wfbe_display_vote", _this select 0];
 
 _u = 1;
 lnbClear 500100;
-lnbAddRow[500100, ["No Commander", "0"]];
+lnbAddRow[500100, ["AI Commander", "0"]];
 lnbSetValue[500100, [0, 0], -1];
 //--- B74.2.5: LIVE-group roster is authoritative once any team has a player leader; until then render from the
 //--- JIP primitive roster push (names only) so a JIP joiner whose wfbe_teams group objects are nil/broken still
@@ -83,7 +83,7 @@ while {alive player && dialog} do {
 		if (WFBE_VOTE_USING_PRIMS && _liveNow) then {
 			WFBE_VOTE_USING_PRIMS = false;
 			lnbClear 500100;
-			lnbAddRow[500100, ["No Commander", "0"]];
+			lnbAddRow[500100, ["AI Commander", "0"]];
 			lnbSetValue[500100, [0, 0], -1];
 			_u = 1;
 			for '_i' from 0 to count(WFBE_Client_Teams)-1 do {
