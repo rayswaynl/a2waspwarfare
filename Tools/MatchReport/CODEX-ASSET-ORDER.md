@@ -71,6 +71,20 @@
 
 ---
 
+## TIER 4 — expansion: stat icons (128×128, transparent)
+
+Wired into the Combat Breakdown cards + leaderboard #1. **Dual-use:** these are also the
+Discord custom-emoji set on `ASSET-WISHLIST.md`. Brief §9 "emoji/small icon" recipe — readable
+at 32px, thick clean shapes, olive + gunmetal, subtle orange edge light, transparent, no text.
+
+- `icon_longest.png` — sniper crosshair / reticle (longest-kill card)
+- `icon_weapon.png` — side-profile assault rifle (top-weapon card)
+- `icon_pvp.png` — two crossed combat knives (PvP card)
+- `icon_captures.png` — planted capture flag (captures card)
+- `icon_mvp.png` — military medal / star award (leaderboard #1)
+
+---
+
 **Not needed from image-gen** (kept procedural in code): the match **map**, **grain.png**, and (likely) the HUD frame. Don't spend generations on those.
 
 **When done:** drop the PNGs in `Tools/MatchReport/assets/`, then `python render_report.py --sample` — the report picks up each file by name; missing ones fall back to the procedural look. Where a procedural version also exists (intro splash, silhouettes), `python ab_compare.py` does the head-to-head.

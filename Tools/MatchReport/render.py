@@ -315,7 +315,8 @@ def render(m, out_path):
         mx=max(p["score"] for p in top) or 1; y0=320; bh=92; gap=22
         for idx,p in enumerate(top):
             y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-300)*p["score"]/mx*prog)
-            d.text((70,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
+            if idx==0 and paste_emblem(im,"icon_mvp",70,y+bh/2,52): pass   # medal on #1 if generated
+            else: d.text((70,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
             panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
             d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+16),p["name"],font=f_h3,fill=INK)
             d.text((158,y+58),f'{SIDE_NAME[p["side"]]}  ·  {p["kills"]}K / {p["d"][6]}D  ·  {p["d"][10]} caps',font=f_xs,fill=DIM)
@@ -334,10 +335,11 @@ def render(m, out_path):
             x=lx+(idx%2)*420; y=ly+(idx//2)*70; d.rectangle([x,y+4,x+24,y+28],fill=col)
             d.text((x+36,y),name,font=f_sm,fill=INK); d.text((x+360,y),f"{int(m.catcount[c]/tot*100)}%",font=f_sm,fill=DIM,anchor="ra")
         gy=1010; cw=(W-220)//2
-        cards=[("LONGEST KILL",f"{m.longest[5]} m",f"{m.longest[3]}",GOLD),("TOP WEAPON",m.topweap[0],f"{m.topweap[1]} kills",WEST),
-               ("PVP KILLS",str(m.pvp_total),"player vs player",INK),("TOWN CAPTURES",str(m.cap_total),"ownership flips",GUER)]
-        for idx,(lab,big,sub,c) in enumerate(cards):
+        cards=[("LONGEST KILL",f"{m.longest[5]} m",f"{m.longest[3]}",GOLD,"icon_longest"),("TOP WEAPON",m.topweap[0],f"{m.topweap[1]} kills",WEST,"icon_weapon"),
+               ("PVP KILLS",str(m.pvp_total),"player vs player",INK,"icon_pvp"),("TOWN CAPTURES",str(m.cap_total),"ownership flips",GUER,"icon_captures")]
+        for idx,(lab,big,sub,c,ic) in enumerate(cards):
             x=110+(idx%2)*cw; y=gy+(idx//2)*200; panel(d,x,y,x+cw-20,y+175)
+            paste_emblem(im,ic,x+cw-58,y+44,48)   # stat icon (top-right) if generated
             d.text((x+26,y+22),lab,font=f_xs,fill=DIM); d.text((x+26,y+52),big,font=f_h3 if len(big)<12 else f_md,fill=c); d.text((x+26,y+120),sub,font=f_xs,fill=DIM)
         footer(im,d)
 

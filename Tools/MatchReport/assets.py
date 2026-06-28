@@ -135,6 +135,33 @@ ASSETS = {
               "bleeding off the bottom corners, a single warm orange #D9763C glow, film grain, heavy "
               "vignette, large empty calm center for a logo and a short call-to-action. 9:16 "
               "1080x1920. No text. " + STYLE},
+ # --- stat icons (brief §9 'emoji/small icon' recipe). 128x128 transparent, readable small. ---
+ # Dual-use: these double as the Discord custom-emoji set on ASSET-WISHLIST.md.
+ "icon_longest": {"file":"icon_longest.png","size":(128,128),"transparent":True,
+    "role":"Combat card: longest kill (crosshair).",
+    "prompt":"A simple bold emoji-scale icon of a sniper crosshair / reticle, readable at 32px, "
+             "flat-ish with a subtle orange #D9763C edge light, transparent background, olive and "
+             "gunmetal, thick clean shapes, no text. " + STYLE},
+ "icon_weapon": {"file":"icon_weapon.png","size":(128,128),"transparent":True,
+    "role":"Combat card: top weapon (rifle).",
+    "prompt":"A simple bold emoji-scale icon of a side-profile assault rifle, readable at 32px, "
+             "flat-ish with a subtle orange #D9763C edge light, transparent background, olive and "
+             "gunmetal, thick clean shapes, no text. " + STYLE},
+ "icon_pvp": {"file":"icon_pvp.png","size":(128,128),"transparent":True,
+    "role":"Combat card: PvP kills (crossed blades / duel).",
+    "prompt":"A simple bold emoji-scale icon of two crossed combat knives, readable at 32px, "
+             "flat-ish with a subtle orange #D9763C edge light, transparent background, olive and "
+             "gunmetal, thick clean shapes, no text. " + STYLE},
+ "icon_captures": {"file":"icon_captures.png","size":(128,128),"transparent":True,
+    "role":"Combat card: town captures (flag).",
+    "prompt":"A simple bold emoji-scale icon of a planted capture flag, readable at 32px, flat-ish "
+             "with a subtle orange #D9763C edge light, transparent background, olive and gunmetal, "
+             "thick clean shapes, no text. " + STYLE},
+ "icon_mvp": {"file":"icon_mvp.png","size":(128,128),"transparent":True,
+    "role":"Leaderboard #1 / MVP (medal).",
+    "prompt":"A simple bold emoji-scale icon of a military medal / star award, readable at 32px, "
+             "flat-ish with a subtle orange #D9763C edge light, transparent background, olive, "
+             "gunmetal and bone, thick clean shapes, no text. " + STYLE},
 }
 
 # silhouettes available as drifting background layers (renderer picks per scene if present)
