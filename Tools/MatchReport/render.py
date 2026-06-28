@@ -287,11 +287,12 @@ def render(m, out_path):
         d.rectangle([bx,by,bx+bw,by+12],fill=(40,46,56)); d.rectangle([bx,by,bx+int(bw*w/t2),by+12],fill=WEST)
         d.rectangle([bx+bw-int(bw*e/t2),by,bx+bw,by+12],fill=EAST)
         R.control_map(d,im,ts,ft,fk)
-        mm,ss=divmod(int(ts),60); d.text((W/2,1500),f"{mm:02d}:{ss:02d}",font=f_h1,fill=INK,anchor="ma")
+        mm,ss=divmod(int(ts),60); d.text((W/2,1452),f"{mm:02d}:{ss:02d}",font=f_h1,fill=INK,anchor="ma")
+        tracked(d,(W/2,1566),"RECENT CONTACTS",SANS(20,False),(120,126,118),anchor="mm",track=5)
         feed=[k for k in m.kills if k[0]<=ts][-4:]; y=1600
         for (t,nm,s,wp,cat,dd) in feed:
-            c=SIDE_COL[s]; d.rectangle([60,y+6,74,y+30],fill=c); d.text((86,y),nm or "AI",font=f_sm,fill=c)
-            d.text((W/2,y),wp,font=f_sm,fill=DIM,anchor="ma"); d.text((W-60,y),f"{dd}m",font=f_sm,fill=(150,160,176),anchor="ra"); y+=62
+            c=SIDE_COL[s]; d.rectangle([60,y+7,74,y+31],fill=c); d.text((90,y),(nm or "AI"),font=f_sm,fill=c)
+            d.text((W-205,y),wp,font=f_sm,fill=DIM,anchor="ra"); d.text((W-60,y),f"{dd}m",font=f_sm,fill=(150,160,176),anchor="ra"); y+=56
         footer(im,d)
 
     def s_momentum(im,d,i,n):
@@ -320,14 +321,14 @@ def render(m, out_path):
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
         if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
             d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
-        d.text((350,330),p["name"],font=f_h1,fill=INK); chip(d,352,418,p["side"],f_md)
+        d.text((352,342),p["name"],font=DISP(60),fill=INK); chip(d,354,420,p["side"],SANS(24,False))
         gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
         cells=[("KILLS",num(p["kills"]),col),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',GOLD),
                ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",col)]
         for idx,(lab,val,c) in enumerate(cells):
             x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
             d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
-        tracked(d,(W/2,1192),f"TOP SCORE   {int(p['score']*kk)}",SANS(25,False),DIM,anchor="mm",track=5); footer(im,d)
+        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),f"TOP SCORE   {int(p['score']*kk)}",SANS(24,False),(200,204,196),anchor="mm",track=6); footer(im,d)
 
     def s_board(im,d,i,n):
         header(d,"TOP OPERATORS","by match score"); top=m.players[:6]
@@ -335,8 +336,8 @@ def render(m, out_path):
         mx=max(p["score"] for p in top) or 1; y0=320; bh=92; gap=22
         for idx,p in enumerate(top):
             y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-300)*p["score"]/mx*prog)
-            if idx==0 and paste_emblem(im,"icon_mvp",70,y+bh/2,52): pass   # medal on #1 if generated
-            else: d.text((70,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
+            if idx==0 and paste_emblem(im,"icon_mvp",92,y+bh/2,52): pass   # medal on #1 if generated
+            else: d.text((92,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
             panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
             d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+16),p["name"],font=f_h3,fill=INK)
             d.text((158,y+58),f'{SIDE_NAME[p["side"]]}  ·  {p["kills"]}K / {p["d"][6]}D  ·  {p["d"][10]} caps',font=f_xs,fill=DIM)
@@ -345,7 +346,7 @@ def render(m, out_path):
 
     def s_combat(im,d,i,n):
         header(d,"COMBAT BREAKDOWN"); kk=ease(min(1,i/26))
-        order=[("INF","Infantry",(90,160,250)),("VEH","Vehicle",(240,150,70)),("AIR","Air",(120,210,150)),("STATIC","Static",(200,120,210))]
+        order=[("INF","Infantry",(198,178,142)),("VEH","Vehicle",(217,118,60)),("AIR","Air",(122,134,72)),("STATIC","Static",(120,128,138))]  # brand: bone/orange/olive/steel
         tot=sum(m.catcount.values()) or 1; segs=[(m.catcount[c]/tot*kk,col) for c,_,col in order]
         if kk<1: segs.append((1-kk,(40,46,56)))
         cx,cy,r=W/2,540,210; donut(d,cx,cy,r,segs)
@@ -369,7 +370,7 @@ def render(m, out_path):
         if town in m.towns:
             x,y=m.towns[town]; cx=mx0+x/m.world_size*ms; cy=my0+(1-y/m.world_size)*ms; pulse=18+8*math.sin(i/4)
             d.ellipse([cx-pulse,cy-pulse,cx+pulse,cy+pulse],outline=GOLD,width=4)
-        d.text((W/2,930),town.upper(),font=f_h1,fill=col,anchor="ma"); d.text((W/2,1010),f"captured at {mm:02d}:{ss:02d}",font=f_md,fill=DIM,anchor="ma")
+        tracked(d,(W/2,948),town.upper(),DISP(56),col,anchor="mm",track=10); tracked(d,(W/2,1008),f"CAPTURED AT {mm:02d}:{ss:02d}",SANS(23,False),DIM,anchor="mm",track=4)
         w=sum(v=="west" for v in m.owners_at(t+1).values()); e=sum(v=="east" for v in m.owners_at(t+1).values())
         panel(d,120,1110,W-120,1250,fill=mix(col,0.10),outline=col)
         d.text((W/2,1140),f"This capture pushed {SIDE_NAME[s]} to {max(w,e)} towns",font=f_sm,fill=INK,anchor="ma")
