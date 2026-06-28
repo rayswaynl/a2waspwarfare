@@ -87,4 +87,48 @@ at 32px, thick clean shapes, olive + gunmetal, subtle orange edge light, transpa
 
 **Not needed from image-gen** (kept procedural in code): the match **map**, **grain.png**, and (likely) the HUD frame. Don't spend generations on those.
 
+---
+
+## TIER 4 — expansion pack (optional, reusable, Claude-ready)
+
+These extend the art library beyond the first renderer slots. The extra silhouettes are safe
+for the existing renderer's drifting-blackout rotation when added to `SILHOUETTES`; icons,
+overlays, and extra backgrounds are ready for Claude to wire into future scene polish.
+
+**`silhouette_apc.png`** — 1280×560, transparent
+> A military-accurate side-profile silhouette of a Cold-War infantry fighting vehicle / APC in BMP-2 style, solid dark gunmetal-to-steel gradient fill, a thin warm-orange #D9763C rim-light along the top edge, transparent background, backlit-at-dusk, sharp detailed outline (low hull, small turret, autocannon barrel, road wheels, tracks, rear troop compartment), no interior detail.
+
+**`silhouette_artillery.png`** — 1280×560, transparent
+> A military-accurate side-profile silhouette of a Cold-War self-propelled rocket artillery launcher in BM-21 Grad / Ural truck style, solid dark gunmetal-to-steel gradient fill, a thin warm-orange #D9763C rim-light along the top edge, transparent background, backlit-at-dusk, sharp detailed outline (truck cab, six wheels, rear rocket launcher rack, chassis), no interior detail.
+
+**`silhouette_supply_truck.png`** — 1280×560, transparent
+> A military-accurate side-profile silhouette of a Cold-War military supply truck in Ural / Kamaz style, solid dark gunmetal-to-steel gradient fill, a thin warm-orange #D9763C rim-light along the top edge, transparent background, backlit-at-dusk, sharp detailed outline (cab, cargo canvas cover, six wheels, mirrors, bumper, rear bed), no interior detail.
+
+**`bg_momentum.png`** — 1080×1920, opaque
+> A tall vertical tactical background for a momentum / towns-held graph scene: dark gunmetal #14171B field, faint topographic grid, subtle ghosted line-chart trails and territory-control front lines near the edges, low dusk haze, sparse olive-drab #5C6536 map texture, a single warm orange #D9763C node glow used very sparingly, heavy vignette, empty central area for code-rendered chart and stats. No text.
+
+**`overlay_contours.png`** — 1080×1920, transparent
+> A transparent tactical topographic / MGRS contour overlay layer: faint bone #E7E3D6 contour lines, subtle MGRS grid ticks, a few registration crosses, very low opacity, no labels, no numbers, no words. It should be reusable over dark backgrounds without covering the center.
+
+**`overlay_stat_panel.png`** — 1080×1920, transparent
+> A transparent reusable tactical stat-panel overlay for vertical match report scenes: faint rectangular panel rails, thin separators, tiny corner screws, muted bone #E7E3D6 linework at low opacity, subtle olive-drab #5C6536 shadow strokes, and a few tiny warm orange #D9763C accent ticks. No labels, no numbers, no words.
+
+**`icon_towns.png`** — 256×256, transparent
+> A compact tactical icon representing captured towns / territory control: a small fortified town cluster and flag marker silhouette inside a thin stencil shield/circle, readable at small size, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent background. No text.
+
+**`icon_kills.png`** — 256×256, transparent
+> A compact tactical icon representing kills / combat effectiveness: crossed rifle and cartridge silhouettes with a small angular target reticle, stencil style, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent background. No text.
+
+**`icon_mvp.png`** — 256×256, transparent
+> A compact tactical icon representing MVP / top operator: a military medal star with small laurel fragments and stencil cuts, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent background. No text.
+
+**`icon_economy.png`** — 256×256, transparent
+> A compact tactical icon representing economy / supply income: a rugged military supply crate with a small fuel can and stacked ration bars, stencil style, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent background. No text.
+
+**`icon_factory.png`** — 256×256, transparent
+> A compact tactical icon representing factories / unit production: a hardened military factory silhouette with sawtooth roof, small gear, and antenna mast, stencil style, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent background. No text.
+
+**`icon_duration.png`** — 256×256, transparent
+> A compact tactical icon representing match duration / time: a rugged military stopwatch or field clock silhouette with one simple hand and small side buttons, stencil style, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent background. No numerals, no text.
+
 **When done:** drop the PNGs in `Tools/MatchReport/assets/`, then `python render_report.py --sample` — the report picks up each file by name; missing ones fall back to the procedural look. Where a procedural version also exists (intro splash, silhouettes), `python ab_compare.py` does the head-to-head.

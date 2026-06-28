@@ -127,6 +127,30 @@ ASSETS = {
               "style), solid dark gunmetal-to-steel gradient fill, a thin warm-orange #D9763C "
               "rim-light along the top edge, transparent background, backlit-at-dusk, sharp detailed "
               "outline (wings, pylons, tail), no interior detail. " + STYLE},
+ "silhouette_apc": {
+    "file": "silhouette_apc.png", "size": (1280, 560), "transparent": True,
+    "role": "Drifting background layer / scene accent (BMP-style APC/IFV).",
+    "prompt": "A military-accurate side-profile silhouette of a Cold-War infantry fighting vehicle "
+              "or APC in BMP-2 style, solid dark gunmetal-to-steel gradient fill, a thin warm-orange "
+              "#D9763C rim-light along the top edge, transparent background, backlit-at-dusk, sharp "
+              "detailed outline (low hull, small turret, autocannon barrel, road wheels, tracks, "
+              "rear troop compartment), no interior detail. " + STYLE},
+ "silhouette_artillery": {
+    "file": "silhouette_artillery.png", "size": (1280, 560), "transparent": True,
+    "role": "Drifting background layer / scene accent (rocket artillery).",
+    "prompt": "A military-accurate side-profile silhouette of a Cold-War self-propelled rocket "
+              "artillery launcher in BM-21 Grad / Ural truck style, solid dark gunmetal-to-steel "
+              "gradient fill, a thin warm-orange #D9763C rim-light along the top edge, transparent "
+              "background, backlit-at-dusk, sharp detailed outline (truck cab, six wheels, rear "
+              "rocket launcher rack, chassis), no interior detail. " + STYLE},
+ "silhouette_supply_truck": {
+    "file": "silhouette_supply_truck.png", "size": (1280, 560), "transparent": True,
+    "role": "Drifting background layer / economy and supply scenes.",
+    "prompt": "A military-accurate side-profile silhouette of a Cold-War military supply truck in "
+              "Ural / Kamaz style, solid dark gunmetal-to-steel gradient fill, a thin warm-orange "
+              "#D9763C rim-light along the top edge, transparent background, backlit-at-dusk, sharp "
+              "detailed outline (cab, cargo canvas cover, six wheels, mirrors, bumper, rear bed), "
+              "no interior detail. " + STYLE},
  "outro_bg": {
     "file": "outro_bg.png", "size": (1080, 1920), "transparent": False,
     "role": "Closing call-to-action card background (join / play).",
@@ -157,15 +181,79 @@ ASSETS = {
     "prompt":"A simple bold emoji-scale icon of a planted capture flag, readable at 32px, flat-ish "
              "with a subtle orange #D9763C edge light, transparent background, olive and gunmetal, "
              "thick clean shapes, no text. " + STYLE},
- "icon_mvp": {"file":"icon_mvp.png","size":(128,128),"transparent":True,
-    "role":"Leaderboard #1 / MVP (medal).",
-    "prompt":"A simple bold emoji-scale icon of a military medal / star award, readable at 32px, "
-             "flat-ish with a subtle orange #D9763C edge light, transparent background, olive, "
-             "gunmetal and bone, thick clean shapes, no text. " + STYLE},
+ "bg_momentum": {
+    "file": "bg_momentum.png", "size": (1080, 1920), "transparent": False,
+    "role": "Optional background for momentum / towns-held chart scenes.",
+    "prompt": "A tall vertical tactical background for a momentum / towns-held graph scene: dark "
+              "gunmetal #14171B field, faint topographic grid, subtle ghosted line-chart trails and "
+              "territory-control front lines near the edges, low dusk haze, sparse olive-drab "
+              "#5C6536 map texture, a single warm orange #D9763C node glow used very sparingly, "
+              "heavy vignette, empty central area for code-rendered chart and stats. No text. "
+              "9:16 1080x1920. " + STYLE},
+ "overlay_contours": {
+    "file": "overlay_contours.png", "size": (1080, 1920), "transparent": True,
+    "role": "Reusable transparent topographic/MGRS texture overlay.",
+    "prompt": "Transparent tactical topographic / MGRS contour overlay layer: faint bone #E7E3D6 "
+              "contour lines, subtle MGRS grid ticks, a few registration crosses, very low opacity, "
+              "no labels, no numbers, no words. Reusable over dark backgrounds without covering the "
+              "center. 9:16 1080x1920. " + STYLE},
+ "overlay_stat_panel": {
+    "file": "overlay_stat_panel.png", "size": (1080, 1920), "transparent": True,
+    "role": "Reusable transparent stat-card rails and dividers.",
+    "prompt": "Transparent reusable tactical stat-panel overlay for vertical match report scenes: "
+              "faint rectangular panel rails, thin separators, tiny corner screws, muted bone "
+              "#E7E3D6 linework at low opacity, subtle olive-drab #5C6536 shadow strokes, and a few "
+              "tiny warm orange #D9763C accent ticks. No labels, no numbers, no words. Center should "
+              "remain mostly transparent for dynamic stats. 9:16 1080x1920. " + STYLE},
+ "icon_towns": {
+    "file": "icon_towns.png", "size": (256, 256), "transparent": True,
+    "role": "Small stat icon for towns held / captures.",
+    "prompt": "A compact tactical icon representing captured towns / territory control: a small "
+              "fortified town cluster and flag marker silhouette inside a thin stencil shield/circle, "
+              "readable at small size, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange "
+              "#D9763C edge accent, transparent background, 256x256, no text. " + STYLE},
+ "icon_kills": {
+    "file": "icon_kills.png", "size": (256, 256), "transparent": True,
+    "role": "Small stat icon for kills / combat effectiveness.",
+    "prompt": "A compact tactical icon representing kills / combat effectiveness: crossed rifle and "
+              "cartridge silhouettes with a small angular target reticle, stencil style, olive-drab "
+              "#5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent "
+              "background, 256x256, no text. " + STYLE},
+ "icon_mvp": {
+    "file": "icon_mvp.png", "size": (256, 256), "transparent": True,
+    "role": "Small stat icon for MVP / top operator.",
+    "prompt": "A compact tactical icon representing MVP / top operator: a military medal star with "
+              "small laurel fragments and stencil cuts, olive-drab #5C6536 and bone #E7E3D6 with a "
+              "tiny warm orange #D9763C edge accent, transparent background, 256x256, no text. "
+              + STYLE},
+ "icon_economy": {
+    "file": "icon_economy.png", "size": (256, 256), "transparent": True,
+    "role": "Small stat icon for economy / supply.",
+    "prompt": "A compact tactical icon representing economy / supply income: a rugged military "
+              "supply crate with a small fuel can and stacked ration bars, stencil style, olive-drab "
+              "#5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, transparent "
+              "background, 256x256, no currency symbols, no text. " + STYLE},
+ "icon_factory": {
+    "file": "icon_factory.png", "size": (256, 256), "transparent": True,
+    "role": "Small stat icon for factories / production.",
+    "prompt": "A compact tactical icon representing factories / unit production: a hardened military "
+              "factory silhouette with sawtooth roof, small gear, and antenna mast, stencil style, "
+              "olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C edge accent, "
+              "transparent background, 256x256, no text. " + STYLE},
+ "icon_duration": {
+    "file": "icon_duration.png", "size": (256, 256), "transparent": True,
+    "role": "Small stat icon for match duration.",
+    "prompt": "A compact tactical icon representing match duration / time: a rugged military "
+              "stopwatch or field clock silhouette with one simple hand and small side buttons, "
+              "stencil style, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C "
+              "edge accent, transparent background, 256x256, no numerals, no text. " + STYLE},
 }
 
 # silhouettes available as drifting background layers (renderer picks per scene if present)
-SILHOUETTES = ["silhouette_hind", "silhouette_tank", "silhouette_jet"]
+SILHOUETTES = [
+    "silhouette_hind", "silhouette_tank", "silhouette_jet",
+    "silhouette_apc", "silhouette_artillery", "silhouette_supply_truck",
+]
 
 def emblem_id(side): return {"west": "emblem_blufor", "east": "emblem_opfor", "guer": "emblem_guer"}.get(side)
 def winner_bg_id(side): return {"west": "winner_bg_blufor", "east": "winner_bg_opfor", "guer": "winner_bg_guer"}.get(side)
