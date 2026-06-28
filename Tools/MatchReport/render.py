@@ -7,7 +7,7 @@ combat breakdown -> decisive blow -> winner card. Pure Pillow drawing; encoded
 with the ffmpeg bundled by imageio-ffmpeg (no system ffmpeg needed).
 """
 import math, os, numpy as np, imageio.v2 as imageio
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # ---- optional generated art (drop PNGs in assets/; see assets.py / gen_prompts.py) ----
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
@@ -94,16 +94,43 @@ def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10):
     x = int(-w*0.25 + (i/max(1, n))*(W + w*0.25)); y = int(H*yfrac)
     im.paste(a2, (x, y), a2)
 
-def overlay_fx(im):
-    """Composite the global grain + HUD frame over a finished RGB frame, if present."""
-    gr = asset("grain"); fo = asset("frame_overlay")
-    if gr is None and fo is None: return im
+_fx = {}
+def _fx_vignette():
+    if "vig" in _fx: return _fx["vig"]
+    m = Image.new("L",(W,H),0); ImageDraw.Draw(m).ellipse([-W*0.45,-H*0.24,W*1.45,H*1.16], fill=255)
+    m = m.filter(ImageFilter.GaussianBlur(260))
+    dark = Image.new("RGBA",(W,H),(5,6,8,255)); dark.putalpha(Image.eval(m, lambda v:int((255-v)*0.42)))
+    _fx["vig"]=dark; return dark
+def _fx_grain():
+    if "grain" not in _fx:
+        _fx["grain"]=(np.random.default_rng(7).random((H+96,W))*255).astype(np.uint8)
+    return _fx["grain"]
+def _fx_frame():
+    if "frame" in _fx: return _fx["frame"]
+    fo=Image.new("RGBA",(W,H),(0,0,0,0)); d=ImageDraw.Draw(fo)
+    c=(150,150,138,150); o=(217,118,60,170); L=72; mg=34
+    for (cx,cy,sx,sy) in [(mg,mg,1,1),(W-mg,mg,-1,1),(mg,H-mg,1,-1),(W-mg,H-mg,-1,-1)]:
+        d.line([(cx,cy),(cx+L*sx,cy)],fill=c,width=3); d.line([(cx,cy),(cx,cy+L*sy)],fill=c,width=3)
+        d.line([(cx,cy),(cx+16*sx,cy)],fill=o,width=3)
+    for x in range(150,W-120,96): d.line([(x,mg-7),(x,mg)],fill=(150,150,138,60))
+    _fx["frame"]=fo; return fo
+
+def overlay_fx(im, i=0):
+    """Production polish over a finished RGB frame: cinematic vignette + animated film
+    grain + a HUD corner frame. Codex's grain/frame_overlay PNGs override the procedural
+    versions when present; otherwise everything is generated, so the look is always on."""
     out = im.convert("RGBA")
+    out = Image.alpha_composite(out, _fx_vignette())
+    gr = asset("grain")
     if gr is not None:
-        g = gr.resize((W, H)).copy(); g.putalpha(g.split()[3].point(lambda v: int(v*0.12)))
+        g = gr.resize((W,H)).copy(); g.putalpha(g.split()[3].point(lambda v:int(v*0.10)))
         out = Image.alpha_composite(out, g)
-    if fo is not None:
-        out = Image.alpha_composite(out, fo.resize((W, H)))
+    else:
+        # static grain (i-independent) so x264 inter-prediction stays cheap -> small file
+        gg=_fx_grain(); tile=Image.fromarray(gg[:H,:])
+        out=Image.alpha_composite(out, Image.merge("RGBA",[tile]*3+[tile.point(lambda v:9)]))
+    fo=asset("frame_overlay")
+    out=Image.alpha_composite(out, fo.resize((W,H)) if fo is not None else _fx_frame())
     return out.convert("RGB")
 
 MX0,MY0,MS=40,470,1000
@@ -210,7 +237,7 @@ def render(m, out_path):
     def fade(im,k): return im if k>=1 else Image.fromarray((np.asarray(im).astype(np.float32)*k).astype(np.uint8))
     def scene(n,fn,fin=12,fout=10):
         for i in range(n):
-            im,d=base(); fn(im,d,i,n); im=overlay_fx(im)
+            im,d=base(); fn(im,d,i,n); im=overlay_fx(im,i)
             k=1.0
             if i<fin: k=ease(i/fin)
             if i>n-fout: k=ease((n-i)/fout)
@@ -352,5 +379,6 @@ def render(m, out_path):
     scene(186,s_board); scene(198,s_combat); scene(120,s_decisive); scene(126,s_winner,fin=4,fout=2)
     for _ in range(18): frames.append(frames[-1])
 
-    imageio.mimwrite(out_path,frames,fps=FPS,codec="libx264",quality=8,macro_block_size=8,ffmpeg_params=["-pix_fmt","yuv420p"])
+    imageio.mimwrite(out_path,frames,fps=FPS,codec="libx264",macro_block_size=8,
+                     ffmpeg_params=["-crf","19","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
     return len(frames)
