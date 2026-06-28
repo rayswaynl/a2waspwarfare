@@ -60,4 +60,7 @@ def build_sample():
         kills.append((int(rng.integers(20,m.duration)), None, s, wp, cat, dist(cat,wp)))
     kills.sort(key=lambda k: k[0])
     m.kills = kills
+    # synthetic player-vs-player rivalries for the offline demo (real matches derive these from victim UIDs)
+    m.pvp_pairs = Counter({("Krait","Ghost"):5,("Ghost","Krait"):3,("Viper","Krait"):4,
+                           ("Volk","Viper"):3,("Viper","Volk"):2,("Tsar","Reaper"):2})
     return m.finalize()

@@ -36,6 +36,14 @@ def _pretty_weapon(w):
         if w.startswith(pre): w = w[len(pre):]; break
     return w.replace("_"," ").strip() or "—"
 
+def _time_token(toks):
+    """Extract a real match-time from a 't=<sec>' token if the emitter logged one (else None)."""
+    for p in toks:
+        if p.startswith("t="):
+            try: return int(p[2:])
+            except ValueError: return None
+    return None
+
 # ---- town coordinates (metres, map origin SW, y = north) -----------------
 # These are STATIC per map. The values below are hand-approximated for Chernarus;
 # they make the control map recognisable but are not survey-accurate. Production
@@ -203,6 +211,28 @@ class MatchData:
             elif changes >= 3: self.comeback = {"badge": "SEE-SAW", "line": f"{changes} LEAD CHANGES — WON {max(fw,fe)}–{min(fw,fe)}"}
             else:              self.comeback = {"line": f"WON {max(fw,fe)}–{min(fw,fe)} — NEVER TRAILED"}
 
+        # hardware destroyed (vehicles + aircraft, from KILL category) — concrete kill-porn.
+        self.hw_veh = self.catcount.get("VEH", 0); self.hw_air = self.catcount.get("AIR", 0)
+        self.hq_kills = self.catcount.get("HQ", 0)
+        # rivalry (top head-to-head) + nemesis (who killed the MVP most) from player-vs-player kills.
+        self.rivalry = None; self.nemesis = None
+        pp = getattr(self, "pvp_pairs", None)
+        if pp:
+            seen = set(); best = None
+            for (a, b) in list(pp):
+                key = tuple(sorted((a, b)))
+                if key in seen: continue
+                seen.add(key)
+                ab = pp.get((a, b), 0); ba = pp.get((b, a), 0); tot = ab + ba
+                if tot > 0 and (best is None or tot > best["tot"]):
+                    best = ({"a": a, "b": b, "af": ab, "bf": ba, "tot": tot} if ab >= ba
+                            else {"a": b, "b": a, "af": ba, "bf": ab, "tot": tot})
+            self.rivalry = best
+            if self.mvp:
+                cands = [(k[0], v) for k, v in pp.items() if k[1] == self.mvp["name"] and v > 0]
+                if cands:
+                    who, nn = max(cands, key=lambda x: x[1]); self.nemesis = {"who": who, "n": nn}
+
         # deterministic per-match variety seed — drives backdrop/silhouette/music/hook
         # rotation so a feed of many reports never looks or sounds identical.
         import hashlib
@@ -241,10 +271,11 @@ def parse_waspstat(lines, names=None, line_times=None):
         if rtype == "ROUNDEND":
             winner = side_from_str(parts[4]); duration = int(parts[5]); map_name = parts[6].lower()
         elif rtype == "CAPTURE":
-            caps_raw.append((seq, parts[4], side_from_id(parts[5]), side_from_id(parts[6])))
+            caps_raw.append((seq, parts[4], side_from_id(parts[5]), side_from_id(parts[6]), _time_token(parts[7:])))
         elif rtype == "KILL":
-            # KILL|killerUID|victimUID|killerSide|victimSide|killerClass|dist|cat|hw=<weapon>|vc=<victimClass>
+            # KILL|killerUID|victimUID|killerSide|victimSide|killerClass|dist|cat|hw=<weapon>|vc=<victimClass>[|t=<sec>]
             killer_uid = parts[4] if len(parts) > 4 else ""
+            victim_uid = parts[5] if len(parts) > 5 else ""
             kside = side_from_str(parts[6]) if len(parts) > 6 else "neu"
             cat = parts[10] if len(parts) > 10 else "INF"
             try: dist = int(parts[9])
@@ -252,7 +283,7 @@ def parse_waspstat(lines, names=None, line_times=None):
             weap = parts[8] if len(parts) > 8 else "—"        # killer class; prefer real hand weapon
             for p in parts[8:]:
                 if p.startswith("hw=") and len(p) > 3: weap = p[3:]; break
-            kills_raw.append((seq, None, kside, _pretty_weapon(weap), cat, dist, killer_uid))
+            kills_raw.append((seq, None, kside, _pretty_weapon(weap), cat, dist, killer_uid, victim_uid, _time_token(parts[8:])))
         else:
             # PLAYERSTATS: tokens "uid:d0,...,d14,side~name" joined by '|' from parts[3:].
             # the trailing "~name" is the live display name (added by the leaderboard emitter).
@@ -275,7 +306,7 @@ def parse_waspstat(lines, names=None, line_times=None):
     # towns + coords — plot the FULL map (every known town logic), not only captured towns,
     # so airfields and quiet towns still appear. Falls back to captured names on an unknown map.
     town_names = []
-    for (_, town, _o, _n) in caps_raw:
+    for (_, town, _o, _n, _ct) in caps_raw:
         if town not in town_names: town_names.append(town)
     all_names = list(TOWN_COORDS.get(map_name.lower(), {}).keys()) or town_names
     for town in town_names:
@@ -285,24 +316,32 @@ def parse_waspstat(lines, names=None, line_times=None):
     # initial owners: oldSide of a town's first capture; else neutral
     init = {t: "neu" for t in town_names}
     seen = set()
-    for (_, town, old, _n) in caps_raw:
+    for (_, town, old, _n, _ct) in caps_raw:
         if town not in seen: init[town] = old; seen.add(town)
     m.init_owners = init
 
     # assign times to seq-ordered events (ingest times if provided, else spread)
     caps_raw.sort(key=lambda r: r[0]); kills_raw.sort(key=lambda r: r[0])
-    def t_for(seq, idx, total):
+    def t_for(stored, seq, idx, total):
+        # prefer the REAL emitted time (t= token), then a passed line_times map, else even spread.
+        if stored is not None: return stored
         if line_times and seq in line_times: return line_times[seq]
         return int((idx + 1) / (total + 1) * m.duration)
-    m.caps  = [(t_for(s, i, len(caps_raw)),  town, new) for i, (s, town, _o, new) in enumerate(caps_raw)]
+    m.caps  = [(t_for(ct, s, i, len(caps_raw)), town, new) for i, (s, town, _o, new, ct) in enumerate(caps_raw)]
     # resolve display names: WASPSTAT now embeds them (~name); fall back to a passed map, then Op-XXXX.
     allnames = dict(names)
     for uid, acc in pstats.items():
         if acc.get("name"): allnames[uid] = acc["name"]
     def _disp(uid): return allnames.get(uid) or ("Op-" + uid[-4:] if len(uid) >= 4 else uid)
 
-    m.kills = [(t_for(s, i, len(kills_raw)), (_disp(u) if u else None), ks, wp, cat, dist)
-               for i, (s, _nm, ks, wp, cat, dist, u) in enumerate(kills_raw)]
+    m.kills = [(t_for(kt, s, i, len(kills_raw)), (_disp(u) if u else None), ks, wp, cat, dist)
+               for i, (s, _nm, ks, wp, cat, dist, u, vu, kt) in enumerate(kills_raw)]
+
+    # rivalries / nemesis foundation: count player-vs-player kills (both UIDs present, distinct).
+    pvp = Counter()
+    for (s, _nm, ks, wp, cat, dist, u, vu, kt) in kills_raw:
+        if u and vu and u != vu: pvp[(_disp(u), _disp(vu))] += 1
+    m.pvp_pairs = pvp
 
     # players (skip headless-client connections — they carry UIDs + stats but aren't operators)
     _HC = {"HC","HC1","HC2","HC3","HC4","HEADLESS","HEADLESSCLIENT","SERVER"}

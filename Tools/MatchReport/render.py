@@ -509,11 +509,19 @@ def render(m, out_path):
             d.text((x+36,y),name,font=f_sm,fill=INK); d.text((x+360,y),f"{int(m.catcount[c]/tot*100)}%",font=f_sm,fill=DIM,anchor="ra")
         gy=1010; cw=(W-220)//2
         cards=[("LONGEST KILL",f"{m.longest[5]} m",f"{m.longest[3]}",GOLD,"icon_longest"),("TOP WEAPON",m.topweap[0],f"{m.topweap[1]} kills",WEST,"icon_weapon"),
-               ("PVP KILLS",str(m.pvp_total),"player vs player",INK,"icon_pvp"),("TOWN CAPTURES",str(m.cap_total),"ownership flips",GUER,"icon_captures")]
+               ("PVP KILLS",str(m.pvp_total),"player vs player",INK,"icon_pvp"),
+               ("HARDWARE KILLED",str(m.hw_veh+m.hw_air),f"{m.hw_veh} veh · {m.hw_air} air",GUER,"icon_captures")]
         for idx,(lab,big,sub,c,ic) in enumerate(cards):
             x=110+(idx%2)*cw; y=gy+(idx//2)*200; panel(d,x,y,x+cw-20,y+175)
             paste_emblem(im,ic,x+cw-58,y+44,48)   # stat icon (top-right) if generated
             d.text((x+26,y+22),lab,font=f_xs,fill=DIM); d.text((x+26,y+52),big,font=f_h3 if len(big)<12 else f_md,fill=c); d.text((x+26,y+120),sub,font=f_xs,fill=DIM)
+        # (fleet plan) rivalry / nemesis — human-vs-human grudge framing drives @-mentions
+        if getattr(m,"rivalry",None):
+            rv=m.rivalry
+            tracked(d,(W/2,1440),"GRUDGE MATCH",SANS(20,False),DIM,anchor="mm",track=8)
+            tracked(d,(W/2,1488),f"{rv['a'].upper()}   {rv['af']}–{rv['bf']}   {rv['b'].upper()}",SANS(31,False),INK,anchor="mm",track=3)
+            if getattr(m,"nemesis",None):
+                tracked(d,(W/2,1542),f"MVP'S NEMESIS — {m.nemesis['who'].upper()} ({m.nemesis['n']})",SANS(20,False),GOLD,anchor="mm",track=4)
         footer(im,d)
 
     def s_decisive(im,d,i,n):
