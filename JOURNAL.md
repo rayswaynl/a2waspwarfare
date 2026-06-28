@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-06-28 — PR #119 low-id CIV HC slot magnet [PR]
+
+PR #119 now layers the static lobby-slot experiment on top of the runtime HC CIV hardening. The two
+plain CIV HC slots were moved to the lowest object ids (`0`, `1`) and `forceHeadlessClient=1` was
+removed so A2-OA's `-client` auto-seat has normal playable CIV slots to choose before WEST id `229`.
+The displaced non-playable LOGIC objects formerly using ids `0` and `1` were moved to unused high ids
+`9007` and `9008`; they had no `synchronizations[]` back-references.
+
+Smoke verdict still needs the live engine: success is both HCs logging `HCSIDE|v1|preseat|...|engineSide=CIV`.
+If preseat remains WEST, the static lobby-label fix is refuted, but the runtime reseat/owner-keyed
+registration from PR #118 still protects gameplay-side behavior.
+
 ## 2026-06-28 — HC CIV slotting hardening [PR]
 
 Root cause is no longer "missing CIV HC slots": `origin/master` already has two CIV `forceHeadlessClient=1`
