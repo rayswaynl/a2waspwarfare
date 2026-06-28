@@ -1048,6 +1048,7 @@ switch (true) do {
 //--- Victory.
 	WFBE_C_VICTORY_THREEWAY = 0; //--- Victory Condition (0: Side a vs Side b [supremacy] minus defender).
 	WFBE_C_VICTORY_THREEWAY_LOCATION_SWAP = 300; //--- When the defender loose depending on victory conditions, startup locations become available for respawn with a rotation (to prevent spawn camping).
+	WFBE_C_ENDGAME_HOLD = 45; //--- Seconds the round is held open after a winner is declared so the winner-cam cinematic (Client\Client_EndGame.sqf) plays in full / is long enough to record. The server delays failMission by this; clients orbit the winning HQ for the same window (skippable with SPACE/ESC). Set to 0 to end almost immediately.
 
 //--- Overall mission coloration.
 if (side group player == west) then{

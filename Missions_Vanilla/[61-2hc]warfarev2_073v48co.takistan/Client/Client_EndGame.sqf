@@ -1,4 +1,4 @@
-Private ['_HQ','_base','_blist','_camShotOrder','_camera','_nvgstate','_position','_secTarget','_side','_track','_vehi'];
+Private ['_HQ','_base','_blist','_camShotOrder','_camera','_nvgstate','_position','_secTarget','_side','_track','_vehi','_holdTime','_winPos','_t0','_ang','_radius'];
 
 _side = _this;
 
@@ -59,6 +59,20 @@ _camera camCommit 0;
 _nvgstate = if (daytime > 18.5 || daytime < 5.5) then {true} else {false};
 camUseNVG _nvgstate;
 
+//--- [endgame winner cam]: per-client SKIP. SPACE (DIK 57) or ESC (DIK 1) ends the cinematic early for
+//--- THIS client only and drops to the score/debrief screen. We consume those two keys (return true) so
+//--- ESC does not pop the pause menu over the cam; every other key passes through (return false). The
+//--- handler index is captured so we can remove exactly our own handler at the end (never the mission's).
+WFBE_ENDGAME_SKIP = false;
+WFBE_ENDGAME_SKIP_EH = -1;
+if (!isDedicated && !isNull (findDisplay 46)) then {
+	WFBE_ENDGAME_SKIP_EH = (findDisplay 46) displayAddEventHandler ["KeyDown", {
+		private "_k"; _k = _this select 1;
+		if (_k in [1,57]) then { WFBE_ENDGAME_SKIP = true; true } else { false };
+	}];
+	hintSilent parseText "<t size='0.8' color='#cccccc'>Press SPACE to skip the victory cam</t>";
+};
+
 //--- B69 [S7 victory outro spectacle]: a SHORT, purely cosmetic celebration at the
 //--- WINNING HQ. Runs entirely client-local in its own thread, spawned only AFTER
 //--- gameOver/failMission is already in motion (this whole script runs post-gameOver),
@@ -117,22 +131,34 @@ _camera camCommit 10;
 
 waitUntil {camCommitted _camera};
 
-_camShotOrder = [[0,100,35],[50,0,20],[0,-50,20],[-50,0,20]];
+//--- [endgame winner cam]: winner-focused, time-bounded cinematic. The old code panned over EVERY base
+//--- on the map (both sides), which was unfocused AND on a populated server was usually cut short anyway -
+//--- server_victory_threeway.sqf used to call failMission only ~5-7s after sending the "endgame" signal,
+//--- long before this fly-over could finish. The server now holds the round open for WFBE_C_ENDGAME_HOLD
+//--- seconds (same default as here), so this orbit reliably plays to completion / is long enough to
+//--- capture for video. Everything below is client-local: no units, no AI, zero server cost.
+_holdTime = missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD", 45];
+_winPos = getPos ((_side) Call WFBE_CO_FNC_GetSideHQ);
 
-{
-	_camera camSetPos getPos _x;
-	_camera camSetTarget getPos _x;
-	
-	{
-		_camera camSetRelPos _x;
-		_camera camCommit 5;
-		waitUntil {camCommitted _camera};
-	} forEach _camShotOrder;
-	
-	_camera camSetRelPos [0,100,35];
-	_camera camCommit 5;
-	waitUntil {camCommitted _camera};
-} forEach _blist;
+//--- Slow orbit of the WINNING HQ for the hold duration (or until skipped). camSetRelPos is relative to
+//--- the cam target, so re-targeting the HQ position each leg keeps it centred while we walk the azimuth.
+//--- Gentle vertical bob (sin of the angle) so it reads as a sweep, not a flat turntable.
+_t0 = time;
+_ang = 200;        //--- start high/behind for a hero reveal
+_radius = 150;
+while { (time - _t0) < _holdTime && !WFBE_ENDGAME_SKIP } do {
+	_ang = _ang + 24;
+	_camera camSetTarget _winPos;
+	_camera camSetRelPos [_radius * sin(_ang), _radius * cos(_ang), 45 + (25 * sin(_ang))];
+	_camera camCommit 4;
+	waitUntil { camCommitted _camera || WFBE_ENDGAME_SKIP || (time - _t0) >= _holdTime };
+};
 
-sleep 3;
+//--- Remove exactly our own KeyDown handler (leave any mission handlers intact).
+if (!isDedicated && WFBE_ENDGAME_SKIP_EH >= 0 && !isNull (findDisplay 46)) then {
+	(findDisplay 46) displayRemoveEventHandler ["KeyDown", WFBE_ENDGAME_SKIP_EH];
+	WFBE_ENDGAME_SKIP_EH = -1;
+};
+
+sleep (if (WFBE_ENDGAME_SKIP) then {0.2} else {1.5});
 failMission "END1";

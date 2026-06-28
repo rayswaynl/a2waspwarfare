@@ -1,4 +1,4 @@
-private["_victory","_total","_side","_hq","_structures","_towns","_factories","_uid","_name"];
+private["_victory","_total","_side","_hq","_structures","_towns","_factories","_uid","_name","_winSide","_endgameHold"];
 
 _victory = missionNamespace getVariable "WFBE_C_VICTORY_THREEWAY";
 _total = totalTowns;
@@ -75,7 +75,12 @@ while {!gameOver} do {
 // Marty: When AntiStack is disabled, no score sampling loop exists; skip final AntiStack DB persistence and finish the mission normally.
 if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWith {
 	["INFORMATION", "server_victory_threeway.sqf: AntiStack is disabled; skipped final score DB save and player list flush."] Call WFBE_CO_FNC_LogContent;
-	sleep 5;
+	//--- [endgame winner cam]: hold the round open so the client winner-cam cinematic (Client_EndGame.sqf)
+	//--- can play in full / be recorded. The "endgame" signal was already sent to clients above; this just
+	//--- delays the authoritative failMission. Floor of 5s preserves the original minimum.
+	_endgameHold = (missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD", 45]) max 5;
+	["INFORMATION", Format ["server_victory_threeway.sqf: holding %1s for winner cam before mission end.", _endgameHold]] Call WFBE_CO_FNC_LogContent;
+	sleep _endgameHold;
 	diag_log Format["[WFBE (OUTRO)][frameno:%1 | ticktime:%2] server_victory_threeway.sqf: Mission end - [Done]",diag_frameno,diag_tickTime];
 	failMission "END1";
 };
@@ -107,6 +112,12 @@ if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWit
 
 ["FLUSH_PLAYERLIST"] call WFBE_SE_FNC_CallDatabaseFlushPlayerList;
 
-sleep 5;
+//--- [endgame winner cam]: hold the round open so the client winner-cam cinematic (Client_EndGame.sqf)
+//--- can play in full / be recorded. The DB save loop above already consumed a little time, so total
+//--- hold from the "endgame" signal is (DB save) + this sleep - always >= the client cam window, never
+//--- cutting it short. Floor of 5s preserves the original minimum.
+_endgameHold = (missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD", 45]) max 5;
+["INFORMATION", Format ["server_victory_threeway.sqf: holding %1s for winner cam before mission end.", _endgameHold]] Call WFBE_CO_FNC_LogContent;
+sleep _endgameHold;
 diag_log Format["[WFBE (OUTRO)][frameno:%1 | ticktime:%2] server_victory_threeway.sqf: Mission end - [Done]",diag_frameno,diag_tickTime];
 failMission "END1";
