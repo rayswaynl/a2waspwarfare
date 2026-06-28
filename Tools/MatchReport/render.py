@@ -66,6 +66,19 @@ def MONO(sz): return _bf("JetBrainsMono-600.ttf",sz)
 f_huge=DISP(118); f_h1=DISP(80); f_h2=DISP(58); f_h3=DISP(44)
 f_md=SANS(34,True); f_sm=SANS(28,True); f_xs=SANS(23,False); f_num=MONO(58)
 
+# Scene plan — single source of truth for lengths so audio.py can find the winner-reveal
+# "climax" frame and stay in sync if scene timing changes. (name, frames, fade-in, fade-out)
+SCENE_PLAN = [("intro",54,18,10),("battle",420,12,10),("momentum",168,12,10),("mvp",156,12,10),
+              ("board",186,12,10),("combat",198,12,10),("decisive",120,12,10),("winner",126,4,2),
+              ("outro",102,10,10)]
+HOLD_FRAMES = 18
+def climax_frame():
+    f=0
+    for name,nf,_,_ in SCENE_PLAN:
+        if name=="winner": return f
+        f+=nf
+    return f
+
 def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
 def mix(c,t): return lerp(BG,c,t)
@@ -255,9 +268,10 @@ def caption(m):
     """Social caption built from the match — used as the Discord/TikTok post text."""
     mm, ss = divmod(m.duration, 60)
     side = SIDE_NAME.get(m.winner, m.winner.upper())
-    mvp = f" MVP {m.mvp['name']} ({m.mvp['kills']}K)." if m.mvp else ""
-    return (f"{side} victory on {m.map_name.title()} — {m.total_kills} kills in {mm:02d}:{ss:02d}.{mvp}\n"
-            f"#arma2 #warfare #cti #miksuuswarfare #gaming #milsim")
+    mvp = f"\n🎖 MVP {m.mvp['name']} — {m.mvp['kills']} kills" if m.mvp else ""
+    return (f"⚔ {side} WIN on {m.map_name.title()} — {m.total_kills} kills in {mm:02d}:{ss:02d}.{mvp}\n"
+            f"Full match recap every round — follow for more.\n"
+            f"#arma2 #warfare #milsim #cti #miksuuswarfare #gaming #fyp")
 
 
 def render(m, out_path):
@@ -414,13 +428,29 @@ def render(m, out_path):
             m2=mk.resize((60,60)); im.paste(m2,(int(W/2-30),1498),m2)
         d.text((W/2,1580),"MIKSUU'S WARFARE",font=f_sm,fill=INK,anchor="mm")
 
-    scene(54,s_intro,fin=18,fout=10); scene(420,s_battle); scene(168,s_momentum); scene(156,s_mvp)
-    scene(186,s_board); scene(198,s_combat); scene(120,s_decisive); scene(126,s_winner,fin=4,fout=2)
-    for _ in range(18): frames.append(frames[-1])
+    def s_outro(im,d,i,n):
+        # closing call-to-action card — converts a view into a follow / a player.
+        if not paste_cover(im,"outro_bg"): paste_cover(im,"intro_splash")
+        d=ImageDraw.Draw(im,"RGBA")
+        drift_silhouette(im,1,i,n,yfrac=0.66,wfrac=0.66,opacity=0.12)
+        mk=brand_logo("mark")
+        if mk is not None:
+            sz=int(206+8*math.sin(i/7)); m2=mk.resize((sz,sz)); im.paste(m2,(int(W/2-sz/2),int(H/2-470)),m2)
+        tracked(d,(W/2,H/2-150),"MIKSUU'S WARFARE",DISP(66),INK,anchor="mm",track=6)
+        rule(d,W/2,H/2-82,half=160)
+        tracked(d,(W/2,H/2-14),"FOLLOW FOR MORE WAR STORIES",SANS(28,False),INK,anchor="mm",track=4)
+        tracked(d,(W/2,H/2+56),"NEW MATCH RECAP EVERY ROUND",SANS(23,False),GOLD,anchor="mm",track=4)
+        footer(im,d)
+
+    fns={"intro":s_intro,"battle":s_battle,"momentum":s_momentum,"mvp":s_mvp,"board":s_board,
+         "combat":s_combat,"decisive":s_decisive,"winner":s_winner,"outro":s_outro}
+    for _name,_nf,_fin,_fout in SCENE_PLAN:
+        scene(_nf, fns[_name], fin=_fin, fout=_fout)
+    for _ in range(HOLD_FRAMES): frames.append(frames[-1])
 
     imageio.mimwrite(out_path,frames,fps=FPS,codec="libx264",macro_block_size=8,
-                     ffmpeg_params=["-crf","24","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
-    # crf 24 keeps a 48s clip ~6 MB — comfortably under Discord's non-boosted upload limit
+                     ffmpeg_params=["-crf","25","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
+    # crf 25 keeps the ~52s clip + audio bed under Discord's non-boosted ~10 MB upload limit
     # (10.9 MB was rejected) while staying crisp at 1080p. Bump lower (19) only for off-Discord exports.
     return len(frames)
 

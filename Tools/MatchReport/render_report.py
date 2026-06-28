@@ -25,6 +25,37 @@ def load_names(path):
                 uid, nm = ln.rstrip("\n").split("\t", 1); names[uid.strip()] = nm.strip()
     return names
 
+def add_sound(video_path, total_frames, climax_frames=None):
+    """Mux a cinematic audio bed onto the silent render. Uses a real track dropped at
+    assets/music.* if present (looped to length), else a procedural synth bed. Best-effort:
+    on any failure the silent video is left intact."""
+    import os, subprocess, tempfile
+    try:
+        import imageio_ffmpeg, audio
+        from render import FPS
+    except Exception as e:
+        print(f"(sound skipped: {e})"); return
+    base = os.path.dirname(os.path.abspath(__file__))
+    try: ff = imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception as e: print(f"(sound skipped, no ffmpeg: {e})"); return
+    track = audio.find_track(base); tmp_out = video_path + ".snd.mp4"
+    if track:
+        args = [ff,"-y","-i",video_path,"-stream_loop","-1","-i",track,"-map","0:v","-map","1:a",
+                "-c:v","copy","-c:a","aac","-b:a","192k","-shortest","-movflags","+faststart",tmp_out]
+        src = f"track {os.path.basename(track)}"
+    else:
+        cf = climax_frames if climax_frames is not None else int(total_frames*0.85)
+        wav = os.path.join(tempfile.gettempdir(), "wasp_report_bed.wav")
+        audio.write_wav(wav, audio.build_bed(total_frames/FPS, cf/FPS, FPS))
+        args = [ff,"-y","-i",video_path,"-i",wav,"-map","0:v","-map","1:a",
+                "-c:v","copy","-c:a","aac","-b:a","128k","-shortest","-movflags","+faststart",tmp_out]
+        src = "procedural bed"
+    r = subprocess.run(args, capture_output=True, text=True)
+    if r.returncode == 0 and os.path.exists(tmp_out):
+        os.replace(tmp_out, video_path); print(f"sound: {src}")
+    else:
+        print(f"(sound mux failed rc={r.returncode}): {(r.stderr or '')[-200:]}")
+
 def main():
     ap = argparse.ArgumentParser(description="Render a WASP post-match report video.")
     src = ap.add_mutually_exclusive_group(required=True)
@@ -33,6 +64,7 @@ def main():
     src.add_argument("--leaderboard", action="store_true", help="render the real server leaderboard from the live DB")
     ap.add_argument("--names", metavar="FILE", help="optional uid<TAB>name mapping")
     ap.add_argument("-o", "--out", help="output mp4 path")
+    ap.add_argument("--no-sound", action="store_true", help="render silent (skip the cinematic audio bed)")
     args = ap.parse_args()
 
     if args.leaderboard:
@@ -45,6 +77,7 @@ def main():
         print(f"rendered {n} frames ({n/30:.1f}s) in {time.time()-t0:.1f}s -> {out}")
         with open(out + ".caption.txt", "w", encoding="utf-8") as fh: fh.write(caption_leaderboard(data))
         print("caption -> " + out + ".caption.txt")
+        if not args.no_sound: add_sound(out, n)
         return
 
     if args.sample:
@@ -67,6 +100,9 @@ def main():
     cap = caption(m)
     with open(out + ".caption.txt", "w", encoding="utf-8") as fh: fh.write(cap)
     print("caption -> " + out + ".caption.txt")
+    if not args.no_sound:
+        from render import climax_frame
+        add_sound(out, n, climax_frame())
 
 if __name__ == "__main__":
     main()
