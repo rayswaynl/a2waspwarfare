@@ -1982,7 +1982,7 @@ class RscMenu_Command {
 		class CA_Cmd_Roster : RscListBox {
 			idc = 14661;
 			x = 0.00561695;
-			y = 0.410000;
+			y = 0.414000;
 			w = 0.459244;
 			h = 0.230000;
 			onLBSelChanged = "WfRosterSel = _this select 1";
