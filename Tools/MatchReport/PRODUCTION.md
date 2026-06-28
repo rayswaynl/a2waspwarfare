@@ -1,0 +1,49 @@
+# Production — auto-generate a report per match
+
+The report runs as a **box-side scheduled task** on the gaming PC (per the "automation
+on the box, never Claude crons" rule). Each run pulls the live server RPT, finds the
+newest completed match, and — if it hasn't already — renders that match's report and
+drops the MP4 for you to post to TikTok.
+
+```
+Hetzner server RPT (WASPSTAT lines)  ──ssh──►  produce-match-report.ps1 (gaming PC)
+        │                                              │
+        └── newest ROUNDEND, de-duped on seq           ├─ slice match → render_report.py
+                                                        ├─ wasp-match-reports\*.mp4
+                                                        └─ Peach DM to Ray (optional)
+```
+
+## Components
+- `render_report.py` + `render.py` + `assets/` + `brand/` — the renderer (this folder).
+- `.venv/` — Python env (pillow/imageio/imageio-ffmpeg/numpy). Create once:
+  `python -m venv .venv && .venv\Scripts\python -m pip install -r requirements.txt`
+- `produce-match-report.ps1` — the runner (pull → slice latest match → render → notify).
+
+## Verified
+`pwsh -File produce-match-report.ps1 -RptFile <log>` on a 2-match log rendered **only the
+latest** match (correct slice by ROUNDEND seq) → ~10 MB MP4, and a second run **de-duped**
+("Already rendered"). Output named `wasp-report-<stamp>-<map>-<winner>.mp4`.
+
+## Deploy (one-time)
+1. **SSH:** the runner reads `Administrator@78.46.107.142:.../arma2oaserver.RPT` (same source
+   the leaderboard/soak reporters use). Make sure the scheduled-task user has the SSH key.
+2. **Register the task** (~every 10 min; it de-dupes so frequent runs are safe):
+   ```powershell
+   $action  = New-ScheduledTaskAction -Execute 'pwsh.exe' -Argument '-NoProfile -File "C:\Users\Game\a2waspwarfare-report\Tools\MatchReport\produce-match-report.ps1" -Notify'
+   $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 10)
+   Register-ScheduledTask -TaskName 'WaspMatchReport' -Action $action -Trigger $trigger -RunLevel Highest
+   ```
+3. **Output:** `C:\Users\Game\wasp-match-reports\*.mp4`. With `-Notify`, Peach DMs Ray the path
+   when each report is ready.
+
+## Known caveats (v1)
+- **Event timing is by sequence, not seconds.** `CAPTURE`/`KILL` carry no match-time, so the
+  battle/momentum animation spreads events evenly across the match. Frame-accurate timing needs
+  `round(time)` added to those emitters (`server_town.sqf`, `RequestOnUnitKilled.sqf`) — a small
+  mission change.
+- **Town coords are approximate** until the `WFBE_C_LOG_TOWN_COORDS` boot-logger (PR #116) is run
+  once per map to harvest exact positions into `matchdata.TOWN_COORDS`.
+- **Player names** fall back to `Op-<last4>` unless `-NamesTsv <uid\tname>` is supplied (generate
+  from the leaderboard `ingame_stats`/`members` table).
+- Auto-posting to TikTok is **out of scope** for v1 (needs the TikTok Content Posting API + app
+  review). Post manually from the output folder.

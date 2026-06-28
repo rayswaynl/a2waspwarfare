@@ -3,3 +3,4 @@
 assets/*.png
 venv/
 __pycache__/
+.venv/
