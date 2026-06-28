@@ -36,12 +36,19 @@ def side_from_str(s):
 WORLD_SIZE = {"chernarus": 15360, "takistan": 12800, "default": 15360}
 
 TOWN_COORDS = {
- "chernarus": {
-  "Komarovo":(3700,2100),"Kamenka":(2150,2050),"Pavlovo":(2100,3750),"Zelenogorsk":(2550,5300),
-  "Pustoshka":(3050,8800),"Vybor":(3900,10300),"Chernogorsk":(6700,2550),"Mogilevka":(7100,5400),
-  "Stary Sobor":(6250,7700),"Novy Sobor":(7050,7950),"Vyshnoye":(5750,6900),"Elektrozavodsk":(10100,2300),
-  "Msta":(9900,7500),"Gvozdno":(9550,12050),"Polana":(10800,9950),"Berezino":(12100,9000),
-  "Krasnostav":(11500,12300),"Solnichniy":(13500,5000),"Dubrovka":(12800,10600),"Stary Yar":(9200,9700),
+ "chernarus": {  # real engine coords, harvested via the #116 town logger (cmdcon6 boot, worldName=chernarus)
+  "Petrovka":(4984,12593),"Solnichniy":(13406,6178),"Pulkovo":(4995,5595),"Stary Sobor":(6222,7822),
+  "Kabanino":(5424,8616),"Dubrovka":(10492,9831),"Olsha":(13386,12856),"Khe Sanh Charlie":(14700,2000),
+  "Chernogorsk":(6833,2439),"Kamyshovo":(11960,3523),"Lopatino":(2787,9832),"Gvozdno":(8640,11946),
+  "Khelm":(12376,10878),"Zelenogorsk":(2591,5437),"Bor":(3334,3921),"Pavlovo":(1754,3925),
+  "Pusta":(9110,3809),"Tulga":(12785,4473),"Shakhovka":(9735,6517),"Guglovo":(8414,6738),
+  "Vyshnoye":(6532,6151),"Kamenka":(1827,2261),"Khe Sanh Bravo":(10000,700),"NEAF":(11850,12690),
+  "Nizhnoye":(12958,8095),"Myshkino":(1916,7439),"Vybor":(3724,8988),"Grishino":(6076,10378),
+  "Polana":(10702,7983),"Khe Sanh Alpha":(14700,9400),"Balota":(4540,2285),"NWAF":(4470,10615),
+  "Rogovo":(4733,6767),"Krasnostav":(10984,12372),"Berezino":(12125,9145),"Gorka":(9629,8866),
+  "Prigorodki":(8118,3306),"Elektrozavodsk":(10280,1970),"Staroye":(10062,5439),"Msta":(11395,5510),
+  "Mogilevka":(7477,5203),"Novy Sobor":(7140,7758),"Komarovo":(3512,2485),"Nadezhdino":(5925,4727),
+  "Dolina":(11269,6593),"Pustoshka":(3112,7947),
  },
  "takistan": {},   # TODO: fill from the boot-time town-position logger.
 }
