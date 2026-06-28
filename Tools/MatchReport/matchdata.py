@@ -83,6 +83,7 @@ class MatchData:
         self.world_size = 15360
         self.duration = 0
         self.winner = "west"
+        self.seed = 0              # deterministic per-match variety seed (set in finalize)
         self.towns = {}            # name -> (x,y)
         self.init_owners = {}      # name -> side
         self.caps = []             # (t_sec, town, new_side)  ordered
@@ -154,6 +155,11 @@ class MatchData:
                 gx = (c+0.5)/GC*S; gy = (1-(r+0.5)/GC)*S
                 near[r, c] = int(np.argmin([(gx-px)**2+(gy-py)**2 for px, py in tpos])) if tpos else 0
         self.nearest = near
+        # deterministic per-match variety seed — drives backdrop/silhouette/music/hook
+        # rotation so a feed of many reports never looks or sounds identical.
+        import hashlib
+        _key = f"{self.map_name}|{self.winner}|{self.duration}|{self.total_kills}|{self.mvp['name'] if self.mvp else ''}"
+        self.seed = int(hashlib.sha1(_key.encode()).hexdigest()[:8], 16)
         return self
 
 

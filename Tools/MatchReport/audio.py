@@ -71,17 +71,23 @@ def _riser(dur=2.7):
     tone = np.sin(2*np.pi*np.cumsum(f)/SR)*0.25
     return (noise*0.7 + tone)*swell
 
-def build_bed(total_sec, climax_sec, fps=30):
-    """Return a float32 stereo array [N,2] in [-1,1] for the given timeline."""
+# Tasteful low roots (A1/G1/A#1/C2/F1) — seed picks one so different matches sit in different
+# keys/tempos and a feed of reports never sounds like the same loop.
+ROOTS = [55.00, 48.99, 58.27, 65.41, 43.65]
+
+def build_bed(total_sec, climax_sec, fps=30, seed=0, winner="west"):
+    """Return a float32 stereo array [N,2] in [-1,1] for the given timeline.
+    seed varies the key (root) and tempo per match; winner is reserved for future mood tweaks."""
     N = int(total_sec*SR)
     t = np.arange(N)/SR
     out = np.zeros(N, np.float32)
+    root = ROOTS[abs(int(seed)) % len(ROOTS)]
 
     intro_end = min(1.8, climax_sec*0.2)
     # --- sub drone: power chord (root+fifth+octave) under the whole match, swelling to climax ---
     swell = 0.5 + 0.5*np.clip((t-intro_end)/max(climax_sec-intro_end,1e-6),0,1)
     drone_env = _seg_env(t, 0.0, climax_sec+0.15, intro_end*0.9, 0.25)*swell
-    drone = (_sine(55,t)*0.55 + _sine(82.41,t)*0.32 + _sine(110,t)*0.20)
+    drone = (_sine(root,t)*0.55 + _sine(root*1.5,t)*0.32 + _sine(root*2,t)*0.20)
     drone *= (0.9+0.1*_sine(0.13,t))                  # slow breathing LFO
     out += drone*drone_env*0.34
 
@@ -91,7 +97,7 @@ def build_bed(total_sec, climax_sec, fps=30):
     out += wind*_seg_env(t,0,total_sec,1.0,1.2)*0.05
 
     # --- heartbeat pulse from end-of-intro to the climax; intensifies over time ---
-    bpm = 84.0; step = 60.0/bpm
+    bpm = 78.0 + (abs(int(seed)) % 7)*2.0; step = 60.0/bpm   # 78–90 BPM, seed-varied
     beat = intro_end
     while beat < climax_sec-0.05:
         frac = (beat-intro_end)/max(climax_sec-intro_end,1e-6)
@@ -107,8 +113,9 @@ def build_bed(total_sec, climax_sec, fps=30):
     # --- impact + warm MAJOR-chord resolve held to the end ---
     _place(out, _impact(min(4.8, total_sec-climax_sec+0.3)), climax_sec)
     res_n = N-int(climax_sec*SR); rt = np.arange(res_n)/SR
-    chord = (_sine(55,rt)*0.5 + _sine(110,rt)*0.4 + _sine(138.59,rt)*0.3 +
-             _sine(164.81,rt)*0.3 + _sine(220,rt)*0.15)            # A major, warm
+    r2 = root*2; third = r2*(2**(4/12)); fifth = r2*(2**(7/12))    # major triad on the octave
+    chord = (_sine(root,rt)*0.5 + _sine(r2,rt)*0.4 + _sine(third,rt)*0.3 +
+             _sine(fifth,rt)*0.3 + _sine(r2*2,rt)*0.15)            # warm, key follows the seed
     cenv = np.clip(rt/0.25,0,1)*np.clip((total_sec-climax_sec-rt)/0.9+1,0,1)
     res = np.zeros(N, np.float32); res[int(climax_sec*SR):] = chord*cenv*0.30
     out += res

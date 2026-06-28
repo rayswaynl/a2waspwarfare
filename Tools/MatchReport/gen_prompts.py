@@ -20,14 +20,33 @@ print("="*72)
 print("\nNEGATIVE PROMPT (paste once, if the tool supports one):")
 print(NEGATIVE)
 print("="*72)
-for aid, a in ASSETS.items():
-    if flt and flt not in aid: continue
-    w, h = a["size"]; alpha = "transparent PNG" if a["transparent"] else "opaque PNG/JPG"
-    print(f"\n### {aid}   [{a['role']}]")
-    print(f"SAVE AS : {a['file']}")
-    print(f"SIZE    : {w}x{h}   ({alpha})")
-    print("PROMPT  :")
-    print(a["prompt"])
+# Backgrounds worth generating extra variants of — the renderer auto-rotates among any
+# <stem>_k.png siblings by match seed, so a feed of many reports never reuses the same frame.
+VARIANT_SLOTS = ["intro_splash","winner_bg_blufor","winner_bg_opfor","winner_bg_guer",
+                 "mvp_backdrop","bg_momentum","outro_bg"]
+if flt == "variants":
+    import os
+    nvar = int(sys.argv[2]) if len(sys.argv) > 2 else 3
+    print(f"\nVARIANT POOL — drop each as <stem>_k.png; the renderer rotates by match seed.\n" + "="*72)
+    for aid in VARIANT_SLOTS:
+        a = ASSETS.get(aid)
+        if not a: continue
+        stem, ext = os.path.splitext(a["file"])
+        for k in range(2, nvar+1):
+            print(f"\n### {aid}  VARIANT {k}")
+            print(f"SAVE AS : {stem}_{k}{ext}")
+            print(f"SIZE    : {a['size'][0]}x{a['size'][1]}")
+            print("VARY    : keep the EXACT style; change the composition — different camera angle, "
+                  "dusk time-of-day, haze, vehicle placement — so it reads as a fresh frame.")
+            print("PROMPT  :"); print(a["prompt"])
+else:
+    for aid, a in ASSETS.items():
+        if flt and flt not in aid: continue
+        w, h = a["size"]; alpha = "transparent PNG" if a["transparent"] else "opaque PNG/JPG"
+        print(f"\n### {aid}   [{a['role']}]")
+        print(f"SAVE AS : {a['file']}")
+        print(f"SIZE    : {w}x{h}   ({alpha})")
+        print("PROMPT  :"); print(a["prompt"])
 print("\n" + "="*72)
-print("After dropping files in assets/, just re-render — present art is used,")
-print("missing art falls back to the procedural look.")
+print("All slots: python gen_prompts.py     |     Variant pool: python gen_prompts.py variants 3")
+print("Drop files in assets/ and re-render — present art is used; missing falls back to procedural.")

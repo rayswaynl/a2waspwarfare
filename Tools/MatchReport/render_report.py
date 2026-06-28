@@ -25,7 +25,7 @@ def load_names(path):
                 uid, nm = ln.rstrip("\n").split("\t", 1); names[uid.strip()] = nm.strip()
     return names
 
-def add_sound(video_path, total_frames, climax_frames=None):
+def add_sound(video_path, total_frames, climax_frames=None, seed=0, winner="west"):
     """Mux a cinematic audio bed onto the silent render. Uses a real track dropped at
     assets/music.* if present (looped to length), else a procedural synth bed. Best-effort:
     on any failure the silent video is left intact."""
@@ -46,7 +46,7 @@ def add_sound(video_path, total_frames, climax_frames=None):
     else:
         cf = climax_frames if climax_frames is not None else int(total_frames*0.85)
         wav = os.path.join(tempfile.gettempdir(), "wasp_report_bed.wav")
-        audio.write_wav(wav, audio.build_bed(total_frames/FPS, cf/FPS, FPS))
+        audio.write_wav(wav, audio.build_bed(total_frames/FPS, cf/FPS, FPS, seed=seed, winner=winner))
         args = [ff,"-y","-i",video_path,"-i",wav,"-map","0:v","-map","1:a",
                 "-c:v","copy","-c:a","aac","-b:a","128k","-shortest","-movflags","+faststart",tmp_out]
         src = "procedural bed"
@@ -102,7 +102,7 @@ def main():
     print("caption -> " + out + ".caption.txt")
     if not args.no_sound:
         from render import climax_frame
-        add_sound(out, n, climax_frame())
+        add_sound(out, n, climax_frame(), seed=m.seed, winner=m.winner)
 
 if __name__ == "__main__":
     main()

@@ -29,6 +29,35 @@ def asset(aid):
     except Exception: img = None
     _acache[aid] = img; return img
 
+# --- asset VARIETY: drop <slot>_2.png, <slot>_3.png … next to <slot>.png and they auto-rotate
+# per match (chosen by m.seed), so a feed of many reports never reuses the same backdrop. ---
+_vfiles = {}
+def _variant_files(aid):
+    if aid in _vfiles: return _vfiles[aid]
+    out = []
+    try:
+        from assets import ASSETS
+        base = ASSETS.get(aid, {}).get("file")
+        if base:
+            stem, ext = os.path.splitext(base)
+            if os.path.exists(os.path.join(ASSET_DIR, base)): out.append(base)
+            k = 2
+            while os.path.exists(os.path.join(ASSET_DIR, f"{stem}_{k}{ext}")):
+                out.append(f"{stem}_{k}{ext}"); k += 1
+    except Exception: pass
+    _vfiles[aid] = out; return out
+
+def vasset(aid, seed=0):
+    """Load a seed-chosen variant image for aid (base file + any <stem>_k siblings)."""
+    files = _variant_files(aid)
+    if not files: return asset(aid)
+    f = files[abs(int(seed)) % len(files)]
+    key = "__v_" + f
+    if key in _acache: return _acache[key]
+    try: img = Image.open(os.path.join(ASSET_DIR, f)).convert("RGBA")
+    except Exception: img = None
+    _acache[key] = img; return img
+
 _BLOGO = os.path.join(os.path.dirname(__file__), "brand", "logo")
 def brand_logo(name):
     key = "__blogo_" + name
@@ -83,9 +112,10 @@ def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
 def mix(c,t): return lerp(BG,c,t)
 
-def paste_cover(im, aid, box=None, opacity=1.0):
-    """Paste an asset scaled to COVER box (default whole frame). Returns True if used."""
-    a = asset(aid)
+def paste_cover(im, aid, box=None, opacity=1.0, seed=None):
+    """Paste an asset scaled to COVER box (default whole frame). Returns True if used.
+    Pass seed to rotate among dropped <slot>_k.png variants for per-match variety."""
+    a = vasset(aid, seed) if seed is not None else asset(aid)
     if a is None: return False
     bx = box or (0, 0, W, H); bw = bx[2]-bx[0]; bh = bx[3]-bx[1]
     s = max(bw/a.width, bh/a.height); a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
@@ -93,8 +123,8 @@ def paste_cover(im, aid, box=None, opacity=1.0):
         a2 = a2.copy(); a2.putalpha(a2.split()[3].point(lambda v:int(v*opacity)))
     im.paste(a2, (bx[0]+(bw-a2.width)//2, bx[1]+(bh-a2.height)//2), a2); return True
 
-def paste_emblem(im, aid, cx, cy, maxw):
-    a = asset(aid)
+def paste_emblem(im, aid, cx, cy, maxw, seed=None):
+    a = vasset(aid, seed) if seed is not None else asset(aid)
     if a is None: return False
     s = maxw/a.width; a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     im.paste(a2, (int(cx-a2.width/2), int(cy-a2.height/2)), a2); return True
@@ -151,18 +181,33 @@ def overlay_fx(im, i=0):
 MX0,MY0,MS=40,470,1000
 
 WATER=(15,38,56); LAND_BASE=(22,30,28); COAST=(70,120,150)
+# Chernarus land/sea trace (world metres). The sea is an L in the south + east; these points run
+# just SEAWARD of the harvested coastal town logics — Kamenka/Komarovo/Balota/Chernogorsk/
+# Elektrozavodsk/Kamyshovo along the south, then Tulga/Solnichniy/Nizhnoye/Olsha up the east —
+# and close along the SE map edges so the enclosed polygon IS the sea. No heightmap rip needed;
+# reads as Chernarus because it's anchored to real town positions + the map's known geography.
+CHERNARUS_SEA=[(0,1850),(2100,1650),(4200,1700),(6600,1500),(9000,1450),(11000,1850),
+               (12500,3100),(13750,5500),(14150,8500),(14450,11500),(14650,14200),
+               (15360,15360),(15360,0),(0,0)]
 class Renderer:
     def __init__(self, m):
         self.m=m; S=m.world_size
-        # coastline: world_y below coast_y(x) is sea (Chernarus' south edge is all coast).
+        # coastline: world_y below coast_y(x) is sea (fallback for non-Chernarus maps).
         self._coast=lambda x:1100+500*(x/S)+200*math.sin(x/S*8.0)
         # precompute a relief-noise field + sea/land mask + land-owner tint base on the grid.
         GC=m.grid_n; rngn=np.random.default_rng(5)
         self.sea=np.zeros((GC,GC),bool); self.relief=np.zeros((GC,GC),np.float32)
+        self.coast_poly=None; _seamask=None
+        if m.map_name.lower()=="chernarus":
+            _poly=[(x/S*GC,(1-y/S)*GC) for (x,y) in CHERNARUS_SEA]   # world -> grid (y flips)
+            _mk=Image.new("L",(GC,GC),0); ImageDraw.Draw(_mk).polygon(_poly,fill=255)
+            _seamask=np.asarray(_mk)
+            self.coast_poly=list(CHERNARUS_SEA[:11])                 # land-side trace for the stroke
         for r in range(GC):
             for c in range(GC):
                 gx=(c+0.5)/GC*S; gy=(1-(r+0.5)/GC)*S
-                self.sea[r,c]= gy < self._coast(gx) or (gx>0.94*S and gy<0.42*S)
+                if _seamask is not None: self.sea[r,c]= _seamask[r,c]>128
+                else: self.sea[r,c]= gy < self._coast(gx) or (gx>0.94*S and gy<0.42*S)
                 self.relief[r,c]=0.5+0.5*math.sin(gx/S*22+gy/S*6)*math.cos(gy/S*17)
         self.relief=0.6*self.relief+0.4*rngn.random((GC,GC))
         # roads: connect each town to its 2 nearest neighbours (deduped undirected edges).
@@ -188,11 +233,15 @@ class Renderer:
                     terr[r,c]=tuple(min(255,int(v*rel)) for v in base)
         im.paste(Image.fromarray(terr).resize((size,size),Image.NEAREST),(x0,y0))
         # --- coastline stroke ---
-        coastpts=[]
-        for c in range(0,size+1,8):
-            gx=c/size*S; cy=y0+(1-self._coast(gx)/S)*size
-            if y0<=cy<=y0+size: coastpts.append((x0+c,cy))
-        if len(coastpts)>1: d.line(coastpts,fill=COAST,width=2)
+        if self.coast_poly:
+            cpts=[(x0+wx/S*size, y0+(1-wy/S)*size) for (wx,wy) in self.coast_poly]
+            d.line(cpts,fill=COAST,width=max(2,int(2*sc)),joint="curve")
+        else:
+            coastpts=[]
+            for c in range(0,size+1,8):
+                gx=c/size*S; cy=y0+(1-self._coast(gx)/S)*size
+                if y0<=cy<=y0+size: coastpts.append((x0+c,cy))
+            if len(coastpts)>1: d.line(coastpts,fill=COAST,width=2)
         # --- military grid + edge coordinates ---
         for k in range(12):
             gx=x0+k*size/11; gy=y0+k*size/11
@@ -288,13 +337,14 @@ def render(m, out_path):
             frames.append(np.asarray(fade(im,k)))
 
     def s_intro(im,d,i,n):
-        paste_cover(im,"intro_splash")   # generated background if present, else dark base
+        paste_cover(im,"intro_splash",seed=m.seed)   # generated background (seed rotates variants)
         mk=brand_logo("mark")
         if mk is not None:
             m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
         tracked(d,(W/2,H/2-92),"MIKSUU'S WARFARE",DISP(82),INK,anchor="mm",track=6)
         tracked(d,(W/2,H/2+10),m.map_name.upper(),DISP(50),GOLD,anchor="mm",track=14)
-        tracked(d,(W/2,H/2+80),"POST-MATCH REPORT",SANS(26,False),DIM,anchor="mm",track=8)
+        _kick=["POST-MATCH REPORT","AFTER-ACTION REPORT","FIELD DEBRIEF","MATCH DOSSIER"]
+        tracked(d,(W/2,H/2+80),_kick[m.seed%len(_kick)],SANS(26,False),DIM,anchor="mm",track=8)
         mm,ss=divmod(m.duration,60)
         tracked(d,(W/2,H/2+152),f"{len(m.players)} OPERATORS      {mm:02d}:{ss:02d}      {m.total_kills} KILLS",SANS(23,False),(150,150,138),anchor="mm",track=3)
 
@@ -320,7 +370,7 @@ def render(m, out_path):
         footer(im,d)
 
     def s_momentum(im,d,i,n):
-        paste_cover(im,"bg_momentum",opacity=0.5)   # generated scene backdrop if present
+        paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed)   # generated scene backdrop (seed rotates)
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
         prog=ease(min(1,i/(n-12))); nshow=max(2,int(len(m.ser_x)*prog))
@@ -341,7 +391,7 @@ def render(m, out_path):
 
     def s_mvp(im,d,i,n):
         if not m.mvp: return
-        paste_cover(im,"mvp_backdrop",opacity=0.5)   # dimmed so the stat card pops
+        paste_cover(im,"mvp_backdrop",opacity=0.5,seed=m.seed)   # dimmed so the stat card pops
         header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
         if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
@@ -408,14 +458,14 @@ def render(m, out_path):
 
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
-        if paste_cover(im, winner_bg_id(m.winner)):
+        if paste_cover(im, winner_bg_id(m.winner), seed=m.seed):
             d=ImageDraw.Draw(im,"RGBA")
         else:
             wash=np.asarray(im).astype(np.float32); wash[:]=mix(lerp(BG,col,0.20),k); im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0)); d=ImageDraw.Draw(im,"RGBA")
             for j in range(80):
                 px=(j*977)%W; sp=40+(j*53)%120; py=H-(i*sp/6)%H; d.ellipse([px,py,px+5,py+5],fill=lerp(col,INK,(j%5)/5))
-        drift_silhouette(im, 0, i, n, yfrac=0.72, wfrac=0.60, opacity=0.10)  # faint blackout low, if generated
-        paste_emblem(im, emblem_id(m.winner), W/2, 320, 200)
+        drift_silhouette(im, m.seed, i, n, yfrac=0.72, wfrac=0.60, opacity=0.10)  # seed picks the vehicle
+        paste_emblem(im, emblem_id(m.winner), W/2, 320, 200, seed=m.seed)
         tracked(d,(W/2,522),SIDE_NAME[m.winner],DISP(100),INK,anchor="mm",track=8); tracked(d,(W/2,648),"VICTORY",DISP(100),col,anchor="mm",track=16)
         mm,ss=divmod(m.duration,60); o=m.owners_at(m.duration); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values())
         mvp=m.mvp["name"]+f' ({m.mvp["kills"]}K)' if m.mvp else "—"
@@ -430,9 +480,9 @@ def render(m, out_path):
 
     def s_outro(im,d,i,n):
         # closing call-to-action card — converts a view into a follow / a player.
-        if not paste_cover(im,"outro_bg"): paste_cover(im,"intro_splash")
+        if not paste_cover(im,"outro_bg",seed=m.seed): paste_cover(im,"intro_splash",seed=m.seed)
         d=ImageDraw.Draw(im,"RGBA")
-        drift_silhouette(im,1,i,n,yfrac=0.66,wfrac=0.66,opacity=0.12)
+        drift_silhouette(im,m.seed+3,i,n,yfrac=0.66,wfrac=0.66,opacity=0.12)
         mk=brand_logo("mark")
         if mk is not None:
             sz=int(206+8*math.sin(i/7)); m2=mk.resize((sz,sz)); im.paste(m2,(int(W/2-sz/2),int(H/2-470)),m2)
