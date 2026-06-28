@@ -68,6 +68,9 @@ Hetzner server RPT  ──WASPSTAT|v1|…──►  box.ps1 / poster.ps1  ──
 - **`render.py`** — `render(MatchData, out)`; all scene drawing (Pillow → frames → mp4).
 - **`render_report.py`** — CLI.
 - **`assets.py` / `gen_prompts.py` / `assets/`** — optional generated art (below).
+- **`brand/`** — Miksuu's Warfare branding: the palette + Oswald/Inter/JetBrains-Mono
+  fonts and the logo mark/lockup drive the report's look (tokens mirror
+  `miksuus-warfare/brand/tokens.css`). Fonts fall back to Arial if absent.
 
 Telemetry contract: see `docs/WASPSTAT-FORMAT.md` in the repo (PLAYERSTATS `d0..d14`,
 `KILL`, `CAPTURE`, `ROUNDEND`).

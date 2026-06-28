@@ -28,15 +28,42 @@ def asset(aid):
     except Exception: img = None
     _acache[aid] = img; return img
 
+_BLOGO = os.path.join(os.path.dirname(__file__), "brand", "logo")
+def brand_logo(name):
+    key = "__blogo_" + name
+    if key in _acache: return _acache[key]
+    img = None; p = os.path.join(_BLOGO, name + ".png")
+    if os.path.exists(p):
+        try: img = Image.open(p).convert("RGBA")
+        except Exception: img = None
+    _acache[key] = img; return img
+
 W, H, FPS = 1080, 1920, 30
-BG=(11,15,21); PANEL=(20,26,35); WEST=(62,142,255); EAST=(236,72,72); GUER=(96,200,112)
-NEU=(96,104,120); GOLD=(240,196,92); INK=(234,240,248); DIM=(138,149,165)
+# --- Miksuu's Warfare brand tokens (from miksuus-warfare/brand/tokens.css) ---
+BG=(20,23,27)       # gunmetal #14171b
+PANEL=(42,47,54)    # steel    #2a2f36
+INK=(231,227,214)   # bone     #e7e3d6 (text)
+DIM=(150,150,138)   # muted bone
+GOLD=(217,118,60)   # orange   #d9763c (the brand accent / chrome)
+WEST=(93,130,163)   # faction west #5d82a3
+EAST=(168,80,63)    # faction east #a8503f
+GUER=(122,134,72)   # olive #5c6536, lifted for legibility
+NEU=(111,118,128)   # #6f7680
 SIDE_COL={"west":WEST,"east":EAST,"guer":GUER,"neu":NEU}
 SIDE_NAME={"west":"BLUFOR","east":"OPFOR","guer":"GUER","neu":"NEUTRAL"}
 
-def F(sz,bold=True):
-    return ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf", sz)
-f_huge=F(104); f_h1=F(70); f_h2=F(52); f_h3=F(40); f_md=F(34); f_sm=F(28); f_xs=F(23); f_num=F(60)
+# --- brand typography: Oswald (display) / Inter (sans) / JetBrains Mono (numbers) ---
+_FDIR=os.path.join(os.path.dirname(__file__),"brand","fonts")
+def _bf(name,sz,fb="arialbd.ttf"):
+    try: return ImageFont.truetype(os.path.join(_FDIR,name),sz)
+    except Exception:
+        try: return ImageFont.truetype(os.path.join(r"C:\Windows\Fonts",fb),sz)
+        except Exception: return ImageFont.load_default()
+def DISP(sz): return _bf("Oswald-700.ttf",sz)
+def SANS(sz,b=True): return _bf("Inter-600.ttf" if b else "Inter-400.ttf",sz,"arial.ttf")
+def MONO(sz): return _bf("JetBrainsMono-600.ttf",sz)
+f_huge=DISP(118); f_h1=DISP(80); f_h2=DISP(58); f_h3=DISP(44)
+f_md=SANS(34,True); f_sm=SANS(28,True); f_xs=SANS(23,False); f_num=MONO(58)
 
 def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
@@ -146,7 +173,13 @@ class Renderer:
                 d.text((cx+10*sc,cy-10*sc),t,font=f_xs,fill=(220,228,240))
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
-def footer(d): d.text((W/2,H-46),"a2waspwarfare  ·  POST-MATCH REPORT",font=f_xs,fill=(120,130,146),anchor="mm")
+def footer(im,d):
+    txt="MIKSUU'S WARFARE   ·   POST-MATCH REPORT"
+    tw=d.textlength(txt,font=f_xs); mk=brand_logo("mark")
+    mkw=30 if mk else 0; total=mkw+(10 if mk else 0)+tw; x0=W/2-total/2
+    if mk:
+        m2=mk.resize((30,30)); im.paste(m2,(int(x0),H-58),m2); x0+=40
+    d.text((x0,H-52),txt,font=f_xs,fill=(150,150,138))
 def chip(d,x,y,side,fs=f_sm): c=SIDE_COL[side]; d.rectangle([x,y+4,x+12,y+30],fill=c); d.text((x+22,y),SIDE_NAME[side],font=fs,fill=c)
 def panel(d,x0,y0,x1,y1,fill=PANEL,outline=(46,54,66)): d.rounded_rectangle([x0,y0,x1,y1],radius=18,fill=fill,outline=outline,width=2)
 def header(d,title,sub=None):
@@ -174,11 +207,14 @@ def render(m, out_path):
 
     def s_intro(im,d,i,n):
         paste_cover(im,"intro_splash")   # generated background if present, else dark base
-        d.text((W/2,H/2-150),"WASP WARFARE",font=f_huge,fill=INK,anchor="mm")
-        d.text((W/2,H/2-30),m.map_name,font=f_h1,fill=WEST,anchor="mm")
-        d.text((W/2,H/2+70),"POST-MATCH REPORT",font=f_h3,fill=DIM,anchor="mm")
+        mk=brand_logo("mark")
+        if mk is not None:
+            m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-450)),m2)
+        d.text((W/2,H/2-95),"MIKSUU'S WARFARE",font=DISP(92),fill=INK,anchor="mm")
+        d.text((W/2,H/2+10),m.map_name,font=f_h1,fill=GOLD,anchor="mm")
+        d.text((W/2,H/2+92),"POST-MATCH REPORT",font=f_h3,fill=DIM,anchor="mm")
         mm,ss=divmod(m.duration,60)
-        d.text((W/2,H/2+150),f"{len(m.players)} operators   ·   {mm:02d}:{ss:02d}   ·   {m.total_kills} kills",font=f_sm,fill=(150,160,176),anchor="mm")
+        d.text((W/2,H/2+170),f"{len(m.players)} operators   ·   {mm:02d}:{ss:02d}   ·   {m.total_kills} kills",font=f_sm,fill=DIM,anchor="mm")
 
     def s_battle(im,d,i,n):
         ts=i/n*m.duration; ft=None; fk=0
@@ -198,7 +234,7 @@ def render(m, out_path):
         for (t,nm,s,wp,cat,dd) in feed:
             c=SIDE_COL[s]; d.rectangle([60,y+6,74,y+30],fill=c); d.text((86,y),nm or "AI",font=f_sm,fill=c)
             d.text((W/2,y),wp,font=f_sm,fill=DIM,anchor="ma"); d.text((W-60,y),f"{dd}m",font=f_sm,fill=(150,160,176),anchor="ra"); y+=62
-        footer(d)
+        footer(im,d)
 
     def s_momentum(im,d,i,n):
         header(d,"MOMENTUM","towns held over time")
@@ -217,7 +253,7 @@ def render(m, out_path):
             mxp=px0+dt/m.duration*pw; d.line([(mxp,py0),(mxp,py0+ph)],fill=GOLD+(150,),width=2); d.text((mxp,py0-8),"supremacy",font=f_xs,fill=GOLD,anchor="mb")
         chip(d,px0,py0+ph+24,"west"); chip(d,px0+200,py0+ph+24,"east")
         d.text((W/2,1280),f"{SIDE_NAME[m.winner]} took the lead at the mid-game and never gave it back.",font=f_sm,fill=DIM,anchor="ma")
-        footer(d)
+        footer(im,d)
 
     def s_mvp(im,d,i,n):
         if not m.mvp: return
@@ -232,7 +268,7 @@ def render(m, out_path):
         for idx,(lab,val,c) in enumerate(cells):
             x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
             d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
-        d.text((W/2,1180),f'Top score: {int(p["score"]*kk)}',font=f_md,fill=DIM,anchor="ma"); footer(d)
+        d.text((W/2,1180),f'Top score: {int(p["score"]*kk)}',font=f_md,fill=DIM,anchor="ma"); footer(im,d)
 
     def s_board(im,d,i,n):
         header(d,"TOP OPERATORS","by match score"); top=m.players[:6]
@@ -245,7 +281,7 @@ def render(m, out_path):
             d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+16),p["name"],font=f_h3,fill=INK)
             d.text((158,y+58),f'{SIDE_NAME[p["side"]]}  ·  {p["kills"]}K / {p["d"][6]}D  ·  {p["d"][10]} caps',font=f_xs,fill=DIM)
             d.text((W-84,y+bh/2),str(int(p["score"]*prog)),font=f_h3,fill=INK,anchor="rm")
-        footer(d)
+        footer(im,d)
 
     def s_combat(im,d,i,n):
         header(d,"COMBAT BREAKDOWN"); kk=ease(min(1,i/26))
@@ -264,7 +300,7 @@ def render(m, out_path):
         for idx,(lab,big,sub,c) in enumerate(cards):
             x=110+(idx%2)*cw; y=gy+(idx//2)*200; panel(d,x,y,x+cw-20,y+175)
             d.text((x+26,y+22),lab,font=f_xs,fill=DIM); d.text((x+26,y+52),big,font=f_h3 if len(big)<12 else f_md,fill=c); d.text((x+26,y+120),sub,font=f_xs,fill=DIM)
-        footer(d)
+        footer(im,d)
 
     def s_decisive(im,d,i,n):
         header(d,"DECISIVE BLOW"); t,town,s=m.decisive; col=SIDE_COL[s]; mm,ss=divmod(t,60)
@@ -276,7 +312,7 @@ def render(m, out_path):
         w=sum(v=="west" for v in m.owners_at(t+1).values()); e=sum(v=="east" for v in m.owners_at(t+1).values())
         panel(d,120,1110,W-120,1250,fill=mix(col,0.10),outline=col)
         d.text((W/2,1140),f"This capture pushed {SIDE_NAME[s]} to {max(w,e)} towns",font=f_sm,fill=INK,anchor="ma")
-        d.text((W/2,1182),"— the swing that decided the match.",font=f_sm,fill=INK,anchor="ma"); footer(d)
+        d.text((W/2,1182),"— the swing that decided the match.",font=f_sm,fill=INK,anchor="ma"); footer(im,d)
 
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
@@ -294,7 +330,10 @@ def render(m, out_path):
         y=940
         for lab,val in rows:
             d.text((W/2-40,y),lab,font=f_md,fill=(225,231,240),anchor="ra"); d.text((W/2+40,y),val,font=f_md,fill=col,anchor="la"); y+=88
-        d.text((W/2,1560),"a2waspwarfare",font=f_sm,fill=(220,226,238),anchor="mm")
+        mk=brand_logo("mark")
+        if mk is not None:
+            m2=mk.resize((60,60)); im.paste(m2,(int(W/2-30),1498),m2)
+        d.text((W/2,1580),"MIKSUU'S WARFARE",font=f_sm,fill=INK,anchor="mm")
 
     scene(54,s_intro,fin=18,fout=10); scene(420,s_battle); scene(168,s_momentum); scene(156,s_mvp)
     scene(186,s_board); scene(198,s_combat); scene(120,s_decisive); scene(126,s_winner,fin=4,fout=2)
