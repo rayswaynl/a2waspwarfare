@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hq','_id','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik'];
+Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -15,18 +15,35 @@ sleep 0.5;
 //--- Wait for a proper common & server initialization before going any further.
 waitUntil {commonInitComplete && serverInitFull};
 
-if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
-
-["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has left the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+if (_name == '__SERVER__' || local player) exitWith {};
 
 //--- Headless Clients disconnection?.
+_isHCDisconnect = false;
+_hcGroup = grpNull;
 if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
-	_get = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
-	if !(isNil '_get') then {
-		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", (missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") - [_get]];
-		missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
+	if (_uid != "") then {
+		_get = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
+		if !(isNil '_get') then {_hcGroup = _get; _isHCDisconnect = true};
+	};
+	if (!_isHCDisconnect && {_uid == ""}) then {
+		_get = missionNamespace getVariable Format["WFBE_HEADLESS_OWNER_%1", _id];
+		if !(isNil '_get') then {_hcGroup = _get; _isHCDisconnect = true};
+	};
+	if (_isHCDisconnect) then {
+		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", (missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") - [_hcGroup]];
+		missionNamespace setVariable [Format["WFBE_HEADLESS_OWNER_%1", _id], nil];
+		if (_uid != "") then {
+			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
+		};
+		diag_log (Format ["HCSIDE|v1|disconnect|uid=%1|owner=%2|removed=%3", _uid, _id, str _hcGroup]);
+		["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Headless client [%1] [%2] owner [%3] has left the game.", _name, _uid, _id]] Call WFBE_CO_FNC_LogContent;
 	};
 };
+if (_isHCDisconnect) exitWith {};
+
+if (_uid == '') exitWith {};
+
+["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has left the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 
 //--- Player had any objects created?
 _get = missionNamespace getVariable Format ["WFBE_CLIENT_%1_OBJECTS", _uid];
