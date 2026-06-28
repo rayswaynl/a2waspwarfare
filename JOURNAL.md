@@ -1,5 +1,21 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-06-28 - HC lobby-slot magnet: plain CIV sliver disproved
+
+Codex tested the last open HC lobby-slot angle on branch `claude/hc-slot-magnet`: convert the two
+lowest playable ids (`229` + `230`) into plain CIV `Functionary1` `PLAY CDG` slots with no
+`forceHeadlessClient`, preserve WEST enrollment by moving the displaced WEST roster slots to `268` +
+`307`, and boot-smoke locally on A2-OA `1.64.144629`. Result: the first HC still logged
+`HCSIDE|v1|preseat|name=codex_hc1|engineSide=WEST`, then runtime reseated to CIV and pruned the
+orphan WEST group. `TEAMREG` stayed 14/14 and no mission SQF errors appeared after MISSINIT.
+
+Verdict: plain low-id CIV slots do not catch the first HC. The engine skips CIV lobby slots and grabs
+the lowest available WEST playable slot in this mission. No enrollment-safe mission.sqm-only fix
+remains; accept the residual lobby/scoreboard label as cosmetic and keep the runtime CIV reseat/prune
+behavior.
+
+---
+
 ## 2026-06-20 — JOIN SAGA: definitive root causes + fixes (B54/B56) [INCIDENT / POSTMORTEM — CORRECTS THE B49 ENTRY BELOW]
 
 **READ THIS FIRST — it supersedes the 2026-06-19 B49 entry below.** The 2026-06-19 postmortem credited
