@@ -1069,6 +1069,7 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_WDDM_COMP_CAP = 3;            //--- Max WDDM commander compositions per base area (size-independent).
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
 	WFBE_C_STATLOG = 1;                   // [WASPSTAT] structured telemetry RPT lines
+	WFBE_C_LOG_TOWN_COORDS = 0;           // One-shot: dump every town's map position (TOWNPOS|... RPT lines) for the post-match report's TOWN_COORDS. Flip to 1 for a single boot per map, harvest, flip back. Off = zero effect.
 	if (isNil "WFBE_C_TOWNS_GUNNERS_ON_CAPTURE") then {WFBE_C_TOWNS_GUNNERS_ON_CAPTURE = true}; // Immediately man static defenses at capture (all sides); false = reactive only
 	//--- Task 32: capture grace periods.
 	//--- Delay (seconds) before the new owner's static defenses and defense teams spawn after capture.
