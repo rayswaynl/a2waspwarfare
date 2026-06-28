@@ -462,6 +462,20 @@ if (count _live > 0) then {
 	_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])]; _dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_MECH_BIAS", 2.0])]; _dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_MOTOR_BIAS", 1.4])]; //--- B755 (Ray 2026-06-25): seat infantry in ARMED vehicles, not on foot - bias the MECHANIZED/armor bucket (2 = IFV/APC that carry their dismounts) hardest + MOTORIZED (1) up vs pure-foot infantry (0). Self-gating: the empty-bucket zero-out below keeps infantry buildable when no heavy/light factory exists yet.
 	_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
 		_dWeights set [3, (_dWeights select 3) * (1 + (((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT", 2.5]) - 1))]; //--- B754 (Ray 2026-06-25) HELI TIME-BIAS: scale the AIR bucket (idx 3) up the longer the match runs (transport + attack both). Applied after town-punch, before the empty-bucket zero-out so an empty air bucket still zeroes safely. A2-OA-safe (time/min/^ arithmetic + getVariable default; RAMP_MIN floored at 1 to avoid /0).
+		//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) REQUEST-UNIT HOOK: a fresh player class request nudges the founding bucket weight (soft).
+		private ["_ruReq","_ruType","_ruT0","_ruMult","_ruIdx"];
+		_ruReq = _logik getVariable "wfbe_aicom_request_type";
+		if (!isNil "_ruReq" && {typeName _ruReq == "ARRAY"} && {count _ruReq == 2}) then {
+			_ruType = _ruReq select 0; _ruT0 = _ruReq select 1;
+			if ((time - _ruT0) < (missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_TTL", 300])) then {
+				_ruMult = missionNamespace getVariable ["WFBE_C_AICOM_REQUEST_TYPE_MULT", 3];
+				_ruIdx = -1;
+				if (_ruType == "infantry") then {_ruIdx = 0};
+				if (_ruType == "armor")    then {_ruIdx = 2};
+				if (_ruType == "air")      then {_ruIdx = 3};
+				if (_ruIdx >= 0) then {_dWeights set [_ruIdx, (_dWeights select _ruIdx) * _ruMult]};
+			};
+		};
 	for "_bi" from 0 to 3 do {
 		if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 	};

@@ -41,6 +41,15 @@ if (count _tgtTowns == 0) exitWith { _logik setVariable ["wfbe_aicom_targets", [
 //--- capturable it falls through and engages the enemy (never idle). The HQ-strike round-ender keeps its own gate.
 _myTowns   = _snap select WFBE_SNAP_MYTOWNS;
 _engageMin = missionNamespace getVariable ["WFBE_C_AICOM_ENGAGE_MIN_TOWNS", 10];
+//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) POSTURE HOOK: a fresh player PUSH/HOLD biases the ENGAGE gate only (small).
+private ["_psPair","_psPos","_psT0","_psDelta"];
+_psPair = _logik getVariable "wfbe_aicom_player_posture";
+_psT0   = _logik getVariable "wfbe_aicom_player_posture_t0";
+if (!isNil "_psPair" && {typeName _psPair == "STRING"} && {!isNil "_psT0"} && {(time - _psT0) < (missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_TTL", 300])}) then {
+	_psDelta = missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_ENGAGE_DELTA", 4];
+	if (_psPair == "PUSH") then {_engageMin = (_engageMin - _psDelta) max 0};
+	if (_psPair == "HOLD") then {_engageMin = _engageMin + _psDelta};
+};
 _expandFirst = false;
 if (_engageMin > 0 && {_myTowns < _engageMin}) then {
 	private ["_neutPool","_sid"];
@@ -210,5 +219,39 @@ _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 		};
 	};
 } forEach _teams;
+
+//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) REINFORCE HOOK: a fresh player REINFORCE order routes ONE
+//--- eligible team to that town (single-team alloc_target override; reversible; auto-clears at WFBE_C_AICOM_REINFORCE_TTL).
+private ["_riPair","_riTown","_riT0"];
+_riPair = _logik getVariable "wfbe_aicom_reinforce";
+if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) then {
+	_riTown = _riPair select 0;
+	_riT0   = _riPair select 1;
+	if (!isNull _riTown && {(time - _riT0) < (missionNamespace getVariable ["WFBE_C_AICOM_REINFORCE_TTL", 300])}) then {
+		private ["_riBest","_riBestD","_riGrp","_riLdr","_riAlive","_riMode","_riRelief","_riStrike"];
+		_riBest = grpNull; _riBestD = 1e9;
+		{
+			_riGrp = _x;
+			if (!isNull _riGrp) then {
+				_riAlive  = {alive _x} count (units _riGrp);
+				_riLdr    = leader _riGrp;
+				_riMode   = toLower (_riGrp getVariable ["wfbe_teammode", "towns"]);
+				_riRelief = _riGrp getVariable ["wfbe_aicom_relief", objNull];
+				_riStrike = _riGrp getVariable ["wfbe_aicom_strike", false];
+				if (_riAlive > 0 && {!isNull _riLdr} && {!isPlayer _riLdr} && {_riGrp != _garGrp}
+				    && {isNull _riRelief} && {!_riStrike} && {!(_riMode in ["move","patrol","defense"])}
+				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
+					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
+					if (_riD < _riBestD) then {_riBestD = _riD; _riBest = _riGrp};
+				};
+			};
+		} forEach _teams;
+		if (!isNull _riBest) then {
+			_riBest setVariable ["wfbe_aicom_alloc_target", _riTown];
+			_riBest setVariable ["wfbe_aicom_alloc_tick", time];
+			diag_log ("AICOM2|v1|REINFORCE|" + str _side + "|" + str (round (time / 60)) + "|town=" + (_riTown getVariable ["name","?"]) + "|team=" + str _riBest);
+		};
+	};
+};
 
 diag_log ("AICOM2|v1|ALLOC|" + str _side + "|" + str (round (time / 60)) + "|fist=" + str (count _fist) + "|primary=" + ((_fist select 0) getVariable ["name","?"]) + "|src=" + (if (_fromFocus) then {"FOCUS"} else {"auto"}) + "|harassTo=" + (if (!isNull _harassTgt) then {_harassTgt getVariable ["name","?"]} else {"none"}) + "|assigned=" + str _assigned + "|harass=" + str _harassAssigned + "|expand=" + str _expandCount + "|teams=" + str (count _teams) + "|myTowns=" + str _myTowns + "|expandFirst=" + str _expandFirst);

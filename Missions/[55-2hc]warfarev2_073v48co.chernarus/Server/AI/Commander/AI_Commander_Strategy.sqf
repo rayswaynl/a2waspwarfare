@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -418,6 +418,17 @@ private ["_atkTownCheck","_reliefEnemyDist"];
 			if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _atkTownCheck) nearEntities [["Man","LandVehicle","Air"], _reliefEnemyDist])) > 0) then {_attacked = _attacked + [_atkTownCheck]};
 		};
 	} forEach towns;
+//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): honour a player-set DEFEND-town order from the command center. While
+//--- the order is fresh (WFBE_C_AICOM_DEFEND_TTL) treat that town as "under attack" so the relief loop below diverts
+//--- a reliever to it (additive + reversible + TTL-gated; offensive logic above is untouched). Server_HandleSpecial.sqf
+//--- "aicom-defend" stamps wfbe_aicom_defend_focus + _t0. A2-OA-safe: plain getVariable + isNil + time math, no A3 prims.
+_pdTown = _logik getVariable "wfbe_aicom_defend_focus";
+_pdT0   = _logik getVariable "wfbe_aicom_defend_focus_t0";
+if (!isNil "_pdTown" && {!isNull _pdTown} && {!isNil "_pdT0"}
+    && {(time - _pdT0) < (missionNamespace getVariable ["WFBE_C_AICOM_DEFEND_TTL", 300])}
+    && {(_pdTown getVariable ["sideID", -1]) == _sideID}) then {
+	if !(_pdTown in _attacked) then {_attacked = [_pdTown] + _attacked};
+};
 _relieved = 0;
 {
 	_town = _x;
@@ -732,11 +743,24 @@ if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * 2)} && {_posture != "PRESS"
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	_upASel = (_logik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT;
 	_cd = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_upASel min ((count (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS")) - 1));
-	if (time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) then {
+	//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) ARTY HOOK: a player ARTILLERY-HERE request
+	//--- (Server_HandleSpecial "aicom-arty-here" stamps wfbe_aicom_arty_request=[pos,time]). When fresh it
+	//--- targets the requested pos AND bypasses the AI's own fire cooldown so the call-in actually fires; the
+	//--- request is CLEARED after this block so it fires exactly once. Additive, reversible, TTL-gated.
+	private ["_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh"];
+	_riArtyReq = _logik getVariable "wfbe_aicom_arty_request";
+	_riArtyPos = []; _riArtyFresh = false;
+	if (!isNil "_riArtyReq" && {typeName _riArtyReq == "ARRAY"} && {count _riArtyReq == 2}) then {
+		_riArtyPos = _riArtyReq select 0; _riArtyT0 = _riArtyReq select 1;
+		if ((typeName _riArtyPos == "ARRAY") && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
+	};
+	if ((time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) || _riArtyFresh) then {
 		//--- Target: enemy HQ during a strike, else the top spearhead town.
 		_artyTgt = [];
 		if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {_artyTgt = getPos _enemyHQ};
 		if (count _artyTgt == 0 && {count _targets > 0}) then {_artyTgt = getPos (_targets select 0)};
+		//--- COMMAND CONSOLE ARTY HOOK: a fresh player request overrides the auto target (player picks the impact).
+		if (_riArtyFresh) then {_artyTgt = _riArtyPos};
 		if (count _artyTgt > 0) then {
 			//--- Friendly-fire guard: no own troops near the impact zone.
 			_ownNear = 0;
@@ -764,4 +788,6 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 			};
 		};
 	};
+	//--- COMMAND CONSOLE ARTY HOOK: consume the player request (fire-once) - clear it whether or not a gun was in range.
+	if (_riArtyFresh) then {_logik setVariable ["wfbe_aicom_arty_request", []]};
 };

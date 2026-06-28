@@ -762,9 +762,9 @@
       </Key>
 
 <!--Main Menu - ALL DONE-->
-      <Key ID="STR_WF_MAIN_CommandMenu"><!--shared U-->
-        <English>Command Center</English>
-        <Russian>Command Center</Russian>
+      <Key ID="STR_WF_MAIN_CommandMenu"><!--shared U--><!--PR1: was "Command Center"; the dialog/menu-entry is now the player->AI-commander console. The physical base structure name is STR_WF_CommandCenter (unchanged).-->
+        <English>Command</English>
+        <Russian>Command</Russian>
       </Key>
       <Key ID="STR_WF_MAIN_EconomyMenu"><!--shared U-->
         <English>Economy</English>

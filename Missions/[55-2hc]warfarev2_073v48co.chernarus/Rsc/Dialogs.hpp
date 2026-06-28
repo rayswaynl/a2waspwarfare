@@ -1930,302 +1930,145 @@ class RscMenu_Command {
 			w = 0.3;
 			text = $STR_WF_MAIN_CommandMenu;
 		};
-		class CA_TakeTowns : RscButton {
-			idc = 14005;
-			x = 0.0057147;
-			y = 0.423585;
-			w = 0.22;
-			text = $STR_WF_COMMAND_TakeTowns;
-			action = "MenuAction = 101";
-		};
-		class CA_Move : CA_TakeTowns {
-			idc = 14006;
-			x = 0.00487578;
-			y = 0.473669;
-			text = $STR_WF_COMMAND_Move;
-			action = "MenuAction = 102";
-			
-			/* spezial */
-			colorBackground[] = {0.5882, 0.5882, 0.3529, 0.7};
-			colorBackgroundActive[] = {0.5882, 0.5882, 0.3529, 1};
-			colorFocused[] = {0.5882, 0.5882, 0.3529, 1};
-		};
-		class CA_Patrol : CA_TakeTowns {
-			idc = 14007;
-			x = 0.24437;
-			y = 0.424035;
-			text = $STR_WF_COMMAND_Patrol;
-			action = "MenuAction = 103";
-			
-			/* spezial */
-			colorBackground[] = {0.5882, 0.5882, 0.3529, 0.7};
-			colorBackgroundActive[] = {0.5882, 0.5882, 0.3529, 1};
-			colorFocused[] = {0.5882, 0.5882, 0.3529, 1};
-		};
-		class CA_Defend : CA_TakeTowns {
-			idc = 14008;
-			x = 0.24353;
-			y = 0.472995;
-			text = $STR_WF_COMMAND_Defense;
-			action = "MenuAction = 104";
-			
-			/* spezial */
-			colorBackground[] = {0.5882, 0.5882, 0.3529, 0.7};
-			colorBackgroundActive[] = {0.5882, 0.5882, 0.3529, 1};
-			colorFocused[] = {0.5882, 0.5882, 0.3529, 1};
-		};
-		/**/
-		class CA_BuyType_Label : RscText {
-			idc = 14009;
-			x = -0.000420049;
-			y = 0.752941;
-			w = 0.17;
-			text = $STR_WF_COMMAND_BuyType;
-		};
-		class CA_BuyType_Combo : RscCombo {
-			idc = 14010;
-			x = 0.162328;
-			y = 0.755179;
-			w = 0.302101;
-			h = 0.035;
-		};
-		class CA_Respawn : RscButton {
-			idc = 14011;
-			x = 0.631344;
-			y = 0.957504;
-			w = 0.23;
-			text = $STR_WF_COMMAND_RespawnButton;
-			action = "MenuAction = 201";
-		};
-		class CA_TeamList : RscListBox {
-			idc = 14012;
-			x = 0.00518636;
-			y = 0.178967;
+		/* =====================================================================================
+		   COMMAND CONSOLE (full rework). The old squad-order tab is gutted; the whole left column
+		   is now the player -> AI-commander console. The embedded map (idc 14002) shows the AI
+		   objective + the player's last order. All new controls live in the 14600-14699 band.
+		   Order buttons set MenuAction; the controller (GUI_Menu_Command.sqf) does press->click-map->
+		   snap-nearest-town->send. Buttons are ctrlEnable'd by the controller when no AI commander runs.
+		   ===================================================================================== */
+		/* AI INTENT read-out panel (refreshed in the menu loop from the WFBE_AICOM_*_<sid> vars). */
+		class CA_Cmd_IntentTitle : RscText_SubTitle {
+			idc = 14605;
+			x = 0.00561695;
+			y = 0.062000;
 			w = 0.459244;
-			h = 0.229759;
-			rowHeight = 0.0219091;
-			sizeEx = 0.03;
-			style = 0x20;//--- MultiSelect LB.
-			onLBSelChanged = "MenuAction = 1";
-			onLBDblClick = "MenuAction = 2";
-		};	
-		class CA_Mission_Type : RscText {
-			idc = 14013;
-			x = 0.000842094;
-			y = 0.142566;
-			w = 0.3;
+			text = "AI COMMANDER";
 		};
-		class CA_AutoAIOn : RscButton {
-			idc = 14014;
-			x = 0.00470574;
-			y = 0.957504;
-			w = 0.3;
-			text = $STR_WF_COMMAND_AutoAI;
-			action = "MenuAction = 301";
+		class CA_Cmd_Intent : RscStructuredText {
+			idc = 14600;
+			x = 0.00561695;
+			y = 0.105000;
+			w = 0.459244;
+			h = 0.255000;
+			size = 0.030;
 		};
-		class CA_AutoAIOff : CA_AutoAIOn {
-			idc = 14015;
-			x = 0.318572;
-			text = $STR_WF_COMMAND_AutoAIOff;
-			action = "MenuAction = 301";
-		};		
-		class CA_SetBuy : RscButton {
-			idc = 14016;
-			x = 0.0440367;
-			y = 0.801901;
-			w = 0.42;
-			text = $STR_WF_COMMAND_SetBuyType;
-			action = "MenuAction = 302";
+		/* Posture toggle. */
+		class CA_Cmd_PostureLbl : RscText {
+			idc = 14606;
+			x = 0.00561695;
+			y = 0.372000;
+			w = 0.150000;
+			text = "Posture:";
 		};
-		/**/
-		class CA_Behavior_Combo : RscCombo {
-			idc = 14017;
-			x = 0.214428;
-			y = 0.531822;
-			w = 0.25;
-			h = 0.035;
+		class CA_Cmd_Push : RscButton_Main {
+			idc = 14610;
+			x = 0.160000;
+			y = 0.370000;
+			w = 0.148000;
+			h = 0.042000;
+			text = "PUSH";
+			action = "MenuAction = 710";
+			tooltip = "Tell the AI commander to press the attack (aggressive posture).";
 		};
-		class CA_Combat_Combo : CA_Behavior_Combo {
-			idc = 14018;
-			x = 0.214428;
-			y = 0.572941;
+		class CA_Cmd_Hold : CA_Cmd_Push {
+			idc = 14611;
+			x = 0.317244;
+			text = "HOLD";
+			action = "MenuAction = 711";
+			tooltip = "Tell the AI commander to consolidate and hold (defensive posture).";
 		};
-		class CA_Formation_Combo : CA_Behavior_Combo {
-			idc = 14019;
-			x = 0.214428;
-			y = 0.614061;
-		};
-		class CA_Speed_Combo : CA_Behavior_Combo {
-			idc = 14020;
-			x = 0.214428;
-			y = 0.656302;
-		};
-		/**/
-		class CA_Behavior_Label : RscText {
-			idc = 14021;
-			x = -0.000420049;
-			y = 0.52958;
-			w = 0.17;
-			text = $STR_WF_COMMAND_Behavior;
-		};
-		class CA_Combat_Label : CA_Behavior_Label {
-			idc = 14022;
-			x = -0.000420049;
-			y = 0.5707;
-			text = $STR_WF_COMMAND_CombatMode;
-		};
-		class CA_Formation_Label : CA_Behavior_Label {
-			idc = 14031;
-			x = -0.000420049;
-			y = 0.61182;
-			text = $STR_WF_COMMAND_Formation;
-		};
-		class CA_Speed_Label : CA_Behavior_Label {
-			idc = 14023;
-			x = -0.000420049;
-			y = 0.654061;
-			text = $STR_WF_COMMAND_Speed;
-		};
-		class CA_SetToTeam : RscButton {
-			idc = 14024;
-			x = 0.0440339;
-			y = 0.703026;
-			w = 0.42;
-			text = $STR_WF_COMMAND_SetTeamProperties;
-			action = "MenuAction = 303";
-		};
-		class CA_Respawn_Combo : RscCombo {
-			idc = 14025;
-			x = 0.160647;
-			y = 0.855182;
-			w = 0.303781;
-			h = 0.035;
-			onLBSelChanged = "MenuAction = 305";
-		};
-		class CA_Respawn_Label : CA_Behavior_Label {
-			idc = 14026;
-			x = -0.000420049;
-			y = 0.852941;
-			text = $STR_WF_COMMAND_Respawn;
-		};
-		class CA_SetRespawn : RscButton {
-			idc = 14027;
-			x = 0.0440337;
-			y = 0.900783;
-			w = 0.42;
-			text = $STR_WF_COMMAND_SetRespawn;
-			action = "MenuAction = 304";
-		};
-		class CA_Funds_Label : RscText {
-			idc = 14028;
-			x = 0.168488;
-			y = 0.142689;
-			w = 0.3;
-			style = ST_RIGHT;
-		};
-		class CA_Tab_Label : RscText_SubTitle {
-			idc = 14030;
-			x = 0.335;
-			y = 0.0107146;
-			w = 0.3;
-			style = ST_CENTER;
-			text = $STR_WF_COMMAND_SquadSettingsLabel;
-		};
-		class CA_SetTask : RscButton {
-			idc = 14032;
-			x = 0.0440328;
-			y = 0.621904;
-			w = 0.42;
-			text = $STR_WF_COMMAND_TaskTO_Set;
-			action = "MenuAction = 306";
-			
-			/* spezial */
-			colorBackground[] = {0.5882, 0.5882, 0.3529, 0.7};
-			colorBackgroundActive[] = {0.5882, 0.5882, 0.3529, 1};
-			colorFocused[] = {0.5882, 0.5882, 0.3529, 1};
-		};
-		/* HQ Team units details */
-		class CA_UnitsDetailList : RscListBoxA {
-			idc = 14041;
-			x = 0.00518636;
-			y = 0.527339;
-			w = 0.463445;
-			h = 0.366386;
-			columns[] = {0.01, 0.19};
-			drawSideArrows = 0;
-			idcRight = -1;
-			idcLeft = -1;
-			rowHeight = 0.05;
-			sizeEx = 0.023;
-			onLBSelChanged = "MenuAction = 401";
-			onLBDblClick = "MenuAction = 3";
-			
-			/* spezial */
-			colorText[] = {0, 0.875, 0, 0.8};
-			colorSelect[] = {0, 0.875, 0, 0.8};
-			colorSelect2[] = {0, 0.875, 0, 0.8};
-			/* extra */
-			colorSelectBackground[] = {0, 0, 0, 0.5};
-			colorSelectBackground2[] = {0, 0, 0, 0.5};
-		};	
-		class CA_FUnflip : RscButton {
-			idc = 14042;
-			x = 0.24384;
-			y = 0.900286;
-			w = 0.22;
-			text = $STR_WF_COMMAND_UnflipButton;
-			action = "MenuAction = 402";
-		};	
-		class CA_FDisband : RscButton {
-			idc = 14043;
-			x = 0.00493164;
-			y = 0.900296;
-			w = 0.22;
-			text = $STR_WF_TEAM_DisbandButton;
-			action = "MenuAction = 403";
-		};		
-		class WF_Con1 : RscClickableText {
-			idc = 14500;
-			x = 0.136976;
-			y = 0.0589629;
-			w = 0.072;
-			h = 0.072;
-			text = "\CA\warfare2\Images\con_barracks.paa";
-			tooltip = $STR_WF_TOOLTIP_TeamOrders_Con1;
-			action = "MenuAction = 601";
-		};
-		class WF_Con2 : WF_Con1 {
-			idc = 14501;
-			x = 0.290419;
-			text = "Client\Images\con_task.paa";
-			tooltip = $STR_WF_TOOLTIP_TeamOrders_Con2;
-			action = "MenuAction = 602";
-		};
-		class WF_Con3 : WF_Con1 {
-			idc = 14502;
-			x = 0.213698;
-			text = "\CA\warfare2\Images\con_hq.paa";
-			tooltip = $STR_WF_TOOLTIP_TeamOrders_Con3;
-			action = "MenuAction = 603";
-		};
-		/* Separators */
-		class LineTRH1 : RscText {
-			idc = 14900;
-			x = 0.00554727;
-			y = 0.518182;
-			w = 0.458181;
+		class LineCmd1 : RscText {
+			idc = 14690;
+			x = 0.00561695;
+			y = 0.424000;
+			w = 0.459244;
 			h = WFBE_SPT1;
 			colorBackground[] = WFBE_SPC1;
 		};
-		class LineTRH2 : LineTRH1 {
-			idc = 14901;
-			x = 0.00554727;
-			y = 0.845784;
+		/* Order buttons (map-click orders). */
+		class CA_Cmd_Focus : RscButton_Main {
+			idc = 14620;
+			x = 0.00561695;
+			y = 0.436000;
+			w = 0.459244;
+			h = 0.044000;
+			text = "Focus Attack  (click a town)";
+			action = "MenuAction = 720";
+			tooltip = "Press, then click the map: the AI commander concentrates its assault on the nearest town.";
 		};
-		class LineTRH3 : LineTRH1 {
-			idc = 14902;
-			x = 0.00554727;
-			y = 0.746904;
+		class CA_Cmd_Defend : CA_Cmd_Focus {
+			idc = 14621;
+			y = 0.486000;
+			text = "Defend Town  (click a town)";
+			action = "MenuAction = 721";
+			tooltip = "Press, then click the map: the AI commander biases a team to defend the nearest town.";
+		};
+		class CA_Cmd_Reinforce : CA_Cmd_Focus {
+			idc = 14622;
+			y = 0.536000;
+			text = "Reinforce Here  (click a town)";
+			action = "MenuAction = 722";
+			tooltip = "Press, then click the map: the AI commander pushes a fresh team toward the nearest town.";
+		};
+		class CA_Cmd_Arty : CA_Cmd_Focus {
+			idc = 14623;
+			y = 0.586000;
+			text = "Artillery Here  (click map)";
+			action = "MenuAction = 723";
+			tooltip = "Press, then click the map: request an AI artillery strike at that spot (if artillery is enabled).";
+		};
+		class LineCmd2 : LineCmd1 {
+			idc = 14691;
+			y = 0.642000;
+		};
+		/* Donate + Request Unit. */
+		class CA_Cmd_Donate : RscButton_Main {
+			idc = 14630;
+			x = 0.00561695;
+			y = 0.654000;
+			w = 0.459244;
+			h = 0.044000;
+			text = "Donate Funds to AI";
+			action = "MenuAction = 730";
+			tooltip = "Move funds from your team wallet to the AI commander's treasury so it can field more.";
+		};
+		class CA_Cmd_ReqLbl : RscText {
+			idc = 14607;
+			x = 0.00561695;
+			y = 0.708000;
+			w = 0.150000;
+			text = "Request:";
+		};
+		class CA_Cmd_ReqCombo : RscCombo {
+			idc = 14640;
+			x = 0.160000;
+			y = 0.706000;
+			w = 0.180000;
+			h = 0.035;
+		};
+		class CA_Cmd_ReqBtn : RscButton_Main {
+			idc = 14641;
+			x = 0.348000;
+			y = 0.706000;
+			w = 0.117244;
+			h = 0.040000;
+			text = "Request";
+			action = "MenuAction = 740";
+			tooltip = "Ask the AI commander to prioritise building the selected unit type next.";
+		};
+		class LineCmd3 : LineCmd1 {
+			idc = 14692;
+			y = 0.764000;
+		};
+		/* Status / hint line at the bottom of the console. */
+		class CA_Cmd_Help : RscStructuredText {
+			idc = 14650;
+			x = 0.00561695;
+			y = 0.776000;
+			w = 0.459244;
+			h = 0.165000;
+			size = 0.027;
 		};
 		/* Back */
 		class Back_Button : RscButton_Back {
@@ -2243,6 +2086,7 @@ class RscMenu_Command {
 		};
 	};
 };
+
 
 //--- Tactical Menu. | ALL DONE!
 class RscMenu_Tactical {

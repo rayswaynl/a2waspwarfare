@@ -310,6 +310,37 @@ while {!gameOver} do {
 						missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
 						missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
 					};
+					//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): publish the two extra side-keyed reads the new "AI
+					//--- Commander" command-center sub-tab needs. ACTIVE = the AI actually HOLDS command this side right
+					//--- now (full command, no human commander) so a player's instructions will steer it; FOCUS_NAME = the
+					//--- name of the player-set focus town (TTL'd by the Allocator) or "" when none/expired. PV only on change.
+					private ["_aKey","_fKey","_active2","_focusT","_focusT0","_focusNm"];
+					_aKey = format ["WFBE_AICOM_ACTIVE_%1", _myID];
+					_active2 = !_humanCmd; //--- inside the _active gate (HQ alive + AICOM on); full command iff no human commander.
+					if ((missionNamespace getVariable [_aKey, false]) != _active2) then {
+						missionNamespace setVariable [_aKey, _active2]; publicVariable _aKey;
+					};
+					_fKey = format ["WFBE_AICOM_FOCUS_NAME_%1", _myID];
+					_focusT  = _logik getVariable "wfbe_aicom_focus";
+					_focusT0 = _logik getVariable "wfbe_aicom_focus_t0";
+					_focusNm = "";
+					if (!isNil "_focusT" && {!isNull _focusT} && {!isNil "_focusT0"} && {(time - _focusT0) < (missionNamespace getVariable ["WFBE_C_AICOM2_FOCUS_TTL", 600])}) then {
+						_focusNm = _focusT getVariable ["name", "?"];
+					};
+					if ((missionNamespace getVariable [_fKey, ""]) != _focusNm) then {
+						missionNamespace setVariable [_fKey, _focusNm]; publicVariable _fKey;
+					};
+					private ["_tKey","_uKey","_teamsN","_fundsN"];
+					_tKey = format ["WFBE_AICOM_TEAMS_%1", _myID];
+					_uKey = format ["WFBE_AICOM_FUNDS_%1", _myID];
+					_teamsN = count (_logik getVariable ["wfbe_teams", []]);
+					_fundsN = (_side) Call GetAICommanderFunds;
+					if ((missionNamespace getVariable [_tKey, -1]) != _teamsN) then {
+						missionNamespace setVariable [_tKey, _teamsN]; publicVariable _tKey;
+					};
+					if ((missionNamespace getVariable [_uKey, -1]) != _fundsN) then {
+						missionNamespace setVariable [_uKey, _fundsN]; publicVariable _uKey;
+					};
 				};
 			};
 			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
