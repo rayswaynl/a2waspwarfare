@@ -67,12 +67,22 @@ Zero server cost and A2-OA safe: no units/AI created, the cam is entirely client
 
 ## Part 2 — Auto-capture for TikTok (PLAN ONLY — not installed)
 
-### The hard constraint: the server renders nothing
+### The hard constraint: the Hetzner server renders nothing
 
-The WASP server is a **dedicated, headless** Arma 2 OA server — it has no 3D view, so there is no
-video to grab from the server process. **Capture must run on a machine that actually renders the
-game**: either a player's client or a dedicated "caster" client that joins and spectates. This is the
-decision that's still open (which PC), so nothing is installed yet.
+The WASP game server runs on **Hetzner** as a **dedicated, headless** Arma 2 OA server — no GPU, no
+3D view, nothing rendered. **You cannot capture video on the Hetzner box** (OBS there would record a
+black screen / console). This is not a config issue; a dedicated Arma server never renders the game.
+
+**So capture must run on a separate GPU machine** running a full Arma 2 OA **caster client** that
+joins the Hetzner server and renders the match. Hetzner only supplies the **trigger** (the `ROUNDEND`
+telemetry), not the video.
+
+**Decided (2026-06-28):** the recorder is **this gaming PC** (it has a GPU and already receives the
+ROUNDEND telemetry via the leaderboard pipeline). Still **plan-only — nothing installed yet.**
+
+Synergy with Part 1: the winner-cam runs on *every* connected client, so a caster client joined to
+the Hetzner match automatically gets the 45s orbit of the winning HQ at round end — that is exactly
+the footage OBS captures. No extra in-game work.
 
 ### Recommended architecture: OBS replay buffer, triggered by the existing ROUNDEND telemetry
 
@@ -82,19 +92,26 @@ We already emit a clean end-of-round marker to the RPT log (see `docs/WASPSTAT-F
 WASPSTAT|v1|<seq>|ROUNDEND|<winnerSide>|<durationSec>|<map>
 ```
 
-Pipeline on the **recording client PC**:
+Pipeline, all on **this gaming PC** (the caster/recorder):
 
-1. **OBS Studio** runs with the **Replay Buffer** enabled, capturing the game window continuously
-   (rolling ~60s buffer, never writing to disk until told to). Negligible overhead on a gaming PC.
-2. A small **watcher** (PowerShell, same pattern as our existing RPT reporters) tails the **client**
-   RPT — or the **server** RPT if capture runs on the same physical PC as the server — for a
-   `|ROUNDEND|` line.
-3. **Timing:** the 45s winner cam plays *after* ROUNDEND fires. So the watcher should **wait ~48s**
+1. **Caster client** — a full Arma 2 OA client auto-joins the **Hetzner** server and stays connected
+   for the match (occupies one player slot; at round end it gets the winner-cam like everyone else).
+   It must **auto-(re)join each match**, because matches rotate (`WaspMapRotate`, ~4h) and the mission
+   restarts — Arma does not auto-reconnect by default. **This auto-join/relaunch loop is the main
+   engineering effort of this lane** (a launcher script with `-connect=<hetzner-ip> -port=… -password=…`
+   that relaunches when the client drops to the server browser).
+2. **OBS Studio** runs with the **Replay Buffer** enabled, capturing the Arma window continuously
+   (rolling ~60s buffer, never written to disk until told to). Negligible overhead on a gaming PC.
+3. A small **watcher** (PowerShell, same pattern as our existing RPT reporters) detects round end.
+   The cleanest source on this PC is the **ROUNDEND telemetry that already arrives** via
+   `poster.ps1 → POST :3010` (see [[wasp-leaderboard-pipeline]]) — no new plumbing from Hetzner.
+   (Fallback: tail the local caster client's RPT for `|ROUNDEND|`.)
+4. **Timing:** the 45s winner cam plays *after* ROUNDEND fires. So the watcher should **wait ~48s**
    (≈ `WFBE_C_ENDGAME_HOLD` + a margin), *then* trigger OBS **Save Replay Buffer**. With a ~60s buffer
    the saved clip = the deciding moment + the full winner cam.
-4. Trigger OBS via the **obs-websocket** API (`SaveReplayBuffer` request) — cleaner than a global
+5. Trigger OBS via the **obs-websocket** API (`SaveReplayBuffer` request) — cleaner than a global
    hotkey and lets us name the file `wasp_<map>_<winnerSide>_<seq>.mkv`.
-5. **Vertical reformat for TikTok/Shorts (optional, automated):** `ffmpeg` crop+scale to 1080×1920,
+6. **Vertical reformat for TikTok/Shorts (optional, automated):** `ffmpeg` crop+scale to 1080×1920,
    e.g. centre-crop then `scale=1080:1920`, optionally burn in a title card
    ("WEST victory — Chernarus"). ffmpeg is **not currently installed** either.
 
@@ -105,18 +122,26 @@ risks a few dropped frames on record-start. A continuously-running replay buffer
 last 60s, so saving it ~48s later captures **both** the final battle and the whole cam in one clip,
 with no record-start hitch.
 
-### Open decisions before we install anything
+### Remaining decisions (smaller, deferred)
 
-- **Which PC renders/records?** This gaming PC (runs the server — would also need a client joined to
-  it), or a separate caster PC? Determines whether the watcher reads the local server RPT or a client RPT.
-- **Caster client?** A dedicated spectator slot that auto-flies the endgame would give the cleanest,
-  player-independent footage. Could reuse the same orbit logic in a free spectator.
-- **Auto-post vs. manual?** Recommend **manual** posting to TikTok first (auto-post needs the TikTok
+- **Caster slot behaviour during the match.** For round-end capture the caster only needs to be
+  *connected* (the replay buffer + winner-cam do the rest), so v1 can just sit at base. A roaming
+  auto-spectator that follows the action is a nice-to-have, not required.
+- **Auto-post vs. manual.** Recommend **manual** posting to TikTok first (auto-post needs the TikTok
   Content Posting API + app review; not worth it until the clips are proven good).
-- **Install footprint:** OBS Studio + obs-websocket (bundled in OBS ≥ 28) + ffmpeg. ~all free.
+- **Unattended/overnight.** The soak matches run unattended (see [[wasp-guer-overnight-soak]]); if we
+  want clips from those, the caster launcher + OBS must survive reboots (Scheduled Task at logon) and
+  the PC must stay logged in with the GPU session active (OBS can't capture from a locked session).
+
+### Install footprint (when Ray says go)
+
+OBS Studio + obs-websocket (bundled in OBS ≥ 28) + ffmpeg — all free. Plus a copy of Arma 2 OA on the
+gaming PC for the caster client (likely already present).
 
 ### Smallest next step when ready
 
-Install OBS on the chosen PC, enable Replay Buffer (60s) + obs-websocket, and write the
-`ROUNDEND → wait 48s → SaveReplayBuffer` watcher (≈30 lines of PowerShell, mirrors the existing
-RPT reporters). Vertical reformat is a follow-up once we like the raw 16:9 clips.
+1. Write the **caster auto-join launcher** (the hard part) — launch Arma with `-connect`/`-password`,
+   detect drop-to-browser, relaunch. 2. Install OBS, enable Replay Buffer (60s) + obs-websocket.
+3. Write the `ROUNDEND → wait 48s → SaveReplayBuffer` watcher (≈30 lines PowerShell, mirrors the
+   existing RPT reporters; can hook the `:3010` ingest that already receives ROUNDEND). Vertical
+   reformat is a follow-up once we like the raw 16:9 clips.
