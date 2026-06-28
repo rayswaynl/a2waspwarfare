@@ -129,7 +129,8 @@ def paste_emblem(im, aid, cx, cy, maxw, seed=None):
     s = maxw/a.width; a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     im.paste(a2, (int(cx-a2.width/2), int(cy-a2.height/2)), a2); return True
 
-HELI_ASSETS = {"silhouette_hind"}   # side-view helicopters get a procedural animated rotor
+# Per-silhouette animated FX (easy to extend: map a new asset id to "rotor"/"jet").
+VEHICLE_FX = {"silhouette_hind": "rotor", "silhouette_jet": "jet"}
 
 def _rotor(d, x, y, w, h, i, opacity, flipped):
     """Animate a side-view helicopter's rotors over the static silhouette: a faint blade-pass
@@ -142,6 +143,17 @@ def _rotor(d, x, y, w, h, i, opacity, flipped):
     d.ellipse([gx-5,ry-5,gx+5,ry+5], fill=(217,118,60,min(255,int(base*1.3))))
     tx = x + int(w*(0.14 if flipped else 0.86)); ty = y + int(h*0.30); tr = int(h*0.13)
     d.line([(tx,ty-tr),(tx,ty+tr)], fill=(8,10,14,int(base*0.8*fl)), width=2)  # tail rotor
+
+def _jet_fx(d, x, y, w, h, i, opacity, flipped):
+    """Animate a jet engine: a pulsing afterburner glow at the rear nozzle + a short heat trail."""
+    nx = x + int(w*(0.18 if flipped else 0.82)); ny = y + int(h*0.60)
+    pulse = 0.62 + 0.30*math.sin(i*0.9) + 0.12*math.sin(i*2.7)
+    base = min(255, int(255*opacity*2.0) + 30); tdir = -1 if flipped else 1   # exhaust streams behind
+    for k in range(1, 5):                                       # tapering heat trail
+        tx = nx + tdir*int(h*0.11*k); rr = max(1, int(h*0.055*(1-k/5)))
+        d.ellipse([tx-rr,ny-rr,tx+rr,ny+rr], fill=(217,118,60,int(base*0.45*pulse*(1-k/5))))
+    for rr,col,af in [(int(h*0.085),(217,118,60),0.9),(int(h*0.05),(245,180,100),0.85),(int(h*0.026),(255,232,182),0.95)]:
+        d.ellipse([nx-rr,ny-rr*0.78,nx+rr,ny+rr*0.78], fill=col+(int(min(255,base*af*pulse)),))  # nozzle core
 
 def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10, direction=-1, hover=False):
     """Drifting vehicle 'blackout' across a scene. The PNGs are drawn facing LEFT, so the sprite is
@@ -163,8 +175,11 @@ def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10, directi
         x = int(-w*0.25 + travel*(W + w*0.25)) if flipped else int(W + w*0.25 - travel*(W + w*0.25))
         y = int(H*yfrac)
     im.paste(a2, (x, y), a2)
-    if aid in HELI_ASSETS:
-        _rotor(ImageDraw.Draw(im, "RGBA"), x, y, w, h, i, opacity, flipped)
+    fx = VEHICLE_FX.get(aid)
+    if fx:
+        dd = ImageDraw.Draw(im, "RGBA")
+        if fx == "rotor": _rotor(dd, x, y, w, h, i, opacity, flipped)
+        elif fx == "jet":  _jet_fx(dd, x, y, w, h, i, opacity, flipped)
 
 _fx = {}
 def _fx_vignette():
@@ -399,7 +414,7 @@ def render(m, out_path):
 
     def s_momentum(im,d,i,n):
         paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed)   # generated scene backdrop (seed rotates)
-        drift_silhouette(im,m.seed+1,i,n,yfrac=0.71,wfrac=0.54,opacity=0.09,direction=(-1 if m.seed%2 else 1))
+        drift_silhouette(im,2,i,n,yfrac=0.72,wfrac=0.56,opacity=0.14,direction=(-1 if m.seed%2 else 1))  # jet w/ afterburner
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
         prog=ease(min(1,i/(n-12))); nshow=max(2,int(len(m.ser_x)*prog))
