@@ -304,6 +304,7 @@ def render(m, out_path):
         footer(im,d)
 
     def s_momentum(im,d,i,n):
+        paste_cover(im,"bg_momentum",opacity=0.5)   # generated scene backdrop if present
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
         prog=ease(min(1,i/(n-12))); nshow=max(2,int(len(m.ser_x)*prog))
