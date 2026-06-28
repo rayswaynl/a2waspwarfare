@@ -20,7 +20,7 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst","_concentrate"];
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -140,6 +140,10 @@ _logik setVariable ["wfbe_aicom_targets", _fist];   //--- the fist is the side's
 _harassN  = missionNamespace getVariable ["WFBE_C_AICOM2_HARASS_TEAMS", 1];
 if (_expandFirst) then {_harassN = 0};   //--- expansion-first: no enemy-rear raid until the engage threshold
 _expandN  = missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3];
+//--- CONCENTRATE-FIRST (Ray 2026-06-28): until we own WFBE_C_AICOM_CONCENTRATE_TOWNS towns, put FULL strength on the ONE fist
+//--- town - no expand/harass split (opening steamroller). After that the normal spread resumes. Layered under the engage gate.
+_concentrate = (_myTowns < (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATE_TOWNS", 4]));
+if (_concentrate) then {_expandN = 0; _harassN = 0};
 _harassTgt = objNull;
 if (_harassN > 0) then {
 	private ["_harassFar"];
@@ -254,4 +258,4 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 	};
 };
 
-diag_log ("AICOM2|v1|ALLOC|" + str _side + "|" + str (round (time / 60)) + "|fist=" + str (count _fist) + "|primary=" + ((_fist select 0) getVariable ["name","?"]) + "|src=" + (if (_fromFocus) then {"FOCUS"} else {"auto"}) + "|harassTo=" + (if (!isNull _harassTgt) then {_harassTgt getVariable ["name","?"]} else {"none"}) + "|assigned=" + str _assigned + "|harass=" + str _harassAssigned + "|expand=" + str _expandCount + "|teams=" + str (count _teams) + "|myTowns=" + str _myTowns + "|expandFirst=" + str _expandFirst);
+diag_log ("AICOM2|v1|ALLOC|" + str _side + "|" + str (round (time / 60)) + "|fist=" + str (count _fist) + "|primary=" + ((_fist select 0) getVariable ["name","?"]) + "|src=" + (if (_fromFocus) then {"FOCUS"} else {"auto"}) + "|harassTo=" + (if (!isNull _harassTgt) then {_harassTgt getVariable ["name","?"]} else {"none"}) + "|assigned=" + str _assigned + "|harass=" + str _harassAssigned + "|expand=" + str _expandCount + "|teams=" + str (count _teams) + "|myTowns=" + str _myTowns + "|expandFirst=" + str _expandFirst + "|concentrate=" + str _concentrate);
