@@ -14,6 +14,11 @@ playable ids (`229` + `230`) into plain CIV `Functionary1` `PLAY CDG` slots with
 `forceHeadlessClient`, moved the displaced WEST roster slots to `268` + `307`, and updated the WEST
 owner-logic sync list (`id=255`) to keep 14 WEST synced slots intact.
 
+This also refutes the lower-id `0`/`1` version staged in this PR: if the allocator honored plain CIV
+slots by playable id, it would have taken CIV `229` before WEST `231` during the boot test. It did not.
+The branch tip therefore restores the original mission.sqm slot layout and keeps only the runtime HC
+hardening plus this documented verdict.
+
 Local A2-OA dedicated boot-smoke (`1.64.144629`, temporary `HCSlotMagnetProbe.Chernarus`, no live
 deploy) still produced:
 
@@ -37,12 +42,15 @@ engine skips CIV lobby slots (both `forceHeadlessClient` and plain CIV) and seat
 lowest available WEST playable slot. No mission.sqm-only, enrollment-safe fix remains for the lobby
 label. Treat the residual as cosmetic and accept the existing runtime CIV reseat/prune behavior.
 
-## Functional status: ALREADY NEUTRALIZED — the residual is cosmetic
+## Functional status after this PR
+Runtime safety is carried forward from PR #118: HC-local reseat keeps gameplay-side, team-balance,
+vote-quorum, supply-stagnation, HC registry and HC disconnect cleanup authoritative even when the
+lobby allocator seats an HC on WEST. What remains is purely the **lobby/scoreboard slot label** and a
+temporary burn of 1 of 14 WEST slots before runtime pruning.
+
 `Headless/Init/Init_HC.sqf` reseats the HC's **side** to civilian (`[player] joinSilent (createGroup
 civilian)`), so team-balance, vote-quorum, and the no-players supply-stagnation timer all correctly
-see CIV (RPT confirms `HCSIDE|...|reseat|...|sideNow=CIV` + the orphan WEST group is pruned). What
-remains is purely the **lobby/scoreboard slot label** (id=229 is `side="WEST"` in mission.sqm) and
-it costs 1 of 14 WEST slots.
+see CIV (RPT confirms `HCSIDE|...|reseat|...|sideNow=CIV` + the orphan WEST group is pruned).
 
 ## Root cause (confirmed 2026-06-28)
 The engine seats a connecting HC before mission scripts run. In A2-OA 1.64, `forceHeadlessClient` is
@@ -73,14 +81,14 @@ slots and preserving the 14-slot WEST roster at higher ids. The first HC still r
 `HCSIDE|v1|preseat|...|engineSide=WEST`. Do **not** repeat this angle.
 
 ## Key files
-- `Headless/Init/Init_HC.sqf` — the side-reseat + persistent re-reseat watcher. NOTE: the latest
-  hardened version (PR #118) lives on `codex/hc-civ-slotting-live` and `claude/command-center-instruct`;
-  `master` (this branch's base) has the pre-#118 version. The **mission.sqm slots are identical** on
-  all branches, so the magnet experiment is unaffected by the Init_HC version.
-- `mission.sqm` — slot defs: `id=229` (Item64, WEST FR_Miles leader, sync 255); `id=268` (Item93) +
-  `id=307` (Item128) = CIV Functionary1 forceHeadlessClient. The WEST owner-logic `id=255` (sync list
-  line ~3920) and EAST `id=256` (~3939) reference slots by id — any id you move must have all its
-  `synchronizations[]` back-references updated in lockstep.
+- `Headless/Init/Init_HC.sqf` — side-reseat + persistent re-reseat watcher + cold-start reannounce from
+  PR #118.
+- `mission.sqm` — baseline slot defs are restored at branch tip: `id=229` (Item64, WEST FR_Miles
+  leader, sync 255); `id=268` (Item93) + `id=307` (Item128) = CIV Functionary1
+  `forceHeadlessClient`. The attempted plain-CIV `id=0`/`id=1` magnet layout is refuted and not left
+  active.
+- The WEST owner-logic `id=255` and EAST `id=256` reference combat slots by id, so any future slot
+  experiment must keep all `synchronizations[]` back-references in lockstep.
 - `Server/Functions/Server_HandleSpecial.sqf` — the `connected-hc` owner-keyed registration.
 
 ## Constraints (HARD)

@@ -1,6 +1,6 @@
 # JOURNAL — a2waspwarfare-experital
 
-## 2026-06-28 - HC lobby-slot magnet: plain CIV sliver disproved
+## 2026-06-28 - HC lobby-slot magnet: plain CIV sliver disproved [PR #119]
 
 Codex tested the last open HC lobby-slot angle on branch `claude/hc-slot-magnet`: convert the two
 lowest playable ids (`229` + `230`) into plain CIV `Functionary1` `PLAY CDG` slots with no
@@ -14,7 +14,29 @@ the lowest available WEST playable slot in this mission. No enrollment-safe miss
 remains; accept the residual lobby/scoreboard label as cosmetic and keep the runtime CIV reseat/prune
 behavior.
 
----
+The branch briefly carried a lower-id `0`/`1` plain-CIV magnet experiment, but the local boot result
+already refutes the premise: if the allocator honored plain CIV playable ids, it would have chosen CIV
+`229` before WEST `231`. The branch tip restores the original mission.sqm slot layout and keeps the
+runtime hardening/documented verdict only.
+
+## 2026-06-28 — HC CIV slotting hardening [PR]
+
+Root cause is no longer "missing CIV HC slots": `origin/master` already has two CIV `forceHeadlessClient=1`
+slots plus the B761/B762/B763 enrollment/vote fixes. The remaining failure surface is boot/restart timing:
+HC-local reseat used mission `time`/`sleep`, server registration gave owner resolution only 3 seconds, and
+the HC registry was keyed by UID even though A2 HCs may report empty/colliding UIDs.
+
+Patch on `codex/hc-civ-slotting-live`:
+- `Headless/Init/Init_HC.sqf`: use `diag_tickTime`/`uiSleep` for reseat deadlines, mark the pre-reseat
+  magnet group, and briefly reannounce `connected-hc` after cold start.
+- `Server/Functions/Server_HandleSpecial.sqf`: wait longer for owner, require server-observed CIV before
+  registry capture, key/de-dupe HCs by owner ID, and prune HC magnet groups even when UID is empty.
+- `Server/Functions/Server_OnPlayerDisconnected.sqf`: clean HC registry by owner for UID-empty HCs before
+  the human disconnect path.
+
+Verification: `dotnet run` in `Tools/LoadoutManager` regenerated Takistan and packed `_MISSIONS.7z`;
+the touched Chernarus/Takistan files hash-match; `git diff --check` has no whitespace errors beyond the
+repo's existing CRLF warnings.
 
 ## 2026-06-20 — JOIN SAGA: definitive root causes + fixes (B54/B56) [INCIDENT / POSTMORTEM — CORRECTS THE B49 ENTRY BELOW]
 
