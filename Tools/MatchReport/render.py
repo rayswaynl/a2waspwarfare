@@ -348,8 +348,9 @@ def render(m, out_path):
             if idx==0 and paste_emblem(im,"icon_mvp",92,y+bh/2,52): pass   # medal on #1 if generated
             else: d.text((92,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
             panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
-            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+16),p["name"],font=f_h3,fill=INK)
-            d.text((158,y+58),f'{SIDE_NAME[p["side"]]}  ·  {p["kills"]}K / {p["d"][6]}D  ·  {p["d"][10]} caps',font=f_xs,fill=DIM)
+            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+13),p["name"],font=f_h3,fill=INK)
+            _sub=f'{SIDE_NAME[p["side"]]}   ·   {p["kills"]}K / {p["d"][6]}D   ·   {p["d"][10]} caps'
+            d.text((159,y+63),_sub,font=f_xs,fill=(14,16,20)); d.text((158,y+62),_sub,font=f_xs,fill=(196,199,189))
             d.text((W-84,y+bh/2),str(int(p["score"]*prog)),font=f_h3,fill=INK,anchor="rm")
         footer(im,d)
 
@@ -447,8 +448,9 @@ def render_leaderboard(data, out_path):
             if idx==0 and paste_emblem(im,"icon_mvp",92,y+bh/2,52): pass
             else: d.text((92,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
             panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
-            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+16),p["name"],font=f_h3,fill=INK)
-            d.text((158,y+58),f'{SIDE_NAME[p["side"]]}   ·   {p["kills"]} kills   ·   {p["caps"]} caps',font=f_xs,fill=DIM)
+            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+13),p["name"],font=f_h3,fill=INK)
+            _sub=f'{SIDE_NAME[p["side"]]}   ·   {p["kills"]} kills   ·   {p["caps"]} caps'
+            d.text((159,y+63),_sub,font=f_xs,fill=(14,16,20)); d.text((158,y+62),_sub,font=f_xs,fill=(196,199,189))
             d.text((W-84,y+bh/2),str(int(p["score"]*prog)),font=f_h3,fill=INK,anchor="rm")
         footer(im,d)
 
