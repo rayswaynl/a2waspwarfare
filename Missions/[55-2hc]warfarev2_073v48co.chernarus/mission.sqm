@@ -112,7 +112,7 @@ class Mission
 				class Item0
 				{
 					position[]={10203.106,61.453606,4053.7334};
-					id=9007;
+					id=0;
 					side="LOGIC";
 					vehicle="LocationLogicStart";
 					leader=1;
@@ -129,7 +129,7 @@ class Mission
 				class Item0
 				{
 					position[]={1946.9515,0.073881432,54.891724};
-					id=9008;
+					id=1;
 					side="LOGIC";
 					vehicle="Logic";
 					leader=1;
@@ -4184,14 +4184,15 @@ class Mission
 				class Item0
 				{
 					position[]={1927.2078,544.75983,15282.436};
-					id=0;
+					id=268;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
+					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
-					description="Headless Client (CIV magnet)";
+					description="Headless Client";
 				};
 			};
 		};
@@ -4968,14 +4969,15 @@ class Mission
 				class Item0
 				{
 					position[]={1937.2078,544.75983,15282.436};
-					id=1;
+					id=307;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
+					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
-					description="Headless Client 2 (CIV magnet)";
+					description="Headless Client 2";
 				};
 			};
 		};
