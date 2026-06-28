@@ -52,10 +52,24 @@ if (!isNil "_psPair" && {typeName _psPair == "STRING"} && {!isNil "_psT0"} && {(
 };
 _expandFirst = false;
 if (_engageMin > 0 && {_myTowns < _engageMin}) then {
-	private ["_neutPool","_sid"];
-	_neutPool = [];
-	{ _sid = _x getVariable ["sideID", -1]; if (_sid != _sideID && {_sid != _enemyID}) then {_neutPool set [count _neutPool, _x]} } forEach _tgtTowns;
-	if (count _neutPool > 0) then {_tgtTowns = _neutPool; _expandFirst = true};
+		private ["_neutPool","_sid","_guerID","_softPool"];
+		_neutPool = [];
+		_softPool = [];
+		_guerID = WFBE_C_GUER_ID;   //--- GUER/resistance own-id (towns held/garrisoned by GUER carry this sideID)
+		{
+			_sid = _x getVariable ["sideID", -1];
+			if (_sid != _sideID && {_sid != _enemyID}) then {
+				_neutPool set [count _neutPool, _x];
+				if (_sid != _guerID) then {_softPool set [count _softPool, _x]};
+			};
+		} forEach _tgtTowns;
+		//--- PREFER NEUTRAL (Ray 2026-06-28): target SOFT (GUER-free) neutral towns first so the concentrate fist
+		//--- never pins on a reinforcing GUER fortress (e.g. Berezino) while easy towns sit free; fall back to the
+		//--- GUER-inclusive pool only when no soft neutral remains, so it still never idles.
+		if (count _softPool > 0) then {_tgtTowns = _softPool; _expandFirst = true} else {
+			if (count _neutPool > 0) then {_tgtTowns = _neutPool; _expandFirst = true};
+		};
+		diag_log ("AICOM2|v1|FISTPOOL|" + str _side + "|soft=" + str (count _softPool) + "|neutInclGuer=" + str (count _neutPool) + "|using=" + (if (count _softPool > 0) then {"soft"} else {"neut"}));
 };
 
 //--- helper: a town's distance to OUR nearest front (own town, else our HQ) = how forward it is.
