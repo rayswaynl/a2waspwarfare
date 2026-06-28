@@ -4177,7 +4177,7 @@ class Mission
 		};
 		class Item93
 		{
-			side="CIV";
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -4963,7 +4963,7 @@ class Mission
 		};
 		class Item128
 		{
-			side="CIV";
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
