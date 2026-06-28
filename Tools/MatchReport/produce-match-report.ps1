@@ -29,7 +29,7 @@ $ErrorActionPreference = 'Stop'
 $ToolDir   = 'C:\Users\Game\a2waspwarfare-report\Tools\MatchReport'
 $Py        = Join-Path $ToolDir '.venv\Scripts\python.exe'
 $Hetzner   = 'Administrator@78.46.107.142'
-$RemoteRpt = 'C:/Users/Administrator/AppData/Local/ArmA 2 OA/arma2oaserver.RPT'
+$RemoteRpt = 'C:\Users\Administrator\AppData\Local\ArmA 2 OA\arma2oaserver.RPT'  # backslashes: remote `type` (cmd) rejects forward slashes
 $StateFile = Join-Path $OutDir '.last-rendered-seq.txt'
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
