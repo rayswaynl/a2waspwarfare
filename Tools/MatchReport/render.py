@@ -11,10 +11,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ---- optional generated art (drop PNGs in assets/; see assets.py / gen_prompts.py) ----
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
-try: from assets import emblem_id, winner_bg_id
+try: from assets import emblem_id, winner_bg_id, SILHOUETTES
 except Exception:
     def emblem_id(s): return None
     def winner_bg_id(s): return None
+    SILHOUETTES = []
 _acache = {}
 def asset(aid):
     if aid in _acache: return _acache[aid]
@@ -82,6 +83,16 @@ def paste_emblem(im, aid, cx, cy, maxw):
     if a is None: return False
     s = maxw/a.width; a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     im.paste(a2, (int(cx-a2.width/2), int(cy-a2.height/2)), a2); return True
+
+def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10):
+    """Faint drifting vehicle 'blackout' behind open scenes, if the asset exists."""
+    if not SILHOUETTES: return
+    a = asset(SILHOUETTES[idx % len(SILHOUETTES)])
+    if a is None: return
+    w = int(W*wfrac); a2 = a.resize((w, max(1, int(a.height*w/a.width)))).copy()
+    a2.putalpha(a2.split()[3].point(lambda v: int(v*opacity)))
+    x = int(-w*0.25 + (i/max(1, n))*(W + w*0.25)); y = int(H*yfrac)
+    im.paste(a2, (x, y), a2)
 
 def overlay_fx(im):
     """Composite the global grain + HUD frame over a finished RGB frame, if present."""
@@ -257,6 +268,7 @@ def render(m, out_path):
 
     def s_mvp(im,d,i,n):
         if not m.mvp: return
+        paste_cover(im,"mvp_backdrop")   # optional spotlight/soldier backdrop if generated
         header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
         if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
@@ -322,6 +334,7 @@ def render(m, out_path):
             wash=np.asarray(im).astype(np.float32); wash[:]=mix(lerp(BG,col,0.20),k); im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0)); d=ImageDraw.Draw(im,"RGBA")
             for j in range(80):
                 px=(j*977)%W; sp=40+(j*53)%120; py=H-(i*sp/6)%H; d.ellipse([px,py,px+5,py+5],fill=lerp(col,INK,(j%5)/5))
+        drift_silhouette(im, 0, i, n, yfrac=0.72, wfrac=0.60, opacity=0.10)  # faint blackout low, if generated
         paste_emblem(im, emblem_id(m.winner), W/2, 320, 200)
         d.text((W/2,520),SIDE_NAME[m.winner],font=f_huge,fill=INK,anchor="mm"); d.text((W/2,650),"VICTORY",font=f_huge,fill=col,anchor="mm")
         mm,ss=divmod(m.duration,60); o=m.owners_at(m.duration); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values())

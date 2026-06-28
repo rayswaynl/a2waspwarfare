@@ -91,7 +91,54 @@ ASSETS = {
               "faction hint rising from the bottom kept subordinate to the gunmetal/olive base, a "
               "single sparing orange #D9763C rim of light, film grain, heavy vignette, empty center "
               "for stats. 9:16 1080x1920. " + STYLE},
+ "winner_bg_guer": {
+    "file": "winner_bg_guer.png", "size": (1080, 1920), "transparent": False,
+    "role": "Victory background when the guerrilla faction wins.",
+    "prompt": "A tall vertical victory background, sombre and tactical: dark gunmetal #14171B field, "
+              "faint topographic grid, low haze, a restrained muted olive-green faction hint rising "
+              "from the bottom subordinate to the gunmetal base, a single sparing orange #D9763C rim "
+              "of light, film grain, heavy vignette, empty center for stats. 9:16 1080x1920. " + STYLE},
+ "mvp_backdrop": {
+    "file": "mvp_backdrop.png", "size": (1080, 1920), "transparent": True,
+    "role": "Faint spotlight backdrop behind the MVP card.",
+    "prompt": "Transparent PNG backdrop: a single dim overhead spotlight cone and the faint backlit "
+              "silhouette of a lone standing soldier with rifle, low in the frame, gunmetal and olive "
+              "with a thin orange rim, heavy haze, mostly empty transparent space in the upper half. "
+              "9:16 1080x1920. No text. " + STYLE},
+ # --- vehicle "blackouts" (brief §6): drifting transparent side-profile silhouettes ---
+ "silhouette_hind": {
+    "file": "silhouette_hind.png", "size": (1280, 560), "transparent": True,
+    "role": "Drifting background layer / scene accent (Mi-24 Hind).",
+    "prompt": "A military-accurate side-profile silhouette of a Mi-24 Hind gunship, solid dark "
+              "gunmetal-to-steel gradient fill, a thin warm-orange #D9763C rim-light along the top "
+              "edge, transparent background, backlit-at-dusk, sharp detailed outline (rotor, weapons "
+              "pylons, landing gear), no interior detail. " + STYLE},
+ "silhouette_tank": {
+    "file": "silhouette_tank.png", "size": (1280, 560), "transparent": True,
+    "role": "Drifting background layer / scene accent (T-72 MBT).",
+    "prompt": "A military-accurate side-profile silhouette of a T-72 main battle tank, solid dark "
+              "gunmetal-to-steel gradient fill, a thin warm-orange #D9763C rim-light along the top "
+              "edge, transparent background, backlit-at-dusk, sharp detailed outline (gun barrel, "
+              "turret, road wheels, tracks), no interior detail. " + STYLE},
+ "silhouette_jet": {
+    "file": "silhouette_jet.png", "size": (1280, 560), "transparent": True,
+    "role": "Drifting background layer / scene accent (fast jet).",
+    "prompt": "A military-accurate side-profile silhouette of a Cold-War ground-attack jet (Su-25 "
+              "style), solid dark gunmetal-to-steel gradient fill, a thin warm-orange #D9763C "
+              "rim-light along the top edge, transparent background, backlit-at-dusk, sharp detailed "
+              "outline (wings, pylons, tail), no interior detail. " + STYLE},
+ "outro_bg": {
+    "file": "outro_bg.png", "size": (1080, 1920), "transparent": False,
+    "role": "Closing call-to-action card background (join / play).",
+    "prompt": "A tall vertical closing card background for a community CTA: dark gunmetal #14171B "
+              "with a faint topographic grid and a low dusk haze, a drifting Hind and tank silhouette "
+              "bleeding off the bottom corners, a single warm orange #D9763C glow, film grain, heavy "
+              "vignette, large empty calm center for a logo and a short call-to-action. 9:16 "
+              "1080x1920. No text. " + STYLE},
 }
 
+# silhouettes available as drifting background layers (renderer picks per scene if present)
+SILHOUETTES = ["silhouette_hind", "silhouette_tank", "silhouette_jet"]
+
 def emblem_id(side): return {"west": "emblem_blufor", "east": "emblem_opfor", "guer": "emblem_guer"}.get(side)
-def winner_bg_id(side): return {"west": "winner_bg_blufor", "east": "winner_bg_opfor"}.get(side)
+def winner_bg_id(side): return {"west": "winner_bg_blufor", "east": "winner_bg_opfor", "guer": "winner_bg_guer"}.get(side)
