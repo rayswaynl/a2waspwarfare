@@ -38,14 +38,21 @@ WORLD_SIZE = {"chernarus": 15360, "takistan": 12800, "default": 15360}
 TOWN_COORDS = {
  # Accurate Chernarus map positions (metres, 0..15360, y=north). Used until the boot
  # logger (WFBE_C_LOG_TOWN_COORDS) harvests the mission's exact getPos set.
+ # EXACT Chernarus positions, boot-harvested from the live mission's town logics via the
+ # WFBE_C_LOG_TOWN_COORDS logger (TOWNPOS|v1|... RPT lines, 46 towns incl. airfields/Khe Sanh).
  "chernarus": {
-  "Kamenka":(2092,1980),"Komarovo":(3673,2148),"Pavlovo":(2049,3759),"Chernogorsk":(6731,2653),
-  "Elektrozavodsk":(10303,2330),"Zelenogorsk":(2542,5267),"Bor":(3380,4570),"Mogilevka":(7159,5434),
-  "Solnichniy":(13507,5527),"Pogorevka":(4402,6196),"Vyshnoye":(5742,6892),"Msta":(9869,7565),
-  "Rogovo":(4490,7910),"Stary Sobor":(6192,7720),"Novy Sobor":(7037,7860),"Pustoshka":(3107,8806),
-  "Kabanino":(5294,8741),"Berezino":(12059,9072),"Stary Yar":(9230,9690),"Grishino":(6234,9992),
-  "Polana":(10846,9971),"Nadezhdino":(8540,10210),"Vybor":(3870,10300),"Orlovets":(10630,10810),
-  "Dubrovka":(12812,10610),"Lopatino":(5680,11100),"Gvozdno":(9583,12121),"Krasnostav":(11268,12346),
+  "Balota":(4540,2285),"Berezino":(12125,9145),"Bor":(3334,3921),"Chernogorsk":(6833,2439),
+  "Dolina":(11269,6593),"Dubrovka":(10492,9831),"Elektrozavodsk":(10280,1970),"Gorka":(9629,8866),
+  "Grishino":(6076,10378),"Guglovo":(8414,6738),"Gvozdno":(8640,11946),"Kabanino":(5424,8616),
+  "Kamenka":(1827,2261),"Kamyshovo":(11960,3523),"Khe Sanh Alpha":(14700,9400),"Khe Sanh Bravo":(10000,700),
+  "Khe Sanh Charlie":(14700,2000),"Khelm":(12376,10878),"Komarovo":(3512,2485),"Krasnostav":(10984,12372),
+  "Lopatino":(2787,9832),"Mogilevka":(7477,5203),"Msta":(11395,5510),"Myshkino":(1916,7439),
+  "NEAF":(11850,12690),"NWAF":(4470,10615),"Nadezhdino":(5925,4727),"Nizhnoye":(12958,8095),
+  "Novy Sobor":(7140,7758),"Olsha":(13386,12856),"Pavlovo":(1754,3925),"Petrovka":(4984,12593),
+  "Polana":(10702,7983),"Prigorodki":(8118,3306),"Pulkovo":(4995,5595),"Pusta":(9110,3809),
+  "Pustoshka":(3112,7947),"Rogovo":(4733,6767),"Shakhovka":(9735,6517),"Solnichniy":(13406,6178),
+  "Staroye":(10062,5439),"Stary Sobor":(6222,7822),"Tulga":(12785,4473),"Vybor":(3724,8988),
+  "Vyshnoye":(6532,6151),"Zelenogorsk":(2591,5437),
  },
  "takistan": {},   # TODO: fill from the boot-time town-position logger.
 }
