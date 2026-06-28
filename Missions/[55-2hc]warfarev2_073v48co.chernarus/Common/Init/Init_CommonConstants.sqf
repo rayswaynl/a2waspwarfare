@@ -858,6 +858,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_GAMEPLAY_FAST_TRAVEL_RANGE_MAX = 3500;
 	WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM = 215;
 	WFBE_C_GAMEPLAY_FAST_TRAVEL_TIME_COEF = 0.8;
+	WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE = 5000;     //--- Ray 2026-06-28: flat base fee to USE fast travel (fee mode 2), added on top of the per-km price.
+	WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE = 2500; //--- Ray 2026-06-28: extra fee per DISTINCT VEHICLE taken along.
 	WFBE_C_GAMEPLAY_VOTE_TIME = if (WF_Debug) then {3} else {40};
 
 //--- Modules.

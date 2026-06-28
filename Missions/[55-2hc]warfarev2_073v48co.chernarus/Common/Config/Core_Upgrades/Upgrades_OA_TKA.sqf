@@ -42,7 +42,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[4500,0]], //--- Custom Flares
 	[[800,0],[1400,0],[2200,0],[3700,0],[6100,0],[10000,0]], //--- Artillery Time
 	[[49500,80000]], //--- ICBM
-	[[1500,0]], //--- Fast Travel
+	[[12000,0]], //--- Fast Travel
 	[[250,0],[650,0],[1200,0],[2100,0],[2400,0]], //--- Gear
 	[[750,0]], //--- Build Ammo
 	[[4000,0]], //--- EASA
@@ -103,7 +103,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
     [[],[],[],[],[],[]], //--- Artillery Time
 	[[WFBE_UP_AIR,3]], //--- ICBM
 	[
-		[[WFBE_UP_LIGHT,1],[WFBE_UP_SUPPLYRATE,1]]
+		[[WFBE_UP_LIGHT,3],[WFBE_UP_SUPPLYRATE,1]]
 	], //--- Fast Travel
 	[[],[],[],[],[]], //--- Gear
 	[[WFBE_UP_GEAR,2]], //--- Build Ammo

@@ -416,12 +416,14 @@ while {alive player && dialog} do {
 				_mode = -1;
 
 				if (_ft == 2) then {
-					_fee = round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
+					_fee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
 					-(_fee) Call ChangePlayerFunds;
 				};
 				
 				_travelingWith = [];
 				{if (_x distance _startPoint < _ftr && !(_x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
+				//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE per DISTINCT real vehicle taken along (dedupe dup crew-seat handles + exclude foot units).
+				if (_ft == 2) then {private "_ftSeen"; _ftSeen = []; {if (!(_x in _ftSeen) && !(_x isKindOf "Man")) then {_ftSeen set [count _ftSeen, _x]; -(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds}} forEach _travelingWith;};
 				
 				ForceMap true;
 				_compass = shownCompass;
