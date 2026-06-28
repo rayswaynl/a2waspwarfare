@@ -67,9 +67,27 @@ Hetzner server RPT  ──WASPSTAT|v1|…──►  box.ps1 / poster.ps1  ──
   shape the parser produces (so the renderer can't tell sample from live).
 - **`render.py`** — `render(MatchData, out)`; all scene drawing (Pillow → frames → mp4).
 - **`render_report.py`** — CLI.
+- **`assets.py` / `gen_prompts.py` / `assets/`** — optional generated art (below).
 
 Telemetry contract: see `docs/WASPSTAT-FORMAT.md` in the repo (PLAYERSTATS `d0..d14`,
 `KILL`, `CAPTURE`, `ROUNDEND`).
+
+## Generated art (optional — "prompt pack + drop folder")
+
+The report renders fully procedurally out of the box. To dress it up with generated
+art (intro splash, faction crests, HUD frame, grain, victory backgrounds):
+
+```
+python gen_prompts.py            # prints a ChatGPT prompt for each asset slot
+```
+
+Each block is stamped with an exact **`SAVE AS`** filename. Generate the image
+(image-gen-2 / ChatGPT), **save it under `assets/` using that exact name**, and
+re-render — the renderer auto-detects whatever is present and composites it; missing
+slots fall back to the procedural look. The filename is the tracking key, so naming
+must match `assets.py` exactly. `assets.py` is the registry (slots, sizes, prompts);
+the drop-folder PNGs are gitignored (binaries). The map is **not** an asset slot — an
+accurate procedural map beats a hallucinated generated one.
 
 ## Known gaps → production wiring (all small, mostly mission-side)
 

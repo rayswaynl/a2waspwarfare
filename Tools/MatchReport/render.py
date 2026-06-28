@@ -6,8 +6,27 @@ Scenes: intro -> battle control-map -> momentum -> MVP -> leaderboard ->
 combat breakdown -> decisive blow -> winner card. Pure Pillow drawing; encoded
 with the ffmpeg bundled by imageio-ffmpeg (no system ffmpeg needed).
 """
-import math, numpy as np, imageio.v2 as imageio
+import math, os, numpy as np, imageio.v2 as imageio
 from PIL import Image, ImageDraw, ImageFont
+
+# ---- optional generated art (drop PNGs in assets/; see assets.py / gen_prompts.py) ----
+ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
+try: from assets import emblem_id, winner_bg_id
+except Exception:
+    def emblem_id(s): return None
+    def winner_bg_id(s): return None
+_acache = {}
+def asset(aid):
+    if aid in _acache: return _acache[aid]
+    img = None
+    try:
+        from assets import ASSETS
+        meta = ASSETS.get(aid)
+        if meta:
+            p = os.path.join(ASSET_DIR, meta["file"])
+            if os.path.exists(p): img = Image.open(p).convert("RGBA")
+    except Exception: img = None
+    _acache[aid] = img; return img
 
 W, H, FPS = 1080, 1920, 30
 BG=(11,15,21); PANEL=(20,26,35); WEST=(62,142,255); EAST=(236,72,72); GUER=(96,200,112)
@@ -22,6 +41,32 @@ f_huge=F(104); f_h1=F(70); f_h2=F(52); f_h3=F(40); f_md=F(34); f_sm=F(28); f_xs=
 def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
 def mix(c,t): return lerp(BG,c,t)
+
+def paste_cover(im, aid, box=None):
+    """Paste an asset scaled to COVER box (default whole frame). Returns True if used."""
+    a = asset(aid)
+    if a is None: return False
+    bx = box or (0, 0, W, H); bw = bx[2]-bx[0]; bh = bx[3]-bx[1]
+    s = max(bw/a.width, bh/a.height); a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
+    im.paste(a2, (bx[0]+(bw-a2.width)//2, bx[1]+(bh-a2.height)//2), a2); return True
+
+def paste_emblem(im, aid, cx, cy, maxw):
+    a = asset(aid)
+    if a is None: return False
+    s = maxw/a.width; a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
+    im.paste(a2, (int(cx-a2.width/2), int(cy-a2.height/2)), a2); return True
+
+def overlay_fx(im):
+    """Composite the global grain + HUD frame over a finished RGB frame, if present."""
+    gr = asset("grain"); fo = asset("frame_overlay")
+    if gr is None and fo is None: return im
+    out = im.convert("RGBA")
+    if gr is not None:
+        g = gr.resize((W, H)).copy(); g.putalpha(g.split()[3].point(lambda v: int(v*0.12)))
+        out = Image.alpha_composite(out, g)
+    if fo is not None:
+        out = Image.alpha_composite(out, fo.resize((W, H)))
+    return out.convert("RGB")
 
 MX0,MY0,MS=40,470,1000
 
@@ -121,13 +166,14 @@ def render(m, out_path):
     def fade(im,k): return im if k>=1 else Image.fromarray((np.asarray(im).astype(np.float32)*k).astype(np.uint8))
     def scene(n,fn,fin=12,fout=10):
         for i in range(n):
-            im,d=base(); fn(im,d,i,n)
+            im,d=base(); fn(im,d,i,n); im=overlay_fx(im)
             k=1.0
             if i<fin: k=ease(i/fin)
             if i>n-fout: k=ease((n-i)/fout)
             frames.append(np.asarray(fade(im,k)))
 
     def s_intro(im,d,i,n):
+        paste_cover(im,"intro_splash")   # generated background if present, else dark base
         d.text((W/2,H/2-150),"WASP WARFARE",font=f_huge,fill=INK,anchor="mm")
         d.text((W/2,H/2-30),m.map_name,font=f_h1,fill=WEST,anchor="mm")
         d.text((W/2,H/2+70),"POST-MATCH REPORT",font=f_h3,fill=DIM,anchor="mm")
@@ -177,7 +223,8 @@ def render(m, out_path):
         if not m.mvp: return
         header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
-        d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
+        if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
+            d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
         d.text((350,330),p["name"],font=f_h1,fill=INK); chip(d,352,418,p["side"],f_md)
         gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
         cells=[("KILLS",num(p["kills"]),col),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',GOLD),
@@ -233,9 +280,13 @@ def render(m, out_path):
 
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
-        wash=np.asarray(im).astype(np.float32); wash[:]=mix(lerp(BG,col,0.20),k); im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0)); d=ImageDraw.Draw(im,"RGBA")
-        for j in range(80):
-            px=(j*977)%W; sp=40+(j*53)%120; py=H-(i*sp/6)%H; d.ellipse([px,py,px+5,py+5],fill=lerp(col,INK,(j%5)/5))
+        if paste_cover(im, winner_bg_id(m.winner)):
+            d=ImageDraw.Draw(im,"RGBA")
+        else:
+            wash=np.asarray(im).astype(np.float32); wash[:]=mix(lerp(BG,col,0.20),k); im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0)); d=ImageDraw.Draw(im,"RGBA")
+            for j in range(80):
+                px=(j*977)%W; sp=40+(j*53)%120; py=H-(i*sp/6)%H; d.ellipse([px,py,px+5,py+5],fill=lerp(col,INK,(j%5)/5))
+        paste_emblem(im, emblem_id(m.winner), W/2, 320, 200)
         d.text((W/2,520),SIDE_NAME[m.winner],font=f_huge,fill=INK,anchor="mm"); d.text((W/2,650),"VICTORY",font=f_huge,fill=col,anchor="mm")
         mm,ss=divmod(m.duration,60); o=m.owners_at(m.duration); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values())
         mvp=m.mvp["name"]+f' ({m.mvp["kills"]}K)' if m.mvp else "—"
