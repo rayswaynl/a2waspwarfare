@@ -129,15 +129,42 @@ def paste_emblem(im, aid, cx, cy, maxw, seed=None):
     s = maxw/a.width; a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     im.paste(a2, (int(cx-a2.width/2), int(cy-a2.height/2)), a2); return True
 
-def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10):
-    """Faint drifting vehicle 'blackout' behind open scenes, if the asset exists."""
+HELI_ASSETS = {"silhouette_hind"}   # side-view helicopters get a procedural animated rotor
+
+def _rotor(d, x, y, w, h, i, opacity, flipped):
+    """Animate a side-view helicopter's rotors over the static silhouette: a faint blade-pass
+    flicker on the main disc + an orange tip-glint sweeping across it, plus a flickering tail rotor."""
+    base = min(255, int(255*opacity*2.4) + 28)
+    ry = y + int(h*0.20); rx0 = x + int(w*0.12); rx1 = x + int(w*0.82); rmid = (rx0+rx1)//2
+    fl = 0.4 + 0.6*abs(math.sin(i*0.85))                       # blades passing
+    d.line([(rx0,ry),(rx1,ry)], fill=(8,10,14,int(base*0.7*fl)), width=max(2,int(h*0.04)))
+    gx = rmid + (rx1-rmid)*math.sin(i*0.8)                     # tip glint sweeping the disc fast
+    d.ellipse([gx-5,ry-5,gx+5,ry+5], fill=(217,118,60,min(255,int(base*1.3))))
+    tx = x + int(w*(0.14 if flipped else 0.86)); ty = y + int(h*0.30); tr = int(h*0.13)
+    d.line([(tx,ty-tr),(tx,ty+tr)], fill=(8,10,14,int(base*0.8*fl)), width=2)  # tail rotor
+
+def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10, direction=-1, hover=False):
+    """Drifting vehicle 'blackout' across a scene. The PNGs are drawn facing LEFT, so the sprite is
+    flipped to face its travel direction (never drives backwards). Helicopters get an animated rotor.
+    hover=True keeps it on-screen with a gentle bob (showcases the spinning rotor)."""
     if not SILHOUETTES: return
-    a = asset(SILHOUETTES[idx % len(SILHOUETTES)])
+    aid = SILHOUETTES[idx % len(SILHOUETTES)]
+    a = asset(aid)
     if a is None: return
-    w = int(W*wfrac); a2 = a.resize((w, max(1, int(a.height*w/a.width)))).copy()
+    w = int(W*wfrac); h = max(1, int(a.height*w/a.width)); a2 = a.resize((w, h)).copy()
+    flipped = direction > 0
+    if flipped: a2 = a2.transpose(Image.FLIP_LEFT_RIGHT)        # face right when moving right
     a2.putalpha(a2.split()[3].point(lambda v: int(v*opacity)))
-    x = int(-w*0.25 + (i/max(1, n))*(W + w*0.25)); y = int(H*yfrac)
+    if hover:
+        x = int(W*0.5 - w*0.5 + W*0.05*math.sin(i/max(1,n)*math.pi*2))   # gentle centred drift
+        y = int(H*yfrac + H*0.010*math.sin(i*0.45))                      # slight vertical bob
+    else:
+        travel = i/max(1, n)
+        x = int(-w*0.25 + travel*(W + w*0.25)) if flipped else int(W + w*0.25 - travel*(W + w*0.25))
+        y = int(H*yfrac)
     im.paste(a2, (x, y), a2)
+    if aid in HELI_ASSETS:
+        _rotor(ImageDraw.Draw(im, "RGBA"), x, y, w, h, i, opacity, flipped)
 
 _fx = {}
 def _fx_vignette():
@@ -338,6 +365,7 @@ def render(m, out_path):
 
     def s_intro(im,d,i,n):
         paste_cover(im,"intro_splash",seed=m.seed)   # generated background (seed rotates variants)
+        drift_silhouette(im,0,i,n,yfrac=0.075,wfrac=0.58,opacity=0.52,direction=(1 if m.seed%2 else -1),hover=True)  # Hind hovering, animated rotor
         mk=brand_logo("mark")
         if mk is not None:
             m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
@@ -371,6 +399,7 @@ def render(m, out_path):
 
     def s_momentum(im,d,i,n):
         paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed)   # generated scene backdrop (seed rotates)
+        drift_silhouette(im,m.seed+1,i,n,yfrac=0.71,wfrac=0.54,opacity=0.09,direction=(-1 if m.seed%2 else 1))
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
         prog=ease(min(1,i/(n-12))); nshow=max(2,int(len(m.ser_x)*prog))
@@ -425,6 +454,7 @@ def render(m, out_path):
         footer(im,d)
 
     def s_combat(im,d,i,n):
+        drift_silhouette(im,m.seed+2,i,n,yfrac=0.30,wfrac=0.5,opacity=0.08,direction=(1 if m.seed%2 else -1))
         header(d,"COMBAT BREAKDOWN"); kk=ease(min(1,i/26))
         order=[("INF","Infantry",(198,178,142)),("VEH","Vehicle",(217,118,60)),("AIR","Air",(122,134,72)),("STATIC","Static",(120,128,138))]  # brand: bone/orange/olive/steel
         tot=sum(m.catcount.values()) or 1; segs=[(m.catcount[c]/tot*kk,col) for c,_,col in order]
