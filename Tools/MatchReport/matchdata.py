@@ -27,6 +27,14 @@ def side_from_id(v):
 def side_from_str(s):
     return SIDE_FROM_STR.get(str(s).strip().upper(), "neu")
 
+def _pretty_weapon(w):
+    """Tidy a weapon/unit class token from WASPSTAT KILL into a readable label."""
+    if not w: return "—"
+    w = w.split("=")[-1].strip()
+    for pre in ("RU_","CDF_","GUE_","INS_","Ins_","US_","USMC_","GER_","RUS_"):
+        if w.startswith(pre): w = w[len(pre):]; break
+    return w.replace("_"," ").strip() or "—"
+
 # ---- town coordinates (metres, map origin SW, y = north) -----------------
 # These are STATIC per map. The values below are hand-approximated for Chernarus;
 # they make the control map recognisable but are not survey-accurate. Production
@@ -195,20 +203,30 @@ def parse_waspstat(lines, names=None, line_times=None):
         elif rtype == "CAPTURE":
             caps_raw.append((seq, parts[4], side_from_id(parts[5]), side_from_id(parts[6])))
         elif rtype == "KILL":
-            killer_uid, victim_uid = parts[4], parts[5]
-            kside = side_from_str(parts[6]); weap = parts[8]; dist = int(parts[9]); cat = parts[10]
-            nm = names.get(killer_uid) if killer_uid else None
-            kills_raw.append((seq, nm, kside, weap, cat, dist, killer_uid))
+            # KILL|killerUID|victimUID|killerSide|victimSide|killerClass|dist|cat|hw=<weapon>|vc=<victimClass>
+            killer_uid = parts[4] if len(parts) > 4 else ""
+            kside = side_from_str(parts[6]) if len(parts) > 6 else "neu"
+            cat = parts[10] if len(parts) > 10 else "INF"
+            try: dist = int(parts[9])
+            except (IndexError, ValueError): dist = 0
+            weap = parts[8] if len(parts) > 8 else "—"        # killer class; prefer real hand weapon
+            for p in parts[8:]:
+                if p.startswith("hw=") and len(p) > 3: weap = p[3:]; break
+            kills_raw.append((seq, None, kside, _pretty_weapon(weap), cat, dist, killer_uid))
         else:
-            # PLAYERSTATS: tokens "uid:d0,...,d14,side" joined by '|' from parts[3:]
+            # PLAYERSTATS: tokens "uid:d0,...,d14,side~name" joined by '|' from parts[3:].
+            # the trailing "~name" is the live display name (added by the leaderboard emitter).
             for tok in parts[3:]:
                 if ":" not in tok: continue
                 uid, fields = tok.split(":", 1)
                 vals = fields.split(",")
                 if len(vals) < 16: continue
-                d = [int(x) for x in vals[:15]]; side = SIDE_FROM_PSTAT.get(int(vals[15]), "guer")
-                acc = pstats.setdefault(uid, {"d": [0]*15, "side": side})
+                side_raw, _, nm = vals[15].partition("~")
+                try: d = [int(x) for x in vals[:15]]; side = SIDE_FROM_PSTAT.get(int(side_raw), "guer")
+                except ValueError: continue
+                acc = pstats.setdefault(uid, {"d": [0]*15, "side": side, "name": ""})
                 acc["side"] = side
+                if nm: acc["name"] = nm
                 for j in range(15): acc["d"][j] += d[j]
 
     m = MatchData()
@@ -237,12 +255,20 @@ def parse_waspstat(lines, names=None, line_times=None):
         if line_times and seq in line_times: return line_times[seq]
         return int((idx + 1) / (total + 1) * m.duration)
     m.caps  = [(t_for(s, i, len(caps_raw)),  town, new) for i, (s, town, _o, new) in enumerate(caps_raw)]
-    m.kills = [(t_for(s, i, len(kills_raw)), nm, ks, wp, cat, dist)
-               for i, (s, nm, ks, wp, cat, dist, _u) in enumerate(kills_raw)]
-
-    # players
+    # resolve display names: WASPSTAT now embeds them (~name); fall back to a passed map, then Op-XXXX.
+    allnames = dict(names)
     for uid, acc in pstats.items():
-        nm = names.get(uid) or ("Op-" + uid[-4:] if len(uid) >= 4 else uid)
+        if acc.get("name"): allnames[uid] = acc["name"]
+    def _disp(uid): return allnames.get(uid) or ("Op-" + uid[-4:] if len(uid) >= 4 else uid)
+
+    m.kills = [(t_for(s, i, len(kills_raw)), (_disp(u) if u else None), ks, wp, cat, dist)
+               for i, (s, _nm, ks, wp, cat, dist, u) in enumerate(kills_raw)]
+
+    # players (skip headless-client connections — they carry UIDs + stats but aren't operators)
+    _HC = {"HC","HC1","HC2","HC3","HC4","HEADLESS","HEADLESSCLIENT","SERVER"}
+    for uid, acc in pstats.items():
+        nm = _disp(uid)
+        if nm.strip().upper() in _HC: continue
         m.players.append({"name": nm, "side": acc["side"], "d": acc["d"]})
 
     return m.finalize()
