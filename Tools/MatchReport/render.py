@@ -207,10 +207,12 @@ class Renderer:
             placed=[]
             for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):  # north-first
                 cx=x0+x/S*size; cy=y0+(1-y/S)*size
-                if any(abs(cx-px)<150*sc and abs(cy-py)<22*sc for px,py in placed): continue
+                if any(abs(cx-px)<104*sc and abs(cy-py)<18*sc for px,py in placed): continue
                 placed.append((cx,cy))
-                d.text((cx+11*sc,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
-                d.text((cx+10*sc,cy-10*sc),t,font=f_xs,fill=(220,228,240))
+                lw=d.textlength(t,font=f_xs); lx=cx+10*sc
+                if lx+lw>x0+size-4: lx=cx-10*sc-lw   # flip label left of the dot near the east edge
+                d.text((lx+1,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
+                d.text((lx,cy-10*sc),t,font=f_xs,fill=(220,228,240))
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
 def footer(im,d):
@@ -330,28 +332,32 @@ def render(m, out_path):
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
         if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
             d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
-        d.text((352,342),p["name"],font=DISP(60),fill=INK); chip(d,354,420,p["side"],SANS(24,False))
+        d.text((352,344),p["name"],font=DISP(58),fill=INK); chip(d,354,422,p["side"],SANS(24,False))
+        # hero kill count fills the right of the card (the MVP's signature number, counts up)
+        d.text((W-182,322),str(int(p["kills"]*kk)),font=DISP(80),fill=col,anchor="ra")
+        d.text((W-182,442),"KILLS",font=SANS(22,False),fill=DIM,anchor="ra")
         gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
-        cells=[("KILLS",num(p["kills"]),col),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',GOLD),
-               ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",col)]
+        cells=[("SCORE",num(p["score"]),GOLD),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',col),
+               ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",GOLD)]
         for idx,(lab,val,c) in enumerate(cells):
             x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
             d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
-        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),f"TOP SCORE   {int(p['score']*kk)}",SANS(24,False),(200,204,196),anchor="mm",track=6); footer(im,d)
+        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),"MOST VALUABLE PLAYER",SANS(24,False),(200,204,196),anchor="mm",track=6); footer(im,d)
 
     def s_board(im,d,i,n):
         header(d,"TOP OPERATORS","by match score"); top=m.players[:6]
         if not top: return
-        mx=max(p["score"] for p in top) or 1; y0=320; bh=92; gap=22
+        mx=max(p["score"] for p in top) or 1; y0=288; bh=186; gap=36   # tall rows fill the frame
         for idx,p in enumerate(top):
-            y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-300)*p["score"]/mx*prog)
-            if idx==0 and paste_emblem(im,"icon_mvp",92,y+bh/2,52): pass   # medal on #1 if generated
-            else: d.text((92,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
-            panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
-            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+13),p["name"],font=f_h3,fill=INK)
-            _sub=f'{SIDE_NAME[p["side"]]}   ·   {p["kills"]}K / {p["d"][6]}D   ·   {p["d"][10]} caps'
-            d.text((159,y+63),_sub,font=f_xs,fill=(14,16,20)); d.text((158,y+62),_sub,font=f_xs,fill=(196,199,189))
-            d.text((W-84,y+bh/2),str(int(p["score"]*prog)),font=f_h3,fill=INK,anchor="rm")
+            y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-320)*p["score"]/mx*prog)
+            if idx==0 and paste_emblem(im,"icon_mvp",86,y+bh/2,64): pass   # medal on #1 if generated
+            else: d.text((86,y+bh/2),f"{idx+1}",font=f_h1,fill=GOLD if idx==0 else DIM,anchor="mm")
+            panel(d,132,y,W-60,y+bh); d.rounded_rectangle([132,y,132+bw+40,y+bh],radius=20,fill=mix(col,0.22),outline=col,width=2)
+            d.rectangle([138,y+28,156,y+bh-28],fill=col); d.text((182,y+38),p["name"],font=f_h2,fill=INK)
+            _sub=f'{SIDE_NAME[p["side"]]}    ·    {p["kills"]} kills    ·    {p["d"][6]} deaths    ·    {p["d"][10]} caps'
+            d.text((184,y+118),_sub,font=f_sm,fill=(14,16,20)); d.text((183,y+116),_sub,font=f_sm,fill=(198,202,192))
+            d.text((W-88,y+bh/2-18),str(int(p["score"]*prog)),font=f_h1,fill=INK,anchor="rm")
+            d.text((W-88,y+bh/2+34),"score",font=f_xs,fill=DIM,anchor="rm")
         footer(im,d)
 
     def s_combat(im,d,i,n):

@@ -103,6 +103,9 @@ class MatchData:
         return kills*10 + d[7]*8 + d[10]*40 + d[1]*6 + d[2]*15 + d[9]//100 + d[12]*5
 
     def finalize(self):
+        # every town on the map gets an owner entry (uncaptured -> neutral) so the control
+        # map renders the FULL town set (all logics incl. airfields), not just towns that flipped.
+        for t in self.towns: self.init_owners.setdefault(t, "neu")
         # per-player derived
         for p in self.players:
             d = p["d"]
@@ -205,11 +208,15 @@ def parse_waspstat(lines, names=None, line_times=None):
     m = MatchData()
     m.winner = winner; m.duration = duration or 1; m.map_name = map_name.upper()
 
-    # towns + coords
+    # towns + coords — plot the FULL map (every known town logic), not only captured towns,
+    # so airfields and quiet towns still appear. Falls back to captured names on an unknown map.
     town_names = []
     for (_, town, _o, _n) in caps_raw:
         if town not in town_names: town_names.append(town)
-    m.towns, m.world_size = coords_for(map_name, town_names)
+    all_names = list(TOWN_COORDS.get(map_name.lower(), {}).keys()) or town_names
+    for town in town_names:
+        if town not in all_names: all_names.append(town)
+    m.towns, m.world_size = coords_for(map_name, all_names)
 
     # initial owners: oldSide of a town's first capture; else neutral
     init = {t: "neu" for t in town_names}

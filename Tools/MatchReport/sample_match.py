@@ -6,28 +6,27 @@ cannot tell sample data from live data. Deterministic (fixed RNG seed).
 """
 import numpy as np
 from collections import Counter
-from matchdata import MatchData, coords_for
+from matchdata import MatchData, coords_for, TOWN_COORDS
 
 def build_sample():
     rng = np.random.default_rng(11)
     m = MatchData()
     m.map_name, m.world_size, m.duration, m.winner = "CHERNARUS", 15360, 2600, "west"
 
-    town_names = ["Komarovo","Kamenka","Pavlovo","Zelenogorsk","Pustoshka","Vybor","Chernogorsk",
-                  "Mogilevka","Stary Sobor","Novy Sobor","Vyshnoye","Elektrozavodsk","Msta","Gvozdno",
-                  "Polana","Berezino","Krasnostav","Solnichniy","Dubrovka","Stary Yar"]
-    m.towns, m.world_size = coords_for("chernarus", town_names)
+    # plot ALL Chernarus towns (boot-harvested set incl. airfields/Khe Sanh), not just the
+    # ones that flip below — uncaptured towns render neutral via finalize().
+    m.towns, m.world_size = coords_for("chernarus", list(TOWN_COORDS["chernarus"].keys()))
 
-    init = {t: "neu" for t in town_names}
+    init = {}
     for t in ["Komarovo","Kamenka","Pavlovo","Zelenogorsk"]: init[t] = "west"
     for t in ["Berezino","Krasnostav","Dubrovka","Solnichniy"]: init[t] = "east"
     m.init_owners = init
 
     m.caps = [(180,"Pustoshka","west"),(240,"Elektrozavodsk","east"),(360,"Vybor","west"),
         (455,"Msta","east"),(540,"Mogilevka","west"),(610,"Polana","east"),(720,"Chernogorsk","west"),
-        (815,"Gvozdno","east"),(905,"Vyshnoye","west"),(1010,"Stary Yar","east"),(1140,"Stary Sobor","west"),
+        (815,"Gvozdno","east"),(905,"Vyshnoye","west"),(1010,"Grishino","east"),(1140,"Stary Sobor","west"),
         (1230,"Msta","west"),(1325,"Novy Sobor","west"),(1450,"Polana","west"),(1560,"Elektrozavodsk","west"),
-        (1700,"Stary Yar","west"),(1840,"Gvozdno","west"),(1980,"Solnichniy","west"),(2120,"Berezino","west"),
+        (1700,"Grishino","west"),(1840,"Gvozdno","west"),(1980,"Solnichniy","west"),(2120,"Berezino","west"),
         (2300,"Dubrovka","west"),(2480,"Krasnostav","west")]
 
     NAMES_W = ["Ghost","Viper","Hawk-7","Reaper","Maverick","Tonka","Sledge","Doc","Crash","Wolfe"]
