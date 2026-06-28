@@ -133,16 +133,16 @@ def paste_emblem(im, aid, cx, cy, maxw, seed=None):
 VEHICLE_FX = {"silhouette_hind": "rotor", "silhouette_jet": "jet"}
 
 def _rotor(d, x, y, w, h, i, opacity, flipped):
-    """Animate a side-view helicopter's rotors over the static silhouette: a faint blade-pass
-    flicker on the main disc + an orange tip-glint sweeping across it, plus a flickering tail rotor."""
-    base = min(255, int(255*opacity*2.4) + 28)
-    ry = y + int(h*0.20); rx0 = x + int(w*0.12); rx1 = x + int(w*0.82); rmid = (rx0+rx1)//2
-    fl = 0.4 + 0.6*abs(math.sin(i*0.85))                       # blades passing
-    d.line([(rx0,ry),(rx1,ry)], fill=(8,10,14,int(base*0.7*fl)), width=max(2,int(h*0.04)))
-    gx = rmid + (rx1-rmid)*math.sin(i*0.8)                     # tip glint sweeping the disc fast
-    d.ellipse([gx-5,ry-5,gx+5,ry+5], fill=(217,118,60,min(255,int(base*1.3))))
-    tx = x + int(w*(0.14 if flipped else 0.86)); ty = y + int(h*0.30); tr = int(h*0.13)
-    d.line([(tx,ty-tr),(tx,ty+tr)], fill=(8,10,14,int(base*0.8*fl)), width=2)  # tail rotor
+    """Subtle spinning-rotor tell. The static silhouette already has the blades, so this is just a
+    small orange tip-glint sweeping ALONG the blade line + a faint tail-rotor flicker — no heavy bar."""
+    base = min(220, int(255*opacity*1.8) + 22)
+    ry = y + int(h*0.34); rx0 = x + int(w*0.18); rx1 = x + int(w*0.78); rmid = (rx0+rx1)//2
+    d.line([(rx0,ry),(rx1,ry)], fill=(22,24,30,int(base*0.16)), width=1)        # faint disc shimmer
+    gx = rmid + (rx1-rmid)*math.sin(i*0.8); gr = max(2,int(h*0.016))            # tip glint sweeping
+    d.ellipse([gx-gr,ry-gr,gx+gr,ry+gr], fill=(217,118,60,min(210,int(base))))
+    tx = x + int(w*(0.17 if flipped else 0.83)); ty = y + int(h*0.30); tr = int(h*0.07)
+    fl = 0.4 + 0.6*abs(math.sin(i*0.9))
+    d.line([(tx,ty-tr),(tx,ty+tr)], fill=(22,24,30,int(base*0.3*fl)), width=1)  # tail rotor flicker
 
 def _jet_fx(d, x, y, w, h, i, opacity, flipped):
     """Animate a jet engine: a pulsing afterburner glow at the rear nozzle + a short heat trail."""
