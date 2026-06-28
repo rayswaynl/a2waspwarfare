@@ -374,6 +374,29 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith {};
 
+	//--- FORCED-ARTY (Ray 2026-06-27, Issue 3 Part 2): GUARANTEE the 1 artillery battery is founded once eligible.
+	//--- The arty-cap strip above only stops OVER-building; the normal type-mix/eff-draw almost never PICKS the lone
+	//--- arty template (diluted across buckets). When under the arty cap (_artyCap>0 && _artyAlive<_artyCap, i.e. the
+	//--- strip block above did NOT remove arty, so an arty template is still in _eligible if the tier admits it), scan
+	//--- _eligible for an arty template - REUSING the exact cap-strip test (any classname in _templates select _ei is
+	//--- in _artyCls) - and force the founding draw onto it. Self-limiting: next cycle _artyAlive>=cap re-strips arty,
+	//--- this scan finds none, and the normal draw resumes. _artyCap/_artyAlive are still in scope from the cap block
+	//--- (declared in the function-level private list). The override of _pick is applied AFTER the normal draw (just
+	//--- before _template = _templates select _pick) so it is the FINAL word and feeds the existing dispatch tail.
+	private ["_forcedArtyPick","_faEi"];
+	_forcedArtyPick = -1;
+	if (_artyCap > 0 && {_artyAlive < _artyCap}) then {
+		{
+			_faEi = _x;   //--- capture the eligible-INDEX before the inner forEach rebinds _x to a classname.
+			if (_forcedArtyPick < 0) then {
+				{ if (_x in _artyCls) exitWith {_forcedArtyPick = _faEi} } forEach (_templates select _faEi);
+			};
+		} forEach _eligible;
+		if (_forcedArtyPick >= 0) then {
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] FORCED-ARTY: under cap (alive %2 < cap %3), forcing founding draw onto arty template %4 this cycle.", _sideText, _artyAlive, _artyCap, _forcedArtyPick]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+
 	//--- P1 combined-arms picker (claude-gaming 2026-06-15). Mirror of AI_Commander_AssignTypes.sqf:
 	//--- the old doctrine-only weighting (70% one vehicle track, 30% UNIFORM over all eligible) averaged
 	//--- ~70% infantry because infantry templates unlock first and stay eligible all match while vehicle
@@ -527,6 +550,11 @@ if (count _live > 0) then {
 		if (_pick == (_logik getVariable ["wfbe_aicom_last_template", -1]) && {count _eligible > 1}) then {_pick = _eligible select (floor (random (count _eligible)))};
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W7 VeteranCompany applied - premium template %2.", _sideText, _pick]] Call WFBE_CO_FNC_AICOMLog;
 	};
+	//--- FORCED-ARTY override (Issue 3 Part 2): if an arty template was forced above, it wins the draw outright.
+	//--- Applied as the LAST mutation of _pick so the normal bucket/eff-draw + anti-repeat + W7 results are discarded
+	//--- this cycle and the lone artillery battery is GUARANTEED to found. _template/_price/factory/HC dispatch below
+	//--- all read _pick, so no further wiring is needed. Inert (no-op) when _forcedArtyPick < 0 (normal cycles).
+	if (_forcedArtyPick >= 0) then {_pick = _forcedArtyPick};
 	_template = _templates select _pick;
 	_logik setVariable ["wfbe_aicom_last_template", _pick]; //--- B74.1: record the actual founded template for the next founding's anti-repeat reroll.
 

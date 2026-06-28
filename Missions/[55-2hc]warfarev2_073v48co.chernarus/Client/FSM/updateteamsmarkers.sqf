@@ -247,7 +247,8 @@ while {!gameOver} do {
 						_lastDir = _lastDirs select _markerIndex;
 						_dirDiff = abs (_dir - _lastDir);
 						if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};
-						if (_dirDiff > 5) then {
+						//--- _lastDir<0 forces the FIRST write past the -999 cache seed (L53): without it the >180 wrap above NEGATES _dirDiff so the arrow freezes forever (root-cause fix Game 2026-06-28).
+						if (_lastDir < 0 || _dirDiff > 5) then {
 							_marker setMarkerDirLocal _dir;
 							_lastDirs set [_markerIndex, _dir];
 							_perfMarkerOps = _perfMarkerOps + 1;

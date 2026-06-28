@@ -1056,6 +1056,9 @@ if (_antiStackEnabled) then {
 
 _logMatchWinPlayerCountThreshold = 10;
 
+//--- Default so low-pop/AI rounds don't leave it undefined (Server_LogGameEnd reads it at every match end); the >=threshold path overwrites it later.
+WFBE_Server_LogMatchWin = false;
+
 [_logMatchWinPlayerCountThreshold] execVM "Server\MonitorPlayerCount.sqf";
 
 WFBE_SE_PLAYERLIST = [[objNull, "0"]];
