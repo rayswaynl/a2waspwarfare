@@ -70,12 +70,14 @@ def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
 def mix(c,t): return lerp(BG,c,t)
 
-def paste_cover(im, aid, box=None):
+def paste_cover(im, aid, box=None, opacity=1.0):
     """Paste an asset scaled to COVER box (default whole frame). Returns True if used."""
     a = asset(aid)
     if a is None: return False
     bx = box or (0, 0, W, H); bw = bx[2]-bx[0]; bh = bx[3]-bx[1]
     s = max(bw/a.width, bh/a.height); a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
+    if opacity < 1.0:
+        a2 = a2.copy(); a2.putalpha(a2.split()[3].point(lambda v:int(v*opacity)))
     im.paste(a2, (bx[0]+(bw-a2.width)//2, bx[1]+(bh-a2.height)//2), a2); return True
 
 def paste_emblem(im, aid, cx, cy, maxw):
@@ -212,18 +214,36 @@ class Renderer:
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
 def footer(im,d):
-    txt="MIKSUU'S WARFARE   ·   POST-MATCH REPORT"
-    tw=d.textlength(txt,font=f_xs); mk=brand_logo("mark")
-    mkw=30 if mk else 0; total=mkw+(10 if mk else 0)+tw; x0=W/2-total/2
-    if mk:
-        m2=mk.resize((30,30)); im.paste(m2,(int(x0),H-58),m2); x0+=40
-    d.text((x0,H-52),txt,font=f_xs,fill=(150,150,138))
+    mk=brand_logo("mark"); txt="MIKSUU'S WARFARE   ·   POST-MATCH REPORT"; f=SANS(21,False); trk=3
+    tw=sum(d.textlength(c,font=f) for c in txt)+trk*(len(txt)-1)
+    mkw=28 if mk else 0; total=mkw+(12 if mk else 0)+tw; x0=W/2-total/2
+    if mk: m2=mk.resize((28,28)); im.paste(m2,(int(x0),H-55),m2); x0+=mkw+12
+    tracked(d,(x0,H-41),txt,f,(146,146,134),anchor="lm",track=trk)
 def chip(d,x,y,side,fs=f_sm): c=SIDE_COL[side]; d.rectangle([x,y+4,x+12,y+30],fill=c); d.text((x+22,y),SIDE_NAME[side],font=fs,fill=c)
 def panel(d,x0,y0,x1,y1,fill=PANEL,outline=(46,54,66)): d.rounded_rectangle([x0,y0,x1,y1],radius=18,fill=fill,outline=outline,width=2)
-def header(d,title,sub=None):
-    d.text((W/2,120),title,font=f_h1,fill=INK,anchor="mm")
-    if sub: d.text((W/2,182),sub,font=f_sm,fill=DIM,anchor="mm")
-    d.line([(W/2-160,214),(W/2+160,214)],fill=(60,70,84),width=3)
+
+MARGIN = 72   # shared content margin / grid unit
+
+def tracked(d, xy, text, font, fill, anchor="lm", track=0):
+    """Draw text with letter-spacing (Pillow has none natively). anchor: h in l/m/r, v in a/m/s."""
+    x, y = xy
+    ws = [d.textlength(ch, font=font) for ch in text]
+    total = sum(ws) + track*max(0, len(text)-1)
+    cx = x - total/2 if anchor[0]=="m" else (x-total if anchor[0]=="r" else x)
+    va = "l"+(anchor[1] if len(anchor)>1 else "m")
+    for ch, w in zip(text, ws):
+        d.text((cx, y), ch, font=font, fill=fill, anchor=va); cx += w+track
+
+def rule(d, cx, y, half=150, accent=True):
+    d.line([(cx-half, y),(cx-12, y)], fill=(74,84,96), width=2)
+    d.line([(cx+12, y),(cx+half, y)], fill=(74,84,96), width=2)
+    if accent: d.line([(cx-7, y),(cx+7, y)], fill=GOLD, width=4)
+
+def header(d, title, sub=None):
+    """Editorial header: tracked uppercase title + tracked kicker + accent rule. Shared by all scenes."""
+    tracked(d, (W/2, 104), title.upper(), DISP(62), INK, anchor="mm", track=8)
+    if sub: tracked(d, (W/2, 156), sub.upper(), SANS(23, False), DIM, anchor="mm", track=4)
+    rule(d, W/2, 196, half=150)
 def donut(d,cx,cy,r,segs):
     a0=-90
     for frac,col in segs: a1=a0+frac*360; d.pieslice([cx-r,cy-r,cx+r,cy+r],a0,a1,fill=col); a0=a1
@@ -247,12 +267,12 @@ def render(m, out_path):
         paste_cover(im,"intro_splash")   # generated background if present, else dark base
         mk=brand_logo("mark")
         if mk is not None:
-            m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-450)),m2)
-        d.text((W/2,H/2-95),"MIKSUU'S WARFARE",font=DISP(92),fill=INK,anchor="mm")
-        d.text((W/2,H/2+10),m.map_name,font=f_h1,fill=GOLD,anchor="mm")
-        d.text((W/2,H/2+92),"POST-MATCH REPORT",font=f_h3,fill=DIM,anchor="mm")
+            m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
+        tracked(d,(W/2,H/2-92),"MIKSUU'S WARFARE",DISP(82),INK,anchor="mm",track=6)
+        tracked(d,(W/2,H/2+10),m.map_name.upper(),DISP(50),GOLD,anchor="mm",track=14)
+        tracked(d,(W/2,H/2+80),"POST-MATCH REPORT",SANS(26,False),DIM,anchor="mm",track=8)
         mm,ss=divmod(m.duration,60)
-        d.text((W/2,H/2+170),f"{len(m.players)} operators   ·   {mm:02d}:{ss:02d}   ·   {m.total_kills} kills",font=f_sm,fill=DIM,anchor="mm")
+        tracked(d,(W/2,H/2+152),f"{len(m.players)} OPERATORS      {mm:02d}:{ss:02d}      {m.total_kills} KILLS",SANS(23,False),(150,150,138),anchor="mm",track=3)
 
     def s_battle(im,d,i,n):
         ts=i/n*m.duration; ft=None; fk=0
@@ -295,7 +315,7 @@ def render(m, out_path):
 
     def s_mvp(im,d,i,n):
         if not m.mvp: return
-        paste_cover(im,"mvp_backdrop")   # optional spotlight/soldier backdrop if generated
+        paste_cover(im,"mvp_backdrop",opacity=0.5)   # dimmed so the stat card pops
         header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
         if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
@@ -307,7 +327,7 @@ def render(m, out_path):
         for idx,(lab,val,c) in enumerate(cells):
             x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
             d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
-        d.text((W/2,1180),f'Top score: {int(p["score"]*kk)}',font=f_md,fill=DIM,anchor="ma"); footer(im,d)
+        tracked(d,(W/2,1192),f"TOP SCORE   {int(p['score']*kk)}",SANS(25,False),DIM,anchor="mm",track=5); footer(im,d)
 
     def s_board(im,d,i,n):
         header(d,"TOP OPERATORS","by match score"); top=m.players[:6]
@@ -365,7 +385,7 @@ def render(m, out_path):
                 px=(j*977)%W; sp=40+(j*53)%120; py=H-(i*sp/6)%H; d.ellipse([px,py,px+5,py+5],fill=lerp(col,INK,(j%5)/5))
         drift_silhouette(im, 0, i, n, yfrac=0.72, wfrac=0.60, opacity=0.10)  # faint blackout low, if generated
         paste_emblem(im, emblem_id(m.winner), W/2, 320, 200)
-        d.text((W/2,520),SIDE_NAME[m.winner],font=f_huge,fill=INK,anchor="mm"); d.text((W/2,650),"VICTORY",font=f_huge,fill=col,anchor="mm")
+        tracked(d,(W/2,522),SIDE_NAME[m.winner],DISP(100),INK,anchor="mm",track=8); tracked(d,(W/2,648),"VICTORY",DISP(100),col,anchor="mm",track=16)
         mm,ss=divmod(m.duration,60); o=m.owners_at(m.duration); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values())
         mvp=m.mvp["name"]+f' ({m.mvp["kills"]}K)' if m.mvp else "—"
         rows=[("DURATION",f"{mm:02d}:{ss:02d}"),("FINAL TOWNS",f"{w} – {e}"),("TOTAL KILLS",str(m.total_kills)),("MVP",mvp),("MAP",m.map_name)]
