@@ -16,6 +16,11 @@ if (count _ammo > _cap) then {
 };
 
 //--- Weapons FIRST so each magazine binds to a matching muzzle (e.g. AT13 -> MetisLauncher); otherwise OA throws "Cannot use magazine X in muzzle Y".
+//--- removeAllWeapons also strips the virtual Throw/Put weapons; restore them so grenade/smoke/mine magazines
+//--- (HandGrenade_West, SmokeShell*, Mine, PipeBomb) have a muzzle to bind to, otherwise OA spams
+//--- "Cannot use magazine SmokeShell in muzzle HandGrenadeMuzzle" / "Mine in muzzle TimeBombMuzzle" etc.
+_unit addWeapon "Throw";
+_unit addWeapon "Put";
 {_unit addWeapon _x} forEach _weapons;
 {_unit addMagazine _x} forEach _ammo;
 

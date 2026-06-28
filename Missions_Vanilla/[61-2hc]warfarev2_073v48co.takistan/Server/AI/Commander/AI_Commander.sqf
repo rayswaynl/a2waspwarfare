@@ -96,7 +96,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	};
 };
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0; _ltDisband = 0;
 _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
@@ -274,6 +274,12 @@ while {!gameOver} do {
 		//--- Economy/build: full command AND only after the build-grace window (#3a, Ray 2026-06-15).
 		//--- rule A still holds (no AI spend under a human); the AI also waits the build-grace with no
 		//--- human commander (from start, re-armed when a human leaves) before it starts building.
+		//--- Ray 2026-06-28: retire idle rear FOOT teams when mobile force is fielded - runs in EVERY command mode
+		//--- (AI-command OR human-commander); the in-view + safety checks inside the pass protect immersion/safety.
+		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INTERVAL", 300])) then {
+			if (!isNil "WFBE_SE_FNC_AI_Com_DisbandLowTier") then {(_side) Call WFBE_SE_FNC_AI_Com_DisbandLowTier};
+			_ltDisband = time;
+		};
 		if (_canBuild) then {
 			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
 			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
@@ -309,6 +315,37 @@ while {!gameOver} do {
 					if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
 						missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
 						missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
+					};
+					//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): publish the two extra side-keyed reads the new "AI
+					//--- Commander" command-center sub-tab needs. ACTIVE = the AI actually HOLDS command this side right
+					//--- now (full command, no human commander) so a player's instructions will steer it; FOCUS_NAME = the
+					//--- name of the player-set focus town (TTL'd by the Allocator) or "" when none/expired. PV only on change.
+					private ["_aKey","_fKey","_active2","_focusT","_focusT0","_focusNm"];
+					_aKey = format ["WFBE_AICOM_ACTIVE_%1", _myID];
+					_active2 = !_humanCmd; //--- inside the _active gate (HQ alive + AICOM on); full command iff no human commander.
+					if (true /* FIX (Game 2026-06-28): was Bool!=Bool (A2-OA-forbidden) - threw EVERY strategy tick + aborted the worker before the AI-founding at ~L364, starving founding (teams=0). Publish unconditionally (cheap per-tick; also reaches JIP joiners). */) then {
+						missionNamespace setVariable [_aKey, _active2]; publicVariable _aKey;
+					};
+					_fKey = format ["WFBE_AICOM_FOCUS_NAME_%1", _myID];
+					_focusT  = _logik getVariable "wfbe_aicom_focus";
+					_focusT0 = _logik getVariable "wfbe_aicom_focus_t0";
+					_focusNm = "";
+					if (!isNil "_focusT" && {!isNull _focusT} && {!isNil "_focusT0"} && {(time - _focusT0) < (missionNamespace getVariable ["WFBE_C_AICOM2_FOCUS_TTL", 600])}) then {
+						_focusNm = _focusT getVariable ["name", "?"];
+					};
+					if ((missionNamespace getVariable [_fKey, ""]) != _focusNm) then {
+						missionNamespace setVariable [_fKey, _focusNm]; publicVariable _fKey;
+					};
+					private ["_tKey","_uKey","_teamsN","_fundsN"];
+					_tKey = format ["WFBE_AICOM_TEAMS_%1", _myID];
+					_uKey = format ["WFBE_AICOM_FUNDS_%1", _myID];
+					_teamsN = count (_logik getVariable ["wfbe_teams", []]);
+					_fundsN = (_side) Call GetAICommanderFunds;
+					if ((missionNamespace getVariable [_tKey, -1]) != _teamsN) then {
+						missionNamespace setVariable [_tKey, _teamsN]; publicVariable _tKey;
+					};
+					if ((missionNamespace getVariable [_uKey, -1]) != _fundsN) then {
+						missionNamespace setVariable [_uKey, _fundsN]; publicVariable _uKey;
 					};
 				};
 			};

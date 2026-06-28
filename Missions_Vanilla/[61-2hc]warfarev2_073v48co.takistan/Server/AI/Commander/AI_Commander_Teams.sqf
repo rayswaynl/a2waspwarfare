@@ -462,6 +462,20 @@ if (count _live > 0) then {
 	_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])]; _dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_MECH_BIAS", 2.0])]; _dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_MOTOR_BIAS", 1.4])]; //--- B755 (Ray 2026-06-25): seat infantry in ARMED vehicles, not on foot - bias the MECHANIZED/armor bucket (2 = IFV/APC that carry their dismounts) hardest + MOTORIZED (1) up vs pure-foot infantry (0). Self-gating: the empty-bucket zero-out below keeps infantry buildable when no heavy/light factory exists yet.
 	_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
 		_dWeights set [3, (_dWeights select 3) * (1 + (((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT", 2.5]) - 1))]; //--- B754 (Ray 2026-06-25) HELI TIME-BIAS: scale the AIR bucket (idx 3) up the longer the match runs (transport + attack both). Applied after town-punch, before the empty-bucket zero-out so an empty air bucket still zeroes safely. A2-OA-safe (time/min/^ arithmetic + getVariable default; RAMP_MIN floored at 1 to avoid /0).
+		//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) REQUEST-UNIT HOOK: a fresh player class request nudges the founding bucket weight (soft).
+		private ["_ruReq","_ruType","_ruT0","_ruMult","_ruIdx"];
+		_ruReq = _logik getVariable "wfbe_aicom_request_type";
+		if (!isNil "_ruReq" && {typeName _ruReq == "ARRAY"} && {count _ruReq == 2}) then {
+			_ruType = _ruReq select 0; _ruT0 = _ruReq select 1;
+			if ((time - _ruT0) < (missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_TTL", 300])) then {
+				_ruMult = missionNamespace getVariable ["WFBE_C_AICOM_REQUEST_TYPE_MULT", 3];
+				_ruIdx = -1;
+				if (_ruType == "infantry") then {_ruIdx = 0};
+				if (_ruType == "armor")    then {_ruIdx = 2};
+				if (_ruType == "air")      then {_ruIdx = 3};
+				if (_ruIdx >= 0) then {_dWeights set [_ruIdx, (_dWeights select _ruIdx) * _ruMult]};
+			};
+		};
 	for "_bi" from 0 to 3 do {
 		if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 	};
@@ -481,6 +495,12 @@ if (count _live > 0) then {
 		_clsOrder = [2,1,3,0];
 		{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _clsOrder;
 	};
+	//--- ALL-EMPTY GUARD (2026-06-28): if EVERY bucket is empty the degrade-walk above leaves _chosen = -1 (the
+	//--- all-jets-before-the-jet-ramp edge: the lone air bucket was time-gated out and no ground bucket is buildable
+	//--- this cycle). The next line `_buckets select _chosen` would throw "select -1". This founding path picks at
+	//--- most ONE team per call, so exitWith ends the founding cycle (nothing buildable = nothing to found). INERT in
+	//--- normal cycles: the infantry bucket is virtually always populated, so _chosen >= 0 and this never fires.
+	if (_chosen < 0) exitWith {};
 	//--- B750 EFFECTIVENESS-WEIGHTED DRAW (Ray 2026-06-24, "don't bias highest VALUE, bias most EFFECTIVE units +
 	//--- more variety"): the B74 draw weighted each template by (mission ECONOMY price)^1.5, so the commander spammed
 	//--- its single most EXPENSIVE platoon. Now weight by (summed BI CfgVehicles "cost" = combat-threat rating)^EXP,
@@ -723,7 +743,16 @@ if (count _live > 0) then {
 			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
 		};
 	};
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
+	//--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes, so they never get wfbe_teamtype
+	//--- stamped -> AI_Commander_DisbandLowTier could never classify (and used to throw) on them. wfbe_teamtype is the
+	//--- TEMPLATE INDEX - the SAME value AssignTypes stores (L241: setVariable ["wfbe_teamtype", _pick]); every reader
+	//--- (DisbandLowTier's _types select _tt, Produce, AI_Commander) resolves the 0-3 type from it ITSELF. So stamp the
+	//--- picked template index _pick, NOT a pre-resolved type. Thread it as a TRAILING delegate arg so
+	//--- Common_RunCommanderTeam can setVariable ["wfbe_teamtype", ...] at founding. A2-OA-safe (typeName + isNil).
+	private ["_foundType"];
+	_foundType = -1;
+	if (!isNil "_pick" && {typeName _pick == "SCALAR"} && {_pick >= 0}) then {_foundType = _pick};
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

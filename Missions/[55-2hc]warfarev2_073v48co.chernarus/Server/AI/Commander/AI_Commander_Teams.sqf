@@ -495,6 +495,12 @@ if (count _live > 0) then {
 		_clsOrder = [2,1,3,0];
 		{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _clsOrder;
 	};
+	//--- ALL-EMPTY GUARD (2026-06-28): if EVERY bucket is empty the degrade-walk above leaves _chosen = -1 (the
+	//--- all-jets-before-the-jet-ramp edge: the lone air bucket was time-gated out and no ground bucket is buildable
+	//--- this cycle). The next line `_buckets select _chosen` would throw "select -1". This founding path picks at
+	//--- most ONE team per call, so exitWith ends the founding cycle (nothing buildable = nothing to found). INERT in
+	//--- normal cycles: the infantry bucket is virtually always populated, so _chosen >= 0 and this never fires.
+	if (_chosen < 0) exitWith {};
 	//--- B750 EFFECTIVENESS-WEIGHTED DRAW (Ray 2026-06-24, "don't bias highest VALUE, bias most EFFECTIVE units +
 	//--- more variety"): the B74 draw weighted each template by (mission ECONOMY price)^1.5, so the commander spammed
 	//--- its single most EXPENSIVE platoon. Now weight by (summed BI CfgVehicles "cost" = combat-threat rating)^EXP,
@@ -737,7 +743,16 @@ if (count _live > 0) then {
 			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
 		};
 	};
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass]] Call WFBE_CO_FNC_SendToClient;
+	//--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes, so they never get wfbe_teamtype
+	//--- stamped -> AI_Commander_DisbandLowTier could never classify (and used to throw) on them. wfbe_teamtype is the
+	//--- TEMPLATE INDEX - the SAME value AssignTypes stores (L241: setVariable ["wfbe_teamtype", _pick]); every reader
+	//--- (DisbandLowTier's _types select _tt, Produce, AI_Commander) resolves the 0-3 type from it ITSELF. So stamp the
+	//--- picked template index _pick, NOT a pre-resolved type. Thread it as a TRAILING delegate arg so
+	//--- Common_RunCommanderTeam can setVariable ["wfbe_teamtype", ...] at founding. A2-OA-safe (typeName + isNil).
+	private ["_foundType"];
+	_foundType = -1;
+	if (!isNil "_pick" && {typeName _pick == "SCALAR"} && {_pick >= 0}) then {_foundType = _pick};
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

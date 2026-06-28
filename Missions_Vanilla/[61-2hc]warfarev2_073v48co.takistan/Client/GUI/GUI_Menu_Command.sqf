@@ -1,552 +1,327 @@
 disableSerialization;
 
+/* =====================================================================================
+	WAR ROOM controller (commander-only rework).
+
+	CORE FINDING this is built to: when YOU command (assist-mode), the AI allocator is
+	SUPPRESSED, so the old aicom-focus/defend/reinforce sends are INERT (nothing reads
+	them). The war room therefore tasks teams DIRECTLY via SetTeamMovePos + SetTeamMoveMode
+	(broadcast true) -> consumed every supervisor tick by AI_Commander_Execute.sqf (which
+	turns them into AIMoveTo waypoints for server-local teams and wfbe_aicom_order for HC
+	teams, REGARDLESS of _canBuild). That is the only human-order path that bites while you
+	command. Two orders stay HYBRID because they bypass the suppressed allocator: Artillery
+	(aicom-arty-here) and Request-Unit (aicom-request-unit). Donate is DROPPED.
+
+	TWO STATES, re-tested every loop so taking/losing command flips the UI live:
+	  STATE A - NOT commander (isNull commanderTeam || commanderTeam != group player):
+	            show TAKE COMMAND (14670) + an explainer; hide the war-room controls.
+	  STATE B - commander (commanderTeam == group player): the war room - economy header,
+	            roster listbox (click-to-select), and the direct-task orders.
+
+	A2-OA-1.64 safe: no params / isEqualType / remoteExec / worldSize / "str find str" /
+	hideObjectGlobal / 3-arg group getVariable / inline private _x. posScreenToWorld and
+	uiNamespace ARE valid in this build (engine-proven on this map control). commanderTeam
+	tests use == (NOT isEqualTo), null-guarded. switch/case + if/else for bools. The
+	SetTeamMovePos / SetTeamMoveMode / posScreenToWorld / MarkerAnim call shapes are copied
+	verbatim from the pre-rework controller (79c2f1173~1 GUI_Menu_Command.sqf).
+   ===================================================================================== */
+
 MenuAction = -1;
 mouseButtonUp = -1;
+WfRosterSel = -1;            //--- set by the roster listbox onLBSelChanged ("WfRosterSel = _this select 1").
+
+private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
+         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon"];
+
 _display = _this select 0;
-
-//--- Alt.
-_mode = 0; //--- Team properties.
-
-_updateProperties = true;
-_updateRespawn = true;
-_updateTab = true;
-
-_IDCTeam = [14009,14010,14016,14017,14018,14019,14020,14021,14022,14023,14024,14025,14026,14027,14030,14031,14901,14902];
-_IDCTasks = [14017,14018,14021,14022,14030,14032];
-_IDCDetails = [14030,14041,14042,14043];
-{ctrlShow[_x,false]} forEach (_IDCTasks + _IDCDetails);
-{ctrlShow[_x,true]} forEach _IDCTeam;
-//--- Tasks tab REVIVED as the Commander Objective Ping (MenuAction 306 sends re-enabled below); tab left visible (dialog default).
-_TaskTypes = ["Assist","Attack","Defend","Destroy","Guard","Hold","Patrol","Move","Search and Destroy","Seize","Support"];
-_TaskDuration = [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,55,60];
-_TaskDurationLabel = ["1 Min","2 Min","3 Min","4 Min","5 Min","6 Min","7 Min","8 Min","9 Min","10 Min","15 Min","20 Min","25 Min","30 Min","35 Min","40 Min","45 Min","50 Min","55 Min","60 Min"];
-_detailGroup = [];
-
-ctrlSetText [14026,localize "STR_WF_COMMAND_Respawn" + ":"];
-
-_listbox_teams = _display displayCtrl 14012;
-_u = 1;
-lbAdd[14012,localize "STR_WF_COMMAND_All"];
-{lbAdd [14012,Format["[%1] %2",_u,name (leader _x)]];_u = _u + 1} forEach clientTeams;
-lbSetCurSel [14012,1];
-
-_radioLabel = ["All","Alpha","Bravo","Charlie","Delta","Echo","Foxtrot","Golf","Hotel","India","Juliet","Kilo","Lima","Mike","November","Oscar","Papa","Quebec","Romeo","Sierra","Tango","Uniform","Victor","Whiskey","X-Ray","Yankee","Zulu","Razor","Fatman","StarForce","Frostbite","Battlemage","Manhattan","Firefly","Swordsman","Sabre","Hammer","Reaper","Anvil","Fortune"];
-
-_templates = missionNamespace getVariable Format["WFBE_%1AITEAMTEMPLATEDESCRIPTIONS",sideJoinedText];
-_templates_upgrades = missionNamespace getVariable Format["WFBE_%1AITEAMUPGRADES",sideJoinedText];
-_upgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
-_u = 0;
-_i = 0;
-{
-	_temp_upgr = _templates_upgrades select _i;
-	
-	_canAdd = true;
-	for '_k' from 0 to 3 do {
-		if ((_temp_upgr select _k) > (_upgrades select _k)) exitWith {_canAdd = false};
-	};
-	
-	if (_canAdd) then {
-		lbAdd [14010,_x];
-		lbSetValue [14010, _u, _i];
-		_u = _u + 1;
-	};
-	_i = _i + 1;
-} forEach _templates;
-lbSort (_display displayCtrl 14010);
-
-_curSel = lbCurSel 14012;
-_teams = [];
-_team = if (_curSel != 0) then {clientTeams select (_curSel - 1)} else {clientTeams select (_curSel + 1)};
-_team_old = _team;
-
-_index = (_team) Call GetTeamType;
-if (_index == -1) then {_index = 1};
-lbSetCurSel [14010,[14010,_index] Call UIFindLBValue];
-
-_txt = (_team) Call GetTeamMoveMode;
-if (_txt == "" || _txt == "towns") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_TakeTowns"};
-if (_txt == "move") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_Move"};
-if (_txt == "patrol") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_Patrol"};
-if (_txt == "defense") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_Defense"};
-ctrlSetText [14013,_txt];
-
 _map = _display displayCtrl 14002;
-//_map ctrlMapAnimAdd [1,.075,getPos (leader(clientTeams select 0))];
-//ctrlMapAnimCommit _map;
+_sid = (sideJoined) Call WFBE_CO_FNC_GetSideID;
+_cool = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_COOLDOWN", 8];
+_artyOn = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0;
 
-ctrlEnable [14015,false];
-ctrlEnable [14014,false];
+//--- Request-Unit combo (idc 14640): the type strings sent verbatim as the aicom-request-unit arg.
+_reqTypes  = ["infantry","armor","air"];
+_reqLabels = ["Infantry","Armor","Air"];
+lbClear 14640;
+{lbAdd [14640, _x]} forEach _reqLabels;
+lbSetCurSel [14640, 0];
 
-//--- Set the combo properties.
-_behaviors = ["AWARE","CARELESS","COMBAT","SAFE","STEALTH"];
-_combatModes = ["BLUE","GREEN","RED","WHITE","YELLOW"];
-_formations = ["COLUMN","DIAMOND","ECH LEFT","ECH  RIGHT","FILE","LINE","STAG COLUMN","VEE","WEDGE"];
-_speeds = ["LIMITED","FULL","NORMAL"];
+_armed = "";
+_lastSend = -1000;
+_lastState = -1;        //--- 0 = take-command, 1 = war room, -1 = uninitialised (force first toggle).
+_lastRosterHash = "";
+_lastEcon = "";
+activeAnimMarker = false;
 
-{lbAdd [14017, _x]} forEach _behaviors;
-{lbAdd [14018, _x]} forEach _combatModes;
-{lbAdd [14019, _x]} forEach _formations;
-{lbAdd [14020, _x]} forEach _speeds;
+//--- All war-room controls (shown only in the commander state). Roster, order buttons, request combo, lines.
+private "_warCtrls";
+_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14610,14611,14640,14641,14690,14691];
 
-_structures = [""];
-_hq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
-if (alive _hq) then {_structures = _structures + [_hq]};
-_structures = _structures + ((sideJoined) Call WFBE_CO_FNC_GetSideStructures);
-_structuresLbl = ["Default"];
-lbAdd[14025,"Default"];
-
-{
-	if (typeName _x == "OBJECT") then {
-		_nearTown = ([_x,towns] Call WFBE_CO_FNC_GetClosestEntity) getVariable 'name';
-		_type = [typeOf _x, 'displayName'] Call GetConfigInfo;
-		_lbl = _type + ' ' + _nearTown + ' ' + str (round(player distance _x)) + 'M';
-		_structuresLbl = _structuresLbl + [_lbl];
-		lbAdd[14025,_lbl];
-	};
-} forEach _structures;
+ctrlSetStructuredText [14650, parseText "Opening the war room..."];
 
 while {alive player && dialog} do {
-	if (side group player != sideJoined) exitWith {activeAnimMarker = false;closeDialog 0};
+	if (side group player != sideJoined) exitWith {activeAnimMarker = false; closeDialog 0};
 	if (!dialog) exitWith {activeAnimMarker = false};
 
-	if (MenuAction == 601) then {if (_mode != 0) then {_updateTab = true};_mode = 0};//--- Team properties.
-	if (MenuAction == 602) then {if (_mode != 1) then {_updateTab = true};_mode = 1};//--- Task.
-	if (MenuAction == 603) then {if (_mode != 2) then {_updateTab = true};_mode = 2};//--- Task.
-	
-	_curSel = lbCurSel 14012;
-	_isAll = if (_curSel == 0 || (0 in _teams)) then {true} else {false};
-	_team = if !(_isAll) then {clientTeams select (_curSel - 1)} else {clientTeams select (_curSel + 1)};
-	_teams = lbSelection _listbox_teams;
-	
-	if (_team_old != _team) then {MenuAction = 1};
-	
-	if (_updateTab) then {
-		_currentIDC = 0;
-		switch (_mode) do {
-			case 0: {
-				{ctrlShow[_x,false]} forEach (_IDCDetails + _IDCTasks);
-				{ctrlShow[_x,true]} forEach _IDCTeam;
-				ctrlSetText[14021,localize "STR_WF_COMMAND_Behavior"];
-				ctrlSetText[14022,localize "STR_WF_COMMAND_CombatMode"];
-				ctrlSetText[14030,localize "STR_WF_COMMAND_SquadSettingsLabel"];
-				lbClear 14017;
-				lbClear 14018;
-				{lbAdd [14017, _x]} forEach _behaviors;
-				{lbAdd [14018, _x]} forEach _combatModes;
-				_updateProperties = true;
-				_currentIDC = 14500;
-			};
-			case 1: {
-				{ctrlShow[_x,false]} forEach (_IDCDetails + _IDCTeam);
-				{ctrlShow[_x,true]} forEach _IDCTasks;
-				lbClear 14017;
-				lbClear 14018;
-				{lbAdd [14017, _x]} forEach _TaskTypes;
-				{lbAdd [14018, _x]} forEach _TaskDurationLabel;
-				ctrlSetText[14021,localize "STR_WF_COMMAND_TaskTO_Do" + ":"];
-				ctrlSetText[14022,localize "STR_WF_COMMAND_TaskTO_Time" + ":"];
-				ctrlSetText[14030,localize "STR_WF_COMMAND_Tasks"];
-				lbSetCurSel[14017,0];
-				lbSetCurSel[14018,0];
-				_currentIDC = 14501;
-			};
-			case 2: {
-				{ctrlShow[_x,false]} forEach (_IDCTasks + _IDCTeam);
-				{ctrlShow[_x,true]} forEach _IDCDetails;
-				ctrlSetText[14030,localize "STR_WF_COMMAND_SquadManagmentLabel"];
-				_detailGroup = if (!_isAll) then {(units(clientTeams select (_curSel - 1))) Call GetLiveUnits} else {[]};
-				[_detailGroup,14041] Call UIFillListTeamOrders;
-				_enable = if !(isPlayer leader _team) then {true} else {false};
-				ctrlEnable [14043,_enable];
-				_enable = if !(isPlayer (vehicle leader _team) && vehicle leader _team != leader _team) then {true} else {false};
-				ctrlEnable [14042,_enable];
-				_currentIDC = 14502;
-			};
-		};
-		_hidc = [14500,14502,14501];
-		_hidc = _hidc - [_currentIDC];
-		_con = _display DisplayCtrl _currentIDC;
-		_con ctrlSetTextColor [1, 1, 1, 1];
-		{_con = _display DisplayCtrl _x;_con ctrlSetTextColor [0.4, 0.4, 0.4, 1]} forEach _hidc;
-		_updateTab = false;
-	};
-	
-	_txt = (_team) Call GetTeamMoveMode;
-	if (_txt == "" || _txt == "towns") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_TakeTowns"};
-	if (_txt == "move") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_Move"};
-	if (_txt == "patrol") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_Patrol"};
-	if (_txt == "defense") then {_txt = localize "STR_WF_COMMAND_Mission" + ": " + localize "STR_WF_COMMAND_Defense"};
-	ctrlSetText [14013,_txt];
-	
-	//--- Team Funds.
-	ctrlSetText [14028,Format [localize 'STR_WF_COMMAND_Cash',str ((_team) Call GetTeamFunds)]];
-	
-	if (MenuAction == 1) then {
-		MenuAction = -1;
-		activeAnimMarker = false;
+	_now = time;
 
-		_index = (_team) Call GetTeamType;
-		_currentCoord = (_team) Call GetTeamMovePos;
-		_currentMission = (_team) Call GetTeamMoveMode;
-		if (typeName _currentCoord == "ARRAY") then {
-			if (count _currentCoord > 0) then {
-				_position = _currentCoord;
-				if (_currentMission == "move") then {["TempAnim",_position,"selector_selectedMission",1,"ColorOrange",1,1.2] Spawn MarkerAnim};
-				if (_currentMission == "patrol") then {["TempAnim",_position,"selector_selectedMission",1,"ColorYellow",1,1.2,"areaPatrol"] Spawn MarkerAnim};
-				if (_currentMission == "defense") then {["TempAnim",_position,"selector_selectedMission",1,"ColorRed",1,1.2] Spawn MarkerAnim};
-			};
-		};
-		if (typeName _currentCoord == "OBJECT") then {
-			if (_currentMission == "towns") then {["TempAnim",getPos _currentCoord,"selector_selectedMission",1,"ColorBlue",1,1.2] Spawn MarkerAnim};
-		};
-		
-		_enable = if (isPlayer(leader _team)) then {false} else {true};
-		_special = if (_isAll) then {false} else {if !(isPlayer(leader _team)) then {true} else {false}};
-		ctrlEnable [14011,_special];
-		ctrlEnable [14014,_enable];
-		ctrlEnable [14015,_enable];
-		
-		if (_enable) then {
-			_isDisabled = (_team) Call GetTeamAutonomous;
-			if (_isDisabled) then {
-				ctrlEnable [14014,true];
-				ctrlEnable [14015,false];
-			} else {
-				ctrlEnable [14015,true];
-				ctrlEnable [14014,false];
-			};
-		};
-		if (_index == -1) then {_index = 1};
-		lbSetCurSel [14010,[14010,_index] Call UIFindLBValue];
-		if (_mode == 0) then {
-			_updateProperties = true;
-			_updateRespawn = true;
-		};
-		if (_mode == 2) then {
-			_detailGroup = if !(_isAll) then {(units(clientTeams select (_curSel - 1))) Call GetLiveUnits} else {[]};
-			[_detailGroup,14041] Call UIFillListTeamOrders;
-			_enable = if !(isPlayer leader _team) then {true} else {false};
-			ctrlEnable [14043,_enable];
-		};
+	//--- ===== STATE GATE ===== am I the commander right now? (canonical null-guarded == idiom). =====
+	private "_isCmd";
+	_isCmd = false;
+	private "_ct"; _ct = commanderTeam;                                 //--- snapshot; guard an unset/nil global on a slow JIP client
+	if (!isNil "_ct") then {if (!isNull _ct) then {if (_ct == group player) then {_isCmd = true}}};
+	private "_seatEmpty"; _seatEmpty = (isNil "_ct") || {isNull _ct};
+	private "_lockOn"; _lockOn = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0;
+
+	//--- Set visibility + subtitle EVERY loop (display-scoped ctrlShow = the most engine-proven A2-OA
+	//--- form; robust to a missed change-edge). The heavier reset stays gated on a real state change.
+	private "_stateNow"; _stateNow = if (_isCmd) then {1} else {0};
+	{(_display displayCtrl _x) ctrlShow _isCmd} forEach _warCtrls;
+	(_display displayCtrl 14670) ctrlShow (!_isCmd);                 //--- TAKE COMMAND only when NOT commander
+	(_display displayCtrl 14605) ctrlSetText (if (_isCmd) then {"WAR ROOM"} else {"COMMAND"});
+	if (_stateNow != _lastState) then {
+		_lastState = _stateNow;
+		_armed = "";
+		_lastRosterHash = ""; _lastEcon = "";                         //--- force a panel redraw on state entry
+		if (!_isCmd) then {lbClear 14661};
 	};
-	
-	//--- Focus.
-	if (MenuAction == 2) then {
-		MenuAction = -1;
-		
-		ctrlMapAnimClear _map;
-		_map ctrlMapAnimAdd [2,.075,getPos(leader _team)];
-		ctrlMapAnimCommit _map;
-	};
-	
-	//--- Focus (AI Sub).
-	if (MenuAction == 3) then {
-		MenuAction = -1;
-		_iddx = lnbCurSelRow 14041;
-		if (_iddx != -1) then {
-			_map ctrlMapAnimAdd [1,.095,getPos (_detailGroup select _iddx)];
-			ctrlMapAnimCommit _map;
-		};
-	};
-	
-	//--- Take Towns.
-	if (MenuAction == 101) then {
-		MenuAction = -1;
-		if (!_isAll) then {
-			[_team,'towns'] Call SetTeamMoveMode;
+
+	//--- ====================================================================
+	//--- STATE A: NOT commander -> Take-Command panel.
+	//--- ====================================================================
+	if (!_isCmd) then {
+		private "_msg";
+		if (_lockOn) then {
+			_msg = "<t color='#F8D664'>AI COMMAND LOCKED</t><br/><br/>The AI permanently commands this side on this server. You cannot take command.";
+			ctrlShow [14670, false];
 		} else {
-			{[_x,'towns'] Call SetTeamMoveMode} forEach clientTeams;
-		};
-		activeAnimMarker = false;
-	};
-	
-	if (mouseButtonUp == 0) then {
-		mouseButtonUp = -1;
-		//--- Move | Patrol | Defend.
-		if (MenuAction == 102 || MenuAction == 103 || MenuAction == 104) then {
-			_color = "";
-			_order = "";
-			_isAdded = "";
-			switch (MenuAction) do {
-				case 102: {_color = "ColorOrange";_order = "MOVE"};
-				case 103: {_color = "ColorYellow";_order = "PATROL";_isAdded = "areaPatrol"};
-				case 104: {_color = "ColorRed";_order = "DEFENSE"};
-			};
-			MenuAction = -1;
-			_position = _map posScreenToWorld[mouseX,mouseY];
-			
-			[_curSel,_position,_order,_isAll,_teams] Spawn {
-				Private ["_curSel","_isAll","_order","_position","_radio","_radioLabel","_sideTeam","_teams"];
-				_curSel = _this select 0;
-				_position = _this select 1;
-				_order = _this select 2;
-				_isAll = _this select 3;
-				_teams = _this select 4;
-				//_radio = ["all","alpha","bravo","charlie","delta","echo","foxtrot","golf","hotel","india","juliet","kilo","lima","mike","november","oscar","papa","quebec","romeo","sierra","tango","uniform","victor","whiskey","xray","yankee","zulu"];
-				_radioLabel = ["All","Alpha","Bravo","Charlie","Delta","Echo","Foxtrot","Golf","Hotel","India","Juliet","Kilo","Lima","Mike","November","Oscar","Papa","Quebec","Romeo","Sierra","Tango","Uniform","Victor","Whiskey","X-Ray","Yankee","Zulu","Razor","Fatman","StarForce","Frostbite","Battlemage","Manhattan","Firefly","Swordsman","Sabre","Hammer","Reaper","Anvil","Fortune"];
-				
-				if (!_isAll) then {
-					_sideTeam = "Team ";
-					for '_i' from 0 to count _teams-1 do {
-						_selected = clientTeams select ((_teams select _i) - 1);
-						_sideTeam = _sideTeam + (_radioLabel select (_teams select _i));
-						if (_i != count _teams -1) then {_sideTeam = _sideTeam + ", "} else {_sideTeam = _sideTeam + " "};
-					};
-				
-					player kbTell [sideHQ, WFBE_V_HQTopicSide, "OrderSent",["1","",_sideTeam,[if (sideJoined == west) then {"blueTeam"} else {"redTeam"}]],["2","","moving to position",["HC_MovingToPosition"]],["3","","over.",["Over1"]],true];
-					{
-						_selected = clientTeams select (_x - 1);
-						[_selected,_position] Call SetTeamMovePos;
-						[_selected,_order] Call SetTeamMoveMode;
-					} forEach _teams;
-				} else {
-					player kbTell [sideHQ, WFBE_V_HQTopicSide, "OrderSentAll",["1","","All",["all"]],["2","","moving to position",["HC_MovingToPosition"]],["3","","over.",["Over1"]],true];
-					{
-						[_x,_position] Call SetTeamMovePos;
-						[_x,_order] Call SetTeamMoveMode;
-					} forEach clientTeams;			
-				};
-			};
-
-			activeAnimMarker = false;
-			//--- AICOM v2 M4: a "Move All" order doubles as the AI commander's side FOCUS - concentrate the
-			//--- autonomous war on the nearest town to the click (the AI handles the details). Reuses this
-			//--- existing command-center action, no new dialog control. Only when the v2 Allocator is live.
-			if (_isAll && {_order == "MOVE"} && {(missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0}) then {
-				private ["_fTown","_fD","_fd2"];
-				_fTown = objNull; _fD = 1e9;
-				{ _fd2 = _position distance _x; if (_fd2 < _fD) then {_fD = _fd2; _fTown = _x} } forEach towns;
-				if (!isNull _fTown) then {
-					["RequestSpecial", ["aicom-focus", sideJoined, _fTown]] Call WFBE_CO_FNC_SendToServer;
-					hintSilent format ["AI Commander - focus set: %1", _fTown getVariable ["name", "?"]];
-				};
-			};
-			_array = if (_isAdded == "") then {["TempAnim",_position,"selector_selectedMission",1,_color,1,1.2]} else {["TempAnim",_position,"selector_selectedMission",1,_color,1,1.2,_isAdded]};
-			_array Spawn MarkerAnim;
-		};
-
-		//--- Set a Task.
-		if (MenuAction == 306) then {
-			MenuAction = -1;
-			_taskType = _TaskTypes select (lbCurSel  14017);
-			_taskTime = _TaskDuration select (lbCurSel  14018);
-			_taskTimeLabel = _TaskDurationLabel select (lbCurSel  14018);
-			_position = _map posScreenToWorld[mouseX,mouseY];
-			if (!_isAll) then {
-				_sideTeam = "Team ";
-				for '_i' from 0 to count _teams-1 do {
-					_selected = clientTeams select ((_teams select _i) - 1);
-					_sideTeam = _sideTeam + (_radioLabel select (_teams select _i));
-					if (_i != count _teams -1) then {_sideTeam = _sideTeam + ", "} else {_sideTeam = _sideTeam + " "};
-				};
-				player kbTell [sideHQ, WFBE_V_HQTopicSide, "OrderSent",["1","",_sideTeam,[if (sideJoined == west) then {"blueTeam"} else {"redTeam"}]],["2","","moving to position",["HC_MovingToPosition"]],["3","","over.",["Over1"]],true];
-				
-				{
-					_selected = clientTeams select (_x - 1);
-					if (alive (leader _selected) && isPlayer(leader _selected)) then {
-						//--- Revived (Objective Ping): targeted send to this squad leader's client. CLTFNCSetTask builds the SimpleTask + map destination + 250m/duration completion loop.
-						[leader _selected, "SetTask", [_taskType,_taskTime,_taskTimeLabel,_position]] Call WFBE_CO_FNC_SendToClient;
-					};
-				} forEach _teams;
+			if (_seatEmpty) then {
+				_msg = "<t color='#85B5FA'>This side has NO commander.</t><br/><br/>Take command to run the war yourself: the AI becomes your quartermaster (it founds and refills teams), and you direct every team from this war room.<br/><br/>Press <t color='#A0E060'>TAKE COMMAND</t> below.";
+				ctrlShow [14670, true];
 			} else {
-				player kbTell [sideHQ, WFBE_V_HQTopicSide, "OrderSentAll",["1","","All",["all"]],["2","","moving to position",["HC_MovingToPosition"]],["3","","over.",["Over1"]],true];
-				//--- Revived (Objective Ping): send to every friendly PLAYER-led squad individually. The old broadcast also tasked the enemy (receiver doesn't side-filter).
+				_msg = "<t color='#85B5FA'>A human already commands this side.</t><br/><br/>Only the commander can use the war room. Win a commander vote (Voting tab) to take over.";
+				ctrlShow [14670, false];
+			};
+		};
+		if (_msg != _lastEcon) then {ctrlSetStructuredText [14600, parseText _msg]; _lastEcon = _msg};
+		ctrlSetStructuredText [14650, parseText "<t color='#85B5FA'>You are not commanding this side.</t>"];
+
+		//--- TAKE COMMAND press -> claim the empty AI commander seat (server re-validates every guard).
+		if (MenuAction == 750) then {
+			MenuAction = -1;
+			if (!_lockOn && _seatEmpty) then {
+				["RequestClaimCommander", [sideJoined, group player]] Call WFBE_CO_FNC_SendToServer;
+				hintSilent parseText "<t color='#A0E060'>Claiming command...</t>";
+			} else {
+				hintSilent parseText "<t color='#F8D664'>The commander seat is not available to claim.</t>";
+			};
+		};
+
+		//--- Back / Exit still work in this state.
+		if (MenuAction == 4) exitWith {MenuAction = -1; activeAnimMarker = false; closeDialog 0; createDialog "WF_Menu"};
+		sleep 0.2;
+	} else {
+	//--- ====================================================================
+	//--- STATE B: COMMANDER -> the war room.
+	//--- ====================================================================
+
+		//--- ----- ECONOMY header (14600): funds / supply / income / towns. All client-readable, non-blocking. -----
+		private ["_funds","_supply","_income","_held","_total","_econ"];
+		_funds  = (clientTeam) Call GetTeamFunds;
+		_supply = missionNamespace getVariable [format ["wfbe_supply_%1", sideJoined], 0]; //--- DIRECT read (never GetSideSupply in a UI loop).
+		if (isNil "_supply") then {_supply = 0};
+		_income = (sideJoined) Call GetIncome;
+		_total  = if (isNil "towns") then {0} else {count towns};
+		_held   = if (_total > 0) then {sideJoined Call GetTownsHeld} else {0};
+		_econ = "<t color='#85B5FA'>Funds:</t> $" + str (round _funds)
+		      + "   <t color='#85B5FA'>Supply:</t> " + str (round _supply)
+		      + "<br/><t color='#85B5FA'>Income:</t> $" + str (round _income) + "/tick"
+		      + "   <t color='#85B5FA'>Towns:</t> " + str _held + "/" + str _total;
+		if (_econ != _lastEcon) then {ctrlSetStructuredText [14600, parseText _econ]; _lastEcon = _econ};
+
+		//--- ----- ROSTER (14661): one row per AI-led team: "leader | role | town | order". -----
+		//--- clientTeams is the own-side team registry; only NON-player-led, alive teams are commandable.
+		private ["_rows","_cmdTeams","_hash"];
+		_rows = []; _cmdTeams = []; _hash = "";
+		{
+			if (!isNull _x && {!isPlayer (leader _x)} && {({alive _y} count units _x) > 0}) then {
+				private ["_ld","_role","_tn","_td","_md","_ord","_lbl","_pos"];
+				_ld = leader _x;
+				_role = [typeOf _ld, "displayName"] Call GetConfigInfo;
+				if (_role == "") then {_role = "Team"};
+				//--- nearest town name (engine-proven nearest-pick; inner forEach rebinds _x to the town, then restores).
+				_pos = getPos _ld; _tn = "field"; _td = 1e9;
 				{
-					if (alive (leader _x) && isPlayer (leader _x)) then {
-						[leader _x, "SetTask", [_taskType,_taskTime,_taskTimeLabel,_position]] Call WFBE_CO_FNC_SendToClient;
+					private "_d"; _d = _pos distance _x;
+					if (_d < _td) then {_td = _d; _tn = _x getVariable ["name", "?"]};
+				} forEach towns;
+				//--- current order from wfbe_teammode (default "towns" = autonomous). Proven group [name,default] read (executor line 27).
+				_md = _x getVariable ["wfbe_teammode", "towns"];
+				if (isNil "_md") then {_md = "towns"};
+				_md = toLower _md;
+				_ord = switch (_md) do {
+					case "move":    {"ATTACK"};
+					case "defense": {"DEFEND"};
+					case "patrol":  {"PATROL"};
+					default {"auto"};
+				};
+				_lbl = (name _ld) + "  |  " + _role + "  |  " + _tn + "  |  " + _ord;
+				_rows = _rows + [_lbl];
+				_cmdTeams = _cmdTeams + [_x];
+				_hash = _hash + _lbl + "#";
+			};
+		} forEach clientTeams;
+		//--- Repaint only on a content change (preserve selection; no per-frame lbClear churn).
+		if (_hash != _lastRosterHash) then {
+			_lastRosterHash = _hash;
+			private "_keep"; _keep = lbCurSel 14661;
+			lbClear 14661;
+			{lbAdd [14661, _x]} forEach _rows;
+			if (_keep >= 0 && _keep < (count _rows)) then {lbSetCurSel [14661, _keep]};
+		};
+
+		//--- Resolve the currently selected team (roster row -> _cmdTeams), else objNull.
+		_selTeam = objNull;
+		private "_sel"; _sel = lbCurSel 14661;
+		if (_sel >= 0 && _sel < (count _cmdTeams)) then {_selTeam = _cmdTeams select _sel};
+
+		//--- ----- ARM a map-click order ----- (Move / Defend / Patrol / Artillery).
+		if (MenuAction == 720 || MenuAction == 721 || MenuAction == 722 || MenuAction == 723) then {
+			private "_b"; _b = MenuAction; MenuAction = -1;
+			switch (_b) do {
+				case 720: {_armed = "move";    hintSilent parseText "<t color='#85B5FA'>Attack/Move:</t> click the destination on the map."};
+				case 721: {_armed = "defense"; hintSilent parseText "<t color='#85B5FA'>Defend:</t> click the point to hold on the map."};
+				case 722: {_armed = "patrol";  hintSilent parseText "<t color='#85B5FA'>Patrol:</t> click the area to patrol on the map."};
+				case 723: {
+					if (_artyOn) then {
+						_armed = "arty";
+						hintSilent parseText "<t color='#85B5FA'>Artillery:</t> click the target spot.";
+					} else {
+						hintSilent parseText "<t color='#F8D664'>Artillery is not enabled.</t>";
+					};
+				};
+			};
+		};
+
+		//--- ----- RELEASE selected team to autonomous (mode "towns"). -----
+		if (MenuAction == 724) then {
+			MenuAction = -1;
+			if (!isNull _selTeam) then {
+				[_selTeam, "towns"] Call SetTeamMoveMode;
+				[_selTeam, true]    Call SetTeamAutonomous;          //--- let AssignTowns re-grab it
+				hintSilent parseText ("<t color='#A0E060'>" + (name (leader _selTeam)) + " released to auto.</t>");
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Select a team in the roster first.</t>";
+			};
+		};
+
+		//--- ----- MAP CLICK -> resolve the armed order (DIRECT team task; copied shape from the old controller). -----
+		if (mouseButtonUp == 0) then {
+			mouseButtonUp = -1;
+			if (_armed != "") then {
+				_position = _map posScreenToWorld [mouseX, mouseY];
+				if ((_now - _lastSend) < _cool) then {
+					hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+				} else {
+					if (_armed == "arty") then {
+						//--- HYBRID: artillery still rides the brain (works in assist-mode) via the RequestSpecial bus.
+						["RequestSpecial", ["aicom-arty-here", sideJoined, [_position select 0, _position select 1, 0]]] Call WFBE_CO_FNC_SendToServer;
+						["TempAnim", _position, "selector_selectedMission", 1, "ColorRed", 1, 1.2] Spawn MarkerAnim;
+						hintSilent parseText "<t color='#A0E060'>Artillery requested.</t>";
+						_lastSend = _now; _armed = "";
+					} else {
+						//--- DIRECT TEAM TASK. Target = selected roster team, else nearest idle AI team to the click.
+						private "_team"; _team = _selTeam;
+						if (isNull _team) then {
+							private "_bd"; _bd = 1e9;
+							{
+								if (!isNull _x && {!isPlayer (leader _x)} && {({alive _y} count units _x) > 0}) then {
+									private "_d"; _d = _position distance (getPos (leader _x));
+									if (_d < _bd) then {_bd = _d; _team = _x};
+								};
+							} forEach clientTeams;
+						};
+						if (!isNull _team) then {
+							private "_col";
+							_col = switch (_armed) do {
+								case "move":    {"ColorBlue"};
+								case "defense": {"ColorGreen"};
+								case "patrol":  {"ColorOrange"};
+								default {"ColorBlue"};
+							};
+							//--- THE working order path (copied verbatim from the old controller, lines 299-300/305-306):
+							//--- stamp mode+goto; AI_Commander_Execute turns it into waypoints (AIMoveTo for server-local
+							//--- teams, wfbe_aicom_order for HC teams) EVERY tick while you command.
+							[_team, _position] Call SetTeamMovePos;
+							[_team, _armed]    Call SetTeamMoveMode;
+							[_team, false]     Call SetTeamAutonomous; //--- pin under manual order (don't let AssignTowns re-grab it)
+							["TempAnim", _position, "selector_selectedMission", 1, _col, 1, 1.2] Spawn MarkerAnim;
+							hintSilent parseText ("<t color='#A0E060'>" + (name (leader _team)) + " -> " + (toUpper _armed) + ".</t>");
+							_lastSend = _now; _armed = "";
+						} else {
+							hintSilent parseText "<t color='#F8D664'>No AI team available to task.</t>";
+						};
+					};
+				};
+			};
+		};
+
+		//--- ----- ALL PUSH / ALL HOLD (bulk; no allocator dependency). -----
+		if (MenuAction == 710 || MenuAction == 711) then {
+			private "_b"; _b = MenuAction; MenuAction = -1;
+			if ((_now - _lastSend) >= _cool) then {
+				private "_n"; _n = 0;
+				{
+					if (!isNull _x && {!isPlayer (leader _x)} && {({alive _y} count units _x) > 0}) then {
+						if (_b == 710) then {
+							[_x, "towns"] Call SetTeamMoveMode;
+							[_x, true]    Call SetTeamAutonomous;
+						} else {
+							[_x, getPos (leader _x)] Call SetTeamMovePos;
+							[_x, "defense"]          Call SetTeamMoveMode;
+							[_x, false]              Call SetTeamAutonomous;
+						};
+						_n = _n + 1;
 					};
 				} forEach clientTeams;
-			};
-		};
-	};
-	
-	//--- Respawn.
-	if (MenuAction == 201) then {
-		MenuAction = -1;
-		[_team] Spawn {
-			Private ["_team"];
-			_team = _this select 0;
-			_units = Units _team;
-			if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0 || ((missionNamespace getVariable "WFBE_C_RESPAWN_CAMPS_MODE") > 0)) then {//--- Make sure that the unit won't spawn back at a camp/ambu.
-				[_team,"forceRespawn"] Call SetTeamRespawn;
-				sleep 2;
-			};
-			_units = _units + ([_team,false] Call GetTeamVehicles);
-			{_x setDammage 1} forEach _units;
-		};
-	};
-	
-	//--- Auto AI.
-	if (MenuAction == 301) then {
-		MenuAction = -1;
-		_isDisabled = (_team) Call GetTeamAutonomous;
-		if (_isDisabled) then {
-			ctrlEnable [14015,true];
-			ctrlEnable [14014,false];
-			if (!_isAll) then {
-				{
-					_selected = clientTeams select (_x - 1);
-					[_selected,false] Call SetTeamAutonomous;
-				} forEach _teams;
+				_lastSend = _now;
+				hintSilent parseText (format ["<t color='#A0E060'>%1: %2 teams.</t>", (if (_b == 710) then {"ALL PUSH"} else {"ALL HOLD"}), _n]);
 			} else {
-				{[_x,false] Call SetTeamAutonomous} forEach clientTeams;
-			};
-		} else {
-			ctrlEnable [14014,true];
-			ctrlEnable [14015,false];
-			if (!_isAll) then {
-				{
-					_selected = clientTeams select (_x - 1);
-					[_selected,true] Call SetTeamAutonomous;
-				} forEach _teams;
-			} else {
-				{[_x,true] Call SetTeamAutonomous} forEach clientTeams;
-			};
-		};		
-	};
-	
-	//--- Set buy Type
-	if (MenuAction == 302) then {
-		MenuAction = -1;
-		_curType = lbValue [14010, lbCurSel(14010)];
-		if (!_isAll) then {
-			{
-				_selected = clientTeams select (_x - 1);
-				[_selected,_curType] Call SetTeamType;
-			} forEach _teams;
-		} else {
-			{[_x,_curType] Call SetTeamType} forEach clientTeams;
-		};
-	};	
-	
-	//--- Set property to team.
-	if (MenuAction == 303) then {
-		MenuAction = -1;
-		_behavior = _behaviors select (lbCurSel(14017));
-		_combat = _combatModes select (lbCurSel(14018));
-		_formation = _formations select (lbCurSel(14019));
-		_speed = _speeds select (lbCurSel(14020));
-		
-		//--- Locality, process on server.
-		_to = sideJoined;
-		if (!_isAll) then {
-			_to = [];
-			{
-				_selected = clientTeams select (_x - 1);
-				_to = _to + [_selected];
-			} foreach _teams;
-		};
-		
-		// WFBE_RequestTeamUpdate = ['SRVFNCREQUESTTEAMUPDATE',[_to,_behavior,_combat,_formation,_speed]];
-		// publicVariable 'WFBE_RequestTeamUpdate';
-		// if (isHostedServer) then {['SRVFNCREQUESTTEAMUPDATE',[_to,_behavior,_combat,_formation,_speed]] Spawn HandleSPVF};
-		["RequestTeamUpdate", [_to,_behavior,_combat,_formation,_speed]] Call WFBE_CO_FNC_SendToServer;
-	};	
-	
-	//--- Set respawn.
-	if (MenuAction == 304) then {
-		MenuAction = -1;
-		_curSel = lbCurSel 14025;
-		if (_curSel == -1) then {_curSel = 0};
-		if (!_isAll) then {
-			{
-				_selected = clientTeams select (_x - 1);
-				[_selected,(_structures select _curSel)] Call SetTeamRespawn;
-			} forEach _teams;
-		} else {
-			{[_x,(_structures select _curSel)] Call SetTeamRespawn} forEach clientTeams;
-		};
-	};
-	
-	//--- Update the respawn info.
-	if (_updateRespawn) then {
-		_updateRespawn = false;
-		_respawn = (_team) Call GetTeamRespawn;
-		_id = _structures find _respawn;
-		if (_id != -1) then {lbSetCurSel [14025,_id]} else {lbSetCurSel[14025,0]};
-	};
-	
-	//--- Minimap update (Only refresh when the combo is selected).
-	if (MenuAction == 305 && _updateProperties) then {MenuAction = -1};
-	if (MenuAction == 305) then {
-		MenuAction = -1;
-		_curSel = lbCurSel 14025;
-		if (_curSel == -1) then {_curSel = 0};
-		if (typeName (_structures select _curSel) == "OBJECT") then {
-			_map ctrlMapAnimAdd [1,.095,getPos (_structures select _curSel)];
-			ctrlMapAnimCommit _map;
-		};
-	};
-	
-	//--- Units Details.
-	if (MenuAction == 401) then {
-		MenuAction = -1;
-		_iddx = lnbCurSelRow 14041;
-		if (_iddx != -1) then {
-			_unit = _detailGroup select _iddx;
-			_enable = if (!(isPlayer (vehicle _unit)) && vehicle _unit != _unit) then {true} else {false};
-			ctrlEnable [14042,_enable];
-		};
-	};
-	
-	//--- Units Details (Unflip)
-	if (MenuAction == 402) then {
-		MenuAction = -1;
-		_iddx = lnbCurSelRow 14041;
-		if (_iddx != -1) then {
-			_unit = _detailGroup select _iddx;
-			if ((getPos _unit select 2) < 5) then {
-				_unit setPos [getPos _unit select 0,getpos _unit select 1,0.5];
-				_unit setVelocity [0,0,-1];
-				_detailGroup = if (!_isAll) then {(units(clientTeams select (_curSel - 1))) Call GetLiveUnits} else {[]};
-				[_detailGroup,14041] Call UIFillListTeamOrders;
+				hintSilent parseText "<t color='#F8D664'>Orders on cooldown.</t>";
 			};
 		};
-	};
-		
-	//--- Units Details (Disband)
-	if (MenuAction == 403) then {
-		MenuAction = -1;
-		_iddx = lnbCurSelRow 14041;
-		if (_iddx != -1) then {
-			_unit = _detailGroup select _iddx;
-			_unit setDamage 1;
-			_detailGroup = if (!_isAll) then {(units(clientTeams select (_curSel - 1))) Call GetLiveUnits} else {[]};
-			[_detailGroup,14041] Call UIFillListTeamOrders;
-		};
-	};
-	
-	//--- Update team properties.
-	if (_updateProperties) then {
-		_updateProperties = false;
-		_behavior = behaviour (leader _team);
-		_combat = combatMode (leader _team);
-		_formation = formation (leader _team);
-		_speed = speedMode (leader _team);
-		
-		//--- Behavior.
-		_id =_behaviors find _behavior;
-		if (_id != -1) then {lbSetCurSel [14017,_id]};		
-		//--- Combat Mode.
-		_id =_combatModes find _combat;
-		if (_id != -1) then {lbSetCurSel [14018,_id]};		
-		//--- Formation.
-		_id =_formations find _formation;
-		if (_id != -1) then {lbSetCurSel [14019,_id]};		
-		//--- Speed.
-		_id =_speeds find _speed;
-		if (_id != -1) then {lbSetCurSel [14020,_id]};
-	};
 
-	//--- Back Button.
-	if (MenuAction == 4) exitWith { //---added-MrNiceGuy
-		MenuAction = -1;
-		closeDialog 0;
-		createDialog "WF_Menu";
+		//--- ----- REQUEST UNIT (HYBRID: the B67 refill block runs in assist-mode, so this bites). -----
+		if (MenuAction == 740) then {
+			MenuAction = -1;
+			if ((_now - _lastSend) >= _cool) then {
+				private "_rs"; _rs = lbCurSel 14640; if (_rs == -1) then {_rs = 0};
+				["RequestSpecial", ["aicom-request-unit", sideJoined, _reqTypes select _rs]] Call WFBE_CO_FNC_SendToServer;
+				_lastSend = _now;
+				hintSilent parseText (format ["<t color='#A0E060'>Prioritising %1 production.</t>", _reqTypes select _rs]);
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Orders on cooldown.</t>";
+			};
+		};
+
+		//--- ----- Bottom status line: cooldown + armed hint. -----
+		private ["_cd","_st"];
+		_cd = _cool - (_now - _lastSend);
+		_st = if (_cd > 0) then {
+			"<t color='#F8D664'>Orders ready in " + str (ceil _cd) + "s</t>"
+		} else {
+			if (_armed != "") then {
+				"<t color='#A0E060'>Armed: " + (toUpper _armed) + " - click the map.</t>"
+			} else {
+				"<t color='#A0E060'>Pick a team, pick an order, click the map.</t>"
+			};
+		};
+		ctrlSetStructuredText [14650, parseText _st];
+
+		//--- Back.
+		if (MenuAction == 4) exitWith {MenuAction = -1; activeAnimMarker = false; closeDialog 0; createDialog "WF_Menu"};
+		sleep 0.1;
 	};
-	
-	_team_old = _team;
-	sleep 0.1;
 };
 
 activeAnimMarker = false;

@@ -20,7 +20,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
-         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend",
+         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased"];
 
 _sideID = _this select 0;
@@ -64,6 +64,17 @@ if (count _this > 3) then {
 //--- would otherwise stay engine-default. The on-objective SAD waypoints still flip to COMBAT/WEDGE.
 _team setCombatMode "RED"; _team setBehaviour "AWARE"; _team setSpeedMode "FULL";
 _team setVariable ["wfbe_aicom_hc", true, true];   //--- brain: do not Produce/waypoint this one directly.
+//--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes (which is where server-local teams get
+//--- wfbe_teamtype), so without this the disband-low-tier worker can never classify them (and used to throw on the
+//--- A2-unsafe 2-arg getVariable). AI_Commander_Teams ships the picked TEMPLATE INDEX _pick (same value AssignTypes
+//--- stores at L241; readers resolve the 0-3 type from it) as a TRAILING delegate arg; here it lands at _this index 6 (the
+//--- inner array's slot after _padClass, request string already stripped by HandleSpecial). Guard on count so the
+//--- 4-arg Wildcard / 3-arg server-local calls are unaffected (mirrors the _skillSend count>3 guard above), and
+//--- validate SCALAR (typeName, not A3 isEqualType) before stamping the GROUP object the disband worker iterates.
+if (count _this > 6) then {
+	_foundType = _this select 6;
+	if (typeName _foundType == "SCALAR" && {_foundType >= 0}) then {_team setVariable ["wfbe_teamtype", _foundType, true]};
+};
 _team setVariable ["wfbe_queue", [], false];
 
 if (isServer) then {

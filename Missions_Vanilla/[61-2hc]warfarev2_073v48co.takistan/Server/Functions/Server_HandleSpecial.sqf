@@ -296,6 +296,161 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	case "aicom-defend": {
+		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a player set a DEFEND town for the AI commander (modeled
+		//--- EXACTLY on aicom-focus). Stamp it (+ a t0 timestamp) on the side logic; AI_Commander_Strategy.sqf
+		//--- reads it (TTL'd by WFBE_C_AICOM_DEFEND_TTL) and biases a reliever team to that town. side validated west/east.
+		private ["_dSide","_dTown","_dLogik"];
+		_dSide = _args select 1;
+		_dTown = _args select 2;
+		if (!isNil "_dTown" && {!isNull _dTown} && {_dSide in [west, east]}) then {
+			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _dLogik) then {
+				_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
+				_dLogik setVariable ["wfbe_aicom_defend_focus_t0", time];
+				diag_log ("AICOM2|v1|DEFEND|" + str _dSide + "|" + str (round (time / 60)) + "|set=" + (_dTown getVariable ["name", "?"]));
+			};
+		};
+	};
+	case "aicom-arty-here": {
+		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a player called an ARTILLERY-HERE strike for the AI commander.
+		//--- Gated on WFBE_C_AI_COMMANDER_ARTILLERY>0 (same gate the brain's own artillery block uses). Wiring a full
+		//--- fire-mission here is too deep (the brain owns gun selection/range/cooldown in AI_Commander_Strategy.sqf), so
+		//--- we stamp a fresh [pos,time] request on the side logic for that block to consume next strategy tick + diag_log it.
+		private ["_aSide","_aPos","_aLogik"];
+		_aSide = _args select 1;
+		_aPos  = _args select 2;
+		if ((typeName _aPos == "ARRAY") && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0}) then {
+			_aLogik = (_aSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _aLogik) then {
+				_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
+				diag_log ("AICOM2|v1|ARTYREQ|" + str _aSide + "|" + str (round (time / 60)) + "|pos=" + str _aPos);
+			};
+		};
+	};
+	case "aicom-reinforce": {
+		//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28): a player ordered the AI commander to REINFORCE one
+		//--- of its OWN towns (modeled on aicom-defend, but offensive-leaning). Stamp [town,time] on the side logic; the
+		//--- Allocator (AI_Commander_Allocate.sqf) reads it while fresh (WFBE_C_AICOM_REINFORCE_TTL) and routes ONE eligible
+		//--- team into that town as part of the fist/expand set - additive, reversible, TTL-clears. AI-commander-run gate +
+		//--- west/east validation; the reinforced town must currently be OURS (you reinforce what you hold).
+		private ["_rSide","_rTown","_rLogik","_rCmd","_rHuman","_rRun","_rSID"];
+		_rSide = _args select 1;
+		_rTown = _args select 2;
+		if (!isNil "_rTown" && {!isNull _rTown} && {_rSide in [west, east]}) then {
+			_rLogik = (_rSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _rLogik) then {
+				_rRun = false;
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_rSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
+					_rCmd = (_rSide) Call WFBE_CO_FNC_GetCommanderTeam; _rHuman = false;
+					if (!isNull _rCmd) then {if (isPlayer (leader _rCmd)) then {_rHuman = true}};
+					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_rHuman = false};
+					_rRun = !_rHuman;
+				};
+				_rSID = (_rSide) Call WFBE_CO_FNC_GetSideID;
+				if (_rRun && {(_rTown getVariable ["sideID", -1]) == _rSID}) then {
+					_rLogik setVariable ["wfbe_aicom_reinforce", [_rTown, time]];
+					diag_log ("AICOM2|v1|ORDER|aicom-reinforce|" + str _rSide + "|" + str (round (time / 60)) + "|town=" + (_rTown getVariable ["name", "?"]));
+				} else {
+					diag_log ("AICOM2|v1|ORDER|aicom-reinforce|REJECT|" + str _rSide + "|run=" + str _rRun + "|ownsTown=" + str ((_rTown getVariable ["sideID", -1]) == _rSID));
+				};
+			};
+		};
+	};
+	case "aicom-posture": {
+		//--- COMMAND CONSOLE (PR backend): a player set a strategic POSTURE - "PUSH" (lean aggressive) or "HOLD" (lean
+		//--- consolidate). Stamp the string + a t0 on the side logic; the brain reads it (TTL WFBE_C_AICOM_POSTURE_TTL) and
+		//--- applies a SMALL bias only - it never hard-overrides the stance machine. AI-commander-run gate + west/east + a
+		//--- string whitelist so a malformed arg cannot poison the read.
+		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
+		_pSide = _args select 1;
+		_pPos  = _args select 2;
+		if ((typeName _pPos == "STRING") && {(_pPos == "PUSH") || (_pPos == "HOLD")} && {_pSide in [west, east]}) then {
+			_pLogik = (_pSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _pLogik) then {
+				_pRun = false;
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_pSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
+					_pCmd = (_pSide) Call WFBE_CO_FNC_GetCommanderTeam; _pHuman = false;
+					if (!isNull _pCmd) then {if (isPlayer (leader _pCmd)) then {_pHuman = true}};
+					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_pHuman = false};
+					_pRun = !_pHuman;
+				};
+				if (_pRun) then {
+					_pLogik setVariable ["wfbe_aicom_player_posture", _pPos];
+					_pLogik setVariable ["wfbe_aicom_player_posture_t0", time];
+					diag_log ("AICOM2|v1|ORDER|aicom-posture|" + str _pSide + "|" + str (round (time / 60)) + "|posture=" + _pPos);
+				};
+			};
+		};
+	};
+	case "aicom-request-unit": {
+		//--- COMMAND CONSOLE (PR backend): a player asked the AI commander to favour a UNIT CLASS next time it founds a
+		//--- team - "armor" / "air" / "infantry". Stamp [type,time]; AssignTypes + Teams nudge the next founding type pick
+		//--- toward that class (a weight bias, NOT a hard force). Reuses the POSTURE TTL. AI-commander-run gate + west/east +
+		//--- class whitelist.
+		private ["_uSide","_uType","_uLogik","_uCmd","_uHuman","_uRun"];
+		_uSide = _args select 1;
+		_uType = _args select 2;
+		if ((typeName _uType == "STRING") && {(_uType == "armor") || (_uType == "air") || (_uType == "infantry")} && {_uSide in [west, east]}) then {
+			_uLogik = (_uSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _uLogik) then {
+				_uRun = false;
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_uSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
+					_uCmd = (_uSide) Call WFBE_CO_FNC_GetCommanderTeam; _uHuman = false;
+					if (!isNull _uCmd) then {if (isPlayer (leader _uCmd)) then {_uHuman = true}};
+					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_uHuman = false};
+					_uRun = !_uHuman;
+				};
+				if (_uRun) then {
+					_uLogik setVariable ["wfbe_aicom_request_type", [_uType, time]];
+					diag_log ("AICOM2|v1|ORDER|aicom-request-unit|" + str _uSide + "|" + str (round (time / 60)) + "|type=" + _uType);
+				};
+			};
+		};
+	};
+	case "aicom-donate": {
+		//--- COMMAND CONSOLE (PR backend): a player DONATES funds from their team wallet to the AI commander treasury.
+		//--- ChangePlayerFunds resolves to [clientTeam,_amt] Call ChangeTeamFunds (it adjusts the TEAM wallet, not a separate
+		//--- personal one), so this debits the donor TEAM and credits the AI treasury server-authoritatively - the exact pair
+		//--- the existing RequestAIComDonate.sqf PVF uses. The donor OBJECT is _args select 3 (the frontend forwards it the
+		//--- same way Paratroops forwards clientTeam); the amount is _args select 2 (defaults to WFBE_C_AICOM_DONATE_AMOUNT).
+		//--- All re-validated server-side: AI-commander-run, amount>0, team can afford it. Inert (logged + skipped) if the
+		//--- donor object is missing, so a 3-arg send never mis-charges anyone.
+		private ["_zSide","_zAmt","_zDonor","_zLogik","_zCmd","_zHuman","_zRun","_zTeam","_zFunds"];
+		_zSide  = _args select 1;
+		_zAmt   = _args select 2;
+		_zDonor = if (count _args > 3) then {_args select 3} else {objNull};
+		if (isNil "_zAmt") then {_zAmt = missionNamespace getVariable ["WFBE_C_AICOM_DONATE_AMOUNT", 10000]};
+		if ((typeName _zAmt == "SCALAR") && {_zAmt > 0} && {_zSide in [west, east]} && {!isNull _zDonor} && {isPlayer _zDonor}) then {
+			_zLogik = (_zSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _zLogik) then {
+				_zRun = false;
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_zSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
+					_zCmd = (_zSide) Call WFBE_CO_FNC_GetCommanderTeam; _zHuman = false;
+					if (!isNull _zCmd) then {if (isPlayer (leader _zCmd)) then {_zHuman = true}};
+					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_zHuman = false};
+					_zRun = !_zHuman;
+				};
+				_zTeam = group _zDonor;
+				//--- A2 OA 1.64: getVariable [name,default] is unreliable on a GROUP; plain get + isNil (mirrors RequestAIComDonate.sqf).
+				_zFunds = _zTeam getVariable "wfbe_funds"; if (isNil "_zFunds") then {_zFunds = 0};
+				if (_zRun && {!isNull _zTeam} && {_zFunds >= _zAmt}) then {
+					[_zTeam, -_zAmt] Call ChangeTeamFunds;
+					[_zSide, _zAmt] Call ChangeAICommanderFunds;
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _zDonor, "HandleSpecial", ["aicom-donate-confirm", _zAmt]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_zDonor, "HandleSpecial", ["aicom-donate-confirm", _zAmt]] Call WFBE_CO_FNC_SendToClient;
+					};
+					diag_log ("AICOM2|v1|ORDER|aicom-donate|" + str _zSide + "|" + str (round (time / 60)) + "|amount=" + str _zAmt + "|wallet_after=" + str ((_zSide) Call GetAICommanderFunds));
+				} else {
+					diag_log ("AICOM2|v1|ORDER|aicom-donate|REJECT|" + str _zSide + "|run=" + str _zRun + "|funds=" + str _zFunds + "|amount=" + str _zAmt);
+				};
+			};
+		} else {
+			diag_log ("AICOM2|v1|ORDER|aicom-donate|REJECT-ARGS|side=" + str _zSide + "|amount=" + str _zAmt + "|donorOk=" + str (!isNull _zDonor && {isPlayer _zDonor}));
+		};
+	};
 	case "aicom-team-ended": {
 		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew"];
 		_csideID = _args select 1;

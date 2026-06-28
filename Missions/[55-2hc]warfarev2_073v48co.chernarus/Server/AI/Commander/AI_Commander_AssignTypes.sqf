@@ -203,6 +203,12 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 					_order = [2,1,3,0];
 					{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _order;
 				};
+				//--- ALL-EMPTY GUARD (2026-06-28): if EVERY bucket is empty the degrade-walk above leaves _chosen = -1
+				//--- (the all-jets-before-the-jet-ramp edge: the lone air bucket was time-gated out and no ground bucket
+				//--- exists this cycle). The next line `_buckets select _chosen` would throw "select -1". The all-empty
+				//--- condition is GLOBAL for this cycle, so exitWith ends the team forEach (spec-sanctioned). INERT in
+				//--- normal cycles: the infantry bucket is virtually always populated, so _chosen >= 0 and this never fires.
+				if (_chosen < 0) exitWith {};
 				_pick = -1;
 					//--- B74 COST/TIER-WEIGHTED DRAW (Ray 2026-06-22): mirror of the founding picker in AI_Commander_Teams.sqf -
 					//--- weight the chosen bucket by (summed unit price)^EXP so server-local teams field their expensive unlocked
