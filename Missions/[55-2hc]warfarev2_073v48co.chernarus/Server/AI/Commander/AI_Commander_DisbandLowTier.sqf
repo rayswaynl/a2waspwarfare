@@ -22,7 +22,7 @@ if (isNil "_logik") exitWith {};
 _teams = _logik getVariable ["wfbe_teams", []];
 if (count _teams < 1) exitWith {};
 
-private ["_sideText","_types","_safeDist","_floor"];
+private ["_sideText","_types","_safeDist","_floor","_viewDist"];
 _sideText = str _side;
 //--- authoritative per-template type (0=inf/foot, 1=light, 2=heavy, 3=air) - the bucket-classifier source,
 //--- correct for motorized (counts as light=mobile, NOT foot) unlike the upgrade-mask telemetry cascade.
@@ -30,6 +30,7 @@ _types    = missionNamespace getVariable Format ["WFBE_%1AITEAMTYPES", _sideText
 if (isNil "_types") exitWith {};
 _safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 _floor    = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR", 3];
+_viewDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_VIEW_DIST", 1500];
 
 //--- single sweep: detect mobile force, count foot teams, pick the SMALLEST rear/idle foot candidate.
 private ["_hasMobile","_footCount","_best","_bestN"];
@@ -53,12 +54,13 @@ _bestN = 1e9;
 			_open    = [_team,"wfbe_aicom_dispatch_open",false]   Call WFBE_CO_FNC_GroupGetBool;
 			//--- candidate = HC-owned, not player-led, idle (auto town-mode, no open dispatch), not flagged.
 			if (_hc && {!_flagged} && {!isPlayer (leader _team)} && {_md == "towns"} && {!_open}) then {
-				private ["_ldr","_threat"];
+				private ["_ldr","_inView","_threat"];
 				_ldr = leader _team;
-				//--- rear + out of combat: not COMBAT, no enemy OR player within safeDist (reuses Teams.sqf idiom).
+				_inView = ({alive _x && {isPlayer _x} && {_x distance _ldr < _viewDist}} count allUnits) > 0;  //--- NEVER retire a team a human can SEE (Ray 2026-06-28)
+				//--- also skip a CONTESTED team (in combat, or an enemy within safeDist); the in-view gate above handles players.
 				_threat = (behaviour _ldr == "COMBAT")
-				       || {({alive _x && {(side _x != _side) || isPlayer _x} && {_x distance _ldr < _safeDist}} count allUnits) > 0};
-				if (!_threat) then {
+				       || {({alive _x && {side _x != _side} && {_x distance _ldr < _safeDist}} count allUnits) > 0};
+				if (!_inView && {!_threat}) then {
 					private "_n"; _n = count ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 					if (_n < _bestN) then {_bestN = _n; _best = _team};   //--- smallest rear foot squad first
 				};

@@ -274,6 +274,12 @@ while {!gameOver} do {
 		//--- Economy/build: full command AND only after the build-grace window (#3a, Ray 2026-06-15).
 		//--- rule A still holds (no AI spend under a human); the AI also waits the build-grace with no
 		//--- human commander (from start, re-armed when a human leaves) before it starts building.
+		//--- Ray 2026-06-28: retire idle rear FOOT teams when mobile force is fielded - runs in EVERY command mode
+		//--- (AI-command OR human-commander); the in-view + safety checks inside the pass protect immersion/safety.
+		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INTERVAL", 300])) then {
+			if (!isNil "WFBE_SE_FNC_AI_Com_DisbandLowTier") then {(_side) Call WFBE_SE_FNC_AI_Com_DisbandLowTier};
+			_ltDisband = time;
+		};
 		if (_canBuild) then {
 			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
 			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
@@ -372,11 +378,6 @@ while {!gameOver} do {
 			};
 			if (time - _ltProd > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL")) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Produce; _ltProd = time;
-			};
-			//--- Ray 2026-06-28: retire idle rear FOOT teams once mobile force is fielded (immersion-paced, dark-tunable).
-			if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INTERVAL", 300])) then {
-				if (!isNil "WFBE_SE_FNC_AI_Com_DisbandLowTier") then {(_side) Call WFBE_SE_FNC_AI_Com_DisbandLowTier};
-				_ltDisband = time;
 			};
 
 			//--- V0.6.7 P4: ADAPTIVE SPEND CONTROLLER - wealth conversion into reinforcement priority.
