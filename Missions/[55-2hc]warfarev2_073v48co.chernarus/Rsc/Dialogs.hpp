@@ -2002,7 +2002,7 @@ class RscMenu_Command {
 			y = 0.660000;
 			w = 0.224000;
 			h = 0.044000;
-			text = "Attack / Move  (click map)";
+			text = "Attack / Move";
 			action = "MenuAction = 720";
 			tooltip = "Order the selected team to advance and assault toward the clicked point (mode: move).";
 		};
@@ -2010,7 +2010,7 @@ class RscMenu_Command {
 			idc = 14621;
 			x = 0.241244;
 			y = 0.660000;
-			text = "Defend Here  (click map)";
+			text = "Defend Here";
 			action = "MenuAction = 721";
 			tooltip = "Order the selected team to hold and defend the clicked point (mode: defense).";
 		};
@@ -2018,7 +2018,7 @@ class RscMenu_Command {
 			idc = 14622;
 			x = 0.00561695;
 			y = 0.710000;
-			text = "Patrol Here  (click map)";
+			text = "Patrol Here";
 			action = "MenuAction = 722";
 			tooltip = "Order the selected team to patrol/search the clicked area (mode: patrol).";
 		};
@@ -2035,7 +2035,7 @@ class RscMenu_Command {
 			x = 0.00561695;
 			y = 0.760000;
 			w = 0.459244;
-			text = "Artillery Here  (click map)";
+			text = "Artillery Strike";
 			action = "MenuAction = 723";
 			tooltip = "Request an artillery strike at the clicked spot (if artillery is enabled).";
 		};
@@ -2083,9 +2083,9 @@ class RscMenu_Command {
 		class CA_Cmd_Help : RscStructuredText {
 			idc = 14650;
 			x = 0.00561695;
-			y = 0.776000;
+			y = 0.872000;
 			w = 0.459244;
-			h = 0.165000;
+			h = 0.070000;
 			size = 0.027;
 		};
 		/* Back */

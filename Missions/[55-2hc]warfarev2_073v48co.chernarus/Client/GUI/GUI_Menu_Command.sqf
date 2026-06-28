@@ -68,19 +68,21 @@ while {alive player && dialog} do {
 	//--- ===== STATE GATE ===== am I the commander right now? (canonical null-guarded == idiom). =====
 	private "_isCmd";
 	_isCmd = false;
-	if (!isNull commanderTeam) then {if (commanderTeam == group player) then {_isCmd = true}};
-	private "_seatEmpty"; _seatEmpty = isNull commanderTeam;
+	private "_ct"; _ct = commanderTeam;                                 //--- snapshot; guard an unset/nil global on a slow JIP client
+	if (!isNil "_ct") then {if (!isNull _ct) then {if (_ct == group player) then {_isCmd = true}}};
+	private "_seatEmpty"; _seatEmpty = (isNil "_ct") || {isNull _ct};
 	private "_lockOn"; _lockOn = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0;
 
-	//--- Toggle control visibility only on a state CHANGE (cheap; avoids per-frame ctrlShow churn).
+	//--- Set visibility + subtitle EVERY loop (display-scoped ctrlShow = the most engine-proven A2-OA
+	//--- form; robust to a missed change-edge). The heavier reset stays gated on a real state change.
 	private "_stateNow"; _stateNow = if (_isCmd) then {1} else {0};
+	{(_display displayCtrl _x) ctrlShow _isCmd} forEach _warCtrls;
+	(_display displayCtrl 14670) ctrlShow (!_isCmd);                 //--- TAKE COMMAND only when NOT commander
+	(_display displayCtrl 14605) ctrlSetText (if (_isCmd) then {"WAR ROOM"} else {"COMMAND"});
 	if (_stateNow != _lastState) then {
 		_lastState = _stateNow;
-		{ctrlShow [_x, _isCmd]} forEach _warCtrls;
-		ctrlShow [14670, !_isCmd];                                        //--- TAKE COMMAND only when not commander
-		ctrlSetText [14605, if (_isCmd) then {"WAR ROOM"} else {"COMMAND"}];
 		_armed = "";
-		_lastRosterHash = ""; _lastEcon = "";                            //--- force a panel redraw on entry
+		_lastRosterHash = ""; _lastEcon = "";                         //--- force a panel redraw on state entry
 		if (!_isCmd) then {lbClear 14661};
 	};
 
