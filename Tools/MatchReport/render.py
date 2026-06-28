@@ -25,28 +25,80 @@ def mix(c,t): return lerp(BG,c,t)
 
 MX0,MY0,MS=40,470,1000
 
+WATER=(15,38,56); LAND_BASE=(22,30,28); COAST=(70,120,150)
 class Renderer:
-    def __init__(self, m): self.m=m
+    def __init__(self, m):
+        self.m=m; S=m.world_size
+        # coastline: world_y below coast_y(x) is sea (Chernarus' south edge is all coast).
+        self._coast=lambda x:1100+500*(x/S)+200*math.sin(x/S*8.0)
+        # precompute a relief-noise field + sea/land mask + land-owner tint base on the grid.
+        GC=m.grid_n; rngn=np.random.default_rng(5)
+        self.sea=np.zeros((GC,GC),bool); self.relief=np.zeros((GC,GC),np.float32)
+        for r in range(GC):
+            for c in range(GC):
+                gx=(c+0.5)/GC*S; gy=(1-(r+0.5)/GC)*S
+                self.sea[r,c]= gy < self._coast(gx) or (gx>0.94*S and gy<0.42*S)
+                self.relief[r,c]=0.5+0.5*math.sin(gx/S*22+gy/S*6)*math.cos(gy/S*17)
+        self.relief=0.6*self.relief+0.4*rngn.random((GC,GC))
+        # roads: connect each town to its 2 nearest neighbours (deduped undirected edges).
+        names=m.tnames; pos=[m.towns[t] for t in names]; edges=set()
+        for i,(ax,ay) in enumerate(pos):
+            nn=sorted(range(len(pos)),key=lambda j:(pos[j][0]-ax)**2+(pos[j][1]-ay)**2)[1:3]
+            for j in nn: edges.add((min(i,j),max(i,j)))
+        self.roads=list(edges)
+
     def to_canvas(self,x,y): S=self.m.world_size; return MX0+x/S*MS, MY0+(1-y/S)*MS
 
     def control_map(self,d,im,ts,flash=None,fk=0.0,x0=MX0,y0=MY0,size=MS,labels=True):
-        m=self.m; o=m.owners_at(ts); GC=m.grid_n; S=m.world_size
+        m=self.m; o=m.owners_at(ts); GC=m.grid_n; S=m.world_size; sc=size/MS
+        # --- terrain layer: sea (banded water) + land (relief-shaded owner territory) ---
         terr=np.zeros((GC,GC,3),np.uint8)
         for r in range(GC):
             for c in range(GC):
-                s=o[m.tnames[m.nearest[r,c]]]; terr[r,c]=mix(SIDE_COL[s],0.30 if s!="neu" else 0.12)
+                if self.sea[r,c]:
+                    band=1.0+0.12*math.sin(r*0.9); terr[r,c]=tuple(min(255,int(v*band)) for v in WATER)
+                else:
+                    s=o[m.tnames[m.nearest[r,c]]]; rel=0.78+0.5*self.relief[r,c]
+                    base=lerp(LAND_BASE,SIDE_COL[s],0.34 if s!="neu" else 0.10)
+                    terr[r,c]=tuple(min(255,int(v*rel)) for v in base)
         im.paste(Image.fromarray(terr).resize((size,size),Image.NEAREST),(x0,y0))
-        for i in range(0,size+1,size//11):
-            d.line([(x0+i,y0),(x0+i,y0+size)],fill=(255,255,255,8)); d.line([(x0,y0+i),(x0+size,y0+i)],fill=(255,255,255,8))
-        d.rectangle([x0,y0,x0+size,y0+size],outline=(70,80,96),width=2); sc=size/MS
+        # --- coastline stroke ---
+        coastpts=[]
+        for c in range(0,size+1,8):
+            gx=c/size*S; cy=y0+(1-self._coast(gx)/S)*size
+            if y0<=cy<=y0+size: coastpts.append((x0+c,cy))
+        if len(coastpts)>1: d.line(coastpts,fill=COAST,width=2)
+        # --- military grid + edge coordinates ---
+        for k in range(12):
+            gx=x0+k*size/11; gy=y0+k*size/11
+            d.line([(gx,y0),(gx,y0+size)],fill=(255,255,255,10)); d.line([(x0,gy),(x0+size,gy)],fill=(255,255,255,10))
+            if k<11:
+                d.text((x0+k*size/11+4,y0+2),chr(65+k),font=f_xs,fill=(90,100,116))
+                d.text((x0+3,y0+k*size/11+2),f"{k:02d}",font=f_xs,fill=(90,100,116))
+        d.rectangle([x0,y0,x0+size,y0+size],outline=(70,80,96),width=2)
+        # --- roads (faint, under the town dots) ---
+        for (i,j) in self.roads:
+            ax,ay=m.towns[m.tnames[i]]; bx,by=m.towns[m.tnames[j]]
+            d.line([(x0+ax/S*size,y0+(1-ay/S)*size),(x0+bx/S*size,y0+(1-by/S)*size)],fill=(120,128,120,90),width=max(1,int(2*sc)))
+        # --- compass ---
+        ccx,ccy=x0+size-44*sc,y0+46*sc
+        d.ellipse([ccx-22*sc,ccy-22*sc,ccx+22*sc,ccy+22*sc],outline=(120,132,150),width=2)
+        d.line([(ccx,ccy+14*sc),(ccx,ccy-14*sc)],fill=(200,210,225),width=2); d.polygon([(ccx,ccy-20*sc),(ccx-6*sc,ccy-8*sc),(ccx+6*sc,ccy-8*sc)],fill=EAST)
+        d.text((ccx,ccy-34*sc),"N",font=f_xs,fill=(200,210,225),anchor="mm")
+        # --- towns ---
         for t,(x,y) in m.towns.items():
             cx=x0+x/S*size; cy=y0+(1-y/S)*size; s=o[t]; col=SIDE_COL[s]; rr=(9 if s!="neu" else 6)*sc
             if flash==t: d.ellipse([cx-26*fk,cy-26*fk,cx+26*fk,cy+26*fk],outline=col,width=3)
-            d.ellipse([cx-rr,cy-rr,cx+rr,cy+rr],fill=col,outline=(8,10,14),width=2)
+            d.ellipse([cx-rr-2,cy-rr-2,cx+rr+2,cy+rr+2],fill=(8,10,14))
+            d.ellipse([cx-rr,cy-rr,cx+rr,cy+rr],fill=col)
         if labels:
-            big=sorted(m.towns,key=lambda t:-(m.towns[t][0]**2))[:5]
-            for t in big:
-                x,y=m.towns[t]; cx=x0+x/S*size; cy=y0+(1-y/S)*size; d.text((cx+12,cy-12),t,font=f_xs,fill=(220,226,236))
+            placed=[]
+            for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):  # north-first
+                cx=x0+x/S*size; cy=y0+(1-y/S)*size
+                if any(abs(cx-px)<150*sc and abs(cy-py)<22*sc for px,py in placed): continue
+                placed.append((cx,cy))
+                d.text((cx+11*sc,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
+                d.text((cx+10*sc,cy-10*sc),t,font=f_xs,fill=(220,228,240))
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
 def footer(d): d.text((W/2,H-46),"a2waspwarfare  ·  POST-MATCH REPORT",font=f_xs,fill=(120,130,146),anchor="mm")
