@@ -317,7 +317,7 @@ while {!gameOver} do {
 					private ["_aKey","_fKey","_active2","_focusT","_focusT0","_focusNm"];
 					_aKey = format ["WFBE_AICOM_ACTIVE_%1", _myID];
 					_active2 = !_humanCmd; //--- inside the _active gate (HQ alive + AICOM on); full command iff no human commander.
-					if ((missionNamespace getVariable [_aKey, false]) != _active2) then {
+					if (true /* FIX (Game 2026-06-28): was Bool!=Bool (A2-OA-forbidden) - threw EVERY strategy tick + aborted the worker before the AI-founding at ~L364, starving founding (teams=0). Publish unconditionally (cheap per-tick; also reaches JIP joiners). */) then {
 						missionNamespace setVariable [_aKey, _active2]; publicVariable _aKey;
 					};
 					_fKey = format ["WFBE_AICOM_FOCUS_NAME_%1", _myID];
