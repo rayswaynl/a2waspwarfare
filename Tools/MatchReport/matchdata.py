@@ -167,6 +167,17 @@ def parse_waspstat(lines, names=None, line_times=None):
     names = names or {}
     caps_raw, kills_raw, pstats = [], [], {}
     winner, duration, map_name = "west", 0, "chernarus"
+    # Real per-event match-time (seconds), keyed by seq, parsed from the "t=" token
+    # the server now appends to CAPTURE/KILL WASPSTAT lines. Merged onto any caller
+    # -supplied line_times below so the timeline is true, not evenly spread.
+    event_times = {}
+
+    def _t_token(toks):
+        for tok in toks:
+            if tok.startswith("t="):
+                try: return int(tok[2:])
+                except ValueError: return None
+        return None
 
     for raw in lines:
         i = raw.find("WASPSTAT|v1|")
@@ -181,11 +192,15 @@ def parse_waspstat(lines, names=None, line_times=None):
             winner = side_from_str(parts[4]); duration = int(parts[5]); map_name = parts[6].lower()
         elif rtype == "CAPTURE":
             caps_raw.append((seq, parts[4], side_from_id(parts[5]), side_from_id(parts[6])))
+            _tt = _t_token(parts[7:])
+            if _tt is not None: event_times[seq] = _tt
         elif rtype == "KILL":
             killer_uid, victim_uid = parts[4], parts[5]
             kside = side_from_str(parts[6]); weap = parts[8]; dist = int(parts[9]); cat = parts[10]
             nm = names.get(killer_uid) if killer_uid else None
             kills_raw.append((seq, nm, kside, weap, cat, dist, killer_uid))
+            _tt = _t_token(parts[11:])
+            if _tt is not None: event_times[seq] = _tt
         else:
             # PLAYERSTATS: tokens "uid:d0,...,d14,side" joined by '|' from parts[3:]
             for tok in parts[3:]:
@@ -217,6 +232,9 @@ def parse_waspstat(lines, names=None, line_times=None):
     # assign times to seq-ordered events (ingest times if provided, else spread)
     caps_raw.sort(key=lambda r: r[0]); kills_raw.sort(key=lambda r: r[0])
     def t_for(seq, idx, total):
+        # Prefer the real match-time the server logged ("t=" token), then any
+        # caller-supplied line_times, and only as a last resort spread evenly.
+        if seq in event_times: return event_times[seq]
         if line_times and seq in line_times: return line_times[seq]
         return int((idx + 1) / (total + 1) * m.duration)
     m.caps  = [(t_for(s, i, len(caps_raw)),  town, new) for i, (s, town, _o, new) in enumerate(caps_raw)]

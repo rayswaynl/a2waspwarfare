@@ -85,6 +85,8 @@ while {!gameOver} do {
 // Marty: When AntiStack is disabled, no score sampling loop exists; skip final AntiStack DB persistence and finish the mission normally.
 if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWith {
 	["INFORMATION", "server_victory_threeway.sqf: AntiStack is disabled; skipped final score DB save and player list flush."] Call WFBE_CO_FNC_LogContent;
+	_hold = missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD",45];
+	sleep _hold;
 	sleep 5;
 	diag_log Format["[WFBE (OUTRO)][frameno:%1 | ticktime:%2] server_victory_threeway.sqf: Mission end - [Done]",diag_frameno,diag_tickTime];
 	failMission "END1";
@@ -117,6 +119,8 @@ if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWit
 
 ["FLUSH_PLAYERLIST"] call WFBE_SE_FNC_CallDatabaseFlushPlayerList;
 
+_hold = missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD",45];
+sleep _hold;
 sleep 5;
 diag_log Format["[WFBE (OUTRO)][frameno:%1 | ticktime:%2] server_victory_threeway.sqf: Mission end - [Done]",diag_frameno,diag_tickTime];
 failMission "END1";

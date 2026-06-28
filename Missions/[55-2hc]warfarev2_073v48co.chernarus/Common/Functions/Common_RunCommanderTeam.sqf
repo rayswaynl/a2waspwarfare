@@ -1091,17 +1091,57 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 					} else {
-						//--- Pure-armour team (no infantry at all): crew counts zero for the camp "Man"
-						//--- scan, but the HULL still counts for the TOWN scan (server_town.sqf L48
-						//--- scans Car/Tank/Air too). Park the hull dead-center so it registers WEST
-						//--- presence within 40m, and lay a SAD so it clears defenders.
-						//--- WAVE-1 A5 ARMOUR-LATCH: only latch _captureDone if the town ACTUALLY flipped (mirror the
-						//--- infantry _townFlipped check above); the old code latched after ONE pass regardless of
-						//--- outcome, so a contested depot a lone tank could not crack was abandoned after one tick.
-						//--- Leaving it false lets the 20s loop re-run + keep the hull fighting at center. SAD radius
-						//--- tightened to _capRange (was max 60) so the hull parks IN the drain ring, not on its edge.
+						//--- ===== PURE-ARMOUR DEPOT HOLD (no infantry at all) =====
+						//--- This team is tank(s)+crew with NO on-foot soldiers (_footInf is empty: the
+						//--- crew stay in their hulls above). The camp "Man" scan (server_town_camp.sqf
+						//--- L26) ignores crewed hulls, so a mounted team can never take camps - but it
+						//--- does NOT need to: the TOWN depot scan (server_town.sqf L51) is
+						//---   nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _capRange]
+						//--- and countSide on that set counts a CREWED hull as its crew's side. So a tank
+						//--- parked within _capRange (40m) of the depot centre contributes our presence to
+						//--- the flip DIRECTLY (drains the town) AND its main gun clears the depot
+						//--- defenders. We therefore drive the WHOLE mounted team onto _townCenter, lay a
+						//--- live group SAD there at _capRange (mirrors the infantry depot-hold at L1008),
+						//--- reveal the garrison, and HOLD in a fight loop until resistance-near-centre is
+						//--- zero (town drains + flips) OR a hard timeout - re-pressing stragglers and
+						//--- re-issuing the move each tick so the hulls NEVER freeze/idle (MEMORY guardrail).
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] PURE-ARMOUR depot hold at [%3] (no foot infantry; %4 hull(s)).", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)]] Call WFBE_CO_FNC_AICOMLog;
+
+						//--- WAVE-1 A5 ARMOUR-LATCH: SAD radius = _capRange so the hull parks IN the drain
+						//--- ring, not on its 40-60m edge. COMBAT/RED so it actively prosecutes the depot.
 						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+						{if (alive _x) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
+
+						//--- Hold/fight loop (mirror of the infantry depot-hold at L1018): up to the same
+						//--- WFBE_C_AICOM_ASSAULT_HOLD window. Exit early once no live resistance remains
+						//--- within _capRange of the centre (depot drains + flips). Re-reveal enemy + re-press
+						//--- stragglers each tick. Honour the same _capAbort re-task interrupt as the foot path.
+						_armHoldEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]);
+						_armResNear = 1;
+						while {time < _armHoldEnd && {_armResNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
+							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
+							if (_capAbort) exitWith {}; //--- re-tasked mid armour-hold -> bail; outer loop re-reads the new order
+							_armEnemyNear = (_townCenter nearEntities [["Man","Car","Motorcycle","Tank","Air"], _capRange]) unitsBelowHeight 10;
+							_armResNear = 0;
+							{
+								if (alive _x && {side _x != _side} && {side _x != civilian}) then {
+									_armResNear = _armResNear + 1;
+									_team reveal _x; //--- A2: 2-operand reveal only (array form is A3-only).
+								};
+							} forEach _armEnemyNear;
+							//--- Keep hulls beyond ~60% of _capRange pressing the centre (cheap re-issue, no freeze).
+							{if (alive _x && {(_x distance _townCenter) > (_capRange * 0.6)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+							//--- Early-out if the town already flipped to us.
+							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_armResNear = 0};
+							sleep 10;
+						};
+						if (_capAbort) exitWith {}; //--- armour-hold interrupted -> bail BEFORE latching captureDone; outer loop re-reads the new order
+
+						//--- WAVE-1 A5 ARMOUR-LATCH: only latch _captureDone if the town ACTUALLY flipped
+						//--- (mirror the infantry _townFlipped check). Otherwise leave it false so the 20s
+						//--- order loop re-runs this whole armour-hold next tick and keeps the hull fighting.
 						if ((!isNull _townObj) && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {
 							_captureDone = true;
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) CAPTURED [%3] - holding center.", _side, _team, _townObj getVariable ["name","?"]]] Call WFBE_CO_FNC_AICOMLog;
@@ -1110,6 +1150,8 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_teammode", "towns", true];
 							_team setVariable ["wfbe_aicom_strike", false, true];
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
+						} else {
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) depot pass at [%3] did not flip (res-near=%4) - holding + retrying.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _armResNear]] Call WFBE_CO_FNC_AICOMLog;
 						};
 					};
 				};

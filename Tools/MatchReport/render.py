@@ -320,7 +320,8 @@ def render(m, out_path):
         if m.ser_x[nshow-1]>=dt:
             mxp=px0+dt/m.duration*pw; d.line([(mxp,py0),(mxp,py0+ph)],fill=GOLD+(150,),width=2); d.text((mxp,py0-8),"supremacy",font=f_xs,fill=GOLD,anchor="mb")
         chip(d,px0,py0+ph+24,"west"); chip(d,px0+200,py0+ph+24,"east")
-        d.text((W/2,1280),f"{SIDE_NAME[m.winner]} took the lead at the mid-game and never gave it back.",font=f_sm,fill=DIM,anchor="ma")
+        _dmin=max(1,round(m.decisive[0]/60))
+        d.text((W/2,1280),f"{SIDE_NAME[m.winner]} seized supremacy around minute {_dmin} and never gave it back.",font=f_sm,fill=DIM,anchor="ma")
         footer(im,d)
 
     def s_mvp(im,d,i,n):

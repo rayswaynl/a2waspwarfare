@@ -1910,6 +1910,30 @@ class RscMenu_Command {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
+		/* War-room framing sub-panels (claude-gaming): subtle dark backers behind the three left-column
+		   clusters (econ/intent header, roster, order buttons) using the WFBE_Background_Color_Sub idiom
+		   every other menu uses. Background controls only - they sit behind whichever STATE's controls show. */
+		class CA_Cmd_Panel_Header : RscText {
+			x = 0.00261695;
+			y = 0.058000;
+			w = 0.465244;
+			h = 0.306000;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		class CA_Cmd_Panel_Roster : RscText {
+			x = 0.00261695;
+			y = 0.368000;
+			w = 0.465244;
+			h = 0.280000;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		class CA_Cmd_Panel_Orders : RscText {
+			x = 0.00261695;
+			y = 0.652000;
+			w = 0.465244;
+			h = 0.156000;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
 	};
 	class controls {
 		class WF_MiniMap : RscMapControl {
@@ -2059,6 +2083,10 @@ class RscMenu_Command {
 			text = "Attack / Move";
 			action = "MenuAction = 720";
 			tooltip = "Order the selected team to advance and assault toward the clicked point (mode: move).";
+			//--- Order-button color-coding: match the map marker the controller drops (GUI_Menu_Command.sqf:336-341).
+			//--- move => ColorBlue {0,0,1}. colorBackgroundActive keeps the tint on hover/press.
+			colorBackground[] = {0, 0, 0.85, 0.85};
+			colorBackgroundActive[] = {0.15, 0.15, 1, 1};
 		};
 		class CA_Cmd_Defend : CA_Cmd_Move {
 			idc = 14621;
@@ -2067,6 +2095,9 @@ class RscMenu_Command {
 			text = "Defend Here";
 			action = "MenuAction = 721";
 			tooltip = "Order the selected team to hold and defend the clicked point (mode: defense).";
+			//--- defense => ColorGreen {0,0.8,0}.
+			colorBackground[] = {0, 0.65, 0, 0.85};
+			colorBackgroundActive[] = {0.1, 0.85, 0.1, 1};
 		};
 		class CA_Cmd_Patrol : CA_Cmd_Move {
 			idc = 14622;
@@ -2075,6 +2106,9 @@ class RscMenu_Command {
 			text = "Patrol Here";
 			action = "MenuAction = 722";
 			tooltip = "Order the selected team to patrol/search the clicked area (mode: patrol).";
+			//--- patrol => ColorOrange {1,0.5,0}.
+			colorBackground[] = {0.85, 0.45, 0, 0.85};
+			colorBackgroundActive[] = {1, 0.55, 0.05, 1};
 		};
 		class CA_Cmd_Release : CA_Cmd_Move {
 			idc = 14624;
@@ -2083,6 +2117,9 @@ class RscMenu_Command {
 			text = "Release to Auto";
 			action = "MenuAction = 724";
 			tooltip = "Hand the selected team back to autonomous town-capture (mode: towns).";
+			//--- release => grey {0.6,0.6,0.6}.
+			colorBackground[] = {0.5, 0.5, 0.5, 0.85};
+			colorBackgroundActive[] = {0.65, 0.65, 0.65, 1};
 		};
 		class CA_Cmd_Arty : CA_Cmd_Move {
 			idc = 14623;
@@ -2092,6 +2129,9 @@ class RscMenu_Command {
 			text = "Artillery Strike";
 			action = "MenuAction = 723";
 			tooltip = "Request an artillery strike at the clicked spot (if artillery is enabled).";
+			//--- arty => ColorRed {0.9,0,0}.
+			colorBackground[] = {0.75, 0, 0, 0.85};
+			colorBackgroundActive[] = {1, 0.1, 0.1, 1};
 		};
 		class LineCmd2 : LineCmd1 {
 			idc = 14691;
