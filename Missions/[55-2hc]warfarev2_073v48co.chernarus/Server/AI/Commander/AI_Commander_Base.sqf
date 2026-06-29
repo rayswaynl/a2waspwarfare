@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen"];
 
 _side = _this;
 _sideText = str _side;
@@ -127,6 +127,23 @@ _nearUsableRoad = {
 	_best
 };
 
+//--- BUILDING-CLEARANCE helper (bug fix, ACTIVE). Ray report: AI factories land hard against
+//--- a house/wall, so factory output spawns INTO the geometry and breaks. _findBuildPos already
+//--- rejects roads, water and crowded friendly structures, but NOT nearby WORLD buildings. This
+//--- helper returns true when a candidate has clear ground (no House/wall within _radius). Uses
+//--- nearestObjects with the "Building"/"House" kinds (A2-OA-safe; same idiom as the cond-c
+//--- counter-battery scan above). The clearance radius is read inline-default so it ships with a
+//--- sane value and Ray can tune it later without editing Init_CommonConstants. Guarded so it never
+//--- blocks a build: callers keep a road-clear fallback that ignores this gate on try-budget failure.
+_buildPosClear = {
+	private ["_cpos","_clr","_blk"];
+	_cpos = _this;
+	_clr = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_CLEARANCE", 14];
+	if (_clr <= 0) exitWith {true};   //--- 0 disables the gate -> old behaviour.
+	_blk = false;
+	{ if (!isNull _x && {(_x distance _cpos) < _clr}) exitWith {_blk = true} } forEach (nearestObjects [_cpos, ["House","Building","Wall","Fence"], _clr + 4]);
+	!_blk
+};
 _findBuildPos = {
 	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear"];
 	_rmin = _this select 0; _rmax = _this select 1;
@@ -181,6 +198,9 @@ _findBuildPos = {
 					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND spacing-OK
 					//--- (moved BELOW the STRUCT_SPACING check). Otherwise the try-budget fallback could hand back a
 					//--- road-clear-but-CROWDED spot (<45m from another structure -> overlapping footprints).
+					//--- CLEARANCE FIX (bug fix, ACTIVE): reject a candidate hard against a world building/wall so the
+					//--- factory spawn pads do not sit inside geometry (units spawning into a house/wall break).
+					if (!_blocked && {!(_cand call _buildPosClear)}) then {_blocked = true};
 					if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true};
 					if (!_blocked) then {_p = _cand; _ok = true};
 				};
@@ -205,6 +225,9 @@ _findBuildPos = {
 					//--- runs before the outer _structures local is assigned (line ~314).
 					_ok = true;
 					{ if ((_p distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_ok = false} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+					//--- CLEARANCE FIX (bug fix, ACTIVE): reject a candidate hard against a world building/wall so the
+					//--- factory spawn pads do not sit inside geometry (units spawning into a house/wall break).
+					if (_ok && {!(_p call _buildPosClear)}) then {_ok = false};
 					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND
 					//--- spacing-OK (_ok survives the STRUCT_SPACING forEach above) - prevents a crowded fallback.
 					if (_ok && {!_haveClear}) then {_bestClear = _p; _haveClear = true};
