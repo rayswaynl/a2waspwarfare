@@ -612,7 +612,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- only if no player is close enough to witness it.
 						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then {
 							_uPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uVeh) < 300}) then {_uPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_uPlayerNear = true} } forEach playableUnits;
 							if (!_uPlayerNear) then {
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
@@ -625,6 +625,8 @@ while {!WFBE_GameOver && _alive} do {
 								};
 							};
 						};
+						//--- B (Ray 2026-06-29 A/B): a player within 100m blocks the teleport, so un-wedge the lead hull with a small upward velocity hop - it breaks terrain friction and visibly bumps the hull free instead of leaving it frozen in the player's view (never-frozen guardrail). The fresh MOVE route below re-applies the order.
+						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = false; { if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_bNear = true} } forEach playableUnits; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
 						//--- WAVE-1 CAUSE-1 FOOT/DEAD-HULL UNSTUCK (2026-06-19): the vehicle Tier-3 above gates on
 						//--- !isNull _uVeh && alive _uVeh, so a wedged FOOT team (leader on foot) or a team whose hull
 						//--- is null/dead/immobile NEVER recovers (live: distStart=0, strikes climbed to ~43). Add a
@@ -637,7 +639,7 @@ while {!WFBE_GameOver && _alive} do {
 						_uOnFoot   = (vehicle _uLdr) == _uLdr;
 						if (_uTier >= 3 && {_uOnFoot || _uHullDead}) then {
 							_uFootPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uLdr) < 300}) then {_uFootPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uLdr) < 100}) then {_uFootPlayerNear = true} } forEach playableUnits;
 							if (!_uFootPlayerNear) then {
 								_uFootRds = (getPos _uLdr) nearRoads 150;
 								if (count _uFootRds > 0) then {
