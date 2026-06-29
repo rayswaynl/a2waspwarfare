@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -97,6 +97,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 };
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0; _ltDisband = 0;
+_ltPara = 0; //--- AICOM PARATROOPS throttle: cheap O(towns) scan + drop attempt; paced to the town interval (worker self-cooldowns the actual drop, gated WFBE_C_AICOM_PARATROOPS_ENABLE, default-OFF).
 _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
@@ -181,6 +182,15 @@ while {!gameOver} do {
 		//--- where the autonomous Strategy arty block is dormant). Self-gates on WFBE_C_AICOM_PLAYER_ARTY + a fresh,
 		//--- friendly-fire-guarded, fire-once request; nil-guarded so it is inert until the function is registered.
 		if (!isNil "WFBE_SE_FNC_AI_Com_PlayerArty") then {(_side) Call WFBE_SE_FNC_AI_Com_PlayerArty};
+
+		//--- AICOM PARATROOPS (claude-gaming 2026-06-29): tier+structure-gated AI paratroop reinforcement drop.
+		//--- Paced to the town interval (cheap O(towns) threat scan); the worker HARD-gates on the researched
+		//--- Paratroopers upgrade tier + a live Tactical Center (CommandCenter) structure, self-cooldowns the
+		//--- actual drop, and exits under a human commander. Flag-gated default-OFF (WFBE_C_AICOM_PARATROOPS_ENABLE),
+		//--- nil-guarded so it is inert until the worker function is registered. Reuses the player KAT_Paratroopers fn.
+		if (!isNil "WFBE_SE_FNC_AI_Com_Paratroops" && {time - _ltPara > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOWN_INTERVAL")}) then {
+			(_side) Call WFBE_SE_FNC_AI_Com_Paratroops; _ltPara = time;
+		};
 
 		//--- AI-INTENT PUBLISH (moved out of _canBuild, claude-gaming 2026-06-28): publish the side-keyed INTENT /
 		//--- OBJECTIVE / ACTIVE / FOCUS / TEAMS / FUNDS reads the client RHUD row + the command-console intent readout
