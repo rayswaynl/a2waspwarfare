@@ -50,6 +50,21 @@ if (!isNil "_psPair" && {typeName _psPair == "STRING"} && {!isNil "_psT0"} && {(
 	if (_psPair == "PUSH") then {_engageMin = (_engageMin - _psDelta) max 0};
 	if (_psPair == "HOLD") then {_engageMin = _engageMin + _psDelta};
 };
+//--- cmdcon27 THREAD C FIELD-ORDER HOOK: read the ONE consolidated player field-order stamp once (string + t0),
+//--- fresh within WFBE_C_AICOM_POSTURE_TTL (reused). _foPos in SPLIT/MASS/HARASS/FALLBACK; levers applied in
+//--- ORDER below (engage here, _fistMax before its :129 consumption, expand/harass/concentrate after :160).
+private ["_foPos","_foT0","_foFresh"];
+_foFresh = false; _foPos = "";
+_foPos = _logik getVariable "wfbe_aicom_player_fieldorder";
+_foT0  = _logik getVariable "wfbe_aicom_player_fieldorder_t0";
+if (!isNil "_foPos" && {typeName _foPos == "STRING"} && {!isNil "_foT0"} && {(time - _foT0) < (missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_TTL", 300])}) then {
+	_foFresh = true;
+} else {
+	_foPos = "";
+};
+//--- FALLBACK engage lever (lands between the posture engage bias and the :54 _engageMin consumption): push the
+//--- engage threshold UP so the side stops clashing and pulls back to owned towns.
+if (_foFresh && {_foPos == "FALLBACK"}) then {_engageMin = _engageMin + (missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_FALLBACK_DELTA", 20])};
 _expandFirst = false;
 if (_engageMin > 0 && {_myTowns < _engageMin}) then {
 		private ["_neutPool","_sid","_guerID","_softPool"];
@@ -126,6 +141,11 @@ if (!_fromFocus) then {
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
 		_scored set [count _scored, [_sc, _tt]];
 	} forEach _tgtTowns;
+	//--- cmdcon27 THREAD C: _fistMax field-order lever - MUST land before its consumption just below.
+	if (_foFresh) then {
+		if (_foPos == "SPLIT") then {_fistMax = _fistMax max (missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_SPLIT_FIST", 3])};
+		if (_foPos == "MASS" || _foPos == "FALLBACK") then {_fistMax = 1};
+	};
 	for "_i" from 1 to (_fistMax min (count _tgtTowns)) do {
 		private ["_best","_bestSc"]; _best = objNull; _bestSc = -1e9;
 		{ if (!((_x select 1) in _fist) && {(_x select 0) > _bestSc}) then {_bestSc = _x select 0; _best = _x select 1} } forEach _scored;
@@ -158,6 +178,28 @@ _expandN  = missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3];
 //--- town - no expand/harass split (opening steamroller). After that the normal spread resumes. Layered under the engage gate.
 _concentrate = (_myTowns < (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATE_TOWNS", 4]));
 if (_concentrate) then {_expandN = 0; _harassN = 0};
+//--- cmdcon27 THREAD C: field-order spread levers (applied AFTER the concentrate gate so they win). _fistMax was
+//--- already shifted before its :129 consumption above; here we steer the expand/harass/concentrate split.
+if (_foFresh) then {
+	switch (_foPos) do {
+		case "SPLIT": {
+			_expandN = _expandN max (missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_SPLIT_EXPAND", 4]);
+			_harassN = _harassN max 1;
+			_concentrate = false;
+		};
+		case "MASS": {
+			_expandN = 0; _harassN = 0; _concentrate = true;
+		};
+		case "HARASS": {
+			//--- send many mounted rear-raid teams; keep the main fist/concentrate as-is (do NOT zero them).
+			_harassN = _harassN max (missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_HARASS_TEAMS", 4]);
+		};
+		case "FALLBACK": {
+			//--- stop clashing / pull back to owned towns (engage already raised; _fistMax already forced to 1).
+			_expandN = 0; _harassN = 0;
+		};
+	};
+};
 _harassTgt = objNull;
 if (_harassN > 0) then {
 	private ["_harassFar"];

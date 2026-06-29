@@ -78,7 +78,7 @@ _warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14610,14611,14640,1
 //--- STATE-A (NOT commander) advisory controls: the live AI-intent readout + the PUSH/HOLD posture nudge. Shown
 //--- only when the AI runs the side (so the nudge actually bites the brain) - hidden in STATE B.
 private "_adviseCtrls";
-_adviseCtrls = [14606,14607,14608,14609,14612];
+_adviseCtrls = [14606,14607,14608,14609,14612,14613,14614,14615,14616]; //--- cmdcon27 THREAD C: +4 field-order nudges (SPLIT UP / PUSH TOGETHER / HARASS / FALL BACK)
 
 (_display displayCtrl 14650) ctrlSetStructuredText (parseText "Opening the war room...");
 
@@ -114,6 +114,7 @@ while {alive player && dialog} do {
 	private "_postureBites"; _postureBites = (!_isCmd) && (_seatEmpty || _lockOn);
 	ctrlEnable [14609, _postureBites];                               //--- global idc form (same reason as the ctrlShow fix above)
 	ctrlEnable [14612, _postureBites];
+	{ctrlEnable [_x, _postureBites]} forEach [14613,14614,14615,14616]; //--- cmdcon27 THREAD C: field-order nudges bite only when the AI runs the side
 	if (_stateNow != _lastState) then {
 		_lastState = _stateNow;
 		diag_log (format ["CMDCON-DBG state=%1 isCmd=%2 | war660=%3 roster661=%4 | takecmd670=%5 intent606=%6 posture608=%7", _stateNow, _isCmd, ctrlShown (_display displayCtrl 14660), ctrlShown (_display displayCtrl 14661), ctrlShown (_display displayCtrl 14670), ctrlShown (_display displayCtrl 14606), ctrlShown (_display displayCtrl 14608)]); //--- CONSOLE PROBE: log real per-state control visibility so any overlap is diagnosable from the RPT.
@@ -182,14 +183,23 @@ while {alive player && dialog} do {
 		//--- ----- POSTURE NUDGE (PUSH / HOLD): steer the still-running AI's expansion-vs-consolidate bias. Sends
 		//--- aicom-posture; the server handler honours it ONLY while no human commands (exactly this STATE A), TTL'd.
 		//--- Same per-order cooldown as the war-room sends so it can't spam the brain. -----
-		if (MenuAction == 760 || MenuAction == 761) then {
+		//--- cmdcon27 THREAD C: MenuAction 760/761 = posture (PUSH/HOLD, aicom-posture); 762-765 = field orders
+		//--- (SPLIT/MASS/HARASS/FALLBACK, aicom-fieldorder). Same STATE-A gate + per-order cooldown for both.
+		if (MenuAction >= 760 && MenuAction <= 765) then {
 			private "_pb"; _pb = MenuAction; MenuAction = -1;
 			if (_seatEmpty || _lockOn) then {
 				if ((_now - _lastSend) >= _cool) then {
-					private "_pv"; _pv = if (_pb == 760) then {"PUSH"} else {"HOLD"};
-					["RequestSpecial", ["aicom-posture", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
-					_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new nudge line
-					hintSilent parseText (format ["<t color='#A0E060'>Posture nudge sent: %1.</t>", _pv]);
+					if (_pb == 760 || _pb == 761) then {
+						private "_pv"; _pv = if (_pb == 760) then {"PUSH"} else {"HOLD"};
+						["RequestSpecial", ["aicom-posture", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
+						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new nudge line
+						hintSilent parseText (format ["<t color='#A0E060'>Posture nudge sent: %1.</t>", _pv]);
+					} else {
+						private "_pv"; _pv = switch (_pb) do {case 762:{"SPLIT"};case 763:{"MASS"};case 764:{"HARASS"};default{"FALLBACK"}};
+						["RequestSpecial", ["aicom-fieldorder", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
+						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new field-order line
+						hintSilent parseText (format ["<t color='#A0E060'>Field order sent: %1.</t>", _pv]);
+					};
 				} else {
 					hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
 				};
@@ -296,12 +306,14 @@ while {alive player && dialog} do {
 		private "_sel"; _sel = lbCurSel 14661;
 		if (_sel >= 0 && _sel < (count _cmdTeams)) then {_selTeam = _cmdTeams select _sel};
 
-		//--- ----- SQUAD-COMMAND MODE TOGGLE (14625): DIRECT (player maneuvers, today's default) <-> AI STRATEGY
+		//--- ----- SQUAD-COMMAND MODE TOGGLE (14625): DIRECT (player maneuvers) <-> AI STRATEGY
 		//--- (the AI maneuver-brain runs Strategy+AssignTowns UNDER the human commander while the player keeps the
-		//--- economy). Reads the server-broadcast delegate flag (default ABSENT => direct ON). The button TEXT shows
-		//--- the CURRENT mode; pressing it sends the OPPOSITE. MAPPING: wire arg = "delegate to AI"; _directOn==true
-		//--- means we are about to turn direct OFF -> send "ON" (delegate ON). -----
-		private "_directOn"; _directOn = true;
+		//--- economy). Reads the server-broadcast delegate flag. cmdcon27 THREAD B: the server delegate now defaults
+		//--- TRUE (AI keeps pushing towns by default when a human takes command), so the client default with the var
+		//--- ABSENT must match => _directOn default FALSE = "AI STRATEGY" shown. The button TEXT shows the CURRENT mode;
+		//--- pressing it sends the OPPOSITE. MAPPING: wire arg = "delegate to AI"; _directOn==true means we are about
+		//--- to turn direct OFF -> send "ON" (delegate ON). -----
+		private "_directOn"; _directOn = false;
 		if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
 			private "_dv"; _dv = WFBE_Client_Logic getVariable "wfbe_aicom_player_delegate";
 			if (!isNil "_dv" && {typeName _dv == "BOOL"}) then {_directOn = !_dv};

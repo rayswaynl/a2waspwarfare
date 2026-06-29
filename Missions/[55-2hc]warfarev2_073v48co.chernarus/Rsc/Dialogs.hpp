@@ -2056,6 +2056,57 @@ class RscMenu_Command {
 			colorBackground[] = {0, 0.65, 0, 0.85};
 			colorBackgroundActive[] = {0.1, 0.85, 0.1, 1};
 		};
+		/* cmdcon27 THREAD C: FIELD-ORDER nudges (STATE-A advisory, shown only when the AI runs the side). Cloned
+		   from CA_Cmd_PosturePush (idc 14609). Row 1 (y=0.728): SPLIT UP / PUSH TOGETHER. Row 2 (y=0.772):
+		   HARASS / FALL BACK. MenuAction 762-765 -> aicom-fieldorder (SPLIT/MASS/HARASS/FALLBACK). Inline text. */
+		class CA_Cmd_NudgeSplit : CA_Cmd_PosturePush {
+			idc = 14613;
+			x = 0.00561695;
+			y = 0.728000;
+			w = 0.224000;
+			h = 0.044000;
+			text = "SPLIT UP";
+			action = "MenuAction = 762";
+			tooltip = "Spread the main effort across multiple fronts (more fist towns + more expansion teams).";
+			colorBackground[] = {0, 0, 0.85, 0.85};
+			colorBackgroundActive[] = {0.15, 0.15, 1, 1};
+		};
+		class CA_Cmd_NudgeMass : CA_Cmd_PosturePush {
+			idc = 14614;
+			x = 0.241244;
+			y = 0.728000;
+			w = 0.224000;
+			h = 0.044000;
+			text = "PUSH TOGETHER";
+			action = "MenuAction = 763";
+			tooltip = "Concentrate the whole side onto ONE fist town (no expand/harass split).";
+			colorBackground[] = {0, 0, 0.85, 0.85};
+			colorBackgroundActive[] = {0.15, 0.15, 1, 1};
+		};
+		class CA_Cmd_NudgeHarass : CA_Cmd_PosturePush {
+			idc = 14615;
+			x = 0.00561695;
+			y = 0.772000;
+			w = 0.224000;
+			h = 0.044000;
+			text = "HARASS";
+			action = "MenuAction = 764";
+			tooltip = "Send many mounted teams to raid the enemy's rear / supply hub (main fist kept).";
+			colorBackground[] = {0.65, 0.45, 0, 0.85};
+			colorBackgroundActive[] = {0.85, 0.6, 0.1, 1};
+		};
+		class CA_Cmd_NudgeFallback : CA_Cmd_PosturePush {
+			idc = 14616;
+			x = 0.241244;
+			y = 0.772000;
+			w = 0.224000;
+			h = 0.044000;
+			text = "FALL BACK";
+			action = "MenuAction = 765";
+			tooltip = "Stop clashing and pull back to owned towns (raise the engage threshold).";
+			colorBackground[] = {0, 0.65, 0, 0.85};
+			colorBackgroundActive[] = {0.1, 0.85, 0.1, 1};
+		};
 		/* ROSTER of your AI teams (commander state). Row = "leader | role | town | order". Click to select. */
 		class CA_Cmd_RosterTitle : RscText_SubTitle {
 			idc = 14660;

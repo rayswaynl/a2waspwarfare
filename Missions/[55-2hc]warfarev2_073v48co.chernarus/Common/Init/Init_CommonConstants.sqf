@@ -524,6 +524,12 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_DONATE_AMOUNT")    then {WFBE_C_AICOM_DONATE_AMOUNT    = 10000};//--- funds moved from the player's team wallet to the AI commander's treasury per Donate press (affordability checked client-side, re-validated server-side).
 	if (isNil "WFBE_C_AICOM_POSTURE_ENGAGE_DELTA") then {WFBE_C_AICOM_POSTURE_ENGAGE_DELTA = 4}; //--- COMMAND CONSOLE: how many towns a PUSH posture shaves off (HOLD adds to) the expansion-first ENGAGE gate in the Allocator. SMALL bias; the stance machine is untouched.
 	if (isNil "WFBE_C_AICOM_REQUEST_TYPE_MULT") then {WFBE_C_AICOM_REQUEST_TYPE_MULT = 3}; //--- COMMAND CONSOLE: weight multiplier the request-unit hook applies to the requested bucket (armor/air/infantry) in AssignTypes + Teams. SOFT nudge; the empty-bucket zero-out still guarantees a buildable pick.
+		//--- cmdcon27 THREAD C: FIELD-ORDER nudge knobs (SPLIT UP / PUSH TOGETHER / HARASS / FALL BACK). One consolidated
+		//--- stamp wfbe_aicom_player_fieldorder (string + t0), read once in the Allocator under WFBE_C_AICOM_POSTURE_TTL. isNil-guarded.
+		if (isNil "WFBE_C_AICOM_NUDGE_SPLIT_FIST")    then {WFBE_C_AICOM_NUDGE_SPLIT_FIST    = 3};  //--- SPLIT UP: fist towns floored to this (spread the main effort across multiple fronts).
+		if (isNil "WFBE_C_AICOM_NUDGE_SPLIT_EXPAND")  then {WFBE_C_AICOM_NUDGE_SPLIT_EXPAND  = 4};  //--- SPLIT UP: expand-team count floored to this (peel more teams onto neutral grabs).
+		if (isNil "WFBE_C_AICOM_NUDGE_HARASS_TEAMS")  then {WFBE_C_AICOM_NUDGE_HARASS_TEAMS  = 4};  //--- HARASS: mounted rear-raid team count floored to this (pressure the enemy back-line).
+		if (isNil "WFBE_C_AICOM_NUDGE_FALLBACK_DELTA") then {WFBE_C_AICOM_NUDGE_FALLBACK_DELTA = 20}; //--- FALL BACK: towns added to the engage gate (stop clashing / pull back to owned towns).
 		//--- COMMAND CONSOLE PLAYER-ARTILLERY: a SEPARATE opt-in flag for the war-room ARTILLERY-HERE order, distinct from
 		//--- WFBE_C_AI_COMMANDER_ARTILLERY (which Steff hard-locks to 0 so the AI can neither fire nor BUILD artillery). When
 		//--- this is >0 the player request is accepted by the handler and serviced by the assist-mode resolver

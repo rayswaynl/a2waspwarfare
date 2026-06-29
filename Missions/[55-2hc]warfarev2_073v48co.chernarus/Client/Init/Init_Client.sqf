@@ -620,7 +620,7 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 //--- via the same wfbe_b62_marker_built compare-and-claim. A2-OA-1.64 safe: allMapMarkers / markerType /
 //--- markerPos / getPos / distance2D-free (uses distance on getPos) / getVariable / setVariable; no A3 commands.
 [] spawn {
-	private ["_n","_done","_hqObj","_hqPos","_found","_mPos","_x","_grace"];
+	private ["_n","_done","_hqObj","_hqPos","_hqPosValid","_found","_mPos","_x","_grace"];
 	waitUntil {(!isNil "WFBE_Client_SideID") && {!isNil "WFBE_Client_Logic"}};
 	//--- Civilian clients have no own HQ; never spin (mirrors the EARLYHEAL CIV bail-out).
 	if (sideJoined == civilian) exitWith { diag_log "[WFBE][cmdcon26 HQ-MARK] CIV-ABORT: skipped on civilian client."; };
@@ -631,6 +631,13 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 		_hqObj = WFBE_Client_Logic getVariable ["wfbe_hq", objNull];
 		if (!isNull _hqObj && {alive _hqObj}) then {
 			_hqPos = getPos _hqObj;
+			//--- cmdcon26 (Game 2026-06-29) JIP DEGENERATE-POS GUARD. On a JIP client getPos on a not-yet-streamed
+			//--- HQ returns [0,0,0]/degenerate; feeding that to (markerPos _x) distance _hqPos for EVERY marker threw
+			//--- once per poll (200x = the _n<200 ceiling). Only run the allMapMarkers scan when _hqPos is a real
+			//--- 2+ element non-[0,0] position; otherwise SKIP this poll (do NOT set _done) so the next 3s tick
+			//--- retries silently until wfbe_hq streams in. A2-OA-1.64 safe: typeName / count / select.
+			_hqPosValid = (typeName _hqPos == "ARRAY") && {count _hqPos >= 2} && {!((_hqPos select 0) == 0 && {(_hqPos select 1) == 0})};
+			if (_hqPosValid) then {
 			//--- Look for any LOCAL "Headquarters"-type marker already painted near the live HQ (Init_BaseStructure
 			//--- draws BaseMarker<N> with type "Headquarters" for the HQ). 150m tolerance covers a mobilized/redeployed
 			//--- HQ that moved slightly between the draw and this check.
@@ -653,6 +660,7 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 					[_hqObj, true, WFBE_Client_SideID] ExecVM "Client\Init\Init_BaseStructure.sqf";
 					diag_log format ["[WFBE][cmdcon26 HQ-MARK] no own HQ marker (poll %1) - cleared claim and re-fired Init_BaseStructure for type=%2 pos=%3.", _n, typeOf _hqObj, _hqPos];
 				};
+			};
 			};
 		};
 		_n = _n + 1;

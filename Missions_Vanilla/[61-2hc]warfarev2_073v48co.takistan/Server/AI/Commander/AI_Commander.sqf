@@ -102,7 +102,7 @@ _ltPara = 0; //--- AICOM PARATROOPS throttle: cheap O(towns) scan + drop attempt
 _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
-_prevDelegate = false; //--- COMMAND CONSOLE squad-command mode (claude-gaming 2026-06-29): prev value of the AI-maneuver delegate flag, for the edge-reset that neutralises sticky orders on a mode flip.
+_prevDelegate = true; //--- cmdcon27 THREAD B: init TRUE to match the new delegate default (avoids a spurious edge-reset at loop start). prev value of the AI-maneuver delegate flag, for the edge-reset that neutralises sticky orders on a mode flip.
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
 _prevStipendActive = false;
@@ -152,22 +152,42 @@ while {!gameOver} do {
 		//--- Human just left -> clear leftover explicit orders so full-auto retakes cleanly.
 		if (_prevHuman) then {
 			if (!_humanCmd) then {
-				{ [_x, "towns"] Call SetTeamMoveMode; _x setVariable ["wfbe_exec_sig", []] } forEach (_logik getVariable ["wfbe_teams", []]);
+				//--- cmdcon27 THREAD A: HC-resident teams (wfbe_aicom_hc) drive ONLY off wfbe_aicom_order, not wfbe_teammode -
+				//--- so the reset MUST bump their order seq (mirror AI_Commander_Strategy.sqf:398-400) or they keep their
+				//--- STALE order + stay Executor-ineligible -> stuck ~2-3.5 min. Server-local teams ignore the order var.
+				{ if (!isNull _x) then {
+					[_x, "towns"] Call SetTeamMoveMode;
+					_x setVariable ["wfbe_exec_sig", []];
+					if (_x getVariable ["wfbe_aicom_hc", false]) then {
+						_x setVariable ["wfbe_aicom_order",
+							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
+							 "towns", getPos (leader _x)], true];
+					};
+				} } forEach (_logik getVariable ["wfbe_teams", []]);
 					_logik setVariable ["wfbe_aicom_focus", objNull]; _logik setVariable ["wfbe_aicom_focus_t0", -1e9]; //--- AICOM v2 fix (wiki cross-check): clear the commander FOCUS when a human commander leaves so a departed commander's "Move All" doesn't tunnel-vision the auto-AI for the 600s TTL.
 			};
 		};
 		_prevHuman = _humanCmd;
 
 		//--- COMMAND CONSOLE squad-command mode (claude-gaming 2026-06-29): read the player's AI-maneuver DELEGATE flag
-		//--- (set ON/OFF from the war room via aicom-ai-command). Default-ABSENT => false => today's DIRECT control.
+		//--- (set ON/OFF from the war room via aicom-ai-command). cmdcon27 THREAD B: Default-ABSENT => TRUE => AI keeps running Strategy/Allocate when a human commands; player flips war-room to DIRECT (false) to drive.
 		//--- When ON, the AI maneuver-brain (Strategy/Snapshot/Allocate) runs UNDER the human commander while the player
 		//--- keeps the economy. DELEGATE EDGE-RESET: on a flip of _aiDelegate, neutralise every team (clear its move
 		//--- mode + exec-sig + the commander FOCUS) so the Executor/AssignTowns don't fight over a team carrying the
 		//--- previous owner's sticky order - same reset the human-left path (above) uses. A2-OA: Bool != Bool is ILLEGAL,
 		//--- so compare via 0/1 scalars.
-		_aiDelegate = _logik getVariable ["wfbe_aicom_player_delegate", false];
+		_aiDelegate = _logik getVariable ["wfbe_aicom_player_delegate", true]; //--- cmdcon27 THREAD B: AI keeps running Strategy/Allocate BY DEFAULT when a human takes command; player flips war-room to DIRECT (false) to drive.
 		if ((if (_aiDelegate) then {1} else {0}) != (if (_prevDelegate) then {1} else {0})) then {
-			{ [_x, "towns"] Call SetTeamMoveMode; _x setVariable ["wfbe_exec_sig", []] } forEach (_logik getVariable ["wfbe_teams", []]);
+			//--- cmdcon27 THREAD A: bump HC-team order seq on the delegate flip too (same stuck-teams root cause).
+			{ if (!isNull _x) then {
+				[_x, "towns"] Call SetTeamMoveMode;
+				_x setVariable ["wfbe_exec_sig", []];
+				if (_x getVariable ["wfbe_aicom_hc", false]) then {
+					_x setVariable ["wfbe_aicom_order",
+						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
+						 "towns", getPos (leader _x)], true];
+				};
+			} } forEach (_logik getVariable ["wfbe_teams", []]);
 			_logik setVariable ["wfbe_aicom_focus", objNull];
 			_logik setVariable ["wfbe_aicom_focus_t0", -1e9];
 			["INFORMATION", Format ["AI_Commander.sqf: [%1] squad-command mode flipped (AI-strategy delegate now %2) - teams reset to neutral.", str _side, if (_aiDelegate) then {"ON"} else {"OFF"}]] Call WFBE_CO_FNC_AICOMLog;

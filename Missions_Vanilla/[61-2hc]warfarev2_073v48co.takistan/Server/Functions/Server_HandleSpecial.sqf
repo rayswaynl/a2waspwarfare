@@ -393,6 +393,33 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	case "aicom-fieldorder": {
+		//--- cmdcon27 THREAD C (COMMAND CONSOLE): a player set a FIELD ORDER - one of SPLIT / MASS / HARASS / FALLBACK.
+		//--- One consolidated stamp (string + t0) on the side logic; the Allocator reads it ONCE per cycle, TTL
+		//--- WFBE_C_AICOM_POSTURE_TTL (reused), and shifts its levers while fresh. Same AI-commander-run gate +
+		//--- west/east + string whitelist as aicom-posture so a malformed arg cannot poison the read. Cloned from
+		//--- "aicom-posture" above.
+		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
+		_pSide = _args select 1;
+		_pPos  = _args select 2;
+		if ((typeName _pPos == "STRING") && {_pPos in ["SPLIT","MASS","HARASS","FALLBACK"]} && {_pSide in [west, east]}) then {
+			_pLogik = (_pSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _pLogik) then {
+				_pRun = false;
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_pSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
+					_pCmd = (_pSide) Call WFBE_CO_FNC_GetCommanderTeam; _pHuman = false;
+					if (!isNull _pCmd) then {if (isPlayer (leader _pCmd)) then {_pHuman = true}};
+					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_pHuman = false};
+					_pRun = !_pHuman;
+				};
+				if (_pRun) then {
+					_pLogik setVariable ["wfbe_aicom_player_fieldorder", _pPos];
+					_pLogik setVariable ["wfbe_aicom_player_fieldorder_t0", time];
+					diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|" + str _pSide + "|" + str (round (time / 60)) + "|order=" + _pPos);
+				};
+			};
+		};
+	};
 	case "aicom-ai-command": {
 		//--- COMMAND CONSOLE (claude-gaming 2026-06-29): the human commander toggled SQUAD-COMMAND MODE from the war
 		//--- room - "ON" (delegate squad MANEUVER to the AI: it runs Strategy + AssignTowns UNDER the human while the
