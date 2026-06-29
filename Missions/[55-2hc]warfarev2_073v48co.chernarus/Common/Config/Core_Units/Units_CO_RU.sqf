@@ -194,10 +194,12 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['Ka52Black'];
     _u = _u		+ ['An2_TK_EP1'];
     // _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
-    _u = _u		+ ['Su25_Ins'];
-    _u = _u		+ ['Su25_TK_EP1'];
-    _u = _u		+ ['Su39'];
-    _u = _u		+ ['Su34'];
+    if (!(IS_tank_war_event)) then {
+        _u = _u		+ ['Su25_Ins'];
+        _u = _u		+ ['Su25_TK_EP1'];
+        _u = _u		+ ['Su39'];
+        _u = _u		+ ['Su34'];
+    };
 } else {
     _u =  ['UH1H_TK_EP1'];
     _u = _u		+ ['Mi17_TK_EP1'];
@@ -211,14 +213,18 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['Ka52Black'];
     _u = _u		+ ['An2_TK_EP1'];
     // _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
-    _u = _u		+ ['Su25_Ins'];
-    _u = _u		+ ['Su25_TK_EP1'];
-    _u = _u		+ ['Su39'];
-    _u = _u		+ ['Su34'];
+    if (!(IS_tank_war_event)) then {
+        _u = _u		+ ['Su25_Ins'];
+        _u = _u		+ ['Su25_TK_EP1'];
+        _u = _u		+ ['Su39'];
+        _u = _u		+ ['Su34'];
+    };
 };
 
 if (IS_mod_map_dependent) then {
-    _u = _u		+ ['ibrPRACS_MiG21mol'];
+    if (!(IS_tank_war_event)) then {
+        _u = _u		+ ['ibrPRACS_MiG21mol'];
+    };
 };
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
@@ -235,13 +241,17 @@ if (IS_chernarus_map_dependent) then {
 
 _u = _u		+ ['An2_TK_EP1'];
 // _u = _u		+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
-_u = _u		+ ['Su25_Ins'];
-_u = _u		+ ['Su25_TK_EP1'];
-_u = _u		+ ['Su39'];
-_u = _u		+ ['Su34'];
+if (!(IS_tank_war_event)) then {
+    _u = _u		+ ['Su25_Ins'];
+    _u = _u		+ ['Su25_TK_EP1'];
+    _u = _u		+ ['Su39'];
+    _u = _u		+ ['Su34'];
+};
 
 if (IS_mod_map_dependent) then {
-    _u = _u		+ ['ibrPRACS_MiG21mol'];
+    if (!(IS_tank_war_event)) then {
+        _u = _u		+ ['ibrPRACS_MiG21mol'];
+    };
 };
 
 missionNamespace setVariable [Format ["WFBE_%1AIRPORTUNITS", _side], _u];
