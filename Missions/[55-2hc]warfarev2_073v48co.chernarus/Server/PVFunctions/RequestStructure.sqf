@@ -9,7 +9,7 @@ _structures = missionNamespace getVariable Format ['WFBE_%1STRUCTURES',str _side
 _structuresNames = missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',str _side];
 _rlType = _structures select (_structuresNames find _structureType);
 
-["DEBUG (RequestStructure.sqf)", Format ["Building: %1", _rlType]] Call WFBE_CO_FNC_LogContent;
+if (WF_Debug) then {["DEBUG (RequestStructure.sqf)", Format ["Building: %1", _rlType]] Call WFBE_CO_FNC_LogContent};
 
 if (_rlType in ["Barracks", "Light", "CommandCenter", "Heavy", "Aircraft", "ServicePoint", "AARadar", "CBRadar", "Bank", "ArtilleryRadar", "Reserve"]) then {
     [_side, "HandleSpecial", ['building-started', _rlType, _pos]] Call WFBE_CO_FNC_SendToClients;

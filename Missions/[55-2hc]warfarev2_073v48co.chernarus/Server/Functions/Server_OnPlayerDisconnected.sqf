@@ -198,4 +198,4 @@ _playerScoreDiff = _playerScore - _oldScore;
 _result = ["STORE", [_uid, _playerScoreDiff]] call WFBE_SE_FNC_CallDatabaseStore;
 _result = ["STORE_SIDE", [_uid, "NONE"]] call WFBE_SE_FNC_CallDatabaseStoreSide;
 
-["ERROR", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has disconnected.", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has disconnected.", _name, _uid]] Call WFBE_CO_FNC_LogContent;

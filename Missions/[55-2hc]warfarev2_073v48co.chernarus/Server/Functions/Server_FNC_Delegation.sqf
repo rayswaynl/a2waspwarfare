@@ -26,7 +26,7 @@ WFBE_SE_FNC_DelegateAITown = {
 
 	_delegators = (count _groups) call WFBE_SE_FNC_GetDelegators; //--- Get the delegators.
 
-	diag_log format["DEBUG DELEGATION::  DelegateAITown.sqf Delegators: %1", _delegators];
+	if (WF_Debug) then {diag_log format["DEBUG DELEGATION::  DelegateAITown.sqf Delegators: %1", _delegators]};
 
 	//--- Delegate units and create units on the server if we don't have enough delegators.	
 	for '_i' from 0 to count(_groups)-1 do {

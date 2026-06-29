@@ -860,13 +860,6 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- AIRFIELD ON-LAND PROBE (claude-gaming 2026-06-14): DIAGNOSTIC ONLY.
-//--- One-shot server-only grid scan that logs surfaceIsWater + nearRoads for a
-//--- 5x5 grid of candidate camp positions around each airfield's
-//--- LocationLogicAirport (Balota id=7, NWAF id=8). Reads AIRFIELD_PROBE|... in
-//--- the RPT to pick a verified on-land, off-road apron. Changes NO coordinates.
-[] execVM "Server\Init\Init_AirfieldProbe.sqf";
-
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 
