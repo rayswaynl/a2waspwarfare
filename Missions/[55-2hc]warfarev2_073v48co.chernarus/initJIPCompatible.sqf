@@ -186,6 +186,16 @@ if (IS_air_war_event) then {
 		missionNamespace setVariable ["WFBE_C_TOWNS_CAPTURE_AIR_HEIGHT", 100]; //--- low-flying crewed aircraft (<=100m) drain town SV
 		missionNamespace setVariable ["WFBE_C_TOWNS_CAPTURE_AI_AIR", 0];       //--- AI aircraft never capture; camps still need ground
 		WFBE_C_AICOM_ASSAULT_REACH_FOOT = 4500;                                 //--- 2500->4500: foot teams can advance across the 25.6km Taviana map
+		//--- Taviana Air War: make the AI commander BUY aircraft heavily (air share up, online earlier, higher caps):
+		WFBE_C_AICOM_TYPE_MIX_EARLY = [0.35, 0.25, 0.20, 0.20]; //--- 1% -> 20% air from the opening
+		WFBE_C_AICOM_TYPE_MIX_MID   = [0.25, 0.20, 0.20, 0.35]; //--- 5% -> 35% air mid
+		WFBE_C_AICOM_TYPE_MIX_LATE  = [0.15, 0.15, 0.20, 0.50]; //--- 15% -> 50% air late
+		WFBE_C_AICOM_TYPE_MIX_MATURE_MID  = 2;                  //--- reach MID tier at 2 towns
+		WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 4;                  //--- reach LATE tier at 4 towns
+		WFBE_C_AICOM_AIR_MIN_TOWNS = 1;                         //--- air online from town 1 (was 3)
+		WFBE_C_AICOM_ATTACKHELI_MAX = 10;                       //--- raise live attack-heli cap (was 4)
+		WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT = 4.0;               //--- stronger air time-bias
+		WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN = 15;               //--- ramp to max air bias in 15 min
 	missionNamespace setVariable ["WFBE_C_TOWNS_STARTING_MODE", 1];
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 };
