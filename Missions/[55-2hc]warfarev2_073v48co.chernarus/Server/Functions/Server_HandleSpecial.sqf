@@ -12,6 +12,13 @@ switch (_args select 0) do {
 	};
 	case "group-query": {
 		Private ["_group","_player","_side"];
+		//--- GUARD (claude-gaming): a malformed/short request (count _args <= 3) used to crash here at
+		//--- "_args select 2/3" ("Error in expression <[_player = _args select 2"). A console action that
+		//--- mis-built its RequestSpecial payload was observed firing this. Bail safely on a short payload
+		//--- rather than select-crash; the valid 4-arg [_,grp,player,side] path is unchanged below.
+		if (count _args < 4) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: group-query received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
 		_group = _args select 1;
 		_player = _args select 2;
 		_side = _args select 3;
@@ -916,6 +923,12 @@ switch (_args select 0) do {
 	//--- V3S_Gue driver, so gate-OFF is a byte-for-byte no-op.
 	case "guer-mortar-strike": {
 		Private ["_pos","_player","_team","_cost","_funds"];
+		//--- GUARD (claude-gaming): mirror the group-query guard - a short payload (count _args <= 2) used to
+		//--- crash at "_player = _args select 2". The valid sender is a 3-arg ["guer-mortar-strike",_pos,_player];
+		//--- bail safely on anything shorter rather than select-crash.
+		if (count _args < 3) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: guer-mortar-strike received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
 		_pos    = _args select 1;
 		_player = _args select 2;
 		if ((typeName _pos == "ARRAY") && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {

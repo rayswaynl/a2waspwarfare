@@ -5795,6 +5795,112 @@
       <Russian>Удар СКАД требует контроля над нефтяной платформой.</Russian>
     </Key>
 
+<!--COMMAND CONSOLE (IDD 14000) - production labels/tooltips (claude-gaming). The player<->AI-commander war room.-->
+    <Key ID="STR_WF_CMD_Claim">
+      <English>TAKE COMMAND</English>
+      <Russian>ВЗЯТЬ КОМАНДОВАНИЕ</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Claim_TT">
+      <English>Claim the empty AI commander seat and run this side yourself. The AI becomes your quartermaster (it founds and refills teams).</English>
+      <Russian>Займите пустующее место ИИ-командира и управляйте этой стороной сами. ИИ станет вашим квартирмейстером (создаёт и пополняет отряды).</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_IntentTitleA">
+      <English>AI COMMANDER INTENT</English>
+      <Russian>НАМЕРЕНИЯ ИИ-КОМАНДИРА</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_PostureTitle">
+      <English>NUDGE THE AI'S POSTURE</English>
+      <Russian>ПОДСКАЗАТЬ ИИ СТРАТЕГИЮ</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Push">
+      <English>PUSH (expand)</English>
+      <Russian>НАСТУП (расширять)</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Push_TT">
+      <English>Advise the AI commander to lean AGGRESSIVE - engage the enemy sooner and shave the expand-first town gate.</English>
+      <Russian>Посоветовать ИИ-командиру действовать АГРЕССИВНЕЕ - раньше вступать в бой и быстрее расширяться.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Hold">
+      <English>HOLD (consolidate)</English>
+      <Russian>ОБОРОНА (закрепиться)</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Hold_TT">
+      <English>Advise the AI commander to lean DEFENSIVE - hold and consolidate towns longer before pushing the enemy.</English>
+      <Russian>Посоветовать ИИ-командиру действовать ОБОРОНИТЕЛЬНЕЕ - дольше удерживать и закреплять города перед атакой.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_RosterTitle">
+      <English>YOUR TEAMS  (click a team, then click the map)</English>
+      <Russian>ВАШИ ОТРЯДЫ  (выберите отряд, затем кликните по карте)</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Move">
+      <English>Attack / Move</English>
+      <Russian>Атака / Движение</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Move_TT">
+      <English>Order the selected team to advance and assault toward the clicked point.</English>
+      <Russian>Приказать выбранному отряду наступать и атаковать к указанной точке.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Defend">
+      <English>Defend Here</English>
+      <Russian>Оборонять здесь</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Defend_TT">
+      <English>Order the selected team to hold and defend the clicked point.</English>
+      <Russian>Приказать выбранному отряду удерживать и оборонять указанную точку.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Patrol">
+      <English>Patrol Here</English>
+      <Russian>Патруль здесь</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Patrol_TT">
+      <English>Order the selected team to patrol and search the clicked area.</English>
+      <Russian>Приказать выбранному отряду патрулировать указанный район.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Release">
+      <English>Release to Auto</English>
+      <Russian>Вернуть в авторежим</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Release_TT">
+      <English>Hand the selected team back to autonomous town-capture.</English>
+      <Russian>Вернуть выбранный отряд к автономному захвату городов.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Arty">
+      <English>Artillery Strike</English>
+      <Russian>Артудар</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_Arty_TT">
+      <English>Request an artillery strike at the clicked spot (if artillery is enabled and friendly guns exist).</English>
+      <Russian>Запросить артудар по указанной точке (если артиллерия включена и есть дружественные орудия).</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_AllPush">
+      <English>ALL PUSH</English>
+      <Russian>ВСЕ В НАСТУП</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_AllPush_TT">
+      <English>All idle AI teams resume autonomous town capture.</English>
+      <Russian>Все свободные отряды ИИ возобновляют автономный захват городов.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_AllHold">
+      <English>ALL HOLD</English>
+      <Russian>ВСЕ В ОБОРОНУ</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_AllHold_TT">
+      <English>All AI teams dig in and defend where they stand.</English>
+      <Russian>Все отряды ИИ закрепляются и обороняются на месте.</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_BuildPrio">
+      <English>Build priority:</English>
+      <Russian>Приоритет постройки:</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_BuildBtn">
+      <English>Build</English>
+      <Russian>Строить</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_BuildBtn_TT">
+      <English>Ask the war effort to prioritise building the selected unit type next.</English>
+      <Russian>Попросить приоритетно построить выбранный тип техники следующим.</Russian>
+    </Key>
+
     </Container>
   </Package>
 </Project>
