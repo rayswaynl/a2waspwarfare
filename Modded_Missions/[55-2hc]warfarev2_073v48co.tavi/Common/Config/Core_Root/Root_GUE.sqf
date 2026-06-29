@@ -50,7 +50,11 @@ if (isServer) then {
 		//--- technical: PK pickup raiding party.
 		['Pickup_PK_GUE','GUE_Soldier_1','GUE_Soldier_AT','GUE_Soldier_2'],
 		//--- motorized: V3S truckload of fighters.
-		['V3S_Gue','GUE_Soldier_1','GUE_Soldier_2','GUE_Soldier_3','GUE_Soldier_MG','GUE_Soldier_AT']
+		['V3S_Gue','GUE_Soldier_1','GUE_Soldier_2','GUE_Soldier_3','GUE_Soldier_MG','GUE_Soldier_AT'],
+		//--- saboteur cell: demolition-led foot raiders (twin Sab + RPG/MG screen).
+		['GUE_Soldier_Sab','GUE_Soldier_Sab','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Medic'],
+		//--- light mechanized: unarmed BTR-40 troop carrier + AT/MG riders.
+		['BTR40_TK_GUE_EP1','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_2','GUE_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
@@ -61,7 +65,11 @@ if (isServer) then {
 		//--- mechanized recon: BTR-40 MG armored car + riders.
 		['BTR40_MG_TK_GUE_EP1','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_2','GUE_Soldier_Medic'],
 		//--- two-technical column: DSHKM + PK with a sniper overwatch dismount.
-		['Offroad_DSHKM_Gue','Pickup_PK_GUE','GUE_Soldier_Sniper','GUE_Soldier_AT','GUE_Soldier_Medic']
+		['Offroad_DSHKM_Gue','Pickup_PK_GUE','GUE_Soldier_Sniper','GUE_Soldier_AT','GUE_Soldier_Medic'],
+		//--- AT screen: SPG-9 + DSHKM dual-technical with RPG/MANPADS dismounts.
+		['Offroad_SPG9_Gue','Offroad_DSHKM_Gue','GUE_Soldier_AT','GUE_Soldier_AA','GUE_Soldier_Medic'],
+		//--- grenadier ambush: twin GP-25 GL fire team with sniper overwatch.
+		['GUE_Soldier_GL','GUE_Soldier_GL','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Sniper','GUE_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
@@ -72,7 +80,11 @@ if (isServer) then {
 		//--- armored AT-hunter: BRDM-2 + SPG-9 technical + RPG gunners.
 		['BRDM2_Gue','Offroad_SPG9_Gue','GUE_Soldier_AT','GUE_Soldier_AT','GUE_Soldier_AA','GUE_Soldier_Medic'],
 		//--- combined column: T-55 + ZU-23 AAA + sniper-led infantry screen.
-		['T55_TK_GUE_EP1','Ural_ZU23_Gue','GUE_Soldier_Sniper','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Medic']
+		['T55_TK_GUE_EP1','Ural_ZU23_Gue','GUE_Soldier_Sniper','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Medic'],
+		//--- mechanized assault: twin BMP-2 IFVs with mounted infantry.
+		['BMP2_Gue','BMP2_Gue','GUE_Soldier_AT','GUE_Soldier_MG','GUE_Soldier_Medic'],
+		//--- vintage armor column: T-34 + DSHKM technical + AT/MANPADS screen.
+		['T34_TK_GUE_EP1','Offroad_DSHKM_Gue','GUE_Soldier_AT','GUE_Soldier_AA','GUE_Soldier_MG','GUE_Soldier_Medic']
 	]];
 	
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

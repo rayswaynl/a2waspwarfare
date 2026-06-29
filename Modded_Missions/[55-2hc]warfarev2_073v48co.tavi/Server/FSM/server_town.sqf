@@ -48,7 +48,13 @@ while {!WFBE_GameOver} do {
 				//--- direct scan. The server_town_ai cache-write remains but is simply unread now.
 				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
 				private "_capH"; _capH = 10; if (_location getVariable ["wfbe_is_naval_hvt", false]) then {_capH = (_location getVariable ["wfbe_naval_deckz", 22]) + 12}; //--- B755 (Ray 2026-06-25): carrier decks sit ~16-22m ASL, so on-deck attackers were EXCLUDED by the flat 10m height filter - the carrier town could never be captured by units standing on its deck (now relevant with the b754 deck-spawn). Naval-HVT towns scan up to deckZ+12; normal towns keep 10.
+				if ((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_AIR_HEIGHT", 0]) > 0 && !(_location getVariable ["wfbe_is_naval_hvt", false])) then {_capH = missionNamespace getVariable "WFBE_C_TOWNS_CAPTURE_AIR_HEIGHT"}; //--- Taviana Air War: raise capture ceiling so low-flying aircraft contribute
 				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight _capH;
+				if ((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_AI_AIR", 0]) == 0) then {
+					private "_keep"; _keep = [];
+					{ if (!(_x isKindOf "Air") || ({isPlayer _x} count (crew _x)) > 0) then {_keep set [count _keep, _x]} } forEach _objects;
+					_objects = _keep;
+				};
 
 				_west = west countSide _objects;
 				_east = east countSide _objects;
