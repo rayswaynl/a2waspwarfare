@@ -816,22 +816,34 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 
 	["INITIALIZATION", "Init_Server.sqf: B74.2 GUER stipend/economy loop launched (decoupled from team-registration)."] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
-//--- mission.sqm are born by the engine at load with no createGroup, so WFBE_CO_FNC_CreateGroup never
-//--- tags them and they show as "untagged" in the server_groupsGC per-source audit - indistinguishable
-//--- from genuinely leaked groups. One-shot sweep tagging every still-untagged WEST/EAST group as
-//--- "editor-player-slot" (broadcast). They already carry wfbe_persistent=true (set above) so the GC
-//--- never reaps them; this is audit-only. The isNil guard skips any runtime group the wrapper already
-//--- tagged. GUER's 4 player-slot editor groups are now included so they tag as editor-player-slot too.
+//--- EDITOR-SLOT SWEEP (2026-06-15; group-cap reclaim 2026-06-29): the 27 WEST + 27 EAST editor-placed
+//--- player-slot groups in mission.sqm are born by the engine at load with no createGroup, so
+//--- WFBE_CO_FNC_CreateGroup never tags them and they show as "untagged" in the server_groupsGC audit -
+//--- indistinguishable from genuinely leaked groups. Of those, ~13/side are "overflow" slots whose unit
+//--- self-deletes at load (mission.sqm init="... deleteVehicle this"), leaving an EMPTY group that still
+//--- permanently occupies one of the 144 per-side group slots. One-shot sweep: REAP the empty overflow
+//--- groups (reclaim ~13/side headroom; they are unsynced + never enter wfbe_teams, so nothing references
+//--- them) and TAG the remaining active player-slot groups "editor-player-slot" (broadcast) so the audit
+//--- can tell them from leaks. Active groups carry wfbe_persistent=true so the GC never reaps them; the
+//--- tag is audit-only. The isNil guard skips any runtime group the wrapper already tagged. GUER included.
 if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
+	Private ["_reclaimed"];
+	_reclaimed = 0;
 	{
 		Private ["_src"];
 		_src = _x getVariable "wfbe_group_src";
 		if (isNil "_src" && {(side _x == west) || (side _x == east) || (side _x == resistance)}) then {
-			_x setVariable ["wfbe_group_src", "editor-player-slot", true];
+			if ((count units _x) == 0) then {
+				//--- empty overflow slot (unit self-deleted at load): reap to free a per-side group-cap slot
+				deleteGroup _x;
+				_reclaimed = _reclaimed + 1;
+			} else {
+				_x setVariable ["wfbe_group_src", "editor-player-slot", true];
+			};
 		};
 	} forEach allGroups;
+	["INITIALIZATION", format ["Init_Server.sqf: editor-slot sweep reclaimed %1 empty overflow groups (group-cap headroom).", _reclaimed]] Call WFBE_CO_FNC_LogContent;
 };
 
 [] Call Compile preprocessFile "Server\Config\Config_GUE.sqf";
