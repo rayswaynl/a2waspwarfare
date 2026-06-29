@@ -281,12 +281,14 @@ _u = _u		+ ['AH64D'];
 _u = _u		+ ['AH64D_EP1'];
 _u = _u		+ ['BAF_Apache_AH1_D'];
 _u = _u		+ ['AH1Z'];
-_u = _u		+ ['L159_ACR'];
-_u = _u		+ ['A10'];
-_u = _u		+ ['A10_US_EP1'];
-_u = _u		+ ['AV8B'];
-_u = _u		+ ['AV8B2'];
-_u = _u		+ ['F35B'];
+if (!(IS_tank_war_event)) then {
+    _u = _u		+ ['L159_ACR'];
+    _u = _u		+ ['A10'];
+    _u = _u		+ ['A10_US_EP1'];
+    _u = _u		+ ['AV8B'];
+    _u = _u		+ ['AV8B2'];
+    _u = _u		+ ['F35B'];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
@@ -294,12 +296,14 @@ if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Cli
 _u = [];
 _u = _u 	+ ['MV22'];
 _u = _u		+ ['C130J_US_EP1'];
-_u = _u		+ ['L159_ACR'];
-_u = _u		+ ['A10'];
-_u = _u		+ ['A10_US_EP1'];
-_u = _u		+ ['AV8B'];
-_u = _u		+ ['AV8B2'];
-_u = _u		+ ['F35B'];
+if (!(IS_tank_war_event)) then {
+    _u = _u		+ ['L159_ACR'];
+    _u = _u		+ ['A10'];
+    _u = _u		+ ['A10_US_EP1'];
+    _u = _u		+ ['AV8B'];
+    _u = _u		+ ['AV8B2'];
+    _u = _u		+ ['F35B'];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1AIRPORTUNITS", _side], _u];
 if (local player) then {['AIRPORT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};

@@ -186,6 +186,46 @@ if (IS_air_war_event) then {
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 };
 
+IS_tank_war_event = false;
+_tankEventEnabledFromParameters = missionNamespace getVariable "WFBE_TANK_EVENT_ENABLED";
+
+switch (_tankEventEnabledFromParameters) do {
+	case 0: {
+		#ifdef IS_TANK_WAR_EVENT
+			IS_tank_war_event = true;
+		#endif
+	};
+	case 1: {
+		IS_tank_war_event = false;
+	};
+	case 2: {
+		IS_tank_war_event = true;
+	};
+};
+
+if (IS_tank_war_event) then {
+	//--- Heavy economy: high supply and funds so armor is affordable from the start (mirrors air-event values).
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_EAST", 50000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_WEST", 50000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_EAST", 13370000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_WEST", 13370000];
+	missionNamespace setVariable ["WFBE_C_TOWNS_STARTING_MODE", 1];
+	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
+	//--- Heavy-armor AICOM overrides (Init_CommonConstants defaults are overridden here because they use isNil guards
+	//--- and have already been set before this block; reassigning here overrules them for the tank-war session).
+	//--- Mix arrays: [infantry, motorized, armor, air]. AIR share = 0.00 → AI stops buying aircraft; heli still via ATTACKHELI_MAX.
+	WFBE_C_AICOM_TYPE_MIX_EARLY = [0.40, 0.25, 0.35, 0.00];
+	WFBE_C_AICOM_TYPE_MIX_MID = [0.25, 0.20, 0.55, 0.00];
+	WFBE_C_AICOM_TYPE_MIX_LATE = [0.15, 0.15, 0.70, 0.00];
+	WFBE_C_AICOM_TYPE_MIX_MATURE_MID = 2;
+	WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 4;
+	WFBE_C_AICOM_ATTACKHELI_MAX = 2;
+	//--- Napf boundary = 20500; foot-reach ~= boundary/4 = 5125, rounded to 5000 for combined-arms assault depth.
+	WFBE_C_AICOM_ASSAULT_REACH_FOOT = 5000;
+	//--- NOTE: AT-vs-armor durability is tuned via Common\Functions\Common_ModifyVehicle.sqf HandleDamage as a
+	//--- playtest knob. Do NOT change those values here; adjust them there after live observation.
+};
+
 if (WF_Debug) then { //--- Debug.
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 	missionNamespace setVariable ["WFBE_C_TOWNS_OCCUPATION", 1];
