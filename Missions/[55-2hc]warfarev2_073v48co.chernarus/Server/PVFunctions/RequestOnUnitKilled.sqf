@@ -78,7 +78,7 @@ if (_killer_side != _killed_side) then {
 	if (_isArtyKill) then {
 		_victimLogik = _killed_side Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNil "_victimLogik") then {
-			_artyKillCount = _victimLogik getVariable ["wfbe_aicom_arty_kill_count", 0] + 1;
+			_artyKillCount = (_victimLogik getVariable ["wfbe_aicom_arty_kill_count", 0]) + 1;
 			_victimLogik setVariable ["wfbe_aicom_arty_kill_count", _artyKillCount];
 			if (_artyKillCount >= 2 && {!(_victimLogik getVariable ["wfbe_aicom_arty_threat", false])}) then {
 				_victimLogik setVariable ["wfbe_aicom_arty_threat", true];
