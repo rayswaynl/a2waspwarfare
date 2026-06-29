@@ -246,13 +246,33 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	};
 
 _vehicle allowCrewInImmobile true;
+	//--- Taviana Air War: AI Combat Air Patrol. WASP issues NO flight orders to AI-bought aircraft; give each AI-crewed
+	//--- air unit a flight altitude + a SAD orbit on the nearest enemy town so it actually patrols + engages. Event-gated, server-side.
+	if (IS_air_war_event && {_unitType isKindOf "Air"} && {!isPlayer (leader _team)}) then {
+		[_vehicle, _team, _sideID, _unitType] spawn {
+			private ["_veh","_grp","_sid","_typ","_alt","_tgt"];
+			_veh = _this select 0; _grp = _this select 1; _sid = _this select 2; _typ = _this select 3;
+			waitUntil {sleep 1; isNull _veh || !alive _veh || (!isNull (driver _veh) && {alive (driver _veh)})};
+			if (isNull _veh || {!alive _veh}) exitWith {};
+			_alt = if (_typ isKindOf "Plane") then {500 + random 150} else {120 + random 60};
+			_veh flyInHeight _alt;
+			_grp setBehaviour "AWARE"; _grp setCombatMode "YELLOW"; _grp setSpeedMode "FULL";
+			_tgt = objNull;
+			if (!isNil "towns") then {
+				{ if (!isNull _veh && {(_x getVariable ["sideID", -1]) != _sid}) then { if (isNull _tgt || {(_x distance _veh) < (_tgt distance _veh)}) then {_tgt = _x} } } forEach towns;
+			};
+			if (!isNull _tgt) then {
+				[_grp, true, [[(getPos _tgt), "SAD", 700, 30, "", []], [(getPos _tgt), "CYCLE", 60, 30, "", []]]] Call AIWPAdd;
+			};
+		};
+	};
 	//--- AI FACTORY RALLY (task #25): drive the fresh hull off the apron toward the commander's
 	//--- forward rally (set on the factory by AI_Commander_Base). commandMove the driver so the
 	//--- vehicle takes the lane out instead of idling in base. AI-only via the count-guard.
 	private "_aiRally";
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
-		(driver _vehicle) commandMove _aiRally;
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)} && {!(_unitType isKindOf "Air")}) then {
+		(driver _vehicle) commandMove _aiRally; //--- ground-only: never road-snap an aircraft (would fight the CAP / fly it into terrain)
 	};
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
