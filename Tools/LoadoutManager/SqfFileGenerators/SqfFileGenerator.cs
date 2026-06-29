@@ -414,6 +414,8 @@ case """ + vehicleName + @""":{
         {
             var terrainInstance = (InterfaceTerrain)EnumExtensions.GetInstance(terrainName.ToString());
             if (!terrainInstance.IsTerrainModded()) continue;
+            // Taviana Air War event: generate ONLY Tavi. Other modded stubs (Eden, Napf, ...) are incomplete/abandoned. Re-widen when restored.
+            if (terrainName.ToString() != "TAVI") continue;
 
             Console.WriteLine();
             terrainInstance.WriteAndUpdateTerrainFiles(_easaFileString, _commonBalanceFileString, _aircraftDisplayNameStrings, _addedAircraftDamageModelChanges, _coreModFile);

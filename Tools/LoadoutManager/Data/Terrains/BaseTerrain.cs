@@ -294,8 +294,9 @@ class CfgSounds
         // Check if the file exists
         if (!File.Exists(finalPathToEdit))
         {
-            // Log a message if the file was not found
-            Console.WriteLine("File not found!");
+            // Log and SKIP — do not fall through to ReadAllText (was crashing on incomplete modded stubs)
+            Console.WriteLine($"File not found, skipping edit: {finalPathToEdit}");
+            return;
         }
 
         // Read the content of the file
