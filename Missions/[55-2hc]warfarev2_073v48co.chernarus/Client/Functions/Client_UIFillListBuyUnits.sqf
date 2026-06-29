@@ -159,6 +159,11 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 	if (_x in WFBE_C_SUPPLY_HELI_TYPES) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.5, 0.25, 1.0]]
 	};
+	//--- Spotter infantry (claude-gaming): amber name + [SPOTTER] tag so the recon class reads as a support role, not a rifleman. Keyed on every selectable faction's spotter class (live Chernarus WEST=USMC -> USMC_SoldierS_Spotter, EAST=RU -> RU_Soldier_Spotter; US/CDF/TK cover the other faction options + the Takistan mirror). Matches the on-select explainer in GUI_Menu_BuyUnits.sqf.
+	if (_x in ["USMC_SoldierS_Spotter","RU_Soldier_Spotter","US_Soldier_Spotter_EP1","CDF_Soldier_Spotter","TK_Soldier_Spotter_EP1"]) then {
+		lnbSetColor [_listBox,[_i,1],[1.0, 0.8, 0.0, 1.0]];
+		lnbSetText  [_listBox,[_i,1],_description + " [SPOTTER - Recon]"];
+	};
 
 	//--- GUER VBIED suicide truck: red name + [VBIED] tag so it reads as a weapon, not a civ car. Keyed off live WFBE_C_GUER_VBIED_TYPE (hilux CH / datsun TK).
 	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
