@@ -134,8 +134,7 @@ public class SqfFileGenerator
         WriteAndUpdateToFilesForATerrain(easaFileStrings.vanilla, commonBalanceFileStrings.vanilla, aircraftDisplayNameStrings.vanilla, addedAircraftDamageModelChanges.vanilla, TerrainName.TAKISTAN);
 
         // Write to the modded maps
-        //WriteAndUpdateToFilesForModdedTerrains(easaFileStrings.modded, commonBalanceFileStrings.modded, aircraftDisplayNameStrings.modded, addedAircraftDamageModelChanges.modded, coreModFileStrings);
-        // TODO: Add the modded maps back here later
+        WriteAndUpdateToFilesForModdedTerrains(easaFileStrings.modded, commonBalanceFileStrings.modded, aircraftDisplayNameStrings.modded, addedAircraftDamageModelChanges.modded, coreModFileStrings);
 
         ZipManager.DoZipOperations();
     }

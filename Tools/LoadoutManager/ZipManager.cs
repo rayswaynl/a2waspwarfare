@@ -7,7 +7,7 @@ public class ZipManager
     public static void DoZipOperations()
     {
         string a2waspDirectory = FileManager.FindA2WaspWarfareDirectory().FullName;
-        string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions" 
+        string[] missionDirectories = { "Missions", "Missions_Vanilla", "Modded_Missions" }; 
         // Create this directory if it doesn't exist
         string tempDirectory = Path.Combine(a2waspDirectory, "TempZippingDirectory");
         if (!Directory.Exists(tempDirectory))
