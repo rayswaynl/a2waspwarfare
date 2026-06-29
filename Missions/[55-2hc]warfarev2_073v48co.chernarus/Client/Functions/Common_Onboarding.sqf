@@ -90,7 +90,8 @@ if (_isJip) then {
 _respawnNote = parseText (
 	"<t size='1.2' color='#28ff14'>If you go down...</t><br/><br/>"
 	+ "You respawn back at base (or a mobile respawn point) and keep playing - no permadeath. Re-buy / re-gear from the action menu and head back to the fight.<br/><br/>"
-	+ "<t color='#28ff14'>Good luck out there!</t>"
+	+ "<t color='#42b6ff'>Need help?</t> Ask in chat or join our Discord: <t color='#28ff14'>discord.me/warfare</t><br/><br/>"
+		+ "<t color='#28ff14'>Good luck out there!</t>"
 );
 hint _respawnNote;
 uiSleep 10;
