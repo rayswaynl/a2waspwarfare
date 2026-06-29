@@ -12,7 +12,7 @@
 
 scriptName "Client\FSM\updateaicommarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN","_reqSent","_reqTicks"];
+private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN","_reqSent","_reqTicks","_typeTag","_label","_ldr"];
 
 //--- B63 (Ray 2026-06-21): BOUNDED gate. The loop must wait for client init, but if a blocking
 //--- init waitUntil ever stalls, the old unbounded `waitUntil {clientInitComplete}` would suppress
@@ -81,7 +81,7 @@ while {true} do {
 	{
 		_unit = _x select 0;
 		_sid  = _x select 1;
-		_dir  = _x select 2;
+		//--- slot 2 (server-fed objective bearing) is no longer used for the arrow; heading is read LIVE from the leader (DIR FIX below).
 		_team = _x select 3;
 		//--- B66: ARROW-VANISH FIX. Key liveness on the TEAM, not on slot0 (the leader captured once
 		//--- at team-created and only refreshed server-side from B66 on). Test the team has a living
@@ -101,61 +101,101 @@ while {true} do {
 				};
 				_i = _i + 1;
 				_mk = Format["wfbe_aicommarker_%1", _i];
-				_pos = getPos (leader _team); //--- B66: draw at the team CURRENT leader (slot0 may be a dead/old leader)
+				_ldr = leader _team;
+				_pos = getPos _ldr; //--- B66: draw at the team CURRENT leader (slot0 may be a dead/old leader)
+				//--- DIR FIX (Game 2026-06-29): use the leader's LIVE heading (getDir), read client-side every tick
+				//--- like the working patrol-marker arrows (updatepatrolmarkers.sqf:38/66), NOT the server-fed slot-2
+				//--- OBJECTIVE BEARING (_x select 2). The objective bearing points straight at the target town, so on
+				//--- a road march (leader following a road bend) the arrow pointed at the town instead of where the team
+				//--- is actually moving/facing - "direction of movement not shown properly". getDir on the replicated
+				//--- leader is the true heading and is A2-OA-1.64-safe (no binary getDir).
+				_dir = getDir _ldr;
+				//--- TYPE TAG (Game 2026-06-29): classify the team by its heaviest hull and append a compact
+				//--- INF / LGHT / HVY / AIR tag so a player can read each commander team's role straight off the map.
+				//--- Derived from the LIVE composition (replicated isKindOf works on remote vehicles), so it is correct
+				//--- for HC-founded teams too (which skip the server-side wfbe_teamtype index path). Priority: any Air
+				//--- hull -> AIR; else any Tank (tracked armour/IFV) -> HVY; else any wheeled APC/Car -> LGHT; else INF.
+				_typeTag = "INF";
+				{
+					if (!isNull _x && {alive _x}) then {
+						private "_veh"; _veh = vehicle _x;
+						if (_veh != _x) then {
+							if (_veh isKindOf "Air") exitWith {_typeTag = "AIR"};
+							if (_veh isKindOf "Tank") then {if (_typeTag != "AIR") then {_typeTag = "HVY"}};
+							if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+						};
+					};
+				} forEach (units _team);
+				_label = Format ["HQ Team [%1]", _typeTag];
 				createMarkerLocal [_mk, _pos];
 				_mk setMarkerTypeLocal "mil_arrow2"; //--- matches the patrol / team arrows.
 				_mk setMarkerColorLocal _color;
 				_mk setMarkerSizeLocal [0.7,0.7];
-				_mk setMarkerTextLocal "HQ Team";
+				_mk setMarkerTextLocal _label;
 				_mk setMarkerDirLocal _dir;
-				//--- PERF4 - cache last pos/dir (slots 2/3) so the follow pass below skips no-op writes.
-				_tracked = _tracked + [[_team, _mk, _pos, _dir]];
+				//--- PERF4 - cache last pos/dir (slots 2/3) + the cached label (slot 4) so the follow pass skips no-op writes.
+				_tracked = _tracked + [[_team, _mk, _pos, _dir, _label]];
 			};
 		};
 	} forEach _list;
 
-	//--- Follow / drop. The entry's leader and dir are re-read from the public list each tick so the
-	//--- arrow tracks the server-fed objective bearing; drop when the team is gone from the list, null
-	//--- or its leader is dead.
+	//--- Follow / drop. The team is re-checked against the public list each tick (presence only);
+	//--- the arrow's POSITION and HEADING are read LIVE from the team's current leader (not the
+	//--- server-fed slot-2 objective bearing - see the DIR FIX note in the create pass). Drop when
+	//--- the team is gone from the list, null or its leader is dead.
 	_keep = [];
 	{
 		_team = _x select 0;
 		_mk   = _x select 1;
-		//--- Find this team's current entry in the public list.
+		//--- Find this team's current entry in the public list (presence test only).
 		_present = false;
-		_unit = objNull;
-		_dir  = 0;
 		{
-			if ((_x select 3) == _team) then {
-				_present = true;
-				_unit = _x select 0;
-				_dir  = _x select 2;
-			};
+			if ((_x select 3) == _team) then {_present = true};
 		} forEach _list;
 
-		//--- B66: ARROW-VANISH FIX. Key liveness on the TEAM (slot0 _unit is the server-fed leader,
-		//--- now refreshed on leader-swap from B66 on, but still test the team directly so a tick
+		//--- B66: ARROW-VANISH FIX. Key liveness on the TEAM (still test the team directly so a tick
 		//--- between leader-death and the next heading patch never drops the arrow). Draw at the
 		//--- team CURRENT leader.
 		if (_present && {!isNull _team} && {({alive _x} count units _team) > 0}) then {
-			//--- PERF4 - only re-write pos/dir when the team actually moved/turned. The header already
-			//--- promised "patched only when it moves >7 deg"; this makes the write match that intent and
-			//--- spares a stationary HQ team two setMarker* writes every ~8s for zero visible change.
-			_pos = getPos (leader _team); //--- B66: current leader, not the (possibly stale slot0) _unit
+			_entry = _x; _ldr = leader _team; //--- B66 + Game 2026-06-29: _entry captured because the units-forEach classifier below clobbers _x (A2-OA nested forEach does NOT restore it)
+			//--- PERF4 - only re-write pos/dir when the team actually moved/turned, sparing a stationary
+			//--- HQ team two setMarker* writes every ~8s for zero visible change.
+			_pos = getPos _ldr;
 			_lastPos = _x select 2;
 			if (isNil "_lastPos" || {(_pos distance _lastPos) > 3}) then {
 				_mk setMarkerPosLocal _pos;
 				_x set [2, _pos];
 			};
-			_lastDir = _x select 3; //--- arrow tracks the server-fed objective heading.
+			//--- DIR FIX (Game 2026-06-29): live leader heading, like the patrol arrows (see create pass note).
+			_dir = getDir _ldr;
+			_lastDir = _x select 3;
 			if (isNil "_lastDir") then {_lastDir = -999};
 			_dirDiff = abs (_dir - _lastDir);
 			if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};
-			if (_dirDiff > 7) then {
+			if (_lastDir < 0 || _dirDiff > 7) then { //--- _lastDir<0 forces the first write past the seed (mirrors team/patrol loops)
 				_mk setMarkerDirLocal _dir;
 				_x set [3, _dir];
 			};
-			_keep = _keep + [_x];
+			//--- TYPE TAG refresh: re-derive the INF/LGHT/HVY/AIR tag from the live composition and re-label
+			//--- only when it changed (cached in slot 4), so a team that loses its armour/air updates its tag
+			//--- without a per-tick setMarkerText. Same classifier + priority as the create pass.
+			_typeTag = "INF";
+			{
+				if (!isNull _x && {alive _x}) then {
+					private "_veh"; _veh = vehicle _x;
+					if (_veh != _x) then {
+						if (_veh isKindOf "Air") exitWith {_typeTag = "AIR"};
+						if (_veh isKindOf "Tank") then {if (_typeTag != "AIR") then {_typeTag = "HVY"}};
+						if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+					};
+				};
+			} forEach (units _team);
+			_label = Format ["HQ Team [%1]", _typeTag];
+			if (_label != (_entry select 4)) then {
+				_mk setMarkerTextLocal _label;
+				_entry set [4, _label];
+			};
+			_keep = _keep + [_entry];
 		} else {
 			deleteMarkerLocal _mk;
 		};
