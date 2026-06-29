@@ -3154,13 +3154,15 @@ class RscMenu_Economy {
 	};
 };
 
-//--- Help Menu
+//--- Help Menu (REDESIGN)
 class RscMenu_Help {
 	movingEnable = 1;
 	idd = 508000;
-	onLoad = "uiNamespace setVariable ['dialog_HelpPanel', _this select 0];['onLoad'] execVM 'Client\GUI\GUI_Menu_Help.sqf'";
-	onUnload = "uiNamespace setVariable ['cti_dialog_ui_onlinehelpmenu', nil]; ['onUnload'] call compile preprocessFileLineNumbers 'Client\GUI\GUI_Menu_Help.sqf'";
+	onLoad  = "uiNamespace setVariable ['dialog_HelpPanel', _this select 0];['onLoad'] execVM 'Client\GUI\GUI_Menu_Help.sqf'";
+	onUnload = "uiNamespace setVariable ['dialog_HelpPanel', nil];";
+
 	class controlsBackground {
+		//--- Full-panel backdrop
 		class WF_Background : RscText {
 			x = "SafeZoneX + (SafeZoneW * 0.1)";
 			y = "SafeZoneY + (SafezoneH * 0.105)";
@@ -3169,93 +3171,106 @@ class RscMenu_Help {
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
+		//--- Header strip (drag handle)
 		class WF_Background_Header : WF_Background {
-			x = "SafeZoneX + (SafeZoneW * 0.1)";
 			y = "SafeZoneY + (SafezoneH * 0.105)";
-			w = "SafeZoneW * 0.8";
-			h = "SafeZoneH * 0.05"; //0.06 stock
+			h = "SafeZoneH * 0.05";
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
-		class Footer: RscText {
+		//--- Footer strip
+		class Footer : RscText {
 			x = "SafeZoneX + (SafeZoneW * 0.1)";
 			y = 0.871195 * safezoneH + safezoneY;
 			w = "SafeZoneW * 0.8";
 			h = 0.034396 * safezoneH;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
-		class CTI_Menu_Title : RscText_Title {
-			style = ST_LEFT;
-			x = "SafeZoneX + (SafeZoneW * 0.12)";
-			y = "SafeZoneY + (SafezoneH * 0.11)";
-			w = "SafeZoneW * 0.78";
-			h = "SafeZoneH * 0.037";
-			text = "Warfare Information Panel";
-			sizeEx = "(			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
-		};
+		//--- Left section-list frame (slightly narrower than stock for a wider read pane)
 		class CTI_Menu_InfoListFrame : RscFrame {
 			x = "SafeZoneX + (SafeZoneW * 0.12)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.2";
+			w = "SafeZoneW * 0.19";
 			h = 0.676391 * safezoneH;
 		};
+		//--- Right content frame + translucent backing
 		class CTI_Menu_InfoResourcesFrame : RscFrame {
-			x = "SafeZoneX + (SafeZoneW * 0.34)";
+			x = "SafeZoneX + (SafeZoneW * 0.325)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.54";
+			w = "SafeZoneW * 0.555";
 			h = 0.676391 * safezoneH;
 		};
 		class CTI_Menu_Info_Background : RscText {
-			x = "SafeZoneX + (SafeZoneW * 0.34)";
+			x = "SafeZoneX + (SafeZoneW * 0.325)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.54";
+			w = "SafeZoneW * 0.555";
 			h = 0.676391 * safezoneH;
-			colorBackground[] = {0.5, 0.5, 0.5, 0.25};
+			colorBackground[] = {0.5, 0.5, 0.5, 0.20};
 		};
 	};
+
 	class controls {
+		//--- Dynamic title bar (rewritten per-section by the controller).
+		//    StructuredText (not RscText) so we can color/size the active page name.
+		class CTI_Menu_Title : RscStructuredText {
+			idc = 160003;
+			x = "SafeZoneX + (SafeZoneW * 0.12)";
+			y = "SafeZoneY + (SafezoneH * 0.112)";
+			w = "SafeZoneW * 0.76";
+			h = "SafeZoneH * 0.040";
+			size = "0.95 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
+			text = "";
+		};
+
+		//--- LEFT: section list
 		class CTI_Menu_Help_Topics : RscListBox {
 			idc = 160001;
-			
 			x = "SafeZoneX + (SafeZoneW * 0.12)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.2";
+			w = "SafeZoneW * 0.19";
 			h = 0.676389 * safezoneH;
-			
-			rowHeight = "1.5 * 			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25)";
-			sizeEx = "0.78 * 			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25)";
-			
-			colorText[] = {1,1,1,1};
-			colorBackground[] = {0,0,0,0};
+
+			rowHeight = "1.7 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25))";
+			sizeEx    = "0.82 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25))";
+
+			colorText[]       = {1, 1, 1, 1};
+			colorBackground[] = {0, 0, 0, 0};
 			onLBSelChanged = "['onHelpLBSelChanged', _this select 1] call compile preprocessFileLineNumbers 'Client\GUI\GUI_Menu_Help.sqf'";
 		};
-		
+
+		//--- RIGHT: scrollable content pane inside a controls group
 		class Menu_Help_ControlsGroup : RscControlsGroup {
-			x = "SafeZoneX + (SafeZoneW * 0.34)";
-			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.54";
-			h = 0.670389 * safezoneH;
-			
-			class controls {				
+			x = "SafeZoneX + (SafeZoneW * 0.335)";
+			y = "SafeZoneY + (SafezoneH * 0.185)";
+			w = "SafeZoneW * 0.535";
+			h = 0.656389 * safezoneH;
+
+			class controls {
 				class CTI_Menu_Help_Explanation : RscStructuredText {
-					
 					idc = 160002;
-					
 					x = "0";
 					y = "0";
-					w = "SafeZoneW * 0.53";
-					h = "SafeZoneH * 2.71";
-					
-					size = "0.85 * (			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
+					w = "SafeZoneW * 0.515";
+					h = "SafeZoneH * 2.71";  // tall so vertical scrollbar engages for long copy
+					size = "0.85 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
 				};
 			};
 		};
-		/* Separators */
+
+		//--- Back to the WF command menu (sibling-consistent).
+		class Back_Button : RscButton_Back {
+			x = 0.822374 * safezoneW + safezoneX;
+			y = 0.878751 * safezoneH + safezoneY;
+			tooltip = $STR_WF_TOOLTIP_BackButton;
+			onButtonClick = "closeDialog 0; createDialog 'WF_Menu';";
+		};
+
+		//--- Close.
 		class Exit_Button : RscButton_Exit {
 			x = 0.868374 * safezoneW + safezoneX;
 			y = 0.878751 * safezoneH + safezoneY;
-			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
-		};		
+			onButtonClick = "closeDialog 0;";
+		};
 	};
 };
 
