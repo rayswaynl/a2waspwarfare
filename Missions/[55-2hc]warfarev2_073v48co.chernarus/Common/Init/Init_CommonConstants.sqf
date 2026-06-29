@@ -262,7 +262,9 @@ with missionNamespace do {
 	WFBE_C_PLAYERS_AI_MAX_BY_TIER     = [16,14,12,10];        //--- per-player AI buy-cap (recruit cap; never deletes an existing squad)
 	WFBE_C_AICOM_INCOME_PC_BONUS_VALVE = 0.045; //--- B37: gentler low-pop income boost when the valve is on (vs 0.06), so more-squads does not over-bank.
 	WFBE_C_AICOM_INCOME_MULT_MAX = 4.0;        //--- B67 (Ray 2026-06-21): 3.0->4.0 - lift the town-cash multiplier ceiling so the low-pop inverted bonus is not clipped (keeps near-empty-server PvE well-funded). CASH only. hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
-	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 3}; //--- B66: 4->3 - bring air online a town sooner. Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
+	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 3};
+	if (isNil "WFBE_C_TOWNS_CAPTURE_AIR_HEIGHT") then {WFBE_C_TOWNS_CAPTURE_AIR_HEIGHT = 0}; //--- Taviana Air War: low-fly capture ceiling, m AGL (0=ground-only). Forced to 100 in the IS_air_war_event block.
+	if (isNil "WFBE_C_TOWNS_CAPTURE_AI_AIR") then {WFBE_C_TOWNS_CAPTURE_AI_AIR = 0}; //--- 0 = AI aircraft do NOT count toward capture //--- B66: 4->3 - bring air online a town sooner. Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
 	//--- B74.2 EMPTY-HELI FIX (Ray 2026-06-24, AH1Z piling at base): hard per-side cap on how many attack-heli
 	//--- (non-transport Helicopter) airframes the commander may have ALIVE at once. Once at/over the cap the
 	//--- founding path strips air templates from _eligible (it degrade-walks to a buildable ground class), so it

@@ -14,6 +14,18 @@
 		texts[] = {"Default (no override)", "Disabled", "Enabled"};
 		default = 0;
 	};
+	class WFBE_C_TOWNS_CAPTURE_AIR_HEIGHT {
+		title = "Air-capture height (m AGL, 0=off)";
+		values[] = {0,50,100,150};
+		texts[] = {"Off (ground only)","50 m","100 m","150 m"};
+		default = 0;
+	};
+	class WFBE_C_TOWNS_CAPTURE_AI_AIR {
+		title = "AI aircraft count toward capture";
+		values[] = {0,1};
+		texts[] = {"No","Yes"};
+		default = 0;
+	};
 	class WFBE_ICBM_TIME_TO_IMPACT {
 		title = "$STR_WF_PARAMETER_ICBM_IMPACT_TIME";
 		values[] = {1,5,10,15,20};

@@ -182,6 +182,10 @@ if (IS_air_war_event) then {
 	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_WEST", 50000];
 	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_EAST", 13370000];
 	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_WEST", 13370000];
+		//--- Taviana Air War features (forced with the event; reliable on dedicated where lobby params can be stale):
+		missionNamespace setVariable ["WFBE_C_TOWNS_CAPTURE_AIR_HEIGHT", 100]; //--- low-flying crewed aircraft (<=100m) drain town SV
+		missionNamespace setVariable ["WFBE_C_TOWNS_CAPTURE_AI_AIR", 0];       //--- AI aircraft never capture; camps still need ground
+		WFBE_C_AICOM_ASSAULT_REACH_FOOT = 4500;                                 //--- 2500->4500: foot teams can advance across the 25.6km Taviana map
 	missionNamespace setVariable ["WFBE_C_TOWNS_STARTING_MODE", 1];
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 };
