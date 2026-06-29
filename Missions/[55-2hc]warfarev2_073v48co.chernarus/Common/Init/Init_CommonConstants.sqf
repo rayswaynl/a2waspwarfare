@@ -441,6 +441,13 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_VETERAN_COOLDOWN")      then {WFBE_C_AICOM_VETERAN_COOLDOWN      = 900};     //--- s between veteran/premium-template founds per side (was unconditional => ~54% of teams). Throttles the spend spam + keeps team variety up.
 	if (isNil "WFBE_C_AICOM_WEALTH_CAP")            then {WFBE_C_AICOM_WEALTH_CAP            = 1500000}; //--- funds: above this, town income + stipend stop crediting the commander (anti-hoard; the side still has millions to spend, the number just stops ballooning to 18M).
 
+	//--- SERVER-AUTHORITY HARDENING (claude-gaming 2026-06-29): master switch for the flag-gated anti-forgery guards
+	//--- (PVF sender/membership validation, ICBM/attack-wave authority, economy ledger). 0 = INERT (every guard short-
+	//--- circuits = byte-equivalent legacy behaviour); 1 = ENFORCE (reject forged/abusive requests). Ships DEFAULT-OFF so
+	//--- it lands inert with the patch; flip to 1 to soak on the test box + confirm honest play before the public switch.
+	//--- Guards live under this flag in Server/PVFunctions/* + Server/Functions/* (DR-55/DR-27/DR-41/economy ledger).
+	if (isNil "WFBE_C_SEC_HARDENING")               then {WFBE_C_SEC_HARDENING               = 0};       //--- 1 = enforce anti-forgery guards; 0 = inert (dark). Default 0.
+
 	//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): in AI-vs-AI soak both commanders pin at WFBE_C_AICOM_WEALTH_CAP
 	//--- (~1.5M) with NOTHING to spend funds on - units cost funds but the 8-team hard cap blocks more teams, and tech/
 	//--- structures cost SUPPLY not funds. So a rich side hoards a meaningless number and rounds never resolve. When armed,
