@@ -335,13 +335,13 @@ if (isHostedServer || (!isHeadLessClient && !isDedicated)) then {
 	//--- black-fade clear never ran -> permanent black for every JIP joiner. Bounded uiSleep loops (real-time; they tick
 	//--- on the paused loading screen, unlike sleep/waitUntil/time) so the client init is ALWAYS reached.
 	private "_w"; _w = 0;
-	while {(isNil "WFBE_PRESENTSIDES") && (_w < 80)} do { uiSleep 0.25; _w = _w + 1; };
+	while {(isNil "WFBE_PRESENTSIDES") && (_w < 40)} do { uiSleep 0.25; _w = _w + 1; }; //--- 2026-06-29 JIP slow-load cut: was 80 (20s). The EARLYHEAL poller (Init_Client:607, ungated) backfills wfbe_teams async, so only an opportunistic grab is needed here.
 	if (!isNil "WFBE_PRESENTSIDES") then {
 		{
 			private ["_logik","_ws"];
 			_logik = (_x) Call WFBE_CO_FNC_GetSideLogic;
 			_ws = 0;
-			while {(isNil {_logik getVariable "wfbe_teams"}) && (_ws < 120)} do { uiSleep 0.25; _ws = _ws + 1; };
+			while {(isNil {_logik getVariable "wfbe_teams"}) && (_ws < 20)} do { uiSleep 0.25; _ws = _ws + 1; }; //--- 2026-06-29 JIP slow-load cut: was 120 (30s/side -> ~60s for WEST+EAST). Opportunistic only; EARLYHEAL backfills.
 			if (!isNil {_logik getVariable "wfbe_teams"}) then {
 				missionNamespace setVariable [Format["WFBE_%1TEAMS",_x], _logik getVariable "wfbe_teams"];
 			} else {
