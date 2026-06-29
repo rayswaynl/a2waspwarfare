@@ -296,6 +296,7 @@ class CfgSounds
         {
             // Log a message if the file was not found
             Console.WriteLine("File not found!");
+            return;
         }
 
         // Read the content of the file

@@ -134,8 +134,7 @@ public class SqfFileGenerator
         WriteAndUpdateToFilesForATerrain(easaFileStrings.vanilla, commonBalanceFileStrings.vanilla, aircraftDisplayNameStrings.vanilla, addedAircraftDamageModelChanges.vanilla, TerrainName.TAKISTAN);
 
         // Write to the modded maps
-        //WriteAndUpdateToFilesForModdedTerrains(easaFileStrings.modded, commonBalanceFileStrings.modded, aircraftDisplayNameStrings.modded, addedAircraftDamageModelChanges.modded, coreModFileStrings);
-        // TODO: Add the modded maps back here later
+        WriteAndUpdateToFilesForModdedTerrains(easaFileStrings.modded, commonBalanceFileStrings.modded, aircraftDisplayNameStrings.modded, addedAircraftDamageModelChanges.modded, coreModFileStrings);
 
         ZipManager.DoZipOperations();
     }
@@ -415,6 +414,7 @@ case """ + vehicleName + @""":{
         {
             var terrainInstance = (InterfaceTerrain)EnumExtensions.GetInstance(terrainName.ToString());
             if (!terrainInstance.IsTerrainModded()) continue;
+            if (terrainName.ToString() != "NAPF") continue;
 
             Console.WriteLine();
             terrainInstance.WriteAndUpdateTerrainFiles(_easaFileString, _commonBalanceFileString, _aircraftDisplayNameStrings, _addedAircraftDamageModelChanges, _coreModFile);
