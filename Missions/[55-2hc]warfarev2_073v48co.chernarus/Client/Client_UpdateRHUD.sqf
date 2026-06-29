@@ -446,7 +446,28 @@ while {true} do {
 			// Marty: Town/economy aggregates walk the towns array, so refresh them less often than volatile HUD values.
 			if (time - _lastTownRefresh > 3) then {
 				_incomeText = Format ["+ %1 $",sideJoined Call GetIncome];
-				_supplyText = Format ["%1",(sideJoined) Call GetSideSupply];
+				//--- SV income on the Supply row (claude-gaming 2026-06-29): show the per-tick SUPPLY credit beside the
+				//--- banked total, mirroring how the Money row already shows funds + per-tick income. The server credits
+				//--- round(townSupply * SUPPLY_INCOME_MULT) to the whole side each income tick (Server\FSM\updateresources.sqf
+				//--- :96), gated while townSupply < the income-gate limit. Recomputed client-side from the same towns array
+				//--- (GetTownsSupply sums owned-town supplyValue) - no server round-trip, no new publicVariable. resistance/GUER
+				//--- has no supply economy so it shows no "+SV". Rendered as "<banked>  +<rate>" (e.g. "1850  +120").
+				private ["_svBanked","_svTownInc","_svRate","_svGate"];
+				_svBanked = (sideJoined) Call GetSideSupply;
+				_svRate = 0;
+				if (sideJoined in [west, east]) then {
+					_svTownInc = (sideJoined) Call WFBE_CO_FNC_GetTownsSupply;
+					_svGate = missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT", 50000];
+					//--- mirror the server income gate: it credits supply only while town-income < the gate limit.
+					if (_svTownInc < _svGate) then {
+						_svRate = round (_svTownInc * (missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_INCOME_MULT", 1]));
+					};
+				};
+				if (_svRate > 0) then {
+					_supplyText = Format ["%1  +%2", _svBanked, _svRate];
+				} else {
+					_supplyText = Format ["%1", _svBanked];
+				};
 				_baseStructures = sideJoined Call WFBE_CO_FNC_GetSideStructures;
 				if (isNil "_baseStructures") then {_baseStructures = []};
 				if (typeName _baseStructures != "ARRAY") then {_baseStructures = []};
