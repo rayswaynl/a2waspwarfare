@@ -39,6 +39,7 @@ _l = _l + ["ChangeScore"];
 _l = _l + ["HandleSpecial"];
 _l = _l + ["HandleParatrooperMarkerCreation"];
 _l = _l + ["LocalizeMessage"];
+_l = _l + ["WildcardMarker"]; //--- wildcard map markers: side-restricted local marker create/delete (Client\PVFunctions\WildcardMarker.sqf).
 _l = _l + ["SetTask"];
 _l = _l + ["SetVehicleLock"];
 _l = _l + ["TownCaptured"];
