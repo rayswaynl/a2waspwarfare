@@ -1360,4 +1360,10 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
 
+//--- New-player onboarding cards (claude-gaming 2026-06-29). Once-per-session, skippable structuredText
+//--- hint sequence (what WASP is + win goal + 3 core actions + scroll-menu + JIP cue + respawn legend).
+//--- Self-gates on WFBE_C_ONBOARDING_ENABLE (default 1) and a uiNamespace once-flag inside the function;
+//--- detects JIP from mission time. Spawned (never blocks input/enrollment), placed after init completes.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Common_Onboarding.sqf";
+
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
