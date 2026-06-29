@@ -32,6 +32,8 @@ Server_ConstructPosition = Compile preprocessFile "Server\Functions\Server_Const
 GetAICommanderFunds = Compile preprocessFile "Server\Functions\Server_GetAICommanderFunds.sqf";
 //--- B74.2 (Ray 2026-06-24, directive #5): AI-commander structure-sell / recycle worker (dark by default, see WFBE_C_AICOM_BASE_SELL_ENABLE).
 WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BaseSell.sqf";
+//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): drain a rich AICOM hoard into offense (dark by default, see WFBE_C_AICOM_FUNDS_SINK_ENABLE). Called from updateresources.sqf on the income cadence.
+WFBE_SE_FNC_AI_Com_FundsSink = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_FundsSink.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
 HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";

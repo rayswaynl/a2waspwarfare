@@ -13,6 +13,31 @@ while {!gameOver} do {
 	//--- (no supremacy win, no HQ-loss win). Supremacy/HQ-loss detection now runs UNCONDITIONALLY; the
 	//--- _victory param no longer gates it. We deliberately add NO new victory MODES here (Ray: no new
 	//--- modes) - this only stops the trap so the standard supremacy condition always works.
+	//--- ENDGAME SOFT-FORCING (claude-gaming 2026-06-29, SYSTEM 2): after WFBE_C_ENDGAME_FORCE_TIMER minutes of an
+	//--- unresolved round, publish an escalating GLOBAL income taper multiplier (WFBE_ENDGAME_FORCE_MULT, 1.0 -> FLOOR)
+	//--- that updateresources.sqf applies to AICOM town income, so turtling becomes unsustainable and a side must commit.
+	//--- No sim/distance-gating, no freeze/teleport, no antistack touch (Ray hard constraints) - purely an economic squeeze.
+	//--- DEFAULT-OFF (WFBE_C_ENDGAME_FORCE_ENABLE=0 -> publish a neutral 1.0 so the consumer is a no-op when dark). The
+	//--- round is "unresolved" simply because we are still in this !gameOver loop; mission 'time' is the elapsed clock.
+	if ((missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_ENABLE", 0]) > 0) then {
+		private ["_forceStartS","_overMin","_step","_floor","_mult","_prevMult"];
+		_forceStartS = (missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TIMER", 90]) * 60;
+		_overMin = ((time - _forceStartS) / 60) max 0;   //--- minutes elapsed PAST the force timer (0 before it)
+		_step  = missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TAPER_STEP", 0.04];
+		_floor = missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TAPER_FLOOR", 0.10];
+		_mult = (1 - (_overMin * _step)) max _floor;     //--- 1.0 until the timer, then escalating shrink down to FLOOR
+		_prevMult = missionNamespace getVariable ["WFBE_ENDGAME_FORCE_MULT", 1];
+		missionNamespace setVariable ["WFBE_ENDGAME_FORCE_MULT", _mult];
+		//--- one-line INFORMATION the first tick the squeeze actually starts biting (mult drops below 1), for soak proof.
+		if (_overMin > 0 && {_prevMult >= 1} && {_mult < 1}) then {
+			["INFORMATION", Format ["server_victory_threeway.sqf: ENDGAME SOFT-FORCE engaged at %1 min (past %2-min timer) - global income taper begins (mult now %3, floor %4).", round (time / 60), missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TIMER", 90], _mult, _floor]] Call WFBE_CO_FNC_LogContent;
+			diag_log ("AICOMSTAT|v1|EVENT|ALL|" + str (round (time / 60)) + "|ENDGAME_FORCE|mult" + str _mult);
+		};
+	} else {
+		//--- Dark: keep the consumer a strict no-op (neutral multiplier).
+		missionNamespace setVariable ["WFBE_ENDGAME_FORCE_MULT", 1];
+	};
+
 	if (!gameOver) then {
 		{
 			_side = _x;

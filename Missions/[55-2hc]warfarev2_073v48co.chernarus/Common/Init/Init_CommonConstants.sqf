@@ -441,6 +441,30 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_VETERAN_COOLDOWN")      then {WFBE_C_AICOM_VETERAN_COOLDOWN      = 900};     //--- s between veteran/premium-template founds per side (was unconditional => ~54% of teams). Throttles the spend spam + keeps team variety up.
 	if (isNil "WFBE_C_AICOM_WEALTH_CAP")            then {WFBE_C_AICOM_WEALTH_CAP            = 1500000}; //--- funds: above this, town income + stipend stop crediting the commander (anti-hoard; the side still has millions to spend, the number just stops ballooning to 18M).
 
+	//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): in AI-vs-AI soak both commanders pin at WFBE_C_AICOM_WEALTH_CAP
+	//--- (~1.5M) with NOTHING to spend funds on - units cost funds but the 8-team hard cap blocks more teams, and tech/
+	//--- structures cost SUPPLY not funds. So a rich side hoards a meaningless number and rounds never resolve. When armed,
+	//--- AI_Commander_FundsSink.sqf (hooked from updateresources.sqf on the income cadence) drains a hoard over THRESHOLD
+	//--- into OFFENSE: doubles the Produce batch cap (heavier/fuller existing teams = a heavy push at the spearhead) +
+	//--- arms a cooldown-respected veteran/premium founding, and debits a discounted one-off chunk so money converts to
+	//--- pressure. Ships DEFAULT-OFF (dark) so Ray can enable + tune in soak. Rationale: convert hoard -> meaningful pressure.
+	if (isNil "WFBE_C_AICOM_FUNDS_SINK_ENABLE")     then {WFBE_C_AICOM_FUNDS_SINK_ENABLE     = 0};       //--- 1 = arm the funds-sink worker; 0 = inert (worker early-exits). Default 0 (dark).
+	if (isNil "WFBE_C_AICOM_FUNDS_SINK_THRESHOLD")  then {WFBE_C_AICOM_FUNDS_SINK_THRESHOLD  = 1000000}; //--- funds: only drain a commander's hoard ABOVE this (well under the 1.5M WEALTH_CAP, so the drip bites before the cap pins it).
+	if (isNil "WFBE_C_AICOM_FUNDS_SINK_DRAIN_PCT")  then {WFBE_C_AICOM_FUNDS_SINK_DRAIN_PCT  = 0.25};    //--- per-tick discounted drain = this fraction of the OVER-THRESHOLD surplus (0.25 = bleed a quarter of the excess each ~60s income tick).
+	if (isNil "WFBE_C_AICOM_FUNDS_SINK_DRAIN_MAX")  then {WFBE_C_AICOM_FUNDS_SINK_DRAIN_MAX  = 120000};  //--- hard ceiling on a single tick's drain so a huge hoard bleeds steadily into push waves, never a one-shot dump.
+
+	//--- ENDGAME SOFT-FORCING (claude-gaming 2026-06-29, SYSTEM 2): after WFBE_C_ENDGAME_FORCE_TIMER minutes of an
+	//--- unresolved round, apply an ESCALATING global economic taper (gradual income shrink) so turtling becomes
+	//--- unsustainable and a side must commit to a confrontation - WITHOUT sim/distance-gating, freezing, teleporting,
+	//--- or touching antistack (Ray hard constraints). The timer is checked in server_victory_threeway.sqf (already on a
+	//--- cadence); the taper multiplier it publishes is applied to AICOM town income in updateresources.sqf. Ships
+	//--- DEFAULT-OFF. Rationale: a 5-6h marathon had breakthroughs but no round-end because each side refills faster than
+	//--- the other can close; a shrinking economic base forces the issue. Mechanism is Ray's morning pick (see openQuestions).
+	if (isNil "WFBE_C_ENDGAME_FORCE_ENABLE")        then {WFBE_C_ENDGAME_FORCE_ENABLE        = 0};       //--- 1 = arm the soft-forcing taper; 0 = inert. Default 0 (dark).
+	if (isNil "WFBE_C_ENDGAME_FORCE_TIMER")         then {WFBE_C_ENDGAME_FORCE_TIMER         = 90};      //--- minutes of UNRESOLVED round before the taper begins escalating (mission 'time' based).
+	if (isNil "WFBE_C_ENDGAME_FORCE_TAPER_STEP")    then {WFBE_C_ENDGAME_FORCE_TAPER_STEP    = 0.04};    //--- per-MINUTE income reduction once the timer passes (0.04 = lose 4%/min of the global income multiplier, escalating).
+	if (isNil "WFBE_C_ENDGAME_FORCE_TAPER_FLOOR")   then {WFBE_C_ENDGAME_FORCE_TAPER_FLOOR   = 0.10};    //--- the income multiplier never tapers below this fraction (0.10 = a starved 10% trickle so the war never freezes outright).
+
 	//=== AI COMMANDER v2 (REBUILD, branch claude/aicom-v2-rebuild) =====================================
 	//--- Layout constants for the world-model SNAPSHOT array (AI_Commander_Snapshot.sqf -> side-logic
 	//--- var wfbe_aicom2_snap), read by the v2 stance machine + objective allocator + closer. Fixed
