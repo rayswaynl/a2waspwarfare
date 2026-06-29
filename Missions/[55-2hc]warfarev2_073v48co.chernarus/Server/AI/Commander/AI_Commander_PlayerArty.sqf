@@ -59,6 +59,10 @@ if (_ownNear == 0) then {
 			if (_idx >= 0) then {
 				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
 				if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) && {(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
+					//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
+					//--- load a situational round chosen ONLY from the types the side has researched (helper gates on
+					//--- WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE, unchanged.
+					[_p, _side, _idx, _artyTgt] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
 					[_p, _artyTgt, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
 					_fired = true;
 					["INFORMATION", Format ["AI_Commander_PlayerArty.sqf: [%1] PLAYER FIRE MISSION [%2] at %3.", _sideText, typeOf _p, _artyTgt]] Call WFBE_CO_FNC_AICOMLog;

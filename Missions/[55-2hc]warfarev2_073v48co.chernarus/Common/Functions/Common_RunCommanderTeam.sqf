@@ -1282,6 +1282,10 @@ while {!WFBE_GameOver && _alive} do {
 					//--- assaulting (the normal case) so the gun almost never fired. Shrink to ~80m around the actual aim point.
 					{ if (alive _x && {side _x == _side} && {(_x distance _tgtP) < 80}) exitWith {_ffClear = false} } forEach (nearestObjects [_tgtP, ["Man","Car","Tank","Air"], 80]);
 					if (_ffClear) then {
+						//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
+						//--- pick + load a situational round (illum at night, cluster vs armour) from ONLY the types the side has
+						//--- researched (the helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
+						[_artyHull, _side, _idx2, _tgtP] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
 						[_artyHull, _tgtP, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
 						_artyHull setVariable ["wfbe_aicom_arty_last", time];
 						diag_log ("AICOMSTAT|v1|EVENT|" + _artyText + "|" + str (round (time / 60)) + "|FIRE_MISSION_MOBILE|" + (typeOf _artyHull) + "|tier=" + str _upLvl);
