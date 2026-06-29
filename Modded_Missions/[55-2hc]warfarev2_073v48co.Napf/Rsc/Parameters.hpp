@@ -1,6 +1,13 @@
 /* Parameters */
 
-class Params {
+	class Params {
+	//--- Supply-helicopter feature toggle: shelve the heli feature from the lobby (default Enabled).
+	class WFBE_C_SUPPLY_HELI_ENABLED {
+		title = "Supply Helicopters";
+		values[] = {0,1};
+		texts[] = {"Disabled","Enabled"};
+		default = 1;
+	};
 	class WFBE_AIR_EVENT_ENABLED {
 		title = "$STR_WF_PARAMETER_AIR_EVENT_ENABLED";
 		values[] = {0,1,2};
@@ -13,11 +20,17 @@ class Params {
 		texts[] = {"1 minute", "5 minutes", "10 minutes", "15 minutes", "20 minutes"};
 		default = 5;
 	};
+	class WFBE_RADZONE_TIME {
+		title = "$STR_WF_PARAMETER_RADZONE_TIME";
+		values[] = {1,5,10,15,20};
+		texts[] = {"1 minute", "5 minutes", "10 minutes", "15 minutes", "20 minutes"};
+		default = 10;
+	};
 	class WFBE_C_AFK_TIME {
 		title = "$STR_WF_PARAMETER_AFK_Time";
 		values[] = {1,5,10,15,20,30};
 		texts[] = {"1 minute", "5 minutes","10 minutes", "15 minutes", "20 minutes", "30 minutes"};
-		default = 10;
+		default = 15;
 	};
 	class WFBE_C_AI_DELEGATION {
 		title = "$STR_WF_PARAMETER_AI_Delegation";
@@ -65,7 +78,13 @@ class Params {
 		title = "$STR_WF_PARAMETER_AICommander";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};//{"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- feat/ai-commander: default-ON (admins can still disable in the lobby).
+	};
+	class WFBE_C_AI_COMMANDER_LEVEL {
+		title = "AI Commander difficulty";
+		values[] = {0,1,2};
+		texts[] = {"Easy","Normal","Hard"};
+		default = 1; //--- V0.5: tunes the AI's synthetic MONEY only - supply stays real on every level.
 	};
 	class WFBE_C_STRUCTURES_ANTIAIRRADAR {
 		title = "$STR_WF_PARAMETER_AntiAirRadar";
@@ -147,15 +166,15 @@ class Params {
 	};
 	class WFBE_C_ECONOMY_SUPPLY_START_EAST {
 		title = "$STR_WF_PARAMETER_Supply_East";
-		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,19200,38400,76800};
-		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 19200","S 38400","S 76800"};
-		default = 6000;
+		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,12800,16000,19200,38400,76800};
+		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 12800","S 16000","S 19200","S 38400","S 76800"};
+		default = 9600;
 	};
 	class WFBE_C_ECONOMY_SUPPLY_START_WEST {
 		title = "$STR_WF_PARAMETER_Supply_West";
-		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,19200,38400,76800};
-		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 19200","S 38400","S 76800"};
-		default = 6000;
+		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,12800,16000,19200,38400,76800};
+		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 12800","S 16000","S 19200","S 38400","S 76800"};
+		default = 9600;
 	};
 
 	class WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT {
@@ -170,7 +189,7 @@ class Params {
 		values[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
 		texts[] = {"00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00",
 		"12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"};
-		default = 9;
+		default = 8;
 	};
 	class WFBE_C_ENVIRONMENT_STARTING_MONTH {
 		title = "$STR_WF_PARAMETER_Month";
@@ -178,10 +197,11 @@ class Params {
 		texts[] = {"January","February","March","April","May","June","July","August","September","October","November","December"};
 		default = 6;
 	};
+	// Marty: Volumetric clouds are disabled globally because the BIS cloud system can cost FPS and stutter with skipTime.
 	class WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC {
 		title = "$STR_WF_PARAMETER_Clouds";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		values[] = {0};
+		texts[] = {"$STR_WF_Disabled"};
 		default = 0;
 	};
 	class WFBE_C_ENVIRONMENT_WEATHER {
@@ -214,19 +234,19 @@ class Params {
 		title = "$STR_WF_PARAMETER_BodiesTimeout";
 		values[] = {60,120,180,240,300,600,900,1200,1800,2400,3000,3600};
 		texts[] = {"1 Minute","2 Minutes","3 Minutes","4 Minutes","5 Minutes","10 Minutes","15 Minutes","20 Minutes","30 Minutes","40 Minutes","50 Minutes","1 Hour"};
-		default = 240;
+		default = 120; //--- B35: was 240; lobby wreck-timeout default lowered to match the restored TrashObject split (~120s effective). Operators can still raise it.
 	};
 	class WFBE_C_UNITS_EMPTY_TIMEOUT {
 		title = "$STR_WF_PARAMETER_VehicleDelay";
 		values[] = {60,120,180,240,300,600,900,1200,1800,2400,3000,3600};
 		texts[] = {"1 Minute","2 Minutes","3 Minutes","4 Minutes","5 Minutes","10 Minutes","15 Minutes","20 Minutes","30 Minutes","40 Minutes","50 Minutes","1 Hour"};
-		default = 600;
+		default = 300; //--- claude-gaming 2026-06-13: 10min->5min. Despawn abandoned empty AI vehicles faster to trim the ~161-vehicle count (network/sim load); supply/medevac trucks stay exempt at 2x. Reversible.
 	};
 	class WFBE_C_GAMEPLAY_FAST_TRAVEL {
 		title = "$STR_WF_PARAMETER_FastTravel";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Free","$STR_WF_PARAMETER_Fee"};
-		default = 0;
+		default = 2; //--- B66 trial: 0->2 (Fee).
 	};
 	class WFBE_C_GAMEPLAY_HANDLE_FRIENDLYFIRE {
 		title = "$STR_WF_PARAMETER_FriendlyFire";
@@ -300,6 +320,13 @@ class Params {
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
+	// Marty: Disable combat marker blinking by default so the feature has no Fired EHs or client scan loop unless admins opt in.
+	class WFBE_C_MAP_ICON_BLINKING_ENABLED {
+		title = "$STR_WF_PARAMETER_MapIconBlinking";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1; //--- B66 trial: 0->1 (combat-marker blinking on for this round).
+	};
 	class WFBE_C_UNITS_BALANCING {
 		title = "$STR_WF_PARAMETER_Balance";
 		values[] = {0,1};
@@ -312,12 +339,6 @@ class Params {
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
-	/* class WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE {
-		title = "$STR_WF_PARAMETER_Upgrades";
-		values[] = {0,1,2,3,4,5,6,7};
-		texts[] = {"$STR_WF_Disabled","West","East","Resistance","West + East","West + Resistance","East + Resistance","All"};
-		default = 0;
-	}; */
 	class WFBE_C_GAMEPLAY_VICTORY_CONDITION {
 		title = "$STR_WF_PARAMETER_VictoryCondition";
 		values[] = {0,1,2,3};
@@ -336,18 +357,19 @@ class Params {
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Enabled_Upgrade","$STR_WF_Enabled"};
 		default = 2;
 		};
+	class WFBE_C_MODULE_AUTO_CM_OA {
+		title = "$STR_WF_PARAMETER_AutoCM_OA";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
 	class WFBE_C_MODULE_WFBE_EASA {
 		title = "$STR_WF_PARAMETER_EASA";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
-	class WFBE_C_MODULE_BIS_HC {
-		title = "$STR_WF_PARAMETER_HighCommand";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
-	};
+	//--- B67 [dead-param-strings]: removed dead class WFBE_C_MODULE_BIS_HC (no runtime reader; HC delegation runs off WFBE_C_AI_DELEGATION). Lobby toggle did nothing.
 	class WFBE_C_MODULE_WFBE_ICBM {
 		title = "$STR_WF_PARAMETER_ICBM";
 		values[] = {0,1};
@@ -381,12 +403,6 @@ class Params {
 	};
 	class WFBE_C_RESPAWN_LEADER {
 		title = "$STR_WF_PARAMETER_LeaderRespawn";
-		values[] = {0,1,2};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled","$STR_WF_Enabled_DefaultGear"};
-		default = 0;
-	};
-	class WFBE_C_RESPAWN_MASH {
-		title = "$STR_WF_PARAMETER_Respawn_MASH";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled","$STR_WF_Enabled_DefaultGear"};
 		default = 0;
@@ -449,7 +465,7 @@ class Params {
 		title = "$STR_WF_PARAMETER_MaxResPatrols";
 		values[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,32,34,36,38,40,50,60,70,80,90,100};
 		texts[] = {"$STR_WF_Disabled","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","22","24","26","28","30","32","34","36","38","40","50","60","70","80","90","100"};
-		default = 0;
+		default = 6;   //--- Town patrols ON by default (up to 6 towns); DR-57 fix makes them work. Set 0 in the lobby to disable, or raise the count. Each patrol is a roaming AI group — main perf lever.
 	};
 	class WFBE_C_TOWNS_BUILD_PROTECTION_RANGE {
 		title = "$STR_WF_PARAMETER_TownProtectionRange";
@@ -505,6 +521,47 @@ class Params {
 		values[] = {1800,3600,5400,7200};
 		texts[] = {"30 Minutes","1 Hour","90 Minutes","2 Hours"};
 		default = 1800;
+	};
+
+	// Marty: Controlled ON/OFF switch for AntiStack performance comparison runs; default keeps current behavior.
+	class WFBE_C_ANTISTACK_ENABLED {
+		title = "AntiStack";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+
+	class WFBE_C_PERFORMANCE_AUDIT_ENABLED {
+		title = "Performance audit";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		// Marty: Keep the audit opt-in while the client commander/AFK regressions are being stabilized.
+		default = 1; //--- B66 trial: 0->1 (measurement window for this round).
+	};
+
+	// 2026-06-15 (Net_2 request): per-client FPS telemetry for the staged-deploy day/night perf study.
+	// When ON, each player client periodically reports its avg/min FPS to the server, which logs each
+	// sample tagged with the day/night cycle mode + in-game time so day-vs-night and cycle ON-vs-OFF
+	// can be compared from the RPT. Off by default; flip it in the admin lobby for the data-gathering run.
+	class WFBE_C_CLIENT_FPS_REPORT {
+		title = "Client FPS telemetry";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_CLIENT_FPS_REPORT_INTERVAL {
+		title = "Client FPS telemetry interval";
+		values[] = {15,30,60,120,300};
+		texts[] = {"15 Seconds","30 Seconds","60 Seconds","2 Minutes","5 Minutes"};
+		default = 60;
+	};
+
+	// GUER "Insurgents" playable faction (harass-only 3rd side). OFF = no GUER slots; mission plays exactly as today.
+	class WFBE_C_GUER_PLAYERSIDE {
+		title = "GUER Insurgents (playable faction)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
 	};
 
 };

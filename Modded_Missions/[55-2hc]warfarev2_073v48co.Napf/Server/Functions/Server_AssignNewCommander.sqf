@@ -1,6 +1,7 @@
 Private ["_logic", "_side", "_commander"];
 
-_side = _this;
+// Marty: The direct commander assignment receives [side, commanderTeam]; keep the side scalar for GetSideLogic and client broadcasts.
+_side = _this select 0;
 _commander = _this select 1;
 _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 

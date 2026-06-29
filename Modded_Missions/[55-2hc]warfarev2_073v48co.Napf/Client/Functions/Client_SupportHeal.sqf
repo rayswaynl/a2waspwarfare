@@ -15,7 +15,7 @@ _nearIsSP = false;
 _nearIsDP = false;
 _nearIsRT = false;
 {
-	if ((typeOf _x) == _spType) then {_nearIsSP = true};
+	if ((typeOf _x) == _spType || {_x isKindOf "Base_WarfareBVehicleServicePoint"}) then {_nearIsSP = true};
 	if ((typeOf _x) == WFBE_Logic_Depot) then {_nearIsDP = true};
 	if ((typeOf _x) in _typeRepair) then {_nearIsRT = true};
 } forEach _supports;
@@ -49,6 +49,7 @@ if (_veh isKindOf 'Air') then {_healTime = round(_healTime * (_airCoef + getDamm
 if (_veh isKindOf 'StaticWeapon') then {_healTime = round(_healTime * (_artCoef + getDammage _veh))};
 if (_veh isKindOf 'Tank') then {_healTime = round(_healTime * (_heaCoef + getDammage _veh))};
 if (_veh isKindOf 'Car' || _veh isKindOf 'Motorcycle') then {_healTime = round(_healTime * (_ligCoef + getDammage _veh))};
+if (_veh isKindOf 'Ship') then {_healTime = round(_healTime * (_ligCoef + getDammage _veh))}; //--- wiki-wins: boats fell through all isKindOf branches (flat base time); scale them like light vehicles
 
 //--- Inform the player.
 hint parseText(Format[localize "STR_WF_INFO_Healing",_name,_healTime]);

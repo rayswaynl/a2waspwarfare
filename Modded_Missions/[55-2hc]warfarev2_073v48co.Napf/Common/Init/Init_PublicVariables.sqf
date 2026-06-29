@@ -7,10 +7,12 @@ scriptName "Common\Init\Init_PublicVariables.sqf";
 Private ['_clientCommandPV','_l','_serverCommandPV'];
 
 _l		= ["RequestVehicleLock"];
+_l = _l + ["RequestOnUnitKilled"];
 _l = _l + ["RequestChangeScore"];
 _l = _l + ["RequestCommanderVote"];
 _l = _l + ["RequestNewCommander"];
 _l = _l + ["RequestStructure"];
+_l = _l + ["RequestFOBStructure"]; //--- B75 (guer-tech): GUER FOB field-factory build (Server\PVFunctions\RequestFOBStructure.sqf).
 _l = _l + ["RequestDefense"];
 _l = _l + ["RequestJoin"];
 _l = _l + ["RequestMHQRepair"];
@@ -18,6 +20,12 @@ _l = _l + ["RequestSpecial"];
 _l = _l + ["RequestTeamUpdate"];
 _l = _l + ["RequestUpgrade"];
 _l = _l + ["RequestAutoWallConstructinChange"];
+_l = _l + ["RequestEnqueue"];
+_l = _l + ["RequestDequeue"];
+_l = _l + ["CounterBatteryFired"];
+_l = _l + ["RequestSiteClearance"];
+_l = _l + ["RequestAIComDonate"];
+_l = _l + ["HCStat"];
 
 _serverCommandPV = _l;
 
@@ -26,7 +34,9 @@ _l = _l + ["AwardBounty"];
 _l = _l + ["AwardBountyPlayer"];
 _l = _l + ["CampCaptured"];
 _l = _l + ["ChangeScore"];
+//_l = _l + ["DatabaseDebug"];
 _l = _l + ["HandleSpecial"];
+_l = _l + ["HandleParatrooperMarkerCreation"];
 _l = _l + ["LocalizeMessage"];
 _l = _l + ["SetTask"];
 _l = _l + ["SetVehicleLock"];
@@ -34,7 +44,11 @@ _l = _l + ["TownCaptured"];
 _l = _l + ["SetMHQLock"];
 _l = _l + ["Available"];
 _l = _l + ["RequestBaseArea"];
-_l = _l + ["HandleParatrooperMarkerCreation"];
+_l = _l + ["NukeIncoming"];
+_l = _l + ["CounterBatteryContact"];
+_l = _l + ["BankPayout"];
+_l = _l + ["RestartAnnounce"];
+_l = _l + ["DashboardAnnounce"];
 
 _clientCommandPV = _l;
 

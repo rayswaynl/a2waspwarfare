@@ -40,10 +40,15 @@ _tie = false;
 _commander = objNull;
 
 //--- Attempt to get a playable team.
-if ((!_tie && _highest >= _aiVotes && _highestTeam != -1) || (!_tie && _highest <= _aiVotes && _highestTeam != -1)) then {_commander = _teams select _highestTeam};
+if (!_tie && _highest >= _aiVotes && _highestTeam != -1) then {_commander = _teams select _highestTeam}; //--- player team wins only if its top votes >= AI/abstain votes (was a tautology: `>= || <=` is always true)
 
 //--- Player voted for an ai...?
 if !(isNull _commander) then {if !(isPlayer leader _commander) then {_commander = objNull}};
+
+//--- AI COMMANDER LOCK: when lock=1 votes always resolve to AI (objNull) regardless of result.
+if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
+	_commander = objNull;
+};
 
 //--- Finally set the commander, null = ai, team = player.
 _logic setVariable ["wfbe_commander", _commander, true];

@@ -15,6 +15,7 @@ _sideID_old = _this select 2;
 _is_repair = if (count _this > 3) then {_this select 3} else {false};
 
 _town = _camp getVariable "town";
+if (isNil "WFBE_Client_SideID") exitWith {};
 
 //--- Does the new side match the client side?
 if (WFBE_Client_SideID == _sideID_new) then {
@@ -43,7 +44,9 @@ if (WFBE_Client_SideID == _sideID_new) then {
 	// };
 } else {
 	//--- Did the client side lost a known camp?
-	if (WFBE_Client_SideID in [(_town getVariable "sideID"), _sideID_old]) then {
+	if ((WFBE_Client_SideID in [(_town getVariable "sideID"), _sideID_old]) || (WFBE_Client_SideID == WFBE_C_GUER_ID)) then {
 		(_camp getVariable "wfbe_camp_marker") setMarkerColorLocal (missionNamespace getVariable Format ["WFBE_C_%1_COLOR",(_sideID_new) Call WFBE_CO_FNC_GetSideFromID]);
+		//--- Enemy repaired a destroyed camp: warn the player with an inbound sound.
+		if (_is_repair) then {playSound "inbound"};
 	};
 };

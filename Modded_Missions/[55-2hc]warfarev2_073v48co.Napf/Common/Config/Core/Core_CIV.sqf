@@ -52,7 +52,7 @@ _c = _c + ['datsun1_civil_1_open'];
 _i = _i + [['','',250,22,-2,0,1,0,'Civilians',[]]];
 
 _c = _c + ['datsun1_civil_2_covered'];
-_i = _i + [['','',250,22,-2,0,1,0,'Civilians',[]]];
+_i = _i + [['','',400,22,-2,0,1,0,'Civilians',[]]]; //--- C1: canonical price (GUER VBIED uses this on Takistan; Core_GUE dup dropped, first-wins).
 
 _c = _c + ['datsun1_civil_3_open'];
 _i = _i + [['','',250,22,-2,0,1,0,'Civilians',[]]];
@@ -64,7 +64,7 @@ _c = _c + ['hilux1_civil_1_open'];
 _i = _i + [['','',340,25,-2,0,1,0,'Civilians',[]]];
 
 _c = _c + ['hilux1_civil_2_covered'];
-_i = _i + [['','',340,25,-2,0,1,0,'Civilians',[]]];
+_i = _i + [['','',400,25,-2,0,1,0,'Civilians',[]]]; //--- C1: canonical price (GUER VBIED uses this on Chernarus; Core_GUE dup dropped, first-wins).
 
 _c = _c + ['V3S_Civ'];
 _i = _i + [['','',380,22,-2,0,1,0,'Civilians',[]]];
@@ -86,7 +86,7 @@ _i = _i + [['','',800,30,-2,0,1,0,'Civilians',[]]];
 
 /* Air Vehicles */
 _c = _c + ['Mi17_Civilian'];
-_i = _i + [['','',15000,35,-2,0,3,0,'Civilians',[]]];
+_i = _i + [['','',6000,35,-2,0,3,0,'Civilians',[]]]; //--- C1: canonical price (shared with GUER air; Core_GUE dup dropped, first-wins).
 /* Defense Structures */
 _c = _c + ['Land_HBarrier3'];
 _i = _i + [['','',30,0,0,0,'Fortification',0,'Civilians',[]]];
@@ -170,6 +170,42 @@ _i = _i + [['','',25,0,0,0,'Fortification',0,'Civilians',[]]];
 
 _c = _c + ['Land_Ind_IlluminantTower'];
 _i = _i + [['','',200,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- WDDM commander positions (Stage 1): anchor placeholders for composition buildables.
+//--- Label/price/category only; the anchor model is just the placement ghost (the composition
+//--- itself is spawned by Server\Functions\Server_ConstructPosition.sqf). Price is a flat MVP value.
+_c = _c + ['Land_Ind_BoardsPack1'];
+_i = _i + [['AA Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_CncBlock_Stripes'];
+_i = _i + [['AA Position (Heavy, 4 AI)','',4500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_Barrel_sand'];
+_i = _i + [['Artillery (Light, 1 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_Ind_BoardsPack2'];
+_i = _i + [['Artillery (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_WoodenRamp'];
+_i = _i + [['Mixed Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['RoadCone'];
+_i = _i + [['Mixed Position (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Paleta1'];
+_i = _i + [['Base Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
+
+_c = _c + ['Paleta2'];
+_i = _i + [['Base Wall - Corner','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+
+_c = _c + ['Land_Ind_Timbers'];
+_i = _i + [['Base Wall - Gate','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_c = _c + ['Land_Pneu'];
+	_i = _i + [['Site Clearance (10/tree)','',0,0,0,0,'Strategic',0,'Civilians',[]]];
+};
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {

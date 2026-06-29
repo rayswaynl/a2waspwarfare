@@ -12,7 +12,10 @@ missionNamespace setVariable [Format["WFBE_%1SOLDIER", _side], 'USMC_Soldier'];
 missionNamespace setVariable [Format["WFBE_%1FLAG", _side], '\Ca\ca_e\Data\flag_us_co.paa'];
 
 missionNamespace setVariable [Format["WFBE_%1AMBULANCES", _side], ['HMMWV_Ambulance','HMMWV_Ambulance_DES_EP1','UH60M_MEV_EP1','M1133_MEV_EP1']];
+missionNamespace setVariable [Format["WFBE_%1REDEPLOYTRUCKS", _side], ['MTVR']]; //--- MTVR (vanilla A2) for Chernarus; MtvrRepair_DES_EP1 path used elsewhere — divergence is INTENTIONAL (map-variant split).
+//missionNamespace setVariable [Format ["WFBE_%1MASHES", _side], ['MASH']];
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['MtvrRepair','MtvrRepair_DES_EP1']];
+// Marty: WEST salvage heli (UH1H_EP1) removed - invalid class on live box; re-add with validated airframe (claude-inbox#2 item 1).
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_USMC','MtvrSalvage_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_USMC','MtvrSupply_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'MQ9PredatorB_US_EP1'];
@@ -20,7 +23,11 @@ missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'MQ9PredatorB_US_EP1'
 missionNamespace setVariable [Format["WFBE_%1AMMOTRUCKS", _side], ['MtvrReammo_DES_EP1','WarfareReammoTruck_USMC','WarfareReammoTruck_RU','UralReammo_TK_EP1']];//listed to get gearaccess in updateavailablaactions.sqf (listed both to get capture skill too)
 missionNamespace setVariable [Format["WFBE_%1ECMTRUCKS", _side], ['MtvrRefuel_DES_EP1','MtvrRefuel']];//listed to add ecm stuff
 missionNamespace setVariable [Format["WFBE_%1LIFTVEHICLE", _side], ["MH60S","MV22","C130J","UH60M_EP1","UH60M_MEV_EP1","CH_47F_EP1","C130J_US_EP1","BAF_Merlin_HC3_D","CH_47F_BAF","Mi17_Civilian"]];
-missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['MLRS_DES_EP1','MLRS','M1129_MC_EP1']];
+missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['MLRS_DES_EP1','MLRS','M1129_MC_EP1','RM70_ACR']];
+
+// Capture-to-unlock: holding a trigger town unlocks an ACR premium unit at own factories (Chernarus only).
+// Format per entry: [classname, townName, requiredFactoryLevel]
+missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Krasnostav',4],['RM70_ACR','NWAF',4]]];
 
 
 //--- Radio Announcers.
@@ -43,24 +50,42 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSuppl
 
 //--- Server only.
 if (isServer) then {
-	//--- Patrols.
+	//--- Patrols. WEST revamp (task #23): archetype variation per tier
+	//--- (recon-foot / motorized / technical-gun-truck / mechanized / AT-hunter).
+	//--- BLOCKER FIX: every entry now carries >=1 Man-class soldier; the old all-armor
+	//--- entries (HMMWV_M2+HMMWV_MK19, LAV25+LAV25, M1A1+AAV, M1A1+M1A1) were crewless
+	//--- to Common_RunSidePatrol (vehicle crews are not counted) and never spawned.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
-		['USMC_Soldier_TL','USMC_Soldier_MG','USMC_SoldierS_Sniper','USMC_Soldier_Medic'], 
+		//--- recon-foot: sniper-led scout team.
+		['USMC_Soldier_TL','USMC_Soldier_MG','USMC_SoldierS_Sniper','USMC_Soldier_Medic'],
+		//--- foot rifle squad.
 		['USMC_Soldier_TL','USMC_Soldier_AR','USMC_Soldier_GL','USMC_Soldier_LAT','USMC_Soldier'],
-		['HMMWV_M2','HMMWV_MK19']
+		//--- technical pair (was crewless): HMMWV M2 + MK19 gun-trucks + crew-chief dismount.
+		['HMMWV_M2','HMMWV_MK19','USMC_Soldier_TL','USMC_Soldier_AT'],
+		//--- motorized: MTVR truckload of riflemen.
+		['MTVR','USMC_Soldier_TL','USMC_Soldier_GL','USMC_Soldier_AR','USMC_Soldier_LAT','USMC_Soldier']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['LAV25','LAV25'], 
+		//--- mechanized (was crewless): twin LAV-25 + dismounted AT screen.
+		['LAV25','LAV25','USMC_Soldier_TL','USMC_Soldier_AT','USMC_Soldier_Medic'],
+		//--- motorized AT-hunter: MTVR + Javelin/AT team.
 		['MTVR','USMC_Soldier_TL','USMC_Soldier_AT','USMC_Soldier_MG','USMC_Soldier_LAT'],
-		['AAV','USMC_Soldier_AA','USMC_Soldier_AA','USMC_Soldier_Medic']
+		//--- mechanized AAA: AAV + MANPADS gunners.
+		['AAV','USMC_Soldier_AA','USMC_Soldier_AA','USMC_Soldier_Medic','USMC_Soldier_TL'],
+		//--- Stryker AT-hunter: ICV + ATGM Stryker with infantry escort.
+		['M1126_ICV_M2_EP1','M1135_ATGMV_EP1','USMC_Soldier_AT','USMC_Soldier_MG','USMC_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['M1A1','AAV'], 
-		['M1A1','M1A1'],
+		//--- armor (was crewless): Abrams + AAV with mounted infantry.
+		['M1A1','AAV','USMC_Soldier_TL','USMC_Soldier_AT','USMC_Soldier_Medic'],
+		//--- heavy armor (was crewless): twin Abrams + AT/HAT escort.
+		['M1A1','M1A1','USMC_Soldier_AT','USMC_Soldier_HAT','USMC_Soldier_Medic'],
+		//--- mechanized assault: AAV pair + full dismounted squad.
 		['AAV','AAV','USMC_Soldier_TL','USMC_Soldier_MG','USMC_SoldierM_Marksman','USMC_Soldier_Medic','USMC_Soldier_AT','USMC_Soldier_HAT','USMC_Soldier'],
-		['LAV25','USMC_Soldier_TL','USMC_Soldier_Medic','USMC_Soldier_GL','USMC_Soldier','USMC_Soldier_AR']
+		//--- mechanized AT-hunter: Bradley + LAV-25 with AT-led screen.
+		['M2A3_EP1','LAV25','USMC_Soldier_TL','USMC_Soldier_AT','USMC_Soldier_HAT','USMC_Soldier_Medic']
 	]];
 	
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].
@@ -148,9 +173,9 @@ missionNamespace setVariable [Format["WFBE_%1_DefaultGearEngineer", _side], [
 
 // Sniper
 missionNamespace setVariable [Format["WFBE_%1_DefaultGearSpot", _side], [
-	['M24','glock17_EP1','ItemCompass','ItemMap','ItemWatch','ItemRadio','Binocular_Vector','NVGoggles'],
-	['5Rnd_762x51_M24','5Rnd_762x51_M24','5Rnd_762x51_M24','5Rnd_762x51_M24','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','SmokeShellRed'],
-	['M24']
+	['m107','glock17_EP1','ItemCompass','ItemMap','ItemWatch','ItemRadio','Binocular','NVGoggles'],
+	['10Rnd_127x99_m107','10Rnd_127x99_m107','10Rnd_127x99_m107','10Rnd_127x99_m107','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','SmokeShellRed'],
+	['m107']
 ]];
 
 // MASH MAN

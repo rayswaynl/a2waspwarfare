@@ -1,4 +1,4 @@
-Private ["_areas","_commanderTeam","_deployed","_direction","_grp","_HQ","_HQName","_logic","_logik","_MHQ","_near","_position","_side","_sideText","_site","_type","_update"];
+Private ["_areas","_commanderTeam","_defenses","_deployed","_direction","_grp","_HQ","_HQName","_logic","_logik","_MHQ","_near","_position","_side","_sideText","_site","_type","_update"];
 
 _type = _this select 0;
 _side = _this select 1;
@@ -36,6 +36,9 @@ if (!_deployed) then {
 	_site addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}];
 	_site addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 	_site addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3, _this select 4] Call BuildingHandleDamages}];
+	_defenses = [_site, missionNamespace getVariable "WFBE_NEURODEF_HEADQUARTERS_WALLS"] call CreateDefenseTemplate;
+	_site setVariable ["wfbe_hq_walls", _defenses];
+	_site setVariable ["WFBE_Walls", _defenses];
 
 	//--- base area limits.
 	if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {
@@ -48,7 +51,7 @@ if (!_deployed) then {
 		if (_update) then {
 			_grp = createGroup sideLogic;
 			_logic = _grp createUnit ["Logic",[0,0,0],[],0,"NONE"];
-			_logic setVariable ["DefenseTeam", createGroup _side];
+			_logic setVariable ["DefenseTeam", ([_side, "defense"] Call WFBE_CO_FNC_CreateGroup)];
             (_logic getVariable "DefenseTeam") setVariable ["wfbe_persistent", true];
 	        _logic setVariable ["weapons",missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI"];
         [nil, "RequestBaseArea", [_logic, _position,_side,_logik,_areas]] Call WFBE_CO_FNC_SendToClients;
@@ -67,6 +70,9 @@ if (!_deployed) then {
 	_direction = getDir _HQ;
 	_HQName = missionNamespace getVariable Format["WFBE_%1MHQNAME",_sideText];
 
+	_defenses = _HQ getVariable ["wfbe_hq_walls", _HQ getVariable ["WFBE_Walls", []]];
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
+
 	_HQ setPos [1,1,1];
 
 	_MHQ = [_HQName, _position, _sideID, _direction, true, false] Call WFBE_CO_FNC_CreateVehicle;
@@ -84,6 +90,13 @@ if (!_deployed) then {
 	_MHQ setVehicleInit "this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
 	processinitcommands;
 	};
+
+	//--- B66: the DEPLOY branch (~:32) fires Init_BaseStructure via setVehicleInit so every client draws the
+	//--- HQ map marker; the MOBILIZE branch never did, so an undeployed/relocating MHQ had NO client marker
+	//--- (own-side + JIP players saw nothing). Mirror the deploy-branch call so the mobilized MHQ also gets a
+	//--- client marker (Init_BaseStructure handles the mobilized state). Matches the deploy-branch quoting.
+	_MHQ setVehicleInit Format["[this,true,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'",_sideID];
+	processInitCommands;
 
 	[_side,"Mobilized", ["Base", _MHQ]] Spawn SideMessage;
 	_MHQ addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}]; //--- Killed EH fires localy, this is the server.

@@ -13,6 +13,7 @@ _side_old = _this select 1;
 _side_new = _this select 2;
 
 //--- Abort if the client is not concerned (3-way).
+if (isNil "WFBE_Client_SideID") exitWith {};
 if !(WFBE_Client_SideID in [_side_old,_side_new]) exitWith {};
 
 _camps = _town getVariable "camps";

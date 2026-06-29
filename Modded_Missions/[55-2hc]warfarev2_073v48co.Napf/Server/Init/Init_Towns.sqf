@@ -156,29 +156,9 @@ switch (missionNamespace getVariable "WFBE_C_TOWNS_STARTING_MODE") do {
 	};
 };
 
-//--- Resistance Patrols.
-if ((missionNamespace getVariable "WFBE_C_TOWNS_STARTING_MODE") != 1 && ((missionNamespace getVariable "WFBE_C_TOWNS_PATROLS") > 0)) then {
-	_require = if ((missionNamespace getVariable "WFBE_C_TOWNS_PATROLS") > count towns) then {count towns} else {missionNamespace getVariable "WFBE_C_TOWNS_PATROLS"};
-	_initied = 0;
-	_towns = towns;
-	
-	//--- Don't bother with the randomizer if the amount set in RESPATROLMAX is >= count towns.
-	while {_initied < _require} do {
-		if (_require == count towns) then {
-			// [_towns select _initied] ExecFSM "Server\FSM\respatrol.fsm";
-			(_towns select _initied) setVariable ["wfbe_patrol_enabled", true];
-			_initied = _initied + 1;
-		} else {
-			if (random 2 > 1) then {
-				_town = _towns select floor (random count _towns);
-				// _town = [_towns select (round(random((count _towns)-1)))] ExecFSM "Server\FSM\respatrol.fsm";
-				_town setVariable ["wfbe_patrol_enabled", true];
-				_towns = _towns - [_town];
-				_initied = _initied + 1;
-			};
-		};
-	};
-};
+//--- Patrols v2: the old fixed-random-towns patrol flagging is RETIRED. Patrols are now
+//--- a 3-level side upgrade (WFBE_UP_PATROLS) driven by Server\FSM\server_side_patrols.sqf
+//--- (spawn at the friendly town nearest the HQ, frontline gravitation, capped per side).
 
 townInitServer = true;
 

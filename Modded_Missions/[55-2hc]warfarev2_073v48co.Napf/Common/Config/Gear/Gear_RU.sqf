@@ -11,7 +11,7 @@ _u = _u + ["5Rnd_127x108_KSVK"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [12];
-_z = _z + [3];
+_z = _z + [0];
 
 _u = _u + ["8Rnd_9x18_Makarov"];
 _p = _p + [''];
@@ -258,6 +258,24 @@ _p = _p + [''];
 _n = _n + [''];
 _o = _o + [50];
 _z = _z + [1];
+
+_u = _u + ["20Rnd_B_AA12_Pellets"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [2];
+
+_u = _u + ["20Rnd_B_AA12_74Slug"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [2];
+
+_u = _u + ["20Rnd_B_AA12_HE"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [40];
+_z = _z + [4];
 
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
@@ -508,3 +526,56 @@ _z = _z + [0];
 _m = _m + [-1];
 
 [_faction, _u, _p, _n, _o, _z, _m] Call Compile preprocessFile "Common\Config\Config_Weapons.sqf";
+
+_u = [];//--- Backpack
+_p = [];//--- Picture
+_n = [];//--- Label
+_o = [];//--- Price
+_z = [];//--- Upgrade level
+
+//--- Backpacks (EAST) — built via runtime isClass filter, capped at 6 entries
+//--- Candidates: 6 primary TK/CZ + 2 US fallbacks (8 total), prices mirror US-side equivalents
+Private ["_bp_candidates","_bp_prices","_bp_valid","_bp_skipped","_bp_class","_bp_i"];
+
+_bp_candidates = [
+	"TK_Assault_Pack_EP1",
+	"TK_RPG_Backpack_EP1",
+	"TK_ALICE_Pack_EP1",
+	"CZ_Backpack_EP1",
+	"CZ_VestPouch_EP1",
+	"TK_AmmoBox_Backpack_EP1",
+	"US_Backpack_EP1",
+	"US_Assault_Pack_EP1"
+];
+
+//--- Prices mirror US equivalents: assault/small=50, mid-size/ALICE/vest=60, large/RPG/ammobox=70
+_bp_prices = [50, 70, 60, 70, 50, 70, 70, 50];
+
+_bp_valid   = [];
+_bp_skipped = [];
+
+{
+	_bp_class = _x;
+	_bp_i     = _forEachIndex;
+	if (isClass (configFile >> "CfgVehicles" >> _bp_class)) then {
+		if (count _bp_valid < 6) then {
+			_bp_valid = _bp_valid + [_bp_i];
+		};
+	} else {
+		_bp_skipped = _bp_skipped + [_bp_class];
+	};
+} forEach _bp_candidates;
+
+{
+	_bp_i     = _x;
+	_bp_class = _bp_candidates select _bp_i;
+	_u = _u + [_bp_class];
+	_p = _p + [''];
+	_n = _n + [''];
+	_o = _o + [_bp_prices select _bp_i];
+	_z = _z + [0];
+} forEach _bp_valid;
+
+diag_log Format ["INFORMATION: Gear_RU backpacks: %1 valid, skipped: %2", count _bp_valid, _bp_skipped];
+
+[_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Backpack.sqf";

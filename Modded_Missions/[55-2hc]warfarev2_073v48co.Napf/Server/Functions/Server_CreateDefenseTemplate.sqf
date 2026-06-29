@@ -1,7 +1,17 @@
-Private ["_created","_current","_dir","_i","_object","_origin","_relDir","_relPos","_skip","_template","_toplace","_toWorld"];
+Private ["_created","_current","_dir","_existingTemplate","_i","_object","_origin","_relDir","_relPos","_skip","_template","_toplace","_toWorld"];
 _origin = _this select 0;
 _template = _this select 1;
 _existingTemplate = if (count _this > 2) then {_this select 2} else {[]};
+
+if (isNil "_template") exitWith {
+	["WARNING", Format ["Server_CreateDefenseTemplate.sqf: Missing wall template for origin [%1].", typeOf _origin]] Call WFBE_CO_FNC_LogContent;
+	[]
+};
+
+if (typeName _template != "ARRAY") exitWith {
+	["WARNING", Format ["Server_CreateDefenseTemplate.sqf: Invalid wall template type [%1] for origin [%2].", typeName _template, typeOf _origin]] Call WFBE_CO_FNC_LogContent;
+	[]
+};
 
 _dir = getDir _origin;
 _created = [];

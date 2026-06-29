@@ -78,6 +78,27 @@ _i = _i + [['','',1050,21,-2,2,1,0,'Czech',[]]];
 _c = _c + ['Pandur2_ACR'];
 _i = _i + [['','',2650,25,[true,false,2,0],3,1,0,'Czech',[]]];
 
+/* Support Trucks (T810 family) */
+_c = _c + ['T810_CZ_EP1'];
+_i = _i + [['','',500,20,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Repair_CZ_EP1'];
+_i = _i + [['','',2500,22,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Refuel_CZ_EP1'];
+_i = _i + [['','',500,22,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Ammo_CZ_EP1'];
+_i = _i + [['','',1750,22,-2,1,1,0,'Czech',[]]];
+
+/* Heavy Vehicles — ACR premium (capture-unlock) */
+_c = _c + ['T72M4CZ'];
+_i = _i + [['','',7000,45,-2,4,2,0,'Czech',[]]];
+
+/* Light Vehicles — ACR premium (capture-unlock) */
+_c = _c + ['RM70_ACR'];
+_i = _i + [['','',6800,25,-2,4,1,0,'Czech',[]]];
+
 /* Air Vehicles */
 _c = _c + ['Mi171Sh_CZ_EP1'];
 _i = _i + [['','',7600,35,-2,1,3,0,'Czech',[]]];
@@ -86,7 +107,7 @@ _c = _c + ['Mi24_D_CZ_ACR'];
 _i = _i + [['','',39620,45,-2,4,3,0,'Czech',[]]];
 
 _c = _c + ['Mi171Sh_rockets_CZ_EP1'];
-_i = _i + [['','',26500,40,-2,3,3,0,'Czech',[]]];
+_i = _i + [['','',24000,40,-2,3,3,0,'Czech',[]]]; //--- owner 2026-06-12: pricier (was 16500) - airfield-exclusive gunship
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
@@ -108,7 +129,10 @@ for '_z' from 0 to (count _c)-1 do {
 			diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_ACR: Duplicated Element found '%1'",(_c select _z),diag_frameno,diag_tickTime];
 		};
 	} else {
-		diag_log Format ["[WFBE (ERROR)][frameno:%2 | ticktime:%3] Core_ACR: Element '%1' is not a valid class.",(_c select _z),diag_frameno,diag_tickTime];
+		//--- D4 2026-06-19: ACR is a shelved/absent DLC on this server, so these classes are
+		//--- EXPECTED to be missing (~70x ERROR spam per init). Demoted ERROR -> WARNING: it is
+		//--- a benign skip (the class just isn't registered), not a fault. Behaviour unchanged.
+		diag_log Format ["[WFBE (WARNING)][frameno:%2 | ticktime:%3] Core_ACR: Element '%1' is not a valid class (DLC absent) - skipped.",(_c select _z),diag_frameno,diag_tickTime];
 	};
 };
 

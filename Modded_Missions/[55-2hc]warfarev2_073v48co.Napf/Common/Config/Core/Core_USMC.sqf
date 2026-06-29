@@ -125,7 +125,7 @@ _i = _i + [['','',1650,27,-2,3,1,0,'USMC',[]]];
 
 /* Heavy Vehicles */
 _c = _c + ['AAV'];
-_i = _i + [['','',1300,25,-2,0,2,0,'USMC',[]]];
+_i = _i + [['','',1300,18,-2,0,2,0,'USMC',[]]];
 
 _c = _c + ['M1A1'];
 _i = _i + [['','',5600,40,-2,if (WF_A2_Vanilla) then {2} else {3},2,0,'USMC',[]]];
@@ -139,6 +139,8 @@ _i = _i + [['','',6500,40,-2,if (WF_A2_Vanilla) then {3} else {4},2,0,'USMC',[]]
 /* Air Vehicles */
 _c = _c + ['MH60S'];
 _i = _i + [['','',6528,30,-2,1,3,0,'USMC',[]]];
+
+// Marty: WEST salvage heli (UH1H_EP1) removed - invalid class on live box; re-add with validated airframe (claude-inbox#2 item 1).
 
 _c = _c + ['UH1Y'];
 _i = _i + [['','',10522,35,-2,2,3,0,'USMC',[]]];
@@ -236,7 +238,7 @@ _i = _i + [['','',7200,0,0,0,'Ammo',0,'USMC',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
-		missionNamespace getVariable (_c select _z);
+		_get = missionNamespace getVariable (_c select _z);
 		if (isNil '_get') then {
 			if ((_i select _z) select 0 == '') then {(_i select _z) set [0, [_c select _z,'displayName'] Call GetConfigInfo]};
 			if (typeName ((_i select _z) select 4) == 'SCALAR') then {

@@ -3,11 +3,9 @@ disableSerialization;
 _display = _this select 0;
 _map = _display DisplayCtrl 23002;
 
-_hqDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
-if (!_hqDeployed || (missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {ctrlEnable [23004, false];ctrlEnable [23006, false]};
-if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {ctrlSetText[23005, localize 'STR_WF_Disabled']};
-
 MenuAction = -1;
+mouseButtonDown = -1;
+mouseButtonUp = -1;
 
 _incomeSystem = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM";
 _incomeDividision = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_DIVIDED";
@@ -20,6 +18,14 @@ _hasStarted = true;
 _lastUse = 0;
 ctrlEnable [23016,false];
 if (_supplySystem != 0) then {ctrlShow [23016, false]};
+
+//--- QoL: Economy Overview dashboard (read-only) + sell-marker state.
+_sellMarkers = [];
+_lastDash = -10;
+_dash = _display DisplayCtrl 23020;
+_econInterval = missionNamespace getVariable ["WFBE_C_ECONOMY_INCOME_INTERVAL", 60];
+if (_econInterval <= 0) then {_econInterval = 60};
+_totalTowns = count towns;
 
 if (_incomeSystem in [3,4]) then {
 	sliderSetRange[23010,0,missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_PERCENT_MAX"];
@@ -103,16 +109,24 @@ while {alive player && dialog} do {
 		
 		//--- Sell Building.
 		if (MenuAction == 105) then {
-			MenuAction = -1;
 			_isCommander = false;
 			if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_isCommander = true}};
-			if !(_isCommander) exitWith {};
+			if !(_isCommander) exitWith {MenuAction = -1};
 			_position = _map posScreenToWorld[mouseX,mouseY];
 			_structures = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
 			_closest = [_position,_structures] Call WFBE_CO_FNC_GetClosestEntity;
-			if (!isNull _closest) then {
-				//--- 100 meters close only.
-				if (_closest distance _position < 100 && isNil {_closest getVariable "WFBE_SOLD"}) then {
+			if (!isNull _closest && _closest distance _position < 100 && isNil {_closest getVariable "WFBE_SOLD"}) then {
+				_scName = getText (configFile >> "CfgVehicles" >> (typeOf _closest) >> "displayName");
+				_scId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _closest);
+				_scRef = if (_scId > 0) then {round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _scId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100)} else {0};
+				if ([Format ["wf_sell_%1", _closest], Format ["<t color='#ff5a5a' size='1.1'>Sell %1?</t><br/>Refund $%2. Click it again to confirm.", _scName, _scRef]] call WFBE_CL_FNC_ConfirmAction) then {
+					MenuAction = -1;
+					mouseButtonDown = -1;
+					mouseButtonUp = -1;
+					uiNamespace setVariable ["wfbe_confirm_key", ""];
+					uiNamespace setVariable ["wfbe_confirm_time", -1000];
+					hintSilent "";
+					{deleteMarkerLocal _x} forEach _sellMarkers; _sellMarkers = [];
 					//--- Spawn a sell thread.
 					(_closest) Spawn {
 						Private ["_closest","_delay","_id","_supplyB","_type"];
@@ -120,12 +134,12 @@ while {alive player && dialog} do {
 						_closest setVariable ["WFBE_SOLD", true];
 						_delay = missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_DELAY";
 						_type = typeOf _closest;
-						
+
 						//--- Inform the side (before).
 						// WFBE_LocalizeMessage = [sideJoined,'CLTFNCLOCALIZEMESSAGE',['StructureSell',_type,_delay]];
 						// publicVariable 'WFBE_LocalizeMessage';
-						[sideJoined, "LocalizeMessage", ['StructureSell',_type,_delay]] Call WFBE_CO_FNC_SendToClients;
-						['StructureSell',_type,_delay] Spawn CLTFNCLocalizeMessage;
+						[sideJoined, "LocalizeMessage", ['StructureSell',_type,_delay, _closest]] Call WFBE_CO_FNC_SendToClients;
+						if (!isHostedServer) then {['StructureSell',_type,_delay, _closest] Spawn CLTFNCLocalizeMessage};
 						
 						sleep _delay;
 						
@@ -138,28 +152,105 @@ while {alive player && dialog} do {
 							_supplyB = (missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _id;
 							_supplyB = round((_supplyB * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100);
 						
-							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold."] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
+							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold.", false] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
 						};
 						
 						//--- Inform the side.
 						// WFBE_LocalizeMessage = [sideJoined,'CLTFNCLOCALIZEMESSAGE',['StructureSold',_type]];
 						// publicVariable 'WFBE_LocalizeMessage';
-						[sideJoined, "LocalizeMessage",['StructureSold',_type]] Call WFBE_CO_FNC_SendToClients;
-						['StructureSold',_type] Spawn CLTFNCLocalizeMessage;
+						[sideJoined, "LocalizeMessage",['StructureSold',_type, _closest]] Call WFBE_CO_FNC_SendToClients;
+						if (!isHostedServer) then {['StructureSold',_type, _closest] Spawn CLTFNCLocalizeMessage};
 						if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 1) then {_closest setVariable ["sold",true,true]};
 						_closest setDammage 1;
 					};
 				};
+			} else {
+				MenuAction = -1;
+				mouseButtonDown = -1;
+				mouseButtonUp = -1;
+				uiNamespace setVariable ["wfbe_confirm_key", ""];
+				uiNamespace setVariable ["wfbe_confirm_time", -1000];
+				hintSilent "";
 			};
 		};
 	};
 	
+	//--- FIX: Back button checked BEFORE the dashboard block so a dashboard hiccup can never starve it (regression: dashboard added below ran before the old back-button check).
+	if (MenuAction == 5) exitWith {
+		MenuAction = -1;
+		mouseButtonDown = -1;
+		mouseButtonUp = -1;
+		uiNamespace setVariable ["wfbe_confirm_key", ""];
+		uiNamespace setVariable ["wfbe_confirm_time", -1000];
+		hintSilent "";
+		{deleteMarkerLocal _x} forEach _sellMarkers; _sellMarkers = [];
+		closeDialog 0;
+		createDialog "WF_Menu";
+	};
+
+	//--- QoL: Economy Overview dashboard + sell-mode markers/preview (read-only).
+	if (MenuAction == 105) then {
+		if (count _sellMarkers == 0) then {
+			_sNames2 = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText];
+			_sCosts2 = missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText];
+			_salePct = missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT";
+			{
+				_i2 = _sNames2 find (typeOf _x);
+				if (_i2 > 0 && isNil {_x getVariable "WFBE_SOLD"}) then {
+					_ref2 = round(((_sCosts2 select _i2) * _salePct) / 100);
+					_mk = Format ["wfbe_econ_sell_%1", _forEachIndex];
+					createMarkerLocal [_mk, getPos _x];
+					_mk setMarkerTypeLocal "Empty";
+					_mk setMarkerColorLocal "ColorYellow";
+					_mk setMarkerSizeLocal [0.7,0.7];
+					_mk setMarkerTextLocal Format ["$%1", _ref2];
+					_sellMarkers set [count _sellMarkers, _mk];	//--- FIX: pushBack is Arma-3-only; A2 OA 1.64 has no pushBack (was throwing "Undefined" every sell-mode tick)
+				};
+			} forEach ((sideJoined) Call WFBE_CO_FNC_GetSideStructures);
+		};
+		_pPos = _map posScreenToWorld[mouseX,mouseY];
+		_pNear = [_pPos,((sideJoined) Call WFBE_CO_FNC_GetSideStructures)] Call WFBE_CO_FNC_GetClosestEntity;
+		_pTxt = "<t color='#ffae3a' shadow='1'>SELL MODE - click a structure to sell.</t>";
+		if (!isNull _pNear && _pNear distance _pPos < 100 && isNil {_pNear getVariable "WFBE_SOLD"}) then {
+			_pId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _pNear);
+			if (_pId > 0) then {
+				_pRef = round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _pId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100);
+				_pTxt = _pTxt + Format ["<br/><t color='#e0b94f' shadow='1'>%1</t> - refund <t color='#76f563' shadow='1'>$%2</t>", getText (configFile >> "CfgVehicles" >> (typeOf _pNear) >> "displayName"), _pRef];
+			};
+		};
+		_dash ctrlSetStructuredText (parseText _pTxt);
+		_lastDash = -10;
+	} else {
+		if (count _sellMarkers > 0) then {{deleteMarkerLocal _x} forEach _sellMarkers; _sellMarkers = []};
+		if (time - _lastDash > 1) then {
+			_lastDash = time;
+			_pool = (sideJoined) Call GetTownsIncome;
+			_perMin = round(_pool * 60 / _econInterval);
+			_dash ctrlSetStructuredText (parseText Format ["<t color='#9fb0bc' shadow='1'>Side income pool: </t><t color='#e0b94f' shadow='1'>$%1/min</t><t color='#9fb0bc' shadow='1'>  ($%2/hr)</t><br/><t color='#9fb0bc' shadow='1'>Towns held: </t><t shadow='1'>%3 / %4</t><br/><t color='#9fb0bc' shadow='1'>Supply: </t><t shadow='1'>%5</t>", _perMin, (_perMin * 60), (sideJoined Call GetTownsHeld), _totalTowns, (missionNamespace getVariable [format ["wfbe_supply_%1", str sideJoined], "?"])]);	//--- FIX: non-blocking read (GetSideSupply does a publicVariableServer+waitUntil that can stall this loop)
+		};
+	};
+
 	sleep 0.1;
 	
 	//--- Back Button.
 	if (MenuAction == 5) exitWith { //---added-MrNiceGuy
 		MenuAction = -1;
+		mouseButtonDown = -1;
+		mouseButtonUp = -1;
+		uiNamespace setVariable ["wfbe_confirm_key", ""];
+		uiNamespace setVariable ["wfbe_confirm_time", -1000];
+		hintSilent "";
 		closeDialog 0;
 		createDialog "WF_Menu";
 	};
 };
+
+//--- QoL: clean up sell markers when the dialog closes (global map overlays).
+MenuAction = -1;
+mouseButtonDown = -1;
+mouseButtonUp = -1;
+uiNamespace setVariable ["wfbe_confirm_key", ""];
+uiNamespace setVariable ["wfbe_confirm_time", -1000];
+hintSilent "";
+{deleteMarkerLocal _x} forEach _sellMarkers;
+_sellMarkers = [];

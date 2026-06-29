@@ -1,3 +1,12 @@
+/*
+	PRICING / SNAPSHOT NOTE (experital task 3):
+	The rearm price is computed and charged by GUI_Menu_Service.sqf BEFORE this script is
+	spawned (pre-pay pattern — see MenuAction == 1 / _martyServiceStartBatch).
+	This script never touches funds; it only waits, then calls RearmVehicle.
+	Therefore snapshot semantics are inherently satisfied: the price was fixed at the
+	moment the player pressed Rearm, using the ammo fraction at that instant.
+	Firing during the rearm timer cannot alter the bill.
+*/
 Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_repairRange','_rearmTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
 _veh = _this select 0;
 _supports = _this select 1;
@@ -15,7 +24,7 @@ _nearIsSP = false;
 _nearIsDP = false;
 _nearIsRT = false;
 {
-	if ((typeOf _x) == _spType) then {_nearIsSP = true};
+	if ((typeOf _x) == _spType || {_x isKindOf "Base_WarfareBVehicleServicePoint"}) then {_nearIsSP = true};
 	if ((typeOf _x) == WFBE_Logic_Depot) then {_nearIsDP = true};
 	if ((typeOf _x) in _typeRepair) then {_nearIsRT = true};
 } forEach _supports;
@@ -49,6 +58,7 @@ if (_veh isKindOf 'Air') then {_rearmTime = round(_rearmTime * _airCoef)};
 if (_veh isKindOf 'StaticWeapon') then {_rearmTime = round(_rearmTime * _artCoef)};
 if (_veh isKindOf 'Tank') then {_rearmTime = round(_rearmTime * _heaCoef)};
 if (_veh isKindOf 'Car' || _veh isKindOf 'Motorcycle') then {_rearmTime = round(_rearmTime * _ligCoef)};
+if (_veh isKindOf 'Ship') then {_rearmTime = round(_rearmTime * _ligCoef)}; //--- wiki-wins: boats fell through all isKindOf branches (flat base time); scale them like light vehicles
 
 //--- Inform the player.
 hint parseText(Format[localize "STR_WF_INFO_Rearming",_name,_rearmTime]);

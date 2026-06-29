@@ -11,7 +11,10 @@ missionNamespace setVariable [Format["WFBE_%1SOLDIER", _side], 'US_Soldier_EP1']
 missionNamespace setVariable [Format["WFBE_%1FLAG", _side], '\Ca\ca_e\Data\flag_us_co.paa'];
 
 missionNamespace setVariable [Format["WFBE_%1AMBULANCES", _side], ['HMMWV_Ambulance','HMMWV_Ambulance_DES_EP1','UH60M_MEV_EP1','M1133_MEV_EP1']];
+missionNamespace setVariable [Format["WFBE_%1REDEPLOYTRUCKS", _side], ['MTVR_DES_EP1']];
+//missionNamespace setVariable [Format ["WFBE_%1MASHES", _side], ['MASH']];
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['MtvrRepair','MtvrRepair_DES_EP1']];
+// Marty: WEST salvage heli (UH1H_EP1) removed - invalid class on live box; re-add with validated airframe (claude-inbox#2 item 1).
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_USMC','MtvrSalvage_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_USMC','MtvrSupply_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'MQ9PredatorB_US_EP1'];
@@ -22,7 +25,11 @@ missionNamespace setVariable [Format["WFBE_%1ECMTRUCKS", _side], ['MtvrRefuel_DE
 missionNamespace setVariable [Format["WFBE_%1LIFTVEHICLE", _side], ["MH60S","MV22","C130J","UH60M_EP1","UH60M_MEV_EP1","CH_47F_EP1","C130J_US_EP1","BAF_Merlin_HC3_D","CH_47F_BAF","Mi17_Civilian"]];
 missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['MLRS_DES_EP1','MLRS','M1129_MC_EP1']];
 
-
+// Capture-to-unlock: holding a trigger town/airfield unlocks an ACR premium unit at own factories (Takistan).
+// Loy Manara (town, mirror of Krasnostav) -> T72M4CZ lvl4 Heavy.
+// Rasman AF  (airfield, mirror of NWAF)    -> RM70_ACR lvl4 Light.
+// Format per entry: [classname, townName, requiredFactoryLevel]
+missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Loy Manara',4],['RM70_ACR','Rasman AF',4]]];
 
 //--- Radio Announcers.
 missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers", _side], ['WFHQ_EN0_EP1','WFHQ_EN1_EP1','WFHQ_EN2_EP1','WFHQ_EN4_EP1','WFHQ_EN5_EP1']];
@@ -48,13 +55,15 @@ if (isServer) then {
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
 		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_Sniper_EP1','US_Soldier_Medic_EP1'],
 		['US_Soldier_TL_EP1','US_Soldier_AR_EP1','US_Soldier_GL_EP1','US_Soldier_AT_EP1','US_Soldier_EP1'],
-		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1']
+		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1'],
+		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1','US_Soldier_GL_EP1','US_Soldier_Medic_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
 		['M1126_ICV_M2_EP1','M1135_ATGMV_EP1'],
 		['MTVR_DES_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1'],
-		['M2A3_EP1','US_Soldier_AA_EP1','US_Soldier_AA_EP1','US_Soldier_Medic_EP1']
+		['M2A3_EP1','US_Soldier_AA_EP1','US_Soldier_AA_EP1','US_Soldier_Medic_EP1'],
+		['M2A3_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_Medic_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [

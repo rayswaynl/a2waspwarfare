@@ -11,7 +11,6 @@ missionNamespace setVariable [Format["WFBE_%1SOLDIER", _side], 'TK_GUE_Soldier_E
 missionNamespace setVariable [Format["WFBE_%1FLAG", _side], '\ca\ca_e\data\flag_tkg_co.paa'];
 
 missionNamespace setVariable [Format["WFBE_%1AMBULANCES", _side], ['V3S_TK_GUE_EP1','V3S_Gue']];
-missionNamespace setVariable [Format ["WFBE_%1MASHES", _side], ['MASH']];
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['WarfareRepairTruck_Gue','V3S_Repair_TK_GUE_EP1']];
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_Gue','V3S_Salvage_TK_GUE_EP1']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_Gue','V3S_Supply_TK_GUE_EP1']];
@@ -94,10 +93,16 @@ if (isServer) then {
 if (local player) then {
 	//--- Default Faction (Buy Menu), this is the faction name defined in core_xxx.sqf files.
 	missionNamespace setVariable [Format["WFBE_%1DEFAULTFACTION", _side], 'Takistani Guerilla'];
-	
+
 	//--- Import the needed Gear (Available from the gear menu), multiple gear can be used.
 	(_side) Call Compile preprocessFileLineNumbers "Common\Config\Loadout\Loadout_TKGUE.sqf";
 	if ((missionNamespace getVariable "WFBE_C_MODULE_BIS_PMC") > 0) then {(_side) Call Compile preprocessFileLineNumbers "Common\Config\Loadout\Loadout_PMC.sqf"};
+
+	//--- GUER "Insurgents" player overlay (buy-menu pool + per-role gear). Only when the playable faction is on.
+	//--- Shared source with Root_GUE_PlayerOverlay.sqf; branched on #ifdef IS_CHERNARUS_MAP_DEPENDENT inside.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+		Call Compile preprocessFileLineNumbers "Common\Config\Core_Root\Root_GUE_PlayerOverlay.sqf";
+	};
 };
 
 //--- Default Loadout [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

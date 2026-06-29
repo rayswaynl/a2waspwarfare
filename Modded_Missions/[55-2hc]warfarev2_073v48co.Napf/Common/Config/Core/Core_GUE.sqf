@@ -99,7 +99,7 @@ _c = _c + ['WarfareSupplyTruck_Gue'];
 _i = _i + [['','',450,21,-2,0,1,0,'Guerilla',[]]];
 
 _c = _c + ['BRDM2_Gue'];
-_i = _i + [['','',1200,25,-2,3,1,0,'Guerilla',[]]];
+_i = _i + [['','',1200,25,-2,2,1,0,'Guerilla',[]]];
 
 _c = _c + ['Ural_ZU23_Gue'];
 _i = _i + [['','',1100,20,-2,2,1,0,'Guerilla',[]]];
@@ -109,10 +109,32 @@ _c = _c + ['M113_UN_EP1'];
 _i = _i + [['','',1100,30,-2,0,2,0,'Takistani Guerilla',[]]];
 
 _c = _c + ['BMP2_Gue'];
-_i = _i + [['','',3400,30,-2,1,2,0,'Guerilla',[]]];
+_i = _i + [['','',3400,28,-2,1,2,0,'Guerilla',[]]];
 
 _c = _c + ['T72_Gue'];
 _i = _i + [['','',5200,35,-2,3,2,0,'Guerilla',[]]];
+
+/* GUER player faction additions (Warlord roster) - not in the base GUE buy config */
+//--- C1 (price-collision fix): T34/T55/BTR40_TK_GUE_EP1, An2_1/2_TK_CIV_EP1, UH1H_TK_GUE_EP1 are
+//--- registered canonically by Core_TKGUE/Core_TKCIV (which load AFTER Core_GUE). Their Core_GUE copies
+//--- here only won the first-registration race with WRONG prices and spammed "Duplicated Element" in the
+//--- TK files - dropped so the canonical TK prices stand. hilux1_civil_2_covered / datsun1_civil_2_covered /
+//--- Mi17_Civilian are registered by Core_CIV (loads BEFORE Core_GUE -> Core_GUE copies were already dead
+//--- dups); their GUER-intended prices (400/400/6000) now live on the canonical Core_CIV entries. Ka137_MG_PMC
+//--- and Mi24_P are KEPT here on purpose: Core_GUE loads before Core_PMC/Core_RU, so these correctly win and
+//--- set the GUER-intended prices (6000 / 18000).
+_c = _c + ['Ka137_MG_PMC'];
+_i = _i + [['','',6000,40,-2,1,1,0,'Guerilla',[]]];   //--- B66 (Ray 2026-06-21): air-upgrade(idx5) 0->1. SAME registration-race as the B60 Mi24_P fix below: Core_GUE loads before Core_PMC, so this entry wins the Ka137_MG_PMC registration (keeps the GUER price 6000) but it ALSO stamped air-level 0 onto the GLOBAL Ka137_MG_PMC, which Squads_GetFactionGroups feeds to the AICOM founding/produce air-gate -> the classname read as air-level 0 (ungated/mis-gated). Price 6000 still wins; only the air-level is corrected to PMC's canonical 1 (Core_PMC.sqf: ['','',3500,35,-2,1,3,0,'PMC',[]]). GUER is base-less (no founding gate) so unaffected; the fix is for the global classname the air-gate keys on. Rollback: ...,0,1,0,...
+_c = _c + ['Mi24_P'];
+_i = _i + [['','',18000,60,-2,3,3,0,'Guerilla',[]]];   //--- B60 (Ray 2026-06-21): air-upgrade(idx5) 0->3. Core_GUE wins the Mi24_P registration race over Core_RU (load order) - the comment above keeps it to win the GUER PRICE (18000), but it also stamped air-level 0 onto the GLOBAL Mi24_P, which Squads_GetFactionGroups feeds to the AICOM founding/produce air-gate -> EAST/RU could field ungated Mi24_P (only B59's town-strip still blocked it). Price 18000 still wins; only the air-level is corrected to RU's canonical 3. GUER is base-less (no founding gate) so unaffected. Rollback: ...,0,3,0,...
+
+//--- B75 (guer-tech) FOB delivery trucks: NOT registered here. The classnames (Ural_INS/UralOpen_INS/GAZ_Vodnik on CH,
+//--- TK_CIV/TKA on TK) are SHARED with active AI/EAST factions, and Core_GUE wins the first-write registration race,
+//--- so registering them with FOB price/upgrade/faction would clobber e.g. RU GAZ_Vodnik / TKA V3S_TK_EP1 (wrong price,
+//--- upgrade gate + faction tag) for those factions' players + AI commander. Instead the FOB trucks ride their CANONICAL
+//--- registration (the GUER depot has no faction filter + bypasses the upgrade gate, so they still appear), and the GUER
+//--- buy list relabels them "FOB (...)" in Client_UIFillListBuyUnits.sqf. A GUER-bought instance is distinguished from
+//--- an AI faction's same-class truck purely by the broadcast wfbe_is_guer_fob flag (set in Client_BuildUnit.sqf).
 
 /* Static Defenses */
 _c = _c + ['GUE_WarfareBMGNest_PK'];

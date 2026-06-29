@@ -14,7 +14,7 @@ _SP = "TK_WarfareBVehicleServicePoint_EP1";
 _AAR = "TK_WarfareBAntiAirRadar_EP1";
 
 /* Mash used after being deployed */
-missionNamespace setVariable [Format["WFBE_%1FARP", _side], 'MASH'];
+missionNamespace setVariable [Format["WFBE_%1FARP", _side], 'CampEast_EP1'];
 
 /* Construction Crates */
 missionNamespace setVariable [Format["WFBE_%1CONSTRUCTIONSITE", _side], 'TK_WarfareBContructionSite_EP1'];
@@ -169,5 +169,9 @@ missionNamespace setVariable [Format["WFBE_%1DEFENSES_ATPOD", _side], ['Metis_TK
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_CANNON", _side], ['D30_TK_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MASH", _side], ['MASH_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MORTAR", _side], ['2b14_82mm_TK_EP1']];
+
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_n = _n + ["Land_Pneu"];			//--- Site Clearance (commander only)
+};
 
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];

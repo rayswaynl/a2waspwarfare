@@ -17,7 +17,7 @@ if (isClass _config) then {
 		};
 	};
 } else {
-	["ERROR", Format ["Common_GetGroupFromConfig.sqf: Entry (configFile >> 'CfgGroups' >> '%3' >> '%4' >> '%5' >> '%6') is not a valid group config.", _side,_faction,_kind,_typ]] Call WFBE_CO_FNC_LogContent;
+	["ERROR", Format ["Common_GetGroupFromConfig.sqf: Entry (configFile >> 'CfgGroups' >> '%1' >> '%2' >> '%3' >> '%4') is not a valid group config.", _side,_faction,_kind,_type]] Call WFBE_CO_FNC_LogContent;
 };
 
 _group

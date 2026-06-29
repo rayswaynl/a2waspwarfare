@@ -45,6 +45,7 @@ if (isMultiplayer) then {[_side, "HandleSpecial", ["set-hq-killed-eh", _mhq]] Ca
 
 _logik setVariable ['wfbe_hq_deployed', false, true];
 _logik setVariable ['wfbe_hq_repairing',false, true];
+_logik setVariable ['cashrepaired', false, true]; //--- wiki-wins: reset so cash-repair works again after the HQ is rebuilt (Action_RepairMHQDepot set it true permanently)
 _logik setVariable ['wfbe_hq_repair_count', (_logik getVariable "wfbe_hq_repair_count") + 1, true];
 //--- [>1.62] Set the HQ to be local to the commander.
  _commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
@@ -56,17 +57,23 @@ deleteVehicle _hq;
 _marker_name = "HQ_WRECK_" + str(_side) ;
 [_marker_name, 0]call WFBE_CL_FNC_Delete_Marker;	
 
-// Marty : these public variables below are used globaly in case a client join after the game has already begin:
+// Marty : HQ has been repaired, allied clients will remove their local wreck marker.
 if (_side == west) then 
 {
 	missionNamespace setVariable ["IS_WEST_HQ_ALIVE", true];
-	publicVariable "IS_WEST_HQ_ALIVE"; 
+	publicVariable "IS_WEST_HQ_ALIVE";
+
+	missionNamespace setVariable ["HQ_WEST_MARKER_INFOS", []];
+	publicVariable "HQ_WEST_MARKER_INFOS";
 };
 
 if (_side == east) then 
 {
 	missionNamespace setVariable ["IS_EAST_HQ_ALIVE", true];
-	publicVariable "IS_EAST_HQ_ALIVE"; 
+	publicVariable "IS_EAST_HQ_ALIVE";
+
+	missionNamespace setVariable ["HQ_EAST_MARKER_INFOS", []];
+	publicVariable "HQ_EAST_MARKER_INFOS";
 };
 // Marty : end.
 

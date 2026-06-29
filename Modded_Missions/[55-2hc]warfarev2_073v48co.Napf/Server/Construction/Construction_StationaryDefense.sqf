@@ -1,5 +1,5 @@
 /* Description: Creates Defenses. */
-Private ["_buildings","_defense","_direction","_isAIQuery","_isArtillery","_manned","_position","_side","_sideID","_type","_area","_availweapons"];
+Private ["_area","_availweapons","_buildings","_builtByRepairTruck","_defense","_direction","_isAIQuery","_isArtillery","_manned","_manRange","_position","_side","_sideID","_type","_wddmChild"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -7,15 +7,37 @@ _direction = _this select 3;
 _manned = _this select 4;
 _isAIQuery = _this select 5;
 _manRange = if (count _this > 6) then {_this select 6} else {missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE"};
+_builtByRepairTruck = if (count _this > 7) then {_this select 7} else {false};
+_wddmChild = if (count _this > 8) then {_this select 8} else {false};
 _sideID = (_side) Call GetSideID;
 
-_area = [_position,((_side) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity4; hintsilent format ["%1",_area];
+//--- Marty 2026-06-13: guard the build position. A malformed _position (e.g. [] from a failed
+//--- _findBuildPos ring search, or an undeployed/relocating HQ) makes GetClosestEntity4 below
+//--- and the createVehicle/setDir/setPos triple throw, spamming the server RPT ~8x/round. Skip
+//--- the placement cleanly and return objNull so callers (which already null-check the result,
+//--- per Common_CreateVehicle's convention) treat it as a no-build. Low gameplay impact - one
+//--- static defense not placed this tick - but it clears the deploy keep/rollback error gate.
+if (isNil "_position" || {typeName _position != "ARRAY"} || {count _position < 2} || {typeName (_position select 0) != "SCALAR"} || {typeName (_position select 1) != "SCALAR"}) exitWith {
+	["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] skipped defense [%2] - invalid build position [%3].", str _side, _type, _position]] Call WFBE_CO_FNC_LogContent;
+	objNull
+};
+
+_area = [_position,((_side) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity4;
 _availweapons = _area getVariable "weapons";
 
 _defense = createVehicle [_type, _position, [], 0, "NONE"];
 _defense setDir _direction;
 _defense setPos _position;
 _defense setVariable ["side" ,_side];
+if (_wddmChild) then {
+	_defense setVariable ["WFBE_WDDMPositionChild", true, true];
+};
+if (_builtByRepairTruck) then {
+	_defense setVariable ["WFBE_BuiltByRepairTruck", true, true];
+	if ((typeOf _defense) isKindOf "Base_WarfareBVehicleServicePoint") then {
+		_defense setVariable ["WFBE_RepairTruckServicePoint", true, true];
+	};
+};
 ["INFORMATION", Format ["Construction_StationaryDefense.sqf: [%1] Defense [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
 
 //--- If it's a minefield, we exit the script while spawning it.
@@ -77,11 +99,21 @@ if (!isNull _area) then {
 		_team = _area getVariable "DefenseTeam";
 
 		if (isNil '_team') then {
-			_team = createGroup _side;
+			_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
+			//--- Per-area DefenseTeam is re-manned over time; flag persistent so the empty-group
+			//--- GC (server_groupsGC.sqf) never deletes it in a window between mannings.
+			_team setVariable ["wfbe_persistent", true];
 			_area setVariable ["DefenseTeam", _team];
 		}else{
 			if(side _team != _side) then{
-				_team = createGroup _side;
+				// Group-cap fix: delete the orphaned group before creating the new one.
+				if !(isNull _team) then {
+					{deleteVehicle _x} forEach (units _team);
+					deleteGroup _team;
+				};
+				_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
+				//--- Re-flag persistent on the replacement group (see above).
+				_team setVariable ["wfbe_persistent", true];
 			};
 			_area setVariable ["DefenseTeam", _team];
 		};
@@ -94,10 +126,22 @@ if (!isNull _area) then {
 				_buildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				_closest = ['BARRACKSTYPE',_buildings,_manRange,_side,_defense] Call BuildingInRange;
 
-				//--- Manning Defenses.
-				if (alive _closest) then {
-					[_defense,_side,_team,_closest] Spawn HandleDefense;
+				//--- EAST/OPFOR empty-static fix (2026-06-14): manning used to be GATED behind
+				//--- `alive _closest` (a side-Barracks within WFBE_C_BASE_DEFENSE_MANNING_RANGE of the
+				//--- gun). AI-commander base guns are placed ~25-42m from the HQ, NOT measured from the
+				//--- barracks, so if the barracks was destroyed / never built / >250m away, HandleDefense
+				//--- was NEVER spawned and the gun sat empty FOREVER - silently (no log on the false
+				//--- branch). The working GUER TOWN path has no barracks gate. Since crews mount instantly
+				//--- AT the gun (Server_HandleDefense _moveInGunner=true, no walk), the barracks is
+				//--- irrelevant to manning. So always spawn the manning loop; fall back to the side HQ as a
+				//--- benign anchor when no barracks is in range, and WARN so empties become visible.
+				if (isNull _closest || !(alive _closest)) then {
+					_closest = (_side) Call WFBE_CO_FNC_GetSideHQ;
+					["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] no alive Barracks within %2m of [%3] - manning via HQ anchor instead (gun would previously sit empty).", str _side, _manRange, _type]] Call WFBE_CO_FNC_LogContent;
 				};
+
+				//--- Manning Defenses. Always start the loop for a manned gun with a free gunner slot.
+				[_defense,_side,_team,_closest] Spawn HandleDefense;
 			};
 		};
 	};
@@ -116,6 +160,13 @@ if (!isNull _area) then {
 
 /* Are we dealing with an artillery unit ? */
 _isArtillery = [_type,_side] Call IsArtillery;
-if (_isArtillery != -1) then {[_defense,_isArtillery,_side] Call EquipArtillery};
+if (_isArtillery != -1) then {
+	[_defense,_isArtillery,_side] Call EquipArtillery;
+	if !(_builtByRepairTruck) then {
+		_defense setVariable ["WFBE_CommanderArtillery", true, true];
+		_defense setVariable ["WFBE_CommanderArtillerySide", str _side, true];
+		_defense setVariable ["WFBE_CommanderArtilleryIndex", _isArtillery, true];
+	};
+};
 
 _defense

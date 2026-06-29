@@ -71,7 +71,7 @@ _u = _u + ["PG7V"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [50];
-_z = _z + [1];
+_z = _z + [0]; //--- B67 (Ray 2026-06-21) item #1: RPG7V round buyable at gear level 0 (GUER staple).
 
 _u = _u + ["PG7VR"];
 _p = _p + [''];
@@ -115,6 +115,33 @@ _n = _n + [''];
 _o = _o + [5];
 _z = _z + [0];
 
+//--- B67 (Ray 2026-06-21) item #2: GUER IED ladder. Prices mirror the BAF IED entries (Gear_BAF.sqf:46-68);
+//--- all four buyable at gear level 0 (_z 0) so insurgents can plant IEDs from the start. Anti-farm: an IED
+//--- kill pays only WFBE_C_GUER_IED_KILL_COEF (30%) bounty (RequestOnUnitKilled.sqf).
+_u = _u + ["BAF_ied_v1"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [0];
+
+_u = _u + ["BAF_ied_v2"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [25];
+_z = _z + [0];
+
+_u = _u + ["BAF_ied_v3"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [40];
+_z = _z + [0];
+
+_u = _u + ["BAF_ied_v4"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [50];
+_z = _z + [0];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon
@@ -129,21 +156,21 @@ _u = _u + ["AK_47_M"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [40];
-_z = _z + [1];
+_z = _z + [0]; //--- B67 (Ray 2026-06-21) item #1: tier-1 GUER staple, buyable at gear level 0.
 _m = _m + [-1];
 
 _u = _u + ["AK_47_S"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [50];
-_z = _z + [1];
+_z = _z + [0]; //--- B67 (Ray 2026-06-21) item #1: tier-1 GUER staple, buyable at gear level 0.
 _m = _m + [-1];
 
 _u = _u + ["AK_74"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [75];
-_z = _z + [1];
+_z = _z + [0]; //--- B67 (Ray 2026-06-21) item #1: tier-1 GUER staple, buyable at gear level 0.
 _m = _m + [-1];
 
 _u = _u + ["AK_74_GL"];
@@ -157,7 +184,7 @@ _u = _u + ["AKS_74_kobra"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [80];
-_z = _z + [2];
+_z = _z + [0]; //--- B67 (Ray 2026-06-21) item #1: tier-1 GUER staple, buyable at gear level 0.
 _m = _m + [-1];
 
 _u = _u + ["AKS_74_pso"];
@@ -171,7 +198,7 @@ _u = _u + ["AKS_74_U"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [80];
-_z = _z + [1];
+_z = _z + [0]; //--- B67 (Ray 2026-06-21) item #1: tier-1 GUER staple, buyable at gear level 0.
 _m = _m + [-1];
 
 _u = _u + ["AKS_74_UN_kobra"];
@@ -220,7 +247,7 @@ _u = _u + ["RPG7V"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [90];
-_z = _z + [1];
+_z = _z + [0]; //--- B67 (Ray 2026-06-21) item #1: tier-1 GUER staple, buyable at gear level 0.
 _m = _m + [-1];
 
 _u = _u + ["Strela"];

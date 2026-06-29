@@ -4,9 +4,9 @@ _destination = _this select 1;
 _radius = if (count _this > 2) then {_this select 2} else {30};
 if (typeName _destination == 'OBJECT') then {_destination = getPos _destination};
 
-_team setCombatMode "RED";
-_team setBehaviour "COMBAT";
-_team setFormation "DIAMOND";
+_team setCombatMode "YELLOW";
+_team setBehaviour "AWARE";
+_team setFormation "COLUMN";
 _team setSpeedMode "NORMAL";
 
 _update = true;
@@ -23,11 +23,14 @@ for [{_z=0},{_z<=_maxWaypoints},{_z=_z+1}] do {
 	_rand1 = random _radius - random _radius;
 	_rand2 = random _radius - random _radius;
 	_pos = [(_destination select 0)+_rand1,(_destination select 1)+_rand2,0];
-	while {surfaceIsWater _pos} do {
+	_wtr = 0;
+	while {surfaceIsWater _pos && _wtr < 20} do {
 		_rand1 = random _radius - random _radius;
 		_rand2 = random _radius - random _radius;
 		_pos = [(_destination select 0)+_rand1,(_destination select 1)+_rand2,0];
+		_wtr = _wtr + 1;
 	};
+	if (surfaceIsWater _pos) then {_pos = [_destination select 0, _destination select 1, 0]};
 	_type = if (_z != _maxWaypoints) then {'MOVE'} else {'CYCLE'};
 	_wps = _wps + [[_pos,_type,35,40,"",[]]];
 };

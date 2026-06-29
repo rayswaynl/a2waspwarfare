@@ -23,7 +23,10 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_ENABLED", _side], [
 	if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {true} else {false}, //--- Artillery Ammo
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0) then {true} else {false}, //--- IR Smoke
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") == 1) then {true} else {false}, //--- Aircraft AA Missiles
-	true //--- Anti Air radar
+	true, //--- Anti Air radar
+	true, //--- Unit cost modifier
+	if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {true} else {false}, //--- Counter Battery Radar
+	true //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
@@ -33,7 +36,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[1200,0],[4000,0],[9200,0],[10500,0],[17600,0]], //--- Air
 	[[1500,0],[2500,0],[3500,0]], //--- Paratroopers
 	[[2000,0]], //--- UAV
-	[[2700,0],[4800,0],[6000,0]], //--- Supply
+	[[2700,0],[4800,0],[8000,0]], //--- Supply
 	[[500,0],[1500,0]], //--- Respawn Range
 	[[1000,0]], //--- Airlift
 	[[4500,0]], //--- Custom Flares
@@ -44,10 +47,14 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[750,0]], //--- Build Ammo
 	[[4000,0]], //--- EASA
 	[[2000,0]], //--- Supply Paradrop
-	[[2500,0],[3500,0],[6000,0]], //--- Artillery Ammo
+	// Marty: Artillery Ammunition is a single upgrade level now.
+	[[2500,0]], //--- Artillery Ammo
 	[[3000,0],[9000,0]], //--- IR Smoke
 	[[7500,0]], //--- Aircraft AA Missiles
-	[[5000,0],[12500,0]] //--- Anti Air Radar
+	[[5000,0],[12500,0]], //--- Anti Air Radar
+	[[25000,0],[50000,0]], //--- Unit cost modifier
+	[[3500,0],[6500,0]], //--- Counter Battery Radar
+	[[300,0],[1600,0],[2400,0],[3200,0]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
@@ -68,16 +75,20 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
 	1, //--- Build Ammo
 	1, //--- EASA
 	1, //--- Supply Paradrop
-	3, //--- Artillery Ammo
+	// Marty: Artillery Ammunition has one maximum level.
+	1, //--- Artillery Ammo
 	2, //--- IR Smoke
 	1, //--- Aircraft AA Missiles
-	2  //--- Anti Air Radar
+	2, //--- Anti Air Radar
+	2, //--- Unit cost modifier
+	2, //--- Counter Battery Radar
+	4 //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 	[[WFBE_UP_GEAR,2],[WFBE_UP_GEAR,3],[WFBE_UP_GEAR,5]], //--- Barracks
 	[[],[],[],[]], //--- Light
-	[[],[],[]], //--- Heavy
+	[[],[],[],[]], //--- Heavy
 	[[],[],[],[],[]], //--- Air
 	[
 		[[WFBE_UP_BARRACKS,1],[WFBE_UP_AIR,1],[WFBE_UP_GEAR,1]],
@@ -98,14 +109,16 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 	[[WFBE_UP_GEAR,5]], //--- Build Ammo
 	[[WFBE_UP_AIR,1]], //--- EASA
 	[[WFBE_UP_AIRLIFT,1]], //--- Supply Paradrop
+	// Marty: Only the first dependency gate remains for the single Artillery Ammunition level.
 	[
-		[[WFBE_UP_GEAR,1],[WFBE_UP_HEAVY,1]],
-		[[WFBE_UP_GEAR,2],[WFBE_UP_HEAVY,2]],
-		[[WFBE_UP_GEAR,3],[WFBE_UP_HEAVY,3]]
+		[[WFBE_UP_GEAR,1],[WFBE_UP_HEAVY,1]]
 	], //--- Artillery Ammo
 	[[WFBE_UP_HEAVY, 3],[]], //--- IR Smoke
 	[[WFBE_UP_AIR, 3]], //--- Aircraft AA Missiles
-	[[],[]] //--- Anti Air Radar
+	[[],[]], //--- Anti Air Radar
+	[[],[]], //--- Unit cost modifier
+	[[WFBE_UP_AAR,1],[WFBE_UP_AAR,2]], //--- Counter Battery Radar (requires AAR level 1 / AAR level 2)
+	[[],[WFBE_UP_LIGHT,1],[WFBE_UP_HEAVY,2],[WFBE_UP_HEAVY,2]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
@@ -126,10 +139,14 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	[40], //--- Build Ammo
 	[90], //--- EASA
 	[50], //--- Supply Paradrop
-	[60,120,180], //--- Artillery Ammo
+	// Marty: Artillery Ammunition keeps the original first-level upgrade time.
+	[60], //--- Artillery Ammo
 	[120,180], //--- IR Smoke
 	[120], //--- Aircraft AA Missiles
-	[50,125] //--- Anti Air Radar
+	[50,125], //--- Anti Air Radar
+	[120, 200], //--- Unit cost modifier
+	[60, 90], //--- Counter Battery Radar
+	[90,150,240,240] //--- Patrols
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.
@@ -147,13 +164,12 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_SUPPLYRATE,2],
 	[WFBE_UP_HEAVY,1],
 	[WFBE_UP_HEAVY,2],
-	[WFBE_UP_ARTYTIMEOUT,1],
+	//--- ARTYTIMEOUT research stripped (owner): the AI commander's arty FIRE pipeline is OFF by
+	//--- default (WFBE_C_AI_COMMANDER_ARTILLERY=0), so an arty-cooldown upgrade was pure wasted spend.
 	[WFBE_UP_SUPPLYRATE,3],
 	[WFBE_UP_HEAVY,3],
-	[WFBE_UP_ARTYTIMEOUT,2],
 	[WFBE_UP_GEAR,3],
 	[WFBE_UP_RESPAWNRANGE,2],
-	[WFBE_UP_ARTYTIMEOUT,3],
 	[WFBE_UP_AIR,1],
 	[WFBE_UP_AIRLIFT,1],
 	[WFBE_UP_AIR,2],
@@ -169,7 +185,13 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_GEAR,4],
 	[WFBE_UP_LIGHT,4],
 	[WFBE_UP_AAR,1],
-	[WFBE_UP_AAR,2]
+	[WFBE_UP_AAR,2],
+	[WFBE_UP_CBRADAR,1],
+	[WFBE_UP_CBRADAR,2],
+	[WFBE_UP_PATROLS,1],
+	[WFBE_UP_PATROLS,2],
+	[WFBE_UP_PATROLS,3],
+	[WFBE_UP_PATROLS,4]
 ]];
 
 //--- Check potential missing definition.

@@ -11,6 +11,11 @@ if (votePopUp) then {
 } else {
 	ctrlSetText[13019, localize "STR_WF_VOTING_PopUpOnButton"];
 };
+if (missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false]) then {
+	ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOn"];
+} else {
+	ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOff"];
+};
 
 ctrlSetText [13002, Format [localize "STR_WF_TEAM_ViewDistanceLabel",_currentVD]];
 ctrlSetText [13004, Format [localize "STR_WF_TEAM_TerrainGridLabel",currentTG]];
@@ -102,11 +107,16 @@ while {alive player && dialog} do {
 	
 	if (MenuAction == 3) then {
 		MenuAction = -1;
+		// Marty: Teach players the faster map selection/disband shortcuts whenever they use the classic WF menu button.
+		titleText [localize "STR_WF_TEAM_MapShortcutDisbandTip", "PLAIN DOWN", 3];
 		_curUnitSel = lbCurSel 13013;
 		if (_curUnitSel != -1) then {
-			_vehicle = vehicle (_units select _curUnitSel);
-			_destroy = [(_units select _curUnitSel)];
-			if (_vehicle != (_units select _curUnitSel)) then {_destroy = _destroy + [_vehicle]};
+			Private ["_targetUnit"];
+			_targetUnit = _units select _curUnitSel;
+			_vehicle = vehicle _targetUnit;
+
+			_destroy = [_targetUnit];
+			if (_vehicle != _targetUnit) then {_destroy = _destroy + [_vehicle]};
 			{
 				if !(isPlayer _x) then {
 					if (_x isKindOf 'Man') then {removeAllWeapons _x};
@@ -147,6 +157,27 @@ while {alive player && dialog} do {
 		} else {
 			votePopUp = true;
 			ctrlSetText[13019, localize "STR_WF_VOTING_PopUpOffButton"];
+		};
+	};
+
+	//--- High climbing default preference.
+	if (MenuAction == 14) then {
+		MenuAction = -1;
+		WFBE_HighClimbingDefaultEnabled = !(missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false]);
+		missionNamespace setVariable ["WFBE_HighClimbingDefaultEnabled", WFBE_HighClimbingDefaultEnabled];
+
+		if (WFBE_HighClimbingDefaultEnabled) then {
+			ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOn"];
+		} else {
+			ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOff"];
+		};
+
+		if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {
+			['WFBE_HIGH_CLIMBING_DEFAULT_ENABLED', WFBE_HighClimbingDefaultEnabled] Call WFBE_CO_FNC_SetProfileVariable;
+			_need_save = true;
+		} else {
+			profileNamespace setVariable ['WFBE_HIGH_CLIMBING_DEFAULT_ENABLED', WFBE_HighClimbingDefaultEnabled];
+			saveProfileNamespace;
 		};
 	};
 	

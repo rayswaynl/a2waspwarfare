@@ -1,6 +1,5 @@
 private["_camp","_town","_flag","_newSID","_force","_camp_cap_rate","_camp_range","_camp_range_players","_town_starting_sv"];
 
-
 _town = _this select 1;
 
 _camps = _this select 0;
@@ -15,10 +14,8 @@ _camp_range_players = missionNamespace getVariable "WFBE_C_CAMPS_RANGE_PLAYERS";
 _town_starting_sv = _town getVariable "startingSupplyValue";
 
 while {!WFBE_GameOver} do {
-
 	for "_i" from 0 to ((count _camps) - 1) step 1 do
 	{
-
 		_camp = _camps select _i;
 		_flag = _flags select _i;
 
@@ -42,8 +39,6 @@ while {!WFBE_GameOver} do {
 				_captured = false;
 				_sideID = _camp getVariable "sideID";
 				_supplyValue = _camp getVariable "supplyValue";
-
-				_town_sideID = _town getVariable "sideID";
 
 				_resistanceDominion = if (_resistance > _east && _resistance > _west) then {true} else {false};
 				_westDominion = if (_west > _east && _west > _resistance) then {true} else {false};
@@ -70,9 +65,9 @@ while {!WFBE_GameOver} do {
 
 				if (_protected) then {
 					if (_supplyValue < _town_starting_sv) then {
-					_supplyValue = _supplyValue + round(_force * _camp_cap_rate);
-					if (_supplyValue > _town_starting_sv) then {_supplyValue = _town_starting_sv};
-					_camp setVariable ["supplyValue",_supplyValue,true];
+						_supplyValue = _supplyValue + round(_force * _camp_cap_rate);
+						if (_supplyValue > _town_starting_sv) then {_supplyValue = _town_starting_sv};
+						_camp setVariable ["supplyValue",_supplyValue,true];
 					};
 				};
 				if(_captured)then{
@@ -86,7 +81,14 @@ while {!WFBE_GameOver} do {
 					if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide,"CapturedNear",["Strongpoint",_town]] Spawn SideMessage};
 
 					_camp setVariable ["sideID",_newSID,true];
-					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _side]);
+
+					//--- B74.2: leaderboard CAMP-capture credit to each capturing player present on the new owner's side
+					//--- at flip. _objects here is already the "Man"-filtered range list; capture the outer side into a
+					//--- private so the nested forEach's magic _x stays safe.
+					private ["_capSideC","_capUidC"];
+					_capSideC = _newSide;
+					{ if (isPlayer _x && {alive _x} && {side _x == _capSideC}) then {_capUidC = getPlayerUID _x; if (_capUidC != "") then {[_capUidC, WFBE_STAT_CAPTURES_CAMP, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
+					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]);
 
 					[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;
 				};

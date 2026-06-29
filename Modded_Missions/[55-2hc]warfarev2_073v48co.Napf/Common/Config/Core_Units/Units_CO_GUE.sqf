@@ -137,6 +137,7 @@ _u = [];
 _u = _u		+ ['An2_1_TK_CIV_EP1'];
 _u = _u		+ ['An2_2_TK_CIV_EP1'];
 
+_u = _u + ['Mi17_Civilian']; _u = _u + ['UH1H_TK_GUE_EP1']; _u = _u + ['Mi24_P']; //--- GUER airfield air pool (transport + light + gunship)
 missionNamespace setVariable [Format ["WFBE_%1AIRPORTUNITS", _side], _u];
 if (local player) then {['AIRPORT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 

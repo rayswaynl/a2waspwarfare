@@ -45,7 +45,7 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 		_spawn_last_get = time;
 		
 		//--- Return the available spawn locations
-		_spawn_locations = [sideJoined, WFBE_DeathLocation] Call GetRespawnAvailable;
+		_spawn_locations = [sideJoined, WFBE_DeathLocation] Call GetRespawnAvailable; if (isNil "_spawn_locations" || {typeName _spawn_locations != "ARRAY"}) then {diag_log Format ["WFBE RESPAWN b754-guard: GetRespawnAvailable returned non-array for side %1 - using [] this tick.", str sideJoined]; _spawn_locations = []}; //--- B754: stop the respawn-menu _x cascade + capture the root side in the RPT.
 
 		//---No spawn available at frist? get one!
 		if (isNull _spawn_at_current) then {
@@ -96,6 +96,9 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 	if (_spawn_at != _spawn_at_current) then {
 		_spawn_at = _spawn_at_current;
 		_spawn_label = getText(configFile >> 'CfgVehicles' >> typeOf _spawn_at >> 'displayname');
+		if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && typeOf _spawn_at in (missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]]) ) then {
+			_spawn_label = "Redeploy Truck";
+		};
 		((uiNamespace getVariable "wfbe_display_respawn") displayCtrl 511003) ctrlSetStructuredText parseText Format[localize "STR_WF_RESPAWN_Status_AT", _spawn_label];
 		WFBE_MarkerTracking = _spawn_at;
 	};

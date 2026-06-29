@@ -3,7 +3,7 @@ Private ['_c','_count','_d','_dir','_dis','_n','_s','_side','_t','_v'];
 _side = _this;
 
 /* Root Definition */
-_MHQ = "M1130_CV_EP1";
+_MHQ = "LAV25_HQ";
 _HQ = "M1130_HQ_unfolded_EP1";
 _BAR = "US_WarfareBBarracks_EP1";
 _LVF = "US_WarfareBLightFactory_EP1";
@@ -14,7 +14,7 @@ _SP = "US_WarfareBVehicleServicePoint_EP1";
 _AAR = "US_WarfareBAntiAirRadar_EP1";
 
 /* Mash used after being deployed */
-missionNamespace setVariable [Format["WFBE_%1FARP", _side], 'Camp_EP1'];
+missionNamespace setVariable [Format["WFBE_%1FARP", _side], 'CampEast_EP1'];
 
 /* Construction Crates */
 missionNamespace setVariable [Format["WFBE_%1CONSTRUCTIONSITE", _side], 'US_WarfareBContructionSite_EP1'];
@@ -171,5 +171,9 @@ missionNamespace setVariable [Format["WFBE_%1DEFENSES_ATPOD", _side], ['TOW_TriP
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_CANNON", _side], ['M119_US_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MASH", _side], ['MASH_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MORTAR", _side], ['M252_US_EP1']];
+
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_n = _n + ["Land_Pneu"];			//--- Site Clearance (commander only)
+};
 
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];

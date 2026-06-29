@@ -123,18 +123,42 @@ class WFBE_UpgradeMenu {
 			idc = 504007;
 			x = 0.595;
 			y = 0.762;
-			w = 0.2;
+			w = 0.095;
 			h = 0.035;
-			sizeEx = 0.035;
+			sizeEx = 0.03;
 			text = "Upgrade";
 			action = "WFBE_MenuAction = 1";
 		};
+		class CA_QueueUpgrade : RscButton_Main {
+			idc = 504008;
+			x = 0.700;
+			y = 0.762;
+			w = 0.0625;
+			h = 0.035;
+			sizeEx = 0.028;
+			text = "Queue";
+			action = "WFBE_MenuAction = 3";
+			tooltip = "Queue the next level of the selected upgrade (click again to stack more levels)";
+		};
+		// Stacking: queueing is no longer a toggle, so cancelling needs its own button.
+		class CA_DequeueUpgrade : RscButton_Main {
+			idc = 504009;
+			x = 0.7675;
+			y = 0.762;
+			w = 0.0275;
+			h = 0.035;
+			sizeEx = 0.03;
+			text = "-";
+			action = "WFBE_MenuAction = 4";
+			tooltip = "Remove the last queued level of the selected upgrade";
+		};
 		class CA_Details : CA_UpgradeDetails {
 			idc = 504006;
+			// Marty: Align the running-upgrade status with the Upgrade button while keeping enough height for the countdown.
 			x = 0.01;
-			y = 0.765;
-			w = 0.4;
-			h = 0.035;
+			y = 0.748;
+			w = 0.56;
+			h = 0.047;
 			size = 0.0250;
 			shadow = 2;
 		};
@@ -517,10 +541,10 @@ class WFBE_TransferMenu {
 			idc = 505004;
 			x = 0.415;
 			y = 0.21;
-			w = 0.3;
-			h = 0.035;
+			w = 0.38;
+			h = 0.075;
 			size = 0.03;
-			
+
 			colorText[] = {0.543, 0.5742, 0.4102, 1.0};
 		};
 	};
@@ -1164,8 +1188,8 @@ class WF_Menu {
 			idc = 11015;
 			x = 0.178164;
 			y = 0.19379;
-			w = 0.800001;
-			sizeEx = 0.035;
+			w = 0.600000;
+			sizeEx = 0.031;
 		};
 		class CA_PA_Button : RscClickableText {
 			idc = 11012;
@@ -1205,16 +1229,67 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};
 		
-		class CA_HUD_Button : RscClickableText {
+		class CA_HUD_Button : RscButton_Main {
 			idc = 11018;
-			x = 0.410;
-			y = 0.78000;
-			w = 0.040;
-			h = 0.040;
-			text = "Client\images\hud_bis.paa";
+			x = 0.408;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "HUD";
+			sizeEx = 0.026;
 			action = "MenuAction = 16";
-			tooltip = "ALL SCREEN HUD On/Off";
+			tooltip = "HUD On/Off";
 		};		
+		// Marty: Reuse the old FPS-only HUD slot for GPS; FPS now lives in the RHUD/sidebar.
+		class CA_GPS_Button : RscButton_Main {
+			idc = 11019;
+			x = 0.455;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "GPS";
+			sizeEx = 0.026;
+			action = "MenuAction = 19";
+			tooltip = "Enable GPS / Mini Map";
+		};
+		//--- Command Deck: Skin Selector shortcut in footer strip.
+		class CA_Skin_Button : RscButton_Main {
+			idc = 11021;
+			//--- B748 (Ray 2026-06-24): revived the hidden skins-button slot as the SETTINGS GEAR -> WFBE_SettingsMenu (idd 29000) via MenuAction 24.
+			show = 1;
+			x = 0.564;
+			y = 0.767144;
+			w = 0.057;
+			h = 0.045;
+			text = "SETUP";
+			sizeEx = 0.022;
+			action = "MenuAction = 24";
+			tooltip = "Settings (view distance, HUD, markers, warnings)";
+		};
+		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
+		class CA_EAR_Button : RscButton_Main {
+			idc = 11022;
+			x = 0.626;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "EAR";
+			sizeEx = 0.026;
+			action = "MenuAction = 22";
+			tooltip = "Earplugs In/Out (lowers game volume)";
+		};
+		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
+		class CA_FPS_Button : RscButton_Main {
+			idc = 11023;
+			x = 0.503;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "FPS";
+			sizeEx = 0.026;
+			action = "MenuAction = 23";
+			tooltip = "Auto VD / target FPS";
+		};
 	};
 };
 
@@ -1389,16 +1464,25 @@ class RscMenu_Team {
 			h = 0.035;
 			onLBSelChanged = "MenuAction = 6";
 		};
-		/* Vote PopUp */
-		class VPOPON_Button : RscButton {
-			idc = 13019;
-			x = 0.203;
-			y = 0.755;
-			w = 0.279;
-			text = "";
-			action = "MenuAction = 13";
-		}
-		/* Seperator */
+			/* High climbing preference */
+			class CA_HighClimbing_Default_Button : RscButton {
+				idc = 13020;
+				x = 0.203;
+				y = 0.733;
+				w = 0.279;
+				text = "";
+				action = "MenuAction = 14";
+			};
+			/* Vote PopUp */
+			class VPOPON_Button : RscButton {
+				idc = 13019;
+				x = 0.203;
+				y = 0.772;
+				w = 0.279;
+				text = "";
+				action = "MenuAction = 13";
+			};
+			/* Seperator */
 		class Line_TRH1 : RscText {
 			x = 0.192941;
 			y = 0.455916;
@@ -1638,8 +1722,22 @@ class RscMenu_BuyUnits {
 			idc = 12024;
 			x = 0.350419;
 			y = 0.00775906;
-			w = 0.3;
+			w = 0.22;
 			style = ST_CENTER;
+		};
+		//--- Task 33: cancel-last-queue button, placed in header next to queue count.
+		class CA_Cancel_Queue : RscButton {
+			idc = 12043;
+			x = 0.578;
+			y = 0.00775906;
+			w = 0.07;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "Cancel Last";
+			colorBackground[] = {0.6, 0.1, 0.0, 0.8};
+			colorBackgroundActive[] = {0.8, 0.2, 0.0, 0.9};
+			colorText[] = {1, 1, 1, 1};
+			action = "MenuAction = 501";
 		};
 		class CA_Faction_Label : RscText {
 			idc = 12025;
@@ -2211,10 +2309,11 @@ class RscMenu_Tactical {
 			w = 0.2;
 			text = $STR_WF_TACTICAL_Artillery;
 		};
+		// Marty: Shift the radius controls down to make room for artillery ammo selection.
 		class CA_Artillery_Label_Radius : RscText {
 			idc = 17030;
 			x = 0.00602637;
-			y = 0.182926;
+			y = 0.223262;
 			w = 0.2;
 			text = $STR_WF_TACTICAL_ArtilleryRadius;
 		};
@@ -2225,17 +2324,18 @@ class RscMenu_Tactical {
 			w = 0.2;
 			text = $STR_WF_TACTICAL_Artillery;
 		};
+		// Marty: Keep the radius slider aligned with the shifted radius label.
 		class CA_Artillery_Slider : RscXSliderH {
 			idc = 17005;
 			x = 0.14652;
-			y = 0.188795;
+			y = 0.229131;
 			w = 0.224033;
 			h = 0.029412;
 		};
 		class CA_SetFMission_Button : RscButton {
 			idc = 17006;
 			x = 0.12047;
-			y = 0.515631;
+			y = 0.507631;
 			w = 0.25;
 			text = $STR_WF_TACTICAL_ArtillerySetFireMission;
 			action = "MenuAction = 1";
@@ -2247,7 +2347,7 @@ class RscMenu_Tactical {
 		class CA_FireMission_Button : RscButton {
 			idc = 17007;
 			x = 0.12047;
-			y = 0.566833;
+			y = 0.551631;
 			w = 0.25;
 			text = $STR_WF_TACTICAL_ArtilleryCallFireMission;
 			action = "MenuAction = 2";
@@ -2260,10 +2360,37 @@ class RscMenu_Tactical {
 			h = 0.029412;
 			onLBSelChanged = "MenuAction = 200";
 		};
+		// Card #113: one-click crew-all-artillery. Mounts available group AI into the empty
+		// driver/gunner seats of the player's own artillery pieces.
+		class CA_CrewArtillery_Button : RscButton {
+			idc = 17040;
+			x = 0.12047;
+			y = 0.595631;
+			w = 0.25;
+			text = $STR_WF_TACTICAL_CrewArtillery;
+			action = "MenuAction = 50";
+			tooltip = $STR_WF_TACTICAL_CrewArtilleryTooltip;
+		};
+		// Marty: Ammo selector applies the selected shell type to all matching player artillery units.
+		class CA_Artillery_Label_Ammo : RscText {
+			idc = 17033;
+			x = 0.00434496;
+			y = 0.182926;
+			w = 0.2;
+			text = "Ammo:";
+		};
+		class CA_Artillery_Ammo_Combo : RscCombo {
+			idc = 17034;
+			x = 0.145945;
+			y = 0.186553;
+			w = 0.224033;
+			h = 0.029412;
+			onLBSelChanged = "MenuAction = 201";
+		};
 		class CA_Support_SubTitle : RscText_SubTitle {
 			idc = 17009;
 			x = 0.00518464;
-			y = 0.622955;
+			y = 0.646955;
 			w = 0.2;
 			text = $STR_WF_TACTICAL_Support;
 		};
@@ -2340,12 +2467,13 @@ class RscMenu_Tactical {
 			action = "MenuAction = 40";
 			tooltip = $STR_WF_TOOLTIP_ArtilleryToggle;
 		};
+		// Marty: Move the artillery status table down after adding the ammo selector.
 		class CA_ArtilleryList : RscListBoxA {
 			idc = 17024;
 			x = 0.00459768;
-			y = 0.270084;
+			y = 0.309084;
 			w = 0.365209;
-			h = 0.235;
+			h = 0.196;
 			columns[] = {0.02, 0.55};
 			drawSideArrows = 0;
 			idcRight = -1;
@@ -2359,16 +2487,17 @@ class RscMenu_Tactical {
 			
 			onLBSelChanged = "MenuAction = 60";
 		};	
+		// Marty: Keep the artillery overview title aligned with the shifted table.
 		class CA_ArtilleryTable_Label : RscText {
 			idc = 17025;
 			x = 0.00495766;
-			y = 0.226604;
+			y = 0.265604;
 			w = 0.339999;
 		};
 		/* Separators */
 		class LineTRH1 : RscText {
 			x = 0.00638635;
-			y = 0.61566;
+			y = 0.63966;
 			w = 0.364063;
 			h = WFBE_SPT1;
 			colorBackground[] = WFBE_SPC1;
@@ -2390,7 +2519,6 @@ class RscMenu_Tactical {
 	};
 };
 
-//--- Upgrade Menu. | ALL DONE!
 
 //--- Service Menu. | ALL DONE!
 class RscMenu_Service {
@@ -2399,11 +2527,12 @@ class RscMenu_Service {
 	onLoad = "ExecVM ""Client\GUI\GUI_Menu_Service.sqf""";
 	
 	class controlsBackground {
+		// Marty: Extend the service menu to fit the EASA row under the batch buttons.
 		class Background_M : RscText {
 			x = 0.157263;
 			y = 0.151421;
 			w = 0.687155;
-			h = 0.699949;
+			h = 0.815949;
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color;
 		};
@@ -2415,9 +2544,10 @@ class RscMenu_Service {
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
+		// Marty: Move the footer down with the enlarged service menu.
 		class Background_F : RscText {
 			x = 0.157263;
-			y = 0.798870;
+			y = 0.914870;
 			w = 0.687155;
 			h = 0.0525;
 			moving = 1;
@@ -2444,85 +2574,158 @@ class RscMenu_Service {
 			x = 0.162101;
 			y = 0.209804;
 			w = 0.677143;
-			h = 0.429553;
+			h = 0.385000;
 			rowHeight = 0.025;
 			sizeEx = 0.035;
+		};
+		class CA_ServiceInfo : RscStructuredText {
+			idc = 20021;
+			x = 0.162101;
+			y = 0.604500;
+			w = 0.677143;
+			h = 0.082000;
+			size = 0.021;
+			colorBackground[] = WFBE_Background_Color_Footer;
 		};
 		class CA_Rearm_Button : RscButton {
 			idc = 20003;
 			x = 0.161261;
-			y = 0.650391;
-			w = 0.22;
+			y = 0.686391;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Rearm;
 			action = "MenuAction = 1";
 		};
 		class CA_Repair_Button : RscButton {
 			idc = 20004;
 			x = 0.50748;
-			y = 0.650391;
-			w = 0.22;
+			y = 0.686391;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Repair;
 			action = "MenuAction = 2";
 		};
 		class CA_Refuel_Button : RscButton {
 			idc = 20005;
 			x = 0.161261;
-			y = 0.697899;
-			w = 0.22;
+			y = 0.733899;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Refuel;
 			action = "MenuAction = 3";
 		};
 		class CA_Heal_Button : RscButton {
 			idc = 20008;
 			x = 0.50748;
-			y = 0.697899;
-			w = 0.22;
+			y = 0.733899;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Heal;
 			action = "MenuAction = 5";
 		};
-		class CA_EASA_Button : RscButton {
-			idc = 20010;
-			x = 0.161261;
-			y = 0.747311;
-			w = 0.565918;
-			text = $STR_WF_SERVICE_EASA;
-			action = "MenuAction = 7";
+		// Marty: Compact all-unit buttons sit inside the old single-action button width.
+		class CA_RearmAll_Button : RscButton {
+			idc = 20015;
+			x = 0.329261;
+			y = 0.686391;
+			w = 0.052;
+			text = "All";
+			action = "MenuAction = 11";
+		};
+		class CA_RepairAll_Button : RscButton {
+			idc = 20017;
+			x = 0.675480;
+			y = 0.686391;
+			w = 0.052;
+			text = "All";
+			action = "MenuAction = 12";
+		};
+		class CA_RefuelAll_Button : RscButton {
+			idc = 20022;
+			x = 0.329261;
+			y = 0.733899;
+			w = 0.052;
+			text = "All";
+			action = "MenuAction = 13";
+		};
+		class CA_HealAll_Button : RscButton {
+			idc = 20019;
+			x = 0.675480;
+			y = 0.733899;
+			w = 0.052;
+			text = "All";
+			action = "MenuAction = 15";
 		};
 		class CA_LabelRearm: RscText {
 			idc = 20011;
 			x = 0.388739;
-			y = 0.653752;
+			y = 0.689752;
 			w = 0.12;
 		};
 		class CA_LabelRepair : CA_LabelRearm {
 			idc = 20012;
-			x = 0.734957;
-			y = 0.653752;
-			w = 0.12;
+			x = 0.724957;
+			y = 0.689752;
+			w = 0.095;
 		};
 		class CA_LabelRefuel : CA_LabelRearm {
 			idc = 20013;
 			x = 0.388739;
-			y = 0.699691;
+			y = 0.735691;
 			w = 0.12;
 		};
 		class CA_LabelHeal : CA_LabelRearm {
 			idc = 20014;
-			x = 0.734957;
-			y = 0.699691;
+			x = 0.724957;
+			y = 0.735691;
+			w = 0.095;
+		};
+		// Marty: Hidden total-price labels kept so older scripts/control maps stay harmless.
+		class CA_LabelRearmAll: CA_LabelRearm {
+			idc = 20016;
+			x = 0;
+			y = 0;
+			w = 0;
+			h = 0;
+		};
+		class CA_LabelRepairAll : CA_LabelRearmAll {
+			idc = 20018;
+		};
+		class CA_LabelHealAll : CA_LabelRearmAll {
+			idc = 20020;
+		};
+		class CA_FullService_Button : RscButton {
+			idc = 20023;
+			x = 0.161261;
+			y = 0.767311;
+			w = 0.22;
+			text = "Full Service";
+			action = "MenuAction = 16";
+		};
+		class CA_LabelFullService : CA_LabelRearm {
+			idc = 20024;
+			x = 0.388739;
+			y = 0.770672;
 			w = 0.12;
 		};
+		// Marty: Keep EASA visible as a loadout/configuration action, not a generic service action.
+		class CA_EASA_Button : RscButton {
+			idc = 20010;
+			x = 0.50748;
+			y = 0.767311;
+			w = 0.331764;
+			text = "Loadout (EASA)";
+			action = "MenuAction = 7";
+		};
 		/* Back */
+		// Marty: Align footer buttons with the enlarged service window.
 		class Back_Button : RscButton_Back {
 			x = 0.737046;
-			y = 0.803685;
+			y = 0.919685;
 			action = "MenuAction = 8";
 			tooltip = $STR_WF_TOOLTIP_BackButton;
 		};
 		/* Exit */
+		// Marty: Align footer buttons with the enlarged service window.
 		class Exit_Button : RscButton_Exit {
 			x = 0.800311;
-			y = 0.803685;
+			y = 0.919685;
 			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};
@@ -2734,7 +2937,7 @@ class RscDisplay_Parameters {
 //--- EASA Menu. | ALL DONE!
 class RscMenu_EASA {
 	movingEnable = 1;
-	idd = 23000;
+	idd = 24000;
 	onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_EASA.sqf""";
 	
 	class controlsBackground {
@@ -2873,7 +3076,16 @@ class RscMenu_Economy {
 			x = 0.0322372;
 			y = 0.264119;
 			w = 0.25;
-			text = "Economy Workers";
+			text = "Economy Overview";
+		};
+		class CA_EconomyDashboard : RscStructuredText {
+			idc = 23020;
+			x = 0.0372786;
+			y = 0.305000;
+			w = 0.360000;
+			h = 0.140000;
+			size = 0.030;
+			shadow = 1;
 		};
 		/* Income */
 		class CA_LabelPartIncome : CA_LabelPartWorkers {
@@ -3067,5 +3279,380 @@ class RscMenu_Help {
 			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};		
-	};	
+	};
+};
+
+//--- Command Deck: Skin Selector (idd 27000).
+class WFBE_SkinSelectorMenu {
+	movingEnable = 1;
+	idd = 27000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_SkinSelectorMenu.sqf'";
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.25;
+			y = 0.08;
+			w = 0.50;
+			h = 0.84;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			x = 0.25;
+			y = 0.08;
+			w = 0.50;
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			x = 0.25;
+			y = 0.08 + 0.80;
+			w = 0.50;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		//--- Accent border line below header.
+		class CA_Border : RscText {
+			x = 0.25;
+			y = 0.08 + 0.06;
+			w = 0.50;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		//--- Header title (idc 27008) — RscButton_Main so ctrlSetText works at runtime.
+		class CA_Title : RscButton_Main {
+			idc = 27008;
+			x = 0.255;
+			y = 0.08 + 0.012;
+			w = 0.35;
+			h = 0.038;
+			text = $STR_WF_SkinSelector_Title;
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		//--- Close button.
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.25 + 0.45;
+			y = 0.08 + 0.0075;
+			w = 0.045;
+			h = 0.045;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 2;";
+		};
+		//--- Skin list (idc 27001).
+		class CA_SkinList : RscListBox {
+			idc = 27001;
+			x = 0.255;
+			y = 0.08 + 0.07;
+			w = 0.22;
+			h = 0.65;
+			rowHeight = 0.03;
+			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
+			onLBSelChanged = "";
+		};
+		//--- Portrait picture (idc 27002).
+		class CA_Portrait : RscPicture {
+			idc = 27002;
+			x = 0.485;
+			y = 0.08 + 0.07;
+			w = 0.12;
+			h = 0.24;
+			style = 0x30 + 0x800;
+			text = "";
+		};
+		//--- Skin name label (idc 27003).
+		class CA_SkinName : RscText {
+			idc = 27003;
+			x = 0.485;
+			y = 0.08 + 0.32;
+			w = 0.255;
+			h = 0.04;
+			sizeEx = 0.026;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Faction label (idc 27004).
+		class CA_FactionName : RscText {
+			idc = 27004;
+			x = 0.485;
+			y = 0.08 + 0.365;
+			w = 0.255;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Ghillie note (idc 27005).
+		class CA_GhillieNote : RscText {
+			idc = 27005;
+			x = 0.255;
+			y = 0.08 + 0.73;
+			w = 0.485;
+			h = 0.03;
+			sizeEx = 0.020;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- APPLY button (idc 27006) — RscButton_Main for ctrlSetText compat.
+		class CA_Apply : RscButton_Main {
+			idc = 27006;
+			x = 0.330;
+			y = 0.08 + 0.762;
+			w = 0.15;
+			h = 0.035;
+			sizeEx = 0.028;
+			text = $STR_WF_SkinSelector_Apply;
+			action = "WFBE_MenuAction = 1";
+		};
+		//--- SKIP button (idc 27007).
+		class CA_Skip : RscButton_Main {
+			idc = 27007;
+			x = 0.490;
+			y = 0.08 + 0.762;
+			w = 0.10;
+			h = 0.035;
+			sizeEx = 0.026;
+			text = $STR_WF_SkinSelector_Skip;
+			action = "WFBE_MenuAction = 2";
+		};
+	};
+};
+
+//--- Per-player Settings menu (idd 29000). Opened from the WF-menu GEAR button (revived skins slot, MenuAction 24).
+//--- All labels (29010-29014 toggles, 29020 VD) set live by WASP\actions\Settings\Settings_Open.sqf (sub-dialog global WFBE_MenuAction).
+class WFBE_SettingsMenu {
+	movingEnable = 1;
+	idd = 29000;
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.30; y = 0.18; w = 0.40; h = 0.66;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Border : RscText {
+			x = 0.30; y = 0.18 + 0.06; w = 0.40; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		class CA_Title : RscButton_Main {
+			idc = 29001;
+			x = 0.305; y = 0.18 + 0.012; w = 0.30; h = 0.038;
+			text = "SETTINGS";
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.30 + 0.355; y = 0.18 + 0.0075; w = 0.045; h = 0.045;
+			text = "X";
+			shadow = 2; sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 9;";
+		};
+		//--- Toggle rows (text set live by the controller; click flips the pref).
+		class CA_HUD : RscButton_Main {
+			idc = 29010;
+			x = 0.325; y = 0.18 + 0.085; w = 0.35; h = 0.044;
+			sizeEx = 0.026;
+			text = "HUD Overlay: ON";
+			action = "WFBE_MenuAction = 1";
+		};
+		class CA_AAR  : CA_HUD { idc = 29011; y = 0.18 + 0.135; text = "AAR Map Markers: ON";   action = "WFBE_MenuAction = 2"; };
+		class CA_Bomb : CA_HUD { idc = 29012; y = 0.18 + 0.185; text = "Bomb Alt Warning: ON";   action = "WFBE_MenuAction = 3"; };
+		class CA_Amb  : CA_HUD { idc = 29013; y = 0.18 + 0.235; text = "Ambulance Circles: ON";  action = "WFBE_MenuAction = 4"; };
+		class CA_Kill : CA_HUD { idc = 29014; y = 0.18 + 0.285; text = "Kill Feed: ON";          action = "WFBE_MenuAction = 5"; };
+		class CA_IRS   : CA_HUD { idc = 29015; y = 0.18 + 0.335; text = "Auto IR Smoke: ON";     action = "WFBE_MenuAction = 6"; };
+		class CA_Bipod : CA_HUD { idc = 29016; y = 0.18 + 0.385; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
+		class CA_Audio : CA_HUD { idc = 29017; y = 0.18 + 0.435; text = "Audio Cues: OFF";       action = "WFBE_MenuAction = 8"; };
+		//--- View-distance label + choice row.
+		class CA_VDLabel : RscText {
+			idc = 29020;
+			x = 0.325; y = 0.18 + 0.49; w = 0.35; h = 0.03;
+			sizeEx = 0.022;
+			text = "View Distance:";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_VD1 : RscButton_Main {
+			idc = 29021;
+			x = 0.325; y = 0.18 + 0.525; w = 0.066; h = 0.05;
+			sizeEx = 0.022;
+			text = "1000";
+			action = "WFBE_MenuAction = 11";
+		};
+		class CA_VD2 : CA_VD1 { idc = 29022; x = 0.325 + 0.070; text = "2000"; action = "WFBE_MenuAction = 12"; };
+		class CA_VD3 : CA_VD1 { idc = 29023; x = 0.325 + 0.140; text = "3000"; action = "WFBE_MenuAction = 13"; };
+		class CA_VD4 : CA_VD1 { idc = 29024; x = 0.325 + 0.210; text = "4000"; action = "WFBE_MenuAction = 14"; };
+		class CA_VD5 : CA_VD1 { idc = 29025; x = 0.325 + 0.280; text = "5000"; action = "WFBE_MenuAction = 15"; };
+		//--- Done.
+		class CA_Done : RscButton_Main {
+			idc = 29009;
+			x = 0.325; y = 0.18 + 0.60; w = 0.35; h = 0.04;
+			sizeEx = 0.026;
+			text = "Done";
+			action = "WFBE_MenuAction = 9";
+		};
+	};
+};
+
+//--- Adaptive View-Distance / Target-FPS picker (idd 28000). Opened from the WF-menu "FPS" button.
+//--- Labels (idc 28001 toggle, 28006 status) are set live by WASP\actions\FPSPicker\FPSPicker_Open.sqf.
+class WFBE_FPSPickerMenu {
+	movingEnable = 1;
+	idd = 28000;
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.32;
+			y = 0.30;
+			w = 0.36;
+			h = 0.40;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			y = 0.30 + 0.36;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		class CA_Border : RscText {
+			x = 0.32;
+			y = 0.30 + 0.06;
+			w = 0.36;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		//--- Header title.
+		class CA_Title : RscButton_Main {
+			idc = 28008;
+			x = 0.325;
+			y = 0.30 + 0.012;
+			w = 0.30;
+			h = 0.038;
+			text = "VD / FPS";
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		//--- Close (X).
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.32 + 0.315;
+			y = 0.30 + 0.0075;
+			w = 0.045;
+			h = 0.045;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 9;";
+		};
+		//--- Auto-VD on/off toggle (text set at runtime, idc 28001).
+		class CA_Toggle : RscButton_Main {
+			idc = 28001;
+			x = 0.345;
+			y = 0.30 + 0.085;
+			w = 0.31;
+			h = 0.05;
+			sizeEx = 0.028;
+			text = "Auto-VD: OFF";
+			action = "WFBE_MenuAction = 1";
+		};
+		//--- Explanatory line.
+		class CA_Status : RscText {
+			idc = 28002;
+			x = 0.345;
+			y = 0.30 + 0.145;
+			w = 0.31;
+			h = 0.03;
+			sizeEx = 0.020;
+			text = "Adapts VD to hold your target FPS.";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Target-FPS preset buttons (30 / 45 / 50 / 60).
+		class CA_FPS45 : RscButton_Main {
+			idc = 28003;
+			x = 0.4225;
+			y = 0.30 + 0.20;
+			w = 0.07;
+			h = 0.05;
+			sizeEx = 0.024;
+			text = "45 FPS";
+			action = "WFBE_MenuAction = 2";
+		};
+		class CA_FPS30 : CA_FPS45 {
+			idc = 28009;
+			x = 0.345;
+			text = "30 FPS";
+			action = "WFBE_MenuAction = 5";
+		};
+		class CA_FPS50 : CA_FPS45 {
+			idc = 28004;
+			x = 0.50;
+			text = "50 FPS";
+			action = "WFBE_MenuAction = 3";
+		};
+		class CA_FPS60 : CA_FPS45 {
+			idc = 28005;
+			x = 0.5775;
+			text = "60 FPS";
+			action = "WFBE_MenuAction = 4";
+		};
+		//--- Current state (set at runtime, idc 28006).
+		class CA_Current : RscText {
+			idc = 28006;
+			x = 0.345;
+			y = 0.30 + 0.265;
+			w = 0.31;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Done / close.
+		class CA_Done : RscButton_Main {
+			idc = 28007;
+			x = 0.345;
+			y = 0.30 + 0.325;
+			w = 0.31;
+			h = 0.04;
+			sizeEx = 0.026;
+			text = "Close";
+			action = "WFBE_MenuAction = 9";
+		};
+	};
 };

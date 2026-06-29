@@ -110,7 +110,14 @@ class FSM
       name = "Update_Actions";
       init = /*%FSM<STATEINIT""">*/"_UpdateActions = false;" \n
        "_vehicle = Vehicle player;" \n
-       "if (_vehicle != player) then {_optionsID = _vehicle addAction [""<t color='#42b6ff'>"" + (localize ""STR_WF_Options"") + ""</t>"",""Client\Action\Action_Menu.sqf"", """", 1, false, true, """", """"]} else {_lastVehicle RemoveAction _optionsID};" \n
+       "if (_vehicle != player) then {" \n
+       "	_optionsID = _vehicle addAction [""<t color='#42b6ff'>"" + (localize ""STR_WF_Options"") + ""</t>"",""Client\Action\Action_Menu.sqf"", """", 1, false, true, """", """"];" \n
+       "} else {" \n
+       "	_lastVehicle RemoveAction _optionsID;" \n
+       "	_optionsID = -1;" \n
+       "	// Marty: Refresh the player WF menu immediately when leaving a vehicle." \n
+       "	if !(isNil ""WFBE_CL_FNC_AddWFMenuAction"") then {player Call WFBE_CL_FNC_AddWFMenuAction};" \n
+       "};" \n
        "_lastVehicle = _vehicle;"/*%FSM</STATEINIT""">*/;
       precondition = /*%FSM<STATEPRECONDITION""">*/""/*%FSM</STATEPRECONDITION""">*/;
       class Links

@@ -163,10 +163,10 @@ _i = _i + [['','',4500,25,-2,3,2,0,'US',[]]];
 /* Heavy Vehicles */
 
 _c = _c + ['M2A2_EP1'];
-_i = _i + [['','',if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {2800} else {3800},30,-2,1,2,0,'US',[]]];
+_i = _i + [['','',if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {2800} else {3800},22,-2,1,2,0,'US',[]]];
 
 _c = _c + ['M2A3_EP1'];
-_i = _i + [['','',3800,32,-2,2,2,0,'US',[]]];
+_i = _i + [['','',3800,28,-2,2,2,0,'US',[]]];
 
 _c = _c + ['M1A1_US_DES_EP1'];
 _i = _i + [['','',5600,40,-2,3,2,0,'US',[]]];
@@ -182,7 +182,7 @@ _i = _i + [['','',7500,35,-2,4,2,0,'US',[]]];
 
 /* Air Vehicles */
 _c = _c + ['MH6J_EP1'];
-_i = _i + [['','',4928,25,-2,0,3,0,'US',[]]];
+_i = _i + [['','',4928,25,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): MH6J_EP1 air-upgrade 0->1. Was a tier-0 heli, so the strict-> tech gate passed it at air-research 0; aircraft must require an air factory (AIR-1). Rollback: ...,0,3,0,...
 
 _c = _c + ['UH60M_EP1'];
 _i = _i + [['','',7168,30,-2,1,3,0,'US',[]]];
@@ -197,7 +197,7 @@ _c = _c + ['C130J_US_EP1'];
 _i = _i + [['','',9440,30,-2,1,3,0,'US',[]]];
 
 _c = _c + ['AH6X_EP1'];
-_i = _i + [['','',4416,50,-2,0,3,0,'US',[]]];
+_i = _i + [['','',4416,50,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): AH6X_EP1 air-upgrade 0->1 (same tier-0-heli fix as MH6J). Rollback: ...,0,3,0,...
 
 _c = _c + ['AH6J_EP1'];
 _i = _i + [['','',9119,35,-2,2,3,0,'US',[]]];
@@ -286,7 +286,7 @@ _i = _i + [['','',5500,0,0,0,'Strategic',0,'US',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
-		missionNamespace getVariable (_c select _z);
+		_get = missionNamespace getVariable (_c select _z);
 		if (isNil '_get') then {
 			if ((_i select _z) select 0 == '') then {(_i select _z) set [0, [_c select _z,'displayName'] Call GetConfigInfo]};
 			if (typeName ((_i select _z) select 4) == 'SCALAR') then {

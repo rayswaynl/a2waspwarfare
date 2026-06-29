@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_construct","_constructed","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_rlType","_side","_sideID","_site","_siteName","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
+Private ["_construct","_constructed","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_rlType","_side","_sideID","_site","_siteName","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -122,9 +122,52 @@ _site setPos _position;
 _site setVariable ["wfbe_side", _side];
 _site setVariable ["wfbe_structure_type", _rlType];
 
-if(isAutoWallConstructingEnabled)then{
-_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
-_site setVariable ["WFBE_Walls", _defenses];
+//--- Bank: spawn composition dressing, register in per-side registry, create global marker, start income drip.
+if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	private ["_dressTpl","_bankKey","_markerName","_markerColor","_markerText"];
+	_dressTpl = Format ["WFBE_NEURODEF_BANK_%1", if (_side == west) then {"WEST"} else {"EAST"}];
+	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	//--- Register single-instance reference.
+	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
+	missionNamespace setVariable [_bankKey, _site];
+	//--- B66: clear the synchronous pending reservation set in RequestStructure.sqf now that the
+	//--- real bank is registered (the live-bank guard takes over from here).
+	missionNamespace setVariable [_bankKey + "_PENDING", -1e11];
+	//--- Global map marker visible to all players (createMarker is global on server).
+	_markerName = Format ["wfbe_bank_%1", if (_side == west) then {"west"} else {"east"}];
+	_markerColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};
+	_markerText = if (_side == west) then {"FEDERAL RESERVE"} else {"BANK ROSSII"};
+	createMarker [_markerName, _position];
+	_markerName setMarkerType "mil_warning";
+	_markerName setMarkerColor _markerColor;
+	_markerName setMarkerText _markerText;
+	_site setVariable ["wfbe_bank_marker", _markerName];
+	//--- Spawn income drip script via registered function.
+	[_site, _side] Spawn WFBE_SE_FNC_BankIncome;
+	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] Bank registered. Marker [%2] created.", str _side, _markerName]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Reserve / ArtilleryRadar: spawn faction composition dressing (task 13 — WDDM starred presets).
+//--- Mirrors the Bank branch above. Templates WFBE_NEURODEF_RESERVE_WEST/EAST and
+//--- WFBE_NEURODEF_ARTILLERYRADAR_WEST/EAST live in Server\Init\Init_Defenses.sqf.
+//--- These two are now EXCLUDED from the auto-walls block below so walls don't double up
+//--- with the dressing rings (the dressing IS the walls + furniture, like Bank/CBR).
+//--- Purely cosmetic, one-time spawn; cleanup via the function's Killed EH on _site.
+if (_rlType in ["Reserve","ArtilleryRadar"]) then {
+	private ["_dressTpl"];
+	_dressTpl = Format ["WFBE_NEURODEF_%1_%2", toUpper _rlType, if (_side == west) then {"WEST"} else {"EAST"}];
+	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 composition dressing spawned via [%3].", str _side, _rlType, _dressTpl]] Call WFBE_CO_FNC_LogContent;
+};
+
+if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
+	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
+	_site setVariable ["WFBE_Walls", _defenses];
+} else {
+	_site setVariable ["WFBE_Walls", []];
+	if (_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]) then {
+		["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 auto walls skipped.", str _side, _rlType]] Call WFBE_CO_FNC_LogContent;
+	};
 };
 
 [_side, "Constructed", ["Base", _site]] Spawn SideMessage;
@@ -144,4 +187,15 @@ if (!IsNull _site) then {
 	Call Compile Format ["_site AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];",_type];
 	
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] Structure [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
+
+	//--- B74.2: leaderboard STRUCTURE-built credit. Builder UID is not threaded through the
+	//--- RequestStructure->Construction path; attribute to the nearest same-side player at the
+	//--- completed site (the placer stands at the build spot). Same idiom as Construction_SmallSite.sqf.
+	private ["_bAttrPos","_bAttrSide","_bAttrRange","_bNear","_bDist","_bUid"];
+	_bAttrPos   = _position;
+	_bAttrSide  = _side;
+	_bAttrRange = missionNamespace getVariable ["WFBE_C_STATS_BUILD_ATTR_RANGE", 150];
+	_bNear = objNull; _bDist = _bAttrRange + 1;
+	{ if (isPlayer _x && {alive _x} && {side _x == _bAttrSide} && {(_x distance _bAttrPos) < _bDist}) then {_bNear = _x; _bDist = _x distance _bAttrPos} } forEach playableUnits;
+	if (!isNull _bNear) then {_bUid = getPlayerUID _bNear; if (_bUid != "") then {[_bUid, WFBE_STAT_STRUCTURES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 };

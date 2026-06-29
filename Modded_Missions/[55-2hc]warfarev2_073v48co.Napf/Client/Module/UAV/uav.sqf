@@ -30,7 +30,7 @@ Call Compile Format ["_uav addEventHandler ['Killed',{[_this select 0,_this sele
 _uav setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';",sideID];
 processInitCommands;
 
-_group = createGroup sideJoined;
+_group = [sideJoined, "misc"] Call WFBE_CO_FNC_CreateGroup;
 _driver = [missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText],_group,getPos _uav,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
 _driver moveInDriver _uav;
 
@@ -120,3 +120,11 @@ while {alive _uav} do {
 	waitUntil {waypointDescription [group _uav,currentWaypoint group _uav] == ' ' || _wpcount != count waypoints _uav || !alive _uav};
 	if (!(alive _uav)||isNull _uav) exitWith {};
 };
+
+//--- SP4: delete the UAV crew group(s) so they don't leak toward the 288-group engine cap.
+//--- (the driver is split into its own group at line ~56, so clean both.)
+private "_dgrp";
+_dgrp = group _driver;
+{deleteVehicle _x} forEach (units _group + units _dgrp);
+deleteGroup _group;
+if (!isNull _dgrp && {_dgrp != _group}) then {deleteGroup _dgrp};

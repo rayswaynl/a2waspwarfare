@@ -12,8 +12,9 @@ _town = _this select 0;
 _town_side_value = _this select 1;
 _town_side_value_new = _this select 2;
 _sv = _town getVariable "supplyValue";
+if (isNil "WFBE_Client_SideID") exitWith {};
 //--- Make sure that the client is concerned by the capture either by capturing or having a town captured.
-if !(WFBE_Client_SideID in [_town_side_value,_town_side_value_new]) exitWith {};
+if !(WFBE_Client_SideID in [_town_side_value,_town_side_value_new,WFBE_C_GUER_ID]) exitWith {}; //--- GUER: always receive town-capture marker updates
 
 _side_captured = (_town_side_value_new) Call WFBE_CO_FNC_GetSideFromID;
 

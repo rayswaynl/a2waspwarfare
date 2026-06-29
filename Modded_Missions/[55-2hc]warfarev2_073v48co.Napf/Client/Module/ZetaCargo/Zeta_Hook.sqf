@@ -1,4 +1,4 @@
-Private ["_action","_actionID","_caller","_ehq","_whq","_index","_isAttached","_lifter","_position","_sorted","_type","_vehicle","_vehicles"];
+Private ["_action","_actionID","_caller","_ehq","_whq","_fhq","_index","_isAttached","_lifter","_position","_sorted","_type","_vehicle","_vehicles"];
 
 _lifter = _this select 0;
 _caller = _this select 1;
@@ -14,6 +14,9 @@ if ((typeOf _lifter) in Zeta_Special) then {
 };
 //--- nearEntities handle living units.
 _vehicles = _lifter nearObjects ["LandVehicle", 10];
+//--- Trello #87: never offer the friendly side HQ as a lift candidate (prevents airlifting your own HQ).
+_fhq = (side _caller) Call WFBE_CO_FNC_GetSideHQ;
+if (!isNull _fhq) then {_vehicles = _vehicles - [_fhq]};
 if (count _vehicles < 1) exitWith {};
 
 _vehicle = [_lifter,_vehicles] Call WFBE_CO_FNC_GetClosestEntity;
@@ -31,7 +34,8 @@ _vehicle attachTo [_lifter,_position];
 _lifter setVariable ["Attached",true,false];
 _lifter removeAction _actionID;
 
-_action = _lifter addAction [localize "STR_WF_Lift_Detach","Client\Module\ZetaCargo\Zeta_Unhook.sqf"];
+//--- B66 pass the hooked vehicle as the addAction args array; Zeta_Unhook reads (_this select 3) select 0 and threw on the empty [] arg list.
+_action = _lifter addAction [localize "STR_WF_Lift_Detach","Client\Module\ZetaCargo\Zeta_Unhook.sqf",[_vehicle]];
 
 while {!gameOver} do {
 	sleep 2;

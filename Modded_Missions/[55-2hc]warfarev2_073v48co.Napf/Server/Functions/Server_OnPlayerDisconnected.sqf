@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hq','_id','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid'];
+Private ['_buildings','_commander','_funds','_get','_hq','_id','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -107,22 +107,29 @@ if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 	_units = units _team;
 	_units = _units + ([_team,false] Call GetTeamVehicles) - [_hq];
 	{if (!isPlayer _x && !(_x in playableUnits)) then {deleteVehicle _x}} forEach _units;
+} else {
+	//--- Preserve==1: AI subordinates remain. Stamp the team so the GC reaper can
+	//--- reclaim it if the player never reconnects within the zombie timeout.
+	_team setVariable ["wfbe_orphaned_at", time];
 };
 
 //--- We save the disconnect client funds.
 _funds = _team Call GetTeamFunds;
 _get set [1,_funds];
 
-//--- We place the unit at the base now.
-_buildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
-_respawnLoc = _hq;
-if (count _buildings > 0) then {
-	_respawnLoc = [_old_unit,_buildings] Call WFBE_CO_FNC_GetClosestEntity;
-};
-_old_unit setPos ([getPos _respawnLoc,20,30] Call GetRandomPosition);
+//--- wiki-wins: removed dead block — _old_unit was already deleteVehicle'd above (~line 102), so this
+//--- setPos (and the GetClosestEntity it fed with the now-null _old_unit) were no-ops. The B74.1
+//--- "_buildings undefined" guard was only masking that dead path.
 
 //--- Update the new informations.
 missionNamespace setVariable [format["WFBE_JIP_USER%1",_uid], _get];
+
+//--- wiki-wins: prune the departing player's row from the supply player-list (it was never removed; the list grew with stale/null refs over a long session).
+if !(isNil "WFBE_SE_PLAYERLIST") then {
+	private "_prunedPL"; _prunedPL = [];
+	{ if ((_x select 1) != _uid) then {_prunedPL set [count _prunedPL, _x]} } forEach WFBE_SE_PLAYERLIST;
+	WFBE_SE_PLAYERLIST = _prunedPL;
+};
 
 //--- Release the UID.
 _team setVariable ["wfbe_uid", nil];
@@ -147,3 +154,31 @@ if !(isNull (_commander)) then {
 		{[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logik getVariable "wfbe_teams");
 	};
 };
+
+// Marty: When AntiStack is disabled, the score sampling loop is not running; skip DB persistence to avoid false missing-score errors.
+if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWith {
+	["INFORMATION", Format ["Server_PlayerDisconnected.sqf: AntiStack is disabled; skipped score DB save for player [%1] [%2].", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Save the player stats to database.
+_playerScore = missionNamespace getVariable format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", _uid];
+
+if (isNil "_playerScore") then {
+	_playerScore = 0;
+	["ERROR", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has no score to be saved upon disconnection. This can be caused by immediate disconnection from the match after joining, or it can be something fishy.", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+};
+
+_oldScore = missionNamespace getVariable format ["WFBE_CO_OLD_SCORE_PLAYER_%1", _uid];
+
+if (isNil "_oldScore") then {
+	_oldScore = 0;
+};
+
+missionNamespace setVariable [format["WFBE_CO_OLD_SCORE_PLAYER_%1", _uid], _playerScore];
+
+_playerScoreDiff = _playerScore - _oldScore;
+
+_result = ["STORE", [_uid, _playerScoreDiff]] call WFBE_SE_FNC_CallDatabaseStore;
+_result = ["STORE_SIDE", [_uid, "NONE"]] call WFBE_SE_FNC_CallDatabaseStoreSide;
+
+["ERROR", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has disconnected.", _name, _uid]] Call WFBE_CO_FNC_LogContent;

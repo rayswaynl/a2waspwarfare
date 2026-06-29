@@ -25,7 +25,7 @@ if !(isNil '_bd') then {
 
 _timeStart = time;
 _ran = round(random((count _ranPos)-1));
-_grp = createGroup _side;
+_grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 _vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARAVEHI",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
 [str _side,'VehiclesCreated',1] Call UpdateStatistics;
 [str _side,'UnitsCreated',1] Call UpdateStatistics;

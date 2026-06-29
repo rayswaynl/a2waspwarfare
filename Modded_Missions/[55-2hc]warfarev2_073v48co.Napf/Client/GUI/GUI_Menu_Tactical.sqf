@@ -39,10 +39,26 @@ _map = _display DisplayCtrl 17002;
 _listboxControl = _display DisplayCtrl _listBox;
 
 _pard = missionNamespace getVariable "WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY";
-{lbAdd[17008,_x]} forEach (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText]);
+// Marty: Show each artillery type's effective min-max range next to its name (Trello #115).
+// Effective max uses the same WFBE_C_ARTILLERY divisor the menu applies for _maxRange below,
+// so the printed number matches the in/out-of-range coloring in the cannon list.
+_artyNames    = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
+_artyRangeMin = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoinedText];
+_artyRangeMax = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoinedText];
+_artyDivisor  = missionNamespace getVariable "WFBE_C_ARTILLERY";
+for "_artyI" from 0 to (count _artyNames) - 1 do {
+	_artyRowName = _artyNames select _artyI;
+	if (!isNil "_artyRangeMin" && !isNil "_artyRangeMax" && _artyDivisor > 0 && _artyI < (count _artyRangeMin) && _artyI < (count _artyRangeMax)) then {
+		_rmin = _artyRangeMin select _artyI;
+		_rmax = round ((_artyRangeMax select _artyI) / _artyDivisor);
+		_artyRowName = Format ["%1 (%2-%3m)", _artyRowName, _rmin, _rmax];
+	};
+	lbAdd [17008, _artyRowName];
+};
 lbSetCurSel[17008,0];
 
-_IDCS = [17005,17006,17007,17008];
+// Marty: Include the artillery ammo selector in the artillery enable/disable state.
+_IDCS = [17005,17006,17007,17008,17034];
 if ((missionNamespace getVariable "WFBE_C_ARTILLERY") == 0) then {{ctrlEnable [_x,false]} forEach _IDCS};
 
 {ctrlEnable [_x, false]} forEach [17010,17011,17012,17013,17014,17015,17017,17018,17020];
@@ -57,7 +73,7 @@ _lastSel = -1;
 _addToList = [localize 'STR_WF_TACTICAL_FastTravel',localize 'STR_WF_ICBM',localize 'STR_WF_TACTICAL_ParadropAmmo',localize 'STR_WF_TACTICAL_ParadropVehicle',localize 'STR_WF_TACTICAL_Paratroop',localize 'STR_WF_TACTICAL_UnitCam',localize 'STR_WF_TACTICAL_UAV',localize 'STR_WF_TACTICAL_UAVDestroy',localize 'STR_WF_TACTICAL_UAVRemoteControl'];
 _addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratroopers","Units_Camera","UAV","UAV_Destroy","UAV_Remote_Control"];
 _addToListFee = [0,75000,9500,3500,8500,0,12500,0,0];
-_addToListInterval = [0,1000,800,600,900,0,0,0,0];
+_addToListInterval = [0,1000,800,600,_pard,0,0,0,0];	//--- QoL fix: paratrooper cooldown now respects WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY (was hardcoded 900, silently ignoring the mission param)
 
 for '_i' from 0 to count(_addToList)-1 do {
 	lbAdd [_listBox,_addToList select _i];
@@ -77,6 +93,43 @@ _maxRange = 200;
 _requestMarkerTransition = false;
 _requestRangedList = true;
 _startLoad = true;
+// Marty: Cache ammo options and remember the last selected ammo per artillery type while the menu is open.
+_currentAmmoOptions = [];
+_ignoreAmmoComboAction = false;
+_selectedAmmoByArtillery = [];
+_artilleryDisplayNames = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
+for "_i" from 0 to (count _artilleryDisplayNames) - 1 do {_selectedAmmoByArtillery set [_i, 0]};
+
+// Marty: Rebuild ammo choices from the selected artillery type and current upgrade level.
+_refreshAmmoCombo = {
+	Private ["_ammoIndex","_artilleryIndex","_displayName","_i","_selectedAmmoIndex","_selectedComboIndex"];
+
+	_artilleryIndex = lbCurSel 17008;
+	lbClear 17034;
+	_currentAmmoOptions = [];
+	ctrlEnable [17034,false];
+
+	if (_artilleryIndex < 0) exitWith {};
+
+	_currentAmmoOptions = [sideJoinedText, _artilleryIndex] Call WFBE_CO_FNC_GetArtilleryAmmoOptions;
+	if (count _currentAmmoOptions == 0) exitWith {};
+
+	for "_i" from 0 to (count _currentAmmoOptions) - 1 do {
+		_displayName = (_currentAmmoOptions select _i) select 0;
+		lbAdd [17034, _displayName];
+		lbSetValue [17034, _i, (_currentAmmoOptions select _i) select 3];
+	};
+
+	_selectedAmmoIndex = _selectedAmmoByArtillery select _artilleryIndex;
+	_selectedComboIndex = 0;
+	for "_i" from 0 to (count _currentAmmoOptions) - 1 do {
+		if (((_currentAmmoOptions select _i) select 3) == _selectedAmmoIndex) then {_selectedComboIndex = _i};
+	};
+
+	ctrlEnable [17034,true];
+	_ignoreAmmoComboAction = true;
+	lbSetCurSel [17034, _selectedComboIndex];
+};
 
 //--- Startup coloration.
 with uinamespace do {
@@ -106,7 +159,6 @@ while {alive player && dialog} do {
 	_currentUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 	
 	if (_ft > 0) then {
-		//--- TODO: Travel fee, mod parameter > FT free or pay, do a clt fct.
 		_currentLevel = _currentUpgrades select WFBE_UP_FASTTRAVEL;
 		if (time - _lastUpdate > 15 && _currentLevel > 0) then {
 			{deleteMarkerLocal _x} forEach _markers;
@@ -117,6 +169,7 @@ while {alive player && dialog} do {
 			_lastUpdate = time;
 			_base = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
 			_isDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
+				if (isNil "_isDeployed") then {_isDeployed = false}; //--- B751: GetSideHQDeployStatus returns nil before wfbe_hq_deployed replicates (JIP) -> would throw "Undefined variable: _isdeployed".
 			if (player distance _base < _ftr && alive _base && vehicle player != _base && _isDeployed) then {
 				_canFT = true;
 				_startPoint = _base;
@@ -420,10 +473,23 @@ while {alive player && dialog} do {
 				
 				_camera cameraEffect["TERMINATE","BACK"];
 				camDestroy _camera;
+
+				//--- Q9 (B69): arrival confirmation for the dropped squad (all client-local).
+				if (!_skip) then {
+					_destName = "destination";
+					if (!isNull _destination) then {
+						_dn = _destination getVariable ["name",""];
+						if (typeName _dn == "STRING" && {_dn != ""}) then {_destName = _dn};
+					};
+					titleText [Format ["Arrived: %1", _destName], "PLAIN DOWN"];
+					playSound "cashierSound"; //--- soft confirmation chime (project CfgSounds, already used for FundsTransfer)
+					systemChat Format ["Fast travel complete - %1 unit(s) moved to %2.", count _travelingWith, _destName];
+				};
 			};
 		};
 		//--- ICBM Strike.
 		if (MenuAction == 8) then {
+			if (!(["wf_icbm", Format ["<t color='#ff5a5a' size='1.1'>Confirm ICBM strike?</t><br/>Cost $%1. Click the target on the map again to confirm.", _currentFee]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
@@ -464,7 +530,7 @@ while {alive player && dialog} do {
 			_time_before_ICBM_impact = missionNamespace getVariable "WFBE_ICBM_TIME_TO_IMPACT"; // time in minutes.
 			_time_before_ICBM_impact = _time_before_ICBM_impact * 60 ;							// time in seconds.
 			[_ICBM_marker_name,_time_before_ICBM_impact] call WFBE_CL_FNC_Delete_Marker ;			// delete the marker. 
-			[_ICBM_marker_elipse_name,_time_before_ICBM_impact] call WFBE_CL_FNC_Delete_Marker ;	// delete the elipse marker.
+			[_ICBM_marker_elipse_name,_time_before_ICBM_impact] call WFBE_CL_FNC_Delete_Marker ;	// delete the elipse marker.		
 		};
 		//--- Vehicle Paradrop.
 		if (MenuAction == 9) then {
@@ -513,6 +579,71 @@ while {alive player && dialog} do {
 		};			
 	};
 	
+	//--- Crew All Artillery (Card #113): mount available group AI into the empty driver/gunner
+	//--- seats of the player's own artillery pieces. Player-group AI and player-bought arty are
+	//--- buyer-local (see Client\Functions\Client_BuildUnit.sqf moveInDriver/moveInGunner), so the
+	//--- moveIn runs client-side here. No new units are spawned; only existing dismounted group AI
+	//--- are seated.
+	if (MenuAction == 50) then {
+		private ["_artyClassnames","_allTypes","_grp","_artyPieces","_available","_seated","_crewed","_piece"];
+		MenuAction = -1;
+
+		//--- Flatten every artillery family for this side into one classname list.
+		_artyClassnames = [];
+		_allTypes = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_CLASSNAMES",sideJoinedText];
+		if (isNil "_allTypes") then {_allTypes = []};
+		{_artyClassnames = _artyClassnames + _x} forEach _allTypes;
+
+		_grp = group player;
+
+		//--- Player-owned artillery pieces with at least one empty crew seat (driver or gunner).
+		_artyPieces = [];
+		{
+			_piece = vehicle _x;
+			if (typeOf _piece in _artyClassnames && !(_piece in _artyPieces) && canMove _piece) then {
+				if (isNull (driver _piece) || isNull (gunner _piece)) then {
+					_artyPieces = _artyPieces + [_piece];
+				};
+			};
+		} forEach (units _grp);
+
+		//--- Available, dismounted, alive group AI (never the human player).
+		_available = [];
+		{
+			if (alive _x && !(isPlayer _x) && (vehicle _x == _x)) then {_available = _available + [_x]};
+		} forEach (units _grp);
+
+		_seated = 0;
+		{
+			_piece = _x;
+			//--- Driver first, then gunner; pop a free AI for each empty seat.
+			if (isNull (driver _piece) && count _available > 0) then {
+				_crewed = _available select 0;
+				_available = _available - [_crewed];
+				[_crewed] allowGetIn true;
+				_crewed moveInDriver _piece;
+				_seated = _seated + 1;
+			};
+			if (isNull (gunner _piece) && count _available > 0) then {
+				_crewed = _available select 0;
+				_available = _available - [_crewed];
+				[_crewed] allowGetIn true;
+				_crewed moveInGunner _piece;
+				_seated = _seated + 1;
+			};
+		} forEach _artyPieces;
+
+		if (count _artyPieces == 0) then {
+			hint (localize "STR_WF_INFO_NoArty");
+		} else {
+			if (_seated > 0) then {
+				hint Format [localize "STR_WF_TACTICAL_CrewArtilleryDone",_seated];
+			} else {
+				hint (localize "STR_WF_TACTICAL_CrewArtilleryNoAI");
+			};
+		};
+	};
+
 	//--- Arty Combo Change or Script init.
 	if (MenuAction == 200 || _startLoad) then {
 		MenuAction = -1;
@@ -521,11 +652,52 @@ while {alive player && dialog} do {
 		_minRange = (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoined]) select _index;
 		_maxRange = round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoined]) select _index) / (missionNamespace getVariable "WFBE_C_ARTILLERY"));
 
+		// Marty: Refresh available ammunition whenever the artillery type changes.
+		[] Call _refreshAmmoCombo;
+
 		_trackingArray = [group player,true,lbCurSel(17008),sideJoined] Call GetTeamArtillery;
 		
 		_requestMarkerTransition = true;
 		_requestRangedList = true;
 		_startLoad = false;
+	};
+
+	// Marty: If programmatic combo selection did not fire an event, keep the next real player click active.
+	if (_ignoreAmmoComboAction && MenuAction != 201) then {_ignoreAmmoComboAction = false};
+
+	// Marty: Load the selected ammo type on every matching artillery unit owned by the player group.
+	if (MenuAction == 201) then {
+		MenuAction = -1;
+
+		if (_ignoreAmmoComboAction) then {
+			_ignoreAmmoComboAction = false;
+		} else {
+			_artilleryIndex = lbCurSel 17008;
+			_ammoComboIndex = lbCurSel 17034;
+
+			_canLoadAmmo = true;
+			if (_artilleryIndex < 0) then {_canLoadAmmo = false};
+			if (_ammoComboIndex < 0) then {_canLoadAmmo = false};
+			if (_ammoComboIndex >= (count _currentAmmoOptions)) then {_canLoadAmmo = false};
+
+			if (_canLoadAmmo) then {
+				_ammoOption = _currentAmmoOptions select _ammoComboIndex;
+				_ammoIndex = _ammoOption select 3;
+				_ammoName = _ammoOption select 0;
+				_units = [Group player,true,_artilleryIndex,sideJoinedText] Call GetTeamArtillery;
+				_loadedCount = 0;
+
+				_selectedAmmoByArtillery set [_artilleryIndex, _ammoIndex];
+				{
+					if ([_x, sideJoinedText, _artilleryIndex, _ammoIndex] Call WFBE_CO_FNC_LoadArtilleryAmmo) then {
+						_loadedCount = _loadedCount + 1;
+					};
+				} forEach _units;
+
+				hintSilent Format ["Artillery ammo %1 requested on %2 unit(s).", _ammoName, _loadedCount];
+				["INFORMATION", Format ["GUI_Menu_Tactical.sqf: Player [%1] requested artillery ammo [%2] for [%3] [%4 unit(s)].", name player, _ammoName, (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText]) select _artilleryIndex, _loadedCount]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
 	};
 	
 	//--- Focus on an artillery cannon.

@@ -51,7 +51,7 @@ Bipod_ON = {
 		Lying_stand = ((animationState player == "amovppnemstpsraswrfldnon") && (_weapon in _affected));
 		Crouch_stand = ((Stands_behind) && (_weapon in _affected) && (!(typeof _behind isKindOf "Man")) && (!(typeof _behind isKindOf "Air")));
 		if (Lying_stand or Crouch_stand) then {
-			nul = HintSilent (localize "str_bipod"); player setUnitRecoilCoefficient 0; player say "Bipod_ON";
+			SetBipodOn = HintSilent (localize "str_bipod"); player setUnitRecoilCoefficient 0; player say "Bipod_ON";
 			};
 //		};                                          //Debug
 //		case 57: {     								//Hit SPACE
@@ -63,4 +63,20 @@ Bipod_ON = {
 //		HintSilent ""; 
 		player setUnitRecoilCoefficient 1;
 	};
-}; 
+};
+
+//--- Card #210: auto-deploy the bipod when going prone with a bipod-capable MG (no TAB needed).
+//--- This reuses the existing key-15 deploy path, which itself re-checks the prone stance and the
+//--- bipod-capable weapon list, so the handler only actually deploys for those weapons while lying.
+//--- Pure client-local (the deploy path only adjusts recoil coef + hint + say). The TAB display
+//--- handler above stays as the manual fallback. The EH is unit-local and is flushed on death, so
+//--- Client_OnKilled.sqf re-attaches it to the fresh player unit after each respawn.
+Bipod_AddAutoDeploy = {
+	if (isNil "Bipod_AutoEH") then {Bipod_AutoEH = -1};
+	if (Bipod_AutoEH >= 0) then {player removeEventHandler ["AnimChanged", Bipod_AutoEH]; Bipod_AutoEH = -1};
+	Bipod_AutoEH = player addEventHandler ["AnimChanged", {
+		if ((_this select 1) == "amovppnemstpsraswrfldnon" && {missionNamespace getVariable ["WFBE_AUTO_BIPOD", true]}) then {15 call Bipod_ON}; //--- B751d: gated on the Auto-Deploy-Bipod client pref (Settings menu); default ON. Manual TAB still works.
+	}];
+};
+
+[] call Bipod_AddAutoDeploy;

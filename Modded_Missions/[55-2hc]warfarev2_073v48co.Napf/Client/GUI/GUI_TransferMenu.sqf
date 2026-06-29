@@ -5,11 +5,12 @@ uiNamespace setVariable ["wfbe_display_transfer", _this select 0];
 
 // Marty : Modifying the script in order to display only human player and not bots in the advanced fund transfer list :
 
-private ["_list_Players"];
+private ["_list_Players","_aicom_row"];
 _list_Players = [];
+_aicom_row = -1; //--- Sentinel index of the AI Commander row; -1 = not present.
 
 {
-	if (isPlayer (leader _x)) then 
+	if (isPlayer (leader _x)) then
 	{
 		_list_Players = _list_Players + [_x] ;
 		_name_player = name (leader _x) ;
@@ -17,6 +18,24 @@ _list_Players = [];
 	};
 
 } forEach WFBE_Client_Teams;
+
+//--- Add "AI Commander" entry when this side is AI-commanded (no human commander).
+//--- commanderTeam is nil/null when no commander group exists (AI mode), or holds the
+//--- human commander's group when a player holds command.  We show the entry only when
+//--- commanderTeam is null/nil OR its leader is not a player — matching the wildcard gate.
+private ["_showAICom","_aicomCmdTeam"];
+_showAICom = false;
+_aicomCmdTeam = sideJoined Call WFBE_CO_FNC_GetCommanderTeam;
+if (isNull _aicomCmdTeam) then {
+	_showAICom = true;
+} else {
+	if !(isPlayer (leader _aicomCmdTeam)) then {_showAICom = true};
+};
+
+if (_showAICom) then {
+	_aicom_row = count _list_Players; //--- Row index in the LNB (0-based after all player rows).
+	lnbAddRow[505001, ["AI wallet", "   ", "AI Commander"]];
+};
 
 _funds_last = -1;
 _last_update = time;
@@ -31,17 +50,17 @@ while {alive player && dialog} do {
 
 	if (time - _last_update > 1) then {
 		_last_update = time;
-		for '_i' from 0 to count _list_Players -1 do 
+		for '_i' from 0 to count _list_Players -1 do
 		{
 			_funds_team = (_list_Players select _i) Call WFBE_CO_FNC_GetTeamFunds;
 			_name_leader = name(leader(_list_Players select _i));
 
-			if ((((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505001) lnbText [_i, 0]) != Format["$%1.",_funds_team]) then 
+			if ((((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505001) lnbText [_i, 0]) != Format["$%1.",_funds_team]) then
 			{
 				lnbSetText [505001, [_i, 0], Format ["$%1.",_funds_team]] ;
 			};
-			
-			if ((((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505001) lnbText [_i, 2]) != _name_leader) then 
+
+			if ((((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505001) lnbText [_i, 2]) != _name_leader) then
 			{
 				lnbSetText [505001, [_i, 2], _name_leader] ;
 			};
@@ -62,21 +81,32 @@ while {alive player && dialog} do {
 		if (_cando) then {
 			if (_ui_lnb_currow != -1) then {
 
-				_selected = _list_Players select _ui_lnb_currow;
+				//--- AI Commander donation path.
+				if (_aicom_row >= 0 && {_ui_lnb_currow == _aicom_row}) then {
+					//--- E2 fix: server is authoritative. RequestAIComDonate debits the team (wfbe_funds) AND credits
+					//--- the AI wallet. The client-side optimistic debit was REMOVED: that helper resolves to
+					//--- ChangeTeamFunds on the SAME group (clientTeam), so client + server were two relative
+					//--- -amount writes that compounded to -2x (donor over-charged, money destroyed).
+					["RequestAIComDonate", [player, clientTeam, _funds_transfering]] Call WFBE_CO_FNC_SendToServer;
+					_funds = Call WFBE_CL_FNC_GetClientFunds;
+					_last_update = -1;
+				} else {
+					_selected = _list_Players select _ui_lnb_currow;
 
-				if !(isNull leader _selected) then {
-					if (_selected != group player) then {
-						hint parseText format [localize "STR_WF_INFO_Funds_Sent", _funds_transfering, name leader _selected];
-						-(_funds_transfering) Call WFBE_CL_FNC_ChangeClientFunds;
-						[_selected, _funds_transfering] Call WFBE_CO_FNC_ChangeTeamFunds;
-						if (isPlayer leader _selected) then {
-								[getPlayerUID(leader _selected), "LocalizeMessage",['FundsTransfer',_funds_transfering,name player]] Call WFBE_CO_FNC_SendToClients;
-								["INFORMATION", Format ["Player %1 has sent cash to player %2).", name player, name leader _selected]] Call WFBE_CO_FNC_LogContent;
+					if !(isNull leader _selected) then {
+						if (_selected != group player) then {
+							hint parseText format [localize "STR_WF_INFO_Funds_Sent", _funds_transfering, name leader _selected];
+							-(_funds_transfering) Call WFBE_CL_FNC_ChangeClientFunds;
+							[_selected, _funds_transfering] Call WFBE_CO_FNC_ChangeTeamFunds;
+							if (isPlayer leader _selected) then {
+									[getPlayerUID(leader _selected), "LocalizeMessage",['FundsTransfer',_funds_transfering,name player]] Call WFBE_CO_FNC_SendToClients;
+									["INFORMATION", Format ["Player %1 has sent cash to player %2).", name player, name leader _selected]] Call WFBE_CO_FNC_LogContent;
+							};
+							_funds = Call WFBE_CL_FNC_GetClientFunds;
+							_last_update = -1;
+						} else {
+							hint parseText localize "STR_WF_INFO_Funds_Self";
 						};
-						_funds = Call WFBE_CL_FNC_GetClientFunds;
-						_last_update = -1;
-					} else {
-						hint parseText localize "STR_WF_INFO_Funds_Self";
 					};
 				};
 			};
@@ -87,7 +117,17 @@ while {alive player && dialog} do {
 
 	if (_funds != _funds_last) then {
 		sliderSetRange[505002, 0, _funds];
-		((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505004) ctrlSetStructuredText (parseText Format [localize "STR_WF_INFO_Funds",_funds]);
+		private ["_teamTotal","_cmdPercent","_fundsText"];
+		_teamTotal = 0;
+		{_teamTotal = _teamTotal + (_x Call WFBE_CO_FNC_GetTeamFunds);} forEach WFBE_Client_Teams;
+		_cmdPercent = WFBE_Client_Logic getVariable ["wfbe_commander_percent", 0];
+		_fundsText = Format [localize "STR_WF_INFO_Funds", _funds];
+		_fundsText = _fundsText + Format ["<br />Team: $%1  |  Cmd share: %2%3", _teamTotal, _cmdPercent, "%"];
+		//--- Trello #204: surface the price of a new HQ so the commander can weigh a transfer
+		//--- against the cost of (re)deploying a base. Reads the same constant the structure
+		//--- configs charge for the HQ (Common\Config\Core_Structures\*: WFBE_C_STRUCTURES_HQ_COST_DEPLOY).
+		_fundsText = _fundsText + Format ["<br />" + (localize "STR_WF_INFO_NewHQCost"), missionNamespace getVariable "WFBE_C_STRUCTURES_HQ_COST_DEPLOY"];
+		((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505004) ctrlSetStructuredText (parseText _fundsText);
 	};
 
 	_funds_last = _funds;

@@ -22,7 +22,7 @@
 
 class RscTitles {
 
-	titles[] = {RscOverlay,CaptureBar,OptionsAvailable,EndOfGameStats};
+	titles[] = {RscOverlay,CaptureBar,OptionsAvailable,EndOfGameStats,WFBE_VehicleTintLegend};
 	class b2zgroup
 	{
 						idd=-2;
@@ -46,7 +46,11 @@ class RscTitles {
 		idd=10200;
 		movingEnable = 0;
 		duration=15000;
-		name="wf_hud_overlay"; //--- GPS FIX (mirror of Chernarus a43ab0f8): rename frees the engine GPS slot so the WF-menu GPS button's showGPS renders the mini-map.
+		// GPS FIX: was name="gps", which bound this map-LESS HUD overlay to the engine GPS slot,
+		// so showGPS had nothing with a map to render and the GPS/mini-map never appeared. This
+		// overlay is shown via cutRsc (Init_Client) independently, so renaming it frees the GPS
+		// slot and lets the vanilla GPS receiver (ItemGPS + showGPS true from the WF-menu button) work.
+		name="wf_hud_overlay";
 		controls[]={"txt_dwn","txt_crw","OptionsIcon0","OptionsIcon1","OptionsIcon2","OptionsIcon3","OptionsIcon4","OptionsIcon5","OptionsIcon6"};
 		onload="uiNamespace setVariable['GUI',_this select 0];";
 
@@ -170,7 +174,7 @@ class RscTitles {
 		onLoad = "_this ExecVM ""Client\GUI\GUI_SetCurrentCutDisplay.sqf""";
 		onUnload = "_this ExecVM ""Client\GUI\GUI_ClearCurrentCutDisplay.sqf""";
 		controls[] = {"RUBHUD_Background","RUBHUD_Health","RUBHUD_Health_Value","RUBHUD_Uptime","RUBHUD_Uptime_Value","RUBHUD_Commander", "RUBHUD_Commander_Value","RUBHUD_AICOUNT","RUBHUD_AICOUNT_Value","RUBHUD_Money","RUBHUD_Money_Value","RUBHUD_Income","RUBHUD_Income_Value","RUBHUD_Supply","RUBHUD_Supply_Value","RUBHUD_SupplyMin","RUBHUD_SupplyMin_Value","RUBHUD_City","RUBHUD_City_Value",
-		"RUBHUD_FPS_Client","RUBHUD_FPS_Client_Value","RUBHUD_FPS_Server","RUBHUD_FPS_Server_Value",
+		"RUBHUD_FPS_Client","RUBHUD_FPS_Client_Value","RUBHUD_FPS_Server","RUBHUD_FPS_Server_Value","RUBHUD_Upgrade","RUBHUD_Upgrade_Value","RUBHUD_UpgradeNext","RUBHUD_UpgradeNext_Value","RUBHUD_Arty","RUBHUD_Arty_Value",
 		"OptionsIcon0", "OptionsIcon1", "OptionsIcon2", "OptionsIcon3", "OptionsIcon4", "OptionsIcon5", "OptionsIcon6", "OptionsIcon7", "OptionsIcon8", "OptionsIcon9", "OptionsIcon10",
 		"OptionsIcon11", "OptionsIcon12", "OptionsIcon13", "OptionsIcon14", "OptionsIcon15", "OptionsIcon16", "OptionsIcon17"};
 		controlsBackground[] = {};
@@ -420,6 +424,73 @@ class RscTitles {
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
 			y = 0.386000 * safezoneH + safezoneY;
+			w = 0.4401041 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.028;
+			colorText[] = {1,1,1,1};
+		};
+
+		class RUBHUD_Upgrade: RscText {
+			idc = 1368;
+			text = "";
+			x = 0.881728 * safezoneW + safezoneX;
+			y = 0.406000 * safezoneH + safezoneY;
+			w = 0.1025 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.026;
+			colorText[] = {1,1,1,1};
+		}
+
+		class RUBHUD_Upgrade_Value: RscText {
+			idc = 1369;
+			text = "";
+			x = 0.925958 * safezoneW + safezoneX;
+			y = 0.406000 * safezoneH + safezoneY;
+			w = 0.4401041 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.028;
+			colorText[] = {1,1,1,1};
+		};
+
+		class RUBHUD_UpgradeNext: RscText {
+			idc = 1370;
+			text = "";
+			x = 0.881728 * safezoneW + safezoneX;
+			y = 0.426000 * safezoneH + safezoneY;
+			w = 0.1025 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.026;
+			colorText[] = {1,1,1,1};
+		}
+
+		class RUBHUD_UpgradeNext_Value: RscText {
+			idc = 1371;
+			text = "";
+			x = 0.925958 * safezoneW + safezoneX;
+			y = 0.426000 * safezoneH + safezoneY;
+			w = 0.4401041 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.028;
+			colorText[] = {1,1,1,1};
+		};
+
+		// Card #219: artillery cooldown readout. Mirrors the RUBHUD_UpgradeNext_Value row geometry.
+		class RUBHUD_Arty: RscText {
+			idc = 1372;
+			text = "";
+			x = 0.881728 * safezoneW + safezoneX;
+			y = 0.446000 * safezoneH + safezoneY;
+			w = 0.1025 * safezoneW;
+			h = 0.0255556 * safezoneH;
+			sizeEx = 0.026;
+			colorText[] = {1,1,1,1};
+		};
+
+		class RUBHUD_Arty_Value: RscText {
+			idc = 1373;
+			text = "";
+			x = 0.925958 * safezoneW + safezoneX;
+			y = 0.446000 * safezoneH + safezoneY;
 			w = 0.4401041 * safezoneW;
 			h = 0.0255556 * safezoneH;
 			sizeEx = 0.028;
@@ -790,4 +861,99 @@ class RscTitles {
 			};
 		};
 	};
+
+	//--- ============================================================================
+	//--- b67 item #3 (claude-gaming 2026-06-21): VEHICLE-TINT LEGEND (top-right pop-up).
+	//--- Shown by Init_Client.sqf via cutRsc on layer 12460 - ONCE on first spawn + toggled with "]".
+	//--- Mirrors the IDD-10200 RscOverlay HUD region (top-right corner, RscStructuredText). Sits in the
+	//--- empty band ABOVE the RUBHUD stats column (RUBHUD starts at y~=0.186*safezoneH), so no overlap.
+	//--- Swatch colours MATCH the per-side body tints set in Common_AddVehicleTexture.sqf (the cheap
+	//--- setObjectTexture colour strings gated by WFBE_C_VEHICLE_TINTS, default ON, decoupled from the
+	//--- expensive #lightpoint markings):
+	//---   WEST/BLUFOR  color(0.04,0.04,0.05) matte black  -> swatch lifted to {0.13,0.13,0.16} for legibility
+	//---   EAST/OPFOR   color(0.20,0.24,0.16) dark olive    -> swatch = true tint
+	//---   GUER         color(0.46,0.40,0.28) desert tan     -> swatch = true tint
+	//--- Static content is baked into the controls (no runtime ctrlSetStructuredText). A2-OA 1.64 safe.
+	class WFBE_VehicleTintLegend {
+		idd = 10250;
+		movingEnable = 0;
+		duration = 1e+011;      //--- never auto-fade; Init_Client cutText "" removes it (toggle / first-spawn timer).
+		name = "WFBE_VehicleTintLegend";
+		onLoad = "uiNamespace setVariable ['wfbe_title_tintlegend', _this select 0]";
+		onUnload = "uiNamespace setVariable ['wfbe_title_tintlegend', displayNull]";
+		controls[] = {"TL_BG","TL_Header","TL_SwWest","TL_LblWest","TL_SwEast","TL_LblEast","TL_SwGuer","TL_LblGuer","TL_Footer"};
+
+		//--- Semi-transparent backing panel so even the near-black WEST swatch reads against any scene.
+		class TL_BG : RscText {
+			idc = -1;
+			text = "";
+			x = 0.808 * safezoneW + safezoneX;
+			y = 0.030 * safezoneH + safezoneY;
+			w = 0.186 * safezoneW;
+			h = 0.150 * safezoneH;
+			colorBackground[] = {0,0,0,0.55};
+		};
+
+		//--- Header / subtitle (structured text, mirrors the RscOverlay structured-text controls).
+		class TL_Header : RscStructuredText {
+			idc = -1;
+			x = 0.815 * safezoneW + safezoneX;
+			y = 0.036 * safezoneH + safezoneY;
+			w = 0.176 * safezoneW;
+			h = 0.048 * safezoneH;
+			size = 0.032;
+			text = "<t size='1.05' color='#ffffff'>Vehicle tints</t><br/><t size='0.85' color='#b0b6c0'>hull colour = owner</t>";
+		};
+
+		//--- Row swatches are filled RscText rects (colorBackground = the live per-side tint).
+		class TL_SwWest : RscText {
+			idc = -1;
+			text = "";
+			x = 0.815 * safezoneW + safezoneX;
+			y = 0.090 * safezoneH + safezoneY;
+			w = 0.016 * safezoneW;
+			h = 0.016 * safezoneH;
+			colorBackground[] = {0.13,0.13,0.16,1};   //--- WEST matte black (true 0.04,0.04,0.05; lifted for legibility).
+		};
+		class TL_LblWest : RscText {
+			idc = -1;
+			text = "BLUFOR  (black)";
+			x = 0.835 * safezoneW + safezoneX;
+			y = 0.088 * safezoneH + safezoneY;
+			w = 0.155 * safezoneW;
+			h = 0.022 * safezoneH;
+			sizeEx = 0.024;
+			colorText[] = {1,1,1,1};
+		};
+
+		class TL_SwEast : TL_SwWest {
+			y = 0.112 * safezoneH + safezoneY;
+			colorBackground[] = {0.20,0.24,0.16,1};   //--- EAST dark olive (true tint).
+		};
+		class TL_LblEast : TL_LblWest {
+			text = "OPFOR  (olive)";
+			y = 0.110 * safezoneH + safezoneY;
+		};
+
+		class TL_SwGuer : TL_SwWest {
+			y = 0.134 * safezoneH + safezoneY;
+			colorBackground[] = {0.46,0.40,0.28,1};   //--- GUER desert tan (true tint).
+		};
+		class TL_LblGuer : TL_LblWest {
+			text = "GUER  (tan)";
+			y = 0.132 * safezoneH + safezoneY;
+		};
+
+		//--- Footer toggle hint (structured text).
+		class TL_Footer : RscStructuredText {
+			idc = -1;
+			x = 0.815 * safezoneW + safezoneX;
+			y = 0.158 * safezoneH + safezoneY;
+			w = 0.176 * safezoneW;
+			h = 0.020 * safezoneH;
+			size = 0.028;
+			text = "<t size='0.85' color='#b0b6c0'>Press ] to toggle</t>";
+		};
+	};
+	//--- ============================================================================
 };

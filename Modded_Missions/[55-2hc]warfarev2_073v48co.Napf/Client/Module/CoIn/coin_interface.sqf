@@ -232,6 +232,7 @@ BIS_CONTROL_CAM_Handler = {
 		if ((_key in (actionKeys "User16")) && ((missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI") > 0)) then {
 			if (manningDefense) then {manningDefense = false} else {manningDefense = true};
 			_status = if (manningDefense) then {localize "STR_WF_On"} else {localize "STR_WF_Off"};
+			hintSilent Format ["Auto-manning defense: %1", _status];
 			_logic setVariable ["WF_RequestUpdate",true];
 		};
 
@@ -497,7 +498,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 					_structuresCosts = missionNamespace getVariable Format["WFBE_%1STRUCTURECOSTS",sideJoinedText];
 					if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-						[sideJoined,-(_structuresCosts select _index),(format ["HQ (%1) undeployed by %2.", sideJoinedText, name leader ((sideJoined) Call WFBE_CO_FNC_GetCommanderTeam)])] Call ChangeSideSupply;
+						[sideJoined,-(_structuresCosts select _index),(format ["HQ (%1) undeployed by %2.", sideJoinedText, name leader ((sideJoined) Call WFBE_CO_FNC_GetCommanderTeam)]), false] Call ChangeSideSupply;
 					} else {
 						-(_structuresCosts select _index) Call ChangePlayerFunds;
 					};
@@ -528,8 +529,8 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 					(uiNamespace getVariable "COIN_displayMain") displayRemoveEventHandler ["KeyDown",WF_COIN_DEH1];
 					(uiNamespace getVariable "COIN_displayMain") displayRemoveEventHandler ["KeyUp",WF_COIN_DEH2];
-					(uiNamespace getVariable "COIN_displayMain") displayRemoveEventHandler ["MouseButtonDown",WF_COIN_DEH2];
-					(uiNamespace getVariable "COIN_displayMain") displayRemoveEventHandler ["MouseButtonUp",WF_COIN_DEH3];
+					(uiNamespace getVariable "COIN_displayMain") displayRemoveEventHandler ["MouseButtonDown",WF_COIN_DEH3];
+					(uiNamespace getVariable "COIN_displayMain") displayRemoveEventHandler ["MouseButtonUp",WF_COIN_DEH4];
 
 					//--- Behold the placeholders
 					BIS_COIN_QUIT = nil;
@@ -669,7 +670,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						if (_index != -1) then {
 							_price = _costs select _index;
 							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-								[sideJoined, -_price,(format ["Either HQ deployed, or base structure building started. Class: %1", _class])] Call ChangeSideSupply;
+								[sideJoined, -_price,(format ["Either HQ deployed, or base structure building started. Class: %1", _class]), false] Call ChangeSideSupply;
 							} else {
 								-(_price) Call ChangePlayerFunds;
 							};
@@ -682,7 +683,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 								};
 								_logic setVariable ["BIS_COIN_restart",true];
 							} else {
-								["RequestChangeScore", [player,score player + (missionNamespace getVariable "WFBE_C_PLAYERS_COMMANDER_SCORE_BUILD")]] Call WFBE_CO_FNC_SendToServer;
+								["RequestChangeScore", [player,score player + (_price / 100 * WFBE_C_PLAYERS_COMMANDER_SCORE_BUILD_COEF)]] Call WFBE_CO_FNC_SendToServer;
 							};
 						};
 
@@ -719,7 +720,14 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						};
 
 						if (_class in _defenses) then {
-							["RequestDefense", [sideJoined,_class,_pos,_dir,manningDefense]] Call WFBE_CO_FNC_SendToServer;
+							//--- Site Clearance: dedicated PVF so the server receives the real player identity.
+							//--- All other defenses use the standard RequestDefense path.
+							if (_class == "Land_Pneu") then {
+								["RequestSiteClearance", [sideJoined,_pos,player]] Call WFBE_CO_FNC_SendToServer;
+							} else {
+								// Marty: pass player as arg 6 so server can refund on budget/threat rejection.
+						["RequestDefense", [sideJoined,_class,_pos,_dir,manningDefense,(_logic == RCoin),player]] Call WFBE_CO_FNC_SendToServer;
+							};
 							lastBuilt = _par;
 							_area = [_pos,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 							_get = _area getVariable 'avail';
@@ -756,15 +764,29 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				_textHeader = "<t size='1.2'><br /></t>";
 				_textPicture = "<t size='2.8'><br /></t><br /><br />";
 				_fileIcon = getText (configFile >> "cfgvehicles" >> _type >> "icon");
-				if (str(configFile >> "CfgVehicleIcons" >> _fileIcon) != "") then {_fileIcon = getText (configFile >> "CfgVehicleIcons" >> _fileIcon)};
 				_filePicture = getText (configFile >> "cfgvehicles" >> _type >> "picture");
-				if (str(configFile >> "CfgVehicleIcons" >> _filePicture) != "") then {_filePicture = getText (configFile >> "CfgVehicleIcons" >> _filePicture)};
+				// Marty: Resolve only real CfgVehicleIcons text entries; some OA static objects use missing icon tokens.
+				_fileIconConfig = configFile >> "CfgVehicleIcons" >> _fileIcon;
+				if (isText _fileIconConfig) then {_fileIcon = getText _fileIconConfig};
+				_filePictureConfig = configFile >> "CfgVehicleIcons" >> _filePicture;
+				if (isText _filePictureConfig) then {_filePicture = getText _filePictureConfig};
 
 				if (_tooltipType != "empty") then {
 					_textHeader = format ["<t color='#42b6ff' shadow='1' align='center' size='1.8'> %1 </t><br />",
 						getText (configFile >> "cfgvehicles" >> _type >> "displayname"),
 						if (isnull _selected) then {""} else {str round ((1 - damage _selected) * 100) + "%"}
 					];
+					//--- QoL (C3): show build count vs limit for this structure while placing.
+					_cbIdx = _buildingsNames find _type;
+					if (_cbIdx != -1) then {
+						_cbLive = WFBE_Client_Logic getVariable "wfbe_structures_live";
+						if (!isNil "_cbLive" && {_cbIdx < count _cbLive}) then {
+							_cbCur = _cbLive select _cbIdx;
+							_cbLim = missionNamespace getVariable (Format ['WFBE_C_STRUCTURES_MAX_%1',(_buildingsType select _cbIdx)]);
+							if (isNil '_cbLim') then {_cbLim = 4};
+							_textHeader = _textHeader + format ["<t color='%1' shadow='1' align='center' size='1.0'>Built: %2 / %3</t><br />",if (_cbCur >= _cbLim) then {'#F56363'} else {'#76F563'},_cbCur,_cbLim];
+						};
+					};
 					_textPicture = format ["<t color='#42b6ff' shadow='2' align='left' size='2.8'><img image='%1'/></t> ",_filePicture];
 				};
 
@@ -826,6 +848,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 		_cashValuesOld = _logic getVariable "BIS_COIN_fundsOld";
 		if (isNil "_cashValuesOld") then {_cashValuesOld = []; _cashValuesOld set [count _cashValues - 1,-1]};
 		_restart = _logic getVariable "BIS_COIN_restart";
+		//--- LIVE FIX (client RPT 2026-06-10, line 851): BIS_COIN_restart is deliberately
+		//--- CLEARED to nil elsewhere (setVariable nil); `|| _restart` with nil then throws
+		//--- "Undefined variable" and kills the rest of this interface tick — placements
+		//--- stop building while the preview still shows. Treat nil as false.
+		if (isNil "_restart") then {_restart = false};
 		if (!([_cashValues,_cashValuesOld] call bis_fnc_arraycompare) || _restart) then {
 			_cashValuesCount = count _cashValues;
 			_cashSize = if (_cashValuesCount <= 1) then {2} else {2.8 / _cashValuesCount};
@@ -878,6 +905,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_itemcost = _x select 2;
 						_itemcash = 0;
 						if (typename _itemcost == "ARRAY") then {_itemcash = _itemcost select 0; _itemcost = _itemcost select 1};
+						if (isNil "_itemcost" || {typeName _itemcost != "SCALAR"}) then {_itemcost = 0}; //--- PR8 (claude): a malformed item (invalid anchor class -> [cash,<null>] cost) leaves _itemcost nil; force numeric to stop the _canAffordCount/_itemcost undefined-variable RPT cascade.
 						_cashValue = _cashValues select _itemcash;
 						_cashDescription = if (count _fundsDescription > _itemcash) then {_fundsDescription select _itemcash} else {"?"};
 						_itemname = if (count _x > 3) then {_x select 3} else {getText (configFile >> "CfgVehicles" >> _itemclass >> "displayName")};
@@ -892,6 +920,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						};
 						if (_itemcategory == _i/*_category*/) then {
 							_canAfford = if (_cashValue - _itemcost >= 0 && !_buildLimit) then {1} else {0};
+							if (isNil "_canAfford") then {_canAfford = 0}; //--- PR8 (claude): belt-and-suspenders so a bad cost can't leave _canAffordCount undefined.
 							_canAffordCount = _canAffordCount + _canAfford;
 							// _text = _itemname + " - " + _cashDescription + str _itemcost;
 							// _arrayNamesLong = _arrayNamesLong + [_text + "                   "];

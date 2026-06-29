@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_construct","_constructed","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_rlType","_side","_sideID","_site","_siteName","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
+Private ["_construct","_constructed","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_rlType","_side","_sideID","_site","_siteName","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -96,7 +96,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 	};
 	
 	//--- Remove the logic from the list since it's built. Add it back if destroyed.
-	_logik setVariable ["wfbe_structures_logic", (_logik getVariable "wfbe_structures_logic") + [_nearLogic]];
+	_logik setVariable ["wfbe_structures_logic", (_logik getVariable "wfbe_structures_logic") - [_nearLogic]]; //--- wiki-wins: was + (double-append); MediumSite uses -
 };
 	
 {if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;
@@ -107,9 +107,27 @@ _site setPos _position;
 _site setVariable ["wfbe_side", _side];
 _site setVariable ["wfbe_structure_type", _rlType];
 
-if(isAutoWallConstructingEnabled)then{
-_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
-_site setVariable ["WFBE_Walls", _defenses];
+//--- CBR: spawn composition dressing and register in per-side registry.
+if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	private ["_dressTpl","_cbrRegistry","_cbrKey"];
+	_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_side == west) then {"WEST"} else {"EAST"}];
+	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	//--- Register in the per-side CBR array.
+	_cbrKey = if (_side == west) then {"WFBE_CBR_WEST"} else {"WFBE_CBR_EAST"};
+	_cbrRegistry = missionNamespace getVariable [_cbrKey, []];
+	_cbrRegistry = _cbrRegistry + [_site];
+	missionNamespace setVariable [_cbrKey, _cbrRegistry];
+	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] CBRadar registered. Registry size: %2.", str _side, count _cbrRegistry]] Call WFBE_CO_FNC_LogContent;
+};
+
+if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","CBRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
+	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
+	_site setVariable ["WFBE_Walls", _defenses];
+} else {
+	_site setVariable ["WFBE_Walls", []];
+	if (_rlType in ["AARadar","CBRadar"]) then {
+		["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] %2 auto walls skipped.", str _side, _rlType]] Call WFBE_CO_FNC_LogContent;
+	};
 };
 
 [_side, "Constructed", ["Base", _site]] Spawn SideMessage;
@@ -129,4 +147,16 @@ if (!isNull _site) then {
 	Call Compile Format ["_site AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];",_type];
 	
 	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] Structure [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
+
+	//--- B74.2: leaderboard STRUCTURE-built credit. The builder UID is not threaded through the
+	//--- RequestStructure->Construction path, so attribute to the nearest same-side player at the
+	//--- completed site (the placer stands at the build spot). Nearest-player scan over playableUnits
+	//--- (codebase idiom); range is an inline tunable. _site/_side/_position in scope here.
+	private ["_bAttrPos","_bAttrSide","_bAttrRange","_bNear","_bDist","_bUid"];
+	_bAttrPos   = _position;
+	_bAttrSide  = _side;
+	_bAttrRange = missionNamespace getVariable ["WFBE_C_STATS_BUILD_ATTR_RANGE", 150];
+	_bNear = objNull; _bDist = _bAttrRange + 1;
+	{ if (isPlayer _x && {alive _x} && {side _x == _bAttrSide} && {(_x distance _bAttrPos) < _bDist}) then {_bNear = _x; _bDist = _x distance _bAttrPos} } forEach playableUnits;
+	if (!isNull _bNear) then {_bUid = getPlayerUID _bNear; if (_bUid != "") then {[_bUid, WFBE_STAT_STRUCTURES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 };

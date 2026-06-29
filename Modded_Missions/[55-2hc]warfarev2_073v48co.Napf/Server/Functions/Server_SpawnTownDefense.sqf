@@ -15,7 +15,7 @@ _defense = "";
 _kinds = _defense_logic getVariable "wfbe_defense_kind";
 
 //--- At least one type is needed.
-if (count _kinds == 0 || _sideID != WFBE_C_GUER_ID) exitWith {};
+if (count _kinds == 0) exitWith {};
 
 _nils = [];
 if (count _kinds > 1) then {
@@ -42,5 +42,7 @@ if (_defense != "") then {
 	_entitie setDir (direction _defense_logic);
 	_entitie setPos (getPos _defense_logic);
 	_entitie addEventHandler ['killed', Format ["[_this select 0, _this select 1, %1] Spawn WFBE_CO_FNC_OnUnitKilled;", _sideID]];
+	//--- Defender classification (public: the activation scan runs server-side).
+	_entitie setVariable ["WFBE_IsTownDefenderAI", true, true];
 	_defense_logic setVariable ["wfbe_defense", _entitie];
 };

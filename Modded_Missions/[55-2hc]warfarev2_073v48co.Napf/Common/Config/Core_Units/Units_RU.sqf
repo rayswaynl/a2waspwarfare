@@ -48,11 +48,7 @@ _u = _u		+ ['KamazRepair'];
 _u = _u		+ ['WarfareReammoTruck_RU'];
 _u = _u		+ ['KamazRefuel'];
 _u = _u		+ ['WarfareSalvageTruck_RU'];
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Config/Core_Units/Units_RU.sqf
-// if ((missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_SYSTEM") == 0) then {
-========
 _u = _u		+ ['WarfareSupplyTruck_RU'];
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.Napf/Common/Config/Core_Units/Units_RU.sqf
 _u = _u		+ ['WarfareSupplyTruck_RU'];
 _u = _u		+ ['GAZ_Vodnik_MedEvac'];
 _u = _u		+ ['BRDM2_INS'];
@@ -111,6 +107,8 @@ _u = _u		+ ["VWGolf"];
 _u = _u		+ ["datsun1_civil_2_covered"];
 _u = _u		+ ["hilux1_civil_2_covered"];
 _u = _u		+ ["UralCivil"];
+_u = _u		+ ["UralCivil"];
+_u = _u		+ ["V3S_Refuel_TK_GUE_EP1"];
 if ((missionNamespace getVariable "WFBE_C_UNITS_TOWN_PURCHASE") > 0) then {
 	_u = _u		+ [missionNamespace getVariable "WFBE_EASTSOLDIER"];
 };

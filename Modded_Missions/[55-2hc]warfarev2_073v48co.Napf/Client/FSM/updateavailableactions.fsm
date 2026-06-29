@@ -55,8 +55,8 @@ class FSM
        "" \n
        "_commandCenter = objNull;" \n
        "" \n
-       "_typeRepair = missionNamespace getVariable Format['WFBE_%1REPAIRTRUCKS',sideJoinedText];" \n
-	   "_typeAmmo = missionNamespace getVariable Format['WFBE_%1AMMOTRUCKS',sideJoinedText];" \n   
+       "_typeRepair = missionNamespace getVariable [Format['WFBE_%1REPAIRTRUCKS',sideJoinedText], []];" \n
+	   "_typeAmmo = missionNamespace getVariable [Format['WFBE_%1AMMOTRUCKS',sideJoinedText], []];" \n   
 	   "" \n
        "//--- Keep actions updated (GUI). - changed-MrNiceGuy " \n
        "12450 cutRsc [""OptionsAvailable"",""PLAIN"",0];" \n
@@ -101,7 +101,10 @@ class FSM
     class Update_Client_Ac
     {
       name = "Update_Client_Ac";
-      init = /*%FSM<STATEINIT""">*/"_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;" \n
+      init = /*%FSM<STATEINIT""">*/"// Marty: Performance Audit timing for available actions update." \n
+       "_perfStart = diag_tickTime;" \n
+       "_perfNearEntities = 0;" \n
+       "_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;" \n
        "_base = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;" \n
        "_upgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;" \n
        "	" \n
@@ -167,6 +170,7 @@ class FSM
        "" \n
 	   "if !(gearInRange) then {" \n
 	   " _checks = (getPos player) nearEntities[_typeAmmo,_gear_field_range];" \n
+	   " _perfNearEntities = _perfNearEntities + 1;" \n
 	   "if (count _checks > 0) then {gearInRange = true;};" \n
        "};" \n
        "" \n
@@ -177,6 +181,7 @@ class FSM
        "" \n
        "if !(serviceInRange) then {" \n
        "	_checks = (getPos player) nearEntities[_typeRepair,_rptr];" \n
+       "	_perfNearEntities = _perfNearEntities + 1;" \n
        "	if (count _checks > 0) then {serviceInRange = true};" \n
        "};" \n
        "" \n
@@ -228,6 +233,8 @@ class FSM
        "}forEach _usable;" \n
        "" \n
        "if (WFBE_ForceUpdate) then {WFBE_ForceUpdate  = false};" \n
+       "// Marty: Performance Audit record for available actions update." \n
+       "if !(isNil ""PerformanceAudit_Record"") then {if (missionNamespace getVariable [""PerformanceAuditEnabled"", true]) then {[""updateavailableactions"", diag_tickTime - _perfStart, Format[""clientTeams:%1;nearEntities:%2;usable:%3"", count clientTeams, _perfNearEntities, _usable], ""CLIENT""] Call PerformanceAudit_Record;}};" \n
        "_lastUpdate = time;"/*%FSM</STATEINIT""">*/;
       precondition = /*%FSM<STATEPRECONDITION""">*/""/*%FSM</STATEPRECONDITION""">*/;
       class Links

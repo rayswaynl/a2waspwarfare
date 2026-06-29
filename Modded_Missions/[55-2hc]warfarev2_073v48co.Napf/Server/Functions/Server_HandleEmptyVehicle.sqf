@@ -9,6 +9,14 @@ Private ["_delay", "_timer", "_vehicle"];
 
 _vehicle = _this select 0;
 
+// Nil-guard: _vehicle can be nil if the caller passes no argument or passes nil explicitly.
+// isNull covers the case where a valid object reference has since been deleted (objNull).
+// Skip-iteration pattern: exit the entire script scope — there is nothing useful to do
+// without a vehicle reference, and silently defaulting to objNull would let typeOf/alive
+// run against a null object and produce wrong results rather than a clean no-op.
+if (isNil "_vehicle") exitWith {};
+if (isNull _vehicle) exitWith {};
+
 _delay = if (count _this > 1) then {_this select 1} else {if (typeOf _vehicle in ['HMMWV_Ambulance','HMMWV_Ambulance_DES_EP1','UH60M_MEV_EP1','M1133_MEV_EP1','GAZ_Vodnik_MedEvac','Mi17_medevac_RU','M113Ambul_TK_EP1']) then {(missionNamespace getVariable "WFBE_C_UNITS_EMPTY_TIMEOUT")*2} else {missionNamespace getVariable "WFBE_C_UNITS_EMPTY_TIMEOUT"};};
 
 _timer = 0;

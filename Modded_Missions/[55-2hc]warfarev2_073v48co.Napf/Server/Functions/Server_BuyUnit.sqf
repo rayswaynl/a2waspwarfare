@@ -30,7 +30,36 @@ _direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",
 _factoryType = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index;
 _waitTime = (missionNamespace getVariable _unitType) select QUERYUNITTIME;
 _position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
-_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
+//--- B67 OPEN SPAWN APRON: the fixed trig offset above has no flat/empty check, so AI
+//--- factory output can drop in trees / on a slope. For AI-owned factories ONLY
+//--- (!isPlayer (leader _team)) sweep for a flat, dry, object-clear apron near the
+//--- factory and use it; on failure fall back to the original fixed offset. The human
+//--- player path is byte-identical (this whole block is skipped when a player leads).
+if (!isPlayer (leader _team)) then {
+	private ["_apFac","_apBaseBrg","_apOk","_apTry","_apBrg","_apDist","_apCand","_apFlat"];
+	_apFac = getPos _building;
+	_apBaseBrg = getDir _building + _direction;
+	_apOk = false;
+	//--- first try the exact original offset position - if it is already flat/empty, keep it.
+	_apFlat = _position isFlatEmpty [8, 0, 2, 8, 0, false, objNull];
+	if ((count _apFlat) > 0 && {!(surfaceIsWater _position)}) then {_apOk = true};
+	//--- otherwise sweep the bearing (around the factory) and the standoff outward, up to
+	//--- ~12 tries, for the first flat dry spot. isFlatEmpty returns [] when not flat.
+	_apTry = 0;
+	while {!_apOk && {_apTry < 12}} do {
+		_apBrg = _apBaseBrg + (_apTry * 30);
+		_apDist = _distance + (8 * (floor (_apTry / 4)));
+		_apCand = [_apFac, _apDist, _apBrg] Call GetPositionFrom;
+		if (!(surfaceIsWater _apCand)) then {
+			_apFlat = _apCand isFlatEmpty [8, 0, 2, 8, 0, false, objNull];
+			if ((count _apFlat) > 0) then {_position = _apCand; _apOk = true};
+		};
+		_apTry = _apTry + 1;
+	};
+	//--- no flat dry apron found in budget: _position is left as the original fixed offset.
+};
+_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];  //--- queue-fix 2026-06-14: keys stored UPPERCASE (Init_Common.sqf:356) but _factoryType is mixed-case -> _longest was nil -> the stuck-head purge (_ret>_longest) NEVER fired. toUpper re-arms it.
+if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety floor so the deadline is always a real number
 
 _ret = 0;
 _queu2 = [0];
@@ -63,7 +92,7 @@ while {_id select 0 != _queu select 0} do {
 			};
 		};
 	};
-	if (count _queu != count _queu2) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) != (_queu2 select 0)}) then {  //--- queue-fix 2026-06-14: reset the stuck-head timer ONLY when the head actually advances, not when a sibling / another team's unit churns the shared factory queue (that reset was defeating the purge under batch ordering).
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
@@ -85,6 +114,15 @@ if (!(alive _building)||(isPlayer (leader _team))) exitWith {
 if (_unitType isKindOf "Man") then {
 	_soldier = [_unitType,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
 	[_sideText,'UnitsCreated',1] Call UpdateStatistics;
+	//--- AI FACTORY RALLY (task #25): the AI commander stamps wfbe_aicom_factory_rally (a forward,
+	//--- road-snapped egress point) on factories it builds. Without a destination a fresh AI unit just
+	//--- stands on the factory apron (the "troops standing still in base" bug). Walk it out to the
+	//--- rally. Player factories never set the var, so the count-guard makes this AI-only.
+	private "_aiRally";
+	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull _soldier}) then {
+		_soldier commandMove _aiRally;
+	};
 } else {
 	_factoryPosition = getPos _building;
 	_dir = -((((_position select 1) - (_factoryPosition select 1)) atan2 ((_position select 0) - (_factoryPosition select 0))) - 90);
@@ -99,6 +137,7 @@ if (_unitType isKindOf "Man") then {
 
 	// Could seperate the array here for modded vehicles
 	if(typeOf _vehicle in ['F35B','AV8B','AV8B2','A10','A10_US_EP1','Su25_Ins','Su25_TK_EP1','Su34','Su39','An2_TK_EP1','L159_ACR','L39_TK_EP1','ibrPRACS_MiG21mol']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles}];};
+	if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];};
     if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 	if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base","BTR90_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}]};
 	if(typeOf _vehicle in ['T90','BMP3']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleATReload;}];};
@@ -114,7 +153,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0) then { //--- IR Smoke
-		if (((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 0) then { //--- Make sure that the unit is defined in IRS_Init and that the upgrade is available.
+		if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 0) then { //--- AI8: use the buying side (_side), not client-side sideJoined (wrong/nil on a dedicated server). Make sure the unit is defined in IRS_Init and the upgrade is available.
 			_get = missionNamespace getVariable Format ["%1_IRS", (typeOf _vehicle)];
 			if !(isNil '_get') then {
 				_vehicle setVariable ["wfbe_irs_flares", _get select 1, true];
@@ -207,6 +246,14 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	};
 
 _vehicle allowCrewInImmobile true;
+	//--- AI FACTORY RALLY (task #25): drive the fresh hull off the apron toward the commander's
+	//--- forward rally (set on the factory by AI_Commander_Base). commandMove the driver so the
+	//--- vehicle takes the lane out instead of idling in base. AI-only via the count-guard.
+	private "_aiRally";
+	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
+		(driver _vehicle) commandMove _aiRally;
+	};
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
 

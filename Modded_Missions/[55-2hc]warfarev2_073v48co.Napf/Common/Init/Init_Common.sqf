@@ -7,8 +7,10 @@ HandleRocketTraccer = Compile preprocessFileLineNumbers "Common\Functions\Common
 HandleCommanderReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleCommanderReload.sqf";
 HandleReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleReload.sqf";
 HandleATReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATReload.sqf";
+//HandleATReloadVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATReloadVehicle.sqf";
 HandleATMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATMissiles.sqf";
 HandleAAMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleAAMissiles.sqf";
+HandleJetAADamage = Compile preprocessFileLineNumbers "Common\Functions\Common_JetAADamage.sqf";
 HandleAlarm = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleAlarm.sqf";
 HandleArty = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArty.sqf";
 HandleAT = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleAT.sqf";
@@ -41,7 +43,14 @@ GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSi
 GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
 GetSideTowns = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideTowns.sqf";
 GetSleepFPS = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSleepFPS.sqf";
+// Marty: Load the local Performance Audit helpers before client/server loops start using them.
+Call Compile preprocessFileLineNumbers "Common\Functions\Common_PerformanceAudit.sqf";
 GetTeamArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamArtillery.sqf";
+// Marty: Artillery ammo selector helpers used by the Tactical Center.
+WFBE_CO_FNC_GetArtilleryAmmoOptions = Compile preprocessFileLineNumbers "Common\Functions\Common_GetArtilleryAmmoOptions.sqf";
+WFBE_CO_FNC_LoadArtilleryAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_LoadArtilleryAmmo.sqf";
+// Marty: Ammo-fraction helper (vehicle current / full complement). Used by proportional rearm pricing.
+WFBE_CO_FNC_GetAmmoFraction = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAmmoFraction.sqf";
 GetTeamAutonomous = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamAutonomous.sqf";
 GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 GetTeamMoveMode = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamMoveMode.sqf";
@@ -58,8 +67,10 @@ GetUnitsBelowHeight = Compile preprocessFileLineNumbers "Common\Functions\Common
 GetUnitVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitVehicle.sqf";
 HandleIncomingMissile = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleIncomingMissile.sqf";
 HandleShootBombs = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootBombs.sqf";
+HandleShootMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootMissiles.sqf";
 IsArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsArtillery.sqf";
 MarkerUpdate = Compile preprocessFileLineNumbers "Common\Common_MarkerUpdate.sqf";
+WFBE_CL_MarkerLoop = Compile preprocessFileLineNumbers "Common\Common_MarkerLoop.sqf"; // Marty: PERF1 consolidated client marker loop (started by the first MarkerUpdate registration).
 PlaceNear = Compile preprocessFileLineNumbers "Common\Functions\Common_PlaceNear.sqf";
 PlaceSafe = Compile preprocessFileLineNumbers "Common\Functions\Common_PlaceSafe.sqf";
 RearmVehicle = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_RearmVehicleOA.sqf"} else {Compile preprocessFileLineNumbers "Common\Functions\Common_RearmVehicle.sqf"};
@@ -83,7 +94,6 @@ ARTY_Prep = Compile preprocessFile "Common\Module\Arty\ARTY_mobileMissionPrep.sq
 ARTY_Finish = Compile preprocessFile "Common\Module\Arty\ARTY_mobileMissionFinish.sqf";
 
 //--- New Fnc.
-WFBE_CO_FNC_AreWaypointsComplete = Compile preprocessFileLineNumbers "Common\Functions\Common_AreWaypointsComplete.sqf";
 WFBE_CO_FNC_ArrayPush = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayPush.sqf";
 WFBE_CO_FNC_ArrayRemoveIndex = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayRemoveIndex.sqf";
 WFBE_CO_FNC_ArrayShift = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShift.sqf";
@@ -93,6 +103,14 @@ WFBE_CO_FNC_ChangeUnitGroup = Compile preprocessFileLineNumbers "Common\Function
 WFBE_CO_FNC_ClearVehicleCargo = if (WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargo.sqf"} else {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargoOA.sqf"};
 WFBE_CO_FNC_CreateTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTeam.sqf";
 WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTownUnits.sqf";
+WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
+WFBE_CO_FNC_RunCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_RunCommanderTeam.sqf";
+WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMServiceTick.sqf"; //--- B48 AICOM self-service (default OFF: WFBE_C_AICOM_SERVICE_ENABLED)
+WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
+WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functions\Common_SpawnFactionSmoke.sqf"; //--- Cosmetic: server-only triggered faction smoke (gated WFBE_C_FSMOKE_ENABLED; capped+TTL+cooldown).
+// Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
+WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
+WFBE_CO_FNC_GroupGetBool = Compile preprocessFileLineNumbers "Common\Functions\Common_GroupGetBool.sqf"; //--- G1: safe bool getVariable for GROUP receivers (A2 OA unset->nil trap)
 WFBE_CO_FNC_CreateUnitForStaticDefence = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitForStaticDefence.sqf";
 WFBE_CO_FNC_CreateUnitsForResBases = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitsForResBases.sqf";
 WFBE_CO_FNC_CreateVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateVehicle.sqf";
@@ -104,7 +122,7 @@ WFBE_CO_FNC_FindTurretsRecursive = Compile preprocessFileLineNumbers "Common\Fun
 WFBE_CO_FNC_FireArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_FireArtillery.sqf";
 WFBE_CO_FNC_GetAreaEnemiesCount = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAreaEnemiesCount.sqf";
 WFBE_CO_FNC_GetCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_GetCommanderTeam.sqf";
-WFBE_CO_FNC_GetClosestEnemyLocation = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestEnemyLocation.sqf";
+//--- wiki-wins: removed dead compile WFBE_CO_FNC_GetClosestEnemyLocation (zero call sites repo-wide)
 WFBE_CO_FNC_GetClosestEntity = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestEntity.sqf";
 WFBE_CO_FNC_GetClosestEntity2 = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestEntity2.sqf";
 WFBE_CO_FNC_GetClosestEntity3 = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestEntity3.sqf";
@@ -128,7 +146,7 @@ WFBE_CO_FNC_GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\
 WFBE_CO_FNC_GetTotalCampsOnSide = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCampsOnSide.sqf";
 WFBE_CO_FNC_GetTownsSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTownsSupply.sqf";
 WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitConfigGear.sqf";
-WFBE_CO_FNC_GetUnitsPerSide = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitsPerSide.sqf";
+//--- wiki-wins: removed dead compile WFBE_CO_FNC_GetUnitsPerSide (zero call sites repo-wide)
 WFBE_CO_FNC_GetVehicleTurretsGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetVehicleTurretsGear.sqf";
 WFBE_CO_FNC_HandleArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArtillery.sqf";
 WFBE_CO_FNC_OnUnitHit = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitHit.sqf";
@@ -149,6 +167,9 @@ WFBE_CO_FNC_WaypointsRemove = Compile preprocessFileLineNumbers "Common\Function
 WF_createMarker = compile preprocessFileLineNumbers "Common\Functions\Common_CreateMarker.sqf";
 WFBE_CL_FNC_Delete_Marker = compile preprocessFileLineNumbers "Client\Functions\Client_Delete_Marker.sqf";
 WF_sendMessage = compile preprocessFileLineNumbers "Common\Functions\Common_SendMessage.sqf";
+WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_StagnateSupplyIncomeNoPlayers.sqf";
+// Marty: Defense budget — category helper (used by RequestDefense budget gate and available to client UI).
+WFBE_CO_FNC_GetDefenseCategory = Compile preprocessFileLineNumbers "Common\Functions\Common_GetDefenseCategory.sqf";
 
 ["INITIALIZATION", "Init_Common.sqf: Functions are initialized."] Call WFBE_CO_FNC_LogContent;
 
@@ -157,7 +178,6 @@ unitMarker = 0;
 
 //--- Load the profile variables if needed (Requires at least version 1.62 build 97105).
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER > 97105 || ARMA_VERSION > 162) then {
-	WFBE_CO_FNC_GetProfileVariable = Compile preprocessFileLineNumbers "Common\Functions\Common_GetProfileVariable.sqf";
 	WFBE_CO_FNC_SaveProfile = Compile preprocessFileLineNumbers "Common\Functions\Common_SaveProfile.sqf";
 	WFBE_CO_FNC_SetProfileVariable = Compile preprocessFileLineNumbers "Common\Functions\Common_SetProfileVariable.sqf";
 };
@@ -189,7 +209,9 @@ WFBE_Logic_Airfield = "LocationLogicAirport";
 WFBE_Logic_Camp = "LocationLogicCamp";
 WFBE_Logic_Depot = "LocationLogicDepot";
 
-isAutoWallConstructingEnabled = true;
+isAutoWallConstructingEnabled = true; //--- legacy global (client CoIn UI still reads this, per-client-side); the per-side server vars below are authoritative for construction
+//--- wiki-wins: per-side auto-wall toggle so one commander's toggle no longer flips every side's + the AI's builds. Default true per side.
+{ missionNamespace setVariable [Format["WFBE_AUTOWALL_%1", _x], true] } forEach [west, east, resistance];
 WFBE_CO_VAR_SupplyMissionRegenInterval = 1800;
 
 /* Wait for BIS Module Init */
@@ -227,12 +249,11 @@ switch (true) do {
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_BAFD.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_BAFW.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_CDF.sqf';
+		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_DeltaForce.sqf'; //--- B755 (Ray 2026-06-25): Core_DeltaForce.sqf existed but was never loaded by this list -> Delta Force classes had no buy-menu metadata (nil lookups). Loaded like its siblings.
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_CIV.sqf';
-		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_DeltaForce.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_FR.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_GUE.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_INS.sqf';
-		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_KSK.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_MVD.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_PMC.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_RU.sqf';
@@ -272,7 +293,7 @@ _presents = [];
 } forEach [[west,"WFBE_L_BLU"],[east,"WFBE_L_OPF"],[resistance,"WFBE_L_GUE"]];
 
 WFBE_PRESENTSIDES = _presents;
-WFBE_ISTHREEWAY = false;
+WFBE_ISTHREEWAY = ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0); //--- GUER Insurgents gate: three-way mode is live only when the playable GUER faction is enabled (else exactly as before)
 
 //--- Todo, dynamic (if logic is present or not).
 WFBE_DEFENDER = resistance;
@@ -285,6 +306,13 @@ Call Compile preprocessFileLineNumbers Format["Common\Config\Core_Root\Root_%1.s
 
 //--- Common Exec.
 Call Compile preprocessFileLineNumbers "Common\Init\Init_PublicVariables.sqf";
+
+//--- B67 (guer-reward): register the GuerVbiedBounty client receiver, mirroring exactly how AwardBounty is
+//--- registered by the Init_PublicVariables.sqf _clientCommandPV forEach loop (compile CLTFNC<name> from
+//--- Client\PVFunctions\<name>.sqf + add the WFBE_PVF_<name> addPublicVariableEventHandler on clients/HC-host).
+//--- Done here (not in Init_PublicVariables) to keep the change inside the B67 edit-scope; identical effect.
+CLTFNCGuerVbiedBounty = compile preprocessFileLineNumbers "Client\PVFunctions\GuerVbiedBounty.sqf";
+if (!isServer || local player) then {"WFBE_PVF_GuerVbiedBounty" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF}};
 
 //--- Import the desired defenses. (todo, Replace the old defense init by this one).
 Call Compile preprocessFileLineNumbers Format["Common\Config\Defenses\Defenses_%1.sqf",_grpWest];
@@ -349,12 +377,52 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 1) then {
 };
 
 //--- Make a global array of miscelleanous stuff.
+
 _repairs = [];
 {
 	_repairs = _repairs + (missionNamespace getVariable Format["WFBE_%1REPAIRTRUCKS", _x]);
 } forEach WFBE_PRESENTSIDES;
 
 missionNamespace setVariable ["WFBE_REPAIRTRUCKS", _repairs];
+
+
+//--- Task 12: Airfield-exclusive aircraft roster.  Populated on all machines so
+//--- the hangar buy menu can use it without a server round-trip.
+//--- WFBE_AIRFIELD_UNITS      = generic list shared by ALL captured airfields (both sides).
+//--- WFBE_AIRFIELD_UNITS_SPECIAL = per-airfield extras: [[townName, [classnames]], ...].
+//---   At menu-fill time the nearest town name is resolved from the airport logic object
+//---   and any matching entry's classes are appended to the generic list.
+//---   Add new per-airfield specials by appending a pair — no other file changes needed.
+if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
+	WFBE_AIRFIELD_UNITS = if (IS_chernarus_map_dependent) then {
+		//--- L-39C removed (Balota-only via special); Mi-171Sh rocket gunship added for early-game support.
+		//--- Amendment 2026-06-12: light jets added — Su25_Ins (EAST, gun+S-5 default) and L159_ACR (WEST,
+		//---   Hydra/Maverick default) — priced between Mi-171Sh (24000) and cheapest factory jet.
+		//---   Cross-faction listing is intentional (soft-faction-walls precedent).
+		//---   NOTE: Su25_Ins also appears in Core_INS factory; L159_ACR also in Core_USMC AF3.
+		//---   Owner ruling 2026-06-12: dual availability confirmed — Su25_Ins and L159_ACR stay in both airfield pool AND factory lists.
+		["An2_TK_EP1","Mi17_Ins","Mi171Sh_rockets_CZ_EP1","Su25_Ins","L159_ACR"]
+	} else {
+		//--- Takistan generic list: L-39C not present here; leave as-is.
+		["An2_TK_EP1","Mi17_TK_EP1"]
+	};
+
+	//--- Per-airfield specials: units added ONLY at the named airfield.
+	//--- Chernarus: L-39C is exclusive to Balota (closest prestige-aviation context).
+	//--- Takistan: no per-airfield specials defined (no clean equivalent for L-39C there).
+	WFBE_AIRFIELD_UNITS_SPECIAL = [
+		["Balota", ["L39_TK_EP1"]]
+	];
+};
+
+//--- Data-driven special-unit info popups.
+//--- Each entry: [classname, stringtable-key].  The buy menu reads this on selection
+//--- and shows hintSilent parseText (localize key) when a match is found.
+//--- To add a new special: append ["ClassName","STR_WF_HINT_..."] to the array.
+WFBE_SPECIAL_UNIT_HINTS = [
+	// Marty: WEST salvage heli (UH1H_EP1) removed - invalid class on live box; re-add with validated airframe (claude-inbox#2 item 1).
+	["Mi17_medevac_CDF","STR_WF_HINT_SalvageHeli"]
+];
 
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

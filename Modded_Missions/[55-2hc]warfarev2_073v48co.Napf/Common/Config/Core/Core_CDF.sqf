@@ -120,13 +120,13 @@ _c = _c + ['Mi17_CDF'];
 _i = _i + [['','',8800,30,-2,1,3,0,'CDF',[]]];
 
 _c = _c + ['Mi17_medevac_CDF'];
-_i = _i + [['','',9800,30,-2,2,3,0,'CDF',[]]];
+_i = _i + [['','',9800,30,-2,1,3,0,'CDF',[]]]; //--- EAST salvage helicopter (salvage-only by classname; Air-1 unlock)
 
 _c = _c + ['Mi24_D'];
 _i = _i + [['','',22580,40,-2,3,3,0,'CDF',[]]];
 
 _c = _c + ['Su25_CDF'];
-_i = _i + [['','',50640,55,-2,4,3,0,'CDF',[]]];
+_i = _i + [['','',42640,55,-2,4,3,0,'CDF',[]]];
 
 /* Static Defenses */
 _c = _c + ['CDF_WarfareBMGNest_PK'];

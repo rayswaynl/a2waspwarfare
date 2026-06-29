@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_groups", "_lock", "_position", "_positions", "_side", "_sideID", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
+Private ["_built", "_builtveh", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -22,7 +22,53 @@ _builtveh = 0;
 _town_teams = [];
 _town_vehicles = [];
 
-_lock = if ((missionNamespace getVariable "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") == 0 && _side == WFBE_DEFENDER) then {false} else {true};
+//--- Task 34: resistance vehicles are always unlocked when the resistance side is inactive (WFBE_C_TOWNS_DEFENDER == 0).
+//--- When resistance IS active the existing WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER parameter governs the lock state
+//--- (default=0 in Parameters.hpp, meaning unlocked; set to 1 in the lobby to require lockpick).
+_lock = if (_side == WFBE_DEFENDER && (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER", 1]) == 0) then {
+	false  //--- Resistance AI disabled: nothing to fight — unlock vehicles for everyone.
+} else {
+	if ((missionNamespace getVariable "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") == 0 && _side == WFBE_DEFENDER) then {false} else {true}
+};
+
+// Marty: Record local group counts around town defense creation to diagnose Arma 2 OA per-side group pressure on server/HC.
+_logGroupCount = {
+	Private ["_event", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_level"];
+
+	_event = _this select 0;
+	_level = _this select 1;
+	_groupCountWest = 0;
+	_groupCountEast = 0;
+	_groupCountGuer = 0;
+	_groupCountCiv = 0;
+	_groupCountLogic = 0;
+	_groupCountUnknown = 0;
+
+	{
+		_groupSide = side _x;
+		switch (_groupSide) do {
+			case west: {_groupCountWest = _groupCountWest + 1};
+			case east: {_groupCountEast = _groupCountEast + 1};
+			case resistance: {_groupCountGuer = _groupCountGuer + 1};
+			case civilian: {_groupCountCiv = _groupCountCiv + 1};
+			case sideLogic: {_groupCountLogic = _groupCountLogic + 1};
+			default {_groupCountUnknown = _groupCountUnknown + 1};
+		};
+	} forEach allGroups;
+
+	_groupCountSide = switch (_side) do {
+		case west: {_groupCountWest};
+		case east: {_groupCountEast};
+		case resistance: {_groupCountGuer};
+		case civilian: {_groupCountCiv};
+		case sideLogic: {_groupCountLogic};
+		default {_groupCountUnknown};
+	};
+	_groupMachine = if (isServer) then {"SERVER"} else {if (hasInterface) then {"CLIENT"} else {"HC"}};
+	[_level, Format ["TOWN_GROUP_COUNT %1 machine:%2 town:%3 side:%4 sideGroups:%5 total:%6 west:%7 east:%8 guer:%9 civ:%10 logic:%11 unknown:%12", _event, _groupMachine, _town getVariable "name", _side, _groupCountSide, count allGroups, _groupCountWest, _groupCountEast, _groupCountGuer, _groupCountCiv, _groupCountLogic, _groupCountUnknown]] Call WFBE_CO_FNC_LogContent;
+};
+
+["activation_before", "INFORMATION"] call _logGroupCount;
 
 for '_i' from 0 to count(_groups)-1 do {
 	_position = _positions select _i;
@@ -31,13 +77,72 @@ for '_i' from 0 to count(_groups)-1 do {
 	["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] [%2] will create a team template %3 at %4", _town, _side, _groups select _i,_position]] Call WFBE_CO_FNC_LogContent;
 	
 	_retVal = [_groups select _i, _position, _side, _lock, _team, true, 90] call WFBE_CO_FNC_CreateTeam;
+	_units = _retVal select 0;
 	_vehicles = _retVal select 1;
-	_built = _built + count(_retVal select 0);
+	// Marty: Track the actual group returned by CreateTeam, because delegated HC creation may replace grpNull locally.
+	_team = _retVal select 2;
+	_crews = if (count _retVal > 3) then {_retVal select 3} else {[]};
+
+	//--- Defender classification: tag everything this town spawned. PUBLIC tag (3rd arg true) -
+	//--- town AI may be created on an HC while the activation scan that must ignore these runs
+	//--- on the server, so a local-only tag would be invisible where it matters.
+	{if (!isNull _x) then {_x setVariable ["WFBE_IsTownDefenderAI", true, true]}} forEach (_units + _crews + _vehicles);
+
+	//--- Item 1: Airfield garrison tracking. Tag units spawned for PMCAirfield-type towns so they
+	//--- can be bulk-deleted on capture (server_town.sqf cleanup-airfield-garrison path).
+	//--- The per-location array is maintained server-local; non-server machines tag individually.
+	if ((_town getVariable ["wfbe_town_type", ""]) == "PMCAirfield") then {
+		Private "_garUnit";
+		{
+			_garUnit = _x;
+			if (!isNull _garUnit) then {
+				_garUnit setVariable ["wfbe_airfield_garrison", true, true];
+			};
+		} forEach (_units + _crews + _vehicles);
+		if (isServer) then {
+			Private "_garArr";
+			_garArr = _town getVariable "wfbe_airfield_garrison_units";
+			if (isNil "_garArr") then {_garArr = []};
+			_town setVariable ["wfbe_airfield_garrison_units", _garArr + _units + _crews + _vehicles, true];
+		};
+	};
+
+	_built = _built + count _units;
 	_builtveh = _builtveh + (count _vehicles);
 
-	[_town, _team, _sideID] execVM "Server\FSM\server_town_patrol.sqf";
-	[_team, 400, _position] spawn WFBE_CO_FNC_RevealArea;
-	[_town_teams, _team] call WFBE_CO_FNC_ArrayPush;
+	// Marty: Skip tracking/patrol work when no valid group could be created on this machine.
+	if (isNull _team || {((count _units) + (count _vehicles)) == 0}) then {
+		["WARNING", Format["Common_CreateTownUnits.sqf: Town [%1] [%2] skipped patrol setup for template %3 because no valid team assets were created.", _town, _side, _groups select _i]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_team setVariable ["WFBE_TownAI_Town", _town, false];
+		_team setVariable ["WFBE_TownAI_Side", _side, false];
+		_team setVariable ["WFBE_TownAI_Group", true, false];
+		[_town, _team, _sideID] execVM "Server\FSM\server_town_patrol.sqf";
+		//--- B5: per-group 400m reveal coalesced to ONE town-wide reveal per activation
+		//--- episode (after this loop). Each group used to fire its own RevealArea spawn,
+		//--- meaning one expensive nearEntities scan per group; for a town with many garrison
+		//--- groups that was N scans per activation. We instead reveal once below to every
+		//--- team created this episode (_town_teams). Enemies are still revealed (just once).
+		[_town_teams, _team] call WFBE_CO_FNC_ArrayPush;
+		_team allowFleeing 0; //--- Make the units brave.
+
+		//--- Town-defender skill spread: tight, near-baseline variation (garrison only).
+		{
+			if (_x isKindOf "Man") then {
+				_skillAcc     = 0.65 + random 0.30;
+				_skillScalar  = 0.80 + random 0.20;
+				_skillSpot    = 0.70 + random 0.25;
+				_skillSpeed   = 0.70 + random 0.25;
+				_skillCourage = 0.80 + random 0.20;
+				_x setSkill ["aimingAccuracy", _skillAcc];
+				_x setSkill ["aimingSpeed",    _skillSpeed];
+				_x setSkill ["spotDistance",   _skillSpot];
+				_x setSkill ["courage",        _skillCourage];
+				_x setSkill _skillScalar;
+			};
+		} forEach _units;
+	};
+
 	{
 		[_town_vehicles, _x] call WFBE_CO_FNC_ArrayPush;
 		if (isServer) then {
@@ -45,12 +150,43 @@ for '_i' from 0 to count(_groups)-1 do {
 			_x setVariable ["WFBE_Taxi_Prohib", true];
 		};
 	} forEach _vehicles;
+};
 
-	_team allowFleeing 0; //--- Make the units brave.
+//--- B5: coalesced reveal — ONE nearEntities scan per activation episode (was one per
+//--- garrison group). Reveal the nearby entities to every town team created this episode.
+//--- Scan is town-centred with a radius that covers the union of the old per-group 400m
+//--- circles (groups spawn up to ~300m from the town, so 700m envelops them). The crew of
+//--- each revealed vehicle is revealed too, matching Common_RevealArea's behaviour.
+if (count _town_teams > 0) then {
+	[_town_teams, _town] spawn {
+		Private ["_teams","_town","_revealPos","_revealRange","_near","_reveal","_ent","_grp"];
+		_teams = _this select 0;
+		_town  = _this select 1;
+		_revealPos = getPos _town;
+		_revealRange = 700;
+		_near = _revealPos nearEntities _revealRange;
+		{
+			_ent = _x;
+			_reveal = [_ent];
+			if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			{
+				_grp = _x;
+				{_grp reveal _ent} forEach _reveal;
+			} forEach _teams;
+		} forEach _near;
+	};
 };
 
 if (_built > 0) then {[str _side,'UnitsCreated',_built] call UpdateStatistics};
 if (_builtveh > 0) then {[str _side,'VehiclesCreated',_builtveh] call UpdateStatistics};
+
+// Marty: Record the post-spawn group count even when activation succeeds, so logs show if a side is approaching the 144 group limit.
+["activation_after", "INFORMATION"] call _logGroupCount;
+
+// Marty: When a town activates empty, print the machine-side group counts near the failure.
+if ((_built + _builtveh) == 0) then {
+	["town_empty", "WARNING"] call _logGroupCount;
+};
 
 ["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] held by [%2] was activated witha total of [%3] units.", _town, _side, _built + _builtveh]] Call WFBE_CO_FNC_LogContent;
 

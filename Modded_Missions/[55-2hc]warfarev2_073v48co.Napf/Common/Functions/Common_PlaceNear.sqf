@@ -1,7 +1,20 @@
 Private["_destination","_direction","_faceAway","_maxRadius","_minRadius","_object","_placeSafe","_position","_radius","_randomDirection","_safeRadius"];
 
 _object = _this Select 0;
+
+// Nil-guard: _object is nil if the caller passes nil or an empty _this array.
+// isNull covers a valid but already-deleted object (objNull).
+// Skip-iteration: exit — placing a nil/null object is a no-op at best and a script error
+// at worst; there is no safe default object to substitute.
+if (isNil "_object") exitWith {};
+if (isNull _object) exitWith {};
+
 _position = _this Select 1;
+
+// Nil-guard: _position can be nil if the caller passes nil explicitly or omits arg 1.
+// Defaulting to [0,0,0] would silently teleport the object to the map origin — a live
+// gameplay bug that is harder to diagnose than an early exit.  Skip instead.
+if (isNil "_position") exitWith {};
 _minRadius = _this Select 2;
 _maxRadius = _this Select 3;
 

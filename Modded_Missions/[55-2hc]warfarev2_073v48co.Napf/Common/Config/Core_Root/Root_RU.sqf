@@ -11,15 +11,20 @@ missionNamespace setVariable [Format["WFBE_%1SOLDIER", _side], 'RU_Soldier'];
 missionNamespace setVariable [Format["WFBE_%1FLAG", _side], '\Ca\Data\flag_rus_co.paa'];
 
 missionNamespace setVariable [Format["WFBE_%1AMBULANCES", _side], ['GAZ_Vodnik_MedEvac','M113Ambul_TK_EP1','Mi17_medevac_RU','M113Ambul_TK_EP1']];
+missionNamespace setVariable [Format["WFBE_%1REDEPLOYTRUCKS", _side], ['Kamaz']];
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['KamazRepair','UralRepair_TK_EP1']];
-missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_RU','UralSalvage_TK_EP1']];
+missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_RU','UralSalvage_TK_EP1','Mi17_medevac_CDF']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_RU','UralSupply_TK_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'Pchela1T'];
 
 missionNamespace setVariable [Format["WFBE_%1AMMOTRUCKS", _side], ['MtvrReammo_DES_EP1','WarfareReammoTruck_USMC','WarfareReammoTruck_RU','UralReammo_TK_EP1']];//listed to get gearaccess in updateavailablaactions.sqf (listed both to get capture skill too)
 missionNamespace setVariable [Format["WFBE_%1ECMTRUCKS", _side], ['KamazRefuel','UralRefuel_TK_EP1']];//listed to add ecm stuff
 missionNamespace setVariable [Format["WFBE_%1LIFTVEHICLE", _side], ["Mi17_Ins","Mi17_medevac_RU","Mi17_TK_EP1"]];
-missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['GRAD_TK_EP1','GRAD_RU']];
+missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['GRAD_TK_EP1','GRAD_RU','RM70_ACR']];
+
+// Capture-to-unlock: holding a trigger town unlocks an ACR premium unit at own factories (Chernarus only).
+// Format per entry: [classname, townName, requiredFactoryLevel]
+missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Krasnostav',4],['RM70_ACR','NWAF',4]]];
 
 
 //--- Radio Announcers.
@@ -33,7 +38,8 @@ missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL3", _side],['MVD_Sold
 
 missionNamespace setVariable [Format["WFBE_%1PARACARGO", _side], 'Mi17_Ins'];//--- Paratroopers, Vehicle.
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCK", _side], 'KamazRepair'];//--- Repair Truck model.
-missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['GAZ_Vodnik_MedEvac','BTR90']];//--- Starting Vehicles.missionNamespace setVariable [Format["WFBE_%1PARAAMMO", _side], ['RUBasicAmmunitionBox','RUBasicWeaponsBox','RULaunchersBox']];//--- Supply Paradropping, Dropped Ammunition.
+missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['GAZ_Vodnik_MedEvac','BTR90']];//--- Starting Vehicles.
+missionNamespace setVariable [Format["WFBE_%1PARAAMMO", _side], ['RUBasicAmmunitionBox','RUBasicWeaponsBox','RULaunchersBox']];//--- Supply Paradropping, Dropped Ammunition.
 missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'KamazRepair'];//--- Supply Paradropping, Dropped Vehicle.
 missionNamespace setVariable [Format["WFBE_%1PARAVEHI", _side], 'Mi17_Ins'];//--- Supply Paradropping, Vehicle
 missionNamespace setVariable [Format["WFBE_%1PARACHUTE", _side], 'ParachuteMediumEast'];//--- Supply Paradropping, Parachute Model.
@@ -41,24 +47,42 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSuppl
 
 //--- Server only.
 if (isServer) then {
-	//--- Patrols.
+	//--- Patrols. EAST revamp (task #23): archetype variation per tier
+	//--- (recon-foot / motorized / technical / mechanized / AT-hunter).
+	//--- BLOCKER FIX: every entry now carries >=1 Man-class soldier; the old all-armor
+	//--- entries (GAZ_Vodnik_HMG+GAZ_Vodnik, BTR90+BTR90, T72_RU+BMP3, T72_RU+T72_RU)
+	//--- were crewless to Common_RunSidePatrol (vehicle crews are not counted) and never spawned.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
+		//--- recon-foot: sniper-led scout team.
 		['RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_Sniper','RU_Soldier_Medic'],
+		//--- foot rifle squad.
 		['RU_Soldier_TL','RU_Soldier_AR','RU_Soldier_GL','RU_Soldier_LAT','RU_Soldier'],
-		['GAZ_Vodnik_HMG','GAZ_Vodnik']
+		//--- technical pair (was crewless): Vodnik HMG + Vodnik with a dismounted AT gunner.
+		['GAZ_Vodnik_HMG','GAZ_Vodnik','RU_Soldier_TL','RU_Soldier_AT'],
+		//--- AT-hunter foot patrol.
+		['RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_AT','RU_Soldier_GL','RU_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['BTR90','BTR90'],
+		//--- mechanized (was crewless): twin BTR-90 + dismounted AT screen.
+		['BTR90','BTR90','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_Medic'],
+		//--- motorized AT-hunter: Kamaz + AT/MG team.
 		['Kamaz','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_MG','RU_Soldier_LAT'],
-		['BMP3','RU_Soldier_AA','RU_Soldier_AA','RU_Soldier_Medic']
+		//--- mechanized AAA: BMP-3 + MANPADS gunners.
+		['BMP3','RU_Soldier_AA','RU_Soldier_AA','RU_Soldier_Medic','RU_Soldier_TL'],
+		//--- BRDM AT-hunter: ATGM scout car + BMP-2 with infantry escort.
+		['BRDM2_ATGM_INS','BMP2_INS','RU_Soldier_AT','RU_Soldier_MG','RU_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['T72_RU','BMP3'],
-		['T72_RU','T72_RU'],
+		//--- armor (was crewless): T-72 + BMP-3 with mounted infantry.
+		['T72_RU','BMP3','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_Medic'],
+		//--- heavy armor (was crewless): twin T-72 + AT/HAT escort.
+		['T72_RU','T72_RU','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier_Medic'],
+		//--- mechanized assault: BMP-3 pair + full dismounted squad.
 		['BMP3','BMP3','RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_Marksman','RU_Soldier_Medic','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier'],
-		['BTR90','RU_Soldier_TL','RU_Soldier_Medic','RU_Soldier_GL','RU_Soldier','RU_Soldier_AR']
+		//--- mechanized AT-hunter: T-90 + BTR-90 with AT-led screen.
+		['T90','BTR90','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier_Medic']
 	]];
 
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

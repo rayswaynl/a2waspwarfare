@@ -1,4 +1,7 @@
-Private["_assist","_bounty","_get","_name","_type"];
+Private["_assist","_bounty","_get","_name","_type","_faction"];
+
+if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
+if (isNull player) exitWith {};
 
 _type = _this select 0;
 _assist = _this select 1;
@@ -7,6 +10,11 @@ _ai = if (count _this > 2) then {_this select 2} else {objNull};
 _get = missionNamespace getVariable _type;
 
 _name = _get select QUERYUNITLABEL;
+_faction = _get select QUERYUNITFACTION;
+
+if ((_name == "BRDM-2 (ATGM)") && (_faction == "Insurgents")) then {
+	_name = "BRDM-2 (Igla AA)";
+};
 
 _bounty = switch  (true) do {
                     case (_type isKindOf "Man"): {round((_get select QUERYUNITPRICE) *0.7* (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF"));};
@@ -29,6 +37,8 @@ _bounty = switch  (true) do {
                    
 				    case (_type isKindOf "building"): {round((_get select QUERYUNITPRICE)*0.55*(missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF"));};
 
+					default {0}; //--- wiki-wins: unmatched (e.g. mod-added) classes no longer feed nil into ChangePlayerFunds
+
 };
 
 sleep (random 3);
@@ -36,9 +46,10 @@ sleep (random 3);
 //--- Are we dealing with a kill assist or a full kill.
 if (_assist) then {
 	_bounty = _bounty * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_ASSISTANCE_COEF");
-	Format[Localize "STR_WF_CHAT_Award_Bounty_Assist", _bounty, _name] Call GroupChatMessage;
+	//--- B748: Kill Feed Settings opt-out gates ONLY the chat line; the bounty payout below is NEVER gated.
+	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty_Assist", _bounty, _name] Call GroupChatMessage};
 } else {
-	Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage;
+	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage};
 };
 
 (_bounty) Call ChangePlayerFunds;

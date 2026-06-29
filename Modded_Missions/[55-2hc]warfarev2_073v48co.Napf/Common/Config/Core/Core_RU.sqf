@@ -113,7 +113,7 @@ _c = _c + ['T90'];
 _i = _i + [['','',6500,40,-2,if (WF_A2_Vanilla) then {3} else {4},2,0,'Russians',[]]];
 
 _c = _c + ['2S6M_Tunguska'];
-_i = _i + [['','',7800,35,-2,4,2,0,'Russians',[]]];
+_i = _i + [['','',8800,35,-2,4,2,0,'Russians',[]]];
 
 /* Air Vehicles */
 _c = _c + ['Mi17_medevac_RU'];
@@ -161,7 +161,7 @@ _c = _c + ['AGS_RU'];
 _i = _i + [['','',650,0,1,0,'Defense',0,'Russians',[]]];
 
 _c = _c + ['Metis'];
-_i = _i + [['Metis-M 9K115-2','',1500,0,1,0,'Defense',0,'Russians',[]]];
+_i = _i + [['Metis-M 9K115-2','',1200,0,1,0,'Defense',0,'Russians',[]]];
 
 _c = _c + ['Igla_AA_pod_East'];
 _i = _i + [['Igla AA POD launcher','',3000,0,1,0,'Defense',0,'Russians',[]]];

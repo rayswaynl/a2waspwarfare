@@ -27,9 +27,10 @@ missionNamespace setVariable [Format['WFBE_%1_ARTILLERY_EXTENDED_MAGS', _side], 
 ]];
 
 //--- Upgrade level required to use the special projectile.
+// Marty: All special artillery ammunition is unlocked by Artillery Ammunition level 1.
 missionNamespace setVariable [Format['WFBE_%1_ARTILLERY_EXTENDED_MAGS_UPGRADE', _side], [
-	[2,3,3,1,1],
-	[2,1]
+	[1,1,1,1,1],
+	[1,1]
 ]];
 
 //--- Artillery classnames, more than one of the same family may be used.

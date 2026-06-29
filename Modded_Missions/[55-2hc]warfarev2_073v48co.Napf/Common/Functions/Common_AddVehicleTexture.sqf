@@ -1,5 +1,10 @@
-Private ["_lock","_position","_side","_type","_vehicle"];
+Private ["_createSide","_lock","_position","_side","_type","_vehicle"];
 _vehicle = _this select 0;
+//--- b67 faction visuals: authoritative side id passed by Common_CreateVehicle.sqf (the create path
+//--- knows the buying side). REQUIRED because a freshly createVehicle'd hull is still CREWLESS, so
+//--- `side _vehicle` here is CIVILIAN -> a self-derived side yields CIV and any per-side block no-ops.
+//--- -1 when an older caller passes only [_vehicle] (none currently; CreateVehicle is the sole caller).
+_createSide = if (count _this > 1) then {_this select 1} else {-1};
 _type = typeof _vehicle;
 
 switch (_type) do {
@@ -218,7 +223,92 @@ switch (_type) do {
 		};
 	};
 
+	case "BVP1_TK_ACR": {
+	    if (IS_chernarus_map_dependent) then {
+	        _vehicle setVehicleInit "this setObjectTexture [0,""Textures\trup_ext0_co.paa""]";
+	    };
 	};
+
+	//--- Salvage helicopters: amber tint to distinguish them from standard transport.
+	//--- Note: A2 OA helicopters often ignore setObjectTexture on body selections;
+	//--- apply best-effort and verify in-engine — selection 0 is the fuselage on most variants.
+	//--- NEEDS-IN-ENGINE-VERIFY: confirm the tint is visible on Mi17_medevac_CDF.
+	//--- Implementation note: we do NOT use setVehicleInit here because Common_CreateVehicle.sqf
+	//--- calls setVehicleInit again (for Init_Unit.sqf) AFTER this function returns, which would
+	//--- overwrite the texture command before processInitCommands sees it — killing JIP visibility.
+	//--- Instead we store the texture command string on the vehicle; Common_CreateVehicle reads it
+	//--- and appends it to the Init_Unit setVehicleInit so both run in one processInitCommands call.
+	// Marty: WEST salvage heli (UH1H_EP1) removed - invalid class on live box; re-add with validated airframe (claude-inbox#2 item 1).
+	case "Mi17_medevac_CDF": {
+		//--- APPEND (was overwrite) so a team-marking string set by Common_AddVehicleMarking.sqf survives.
+		Private ["_salvageTex","_pendingSalv"];
+		_salvageTex  = "this setObjectTexture [0,'#(argb,8,8,3)color(0.8,0.5,0.0,0.5,ca)']";
+		_pendingSalv = _vehicle getVariable ["wfbe_pending_texture", ""];
+		if (_pendingSalv != "") then {_pendingSalv = _pendingSalv + "; " + _salvageTex} else {_pendingSalv = _salvageTex};
+		_vehicle setVariable ["wfbe_pending_texture", _pendingSalv];
+	};
+
+
+	};
+
+//--- ============================================================================
+//--- Miksuu vehicle SKINS (experital). Side-gated body retextures applied as an APPEND to
+//--- wfbe_pending_texture (same JIP-safe path as the salvage tint above). _side is read from
+//--- wfbe_side_id, stamped by Common_AddVehicleMarking.sqf which the create path runs just
+//--- BEFORE this function. Gate: WFBE_C_VEHICLE_TINTS (decoupled from WFBE_C_VEHICLE_MARKINGS, which gates the #lightpoint markings in Common_AddVehicleMarking.sqf).
+//--- NOTE: like the salvage tint, this only reaches clients on the GLOBAL non-defender path
+//--- (the path Common_CreateVehicle uses for player/commander vehicles).
+//--- ============================================================================
+if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 0]) > 0) then {
+	Private ["_skinCmd","_pendingSkin"];
+	//--- B67 side resolution (authoritative). Prefer the side PASSED by Common_CreateVehicle (_createSide)
+	//--- - the create path knows the buying side. The old B66 path read wfbe_side_id then fell back to
+	//--- (side _vehicle), but BOTH are broken here: wfbe_side_id is ONLY stamped by Common_AddVehicleMarking.sqf,
+	//--- which exits early when WFBE_C_VEHICLE_MARKINGS != 1 (default 0) so it is usually unset; and the hull
+	//--- is still CREWLESS here, so (side _vehicle) resolves to CIVILIAN -> WFBE_C_CIV_ID -> no faction case
+	//--- matches -> the tints silently no-op. So: _createSide first, then the marking-stamped id, then engine
+	//--- side as a last-resort guard only (it can only resolve to a real faction once the hull is crewed).
+	_side    = _createSide;
+	if (_side < 0) then { _side = _vehicle getVariable ["wfbe_side_id", -1]; };
+	if (_side < 0) then { _side = (side _vehicle) Call WFBE_CO_FNC_GetSideID; };
+	_skinCmd = "";
+
+	switch (_side) do {
+		//--- WEST: matte-black motor-pool finish. Zero art (procedural colour) - ships now.
+		//--- NEEDS-IN-ENGINE-VERIFY: body selections vary per class; 0+1 cover most A2 hulls.
+		case WFBE_C_WEST_ID: {
+			_skinCmd = "this setObjectTexture [0,'#(argb,8,8,3)color(0.04,0.04,0.05,1,ca)']; this setObjectTexture [1,'#(argb,8,8,3)color(0.04,0.04,0.05,1,ca)']";
+		};
+		//--- EAST: dark olive/forest procedural tint. Zero art (procedural colour) - ships now.
+		//--- Mirrors the WEST block: same selection indices (0+1), known-safe on most A2 hulls.
+		//--- NEEDS-IN-ENGINE-VERIFY: body selections vary per class; 0+1 cover most A2 hulls.
+		case WFBE_C_EAST_ID: {
+			_skinCmd = "this setObjectTexture [0,'#(argb,8,8,3)color(0.20,0.24,0.16,1,ca)']; this setObjectTexture [1,'#(argb,8,8,3)color(0.20,0.24,0.16,1,ca)']";
+		};
+		//--- GUER/resistance: desert tan/brown procedural tint. Zero art (procedural colour) - ships now.
+		//--- Mirrors the WEST block: same selection indices (0+1), known-safe on most A2 hulls.
+		//--- NEEDS-IN-ENGINE-VERIFY: body selections vary per class; 0+1 cover most A2 hulls.
+		case WFBE_C_GUER_ID: {
+			_skinCmd = "this setObjectTexture [0,'#(argb,8,8,3)color(0.46,0.40,0.28,1,ca)']; this setObjectTexture [1,'#(argb,8,8,3)color(0.46,0.40,0.28,1,ca)']";
+		};
+	};
+
+	//--- STUB: clan livery E on the EAST MHQ / flagship class (Chernarus RU MHQ = BTR90_HQ).
+	//--- fill Textures\mks_clan_e_co.paa from image-gen.
+	//if (_type == "BTR90_HQ") then { _skinCmd = "this setObjectTexture [0,'Textures\mks_clan_e_co.paa']"; }; //--- fill from image-gen
+
+	//--- STUB: medic red-cross decal on the TK ambulance (existing case above textures its body).
+	//--- fill Textures\mks_medic_cross_ca.paa from image-gen.
+	//if (_type == "M113Ambul_TK_EP1") then { _skinCmd = _skinCmd + "; this setObjectTexture [1,'Textures\mks_medic_cross_ca.paa']"; }; //--- fill from image-gen
+
+	//--- TODO v2: kill-tally livery (needs kill-attribution design).
+
+	if (_skinCmd != "") then {
+		_pendingSkin = _vehicle getVariable ["wfbe_pending_texture", ""];
+		if (_pendingSkin != "") then {_pendingSkin = _pendingSkin + "; " + _skinCmd} else {_pendingSkin = _skinCmd};
+		_vehicle setVariable ["wfbe_pending_texture", _pendingSkin];
+	};
+};
 
 processinitcommands;
 _vehicle

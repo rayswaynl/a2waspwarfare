@@ -15,7 +15,7 @@ _nearIsSP = false;
 _nearIsDP = false;
 _nearIsRT = false;
 {
-	if ((typeOf _x) == _spType) then {_nearIsSP = true};
+	if ((typeOf _x) == _spType || {_x isKindOf "Base_WarfareBVehicleServicePoint"}) then {_nearIsSP = true};
 	if ((typeOf _x) == WFBE_Logic_Depot) then {_nearIsDP = true};
 	if ((typeOf _x) in _typeRepair) then {_nearIsRT = true};
 } forEach _supports;
@@ -49,6 +49,7 @@ if (_veh isKindOf 'Air') then {_repTime = round(_repTime * (_airCoef + getDammag
 if (_veh isKindOf 'StaticWeapon') then {_repTime = round(_repTime * (_artCoef + getDammage _veh))};
 if (_veh isKindOf 'Tank') then {_repTime = round(_repTime * (_heaCoef + getDammage _veh))};
 if (_veh isKindOf 'Car' || _veh isKindOf 'Motorcycle') then {_repTime = round(_repTime * (_ligCoef + getDammage _veh))};
+if (_veh isKindOf 'Ship') then {_repTime = round(_repTime * (_ligCoef + getDammage _veh))}; //--- wiki-wins: boats fell through all isKindOf branches (flat base time); scale them like light vehicles
 
 //--- Inform the player.
 hint parseText(Format[localize "STR_WF_INFO_Repairing",_name,_repTime]);
@@ -75,4 +76,10 @@ while {true} do {
 //--- Fix the damages?
 if (_cts != 0) then {
 	_veh setDammage 0;
+	//--- Jets: a full repair restores fuel to 100% and re-arms the SPAAG survival mechanic.
+	if (_veh isKindOf "Plane") then {
+		_veh setFuel 1;
+		_veh setVariable ["wfbe_jet_aa_hits", 0, true];
+		_veh setVariable ["wfbe_jet_aa_lasthit", -100, true];
+	};
 };

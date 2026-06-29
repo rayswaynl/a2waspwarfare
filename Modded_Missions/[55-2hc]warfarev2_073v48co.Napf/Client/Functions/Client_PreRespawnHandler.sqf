@@ -5,7 +5,9 @@ _unit = _this;
 (_unit) Call WFBE_SK_FNC_Apply;
 [] execFSM "Client\FSM\updateactions.fsm";
 
-Options = _unit addAction ["<t color='#42b6ff'>" + (localize "STR_WF_Options") + "</t>","Client\Action\Action_Menu.sqf", "", 1, false, true, "", "_target == player"];
+// Marty: Re-add the WF menu on the new respawned unit and store the action ID on that unit.
+_unit Call WFBE_CL_FNC_AddWFMenuAction;
+_unit Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\OnKilled.sqf";
 player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
 (vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}];
