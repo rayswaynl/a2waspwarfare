@@ -1,167 +1,30 @@
-//--- Author [ICE]
-player createDiaryRecord["Diary", ["Upgrades", "<br/>To be able to purchase higher levels of equipment or units, the factories need to be upgraded by the commander. The commander will need both cash and supply points to do this. He may ask for contributions from other team players to help out. Each factory has 3 levels."]];
-player createDiaryRecord["Diary", ["Supplies", "<br/>Each captured town has an Actual and Potential Value. On the map you will see this represented as 2 numbers seperated by a / for example; Zelenogorsk, once captured will start as 30/120. This means that the current supplies to each player from this town is $30 per minute. Each time a supply truck arrives at the town depot its value will increase by 10. Remember though, the supply truck must be either fully loaded from the HQ or a Supply point or, have come from a town with a higher actual value. you will also receive 4 x the actual value as cash if you or one of your squad drives the truck. Supply runs should be the responsibility of all. The best way to win Warfare is to work together capping and then supping up the town before moving to another."]];
-player createDiaryRecord["Diary", ["Building", "<br/>The commander builds a base. Each side starts with one Mobile Headqarters (MHQ). This is a vehicle the commander can use to build th headquarters (HQ) anywhere on the map. After the HQ is built, other buildings can be constructed. Only the commander can build factories and defenses around the base using the HQ. The HQ can also be packed up back as MHQ again and moved to another location."]];
-player createDiaryRecord["Diary", ["Team", "<br/>All players and AI soldiers can buy subordinates, equipment and vehicles from the main base as well as some vehicles from the captured town forts. You can access all available facilities through the Purchase interface from inside the main base perimeter or anywhere on the map once a Command Center has been erected. Accessible supply factories are indicated by icons on right edge of the screen. If a Barracks has been built, select the Purchase Gear button to purchase weapons and ammunition. The equipment you purchase here will also be your starting kit when you respawn. In Purchase Units button, you will find a list of unit type icons along the top. Here you can buy empty or manned units from soldiers to aircraft."]];
-player createDiaryRecord["Diary", ["Commander", "<br/>The Commander can be controlled either by player or by AI. He has access to extra resources and abilities: developing the base, setting objectives for teams, and defining the strategy of your side."]];
-player createDiaryRecord["Diary", ["Voting", "<br/>After starting the warfare mission, you are confronted with the Vote Commander screen. Click on any name in the player list to cast your vote. If you join a game that has already started, you will not see the Vote Commander screen. A new vote for a new Commander can be started anytime using the Vote option in the Options interface. The commander assigns a mission and a role to a team leader, whether it be AI or human player. The role can include the type of equipment and vehicles the AI teams will use. Players have control of what they will use in their team. Mission is the task for the team to perform. You may disable the Commander Vote Pop-up in the Team Menu."]];
-player createDiaryRecord["Diary", ["Summary", "<br/>Warfare is a blend of a team-based multiplayer mission and realtime strategy, where BLUFOR and OPFOR fight for the island control. Key objectives are to capture towns, defend your base and destroy the base of enemy. Both sides are lead by a commander, who influences his side's strategy. There are two kinds of resources: Supply points are used by the commander for building factories. Money is used to purchase weapons, units and vehicles."]];
-player createDiaryRecord["Diary", ["Changelog", "<br/>
-- Bountry for factories added and depending on kind of fac and way it got destroyed<br />
-- ASR AI for server side and player's AIs.<br />
-- New income encouraging players that are active on the map ! commander can change tax if he needs money.<br />
-- Kill bounties raised and depending on the unit killed (high for infantry, low for aircraft).<br />
-- Camp/town capture bounty raised.<br />
-- Missile Range Limitation is the same for all vehicles.<br />
-- Tank prices adjusted to their abitilities and HF levels line ups are reiewed.<br />
-- Representative air prices according to their abilities and utility.<br />
-- An-2 got WW1 MG and is compatible with EASA.<br />
-- EASA setups reviewed for more balance.<br />
-- Default params reviewed to match the mission's logic and context.<br />
-- Kill bounties for human players now depend on their score.<br />
-- Reviewed some camps positions to fix terrain bugs.<br />
-- Service point can be dropped by repair truck now for 10 000 $.<br />
-- MLRS can shoot now 8 rockets and has 36 rockets in total to match GRADs firepower.<br />
-- Thanks to WASP team,we included some of theuir mission' features.
-- Tunguska rearming at service point fixed.<br />
-- Airlifting wrecks is possible now (you can't airlift ennemy HQ wreck).<br />
-- AIs can't take camps easily now.<br />
-- AIs get same bounties as players depending on their position in towns (no need for them to be near main camps to get bounty).<br />
-- 'Hit' eventhandler from 073 added (ex: when you disable a tank then it explodes you get bounty).<br />
-- AI will no longer disembark from disabled tanks.<br />
-- New Missiles behaviour based on realistic values and accelerations<br />
-- New rocket ranges<br />
-- Bombs (MK and FAB) are free fall bombs and will be affected by the missile range<br />
-- New upgrades levels to change the gameplay structure<br />
-- Town capturing bounties are related to the town SV <br />
-- Building walls inside factories is restricted <br />
-- Swimming with gear is now possible <br />
-- HQ now can be repaired at captured town depots for 225000$.(+5% every repair). All friendly townes will be set back to 10SV. <br />
-- AI will no longer stop while player is respawning. <br />
+//--- Author [ICE] & Net_2
 
-V42: <br />
-- Hellfire and KH29 Top mode. <br />
-- Added refuel truck to main depot in towns.<br />
-- Respawning at ennemy occupated towns is disabled <br />
-- Proper units for takistan (crewmen,soldiers,pilots) <br />
-- Autodefenses reduced to 30. <br />
-- Air vehicles will not triger towns unless they fly under 50 m !!!. <br />
-- Increased all AI skills to 100 %.<br />
-- Airlift position lowered to avoid the 'Vehicle over heli' bug.<br />
-- Stationary defences cost 2 times more.<br />
-- Arty bursts reduced.<br />
-- Upgrade prices adjusted <br />
-- New base walls added <br />
-- Base defences don't get auto-manned anymore <br />
-- Commander can buy +20 AI <br />
-- Novy Sobor is back! <br />
-- Mortar range 2,2km, other arty 3km <br />
-- Soldier prices adapted to make gear-farming ineffective. <br />
-- Aircraft cannot rearm / repair at town depots anymore. Emergency service (fuel truck, engineer) only. <br />
-- Salvage time raised to 6min. <br />
-- Artillery prices lowered. <br />
-- Kill bounties raised. <br />
-- Capture bounties raised. <br />
-- Pustoshka was replaced by Myshkino. <br />
-- Maximum commander tax reduced to 30%. <br /> 
-- Reduced Top attack effect for Hellfire and KH29. <br /> 
-- Increased tunguska's accuracy. <br /> 
-V43: <br />
-- Construction menu tweaks:selling ennemy structures is not anymore possible. <br /> 
-- Reworked players / factory bounties and also messages related to them. <br /> 
-- RPG18/M136 and NLAW are disposable launchers now. <br /> 
-- Anti Stacking script. <br /> 
-- Modified fast time : disabled is default. <br /> 
-- GEAR now has 5 upgrade levels and adapted costs. <br />
-- BLUFOR can save resistance gear now (just take the weapon and press buy). <br />
-- Lasermarker can be bought to the glasses slots. <br />
-- Construction menu tweaks:building walls while a factory is building is not anymore possible. <br /> 
-- Automanned AIs will join commander's group. <br /> 
-- Laserbatteries,Mines will fit in the handgun magazines pool. <br /> 
-- Now player can ask his crewmen to engine off the vehicle,and when it's done the vehicle switches to stealth mod until you use Start engine. <br /> 
-- Construction menu fixes. <br /> 
-- Base defenses and walls will be removed after base destruction. <br /> 
-- Su-25 Easa bug fixed <br />
-- Rules updated. <br />
-- Tunguska/Linebaker price reduced.<br /> 
-- Medics and Squad leaders/Officers are now able to repair camps.<br /> 
-- lockpicking success chance increased from 20% to 50 %.<br /> 
-- HQ deploy cost increase to 500 S / reduced deployed HQ  health points (8 SMAW HEAA can kill it) /Deploy range reduced from 200 to 140 m.<br /> 
-- Some missiles behaviour has been reviewed/ Hellfire TOP attack reloaded with better accuracy (Hopefully this time ,it will work properly).
-<br />
-- Command center/service point are not anymore spawnable structures and therefore ,do not count as a base area when built alone.<br /> 
-- NLAW moved to gear level 2 and barracks 1 can be upgraded after Gear level 2.<br /> 
-- Some construction menu exploits fixed (needs to be tested).<br />
-- Construction inside ennemy towns is not possible.<br />
-- HQ first repair cost reduced to 250000 $.<br />
-- HQ repair using cash will be only possible once in a game.<br />
-- Some upgrades on both sides will cost some amount of cash (26000$ in total).<br />
- *** 21122013 V43 Changes ***<br /> 
-- Each base area will have a limited number of structures and defenses that can be built inside (choose carefully your walls and defenses).<br /> 
-- You can't build a factory if you have  0 items available.<br />
-- If an item gets destroyed you will lose it forever for that base area.<br />
-- If an item is sold you will not lose it.<br />
-- Command center range is not unlimited anymore.<br />
-- Bases cannot be built near ennemy ones,and indication will be given inside construction menu,but it's not enough to reveal the exact position of the ennemy base.<br />
-- Maximum camps per town is 2 now instead of 3.<br />
-- Occupation and resistance reviewed,but needs testing.<br />
-- Konkurs reloading times reduced,and the M242 rate of fire increased to 500 rpm to match the real life value.<br />
-- minor fixes (like refueling while being in stealth mode).<br />
- *** 06032014 V43 Changes ***<br /> 
-- Removed many parameters to keep mission (oriented).<br />
-- Added a garbage collector for dropped objects on the ground.<br />
-- General reduction of all bounties.<br />
-- Added 3 town templates to town amount parameter.<br />
-- both camps are required to capture a town.<br />
-- Ambulance lifespan is double the normal vehicle's ones.<br />
-- Removed cargo walls ,concrete walls have double height now.<br />
-- Light factory levels are now 4 (the balance is not symetric between sides).<br />
-- Fixed :rearming air in towns is impossible.<br />
-- CC range : 5500.<br />
-- MIBA : 260.<br />
-- Minor fixes and exploits dealt with.<br />
- *** 07122014 V45 Changes ***<br /> 
-- added low gear for tanks.<br />
-- removed towers from the construction menu. <br />
-- optimised fsm scripts. <br />
-- konkurs missile has 30 seconds of reload time. <br />
-- improved armor for t-72 and t-90. <br />
-- added tracer effect for AT launchers (second level of gear upgrade). <br />
-- Hinds have apropriate textire on taki and cherno maps. <br />
-- Fixed some prices for AT launchers. <br />
-- Improved ammo for t-34. <br />
-- opfor can buy mortars on 2-nd level like it does blifor team.<br />
-- Improved armor for hinds choppers.<br />
-- Improved EASA for Mi-24.<br />
-<br />
-V47: <br />
-- Added item's cleaners and their settings in parameter list (GLOBAL section). <br/>
-- Added a message of what upgrade was started in team of player. <br/>
-- Added a restriction to build structures, statics and fortifications on base of an enemy team is around (250m radius). <br/>
-- Removed Artillery Computer from parameter list.<br/>
-"]];
+player createDiaryRecord["Diary", ["Gameplay Summary", "<br/>Warfare is a blend of a team-based multiplayer mission and realtime strategy, where BLUFOR and OPFOR fight for the control of the map. Both sides are lead by a commander, who influences his side's strategy.<br/><br/>There are two kinds of resources: <t color='#F5D363'>Supply</t> is used by the commander for building and upgrading factories. <t color='#F5D363'>Cash</t> is used to purchase weapons, units and vehicles."]];
 
-player createDiaryRecord["Diary", ["Server Rules", "<br/>
+player createDiaryRecord["Diary", ["Your Task", "<br/>Your tasks are:<br/><br/>1. Capture towns from local resistance and the enemy team.<br/><br/>2. Destroy the enemy base and HQ.<br/><br/>3. Defend your own base and HQ."]];
 
-The following penalty scale represents the maximum penalty admins may give for breaching of rules: <br />
-- Teamkilling, Stealing or destroying teammates property without compensation: 1) kick 2) !btk 1h ban 3) 2 weeks timeban <br />
-- Intentional(attempted) HQ-Teamkill: 2 weeks timeban <br />
-- Entering HQ without beeing commander: kick <br />
-- Insults aiming at players real life: 1) warnings, 2) kick <br />
-- Racism 1) kick 2) 2 weeks timeban <br />
-- Bugusing*: 1) kick 2) 2 weeks timeban <br />
-- Hacking: ban <br />
-- Producing factories (B,LF,HF,AF) must have an entrance 1) warning 2) kick 3) 2 weeks timeban <br />
-- You may not stack a WF-building (HQ,B,LF,HF,AF,S,C,AAR) inside enviroment objects to more than 50%.  1) warning 2) kick 3) 2 weeks timeban <br />
- <br />
-Some bugs became a part of pubic gameplay and are tolerated: <br />
-1)gear-selling (you earn so few anyway.. ), 2)selling enemy structures as commander, 3)building objects at the mobile HQ <br />
-Please report bugs you find, so they get fixed or added to this list.<br />
- <br />
-Getting two timebans in less than 2 months may lead to a ban. <br />
-Disrespecting the rules as admin makes you loose your admin rights. <br />
+player createDiaryRecord["Diary", ["Getting Started", "<br/>Most actions happen via the <t color='#F5D363'>WF menu</t> — open it with your mouse scroll wheel.<br/><br/>You need to be inside a base perimeter or near a factory to use it. If needed, respawn and choose a base spawn point on the map.<br/><br/>Barracks [B] — gear and infantry. Light Factory [LF] — light vehicles. Heavy Factory [HF] — tanks and APCs. Air Factory [AF] — helicopters and aircraft. Service Point [SP] — rearm, repair, refuel.<br/><br/>Special vehicles are colour-coded in the Buy Units menu; single-click any entry for a usage hint.<br/><br/>Build a Command Center [CC] to enable remote purchasing from anywhere on the map, to fire artillery missions, and to start upgrades. Build an Anti-Air Radar [AAR] to track enemy aircraft and to unlock the Counter Battery Radar."]];
 
-"]];
+player createDiaryRecord["Diary", ["Commander", "<br/>The commander should be a player. The commander can:<br/><br/>- Deploy and relocate the HQ (Mobile HQ vehicle)<br/>- Build and sell factories and defenses from the Construction Menu (near HQ)<br/>- Research upgrades via WF menu → Factory Upgrade<br/>- Buy WDDM commander compositions (up to 3 per base area)<br/>- Issue capture orders and objectives to the team<br/><br/>Build factories early, keep supply for the CBR and Bank. Focus upgrade supply on barracks and the factory type your team needs most."]];
+
+player createDiaryRecord["Diary", ["Capturing Towns", "<br/>Capture a town by taking its strongpoints (small bunkers around the town circle) first, then dominating the main town depot (50 m radius).<br/><br/>Captured strongpoints are respawn points as long as you are inside the town range.<br/><br/><t color='#F5D363'>Capture grace period</t>: after your side takes a town, defenders get 5 minutes before enemy AI can respawn there, and lingering defenders have 3 minutes to clear out. Use this window to consolidate."]];
+
+player createDiaryRecord["Diary", ["Building Bases (As Commander)", "<br/>Each side starts with one Mobile HQ [MHQ]. Deploy it to build a base. After the HQ is placed, you can add Barracks, Light/Heavy/Air factories, a Command Center, Anti-Air Radar, and a Service Point from the Construction Menu.<br/><br/>The HQ can be packed up and redeployed. You can have multiple bases. Defense budget is capped per category per base (scales with barracks level) — statics and mines are blocked if 3+ enemy ground units are inside base range."]];
+
+player createDiaryRecord["Diary", ["Experimental Changes", "<br/><t size='1.2' color='#F5D363'>Economy</t><br/>Both sides start with <t color='#F5D363'>$11,600 cash and 7,400 supply</t>.<br/><br/><t size='1.2' color='#F5D363'>Bank (endgame)</t><br/>Build the <t color='#F5D363'>Federal Reserve / Bank Rossii</t> (9,500 supply; must be placed more than 800 m from your HQ). While your HQ stands it pays $6,000 total every 5 minutes, split among living team members. Destroying the enemy bank awards +$40,000 side supply and $25,000 to the killer. Both banks are marked on the map for both sides.<br/><br/><t size='1.2' color='#F5D363'>Counter Battery Radar (CBR)</t><br/>Build the CBR (2,400 supply) to detect and mark enemy artillery firing positions for 75 seconds. Requires your AAR to be alive. The CBR Radar upgrade extends its detection radius: 750 m → 1,500 m → 2,000 m. Capturing an airfield gives your side a permanent 2,000 m CBR for that airfield.<br/><br/><t size='1.2' color='#F5D363'>Airfields</t><br/>NWAF, NEAF and Balota Airfield are capturable towns (max 40 SV; resets to 10 on capture). Holding an airfield provides a repair point and an exclusive hangar stocking unique aircraft unavailable elsewhere (L-39, An-2, Mi-17 variants on Chernarus).<br/><br/><t size='1.2' color='#F5D363'>Capture-to-Unlock Premium Units</t><br/>Holding <t color='#F5D363'>Krasnostav</t> unlocks the Czech T-72 (Heavy Factory level 4, $7,000). Holding <t color='#F5D363'>NW Airfield</t> unlocks the RM-70 rocket artillery (Light Factory level 4, $6,800, fully integrated into artillery fire missions). Both unlock for the holding side only.<br/><br/><t size='1.2' color='#F5D363'>Patrols and Convoys</t><br/>Research the Patrols upgrade (4 levels — supply cost 300 / 1,600 / 2,400 / 3,200). Patrols spawn near your HQ and push toward the frontline capturing towns as they go (max 3 active per side). Level 4 Convoys add a supply truck to each patrol that pays your whole team $750 split equally at every town stop. Active patrols reduce each player's max AI by 1.<br/><br/><t size='1.2' color='#F5D363'>Factory Queue and Buy Menu</t><br/>The buy menu shows the current queue depth as <t color='#F5D363'>N/CAP</t>. Queue caps scale with factory level: Barracks min 10, Light Factory min 5, Heavy/Aircraft min 3. You can cancel the last queued order for a refund (capped at 50% for orders that had a discount applied).<br/><br/><t size='1.2' color='#F5D363'>Medic Redeployment Truck</t><br/>Medics only: a forward spawn truck purchasable from the Light Factory (violet row). It activates when parked with engine off, a free cargo seat, and at least 500 m from any non-friendly town.<br/><br/><t size='1.2' color='#F5D363'>Classes</t><br/>Your class and its abilities are shown as a hint when you spawn and again from the Class Info action in your action menu. Class tags (SOL/SUP/MED/ENG/SNI) appear on the map."]];
+
+player createDiaryRecord["Diary", ["Experimental: AI & Factions", "<br/><t size='1.2' color='#F5D363'>AI Commander</t><br/>Any side can be run by an <t color='#F5D363'>AI Commander</t> that manages the economy, builds the base, researches upgrades and leads its combat teams in assaults on towns. If no human takes the Commander slot within <t color='#F5D363'>5 minutes</t> of the round start (re-armed whenever a player commander leaves), the AI takes over building. You can claim Commander at any time - even then the AI keeps its own HQ combat teams fighting and never leaves them standing idle, while you run the economy and give orders. Any team you order directly stays under your command.<br/><br/><t size='1.2' color='#F5D363'>Three Factions</t><br/>BLUFOR and OPFOR fight over the map, but the <t color='#F5D363'>GUER resistance</t> is a living third faction, not just neutral garrisons. GUER fields mechanized patrols that grow <t color='#F5D363'>more dangerous the more towns it loses</t> - light technicals while it holds the map, escalating to BRDM-2 armour with AT/AA support and a second patrol once it is squeezed below 20 towns. A cornered insurgency bites hardest.<br/><br/><t size='1.2' color='#F5D363'>Clean Captures</t><br/>Taking a town from GUER no longer hands you its static weapon emplacements - you capture the ground clean and bring or build your own defences. GUER keeps and rebuilds its statics when it recaptures.<br/><br/><t size='1.2' color='#F5D363'>Wildcards</t><br/>Random battlefield events fire through the round - veteran reinforcement companies, local uprisings, heliborne QRF drops and more - shifting momentum on both sides.<br/><br/><t size='1.2' color='#F5D363'>Performance Telemetry</t><br/>This build samples each client's FPS periodically and reports it to the server for the day/night performance study. Diagnostic only; it changes nothing in-game."]];
+player createDiaryRecord["Diary", ["Mods", "<br/>We strongly suggest downloading and enabling the mods listed on our Discord. They improve the experience enormously!"]];
+
+player createDiaryRecord["Diary", ["Our Discord", "<br/>DISCORD (open link with a browser): >>> discord.me/warfare <<<.<br/><br/>Backup link: >>> discord.gg/knXvYMX <<<.<br/><br/>Help cover server costs by becoming a Patron at >> patreon.com/WarfareArma2 << or send a message to Miksuu on Discord.<br/><br/>An FPS optimisation guide is available in the Discord — worth checking if you experience performance issues."]];
+
+
+
+
+
+
+
 
 
 
