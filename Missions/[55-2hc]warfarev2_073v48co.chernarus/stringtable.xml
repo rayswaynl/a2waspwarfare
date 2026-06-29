@@ -5872,6 +5872,14 @@
       <English>Request an artillery strike at the clicked spot (if artillery is enabled and friendly guns exist).</English>
       <Russian>Запросить артудар по указанной точке (если артиллерия включена и есть дружественные орудия).</Russian>
     </Key>
+    <Key ID="STR_WF_CMD_AICmd">
+      <English>Squad command: DIRECT</English>
+      <Russian>Командование отрядами: ВРУЧНУЮ</Russian>
+    </Key>
+    <Key ID="STR_WF_CMD_AICmd_TT">
+      <English>Toggle squad maneuvering: DIRECT (you order every team yourself) or AI STRATEGY (the AI commander maneuvers your squads while you keep the economy). The label shows the current mode.</English>
+      <Russian>Переключить маневрирование отрядами: ВРУЧНУЮ (вы сами командуете отрядами) или СТРАТЕГИЯ ИИ (ИИ-командир маневрирует вашими отрядами, а экономика остаётся за вами). Надпись показывает текущий режим.</Russian>
+    </Key>
     <Key ID="STR_WF_CMD_AllPush">
       <English>ALL PUSH</English>
       <Russian>ВСЕ В НАСТУП</Russian>

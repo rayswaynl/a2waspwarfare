@@ -13,5 +13,5 @@ switch (_this) do {
 		if (isNil "_u") then { _u = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] }; //--- GUER: no upgrade system -> zero array so callers' select never errors
 		_u
 	};
-	default {objNull};
+	default {[]}; //--- B76: was {objNull}; civilian/unknown side now returns an EMPTY ARRAY so callers' count/select degrade safely (no caller checks isNull on this result). Prevents per-tick RPT errors on a CIV edge.
 }

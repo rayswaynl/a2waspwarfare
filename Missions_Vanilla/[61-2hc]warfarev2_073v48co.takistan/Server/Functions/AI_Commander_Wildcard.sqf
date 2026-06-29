@@ -207,7 +207,8 @@ while {!gameOver} do {
 		         "_wNameMap","_wName","_wDesc",
 		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22TargetPos","_wW22",
 		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
-		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24"];
+		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
+		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
@@ -1544,6 +1545,73 @@ while {!gameOver} do {
 				_wName = Format ["W%1", _draw];
 				_wDesc = "";
 				{if ((_x select 0) == _draw) exitWith {_wName = _x select 1; _wDesc = _x select 2}} forEach _wNameMap;
+
+				//--- -----------------------------------------------------------------------
+				//--- MAP MARKER (feature: wildcard events show on the map for the OWNING side)
+				//--- -----------------------------------------------------------------------
+				//--- Only the events with a clear single world position + a bounded lifetime get a
+				//--- marker; pure-economy/flag draws (W1/W2/W11/W12/W15/W16/W20 + the inert ids) have
+				//--- no battlefield location, so they get none. We resolve the position from the SAME
+				//--- target var the apply block already computed (re-using its work; no second scan),
+				//--- and a lifetime that matches the event's own watcher/loiter window so the marker
+				//--- expires WITH the event - one marker per active event, always cleaned up.
+				//---
+				//--- LOCALITY: the marker is broadcast via WFBE_CO_FNC_SendToClients to the SIDE object
+				//--- (_side) - Client_HandlePVF matches a SIDE destination against sideJoined, so ONLY
+				//--- this side's clients run WildcardMarker.sqf and createMarkerLocal. The enemy never
+				//--- sees it. The marker uses the side colour + a distinct icon + a short label.
+				if (_result == "applied") then {
+					_mkPos  = [];
+					_mkLife = 0;
+					_mkType = "mil_objective";
+					switch (_draw) do {
+						//--- W4 Airborne Assault: the drop town (enemy/neutral front town). Short info beat.
+						case 4:  {if (!isNil "_bestTown" && {!isNull _bestTown}) then {_mkPos = getPos _bestTown}; _mkLife = 120; _mkType = "mil_pickup"};
+						//--- W6 Air Cavalry: the front town the squad is aimed at (HQ-spawned, brain-ordered fwd).
+						case 6:  {if (!isNil "_w6BestTown" && {!isNull _w6BestTown}) then {_mkPos = getPos _w6BestTown}; _mkLife = 300; _mkType = "mil_pickup"};
+						//--- W13 Gunship Strike: the strafed cluster town. Lifetime = the 90s strike window.
+						case 13: {if (!isNil "_w13TargetPos") then {_mkPos = _w13TargetPos}; _mkLife = 90; _mkType = "mil_destroy"};
+						//--- W19 Heliborne QRF: the threatened FRIENDLY town the QRF lands on.
+						case 19: {if (!isNil "_w19TownPos") then {_mkPos = _w19TownPos}; _mkLife = 300; _mkType = "mil_pickup"};
+						//--- W22 Top Gun: the loiter point over the front. Lifetime = the 180s loiter window.
+						case 22: {if (!isNil "_w22TargetPos") then {_mkPos = _w22TargetPos}; _mkLife = 180; _mkType = "mil_air"};
+						//--- W23/W24 handled below (their apply spawns at HQ; mark the front town they head to).
+						case 23: {};
+						case 24: {};
+					};
+					//--- W23 Armor Column / W24 Technical Swarm: spawn at HQ, brain orders them to the front.
+					//--- Mark the best-scored spearhead/front town (the SAME selection W4/W6 use) so the side
+					//--- sees WHERE the reinforcement is headed.
+					if (_draw == 23 || {_draw == 24}) then {
+						_mkBestTown  = objNull;
+						_mkBestScore = -1e9;
+						{
+							_mkT4    = _x;
+							_mkDNear = 1e9;
+							{ if ((_x getVariable ["sideID","?"]) == _sideID) then {_mkD = _mkT4 distance _x; if (_mkD < _mkDNear) then {_mkDNear = _mkD}} } forEach towns;
+							if (_mkDNear > 1e8 && {!isNull _hq}) then {_mkDNear = _mkT4 distance _hq};
+							_mkScore = (_mkT4 getVariable ["supplyValue", 0]) - (_mkDNear / 150);
+							if (_mkScore > _mkBestScore) then {_mkBestScore = _mkScore; _mkBestTown = _mkT4};
+						} forEach _cands;
+						if (!isNull _mkBestTown) then {_mkPos = getPos _mkBestTown; _mkLife = 300; _mkType = "mil_arrow2"};
+					};
+
+					if (count _mkPos > 0 && {_mkLife > 0}) then {
+						_mkColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};
+						_mkName  = Format ["wc_%1_%2_%3", _sideText, _draw, round time];
+						//--- CREATE on the owning side only (SIDE destination -> sideJoined match in Client_HandlePVF).
+						[_side, "WildcardMarker", ["create", _mkName, _mkPos, _mkColor, _mkType, _wName]] Call WFBE_CO_FNC_SendToClients;
+						//--- Self-expiring watcher: delete the marker on the SAME side after the event lifetime.
+						//--- One marker per event; this is the only deletion path (no leak, no spam).
+						[_side, _mkName, _mkLife] spawn {
+							private ["_s","_n","_lf"];
+							_s = _this select 0; _n = _this select 1; _lf = _this select 2;
+							sleep _lf;
+							[_s, "WildcardMarker", ["delete", _n]] Call WFBE_CO_FNC_SendToClients;
+						};
+					};
+				};
+
 				_locMsg = if (_humanCmd) then {
 					Format ["[Wildcard] Your forces receive %1 - %2.", _wName, _wDesc]
 				} else {

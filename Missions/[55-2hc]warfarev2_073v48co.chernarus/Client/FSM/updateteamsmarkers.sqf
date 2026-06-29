@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i"];
 
 _sideText = sideJoinedText;
 _label = "";
@@ -13,6 +13,7 @@ _lastPositions = [];
 _lastDirs = [];
 _nextAIUpdate = 0;
 _afkMarkerDiagnosticNextLog = 0;
+_nextRebindCheck = 0;
 
 // Marty: Any open Warfare dialog can contain or lead to a minimap view; keep team markers live while these are visible.
 _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,504000,505000,508000,511000];
@@ -86,6 +87,45 @@ while {!gameOver} do {
 		//--- _lastDirs/_lastPositions reads return nil -> abs()/distance throw -> the player own
 		//--- orange arrow never (re)creates or tracks heading ("direction not working again").
 		//--- Rebuild missing markers + grow ALL caches to match clientTeams when the lengths diverge.
+		//--- cmdcon26 (Game 2026-06-29) SAME-COUNT REBIND FIX. The B64 guard below ONLY rebuilds when the COUNT
+		//--- diverges. But the B62/EARLYHEAL reconciliation in Init_Client REBINDS the global clientTeams from the
+		//--- boot SLOT-GROUPS to the live side-logic wfbe_teams, and those two lists are the SAME LENGTH (15 slot
+		//--- groups -> 15 real teams). So `count clientTeams != count _markerNames` stays FALSE, NO rebuild fires,
+		//--- and _lastLeaders keeps pointing at the now-stale/objNull original slot leaders. For a JIP slow-sync
+		//--- joiner (RPT "Zwanon": markerOps:0;skippedWrites:5) every cached leader was dead/objNull while
+		//--- clientTeams carried live leaders -> alpha stayed 0 -> own-side arrows INVISIBLE. Detect that here:
+		//--- periodically (every ~2s, cheap) compare each cached _lastLeaders entry against the LIVE
+		//--- `leader (clientTeams select _i)`. If they diverge (a same-length rebind), reseed the _last* caches to
+		//--- their force-write seeds so the very next follow-loop pass re-evaluates and re-paints every marker
+		//--- against the live leaders. A2-OA-1.64 safe: select / count / leader / objNull / isNull / alive compare.
+		_needRebind = false;
+		if (count clientTeams == count _markerNames && {time >= _nextRebindCheck}) then {
+			_nextRebindCheck = time + 2;
+			for "_i" from 0 to ((count clientTeams) - 1) do {
+				if (!_needRebind) then {
+					_liveLeader   = leader (clientTeams select _i);
+					_cachedLeader = _lastLeaders select _i;
+					_liveHas   = (!isNull _liveLeader) && {alive _liveLeader};
+					_cachedHas = (!isNull _cachedLeader) && {alive _cachedLeader};
+					//--- Diverged if the live leader differs from the cached one while the live one is real, OR the
+					//--- cache holds a dead/null leader where clientTeams now carries a live one.
+					if ((_liveHas && {_liveLeader != _cachedLeader}) || (_liveHas && {!_cachedHas})) then {
+						_needRebind = true;
+					};
+				};
+			};
+			if (_needRebind) then {
+				diag_log format ["[WFBE][cmdcon26 TEAM-MARK] same-count clientTeams rebind detected (teams=%1 cache=%2) - reseeding leader caches to re-paint own-side arrows", count clientTeams, count _markerNames];
+				for "_i" from 0 to ((count _markerNames) - 1) do {
+					_lastLeaders   set [_i, objNull];
+					_lastTexts     set [_i, ""];
+					_lastAlphas    set [_i, -1];
+					_lastColors    set [_i, "ColorBlack"];
+					_lastPositions set [_i, [-99999,-99999,0]];
+					_lastDirs      set [_i, -999];
+				};
+			};
+		};
 		if (count clientTeams != count _markerNames) then {
 			diag_log format ["[WFBE][B64 TEAM-MARK] clientTeams rebind detected: teams=%1 cache=%2 - rebuilding", count clientTeams, count _markerNames];
 			{

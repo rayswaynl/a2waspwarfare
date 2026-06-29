@@ -74,13 +74,13 @@ activeAnimMarker = false;
 
 //--- All war-room controls (shown only in the commander STATE B). Roster, order buttons, request combo+label, lines.
 private "_warCtrls";
-_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14610,14611,14640,14641,14642,14690,14691];
+_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14610,14611,14640,14641,14642,14690,14691];
 //--- STATE-A (NOT commander) advisory controls: the live AI-intent readout + the PUSH/HOLD posture nudge. Shown
 //--- only when the AI runs the side (so the nudge actually bites the brain) - hidden in STATE B.
 private "_adviseCtrls";
 _adviseCtrls = [14606,14607,14608,14609,14612];
 
-ctrlSetStructuredText [14650, parseText "Opening the war room..."];
+(_display displayCtrl 14650) ctrlSetStructuredText (parseText "Opening the war room...");
 
 while {alive player && dialog} do {
 	if (side group player != sideJoined) exitWith {activeAnimMarker = false; closeDialog 0};
@@ -96,21 +96,27 @@ while {alive player && dialog} do {
 	private "_seatEmpty"; _seatEmpty = (isNil "_ct") || {isNull _ct};
 	private "_lockOn"; _lockOn = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0;
 
-	//--- Set visibility + subtitle EVERY loop (display-scoped ctrlShow = the most engine-proven A2-OA
-	//--- form; robust to a missed change-edge). The heavier reset stays gated on a real state change.
+	//--- Set visibility + subtitle EVERY loop. ROOT-CAUSE FIX (2026-06-29): use the GLOBAL idc form
+	//--- `ctrlShow [idc,bool]`, NOT the display-scoped `(_display displayCtrl idc) ctrlShow bool`. Against an
+	//--- idd createDialog menu in A2-OA-1.64 the display-scoped setter silently no-ops, so neither control set
+	//--- was ever hidden and both STATEs rendered on top of each other (the Ray screenshot). The global form
+	//--- resolves the idc against the engine's top dialog and is the idiom every other idd menu uses
+	//--- (GUI_Menu_BuyUnits.sqf:467-470, GUI_Menu_Economy.sqf:20) and that THIS controller already uses
+	//--- working for 14670 below (lines 126/130/133). Fires on the very first loop; no change-edge dependency.
 	private "_stateNow"; _stateNow = if (_isCmd) then {1} else {0};
-	{(_display displayCtrl _x) ctrlShow _isCmd} forEach _warCtrls;
-	{(_display displayCtrl _x) ctrlShow (!_isCmd)} forEach _adviseCtrls; //--- STATE-A advisory readout + posture nudge
-	(_display displayCtrl 14670) ctrlShow (!_isCmd);                 //--- TAKE COMMAND only when NOT commander
-	(_display displayCtrl 14605) ctrlSetText (if (_isCmd) then {"WAR ROOM"} else {"COMMAND"});
+	{ctrlShow [_x, _isCmd]} forEach _warCtrls;
+	{ctrlShow [_x, !_isCmd]} forEach _adviseCtrls;                   //--- STATE-A advisory readout + posture nudge
+	ctrlShow [14670, !_isCmd];                                       //--- TAKE COMMAND only when NOT commander
+	ctrlSetText [14605, (if (_isCmd) then {"WAR ROOM"} else {"COMMAND"})];
 	//--- The posture nudge only BITES the brain when the AI actually holds command of the side (the server handler
 	//--- honours it iff no human commander, treating LOCK as no-human). Mirror that: it bites when the seat is empty
 	//--- (AI runs it) OR the side is AI-LOCKED. Shown only in STATE A; greyed when a DIFFERENT human commands.
 	private "_postureBites"; _postureBites = (!_isCmd) && (_seatEmpty || _lockOn);
-	(_display displayCtrl 14609) ctrlEnable _postureBites;
-	(_display displayCtrl 14612) ctrlEnable _postureBites;
+	ctrlEnable [14609, _postureBites];                               //--- global idc form (same reason as the ctrlShow fix above)
+	ctrlEnable [14612, _postureBites];
 	if (_stateNow != _lastState) then {
 		_lastState = _stateNow;
+		diag_log (format ["CMDCON-DBG state=%1 isCmd=%2 | war660=%3 roster661=%4 | takecmd670=%5 intent606=%6 posture608=%7", _stateNow, _isCmd, ctrlShown (_display displayCtrl 14660), ctrlShown (_display displayCtrl 14661), ctrlShown (_display displayCtrl 14670), ctrlShown (_display displayCtrl 14606), ctrlShown (_display displayCtrl 14608)]); //--- CONSOLE PROBE: log real per-state control visibility so any overlap is diagnosable from the RPT.
 		_armed = "";
 		_lastRosterHash = ""; _lastEcon = "";                         //--- force a panel redraw on state entry
 		if (!_isCmd) then {lbClear 14661};
@@ -133,7 +139,7 @@ while {alive player && dialog} do {
 				ctrlShow [14670, false];
 			};
 		};
-		if (_msg != _lastEcon) then {ctrlSetStructuredText [14600, parseText _msg]; _lastEcon = _msg};
+		if (_msg != _lastEcon) then {(_display displayCtrl 14600) ctrlSetStructuredText (parseText _msg); _lastEcon = _msg};
 
 		//--- ----- LIVE AI-INTENT READOUT (14607): read the side-keyed WFBE_AICOM_*_<sid> vars the server publishes
 		//--- every strategy tick (mirrors the RHUD idiom; reuses the cached _sid - never GetSideID per frame). PV-on-
@@ -158,9 +164,9 @@ while {alive player && dialog} do {
 			_intentTxt = _intentTxt + "<br/><t color='#F8D664'>Your nudge:</t> " + _posture;
 		};
 		//--- change-hash so the readout updates live without per-frame churn.
-		if (_intentTxt != _lastIntent) then {ctrlSetStructuredText [14607, parseText _intentTxt]; _lastIntent = _intentTxt};
+		if (_intentTxt != _lastIntent) then {(_display displayCtrl 14607) ctrlSetStructuredText (parseText _intentTxt); _lastIntent = _intentTxt};
 
-		ctrlSetStructuredText [14650, parseText "<t color='#85B5FA'>You are not commanding this side. Nudge the AI's posture below, or take command.</t>"];
+		(_display displayCtrl 14650) ctrlSetStructuredText (parseText "<t color='#85B5FA'>You are not commanding this side. Nudge the AI's posture below, or take command.</t>");
 
 		//--- TAKE COMMAND press -> claim the empty AI commander seat (server re-validates every guard).
 		if (MenuAction == 750) then {
@@ -215,15 +221,30 @@ while {alive player && dialog} do {
 		      + "   <t color='#85B5FA'>Supply:</t> " + str (round _supply)
 		      + "<br/><t color='#85B5FA'>Income:</t> $" + str (round _income) + "/tick"
 		      + "   <t color='#85B5FA'>Towns:</t> " + str _held + "/" + str _total;
-		if (_econ != _lastEcon) then {ctrlSetStructuredText [14600, parseText _econ]; _lastEcon = _econ};
+		if (_econ != _lastEcon) then {(_display displayCtrl 14600) ctrlSetStructuredText (parseText _econ); _lastEcon = _econ};
 
 		//--- ----- ROSTER (14661): one row per AI-led team: "leader | role | town | order". -----
 		//--- clientTeams is the own-side team registry; only NON-player-led, alive teams are commandable.
-		private ["_rows","_cmdTeams","_hash"];
+		private ["_rows","_cmdTeams","_hash","_srcTeams"];
+		//--- FIX 1a (claude-gaming 2026-06-29): the roster MUST iterate the live side-logic team registry, not the
+		//--- FROZEN boot snapshot clientTeams (Init_Client.sqf:294 captures ~15 playable slot-groups ONCE; the runtime
+		//--- AI squads are appended only to the side-logic wfbe_teams - AI_Commander_Teams.sqf - and broadcast). So
+		//--- clientTeams NEVER contains a single founded AI squad -> the war-room roster was always empty. Resolve the
+		//--- live array from WFBE_Client_Logic.wfbe_teams (null-guarded; fall back to clientTeams if the logic/var is
+		//--- not yet replicated on a fresh JIP client). The two fallback "nearest idle team" loops below repoint to
+		//--- this same _srcTeams.
+		_srcTeams = clientTeams;
+		if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
+			private "_lt"; _lt = WFBE_Client_Logic getVariable "wfbe_teams";
+			if (!isNil "_lt" && {(typeName _lt) == "ARRAY"}) then {_srcTeams = _lt};
+		};
 		_rows = []; _cmdTeams = []; _hash = "";
 		{
 			private "_grp"; _grp = _x;                                    //--- FIX (clobber): capture the TEAM group into a stable local. The inner nearest-town forEach below rebinds _x to TOWN objects and A2-OA forEach does NOT save/restore _x, so every read after that loop must use _grp, not _x. Reading _x there stamped TOWN objects into _cmdTeams - the exact bug that made selected-team orders land on a town the Executor never reads.
-			if (!isNull _grp && {!isPlayer (leader _grp)} && {({alive _y} count units _grp) > 0}) then {
+			//--- FIX 1b (claude-gaming 2026-06-29): A2-OA `count` provides _x to the condition, NOT _y. The old
+			//--- {alive _y} read an undefined _y -> THREW every iteration (22,529 RPT errors on cmdcon25) AND the
+			//--- failing count broke the filter so no row ever passed. Use {alive _x}; _grp already holds the team.
+			if (!isNull _grp && {!isPlayer (leader _grp)} && {({alive _x} count units _grp) > 0}) then {
 				private ["_ld","_role","_tn","_td","_md","_ord","_lbl","_pos"];
 				_ld = leader _grp;
 				_role = [typeOf _ld, "displayName"] Call GetConfigInfo;
@@ -249,7 +270,7 @@ while {alive player && dialog} do {
 				_cmdTeams = _cmdTeams + [_grp];
 				_hash = _hash + _lbl + "#";
 			};
-		} forEach clientTeams;
+		} forEach _srcTeams;
 		//--- Repaint only on a content change (preserve selection BY TEAM IDENTITY, not row index; no per-frame lbClear churn).
 		if (_hash != _lastRosterHash) then {
 			_lastRosterHash = _hash;
@@ -274,6 +295,29 @@ while {alive player && dialog} do {
 		_selTeam = objNull;
 		private "_sel"; _sel = lbCurSel 14661;
 		if (_sel >= 0 && _sel < (count _cmdTeams)) then {_selTeam = _cmdTeams select _sel};
+
+		//--- ----- SQUAD-COMMAND MODE TOGGLE (14625): DIRECT (player maneuvers, today's default) <-> AI STRATEGY
+		//--- (the AI maneuver-brain runs Strategy+AssignTowns UNDER the human commander while the player keeps the
+		//--- economy). Reads the server-broadcast delegate flag (default ABSENT => direct ON). The button TEXT shows
+		//--- the CURRENT mode; pressing it sends the OPPOSITE. MAPPING: wire arg = "delegate to AI"; _directOn==true
+		//--- means we are about to turn direct OFF -> send "ON" (delegate ON). -----
+		private "_directOn"; _directOn = true;
+		if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
+			private "_dv"; _dv = WFBE_Client_Logic getVariable "wfbe_aicom_player_delegate";
+			if (!isNil "_dv" && {typeName _dv == "BOOL"}) then {_directOn = !_dv};
+		};
+		ctrlSetText [14625, (if (_directOn) then {"Squad command: DIRECT"} else {"Squad command: AI STRATEGY"})];
+		if (MenuAction == 730) then {
+			MenuAction = -1;
+			if ((_now - _lastSend) >= _cool) then {
+				private "_send"; _send = if (_directOn) then {"ON"} else {"OFF"};
+				["RequestSpecial", ["aicom-ai-command", sideJoined, _send]] Call WFBE_CO_FNC_SendToServer;
+				_lastSend = _now;
+				hintSilent parseText "<t color='#A0E060'>Command mode change sent.</t>";
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+			};
+		};
 
 		//--- ----- ARM a map-click order ----- (Move / Defend / Patrol / Artillery).
 		if (MenuAction == 720 || MenuAction == 721 || MenuAction == 722 || MenuAction == 723) then {
@@ -325,11 +369,11 @@ while {alive player && dialog} do {
 						if (isNull _team) then {
 							private "_bd"; _bd = 1e9;
 							{
-								if (!isNull _x && {!isPlayer (leader _x)} && {({alive _y} count units _x) > 0}) then {
+								if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count units _x) > 0}) then {  //--- FIX 1b: {alive _x} (A2-OA count provides _x, not _y); FIX 1a: _srcTeams (live registry, not frozen clientTeams).
 									private "_d"; _d = _position distance (getPos (leader _x));
 									if (_d < _bd) then {_bd = _d; _team = _x};
 								};
-							} forEach clientTeams;
+							} forEach _srcTeams;
 						};
 						if (!isNull _team) then {
 							private "_col";
@@ -362,7 +406,7 @@ while {alive player && dialog} do {
 			if ((_now - _lastSend) >= _cool) then {
 				private "_n"; _n = 0;
 				{
-					if (!isNull _x && {!isPlayer (leader _x)} && {({alive _y} count units _x) > 0}) then {
+					if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count units _x) > 0}) then {  //--- FIX 1b: {alive _x} (count provides _x); FIX 1a: iterate _srcTeams below.
 						if (_b == 710) then {
 							[_x, "towns"] Call SetTeamMoveMode;
 							[_x, true]    Call SetTeamAutonomous;
@@ -373,7 +417,7 @@ while {alive player && dialog} do {
 						};
 						_n = _n + 1;
 					};
-				} forEach clientTeams;
+				} forEach _srcTeams;
 				_lastSend = _now;
 				hintSilent parseText (format ["<t color='#A0E060'>%1: %2 teams.</t>", (if (_b == 710) then {"ALL PUSH"} else {"ALL HOLD"}), _n]);
 			} else {
@@ -406,7 +450,7 @@ while {alive player && dialog} do {
 				"<t color='#A0E060'>Pick a team, pick an order, click the map.</t>"
 			};
 		};
-		ctrlSetStructuredText [14650, parseText _st];
+		(_display displayCtrl 14650) ctrlSetStructuredText (parseText _st);
 
 		//--- Back.
 		if (MenuAction == 4) exitWith {MenuAction = -1; activeAnimMarker = false; closeDialog 0; createDialog "WF_Menu"};

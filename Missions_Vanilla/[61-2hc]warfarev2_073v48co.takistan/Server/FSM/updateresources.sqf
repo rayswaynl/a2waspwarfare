@@ -45,6 +45,15 @@ while {!gameOver} do {
 	_tcMult   = _tcFloor + ((_tcCeil - _tcFloor) * _tcRamp);
 	_pcMult   = _pcMult * _tcMult;
 
+	//--- ENDGAME SOFT-FORCING (claude-gaming 2026-06-29, SYSTEM 2): fold the global income-taper multiplier
+	//--- published by server_victory_threeway.sqf into _pcMult so the escalating squeeze reaches every AICOM
+	//--- town-income credit below (the four ChangeAICommanderFunds town-income paths). Default 1.0 when the
+	//--- feature is dark (server_victory_threeway publishes a neutral 1) so this is a strict no-op until armed.
+	//--- Applied to AICOM CASH income only (never player paychecks or the side-wide supply credit). A2-OA-safe.
+	if ((missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_ENABLE", 0]) > 0) then {
+		_pcMult = _pcMult * (missionNamespace getVariable ["WFBE_ENDGAME_FORCE_MULT", 1]);
+	};
+
 
 	{
 		_logik = (_x) Call WFBE_CO_FNC_GetSideLogic;
@@ -130,6 +139,15 @@ while {!gameOver} do {
 				if (((_x) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_x, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds}; //--- B752 (Ray 2026-06-25) anti-hoard funds-cap: stop town income above WFBE_C_AICOM_WEALTH_CAP (the 12h soak ballooned to 18M; the side still keeps millions to spend, the number just stops being meaningless).
 			};
 			if (((_x) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds}; //--- B752: same anti-hoard cap on the stipend drip.
+		};
+
+		//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): on this same income cadence, give a rich AICOM somewhere to
+		//--- spend its hoard - convert money over WFBE_C_AICOM_FUNDS_SINK_THRESHOLD into OFFENSE (heavy push wave + veteran
+		//--- founding + a discounted drain). Hooked HERE (a place this cluster owns) instead of editing AI_Commander.sqf.
+		//--- DEFAULT-OFF + nil-guarded: the worker self-gates on WFBE_C_AICOM_FUNDS_SINK_ENABLE and early-exits when dark,
+		//--- so this is a no-op until armed. _x = side (commander treasury is per-side; GUER already excluded by the forEach).
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_FUNDS_SINK_ENABLE", 0]) > 0 && _commander_enabled && {!isNil "WFBE_SE_FNC_AI_Com_FundsSink"}) then {
+			(_x) Call WFBE_SE_FNC_AI_Com_FundsSink;
 		};
 
 	} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: funds-only stipend, no supply/commander economy

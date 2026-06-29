@@ -46,6 +46,11 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 		
 		//--- Return the available spawn locations
 		_spawn_locations = [sideJoined, WFBE_DeathLocation] Call GetRespawnAvailable; if (isNil "_spawn_locations" || {typeName _spawn_locations != "ARRAY"}) then {diag_log Format ["WFBE RESPAWN b754-guard: GetRespawnAvailable returned non-array for side %1 - using [] this tick.", str sideJoined]; _spawn_locations = []}; //--- B754: stop the respawn-menu _x cascade + capture the root side in the RPT.
+			//--- cmdcon15 element-guard: drop any non-OBJECT / null / dead handle before the marker forEach loops + GetClosestEntity touch it.
+			//--- The b754 guard above only validates the WHOLE array; a single bad ELEMENT (a just-deleted spawn-beacon/redeploy/ambulance
+			//--- handle, an objNull HQ seeded by GetSideHQ, or the wfbe_startpos POSITION array) still makes getPos _x / _x getVariable /
+			//--- _x distance _object throw, flooding "Error in expression <forEach _spawn_locations_last;" + the GetClosestEntity error.
+			{ if (isNil "_x" || {typeName _x != "OBJECT"} || {isNull _x}) then {_spawn_locations = _spawn_locations - [_x]} } forEach (+_spawn_locations);
 
 		//---No spawn available at frist? get one!
 		if (isNull _spawn_at_current) then {

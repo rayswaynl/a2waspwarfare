@@ -39,12 +39,13 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
 _atChance   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_AT_CHANCE", 0.20];
 _mi24Chance = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MI24_CHANCE", 0.25];
+_aaChance   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_AA_CHANCE", 0.75];
 _classKa    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_KA", "Ka137_MG_PMC"];
 _classMi24  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24", "Mi24_P"];
 _lifetime   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LIFETIME", 900];
@@ -67,7 +68,7 @@ _crewClass  = missionNamespace getVariable ["WFBE_GUERRESCREW",  "GUE_Soldier_Cr
 _defenders = [];
 
 ["INITIALIZATION", Format ["Server_GuerAirDef.sqf: GUER air defense started (interval=%1 cap=%2 atChance=%3 mi24Chance=%4).", _interval, _maxAir, _atChance, _mi24Chance]] Call WFBE_CO_FNC_LogContent;
-diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|ka=%5|mi24=%6", _interval, _maxAir, _atChance, _mi24Chance, _classKa, _classMi24];
+diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24];
 
 //--- B67 (Ray 2026-06-21): publish the GUER-air list for the client map-marker loop (updatepatrolmarkers.sqf
 //--- reads WFBE_ACTIVE_GUER_AIR = [[vehicle, sideID], ...]). Init empty + broadcast so a JIP client never sees
@@ -140,7 +141,7 @@ while {!WFBE_GameOver} do {
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_isLarge","_townType","_maxSV","_useMi24","_class","_useAT","_grp","_veh","_pilot","_gunner","_spawnPos","_ang","_loadName"];
+		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_grp","_veh","_pilot","_gunner","_spawnPos","_ang","_loadName"];
 		_town = _x;
 
 		if (_aliveCount < _maxAir
@@ -154,21 +155,29 @@ while {!WFBE_GameOver} do {
 			//--- Enemies near the town (west + east, GUER's foes).
 			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count allUnits;
 
+			//--- Enemy AIR near the town (crewed west/east aircraft) - the counter-air trigger. Scanned over
+			//--- `vehicles` (hull objects); side comes from the crewed hull, so an empty parked heli reads CIV
+			//--- and is ignored (only manned attackers pull a SAM-heli response).
+			_enemyAir = {alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count vehicles;
+
 			//--- LARGE-town test: by maxSupplyValue threshold OR by town_type tier (Large/Huge).
 			_maxSV    = _town getVariable ["maxSupplyValue", 0];
 			_townType = _town getVariable ["wfbe_town_type", ""];
 			_isLarge  = (_maxSV >= _largeSV)
 				|| {(_townType == "LargeTown1") || {(_townType == "LargeTown2") || {(_townType == "HugeTown1") || {_townType == "HugeTown2"}}}};
 
-			//--- Mi-24 only when the town is LARGE AND under attack AND the 25% roll passes.
-			_useMi24 = false;
-			if (_isLarge && {_enemies > 0} && {(random 1) < _mi24Chance}) then { _useMi24 = true; };
+			//--- LOADOUT/AIRFRAME SELECTION (priority order):
+			//---   1. ENEMY AIR present -> Ka-137 with the EASA Igla AA set (counter-air). Beats Mi-24/AT so
+			//---      GUER actually contests hostile air instead of orbiting with an MG it cannot elevate.
+			//---   2. else LARGE town under ground attack -> Mi-24 gunship (25% roll).
+			//---   3. else 20% AT (Konkurs/AT-5) swap on the Ka-137.
+			//---   4. else recon MG (default).
+			_useMi24 = false; _useAA = false; _useAT = false;
+			if (_enemyAir > 0 && {(random 1) < _aaChance}) then { _useAA = true; };
+			if (!_useAA && {_isLarge} && {_enemies > 0} && {(random 1) < _mi24Chance}) then { _useMi24 = true; };
+			if (!_useAA && {!_useMi24} && {(random 1) < _atChance}) then { _useAT = true; };
 
 			_class = if (_useMi24) then {_classMi24} else {_classKa};
-
-			//--- 20% AT loadout roll (Ka-137 only; the Mi-24 is already an AT gunship by config).
-			_useAT = false;
-			if (!_useMi24 && {(random 1) < _atChance}) then { _useAT = true; };
 
 			//--- Spawn the airframe airborne, a short way off the town so it flies in (FLY special, like W13).
 			_ang      = random 360;
@@ -200,6 +209,16 @@ while {!WFBE_GameOver} do {
 							{_veh addWeaponTurret  [_x, [-1]]} forEach ["AT5Launcher","57mmLauncher"];
 							_loadName = "AT5";
 						};
+						//--- Apply the EASA Igla AA loadout (counter-air): strip the recon MG, mount the Igla SAM set.
+						//--- EXACT classnames from the Ka-137 EASA AA entry (EASA_Init.sqf ~L679: [['Igla_twice'],['2Rnd_Igla','2Rnd_Igla']]).
+						//--- Same turret-path [-1] swap idiom as the AT branch above; _useAA is mutually exclusive with _useAT.
+						if (_useAA) then {
+							{_veh removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
+							{_veh removeWeaponTurret  [_x, [-1]]} forEach ["PKT"];
+							{_veh addMagazineTurret [_x, [-1]]} forEach ["2Rnd_Igla","2Rnd_Igla"];
+							{_veh addWeaponTurret  [_x, [-1]]} forEach ["Igla_twice"];
+							_loadName = "IglaAA";
+						};
 
 						//--- Tag for the maintain/clean sweeps and live identification.
 						_veh setVariable ["wfbe_guer_airdef", true, true];
@@ -220,7 +239,7 @@ while {!WFBE_GameOver} do {
 						_townsWithAir = _townsWithAir + [_town];
 						_aliveCount = _aliveCount + 1;
 
-						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|enemies=%5|large=%6|alive=%7", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _enemies, _isLarge, _aliveCount];
+						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|enemies=%5|enemyAir=%6|large=%7|alive=%8", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _enemies, _enemyAir, _isLarge, _aliveCount];
 					} else {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.
 						//--- B66: player-safe teardown (hull is freshly created with no moveIn yet,

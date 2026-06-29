@@ -612,7 +612,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- only if no player is close enough to witness it.
 						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then {
 							_uPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uVeh) < 300}) then {_uPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_uPlayerNear = true} } forEach playableUnits;
 							if (!_uPlayerNear) then {
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
@@ -625,6 +625,8 @@ while {!WFBE_GameOver && _alive} do {
 								};
 							};
 						};
+						//--- B (Ray 2026-06-29 A/B): a player within 100m blocks the teleport, so un-wedge the lead hull with a small upward velocity hop - it breaks terrain friction and visibly bumps the hull free instead of leaving it frozen in the player's view (never-frozen guardrail). The fresh MOVE route below re-applies the order.
+						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = false; { if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_bNear = true} } forEach playableUnits; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
 						//--- WAVE-1 CAUSE-1 FOOT/DEAD-HULL UNSTUCK (2026-06-19): the vehicle Tier-3 above gates on
 						//--- !isNull _uVeh && alive _uVeh, so a wedged FOOT team (leader on foot) or a team whose hull
 						//--- is null/dead/immobile NEVER recovers (live: distStart=0, strikes climbed to ~43). Add a
@@ -637,7 +639,7 @@ while {!WFBE_GameOver && _alive} do {
 						_uOnFoot   = (vehicle _uLdr) == _uLdr;
 						if (_uTier >= 3 && {_uOnFoot || _uHullDead}) then {
 							_uFootPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uLdr) < 300}) then {_uFootPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uLdr) < 100}) then {_uFootPlayerNear = true} } forEach playableUnits;
 							if (!_uFootPlayerNear) then {
 								_uFootRds = (getPos _uLdr) nearRoads 150;
 								if (count _uFootRds > 0) then {
@@ -1252,8 +1254,12 @@ while {!WFBE_GameOver && _alive} do {
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ENABLED", 0]) > 0) then {
 		private ["_artyHull","_aLogik","_upLvl","_cd","_last","_artyText","_idx2","_maxR","_minR","_tgtT","_tgtP","_ffClear"];
 		_artyHull = objNull;
-		{ if (alive _x && {([(typeOf _x), _side] Call IsArtillery) != -1} && {!isNull (gunner _x)} && {alive (gunner _x)} && {someAmmo _x}) exitWith {_artyHull = _x} } forEach _vehicles;
-		if (!isNull _artyHull) then {
+		//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: only fire from a TRACKED/WHEELED self-propelled arty hull (GRAD/MLRS),
+		//--- never a static towed gun or mortar emplacement. IsMobileArtillery = IsArtillery!=-1 AND a vehicle chassis
+		//--- (Tank/Car/Wheeled_APC/Tracked_APC) AND NOT StaticWeapon. _vehicles only ever holds the team's mounted hulls,
+		//--- so in practice this is the GRAD/MLRS; the guard just makes "self-propelled only" explicit + future-proof.
+		{ if (alive _x && {[_x, _side] Call IsMobileArtillery} && {!isNull (gunner _x)} && {alive (gunner _x)} && {someAmmo _x}) exitWith {_artyHull = _x} } forEach _vehicles;
+		if (!isNull _artyHull && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == _sideID) && {(_artyHull distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: SPG fires only when SUPPORTED from a captured town (within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off).
 			_aLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 			_upLvl = if (isNull _aLogik) then {0} else {(_aLogik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
 			if (typeName _upLvl != "SCALAR") then {_upLvl = 0};
@@ -1278,6 +1284,10 @@ while {!WFBE_GameOver && _alive} do {
 					//--- assaulting (the normal case) so the gun almost never fired. Shrink to ~80m around the actual aim point.
 					{ if (alive _x && {side _x == _side} && {(_x distance _tgtP) < 80}) exitWith {_ffClear = false} } forEach (nearestObjects [_tgtP, ["Man","Car","Tank","Air"], 80]);
 					if (_ffClear) then {
+						//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
+						//--- pick + load a situational round (illum at night, cluster vs armour) from ONLY the types the side has
+						//--- researched (the helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
+						[_artyHull, _side, _idx2, _tgtP] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
 						[_artyHull, _tgtP, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
 						_artyHull setVariable ["wfbe_aicom_arty_last", time];
 						diag_log ("AICOMSTAT|v1|EVENT|" + _artyText + "|" + str (round (time / 60)) + "|FIRE_MISSION_MOBILE|" + (typeOf _artyHull) + "|tier=" + str _upLvl);

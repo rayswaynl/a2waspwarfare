@@ -393,6 +393,27 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	case "aicom-ai-command": {
+		//--- COMMAND CONSOLE (claude-gaming 2026-06-29): the human commander toggled SQUAD-COMMAND MODE from the war
+		//--- room - "ON" (delegate squad MANEUVER to the AI: it runs Strategy + AssignTowns UNDER the human while the
+		//--- player keeps the economy) or "OFF" (today's DIRECT player control). Stamp a BROADCAST bool on the side
+		//--- logic; AI_Commander.sqf reads it to widen the strategy gate (_aiStrategy = _canBuild || _aiDelegate) and
+		//--- the war-room client reads it back to label the toggle. Default-ABSENT reads as direct-ON everywhere.
+		//--- DELIBERATELY no human-commander gate: this flag's whole purpose is to change whether the AI strategy runs
+		//--- UNDER a human commander. Modeled on aicom-posture: ENABLED + HQ-alive + west/east + string whitelist.
+		private ["_dSide","_dVal","_dLogik"];
+		_dSide = _args select 1;
+		_dVal  = _args select 2;
+		if ((typeName _dVal == "STRING") && {(_dVal == "ON") || (_dVal == "OFF")} && {_dSide in [west, east]}) then {
+			if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_dSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
+				_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _dLogik) then {
+					_dLogik setVariable ["wfbe_aicom_player_delegate", (_dVal == "ON"), true];
+					diag_log ("AICOM2|v1|ORDER|aicom-ai-command|" + str _dSide + "|" + str (round (time / 60)) + "|delegate=" + _dVal);
+				};
+			};
+		};
+	};
 	case "aicom-request-unit": {
 		//--- COMMAND CONSOLE (PR backend): a player asked the AI commander to favour a UNIT CLASS next time it founds a
 		//--- team - "armor" / "air" / "infantry". Stamp [type,time]; AssignTypes + Teams nudge the next founding type pick

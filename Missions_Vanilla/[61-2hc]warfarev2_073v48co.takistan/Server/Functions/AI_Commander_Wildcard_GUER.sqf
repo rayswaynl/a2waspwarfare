@@ -62,7 +62,7 @@ while {!gameOver} do {
 		         "_i","_chosen","_draw","_result","_detail","_soldierClass","_vbiedClass","_target","_nearD",
 		         "_candTown","_dd","_targetPos","_ang","_spawnPos","_try","_roads","_truck","_grp","_drv",
 		         "_tier","_cpVeh","_cpLabel","_veh","_d1","_d2","_n","_footN","_u","_pos","_mk","_occSide",
-		         "_locMsg","_wName","_wDesc","_wMap"];
+		         "_locMsg","_wName","_wDesc","_wMap","_g1Mk"];
 
 		_sideID = _this select 0;
 		_westID = west Call WFBE_CO_FNC_GetSideID;
@@ -147,6 +147,22 @@ while {!gameOver} do {
 									{deleteVehicle _x} forEach (crew _v);
 									if (!isNull _v) then {deleteVehicle _v};
 									if (!isNull _g) then {deleteGroup _g};
+								};
+								//--- MAP MARKER (feature: wildcard events show on the map for the OWNING side).
+								//--- G1 belongs to GUER, so the marker is broadcast to the resistance SIDE object
+								//--- via WFBE_CO_FNC_SendToClients - Client_HandlePVF matches a SIDE dest against
+								//--- sideJoined, so ONLY GUER players' clients createMarkerLocal it (the occupiers it
+								//--- targets do NOT see this telegraph; it points GUER players at their car bomb).
+								//--- A short-lived watcher deletes it when the truck resolves (death/arrival) or at the
+								//--- 600s watcher cap - one marker per active event, always cleaned up.
+								_g1Mk = Format ["wc_GUER_G1_%1", round time];
+								[resistance, "WildcardMarker", ["create", _g1Mk, _targetPos, "ColorGreen", "mil_destroy", "Car Bomb"]] Call WFBE_CO_FNC_SendToClients;
+								[_truck, _targetPos, _g1Mk] spawn {
+									private ["_v","_tgt","_mk","_el"];
+									_v = _this select 0; _tgt = _this select 1; _mk = _this select 2; _el = 0;
+									waitUntil { sleep 2; _el = _el + 2;
+										(isNull _v || {!alive _v} || {(_v distance _tgt) < 25} || {_el >= 600} || gameOver) };
+									[resistance, "WildcardMarker", ["delete", _mk]] Call WFBE_CO_FNC_SendToClients;
 								};
 								_detail = Format ["target=%1 chassis=%2 spawnD=%3", _target getVariable ["name","?"], _vbiedClass, round (_spawnPos distance _targetPos)];
 							} else { deleteVehicle _truck; deleteGroup _grp; _result = "partial"; _detail = "G1 createUnit null"; };

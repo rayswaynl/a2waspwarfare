@@ -12,7 +12,7 @@ private[
 	"_total", "_perfStart", "_display", "_lastDisplay", "_controls", "_rhudIDC", "_lastTexts", "_lastColors", "_lastShown", "_lastBackgroundColor",
 	"_labelsApplied", "_hiddenApplied", "_hudWasShown", "_lastTownRefresh", "_incomeText", "_supplyText", "_baseText", "_baseColor",
 	"_RHUDResetControlCache", "_RHUDSetShow", "_RHUDSetText", "_RHUDSetColor", "_RHUDGetDisplay", "_idx", "_player", "_side", "_bgColor",
-	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_mbu", "_mbuByTier", "_mbuPT", "_currentUnitsCount", "_maxUnitsCount", //--- B74.2: _mbuByTier/_mbuPT for pop-tier per-player AI cap
+	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_mbu", "_mbuByTier", "_mbuPT", "_currentUnitsCount", "_maxUnitsCount", "_ups", //--- B74.2: _mbuByTier/_mbuPT for pop-tier per-player AI cap; B76: _ups for guarded GetSideUpgrades
 	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_baseStructures", "_baseHq", "_baseTotal", "_baseDamaged", "_clientFPS", "_clientFPSColor",
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
@@ -414,9 +414,15 @@ while {true} do {
 				if (_mbuPT <= ((count _mbuByTier) - 1)) then {_mbu = _mbuByTier select _mbuPT};
 			};
 			//--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
-			if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
+			//--- B76 DEFENSIVE: resolve GetSideUpgrades ONCE and guard the select math. GetSideUpgrades returns objNull
+			//--- for a civilian side (Common_GetSideUpgrades default) - selecting an index off objNull throws a per-tick
+			//--- RPT error. Treat a non-ARRAY result (objNull) as "no upgrades" so the HUD degrades silently. The L30
+			//--- CIV-side guard should prevent civilian here, but this keeps the per-frame HUD error-free on any edge.
+			_ups = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
+			if ((typeName _ups) != "ARRAY") then {_ups = []};
+			if (count _ups > WFBE_UP_PATROLS && {(_ups select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 			_currentUnitsCount = Count ((Units (group player)) Call GetLiveUnits);
-			_maxUnitsCount = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
+			_maxUnitsCount = if (count _ups > WFBE_UP_BARRACKS) then {_ups select WFBE_UP_BARRACKS} else {0};
 			switch (_maxUnitsCount) do {
 				case 0: {_maxUnitsCount = round(_mbu / 4)};
 				case 1: {_maxUnitsCount = round(_mbu / 4)*2};

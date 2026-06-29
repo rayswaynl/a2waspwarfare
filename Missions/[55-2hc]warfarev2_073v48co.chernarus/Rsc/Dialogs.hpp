@@ -2062,6 +2062,7 @@ class RscMenu_Command {
 			x = 0.00561695;
 			y = 0.372000;
 			w = 0.459244;
+			show = 0;                          //--- STRUCTURAL GUARD: war-room (STATE-B) controls default HIDDEN so a non-commander never overlaps the STATE-A advisory block even if the controller hiccups. Controller shows them only when _isCmd. (Derived classes inherit this show.)
 			text = $STR_WF_CMD_RosterTitle;
 		};
 		class CA_Cmd_Roster : RscListBox {
@@ -2070,6 +2071,8 @@ class RscMenu_Command {
 			y = 0.414000;
 			w = 0.459244;
 			h = 0.230000;
+			rowHeight = 0.03;                  //--- REQUIRED (claude 2026-06-29): explicit rowHeight - inherited RscListBox value not in inherit-scope for this dialog; absence threw "No entry ...CA_Cmd_Roster.rowHeight" and broke the console.
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
 			//--- selection is read live via lbCurSel 14661 in the controller loop; no onLBSelChanged needed.
 		};
 		class LineCmd1 : RscText {
@@ -2078,6 +2081,7 @@ class RscMenu_Command {
 			y = 0.648000;
 			w = 0.459244;
 			h = WFBE_SPT1;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660). LineCmd2 (14691) inherits this.
 			colorBackground[] = WFBE_SPC1;
 		};
 		/* Order buttons (map-click; act on the selected roster team, else nearest idle AI team). */
@@ -2087,6 +2091,7 @@ class RscMenu_Command {
 			y = 0.660000;
 			w = 0.224000;
 			h = 0.044000;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660). Defend/Patrol/Release/Arty (14621/22/24/23) inherit this.
 			text = $STR_WF_CMD_Move;
 			action = "MenuAction = 720";
 			tooltip = $STR_WF_CMD_Move_TT;
@@ -2132,13 +2137,29 @@ class RscMenu_Command {
 			idc = 14623;
 			x = 0.00561695;
 			y = 0.760000;
-			w = 0.459244;
+			w = 0.224000;                          //--- HALVED from full-width to share the y=0.760 row with CA_Cmd_AICmd (the squad-command mode toggle) on the right; both stay above the 0.808 separator (button bottom 0.804).
 			text = $STR_WF_CMD_Arty;
 			action = "MenuAction = 723";
 			tooltip = $STR_WF_CMD_Arty_TT;
 			//--- arty => ColorRed {0.9,0,0}.
 			colorBackground[] = {0.75, 0, 0, 0.85};
 			colorBackgroundActive[] = {1, 0.1, 0.1, 1};
+		};
+		/* Squad-command mode toggle (claude-gaming 2026-06-29): DIRECT (player maneuvers squads, today's default) <->
+		   AI STRATEGY (the AI maneuver-brain runs Strategy+AssignTowns under the human commander; player keeps the
+		   economy). Inherits CA_Cmd_Move (show=0 STRUCTURAL GUARD, h=0.044). Shares the y=0.760 order-button row with
+		   the now-halved CA_Cmd_Arty, so it does NOT overlap CA_Cmd_Arty (left half) or the LineCmd2 separator (0.808). */
+		class CA_Cmd_AICmd : CA_Cmd_Move {
+			idc = 14625;
+			x = 0.241244;
+			y = 0.760000;
+			w = 0.224000;
+			text = $STR_WF_CMD_AICmd;
+			action = "MenuAction = 730";
+			tooltip = $STR_WF_CMD_AICmd_TT;
+			//--- mode toggle => slate/teal {0.15,0.4,0.45}, distinct from the order-color cluster.
+			colorBackground[] = {0.12, 0.35, 0.42, 0.85};
+			colorBackgroundActive[] = {0.18, 0.5, 0.58, 1};
 		};
 		/* Separator dividing the per-team order buttons (above) from the bulk/build cluster (below). Raised to 0.808
 		   so the whole bulk/build row sits cleanly BELOW the line (previously the "Build priority:" caption straddled it). */
@@ -2155,6 +2176,7 @@ class RscMenu_Command {
 			y = 0.834000;
 			w = 0.148000;
 			h = 0.034000;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660). CA_Cmd_Hold (14611) inherits this.
 			text = $STR_WF_CMD_AllPush;
 			action = "MenuAction = 710";
 			tooltip = $STR_WF_CMD_AllPush_TT;
@@ -2174,6 +2196,7 @@ class RscMenu_Command {
 			y = 0.814000;
 			w = 0.148000;
 			h = 0.018000;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
 			text = $STR_WF_CMD_BuildPrio;
 			sizeEx = 0.022;
 		};
@@ -2183,6 +2206,7 @@ class RscMenu_Command {
 			y = 0.834000;
 			w = 0.090000;
 			h = 0.033;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
 		};
 		class CA_Cmd_ReqBtn : RscButton_Main {
 			idc = 14641;
@@ -2190,6 +2214,7 @@ class RscMenu_Command {
 			y = 0.834000;
 			w = 0.052561;
 			h = 0.034000;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
 			text = $STR_WF_CMD_BuildBtn;
 			action = "MenuAction = 740";
 			tooltip = $STR_WF_CMD_BuildBtn_TT;

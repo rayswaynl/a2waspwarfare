@@ -25,7 +25,7 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_paidThisVisit","_convoyPay","_sweepDone",
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
-         "_driver","_cargo","_u","_settleTimeout"];
+         "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode"];
 
 _sideID   = _this select 0;
 _template = _this select 1;
@@ -258,6 +258,8 @@ while {!WFBE_GameOver && _alive} do {
 					_target = objNull; //--- Town is ours now: gravitate to the next frontline town.
 				};
 				//--- Still hostile/neutral: stay engaged; the town capture logic does the rest.
+			} else { //--- EN-ROUTE never-frozen guard (Ray 2026-06-29): a patrol with no progress for ~90s is wedged - re-march + un-wedge (player-safe velocity hop within 100m, teleport-to-road otherwise). A patrol must never sit frozen in a player view.
+			_pLdr = leader _team; if (!isNull _pLdr && {alive _pLdr}) then { _pPos = getPos _pLdr; if (isNil "_stuckTicks") then {_stuckTicks = 0}; if (isNil "_lastLdrPos") then {_lastLdrPos = _pPos}; if ((_pPos distance _lastLdrPos) < 25) then {_stuckTicks = _stuckTicks + 1} else {_stuckTicks = 0}; _lastLdrPos = _pPos; if (_stuckTicks >= 3) then { _stuckTicks = 0; { if (alive _x && {vehicle _x == _x} && {!isNull (assignedVehicle _x)} && {alive (assignedVehicle _x)} && {canMove (assignedVehicle _x)}) then {[_x] orderGetIn true} } forEach (units _team); [_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple; _pVeh = vehicle _pLdr; if (!isNull _pVeh && {_pVeh != _pLdr} && {alive _pVeh} && {canMove _pVeh}) then { _pNear = false; { if (isPlayer _x && {(_x distance _pVeh) < 100}) then {_pNear = true} } forEach playableUnits; if (_pNear) then { _pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4] } else { _pRds = (getPos _pVeh) nearRoads 150; if (count _pRds > 0) then { _pNode = [getPos _pVeh, _pRds] Call WFBE_CO_FNC_GetClosestEntity; if (!isNull _pNode && {!surfaceIsWater (getPos _pNode)}) then { _pVeh setVelocity [0,0,0]; _pVeh setPos (getPos _pNode) } } }; diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK|" + (str _team)) } } }
 			};
 		};
 	};

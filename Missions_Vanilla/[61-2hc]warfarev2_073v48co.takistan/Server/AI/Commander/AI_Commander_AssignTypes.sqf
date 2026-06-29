@@ -93,6 +93,21 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 				if (_ok) then {_eligible set [count _eligible, _i]};
 			};
 
+			//--- Ray 2026-06-29 NO STATICS / NO WEAPON TEAMS (no-HC fallback): mirror of the founding strip in
+			//--- AI_Commander_Teams.sqf - drop every eligible template containing a StaticWeapon so the AI never types a
+			//--- server-local team onto a static gun / mortar emplacement / weapon team. Self-propelled arty (GRAD/MLRS)
+			//--- are vehicle hulls, not StaticWeapon, so they survive. GUARDRAIL: keep the original set if stripping would
+			//--- empty it (founding never starved). A2-OA-safe: string-form isKindOf on the template classnames.
+			private ["_eligNoStatic","_swEi","_swHas"];
+			_eligNoStatic = [];
+			{
+				_swEi = _x;
+				_swHas = false;
+				{ if ((typeName _x == "STRING") && {_x isKindOf "StaticWeapon"}) exitWith {_swHas = true} } forEach (_templates select _swEi);
+				if (!_swHas) then {_eligNoStatic set [count _eligNoStatic, _swEi]};
+			} forEach _eligible;
+			if (count _eligNoStatic > 0) then {_eligible = _eligNoStatic};
+
 			if (count _eligible > 0) then {
 				//--- P1 combined-arms picker (claude-gaming 2026-06-15). The old logic favoured the
 				//--- doctrine's single vehicle track 70% of the time but fell back to a UNIFORM draw over

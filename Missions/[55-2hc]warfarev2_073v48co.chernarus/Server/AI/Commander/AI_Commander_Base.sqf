@@ -144,20 +144,59 @@ _buildPosClear = {
 	{ if (!isNull _x && {(_x distance _cpos) < _clr}) exitWith {_blk = true} } forEach (nearestObjects [_cpos, ["House","Building","Wall","Fence"], _clr + 4]);
 	!_blk
 };
+//--- NO-OVERLAP FLOOR helper (Ray 2026-06-29, req #1). The soft STRUCT_SPACING (default 45m) is a
+//--- PREFERENCE the primary _ok path enforces; but the try-budget fallback tiers (_bestBC/_best/_p)
+//--- previously had NO spacing floor, so a failed search could hand back a spot ON TOP of an existing
+//--- structure (overlapping footprints). This helper returns true only when _cand is >= the HARD floor
+//--- (WFBE_C_AICOM_STRUCT_SPACING_FLOOR, default 30m == the "big hangars reach ~30m" footprint note)
+//--- from EVERY existing friendly structure, so no fallback tier can ever overlap. Local _blk flag +
+//--- exitWith INSIDE its own forEach (same idiom as _buildPosClear) so it cannot abort an outer loop.
+_farFromStructs = {
+	private ["_cpos","_floor","_blk"];
+	_cpos = _this;
+	_floor = missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING_FLOOR", 30];
+	if (_floor <= 0) exitWith {true};   //--- 0 disables the floor.
+	_blk = false;
+	{ if ((_cpos distance _x) < _floor) exitWith {_blk = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+	!_blk
+};
+//--- NEAREST-FACTORY-DISTANCE helper (Ray 2026-06-29, req #2). Distance (m) from _cand to the closest
+//--- existing SPAWN-POINT factory (Barracks/Light/Heavy/Aircraft - the player respawn structures per
+//--- Client_GetRespawnAvailable). Used by the road-spaced mode (_nearRoad==2) to STRING factories ALONG
+//--- a road one step apart instead of clustering at one HQ angle. Returns 1e9 when the side has none yet
+//--- (so the first spawn-point factory is placed freely). Local-flag forEach idiom, no exitWith leak.
+_nearestFactoryDist = {
+	private ["_cpos","_best","_d"];
+	_cpos = _this;
+	_best = 1e9;
+	{ if (((_x getVariable ["wfbe_structure_type", ""]) in ["Barracks","Light","Heavy","Aircraft"]) && {alive _x}) then {_d = _cpos distance _x; if (_d < _best) then {_best = _d}} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+	_best
+};
 _findBuildPos = {
-	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear"];
+	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear","_bestBC","_haveBC","_isRoadMode","_stepBest","_haveStep","_stepTarget","_nf","_stepErr","_bestStepErr","_floor"];
 	_rmin = _this select 0; _rmax = _this select 1;
 	_nearRoad = if (count _this > 2) then {_this select 2} else {0};
-	//--- the USABLE-road filter rejects more candidates than the old bare nearRoads gate,
-	//--- so give the near-road mode more tries to find a paved lane to sit beside.
-	_tries = if (_nearRoad == 1) then {40} else {24};
-	_ok = false; _try = 0; _haveDry = false; _haveClear = false; _best = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+	//--- ROAD modes: 1 = beside a road (legacy near-road); 2 = beside a road AND spaced ALONG it
+	//--- (Ray 2026-06-29 req #2, spawn-point factories). Both share the perpendicular-offset/off-lane
+	//--- validation; mode 2 additionally PREFERS the all-gates-clear throw whose distance to the nearest
+	//--- existing factory is closest to WFBE_C_AICOM_FACTORY_ROAD_STEP, so factory N+1 steps one slot
+	//--- further along the road frontage instead of landing at a random ring angle next to factory N.
+	_isRoadMode = (_nearRoad == 1) || (_nearRoad == 2);
+	//--- the USABLE-road filter rejects more candidates than the old bare nearRoads gate, so give the
+	//--- near-road modes a bigger try budget to find a paved lane to sit beside AND clear the FULL
+	//--- spacing gate (Ray req #1: widen the search so an all-gates-clear spot is normally found, and
+	//--- the no-overlap floor is only ever a last resort). Build-tick only (~1/5min/side) so cost is moot.
+	_tries = if (_isRoadMode) then {(missionNamespace getVariable ["WFBE_C_AICOM_BUILDPOS_TRIES_ROAD", 64])} else {(missionNamespace getVariable ["WFBE_C_AICOM_BUILDPOS_TRIES_OFFROAD", 40])};
+	_stepTarget = missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_ROAD_STEP", 50];
+	_floor = missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING_FLOOR", 30];
+	_stepBest = [0,0,0]; _haveStep = false; _bestStepErr = 1e9;
+	_ok = false; _try = 0; _haveDry = false; _haveClear = false; _haveBC = false; _best = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
 	_p = _best;
 	while {!_ok && _try < _tries} do {
 		_ang = random 360;
 		_p = [(_hqPos select 0) + (_rmin + random (_rmax - _rmin)) * sin _ang, (_hqPos select 1) + (_rmin + random (_rmax - _rmin)) * cos _ang, 0];
-		if (_nearRoad == 1) then {
-			//--- NEAR-road (Light/Heavy/Aircraft factories): BESIDE a USABLE road on flat,
+		if (_isRoadMode) then {
+			//--- NEAR-road (Barracks/Light/Heavy/Aircraft factories): BESIDE a USABLE road on flat,
 			//--- dry ground with a real standoff, never on/over the lane. Do NOT pre-snap with
 			//--- GetEmptyPosition here - roads are the flattest/emptiest terrain, so snapping
 			//--- first drifts the candidate ONTO the track (the old order-of-operations bug).
@@ -189,6 +228,14 @@ _findBuildPos = {
 						//--- Ray reported. nearRoads 9 catches any carriageway node under the footprint; the chosen road is
 						//--- >12m off so it is not caught; the 40-try near-road budget refinds a clean spot.
 						if (!_blocked && {count (_cand nearRoads 9) > 0}) then {_blocked = true};
+					//--- MIDDLE FALLBACK TIER (_bestBC): candidate passed water/standoff/on-road AND is
+					//--- BUILDING-CLEAR (_buildPosClear) but may be spacing-crowded. Recorded BEFORE the
+					//--- STRUCT_SPACING gate so the try-budget fallback prefers a building+road-clear (off-lane,
+					//--- not-in-geometry) spot over raw 'dry' _best (which GetEmptyPosition drifts onto roads).
+					//--- Ray 2026-06-29 req #1: ALSO gate on the HARD no-overlap floor (_farFromStructs) so the
+						//--- relaxed fallback may use the cushion between FLOOR (30m) and SPACING (45m) but can NEVER
+						//--- return a spot that overlaps an existing structure. Only the 30..45m band is ever relaxed.
+						if (!_blocked && {!_haveBC} && {_cand call _buildPosClear} && {_cand call _farFromStructs}) then {_bestBC = _cand; _haveBC = true};
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
@@ -202,7 +249,23 @@ _findBuildPos = {
 					//--- factory spawn pads do not sit inside geometry (units spawning into a house/wall break).
 					if (!_blocked && {!(_cand call _buildPosClear)}) then {_blocked = true};
 					if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true};
-					if (!_blocked) then {_p = _cand; _ok = true};
+					//--- Ray 2026-06-29 req #2 (SPACED-along-road, mode 2): a fully-clear candidate is a valid
+					//--- step. Instead of accepting the FIRST one (which clusters factory N+1 right next to factory
+					//--- N at a random ring angle), keep the one whose distance to the nearest existing factory is
+					//--- closest to WFBE_C_AICOM_FACTORY_ROAD_STEP, so consecutive spawn points step evenly ALONG
+					//--- the road frontage. Spend the whole try budget hunting the best step; the first spawn-point
+					//--- factory (no factories yet -> _nf=1e9) takes the first hit immediately.
+					if (!_blocked && {_nearRoad == 2}) then {
+						_nf = _cand call _nearestFactoryDist;
+						if (_nf >= 1e8) then {
+							_p = _cand; _ok = true;   //--- first spawn point on this side: nothing to space from.
+						} else {
+							_stepErr = abs (_nf - _stepTarget);
+							if (!_haveStep || {_stepErr < _bestStepErr}) then {_stepBest = _cand; _bestStepErr = _stepErr; _haveStep = true};
+						};
+					};
+					//--- mode 1 (legacy near-road) keeps the FIRST all-gates-clear hit.
+					if (!_blocked && {_nearRoad != 2}) then {_p = _cand; _ok = true};
 				};
 			};
 		} else {
@@ -220,6 +283,11 @@ _findBuildPos = {
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
 				if (count (_p nearRoads 22) == 0) then {
+					//--- MIDDLE FALLBACK TIER (_bestBC): road-clear here; record if ALSO building-clear,
+					//--- relaxing the soft STRUCT_SPACING. Preferred over raw 'dry' _best in the fallback chain.
+					//--- Ray 2026-06-29 req #1: ALSO gate on the HARD no-overlap floor (_farFromStructs) so the
+					//--- relaxed fallback can never return a spot that overlaps an existing structure.
+					if (!_haveBC && {_p call _buildPosClear} && {_p call _farFromStructs}) then {_bestBC = _p; _haveBC = true};
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
@@ -236,8 +304,34 @@ _findBuildPos = {
 		};
 		_try = _try + 1;
 	};
+	//--- Ray 2026-06-29 req #2: in SPACED mode (2), if no candidate was accepted immediately (i.e. this is
+	//--- NOT the first factory) but the budget found at least one fully-clear step, take the best-spaced one
+	//--- now. _stepBest is all-gates-clear (building+road+FULL spacing), so it is a clean accept.
+	if (!_ok && {_nearRoad == 2} && {_haveStep}) then {_p = _stepBest; _ok = true};
+	private "_via";
 	//--- try-budget failure: hand back the best dry-land candidate (never water).
-	if (!_ok) then {_p = if (_haveClear) then {_bestClear} else {if (_haveDry) then {_best} else {_p}}}; //--- AICOM v2 (Ray): prefer the best ROAD-CLEAR fallback over an on-road _best, so structures stop landing on roads in road-dense base spots.
+	if (!_ok) then {_p = if (_haveClear) then {_bestClear} else {if (_haveBC) then {_bestBC} else {if (_haveDry) then {_best} else {_p}}}}; //--- AICOM v2 (Ray): prefer the best ROAD-CLEAR fallback over an on-road _best, so structures stop landing on roads in road-dense base spots.
+	_via = "raw"; if (_haveDry) then {_via = "DRY"}; if (_haveBC) then {_via = "bestBC"}; if (_haveClear) then {_via = "bestClear"}; if (_haveStep) then {_via = "bestStep"}; if (_ok) then {_via = if (_nearRoad == 2) then {"okStep"} else {"ok"}};
+	//--- Ray 2026-06-29 req #1 FINAL HARD GUARD: the raw _best/_p fallback tiers have NO spacing floor, so a
+	//--- fully-failed search could still resolve _p ON TOP of an existing structure (overlap). Enforce the
+	//--- no-overlap floor unconditionally: if _p still violates the floor, NUDGE it radially OUTWARD along the
+	//--- HQ->_p bearing in 8m steps (up to +150m) until it clears every structure. Pure scalar math + distance
+	//--- loop = A2-OA-safe; runs only when the fallback actually produced an overlapping spot (rare).
+	if (!(_p call _farFromStructs) && {_floor > 0}) then {
+		private ["_bx","_by","_bh","_step","_nx","_ny","_npos","_done"];
+		_bx = (_p select 0) - (_hqPos select 0); _by = (_p select 1) - (_hqPos select 1);
+		_bh = if (_bx == 0 && {_by == 0}) then {random 360} else {_bx atan2 _by}; //--- HQ->_p bearing (random if _p == HQ).
+		_done = false; _step = 8;
+		while {!_done && {_step <= 150}} do {
+			_nx = (_p select 0) + _step * sin _bh;
+			_ny = (_p select 1) + _step * cos _bh;
+			_npos = [_nx, _ny, 0];
+			if (!(surfaceIsWater _npos) && {_npos call _farFromStructs}) then {_p = _npos; _done = true; _via = _via + "+nudge"};
+			_step = _step + 8;
+		};
+		if (!_done) then {_via = _via + "+OVERLAP!"}; //--- could not clear the floor in a crowded base; RPT-flagged.
+	};
+	diag_log (format ["AICOMPLACE|near=%1|via=%2|pos=%3|onRoad=%4|clr=%5|nf=%6|floorOK=%7", _nearRoad, _via, _p, (count (_p nearRoads 12) > 0), (_p call _buildPosClear), (round (_p call _nearestFactoryDist)), (_p call _farFromStructs)]);
 	_p
 };
 
@@ -449,14 +543,21 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 					_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
 					if (!(surfaceIsWater _pos)) then {_placed = true};
 				};
-				//--- task #25: production factories (Light/Heavy/Aircraft) are where commander
-				//--- teams spawn, so bias them NEAR a road for unit egress; everything else
-				//--- (CC/Barracks/Bank/CBR) keeps the default OFF-road placement.
+				//--- task #25 + Ray 2026-06-29 req #2: the SPAWN-POINT factories (Barracks/Light/Heavy/Aircraft -
+				//--- the player respawn structures per Client_GetRespawnAvailable) are placed road-ADJACENT and
+				//--- SPACED ALONG the road (mode 2) so respawning players come out near a road and the four spawn
+				//--- points don't stack at one HQ angle. Everything else (CC/Bank/CBR) keeps OFF-road placement.
+				//--- Barracks was previously OFF-road; it is now road-spaced too (it IS a respawn point).
 				if (!_placed) then {
-					if (_x in ["Light","Heavy","Aircraft"]) then {
-						//--- B67: widen the factory placement ring (was 45..75) so production
-						//--- factories spread out from the HQ core and clear the spacing gate.
-						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
+					if (_x in ["Barracks","Light","Heavy","Aircraft"]) then {
+						//--- B67 + req #2: widen the outer ring as the side accumulates spawn-point factories so each
+						//--- successive one has fresh road frontage to step onto (the FULL 45m spacing gate clears
+						//--- far more often -> the no-overlap floor stays a rare last resort). +35m per existing
+						//--- spawn-point factory, capped at +120m over the base outer ring.
+						private ["_fc","_rmaxF"];
+						_fc = {((_x getVariable ["wfbe_structure_type", ""]) in ["Barracks","Light","Heavy","Aircraft"]) && {alive _x}} count _structures;
+						_rmaxF = (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]) + ((_fc * 35) min 120);
+						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), _rmaxF, 2] Call _findBuildPos;
 					} else {
 						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110])] Call _findBuildPos;
 					};

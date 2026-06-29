@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -97,10 +97,12 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 };
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0; _ltDisband = 0;
+_ltBeacon = 0; //--- AICOM FORWARD SPAWN-BEACON throttle (Approach A): gated WFBE_C_AICOM_SPAWNBEACON_ENABLE (default 0 = INERT), paced to WFBE_C_AICOM_SPAWNBEACON_INTERVAL.
 _ltPara = 0; //--- AICOM PARATROOPS throttle: cheap O(towns) scan + drop attempt; paced to the town interval (worker self-cooldowns the actual drop, gated WFBE_C_AICOM_PARATROOPS_ENABLE, default-OFF).
 _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
+_prevDelegate = false; //--- COMMAND CONSOLE squad-command mode (claude-gaming 2026-06-29): prev value of the AI-maneuver delegate flag, for the edge-reset that neutralises sticky orders on a mode flip.
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
 _prevStipendActive = false;
@@ -156,6 +158,22 @@ while {!gameOver} do {
 		};
 		_prevHuman = _humanCmd;
 
+		//--- COMMAND CONSOLE squad-command mode (claude-gaming 2026-06-29): read the player's AI-maneuver DELEGATE flag
+		//--- (set ON/OFF from the war room via aicom-ai-command). Default-ABSENT => false => today's DIRECT control.
+		//--- When ON, the AI maneuver-brain (Strategy/Snapshot/Allocate) runs UNDER the human commander while the player
+		//--- keeps the economy. DELEGATE EDGE-RESET: on a flip of _aiDelegate, neutralise every team (clear its move
+		//--- mode + exec-sig + the commander FOCUS) so the Executor/AssignTowns don't fight over a team carrying the
+		//--- previous owner's sticky order - same reset the human-left path (above) uses. A2-OA: Bool != Bool is ILLEGAL,
+		//--- so compare via 0/1 scalars.
+		_aiDelegate = _logik getVariable ["wfbe_aicom_player_delegate", false];
+		if ((if (_aiDelegate) then {1} else {0}) != (if (_prevDelegate) then {1} else {0})) then {
+			{ [_x, "towns"] Call SetTeamMoveMode; _x setVariable ["wfbe_exec_sig", []] } forEach (_logik getVariable ["wfbe_teams", []]);
+			_logik setVariable ["wfbe_aicom_focus", objNull];
+			_logik setVariable ["wfbe_aicom_focus_t0", -1e9];
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] squad-command mode flipped (AI-strategy delegate now %2) - teams reset to neutral.", str _side, if (_aiDelegate) then {"ON"} else {"OFF"}]] Call WFBE_CO_FNC_AICOMLog;
+		};
+		_prevDelegate = _aiDelegate;
+
 		//--- B36 (Ray 2026-06-15) #3a: build-grace tracker. _noHumanSince = when the side last became
 		//--- human-commander-less (-1 while a human commands). The AI builds only after the grace window
 		//--- with no human commander - from match start, re-armed each time a human commander leaves.
@@ -165,6 +183,15 @@ while {!gameOver} do {
 			if (_noHumanSince < 0) then {_noHumanSince = time};
 		};
 		_canBuild = (_noHumanSince >= 0) && {(time - _noHumanSince) >= (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BUILD_GRACE", 300])};
+
+		//--- COMMAND CONSOLE squad-command mode (claude-gaming 2026-06-29): _aiStrategy widens the maneuver-brain gate.
+		//--- The AI runs Strategy/Snapshot/Allocate when it holds full command (_canBuild) OR when a human commander has
+		//--- DELEGATED maneuver to it (_aiDelegate, war-room "AI STRATEGY"). _canBuild is left EXACTLY as-is so the
+		//--- economy block (Base/Upgrade/MHQ/Teams/Produce/wealth/CBR) stays player-owned in delegate mode (Ray: the
+		//--- player keeps the economy). Squad CREATION (HYBRID-REFILL), AssignTowns, Execute and the unstuck/driver
+		//--- logic already run on the _humanCmd/_active gates and KEEP running here (Ray: it also creates squads + runs
+		//--- the unstuck logic) - they are NOT gated by this.
+		_aiStrategy = _canBuild || _aiDelegate;
 
 		//--- Lifecycle log + running flag (full command only; income routes to aicom_funds only with no human).
 		_state = if (_humanCmd) then {"assist"} else {"full"};
@@ -364,7 +391,11 @@ while {!gameOver} do {
 			if (!isNil "WFBE_SE_FNC_AI_Com_DisbandLowTier") then {(_side) Call WFBE_SE_FNC_AI_Com_DisbandLowTier};
 			_ltDisband = time;
 		};
-		if (_canBuild) then {
+		//--- COMMAND CONSOLE squad-command mode (claude-gaming 2026-06-29): the MANEUVER BRAIN (Strategy + the v2
+		//--- Snapshot/Allocate) is the ONE block moved out of the _canBuild economy gate onto _aiStrategy, so it runs
+		//--- either when the AI holds full command (_canBuild) OR when a human commander delegated maneuver to it
+		//--- (war-room "AI STRATEGY"). Everything else economy-related stays inside if (_canBuild) below.
+		if (_aiStrategy) then {
 			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
 			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
 				//--- AICOM v2 (M0): refresh the server-authoritative world-model snapshot (wfbe_aicom2_snap)
@@ -375,10 +406,12 @@ while {!gameOver} do {
 				//--- fist choice wins (overwrites wfbe_aicom_targets) + assigns each team an alloc_target.
 				//--- Inert unless WFBE_C_AICOM2_ALLOCATE_ENABLE>0 (checked inside) -> legacy path = instant rollback.
 				if (!isNil "WFBE_SE_FNC_AICOM2_Allocate") then {(_side) Call WFBE_SE_FNC_AICOM2_Allocate};
-				//--- NOTE (claude-gaming 2026-06-28): the AI-INTENT publish block was MOVED OUT of this _canBuild gate
+				//--- NOTE (claude-gaming 2026-06-28): the AI-INTENT publish block was MOVED OUT of this gate
 				//--- (it used to live here) to the _active-gated block just below the Executor, so the command-console
 				//--- intent readout refreshes + reaches JIP/assist clients even when the AI is not in full-build mode.
 			};
+		};
+		if (_canBuild) then {
 			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
 			//--- mobilize -> DRIVE the MHQ forward to a standoff behind the front town -> re-deploy. Self-gates
 			//--- on WFBE_C_AICOM_MHQ_RELOCATE + single-flight + deployed-HQ + enemy-standoff; drive runs in its own Spawn.
@@ -394,6 +427,13 @@ while {!gameOver} do {
 			//--- V0.2: build the base (HQ deploy -> doctrine build order -> defenses).
 			if (time - _ltBase > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BASE_INTERVAL", 60])) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Base; _ltBase = time;
+			};
+			//--- AICOM FORWARD SPAWN-BEACON (Approach A, claude-gaming 2026-06-29): park a forward ambulance (a wired
+			//--- mobile respawn) behind the spearhead town so AI + humans get a spawn line that follows the front.
+			//--- INERT by default - both the flag AND the worker's own gate must pass (WFBE_C_AICOM_SPAWNBEACON_ENABLE=0
+			//--- -> the worker is never called). nil-guarded like the other optional workers.
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_SPAWNBEACON_ENABLE", 0]) > 0 && {time - _ltBeacon > (missionNamespace getVariable ["WFBE_C_AICOM_SPAWNBEACON_INTERVAL", 120])}) then {
+				if (!isNil "WFBE_SE_FNC_AI_Com_Beacon") then {(_side) Call WFBE_SE_FNC_AI_Com_Beacon; _ltBeacon = time};
 			};
 			//--- V0.2: found AI combat teams up to the target (editor slots are not enough on AI-only sides).
 			if (time - _ltTeams > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_INTERVAL", 90])) then {

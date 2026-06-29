@@ -28,6 +28,17 @@ Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeploye
 if (isNull player) exitWith {["ERROR", "Init_Client.sqf: player is NULL at init (joined a deleted/shell slot?) - aborting client init gracefully; fade watchdog clears the screen."] Call WFBE_CO_FNC_LogContent};
 
 sideJoined = side player;
+//--- CIV-SIDE GUARD (B76 2026-06-29): on a reconnect/JIP the engine can briefly report `side player == civilian`
+//--- (HC seat-magnet + in-place restart re-slot churn). `sideJoined` is read ONCE here and never re-derived, so a
+//--- transient CIVILIAN sticks forever -> WFBE_Client_Logic resolves to objNull -> the EARLYHEAL poller spins ~30min
+//--- and Client_UpdateRHUD's GetSideUpgrades select indexes objNull (per-tick RPT error). Every PLAYABLE slot is a
+//--- military unit, so a civilian `side player` is always wrong: re-derive the real side from the unit's class config
+//--- (mirrors the proven AI_AdvancedRespawn.sqf:14-16 pattern). A normal player (west/east/resistance) skips this
+//--- entirely - behaviour is unchanged. A2-OA-1.64 safe: getNumber / configFile >> / typeOf / switch / case are core.
+if (sideJoined == civilian) then {
+	sideJoined = switch (getNumber (configFile >> "CfgVehicles" >> (typeOf player) >> "side")) do {case 0: {east}; case 1: {west}; case 2: {resistance}; default {civilian}};
+	diag_log format ["CLIENTTEAMS|CIV-GUARD|re-derived sideJoined from class %1 -> %2 at=%3s", typeOf player, str sideJoined, round time];
+};
 sideJoinedText = str sideJoined;
 //--- WF3 Compatible.
 WFBE_Client_SideJoined = sideJoined;
@@ -596,6 +607,60 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 	};
 };
 
+//--- cmdcon26 (Game 2026-06-29) HQ-MARKER HEAL. THE GAP: the B62/B64 reconciliation above re-fires
+//--- Init_BaseStructure for wfbe_hq, but ONLY while the ~120s window runs AND only while the claim flag
+//--- wfbe_b62_marker_built is still false. Init_BaseStructure SETS that claim flag (line 37) BEFORE it has
+//--- actually painted the marker (it then sleeps 2s, and earlier it sat behind a 90s gate + a side-ID check
+//--- that exitWiths WITHOUT clearing the flag). Under JIP slow-sync the own HQ marker can therefore latch
+//--- "claimed" yet never render if wfbe_hq / WFBE_Client_SideID arrived late, and once the 120s window closes
+//--- nothing retries - the HQ icon stays missing (RPT "Zwanon": MARKERS=3, no own HQ). This dedicated bounded
+//--- loop keeps RETRYING past that window: it verifies an ACTUAL own-side "Headquarters" marker exists near the
+//--- live wfbe_hq position; if not, it CLEARS the stale claim flag and re-fires Init_BaseStructure so the draw
+//--- runs again. It stops the instant the HQ marker is present (a healthy join sends ZERO re-fires). Idempotent
+//--- via the same wfbe_b62_marker_built compare-and-claim. A2-OA-1.64 safe: allMapMarkers / markerType /
+//--- markerPos / getPos / distance2D-free (uses distance on getPos) / getVariable / setVariable; no A3 commands.
+[] spawn {
+	private ["_n","_done","_hqObj","_hqPos","_found","_mPos","_x","_grace"];
+	waitUntil {(!isNil "WFBE_Client_SideID") && {!isNil "WFBE_Client_Logic"}};
+	//--- Civilian clients have no own HQ; never spin (mirrors the EARLYHEAL CIV bail-out).
+	if (sideJoined == civilian) exitWith { diag_log "[WFBE][cmdcon26 HQ-MARK] CIV-ABORT: skipped on civilian client."; };
+	_done = false;
+	_n = 0;
+	//--- ~200 polls x ~3s = ~10min ceiling, comfortably past the 120s reconciliation window.
+	while {!_done && {_n < 200} && {sideJoined != civilian}} do {
+		_hqObj = WFBE_Client_Logic getVariable ["wfbe_hq", objNull];
+		if (!isNull _hqObj && {alive _hqObj}) then {
+			_hqPos = getPos _hqObj;
+			//--- Look for any LOCAL "Headquarters"-type marker already painted near the live HQ (Init_BaseStructure
+			//--- draws BaseMarker<N> with type "Headquarters" for the HQ). 150m tolerance covers a mobilized/redeployed
+			//--- HQ that moved slightly between the draw and this check.
+			_found = false;
+			{
+				if (!_found && {(markerType _x) == "Headquarters"}) then {
+					_mPos = markerPos _x;
+					if ((_mPos distance _hqPos) < 150) then {_found = true};
+				};
+			} forEach allMapMarkers;
+			if (_found) then {
+				_done = true;
+				if (_n > 0) then { diag_log format ["[WFBE][cmdcon26 HQ-MARK] own HQ marker present after %1 poll(s); heal complete.", _n]; };
+			} else {
+				//--- No HQ marker yet. Clear any stale claim and re-fire the one-shot draw. A small grace on the very
+				//--- first poll lets the original B62 reconciliation re-fire land its own marker before we intervene.
+				_grace = (_n == 0);
+				if (!_grace) then {
+					_hqObj setVariable ["wfbe_b62_marker_built", false];
+					[_hqObj, true, WFBE_Client_SideID] ExecVM "Client\Init\Init_BaseStructure.sqf";
+					diag_log format ["[WFBE][cmdcon26 HQ-MARK] no own HQ marker (poll %1) - cleared claim and re-fired Init_BaseStructure for type=%2 pos=%3.", _n, typeOf _hqObj, _hqPos];
+				};
+			};
+		};
+		_n = _n + 1;
+		sleep 3;
+	};
+	if (!_done) then { diag_log format ["[WFBE][cmdcon26 HQ-MARK] GAVE UP after %1 polls; own HQ marker never confirmed.", _n]; };
+};
+
 //--- B74.2.4 (Ray 2026-06-24, P0 — lobby joiners get NO funds / NO marker / NOT in the commander-vote menu =
 //--- empty clientTeams = mission UNPLAYABLE). The B62/B64 reconciliation above only re-reads wfbe_teams for ~120s
 //--- AFTER a ~90s gate (~210s total) then GIVES UP. Under heavy AI load the side-logic wfbe_teams can take longer
@@ -605,12 +670,17 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 //--- heal above; the WAIT/EARLYHEAL diag_logs prove (on the client RPT) whether the data arrives late vs never.
 //--- A2-OA-1.64 safe: plain getVariable on the logic OBJECT, typeName ==, count, mod; no A3 commands.
 [] spawn {
-	private ["_logik","_sideText","_teams","_n","_done","_lg"];
+	private ["_logik","_sideText","_teams","_n","_done","_lg","_sentAny"];
 	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_Logic"} && {!isNil "WFBE_Client_SideID"}};
 	_sideText = WFBE_Client_SideJoinedText;
 	_done = false;
+	_sentAny = false;
 	_n = 0;
-	while {!_done && {_n < 900}} do {
+	//--- B76 CIV bail-out: never spin on a civilian client (WFBE_Client_Logic is objNull for civilian so this would
+	//--- otherwise poll the full ~30min cap logging WAIT|logikNull=true every tick). The CIV-side guard at L30 should
+	//--- already have re-derived a real side; this is a belt-and-braces stop in case a civilian slips through.
+	if (sideJoined == civilian) exitWith { diag_log "CLIENTTEAMS|CIV-ABORT|EARLYHEAL skipped on civilian client"; };
+	while {!_done && {_n < 900} && {sideJoined != civilian}} do {
 		_logik = WFBE_Client_Logic;
 		if (!isNull _logik && {!isNil {_logik getVariable "wfbe_teams"}}) then {
 			_teams = _logik getVariable "wfbe_teams";
@@ -628,11 +698,75 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 				_lg = WFBE_Client_Logic;
 				diag_log format ["CLIENTTEAMS|WAIT|side=%1|n=%2|t=%3s|logikNull=%4|teamsNil=%5", _sideText, _n, round time, (isNull _lg), (isNil {_lg getVariable "wfbe_teams"})];
 			};
+			//--- cmdcon26 (Game 2026-06-29) TEAMS RE-BROADCAST REQUEST (mirrors the B76 funds self-heal). The
+			//--- side-logic wfbe_teams broadcast may never have been replayed to this late joiner (A2-OA does not
+			//--- replay object setVariable-broadcasts to post-join clients). Beyond passively polling, ask the
+			//--- server to RE-broadcast its authoritative side-logic roster (+ HQ/structures) so the data gap
+			//--- closes actively. Throttle the PVF to ~every 10s (every 5th 2s tick) while still polling locally
+			//--- each tick; stops the instant wfbe_teams lands (_done). Server side is idempotent (same-value
+			//--- re-set, never mutates the roster), so redundant requests are harmless.
+			if ((_n mod 5) == 0) then {
+				["RequestTeamsResend", [player, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
+				_sentAny = true;
+				diag_log format ["CLIENTTEAMS|RESEND-REQ|side=%1|n=%2|t=%3s", _sideText, _n, round time];
+			};
 			_n = _n + 1;
 			sleep 2;
 		};
 	};
-	if (!_done) then { diag_log format ["CLIENTTEAMS|EARLYHEAL-GAVEUP|side=%1|afterPolls=%2", _sideText, _n]; };
+	if (!_done) then { diag_log format ["CLIENTTEAMS|EARLYHEAL-GAVEUP|side=%1|afterPolls=%2|sentResend=%3", _sideText, _n, _sentAny]; };
+};
+
+//--- B76 (Ray 2026-06-29) JIP FUNDS SELF-HEAL. THE BUG (client-main.rpt, "Zwanon"): a JIP joiner whose own-side
+//--- wfbe_teams slow-synced under heavy AI ended up with NO money - and a slot-switch "fixed" it. The funds live
+//--- on the player's GROUP as wfbe_funds, set by Server_OnPlayerConnected with a broadcast (true) setVariable. In
+//--- A2-OA an object setVariable-broadcast is NOT replayed to a late joiner and can reach it slowly/never under
+//--- load - the SAME failure mode as the team-sync heals above. The B62/B64/B74.2 reconciliation only re-pulls
+//--- wfbe_teams + structure markers; NOTHING re-applied the player's own-group funds, so GetTeamFunds read nil ->
+//--- "$0". This loop closes exactly that gap: once it can read its own team, if that group has NO numeric
+//--- wfbe_funds it asks the server (RequestFundsResend) to re-broadcast the AUTHORITATIVE value - the explicit
+//--- mirror of the slot-switch recovery, WITHOUT forcing a reconnect. It STOPS the instant funds land, so a
+//--- normal fast join (funds already present) sends ZERO requests. The server side is idempotent (re-broadcasts an
+//--- absolute stored value, never adds), so even a redundant request cannot duplicate money. Covers WEST/EAST/GUER
+//--- (all three keep wfbe_funds on the group). A2-OA-1.64 safe: group player / getVariable / typeName == / mod;
+//--- no A3 commands. No frozen AI / no sim-gating touched.
+[] spawn {
+	private ["_grp","_f","_n","_done","_sentAny"];
+	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_SideJoined"}};
+	//--- Let the normal connect-handler funds broadcast have a moment to land first (avoids a needless request on
+	//--- a healthy fast join). Re-resolve group player each tick: a JIP/respawn can swap the player's group.
+	sleep 8;
+	_done = false;
+	_sentAny = false;
+	_n = 0;
+	//--- ~300 polls x ~3s = ~15min ceiling; matches the team-heal's generous JIP window. Cheap idle cadence.
+	while {!_done && {_n < 300}} do {
+		_grp = group player;
+		if (!isNull _grp) then {
+			_f = _grp getVariable "wfbe_funds";
+			if (!isNil "_f" && {typeName _f == "SCALAR"}) then {
+				//--- Funds are present (any numeric value, incl. a legitimately-spent low balance). Done; do not
+				//--- keep asking. We do NOT treat 0 as "missing" - a player who spent down to 0 is valid, and the
+				//--- server re-broadcast would only echo that same value anyway, so stopping here is correct.
+				_done = true;
+				if (_sentAny) then {
+					diag_log format ["[WFBE][B76 FUNDS-HEAL] own-group funds=%1 landed after %2 request(s); self-heal complete.", _f, _n];
+				};
+			} else {
+				//--- No numeric wfbe_funds on our own group yet -> ask the server to (re)broadcast it. Throttle the
+				//--- actual PVF to every ~9s (every 3rd ~3s tick) so a slow server-side resolve is not spammed,
+				//--- while still polling locally each tick so we react the instant funds arrive.
+				if ((_n mod 3) == 0) then {
+					["RequestFundsResend", [player, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
+					_sentAny = true;
+					diag_log format ["[WFBE][B76 FUNDS-HEAL] own-group has no wfbe_funds (poll %1); requested server re-broadcast.", _n];
+				};
+			};
+		};
+		_n = _n + 1;
+		sleep 3;
+	};
+	if (!_done && _sentAny) then { diag_log format ["[WFBE][B76 FUNDS-HEAL] GAVE UP after %1 polls; funds never landed on own group.", _n]; };
 };
 
 [] execFSM "Client\FSM\updateactions.fsm";
@@ -648,9 +782,9 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Towns Marker FSM"] Call WFBE_CO_FNC_LogContent;
 	[] execVM "Client\FSM\updatetownmarkers.sqf";
 	if (sideJoined != resistance) then {
-waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_structures"}};
+waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "wfbe_structures"}}}; //--- B76: || civilian so a CIV client (objNull logic) never hangs here
 	if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-		waitUntil {!isNil {missionNamespace getVariable format ["wfbe_supply_%1", sideJoinedText]}};
+		waitUntil {(sideJoined == civilian) || {!isNil {missionNamespace getVariable format ["wfbe_supply_%1", sideJoinedText]}}}; //--- B76: || civilian bail
 	};
 };
 	missionNamespace setVariable ["wfbe_supply", missionNamespace getVariable [Format ["wfbe_supply_%1", sideJoinedText], 0]];
@@ -778,11 +912,11 @@ if (sideJoined == resistance) then {
 	_base = if (count _fr > 0) then { getPos (_fr select (floor (random (count _fr)))) } else { getMarkerPos "GuerTempRespawnMarker" };
 } else {
 if (time < 30) then {
-	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}};
+	waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}}}; //--- B76: || civilian so a CIV client never hangs on objNull logic
 	_base = WFBE_Client_Logic getVariable "wfbe_startpos";
 } else {
-	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_hq"}};
-	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_structures"}};
+	waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "wfbe_hq"}}};       //--- B76: || civilian bail
+	waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "wfbe_structures"}}}; //--- B76: || civilian bail
 	_base = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
 	_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
 
@@ -810,7 +944,7 @@ missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true]; //--- DEADS
 /* HQ Building Init. */
 _isDeployed = true; //--- B751: default so resistance/GUER (which skips the block below) never reads an undefined _isDeployed at the `!isServer && !_isDeployed` HQ-killed-EH guard (~L824). WEST/EAST reassign the real status below.
 if (sideJoined != resistance) then {
-waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_hq_deployed"}};
+waitUntil {(sideJoined == civilian) || !isNil {WFBE_Client_Logic getVariable "wfbe_hq_deployed"}};
 ["INITIALIZATION", "Init_Client.sqf: Initializing COIN Module."] Call WFBE_CO_FNC_LogContent;
 _isDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 if (_isDeployed) then {
@@ -823,7 +957,7 @@ if (_isDeployed) then {
 //--- Add Killed EH to the HQ on each client if needed (JIP), skip LAN host.
 if (!isServer && !_isDeployed) then {
 	[] spawn {
-		waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_hq"}};
+		waitUntil {(sideJoined == civilian) || !isNil {WFBE_Client_Logic getVariable "wfbe_hq"}};
 		(WFBE_Client_SideJoined Call WFBE_CO_FNC_GetSideHQ) addEventHandler ["killed", {["RequestSpecial", ["process-killed-hq", _this]] Call WFBE_CO_FNC_SendToServer}];
 	};
 };
@@ -1111,7 +1245,7 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 
 /* Vote System, define whether a vote is already running or not */
 if (sideJoined != resistance) then {
-waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_votetime"}};
+waitUntil {(sideJoined == civilian) || !isNil {WFBE_Client_Logic getVariable "wfbe_votetime"}};
 ["INITIALIZATION", "Init_Client.sqf: Vote system is initialized."] Call WFBE_CO_FNC_LogContent;
 if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFBE_VoteMenu"};
 };
@@ -1346,7 +1480,7 @@ if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFB
 
 clientInitComplete = true;
 
-hint parseText "v16052026 <br/><br/> <t color='#28ff14'>If you're a new player:</t> <br/><br/>Read the instructions on map (press 'M' key) on the 'Notes' tab. <br/><br/>Our Discord server: <br/><br/><t color='#28ff14'>discord.me/warfare</t>  <br/><br/>(Open the link with a web browser like Chrome) <br/><br/>Ask in chat or on our Discord server if you want to know how something works. <br/><br/>You and your units are marked with <t color='#FFAC1C'>orange</t> color on map. <br/><br/>Friendly towns are marked with <t color='#1ff026'>green</t> color. <t color='#000bde'>Blue</t> and <t color='#de0300'>red</t> towns are controlled by enemy. <br/><br/>Note that you see friendly players and vehicles on map. <br/><br/><t color='#42b6ff'>WF menu</t> is important. You can open it by using action menu (mouse scroll). <br/><br/>Welcome and good luck, soldier! :)";
+if ((missionNamespace getVariable ["WFBE_C_ONBOARDING_ENABLE", 1]) < 1) then { hint parseText "v16052026 <br/><br/> <t color='#28ff14'>If you're a new player:</t> <br/><br/>Read the instructions on map (press 'M' key) on the 'Notes' tab. <br/><br/>Our Discord server: <br/><br/><t color='#28ff14'>discord.me/warfare</t>  <br/><br/>(Open the link with a web browser like Chrome) <br/><br/>Ask in chat or on our Discord server if you want to know how something works. <br/><br/>You and your units are marked with <t color='#FFAC1C'>orange</t> color on map. <br/><br/>Friendly towns are marked with <t color='#1ff026'>green</t> color. <t color='#000bde'>Blue</t> and <t color='#de0300'>red</t> towns are controlled by enemy. <br/><br/>Note that you see friendly players and vehicles on map. <br/><br/><t color='#42b6ff'>WF menu</t> is important. You can open it by using action menu (mouse scroll). <br/><br/>Welcome and good luck, soldier! :)"; };
 
 CLIENT_INIT_READY = player;
 
@@ -1359,5 +1493,11 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
 //--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
+
+//--- New-player onboarding cards (claude-gaming 2026-06-29). Once-per-session, skippable structuredText
+//--- hint sequence (what WASP is + win goal + 3 core actions + scroll-menu + JIP cue + respawn legend).
+//--- Self-gates on WFBE_C_ONBOARDING_ENABLE (default 1) and a uiNamespace once-flag inside the function;
+//--- detects JIP from mission time. Spawned (never blocks input/enrollment), placed after init completes.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Common_Onboarding.sqf";
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

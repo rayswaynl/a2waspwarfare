@@ -32,6 +32,8 @@ Server_ConstructPosition = Compile preprocessFile "Server\Functions\Server_Const
 GetAICommanderFunds = Compile preprocessFile "Server\Functions\Server_GetAICommanderFunds.sqf";
 //--- B74.2 (Ray 2026-06-24, directive #5): AI-commander structure-sell / recycle worker (dark by default, see WFBE_C_AICOM_BASE_SELL_ENABLE).
 WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BaseSell.sqf";
+//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): drain a rich AICOM hoard into offense (dark by default, see WFBE_C_AICOM_FUNDS_SINK_ENABLE). Called from updateresources.sqf on the income cadence.
+WFBE_SE_FNC_AI_Com_FundsSink = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_FundsSink.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
 HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";
@@ -65,12 +67,14 @@ WFBE_SE_FNC_AI_Com_Produce = Compile preprocessFileLineNumbers "Server\AI\Comman
 WFBE_SE_FNC_AI_Com_DisbandLowTier = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_DisbandLowTier.sqf";
 WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Execute.sqf";
 WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
+WFBE_SE_FNC_AI_Com_Beacon = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Beacon.sqf"; //--- AICOM FORWARD SPAWN-BEACON (Approach A): forward ambulance as a mobile spawn point (flag WFBE_C_AICOM_SPAWNBEACON_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
 WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
 WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
 WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_MHQReloc.sqf";
 WFBE_SE_FNC_AI_Com_PlayerArty = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_PlayerArty.sqf"; //--- COMMAND CONSOLE: assist-mode resolver for a player war-room ARTILLERY-HERE request (runs every tick, even under a human commander; fires only existing friendly guns).
+WFBE_SE_FNC_AI_Com_Paratroops = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Paratroops.sqf"; //--- AICOM PARATROOPS: tier+structure-gated AI paratroop reinforcement drop, reuses the player KAT_Paratroopers support fn (flag WFBE_C_AICOM_PARATROOPS_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard_GUER = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard_GUER.sqf";
@@ -857,13 +861,6 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	[] execVM "Server\Init\Init_NavalHVT.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
-
-//--- AIRFIELD ON-LAND PROBE (claude-gaming 2026-06-14): DIAGNOSTIC ONLY.
-//--- One-shot server-only grid scan that logs surfaceIsWater + nearRoads for a
-//--- 5x5 grid of candidate camp positions around each airfield's
-//--- LocationLogicAirport (Balota id=7, NWAF id=8). Reads AIRFIELD_PROBE|... in
-//--- the RPT to pick a verified on-land, off-road apron. Changes NO coordinates.
-[] execVM "Server\Init\Init_AirfieldProbe.sqf";
 
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};

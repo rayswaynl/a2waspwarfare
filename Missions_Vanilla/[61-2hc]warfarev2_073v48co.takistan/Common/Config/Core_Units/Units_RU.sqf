@@ -49,7 +49,6 @@ _u = _u		+ ['WarfareReammoTruck_RU'];
 _u = _u		+ ['KamazRefuel'];
 _u = _u		+ ['WarfareSalvageTruck_RU'];
 _u = _u		+ ['WarfareSupplyTruck_RU'];
-_u = _u		+ ['WarfareSupplyTruck_RU'];
 _u = _u		+ ['GAZ_Vodnik_MedEvac'];
 _u = _u		+ ['BRDM2_INS'];
 _u = _u		+ ['BRDM2_ATGM_INS'];
@@ -106,7 +105,6 @@ _u = _u		+ ["SkodaRed"];
 _u = _u		+ ["VWGolf"];
 _u = _u		+ ["datsun1_civil_2_covered"];
 _u = _u		+ ["hilux1_civil_2_covered"];
-_u = _u		+ ["UralCivil"];
 _u = _u		+ ["UralCivil"];
 _u = _u		+ ["V3S_Refuel_TK_GUE_EP1"];
 if ((missionNamespace getVariable "WFBE_C_UNITS_TOWN_PURCHASE") > 0) then {

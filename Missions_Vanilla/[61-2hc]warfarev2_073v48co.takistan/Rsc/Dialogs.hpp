@@ -1931,7 +1931,9 @@ class RscMenu_Command {
 			x = 0.00261695;
 			y = 0.652000;
 			w = 0.465244;
-			h = 0.156000;
+			//--- Extended to 0.218 (ends 0.870) so the backer also covers the bulk-order + build-priority row, which
+			//--- previously sat on bare background below the panel. Stops just above the help line (0.872).
+			h = 0.218000;
 			colorBackground[] = WFBE_Background_Color_Sub;
 		};
 	};
@@ -1999,9 +2001,9 @@ class RscMenu_Command {
 			y = 0.372000;
 			w = 0.459244;
 			h = 0.060000;
-			text = "TAKE COMMAND";
+			text = $STR_WF_CMD_Claim;
 			action = "MenuAction = 750";
-			tooltip = "Claim the empty AI commander seat and run this side yourself.";
+			tooltip = $STR_WF_CMD_Claim_TT;
 		};
 		/* =====================================================================================
 		   STATE A (NOT commander) ADVISORY block: a live AI-commander INTENT readout (14607, fed
@@ -2014,7 +2016,7 @@ class RscMenu_Command {
 			x = 0.00561695;
 			y = 0.444000;
 			w = 0.459244;
-			text = "AI COMMANDER INTENT";
+			text = $STR_WF_CMD_IntentTitleA;
 		};
 		class CA_Cmd_IntentA : RscStructuredText {
 			idc = 14607;
@@ -2029,7 +2031,7 @@ class RscMenu_Command {
 			x = 0.00561695;
 			y = 0.636000;
 			w = 0.459244;
-			text = "NUDGE THE AI'S POSTURE";
+			text = $STR_WF_CMD_PostureTitle;
 		};
 		class CA_Cmd_PosturePush : RscButton_Main {
 			idc = 14609;
@@ -2037,17 +2039,22 @@ class RscMenu_Command {
 			y = 0.678000;
 			w = 0.224000;
 			h = 0.044000;
-			text = "PUSH (expand)";
+			text = $STR_WF_CMD_Push;
 			action = "MenuAction = 760";
-			tooltip = "Advise the AI commander to lean AGGRESSIVE - engage the enemy sooner / shave the expand-first town gate.";
+			tooltip = $STR_WF_CMD_Push_TT;
+			//--- Posture colour-coding to match the order palette: PUSH = aggressive blue, HOLD = defensive green.
+			colorBackground[] = {0, 0, 0.85, 0.85};
+			colorBackgroundActive[] = {0.15, 0.15, 1, 1};
 		};
 		class CA_Cmd_PostureHold : CA_Cmd_PosturePush {
 			idc = 14612;
 			x = 0.241244;
 			y = 0.678000;
-			text = "HOLD (consolidate)";
+			text = $STR_WF_CMD_Hold;
 			action = "MenuAction = 761";
-			tooltip = "Advise the AI commander to lean DEFENSIVE - hold and consolidate towns longer before pushing the enemy.";
+			tooltip = $STR_WF_CMD_Hold_TT;
+			colorBackground[] = {0, 0.65, 0, 0.85};
+			colorBackgroundActive[] = {0.1, 0.85, 0.1, 1};
 		};
 		/* ROSTER of your AI teams (commander state). Row = "leader | role | town | order". Click to select. */
 		class CA_Cmd_RosterTitle : RscText_SubTitle {
@@ -2055,7 +2062,8 @@ class RscMenu_Command {
 			x = 0.00561695;
 			y = 0.372000;
 			w = 0.459244;
-			text = "YOUR TEAMS  (click a team, then click the map)";
+			show = 0;                          //--- STRUCTURAL GUARD: war-room (STATE-B) controls default HIDDEN so a non-commander never overlaps the STATE-A advisory block even if the controller hiccups. Controller shows them only when _isCmd. (Derived classes inherit this show.)
+			text = $STR_WF_CMD_RosterTitle;
 		};
 		class CA_Cmd_Roster : RscListBox {
 			idc = 14661;
@@ -2063,6 +2071,8 @@ class RscMenu_Command {
 			y = 0.414000;
 			w = 0.459244;
 			h = 0.230000;
+			rowHeight = 0.03;                  //--- REQUIRED (claude 2026-06-29): explicit rowHeight - inherited RscListBox value not in inherit-scope for this dialog; absence threw "No entry ...CA_Cmd_Roster.rowHeight" and broke the console.
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
 			//--- selection is read live via lbCurSel 14661 in the controller loop; no onLBSelChanged needed.
 		};
 		class LineCmd1 : RscText {
@@ -2071,6 +2081,7 @@ class RscMenu_Command {
 			y = 0.648000;
 			w = 0.459244;
 			h = WFBE_SPT1;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660). LineCmd2 (14691) inherits this.
 			colorBackground[] = WFBE_SPC1;
 		};
 		/* Order buttons (map-click; act on the selected roster team, else nearest idle AI team). */
@@ -2080,9 +2091,10 @@ class RscMenu_Command {
 			y = 0.660000;
 			w = 0.224000;
 			h = 0.044000;
-			text = "Attack / Move";
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660). Defend/Patrol/Release/Arty (14621/22/24/23) inherit this.
+			text = $STR_WF_CMD_Move;
 			action = "MenuAction = 720";
-			tooltip = "Order the selected team to advance and assault toward the clicked point (mode: move).";
+			tooltip = $STR_WF_CMD_Move_TT;
 			//--- Order-button color-coding: match the map marker the controller drops (GUI_Menu_Command.sqf:336-341).
 			//--- move => ColorBlue {0,0,1}. colorBackgroundActive keeps the tint on hover/press.
 			colorBackground[] = {0, 0, 0.85, 0.85};
@@ -2092,9 +2104,9 @@ class RscMenu_Command {
 			idc = 14621;
 			x = 0.241244;
 			y = 0.660000;
-			text = "Defend Here";
+			text = $STR_WF_CMD_Defend;
 			action = "MenuAction = 721";
-			tooltip = "Order the selected team to hold and defend the clicked point (mode: defense).";
+			tooltip = $STR_WF_CMD_Defend_TT;
 			//--- defense => ColorGreen {0,0.8,0}.
 			colorBackground[] = {0, 0.65, 0, 0.85};
 			colorBackgroundActive[] = {0.1, 0.85, 0.1, 1};
@@ -2103,9 +2115,9 @@ class RscMenu_Command {
 			idc = 14622;
 			x = 0.00561695;
 			y = 0.710000;
-			text = "Patrol Here";
+			text = $STR_WF_CMD_Patrol;
 			action = "MenuAction = 722";
-			tooltip = "Order the selected team to patrol/search the clicked area (mode: patrol).";
+			tooltip = $STR_WF_CMD_Patrol_TT;
 			//--- patrol => ColorOrange {1,0.5,0}.
 			colorBackground[] = {0.85, 0.45, 0, 0.85};
 			colorBackgroundActive[] = {1, 0.55, 0.05, 1};
@@ -2114,9 +2126,9 @@ class RscMenu_Command {
 			idc = 14624;
 			x = 0.241244;
 			y = 0.710000;
-			text = "Release to Auto";
+			text = $STR_WF_CMD_Release;
 			action = "MenuAction = 724";
-			tooltip = "Hand the selected team back to autonomous town-capture (mode: towns).";
+			tooltip = $STR_WF_CMD_Release_TT;
 			//--- release => grey {0.6,0.6,0.6}.
 			colorBackground[] = {0.5, 0.5, 0.5, 0.85};
 			colorBackgroundActive[] = {0.65, 0.65, 0.65, 1};
@@ -2125,63 +2137,87 @@ class RscMenu_Command {
 			idc = 14623;
 			x = 0.00561695;
 			y = 0.760000;
-			w = 0.459244;
-			text = "Artillery Strike";
+			w = 0.224000;                          //--- HALVED from full-width to share the y=0.760 row with CA_Cmd_AICmd (the squad-command mode toggle) on the right; both stay above the 0.808 separator (button bottom 0.804).
+			text = $STR_WF_CMD_Arty;
 			action = "MenuAction = 723";
-			tooltip = "Request an artillery strike at the clicked spot (if artillery is enabled).";
+			tooltip = $STR_WF_CMD_Arty_TT;
 			//--- arty => ColorRed {0.9,0,0}.
 			colorBackground[] = {0.75, 0, 0, 0.85};
 			colorBackgroundActive[] = {1, 0.1, 0.1, 1};
 		};
+		/* Squad-command mode toggle (claude-gaming 2026-06-29): DIRECT (player maneuvers squads, today's default) <->
+		   AI STRATEGY (the AI maneuver-brain runs Strategy+AssignTowns under the human commander; player keeps the
+		   economy). Inherits CA_Cmd_Move (show=0 STRUCTURAL GUARD, h=0.044). Shares the y=0.760 order-button row with
+		   the now-halved CA_Cmd_Arty, so it does NOT overlap CA_Cmd_Arty (left half) or the LineCmd2 separator (0.808). */
+		class CA_Cmd_AICmd : CA_Cmd_Move {
+			idc = 14625;
+			x = 0.241244;
+			y = 0.760000;
+			w = 0.224000;
+			text = $STR_WF_CMD_AICmd;
+			action = "MenuAction = 730";
+			tooltip = $STR_WF_CMD_AICmd_TT;
+			//--- mode toggle => slate/teal {0.15,0.4,0.45}, distinct from the order-color cluster.
+			colorBackground[] = {0.12, 0.35, 0.42, 0.85};
+			colorBackgroundActive[] = {0.18, 0.5, 0.58, 1};
+		};
+		/* Separator dividing the per-team order buttons (above) from the bulk/build cluster (below). Raised to 0.808
+		   so the whole bulk/build row sits cleanly BELOW the line (previously the "Build priority:" caption straddled it). */
 		class LineCmd2 : LineCmd1 {
 			idc = 14691;
-			y = 0.812000;
+			y = 0.808000;
 		};
-		/* Bulk posture + Request-Unit (the two hybrid orders that still bite in assist-mode). */
+		/* Bulk posture + Request-Unit (the two hybrid orders that still bite in assist-mode). One tidy row at y=0.834:
+		   ALL PUSH | ALL HOLD on the left, the Build-priority caption+combo+Build button on the right, all below the
+		   separator and clear of the help line (combo bottom 0.867 < help top 0.872). */
 		class CA_Cmd_Push : RscButton_Main {
 			idc = 14610;
 			x = 0.00561695;
-			y = 0.824000;
+			y = 0.834000;
 			w = 0.148000;
-			h = 0.040000;
-			text = "ALL PUSH";
+			h = 0.034000;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660). CA_Cmd_Hold (14611) inherits this.
+			text = $STR_WF_CMD_AllPush;
 			action = "MenuAction = 710";
-			tooltip = "All idle AI teams resume autonomous town capture.";
+			tooltip = $STR_WF_CMD_AllPush_TT;
 		};
 		class CA_Cmd_Hold : CA_Cmd_Push {
 			idc = 14611;
 			x = 0.160244;
-			y = 0.824000;
-			text = "ALL HOLD";
+			y = 0.834000;
+			text = $STR_WF_CMD_AllHold;
 			action = "MenuAction = 711";
-			tooltip = "All AI teams dig in and defend where they stand.";
+			tooltip = $STR_WF_CMD_AllHold_TT;
 		};
-		/* Label for the Request-Unit (Build-priority) combo so a new commander knows what the dropdown does. */
+		/* Caption above the Build-priority combo so a new commander knows what the dropdown does (sits below the separator). */
 		class CA_Cmd_ReqLabel : RscText {
 			idc = 14642;
 			x = 0.317244;
-			y = 0.804000;
+			y = 0.814000;
 			w = 0.148000;
-			h = 0.020000;
-			text = "Build priority:";
-			sizeEx = 0.024;
+			h = 0.018000;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
+			text = $STR_WF_CMD_BuildPrio;
+			sizeEx = 0.022;
 		};
 		class CA_Cmd_ReqCombo : RscCombo {
 			idc = 14640;
 			x = 0.317244;
-			y = 0.826000;
+			y = 0.834000;
 			w = 0.090000;
-			h = 0.035;
+			h = 0.033;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
 		};
 		class CA_Cmd_ReqBtn : RscButton_Main {
 			idc = 14641;
 			x = 0.412244;
-			y = 0.824000;
+			y = 0.834000;
 			w = 0.052561;
-			h = 0.040000;
-			text = "Build";
+			h = 0.034000;
+			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
+			text = $STR_WF_CMD_BuildBtn;
 			action = "MenuAction = 740";
-			tooltip = "Ask the war effort to prioritise building the selected unit type next.";
+			tooltip = $STR_WF_CMD_BuildBtn_TT;
 		};
 		/* Status / hint line at the bottom of the console. */
 		class CA_Cmd_Help : RscStructuredText {
@@ -3143,13 +3179,15 @@ class RscMenu_Economy {
 	};
 };
 
-//--- Help Menu
+//--- Help Menu (REDESIGN)
 class RscMenu_Help {
 	movingEnable = 1;
 	idd = 508000;
-	onLoad = "uiNamespace setVariable ['dialog_HelpPanel', _this select 0];['onLoad'] execVM 'Client\GUI\GUI_Menu_Help.sqf'";
-	onUnload = "uiNamespace setVariable ['cti_dialog_ui_onlinehelpmenu', nil]; ['onUnload'] call compile preprocessFileLineNumbers 'Client\GUI\GUI_Menu_Help.sqf'";
+	onLoad  = "uiNamespace setVariable ['dialog_HelpPanel', _this select 0];['onLoad'] execVM 'Client\GUI\GUI_Menu_Help.sqf'";
+	onUnload = "uiNamespace setVariable ['dialog_HelpPanel', nil];";
+
 	class controlsBackground {
+		//--- Full-panel backdrop
 		class WF_Background : RscText {
 			x = "SafeZoneX + (SafeZoneW * 0.1)";
 			y = "SafeZoneY + (SafezoneH * 0.105)";
@@ -3158,93 +3196,106 @@ class RscMenu_Help {
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
+		//--- Header strip (drag handle)
 		class WF_Background_Header : WF_Background {
-			x = "SafeZoneX + (SafeZoneW * 0.1)";
 			y = "SafeZoneY + (SafezoneH * 0.105)";
-			w = "SafeZoneW * 0.8";
-			h = "SafeZoneH * 0.05"; //0.06 stock
+			h = "SafeZoneH * 0.05";
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
-		class Footer: RscText {
+		//--- Footer strip
+		class Footer : RscText {
 			x = "SafeZoneX + (SafeZoneW * 0.1)";
 			y = 0.871195 * safezoneH + safezoneY;
 			w = "SafeZoneW * 0.8";
 			h = 0.034396 * safezoneH;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
-		class CTI_Menu_Title : RscText_Title {
-			style = ST_LEFT;
-			x = "SafeZoneX + (SafeZoneW * 0.12)";
-			y = "SafeZoneY + (SafezoneH * 0.11)";
-			w = "SafeZoneW * 0.78";
-			h = "SafeZoneH * 0.037";
-			text = "Warfare Information Panel";
-			sizeEx = "(			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
-		};
+		//--- Left section-list frame (slightly narrower than stock for a wider read pane)
 		class CTI_Menu_InfoListFrame : RscFrame {
 			x = "SafeZoneX + (SafeZoneW * 0.12)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.2";
+			w = "SafeZoneW * 0.19";
 			h = 0.676391 * safezoneH;
 		};
+		//--- Right content frame + translucent backing
 		class CTI_Menu_InfoResourcesFrame : RscFrame {
-			x = "SafeZoneX + (SafeZoneW * 0.34)";
+			x = "SafeZoneX + (SafeZoneW * 0.325)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.54";
+			w = "SafeZoneW * 0.555";
 			h = 0.676391 * safezoneH;
 		};
 		class CTI_Menu_Info_Background : RscText {
-			x = "SafeZoneX + (SafeZoneW * 0.34)";
+			x = "SafeZoneX + (SafeZoneW * 0.325)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.54";
+			w = "SafeZoneW * 0.555";
 			h = 0.676391 * safezoneH;
-			colorBackground[] = {0.5, 0.5, 0.5, 0.25};
+			colorBackground[] = {0.5, 0.5, 0.5, 0.20};
 		};
 	};
+
 	class controls {
+		//--- Dynamic title bar (rewritten per-section by the controller).
+		//    StructuredText (not RscText) so we can color/size the active page name.
+		class CTI_Menu_Title : RscStructuredText {
+			idc = 160003;
+			x = "SafeZoneX + (SafeZoneW * 0.12)";
+			y = "SafeZoneY + (SafezoneH * 0.112)";
+			w = "SafeZoneW * 0.76";
+			h = "SafeZoneH * 0.040";
+			size = "0.95 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
+			text = "";
+		};
+
+		//--- LEFT: section list
 		class CTI_Menu_Help_Topics : RscListBox {
 			idc = 160001;
-			
 			x = "SafeZoneX + (SafeZoneW * 0.12)";
 			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.2";
+			w = "SafeZoneW * 0.19";
 			h = 0.676389 * safezoneH;
-			
-			rowHeight = "1.5 * 			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25)";
-			sizeEx = "0.78 * 			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25)";
-			
-			colorText[] = {1,1,1,1};
-			colorBackground[] = {0,0,0,0};
+
+			rowHeight = "1.7 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25))";
+			sizeEx    = "0.82 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25))";
+
+			colorText[]       = {1, 1, 1, 1};
+			colorBackground[] = {0, 0, 0, 0};
 			onLBSelChanged = "['onHelpLBSelChanged', _this select 1] call compile preprocessFileLineNumbers 'Client\GUI\GUI_Menu_Help.sqf'";
 		};
-		
+
+		//--- RIGHT: scrollable content pane inside a controls group
 		class Menu_Help_ControlsGroup : RscControlsGroup {
-			x = "SafeZoneX + (SafeZoneW * 0.34)";
-			y = "SafeZoneY + (SafezoneH * 0.175)";
-			w = "SafeZoneW * 0.54";
-			h = 0.670389 * safezoneH;
-			
-			class controls {				
+			x = "SafeZoneX + (SafeZoneW * 0.335)";
+			y = "SafeZoneY + (SafezoneH * 0.185)";
+			w = "SafeZoneW * 0.535";
+			h = 0.656389 * safezoneH;
+
+			class controls {
 				class CTI_Menu_Help_Explanation : RscStructuredText {
-					
 					idc = 160002;
-					
 					x = "0";
 					y = "0";
-					w = "SafeZoneW * 0.53";
-					h = "SafeZoneH * 2.71";
-					
-					size = "0.85 * (			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
+					w = "SafeZoneW * 0.515";
+					h = "SafeZoneH * 2.71";  // tall so vertical scrollbar engages for long copy
+					size = "0.85 * (((((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
 				};
 			};
 		};
-		/* Separators */
+
+		//--- Back to the WF command menu (sibling-consistent).
+		class Back_Button : RscButton_Back {
+			x = 0.822374 * safezoneW + safezoneX;
+			y = 0.878751 * safezoneH + safezoneY;
+			tooltip = $STR_WF_TOOLTIP_BackButton;
+			onButtonClick = "closeDialog 0; createDialog 'WF_Menu';";
+		};
+
+		//--- Close.
 		class Exit_Button : RscButton_Exit {
 			x = 0.868374 * safezoneW + safezoneX;
 			y = 0.878751 * safezoneH + safezoneY;
-			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
-		};		
+			onButtonClick = "closeDialog 0;";
+		};
 	};
 };
 
