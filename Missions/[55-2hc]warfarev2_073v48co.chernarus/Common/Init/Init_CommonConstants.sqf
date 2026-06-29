@@ -182,6 +182,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_GUER_AIRDEF_MAX") then {WFBE_C_GUER_AIRDEF_MAX = 4};              //--- global alive cap on GUER air defenders (hard FPS bound).
 	if (isNil "WFBE_C_GUER_AIRDEF_AT_CHANCE") then {WFBE_C_GUER_AIRDEF_AT_CHANCE = 0.20}; //--- chance a spawned Ka-137 carries the EASA AT (Konkurs/AT-5) loadout.
 	if (isNil "WFBE_C_GUER_AIRDEF_MI24_CHANCE") then {WFBE_C_GUER_AIRDEF_MI24_CHANCE = 0.25}; //--- chance a LARGE GUER town under attack fields a Mi-24 gunship instead.
+	if (isNil "WFBE_C_GUER_AIRDEF_AA_CHANCE") then {WFBE_C_GUER_AIRDEF_AA_CHANCE = 0.75}; //--- chance a Ka-137 fields the EASA Igla AA loadout when ENEMY AIR is near the town (counter-air; takes priority over Mi-24/AT roll).
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_KA") then {WFBE_C_GUER_AIRDEF_CLASS_KA = "Ka137_MG_PMC"}; //--- default light air defender (recon/strike).
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24") then {WFBE_C_GUER_AIRDEF_CLASS_MI24 = "Mi24_P"};   //--- heavy gunship for large contested towns.
 	if (isNil "WFBE_C_GUER_AIRDEF_LIFETIME") then {WFBE_C_GUER_AIRDEF_LIFETIME = 900};  //--- max seconds a defender lives before forced recycle (anti-accumulation).
@@ -447,6 +448,12 @@ with missionNamespace do {
 	//--- it lands inert with the patch; flip to 1 to soak on the test box + confirm honest play before the public switch.
 	//--- Guards live under this flag in Server/PVFunctions/* + Server/Functions/* (DR-55/DR-27/DR-41/economy ledger).
 	if (isNil "WFBE_C_SEC_HARDENING")               then {WFBE_C_SEC_HARDENING               = 0};       //--- 1 = enforce anti-forgery guards; 0 = inert (dark). Default 0.
+
+	//--- AICOM FORWARD-ARTY + PARATROOPS + TIERED-AMMO (Ray 2026-06-29: ENABLED). Three AICOM capabilities flipped ON.
+	if (isNil "WFBE_C_AICOM_ARTY_REQUIRE_TOWN")     then {WFBE_C_AICOM_ARTY_REQUIRE_TOWN     = 1};       //--- 1 = mobile SPG fires only when within ARTY_TOWN_RANGE of a friendly captured town (Ray: artillery near the front).
+	if (isNil "WFBE_C_AICOM_ARTY_TOWN_RANGE")       then {WFBE_C_AICOM_ARTY_TOWN_RANGE       = 300};     //--- metres: how close a captured town centre must be for the SPG to count as supported + clear to fire.
+	if (isNil "WFBE_C_AICOM_PARATROOPS_ENABLE")     then {WFBE_C_AICOM_PARATROOPS_ENABLE     = 1};       //--- 1 = AI calls Tactical Center paratroops (ONLY after building the Command Center + researching Paratroopers).
+	if (isNil "WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE") then {WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE = 1};       //--- 1 = AI arty uses alternate ammo types it has unlocked via WFBE_UP_ARTYAMMO (else HE only).
 
 	//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): in AI-vs-AI soak both commanders pin at WFBE_C_AICOM_WEALTH_CAP
 	//--- (~1.5M) with NOTHING to spend funds on - units cost funds but the 8-team hard cap blocks more teams, and tech/
