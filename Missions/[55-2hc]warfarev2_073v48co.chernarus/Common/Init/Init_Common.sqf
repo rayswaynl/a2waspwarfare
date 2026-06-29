@@ -69,6 +69,7 @@ HandleIncomingMissile = Compile preprocessFileLineNumbers "Common\Functions\Comm
 HandleShootBombs = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootBombs.sqf";
 HandleShootMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootMissiles.sqf";
 IsArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsArtillery.sqf";
+IsMobileArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsMobileArtillery.sqf"; //--- Ray 2026-06-29: TRUE only for tracked/wheeled SELF-PROPELLED arty (GRAD/MLRS), FALSE for static towed/mortar emplacements. AICOM fields/fires SPG only.
 MarkerUpdate = Compile preprocessFileLineNumbers "Common\Common_MarkerUpdate.sqf";
 WFBE_CL_MarkerLoop = Compile preprocessFileLineNumbers "Common\Common_MarkerLoop.sqf"; // Marty: PERF1 consolidated client marker loop (started by the first MarkerUpdate registration).
 PlaceNear = Compile preprocessFileLineNumbers "Common\Functions\Common_PlaceNear.sqf";

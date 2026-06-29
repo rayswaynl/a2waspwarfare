@@ -590,16 +590,31 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 			if (!isNil "_artyClasses" && {count _artyClasses > 0}) then {
 				//--- Entries are FAMILY arrays ([['M119_US_EP1'],['M252_US_EP1'],...]): pass a
 				//--- CLASSNAME on, or ConstructDefense's createVehicle throws a type error that
-				//--- kills the whole supervisor script. Family _artyBuilt, scanning past empties.
-				_i = _artyBuilt;
+				//--- kills the whole supervisor script.
+				//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: the AI may field only TRACKED/WHEELED self-propelled
+				//--- artillery - NO static towed howitzers (D30/M119) or mortar emplacements (2b14/M252). Those
+				//--- occupy ARTILLERY_CLASSNAMES indices 0/1 (StaticWeapon); the SPG (GRAD/MLRS) is a later index.
+				//--- Scan ALL families and accept the FIRST class that is a self-propelled hull (Tank/Car/Wheeled_APC/
+				//--- Tracked_APC and NOT StaticWeapon). If the side has no SPG class, build nothing - a static gun is
+				//--- never created for the AI. A2-OA-safe: string-form isKindOf on the classname (idiom: AwardBounty.sqf:34).
+				_i = 0;
 				while {_i < count _artyClasses && {_defClass == ""}} do {
+					private ["_cand","_isSP"];
 					_fam = _artyClasses select _i;
+					_cand = "";
 					if (typeName _fam == "ARRAY") then {
-						if (count _fam > 0) then {_defClass = _fam select 0};
+						if (count _fam > 0) then {_cand = _fam select 0};
 					} else {
-						_defClass = _fam;
+						_cand = _fam;
+					};
+					if (_cand != "" && {isClass (configFile >> "CfgVehicles" >> _cand)}) then {
+						_isSP = ((_cand isKindOf "Tank") || (_cand isKindOf "Car") || (_cand isKindOf "Wheeled_APC") || (_cand isKindOf "Tracked_APC")) && {!(_cand isKindOf "StaticWeapon")};
+						if (_isSP) then {_defClass = _cand};
 					};
 					_i = _i + 1;
+				};
+				if (_defClass == "") then {
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
 			if (_defClass != "") then {

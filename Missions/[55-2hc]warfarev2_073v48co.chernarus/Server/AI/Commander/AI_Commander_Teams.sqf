@@ -295,6 +295,23 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith {};
 
+	//--- Ray 2026-06-29 NO STATICS / NO WEAPON TEAMS: strip every eligible template that contains a StaticWeapon
+	//--- (a towed gun, a mortar emplacement, or any crew-served static) so the AI NEVER founds a static gun or a
+	//--- weapon team. The AI may field only TRACKED/WHEELED self-propelled artillery (GRAD/MLRS), which are vehicle
+	//--- hulls (not StaticWeapon) and survive this filter. GUARDRAIL: if stripping would EMPTY the set, keep the
+	//--- original (so founding is never starved) - in practice infantry/vehicle templates carry no statics, so this
+	//--- only removes the rare weapon-team group. A2-OA-safe: string-form isKindOf on the template classnames.
+	private ["_eligNoStatic","_swEi","_swHas"];
+	_eligNoStatic = [];
+	{
+		_swEi = _x;
+		_swHas = false;
+		{ if ((typeName _x == "STRING") && {_x isKindOf "StaticWeapon"}) exitWith {_swHas = true} } forEach (_templates select _swEi);
+		if (!_swHas) then {_eligNoStatic set [count _eligNoStatic, _swEi]};
+	} forEach _eligible;
+	if (count _eligNoStatic > 0) then {_eligible = _eligNoStatic};
+	if (count _eligible == 0) exitWith {};
+
 	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
 	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
 	//--- air factory. Mirror AI_Commander_Produce.sqf:47-52: until the side holds >= WFBE_C_AICOM_AIR_MIN_TOWNS
@@ -348,8 +365,27 @@ if (count _live > 0) then {
 	//--- self-corrects - when the battery dies the count drops and arty is re-admitted next cycle.
 	private ["_artyCap","_artyCls","_artyAlive","_eligNoArty","_hasArty","_ei"];
 	_artyCap = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_MAX", 1];
+	//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: build the arty-class list from THIS side's ARTILLERY_CLASSNAMES,
+	//--- keeping ONLY tracked/wheeled self-propelled hulls (GRAD/MLRS/RM70/M1129) and dropping every static
+	//--- towed gun (D30/M119) and mortar (2b14/M252). Replaces the old hardcoded ["MLRS","MLRS_DES_EP1",
+	//--- "GRAD_RU","GRAD_TK_EP1"] literal (which missed GRAD_CDF/RM70_ACR/M1129 + only RU/TK GRAD variants),
+	//--- so the ARTY_MAX cap AND the FORCED-ARTY guarantee below now track the lone SPG battery for every
+	//--- faction. A2-OA-safe: string-form isKindOf on the classname (idiom: AwardBounty.sqf:34).
+	_artyCls = [];
+	{
+		private ["_fam2","_aCls"];
+		_fam2 = _x;
+		{
+			_aCls = _x;
+			if ((typeName _aCls == "STRING") && {_aCls != ""} && {isClass (configFile >> "CfgVehicles" >> _aCls)}) then {
+				if (((_aCls isKindOf "Tank") || (_aCls isKindOf "Car") || (_aCls isKindOf "Wheeled_APC") || (_aCls isKindOf "Tracked_APC")) && {!(_aCls isKindOf "StaticWeapon")}) then {
+					if (!(_aCls in _artyCls)) then {_artyCls set [count _artyCls, _aCls]};
+				};
+			};
+		} forEach (if (typeName _fam2 == "ARRAY") then {_fam2} else {[_fam2]});
+	} forEach (missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_CLASSNAMES", _sideText], []]);
+	if (count _artyCls == 0) then {_artyCls = ["MLRS","MLRS_DES_EP1","GRAD_RU","GRAD_TK_EP1","GRAD_CDF","RM70_ACR","M1129_MC_EP1"]}; //--- fallback SPG superset if the side arty config is missing (never a static class).
 	if (_artyCap > 0) then {
-		_artyCls = ["MLRS","MLRS_DES_EP1","GRAD_RU","GRAD_TK_EP1"];
 		_artyAlive = 0;
 		{
 			if (alive _x && {(typeOf _x) in _artyCls}) then {
