@@ -44,7 +44,7 @@ if (isNil "mouseX") then {mouseX = 0.5};
 if (isNil "mouseY") then {mouseY = 0.5};
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
-         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture"];
+         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture","_disbandArm"];
 
 _display = _this select 0;
 _map = _display displayCtrl 14002;
@@ -65,6 +65,7 @@ lbSetCurSel [14640, 0];
 
 _armed = "";
 _lastSend = -1000;
+_disbandArm = -1000;        //--- player-commander DISBAND failsafe: 2-click-arm timestamp (claude-gaming 2026-06-30).
 _lastState = -1;        //--- 0 = take-command, 1 = war room, -1 = uninitialised (force first toggle).
 _lastRosterHash = "";
 _lastEcon = "";
@@ -74,7 +75,7 @@ activeAnimMarker = false;
 
 //--- All war-room controls (shown only in the commander STATE B). Roster, order buttons, request combo+label, lines.
 private "_warCtrls";
-_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14610,14611,14640,14641,14642,14690,14691];
+_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14626,14610,14611,14640,14641,14642,14690,14691];
 //--- STATE-A (NOT commander) advisory controls: the live AI-intent readout + the PUSH/HOLD posture nudge. Shown
 //--- only when the AI runs the side (so the nudge actually bites the brain) - hidden in STATE B.
 private "_adviseCtrls";
@@ -447,6 +448,25 @@ while {alive player && dialog} do {
 				hintSilent parseText (format ["<t color='#A0E060'>Prioritising %1 production.</t>", _reqTypes select _rs]);
 			} else {
 				hintSilent parseText "<t color='#F8D664'>Orders on cooldown.</t>";
+			};
+		};
+
+		//--- ----- DISBAND ALL AI TEAMS (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE, two-click confirm.
+		//--- Server re-validates a human commander + enforces the 15-min per-side cooldown; the HC deletes each team
+		//--- only when no player is within SAFE_DIST and it is not in combat (no vanish-in-view). -----
+		if (MenuAction == 745) then {
+			MenuAction = -1;
+			if (!_isCmd) then {
+				hintSilent parseText "<t color='#F8D664'>Only the commander can disband AI teams.</t>";
+			} else {
+				if ((_now - _disbandArm) <= 5) then {
+					_disbandArm = -1000;
+					["RequestSpecial", ["aicom-team-disband", sideJoined]] Call WFBE_CO_FNC_SendToServer;
+					hintSilent parseText "<t color='#F89060'>Disband order sent - all AI field teams will stand down where safe.</t>";
+				} else {
+					_disbandArm = _now;
+					hintSilent parseText "<t color='#F85050'>DISBAND ALL AI teams? Click again within 5s to confirm. (~15-min cooldown)</t>";
+				};
 			};
 		};
 

@@ -335,6 +335,13 @@ with missionNamespace do {
 		if (isNil "WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX")      then {WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX      = 2};
 		if (isNil "WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO")     then {WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO     = 3};
 		if (isNil "WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE") then {WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE = 5};
+		//--- D2 (cmdcon28, Ray 2026-06-30): the STALL_OVERRIDE above was structurally DEAD (its counter only built while
+		//--- town-dominant-but-strength-deficit, but the override gate required strength-dominance - mutually exclusive;
+		//--- live: a side stalled 17x, 0 round-enders). Fixed in AI_Commander_Strategy.sqf. STALL_TOWN_RATIO = how many x
+		//--- the enemy's towns a side must hold to accrue the override streak (was a hard-coded 2). OVERRIDE_ENABLE = master
+		//--- on/off for a clean revert. NOTE: at 2x, an 11-6 board (1.83x) does NOT trigger - drop to ~1.7 to close tighter games.
+		if (isNil "WFBE_C_AICOM_STALL_TOWN_RATIO")        then {WFBE_C_AICOM_STALL_TOWN_RATIO        = 2};
+		if (isNil "WFBE_C_AICOM_STALL_OVERRIDE_ENABLE")   then {WFBE_C_AICOM_STALL_OVERRIDE_ENABLE   = 1};
 		//--- B755 (Ray 2026-06-25) MECHANIZED-INFANTRY BIAS: seat infantry in ARMED vehicles rather than founding pure-foot teams. Multiplies the class-bucket roll toward mechanized/armor (bucket 2 = IFV/APC that carry their own dismounts) + motorized (bucket 1). 1.0 = no-op. Self-gating (empty buckets zero out, so foot is never starved when no factory exists).
 		if (isNil "WFBE_C_AICOM_MECH_BIAS")  then {WFBE_C_AICOM_MECH_BIAS  = 1.5}; //--- B756 (Ray 2026-06-26): trimmed 2.0->1.5 after the b755 soak (heavy OVERTOOK infantry 38% vs 32%; want mech prominent, not infantry suppressed). Pairs with WFBE_C_AICOM_DISMOUNT_BIAS to favour IFV/APC dismount-carriers over bare MBT within the heavy pick.
 		if (isNil "WFBE_C_AICOM_MOTOR_BIAS") then {WFBE_C_AICOM_MOTOR_BIAS = 1.4};
@@ -507,6 +514,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_DISBAND_INTERVAL") then {WFBE_C_AICOM_DISBAND_INTERVAL = 300};//--- seconds between disband passes (at most ONE team retired per pass) - long for immersion.
 	if (isNil "WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR") then {WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR = 2};//--- never disband below this many FOOT teams/side (keep a footprint). 3->2: with the 8-team cap a side rarely holds >3 foot teams so disband never fired.
 	if (isNil "WFBE_C_AICOM_DISBAND_VIEW_DIST") then {WFBE_C_AICOM_DISBAND_VIEW_DIST = 1500};//--- Ray 2026-06-28: NEVER retire a foot team with a human player within this many m (immersion - no team vanishing in a player's view). Proximity proxy for line-of-sight.
+	if (isNil "WFBE_C_AICOM_DISBAND_COOLDOWN") then {WFBE_C_AICOM_DISBAND_COOLDOWN = 900};//--- claude-gaming 2026-06-30 (Ray): PLAYER-COMMANDER disband-ALL failsafe (Command Console button) - min seconds between full AI-field-team disbands, per side. Reuses the wfbe_aicom_disband path; the HC deletes each team only when no player is within DISBAND_SAFE_DIST and it is not in combat (no vanish-in-view).
 	if (isNil "WFBE_C_AICOM2_SUPPORT_PUSH")    then {WFBE_C_AICOM2_SUPPORT_PUSH    = 1};  //--- M5: 1 = when humans are on the side, bias the fist toward where they're massed (support their push). 0 = always auto-pick the front.
 	if (isNil "WFBE_C_AICOM2_SUPPORT_DIVISOR") then {WFBE_C_AICOM2_SUPPORT_DIVISOR = 50}; //--- M5: strength of the pull toward the human axis (smaller = stronger pull).
 	if (isNil "WFBE_C_AICOM2_FOCUS_TTL")       then {WFBE_C_AICOM2_FOCUS_TTL       = 600};//--- M4: s a commander FOCUS town stays in force before it auto-clears (so a forgotten focus doesn't tunnel-vision the AI forever).
@@ -674,6 +682,13 @@ with missionNamespace do {
 	//--- grinding one unreachable/unflippable town forever (re-issue kept re-picking the same town). Guardrail:
 	//--- if every candidate is blacklisted the list is cleared so the team always gets a target (never idles).
 	if (isNil "WFBE_C_AICOM_STUCK_ABANDON") then {WFBE_C_AICOM_STUCK_ABANDON = 4};
+	//--- D1 (cmdcon28, Ray 2026-06-30): PER-SIDE unreachable-town blacklist (AI_Commander_AssignTowns). STUCK_ABANDON
+	//--- above is PER-TEAM; fresh teams kept being thrown at the same A2-pathfinder-unreachable town (overnight soak:
+	//--- Stary Sobor = 105 dispatches). When SIDE_ABANDON different teams abandon the SAME town, it's blacklisted for
+	//--- the WHOLE side for SIDE_BLACKLIST_COOLDOWN s. Flag-gated, reversible, A2-safe.
+	if (isNil "WFBE_C_AICOM_SIDE_BLACKLIST")          then {WFBE_C_AICOM_SIDE_BLACKLIST = 1};            //--- 1=on; 0=off (legacy per-team only)
+	if (isNil "WFBE_C_AICOM_SIDE_ABANDON")            then {WFBE_C_AICOM_SIDE_ABANDON = 3};              //--- # different-team abandons of one town -> side-wide blacklist
+	if (isNil "WFBE_C_AICOM_SIDE_BLACKLIST_COOLDOWN") then {WFBE_C_AICOM_SIDE_BLACKLIST_COOLDOWN = 900}; //--- s a side-blacklisted town stays excluded before a retry
 	//--- CAPTURE_MAXPASSES: max consecutive depot-hold passes (Common_RunCommanderTeam CAUSE-3) with
 	//--- res-near==0 AND the town still NOT ours before the team RELEASES the contested/uncapturable depot
 	//--- (same on-capture re-task idiom -> AssignTowns retargets) instead of holding the center forever.

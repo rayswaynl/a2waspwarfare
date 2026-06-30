@@ -578,7 +578,15 @@ if (!isNull _enemyHQ && {alive _enemyHQ} && {_myTowns > _enemyTowns}) then {
 	_rEnEff = _enStr + (_enemyTowns * _rTownStr);
 	if (_rMyEff >= _rEnEff) then {
 		if ((_enemyTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 2])) || {_myTowns >= (_enemyTowns * (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 3]))}) then {_strikeOn = true};
-		if ((_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])) then {_strikeOn = true};
+	};
+	//--- D2 (cmdcon28): STALL-OVERRIDE now fires OUTSIDE the _rMyEff>=_rEnEff gate (was inside, which made it dead -
+	//--- the streak only builds while town-dominant-but-strength-deficit, exactly the case that gate excluded). The
+	//--- override breaks a frozen front the territorial leader can't convert (assault-reach ceiling). The streak only
+	//--- accrues at >= STALL_TOWN_RATIO x towns and we're inside _myTowns>_enemyTowns, so it can never fire from behind.
+	//--- Master flag WFBE_C_AICOM_STALL_OVERRIDE_ENABLE (default 1) for a clean one-switch revert.
+	if (((missionNamespace getVariable ["WFBE_C_AICOM_STALL_OVERRIDE_ENABLE", 1]) > 0) && {(_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])}) then {
+		_strikeOn = true;
+		if (!_wasStrike) then {diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE_STALL_OVERRIDE|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _rMyEff + "|enEff=" + str _rEnEff)};
 	};
 };
 //--- B752 (Ray 2026-06-25): STICKY STRIKE. The recall gate used RAW maneuver _myStr, which dips below the concentrated
@@ -730,9 +738,18 @@ diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|
 //--- and is not under HQ strike, so future soak ticks make the freeze greppable and we can size the real
 //--- fix (territory-weighted aggression / garrison-vs-maneuver strength split - see B57-SOAK-PROPOSALS.md).
 //--- A2-OA-safe: pure diag_log, all operands already computed this tick; no sim/distance-gating; no antistack.
-if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * 2)} && {_posture != "PRESS"} && {!_strikeOn}) then {
-	diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
-	_logik setVariable ["wfbe_aicom_stall_streak", (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + 1]; //--- B754 (Ray 2026-06-25): count consecutive dominant-but-passive stalls; the HQ-strike relative gate uses this for a stall-triggered override. (No reset needed: the override only re-fires while still effective-strength-dominant, which is exactly when we want to close.)
+//--- D2 (cmdcon28, Ray 2026-06-30): ROUND-ENDER STALL-OVERRIDE FIX. The override counter must build whenever a side
+//--- holds a sustained TOWN lead (>= STALL_TOWN_RATIO x enemy) and is NOT already striking - REGARDLESS of posture.
+//--- Old bug: gated on (_posture != "PRESS"), so it reset on every PRESS tick AND only counted myEff<enEff stalls, which
+//--- the override gate (myEff>=enEff, line ~579) then excluded - making the override structurally unreachable (live: EAST
+//--- stalled 17x, 0 round-enders). Now: count sustained territory dominance; emit the STALL telemetry only for the
+//--- PASSIVE subset (posture != PRESS) so the greppable signal keeps its original "dominant but idle" meaning.
+private "_stallRatio"; _stallRatio = missionNamespace getVariable ["WFBE_C_AICOM_STALL_TOWN_RATIO", 2];
+if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeOn}) then {
+	_logik setVariable ["wfbe_aicom_stall_streak", (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + 1];
+	if (_posture != "PRESS") then {
+		diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]));
+	};
 } else {
 	_logik setVariable ["wfbe_aicom_stall_streak", 0];
 };

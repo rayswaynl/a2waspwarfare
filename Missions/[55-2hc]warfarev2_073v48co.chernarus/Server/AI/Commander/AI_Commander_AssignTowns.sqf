@@ -236,6 +236,27 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											_team setVariable ["wfbe_aicom_blacklist", _abKeep];
 											_team setVariable ["wfbe_aicom_stuckstrikes", 0];
 											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|cooldown=" + str _abCd);
+											//--- D1 (cmdcon28): tally this abandon SIDE-WIDE. After WFBE_C_AICOM_SIDE_ABANDON different-team
+											//--- abandons of the SAME town, blacklist it for the WHOLE side (read by the selector above) so no more
+											//--- teams are thrown at an A2-unreachable town. A2-safe: lists of [town,count] / [town,expiry] on _logik.
+											if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
+												private ["_sba","_newSba","_sFound","_sCnt"];
+												_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
+												_newSba = []; _sFound = false; _sCnt = 0;
+												{ if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]} } forEach _sba;
+												if (!_sFound) then {_sCnt = 1; _newSba set [count _newSba, [_goto, 1]]};
+												_logik setVariable ["wfbe_aicom_side_abandons", _newSba];
+												if (_sCnt >= (missionNamespace getVariable ["WFBE_C_AICOM_SIDE_ABANDON", 3])) then {
+													private ["_sbl","_sblKeep","_sblCd"];
+													_sblCd = missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST_COOLDOWN", 900];
+													_sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
+													_sblKeep = [];
+													{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_sblKeep set [count _sblKeep, _x]} } forEach _sbl;
+													_sblKeep set [count _sblKeep, [_goto, time + _sblCd]];
+													_logik setVariable ["wfbe_aicom_side_blacklist", _sblKeep];
+													diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SIDE_BLACKLIST|town=" + (_goto getVariable ["name","town"]) + "|abandons=" + str _sCnt + "|cooldown=" + str _sblCd);
+												};
+											};
 										};
 									} else {
 										//--- progressing, arrived, or in contact: refresh the breadcrumb and
@@ -306,6 +327,17 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_blTowns = [];
 					{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_blKeep set [count _blKeep, _x]; _blTowns set [count _blTowns, (_x select 0)]} } forEach _blList;
 					_team setVariable ["wfbe_aicom_blacklist", _blKeep];
+					//--- D1 (cmdcon28, Ray 2026-06-30): PER-SIDE unreachable-town blacklist. The per-team list above
+					//--- only stops THIS team re-picking a town it abandoned - but fresh teams kept being thrown at the
+					//--- same A2-pathfinder-unreachable town (the overnight soak: Stary Sobor ate 105 dispatches). Once
+					//--- WFBE_C_AICOM_SIDE_ABANDON different teams abandon a town (tallied at the TARGET_ABANDON below),
+					//--- it lands on the side logic's wfbe_aicom_side_blacklist; merge those into _blTowns so the WHOLE
+					//--- side stops sending teams there. The empty-pool guardrail below clears _blTowns (incl these) so a
+					//--- team is never left idle. Flag-gated WFBE_C_AICOM_SIDE_BLACKLIST (default on), reversible. A2-safe.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
+						private "_sbl"; _sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {!((_x select 0) in _blTowns)}) then {_blTowns set [count _blTowns, (_x select 0)]} } forEach _sbl;
+					};
 					_uncapturedF = _uncaptured - _blTowns;
 					if (count _uncapturedF == 0) then {
 						//--- every uncaptured town is blacklisted: clear it so this team is never left without a target.

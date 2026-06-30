@@ -2279,6 +2279,24 @@ class RscMenu_Command {
 			h = 0.070000;
 			size = 0.027;
 		};
+		/* DISBAND AI TEAMS (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - flags every AI field team for
+		   disband (the proven wfbe_aicom_disband path; the HC deletes each only when no player is within SAFE_DIST and it
+		   is not in COMBAT, so nothing vanishes in view). Server enforces a 15-min per-side cooldown + a human-commander
+		   check. Two-click confirm client-side. Bottom-left, clear of Back/Exit (x>0.89). show=0 STRUCTURAL GUARD -> only
+		   shown in STATE B (commander); added to _warCtrls in GUI_Menu_Command.sqf. Maroon = destructive. MenuAction 745. */
+		class CA_Cmd_Disband : RscButton_Main {
+			idc = 14626;
+			x = 0.00561695;
+			y = 0.953825;
+			w = 0.224000;
+			h = 0.040000;
+			show = 0;
+			text = "DISBAND AI TEAMS";
+			action = "MenuAction = 745";
+			tooltip = "FAILSAFE: stand down ALL AI field teams (the AI re-founds fresh). ~15-min cooldown. Click twice to confirm.";
+			colorBackground[] = {0.45, 0.05, 0.1, 0.85};
+			colorBackgroundActive[] = {0.7, 0.1, 0.15, 1};
+		};
 		/* Back */
 		class Back_Button : RscButton_Back {
 			x = 0.892507;

@@ -420,6 +420,35 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	case "aicom-team-disband": {
+		//--- COMMAND CONSOLE (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - disband ALL of the side's AI
+		//--- field teams at once. Unlike the posture/fieldorder NUDGES (which gate on !_pHuman = AI-runs), this is a
+		//--- DIRECT action FOR the human commander, so it REQUIRES a human commander on the side. Per-side 15-min
+		//--- cooldown. We only FLAG each team (wfbe_aicom_disband, the proven retire path); the HC-local executor in
+		//--- Common_RunCommanderTeam.sqf deletes a team's units ONLY when no player is within DISBAND_SAFE_DIST and it
+		//--- is not in COMBAT - so nothing vanishes in a player's view (honours the no-vanish-in-view rule). A2-OA-safe:
+		//--- object getVariable [k,d] (side logic), group setVariable [k,v,true] (no A3-only group getVariable [k,d]).
+		private ["_dSide","_dLogik","_dCmd","_dHuman","_dLast","_dCool","_dTeams","_dN"];
+		_dSide = _args select 1;
+		if (_dSide in [west, east]) then {
+			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _dLogik) then {
+				_dCmd = (_dSide) Call WFBE_CO_FNC_GetCommanderTeam; _dHuman = false;
+				if (!isNull _dCmd) then {if (isPlayer (leader _dCmd)) then {_dHuman = true}};
+				_dLast = _dLogik getVariable ["wfbe_aicom_last_disband", -1e10];
+				_dCool = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_COOLDOWN", 900];
+				if (_dHuman && {(time - _dLast) >= _dCool}) then {
+					_dLogik setVariable ["wfbe_aicom_last_disband", time, true];
+					_dTeams = _dLogik getVariable ["wfbe_teams", []];
+					_dN = 0;
+					{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _dN = _dN + 1} } forEach _dTeams;
+					diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|flagged=" + str _dN + "|teams=" + str (count _dTeams));
+				} else {
+					diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|cdLeft=" + str (_dCool - (time - _dLast)));
+				};
+			};
+		};
+	};
 	case "aicom-ai-command": {
 		//--- COMMAND CONSOLE (claude-gaming 2026-06-29): the human commander toggled SQUAD-COMMAND MODE from the war
 		//--- room - "ON" (delegate squad MANEUVER to the AI: it runs Strategy + AssignTowns UNDER the human while the

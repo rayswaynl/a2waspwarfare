@@ -617,7 +617,7 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 //--- loop keeps RETRYING past that window: it verifies an ACTUAL own-side "Headquarters" marker exists near the
 //--- live wfbe_hq position; if not, it CLEARS the stale claim flag and re-fires Init_BaseStructure so the draw
 //--- runs again. It stops the instant the HQ marker is present (a healthy join sends ZERO re-fires). Idempotent
-//--- via the same wfbe_b62_marker_built compare-and-claim. A2-OA-1.64 safe: allMapMarkers / markerType /
+//--- via the same wfbe_b62_marker_built compare-and-claim. A2-OA-1.64 safe (cmdcon28: dropped allMapMarkers — Arma-3-only): markerType /
 //--- markerPos / getPos / distance2D-free (uses distance on getPos) / getVariable / setVariable; no A3 commands.
 [] spawn {
 	private ["_n","_done","_hqObj","_hqPos","_hqPosValid","_found","_mPos","_x","_grace"];
@@ -647,7 +647,7 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 					_mPos = markerPos _x;
 					if ((_mPos distance _hqPos) < 150) then {_found = true};
 				};
-			} forEach allMapMarkers;
+			} forEach (if ((_hqObj getVariable ["wfbe_hq_marker_name", ""]) == "") then {[]} else {[_hqObj getVariable ["wfbe_hq_marker_name", ""]]});	//--- cmdcon28: allMapMarkers is Arma-3-only (it threw 'undefined variable' EVERY poll => 200x/join + heal never fired). A2-OA has no marker enumeration, so check the HQ's OWN stamped marker by name (markerType/markerPos are A2-valid on a named marker). _x in the body is now that one marker name.
 			if (_found) then {
 				_done = true;
 				if (_n > 0) then { diag_log format ["[WFBE][cmdcon26 HQ-MARK] own HQ marker present after %1 poll(s); heal complete.", _n]; };
