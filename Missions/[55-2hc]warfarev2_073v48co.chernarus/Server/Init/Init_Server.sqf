@@ -906,7 +906,7 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
-[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default ON unless configured off)
+[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default OFF unless configured on)
 
 //--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
