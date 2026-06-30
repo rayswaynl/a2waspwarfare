@@ -16,7 +16,7 @@
 	  - ChangeSideSupply         (Common\Init\Init_Common.sqf line 19): [_side,_amount,_reason]
 	  - ChangeTeamFunds          (Common\Init\Init_Common.sqf line 20): [_team,_amount]
 	  - WFBE_HEADLESSCLIENTS_ID  (Init_Server.sqf line 147): array of HC logic groups
-	  - WFBE_EASTEAITEAMTEMPLATES: missionNamespace variable (str east == "EAST")
+	  - WFBE_<SIDE>AITEAMTEMPLATES: read via Format["WFBE_%1AITEAMTEMPLATES", str east] (== "EAST")
 	  - ATTACK_WAVE_DETAILS publicVariable: triggers AttackWave.sqf EH on all machines ([side,modifier,durationSecs])
 
 	A2-dialect: private ["_x",...], forEach, _arr set [count _arr, _x], no pushBack/params[/findIf/select{}.
@@ -112,7 +112,7 @@ while {!WFBE_GameOver && {LS_WaveNumber < LS_MaxWaves} && {LS_Tickets > 0}} do {
 
 	//--- Gather east AI team templates.
 	private ["_eastTemplates"];
-	_eastTemplates = missionNamespace getVariable ["WFBE_EASTEAITEAMTEMPLATES", []];
+	_eastTemplates = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", str east], []]; //--- matches the framework's Format["WFBE_%1AITEAMTEMPLATES",_side] storage
 	if (isNil "_eastTemplates") then {_eastTemplates = []};
 
 	//--- Number of groups to spawn this wave.
@@ -196,10 +196,10 @@ while {!WFBE_GameOver && {LS_WaveNumber < LS_MaxWaves} && {LS_Tickets > 0}} do {
 		//--- Count living east AI within 500m of the hold position.
 		private ["_hostileNear","_uu"];
 		_hostileNear = 0;
-		_uu = (units east) + [];
+		_uu = allUnits; //--- A2: 'units east' is invalid (units takes a group/object); iterate allUnits + filter by side
 		{
 			_u = _x;
-			if (alive _u && {!isPlayer _u} && {(_u distance LS_HoldPos) < 500}) then {
+			if (alive _u && {side _u == east} && {!isPlayer _u} && {(_u distance LS_HoldPos) < 500}) then {
 				_hostileNear = _hostileNear + 1;
 			};
 		} forEach _uu;
@@ -238,5 +238,5 @@ if (LS_Tickets <= 0) then {
 	WFBE_GameOver = true;
 	gameOver = true;
 	sleep 5;
-	failMission "END1";
+	endMission "END1"; //--- WIN: endMission (victory debrief), not failMission
 };
