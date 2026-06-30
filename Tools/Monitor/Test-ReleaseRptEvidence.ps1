@@ -6,6 +6,7 @@
 #
 # Examples:
 #   .\Test-ReleaseRptEvidence.ps1 -RptPath C:\WASP\rpt\server.RPT -RequireServerDebug -RequirePr122Markers -RequireAicomTelemetry
+#   .\Test-ReleaseRptEvidence.ps1 -RptPath @($server,$hc1,$hc2) -RequireHcRegistry -OutputSummaryJson C:\WASP\rpt\evidence-summary.json
 #   .\Test-ReleaseRptEvidence.ps1 -RptPath @($server,$hc1,$hc2,$client) -OutputJson C:\WASP\rpt\evidence.json
 #   .\Test-ReleaseRptEvidence.ps1 -RptPath @($server,$hc1,$hc2) -OutputSummaryJson C:\WASP\rpt\evidence-summary.json
 
@@ -17,6 +18,7 @@ param(
     [switch] $RequireServerDebug,
     [switch] $RequirePr122Markers,
     [switch] $RequireAicomTelemetry,
+    [switch] $RequireHcRegistry,
     [string] $OutputJson,
     [string] $OutputSummaryJson
 )
@@ -51,6 +53,12 @@ $markerPatterns = @(
     @{ Name = 'combat_status'; Pattern = 'COMBATSTAT' },
     @{ Name = 'team_founded'; Pattern = 'TEAM_FOUNDED' },
     @{ Name = 'assault_dispatch'; Pattern = 'ASSAULT_DISPATCH' },
+    @{ Name = 'hc_preseat'; Pattern = 'HCSIDE\|v1\|preseat' },
+    @{ Name = 'hc_reseat'; Pattern = 'HCSIDE\|v1\|reseat' },
+    @{ Name = 'hc_connect'; Pattern = 'HCSIDE\|v1\|connect\|' },
+    @{ Name = 'hc_group_civilian'; Pattern = 'HCSIDE\|v1\|connect\|.*groupSide=civilian' },
+    @{ Name = 'hc_register_true'; Pattern = 'HCSIDE\|v1\|connect\|.*register=true' },
+    @{ Name = 'hc_connect_skip'; Pattern = 'HCSIDE\|v1\|connect-skip' },
     @{ Name = 'hc_control'; Pattern = 'HC-AI-Control|HCDELEG|HCDISPATCH|Init_HC\.sqf' },
     @{ Name = 'client_init'; Pattern = 'Init_Client\.sqf: Client initialization (begins|ended)' },
     @{ Name = 'jip_client_health'; Pattern = 'CLIENTTEAMS|CLIENTROSTER|\[WFBE\]\[B56 JIP-FIX\]' },
@@ -208,7 +216,7 @@ $requirements = New-Object System.Collections.ArrayList
 [void]$requirements.Add((New-Object psobject -Property @{
     name = 'pr122_guard_markers'
     required = [bool]$RequirePr122Markers
-    passed = (-not $RequirePr122Markers -or ($aggregateMarkers['pr122_editor_slot_audit'] -gt 0 -and $aggregateMarkers['pr122_disconnect_retry'] -gt 0))
+    passed = (-not $RequirePr122Markers -or ($aggregateMarkers['pr122_editor_slot_audit'] -gt 0 -and $aggregateMarkers['pr122_disconnect_retry'] -gt 0 -and $aggregateMarkers['pr122_clientupgrade_guard'] -gt 0))
     detail = "editor_slot=$($aggregateMarkers['pr122_editor_slot_audit']); disconnect_retry=$($aggregateMarkers['pr122_disconnect_retry']); clientupgrade_guard=$($aggregateMarkers['pr122_clientupgrade_guard'])"
 }))
 [void]$requirements.Add((New-Object psobject -Property @{
@@ -216,6 +224,12 @@ $requirements = New-Object System.Collections.ArrayList
     required = [bool]$RequireAicomTelemetry
     passed = (-not $RequireAicomTelemetry -or ($aggregateMarkers['aicom_event'] -gt 0 -and $aggregateMarkers['commander_status'] -gt 0))
     detail = "aicom_event=$($aggregateMarkers['aicom_event']); commander_status=$($aggregateMarkers['commander_status']); team_founded=$($aggregateMarkers['team_founded'])"
+}))
+[void]$requirements.Add((New-Object psobject -Property @{
+    name = 'hc_registry'
+    required = [bool]$RequireHcRegistry
+    passed = (-not $RequireHcRegistry -or ($aggregateMarkers['hc_connect'] -gt 0 -and $aggregateMarkers['hc_group_civilian'] -gt 0 -and $aggregateMarkers['hc_register_true'] -gt 0 -and $aggregateMarkers['hc_connect_skip'] -eq 0))
+    detail = "connect=$($aggregateMarkers['hc_connect']); group_civilian=$($aggregateMarkers['hc_group_civilian']); register_true=$($aggregateMarkers['hc_register_true']); connect_skip=$($aggregateMarkers['hc_connect_skip'])"
 }))
 
 $requiredFailures = @($requirements | Where-Object { $_.required -and -not $_.passed })
