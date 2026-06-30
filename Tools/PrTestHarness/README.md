@@ -135,6 +135,19 @@ and Takistan coverage plus the round-6 AICOM, JIP, HC, town-cleanup,
 WDDM/static/artillery and supply evidence tokens. It exits non-zero until the
 bundle is complete.
 
+To produce a portable release/wiki summary packet from the same scorer output:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 `
+  -RptDirectory "C:\WASP\rpts\release-candidate" -Recurse `
+  -ExpectedMarker "WASPRELEASE|v1|candidate=release-command-center-20260630" `
+  -OutDirectory "C:\WASP\rpts\release-candidate\summary" -Force
+```
+
+It writes `release-rpt-summary.json` and `release-rpt-summary.md` without
+copying raw RPT lines. Like the scorer, it exits non-zero until the runtime
+gates pass; add `-NoFail` when producing an incomplete diagnostic packet.
+
 ## Shipping Boundary
 
 Do not commit generated local mission folders or harness overlays into a release
