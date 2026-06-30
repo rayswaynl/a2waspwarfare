@@ -49,6 +49,16 @@ function Get-WindowedRpt {
     for ($i = $all.Count - 1; $i -ge 0; $i--) {
         if ($all[$i] -match $WindowMarker) { $start = $i; break }
     }
+
+    # The current mission writes a three-line startup banner. If the last marker
+    # is Build/LOG CONTENT, include the preceding Mission Name so evidence keeps
+    # the full map/build/logging header.
+    if ($WindowMarker -eq 'MISSINIT|## (Mission Name|Build|LOG CONTENT)' -and $all[$start] -match '## (Build|LOG CONTENT)') {
+        for ($j = $start; $j -ge ([Math]::Max(0, $start - 20)); $j--) {
+            if ($all[$j] -match '## Mission Name') { $start = $j; break }
+        }
+    }
+
     $window = if ($start -gt 0) { $all[$start..($all.Count - 1)] } else { $all }
 
     if ($Pattern) { $window = @($window | Where-Object { $_ -match $Pattern }) }
