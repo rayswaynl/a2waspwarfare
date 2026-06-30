@@ -530,6 +530,44 @@ while {!WFBE_GameOver && _alive} do {
 			};
 		} forEach _vehicles;
 	};
+
+	//--- AICOM v2 (cmdcon29, Ray): crew SELF-REPAIR of an immobilized ground vehicle. A team whose vehicle
+	//--- has a shot-out wheel/track or a blown engine (!canMove) strands the whole team (moved=0). When the
+	//--- vehicle still has a live crew, is NOT in a firefight, and no enemy is near, the crew effects a field
+	//--- repair after a short delay -> mobility restored, the team rolls again instead of lingering forever.
+	//--- HC-local (vehicles are local here). The !canMove gate is checked first, so the nearEntities threat
+	//--- scan only runs for the rare actually-immobilized vehicle.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHICLE_SELFREPAIR", 1]) > 0) then {
+		private ["_srVeh","_srSafe","_srDelay"];
+		_srSafe  = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_SAFE_DIST", 250];
+		_srDelay = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_DELAY", 30];
+		{
+			_srVeh = _x;
+			if (!isNull _srVeh && {alive _srVeh} && {local _srVeh} && {_srVeh isKindOf "LandVehicle"} && {!(canMove _srVeh)} && {({alive _x} count (crew _srVeh)) > 0}) then {
+				//--- threat present (enemy/neutral-hostile within the safe radius) or the team is fighting? stand down.
+				private ["_srThreat","_srStamp"];
+				_srThreat = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_srVeh nearEntities [["Man","LandVehicle"], _srSafe]);
+				if (_srThreat == 0 && {behaviour (leader _team) != "COMBAT"}) then {
+					_srStamp = _srVeh getVariable "wfbe_aicom_repair_at";
+					if (isNil "_srStamp") then {
+						_srVeh setVariable ["wfbe_aicom_repair_at", time];
+					} else {
+						if ((time - _srStamp) >= _srDelay) then {
+							_srVeh setDamage 0;
+							_srVeh setVariable ["wfbe_aicom_repair_at", nil];
+							diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|VEHICLE_SELFREPAIR|veh=" + (typeOf _srVeh));
+						};
+					};
+				} else {
+					//--- enemy appeared or the team engaged: cancel any in-progress repair so it must re-earn the safe window.
+					_srVeh setVariable ["wfbe_aicom_repair_at", nil];
+				};
+			} else {
+				if (!isNull _srVeh) then {_srVeh setVariable ["wfbe_aicom_repair_at", nil]};
+			};
+		} forEach _vehicles;
+	};
+
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 	//--- B36.1 (Ray 2026-06-15): PC-scale retirement. The server flags a REAR team (wfbe_aicom_disband)

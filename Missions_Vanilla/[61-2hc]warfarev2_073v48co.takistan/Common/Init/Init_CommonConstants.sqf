@@ -151,6 +151,8 @@ with missionNamespace do {
 			_blockDist = missionNamespace getVariable ["WFBE_C_GUER_FOB_TOWN_BLOCK", 600];
 			//--- never on water.
 			if (surfaceIsWater _pos) then {_blocked = true};
+			//--- qol-polish-pack: reject too-steep ground (FOB factory floats/tilts on slopes; mirrors the AI commander's isFlatEmpty gate).
+			if (!_blocked && {(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0} && {count (_pos isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then {_blocked = true};
 			//--- enemy-HELD (WEST/EAST) town within the block radius?
 			_townList = if (isNil "towns") then {[]} else {towns};
 			{
@@ -329,6 +331,10 @@ with missionNamespace do {
 		//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft (heli OR plane) so a long round can't pile up orphaned airframes.
 		if (isNil "WFBE_C_AICOM_AIR_REAP_UNCREWED") then {WFBE_C_AICOM_AIR_REAP_UNCREWED = 1};  //--- 1 = delete an alive air vehicle with no alive crew. 0 = off.
 		if (isNil "WFBE_C_AICOM_AIR_REAP_GRACE")    then {WFBE_C_AICOM_AIR_REAP_GRACE    = 45}; //--- s an aircraft must stay uncrewed before it's reaped (avoids deleting a transient bail/reseat).
+		//--- AICOM v2 (cmdcon29, Ray): crew SELF-REPAIR of an immobilized ground vehicle (shot-out wheel/track/engine -> !canMove strands the whole team, moved=0). Crew field-repairs (setDamage 0) after a safe-window delay; gated on no enemy near + not in combat. 0 = off.
+		if (isNil "WFBE_C_AICOM_VEHICLE_SELFREPAIR")   then {WFBE_C_AICOM_VEHICLE_SELFREPAIR   = 1};
+		if (isNil "WFBE_C_AICOM_SELFREPAIR_SAFE_DIST") then {WFBE_C_AICOM_SELFREPAIR_SAFE_DIST = 250}; //--- m: no non-friendly Man/LandVehicle within this radius before a repair starts or completes.
+		if (isNil "WFBE_C_AICOM_SELFREPAIR_DELAY")     then {WFBE_C_AICOM_SELFREPAIR_DELAY     = 30};  //--- s the crew must hold a safe window before the field repair completes.
 		//--- B754: also GROW the attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX) over the match so the late air push isn't throttled at the early cap. Only when a base cap > 0 exists (0 still = no cap). Effective cap = base + floor(timeRatio * BONUS).
 		if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS") then {WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS = 4};
 		//--- B754 (Ray 2026-06-25) RELATIVE ROUND-CLOSER GATE: the absolute 12-town HQ-strike gate is unreachable in a lopsided game (b753 soak: WEST held 11 vs EAST's dug-in 2, myEff 70 vs 53, never hit 12 -> 8.4h with no winner). Let a runaway leader close BELOW the absolute gate when dominant on EFFECTIVE strength AND (enemy collapsed to <= ENEMY_MAX towns OR own >= TOWN_RATIO town lead), plus a STALL_OVERRIDE after N dominant-but-passive stall ticks. Never fires while behind on towns/strength.
@@ -1094,6 +1100,15 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_UNITS_CLEAN_TIMEOUT") then {WFBE_C_UNITS_CLEAN_TIMEOUT = 60}; //--- Lifespan of a dead body.
 	if (isNil "WFBE_C_UNITS_EMPTY_TIMEOUT") then {WFBE_C_UNITS_EMPTY_TIMEOUT = 1800}; //--- Lifespan of an empty vehicle (30 minutes).
 		WFBE_C_UNITS_BODIES_TIMEOUT = 60;
+	//--- qol-polish-pack tunables --------------------------------------------------------------------------------
+	if (isNil "WFBE_C_UNITS_BODIES_PROX")      then {WFBE_C_UNITS_BODIES_PROX = 20};       //--- m: hold a corpse's deletion while a player is this close (capped at +1 timeout so a camper can't pin it forever). 0 = off (vanilla).
+	if (isNil "WFBE_C_STRUCTURES_FLAT_CHECK")  then {WFBE_C_STRUCTURES_FLAT_CHECK = 1};    //--- reject too-steep ground for player-placed base structures + GUER FOB (the AI commander already does this). 0 = off.
+	if (isNil "WFBE_C_STRUCTURES_FLAT_RADIUS") then {WFBE_C_STRUCTURES_FLAT_RADIUS = 10};  //--- isFlatEmpty footprint radius (m).
+	if (isNil "WFBE_C_STRUCTURES_FLAT_GRAD")   then {WFBE_C_STRUCTURES_FLAT_GRAD = 0.5};   //--- isFlatEmpty max gradient (lower = stricter; the AI uses 2 = lenient). Raise toward 2 if it over-blocks.
+	if (isNil "WFBE_C_AIHELI_TERRAIN_GUARD")   then {WFBE_C_AIHELI_TERRAIN_GUARD = 1};     //--- AI-heli terrain look-ahead climb (server-local helis). 1 = ON by default (changes AI flight). Set 0 to disable.
+	if (isNil "WFBE_C_AIHELI_GUARD_LOOKAHEAD") then {WFBE_C_AIHELI_GUARD_LOOKAHEAD = 250}; //--- m ahead of the heli to sample terrain.
+	if (isNil "WFBE_C_AIHELI_GUARD_CLEARANCE") then {WFBE_C_AIHELI_GUARD_CLEARANCE = 60};  //--- m minimum clearance over the terrain ahead before the heli is told to climb.
+	//-------------------------------------------------------------------------------------------------------------
 	if (isNil "WFBE_C_UNITS_PRICING") then {WFBE_C_UNITS_PRICING = 0}; //--- Price Focus. (0: Default, 1: Infantry, 2: Tanks, 3: Air).
 	if (isNil "WFBE_C_UNITS_TOWN_PURCHASE") then {WFBE_C_UNITS_TOWN_PURCHASE = 1}; //--- Allow AIs to be bought from depots.
 	if (isNil "WFBE_C_UNITS_TRACK_INFANTRY") then {WFBE_C_UNITS_TRACK_INFANTRY = 1}; //--- Track units on map (infantry).

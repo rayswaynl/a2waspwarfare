@@ -88,7 +88,7 @@ while {!WFBE_GameOver} do {
 					private ["_capSideC","_capUidC"];
 					_capSideC = _newSide;
 					{ if (isPlayer _x && {alive _x} && {side _x == _capSideC}) then {_capUidC = getPlayerUID _x; if (_capUidC != "") then {[_capUidC, WFBE_STAT_CAPTURES_CAMP, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
-					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]);
+					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]); _flag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bare setFlagTexture is local-only; bake into object init so late joiners replay it)
 
 					[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;
 				};

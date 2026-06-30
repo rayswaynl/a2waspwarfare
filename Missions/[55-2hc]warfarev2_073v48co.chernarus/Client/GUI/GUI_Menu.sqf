@@ -305,5 +305,13 @@ while {alive player && dialog} do {
 		};
 	};
 
+	// qol-polish-pack: friendly name-tag overlay toggle (the worldToScreen loop + RscTitles live in Init_Client.sqf / Titles.hpp).
+	if (MenuAction == 25) then {
+		MenuAction = -1;
+		if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
+		WFBE_NameTagsEnabled = !WFBE_NameTagsEnabled;
+		hint (Format ["Name tags: %1", if (WFBE_NameTagsEnabled) then {"ON"} else {"OFF"}]);
+	};
+
 	sleep 0.1;
 };
