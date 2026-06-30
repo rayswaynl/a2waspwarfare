@@ -265,9 +265,13 @@ WFBE_CL_FNC_Upgrade_Complete = {
 		playSound "ARTY_cooldown_over";
 	}; //--- end _upgrade_isplayer guard
 	// Marty: Clear the local cached upgrade ID and countdown when completion is announced.
-	WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
-	WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
-	WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", -1, false];
+	//--- cmdcon30 (staged): a JIP client (or the HC running this client fn) can reach here before WFBE_Client_Logic
+	//--- is initialised -> "Undefined variable wfbe_client_logic" (live x2 in Ray's cmdcon29 client RPT). isNil-guard, A2-OA-safe.
+	if (!isNil "WFBE_Client_Logic") then {
+		WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
+		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
+		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", -1, false];
+	};
 
 	// Marty: Refresh local artillery vehicles after Artillery Ammunition unlocks new special rounds.
 	// Existing empty artillery is equipped only when it is bought, built or rearmed, so scanning group units is not enough.
