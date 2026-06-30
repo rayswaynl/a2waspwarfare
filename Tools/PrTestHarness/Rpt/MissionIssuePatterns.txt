@@ -1,0 +1,19 @@
+# Regex patterns for PR8 mission-side issues.
+# These are release signals, not addon/mod noise. Do not move them into
+# KnownNoise.txt unless the mission code has been proven unrelated.
+
+_requestID|_responseCode|_response|_teamSkillWest|_teamSkillEast
+sideJoined|sideID|WFBE_Client_SideID|AwardBounty
+AntiStack
+HC client PVF
+SupplyMission.*(ignored|cancelled|error|undefined)
+Server_PV|Client_PV
+
+# Experital-branch subsystems (added 2026-06-10): attribute their errors as mission issues.
+Server_CounterBattery|CounterBatteryFired|CounterBatteryContact|wfbe_cbr
+Server_BankIncome|BankPayout|WFBE_BANK_
+Server_SiteClearance|RequestSiteClearance|Land_Pneu
+Server_SpawnStructureDressing|wfbe_dressing
+Common_GetAmmoFraction|WFBE_AMMOFULL_
+FlipVehicle|EarplugToggle
+WFBE_C_QUEUE_.*_MAX|REDEPLOYTRUCKS
