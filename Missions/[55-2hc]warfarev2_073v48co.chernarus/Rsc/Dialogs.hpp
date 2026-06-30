@@ -1290,6 +1290,18 @@ class WF_Menu {
 			action = "MenuAction = 23";
 			tooltip = "Auto VD / target FPS";
 		};
+		// qol-polish-pack: friendly name-tag overlay toggle (loop + RscTitles in Init_Client.sqf / Titles.hpp).
+		class CA_NT_Button : RscButton_Main {
+			idc = 11024;
+			x = 0.671;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "TAGS";
+			sizeEx = 0.026;
+			action = "MenuAction = 25";
+			tooltip = "Friendly name tags On/Off";
+		};
 	};
 };
 

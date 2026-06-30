@@ -22,7 +22,37 @@
 
 class RscTitles {
 
-	titles[] = {RscOverlay,CaptureBar,OptionsAvailable,EndOfGameStats,WFBE_VehicleTintLegend};
+	titles[] = {RscOverlay,CaptureBar,OptionsAvailable,EndOfGameStats,WFBE_VehicleTintLegend,WFBE_NameTagOverlay};
+	//--- qol-polish-pack: pooled friendly name-tag overlay. Slots are positioned each tick from Init_Client.sqf via worldToScreen + ctrlSetPosition.
+	class WFBE_NameTagOverlay {
+		idd = 10261;
+		movingEnable = 0;
+		duration = 1e+011;
+		fadeIn = 0;
+		fadeOut = 0;
+		name = "WFBE_NameTagOverlay";
+		onLoad = "uiNamespace setVariable ['wfbe_nametag_display', _this select 0]";
+		onUnload = "uiNamespace setVariable ['wfbe_nametag_display', displayNull]";
+		controls[] = {"NT0","NT1","NT2","NT3","NT4","NT5","NT6","NT7","NT8","NT9","NT10","NT11","NT12","NT13","NT14","NT15","NT16","NT17"};
+		class NT0 : RscStructuredText { idc = 62000; x = 0; y = 0; w = 0.2; h = 0.03; size = 0.024; };
+		class NT1 : NT0 { idc = 62001; };
+		class NT2 : NT0 { idc = 62002; };
+		class NT3 : NT0 { idc = 62003; };
+		class NT4 : NT0 { idc = 62004; };
+		class NT5 : NT0 { idc = 62005; };
+		class NT6 : NT0 { idc = 62006; };
+		class NT7 : NT0 { idc = 62007; };
+		class NT8 : NT0 { idc = 62008; };
+		class NT9 : NT0 { idc = 62009; };
+		class NT10 : NT0 { idc = 62010; };
+		class NT11 : NT0 { idc = 62011; };
+		class NT12 : NT0 { idc = 62012; };
+		class NT13 : NT0 { idc = 62013; };
+		class NT14 : NT0 { idc = 62014; };
+		class NT15 : NT0 { idc = 62015; };
+		class NT16 : NT0 { idc = 62016; };
+		class NT17 : NT0 { idc = 62017; };
+	};
 	class b2zgroup
 	{
 						idd=-2;

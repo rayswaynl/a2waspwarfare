@@ -215,6 +215,43 @@ waitUntil {commonInitComplete};
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Common initialization is complete at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
+//--- qol-polish-pack: friendly name-tag overlay, toggled from the WF menu "TAGS" button (MenuAction 25). Client-side, friendly-PLAYERS only,
+//--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / getPosVisual / ctrlSetStructuredText, no A3 commands.
+if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
+[] spawn {
+	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
+	_max = 18;
+	while {!WFBE_gameover} do {
+		waitUntil {WFBE_NameTagsEnabled || WFBE_gameover};
+		if (WFBE_gameover) exitWith {};
+		12461 cutRsc ["WFBE_NameTagOverlay","PLAIN",0];
+		waitUntil {(!isNull (uiNamespace getVariable ["wfbe_nametag_display", displayNull])) || (!WFBE_NameTagsEnabled)};
+		_disp = uiNamespace getVariable ["wfbe_nametag_display", displayNull];
+		while {WFBE_NameTagsEnabled && {!WFBE_gameover} && {!isNull _disp}} do {
+			_shown = 0;
+			{
+				if (_shown < _max && {isPlayer _x} && {_x != player} && {alive _x} && {side _x == side player}) then {
+					_pp = getPosVisual _x;
+					_scr = worldToScreen [_pp select 0, _pp select 1, (_pp select 2) + 1.9];
+					if (count _scr == 2 && {(_scr select 0) > 0} && {(_scr select 0) < 1} && {(_scr select 1) > 0} && {(_scr select 1) < 1}) then {
+						_d = _x distance player;
+						_sz = 0.018 + (0.016 * (1 - (_d / 120)));
+						_ctrl = _disp displayCtrl (62000 + _shown);
+						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#d6ecff'>%1</t>", name _x, _sz]));
+						_ctrl ctrlSetPosition [(_scr select 0) - 0.1, (_scr select 1) - 0.025, 0.2, 0.03];
+						_ctrl ctrlCommit 0;
+						_ctrl ctrlShow true;
+						_shown = _shown + 1;
+					};
+				};
+			} forEach (player nearEntities [["Man"], 120]);
+			for "_i" from _shown to (_max - 1) do {(_disp displayCtrl (62000 + _i)) ctrlShow false};
+			sleep 0.1;
+		};
+		12461 cutText ["","PLAIN",0];
+	};
+};
+
 // Marty: Show the test build marker once in debug mode so testers can confirm the running PBO version.
 if (WF_Debug) then {
 	systemChat "TD Debug build: 2026-06-09 01:56";
@@ -934,7 +971,7 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 			_area = [_preview,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 
             	if(_area getVariable 'avail' <= 0) then { _color = _colorRed };
-           		if (surfaceIsWater(position _preview)) then { _color = _colorRed };
+           		if (surfaceIsWater(position _preview)) then { _color = _colorRed }; if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {count ((position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then { _color = _colorRed }; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
 
 			if ({_preview isKindOf _x} count _affected != 0) then {
                 	Private["_building","_sort","_strs","_lax","_lay"];
