@@ -181,6 +181,23 @@ The JSON and Markdown outputs include the package SHA256, per-required-file
 hashes, and the generated `WF_RELEASE_MARKER` strings. They do not copy raw
 mission file contents.
 
+## Release Handoff Packet
+
+After package provenance passes, generate a local handoff packet for runtime
+operators and release reviewers:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Release\New-WaspReleaseHandoff.ps1 `
+  -PackageManifestPath .\wasp-release-package-manifest\release-package-manifest.json `
+  -OutDirectory .\wasp-release-handoff -Force
+```
+
+It writes `release-handoff.json` and `release-handoff.md` with the package
+hash, exact Chernarus/Takistan runtime markers, scorer commands, runtime
+preconditions, deploy approval checks, rollback checks and privacy boundaries.
+It does not touch SSH, server files or raw RPTs; live deployment still requires
+explicit approval and separate runtime evidence.
+
 ## Shipping Boundary
 
 Do not commit generated local mission folders or harness overlays into a release
