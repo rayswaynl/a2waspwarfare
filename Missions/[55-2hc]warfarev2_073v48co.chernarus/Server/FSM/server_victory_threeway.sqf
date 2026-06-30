@@ -13,7 +13,8 @@ while {!gameOver} do {
 	//--- (no supremacy win, no HQ-loss win). Supremacy/HQ-loss detection now runs UNCONDITIONALLY; the
 	//--- _victory param no longer gates it. We deliberately add NO new victory MODES here (Ray: no new
 	//--- modes) - this only stops the trap so the standard supremacy condition always works.
-	if (!gameOver) then {
+	//--- Last Stand: wave manager owns end state; skip auto-victory so it cannot fire prematurely.
+	if (!gameOver && {!IS_laststand_event}) then {
 		{
 			_side = _x;
 			_hq = (_x) Call WFBE_CO_FNC_GetSideHQ;
