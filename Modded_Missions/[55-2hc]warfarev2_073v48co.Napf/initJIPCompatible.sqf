@@ -213,13 +213,16 @@ if (IS_tank_war_event) then {
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 	//--- Heavy-armor AICOM overrides (Init_CommonConstants defaults are overridden here because they use isNil guards
 	//--- and have already been set before this block; reassigning here overrules them for the tank-war session).
-	//--- Mix arrays: [infantry, motorized, armor, air]. AIR share = 0.00 → AI stops buying aircraft; heli still via ATTACKHELI_MAX.
-	WFBE_C_AICOM_TYPE_MIX_EARLY = [0.40, 0.25, 0.35, 0.00];
-	WFBE_C_AICOM_TYPE_MIX_MID = [0.25, 0.20, 0.55, 0.00];
-	WFBE_C_AICOM_TYPE_MIX_LATE = [0.15, 0.15, 0.70, 0.00];
+	//--- Mix arrays: [infantry, motorized, armor, air]. Jets are gated OUT of the buy rosters (Units_CO_US/RU), so the AIR
+	//--- bucket here buys HELICOPTERS only: armor stays dominant (~32-57%) while helis are a featured ~10-15% air-cav arm.
+	WFBE_C_AICOM_TYPE_MIX_EARLY = [0.38, 0.20, 0.32, 0.10];
+	WFBE_C_AICOM_TYPE_MIX_MID = [0.25, 0.16, 0.47, 0.12];
+	WFBE_C_AICOM_TYPE_MIX_LATE = [0.16, 0.12, 0.57, 0.15];
 	WFBE_C_AICOM_TYPE_MIX_MATURE_MID = 2;
 	WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 4;
-	WFBE_C_AICOM_ATTACKHELI_MAX = 2;
+	WFBE_C_AICOM_ATTACKHELI_MAX = 6;                         //--- featured gunship presence (was 2)
+	WFBE_C_AICOM_AIR_MIN_TOWNS = 1;                          //--- helis come online from town 1 (was 3)
+	WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD = 0;                   //--- helis fly from base, no captured airfield needed (jets are gated out anyway)
 	//--- Napf boundary = 20500; foot-reach ~= boundary/4 = 5125, rounded to 5000 for combined-arms assault depth.
 	WFBE_C_AICOM_ASSAULT_REACH_FOOT = 5000;
 	//--- NOTE: AT-vs-armor durability is tuned via Common\Functions\Common_ModifyVehicle.sqf HandleDamage as a
