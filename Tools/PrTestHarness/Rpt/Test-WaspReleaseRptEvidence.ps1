@@ -3,6 +3,7 @@ param(
 	[string[]]$RptPath = @(),
 	[string[]]$RptDirectory = @(),
 	[string[]]$ExpectedMarker = @(),
+	[string]$WindowMarker = "MISSINIT|## (Mission Name|Build|LOG CONTENT)",
 	[switch]$Recurse,
 	[switch]$Json,
 	[switch]$NoFail
@@ -42,6 +43,54 @@ function Get-RptFiles {
 	return @($files | Select-Object -Unique)
 }
 
+function Get-RptLineWindow {
+	param(
+		[Parameter(Mandatory)] [string]$Path,
+		[Parameter(Mandatory)] [string]$Marker
+	)
+
+	$fs = [System.IO.File]::Open($Path,
+		[System.IO.FileMode]::Open,
+		[System.IO.FileAccess]::Read,
+		[System.IO.FileShare]::ReadWrite)
+	try {
+		$reader = New-Object System.IO.StreamReader($fs)
+		try { $content = $reader.ReadToEnd() } finally { $reader.Dispose() }
+	} finally {
+		$fs.Dispose()
+	}
+
+	$allLines = @($content -split "`r?`n")
+	$startIndex = 0
+	$markerFound = $false
+	for ($i = $allLines.Count - 1; $i -ge 0; $i--) {
+		if ($allLines[$i] -match $Marker) {
+			$startIndex = $i
+			$markerFound = $true
+			break
+		}
+	}
+
+	# Keep the full three-line startup banner when the final hit is Build/LOG CONTENT.
+	if ($Marker -eq "MISSINIT|## (Mission Name|Build|LOG CONTENT)" -and $allLines[$startIndex] -match "## (Build|LOG CONTENT)") {
+		for ($j = $startIndex; $j -ge ([Math]::Max(0, $startIndex - 20)); $j--) {
+			if ($allLines[$j] -match "## Mission Name") {
+				$startIndex = $j
+				break
+			}
+		}
+	}
+
+	$windowLines = if ($startIndex -gt 0) { @($allLines[$startIndex..($allLines.Count - 1)]) } else { @($allLines) }
+	return [ordered]@{
+		lines = $windowLines
+		rawLineCount = $allLines.Count
+		windowStartLine = $startIndex + 1
+		windowLineCount = $windowLines.Count
+		windowMarkerFound = $markerFound
+	}
+}
+
 function New-Counts {
 	param([object[]]$Specs)
 	$counts = [ordered]@{}
@@ -51,7 +100,7 @@ function New-Counts {
 
 function Add-Counts {
 	param($Target, $Source)
-	foreach ($key in $Source.Keys) {
+	foreach ($key in @($Source.Keys)) {
 		if (!$Target.Contains($key)) { $Target[$key] = 0 }
 		$Target[$key] += [int]$Source.Item($key)
 	}
@@ -64,6 +113,18 @@ function Test-AnyCount {
 	}
 	return $false
 }
+
+$stopSpecs = @(
+	[pscustomobject]@{ Name = "errorInExpression"; Pattern = "Error in expression" },
+	[pscustomobject]@{ Name = "undefinedVariable"; Pattern = "Undefined variable" },
+	[pscustomobject]@{ Name = "noEntry"; Pattern = "No entry" },
+	[pscustomobject]@{ Name = "missingSemicolon"; Pattern = "Missing ;" },
+	[pscustomobject]@{ Name = "genericError"; Pattern = "Generic error" },
+	[pscustomobject]@{ Name = "errorPosition"; Pattern = "Error position" },
+	[pscustomobject]@{ Name = "unknownCommand"; Pattern = "Unknown command" },
+	[pscustomobject]@{ Name = "cannotLoadTexture"; Pattern = "Cannot load texture" },
+	[pscustomobject]@{ Name = "cannotOpenObject"; Pattern = "Cannot open object" }
+)
 
 $tokenSpecs = @(
 	[pscustomobject]@{ Name = "aicomHbWest"; Pattern = "AICOMHB\|v1\|west\|" },
@@ -179,6 +240,8 @@ if ($files.Count -eq 0) {
 }
 
 $totalCounts = New-Counts $tokenSpecs
+$totalStopCounts = New-Counts $stopSpecs
+$totalStopMatches = 0
 $fileSummaries = @()
 $worlds = New-Object System.Collections.Generic.HashSet[string]
 $markerCounts = [ordered]@{}
@@ -188,17 +251,20 @@ foreach ($marker in $ExpectedMarker) {
 
 foreach ($file in $files) {
 	$item = Get-Item -LiteralPath $file
-	$lines = @(Get-Content -LiteralPath $file)
+	$window = Get-RptLineWindow -Path $item.FullName -Marker $WindowMarker
+	$lines = @($window.lines)
 	$fileCounts = New-Counts $tokenSpecs
+	$fileStopCounts = New-Counts $stopSpecs
 	$sessions = @()
 	$builds = @()
 	for ($i = 0; $i -lt $lines.Count; $i++) {
 		$line = $lines[$i]
+		$absoluteLine = [int]$window.windowStartLine + $i
 		if ($line -match "MISSINIT: missionName=([^,]+), worldName=([^,]+), isMultiplayer=([^,]+), isServer=([^,]+), isDedicated=([^\]]+)") {
 			$world = $matches[2].Trim().ToLowerInvariant()
 			[void]$worlds.Add($world)
 			$sessions += [ordered]@{
-				line = $i + 1
+				line = $absoluteLine
 				missionName = $matches[1]
 				worldName = $matches[2]
 				isMultiplayer = $matches[3]
@@ -210,10 +276,17 @@ foreach ($file in $files) {
 			[void]$worlds.Add($matches[1].Trim().ToLowerInvariant())
 		}
 		if ($line -match "## Build: (.+)") {
-			$builds += [ordered]@{ line = $i + 1; build = ($matches[1] -replace '"', '').Trim() }
+			$builds += [ordered]@{ line = $absoluteLine; build = ($matches[1] -replace '"', '').Trim() }
 		}
-		foreach ($marker in $markerCounts.Keys) {
+		foreach ($marker in @($markerCounts.Keys)) {
 			if ($line.Contains($marker)) { $markerCounts[$marker]++ }
+		}
+		foreach ($spec in $stopSpecs) {
+			if ($line -match $spec.Pattern) {
+				$fileStopCounts[$spec.Name]++
+				$totalStopCounts[$spec.Name]++
+				$totalStopMatches++
+			}
 		}
 		foreach ($spec in $tokenSpecs) {
 			if ($line -match $spec.Pattern) { $fileCounts[$spec.Name]++ }
@@ -224,17 +297,34 @@ foreach ($file in $files) {
 		path = ConvertTo-SafePath $item.FullName
 		lastWriteTime = $item.LastWriteTime.ToString("yyyy-MM-ddTHH:mm:sszzz")
 		lengthBytes = $item.Length
+		rawLineCount = [int]$window.rawLineCount
 		lineCount = $lines.Count
+		windowMarker = $WindowMarker
+		windowMarkerFound = [bool]$window.windowMarkerFound
+		windowStartLine = [int]$window.windowStartLine
 		sessions = $sessions
 		builds = $builds
+		stopCounts = $fileStopCounts
+		stopMatchCount = ($fileStopCounts.Values | Measure-Object -Sum).Sum
 		tokenCounts = $fileCounts
 	}
 }
 
 $gateResults = @()
+$stopFailHits = @()
+foreach ($key in @($totalStopCounts.Keys)) {
+	if ([int]$totalStopCounts[$key] -gt 0) { $stopFailHits += ("{0}={1}" -f $key, $totalStopCounts[$key]) }
+}
+$gateResults += [ordered]@{
+	id = "no-stop-condition-matches"
+	status = if ($totalStopMatches -eq 0) { "pass" } else { "fail" }
+	missing = @()
+	failHits = $stopFailHits
+	note = "Generic RPT stop-condition scan in current-mission windows only; no raw RPT lines are emitted."
+}
 if ($markerCounts.Count -gt 0) {
 	$missingMarkers = @()
-	foreach ($marker in $markerCounts.Keys) {
+	foreach ($marker in @($markerCounts.Keys)) {
 		if ([int]$markerCounts[$marker] -eq 0) { $missingMarkers += $marker }
 	}
 	$gateResults += [ordered]@{
@@ -276,10 +366,13 @@ $overallPass = (@($gateResults | Where-Object { $_.status -ne "pass" }).Count -e
 $result = [ordered]@{
 	schema = "a2waspwarfare-release-rpt-evidence-v1"
 	generatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+	windowMarker = $WindowMarker
 	files = $fileSummaries
 	worldsSeen = @($worlds)
 	expectedMarkerCounts = $markerCounts
 	tokenCounts = $totalCounts
+	stopCounts = $totalStopCounts
+	stopMatchCount = $totalStopMatches
 	gates = $gateResults
 	overall = if ($overallPass) { "pass" } else { "missing_or_failed" }
 	privacy = "No raw RPT lines are emitted; paths are user-profile redacted."
@@ -290,7 +383,9 @@ if ($Json) {
 } else {
 	Write-Host "WASP release RPT evidence check"
 	Write-Host "Files: $($files.Count)"
+	Write-Host "Window marker: $WindowMarker"
 	Write-Host "Worlds seen: $((@($worlds) | Sort-Object) -join ', ')"
+	Write-Host "Stop-condition matches: $totalStopMatches"
 	if ($markerCounts.Count -gt 0) {
 		Write-Host "Expected markers:"
 		foreach ($marker in $markerCounts.Keys) {

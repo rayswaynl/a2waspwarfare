@@ -174,8 +174,8 @@ $packet = [ordered]@{
 	gates = $gates.ToArray()
 	commands = [ordered]@{
 		markerArray = $markerArrayCommand
-		runtimeScorer = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers"
-		runtimeSummary = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
+		runtimeScorer = "& .\Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers"
+		runtimeSummary = "& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
 		packageProof = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1 -ArchivePath .\_MISSIONS.7z -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -OutDirectory .\wasp-release-package-manifest -Force"
 	}
 	runtimeChecklist = @(
@@ -184,6 +184,7 @@ $packet = [ordered]@{
 		"Two headless client RPTs, HC1 and HC2.",
 		"Start-client and late-JIP client RPTs.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
+		"Current-mission RPT windows have no generic stop-condition errors.",
 		"AICOM side discovery, heartbeat, tick and progress tokens for WEST and EAST.",
 		"HC delegation/locality, town cleanup, WDDM/static/artillery, supply and JIP/HUD evidence families."
 	)

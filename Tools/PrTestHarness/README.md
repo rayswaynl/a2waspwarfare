@@ -121,7 +121,9 @@ Important tokens:
 - `PERF_BURST`, `PERF #`
 
 For a release-candidate RPT bundle, use the redaction-safe evidence scorer. It
-prints session names and token counts only; it does not echo raw RPT lines.
+scores only the current mission window in each RPT, starting at the latest
+`MISSINIT` or startup banner, then prints session names and token counts only;
+it does not echo raw RPT lines.
 
 ```powershell
 $releaseGit = git rev-parse --short=10 HEAD
@@ -130,7 +132,7 @@ $expectedReleaseMarkers = @(
   "WASPRELEASE|v1|candidate=release-command-center-20260630|git=$releaseGit|terrain=takistan"
 )
 
-pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 `
+& .\Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 `
   -RptDirectory "C:\WASP\rpts\release-candidate" -Recurse `
   -ExpectedMarker $expectedReleaseMarkers
 ```
@@ -138,14 +140,15 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspR
 LoadoutManager writes those markers into generated `version.sqf`, with the
 current git short hash and terrain appended. Use the terrain-specific marker
 values so runtime proof ties back to the exact release HEAD. The scorer expects
-both Chernarus and Takistan coverage plus the round-6 AICOM, JIP, HC,
-town-cleanup, WDDM/static/artillery and supply evidence tokens. It exits
-non-zero until the bundle is complete.
+both Chernarus and Takistan coverage, no generic current-window RPT stop
+conditions, plus the round-6 AICOM, JIP, HC, town-cleanup,
+WDDM/static/artillery and supply evidence tokens. It exits non-zero until the
+bundle is complete.
 
 To produce a portable release/wiki summary packet from the same scorer output:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 `
+& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 `
   -RptDirectory "C:\WASP\rpts\release-candidate" -Recurse `
   -ExpectedMarker $expectedReleaseMarkers `
   -OutDirectory "C:\WASP\rpts\release-candidate\summary" -Force
