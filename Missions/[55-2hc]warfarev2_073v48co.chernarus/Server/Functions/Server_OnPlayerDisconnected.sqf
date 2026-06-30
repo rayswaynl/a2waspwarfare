@@ -17,6 +17,15 @@ waitUntil {commonInitComplete && serverInitFull};
 
 if (_name == '__SERVER__' || local player) exitWith {};
 
+//--- cmdcon30 (Ray's stuck-join, 2026-06-30): clear the UID-keyed enrollment retry counter on disconnect.
+//--- WFBE_CONNECT_RETRY_<uid> (Server_OnPlayerConnected) is cleared on enrollment SUCCESS but NEVER on
+//--- disconnect - so once a JIP enrollment exhausts its 3 re-arms, a RE-JOIN with the same UID gets only a
+//--- single resolver pass with no re-arm safety net (the cap is already maxed) and re-bails -> the player is
+//--- permanently stuck (no team / HUD / markers) until a server restart. Clearing it here makes a fresh
+//--- re-join always get the full 3-attempt self-heal again. A2-OA-1.64-safe (setVariable nil). HCs skip the
+//--- resolver so they never hold this key - the clear is a harmless no-op for them.
+if (_uid != "") then {missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil]};
+
 //--- Headless Clients disconnection?.
 _isHCDisconnect = false;
 _hcGroup = grpNull;
