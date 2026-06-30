@@ -1,5 +1,5 @@
 /*
-	server_heli_terrain_guard.sqf — qol-polish-pack (OPT-IN, default OFF).
+	server_heli_terrain_guard.sqf — qol-polish-pack (ON by default; set WFBE_C_AIHELI_TERRAIN_GUARD = 0 to disable).
 
 	AI helicopters in A2 hold a fixed flyInHeight (AGL) maintained against the terrain *directly below* them, so on a steep
 	up-slope they clip the rising ground ahead before the engine reacts. This loop looks AHEAD along each AI heli's heading and
