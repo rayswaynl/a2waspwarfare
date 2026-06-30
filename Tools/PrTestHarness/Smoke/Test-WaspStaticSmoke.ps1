@@ -172,8 +172,8 @@ function Test-AARadarHasNoWalls {
 	$templateMatch = [regex]::Match($defText, "WFBE_NEURODEF_AARADAR_WALLS'\s*,\s*\[(?<body>[\s\S]*?)\]\s*\];")
 	$body = if ($templateMatch.Success) { $templateMatch.Groups["body"].Value } else { "" }
 	$objectCount = ([regex]::Matches($body, "\['[^']+'\s*,\s*\[[^\]]+\]\s*,\s*-?[0-9.]+\]")).Count
-	$smallGuard = $smallText.Contains('_rlType != "AARadar"') -and $smallText.Contains("AARadar auto walls skipped")
-	$mediumGuard = $mediumText.Contains('_rlType != "AARadar"') -and $mediumText.Contains("AARadar auto walls skipped")
+	$smallGuard = $smallText.Contains('!(_rlType in ["AARadar","CBRadar"])') -and $smallText.Contains("%2 auto walls skipped")
+	$mediumGuard = $mediumText.Contains('!(_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"])') -and $mediumText.Contains("%2 auto walls skipped")
 	Add-Result "AARadar wall template removed" ($templateMatch.Success -and $objectCount -eq 0 -and $smallGuard -and $mediumGuard) "templateFound=$($templateMatch.Success) wallObjects=$objectCount smallGuard=$smallGuard mediumGuard=$mediumGuard"
 }
 
@@ -181,7 +181,7 @@ function Test-WddmInstantStaticCrew {
 	$handle = Get-Text (Join-Path $missionRoot "Server\Functions\Server_HandleDefense.sqf")
 	$create = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateUnitForStaticDefence.sqf")
 	$construct = Get-Text (Join-Path $missionRoot "Server\Functions\Server_ConstructPosition.sqf")
-	$spawnAtGun = $handle.Contains('if (_moveInGunner) then {_position = getPosATL _defense}')
+	$spawnAtGun = $handle.Contains('_moveInGunner = true') -and $handle.Contains('_position = getPosATL _defense')
 	$logsStaticType = $handle.Contains('typeOf _defense') -and $handle.Contains('instant=%3')
 	$passesWddmFlag = $construct.Contains('false, true] Call ConstructDefense')
 	$retry = $create.Contains('retried instant static manning') -and $create.Contains('setPosATL (getPosATL _defence)') -and $create.Contains('_unit moveInGunner _defence')
@@ -297,10 +297,11 @@ function Test-HcPvfGuard {
 function Test-HcDelegatedAiLocalGroups {
 	$delegateTown = Get-Text (Join-Path $missionRoot "Client\Functions\Client_DelegateTownAI.sqf")
 	$delegateStatic = Get-Text (Join-Path $missionRoot "Client\Functions\Client_DelegateAIStaticDefence.sqf")
+	$createStatic = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateUnitForStaticDefence.sqf")
 	$createUnit = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateUnit.sqf")
 	$createTeam = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateTeam.sqf")
-	$townLocalizes = $delegateTown.Contains("count units _team") -and $delegateTown.Contains("_team = createGroup _side") -and $delegateTown.Contains("_teams set [_i, _team]")
-	$staticLocalizes = $delegateStatic.Contains("count units _team") -and $delegateStatic.Contains("_team = createGroup _side")
+	$townLocalizes = $delegateTown.Contains("count units _team") -and $delegateTown.Contains('[_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup') -and $delegateTown.Contains("_teams set [_i, _team]")
+	$staticLocalizes = $delegateStatic.Contains("GROUP BLOAT REDUCTION") -and $delegateStatic.Contains("WFBE_CO_FNC_CreateUnitForStaticDefence") -and $createStatic.Contains('[_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup') -and $createStatic.Contains("wfbe_hc_local_grp")
 	$unitFallback = $createUnit.Contains("_teamLeader = leader _team") -and $createUnit.Contains("!local _teamLeader") -and $createUnit.Contains("is not local here; creating local fallback group") -and $createUnit.Contains("if (isNull _unit) exitWith") -and (-not $createUnit.Contains("local _team)"))
 	$teamFiltersNull = $createTeam.Contains("if (isNull _unit) then") -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}")   # recalibrated: baseline guards the null-unit case with isNull (not !isNull)
 	Add-Result "HC delegated AI local groups" ($townLocalizes -and $staticLocalizes -and $unitFallback -and $teamFiltersNull) "town=$townLocalizes static=$staticLocalizes unitFallback=$unitFallback nullFilter=$teamFiltersNull"
@@ -384,8 +385,8 @@ function Test-RhudEconomyFpsLayout {
 	$activeRhud = if (Test-Path -LiteralPath $activeRhudPath) { Get-Text $activeRhudPath } else { "" }
 	$moneyIncome = $rhud.Contains('%1 $ | %2') -and $rhud.Contains('[7, "Money:"]')
 	$baseStatus = $rhud.Contains('[11, "Base:"]') -and (-not $rhud.Contains('[13, "SV Min:"]'))   # recalibrated: index-11 row renamed SV+: -> Base: (kept $baseStatus name — consumed by Add-Result below)
-	$fpsCombined = $rhud.Contains('[13, "FPS C/S:"]') -and $rhud.Contains('format ["%1 / %2", _clientFPS, _serverFPS]') -and (-not $rhud.Contains('[15, "FPS Server:"]'))
-	$hiddenOldRows = $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [15,16,17,18,19,20,21,22]')
+	$fpsCombined = $rhud.Contains('[13, "FPS C/S:"]') -and $rhud.Contains('format ["%1 / %2  VD %3", _clientFPS, _serverFPS, round viewDistance]') -and (-not $rhud.Contains('[15, "FPS Server:"]'))
+	$hiddenOldRows = $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [15,16,17,18]') -and $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [27,28]')
 	$topStrip = $menu.Contains('| SV %9') -and (-not $menu.Contains('| SV+ %9')) -and (-not $menu.Contains('| FPS %9'))
 	$stressProof = $stress.Contains('topStrip=uptime|time|players|towns|svSigned') -and $stress.Contains('rhud=moneyIncome|baseStatus|fpsClientServer')
 	$hudDefaultOn = $initClient.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and $rhud.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and (-not $initClient.Contains("Start RHUD hidden"))
@@ -394,11 +395,12 @@ function Test-RhudEconomyFpsLayout {
 }
 
 function Test-AfkBoolComparisons {
-	$monitor = Get-Text (Join-Path $missionRoot "Client\Module\AFKkick\monitorAFK.sqf")
-	$noBoolNotEquals = -not [regex]::IsMatch($monitor, "\b(_afk|_commandAndConquer)\s*!=")
-	$afkXor = $monitor.Contains("(_afk && !_afkShouldBe) || (!_afk && _afkShouldBe)")
-	$commandXor = $monitor.Contains("(_commandAndConquer && !_commandAndConquerShouldBe) || (!_commandAndConquer && _commandAndConquerShouldBe)")
-	Add-Result "AFK boolean comparison guard" ($noBoolNotEquals -and $afkXor -and $commandXor) "noBoolNotEquals=$noBoolNotEquals afkXor=$afkXor commandXor=$commandXor"
+	$updateClient = Get-Text (Join-Path $missionRoot "Client\FSM\updateclient.sqf")
+	$noBoolNotEquals = -not [regex]::IsMatch($updateClient, "\b(_afk|_commandAndConquer)\s*!=")
+	$afkXor = $updateClient.Contains("(_afk && !_afkShouldBe) || (!_afk && _afkShouldBe)")
+	$publishes = $updateClient.Contains('player setVariable ["WASP_AFK", _afkShouldBe, true]')
+	$commandXor = (-not $updateClient.Contains("_commandAndConquer")) -or $updateClient.Contains("(_commandAndConquer && !_commandAndConquerShouldBe) || (!_commandAndConquer && _commandAndConquerShouldBe)")
+	Add-Result "AFK boolean comparison guard" ($noBoolNotEquals -and $afkXor -and $publishes -and $commandXor) "noBoolNotEquals=$noBoolNotEquals afkXor=$afkXor publishes=$publishes commandXor=$commandXor"
 }
 
 function Test-HarnessBoolComparisons {
@@ -653,7 +655,7 @@ function Test-WddmTiers {
 	$tpls = @("WFBE_NEURODEF_AAPOS_WEST","WFBE_NEURODEF_AAPOS_HEAVY_WEST","WFBE_NEURODEF_ARTYPOS_LIGHT_WEST","WFBE_NEURODEF_ARTYPOS_WEST","WFBE_NEURODEF_MIXEDPOS_WEST","WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST","WFBE_NEURODEF_AAPOS_HEAVY_EAST","WFBE_NEURODEF_ARTYPOS_LIGHT_EAST","WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST")
 	$missing = @()
 	foreach ($t in $tpls) { if (-not $def.Contains("'$t'")) { $missing += $t } }
-	$anchors = $def.Contains("'RoadBarrier'") -and $def.Contains("'RoadBarrier_light'") -and $def.Contains("'RoadCone'")
+	$anchors = $def.Contains("'Land_Ind_BoardsPack1'") -and $def.Contains("'Land_CncBlock_Stripes'") -and $def.Contains("'Land_Barrel_sand'") -and $def.Contains("'Land_Ind_BoardsPack2'") -and $def.Contains("'Land_WoodenRamp'") -and $def.Contains("'RoadCone'") -and $def.Contains("WFBE_POSITION_ANCHOR_NAMES")
 	Add-Result "WDDM light/heavy tiers present" (($missing.Count -eq 0) -and $anchors) "missingTemplates=$($missing -join ',') newAnchors=$anchors"
 }
 

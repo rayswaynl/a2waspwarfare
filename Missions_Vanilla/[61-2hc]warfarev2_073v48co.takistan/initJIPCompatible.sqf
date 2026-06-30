@@ -27,7 +27,7 @@ publicVariable "CBA_display_ingame_warnings";
 for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
-diag_log "## Build: WASP Experital TEST (experimental feature branch)";
+diag_log "## Build: WASP Warfare release candidate";
 diag_log format ["## Starting Distance: [%1]", startingDistance];
 diag_log format ["## Max players Defined: [%1]", WF_MAXPLAYERS];
 diag_log format ["## LOG CONTENT : [%1]", LOG_CONTENT_STATE];

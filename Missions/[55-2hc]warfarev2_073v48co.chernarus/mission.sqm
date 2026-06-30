@@ -23,7 +23,7 @@ class Mission
 	class Intel
 	{
 		briefingName="Warfare V48 Chernarus [GUER]";
-		briefingDescription="AI-vs-AI commander eval build (V0.6.x): both sides run the scripted commander brain. Spectate or observe - rounds are scored from telemetry.";
+		briefingDescription="WASP Warfare release candidate: AI commander, command-center, supply, WDDM/artillery, UI/UX, GPS, factories, and performance updates.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;

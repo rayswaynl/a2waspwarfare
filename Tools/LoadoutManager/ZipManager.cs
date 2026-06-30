@@ -6,6 +6,12 @@ public class ZipManager
 {
     public static void DoZipOperations()
     {
+        if (ShouldSkipZipOperations())
+        {
+            Console.WriteLine("Skipping mission packaging because A2WASP_SKIP_ZIP is set.");
+            return;
+        }
+
         string a2waspDirectory = FileManager.FindA2WaspWarfareDirectory().FullName;
         string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions" 
         // Create this directory if it doesn't exist
@@ -38,6 +44,19 @@ public class ZipManager
         Create7zFromDirectory(tempDirectory, destinationFile);
 
         DeleteDirectory(tempDirectory);
+    }
+
+    private static bool ShouldSkipZipOperations()
+    {
+        string skipZip = Environment.GetEnvironmentVariable("A2WASP_SKIP_ZIP");
+        if (string.IsNullOrWhiteSpace(skipZip))
+        {
+            return false;
+        }
+
+        return skipZip == "1" ||
+               skipZip.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+               skipZip.Equals("yes", StringComparison.OrdinalIgnoreCase);
     }
 
     // This method creates a new directory if it doesn't exist

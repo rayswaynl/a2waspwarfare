@@ -58,7 +58,14 @@ $env:7za = "C:\Program Files\7-Zip\7za.exe"
 dotnet run -c SERVER_DEBUG
 ```
 
+To generate/copy mission files without packing `_MISSIONS.7z`, set:
+
+```powershell
+$env:A2WASP_SKIP_ZIP = "1"
+dotnet run -c RELEASE
+```
+
 ## Notes
 
-- Setting the 7za environment variable is only necessary if you're packing missions. It's not required if you're only copying files to other missions from Chernarus.
+- Setting the 7za environment variable is only necessary if you're packing missions. It's not required if you're only copying files to other missions from Chernarus or when `A2WASP_SKIP_ZIP=1`.
 - Make sure to use the appropriate configuration based on your deployment target.
