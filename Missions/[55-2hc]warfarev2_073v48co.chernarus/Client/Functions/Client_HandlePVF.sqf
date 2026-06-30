@@ -16,7 +16,7 @@ _parameters = if (count _this > 2) then {_publicVar select 2} else {[]};
 _isHeadless = if !(isNil "isHeadLessClient") then {isHeadLessClient} else {!(hasInterface || isDedicated)};
 if (_isHeadless) then {
 	_hcAllowed = false;
-	if (_script == "CLTFNCHandleSpecial" && (typeName _parameters) == "ARRAY" && count _parameters > 0) then {
+	if (_script == "CLTFNCHandleSpecial" && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
 		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence"]);
 	};
 	if !(_hcAllowed) exitWith {};
