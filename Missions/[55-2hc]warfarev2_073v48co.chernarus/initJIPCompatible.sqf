@@ -214,6 +214,7 @@ if (IS_laststand_event) then {
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 	diag_log "[WFBE (INIT)] IS_laststand_event=true - Last Stand horde mode active.";
 	if (isServer) then { [] execVM "Server\LastStand\LS_WaveManager.sqf" };
+	if (isServer) then { [] execVM "Server\LastStand\LS_Tickets.sqf" }; //--- WEST-death ticket watcher (enables the lose condition)
 };
 
 if (WF_Debug) then { //--- Debug.
