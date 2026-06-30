@@ -69,7 +69,7 @@ switch (_request) do {
 	};
 	/*--- wiki-wins: removed dead "delegate-ai" case (no server sender repo-wide; superseded by delegate-townai / delegate-ai-static-defence) ---*/
 	case "delegate-ai-static-defence": {_args spawn WFBE_CL_FNC_DelegateAIStaticDefence};
-	case "endgame": {_args spawn WFBE_CL_FNC_EndGame};
+	case "endgame": {if !(isNil "WFBE_CL_FNC_EndGame") then {_args spawn WFBE_CL_FNC_EndGame}};
 	case "group-join-accept": {_args call WFBE_CL_FNC_Groups_JoinAccepted};
 	case "group-join-deny": {_args call WFBE_CL_FNC_Groups_JoinDenied};
 	case "group-kick": {_args call WFBE_CL_FNC_Groups_KickedOff};

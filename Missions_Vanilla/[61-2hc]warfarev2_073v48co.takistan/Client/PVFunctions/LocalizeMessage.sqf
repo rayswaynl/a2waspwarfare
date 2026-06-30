@@ -217,5 +217,7 @@ if (_commandChat) then {
 		_txt Call CommandChatMessage;
 	};
 } else {
-	_txt Call GroupChatMessage;
+	if (!isNil "GroupChatMessage") then {
+		_txt Call GroupChatMessage;
+	};
 };
