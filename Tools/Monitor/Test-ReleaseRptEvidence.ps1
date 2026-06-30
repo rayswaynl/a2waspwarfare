@@ -7,6 +7,7 @@
 # Examples:
 #   .\Test-ReleaseRptEvidence.ps1 -RptPath C:\WASP\rpt\server.RPT -RequireServerDebug -RequirePr122Markers -RequireAicomTelemetry
 #   .\Test-ReleaseRptEvidence.ps1 -RptPath @($server,$hc1,$hc2,$client) -OutputJson C:\WASP\rpt\evidence.json
+#   .\Test-ReleaseRptEvidence.ps1 -RptPath @($server,$hc1,$hc2) -OutputSummaryJson C:\WASP\rpt\evidence-summary.json
 
 [CmdletBinding()]
 param(
@@ -16,7 +17,8 @@ param(
     [switch] $RequireServerDebug,
     [switch] $RequirePr122Markers,
     [switch] $RequireAicomTelemetry,
-    [string] $OutputJson
+    [string] $OutputJson,
+    [string] $OutputSummaryJson
 )
 
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -73,6 +75,53 @@ function Find-PatternMatches {
         }
     }
     return @($hits)
+}
+
+function New-ReleaseRptEvidenceSummary {
+    param(
+        [Parameter(Mandatory)] $Report
+    )
+
+    $summaryFiles = New-Object System.Collections.ArrayList
+    $fileIndex = 0
+    foreach ($file in @($Report.files)) {
+        $fileIndex++
+        $markerCounts = [ordered]@{}
+        foreach ($marker in @($file.markers)) {
+            $markerCounts[$marker.name] = $marker.count
+        }
+
+        $stopCounts = [ordered]@{}
+        foreach ($stop in @($file.stop_matches)) {
+            $stopCounts[$stop.pattern] = $stop.count
+        }
+
+        [void]$summaryFiles.Add((New-Object psobject -Property @{
+            index = $fileIndex
+            exists = $file.exists
+            window_line_count = $file.window_line_count
+            has_startup_banner = $file.has_startup_banner
+            log_content_not_activated = $file.log_content_not_activated
+            stop_match_count = $file.stop_match_count
+            stop_counts = (New-Object psobject -Property $stopCounts)
+            marker_counts = (New-Object psobject -Property $markerCounts)
+        }))
+    }
+
+    return (New-Object psobject -Property @{
+        generated_at = $Report.generated_at
+        verdict = $Report.verdict
+        window_marker = $Report.window_marker
+        total_files = $Report.total_files
+        missing_files = $Report.missing_files
+        files_without_startup_banner = $Report.files_without_startup_banner
+        files_without_window_lines = $Report.files_without_window_lines
+        stop_match_count = $Report.stop_match_count
+        aggregate_markers = $Report.aggregate_markers
+        requirements = @($Report.requirements | Select-Object name, required, passed, detail)
+        required_failures = @($Report.requirements | Where-Object { $_.required -and -not $_.passed } | Select-Object name, detail)
+        files = @($summaryFiles)
+    })
 }
 
 $fileReports = New-Object System.Collections.ArrayList
@@ -184,6 +233,7 @@ $report = New-Object psobject -Property @{
     total_files = $fileReports.Count
     missing_files = $missingFiles
     files_without_startup_banner = $filesWithoutStartup
+    files_without_window_lines = $filesWithoutLines
     stop_match_count = $totalStopMatches
     aggregate_markers = $aggregateMarkerObject
     requirements = @($requirements)
@@ -193,6 +243,13 @@ $report = New-Object psobject -Property @{
 if ($OutputJson) {
     $json = $report | ConvertTo-Json -Depth 8
     Set-Content -LiteralPath $OutputJson -Value $json -Encoding UTF8
+}
+
+$summaryReport = New-ReleaseRptEvidenceSummary -Report $report
+
+if ($OutputSummaryJson) {
+    $summaryJson = $summaryReport | ConvertTo-Json -Depth 8
+    Set-Content -LiteralPath $OutputSummaryJson -Value $summaryJson -Encoding UTF8
 }
 
 $report | ConvertTo-Json -Depth 8
