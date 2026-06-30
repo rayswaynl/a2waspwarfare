@@ -19,6 +19,10 @@ if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
 
 ["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has left the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 
+//--- If enrollment exhausted its retry budget before the player disconnected, give the same UID
+//--- a clean three-attempt self-heal on the next join instead of carrying the stale failure state.
+missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil];
+
 //--- Headless Clients disconnection?.
 if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 	_get = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
