@@ -16,8 +16,8 @@ function Get-WindowedRpt {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)] [string] $RptPath,
-        # Marker that opens the window; default = mission init line stamped at every mission start.
-        [string] $WindowMarker = 'MISSINIT',
+        # Regex marker that opens the window; default matches the mission startup banners.
+        [string] $WindowMarker = 'MISSINIT|## (Mission Name|Build|LOG CONTENT)',
         # Optional regex applied to lines inside the window.
         [string] $Pattern,
         # Return at most this many lines from the end of the window (0 = all).
