@@ -20,26 +20,26 @@
 
 | Path | Repo / target | Responsibility |
 |------|---------------|----------------|
-| `C:\Users\Steff\a2waspwarfare\server-config\userconfig\ASR_AI\asr_ai_settings.hpp` | legacy repo (`master`) — **create** | Canonical, version-controlled tuned config (source of truth) |
-| `C:\Users\Steff\a2waspwarfare\server-config\userconfig\README.md` | legacy repo — **create** | Deploy/revert instructions + server-not-client rationale |
+| `<a2waspwarfare>\server-config\userconfig\ASR_AI\asr_ai_settings.hpp` | legacy repo (`master`) — **create** | Canonical, version-controlled tuned config (source of truth) |
+| `<a2waspwarfare>\server-config\userconfig\README.md` | legacy repo — **create** | Deploy/revert instructions + server-not-client rationale |
 | `C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\userconfig\ASR_AI\asr_ai_settings.hpp` | local Steam install — **overwrite** | Deployed copy for local playtests (`.bak` beside it is untouched) |
-| `C:\Users\Steff\miksuus-warfare\web\content\guides\performance.mdx` | miksuus-warfare — **modify** | Add "ASR AI tuning (server-side)" section |
-| `C:\Users\Steff\miksuus-warfare\web\content\guides\mods-and-modpack.mdx` | miksuus-warfare — **modify** | Add server-side tuning pointer |
-| `C:\Users\Steff\a2waspwarfare-next\docs\codex-work-order.md` | rebuild repo (`main`) — **modify** | Add `Theme G` / `G1` modpack-integration backlog item |
+| `<miksuus-warfare>\web\content\guides\performance.mdx` | miksuus-warfare — **modify** | Add "ASR AI tuning (server-side)" section |
+| `<miksuus-warfare>\web\content\guides\mods-and-modpack.mdx` | miksuus-warfare — **modify** | Add server-side tuning pointer |
+| `<a2waspwarfare-next>\docs\codex-work-order.md` | rebuild repo (`main`) — **modify** | Add `Theme G` / `G1` modpack-integration backlog item |
 
 ---
 
 ### Task 1: Create the canonical version-controlled config (with Profile A applied)
 
 **Files:**
-- Create: `C:\Users\Steff\a2waspwarfare\server-config\userconfig\ASR_AI\asr_ai_settings.hpp`
+- Create: `<a2waspwarfare>\server-config\userconfig\ASR_AI\asr_ai_settings.hpp`
 - Source: `C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\userconfig\ASR_AI\asr_ai_settings.hpp`
 
 - [ ] **Step 1: Copy the current live config into the repo as an exact baseline**
 
 ```powershell
 $src = "C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\userconfig\ASR_AI\asr_ai_settings.hpp"
-$dst = "C:\Users\Steff\a2waspwarfare\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
+$dst = "<a2waspwarfare>\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
 New-Item -ItemType Directory -Force -Path (Split-Path $dst) | Out-Null
 Copy-Item -Path $src -Destination $dst -Force
 ```
@@ -104,7 +104,7 @@ class asr_ai {
 - [ ] **Step 7: Verify the edits landed and nothing else changed**
 
 ```powershell
-$dst = "C:\Users\Steff\a2waspwarfare\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
+$dst = "<a2waspwarfare>\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
 Select-String -Path $dst -Pattern 'radiorange = 300;','buildingSearching = 0.5;','WASP Warfare perf tuning' | Select-Object Line
 # Confirm the keep-list is intact:
 Select-String -Path $dst -Pattern 'serverdvd = 1;','join_loners = 1;','setskills = 1;','feature = 0;','version = 6;' | Select-Object Line
@@ -131,7 +131,7 @@ Expected: `True`. If `False`, first make one: `Copy-Item $src "$src.bak"` (where
 - [ ] **Step 2: Deploy the canonical repo copy over the live file**
 
 ```powershell
-$repo = "C:\Users\Steff\a2waspwarfare\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
+$repo = "<a2waspwarfare>\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
 $live = "C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\userconfig\ASR_AI\asr_ai_settings.hpp"
 Copy-Item -Path $repo -Destination $live -Force
 ```
@@ -140,7 +140,7 @@ Note: if this errors with access-denied, re-run the copy in an elevated PowerShe
 - [ ] **Step 3: Verify the live file now matches the repo canonical and the `.bak` is unchanged**
 
 ```powershell
-$repo = "C:\Users\Steff\a2waspwarfare\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
+$repo = "<a2waspwarfare>\server-config\userconfig\ASR_AI\asr_ai_settings.hpp"
 $live = "C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\userconfig\ASR_AI\asr_ai_settings.hpp"
 if ((Get-FileHash $repo).Hash -eq (Get-FileHash $live).Hash) { "LIVE MATCHES REPO" } else { "MISMATCH" }
 Select-String -Path "$live.bak" -Pattern 'radiorange = 500;' -Quiet  # bak should still hold stock value
@@ -152,7 +152,7 @@ Expected: `LIVE MATCHES REPO`, and the `.bak` check returns `True` (stock 500 pr
 ### Task 3: Write the server-config deploy README
 
 **Files:**
-- Create: `C:\Users\Steff\a2waspwarfare\server-config\userconfig\README.md`
+- Create: `<a2waspwarfare>\server-config\userconfig\README.md`
 
 - [ ] **Step 1: Create the README with deploy + revert instructions**
 
@@ -202,7 +202,7 @@ Each install keeps a stock `asr_ai_settings.hpp.bak` beside the live file. To re
 - [ ] **Step 2: Verify the file exists and is non-empty**
 
 ```powershell
-Get-Item "C:\Users\Steff\a2waspwarfare\server-config\userconfig\README.md" | Select-Object Length
+Get-Item "<a2waspwarfare>\server-config\userconfig\README.md" | Select-Object Length
 ```
 Expected: a non-zero `Length`.
 
@@ -211,8 +211,8 @@ Expected: a non-zero `Length`.
 ### Task 4: Update the miksuus-warfare guides
 
 **Files:**
-- Modify: `C:\Users\Steff\miksuus-warfare\web\content\guides\performance.mdx`
-- Modify: `C:\Users\Steff\miksuus-warfare\web\content\guides\mods-and-modpack.mdx`
+- Modify: `<miksuus-warfare>\web\content\guides\performance.mdx`
+- Modify: `<miksuus-warfare>\web\content\guides\mods-and-modpack.mdx`
 
 - [ ] **Step 1: Read both files** to confirm the anchor lines are still present (they were captured 2026-06-09 — if the surrounding text shifted, re-anchor on the same quoted sentence).
 
@@ -253,8 +253,8 @@ new_string:
 - [ ] **Step 4: Verify both edits**
 
 ```powershell
-Select-String -Path "C:\Users\Steff\miksuus-warfare\web\content\guides\performance.mdx" -Pattern 'ASR AI tuning \(server-side\)','radiorange = 300' | Select-Object Line
-Select-String -Path "C:\Users\Steff\miksuus-warfare\web\content\guides\mods-and-modpack.mdx" -Pattern 'Most of its cost is' | Select-Object Line
+Select-String -Path "<miksuus-warfare>\web\content\guides\performance.mdx" -Pattern 'ASR AI tuning \(server-side\)','radiorange = 300' | Select-Object Line
+Select-String -Path "<miksuus-warfare>\web\content\guides\mods-and-modpack.mdx" -Pattern 'Most of its cost is' | Select-Object Line
 ```
 Expected: both patterns found.
 
@@ -263,7 +263,7 @@ Expected: both patterns found.
 ### Task 5: Add the modpack-integration backlog item to waspwarfare-next
 
 **Files:**
-- Modify: `C:\Users\Steff\a2waspwarfare-next\docs\codex-work-order.md`
+- Modify: `<a2waspwarfare-next>\docs\codex-work-order.md`
 
 > The rebuild repo has a binding protocol (`a2waspwarfare-next/CLAUDE.md`): claim-before-build, explicit-path commits with a `claude:` prefix, run both validators, never edit the legacy repo from here. A docs-only backlog addition is low-risk, but the commit must still follow that protocol (handled in Task 6). This task only writes the text.
 
@@ -290,7 +290,7 @@ new_string:
 - [ ] **Step 2: Verify the entry landed in place**
 
 ```powershell
-Select-String -Path "C:\Users\Steff\a2waspwarfare-next\docs\codex-work-order.md" -Pattern '## Theme G','### G1\.','# 4\. Coordination' | Select-Object LineNumber, Line
+Select-String -Path "<a2waspwarfare-next>\docs\codex-work-order.md" -Pattern '## Theme G','### G1\.','# 4\. Coordination' | Select-Object LineNumber, Line
 ```
 Expected: `Theme G` and `G1.` appear immediately before `# 4. Coordination & sequencing` (ascending line numbers, G1 just above section 4).
 
@@ -305,9 +305,9 @@ Expected: `Theme G` and `G1.` appear immediately before `# 4. Coordination & seq
 - [ ] **Step 2: Show pending changes per repo (review before any commit)**
 
 ```powershell
-git -C "C:\Users\Steff\a2waspwarfare" status --short
-git -C "C:\Users\Steff\miksuus-warfare" status --short
-git -C "C:\Users\Steff\a2waspwarfare-next" status --short
+git -C "<a2waspwarfare>" status --short
+git -C "<miksuus-warfare>" status --short
+git -C "<a2waspwarfare-next>" status --short
 ```
 Expected: legacy repo shows the new `server-config/...` files + `docs/superpowers/...`; miksuus-warfare shows the two guide edits; rebuild shows only `docs/codex-work-order.md`.
 
@@ -316,7 +316,7 @@ Expected: legacy repo shows the new `server-config/...` files + `docs/superpower
 - [ ] **Step 4 (on approval): Run the rebuild validators before its commit** (required by `a2waspwarfare-next/CLAUDE.md`)
 
 ```powershell
-cd "C:\Users\Steff\a2waspwarfare-next"
+cd "<a2waspwarfare-next>"
 .\tools\validate-private-repo.ps1
 .\tools\validate-mission-source.ps1
 git diff --check
@@ -327,22 +327,22 @@ Expected: both validators pass; `git diff --check` clean. A docs-only edit shoul
 
 ```powershell
 # Legacy repo (branch master) — config + spec + plan + README
-git -C "C:\Users\Steff\a2waspwarfare" add `
+git -C "<a2waspwarfare>" add `
   "server-config/userconfig/ASR_AI/asr_ai_settings.hpp" `
   "server-config/userconfig/README.md" `
   "docs/superpowers/specs/2026-06-09-asr-ai-server-fps-tuning-design.md" `
   "docs/superpowers/plans/2026-06-09-asr-ai-server-fps-tuning.md"
-git -C "C:\Users\Steff\a2waspwarfare" commit -m "perf(asr-ai): conservative server-FPS tune (radiorange 500->300, buildingSearching 0.7->0.5) + version-control userconfig"
+git -C "<a2waspwarfare>" commit -m "perf(asr-ai): conservative server-FPS tune (radiorange 500->300, buildingSearching 0.7->0.5) + version-control userconfig"
 
 # miksuus-warfare — guide docs
-git -C "C:\Users\Steff\miksuus-warfare" add `
+git -C "<miksuus-warfare>" add `
   "web/content/guides/performance.mdx" `
   "web/content/guides/mods-and-modpack.mdx"
-git -C "C:\Users\Steff\miksuus-warfare" commit -m "docs(guides): document server-side ASR AI tuning"
+git -C "<miksuus-warfare>" commit -m "docs(guides): document server-side ASR AI tuning"
 
 # Rebuild repo (branch main) — explicit path, claude: prefix (per its protocol)
-git -C "C:\Users\Steff\a2waspwarfare-next" add "docs/codex-work-order.md"
-git -C "C:\Users\Steff\a2waspwarfare-next" commit -m "claude: backlog G1 - official modpack compatibility + integration (forward-looking)"
+git -C "<a2waspwarfare-next>" add "docs/codex-work-order.md"
+git -C "<a2waspwarfare-next>" commit -m "claude: backlog G1 - official modpack compatibility + integration (forward-looking)"
 ```
 Note: do NOT push. Pushing is a separate explicit request.
 

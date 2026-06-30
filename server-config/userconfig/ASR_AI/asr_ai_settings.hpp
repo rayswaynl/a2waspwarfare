@@ -10,7 +10,7 @@
 */
 
 /*
- WASP Warfare perf tuning — Profile A (Conservative), 2026-06-09:
+ WASP Warfare perf tuning - Profile A (Conservative), 2026-06-09:
    sys_airearming.feature = 0           (AI rearming scan loop off; pre-existing)
    sys_aiskill.radiorange = 300         (was 500; shrink radio-net fan-out)
    sys_aiskill.buildingSearching = 0.5  (was 0.7; reduce CQB pathfinding)
@@ -92,7 +92,7 @@ class asr_ai {
 				general[]        = {1.00, 0.00};
 
 				units[] = { // add class names to this to override their default (or inherited) skill set
-					
+
 				};
 			};
 			class level_1 { // sf 1
@@ -257,11 +257,11 @@ class asr_ai {
 				general[]        = {0.70, 0.20};
 
 				units[] = {
-					
+
 				};
 			};
 		};//sets
-		
+
 		// apply skill coefficient by faction to the skills the units would get based on their skill levels and settings above
 		// if a faction is missing the coefficient is assumed to be 1
 		class factions {
