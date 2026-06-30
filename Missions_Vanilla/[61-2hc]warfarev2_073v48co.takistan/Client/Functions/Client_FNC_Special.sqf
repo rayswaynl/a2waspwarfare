@@ -266,11 +266,17 @@ WFBE_CL_FNC_Upgrade_Complete = {
 	}; //--- end _upgrade_isplayer guard
 	// Marty: Clear the local cached upgrade ID and countdown when completion is announced.
 	//--- cmdcon30 (staged): a JIP client (or the HC running this client fn) can reach here before WFBE_Client_Logic
-	//--- is initialised -> "Undefined variable wfbe_client_logic" (live x2 in Ray's cmdcon29 client RPT). isNil-guard, A2-OA-safe.
+	//--- is initialised, or while it is still objNull. Guard both states so upgrade completion cannot break client init.
 	if (!isNil "WFBE_Client_Logic") then {
-		WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
-		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
-		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", -1, false];
+		if !(isNull WFBE_Client_Logic) then {
+			WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
+			WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
+			WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", -1, false];
+		} else {
+			diag_log "CLIENTUPGRADE|SKIP|WFBE_Client_Logic objNull at completion";
+		};
+	} else {
+		diag_log "CLIENTUPGRADE|SKIP|WFBE_Client_Logic nil at completion";
 	};
 
 	// Marty: Refresh local artillery vehicles after Artillery Ammunition unlocks new special rounds.
