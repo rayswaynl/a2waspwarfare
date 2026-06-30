@@ -186,6 +186,36 @@ if (IS_air_war_event) then {
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 };
 
+IS_laststand_event = false;
+_laststandEnabledFromParameters = missionNamespace getVariable "WFBE_LASTSTAND_ENABLED";
+
+switch (_laststandEnabledFromParameters) do {
+	case 0: {
+		#ifdef IS_LASTSTAND_EVENT
+			IS_laststand_event = true;
+		#endif
+	};
+	case 1: {
+		IS_laststand_event = false;
+	};
+	case 2: {
+		IS_laststand_event = true;
+	};
+};
+
+if (IS_laststand_event) then {
+	//--- Last Stand: west gets generous starting economy to buy defenses during prep phases.
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_WEST", 50000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_WEST", 200000];
+	//--- East gets minimal resources — AI attacks are wave-managed by LS_WaveManager.
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_EAST", 1000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_EAST", 1000];
+	//--- All upgrades available from the start so west can buy freely.
+	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
+	diag_log "[WFBE (INIT)] IS_laststand_event=true - Last Stand horde mode active.";
+	if (isServer) then { [] execVM "Server\LastStand\LS_WaveManager.sqf" };
+};
+
 if (WF_Debug) then { //--- Debug.
 	missionNamespace setVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", 7];
 	missionNamespace setVariable ["WFBE_C_TOWNS_OCCUPATION", 1];
