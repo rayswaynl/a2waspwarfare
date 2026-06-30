@@ -216,7 +216,7 @@ waitUntil {commonInitComplete};
 ["INITIALIZATION", Format ["Init_Client.sqf: Common initialization is complete at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
 //--- qol-polish-pack: friendly name-tag overlay, toggled from the WF menu "TAGS" button (MenuAction 25). Client-side, friendly-PLAYERS only,
-//--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / getPosVisual / ctrlSetStructuredText, no A3 commands.
+//--- distance-scaled, pooled controls (no per-frame create). A2-safe: visiblePosition / worldToScreen / ctrlSetStructuredText, no A3 commands.
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
@@ -231,7 +231,7 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 			_shown = 0;
 			{
 				if (_shown < _max && {isPlayer _x} && {_x != player} && {alive _x} && {side _x == side player}) then {
-					_pp = getPosVisual _x;
+					_pp = visiblePosition _x;
 					_scr = worldToScreen [_pp select 0, _pp select 1, (_pp select 2) + 1.9];
 					if (count _scr == 2 && {(_scr select 0) > 0} && {(_scr select 0) < 1} && {(_scr select 1) > 0} && {(_scr select 1) < 1}) then {
 						_d = _x distance player;
@@ -971,7 +971,7 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 			_area = [_preview,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 
             	if(_area getVariable 'avail' <= 0) then { _color = _colorRed };
-           		if (surfaceIsWater(position _preview)) then { _color = _colorRed }; if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {count ((position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then { _color = _colorRed }; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
+			if (surfaceIsWater(position _preview)) then { _color = _colorRed }; if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {count ((position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then { _color = _colorRed }; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
 
 			if ({_preview isKindOf _x} count _affected != 0) then {
                 	Private["_building","_sort","_strs","_lax","_lay"];
