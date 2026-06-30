@@ -174,15 +174,16 @@ $packet = [ordered]@{
 	gates = $gates.ToArray()
 	commands = [ordered]@{
 		markerArray = $markerArrayCommand
+		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedGit $ReleaseGit -ChernarusStartTime `"<chernarus-launch-time>`" -TakistanStartTime `"<takistan-launch-time>`""
 		runtimeScorer = "& .\Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers"
 		runtimeSummary = "& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
 		packageProof = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1 -ArchivePath .\_MISSIONS.7z -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -OutDirectory .\wasp-release-package-manifest -Force"
 	}
 	runtimeChecklist = @(
-		"Chernarus dedicated-server RPT from this exact package.",
-		"Takistan dedicated-server RPT from this exact package.",
-		"Two headless client RPTs, HC1 and HC2.",
-		"Start-client and late-JIP client RPTs.",
+		"Exactly ten copied RPT files exist: chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt and takistan/{server,HC1,HC2,start-client,late-JIP}.rpt.",
+		"No extra RPT files or duplicate copied paths are present in the release-candidate RPT root.",
+		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker and MISSINIT worldName.",
+		"Run ledger records terrain launch times, original source RPT paths, copied paths, command lines and PIDs; copied RPT LastWriteTime values are after their terrain launch time and no original source RPT path is reused across roles.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
 		"AICOM side discovery, heartbeat, tick and progress tokens for WEST and EAST.",
@@ -252,6 +253,8 @@ foreach ($gate in $packet.gates) {
 [void]$lines.Add("")
 [void]$lines.Add('```powershell')
 [void]$lines.Add($packet.commands.markerArray)
+[void]$lines.Add("")
+[void]$lines.Add($packet.commands.runtimePacket)
 [void]$lines.Add("")
 [void]$lines.Add($packet.commands.runtimeScorer)
 [void]$lines.Add("")

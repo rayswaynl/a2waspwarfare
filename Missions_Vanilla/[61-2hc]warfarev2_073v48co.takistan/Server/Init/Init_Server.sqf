@@ -825,16 +825,16 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 
 	["INITIALIZATION", "Init_Server.sqf: B74.2 GUER stipend/economy loop launched (decoupled from team-registration)."] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- EDITOR-SLOT SWEEP (2026-06-15; group-cap reclaim 2026-06-29): the 27 WEST + 27 EAST editor-placed
+//--- EDITOR-SLOT AUDIT TAGGING (2026-06-15; PR#122 reap removed 2026-06-30): the 27 WEST + 27 EAST editor-placed
 //--- player-slot groups in mission.sqm are born by the engine at load with no createGroup, so
 //--- WFBE_CO_FNC_CreateGroup never tags them and they show as "untagged" in the server_groupsGC audit -
 //--- indistinguishable from genuinely leaked groups. Of those, ~13/side are "overflow" slots whose unit
 //--- self-deletes at load (mission.sqm init="... deleteVehicle this"), leaving an EMPTY group that still
-//--- permanently occupies one of the 144 per-side group slots. One-shot sweep: REAP the empty overflow
-//--- groups (reclaim ~13/side headroom; they are unsynced + never enter wfbe_teams, so nothing references
-//--- them) and TAG the remaining active player-slot groups "editor-player-slot" (broadcast) so the audit
-//--- can tell them from leaks. Active groups carry wfbe_persistent=true so the GC never reaps them; the
-//--- tag is audit-only. The isNil guard skips any runtime group the wrapper already tagged. GUER included.
+//--- permanently occupies one of the 144 per-side group slots. A later one-shot deleteGroup reap for those
+//--- empty overflow groups caused JIP deadspawn, so this block now only TAGS editor player-slot groups as
+//--- "editor-player-slot" (broadcast) so the audit can tell them from leaks. Active groups carry
+//--- wfbe_persistent=true so the GC never reaps them; the tag is audit-only. The isNil guard skips any
+//--- runtime group the wrapper already tagged. GUER included.
 if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
 	{

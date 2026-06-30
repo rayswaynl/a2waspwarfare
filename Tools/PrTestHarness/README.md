@@ -120,10 +120,29 @@ Important tokens:
 - `FACTORY_AUDIT`, `SERVICE_SUPPLY_AUDIT`, `WDDM_ARTILLERY_AUDIT`
 - `PERF_BURST`, `PERF #`
 
-For a release-candidate RPT bundle, use the redaction-safe evidence scorer. It
-scores only the current mission window in each RPT, starting at the latest
-`MISSINIT` or startup banner, then prints session names and token counts only;
-it does not echo raw RPT lines.
+For a release-candidate RPT bundle, first verify the packet shape, then use the
+redaction-safe evidence scorer. The packet checker prevents aggregate false
+passes by requiring this exact copied layout:
+
+```text
+release-candidate\
+  chernarus\server.rpt
+  chernarus\HC1.rpt
+  chernarus\HC2.rpt
+  chernarus\start-client.rpt
+  chernarus\late-JIP.rpt
+  takistan\server.rpt
+  takistan\HC1.rpt
+  takistan\HC2.rpt
+  takistan\start-client.rpt
+  takistan\late-JIP.rpt
+```
+
+It also checks that each role file contains the terrain-specific release marker
+and matching `MISSINIT` world, rejects extra/duplicate copied RPTs, and can
+reject stale RPTs when passed the terrain launch times from the run ledger. The
+run ledger still needs to record the original source RPT path for each copied
+file so reviewers can reject duplicate source paths.
 
 ```powershell
 $releaseGit = git rev-parse --short=10 HEAD
@@ -139,12 +158,24 @@ $expectedReleaseMarkers = @(
 
 LoadoutManager writes those markers into generated `version.sqf`, with the
 current git short hash and terrain appended. Use the terrain-specific marker
-values so runtime proof ties back to the exact release HEAD. The scorer expects
-both Chernarus and Takistan coverage, no generic current-window RPT stop
-conditions, at least two successful non-zero-owner CIV `HCSIDE|v1|connect`
-rows for HC registry proof, plus the round-6 AICOM, JIP, HC, town-cleanup,
-WDDM/static/artillery and supply evidence tokens. It exits non-zero until the
-bundle is complete.
+values so runtime proof ties back to the exact release HEAD.
+
+```powershell
+& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 `
+  -RptRoot "C:\WASP\rpts\release-candidate" `
+  -ExpectedGit $releaseGit `
+  -ChernarusStartTime "2026-07-01T20:00:00+02:00" `
+  -TakistanStartTime "2026-07-01T21:00:00+02:00"
+```
+
+After the packet matrix passes, the scorer checks both Chernarus and Takistan
+coverage, no generic current-window RPT stop conditions, at least two successful
+non-zero-owner CIV `HCSIDE|v1|connect` rows for HC registry proof, plus the
+round-6 AICOM, JIP, HC, town-cleanup, WDDM/static/artillery and supply evidence
+tokens. It exits non-zero until the bundle is complete. It scores only the
+current mission window in each RPT, including the startup banner immediately
+above the latest `MISSINIT`, then prints session names and token counts only;
+it does not echo raw RPT lines.
 
 To produce a portable release/wiki summary packet from the same scorer output:
 

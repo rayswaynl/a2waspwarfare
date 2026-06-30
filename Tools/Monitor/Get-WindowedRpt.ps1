@@ -44,10 +44,17 @@ function Get-WindowedRpt {
 
     $all = $content -split "`r?`n"
 
-    # Find the LAST window marker; window = everything after it.
+    # Find the LAST window marker; window = everything after it. For MISSINIT,
+    # include the immediately preceding startup banner so the release marker
+    # logged between Build and MISSINIT stays inside the returned window.
     $start = 0
     for ($i = $all.Count - 1; $i -ge 0; $i--) {
         if ($all[$i] -match $WindowMarker) { $start = $i; break }
+    }
+    if ($WindowMarker -eq 'MISSINIT' -and $start -gt 0) {
+        for ($j = $start; $j -ge ([Math]::Max(0, $start - 20)); $j--) {
+            if ($all[$j] -match '## Mission Name') { $start = $j; break }
+        }
     }
     $window = if ($start -gt 0) { $all[$start..($all.Count - 1)] } else { $all }
 

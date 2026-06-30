@@ -71,8 +71,10 @@ function Get-RptLineWindow {
 		}
 	}
 
-	# Keep the full three-line startup banner when the final hit is Build/LOG CONTENT.
-	if ($Marker -eq "MISSINIT|## (Mission Name|Build|LOG CONTENT)" -and $allLines[$startIndex] -match "## (Build|LOG CONTENT)") {
+	# Keep the full startup banner when the final hit is MISSINIT/Build/LOG CONTENT.
+	# The release marker is logged between Build and MISSINIT, so starting at MISSINIT
+	# alone would incorrectly hide the exact candidate marker from the evidence window.
+	if ($Marker -eq "MISSINIT|## (Mission Name|Build|LOG CONTENT)" -and $allLines[$startIndex] -match "MISSINIT|## (Build|LOG CONTENT)") {
 		for ($j = $startIndex; $j -ge ([Math]::Max(0, $startIndex - 20)); $j--) {
 			if ($allLines[$j] -match "## Mission Name") {
 				$startIndex = $j
