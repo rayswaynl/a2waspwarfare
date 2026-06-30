@@ -126,12 +126,14 @@ prints session names and token counts only; it does not echo raw RPT lines.
 ```powershell
 powershell -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 `
   -RptDirectory "C:\WASP\rpts\release-candidate" -Recurse `
-  -ExpectedMarker "f0b36fe4f"
+  -ExpectedMarker "WASPRELEASE|v1|candidate=release-command-center-20260630"
 ```
 
-It expects both Chernarus and Takistan coverage plus the round-6 AICOM, JIP,
-HC, town-cleanup, WDDM/static/artillery and supply evidence tokens. It exits
-non-zero until the bundle is complete.
+LoadoutManager writes that marker into generated `version.sqf`, with the
+current git short hash and terrain appended. The scorer expects both Chernarus
+and Takistan coverage plus the round-6 AICOM, JIP, HC, town-cleanup,
+WDDM/static/artillery and supply evidence tokens. It exits non-zero until the
+bundle is complete.
 
 ## Shipping Boundary
 

@@ -28,6 +28,12 @@ for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
 diag_log "## Build: WASP Warfare release candidate";
+#ifdef WF_RELEASE_MARKER
+diag_log WF_RELEASE_MARKER;
+#else
+diag_log format ["WASPRELEASE|v1|candidate=release-command-center-20260630|git=unknown|terrain=%1", worldName];
+#endif
+diag_log format ["MISSINIT: missionName=%1, worldName=%2, isMultiplayer=%3, isServer=%4, isDedicated=%5", WF_MISSIONNAME, worldName, isMultiplayer, isServer, isDedicated];
 diag_log format ["## Starting Distance: [%1]", startingDistance];
 diag_log format ["## Max players Defined: [%1]", WF_MAXPLAYERS];
 diag_log format ["## LOG CONTENT : [%1]", LOG_CONTENT_STATE];
