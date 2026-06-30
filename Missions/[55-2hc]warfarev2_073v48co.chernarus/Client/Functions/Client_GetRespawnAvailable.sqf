@@ -19,7 +19,7 @@ _checks = [_side,missionNamespace getVariable Format["WFBE_%1AIRCRAFTTYPE",_side
 if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
 
 _base_respawn = _availableSpawn - [_hq];
-_has_baserespawn = if (alive _hq || count _base_respawn > 0) then {true} else {false};
+_has_baserespawn = if (alive _hq || ((count _base_respawn) > 0)) then {true} else {false};
 
 /* _checks = [_side,missionNamespace getVariable Format["WFBE_%1COMMANDCENTERTYPE",_sideText],_buildings] Call GetFactories;
 if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
@@ -28,7 +28,7 @@ if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks}; */
 
 
 //--- HQ is dead, but we can spawn at other buildings.
-if (!alive _hq && count _availableSpawn > 1) then {_availableSpawn = _availableSpawn - [_hq]};
+if (!alive _hq && ((count _availableSpawn) > 1)) then {_availableSpawn = _availableSpawn - [_hq]};
 
 //--- Mobile respawn.
 if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {

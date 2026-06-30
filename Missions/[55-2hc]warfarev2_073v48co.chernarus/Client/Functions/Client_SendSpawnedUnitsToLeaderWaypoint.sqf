@@ -24,7 +24,7 @@ _destinationSource = "none";
 _storedMapOrderGroup = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_GROUP", grpNull];
 _storedMapOrderPosition = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION", []];
 
-if (!isNull _storedMapOrderGroup && _storedMapOrderGroup == _team && count _storedMapOrderPosition > 1) then {
+if (!isNull _storedMapOrderGroup && _storedMapOrderGroup == _team && ((count _storedMapOrderPosition) > 1)) then {
 	if (_leader distance _storedMapOrderPosition > 25) then {
 		_destinationPosition = _storedMapOrderPosition;
 		_destinationSource = "stored shift-click map order";

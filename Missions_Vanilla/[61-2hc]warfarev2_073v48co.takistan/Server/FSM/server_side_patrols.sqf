@@ -121,7 +121,7 @@ while {!WFBE_GameOver} do {
 						_logik setVariable ["wfbe_patrol_waitlog", true];
 						["INFORMATION", Format ["server_side_patrols.sqf: [%1] Patrols %2 researched but NO owned towns yet - waiting for the first capture.", _side, _lvl]] Call WFBE_CO_FNC_AICOMLog;
 					};
-					if (!isNull _hq && count _owned > 0) then {
+					if (!isNull _hq && ((count _owned) > 0)) then {
 						_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
 						_tier = switch (_lvl) do {case 1: {"LIGHT"}; case 2: {"MEDIUM"}; default {"HEAVY"}};
 						//--- B36 (Ray 2026-06-15): GUER patrols = a MECHANIZED insurgent COMEBACK force. Always mounted

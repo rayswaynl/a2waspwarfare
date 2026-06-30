@@ -103,7 +103,7 @@ _logic spawn {
 		waitUntil {
 			_params = _logic getVariable "BIS_COIN_params";
 			if (isNil "_params") then {_params = []};
-			(commandingMenu == "" && count _params == 0 && !BIS_CONTROL_CAM_RMB) || isNil "BIS_CONTROL_CAM"
+			(commandingMenu == "" && ((count _params) == 0) && !BIS_CONTROL_CAM_RMB) || isNil "BIS_CONTROL_CAM"
 		};
 		if (isNil "BIS_CONTROL_CAM") exitWith {};
 		showCommandingMenu "#USER:BIS_Coin_categories_0";
@@ -218,7 +218,7 @@ BIS_CONTROL_CAM_Handler = {
 		};
 
 		//--- Last Built Defense (Custom Action #1).
-		if ((_key in (actionKeys "User15")) && count lastBuilt > 0) then {
+		if ((_key in (actionKeys "User15")) && ((count lastBuilt) > 0)) then {
 			_deployed = true;
 			if (WFBE_COIN_Root == "HQ") then {_deployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus};
 			_currentCash = Call GetPlayerFunds;

@@ -35,7 +35,7 @@ _wpradius = -1;
 _wpcompletionRadius = -1;
 
 for '_z' from 0 to _maxWaypoints do {
-	if (_z == _insert && count _usable > 0) then {
+	if (_z == _insert && ((count _usable) > 0)) then {
 		_insert = _insert + _insertStep;
 		_insertObject = _usable select (round(random((count _usable)-1)));
 		_usable = _usable - [_insertObject];

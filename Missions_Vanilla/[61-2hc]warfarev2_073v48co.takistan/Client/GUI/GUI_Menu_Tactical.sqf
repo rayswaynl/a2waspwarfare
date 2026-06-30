@@ -617,14 +617,14 @@ while {alive player && dialog} do {
 		{
 			_piece = _x;
 			//--- Driver first, then gunner; pop a free AI for each empty seat.
-			if (isNull (driver _piece) && count _available > 0) then {
+			if (isNull (driver _piece) && ((count _available) > 0)) then {
 				_crewed = _available select 0;
 				_available = _available - [_crewed];
 				[_crewed] allowGetIn true;
 				_crewed moveInDriver _piece;
 				_seated = _seated + 1;
 			};
-			if (isNull (gunner _piece) && count _available > 0) then {
+			if (isNull (gunner _piece) && ((count _available) > 0)) then {
 				_crewed = _available select 0;
 				_available = _available - [_crewed];
 				[_crewed] allowGetIn true;
