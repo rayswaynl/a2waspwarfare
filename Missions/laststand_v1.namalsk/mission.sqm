@@ -1,0 +1,818 @@
+version=11;
+class Mission
+{
+	addOns[]=
+	{
+		"namalsk",
+		"cacharacters2",
+		"ca_modules_functions",
+		"ca_highcommand",
+		"warfare2vehicles",
+		"ca_communityconfigurationproject_e",
+		"CorePatch_CCP_70799"
+	};
+	addOnsAuto[]=
+	{
+		"namalsk",
+		"ca_modules_functions",
+		"cacharacters2",
+		"CorePatch_CCP_70799"
+	};
+	randomSeed=10034581;
+	class Intel
+	{
+		briefingName="Last Stand v1 Namalsk [WEST]";
+		briefingDescription="Last Stand horde mode on Namalsk. WEST holds the central compound against wave attacks. One playable side. Requires @NC (nc_pathfinder).";
+		resistanceWest=0;
+		startWeather=0.30000001;
+		forecastWeather=0.5;
+		year=2016;
+		month=2;
+		day=14;
+		hour=10;
+		minute=0;
+	};
+	class Groups
+	{
+		items=24;
+
+		// --- LOGIC: LocationLogicStart (world anchor / start-position candidate)
+		class Item0
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5100,0,4900};
+					azimut=0;
+					special="NONE";
+					id=1;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		};
+
+		// --- LOGIC: RCoin
+		class Item1
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5100,0,4900};
+					id=2;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+					text="RCoin";
+					init="this enableSimulation false;";
+				};
+			};
+		};
+
+		// --- LOGIC: MCoin
+		class Item2
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5110,0,4900};
+					id=3;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+					text="MCoin";
+					init="this enableSimulation false;";
+				};
+			};
+		};
+
+		// --- LOGIC: FunctionsManager
+		class Item3
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5120,0,4900};
+					id=4;
+					side="LOGIC";
+					vehicle="FunctionsManager";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		};
+
+		// --- LOGIC: WF_Logic (framework global anchor; no towns for Namalsk Last Stand)
+		// totalTowns=0 is correct: there are no capturable towns in Last Stand mode.
+		// Init_TownMode.sqf handles an empty array without hanging.
+		class Item4
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5130,0,4900};
+					id=5;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+					text="WF_Logic";
+					init="this setVariable [""totalTowns"",0]; this enableSimulation false; nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
+				};
+			};
+		};
+
+		// --- LOGIC: WFBE_L_BLU (west side logic, synced to all 14 west playable slots)
+		class Item5
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5140,0,4900};
+					id=10;
+					side="LOGIC";
+					vehicle="LocationLogicOwnerWest";
+					leader=1;
+					skill=0.60000002;
+					text="WFBE_L_BLU";
+					synchronizations[]={101,102,103,104,105,106,107,108,109,110,111,112,113,114};
+				};
+			};
+		};
+
+		// --- WEST Playable: Medic 1
+		class Item6
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5060,0,4860};
+					azimut=0;
+					special="NONE";
+					id=101;
+					side="WEST";
+					vehicle="FR_Corpsman";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Medic 2
+		class Item7
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5070,0,4860};
+					azimut=0;
+					special="NONE";
+					id=102;
+					side="WEST";
+					vehicle="FR_Corpsman";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Medic 3
+		class Item8
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5080,0,4860};
+					azimut=0;
+					special="NONE";
+					id=103;
+					side="WEST";
+					vehicle="FR_Corpsman";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Engineer 1
+		class Item9
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5060,0,4880};
+					azimut=0;
+					special="NONE";
+					id=104;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Engineer 2
+		class Item10
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5070,0,4880};
+					azimut=0;
+					special="NONE";
+					id=105;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Engineer 3
+		class Item11
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5080,0,4880};
+					azimut=0;
+					special="NONE";
+					id=106;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Engineer 4
+		class Item12
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5090,0,4880};
+					azimut=0;
+					special="NONE";
+					id=107;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Engineer (Repair, Salvage, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Support 1
+		class Item13
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5060,0,4900};
+					azimut=0;
+					special="NONE";
+					id=108;
+					side="WEST";
+					vehicle="FR_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Support (Supply run)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Support 2
+		class Item14
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5070,0,4900};
+					azimut=0;
+					special="NONE";
+					id=109;
+					side="WEST";
+					vehicle="FR_TL";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Support (Supply run)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Soldier 1
+		class Item15
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5080,0,4900};
+					azimut=0;
+					special="NONE";
+					id=110;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Soldier 2
+		class Item16
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5090,0,4900};
+					azimut=0;
+					special="NONE";
+					id=111;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Soldier 3
+		class Item17
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5100,0,4900};
+					azimut=0;
+					special="NONE";
+					id=112;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Sniper 1
+		class Item18
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5060,0,4920};
+					azimut=0;
+					special="NONE";
+					id=113;
+					side="WEST";
+					vehicle="USMC_SoldierS_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- WEST Playable: Sniper 2
+		class Item19
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5070,0,4920};
+					azimut=0;
+					special="NONE";
+					id=114;
+					side="WEST";
+					vehicle="USMC_SoldierS_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
+					synchronizations[]={10};
+				};
+			};
+		};
+
+		// --- CIV: Headless Client 1
+		class Item20
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5200,0,5000};
+					id=200;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client";
+				};
+			};
+		};
+
+		// --- CIV: Headless Client 2
+		class Item21
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5210,0,5000};
+					id=201;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 2";
+				};
+			};
+		};
+
+		// --- LOGIC: LocationLogicStart marked as west default spawn
+		// Tells Init_Server.sqf's spawn-placement that this is the WEST HQ start area.
+		class Item22
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={5100,0,4900};
+					azimut=0;
+					special="NONE";
+					id=300;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+					init="this setVariable [""wfbe_default"", west]; this setVariable [""wfbe_spawn"", ""north""];";
+				};
+			};
+		};
+
+		// --- LOGIC: LocationLogicStart for east placement anchor
+		// A second LocationLogicStart is needed so the spawn-randomiser has a pool.
+		// Placed far south-east corner; engine places EAST HQ there (no EAST players join).
+		class Item23
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={9000,0,1000};
+					azimut=0;
+					special="NONE";
+					id=301;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+					init="this setVariable [""wfbe_default"", east]; this setVariable [""wfbe_spawn"", ""south""];";
+				};
+			};
+		};
+	};
+	class Markers
+	{
+		items=14;
+
+		// --- West respawn marker (required by respawn system)
+		class Item0
+		{
+			position[]={5100,0,4900};
+			name="WestTempRespawnMarker";
+			type="Empty";
+		};
+
+		// --- DEADSPAWNS (required by Init_Server; placed in far corner)
+		class Item1
+		{
+			position[]={9500,0,9500};
+			name="DEADSPAWNS";
+			text="DEADSPAWNS, DO NOT ENTER!!!";
+			type="mil_dot";
+			colorName="ColorRed";
+			a=4;
+			b=4;
+		};
+		class Item2
+		{
+			position[]={9500,0,9500};
+			name="DEADSPAWNS_1";
+			text="DEADSPAWNS, DO NOT ENTER!!!";
+			markerType="ELLIPSE";
+			type="mil_dot";
+			colorName="ColorRed";
+			a=80;
+			b=80;
+		};
+
+		// --- Last Stand hold-point marker (read by LS_WaveManager.sqf via getMarkerPos "ls_holdpoint")
+		class Item3
+		{
+			position[]={5100,0,4900};
+			name="ls_holdpoint";
+			text="HOLD POINT";
+			markerType="ELLIPSE";
+			type="mil_objective";
+			colorName="ColorWEST";
+			a=120;
+			b=120;
+		};
+
+		// --- Wave spawn ring — 8 markers at ~1000m around hold point [5100, 4900]
+		// ls_spawn_1: south  [5100, 3900]
+		class Item4
+		{
+			position[]={5100,0,3900};
+			name="ls_spawn_1";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+		// ls_spawn_2: south-east  [5807, 4193] approx 1000m SE
+		class Item5
+		{
+			position[]={5807,0,4193};
+			name="ls_spawn_2";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+		// ls_spawn_3: east  [6100, 4900]
+		class Item6
+		{
+			position[]={6100,0,4900};
+			name="ls_spawn_3";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+		// ls_spawn_4: north-east  [5807, 5607]
+		class Item7
+		{
+			position[]={5807,0,5607};
+			name="ls_spawn_4";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+		// ls_spawn_5: north  [5100, 5900]
+		class Item8
+		{
+			position[]={5100,0,5900};
+			name="ls_spawn_5";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+		// ls_spawn_6: north-west  [4393, 5607]
+		class Item9
+		{
+			position[]={4393,0,5607};
+			name="ls_spawn_6";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+		// ls_spawn_7: west  [4100, 4900]
+		class Item10
+		{
+			position[]={4100,0,4900};
+			name="ls_spawn_7";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+		// ls_spawn_8: south-west  [4393, 4193]
+		class Item11
+		{
+			position[]={4393,0,4193};
+			name="ls_spawn_8";
+			type="mil_dot";
+			colorName="ColorEAST";
+		};
+
+		// --- EastTempRespawnMarker (engine uses this for EAST respawn even in 1-sided missions)
+		class Item12
+		{
+			position[]={9000,0,1000};
+			name="EastTempRespawnMarker";
+			type="Empty";
+		};
+
+		// --- GuerTempRespawnMarker (required by 3-way respawn init; placed harmlessly)
+		class Item13
+		{
+			position[]={9100,0,1000};
+			name="GuerTempRespawnMarker";
+			type="Empty";
+		};
+	};
+};
+class Intro
+{
+	addOns[]=
+	{
+		"namalsk"
+	};
+	addOnsAuto[]=
+	{
+		"namalsk"
+	};
+	randomSeed=13267190;
+	class Intel
+	{
+		startWeather=0.30000001;
+		forecastWeather=0.5;
+		year=2016;
+		month=2;
+		day=14;
+		hour=10;
+		minute=0;
+	};
+};
+class OutroWin
+{
+	addOns[]=
+	{
+		"namalsk"
+	};
+	addOnsAuto[]=
+	{
+		"namalsk"
+	};
+	randomSeed=10462969;
+	class Intel
+	{
+		startWeather=0.30000001;
+		forecastWeather=0.5;
+		year=2016;
+		month=2;
+		day=14;
+		hour=10;
+		minute=0;
+	};
+};
+class OutroLoose
+{
+	addOns[]=
+	{
+		"namalsk"
+	};
+	addOnsAuto[]=
+	{
+		"namalsk"
+	};
+	randomSeed=12603217;
+	class Intel
+	{
+		startWeather=0.30000001;
+		forecastWeather=0.5;
+		year=2016;
+		month=2;
+		day=14;
+		hour=10;
+		minute=0;
+	};
+};

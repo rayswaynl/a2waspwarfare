@@ -1,0 +1,161 @@
+
+class CfgSounds
+{
+    sounds[] = {};
+    
+    class aaRadarBuildSound {
+        name = "aaRadarBuildSound";
+        sound[] = {"\Sounds\aaRadarBuildSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class aircraftFactoryBuildSound {
+        name = "aircraftFactoryBuildSound";
+        sound[] = {"\Sounds\aircraftFactoryBuildSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class ARTY_cooldown_over {
+        name = "ARTY_cooldown_over";
+        sound[] = {"\Sounds\ARTY_cooldown_over-8.ogg", 8, 1};
+        titles[] = {};
+    };
+
+    class ARTY_message_to_friendly_players_v2 {
+        name = "ARTY_message_to_friendly_players_v2";
+        sound[] = {"\Sounds\ARTY_message_to_friendly_players_v2-8.ogg", 8, 1};
+        titles[] = {};
+    };
+
+    class ARTY_message_to_friendly_russian_v1 {
+        name = "ARTY_message_to_friendly_russian_v1";
+        sound[] = {"\Sounds\ARTY_message_to_friendly_russian_v1-8.ogg", 8, 1};
+        titles[] = {};
+    };
+
+    class ARTY_message_to_friendly_takistanish_v1 {
+        name = "ARTY_message_to_friendly_takistanish_v1";
+        sound[] = {"\Sounds\ARTY_message_to_friendly_takistanish_v1-8.ogg", 8, 1};
+        titles[] = {};
+    };
+
+    class attackMode {
+        name = "attackMode";
+        sound[] = {"\Sounds\attackMode-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class autoViewDistanceToggledOff {
+        name = "autoViewDistanceToggledOff";
+        sound[] = {"\Sounds\autoViewDistanceToggledOff-1.ogg", 1, 1};
+        titles[] = {};
+    };
+
+    class autoViewDistanceToggledOn {
+        name = "autoViewDistanceToggledOn";
+        sound[] = {"\Sounds\autoViewDistanceToggledOn-1.ogg", 1, 1};
+        titles[] = {};
+    };
+
+    class barracksBuildSound {
+        name = "barracksBuildSound";
+        sound[] = {"\Sounds\barracksBuildSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class Bipod_ON {
+        name = "Bipod_ON";
+        sound[] = {"\Sounds\Bipod_ON-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class cashierSound {
+        name = "cashierSound";
+        sound[] = {"\Sounds\cashierSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class commandCenterBuildSound {
+        name = "commandCenterBuildSound";
+        sound[] = {"\Sounds\commandCenterBuildSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class commanderNotification {
+        name = "commanderNotification";
+        sound[] = {"\Sounds\commanderNotification-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class heavyFactoryBuildSound {
+        name = "heavyFactoryBuildSound";
+        sound[] = {"\Sounds\heavyFactoryBuildSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class ICBM_message_to_enemy_players {
+        name = "ICBM_message_to_enemy_players";
+        sound[] = {"\Sounds\ICBM_message_to_enemy_players-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class ICBM_message_to_friendly_players {
+        name = "ICBM_message_to_friendly_players";
+        sound[] = {"\Sounds\ICBM_message_to_friendly_players-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class inbound {
+        name = "inbound";
+        sound[] = {"\Sounds\inbound-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class inboundMissileGround {
+        name = "inboundMissileGround";
+        sound[] = {"\Sounds\inboundMissileGround-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class inboundMissileGround_cont {
+        name = "inboundMissileGround_cont";
+        sound[] = {"\Sounds\inboundMissileGround_cont-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class lightFactoryBuildSound {
+        name = "lightFactoryBuildSound";
+        sound[] = {"\Sounds\lightFactoryBuildSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class MissileLaunchBlocked {
+        name = "MissileLaunchBlocked";
+        sound[] = {"\Sounds\MissileLaunchBlocked-2.ogg", 2, 1};
+        titles[] = {};
+    };
+
+    class newCommander {
+        name = "newCommander";
+        sound[] = {"\Sounds\newCommander-10.ogg", 10, 1};
+        titles[] = {};
+    };
+
+    class radiationSound {
+        name = "radiationSound";
+        sound[] = {"\Sounds\radiationSound-5.ogg", 5, 1};
+        titles[] = {};
+    };
+
+    class servicePointBuildSound {
+        name = "servicePointBuildSound";
+        sound[] = {"\Sounds\servicePointBuildSound-7.ogg", 7, 1};
+        titles[] = {};
+    };
+
+    class SidewinderLock {
+        name = "SidewinderLock";
+        sound[] = {"\Sounds\SidewinderLock-1.ogg", 1, 1};
+        titles[] = {};
+    };
+};

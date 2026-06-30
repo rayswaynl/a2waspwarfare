@@ -1,0 +1,139 @@
+/* ACR Configuration */
+Private ['_c','_get','_i','_p','_z'];
+
+_c = [];
+_i = [];
+
+/* Infantry */
+_c = _c + ['CZ_Soldier_Light_DES_EP1'];
+_i = _i + [['','',125,4,-1,0,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_DES_EP1'];
+_i = _i + [['','',150,4,-1,0,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_B_DES_EP1'];
+_i = _i + [['','',150,4,-1,0,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_AT_DES_EP1'];
+_i = _i + [['','',310,5,-1,0,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_AMG_DES_EP1'];
+_i = _i + [['','',210,5,-1,1,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_MG_DES_EP1'];
+_i = _i + [['','',220,5,-1,0,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_Sniper_EP1'];
+_i = _i + [['','',280,5,-1,1,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Special_Forces_GL_DES_EP1'];
+_i = _i + [['','',290,5,-1,3,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Special_Forces_MG_DES_EP1'];
+_i = _i + [['','',310,5,-1,3,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Special_Forces_DES_EP1'];
+_i = _i + [['','',285,5,-1,3,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Special_Forces_Scout_DES_EP1'];
+_i = _i + [['','',305,5,-1,3,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Special_Forces_TL_DES_EP1'];
+_i = _i + [['','',310,5,-1,3,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_Pilot_EP1'];
+_i = _i + [['','',120,4,-1,0,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_Office_DES_EP1'];
+_i = _i + [['','',240,5,-1,1,0,1,'Czech',[]]];
+
+_c = _c + ['CZ_Soldier_SL_DES_EP1'];
+_i = _i + [['','',220,5,-1,2,0,1,'Czech',[]]];
+
+/* Light Vehicles */
+_c = _c + ['ATV_CZ_EP1'];
+_i = _i + [['','',175,15,-2,0,1,0,'Czech',[]]];
+
+_c = _c + ['HMMWV_M1151_M2_CZ_DES_EP1'];
+_i = _i + [['','',850,20,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['LandRover_CZ_EP1'];
+_i = _i + [['','',275,18,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['LandRover_Special_CZ_EP1'];
+_i = _i + [['','',700,20,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['Dingo_WDL_ACR'];
+_i = _i + [['','',870,20,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['Dingo_GL_Wdl_ACR'];
+_i = _i + [['','',1050,21,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['Dingo_DST_ACR'];
+_i = _i + [['','',870,20,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['Dingo_GL_DST_ACR'];
+_i = _i + [['','',1050,21,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['Pandur2_ACR'];
+_i = _i + [['','',2650,25,[true,false,2,0],3,1,0,'Czech',[]]];
+
+/* Support Trucks (T810 family) */
+_c = _c + ['T810_CZ_EP1'];
+_i = _i + [['','',500,20,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Repair_CZ_EP1'];
+_i = _i + [['','',2500,22,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Refuel_CZ_EP1'];
+_i = _i + [['','',500,22,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Ammo_CZ_EP1'];
+_i = _i + [['','',1750,22,-2,1,1,0,'Czech',[]]];
+
+/* Heavy Vehicles — ACR premium (capture-unlock) */
+_c = _c + ['T72M4CZ'];
+_i = _i + [['','',7000,45,-2,4,2,0,'Czech',[]]];
+
+/* Light Vehicles — ACR premium (capture-unlock) */
+_c = _c + ['RM70_ACR'];
+_i = _i + [['','',6800,25,-2,4,1,0,'Czech',[]]];
+
+/* Air Vehicles */
+_c = _c + ['Mi171Sh_CZ_EP1'];
+_i = _i + [['','',7600,35,-2,1,3,0,'Czech',[]]];
+
+_c = _c + ['Mi24_D_CZ_ACR'];
+_i = _i + [['','',39620,45,-2,4,3,0,'Czech',[]]];
+
+_c = _c + ['Mi171Sh_rockets_CZ_EP1'];
+_i = _i + [['','',24000,40,-2,3,3,0,'Czech',[]]]; //--- owner 2026-06-12: pricier (was 16500) - airfield-exclusive gunship
+
+for '_z' from 0 to (count _c)-1 do {
+	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
+		_get = missionNamespace getVariable (_c select _z);
+		if (isNil '_get') then {
+			if ((_i select _z) select 0 == '') then {(_i select _z) set [0, [_c select _z,'displayName'] Call GetConfigInfo]};
+			if (typeName ((_i select _z) select 4) == 'SCALAR') then {
+				if (((_i select _z) select 4) == -2) then {
+					_ret = (_c select _z) Call Compile preprocessFile "Common\Functions\Common_GetConfigVehicleCrewSlot.sqf";
+					(_i select _z) set [4, _ret select 0];
+					(_i select _z) set [9, _ret select 1];
+				};
+			};
+			if (WF_Debug) then {(_i select _z) set [3,1]};
+			_p = if ((_c select _z) isKindOf 'Man') then {'portrait'} else {'picture'};
+			(_i select _z) set [1, [_c select _z,_p] Call GetConfigInfo];
+			missionNamespace setVariable [_c select _z, _i select _z];
+		} else {
+			diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_ACR: Duplicated Element found '%1'",(_c select _z),diag_frameno,diag_tickTime];
+		};
+	} else {
+		//--- D4 2026-06-19: ACR is a shelved/absent DLC on this server, so these classes are
+		//--- EXPECTED to be missing (~70x ERROR spam per init). Demoted ERROR -> WARNING: it is
+		//--- a benign skip (the class just isn't registered), not a fault. Behaviour unchanged.
+		diag_log Format ["[WFBE (WARNING)][frameno:%2 | ticktime:%3] Core_ACR: Element '%1' is not a valid class (DLC absent) - skipped.",(_c select _z),diag_frameno,diag_tickTime];
+	};
+};
+
+diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_ACR: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];
