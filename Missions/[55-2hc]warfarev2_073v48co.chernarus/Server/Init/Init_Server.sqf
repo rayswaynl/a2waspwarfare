@@ -843,8 +843,15 @@ if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 		Private ["_src"];
 		_src = _x getVariable "wfbe_group_src";
 		if (isNil "_src" && {(side _x == west) || (side _x == east) || (side _x == resistance)}) then {
-			if ((count units _x) == 0) then {
-				//--- empty overflow slot (unit self-deleted at load): reap to free a per-side group-cap slot
+			//--- cmdcon30 (fleet audit 2026-06-30): this reap deleted EMPTY-but-JIP-SELECTABLE player-slot groups
+			//--- (an overflow placeholder unit self-deletes at load -> an empty group a human can STILL JIP into).
+			//--- A player joining that slot landed in this already-deleteGroup'd group -> no wfbe_side -> the
+			//--- enrollment resolver bailed (B746 re-arm x3 then exhaust) -> player stuck in DEADSPAWN. Gate the
+			//--- reap behind WFBE_C_EDITOR_GROUP_REAP (DEFAULT 0 = off; the group-cap headroom reclaim is already
+			//--- covered by the persistence-aware server_groupsGC) AND never reap a wfbe_persistent (registered)
+			//--- slot group. Default-off == the pre-PR122 tag-only behaviour (known-good). A2-OA-1.64-safe
+			//--- (group getVariable: plain 1-arg + isNil, no [name,default] form).
+			if ((count units _x) == 0 && {(missionNamespace getVariable ["WFBE_C_EDITOR_GROUP_REAP", 0]) > 0} && {isNil {_x getVariable "wfbe_persistent"}}) then {
 				deleteGroup _x;
 				_reclaimed = _reclaimed + 1;
 			} else {

@@ -227,7 +227,7 @@ waitUntil {commonInitComplete};
 ["INITIALIZATION", Format ["Init_Client.sqf: Common initialization is complete at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
 //--- qol-polish-pack: friendly name-tag overlay, toggled from the WF menu "TAGS" button (MenuAction 25). Client-side, friendly-PLAYERS only,
-//--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / getPosVisual / ctrlSetStructuredText, no A3 commands.
+//--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition / ctrlSetStructuredText, no A3 commands.
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
@@ -242,7 +242,7 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 			_shown = 0;
 			{
 				if (_shown < _max && {isPlayer _x} && {_x != player} && {alive _x} && {side _x == side player}) then {
-					_pp = getPosVisual _x;
+					_pp = visiblePosition _x; //--- cmdcon30: getPosVisual is Arma-3-only (undefined in A2-OA 1.64); visiblePosition is the A2 equivalent.
 					_scr = worldToScreen [_pp select 0, _pp select 1, (_pp select 2) + 1.9];
 					if (count _scr == 2 && {(_scr select 0) > 0} && {(_scr select 0) < 1} && {(_scr select 1) > 0} && {(_scr select 1) < 1}) then {
 						_d = _x distance player;

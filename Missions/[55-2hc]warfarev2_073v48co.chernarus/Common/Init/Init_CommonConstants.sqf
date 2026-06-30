@@ -1108,6 +1108,7 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_AIHELI_TERRAIN_GUARD")   then {WFBE_C_AIHELI_TERRAIN_GUARD = 1};     //--- AI-heli terrain look-ahead climb (server-local helis). 1 = ON by default (changes AI flight). Set 0 to disable.
 	if (isNil "WFBE_C_AIHELI_GUARD_LOOKAHEAD") then {WFBE_C_AIHELI_GUARD_LOOKAHEAD = 250}; //--- m ahead of the heli to sample terrain.
 	if (isNil "WFBE_C_AIHELI_GUARD_CLEARANCE") then {WFBE_C_AIHELI_GUARD_CLEARANCE = 60};  //--- m minimum clearance over the terrain ahead before the heli is told to climb.
+		if (isNil "WFBE_C_EDITOR_GROUP_REAP")     then {WFBE_C_EDITOR_GROUP_REAP = 0};      //--- cmdcon30: 0 = OFF (default). The Init_Server editor-slot reap deleted empty-but-JIP-selectable player-slot groups -> a joiner landed in a deleted group -> no wfbe_side -> enrollment exhausted -> DEADSPAWN. Off = pre-PR122 tag-only (safe). 1 re-enables the group-cap reclaim (now guarded to never reap a wfbe_persistent slot).
 	//-------------------------------------------------------------------------------------------------------------
 	if (isNil "WFBE_C_UNITS_PRICING") then {WFBE_C_UNITS_PRICING = 0}; //--- Price Focus. (0: Default, 1: Infantry, 2: Tanks, 3: Air).
 	if (isNil "WFBE_C_UNITS_TOWN_PURCHASE") then {WFBE_C_UNITS_TOWN_PURCHASE = 1}; //--- Allow AIs to be bought from depots.
