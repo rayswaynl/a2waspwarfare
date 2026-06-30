@@ -120,6 +120,19 @@ Important tokens:
 - `FACTORY_AUDIT`, `SERVICE_SUPPLY_AUDIT`, `WDDM_ARTILLERY_AUDIT`
 - `PERF_BURST`, `PERF #`
 
+For a release-candidate RPT bundle, use the redaction-safe evidence scorer. It
+prints session names and token counts only; it does not echo raw RPT lines.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 `
+  -RptDirectory "C:\WASP\rpts\release-candidate" -Recurse `
+  -ExpectedMarker "f0b36fe4f"
+```
+
+It expects both Chernarus and Takistan coverage plus the round-6 AICOM, JIP,
+HC, town-cleanup, WDDM/static/artillery and supply evidence tokens. It exits
+non-zero until the bundle is complete.
+
 ## Shipping Boundary
 
 Do not commit generated local mission folders or harness overlays into a release
