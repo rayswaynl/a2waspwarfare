@@ -37,6 +37,8 @@
 //--- Define which 'part' of the game to run.
 #include "version.sqf"
 
+//#define IS_LASTSTAND_EVENT
+
 #include "Sounds\description.ext"
 
 #include "Music\description.ext"
