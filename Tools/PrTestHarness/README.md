@@ -45,10 +45,11 @@ still required before shipping.
 ## Bug-Hunt Mode
 
 `BugHunt/Find-WaspBugHunt.ps1` is an open-ended HUNTER (vs the pass/fail smoke gate). It
-scans mission `.sqf` for high-signal bug patterns — A3-only commands, off-by-one loops
-(`to (count ..)` without `-1`, `<= count`), descending loops missing `step -1`, `local`
-on a Group, nil-hazard `getVariable`, and missing compiled/exec paths. Findings are leads
-to eyeball, not guaranteed bugs.
+scans mission `.sqf` for high-signal bug patterns — A3-only command tokens outside strings
+and comments, high-confidence off-by-one loops where the iterator visibly indexes an array,
+broader `to count` review leads, descending loops missing `step -1`, `local` on a Group,
+nil-hazard `getVariable`, and missing compiled/exec paths. Findings are leads to eyeball,
+not guaranteed bugs.
 
 ```powershell
 pwsh BugHunt\Find-WaspBugHunt.ps1                  # hunt the PR diff (changed vs origin/master)

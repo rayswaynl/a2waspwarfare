@@ -51,12 +51,11 @@ function Add-Finding {
 	}) | Out-Null
 }
 
-# Return code-only lines (same line count) with // line comments and /* */ block comments removed,
-# but STRINGS KEPT. Strings are kept on purpose: SQF writes the for-loop iterator and getVariable
-# names as string literals (for "_i" ..., getVariable "x"), so blanking strings would hide the very
-# structures we hunt. The original false positives were all in COMMENTS, which we still strip.
+# Return code-only lines (same line count) with // line comments and /* */ block comments removed.
+# Some rules need strings kept because SQF writes iterator names and paths as strings
+# (for "_i" ..., getVariable "x", execVM "x.sqf"). Token rules can request strings blanked.
 function Get-CodeLines {
-	param([string]$Text)
+	param([string]$Text, [switch]$BlankStrings)
 	$out = New-Object System.Collections.Generic.List[string]
 	$sb = New-Object System.Text.StringBuilder
 	$inS = $false; $inD = $false; $inBlock = $false; $inLine = $false
@@ -64,17 +63,43 @@ function Get-CodeLines {
 	while ($i -lt $len) {
 		$c = $Text[$i]
 		$nx = if ($i + 1 -lt $len) { $Text[$i + 1] } else { [char]0 }
-		# Reset string state per line (most SQF strings are single-line); block comments span lines.
-		if ($c -eq "`n") { $out.Add($sb.ToString()) | Out-Null; [void]$sb.Clear(); $inLine = $false; $inS = $false; $inD = $false; $i++; continue }
+		# Line comments reset at newline; SQF UI strings can span physical lines, so string state carries over.
+		if ($c -eq "`n") { $out.Add($sb.ToString()) | Out-Null; [void]$sb.Clear(); $inLine = $false; $i++; continue }
 		if ($c -eq "`r") { $i++; continue }
 		if ($inLine) { $i++; continue }
 		if ($inBlock) { if ($c -eq '*' -and $nx -eq '/') { $inBlock = $false; $i += 2; continue }; $i++; continue }
-		if ($inS) { [void]$sb.Append($c); if ($c -eq "'") { if ($nx -eq "'") { [void]$sb.Append($nx); $i += 2; continue } else { $inS = $false } }; $i++; continue }
-		if ($inD) { [void]$sb.Append($c); if ($c -eq '"') { if ($nx -eq '"') { [void]$sb.Append($nx); $i += 2; continue } else { $inD = $false } }; $i++; continue }
+		if ($inS) {
+			if ($BlankStrings) { [void]$sb.Append(' ') } else { [void]$sb.Append($c) }
+			if ($c -eq "'") {
+				if ($nx -eq "'") {
+					if ($BlankStrings) { [void]$sb.Append(' ') } else { [void]$sb.Append($nx) }
+					$i += 2
+					continue
+				} else {
+					$inS = $false
+				}
+			}
+			$i++
+			continue
+		}
+		if ($inD) {
+			if ($BlankStrings) { [void]$sb.Append(' ') } else { [void]$sb.Append($c) }
+			if ($c -eq '"') {
+				if ($nx -eq '"') {
+					if ($BlankStrings) { [void]$sb.Append(' ') } else { [void]$sb.Append($nx) }
+					$i += 2
+					continue
+				} else {
+					$inD = $false
+				}
+			}
+			$i++
+			continue
+		}
 		if ($c -eq '/' -and $nx -eq '/') { $inLine = $true; $i++; continue }
 		if ($c -eq '/' -and $nx -eq '*') { $inBlock = $true; $i++; continue }
-		if ($c -eq "'") { $inS = $true; [void]$sb.Append($c); $i++; continue }
-		if ($c -eq '"') { $inD = $true; [void]$sb.Append($c); $i++; continue }
+		if ($c -eq "'") { $inS = $true; if ($BlankStrings) { [void]$sb.Append(' ') } else { [void]$sb.Append($c) }; $i++; continue }
+		if ($c -eq '"') { $inD = $true; if ($BlankStrings) { [void]$sb.Append(' ') } else { [void]$sb.Append($c) }; $i++; continue }
 		[void]$sb.Append($c); $i++
 	}
 	$out.Add($sb.ToString()) | Out-Null
@@ -112,19 +137,31 @@ function Test-File {
 	$text = [System.IO.File]::ReadAllText($Path)
 	$rawLines = $text -split "`n"
 	$codeLines = Get-CodeLines $text
+	$tokenLines = Get-CodeLines $text -BlankStrings
 	# Per-line detectors (run on code-only lines; show the raw line as the snippet)
 	for ($idx = 0; $idx -lt $codeLines.Count; $idx++) {
 		$code = $codeLines[$idx]
+		$tokenCode = if ($idx -lt $tokenLines.Count) { $tokenLines[$idx] } else { $code }
 		if ([string]::IsNullOrWhiteSpace($code)) { continue }
 		$n = $idx + 1
 		$raw = if ($idx -lt $rawLines.Count) { $rawLines[$idx] } else { $code }
 
-		# 1. A3-only command (string-stripped so 'params' inside text is ignored)
-		if ($code -match $a3Pattern) { Add-Finding "high" "A3-only command '$($matches[1])'" $Path $n $raw }
+		# 1. A3-only command (string/comment-stripped so UI text and diag_log labels are ignored)
+		if ($tokenCode -match $a3Pattern) { Add-Finding "high" "A3-only command '$($matches[1])'" $Path $n $raw }
 
-		# 2. Ascending off-by-one: for "_i"/'_i' from .. to <expr with count> do  (no -1)
-		if ($code -match 'for\s+["''][^"'']+["'']\s+from\b.+?\bto\s+([^;{]*?\bcount\b[^;{]*?)\s+do\b') {
-			if ($matches[1] -notmatch '-\s*1') { Add-Finding "high" "Off-by-one: loop 'to (count ...)' without -1 (index runs 1 past end)" $Path $n $raw }
+		# 2. Ascending off-by-one: high only when the iterator is visibly used as an index.
+		# Broader "to count" loops are review leads because some are repeat counters, not array indexes.
+		if ($code -match 'for\s+["''](?<iter>_\w+)["'']\s+from\b.+?\bto\s+(?<upper>[^;{]*?\bcount\b[^;{]*?)\s+do\b(?<body>.*)$') {
+			$upper = $matches["upper"]
+			$iter = [regex]::Escape($matches["iter"])
+			$body = $matches["body"]
+			if ($upper -notmatch '-\s*\d+') {
+				if ($body -match "(select\s+$iter\b|set\s*\[\s*$iter\b)") {
+					Add-Finding "high" "Off-by-one: loop iterator indexes an array up to count" $Path $n $raw
+				} else {
+					Add-Finding "medium" "Review loop 'to count' without explicit bounded index use" $Path $n $raw
+				}
+			}
 		}
 		# 2b. C-style off-by-one: _i <= count ...
 		if ($code -match '\b_\w+\s*<=\s*[^;{]*\bcount\b') { Add-Finding "medium" "Off-by-one: '<= count ...' (use <)" $Path $n $raw }
