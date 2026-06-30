@@ -445,7 +445,7 @@ switch (_args select 0) do {
 	case "connected-hc": {
 		// Marty: Spawned so the 3-second cold-start retry doesn't block the PVF dispatcher.
 		_args Spawn {
-			Private ["_hc","_id","_retries","_uid","_hcOld","_hcList","_hcValid"];
+			Private ["_hc","_id","_retries","_uid","_hcOld","_hcList","_hcValid","_hcGroup","_hcGroupSide","_sideRetries","_canRegister"];
 			_hc = _this select 1;
 			_uid = getPlayerUID _hc;
 
@@ -460,9 +460,18 @@ switch (_args select 0) do {
 			_id = owner _hc;
 
 			["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client [%1] [%2] Owner ID after retry [%3] (retries:%4).", _hc, _uid, _id, _retries]] Call WFBE_CO_FNC_LogContent;
-			diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3", _uid, _id, str (side _hc)]); //--- diagnostic: is the HC actually mis-seated (WEST) or already CIV (cosmetic BLUFOR)?
 
 			if (_id != 0) then {
+				//--- The HC reports connected only after its local reseat, but group-side replication can
+				//--- still arrive just after the owner retry. Never publish a WEST/EAST HC group into the
+				//--- delegation registry; AICOM/town delegation treat the registry as authoritative.
+				_sideRetries = 0;
+				waitUntil {sleep 1; _sideRetries = _sideRetries + 1; ((side group _hc) == civilian) || (_sideRetries >= 10)};
+				_hcGroup = group _hc;
+				_hcGroupSide = side _hcGroup;
+				_canRegister = (!isNull _hcGroup) && {_hcGroupSide == civilian};
+				diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3|groupSide=%4|groupRetries=%5|register=%6", _uid, _id, str (side _hc), str _hcGroupSide, _sideRetries, _canRegister]); //--- diagnostic: is the HC actually mis-seated (WEST) or already CIV (cosmetic BLUFOR)?
+
 				//--- Registry hygiene: an HC re-registers after every reconnect, and the old append-only
 				//--- list kept dead groups forever - delegation could then pick a corpse and the town AI
 				//--- silently vanished. Drop this UID's previous group and prune any dead entries.
@@ -476,9 +485,16 @@ switch (_args select 0) do {
 				if (count _hcValid != count _hcList) then {
 					["INFORMATION", Format["Server_HandleSpecial.sqf: Pruned [%1] dead headless client entries from the registry.", (count _hcList) - (count _hcValid)]] Call WFBE_CO_FNC_LogContent;
 				};
-				//--- Add the Headless client to our candidates.
-				missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], group _hc];
-				missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]];
+				if (_canRegister) then {
+					//--- Add the Headless client to our candidates.
+					missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], _hcGroup];
+					missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [_hcGroup]];
+				} else {
+					missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
+					missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid];
+					diag_log (Format ["HCSIDE|v1|connect-skip|uid=%1|owner=%2|groupSide=%3|reason=noncivilian", _uid, _id, str _hcGroupSide]);
+					["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] [%2] was not registered because its server-visible group side is [%3].", _hc, _uid, _hcGroupSide]] Call WFBE_CO_FNC_LogContent;
+				};
 
 				//--- b763 (Ray 2026-06-26): PRUNE the HC's boot-orphaned magnet slot-team from each player side's
 				//--- wfbe_teams. The engine seat-magnets an HC onto a synchronized WEST/EAST playable slot BEFORE
@@ -514,6 +530,7 @@ switch (_args select 0) do {
 					};
 				} forEach [west, east];
 			} else {
+				diag_log (Format ["HCSIDE|v1|connect|uid=%1|owner=%2|side=%3|groupSide=%4|groupRetries=%5|register=false", _uid, _id, str (side _hc), str (side group _hc), 0]);
 				["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] Owner ID is still [0] after %2 retries, it is server controlled.",_hc, _retries]] Call WFBE_CO_FNC_LogContent;
 			};
 		};
