@@ -176,7 +176,7 @@ foreach ($file in (ConvertTo-Array $score.files)) {
 [void]$lines.Add("")
 [void]$lines.Add("| Token | Count |")
 [void]$lines.Add("| --- | ---: |")
-foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","aiCommanderAssist","aicomOrder","hcSide","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
+foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","aiCommanderAssist","aicomOrder","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
 	[void]$lines.Add(("| {0} | {1} |" -f $key, (Get-CountValue $score.tokenCounts $key)))
 }
 [void]$lines.Add("")

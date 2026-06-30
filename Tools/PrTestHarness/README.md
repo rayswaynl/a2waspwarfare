@@ -141,7 +141,8 @@ LoadoutManager writes those markers into generated `version.sqf`, with the
 current git short hash and terrain appended. Use the terrain-specific marker
 values so runtime proof ties back to the exact release HEAD. The scorer expects
 both Chernarus and Takistan coverage, no generic current-window RPT stop
-conditions, plus the round-6 AICOM, JIP, HC, town-cleanup,
+conditions, at least two successful non-zero-owner CIV `HCSIDE|v1|connect`
+rows for HC registry proof, plus the round-6 AICOM, JIP, HC, town-cleanup,
 WDDM/static/artillery and supply evidence tokens. It exits non-zero until the
 bundle is complete.
 

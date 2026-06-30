@@ -152,6 +152,10 @@ $tokenSpecs = @(
 	[pscustomobject]@{ Name = "connectBailB747"; Pattern = "B747\.2 CONNECT BAIL" },
 	[pscustomobject]@{ Name = "stampMissB762"; Pattern = "B762 STAMP-ON-DEMAND MISS" },
 	[pscustomobject]@{ Name = "hcSide"; Pattern = "HCSIDE\|v1" },
+	[pscustomobject]@{ Name = "hcConnect"; Pattern = "HCSIDE\|v1\|connect\|" },
+	[pscustomobject]@{ Name = "hcConnectCivilian"; Pattern = "HCSIDE\|v1\|connect\|.*owner=[1-9][0-9]*\|side=(CIV|civilian)" },
+	[pscustomobject]@{ Name = "hcConnectNonCivilian"; Pattern = "HCSIDE\|v1\|connect\|.*\|side=(WEST|EAST|GUER|LOGIC)" },
+	[pscustomobject]@{ Name = "hcConnectSkip"; Pattern = "HCSIDE\|v1\|connect-skip" },
 	[pscustomobject]@{ Name = "hcStat"; Pattern = "HCSTAT\|v1" },
 	[pscustomobject]@{ Name = "hcDeleg"; Pattern = "HCDELEG\|v1" },
 	[pscustomobject]@{ Name = "delegStat"; Pattern = "DELEGSTAT\|v1" },
@@ -212,6 +216,13 @@ $gateSpecs = @(
 		required = @("hcSide","hcStat","hcDeleg","delegStat","teamFoundedViaHC")
 		fail = @("hcConnectFailed")
 		note = "HC connection, delegation, and remote founding evidence."
+	},
+	[ordered]@{
+		id = "hc-registry-civilian"
+		required = @()
+		minCounts = @{ hcConnectCivilian = 2 }
+		fail = @("hcConnectFailed","hcConnectNonCivilian","hcConnectSkip")
+		note = "Requires at least two successful HCSIDE connect rows with non-zero owner and CIV side; generic preseat/reseat lines do not satisfy the registry gate."
 	},
 	[ordered]@{
 		id = "town-ai-cleanup"
@@ -346,6 +357,13 @@ foreach ($gate in $gateSpecs) {
 		foreach ($key in $gate.required) {
 			if (!$totalCounts.Contains($key) -or [int]$totalCounts[$key] -eq 0) { $missing += $key }
 		}
+		if ($gate.Contains("minCounts")) {
+			foreach ($key in @($gate.minCounts.Keys)) {
+				$actual = if ($totalCounts.Contains($key)) { [int]$totalCounts[$key] } else { 0 }
+				$minimum = [int]$gate.minCounts[$key]
+				if ($actual -lt $minimum) { $missing += ("{0}>={1} (actual {2})" -f $key, $minimum, $actual) }
+			}
+		}
 		foreach ($key in $gate.fail) {
 			if ($totalCounts.Contains($key) -and [int]$totalCounts[$key] -gt 0) { $failHits += $key }
 		}
@@ -402,7 +420,7 @@ if ($Json) {
 	}
 	Write-Host ""
 	Write-Host "Selected token counts:"
-	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","hcSide","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
+	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
 		Write-Host ("{0,-28} {1}" -f $key, $totalCounts[$key])
 	}
 	Write-Host ""
