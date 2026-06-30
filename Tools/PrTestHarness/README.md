@@ -148,6 +148,32 @@ It writes `release-rpt-summary.json` and `release-rpt-summary.md` without
 copying raw RPT lines. Like the scorer, it exits non-zero until the runtime
 gates pass; add `-NoFail` when producing an incomplete diagnostic packet.
 
+## Release Package Provenance
+
+After LoadoutManager builds `_MISSIONS.7z`, verify the archive layout and
+generated release markers before handing it to the server:
+
+```powershell
+$env:7za = "C:\Program Files\7-Zip\7z.exe"
+dotnet run -c RELEASE --project Tools\LoadoutManager\LoadoutManager.csproj
+
+powershell -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1 `
+  -ArchivePath .\_MISSIONS.7z `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit (git rev-parse --short=10 HEAD) `
+  -OutDirectory .\wasp-release-package-manifest -Force
+```
+
+The package checker is intentionally strict: `_MISSIONS.7z` must contain the
+Chernarus and Takistan mission folders at the archive root, not `Missions\` or
+`Missions_Vanilla\`. Each terrain must include `mission.sqm`, `version.sqf`,
+`description.ext`, `initJIPCompatible.sqf`, `stringtable.xml`, the client,
+server, headless and common init files, and `Rsc\Parameters.hpp`.
+
+The JSON and Markdown outputs include the package SHA256, per-required-file
+hashes, and the generated `WF_RELEASE_MARKER` strings. They do not copy raw
+mission file contents.
+
 ## Shipping Boundary
 
 Do not commit generated local mission folders or harness overlays into a release

@@ -13,37 +13,59 @@ public class ZipManager
         }
 
         string a2waspDirectory = FileManager.FindA2WaspWarfareDirectory().FullName;
+        string sevenZipPath = GetSevenZipPath();
+        if (string.IsNullOrWhiteSpace(sevenZipPath))
+        {
+            Console.WriteLine("Skipping mission packaging because the 7za environment variable is not set.");
+            return;
+        }
+
         string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions" 
         // Create this directory if it doesn't exist
         string tempDirectory = Path.Combine(a2waspDirectory, "TempZippingDirectory");
-        if (!Directory.Exists(tempDirectory))
-        {
-            CreateDirectory(tempDirectory);
-        }
-        
         string destinationFile = Path.Combine(a2waspDirectory, "_MISSIONS.7z");
+        string tempDestinationFile = destinationFile + ".tmp";
 
-        if (File.Exists(destinationFile))
+        try
         {
-            using (FileStream fs = new FileStream(destinationFile, FileMode.Open))
+            if (File.Exists(tempDestinationFile))
             {
-                fs.Close();
+                File.Delete(tempDestinationFile);
+                Console.WriteLine($"Deleted existing temp file: {tempDestinationFile}");
             }
-            File.Delete(destinationFile);
-            Console.WriteLine($"Deleted existing file: {destinationFile}");
+
+            CreateDirectory(tempDirectory);
+
+            foreach (var missionDirectory in missionDirectories)
+            {
+                string sourceDirectory = Path.Combine(a2waspDirectory, missionDirectory);
+                CopyFilesFromSourceToDestinationWithoutModdedTerrainsParam(sourceDirectory, tempDirectory);
+            }
+
+            Create7zFromDirectory(tempDirectory, tempDestinationFile, sevenZipPath);
+
+            if (File.Exists(destinationFile))
+            {
+                File.Delete(destinationFile);
+                Console.WriteLine($"Deleted existing file: {destinationFile}");
+            }
+
+            File.Move(tempDestinationFile, destinationFile);
+            Console.WriteLine($"Created 7z file: {destinationFile}");
         }
-
-        CreateDirectory(tempDirectory);
-
-        foreach (var missionDirectory in missionDirectories)
+        finally
         {
-            string sourceDirectory = Path.Combine(a2waspDirectory, missionDirectory);
-            CopyFilesFromSourceToDestinationWithoutModdedTerrainsParam(sourceDirectory, tempDirectory);
+            if (Directory.Exists(tempDirectory))
+            {
+                DeleteDirectory(tempDirectory);
+            }
+
+            if (File.Exists(tempDestinationFile))
+            {
+                File.Delete(tempDestinationFile);
+                Console.WriteLine($"Deleted temp file: {tempDestinationFile}");
+            }
         }
-
-        Create7zFromDirectory(tempDirectory, destinationFile);
-
-        DeleteDirectory(tempDirectory);
     }
 
     private static bool ShouldSkipZipOperations()
@@ -57,6 +79,22 @@ public class ZipManager
         return skipZip == "1" ||
                skipZip.Equals("true", StringComparison.OrdinalIgnoreCase) ||
                skipZip.Equals("yes", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetSevenZipPath()
+    {
+        string sevenZipPath = Environment.GetEnvironmentVariable("7za");
+        if (string.IsNullOrWhiteSpace(sevenZipPath))
+        {
+            return "";
+        }
+
+        if (!File.Exists(sevenZipPath))
+        {
+            throw new FileNotFoundException("7za environment variable points to a missing executable.", sevenZipPath);
+        }
+
+        return sevenZipPath;
     }
 
     // This method creates a new directory if it doesn't exist
@@ -87,21 +125,24 @@ public class ZipManager
     }
 
     // This method creates a 7z file from a directory
-    private static void Create7zFromDirectory(string _sourceDirectory, string _destinationFile)
+    private static void Create7zFromDirectory(string _sourceDirectory, string _destinationFile, string _sevenZipPath)
     {
-        string sevenZipPath = Environment.GetEnvironmentVariable("7za");
-        if (string.IsNullOrEmpty(sevenZipPath))
-        {
-            throw new Exception("7za environment variable is not set.");
-        }
-
         ProcessStartInfo p = new ProcessStartInfo();
-        p.FileName = sevenZipPath;
+        p.FileName = _sevenZipPath;
         p.Arguments = $"a -t7z \"{_destinationFile}\" \"{_sourceDirectory}\\*\" -mx=9";
         p.WindowStyle = ProcessWindowStyle.Hidden;
+        p.UseShellExecute = false;
+        p.CreateNoWindow = true;
         Process x = Process.Start(p);
+        if (x == null)
+        {
+            throw new Exception("Could not start 7za process.");
+        }
         x.WaitForExit();
-        Console.WriteLine($"Created 7z file: {_destinationFile}");
+        if (x.ExitCode != 0)
+        {
+            throw new Exception($"7za failed with exit code {x.ExitCode}.");
+        }
     }
 
     // This method copies directories from one location to another, ignoring symlinks
