@@ -187,14 +187,14 @@ NEURO_BE_AssignToVehicle = {
 				};
 				
 				//--- Gunner.
-				if ((_emptiness select 1) > 0 && count _units > 0) then {
+				if ((_emptiness select 1) > 0 && ((count _units) > 0)) then {
 					(_units select 0) assignAsGunner _vehicle;
 					_assignedUnits = _assignedUnits + [_units select 0];
 					_units = _units - [_units select 0];
 				};
 				
 				//--- Commander.
-				if ((_emptiness select 2) > 0 && count _units > 0) then {
+				if ((_emptiness select 2) > 0 && ((count _units) > 0)) then {
 					(_units select 0) assignAsCommander _vehicle;
 					_assignedUnits = _assignedUnits + [_units select 0];
 					_units = _units - [_units select 0];
@@ -202,7 +202,7 @@ NEURO_BE_AssignToVehicle = {
 			};
 		
 			//--- Cargo.
-			if (_cargoEmptiness > 0 && count _units > 0) then {
+			if (_cargoEmptiness > 0 && ((count _units) > 0)) then {
 				_count = count _units;
 				
 				//--- Make sure that the vehicle is going around the squad's destination.

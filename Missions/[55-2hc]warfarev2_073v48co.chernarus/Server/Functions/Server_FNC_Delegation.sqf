@@ -135,7 +135,7 @@ WFBE_SE_FNC_GetDelegators = {
 	_delegators = [];
 	_amount = 1;
 	
-	while {count _units != 0 && count _delegators < _count && _amount <= _limit} do {
+	while {((count _units) != 0) && ((count _delegators) < _count) && (_amount <= _limit)} do {
 		for '_i' from 0 to (count _units)-1 do {
 			_unit = _units select _i;
 			if (isPlayer _unit) then { //--- Only get players.

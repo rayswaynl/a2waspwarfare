@@ -101,7 +101,7 @@ if (local player) then {
 		if (_cbrRadius < 0) then {
 			_cbrUps = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 			_cbrLvl = 0;
-			if (!isNil "WFBE_UP_CBRADAR" && count _cbrUps > WFBE_UP_CBRADAR) then {
+			if (!isNil "WFBE_UP_CBRADAR" && ((count _cbrUps) > WFBE_UP_CBRADAR)) then {
 				_cbrLvl = _cbrUps select WFBE_UP_CBRADAR;
 			};
 			_cbrLvl = (_cbrLvl min 2) max 0;
@@ -131,7 +131,7 @@ if (local player) then {
 				if (!_fixed) then {
 					_ups = (_sd) Call WFBE_CO_FNC_GetSideUpgrades;
 					_lvl = 0;
-					if (!isNil "WFBE_UP_CBRADAR" && count _ups > WFBE_UP_CBRADAR) then {
+					if (!isNil "WFBE_UP_CBRADAR" && ((count _ups) > WFBE_UP_CBRADAR)) then {
 						_lvl = _ups select WFBE_UP_CBRADAR;
 					};
 					_lvl = (_lvl min 2) max 0;
