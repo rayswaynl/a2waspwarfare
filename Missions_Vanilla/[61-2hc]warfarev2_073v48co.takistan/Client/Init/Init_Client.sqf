@@ -1110,7 +1110,7 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
     //--- Smooth.
     case 1: {
 		missionNamespace setVariable ["WFBE_C_STRUCTURES_PLACEMENT_METHOD",{
-			Private ["_color","_itemcategory","_preview","_area","_eside","_flatSpots"];
+			Private ["_color","_itemcategory","_preview","_area","_eside","_affected","_flatSpots"];
 			_itemcategory = _this select 0;
 			_preview = _this select 1;
 			_color = _this select 2;
