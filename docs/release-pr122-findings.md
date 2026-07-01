@@ -1,11 +1,48 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 01:06 Europe/Amsterdam
+Last updated: 2026-07-02 01:14 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 01:14 Update
+
+Built the latest PR #136 head in an isolated detached worktree:
+
+- PR #136 head: `4a9b2ac1860767e852ca4a2de72c0bf43e966550`
+- worktree: `work/a2waspwarfare-pr136-4a9b2ac`
+- command:
+  `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj -c SERVER_DEBUG`
+
+Result:
+
+- LoadoutManager exit code `0`
+- reached `CHERNARUS DONE`
+- reached `TAKISTAN DONE`
+- archive integrity passed
+- extraction passed
+
+Artifact:
+
+- `outputs/a2waspwarfare-pr136-4a9b2ac-server-debug-missions.7z`
+- SHA256:
+  `848A6227135257ABB2A266EF95405552C32B998943C2EF795A290702037FB154`
+- size:
+  `7179063` bytes
+- archive contents:
+  `160` folders, `1727` files, `24404625` uncompressed bytes
+
+Extracted release markers use `git=4a9b2ac186`, `WF_DEBUG` is commented out, and
+`WF_LOG_CONTENT` is enabled for both terrains. However, the marker candidate is
+still `release-command-center-20260630`, so release identity remains blocked if
+this branch is selected.
+
+This is package/static evidence only. It is not runtime proof. PR #136 still
+needs corrected release identity or an explicit waiver, deployment of this exact
+artifact, both-map RPT evidence, and human smoke evidence before any
+release-ready claim.
 
 ## 2026-07-02 01:06 Update
 
