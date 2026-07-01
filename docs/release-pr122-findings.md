@@ -62,6 +62,12 @@ head `5fd7ea51b87305e3a139e272461bf060654f94ad` after a force update. Its
 verified shippable pieces were folded through PR #127; keep the remaining branch
 separate unless it is rebased and revalidated.
 
+PR #131 is the focused draft fix for the latest master static blocker. It is
+open, draft, and currently reported clean at head
+`2178b20d3ddcadda8dd9a01bf6a4c8e1db4ef793`. It only touches the Chernarus and
+generated Takistan placement preview block in `Client/Init/Init_Client.sqf`,
+splitting the dense flat-ground expression into a `_flatSpots` count check.
+
 ## R8 Integration Finding
 
 PR #124, <https://github.com/rayswaynl/a2waspwarfare/pull/124>, is now the
@@ -238,6 +244,11 @@ Static gate:
   `count (...) == 0` expression inside the lazy boolean chain. Treat this as a
   source-review/runtime-RPT risk until the line is simplified or exact runtime
   evidence proves it clean.
+- Draft PR #131, <https://github.com/rayswaynl/a2waspwarfare/pull/131>, is the
+  focused proposed fix. It passes `git diff --check origin/master..HEAD`,
+  reaches `CHERNARUS DONE` and `TAKISTAN DONE` in LoadoutManager
+  `SERVER_DEBUG`, and keeps the touched block mirrored between Chernarus and
+  generated Takistan.
 
 This artifact supersedes the `5bf5f923`, `311b9d93`, and PR #127-only artifacts
 as the freshest exact current-master payload. It is still not runtime proof, and
