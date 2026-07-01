@@ -761,6 +761,7 @@ if (count _live > 0) then {
 		[_side, -_price] Call ChangeAICommanderFunds;
 	};
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
+	if (_pending <= 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]};
 	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
 	//--- all live HCs, and the server RPT should show the split without reading HC RPTs.
 	//--- Commander teams are the BIG atomic lumps (a whole platoon lands on ONE HC), so

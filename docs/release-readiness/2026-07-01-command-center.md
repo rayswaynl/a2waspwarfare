@@ -29,6 +29,15 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 | Branch intake scout | Open PRs, local worktrees, candidate cherry-picks | AICOM v2, commander cache, PR #120, most PR #122 content, and newer harness gates are already included or superseded. PR #109 is the only plausible gameplay intake, and should stay explicit/deferred. |
 | Merge-gate scout | PR #125 conflict with `origin/master` | `origin/master` currently contributes PR #121's editor-slot group reaper. The release branch keeps the reaper out because it was associated with JIP deadspawn risk; do not reintroduce it blindly. |
 
+## 2026-07-01 Agent Loop Update
+
+- Continued draft PR #125 instead of opening a duplicate release PR; this branch remains the command-center release-readiness lane.
+- Code scout found the fork's AICOM layer is the largest delta from `Miksuu/a2waspwarfare`; town runtime scans and AICOM allUnits/allGroups scans remain the main later optimization surfaces.
+- External-source scout confirmed Jerry/bIdentify and `Miksuu/a2waspwarfare` are reachable, with `WarfareV2_073LiteCO.zip` the best public Benny 2.073 lineage baseline; Google Drive archive enumeration, direct stats backend and SSH/RPT access remain blocked without interactive approval/session context.
+- Wiki scout confirmed Chernarus and Takistan pages exist but need release-facing freshness wording, exact dual-terrain RPT status, and generated Takistan parity notes before runtime-proven claims.
+- Applied a small AICOM HC-dispatch bookkeeping fix: pending-slot age now starts at dispatch and clears when HC creation acknowledges or fails before registration. This makes `HCDISPATCH_REAP` measure actual dispatch age instead of delayed scan age.
+- Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
+
 ## Proven Static And Package Gates
 
 - `dotnet run -c RELEASE --project Tools\LoadoutManager\LoadoutManager.csproj`
