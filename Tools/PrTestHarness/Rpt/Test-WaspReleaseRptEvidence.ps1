@@ -198,8 +198,8 @@ $stopSpecs = @(
 )
 
 $tokenSpecs = @(
-	[pscustomobject]@{ Name = "aicomHbWest"; Pattern = "AICOMHB\|v1\|west\|" },
-	[pscustomobject]@{ Name = "aicomHbEast"; Pattern = "AICOMHB\|v1\|east\|" },
+	[pscustomobject]@{ Name = "aicomHbWest"; Pattern = "AICOMHB\|v2\|west\|" },
+	[pscustomobject]@{ Name = "aicomHbEast"; Pattern = "AICOMHB\|v2\|east\|" },
 	[pscustomobject]@{ Name = "aicomTickWest"; Pattern = "AICOMSTAT\|v1\|TICK\|west\|" },
 	[pscustomobject]@{ Name = "aicomTickEast"; Pattern = "AICOMSTAT\|v1\|TICK\|east\|" },
 	[pscustomobject]@{ Name = "aicomEvent"; Pattern = "AICOMSTAT\|v2\|EVENT" },
@@ -246,11 +246,14 @@ $tokenSpecs = @(
 	[pscustomobject]@{ Name = "hcConnectCivilian"; Pattern = "HCSIDE\|v1\|connect\|.*owner=[1-9][0-9]*\|side=(CIV|civilian)" },
 	[pscustomobject]@{ Name = "hcConnectNonCivilian"; Pattern = "HCSIDE\|v1\|connect\|.*\|side=(WEST|EAST|GUER|LOGIC)" },
 	[pscustomobject]@{ Name = "hcConnectSkip"; Pattern = "HCSIDE\|v1\|connect-skip" },
+	[pscustomobject]@{ Name = "hcDisconnect"; Pattern = "HCSIDE\|v1\|disconnect\|" },
 	[pscustomobject]@{ Name = "hcStat"; Pattern = "HCSTAT\|v1" },
 	[pscustomobject]@{ Name = "hcDeleg"; Pattern = "HCDELEG\|v1" },
 	[pscustomobject]@{ Name = "delegStat"; Pattern = "DELEGSTAT\|v1" },
 	[pscustomobject]@{ Name = "teamFoundedViaHC"; Pattern = "TEAM_FOUNDED\|via=HC" },
 	[pscustomobject]@{ Name = "hcConnectFailed"; Pattern = "connect-failed|connect-deferred|HCDISPATCH_REAP|No owner|local - update is ignored" },
+	[pscustomobject]@{ Name = "hcDropOldOwnerLive"; Pattern = "HCDROP_AICOM_AUDIT\|delay=60\|.*\|oldOwnerLive=[1-9][0-9]*" },
+	[pscustomobject]@{ Name = "hcDropStaleHeading"; Pattern = "HCDROP_AICOM_AUDIT\|delay=60\|.*\|heading(Stale|Unknown)=[1-9][0-9]*" },
 	[pscustomobject]@{ Name = "townActivated"; Pattern = "server_town_ai\.sqf: Town .* ACTIVATED" },
 	[pscustomobject]@{ Name = "townDeactivated"; Pattern = "server_town_ai\.sqf: Town .* DEACTIVATED" },
 	[pscustomobject]@{ Name = "townAiHcCleanup"; Pattern = "TOWN_AI_HC_CLEANUP" },
@@ -259,6 +262,8 @@ $tokenSpecs = @(
 	[pscustomobject]@{ Name = "gcStat"; Pattern = "GCSTAT\|v1" },
 	[pscustomobject]@{ Name = "emptyGrp"; Pattern = "EMPTYGRP\|v1" },
 	[pscustomobject]@{ Name = "clientEmptyGroupCleanup"; Pattern = "CLIENT_EMPTY_GROUP_CLEANUP\|v1" },
+	[pscustomobject]@{ Name = "groupCapAtCeiling"; Pattern = "(GRPBUDGET|GCSTAT)\|v1\|.*\|(west|east|guer)=((14[4-9])|(1[5-9][0-9])|([2-9][0-9][0-9]+))(\||$)" },
+	[pscustomobject]@{ Name = "groupCapFailure"; Pattern = "createGroup returned grpNull|group-cap ceiling reached|AT CAP" },
 	[pscustomobject]@{ Name = "townCleanupFail"; Pattern = "TOWN_GROUP_COUNT create_failed|TOWN_AI_HC_CLEANUP group_not_empty|keptGroups:[1-9]|GRPBUDGET\|v1\|WARN" },
 	[pscustomobject]@{ Name = "wddmArtilleryAudit"; Pattern = "WDDM_ARTILLERY_AUDIT" },
 	[pscustomobject]@{ Name = "wddmArtillerySide"; Pattern = "WDDM_ARTILLERY_SIDE" },
@@ -314,7 +319,7 @@ $gateSpecs = @(
 	[ordered]@{
 		id = "hc-delegation-locality"
 		required = @("hcSide","hcStat","hcDeleg","delegStat","teamFoundedViaHC")
-		fail = @("hcConnectFailed")
+		fail = @("hcConnectFailed","hcDropOldOwnerLive","hcDropStaleHeading")
 		note = "HC connection, delegation, and remote founding evidence."
 	},
 	[ordered]@{
@@ -327,7 +332,7 @@ $gateSpecs = @(
 	[ordered]@{
 		id = "town-ai-cleanup"
 		required = @("townActivated","townDeactivated","townAiHcCleanup","townCleanupKeptZero","townGroupCleanupAfter","gcStat")
-		fail = @("townCleanupFail")
+		fail = @("townCleanupFail","groupCapAtCeiling","groupCapFailure")
 		note = "Town activation/deactivation and cleanup evidence."
 	},
 	[ordered]@{
@@ -606,7 +611,7 @@ if ($Json) {
 	}
 	Write-Host ""
 	Write-Host "Selected token counts:"
-	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aicomWestInfFallback","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
+	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aicomWestInfFallback","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcDisconnect","hcDropOldOwnerLive","hcDropStaleHeading","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","gcStat","groupCapAtCeiling","groupCapFailure","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
 		Write-Host ("{0,-28} {1}" -f $key, $totalCounts[$key])
 	}
 	Write-Host ""

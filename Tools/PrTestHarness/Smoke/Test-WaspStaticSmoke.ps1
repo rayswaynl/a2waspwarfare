@@ -719,7 +719,7 @@ function Test-ReleaseRuntimeProofTokenEmitters {
 		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
 	)
 	$tokens = @(
-		[pscustomobject]@{ Name = "aicom-heartbeat"; Needle = "AICOMHB|v1|" },
+		[pscustomobject]@{ Name = "aicom-heartbeat"; Needle = "AICOMHB|v2|" },
 		[pscustomobject]@{ Name = "aicom-tick"; Needle = "AICOMSTAT|v1|TICK|" },
 		[pscustomobject]@{ Name = "aicom-event"; Needle = "AICOMSTAT|v2|EVENT|" },
 		[pscustomobject]@{ Name = "aicom-team-founded-hc"; Needle = "TEAM_FOUNDED|via=HC" },

@@ -94,7 +94,7 @@ _pcN = (_pcN - _hcN) max 0;
 		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
 	};
 _base = switch (true) do {
-	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  6]};
+	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  12]};
 	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
 	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
@@ -217,7 +217,7 @@ if (_sideAINow >= _aiCapTier) exitWith {
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
 _totalGroups = {side _x == _side} count _allGroups;
-if (_totalGroups > 110) exitWith {
+if (_totalGroups > (missionNamespace getVariable ["WFBE_C_AICOM_GROUP_CAP", 110])) exitWith {
 	private "_groupCapWarnLast";
 	_groupCapWarnLast = _logik getVariable ["wfbe_aicom_groupcap_warn_t", -9999];
 	if ((time - _groupCapWarnLast) >= 900) then {
@@ -376,35 +376,8 @@ if (count _live > 0) then {
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
 	};
-	//--- STARVED-INFANTRY FALLBACK (cmdcon31, Ray 2026-07-01): the founding eligibility strip above requires EVERY unit
-	//--- in a template to be upgrade-0, but founding side-upgrades start [0,0,0,0] (Init_Server ~589). A faction whose
-	//--- BASE infantry squad carries an upgrade>=1 team-leader (BIS_US US_Soldier_TL_EP1=1; CH USMC too) has ALL its
-	//--- infantry templates stripped, leaving only appended custom armour -> the side founds one pricey armour team and
-	//--- STARVES (WEST-on-TK; latent on CH-WEST, masked by custom armour). EAST/BIS_TK escaped only because its leader
-	//--- classes are undefined in Core_TKA and read as free upgrade-0. FIX: if _eligible has NO infantry template (B66
-	//--- stored type 0), admit the CHEAPEST (lowest upgrade-mask-sum) infantry template so every faction can always
-	//--- found a basic squad. Map-independent; self-heals (the normal path re-admits richer templates as upgrades land).
-	//--- A2-OA-safe: forEach/for-do, isNil-guarded, no A3 commands.
-	if (!isNil "_storedTypes") then {
-		private ["_hasInf","_fbBest","_fbBestMask","_ti2","_tType","_maskSum","_stX"];
-		_hasInf = false;
-		{ _stX = _storedTypes select _x; if (!isNil "_stX" && {_stX == 0}) exitWith {_hasInf = true} } forEach _eligible;
-		if (!_hasInf) then {
-			_fbBest = -1; _fbBestMask = 1e9;
-			for "_ti2" from 0 to ((count _templates) - 1) do {
-				_tType = _storedTypes select _ti2;
-				if (!isNil "_tType" && {_tType == 0}) then {
-					_maskSum = 0;
-					{ _maskSum = _maskSum + _x } forEach (_tmplUpgrades select _ti2);
-					if (_maskSum < _fbBestMask) then {_fbBestMask = _maskSum; _fbBest = _ti2};
-				};
-			};
-			if (_fbBest >= 0) then {
-				_eligible set [count _eligible, _fbBest];
-				diag_log format ["AICOMGATE|%1|infFallback|admitted tmpl %2 maskSum=%3 sideUpg=%4 (no upgrade-0 infantry eligible)", _sideText, _fbBest, _fbBestMask, _upgrades];
-			};
-		};
-	};
+	//--- cmdcon33 cleanup: the duplicate cmdcon31 fallback that used to sit here was removed.
+	//--- The canonical fallback above runs before the first empty-set exit and survives static/air strips.
 	if (count _eligible == 0) exitWith {};
 
 	//--- B74.2 EMPTY-HELI CAP (Ray 2026-06-24): if the side already fields WFBE_C_AICOM_ATTACKHELI_MAX or more

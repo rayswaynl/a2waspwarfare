@@ -83,7 +83,8 @@ function New-TestPacket {
 		[switch]$IncludeTakistanInfFallback,
 		[switch]$IncludeChernarusInfFallback,
 		[switch]$IncludeTakistanEastInfFallback,
-		[switch]$OmitEastAicomProgress
+		[switch]$OmitEastAicomProgress,
+		[string[]]$ExtraServerSemanticTokens = @()
 	)
 
 	$roles = @("server","HC1","HC2","start-client","late-JIP")
@@ -101,8 +102,8 @@ function New-TestPacket {
 			[void]$lines.Add("ROLEPROOF|$role|$terrain")
 			if ($role -eq "server" -and ($SemanticTerrains -contains $terrain)) {
 				$semanticTokens = @(
-					"AICOMHB|v1|west|ok",
-					"AICOMHB|v1|east|ok",
+					"AICOMHB|v2|west|ok",
+					"AICOMHB|v2|east|ok",
 					"AICOMSTAT|v1|TICK|west|1|0|0|0|0|0|",
 					"AICOMSTAT|v1|TICK|east|1|0|0|0|0|0|",
 					"AICOMSTAT|v2|EVENT|west|1|TEAM_FOUNDED|team=alpha",
@@ -147,6 +148,9 @@ function New-TestPacket {
 					)
 				}
 				foreach ($token in $semanticTokens) {
+					[void]$lines.Add($token)
+				}
+				foreach ($token in $ExtraServerSemanticTokens) {
 					[void]$lines.Add($token)
 				}
 				if ($terrain -eq "chernarus" -and $IncludeChernarusInfFallback) {
@@ -326,6 +330,41 @@ try {
 	if ([string]$bothTerrains.overall -ne "pass" -or [string]$perTerrainGate.status -ne "pass" -or [string]$fallbackGate.status -ne "pass") {
 		throw ("Expected mirrored Chernarus/Takistan semantic packet with Takistan WEST fallback to pass; overall={0}, perTerrain={1}, fallback={2}" -f $bothTerrains.overall, $perTerrainGate.status, $fallbackGate.status)
 	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanInfFallback -ExtraServerSemanticTokens @(
+		"HCSIDE|v1|disconnect|uid=hc1|owner=11|removed=CIV",
+		"AICOMSTAT|v2|EVENT|west|61|HCDROP_AICOM_AUDIT|delay=60|uid=hc1|name=HC1|owner=11|group=CIV|teams=2|live=2|oldOwnerLive=1|headingFresh=1|headingStale=0|headingUnknown=0",
+		"AICOMSTAT|v2|EVENT|east|61|HCDROP_AICOM_AUDIT|delay=60|uid=hc2|name=HC2|owner=12|group=CIV|teams=2|live=2|oldOwnerLive=0|headingFresh=0|headingStale=1|headingUnknown=0"
+	)
+	$badHcDrop = Invoke-Score -Root $root
+	$hcGate = @($badHcDrop.gates | Where-Object { [string]$_.id -eq "hc-delegation-locality" }) | Select-Object -First 1
+	$hcFailHits = @($hcGate.failHits)
+	if ([string]$badHcDrop.overall -ne "missing_or_failed" -or [string]$hcGate.status -ne "fail" -or !($hcFailHits -contains "hcDropOldOwnerLive") -or !($hcFailHits -contains "hcDropStaleHeading")) {
+		throw ("Expected delayed bad HC drop audit to fail HC locality gate; overall={0}, hc={1}, failHits={2}" -f $badHcDrop.overall, $hcGate.status, ($hcFailHits -join ","))
+	}
+	if ([int]$badHcDrop.tokenCounts.hcDisconnect -lt 1) {
+		throw "Expected HC disconnect evidence to be counted as a selected token."
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanInfFallback -ExtraServerSemanticTokens @(
+		"Common_CreateGroup.sqf: createGroup returned grpNull for WEST (source: self-test) - 144 groups on side.",
+		"server_groupsGC.sqf: [WEST] side at 144/144 groups - AT CAP; createGroup will return grpNull and AI spawns will silently fail.",
+		"GCSTAT|v1|reaped=0|emptyFound=0|west=144|east=20|guer=0|untW=20|untE=20|untG=0|t=61"
+	)
+	$badGroupCap = Invoke-Score -Root $root
+	$townGate = @($badGroupCap.gates | Where-Object { [string]$_.id -eq "town-ai-cleanup" }) | Select-Object -First 1
+	$townFailHits = @($townGate.failHits)
+	if ([string]$badGroupCap.overall -ne "missing_or_failed" -or [string]$townGate.status -ne "fail" -or !($townFailHits -contains "groupCapFailure") -or !($townFailHits -contains "groupCapAtCeiling")) {
+		throw ("Expected group-cap ceiling evidence to fail town cleanup gate; overall={0}, town={1}, failHits={2}" -f $badGroupCap.overall, $townGate.status, ($townFailHits -join ","))
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanInfFallback
 
 	$badManifest = Join-Path $root "packet-failed\runtime-rpt-packet-manifest.json"
 	Write-RuntimePacketManifest -Path $badManifest -ValidationRequested $false -ValidationOverall "skipped"
