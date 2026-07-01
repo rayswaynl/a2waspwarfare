@@ -1,5 +1,22 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Side-supply temp-channel authority guard [RELEASE LOOP]
+
+Closed the small side-supply authority gap left after the earlier arithmetic
+floor fix. `Server_ChangeSideSupply.sqf` now routes west/resistance/east temp
+publicVariable handlers through one shared server helper, rejects malformed
+payloads, rejects side/channel mismatches, requires scalar amounts, preserves
+valid positive rewards and negative spend deltas, and keeps the authoritative
+result clamped to `0..WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT`.
+
+The Chernarus source edit was propagated to maintained Takistan with
+`Tools\LoadoutManager`. Static validation passed via `Run-WaspFinalCheck.ps1`,
+including the new `Side-supply channel authority guard` smoke check, Chernarus
+and Takistan A2/OA lint `FAIL: 0` / `REVIEW: 0`, and whole-mission HIGH
+BugHunt clean. Package provenance now passes for head `fd55c9f2c1` with
+archive SHA256 `0CCA1F3804D250873A2D70F7733304FAE4F4EEE589BBF0DBBA7FCEC4CBB2AE2E`.
+Runtime RPT collection and deployment remain approval-gated.
+
 ## 2026-07-01 — Placement preview flat-check split [RELEASE LOOP]
 
 Absorbed the safe source part of PR #131 into the command-center release lane.
