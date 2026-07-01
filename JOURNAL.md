@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Final-check active-stress skip hygiene [RELEASE LOOP]
+
+Made the PR8 static smoke harness handle absent active stress mission copies
+consistently. RHUD stress-proof, local active stress harness and local active
+stress client-helper checks now skip only when the configured active mission
+root is not present; if that root exists but is incomplete, the checks still
+fail. This keeps package-only release worktrees from reporting a false final
+check failure while preserving the active-overlay gate for real stress runs.
+
+`Test-WaspStaticSmoke.ps1` and `Run-WaspFinalCheck.ps1` now pass in a clean
+package worktree without an installed active mission root. Runtime, SSH, RPT
+collection, upload, restart, cache-clear and deployment remain explicit-approval
+gated.
+
 ## 2026-07-01 — AICOM HandleSpecial payload/list guards [RELEASE LOOP]
 
 Closed the follow-up scout slice for public-variable routed AICOM console and

@@ -816,6 +816,7 @@ function Test-RhudEconomyFpsLayout {
 	$rhud = Get-Text (Join-Path $missionRoot "Client\Client_UpdateRHUD.sqf")
 	$initClient = Get-Text (Join-Path $missionRoot "Client\Init\Init_Client.sqf")
 	$menu = Get-Text (Join-Path $missionRoot "Client\GUI\GUI_Menu.sqf")
+	$activeMissionExists = Test-Path -LiteralPath $ActiveMissionRoot
 	$stressPath = Join-Path $ActiveMissionRoot "test\wasp_pr8_stress_mission.sqf"
 	$activeInitPath = Join-Path $ActiveMissionRoot "Client\Init\Init_Client.sqf"
 	$activeRhudPath = Join-Path $ActiveMissionRoot "Client\Client_UpdateRHUD.sqf"
@@ -827,10 +828,11 @@ function Test-RhudEconomyFpsLayout {
 	$fpsCombined = $rhud.Contains('[13, "FPS C/S:"]') -and $rhud.Contains('format ["%1 / %2  VD %3", _clientFPS, _serverFPS, round viewDistance]') -and (-not $rhud.Contains('[15, "FPS Server:"]'))
 	$hiddenOldRows = $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [15,16,17,18]') -and $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [27,28]')
 	$topStrip = $menu.Contains('| SV %9') -and (-not $menu.Contains('| SV+ %9')) -and (-not $menu.Contains('| FPS %9'))
-	$stressProof = $stress.Contains('topStrip=uptime|time|players|towns|svSigned') -and $stress.Contains('rhud=moneyIncome|baseStatus|fpsClientServer')
+	$stressProof = (-not $activeMissionExists) -or ($stress.Contains('topStrip=uptime|time|players|towns|svSigned') -and $stress.Contains('rhud=moneyIncome|baseStatus|fpsClientServer'))
+	$stressProofDetail = if ($activeMissionExists) { $stressProof } else { "skipped-no-active-mission" }
 	$hudDefaultOn = $initClient.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and $rhud.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and (-not $initClient.Contains("Start RHUD hidden"))
 	$activeHudDefaultOn = ($activeInit -eq "") -or ($activeInit.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and $activeRhud.Contains('if (isNil "RUBHUD") then {RUBHUD = true}'))
-	Add-Result "RHUD economy/FPS layout" ($moneyIncome -and $baseStatus -and $fpsCombined -and $hiddenOldRows -and $topStrip -and $stressProof -and $hudDefaultOn -and $activeHudDefaultOn) "moneyIncome=$moneyIncome baseStatus=$baseStatus fpsCombined=$fpsCombined hiddenOldRows=$hiddenOldRows topStrip=$topStrip stressProof=$stressProof hudDefaultOn=$hudDefaultOn activeHudDefaultOn=$activeHudDefaultOn"
+	Add-Result "RHUD economy/FPS layout" ($moneyIncome -and $baseStatus -and $fpsCombined -and $hiddenOldRows -and $topStrip -and $stressProof -and $hudDefaultOn -and $activeHudDefaultOn) "moneyIncome=$moneyIncome baseStatus=$baseStatus fpsCombined=$fpsCombined hiddenOldRows=$hiddenOldRows topStrip=$topStrip stressProof=$stressProofDetail hudDefaultOn=$hudDefaultOn activeHudDefaultOn=$activeHudDefaultOn"
 }
 
 function Test-AfkBoolComparisons {
@@ -956,6 +958,11 @@ function Test-CleanerStartupThrottle {
 }
 
 function Test-Pr8StressHarness {
+	if (!(Test-Path -LiteralPath $ActiveMissionRoot)) {
+		Add-Result "Local active stress harness present/gated" $true "Skipped: active mission root not present at $ActiveMissionRoot"
+		return
+	}
+
 	$harness = Join-Path $ActiveMissionRoot "test\wasp_pr8_stress_mission.sqf"
 	$readme = Join-Path $ActiveMissionRoot "test\README.md"
 	$selftest = Join-Path $ActiveMissionRoot "test\wasp_selftest.sqf"
@@ -979,6 +986,11 @@ function Test-Pr8StressHarness {
 }
 
 function Test-Pr8StressClientHelper {
+	if (!(Test-Path -LiteralPath $ActiveMissionRoot)) {
+		Add-Result "Local active stress client helper actions" $true "Skipped: active mission root not present at $ActiveMissionRoot"
+		return
+	}
+
 	$client = Join-Path $ActiveMissionRoot "test\wasp_pr8_stress_client.sqf"
 	$action = Join-Path $ActiveMissionRoot "test\wasp_pr8_stress_client_action.sqf"
 	$exists = (Test-Path -LiteralPath $client) -and (Test-Path -LiteralPath $action)
