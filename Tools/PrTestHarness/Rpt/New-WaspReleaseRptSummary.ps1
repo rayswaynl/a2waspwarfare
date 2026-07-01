@@ -5,7 +5,11 @@ param(
 	[string[]]$ExpectedMarker = @(),
 	[string]$OutDirectory = "",
 	[string]$RuntimePacketManifestPath = "",
+	[string]$ExpectedCandidate = "",
+	[string]$ExpectedGit = "",
+	[string]$ExpectedArchiveSha256 = "",
 	[switch]$Recurse,
+	[switch]$RequireRuntimePacketManifest,
 	[switch]$Force,
 	[switch]$NoFail
 )
@@ -108,14 +112,27 @@ function Format-SessionSummary {
 }
 
 function Test-RuntimePacketManifestProof {
-	param([string]$Path)
+	param(
+		[string]$Path,
+		[string]$ExpectedCandidate,
+		[string]$ExpectedGit,
+		[string]$ExpectedArchiveSha256,
+		[bool]$RequireRuntimePacketManifest
+	)
 	$missing = New-Object System.Collections.Generic.List[string]
 	$failHits = New-Object System.Collections.Generic.List[string]
+	$expectedArchiveSha256Value = if ([string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) { "" } else { $ExpectedArchiveSha256.ToUpperInvariant() }
 	$result = [ordered]@{
 		status = "not_requested"
 		requested = $false
 		manifestPath = ""
 		manifestPathHash = ""
+		expectedCandidate = $ExpectedCandidate
+		expectedGit = $ExpectedGit
+		expectedArchiveSha256 = $expectedArchiveSha256Value
+		releaseCandidate = ""
+		releaseGit = ""
+		releaseArchiveSha256 = ""
 		schema = ""
 		validationRequested = $false
 		validationOverall = ""
@@ -126,6 +143,12 @@ function Test-RuntimePacketManifestProof {
 		note = "Pass -RuntimePacketManifestPath to bind this summary to the ten-file packet validator proof."
 	}
 	if ([string]::IsNullOrWhiteSpace($Path)) {
+		if ($RequireRuntimePacketManifest) {
+			[void]$missing.Add("runtime-rpt-packet-manifest.json")
+			$result.status = "missing"
+			$result.missing = $missing.ToArray()
+			$result.note = "Runtime packet manifest proof is required for this release summary."
+		}
 		return $result
 	}
 	$result.requested = $true
@@ -149,6 +172,22 @@ function Test-RuntimePacketManifestProof {
 	$result.schema = $schema
 	if ($schema -ne "a2waspwarfare-runtime-rpt-packet-builder-v1") {
 		[void]$failHits.Add("schema must be a2waspwarfare-runtime-rpt-packet-builder-v1")
+	}
+	$release = Get-JsonValue $manifest "release"
+	$releaseCandidate = [string](Get-JsonValue $release "candidate")
+	$releaseGit = [string](Get-JsonValue $release "git")
+	$releaseArchiveSha256 = ([string](Get-JsonValue $release "archiveSha256")).ToUpperInvariant()
+	$result.releaseCandidate = $releaseCandidate
+	$result.releaseGit = $releaseGit
+	$result.releaseArchiveSha256 = $releaseArchiveSha256
+	if (![string]::IsNullOrWhiteSpace($ExpectedCandidate) -and $releaseCandidate -ne $ExpectedCandidate) {
+		[void]$failHits.Add("runtime packet manifest release.candidate must be $ExpectedCandidate")
+	}
+	if (![string]::IsNullOrWhiteSpace($ExpectedGit) -and $releaseGit -ne $ExpectedGit) {
+		[void]$failHits.Add("runtime packet manifest release.git must be $ExpectedGit")
+	}
+	if (![string]::IsNullOrWhiteSpace($expectedArchiveSha256Value) -and $releaseArchiveSha256 -ne $expectedArchiveSha256Value) {
+		[void]$failHits.Add("runtime packet manifest release.archiveSha256 must match expected package SHA256")
 	}
 	$validation = Get-JsonValue $manifest "validation"
 	$validationRequested = ConvertTo-BoolFlag (Get-JsonValue $validation "requested")
@@ -208,7 +247,7 @@ if ([string]::IsNullOrWhiteSpace($jsonText)) {
 	throw "RPT evidence scorer produced no JSON output."
 }
 $score = $jsonText | ConvertFrom-Json
-$runtimePacketProof = Test-RuntimePacketManifestProof -Path $RuntimePacketManifestPath
+$runtimePacketProof = Test-RuntimePacketManifestProof -Path $RuntimePacketManifestPath -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ExpectedGit -ExpectedArchiveSha256 $ExpectedArchiveSha256 -RequireRuntimePacketManifest ([bool]$RequireRuntimePacketManifest)
 $summaryOverall = if ([string]$score.overall -eq "pass" -and ([string]$runtimePacketProof.status -eq "not_requested" -or [string]$runtimePacketProof.status -eq "pass")) { "pass" } else { "missing_or_failed" }
 
 if ([string]::IsNullOrWhiteSpace($OutDirectory)) {
@@ -243,6 +282,10 @@ $packet = [ordered]@{
 		recurse = [bool]$Recurse
 		expectedMarker = @($ExpectedMarker | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 		runtimePacketManifestProvided = ![string]::IsNullOrWhiteSpace($RuntimePacketManifestPath)
+		requireRuntimePacketManifest = [bool]$RequireRuntimePacketManifest
+		expectedCandidate = $ExpectedCandidate
+		expectedGit = $ExpectedGit
+		expectedArchiveSha256 = if ([string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) { "" } else { $ExpectedArchiveSha256.ToUpperInvariant() }
 	}
 	result = $score
 	runtimePacketProof = $runtimePacketProof
@@ -274,6 +317,9 @@ $lines = New-Object System.Collections.Generic.List[string]
 [void]$lines.Add(("Manifest: {0}" -f $packet.runtimePacketProof.manifestPath))
 [void]$lines.Add(("Manifest path hash: {0}" -f (Join-Display $packet.runtimePacketProof.manifestPathHash)))
 [void]$lines.Add(("Schema: {0}" -f (Join-Display $packet.runtimePacketProof.schema)))
+[void]$lines.Add(("Release candidate: {0}" -f (Join-Display $packet.runtimePacketProof.releaseCandidate)))
+[void]$lines.Add(("Release git: {0}" -f (Join-Display $packet.runtimePacketProof.releaseGit)))
+[void]$lines.Add(("Release archive SHA256: {0}" -f (Join-Display $packet.runtimePacketProof.releaseArchiveSha256)))
 [void]$lines.Add(("Validation requested: {0}" -f $packet.runtimePacketProof.validationRequested))
 [void]$lines.Add(("Validation overall: {0}" -f (Join-Display $packet.runtimePacketProof.validationOverall)))
 [void]$lines.Add(("Files in manifest: {0}" -f $packet.runtimePacketProof.fileCount))

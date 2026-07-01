@@ -1,17 +1,21 @@
 # JOURNAL — a2waspwarfare-experital
 
-## 2026-07-01 — Runtime summary manifest file-set proof [RELEASE LOOP]
+## 2026-07-01 — Runtime summary manifest release binding [RELEASE LOOP]
 
 Tightened `New-WaspReleaseRptSummary.ps1` one step further: when a runtime packet
-manifest is supplied, the summary now validates the actual copied packet labels
-for `chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt` and
+manifest is supplied for release handoff, the summary can require it and validate
+the manifest's release candidate, git marker and package archive SHA before the
+portable summary can pass. It also validates the actual copied packet labels for
+`chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt` and
 `takistan/{server,HC1,HC2,start-client,late-JIP}.rpt`, not only the manifest's
 file count and validation status.
 
-The per-terrain self-test now includes a malformed manifest fixture with ten
-files but the wrong Takistan HC2 copied path. That keeps a manually edited or
-otherwise malformed `runtime-rpt-packet-manifest.json` from making the portable
-summary look green while the exact runtime packet matrix is not present.
+The per-terrain self-test now includes malformed manifest fixtures for ten files
+with the wrong Takistan HC2 copied path, a stale release git, and a missing
+required manifest. The handoff generator now emits the bound summary command with
+`-ExpectedCandidate`, `-ExpectedGit`, `-ExpectedArchiveSha256` and
+`-RequireRuntimePacketManifest`, plus an explicit pending runtime-approval gate
+before any local Arma launch/RPT collection.
 
 ## 2026-07-01 — Runtime packet self-test committed [RELEASE LOOP]
 

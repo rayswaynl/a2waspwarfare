@@ -19,6 +19,10 @@ function Get-ExpectedMarkers {
 	)
 }
 
+function Get-TestArchiveSha256 {
+	return "22223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF00001111"
+}
+
 function New-TestPacket {
 	param(
 		[Parameter(Mandatory)] [string]$Root,
@@ -114,7 +118,10 @@ function Write-RuntimePacketManifest {
 		[Parameter(Mandatory)] [string]$Path,
 		[bool]$ValidationRequested,
 		[Parameter(Mandatory)] [string]$ValidationOverall,
-		[string]$FileVariant = "valid"
+		[string]$FileVariant = "valid",
+		[string]$ReleaseCandidate = "per-terrain-self-test",
+		[string]$ReleaseGit = "selftest01",
+		[string]$ArchiveSha256 = (Get-TestArchiveSha256)
 	)
 	$files = @(
 		[ordered]@{ terrain = "chernarus"; role = "server"; copiedRptPath = "chernarus\server.rpt" },
@@ -137,9 +144,9 @@ function Write-RuntimePacketManifest {
 		rptRoot = "<rpt-root>"
 		rptRootHash = "selftest"
 		release = [ordered]@{
-			candidate = "per-terrain-self-test"
-			git = "selftest01"
-			archiveSha256 = "22223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF00001111"
+			candidate = $ReleaseCandidate
+			git = $ReleaseGit
+			archiveSha256 = $ArchiveSha256
 		}
 		artifacts = [ordered]@{
 			ledgerPath = "release-run-ledger.json"
@@ -158,14 +165,29 @@ function Write-RuntimePacketManifest {
 	$manifest | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $Path -Encoding UTF8
 }
 
-function Invoke-Summary {
+function Invoke-BoundSummary {
 	param(
 		[Parameter(Mandatory)] [string]$Root,
 		[Parameter(Mandatory)] [string]$OutDirectory,
-		[Parameter(Mandatory)] [string]$RuntimePacketManifestPath
+		[string]$RuntimePacketManifestPath = ""
 	)
 	$expectedMarkers = Get-ExpectedMarkers
-	& $summaryPath -RptDirectory $Root -Recurse -ExpectedMarker $expectedMarkers -RuntimePacketManifestPath $RuntimePacketManifestPath -OutDirectory $OutDirectory -Force -NoFail | Out-Null
+	$params = @{
+		RptDirectory = @($Root)
+		Recurse = $true
+		ExpectedMarker = $expectedMarkers
+		ExpectedCandidate = "per-terrain-self-test"
+		ExpectedGit = "selftest01"
+		ExpectedArchiveSha256 = (Get-TestArchiveSha256)
+		RequireRuntimePacketManifest = $true
+		OutDirectory = $OutDirectory
+		Force = $true
+		NoFail = $true
+	}
+	if (![string]::IsNullOrWhiteSpace($RuntimePacketManifestPath)) {
+		$params["RuntimePacketManifestPath"] = $RuntimePacketManifestPath
+	}
+	& $summaryPath @params | Out-Null
 	return (Get-Content -Raw -LiteralPath (Join-Path $OutDirectory "release-rpt-summary.json") | ConvertFrom-Json)
 }
 
@@ -221,27 +243,39 @@ try {
 
 	$badManifest = Join-Path $root "packet-failed\runtime-rpt-packet-manifest.json"
 	Write-RuntimePacketManifest -Path $badManifest -ValidationRequested $false -ValidationOverall "skipped"
-	$badSummary = Invoke-Summary -Root $root -OutDirectory (Join-Path $root "summary-bad") -RuntimePacketManifestPath $badManifest
+	$badSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-bad") -RuntimePacketManifestPath $badManifest
 	if ([string]$badSummary.overall -ne "missing_or_failed" -or [string]$badSummary.runtimePacketProof.status -ne "fail") {
 		throw ("Expected summary to fail when runtime packet manifest validation is skipped; summary={0}, packetProof={1}" -f $badSummary.overall, $badSummary.runtimePacketProof.status)
 	}
 
 	$wrongFilesManifest = Join-Path $root "packet-wrong-files\runtime-rpt-packet-manifest.json"
 	Write-RuntimePacketManifest -Path $wrongFilesManifest -ValidationRequested $true -ValidationOverall "pass" -FileVariant "wrong-file-set"
-	$wrongFilesSummary = Invoke-Summary -Root $root -OutDirectory (Join-Path $root "summary-wrong-files") -RuntimePacketManifestPath $wrongFilesManifest
+	$wrongFilesSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-wrong-files") -RuntimePacketManifestPath $wrongFilesManifest
 	if ([string]$wrongFilesSummary.overall -ne "missing_or_failed" -or [string]$wrongFilesSummary.runtimePacketProof.status -ne "fail") {
 		throw ("Expected summary to fail when runtime packet manifest has ten files but wrong copied paths; summary={0}, packetProof={1}" -f $wrongFilesSummary.overall, $wrongFilesSummary.runtimePacketProof.status)
 	}
 
+	$staleManifest = Join-Path $root "packet-stale-release\runtime-rpt-packet-manifest.json"
+	Write-RuntimePacketManifest -Path $staleManifest -ValidationRequested $true -ValidationOverall "pass" -ReleaseGit "stalegit01"
+	$staleSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-stale-release") -RuntimePacketManifestPath $staleManifest
+	if ([string]$staleSummary.overall -ne "missing_or_failed" -or [string]$staleSummary.runtimePacketProof.status -ne "fail") {
+		throw ("Expected summary to fail when runtime packet manifest release identity is stale; summary={0}, packetProof={1}" -f $staleSummary.overall, $staleSummary.runtimePacketProof.status)
+	}
+
+	$missingSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-missing-required")
+	if ([string]$missingSummary.overall -ne "missing_or_failed" -or [string]$missingSummary.runtimePacketProof.status -ne "missing") {
+		throw ("Expected summary to fail when required runtime packet manifest is missing; summary={0}, packetProof={1}" -f $missingSummary.overall, $missingSummary.runtimePacketProof.status)
+	}
+
 	$goodManifest = Join-Path $root "packet-good\runtime-rpt-packet-manifest.json"
 	Write-RuntimePacketManifest -Path $goodManifest -ValidationRequested $true -ValidationOverall "pass"
-	$goodSummary = Invoke-Summary -Root $root -OutDirectory (Join-Path $root "summary-good") -RuntimePacketManifestPath $goodManifest
+	$goodSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-good") -RuntimePacketManifestPath $goodManifest
 	if ([string]$goodSummary.overall -ne "pass" -or [string]$goodSummary.runtimePacketProof.status -ne "pass") {
 		throw ("Expected summary to pass when scorer and runtime packet manifest pass; summary={0}, packetProof={1}" -f $goodSummary.overall, $goodSummary.runtimePacketProof.status)
 	}
 
 	$summaryOut = Join-Path $root "summary"
-	& $summaryPath -RptDirectory $root -Recurse -ExpectedMarker (Get-ExpectedMarkers) -RuntimePacketManifestPath $goodManifest -OutDirectory $summaryOut -Force
+	& $summaryPath -RptDirectory $root -Recurse -ExpectedMarker (Get-ExpectedMarkers) -RuntimePacketManifestPath $goodManifest -ExpectedCandidate "per-terrain-self-test" -ExpectedGit "selftest01" -ExpectedArchiveSha256 (Get-TestArchiveSha256) -RequireRuntimePacketManifest -OutDirectory $summaryOut -Force
 	$summaryMarkdown = Join-Path $summaryOut "release-rpt-summary.md"
 	if (!(Test-Path -LiteralPath $summaryMarkdown -PathType Leaf)) {
 		throw "Expected summary Markdown was not written."
