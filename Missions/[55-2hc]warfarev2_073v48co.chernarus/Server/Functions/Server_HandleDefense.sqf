@@ -1,4 +1,4 @@
-Private ["_buildings","_closest","_defense","_groups","_HC","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander"];
+Private ["_buildings","_closest","_defense","_groups","_HC","_liveHCs","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander"];
 _defense = _this select 0;
 _side = _this select 1;
 _team = _this select 2;
@@ -32,8 +32,9 @@ while {alive _defense} do {
 		//--- _closest cover-position math never ran; that dead branch has been dropped and crews seat at the gun.
 		_position = getPosATL _defense;
 
-		_HC = missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID";
-		if (count _HC > 0) then {
+		_HC = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+		_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count _HC;
+		if (_liveHCs > 0) then {
 			_groups = [] + [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side]];
 			_positions = [] + [_position];
 			[_side, _groups, _positions, _team, _defense, _moveInGunner] Call WFBE_CO_FNC_DelegateAIStaticDefenceHeadless;

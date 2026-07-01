@@ -782,6 +782,32 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 		diag_log format ["[WFBE] GUER playable faction: registered %1 player teams (INITIALIZATION LogContent is filtered on this build, so this diag_log is the visibility).", count _guerTeams];
 		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
+
+			//--- Radio announcer for playable GUER (claude/guer-radio-announcer). The main sides loop above only
+			//--- builds the wfbe_radio_hq speaker for west/east (base-less GUER is registered in this separate block),
+			//--- so resistance players never heard the town/camp/hostiles radio calls that BLUFOR/OPFOR get. Mirror the
+			//--- west/east announcer setup here on the GUER side logic (WFBE_L_GUE) so Server_SideMessage's kbTell has a
+			//--- valid speaker for resistance. Gated identically to the player-team registration (PLAYERSIDE>0 + logic
+			//--- present) so it exists exactly when a human GUER player can be listening; the null-speaker guard in
+			//--- Server_SideMessage.sqf stays as a safety net. Two Logic units (speaker + receiver), a random announcer
+			//--- identity from WFBE_GUER_RadioAnnouncers, and the shared hq.bikb topic - byte-for-byte the same recipe.
+			private ["_guer_radio_hq1","_guer_radio_hq2","_guer_announcers","_guer_radio_hq_id"];
+			_guer_radio_hq1 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
+			_guer_radio_hq2 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
+			[_guer_radio_hq1] joinSilent ([resistance, "misc"] Call WFBE_CO_FNC_CreateGroup);
+			[_guer_radio_hq2] joinSilent ([resistance, "misc"] Call WFBE_CO_FNC_CreateGroup);
+			_guerLogic setVariable ["wfbe_radio_hq", _guer_radio_hq1, true];
+			_guerLogic setVariable ["wfbe_radio_hq_rec", _guer_radio_hq2];
+
+			_guer_announcers = missionNamespace getVariable Format ["WFBE_%1_RadioAnnouncers", resistance];
+			_guer_radio_hq_id = (_guer_announcers) select floor(random (count _guer_announcers));
+			_guer_radio_hq1 setIdentity _guer_radio_hq_id;
+			_guer_radio_hq1 setRank 'COLONEL';
+			_guer_radio_hq1 setGroupId ["HQ"];
+			_guer_radio_hq1 kbAddTopic [_guer_radio_hq_id, "Client\kb\hq.bikb","Client\kb\hq.fsm", {call compile preprocessFileLineNumbers "Client\kb\hq.sqf"}];
+			_guerLogic setVariable ["wfbe_radio_hq_id", _guer_radio_hq_id, true];
+			["INITIALIZATION", Format ["Init_Server.sqf: GUER radio announcer initialized [%1] (identity: %2).", _guer_radio_hq1, _guer_radio_hq_id]] Call WFBE_CO_FNC_LogContent;
+
 			//--- B74.2: the GUER stipend/economy execVM was MOVED out of this team-registration block to its own
 			//--- isServer+WFBE_C_GUER_PLAYERSIDE gate below (beside the air-def launch). Rationale: the economy loop
 			//--- must NOT be coupled to the registration forEach above - a future registration change that errors
@@ -869,6 +895,14 @@ serverInitFull = true;
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	[] execVM "Server\Init\Init_NavalHVT.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
+//--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
+//--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
+if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLower worldName == "takistan"}) then {
+	[] execVM "Server\Server_Oilfields.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
 };
 
 // run one global server town script to process supply updates in each town

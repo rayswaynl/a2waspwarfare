@@ -7,7 +7,7 @@
 		- Player's call
 */
 
-Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_logic","_ownedBySide","_refreshedArtillery","_side","_sideText","_stime","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle"];
+Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_logic","_ownedBySide","_refreshedArtillery","_side","_sideText","_stime","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle","_patrolNewLevel","_patrolCashPool","_patrolPlayers","_patrolShare","_patrolSupply"];
 
 _side = _this select 0;
 _upgrade_id = _this select 1;
@@ -53,6 +53,36 @@ _logic setVariable ["wfbe_upgrading_id", -1, true];
 // Marty: Clear the replicated authoritative end time too, so a stale value cannot drive a
 // phantom countdown on clients between upgrades.
 _logic setVariable ["wfbe_upgrading_end_time", -1, true];
+
+//--- Patrol upgrade economy rewards (Ray 2026-07-01): reward reaching the top patrol tiers.
+//--- Runs exactly once when a level completes (this file is the completion hook), on the server.
+//---   T3 (new level 3) = one-time CASH grant to the side, split among alive owning-side players
+//---     (mirrors Server_BankIncome / convoy-pay BankPayout pattern).
+//---   T4 (new level 4) = one-time small SUPPLY grant to the side pool (mirrors the
+//---     GuerFobCleared / bank-destruction ChangeSideSupply pattern; ChangeSideSupply clamps
+//---     at the supply ceiling server-side).
+//--- One-time-on-completion (NOT a passive per-tick drip) keeps it a clean research incentive
+//--- with zero extra loops. Amounts are tunable via missionNamespace getVariable [NAME,default].
+if (_upgrade_id == WFBE_UP_PATROLS) then {
+	_patrolNewLevel = _upgrades select _upgrade_id;
+	if (_patrolNewLevel == 3) then {
+		_patrolCashPool = missionNamespace getVariable ["WFBE_C_PATROL_T3_CASH", 8000];
+		if (_patrolCashPool > 0) then {
+			_patrolPlayers = 0;
+			{if ((isPlayer _x) && (alive _x) && (side _x == _side)) then {_patrolPlayers = _patrolPlayers + 1}} forEach playableUnits;
+			_patrolShare = round (_patrolCashPool / (_patrolPlayers max 1));
+			[_side, "BankPayout", [_patrolShare]] Call WFBE_CO_FNC_SendToClients;
+			["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward $%2 x %3 players (pool %4).", str _side, _patrolShare, _patrolPlayers, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+	if (_patrolNewLevel == 4) then {
+		_patrolSupply = missionNamespace getVariable ["WFBE_C_PATROL_T4_SUPPLY", 1500];
+		if (_patrolSupply > 0) then {
+			[_side, _patrolSupply, "Patrol upgrade T4 reward.", false] Call ChangeSideSupply;
+			["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T4 supply reward +%2.", str _side, _patrolSupply]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+};
 
 // Marty: Existing artillery, such as pre-upgrade M119 static guns, does not pass through buy/build equipment init again.
 // Scan every vehicle known by the server because artillery pieces may be deployed far away from the base.

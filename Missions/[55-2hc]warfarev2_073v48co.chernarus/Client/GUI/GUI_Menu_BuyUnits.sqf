@@ -166,7 +166,25 @@ _IDCS = _IDCS - [_currentIDC];
 			};
 			if !(_skip) then {
 				//--- Check the max queu.
-				if ((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_type]) < (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) then {
+				//--- Depot 4/4 hard-cap (claude/depot-queue-cap): the legacy gate keys ONLY on the per-CLIENT
+				//--- counter WFBE_C_QUEUE_<type> (missionNamespace = per machine). The number the player SEES as
+				//--- "N/CAP" (and the FIFO the units really build from) is the per-BUILDING PUBLIC "queu" array that
+				//--- every co-op player's Client_BuildUnit appends to. On GUER's base-less town depots - shared by
+				//--- several resistance players - each client stayed within its own 4 budget while the shared "queu"
+				//--- ran past it, so the readout showed "5/4"/"6/4" and a T-34 + infantry built at the same time.
+				//--- For DEPOT, additionally require the LIVE shared queue to have room so CAP is a true ceiling
+				//--- (isNull guard => treat as empty). This can only ever be MORE restrictive; base factories are
+				//--- left untouched (Depot-only branch), and the orphan-reaper in the display loop below keeps this
+				//--- shared-queue gate from ever soft-locking a depot whose head was orphaned by a disconnect.
+				private ["_depotQueueBlocked"];
+				_depotQueueBlocked = false;
+				if (_type == "Depot" && {!isNull _closest}) then {
+					if ((count (_closest getVariable ["queu", []])) >= (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) then {
+						_depotQueueBlocked = true;
+						if (WF_Debug) then {["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy blocked - shared queue full (%1/%2).", count (_closest getVariable ["queu", []]), missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]] Call WFBE_CO_FNC_LogContent};
+					};
+				};
+				if (((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_type]) < (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) && {!_depotQueueBlocked}) then {
 					missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_type],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_type])+1];
 					Private ["_currentUnitLabel"];
                     _currentUnitLabel = _currentUnit select QUERYUNITLABEL;
@@ -399,7 +417,46 @@ _IDCS = _IDCS - [_currentIDC];
 		_updateMap = true;
 	};
 	
-	//--- Display Factory Queu.
+	//--- Depot orphan-reaper (claude/depot-queue-cap): the count(queu) buy-gate above must never SOFT-LOCK a
+		//--- depot whose head token was orphaned - e.g. a buyer disconnected mid-build, so their Client_BuildUnit
+		//--- loop died and never removed its token (and the client-side stuck-head purge is inert: WFBE_LONGEST
+		//--- <Type>BUILDTIME is stored UPPERCASE but looked up mixed-case in Client_BuildUnit, so _longest is nil).
+		//--- While ANY player has this buy menu open, drain a head that has sat unchanged longer than the depot's
+		//--- longest build time + a generous 60s margin (so a legitimately-building head is NEVER reaped). Time-
+		//--- based, removes at most one head per deadline, converges, and only ever REMOVES a genuine orphan.
+		//--- wfbe_queu_head_seen is a LOCAL object var (each client times independently); the queu REMOVAL is
+		//--- public. Depot-only, so base factories keep their exact current behaviour.
+		if (_type == "Depot" && {!isNull _closest}) then {
+			private ["_rQueu","_rLongest","_rHead","_rSeen"];
+			_rQueu = _closest getVariable ["queu", []];
+			if (count _rQueu > 0) then {
+				_rLongest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME", toUpper _type];
+				if (isNil "_rLongest" || {_rLongest <= 0}) then {_rLongest = 60};
+				_rHead = _rQueu select 0;
+				_rSeen = _closest getVariable ["wfbe_queu_head_seen", ["", -1]];
+				if (((_rSeen select 0) != _rHead) || {(_rSeen select 1) < 0}) then {
+					//--- New/changed head => (re)start its stagnation timer.
+					_closest setVariable ["wfbe_queu_head_seen", [_rHead, time]];
+				} else {
+					if ((time - (_rSeen select 1)) > (_rLongest + 60)) then {
+						_rQueu = _closest getVariable ["queu", []];
+						if ((count _rQueu > 0) && {(_rQueu select 0) == _rHead}) then {
+							_rQueu = _rQueu - [_rHead];
+							_closest setVariable ["queu", _rQueu, true];
+							_closest setVariable ["wfbe_queu_head_seen", ["", -1]];
+							["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: reaped orphaned DEPOT queue head after ~%1s stagnation (%2 order(s) left).", (_rLongest + 60), count _rQueu]] Call WFBE_CO_FNC_LogContent;
+						};
+					};
+				};
+			} else {
+				//--- Empty queue => clear any stale marker so the next order starts a fresh timer.
+				if (((_closest getVariable ["wfbe_queu_head_seen", ["", -1]]) select 1) >= 0) then {
+					_closest setVariable ["wfbe_queu_head_seen", ["", -1]];
+				};
+			};
+		};
+
+		//--- Display Factory Queu.
 	_queu = _closest getVariable "queu";
 	_value = if (isNil '_queu') then {0} else {count (_closest getVariable "queu")};
 	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: append /CAP to the queue count so players can see the limit.
@@ -675,7 +732,10 @@ _IDCS = _IDCS - [_currentIDC];
 						hintSilent parseText "<t color='#00ff00'>Salvage Truck</t> - turns enemy and friendly wrecks into cash for your team. <br/> <br/>Drive it (a crew must be aboard) near any destroyed vehicle, ship, aircraft or static weapon. While the truck is parked nearby, wrecks in range are automatically recovered and DELETED, paying your team a share of each wreck's value. <br/> <br/>Keep it close to where vehicles are dying - frontlines, factory yards, contested towns - to keep the salvage income flowing.";
 					};
 					//--- Utility / rearm (ammo) truck (claude-gaming): missing explainer added. Keyed on the same WFBE_%1AMMOTRUCKS side-list the red buy-menu row tint uses.
-					if (_unit in (missionNamespace getVariable Format ["WFBE_%1AMMOTRUCKS", sideJoinedText])) then {
+					//--- GUER MARKER FIX (claude 2026-07-01): nil-guard with [Format[...], []] - WFBE_GUERAMMOTRUCKS is undefined for the
+					//--- playable GUER faction, so the bare read threw `_unit in nil` here and aborted the rest of this selection handler
+					//--- (the GUER VBIED / mortar-truck / special-unit hints below never ran). Matches the L696 nil-safe form.
+					if (_unit in (missionNamespace getVariable [Format ["WFBE_%1AMMOTRUCKS", sideJoinedText], []])) then {
 						hintSilent parseText "<t color='#ff5555'>Utility / Ammunition Truck</t> - a mobile rearm and resupply point for your forces. <br/> <br/>Park it near friendly units and vehicles that have run dry, get in the driver seat and open the action menu (mouse scroll) to resupply ammunition, or have nearby allies rearm from it. <br/> <br/>Use it to keep an advancing push topped up on ammo without driving all the way back to base.";
 					};
 					if (_unit in WFBE_C_SUPPLY_HELI_TYPES) then {

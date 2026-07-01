@@ -8,7 +8,7 @@
 
 scriptName "Client\FSM\updatepatrolmarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_mk","_known","_i","_k","_pos","_dir","_lastPos","_lastDir","_dirDiff","_t0","_alist","_trackedAir","_airNow"];
+private ["_list","_tracked","_keep","_unit","_sid","_mk","_known","_i","_k","_pos","_dir","_lastPos","_lastDir","_dirDiff","_t0","_alist","_trackedAir","_airNow","_typeTag"];
 
 //--- B63 (Ray 2026-06-21): bounded gate (mirrors updateaicommarkers) so a stalled client init can't
 //--- suppress the friendly patrol arrows forever; proceed after 90s of in-game time at the latest.
@@ -36,12 +36,29 @@ while {true} do {
 				_mk = Format["wfbe_patrolmarker_%1", _i];
 				_pos = getPos _unit;
 				_dir = getDir _unit;
+				//--- TYPE TAG (Build83, Ray 2026-07-01): label the patrol by its heaviest hull -> "Patrol INF/LGHT/HVY/AIR"
+				//--- instead of the ever-incrementing "Patrol <N>". Marker NAME (_mk) stays unique per patrol; only the
+				//--- DISPLAYED text changes. SAME classifier + priority as the AICOM team markers (updateaicommarkers.sqf
+				//--- L118-128): any Air hull -> AIR; else any Tank (tracked armour/IFV) -> HVY; else any wheeled APC/Car
+				//--- -> LGHT; else INF. Derived from the LIVE group composition off the patrol leader (replicated isKindOf
+				//--- works on remote vehicles). A2-OA-1.64-safe (group/units/vehicle/isKindOf).
+				_typeTag = "INF";
+				{
+					if (!isNull _x && {alive _x}) then {
+						private "_veh"; _veh = vehicle _x;
+						if (_veh != _x) then {
+							if (_veh isKindOf "Air") exitWith {_typeTag = "AIR"};
+							if (_veh isKindOf "Tank") then {if (_typeTag != "AIR") then {_typeTag = "HVY"}};
+							if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+						};
+					};
+				} forEach (units (group _unit));
 				createMarkerLocal [_mk, _pos];
-				//--- Direction-showing arrow, numbered per patrol (Steff: "marker can be nicer").
+				//--- Direction-showing arrow, TYPE-labelled per patrol (Build83; was numbered "Patrol %1").
 				_mk setMarkerTypeLocal "mil_arrow2";
 				_mk setMarkerColorLocal "ColorYellow";
 				_mk setMarkerSizeLocal [0.6,0.6];
-				_mk setMarkerTextLocal Format["Patrol %1", _i];
+				_mk setMarkerTextLocal Format["Patrol %1", _typeTag];
 				_mk setMarkerDirLocal _dir;
 				//--- PERF4 - cache last pos/dir (slots 2/3) so the follow pass below skips no-op writes.
 				_tracked = _tracked + [[_unit, _mk, _pos, _dir]];

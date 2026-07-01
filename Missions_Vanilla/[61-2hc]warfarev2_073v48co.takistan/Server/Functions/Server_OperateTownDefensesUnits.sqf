@@ -6,7 +6,7 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
+Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -61,7 +61,8 @@ switch (_action) do {
 
 								//--- Pass the per-town group as _team.  On the HC, Common_CreateUnitForStaticDefence
 								//--- will bridge to a HC-local group keyed on this server group object.
-								if (count(missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") > 0) then {
+								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+								if (_liveHCs > 0) then {
 									[_side, _groups, _positions, _team, _defense, true] Call WFBE_CO_FNC_DelegateAIStaticDefenceHeadless;
 									_use_server = false;
 								};

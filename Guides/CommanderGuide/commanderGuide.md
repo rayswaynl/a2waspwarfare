@@ -40,7 +40,7 @@ etc...
 
 ## Voting Mechanics
 - Player with most votes will win.
-- However, if the vote goes even, no commander will be assigned
+- However, if the vote goes even (a tie), the side stays under the AI Commander fallback — it is never left with an empty commander role.
 -add more here
 - You are able to pass the commander with the vote menu to any other person instantly, instead of them having to vote for it.
 
@@ -86,10 +86,10 @@ and with the repair truck,
 - On flat terrain, consider placement of the hq to be on the middle to be covered by the other factories [thanks copilot++, lmao]
 
 ### Base and factory limits
-- Each team can only have 3 bases.
+- The number of each base structure you can build follows the server building-limit parameter (WFBE_C_STRUCTURES_MAX, default 2).
 - Plan and place them wisely to cover key areas and support your team's movements.
-- Each team can only have 2 production factories [list them here] and command centers.
-- However, you can have 4 service points and AAR's
+- Production factories (Barracks, Light, Heavy, Aircraft) and Command Centers are each capped at that same limit (default 2).
+- Service Points allow twice the limit (default 4), while the Anti-Air Radar, Counter-Battery Radar and Bank are hard-capped at 1 each.
 
 ### Spawn Markers Usage
 Position spawn markers on the base.
@@ -132,7 +132,7 @@ Familiarize yourself with all command and build hotkeys to improve your efficien
 - However, town bases do not provide any stealth for your base, as enemy could find it while capturing towns.
 
 ## Building the first base 
-- Once the HQ is deployed, with 6000 supply start which is default, you can build:
+- Once the HQ is deployed, with 12,800 supply start which is default, you can build:
 - B, LF or HF and CC
 - Make sure to not make a mistake of building building such as Aircraft Factory, Service Point or Anti Air Radar as they are not needed for the first base.
 - LF will provide you with light vehicles and although you can get supply trucks with LF0 nowadays, it can be quite a big advantage in the early game if someone uses supply trucks to provide supplies for your base.
@@ -173,7 +173,7 @@ Familiarize yourself with all command and build hotkeys to improve your efficien
 ## Command Center
 - Cost: 1200 supply
 - Place near roads if your team does supply missions.
-- 4800m circular range around the building, in all directions, including when you are high up in the sky.
+- 5500m circular range around the building, in all directions, including when you are high up in the sky.
 
 - If you can hide one inside a base that's at the center of the map, that's good.
 - For example if you sell a base that enemies have not spotted, they might never know that a CC was there, and might take them for a very long time to figure it out.

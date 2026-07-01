@@ -167,6 +167,7 @@ WFBE_CO_FNC_WaypointPatrolTown = Compile preprocessFileLineNumbers "Common\Funct
 WFBE_CO_FNC_WaypointSimple = Compile preprocessFileLineNumbers "Common\Functions\Common_WaypointSimple.sqf";
 WFBE_CO_FNC_WaypointsAdd = Compile preprocessFileLineNumbers "Common\Functions\Common_WaypointsAdd.sqf";
 WFBE_CO_FNC_WaypointsRemove = Compile preprocessFileLineNumbers "Common\Functions\Common_WaypointsRemove.sqf";
+WFBE_CO_FNC_BuildRoadRoute = Compile preprocessFileLineNumbers "Common\Functions\Common_BuildRoadRoute.sqf"; //--- AICOM road-march helper: road-node-snapped chain shared by AssignTowns (AI-strategy) + Execute (war-room console DIRECT orders).
 WF_createMarker = compile preprocessFileLineNumbers "Common\Functions\Common_CreateMarker.sqf";
 WFBE_CL_FNC_Delete_Marker = compile preprocessFileLineNumbers "Client\Functions\Client_Delete_Marker.sqf";
 WF_sendMessage = compile preprocessFileLineNumbers "Common\Functions\Common_SendMessage.sqf";
@@ -314,7 +315,15 @@ Call Compile preprocessFileLineNumbers "Common\Init\Init_PublicVariables.sqf";
 //--- Client\PVFunctions\<name>.sqf + add the WFBE_PVF_<name> addPublicVariableEventHandler on clients/HC-host).
 //--- Done here (not in Init_PublicVariables) to keep the change inside the B67 edit-scope; identical effect.
 CLTFNCGuerVbiedBounty = compile preprocessFileLineNumbers "Client\PVFunctions\GuerVbiedBounty.sqf";
+if (!isNil "WFBE_CL_PVF_ALLOWED") then {WFBE_CL_PVF_ALLOWED = WFBE_CL_PVF_ALLOWED + ["CLTFNCGuerVbiedBounty"]};
 if (!isServer || local player) then {"WFBE_PVF_GuerVbiedBounty" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF}};
+
+//--- pvf-allowlist (claude-gaming 2026-07-01): several server paths (RequestOnUnitKilled/Server_BuildingKilled/
+//--- Server_OnHQKilled/Server_HandleSpecial) re-dispatch the score handler directly with the UPPERCASE spelling
+//--- 'SRVFNCREQUESTCHANGESCORE' via Spawn WFBE_SE_FNC_HandlePVF. The standard loop registers it mixed-case as
+//--- "SRVFNCRequestChangeScore", and the new Server_HandlePVF allowlist gate uses case-SENSITIVE array `in`, so
+//--- without this alias those score awards would be silently rejected. Add the exact uppercase alias too.
+if (!isNil "WFBE_SE_PVF_ALLOWED") then {WFBE_SE_PVF_ALLOWED = WFBE_SE_PVF_ALLOWED + ["SRVFNCREQUESTCHANGESCORE"]};
 
 //--- Import the desired defenses. (todo, Replace the old defense init by this one).
 Call Compile preprocessFileLineNumbers Format["Common\Config\Defenses\Defenses_%1.sqf",_grpWest];

@@ -422,30 +422,55 @@ switch (_args select 0) do {
 		};
 	};
 	case "aicom-team-disband": {
-		//--- COMMAND CONSOLE (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - disband ALL of the side's AI
-		//--- field teams at once. Unlike the posture/fieldorder NUDGES (which gate on !_pHuman = AI-runs), this is a
-		//--- DIRECT action FOR the human commander, so it REQUIRES a human commander on the side. Per-side 15-min
-		//--- cooldown. We only FLAG each team (wfbe_aicom_disband, the proven retire path); the HC-local executor in
-		//--- Common_RunCommanderTeam.sqf deletes a team's units ONLY when no player is within DISBAND_SAFE_DIST and it
-		//--- is not in COMBAT - so nothing vanishes in a player's view (honours the no-vanish-in-view rule). A2-OA-safe:
-		//--- object getVariable [k,d] (side logic), group setVariable [k,v,true] (no A3-only group getVariable [k,d]).
-		private ["_dSide","_dLogik","_dCmd","_dHuman","_dLast","_dCool","_dTeams","_dN"];
+		//--- COMMAND CONSOLE (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - disband the side's AI field
+		//--- teams. Unlike the posture/fieldorder NUDGES (which gate on !_pHuman = AI-runs), this is a DIRECT action FOR
+		//--- the human commander, so it REQUIRES a human commander on the side. We only FLAG each team (wfbe_aicom_disband,
+		//--- the proven retire path); the HC-local executor in Common_RunCommanderTeam.sqf deletes a team's units ONLY when
+		//--- no player is within DISBAND_SAFE_DIST and it is not in COMBAT - so nothing vanishes in a player's view (honours
+		//--- the no-vanish-in-view rule). A2-OA-safe: object getVariable [k,d] (side logic), group setVariable [k,v,true]
+		//--- (no A3-only group getVariable [k,d]); count _args / typeName for the optional arg (no params / isEqualType).
+		//--- Command Console v2 (claude-gaming 2026-07-01): OPTIONAL arg[2] = a team INDEX into this side's wfbe_teams. When
+		//--- present + valid -> disband ONLY that team (a precision action; NO 15-min cooldown, and it does NOT stamp the
+		//--- per-side cooldown clock). When ABSENT -> the original ALL-teams sweep (15-min per-side cooldown, unchanged).
+		private ["_dSide","_dLogik","_dCmd","_dHuman","_dTeams","_dN","_dHasIdx","_dIdx"];
 		_dSide = _args select 1;
+		_dHasIdx = false; _dIdx = -1;
+		if (count _args >= 3) then {
+			private "_dRaw"; _dRaw = _args select 2;
+			if (!isNil "_dRaw" && {typeName _dRaw == "SCALAR"}) then {_dHasIdx = true; _dIdx = _dRaw};
+		};
 		if (_dSide in [west, east]) then {
 			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _dLogik) then {
 				_dCmd = (_dSide) Call WFBE_CO_FNC_GetCommanderTeam; _dHuman = false;
 				if (!isNull _dCmd) then {if (isPlayer (leader _dCmd)) then {_dHuman = true}};
-				_dLast = _dLogik getVariable ["wfbe_aicom_last_disband", -1e10];
-				_dCool = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_COOLDOWN", 900];
-				if (_dHuman && {(time - _dLast) >= _dCool}) then {
-					_dLogik setVariable ["wfbe_aicom_last_disband", time, true];
-					_dTeams = _dLogik getVariable ["wfbe_teams", []];
-					_dN = 0;
-					{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _dN = _dN + 1} } forEach _dTeams;
-					diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|flagged=" + str _dN + "|teams=" + str (count _dTeams));
+				_dTeams = _dLogik getVariable ["wfbe_teams", []];
+				if (_dHasIdx) then {
+					//--- SPECIFIC-TEAM disband: human commander required, but no side cooldown (single, deliberate stand-down).
+					if (_dHuman && {_dIdx >= 0} && {_dIdx < (count _dTeams)}) then {
+						private "_dTeam"; _dTeam = _dTeams select _dIdx;
+						if (!isNull _dTeam && {!isPlayer (leader _dTeam)}) then {
+							_dTeam setVariable ["wfbe_aicom_disband", true, true];
+							diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|specific=" + str _dIdx + "|team=" + str _dTeam);
+						} else {
+							diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT-SPECIFIC|" + str _dSide + "|idx=" + str _dIdx + "|nullOrPlayer");
+						};
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT-SPECIFIC|" + str _dSide + "|human=" + str _dHuman + "|idx=" + str _dIdx + "|teams=" + str (count _dTeams));
+					};
 				} else {
-					diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|cdLeft=" + str (_dCool - (time - _dLast)));
+					//--- ALL-teams sweep (original behaviour): human commander + 15-min per-side cooldown.
+					private ["_dLast","_dCool"];
+					_dLast = _dLogik getVariable ["wfbe_aicom_last_disband", -1e10];
+					_dCool = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_COOLDOWN", 900];
+					if (_dHuman && {(time - _dLast) >= _dCool}) then {
+						_dLogik setVariable ["wfbe_aicom_last_disband", time, true];
+						_dN = 0;
+						{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _dN = _dN + 1} } forEach _dTeams;
+						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|flagged=" + str _dN + "|teams=" + str (count _dTeams));
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|cdLeft=" + str (_dCool - (time - _dLast)));
+					};
 				};
 			};
 		};
@@ -547,6 +572,9 @@ switch (_args select 0) do {
 		if (!isNull _hteam) then {
 			_haicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 			_hchanged = false;
+			_hldr = leader _hteam;
+			_hteam setVariable ["wfbe_aicom_last_heading_t", time, false];
+			if (!isNull _hldr) then {_hteam setVariable ["wfbe_aicom_last_heading_owner", owner _hldr, false]};
 			for "_hi" from 0 to (count _haicomList - 1) do {
 				_hentry = _haicomList select _hi;
 				if ((_hentry select 3) == _hteam) then {
@@ -555,7 +583,6 @@ switch (_args select 0) do {
 					//--- liveness/position on a dead/null unit and dropped the arrow. Re-resolve the CURRENT
 					//--- leader from the live team (slot3) and write it back whenever it changed, so a leader
 					//--- swap keeps the arrow alive.
-					_hldr = leader _hteam;
 					if (!isNull _hldr && {(_hentry select 0) != _hldr}) then {
 						_hentry set [0, _hldr];
 						_haicomList set [_hi, _hentry];
@@ -750,6 +777,44 @@ switch (_args select 0) do {
 			missionNamespace setVariable [_hcOwnerKey, _hcGroup];
 			if (_uid != "") then {missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], _hcGroup]};
 			missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid];
+			[_uid, _id, _hcGroup] spawn {
+				Private ["_uid","_ownerID","_hcGroup","_side","_sideText","_logik","_teams","_g","_ldr","_ldrOwner","_last","_age","_hcTeams","_live","_newOwnerLive","_headingFresh","_headingStale","_headingUnknown"];
+				_uid = _this select 0;
+				_ownerID = _this select 1;
+				_hcGroup = _this select 2;
+				sleep 5;
+				{
+					_side = _x;
+					_sideText = str _side;
+					_hcTeams = 0; _live = 0; _newOwnerLive = 0; _headingFresh = 0; _headingStale = 0; _headingUnknown = 0;
+					_logik = _side Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _logik && {!(isNil {_logik getVariable "wfbe_teams"})}) then {
+						_teams = _logik getVariable "wfbe_teams";
+						{
+							_g = _x;
+							if (!isNull _g) then {
+								if ([_g, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_hcTeams = _hcTeams + 1;
+									_ldr = leader _g;
+									if (!isNull _ldr && {alive _ldr}) then {
+										_live = _live + 1;
+										_ldrOwner = owner _ldr;
+										if (_ldrOwner == _ownerID) then {_newOwnerLive = _newOwnerLive + 1};
+									};
+									if (isNil {_g getVariable "wfbe_aicom_last_heading_t"}) then {
+										_headingUnknown = _headingUnknown + 1;
+									} else {
+										_last = _g getVariable "wfbe_aicom_last_heading_t";
+										_age = time - _last;
+										if (_age <= 30) then {_headingFresh = _headingFresh + 1} else {_headingStale = _headingStale + 1};
+									};
+								};
+							};
+						} forEach _teams;
+					};
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HCRECON_AICOM_AUDIT|uid=" + _uid + "|owner=" + str _ownerID + "|group=" + str _hcGroup + "|teams=" + str _hcTeams + "|live=" + str _live + "|newOwnerLive=" + str _newOwnerLive + "|headingFresh=" + str _headingFresh + "|headingStale=" + str _headingStale + "|headingUnknown=" + str _headingUnknown);
+				} forEach [west, east];
+			};
 
 			//--- b763 (Ray 2026-06-26): PRUNE the HC's boot-orphaned magnet slot-team from each player side's
 			//--- wfbe_teams. The engine seat-magnets an HC onto a synchronized WEST/EAST playable slot BEFORE

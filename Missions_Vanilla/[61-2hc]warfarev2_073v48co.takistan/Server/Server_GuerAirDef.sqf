@@ -11,6 +11,12 @@
 	  - ~20% of spawned Ka-137s use the EASA AT loadout (Konkurs/AT-5) instead of the recon MG.
 	  - For a LARGE GUER town that is under attack (enemies present), a 25% roll fields a Mi-24_P
 	    gunship instead of the Ka-137.
+	  - CARGO/PARADROP variant (build83): when a GUER town is under GROUND attack (enemy infantry/
+	    vehicles near, NOT just air), an 18% roll makes the Ka-137 (a DRONE, no cargo) fly toward the
+	    town and then SCRIPT-spawn a stick of WFBE_C_GUER_AIRDEF_DROP_COUNT (5) GUER infantry under
+	    parachutes near the town. Priority is AFTER the AA counter-air branch (air threats trump a
+	    ground reinforcement drop). The dropped squad is tracked in a SEPARATE registry that obeys the
+	    SAME alive-cap / lifetime / quiet-despawn / tag / marker rules as the air, so it can't be spammed.
 
 	MAINTAIN (not one-shot): every WFBE_C_GUER_AIRDEF_INTERVAL (~120s) it
 	  1. prunes dead/destroyed defenders (decrementing the alive count),
@@ -39,7 +45,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -52,6 +58,15 @@ _lifetime   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LIFETIME", 900];
 _quiet      = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_QUIET_DESPAWN", 300];
 _largeSV    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LARGE_SV", 2500];
 _flyHeight  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
+
+//--- CARGO/PARADROP variant (build83). DROP_CHANCE: per-spawn roll for the Ka-137 to run a paradrop of
+//--- infantry over a town under GROUND attack. DROP_COUNT: troopers per stick. DROP_MAX: global alive cap
+//--- on dropped squads (a SEPARATE cap from the airframe cap so a paradrop can't crowd out the air, and so
+//--- ground reinforcements themselves can't be spammed). All keyed off missionNamespace so the parent adds
+//--- the Init_CommonConstants definitions; inline defaults ship a sane no-constant fallback.
+_dropChance = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_CHANCE", 0.18];
+_dropCount  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_COUNT", 5];
+_dropMax    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_MAX", 2];
 
 //--- Wait for towns + the GUER side logic to exist, then let town ownership settle (mirror of GuerStipend).
 waitUntil {
@@ -67,8 +82,14 @@ _crewClass  = missionNamespace getVariable ["WFBE_GUERRESCREW",  "GUE_Soldier_Cr
 //--- Script-local (NOT wfbe_persistent) so it can't outlive a despawn / leak groups.
 _defenders = [];
 
+//--- Live registry of PARADROPPED squads (build83). Each entry: [_town, _group, _spawnTime, _lastEnemyTime].
+//--- Same shape/rules as _defenders but for the infantry stick from the CARGO/PARADROP variant. Script-local
+//--- (NOT wfbe_persistent) so a dropped squad can never leak groups or outlive its despawn. Separate cap
+//--- (_dropMax) and separate prune pass below keep it from being spammed exactly like the air branches.
+_drops = [];
+
 ["INITIALIZATION", Format ["Server_GuerAirDef.sqf: GUER air defense started (interval=%1 cap=%2 atChance=%3 mi24Chance=%4).", _interval, _maxAir, _atChance, _mi24Chance]] Call WFBE_CO_FNC_LogContent;
-diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24];
+diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7|dropChance=%8|dropCount=%9|dropMax=%10", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24, _dropChance, _dropCount, _dropMax];
 
 //--- B67 (Ray 2026-06-21): publish the GUER-air list for the client map-marker loop (updatepatrolmarkers.sqf
 //--- reads WFBE_ACTIVE_GUER_AIR = [[vehicle, sideID], ...]). Init empty + broadcast so a JIP client never sees
@@ -139,9 +160,60 @@ while {!WFBE_GameOver} do {
 	_defenders  = _kept;
 	_aliveCount = count _defenders;
 
+	//=== (1b) PRUNE + SELF-CLEAN the PARADROPPED squads (build83) =============================
+	//--- Same lifecycle as the air: drop a squad when it is wiped out, its town is lost/inactive,
+	//--- it has been quiet too long, or it has outlived _lifetime. Player-safe teardown: never
+	//--- deleteVehicle a player-occupied body (GUER is playable). Keeps the ground drop from
+	//--- accumulating exactly like the air alive-cap keeps the air from accumulating.
+	private ["_keptDrops","_dropAlive"];
+	_keptDrops = [];
+	{
+		private ["_dEntry","_dTown","_dGrp","_dSpawn","_dLastEnemy","_dDrop","_dReason","_dLiving","_dEnemiesNow","_dTownSide","_dTownActive"];
+		_dEntry     = _x;
+		_dTown      = _dEntry select 0;
+		_dGrp       = _dEntry select 1;
+		_dSpawn     = _dEntry select 2;
+		_dLastEnemy = _dEntry select 3;
+
+		_dDrop   = false;
+		_dReason = "";
+
+		//--- Squad wiped out (no living units left in the group) => prune.
+		_dLiving = if (isNull _dGrp) then {0} else {{alive _x} count (units _dGrp)};
+		if (isNull _dGrp || {_dLiving == 0}) then { _dDrop = true; _dReason = "wiped"; };
+
+		//--- Town no longer GUER-held or no longer active => recall.
+		if (!_dDrop) then {
+			_dTownSide   = if (isNull _dTown) then {-1} else {_dTown getVariable ["sideID", -1]};
+			_dTownActive = if (isNull _dTown) then {false} else {_dTown getVariable ["wfbe_active", false]};
+			if (_dTownSide != WFBE_C_GUER_ID) then { _dDrop = true; _dReason = "town_lost"; };
+			if (!_dDrop && !_dTownActive) then { _dDrop = true; _dReason = "town_inactive"; };
+		};
+
+		//--- Refresh last-enemy timestamp (west + east near the town).
+		if (!_dDrop && !(isNull _dTown)) then {
+			_dEnemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _dTown) < ((_dTown getVariable ["range", 600]) max 600)}} count allUnits;
+			if (_dEnemiesNow > 0) then { _dLastEnemy = _now; };
+		};
+
+		//--- Quiet too long / lifetime exceeded => recall (anti-accumulation).
+		if (!_dDrop && {(_now - _dLastEnemy) > _quiet}) then { _dDrop = true; _dReason = "quiet"; };
+		if (!_dDrop && {(_now - _dSpawn) > _lifetime}) then { _dDrop = true; _dReason = "lifetime"; };
+
+		if (_dDrop) then {
+			//--- Player-safe teardown: only delete non-player bodies; then drop the group.
+			if (!isNull _dGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _dGrp); deleteGroup _dGrp; };
+			diag_log format ["GUERAIRDEF|DROPDESPAWN|town=%1|reason=%2|dropsAlive=%3", (if (isNull _dTown) then {"?"} else {_dTown getVariable ["name","?"]}), _dReason, (count _keptDrops)];
+		} else {
+			_keptDrops = _keptDrops + [[_dTown, _dGrp, _dSpawn, _dLastEnemy]];
+		};
+	} forEach _drops;
+	_drops     = _keptDrops;
+	_dropAlive = count _drops;
+
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_grp","_veh","_pilot","_gunner","_spawnPos","_ang","_loadName"];
+		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_spawnPos","_ang","_loadName"];
 		_town = _x;
 
 		if (_aliveCount < _maxAir
@@ -166,17 +238,35 @@ while {!WFBE_GameOver} do {
 			_isLarge  = (_maxSV >= _largeSV)
 				|| {(_townType == "LargeTown1") || {(_townType == "LargeTown2") || {(_townType == "HugeTown1") || {_townType == "HugeTown2"}}}};
 
-			//--- LOADOUT/AIRFRAME SELECTION (priority order):
-			//---   1. ENEMY AIR present -> Ka-137 with the EASA Igla AA set (counter-air). Beats Mi-24/AT so
-			//---      GUER actually contests hostile air instead of orbiting with an MG it cannot elevate.
-			//---   2. else LARGE town under ground attack -> Mi-24 gunship (25% roll).
-			//---   3. else 20% AT (Konkurs/AT-5) swap on the Ka-137.
-			//---   4. else recon MG (default).
-			_useMi24 = false; _useAA = false; _useAT = false;
-			if (_enemyAir > 0 && {(random 1) < _aaChance}) then { _useAA = true; };
-			if (!_useAA && {_isLarge} && {_enemies > 0} && {(random 1) < _mi24Chance}) then { _useMi24 = true; };
-			if (!_useAA && {!_useMi24} && {(random 1) < _atChance}) then { _useAT = true; };
+			//--- Is there already a live paradropped squad on THIS town? (one drop per town at a time.)
+			_townHasDrop = false;
+			{ if ((_x select 0) == _town) then { _townHasDrop = true; } } forEach _drops;
 
+			//--- LOADOUT/AIRFRAME SELECTION (priority order):
+			//---   1. ENEMY AIR present -> Ka-137 with the EASA Igla AA set (counter-air). Beats everything so
+			//---      GUER actually contests hostile air instead of orbiting with an MG it cannot elevate.
+			//---   2. else GROUND attack (enemy infantry/vehicles near, NOT air) -> CARGO/PARADROP variant
+			//---      (build83): the recon-MG Ka-137 (a DRONE) flies in and SCRIPT-drops a GUER infantry stick
+			//---      under parachutes. Gated by _dropChance, the global _dropMax alive-cap and one-per-town so
+			//---      it cannot be spammed. Priority AFTER the AA branch as specified.
+			//---   3. else LARGE town under ground attack -> Mi-24 gunship (25% roll).
+			//---   4. else 20% AT (Konkurs/AT-5) swap on the Ka-137.
+			//---   5. else recon MG (default).
+			_useMi24 = false; _useAA = false; _useAT = false; _useDrop = false;
+			if (_enemyAir > 0 && {(random 1) < _aaChance}) then { _useAA = true; };
+			//--- Ground attack = at least one non-air foe near the town. _enemies counts allUnits (infantry +
+			//--- crewed vehicle occupants) within range, so _enemies > _enemyAir means a genuine GROUND threat
+			//--- (not merely aircraft overhead). Require that so a pure air raid never pulls an infantry drop.
+			if (!_useAA
+				&& {_enemies > 0}
+				&& {(_enemies - _enemyAir) > 0}
+				&& {!_townHasDrop}
+				&& {_dropAlive < _dropMax}
+				&& {(random 1) < _dropChance}) then { _useDrop = true; };
+			if (!_useAA && {!_useDrop} && {_isLarge} && {_enemies > 0} && {(random 1) < _mi24Chance}) then { _useMi24 = true; };
+			if (!_useAA && {!_useDrop} && {!_useMi24} && {(random 1) < _atChance}) then { _useAT = true; };
+
+			//--- The paradrop variant uses the DEFAULT Ka-137 (drone recon-MG airframe) as the delivery bird.
 			_class = if (_useMi24) then {_classMi24} else {_classKa};
 
 			//--- Spawn the airframe airborne, a short way off the town so it flies in (FLY special, like W13).
@@ -219,6 +309,9 @@ while {!WFBE_GameOver} do {
 							{_veh addWeaponTurret  [_x, [-1]]} forEach ["Igla_twice"];
 							_loadName = "IglaAA";
 						};
+						//--- CARGO/PARADROP variant keeps the DEFAULT recon-MG airframe (drone delivery bird);
+						//--- only the log tag changes so the drop is distinguishable in the RPT.
+						if (_useDrop) then { _loadName = "cargoDrop"; };
 
 						//--- Tag for the maintain/clean sweeps and live identification.
 						_veh setVariable ["wfbe_guer_airdef", true, true];
@@ -239,7 +332,113 @@ while {!WFBE_GameOver} do {
 						_townsWithAir = _townsWithAir + [_town];
 						_aliveCount = _aliveCount + 1;
 
-						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|enemies=%5|enemyAir=%6|large=%7|alive=%8", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _enemies, _enemyAir, _isLarge, _aliveCount];
+						//=== CARGO/PARADROP variant (build83) ===============================================
+						//--- The Ka-137 is a DRONE (no cargo), so we SCRIPT-spawn the reinforcement stick rather
+						//--- than eject from cargo. Build the squad group HERE (synchronously) and register it in
+						//--- _drops NOW so the alive-cap/lifetime/quiet/one-per-town gates are honoured deterministically;
+						//--- the chute-descent + defend orders run in a sub-thread (createUnit + a per-unit chute like
+						//--- Support_ParaAmmo.sqf / Support_ParaVehicles.sqf, but moveInDriver the man INTO the chute).
+						//--- Reuse the side's already-defined WFBE_GUERPARACHUTELEVEL1 roster + WFBE_GUERPARACHUTE model
+						//--- (Root_GUE.sqf: ParachuteC / GUE_* soldiers; TK mirror: ParachuteMediumEast_EP1 / TK_GUE_*),
+						//--- so the classnames are guaranteed to exist on BOTH maps.
+						if (_useDrop) then {
+							private ["_dropGrp","_dropRoster","_dropChute","_registered"];
+							_dropGrp    = [resistance, "guer-airdrop"] Call WFBE_CO_FNC_CreateGroup;
+							_dropRoster = missionNamespace getVariable ["WFBE_GUERPARACHUTELEVEL1", ["GUE_Soldier_1","GUE_Soldier_AT","GUE_Soldier_2","GUE_Soldier_3","GUE_Soldier_MG","GUE_Soldier_Medic"]];
+							_dropChute  = missionNamespace getVariable ["WFBE_GUERPARACHUTE", "ParachuteC"];
+							_registered = false;
+							if (!isNull _dropGrp && {typeName _dropRoster == "ARRAY"} && {(count _dropRoster) > 0} && {typeName _dropChute == "STRING"} && {_dropChute != ""}) then {
+								//--- Register the (still-empty) group immediately so the cap accounts for it this tick;
+								//--- the sub-thread fills + drops it. Prune keeps it only while it has living units.
+								_drops     = _drops + [[_town, _dropGrp, time, time]];
+								_dropAlive = _dropAlive + 1;
+								_registered = true;
+
+								[_town, _pos, _dropGrp, _dropRoster, _dropCount, _dropChute, _flyHeight] Spawn {
+									private ["_t","_tPos","_g","_roster","_count","_chuteModel","_baseH","_type","_ux","_uy","_uz","_uPos","_u","_chute","_wtr","_built","_ctr","_chutes","_pair","_cu","_cc"];
+									_t          = _this select 0;
+									_tPos       = _this select 1;
+									_g          = _this select 2;
+									_roster     = _this select 3;
+									_count      = _this select 4;
+									_chuteModel = _this select 5;
+									_baseH      = _this select 6;
+
+									//--- Let the delivery bird approach the town before troops appear overhead.
+									sleep 20;
+									if (isNull _g) exitWith {};
+
+									//--- Phase 1: create the whole stick at altitude over the town + chute each man, quickly
+									//--- (0.3s apart, like the supply-drop cadence) so the stick descends TOGETHER, not serially.
+									//--- Each entry: [unit, chute].
+									_chutes = [];
+									_built  = 0;
+									_ctr    = 0;
+									while {_ctr < _count} do {
+										//--- Cycle the roster; spawn each trooper a little offset + high over the town so it
+										//--- descends under a chute onto the town (A2-OA: createUnit via the mission helper, then
+										//--- moveInDriver the man into a freshly-created parachute vehicle at altitude).
+										_type = _roster select (_ctr mod (count _roster));
+										_ux = (_tPos select 0) + (60 - random 120);
+										_uy = (_tPos select 1) + (60 - random 120);
+										_uz = _baseH + 40 + random 30;
+										_uPos = [_ux, _uy, _uz];
+
+										_u = [_type, _g, _uPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+										if (!isNull _u) then {
+											//--- Per-unit parachute (same createVehicle idiom as Support_ParaAmmo.sqf L71-72),
+											//--- but a MAN goes in as DRIVER of the chute (engine-standard for a chuted soldier).
+											_chute = _chuteModel createVehicle [0,0,20];
+											_chute setPos [_ux, _uy, _uz];
+											_u moveInDriver _chute;
+											_chutes = _chutes + [[_u, _chute]];
+											_built = _built + 1;
+										};
+										_ctr = _ctr + 1;
+										sleep 0.3;
+									};
+
+									//--- Phase 2: single combined descent wait. Bail after ~75s (a chute may snag), so the
+									//--- thread can never hang. Cleared each tick: once every man is down (or dead) we stop.
+									_wtr = 0;
+									waitUntil {
+										sleep 1;
+										_wtr = _wtr + 1;
+										private ["_stillUp"];
+										_stillUp = 0;
+										{
+											_cu = _x select 0; _cc = _x select 1;
+											if (!isNull _cu && {alive _cu} && {!isNull _cc} && {(getPos _cu select 2) >= 3}) then { _stillUp = _stillUp + 1; };
+										} forEach _chutes;
+										(_stillUp == 0) || {_wtr > 75}
+									};
+
+									//--- Phase 3: dismount + clean every chute (leave the troopers on the ground).
+									{
+										_cu = _x select 0; _cc = _x select 1;
+										if (!isNull _cu && {alive _cu} && {!isNull _cc}) then { _cu action ["getOut", _cc]; };
+										if (!isNull _cc) then { deleteVehicle _cc; };
+									} forEach _chutes;
+
+									//--- Order the landed squad to hold/defend the town: patrol first (it re-sets AWARE/YELLOW),
+									//--- then stamp COMBAT/RED last so they actually engage the attackers (same order fix as the air).
+									if (!isNull _g && {({alive _x} count (units _g)) > 0}) then {
+										[_g, _tPos, ((_t getVariable ["range", 600]) max 300)] Call AIPatrol;
+										_g setBehaviour "COMBAT";
+										_g setCombatMode "RED";
+										_g setSpeedMode "NORMAL";
+									};
+
+									diag_log format ["GUERAIRDEF|DROP|town=%1|dropped=%2|alive=%3", (_t getVariable ["name","?"]), _built, ({alive _x} count (units _g))];
+								};
+							} else {
+								//--- Could not stand up the squad group/roster/chute -> abandon the drop cleanly.
+								if (!isNull _dropGrp) then { deleteGroup _dropGrp; };
+								diag_log format ["GUERAIRDEF|DROPFAIL|town=%1|reason=no_group_or_roster", (_town getVariable ["name","?"])];
+							};
+						};
+
+						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|drop=%5|enemies=%6|enemyAir=%7|large=%8|alive=%9|dropsAlive=%10", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _useDrop, _enemies, _enemyAir, _isLarge, _aliveCount, _dropAlive];
 					} else {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.
 						//--- B66: player-safe teardown (hull is freshly created with no moveIn yet,

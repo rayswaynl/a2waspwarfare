@@ -35,6 +35,11 @@ _overAllCost = 0;
 			_salvageCost = round(((_get select QUERYUNITPRICE)*_percentage) / 100);
 		};
 
+		//--- Ka-137 reward nerf: salvaging a Ka-137 wreck (all PMC variants) yields only the coef (default 0.4) of normal.
+		if ((_x isKindOf "Ka137_MG_PMC") || (_x isKindOf "Ka137_PMC")) then {
+			_salvageCost = round(_salvageCost * (missionNamespace getVariable ["WFBE_C_KA137_REWARD_COEF", 0.4]));
+		};
+
 		_overAllCost = _overAllCost + _salvageCost;
 		(Format [localize 'STR_WF_CHAT_Salvaged_Unit',_salvageCost,[typeOf _x,'displayName'] Call GetConfigInfo]) Call GroupChatMessage;
 

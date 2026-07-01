@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -256,7 +256,8 @@ while {!WFBE_GameOver} do {
 								_use_server = false;
 							};
 							case 2: { //--- Headless Client delegation.
-								if (count(missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") > 0) then {
+								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+								if (_liveHCs > 0) then {
 									[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
 									// Marty: HC-local groups are reported back by update-town-delegation after creation.
 									_town setVariable ['wfbe_town_teams', _town_teams];
