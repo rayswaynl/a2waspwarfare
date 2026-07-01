@@ -13,7 +13,7 @@ then removed before shipping a release mission.
 - A release RPT packet builder that copies the exact Chernarus/Takistan role matrix from a private source map and writes the run ledger.
 - A static smoke script for checking the active test mission boundary.
 - A random **bug-hunt** mode (`BugHunt/Find-WaspBugHunt.ps1`) — a heuristic static hunter.
-- A one-command **pre-test check** (`Run-WaspFinalCheck.ps1`) — runs the smoke gate + bug-hunt.
+- A one-command **pre-test check** (`Run-WaspFinalCheck.ps1`) — runs the smoke gate, whole-root A2 OA lint for Chernarus/Takistan, and bug-hunt.
 - A one-command **play-test setup** (`Setup-WaspTestMission.ps1`) — LoadoutManager regen + copy to MPMissions.
 - A PR8-era stress profile that can be reused as the starting point for later PR tests.
 
@@ -35,13 +35,14 @@ optional — without it only the `_MISSIONS.7z` server package is skipped; the m
 ## Ready-To-Test Check
 
 ```powershell
-pwsh Tools\PrTestHarness\Run-WaspFinalCheck.ps1   # smoke gate + whole-mission bug-hunt (HIGH), combined verdict
+pwsh Tools\PrTestHarness\Run-WaspFinalCheck.ps1   # smoke gate + whole-root A2 OA lint + whole-mission bug-hunt (HIGH), combined verdict
 ```
 
 This is the "am I ready to test in-engine?" gate. It does not replace in-engine testing:
 the `Local active stress` / RHUD-stressProof smoke checks only pass once the stress overlay
 is installed into the active test mission, and LoadoutManager regen + Arma 2 OA smoke are
-still required before shipping.
+still required before shipping. The A2 OA linter scans both maintained mission roots and
+fails on definitive A3-only idioms or string-find ambiguity before runtime collection.
 
 ## Bug-Hunt Mode
 

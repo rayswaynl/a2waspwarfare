@@ -1,5 +1,26 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Final-check whole-root A2 lint gate [RELEASE LOOP]
+
+Strengthened `Tools/PrTestHarness/Run-WaspFinalCheck.ps1` so the one-command
+pre-test gate now runs the static smoke suite, whole-root A2/OA compatibility
+lint for both maintained terrains, and whole-mission HIGH BugHunt before
+returning success. This makes Chernarus/Takistan string-find or A3-only command
+regressions fail the release gate before runtime RPT collection.
+
+Also folded the current AICOM/JIP seed patch into the same release checkpoint:
+late-joining WEST/EAST clients now receive the current `WFBE_PopTier` and
+side-keyed primitive AICOM intent/objective/status variables from
+`Server_OnPlayerConnected.sqf`, reducing the chance that command-console/RHUD
+objective state stays stale until the next strategic publish. The patch is
+present in Chernarus and the maintained Takistan mirror.
+
+The updated gate passed locally after the GUER armor classifier cleanup:
+Chernarus lint `FAIL: 0` / `REVIEW: 0`, Takistan lint `FAIL: 0` /
+`REVIEW: 0`, static smoke clean, and BugHunt HIGH clean. Runtime RPT collection
+and deployment remain approval-gated; no local Arma launch, SSH, upload,
+restart, cache clear or deployment action was performed.
+
 ## 2026-07-01 — PR #126 guardrail intake into command-center lane [RELEASE LOOP]
 
 Folded the low-risk release-readiness guardrails from the narrower PR #126 lane
