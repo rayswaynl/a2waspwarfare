@@ -35,7 +35,7 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 	_marker setMarkerSizeLocal [0.7,0.7];
 	_marker setMarkerAlphaLocal 0;
 
-	_markerColor = "ColorBlue"; //--- cmdcon35: restore Miksuu friendly-blue teammate markers (was ColorBlack, reported as "weird color"); self stays ColorOrange below, AI-led teams read blue like the baseline b_inf symbol.
+	_markerColor = "ColorBlue"; //--- cmdcon35: restore Miksuu friendly-blue teammate markers (was ColorBlack, reported as "weird color"); self stays ColorOrange below, AI-led teams read blue with the A2-safe mil_arrow2 symbol.
 	if !(isNil "_x") then {
 		_leader = leader _x;
 		if (player == _leader) then {_markerColor = "ColorOrange"};
@@ -209,7 +209,7 @@ while {!gameOver} do {
 
 				if (alive _leader) then {
 					_leaderChanged = ((_lastLeaders select _markerIndex) != _leader);
-					_markerColor = "ColorBlue"; //--- cmdcon35: restore Miksuu friendly-blue teammate markers (was ColorBlack, reported as "weird color"); self stays ColorOrange below, AI-led teams read blue like the baseline b_inf symbol.
+					_markerColor = "ColorBlue"; //--- cmdcon35: restore Miksuu friendly-blue teammate markers (was ColorBlack, reported as "weird color"); self stays ColorOrange below, AI-led teams read blue with the A2-safe mil_arrow2 symbol.
 					if (player == _leader) then {_markerColor = "ColorOrange"};
 
 					_markerAlpha = 0;

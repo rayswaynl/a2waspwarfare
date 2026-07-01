@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM arrival gate SAD-ring follow-up [RELEASE LOOP]
+
+Closed a small follow-up on the capture-stall guardrails. The assault arrival
+latch now uses the larger of `WFBE_C_TOWNS_CAPTURE_RANGE` and
+`WFBE_C_AICOM_ASSAULT_SAD`, plus the existing 20m buffer, so squads running the
+tighter SAD assault radius can enter the local capture behavior from the same
+ring they are about to fight inside. Static smoke now asserts the arrival gate
+uses both tunables.
+
+The teammate marker comment was also clarified to match the A2-safe
+`mil_arrow2` marker choice. Runtime, SSH, RPT collection, upload, restart,
+cache-clear and deployment remain explicit-approval gated.
+
 ## 2026-07-01 — AICOM capture drain-wait and release marker guardrails [RELEASE LOOP]
 
 Follow-up subagent review closed two P1s before publishing this lane. The

@@ -615,6 +615,7 @@ function Test-AicomCaptureStallGuardrails {
 		if (-not ($constants.Contains("WFBE_C_AICOM_CAMP_GATE_MODE2") -and $constants.Contains("WFBE_C_AICOM_STALL_ADVANCE_SECS"))) { $missing += "$($entry.Terrain):constants" }
 		if (-not ($runner.Contains("_campWaypoints") -and $runner.Contains('[_team, true, _campWaypoints] Spawn WFBE_CO_FNC_WaypointsAdd') -and $runner.Contains("WFBE_C_AICOM_CAMP_GATE_MODE2"))) { $missing += "$($entry.Terrain):camp-waypoint-chain" }
 		if ($runner.Contains("[_team, true, [[_campTgtPos, 'SAD'")) { $missing += "$($entry.Terrain):camp-sad-clears-tight-move" }
+		if (-not ($runner.Contains('WFBE_C_AICOM_ASSAULT_SAD", 80') -and $runner.Contains('WFBE_C_TOWNS_CAPTURE_RANGE", 40') -and $runner.Contains(") max (missionNamespace getVariable"))) { $missing += "$($entry.Terrain):arrival-gate-sad-ring" }
 		$stallIndex = $assign.IndexOf("WFBE_C_AICOM_STALL_ADVANCE_SECS")
 		$stuckIndex = $assign.IndexOf("WFBE_C_AICOM_STUCK_SECS")
 		if (-not ($assign.Contains("reason=stall-advance") -and $assign.Contains("wfbe_aicom_goto_since") -and $stallIndex -ge 0 -and $stuckIndex -ge 0 -and $stallIndex -lt $stuckIndex)) { $missing += "$($entry.Terrain):stall-advance-independent" }
