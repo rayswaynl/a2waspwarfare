@@ -14,12 +14,13 @@ The working standard is source parity, runtime evidence, and wiki/player documen
 
 ## Active PR Map
 
-As of 2026-07-01 13:45 UTC:
+As of 2026-07-01 16:10 UTC:
 
-- PR #123, `[codex] running release findings log`, branch `codex/release-findings`: docs-only running findings log for release proof. Current head observed: `19fe9e4e5`.
+- `origin/master`: current observed head `7fd310c63`, moved since PR #126 base only by deleting stale top-level `B57-SOAK-PROPOSALS.md` and `GUER_TECH.md`; GitHub still reports PR #126 clean/mergeable.
+- PR #123, `[codex] running release findings log`, branch `codex/release-findings`: docs-only running findings log for release proof. Current head observed: `d238d0ad4`.
 - PR #124, `[codex] Release r8 integration findings for July 2`, branch `release/2026-07-02-stackcheck-r8`: r8 stack candidate with package hashes and NO-GO until exact runtime proof.
-- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates. Current head observed: `8ee3860d6`; wiki currently records packaged identity `8ee3860d6` with archive SHA `41F926A8B44F757B3F8218DFBE0A1119AAFC2550A9BB1D77C9E70B4A7B2EF3A2`, `1,879` entries, `7,139,063` bytes.
-- PR #131, `[codex] Fix placement preview static gate`, branch `codex/fix-b724-placement-static`: focused static-gate follow-up for the latest master placement-preview blocker. Findings log records artifact `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z` with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`; this is packaging/tooling proof only.
+- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates. Current branch/package identity observed: `14b995d5f`; wiki records `_MISSIONS.7z` SHA256 `DE9E63F27F58A390C4E0A0ED93EABFBF70D63DA85075192731DB48F00AE3EDF6`, `1,879` entries, `7,139,873` bytes, handoff status `ready_for_runtime_collection`. Commits after the old `8ee3860d6` map add/fold AICOM HC audit telemetry, harden the release proof gates, harden AICOM donation authority, rebroadcast AICOM status on feed request, settle HC audit fixtures, and remove stale AICOM proposal references.
+- PR #131, `[codex] Fix placement preview static gate`, branch `codex/fix-b724-placement-static`: focused static-gate follow-up for the latest master placement-preview blocker. Current branch head observed: `bc297a632` after a force-update onto `origin/master@7fd310c63`; prior findings artifact `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z` with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D` remains packaging/tooling proof only for old head `2178b20d3`, not exact current-head proof unless refreshed or explicitly accepted as same mission delta.
 - This branch, `codex/release-readiness-20260701`: multi-agent task ledger and AICOM guardrail/proof-instrumentation lane. HC audit source is through `f20ddfc83`, the first livehost proof-gap ledger was pushed at `5b2e29c1c`, and the latest local proof-instrumented archive SHA256 remains `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD`; GitHub reports PR #126 open, draft, clean, and mergeable.
 
 ## Agent Lanes
@@ -32,7 +33,7 @@ As of 2026-07-01 13:45 UTC:
 
 | Source | Current status | Use in this loop |
 | --- | --- | --- |
-| `rayswaynl/a2waspwarfare` | Local PR #126 refresh worktree is based on current `origin/master` through `b7241a35f` plus the rebased release-readiness stack. The original branch root was `6cbf6f6a5`; the HC audit source commit is `f20ddfc83`. | Primary code, docs, tools, release branches, PR evidence. |
+| `rayswaynl/a2waspwarfare` | Local PR #126 refresh worktree is based on `origin/master` through `b7241a35f` plus the rebased release-readiness stack. Current `origin/master` is `7fd310c63`; the branch is not rebased onto the two latest master doc deletions, but GitHub reports PR #126 clean/mergeable. The original branch root was `6cbf6f6a5`; the HC audit source commit is `f20ddfc83`. | Primary code, docs, tools, release branches, PR evidence. |
 | `rayswaynl/a2waspwarfare.wiki` | Cloned locally and synced with the PR #126 livehost marker-sweep caveat, HC audit source through `f20ddfc83`, and the newer PR #125 package tuple preserved from remote wiki work. Wiki commit hashes are not release identities; use the package/git/archive tuple and RPT markers for release proof. | Wiki freshness and release-doc synchronization. |
 | `Miksuu/a2waspwarfare` | Public repo reachable; local clone exists at `work/miksuu-original`, remote `https://github.com/Miksuu/a2waspwarfare.git`, HEAD `b8389e74` from 2026-06-09. Checkout hit Windows long-path failure on one very long LoadoutManager filename. | Historical/original mission comparison where files are present; full comparison needs long-path-safe checkout or sparse checkout. |
 | Jerry mission dump | Public index reachable; Arma2 section reports 1498 files / 24.23 GB and Arma2 OA reports 535 files / 29.42 GB. Exact useful query: `https://bidentify.jerryhopper.com/api/search/WarfareV2_073`. Key package lead: `WarfareV2_073LiteCO.zip`, which lists Takistan, Zargabad, and Chernarus PBOs. | Historical Benny/Warfare 0.73 baseline, hashes, archive contents, and downloadable reference PBOs once a specific comparison is needed. |
@@ -43,7 +44,7 @@ As of 2026-07-01 13:45 UTC:
 | `https://miksuu.com/leaderboard` | Public leaderboard reachable; current scrape shows 33 players and no AI-commander round data yet. | Cross-check stats pipeline and AI commander telemetry visibility. |
 | `https://miksuu.com/api/wasp-stats` | Public API reachable but returned `online:false`, `stale:true` during the sweep. | Compare public API freshness against server-side stats files. |
 | `http://78.46.107.142:8080/` | Direct page timed out in this environment. | Dashboard/runtime status source; verify from an environment that can reach the port. |
-| SSH RPTs on Game PC / Hetzner | Read-only `livehost` alias was discoverable and worked. Backing stats files exist under `C:/WASP/web`; latest server-side stats observed `generatedAt: 2026-07-01T13:42:08Z`, server online, Chernarus, 4 players, 2 headless clients, server FPS last/avg `47/46`, and HC delegation `93%`. Latest RPT sweep shows live `AICOMSTAT`/`HCSTAT` but no PR #126 `HCDROP_AICOM_AUDIT`/`HCRECON_AICOM_AUDIT` markers and no `7e97c78b9`/`f20ddfc83` release marker. | Current live telemetry is useful health evidence, but not exact PR #126 runtime proof. |
+| SSH RPTs on Game PC / Hetzner | Read-only `livehost` alias was discoverable and worked. Backing stats files exist under `C:/WASP/web`; latest server-side stats observed `generatedAt: 2026-07-01T16:08:17Z`, server online, Chernarus, 1 player, 2 headless clients, server FPS last/avg `47/46`, HC delegation `89%`, live group sources including `aicom` and `aicom_paradrop`. Latest RPT sweep still shows live `AICOMSTAT`/`HCSTAT` and `release-command-center-20260630` markers but no PR #126 `HCDROP_AICOM_AUDIT`/`HCRECON_AICOM_AUDIT` markers and no `0eb72ca47`/`c148d0d6`/`f20ddfc83`/archive-SHA marker. | Current live telemetry is useful health evidence, but not exact PR #126 runtime proof. |
 
 ## First Findings
 
@@ -109,6 +110,7 @@ As of 2026-07-01 13:45 UTC:
 11. Public stats and server-side stats disagreed during reconnaissance.
    - Public `/api/wasp-stats` reported stale/offline.
    - Read-only SSH stats files were fresher; the latest `C:/WASP/web/stats.json` observed at `2026-07-01T13:42:08Z` showed Chernarus online with 4 players, 2 HCs, server FPS last/avg `47/46`, HC delegation `93%`, and active commander-intel/pop-tier data.
+   - Follow-up SSH stats at `2026-07-01T16:08:17Z` showed Chernarus still online with 1 player, 2 HCs, server FPS last/avg `47/46`, HC delegation `89%`, HC1/HC2 FPS `47/46`, active `aicom` group sources on both sides, and `aicom_paradrop` group source on WEST. This is live health context only because the RPT package/build markers still identify older command-center windows.
    - Action: include public API freshness and dashboard backing-file freshness in the release/server-ops checks, and keep exact build provenance separate from dashboard health.
 
 12. Latest RPT candidates exist and were marker-swept without copying private logs.
@@ -123,6 +125,7 @@ As of 2026-07-01 13:45 UTC:
    - `C:/WASP/rpt-archive/arma2oaserver-preFIXch-20260630-1952.RPT`
    - Latest 8 RPTs contain many `AICOMSTAT` and `HCSTAT` lines, plus `WASPRELEASE|v1|candidate=release-command-center-20260630|git=5b1640cf88|terrain=takistan` and `git=6e0e324b79` samples.
    - Latest 8 RPTs contain no `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSIDE|v1|disconnect`, `HCSIDE|v1|reconnect`, `HCDISPATCH`, `WF_RELEASE_MARKER`, `2178b20d`, `7e97c78b`, `f20ddfc83`, or `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD` markers.
+   - Follow-up marker sweep after PR #126 reached `0eb72ca47` still found 0 for `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSIDE|v1|disconnect`, `HCSIDE|v1|reconnect`, `HCDISPATCH`, `WF_RELEASE_MARKER`, `0eb72ca47`, `c148d0d6`, `f20ddfc83`, and `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD`.
    - Action: these live logs confirm useful pre-instrumentation AICOM/HC health, but cannot satisfy the PR #126 exact-build HC-drop audit gate. Added `Tools/Monitor/Get-WaspRptMarkerSweep.ps1` so future livehost/archive checks can repeat this marker sweep with path hashes and line hashes instead of copied logs or raw lines. Added `Tools/Monitor/Test-WaspRptMarkerSweep.SelfTest.ps1`; synthetic validation passes for required-marker success, missing-marker `-NoFail`, missing-marker hard fail, comma-separated required markers, and default no-raw-line samples. Only copy/analyze broader private RPT contents after the owner confirms target build/window and privacy scope.
 
 13. HC-disconnect adoption is still a release-risk lead.
