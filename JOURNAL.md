@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM air-factory scan lint review cleared [RELEASE LOOP]
+
+Tightened the last known A2/OA lint review in `AI_Commander_Teams.sqf`.
+The heli air-tier waive still detects a live Aircraft Factory from
+`WFBE_<SIDE>STRUCTURES` / `WFBE_<SIDE>STRUCTURENAMES`, but now uses an explicit
+indexed loop instead of the A2-legal array `find "Aircraft"` form that the
+release linter could not distinguish from Arma 3 string-find. LoadoutManager
+mirrored the change to Takistan and rebuilt `_MISSIONS.7z`.
+
+Direct `Lint-A2Compat.ps1` runs now pass with `FAIL 0 / REVIEW 0` for both
+Chernarus and Takistan. Runtime/deploy gates remain unchanged and still require
+explicit approval plus the exact ten-file RPT packet.
+
 ## 2026-07-01 — AICOM lifecycle/refund authority guard [RELEASE LOOP]
 
 Closed the next bounded commander-hardening slice for both maintained terrains.
@@ -16,8 +29,7 @@ cost is scalar, positive and capped by the mission unit price for that class.
 Team-end handling also rejects duplicate/unregistered/live-team lifecycle
 messages before cleanup. LoadoutManager mirrored the source change to Takistan
 and rebuilt `_MISSIONS.7z`; `Test-WaspStaticSmoke.ps1` and
-`Run-WaspFinalCheck.ps1` both pass, with the known Chernarus/Takistan
-`find "Aircraft"` A2/OA lint review heuristic still present.
+`Run-WaspFinalCheck.ps1` both pass.
 
 ## 2026-07-01 — AICOM/PVF static hardening and Build 83 merge-gate [RELEASE LOOP]
 

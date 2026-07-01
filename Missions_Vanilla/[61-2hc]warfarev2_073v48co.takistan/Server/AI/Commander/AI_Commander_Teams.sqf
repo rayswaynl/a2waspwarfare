@@ -280,12 +280,16 @@ if (count _live > 0) then {
 	//--- STRUCTURE here and, when present, WAIVE the air-tier eligibility gate for HELI templates (planes stay behind the
 	//--- airfield via _hasAirfield + the plane-bucket gate below). This is the structure-keyed sibling of _freeAirWaive.
 	//--- A2-OA-safe: STRUCTURENAMES/GetSideStructures scan (same idiom as the spawn-factory finder ~L762), typeOf==+alive.
-	private ["_hasAirFactory","_airHeliWaive","_afStructNames","_afStructs","_afStructIdx","_afStructClass"];
+	private ["_hasAirFactory","_airHeliWaive","_afStructNames","_afStructTypes","_afStructs","_afStructIdx","_afStructClass","_afI"];
 	_hasAirFactory = false;
 	_afStructNames = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
-	if (!isNil "_afStructNames") then {
-		_afStructIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find "Aircraft";
-		if (_afStructIdx >= 0) then {
+	_afStructTypes = missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText];
+	if (!isNil "_afStructNames" && {!isNil "_afStructTypes"}) then {
+		_afStructIdx = -1;
+		for "_afI" from 0 to ((count _afStructTypes) - 1) do {
+			if ((_afStructTypes select _afI) == "Aircraft") exitWith {_afStructIdx = _afI};
+		};
+		if (_afStructIdx >= 0 && {_afStructIdx < count _afStructNames}) then {
 			_afStructClass = _afStructNames select _afStructIdx;
 			_afStructs = (_side) Call WFBE_CO_FNC_GetSideStructures;
 			{ if (typeOf _x == _afStructClass && {alive _x}) exitWith {_hasAirFactory = true} } forEach _afStructs;

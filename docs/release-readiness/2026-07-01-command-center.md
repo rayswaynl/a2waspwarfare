@@ -48,12 +48,13 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - Hardened the PVF dispatch shape checks before handler selection and routed remaining active AICOM group receiver reads through the existing OA-safe group-variable helper. The stale `aicom-focus`, `aicom-defend`, and `aicom-reinforce` command cases now require the human-commander requester/team validation used by the live command-console actions.
 - Current `origin/master`/Build83 cmdcon35 has been reconciled into this PR while preserving the release harness, HCTopUp draft exclusion, AICOM/PVF authority hardening and the active AICOM executor latch reset.
 - Hardened AICOM team lifecycle/refund messages: HC-founded groups now carry a side binding, team-created/end/heading payloads require registered managed AICOM teams, duplicate/live/unregistered lifecycle messages are rejected, and heli fly-off refunds must include the originating team and transport class with the refund capped to that class' mission unit price.
+- Cleared the remaining A2/OA lint review by replacing the AICOM Aircraft Factory array `find "Aircraft"` lookup with an explicit indexed scan in both maintained terrains.
 - Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
 
 ## Proven Static And Package Gates
 
 - `dotnet run` from `Tools\LoadoutManager` must complete and leave no unintended tracked source diff.
-- Latest recorded static validation: the AICOM group/latch smoke guard passes; the remaining static smoke failures are the known RHUD/stress active-copy local prerequisites; Chernarus and Takistan `Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1` each passed with `FAIL 0`, `REVIEW 1` for the known array `find "Aircraft"` heuristic; whole-mission HIGH BugHunt is clean.
+- Latest recorded static validation: the AICOM group/latch smoke guard passes; Chernarus and Takistan `Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1` each passed with `FAIL 0`, `REVIEW 0`; whole-mission HIGH BugHunt is clean.
 - `Tools\PrTestHarness\Smoke\Test-WaspStaticSmoke.ps1` includes the `Release runtime-proof token emitters` source contract. This proves emitter strings are present for the runtime scorer, not that runtime evidence has passed.
 - `Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1` must pass against `_MISSIONS.7z` with expected candidate `release-command-center-20260630` and the current `git rev-parse --short=10 HEAD`.
 - `Tools\PrTestHarness\Release\New-WaspReleaseHandoff.ps1` must pass against the current package manifest.
