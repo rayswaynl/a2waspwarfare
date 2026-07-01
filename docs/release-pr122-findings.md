@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 18:50 Europe/Amsterdam
+Last updated: 2026-07-01 18:57 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -14,13 +14,14 @@ extracts, but the latest source delta currently fails the static whitespace
 gate before runtime proof is even considered.
 
 `origin/master` has advanced to
-`7fd310c63c23e2a723ca24de7349b8235631db9d`, which currently differs from the
-previous `b7241a35f0460e92cf8839cd315c95defaa6380b` master by deleting
-`B57-SOAK-PROPOSALS.md` and `GUER_TECH.md`. The latest master source still
-inherits the cmdcon33/cmdcon34 placement-preview whitespace/static blocker in
-both Chernarus and Takistan `Client/Init/Init_Client.sqf`. The older
-`b7241a35`, `5bf5f923`, `311b9d93`, PR #127-only, r9, r8, and PR #122 artifacts
-no longer prove the current master state.
+`b4a6350ca0f90c9b0316570473c05a5e790aea96`, the merge commit for PR #132
+Build 83/cmdcon35. The merge itself is clean when checked from `7fd310c63`, and
+the deleted root docs were not reintroduced in final master. However, latest
+master still inherits the cmdcon33/cmdcon34 placement-preview whitespace/static
+blocker when checked from the broader `5bf5f92385` range in both Chernarus and
+Takistan `Client/Init/Init_Client.sqf`. The older `7fd310c63`, `b7241a35`,
+`5bf5f923`, `311b9d93`, PR #127-only, r9, r8, PR #122, and PR #131 artifacts no
+longer prove the current master state.
 Release-ready wording still needs current Arma 2 OA evidence from the exact
 chosen build, covering both Chernarus and Takistan plus server, client, late
 join, and headless-client roles.
@@ -30,7 +31,7 @@ join, and headless-client roles.
 - Repository: `rayswaynl/a2waspwarfare`
 - Base branch: `origin/master`
 - Current `origin/master` head:
-  `7fd310c63c23e2a723ca24de7349b8235631db9d`
+  `b4a6350ca0f90c9b0316570473c05a5e790aea96`
 - Original PR #122 base head:
   `bd48a6dbe673ae47a88053dafdf948a29cb8dfe0`
 - PR #122 branch: `origin/feat/qol-polish-pack`
@@ -40,7 +41,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `a5f758908b51289449d6733e92aa12ee5e88c6e8`
+  `2ec2f5fa359fe03bfe4e08af974eeb3184a105dc`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -48,11 +49,9 @@ PR #124/#125/#126, was merged at
 series of cmdcon32, cmdcon33, and cmdcon34 follow-up fixes means the PR #127-only
 artifact is stale relative to the latest master artifact.
 
-GitHub currently reports PR #132 as open, non-draft, and clean at
-`6ff7bad28003ec6781a9346e033afbc386894b6f`, based on the previous
-`b7241a35` master. It is a broad Build 83/cmdcon35 lane and is not current
-runtime proof until it is rebased/reconciled, reviewed, selected, rebuilt, and
-proven with exact RPT evidence.
+PR #132 was merged at `b4a6350ca0f90c9b0316570473c05a5e790aea96`. It is now
+current master source, but it is not release proof until exact current-build
+artifacts and RPT evidence exist.
 
 GitHub currently reports PR #124 as open and draft with unknown merge state.
 The old r8 branch remains stale relative to current master and needs conflict
@@ -63,28 +62,26 @@ open, draft, and currently reported clean at head
 `153a513fb6511a4154f2ed825ba9ff2578c070e7`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
-PR #126 also exists as an open draft release-readiness/AICOM guardrail lane at
-head `10c38fb47c0743b5376f592bcaca1c8247a32ef6` after a force update. Its
-verified shippable pieces were folded through PR #127; keep the remaining branch
-separate unless it is rebased and revalidated.
+PR #126 is now closed without merge. Its verified shippable pieces were folded
+through PR #127; keep the remaining branch separate unless it is rebased and
+revalidated.
 
 PR #129 is an open draft release-readiness hub at
 `72888f22851871c8ed967a0fd29402a0c410c0bd`. It is mission-affecting, not
 docs-only, and overlaps PR #125 in shared AICOM commander files.
 
-PR #131 is the focused draft fix for the latest master static blocker. It is
-open, draft, and currently reported clean at head
-`bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583`. It only touches the Chernarus and
-generated Takistan placement preview block in `Client/Init/Init_Client.sqf`,
-splitting the dense flat-ground expression into a `_flatSpots` count check. It
-was replayed onto `7fd310c63` after the two deleted docs made the old PR #131
-branch appear to re-add stale whitespace. An exact PR #131 `SERVER_DEBUG`
-mission-folder artifact now exists for runtime collection at
-`outputs/a2waspwarfare-pr131-bc297a63-server-debug-missions.7z` with SHA256
-`D2F3964F51A8A2647AD6A50D0BAD08016D3B35D513D41DB2A5CA931CFA483236`. An exact
-PR #131 folder-smoke kit also exists at
-`outputs/a2waspwarfare-pr131-bc297a63-folder-smoke-kit.7z` with SHA256
-`4FDCCAFE489802E4D2C6A31854F43452FCF333F766996A1E108889AFA9CE8687`.
+PR #131 is now closed without merge and stale after PR #132. PR #133 replaces
+it as the focused draft fix for the latest master static blocker. PR #133 is
+open, draft, and GitHub reports it clean at
+`5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0` on base
+`b4a6350ca0f90c9b0316570473c05a5e790aea96`. It only touches the Chernarus and
+generated Takistan placement-preview block in `Client/Init/Init_Client.sqf`,
+splitting the dense flat-ground expression into a `_flatSpots` count check while
+keeping the PR #132 GUER radio/client changes intact. Validation for PR #133:
+`git diff --check origin/master..HEAD` pass; `git diff --check
+5bf5f92385ef0218c5e20fb4273cf563a295e82d..HEAD` pass; LoadoutManager reached
+`CHERNARUS DONE` and `TAKISTAN DONE` and packaged `_MISSIONS.7z` with local
+7-Zip. PR #133 is source/static/generator proof only, not runtime proof.
 
 ## R8 Integration Finding
 
@@ -328,27 +325,22 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 18:40 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 18:57 Europe/Amsterdam found:
 
-- PR #131: focused placement-preview static fix, clean at
-  `bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583`. This remains the release-critical
-  unblocker because current `origin/master` still fails `git diff --check` from
-  `5bf5f92385` in both terrain copies of `Client/Init/Init_Client.sqf`.
-- PR #126: medium source risk, high release-gate risk until runtime proof exists.
-  It advanced to `10c38fb47c0743b5376f592bcaca1c8247a32ef6`. True payload from
-  merge-base `b7241a35` is 18 files, +870/-24, including 14 mission files plus
-  `Tools/Monitor` helper/docs and one release doc. It changes AICOM/HC/JIP
-  telemetry and throttling paths. True-payload `git diff --check` passes, but a
-  raw `origin/master..HEAD` check fails because the stale-base branch re-adds
-  deleted `GUER_TECH.md` with trailing whitespace. Added-line scan found no
-  watched A3-only token hits.
+- PR #133: focused placement-preview static fix, open draft and clean at
+  `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
+  unblocker for `origin/master` after PR #132 merged.
+- PR #126: closed without merge after advancing again to
+  `390a6846a5d99ca28046f15ba883dad82300ad66`. Do not use it as a Thursday
+  release path unless it is deliberately reopened/rebased and revalidated.
 - PR #125: broad command-center/tooling lane at
   `153a513fb6511a4154f2ed825ba9ff2578c070e7`. True payload from merge-base
   `b7241a35` is 141 files, +13909/-1470, including 103 mission files across both
-  terrains plus large harness/docs/server-config additions. It overlaps #131 in
-  the two terrain `Client/Init/Init_Client.sqf` files and simulated stacking
-  shows real conflicts there. True-payload `git diff --check` passes, but a raw
-  `origin/master..HEAD` check fails because stale deleted docs are re-added.
+  terrains plus large harness/docs/server-config additions. GitHub now reports
+  it `DIRTY` against the merged #132 master. It overlaps the placement static
+  fix in the two terrain `Client/Init/Init_Client.sqf` files. True-payload
+  `git diff --check` passed before #132 merged, but it is no longer a clean
+  current-master lane.
   Added-line A3-token scan hits docs/tooling and a string label in
   `Tools/PrTestHarness/Overlays/pr8-stress/test/wasp_selftest.sqf`, not an
   executable mission `params` command, but this lane is still too broad for a
@@ -358,17 +350,10 @@ Fresh triage at 2026-07-01 18:40 Europe/Amsterdam found:
   `+188/-92`. It is mission-affecting in AICOM commander code, group GC,
   briefings, and release docs. Its docs mention older base context, so treat
   GitHub metadata and fresh local diff checks as authoritative.
-- PR #132: broad Build 83/cmdcon35 lane at
-  `6ff7bad28003ec6781a9346e033afbc386894b6f`. It is clean on GitHub, but the
-  current-master diff is broad: 131 files, +4416/-764, including 64 mirrored
-  Chernarus mission files and the same 64 Takistan files. It re-adds
-  `B57-SOAK-PROPOSALS.md` and `GUER_TECH.md`; `git diff --check
-  origin/master..origin/claude/build83-cmdcon35` fails on `GUER_TECH.md`
-  trailing whitespace. It does not contain the #131 placement static fix:
-  checking from `5bf5f92385` to #132 still fails on both terrain
-  `Client/Init/Init_Client.sqf` placement lines. Treat #132 as a separate
-  medium-high release-risk lane until it is rebased, reconciled with #131,
-  regenerated, packaged, and proven with exact real RPT evidence.
+- PR #132: merged into master at
+  `b4a6350ca0f90c9b0316570473c05a5e790aea96`. Treat it as current source
+  needing exact current-build artifact and runtime proof, not as proof by
+  itself.
 
 PR #125 and PR #126 overlap in 14 shared AICOM/HC/JIP files across Chernarus and
 Takistan. PR #126 does not overlap #131. PR #125 and PR #129 were not stacked at
@@ -627,9 +612,9 @@ ASR-enabled RPT proof.
 
 ## Recommended Next Path
 
-1. Treat PR #131 at `bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583` as the current
-   focused proof target if the static fix is selected, or merge #131 first and
-   rebuild from the new `origin/master`.
+1. Treat PR #133 at `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0` as the current
+   focused proof target for the static gate on top of merged #132, or merge
+   #133 first and rebuild from the new `origin/master`.
 2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
    prove latest `origin/master`.
 3. If current `origin/master` is chosen without #131, record an explicit static
