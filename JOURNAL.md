@@ -8,6 +8,12 @@ on touched AICOM HC groups and emits delayed `HCRECON_AICOM_AUDIT` telemetry.
 HC disconnect now emits immediate and delayed `HCDROP_AICOM_AUDIT` telemetry
 with side, team, live-leader, owner and heading-freshness counts.
 
+Also tightened the late-JIP `WFBE_ReqAicomFeed` retry path. When a client asks
+for the missing AICOM marker feed, the server now rebroadcasts the side-keyed
+`WFBE_AICOM_*_<side>` intent/objective/status variables to that requester in
+addition to the active AICOM team and patrol arrays. Static smoke now asserts
+the retry-path `aiStatus` token plus HC reconnect/drop audit emitters.
+
 This is diagnostic instrumentation for runtime proof collection; it does not
 change AI commander target selection, team production or delegation decisions.
 `Run-WaspFinalCheck.ps1` kept Chernarus/Takistan A2/OA lint clean and HIGH

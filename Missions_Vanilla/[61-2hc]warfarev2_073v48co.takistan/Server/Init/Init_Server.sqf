@@ -946,13 +946,26 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 //--- the SAME proven targeted-reply pattern as REQUEST_SUPPLY_VALUE (Server_PV_RequestSupplyValue.sqf). Unconditional
 //--- (always armed); server_side_patrols also re-broadcasts every ~20s as a safety net.
 "WFBE_ReqAicomFeed" addPublicVariableEventHandler {
-	private ["_player","_id"];
+	private ["_player","_id","_side","_sid","_aiKey","_aiSent"];
 	_player = _this select 1;
 	if (isNull _player) exitWith {};
 	_id = owner _player;
 	if (!isNil "WFBE_ACTIVE_AICOM_TEAMS") then {_id publicVariableClient "WFBE_ACTIVE_AICOM_TEAMS"};
 	if (!isNil "WFBE_ACTIVE_PATROLS") then {_id publicVariableClient "WFBE_ACTIVE_PATROLS"};
-	diag_log format ["[WFBE][B74.2 REQ-MARK] rebroadcast marker feeds to requester %1 (aicom=%2, patrols=%3).", _id, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
+	_side = side _player;
+	if (!(_side in [west, east])) then {_side = side (group _player)};
+	_aiSent = 0;
+	if (_side in [west, east]) then {
+		_sid = _side Call WFBE_CO_FNC_GetSideID;
+		{
+			_aiKey = Format [_x, _sid];
+			if (!isNil {missionNamespace getVariable _aiKey}) then {
+				_id publicVariableClient _aiKey;
+				_aiSent = _aiSent + 1;
+			};
+		} forEach ["WFBE_AICOM_INTENT_%1","WFBE_AICOM_OBJNAME_%1","WFBE_AICOM_OBJPOS_%1","WFBE_AICOM_ACTIVE_%1","WFBE_AICOM_FOCUS_NAME_%1","WFBE_AICOM_TEAMS_%1","WFBE_AICOM_FUNDS_%1"];
+	};
+	diag_log format ["[WFBE][B74.2 REQ-MARK] rebroadcast marker feeds to requester %1 (aicom=%2, patrols=%3, aiStatus=%4, side=%5).", _id, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []]), _aiSent, _side];
 };
 ["INITIALIZATION", "Init_Server.sqf: B74.2 WFBE_ReqAicomFeed handler armed (own-side marker feed-gap recovery)."] Call WFBE_CO_FNC_LogContent;
 
