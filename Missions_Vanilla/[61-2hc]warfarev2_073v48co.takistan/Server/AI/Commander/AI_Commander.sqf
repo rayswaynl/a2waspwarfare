@@ -167,7 +167,9 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				//--- STALE order + stay Executor-ineligible -> stuck ~2-3.5 min. Server-local teams ignore the order var.
 				{ if (!isNull _x) then {
 					[_x, "towns"] Call SetTeamMoveMode;
-					_x setVariable ["wfbe_exec_sig", []];
+					_x setVariable ["wfbe_exec_lastmode", ""];
+					_x setVariable ["wfbe_exec_lastgoto", [0,0,0]];
+					_x setVariable ["wfbe_exec_at", -1e9];
 					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 						_x setVariable ["wfbe_aicom_order",
 							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
@@ -191,7 +193,9 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			//--- cmdcon27 THREAD A: bump HC-team order seq on the delegate flip too (same stuck-teams root cause).
 			{ if (!isNull _x) then {
 				[_x, "towns"] Call SetTeamMoveMode;
-				_x setVariable ["wfbe_exec_sig", []];
+				_x setVariable ["wfbe_exec_lastmode", ""];
+				_x setVariable ["wfbe_exec_lastgoto", [0,0,0]];
+				_x setVariable ["wfbe_exec_at", -1e9];
 				if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_x setVariable ["wfbe_aicom_order",
 						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,

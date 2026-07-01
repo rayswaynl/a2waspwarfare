@@ -443,8 +443,10 @@ function Test-AicomGroupVariableDefaults {
 	$missing = @()
 	foreach ($entry in $roots) {
 		$executePath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander_Execute.sqf"
+		$commanderPath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander.sqf"
 		$runTeamPath = Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf"
 		$execute = Get-Text $executePath
+		$commander = Get-Text $commanderPath
 		$runTeam = Get-Text $runTeamPath
 		if (-not $execute.Contains('[_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-mode" }
 		if (-not $execute.Contains('[_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-goto" }
@@ -452,6 +454,8 @@ function Test-AicomGroupVariableDefaults {
 		if (-not $execute.Contains('[_team, "wfbe_exec_lastgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-lastgoto" }
 		if (-not $execute.Contains('[_team, "wfbe_exec_at", -1e9] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-at" }
 		if ($execute.Contains('_team getVariable ["wfbe_teammode", "towns"]') -or $execute.Contains('_team getVariable ["wfbe_teamgoto", [0,0,0]]') -or $execute.Contains('_team getVariable ["wfbe_exec_sig", []') -or $execute.Contains('_team getVariable ["wfbe_exec_lastmode", "') -or $execute.Contains('_team getVariable ["wfbe_exec_lastgoto", [0,0,0]]') -or $execute.Contains('_team getVariable ["wfbe_exec_at", -1e9]')) { $missing += "$($entry.Terrain):execute-raw-group-default" }
+		if ($commander.Contains('wfbe_exec_sig')) { $missing += "$($entry.Terrain):commander-old-exec-sig" }
+		if (-not $commander.Contains('_x setVariable ["wfbe_exec_lastmode", ""]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_lastgoto", [0,0,0]]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_at", -1e9]')) { $missing += "$($entry.Terrain):commander-latch-reset" }
 		if (-not $runTeam.Contains('[_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):capture-pass-helper" }
 		if ($runTeam.Contains('_team getVariable ["wfbe_aicom_cappasses", 0]')) { $missing += "$($entry.Terrain):capture-pass-raw-group-default" }
 	}
