@@ -472,6 +472,35 @@ if (_isMan) then {
 		_vehicle setVariable ["wfbe_is_guer_fob", true, true];
 	};
 
+	//--- B76 (guer-depot climb): GUER buys EVERY vehicle from the Depot (GUI_Menu_BuyUnits forces _type='Depot'),
+	//--- and their technicals need to scale the steep Takistan/Chernarus terrain to be useful. Only the VBIED truck
+	//--- (line ~357) had Valhalla High Climbing forced on; every other Depot car spawned with it OFF (default
+	//--- WFBE_HighClimbingDefaultEnabled = false), so the buyer had to toggle it by hand each time. Enable it by
+	//--- default on GUER Depot cars (broadcast), mirroring the VBIED path. Skip vehicles already handled as a VBIED
+	//--- (their own GetIn path already arms the climb loop). The buyer keeps the Init_Unit "High-climbing gear off"
+	//--- toggle to turn it back off. GetIn driver-path starts the loop for whoever takes the wheel, exactly the way
+	//--- LowGear_Toggle.sqf does. Idempotent: setVariable + a dedupe-guarded GetIn EH (wfbe_depot_climb_eh).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_factory == "Depot"} && {_vehicle isKindOf "Car"} && {!(_vehicle getVariable ["wfbe_is_guer_vbied", false])}) then {
+		_vehicle setVariable ["WFBE_HighClimbingEnabled", true, true];
+
+		if ((_vehicle getVariable ["wfbe_depot_climb_eh", -1]) < 0) then {
+			private ["_eh"];
+			_eh = _vehicle addEventHandler ["GetIn", {
+				private ["_v","_pos","_u"];
+				_v = _this select 0;
+				_pos = _this select 1;
+				_u = _this select 2;
+				if (_pos == "driver" && {_u == player} && {_v getVariable ["WFBE_HighClimbingEnabled", false]}) then {
+					Local_HighClimbingModeOn = true;
+					if (!Local_HighClimbingRunning) then {
+						_v spawn VALHALLA_FNC_LowGear;
+					};
+				};
+			}];
+			_vehicle setVariable ["wfbe_depot_climb_eh", _eh];
+		};
+	};
+
 	//--- Salvage Truck.
 	if (_unit in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',sideJoinedText])) then {[_vehicle] execVM 'Client\FSM\updatesalvage.sqf'};
 
