@@ -210,7 +210,7 @@ if (_sideJoined in [west, east]) then {
 				if (!isNull _x) then {
 					_lead = leader _x;
 					if (!isNull _lead && {isPlayer _lead}) then {
-						_rows = _rows + [[name _lead, 1, (_x getVariable ["wfbe_funds", 0]), str _x]];
+						_rows = _rows + [[name _lead, 1, (_x Call WFBE_CO_FNC_GetTeamFunds), str _x]];
 					};
 				};
 			} forEach _rteams;

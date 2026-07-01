@@ -81,7 +81,7 @@ switch (_request) do {
 				private ["_caller","_cost","_funds"];
 				_caller = _this select 1;
 				_cost   = WFBE_C_SCUD_COST;
-				_funds  = (group _caller) getVariable ["wfbe_funds", 0];
+				_funds  = (group _caller) Call WFBE_CO_FNC_GetTeamFunds;
 				if (_funds < _cost) exitWith { hint localize "STR_WF_SCUD_NO_FUNDS"; };
 				hint localize "STR_WF_SCUD_SELECT_TARGET";
 				openMap true;

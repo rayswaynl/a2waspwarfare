@@ -487,7 +487,10 @@ function Test-AicomGroupVariableDefaults {
 			$commandGuiPath,
 			$runTeamPath,
 			(Join-Path $entry.Root "Server\FSM\server_groupsGC.sqf"),
-			(Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf")
+			(Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"),
+			(Join-Path $entry.Root "Server\Functions\Server_OnPlayerConnected.sqf"),
+			(Join-Path $entry.Root "Server\Support\Support_ScudStrike.sqf"),
+			(Join-Path $entry.Root "Client\PVFunctions\HandleSpecial.sqf")
 		)
 		$execute = Get-Text $executePath
 		$commander = Get-Text $commanderPath
@@ -516,6 +519,12 @@ function Test-AicomGroupVariableDefaults {
 				$code = Remove-StringLiterals (Remove-CodeComments $line ([ref]$inBlockComment))
 				if ($code -match '\b(_team|_grp|_riGrp|_wTeam|_free|_best|_cand|_candidate|_cteam|_hteam|_rTeam|_tm)\s+getVariable\s+\[') {
 					$missing += "$($entry.Terrain):raw-group-default:$([System.IO.Path]::GetFileName($filePath)):$lineNumber"
+				}
+				if ($code -match '(\(group\s+[_a-zA-Z0-9]+\)|\b(_playerTeam|_playerGroup|_requestTeam|_donorTeam|_cmdTeam|_comTeam|_team|_grp|_riGrp|_wTeam|_free|_best|_cand|_candidate|_cteam|_hteam|_rTeam|_tm))\s+getVariable\s+\["wfbe_funds"') {
+					$missing += "$($entry.Terrain):raw-group-funds-default:$([System.IO.Path]::GetFileName($filePath)):$lineNumber"
+				}
+				if (([System.IO.Path]::GetFileName($filePath) -eq "Server_OnPlayerConnected.sqf") -and ($code -match '\b_x\s+getVariable\s+\["wfbe_funds"')) {
+					$missing += "$($entry.Terrain):raw-roster-funds-default:$([System.IO.Path]::GetFileName($filePath)):$lineNumber"
 				}
 			}
 		}

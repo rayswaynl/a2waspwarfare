@@ -51,13 +51,13 @@ if ((_now - _lastFired) < WFBE_C_SCUD_COOLDOWN) exitWith {
 
 //--- VALIDATION 3: server-authoritative funds (deduct on the calling team's group).
 if (isNull _playerTeam) exitWith {["WARNING","Support_ScudStrike.sqf : denied -- null calling team."] Call WFBE_CO_FNC_LogContent};
-_funds = _playerTeam getVariable ["wfbe_funds", 0];
+_funds = _playerTeam Call WFBE_CO_FNC_GetTeamFunds;
 if (_funds < WFBE_C_SCUD_COST) exitWith {
 	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- insufficient funds (%2 < %3).", str _side, _funds, WFBE_C_SCUD_COST]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- All checks pass: deduct funds + stamp cooldown BEFORE firing (anti double-fire race).
-_playerTeam setVariable ["wfbe_funds", (_funds - WFBE_C_SCUD_COST), true];
+[_playerTeam, -WFBE_C_SCUD_COST] Call WFBE_CO_FNC_ChangeTeamFunds;
 missionNamespace setVariable [_cooldownKey, _now];
 
 ["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] AUTHORISED -- launching from %2 at target %3.", str _side, getPos _platform, _destination]] Call WFBE_CO_FNC_LogContent;

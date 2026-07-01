@@ -1,5 +1,22 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — SCUD and roster group-funds default hardening [RELEASE LOOP]
+
+Closed the group-funds default-read blockers found by the read-only release
+scout. The client SCUD action, server SCUD funds gate and JIP roster row builder
+now resolve team treasuries through `WFBE_CO_FNC_GetTeamFunds` instead of raw
+group `getVariable [name, default]` reads. `Common_ChangeTeamFunds.sqf` now
+uses the older plain-get plus `isNil` guard before adding the delta, so an unset
+team treasury cannot turn a later credit/debit into `nil + amount`.
+
+Static smoke now scans the SCUD and JIP roster paths for raw group `wfbe_funds`
+default reads, including `(group _caller)`, `_playerTeam` and the `_x` roster
+loop in `Server_OnPlayerConnected.sqf`. LoadoutManager mirrored the maintained
+Chernarus edits to Takistan and rebuilt `_MISSIONS.7z`; direct static smoke and
+`Run-WaspFinalCheck.ps1` passed with both terrain A2/OA lints at `FAIL 0 /
+REVIEW 0` and BugHunt HIGH clean. No runtime, SSH, RPT collection, upload,
+restart, cache-clear or deploy action was performed.
+
 ## 2026-07-01 — Command-menu group-default follow-up [RELEASE LOOP]
 
 Closed the adjacent client command-menu group read found during the AICOM
