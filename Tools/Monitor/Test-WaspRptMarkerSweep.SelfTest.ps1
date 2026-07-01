@@ -52,6 +52,7 @@ try {
 	)
 	Set-Content -LiteralPath $hcRpt -Encoding ASCII -Value @(
 		"MISSINIT",
+		"""WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=takistan""",
 		"""HCDROP_AICOM_AUDIT|uid=redacted|owner=2""",
 		"""HCRECON_AICOM_AUDIT|owner=3"""
 	)
@@ -72,6 +73,28 @@ try {
 	Assert-Equal @($result.missingRequired).Count 0 "missingRequired count"
 	Assert-True ((@($result.samples) | Where-Object { $_.PSObject.Properties.Name -contains "line" }).Count -eq 0) "Default samples must not include raw line text"
 	Assert-True ((@($result.samples) | Where-Object { $_.lineHash -and $_.pathLabel }).Count -gt 0) "Samples should include line hashes and public path labels"
+
+	$releaseMarkerText = Invoke-MarkerSweep -Arguments @(
+		"-RptDirectory", $tempRoot,
+		"-Latest", "2",
+		"-ExpectedCandidate", "release-command-center-20260630",
+		"-ExpectedGit", "test",
+		"-RequireReleaseMarkers",
+		"-Json"
+	)
+	$releaseMarkerResult = $releaseMarkerText | ConvertFrom-Json
+	Assert-Equal @($releaseMarkerResult.expectedReleaseMarkers).Count 2 "expectedReleaseMarkers count"
+	Assert-Equal $releaseMarkerResult.counts.AICOMSTAT 1 "release marker mode should retain default AICOMSTAT count"
+	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus' 1 "chernarus release marker count"
+	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=takistan' 1 "takistan release marker count"
+	Assert-Equal @($releaseMarkerResult.missingRequired).Count 0 "release marker missingRequired count"
+
+	[void](Invoke-MarkerSweep -Arguments @(
+		"-RptPath", $serverRpt,
+		"-ExpectedCandidate", "release-command-center-20260630",
+		"-ExpectedGit", "test",
+		"-RequireReleaseMarkers"
+	) -ExpectFailure)
 
 	$nofailText = Invoke-MarkerSweep -Arguments @(
 		"-RptDirectory", $tempRoot,

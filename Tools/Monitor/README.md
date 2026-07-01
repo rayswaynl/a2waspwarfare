@@ -23,6 +23,19 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -Json
 ```
 
+For the current package lane, let the helper build and require both exact terrain release markers:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.ps1 `
+  -RptDirectory "C:\WASP\rpt-archive" `
+  -Latest 8 `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit 1d713bcf2b `
+  -RequireReleaseMarkers `
+  -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
+  -Json
+```
+
 By default, samples include the marker name, public file label, line number, and a short line hash. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
 
 Useful PR #126 proof markers:

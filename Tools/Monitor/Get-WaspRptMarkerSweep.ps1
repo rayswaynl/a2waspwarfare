@@ -19,6 +19,14 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory C:\WASP\rpt-archive `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
   -Json
+
+.EXAMPLE
+powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.ps1 `
+  -RptDirectory C:\WASP\rpt-archive `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit 1d713bcf2b `
+  -RequireReleaseMarkers `
+  -Json
 #>
 
 [CmdletBinding()]
@@ -28,6 +36,10 @@ param(
 	[int]$Latest = 8,
 	[string[]]$Pattern = @(),
 	[string[]]$RequirePattern = @(),
+	[string]$ExpectedCandidate = "",
+	[string]$ExpectedGit = "",
+	[string[]]$ExpectedTerrain = @("chernarus", "takistan"),
+	[switch]$RequireReleaseMarkers,
 	[string]$WindowMarker = "",
 	[int]$SampleLimit = 3,
 	[switch]$Recurse,
@@ -154,6 +166,24 @@ function Expand-PatternArgument {
 	return $expanded.ToArray()
 }
 
+function New-ExpectedReleaseMarkers {
+	param(
+		[string]$Candidate,
+		[string]$Git,
+		[string[]]$Terrain
+	)
+	$markers = New-Object System.Collections.Generic.List[string]
+	if ([string]::IsNullOrWhiteSpace($Candidate) -or [string]::IsNullOrWhiteSpace($Git)) {
+		return $markers.ToArray()
+	}
+	foreach ($terrainName in (Expand-PatternArgument -Values $Terrain)) {
+		$trimmedTerrain = $terrainName.Trim().ToLowerInvariant()
+		if ([string]::IsNullOrWhiteSpace($trimmedTerrain)) { continue }
+		$markers.Add(("WASPRELEASE|v1|candidate={0}|git={1}|terrain={2}" -f $Candidate.Trim(), $Git.Trim(), $trimmedTerrain))
+	}
+	return $markers.ToArray()
+}
+
 $defaultPatterns = @(
 	"WASPRELEASE",
 	"WF_RELEASE_MARKER",
@@ -174,9 +204,15 @@ $defaultPatterns = @(
 
 $Pattern = @(Expand-PatternArgument -Values $Pattern)
 $RequirePattern = @(Expand-PatternArgument -Values $RequirePattern)
+$hasExplicitPattern = $Pattern.Count -gt 0
+$expectedReleaseMarkers = @(New-ExpectedReleaseMarkers -Candidate $ExpectedCandidate -Git $ExpectedGit -Terrain $ExpectedTerrain)
 
 $patterns = @()
-if ($Pattern.Count -gt 0) { $patterns += $Pattern } else { $patterns += $defaultPatterns }
+if ($hasExplicitPattern) { $patterns += $Pattern } else { $patterns += $defaultPatterns }
+foreach ($marker in $expectedReleaseMarkers) {
+	if ($patterns -notcontains $marker) { $patterns += $marker }
+	if ($RequireReleaseMarkers -and ($RequirePattern -notcontains $marker)) { $RequirePattern += $marker }
+}
 foreach ($required in $RequirePattern) {
 	if (![string]::IsNullOrWhiteSpace($required) -and ($patterns -notcontains $required)) {
 		$patterns += $required
@@ -251,6 +287,9 @@ $result = [pscustomobject][ordered]@{
 	fileCount = $files.Count
 	latestLimit = $Latest
 	windowMarker = $WindowMarker
+	expectedCandidate = $ExpectedCandidate
+	expectedGit = $ExpectedGit
+	expectedReleaseMarkers = $expectedReleaseMarkers
 	counts = $aggregate
 	missingRequired = $missingRequired
 	files = $fileResults.ToArray()
