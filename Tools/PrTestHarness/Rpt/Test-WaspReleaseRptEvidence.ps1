@@ -204,11 +204,23 @@ $tokenSpecs = @(
 	[pscustomobject]@{ Name = "aicomTickEast"; Pattern = "AICOMSTAT\|v1\|TICK\|east\|" },
 	[pscustomobject]@{ Name = "aicomEvent"; Pattern = "AICOMSTAT\|v2\|EVENT" },
 	[pscustomobject]@{ Name = "aicomTeamFounded"; Pattern = "AICOMSTAT\|v[12]\|EVENT\|.*\|TEAM_FOUNDED" },
+	[pscustomobject]@{ Name = "aicomTeamFoundedWest"; Pattern = "AICOMSTAT\|v[12]\|EVENT\|west\|.*\|TEAM_FOUNDED" },
+	[pscustomobject]@{ Name = "aicomTeamFoundedEast"; Pattern = "AICOMSTAT\|v[12]\|EVENT\|east\|.*\|TEAM_FOUNDED" },
 	[pscustomobject]@{ Name = "aicomAssaultDispatch"; Pattern = "AICOMSTAT\|v2\|EVENT\|.*\|ASSAULT_DISPATCH" },
+	[pscustomobject]@{ Name = "aicomAssaultDispatchWest"; Pattern = "AICOMSTAT\|v2\|EVENT\|west\|.*\|ASSAULT_DISPATCH" },
+	[pscustomobject]@{ Name = "aicomAssaultDispatchEast"; Pattern = "AICOMSTAT\|v2\|EVENT\|east\|.*\|ASSAULT_DISPATCH" },
 	[pscustomobject]@{ Name = "aicomCombatStatus"; Pattern = "COMBATSTAT" },
+	[pscustomobject]@{ Name = "aicomCombatStatusWest"; Pattern = "AICOMSTAT\|v2\|EVENT\|west\|.*\|COMBATSTAT" },
+	[pscustomobject]@{ Name = "aicomCombatStatusEast"; Pattern = "AICOMSTAT\|v2\|EVENT\|east\|.*\|COMBATSTAT" },
 	[pscustomobject]@{ Name = "aicomFront"; Pattern = "AICOMSTAT\|v1\|FRONT\|" },
+	[pscustomobject]@{ Name = "aicomFrontWest"; Pattern = "AICOMSTAT\|v1\|FRONT\|west\|" },
+	[pscustomobject]@{ Name = "aicomFrontEast"; Pattern = "AICOMSTAT\|v1\|FRONT\|east\|" },
 	[pscustomobject]@{ Name = "aicomPosture"; Pattern = "AICOMSTAT\|v1\|POSTURE\|" },
+	[pscustomobject]@{ Name = "aicomPostureWest"; Pattern = "AICOMSTAT\|v1\|POSTURE\|west\|" },
+	[pscustomobject]@{ Name = "aicomPostureEast"; Pattern = "AICOMSTAT\|v1\|POSTURE\|east\|" },
 	[pscustomobject]@{ Name = "aicomSnapshot"; Pattern = "AICOM2\|v1\|SNAP\|" },
+	[pscustomobject]@{ Name = "aicomSnapshotWest"; Pattern = "AICOM2\|v1\|SNAP\|west\|" },
+	[pscustomobject]@{ Name = "aicomSnapshotEast"; Pattern = "AICOM2\|v1\|SNAP\|east\|" },
 	[pscustomobject]@{ Name = "aicomWestInfFallback"; Pattern = "AICOMGATE\|WEST\|infFallback\|" },
 	[pscustomobject]@{ Name = "aiCommanderActive"; Pattern = "AI commander ACTIVE" },
 	[pscustomobject]@{ Name = "aiCommanderAssist"; Pattern = "AI commander ASSIST" },
@@ -273,15 +285,19 @@ $gateSpecs = @(
 	},
 	[ordered]@{
 		id = "aicom-no-human"
-		required = @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","aicomEvent","aicomTeamFounded","cmdrStat","srvPerf","grpBudget")
+		required = @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","aicomEvent","aicomTeamFoundedWest","aicomTeamFoundedEast","cmdrStat","srvPerf","grpBudget")
 		anyOf = @(
 			[ordered]@{
-				label = "aicom-action-or-progress"
-				keys = @("aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot")
+				label = "west-action-or-progress"
+				keys = @("aicomAssaultDispatchWest","aicomCombatStatusWest","aicomFrontWest","aicomPostureWest","aicomSnapshotWest")
+			},
+			[ordered]@{
+				label = "east-action-or-progress"
+				keys = @("aicomAssaultDispatchEast","aicomCombatStatusEast","aicomFrontEast","aicomPostureEast","aicomSnapshotEast")
 			}
 		)
 		fail = @("watchdogRestart")
-		note = "No-human AI commander heartbeat/tick/progress gate; requires team founding plus at least one autonomous AICOM action/progress token."
+		note = "No-human AI commander heartbeat/tick/progress gate; requires WEST and EAST team founding plus at least one autonomous AICOM action/progress token per side."
 	},
 	[ordered]@{
 		id = "human-takeover-revert"

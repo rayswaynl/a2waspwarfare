@@ -82,7 +82,8 @@ function New-TestPacket {
 		[Parameter(Mandatory)] [string[]]$SemanticTerrains,
 		[switch]$IncludeTakistanInfFallback,
 		[switch]$IncludeChernarusInfFallback,
-		[switch]$IncludeTakistanEastInfFallback
+		[switch]$IncludeTakistanEastInfFallback,
+		[switch]$OmitEastAicomProgress
 	)
 
 	$roles = @("server","HC1","HC2","start-client","late-JIP")
@@ -99,7 +100,7 @@ function New-TestPacket {
 			[void]$lines.Add("MISSINIT: missionName=[test]warfarev2_073v48co.$terrain, worldName=$terrain, isMultiplayer=true, isServer=$isServer, isDedicated=$isDedicated]")
 			[void]$lines.Add("ROLEPROOF|$role|$terrain")
 			if ($role -eq "server" -and ($SemanticTerrains -contains $terrain)) {
-				foreach ($token in @(
+				$semanticTokens = @(
 					"AICOMHB|v1|west|ok",
 					"AICOMHB|v1|east|ok",
 					"AICOMSTAT|v1|TICK|west|1|0|0|0|0|0|",
@@ -141,7 +142,14 @@ function New-TestPacket {
 					"SupplyMissionUnload.sqf: Player Tester started helicopter unload timer",
 					"SupplyMissionCompleted.sqf: Completion accepted",
 					"SERVICE_SUPPLY_AUDIT"
-				)) {
+				)
+				if (!$OmitEastAicomProgress) {
+					$semanticTokens += @(
+						"AICOMSTAT|v2|EVENT|east|1|TEAM_FOUNDED|team=bravo",
+						"AICOMSTAT|v2|EVENT|east|1|ASSAULT_DISPATCH|town=bravo"
+					)
+				}
+				foreach ($token in $semanticTokens) {
 					[void]$lines.Add($token)
 				}
 				if ($terrain -eq "chernarus" -and $IncludeChernarusInfFallback) {
@@ -299,6 +307,17 @@ try {
 	$fallbackGate = @($wrongSideFallback.gates | Where-Object { [string]$_.id -eq "takistan-west-aicom-infantry-fallback" }) | Select-Object -First 1
 	if ([string]$wrongSideFallback.overall -ne "missing_or_failed" -or [string]$fallbackGate.status -ne "missing") {
 		throw ("Expected Takistan EAST fallback marker not to satisfy Takistan WEST fallback gate; overall={0}, fallback={1}" -f $wrongSideFallback.overall, $fallbackGate.status)
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanInfFallback -OmitEastAicomProgress
+	$missingEastAicom = Invoke-Score -Root $root
+	$aicomGate = @($missingEastAicom.gates | Where-Object { [string]$_.id -eq "aicom-no-human" }) | Select-Object -First 1
+	if ($null -eq $aicomGate) { throw "Missing aicom-no-human gate." }
+	$eastMissing = @($aicomGate.missing | Where-Object { [string]$_ -match "aicomTeamFoundedEast|east-action-or-progress" })
+	if ([string]$missingEastAicom.overall -ne "missing_or_failed" -or [string]$aicomGate.status -ne "missing" -or $eastMissing.Count -eq 0) {
+		throw ("Expected no-human AICOM gate to fail without EAST founding/progress; overall={0}, aicom={1}, missing={2}" -f $missingEastAicom.overall, $aicomGate.status, (($aicomGate.missing | Out-String).Trim()))
 	}
 
 	Remove-Item -LiteralPath $root -Recurse -Force

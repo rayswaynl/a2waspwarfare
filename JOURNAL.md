@@ -1,5 +1,32 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM runtime scorer side-proof hardening [RELEASE LOOP]
+
+Tightened the release RPT scorer's no-human AICOM gate so both WEST and EAST
+must now show `TEAM_FOUNDED` plus at least one side-specific autonomous
+action/progress token (`ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or
+`SNAP`). The per-terrain self-test now includes a negative fixture that omits
+EAST founding/progress and verifies the gate stays missing instead of passing on
+WEST-only commander work.
+
+Focused validation passed:
+`Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.PerTerrainSelfTest.ps1`
+and `Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.SelfTest.ps1`.
+Runtime RPT collection and deployment remain approval-gated.
+
+## 2026-07-01 — Group-cap diagnostic debounce [RELEASE LOOP]
+
+Adapted the remaining bounded release-readiness source candidate:
+group-cap diagnostics are now latched/throttled instead of repeating every
+scan while the server stays near the Arma 2 OA side group cap. `GRPBUDGET|WARN`
+now fires on the near-cap edge and emits `GRPBUDGET|RECOVER` when the count
+drops below the threshold again; AI Commander founding cap warnings are limited
+to once per side every 15 minutes while capped; lower-level create-group and
+create-team failures are debounced per side/machine every five minutes.
+
+This is source-only log-pressure reduction. It does not change caps, spawning
+policy, runtime approval status, or deploy gates.
+
 ## 2026-07-01 — Final-check whole-root A2 lint gate [RELEASE LOOP]
 
 Strengthened `Tools/PrTestHarness/Run-WaspFinalCheck.ps1` so the one-command
@@ -7,6 +34,9 @@ pre-test gate now runs the static smoke suite, whole-root A2/OA compatibility
 lint for both maintained terrains, and whole-mission HIGH BugHunt before
 returning success. This makes Chernarus/Takistan string-find or A3-only command
 regressions fail the release gate before runtime RPT collection.
+The static smoke dialect scan itself now checks changed files in both maintained
+mission roots when running from the default repo layout, so direct
+`Test-WaspStaticSmoke.ps1` runs do not stay Chernarus-only for dialect hazards.
 
 Also folded the current AICOM/JIP seed patch into the same release checkpoint:
 late-joining WEST/EAST clients now receive the current `WFBE_PopTier` and
@@ -20,6 +50,21 @@ Chernarus lint `FAIL: 0` / `REVIEW: 0`, Takistan lint `FAIL: 0` /
 `REVIEW: 0`, static smoke clean, and BugHunt HIGH clean. Runtime RPT collection
 and deployment remain approval-gated; no local Arma launch, SSH, upload,
 restart, cache clear or deployment action was performed.
+
+## 2026-07-01 — Town AI HC fallback liveness guard [RELEASE LOOP]
+
+Closed a source-only town-AI delegation gap found by the AICOM scout. In
+`server_town_ai.sqf`, delegation mode 2 now counts only non-null HC registry
+groups with non-null, alive leaders before suppressing server-side town-unit
+creation. A stale `WFBE_HEADLESSCLIENTS_ID` entry can no longer make the town
+FSM call HC delegation, drop every group inside `Server_DelegateAITownHeadless`,
+and skip the server fallback for that activation.
+
+The Chernarus source edit was propagated to maintained Takistan with
+`Tools\LoadoutManager`, and the strengthened final pre-test gate passed:
+static smoke clean, Chernarus/Takistan A2/OA lint `FAIL: 0` / `REVIEW: 0`,
+and whole-mission HIGH BugHunt clean. Runtime RPT evidence is still pending and
+approval-gated.
 
 ## 2026-07-01 — PR #126 guardrail intake into command-center lane [RELEASE LOOP]
 

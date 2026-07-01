@@ -273,8 +273,9 @@ terrain and requires the core runtime evidence families to pass independently
 for Chernarus and Takistan through the `per-terrain-runtime-evidence` gate; a
 rich Chernarus run can no longer satisfy missing Takistan semantic evidence.
 The no-human AICOM gate requires WEST/EAST heartbeats and ticks, `AICOMSTAT`
-events, `TEAM_FOUNDED`, `CMDRSTAT`, and at least one action/progress token such
-as `ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or `SNAP`. The current
+events, WEST and EAST `TEAM_FOUNDED`, `CMDRSTAT`, and at least one
+side-specific action/progress token such as `ASSAULT_DISPATCH`, `COMBATSTAT`,
+`FRONT`, `POSTURE` or `SNAP`. The current
 release candidate also requires the Takistan WEST fallback marker
 `AICOMGATE|WEST|infFallback` through the
 `takistan-west-aicom-infantry-fallback` gate, so generic founding/progress tokens

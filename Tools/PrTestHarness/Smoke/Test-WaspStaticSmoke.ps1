@@ -32,16 +32,23 @@ function Get-Text {
 
 function Get-ChangedMissionFiles {
 	$sourceRepoRootPath = if ($sourceRepoRoot -is [System.Management.Automation.PathInfo]) { $sourceRepoRoot.Path } else { [string]$sourceRepoRoot }
-	$missionPath = $missionRoot.Substring($sourceRepoRootPath.Length).TrimStart('\') -replace '\\','/'
-	$relative = & git -C $sourceRepoRootPath diff --name-only "$BaseRef..$HeadRef" -- $missionPath
 	$files = @()
-	foreach ($path in $relative) {
-		if ($path -match '\.(sqf|fsm)$') {
-			$full = Join-Path $sourceRepoRootPath ($path -replace '/', '\')
-			if (Test-Path -LiteralPath $full) { $files += $full }
+	$roots = @($missionRoot)
+	if ([string]::IsNullOrWhiteSpace($SourceMissionRoot)) {
+		$takistanRoot = Join-Path $sourceRepoRootPath "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+		if (Test-Path -LiteralPath $takistanRoot) { $roots += (Resolve-Path -LiteralPath $takistanRoot).Path }
+	}
+	foreach ($root in $roots) {
+		$missionPath = $root.Substring($sourceRepoRootPath.Length).TrimStart('\') -replace '\\','/'
+		$relative = & git -C $sourceRepoRootPath diff --name-only "$BaseRef..$HeadRef" -- $missionPath
+		foreach ($path in $relative) {
+			if ($path -match '\.(sqf|fsm)$') {
+				$full = Join-Path $sourceRepoRootPath ($path -replace '/', '\')
+				if (Test-Path -LiteralPath $full) { $files += $full }
+			}
 		}
 	}
-	return $files
+	return @($files | Select-Object -Unique)
 }
 
 function Remove-LineComment {
@@ -110,7 +117,7 @@ function Test-ForbiddenReleaseCommands {
 			}
 		}
 	}
-	Add-Result "A2 OA command dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No forbidden/project-blocked commands in changed Chernarus mission files." }))
+	Add-Result "A2 OA command dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No forbidden/project-blocked commands in changed maintained mission files." }))
 }
 
 function Test-HarnessOverlayA3Dialect {

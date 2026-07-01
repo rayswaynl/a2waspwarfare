@@ -41,6 +41,9 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - Removed the last AICOM `find` ambiguity review items from `AI_Commander_Base.sqf` by replacing scaffold structure lookups with an explicit A2-safe local index helper.
 - Added a static runtime-proof emitter contract to the smoke gate so AICOM, HC/delegation, town cleanup, group-budget, supply, artillery and Takistan WEST fallback source tokens cannot disappear before the runtime RPT phase.
 - Synced the Takistan in-game Help menu to the redesigned controller while keeping Takistan-specific airfield and premium-unlock anchors (`Loy Manara`, `Rasman AF`).
+- Hardened town-AI HC delegation mode so stale/dead HC registry groups no longer suppress server-side fallback town-unit creation.
+- Strengthened `Run-WaspFinalCheck.ps1` so the final pre-test gate now runs whole-root A2/OA compatibility lint for both Chernarus and Takistan, in addition to smoke and HIGH BugHunt; the smoke gate's changed-file dialect scan now covers both maintained mission roots.
+- Debounced repeated group-cap diagnostics: `GRPBUDGET|WARN` is edge-triggered with `GRPBUDGET|RECOVER`, AI Commander founding cap warnings are throttled to once per side per 15 minutes, and lower-level create-group/create-team cap failures report once per side/machine every five minutes.
 - Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
 
 ## Proven Static And Package Gates
@@ -53,7 +56,7 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - `Tools\PrTestHarness\Release\Test-WaspReleaseHandoff.SelfTest.ps1`
 - `Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.SelfTest.ps1`
 - `Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.PerTerrainSelfTest.ps1`
-- `Tools\PrTestHarness\Run-WaspFinalCheck.ps1`
+- `Tools\PrTestHarness\Run-WaspFinalCheck.ps1` now covers static smoke, whole-root Chernarus/Takistan A2/OA lint, and whole-mission HIGH BugHunt.
 
 Package self-test is expensive because it mutates archive fixtures; rerun it before final deploy handoff if the package or package validator changes.
 
