@@ -35,3 +35,9 @@ Useful PR #126 proof markers:
 - `HCDISPATCH`
 - `HCSTAT`
 - `AICOMSTAT`
+
+Run the helper contract self-test after editing it:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRptMarkerSweep.SelfTest.ps1
+```
