@@ -184,9 +184,9 @@ if (WF_A2_CombinedOps) then {
 //--- existing overlay loop still owns subsequent tier-change re-seeds.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {local player} && {side group player == resistance}) then {
 	if (worldName == "Chernarus") then {
-		missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","hilux1_civil_2_covered","Ka137_MG_PMC"]];
+		missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","BTR40_TK_GUE_EP1","hilux1_civil_2_covered","Ka137_MG_PMC"]]; //--- BTR-40 tier-0 (2026-07-01).
 	} else {
 		WFBE_C_GUER_VBIED_TYPE = "datsun1_civil_2_covered";
-		missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["TK_GUE_Soldier_EP1","TK_GUE_Bonesetter_EP1","TK_GUE_Soldier_MG_EP1","TK_GUE_Soldier_AT_EP1","TK_GUE_Soldier_AA_EP1","TK_GUE_Soldier_Sniper_EP1","Offroad_DSHKM_TK_GUE_EP1","Pickup_PK_TK_GUE_EP1","V3S_TK_GUE_EP1","datsun1_civil_2_covered","Ka137_MG_PMC"]];
+		missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["TK_GUE_Soldier_EP1","TK_GUE_Bonesetter_EP1","TK_GUE_Soldier_MG_EP1","TK_GUE_Soldier_AT_EP1","TK_GUE_Soldier_AA_EP1","TK_GUE_Soldier_Sniper_EP1","Offroad_DSHKM_TK_GUE_EP1","Pickup_PK_TK_GUE_EP1","V3S_TK_GUE_EP1","BTR40_MG_TK_GUE_EP1","datsun1_civil_2_covered","Ka137_MG_PMC"]]; //--- BTR-40 (MG) tier-0 (2026-07-01).
 	};
 };
