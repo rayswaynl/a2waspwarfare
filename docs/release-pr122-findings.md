@@ -1,6 +1,6 @@
 # PR #122 Release Findings
 
-Last updated: 2026-07-01 09:35 Europe/Amsterdam
+Last updated: 2026-07-01 09:49 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -11,10 +11,10 @@ here.
 
 NO-GO as a release claim until exact-build runtime evidence exists.
 
-PR #122 is source-backed and static/tooling-clean, but release-ready wording
-still needs current Arma 2 OA evidence from the exact build, covering both
-Chernarus and Takistan plus server, client, late join, and headless-client
-roles.
+PR #122 is source-backed and static/tooling-clean, but a newer r8 integration
+branch now exists as PR #124. Release-ready wording still needs current Arma 2
+OA evidence from the exact chosen build, covering both Chernarus and Takistan
+plus server, client, late join, and headless-client roles.
 
 ## Current Anchors
 
@@ -24,11 +24,48 @@ roles.
 - PR #122 branch: `origin/feat/qol-polish-pack`
 - PR/scanner head: `4c66c3b6b1c20321163e732d6d06f5dacaeb4e5a`
 - Mission-content head: `f5c41461508e117d13d0b6172cbd66698091a8eb`
+- PR #124 r8 integration branch: `origin/release/2026-07-02-stackcheck-r8`
+- PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop: `a8b4dc229f59d452f3afd031fd0c3c914d4f33f2`
 
 GitHub currently reports PR #122 as open, non-draft, and mergeable, with no
-reported checks. Mergeability is not runtime proof.
+reported checks. GitHub currently reports PR #124 as open, draft, and mergeable.
+Mergeability is not runtime proof.
+
+## R8 Integration Finding
+
+PR #124, <https://github.com/rayswaynl/a2waspwarfare/pull/124>, is now the
+release-stack candidate to evaluate in addition to the PR #122-only path. It
+combines:
+
+- PR #109 GUER improvised armor
+- PR #120 GUER patrol variety and adaptive air-defense loadout
+- latest PR #122
+- Takistan regeneration commit `16bfe29e`
+
+Independent Codex validation on 2026-07-01 09:49 found:
+
+- r8 diff over PR #122 is exactly 10 files, all in the GUER armor/air-defense
+  surface across Chernarus and Takistan.
+- `git diff --check origin/master...HEAD` passes.
+- Added-line scans found no watched A2/OA-incompatible tokens:
+  `params`, `pushBack`, `isEqualTo`, `isEqualType`, `getPosVisual`,
+  `remoteExec`, `BIS_fnc_MP`.
+- Added-line scan found no `count` comparison in `&&` / `||` chains.
+- The five r8 GUER file pairs hash-identically between Chernarus and Takistan:
+  `Root_GUE.sqf`, `Common_CreateVehicle.sqf`, `Common_GuerArmor.sqf`,
+  `Init_CommonConstants.sqf`, and `Server_GuerAirDef.sqf`.
+- LoadoutManager reaches `CHERNARUS DONE` and `TAKISTAN DONE`, then stops only
+  at the known local missing-`7za` packaging boundary.
+- Synthetic two-terrain release scanner fixture passes with
+  `-RequireServerDebug -RequirePr122Markers -RequireAicomTelemetry
+  -RequireHcRegistry -RequireBothTerrains`.
+
+Important risk: r8 still defaults GUER light air defense to `Ka137_MG_PMC`.
+That means the ASR / Ka-137 stop-condition concern below still applies to r8
+until exact runtime evidence proves it clean or an explicit mitigation is
+accepted.
 
 ## Evidence Already Strong
 
@@ -122,14 +159,15 @@ ASR-enabled RPT proof.
 
 ## Recommended Next Path
 
-1. Preserve PR #122 mission content as-is unless the owner/operator chooses the
-   ASR mitigation path.
-2. Run the exact current artifact through folder-smoke or a controlled dedicated
+1. Decide whether the release proof target is PR #122-only or r8 PR #124.
+2. Build/package the exact chosen branch; current PR #122 artifacts do not prove
+   r8.
+3. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
-3. Collect both-map server/client/latejoin/HC evidence.
-4. Run the release scanner with all required gates.
-5. Attach human smoke notes.
-6. Only then update release notes/wiki wording from runtime-pending to
+4. Collect both-map server/client/latejoin/HC evidence.
+5. Run the release scanner with all required gates.
+6. Attach human smoke notes.
+7. Only then update release notes/wiki wording from runtime-pending to
    release-proven.
 
 If the ASR/Ka-137 stop-condition errors recur on the exact proof runtime,
