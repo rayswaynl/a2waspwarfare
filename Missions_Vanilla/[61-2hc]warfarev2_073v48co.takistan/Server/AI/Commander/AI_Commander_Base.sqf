@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_findNameIdx"];
 
 _side = _this;
 _sideText = str _side;
@@ -28,6 +28,16 @@ _classes = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideTe
 _costs   = missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS", _sideText];
 _scripts = missionNamespace getVariable Format ["WFBE_%1STRUCTURESCRIPTS", _sideText];
 if (isNil "_names" || isNil "_classes" || isNil "_costs" || isNil "_scripts") exitWith {};
+
+_findNameIdx = {
+	private ["_needle","_j","_out"];
+	_needle = _this;
+	_out = -1;
+	for "_j" from 0 to ((count _names) - 1) do {
+		if ((_names select _j) == _needle) exitWith {_out = _j};
+	};
+	_out
+};
 
 //--- 1) Deploy the HQ where it stands (the MHQ starts at the side's start location).
 if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
@@ -370,7 +380,7 @@ if (_coreDone) then {
 //--- scan below (condition c).  All three write wfbe_aicom_arty_threat = true on the
 //--- side logic.  Additional gates: round time > 45 min AND supply >= CBR cost + reserve.
 _scaffoldActivated = false;
-_cbrIdx = _names find "CBRadar";
+_cbrIdx = "CBRadar" Call _findNameIdx;
 if (_cbrIdx >= 0) then {
 	//--- Read or compute the threat flag.
 	_artyThreat = _logik getVariable ["wfbe_aicom_arty_threat", false];
@@ -420,7 +430,7 @@ if (_cbrIdx >= 0) then {
 _econGateTowns = missionNamespace getVariable ["WFBE_C_AICOM_ECON_GATE_TOWNS", 6];
 _econMyID = (_side) Call WFBE_CO_FNC_GetSideID;
 _econOpen = ({(_x getVariable "sideID") == _econMyID} count towns) > _econGateTowns;
-_bankIdx = _names find "Bank";
+_bankIdx = "Bank" Call _findNameIdx;
 if (_bankIdx >= 0) then {
 	//--- Supply gate: only attempt Bank when supply > 1.5x its construction cost.
 	_bankCost = _costs select _bankIdx;
@@ -430,9 +440,9 @@ if (_bankIdx >= 0) then {
 	};
 };
 //--- RESERVE (owner request): humans can build it; let the AI build it too. Same plain
-//--- supply-multiple gate as Bank. `_names find "Reserve" == -1` (guard WFBE_C_STRUCTURES_RESERVE
+//--- supply-multiple gate as Bank. If Reserve is absent from the structure-name array
 //--- off) is the natural no-op; the L274 builder loop then dedups/pays from _costs.
-_resIdx = _names find "Reserve";
+_resIdx = "Reserve" Call _findNameIdx;
 if (_resIdx >= 0) then {
 	_resCost = _costs select _resIdx;
 	if (_econOpen && {_supply > _resCost * 1.5}) then {
@@ -445,7 +455,7 @@ if (_resIdx >= 0) then {
 //--- armed (cond-a killed-by-arty, cond-b >=3 fire missions, cond-c enemy-arty-piece scan). The flag
 //--- is never auto-cleared, so once the enemy fields arty this gate opens on the next tick (it CAN
 //--- build later). Default-ON; set WFBE_C_AICOM_ARTRAD_REQUIRE_ENEMY_ARTY = 0 for the old always-build.
-_artradIdx = _names find "ArtilleryRadar";
+_artradIdx = "ArtilleryRadar" Call _findNameIdx;
 if (_artradIdx >= 0) then {
 	_artradCost = _costs select _artradIdx;
 	_artradReqArty = (missionNamespace getVariable ["WFBE_C_AICOM_ARTRAD_REQUIRE_ENEMY_ARTY", 1]) > 0;
