@@ -601,6 +601,27 @@ function Test-AicomOrderSequenceGuards {
 	Add-Result "AICOM order sequence guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomCaptureStallGuardrails {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$constants = Get-Text (Join-Path $entry.Root "Common\Init\Init_CommonConstants.sqf")
+		$runner = Get-Text (Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf")
+		$assign = Get-Text (Join-Path $entry.Root "Server\AI\Commander\AI_Commander_AssignTowns.sqf")
+		if (-not ($constants.Contains("WFBE_C_AICOM_CAMP_GATE_MODE2") -and $constants.Contains("WFBE_C_AICOM_STALL_ADVANCE_SECS"))) { $missing += "$($entry.Terrain):constants" }
+		if (-not ($runner.Contains("_campWaypoints") -and $runner.Contains('[_team, true, _campWaypoints] Spawn WFBE_CO_FNC_WaypointsAdd') -and $runner.Contains("WFBE_C_AICOM_CAMP_GATE_MODE2"))) { $missing += "$($entry.Terrain):camp-waypoint-chain" }
+		if ($runner.Contains("[_team, true, [[_campTgtPos, 'SAD'")) { $missing += "$($entry.Terrain):camp-sad-clears-tight-move" }
+		$stallIndex = $assign.IndexOf("WFBE_C_AICOM_STALL_ADVANCE_SECS")
+		$stuckIndex = $assign.IndexOf("WFBE_C_AICOM_STUCK_SECS")
+		if (-not ($assign.Contains("reason=stall-advance") -and $assign.Contains("wfbe_aicom_goto_since") -and $stallIndex -ge 0 -and $stuckIndex -ge 0 -and $stallIndex -lt $stuckIndex)) { $missing += "$($entry.Terrain):stall-advance-independent" }
+	}
+	Add-Result "AICOM capture stall guardrails" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-HcPvfGuard {
 	$handle = Get-Text (Join-Path $missionRoot "Client\Functions\Client_HandlePVF.sqf")
 	$town = Get-Text (Join-Path $missionRoot "Client\PVFunctions\TownCaptured.sqf")
@@ -1103,6 +1124,7 @@ Test-AicomHcTopUpDraftExcluded
 Test-AicomGroupVariableDefaults
 Test-AicomArtilleryConfigGuards
 Test-AicomOrderSequenceGuards
+Test-AicomCaptureStallGuardrails
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups
 Test-GuiImageTabGuard

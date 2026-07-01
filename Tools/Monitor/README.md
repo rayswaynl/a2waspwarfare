@@ -30,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory "C:\WASP\rpt-archive" `
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit cceb3ae0b0 `
+  -ExpectedGit CURRENT_PR_BODY_GIT_MARKER `
   -RequireReleaseMarkers `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
   -Json
@@ -38,10 +38,10 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
 
 By default, samples include the marker name, public file label, line number, and a short line hash. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
 
-Useful PR #126 proof markers:
+Useful PR #125 proof markers:
 
 - `WASPRELEASE`
-- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=cceb3ae0b0`
+- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=CURRENT_PR_BODY_GIT_MARKER`
 - `HCDROP_AICOM_AUDIT`
 - `HCRECON_AICOM_AUDIT`
 - `HCSIDE|v1|disconnect`
@@ -50,7 +50,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-Current PR #125 source/package identity is `codex/release-command-center-20260630@cceb3ae0b0`, `_MISSIONS.7z` SHA256 `6BC010D8D5F73F7991FDA972BBA7CBF5382B49B684DB3CE1DC062091F36DC87F`, `1,885` entries, `7,161,754` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
+Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against the current PR body/wiki package tuple.
 
 Run the helper contract self-test after editing it:
 

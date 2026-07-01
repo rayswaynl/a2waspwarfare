@@ -46,13 +46,19 @@ try {
 	$hcRpt = Join-Path $tempRoot "server-b.RPT"
 	Set-Content -LiteralPath $serverRpt -Encoding ASCII -Value @(
 		"boot",
+		"""WASPRELEASE|v1|candidate=old-candidate|git=old|terrain=chernarus""",
+		"MISSINIT: missionName=old",
+		"old-window marker",
+		"## Mission Name: WASP Warfare",
 		"""WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus""",
+		"MISSINIT: missionName=current",
 		"""AICOMSTAT|v1|EVENT|WEST|0|TEAM_FOUNDED""",
 		"""HCSTAT|v1|HC-1|fps=45|units=1"""
 	)
 	Set-Content -LiteralPath $hcRpt -Encoding ASCII -Value @(
-		"MISSINIT",
+		"## Mission Name: WASP Warfare",
 		"""WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=takistan""",
+		"MISSINIT",
 		"""HCDROP_AICOM_AUDIT|uid=redacted|owner=2""",
 		"""HCRECON_AICOM_AUDIT|owner=3"""
 	)
@@ -88,6 +94,56 @@ try {
 	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus' 1 "chernarus release marker count"
 	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=takistan' 1 "takistan release marker count"
 	Assert-Equal @($releaseMarkerResult.missingRequired).Count 0 "release marker missingRequired count"
+
+	$windowText = Invoke-MarkerSweep -Arguments @(
+		"-RptPath", $serverRpt,
+		"-WindowMarker", "MISSINIT",
+		"-ExpectedCandidate", "release-command-center-20260630",
+		"-ExpectedGit", "test",
+		"-ExpectedTerrain", "chernarus",
+		"-RequireReleaseMarkers",
+		"-Json"
+	)
+	$windowResult = $windowText | ConvertFrom-Json
+	Assert-Equal $windowResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus' 1 "MISSINIT window should include current release marker"
+	Assert-Equal $windowResult.counts.'WASPRELEASE|v1|candidate=old-candidate|git=old|terrain=chernarus' $null "MISSINIT window should not count stale pre-window release marker"
+
+	$literalWindowText = Invoke-MarkerSweep -Arguments @(
+		"-RptPath", $serverRpt,
+		"-WindowMarker", "WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus",
+		"-ExpectedCandidate", "release-command-center-20260630",
+		"-ExpectedGit", "test",
+		"-ExpectedTerrain", "chernarus",
+		"-RequireReleaseMarkers",
+		"-Json"
+	)
+	$literalWindowResult = $literalWindowText | ConvertFrom-Json
+	Assert-Equal $literalWindowResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus' 1 "Exact release marker window should be literal by default"
+	Assert-Equal $literalWindowResult.counts.'WASPRELEASE|v1|candidate=old-candidate|git=old|terrain=chernarus' $null "Exact release marker window should not regex-match stale markers"
+
+	$regexTrapRpt = Join-Path $tempRoot "regex-trap.RPT"
+	Set-Content -LiteralPath $regexTrapRpt -Encoding ASCII -Value @(
+		"## Mission Name: WASP Warfare",
+		"""WASPRELEASE""",
+		"MISSINIT"
+	)
+	[void](Invoke-MarkerSweep -Arguments @(
+		"-RptPath", $regexTrapRpt,
+		"-ExpectedCandidate", "release-command-center-20260630",
+		"-ExpectedGit", "test",
+		"-RequireReleaseMarkers",
+		"-Regex"
+	) -ExpectFailure)
+
+	$includeLineText = Invoke-MarkerSweep -Arguments @(
+		"-RptPath", $serverRpt,
+		"-Pattern", "AICOMSTAT",
+		"-IncludeLineText",
+		"-Json"
+	)
+	$includeLineResult = $includeLineText | ConvertFrom-Json
+	$includeLineSamples = @($includeLineResult.samples) | Where-Object { $_.pattern -eq "AICOMSTAT" }
+	Assert-True (($includeLineSamples | Where-Object { $_.line -like "*AICOMSTAT*" }).Count -gt 0) "IncludeLineText should opt in to raw marker line samples"
 
 	[void](Invoke-MarkerSweep -Arguments @(
 		"-RptPath", $serverRpt,

@@ -24,7 +24,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
 powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.ps1 `
   -RptDirectory C:\WASP\rpt-archive `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit b3f4d3664f `
+  -ExpectedGit <expected-git> `
   -RequireReleaseMarkers `
   -Json
 #>
@@ -121,16 +121,30 @@ function Read-RptLines {
 function Get-RptWindow {
 	param(
 		[string[]]$Lines,
-		[string]$Marker
+		[string]$Marker,
+		[bool]$UseRegex
 	)
 	$startIndex = 0
 	$markerFound = $false
 	if (![string]::IsNullOrWhiteSpace($Marker)) {
 		for ($i = $Lines.Count - 1; $i -ge 0; $i--) {
-			if ($Lines[$i] -match $Marker) {
+			$matched = if ($UseRegex) {
+				$Lines[$i] -match $Marker
+			} else {
+				$Lines[$i].IndexOf($Marker, [System.StringComparison]::OrdinalIgnoreCase) -ge 0
+			}
+			if ($matched) {
 				$startIndex = $i
 				$markerFound = $true
 				break
+			}
+		}
+		if ($markerFound -and $Marker -eq "MISSINIT" -and $startIndex -gt 0) {
+			for ($j = $startIndex; $j -ge ([Math]::Max(0, $startIndex - 20)); $j--) {
+				if ($Lines[$j] -match "## Mission Name|WASPRELEASE\|v1\|") {
+					$startIndex = $j
+					break
+				}
 			}
 		}
 	}
@@ -147,9 +161,10 @@ function Test-LineMatch {
 	param(
 		[string]$Line,
 		[string]$Needle,
-		[bool]$UseRegex
+		[bool]$UseRegex,
+		[bool]$ForceLiteral = $false
 	)
-	if ($UseRegex) { return ($Line -match $Needle) }
+	if ($UseRegex -and !$ForceLiteral) { return ($Line -match $Needle) }
 	return ($Line.IndexOf($Needle, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
 }
 
@@ -206,6 +221,8 @@ $Pattern = @(Expand-PatternArgument -Values $Pattern)
 $RequirePattern = @(Expand-PatternArgument -Values $RequirePattern)
 $hasExplicitPattern = $Pattern.Count -gt 0
 $expectedReleaseMarkers = @(New-ExpectedReleaseMarkers -Candidate $ExpectedCandidate -Git $ExpectedGit -Terrain $ExpectedTerrain)
+$literalPatterns = @{}
+foreach ($marker in $expectedReleaseMarkers) { $literalPatterns[$marker] = $true }
 
 $patterns = @()
 if ($hasExplicitPattern) { $patterns += $Pattern } else { $patterns += $defaultPatterns }
@@ -231,14 +248,14 @@ $fileResults = New-Object System.Collections.Generic.List[object]
 
 foreach ($file in $files) {
 	$allLines = @(Read-RptLines -Path $file.FullName)
-	$window = Get-RptWindow -Lines $allLines -Marker $WindowMarker
+	$window = Get-RptWindow -Lines $allLines -Marker $WindowMarker -UseRegex ([bool]$Regex)
 	$fileCounts = [ordered]@{}
 	foreach ($patternName in $patterns) { $fileCounts[$patternName] = 0 }
 
 	$lineNumber = [int]$window.windowStartLine
 	foreach ($line in @($window.lines)) {
 		foreach ($patternName in $patterns) {
-			if (Test-LineMatch -Line $line -Needle $patternName -UseRegex ([bool]$Regex)) {
+			if (Test-LineMatch -Line $line -Needle $patternName -UseRegex ([bool]$Regex) -ForceLiteral ($literalPatterns.ContainsKey($patternName))) {
 				$fileCounts[$patternName] = [int]$fileCounts[$patternName] + 1
 				$aggregate[$patternName] = [int]$aggregate[$patternName] + 1
 				$currentSamples = @($samples | Where-Object { $_.pattern -eq $patternName })

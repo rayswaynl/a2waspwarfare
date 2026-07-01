@@ -17,7 +17,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_captureDone","_townObj","_townCamps","_campObj","_campRange",
          "_liveUnits","_dismounted","_veh","_u","_settleTimeout","_hasCargo",
          "_townCenter","_capRange","_footInf","_holdEnd","_resNear","_enemyNear","_townFlipped",
-         "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
+         "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos","_campWaypoints",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType","_pendingToken",
@@ -1053,7 +1053,7 @@ while {!WFBE_GameOver && _alive} do {
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
 						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
 						//--- B74.2 (Ray 2026-06-23) NO-PROGRESS tracker for the camp-first loop (don't get stuck on camps).
-						private ["_campStallPasses","_campLastUnheld","_campStallMax","_capMode","_campGateMode2","_campEnemy","_campFoe"];
+						private ["_campStallPasses","_campLastUnheld","_campStallMax","_capMode","_campGateMode2","_campEnemy","_campFoe","_campWaypoints"];
 						_campStallPasses = 0;
 						_campLastUnheld  = count _unheldCamps;
 						_campStallMax    = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_STALL_PASSES", 3];
@@ -1079,7 +1079,9 @@ while {!WFBE_GameOver && _alive} do {
 							//---      units (doStop + setUnitPos "UP") so they hold IN the 10m zone and
 							//---      the presence scan ticks, instead of orbiting.
 							_campHoldR = (_campRange - 2) max 6; //--- ~8m: comfortably inside the 10m "Man" scan
-							[_team, true, [[_campTgtPos, 'MOVE', _campHoldR, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							_campWaypoints = [[_campTgtPos, 'MOVE', _campHoldR, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]];
+							if (_capMode == 2 && {_campGateMode2 != 0}) then {_campWaypoints = _campWaypoints + [[_campTgtPos, 'SAD', (_campRange max 30), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]};
+							[_team, true, _campWaypoints] Spawn WFBE_CO_FNC_WaypointsAdd;
 							//--- Defensive dismount: any foot soldier still in cargo walks in on foot
 							//--- (crew never count for the camp "Man" scan, so foot presence is required).
 							{
@@ -1095,7 +1097,6 @@ while {!WFBE_GameOver && _alive} do {
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
 							} forEach (_campTgtPos nearEntities [["Man"], 60]);
 							if (_capMode == 2 && {_campGateMode2 != 0}) then {
-								[_team, true, [[_campTgtPos, 'SAD', (_campRange max 30), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 								_campEnemy = [];
 								{
 									if (alive _x && {side _x != _side} && {side _x != civilian}) then {

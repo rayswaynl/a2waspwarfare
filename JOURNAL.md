@@ -2,6 +2,20 @@
 
 ## 2026-07-01 — AICOM capture drain-wait and release marker guardrails [RELEASE LOOP]
 
+Follow-up subagent review closed two P1s before publishing this lane. The
+AllCamps camp push now installs the tight camp MOVE and optional SAD sweep as
+one `WaypointsAdd` chain, so the SAD cannot asynchronously clear the 8m
+presence waypoint. AssignTowns now evaluates `WFBE_C_AICOM_STALL_ADVANCE_SECS`
+as an independent same-target age guard before the older far-from-target stuck
+branch, and no longer refreshes `wfbe_aicom_goto_since` merely because a team is
+in contact or making breadcrumb progress. Static smoke now asserts these capture
+stall guardrails across Chernarus and generated Takistan.
+
+The RPT marker sweep helper was also hardened after review: `-WindowMarker
+MISSINIT` backs up to the current mission banner/release marker, expected
+release markers stay literal even with `-Regex`, and the self-test now covers
+stale-window rejection plus `-IncludeLineText` opt-in behavior.
+
 Ported the narrow cmdcon37/cmdcon38 AICOM capture fixes onto the PR #125
 release lane without merging the broader Build84/overnight branches. Camp-first
 logic now keeps the no-progress bail disabled only in AllCamps mode, where the
