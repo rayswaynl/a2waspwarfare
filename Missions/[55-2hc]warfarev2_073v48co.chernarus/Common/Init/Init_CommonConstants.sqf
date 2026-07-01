@@ -1108,7 +1108,7 @@ if (WF_A2_Vanilla) then {
 		WFBE_C_UNITS_BODIES_TIMEOUT = 60;
 	//--- qol-polish-pack tunables --------------------------------------------------------------------------------
 	if (isNil "WFBE_C_UNITS_BODIES_PROX")      then {WFBE_C_UNITS_BODIES_PROX = 20};       //--- m: hold a corpse's deletion while a player is this close (capped at +1 timeout so a camper can't pin it forever). 0 = off (vanilla).
-	if (isNil "WFBE_C_STRUCTURES_FLAT_CHECK")  then {WFBE_C_STRUCTURES_FLAT_CHECK = 1};    //--- reject too-steep ground for player-placed base structures + GUER FOB (the AI commander already does this). 0 = off.
+	if (isNil "WFBE_C_STRUCTURES_FLAT_CHECK")  then {WFBE_C_STRUCTURES_FLAT_CHECK = 0};    //--- cmdcon34: DISABLED (0). The player flat-gate over-blocked base placement on mountainous Takistan (structures red -> HQ red -> factories only <10m from HQ). Reverts to pre-Build-81 freedom; the server places structures fine on any ground. Re-enable with a Takistan-tuned gradient later if wanted.
 	if (isNil "WFBE_C_STRUCTURES_FLAT_RADIUS") then {WFBE_C_STRUCTURES_FLAT_RADIUS = 10};  //--- isFlatEmpty footprint radius (m).
 	if (isNil "WFBE_C_STRUCTURES_FLAT_GRAD")   then {WFBE_C_STRUCTURES_FLAT_GRAD = 2};     //--- isFlatEmpty max gradient (lower = stricter; matches the AI commander's lenient value). cmdcon32: 0.5 -> 2 (0.5 over-blocked player placement on mountainous Takistan - everything red).
 	if (isNil "WFBE_C_AIHELI_TERRAIN_GUARD")   then {WFBE_C_AIHELI_TERRAIN_GUARD = 1};     //--- AI-heli terrain look-ahead climb (server-local helis). 1 = ON by default (changes AI flight). Set 0 to disable.
