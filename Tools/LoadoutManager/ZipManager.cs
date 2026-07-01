@@ -13,18 +13,21 @@ public class ZipManager
         }
 
         string a2waspDirectory = FileManager.FindA2WaspWarfareDirectory().FullName;
-        string sevenZipPath = GetSevenZipPath();
-        if (string.IsNullOrWhiteSpace(sevenZipPath))
-        {
-            Console.WriteLine("Skipping mission packaging because the 7za environment variable is not set.");
-            return;
-        }
-
-        string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions" 
-        // Create this directory if it doesn't exist
+        string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions"
         string tempDirectory = Path.Combine(a2waspDirectory, "TempZippingDirectory");
         string destinationFile = Path.Combine(a2waspDirectory, "_MISSIONS.7z");
         string tempDestinationFile = destinationFile + ".tmp";
+
+        string? sevenZipPath = ResolveSevenZip();
+        if (sevenZipPath == null)
+        {
+            Console.WriteLine("[ZipManager] 7-Zip not found (checked the 7za env var, the standard "
+                + "C:\\Program Files\\7-Zip install location, and PATH). Skipping the _MISSIONS.7z packing step. "
+                + "Install 7-Zip, or set the 7za environment variable to a 7z/7za executable, to enable "
+                + "easy-deploy packing. The mission mirror itself completed normally.");
+            return;
+        }
+        Console.WriteLine($"[ZipManager] Using 7-Zip at: {sevenZipPath}");
 
         try
         {
@@ -42,7 +45,7 @@ public class ZipManager
                 CopyFilesFromSourceToDestinationWithoutModdedTerrainsParam(sourceDirectory, tempDirectory);
             }
 
-            Create7zFromDirectory(tempDirectory, tempDestinationFile, sevenZipPath);
+            Create7zFromDirectory(sevenZipPath, tempDirectory, tempDestinationFile);
 
             if (File.Exists(destinationFile))
             {
@@ -81,20 +84,62 @@ public class ZipManager
                skipZip.Equals("yes", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string GetSevenZipPath()
+    // Locate a 7-Zip executable, in priority order:
+    //   1) the explicit 7za environment variable (back-compat with the documented mechanism),
+    //   2) the standard Windows install locations (7z.exe handles "a -t7z" identically to standalone 7za.exe),
+    //   3) any 7z/7za on PATH.
+    // Returns null when none is found; the caller then skips packing rather than treating it as fatal.
+    private static string? ResolveSevenZip()
     {
-        string sevenZipPath = Environment.GetEnvironmentVariable("7za");
-        if (string.IsNullOrWhiteSpace(sevenZipPath))
+        // 1) Explicit override.
+        string? env = Environment.GetEnvironmentVariable("7za");
+        if (!string.IsNullOrWhiteSpace(env) && File.Exists(env))
         {
-            return "";
+            return env;
         }
 
-        if (!File.Exists(sevenZipPath))
+        // 2) Standard 7-Zip install locations.
+        string[] candidates =
         {
-            throw new FileNotFoundException("7za environment variable points to a missing executable.", sevenZipPath);
+            @"C:\Program Files\7-Zip\7z.exe",
+            @"C:\Program Files\7-Zip\7za.exe",
+            @"C:\Program Files (x86)\7-Zip\7z.exe",
+            @"C:\Program Files (x86)\7-Zip\7za.exe",
+        };
+        foreach (var candidate in candidates)
+        {
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
         }
 
-        return sevenZipPath;
+        // 3) Anything named 7z/7za on PATH.
+        string pathVar = Environment.GetEnvironmentVariable("PATH") ?? "";
+        foreach (var dir in pathVar.Split(Path.PathSeparator))
+        {
+            if (string.IsNullOrWhiteSpace(dir))
+            {
+                continue;
+            }
+            foreach (var exe in new[] { "7z.exe", "7za.exe" })
+            {
+                try
+                {
+                    string full = Path.Combine(dir.Trim(), exe);
+                    if (File.Exists(full))
+                    {
+                        return full;
+                    }
+                }
+                catch
+                {
+                    // Ignore malformed PATH entries.
+                }
+            }
+        }
+
+        return null;
     }
 
     // This method creates a new directory if it doesn't exist
@@ -124,8 +169,8 @@ public class ZipManager
         Console.WriteLine($"Deleted directory: {_directoryPath}");
     }
 
-    // This method creates a 7z file from a directory
-    private static void Create7zFromDirectory(string _sourceDirectory, string _destinationFile, string _sevenZipPath)
+    // This method creates a 7z file from a directory using the resolved 7-Zip executable.
+    private static void Create7zFromDirectory(string _sevenZipPath, string _sourceDirectory, string _destinationFile)
     {
         ProcessStartInfo p = new ProcessStartInfo();
         p.FileName = _sevenZipPath;
@@ -133,15 +178,15 @@ public class ZipManager
         p.WindowStyle = ProcessWindowStyle.Hidden;
         p.UseShellExecute = false;
         p.CreateNoWindow = true;
-        Process x = Process.Start(p);
+        Process? x = Process.Start(p);
         if (x == null)
         {
-            throw new Exception("Could not start 7za process.");
+            throw new Exception($"Could not start 7-Zip process ({_sevenZipPath}).");
         }
         x.WaitForExit();
         if (x.ExitCode != 0)
         {
-            throw new Exception($"7za failed with exit code {x.ExitCode}.");
+            throw new Exception($"7-Zip exited with code {x.ExitCode} while creating {_destinationFile}.");
         }
     }
 
