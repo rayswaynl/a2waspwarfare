@@ -1104,7 +1104,7 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
     //--- Smooth.
     case 1: {
 		missionNamespace setVariable ["WFBE_C_STRUCTURES_PLACEMENT_METHOD",{
-           		 Private ["_color","_itemcategory","_preview","_area","_eside"];
+			Private ["_color","_itemcategory","_preview","_area","_eside","_flatSpots"];
 			_itemcategory = _this select 0;
 			_preview = _this select 1;
 			_color = _this select 2;
@@ -1113,8 +1113,12 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 							"Base_WarfareBAircraftFactory","Base_WarfareBUAVterminal","Base_WarfareBVehicleServicePoint","BASE_WarfareBAntiAirRadar"];
 			_area = [_preview,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 
-			if (!isNull _area && {(_area getVariable ['avail', 0]) <= 0}) then { _color = _colorRed }; //--- cmdcon33: guard objNull _area (no base area before first HQ deploy -> nil<=0 falsely reddened the HQ ghost)
-			if (surfaceIsWater(position _preview)) then { _color = _colorRed }; if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")} && {count ((position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then { _color = _colorRed }; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
+			if (!isNull _area && {(_area getVariable ['avail', 0]) <= 0}) then {_color = _colorRed}; //--- cmdcon33: guard objNull _area (no base area before first HQ deploy -> nil<=0 falsely reddened the HQ ghost)
+			if (surfaceIsWater(position _preview)) then {_color = _colorRed};
+			if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")}) then {
+				_flatSpots = (position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull];
+				if ((count _flatSpots) == 0) then {_color = _colorRed}; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
+			};
 
 			if ({_preview isKindOf _x} count _affected != 0) then {
                 	Private["_building","_sort","_strs","_lax","_lay"];
