@@ -27,7 +27,7 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 | Release/RPT scout | Package, handoff, runtime packet, final static gates | Round-40 artifacts were stale after the role-proof commit; refresh package/handoff after every new source commit. |
 | Wiki/source scout | Public wiki status, source-intake discipline, BI docs | Wiki should stay runtime-pending and sanitized; add source-intake discoverability before publishing broad release claims. |
 | Branch intake scout | Open PRs, local worktrees, candidate cherry-picks | AICOM v2, commander cache, PR #120, most PR #122 content, and newer harness gates are already included or superseded. PR #109 is the only plausible gameplay intake, and should stay explicit/deferred. |
-| Merge-gate scout | PR #125 conflict with `origin/master` | `origin/master` currently contributes PR #121's editor-slot group reaper. The release branch keeps the reaper out because it was associated with JIP deadspawn risk; do not reintroduce it blindly. |
+| Merge-gate scout | PR #125 conflict with `origin/master` | `origin/master` is now Build 83/cmdcon35. Local merge simulation conflicts with this release lane, deletes release harness/docs, reintroduces the excluded HCTopUp draft worker surface, changes release marker identity, and carries broad gameplay changes. Do not merge it blindly. |
 
 ## 2026-07-01 Agent Loop Update
 
@@ -45,6 +45,8 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - Strengthened `Run-WaspFinalCheck.ps1` so the final pre-test gate now runs whole-root A2/OA compatibility lint for both Chernarus and Takistan, in addition to smoke and HIGH BugHunt; the smoke gate's changed-file dialect scan now covers both maintained mission roots.
 - Debounced repeated group-cap diagnostics: `GRPBUDGET|WARN` is edge-triggered with `GRPBUDGET|RECOVER`, AI Commander founding cap warnings are throttled to once per side per 15 minutes, and lower-level create-group/create-team cap failures report once per side/machine every five minutes.
 - Reduced repeated AICOM Strategy town scans by consuming the freshly published `wfbe_aicom2_snap` town census in `AI_Commander_Strategy.sqf`, with the old live `towns` scan kept as fallback. Spearhead scoring/debug and the optional commander-artillery support-town guard now reuse the same per-tick owned/capturable town arrays.
+- Hardened the PVF dispatch shape checks before handler selection and routed remaining active AICOM group receiver reads through the existing OA-safe group-variable helper. The stale `aicom-focus`, `aicom-defend`, and `aicom-reinforce` command cases now require the human-commander requester/team validation used by the live command-console actions.
+- Current `origin/master`/Build 83 is a source-intake item, not a merge target for this PR: it conflicts with the release harness/docs, release marker identity and HCTopUp exclusion policy.
 - Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
 
 ## Proven Static And Package Gates

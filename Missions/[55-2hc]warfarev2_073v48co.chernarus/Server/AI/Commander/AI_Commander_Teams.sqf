@@ -48,8 +48,8 @@ _editorTeams  = 0;
 {
 	if (!isNull _x) then {
 		_real = false;
-		if (_x getVariable ["wfbe_aicom_hc", false]) then {_real = true};
-		if (!_real && {_x getVariable ["wfbe_aicom_founded", false]}) then {_real = true};
+		if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
+		if (!_real && {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
 		if (_real) then {
 			_foundedTeams = _foundedTeams + 1;
 		} else {
@@ -170,7 +170,7 @@ if (_foundedTeams > _target) then {
 	_safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 	_pick = grpNull; _pickN = 1e9;
 	{
-		if (!isNull _x && {_x getVariable ["wfbe_aicom_hc", false]} && {!(_x getVariable ["wfbe_aicom_disband", false])}) then {
+		if (!isNull _x && {[_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_x, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 			_ldr = leader _x;
 			if (!isNull _ldr && {alive _ldr}) then {
 				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count _allUnits;

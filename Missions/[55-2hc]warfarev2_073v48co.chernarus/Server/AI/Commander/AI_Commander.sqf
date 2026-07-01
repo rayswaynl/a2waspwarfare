@@ -168,7 +168,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				{ if (!isNull _x) then {
 					[_x, "towns"] Call SetTeamMoveMode;
 					_x setVariable ["wfbe_exec_sig", []];
-					if (_x getVariable ["wfbe_aicom_hc", false]) then {
+					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 						_x setVariable ["wfbe_aicom_order",
 							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 							 "towns", getPos (leader _x)], true];
@@ -192,7 +192,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			{ if (!isNull _x) then {
 				[_x, "towns"] Call SetTeamMoveMode;
 				_x setVariable ["wfbe_exec_sig", []];
-				if (_x getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_x setVariable ["wfbe_aicom_order",
 						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 						 "towns", getPos (leader _x)], true];
@@ -628,7 +628,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_foundedN = _foundedN + 1;
 					_aliveN = {alive _x} count (units _x);
 					_aliveSum = _aliveSum + _aliveN;
-					_tt = _x getVariable ["wfbe_teamtype", -1];
+					_tt = [_x, "wfbe_teamtype", -1] Call WFBE_CO_FNC_GroupGetBool;
 					//--- SOAK DRAFT: classify the team as VEHICLE (Tank or non-transport heli in its
 					//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
 					//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>
