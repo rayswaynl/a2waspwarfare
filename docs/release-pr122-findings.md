@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 20:09 Europe/Amsterdam
+Last updated: 2026-07-01 20:24 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -41,7 +41,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `f6cdfce`
+  `926b958`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -59,12 +59,12 @@ repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`1d713bcf2b2daa6eea722bca5221f4e430bbe746`. Treat it as a separate broad lane,
+`b3f4d3664f10b3a40f1ffe0aee22653bbef8c754`. Treat it as a separate broad lane,
 not as current-master runtime proof. The earlier `b4628c35` package validation
 is now stale because the branch advanced.
 
 PR #126 is open again, draft, and GitHub reports it clean at
-`607d6c59ca4268fd0938e94edc66619d008db673`. Its verified shippable pieces were
+`0cafef14d532d25182a3396e0ee394d7a861588a`. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
 
@@ -263,7 +263,7 @@ Validation:
 
 This artifact is not runtime proof. It is a package/static validation result for
 the broad command-center branch as it existed at `b4628c35`. It is now stale:
-PR #125 advanced to `1d713bcf2b2daa6eea722bca5221f4e430bbe746` after this
+PR #125 advanced to `b3f4d3664f10b3a40f1ffe0aee22653bbef8c754` after this
 artifact was built. Do not use the `b4628c35` / `D0BD2405...` tuple as current
 PR #125 proof except as historical evidence.
 
@@ -519,7 +519,7 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 19:54 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 20:24 Europe/Amsterdam found:
 
 - PR #134: new Build84/cmdcon36 lane, open non-draft and clean at
   `cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`. True mission payload from merge
@@ -540,11 +540,11 @@ Fresh triage at 2026-07-01 19:54 Europe/Amsterdam found:
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
 - PR #126: open draft, clean at
-  `607d6c59ca4268fd0938e94edc66619d008db673`. This head advanced after the
+  `0cafef14d532d25182a3396e0ee394d7a861588a`. This head advanced after the
   prior checkpoint and still needs fresh diff/static/runtime triage
   before release selection.
 - PR #125: broad command-center/tooling lane at
-  `1d713bcf2b2daa6eea722bca5221f4e430bbe746`. GitHub reports it `CLEAN`
+  `b3f4d3664f10b3a40f1ffe0aee22653bbef8c754`. GitHub reports it `CLEAN`
   against merged #132 master. The prior `b4628c35` artifact SHA256
   `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2` is now
   stale because this branch advanced.
@@ -836,7 +836,7 @@ ASR-enabled RPT proof.
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
    current command-center package identity. Also do not use the local
    `b4628c35` / `D0BD2405...` tuple as current PR #125 proof; PR #125 has
-   advanced to `1d713bcf2b2daa6eea722bca5221f4e430bbe746` and needs a fresh
+   advanced to `b3f4d3664f10b3a40f1ffe0aee22653bbef8c754` and needs a fresh
    package if selected.
 7. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
