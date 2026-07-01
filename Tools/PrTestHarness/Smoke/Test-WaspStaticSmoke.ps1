@@ -532,6 +532,31 @@ function Test-AicomGroupVariableDefaults {
 	Add-Result "AICOM group variable default guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomArtilleryConfigGuards {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$strategyPath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander_Strategy.sqf"
+		$playerArtyPath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander_PlayerArty.sqf"
+		$strategy = Get-Text $strategyPath
+		$playerArty = Get-Text $playerArtyPath
+		if (-not $strategy.Contains('missionNamespace getVariable ["WFBE_C_ARTILLERY_INTERVALS", [550,500,450,400,350,300,250]]')) { $missing += "$($entry.Terrain):strategy-interval-default" }
+		if (-not ($strategy.Contains('_upgradesA = _logik getVariable ["wfbe_upgrades", []]') -and $strategy.Contains('count _upgradesA > WFBE_UP_ARTYTIMEOUT') -and $strategy.Contains('typeName _upASel != "SCALAR"'))) { $missing += "$($entry.Terrain):strategy-upgrade-guard" }
+		if ($strategy.Contains('missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS"')) { $missing += "$($entry.Terrain):strategy-raw-interval-read" }
+		if ($strategy.Contains('(missionNamespace getVariable "WFBE_C_ARTILLERY")')) { $missing += "$($entry.Terrain):strategy-raw-artillery-read" }
+		foreach ($name in @("strategy", "player-arty")) {
+			$text = if ($name -eq "strategy") { $strategy } else { $playerArty }
+			if (-not ($text.Contains('_rangeMaxA = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText], []]') -and $text.Contains('typeName _rangeMaxA == "ARRAY"') -and $text.Contains('_idx < count _rangeMaxA') -and $text.Contains('_artyDiv = (missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1'))) { $missing += "$($entry.Terrain):$($name)-range-guard" }
+			if ($text.Contains('missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX"')) { $missing += "$($entry.Terrain):$($name)-raw-range-read" }
+		}
+	}
+	Add-Result "AICOM artillery config guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-HcPvfGuard {
 	$handle = Get-Text (Join-Path $missionRoot "Client\Functions\Client_HandlePVF.sqf")
 	$town = Get-Text (Join-Path $missionRoot "Client\PVFunctions\TownCaptured.sqf")
@@ -1032,6 +1057,7 @@ Test-AicomCommandConsoleAuthorityGuard
 Test-AicomTeamLifecycleAuthorityGuard
 Test-AicomHcTopUpDraftExcluded
 Test-AicomGroupVariableDefaults
+Test-AicomArtilleryConfigGuards
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups
 Test-GuiImageTabGuard

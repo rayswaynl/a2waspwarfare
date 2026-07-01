@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_upgradesA","_intervalsA","_rangeMaxA","_artyDiv","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -772,9 +772,14 @@ if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeO
 
 //--- 4) ARTILLERY: soften the spearhead town or the enemy HQ - never near friendlies.
 //--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
-if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
-	_upASel = (_logik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT;
-	_cd = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_upASel min ((count (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS")) - 1));
+if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) > 0}) then {
+	_upgradesA = _logik getVariable ["wfbe_upgrades", []];
+	_upASel = 0;
+	if ((typeName _upgradesA == "ARRAY") && {count _upgradesA > WFBE_UP_ARTYTIMEOUT}) then {_upASel = _upgradesA select WFBE_UP_ARTYTIMEOUT};
+	if (typeName _upASel != "SCALAR") then {_upASel = 0};
+	_intervalsA = missionNamespace getVariable ["WFBE_C_ARTILLERY_INTERVALS", [550,500,450,400,350,300,250]];
+	if ((typeName _intervalsA != "ARRAY") || {count _intervalsA == 0}) then {_intervalsA = [550,500,450,400,350,300,250]};
+	_cd = _intervalsA select ((_upASel max 0) min ((count _intervalsA) - 1));
 	//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) ARTY HOOK: a player ARTILLERY-HERE request
 	//--- (Server_HandleSpecial "aicom-arty-here" stamps wfbe_aicom_arty_request=[pos,time]). When fresh it
 	//--- targets the requested pos AND bypasses the AI's own fire cooldown so the call-in actually fires; the
@@ -811,17 +816,21 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 					if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
 						_idx = [typeOf _p, _side] Call IsArtillery;
 						if (_idx >= 0) then {
-							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
-							if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
-								//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
-								//--- load a situational round (illum at night, cluster vs armour) chosen ONLY from the types the side has
-								//--- researched (helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
-								[_p, _side, _idx, _artyTgt] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
-								[_p, _artyTgt, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
-								_logik setVariable ["wfbe_aicom_arty_last", time];
-								_fired = true;
-								["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] FIRE MISSION [%2] at %3 (cooldown %4s).", _sideText, typeOf _p, _artyTgt, _cd]] Call WFBE_CO_FNC_AICOMLog;
-						diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FIRE_MISSION|" + (typeOf _p));
+							_rangeMaxA = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText], []];
+							if ((typeName _rangeMaxA == "ARRAY") && {_idx < count _rangeMaxA}) then {
+								_artyDiv = (missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1;
+								_maxR = (_rangeMaxA select _idx) / _artyDiv;
+								if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
+									//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
+									//--- load a situational round (illum at night, cluster vs armour) chosen ONLY from the types the side has
+									//--- researched (helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
+									[_p, _side, _idx, _artyTgt] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
+									[_p, _artyTgt, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
+									_logik setVariable ["wfbe_aicom_arty_last", time];
+									_fired = true;
+									["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] FIRE MISSION [%2] at %3 (cooldown %4s).", _sideText, typeOf _p, _artyTgt, _cd]] Call WFBE_CO_FNC_AICOMLog;
+									diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FIRE_MISSION|" + (typeOf _p));
+								};
 							};
 						};
 					};

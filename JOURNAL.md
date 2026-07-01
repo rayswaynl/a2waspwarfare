@@ -1,5 +1,26 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM artillery config default guards [RELEASE LOOP]
+
+Closed the next AI-commander artillery runtime-risk slice. The strategy and
+player-requested artillery paths now read artillery enablement, timeout
+intervals and per-side max-range arrays through guarded defaults, validate array
+shape before selecting by artillery index, and clamp the artillery divisor to at
+least 1 before computing range.
+
+This prevents missing or malformed artillery config state from turning an AICOM
+strategy tick or player fire-mission request into a select/divide runtime error.
+Static smoke includes an `AICOM artillery config guards` check across Chernarus
+and generated Takistan. LoadoutManager propagation refreshed `_MISSIONS.7z`
+(`7050E187DCC3862CA40B1EB360C1FCFD49A9CED4D83ED3E5A050662897D177E0`,
+7,160,902 bytes, 1,723 archive files). `Run-WaspFinalCheck.ps1` passed:
+static smoke, Chernarus OA lint, Takistan OA lint, and high-only bug hunt.
+
+Parallel scouts also identified two next release-loop candidates: harden
+`wfbe_aicom_order` sequence reads, and close the explicit Jerry file 5420 /
+`WarfareV2_073LiteCO.zip` source-comparison gap in the wiki. No runtime, SSH,
+RPT collection, upload, restart, cache-clear or deploy action was performed.
+
 ## 2026-07-01 — SCUD and roster group-funds default hardening [RELEASE LOOP]
 
 Closed the group-funds default-read blockers found by the read-only release
