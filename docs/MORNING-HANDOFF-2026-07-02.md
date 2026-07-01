@@ -28,12 +28,11 @@ a broken pipeline. Server healthy all night (0 HC errors, 3/3 procs, ~44 fps). N
    call** (not auto-applied): Groups_US GER/BAF→US classnames (changes which units spawn — did you want the
    variety?), gear-price double-count (ambiguous A2 semantics). ~half the raw audit flags were false positives
    (documented in REJECTED).
-4. **⚠️ AI-count blowup from the unresolved see-saw (perf):** because the match never resolves, both sides keep
-   founding teams and GUER keeps spawning — AI_TOT climbed 190→365 over the night (GUER 61→209), dragging
-   **hc_fps down 47→16** (server fps 47→37). Not crashed, but trending toward the ~450-470u / low-fps knee.
-   SPREAD+HOLD (item 1) fixes the root by letting the match progress. ALSO check whether GUER insurgent spawns
-   have a cap (209 is the bulk of the load — likely spawns outside the commander-team cap). If hc_fps craters
-   overnight the loop may restart the match (same build) to reset the count.
+4. **AI-count OSCILLATES with GUER waves (self-limiting — not a runaway):** GUER insurgent count spikes then
+   collapses (observed 61→209→224→86 across ticks), pulling hc_fps down to ~16 at a peak then recovering to ~47
+   as the wave dies. AI_TOT rides it (~257-395). It self-corrects each time — no restart was needed overnight.
+   Still worth a daylight look at GUER wave sizing/cap (209-224 peaks are heavy), but it is NOT causing a
+   sustained perf collapse. SPREAD+HOLD (item 1) still matters for the see-saw itself.
 
 ## Already handled (no morning action)
 - **Peach+ reports** — fixed live (build tag was blank after the friendly-missionName change; now reads the
