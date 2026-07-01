@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 20:24 Europe/Amsterdam
+Last updated: 2026-07-01 20:30 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -64,7 +64,7 @@ not as current-master runtime proof. The earlier `b4628c35` package validation
 is now stale because the branch advanced.
 
 PR #126 is open again, draft, and GitHub reports it clean at
-`0cafef14d532d25182a3396e0ee394d7a861588a`. Its verified shippable pieces were
+`79ef8b1188e144c9f088d88b998f47d2b10f7b84`. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
 
@@ -519,7 +519,7 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 20:24 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 20:30 Europe/Amsterdam found:
 
 - PR #134: new Build84/cmdcon36 lane, open non-draft and clean at
   `cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`. True mission payload from merge
@@ -540,7 +540,7 @@ Fresh triage at 2026-07-01 20:24 Europe/Amsterdam found:
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
 - PR #126: open draft, clean at
-  `0cafef14d532d25182a3396e0ee394d7a861588a`. This head advanced after the
+  `79ef8b1188e144c9f088d88b998f47d2b10f7b84`. This head advanced after the
   prior checkpoint and still needs fresh diff/static/runtime triage
   before release selection.
 - PR #125: broad command-center/tooling lane at
