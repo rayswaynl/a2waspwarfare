@@ -44,7 +44,7 @@ replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`c7ab75db14b78a303098ecd5e17b84f7a04863de`. Treat it as a separate broad lane,
+`db3173e4d67b2b4dcf94a6fdea88dfcca98314fa`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also now exists as an open draft release-readiness/AICOM guardrail lane
@@ -147,7 +147,7 @@ Europe/Amsterdam:
 - PR #124/r8 is open draft; GitHub reports `DIRTY`, and local merge-tree
   analysis still shows conflicts.
 - PR #125/command-center advanced to
-  `c7ab75db14b78a303098ecd5e17b84f7a04863de` and is now reported clean, but
+  `db3173e4d67b2b4dcf94a6fdea88dfcca98314fa` and is now reported clean, but
   remains a separate broad draft lane.
 - PR #126/release-readiness exists at
   `1d12f17d24d3cfd8796bb26b18d7944bc9694956` and is reported clean, but
