@@ -52,6 +52,11 @@
    more teams / heavier units) instead of abandoning, and audit for any true mechanical dead-end. Pairs with
    tonight's drain-wait (`e1d031f47`) + arrival-gate (`87d7b3d94`) fixes. Consider a per-town "assault escalation"
    counter that raises committed force each failed pass rather than releasing.
+   **✅ DESIGN COMPLETE (fleet run `wj1le31cr`) → [docs/design/NO-TOWN-UNCAPTURABLE.md](design/NO-TOWN-UNCAPTURABLE.md):**
+   an ESCALATION LADDER (`wfbe_aicom_escalate`) converts every blacklist/abandon path into "concentrate more
+   teams + raise priority" (flag `WFBE_C_AICOM_ESCALATE_MODE`, MAXCONC=12/MAXTOWNS=2 guards so the army never
+   piles on one impossible town). Verdict: NO server_town.sqf change needed (drain is linear in attacker count →
+   mass always wins). Ready to implement in the morning on Ray's word.
 2. **PLAYER CLASS-ICON MARKER.** Tonight's `4f33143cd` reverted the A3-invalid `b_inf` back to the working
    `mil_arrow2` heading arrow (class still shows as a `[SOL]/[MED]/…` text tag). Ray wants the marker to show
    his CLASS as an icon. A2-OA-1.64 has no native class-symbol markers (b_inf is A3-only), so a true class icon
