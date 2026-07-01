@@ -207,7 +207,10 @@ copy the ten files and write `release-run-ledger.json`:
 
 The builder emits `runtime-rpt-packet-manifest.json` with packet-relative labels,
 path hashes and content hashes only. Keep the populated source map and generated
-`release-run-ledger.json` private unless separately redacted.
+`release-run-ledger.json` private unless separately redacted. When
+`-ExpectedCandidate`, `-ExpectedGit` or `-ExpectedArchiveSha256` are supplied,
+the source map release identity must match those command-line values and the run
+ledger must retain the same non-empty identity.
 
 ```powershell
 & .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 `
@@ -366,6 +369,16 @@ the package hash, exact Chernarus/Takistan runtime markers, builder/scorer
 commands, runtime preconditions, deploy approval checks, rollback checks and
 privacy boundaries. It does not touch SSH, server files or raw RPTs; live
 deployment still requires explicit approval and separate runtime evidence.
+
+The handoff contract has a synthetic local fixture:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Release\Test-WaspReleaseHandoff.SelfTest.ps1
+```
+
+It verifies the pending approval gates, package-manifest copy, runtime packet
+builder/checker commands, runtime summary identity binding and ten-record
+source-map/run-ledger templates without touching live runtime data.
 
 ## Shipping Boundary
 

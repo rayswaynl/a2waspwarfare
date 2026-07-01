@@ -1,5 +1,27 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Release handoff contract self-test [RELEASE LOOP]
+
+Added `Tools/PrTestHarness/Release/Test-WaspReleaseHandoff.SelfTest.ps1` so the
+runtime handoff packet now has a local synthetic contract test. The fixture
+builds a fake `_MISSIONS.7z` plus package manifest, runs
+`New-WaspReleaseHandoff.ps1 -AllowNonHeadReleaseGit`, and asserts the pending
+runtime/deployment approval gates, package-manifest copy, runtime packet
+builder/checker commands, runtime summary candidate/git/archive binding and the
+ten-record source-map/run-ledger templates.
+
+This keeps the release approval boundary testable without SSH, live server
+access, local Arma launch or raw RPT collection.
+
+Closed the adjacent runtime packet identity gap as well:
+`New-WaspRuntimeRptPacket.ps1` now treats source-map `release.*` values as
+defaults only when the command-line expectation is blank, and it fails if a
+private source map disagrees with `-ExpectedCandidate`, `-ExpectedGit` or
+`-ExpectedArchiveSha256`. `Test-WaspRuntimeRptPacket.ps1` now requires non-empty
+matching run-ledger `release.candidate` and `release.git` whenever those
+expected identity flags are supplied. The runtime packet self-test covers stale
+source-map candidate drift plus blank ledger candidate/git/archive identity.
+
 ## 2026-07-01 — Runtime summary manifest release binding [RELEASE LOOP]
 
 Tightened `New-WaspReleaseRptSummary.ps1` one step further: when a runtime packet

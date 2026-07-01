@@ -270,15 +270,24 @@ function Test-WaspRuntimeRunLedger {
 		[void]$failHits.Add("schema must be a2waspwarfare-runtime-run-ledger-v1")
 	}
 	$release = Get-JsonValue $ledger "release"
+	$expectedReleaseIdentity = (![string]::IsNullOrWhiteSpace($ExpectedCandidate) -or ![string]::IsNullOrWhiteSpace($ExpectedGit) -or ![string]::IsNullOrWhiteSpace($ExpectedArchiveSha256))
 	if ($null -ne $release) {
 		$ledgerGit = [string](Get-JsonValue $release "git")
 		$ledgerCandidate = [string](Get-JsonValue $release "candidate")
 		$ledgerArchiveSha256 = [string](Get-JsonValue $release "archiveSha256")
-		if (![string]::IsNullOrWhiteSpace($ledgerGit) -and $ledgerGit -ne $ExpectedGit) {
-			[void]$failHits.Add("release.git '$ledgerGit' does not match expected '$ExpectedGit'")
+		if (![string]::IsNullOrWhiteSpace($ExpectedGit)) {
+			if ([string]::IsNullOrWhiteSpace($ledgerGit)) {
+				[void]$failHits.Add("release.git is required when ExpectedGit is supplied")
+			} elseif ($ledgerGit -ne $ExpectedGit) {
+				[void]$failHits.Add("release.git '$ledgerGit' does not match expected '$ExpectedGit'")
+			}
 		}
-		if (![string]::IsNullOrWhiteSpace($ledgerCandidate) -and $ledgerCandidate -ne $ExpectedCandidate) {
-			[void]$failHits.Add("release.candidate '$ledgerCandidate' does not match expected '$ExpectedCandidate'")
+		if (![string]::IsNullOrWhiteSpace($ExpectedCandidate)) {
+			if ([string]::IsNullOrWhiteSpace($ledgerCandidate)) {
+				[void]$failHits.Add("release.candidate is required when ExpectedCandidate is supplied")
+			} elseif ($ledgerCandidate -ne $ExpectedCandidate) {
+				[void]$failHits.Add("release.candidate '$ledgerCandidate' does not match expected '$ExpectedCandidate'")
+			}
 		}
 		if (![string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) {
 			if ([string]::IsNullOrWhiteSpace($ledgerArchiveSha256)) {
@@ -287,8 +296,8 @@ function Test-WaspRuntimeRunLedger {
 				[void]$failHits.Add("release.archiveSha256 does not match expected package SHA256")
 			}
 		}
-	} elseif (![string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) {
-		[void]$failHits.Add("release object with archiveSha256 is required when ExpectedArchiveSha256 is supplied")
+	} elseif ($expectedReleaseIdentity) {
+		[void]$failHits.Add("release object is required when expected release identity fields are supplied")
 	}
 
 	$records = @(ConvertTo-LedgerRecords $ledger)

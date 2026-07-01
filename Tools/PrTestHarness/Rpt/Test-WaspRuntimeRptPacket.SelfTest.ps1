@@ -85,7 +85,10 @@ function New-RptLines {
 function New-SourceMapFixture {
 	param(
 		[string]$Root,
-		[string]$Variant
+		[string]$Variant,
+		[string]$SourceMapCandidate = $candidate,
+		[string]$SourceMapGit = $expectedGit,
+		[string]$SourceMapArchiveSha256 = $expectedArchiveSha256
 	)
 	$sourceRoot = Join-Path $Root "source-rpts"
 	$terrainStart = (Get-Date).AddMinutes(-10).ToString("yyyy-MM-ddTHH:mm:sszzz")
@@ -113,9 +116,9 @@ function New-SourceMapFixture {
 	$sourceMap = [ordered]@{
 		schema = "a2waspwarfare-runtime-rpt-source-map-v1"
 		release = [ordered]@{
-			candidate = $candidate
-			git = $expectedGit
-			archiveSha256 = $expectedArchiveSha256
+			candidate = $SourceMapCandidate
+			git = $SourceMapGit
+			archiveSha256 = $SourceMapArchiveSha256
 		}
 		records = $records.ToArray()
 	}
@@ -148,6 +151,24 @@ function Invoke-ValidatorFixture {
 	return ConvertFrom-JsonOutput (& $validator -RptRoot $PacketRoot -ExpectedCandidate $candidate -ExpectedGit $expectedGit -ExpectedArchiveSha256 $expectedArchiveSha256 -RunLedgerPath $ledgerPath -RequireSourceRptExists -Json)
 }
 
+function Assert-ThrowsLike {
+	param(
+		[scriptblock]$Script,
+		[string]$Pattern,
+		[string]$Message
+	)
+	$threw = $false
+	try {
+		& $Script
+	} catch {
+		$threw = $true
+		if ($_.Exception.Message -notmatch $Pattern) {
+			throw ("{0} Expected exception matching '{1}', got '{2}'." -f $Message, $Pattern, $_.Exception.Message)
+		}
+	}
+	if (!$threw) { throw $Message }
+}
+
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("wasp-runtime-packet-selftest-" + [guid]::NewGuid().ToString("N"))
 try {
 	[void](New-Item -ItemType Directory -Path $tempRoot -Force)
@@ -159,6 +180,13 @@ try {
 	Assert-Equal ([string]$happyManifest.validation.overall) "pass" "Happy-path builder validation failed."
 	$happyValidation = Invoke-ValidatorFixture -PacketRoot $happyPacket
 	Assert-Equal ([string]$happyValidation.overall) "pass" "Happy-path packet validation failed."
+
+	$staleIdentityRoot = Join-Path $tempRoot "stale-identity"
+	$staleIdentityMap = New-SourceMapFixture -Root $staleIdentityRoot -Variant "happy" -SourceMapCandidate "stale-candidate"
+	$staleIdentityPacket = Join-Path $staleIdentityRoot "packet"
+	Assert-ThrowsLike -Pattern "release\.candidate" -Message "Builder should reject source-map candidate drift when -ExpectedCandidate is supplied." -Script {
+		Invoke-BuilderFixture -MapPath $staleIdentityMap -OutDirectory $staleIdentityPacket -NoFail | Out-Null
+	}
 
 	$duplicateRoot = Join-Path $tempRoot "duplicate"
 	$duplicateMap = New-SourceMapFixture -Root $duplicateRoot -Variant "duplicate-content"
@@ -175,6 +203,20 @@ try {
 	Assert-Equal ([string](Get-Gate -Validation $wrongRoleManifest.validation -Id "per-role-proof").status) "fail" "Per-role proof gate did not fail."
 
 	$ledgerObject = Get-Content -Raw -LiteralPath (Join-Path $happyPacket "release-run-ledger.json") | ConvertFrom-Json
+	$ledgerObject.release.candidate = ""
+	$ledgerObject | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $happyPacket "release-run-ledger.json") -Encoding UTF8
+	$candidateValidation = Invoke-ValidatorFixture -PacketRoot $happyPacket -NoFail
+	Assert-Equal ([string]$candidateValidation.overall) "missing_or_failed" "Missing ledger candidate fixture should fail validation."
+	Assert-Equal ([string](Get-Gate -Validation $candidateValidation -Id "runtime-run-ledger").status) "fail" "Runtime run-ledger gate did not fail when release candidate was missing."
+
+	$ledgerObject.release.candidate = $candidate
+	$ledgerObject.release.git = ""
+	$ledgerObject | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $happyPacket "release-run-ledger.json") -Encoding UTF8
+	$gitValidation = Invoke-ValidatorFixture -PacketRoot $happyPacket -NoFail
+	Assert-Equal ([string]$gitValidation.overall) "missing_or_failed" "Missing ledger git fixture should fail validation."
+	Assert-Equal ([string](Get-Gate -Validation $gitValidation -Id "runtime-run-ledger").status) "fail" "Runtime run-ledger gate did not fail when release git was missing."
+
+	$ledgerObject.release.git = $expectedGit
 	$ledgerObject.release.archiveSha256 = ""
 	$ledgerObject | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $happyPacket "release-run-ledger.json") -Encoding UTF8
 	$archiveValidation = Invoke-ValidatorFixture -PacketRoot $happyPacket -NoFail

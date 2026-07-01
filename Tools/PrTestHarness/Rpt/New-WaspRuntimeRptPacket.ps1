@@ -216,15 +216,29 @@ if ($schema -ne "a2waspwarfare-runtime-rpt-source-map-v1") {
 }
 
 $release = Get-JsonValue $sourceMap "release"
-if ([string]::IsNullOrWhiteSpace($ExpectedGit) -and $null -ne $release) {
-	$ExpectedGit = [string](Get-JsonValue $release "git")
-}
-if ([string]::IsNullOrWhiteSpace($ExpectedArchiveSha256) -and $null -ne $release) {
-	$ExpectedArchiveSha256 = [string](Get-JsonValue $release "archiveSha256")
-}
+$releaseIdentityFailures = New-Object System.Collections.Generic.List[string]
 if ($null -ne $release) {
 	$mapCandidate = [string](Get-JsonValue $release "candidate")
-	if (![string]::IsNullOrWhiteSpace($mapCandidate)) { $ExpectedCandidate = $mapCandidate }
+	$mapGit = [string](Get-JsonValue $release "git")
+	$mapArchiveSha256 = [string](Get-JsonValue $release "archiveSha256")
+	if ([string]::IsNullOrWhiteSpace($ExpectedCandidate)) {
+		$ExpectedCandidate = $mapCandidate
+	} elseif (![string]::IsNullOrWhiteSpace($mapCandidate) -and $mapCandidate -ne $ExpectedCandidate) {
+		Add-Problem $releaseIdentityFailures "release.candidate does not match -ExpectedCandidate"
+	}
+	if ([string]::IsNullOrWhiteSpace($ExpectedGit)) {
+		$ExpectedGit = $mapGit
+	} elseif (![string]::IsNullOrWhiteSpace($mapGit) -and $mapGit -ne $ExpectedGit) {
+		Add-Problem $releaseIdentityFailures "release.git does not match -ExpectedGit"
+	}
+	if ([string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) {
+		$ExpectedArchiveSha256 = $mapArchiveSha256
+	} elseif (![string]::IsNullOrWhiteSpace($mapArchiveSha256) -and !$mapArchiveSha256.Equals($ExpectedArchiveSha256, [System.StringComparison]::OrdinalIgnoreCase)) {
+		Add-Problem $releaseIdentityFailures "release.archiveSha256 does not match -ExpectedArchiveSha256"
+	}
+}
+if ($releaseIdentityFailures.Count -gt 0) {
+	throw ("Runtime RPT source map release identity mismatch. Failures: {0}." -f ($releaseIdentityFailures.ToArray() -join "; "))
 }
 if ([string]::IsNullOrWhiteSpace($ExpectedGit)) {
 	$repoRoot = Find-RepoRoot
