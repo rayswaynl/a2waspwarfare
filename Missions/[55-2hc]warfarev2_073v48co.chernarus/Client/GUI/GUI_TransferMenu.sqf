@@ -25,11 +25,13 @@ _aicom_row = -1; //--- Sentinel index of the AI Commander row; -1 = not present.
 //--- commanderTeam is null/nil OR its leader is not a player — matching the wildcard gate.
 private ["_showAICom","_aicomCmdTeam"];
 _showAICom = false;
-_aicomCmdTeam = sideJoined Call WFBE_CO_FNC_GetCommanderTeam;
-if (isNull _aicomCmdTeam) then {
-	_showAICom = true;
-} else {
-	if !(isPlayer (leader _aicomCmdTeam)) then {_showAICom = true};
+if ((sideJoined in [west, east]) && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0}) then {
+	_aicomCmdTeam = sideJoined Call WFBE_CO_FNC_GetCommanderTeam;
+	if (isNull _aicomCmdTeam) then {
+		_showAICom = true;
+	} else {
+		if !(isPlayer (leader _aicomCmdTeam)) then {_showAICom = true};
+	};
 };
 
 if (_showAICom) then {

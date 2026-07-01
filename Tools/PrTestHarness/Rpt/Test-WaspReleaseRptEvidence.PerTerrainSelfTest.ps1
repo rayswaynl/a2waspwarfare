@@ -84,6 +84,8 @@ function New-TestPacket {
 		[switch]$IncludeChernarusInfFallback,
 		[switch]$IncludeTakistanEastInfFallback,
 		[switch]$OmitEastAicomProgress,
+		[switch]$OmitAicomHcAudit,
+		[switch]$OmitAicomJipStatus,
 		[string[]]$ExtraServerSemanticTokens = @()
 	)
 
@@ -141,6 +143,15 @@ function New-TestPacket {
 					"SupplyMissionUnload.sqf: Player Tester started helicopter unload timer",
 					"SupplyMissionCompleted.sqf: Completion accepted"
 				)
+				if (!$OmitAicomHcAudit) {
+					$semanticTokens += @(
+						"AICOMSTAT|v2|EVENT|west|1|HCRECON_AICOM_AUDIT|uid=HC1|owner=11|teams=2|live=2|newOwnerLive=2|headingFresh=2|headingStale=0|headingUnknown=0",
+						"AICOMSTAT|v2|EVENT|east|1|HCDROP_AICOM_AUDIT|delay=60|uid=HC2|owner=12|teams=2|live=2|oldOwnerLive=0|headingFresh=1|headingStale=1|headingUnknown=0"
+					)
+				}
+				if (!$OmitAicomJipStatus) {
+					$semanticTokens += "[WFBE][B74.2 REQ-MARK] rebroadcast marker feeds to requester 42 (aicom=2, patrols=2, aiStatus=7, side=WEST)."
+				}
 				if (!$OmitEastAicomProgress) {
 					$semanticTokens += @(
 						"AICOMSTAT|v2|EVENT|east|1|TEAM_FOUNDED|team=bravo",
@@ -319,6 +330,28 @@ try {
 	$eastMissing = @($aicomGate.missing | Where-Object { [string]$_ -match "aicomTeamFoundedEast|east-action-or-progress" })
 	if ([string]$missingEastAicom.overall -ne "missing_or_failed" -or [string]$aicomGate.status -ne "missing" -or $eastMissing.Count -eq 0) {
 		throw ("Expected no-human AICOM gate to fail without EAST founding/progress; overall={0}, aicom={1}, missing={2}" -f $missingEastAicom.overall, $aicomGate.status, (($aicomGate.missing | Out-String).Trim()))
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanInfFallback -OmitAicomHcAudit
+	$missingHcAudit = Invoke-Score -Root $root
+	$hcGate = @($missingHcAudit.gates | Where-Object { [string]$_.id -eq "hc-delegation-locality" }) | Select-Object -First 1
+	if ($null -eq $hcGate) { throw "Missing hc-delegation-locality gate." }
+	$hcAuditMissing = @($hcGate.missing | Where-Object { [string]$_ -match "aicomHcReconnectAudit|aicomHcDropAudit" })
+	if ([string]$missingHcAudit.overall -ne "missing_or_failed" -or [string]$hcGate.status -ne "missing" -or $hcAuditMissing.Count -eq 0) {
+		throw ("Expected HC delegation gate to fail without AICOM HC reconnect/drop audit evidence; overall={0}, hc={1}, missing={2}" -f $missingHcAudit.overall, $hcGate.status, (($hcGate.missing | Out-String).Trim()))
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanInfFallback -OmitAicomJipStatus
+	$missingJipStatus = Invoke-Score -Root $root
+	$hqJipGate = @($missingJipStatus.gates | Where-Object { [string]$_.id -eq "hq-death-and-jip" }) | Select-Object -First 1
+	if ($null -eq $hqJipGate) { throw "Missing hq-death-and-jip gate." }
+	$jipStatusMissing = @($hqJipGate.missing | Where-Object { [string]$_ -eq "aicomJipRequestAiStatus" })
+	if ([string]$missingJipStatus.overall -ne "missing_or_failed" -or [string]$hqJipGate.status -ne "missing" -or $jipStatusMissing.Count -eq 0) {
+		throw ("Expected HQ/JIP gate to fail without WFBE_ReqAicomFeed aiStatus evidence; overall={0}, hqJip={1}, missing={2}" -f $missingJipStatus.overall, $hqJipGate.status, (($hqJipGate.missing | Out-String).Trim()))
 	}
 
 	Remove-Item -LiteralPath $root -Recurse -Force

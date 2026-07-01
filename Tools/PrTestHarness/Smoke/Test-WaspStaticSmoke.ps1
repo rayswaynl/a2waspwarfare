@@ -348,6 +348,31 @@ function Test-UpgradeRequestAuthorityGuard {
 	Add-Result "Upgrade request authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AIComDonateAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$requestPath = Join-Path $entry.Root "Server\PVFunctions\RequestAIComDonate.sqf"
+		$clientPath = Join-Path $entry.Root "Client\GUI\GUI_TransferMenu.sqf"
+		$request = Get-Text $requestPath
+		$requestCode = [regex]::Replace($request, "//.*", "")
+		$requestCode = [regex]::Replace($requestCode, "/\*[\s\S]*?\*/", "")
+		$client = Get-Text $clientPath
+		if (-not ($requestCode.Contains('typeName _this != "ARRAY"') -and $requestCode.Contains("count _args < 3"))) { $missing += "$($entry.Terrain):payload-shape" }
+		if (-not ($requestCode.Contains('typeName _donor != "OBJECT"') -and $requestCode.Contains('typeName _donorTeam != "GROUP"') -and $requestCode.Contains('typeName _amount != "SCALAR"') -and $requestCode.Contains('_amount != floor _amount'))) { $missing += "$($entry.Terrain):payload-types" }
+		if (-not ($requestCode.Contains('!isPlayer _donor') -and $requestCode.Contains('alive _donor') -and $requestCode.Contains('group _donor != _donorTeam'))) { $missing += "$($entry.Terrain):donor-team-binding" }
+		if (-not ($requestCode.Contains('_side in [west, east]') -and $requestCode.Contains('WFBE_C_AI_COMMANDER_ENABLED') -and $requestCode.Contains('_humanCmd') -and $requestCode.Contains('isPlayer (leader _cmdTeam)'))) { $missing += "$($entry.Terrain):aicom-side-enabled" }
+		if (-not ($requestCode.Contains('WFBE_CO_FNC_GetTeamFunds') -and $requestCode.Contains('WFBE_CO_FNC_ChangeTeamFunds') -and $requestCode.Contains('ChangeAICommanderFunds'))) { $missing += "$($entry.Terrain):server-payment" }
+		if ($requestCode.Contains('_donorTeam getVariable "wfbe_funds"')) { $missing += "$($entry.Terrain):raw-group-funds-read" }
+		if (-not ($client.Contains('sideJoined in [west, east]') -and $client.Contains('WFBE_C_AI_COMMANDER_ENABLED') -and $client.Contains('player, clientTeam, _funds_transfering'))) { $missing += "$($entry.Terrain):client-request-gate" }
+	}
+	Add-Result "AI commander donation authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomGroupVariableDefaults {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -849,6 +874,7 @@ Test-WddmAnchorClassValidity
 Test-PvfIntegrity
 Test-SideSupplyAuthorityGuard
 Test-UpgradeRequestAuthorityGuard
+Test-AIComDonateAuthorityGuard
 Test-AicomGroupVariableDefaults
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups

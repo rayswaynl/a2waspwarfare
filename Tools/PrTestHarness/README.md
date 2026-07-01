@@ -279,7 +279,9 @@ side-specific action/progress token such as `ASSAULT_DISPATCH`, `COMBATSTAT`,
 release candidate also requires the Takistan WEST fallback marker
 `AICOMGATE|WEST|infFallback` through the
 `takistan-west-aicom-infantry-fallback` gate, so generic founding/progress tokens
-cannot mask the round32 WEST infantry-starvation fix. It exits non-zero until
+cannot mask the round32 WEST infantry-starvation fix. The HC/JIP runtime gates
+also require the native AICOM feed-recovery and HC audit proof tokens:
+`aiStatus=<number>`, `HCRECON_AICOM_AUDIT`, and `HCDROP_AICOM_AUDIT`. It exits non-zero until
 the bundle is complete. It scores only the current mission window in each RPT,
 including the startup banner immediately above the latest `MISSINIT`, and fails
 if any scored file lacks that startup Mission Name banner. It prints session

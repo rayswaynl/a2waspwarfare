@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AI commander donation authority guard [RELEASE LOOP]
+
+Hardened the live `RequestAIComDonate.sqf` PVF before the runtime RPT pass.
+The handler now validates payload shape and types before selecting fields,
+requires a live player donor still in the submitted team, rejects unsupported
+non-WEST/EAST sides and disabled-AICOM configurations, reads donor funds through
+the common team-funds helper, and uses the common team-funds debit helper before
+crediting the AI commander wallet. The transfer menu now only offers the AI
+Commander donation row for WEST/EAST sides while AICOM is enabled.
+
+Static smoke gained an `AI commander donation authority guard` to keep the
+six-part contract visible across Chernarus and generated Takistan. LoadoutManager
+must propagate this Chernarus source slice before package provenance is refreshed.
+
 ## 2026-07-01 — HC reconnect/drop AICOM audit tokens [RELEASE LOOP]
 
 Ported the source-only part of `f20ddfc83` into the PR #125 release branch for

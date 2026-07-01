@@ -222,6 +222,9 @@ $tokenSpecs = @(
 	[pscustomobject]@{ Name = "aicomSnapshotWest"; Pattern = "AICOM2\|v1\|SNAP\|west\|" },
 	[pscustomobject]@{ Name = "aicomSnapshotEast"; Pattern = "AICOM2\|v1\|SNAP\|east\|" },
 	[pscustomobject]@{ Name = "aicomWestInfFallback"; Pattern = "AICOMGATE\|WEST\|infFallback\|" },
+	[pscustomobject]@{ Name = "aicomHcReconnectAudit"; Pattern = "HCRECON_AICOM_AUDIT" },
+	[pscustomobject]@{ Name = "aicomHcDropAudit"; Pattern = "HCDROP_AICOM_AUDIT" },
+	[pscustomobject]@{ Name = "aicomJipRequestAiStatus"; Pattern = "aiStatus=[0-9]+" },
 	[pscustomobject]@{ Name = "aiCommanderActive"; Pattern = "AI commander ACTIVE" },
 	[pscustomobject]@{ Name = "aiCommanderAssist"; Pattern = "AI commander ASSIST" },
 	[pscustomobject]@{ Name = "aicomOrder"; Pattern = "AICOM2\|v1\|ORDER\|aicom-ai-command" },
@@ -312,15 +315,15 @@ $gateSpecs = @(
 	},
 	[ordered]@{
 		id = "hq-death-and-jip"
-		required = @("jipMark","teamsRebc","rosterPush","jipFunds","clientRosterRecv","clientRosterPollAdopt","hqMark")
+		required = @("jipMark","teamsRebc","rosterPush","jipFunds","clientRosterRecv","clientRosterPollAdopt","hqMark","aicomJipRequestAiStatus")
 		fail = @("connectBailB746","connectBailB747","stampMissB762")
-		note = "Late-JIP enrollment and HUD/marker evidence; client fade/playability remains observational."
+		note = "Late-JIP enrollment, HUD/marker evidence and WFBE_ReqAicomFeed AICOM status rebroadcast evidence; client fade/playability remains observational."
 	},
 	[ordered]@{
 		id = "hc-delegation-locality"
-		required = @("hcSide","hcStat","hcDeleg","delegStat","teamFoundedViaHC")
+		required = @("hcSide","hcStat","hcDeleg","delegStat","teamFoundedViaHC","aicomHcReconnectAudit","aicomHcDropAudit")
 		fail = @("hcConnectFailed","hcDropOldOwnerLive","hcDropStaleHeading")
-		note = "HC connection, delegation, and remote founding evidence."
+		note = "HC connection, delegation, remote founding and AICOM HC reconnect/drop audit evidence; delayed drop samples must not retain live old-owner or stale/unknown heading counts."
 	},
 	[ordered]@{
 		id = "hc-registry-civilian"
@@ -611,7 +614,7 @@ if ($Json) {
 	}
 	Write-Host ""
 	Write-Host "Selected token counts:"
-	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aicomWestInfFallback","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcDisconnect","hcDropOldOwnerLive","hcDropStaleHeading","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","gcStat","groupCapAtCeiling","groupCapFailure","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
+	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aicomWestInfFallback","aicomHcReconnectAudit","aicomHcDropAudit","aicomJipRequestAiStatus","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcDisconnect","hcDropOldOwnerLive","hcDropStaleHeading","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","gcStat","groupCapAtCeiling","groupCapFailure","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
 		Write-Host ("{0,-28} {1}" -f $key, $totalCounts[$key])
 	}
 	Write-Host ""
