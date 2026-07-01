@@ -13,9 +13,12 @@
   - **Issue found** → diagnose + fix (commit to this branch).
   - **No issue** → pull the next item off the improvement backlog below and ship it.
   - **Server crashed / procs < 3** → restart the chain (deploy script / service restart) and resume.
-- **Safety:** develop + commit fixes to THIS PR (ready for Ray's review). Do NOT hot-deploy new
-  code to the live server unattended unless it directly resolves a live crash loop. The live build
-  stays **cmdcon36**; match rotation stays box-side (WaspMatchEndRotate). No unattended risky deploys.
+- **Safety / DEPLOY POLICY (Ray directive 2026-07-02, ~cmdcon39):** **NO more live deploys tonight.**
+  The NEXT update goes live only in the MORNING when Ray says so. Until then: develop + commit + push
+  fixes to THIS PR, monitor, and stage everything for the morning bundle. Crash recovery (restarting the
+  SAME live build after a crash / procs<3) is still allowed to keep the server up — that is not "an update".
+  Live build is **cmdcon39aicom** (drain-wait + arrival-gate capture fixes + class-text marker). Match
+  rotation stays box-side (WaspMatchEndRotate).
 - **Live panel:** WASPSCALE scope-vs-FPS → https://miksuu.com/wasp (Performance tab).
 
 ## Shipped this session (folded into this branch)
@@ -72,3 +75,6 @@
   Deployed **cmdcon38** (human dropped on restart as expected; match can't self-end while the bug is live, so waiting for match-end wasn't an option). **Boot-smoke clean: 0 errors, builderr=0, AICOMHB v2, WASPSCALE v2 `build=cmdcon38aicom|hc_fps=45`.** Published **Build 85** changelog (miksuu.com `b054895` + Discord). NEXT: watch `CAPTURED` climb off zero (the real proof).
 - **Tick 3** (capture verification — inconclusive, prepared next fix): live cmdcon38 at minute 18: **0 errors, 3/3, WASPSCALE healthy, AI_TOT=152, fps=46**. But `CAPTURED=0` **and** `begin_capture=0` **and** `did_not_flip=0` — no team has entered the capture phase at all yet. Teams ARE dispatched to real towns (`ASSAULT_DISPATCH town=Myshkino dist=1500`, `→Khelm dist=1055`), `contested=0`, founding still 9/10 → most likely the two 152-unit armies are clashing in the FIELD between bases (not a regression: my drain-wait change only touches the depot-hold *after* arrival). Traced the full capture chain: dispatch → **60m arrival gate** (`Common_RunCommanderTeam.sqf:890`, `CAPTURE_RANGE+20`) → capture phase → drain-wait depot-hold.
   Found a plausible secondary gap: the approach SAD ring is **80m** (`WFBE_C_AICOM_ASSAULT_SAD`) but the arrival gate is only **60m**, so a squad can rove its search ring and never cross into the capture phase. **Committed (NOT deployed) `87d7b3d94`:** arrival gate → `max(CAPTURE_RANGE, ASSAULT_SAD)+20` (=100m). Held the deploy to preserve the capture-verification clock. **NEXT TICK:** re-check `CAPTURED`/`begin_capture` at ~minute 33 — if still 0, deploy the arrival-gate fix (cmdcon39); if captures are flowing, the drain-wait fix is confirmed and the arrival-gate change is a bonus reliability win.
+- **Tick 4** (Ray marker clarification + PR audit + LAST deploy): Ray wants his marker to show class as **shortened TEXT** (SOL/MED/…), not a graphic icon. Used the wiki + Miksuu upstream (Ray's steer): confirmed **A2-OA has NO class-symbol markers** (b_inf is A3-only) and Miksuu's parent used plain `"Arrow"` with no class text — so this is NEW. Wired the shortened class onto the reliable `_ownMarker` (which set no text) — git `aecc87dae`; SpecOps tag SUP→SPEC. Deployed **cmdcon39** (marker + arrival-gate + drain-wait) so Ray can see it — **boot-smoke clean: 0 errors, cmdcon39 active, 3/3**. Published the **Build 85 changelog correction** (marker = class TEXT, not the A3 icon that never worked) to miksuu.com (`e4c5e30`) + Discord.
+  **PR audit (Ray ask):** graded the 7 other open PRs. Only genuinely useful gameplay content = **#125's RequestUpgrade anti-forge** (+150, real client→server upgrade authority) + **`WFBE_CO_FNC_GroupGetBool`** helper (safe A2 group-var reads, incl. `wfbe_aicom_cappasses`). Rest = release tooling/metadata/docs. #125 NOT mergeable (pins heartbeat back to v1 = regression). **PROPOSED to Ray** to fold just those two into the morning patch — awaiting his go.
+  **DEPLOY POLICY now morning-only** (see above). Loop continues as monitor+stage only.
