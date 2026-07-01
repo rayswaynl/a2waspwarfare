@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM HandleSpecial payload/list guards [RELEASE LOOP]
+
+Closed the follow-up scout slice for public-variable routed AICOM console and
+patrol marker cleanup. The command-console HandleSpecial cases now reject short
+payloads before reading `_args select 1/2`, so malformed or stale console
+requests cannot throw before `_validateAicomConsoleRequester` runs. The
+side-patrol feed cleanup now also normalizes a corrupted `WFBE_ACTIVE_PATROLS`
+mission variable to `[]` and validates each entry shape before reading slot 0,
+mirroring the active AICOM marker-list hardening.
+
+Static smoke adds `AICOM HandleSpecial shape guards` across Chernarus and
+generated Takistan. Runtime, SSH, RPT collection, upload, restart, cache-clear
+and deployment remain explicit-approval gated.
+
 ## 2026-07-01 — AICOM movement root follow-up [RELEASE LOOP]
 
 Ported the narrow movement-root fixes from the overnight scout without merging

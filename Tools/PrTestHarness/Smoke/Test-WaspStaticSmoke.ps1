@@ -395,6 +395,59 @@ function Test-AicomCommandConsoleAuthorityGuard {
 	Add-Result "AICOM command-console authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomHandleSpecialShapeGuards {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	$consoleCases = @(
+		"aicom-reinforce",
+		"aicom-posture",
+		"aicom-fieldorder",
+		"aicom-team-disband",
+		"aicom-ai-command",
+		"aicom-request-unit"
+	)
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$server = Get-Text $serverPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		foreach ($caseName in $consoleCases) {
+			$start = $serverCode.IndexOf("case `"$caseName`"")
+			if ($start -lt 0) {
+				$missing += "$($entry.Terrain):$caseName:missing-case"
+				continue
+			}
+			$end = $serverCode.IndexOf("`n`tcase `"", $start + 1)
+			if ($end -lt 0) { $end = $serverCode.Length }
+			$block = $serverCode.Substring($start, $end - $start)
+			$guardAt = $block.IndexOf("count _args < 5")
+			$selectAt = $block.IndexOf("_args select 1")
+			if ($guardAt -lt 0) { $missing += "$($entry.Terrain):$caseName:short-payload-guard" }
+			if ($selectAt -ge 0 -and ($guardAt -lt 0 -or $guardAt -gt $selectAt)) { $missing += "$($entry.Terrain):$caseName:guard-after-select" }
+			if (-not $block.Contains("rejected malformed $caseName payload")) { $missing += "$($entry.Terrain):$caseName:warning" }
+		}
+		$patrolStart = $serverCode.IndexOf('case "sidepatrol-ended"')
+		if ($patrolStart -lt 0) {
+			$missing += "$($entry.Terrain):sidepatrol-ended:missing-case"
+		} else {
+			$patrolEnd = $serverCode.IndexOf('case "sidepatrol-convoy-stop"', $patrolStart)
+			if ($patrolEnd -lt 0) { $patrolEnd = $serverCode.Length }
+			$patrolBlock = $serverCode.Substring($patrolStart, $patrolEnd - $patrolStart)
+			$normalizesList = $patrolBlock.Contains('typeName _plist != "ARRAY"')
+			$guardsEntry = $patrolBlock.Contains('typeName _x == "ARRAY"') -and $patrolBlock.Contains('count _x >= 2') -and $patrolBlock.Contains('typeName _pEntryUnit == "OBJECT"')
+			$unsafeSelect = [regex]::IsMatch($patrolBlock, 'isNull\s*\(\s*_x\s+select\s+0\s*\)')
+			if (-not $normalizesList) { $missing += "$($entry.Terrain):sidepatrol-ended:list-normalize" }
+			if (-not $guardsEntry) { $missing += "$($entry.Terrain):sidepatrol-ended:entry-guard" }
+			if ($unsafeSelect) { $missing += "$($entry.Terrain):sidepatrol-ended:raw-entry-select" }
+		}
+	}
+	Add-Result "AICOM HandleSpecial shape guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomTeamLifecycleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1159,6 +1212,7 @@ Test-SideSupplyAuthorityGuard
 Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
+Test-AicomHandleSpecialShapeGuards
 Test-AicomTeamLifecycleAuthorityGuard
 Test-AicomFeedRequestPvGuard
 Test-AicomHcTopUpDraftExcluded

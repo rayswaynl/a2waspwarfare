@@ -440,6 +440,9 @@ switch (_args select 0) do {
 		//--- team into that town as part of the fist/expand set - additive, reversible, TTL-clears. AI-commander-run gate +
 		//--- west/east validation; the reinforced town must currently be OURS (you reinforce what you hold).
 		private ["_rSide","_rTown","_rLogik","_rCmd","_rHuman","_rRun","_rSID"];
+		if (count _args < 5) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-reinforce payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_rSide = _args select 1;
 		_rTown = _args select 2;
 		if (!isNil "_rTown" && {!isNull _rTown} && {_rSide in [west, east]} && {[_args, _rSide, true] Call _validateAicomConsoleRequester}) then {
@@ -468,6 +471,9 @@ switch (_args select 0) do {
 		//--- applies a SMALL bias only - it never hard-overrides the stance machine. AI-commander-run gate + west/east + a
 		//--- string whitelist so a malformed arg cannot poison the read.
 		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
+		if (count _args < 5) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-posture payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
 		if ((typeName _pPos == "STRING") && {(_pPos == "PUSH") || (_pPos == "HOLD")} && {_pSide in [west, east]} && {[_args, _pSide, false] Call _validateAicomConsoleRequester}) then {
@@ -495,6 +501,9 @@ switch (_args select 0) do {
 		//--- west/east + string whitelist as aicom-posture so a malformed arg cannot poison the read. Cloned from
 		//--- "aicom-posture" above.
 		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
+		if (count _args < 5) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-fieldorder payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
 		if ((typeName _pPos == "STRING") && {_pPos in ["SPLIT","MASS","HARASS","FALLBACK"]} && {_pSide in [west, east]} && {[_args, _pSide, false] Call _validateAicomConsoleRequester}) then {
@@ -527,6 +536,9 @@ switch (_args select 0) do {
 		//--- present + valid -> disband ONLY that team (a precision action; NO 15-min cooldown, and it does NOT stamp the
 		//--- per-side cooldown clock). When ABSENT -> the original ALL-teams sweep (15-min per-side cooldown, unchanged).
 		private ["_dSide","_dLogik","_dCmd","_dHuman","_dTeams","_dN","_dHasIdx","_dIdx"];
+		if (count _args < 5) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-team-disband payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_dSide = _args select 1;
 		_dHasIdx = false; _dIdx = -1;
 		if (count _args >= 3) then {
@@ -578,6 +590,9 @@ switch (_args select 0) do {
 		//--- DELIBERATELY no human-commander gate: this flag's whole purpose is to change whether the AI strategy runs
 		//--- UNDER a human commander. Modeled on aicom-posture: ENABLED + HQ-alive + west/east + string whitelist.
 		private ["_dSide","_dVal","_dLogik"];
+		if (count _args < 5) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-ai-command payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_dSide = _args select 1;
 		_dVal  = _args select 2;
 		if ((typeName _dVal == "STRING") && {(_dVal == "ON") || (_dVal == "OFF")} && {_dSide in [west, east]} && {[_args, _dSide, true] Call _validateAicomConsoleRequester}) then {
@@ -603,6 +618,9 @@ switch (_args select 0) do {
 		//--- so a player order can neither pin nor destabilise the brain. We therefore gate only on ENABLED + HQ-alive
 		//--- + side + class whitelist - no human-commander gate. The TTL ages the stamp out on its own.
 		private ["_uSide","_uType","_uLogik"];
+		if (count _args < 5) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-request-unit payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_uSide = _args select 1;
 		_uType = _args select 2;
 		if ((typeName _uType == "STRING") && {(_uType == "armor") || (_uType == "air") || (_uType == "infantry")} && {_uSide in [west, east]} && {[_args, _uSide, true] Call _validateAicomConsoleRequester}) then {
@@ -856,7 +874,7 @@ switch (_args select 0) do {
 		};
 	};
 	case "sidepatrol-ended": {
-		Private ["_psideID","_punit","_plogik","_plist","_pnew"];
+		Private ["_psideID","_punit","_plogik","_plist","_pnew","_pEntryUnit"];
 		_psideID = _args select 1;
 		_punit = _args select 2;
 		_plogik = ((_psideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
@@ -866,10 +884,14 @@ switch (_args select 0) do {
 			_plogik setVariable ["wfbe_side_patrol_last", time];
 		};
 		_plist = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []];
+		if (typeName _plist != "ARRAY") then {_plist = []};
 		_pnew = [];
 		{
 			//--- Drop the ended patrol's entry and any null leftovers while we're here.
-			if (!isNull (_x select 0) && {(_x select 0) != _punit}) then {_pnew = _pnew + [_x]};
+			if (typeName _x == "ARRAY" && {count _x >= 2}) then {
+				_pEntryUnit = _x select 0;
+				if (typeName _pEntryUnit == "OBJECT" && {!isNull _pEntryUnit} && {_pEntryUnit != _punit}) then {_pnew = _pnew + [_x]};
+			};
 		} forEach _plist;
 		missionNamespace setVariable ["WFBE_ACTIVE_PATROLS", _pnew];
 		publicVariable "WFBE_ACTIVE_PATROLS";
