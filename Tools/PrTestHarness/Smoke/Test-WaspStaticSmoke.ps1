@@ -716,21 +716,29 @@ function Test-AicomCaptureStallGuardrails {
 }
 
 function Test-HcPvfGuard {
-	$handle = Get-Text (Join-Path $missionRoot "Client\Functions\Client_HandlePVF.sqf")
-	$town = Get-Text (Join-Path $missionRoot "Client\PVFunctions\TownCaptured.sqf")
-	$camp = Get-Text (Join-Path $missionRoot "Client\PVFunctions\CampCaptured.sqf")
-	$allCamps = Get-Text (Join-Path $missionRoot "Client\PVFunctions\AllCampsCaptured.sqf")
-	$bounty = Get-Text (Join-Path $missionRoot "Client\PVFunctions\AwardBounty.sqf")
-	$bountyPlayer = Get-Text (Join-Path $missionRoot "Client\PVFunctions\AwardBountyPlayer.sqf")
-	$detectsHc = $handle.Contains("isHeadLessClient") -and $handle.Contains("hasInterface")
-	$allowsDelegates = $handle.Contains("delegate-townai") -and $handle.Contains("delegate-ai-static-defence")
-	$blocksPlayerPvfs = $handle.Contains("if !(_hcAllowed) exitWith {}")
-	$guardsSide = $handle.Contains('if !(isNil "sideJoined")')
-	$guardsTown = $town.Contains('if (isNil "WFBE_Client_SideID") exitWith {}')
-	$guardsCamp = $camp.Contains('if (isNil "WFBE_Client_SideID") exitWith {}')
-	$guardsAll = $allCamps.Contains('if (isNil "WFBE_Client_SideID") exitWith {}')
-	$guardsBounty = $bounty.Contains('if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}}') -and $bounty.Contains('if (isNull player) exitWith {}') -and $bountyPlayer.Contains('if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}}') -and $bountyPlayer.Contains('if (isNull player) exitWith {}')
-	Add-Result "HC client PVF guard" ($detectsHc -and $allowsDelegates -and $blocksPlayerPvfs -and $guardsSide -and $guardsTown -and $guardsCamp -and $guardsAll -and $guardsBounty) "detectsHc=$detectsHc delegates=$allowsDelegates blocks=$blocksPlayerPvfs sideGuard=$guardsSide town=$guardsTown camp=$guardsCamp all=$guardsAll bounty=$guardsBounty"
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$handle = Get-Text (Join-Path $entry.Root "Client\Functions\Client_HandlePVF.sqf")
+		$town = Get-Text (Join-Path $entry.Root "Client\PVFunctions\TownCaptured.sqf")
+		$camp = Get-Text (Join-Path $entry.Root "Client\PVFunctions\CampCaptured.sqf")
+		$allCamps = Get-Text (Join-Path $entry.Root "Client\PVFunctions\AllCampsCaptured.sqf")
+		$bounty = Get-Text (Join-Path $entry.Root "Client\PVFunctions\AwardBounty.sqf")
+		$bountyPlayer = Get-Text (Join-Path $entry.Root "Client\PVFunctions\AwardBountyPlayer.sqf")
+		if (-not ($handle.Contains("isHeadLessClient") -and $handle.Contains("hasInterface"))) { $missing += "$($entry.Terrain):detects-hc" }
+		if (-not ($handle.Contains("delegate-townai") -and $handle.Contains("delegate-ai-static-defence") -and $handle.Contains("delegate-sidepatrol") -and $handle.Contains("delegate-aicom-team"))) { $missing += "$($entry.Terrain):delegate-allowlist" }
+		if (-not $handle.Contains("if !(_hcAllowed) exitWith {}")) { $missing += "$($entry.Terrain):blocks-player-pvfs" }
+		if (-not $handle.Contains('if !(isNil "sideJoined")')) { $missing += "$($entry.Terrain):side-guard" }
+		if (-not $town.Contains('if (isNil "WFBE_Client_SideID") exitWith {}')) { $missing += "$($entry.Terrain):town-side-guard" }
+		if (-not $camp.Contains('if (isNil "WFBE_Client_SideID") exitWith {}')) { $missing += "$($entry.Terrain):camp-side-guard" }
+		if (-not $allCamps.Contains('if (isNil "WFBE_Client_SideID") exitWith {}')) { $missing += "$($entry.Terrain):all-camps-side-guard" }
+		if (-not ($bounty.Contains('if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}}') -and $bounty.Contains('if (isNull player) exitWith {}') -and $bountyPlayer.Contains('if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}}') -and $bountyPlayer.Contains('if (isNull player) exitWith {}'))) { $missing += "$($entry.Terrain):bounty-hc-guard" }
+	}
+	Add-Result "HC client PVF guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
 function Test-HcDelegatedAiLocalGroups {

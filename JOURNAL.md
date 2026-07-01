@@ -13,7 +13,20 @@ check failure while preserving the active-overlay gate for real stress runs.
 package worktree without an installed active mission root. Runtime, SSH, RPT
 collection, upload, restart, cache-clear and deployment remain explicit-approval
 gated.
+## 2026-07-01 — HC AICOM/side-patrol delegate allowlist [RELEASE LOOP]
 
+Closed the next read-only scout finding around HC-routed `HandleSpecial`
+delegation. The headless-client PVF guard already allowed delegated town AI and
+static-defense work, but it dropped the live `delegate-aicom-team` and
+`delegate-sidepatrol` cases before the HC dispatcher could run them. The HC
+allowlist now includes all four delegated AI work types, so server-side AICOM
+team founding and side-patrol launches sent to a live HC are not silently
+discarded at the client PVF gate.
+
+Static smoke now checks the HC PVF guard across both maintained terrains and
+asserts the full delegate allowlist (`delegate-townai`,
+`delegate-ai-static-defence`, `delegate-sidepatrol`, `delegate-aicom-team`) in
+addition to the existing HC/player-PVF and side-guard checks.
 ## 2026-07-01 — AICOM HandleSpecial payload/list guards [RELEASE LOOP]
 
 Closed the follow-up scout slice for public-variable routed AICOM console and
