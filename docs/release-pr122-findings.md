@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 15:05 Europe/Amsterdam
+Last updated: 2026-07-01 16:19 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -40,7 +40,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `acaf1bc915f8ff3d8313ae798735bfb94496ac96`
+  `84ed680c19a76df903316f25f808e86823639d42`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -54,13 +54,17 @@ release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`70fc6e0b9e3e35415ae08b36c40df0bef64695f2`. Treat it as a separate broad lane,
+`6756df2846c8da0a7e51eb0cda0e2aad61ca4cdf`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also exists as an open draft release-readiness/AICOM guardrail lane at
-head `5fd7ea51b87305e3a139e272461bf060654f94ad` after a force update. Its
+head `5fcacca74b4cac659f34de1be89fd972d6a017cd` after a force update. Its
 verified shippable pieces were folded through PR #127; keep the remaining branch
 separate unless it is rebased and revalidated.
+
+PR #129 is an open draft release-readiness hub at
+`72888f22851871c8ed967a0fd29402a0c410c0bd`. It is mission-affecting, not
+docs-only, and overlaps PR #125 in shared AICOM commander files.
 
 PR #131 is the focused draft fix for the latest master static blocker. It is
 open, draft, and currently reported clean at head
@@ -269,6 +273,46 @@ Static gate:
 This artifact supersedes the `5bf5f923`, `311b9d93`, and PR #127-only artifacts
 as the freshest exact current-master payload. It is still not runtime proof, and
 the current source static gate is failing.
+
+## Current Draft Lane Triage
+
+Fresh triage at 2026-07-01 16:19 Europe/Amsterdam found these current draft
+lanes all based on `b7241a35f0460e92cf8839cd315c95defaa6380b`:
+
+- PR #131: focused placement-preview static fix, clean at
+  `2178b20d3ddcadda8dd9a01bf6a4c8e1db4ef793`. This remains the release-critical
+  unblocker because current `origin/master` still fails `git diff --check` from
+  `5bf5f92385` in both terrain copies of `Client/Init/Init_Client.sqf`.
+- PR #126: medium source risk, high release-gate risk until runtime proof exists.
+  It changes 15 files: 14 mirrored Chernarus/Takistan SQF files plus a release
+  task document. It adds group-budget warning throttles/recovery markers,
+  HC drop/reconnect AICOM audit markers, and late-JIP pushes for population tier
+  and side-keyed AICOM status variables. `git diff --check
+  origin/master..origin/codex/release-readiness-20260701` passes, and the seven
+  touched Chernarus/Takistan SQF file pairs are byte-identical at the PR head.
+  It does not touch the #131 `Init_Client.sqf` static blocker and is not a
+  substitute for #131.
+- PR #125: broad command-center/tooling lane at
+  `6756df2846c8da0a7e51eb0cda0e2aad61ca4cdf`, 127 files and approximately
+  `+13499/-670`. It is mission-affecting across client/common/server SQF,
+  AICOM/PV handlers, release harness tooling, docs, and server config. Its
+  package/provenance claims need exact logs/artifacts tied to this head before
+  they can be used as release evidence.
+- PR #129: release-readiness hub at
+  `72888f22851871c8ed967a0fd29402a0c410c0bd`, 14 files and approximately
+  `+188/-92`. It is mission-affecting in AICOM commander code, group GC,
+  briefings, and release docs. Its docs mention older base context, so treat
+  GitHub metadata and fresh local diff checks as authoritative.
+
+PR #125 and PR #129 are not stacked. Their merge base is current `origin/master`,
+and synthetic merge analysis reports changed-in-both/conflict risk in shared
+AICOM files, especially `AI_Commander_PlayerArty.sqf` and
+`AI_Commander_Teams.sqf` on both terrains. Key divergence includes
+`AICOMHB|v1|` versus `AICOMHB|v2|`, different PlayerArty validation,
+hardcoded/throttled group-cap behavior versus configurable
+`WFBE_C_AICOM_GROUP_CAP`, and duplicate starved-infantry fallback handling.
+Do not combine #125 and #129 for Thursday without explicit conflict resolution,
+LoadoutManager regeneration/validation, new artifacts, and fresh real RPT proof.
 
 ## Superseded Latest Master Exact Artifact
 
@@ -489,26 +533,30 @@ ASR-enabled RPT proof.
 
 ## Recommended Next Path
 
-1. Treat latest `origin/master` at
-   `5bf5f92385ef0218c5e20fb4273cf563a295e82d` as the current proof target unless
-   a newer branch is deliberately selected and rebuilt.
+1. Treat PR #131 at `2178b20d3ddcadda8dd9a01bf6a4c8e1db4ef793` as the current
+   focused proof target if the static fix is selected, or merge #131 first and
+   rebuild from the new `origin/master`.
 2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
    prove latest `origin/master`.
-3. If current `origin/master` is chosen, use artifact SHA256
-   `2E88777C983CCEF2ACFF798302C33708C2561C1835981A884CE94340B61D7FEC` and
+3. If current `origin/master` is chosen without #131, record an explicit static
+   gate waiver first. The current master artifact SHA256 is
+   `F2652CCDFF6085D73461C4FAADE4422D667F7FD245BE87556746A2CDA569545E`, but the
+   source static gate is failing.
+4. If #131 is chosen, use artifact SHA256
+   `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D` and
    folder-smoke kit SHA256
-   `173D16F30DF7E62AEC44E5A7354449F374894AAC3C8C8F6ADE9567E0487BD8B3`.
-4. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
+   `C70F3E26961FE6FEC477B77D0FE46C98046AC756780D550B3EA297FB955F1F8C`.
+5. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
    `96CD026F76E0828F584F243FEC2358C1D319CDEFAE5E69868B7394C89FC77171` no longer
    proves the latest master.
-5. Run the exact chosen artifact through folder-smoke or a controlled dedicated
+6. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
-6. Collect both-map server/client/latejoin/HC evidence.
-7. Run the release scanner with all required gates.
-8. Attach human smoke notes.
-9. Only then update release notes/wiki wording from runtime-pending to
+7. Collect both-map server/client/latejoin/HC evidence.
+8. Run the release scanner with all required gates.
+9. Attach human smoke notes.
+10. Only then update release notes/wiki wording from runtime-pending to
    release-proven.
 
 If the ASR/Ka-137 stop-condition errors recur on the exact proof runtime,
