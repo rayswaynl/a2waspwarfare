@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 19:10 Europe/Amsterdam
+Last updated: 2026-07-01 19:46 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -59,8 +59,9 @@ repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`153a513fb6511a4154f2ed825ba9ff2578c070e7`. Treat it as a separate broad lane,
-not as current-master runtime proof.
+`b4628c35afeef15a1703021e6171706a949e5afa`. Treat it as a separate broad lane,
+not as current-master runtime proof. Its latest local package validation is
+recorded below; the PR body still names an older package tuple.
 
 PR #126 is open again, draft, and GitHub reports it clean at
 `be1b83a7eca8ffe3d95d1584450fdf7d6ffdb954`. Its verified shippable pieces were
@@ -211,8 +212,50 @@ Validation performed:
   `passed = true` and `failed_count = 0`
 
 This kit is still not runtime proof. It is a repeatable packaging and evidence
-collection tool for the exact r8 candidate. Final release proof still requires
+collection tool for the exact PR #133 candidate. Final release proof still requires
 fresh real Arma 2 OA RPTs and human smoke notes from this exact kit.
+
+## PR #125 Current Head Artifact
+
+Fresh triage and packaging for PR #125 at 2026-07-01 19:46 Europe/Amsterdam:
+
+- PR: <https://github.com/rayswaynl/a2waspwarfare/pull/125>
+- branch: `codex/release-command-center-20260630`
+- head: `b4628c35afeef15a1703021e6171706a949e5afa`
+- base: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- artifact:
+  `outputs/a2waspwarfare-pr125-b4628c35-server-debug-missions.7z`
+- SHA256:
+  `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2`
+- size: `7158727` bytes
+- manifest:
+  `outputs/a2waspwarfare-pr125-b4628c35-server-debug-artifact-2026-07-01-1946.md`
+
+Validation:
+
+- GitHub reports PR #125 open, draft, and clean/mergeable against current
+  master.
+- `git diff --check origin/master..HEAD`: pass.
+- Added-line watched-token scan over maintained mission diff for A3-only tokens:
+  no added executable hits.
+- LoadoutManager `SERVER_DEBUG` exited `0` and reached `CHERNARUS DONE` and
+  `TAKISTAN DONE`.
+- Archive integrity and extraction validation pass with 160 folders, 1721 files,
+  and 24272901 uncompressed bytes.
+- Both extracted `version.sqf` files have `WF_DEBUG` commented out,
+  `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` with `git=b4628c35af`.
+- Extracted package scan for `AI_Commander_HCTopUp` / `HCTopUp.DRAFT`: no hits.
+- `Run-WaspFinalCheck.ps1` exits non-zero because the local active stress
+  overlay/RHUD-stressProof environment is absent or misaligned. The code
+  validation portions are mostly pass, with only the known manual
+  `find "Aircraft"` review item in both terrain A2 OA lint passes.
+
+This artifact is not runtime proof. It is a package/static validation result for
+the broad command-center branch if that branch is explicitly selected. The PR
+body still names an older SHA256 tuple
+`77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545`; treat the
+`b4628c35` / `D0BD2405...` tuple above as current local evidence until the PR
+body/wiki are refreshed or another package supersedes it.
 
 ## Current Master / r9 Reconciliation
 
@@ -224,7 +267,8 @@ Europe/Amsterdam:
   analysis still shows conflicts.
 - PR #125/command-center advanced to
   `0e2696f1cd831a36594836ccc7a395bd6637a0b4` and is now reported clean, but
-  remains a separate broad draft lane.
+  remains a separate broad draft lane. This entry is superseded by the 19:46
+  `b4628c35afeef15a1703021e6171706a949e5afa` package validation above.
 - PR #126/release-readiness exists at
   `5868dc91346c0d9ede6059460a88e8b75c28f762` and is reported clean, but
   remains a separate focused AICOM/source-doc lane.
@@ -380,13 +424,12 @@ Fresh triage at 2026-07-01 18:57 Europe/Amsterdam found:
   18:57 PR #133 checkpoint and still needs fresh diff/static/runtime triage
   before release selection.
 - PR #125: broad command-center/tooling lane at
-  `64cbc79b185d30193d3eed7b27cbdd5219550187`. GitHub reports it `DIRTY`
-  against the merged #132 master. It remains broad mission-affecting scope and
-  still needs fresh conflict/static/runtime triage before release selection.
-  Added-line A3-token scan hits docs/tooling and a string label in
-  `Tools/PrTestHarness/Overlays/pr8-stress/test/wasp_selftest.sqf`, not an
-  executable mission `params` command, but this lane is still too broad for a
-  Thursday selection without runtime proof.
+  `b4628c35afeef15a1703021e6171706a949e5afa`. GitHub reports it `CLEAN`
+  against merged #132 master, and package/static validation now exists with
+  artifact SHA256
+  `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2`.
+  It remains broad mission-affecting scope and is still too broad for a
+  Thursday selection without exact both-map runtime proof.
 - PR #129: release-readiness hub at
   `72888f22851871c8ed967a0fd29402a0c410c0bd`, 14 files and approximately
   `+188/-92`. It is mission-affecting in AICOM commander code, group GC,
@@ -656,7 +699,11 @@ ASR-enabled RPT proof.
 
 1. Treat PR #133 at `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0` as the current
    focused proof target for the static gate on top of merged #132, or merge
-   #133 first and rebuild from the new `origin/master`.
+   #133 first and rebuild from the new `origin/master`. If the owner explicitly
+   selects the broader command-center lane instead, use PR #125 at
+   `b4628c35afeef15a1703021e6171706a949e5afa` with artifact SHA256
+   `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2` as the
+   package/static starting point.
 2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
    prove latest `origin/master`.
 3. If current `origin/master` is chosen without #133, record an explicit static
@@ -667,17 +714,21 @@ ASR-enabled RPT proof.
    `B626E746774B9B350B9431923A975C9E0087CF330B3D35808D650A254D379DFB` and
    folder-smoke kit SHA256
    `A1359392F00141BD2502293F439123C7B6DDDD449C5DAAF2F5E38DE2015EBEC7`.
-5. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
+5. Do not use the stale PR #125 body hash
+   `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
+   current command-center package identity; it has been superseded locally by
+   the `b4628c35` / `D0BD2405...` artifact tuple above.
+6. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
    `96CD026F76E0828F584F243FEC2358C1D319CDEFAE5E69868B7394C89FC77171` no longer
    proves the latest master.
-6. Run the exact chosen artifact through folder-smoke or a controlled dedicated
+7. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
-7. Collect both-map server/client/latejoin/HC evidence.
-8. Run the release scanner with all required gates.
-9. Attach human smoke notes.
-10. Only then update release notes/wiki wording from runtime-pending to
+8. Collect both-map server/client/latejoin/HC evidence.
+9. Run the release scanner with all required gates.
+10. Attach human smoke notes.
+11. Only then update release notes/wiki wording from runtime-pending to
    release-proven.
 
 If the ASR/Ka-137 stop-condition errors recur on the exact proof runtime,
