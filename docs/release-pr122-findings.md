@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 16:19 Europe/Amsterdam
+Last updated: 2026-07-01 18:09 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -14,13 +14,13 @@ extracts, but the latest source delta currently fails the static whitespace
 gate before runtime proof is even considered.
 
 `origin/master` has advanced to
-`b7241a35f0460e92cf8839cd315c95defaa6380b`, which adds the cmdcon33/cmdcon34
-WEST founding and player placement follow-up fixes on top of the previous
-`5bf5f92385` master. A fresh current-master `SERVER_DEBUG` mission-folder
-artifact exists for this exact head, but it is packaging/tooling proof only and
-is blocked by `git diff --check` failures in both Chernarus and Takistan
-`Client/Init/Init_Client.sqf`. The older `5bf5f923`, `311b9d93`, PR #127-only,
-r9, r8, and PR #122 artifacts no longer prove the current master state.
+`7fd310c63c23e2a723ca24de7349b8235631db9d`, which currently differs from the
+previous `b7241a35f0460e92cf8839cd315c95defaa6380b` master by deleting
+`B57-SOAK-PROPOSALS.md` and `GUER_TECH.md`. The latest master source still
+inherits the cmdcon33/cmdcon34 placement-preview whitespace/static blocker in
+both Chernarus and Takistan `Client/Init/Init_Client.sqf`. The older
+`b7241a35`, `5bf5f923`, `311b9d93`, PR #127-only, r9, r8, and PR #122 artifacts
+no longer prove the current master state.
 Release-ready wording still needs current Arma 2 OA evidence from the exact
 chosen build, covering both Chernarus and Takistan plus server, client, late
 join, and headless-client roles.
@@ -30,7 +30,7 @@ join, and headless-client roles.
 - Repository: `rayswaynl/a2waspwarfare`
 - Base branch: `origin/master`
 - Current `origin/master` head:
-  `b7241a35f0460e92cf8839cd315c95defaa6380b`
+  `7fd310c63c23e2a723ca24de7349b8235631db9d`
 - Original PR #122 base head:
   `bd48a6dbe673ae47a88053dafdf948a29cb8dfe0`
 - PR #122 branch: `origin/feat/qol-polish-pack`
@@ -40,7 +40,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `84ed680c19a76df903316f25f808e86823639d42`
+  `029fb394337ef1c7a19b592db46e61a25f0d19c4`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -48,17 +48,23 @@ PR #124/#125/#126, was merged at
 series of cmdcon32, cmdcon33, and cmdcon34 follow-up fixes means the PR #127-only
 artifact is stale relative to the latest master artifact.
 
-GitHub currently reports PR #124 as open, draft, and `DIRTY`. The old r8 branch
-therefore needs conflict repair or replacement before it can be a current
-release candidate.
+GitHub currently reports PR #132 as open, non-draft, and clean at
+`b9b08eac7d4c8c0115cdab9a6e9e2f2566764eac`, based on the previous
+`b7241a35` master. It is a broad Build 83/cmdcon35 lane and is not current
+runtime proof until it is reviewed, selected, rebuilt, and proven with exact
+RPT evidence.
+
+GitHub currently reports PR #124 as open and draft with unknown merge state.
+The old r8 branch remains stale relative to current master and needs conflict
+repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`6756df2846c8da0a7e51eb0cda0e2aad61ca4cdf`. Treat it as a separate broad lane,
+`14b995d5f5ef19585aee286a9800cd6c4fab8e06`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also exists as an open draft release-readiness/AICOM guardrail lane at
-head `5fcacca74b4cac659f34de1be89fd972d6a017cd` after a force update. Its
+head `c148d0d6bb7dacc25acab2797d9e823b93c17ea4` after a force update. Its
 verified shippable pieces were folded through PR #127; keep the remaining branch
 separate unless it is rebased and revalidated.
 
@@ -68,15 +74,17 @@ docs-only, and overlaps PR #125 in shared AICOM commander files.
 
 PR #131 is the focused draft fix for the latest master static blocker. It is
 open, draft, and currently reported clean at head
-`2178b20d3ddcadda8dd9a01bf6a4c8e1db4ef793`. It only touches the Chernarus and
+`bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583`. It only touches the Chernarus and
 generated Takistan placement preview block in `Client/Init/Init_Client.sqf`,
-splitting the dense flat-ground expression into a `_flatSpots` count check. An
-exact PR #131 `SERVER_DEBUG` mission-folder artifact now exists for runtime
-collection at `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z`
-with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`.
-An exact PR #131 folder-smoke kit also exists at
-`outputs/a2waspwarfare-pr131-2178b20d-folder-smoke-kit.7z` with SHA256
-`C70F3E26961FE6FEC477B77D0FE46C98046AC756780D550B3EA297FB955F1F8C`.
+splitting the dense flat-ground expression into a `_flatSpots` count check. It
+was replayed onto `7fd310c63` after the two deleted docs made the old PR #131
+branch appear to re-add stale whitespace. An exact PR #131 `SERVER_DEBUG`
+mission-folder artifact now exists for runtime collection at
+`outputs/a2waspwarfare-pr131-bc297a63-server-debug-missions.7z` with SHA256
+`D2F3964F51A8A2647AD6A50D0BAD08016D3B35D513D41DB2A5CA931CFA483236`. An exact
+PR #131 folder-smoke kit also exists at
+`outputs/a2waspwarfare-pr131-bc297a63-folder-smoke-kit.7z` with SHA256
+`4FDCCAFE489802E4D2C6A31854F43452FCF333F766996A1E108889AFA9CE8687`.
 
 ## R8 Integration Finding
 
@@ -221,9 +229,10 @@ armor is still wanted, but after `origin/master` advanced to `311b9d936` it is
 now behind by four commits. If r9-narrow is chosen, rebase/rebuild it on the
 current master before using it as a proof target.
 
-## Latest Master Exact Artifact
+## Superseded b724 Master Exact Artifact
 
-An exact latest-master `SERVER_DEBUG` mission-folder artifact now exists:
+An exact `SERVER_DEBUG` mission-folder artifact was created for the now-stale
+`b7241a35f0460e92cf8839cd315c95defaa6380b` master:
 
 - source head: `b7241a35f0460e92cf8839cd315c95defaa6380b`
 - artifact: `outputs/a2waspwarfare-master-b7241a35-server-debug-missions.7z`
@@ -254,65 +263,99 @@ Static gate:
   `count (...) == 0` expression inside the lazy boolean chain. Treat this as a
   source-review/runtime-RPT risk until the line is simplified or exact runtime
   evidence proves it clean.
-- Draft PR #131, <https://github.com/rayswaynl/a2waspwarfare/pull/131>, is the
-  focused proposed fix. It passes `git diff --check origin/master..HEAD`,
-  reaches `CHERNARUS DONE` and `TAKISTAN DONE` in LoadoutManager
-  `SERVER_DEBUG`, and keeps the touched block mirrored between Chernarus and
-  generated Takistan.
-- PR #131 artifact:
+- Old draft PR #131 validation at `2178b20d3d` passed `git diff --check
+  origin/master..HEAD`, reached `CHERNARUS DONE` and `TAKISTAN DONE` in
+  LoadoutManager `SERVER_DEBUG`, and kept the touched block mirrored between
+  Chernarus and generated Takistan. This old branch/artifact is now superseded
+  by the refreshed `bc297a63` PR #131 validation below.
+- Superseded PR #131 artifact:
   `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z`, SHA256
   `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`,
   archive/extraction pass, 1719 files, and both extracted `version.sqf` files
   have `WF_RELEASE_MARKER` for `git=2178b20d3d`.
-- PR #131 folder-smoke kit:
+- Superseded PR #131 folder-smoke kit:
   `outputs/a2waspwarfare-pr131-2178b20d-folder-smoke-kit.7z`, SHA256
   `C70F3E26961FE6FEC477B77D0FE46C98046AC756780D550B3EA297FB955F1F8C`,
   archive/extraction pass, script parse pass, install rehearsal pass, evidence
   template generation pass, and synthetic release-gate package validation pass.
 
-This artifact supersedes the `5bf5f923`, `311b9d93`, and PR #127-only artifacts
-as the freshest exact current-master payload. It is still not runtime proof, and
-the current source static gate is failing.
+This artifact superseded the `5bf5f923`, `311b9d93`, and PR #127-only artifacts
+at the time, but it is now stale relative to current master
+`7fd310c63c23e2a723ca24de7349b8235631db9d`.
+
+## Current PR #131 Exact Artifact And Kit
+
+PR #131 has been refreshed onto current master
+`7fd310c63c23e2a723ca24de7349b8235631db9d`:
+
+- PR #131 head: `bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583`
+- Source diff over current master: exactly the two terrain copies of
+  `Client/Init/Init_Client.sqf`
+- `git diff --check origin/master..HEAD`: pass
+- LoadoutManager `SERVER_DEBUG`: exit `0`
+- LoadoutManager reached `CHERNARUS DONE`
+- LoadoutManager reached `TAKISTAN DONE`
+
+Exact artifact:
+
+- artifact:
+  `outputs/a2waspwarfare-pr131-bc297a63-server-debug-missions.7z`
+- SHA256:
+  `D2F3964F51A8A2647AD6A50D0BAD08016D3B35D513D41DB2A5CA931CFA483236`
+- size: `7139836` bytes
+- archive test: pass
+- extraction validation: pass, 160 folders, 1719 files, 24061939 bytes
+- both extracted `version.sqf` files have `WF_DEBUG` commented out,
+  `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` for `git=bc297a6323`
+
+Exact folder-smoke kit:
+
+- kit:
+  `outputs/a2waspwarfare-pr131-bc297a63-folder-smoke-kit.7z`
+- SHA256:
+  `4FDCCAFE489802E4D2C6A31854F43452FCF333F766996A1E108889AFA9CE8687`
+- size: `7167874` bytes
+- archive test: pass, 165 folders, 1730 files, 24111675 bytes
+- extracted-kit validation: pass
+- six kit PowerShell scripts parse
+- staging and extracted install rehearsals pass
+- smoke evidence template generation pass
+- synthetic release-gate collector/scanner/package rehearsal pass with
+  `failed_count = 0`
+
+This artifact and kit are still not runtime proof. They are the current exact
+payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 16:19 Europe/Amsterdam found these current draft
-lanes all based on `b7241a35f0460e92cf8839cd315c95defaa6380b`:
+Fresh triage at 2026-07-01 18:09 Europe/Amsterdam found:
 
 - PR #131: focused placement-preview static fix, clean at
-  `2178b20d3ddcadda8dd9a01bf6a4c8e1db4ef793`. This remains the release-critical
+  `bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583`. This remains the release-critical
   unblocker because current `origin/master` still fails `git diff --check` from
   `5bf5f92385` in both terrain copies of `Client/Init/Init_Client.sqf`.
 - PR #126: medium source risk, high release-gate risk until runtime proof exists.
-  It changes 15 files: 14 mirrored Chernarus/Takistan SQF files plus a release
-  task document. It adds group-budget warning throttles/recovery markers,
-  HC drop/reconnect AICOM audit markers, and late-JIP pushes for population tier
-  and side-keyed AICOM status variables. `git diff --check
-  origin/master..origin/codex/release-readiness-20260701` passes, and the seven
-  touched Chernarus/Takistan SQF file pairs are byte-identical at the PR head.
-  It does not touch the #131 `Init_Client.sqf` static blocker and is not a
-  substitute for #131.
+  It advanced to `c148d0d6bb7dacc25acab2797d9e823b93c17ea4`. Re-triage this
+  new head before selecting it; the earlier 16:19 source-risk finding applies
+  only to `5fcacca74b4cac659f34de1be89fd972d6a017cd`.
 - PR #125: broad command-center/tooling lane at
-  `6756df2846c8da0a7e51eb0cda0e2aad61ca4cdf`, 127 files and approximately
-  `+13499/-670`. It is mission-affecting across client/common/server SQF,
-  AICOM/PV handlers, release harness tooling, docs, and server config. Its
-  package/provenance claims need exact logs/artifacts tied to this head before
-  they can be used as release evidence.
+  `14b995d5f5ef19585aee286a9800cd6c4fab8e06`. Re-triage this new head before
+  selecting it; the earlier 16:19 overlap finding applies to
+  `6756df2846c8da0a7e51eb0cda0e2aad61ca4cdf`.
 - PR #129: release-readiness hub at
   `72888f22851871c8ed967a0fd29402a0c410c0bd`, 14 files and approximately
   `+188/-92`. It is mission-affecting in AICOM commander code, group GC,
   briefings, and release docs. Its docs mention older base context, so treat
   GitHub metadata and fresh local diff checks as authoritative.
+- PR #132: broad Build 83/cmdcon35 lane at
+  `b9b08eac7d4c8c0115cdab9a6e9e2f2566764eac`. It is clean on GitHub but broad
+  enough to need separate diff/static/generator/runtime review before it can
+  replace the focused #131 path.
 
-PR #125 and PR #129 are not stacked. Their merge base is current `origin/master`,
-and synthetic merge analysis reports changed-in-both/conflict risk in shared
-AICOM files, especially `AI_Commander_PlayerArty.sqf` and
-`AI_Commander_Teams.sqf` on both terrains. Key divergence includes
-`AICOMHB|v1|` versus `AICOMHB|v2|`, different PlayerArty validation,
-hardcoded/throttled group-cap behavior versus configurable
-`WFBE_C_AICOM_GROUP_CAP`, and duplicate starved-infantry fallback handling.
-Do not combine #125 and #129 for Thursday without explicit conflict resolution,
-LoadoutManager regeneration/validation, new artifacts, and fresh real RPT proof.
+PR #125 and PR #129 were not stacked at the 16:19 triage point and overlapped
+in shared AICOM files. Because PR #125 has advanced since then, do not combine
+#125 and #129 for Thursday without fresh conflict analysis, LoadoutManager
+regeneration/validation, new artifacts, and fresh real RPT proof.
 
 ## Superseded Latest Master Exact Artifact
 
@@ -533,7 +576,7 @@ ASR-enabled RPT proof.
 
 ## Recommended Next Path
 
-1. Treat PR #131 at `2178b20d3ddcadda8dd9a01bf6a4c8e1db4ef793` as the current
+1. Treat PR #131 at `bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583` as the current
    focused proof target if the static fix is selected, or merge #131 first and
    rebuild from the new `origin/master`.
 2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
@@ -543,9 +586,9 @@ ASR-enabled RPT proof.
    `F2652CCDFF6085D73461C4FAADE4422D667F7FD245BE87556746A2CDA569545E`, but the
    source static gate is failing.
 4. If #131 is chosen, use artifact SHA256
-   `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D` and
+   `D2F3964F51A8A2647AD6A50D0BAD08016D3B35D513D41DB2A5CA931CFA483236` and
    folder-smoke kit SHA256
-   `C70F3E26961FE6FEC477B77D0FE46C98046AC756780D550B3EA297FB955F1F8C`.
+   `4FDCCAFE489802E4D2C6A31854F43452FCF333F766996A1E108889AFA9CE8687`.
 5. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
