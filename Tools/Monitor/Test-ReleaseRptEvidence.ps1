@@ -19,6 +19,7 @@ param(
     [switch] $RequirePr122Markers,
     [switch] $RequireAicomTelemetry,
     [switch] $RequireHcRegistry,
+    [switch] $RequireBothTerrains,
     [string] $OutputJson,
     [string] $OutputSummaryJson
 )
@@ -40,6 +41,8 @@ $stopPatterns = @(
 
 $markerPatterns = @(
     @{ Name = 'startup_mission_name'; Pattern = '## Mission Name' },
+    @{ Name = 'mission_chernarus'; Pattern = '## Mission Name: .*Chernarus' },
+    @{ Name = 'mission_takistan'; Pattern = '## Mission Name: .*Takistan' },
     @{ Name = 'startup_build'; Pattern = '## Build' },
     @{ Name = 'log_content'; Pattern = '## LOG CONTENT' },
     @{ Name = 'log_content_not_activated'; Pattern = '## LOG CONTENT : \[NOT ACTIVATED\]' },
@@ -228,14 +231,20 @@ $requirements = New-Object System.Collections.ArrayList
 [void]$requirements.Add((New-Object psobject -Property @{
     name = 'aicom_telemetry'
     required = [bool]$RequireAicomTelemetry
-    passed = (-not $RequireAicomTelemetry -or ($aggregateMarkers['aicom_event'] -gt 0 -and $aggregateMarkers['commander_status'] -gt 0))
-    detail = "aicom_event=$($aggregateMarkers['aicom_event']); commander_status=$($aggregateMarkers['commander_status']); team_founded=$($aggregateMarkers['team_founded'])"
+    passed = (-not $RequireAicomTelemetry -or ($aggregateMarkers['aicom_event'] -gt 0 -and $aggregateMarkers['commander_status'] -gt 0 -and $aggregateMarkers['team_founded'] -gt 0 -and ($aggregateMarkers['assault_dispatch'] -gt 0 -or $aggregateMarkers['combat_status'] -gt 0)))
+    detail = "aicom_event=$($aggregateMarkers['aicom_event']); commander_status=$($aggregateMarkers['commander_status']); team_founded=$($aggregateMarkers['team_founded']); assault_dispatch=$($aggregateMarkers['assault_dispatch']); combat_status=$($aggregateMarkers['combat_status'])"
 }))
 [void]$requirements.Add((New-Object psobject -Property @{
     name = 'hc_registry'
     required = [bool]$RequireHcRegistry
     passed = (-not $RequireHcRegistry -or ($aggregateMarkers['hc_connect'] -gt 0 -and $aggregateMarkers['hc_group_civilian'] -gt 0 -and $aggregateMarkers['hc_register_true'] -gt 0 -and $aggregateMarkers['hc_connect_skip'] -eq 0))
     detail = "connect=$($aggregateMarkers['hc_connect']); group_civilian=$($aggregateMarkers['hc_group_civilian']); register_true=$($aggregateMarkers['hc_register_true']); connect_skip=$($aggregateMarkers['hc_connect_skip'])"
+}))
+[void]$requirements.Add((New-Object psobject -Property @{
+    name = 'both_terrain_windows'
+    required = [bool]$RequireBothTerrains
+    passed = (-not $RequireBothTerrains -or ($aggregateMarkers['mission_chernarus'] -gt 0 -and $aggregateMarkers['mission_takistan'] -gt 0))
+    detail = "chernarus=$($aggregateMarkers['mission_chernarus']); takistan=$($aggregateMarkers['mission_takistan'])"
 }))
 
 $requiredFailures = @($requirements | Where-Object { $_.required -and -not $_.passed })
