@@ -856,7 +856,13 @@ waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "w
 [] Call Compile preprocessFile "briefing.sqf";
 
 //--- HQ Radio system.
-if (sideJoined != resistance) then {
+//--- claude/guer-radio-announcer: BLUFOR/OPFOR always register the radio kb topic here so they hear the
+//--- town/camp/hostiles announcer voices; resistance was hard-excluded, so playable GUER players got none of
+//--- them. Include resistance when the GUER faction is playable (WFBE_C_GUER_PLAYERSIDE>0) - the server now
+//--- builds the matching wfbe_radio_hq speaker on WFBE_L_GUE under the same gate (Init_Server.sqf), so the
+//--- waitUntil below resolves. west/east and the civilian pass-through keep their exact previous behaviour;
+//--- resistance stays skipped (sideHQ=objNull) when GUER is AI-defender-only (no human resistance slots exist).
+if ((sideJoined != resistance) || {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_radio_hq"}};
 _HQRadio = WFBE_Client_Logic getVariable "wfbe_radio_hq";
 ["INITIALIZATION", Format["Init_Client.sqf: Initialized the Radio Announcer [%1]", _HQRadio]] Call WFBE_CO_FNC_LogContent;
