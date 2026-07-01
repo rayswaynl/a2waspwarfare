@@ -289,6 +289,30 @@ function Test-PvfIntegrity {
 	Add-Result "PVF registration/handlers" ($missing.Count -eq 0 -and $allowlists -and $dispatchChecks -and $directClientAllowed) ($(if ($missing.Count) { $missing -join "; " } else { "Core PR8 server PVF channels are registered and have handlers. allowlists=$allowlists dispatchChecks=$dispatchChecks directClientAllowed=$directClientAllowed" }))
 }
 
+function Test-SideSupplyAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_ChangeSideSupply.sqf"
+		$commonPath = Join-Path $entry.Root "Common\Functions\Common_ChangeSideSupply.sqf"
+		$server = Get-Text $serverPath
+		$common = Get-Text $commonPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$commonCode = [regex]::Replace($common, "//.*", "")
+		if (-not $server.Contains("WFBE_SE_FNC_HandleSideSupplyChange")) { $missing += "$($entry.Terrain):helper" }
+		if (-not ($server.Contains('typeName _payload != "ARRAY"') -and $server.Contains("count _payload < 3"))) { $missing += "$($entry.Terrain):payload-shape" }
+		if (-not ($server.Contains('typeName _side != "SIDE"') -and $server.Contains("_side != _expectedSide"))) { $missing += "$($entry.Terrain):side-channel" }
+		if (-not $server.Contains('typeName _amount != "SCALAR"')) { $missing += "$($entry.Terrain):amount-type" }
+		if (-not ($server.Contains('[_this, west] Call WFBE_SE_FNC_HandleSideSupplyChange') -and $server.Contains('[_this, resistance] Call WFBE_SE_FNC_HandleSideSupplyChange') -and $server.Contains('[_this, east] Call WFBE_SE_FNC_HandleSideSupplyChange'))) { $missing += "$($entry.Terrain):handler-wiring" }
+		if ($serverCode.Contains("_currentSupply - _amount") -or $commonCode.Contains("_currentSupply - _amount")) { $missing += "$($entry.Terrain):old-negative-floor" }
+	}
+	Add-Result "Side-supply channel authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-HcPvfGuard {
 	$handle = Get-Text (Join-Path $missionRoot "Client\Functions\Client_HandlePVF.sqf")
 	$town = Get-Text (Join-Path $missionRoot "Client\PVFunctions\TownCaptured.sqf")
@@ -763,6 +787,7 @@ Test-AARadarHasNoWalls
 Test-WddmInstantStaticCrew
 Test-WddmAnchorClassValidity
 Test-PvfIntegrity
+Test-SideSupplyAuthorityGuard
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups
 Test-GuiImageTabGuard
