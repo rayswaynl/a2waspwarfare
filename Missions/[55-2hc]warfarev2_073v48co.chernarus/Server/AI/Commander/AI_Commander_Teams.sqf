@@ -21,7 +21,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
-              "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger"]; //--- B66
+              "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger","_pendingToken","_pendingTokens"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -152,6 +152,11 @@ if (_pending > 0) then {
 	if ((time - _pendSince) > (missionNamespace getVariable ["WFBE_C_AICOM_PENDING_TIMEOUT", 270])) then {
 		_pending = _pending - 1;
 		_logik setVariable ["wfbe_aicom_pending", _pending];
+		_pendingTokens = _logik getVariable ["wfbe_aicom_pending_tokens", []];
+		if (count _pendingTokens > 0) then {
+			_pendingTokens set [0, "__AICOM_TOKEN_REAPED__"];
+			_logik setVariable ["wfbe_aicom_pending_tokens", _pendingTokens - ["__AICOM_TOKEN_REAPED__"]];
+		};
 		if (_pending > 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]} else {_logik setVariable ["wfbe_aicom_pending_since", -1]};
 		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP|pending->" + str _pending + "|reason=ack-timeout");
 	};
@@ -876,6 +881,9 @@ if (count _live > 0) then {
 	};
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
 	if (_pending <= 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]};
+	_pendingTokens = _logik getVariable ["wfbe_aicom_pending_tokens", []];
+	_pendingToken = Format ["%1:%2:%3:%4", _sideID, round (time * 100), floor (random 1000000), _pick];
+	_logik setVariable ["wfbe_aicom_pending_tokens", _pendingTokens + [_pendingToken]];
 	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
 	//--- all live HCs, and the server RPT should show the split without reading HC RPTs.
 	//--- Commander teams are the BIG atomic lumps (a whole platoon lands on ONE HC), so
@@ -942,8 +950,9 @@ if (count _live > 0) then {
 	if (!isNil "_pick" && {typeName _pick == "SCALAR"} && {_pick >= 0}) then {_foundType = _pick};
 	//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): append the is-jet-team flag + runway heading as trailing delegate args (slots
 	//--- 8/9 of the inner array; after HandleSpecial strips the leading string they land at Common_RunCommanderTeam _this indices 7/8).
-	//--- Purely additive - every other delegate reader ignores them (count-guarded), so ground/heli founding is byte-identical.
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir]] Call WFBE_CO_FNC_SendToClient;
+	//--- WP12: append the server-minted pending token after those (Common_RunCommanderTeam index 9). Only a null-group
+	//--- creation-failure ack with this token may release the pending slot; registered team-ended remains group-bound.
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir, _pendingToken]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

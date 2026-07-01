@@ -151,7 +151,7 @@ while {!WFBE_GameOver} do {
 										} else {
 											if ((time - _baseSeen) >= _baseTimeout) then {
 												//--- RE-TASK toward the front (always; never leave it idle).
-												_baseSeq = (([_baseG, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetBool) select 0) + 1;
+												_baseSeq = (([_baseG, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetValue) select 0) + 1;
 												_baseG setVariable ["wfbe_aicom_order", [_baseSeq, "towns-target", _baseFrontPos], true];
 												//--- RE-ADOPT into the commander only while UNDER the side cap (else just re-task).
 												if (!isNull _baseLogik && {_baseFounded < _baseCap} && {!(_baseG in _baseTeams)}) then {

@@ -54,7 +54,7 @@ _assigned = [];
 	if (!isNull _team) then {
 		if (({alive _x} count (units _team)) > 0) then {
 			private ["_curOrd","_curTgt"];
-			_curOrd = _team getVariable ["wfbe_aicom_townorder", []];
+			_curOrd = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetValue;
 			if (count _curOrd >= 1) then {
 				_curTgt = _curOrd select 0;
 				if (typeName _curTgt == "OBJECT" && {!isNull _curTgt}) then {
@@ -88,9 +88,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- (Hook A latch), resolve exactly one ARRIVED (leader within arrive-radius of the town) or
 	//--- STRANDED (timeout exceeded, still far). Latched by wfbe_aicom_dispatch_open so it fires
 	//--- once per dispatch; a re-dispatch in Hook A re-opens the latch. Logging only, no behaviour.
-	if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
+	if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {
 		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed"];
-		_dord = _team getVariable ["wfbe_aicom_townorder", []];
+		_dord = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetValue;
 		if (count _dord >= 2) then {
 			_dtgt = _dord select 0;
 			_dt0  = _dord select 1;
@@ -119,8 +119,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			};
 		};
 	};
-	_autonomous = _team getVariable ["wfbe_autonomous", false];
-	_modeNow = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+	_autonomous = [_team, "wfbe_autonomous", false] Call WFBE_CO_FNC_GroupGetBool;
+	_modeNow = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue);
 	_canDrive = false;
 	_explicitMode = false;
 	//--- MANUAL-PIN (Build83, claude-gaming 2026-07-01): a team a HUMAN just ordered from the war-room console
@@ -175,7 +175,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					[_team, "defense"] Call SetTeamMoveMode;
 					[_team, getPos _hqG] Call SetTeamMovePos;
 					//--- V0.3: HC-resident teams get their orders via the public order variable.
-					if (_team getVariable ["wfbe_aicom_hc", false]) then {
+					if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _hqG], true];
 					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
@@ -185,8 +185,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			};
 		};
 		if (!_explicitMode) then {
-			_mode = _team getVariable ["wfbe_teammode", ""];
-			_goto = _team getVariable ["wfbe_teamgoto", objNull];
+			_mode = [_team, "wfbe_teammode", ""] Call WFBE_CO_FNC_GroupGetValue;
+			_goto = [_team, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetValue;
 
 			//--- V0.4.2 churn fix: orders are STICKY. Retarget only when the team has no
 			//--- valid enemy-town target, the target resolved (we captured it), or the team
@@ -203,7 +203,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if ((_goto getVariable "sideID") == _sideID) then {
 							_needs = true;
 						} else {
-							_ord = _team getVariable ["wfbe_aicom_townorder", []];
+							_ord = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetValue;
 							if (count _ord < 3 || {(_ord select 0) != _goto}) then {
 								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
@@ -224,7 +224,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										//--- (teleport-nudge to nearest clear road node, no player nearby). The strike
 										//--- rides on the order broadcast below; the executor reads wfbe_aicom_unstuck.
 										private ["_strk"];
-										_strk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
+										_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetValue) + 1;
 										_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
 										diag_log (Format ["STUCKSTAT|v1|%1|%2|stuck|leader=%3|distStart=%4|distTgt=%5|reissue|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance (_ord select 2)), round (_ldr distance _goto), _strk]);
 										//--- WAVE-1 CAUSE-2 TARGET-ABANDON: a team grinding one unreachable/unflippable town forever
@@ -236,7 +236,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])) then {
 											private ["_abCd","_abBl","_abKeep"];
 											_abCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
-											_abBl = _team getVariable ["wfbe_aicom_blacklist", []];
+											_abBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetValue;
 											//--- prune expired entries + drop any prior entry for _goto, then add a fresh one.
 											_abKeep = [];
 											{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_abKeep set [count _abKeep, _x]} } forEach _abBl;
@@ -330,7 +330,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- if excluding the blacklist would leave NO uncaptured town, clear the blacklist and fall back
 					//--- to the full list so the team always gets a target (never idle). _blTowns gates the spearhead
 					//--- pick too; bootstrap (0-town opening rush) is exempt - it never reaches here.
-					_blList = _team getVariable ["wfbe_aicom_blacklist", []];
+					_blList = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetValue;
 					_blKeep = [];
 					_blTowns = [];
 					{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_blKeep set [count _blKeep, _x]; _blTowns set [count _blTowns, (_x select 0)]} } forEach _blList;
@@ -418,7 +418,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					if (!isNull _target) then {
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
-						if (_team getVariable ["wfbe_aicom_hc", false]) then {
+						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
 							//--- server-side waypoint commands on remote groups are unreliable.
 							//--- ROAD-MARCH (task #14/#16): the executor turns a bare wfbe_aicom_order
@@ -432,7 +432,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							_hcLdr    = leader _team;
 							_hcOrigin = getPos _hcLdr;
 							_hcDest   = getPos _target;
-							_hcStrk   = _team getVariable ["wfbe_aicom_stuckstrikes", 0];
+							_hcStrk   = [_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetValue;
 							//--- Build up to N road-snapped waypoints evenly between origin and dest.
 							//--- Each guess is the straight-line fraction point; we snap it to the nearest
 							//--- real road node (nearRoads) so the convoy follows lanes A2 PFM can drive.
@@ -471,8 +471,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- failure is logged + the team deliberately re-tasked. A NEW target (front rolled, target
 						//--- captured) legitimately resets the clock. The unstuck strike ladder still rides along.
 						private ["_priorOrd","_priorOpen","_dispT0","_sameTgt"];
-						_priorOrd  = _team getVariable ["wfbe_aicom_townorder", []];
-						_priorOpen = _team getVariable ["wfbe_aicom_dispatch_open", false];
+						_priorOrd  = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetValue;
+						_priorOpen = [_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool;
 						_sameTgt   = (count _priorOrd >= 1) && {(typeName (_priorOrd select 0)) == "OBJECT"} && {(_priorOrd select 0) == _target};
 						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorOrd select 1} else {time};
 						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team)]];

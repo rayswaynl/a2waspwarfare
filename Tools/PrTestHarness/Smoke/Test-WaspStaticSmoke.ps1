@@ -409,6 +409,8 @@ function Test-AicomTeamLifecycleAuthorityGuard {
 		$runner = Get-Text $runnerPath
 		$serverCode = [regex]::Replace($server, "//.*", "")
 		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$runnerCode = [regex]::Replace($runner, "//.*", "")
+		$runnerCode = [regex]::Replace($runnerCode, "/\*[\s\S]*?\*/", "")
 		$headingBlock = ""
 		$headingStart = $serverCode.IndexOf('case "aicom-team-heading"')
 		if ($headingStart -ge 0) {
@@ -417,13 +419,13 @@ function Test-AicomTeamLifecycleAuthorityGuard {
 				$headingBlock = $serverCode.Substring($headingStart, $headingEnd - $headingStart)
 			}
 		}
-		if (-not ($runner.Contains('setVariable ["wfbe_aicom_sideid", _sideID, true]') -and $runner.Contains('["aicom-heli-refunded", _sID, _cost, _tm, _htype]'))) { $missing += "$($entry.Terrain):sender-team-binding" }
-		if (-not ($server.Contains('_validateAicomManagedTeamForSide') -and $server.Contains('WFBE_CO_FNC_GroupGetBool') -and $server.Contains('wfbe_aicom_sideid'))) { $missing += "$($entry.Terrain):managed-team-validator" }
-		if (-not ($server.Contains('count _args < 3') -and $server.Contains('rejected malformed aicom-team-created') -and $server.Contains('rejected untrusted aicom-team-created') -and $server.Contains('rejected duplicate aicom-team-created'))) { $missing += "$($entry.Terrain):created-guard" }
-		if (-not ($server.Contains('rejected malformed aicom-team-ended') -and $server.Contains('rejected untrusted aicom-team-ended') -and $server.Contains('rejected unregistered aicom-team-ended') -and $server.Contains('rejected live aicom-team-ended') -and $server.Contains('typeName _x == "ARRAY"') -and $server.Contains('count _x >= 4'))) { $missing += "$($entry.Terrain):ended-guard" }
-		if (-not ($server.Contains('rejected malformed aicom-team-heading') -and $server.Contains('typeName _hdir != "SCALAR"') -and $server.Contains('rejected untrusted aicom-team-heading') -and $server.Contains('rejected unregistered aicom-team-heading'))) { $missing += "$($entry.Terrain):heading-guard" }
+		if (-not ($runnerCode.Contains('setVariable ["wfbe_aicom_sideid", _sideID, true]') -and $runnerCode.Contains('setVariable ["wfbe_aicom_transport_team", _team, true]') -and $runnerCode.Contains('setVariable ["wfbe_aicom_transport_type", typeOf _airVeh, true]') -and $runnerCode.Contains('count _this > 9') -and $runnerCode.Contains('["aicom-team-ended", _sideID, grpNull, _pendingToken]') -and $runnerCode.Contains('["aicom-team-created", _sideID, _team, _pendingToken]') -and $runnerCode.Contains('["aicom-heli-refunded", _sID, _h, _tm, _htype]'))) { $missing += "$($entry.Terrain):sender-team-binding" }
+		if (-not ($serverCode.Contains('_validateAicomManagedTeamForSide') -and $serverCode.Contains('WFBE_CO_FNC_GroupGetBool') -and $serverCode.Contains('wfbe_aicom_sideid') -and $serverCode.Contains('_consumeAicomPendingToken') -and $serverCode.Contains('wfbe_aicom_pending_tokens'))) { $missing += "$($entry.Terrain):managed-team-validator" }
+		if (-not ($serverCode.Contains('count _args < 3') -and $serverCode.Contains('rejected malformed aicom-team-created') -and $serverCode.Contains('rejected untrusted aicom-team-created') -and $serverCode.Contains('rejected duplicate aicom-team-created') -and $serverCode.Contains('rejected stale aicom-team-created pending token'))) { $missing += "$($entry.Terrain):created-guard" }
+		if (-not ($serverCode.Contains('rejected malformed aicom-team-ended') -and $serverCode.Contains('rejected untrusted aicom-team-ended') -and $serverCode.Contains('rejected unregistered aicom-team-ended') -and $serverCode.Contains('rejected live aicom-team-ended') -and $serverCode.Contains('rejected unauthenticated aicom-team-ended pending release') -and $serverCode.Contains('rejected stale aicom-team-ended pending release token') -and $serverCode.Contains('typeName _x == "ARRAY"') -and $serverCode.Contains('count _x >= 4'))) { $missing += "$($entry.Terrain):ended-guard" }
+		if (-not ($serverCode.Contains('rejected malformed aicom-team-heading') -and $serverCode.Contains('typeName _hdir != "SCALAR"') -and $serverCode.Contains('rejected untrusted aicom-team-heading') -and $serverCode.Contains('rejected unregistered aicom-team-heading'))) { $missing += "$($entry.Terrain):heading-guard" }
 		if ($headingBlock.Contains('(_args select 1) select 0')) { $missing += "$($entry.Terrain):raw-heading-select" }
-		if (-not ($server.Contains('count _args < 5') -and $server.Contains('typeName _rCost != "SCALAR"') -and $server.Contains('typeName _rTeam != "GROUP"') -and $server.Contains('typeName _rType != "STRING"') -and $server.Contains('_rCost <= _rMaxCost') -and $server.Contains('rejected untrusted aicom-heli-refunded') -and $server.Contains('rejected unregistered aicom-heli-refunded'))) { $missing += "$($entry.Terrain):refund-guard" }
+		if (-not ($serverCode.Contains('count _args < 5') -and $serverCode.Contains('typeName _rVeh != "OBJECT"') -and $serverCode.Contains('typeName _rTeam != "GROUP"') -and $serverCode.Contains('typeName _rType != "STRING"') -and $serverCode.Contains('typeOf _rVeh != _rType') -and $serverCode.Contains('group (driver _rVeh) != _rTeam') -and $serverCode.Contains('wfbe_aicom_transport_refunded') -and $serverCode.Contains('_rCost = _rMaxCost') -and $serverCode.Contains('rejected untrusted aicom-heli-refunded') -and $serverCode.Contains('rejected unregistered aicom-heli-refunded') -and $serverCode.Contains('rejected aicom-heli-refunded transport not off-map'))) { $missing += "$($entry.Terrain):refund-guard" }
 	}
 	Add-Result "AICOM lifecycle/refund authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
@@ -480,29 +482,35 @@ function Test-AicomGroupVariableDefaults {
 		$runTeamPath = Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf"
 		$initCommonPath = Join-Path $entry.Root "Common\Init\Init_Common.sqf"
 		$commanderDir = Join-Path $entry.Root "Server\AI\Commander"
+		$groupDefaultScanPaths = @(
+			$runTeamPath,
+			(Join-Path $entry.Root "Server\FSM\server_groupsGC.sqf"),
+			(Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf")
+		)
 		$execute = Get-Text $executePath
 		$commander = Get-Text $commanderPath
 		$runTeam = Get-Text $runTeamPath
 		$initCommon = Get-Text $initCommonPath
 		if (-not $initCommon.Contains("WFBE_CO_FNC_GroupGetValue = Compile preprocessFileLineNumbers")) { $missing += "$($entry.Terrain):group-get-value-helper" }
-		if (-not $execute.Contains('[_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-mode" }
-		if (-not $execute.Contains('[_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-goto" }
-		if (-not $execute.Contains('[_team, "wfbe_exec_lastmode", ""] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-lastmode" }
-		if (-not $execute.Contains('[_team, "wfbe_exec_lastgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-lastgoto" }
-		if (-not $execute.Contains('[_team, "wfbe_exec_at", -1e9] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-at" }
+		if (-not $execute.Contains('[_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-mode" }
+		if (-not $execute.Contains('[_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-goto" }
+		if (-not $execute.Contains('[_team, "wfbe_exec_lastmode", ""] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-lastmode" }
+		if (-not $execute.Contains('[_team, "wfbe_exec_lastgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-lastgoto" }
+		if (-not $execute.Contains('[_team, "wfbe_exec_at", -1e9] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-at" }
 		if ($execute.Contains('_team getVariable ["wfbe_teammode", "towns"]') -or $execute.Contains('_team getVariable ["wfbe_teamgoto", [0,0,0]]') -or $execute.Contains('_team getVariable ["wfbe_exec_sig", []') -or $execute.Contains('_team getVariable ["wfbe_exec_lastmode", "') -or $execute.Contains('_team getVariable ["wfbe_exec_lastgoto", [0,0,0]]') -or $execute.Contains('_team getVariable ["wfbe_exec_at", -1e9]')) { $missing += "$($entry.Terrain):execute-raw-group-default" }
 		if ($commander.Contains('wfbe_exec_sig')) { $missing += "$($entry.Terrain):commander-old-exec-sig" }
 		if (-not $commander.Contains('_x setVariable ["wfbe_exec_lastmode", ""]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_lastgoto", [0,0,0]]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_at", -1e9]')) { $missing += "$($entry.Terrain):commander-latch-reset" }
-		if (-not $runTeam.Contains('[_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):capture-pass-helper" }
+		if (-not $runTeam.Contains('[_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):capture-pass-helper" }
 		if ($runTeam.Contains('_team getVariable ["wfbe_aicom_cappasses", 0]')) { $missing += "$($entry.Terrain):capture-pass-raw-group-default" }
-		foreach ($file in Get-ChildItem -LiteralPath $commanderDir -Filter "*.sqf" -File) {
+		$groupDefaultScanPaths += (Get-ChildItem -LiteralPath $commanderDir -Filter "*.sqf" -File | ForEach-Object { $_.FullName })
+		foreach ($filePath in $groupDefaultScanPaths) {
 			$lineNumber = 0
 			$inBlockComment = $false
-			foreach ($line in [System.IO.File]::ReadLines($file.FullName)) {
+			foreach ($line in [System.IO.File]::ReadLines($filePath)) {
 				$lineNumber++
 				$code = Remove-StringLiterals (Remove-CodeComments $line ([ref]$inBlockComment))
-				if ($code -match '\b(_team|_grp|_riGrp|_wTeam|_free|_best|_cand)\s+getVariable\s+\[') {
-					$missing += "$($entry.Terrain):commander-raw-group-default:$($file.Name):$lineNumber"
+				if ($code -match '\b(_team|_grp|_riGrp|_wTeam|_free|_best|_cand|_candidate|_cteam|_hteam|_rTeam|_tm)\s+getVariable\s+\[') {
+					$missing += "$($entry.Terrain):raw-group-default:$([System.IO.Path]::GetFileName($filePath)):$lineNumber"
 				}
 			}
 		}

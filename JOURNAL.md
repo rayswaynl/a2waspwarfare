@@ -1,5 +1,43 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM pending-token and transport-refund authority [RELEASE LOOP]
+
+Closed the next AICOM authority slice before runtime collection. HC team
+dispatches now carry a server-minted `wfbe_aicom_pending_tokens` entry through
+`delegate-aicom-team`; `aicom-team-created` consumes it when present, and a
+`grpNull` `aicom-team-ended` creation-failure release must echo a real token
+before it can decrement `wfbe_aicom_pending`. Tokenless null-team releases now
+log as unauthenticated instead of freeing a pending slot.
+
+Transport fly-off refunds are now object-bound instead of cost-string-bound.
+The HC stamps each AICOM transport with side/team/type metadata, sends the live
+transport object to the server before deletion, and the server verifies the
+object is a live off-map AICOM transport with the expected side, team, type and
+driver before computing the refund from mission unit data. The transport object
+is latched with `wfbe_aicom_transport_refunded` before treasury credit so replay
+messages cannot double-credit.
+
+LoadoutManager mirrored Chernarus to Takistan and rebuilt `_MISSIONS.7z`.
+`Test-WaspStaticSmoke.ps1` and `Run-WaspFinalCheck.ps1` passed with both
+terrain A2/OA lints at `FAIL 0 / REVIEW 0` and BugHunt HIGH clean. No runtime,
+SSH, RPT collection, upload, restart or deploy action was performed.
+
+## 2026-07-01 — AICOM commander group-default sweep [RELEASE LOOP]
+
+Closed the next AICOM-safe read slice in the maintained Chernarus source. Added
+`WFBE_CO_FNC_GroupGetValue` for non-boolean group variables so strings, arrays,
+objects, positions and counters keep their intended default when unset on an
+Arma 2 OA group receiver. The existing `WFBE_CO_FNC_GroupGetBool` remains the
+bool-specific path.
+
+Converted the remaining commander `_team getVariable [name, default]` reads in
+`AI_Commander_Snapshot.sqf`, `AI_Commander_AssignTypes.sqf`,
+`AI_Commander_AssignTowns.sqf`, `AI_Commander_Produce.sqf` and
+`AI_Commander_DisbandLowTier.sqf`. Static smoke now scans commander scripts for
+raw group default reads so future AICOM edits fail before packaging. Takistan
+propagation and release gates passed in the WP12 validation loop; runtime,
+deploy and SSH collection remain explicit-approval gated.
+
 ## 2026-07-01 — AICOM air-factory scan lint review cleared [RELEASE LOOP]
 
 Tightened the last known A2/OA lint review in `AI_Commander_Teams.sqf`.

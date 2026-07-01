@@ -20,7 +20,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
-         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
+         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType","_pendingToken",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir"];
 
 _sideID = _this select 0;
@@ -49,6 +49,12 @@ if (_isPlaneTeam && {(!(typeName _planeDir == "SCALAR")) || {_planeDir < 0}}) th
 	};
 };
 
+//--- WP12: AI_Commander_Teams appends a server-minted pending token for HC foundings.
+//--- It is echoed only in creation-failure/creation-ack messages so the server can bind
+//--- pending-slot release to a real dispatch. Older server-local/Wildcard callers omit it.
+_pendingToken = "";
+if (count _this > 9) then { private ["_pt"]; _pt = _this select 9; if (typeName _pt == "STRING") then {_pendingToken = _pt} };
+
 //--- SCATTER: ground/heli teams keep the proven GetRandomPosition[30,120] + GetEmptyPosition[40] scatter so hulls do not stack on the
 //--- factory pad. A PLANE team SKIPS the scatter entirely and air-starts directly ABOVE the resolved airfield/runway threshold (server
 //--- passed getPos of the captured airfield hangar/logic), which is the most reliable A2 fixed-wing start (ground-takeoff off a runway is
@@ -69,9 +75,9 @@ _team = _retVal select 2;
 if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
 	["WARNING", Format ["Common_RunCommanderTeam.sqf: [%1] team creation failed - releasing the slot.", _side]] Call WFBE_CO_FNC_AICOMLog;
 	if (isServer) then {
-		["aicom-team-ended", _sideID, grpNull] Call HandleSpecial;
+		["aicom-team-ended", _sideID, grpNull, _pendingToken] Call HandleSpecial;
 	} else {
-		["RequestSpecial", ["aicom-team-ended", _sideID, grpNull]] Call WFBE_CO_FNC_SendToServer;
+		["RequestSpecial", ["aicom-team-ended", _sideID, grpNull, _pendingToken]] Call WFBE_CO_FNC_SendToServer;
 	};
 };
 
@@ -108,9 +114,9 @@ if (count _this > 6) then {
 _team setVariable ["wfbe_queue", [], false];
 
 if (isServer) then {
-	["aicom-team-created", _sideID, _team] Call HandleSpecial;
+	["aicom-team-created", _sideID, _team, _pendingToken] Call HandleSpecial;
 } else {
-	["RequestSpecial", ["aicom-team-created", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+	["RequestSpecial", ["aicom-team-created", _sideID, _team, _pendingToken]] Call WFBE_CO_FNC_SendToServer;
 };
 
 ["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] commander team spawned (%2 units, %3 vehicles).", _side, count _units, count _vehicles]] Call WFBE_CO_FNC_AICOMLog;
@@ -337,6 +343,10 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		//--- Mark this hull as an AI-commander transport so the refund path can
 		//--- never refund a player-owned or non-aicom heli.
 		_airVeh setVariable ["wfbe_aicom_transport", true, true];
+		_airVeh setVariable ["wfbe_aicom_transport_sideid", _sideID, true];
+		_airVeh setVariable ["wfbe_aicom_transport_team", _team, true];
+		_airVeh setVariable ["wfbe_aicom_transport_type", typeOf _airVeh, true];
+		_airVeh setVariable ["wfbe_aicom_transport_refund_sent", false, true];
 
 		//--- Fly the heli to the objective and unload. doMove + flyInHeight, then
 		//--- land+disembark when close (heli-land) OR para-eject if no flat LZ.
@@ -432,17 +442,21 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				if (!isNull _h && {alive _h} && {(((getPos _h) select 0) < 0) || (((getPos _h) select 0) > _wsz) || (((getPos _h) select 1) < 0) || (((getPos _h) select 1) > _wsz)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
 						private ["_htype"];
 						_htype = typeOf _h;          //--- capture BEFORE delete (typeOf of a deleted obj is "").
+					if (_cost > 0) then {
+						if (!(_h getVariable ["wfbe_aicom_transport_refund_sent", false])) then {
+							_h setVariable ["wfbe_aicom_transport_refund_sent", true, true];
+							if (isServer) then {
+								["aicom-heli-refunded", _sID, _h, _tm, _htype] Call HandleSpecial;
+							} else {
+								["RequestSpecial", ["aicom-heli-refunded", _sID, _h, _tm, _htype]] Call WFBE_CO_FNC_SendToServer;
+							};
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, refund requested for $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
+							sleep 2;
+						};
+					};
 					_hcrew = crew _h;
 					{deleteVehicle _x} forEach _hcrew;
 					deleteVehicle _h;
-					if (_cost > 0) then {
-						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost, _tm, _htype] Call HandleSpecial;
-						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _tm, _htype]] Call WFBE_CO_FNC_SendToServer;
-						};
-						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
-					};
 				};
 			};
 		};
@@ -1194,11 +1208,11 @@ while {!WFBE_GameOver && _alive} do {
 							if (_resNear > 0) then {
 								_team setVariable ["wfbe_aicom_cappasses", 0];
 							} else {
-								_capPasses = ([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
+								_capPasses = ([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetValue) + 1;
 								_team setVariable ["wfbe_aicom_cappasses", _capPasses];
 							};
 							_capReleased = false;
-							if (([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool) >= _capMaxPasses) then {
+							if (([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetValue) >= _capMaxPasses) then {
 								//--- Bail this depot: same release idiom as the capture-success block above so AssignTowns
 								//--- retargets (isNull _goto => _needs=true), and clear strike/relief so Strategy will not re-grab.
 								_captureDone = true;     //--- stop re-running this phase for the dropped order

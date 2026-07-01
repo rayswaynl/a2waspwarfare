@@ -632,7 +632,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_foundedN = _foundedN + 1;
 					_aliveN = {alive _x} count (units _x);
 					_aliveSum = _aliveSum + _aliveN;
-					_tt = [_x, "wfbe_teamtype", -1] Call WFBE_CO_FNC_GroupGetBool;
+					_tt = [_x, "wfbe_teamtype", -1] Call WFBE_CO_FNC_GroupGetValue;
 					//--- SOAK telemetry: classify the team as VEHICLE (Tank or non-transport heli in its
 					//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
 					//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>

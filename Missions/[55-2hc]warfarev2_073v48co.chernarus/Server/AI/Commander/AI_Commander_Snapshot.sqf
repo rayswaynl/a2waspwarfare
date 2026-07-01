@@ -124,9 +124,9 @@ _teamDigests = [];
 			_ldr = leader _team;
 			_ldrPos = if (!isNull _ldr) then {getPos _ldr} else {[0,0,0]};
 			_isGar = (_team == _garGrp);
-			_mode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
-			_strikeFlag = _team getVariable ["wfbe_aicom_strike", false];
-			_reliefTown = _team getVariable ["wfbe_aicom_relief", objNull];
+			_mode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue);
+			_strikeFlag = [_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
+			_reliefTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetValue;
 			//--- transport state: owns a drivable ground hull (reach-IF-remounted), anyone mounted now,
 			//--- and has a heavy punch vehicle. Classname-literal isKindOf only (A2-OA-safe).
 			_hasGndVeh = false; _mountedNow = false; _hasHeavy = false;

@@ -26,10 +26,10 @@ if (isNil "_teams") exitWith {};
 	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
 	if (!isNull _team && {!isPlayer (leader _team)}) then {
 		if (_aliveCount > 0) then {
-			_mode  = [_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool;
+			_mode  = [_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue;
 			_modeL = toLower _mode;
 			if (_modeL == "move" || _modeL == "patrol" || _modeL == "defense") then {
-				_goto = [_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool;
+				_goto = [_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetValue;
 				//--- A real destination only (array, not the [0,0,0] default).
 				_realGoto = false;
 				if (typeName _goto == "ARRAY") then {
@@ -48,8 +48,8 @@ if (isNil "_teams") exitWith {};
 					//--- re-issue interval WFBE_C_AICOM_ORDER_MININT (default 6s) so rapid clicks can't re-lay inside
 					//--- the debounce window. Pure arithmetic + group-safe default reads (A2-OA 1.64 safe).
 					//--- On-change-only and the HC-publish vs server-local branches below are otherwise unchanged.
-					_prevMode    = [_team, "wfbe_exec_lastmode", ""] Call WFBE_CO_FNC_GroupGetBool;
-					_prevGoto    = [_team, "wfbe_exec_lastgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool;
+					_prevMode    = [_team, "wfbe_exec_lastmode", ""] Call WFBE_CO_FNC_GroupGetValue;
+					_prevGoto    = [_team, "wfbe_exec_lastgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetValue;
 					_orderDelta  = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_DELTA", 80];
 					_orderMinInt = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_MININT", 6];
 					_changed = false;
@@ -59,7 +59,7 @@ if (isNil "_teams") exitWith {};
 					//--- committed one for this team within the last _orderMinInt seconds (rapid double-click guard).
 					//--- Never freezes a team: a real change simply re-lays on the next tick past the window; the
 					//--- team keeps its current live waypoint meanwhile.
-					if (_changed && {(time - ([_team, "wfbe_exec_at", -1e9] Call WFBE_CO_FNC_GroupGetBool)) < _orderMinInt}) then {_changed = false};
+					if (_changed && {(time - ([_team, "wfbe_exec_at", -1e9] Call WFBE_CO_FNC_GroupGetValue)) < _orderMinInt}) then {_changed = false};
 					if (_changed) then {
 						//--- COMMAND CONSOLE telemetry (claude-gaming 2026-06-28): one machine-parseable line per NEWLY-
 						//--- committed direct order (the war-room's per-team task path). Previously the direct path was

@@ -240,7 +240,7 @@ if (count _targets > 0) then {
 	{
 		_team = _x;
 		if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-			_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+			_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue);
 			//--- offense only: skip relief ("defense"), HQ-strike ("move") and the garrison team.
 			if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 				_wLdr = leader _team;
@@ -350,7 +350,7 @@ if (count _targets > 0) then {
 			{
 				_team = _x;
 				if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-					_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+					_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue);
 					if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 						_wLdr = leader _team;
 						if (!isNull _wLdr) then {_d = _wLdr distance _newPrim; if (_d < _newApproach) then {_newApproach = _d}};
@@ -390,7 +390,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 {
 	_team = _x;
 	if (!isNull _team) then {
-		_relTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+		_relTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetValue;
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
 			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
@@ -450,7 +450,7 @@ _relieved = 0;
 	if (_relieved < (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_RELIEF_MAX", 2])) then {
 		//--- Already has a reliever?
 		_free = grpNull;
-		{ if (!isNull _x && {([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) == _town}) exitWith {_free = _x} } forEach _teams;
+		{ if (!isNull _x && {([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetValue) == _town}) exitWith {_free = _x} } forEach _teams;
 		if (isNull _free) then {
 			//--- Nearest eligible team: AI-led, alive, plain towns-mode (not garrison/strike/relief/HC).
 			_freeD = 1e9;
@@ -474,10 +474,10 @@ _relieved = 0;
 						};
 					} forEach (units _team);
 					if (_relIsBigVeh || {_relAlive >= _relMinAlive}) then {
-						if ((toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool)) == "towns") then {
+						if ((toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue)) == "towns") then {
 							//--- WAVE-1 A3 (a): HC teams ARE now eligible for relief (the old !wfbe_aicom_hc exclusion made
 							//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
-							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetValue) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 								_d = (leader _team) distance _town;
 								if (_d < _freeD) then {_freeD = _d; _free = _team};
 							};
@@ -518,7 +518,7 @@ _relieved = 0;
 {
 	_wTeam = _x;
 	if (!isNull _wTeam && {!isPlayer (leader _wTeam)} && {({alive _x} count (units _wTeam)) > 0}) then {
-		_wMode = toLower ([_wTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+		_wMode = toLower ([_wTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue);
 		if (_wMode == "defense" || {_wMode == "move"}) then {
 			_wLdr = leader _wTeam;
 			if (!isNull _wLdr && {alive _wLdr} && {behaviour _wLdr != "COMBAT"}) then {
@@ -638,7 +638,7 @@ if (_strikeOn) then {
 		{
 			_team = _x;
 			if (!isNull _team && {!isPlayer (leader _team)} && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
-				if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
+				if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetValue) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
 					if (_alive > 0) then {
 						//--- B69 (hqstrike-picker-weight-vehicle-punch): rank by PUNCH score, not raw bodycount. Heavy-detect idiom matches Common_AICOMServiceTick.sqf:103 (A2-OA-safe). _bestN now carries a score; inf 2 scores 2>1 (passes), 1-man remnant scores 1 (rejected), armour/attack-heli gets +bonus and outranks infantry.

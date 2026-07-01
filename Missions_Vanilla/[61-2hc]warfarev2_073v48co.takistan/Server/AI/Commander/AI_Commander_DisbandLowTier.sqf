@@ -50,7 +50,7 @@ _bestN = 1e9;
 			private ["_hc","_flagged","_md","_open"];
 			_hc      = [_team,"wfbe_aicom_hc",false]              Call WFBE_CO_FNC_GroupGetBool;
 			_flagged = [_team,"wfbe_aicom_disband",false]         Call WFBE_CO_FNC_GroupGetBool;
-			_md      = _team getVariable ["wfbe_teammode","towns"];
+			_md      = [_team,"wfbe_teammode","towns"]              Call WFBE_CO_FNC_GroupGetValue;
 			_open    = [_team,"wfbe_aicom_dispatch_open",false]   Call WFBE_CO_FNC_GroupGetBool;
 			//--- candidate = HC-owned, not player-led, idle (auto town-mode, no open dispatch), not flagged.
 			if (_hc && {!_flagged} && {!isPlayer (leader _team)} && {_md == "towns"} && {!_open}) then {
