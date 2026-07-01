@@ -65,7 +65,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-Current PR #125 source/package identity is `codex/release-command-center-20260630@c441d6f38d`, `_MISSIONS.7z` SHA256 `F057952E3DEDF4AB7D75FD1B3BEECFF4183506A7B83798241120B2F8D14B5F43`, `1,885` entries, `7,161,823` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
+The last recorded PR #125 package checkpoint is `codex/release-command-center-20260630@c441d6f38d`, `_MISSIONS.7z` SHA256 `F057952E3DEDF4AB7D75FD1B3BEECFF4183506A7B83798241120B2F8D14B5F43`, `1,885` entries, `7,161,823` bytes, handoff `ready_for_runtime_collection`. PR #125 later advanced to `7f81115ed` with mission source changes, so refresh the package tuple before runtime collection if that newer head remains the target. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against the chosen package tuple.
 
 Run the helper contract self-test after editing it:
 
