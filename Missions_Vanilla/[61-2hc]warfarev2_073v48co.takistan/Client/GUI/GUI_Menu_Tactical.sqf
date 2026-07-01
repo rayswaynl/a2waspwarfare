@@ -72,7 +72,7 @@ _currentFee = -1;
 _lastSel = -1;
 _addToList = [localize 'STR_WF_TACTICAL_FastTravel',localize 'STR_WF_ICBM',localize 'STR_WF_TACTICAL_ParadropAmmo',localize 'STR_WF_TACTICAL_ParadropVehicle',localize 'STR_WF_TACTICAL_Paratroop',localize 'STR_WF_TACTICAL_UnitCam',localize 'STR_WF_TACTICAL_UAV',localize 'STR_WF_TACTICAL_UAVDestroy',localize 'STR_WF_TACTICAL_UAVRemoteControl'];
 _addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratroopers","Units_Camera","UAV","UAV_Destroy","UAV_Remote_Control"];
-_addToListFee = [0,75000,9500,3500,8500,0,12500,0,0];
+_addToListFee = [0,(missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_ICBM_COST",75000]),9500,3500,8500,0,12500,0,0];
 _addToListInterval = [0,1000,800,600,_pard,0,0,0,0];	//--- QoL fix: paratrooper cooldown now respects WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY (was hardcoded 900, silently ignoring the mission param)
 
 for '_i' from 0 to count(_addToList)-1 do {
@@ -496,7 +496,6 @@ while {alive player && dialog} do {
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
-			-_currentFee Call ChangePlayerFunds;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
 			_obj = "HeliHEmpty" createVehicle _callPos; 
 			

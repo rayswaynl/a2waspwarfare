@@ -495,6 +495,57 @@ function Test-AttackWavePvGuards {
 	Add-Result "Attack Wave PV guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-IcbmRequestSpecialAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$clientPath = Join-Path $entry.Root "Client\Module\Nuke\nukeincoming.sqf"
+		$tacticalPath = Join-Path $entry.Root "Client\GUI\GUI_Menu_Tactical.sqf"
+		$constantsPath = Join-Path $entry.Root "Common\Init\Init_CommonConstants.sqf"
+		$server = Get-Text $serverPath
+		$client = Get-Text $clientPath
+		$tactical = Get-Text $tacticalPath
+		$constants = Get-Text $constantsPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$caseAt = $serverCode.IndexOf('case "ICBM"')
+		if ($caseAt -lt 0) {
+			$missing += "$($entry.Terrain):missing-case"
+			continue
+		}
+		$caseEnd = $serverCode.IndexOf('case "ArtyMarkerCleanup"', $caseAt)
+		if ($caseEnd -lt 0) { $caseEnd = $serverCode.Length }
+		$block = $serverCode.Substring($caseAt, $caseEnd - $caseAt)
+		$countAt = $block.IndexOf('count _args < 6')
+		$selectAt = $block.IndexOf('_args select 1')
+		if ($countAt -lt 0) { $missing += "$($entry.Terrain):short-payload-guard" }
+		if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):guard-after-select" }
+		if (-not ($block.Contains('_side in [west, east]') -and $block.Contains('WFBE_C_MODULE_WFBE_ICBM') -and $block.Contains('typeName _impactTarget != "OBJECT"') -and $block.Contains('typeName _missile != "OBJECT"') -and $block.Contains('typeName _playerTeam != "GROUP"') -and $block.Contains('typeName _requester != "OBJECT"'))) { $missing += "$($entry.Terrain):payload-types" }
+		if (-not ($block.Contains('!isPlayer _requester') -and $block.Contains('group _requester != _playerTeam') -and $block.Contains('side _playerTeam != _side') -and $block.Contains('_side Call WFBE_CO_FNC_GetCommanderTeam') -and $block.Contains('_playerTeam != _cmdTeam') -and $block.Contains('leader _cmdTeam != _requester') -and $block.Contains('side (leader _cmdTeam) != _side'))) { $missing += "$($entry.Terrain):commander-binding" }
+		if (-not ($block.Contains('WFBE_UP_ICBM') -and $block.Contains('WFBE_CO_FNC_GetSideUpgrades') -and $block.Contains('WFBE_CO_FNC_GetSideStructures') -and $block.Contains('COMMANDCENTERTYPE') -and $block.Contains('without live Tactical Center'))) { $missing += "$($entry.Terrain):unlock-structure-gates" }
+		if (-not ($block.Contains('WFBE_C_PLAYERS_SUPPORT_ICBM_COST') -and $block.Contains('WFBE_CO_FNC_GetTeamFunds') -and $block.Contains('WFBE_CO_FNC_ChangeTeamFunds') -and $block.Contains('rejected unaffordable ICBM') -and $block.Contains('wfbe_icbm_server_authorized') -and $block.Contains('rejected duplicate ICBM authorization'))) { $missing += "$($entry.Terrain):server-economy-gate" }
+		if (-not ($block.Contains('waitUntil {!alive _missile || isNull _missile}') -and $block.Contains('[_impactTarget] Spawn NukeDammage'))) { $missing += "$($entry.Terrain):validated-impact-path" }
+		if (-not ($block.Contains('rejected short ICBM payload') -and $block.Contains('rejected ICBM requester/team mismatch') -and $block.Contains('rejected ICBM from non-commander'))) { $missing += "$($entry.Terrain):warnings" }
+		if (-not $client.Contains('["RequestSpecial", ["ICBM",sideJoined,_target,_cruise,clientTeam,player]]')) { $missing += "$($entry.Terrain):client-requester-context" }
+		if (-not ($constants.Contains('WFBE_C_PLAYERS_SUPPORT_ICBM_COST = 75000') -and $tactical.Contains('missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_ICBM_COST",75000]'))) { $missing += "$($entry.Terrain):shared-client-cost" }
+		$icbmUiAt = $tactical.IndexOf('//--- ICBM Strike.')
+		if ($icbmUiAt -ge 0) {
+			$nextAt = $tactical.IndexOf('//--- Vehicle Paradrop.', $icbmUiAt)
+			if ($nextAt -lt 0) { $nextAt = $tactical.Length }
+			$icbmUiBlock = $tactical.Substring($icbmUiAt, $nextAt - $icbmUiAt)
+			if ($icbmUiBlock.Contains('ChangePlayerFunds')) { $missing += "$($entry.Terrain):client-local-icbm-debit" }
+		} else {
+			$missing += "$($entry.Terrain):missing-icbm-ui-block"
+		}
+	}
+	Add-Result "ICBM RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomCommandConsoleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1377,6 +1428,7 @@ Test-AIComDonateAuthorityGuard
 Test-FpsReportPvGuard
 Test-FactoryQueueEmptyHeadGuard
 Test-AttackWavePvGuards
+Test-IcbmRequestSpecialAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards

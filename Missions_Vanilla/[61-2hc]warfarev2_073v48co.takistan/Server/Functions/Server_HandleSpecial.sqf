@@ -191,20 +191,74 @@ switch (_args select 0) do {
 		} forEach _vehicles;
 	};
 	case "ICBM": {
-		Private ["_base","_playerTeam","_side","_target"];
+		Private ["_cc","_ccType","_cmdTeam","_cost","_funds","_hasCC","_impactTarget","_missile","_playerTeam","_requester","_side","_upgrades"];
+
+		if (count _args < 6) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected short ICBM payload [%1].", _args]] Call WFBE_CO_FNC_LogContent;
+		};
 
 		_side = _args select 1;
-		_base = _args select 2;
-		_target = _args select 3;
+		_impactTarget = _args select 2;
+		_missile = _args select 3;
 		_playerTeam = _args select 4;
+		_requester = _args select 5;
 
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Team [%2] [%3] called in an ICBM Nuke.", str _side, _playerTeam, name (leader _playerTeam)]] Call WFBE_CO_FNC_LogContent;
+		if (!(_side in [west, east])) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ICBM with invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((missionNamespace getVariable ["WFBE_C_MODULE_WFBE_ICBM", 0]) <= 0) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ICBM while module disabled for side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((typeName _impactTarget != "OBJECT") || {typeName _missile != "OBJECT"} || {typeName _playerTeam != "GROUP"} || {typeName _requester != "OBJECT"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed ICBM fields side=%1 target=%2 missile=%3 team=%4 requester=%5.", _side, typeName _impactTarget, typeName _missile, typeName _playerTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNull _impactTarget || {isNull _missile} || {isNull _playerTeam} || {isNull _requester}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ICBM with null field target=%1 missile=%2 team=%3 requester=%4.", _impactTarget, _missile, _playerTeam, _requester]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (!alive _requester || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ICBM requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		};
 
-		if (isNull _target || !alive _target) exitWith {};
+		_cmdTeam = _side Call WFBE_CO_FNC_GetCommanderTeam;
+		if (isNull _cmdTeam || {_playerTeam != _cmdTeam} || {leader _cmdTeam != _requester} || {!isPlayer (leader _cmdTeam)} || {side (leader _cmdTeam) != _side}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ICBM from non-commander requester=%1 team=%2 commander=%3 side=%4.", _requester, _playerTeam, _cmdTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		};
 
-		waitUntil {!alive _target || isNull _target};
+		_upgrades = _side Call WFBE_CO_FNC_GetSideUpgrades;
+		if (typeName _upgrades != "ARRAY" || {count _upgrades <= WFBE_UP_ICBM} || {(_upgrades select WFBE_UP_ICBM) <= 0}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ICBM before upgrade unlock side=%1.", _side]] Call WFBE_CO_FNC_LogContent;
+		};
 
-		[_base] Spawn NukeDammage;
+		_ccType = missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE", str _side];
+		_hasCC = false;
+		if (!isNil "_ccType") then {
+			_cc = [_side, _ccType, (_side Call WFBE_CO_FNC_GetSideStructures)] Call GetFactories;
+			if (count _cc > 0) then {_hasCC = true};
+		};
+		if (!_hasCC) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ICBM without live Tactical Center side=%1.", _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_missile getVariable ["wfbe_icbm_server_authorized", false]) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected duplicate ICBM authorization for missile=%1 side=%2.", _missile, _side]] Call WFBE_CO_FNC_LogContent;
+		};
+
+		_cost = missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_ICBM_COST", 75000];
+		if (typeName _cost != "SCALAR") then {_cost = 75000};
+		if (_cost < 0) then {_cost = 0};
+		_funds = _playerTeam Call WFBE_CO_FNC_GetTeamFunds;
+		if (_funds < _cost) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected unaffordable ICBM side=%1 team=%2 need=%3 have=%4.", _side, _playerTeam, _cost, _funds]] Call WFBE_CO_FNC_LogContent;
+		};
+		_missile setVariable ["wfbe_icbm_server_authorized", true];
+		if (_cost > 0) then {[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds};
+
+		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Team [%2] [%3] called in an ICBM Nuke for $%4.", str _side, _playerTeam, name _requester, _cost]] Call WFBE_CO_FNC_LogContent;
+
+		if (!alive _missile) exitWith {};
+
+		waitUntil {!alive _missile || isNull _missile};
+
+		[_impactTarget] Spawn NukeDammage;
 	};
 
 	//--- Marty (Trello #171): Server-side timed removal of the player-called artillery barrage markers.

@@ -20,7 +20,7 @@ _cruise setVelocity [0,2,0];
 _cruise flyInHeight 570;
 _cruise setSpeedMode "FULL";
 
-["RequestSpecial", ["ICBM",sideJoined,_target,_cruise,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+["RequestSpecial", ["ICBM",sideJoined,_target,_cruise,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 
 sleep 1.5;
 
