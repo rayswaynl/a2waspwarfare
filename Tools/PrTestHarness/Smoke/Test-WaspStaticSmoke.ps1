@@ -618,6 +618,59 @@ function Test-ReleaseRoleProofDiagLogEmitters {
 	Add-Result "Release role-proof diag_log emitters" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-ReleaseRuntimeProofTokenEmitters {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$tokens = @(
+		[pscustomobject]@{ Name = "aicom-heartbeat"; Needle = "AICOMHB|v1|" },
+		[pscustomobject]@{ Name = "aicom-tick"; Needle = "AICOMSTAT|v1|TICK|" },
+		[pscustomobject]@{ Name = "aicom-event"; Needle = "AICOMSTAT|v2|EVENT|" },
+		[pscustomobject]@{ Name = "aicom-team-founded-hc"; Needle = "TEAM_FOUNDED|via=HC" },
+		[pscustomobject]@{ Name = "aicom-front"; Needle = "AICOMSTAT|v1|FRONT|" },
+		[pscustomobject]@{ Name = "aicom-posture"; Needle = "AICOMSTAT|v1|POSTURE|" },
+		[pscustomobject]@{ Name = "aicom-snapshot"; Needle = "AICOM2|v1|SNAP|" },
+		[pscustomobject]@{ Name = "aicom-ai-command-order"; Needle = "AICOM2|v1|ORDER|aicom-ai-command" },
+		[pscustomobject]@{ Name = "aicom-arty-request"; Needle = "AICOM2|v1|ARTYREQ" },
+		[pscustomobject]@{ Name = "aicom-fallback-source"; Needle = "AICOMGATE|%1|infFallback" },
+		[pscustomobject]@{ Name = "aicom-active"; Needle = "AI commander ACTIVE" },
+		[pscustomobject]@{ Name = "aicom-assist"; Needle = "AI commander ASSIST" },
+		[pscustomobject]@{ Name = "cmdrstat"; Needle = "CMDRSTAT|v1" },
+		[pscustomobject]@{ Name = "srvperf"; Needle = "SRVPERF|v1" },
+		[pscustomobject]@{ Name = "grpbudget"; Needle = "GRPBUDGET|v1" },
+		[pscustomobject]@{ Name = "hc-connect"; Needle = "HCSIDE|v1|connect|" },
+		[pscustomobject]@{ Name = "hc-stat"; Needle = "HCSTAT|v1" },
+		[pscustomobject]@{ Name = "hc-deleg"; Needle = "HCDELEG|v1" },
+		[pscustomobject]@{ Name = "deleg-stat"; Needle = "DELEGSTAT|v1" },
+		[pscustomobject]@{ Name = "town-ai-hc-cleanup"; Needle = "TOWN_AI_HC_CLEANUP" },
+		[pscustomobject]@{ Name = "gcstat"; Needle = "GCSTAT|v1" },
+		[pscustomobject]@{ Name = "emptygrp"; Needle = "EMPTYGRP|v1" },
+		[pscustomobject]@{ Name = "client-empty-group-cleanup"; Needle = "CLIENT_EMPTY_GROUP_CLEANUP|v1" },
+		[pscustomobject]@{ Name = "arty-threat"; Needle = "ARTY_THREAT_ARMED" },
+		[pscustomobject]@{ Name = "fire-mission"; Needle = "FIRE_MISSION" },
+		[pscustomobject]@{ Name = "supply-loaded"; Needle = "SupplyMissionStart.sqf: Player" },
+		[pscustomobject]@{ Name = "supply-unload"; Needle = "SupplyMissionUnload.sqf: Player" },
+		[pscustomobject]@{ Name = "supply-completed"; Needle = "SupplyMissionCompleted.sqf: Completion accepted" },
+		[pscustomobject]@{ Name = "supply-interdiction"; Needle = "Logistics interdiction" }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$builder = New-Object System.Text.StringBuilder
+		$files = Get-ChildItem -LiteralPath $entry.Root -Recurse -File -ErrorAction SilentlyContinue |
+			Where-Object { $_.Extension -in @(".sqf",".fsm",".ext",".hpp") }
+		foreach ($file in $files) {
+			[void]$builder.AppendLine([System.IO.File]::ReadAllText($file.FullName))
+		}
+		$text = $builder.ToString()
+		foreach ($token in $tokens) {
+			if (-not $text.Contains($token.Needle)) { $missing += "$($entry.Terrain):$($token.Name)" }
+		}
+	}
+	Add-Result "Release runtime-proof token emitters" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-ActiveStressMissionCopy {
 	if (!(Test-Path -LiteralPath $ActiveMissionRoot)) {
 		Add-Result "Active stress mission copy" $true "Skipped: active mission root not present at $ActiveMissionRoot"
@@ -722,6 +775,7 @@ Test-Pr8StressRptAnalyzer
 Test-Pr8LiveWatcher
 Test-ShippingMissionsExcludeHarness
 Test-ReleaseRoleProofDiagLogEmitters
+Test-ReleaseRuntimeProofTokenEmitters
 Test-ActiveStressMissionCopy
 
 #--- June 2026 finalize checks
