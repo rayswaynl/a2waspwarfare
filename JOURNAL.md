@@ -1,5 +1,25 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Codex multi-agent release task opened [PR LOOP]
+
+Opened the Codex release-readiness loop for the command-center candidate. Four
+read-only scouts covered AICOM, release/RPT gates, wiki/source discipline, and
+branch intake. The useful findings are now summarized in
+`docs/release-readiness/2026-07-01-command-center.md` and will be mirrored into
+the PR thread.
+
+Refreshed the package/handoff proof after the role-proof emitter commit:
+current candidate identity is `2bdf79f398`, package SHA256
+`1B9D4FF61DBD7A1BA0BE01C31DEE394586AC1F11238EA75CB343992DFC01E4FA`,
+1882 archive entries, and local handoff status remains
+`ready_for_runtime_collection`.
+
+Corrected the static smoke wording around the command-dialect gate:
+`allMissionObjects` is an Arma 2 OA command per BI docs, so the gate now calls
+its list forbidden/project-blocked rather than purely A3-only. The project still
+blocks it in this release path because the current A2/OA compatibility gate is
+conservative and source-bound.
+
 ## 2026-07-01 — Release runtime role-proof emitters [RELEASE LOOP]
 
 Scout review found the round40 package could be package-clean but still fail the
@@ -15,7 +35,7 @@ role-proof emitters.
 
 ## 2026-07-01 — AICOM wildcard A2 dialect fix [RELEASE LOOP]
 
-Removed the A3-only `allMissionObjects` token from the retired W10 lucky
+Removed project-blocked `allMissionObjects` usage from the retired W10 lucky
 salvage wildcard branch. The sweep now uses `allDead`, matching the eligibility
 proxy already documented earlier in `AI_Commander_Wildcard.sqf`, and
 LoadoutManager propagated the fix from Chernarus into Takistan.

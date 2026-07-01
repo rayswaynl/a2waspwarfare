@@ -90,7 +90,7 @@ function Remove-StringLiterals {
 	return [regex]::Replace($withoutDouble, "'[^']*'", "''")
 }
 
-function Test-ForbiddenA3Commands {
+function Test-ForbiddenReleaseCommands {
 	$forbidden = @(
 		"allMapMarkers","allMissionObjects","pushBack","pushBackUnique","selectRandom","isEqualTo","params",
 		"parseSimpleArray","remoteExec","setGroupOwner","append","apply",
@@ -110,13 +110,13 @@ function Test-ForbiddenA3Commands {
 			}
 		}
 	}
-	Add-Result "A2 OA command dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No forbidden A3-only commands in changed Chernarus mission files." }))
+	Add-Result "A2 OA command dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No forbidden/project-blocked commands in changed Chernarus mission files." }))
 }
 
 function Test-HarnessOverlayA3Dialect {
 	# Dialect-scan the harness overlay's OWN sqf (init.sqf + test/*.sqf). The main
-	# dialect check only covers changed mission files, so harness A3-isms (e.g. the
-	# allMapMarkers regression) previously slipped to runtime.
+	# dialect check only covers changed mission files, so harness forbidden/project-blocked
+	# command regressions previously slipped to runtime.
 	$forbidden = @(
 		"allMapMarkers","allMissionObjects","pushBack","pushBackUnique","selectRandom","isEqualTo","params",
 		"parseSimpleArray","remoteExec","setGroupOwner","append","apply",
@@ -141,7 +141,7 @@ function Test-HarnessOverlayA3Dialect {
 			}
 		}
 	}
-	Add-Result "Harness overlay A2 dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No A3-only commands in the pr8-stress harness overlay scripts." }))
+	Add-Result "Harness overlay A2 dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No forbidden/project-blocked commands in the pr8-stress harness overlay scripts." }))
 }
 
 function Test-HqShield {
@@ -690,7 +690,7 @@ function Test-InterdictionEnemyGuard {
 	Add-Result "Supply interdiction enemy-side guard" $ok "enemyGuard=$ok"
 }
 
-Test-ForbiddenA3Commands
+Test-ForbiddenReleaseCommands
 Test-HarnessOverlayA3Dialect
 Test-HqShield
 Test-AARadarHasNoWalls
