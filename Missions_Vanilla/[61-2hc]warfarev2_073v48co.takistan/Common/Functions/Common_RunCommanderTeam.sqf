@@ -19,7 +19,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_townCenter","_capRange","_footInf","_holdEnd","_resNear","_enemyNear","_townFlipped",
          "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
-         "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
+         "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir"];
 
@@ -638,6 +638,8 @@ while {!WFBE_GameOver && _alive} do {
 				_lastSeq = _seq;
 				_arrived = false;
 				_captureDone = false;
+				_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
+				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_ACCEPT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round ((leader _team) distance _dest)));
 
 				//--- REAL UNSTUCK (task #14/#16): if this fresh order is a STUCK re-issue
 				//--- (server bumped wfbe_aicom_unstuck > 0 because the team sat parked far
@@ -887,8 +889,11 @@ while {!WFBE_GameOver && _alive} do {
 
 				//--- On arrival, switch to the mode's local behaviour once.
 				if (!_arrived) then {
-					if ((leader _team) distance _dest < (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20)) then { //--- WAVE-2 ARRIVAL-GATE: cover the assault SAD ring (80m), not just depot+20 (60m), so a team roving its search ring still crosses into the capture phase; the phase then drives units onto the exact depot centre.
+					_arrivalGate = ((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20;
+					_arrivalDist = (leader _team) distance _dest;
+					if (_arrivalDist < _arrivalGate) then { //--- WAVE-2 ARRIVAL-GATE: cover the assault SAD ring (80m), not just depot+20 (60m), so a team roving its search ring still crosses into the capture phase; the phase then drives units onto the exact depot centre.
 						_arrived = true;
+						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ARRIVAL_GATE|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round _arrivalDist) + "|gate=" + str (round _arrivalGate));
 						//--- Cosmetic: faction smoke at assault onset (fires once per team via the _arrived latch). Server-only, gated + capped + cooldown.
 						[getPosATL (leader _team), side _team] call WFBE_CO_FNC_SpawnFactionSmoke;
 						//--- ROAD-MARCH hand-off: at the objective we WANT overland combat, so
@@ -901,6 +906,13 @@ while {!WFBE_GameOver && _alive} do {
 							[_team, true, [[_dest, 'SAD', 100, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
 							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring.
+						};
+					} else {
+						_arrivalTraceAt = _team getVariable "wfbe_aicom_arrival_trace_at";
+						if (isNil "_arrivalTraceAt") then {_arrivalTraceAt = time};
+						if (time >= _arrivalTraceAt) then {
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ARRIVAL_WAIT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round _arrivalDist) + "|gate=" + str (round _arrivalGate));
+							_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
 						};
 					};
 				};
@@ -932,6 +944,7 @@ while {!WFBE_GameOver && _alive} do {
 				//--- 20s loop re-runs this phase next tick (units keep fighting at the center) so
 				//--- a single failed pass is never a dead end.
 				if (_arrived && !_captureDone && _mode == "towns-target") then {
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|BEGIN_CAPTURE|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round ((leader _team) distance _dest)));
 
 					//--- WAVE-1 CAUSE-3 EARLY-EXIT: bail the whole capture phase if the team is gone or has
 					//--- no live units (a wipe mid-phase would otherwise run scans/waypoints on a dead group).
