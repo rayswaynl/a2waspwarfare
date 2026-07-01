@@ -30,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit 7f81115edf `
-  -ExpectedArchiveSha256 50AD7B20D82E30AF7C7CD7028D79F8EFC0D48745A209F1D959C1DFE52315C320 `
+  -ExpectedArchiveSha256 40883616F483EFBB6BCB4DE9EF0FFB4CC693652F89376DBC045CE1F9C69F17BD `
   -RequireReleaseMarkers `
   -Json `
   -OutFile "C:\WASP\rpt-archive\marker-sweep-7f81115edf.json"
@@ -44,7 +44,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit 7f81115edf `
-  -ExpectedArchiveSha256 50AD7B20D82E30AF7C7CD7028D79F8EFC0D48745A209F1D959C1DFE52315C320 `
+  -ExpectedArchiveSha256 40883616F483EFBB6BCB4DE9EF0FFB4CC693652F89376DBC045CE1F9C69F17BD `
   -RequireReleaseMarkers `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
   -Json `
@@ -65,7 +65,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-Current PR #125 package checkpoint is `codex/release-command-center-20260630@7f81115edf`, `_MISSIONS.7z` SHA256 `50AD7B20D82E30AF7C7CD7028D79F8EFC0D48745A209F1D959C1DFE52315C320`, `1,885` entries, `7,161,964` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
+Current PR #125 package checkpoint is `codex/release-command-center-20260630@7f81115edf`, `_MISSIONS.7z` SHA256 `40883616F483EFBB6BCB4DE9EF0FFB4CC693652F89376DBC045CE1F9C69F17BD`, `1,885` entries, `7,162,199` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
 
 Run the helper contract self-test after editing it:
 
