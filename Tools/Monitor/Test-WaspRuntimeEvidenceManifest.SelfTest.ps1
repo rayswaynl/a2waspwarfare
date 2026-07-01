@@ -130,6 +130,33 @@ try {
 		throw "Expected git-mismatch failure text, got: $badText"
 	}
 
+	$releaseMismatchManifest = Join-Path $tempRoot "release-mismatch-manifest.json"
+	Write-JsonFile -Path $releaseMismatchManifest -Value ([pscustomobject][ordered]@{
+		schema = "a2waspwarfare-runtime-evidence-manifest-v1"
+		release = [pscustomobject][ordered]@{
+			candidate = "test-candidate"
+			git = "wronggit"
+			archiveSha256 = "ABCDEF0123456789"
+		}
+		evidence = @([pscustomobject][ordered]@{
+			terrain = "chernarus"
+			role = "server"
+			markerSweepPath = "sweep-chernarus-server-mismatch.json"
+		})
+	})
+	Write-JsonFile -Path (Join-Path $tempRoot "sweep-chernarus-server-mismatch.json") -Value (New-Sweep -Terrain "chernarus")
+	$releaseMismatchText = Invoke-ManifestTest -Arguments @(
+		"-ManifestPath", $releaseMismatchManifest,
+		"-ExpectedCandidate", "test-candidate",
+		"-ExpectedGit", "testgit",
+		"-ExpectedArchiveSha256", "ABCDEF0123456789",
+		"-RequiredTerrain", "chernarus",
+		"-RequiredRole", "server"
+	) -ExpectFailure
+	if ($releaseMismatchText -notmatch "release.git") {
+		throw "Expected release.git mismatch failure text, got: $releaseMismatchText"
+	}
+
 	$missingRequiredSweepName = "missing-required-sweep.json"
 	Write-JsonFile -Path (Join-Path $tempRoot $missingRequiredSweepName) -Value (New-Sweep -Terrain "chernarus" -MissingRequired @("HCSTAT"))
 	$missingRequiredManifest = Join-Path $tempRoot "missing-required-manifest.json"

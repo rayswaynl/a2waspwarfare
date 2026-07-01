@@ -99,6 +99,19 @@ if ($manifest.schema -ne "a2waspwarfare-runtime-evidence-manifest-v1") {
 	Add-Finding $findings ("Manifest schema must be a2waspwarfare-runtime-evidence-manifest-v1, got [{0}]." -f $manifest.schema)
 }
 
+$manifestRelease = Get-JsonProperty -Object $manifest -Name "release"
+if ($null -ne $manifestRelease) {
+	if ((Get-JsonProperty -Object $manifestRelease -Name "candidate") -ne $ExpectedCandidate) {
+		Add-Finding $findings "Manifest release.candidate does not match expected candidate."
+	}
+	if ((Get-JsonProperty -Object $manifestRelease -Name "git") -ne $ExpectedGit) {
+		Add-Finding $findings "Manifest release.git does not match expected git."
+	}
+	if ((Get-JsonProperty -Object $manifestRelease -Name "archiveSha256") -ne $ExpectedArchiveSha256) {
+		Add-Finding $findings "Manifest release.archiveSha256 does not match expected archive SHA."
+	}
+}
+
 $requiredTerrains = @(Expand-List -Values $RequiredTerrain)
 $requiredRoles = @(Expand-List -Values $RequiredRole)
 if ($requiredTerrains.Count -eq 0) { Add-Finding $findings "At least one required terrain is needed." }
