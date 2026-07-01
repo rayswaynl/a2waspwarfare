@@ -146,7 +146,7 @@ function New-TestPacket {
 				if (!$OmitAicomHcAudit) {
 					$semanticTokens += @(
 						"AICOMSTAT|v2|EVENT|west|1|HCRECON_AICOM_AUDIT|uid=HC1|owner=11|teams=2|live=2|newOwnerLive=2|headingFresh=2|headingStale=0|headingUnknown=0",
-						"AICOMSTAT|v2|EVENT|east|1|HCDROP_AICOM_AUDIT|delay=60|uid=HC2|owner=12|teams=2|live=2|oldOwnerLive=0|headingFresh=1|headingStale=1|headingUnknown=0"
+						"AICOMSTAT|v2|EVENT|east|1|HCDROP_AICOM_AUDIT|delay=60|uid=HC2|owner=12|teams=2|live=2|oldOwnerLive=0|headingFresh=2|headingStale=0|headingUnknown=0"
 					)
 				}
 				if (!$OmitAicomJipStatus) {
@@ -290,7 +290,7 @@ try {
 	if ($null -eq $perTerrainGate) { throw "Missing per-terrain-runtime-evidence gate." }
 	$takistanMissing = @($perTerrainGate.missing | Where-Object { [string]$_ -like "takistan:*" })
 	if ([string]$chernarusOnly.overall -ne "missing_or_failed" -or [string]$perTerrainGate.status -ne "missing" -or $takistanMissing.Count -eq 0) {
-		throw "Expected Chernarus-only semantic packet to fail the Takistan per-terrain runtime gate."
+		throw ("Expected Chernarus-only semantic packet to fail the Takistan per-terrain runtime gate; overall={0}, perTerrain={1}, missing={2}" -f $chernarusOnly.overall, $perTerrainGate.status, (($perTerrainGate.missing | Out-String).Trim()))
 	}
 
 	Remove-Item -LiteralPath $root -Recurse -Force
