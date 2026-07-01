@@ -1,5 +1,28 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Upgrade request and AICOM group-var guards [RELEASE LOOP]
+
+Closed another bounded release-readiness slice without touching runtime/SSH.
+`RequestUpgrade.sqf` now rejects malformed payloads, wrong payload types,
+non-player upgrade flags, invalid side logic, already-running upgrades, disabled
+or out-of-range upgrade ids, stale/skipped levels, missing config arrays and
+unmet dependency links before spawning the existing upgrade timer worker. The
+flag-gated commander-team hardening mirrors the queue path: when enabled, the
+server requires a player-led commander team on the requested side before
+honouring the direct player upgrade PV.
+
+The AICOM executor and capture retry loop now route the remaining release-risk
+group default reads through `WFBE_CO_FNC_GroupGetBool`, avoiding the Arma 2 OA
+group `getVariable [name, default]` unset-value trap for direct war-room orders
+and the `wfbe_aicom_cappasses` anti-stall counter. LoadoutManager propagated the
+Chernarus source edits to maintained Takistan and rebuilt `_MISSIONS.7z`.
+
+Validation passed via `Run-WaspFinalCheck.ps1`: static smoke clean including the
+new `Upgrade request authority guard` and `AICOM group variable default guards`,
+Chernarus and Takistan A2/OA lint `FAIL: 0` / `REVIEW: 0`, and whole-mission
+HIGH BugHunt clean. Package provenance must be regenerated after this journaled
+source commit so PR/wiki can bind to the final commit hash and archive SHA.
+
 ## 2026-07-01 — Side-supply temp-channel authority guard [RELEASE LOOP]
 
 Closed the small side-supply authority gap left after the earlier arithmetic

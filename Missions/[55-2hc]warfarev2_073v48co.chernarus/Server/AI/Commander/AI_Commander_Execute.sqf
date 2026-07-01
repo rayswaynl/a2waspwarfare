@@ -24,10 +24,10 @@ if (isNil "_teams") exitWith {};
 	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
 	if (!isNull _team && {!isPlayer (leader _team)}) then {
 		if (_aliveCount > 0) then {
-			_mode  = _team getVariable ["wfbe_teammode", "towns"];
+			_mode  = [_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool;
 			_modeL = toLower _mode;
 			if (_modeL == "move" || _modeL == "patrol" || _modeL == "defense") then {
-				_goto = _team getVariable ["wfbe_teamgoto", [0,0,0]];
+				_goto = [_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool;
 				//--- A real destination only (array, not the [0,0,0] default).
 				_realGoto = false;
 				if (typeName _goto == "ARRAY") then {
@@ -38,7 +38,7 @@ if (isNil "_teams") exitWith {};
 				};
 				if (_realGoto) then {
 					_sig     = [_modeL, round (_goto select 0), round (_goto select 1)];
-					_prevSig = _team getVariable ["wfbe_exec_sig", []];
+					_prevSig = [_team, "wfbe_exec_sig", []] Call WFBE_CO_FNC_GroupGetBool;
 					if (str _sig != str _prevSig) then {
 						//--- COMMAND CONSOLE telemetry (claude-gaming 2026-06-28): one machine-parseable line per NEWLY-
 						//--- committed direct order (the war-room's per-team task path). Previously the direct path was

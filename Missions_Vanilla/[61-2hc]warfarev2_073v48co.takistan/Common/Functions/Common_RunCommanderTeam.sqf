@@ -1107,11 +1107,11 @@ while {!WFBE_GameOver && _alive} do {
 							if (_resNear > 0) then {
 								_team setVariable ["wfbe_aicom_cappasses", 0];
 							} else {
-								_capPasses = (_team getVariable ["wfbe_aicom_cappasses", 0]) + 1;
+								_capPasses = ([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 								_team setVariable ["wfbe_aicom_cappasses", _capPasses];
 							};
 							_capReleased = false;
-							if ((_team getVariable ["wfbe_aicom_cappasses", 0]) >= _capMaxPasses) then {
+							if (([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool) >= _capMaxPasses) then {
 								//--- Bail this depot: same release idiom as the capture-success block above so AssignTowns
 								//--- retargets (isNull _goto => _needs=true), and clear strike/relief so Strategy will not re-grab.
 								_captureDone = true;     //--- stop re-running this phase for the dropped order

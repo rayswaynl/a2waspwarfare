@@ -25,10 +25,10 @@ private ["_side","_sideText","_logik","_riArtyReq","_riArtyPos","_riArtyT0","_ri
 
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) <= 0) exitWith {};
-if ((missionNamespace getVariable "WFBE_C_ARTILLERY") <= 0) exitWith {};
+if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) <= 0) exitWith {};
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-if (isNil "_logik") exitWith {};
+if (isNull _logik) exitWith {};
 
 //--- Read + freshness-check the player request.
 _riArtyReq = _logik getVariable "wfbe_aicom_arty_request";
@@ -60,7 +60,7 @@ if (_ownNear == 0) then {
 		if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
 			_idx = [typeOf _p, _side] Call IsArtillery;
 			if (_idx >= 0) then {
-				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
+				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]);
 				if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) && {(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
 					//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
 					//--- load a situational round chosen ONLY from the types the side has researched (helper gates on

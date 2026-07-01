@@ -313,6 +313,53 @@ function Test-SideSupplyAuthorityGuard {
 	Add-Result "Side-supply channel authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-UpgradeRequestAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$requestPath = Join-Path $entry.Root "Server\PVFunctions\RequestUpgrade.sqf"
+		$request = Get-Text $requestPath
+		$requestCode = [regex]::Replace($request, "//.*", "")
+		if (-not ($request.Contains('typeName _this != "ARRAY"') -and $request.Contains("count _args < 4"))) { $missing += "$($entry.Terrain):payload-shape" }
+		if (-not ($request.Contains('typeName _side != "SIDE"') -and $request.Contains('typeName _upgrade_id != "SCALAR"') -and $request.Contains('typeName _upgrade_level != "SCALAR"') -and $request.Contains('typeName _upgrade_isplayer != "BOOL"'))) { $missing += "$($entry.Terrain):payload-types" }
+		if (-not ($request.Contains('!_upgrade_isplayer') -and $request.Contains('RequestUpgrade is the player-commander path'))) { $missing += "$($entry.Terrain):player-request-only" }
+		if (-not ($request.Contains('WFBE_C_SEC_HARDENING') -and $request.Contains('!isPlayer (leader _cmdTeam)') -and $request.Contains('side (leader _cmdTeam) != _side'))) { $missing += "$($entry.Terrain):commander-team-hardening" }
+		if (-not $request.Contains('_logic getVariable "wfbe_upgrading"')) { $missing += "$($entry.Terrain):running-gate" }
+		if (-not ($request.Contains('WFBE_C_UPGRADES_%1_ENABLED') -and $request.Contains('WFBE_C_UPGRADES_%1_LEVELS') -and $request.Contains('WFBE_C_UPGRADES_%1_TIMES') -and $request.Contains('WFBE_C_UPGRADES_%1_LINKS'))) { $missing += "$($entry.Terrain):config-gates" }
+		if (-not ($request.Contains('_upgrade_level != _current') -and $request.Contains('stale/skipped upgrade level'))) { $missing += "$($entry.Terrain):server-current-level" }
+		if (-not $request.Contains('_linkNeeded')) { $missing += "$($entry.Terrain):dependency-gate" }
+		if ($requestCode.Contains("_this Spawn WFBE_SE_FNC_ProcessUpgrade")) { $missing += "$($entry.Terrain):raw-spawn" }
+		if (-not $requestCode.Contains("_args Spawn WFBE_SE_FNC_ProcessUpgrade")) { $missing += "$($entry.Terrain):validated-spawn" }
+	}
+	Add-Result "Upgrade request authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
+function Test-AicomGroupVariableDefaults {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$executePath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander_Execute.sqf"
+		$runTeamPath = Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf"
+		$execute = Get-Text $executePath
+		$runTeam = Get-Text $runTeamPath
+		if (-not $execute.Contains('[_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-mode" }
+		if (-not $execute.Contains('[_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-goto" }
+		if (-not $execute.Contains('[_team, "wfbe_exec_sig", []] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-sig" }
+		if ($execute.Contains('_team getVariable ["wfbe_teammode", "towns"]') -or $execute.Contains('_team getVariable ["wfbe_teamgoto", [0,0,0]]') -or $execute.Contains('_team getVariable ["wfbe_exec_sig", []]')) { $missing += "$($entry.Terrain):execute-raw-group-default" }
+		if (-not $runTeam.Contains('[_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):capture-pass-helper" }
+		if ($runTeam.Contains('_team getVariable ["wfbe_aicom_cappasses", 0]')) { $missing += "$($entry.Terrain):capture-pass-raw-group-default" }
+	}
+	Add-Result "AICOM group variable default guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-HcPvfGuard {
 	$handle = Get-Text (Join-Path $missionRoot "Client\Functions\Client_HandlePVF.sqf")
 	$town = Get-Text (Join-Path $missionRoot "Client\PVFunctions\TownCaptured.sqf")
@@ -788,6 +835,8 @@ Test-WddmInstantStaticCrew
 Test-WddmAnchorClassValidity
 Test-PvfIntegrity
 Test-SideSupplyAuthorityGuard
+Test-UpgradeRequestAuthorityGuard
+Test-AicomGroupVariableDefaults
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups
 Test-GuiImageTabGuard
