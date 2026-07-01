@@ -46,6 +46,23 @@ function Assert-GateStatus {
 	Assert-Equal ([string]$gate.status) $ExpectedStatus "Unexpected status for gate '$Id'."
 }
 
+function Get-CurrentPowerShellExe {
+	$path = (Get-Process -Id $PID).Path
+	if (![string]::IsNullOrWhiteSpace($path) -and (Test-Path -LiteralPath $path -PathType Leaf)) { return $path }
+	if ($PSVersionTable.PSEdition -eq "Core") { return "pwsh" }
+	return "powershell"
+}
+
+function Invoke-HandoffChild {
+	param([string[]]$Arguments)
+	$exe = Get-CurrentPowerShellExe
+	$output = & $exe -NoProfile -ExecutionPolicy Bypass -File $handoffPath @Arguments 2>&1
+	return [ordered]@{
+		exitCode = $LASTEXITCODE
+		output = @($output)
+	}
+}
+
 function New-TestPackageManifest {
 	param(
 		[Parameter(Mandatory)] [string]$Root,
@@ -190,6 +207,29 @@ try {
 
 	$copiedManifest = Get-Content -Raw -LiteralPath $copiedManifestJson | ConvertFrom-Json
 	Assert-Equal ([string]$copiedManifest.archive.sha256) $manifestInfo.sha256 "Copied package manifest SHA mismatch."
+
+	$badArchiveRoot = Join-Path $tempRoot "bad-archive"
+	[void](New-Item -ItemType Directory -Path $badArchiveRoot -Force)
+	$badArchivePath = Join-Path $badArchiveRoot "_MISSIONS.7z"
+	[System.IO.File]::WriteAllBytes($badArchivePath, [byte[]](65, 66, 67, 68))
+	$badManifestInfo = New-TestPackageManifest -Root $badArchiveRoot -ArchivePath $badArchivePath
+	[System.IO.File]::WriteAllBytes($badArchivePath, [byte[]](65, 66, 67, 69))
+	$badOutDir = Join-Path $badArchiveRoot "handoff"
+	$badResult = Invoke-HandoffChild @(
+		"-PackageManifestPath", $badManifestInfo.path,
+		"-ExpectedCandidate", $candidate,
+		"-ReleaseGit", $releaseGit,
+		"-OutDirectory", $badOutDir,
+		"-AllowNonHeadReleaseGit",
+		"-Force"
+	)
+	Assert-Equal ([string]$badResult.exitCode) "1" "Stale package handoff must exit nonzero."
+	$badPacketPath = Join-Path $badOutDir "release-handoff.json"
+	Assert-True (Test-Path -LiteralPath $badPacketPath -PathType Leaf) "Failed handoff should still write the diagnostic packet."
+	$badPacket = Get-Content -Raw -LiteralPath $badPacketPath | ConvertFrom-Json
+	Assert-Equal ([string]$badPacket.status) "needs_package_or_marker_fix" "Stale package handoff should not be runtime-ready."
+	Assert-GateStatus -Packet $badPacket -Id "archive-length-match" -ExpectedStatus "pass"
+	Assert-GateStatus -Packet $badPacket -Id "archive-sha256-match" -ExpectedStatus "fail"
 
 	Write-Host "WASP release handoff self-test PASS."
 } finally {
