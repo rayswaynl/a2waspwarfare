@@ -374,6 +374,40 @@ function Test-AIComDonateAuthorityGuard {
 	Add-Result "AI commander donation authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-FpsReportPvGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Init\Init_Server.sqf"
+		$clientPath = Join-Path $entry.Root "Client\Functions\Client_FpsReport.sqf"
+		$server = Get-Text $serverPath
+		$client = Get-Text $clientPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$start = $serverCode.IndexOf('"WFBE_FPS_REPORT" addPublicVariableEventHandler')
+		if ($start -lt 0) {
+			$missing += "$($entry.Terrain):missing-handler"
+			continue
+		}
+		$end = $serverCode.IndexOf('["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed', $start)
+		if ($end -lt 0) { $end = $serverCode.Length }
+		$block = $serverCode.Substring($start, $end - $start)
+		$shapeGuardAt = $block.IndexOf('typeName _d != "ARRAY"')
+		$countGuardAt = $block.IndexOf('count _d < 4')
+		$firstSelectAt = $block.IndexOf('_d select 0')
+		if ($shapeGuardAt -lt 0 -or $countGuardAt -lt 0) { $missing += "$($entry.Terrain):payload-shape" }
+		if ($firstSelectAt -ge 0 -and ($shapeGuardAt -lt 0 -or $countGuardAt -lt 0 -or $shapeGuardAt -gt $firstSelectAt -or $countGuardAt -gt $firstSelectAt)) { $missing += "$($entry.Terrain):guard-after-select" }
+		if (-not ($block.Contains('typeName _uid != "STRING"') -and $block.Contains('typeName _name != "STRING"') -and $block.Contains('typeName _avgFps != "SCALAR"') -and $block.Contains('typeName _minFps != "SCALAR"'))) { $missing += "$($entry.Terrain):field-types" }
+		if (-not ($block.Contains('rejected malformed WFBE_FPS_REPORT') -and $block.Contains('rejected short WFBE_FPS_REPORT') -and $block.Contains('rejected invalid WFBE_FPS_REPORT fields'))) { $missing += "$($entry.Terrain):warnings" }
+		if (-not ($client.Contains('WFBE_FPS_REPORT = [getPlayerUID player, name player, round _avg, round _min]') -and $client.Contains('publicVariableServer "WFBE_FPS_REPORT"'))) { $missing += "$($entry.Terrain):client-shape" }
+	}
+	Add-Result "FPS report PV guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomCommandConsoleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1231,6 +1265,7 @@ Test-PvfIntegrity
 Test-SideSupplyAuthorityGuard
 Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
+Test-FpsReportPvGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-AicomTeamLifecycleAuthorityGuard

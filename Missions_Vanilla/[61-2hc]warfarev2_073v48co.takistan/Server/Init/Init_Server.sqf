@@ -949,15 +949,33 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 //--- LAST so a '|' in a player name can't corrupt the earlier pipe-delimited fields.
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
-		private ["_d", "_players", "_hc"];
+		private ["_badFields", "_d", "_players", "_hc", "_uid", "_name", "_avgFps", "_minFps"];
 		_d = _this select 1;
+		if (typeName _d != "ARRAY") exitWith {
+			["WARNING", Format ["Init_Server.sqf: rejected malformed WFBE_FPS_REPORT payload type [%1].", typeName _d]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (count _d < 4) exitWith {
+			["WARNING", Format ["Init_Server.sqf: rejected short WFBE_FPS_REPORT payload [%1].", _d]] Call WFBE_CO_FNC_LogContent;
+		};
+		_uid = _d select 0;
+		_name = _d select 1;
+		_avgFps = _d select 2;
+		_minFps = _d select 3;
+		_badFields = false;
+		if (typeName _uid != "STRING") then {_badFields = true};
+		if (typeName _name != "STRING") then {_badFields = true};
+		if (typeName _avgFps != "SCALAR") then {_badFields = true};
+		if (typeName _minFps != "SCALAR") then {_badFields = true};
+		if (_badFields) exitWith {
+			["WARNING", Format ["Init_Server.sqf: rejected invalid WFBE_FPS_REPORT fields uid=%1 name=%2 avg=%3 min=%4.", typeName _uid, typeName _name, typeName _avgFps, typeName _minFps]] Call WFBE_CO_FNC_LogContent;
+		};
 		_players = { isPlayer _x } count playableUnits;
 		//--- hc= the live headless-client count (registry filtered to non-null, alive-leader HCs), so the
 		//--- planned 0-HC / 1-HC / 2-HC comparison days bucket cleanly even when an RPT spans several launches.
 		_hc = { !isNull _x && {!isNull leader _x} && {alive leader _x} } count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
-		diag_log ("FPSREPORT|v1|uid=" + str (_d select 0)
-			+ "|fps=" + str (_d select 2)
-			+ "|fpsMin=" + str (_d select 3)
+		diag_log ("FPSREPORT|v1|uid=" + str _uid
+			+ "|fps=" + str _avgFps
+			+ "|fpsMin=" + str _minFps
 			+ "|players=" + str _players
 			+ "|hc=" + str _hc
 			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
@@ -965,7 +983,7 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 			+ "|sun=" + str (round (sunOrMoon * 100) / 100)
 			+ "|srvFps=" + str (round diag_fps)
 			+ "|t=" + str (round (time / 60))
-			+ "|name=" + (_d select 1));
+			+ "|name=" + _name);
 	};
 	["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed (WFBE_C_CLIENT_FPS_REPORT=1)."] Call WFBE_CO_FNC_LogContent;
 };

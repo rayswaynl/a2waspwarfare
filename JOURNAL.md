@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — FPS telemetry payload guard [RELEASE LOOP]
+
+Closed the FPS telemetry public-variable hardening slice. The
+`WFBE_FPS_REPORT` server handler now rejects non-array, short, or wrong-typed
+payloads before reading any `_d select` slots, while preserving the existing
+`FPSREPORT|v1` runtime marker shape for valid clients.
+
+Static smoke now checks the FPS report payload guard and client sender shape
+across Chernarus and generated Takistan. `Run-WaspFinalCheck.ps1` passes with
+static smoke, both A2 OA compatibility lints, and high-only bug hunt clean.
+Runtime, SSH, RPT collection, upload, restart, cache-clear and deployment remain
+explicit-approval gated.
+
 ## 2026-07-01 — Final-check active-stress skip hygiene [RELEASE LOOP]
 
 Made the PR8 static smoke harness handle absent active stress mission copies
@@ -13,6 +26,7 @@ check failure while preserving the active-overlay gate for real stress runs.
 package worktree without an installed active mission root. Runtime, SSH, RPT
 collection, upload, restart, cache-clear and deployment remain explicit-approval
 gated.
+
 ## 2026-07-01 — HC AICOM/side-patrol delegate allowlist [RELEASE LOOP]
 
 Closed the next read-only scout finding around HC-routed `HandleSpecial`
