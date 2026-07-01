@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 23:08 Europe/Amsterdam
+Last updated: 2026-07-01 23:26 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -107,6 +107,12 @@ so runtime release proof remains blocked pending root-cause evidence. PR #137
 is the focused draft fix for PR #136's inherited
 static/release-identity blockers at
 `4604044a255b5be2eec86d7da7ffad670d2915ef`.
+
+PR #138 is a focused draft trace lane stacked on PR #137 at
+`41a9048764022f4345f521bc4453b5e89aca217f`. It adds capture-entry telemetry
+only, so the next exact RPT can distinguish order publication, HC driver order
+acceptance, arrival-gate crossing, arrival waits, and capture-phase entry.
+It is not a gameplay fix and not runtime proof.
 
 Exact PR #133 `SERVER_DEBUG` mission-folder artifact:
 
@@ -484,6 +490,51 @@ This artifact is not runtime proof. It proves PR #136 has a focused
 static/identity fix path, but release-ready wording still needs exact selected
 build real RPT evidence and human smoke notes.
 
+## PR #138 Build85 Capture-Entry Trace
+
+Fresh trace patch and packaging for PR #138 at 2026-07-01 23:26
+Europe/Amsterdam:
+
+- PR: <https://github.com/rayswaynl/a2waspwarfare/pull/138>
+- base PR: #137, <https://github.com/rayswaynl/a2waspwarfare/pull/137>
+- branch: `codex/trace-pr136-capture-entry`
+- base branch: `codex/fix-pr136-release-identity`
+- base head: `4604044a255b5be2eec86d7da7ffad670d2915ef`
+- fix head: `41a9048764022f4345f521bc4453b5e89aca217f`
+- artifact:
+  `outputs/a2waspwarfare-pr138-capture-trace-server-debug-missions.7z`
+- SHA256:
+  `BBC224FF0C2DDE0FDFB8B61502D97923D06B69740CAB61754010C71074CE8BC3`
+- size: `7178722` bytes
+
+Scope:
+
+- Adds `CAPTURE_TRACE|ORDER_PUBLISHED` when AssignTowns publishes a
+  `towns-target` HC order.
+- Adds `CAPTURE_TRACE|ORDER_ACCEPT` when the HC driver accepts a fresh order
+  sequence.
+- Adds `CAPTURE_TRACE|ARRIVAL_WAIT` every 60s while the driver has not crossed
+  the arrival gate, including current distance and gate radius.
+- Adds `CAPTURE_TRACE|ARRIVAL_GATE` when the driver crosses the arrival gate.
+- Adds `CAPTURE_TRACE|BEGIN_CAPTURE` when the driver enters the
+  `towns-target` capture phase.
+
+Validation:
+
+- PR #138 is open draft and GitHub reports it clean against PR #137.
+- `git diff --check`: pass.
+- `git diff --cached --check`: pass before commit.
+- LoadoutManager `SERVER_DEBUG` exited `0` and reached `CHERNARUS DONE` and
+  `TAKISTAN DONE`.
+- Archive integrity validation passed with 160 folders, 1727 files, and
+  24405187 uncompressed bytes.
+
+This is not release proof. It is instrumentation for the next exact RPT pass.
+The simple `"towns"` vs `"towns-target"` mismatch is not proven by static code:
+AssignTowns does publish `towns-target` for HC teams. PR #138 is intended to
+prove whether the real break is order publication, HC delivery, arrival gate, or
+capture-phase entry.
+
 ## Current Master / r9 Reconciliation
 
 After fresh remote refreshes on 2026-07-01 10:33, 10:48, and 11:04
@@ -641,8 +692,12 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 23:08 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 23:26 Europe/Amsterdam found:
 
+- PR #138: focused capture-entry telemetry lane, open draft and clean at
+  `41a9048764022f4345f521bc4453b5e89aca217f` against PR #137. It adds trace
+  markers only and is intended to make the next RPT proof decisive; it is not a
+  gameplay fix or release proof.
 - PR #137: focused Build85/cmdcon39 identity/static fix, open draft and clean
   at `4604044a255b5be2eec86d7da7ffad670d2915ef` against PR #136's branch. This
   clears PR #136's inherited `GUER_TECH.md` whitespace failure and produces a
@@ -974,23 +1029,28 @@ ASR-enabled RPT proof.
    package/static artifact SHA256 is
    `117E5893DB9D54BEDD57837F2DC9472CF64E87E54C3D8FA76B0288ECC720F86E`, but it
    is not release-ready proof.
-7. Do not use the stale PR #125 body hash
+7. If Build85 capture proof is pursued before a direct gameplay fix lands, use
+   PR #138's trace artifact SHA256
+   `BBC224FF0C2DDE0FDFB8B61502D97923D06B69740CAB61754010C71074CE8BC3` to collect
+   exact RPT evidence for `ORDER_PUBLISHED`, `ORDER_ACCEPT`, `ARRIVAL_WAIT`,
+   `ARRIVAL_GATE`, and `BEGIN_CAPTURE`.
+8. Do not use the stale PR #125 body hash
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
    current command-center package identity. Also do not use the local
    `b4628c35` / `D0BD2405...` tuple as current PR #125 proof; PR #125 has
    advanced to `c441d6f38df103e32694791f0bca5c5a70428c12` and needs a fresh
    package if selected.
-8. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
+9. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
    `96CD026F76E0828F584F243FEC2358C1D319CDEFAE5E69868B7394C89FC77171` no longer
    proves the latest master.
-9. Run the exact chosen artifact through folder-smoke or a controlled dedicated
+10. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
-10. Collect both-map server/client/latejoin/HC evidence.
-11. Run the release scanner with all required gates.
-12. Attach human smoke notes.
-13. Only then update release notes/wiki wording from runtime-pending to
+11. Collect both-map server/client/latejoin/HC evidence.
+12. Run the release scanner with all required gates.
+13. Attach human smoke notes.
+14. Only then update release notes/wiki wording from runtime-pending to
    release-proven.
 
 If the ASR/Ka-137 stop-condition errors recur on the exact proof runtime,
