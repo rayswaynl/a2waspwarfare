@@ -1,6 +1,6 @@
-# PR #122 Release Findings
+# Running Release Findings
 
-Last updated: 2026-07-01 11:19 Europe/Amsterdam
+Last updated: 2026-07-01 12:17 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -11,21 +11,22 @@ here.
 
 NO-GO as a release claim until exact-build runtime evidence exists.
 
-`origin/master` has advanced to the live command-center/AICOM line at
-`311b9d93661f292eeac9337989da44fd9b9ed8f5`. A current-master `SERVER_DEBUG`
-mission-folder artifact now exists, but it is still packaging/tooling proof
-only. PR #124/r8 remains stale/conflicting by local merge analysis relative to
-current master, so its artifacts no longer prove the current master state.
-Release-ready wording still needs current Arma 2 OA evidence from the exact
-chosen build, covering both Chernarus and Takistan plus server, client, late
-join, and headless-client roles.
+`origin/master` has advanced to
+`5bf5f92385ef0218c5e20fb4273cf563a295e82d`, which includes the merged PR #127
+release fold plus the cmdcon32 flat-ground placement hotfix. A fresh
+current-master `SERVER_DEBUG` mission-folder artifact exists for this exact
+head, but it is still packaging/tooling proof only. The older `311b9d93`,
+PR #127-only, r9, r8, and PR #122 artifacts no longer prove the current master
+state. Release-ready wording still needs current Arma 2 OA evidence from the
+exact chosen build, covering both Chernarus and Takistan plus server, client,
+late join, and headless-client roles.
 
 ## Current Anchors
 
 - Repository: `rayswaynl/a2waspwarfare`
 - Base branch: `origin/master`
 - Current `origin/master` head:
-  `311b9d93661f292eeac9337989da44fd9b9ed8f5`
+  `5bf5f92385ef0218c5e20fb4273cf563a295e82d`
 - Original PR #122 base head:
   `bd48a6dbe673ae47a88053dafdf948a29cb8dfe0`
 - PR #122 branch: `origin/feat/qol-polish-pack`
@@ -35,22 +36,27 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `e6a3d50dc309f4a3c3e72a1815cb58059eda8149`
+  `0b5d752d6b540aa8a1d013b3d6202514d96de4d8`
 
-GitHub currently reports PR #124 as open, draft, and `DIRTY`, while local
-merge-tree analysis still shows conflict markers after the `origin/master`
-command-center merge. The old r8 branch therefore needs conflict repair or
-replacement before it can be a current release candidate.
+PR #127, the curated release fold of selected legacy-fit changes from
+PR #124/#125/#126, was merged at
+`8db697c10a789fe4a495c91a967df927cceb7bbb`. It is now part of master, but a
+later cmdcon32 hotfix means the PR #127-only artifact is stale relative to the
+latest master artifact.
+
+GitHub currently reports PR #124 as open, draft, and `DIRTY`. The old r8 branch
+therefore needs conflict repair or replacement before it can be a current
+release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
-open, draft, and currently reported clean at head
-`0e2696f1cd831a36594836ccc7a395bd6637a0b4`. Treat it as a separate broad lane,
+open, draft, and currently reported dirty at head
+`e8f2598e3bfcce4b9a797c8cb02cdea75ca0886f`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also now exists as an open draft release-readiness/AICOM guardrail lane
-at head `5868dc91346c0d9ede6059460a88e8b75c28f762`. GitHub currently reports
-clean. It should still be reviewed as a separate focused AICOM/source-doc
-candidate before any release artifact target is reset.
+at head `c75a63eed5ce5a6384b84d96f5f26f8f3ddaf68f`. GitHub currently reports
+dirty after master advanced. Its verified shippable pieces were folded through
+PR #127; keep the remaining branch separate unless it is rebased and revalidated.
 
 ## R8 Integration Finding
 
@@ -195,7 +201,41 @@ armor is still wanted, but after `origin/master` advanced to `311b9d936` it is
 now behind by four commits. If r9-narrow is chosen, rebase/rebuild it on the
 current master before using it as a proof target.
 
-## Current Master Exact Artifact
+## Latest Master Exact Artifact
+
+An exact latest-master `SERVER_DEBUG` mission-folder artifact now exists:
+
+- source head: `5bf5f92385ef0218c5e20fb4273cf563a295e82d`
+- artifact: `outputs/a2waspwarfare-master-5bf5f923-server-debug-missions.7z`
+- SHA256: `2E88777C983CCEF2ACFF798302C33708C2561C1835981A884CE94340B61D7FEC`
+- size: `7140043` bytes
+- manifest:
+  `outputs/a2waspwarfare-master-server-debug-artifact-2026-07-01-1217.md`
+
+Build/validation:
+
+- `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj -c SERVER_DEBUG`
+  exited `0`
+- reached `CHERNARUS DONE`
+- reached `TAKISTAN DONE`
+- `ZipManager` auto-detected `C:\Program Files\7-Zip\7z.exe`
+- archive integrity test passed with 160 folders, 1719 files, 24057891
+  uncompressed bytes
+- extraction produced exactly the Chernarus and Takistan mission folders
+- extracted `version.sqf` files have `WF_DEBUG` commented out,
+  `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` present for
+  `git=5bf5f92385` on both terrains
+- `git diff --check 311b9d936..5bf5f9238` passed
+- added-line watched-token scan found no `params`, `pushBack`, `isEqualTo`,
+  `isEqualType`, `getPosVisual`, `remoteExec`, or `BIS_fnc_MP`
+- added-line scan still flags AICOM `count` expressions inside/near boolean
+  logic; treat this as a source-review/runtime-RPT risk until real RPTs prove
+  clean
+
+This artifact supersedes the `311b9d93` and PR #127-only artifacts as the
+freshest exact current-master payload. It is still not runtime proof.
+
+## Superseded Current Master Exact Artifact
 
 An exact current-master `SERVER_DEBUG` mission-folder artifact now exists:
 
@@ -221,9 +261,9 @@ Build/validation:
   noise only; `git diff --stat`, `git diff --numstat`, and `git diff --check`
   found no real content changes
 
-This artifact supersedes the 10:48 `54d0b8e7` artifact as the freshest exact
-current-master payload for proof collection if current `origin/master` is chosen
-as the release target. It is still not runtime proof.
+This artifact superseded the 10:48 `54d0b8e7` artifact at the time, but it is
+now stale relative to `5bf5f92385ef0218c5e20fb4273cf563a295e82d`. It should not
+be used as current-master proof.
 
 ## Current Master Folder Smoke Kit
 
@@ -251,8 +291,9 @@ Validation performed:
   markers, content logging markers, zero stop-condition matches, and
   `failed_count = 0`
 
-This kit is still not runtime proof. It is the current best portable collection
-path if `origin/master` is selected as the proof target.
+This kit is still not runtime proof, and it is now stale relative to
+`5bf5f92385ef0218c5e20fb4273cf563a295e82d`. Rebuild the folder-smoke kit from
+the `5bf5f923` artifact before using folder-smoke as the current proof path.
 
 ## Evidence Already Strong
 
@@ -346,14 +387,13 @@ ASR-enabled RPT proof.
 
 ## Recommended Next Path
 
-1. Decide whether the release proof target is current `origin/master` as-is,
-   PR #126 after review/integration, old r8/PR #124 after conflict repair, or
-   local r9-narrow.
-2. Do not use old PR #122 or r8 artifacts to prove current `origin/master`.
+1. Treat latest `origin/master` at
+   `5bf5f92385ef0218c5e20fb4273cf563a295e82d` as the current proof target unless
+   a newer branch is deliberately selected and rebuilt.
+2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
+   prove latest `origin/master`.
 3. If current `origin/master` is chosen, use artifact SHA256
-   `789165EE6A434E16E2602A13CA2582334EBE3994E0D59D45D2B128E0CA3186C5` and
-   folder-smoke kit SHA256
-   `9CDC5BB7E12C34D58B8AEF2738A0F35F4E8C5E303D4A178BA47E5E9A5FB09E1C`.
+   `2E88777C983CCEF2ACFF798302C33708C2561C1835981A884CE94340B61D7FEC`.
 4. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
