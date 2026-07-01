@@ -1,5 +1,20 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — HC reconnect/drop AICOM audit tokens [RELEASE LOOP]
+
+Ported the source-only part of `f20ddfc83` into the PR #125 release branch for
+both maintained terrains. HC reconnect now stamps `wfbe_aicom_last_heading_t`
+on touched AICOM HC groups and emits delayed `HCRECON_AICOM_AUDIT` telemetry.
+HC disconnect now emits immediate and delayed `HCDROP_AICOM_AUDIT` telemetry
+with side, team, live-leader, owner and heading-freshness counts.
+
+This is diagnostic instrumentation for runtime proof collection; it does not
+change AI commander target selection, team production or delegation decisions.
+`Run-WaspFinalCheck.ps1` kept Chernarus/Takistan A2/OA lint clean and HIGH
+BugHunt clean. The local static smoke still reports the known active stress
+overlay/RHUD proof prerequisites as missing in this workspace, so runtime RPT
+evidence and deployment remain approval-gated.
+
 ## 2026-07-01 — Upgrade client/server payment contract alignment [RELEASE LOOP]
 
 Aligned the direct player upgrade GUI path with the hardened
