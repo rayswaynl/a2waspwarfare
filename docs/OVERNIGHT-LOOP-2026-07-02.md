@@ -42,3 +42,6 @@
 ## Tick log
 - **Tick 0** (setup): server healthy (3/3 procs, cmdcon36, 0 errors, AICOMHB v2, WEST 10-0). No issue →
   shipped the pending batch above (grade-stamp, marker b_inf, WASPSCALE v2 emitter, HC label). Loop armed.
+- **Tick 1** (Ray-requested deploy): shipped **cmdcon37** = the patch + **camps Fix A** (`WFBE_C_AICOM_CAMP_GATE_MODE2`, hold+clear camps in AllCamps mode) + **stall-advance floor**
+  (`WFBE_C_AICOM_STALL_ADVANCE_SECS=240`, re-route parked-not-flipping teams — the real fix for the live "0 town-captures / grind unflippable depot" root of standing+circling+afraid-of-camps).
+  Boot-smoke found + fixed a WASPSCALE build-tag string-`find` A3 fault (aborted the emit → 0 lines) → re-deployed. **Live cmdcon37 clean: 0 errors, AICOMHB v2, WASPSCALE v2 emitting `build=cmdcon37aicom|hc_fps=46`.**
