@@ -29,11 +29,11 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory "C:\WASP\rpt-archive" `
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit c441d6f38d `
-  -ExpectedArchiveSha256 F057952E3DEDF4AB7D75FD1B3BEECFF4183506A7B83798241120B2F8D14B5F43 `
+  -ExpectedGit 7f81115edf `
+  -ExpectedArchiveSha256 50AD7B20D82E30AF7C7CD7028D79F8EFC0D48745A209F1D959C1DFE52315C320 `
   -RequireReleaseMarkers `
   -Json `
-  -OutFile "C:\WASP\rpt-archive\marker-sweep-c441d6f38d.json"
+  -OutFile "C:\WASP\rpt-archive\marker-sweep-7f81115edf.json"
 ```
 
 Only add PR #126 HC-audit markers to `-RequirePattern` when the package being tested actually includes that instrumentation:
@@ -43,12 +43,12 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory "C:\WASP\rpt-archive" `
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit c441d6f38d `
-  -ExpectedArchiveSha256 F057952E3DEDF4AB7D75FD1B3BEECFF4183506A7B83798241120B2F8D14B5F43 `
+  -ExpectedGit 7f81115edf `
+  -ExpectedArchiveSha256 50AD7B20D82E30AF7C7CD7028D79F8EFC0D48745A209F1D959C1DFE52315C320 `
   -RequireReleaseMarkers `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
   -Json `
-  -OutFile "C:\WASP\rpt-archive\marker-sweep-c441d6f38d-hc-audit.json"
+  -OutFile "C:\WASP\rpt-archive\marker-sweep-7f81115edf-hc-audit.json"
 ```
 
 By default, samples include the marker name, public file label, line number, and a short line hash. `-OutFile` writes the same redaction-safe JSON that `-Json` prints, and the output records the expected candidate, git marker, archive SHA and generated terrain markers. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
@@ -56,7 +56,7 @@ By default, samples include the marker name, public file label, line number, and
 Useful PR #126 proof markers:
 
 - `WASPRELEASE`
-- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=c441d6f38d`
+- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=7f81115edf`
 - `HCDROP_AICOM_AUDIT`
 - `HCRECON_AICOM_AUDIT`
 - `HCSIDE|v1|disconnect`
@@ -65,7 +65,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-The last recorded PR #125 package checkpoint is `codex/release-command-center-20260630@c441d6f38d`, `_MISSIONS.7z` SHA256 `F057952E3DEDF4AB7D75FD1B3BEECFF4183506A7B83798241120B2F8D14B5F43`, `1,885` entries, `7,161,823` bytes, handoff `ready_for_runtime_collection`. PR #125 later advanced to `7f81115ed` with mission source changes, so refresh the package tuple before runtime collection if that newer head remains the target. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against the chosen package tuple.
+Current PR #125 package checkpoint is `codex/release-command-center-20260630@7f81115edf`, `_MISSIONS.7z` SHA256 `50AD7B20D82E30AF7C7CD7028D79F8EFC0D48745A209F1D959C1DFE52315C320`, `1,885` entries, `7,161,964` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
 
 Run the helper contract self-test after editing it:
 
