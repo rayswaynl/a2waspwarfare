@@ -140,9 +140,11 @@ release-candidate\
 
 It also checks that each role file contains the terrain-specific release marker
 and matching `MISSINIT` world, rejects extra/duplicate copied RPTs, and can
-reject stale RPTs when passed the terrain launch times from the run ledger. The
-run ledger still needs to record the original source RPT path for each copied
-file so reviewers can reject duplicate source paths.
+reject stale RPTs from the terrain launch times in the run ledger. The run
+ledger is machine-checked too: it must record the original source RPT path,
+copied packet path, command line, PID and terrain start time for each role.
+Duplicate original source RPT paths fail the packet gate. Copied file
+LastWriteTime values are read by the checker itself.
 
 ```powershell
 $releaseGit = git rev-parse --short=10 HEAD
@@ -164,8 +166,33 @@ values so runtime proof ties back to the exact release HEAD.
 & .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 `
   -RptRoot "C:\WASP\rpts\release-candidate" `
   -ExpectedGit $releaseGit `
-  -ChernarusStartTime "2026-07-01T20:00:00+02:00" `
-  -TakistanStartTime "2026-07-01T21:00:00+02:00"
+  -RunLedgerPath "C:\WASP\rpts\release-candidate\release-run-ledger.json"
+```
+
+The ledger is intentionally structured as flat records so copied packet files
+and original live/source RPT files can be audited separately:
+
+```json
+{
+  "schema": "a2waspwarfare-runtime-run-ledger-v1",
+  "release": {
+    "candidate": "release-command-center-20260630",
+    "git": "<release-git-short>",
+    "archiveSha256": "<_MISSIONS.7z-sha256>"
+  },
+  "records": [
+    {
+      "terrain": "chernarus",
+      "role": "server",
+      "terrainStartTime": "2026-07-01T20:00:00+02:00",
+      "pid": 1234,
+      "commandLine": "<redacted-command-line>",
+      "profilePath": "<profile-or-log-root>",
+      "sourceRptPath": "C:\\ArmaProfiles\\server\\arma2oaserver.RPT",
+      "copiedRptPath": "chernarus\\server.rpt"
+    }
+  ]
+}
 ```
 
 After the packet matrix passes, the scorer checks both Chernarus and Takistan

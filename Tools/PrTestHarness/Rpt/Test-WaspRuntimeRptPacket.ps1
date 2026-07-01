@@ -3,6 +3,8 @@ param(
 	[Parameter(Mandatory)] [string]$RptRoot,
 	[string]$ExpectedCandidate = "release-command-center-20260630",
 	[string]$ExpectedGit = "",
+	[string]$RunLedgerPath = "",
+	[switch]$RequireSourceRptExists,
 	[datetime]$ChernarusStartTime,
 	[datetime]$TakistanStartTime,
 	[switch]$Json,
@@ -45,6 +47,270 @@ function ConvertTo-Array {
 	if ($null -eq $Value) { return @() }
 	if ($Value -is [System.Array]) { return @($Value) }
 	return @($Value)
+}
+
+function Get-JsonValue {
+	param($Object, [string]$Name)
+	if ($null -eq $Object) { return $null }
+	$property = $Object.PSObject.Properties[$Name]
+	if ($null -eq $property) { return $null }
+	return $property.Value
+}
+
+function Resolve-LedgerPathValue {
+	param([string]$Path, [string]$DefaultBasePath)
+	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+	$expanded = [System.Environment]::ExpandEnvironmentVariables($Path)
+	if ([System.IO.Path]::IsPathRooted($expanded)) {
+		return [System.IO.Path]::GetFullPath($expanded)
+	}
+	return [System.IO.Path]::GetFullPath((Join-Path $DefaultBasePath $expanded))
+}
+
+function Get-SafeTextHash {
+	param([string]$Text)
+	if ([string]::IsNullOrWhiteSpace($Text)) { return "" }
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	try {
+		$bytes = [System.Text.Encoding]::UTF8.GetBytes($Text.ToLowerInvariant())
+		$hash = $sha.ComputeHash($bytes)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").Substring(0, 12)
+	} finally {
+		$sha.Dispose()
+	}
+}
+
+function ConvertTo-LedgerRecords {
+	param($Ledger)
+	$records = New-Object System.Collections.Generic.List[object]
+	$flatRecords = Get-JsonValue $Ledger "records"
+	if ($null -ne $flatRecords) {
+		foreach ($record in (ConvertTo-Array $flatRecords)) { [void]$records.Add($record) }
+		return $records.ToArray()
+	}
+	$runs = Get-JsonValue $Ledger "runs"
+	if ($null -ne $runs) {
+		foreach ($record in (ConvertTo-Array $runs)) { [void]$records.Add($record) }
+		return $records.ToArray()
+	}
+	$terrains = Get-JsonValue $Ledger "terrains"
+	if ($null -ne $terrains) {
+		foreach ($terrainRecord in (ConvertTo-Array $terrains)) {
+			$terrainName = [string](Get-JsonValue $terrainRecord "terrain")
+			$terrainStart = Get-JsonValue $terrainRecord "startTime"
+			$rolesValue = Get-JsonValue $terrainRecord "roles"
+			foreach ($roleRecord in (ConvertTo-Array $rolesValue)) {
+				$copy = [ordered]@{}
+				foreach ($property in $roleRecord.PSObject.Properties) { $copy[$property.Name] = $property.Value }
+				if ([string]::IsNullOrWhiteSpace([string](Get-JsonValue ([pscustomobject]$copy) "terrain"))) { $copy["terrain"] = $terrainName }
+				if ($null -ne $terrainStart -and [string]::IsNullOrWhiteSpace([string](Get-JsonValue ([pscustomobject]$copy) "terrainStartTime"))) { $copy["terrainStartTime"] = $terrainStart }
+				[void]$records.Add([pscustomobject]$copy)
+			}
+		}
+	}
+	return $records.ToArray()
+}
+
+function Test-WaspRuntimeRunLedger {
+	param(
+		[string]$LedgerPath,
+		[string]$RootPath,
+		[string]$ExpectedGit,
+		[string]$ExpectedCandidate,
+		[object[]]$ExpectedFiles,
+		[hashtable]$ExplicitStartTimes
+	)
+	$missing = New-Object System.Collections.Generic.List[string]
+	$failHits = New-Object System.Collections.Generic.List[string]
+	$recordResults = New-Object System.Collections.Generic.List[object]
+	$ledgerStartTimes = @{}
+
+	if ([string]::IsNullOrWhiteSpace($LedgerPath)) {
+		[void]$missing.Add("RunLedgerPath")
+		return [ordered]@{
+			status = "missing"
+			path = ""
+			missing = $missing.ToArray()
+			failHits = $failHits.ToArray()
+			startTimes = $ledgerStartTimes
+			records = $recordResults.ToArray()
+		}
+	}
+
+	if (!(Test-Path -LiteralPath $LedgerPath)) {
+		[void]$missing.Add("run ledger file")
+		return [ordered]@{
+			status = "missing"
+			path = ConvertTo-SafePath $LedgerPath
+			missing = $missing.ToArray()
+			failHits = $failHits.ToArray()
+			startTimes = $ledgerStartTimes
+			records = $recordResults.ToArray()
+		}
+	}
+
+	$ledgerItem = Get-Item -LiteralPath $LedgerPath
+	$ledgerDir = Split-Path -Parent $ledgerItem.FullName
+	try {
+		$ledger = Get-Content -Raw -LiteralPath $ledgerItem.FullName | ConvertFrom-Json
+	} catch {
+		[void]$failHits.Add("run ledger JSON parse failed")
+		return [ordered]@{
+			status = "fail"
+			path = ConvertTo-SafePath $ledgerItem.FullName
+			missing = $missing.ToArray()
+			failHits = $failHits.ToArray()
+			startTimes = $ledgerStartTimes
+			records = $recordResults.ToArray()
+		}
+	}
+
+	$schema = [string](Get-JsonValue $ledger "schema")
+	if ($schema -ne "a2waspwarfare-runtime-run-ledger-v1") {
+		[void]$failHits.Add("schema must be a2waspwarfare-runtime-run-ledger-v1")
+	}
+	$release = Get-JsonValue $ledger "release"
+	if ($null -ne $release) {
+		$ledgerGit = [string](Get-JsonValue $release "git")
+		$ledgerCandidate = [string](Get-JsonValue $release "candidate")
+		if (![string]::IsNullOrWhiteSpace($ledgerGit) -and $ledgerGit -ne $ExpectedGit) {
+			[void]$failHits.Add("release.git '$ledgerGit' does not match expected '$ExpectedGit'")
+		}
+		if (![string]::IsNullOrWhiteSpace($ledgerCandidate) -and $ledgerCandidate -ne $ExpectedCandidate) {
+			[void]$failHits.Add("release.candidate '$ledgerCandidate' does not match expected '$ExpectedCandidate'")
+		}
+	}
+
+	$records = @(ConvertTo-LedgerRecords $ledger)
+	if ($records.Count -eq 0) {
+		[void]$missing.Add("records")
+	}
+
+	$sourcePaths = New-Object System.Collections.Generic.List[string]
+	$processKeysByTerrain = @{}
+	$topLevelStartTimes = Get-JsonValue $ledger "terrainStartTimes"
+	$expectedKeys = @{}
+	foreach ($expected in $ExpectedFiles) { $expectedKeys[("{0}/{1}" -f $expected.terrain, $expected.role)] = $true }
+	foreach ($record in $records) {
+		$recordKey = "{0}/{1}" -f ([string](Get-JsonValue $record "terrain")).ToLowerInvariant(), ([string](Get-JsonValue $record "role"))
+		if (!$expectedKeys.ContainsKey($recordKey)) {
+			[void]$failHits.Add("extra ledger record $recordKey")
+		}
+	}
+	foreach ($expected in $ExpectedFiles) {
+		$terrain = [string]$expected.terrain
+		$role = [string]$expected.role
+		$expectedCopiedPath = [System.IO.Path]::GetFullPath([string]$expected.path)
+		$matches = @($records | Where-Object { ([string](Get-JsonValue $_ "terrain")).ToLowerInvariant() -eq $terrain -and ([string](Get-JsonValue $_ "role")) -eq $role })
+		if ($matches.Count -eq 0) {
+			[void]$missing.Add("ledger record $terrain/$role")
+			continue
+		}
+		if ($matches.Count -gt 1) {
+			[void]$failHits.Add("duplicate ledger records for $terrain/$role")
+		}
+		$record = $matches[0]
+		$sourceRaw = [string](Get-JsonValue $record "sourceRptPath")
+		$copiedRaw = [string](Get-JsonValue $record "copiedRptPath")
+		$commandLine = [string](Get-JsonValue $record "commandLine")
+		$pidValue = Get-JsonValue $record "pid"
+		$copiedLastWriteRaw = [string](Get-JsonValue $record "copiedLastWriteTime")
+		$terrainStartRaw = [string](Get-JsonValue $record "terrainStartTime")
+		if ([string]::IsNullOrWhiteSpace($terrainStartRaw)) { $terrainStartRaw = [string](Get-JsonValue $record "startTime") }
+		if ([string]::IsNullOrWhiteSpace($terrainStartRaw) -and $null -ne $topLevelStartTimes) { $terrainStartRaw = [string](Get-JsonValue $topLevelStartTimes $terrain) }
+
+		if ([string]::IsNullOrWhiteSpace($sourceRaw)) { [void]$missing.Add("sourceRptPath for $terrain/$role") }
+		if ([string]::IsNullOrWhiteSpace($copiedRaw)) { [void]$missing.Add("copiedRptPath for $terrain/$role") }
+		if ([string]::IsNullOrWhiteSpace($commandLine)) { [void]$missing.Add("commandLine for $terrain/$role") }
+		if ($null -eq $pidValue -or [string]::IsNullOrWhiteSpace([string]$pidValue)) { [void]$missing.Add("pid for $terrain/$role") }
+		if ([string]::IsNullOrWhiteSpace($terrainStartRaw)) { [void]$missing.Add("terrainStartTime for $terrain/$role") }
+
+		$sourcePath = Resolve-LedgerPathValue $sourceRaw $ledgerDir
+		$copiedPath = Resolve-LedgerPathValue $copiedRaw $RootPath
+		if (![string]::IsNullOrWhiteSpace($sourcePath)) {
+			[void]$sourcePaths.Add($sourcePath.ToLowerInvariant())
+			if ([System.IO.Path]::GetExtension($sourcePath).ToLowerInvariant() -ne ".rpt") { [void]$failHits.Add("sourceRptPath for $terrain/$role must point to an .rpt file") }
+			if ($RequireSourceRptExists -and !(Test-Path -LiteralPath $sourcePath)) { [void]$failHits.Add("source RPT does not exist for ${terrain}/${role}: $(ConvertTo-SafePath $sourcePath)") }
+		}
+		if (![string]::IsNullOrWhiteSpace($copiedPath) -and $copiedPath.ToLowerInvariant() -ne $expectedCopiedPath.ToLowerInvariant()) {
+			[void]$failHits.Add("copiedRptPath for $terrain/$role does not match packet path")
+		}
+		if (![string]::IsNullOrWhiteSpace($sourcePath) -and $sourcePath.Equals($copiedPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+			[void]$failHits.Add("sourceRptPath and copiedRptPath are the same for $terrain/$role")
+		}
+
+		$pidInt = 0
+		if ($null -ne $pidValue -and ![int]::TryParse([string]$pidValue, [ref]$pidInt)) {
+			[void]$failHits.Add("pid for $terrain/$role is not an integer")
+		} elseif ($pidInt -lt 1 -and $null -ne $pidValue -and ![string]::IsNullOrWhiteSpace([string]$pidValue)) {
+			[void]$failHits.Add("pid for $terrain/$role must be greater than zero")
+		} elseif ($pidInt -gt 0) {
+			if (!$processKeysByTerrain.ContainsKey($terrain)) { $processKeysByTerrain[$terrain] = New-Object System.Collections.Generic.List[string] }
+			$processKey = "$pidInt|$commandLine"
+			[void]$processKeysByTerrain[$terrain].Add($processKey)
+		}
+
+		$terrainStart = [datetime]::MinValue
+		if (![string]::IsNullOrWhiteSpace($terrainStartRaw)) {
+			if (![datetime]::TryParse($terrainStartRaw, [ref]$terrainStart)) {
+				[void]$failHits.Add("terrainStartTime for $terrain/$role is not a datetime")
+			} else {
+				if (!$ledgerStartTimes.ContainsKey($terrain)) {
+					$ledgerStartTimes[$terrain] = $terrainStart
+				} elseif ([Math]::Abs(($ledgerStartTimes[$terrain] - $terrainStart).TotalSeconds) -gt 2) {
+					[void]$failHits.Add("terrainStartTime differs across $terrain ledger records")
+				}
+				if ($ExplicitStartTimes.ContainsKey($terrain) -and $null -ne $ExplicitStartTimes[$terrain] -and [Math]::Abs(($ExplicitStartTimes[$terrain] - $terrainStart).TotalSeconds) -gt 2) {
+					[void]$failHits.Add("explicit $terrain start time does not match ledger")
+				}
+			}
+		}
+
+		$copiedLastWrite = [datetime]::MinValue
+		if (![string]::IsNullOrWhiteSpace($copiedLastWriteRaw)) {
+			if (![datetime]::TryParse($copiedLastWriteRaw, [ref]$copiedLastWrite)) {
+				[void]$failHits.Add("copiedLastWriteTime for $terrain/$role is not a datetime")
+			} elseif (Test-Path -LiteralPath $expectedCopiedPath) {
+				$actualLastWrite = (Get-Item -LiteralPath $expectedCopiedPath).LastWriteTime
+				if ([Math]::Abs(($actualLastWrite - $copiedLastWrite).TotalSeconds) -gt 2) {
+					[void]$failHits.Add("copiedLastWriteTime for $terrain/$role does not match copied file")
+				}
+			}
+		}
+
+		[void]$recordResults.Add([ordered]@{
+			terrain = $terrain
+			role = $role
+			sourceRptRecorded = (![string]::IsNullOrWhiteSpace($sourcePath))
+			sourceRptPathHash = Get-SafeTextHash $sourcePath
+			copiedRptPath = ConvertTo-SafePath $copiedPath
+			pidRecorded = ($pidInt -gt 0)
+			commandLineRecorded = (![string]::IsNullOrWhiteSpace($commandLine))
+			terrainStartTime = if ($terrainStart -eq [datetime]::MinValue) { "" } else { $terrainStart.ToString("yyyy-MM-ddTHH:mm:sszzz") }
+			copiedLastWriteTime = if ($copiedLastWrite -eq [datetime]::MinValue) { "" } else { $copiedLastWrite.ToString("yyyy-MM-ddTHH:mm:sszzz") }
+		})
+	}
+
+	$duplicateSourcePaths = @($sourcePaths.ToArray() | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })
+	foreach ($duplicate in $duplicateSourcePaths) {
+		[void]$failHits.Add("duplicate original source RPT path hash: $(Get-SafeTextHash $duplicate)")
+	}
+	foreach ($terrainName in $processKeysByTerrain.Keys) {
+		$duplicateProcessKeys = @($processKeysByTerrain[$terrainName].ToArray() | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })
+		foreach ($duplicateProcessKey in $duplicateProcessKeys) {
+			[void]$failHits.Add("duplicate process evidence for ${terrainName}: $duplicateProcessKey")
+		}
+	}
+
+	$status = if ($failHits.Count -gt 0) { "fail" } elseif ($missing.Count -gt 0) { "missing" } else { "pass" }
+	return [ordered]@{
+		status = $status
+		path = ConvertTo-SafePath $ledgerItem.FullName
+		missing = $missing.ToArray()
+		failHits = $failHits.ToArray()
+		startTimes = $ledgerStartTimes
+		records = $recordResults.ToArray()
+	}
 }
 
 function Get-RptLines {
@@ -166,6 +432,13 @@ foreach ($terrain in $terrains) {
 	}
 }
 
+$ledgerResult = Test-WaspRuntimeRunLedger -LedgerPath $RunLedgerPath -RootPath $rootPath -ExpectedGit $ExpectedGit -ExpectedCandidate $ExpectedCandidate -ExpectedFiles $expectedFiles.ToArray() -ExplicitStartTimes $startTimes
+foreach ($terrain in $terrains) {
+	if ($null -eq $startTimes[$terrain] -and $ledgerResult.startTimes.ContainsKey($terrain)) {
+		$startTimes[$terrain] = $ledgerResult.startTimes[$terrain]
+	}
+}
+
 $fileResults = New-Object System.Collections.Generic.List[object]
 $missingFiles = @()
 $markerWorldFailures = @()
@@ -270,6 +543,13 @@ $gates = @(
 		note = "Each role/terrain RPT must be a distinct copied file; original source paths are checked in the runtime run ledger."
 	},
 	[ordered]@{
+		id = "runtime-run-ledger"
+		status = $ledgerResult.status
+		missing = @($ledgerResult.missing)
+		failHits = @($ledgerResult.failHits)
+		note = "Requires a JSON run ledger with unique original source RPT paths, copied packet paths, command lines, PIDs and per-terrain launch start times."
+	},
+	[ordered]@{
 		id = "per-file-marker-world"
 		status = if ($markerWorldFailures.Count -eq 0) { "pass" } else { "fail" }
 		missing = @()
@@ -281,7 +561,7 @@ $gates = @(
 		status = if ($freshnessMissing.Count -eq 0 -and $freshnessFailures.Count -eq 0) { "pass" } elseif ($freshnessFailures.Count -gt 0) { "fail" } else { "missing" }
 		missing = @($freshnessMissing | ForEach-Object { "{0} start time" -f $_ })
 		failHits = $freshnessFailures
-		note = "Pass -ChernarusStartTime and -TakistanStartTime from the runtime run ledger; copied RPT LastWriteTime must be after that terrain's launch start."
+		note = "Use -RunLedgerPath or explicit terrain start times; copied RPT LastWriteTime must be after that terrain's launch start."
 	}
 )
 
@@ -300,10 +580,15 @@ $result = [ordered]@{
 		chernarus = if ($null -eq $startTimes.chernarus) { "" } else { $startTimes.chernarus.ToString("yyyy-MM-ddTHH:mm:sszzz") }
 		takistan = if ($null -eq $startTimes.takistan) { "" } else { $startTimes.takistan.ToString("yyyy-MM-ddTHH:mm:sszzz") }
 	}
+	runLedger = [ordered]@{
+		path = $ledgerResult.path
+		status = $ledgerResult.status
+		records = $ledgerResult.records
+	}
 	files = $fileResults.ToArray()
 	gates = $gates
 	overall = if ($overallPass) { "pass" } else { "missing_or_failed" }
-	privacy = "No raw RPT lines are emitted; paths are user-profile redacted."
+	privacy = "No raw RPT lines are emitted; original source RPT paths are not emitted, only short hashes."
 }
 
 if ($Json) {

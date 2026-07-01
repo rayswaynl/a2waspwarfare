@@ -132,8 +132,9 @@ if (Test-Path -LiteralPath $outPath) {
 
 $jsonOut = Join-Path $outPath "release-handoff.json"
 $markdownOut = Join-Path $outPath "release-handoff.md"
+$ledgerTemplateOut = Join-Path $outPath "runtime-run-ledger.template.json"
 if (!$Force) {
-	foreach ($candidate in @($jsonOut, $markdownOut)) {
+	foreach ($candidate in @($jsonOut, $markdownOut, $ledgerTemplateOut)) {
 		if (Test-Path -LiteralPath $candidate) {
 			throw "Output already exists: $candidate. Pass -Force to overwrite."
 		}
@@ -146,6 +147,22 @@ $markerArrayCommand = @(
 	('  "{0}"' -f $expectedMarkers.takistan),
 	')'
 ) -join "`n"
+
+$runLedgerRecords = New-Object System.Collections.Generic.List[object]
+foreach ($terrain in @("chernarus", "takistan")) {
+	foreach ($role in @("server", "HC1", "HC2", "start-client", "late-JIP")) {
+		[void]$runLedgerRecords.Add([ordered]@{
+			terrain = $terrain
+			role = $role
+			terrainStartTime = "<$terrain-launch-time>"
+			pid = "<process-pid>"
+			commandLine = "<redacted-command-line>"
+			profilePath = "<profile-or-log-root>"
+			sourceRptPath = "<original-source-rpt-path>"
+			copiedRptPath = "$terrain\$role.rpt"
+		})
+	}
+}
 
 $packet = [ordered]@{
 	schema = "a2waspwarfare-release-handoff-v1"
@@ -174,16 +191,25 @@ $packet = [ordered]@{
 	gates = $gates.ToArray()
 	commands = [ordered]@{
 		markerArray = $markerArrayCommand
-		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedGit $ReleaseGit -ChernarusStartTime `"<chernarus-launch-time>`" -TakistanStartTime `"<takistan-launch-time>`""
+		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedGit $ReleaseGit -RunLedgerPath `"<release-candidate-rpts>\release-run-ledger.json`""
 		runtimeScorer = "& .\Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers"
 		runtimeSummary = "& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
 		packageProof = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1 -ArchivePath .\_MISSIONS.7z -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -OutDirectory .\wasp-release-package-manifest -Force"
+	}
+	runtimeRunLedgerTemplate = [ordered]@{
+		schema = "a2waspwarfare-runtime-run-ledger-v1"
+		release = [ordered]@{
+			candidate = $ExpectedCandidate
+			git = $ReleaseGit
+			archiveSha256 = [string]$manifest.archive.sha256
+		}
+		records = $runLedgerRecords.ToArray()
 	}
 	runtimeChecklist = @(
 		"Exactly ten copied RPT files exist: chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt and takistan/{server,HC1,HC2,start-client,late-JIP}.rpt.",
 		"No extra RPT files or duplicate copied paths are present in the release-candidate RPT root.",
 		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker and MISSINIT worldName.",
-		"Run ledger records terrain launch times, original source RPT paths, copied paths, command lines and PIDs; copied RPT LastWriteTime values are after their terrain launch time and no original source RPT path is reused across roles.",
+		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath: terrain launch times, original source RPT paths, copied paths, command lines and PIDs are present; copied RPT LastWriteTime values are read from the copied files and must be after their terrain launch time; no original source RPT path is reused across roles.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
 		"AICOM side discovery, heartbeat, tick and progress tokens for WEST and EAST.",
@@ -216,6 +242,7 @@ $packet = [ordered]@{
 }
 
 $packet | ConvertTo-Json -Depth 16 | Set-Content -LiteralPath $jsonOut -Encoding UTF8
+$packet.runtimeRunLedgerTemplate | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $ledgerTemplateOut -Encoding UTF8
 
 $lines = New-Object System.Collections.Generic.List[string]
 [void]$lines.Add("# WASP Release Handoff")
@@ -261,6 +288,14 @@ foreach ($gate in $packet.gates) {
 [void]$lines.Add($packet.commands.runtimeSummary)
 [void]$lines.Add('```')
 [void]$lines.Add("")
+[void]$lines.Add("## Runtime Run Ledger Template")
+[void]$lines.Add("")
+[void]$lines.Add("Save this as `release-run-ledger.json` beside the RPT packet and replace placeholders before running the packet checker.")
+[void]$lines.Add("")
+[void]$lines.Add('```json')
+[void]$lines.Add(($packet.runtimeRunLedgerTemplate | ConvertTo-Json -Depth 10))
+[void]$lines.Add('```')
+[void]$lines.Add("")
 [void]$lines.Add("## Runtime Checklist")
 [void]$lines.Add("")
 foreach ($item in $packet.runtimeChecklist) {
@@ -291,5 +326,6 @@ $lines | Set-Content -LiteralPath $markdownOut -Encoding UTF8
 Write-Host "Wrote release handoff:"
 Write-Host $jsonOut
 Write-Host $markdownOut
+Write-Host $ledgerTemplateOut
 
 if ($blockingFailures.Count -gt 0) { exit 1 }
