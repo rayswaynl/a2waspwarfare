@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Package payload HEAD binding [RELEASE LOOP]
+
+Tightened `Tools/PrTestHarness/Package/Test-WaspReleasePackage.ps1` so package
+provenance now checks the complete archived Chernarus/Takistan mission payload
+against `git` `HEAD`. The archive may contain the two generated ignored
+`version.sqf` files, but every other mission file must be tracked under the
+matching source mission root and hash back to the `HEAD` blob.
+
+Added `Test-WaspReleasePackage.SelfTest.ps1`. The fixture runs the current
+package as the happy path, then mutates temporary archive copies to add a stray
+untracked mission file and to replace a tracked file with stale content. Both
+must fail the new `git-tracked-mission-payload` gate.
+
 ## 2026-07-01 — Runtime handoff checklist identity coverage [RELEASE LOOP]
 
 Tightened the generated release handoff checklist so operators see the same

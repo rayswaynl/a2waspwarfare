@@ -350,9 +350,28 @@ Chernarus and Takistan mission folders at the archive root, not `Missions\` or
 `description.ext`, `initJIPCompatible.sqf`, `stringtable.xml`, the client,
 server, headless and common init files, and `Rsc\Parameters.hpp`.
 
+It also compares the complete archived mission payload to `git` `HEAD`: every
+archived mission file must be tracked under the matching source mission root and
+hash back to the `HEAD` blob. The only explicit generated allowances are the two
+ignored terrain `version.sqf` files produced by LoadoutManager.
+
 The JSON and Markdown outputs include the package SHA256, per-required-file
 hashes, and the generated `WF_RELEASE_MARKER` strings. They do not copy raw
 mission file contents.
+
+The package gate has a local fixture that uses the current `_MISSIONS.7z` and
+temporary mutated copies:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.SelfTest.ps1 `
+  -ArchivePath .\_MISSIONS.7z `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit (git rev-parse --short=10 HEAD)
+```
+
+It proves the current package passes, then proves a stray untracked mission file
+and stale tracked mission content both fail the `git-tracked-mission-payload`
+gate.
 
 ## Release Handoff Packet
 
