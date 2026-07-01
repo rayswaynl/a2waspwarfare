@@ -4,12 +4,12 @@
 // #define WF_DEBUG 1
 // #define WF_LOG_CONTENT
 #define WF_RELEASE_MARKER "WASPRELEASE|v1|candidate=unpackaged|git=missing-version|terrain=manual"
-#define IS_CHERNARUS_MAP_DEPENDENT
+//#define IS_CHERNARUS_MAP_DEPENDENT
 //#define IS_MOD_MAP_DEPENDENT
-#define IS_NAVAL_MAP
+//#define IS_NAVAL_MAP
 //#define IS_AIR_WAR_EVENT
-#define WF_MAXPLAYERS 34
-#define WF_MISSIONNAME "[55] Warfare V48 Chernarus"
+#define WF_MAXPLAYERS 61
+#define WF_MISSIONNAME "[61] Warfare V48 Takistan"
 #define STARTING_DISTANCE 7500
 #define COMBINEDOPS 1
 #define WF_RESPAWNDELAY 2

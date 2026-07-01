@@ -74,6 +74,8 @@ powershell -ExecutionPolicy Bypass -File ..\PrTestHarness\Package\Test-WaspRelea
   -ExpectedGit (git -C ..\.. rev-parse --short=10 HEAD)
 ```
 
+Use the dynamic `git rev-parse` form only when validating an archive built from that same checkout. For the current PR #125 package tuple, pass `-ExpectedGit c1c914f2d3` with the matching archive SHA proof instead of a companion-branch HEAD.
+
 ## Notes
 
 - Setting the 7za environment variable is only necessary if you're packing missions. It's not required if you're only copying files to other missions from Chernarus or when `A2WASP_SKIP_ZIP=1`.

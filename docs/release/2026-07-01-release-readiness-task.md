@@ -138,6 +138,11 @@ As of 2026-07-01 after the PR #125 Build83/cmdcon35, AICOM latch-reset, and rele
    - `Common_RunCommanderTeam.sqf` marks HC teams with `wfbe_aicom_hc`; `AI_Commander_Produce.sqf` and `AI_Commander_Execute.sqf` treat HC teams differently from server-local teams.
    - Action: proof-first instrumentation added. `aicom-team-heading` now stamps `wfbe_aicom_last_heading_t` on each HC commander team, HC disconnects emit immediate plus 60-second `HCDROP_AICOM_AUDIT` lines, and HC reconnect registration emits `HCRECON_AICOM_AUDIT` lines with live HC-team counts, owner survivors, and fresh/stale/unknown heading heartbeat counts. Defer behavior-changing re-adoption until those RPT lines prove whether existing HC teams become inert.
 
+15. Takistan fallback template still carried Chernarus/naval identity.
+   - `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template` is a tracked fallback for the ignored generated `version.sqf`, but it still defined `IS_CHERNARUS_MAP_DEPENDENT`, `IS_NAVAL_MAP`, `WF_MAXPLAYERS 34`, and the Chernarus mission name.
+   - Impact: copying the fallback template directly to `version.sqf` could put Takistan through Chernarus faction/structure branches, enable naval-map behavior, and advertise the wrong mission identity/player count.
+   - Action: PR #126 now comments the Chernarus and naval defines in the Takistan template and sets `WF_MAXPLAYERS 61` plus `WF_MISSIONNAME "[61] Warfare V48 Takistan"`. The generated PR #125 package remains the active release tuple; if this fallback guardrail is promoted into the package lane, regenerate and re-prove the package afterward.
+
 ## Working Backlog
 
 - Decide whether this branch stays as a small findings PR or merges into PR #123/#125 after review.
