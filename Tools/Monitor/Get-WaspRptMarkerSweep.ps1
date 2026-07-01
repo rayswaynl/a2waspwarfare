@@ -206,6 +206,10 @@ $Pattern = @(Expand-PatternArgument -Values $Pattern)
 $RequirePattern = @(Expand-PatternArgument -Values $RequirePattern)
 $hasExplicitPattern = $Pattern.Count -gt 0
 $expectedReleaseMarkers = @(New-ExpectedReleaseMarkers -Candidate $ExpectedCandidate -Git $ExpectedGit -Terrain $ExpectedTerrain)
+if ($RequireReleaseMarkers -and $expectedReleaseMarkers.Count -eq 0) {
+	Write-Host "-RequireReleaseMarkers needs -ExpectedCandidate, -ExpectedGit, and at least one -ExpectedTerrain value."
+	exit 1
+}
 
 $patterns = @()
 if ($hasExplicitPattern) { $patterns += $Pattern } else { $patterns += $defaultPatterns }

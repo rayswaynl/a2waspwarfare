@@ -96,6 +96,12 @@ try {
 		"-RequireReleaseMarkers"
 	) -ExpectFailure)
 
+	[void](Invoke-MarkerSweep -Arguments @(
+		"-RptDirectory", $tempRoot,
+		"-Latest", "2",
+		"-RequireReleaseMarkers"
+	) -ExpectFailure)
+
 	$nofailText = Invoke-MarkerSweep -Arguments @(
 		"-RptDirectory", $tempRoot,
 		"-Latest", "2",

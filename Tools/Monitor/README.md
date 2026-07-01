@@ -32,6 +32,18 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit b3f4d3664f `
   -RequireReleaseMarkers `
+  -Json
+```
+
+Only add PR #126 HC-audit markers to `-RequirePattern` when the package being tested actually includes that instrumentation:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.ps1 `
+  -RptDirectory "C:\WASP\rpt-archive" `
+  -Latest 8 `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit b3f4d3664f `
+  -RequireReleaseMarkers `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
   -Json
 ```
