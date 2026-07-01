@@ -85,7 +85,7 @@ As of 2026-07-01 08:16 UTC:
    - Commander funds can publicVariable every 15s when exact funds change.
    - GUER stipend and air-defense state rebroadcasts are intentionally JIP-durable but chatty.
    - Pending HC dispatch and group-cap warnings can repeat heavily in long RPTs.
-   - Action: after runtime evidence, consider quantized funds broadcasts and warning latches/summary counters.
+   - Action: partially mitigated. `GRPBUDGET|WARN` is now edge-triggered with a `GRPBUDGET|RECOVER` latch reset, while AI Commander team-founder group-cap warnings are throttled to once per side per 15 minutes while the cap remains exceeded. The lower-level `Common_CreateGroup.sqf` emergency-GC and `grpNull` warnings, plus the `Common_CreateTeam.sqf` template-skip follow-up, are now debounced to one report per side/machine every five minutes. Still defer exact-funds quantization and JIP rebroadcast changes until live RPT evidence proves they are worth the compatibility risk.
 
 8. There is still a watched-command compatibility lead in wildcard code.
    - `Server/Functions/AI_Commander_Wildcard.sqf:325` documents the allDead replacement for lucky salvage.

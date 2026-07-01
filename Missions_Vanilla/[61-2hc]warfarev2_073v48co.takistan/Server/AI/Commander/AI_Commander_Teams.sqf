@@ -213,8 +213,14 @@ if (_sideAINow >= _aiCapTier) exitWith {
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
 _totalGroups = {side _x == _side} count _allGroups;
 if (_totalGroups > 110) exitWith {
-	["WARNING", Format ["AI_Commander_Teams.sqf: [%1] group-cap ceiling reached (%2 groups) - founding skipped (founded %3, editor %4, pending %5, target %6).", _sideText, _totalGroups, _foundedTeams, _editorTeams, _pending, _target]] Call WFBE_CO_FNC_AICOMLog;
+	private "_groupCapWarnLast";
+	_groupCapWarnLast = _logik getVariable ["wfbe_aicom_groupcap_warn_t", -9999];
+	if ((time - _groupCapWarnLast) >= 900) then {
+		_logik setVariable ["wfbe_aicom_groupcap_warn_t", time];
+		["WARNING", Format ["AI_Commander_Teams.sqf: [%1] group-cap ceiling reached (%2 groups) - founding skipped (founded %3, editor %4, pending %5, target %6).", _sideText, _totalGroups, _foundedTeams, _editorTeams, _pending, _target]] Call WFBE_CO_FNC_AICOMLog;
+	};
 };
+_logik setVariable ["wfbe_aicom_groupcap_warn_t", -9999];
 
 //--- Live HC available?
 _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];

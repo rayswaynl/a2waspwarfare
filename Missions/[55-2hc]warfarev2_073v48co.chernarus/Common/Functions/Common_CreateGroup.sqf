@@ -12,10 +12,18 @@
 	  5. On success: tag the group with wfbe_group_src = _sourceTag and return it.
 */
 
-Private ["_side", "_sourceTag", "_cnt", "_grp", "_isPersistent", "_liveCount", "_gcDone"];
+Private ["_side", "_sourceTag", "_cnt", "_grp", "_isPersistent", "_liveCount", "_gcDone", "_sideKey", "_warnKey", "_warnLast"];
 
 _side      = _this select 0;
 _sourceTag = _this select 1;
+_sideKey = switch (_side) do {
+	case west: {"west"};
+	case east: {"east"};
+	case resistance: {"guer"};
+	case civilian: {"civ"};
+	case sideLogic: {"logic"};
+	default {"unknown"};
+};
 
 // --- Count groups for this side ---
 _cnt = 0;
@@ -49,14 +57,24 @@ if (_cnt >= 140) then {
 	_cnt = 0;
 	{ if (side _x == _side) then { _cnt = _cnt + 1 } } forEach allGroups;
 
-	["WARNING", Format ["Common_CreateGroup.sqf: emergency GC for %1 at %2 groups (source: %3) - reaped %4 empty groups.", str _side, _cnt, _sourceTag, _gcDone]] Call WFBE_CO_FNC_AICOMLog;
+	_warnKey = "wfbe_creategroup_gc_warn_" + _sideKey;
+	_warnLast = missionNamespace getVariable [_warnKey, -9999];
+	if ((time - _warnLast) >= 300) then {
+		missionNamespace setVariable [_warnKey, time];
+		["WARNING", Format ["Common_CreateGroup.sqf: emergency GC for %1 at %2 groups (source: %3) - reaped %4 empty groups.", str _side, _cnt, _sourceTag, _gcDone]] Call WFBE_CO_FNC_AICOMLog;
+	};
 };
 
 // --- Create the group ---
 _grp = createGroup _side;
 
 if (isNull _grp) then {
-	["WARNING", Format ["Common_CreateGroup.sqf: createGroup returned grpNull for %1 (source: %2) - %3 groups on side.", str _side, _sourceTag, _cnt]] Call WFBE_CO_FNC_AICOMLog;
+	_warnKey = "wfbe_creategroup_null_warn_" + _sideKey;
+	_warnLast = missionNamespace getVariable [_warnKey, -9999];
+	if ((time - _warnLast) >= 300) then {
+		missionNamespace setVariable [_warnKey, time];
+		["WARNING", Format ["Common_CreateGroup.sqf: createGroup returned grpNull for %1 (source: %2) - %3 groups on side.", str _side, _sourceTag, _cnt]] Call WFBE_CO_FNC_AICOMLog;
+	};
 } else {
 	_grp setVariable ["wfbe_group_src", _sourceTag, true];
 };
