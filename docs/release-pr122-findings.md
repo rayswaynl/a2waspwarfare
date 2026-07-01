@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 22:46 Europe/Amsterdam
+Last updated: 2026-07-01 23:00 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -64,7 +64,7 @@ not as current-master runtime proof. The earlier `b4628c35` package validation
 is now stale because the branch advanced.
 
 PR #126 is open again, draft, and moved repeatedly during this loop; the latest
-checked head is `b0b28dc743af9c0035629829bb3c1622adf860f2`, with GitHub
+checked head is `fd0dabba9991bd13cc4b7f2a677d23511a3f8dc6`, with GitHub
 reporting it clean. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
@@ -98,13 +98,13 @@ fixes the PR #134 release identity/static blockers without changing gameplay
 logic.
 
 PR #136 is a new overnight Build85/cmdcon39 lane, open and non-draft at
-`518bdc8f346b16cb978b49468e8993a483751f9d`. It is stacked on PR #134's branch,
+`d581a0854c2bf5c2163807759d00d32df6061c02`. It is stacked on PR #134's branch,
 not directly on current master. It is broad AICOM/client/live-monitor scope and
 contains live-monitor claims in `docs/OVERNIGHT-LOOP-2026-07-02.md`, but this
 repository pass did not find attached exact RPT evidence packages proving those
 claims for release. PR #137 is the focused draft fix for PR #136's inherited
 static/release-identity blockers at
-`162cad0a3e8f1be50c830d42dbbaefab533814d6`.
+`f04237eb5ca8c6498625303a8e78ee3d7aaea8a0`.
 
 Exact PR #133 `SERVER_DEBUG` mission-folder artifact:
 
@@ -374,12 +374,12 @@ requires real both-map Arma 2 OA RPT evidence and human smoke notes.
 
 ## PR #136 Overnight Build85 Triage
 
-Fresh triage and packaging for PR #136 at 2026-07-01 22:46 Europe/Amsterdam:
+Fresh triage and packaging for PR #136 at 2026-07-01 23:00 Europe/Amsterdam:
 
 - PR: <https://github.com/rayswaynl/a2waspwarfare/pull/136>
 - branch: `claude/overnight-2026-07-02`
 - checked head: `2afad9db5a175464927451ab4713556c3a485c7a`
-- latest head after triage: `518bdc8f346b16cb978b49468e8993a483751f9d`
+- latest head after triage: `d581a0854c2bf5c2163807759d00d32df6061c02`
 - base branch: `claude/build84-cmdcon36`
 - base head: `cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`
 - merge base with current master:
@@ -394,7 +394,9 @@ Validation:
 
 - GitHub reports PR #136 open, non-draft, and clean.
 - The move from `2afad9db5a` to `518bdc8f3` was docs-only
-  (`docs/OVERNIGHT-LOOP-2026-07-02.md`, +1).
+  (`docs/OVERNIGHT-LOOP-2026-07-02.md`, +1), and the later move to
+  `d581a0854` was also docs-only (`docs/OVERNIGHT-LOOP-2026-07-02.md` plus
+  `docs/design/NO-TOWN-UNCAPTURABLE.md`).
 - Incremental payload over PR #134 is 15 files, `+416/-36`.
 - Raw payload over current master is 45 files, `+2288/-92`, because it carries
   PR #134/Build84 plus the overnight changes.
@@ -429,24 +431,25 @@ Cautions:
 
 This artifact is not runtime proof. It is a package/static validation result
 for PR #136 as it existed at `2afad9db5a`; the latest PR #136 head
-`518bdc8f3` moved only documentation, so mission content is unchanged, but the
-artifact is not an exact full-repo package for the latest head.
+`d581a0854` moved only documentation after that mission package, so mission
+content is unchanged, but the artifact is not an exact full-repo package for the
+latest head.
 
 ## PR #137 Build85 Identity Fix
 
-Fresh fix and packaging for PR #137 at 2026-07-01 22:46 Europe/Amsterdam:
+Fresh fix and packaging for PR #137 at 2026-07-01 23:00 Europe/Amsterdam:
 
 - PR: <https://github.com/rayswaynl/a2waspwarfare/pull/137>
 - base PR: #136, <https://github.com/rayswaynl/a2waspwarfare/pull/136>
 - branch: `codex/fix-pr136-release-identity`
 - base branch: `claude/overnight-2026-07-02`
-- base head: `518bdc8f346b16cb978b49468e8993a483751f9d`
-- fix head: `162cad0a3e8f1be50c830d42dbbaefab533814d6`
+- base head: `d581a0854c2bf5c2163807759d00d32df6061c02`
+- fix head: `f04237eb5ca8c6498625303a8e78ee3d7aaea8a0`
 - artifact:
   `outputs/a2waspwarfare-pr137-release-identity-server-debug-missions.7z`
 - SHA256:
-  `7136B0C6699A2B170DE6E8B70D6DB2BB6266F4488436CA38F9F12AF5D09C9D75`
-- size: `7177949` bytes
+  `91DB26A15BDD6C473A9283E3EDBE8899661BCC545962083FC7AD09D3B88CE4CA`
+- size: `7178092` bytes
 
 Scope:
 
@@ -458,8 +461,8 @@ Scope:
 
 Validation:
 
-- `git diff --check origin/master`: pass, with Windows line-ending warnings only.
-- `git diff --check origin/claude/overnight-2026-07-02`: pass, with Windows
+- `git diff --check origin/master..HEAD`: pass, with Windows line-ending warnings only.
+- `git diff --check origin/claude/overnight-2026-07-02..HEAD`: pass, with Windows
   line-ending warnings only.
 - `git diff --cached --check`: pass before commit.
 - LoadoutManager `SERVER_DEBUG` exited `0` and reached `CHERNARUS DONE` and
@@ -468,7 +471,7 @@ Validation:
   24401741 uncompressed bytes.
 - Generated Chernarus and Takistan `version.sqf` files have `WF_DEBUG`
   commented out, `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` with
-  `candidate=build85-cmdcon39-20260702`, `git=162cad0a3e`, and the correct
+  `candidate=build85-cmdcon39-20260702`, `git=f04237eb5c`, and the correct
   terrain value.
 
 This artifact is not runtime proof. It proves PR #136 has a focused
@@ -632,14 +635,15 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 22:46 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 23:00 Europe/Amsterdam found:
 
 - PR #137: focused Build85/cmdcon39 identity/static fix, open draft and clean
-  at `162cad0a3e8f1be50c830d42dbbaefab533814d6` against PR #136's branch. This
+  at `f04237eb5ca8c6498625303a8e78ee3d7aaea8a0` against PR #136's branch. This
   clears PR #136's inherited `GUER_TECH.md` whitespace failure and produces a
-  package with `candidate=build85-cmdcon39-20260702`.
+  package with `candidate=build85-cmdcon39-20260702` and archive SHA256
+  `91DB26A15BDD6C473A9283E3EDBE8899661BCC545962083FC7AD09D3B88CE4CA`.
 - PR #136: overnight Build85/cmdcon39 lane, open non-draft and clean at
-  `518bdc8f346b16cb978b49468e8993a483751f9d`. It is stacked on PR #134 and
+  `d581a0854c2bf5c2163807759d00d32df6061c02`. It is stacked on PR #134 and
   carries broad AICOM/client/live-monitor changes. Raw current-master
   `git diff --check` fails on inherited `GUER_TECH.md` whitespace; unpatched
   package marker says `candidate=release-command-center-20260630`. Treat it as
@@ -664,7 +668,7 @@ Fresh triage at 2026-07-01 22:46 Europe/Amsterdam found:
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
 - PR #126: open draft and moved repeatedly during this loop; latest checked
-  head is `b0b28dc743af9c0035629829bb3c1622adf860f2`, with GitHub reporting it
+  head is `fd0dabba9991bd13cc4b7f2a677d23511a3f8dc6`, with GitHub reporting it
   clean. This lane still needs fresh diff/static/runtime triage before release
   selection.
 - PR #125: broad command-center/tooling lane at
@@ -960,7 +964,7 @@ ASR-enabled RPT proof.
    cherry-pick PR #137 first so PR #136 no longer carries the inherited
    `GUER_TECH.md` whitespace failure or stale release marker. The fixed
    package/static artifact SHA256 is
-   `7136B0C6699A2B170DE6E8B70D6DB2BB6266F4488436CA38F9F12AF5D09C9D75`, but it
+   `91DB26A15BDD6C473A9283E3EDBE8899661BCC545962083FC7AD09D3B88CE4CA`, but it
    is not release-ready proof.
 7. Do not use the stale PR #125 body hash
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
