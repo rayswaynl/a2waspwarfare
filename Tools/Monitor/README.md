@@ -1,0 +1,37 @@
+# WASP Monitor Helpers
+
+Small operator-side helpers for reading live or archived Arma 2 OA RPT files.
+
+## Windowed RPT Reads
+
+`Get-WindowedRpt.ps1` reads an RPT with read/write sharing and returns only the latest mission window by default.
+
+```powershell
+. .\Tools\Monitor\Get-WindowedRpt.ps1
+$lines = Get-WindowedRpt -RptPath "C:\WASP\rpt-archive\arma2oaserver-latest.RPT"
+```
+
+## Redaction-Safe Marker Sweep
+
+`Get-WaspRptMarkerSweep.ps1` counts release, AI Commander and HC proof markers without copying logs, printing absolute paths, or dumping RPT lines.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.ps1 `
+  -RptDirectory "C:\WASP\rpt-archive" `
+  -Latest 8 `
+  -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
+  -Json
+```
+
+By default, samples include the marker name, public file label, line number, and a short line hash. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
+
+Useful PR #126 proof markers:
+
+- `WASPRELEASE`
+- `HCDROP_AICOM_AUDIT`
+- `HCRECON_AICOM_AUDIT`
+- `HCSIDE|v1|disconnect`
+- `HCSIDE|v1|reconnect`
+- `HCDISPATCH`
+- `HCSTAT`
+- `AICOMSTAT`

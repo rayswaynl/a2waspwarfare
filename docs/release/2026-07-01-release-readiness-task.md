@@ -123,7 +123,7 @@ As of 2026-07-01 13:45 UTC:
    - `C:/WASP/rpt-archive/arma2oaserver-preFIXch-20260630-1952.RPT`
    - Latest 8 RPTs contain many `AICOMSTAT` and `HCSTAT` lines, plus `WASPRELEASE|v1|candidate=release-command-center-20260630|git=5b1640cf88|terrain=takistan` and `git=6e0e324b79` samples.
    - Latest 8 RPTs contain no `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSIDE|v1|disconnect`, `HCSIDE|v1|reconnect`, `HCDISPATCH`, `WF_RELEASE_MARKER`, `2178b20d`, `7e97c78b`, `f20ddfc83`, or `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD` markers.
-   - Action: these live logs confirm useful pre-instrumentation AICOM/HC health, but cannot satisfy the PR #126 exact-build HC-drop audit gate. Only copy/analyze broader private RPT contents after the owner confirms target build/window and privacy scope.
+   - Action: these live logs confirm useful pre-instrumentation AICOM/HC health, but cannot satisfy the PR #126 exact-build HC-drop audit gate. Added `Tools/Monitor/Get-WaspRptMarkerSweep.ps1` so future livehost/archive checks can repeat this marker sweep with path hashes and line hashes instead of copied logs or raw lines. Only copy/analyze broader private RPT contents after the owner confirms target build/window and privacy scope.
 
 13. HC-disconnect adoption is still a release-risk lead.
    - `Server_OnPlayerDisconnected.sqf` removes a disconnected HC from future delegation registries, but does not yet prove already-running HC-owned AICOM teams have been re-adopted by the server after locality migrates.
@@ -139,6 +139,7 @@ As of 2026-07-01 13:45 UTC:
 - Select concrete Jerry/Miksuu dump packages before downloading large archives.
 - Collect or import RPT evidence only after explicit approval for SSH/server access.
 - Run a focused HC disconnect/reconnect proof pass and capture `HCSIDE|disconnect`, `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSTAT`, `AICOMSTAT|...|HCDISPATCH`, and post-drop heading/marker continuity before changing HC team re-adoption behavior.
+- Use `Tools/Monitor/Get-WaspRptMarkerSweep.ps1` for redaction-safe first-pass livehost/archive RPT marker counts before deciding whether any private RPT copies are needed.
 
 ## Validation Expectations
 
