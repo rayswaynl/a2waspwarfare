@@ -14,9 +14,11 @@ if ((typeOf _lifter) in Zeta_Special) then {
 };
 //--- nearEntities handle living units.
 _vehicles = _lifter nearObjects ["LandVehicle", 10];
-//--- Trello #87: never offer the friendly side HQ as a lift candidate (prevents airlifting your own HQ).
-_fhq = (side _caller) Call WFBE_CO_FNC_GetSideHQ;
-if (!isNull _fhq) then {_vehicles = _vehicles - [_fhq]};
+//--- Build83 (Ray 2026-07-01): airlifting your OWN HQ is RE-ENABLED (was disabled by Trello #87). Flag-gated: set WFBE_C_AIRLIFT_OWN_HQ=0 to restore the old exclusion. Enemy-HQ-wreck guard below unchanged.
+if ((missionNamespace getVariable ["WFBE_C_AIRLIFT_OWN_HQ", 1]) == 0) then {
+	_fhq = (side _caller) Call WFBE_CO_FNC_GetSideHQ;
+	if (!isNull _fhq) then {_vehicles = _vehicles - [_fhq]};
+};
 if (count _vehicles < 1) exitWith {};
 
 _vehicle = [_lifter,_vehicles] Call WFBE_CO_FNC_GetClosestEntity;

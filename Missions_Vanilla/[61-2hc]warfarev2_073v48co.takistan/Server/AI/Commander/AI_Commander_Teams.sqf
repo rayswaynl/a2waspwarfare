@@ -94,7 +94,7 @@ _pcN = (_pcN - _hcN) max 0;
 		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
 	};
 _base = switch (true) do {
-	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  6]};
+	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  12]};
 	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
 	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
@@ -212,7 +212,7 @@ if (_sideAINow >= _aiCapTier) exitWith {
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
 _totalGroups = {side _x == _side} count _allGroups;
-if (_totalGroups > 110) exitWith {
+if (_totalGroups > (missionNamespace getVariable ["WFBE_C_AICOM_GROUP_CAP", 110])) exitWith {
 	private "_groupCapWarnLast";
 	_groupCapWarnLast = _logik getVariable ["wfbe_aicom_groupcap_warn_t", -9999];
 	if ((time - _groupCapWarnLast) >= 900) then {
@@ -266,6 +266,29 @@ if (count _live > 0) then {
 	private ["_freeAirWaive"];
 	_freeAirWaive = _hasAirfield && {(missionNamespace getVariable ["WFBE_C_AICOM_AIRFIELD_FREE_AIR", 1]) > 0};
 
+	//--- Build83 NO-AIR-BUILDS ROOT-CAUSE FIX (Ray cmdcon34, 2026-07-01): AICOM fielded ZERO air even with a higher-tier
+	//--- Aircraft Factory. Root cause: the founding air gates keyed off the RESEARCHED air TIER (_upgrades[WFBE_UP_AIR]),
+	//--- but the AI research program (AI_Commander.sqf) NEVER prepends any AIR upgrade - AIR sits deep in the tail default
+	//--- order, so wfbe_upgrades[WFBE_UP_AIR] stays 0 for most of the match -> every heli/plane template fails the tier
+	//--- eligibility gate and is stripped. Ray's rule: HELICOPTERS build once the side simply HOLDS an Aircraft Factory
+	//--- structure (attack + transport); PLANES additionally need a held airfield. So detect a live AIRCRAFT-FACTORY
+	//--- STRUCTURE here and, when present, WAIVE the air-tier eligibility gate for HELI templates (planes stay behind the
+	//--- airfield via _hasAirfield + the plane-bucket gate below). This is the structure-keyed sibling of _freeAirWaive.
+	//--- A2-OA-safe: STRUCTURENAMES/GetSideStructures scan (same idiom as the spawn-factory finder ~L762), typeOf==+alive.
+	private ["_hasAirFactory","_airHeliWaive","_afStructNames","_afStructs","_afStructIdx","_afStructClass"];
+	_hasAirFactory = false;
+	_afStructNames = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
+	if (!isNil "_afStructNames") then {
+		_afStructIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find "Aircraft";
+		if (_afStructIdx >= 0) then {
+			_afStructClass = _afStructNames select _afStructIdx;
+			_afStructs = (_side) Call WFBE_CO_FNC_GetSideStructures;
+			{ if (typeOf _x == _afStructClass && {alive _x}) exitWith {_hasAirFactory = true} } forEach _afStructs;
+		};
+	};
+	//--- WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI (default-ON): a held Aircraft Factory makes HELI templates air-tier-eligible.
+	_airHeliWaive = _hasAirFactory && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI", 1]) > 0};
+
 	//--- V0.6.2: gate templates on REAL unit data too (same rule Produce uses) - the
 	//--- hand-authored squad metadata is stale (RU tank platoon claims heavy 1; the
 	//--- T72_RU unit data says heavy 3 for humans). Track = factory unit-list membership.
@@ -274,9 +297,17 @@ if (count _live > 0) then {
 	_eligible = [];
 	for "_i" from 0 to (count _templates - 1) do {
 		_u = _tmplUpgrades select _i;
+		//--- Build83 NO-AIR-BUILDS FIX (Ray cmdcon34): does THIS template contain a fixed-wing Plane hull? Helis (air, no
+		//--- Plane) get the Aircraft-Factory air-tier waive; PLANES do NOT (they stay behind the airfield gate below). The
+		//--- captured-airfield free-buy (_freeAirWaive) still waives BOTH heli+plane tiers, unchanged. A2-OA-safe: string isKindOf.
+		private ["_isPlaneTmpl","_airTierWaive"];
+		_isPlaneTmpl = ({(typeName _x == "STRING") && {_x isKindOf "Plane"}} count (_templates select _i)) > 0;
+		_airTierWaive = _freeAirWaive || {_airHeliWaive && {!_isPlaneTmpl}}; //--- waive the AIR factory-tier gate: at a held airfield (planes+helis) OR when a held Aircraft Factory covers HELI-only.
 		_ok = true;
 		for "_k" from 0 to 3 do {
-			if ((_u select _k) > (_upgrades select _k)) exitWith {_ok = false};
+			//--- Build83: skip the TEMPLATE-mask air-tier gate for track 3 (AIR) when the heli/airfield waive applies, so a
+			//--- heli template is not stripped merely because the side never researched the air TIER (the AI program omits it).
+			if ((_u select _k) > (_upgrades select _k) && {!(_k == WFBE_UP_AIR && _airTierWaive)}) exitWith {_ok = false};
 		};
 		if (_ok) then {
 			{
@@ -286,7 +317,7 @@ if (count _live > 0) then {
 					{
 						_unitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
 						if (_cn in _unitList) exitWith {
-							if (((_ud select QUERYUNITUPGRADE) > (_upgrades select (_x select 1))) && {!(_freeAirWaive && {(_x select 1) == WFBE_UP_AIR})}) then {_ok = false}; //--- B74: at a captured airfield (free-buy) waive the AIR factory-tier requirement so jets+helis are buildable without the Aircraft Factory; non-air factory tiers still apply.
+							if (((_ud select QUERYUNITUPGRADE) > (_upgrades select (_x select 1))) && {!(_airTierWaive && {(_x select 1) == WFBE_UP_AIR})}) then {_ok = false}; //--- B74/Build83: waive the per-unit AIR factory-tier requirement at a captured airfield (jets+helis) OR when a held Aircraft Factory covers HELIS; non-air factory tiers still apply.
 						};
 					} forEach _facMap;
 				};
@@ -335,7 +366,7 @@ if (count _live > 0) then {
 			};
 			if (_fbBest >= 0) then {
 				_eligible set [count _eligible, _fbBest];
-				diag_log format ["AICOMGATE|%1|infFallback|admitted tmpl %2 maskSum=%3 sideUpg=%4 (no upgrade-0 infantry eligible)", _sideText, _fbBest, _fbBestMask, _upgrades];
+				diag_log format ["AICOMGATE|%1|infFallback|admitted cheapest infantry template %2 (static-strip left none upgrade-0) -> founding proceeds (maskSum=%3 sideUpg=%4)", _sideText, _fbBest, _fbBestMask, _upgrades];
 			};
 		};
 	};
@@ -366,70 +397,57 @@ if (count _live > 0) then {
 	_rosterMyID = (_side) Call WFBE_CO_FNC_GetSideID;
 	_rosterOwnTowns = 0;
 	{ if ((_x getVariable "sideID") == _rosterMyID) then {_rosterOwnTowns = _rosterOwnTowns + 1} } forEach towns;
-	if ((_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) && {!_freeAirWaive}) then { //--- B74: a captured airfield (free-buy) exempts the AIR_MIN_TOWNS strip so air comes online immediately on field capture.
+	if ((_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) && {!_freeAirWaive} && {!_airHeliWaive}) then { //--- B74: a captured airfield (free-buy) exempts the AIR_MIN_TOWNS strip so air comes online immediately on field capture. Build83 (Ray cmdcon34): a held Aircraft Factory ALSO exempts it (the AF only builds after AIR_MIN_TOWNS anyway, so holding one already implies establishment) - helis build once the factory stands.
 		_eligNoAir = [];
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
 	};
-	//--- STARVED-INFANTRY FALLBACK (cmdcon31, Ray 2026-07-01): the founding eligibility strip above requires EVERY unit
-	//--- in a template to be upgrade-0, but founding side-upgrades start [0,0,0,0] (Init_Server ~589). A faction whose
-	//--- BASE infantry squad carries an upgrade>=1 team-leader (BIS_US US_Soldier_TL_EP1=1; CH USMC too) has ALL its
-	//--- infantry templates stripped, leaving only appended custom armour -> the side founds one pricey armour team and
-	//--- STARVES (WEST-on-TK; latent on CH-WEST, masked by custom armour). EAST/BIS_TK escaped only because its leader
-	//--- classes are undefined in Core_TKA and read as free upgrade-0. FIX: if _eligible has NO infantry template (B66
-	//--- stored type 0), admit the CHEAPEST (lowest upgrade-mask-sum) infantry template so every faction can always
-	//--- found a basic squad. Map-independent; self-heals (the normal path re-admits richer templates as upgrades land).
-	//--- A2-OA-safe: forEach/for-do, isNil-guarded, no A3 commands.
-	if (!isNil "_storedTypes") then {
-		private ["_hasInf","_fbBest","_fbBestMask","_ti2","_tType","_maskSum","_stX"];
-		_hasInf = false;
-		{ _stX = _storedTypes select _x; if (!isNil "_stX" && {_stX == 0}) exitWith {_hasInf = true} } forEach _eligible;
-		if (!_hasInf) then {
-			_fbBest = -1; _fbBestMask = 1e9;
-			for "_ti2" from 0 to ((count _templates) - 1) do {
-				_tType = _storedTypes select _ti2;
-				if (!isNil "_tType" && {_tType == 0}) then {
-					_maskSum = 0;
-					{ _maskSum = _maskSum + _x } forEach (_tmplUpgrades select _ti2);
-					if (_maskSum < _fbBestMask) then {_fbBestMask = _maskSum; _fbBest = _ti2};
-				};
-			};
-			if (_fbBest >= 0) then {
-				_eligible set [count _eligible, _fbBest];
-				diag_log format ["AICOMGATE|%1|infFallback|admitted tmpl %2 maskSum=%3 sideUpg=%4 (no upgrade-0 infantry eligible)", _sideText, _fbBest, _fbBestMask, _upgrades];
-			};
-		};
-	};
 	if (count _eligible == 0) exitWith {};
 
-	//--- B74.2 EMPTY-HELI CAP (Ray 2026-06-24): if the side already fields WFBE_C_AICOM_ATTACKHELI_MAX or more
-	//--- ALIVE attack helis (non-transport Helicopter), strip every air template from _eligible so the founding
-	//--- draw cannot create yet another premium AH1Z team that nothing retires/cleans. The bucket picker below
-	//--- degrade-walks to a buildable ground class, so founding continues normally. 0 = no cap (old behaviour).
-	//--- FLAW-FIX: count BOTH crewed AND crewless non-transport helis on this side. For crewed helis, side is
-	//--- resolved via (crew _x) select 0 (reliable). For crewless helis, wfbe_side on the vehicle object is
-	//--- checked first (falls back to sideUnknown if not tagged on this build, which is safe). A2-OA-safe:
-	//--- isKindOf/getNumber/transportSoldier mirrors the L477 detector; count over vehicles (not allUnits).
-	private ["_heliCap","_heliAlive","_eligNoAir2"];
-	_heliCap = missionNamespace getVariable ["WFBE_C_AICOM_ATTACKHELI_MAX", 0]; if (_heliCap > 0) then {_heliCap = _heliCap + floor((((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * (missionNamespace getVariable ["WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS", 0]))}; //--- B754: grow the attack-heli cap over match time so the late air push isn't throttled at the early cap (0 base cap still = no cap).
-	if (_heliCap > 0) then {
-		_heliAlive = 0;
+	//--- Build83 FLAT AIR CAP (Ray cmdcon34, 2026-07-01): SUPERSEDES the old per-type attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX
+	//--- + its time-bonus ramp) with a SINGLE per-side ceiling: at most WFBE_C_AICOM_AIR_MAX_TOTAL (default 3) AICOM air units
+	//--- ALIVE at once, counting PLANES + ATTACK HELIS + TRANSPORT HELIS TOGETHER. Ray: "just limit AI commander air to max 3
+	//--- planes/attack/transport helicopters IN TOTAL at once" (per side). The old ATTACKHELI_MAX const is LEFT DEFINED but is no
+	//--- longer the gate. At/over the cap, strip EVERY air template from _eligible; the bucket picker below degrade-walks to a
+	//--- buildable ground class so founding continues normally. 0 = no cap.
+	//---
+	//--- COUNT = all ALIVE isKindOf "Air" on this side - non-transport (attack/plane) AND transport, crewed or not. To avoid
+	//--- double-counting TOWN/GARRISON air, a hull counts only when its SIDE resolves to _side (crewed -> side of (crew select 0);
+	//--- crewless -> the wfbe_side hull tag). In this mission town garrisons are ground-only (town templates carry no aircraft),
+	//--- so every side-resolved airframe is commander-fielded (own founded air teams + their lift transports). A2-OA-safe:
+	//--- isKindOf "Air" + crew/side resolve (mirrors the old heli-cap detector), count over the _allVehicles snapshot (not allUnits).
+	private ["_airMaxTotal","_airAlive","_eligNoAir2"];
+	_airMaxTotal = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
+	if (_airMaxTotal > 0) then {
+		_airAlive = 0;
 		{
-			if (alive _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) then {
-				if ((count crew _x) > 0 && {side ((crew _x) select 0) == _side}) then {
-					_heliAlive = _heliAlive + 1;
+			if (alive _x && {_x isKindOf "Air"}) then {
+				private ["_airSideOK"];
+				_airSideOK = false;
+				if ((count crew _x) > 0) then {
+					if (side ((crew _x) select 0) == _side) then {_airSideOK = true};
 				} else {
-					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side", sideUnknown]) == _side}) then {
-						_heliAlive = _heliAlive + 1;
-					};
+					if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_airSideOK = true};
 				};
+				if (_airSideOK) then {_airAlive = _airAlive + 1};
 			};
 		} forEach _allVehicles;
-		if (_heliAlive >= _heliCap) then {
+		if (_airAlive >= _airMaxTotal) then {
+			//--- Strip EVERY air template (planes + helis, transport included). Robust air-template test: the authoritative
+			//--- CfgGroups stored type (_storedTypes==3 = air) OR the template carries an isKindOf "Air" hull OR its air
+			//--- upgrade-mask is > 0. Covers cheap helis whose air-tier requirement is 0 (air-mask 0) that the old
+			//--- mask-only test missed. A2-OA-safe: string isKindOf, nil-guarded _storedTypes read. Keeps NON-air templates.
 			_eligNoAir2 = [];
-			{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir2 set [count _eligNoAir2, _x]} } forEach _eligible;
+			{
+				private ["_capEi","_capIsAir","_capST"];
+				_capEi = _x;
+				_capIsAir = ((_tmplUpgrades select _capEi) select WFBE_UP_AIR) > 0;
+				if (!_capIsAir && {!isNil "_storedTypes"} && {_capEi < count _storedTypes}) then {_capST = _storedTypes select _capEi; if (!isNil "_capST" && {_capST == 3}) then {_capIsAir = true}};
+				if (!_capIsAir) then { { if ((typeName _x == "STRING") && {_x isKindOf "Air"}) exitWith {_capIsAir = true} } forEach (_templates select _capEi) };
+				if (!_capIsAir) then {_eligNoAir2 set [count _eligNoAir2, _capEi]};
+			} forEach _eligible;
 			_eligible = _eligNoAir2;
-			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B74.2 attack-heli cap hit (alive %2 >= cap %3) - air templates stripped from founding this cycle.", _sideText, _heliAlive, _heliCap]] Call WFBE_CO_FNC_AICOMLog;
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] flat air cap hit (alive air %2 >= cap %3) - air templates stripped from founding this cycle.", _sideText, _airAlive, _airMaxTotal]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
 	if (count _eligible == 0) exitWith {};
@@ -719,22 +737,61 @@ if (count _live > 0) then {
 		};
 	};
 
-	//--- B66 INF-TRANSPORT TRUCK: a PURE-INFANTRY team (every template entry is Man-class) on a long
-	//--- approach needs wheels - AssignTowns caps a footed team at REACH_FOOT, skipping far targets. When
-	//--- WFBE_C_AICOM_INF_TRANSPORT>0 AND the side has a Light+ factory (Light/Heavy/Aircraft) AND the
-	//--- template has NO ground vehicle, prepend a faction troop-truck to a COPY of the template so
-	//--- CreateTeam crews it and the existing HC mount-up seats the infantry. Truck classname resolves
-	//--- per-side from the Core transport lists (WFBE_%1REDEPLOYTRUCKS = MTVR/Kamaz; GUER falls back to
-	//--- its V3S troop truck). A2-OA-safe: classname-literal isKindOf, +_template copy (no shared mutation).
-	//--- ARMED-TRANSPORT-ONLY conflict fix (2026-06-22, Ray "trucks that linger"): when
-	//--- WFBE_C_AICOM_ARMED_TRANSPORT_ONLY is ON the ride-pool (Common_RunCommanderTeam) refuses unarmed
-	//--- trucks, so this prepended troop-truck is NEVER boarded and LINGERS empty beside the team. Skip the
-	//--- prepend entirely when armed-transport-only is on -> the infantry road-march on foot, no dead truck.
-	if (((missionNamespace getVariable ["WFBE_C_AICOM_INF_TRANSPORT", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0}) then {
-		private ["_pureInf","_hasLightPlus","_facNamesT","_structuresT","_truck","_truckList"];
+	//--- Build83 INF-TRANSPORT-TRUCK WIRE (Ray 2026-07-01, fixes the live WEST-10km STRANDED/recall churn):
+	//--- teams are founded AT THE HQ; a PURE-INFANTRY team (every template entry is Man-class) can only
+	//--- reach REACH_FOOT (WFBE_C_AICOM_ASSAULT_REACH_FOOT, ~2500-3500m) from its leader - AssignTowns
+	//--- (L323-327) sets _mounted only when a unit rides a drivable LandVehicle, so a footed team gets
+	//--- REACH_FOOT and FAILS every reach gate when the front is far, churning (recall) instead of flowing
+	//--- forward. This wires the ALREADY-DECLARED WFBE_C_AICOM_INF_TRANSPORT flag (default 1, previously NO
+	//--- effective consumer - the old block self-vetoed whenever WFBE_C_AICOM_ARMED_TRANSPORT_ONLY was ON,
+	//--- which is the default, so it never ran live). Now: when the flag is ON AND the picked template is
+	//--- PURE INFANTRY (no ground vehicle hull) AND the side has a Light+ factory (Light/Heavy/Aircraft) AND
+	//--- the FRONT IS FAR (nearest uncaptured/enemy town is beyond REACH_FOOT of this side's HQ - i.e. a foot
+	//--- team would strand), PREPEND one faction troop-truck to a COPY of the template. Common_CreateTeam
+	//--- then spawns + CREWS the truck (a driver from WFBE_%1CREW), so the founded team owns a drivable
+	//--- LandVehicle -> AssignTowns scores it REACH_MOUNTED (9km) and it DRIVES to the front; the existing
+	//--- GROUND MOUNT-UP (Common_RunCommanderTeam L454+) seats the infantry into it. BOUNDED: exactly ONE
+	//--- truck, only at founding, only for a qualifying FAR foot team. A truck is just one more LandVehicle
+	//--- ground hull, so the group-cap / air-cap logic above is unaffected (air templates never reach here -
+	//--- they are not pure-infantry). Truck classname resolves per-side from the Core transport rosters
+	//--- (WFBE_%1REDEPLOYTRUCKS = MTVR (WEST/CH) / Kamaz (EAST/CH); GUER has none -> V3S troop-truck
+	//--- fallback). Flag 0 => this whole block is skipped = OLD behaviour (foot team, no truck).
+	//--- NOTE (armed-transport-only interplay): under WFBE_C_AICOM_ARMED_TRANSPORT_ONLY=1 the ride-pool
+	//--- refuses the UNARMED truck for boarding, but the CREWED truck still delivers REACH_MOUNTED and
+	//--- drives the team's leader forward (infantry road-march with it) - the team un-strands either way;
+	//--- with armed-transport-only OFF (or an armed hull) the mount-up also seats the dismounts.
+	//--- A2-OA-safe: classname-literal isKindOf, +_template copy (no shared mutation), plain distance/forEach.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_INF_TRANSPORT", 1]) > 0) then {
+		private ["_pureInf","_hasLightPlus","_facNamesT","_structuresT","_truck","_truckList","_frontFar","_reachFootT","_hqObjT","_hqPosT","_nearFrontD"];
 		_pureInf = true;
 		{ if (!(_x isKindOf "Man")) exitWith {_pureInf = false} } forEach _template;
-		if (_pureInf && {count _template > 0}) then {
+		//--- FAR-FRONT gate: is the nearest UNCAPTURED (enemy/neutral, sideID != this side) town beyond
+		//--- REACH_FOOT of this side's HQ? If so, a foot team founded here would strand. Keyed on
+		//--- founded-with-distant-front (HQ->nearest-enemy-town distance), NOT a future per-team assault
+		//--- target (that is decided later in AssignTowns and is unavailable at founding). If NO uncaptured
+		//--- town exists (side owns the map), _frontFar stays false and no truck is added. A2-OA-safe.
+		_frontFar   = false;
+		_reachFootT = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500];
+		_hqObjT     = (_side) Call WFBE_CO_FNC_GetSideHQ;
+		if (!isNull _hqObjT) then {
+			//--- 2D plane distance via world X/Y (A2-OA-safe; distance2D is an A3-only command). Compare
+			//--- against REACH_FOOT^2 so no sqrt is needed in the town loop.
+			private ["_hx","_hy","_reachFoot2","_tx","_ty","_dx","_dy","_d2"];
+			_hqPosT     = getPos _hqObjT;
+			_hx = _hqPosT select 0; _hy = _hqPosT select 1;
+			_reachFoot2 = _reachFootT * _reachFootT;
+			_nearFrontD = 1e18; //--- squared-distance accumulator (kept in m^2 to avoid the per-town sqrt).
+			{
+				if ((_x getVariable ["sideID", -1]) != _sideID) then {
+					_tx = (getPos _x) select 0; _ty = (getPos _x) select 1;
+					_dx = _tx - _hx; _dy = _ty - _hy;
+					_d2 = (_dx * _dx) + (_dy * _dy);
+					if (_d2 < _nearFrontD) then {_nearFrontD = _d2};
+				};
+			} forEach towns;
+			if (_nearFrontD < 1e18 && {_nearFrontD > _reachFoot2}) then {_frontFar = true};
+		};
+		if (_pureInf && {count _template > 0} && {_frontFar}) then {
 			//--- Light+ factory existence (mirror the spawn-factory scan below): any alive Light/Heavy/Aircraft.
 			_hasLightPlus = false;
 			_facNamesT    = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
@@ -760,7 +817,7 @@ if (count _live > 0) then {
 				};
 				if (_truck != "" && {isClass (configFile >> "CfgVehicles" >> _truck)}) then {
 					_template = [_truck] + _template; //--- prepend on a fresh array (no shared-template mutation).
-					["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] B66 prepended troop-truck %2 to pure-infantry founding template (%3 units total).", _sideText, _truck, count _template]] Call WFBE_CO_FNC_AICOMLog;
+					["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] INF-TRANSPORT wire: FAR-FRONT pure-infantry team (nearest enemy town %2m > REACH_FOOT %3m) - prepended troop-truck %4 so the team founds REACH_MOUNTED and drives forward (%5 units total).", _sideText, round (sqrt _nearFrontD), _reachFootT, _truck, count _template]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
 		};
@@ -834,9 +891,10 @@ if (count _live > 0) then {
 	//--- AICOM v2 JET RUNWAY-SPAWN (Ray 2026-06-27): a fixed-wing (Plane) team spawns on the CAPTURED AIRFIELD
 	//--- runway (the owned airfield town's hangar/logic), not at the rear factory - so it can take off + operate.
 	//--- Self-contained + gated to jet teams only (inert for every existing ground/heli founding).
-	private ["_spawnPos","_isJetTeam"];
+	private ["_spawnPos","_isJetTeam","_runwayDir"];
 	_isJetTeam = ({_x isKindOf "Plane"} count _template) > 0;
 	_spawnPos = getPos _facObj;
+	_runwayDir = -1; //--- PLANE AIR-START (Ray 2026-07-01): resolved below for a jet team from the airfield logic getDir (runway heading), threaded to the HC so a founded plane air-starts pointing down the field, not across it. -1 => not a jet team / no field (HC self-resolves or falls back).
 	//--- AICOM v2 (Ray): spawn at the factory's SPAWN BEACON - the HeliH-family pad players use (the closest pad
 	//--- within 80m is THIS factory's own), so AI teams egress from the designated spot, not the raw factory hull.
 	//--- HeliHRescue/HeliHCivil inherit HeliH; Sr_border is the barracks pad. Jets override to the airfield below.
@@ -853,6 +911,13 @@ if (count _live > 0) then {
 			_haObj = _afTown getVariable ["wfbe_hangar", objNull];
 			if (isNull _haObj) then {_haObj = _afTown getVariable ["wfbe_airfield_hangar_obj", objNull]};
 			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
+			//--- RUNWAY HEADING (Ray 2026-07-01, PLANE-ONLY): the airfield is anchored on a LocationLogicAirport logic whose
+			//--- getDir IS the runway orientation (server_town.sqf L569 orients the hangar off it). Resolve the nearest such
+			//--- logic to the airfield town and thread its getDir to the HC as the plane air-start heading. If none is found
+			//--- (-1 kept), Common_RunCommanderTeam self-resolves / falls back. A2-OA-safe: nearEntities on the logic class.
+			private ["_afLogic"];
+			_afLogic = ((getPos _afTown) nearEntities [["LocationLogicAirport"], 1500]);
+			if (count _afLogic > 0) then {_runwayDir = getDir (_afLogic select 0)};
 		};
 	};
 	//--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes, so they never get wfbe_teamtype
@@ -864,7 +929,10 @@ if (count _live > 0) then {
 	private ["_foundType"];
 	_foundType = -1;
 	if (!isNil "_pick" && {typeName _pick == "SCALAR"} && {_pick >= 0}) then {_foundType = _pick};
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType]] Call WFBE_CO_FNC_SendToClient;
+	//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): append the is-jet-team flag + runway heading as trailing delegate args (slots
+	//--- 8/9 of the inner array; after HandleSpecial strips the leading string they land at Common_RunCommanderTeam _this indices 7/8).
+	//--- Purely additive - every other delegate reader ignores them (count-guarded), so ground/heli founding is byte-identical.
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

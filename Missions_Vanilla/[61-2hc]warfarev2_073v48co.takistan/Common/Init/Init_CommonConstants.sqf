@@ -60,7 +60,7 @@ WFBE_UP_CBRADAR = 22;
 WFBE_UP_PATROLS = 23;
 
 //--- Side patrols (Patrols upgrade): max concurrent patrol teams per side.
-if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 2};  //--- B36.1 (Ray 2026-06-15): WEST/EAST patrol cap 3->2. Patrols stay LOW even as the HQ-team curve scales up; the EFFECTIVE cap is level-aware (min(this, patrol level)) in server_side_patrols.sqf, so patrol-1 => 1, patrol-2+ => 2 per side, never more.
+if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 3};  //--- Build83 (Ray 2026-07-01): +1 WEST/EAST side-patrol cap 2->3 (flat fallback; the pop-tier BY_TIER array below is the live consumer). [B36.1 2026-06-15: was 3->2.] Patrols stay LOW even as the HQ-team curve scales up; the EFFECTIVE cap is level-aware (min(this, patrol level)) in server_side_patrols.sqf, so patrol-1 => 1, patrol-2+ => 3 per side, never more.
 
 /*
 	### Working with the missionNamespace ###
@@ -105,13 +105,13 @@ with missionNamespace do {
 		if (isNil "WFBE_GUER_PLAYER_KILLS") then {WFBE_GUER_PLAYER_KILLS = 0};
 		//--- Vehicle-tier kill thresholds. tier1 (>= KILLTIER_1 kills) = BRDM + T-34, tier2 = T-55, tier3 = T-72 + BMP2.
 		//--- These replace the old elapsed-time ladder (30m/90m/180m) that gated the GUER heavy vehicles.
-		if (isNil "WFBE_C_GUER_KILLTIER_1") then {WFBE_C_GUER_KILLTIER_1 = 15};
-		if (isNil "WFBE_C_GUER_KILLTIER_2") then {WFBE_C_GUER_KILLTIER_2 = 40};
-		if (isNil "WFBE_C_GUER_KILLTIER_3") then {WFBE_C_GUER_KILLTIER_3 = 80};
+		if (isNil "WFBE_C_GUER_KILLTIER_1") then {WFBE_C_GUER_KILLTIER_1 = 30};  //--- 2x-ed (was 15) - slow GUER kill-tech progression.
+		if (isNil "WFBE_C_GUER_KILLTIER_2") then {WFBE_C_GUER_KILLTIER_2 = 80};  //--- 2x-ed (was 40).
+		if (isNil "WFBE_C_GUER_KILLTIER_3") then {WFBE_C_GUER_KILLTIER_3 = 160}; //--- 2x-ed (was 80).
 		//--- Second VBIED: an UNARMED M113 with ~2x speed (driver-detonated, same blast + cash-for-kills as the hilux),
 		//--- kill-gated into the GUER depot. M113_UN_EP1 exists on both maps so the type is map-independent (no TK repoint).
 		if (isNil "WFBE_C_GUER_VBIED_M113_TYPE") then {WFBE_C_GUER_VBIED_M113_TYPE = "M113_UN_EP1"};
-		if (isNil "WFBE_C_GUER_VBIED_M113_KILLS") then {WFBE_C_GUER_VBIED_M113_KILLS = 25}; //--- GUER kills required before the M113 VBIED appears in the depot.
+		if (isNil "WFBE_C_GUER_VBIED_M113_KILLS") then {WFBE_C_GUER_VBIED_M113_KILLS = 50}; //--- 2x-ed (was 25): GUER kills required before the M113 VBIED appears in the depot.
 		if (isNil "WFBE_C_GUER_VBIED_M113_SPEEDCOEF") then {WFBE_C_GUER_VBIED_M113_SPEEDCOEF = 2.0}; //--- target top-speed multiplier of the driver-local boost loop (~2x stock M113).
 		//--- Ka-137 (Ka137_MG_PMC) flares: the recon heli ships with NO countermeasures. The GUER player's bought Ka-137
 		//--- gets a CMFlareLauncher + a flare magazine sized by the kill tier (more kills => more flares). NB: A2-OA stock
@@ -180,7 +180,7 @@ with missionNamespace do {
 		//--- Barracks AI cap (per GUER player group): base + one extra slot per N kills, clamped to the A2 12-per-group engine ceiling.
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_BASE") then {WFBE_C_GUER_BARRACKS_AI_BASE = 4};
 		if (isNil "WFBE_C_GUER_BARRACKS_AI_MAX") then {WFBE_C_GUER_BARRACKS_AI_MAX = 12};
-		if (isNil "WFBE_C_GUER_BARRACKS_AI_PER_KILLS") then {WFBE_C_GUER_BARRACKS_AI_PER_KILLS = 10};
+		if (isNil "WFBE_C_GUER_BARRACKS_AI_PER_KILLS") then {WFBE_C_GUER_BARRACKS_AI_PER_KILLS = 20}; //--- 2x-ed (was 10): FOB barracks squad cap grows half as fast (still capped by WFBE_C_GUER_BARRACKS_AI_MAX).
 
 //--- B61 (Ray 2026-06-21): GUER AIR DEFENSE — standalone server loop (Server\Server_GuerAirDef.sqf) keeps a
 //--- Ka-137 (or, over a large town under attack, a Mi-24) over ACTIVE GUER-held towns. Default-ON but capped +
@@ -255,9 +255,9 @@ with missionNamespace do {
 	//--- with population: more players = more server pressure = FEWER HQ squads; low pop is efficient +
 	//--- boring, so flood it with many more AI teams. Buckets 0-2 / 3-5 / 6-9 / 10+. The 10+ value matches
 	//--- the old static target (2) = no high-pop regression. Consumed by AI_Commander_Teams.sqf.
-	WFBE_C_AICOM_TEAMS_PC_LOW  = 12;           //--- B59 (Ray 2026-06-20): 10->15 max HQ teams/side (low pop) to really push the load test, Ray's call. ~15*10 found-size = 150/side; TOTAL_AI_MAX raised 130->190 to fit so the side-gate doesn't starve the last teams. EXPECT lower server FPS (this IS the load test). Rollback: 10.  [historical B57 note follows] Pairs with the founding-pad (teams found at 8-12) for larger massed groups. ~10*8=80/side < TOTAL_AI_MAX 130 (watch server FPS). Prior B49 had cut 10->5: FEWER/BIGGER teams - the B48 soak gridlocked at ~2 captures with 10 thin (~5-unit) teams + banked funds; 5 teams fill to 8-12 each and CONCENTRATION=4 massed on the spearhead actually cracks garrisons. 5*12=60 units << TOTAL_AI_MAX 130 (FPS-safe). Rollback: 10.
-	WFBE_C_AICOM_TEAMS_PC_MID  = 8;            //--- 3-5 players (Ray B36.1 tweak, was 4).
-	WFBE_C_AICOM_TEAMS_PC_HIGH = 5;
+	WFBE_C_AICOM_TEAMS_PC_LOW  = 10;           //--- B59 (Ray 2026-06-20): 10->15 max HQ teams/side (low pop) to really push the load test, Ray's call. ~15*10 found-size = 150/side; TOTAL_AI_MAX raised 130->190 to fit so the side-gate doesn't starve the last teams. EXPECT lower server FPS (this IS the load test). Rollback: 10.  [historical B57 note follows] Pairs with the founding-pad (teams found at 8-12) for larger massed groups. ~10*8=80/side < TOTAL_AI_MAX 130 (watch server FPS). Prior B49 had cut 10->5: FEWER/BIGGER teams - the B48 soak gridlocked at ~2 captures with 10 thin (~5-unit) teams + banked funds; 5 teams fill to 8-12 each and CONCENTRATION=4 massed on the spearhead actually cracks garrisons. 5*12=60 units << TOTAL_AI_MAX 130 (FPS-safe). Rollback: 10.
+	WFBE_C_AICOM_TEAMS_PC_MID  = 7;            //--- Build83 (Ray 2026-07-01): ~20% commander-team trim, 8->7. 3-5 players.
+	WFBE_C_AICOM_TEAMS_PC_HIGH = 4;            //--- Build83: ~20% trim, 5->4.
 	WFBE_C_AICOM_TEAMS_PC_FULL = 3;            //--- rollback the whole curve: set all four to 2.
 	WFBE_C_AICOM_TEAMS_HARD_CAP = 10;          //--- Ray 2026-06-29: 8 -> 10 max teams/side (Ray: low-pop fielding; reverts the 2026-06-28 10->8). [prior B752 2026-06-25: back to 8 max teams (13 over-throttled the per-side TOTAL_AI cap + fed the hoard in the 12h TK soak). Shared CH+TK via LoadoutManager. HARD ceiling on the AI-commander founding target regardless of the PC curve + banking valve (was fielding ~15 at low pop = base 12 + valve 3). Clamped in AI_Commander_Teams.sqf. Rollback: 99 (effectively off).
 	WFBE_C_AICOM_DISBAND_SAFE_DIST = 1200;     //--- punchy-AICOM (Ray 2026-06-17): 600->1200 - wider no-retire radius so rear teams are kept (more standing army), only retiring when truly far from any player. Rollback: 600.
@@ -276,7 +276,7 @@ with missionNamespace do {
 	WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER = [3,2,0,0];            //--- funds-valve extra teams (valve only fires pop<=5 = LOW/MID)
 	WFBE_C_TOWNS_DEFENDER_BY_TIER     = [2,2,2,1];            //--- town garrison difficulty -> COEF (Medium/Medium/Medium/Light)
 	WFBE_C_TOWNS_ACTIVE_MAX_BY_TIER   = [12,12,10,8];         //--- concurrently-active-towns cap (the single largest AI slice)
-	WFBE_C_SIDE_PATROLS_MAX_BY_TIER   = [2,2,2,1];            //--- WEST/EAST side-patrol cap (effective = min(this, patrol level))
+	WFBE_C_SIDE_PATROLS_MAX_BY_TIER   = [3,3,3,2];            //--- Build83 (Ray 2026-07-01): +1 WEST/EAST side-patrol cap per tier ([2,2,2,1]->[3,3,3,2]). Effective = min(this, patrol level).
 	WFBE_C_PLAYERS_AI_MAX_BY_TIER     = [16,14,12,10];        //--- per-player AI buy-cap (recruit cap; never deletes an existing squad)
 	WFBE_C_AICOM_INCOME_PC_BONUS_VALVE = 0.045; //--- B37: gentler low-pop income boost when the valve is on (vs 0.06), so more-squads does not over-bank.
 	WFBE_C_AICOM_INCOME_MULT_MAX = 4.0;        //--- B67 (Ray 2026-06-21): 3.0->4.0 - lift the town-cash multiplier ceiling so the low-pop inverted bonus is not clipped (keeps near-empty-server PvE well-funded). CASH only. hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
@@ -288,6 +288,41 @@ with missionNamespace do {
 	//--- 0 = no cap (old behaviour). Counts ALL alive non-transport helis on the side (founded teams + any others),
 	//--- so it is self-limiting regardless of where the airframe came from.
 	if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX") then {WFBE_C_AICOM_ATTACKHELI_MAX = 4};
+	//--- === Build 83 / cmdcon35 constants (claude-gaming 2026-07-01) ===
+	if (isNil "WFBE_C_AICOM_HQ_NUDGE_MAX_R") then {WFBE_C_AICOM_HQ_NUDGE_MAX_R = 200};  //--- AI HQ off-road nudge: max expanding-ring radius (m) before using best off-road candidate.
+	if (isNil "WFBE_C_AICOM_HQ_NUDGE_STEP") then {WFBE_C_AICOM_HQ_NUDGE_STEP = 25};     //--- AI HQ off-road nudge: ring radius growth per step (m).
+	if (isNil "WFBE_C_GUER_AIRDEF_DROP_CHANCE") then {WFBE_C_GUER_AIRDEF_DROP_CHANCE = 0.18}; //--- Ka-137 cargo/paradrop roll when a GUER town is under GROUND attack.
+	if (isNil "WFBE_C_GUER_AIRDEF_DROP_COUNT") then {WFBE_C_GUER_AIRDEF_DROP_COUNT = 5};      //--- troopers per Ka-137 paradrop stick.
+	if (isNil "WFBE_C_GUER_AIRDEF_DROP_MAX") then {WFBE_C_GUER_AIRDEF_DROP_MAX = 2};          //--- global alive cap on paradropped GUER squads (anti-spam).
+	if (isNil "WFBE_C_KA137_REWARD_COEF") then {WFBE_C_KA137_REWARD_COEF = 0.4};              //--- Build83 (Ray 2026-07-01): Ka-137 kill/salvage reward -60%. Applied gated on Ka137_MG_PMC in bounty + salvage paths.
+	if (isNil "WFBE_C_AICOM_GROUP_CAP") then {WFBE_C_AICOM_GROUP_CAP = 110};               //--- Build83: tunable AICOM founding group-cap (engine ~144/side safety headroom); 110 = prior hardcoded value.
+	if (isNil "WFBE_C_AICOM_FOOT_ROUTE_DIST") then {WFBE_C_AICOM_FOOT_ROUTE_DIST = 700};   //--- Build83 movement: min leg (m) for a pure-infantry team to road-march the wfbe_aicom_route chain vs a single cross-country MOVE.
+	if (isNil "WFBE_C_AICOM_ROUTE_COMPLETION") then {WFBE_C_AICOM_ROUTE_COMPLETION = 70};  //--- Build83 movement: intermediate road-node MOVE completionRadius (m); wider = no stop-start. Final dest node stays tight (30).
+	if (isNil "WFBE_C_AICOM_GRADE_DWELL") then {WFBE_C_AICOM_GRADE_DWELL = 6};             //--- Build83 movement: seconds a steep grade must persist before the careful-gear governor downshifts a convoy to LIMITED (anti-pulse). Stuck-strike LIMITED stays immediate.
+	if (isNil "WFBE_C_AICOM_ORDER_DELTA") then {WFBE_C_AICOM_ORDER_DELTA = 80};            //--- Build83 movement: console/HC order re-issue distance gate (m) - nearby re-clicks don't tear the march.
+	if (isNil "WFBE_C_AICOM_ORDER_MININT") then {WFBE_C_AICOM_ORDER_MININT = 6};           //--- Build83 movement: per-team min seconds between order re-lays (debounce).
+	if (isNil "WFBE_C_AICOM_DIRECT_COOLDOWN") then {WFBE_C_AICOM_DIRECT_COOLDOWN = 1.5};   //--- Build83 console: short cooldown for DIRECT map-click Move/Defend/Patrol (local setVariable) - separate from the 8s RequestSpecial brain-send gate so re-targeting feels responsive.
+	//--- === Build 83 OILFIELDS (Takistan-only neutral resource node, Ray 2026-07-01) ===
+	if (isNil "WFBE_C_OILFIELD_ENABLE") then {WFBE_C_OILFIELD_ENABLE = 1};                 //--- master on/off (Takistan only; inert on Chernarus).
+	if (isNil "WFBE_C_OILFIELD_UNLOCK_TIME") then {WFBE_C_OILFIELD_UNLOCK_TIME = 3600};    //--- ingame seconds before the node unlocks (marker+capture+income live, announced). 1 hour.
+	if (isNil "WFBE_C_OILFIELD_POS") then {WFBE_C_OILFIELD_POS = [4600, 6200, 0]};         //--- PLACEHOLDER TK node anchor; the file auto-snaps to a real oil/fuel object near here, else uses this. FINALIZE to the real derrick coord.
+	if (isNil "WFBE_C_OILFIELD_ANCHOR_SEARCH") then {WFBE_C_OILFIELD_ANCHOR_SEARCH = 1200}; //--- search radius (m) for a real oil/fuel installation to anchor on.
+	if (isNil "WFBE_C_OILFIELD_RADIUS") then {WFBE_C_OILFIELD_RADIUS = 120};               //--- capture/hold radius (m).
+	if (isNil "WFBE_C_OILFIELD_SCAN_INTERVAL") then {WFBE_C_OILFIELD_SCAN_INTERVAL = 15};   //--- seconds between presence scans (floored 5s in code).
+	if (isNil "WFBE_C_OILFIELD_INCOME_INTERVAL") then {WFBE_C_OILFIELD_INCOME_INTERVAL = 60}; //--- seconds between income ticks while held.
+	if (isNil "WFBE_C_OILFIELD_INCOME_SUPPLY") then {WFBE_C_OILFIELD_INCOME_SUPPLY = 25};   //--- supply credited to the owner per income tick (small).
+	if (isNil "WFBE_C_OILFIELD_INCOME_CAP") then {WFBE_C_OILFIELD_INCOME_CAP = 15000};      //--- per-round lifetime supply cap the node pays out (anti-runaway).
+	if (isNil "WFBE_C_OILFIELD_MARKER_TYPE") then {WFBE_C_OILFIELD_MARKER_TYPE = "mil_circle"}; //--- map marker type.
+	if (isNil "WFBE_C_OILFIELD_MARKER_TEXT") then {WFBE_C_OILFIELD_MARKER_TEXT = "OILFIELD"};   //--- map marker label.
+	if (isNil "WFBE_C_OILFIELD_OPEN_MSG") then {WFBE_C_OILFIELD_OPEN_MSG = "The OILFIELD is now active! Hold it with your units to earn passive supply income. Check your map."}; //--- 1h-unlock broadcast line.
+	if (isNil "WFBE_C_PATROL_T3_CASH") then {WFBE_C_PATROL_T3_CASH = 8000};                //--- Build83 (Ray): one-time CASH granted to a side on completing Patrol upgrade level 3 (split among alive players via BankPayout). 0 = off.
+	if (isNil "WFBE_C_PATROL_T4_SUPPLY") then {WFBE_C_PATROL_T4_SUPPLY = 1500};             //--- Build83 (Ray): one-time SUPPLY granted to a side's pool on completing Patrol upgrade level 4 (ChangeSideSupply, clamped). 0 = off.
+	if (isNil "WFBE_C_AICOM_PLANE_AIRSTART") then {WFBE_C_AICOM_PLANE_AIRSTART = 1};        //--- Build83 (Ray): founded PLANES air-start (FLY) at the captured airfield, aligned to the runway logic, de-conflicted (helis/ground unchanged). 0 = old grounded/scattered FORM behavior.
+	if (isNil "WFBE_C_AICOM_PLANE_STACK_DEG") then {WFBE_C_AICOM_PLANE_STACK_DEG = 25};     //--- Build83: per-plane heading fan (deg) so a multi-plane team's air-started hulls don't spawn stacked.
+	if (isNil "WFBE_C_AIRLIFT_OWN_HQ") then {WFBE_C_AIRLIFT_OWN_HQ = 1};                    //--- Build83 (Ray 2026-07-01): re-enable airlifting your OWN HQ (Zeta_Hook; was disabled by Trello #87). 0 = restore the old exclusion.
+	if (isNil "WFBE_C_AICOM_AIR_MAX_TOTAL") then {WFBE_C_AICOM_AIR_MAX_TOTAL = 3};          //--- Build83 (Ray): flat per-side cap on TOTAL alive AICOM air (planes + attack + transport helis together). Supersedes WFBE_C_AICOM_ATTACKHELI_MAX. 0 = no cap.
+	if (isNil "WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI") then {WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI = 1}; //--- Build83 (Ray): a held Aircraft-Factory structure lets the AI build HELIS without the (never-rushed) air-research tier; planes still need a held airfield. 0 = old (helis need researched air tier).
+	if (isNil "WFBE_C_AICOM_MANUALPIN_TTL") then {WFBE_C_AICOM_MANUALPIN_TTL = 600};        //--- Build83 (Ray): seconds a human console order "pins" a team so the AI (AssignTowns) won't re-grab it; TTL-bounded so a stale pin from a disconnected commander expires. 0 = off.
 	//--- B74.2 HELI BASE-REAP: let the HC team-runner self-delete an attack heli that has idled crewed at its OWN
 	//--- base continuously for this many seconds (0 = off). This is the HC-LOCAL cleanup the server-side BASE-GC
 	//--- cannot do (HC-founded heli hulls are not server-local + are ownership-exempt at server_groupsGC.sqf:209).
@@ -796,7 +831,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_BASE_DEFENSE_MAX_AI") then {WFBE_C_BASE_DEFENSE_MAX_AI = 40}; //--- Maximum AIs that will be able to man defense within the barracks area.
 	if (isNil "WFBE_C_BASE_DEFENSE_MANNING_RANGE") then {WFBE_C_BASE_DEFENSE_MANNING_RANGE = 250}; //--- Within x meters, defenses may be manned.
 	if (isNil "WFBE_C_BASE_START_TOWN") then {WFBE_C_BASE_START_TOWN = 1}; //--- Remove the spawn locations which are too far away from the towns.
-	if (isNil "WFBE_C_BASE_STARTING_MODE") then {WFBE_C_BASE_STARTING_MODE = 2}; //--- Starting Locations Mode: 0 = WN|ES; 1 = WS|EN; 2 = Random;
+	if (isNil "WFBE_C_BASE_STARTING_MODE") then {WFBE_C_BASE_STARTING_MODE = 0}; //--- Starting Locations Mode: 0 = WN|ES; 1 = WS|EN; 2 = Random;
 	//--- Egress-quality gate (A2-fix 2026-06-14): random base placement (MODE=2) can box a side into a
 	//--- corner with a single egress road, stalling its AI-commander teams (empty HC route -> PFM stall).
 	//--- The Init_Server start-picker requires a candidate to have >= MIN_EGRESS_ROADS usable road
@@ -1155,15 +1190,22 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_QOL_ADVISOR_INTERVAL") then {WFBE_C_QOL_ADVISOR_INTERVAL = 300}; //--- Seconds between advisor nudge checks (0 = off).
 
 	// === Restart announcer (work-order item 15) — server-side countdown, one broadcast per minute over the final WARN window. ===
-	if (isNil "WFBE_C_RESTART_ENABLED") then {WFBE_C_RESTART_ENABLED = 1};   //--- 0 disables the in-game restart announcer entirely.
+	if (isNil "WFBE_C_RESTART_ENABLED") then {WFBE_C_RESTART_ENABLED = 0};   //--- 0 disables the in-game restart announcer entirely.
 	if (isNil "WFBE_C_RESTART_AT_MIN") then {WFBE_C_RESTART_AT_MIN = 90};    //--- Mission uptime (minutes) at which the scheduled restart occurs.
 	if (isNil "WFBE_C_RESTART_WARN_MIN") then {WFBE_C_RESTART_WARN_MIN = 5}; //--- Start warning this many minutes out; fires exactly this many times (once per minute).
 	if (isNil "WFBE_C_RESTART_MSG") then {WFBE_C_RESTART_MSG = "SERVER RESTART IN %1 MINUTE(S) - finish up and find cover."}; //--- %1 = minutes remaining.
 
 	// === Dashboard-link announcer (claude-gaming 2026-06-14) — periodic in-game broadcast of the public live-stats URL so players know where to find updates/benchmarks. ===
 	if (isNil "WFBE_C_DASHBOARD_ANNOUNCE_ENABLED") then {WFBE_C_DASHBOARD_ANNOUNCE_ENABLED = 1};    //--- 0 disables the in-game dashboard-link announcer.
-	if (isNil "WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL") then {WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL = 300}; //--- Seconds between dashboard-link broadcasts (default 5 min).
-	if (isNil "WFBE_C_DASHBOARD_MSG") then {WFBE_C_DASHBOARD_MSG = "WASP LIVE STATS  >>  http://78.46.107.142:8080/  <<  live server FPS, AI unit balance & K/D leaderboard, and per-build benchmarks - updated every round. That's where we post what's being tested & tuned."}; //--- the broadcast line.
+	if (isNil "WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL") then {WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL = 840}; //--- Seconds between dashboard-link broadcasts (default 5 min).
+	if (isNil "WFBE_C_DASHBOARD_MSG") then {WFBE_C_DASHBOARD_MSG = "WASP LIVE STATS & LEADERBOARD  >>  miksuu.com/leaderboard  <<  live server FPS, AI balance, K/D and per-build benchmarks - updated every round."}; //--- fallback single line (used only if the MSGS pool below is empty).
+	//--- Build 83 (Ray 2026-07-01): rotating hint pool, cycled by server_dashboard_announcer at WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL (~14 min apart).
+	if (isNil "WFBE_C_DASHBOARD_MSGS") then {WFBE_C_DASHBOARD_MSGS = [
+		"WASP LIVE STATS & LEADERBOARD  >>  miksuu.com/leaderboard  <<  live server FPS, AI balance, K/D and per-build benchmarks - updated every round.",
+		"Join the WASP community on Discord  >>  discord.me/warfare  <<  feedback, bug reports & match times.",
+		"TIP: Commanding your side? Open the war-room (Command Console) to focus the AI on a town, view your teams, and issue field orders.",
+		"TIP: Play the insurgency - GUER harass with VBIEDs, Ka-137 drones & mortar trucks. Pick a GUER slot in the lobby."
+	]}; //--- the broadcast line.
 
 	// === Top-Players leaderboard emitter (claude-gaming 2026-06-14) — periodic per-player PLAYERSTAT snapshot. ===
 	// This is the ONLY telemetry carrying the player display NAME, so it powers the public Top-Players tab
@@ -1291,7 +1333,7 @@ missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 	WFBE_C_TOWNS_MERGE_TARGET = 5;                //--- GROUP-COUNT REDUCTION (claude-gaming 2026-06-13): target units per CONSOLIDATED town-garrison infantry group. Server_GetTownGroups/Defender fuse the SAME infantry rosters into ~this-many-unit groups (hard cap 10) so a town spawns identical units in FEWER server group-brains (server-FPS win, gameplay-transparent). Vehicles never merged. Set to 0 to disable (instant rollback to one-group-per-template).
 	if (isNil 'WFBE_C_TOWNS_MERGE_TARGET_DEFENDER') then {WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 11}; //--- GUER condense A/B (task #12, claude-gaming 2026-06-14): raised 9->11 units/group to fuse GUER garrisons harder (fewer group-brains, SAME units). Measure GUER group count + fps vs Build 28. WEST/EAST untouched (global 5).
 	if (isNil 'WFBE_C_TOWNS_MERGE_CAP_DEFENDER') then {WFBE_C_TOWNS_MERGE_CAP_DEFENDER = 12};    //--- Defender-only merged-group size cap (raised from the global hardcoded 10 so the 11-target can actually flush at ~11-12; 12 = classic A2 squad max, safe for static garrison defenders).
-	if (isNil 'WFBE_C_SIDE_PATROLS_MAX_DEFENDER') then {WFBE_C_SIDE_PATROLS_MAX_DEFENDER = 1};      //--- B36 (Ray 2026-06-15): GUER (defender) side-patrol cap 2->1 - fewer GUER patrols, the survivors made deadlier (skill boost in Common_RunSidePatrol). GUER condense.
+	if (isNil 'WFBE_C_SIDE_PATROLS_MAX_DEFENDER') then {WFBE_C_SIDE_PATROLS_MAX_DEFENDER = 3};      //--- Build83 (Ray 2026-07-01): GUER (defender) side-patrol cap RAISED +2 -> 3 (effective = min(this, GUER patrol level)). [B36 2026-06-15 had 2->1: fewer GUER patrols, the survivors made deadlier (skill boost in Common_RunSidePatrol). GUER condense.
 	if (isNil 'WFBE_C_GUER_PATROLS_LEVEL') then {WFBE_C_GUER_PATROLS_LEVEL = 2};                    //--- B67 (Ray 2026-06-21): fixed Patrols level for GUER (resistance has no upgrade system) so GUER side-patrols actually dispatch and show on GUER players' maps (server_side_patrols.sqf). Effective concurrent count = min(_maxSide, this). 0 = OFF (no GUER patrols, instant rollback); 1 = single; 2 = a pair; 4 adds the convoy supply truck.
 	WFBE_C_GROUP_BUDGET_WARN = 120;               //--- GROUP-BUDGET ALARM (claude-gaming 2026-06-13): per-side group-count WARN threshold (GRPBUDGET line in AI_Commander.sqf). Arma 2 OA hard cap is 144/side; crossing this logs a GRPBUDGET|WARN so the watchdog/dashboard flags it before the AI can no longer found teams. (120, not 125: with the persistent-husk leak fixed, steady state should drop below 120, making the WARN a true leading indicator rather than always-on.)
 	if (isNil 'WFBE_C_GROUPAUDIT_EVERY') then {WFBE_C_GROUPAUDIT_EVERY = 5}; //--- D2 server-FPS (claude-gaming 2026-06-14): run the EXPENSIVE per-faction group-classification AUDIT DUMP (server_groupsGC.sqf; auditMs ~2100ms on 276 groups) only every Nth 5-min audit window. The husk-reap GC + zombie-reap + cap-warning still run EVERY 60s cycle (they live outside the audit branch) - this throttles only diagnostic telemetry. 5 = full dump ~every 25 min instead of every 5 min. 1 = dump every window (old behavior); values < 1 are clamped to 1. Pure diagnostic throttle, no gameplay effect; instant rollback by setting to 1.
