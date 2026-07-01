@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — PR #125 master merge gate decision [PR LOOP]
+
+`origin/master` currently adds PR #121's editor-slot empty-group reaper in
+`Server/Init/Init_Server.sqf` for both maintained terrains. The command-center
+release branch intentionally keeps that behavior out because the cmdcon30
+deadspawn investigation removed the editor-slot reaper and returned to
+audit/tag-only handling for JIP-selectable player-slot groups.
+
+The PR conflict should therefore be resolved by marking `origin/master` as
+reviewed/merged while preserving the release branch tree for the two
+`Init_Server.sqf` files. Runtime group-budget evidence can revisit this later,
+but it should not be reintroduced blindly during final release gating.
+
 ## 2026-07-01 — Codex multi-agent release task opened [PR LOOP]
 
 Opened the Codex release-readiness loop for the command-center candidate. Four

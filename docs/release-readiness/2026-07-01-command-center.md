@@ -5,19 +5,18 @@ candidate on `codex/release-command-center-20260630`.
 
 ## Current Candidate
 
-- Head: `2bdf79f3982ec5191906f4b5399d8dc9f508f441`
-- Short release git: `2bdf79f398`
 - Candidate: `release-command-center-20260630`
-- Package SHA256: `1B9D4FF61DBD7A1BA0BE01C31DEE394586AC1F11238EA75CB343992DFC01E4FA`
-- Package entries: `1882`
-- Package status: package provenance pass, handoff status `ready_for_runtime_collection`
+- Branch: `codex/release-command-center-20260630`
+- Draft PR: `https://github.com/rayswaynl/a2waspwarfare/pull/125`
+- Package identity: use the current PR body plus the newest local `work\release-handoff-*` artifacts; the package marker changes whenever the release branch HEAD changes.
+- Package status: package provenance pass after each release-identity refresh; handoff status `ready_for_runtime_collection`
 - Runtime status: pending explicit runtime approval, fresh dual-terrain RPT packet, and deploy approval
 
-Expected runtime markers:
+Expected runtime markers use the current short release git:
 
 ```text
-WASPRELEASE|v1|candidate=release-command-center-20260630|git=2bdf79f398|terrain=chernarus
-WASPRELEASE|v1|candidate=release-command-center-20260630|git=2bdf79f398|terrain=takistan
+WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>|terrain=chernarus
+WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>|terrain=takistan
 ```
 
 ## Multi-Agent Task Split
@@ -25,14 +24,15 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=2bdf79f398|terrain=
 | Role | Scope | Current verdict |
 | --- | --- | --- |
 | AICOM scout | Commander core, HC delegation, AICOM telemetry, buy-unit/marker proof | Code path is ready for runtime evidence; do not merge `origin/claude/command-center-instruct` blindly because it would reintroduce command-dialect drift. |
-| Release/RPT scout | Package, handoff, runtime packet, final static gates | Round-40 artifacts were stale after the role-proof commit; round-41 package/handoff now matches `2bdf79f398`. |
+| Release/RPT scout | Package, handoff, runtime packet, final static gates | Round-40 artifacts were stale after the role-proof commit; refresh package/handoff after every new source commit. |
 | Wiki/source scout | Public wiki status, source-intake discipline, BI docs | Wiki should stay runtime-pending and sanitized; add source-intake discoverability before publishing broad release claims. |
 | Branch intake scout | Open PRs, local worktrees, candidate cherry-picks | AICOM v2, commander cache, PR #120, most PR #122 content, and newer harness gates are already included or superseded. PR #109 is the only plausible gameplay intake, and should stay explicit/deferred. |
+| Merge-gate scout | PR #125 conflict with `origin/master` | `origin/master` currently contributes PR #121's editor-slot group reaper. The release branch keeps the reaper out because it was associated with JIP deadspawn risk; do not reintroduce it blindly. |
 
 ## Proven Static And Package Gates
 
 - `dotnet run -c RELEASE --project Tools\LoadoutManager\LoadoutManager.csproj`
-- `Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1` against `_MISSIONS.7z`, expected candidate `release-command-center-20260630`, expected git `2bdf79f398`
+- `Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1` against `_MISSIONS.7z`, expected candidate `release-command-center-20260630`, expected git from `git rev-parse --short=10 HEAD`
 - `Tools\PrTestHarness\Release\New-WaspReleaseHandoff.ps1` against the current package manifest
 - `Tools\PrTestHarness\Release\Test-WaspReleaseHandoff.SelfTest.ps1`
 - `Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.SelfTest.ps1`
