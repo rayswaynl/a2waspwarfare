@@ -646,11 +646,15 @@ function Test-AicomCaptureStallGuardrails {
 	foreach ($entry in $roots) {
 		$constants = Get-Text (Join-Path $entry.Root "Common\Init\Init_CommonConstants.sqf")
 		$runner = Get-Text (Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf")
+		$waypointsAdd = Get-Text (Join-Path $entry.Root "Common\Functions\Common_WaypointsAdd.sqf")
 		$assign = Get-Text (Join-Path $entry.Root "Server\AI\Commander\AI_Commander_AssignTowns.sqf")
 		if (-not ($constants.Contains("WFBE_C_AICOM_CAMP_GATE_MODE2") -and $constants.Contains("WFBE_C_AICOM_STALL_ADVANCE_SECS"))) { $missing += "$($entry.Terrain):constants" }
 		if (-not ($runner.Contains("_campWaypoints") -and $runner.Contains('[_team, true, _campWaypoints] Spawn WFBE_CO_FNC_WaypointsAdd') -and $runner.Contains("WFBE_C_AICOM_CAMP_GATE_MODE2"))) { $missing += "$($entry.Terrain):camp-waypoint-chain" }
 		if ($runner.Contains("[_team, true, [[_campTgtPos, 'SAD'")) { $missing += "$($entry.Terrain):camp-sad-clears-tight-move" }
-		if (-not ($runner.Contains('WFBE_C_AICOM_ASSAULT_SAD", 80') -and $runner.Contains('WFBE_C_TOWNS_CAPTURE_RANGE", 40') -and $runner.Contains(") max (missionNamespace getVariable"))) { $missing += "$($entry.Terrain):arrival-gate-sad-ring" }
+		if (-not ($runner.Contains('WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250') -and $runner.Contains('WFBE_C_AICOM_ASSAULT_SAD", 80') -and $runner.Contains('WFBE_C_TOWNS_CAPTURE_RANGE", 40') -and $runner.Contains(") max (((missionNamespace getVariable"))) { $missing += "$($entry.Terrain):arrival-gate-arrive-radius" }
+		if (-not ($runner.Contains('if (if (_govGradeRaw) then {!_govSteep} else {_govSteep}) then'))) { $missing += "$($entry.Terrain):grade-bool-compare" }
+		if (-not $waypointsAdd.Contains('if (_forEachIndex == 0) then {_team setCurrentWaypoint [_team, _WPCount]}')) { $missing += "$($entry.Terrain):waypoint-current-first-batch" }
+		if ($waypointsAdd.Contains('if (_WPCount == 0) then {_team setCurrentWaypoint [_team, _WPCount]}')) { $missing += "$($entry.Terrain):waypoint-current-residual-index" }
 		$stallIndex = $assign.IndexOf("WFBE_C_AICOM_STALL_ADVANCE_SECS")
 		$stuckIndex = $assign.IndexOf("WFBE_C_AICOM_STUCK_SECS")
 		if (-not ($assign.Contains("reason=stall-advance") -and $assign.Contains("wfbe_aicom_goto_since") -and $stallIndex -ge 0 -and $stuckIndex -ge 0 -and $stallIndex -lt $stuckIndex)) { $missing += "$($entry.Terrain):stall-advance-independent" }

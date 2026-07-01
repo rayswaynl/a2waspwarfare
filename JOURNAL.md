@@ -1,5 +1,21 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM movement root follow-up [RELEASE LOOP]
+
+Ported the narrow movement-root fixes from the overnight scout without merging
+the broader overnight branch. `WaypointsAdd` now makes the first waypoint in
+each newly-added batch current even after `WaypointsRemove` leaves a residual
+engine waypoint, so relaid commander routes actually start moving. The assault
+arrival latch now honors `WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS` as the outer gate
+while keeping the tighter SAD/depot capture behavior inside the phase. Also
+replaced the AICOM grade dwell boolean `!=` comparison with an A2-safe explicit
+boolean change test.
+
+Static smoke asserts the first-batch waypoint current call, widened arrival
+gate and A2-safe grade comparison across both maintained terrains. Runtime,
+SSH, RPT collection, upload, restart, cache-clear and deployment remain
+explicit-approval gated.
+
 ## 2026-07-01 — AICOM lifecycle shape guards [RELEASE LOOP]
 
 Tightened a few malformed-state edges around AICOM team lifecycle cleanup. The

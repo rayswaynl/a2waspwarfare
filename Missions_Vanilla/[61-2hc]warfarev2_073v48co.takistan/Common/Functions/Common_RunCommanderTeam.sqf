@@ -870,7 +870,7 @@ while {!WFBE_GameOver && _alive} do {
 						_team setVariable ["wfbe_aicom_grade_stamp", _govGradeStamp];
 					};
 					_govGradeRaw = _govGradeStamp select 0;
-					if (_govGradeRaw != _govSteep) then {
+					if (if (_govGradeRaw) then {!_govSteep} else {_govSteep}) then {
 						//--- raw slope state changed this tick: restart the dwell clock.
 						_govGradeStamp = [_govSteep, time];
 						_team setVariable ["wfbe_aicom_grade_stamp", _govGradeStamp];
@@ -902,7 +902,7 @@ while {!WFBE_GameOver && _alive} do {
 
 				//--- On arrival, switch to the mode's local behaviour once.
 				if (!_arrived) then {
-					if ((leader _team) distance _dest < (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20)) then {
+					if ((leader _team) distance _dest < ((missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]) max (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20))) then {
 						_arrived = true;
 						//--- Cosmetic: faction smoke at assault onset (fires once per team via the _arrived latch). Server-only, gated + capped + cooldown.
 						[getPosATL (leader _team), side _team] call WFBE_CO_FNC_SpawnFactionSmoke;

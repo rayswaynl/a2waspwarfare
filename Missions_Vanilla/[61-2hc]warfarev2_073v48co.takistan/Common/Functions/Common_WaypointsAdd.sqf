@@ -31,5 +31,5 @@ if (_clear) then {_team Call WFBE_CO_FNC_WaypointsRemove};
 	if (count _statements > 0) then {[_team, _WPCount] setWaypointStatements [_statements select 0, _statements select 1]};
 	if (count _timeout > 0) then {[_team, _WPCount] setWaypointTimeout [_timeout select 0, _timeout select 1, _timeout select 2]};
 	if (count _squad_prop > 0) then {if ((_squad_prop select 0) != "") then {[_team, _WPCount] setWaypointBehaviour (_squad_prop select 0)};if ((_squad_prop select 1) != "") then {[_team, _WPCount] setWaypointCombatMode (_squad_prop select 1)};if ((_squad_prop select 2) != "") then {[_team, _WPCount] setWaypointFormation (_squad_prop select 2)};	if ((_squad_prop select 3) != "") then {[_team, _WPCount] setWaypointSpeed (_squad_prop select 3)};};	
-	if (_WPCount == 0) then {_team setCurrentWaypoint [_team, _WPCount]};
+	if (_forEachIndex == 0) then {_team setCurrentWaypoint [_team, _WPCount]};
 } forEach _waypoints;
