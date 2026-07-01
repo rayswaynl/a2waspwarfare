@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 19:46 Europe/Amsterdam
+Last updated: 2026-07-01 19:54 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -41,7 +41,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `624f1f38f9f3f4b2b3e658c113fd8622c29f74d5`
+  `f6cdfce`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -59,12 +59,12 @@ repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`b4628c35afeef15a1703021e6171706a949e5afa`. Treat it as a separate broad lane,
-not as current-master runtime proof. Its latest local package validation is
-recorded below; the PR body still names an older package tuple.
+`1d713bcf2b2daa6eea722bca5221f4e430bbe746`. Treat it as a separate broad lane,
+not as current-master runtime proof. The earlier `b4628c35` package validation
+is now stale because the branch advanced.
 
 PR #126 is open again, draft, and GitHub reports it clean at
-`be1b83a7eca8ffe3d95d1584450fdf7d6ffdb954`. Its verified shippable pieces were
+`607d6c59ca4268fd0938e94edc66619d008db673`. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
 
@@ -84,6 +84,12 @@ keeping the PR #132 GUER radio/client changes intact. Validation for PR #133:
 5bf5f92385ef0218c5e20fb4273cf563a295e82d..HEAD` pass; LoadoutManager reached
 `CHERNARUS DONE` and `TAKISTAN DONE` and packaged `_MISSIONS.7z` with local
 7-Zip. PR #133 is source/static/generator proof only, not runtime proof.
+
+PR #134 is a new Build84/cmdcon36 lane, open and non-draft at
+`cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`. GitHub reports it clean, but it is
+broad mission-affecting AICOM/client/start-spawn scope. Local package/static
+triage found a raw current-master whitespace failure and release-marker identity
+ambiguity, documented below.
 
 Exact PR #133 `SERVER_DEBUG` mission-folder artifact:
 
@@ -212,10 +218,10 @@ Validation performed:
   `passed = true` and `failed_count = 0`
 
 This kit is still not runtime proof. It is a repeatable packaging and evidence
-collection tool for the exact PR #133 candidate. Final release proof still requires
+collection tool for the exact r8 candidate. Final release proof still requires
 fresh real Arma 2 OA RPTs and human smoke notes from this exact kit.
 
-## PR #125 Current Head Artifact
+## PR #125 Superseded Artifact
 
 Fresh triage and packaging for PR #125 at 2026-07-01 19:46 Europe/Amsterdam:
 
@@ -251,11 +257,60 @@ Validation:
   `find "Aircraft"` review item in both terrain A2 OA lint passes.
 
 This artifact is not runtime proof. It is a package/static validation result for
-the broad command-center branch if that branch is explicitly selected. The PR
-body still names an older SHA256 tuple
-`77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545`; treat the
-`b4628c35` / `D0BD2405...` tuple above as current local evidence until the PR
-body/wiki are refreshed or another package supersedes it.
+the broad command-center branch as it existed at `b4628c35`. It is now stale:
+PR #125 advanced to `1d713bcf2b2daa6eea722bca5221f4e430bbe746` after this
+artifact was built. Do not use the `b4628c35` / `D0BD2405...` tuple as current
+PR #125 proof except as historical evidence.
+
+## PR #134 Build84 Artifact
+
+Fresh triage and packaging for PR #134 at 2026-07-01 19:54 Europe/Amsterdam:
+
+- PR: <https://github.com/rayswaynl/a2waspwarfare/pull/134>
+- branch: `claude/build84-cmdcon36`
+- head: `cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`
+- current master: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- merge base: `6ff7bad28003ec6781a9346e033afbc386894b6f`
+- artifact:
+  `outputs/a2waspwarfare-pr134-cc29feb-server-debug-missions.7z`
+- SHA256:
+  `F7768578727C7A16D865D31190EF72488FE0F8D21CF2ABCF670545D924122F3B`
+- size: `7174919` bytes
+- manifest:
+  `outputs/a2waspwarfare-pr134-cc29feb-server-debug-artifact-2026-07-01-1954.md`
+
+Validation:
+
+- GitHub reports PR #134 open, non-draft, and clean/mergeable.
+- True mission payload from merge base is 34 maintained mission files,
+  `+1322/-56`.
+- `git diff --check 6ff7bad28003ec6781a9346e033afbc386894b6f..HEAD`: pass.
+- `git diff --check origin/master..HEAD`: fail on reintroduced
+  `GUER_TECH.md` trailing whitespace at lines 33 and 45.
+- Added-line watched-token scan over maintained mission diff for A3-only tokens:
+  no added executable hits.
+- `Tools/PrTestHarness/Run-WaspFinalCheck.ps1` is not present on this branch, so
+  the newer final harness could not be run from the PR #134 checkout.
+- LoadoutManager `SERVER_DEBUG` exited `0` and reached `CHERNARUS DONE` and
+  `TAKISTAN DONE`.
+- Archive integrity and extraction validation pass with 160 folders, 1727 files,
+  and 24372987 uncompressed bytes.
+- Both extracted `version.sqf` files have `WF_DEBUG` commented out,
+  `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` with `git=cc29feb207`.
+
+Cautions:
+
+- The extracted release marker says
+  `candidate=release-command-center-20260630`, not Build84/cmdcon36.
+- The branch re-adds `B57-SOAK-PROPOSALS.md` and `GUER_TECH.md` relative to
+  current master; `GUER_TECH.md` fails whitespace.
+- The package contains `AI_Commander_HCTopUp.DRAFT.sqf`, but that file and its
+  guarded call site are inherited from current master, not introduced by PR
+  #134.
+
+This artifact is not runtime proof. It is an exact PR #134 package for further
+runtime collection only after the source/static identity issues are resolved or
+explicitly waived.
 
 ## Current Master / r9 Reconciliation
 
@@ -414,22 +469,31 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 18:57 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 19:54 Europe/Amsterdam found:
 
+- PR #134: new Build84/cmdcon36 lane, open non-draft and clean at
+  `cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`. True mission payload from merge
+  base is 34 maintained mission files and passes true-payload `git diff
+  --check`; LoadoutManager `SERVER_DEBUG` reaches both maps and package
+  archive/extraction validation passes with artifact SHA256
+  `F7768578727C7A16D865D31190EF72488FE0F8D21CF2ABCF670545D924122F3B`.
+  However raw current-master `git diff --check origin/master..HEAD` fails on
+  reintroduced `GUER_TECH.md` trailing whitespace at lines 33 and 45, and the
+  extracted release marker still says
+  `candidate=release-command-center-20260630`. Treat it as broad and
+  source/identity-pending, not runtime proof.
 - PR #133: focused placement-preview static fix, open draft and clean at
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
 - PR #126: open draft, clean at
-  `be1b83a7eca8ffe3d95d1584450fdf7d6ffdb954`. This head advanced after the
-  18:57 PR #133 checkpoint and still needs fresh diff/static/runtime triage
+  `607d6c59ca4268fd0938e94edc66619d008db673`. This head advanced after the
+  prior checkpoint and still needs fresh diff/static/runtime triage
   before release selection.
 - PR #125: broad command-center/tooling lane at
-  `b4628c35afeef15a1703021e6171706a949e5afa`. GitHub reports it `CLEAN`
-  against merged #132 master, and package/static validation now exists with
-  artifact SHA256
-  `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2`.
-  It remains broad mission-affecting scope and is still too broad for a
-  Thursday selection without exact both-map runtime proof.
+  `1d713bcf2b2daa6eea722bca5221f4e430bbe746`. GitHub reports it `CLEAN`
+  against merged #132 master. The prior `b4628c35` artifact SHA256
+  `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2` is now
+  stale because this branch advanced.
 - PR #129: release-readiness hub at
   `72888f22851871c8ed967a0fd29402a0c410c0bd`, 14 files and approximately
   `+188/-92`. It is mission-affecting in AICOM commander code, group GC,
@@ -440,12 +504,10 @@ Fresh triage at 2026-07-01 18:57 Europe/Amsterdam found:
   needing exact current-build artifact and runtime proof, not as proof by
   itself.
 
-PR #125 and PR #126 overlap in 14 shared AICOM/HC/JIP files across Chernarus and
-Takistan. PR #126 does not overlap #131. PR #125 and PR #129 were not stacked at
-the 16:19 triage point and overlapped in shared AICOM files. Because PR #125 has
-advanced since then, do not combine #125 with #126 or #129 for Thursday without
-fresh conflict analysis, LoadoutManager regeneration/validation, new artifacts,
-and fresh real RPT proof.
+PR #125, PR #126, PR #129, and PR #134 are all mission-affecting AICOM/release
+lanes. Do not combine them for Thursday without fresh conflict analysis,
+LoadoutManager regeneration/validation, new artifacts, and fresh real RPT
+proof.
 
 ## Superseded Latest Master Exact Artifact
 
@@ -699,11 +761,7 @@ ASR-enabled RPT proof.
 
 1. Treat PR #133 at `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0` as the current
    focused proof target for the static gate on top of merged #132, or merge
-   #133 first and rebuild from the new `origin/master`. If the owner explicitly
-   selects the broader command-center lane instead, use PR #125 at
-   `b4628c35afeef15a1703021e6171706a949e5afa` with artifact SHA256
-   `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2` as the
-   package/static starting point.
+   #133 first and rebuild from the new `origin/master`.
 2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
    prove latest `origin/master`.
 3. If current `origin/master` is chosen without #133, record an explicit static
@@ -714,21 +772,28 @@ ASR-enabled RPT proof.
    `B626E746774B9B350B9431923A975C9E0087CF330B3D35808D650A254D379DFB` and
    folder-smoke kit SHA256
    `A1359392F00141BD2502293F439123C7B6DDDD449C5DAAF2F5E38DE2015EBEC7`.
-5. Do not use the stale PR #125 body hash
+5. If the owner selects broad Build84/cmdcon36, first fix or explicitly waive
+   PR #134's reintroduced `GUER_TECH.md` whitespace failure and release-marker
+   identity mismatch. Its current package/static artifact SHA256 is
+   `F7768578727C7A16D865D31190EF72488FE0F8D21CF2ABCF670545D924122F3B`, but it
+   is not release-ready proof.
+6. Do not use the stale PR #125 body hash
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
-   current command-center package identity; it has been superseded locally by
-   the `b4628c35` / `D0BD2405...` artifact tuple above.
-6. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
+   current command-center package identity. Also do not use the local
+   `b4628c35` / `D0BD2405...` tuple as current PR #125 proof; PR #125 has
+   advanced to `1d713bcf2b2daa6eea722bca5221f4e430bbe746` and needs a fresh
+   package if selected.
+7. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
    `96CD026F76E0828F584F243FEC2358C1D319CDEFAE5E69868B7394C89FC77171` no longer
    proves the latest master.
-7. Run the exact chosen artifact through folder-smoke or a controlled dedicated
+8. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
-8. Collect both-map server/client/latejoin/HC evidence.
-9. Run the release scanner with all required gates.
-10. Attach human smoke notes.
-11. Only then update release notes/wiki wording from runtime-pending to
+9. Collect both-map server/client/latejoin/HC evidence.
+10. Run the release scanner with all required gates.
+11. Attach human smoke notes.
+12. Only then update release notes/wiki wording from runtime-pending to
    release-proven.
 
 If the ASR/Ka-137 stop-condition errors recur on the exact proof runtime,
