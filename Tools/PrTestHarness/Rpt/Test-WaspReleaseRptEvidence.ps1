@@ -332,15 +332,17 @@ $gateSpecs = @(
 	},
 	[ordered]@{
 		id = "wddm-static-artillery"
-		required = @("wddmArtilleryAudit","wddmArtillerySide","structureBuiltReserve","structureBuiltArtilleryRadar","artyThreatArmed")
+		# WDDM_ARTILLERY_AUDIT / WDDM_ARTILLERY_SIDE are emitted ONLY by the pr8-stress overlay, never by native mission code, so a real release run could never satisfy this gate. Dropped from the release-gate `required` set (still defined as tokens for stress-overlay analysis). See docs/release/2026-07-01-release-readiness-program.md.
+		required = @("structureBuiltReserve","structureBuiltArtilleryRadar","artyThreatArmed")
 		fail = @()
-		note = "WDDM/static defense and artillery discoverability evidence. FIRE_MISSION is reported separately."
+		note = "WDDM/static defense + artillery discoverability via native STRUCTURE_BUILT (Reserve, ArtilleryRadar) and ARTY_THREAT_ARMED. WDDM_ARTILLERY_AUDIT/SIDE are stress-overlay-only and are not required by a native release run. FIRE_MISSION is reported separately."
 	},
 	[ordered]@{
 		id = "supply-truck-heli"
-		required = @("supplyLoaded","supplyUnloadTimer","supplyCompleted","serviceSupplyAudit")
+		# SERVICE_SUPPLY_AUDIT is emitted ONLY by the pr8-stress overlay, never by native mission code. Dropped from the release-gate `required` set. NOTE: supplyLoaded/UnloadTimer/Completed are WFBE_CO_FNC_LogContent lines (LOG_CONTENT is off by default on server/player) - capture these from an HC-machine client RPT, or a build compiled with WF_LOG_CONTENT. See docs/release/2026-07-01-release-readiness-program.md.
+		required = @("supplyLoaded","supplyUnloadTimer","supplyCompleted")
 		fail = @()
-		note = "Supply load/unload/completion/service audit evidence; cash-run/JIP cooldown still needs human-readable notes."
+		note = "Supply load/unload/completion evidence (WFBE_CO_FNC_LogContent - needs LOG_CONTENT active, e.g. an HC-machine client RPT). SERVICE_SUPPLY_AUDIT is stress-overlay-only and not required by a native release run. Cash-run/JIP cooldown still needs human-readable notes."
 	}
 )
 
