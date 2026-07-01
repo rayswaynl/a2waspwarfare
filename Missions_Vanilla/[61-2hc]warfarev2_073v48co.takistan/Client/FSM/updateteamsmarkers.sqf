@@ -79,6 +79,8 @@ _ownMarker setMarkerAlphaLocal 0;
 _ownLastPos   = [-99999,-99999,0];
 _ownLastDir   = -999;
 _ownLastAlpha = -1;
+	private ["_ownLastText","_ownClassTag"];
+	_ownLastText = "~"; //--- WAVE-2 own-marker CLASS TEXT (Ray 2026-07-02): the reliable local-player marker sets no text, so the class never showed; seed "~" forces the first write.
 
 while {!gameOver} do {
 	// Marty: Only refresh marker state while the player can see map data through the map, GPS, or a Warfare dialog.
@@ -111,6 +113,23 @@ while {!gameOver} do {
 				_ownLastPos = _ownPos;
 			};
 			_ownDir = getDir (vehicle player);
+				//--- WAVE-2 own-marker CLASS TEXT: paint the local player's shortened class on their OWN marker
+				//--- every visible tick (cheap getVariable + cached write, so no spam; updates live if the player
+				//--- re-classes via the skin selector). This is the marker Ray actually sees; the per-team [SOL]
+				//--- label path only fires when the JIP-unreliable isPlayer(leader) detection succeeds.
+				_ownClassTag = switch (player getVariable ["wfbe_player_class", ""]) do {
+					case "Engineer": {"ENG"};
+					case "Soldier":  {"SOL"};
+					case "SpecOps":  {"SPEC"};
+					case "Spotter":  {"SNI"};
+					case "Medic":    {"MED"};
+					case "Officer":  {"OFF"};
+					default          {""};
+				};
+				if (_ownLastText != _ownClassTag) then {
+					_ownMarker setMarkerTextLocal _ownClassTag;
+					_ownLastText = _ownClassTag;
+				};
 			_ownDirDiff = abs (_ownDir - _ownLastDir);
 			if (_ownDirDiff > 180) then {_ownDirDiff = 360 - _ownDirDiff};
 			if (_ownLastDir < 0 || _ownDirDiff > 5) then {
@@ -302,7 +321,7 @@ while {!gameOver} do {
 						_classTag = switch (_leaderClass) do {
 							case "Engineer": {"ENG"};
 							case "Soldier":  {"SOL"};
-							case "SpecOps":  {"SUP"};
+							case "SpecOps":  {"SPEC"};
 							case "Spotter":  {"SNI"};
 							case "Medic":    {"MED"};
 							case "Officer":  {"OFF"};
