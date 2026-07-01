@@ -1,11 +1,42 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 00:35 Europe/Amsterdam
+Last updated: 2026-07-02 00:45 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 00:45 Update
+
+PR #136 advanced again to `d9d8abb4c87c128f67ab6be7e6720a7b8331f8c4`.
+The latest commit is design/docs only: it adds
+`docs/design/SPREAD-AND-HOLD.md` and updates
+`docs/design/NO-TOWN-UNCAPTURABLE.md`. It does not change mission source or add
+new runtime proof; it describes flag-gated spread/hold tuning now that the
+cmdcon40 capture-chain is proven on Chernarus.
+
+I rechecked the live server artifact layout. The active config still references
+both Chernarus and Takistan cmdcon40 templates, but active `MPMissions` contains
+only the Chernarus cmdcon40 PBO:
+
+- active Chernarus:
+  `[55-2hc]warfarev2_073v48co_cmdcon40aicom.chernarus.pbo`
+  - SHA256:
+    `659A90BDA050278A4549092E06CE4D233B74983893A0903D026F374F0AA82C4F`
+- parked Takistan:
+  `C:\WASP\mission-park\tk\[61-2hc]warfarev2_073v48co_cmdcon40aicom.takistan.pbo`
+  - SHA256:
+    `872D72681660792320258BDBB20AF3DB7B580FAB207BE1989C53AEF42ED38F35`
+
+Public stats generated at `2026-07-01T22:39:08Z` still show Chernarus, minute
+70, `currentRound.captures=2`, recent captures `Myshkino` and `Khelm`,
+benchmark `errors=0`, and both sides holding one town.
+
+This makes the remaining runtime blocker specific: Takistan cmdcon40 exists as a
+parked PBO, but it is not active in `MPMissions` and has no selected-build RPT
+proof. The release remains **NO-GO** until Takistan is deployed/launched through
+the normal path and its selected-build RPT evidence is collected.
 
 ## 2026-07-02 00:35 Update
 
