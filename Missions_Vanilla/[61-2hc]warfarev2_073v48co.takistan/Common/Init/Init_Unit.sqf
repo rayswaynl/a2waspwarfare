@@ -236,22 +236,32 @@ if (_isMan) then { //--- Man.
 	};
 	_params = [_type,_color,_size,_txt,_markerName,_unit,1,true,"DestroyedVehicle",_color,false,_side,[1,1]];
 } else { //--- Vehicle.
+	//--- GUER MARKER FIX (claude 2026-07-01): the seven side-keyed reads below (SUPPLY/REPAIR/ARTY/AMMO/LIFT/
+	//--- AMBULANCE/SALVAGE) previously used the BARE `getVariable Format[...]` form with NO default. For the
+	//--- playable GUER (resistance) faction, WFBE_GUERARTYVEHICLE / WFBE_GUERAMMOTRUCKS / WFBE_GUERLIFTVEHICLE are
+	//--- never registered (only the WEST/EAST army roots set them), so `_unit_kind in nil` threw a type error that
+	//--- HALTED this scheduled Init_Unit run BEFORE `_params Spawn MarkerUpdate` (below) - so a GUER player's own
+	//--- vehicles got NO map marker at all. This stayed hidden while resistance was the AI defender (Init_Unit is
+	//--- skipped for the defender) and surfaced when GUER became a playable three-way side. Fix: read every side
+	//--- list nil-safely with the [Format[...], []] default - the SAME form the sibling consumers already use
+	//--- (Client_UIFillListBuyUnits.sqf:41-46, GUI_Menu_BuyUnits.sqf:696, updateavailableactions.fsm:59). Also
+	//--- covers Takistan (resistance = TKGUE, missing the same three keys). A2-OA-1.64-safe (two-arg getVariable).
     if (_unit isKindOf "Bicycle") then {_color = "ColorWhite"};
 	if (_unit isKindOf "Plane") then {_color = "ColorPink"}; // Placeholder, change to light blue later, if it's possible?
 	if (_unit isKindOf "Helicopter") then {_color = "ColorPink"};
 	if (local _unit && isMultiplayer) then {_color = "ColorOrange"};
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1SUPPLYTRUCKS',str _side])) then {_type = "SupplyVehicle";_size = [1,1]};//--- Supply.
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1REPAIRTRUCKS',str _side])) then {_color = "ColorBrown";_type = "RepairVehicle";};//--- Repair.
+	if (_unit_kind in (missionNamespace getVariable [Format['WFBE_%1SUPPLYTRUCKS',str _side], []])) then {_type = "SupplyVehicle";_size = [1,1]};//--- Supply.
+	if (_unit_kind in (missionNamespace getVariable [Format['WFBE_%1REPAIRTRUCKS',str _side], []])) then {_color = "ColorBrown";_type = "RepairVehicle";};//--- Repair.
 	
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1ARTYVEHICLE',str _side])) then {_color = "ColorPink";};//--- Arty.
+	if (_unit_kind in (missionNamespace getVariable [Format['WFBE_%1ARTYVEHICLE',str _side], []])) then {_color = "ColorPink";};//--- Arty.
 	
 	
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1AMMOTRUCKS',str _side])) then {_size=[0.4,0.4];_type = "Attack";_color = "ColorRed";};//--- Ammotruck.
+	if (_unit_kind in (missionNamespace getVariable [Format['WFBE_%1AMMOTRUCKS',str _side], []])) then {_size=[0.4,0.4];_type = "Attack";_color = "ColorRed";};//--- Ammotruck.
 	
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1LIFTVEHICLE',str _side])) then {_color = "ColorWhite";};//---Lifter
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1AMBULANCES',str _side])) then {_color = "ColorYellow";};//--- Medical.
+	if (_unit_kind in (missionNamespace getVariable [Format['WFBE_%1LIFTVEHICLE',str _side], []])) then {_color = "ColorWhite";};//---Lifter
+	if (_unit_kind in (missionNamespace getVariable [Format['WFBE_%1AMBULANCES',str _side], []])) then {_color = "ColorYellow";};//--- Medical.
 	//
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',str _side])) then {_color = "ColorKhaki";_type = "SalvageVehicle";};//--- Salvage.
+	if (_unit_kind in (missionNamespace getVariable [Format['WFBE_%1SALVAGETRUCK',str _side], []])) then {_color = "ColorKhaki";_type = "SalvageVehicle";};//--- Salvage.
         _params = [_type,_color,_size,_txt,_markerName,_unit,1,true,"DestroyedVehicle",_color,false,_side,[2,2]];	
         if (_unit == ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_color = "ColorPink";_params = ['Headquarters',_color,[1,1],'','HQUndeployed',_unit,0.2,false,'','',false,_side]};//--- HQ.	
 };

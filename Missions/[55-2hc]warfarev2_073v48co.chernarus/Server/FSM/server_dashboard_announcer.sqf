@@ -15,17 +15,38 @@ scriptName "Server\FSM\server_dashboard_announcer.sqf";
 if (!isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_DASHBOARD_ANNOUNCE_ENABLED", 1]) != 1) exitWith {};
 
-Private ["_interval", "_msg"];
+Private ["_interval", "_msg", "_msgs", "_idx", "_count"];
 
 _interval = missionNamespace getVariable ["WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL", 300];
 _msg      = missionNamespace getVariable ["WFBE_C_DASHBOARD_MSG", "WASP live stats: http://78.46.107.142:8080/"];
 
 if (_interval < 30) then {_interval = 30}; //--- floor: never spam the chat faster than every 30s.
 
+//--- Persistent cycle index, so successive broadcasts step through the hint pool (0,1,2,3,0,1,...).
+if (isNil {missionNamespace getVariable "wfbe_dashboard_msg_idx"}) then {
+	missionNamespace setVariable ["wfbe_dashboard_msg_idx", 0];
+};
+
 ["INITIALIZATION", Format ["server_dashboard_announcer.sqf: Armed. Broadcasting the dashboard link every %1s.", _interval]] Call WFBE_CO_FNC_LogContent;
 
 while {true} do {
 	sleep _interval;                                   //--- wait first, so we do not spam at t=0 boot.
+
+	//--- Pick the next hint from the pool; fall back to the single fixed message if the pool is nil/empty.
+	_msgs  = missionNamespace getVariable ["WFBE_C_DASHBOARD_MSGS", []];
+	_count = 0;
+	if (typeName _msgs == "ARRAY") then {_count = count _msgs};
+
+	if (_count > 0) then {
+		_idx = missionNamespace getVariable ["wfbe_dashboard_msg_idx", 0];
+		if (_idx < 0) then {_idx = 0};
+		if (_idx >= _count) then {_idx = 0};                     //--- guard: pool may have shrunk since last tick.
+		_msg = _msgs select _idx;
+		missionNamespace setVariable ["wfbe_dashboard_msg_idx", (_idx + 1) % _count]; //--- advance & wrap.
+	} else {
+		_msg = missionNamespace getVariable ["WFBE_C_DASHBOARD_MSG", "WASP live stats: http://78.46.107.142:8080/"];
+	};
+
 	[nil, "DashboardAnnounce", [_msg]] Call WFBE_CO_FNC_SendToClients;
 	["INFORMATION", "server_dashboard_announcer.sqf: Broadcast dashboard link to all clients."] Call WFBE_CO_FNC_LogContent;
 };

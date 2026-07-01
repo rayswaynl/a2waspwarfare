@@ -21,18 +21,47 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
-         "_capPasses","_capMaxPasses","_capReleased"];
+         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir"];
 
 _sideID = _this select 0;
 _template = _this select 1;
 _pos = _this select 2;
 _side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 
-_pos = [_pos, 30, 120] Call WFBE_CO_FNC_GetRandomPosition;
-_pos = [_pos, 40] Call WFBE_CO_FNC_GetEmptyPosition;
+//--- PLANE AIRFIELD-SPAWN (Ray 2026-07-01, PLANE-ONLY "free air at captured airfields", gate WFBE_C_AICOM_PLANE_AIRSTART default-ON):
+//--- AI_Commander_Teams appends two trailing delegate args for a fixed-wing founding: slot 7 = is-plane-team flag (bool), slot 8 =
+//--- the runway/airfield heading (deg, resolved server-side from the airfield logic getDir). Read both count-guarded so every OTHER
+//--- delegate caller (W6/W19 server-local 3-arg, non-air foundings) is byte-identical. A2-OA-safe: typeName guards, no A3 commands.
+_isPlaneTeam = false;
+if (count _this > 7) then { private ["_ipt"]; _ipt = _this select 7; if (typeName _ipt == "BOOL") then {_isPlaneTeam = _ipt} };
+_planeDir = -1;
+if (count _this > 8) then { private ["_ipd"]; _ipd = _this select 8; if (typeName _ipd == "SCALAR") then {_planeDir = _ipd} };
+//--- Belt-and-braces: if the flag is set but no valid heading arrived, self-resolve the runway heading HERE from the nearest
+//--- airfield logic (getDir of the LocationLogicAirport), else fall back to 0 so a plane never air-starts on a nil heading.
+//--- Only runs for a flagged plane team; ground/heli founding never touches this.
+if (_isPlaneTeam && {(!(typeName _planeDir == "SCALAR")) || {_planeDir < 0}}) then {
+	private ["_afLog"];
+	_afLog = (_pos nearEntities [["LocationLogicAirport"], 2000]);
+	if (count _afLog > 0) then {
+		_planeDir = getDir (_afLog select 0);
+	} else {
+		_planeDir = 0;
+	};
+};
+
+//--- SCATTER: ground/heli teams keep the proven GetRandomPosition[30,120] + GetEmptyPosition[40] scatter so hulls do not stack on the
+//--- factory pad. A PLANE team SKIPS the scatter entirely and air-starts directly ABOVE the resolved airfield/runway threshold (server
+//--- passed getPos of the captured airfield hangar/logic), which is the most reliable A2 fixed-wing start (ground-takeoff off a runway is
+//--- finicky). The airborne "FLY" hulls are lifted + fanned in Common_CreateTeam so multiple planes never air-spawn stacked.
+if (!_isPlaneTeam) then {
+	_pos = [_pos, 30, 120] Call WFBE_CO_FNC_GetRandomPosition;
+	_pos = [_pos, 40] Call WFBE_CO_FNC_GetEmptyPosition;
+};
 
 _team = [_side, "aicom"] Call WFBE_CO_FNC_CreateGroup;
-_retVal = [_template, _pos, _side, true, _team, true, 90] call WFBE_CO_FNC_CreateTeam;
+//--- PLANE-ONLY 8th CreateTeam arg = the runway heading; CreateTeam air-starts each Plane hull ("FLY" + this heading). -1 (all other
+//--- teams) leaves CreateTeam on its byte-identical grounded "FORM"/dir-0 path for helis + ground hulls.
+_retVal = [_template, _pos, _side, true, _team, true, 90, (if (_isPlaneTeam) then {_planeDir} else {-1})] call WFBE_CO_FNC_CreateTeam;
 _units = _retVal select 0;
 _vehicles = _retVal select 1;
 _team = _retVal select 2;
@@ -745,10 +774,11 @@ while {!WFBE_GameOver && _alive} do {
 					//--- Build the waypoint list: each road node as a COLUMN/NORMAL MOVE, then a
 					//--- final MOVE on the destination so the arrival branch (leader<200m) trips.
 					_rmWPs = [];
+					private "_rmInterCR"; _rmInterCR = missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_COMPLETION", 70]; //--- SMOOTHNESS (B): intermediate road-node completionRadius widened 30 -> WFBE_C_AICOM_ROUTE_COMPLETION (70) so the convoy latches each node from further out and stops braking/backtracking to hit a tight 30m ring; the FINAL _dest node below stays tight (30) so the arrival branch still trips.
 					{
-						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, 30, [], [], ["AWARE","RED","","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was YELLOW/NORMAL). A2-fix 2026-06-14: inherit-formation (was COLUMN-locked) + wider completion 30 so columns open through chokepoints instead of bunching
+						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, _rmInterCR, [], [], ["AWARE","RED","","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was YELLOW/NORMAL). A2-fix 2026-06-14: inherit-formation (was COLUMN-locked). SMOOTHNESS (B): completion 30 -> _rmInterCR (WFBE_C_AICOM_ROUTE_COMPLETION 70) so columns open through chokepoints instead of bunching + braking to hit each node.
 					} forEach _rmRoute;
-					_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL final-approach (was YELLOW/NORMAL).
+					_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL final-approach (was YELLOW/NORMAL). FINAL node kept tight (30) so the arrival branch (leader<capRange) still latches.
 					[_team, true, _rmWPs] Spawn WFBE_CO_FNC_WaypointsAdd;
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 ROAD-MARCH (%5 road nodes).", _side, _team, _seq, _mode, count _rmRoute]] Call WFBE_CO_FNC_AICOMLog;
 				} else {
@@ -761,8 +791,34 @@ while {!WFBE_GameOver && _alive} do {
 					//--- final waypoint (~L549) with explicit [AWARE,RED,COLUMN,FULL] so foot squads transit FAST
 					//--- in column. The arrival branch (~L595-611) already re-lays a COMBAT/WEDGE SAD, so they
 					//--- still fight on arrival (never-frozen-AI safe - the squad always holds a live MOVE order).
-					[_team, true, [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- B66 (was [_team,_dest,'MOVE',50] Spawn WFBE_CO_FNC_WaypointSimple - empty props)
-					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT FAST-TRANSIT (column).", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
+					//--- SMOOTHNESS (A) FOOT ROAD-ROUTE: for a LONG pure-infantry leg (> WFBE_C_AICOM_FOOT_ROUTE_DIST,
+					//--- default 700m) with a server-snapped road chain, walk the SAME road-node chain the vehicle
+					//--- road-march uses (wfbe_aicom_route) instead of a single cross-country beeline. Foot squads then
+					//--- follow lanes/valleys the engine can path smoothly rather than grinding straight over ridges,
+					//--- and each intermediate node latches from WFBE_C_AICOM_ROUTE_COMPLETION (70m) out so the column
+					//--- flows instead of braking to hit a tight ring. A FINAL tight (30m) MOVE on _dest still trips the
+					//--- arrival branch. Short legs (< dist) OR an empty route keep the proven single fast-transit MOVE.
+					//--- A2-OA-safe: getVariable + isNil guard on the GROUP route var (no [name,default] on groups),
+					//--- plain forEach node build, exact vehicle-branch WaypointsAdd signature ([_team,true,_rmWPs] Spawn).
+					//--- NEVER-FROZEN: either path hands the team a live MOVE chain; the arrival branch re-lays COMBAT/WEDGE SAD.
+					_rmRoute = _team getVariable "wfbe_aicom_route";
+					if (isNil "_rmRoute") then {_rmRoute = []};
+					if (((leader _team) distance _dest > (missionNamespace getVariable ["WFBE_C_AICOM_FOOT_ROUTE_DIST", 700])) && {count _rmRoute > 0}) then {
+						//--- Long foot leg WITH a road chain: build node-by-node MOVE waypoints (fast column), wide
+						//--- intermediate completion so the squad flows, then a tight final MOVE on the destination.
+						private "_rmFootCR"; _rmFootCR = missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_COMPLETION", 70];
+						_rmWPs = [];
+						{
+							_rmWPs = _rmWPs + [[_x, 'MOVE', 50, _rmFootCR, [], [], ["AWARE","RED","COLUMN","FULL"]]]; //--- foot road node: RED/FULL column transit, wide latch (WFBE_C_AICOM_ROUTE_COMPLETION 70).
+						} forEach _rmRoute;
+						_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]]; //--- FINAL kept tight (30) so the arrival branch latches.
+						[_team, true, _rmWPs] Spawn WFBE_CO_FNC_WaypointsAdd; //--- exact vehicle-branch signature.
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT ROAD-ROUTE (%5 road nodes, long leg).", _side, _team, _seq, _mode, count _rmRoute]] Call WFBE_CO_FNC_AICOMLog;
+					} else {
+						//--- Short leg OR no road chain: proven single fast-transit MOVE (unchanged behaviour).
+						[_team, true, [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- B66 (was [_team,_dest,'MOVE',50] Spawn WFBE_CO_FNC_WaypointSimple - empty props)
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT FAST-TRANSIT (column).", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
+					};
 				};
 			} else {
 				//--- CAREFUL-GEAR GOVERNOR (owner refinement, layered on the 20s loop):
@@ -783,10 +839,40 @@ while {!WFBE_GameOver && _alive} do {
 					//--- Sample the VEHICLE pos (the hull is what climbs); leader rides the hull.
 					_govNz   = (surfaceNormal (getPos (vehicle _govLdr))) select 2; //--- 1.0=flat, lower=steeper.
 					_govSteep = _govNz < (missionNamespace getVariable ["WFBE_C_AICOM_SLOPE_Z", 0.93]);
+					//--- SMOOTHNESS (C) GRADE DWELL/HYSTERESIS: the raw per-tick "steep" sample flickers as a
+					//--- convoy crests small bumps, so one steep hull used to pulse the WHOLE team down to LIMITED
+					//--- (jerky speed oscillation). Debounce the SLOPE side: the steep condition must PERSIST
+					//--- continuously for > WFBE_C_AICOM_GRADE_DWELL (default 6s) before it downshifts to LIMITED,
+					//--- and the hull must be FLAT for the same dwell before FULL is restored. The stuck STRIKE side
+					//--- stays IMMEDIATE (recovery must not be delayed). setSpeedMode still fires once per state
+					//--- transition (via _govIsSlow), never per-tick. Time stamped in a team var on the first-steep /
+					//--- first-flat tick. A2-safe: plain time + getVariable+isNil on the GROUP (no [name,default]).
+					private ["_govDwell","_govGradeStamp","_govGradeRaw","_govSteepDwelled"];
+					_govDwell = missionNamespace getVariable ["WFBE_C_AICOM_GRADE_DWELL", 6];
+					_govGradeStamp = _team getVariable "wfbe_aicom_grade_stamp"; //--- [rawSteepBool, timeStamped]
+					if (isNil "_govGradeStamp" || {(typeName _govGradeStamp) != "ARRAY"} || {count _govGradeStamp < 2}) then {
+						_govGradeStamp = [_govSteep, time];
+						_team setVariable ["wfbe_aicom_grade_stamp", _govGradeStamp];
+					};
+					_govGradeRaw = _govGradeStamp select 0;
+					if (_govGradeRaw != _govSteep) then {
+						//--- raw slope state changed this tick: restart the dwell clock.
+						_govGradeStamp = [_govSteep, time];
+						_team setVariable ["wfbe_aicom_grade_stamp", _govGradeStamp];
+					};
+					//--- debounced steep = raw steep held past the dwell; else keep the last debounced state until
+					//--- the opposite condition earns its own dwell (so we never flap mid-transition).
+					_govSteepDwelled = _team getVariable "wfbe_aicom_grade_steep";
+					if (isNil "_govSteepDwelled") then {_govSteepDwelled = false};
+					if ((time - (_govGradeStamp select 1)) >= _govDwell) then {
+						_govSteepDwelled = _govSteep; //--- current raw state has persisted long enough -> adopt it.
+						_team setVariable ["wfbe_aicom_grade_steep", _govSteepDwelled];
+					};
 					//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
 					_govStrk = _team getVariable "wfbe_aicom_unstuck";
 					if (isNil "_govStrk") then {_govStrk = 0};
-					_govWantSlow = _govSteep || {_govStrk > 0};
+					//--- STRIKE stays immediate; SLOPE uses the debounced (dwelled) state.
+					_govWantSlow = _govSteepDwelled || {_govStrk > 0};
 					_govIsSlow = _team getVariable "wfbe_aicom_gearslow";
 					if (isNil "_govIsSlow") then {_govIsSlow = false};
 					if (_govWantSlow && {!_govIsSlow}) then {

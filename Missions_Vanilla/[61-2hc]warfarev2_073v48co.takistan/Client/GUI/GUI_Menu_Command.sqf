@@ -44,12 +44,19 @@ if (isNil "mouseX") then {mouseX = 0.5};
 if (isNil "mouseY") then {mouseY = 0.5};
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
-         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture","_disbandArm"];
+         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture","_disbandArm",
+         "_disbandSelArm","_focusArmed","_lastDirect","_directCool"];
 
 _display = _this select 0;
 _map = _display displayCtrl 14002;
 _sid = (sideJoined) Call WFBE_CO_FNC_GetSideID;
 _cool = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_COOLDOWN", 8];
+//--- Build83 smoother-console (claude-gaming 2026-07-01): the 8s _cool gate belongs ONLY on the RequestSpecial
+//--- brain-sends (arty/posture/request-unit/ai-command/disband) which actually cost the server work. The DIRECT
+//--- map-click group-var orders (Move/Defend/Patrol/Release/ALL-PUSH/ALL-HOLD) are pure LOCAL setVariable (no
+//--- server load), so re-targeting them under an 8s gate feels broken. Gate those on a SEPARATE short cooldown
+//--- (WFBE_C_AICOM_DIRECT_COOLDOWN, default 1.5s, defined in Init_CommonConstants) tracked by _lastDirect.
+_directCool = missionNamespace getVariable ["WFBE_C_AICOM_DIRECT_COOLDOWN", 1.5];
 //--- Artillery enable: a player war-room ARTILLERY-HERE request rides its OWN flag (WFBE_C_AICOM_PLAYER_ARTY),
 //--- SEPARATE from the hard-locked AI-autonomous-artillery flag (WFBE_C_AI_COMMANDER_ARTILLERY = 0, Steff). The
 //--- player request is serviced by an assist-mode resolver and only fires IF friendly artillery pieces exist; it
@@ -65,7 +72,10 @@ lbSetCurSel [14640, 0];
 
 _armed = "";
 _lastSend = -1000;
-_disbandArm = -1000;        //--- player-commander DISBAND failsafe: 2-click-arm timestamp (claude-gaming 2026-06-30).
+_lastDirect = -1000;        //--- Build83 smoother-console: separate short-cooldown timestamp for DIRECT map-click group-var orders (claude-gaming 2026-07-01).
+_disbandArm = -1000;        //--- player-commander DISBAND-ALL failsafe: 2-click-arm timestamp (claude-gaming 2026-06-30).
+_disbandSelArm = -1000;     //--- Command Console v2: per-team DISBAND-SELECTED 2-click-arm timestamp (claude-gaming 2026-07-01).
+_focusArmed = false;        //--- Command Console v2: STATE-A "AI: FOCUS TOWN" armed flag - next map click sets the AI focus (claude-gaming 2026-07-01).
 _lastState = -1;        //--- 0 = take-command, 1 = war room, -1 = uninitialised (force first toggle).
 _lastRosterHash = "";
 _lastEcon = "";
@@ -75,11 +85,14 @@ activeAnimMarker = false;
 
 //--- All war-room controls (shown only in the commander STATE B). Roster, order buttons, request combo+label, lines.
 private "_warCtrls";
-_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14626,14610,14611,14640,14641,14642,14690,14691];
+//--- Command Console v2 (claude-gaming 2026-07-01): +14627 DISBAND SELECTED (per-team teardown beside DISBAND ALL 14626).
+_warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14626,14627,14610,14611,14640,14641,14642,14690,14691];
 //--- STATE-A (NOT commander) advisory controls: the live AI-intent readout + the PUSH/HOLD posture nudge. Shown
 //--- only when the AI runs the side (so the nudge actually bites the brain) - hidden in STATE B.
 private "_adviseCtrls";
-_adviseCtrls = [14606,14607,14608,14609,14612,14613,14614,14615,14616]; //--- cmdcon27 THREAD C: +4 field-order nudges (SPLIT UP / PUSH TOGETHER / HARASS / FALL BACK)
+//--- cmdcon27 THREAD C: +4 field-order nudges (SPLIT UP / PUSH TOGETHER / HARASS / FALL BACK).
+//--- Command Console v2 (claude-gaming 2026-07-01): +14617 "AI: FOCUS TOWN" (map-click advisory focus).
+_adviseCtrls = [14606,14607,14608,14609,14612,14613,14614,14615,14616,14617];
 
 (_display displayCtrl 14650) ctrlSetStructuredText (parseText "Opening the war room...");
 
@@ -116,10 +129,12 @@ while {alive player && dialog} do {
 	ctrlEnable [14609, _postureBites];                               //--- global idc form (same reason as the ctrlShow fix above)
 	ctrlEnable [14612, _postureBites];
 	{ctrlEnable [_x, _postureBites]} forEach [14613,14614,14615,14616]; //--- cmdcon27 THREAD C: field-order nudges bite only when the AI runs the side
+	ctrlEnable [14617, _postureBites];                               //--- Command Console v2: AI FOCUS-TOWN bites only when the AI runs the side (same gate as the nudges)
 	if (_stateNow != _lastState) then {
 		_lastState = _stateNow;
 		diag_log (format ["CMDCON-DBG state=%1 isCmd=%2 | war660=%3 roster661=%4 | takecmd670=%5 intent606=%6 posture608=%7", _stateNow, _isCmd, ctrlShown (_display displayCtrl 14660), ctrlShown (_display displayCtrl 14661), ctrlShown (_display displayCtrl 14670), ctrlShown (_display displayCtrl 14606), ctrlShown (_display displayCtrl 14608)]); //--- CONSOLE PROBE: log real per-state control visibility so any overlap is diagnosable from the RPT.
 		_armed = "";
+		_focusArmed = false;                                          //--- Command Console v2: clear any armed FOCUS on state entry
 		_lastRosterHash = ""; _lastEcon = "";                         //--- force a panel redraw on state entry
 		if (!_isCmd) then {lbClear 14661};
 	};
@@ -209,6 +224,49 @@ while {alive player && dialog} do {
 			};
 		};
 
+		//--- ----- AI: FOCUS TOWN (Command Console v2, claude-gaming 2026-07-01) -----
+		//--- STATE-A advisory: ARM on MenuAction 766, then the NEXT map click resolves the nearest town and sends
+		//--- aicom-focus (the SAME side-focus mechanism the M4-key / command-center focus uses -> the Allocator makes it
+		//--- the side's fist, TTL'd). The player does NOT take command. Same _seatEmpty/_lockOn AI-runs gate as the nudges
+		//--- (a focus on a side a DIFFERENT human commands would be inert - strategy is off), and the same per-order cooldown.
+		if (MenuAction == 766) then {
+			MenuAction = -1;
+			if (_seatEmpty || _lockOn) then {
+				_focusArmed = true;
+				hintSilent parseText "<t color='#85B5FA'>AI focus:</t> click the town on the map to point the AI commander at it.";
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Focus only steers the AI when it holds command of this side.</t>";
+			};
+		};
+
+		//--- Map click while a FOCUS is armed -> resolve the nearest town to the click and send aicom-focus (town OBJECT
+		//--- at arg[2], exactly what the server handler expects). towns is populated on every client (Init_Town.sqf).
+		if (mouseButtonUp == 0) then {
+			mouseButtonUp = -1;
+			if (_focusArmed) then {
+				if (!(_seatEmpty || _lockOn)) then {
+					_focusArmed = false;
+					hintSilent parseText "<t color='#F8D664'>Focus only steers the AI when it holds command of this side.</t>";
+				} else {
+					if ((_now - _lastSend) < _cool) then {
+						hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+					} else {
+						_position = _map posScreenToWorld [mouseX, mouseY];
+						private "_fT"; _fT = objNull;
+						if (!isNil "towns" && {count towns > 0}) then {_fT = [_position, towns] Call WFBE_CO_FNC_GetClosestEntity};
+						if (!isNull _fT) then {
+							["RequestSpecial", ["aicom-focus", sideJoined, _fT]] Call WFBE_CO_FNC_SendToServer;
+							["TempAnim", getPos _fT, "selector_selectedMission", 1, "ColorYellow", 1, 1.2] Spawn MarkerAnim;
+							_lastSend = _now; _focusArmed = false; _lastIntent = "";   //--- repaint the intent readout with the new focus town
+							hintSilent parseText (format ["<t color='#A0E060'>AI focus set: %1.</t>", _fT getVariable ["name", "?"]]);
+						} else {
+							hintSilent parseText "<t color='#F8D664'>No town near that click - try again.</t>";
+						};
+					};
+				};
+			};
+		};
+
 		//--- Back / Exit still work in this state.
 		if (MenuAction == 4) exitWith {MenuAction = -1; activeAnimMarker = false; closeDialog 0; createDialog "WF_Menu"};
 		sleep 0.2;
@@ -234,7 +292,10 @@ while {alive player && dialog} do {
 		      + "   <t color='#85B5FA'>Towns:</t> " + str _held + "/" + str _total;
 		if (_econ != _lastEcon) then {(_display displayCtrl 14600) ctrlSetStructuredText (parseText _econ); _lastEcon = _econ};
 
-		//--- ----- ROSTER (14661): one row per AI-led team: "leader | role | town | order". -----
+		//--- ----- ROSTER (14661): one row per AI-led team: "Squad type | Target | Alive" (Command Console v2,
+		//--- claude-gaming 2026-07-01, was "leader | role | town | order"). Squad type = the SAME INF/LGHT/HVY/AIR
+		//--- classifier the map team markers use (updateaicommarkers.sqf); Target = the team's objective/destination
+		//--- town (from the broadcast wfbe_teamgoto); Alive = "alive/total". -----
 		//--- clientTeams is the own-side team registry; only NON-player-led, alive teams are commandable.
 		private ["_rows","_cmdTeams","_hash","_srcTeams"];
 		//--- FIX 1a (claude-gaming 2026-06-29): the roster MUST iterate the live side-logic team registry, not the
@@ -256,27 +317,44 @@ while {alive player && dialog} do {
 			//--- {alive _y} read an undefined _y -> THREW every iteration (22,529 RPT errors on cmdcon25) AND the
 			//--- failing count broke the filter so no row ever passed. Use {alive _x}; _grp already holds the team.
 			if (!isNull _grp && {!isPlayer (leader _grp)} && {({alive _x} count units _grp) > 0}) then {
-				private ["_ld","_role","_tn","_td","_md","_ord","_lbl","_pos"];
-				_ld = leader _grp;
-				_role = [typeOf _ld, "displayName"] Call GetConfigInfo;
-				if (_role == "") then {_role = "Team"};
-				//--- nearest town name (engine-proven nearest-pick; the inner forEach rebinds _x to the town - we keep using _grp for the team afterwards).
-				_pos = getPos _ld; _tn = "field"; _td = 1e9;
+				private ["_tn","_td","_lbl","_typeTag","_goto","_gotoTown","_alive","_total"];
+				//--- SQUAD TYPE: the SAME heaviest-hull classifier the map team markers use (updateaicommarkers.sqf:118-128).
+				//--- Priority: any Air hull -> AIR; else any Tank (tracked armour/IFV) -> HVY; else any wheeled APC/Car -> LGHT;
+				//--- else INF. The inner forEach rebinds _x to the team's UNITS, so keep using _grp for the team afterwards.
+				_typeTag = "INF";
 				{
-					private "_d"; _d = _pos distance _x;
-					if (_d < _td) then {_td = _d; _tn = _x getVariable ["name", "?"]};
-				} forEach towns;
-				//--- current order from wfbe_teammode (default "towns" = autonomous). Proven group [name,default] read (executor line 27).
-				_md = _grp getVariable ["wfbe_teammode", "towns"];
-				if (isNil "_md") then {_md = "towns"};
-				_md = toLower _md;
-				_ord = switch (_md) do {
-					case "move":    {"ATTACK"};
-					case "defense": {"DEFEND"};
-					case "patrol":  {"PATROL"};
-					default {"auto"};
+					if (!isNull _x && {alive _x}) then {
+						private "_veh"; _veh = vehicle _x;
+						if (_veh != _x) then {
+							if (_veh isKindOf "Air") exitWith {_typeTag = "AIR"};
+							if (_veh isKindOf "Tank") then {if (_typeTag != "AIR") then {_typeTag = "HVY"}};
+							if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+						};
+					};
+				} forEach units _grp;
+				//--- TARGET: the team's objective/destination town. wfbe_teamgoto is BROADCAST (SetTeamMovePos / AssignTowns
+				//--- L412), so it is client-readable: a town OBJECT (AI town assignment) OR a position (player DIRECT order).
+				//--- Resolve to a town name; if unset / autonomous with no goto -> "auto". The inner forEach rebinds _x to towns.
+				_goto = _grp getVariable ["wfbe_teamgoto", objNull];
+				_tn = "auto";
+				if (!isNil "_goto") then {
+					if (typeName _goto == "OBJECT") then {
+						if (!isNull _goto) then {_tn = _goto getVariable ["name", "?"]};
+					} else {
+						if (typeName _goto == "ARRAY" && {count _goto >= 2}) then {
+							_gotoTown = objNull; _td = 1e9;
+							{
+								private "_d"; _d = _goto distance _x;
+								if (_d < _td) then {_td = _d; _gotoTown = _x};
+							} forEach towns;
+							if (!isNull _gotoTown) then {_tn = _gotoTown getVariable ["name", "?"]};
+						};
+					};
 				};
-				_lbl = (name _ld) + "  |  " + _role + "  |  " + _tn + "  |  " + _ord;
+				//--- ALIVE: alive/total members (e.g. 6/8).
+				_alive = {alive _x} count units _grp;
+				_total = count units _grp;
+				_lbl = _typeTag + "  |  " + _tn + "  |  " + str _alive + "/" + str _total;
 				_rows = _rows + [_lbl];
 				_cmdTeams = _cmdTeams + [_grp];
 				_hash = _hash + _lbl + "#";
@@ -306,6 +384,22 @@ while {alive player && dialog} do {
 		_selTeam = objNull;
 		private "_sel"; _sel = lbCurSel 14661;
 		if (_sel >= 0 && _sel < (count _cmdTeams)) then {_selTeam = _cmdTeams select _sel};
+
+		//--- ----- VIEW TEAM camera (Command Console v2, claude-gaming 2026-07-01): double-click a roster row (onLBDblClick
+		//--- -> MenuAction 726) opens the EXISTING unit camera (RscMenu_UnitCamera / GUI_Menu_UnitCamera.sqf) focused on the
+		//--- selected team's leader. Seed WFBE_CmdCon_CamUnit with the leader; the camera reads it on load as its start unit
+		//--- (the camera's own player-team list is unchanged). Close this console first, then open the camera dialog. -----
+		if (MenuAction == 726) then {
+			MenuAction = -1;
+			if (!isNull _selTeam && {alive (leader _selTeam)}) then {
+				WFBE_CmdCon_CamUnit = leader _selTeam;
+				activeAnimMarker = false;
+				closeDialog 0;
+				createDialog "RscMenu_UnitCamera";
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Select a live team in the roster first.</t>";
+			};
+		};
 
 		//--- ----- SQUAD-COMMAND MODE TOGGLE (14625): DIRECT (player maneuvers) <-> AI STRATEGY
 		//--- (the AI maneuver-brain runs Strategy+AssignTowns UNDER the human commander while the player keeps the
@@ -356,6 +450,8 @@ while {alive player && dialog} do {
 			if (!isNull _selTeam) then {
 				[_selTeam, "towns"] Call SetTeamMoveMode;
 				[_selTeam, true]    Call SetTeamAutonomous;          //--- let AssignTowns re-grab it
+				_selTeam setVariable ["wfbe_aicom_manualpin", nil, true]; //--- MANUAL-PIN (Build83): RELEASE clears the pin (broadcast) so AssignTowns is free to re-grab this team immediately.
+				_lastDirect = _now;                                  //--- DIRECT group-var order: stamp the short-cooldown clock (Build83 smoother-console).
 				hintSilent parseText ("<t color='#A0E060'>" + (name (leader _selTeam)) + " released to auto.</t>");
 			} else {
 				hintSilent parseText "<t color='#F8D664'>Select a team in the roster first.</t>";
@@ -367,15 +463,24 @@ while {alive player && dialog} do {
 			mouseButtonUp = -1;
 			if (_armed != "") then {
 				_position = _map posScreenToWorld [mouseX, mouseY];
-				if ((_now - _lastSend) < _cool) then {
-					hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
-				} else {
-					if (_armed == "arty") then {
+				if (_armed == "arty") then {
+					//--- ARTY is a RequestSpecial brain-send -> keep it on the 8s _lastSend / _cool gate.
+					if ((_now - _lastSend) < _cool) then {
+						hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+					} else {
 						//--- HYBRID: artillery still rides the brain (works in assist-mode) via the RequestSpecial bus.
 						["RequestSpecial", ["aicom-arty-here", sideJoined, [_position select 0, _position select 1, 0], player, group player]] Call WFBE_CO_FNC_SendToServer;
 						["TempAnim", _position, "selector_selectedMission", 1, "ColorRed", 1, 1.2] Spawn MarkerAnim;
 						hintSilent parseText "<t color='#A0E060'>Artillery requested.</t>";
 						_lastSend = _now; _armed = "";
+					};
+				} else {
+					//--- DIRECT map-click order (Move/Defend/Patrol) = pure LOCAL setVariable, no server load ->
+					//--- gate on the SHORT _lastDirect / _directCool. Within that window do NOT clear _armed (leave the
+					//--- order armed so the very next click lands without re-arming) and show a soft "ready in Ns" hint.
+					if ((_now - _lastDirect) < _directCool) then {
+						private "_dcd"; _dcd = _directCool - (_now - _lastDirect);
+						hintSilent parseText (format ["<t color='#F8D664'>Ready in %1s - click again.</t>", (ceil _dcd)]);
 					} else {
 						//--- DIRECT TEAM TASK. Target = selected roster team, else nearest idle AI team to the click.
 						private "_team"; _team = _selTeam;
@@ -402,9 +507,10 @@ while {alive player && dialog} do {
 							[_team, _position] Call SetTeamMovePos;
 							[_team, _armed]    Call SetTeamMoveMode;
 							[_team, false]     Call SetTeamAutonomous; //--- pin under manual order (don't let AssignTowns re-grab it)
+							_team setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): stamp the human order time so AssignTowns treats this team as explicit for WFBE_C_AICOM_MANUALPIN_TTL (600s) and does not re-grab it on the next 120s tick. Broadcast so the SERVER's AssignTowns reads it.
 							["TempAnim", _position, "selector_selectedMission", 1, _col, 1, 1.2] Spawn MarkerAnim;
 							hintSilent parseText ("<t color='#A0E060'>" + (name (leader _team)) + " -> " + (toUpper _armed) + ".</t>");
-							_lastSend = _now; _armed = "";
+							_lastDirect = _now; _armed = "";
 						} else {
 							hintSilent parseText "<t color='#F8D664'>No AI team available to task.</t>";
 						};
@@ -414,27 +520,42 @@ while {alive player && dialog} do {
 		};
 
 		//--- ----- ALL PUSH / ALL HOLD (bulk; no allocator dependency). -----
+		//--- Build83 smoother-console (claude-gaming 2026-07-01): these are DIRECT group-var orders (pure local
+		//--- setVariable, no server load), so gate them on the SHORT _lastDirect / _directCool, not the 8s _lastSend.
 		if (MenuAction == 710 || MenuAction == 711) then {
 			private "_b"; _b = MenuAction; MenuAction = -1;
-			if ((_now - _lastSend) >= _cool) then {
+			if ((_now - _lastDirect) >= _directCool) then {
 				private "_n"; _n = 0;
 				{
 					if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count units _x) > 0}) then {  //--- FIX 1b: {alive _x} (count provides _x); FIX 1a: iterate _srcTeams below.
 						if (_b == 710) then {
 							[_x, "towns"] Call SetTeamMoveMode;
 							[_x, true]    Call SetTeamAutonomous;
+							_x setVariable ["wfbe_aicom_manualpin", nil, true]; //--- MANUAL-PIN (Build83): ALL-PUSH releases every team to auto, so clear each pin (broadcast) - AssignTowns re-grabs them freely.
 						} else {
-							[_x, getPos (leader _x)] Call SetTeamMovePos;
-							[_x, "defense"]          Call SetTeamMoveMode;
-							[_x, false]              Call SetTeamAutonomous;
+							//--- Build83 smoother-console CHANGE 2 (claude-gaming 2026-07-01): a bulk HOLD must not freeze a team
+							//--- off-road mid-march. Pull each team's hold point to the nearest road node before stamping defense
+							//--- (nearRoads / WFBE_CO_FNC_GetClosestEntity - the same A2-safe snap the AICOM route builder uses).
+							//--- The SINGLE-team Defend (exact map click) is left untouched.
+							private "_hp"; _hp = getPos (leader _x);
+							private "_rd"; _rd = _hp nearRoads 200;
+							if (count _rd > 0) then {
+								private "_rn"; _rn = [_hp, _rd] Call WFBE_CO_FNC_GetClosestEntity;
+								if (!isNull _rn) then {_hp = getPos _rn};
+							};
+							[_x, _hp]       Call SetTeamMovePos;
+							[_x, "defense"] Call SetTeamMoveMode;
+							[_x, false]     Call SetTeamAutonomous;
+							_x setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): ALL-HOLD is a human DIRECT defense order, so pin each team (broadcast) - AssignTowns won't re-grab it for WFBE_C_AICOM_MANUALPIN_TTL (600s).
 						};
 						_n = _n + 1;
 					};
 				} forEach _srcTeams;
-				_lastSend = _now;
+				_lastDirect = _now;
 				hintSilent parseText (format ["<t color='#A0E060'>%1: %2 teams.</t>", (if (_b == 710) then {"ALL PUSH"} else {"ALL HOLD"}), _n]);
 			} else {
-				hintSilent parseText "<t color='#F8D664'>Orders on cooldown.</t>";
+				private "_bcd"; _bcd = _directCool - (_now - _lastDirect);
+				hintSilent parseText (format ["<t color='#F8D664'>Ready in %1s.</t>", (ceil _bcd)]);
 			};
 		};
 
@@ -470,16 +591,68 @@ while {alive player && dialog} do {
 			};
 		};
 
-		//--- ----- Bottom status line: cooldown + armed hint. -----
-		private ["_cd","_st"];
-		_cd = _cool - (_now - _lastSend);
-		_st = if (_cd > 0) then {
-			"<t color='#F8D664'>Orders ready in " + str (ceil _cd) + "s</t>"
-		} else {
-			if (_armed != "") then {
-				"<t color='#A0E060'>Armed: " + (toUpper _armed) + " - click the map.</t>"
+		//--- ----- DISBAND SELECTED AI TEAM (Command Console v2, claude-gaming 2026-07-01): stand down ONLY the highlighted
+		//--- roster team, two-click confirm. Same player-safe teardown as DISBAND ALL (flags wfbe_aicom_disband; the HC
+		//--- deletes it only when no player is near + not in combat). The server 'aicom-team-disband' handler is EXTENDED to
+		//--- accept an optional team INDEX (arg[2]) into the side logic's wfbe_teams; we resolve _selTeam's index in the SAME
+		//--- broadcast registry the server reads (WFBE_Client_Logic getVariable "wfbe_teams" == _dLogik wfbe_teams, both via
+		//--- WFBE_CO_FNC_GetSideLogic - Init_Client.sqf:455). Guard: only send when that registry is live AND the selected
+		//--- team is found in it (else the index would not match the server). No per-side cooldown on a single-team disband
+		//--- (server-side: the specific-team path skips the 15-min gate; that gate guards the all-teams sweep). -----
+		if (MenuAction == 746) then {
+			MenuAction = -1;
+			if (!_isCmd) then {
+				hintSilent parseText "<t color='#F8D664'>Only the commander can disband AI teams.</t>";
 			} else {
-				"<t color='#A0E060'>Pick a team, pick an order, click the map.</t>"
+				if (isNull _selTeam) then {
+					hintSilent parseText "<t color='#F8D664'>Select a team in the roster first.</t>";
+				} else {
+					//--- Resolve the selected team's index in the broadcast wfbe_teams registry (server-matching order).
+					private ["_regTeams","_tIdx"];
+					_regTeams = []; _tIdx = -1;
+					if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
+						private "_rt"; _rt = WFBE_Client_Logic getVariable "wfbe_teams";
+						if (!isNil "_rt" && {(typeName _rt) == "ARRAY"}) then {_regTeams = _rt};
+					};
+					{ if (_x == _selTeam) exitWith {_tIdx = _forEachIndex} } forEach _regTeams;
+					if (_tIdx < 0) then {
+						hintSilent parseText "<t color='#F8D664'>Cannot target that team yet - try again in a moment.</t>";
+					} else {
+						if ((_now - _disbandSelArm) <= 5) then {
+							_disbandSelArm = -1000;
+							["RequestSpecial", ["aicom-team-disband", sideJoined, _tIdx]] Call WFBE_CO_FNC_SendToServer;
+							hintSilent parseText (format ["<t color='#F89060'>Disband order sent - %1 will stand down where safe.</t>", (name (leader _selTeam))]);
+						} else {
+							_disbandSelArm = _now;
+							hintSilent parseText (format ["<t color='#F85050'>DISBAND %1? Click again within 5s to confirm.</t>", (name (leader _selTeam))]);
+						};
+					};
+				};
+			};
+		};
+
+		//--- ----- Bottom status line: cooldown + armed hint. -----
+		//--- Build83 smoother-console (claude-gaming 2026-07-01): a DIRECT order (move/defense/patrol) is armed and
+		//--- gated on the SHORT _lastDirect clock, so it must not be masked by the long _lastSend brain-send countdown.
+		//--- Show the armed-DIRECT prompt whenever such an order is armed; otherwise fall back to the _lastSend readout.
+		private ["_cd","_st"];
+		if (_armed != "" && {_armed != "arty"}) then {
+			private "_dcd"; _dcd = _directCool - (_now - _lastDirect);
+			_st = if (_dcd > 0) then {
+				"<t color='#F8D664'>" + (toUpper _armed) + " armed - ready in " + str (ceil _dcd) + "s</t>"
+			} else {
+				"<t color='#A0E060'>Armed: " + (toUpper _armed) + " - click the map.</t>"
+			};
+		} else {
+			_cd = _cool - (_now - _lastSend);
+			_st = if (_cd > 0) then {
+				"<t color='#F8D664'>Orders ready in " + str (ceil _cd) + "s</t>"
+			} else {
+				if (_armed != "") then {
+					"<t color='#A0E060'>Armed: " + (toUpper _armed) + " - click the map.</t>"
+				} else {
+					"<t color='#A0E060'>Pick a team, pick an order, click the map.</t>"
+				};
 			};
 		};
 		(_display displayCtrl 14650) ctrlSetStructuredText (parseText _st);

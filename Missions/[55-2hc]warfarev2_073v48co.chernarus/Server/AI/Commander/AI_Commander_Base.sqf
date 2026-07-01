@@ -49,19 +49,54 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 	if (_logik getVariable ["wfbe_mhqreloc_active", false]) exitWith {};
 	_deployCost = _costs select 0;
 	if (_supply >= _deployCost) then {
-		//--- V0.6.5 owner report: HQ deployed ON a road (MHQ start spot). Nudge the
-		//--- deploy position off-road/out-of-water; fall back to the raw spot if no
-		//--- candidate is found within 20 tries.
+		//--- V0.6.5 owner report: HQ deployed ON a road (MHQ start spot). Nudge the deploy
+		//--- position off-road/out-of-water. AICOM v2 (Ray 2026-07-01, road fix): the old code
+		//--- used a FIXED 22-50m annulus and, on give-up, RESET to the raw on-road spot - so a
+		//--- start location boxed in by roads kept planting the HQ ON the road. Replace with an
+		//--- EXPANDING-RING off-road search (mirrors the ring idiom in Common_GetSafePlace.sqf:
+		//--- sweep angles, then GROW the radius when a ring is exhausted) and KEEP the best
+		//--- off-road candidate ever found - NEVER reset to the raw on-road spot. The radius
+		//--- grows in WFBE_C_AICOM_HQ_NUDGE_STEP (default 25m) increments up to
+		//--- WFBE_C_AICOM_HQ_NUDGE_MAX_R (default 200m). Pure scalar math + nearRoads/surfaceIsWater
+		//--- (A2-OA-safe, same gate as the factory finder and the ServicePoint road-snap).
 		_dPos = getPos _hq;
 		if ((count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}) then {
+			private ["_hqRaw","_nudgeMaxR","_nudgeStep","_nudgeRad","_nudgeAng","_cand","_haveCand","_bestCand","_bestRoadD","_candRoadD","_candOK"];
+			_hqRaw = getPos _hq;
+			_nudgeMaxR = missionNamespace getVariable ["WFBE_C_AICOM_HQ_NUDGE_MAX_R", 200];
+			_nudgeStep = missionNamespace getVariable ["WFBE_C_AICOM_HQ_NUDGE_STEP", 25];
+			if (_nudgeStep <= 0) then {_nudgeStep = 25};
 			_dTry = 0;
-			while {_dTry < 20 && {(count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}}} do {
-				_dAng = random 360;
-				_dPos = [((getPos _hq) select 0) + (22 + random 28) * sin _dAng, ((getPos _hq) select 1) + (22 + random 28) * cos _dAng, 0];
-				_dTry = _dTry + 1;
+			_haveCand = false;      //--- a fully off-road+dry candidate found -> accept immediately.
+			_bestCand = _hqRaw;     //--- best-so-far (farthest from any road, always dry) - the fallback.
+			_bestRoadD = -1;        //--- distance to nearest road at _bestCand (higher = better); -1 = unset.
+			//--- expanding ring: start just outside the road-reject radius, grow outward.
+			_nudgeRad = 22;
+			while {!_haveCand && {_nudgeRad <= _nudgeMaxR}} do {
+				//--- sweep the ring in fixed angular steps (36 deg == the Common_GetSafePlace sweep),
+				//--- with a small random phase so successive deploys do not all probe identical spots.
+				_nudgeAng = random 360;
+				for [{private "_k"; _k = 0}, {_k < 10 && {!_haveCand}}, {_k = _k + 1}] do {
+					_cand = [(_hqRaw select 0) + _nudgeRad * sin _nudgeAng, (_hqRaw select 1) + _nudgeRad * cos _nudgeAng, 0];
+					_dTry = _dTry + 1;
+					if (!(surfaceIsWater _cand)) then {
+						//--- distance to the nearest road (60 == none within 60m -> treat as fully clear).
+						_candRoadD = 60;
+						{ private "_rd"; _rd = (getPos _x) distance _cand; if (_rd < _candRoadD) then {_candRoadD = _rd} } forEach (_cand nearRoads 60);
+						_candOK = (count (_cand nearRoads 14) == 0);
+						//--- track the best DRY candidate by road-clearance so give-up never returns on-road.
+						if (_candRoadD > _bestRoadD) then {_bestRoadD = _candRoadD; _bestCand = _cand};
+						if (_candOK) then {_haveCand = true; _bestCand = _cand};
+					};
+					_nudgeAng = _nudgeAng + 36;
+				};
+				_nudgeRad = _nudgeRad + _nudgeStep;
 			};
-			if ((count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}) then {_dPos = getPos _hq};
-			["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] HQ deploy spot nudged off-road to %2 (%3 tries).", _sideText, _dPos, _dTry]] Call WFBE_CO_FNC_AICOMLog;
+			//--- NEVER reset to the raw on-road spot: take the fully-clear hit, else the best off-road
+			//--- candidate seen (farthest from any road, guaranteed dry). Only if NOTHING dry was ever
+			//--- found (all-water ring, degenerate map) does _bestCand remain the raw spot.
+			_dPos = _bestCand;
+			["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] HQ deploy spot nudged off-road to %2 (%3 tries, clear=%4, roadDist=%5, maxR=%6).", _sideText, _dPos, _dTry, _haveCand, round _bestRoadD, _nudgeMaxR]] Call WFBE_CO_FNC_AICOMLog;
 		};
 		if (_dual) then {[_side, -_deployCost, "AI commander HQ deployment.", false] Call ChangeSideSupply};
 		[_classes select 0, _side, _dPos, getDir _hq, 0] ExecVM "Server\Construction\Construction_HQSite.sqf";
@@ -322,6 +357,28 @@ _findBuildPos = {
 	//--- try-budget failure: hand back the best dry-land candidate (never water).
 	if (!_ok) then {_p = if (_haveClear) then {_bestClear} else {if (_haveBC) then {_bestBC} else {if (_haveDry) then {_best} else {_p}}}}; //--- AICOM v2 (Ray): prefer the best ROAD-CLEAR fallback over an on-road _best, so structures stop landing on roads in road-dense base spots.
 	_via = "raw"; if (_haveDry) then {_via = "DRY"}; if (_haveBC) then {_via = "bestBC"}; if (_haveClear) then {_via = "bestClear"}; if (_haveStep) then {_via = "bestStep"}; if (_ok) then {_via = if (_nearRoad == 2) then {"okStep"} else {"ok"}};
+	//--- AICOM v2 (Ray 2026-07-01, road fix): the fallback chain above prefers the road-CLEAR tiers
+	//--- (_bestClear/_bestBC) but can still resolve _p onto the raw DRY _best - which is recorded
+	//--- BEFORE the road gate and may sit ON a road (paved OR dirt). REJECT an on-road fallback _p:
+	//--- rather than returning it, STEP it off-road radially OUTWARD along the HQ->_p bearing in 8m
+	//--- increments (up to +150m) until nearRoads is clear and the spot is dry. Same nudge idiom as
+	//--- the no-overlap hard guard below (which then still runs on the stepped-off spot, so spacing
+	//--- is preserved). Pure scalar math + nearRoads/surfaceIsWater = A2-OA-safe; only fires when the
+	//--- try-budget genuinely failed AND the chosen fallback landed on a road (rare, road-dense base).
+	if (count (_p nearRoads 14) > 0) then {
+		private ["_rbx","_rby","_rbh","_rstep","_rnx","_rny","_rnpos","_rdone"];
+		_rbx = (_p select 0) - (_hqPos select 0); _rby = (_p select 1) - (_hqPos select 1);
+		_rbh = if (_rbx == 0 && {_rby == 0}) then {random 360} else {_rbx atan2 _rby}; //--- HQ->_p bearing (random if _p == HQ).
+		_rdone = false; _rstep = 8;
+		while {!_rdone && {_rstep <= 150}} do {
+			_rnx = (_p select 0) + _rstep * sin _rbh;
+			_rny = (_p select 1) + _rstep * cos _rbh;
+			_rnpos = [_rnx, _rny, 0];
+			if (!(surfaceIsWater _rnpos) && {count (_rnpos nearRoads 14) == 0}) then {_p = _rnpos; _rdone = true; _via = _via + "+offroad"};
+			_rstep = _rstep + 8;
+		};
+		if (!_rdone) then {_via = _via + "+ONROAD!"}; //--- could not step clear of roads within +150m; RPT-flagged.
+	};
 	//--- Ray 2026-06-29 req #1 FINAL HARD GUARD: the raw _best/_p fallback tiers have NO spacing floor, so a
 	//--- fully-failed search could still resolve _p ON TOP of an existing structure (overlap). Enforce the
 	//--- no-overlap floor unconditionally: if _p still violates the floor, NUDGE it radially OUTWARD along the

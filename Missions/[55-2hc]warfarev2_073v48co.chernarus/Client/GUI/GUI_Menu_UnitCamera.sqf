@@ -30,6 +30,14 @@ _id = clientTeams find _player_group;
 
 lbSetCurSel[21002,_id];
 _currentUnit = (player) Call GetUnitVehicle;
+//--- Command Console v2 (claude-gaming 2026-07-01): VIEW TEAM entry. The command console seeds WFBE_CmdCon_CamUnit with a
+//--- selected AI team's leader before opening this camera; if it holds a live unit, start the camera on that unit (its
+//--- vehicle) instead of the player. One-shot: cleared immediately so a normal camera open (Tactical) is unaffected.
+if (!isNil "WFBE_CmdCon_CamUnit") then {
+	private "_seedUnit"; _seedUnit = WFBE_CmdCon_CamUnit;
+	WFBE_CmdCon_CamUnit = nil;
+	if (!isNull _seedUnit && {alive _seedUnit}) then {_currentUnit = (_seedUnit) Call GetUnitVehicle};
+};
 _currentMode = "Internal";
 _currentUnit switchCamera _currentMode;
 _units = (Units (group player) - [player]) Call GetLiveUnits;

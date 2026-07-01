@@ -3,7 +3,7 @@
 // (WF_DEBUG ON = instant funds + all tiers unlocked; smoke-test ONLY, never a deploy).
 // #define WF_DEBUG 1
 // #define WF_LOG_CONTENT
-#define WF_RELEASE_MARKER "WASPRELEASE|v1|candidate=release-command-center-20260630|git=manual|terrain=manual"
+#define WF_RELEASE_MARKER "WASPRELEASE|v1|candidate=build83-cmdcon35-20260701|git=build83-cmdcon35|terrain=manual"
 #define IS_CHERNARUS_MAP_DEPENDENT
 //#define IS_MOD_MAP_DEPENDENT
 #define IS_NAVAL_MAP

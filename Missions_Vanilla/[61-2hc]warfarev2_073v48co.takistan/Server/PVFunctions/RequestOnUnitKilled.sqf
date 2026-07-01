@@ -288,6 +288,10 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 		} else { //--- The team is lead by an AI.
 			if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_ENABLED") > 0 && isServer) then { //--- Award the kill to the AI team.
 				_bounty = (_get select QUERYUNITPRICE) * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF");
+				//--- Ka-137 reward nerf: a killed Ka-137 (all PMC variants) pays only the coef (default 0.4) of normal.
+				if ((_killed isKindOf "Ka137_MG_PMC") || (_killed isKindOf "Ka137_PMC")) then {
+					_bounty = _bounty * (missionNamespace getVariable ["WFBE_C_KA137_REWARD_COEF", 0.4]);
+				};
 				_bounty = _bounty - (_bounty % 1);
 				[_killer_group, _bounty] Call ChangeTeamFunds;
 				//--- punchy-AICOM KILL-REWARD (Ray 2026-06-17): unconditionally trickle the kill bounty

@@ -28,7 +28,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) <= 0) exitWit
 if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) <= 0) exitWith {};
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-if (isNull _logik) exitWith {};
+if (isNull _logik) exitWith {}; //--- GetSideLogic returns objNull (never nil) when the side logic is absent; guard isNull, matching BaseSell.sqf.
 
 //--- Read + freshness-check the player request.
 _riArtyReq = _logik getVariable "wfbe_aicom_arty_request";
