@@ -13,6 +13,19 @@ Static smoke now checks the guarded wait condition and empty-head removal paths
 across Chernarus and generated Takistan. Runtime, SSH, RPT collection, upload,
 restart, cache-clear and deployment remain explicit-approval gated.
 
+## 2026-07-02 — Attack Wave PV payload guards [RELEASE LOOP]
+
+Closed the Attack Wave public-variable hardening slice. `ATTACK_WAVE_INIT`,
+`CLIENT_INIT_READY` and `ATTACK_WAVE_DETAILS` now reject malformed, short or
+wrong-typed payloads before slot reads. Attack-wave activation also re-reads the
+live server-side side supply and refuses activation below the 25k action cost
+instead of trusting the client-submitted supply number.
+
+Static smoke now checks the Attack Wave PV guards across Chernarus and generated
+Takistan. `Run-WaspFinalCheck.ps1` passes with static smoke, both A2 OA
+compatibility lints, and high-only bug hunt clean. Runtime, SSH, RPT collection,
+upload, restart, cache-clear and deployment remain explicit-approval gated.
+
 ## 2026-07-02 — Marker feed consumer shape guards [RELEASE LOOP]
 
 Closed the remaining marker-feed consumer hardening gap. The server-side

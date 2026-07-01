@@ -1,14 +1,25 @@
 "CLIENT_INIT_READY" addPublicVariableEventHandler {
-    private ["_player"];
+    private ["_player", "_playerSide"];
 
     _player = _this select 1;
+    if (typeName _player != "OBJECT") exitWith {
+        ["WARNING", Format ["AttackWave.sqf: rejected malformed CLIENT_INIT_READY payload type [%1].", typeName _player]] Call WFBE_CO_FNC_LogContent;
+    };
+    if (isNull _player) exitWith {
+        ["WARNING", "AttackWave.sqf: rejected CLIENT_INIT_READY payload for null player object."] Call WFBE_CO_FNC_LogContent;
+    };
+    if (!isPlayer _player) exitWith {
+        ["WARNING", Format ["AttackWave.sqf: rejected CLIENT_INIT_READY payload for non-player object [%1].", _player]] Call WFBE_CO_FNC_LogContent;
+    };
+    _playerSide = side _player;
+    if (!(_playerSide in [west, east])) exitWith {};
 
     //--- Set attack mode status properly.
-    if (side (_player) == west && ATTACK_WAVE_ACTIVE_WEST) then {
+    if (_playerSide == west && ATTACK_WAVE_ACTIVE_WEST) then {
         [(_player), "HandleSpecial", ["attack-wave", ATTACK_WAVE_WEST_PRICE_MODIFIER]] Call WFBE_CO_FNC_SendToClient;
         [(_player), "LocalizeMessage", ["AttackModeActiveJIP"]] call WFBE_CO_FNC_SendToClient;
     } else {
-        if (side (_player) == east && ATTACK_WAVE_ACTIVE_EAST) then {
+        if (_playerSide == east && ATTACK_WAVE_ACTIVE_EAST) then {
             [(_player), "HandleSpecial", ["attack-wave", ATTACK_WAVE_EAST_PRICE_MODIFIER]] Call WFBE_CO_FNC_SendToClient;
             [(_player), "LocalizeMessage", ["AttackModeActiveJIP"]] call WFBE_CO_FNC_SendToClient;
         };
@@ -18,11 +29,31 @@
 
 "ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
 
-	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
+	private ["_badFields", "_d", "_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
 
-	_side = ((_this select 1) select 0);
-	_priceModifier = ((_this select 1) select 1);
-    _attackLength = ((_this select 1) select 2);
+	_d = _this select 1;
+    if (typeName _d != "ARRAY") exitWith {
+        ["WARNING", Format ["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS payload type [%1].", typeName _d]] Call WFBE_CO_FNC_LogContent;
+    };
+    if (count _d < 3) exitWith {
+        ["WARNING", Format ["AttackWave.sqf: rejected short ATTACK_WAVE_DETAILS payload [%1].", _d]] Call WFBE_CO_FNC_LogContent;
+    };
+	_side = _d select 0;
+	_priceModifier = _d select 1;
+    _attackLength = _d select 2;
+    _badFields = false;
+    if (!(_side in [west, east])) then {_badFields = true};
+    if (typeName _priceModifier != "SCALAR") then {_badFields = true};
+    if (typeName _attackLength != "SCALAR") then {_badFields = true};
+    if (_badFields) exitWith {
+        ["WARNING", Format ["AttackWave.sqf: rejected invalid ATTACK_WAVE_DETAILS fields side=%1 price=%2 length=%3.", _side, typeName _priceModifier, typeName _attackLength]] Call WFBE_CO_FNC_LogContent;
+    };
+    if (_priceModifier <= 0) exitWith {
+        ["WARNING", Format ["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with non-positive price modifier [%1].", _priceModifier]] Call WFBE_CO_FNC_LogContent;
+    };
+    if (_attackLength < 0) exitWith {
+        ["WARNING", Format ["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with negative attack length [%1].", _attackLength]] Call WFBE_CO_FNC_LogContent;
+    };
 
     _priceModifierPercentage = round (_priceModifier * 100);
 

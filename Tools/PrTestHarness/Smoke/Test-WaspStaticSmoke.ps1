@@ -428,6 +428,72 @@ function Test-FactoryQueueEmptyHeadGuard {
 	Add-Result "Factory queue empty-head guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AttackWavePvGuards {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$initPath = Join-Path $entry.Root "Server\Functions\Server_AttackWave.sqf"
+		$detailsPath = Join-Path $entry.Root "Server\PVFunctions\AttackWave.sqf"
+		$clientPath = Join-Path $entry.Root "Common\Functions\Common_AttackWaveActivate.sqf"
+		$init = Get-Text $initPath
+		$details = Get-Text $detailsPath
+		$client = Get-Text $clientPath
+		$initCode = [regex]::Replace($init, "//.*", "")
+		$initCode = [regex]::Replace($initCode, "/\*[\s\S]*?\*/", "")
+		$detailsCode = [regex]::Replace($details, "//.*", "")
+		$detailsCode = [regex]::Replace($detailsCode, "/\*[\s\S]*?\*/", "")
+
+		$initStart = $initCode.IndexOf('"ATTACK_WAVE_INIT" addPublicVariableEventHandler')
+		if ($initStart -lt 0) {
+			$missing += "$($entry.Terrain):init-missing-handler"
+		} else {
+			$initBlock = $initCode.Substring($initStart)
+			$shapeAt = $initBlock.IndexOf('typeName _d != "ARRAY"')
+			$countAt = $initBlock.IndexOf('count _d < 2')
+			$selectAt = $initBlock.IndexOf('_d select 0')
+			if ($shapeAt -lt 0 -or $countAt -lt 0) { $missing += "$($entry.Terrain):init-payload-shape" }
+			if ($selectAt -ge 0 -and ($shapeAt -lt 0 -or $countAt -lt 0 -or $shapeAt -gt $selectAt -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):init-guard-after-select" }
+			if (-not ($initBlock.Contains('typeName _supply != "SCALAR"') -and $initBlock.Contains('_side in [west, east]') -and $initBlock.Contains('_serverSupply = _side Call GetSideSupply') -and $initBlock.Contains('_serverSupply < 25000'))) { $missing += "$($entry.Terrain):init-authority-types" }
+			if (-not ($initBlock.Contains('rejected malformed ATTACK_WAVE_INIT') -and $initBlock.Contains('rejected short ATTACK_WAVE_INIT') -and $initBlock.Contains('rejected invalid ATTACK_WAVE_INIT'))) { $missing += "$($entry.Terrain):init-warnings" }
+		}
+
+		$clientStart = $detailsCode.IndexOf('"CLIENT_INIT_READY" addPublicVariableEventHandler')
+		if ($clientStart -lt 0) {
+			$missing += "$($entry.Terrain):client-ready-missing-handler"
+		} else {
+			$clientEnd = $detailsCode.IndexOf('"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler', $clientStart)
+			if ($clientEnd -lt 0) { $clientEnd = $detailsCode.Length }
+			$clientBlock = $detailsCode.Substring($clientStart, $clientEnd - $clientStart)
+			$assignAt = $clientBlock.IndexOf('_player = _this select 1')
+			$sideAt = $clientBlock.IndexOf('side _player')
+			if (-not ($clientBlock.Contains('typeName _player != "OBJECT"') -and $clientBlock.Contains('isNull _player') -and $clientBlock.Contains('!isPlayer _player') -and $clientBlock.Contains('_playerSide in [west, east]'))) { $missing += "$($entry.Terrain):client-ready-object-guard" }
+			if ($sideAt -ge 0 -and $assignAt -ge 0 -and $sideAt -lt $assignAt) { $missing += "$($entry.Terrain):client-ready-side-before-payload" }
+			if (-not $clientBlock.Contains('rejected malformed CLIENT_INIT_READY')) { $missing += "$($entry.Terrain):client-ready-warning" }
+		}
+
+		$detailsStart = $detailsCode.IndexOf('"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler')
+		if ($detailsStart -lt 0) {
+			$missing += "$($entry.Terrain):details-missing-handler"
+		} else {
+			$detailsBlock = $detailsCode.Substring($detailsStart)
+			$shapeAt = $detailsBlock.IndexOf('typeName _d != "ARRAY"')
+			$countAt = $detailsBlock.IndexOf('count _d < 3')
+			$selectAt = $detailsBlock.IndexOf('_d select 0')
+			if ($shapeAt -lt 0 -or $countAt -lt 0) { $missing += "$($entry.Terrain):details-payload-shape" }
+			if ($selectAt -ge 0 -and ($shapeAt -lt 0 -or $countAt -lt 0 -or $shapeAt -gt $selectAt -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):details-guard-after-select" }
+			if (-not ($detailsBlock.Contains('typeName _priceModifier != "SCALAR"') -and $detailsBlock.Contains('typeName _attackLength != "SCALAR"') -and $detailsBlock.Contains('_priceModifier <= 0') -and $detailsBlock.Contains('_attackLength < 0') -and $detailsBlock.Contains('_side in [west, east]'))) { $missing += "$($entry.Terrain):details-field-types" }
+			if (-not ($detailsBlock.Contains('rejected malformed ATTACK_WAVE_DETAILS') -and $detailsBlock.Contains('rejected short ATTACK_WAVE_DETAILS') -and $detailsBlock.Contains('rejected invalid ATTACK_WAVE_DETAILS'))) { $missing += "$($entry.Terrain):details-warnings" }
+		}
+
+		if (-not ($client.Contains('ATTACK_WAVE_INIT = [_supply, _side]') -and $client.Contains('publicVariableServer "ATTACK_WAVE_INIT"'))) { $missing += "$($entry.Terrain):client-init-shape" }
+	}
+	Add-Result "Attack Wave PV guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomCommandConsoleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1309,6 +1375,7 @@ Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
 Test-FpsReportPvGuard
 Test-FactoryQueueEmptyHeadGuard
+Test-AttackWavePvGuards
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards
