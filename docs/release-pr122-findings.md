@@ -1,6 +1,6 @@
 # PR #122 Release Findings
 
-Last updated: 2026-07-01 09:49 Europe/Amsterdam
+Last updated: 2026-07-01 09:59 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -32,6 +32,10 @@ plus server, client, late join, and headless-client roles.
 GitHub currently reports PR #122 as open, non-draft, and mergeable, with no
 reported checks. GitHub currently reports PR #124 as open, draft, and mergeable.
 Mergeability is not runtime proof.
+
+Another draft lane, PR #125, now exists for a broader command-center package.
+It is open, draft, and conflicting, with 422 changed files. Treat it as a
+separate candidate/tooling lane, not the current r8 release proof target.
 
 ## R8 Integration Finding
 
@@ -66,6 +70,26 @@ Important risk: r8 still defaults GUER light air defense to `Ka137_MG_PMC`.
 That means the ASR / Ka-137 stop-condition concern below still applies to r8
 until exact runtime evidence proves it clean or an explicit mitigation is
 accepted.
+
+## R8 Exact Artifact
+
+An exact r8 `SERVER_DEBUG` mission-folder artifact now exists for runtime
+collection:
+
+- artifact: `outputs/a2waspwarfare-r8-16bfe29e-server-debug-missions.7z`
+- r8 source head: `16bfe29eb326303848f6223bc5604b81260ca484`
+- SHA256: `4F8EE6A025405F1B777F28DFF20A290942F110E0E511A2D64CF98CA216D6B47A`
+- size: `7078199` bytes
+- archive test: pass
+- extracted top-level folders:
+  - `[55-2hc]warfarev2_073v48co.chernarus`
+  - `[61-2hc]warfarev2_073v48co.takistan`
+- extracted contents: `1692` files, `23363902` bytes
+- both extracted `version.sqf` files have `WF_LOG_CONTENT` enabled with
+  `WF_DEBUG` commented out
+
+This artifact is not runtime proof. It only gives the release loop an exact r8
+payload to launch and collect RPTs from.
 
 ## Evidence Already Strong
 
@@ -160,8 +184,9 @@ ASR-enabled RPT proof.
 ## Recommended Next Path
 
 1. Decide whether the release proof target is PR #122-only or r8 PR #124.
-2. Build/package the exact chosen branch; current PR #122 artifacts do not prove
-   r8.
+2. If r8 is chosen, use the exact artifact SHA256
+   `4F8EE6A025405F1B777F28DFF20A290942F110E0E511A2D64CF98CA216D6B47A`;
+   current PR #122 artifacts do not prove r8.
 3. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
 4. Collect both-map server/client/latejoin/HC evidence.
