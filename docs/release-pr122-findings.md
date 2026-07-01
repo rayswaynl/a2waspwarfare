@@ -1,11 +1,41 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 01:23 Europe/Amsterdam
+Last updated: 2026-07-02 01:29 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 01:29 Update
+
+Final validation found PR #125 and PR #126 moved again.
+
+PR #125 is now at `d8f15b554faf7e1a5f08fa037d5db58eac616918` with
+mission-affecting ICBM request authority changes across both maps:
+
+- `Client/GUI/GUI_Menu_Tactical.sqf`
+- `Client/Module/Nuke/nukeincoming.sqf`
+- `Common/Init/Init_CommonConstants.sqf`
+- `Server/Functions/Server_HandleSpecial.sqf`
+- `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`
+
+The earlier PR #125 package tuple `0ee16d18e0` /
+`D323434629AB90F90CDD4C4874F164422F38B94075101861F8B1E726C76FE81E` is no
+longer current PR #125 head proof.
+
+PR #126 is now at `ac12fb647b521378450c80f3d087b4988f20a3ec` with
+mission-affecting AICOM/JIP source-safety guard changes across both maps:
+
+- `Server/AI/Commander/AI_Commander*.sqf`
+- `Tools/Ops/Test-WaspJipAicomSourceGuards.ps1`
+- `docs/release/2026-07-01-release-readiness-task.md`
+
+Both heads need fresh triage before release selection. Do not combine PR #125,
+PR #126, or PR #136 evidence without an explicit selected candidate, fresh
+package/static validation, exact both-map RPT proof, and human smoke evidence.
+
+Release remains **NO-GO**.
 
 ## 2026-07-02 01:23 Update
 
