@@ -22,8 +22,6 @@ switch (WFBE_SK_V_Type) do {
 			"time - WFBE_SK_V_LastUse_Repair > WFBE_SK_V_Reload_Repair"
 		];
 
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/Skill/Skill_Apply.sqf
-========
 		/* Salvage Ability */
 		_unit addAction [
 			("<t color='#CC00CB'>" + localize 'STR_WF_ACTION_Salvage'+ "</t>"),
@@ -38,7 +36,6 @@ switch (WFBE_SK_V_Type) do {
 	
 	_unit addAction ["<t color='#11ec52'>" + localize 'STR_WF_Repair_Camp' + "</t>",'Client\Action\Action_RepairCampEngineer.sqf', [], 97, false, true, '', 'alive _target'];
 	
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Client/Module/Skill/Skill_Apply.sqf
 	};
 	
 	case 'Officer': {
@@ -95,21 +92,6 @@ switch (WFBE_SK_V_Type) do {
 				"",
 				"time - WFBE_SK_V_LastUse_MASH > WFBE_SK_V_Reload_MASH"
 			];
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/Skill/Skill_Apply.sqf
-		};
-		_unit addAction [
-			(localize "STR_WASP_actions_fastrep"),
-			(WFBE_SK_V_Root + 'LR' + '.sqf'),
-			[],
-			80,
-			false,
-			true,
-			"",
-			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR)&&((cursorTarget isKindOf 'Landvehicle' )|| (cursorTarget isKindOf 'Air'))&&(player distance cursorTarget<5)"
-		];
-	};
-
-========
 			_unit addAction ["<t color='#11ec52'>" + localize 'STR_WF_Repair_Camp' + "</t>",'Client\Action\Action_RepairCampEngineer.sqf', [], 97, false, true, '', 'alive _target'];
 			//_unit addAction ["<t color='#11ec52'>" + localize 'STR_WF_Repair_Camp' + "</t>",'Client\Action\Action_RepairCampEngineer.sqf', [], 97, false, true, '', 'alive _target'];	
 		};
@@ -140,7 +122,6 @@ switch (WFBE_SK_V_Type) do {
 		];
 		
 	};
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Client/Module/Skill/Skill_Apply.sqf
 	case 'Spotter': {
 		/* Spotting Ability */
 		_unit addAction [
@@ -154,17 +135,6 @@ switch (WFBE_SK_V_Type) do {
 			"time - WFBE_SK_V_LastUse_Spot > WFBE_SK_V_Reload_Spot"
 		];
 
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/Skill/Skill_Apply.sqf
-_unit addAction [
-			(localize "STR_WASP_actions_fastrep"),
-			(WFBE_SK_V_Root + 'LR' + '.sqf'),
-			[],
-			80,
-			false,
-			true,
-			"",
-			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR)&&((cursorTarget isKindOf 'Landvehicle' )|| (cursorTarget isKindOf 'Air'))&&(player distance cursorTarget<5)"
-========
 		/* Lockpicking Ability */
 		_unit addAction [
 			("<t color='#f8d664'>" + localize 'STR_WF_ACTION_Lockpick'+ "</t>"),
@@ -175,7 +145,6 @@ _unit addAction [
 			true, 
 			"", 
 			"time - WFBE_SK_V_LastUse_Lockpick > WFBE_SK_V_Reload_Lockpick"
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Client/Module/Skill/Skill_Apply.sqf
 		];
 		
 		_unit addAction [
@@ -193,15 +162,9 @@ _unit addAction [
 	
 	};
 
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/Skill/Skill_Apply.sqf
-case 'Medic': {
-
-                _unit addAction [
-========
 	case 'Medic': {
 			
 		_unit addAction [
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Client/Module/Skill/Skill_Apply.sqf
 			(localize "STR_WASP_actions_fastrep"),
 			(WFBE_SK_V_Root + 'LR' + '.sqf'),
 			[],
@@ -211,13 +174,6 @@ case 'Medic': {
 			"",
 			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR)&&((cursorTarget isKindOf 'Landvehicle' )|| (cursorTarget isKindOf 'Air'))&&(player distance cursorTarget<5)"
 		];
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/Skill/Skill_Apply.sqf
-		_unit addAction ["<t color='#11ec52'>" + localize 'STR_WF_Repair_Camp' + "</t>",'Client\Action\Action_RepairCampEngineer.sqf', [], 97, false, true, '', 'alive _target'];
-	};
-case 'Soldier': {
-
-                _unit addAction [
-========
 		
 		_unit addAction ["<t color='#11ec52'>" + localize 'STR_WF_Repair_Camp' + "</t>",'Client\Action\Action_RepairCampEngineer.sqf', [], 97, false, true, '', 'alive _target'];
 	
@@ -226,7 +182,6 @@ case 'Soldier': {
 	case 'Soldier': {
 			
 		_unit addAction [
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Client/Module/Skill/Skill_Apply.sqf
 			(localize "STR_WASP_actions_fastrep"),
 			(WFBE_SK_V_Root + 'LR' + '.sqf'),
 			[],
@@ -240,9 +195,5 @@ case 'Soldier': {
 		_unit addAction ["<t color='#11ec52'>" + localize 'STR_WF_Repair_Camp' + "</t>",'Client\Action\Action_RepairCampEngineer.sqf', [], 97, false, true, '', 'alive _target'];
 	
 	};
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/Skill/Skill_Apply.sqf
-};
-========
 
 };
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Client/Module/Skill/Skill_Apply.sqf

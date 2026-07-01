@@ -48,11 +48,7 @@ _u = _u		+ ['KamazRepair'];
 _u = _u		+ ['WarfareReammoTruck_RU'];
 _u = _u		+ ['KamazRefuel'];
 _u = _u		+ ['WarfareSalvageTruck_RU'];
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Config/Core_Units/Units_RU.sqf
-// if ((missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_SYSTEM") == 0) then {
-========
 _u = _u		+ ['WarfareSupplyTruck_RU'];
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.Napf/Common/Config/Core_Units/Units_RU.sqf
 _u = _u		+ ['WarfareSupplyTruck_RU'];
 _u = _u		+ ['GAZ_Vodnik_MedEvac'];
 _u = _u		+ ['BRDM2_INS'];

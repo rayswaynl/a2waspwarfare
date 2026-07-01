@@ -478,9 +478,13 @@ function Test-AicomGroupVariableDefaults {
 		$executePath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander_Execute.sqf"
 		$commanderPath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander.sqf"
 		$runTeamPath = Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf"
+		$initCommonPath = Join-Path $entry.Root "Common\Init\Init_Common.sqf"
+		$commanderDir = Join-Path $entry.Root "Server\AI\Commander"
 		$execute = Get-Text $executePath
 		$commander = Get-Text $commanderPath
 		$runTeam = Get-Text $runTeamPath
+		$initCommon = Get-Text $initCommonPath
+		if (-not $initCommon.Contains("WFBE_CO_FNC_GroupGetValue = Compile preprocessFileLineNumbers")) { $missing += "$($entry.Terrain):group-get-value-helper" }
 		if (-not $execute.Contains('[_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-mode" }
 		if (-not $execute.Contains('[_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-goto" }
 		if (-not $execute.Contains('[_team, "wfbe_exec_lastmode", ""] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):execute-lastmode" }
@@ -491,6 +495,17 @@ function Test-AicomGroupVariableDefaults {
 		if (-not $commander.Contains('_x setVariable ["wfbe_exec_lastmode", ""]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_lastgoto", [0,0,0]]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_at", -1e9]')) { $missing += "$($entry.Terrain):commander-latch-reset" }
 		if (-not $runTeam.Contains('[_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool')) { $missing += "$($entry.Terrain):capture-pass-helper" }
 		if ($runTeam.Contains('_team getVariable ["wfbe_aicom_cappasses", 0]')) { $missing += "$($entry.Terrain):capture-pass-raw-group-default" }
+		foreach ($file in Get-ChildItem -LiteralPath $commanderDir -Filter "*.sqf" -File) {
+			$lineNumber = 0
+			$inBlockComment = $false
+			foreach ($line in [System.IO.File]::ReadLines($file.FullName)) {
+				$lineNumber++
+				$code = Remove-StringLiterals (Remove-CodeComments $line ([ref]$inBlockComment))
+				if ($code -match '\b(_team|_grp|_riGrp|_wTeam|_free|_best|_cand)\s+getVariable\s+\[') {
+					$missing += "$($entry.Terrain):commander-raw-group-default:$($file.Name):$lineNumber"
+				}
+			}
+		}
 	}
 	Add-Result "AICOM group variable default guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
@@ -965,6 +980,22 @@ function Test-InterdictionEnemyGuard {
 	Add-Result "Supply interdiction enemy-side guard" $ok "enemyGuard=$ok"
 }
 
+function Test-MissionConflictMarkers {
+	$sourceRepoRootPath = if ($sourceRepoRoot -is [System.Management.Automation.PathInfo]) { $sourceRepoRoot.Path } else { [string]$sourceRepoRoot }
+	$roots = @("Missions", "Missions_Vanilla", "Modded_Missions")
+	$existingRoots = @()
+	foreach ($root in $roots) {
+		if (Test-Path -LiteralPath (Join-Path $sourceRepoRootPath $root)) { $existingRoots += $root }
+	}
+	$hits = @()
+	if ($existingRoots.Count -gt 0) {
+		$hits = @(& git -C $sourceRepoRootPath grep -I -n -E '^(<{7}|={7}|>{7})|<{7}|>{7}' -- $existingRoots 2>$null)
+		if ($LASTEXITCODE -gt 1) { $hits += "git grep failed with exit $LASTEXITCODE" }
+	}
+	Add-Result "Mission conflict markers absent" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No conflict markers in tracked mission roots." }))
+}
+
+Test-MissionConflictMarkers
 Test-ForbiddenReleaseCommands
 Test-HarnessOverlayA3Dialect
 Test-HqShield

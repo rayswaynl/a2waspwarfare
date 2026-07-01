@@ -16,11 +16,6 @@ private["_total"];
 
 //// Getting the amount of all towns
 _total = count towns;
-<<<<<<<< HEAD:Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf
-// _secondExecRUBHUD = false;
-
-========
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Client/Client_UpdateRHUD.sqf
 sleep 10;
 
 while {true} do {
@@ -31,24 +26,6 @@ while {true} do {
 			_lineLabel = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1345;
 			_textLabel1 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1346;
 			_textLabel2 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1348;
-<<<<<<<< HEAD:Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf
-			//Commander name
-			_textLabel3 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1350;
-			
-			_textLabel4 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1352;
-			_textLabel5 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1354;
-			_textLabel6 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1356;
-			_textLabel7 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1358;
-			_textLabel8 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1360;
-			//FPS
-			_textLabel_FPS_3 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1363;
-			//Server FPS
-			_textLabel_FPS_5 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1365;
-			
-			
-			
-			_player = Leader player;		
-========
 			_textLabel3 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1350; //Commander name
 			_textLabel_AICOUNT = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1352; //AI Count
 			_textLabel4 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1354;
@@ -59,7 +36,6 @@ while {true} do {
 			_textLabel_FPS_3 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1364; //FPS
 
 			_player = Leader player;
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Client/Client_UpdateRHUD.sqf
 			//Show background
 
 			_lineLabel ctrlShow true;
@@ -78,12 +54,7 @@ while {true} do {
 			_textLabel6 ctrlSetText "Supply:";
 			_textLabel7 ctrlSetText "SV Min:";
 			_textLabel8 ctrlSetText "City:";
-<<<<<<<< HEAD:Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf
-			_textLabel_FPS_3 ctrlSetText "FPS Client:";
-			_textLabel_FPS_5 ctrlSetText "FPS Server:";
-========
 			_textLabel_FPS_3 ctrlSetText "FPS:";
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Client/Client_UpdateRHUD.sqf
 			_textLabel1 ctrlShow true;
 			_textLabel2 ctrlShow true;
 			_textLabel3 ctrlShow true;
@@ -94,16 +65,9 @@ while {true} do {
 			_textLabel7 ctrlShow true;
 			_textLabel8 ctrlShow true;
 			_textLabel_FPS_3 ctrlShow true;
-<<<<<<<< HEAD:Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf
-			_textLabel_FPS_5 ctrlShow true;
-			_lineLabel ctrlShow true;	
-				
-			//HEALTH		
-========
 			_lineLabel ctrlShow true;
 
 			//HEALTH
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Client/Client_UpdateRHUD.sqf
 			_textControl5 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1347;
 			_textControl5 ctrlShow true;
 			_status = damage _player;
@@ -196,34 +160,6 @@ while {true} do {
 			_textControl7 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1363;
 			_textControl7 ctrlShow true;
 			_textControl7 ctrlSetTextColor [0.85, 0, 0, 1];
-<<<<<<<< HEAD:Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf
-			_textControl7 ctrlSetText Format ["%1 on %2", sideJoined Call GetTownsHeld,_total];				
-		
-			//Client FPS
-			_clientFPS = round(diag_fps);			
-			_textControl_FPS_4 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1364;
-			_textControl_FPS_4 ctrlShow true;
-			_textControl_FPS_4 ctrlSetTextColor [0, 1, 0, 1];_textControl_FPS_4 ctrlSetText Format ["%1",_clientFPS];
-			if (_clientFPS < 40) then {_textControl_FPS_4 ctrlSetTextColor [1, 0.8431, 0, 1];_textControl_FPS_4 ctrlSetText Format ["%1",_clientFPS]};
-			if (_clientFPS < 20) then {_textControl_FPS_4 ctrlSetTextColor [1, 0, 0, 1];_textControl_FPS_4 ctrlSetText Format ["%1",_clientFPS]};
-
-			//Server FPS
-			waitUntil { !isNil {missionNamespace getVariable "WFBE_VAR_SERVER_FPS"};};
-			
-			_serverFPS = missionNamespace getVariable "WFBE_VAR_SERVER_FPS";			
-			_textControl_FPS_6 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1366;
-			_textControl_FPS_6 ctrlShow true;
-			_textControl_FPS_6 ctrlSetTextColor [0, 1, 0, 1];_textControl_FPS_6 ctrlSetText Format ["%1",_serverFPS];
-			if (_serverFPS < 35) then {_textControl_FPS_6 ctrlSetTextColor [1, 0.8431, 0, 1];_textControl_FPS_6 ctrlSetText Format ["%1", str (_serverFPS)]};
-			if (_serverFPS < 20) then {_textControl_FPS_6 ctrlSetTextColor [1, 0, 0, 1];_textControl_FPS_6 ctrlSetText Format ["%1", str (_serverFPS)]};
-
-			// if (!_secondExecRUBHUD) then {_secondExecRUBHUD = true;};
-						
-		};
-	} else {
-		// if (_secondExecRUBHUD) then {_secondExecRUBHUD = false;};
-		if (isNull (["currentCutDisplay"] call BIS_FNC_GUIget)) then {CutRsc["OptionsAvailable","PLAIN",0];_delay = 0};	
-========
 			_textControl7 ctrlSetText Format ["%1 on %2", sideJoined Call GetTownsHeld,_total];
 
 			// Client FPS
@@ -260,7 +196,6 @@ while {true} do {
 		};
 	} else {
 		if (isNull (["currentCutDisplay"] call BIS_FNC_GUIget)) then {CutRsc["OptionsAvailable","PLAIN",0];_delay = 0};
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Client/Client_UpdateRHUD.sqf
 		if (!isNull (["currentCutDisplay"] call BIS_FNC_GUIget)) then {
 			_lineLabel = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1345;
 			_textLabel1 = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 1346;

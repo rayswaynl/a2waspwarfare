@@ -3,17 +3,9 @@ Private ['_cruise','_dropPosition','_dropPosX','_dropPosY','_dropPosZ','_misFlar
 _target = _this select 0;
 _nukeMarker = _this select 1;
 
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/Nuke/nukeincoming.sqf
-[nil, "LocalizeMessage", ['TacticalLaunch']] Call WFBE_CO_FNC_SendToClients;
-[nil, "NukeIncoming", []] Call WFBE_CO_FNC_SendToClients;
-if (isMultiplayer) then {(localize "STR_WF_CHAT_ICBM_Launch") Call CommandChatMessage};
-playSound ["airRaid",true];
-
-========
 // Marty : 
 _time_before_ICBM_impact = missionNamespace getVariable "WFBE_ICBM_TIME_TO_IMPACT";
 sleep (_time_before_ICBM_impact * 60) ;
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Client/Module/Nuke/nukeincoming.sqf
 
 // Nuke effects :
 _path = "\ca\air2\cruisemissile\"; 

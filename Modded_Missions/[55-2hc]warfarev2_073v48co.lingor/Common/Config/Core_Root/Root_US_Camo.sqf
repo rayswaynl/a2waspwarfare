@@ -35,11 +35,7 @@ missionNamespace setVariable [Format["WFBE_%1PARACHUTELEVEL3", _side],['FR_Assau
 
 missionNamespace setVariable [Format["WFBE_%1PARACARGO", _side], 'C130J'];	//--- Paratroopers, Vehicle.
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCK", _side], 'MtvrRepair'];//--- Repair Truck model.
-<<<<<<<< HEAD:Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Root/Root_US_Camo.sqf
-missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['HMMWV_Ambulance','LAV25']];//--- Starting Vehicles.
-========
 missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['HMMWV_Ambulance','Pandur2_ACR']];//--- Starting Vehicles.
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Common/Config/Core_Root/Root_US_Camo.sqf
 missionNamespace setVariable [Format["WFBE_%1PARAAMMO", _side], ['USBasicAmmunitionBox','USBasicWeaponsBox','USLaunchersBox']];//--- Supply Paradropping, Dropped Ammunition.
 missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'MtvrRepair'];//--- Supply Paradropping, Dropped Vehicle.
 missionNamespace setVariable [Format["WFBE_%1PARAVEHI", _side], 'MH60S'];//--- Supply Paradropping, Vehicle
@@ -153,15 +149,9 @@ missionNamespace setVariable [Format["WFBE_%1_DefaultGearEngineer", _side], [
 
 // Sniper
 missionNamespace setVariable [Format["WFBE_%1_DefaultGearSpot", _side], [
-<<<<<<<< HEAD:Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Root/Root_US_Camo.sqf
-	['m107','glock17_EP1','ItemCompass','ItemMap','ItemWatch','ItemRadio','Binocular','NVGoggles'],
-	['10Rnd_127x99_m107','10Rnd_127x99_m107','10Rnd_127x99_m107','10Rnd_127x99_m107','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','SmokeShellRed'],
-	['m107']
-========
 	['M24','glock17_EP1','ItemCompass','ItemMap','ItemWatch','ItemRadio','Binocular_Vector','NVGoggles'],
 	['5Rnd_762x51_M24','5Rnd_762x51_M24','5Rnd_762x51_M24','5Rnd_762x51_M24','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','17Rnd_9x19_glock17','SmokeShellRed'],
 	['M24']
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Common/Config/Core_Root/Root_US_Camo.sqf
 ]];
 
 // MASH MAN

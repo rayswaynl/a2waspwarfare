@@ -161,11 +161,7 @@ _n = _n		+ ["RUBasicAmmunitionBox"];
 _n = _n		+ ["RUBasicWeaponsBox"];
 _n = _n		+ ["RULaunchersBox"];
 _n = _n		+ ["RUSpecialWeaponsBox"];
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Config/Core_Structures/Structures_CO_RU.sqf
-_n = _n		+ ["TK_WarfareBVehicleServicePoint_Base_EP1"];
-========
 _n = _n		+ [if (IS_chernarus_map_dependent) then {"INS_WarfareBVehicleServicePoint"} else {"TK_WarfareBVehicleServicePoint_Base_EP1"}];
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Common/Config/Core_Structures/Structures_CO_RU.sqf
 
 /* Class used for AI, AI will attempt to build those */
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MG", _side], ['KORD_high_TK_EP1']];

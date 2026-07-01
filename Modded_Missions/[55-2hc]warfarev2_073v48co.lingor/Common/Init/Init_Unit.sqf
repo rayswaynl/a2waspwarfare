@@ -151,14 +151,6 @@ if (_isMan) then { //--- Man.
 	if (_unit isKindOf "Helicopter") then {_color = "ColorPink"};
 	if (local _unit && isMultiplayer) then {_color = "ColorOrange"};
 	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1SUPPLYTRUCKS',str _side])) then {_type = "SupplyVehicle";_size = [1,1]};//--- Supply.
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_Unit.sqf
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1REPAIRTRUCKS',str _side])) then {_type = "RepairVehicle"};//--- Repair.
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1AMBULANCES',str _side])) then {_color = "ColorYellow"};//--- Medical.
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1MASHES',str _side])) then {_type = "n_med"; _color = "ColorYellow";};//--- MASH.
-	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',str _side])) then {_type = "SalvageVehicle"};//--- Salvage.
-
-	_params = [_type,_color,_size,_txt,_markerName,_unit,1,true,"DestroyedVehicle",_color,false,_side,[2,2]];
-========
 	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1REPAIRTRUCKS',str _side])) then {_color = "ColorBrown";_type = "RepairVehicle";};//--- Repair.
 	
 	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1ARTYVEHICLE',str _side])) then {_color = "ColorPink";};//--- Arty.
@@ -174,7 +166,6 @@ if (_isMan) then { //--- Man.
 	//
 	if (_unit_kind in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',str _side])) then {_color = "ColorKhaki";_type = "SalvageVehicle";};//--- Salvage.
         _params = [_type,_color,_size,_txt,_markerName,_unit,1,true,"DestroyedVehicle",_color,false,_side,[2,2]];	
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Common/Init/Init_Unit.sqf
         if (_unit == ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_color = "ColorPink";_params = ['Headquarters',_color,[1,1],'','HQUndeployed',_unit,0.2,false,'','',false,_side]};//--- HQ.	
 };
 

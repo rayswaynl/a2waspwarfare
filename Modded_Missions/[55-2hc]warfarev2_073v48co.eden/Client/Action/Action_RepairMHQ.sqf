@@ -9,23 +9,7 @@ if (alive _hq || (_hq distance _vehicle > 30)) exitWith {hint (localize "STR_WF_
 if (WFBE_Client_Logic getVariable "wfbe_hq_repairing") exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_BeingRepaired")};
 
 _currency_system = missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM";
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Action/Action_RepairMHQ.sqf
-
-switch (missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined]) do {
-    case 1: {
-        missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_PRICE_%1', sideJoined], missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_2ND'];
-    };
-    case 2: {
-        missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_PRICE_%1', sideJoined], missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_3RD'];
-    };
-};
-
-if (missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_PRICE_%1', sideJoined] == (missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_3RD')) exitWith {hint Format [localize "STR_WF_INFO_MHQ_Repairs_Used"]};
-
-_repairPrice = (missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_PRICE_%1', sideJoined]);
-========
 _repairPrice = (missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE');
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Client/Action/Action_RepairMHQ.sqf
 _currency = if (_currency_system == 0) then {(sideJoined) Call GetSideSupply} else {Call GetPlayerFunds};
 _currencySym = if (_currency_system == 0) then {"S"} else {"$"};
 if (_currency < _repairPrice) exitWith {hint Format [localize "STR_WF_INFO_Repair_MHQ_Funds",_currencySym,_repairPrice - _currency]};

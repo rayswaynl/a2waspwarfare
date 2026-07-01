@@ -163,12 +163,7 @@ _n = _n		+ ["USBasicAmmunitionBox_EP1"];
 _n = _n		+ ["USBasicWeapons_EP1"];
 _n = _n		+ ["USLaunchers_EP1"];
 _n = _n		+ ["USSpecialWeapons_EP1"];
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Config/Core_Structures/Structures_CO_US.sqf
-_n = _n		+ ["US_WarfareBVehicleServicePoint_Base_EP1"];
-
-========
 _n = _n		+ [if (IS_chernarus_map_dependent) then {"CDF_WarfareBVehicleServicePoint"} else {"US_WarfareBVehicleServicePoint_Base_EP1"}];
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.Napf/Common/Config/Core_Structures/Structures_CO_US.sqf
 
 /* Class used for AI, AI will attempt to build those */
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MG", _side], ['M2StaticMG_US_EP1']];
