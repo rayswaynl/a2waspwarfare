@@ -14,12 +14,13 @@ The working standard is source parity, runtime evidence, and wiki/player documen
 
 ## Active PR Map
 
-As of 2026-07-01 08:16 UTC:
+As of 2026-07-01 13:19 UTC:
 
-- PR #123, `[codex] running release findings log`, branch `codex/release-findings`: docs-only running findings log for release proof.
+- PR #123, `[codex] running release findings log`, branch `codex/release-findings`: docs-only running findings log for release proof. Current head observed: `19fe9e4e5`.
 - PR #124, `[codex] Release r8 integration findings for July 2`, branch `release/2026-07-02-stackcheck-r8`: r8 stack candidate with package hashes and NO-GO until exact runtime proof.
-- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates.
-- This branch, `codex/release-readiness-20260701`: multi-agent task ledger and first-pass findings from the current release-readiness sweep.
+- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates. Current head observed: `8ee3860d6`; wiki currently records packaged identity `1c101121b` with archive SHA `A984112809175432E98F19856C78BDC6C0EAFB5F8CAA54D2B4C979E37311E1E3`.
+- PR #131, `[codex] Fix placement preview static gate`, branch `codex/fix-b724-placement-static`: focused static-gate follow-up for the latest master placement-preview blocker. Findings log records artifact `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z` with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`; this is packaging/tooling proof only.
+- This branch, `codex/release-readiness-20260701`: multi-agent task ledger and AICOM guardrail/proof-instrumentation lane. Current head observed: `f20ddfc83`; latest local proof-instrumented archive SHA256 `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD`; GitHub reports PR #126 open, draft, clean, and mergeable.
 
 ## Agent Lanes
 
@@ -31,8 +32,8 @@ As of 2026-07-01 08:16 UTC:
 
 | Source | Current status | Use in this loop |
 | --- | --- | --- |
-| `rayswaynl/a2waspwarfare` | Cloned locally; branch created from `origin/master` at `6cbf6f6a5`. | Primary code, docs, tools, release branches, PR evidence. |
-| `rayswaynl/a2waspwarfare.wiki` | Cloned locally. | Wiki freshness and release-doc synchronization. |
+| `rayswaynl/a2waspwarfare` | Local PR #126 refresh worktree is based on current `origin/master` through `b7241a35f` plus the rebased release-readiness stack ending at `f20ddfc83`. The original branch root was `6cbf6f6a5`. | Primary code, docs, tools, release branches, PR evidence. |
+| `rayswaynl/a2waspwarfare.wiki` | Cloned locally and synced through `aea5283`, with PR #126 companion head and HC audit gate aligned to `f20ddfc83`. | Wiki freshness and release-doc synchronization. |
 | `Miksuu/a2waspwarfare` | Public repo reachable; local clone exists at `work/miksuu-original`, remote `https://github.com/Miksuu/a2waspwarfare.git`, HEAD `b8389e74` from 2026-06-09. Checkout hit Windows long-path failure on one very long LoadoutManager filename. | Historical/original mission comparison where files are present; full comparison needs long-path-safe checkout or sparse checkout. |
 | Jerry mission dump | Public index reachable; Arma2 section reports 1498 files / 24.23 GB and Arma2 OA reports 535 files / 29.42 GB. Exact useful query: `https://bidentify.jerryhopper.com/api/search/WarfareV2_073`. Key package lead: `WarfareV2_073LiteCO.zip`, which lists Takistan, Zargabad, and Chernarus PBOs. | Historical Benny/Warfare 0.73 baseline, hashes, archive contents, and downloadable reference PBOs once a specific comparison is needed. |
 | Miksuu Google Drive mission dump | Not fetched yet. Password `armedassault` is known, but no exact folder URL was discovered from public/local notes beyond the user-provided Drive view. | Requires Drive/browser download handling; add only after exact candidate packages are identified. |
@@ -93,7 +94,8 @@ As of 2026-07-01 08:16 UTC:
    - Action: resolved without relying on the unverified command. W10 Lucky Salvage is already removed from the active deck (`_wW10 = 0`), but the inert switch body now also uses the same `allDead` sweep as the eligibility proxy, eliminating the broad `allMissionObjects "AllVehicles"` scan from both maintained terrains.
 
 9. Existing release PRs already agree on the main gate: source/static checks are not enough.
-   - PR #124 and PR #125 both require exact-build RPT evidence for Chernarus and Takistan.
+   - PR #124, PR #125, PR #126, and the PR #131 findings all require exact-build RPT evidence for Chernarus and Takistan.
+   - Latest known artifacts for PR #125/PR #126/PR #131 are package or tooling proof; none are final runtime proof.
    - Action: do not mark release ready until server, HC1, HC2, start-client, and late-JIP evidence exists for both terrains or the required role matrix is explicitly reduced by the owner.
 
 10. Wiki release structure needs a public-facing cleanup pass.
