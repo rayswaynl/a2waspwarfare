@@ -32,6 +32,9 @@ if (alive _vehicle) then {
 
 						_vehicle vehicleChat Format[localize "STR_WF_CHAT_IRS_Deployed",_vehicle getVariable "wfbe_irs_flares"];
 
+						[_projectile, _vehicle] spawn WFBE_CO_FNC_IRS_PlayWarningSound;
+						[_projectile, _vehicle] spawn WFBE_CO_FNC_IRS_ShowWarning;
+
 						// Play the regular sound if the upgrade level is less than 2 (just like before)
 						if (_irSmokeUpgradeLevel < 2) then {
 					    	playSound ["inboundMissileGround", true];

@@ -49,7 +49,6 @@ _u = _u		+ ['WarfareReammoTruck_RU'];
 _u = _u		+ ['KamazRefuel'];
 _u = _u		+ ['WarfareSalvageTruck_RU'];
 _u = _u		+ ['WarfareSupplyTruck_RU'];
-_u = _u		+ ['WarfareSupplyTruck_RU'];
 _u = _u		+ ['GAZ_Vodnik_MedEvac'];
 _u = _u		+ ['BRDM2_INS'];
 _u = _u		+ ['BRDM2_ATGM_INS'];
