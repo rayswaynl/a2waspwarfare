@@ -141,7 +141,12 @@ As of 2026-07-01 after the PR #125 Build83/cmdcon35, AICOM latch-reset, and rele
 15. Takistan fallback template still carried Chernarus/naval identity.
    - `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template` is a tracked fallback for the ignored generated `version.sqf`, but it still defined `IS_CHERNARUS_MAP_DEPENDENT`, `IS_NAVAL_MAP`, `WF_MAXPLAYERS 34`, and the Chernarus mission name.
    - Impact: copying the fallback template directly to `version.sqf` could put Takistan through Chernarus faction/structure branches, enable naval-map behavior, and advertise the wrong mission identity/player count.
-   - Action: PR #126 now comments the Chernarus and naval defines in the Takistan template and sets `WF_MAXPLAYERS 61` plus `WF_MISSIONNAME "[61] Warfare V48 Takistan"`. The generated PR #125 package remains the active release tuple; if this fallback guardrail is promoted into the package lane, regenerate and re-prove the package afterward.
+   - Action: PR #126 now comments the Chernarus and naval defines in the Takistan template and sets `WF_MAXPLAYERS 61` plus `WF_MISSIONNAME "[61] Warfare V48 Takistan"`. `Tools/Ops/Test-WaspVersionTemplates.ps1` guards both maintained tracked templates so Chernarus keeps its intentional Chernarus/naval flags while Takistan cannot silently regress to Chernarus/naval identity. The generated PR #125 package remains the active release tuple; if this fallback guardrail is promoted into the package lane, regenerate and re-prove the package afterward.
+
+16. Chernarus fallback template had the wrong player count for the `[55]` mission family.
+   - `Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf.template` advertised `WF_MAXPLAYERS 34`, even though the mission folder/name and `Tools/LoadoutManager` forest terrain rule generate `[55]` / `WF_MAXPLAYERS 55`.
+   - Impact: copying the tracked fallback template directly to `version.sqf` could advertise the wrong slot count in `Rsc/Header.hpp` and boot logs, confusing package/runtime proof and operator checks.
+   - Action: PR #126 now sets the Chernarus fallback template to `WF_MAXPLAYERS 55`; `Tools/Ops/Test-WaspVersionTemplates.ps1` guards this alongside the Takistan fallback identity checks.
 
 ## Working Backlog
 
@@ -154,6 +159,7 @@ As of 2026-07-01 after the PR #125 Build83/cmdcon35, AICOM latch-reset, and rele
 - Run a focused HC disconnect/reconnect proof pass and capture `HCSIDE|disconnect`, `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSTAT`, `AICOMSTAT|...|HCDISPATCH`, and post-drop heading/marker continuity before changing HC team re-adoption behavior, but require the PR #126 audit marker pair only for packages that actually include the PR #126 instrumentation.
 - Use `Tools/Monitor/Get-WaspRptMarkerSweep.ps1` with `-ExpectedCandidate release-command-center-20260630 -ExpectedGit c441d6f38d -ExpectedArchiveSha256 F057952E3DEDF4AB7D75FD1B3BEECFF4183506A7B83798241120B2F8D14B5F43 -RequireReleaseMarkers -OutFile <redaction-safe-marker-sweep.json>` for redaction-safe first-pass livehost/archive RPT marker counts before deciding whether any private RPT copies are needed.
 - Re-run `Tools/Monitor/Test-WaspRptMarkerSweep.SelfTest.ps1` after edits to the marker-sweep helper.
+- Re-run `Tools/Ops/Test-WaspVersionTemplates.ps1` after edits to tracked `version.sqf.template` files or terrain generation settings.
 
 ## Validation Expectations
 

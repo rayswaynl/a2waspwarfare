@@ -8,7 +8,7 @@
 //#define IS_MOD_MAP_DEPENDENT
 #define IS_NAVAL_MAP
 //#define IS_AIR_WAR_EVENT
-#define WF_MAXPLAYERS 34
+#define WF_MAXPLAYERS 55
 #define WF_MISSIONNAME "[55] Warfare V48 Chernarus"
 #define STARTING_DISTANCE 7500
 #define COMBINEDOPS 1
