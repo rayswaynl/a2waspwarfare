@@ -620,7 +620,7 @@ while {alive player && dialog} do {
 					} else {
 						if ((_now - _disbandSelArm) <= 5) then {
 							_disbandSelArm = -1000;
-							["RequestSpecial", ["aicom-team-disband", sideJoined, _tIdx]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-team-disband", sideJoined, _tIdx, player, group player]] Call WFBE_CO_FNC_SendToServer;
 							hintSilent parseText (format ["<t color='#F89060'>Disband order sent - %1 will stand down where safe.</t>", (name (leader _selTeam))]);
 						} else {
 							_disbandSelArm = _now;
