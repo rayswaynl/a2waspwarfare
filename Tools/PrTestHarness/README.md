@@ -166,6 +166,7 @@ values so runtime proof ties back to the exact release HEAD.
 & .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 `
   -RptRoot "C:\WASP\rpts\release-candidate" `
   -ExpectedGit $releaseGit `
+  -ExpectedArchiveSha256 "<_MISSIONS.7z-sha256>" `
   -RunLedgerPath "C:\WASP\rpts\release-candidate\release-run-ledger.json"
 ```
 
@@ -194,6 +195,12 @@ and original live/source RPT files can be audited separately:
   ]
 }
 ```
+
+When `-ExpectedArchiveSha256` is supplied, the packet checker requires the run
+ledger `release.archiveSha256` value to match the approved package archive. This
+prevents runtime RPT proof from being attached to a different rebuilt archive
+that happens to share the same git marker. Public duplicate-process failures
+emit the PID and a command-line hash, not the raw launch command.
 
 After the packet matrix passes, the scorer checks both Chernarus and Takistan
 coverage, no generic current-window RPT stop conditions, at least two successful

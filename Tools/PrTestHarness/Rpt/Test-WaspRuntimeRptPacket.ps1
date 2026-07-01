@@ -3,6 +3,7 @@ param(
 	[Parameter(Mandatory)] [string]$RptRoot,
 	[string]$ExpectedCandidate = "release-command-center-20260630",
 	[string]$ExpectedGit = "",
+	[string]$ExpectedArchiveSha256 = "",
 	[string]$RunLedgerPath = "",
 	[switch]$RequireSourceRptExists,
 	[datetime]$ChernarusStartTime,
@@ -117,6 +118,7 @@ function Test-WaspRuntimeRunLedger {
 		[string]$RootPath,
 		[string]$ExpectedGit,
 		[string]$ExpectedCandidate,
+		[string]$ExpectedArchiveSha256,
 		[object[]]$ExpectedFiles,
 		[hashtable]$ExplicitStartTimes
 	)
@@ -173,12 +175,22 @@ function Test-WaspRuntimeRunLedger {
 	if ($null -ne $release) {
 		$ledgerGit = [string](Get-JsonValue $release "git")
 		$ledgerCandidate = [string](Get-JsonValue $release "candidate")
+		$ledgerArchiveSha256 = [string](Get-JsonValue $release "archiveSha256")
 		if (![string]::IsNullOrWhiteSpace($ledgerGit) -and $ledgerGit -ne $ExpectedGit) {
 			[void]$failHits.Add("release.git '$ledgerGit' does not match expected '$ExpectedGit'")
 		}
 		if (![string]::IsNullOrWhiteSpace($ledgerCandidate) -and $ledgerCandidate -ne $ExpectedCandidate) {
 			[void]$failHits.Add("release.candidate '$ledgerCandidate' does not match expected '$ExpectedCandidate'")
 		}
+		if (![string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) {
+			if ([string]::IsNullOrWhiteSpace($ledgerArchiveSha256)) {
+				[void]$failHits.Add("release.archiveSha256 is required when ExpectedArchiveSha256 is supplied")
+			} elseif (!$ledgerArchiveSha256.Equals($ExpectedArchiveSha256, [System.StringComparison]::OrdinalIgnoreCase)) {
+				[void]$failHits.Add("release.archiveSha256 does not match expected package SHA256")
+			}
+		}
+	} elseif (![string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) {
+		[void]$failHits.Add("release object with archiveSha256 is required when ExpectedArchiveSha256 is supplied")
 	}
 
 	$records = @(ConvertTo-LedgerRecords $ledger)
@@ -246,7 +258,7 @@ function Test-WaspRuntimeRunLedger {
 			[void]$failHits.Add("pid for $terrain/$role must be greater than zero")
 		} elseif ($pidInt -gt 0) {
 			if (!$processKeysByTerrain.ContainsKey($terrain)) { $processKeysByTerrain[$terrain] = New-Object System.Collections.Generic.List[string] }
-			$processKey = "$pidInt|$commandLine"
+			$processKey = "$pidInt|$(Get-SafeTextHash $commandLine)"
 			[void]$processKeysByTerrain[$terrain].Add($processKey)
 		}
 
@@ -298,7 +310,10 @@ function Test-WaspRuntimeRunLedger {
 	foreach ($terrainName in $processKeysByTerrain.Keys) {
 		$duplicateProcessKeys = @($processKeysByTerrain[$terrainName].ToArray() | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })
 		foreach ($duplicateProcessKey in $duplicateProcessKeys) {
-			[void]$failHits.Add("duplicate process evidence for ${terrainName}: $duplicateProcessKey")
+			$processParts = $duplicateProcessKey -split "\|", 2
+			$duplicatePid = $processParts[0]
+			$duplicateCommandLineHash = if ($processParts.Count -gt 1) { $processParts[1] } else { "" }
+			[void]$failHits.Add("duplicate process evidence for ${terrainName}: pid=$duplicatePid commandLineHash=$duplicateCommandLineHash")
 		}
 	}
 
@@ -432,7 +447,7 @@ foreach ($terrain in $terrains) {
 	}
 }
 
-$ledgerResult = Test-WaspRuntimeRunLedger -LedgerPath $RunLedgerPath -RootPath $rootPath -ExpectedGit $ExpectedGit -ExpectedCandidate $ExpectedCandidate -ExpectedFiles $expectedFiles.ToArray() -ExplicitStartTimes $startTimes
+$ledgerResult = Test-WaspRuntimeRunLedger -LedgerPath $RunLedgerPath -RootPath $rootPath -ExpectedGit $ExpectedGit -ExpectedCandidate $ExpectedCandidate -ExpectedArchiveSha256 $ExpectedArchiveSha256 -ExpectedFiles $expectedFiles.ToArray() -ExplicitStartTimes $startTimes
 foreach ($terrain in $terrains) {
 	if ($null -eq $startTimes[$terrain] -and $ledgerResult.startTimes.ContainsKey($terrain)) {
 		$startTimes[$terrain] = $ledgerResult.startTimes[$terrain]
@@ -572,6 +587,7 @@ $result = [ordered]@{
 	rptRoot = ConvertTo-SafePath $rootPath
 	expectedCandidate = $ExpectedCandidate
 	expectedGit = $ExpectedGit
+	expectedArchiveSha256 = $ExpectedArchiveSha256
 	expectedMarkers = [ordered]@{
 		chernarus = $expectedMarkers.chernarus
 		takistan = $expectedMarkers.takistan
@@ -597,6 +613,7 @@ if ($Json) {
 	Write-Host "WASP runtime RPT packet matrix check"
 	Write-Host "Root: $(ConvertTo-SafePath $rootPath)"
 	Write-Host "Expected git: $ExpectedGit"
+	if (![string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) { Write-Host "Expected archive SHA256: $ExpectedArchiveSha256" }
 	Write-Host ""
 	Write-Host "Gate results:"
 	foreach ($gate in $gates) {

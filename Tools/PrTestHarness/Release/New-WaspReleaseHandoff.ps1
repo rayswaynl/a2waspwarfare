@@ -4,6 +4,7 @@ param(
 	[string]$ExpectedCandidate = "release-command-center-20260630",
 	[string]$ReleaseGit = "",
 	[string]$OutDirectory = "",
+	[switch]$AllowNonHeadReleaseGit,
 	[switch]$Force
 )
 
@@ -29,6 +30,22 @@ function ConvertTo-SafePath {
 		$safe = $safe -replace [regex]::Escape($env:USERPROFILE), "%USERPROFILE%"
 	}
 	return $safe
+}
+
+function Resolve-ManifestArchivePath {
+	param([string]$Path, [string]$RepoRoot)
+	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+	$expanded = [System.Environment]::ExpandEnvironmentVariables($Path)
+	if ([System.IO.Path]::IsPathRooted($expanded)) {
+		return [System.IO.Path]::GetFullPath($expanded)
+	}
+	return [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $expanded))
+}
+
+function Get-FileSha256Value {
+	param([string]$Path)
+	if ([string]::IsNullOrWhiteSpace($Path) -or !(Test-Path -LiteralPath $Path -PathType Leaf)) { return "" }
+	return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToUpperInvariant()
 }
 
 function Escape-MarkdownCell {
@@ -96,6 +113,12 @@ $fullHead = Invoke-GitValue $repoRoot @("rev-parse", "HEAD")
 $branch = Invoke-GitValue $repoRoot @("branch", "--show-current")
 $manifestPath = Resolve-PackageManifestPath $PackageManifestPath $repoRoot
 $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
+$manifestArchivePath = Resolve-ManifestArchivePath ([string]$manifest.archive.path) $repoRoot
+$manifestArchiveExists = (![string]::IsNullOrWhiteSpace($manifestArchivePath) -and (Test-Path -LiteralPath $manifestArchivePath -PathType Leaf))
+$manifestArchiveLength = if ($manifestArchiveExists) { [int64](Get-Item -LiteralPath $manifestArchivePath).Length } else { -1 }
+$manifestArchiveSha256 = Get-FileSha256Value $manifestArchivePath
+$expectedArchiveLength = [int64]$manifest.archive.lengthBytes
+$expectedArchiveSha256 = ([string]$manifest.archive.sha256).ToUpperInvariant()
 
 $expectedMarkers = [ordered]@{
 	chernarus = "WASPRELEASE|v1|candidate=$ExpectedCandidate|git=$ReleaseGit|terrain=chernarus"
@@ -112,8 +135,12 @@ Add-Gate $gates "package-manifest-present" "pass" "Package manifest was loaded."
 Add-Gate $gates "package-overall-pass" ($(if ([string]$manifest.overall -eq "pass") { "pass" } else { "fail" })) "Package manifest overall status must be pass."
 Add-Gate $gates "candidate-match" ($(if ([string]$manifest.expectedCandidate -eq $ExpectedCandidate) { "pass" } else { "fail" })) "Package candidate must match the handoff candidate."
 Add-Gate $gates "git-match" ($(if ([string]$manifest.expectedGit -eq $ReleaseGit) { "pass" } else { "fail" })) "Package git marker must match the current handoff git short hash."
+Add-Gate $gates "release-git-matches-head" ($(if ($AllowNonHeadReleaseGit -or $fullHead.StartsWith($ReleaseGit, [System.StringComparison]::OrdinalIgnoreCase)) { "pass" } else { "fail" })) "Release git should be the current HEAD prefix unless -AllowNonHeadReleaseGit is explicitly used."
 Add-Gate $gates "chernarus-marker-match" ($(if ($actualMarkers.chernarus -eq $expectedMarkers.chernarus) { "pass" } else { "fail" })) "Chernarus package marker must match the exact runtime marker."
 Add-Gate $gates "takistan-marker-match" ($(if ($actualMarkers.takistan -eq $expectedMarkers.takistan) { "pass" } else { "fail" })) "Takistan package marker must match the exact runtime marker."
+Add-Gate $gates "archive-file-present" ($(if ($manifestArchiveExists) { "pass" } else { "fail" })) "Manifest archive path must resolve to a readable local package archive before runtime handoff."
+Add-Gate $gates "archive-length-match" ($(if ($manifestArchiveExists -and $manifestArchiveLength -eq $expectedArchiveLength) { "pass" } else { "fail" })) "Local package archive length must still match the package manifest."
+Add-Gate $gates "archive-sha256-match" ($(if ($manifestArchiveExists -and $manifestArchiveSha256 -eq $expectedArchiveSha256) { "pass" } else { "fail" })) "Local package archive SHA256 must still match the package manifest."
 Add-Gate $gates "runtime-evidence" "pending" "Fresh dual-terrain dedicated-server RPT evidence is still required."
 Add-Gate $gates "deployment-approval" "pending" "Live server upload/restart/rollback still requires Steff approval."
 
@@ -180,7 +207,7 @@ $packet = [ordered]@{
 		overall = [string]$manifest.overall
 		expectedGit = [string]$manifest.expectedGit
 		archiveName = [string]$manifest.archive.name
-		archivePath = ConvertTo-SafePath ([string]$manifest.archive.path)
+		archivePath = ConvertTo-SafePath $manifestArchivePath
 		lengthBytes = [int64]$manifest.archive.lengthBytes
 		sha256 = [string]$manifest.archive.sha256
 		entryCount = [int]$manifest.entryCount
@@ -191,7 +218,7 @@ $packet = [ordered]@{
 	gates = $gates.ToArray()
 	commands = [ordered]@{
 		markerArray = $markerArrayCommand
-		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedGit $ReleaseGit -RunLedgerPath `"<release-candidate-rpts>\release-run-ledger.json`""
+		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedGit $ReleaseGit -ExpectedArchiveSha256 $expectedArchiveSha256 -RunLedgerPath `"<release-candidate-rpts>\release-run-ledger.json`""
 		runtimeScorer = "& .\Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers"
 		runtimeSummary = "& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
 		packageProof = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1 -ArchivePath .\_MISSIONS.7z -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -OutDirectory .\wasp-release-package-manifest -Force"
@@ -201,7 +228,7 @@ $packet = [ordered]@{
 		release = [ordered]@{
 			candidate = $ExpectedCandidate
 			git = $ReleaseGit
-			archiveSha256 = [string]$manifest.archive.sha256
+			archiveSha256 = $expectedArchiveSha256
 		}
 		records = $runLedgerRecords.ToArray()
 	}
@@ -211,6 +238,7 @@ $packet = [ordered]@{
 		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker and MISSINIT worldName.",
 		"Every scored current-mission window keeps the startup ## Mission Name banner; files without that banner fail the all-files-have-startup-banner scorer gate.",
 		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath: terrain launch times, original source RPT paths, copied paths, command lines and PIDs are present; copied RPT LastWriteTime values are read from the copied files and must be after their terrain launch time; no original source RPT path is reused across roles.",
+		"Run ledger release.archiveSha256 matches the approved package SHA256 passed to Test-WaspRuntimeRptPacket.ps1 -ExpectedArchiveSha256.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
 		"AICOM side discovery, heartbeat, tick and progress tokens for WEST and EAST.",
