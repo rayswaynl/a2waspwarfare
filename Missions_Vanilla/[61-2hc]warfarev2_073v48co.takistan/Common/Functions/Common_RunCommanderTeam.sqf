@@ -887,7 +887,7 @@ while {!WFBE_GameOver && _alive} do {
 
 				//--- On arrival, switch to the mode's local behaviour once.
 				if (!_arrived) then {
-					if ((leader _team) distance _dest < (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20)) then { //--- WAVE-2 ARRIVAL-GATE: cover the assault SAD ring (80m), not just depot+20 (60m), so a team roving its search ring still crosses into the capture phase; the phase then drives units onto the exact depot centre.
+					if ((leader _team) distance _dest < ((missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]) max (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20))) then { //--- WAVE-3 ARRIVAL-GATE ROOT FIX (2026-07-02): the 100m gate was STILL too tight -> live begin_capture=0 both sides at min 20: teams reach the 250m telemetry arrive-radius (ASSAULT_DISPATCH/ARRIVED) but WEDGE outside 100m, never latch _arrived, never enter the capture block (L934). Widen to the SAME WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS (250m); the in-phase code re-drives units onto the exact depot centre (getPos _townObj, 40m). Fleet root-cause wln6wj9cn.
 						_arrived = true;
 						//--- Cosmetic: faction smoke at assault onset (fires once per team via the _arrived latch). Server-only, gated + capped + cooldown.
 						[getPosATL (leader _team), side _team] call WFBE_CO_FNC_SpawnFactionSmoke;
