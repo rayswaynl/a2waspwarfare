@@ -59,12 +59,12 @@ repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`c441d6f38df103e32694791f0bca5c5a70428c12`. Treat it as a separate broad lane,
+`7f81115edf6226791d2156b330b7b38652d7a989`. Treat it as a separate broad lane,
 not as current-master runtime proof. The earlier `b4628c35` package validation
 is now stale because the branch advanced.
 
 PR #126 is open again, draft, and moved repeatedly during this loop; the latest
-checked head is `360a4a52c811c0531d57ba4470cf04cbfc3637a0`, with GitHub
+checked head is `d5a1cf749d9777373694d3390174352574f4040d`, with GitHub
 reporting it clean. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
@@ -586,6 +586,25 @@ The move from `f712857279af87deabcec9b884af664e1e84b45b` to
 code, but it does add morning-patch candidates that require separate triage
 before release selection.
 
+## Public Stats Snapshot - Cmdcon40
+
+Fetched public server stats from `http://78.46.107.142:8080/stats.json` at
+2026-07-01 23:42 Europe/Amsterdam:
+
+- generatedAt `2026-07-01T21:42:04Z`
+- server online, map Chernarus, 2 headless clients, uptime 21 min
+- current round elapsed 15 min
+- `currentRound.captures` 0
+- `benchmark.current` captures 0, captureDismount 0, errors 0
+- teams WEST 7, EAST 6
+- HC1 fps=46 units=76; HC2 fps=48 units=75
+- performance towns `0:0,5:0,10:1,15:2`
+- performance units `0:40,5:46,10:130,15:153`
+
+This is useful current telemetry, but it is not exact selected-build RPT proof.
+The release gate remains open until real RPTs show movement, arrival,
+capture-entry, and at least one `CAPTURED`/town flip on the selected artifact.
+
 ## Current Master / r9 Reconciliation
 
 After fresh remote refreshes on 2026-07-01 10:33, 10:48, and 11:04
@@ -786,11 +805,11 @@ Fresh triage at 2026-07-01 23:30 Europe/Amsterdam found:
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
 - PR #126: open draft and moved repeatedly during this loop; latest checked
-  head is `360a4a52c811c0531d57ba4470cf04cbfc3637a0`, with GitHub reporting it
+  head is `d5a1cf749d9777373694d3390174352574f4040d`, with GitHub reporting it
   clean. This lane still needs fresh diff/static/runtime triage before release
   selection.
 - PR #125: broad command-center/tooling lane at
-  `c441d6f38df103e32694791f0bca5c5a70428c12`. GitHub reports it `CLEAN`
+  `7f81115edf6226791d2156b330b7b38652d7a989`. GitHub reports it `CLEAN`
   against merged #132 master. The prior `b4628c35` artifact SHA256
   `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2` is now
   stale because this branch advanced again.
@@ -1096,7 +1115,7 @@ ASR-enabled RPT proof.
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
    current command-center package identity. Also do not use the local
    `b4628c35` / `D0BD2405...` tuple as current PR #125 proof; PR #125 has
-   advanced to `c441d6f38df103e32694791f0bca5c5a70428c12` and needs a fresh
+   advanced to `7f81115edf6226791d2156b330b7b38652d7a989` and needs a fresh
    package if selected.
 9. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
