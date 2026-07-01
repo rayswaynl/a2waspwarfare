@@ -191,8 +191,10 @@ r9-narrow validation:
   `WF_LOG_CONTENT` enabled
 
 This r9 artifact is not runtime proof and has not been pushed. It is the current
-best local source/artifact candidate if GUER improvised armor is still wanted on
-the new command-center master.
+best local source/artifact candidate from the 10:33 master if GUER improvised
+armor is still wanted, but after `origin/master` advanced to `54d0b8e7` it is
+now behind by two commits. If r9-narrow is chosen, rebase/rebuild it on the
+current master before using it as a proof target.
 
 ## Current Master Exact Artifact
 
@@ -322,9 +324,11 @@ ASR-enabled RPT proof.
 2. Do not use old PR #122 or r8 artifacts to prove current `origin/master`.
 3. If current `origin/master` is chosen, use artifact SHA256
    `507414924807FCEB603DAD9AFD2C9E9B21D7A57B4A9EF74BD9060A9ECBF39D9A`.
-4. If r9-narrow is chosen, first push/open or update a source PR, then use
-   artifact SHA256
-   `96CD026F76E0828F584F243FEC2358C1D319CDEFAE5E69868B7394C89FC77171`.
+4. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
+   then push/open or update a source PR and publish a fresh artifact/hash. The
+   older r9 artifact SHA256
+   `96CD026F76E0828F584F243FEC2358C1D319CDEFAE5E69868B7394C89FC77171` no longer
+   proves the latest master.
 5. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
 6. Collect both-map server/client/latejoin/HC evidence.
