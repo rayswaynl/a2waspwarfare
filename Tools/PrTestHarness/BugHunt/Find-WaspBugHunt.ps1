@@ -180,7 +180,7 @@ function Test-File {
 		#    or arithmetic ( + (x getVariable "y") ). Plain getVariable-without-default is valid SQF and
 		#    far too common to flag, so we only flag the negation/arithmetic shapes that actually throw on nil.
 		if ($code -notmatch 'getVariable\s*\[' -and ($code -match '!\s*\(\s*\w[\w ]*\s+getVariable\s+"' -or $code -match '[-+*/]\s*\(\s*\w[\w ]*\s+getVariable\s+"')) {
-			Add-Finding "medium" "getVariable (no default) negated/in arithmetic — nil throws if unset" $Path $n $raw
+			Add-Finding "medium" "getVariable (no default) negated/in arithmetic - nil throws if unset" $Path $n $raw
 		}
 	}
 
@@ -211,7 +211,7 @@ if ($targets.Count -eq 0) {
 }
 
 $mode = if ($Random -gt 0) { "random sample ($($targets.Count) files" + $(if ($null -ne $Seed) { ", seed $Seed)" } else { ", new seed)" }) } elseif ($All) { "whole mission ($($targets.Count) files)" } else { "PR diff ($($targets.Count) files)" }
-Write-Host "WASP BugHunt — scanning $mode" -ForegroundColor Cyan
+Write-Host "WASP BugHunt - scanning $mode" -ForegroundColor Cyan
 
 foreach ($f in $targets) { try { Test-File $f } catch { Write-Host "  (skipped $($f): $($_.Exception.Message))" -ForegroundColor DarkGray } }
 
@@ -225,7 +225,7 @@ if ($total -eq 0) {
 	$counts = $findings | Group-Object Severity | ForEach-Object { "$($_.Name)=$($_.Count)" }
 	Write-Host "`nSuspects (showing up to $Top of $total at>= '$MinSeverity'): $($counts -join ' ')" -ForegroundColor Yellow
 	$shown | Select-Object -First $Top | Format-Table Severity, Rule, Location, Snippet -AutoSize -Wrap
-	Write-Host "These are HEURISTIC leads — eyeball each before acting." -ForegroundColor DarkGray
+	Write-Host "These are HEURISTIC leads - eyeball each before acting." -ForegroundColor DarkGray
 }
 
 $highCount = @($findings | Where-Object { $_.Severity -eq "high" }).Count

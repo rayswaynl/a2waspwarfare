@@ -43,8 +43,8 @@ if ($smoke -eq 0) {
 } else {
 	Write-Host " Smoke gate: $smoke check(s) failed. NOTE: the 'Local active stress' /" -ForegroundColor Yellow
 	Write-Host " RHUD-stressProof checks fail unless the stress overlay is installed into the" -ForegroundColor Yellow
-	Write-Host " active test mission (Install-WaspPrTestHarness.ps1) — those are environment, not code." -ForegroundColor Yellow
+	Write-Host " active test mission (Install-WaspPrTestHarness.ps1) - those are environment, not code." -ForegroundColor Yellow
 }
-Write-Host " Bug-hunt findings above are HEURISTIC leads — eyeball before acting." -ForegroundColor DarkGray
+Write-Host " Bug-hunt findings above are HEURISTIC leads - eyeball before acting." -ForegroundColor DarkGray
 Write-Host " Still required before ship: LoadoutManager regen + Arma 2 OA in-engine smoke." -ForegroundColor DarkGray
 Write-Host "==================================================================" -ForegroundColor Cyan

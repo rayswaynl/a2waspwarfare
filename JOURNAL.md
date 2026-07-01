@@ -10,6 +10,10 @@ as `ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or `SNAP`.
 This matches the July 2 source-drift intent while keeping the release branch's
 newer redaction-safe scorer and exact dual-terrain packet flow.
 
+Follow-up in the same release loop: the final-check wrapper and BugHunt console
+text were made ASCII-safe so the gate parses under both Windows PowerShell 5.1
+and `pwsh`; logic is unchanged.
+
 ## 2026-07-01 — Release runtime packet builder and role-proof gate [RELEASE LOOP]
 
 The release command-center tooling now has a source-map driven runtime RPT packet builder:
