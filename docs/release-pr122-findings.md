@@ -70,6 +70,9 @@ splitting the dense flat-ground expression into a `_flatSpots` count check. An
 exact PR #131 `SERVER_DEBUG` mission-folder artifact now exists for runtime
 collection at `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z`
 with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`.
+An exact PR #131 folder-smoke kit also exists at
+`outputs/a2waspwarfare-pr131-2178b20d-folder-smoke-kit.7z` with SHA256
+`C70F3E26961FE6FEC477B77D0FE46C98046AC756780D550B3EA297FB955F1F8C`.
 
 ## R8 Integration Finding
 
@@ -257,6 +260,11 @@ Static gate:
   `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`,
   archive/extraction pass, 1719 files, and both extracted `version.sqf` files
   have `WF_RELEASE_MARKER` for `git=2178b20d3d`.
+- PR #131 folder-smoke kit:
+  `outputs/a2waspwarfare-pr131-2178b20d-folder-smoke-kit.7z`, SHA256
+  `C70F3E26961FE6FEC477B77D0FE46C98046AC756780D550B3EA297FB955F1F8C`,
+  archive/extraction pass, script parse pass, install rehearsal pass, evidence
+  template generation pass, and synthetic release-gate package validation pass.
 
 This artifact supersedes the `5bf5f923`, `311b9d93`, and PR #127-only artifacts
 as the freshest exact current-master payload. It is still not runtime proof, and
