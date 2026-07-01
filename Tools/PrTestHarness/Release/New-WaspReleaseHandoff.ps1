@@ -22,14 +22,17 @@ function Find-RepoRoot {
 	}
 }
 
-function ConvertTo-SafePath {
-	param([string]$Path)
-	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
-	$safe = $Path
-	if (![string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
-		$safe = $safe -replace [regex]::Escape($env:USERPROFILE), "%USERPROFILE%"
+function Get-SafeTextHash {
+	param([string]$Text)
+	if ([string]::IsNullOrWhiteSpace($Text)) { return "" }
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	try {
+		$bytes = [System.Text.Encoding]::UTF8.GetBytes($Text.ToLowerInvariant())
+		$hash = $sha.ComputeHash($bytes)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").Substring(0, 12)
+	} finally {
+		$sha.Dispose()
 	}
-	return $safe
 }
 
 function Resolve-ManifestArchivePath {
@@ -112,6 +115,8 @@ if ([string]::IsNullOrWhiteSpace($ReleaseGit)) {
 $fullHead = Invoke-GitValue $repoRoot @("rev-parse", "HEAD")
 $branch = Invoke-GitValue $repoRoot @("branch", "--show-current")
 $manifestPath = Resolve-PackageManifestPath $PackageManifestPath $repoRoot
+$manifestMarkdownPath = [System.IO.Path]::ChangeExtension($manifestPath, ".md")
+$manifestMarkdownExists = (Test-Path -LiteralPath $manifestMarkdownPath -PathType Leaf)
 $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
 $manifestArchivePath = Resolve-ManifestArchivePath ([string]$manifest.archive.path) $repoRoot
 $manifestArchiveExists = (![string]::IsNullOrWhiteSpace($manifestArchivePath) -and (Test-Path -LiteralPath $manifestArchivePath -PathType Leaf))
@@ -132,6 +137,7 @@ $actualMarkers = [ordered]@{
 
 $gates = New-Object System.Collections.Generic.List[object]
 Add-Gate $gates "package-manifest-present" "pass" "Package manifest was loaded."
+Add-Gate $gates "package-manifest-markdown-present" ($(if ($manifestMarkdownExists) { "pass" } else { "fail" })) "Sibling release-package-manifest.md must travel with the JSON handoff artifact."
 Add-Gate $gates "package-overall-pass" ($(if ([string]$manifest.overall -eq "pass") { "pass" } else { "fail" })) "Package manifest overall status must be pass."
 Add-Gate $gates "candidate-match" ($(if ([string]$manifest.expectedCandidate -eq $ExpectedCandidate) { "pass" } else { "fail" })) "Package candidate must match the handoff candidate."
 Add-Gate $gates "git-match" ($(if ([string]$manifest.expectedGit -eq $ReleaseGit) { "pass" } else { "fail" })) "Package git marker must match the current handoff git short hash."
@@ -160,8 +166,10 @@ if (Test-Path -LiteralPath $outPath) {
 $jsonOut = Join-Path $outPath "release-handoff.json"
 $markdownOut = Join-Path $outPath "release-handoff.md"
 $ledgerTemplateOut = Join-Path $outPath "runtime-run-ledger.template.json"
+$manifestJsonOut = Join-Path $outPath "release-package-manifest.json"
+$manifestMarkdownOut = Join-Path $outPath "release-package-manifest.md"
 if (!$Force) {
-	foreach ($candidate in @($jsonOut, $markdownOut, $ledgerTemplateOut)) {
+	foreach ($candidate in @($jsonOut, $markdownOut, $ledgerTemplateOut, $manifestJsonOut, $manifestMarkdownOut)) {
 		if (Test-Path -LiteralPath $candidate) {
 			throw "Output already exists: $candidate. Pass -Force to overwrite."
 		}
@@ -203,14 +211,18 @@ $packet = [ordered]@{
 		git = $ReleaseGit
 		fullHead = $fullHead
 		branch = $branch
-		repoRoot = ConvertTo-SafePath $repoRoot
+		repoRoot = "<repo-root>"
+		repoRootHash = Get-SafeTextHash $repoRoot
 	}
 	package = [ordered]@{
-		manifestPath = ConvertTo-SafePath $manifestPath
+		manifestPath = "release-package-manifest.json"
+		manifestMarkdownPath = if ($manifestMarkdownExists) { "release-package-manifest.md" } else { "" }
+		sourceManifestPathHash = Get-SafeTextHash $manifestPath
 		overall = [string]$manifest.overall
 		expectedGit = [string]$manifest.expectedGit
 		archiveName = [string]$manifest.archive.name
-		archivePath = ConvertTo-SafePath $manifestArchivePath
+		archivePath = ("<package-archive>\{0}" -f [string]$manifest.archive.name)
+		archivePathHash = Get-SafeTextHash $manifestArchivePath
 		lengthBytes = [int64]$manifest.archive.lengthBytes
 		sha256 = [string]$manifest.archive.sha256
 		entryCount = [int]$manifest.entryCount
@@ -237,8 +249,8 @@ $packet = [ordered]@{
 	}
 	runtimeChecklist = @(
 		"Exactly ten copied RPT files exist: chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt and takistan/{server,HC1,HC2,start-client,late-JIP}.rpt.",
-		"No extra RPT files or duplicate copied paths are present in the release-candidate RPT root.",
-		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker and MISSINIT worldName.",
+		"No extra RPT files, duplicate copied paths, or duplicate copied/source RPT content hashes are present in the release-candidate RPT root.",
+		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker, MISSINIT worldName, and role identity: server files report isServer=true/isDedicated=true while HC/client files do not.",
 		"Every scored current-mission window keeps the startup ## Mission Name banner; files without that banner fail the all-files-have-startup-banner scorer gate.",
 		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath -RequireSourceRptExists: terrain launch times, original source RPT paths, source LastWriteTime/SHA256, copied paths/SHA256, command lines and PIDs are present; source RPT LastWriteTime must be after terrain launch time; source and copied RPT hashes must match; no original source RPT path is reused across roles.",
 		"Run ledger release.archiveSha256 matches the approved package SHA256 passed to Test-WaspRuntimeRptPacket.ps1 -ExpectedArchiveSha256.",
@@ -276,6 +288,12 @@ $packet = [ordered]@{
 
 $packet | ConvertTo-Json -Depth 16 | Set-Content -LiteralPath $jsonOut -Encoding UTF8
 $packet.runtimeRunLedgerTemplate | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $ledgerTemplateOut -Encoding UTF8
+if ([System.IO.Path]::GetFullPath($manifestPath) -ne [System.IO.Path]::GetFullPath($manifestJsonOut)) {
+	Copy-Item -LiteralPath $manifestPath -Destination $manifestJsonOut -Force
+}
+if ($manifestMarkdownExists -and [System.IO.Path]::GetFullPath($manifestMarkdownPath) -ne [System.IO.Path]::GetFullPath($manifestMarkdownOut)) {
+	Copy-Item -LiteralPath $manifestMarkdownPath -Destination $manifestMarkdownOut -Force
+}
 
 $lines = New-Object System.Collections.Generic.List[string]
 [void]$lines.Add("# WASP Release Handoff")
@@ -360,5 +378,7 @@ Write-Host "Wrote release handoff:"
 Write-Host $jsonOut
 Write-Host $markdownOut
 Write-Host $ledgerTemplateOut
+Write-Host $manifestJsonOut
+if ($manifestMarkdownExists) { Write-Host $manifestMarkdownOut }
 
 if ($blockingFailures.Count -gt 0) { exit 1 }

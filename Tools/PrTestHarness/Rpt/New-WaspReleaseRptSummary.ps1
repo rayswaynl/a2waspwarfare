@@ -120,7 +120,7 @@ $packet = [ordered]@{
 		"Supply/cash-run workflow is playable end to end, including JIP cooldown expectations.",
 		"Release package/deployment provenance is recorded separately from RPT token scoring."
 	)
-	privacy = "No raw RPT lines are emitted or copied; scorer paths are user-profile redacted."
+	privacy = "No raw RPT lines or absolute RPT paths are emitted or copied; scorer paths are public RPT-root-relative labels with short path hashes."
 }
 $packet | ConvertTo-Json -Depth 16 | Set-Content -LiteralPath $jsonOut -Encoding UTF8
 
@@ -132,7 +132,7 @@ $lines = New-Object System.Collections.Generic.List[string]
 [void]$lines.Add(("Worlds seen: {0}" -f (Join-Display $score.worldsSeen)))
 [void]$lines.Add(("Files scored: {0}" -f @(ConvertTo-Array $score.files).Count))
 [void]$lines.Add("")
-[void]$lines.Add("Privacy: no raw RPT lines are emitted or copied. File paths come from the scorer's redacted path field.")
+[void]$lines.Add("Privacy: no raw RPT lines or absolute RPT paths are emitted or copied. File paths come from the scorer's public RPT-root-relative labels with short path hashes.")
 [void]$lines.Add("")
 [void]$lines.Add("## Expected Markers")
 [void]$lines.Add("")

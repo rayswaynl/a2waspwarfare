@@ -138,14 +138,16 @@ release-candidate\
   takistan\late-JIP.rpt
 ```
 
-It also checks that each role file contains the terrain-specific release marker
-and matching `MISSINIT` world, rejects extra/duplicate copied RPTs, and can
-reject stale RPTs from the terrain launch times in the run ledger. The run
-ledger is machine-checked too: it must record the original source RPT path,
-original source RPT LastWriteTime and SHA256, copied packet path and SHA256,
-command line, PID and terrain start time for each role. Duplicate original
-source RPT paths fail the packet gate. Copied file LastWriteTime values are
-read by the checker itself.
+It also checks that each role file contains the terrain-specific release marker,
+matching `MISSINIT` world and expected role identity: `server.rpt` must report
+`isServer=true` and `isDedicated=true`, while HC/client files must not. The
+packet gate rejects extra RPTs, duplicate copied paths and duplicate copied RPT
+content hashes, and can reject stale RPTs from the terrain launch times in the
+run ledger. The run ledger is machine-checked too: it must record the original
+source RPT path, original source RPT LastWriteTime and SHA256, copied packet
+path and SHA256, command line, PID and terrain start time for each role.
+Duplicate original source RPT paths or source/copy content hashes fail the
+packet gate. Copied file LastWriteTime values are read by the checker itself.
 
 ```powershell
 $releaseGit = git rev-parse --short=10 HEAD
@@ -208,8 +210,8 @@ that happens to share the same git marker. The packet checker also compares
 each copied RPT to `copiedRptSha256`, requires `sourceRptLastWriteTime` to be
 after the terrain launch time, and with `-RequireSourceRptExists` recomputes the
 source RPT timestamp/SHA256 and verifies that the source and copied content are
-identical. Public duplicate-process failures emit the PID and a command-line
-hash, not the raw launch command.
+identical. Public failures emit short path/content/command hashes, not raw
+source paths or launch commands.
 
 After the packet matrix passes, the scorer checks both Chernarus and Takistan
 coverage, no generic current-window RPT stop conditions, at least two successful
@@ -219,7 +221,7 @@ tokens. It exits non-zero until the bundle is complete. It scores only the
 current mission window in each RPT, including the startup banner immediately
 above the latest `MISSINIT`, and now fails if any scored file lacks that
 startup Mission Name banner. It prints session names and token counts only; it
-does not echo raw RPT lines.
+does not echo raw RPT lines or absolute RPT paths.
 
 To produce a portable release/wiki summary packet from the same scorer output:
 
@@ -231,8 +233,9 @@ To produce a portable release/wiki summary packet from the same scorer output:
 ```
 
 It writes `release-rpt-summary.json` and `release-rpt-summary.md` without
-copying raw RPT lines. Like the scorer, it exits non-zero until the runtime
-gates pass; add `-NoFail` when producing an incomplete diagnostic packet.
+copying raw RPT lines or absolute RPT paths. Like the scorer, it exits non-zero
+until the runtime gates pass; add `-NoFail` when producing an incomplete
+diagnostic packet.
 
 ## Release Package Provenance
 
@@ -271,11 +274,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Release\New-Wa
   -OutDirectory .\wasp-release-handoff -Force
 ```
 
-It writes `release-handoff.json` and `release-handoff.md` with the package
-hash, exact Chernarus/Takistan runtime markers, scorer commands, runtime
-preconditions, deploy approval checks, rollback checks and privacy boundaries.
-It does not touch SSH, server files or raw RPTs; live deployment still requires
-explicit approval and separate runtime evidence.
+It writes `release-handoff.json`, `release-handoff.md`,
+`runtime-run-ledger.template.json` and copies `release-package-manifest.json`
+plus sibling `release-package-manifest.md` into the same handoff folder. The
+handoff includes the package hash, exact Chernarus/Takistan runtime markers,
+scorer commands, runtime preconditions, deploy approval checks, rollback checks
+and privacy boundaries. It does not touch SSH, server files or raw RPTs; live
+deployment still requires explicit approval and separate runtime evidence.
 
 ## Shipping Boundary
 

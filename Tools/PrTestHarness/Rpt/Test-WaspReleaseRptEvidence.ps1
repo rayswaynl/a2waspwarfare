@@ -11,13 +11,41 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function ConvertTo-SafePath {
-	param([string]$Path)
-	$safe = $Path
-	if (![string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
-		$safe = $safe -replace [regex]::Escape($env:USERPROFILE), "%USERPROFILE%"
+function Get-SafeTextHash {
+	param([string]$Text)
+	if ([string]::IsNullOrWhiteSpace($Text)) { return "" }
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	try {
+		$bytes = [System.Text.Encoding]::UTF8.GetBytes($Text.ToLowerInvariant())
+		$hash = $sha.ComputeHash($bytes)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").Substring(0, 12)
+	} finally {
+		$sha.Dispose()
 	}
-	return $safe
+}
+
+function ConvertTo-PublicRptLabel {
+	param(
+		[Parameter(Mandatory)] [string]$Path,
+		[string[]]$Roots = @()
+	)
+	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+	$fullPath = [System.IO.Path]::GetFullPath($Path)
+	$pathHash = Get-SafeTextHash $fullPath
+	foreach ($root in $Roots) {
+		if ([string]::IsNullOrWhiteSpace($root)) { continue }
+		$rootPath = [System.IO.Path]::GetFullPath($root)
+		if ((Test-Path -LiteralPath $rootPath -PathType Leaf)) {
+			$rootPath = Split-Path -Parent $rootPath
+		}
+		$rootPath = $rootPath.TrimEnd([char[]]@('\','/'))
+		$prefix = $rootPath + [System.IO.Path]::DirectorySeparatorChar
+		if ($fullPath.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+			$relative = $fullPath.Substring($prefix.Length)
+			return ("<rpt-root>\{0} (pathHash={1})" -f $relative, $pathHash)
+		}
+	}
+	return ("<rpt-file>\{0} (pathHash={1})" -f ([System.IO.Path]::GetFileName($fullPath)), $pathHash)
 }
 
 function Get-RptFiles {
@@ -251,6 +279,12 @@ if ($files.Count -eq 0) {
 	Write-Host "FAIL: pass -RptPath or -RptDirectory with at least one RPT." -ForegroundColor Red
 	exit 1
 }
+$publicRptRoots = @()
+foreach ($dir in $RptDirectory) {
+	if (![string]::IsNullOrWhiteSpace($dir) -and (Test-Path -LiteralPath $dir)) {
+		$publicRptRoots += (Resolve-Path -LiteralPath $dir).Path
+	}
+}
 
 $totalCounts = New-Counts $tokenSpecs
 $totalStopCounts = New-Counts $stopSpecs
@@ -311,7 +345,8 @@ foreach ($file in $files) {
 	}
 	Add-Counts $totalCounts $fileCounts
 	$fileSummaries += [ordered]@{
-		path = ConvertTo-SafePath $item.FullName
+		path = ConvertTo-PublicRptLabel -Path $item.FullName -Roots $publicRptRoots
+		pathHash = Get-SafeTextHash $item.FullName
 		lastWriteTime = $item.LastWriteTime.ToString("yyyy-MM-ddTHH:mm:sszzz")
 		lengthBytes = $item.Length
 		rawLineCount = [int]$window.rawLineCount
@@ -409,7 +444,7 @@ $result = [ordered]@{
 	stopMatchCount = $totalStopMatches
 	gates = $gateResults
 	overall = if ($overallPass) { "pass" } else { "missing_or_failed" }
-	privacy = "No raw RPT lines are emitted; paths are user-profile redacted."
+	privacy = "No raw RPT lines or absolute paths are emitted; file labels are RPT-root-relative when possible and include short path hashes."
 }
 
 if ($Json) {

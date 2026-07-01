@@ -33,14 +33,23 @@ function Invoke-GitValue {
 	return (($output | Select-Object -First 1).ToString().Trim())
 }
 
-function ConvertTo-SafePath {
-	param([string]$Path)
+function ConvertTo-PacketPath {
+	param(
+		[string]$Path,
+		[string]$RootPath
+	)
 	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
-	$safe = $Path
-	if (![string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
-		$safe = $safe -replace [regex]::Escape($env:USERPROFILE), "%USERPROFILE%"
+	$fullPath = [System.IO.Path]::GetFullPath($Path)
+	$pathHash = Get-SafeTextHash $fullPath
+	if (![string]::IsNullOrWhiteSpace($RootPath)) {
+		$rootFull = [System.IO.Path]::GetFullPath($RootPath).TrimEnd([char[]]@('\','/'))
+		$prefix = $rootFull + [System.IO.Path]::DirectorySeparatorChar
+		if ($fullPath.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+			$relative = $fullPath.Substring($prefix.Length)
+			return ("<rpt-root>\{0} (pathHash={1})" -f $relative, $pathHash)
+		}
 	}
-	return $safe
+	return ("<rpt-file>\{0} (pathHash={1})" -f ([System.IO.Path]::GetFileName($fullPath)), $pathHash)
 }
 
 function ConvertTo-Array {
@@ -188,7 +197,7 @@ function Test-WaspRuntimeRunLedger {
 		[void]$missing.Add("run ledger file")
 		return [ordered]@{
 			status = "missing"
-			path = ConvertTo-SafePath $LedgerPath
+			path = ConvertTo-PacketPath -Path $LedgerPath -RootPath $RootPath
 			missing = $missing.ToArray()
 			failHits = $failHits.ToArray()
 			startTimes = $ledgerStartTimes
@@ -204,7 +213,7 @@ function Test-WaspRuntimeRunLedger {
 		[void]$failHits.Add("run ledger JSON parse failed")
 		return [ordered]@{
 			status = "fail"
-			path = ConvertTo-SafePath $ledgerItem.FullName
+			path = ConvertTo-PacketPath -Path $ledgerItem.FullName -RootPath $RootPath
 			missing = $missing.ToArray()
 			failHits = $failHits.ToArray()
 			startTimes = $ledgerStartTimes
@@ -244,6 +253,8 @@ function Test-WaspRuntimeRunLedger {
 	}
 
 	$sourcePaths = New-Object System.Collections.Generic.List[string]
+	$sourceShaValues = New-Object System.Collections.Generic.List[object]
+	$copiedShaValues = New-Object System.Collections.Generic.List[object]
 	$processKeysByTerrain = @{}
 	$topLevelStartTimes = Get-JsonValue $ledger "terrainStartTimes"
 	$expectedKeys = @{}
@@ -289,13 +300,15 @@ function Test-WaspRuntimeRunLedger {
 		if ([string]::IsNullOrWhiteSpace($copiedSha256)) { [void]$missing.Add("copiedRptSha256 for $terrain/$role") }
 		if (![string]::IsNullOrWhiteSpace($sourceSha256) -and !(Test-IsSha256Text $sourceSha256)) { [void]$failHits.Add("sourceRptSha256 for $terrain/$role must be a SHA256 hex value") }
 		if (![string]::IsNullOrWhiteSpace($copiedSha256) -and !(Test-IsSha256Text $copiedSha256)) { [void]$failHits.Add("copiedRptSha256 for $terrain/$role must be a SHA256 hex value") }
+		if (Test-IsSha256Text $sourceSha256) { [void]$sourceShaValues.Add([pscustomobject]@{ sha = $sourceSha256; key = "$terrain/$role" }) }
+		if (Test-IsSha256Text $copiedSha256) { [void]$copiedShaValues.Add([pscustomobject]@{ sha = $copiedSha256; key = "$terrain/$role" }) }
 
 		$sourcePath = Resolve-LedgerPathValue $sourceRaw $ledgerDir
 		$copiedPath = Resolve-LedgerPathValue $copiedRaw $RootPath
 		if (![string]::IsNullOrWhiteSpace($sourcePath)) {
 			[void]$sourcePaths.Add($sourcePath.ToLowerInvariant())
 			if ([System.IO.Path]::GetExtension($sourcePath).ToLowerInvariant() -ne ".rpt") { [void]$failHits.Add("sourceRptPath for $terrain/$role must point to an .rpt file") }
-			if ($RequireSourceRptExists -and !(Test-Path -LiteralPath $sourcePath)) { [void]$failHits.Add("source RPT does not exist for ${terrain}/${role}: $(ConvertTo-SafePath $sourcePath)") }
+			if ($RequireSourceRptExists -and !(Test-Path -LiteralPath $sourcePath)) { [void]$failHits.Add("source RPT does not exist for ${terrain}/${role}: sourceRptPathHash=$(Get-SafeTextHash $sourcePath)") }
 		}
 		if (![string]::IsNullOrWhiteSpace($copiedPath) -and $copiedPath.ToLowerInvariant() -ne $expectedCopiedPath.ToLowerInvariant()) {
 			[void]$failHits.Add("copiedRptPath for $terrain/$role does not match packet path")
@@ -378,7 +391,7 @@ function Test-WaspRuntimeRunLedger {
 			role = $role
 			sourceRptRecorded = (![string]::IsNullOrWhiteSpace($sourcePath))
 			sourceRptPathHash = Get-SafeTextHash $sourcePath
-			copiedRptPath = ConvertTo-SafePath $copiedPath
+			copiedRptPath = ConvertTo-PacketPath -Path $copiedPath -RootPath $RootPath
 			pidRecorded = ($pidInt -gt 0)
 			commandLineRecorded = (![string]::IsNullOrWhiteSpace($commandLine))
 			terrainStartTime = if ($terrainStart -eq [datetime]::MinValue) { "" } else { $terrainStart.ToString("yyyy-MM-ddTHH:mm:sszzz") }
@@ -393,6 +406,14 @@ function Test-WaspRuntimeRunLedger {
 	foreach ($duplicate in $duplicateSourcePaths) {
 		[void]$failHits.Add("duplicate original source RPT path hash: $(Get-SafeTextHash $duplicate)")
 	}
+	foreach ($group in @($sourceShaValues.ToArray() | Group-Object -Property sha | Where-Object { $_.Count -gt 1 })) {
+		$roles = @($group.Group | ForEach-Object { $_.key }) -join ","
+		[void]$failHits.Add("duplicate original source RPT content hash: contentHash=$($group.Name.Substring(0, 12)) roles=$roles")
+	}
+	foreach ($group in @($copiedShaValues.ToArray() | Group-Object -Property sha | Where-Object { $_.Count -gt 1 })) {
+		$roles = @($group.Group | ForEach-Object { $_.key }) -join ","
+		[void]$failHits.Add("duplicate copied RPT content hash: contentHash=$($group.Name.Substring(0, 12)) roles=$roles")
+	}
 	foreach ($terrainName in $processKeysByTerrain.Keys) {
 		$duplicateProcessKeys = @($processKeysByTerrain[$terrainName].ToArray() | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })
 		foreach ($duplicateProcessKey in $duplicateProcessKeys) {
@@ -406,7 +427,7 @@ function Test-WaspRuntimeRunLedger {
 	$status = if ($failHits.Count -gt 0) { "fail" } elseif ($missing.Count -gt 0) { "missing" } else { "pass" }
 	return [ordered]@{
 		status = $status
-		path = ConvertTo-SafePath $ledgerItem.FullName
+		path = ConvertTo-PacketPath -Path $ledgerItem.FullName -RootPath $RootPath
 		missing = $missing.ToArray()
 		failHits = $failHits.ToArray()
 		startTimes = $ledgerStartTimes
@@ -494,6 +515,15 @@ function Test-WindowContains {
 	return $false
 }
 
+function ConvertTo-BooleanValue {
+	param([string]$Value)
+	if ([string]::IsNullOrWhiteSpace($Value)) { return $null }
+	$text = ($Value -replace '"', '').Trim().ToLowerInvariant()
+	if ($text -eq "true") { return $true }
+	if ($text -eq "false") { return $false }
+	return $null
+}
+
 if (!(Test-Path -LiteralPath $RptRoot)) {
 	throw "RPT root not found: $RptRoot"
 }
@@ -543,9 +573,11 @@ foreach ($terrain in $terrains) {
 $fileResults = New-Object System.Collections.Generic.List[object]
 $missingFiles = @()
 $markerWorldFailures = @()
+$roleIdentityFailures = @()
 $freshnessFailures = @()
 $freshnessMissing = @()
 $resolvedPaths = @()
+$copiedContentEvidence = New-Object System.Collections.Generic.List[object]
 
 foreach ($expected in $expectedFiles) {
 	$terrain = [string]$expected.terrain
@@ -556,7 +588,7 @@ foreach ($expected in $expectedFiles) {
 		$fileResults.Add([ordered]@{
 			terrain = $terrain
 			role = $role
-			path = ConvertTo-SafePath $path
+			path = ConvertTo-PacketPath -Path $path -RootPath $rootPath
 			status = "missing"
 		})
 		continue
@@ -567,6 +599,10 @@ foreach ($expected in $expectedFiles) {
 		continue
 	}
 	$resolvedPaths += $item.FullName.ToLowerInvariant()
+	$copiedFileSha256 = Get-FileSha256Value $item.FullName
+	if (Test-IsSha256Text $copiedFileSha256) {
+		[void]$copiedContentEvidence.Add([pscustomobject]@{ sha = $copiedFileSha256; key = "$terrain/$role" })
+	}
 	$lines = Get-RptLines -Path $item.FullName
 	$window = Get-StartupWindow -Lines $lines
 	$marker = [string]$expectedMarkers[$terrain]
@@ -579,6 +615,19 @@ foreach ($expected in $expectedFiles) {
 	}
 	if (!$markerPresent) {
 		$markerWorldFailures += ("{0}/{1}: missing expected marker" -f $terrain, $role)
+	}
+	if ($window.found) {
+		$isServerValue = ConvertTo-BooleanValue ([string]$window.isServer)
+		$isDedicatedValue = ConvertTo-BooleanValue ([string]$window.isDedicated)
+		if ($null -eq $isServerValue -or $null -eq $isDedicatedValue) {
+			$roleIdentityFailures += ("{0}/{1}: missing isServer/isDedicated in MISSINIT" -f $terrain, $role)
+		} elseif ($role -eq "server") {
+			if (!$isServerValue -or !$isDedicatedValue) {
+				$roleIdentityFailures += ("{0}/{1}: expected dedicated server RPT, got isServer={2} isDedicated={3}" -f $terrain, $role, $window.isServer, $window.isDedicated)
+			}
+		} elseif ($isServerValue -or $isDedicatedValue) {
+			$roleIdentityFailures += ("{0}/{1}: non-server role has isServer={2} isDedicated={3}" -f $terrain, $role, $window.isServer, $window.isDedicated)
+		}
 	}
 	$startTime = $startTimes[$terrain]
 	$freshnessStatus = "not_checked"
@@ -593,7 +642,9 @@ foreach ($expected in $expectedFiles) {
 	$fileResults.Add([ordered]@{
 		terrain = $terrain
 		role = $role
-		path = ConvertTo-SafePath $item.FullName
+		path = ConvertTo-PacketPath -Path $item.FullName -RootPath $rootPath
+		pathHash = Get-SafeTextHash $item.FullName
+		contentHash = if ((Test-IsSha256Text $copiedFileSha256)) { $copiedFileSha256.Substring(0, 12) } else { "" }
 		lastWriteTime = $item.LastWriteTime.ToString("yyyy-MM-ddTHH:mm:sszzz")
 		lengthBytes = $item.Length
 		lineCount = $lines.Count
@@ -601,6 +652,8 @@ foreach ($expected in $expectedFiles) {
 		missInitLine = [int]$window.missInitLine
 		missionName = [string]$window.missionName
 		worldName = [string]$window.worldName
+		isServer = [string]$window.isServer
+		isDedicated = [string]$window.isDedicated
 		expectedMarker = $marker
 		expectedMarkerFound = [bool]$markerPresent
 		worldMatchesTerrain = [bool]$worldOk
@@ -616,9 +669,14 @@ $expectedResolved = @($expectedFiles | ForEach-Object {
 })
 $extraFiles = @()
 foreach ($file in $allRptResolved) {
-	if ($expectedResolved -notcontains $file.ToLowerInvariant()) { $extraFiles += (ConvertTo-SafePath $file) }
+	if ($expectedResolved -notcontains $file.ToLowerInvariant()) { $extraFiles += (ConvertTo-PacketPath -Path $file -RootPath $rootPath) }
 }
 $duplicatePaths = @($resolvedPaths | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })
+$duplicateContentFailures = @()
+foreach ($group in @($copiedContentEvidence.ToArray() | Group-Object -Property sha | Where-Object { $_.Count -gt 1 })) {
+	$roles = @($group.Group | ForEach-Object { $_.key }) -join ","
+	$duplicateContentFailures += ("contentHash={0} roles={1}" -f $group.Name.Substring(0, 12), $roles)
+}
 $freshnessMissing = @($freshnessMissing | Select-Object -Unique)
 
 $gates = @(
@@ -640,8 +698,15 @@ $gates = @(
 		id = "no-duplicate-copied-paths"
 		status = if ($duplicatePaths.Count -eq 0) { "pass" } else { "fail" }
 		missing = @()
-		failHits = @($duplicatePaths | ForEach-Object { ConvertTo-SafePath $_ })
+		failHits = @($duplicatePaths | ForEach-Object { ConvertTo-PacketPath -Path $_ -RootPath $rootPath })
 		note = "Each role/terrain RPT must be a distinct copied file; original source paths are checked in the runtime run ledger."
+	},
+	[ordered]@{
+		id = "no-duplicate-rpt-content"
+		status = if ($duplicateContentFailures.Count -eq 0) { "pass" } else { "fail" }
+		missing = @()
+		failHits = $duplicateContentFailures
+		note = "Each role/terrain RPT must have distinct content; copied files with matching hashes fail even when filenames differ."
 	},
 	[ordered]@{
 		id = "runtime-run-ledger"
@@ -658,6 +723,13 @@ $gates = @(
 		note = "Each file's latest startup window must contain the terrain-specific WASPRELEASE marker and matching MISSINIT worldName."
 	},
 	[ordered]@{
+		id = "per-role-identity"
+		status = if ($roleIdentityFailures.Count -eq 0) { "pass" } else { "fail" }
+		missing = @()
+		failHits = $roleIdentityFailures
+		note = "Server files must report isServer=true/isDedicated=true in MISSINIT; HC and client role files must not."
+	},
+	[ordered]@{
 		id = "per-terrain-freshness-cutoffs"
 		status = if ($freshnessMissing.Count -eq 0 -and $freshnessFailures.Count -eq 0) { "pass" } elseif ($freshnessFailures.Count -gt 0) { "fail" } else { "missing" }
 		missing = @($freshnessMissing | ForEach-Object { "{0} start time" -f $_ })
@@ -670,7 +742,8 @@ $overallPass = (@($gates | Where-Object { $_.status -ne "pass" }).Count -eq 0)
 $result = [ordered]@{
 	schema = "a2waspwarfare-runtime-rpt-packet-v1"
 	generatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
-	rptRoot = ConvertTo-SafePath $rootPath
+	rptRoot = "<rpt-root>"
+	rptRootHash = Get-SafeTextHash $rootPath
 	expectedCandidate = $ExpectedCandidate
 	expectedGit = $ExpectedGit
 	expectedArchiveSha256 = $ExpectedArchiveSha256
@@ -690,14 +763,14 @@ $result = [ordered]@{
 	files = $fileResults.ToArray()
 	gates = $gates
 	overall = if ($overallPass) { "pass" } else { "missing_or_failed" }
-	privacy = "No raw RPT lines are emitted; original source RPT paths are not emitted, only short hashes."
+	privacy = "No raw RPT lines, absolute copied paths, original source RPT paths, or raw command lines are emitted; packet paths are RPT-root-relative labels with short path hashes."
 }
 
 if ($Json) {
 	$result | ConvertTo-Json -Depth 12
 } else {
 	Write-Host "WASP runtime RPT packet matrix check"
-	Write-Host "Root: $(ConvertTo-SafePath $rootPath)"
+	Write-Host "Root: <rpt-root> (pathHash=$(Get-SafeTextHash $rootPath))"
 	Write-Host "Expected git: $ExpectedGit"
 	if (![string]::IsNullOrWhiteSpace($ExpectedArchiveSha256)) { Write-Host "Expected archive SHA256: $ExpectedArchiveSha256" }
 	Write-Host ""
