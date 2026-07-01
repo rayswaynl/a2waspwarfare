@@ -45,6 +45,48 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
 		};
 		diag_log (Format ["HCSIDE|v1|disconnect|uid=%1|owner=%2|removed=%3", _uid, _id, str _hcGroup]);
+		[_uid, _name, _id, _hcGroup] spawn {
+			Private ["_uid","_name","_oldOwner","_oldGroup","_delay","_side","_sideText","_logik","_teams","_g","_ldr","_ldrOwner","_last","_age","_hcTeams","_live","_oldOwnerLive","_headingFresh","_headingStale","_headingUnknown"];
+			_uid = _this select 0;
+			_name = _this select 1;
+			_oldOwner = _this select 2;
+			_oldGroup = _this select 3;
+			{
+				_delay = _x;
+				sleep _delay;
+				{
+					_side = _x;
+					_sideText = str _side;
+					_hcTeams = 0; _live = 0; _oldOwnerLive = 0; _headingFresh = 0; _headingStale = 0; _headingUnknown = 0;
+					_logik = _side Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _logik && {!(isNil {_logik getVariable "wfbe_teams"})}) then {
+						_teams = _logik getVariable "wfbe_teams";
+						{
+							_g = _x;
+							if (!isNull _g) then {
+								if ([_g, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_hcTeams = _hcTeams + 1;
+									_ldr = leader _g;
+									if (!isNull _ldr && {alive _ldr}) then {
+										_live = _live + 1;
+										_ldrOwner = owner _ldr;
+										if (_ldrOwner == _oldOwner) then {_oldOwnerLive = _oldOwnerLive + 1};
+									};
+									if (isNil {_g getVariable "wfbe_aicom_last_heading_t"}) then {
+										_headingUnknown = _headingUnknown + 1;
+									} else {
+										_last = _g getVariable "wfbe_aicom_last_heading_t";
+										_age = time - _last;
+										if (_age <= 30) then {_headingFresh = _headingFresh + 1} else {_headingStale = _headingStale + 1};
+									};
+								};
+							};
+						} forEach _teams;
+					};
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HCDROP_AICOM_AUDIT|delay=" + str _delay + "|uid=" + _uid + "|name=" + _name + "|owner=" + str _oldOwner + "|group=" + str _oldGroup + "|teams=" + str _hcTeams + "|live=" + str _live + "|oldOwnerLive=" + str _oldOwnerLive + "|headingFresh=" + str _headingFresh + "|headingStale=" + str _headingStale + "|headingUnknown=" + str _headingUnknown);
+				} forEach [west, east];
+			} forEach [0, 60];
+		};
 		["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Headless client [%1] [%2] owner [%3] has left the game.", _name, _uid, _id]] Call WFBE_CO_FNC_LogContent;
 	};
 };

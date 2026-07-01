@@ -119,7 +119,7 @@ As of 2026-07-01 08:16 UTC:
 13. HC-disconnect adoption is still a release-risk lead.
    - `Server_OnPlayerDisconnected.sqf` removes a disconnected HC from future delegation registries, but does not yet prove already-running HC-owned AICOM teams have been re-adopted by the server after locality migrates.
    - `Common_RunCommanderTeam.sqf` marks HC teams with `wfbe_aicom_hc`; `AI_Commander_Produce.sqf` and `AI_Commander_Execute.sqf` treat HC teams differently from server-local teams.
-   - Action: defer code change until a focused HC drop/reconnect RPT pass can prove whether existing HC teams become inert. Candidate patch is a delayed, server-side re-adoption sweep gated on `wfbe_aicom_hc` and server-local leaders, with RPT proof for order resumption and no duplicate team accounting.
+   - Action: proof-first instrumentation added. `aicom-team-heading` now stamps `wfbe_aicom_last_heading_t` on each HC commander team, HC disconnects emit immediate plus 60-second `HCDROP_AICOM_AUDIT` lines, and HC reconnect registration emits `HCRECON_AICOM_AUDIT` lines with live HC-team counts, owner survivors, and fresh/stale/unknown heading heartbeat counts. Defer behavior-changing re-adoption until those RPT lines prove whether existing HC teams become inert.
 
 ## Working Backlog
 
@@ -129,7 +129,7 @@ As of 2026-07-01 08:16 UTC:
 - Mine the Miksuu original repo with a long-path-safe or sparse checkout for mission-level diffs.
 - Select concrete Jerry/Miksuu dump packages before downloading large archives.
 - Collect or import RPT evidence only after explicit approval for SSH/server access.
-- Run a focused HC disconnect/reconnect proof pass before changing HC team re-adoption behavior.
+- Run a focused HC disconnect/reconnect proof pass and capture `HCSIDE|disconnect`, `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSTAT`, `AICOMSTAT|...|HCDISPATCH`, and post-drop heading/marker continuity before changing HC team re-adoption behavior.
 
 ## Validation Expectations
 
