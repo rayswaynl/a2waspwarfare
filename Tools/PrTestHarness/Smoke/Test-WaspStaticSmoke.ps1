@@ -395,6 +395,39 @@ function Test-AicomCommandConsoleAuthorityGuard {
 	Add-Result "AICOM command-console authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomTeamLifecycleAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$runnerPath = Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf"
+		$server = Get-Text $serverPath
+		$runner = Get-Text $runnerPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$headingBlock = ""
+		$headingStart = $serverCode.IndexOf('case "aicom-team-heading"')
+		if ($headingStart -ge 0) {
+			$headingEnd = $serverCode.IndexOf('case "aicom-vehicle-abandoned"', $headingStart)
+			if ($headingEnd -gt $headingStart) {
+				$headingBlock = $serverCode.Substring($headingStart, $headingEnd - $headingStart)
+			}
+		}
+		if (-not ($runner.Contains('setVariable ["wfbe_aicom_sideid", _sideID, true]') -and $runner.Contains('["aicom-heli-refunded", _sID, _cost, _tm, _htype]'))) { $missing += "$($entry.Terrain):sender-team-binding" }
+		if (-not ($server.Contains('_validateAicomManagedTeamForSide') -and $server.Contains('WFBE_CO_FNC_GroupGetBool') -and $server.Contains('wfbe_aicom_sideid'))) { $missing += "$($entry.Terrain):managed-team-validator" }
+		if (-not ($server.Contains('count _args < 3') -and $server.Contains('rejected malformed aicom-team-created') -and $server.Contains('rejected untrusted aicom-team-created') -and $server.Contains('rejected duplicate aicom-team-created'))) { $missing += "$($entry.Terrain):created-guard" }
+		if (-not ($server.Contains('rejected malformed aicom-team-ended') -and $server.Contains('rejected untrusted aicom-team-ended') -and $server.Contains('rejected unregistered aicom-team-ended') -and $server.Contains('rejected live aicom-team-ended') -and $server.Contains('typeName _x == "ARRAY"') -and $server.Contains('count _x >= 4'))) { $missing += "$($entry.Terrain):ended-guard" }
+		if (-not ($server.Contains('rejected malformed aicom-team-heading') -and $server.Contains('typeName _hdir != "SCALAR"') -and $server.Contains('rejected untrusted aicom-team-heading') -and $server.Contains('rejected unregistered aicom-team-heading'))) { $missing += "$($entry.Terrain):heading-guard" }
+		if ($headingBlock.Contains('(_args select 1) select 0')) { $missing += "$($entry.Terrain):raw-heading-select" }
+		if (-not ($server.Contains('count _args < 5') -and $server.Contains('typeName _rCost != "SCALAR"') -and $server.Contains('typeName _rTeam != "GROUP"') -and $server.Contains('typeName _rType != "STRING"') -and $server.Contains('_rCost <= _rMaxCost') -and $server.Contains('rejected untrusted aicom-heli-refunded') -and $server.Contains('rejected unregistered aicom-heli-refunded'))) { $missing += "$($entry.Terrain):refund-guard" }
+	}
+	Add-Result "AICOM lifecycle/refund authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomHcTopUpDraftExcluded {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -943,6 +976,7 @@ Test-SideSupplyAuthorityGuard
 Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
+Test-AicomTeamLifecycleAuthorityGuard
 Test-AicomHcTopUpDraftExcluded
 Test-AicomGroupVariableDefaults
 Test-HcPvfGuard

@@ -1,5 +1,24 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM lifecycle/refund authority guard [RELEASE LOOP]
+
+Closed the next bounded commander-hardening slice for both maintained terrains.
+HC-founded AICOM teams now stamp a public `wfbe_aicom_sideid` binding when the
+group is created, and `Server_HandleSpecial.sqf` uses that alongside the
+OA-safe `WFBE_CO_FNC_GroupGetBool` helper to reject untrusted
+`aicom-team-created`, `aicom-team-ended`, `aicom-team-heading` and
+`aicom-heli-refunded` payloads before they can mutate side team lists, marker
+feeds, pending counters or the AI-commander treasury.
+
+The heli fly-off refund sender now includes the originating team and transport
+class, and the server only credits a registered AICOM team when the submitted
+cost is scalar, positive and capped by the mission unit price for that class.
+Team-end handling also rejects duplicate/unregistered/live-team lifecycle
+messages before cleanup. LoadoutManager mirrored the source change to Takistan
+and rebuilt `_MISSIONS.7z`; `Test-WaspStaticSmoke.ps1` and
+`Run-WaspFinalCheck.ps1` both pass, with the known Chernarus/Takistan
+`find "Aircraft"` A2/OA lint review heuristic still present.
+
 ## 2026-07-01 — AICOM/PVF static hardening and Build 83 merge-gate [RELEASE LOOP]
 
 Closed the next static release-hardening slice without touching runtime, SSH or
@@ -18,11 +37,10 @@ classification. Static smoke now also asserts the PVF shape guard and the extra
 AICOM command-case gates. `Run-WaspFinalCheck.ps1` passed after LoadoutManager
 mirrored the Chernarus source to Takistan and rebuilt `_MISSIONS.7z`.
 
-Merge-gate note: current `origin/master` is Build 83/cmdcon35 and is not a safe
-blind merge into PR #125. Local merge simulation shows it deletes the release
-harness/docs, reintroduces the HCTopUp draft worker surface, changes the release
-marker identity and carries broad gameplay changes. Keep PR #125 as the isolated
-release-readiness lane unless those changes are intentionally re-reviewed.
+Merge-gate note superseded: current `origin/master` Build 83/cmdcon35 is already
+an ancestor of this release branch. Keep future broad branch intake explicit and
+source-reviewed, but PR #125 is no longer blocked on that older local merge
+simulation.
 
 ## 2026-07-01 — HCTopUp draft worker excluded from release package [RELEASE LOOP]
 

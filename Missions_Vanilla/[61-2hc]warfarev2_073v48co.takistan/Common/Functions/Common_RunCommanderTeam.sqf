@@ -93,6 +93,7 @@ if (count _this > 3) then {
 //--- would otherwise stay engine-default. The on-objective SAD waypoints still flip to COMBAT/WEDGE.
 _team setCombatMode "RED"; _team setBehaviour "AWARE"; _team setSpeedMode "FULL";
 _team setVariable ["wfbe_aicom_hc", true, true];   //--- brain: do not Produce/waypoint this one directly.
+_team setVariable ["wfbe_aicom_sideid", _sideID, true]; //--- Server_HandleSpecial lifecycle/refund authority binding.
 //--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes (which is where server-local teams get
 //--- wfbe_teamtype), so without this the disband-low-tier worker can never classify them (and used to throw on the
 //--- A2-unsafe 2-arg getVariable). AI_Commander_Teams ships the picked TEMPLATE INDEX _pick (same value AssignTypes
@@ -436,9 +437,9 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 					deleteVehicle _h;
 					if (_cost > 0) then {
 						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost] Call HandleSpecial;
+							["aicom-heli-refunded", _sID, _cost, _tm, _htype] Call HandleSpecial;
 						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _tm, _htype]] Call WFBE_CO_FNC_SendToServer;
 						};
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
 					};

@@ -47,6 +47,7 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - Reduced repeated AICOM Strategy town scans by consuming the freshly published `wfbe_aicom2_snap` town census in `AI_Commander_Strategy.sqf`, with the old live `towns` scan kept as fallback. Spearhead scoring/debug and the optional commander-artillery support-town guard now reuse the same per-tick owned/capturable town arrays.
 - Hardened the PVF dispatch shape checks before handler selection and routed remaining active AICOM group receiver reads through the existing OA-safe group-variable helper. The stale `aicom-focus`, `aicom-defend`, and `aicom-reinforce` command cases now require the human-commander requester/team validation used by the live command-console actions.
 - Current `origin/master`/Build83 cmdcon35 has been reconciled into this PR while preserving the release harness, HCTopUp draft exclusion, AICOM/PVF authority hardening and the active AICOM executor latch reset.
+- Hardened AICOM team lifecycle/refund messages: HC-founded groups now carry a side binding, team-created/end/heading payloads require registered managed AICOM teams, duplicate/live/unregistered lifecycle messages are rejected, and heli fly-off refunds must include the originating team and transport class with the refund capped to that class' mission unit price.
 - Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
 
 ## Proven Static And Package Gates

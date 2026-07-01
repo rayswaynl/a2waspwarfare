@@ -1,4 +1,4 @@
-Private['_args','_validateAicomConsoleRequester'];
+Private['_args','_validateAicomConsoleRequester','_validateAicomManagedTeamForSide'];
 
 _args = _this;
 
@@ -27,6 +27,17 @@ _validateAicomConsoleRequester = {
 		if (isNull _cmdTeam || {leader _cmdTeam != _requester} || {!isPlayer (leader _cmdTeam)}) exitWith {false};
 	};
 	true
+};
+
+_validateAicomManagedTeamForSide = {
+	private ["_team","_sideID","_teamSideID"];
+	_team = _this select 0;
+	_sideID = _this select 1;
+	if ((typeName _team != "GROUP") || {isNull _team} || {typeName _sideID != "SCALAR"}) exitWith {false};
+	if !([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) exitWith {false};
+	_teamSideID = _team getVariable "wfbe_aicom_sideid";
+	if (isNil "_teamSideID" || {typeName _teamSideID != "SCALAR"}) exitWith {false};
+	_teamSideID == _sideID
 };
 
 switch (_args select 0) do {
@@ -291,15 +302,29 @@ switch (_args select 0) do {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr"];
+		Private ["_csideID","_cside","_cteam","_clogik","_cteams","_caicomList","_caicomExists","_cdir","_cldr"];
+		if (count _args < 3) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-team-created payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_csideID = _args select 1;
 		_cteam = _args select 2;
-		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		if ((typeName _csideID != "SCALAR") || {typeName _cteam != "GROUP"} || {!([_cteam, _csideID] Call _validateAicomManagedTeamForSide)}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected untrusted aicom-team-created payload."] Call WFBE_CO_FNC_LogContent;
+		};
+		_cside = (_csideID) Call WFBE_CO_FNC_GetSideFromID;
+		if !(_cside in [east,west,resistance]) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected aicom-team-created for invalid sideID [%1].", _csideID]] Call WFBE_CO_FNC_LogContent;
+		};
+		_clogik = (_cside) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
+			_cteams = _clogik getVariable ["wfbe_teams", []];
+			if (_cteam in _cteams) exitWith {
+				["WARNING", "Server_HandleSpecial.sqf: rejected duplicate aicom-team-created payload."] Call WFBE_CO_FNC_LogContent;
+			};
 			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 			if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
 			if (!isNull _cteam) then {
-				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+				if !(_cteam in _cteams) then {_clogik setVariable ["wfbe_teams", _cteams + [_cteam], true]};
 				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
 				//--- [leader, sideID, dir, team] so every client can draw a side-coloured
 				//--- mil_arrow2 at the commander team's leader. dir is patched later by the
@@ -308,8 +333,12 @@ switch (_args select 0) do {
 				if (!isNull _cldr) then {
 					_cdir = getDir _cldr;
 					_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
-					missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
-					publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+					_caicomExists = false;
+					{if ((typeName _x == "ARRAY") && {count _x >= 4} && {(_x select 3) == _cteam}) exitWith {_caicomExists = true}} forEach _caicomList;
+					if (!_caicomExists) then {
+						missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
+						publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+					};
 				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
 			};
@@ -559,26 +588,47 @@ switch (_args select 0) do {
 	//--- the Transfer menu (GUI_TransferMenu.sqf) - it shares the same "aicom-donate-confirm" client confirm. Donating
 	//--- to the AI treasury only makes sense while the AI runs the side, which that path already enforces.
 	case "aicom-team-ended": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew"];
+		Private ["_csideID","_cside","_cteam","_clogik","_cteams","_cpending","_caicomList","_caicomNew"];
+		if (count _args < 3) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-team-ended payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_csideID = _args select 1;
 		_cteam = _args select 2;
-		//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
-		//--- then re-broadcast so every client deletes the marker. Mirrors sidepatrol-ended.
-		_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
-		_caicomNew = [];
-		{
-			if (!isNull (_x select 0) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
-		} forEach _caicomList;
-		missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
-		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
-		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		if ((typeName _csideID != "SCALAR") || {typeName _cteam != "GROUP"}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected untyped aicom-team-ended payload."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (!isNull _cteam && {!([_cteam, _csideID] Call _validateAicomManagedTeamForSide)}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected untrusted aicom-team-ended payload."] Call WFBE_CO_FNC_LogContent;
+		};
+		_cside = (_csideID) Call WFBE_CO_FNC_GetSideFromID;
+		if !(_cside in [east,west,resistance]) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected aicom-team-ended for invalid sideID [%1].", _csideID]] Call WFBE_CO_FNC_LogContent;
+		};
+		_clogik = (_cside) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
+			_cteams = _clogik getVariable ["wfbe_teams", []];
+			if (!isNull _cteam && {!(_cteam in _cteams)}) exitWith {
+				["WARNING", "Server_HandleSpecial.sqf: rejected unregistered aicom-team-ended payload."] Call WFBE_CO_FNC_LogContent;
+			};
+			if (!isNull _cteam && {({alive _x} count units _cteam) > 0}) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: rejected live aicom-team-ended payload for team %1.", _cteam]] Call WFBE_CO_FNC_LogContent;
+			};
+			//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
+			//--- then re-broadcast so every client deletes the marker. Mirrors sidepatrol-ended.
+			_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+			_caicomNew = [];
+			{
+				if ((typeName _x == "ARRAY") && {count _x >= 4} && {!isNull (_x select 0)} && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
+			} forEach _caicomList;
+			missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
+			publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 			if (isNull _cteam) then {
 				//--- Creation failed before registration: just release the pending slot.
-				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
+				_cpending = _clogik getVariable ["wfbe_aicom_pending", 0];
+				if (_cpending > 0) then {_clogik setVariable ["wfbe_aicom_pending", (_cpending - 1) max 0]};
 				if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
 			} else {
-				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) - [_cteam], true];
+				_clogik setVariable ["wfbe_teams", _cteams - [_cteam], true];
 				//--- GROUP-CAP LEAK FIX (claude-gaming 2026-06-13): founded + W8 Motor Pool teams carry
 				//--- wfbe_persistent=true so the GC will not reap them during the empty-while-FILLING window.
 				//--- But on team-END (wiped) the group was only DEREGISTERED, never deleted - leaving a
@@ -598,10 +648,26 @@ switch (_args select 0) do {
 	//--- pushes [team, dir] whenever its objective bearing changes; we update the entry's slot 2 and
 	//--- only re-broadcast WFBE_ACTIVE_AICOM_TEAMS when the arrow actually moved >7 deg (cuts PV spam).
 	case "aicom-team-heading": {
-		Private ["_hteam","_hdir","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi","_hldr"]; //--- B66 +_hldr
-		_hteam = (_args select 1) select 0;
-		_hdir  = (_args select 1) select 1;
+		Private ["_hpayload","_hteam","_hdir","_hsideID","_hside","_hlogik","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi","_hldr"]; //--- B66 +_hldr
+		if (count _args < 2 || {typeName (_args select 1) != "ARRAY"} || {count (_args select 1) < 2}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-team-heading payload."] Call WFBE_CO_FNC_LogContent;
+		};
+		_hpayload = _args select 1;
+		_hteam = _hpayload select 0;
+		_hdir  = _hpayload select 1;
+		if ((typeName _hteam != "GROUP") || {typeName _hdir != "SCALAR"}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected untyped aicom-team-heading payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		if (!isNull _hteam) then {
+			_hsideID = _hteam getVariable "wfbe_aicom_sideid";
+			if (isNil "_hsideID" || {typeName _hsideID != "SCALAR"} || {!([_hteam, _hsideID] Call _validateAicomManagedTeamForSide)}) exitWith {
+				["WARNING", "Server_HandleSpecial.sqf: rejected untrusted aicom-team-heading payload."] Call WFBE_CO_FNC_LogContent;
+			};
+			_hside = (_hsideID) Call WFBE_CO_FNC_GetSideFromID;
+			_hlogik = (_hside) Call WFBE_CO_FNC_GetSideLogic;
+			if (isNull _hlogik || {!(_hteam in (_hlogik getVariable ["wfbe_teams", []]))}) exitWith {
+				["WARNING", "Server_HandleSpecial.sqf: rejected unregistered aicom-team-heading payload."] Call WFBE_CO_FNC_LogContent;
+			};
 			_haicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 			_hchanged = false;
 			_hldr = leader _hteam;
@@ -609,7 +675,7 @@ switch (_args select 0) do {
 			if (!isNull _hldr) then {_hteam setVariable ["wfbe_aicom_last_heading_owner", owner _hldr, false]};
 			for "_hi" from 0 to (count _haicomList - 1) do {
 				_hentry = _haicomList select _hi;
-				if ((_hentry select 3) == _hteam) then {
+				if ((typeName _hentry == "ARRAY") && {count _hentry >= 4} && {(_hentry select 3) == _hteam}) then {
 					//--- B66: ARROW-VANISH FIX. slot0 (leader) was captured ONCE at aicom-team-created and
 					//--- never refreshed; when the original leader died (team still alive) the client keyed
 					//--- liveness/position on a dead/null unit and dropped the arrow. Re-resolve the CURRENT
@@ -668,12 +734,26 @@ switch (_args select 0) do {
 	//--- treasury write is authoritative; mirrors AI_Commander_Wildcard salvage payback
 	//--- ([_side, _wkTotal] Call ChangeAICommanderFunds, L726).
 	case "aicom-heli-refunded": {
-		Private ["_rSideID","_rSide","_rCost"];
+		Private ["_rSideID","_rSide","_rCost","_rTeam","_rType","_rLogik","_rData","_rMaxCost"];
+		if (count _args < 5) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-heli-refunded payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_rSideID = _args select 1;
 		_rCost   = _args select 2;
+		_rTeam   = _args select 3;
+		_rType   = _args select 4;
+		if ((typeName _rSideID != "SCALAR") || {typeName _rCost != "SCALAR"} || {typeName _rTeam != "GROUP"} || {typeName _rType != "STRING"} || {!([_rTeam, _rSideID] Call _validateAicomManagedTeamForSide)}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected untrusted aicom-heli-refunded payload."] Call WFBE_CO_FNC_LogContent;
+		};
 		_rSide   = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
+		_rLogik = (_rSide) Call WFBE_CO_FNC_GetSideLogic;
+		if (isNull _rLogik || {!(_rTeam in (_rLogik getVariable ["wfbe_teams", []]))}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: rejected unregistered aicom-heli-refunded payload."] Call WFBE_CO_FNC_LogContent;
+		};
+		_rData = missionNamespace getVariable _rType;
+		_rMaxCost = if (!isNil "_rData" && {typeName _rData == "ARRAY"} && {count _rData > QUERYUNITPRICE} && {typeName (_rData select QUERYUNITPRICE) == "SCALAR"}) then {_rData select QUERYUNITPRICE} else {0};
 		//--- _rSide is a Side (not an Object) so isNull is the wrong test and throws; validate it is a real combatant treasury side instead.
-		if ((_rSide in [east,west,resistance]) && {_rCost > 0}) then {
+		if ((_rSide in [east,west,resistance]) && {_rCost > 0} && {_rCost <= _rMaxCost}) then {
 			[_rSide, _rCost] Call ChangeAICommanderFunds;
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 to [%2] AI-commander treasury (transport flew off-map).", _rCost, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
 		};
