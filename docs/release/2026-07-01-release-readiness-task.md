@@ -90,7 +90,7 @@ As of 2026-07-01 08:16 UTC:
 8. There is still a watched-command compatibility lead in wildcard code.
    - `Server/Functions/AI_Commander_Wildcard.sqf:325` documents the allDead replacement for lucky salvage.
    - The same file still has `allMissionObjects "AllVehicles"` around line 909 in both maintained terrains.
-   - Action: classify whether this is allowed in Arma 2 OA or should be replaced/guarded; verify against official BI OA scripting docs before editing.
+   - Action: resolved without relying on the unverified command. W10 Lucky Salvage is already removed from the active deck (`_wW10 = 0`), but the inert switch body now also uses the same `allDead` sweep as the eligibility proxy, eliminating the broad `allMissionObjects "AllVehicles"` scan from both maintained terrains.
 
 9. Existing release PRs already agree on the main gate: source/static checks are not enough.
    - PR #124 and PR #125 both require exact-build RPT evidence for Chernarus and Takistan.
