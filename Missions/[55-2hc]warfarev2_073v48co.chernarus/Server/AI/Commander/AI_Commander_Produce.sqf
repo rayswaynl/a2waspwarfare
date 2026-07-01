@@ -204,7 +204,7 @@ if (_airMaxTotalP > 0) then {
 					_team setVariable ["wfbe_aicom_retreat_tries", _rTries, true];
 					_team setVariable ["wfbe_aicom_retreat_issues", _rIssues + 1, true]; //--- B68: monotonic re-issue count, never reset by progress.
 					_team setVariable ["wfbe_aicom_retreat_lastdist", _curDist, true];
-					_retreatSeq = (([_team, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetValue) select 0) + 1;
+					_retreatSeq = [_team] Call WFBE_CO_FNC_AICOMNextOrderSeq;
 					_retreatOrder = [_retreatSeq, "defense", getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.

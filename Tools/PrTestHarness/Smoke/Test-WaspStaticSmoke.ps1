@@ -557,6 +557,50 @@ function Test-AicomArtilleryConfigGuards {
 	Add-Result "AICOM artillery config guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomOrderSequenceGuards {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$initCommonPath = Join-Path $entry.Root "Common\Init\Init_Common.sqf"
+		$helperPath = Join-Path $entry.Root "Common\Functions\Common_AICOMNextOrderSeq.sqf"
+		$commanderDir = Join-Path $entry.Root "Server\AI\Commander"
+		$initCommon = Get-Text $initCommonPath
+		$helper = Get-Text $helperPath
+		if (-not $initCommon.Contains("WFBE_CO_FNC_AICOMNextOrderSeq = Compile preprocessFileLineNumbers")) { $missing += "$($entry.Terrain):next-order-seq-compile" }
+		if (-not ($helper.Contains('typeName _order == "ARRAY"') -and $helper.Contains('count _order > 0') -and $helper.Contains('typeName _seq != "SCALAR"') -and $helper.Contains('_seq + 1'))) { $missing += "$($entry.Terrain):next-order-seq-shape-guard" }
+		$requiredCalls = @{
+			"AI_Commander.sqf" = @("[[_x] Call WFBE_CO_FNC_AICOMNextOrderSeq")
+			"AI_Commander_AssignTowns.sqf" = @("[[_team] Call WFBE_CO_FNC_AICOMNextOrderSeq")
+			"AI_Commander_Execute.sqf" = @("_hcSeq = [_team] Call WFBE_CO_FNC_AICOMNextOrderSeq")
+			"AI_Commander_Produce.sqf" = @("_retreatSeq = [_team] Call WFBE_CO_FNC_AICOMNextOrderSeq")
+			"AI_Commander_Strategy.sqf" = @("[[_team] Call WFBE_CO_FNC_AICOMNextOrderSeq", "[[_free] Call WFBE_CO_FNC_AICOMNextOrderSeq", "[[_wTeam] Call WFBE_CO_FNC_AICOMNextOrderSeq", "[[_best] Call WFBE_CO_FNC_AICOMNextOrderSeq")
+		}
+		foreach ($fileName in $requiredCalls.Keys) {
+			$filePath = Join-Path $commanderDir $fileName
+			$text = Get-Text $filePath
+			foreach ($needle in $requiredCalls[$fileName]) {
+				if (-not $text.Contains($needle)) { $missing += "$($entry.Terrain):$($fileName):missing-next-seq-call" }
+			}
+		}
+		foreach ($filePath in (Get-ChildItem -LiteralPath $commanderDir -Filter "AI_Commander*.sqf" -File | ForEach-Object { $_.FullName })) {
+			$lineNumber = 0
+			$inBlockComment = $false
+			foreach ($line in [System.IO.File]::ReadLines($filePath)) {
+				$lineNumber++
+				$code = Remove-CodeComments $line ([ref]$inBlockComment)
+				if ($code -match 'getVariable\s+("wfbe_aicom_order"|\["wfbe_aicom_order")') {
+					$missing += "$($entry.Terrain):raw-aicom-order-seq-read:$([System.IO.Path]::GetFileName($filePath)):$lineNumber"
+				}
+			}
+		}
+	}
+	Add-Result "AICOM order sequence guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-HcPvfGuard {
 	$handle = Get-Text (Join-Path $missionRoot "Client\Functions\Client_HandlePVF.sqf")
 	$town = Get-Text (Join-Path $missionRoot "Client\PVFunctions\TownCaptured.sqf")
@@ -1058,6 +1102,7 @@ Test-AicomTeamLifecycleAuthorityGuard
 Test-AicomHcTopUpDraftExcluded
 Test-AicomGroupVariableDefaults
 Test-AicomArtilleryConfigGuards
+Test-AicomOrderSequenceGuards
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups
 Test-GuiImageTabGuard

@@ -176,7 +176,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					[_team, getPos _hqG] Call SetTeamMovePos;
 					//--- V0.3: HC-resident teams get their orders via the public order variable.
 					if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
-						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _hqG], true];
+						_team setVariable ["wfbe_aicom_order", [[_team] Call WFBE_CO_FNC_AICOMNextOrderSeq, "defense", getPos _hqG], true];
 					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
 					_explicitMode = true; //--- now an explicit order; the executor drives it home
@@ -453,7 +453,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							//--- tier. Pairs with UNSTUCK_FIRED (Common_RunCommanderTeam) + the existing ASSAULT_STRANDED
 							//--- moved/stuck line, giving the full strike -> fire -> recover lifecycle in the RPT.
 							if (_hcStrk > 0) then { diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNSTUCK_STRIKE|team=" + (str _team) + "|tier=" + str _hcStrk); };
-							_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
+							_team setVariable ["wfbe_aicom_order", [[_team] Call WFBE_CO_FNC_AICOMNextOrderSeq, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
 						} else {
 							if (_useArc) then {
 								[_team, _target] Call WFBE_SE_FNC_AI_SetTownAttackPath;

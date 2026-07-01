@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM order sequence helper [RELEASE LOOP]
+
+Closed another HC-order churn edge in the AI commander. Added
+`WFBE_CO_FNC_AICOMNextOrderSeq` to centralize guarded reads of the public
+`wfbe_aicom_order` array before bumping its sequence number. Commander reset,
+assignment, execute, retreat, relief, wedge-release and HQ-strike writers now
+use the helper instead of open-coded `select 0` reads that could fail if the
+group variable was nil, empty or malformed after HC/JIP churn.
+
+Static smoke now asserts the helper registration and scans commander files for
+raw AICOM order sequence reads. Runtime, SSH, RPT collection, upload, restart,
+cache-clear and deployment remain explicit-approval gated.
+
 ## 2026-07-01 — AICOM artillery config default guards [RELEASE LOOP]
 
 Closed the next AI-commander artillery runtime-risk slice. The strategy and

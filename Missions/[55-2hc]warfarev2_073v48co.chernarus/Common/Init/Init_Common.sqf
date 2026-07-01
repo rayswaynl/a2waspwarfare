@@ -115,6 +115,7 @@ WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functi
 WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
 WFBE_CO_FNC_GroupGetBool = Compile preprocessFileLineNumbers "Common\Functions\Common_GroupGetBool.sqf"; //--- G1: safe bool getVariable for GROUP receivers (A2 OA unset->nil trap)
 WFBE_CO_FNC_GroupGetValue = Compile preprocessFileLineNumbers "Common\Functions\Common_GroupGetValue.sqf"; //--- G1: safe non-bool getVariable defaults for GROUP receivers
+WFBE_CO_FNC_AICOMNextOrderSeq = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMNextOrderSeq.sqf"; //--- G1: guarded next seq for public AICOM group orders
 WFBE_CO_FNC_CreateUnitForStaticDefence = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitForStaticDefence.sqf";
 WFBE_CO_FNC_CreateUnitsForResBases = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitsForResBases.sqf";
 WFBE_CO_FNC_CreateVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateVehicle.sqf";
