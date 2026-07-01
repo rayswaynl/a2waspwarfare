@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 19:02 Europe/Amsterdam
+Last updated: 2026-07-01 19:10 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -41,7 +41,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `2ec2f5fa359fe03bfe4e08af974eeb3184a105dc`
+  `624f1f38f9f3f4b2b3e658c113fd8622c29f74d5`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -83,6 +83,24 @@ keeping the PR #132 GUER radio/client changes intact. Validation for PR #133:
 5bf5f92385ef0218c5e20fb4273cf563a295e82d..HEAD` pass; LoadoutManager reached
 `CHERNARUS DONE` and `TAKISTAN DONE` and packaged `_MISSIONS.7z` with local
 7-Zip. PR #133 is source/static/generator proof only, not runtime proof.
+
+Exact PR #133 `SERVER_DEBUG` mission-folder artifact:
+
+- artifact:
+  `outputs/a2waspwarfare-pr133-5f5eeedc-server-debug-missions.7z`
+- SHA256:
+  `B626E746774B9B350B9431923A975C9E0087CF330B3D35808D650A254D379DFB`
+- size: `7166613` bytes
+- manifest:
+  `outputs/a2waspwarfare-pr133-5f5eeedc-server-debug-artifact-2026-07-01-1910.md`
+- archive test: pass, 160 folders, 1723 files, 24289101 uncompressed bytes
+- extraction validation: pass
+- extracted folders: Chernarus and Takistan mission folders
+- both extracted `version.sqf` files have `WF_DEBUG` commented out,
+  `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` with `git=5f5eeedcbf`
+
+This artifact is not runtime proof. It is the exact #133 bundle to launch for
+real RPT collection if #133 is selected.
 
 ## R8 Integration Finding
 
