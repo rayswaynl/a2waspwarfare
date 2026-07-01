@@ -36,6 +36,7 @@ function Write-JsonFile {
 function New-Sweep {
 	param(
 		[Parameter(Mandatory)] [string]$Terrain,
+		[Parameter(Mandatory)] [string]$Role,
 		[string]$Git = "testgit",
 		[string]$Archive = "ABCDEF0123456789",
 		[string[]]$MissingRequired = @()
@@ -48,6 +49,7 @@ function New-Sweep {
 		expectedCandidate = "test-candidate"
 		expectedGit = $Git
 		expectedArchiveSha256 = $Archive
+		expectedRole = $Role
 		counts = [pscustomobject]$counts
 		missingRequired = $MissingRequired
 	}
@@ -66,7 +68,7 @@ try {
 	foreach ($terrain in $terrains) {
 		foreach ($role in $roles) {
 			$name = "sweep-$terrain-$role.json"
-			Write-JsonFile -Path (Join-Path $tempRoot $name) -Value (New-Sweep -Terrain $terrain)
+			Write-JsonFile -Path (Join-Path $tempRoot $name) -Value (New-Sweep -Terrain $terrain -Role $role)
 			$rows.Add([pscustomobject][ordered]@{
 				terrain = $terrain
 				role = $role
@@ -108,7 +110,7 @@ try {
 	}
 
 	$badSweepName = "bad-sweep.json"
-	Write-JsonFile -Path (Join-Path $tempRoot $badSweepName) -Value (New-Sweep -Terrain "chernarus" -Git "wronggit")
+	Write-JsonFile -Path (Join-Path $tempRoot $badSweepName) -Value (New-Sweep -Terrain "chernarus" -Role "server" -Git "wronggit")
 	$badManifest = Join-Path $tempRoot "bad-manifest.json"
 	Write-JsonFile -Path $badManifest -Value ([pscustomobject][ordered]@{
 		schema = "a2waspwarfare-runtime-evidence-manifest-v1"
@@ -144,7 +146,7 @@ try {
 			markerSweepPath = "sweep-chernarus-server-mismatch.json"
 		})
 	})
-	Write-JsonFile -Path (Join-Path $tempRoot "sweep-chernarus-server-mismatch.json") -Value (New-Sweep -Terrain "chernarus")
+	Write-JsonFile -Path (Join-Path $tempRoot "sweep-chernarus-server-mismatch.json") -Value (New-Sweep -Terrain "chernarus" -Role "server")
 	$releaseMismatchText = Invoke-ManifestTest -Arguments @(
 		"-ManifestPath", $releaseMismatchManifest,
 		"-ExpectedCandidate", "test-candidate",
@@ -157,8 +159,31 @@ try {
 		throw "Expected release.git mismatch failure text, got: $releaseMismatchText"
 	}
 
+	$roleMismatchSweepName = "role-mismatch-sweep.json"
+	Write-JsonFile -Path (Join-Path $tempRoot $roleMismatchSweepName) -Value (New-Sweep -Terrain "takistan" -Role "server")
+	$roleMismatchManifest = Join-Path $tempRoot "role-mismatch-manifest.json"
+	Write-JsonFile -Path $roleMismatchManifest -Value ([pscustomobject][ordered]@{
+		schema = "a2waspwarfare-runtime-evidence-manifest-v1"
+		evidence = @([pscustomobject][ordered]@{
+			terrain = "takistan"
+			role = "hc1"
+			markerSweepPath = $roleMismatchSweepName
+		})
+	})
+	$roleMismatchText = Invoke-ManifestTest -Arguments @(
+		"-ManifestPath", $roleMismatchManifest,
+		"-ExpectedCandidate", "test-candidate",
+		"-ExpectedGit", "testgit",
+		"-ExpectedArchiveSha256", "ABCDEF0123456789",
+		"-RequiredTerrain", "takistan",
+		"-RequiredRole", "hc1"
+	) -ExpectFailure
+	if ($roleMismatchText -notmatch "role mismatch") {
+		throw "Expected role-mismatch failure text, got: $roleMismatchText"
+	}
+
 	$missingRequiredSweepName = "missing-required-sweep.json"
-	Write-JsonFile -Path (Join-Path $tempRoot $missingRequiredSweepName) -Value (New-Sweep -Terrain "chernarus" -MissingRequired @("HCSTAT"))
+	Write-JsonFile -Path (Join-Path $tempRoot $missingRequiredSweepName) -Value (New-Sweep -Terrain "chernarus" -Role "server" -MissingRequired @("HCSTAT"))
 	$missingRequiredManifest = Join-Path $tempRoot "missing-required-manifest.json"
 	Write-JsonFile -Path $missingRequiredManifest -Value ([pscustomobject][ordered]@{
 		schema = "a2waspwarfare-runtime-evidence-manifest-v1"

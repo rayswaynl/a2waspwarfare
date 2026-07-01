@@ -97,6 +97,7 @@ try {
 		"-ExpectedCandidate", "release-command-center-20260630",
 		"-ExpectedGit", "test",
 		"-ExpectedArchiveSha256", "ABCDEF0123456789",
+		"-ExpectedRole", "server",
 		"-RequireReleaseMarkers",
 		"-Json",
 		"-OutFile", $outFile
@@ -106,6 +107,8 @@ try {
 	$outStdoutResult = $outFileText | ConvertFrom-Json
 	Assert-Equal $outFileResult.expectedArchiveSha256 "ABCDEF0123456789" "OutFile expectedArchiveSha256"
 	Assert-Equal $outStdoutResult.expectedArchiveSha256 "ABCDEF0123456789" "stdout expectedArchiveSha256"
+	Assert-Equal $outFileResult.expectedRole "server" "OutFile expectedRole"
+	Assert-Equal $outStdoutResult.expectedRole "server" "stdout expectedRole"
 	Assert-Equal @($outFileResult.expectedReleaseMarkers).Count 2 "OutFile expectedReleaseMarkers count"
 	Assert-True ((@($outFileResult.samples) | Where-Object { $_.PSObject.Properties.Name -contains "line" }).Count -eq 0) "OutFile samples must not include raw line text by default"
 

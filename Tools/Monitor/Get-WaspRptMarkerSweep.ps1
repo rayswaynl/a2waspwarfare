@@ -40,6 +40,7 @@ param(
 	[string]$ExpectedCandidate = "",
 	[string]$ExpectedGit = "",
 	[string]$ExpectedArchiveSha256 = "",
+	[string]$ExpectedRole = "",
 	[string[]]$ExpectedTerrain = @("chernarus", "takistan"),
 	[switch]$RequireReleaseMarkers,
 	[string]$WindowMarker = "",
@@ -297,6 +298,7 @@ $result = [pscustomobject][ordered]@{
 	expectedCandidate = $ExpectedCandidate
 	expectedGit = $ExpectedGit
 	expectedArchiveSha256 = $ExpectedArchiveSha256
+	expectedRole = $ExpectedRole
 	expectedReleaseMarkers = $expectedReleaseMarkers
 	counts = $aggregate
 	missingRequired = $missingRequired

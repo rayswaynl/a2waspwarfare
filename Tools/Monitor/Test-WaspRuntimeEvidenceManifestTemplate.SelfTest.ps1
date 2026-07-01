@@ -33,7 +33,8 @@ function Invoke-Template {
 function Write-Sweep {
 	param(
 		[Parameter(Mandatory)] [string]$Path,
-		[Parameter(Mandatory)] [string]$Terrain
+		[Parameter(Mandatory)] [string]$Terrain,
+		[Parameter(Mandatory)] [string]$Role
 	)
 	$marker = "WASPRELEASE|v1|candidate=test-candidate|git=testgit|terrain=$Terrain"
 	$counts = [ordered]@{}
@@ -43,6 +44,7 @@ function Write-Sweep {
 		expectedCandidate = "test-candidate"
 		expectedGit = "testgit"
 		expectedArchiveSha256 = "ABCDEF0123456789"
+		expectedRole = $Role
 		counts = [pscustomobject]$counts
 		missingRequired = @()
 	}
@@ -59,13 +61,15 @@ try {
 	New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 
 	$manifestPath = Join-Path $tempRoot "runtime-evidence.json"
+	$commandPath = Join-Path $tempRoot "marker-sweep-commands.ps1"
 	[void](Invoke-Template -Arguments @(
 		"-OutFile", $manifestPath,
 		"-ExpectedCandidate", "test-candidate",
 		"-ExpectedGit", "testgit",
 		"-ExpectedArchiveSha256", "ABCDEF0123456789",
 		"-RequiredTerrain", "chernarus,takistan",
-		"-RequiredRole", "server,hc1"
+		"-RequiredRole", "server,hc1",
+		"-CommandOutFile", $commandPath
 	))
 
 	$manifest = (Get-Content -Raw -LiteralPath $manifestPath) | ConvertFrom-Json
@@ -79,9 +83,15 @@ try {
 	if (!$hasTakistanHc1) {
 		throw "Expected Takistan HC1 row."
 	}
+	if (!(Test-Path -LiteralPath $commandPath)) { throw "Expected marker-sweep command template to exist." }
+	$commandText = Get-Content -Raw -LiteralPath $commandPath
+	if ($commandText -notmatch "marker-sweep-takistan-hc1.json") { throw "Expected Takistan HC1 marker-sweep output path in command template." }
+	if ($commandText -notmatch "-ExpectedTerrain takistan") { throw "Expected per-terrain marker sweep command." }
+	if ($commandText -notmatch "-ExpectedRole hc1") { throw "Expected per-role marker sweep command." }
+	if ($commandText -notmatch "Do not commit populated private paths") { throw "Expected privacy warning in command template." }
 
 	foreach ($row in @($manifest.evidence)) {
-		Write-Sweep -Path (Join-Path $tempRoot $row.markerSweepPath) -Terrain $row.terrain
+		Write-Sweep -Path (Join-Path $tempRoot $row.markerSweepPath) -Terrain $row.terrain -Role $row.role
 	}
 
 	$validatorOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File $validatorScript `

@@ -170,6 +170,9 @@ foreach ($row in $evidenceRows) {
 	if ($sweep.expectedArchiveSha256 -ne $ExpectedArchiveSha256) {
 		Add-Finding $findings ("Evidence row [{0}] archive SHA mismatch." -f $slot)
 	}
+	if ($sweep.expectedRole -ne $role) {
+		Add-Finding $findings ("Evidence row [{0}] role mismatch: expected [{1}], got [{2}]." -f $slot, $role, $sweep.expectedRole)
+	}
 
 	$missingRequired = @(Get-JsonProperty -Object $sweep -Name "missingRequired")
 	if ($missingRequired.Count -gt 0) {
