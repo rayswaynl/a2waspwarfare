@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 12:30 Europe/Amsterdam
+Last updated: 2026-07-01 13:06 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -9,24 +9,28 @@ here.
 
 ## Current Verdict
 
-NO-GO as a release claim until exact-build runtime evidence exists.
+NO-GO as a release claim. The newest `origin/master` package builds and
+extracts, but the latest source delta currently fails the static whitespace
+gate before runtime proof is even considered.
 
 `origin/master` has advanced to
-`5bf5f92385ef0218c5e20fb4273cf563a295e82d`, which includes the merged PR #127
-release fold plus the cmdcon32 flat-ground placement hotfix. A fresh
-current-master `SERVER_DEBUG` mission-folder artifact exists for this exact
-head, but it is still packaging/tooling proof only. The older `311b9d93`,
-PR #127-only, r9, r8, and PR #122 artifacts no longer prove the current master
-state. Release-ready wording still needs current Arma 2 OA evidence from the
-exact chosen build, covering both Chernarus and Takistan plus server, client,
-late join, and headless-client roles.
+`b7241a35f0460e92cf8839cd315c95defaa6380b`, which adds the cmdcon33/cmdcon34
+WEST founding and player placement follow-up fixes on top of the previous
+`5bf5f92385` master. A fresh current-master `SERVER_DEBUG` mission-folder
+artifact exists for this exact head, but it is packaging/tooling proof only and
+is blocked by `git diff --check` failures in both Chernarus and Takistan
+`Client/Init/Init_Client.sqf`. The older `5bf5f923`, `311b9d93`, PR #127-only,
+r9, r8, and PR #122 artifacts no longer prove the current master state.
+Release-ready wording still needs current Arma 2 OA evidence from the exact
+chosen build, covering both Chernarus and Takistan plus server, client, late
+join, and headless-client roles.
 
 ## Current Anchors
 
 - Repository: `rayswaynl/a2waspwarfare`
 - Base branch: `origin/master`
 - Current `origin/master` head:
-  `5bf5f92385ef0218c5e20fb4273cf563a295e82d`
+  `b7241a35f0460e92cf8839cd315c95defaa6380b`
 - Original PR #122 base head:
   `bd48a6dbe673ae47a88053dafdf948a29cb8dfe0`
 - PR #122 branch: `origin/feat/qol-polish-pack`
@@ -36,13 +40,13 @@ late join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `ff5ce95`
+  `acaf1bc915f8ff3d8313ae798735bfb94496ac96`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
 `8db697c10a789fe4a495c91a967df927cceb7bbb`. It is now part of master, but a
-later cmdcon32 hotfix means the PR #127-only artifact is stale relative to the
-latest master artifact.
+series of cmdcon32, cmdcon33, and cmdcon34 follow-up fixes means the PR #127-only
+artifact is stale relative to the latest master artifact.
 
 GitHub currently reports PR #124 as open, draft, and `DIRTY`. The old r8 branch
 therefore needs conflict repair or replacement before it can be a current
@@ -50,13 +54,13 @@ release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`f9734c82977cff91208bb6507c851f82614f246c`. Treat it as a separate broad lane,
+`70fc6e0b9e3e35415ae08b36c40df0bef64695f2`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
-PR #126 also now exists as an open draft release-readiness/AICOM guardrail lane
-at head `c75a63eed5ce5a6384b84d96f5f26f8f3ddaf68f`. GitHub currently reports
-dirty after master advanced. Its verified shippable pieces were folded through
-PR #127; keep the remaining branch separate unless it is rebased and revalidated.
+PR #126 also exists as an open draft release-readiness/AICOM guardrail lane at
+head `5fd7ea51b87305e3a139e272461bf060654f94ad` after a force update. Its
+verified shippable pieces were folded through PR #127; keep the remaining branch
+separate unless it is rebased and revalidated.
 
 ## R8 Integration Finding
 
@@ -205,6 +209,45 @@ current master before using it as a proof target.
 
 An exact latest-master `SERVER_DEBUG` mission-folder artifact now exists:
 
+- source head: `b7241a35f0460e92cf8839cd315c95defaa6380b`
+- artifact: `outputs/a2waspwarfare-master-b7241a35-server-debug-missions.7z`
+- SHA256: `F2652CCDFF6085D73461C4FAADE4422D667F7FD245BE87556746A2CDA569545E`
+- size: `7140187` bytes
+- manifest:
+  `outputs/a2waspwarfare-master-server-debug-artifact-2026-07-01-1306.md`
+
+Build/validation:
+
+- `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj -c SERVER_DEBUG`
+  exited `0`
+- reached `CHERNARUS DONE`
+- reached `TAKISTAN DONE`
+- archive integrity test passed with 160 folders, 1719 files, 24061857
+  uncompressed bytes
+- extraction produced exactly the Chernarus and Takistan mission folders
+- extracted `version.sqf` files have `WF_DEBUG` commented out,
+  `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` present for
+  `git=b7241a35f0` on both terrains
+
+Static gate:
+
+- `git diff --check 5bf5f92385..origin/master` fails on space-before-tab
+  indentation in both terrain copies of `Client/Init/Init_Client.sqf` at the
+  cmdcon33/cmdcon34 placement preview lines.
+- The added player placement flat-check line still uses a dense
+  `count (...) == 0` expression inside the lazy boolean chain. Treat this as a
+  source-review/runtime-RPT risk until the line is simplified or exact runtime
+  evidence proves it clean.
+
+This artifact supersedes the `5bf5f923`, `311b9d93`, and PR #127-only artifacts
+as the freshest exact current-master payload. It is still not runtime proof, and
+the current source static gate is failing.
+
+## Superseded Latest Master Exact Artifact
+
+An exact latest-master `SERVER_DEBUG` mission-folder artifact was previously
+created for the now-stale `5bf5f92385ef0218c5e20fb4273cf563a295e82d` head:
+
 - source head: `5bf5f92385ef0218c5e20fb4273cf563a295e82d`
 - artifact: `outputs/a2waspwarfare-master-5bf5f923-server-debug-missions.7z`
 - SHA256: `2E88777C983CCEF2ACFF798302C33708C2561C1835981A884CE94340B61D7FEC`
@@ -232,13 +275,16 @@ Build/validation:
   logic; treat this as a source-review/runtime-RPT risk until real RPTs prove
   clean
 
-This artifact supersedes the `311b9d93` and PR #127-only artifacts as the
-freshest exact current-master payload. It is still not runtime proof.
+This artifact superseded the `311b9d93` and PR #127-only artifacts at the time,
+but it is now stale relative to
+`b7241a35f0460e92cf8839cd315c95defaa6380b`. It should not be used as
+current-master proof.
 
-## Latest Master Folder Smoke Kit
+## Superseded Latest Master Folder Smoke Kit
 
-A portable latest-master folder-smoke kit now exists for collecting runtime
-proof from the exact `5bf5f92385ef0218c5e20fb4273cf563a295e82d` master payload:
+A portable latest-master folder-smoke kit previously existed for collecting
+runtime proof from the exact `5bf5f92385ef0218c5e20fb4273cf563a295e82d` master
+payload:
 
 - kit: `outputs/a2waspwarfare-master-5bf5f923-folder-smoke-kit.7z`
 - SHA256: `173D16F30DF7E62AEC44E5A7354449F374894AAC3C8C8F6ADE9567E0487BD8B3`
@@ -260,8 +306,9 @@ Validation performed:
   markers, content logging markers, zero stop-condition matches, and
   `failed_count = 0`
 
-This kit is still not runtime proof. It is the current portable collection path
-if `origin/master` is selected as the proof target.
+This kit is still not runtime proof, and it is now stale relative to
+`b7241a35f0460e92cf8839cd315c95defaa6380b`. Build a fresh folder-smoke kit only
+after the latest static gate is fixed or deliberately waived.
 
 ## Superseded Current Master Exact Artifact
 
