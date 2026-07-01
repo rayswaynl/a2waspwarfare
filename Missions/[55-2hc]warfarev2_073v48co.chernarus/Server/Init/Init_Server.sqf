@@ -14,6 +14,12 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
 };
 
 AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
+//--- AICOM HIGH-CLIMB (claude-gaming 2026-07-01): give AI-commander tanks the Valhalla low-gear terrain
+//--- assist on the SERVER, where server-local founded commander teams are local (the player client assist
+//--- never runs here). The manager self-gates OFF unless WFBE_C_AICOM_HIGHCLIMB==1 and enumerates only the
+//--- side-logic wfbe_teams (bounded, no allUnits). Each HC starts its own copy from Init_HC.sqf.
+if (isServer) then { [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HighClimb.sqf" };
+if (isServer) then { [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_AutoFlip.sqf" };  //--- Build84 (Ray): auto-right flipped AICOM ground vehicles (server-local founded teams).
 if (WF_A2_Vanilla) then {AISquadRespawn = Compile preprocessFile "Server\AI\AI_SquadRespawn.sqf"};
 if !(WF_A2_Vanilla) then {AIAdvancedRespawn = Compile preprocessFile "Server\AI\AI_AdvancedRespawn.sqf"};
 AIMoveTo = Compile preprocessFile "Server\AI\Orders\AI_MoveTo.sqf";
@@ -234,6 +240,8 @@ if ((missionNamespace getVariable "WFBE_C_BASE_START_TOWN") > 0) then {
 //--- (id 278/279=NWAF, id 300=NE) -> HQ/base spawning ON the runway. Drop any candidate within ~1500m of
 //--- a map airport anchor, terrain-independent (LocationLogicAirport). A2-OA-safe. GUARD: if the filter
 //--- empties the set, keep the unfiltered set (never zero candidates).
+//--- Build84 (backlog#2): SKIPPED when WFBE_C_BASE_RANDOM_PURE==1 (Miksuu-original unfiltered pure-random).
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
 private ["_b62_airports","_b62_filtered","_s"];
 _b62_airports = nearestObjects [[7680,7680,0], ["LocationLogicAirport"], 99999];
 //--- A2-OA 1.64: 'ARRAY select {CODE}' is A3-only (see Server_CounterBattery.sqf:101) -> explicit filter loop.
@@ -249,6 +257,7 @@ if (count _b62_filtered > 0) then {
 	["INITIALIZATION", Format ["Init_Server.sqf: B62 airfield filter kept %1 start candidates (dropped %2 on/near airfields).", count _b62_filtered, count _b62_airports]] Call WFBE_CO_FNC_LogContent;
 } else {
 	["WARNING", "Init_Server.sqf: B62 airfield filter emptied the candidate set - keeping the unfiltered starts."] Call WFBE_CO_FNC_LogContent;
+};
 };
 
 //--- B66 (Ray 2026-06-21) STABLE ROTATION KEY: the B62 rotation keyed on `str _x` of an unnamed
@@ -272,6 +281,8 @@ WFBE_FNC_B66_StartKey = {
 //--- the stable rounded-position key above) so the random draw varies match-to-match beyond the B57
 //--- RNG-advance. Fall back to the full filtered set if exclusion would empty it.
 //--- A2-OA-safe: plain string-compare via the stable key + == (no A3-only equality/search/random commands).
+//--- Build84 (backlog#2): SKIPPED when WFBE_C_BASE_RANDOM_PURE==1 (Miksuu-original unfiltered pure-random).
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
 private ["_b62_lastW","_b62_lastE","_b62_rotPool","_id"];
 _b62_lastW = profileNamespace getVariable ["WFBE_LAST_START_W", ""];
 _b62_lastE = profileNamespace getVariable ["WFBE_LAST_START_E", ""];
@@ -286,6 +297,7 @@ _b62_rotPool = [];
 if (count _b62_rotPool > 1) then {
 	_locationLogics = _b62_rotPool;
 	["INITIALIZATION", Format ["Init_Server.sqf: B62/B66 rotation excluded last-used starts -> %1 candidates remain.", count _b62_rotPool]] Call WFBE_CO_FNC_LogContent;
+};
 };
 
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
@@ -357,6 +369,9 @@ _egressOK = {
 //--- every match, the very bug we are fixing). startingDistance(7500) spacing is also large on Chernarus, so
 //--- a thin egress-passing pool is realistic. A2-OA-safe (explicit count loop, no A3 commands).
 missionNamespace setVariable ["WFBE_B66_EGRESS_RELAX", 0];
+//--- Build84 (backlog#2): the egress pool-measure + relax pass is a no-op under WFBE_C_BASE_RANDOM_PURE==1
+//--- (the draw-loop egress clauses auto-pass), so SKIP the whole measure/relax to keep the pure path unfiltered.
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
 private ["_b66_egressPass","_b66_relax"];
 _b66_relax = 0;
 _b66_egressPass = 0;
@@ -369,6 +384,7 @@ while {_b66_egressPass < 2 && {_b66_relax < 2}} do {
 	_b66_egressPass = 0;
 	{ if (_x call _egressOK) then {_b66_egressPass = _b66_egressPass + 1} } forEach _locationLogics;
 	["WARNING", Format ["Init_Server.sqf: B66 egress pool too thin - relaxed minRoads by %1 -> now %2 candidates pass (never collapse to 1).", _b66_relax, _b66_egressPass]] Call WFBE_CO_FNC_LogContent;
+};
 };
 
 _spawn_north = objNull;
@@ -449,13 +465,13 @@ if (_use_random) then {
 			_rPosW = _locationLogics select floor(random _total);
 			//--- Egress-quality gate (EAST-EGRESS fix): require distance spacing AND a usable egress road
 			//--- network clear of the map edges. Symmetric with east. Fallback below still guarantees placement.
-			if (_rPosW distance _startE > _minDist && {!_guerReal || {_rPosW distance _startG > _minDist}} && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
+			if (_rPosW distance _startE > _minDist && {!_guerReal || {_rPosW distance _startG > _minDist}} && {(missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 1 || {_rPosW call _egressOK}}) then {_startW = _rPosW; _setWest = false};
 		};
 
 		// --- Determine west starting location if necessary.
 		if (_setEast) then {
 			_rPosE = _locationLogics select floor(random _total);
-			if (_rPosE distance _startW > _minDist && {!_guerReal || {_rPosE distance _startG > _minDist}} && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
+			if (_rPosE distance _startW > _minDist && {!_guerReal || {_rPosE distance _startG > _minDist}} && {(missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 1 || {_rPosE call _egressOK}}) then {_startE = _rPosE; _setEast = false};
 		};
 
 		_i = _i + 1;

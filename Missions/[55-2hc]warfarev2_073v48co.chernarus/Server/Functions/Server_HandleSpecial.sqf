@@ -451,6 +451,7 @@ switch (_args select 0) do {
 						private "_dTeam"; _dTeam = _dTeams select _dIdx;
 						if (!isNull _dTeam && {!isPlayer (leader _dTeam)}) then {
 							_dTeam setVariable ["wfbe_aicom_disband", true, true];
+							_dTeam setVariable ["wfbe_aicom_disband_cmd", true, true]; //--- Build84: explicit human console order -> bypass the player-proximity veto in the HC executor
 							diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|specific=" + str _dIdx + "|team=" + str _dTeam);
 						} else {
 							diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT-SPECIFIC|" + str _dSide + "|idx=" + str _dIdx + "|nullOrPlayer");
@@ -466,7 +467,7 @@ switch (_args select 0) do {
 					if (_dHuman && {(time - _dLast) >= _dCool}) then {
 						_dLogik setVariable ["wfbe_aicom_last_disband", time, true];
 						_dN = 0;
-						{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _dN = _dN + 1} } forEach _dTeams;
+						{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _x setVariable ["wfbe_aicom_disband_cmd", true, true]; _dN = _dN + 1} } forEach _dTeams;
 						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|flagged=" + str _dN + "|teams=" + str (count _dTeams));
 					} else {
 						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|cdLeft=" + str (_dCool - (time - _dLast)));

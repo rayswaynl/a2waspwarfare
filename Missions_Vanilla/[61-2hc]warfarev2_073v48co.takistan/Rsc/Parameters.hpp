@@ -138,7 +138,13 @@
 		title = "$STR_WF_PARAMETER_StartingLocations";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_PARAMETER_StartingLocations_WestNorth","$STR_WF_PARAMETER_StartingLocations_WestSouth","$STR_WF_PARAMETER_StartingLocations_Random"};
-		default = 2;
+		default = 0;  //--- Build84 (backlog#2): default to the fixed original Miksuu spawns (West-North|East-South). 1 = WS|EN, 2 = hardened random.
+	};
+	class WFBE_C_BASE_RANDOM_PURE {
+		title = "$STR_WF_PARAMETER_RandomPure";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_PARAMETER_RandomPure_Hardened","$STR_WF_PARAMETER_RandomPure_Original"};
+		default = 0;  //--- Build84 (backlog#2): 0 = hardened filtered random (B62 airfield / B66 egress-edge / rotation). 1 = Miksuu-original unfiltered pure-random (MODE=2 only; distance-spacing only).
 	};
 	class WFBE_C_ECONOMY_CURRENCY_SYSTEM {
 		title = "$STR_WF_PARAMETER_Currency";

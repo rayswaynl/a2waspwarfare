@@ -609,17 +609,17 @@ while {!WFBE_GameOver && _alive} do {
 		private ["_dis"];
 		_dis = _team getVariable "wfbe_aicom_disband";
 		if (!isNil "_dis" && {_dis}) then {
-			private ["_dLdr","_dSafe","_dNear","_dCombat"];
+			private ["_dLdr","_dSafe","_dNear","_dCombat","_dCmd"];
 			_dLdr  = leader _team;
 			_dSafe = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
-			_dNear = if (isNull _dLdr) then {0} else {{isPlayer _x && {alive _x} && {(_x distance _dLdr) < _dSafe}} count allUnits};
+			_dCmd = _team getVariable "wfbe_aicom_disband_cmd"; _dCmd = (!isNil "_dCmd" && {_dCmd}); _dNear = if (_dCmd || {isNull _dLdr}) then {0} else {{isPlayer _x && {alive _x} && {(_x distance _dLdr) < _dSafe}} count allUnits}; //--- Build84: explicit console order bypasses player-proximity veto
 			_dCombat = if (isNull _dLdr) then {false} else {behaviour _dLdr == "COMBAT"};
 			if (_dNear == 0 && {!_dCombat}) then {
 				{ if (local _x) then {deleteVehicle _x} } forEach (units _team);
 				_alive = false;
-				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|deleted-local-units");
+				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|deleted-local-units|cmd=" + str _dCmd);
 			} else {
-				_team setVariable ["wfbe_aicom_disband", false, true];
+				if (!_dCmd) then {_team setVariable ["wfbe_aicom_disband", false, true]}; //--- Build84: latch explicit console orders (fire when combat ends); only the automatic sweep clears on player-proximity
 			};
 		};
 	};

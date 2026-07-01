@@ -267,10 +267,72 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											};
 										};
 									} else {
-										//--- progressing, arrived, or in contact: refresh the breadcrumb and
-										//--- reset the unstuck strike ladder (the team moved, so it is not stuck).
-										_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
-										_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+										//--- CIRCLING FIX (Build84, claude-gaming 2026-07-01): the old code zeroed the
+										//--- unstuck strike ladder on ANY non-position-stuck tick ("progressing, arrived,
+										//--- or in contact"). A team PARKED on an UNCAPTURABLE depot is exactly that: it
+										//--- is AT the target (within arrive radius) and often flips in/out of COMBAT as
+										//--- it fights the un-drainable garrison, so it never trips the position-stuck gate
+										//--- above AND its strikes were reset every window -> it NEVER reached STUCK_ABANDON,
+										//--- so it orbited the depot forever (0 side-abandons all match; RPT: "did not flip
+										//--- (res-near=0)" / "RELEASED uncapturable depot after N empty passes"). We now detect
+										//--- "AT target but town NOT ours" and let strikes ACCUMULATE toward ABANDON so an
+										//--- uncapturable target gets abandoned + blacklisted for THIS team just like a
+										//--- position-stuck one. Real progress (team actually moved toward/away, town not
+										//--- reached yet) still resets, unchanged.
+										private ["_atTarget","_uncapParked"];
+										//--- AT the target: within the assault arrive radius of _goto (same radius the
+										//--- dispatch latch uses at the top of this file). Ties the abandon to the SAME
+										//--- "did not flip"/"RELEASED uncapturable depot" signal Common_RunCommanderTeam
+										//--- computes: wfbe_aicom_cappasses (>0 => at least one res-near==0 non-flip pass
+										//--- was logged), OR just being parked on-centre while the town stays enemy-held.
+										_atTarget = (_ldr distance _goto) <= (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]);
+										_uncapParked = _atTarget && {(_goto getVariable ["sideID", -1]) != _sideID};
+										if (_uncapParked) then {
+											//--- Refresh the breadcrumb (so the position-stuck gate does NOT also fire and
+											//--- double-count) but do NOT zero strikes; bump the SAME strike counter the
+											//--- unstuck ladder uses so an uncapturable depot climbs to ABANDON.
+											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
+											private ["_strk"];
+											_strk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
+											_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
+											diag_log (Format ["STUCKSTAT|v1|%1|%2|uncap-parked|leader=%3|distTgt=%4|cappasses=%5|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance _goto), (_team getVariable ["wfbe_aicom_cappasses", 0]), _strk]);
+											if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])) then {
+												//--- Same ABANDON + per-team blacklist + side-abandon tally as the position-stuck
+												//--- ladder below-left; factored to keep both paths identical.
+												private ["_abCd","_abBl","_abKeep"];
+												_abCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
+												_abBl = _team getVariable ["wfbe_aicom_blacklist", []];
+												_abKeep = [];
+												{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_abKeep set [count _abKeep, _x]} } forEach _abBl;
+												_abKeep set [count _abKeep, [_goto, time + _abCd]];
+												_team setVariable ["wfbe_aicom_blacklist", _abKeep];
+												_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+												diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|reason=uncapturable|cooldown=" + str _abCd);
+												if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
+													private ["_sba","_newSba","_sFound","_sCnt"];
+													_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
+													_newSba = []; _sFound = false; _sCnt = 0;
+													{ if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]} } forEach _sba;
+													if (!_sFound) then {_sCnt = 1; _newSba set [count _newSba, [_goto, 1]]};
+													_logik setVariable ["wfbe_aicom_side_abandons", _newSba];
+													if (_sCnt >= (missionNamespace getVariable ["WFBE_C_AICOM_SIDE_ABANDON", 3])) then {
+														private ["_sbl","_sblKeep","_sblCd"];
+														_sblCd = missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST_COOLDOWN", 900];
+														_sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
+														_sblKeep = [];
+														{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_sblKeep set [count _sblKeep, _x]} } forEach _sbl;
+														_sblKeep set [count _sblKeep, [_goto, time + _sblCd]];
+														_logik setVariable ["wfbe_aicom_side_blacklist", _sblKeep];
+														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SIDE_BLACKLIST|town=" + (_goto getVariable ["name","town"]) + "|abandons=" + str _sCnt + "|cooldown=" + str _sblCd);
+													};
+												};
+											};
+										} else {
+											//--- Real progress (en-route, actually moving, town not yet reached): refresh the
+											//--- breadcrumb and reset the unstuck strike ladder (the team moved, so it is not stuck).
+											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
+											_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+										};
 									};
 								};
 							};
@@ -440,7 +502,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							//--- to a direct MOVE for that segment). Only build a route on the long leg.
 							_hcRoute = [];
 							if ((_hcOrigin distance _hcDest) > 700) then {
-								_rmHops = 8;  //--- A2-fix 2026-06-14: denser road-node chain (was 4) so convoys hug roads instead of cutting cross-country
+								_rmHops = 8 max ((round ((_hcOrigin distance _hcDest) / (missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_HOP_SPACING", 600]))) min (missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_HOP_MAX", 24]));  //--- Build84: scale road-node density with leg length (~1 node/600m, cap 24) so 12.8km legs get ~21 hops (~600m apart) instead of a fixed 8 (~1400m gaps that beeline into path-stalls)
 								//--- A2-fix 2026-06-14 (owner: teams move INDIVIDUALLY to same town = better speed): base-egress road node so teams escape a boxed/corner base, + per-team lateral lane so concentrated teams don't funnel one road.
 								//--- Road-node chain extracted to WFBE_CO_FNC_BuildRoadRoute (shared with the war-room console path AI_Commander_Execute.sqf) - behaviour-identical to the prior inline builder; this keeps the per-team lane jitter here as the caller owns the persistent wfbe_aicom_lanejit var.
 								_laneJit = _team getVariable "wfbe_aicom_lanejit";

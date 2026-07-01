@@ -1797,6 +1797,18 @@
         <English>West = South | East = North</English>
         <Russian>Запад Ю | Восток С</Russian>
       </Key>
+      <Key ID="STR_WF_PARAMETER_RandomPure"><!--Build84 backlog#2-->
+        <English>Random Start Filtering</English>
+        <Russian>Random Start Filtering</Russian>
+      </Key>
+      <Key ID="STR_WF_PARAMETER_RandomPure_Hardened"><!--Build84 backlog#2-->
+        <English>Hardened (road-connected)</English>
+        <Russian>Hardened (road-connected)</Russian>
+      </Key>
+      <Key ID="STR_WF_PARAMETER_RandomPure_Original"><!--Build84 backlog#2-->
+        <English>Original (unfiltered)</English>
+        <Russian>Original (unfiltered)</Russian>
+      </Key>
       <Key ID="STR_WF_PARAMETER_Small">
         <English>Small</English>
         <Russian>Маленький</Russian>

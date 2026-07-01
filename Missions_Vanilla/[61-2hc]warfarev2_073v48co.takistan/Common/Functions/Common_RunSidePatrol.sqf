@@ -25,7 +25,8 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_paidThisVisit","_convoyPay","_sweepDone",
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
-         "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode"];
+         "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
+         "_pUnstuckStreak","_pUnstuckMax","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided"];
 
 _sideID   = _this select 0;
 _template = _this select 1;
@@ -121,6 +122,13 @@ if (_upgLvl >= 4) then {
 _target        = objNull;
 _alive         = true;
 _paidThisVisit = false;
+//--- CIRCLING FIX B (Build84, claude-gaming 2026-07-01): consecutive PATROL_UNSTUCK wedge count.
+//--- The wedge handler used to re-march the SAME unreachable target forever (RPT: 72 PATROL_UNSTUCK
+//--- fires on one team over 100 min). After WFBE_C_AICOM_PATROL_UNSTUCK_MAX consecutive wedges we drop
+//--- the target + avoid that town for a cooldown so the nearest-town pick below chooses a DIFFERENT
+//--- frontline town. _pAvoid holds [town, expiry] pairs (A2-safe plain array on a local).
+_pUnstuckStreak = 0;
+_pAvoid         = [];
 
 while {!WFBE_GameOver && _alive} do {
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
@@ -128,9 +136,27 @@ while {!WFBE_GameOver && _alive} do {
 	if (_alive) then {
 		if (isNull _target) then {
 			_paidThisVisit = false; //--- new objective: reset convoy-pay guard
+			//--- CIRCLING FIX B: prune expired avoid entries, then exclude still-avoided (recently
+			//--- wedged) towns so a fresh pick lands on a DIFFERENT frontline town. If everything is
+			//--- avoided, fall through to the unfiltered list so the patrol always gets a target.
+			_pAvoidKeep = [];
+			{if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_pAvoidKeep set [count _pAvoidKeep, _x]}} forEach _pAvoid;
+			_pAvoid = _pAvoidKeep;
 			_candidates = [];
-			{if ((_x getVariable "sideID") != _sideID) then {_candidates = _candidates + [_x]}} forEach towns;
-			if (count _candidates == 0) then {_candidates = + towns};
+			{
+				private ["_cTown"];
+				_cTown = _x;
+				if ((_cTown getVariable "sideID") != _sideID) then {
+					_cIsAvoided = false;
+					{if ((_x select 0) == _cTown) then {_cIsAvoided = true}} forEach _pAvoid;
+					if (!_cIsAvoided) then {_candidates = _candidates + [_cTown]};
+				};
+			} forEach towns;
+			if (count _candidates == 0) then {
+				//--- Everything owned or everything avoided: fall back to any non-owned town, else all towns.
+				{if ((_x getVariable "sideID") != _sideID) then {_candidates = _candidates + [_x]}} forEach towns;
+				if (count _candidates == 0) then {_candidates = + towns};
+			};
 			_target = [leader _team, _candidates] Call WFBE_CO_FNC_GetClosestEntity;
 			if (!isNull _target) then {
 				[_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple;
@@ -259,7 +285,7 @@ while {!WFBE_GameOver && _alive} do {
 				};
 				//--- Still hostile/neutral: stay engaged; the town capture logic does the rest.
 			} else { //--- EN-ROUTE never-frozen guard (Ray 2026-06-29): a patrol with no progress for ~90s is wedged - re-march + un-wedge (player-safe velocity hop within 100m, teleport-to-road otherwise). A patrol must never sit frozen in a player view.
-			_pLdr = leader _team; if (!isNull _pLdr && {alive _pLdr}) then { _pPos = getPos _pLdr; if (isNil "_stuckTicks") then {_stuckTicks = 0}; if (isNil "_lastLdrPos") then {_lastLdrPos = _pPos}; if ((_pPos distance _lastLdrPos) < 25) then {_stuckTicks = _stuckTicks + 1} else {_stuckTicks = 0}; _lastLdrPos = _pPos; if (_stuckTicks >= 3) then { _stuckTicks = 0; { if (alive _x && {vehicle _x == _x} && {!isNull (assignedVehicle _x)} && {alive (assignedVehicle _x)} && {canMove (assignedVehicle _x)}) then {[_x] orderGetIn true} } forEach (units _team); [_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple; _pVeh = vehicle _pLdr; if (!isNull _pVeh && {_pVeh != _pLdr} && {alive _pVeh} && {canMove _pVeh}) then { _pNear = false; { if (isPlayer _x && {(_x distance _pVeh) < 100}) then {_pNear = true} } forEach playableUnits; if (_pNear) then { _pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4] } else { _pRds = (getPos _pVeh) nearRoads 150; if (count _pRds > 0) then { _pNode = [getPos _pVeh, _pRds] Call WFBE_CO_FNC_GetClosestEntity; if (!isNull _pNode && {!surfaceIsWater (getPos _pNode)}) then { _pVeh setVelocity [0,0,0]; _pVeh setPos (getPos _pNode) } } }; diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK|" + (str _team)) } } }
+			_pLdr = leader _team; if (!isNull _pLdr && {alive _pLdr}) then { _pPos = getPos _pLdr; if (isNil "_stuckTicks") then {_stuckTicks = 0}; if (isNil "_lastLdrPos") then {_lastLdrPos = _pPos}; if ((_pPos distance _lastLdrPos) < 25) then {_stuckTicks = _stuckTicks + 1} else {_stuckTicks = 0; _pUnstuckStreak = 0}; _lastLdrPos = _pPos; if (_stuckTicks >= 3) then { _stuckTicks = 0; { if (alive _x && {vehicle _x == _x} && {!isNull (assignedVehicle _x)} && {alive (assignedVehicle _x)} && {canMove (assignedVehicle _x)}) then {[_x] orderGetIn true} } forEach (units _team); [_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple; _pVeh = vehicle _pLdr; if (!isNull _pVeh && {_pVeh != _pLdr} && {alive _pVeh} && {canMove _pVeh}) then { _pNear = false; { if (isPlayer _x && {(_x distance _pVeh) < 100}) then {_pNear = true} } forEach playableUnits; if (_pNear) then { _pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4] } else { _pRds = (getPos _pVeh) nearRoads 150; if (count _pRds > 0) then { _pNode = [getPos _pVeh, _pRds] Call WFBE_CO_FNC_GetClosestEntity; if (!isNull _pNode && {!surfaceIsWater (getPos _pNode)}) then { _pVeh setVelocity [0,0,0]; _pVeh setPos (getPos _pNode) } } }; diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK|" + (str _team)); _pUnstuckStreak = _pUnstuckStreak + 1; _pUnstuckMax = missionNamespace getVariable ["WFBE_C_AICOM_PATROL_UNSTUCK_MAX", 5]; if (_pUnstuckStreak >= _pUnstuckMax) then { _pUnstuckStreak = 0; if (!isNull _target) then { _pAvoidCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600]; _pAvoid set [count _pAvoid, [_target, time + _pAvoidCd]]; diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_RETARGET|" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|wedges=" + str _pUnstuckMax) }; _target = objNull } } } }
 			};
 		};
 	};

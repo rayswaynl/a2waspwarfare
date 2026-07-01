@@ -169,3 +169,12 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 //--- protect. Reaps client-LOCAL empty, non-persistent, non-player, non-town-tracked groups once
 //--- per 60s and logs a CLIENT_EMPTY_GROUP_CLEANUP wire line tagged HC-<netId> for visibility.
 [] ExecVM "Client\Functions\Client_GroupsGC.sqf";
+
+//--- AICOM HIGH-CLIMB (claude-gaming 2026-07-01): give AI-commander tanks the Valhalla low-gear terrain
+//--- assist on THIS headless client, where its DELEGATED commander teams (and their tank hulls) are local -
+//--- the player client low-gear manager only iterates `units group player`, so an HC's own AICOM tanks never
+//--- get the assist. The manager self-gates OFF unless WFBE_C_AICOM_HIGHCLIMB==1 and enumerates only the
+//--- side-logic wfbe_teams (bounded, no allUnits), touching only hulls local to this machine. Server runs
+//--- its own copy from Init_Server.sqf for the server-local founded teams.
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HighClimb.sqf";
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_AutoFlip.sqf";  //--- Build84 (Ray): auto-right flipped AICOM ground vehicles (HC-delegated teams).

@@ -242,8 +242,8 @@ _findBuildPos = {
 				//--- carriageway and the lane stays clear for egress.
 				_rp = getPos _rd;
 				_hd = ((_p select 0) - (_rp select 0)) atan2 ((_p select 1) - (_rp select 1)); //--- bearing road->candidate = the side we push out to
-				_ox = (_rp select 0) + 16 * sin _hd;
-				_oy = (_rp select 1) + 16 * cos _hd;
+				_ox = (_rp select 0) + (missionNamespace getVariable ["WFBE_C_AICOM_ROAD_STANDOFF", 16]) * sin _hd;  //--- Build84: map-aware road standoff (TK 40 / CH 24; was hardcoded 16)
+				_oy = (_rp select 1) + (missionNamespace getVariable ["WFBE_C_AICOM_ROAD_STANDOFF", 16]) * cos _hd;
 				_cand = [_ox, _oy, 0];
 				//--- settle onto flat-empty ground with a SMALL radius so it cannot drift back
 				//--- onto the lane, then validate: dry, and a clear drivable strip between the
@@ -256,7 +256,7 @@ _findBuildPos = {
 					_sy = (((_cand select 1) + (_rp select 1)) / 2);
 					if (surfaceIsWater [_sx, _sy, 0]) then {_blocked = true};
 					//--- standoff must survive the empty-pos settle (>= 12m off the carriageway).
-					if (((_cand distance _rp) < 12)) then {_blocked = true};
+					if (((_cand distance _rp) < ((missionNamespace getVariable ["WFBE_C_AICOM_ROAD_STANDOFF", 16]) * 0.6))) then {_blocked = true};  //--- Build84: scale min-standoff with the tunable (was bare 12)
 						//--- B752 (Ray 2026-06-25): also reject a candidate that SETTLED ONTO a road (paved OR DIRT).
 						//--- The 16m offset is from the CHOSEN usable road (kept >12m off above), but GetEmptyPosition can
 						//--- drift _cand onto an ADJACENT dirt track (flat+empty = preferred) = the "factory on a dirt road"

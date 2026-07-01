@@ -416,8 +416,17 @@ if (count _live > 0) then {
 	//--- crewless -> the wfbe_side hull tag). In this mission town garrisons are ground-only (town templates carry no aircraft),
 	//--- so every side-resolved airframe is commander-fielded (own founded air teams + their lift transports). A2-OA-safe:
 	//--- isKindOf "Air" + crew/side resolve (mirrors the old heli-cap detector), count over the _allVehicles snapshot (not allUnits).
+	//--- Build84 LATE-GAME AIR SCALING (Ray 2026-07-01): late in the match, raise the flat air ceiling and lean the
+	//--- air pool toward HELICOPTERS. "Late game" = elapsed MISSION time (time/60 >= AIR_LATE_MINS, default 45min) -
+	//--- the same time/60 idiom the jet time-ramp (~L560) and heli time-bias (~L595) already use here; a self-contained
+	//--- server-clock signal that needs no cross-side dominance read. When late, the air cap becomes AIR_MAX_LATE
+	//--- (default 7) in place of the flat AIR_MAX_TOTAL (default 3); early game is byte-identical. Setting
+	//--- AIR_MAX_LATE == AIR_MAX_TOTAL restores Build83 behaviour. A2-OA-safe: time / arithmetic + getVariable default.
+	private ["_late"];
+	_late = (time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45]);
 	private ["_airMaxTotal","_airAlive","_eligNoAir2"];
 	_airMaxTotal = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
+	if (_late) then {_airMaxTotal = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_LATE", 7]};
 	if (_airMaxTotal > 0) then {
 		_airAlive = 0;
 		{
@@ -559,6 +568,56 @@ if (count _live > 0) then {
 			(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
 		};
 	} forEach _eligible;
+
+	//--- Build84 LATE-GAME HELI SHARE (Ray 2026-07-01): late game, bias the AIR bucket so ~HELI_SHARE_LATE (default 0.55,
+	//--- i.e. 50-60%) of the side's air is HELICOPTERS (attack + transport), the rest PLANES. Only acts when _late AND the
+	//--- air bucket (index 3) actually holds BOTH plane and heli templates this cycle (else there is nothing to bias, or
+	//--- the airfield/jet-time gate already left helis-only). Signal = current alive HELIS / current alive AIR on this side
+	//--- (reuse the same crew/side-resolve idiom as the flat air cap above, over the _allVehicles snapshot): if the live
+	//--- heli fraction is BELOW target, drop the PLANE templates from the air bucket this cycle so the downstream draw
+	//--- can only land on a heli (prefer heli); otherwise leave the mixed bucket so a plane can be picked. Self-correcting:
+	//--- once helis reach the share, planes are re-admitted next cycle. BOUNDED (reuses the existing air-bucket pool + the
+	//--- flat-cap air counting; invents no template lists). HELI_SHARE_LATE=0 disables the bias (planes never dropped) =
+	//--- Build83 behaviour. A2-OA-safe: string isKindOf, plain crew/side resolve, count over the vehicles snapshot.
+	if (_late && {(missionNamespace getVariable ["WFBE_C_AICOM_HELI_SHARE_LATE", 0.55]) > 0} && {count (_buckets select 3) > 0}) then {
+		private ["_airBkt","_planeTmpls","_heliTmpls","_hsIdx","_hsHasPlane"];
+		_airBkt = _buckets select 3;
+		_planeTmpls = []; _heliTmpls = [];
+		{
+			_hsIdx = _x;
+			_hsHasPlane = ({(typeName _x == "STRING") && {_x isKindOf "Plane"}} count (_templates select _hsIdx)) > 0;
+			if (_hsHasPlane) then {_planeTmpls set [count _planeTmpls, _hsIdx]} else {_heliTmpls set [count _heliTmpls, _hsIdx]};
+		} forEach _airBkt;
+		//--- Only meaningful when both plane AND heli templates are eligible this cycle.
+		if (count _planeTmpls > 0 && {count _heliTmpls > 0}) then {
+			private ["_hsAirAlive","_hsHeliAlive","_hsShare","_hsHeliFrac"];
+			_hsAirAlive = 0; _hsHeliAlive = 0;
+			{
+				if (alive _x && {_x isKindOf "Air"}) then {
+					private ["_hsSideOK"];
+					_hsSideOK = false;
+					if ((count crew _x) > 0) then {
+						if (side ((crew _x) select 0) == _side) then {_hsSideOK = true};
+					} else {
+						if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_hsSideOK = true};
+					};
+					if (_hsSideOK) then {
+						_hsAirAlive = _hsAirAlive + 1;
+						//--- Heli = Air but NOT a fixed-wing Plane hull (attack + transport helis both count).
+						if (!(_x isKindOf "Plane")) then {_hsHeliAlive = _hsHeliAlive + 1};
+					};
+				};
+			} forEach _allVehicles;
+			_hsShare = missionNamespace getVariable ["WFBE_C_AICOM_HELI_SHARE_LATE", 0.55];
+			_hsHeliFrac = if (_hsAirAlive > 0) then {_hsHeliAlive / _hsAirAlive} else {0}; //--- no air yet => frac 0 => below target => prefer heli.
+			if (_hsHeliFrac < _hsShare) then {
+				//--- Under the heli target: restrict the air bucket to HELI templates this cycle (drop planes) so the
+				//--- downstream effectiveness draw can only found a helicopter. Planes return once the share is met.
+				_buckets set [3, _heliTmpls];
+				["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] late-game heli-share bias: heliFrac %2 < target %3 (alive heli %4 / air %5) - air bucket restricted to helis this cycle.", _sideText, _hsHeliFrac, _hsShare, _hsHeliAlive, _hsAirAlive]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+	};
 
 	//--- B66 MATURITY-RAMPED MIX: select the [inf,light,heavy,air] weight tier by the side's OWN-TOWN count
 	//--- (reuse _rosterOwnTowns from the air-gate above): EARLY when towns < MATURE_MID, MID when towns <
@@ -718,7 +777,8 @@ if (count _live > 0) then {
 	//--- and is clamped into [MIN,MAX]; behaviour is identical to before when FOUND_SIZE == MIN.
 	private ["_sizeMin","_sizeMax","_foundSize","_isBigVeh","_padClass"];
 	_sizeMin   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
-	_sizeMax   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+	_sizeMax   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8]; //--- Build84 (Ray 2026-07-01): cap MAX infantry team size at 8 (was 12). MBT/attack-heli single-vehicle teams are exempt (the _isBigVeh skip below never pads them up). If MIN ever exceeds MAX (mis-set consts), clamp MIN down so the [MIN,MAX] clamp stays valid.
+	if (_sizeMin > _sizeMax) then {_sizeMin = _sizeMax}; //--- Build84 guard: keep MIN <= MAX so the _foundSize clamp below can't invert.
 	_foundSize = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_FOUND_SIZE", _sizeMin];
 	if (_foundSize < _sizeMin) then {_foundSize = _sizeMin};
 	if (_foundSize > _sizeMax) then {_foundSize = _sizeMax};
@@ -856,6 +916,90 @@ if (count _live > 0) then {
 		};
 		if (!isNull _facObj) exitWith {};
 	} forEach (if (_doc == "HF") then {["Heavy","Light","Barracks"]} else {["Light","Heavy","Barracks"]});
+
+	//--- Build84 OWNED-FACTORY GATE (Ray 2026-07-01, gated WFBE_C_AICOM_FOUND_REQUIRE_FACTORY default 0 = OLD
+	//--- HQ-fallback allowed = SHIP-SAFE). Ray: "no magic infantry conjured at the HQ" - only produce troops for
+	//--- factories the commander OWNS. When the flag is 1: the picked team's type (_chosen: 0=inf,1=light,2=heavy,
+	//--- 3=air) must MATCH an owned factory (infantry->Barracks; armor light->Light or Heavy; armor heavy->Heavy
+	//--- or Light; air->Aircraft). If the side owns NO factory of that type, SKIP founding it this cycle so the
+	//--- HQ-fallback never conjures a magic team. STARVATION-SAFETY (hard - this fork loses by walkover when a side
+	//--- founds ZERO teams): a side that owns a Barracks may ALWAYS found infantry, and the skip only fires when the
+	//--- side ALSO owns some OTHER factory (so a productive founding path still exists next cycle) - a side that
+	//--- holds ANY factory is therefore never gated to zero foundings. If the side owns NO factory at all, the flag
+	//--- makes no difference (nothing to snap to) and the HQ-fallback below still applies exactly as for flag 0, so
+	//--- an early-game side with only its HQ is never starved. A2-OA-safe: same STRUCTURES/typeOf scan idiom as the
+	//--- factory finder above; plain if/else, getVariable-with-default, no A3 commands.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_FOUND_REQUIRE_FACTORY", 0]) != 0) then {
+		private ["_ownBarracks","_ownLight","_ownHeavy","_ownAircraft","_ownAny","_wantType","_typeOK","_gateFacObj"];
+		//--- Ownership booleans by factory type (alive structure of the matching STRUCTURES class this side holds).
+		_ownBarracks = false; _ownLight = false; _ownHeavy = false; _ownAircraft = false;
+		{
+			private ["_gStruct","_gIdx","_gClass","_gHas"];
+			_gStruct = _x;
+			_gIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find _gStruct;
+			_gHas = false;
+			if (_gIdx >= 0) then {
+				_gClass = _facNames select _gIdx;
+				{ if (typeOf _x == _gClass && {alive _x}) exitWith {_gHas = true} } forEach _structures;
+			};
+			switch (_gStruct) do {
+				case "Barracks": {_ownBarracks = _gHas};
+				case "Light":    {_ownLight    = _gHas};
+				case "Heavy":    {_ownHeavy    = _gHas};
+				case "Aircraft": {_ownAircraft = _gHas};
+			};
+		} forEach ["Barracks","Light","Heavy","Aircraft"];
+		_ownAny = _ownBarracks || _ownLight || _ownHeavy || _ownAircraft;
+
+		//--- Picked team type -> does the side own a matching factory? Prefer the AUTHORITATIVE CfgGroups stored
+		//--- type of the FINAL _pick (W7 Veteran / anti-repeat / FORCED-ARTY can re-pick from a different bucket
+		//--- than _chosen), falling back to _chosen (the bucket the base draw came from), then to infantry.
+		_wantType = if (isNil "_chosen") then {0} else {_chosen};
+		if (!isNil "_storedTypes" && {!isNil "_pick"} && {typeName _pick == "SCALAR"} && {_pick >= 0} && {_pick < count _storedTypes}) then {
+			private ["_stPick"];
+			_stPick = _storedTypes select _pick;
+			if (!isNil "_stPick" && {_stPick >= 0}) then {_wantType = _stPick};
+		};
+		_typeOK = switch (_wantType) do {
+			case 0: {_ownBarracks};                 //--- infantry needs a Barracks.
+			case 1: {_ownLight || _ownHeavy};       //--- light armor: Light (or Heavy covers it).
+			case 2: {_ownHeavy || _ownLight};       //--- heavy armor: Heavy (or Light covers it).
+			case 3: {_ownAircraft};                 //--- air needs an Aircraft factory.
+			default {true};
+		};
+
+		//--- STARVATION-SAFE: owning a Barracks always permits infantry regardless of the picked type; and if the
+		//--- side owns ANY factory, only SKIP when it also owns a DIFFERENT factory (a real path remains next cycle).
+		if (!_typeOK && _ownAny) exitWith {
+			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding SKIPPED by owned-factory gate (picked type %2, ownBar %3 light %4 heavy %5 air %6) - no matching owned factory; no funds/pending claimed yet, re-picks next cycle.", _sideText, _wantType, _ownBarracks, _ownLight, _ownHeavy, _ownAircraft]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOUND_GATE_SKIP|type=" + str _wantType + "|ownAny=" + str _ownAny);
+			//--- No funds were deducted and no pending slot claimed yet (both happen below), so simply ending the
+			//--- founding cycle here leaks nothing. The commander re-picks a buildable type next cycle.
+		};
+		//--- Anchor the spawn to the matching owned factory when _facObj (doctrine walk) landed on a non-matching
+		//--- one - so a produced team exits the RIGHT structure. Only re-anchor when a matching factory is owned.
+		if (_typeOK) then {
+			_gateFacObj = objNull;
+			{
+				private ["_aStruct","_aIdx","_aClass"];
+				_aStruct = _x;
+				_aIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find _aStruct;
+				if (_aIdx >= 0) then {
+					_aClass = _facNames select _aIdx;
+					{ if (typeOf _x == _aClass && {alive _x}) exitWith {_gateFacObj = _x} } forEach _structures;
+				};
+				if (!isNull _gateFacObj) exitWith {};
+			} forEach (switch (_wantType) do {
+				case 0: {["Barracks"]};
+				case 1: {if (_doc == "HF") then {["Heavy","Light"]} else {["Light","Heavy"]}};
+				case 2: {["Heavy","Light"]};
+				case 3: {["Aircraft"]};
+				default {["Light","Heavy","Barracks"]};
+			});
+			if (!isNull _gateFacObj) then {_facObj = _gateFacObj};
+		};
+	};
+
 	if (isNull _facObj) then {_facObj = (_side) Call WFBE_CO_FNC_GetSideHQ};
 	if (isNull _facObj) exitWith {};
 
