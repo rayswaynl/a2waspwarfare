@@ -720,7 +720,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
 		if (_bt == "") then {
 			_mn = missionName; if (typeName _mn != "STRING") then {_mn = ""};
-			_ci = _mn find "cmdcon";
+			private ["_mnAf","_ndl","_nlen","_ok"]; _mnAf = toArray _mn; _ndl = toArray "cmdcon"; _nlen = count _ndl; _ci = -1; for "_k" from 0 to ((count _mnAf) - _nlen) do { _ok = true; { if ((_mnAf select (_k + _forEachIndex)) != _x) exitWith {_ok = false} } forEach _ndl; if (_ok) exitWith {_ci = _k} };  //--- A2-OA fix: string 'find' is A3-only; char-scan toArray for the "cmdcon" token start.
 			if (_ci >= 0) then {
 				//--- Slice "cmdcon..." to next '_' (95) or '.' (46) via the A2-OA-safe toArray/toString idiom (string
 					//--- `select [start,count]` substring is A3-only). "..._cmdcon36aicom.chernarus" -> "cmdcon36aicom".
