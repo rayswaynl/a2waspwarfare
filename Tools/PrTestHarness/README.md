@@ -10,6 +10,7 @@ then removed before shipping a release mission.
 
 - A stress/smoke mission overlay with scroll actions and server-side command queues.
 - RPT live reporting and post-run analysis tools.
+- A release RPT packet builder that copies the exact Chernarus/Takistan role matrix from a private source map and writes the run ledger.
 - A static smoke script for checking the active test mission boundary.
 - A random **bug-hunt** mode (`BugHunt/Find-WaspBugHunt.ps1`) — a heuristic static hunter.
 - A one-command **pre-test check** (`Run-WaspFinalCheck.ps1`) — runs the smoke gate + bug-hunt.
@@ -120,8 +121,8 @@ Important tokens:
 - `FACTORY_AUDIT`, `SERVICE_SUPPLY_AUDIT`, `WDDM_ARTILLERY_AUDIT`
 - `PERF_BURST`, `PERF #`
 
-For a release-candidate RPT bundle, first verify the packet shape, then use the
-redaction-safe evidence scorer. The packet checker prevents aggregate false
+For a release-candidate RPT bundle, first build or verify the packet shape, then
+use the redaction-safe evidence scorer. The packet checker prevents aggregate false
 passes by requiring this exact copied layout:
 
 ```text
@@ -139,15 +140,17 @@ release-candidate\
 ```
 
 It also checks that each role file contains the terrain-specific release marker,
-matching `MISSINIT` world and expected role identity: `server.rpt` must report
-`isServer=true` and `isDedicated=true`, while HC/client files must not. The
+matching `MISSINIT` world and expected role proof: `server.rpt` must report
+`isServer=true` and `isDedicated=true`, HC files must contain HC-local startup
+proof, and player-client files must contain client-local startup proof. The
 packet gate rejects extra RPTs, duplicate copied paths and duplicate copied RPT
 content hashes, and can reject stale RPTs from the terrain launch times in the
 run ledger. The run ledger is machine-checked too: it must record the original
 source RPT path, original source RPT LastWriteTime and SHA256, copied packet
-path and SHA256, command line, PID and terrain start time for each role.
-Duplicate original source RPT paths or source/copy content hashes fail the
-packet gate. Copied file LastWriteTime values are read by the checker itself.
+path and SHA256, command line, PID, terrain start time, `roleProof` and client
+`joinPhase` for each role. Duplicate original source RPT paths or source/copy
+content hashes fail the packet gate. Copied file LastWriteTime values are read
+by the checker itself.
 
 ```powershell
 $releaseGit = git rev-parse --short=10 HEAD
@@ -165,9 +168,51 @@ LoadoutManager writes those markers into generated `version.sqf`, with the
 current git short hash and terrain appended. Use the terrain-specific marker
 values so runtime proof ties back to the exact release HEAD.
 
+The safest operator path is to fill a private source map and let the builder
+copy the ten files and write `release-run-ledger.json`:
+
+```json
+{
+  "schema": "a2waspwarfare-runtime-rpt-source-map-v1",
+  "release": {
+    "candidate": "release-command-center-20260630",
+    "git": "<release-git-short>",
+    "archiveSha256": "<_MISSIONS.7z-sha256>"
+  },
+  "records": [
+    {
+      "terrain": "chernarus",
+      "role": "server",
+      "roleProof": "server",
+      "joinPhase": "",
+      "terrainStartTime": "2026-07-01T20:00:00+02:00",
+      "pid": 1234,
+      "commandLine": "<redacted-command-line>",
+      "profilePath": "<profile-or-log-root>",
+      "sourceRptPath": "C:\\ArmaProfiles\\server\\arma2oaserver.RPT"
+    }
+  ]
+}
+```
+
+```powershell
+& .\Tools\PrTestHarness\Rpt\New-WaspRuntimeRptPacket.ps1 `
+  -SourceMapPath "C:\WASP\private\runtime-rpt-source-map.json" `
+  -OutDirectory "C:\WASP\rpts\release-candidate" `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit $releaseGit `
+  -ExpectedArchiveSha256 "<_MISSIONS.7z-sha256>" `
+  -Validate -RequireSourceRptExists -Force
+```
+
+The builder emits `runtime-rpt-packet-manifest.json` with packet-relative labels,
+path hashes and content hashes only. Keep the populated source map and generated
+`release-run-ledger.json` private unless separately redacted.
+
 ```powershell
 & .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 `
   -RptRoot "C:\WASP\rpts\release-candidate" `
+  -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit $releaseGit `
   -ExpectedArchiveSha256 "<_MISSIONS.7z-sha256>" `
   -RunLedgerPath "C:\WASP\rpts\release-candidate\release-run-ledger.json" `
@@ -197,7 +242,9 @@ and original live/source RPT files can be audited separately:
       "sourceRptLastWriteTime": "2026-07-01T20:03:21+02:00",
       "sourceRptSha256": "<source-rpt-sha256>",
       "copiedRptPath": "chernarus\\server.rpt",
-      "copiedRptSha256": "<copied-rpt-sha256>"
+      "copiedRptSha256": "<copied-rpt-sha256>",
+      "roleProof": "server",
+      "joinPhase": ""
     }
   ]
 }
@@ -275,11 +322,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Release\New-Wa
 ```
 
 It writes `release-handoff.json`, `release-handoff.md`,
-`runtime-run-ledger.template.json` and copies `release-package-manifest.json`
-plus sibling `release-package-manifest.md` into the same handoff folder. The
-handoff includes the package hash, exact Chernarus/Takistan runtime markers,
-scorer commands, runtime preconditions, deploy approval checks, rollback checks
-and privacy boundaries. It does not touch SSH, server files or raw RPTs; live
+`runtime-rpt-source-map.template.json`, `runtime-run-ledger.template.json` and
+copies `release-package-manifest.json` plus sibling
+`release-package-manifest.md` into the same handoff folder. The handoff includes
+the package hash, exact Chernarus/Takistan runtime markers, builder/scorer
+commands, runtime preconditions, deploy approval checks, rollback checks and
+privacy boundaries. It does not touch SSH, server files or raw RPTs; live
 deployment still requires explicit approval and separate runtime evidence.
 
 ## Shipping Boundary

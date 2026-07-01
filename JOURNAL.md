@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Release runtime packet builder and role-proof gate [RELEASE LOOP]
+
+The release command-center tooling now has a source-map driven runtime RPT packet builder:
+`Tools\PrTestHarness\Rpt\New-WaspRuntimeRptPacket.ps1`. Runtime operators fill a private
+`runtime-rpt-source-map.json`, then the helper copies the exact ten Chernarus/Takistan role
+RPTs, writes `release-run-ledger.json`, emits a redaction-safe `runtime-rpt-packet-manifest.json`
+and can immediately call `Test-WaspRuntimeRptPacket.ps1`.
+
+The packet validator now hardens role proof beyond "server vs non-server": HC files must show
+HC-local startup tokens, player-client files must show client-local startup tokens, and the private
+ledger must carry exact `roleProof` plus `joinPhase` for `start-client`/`late-JIP`. The release
+handoff generator writes `runtime-rpt-source-map.template.json`, includes the builder command and
+passes `-ExpectedCandidate` explicitly to the packet checker.
+
 ## 2026-06-28 — PR #119 low-id CIV HC slot magnet [PR]
 
 PR #119 now layers the static lobby-slot experiment on top of the runtime HC CIV hardening. The two

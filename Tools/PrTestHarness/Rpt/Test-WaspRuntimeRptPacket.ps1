@@ -118,6 +118,50 @@ function Test-IsSha256Text {
 	return (![string]::IsNullOrWhiteSpace($Value) -and $Value -match "^[A-Fa-f0-9]{64}$")
 }
 
+function ConvertTo-RoleProofValue {
+	param([string]$Value)
+	if ([string]::IsNullOrWhiteSpace($Value)) { return "" }
+	$text = ($Value.Trim().ToLowerInvariant() -replace "_", "-")
+	switch ($text) {
+		"server" { return "server" }
+		"dedicated-server" { return "server" }
+		"hc1" { return "HC1" }
+		"headless-client-1" { return "HC1" }
+		"headlessclient1" { return "HC1" }
+		"hc2" { return "HC2" }
+		"headless-client-2" { return "HC2" }
+		"headlessclient2" { return "HC2" }
+		"start-client" { return "start-client" }
+		"startclient" { return "start-client" }
+		"initial-client" { return "start-client" }
+		"launch-client" { return "start-client" }
+		"late-jip" { return "late-JIP" }
+		"latejip" { return "late-JIP" }
+		"jip-client" { return "late-JIP" }
+		"mid-round-client" { return "late-JIP" }
+		default { return "" }
+	}
+}
+
+function ConvertTo-JoinPhaseValue {
+	param([string]$Value)
+	if ([string]::IsNullOrWhiteSpace($Value)) { return "" }
+	$text = ($Value.Trim().ToLowerInvariant() -replace "_", "-")
+	switch ($text) {
+		"launch" { return "start-client" }
+		"start" { return "start-client" }
+		"round-start" { return "start-client" }
+		"start-client" { return "start-client" }
+		"initial-client" { return "start-client" }
+		"late" { return "late-JIP" }
+		"jip" { return "late-JIP" }
+		"late-jip" { return "late-JIP" }
+		"mid-round" { return "late-JIP" }
+		"mid-round-client" { return "late-JIP" }
+		default { return "" }
+	}
+}
+
 function ConvertFrom-LedgerDateTime {
 	param([string]$Value, [ref]$Result)
 	if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
@@ -286,6 +330,8 @@ function Test-WaspRuntimeRunLedger {
 		$sourceLastWriteRaw = [string](Get-JsonValue $record "sourceRptLastWriteTime")
 		$sourceSha256 = ConvertTo-Sha256Text ([string](Get-JsonValue $record "sourceRptSha256"))
 		$copiedSha256 = ConvertTo-Sha256Text ([string](Get-JsonValue $record "copiedRptSha256"))
+		$roleProof = ConvertTo-RoleProofValue ([string](Get-JsonValue $record "roleProof"))
+		$joinPhase = ConvertTo-JoinPhaseValue ([string](Get-JsonValue $record "joinPhase"))
 		$terrainStartRaw = [string](Get-JsonValue $record "terrainStartTime")
 		if ([string]::IsNullOrWhiteSpace($terrainStartRaw)) { $terrainStartRaw = [string](Get-JsonValue $record "startTime") }
 		if ([string]::IsNullOrWhiteSpace($terrainStartRaw) -and $null -ne $topLevelStartTimes) { $terrainStartRaw = [string](Get-JsonValue $topLevelStartTimes $terrain) }
@@ -298,8 +344,12 @@ function Test-WaspRuntimeRunLedger {
 		if ([string]::IsNullOrWhiteSpace($sourceLastWriteRaw)) { [void]$missing.Add("sourceRptLastWriteTime for $terrain/$role") }
 		if ([string]::IsNullOrWhiteSpace($sourceSha256)) { [void]$missing.Add("sourceRptSha256 for $terrain/$role") }
 		if ([string]::IsNullOrWhiteSpace($copiedSha256)) { [void]$missing.Add("copiedRptSha256 for $terrain/$role") }
+		if ([string]::IsNullOrWhiteSpace($roleProof)) { [void]$missing.Add("roleProof for $terrain/$role") }
+		if (($role -eq "start-client" -or $role -eq "late-JIP") -and [string]::IsNullOrWhiteSpace($joinPhase)) { [void]$missing.Add("joinPhase for $terrain/$role") }
 		if (![string]::IsNullOrWhiteSpace($sourceSha256) -and !(Test-IsSha256Text $sourceSha256)) { [void]$failHits.Add("sourceRptSha256 for $terrain/$role must be a SHA256 hex value") }
 		if (![string]::IsNullOrWhiteSpace($copiedSha256) -and !(Test-IsSha256Text $copiedSha256)) { [void]$failHits.Add("copiedRptSha256 for $terrain/$role must be a SHA256 hex value") }
+		if (![string]::IsNullOrWhiteSpace($roleProof) -and $roleProof -ne $role) { [void]$failHits.Add("roleProof for $terrain/$role must be $role") }
+		if (($role -eq "start-client" -or $role -eq "late-JIP") -and ![string]::IsNullOrWhiteSpace($joinPhase) -and $joinPhase -ne $role) { [void]$failHits.Add("joinPhase for $terrain/$role must be $role") }
 		if (Test-IsSha256Text $sourceSha256) { [void]$sourceShaValues.Add([pscustomobject]@{ sha = $sourceSha256; key = "$terrain/$role" }) }
 		if (Test-IsSha256Text $copiedSha256) { [void]$copiedShaValues.Add([pscustomobject]@{ sha = $copiedSha256; key = "$terrain/$role" }) }
 
@@ -399,6 +449,8 @@ function Test-WaspRuntimeRunLedger {
 			sourceRptSha256Recorded = (Test-IsSha256Text $sourceSha256)
 			copiedRptSha256Recorded = (Test-IsSha256Text $copiedSha256)
 			copiedLastWriteTime = if ($copiedLastWrite -eq [datetime]::MinValue) { "" } else { $copiedLastWrite.ToString("yyyy-MM-ddTHH:mm:sszzz") }
+			roleProof = $roleProof
+			joinPhase = $joinPhase
 		})
 	}
 
@@ -515,6 +567,14 @@ function Test-WindowContains {
 	return $false
 }
 
+function Test-WindowContainsAny {
+	param([string[]]$Lines, [string[]]$Needles)
+	foreach ($needle in $Needles) {
+		if (Test-WindowContains -Lines $Lines -Needle $needle) { return $true }
+	}
+	return $false
+}
+
 function ConvertTo-BooleanValue {
 	param([string]$Value)
 	if ([string]::IsNullOrWhiteSpace($Value)) { return $null }
@@ -574,10 +634,20 @@ $fileResults = New-Object System.Collections.Generic.List[object]
 $missingFiles = @()
 $markerWorldFailures = @()
 $roleIdentityFailures = @()
+$roleProofFailures = @()
 $freshnessFailures = @()
 $freshnessMissing = @()
 $resolvedPaths = @()
 $copiedContentEvidence = New-Object System.Collections.Generic.List[object]
+$hcProofTokens = @(
+	"initJIPCompatible.sqf: Detected an headless client.",
+	"Init_HC.sqf: Running the headless client initialization.",
+	"Init_HC.sqf: HC "
+)
+$clientProofTokens = @(
+	"initJIPCompatible.sqf: Executing the Client Initialization.",
+	"Init_Client.sqf: Client initialization begins"
+)
 
 foreach ($expected in $expectedFiles) {
 	$terrain = [string]$expected.terrain
@@ -617,8 +687,11 @@ foreach ($expected in $expectedFiles) {
 		$markerWorldFailures += ("{0}/{1}: missing expected marker" -f $terrain, $role)
 	}
 	if ($window.found) {
+		$windowLines = [string[]]$window.lines
 		$isServerValue = ConvertTo-BooleanValue ([string]$window.isServer)
 		$isDedicatedValue = ConvertTo-BooleanValue ([string]$window.isDedicated)
+		$hasHcLocalProof = Test-WindowContainsAny -Lines $windowLines -Needles $hcProofTokens
+		$hasClientLocalProof = Test-WindowContainsAny -Lines $windowLines -Needles $clientProofTokens
 		if ($null -eq $isServerValue -or $null -eq $isDedicatedValue) {
 			$roleIdentityFailures += ("{0}/{1}: missing isServer/isDedicated in MISSINIT" -f $terrain, $role)
 		} elseif ($role -eq "server") {
@@ -627,6 +700,21 @@ foreach ($expected in $expectedFiles) {
 			}
 		} elseif ($isServerValue -or $isDedicatedValue) {
 			$roleIdentityFailures += ("{0}/{1}: non-server role has isServer={2} isDedicated={3}" -f $terrain, $role, $window.isServer, $window.isDedicated)
+		}
+		if ($role -eq "HC1" -or $role -eq "HC2") {
+			if (!$hasHcLocalProof) {
+				$roleProofFailures += ("{0}/{1}: missing HC-local startup proof" -f $terrain, $role)
+			}
+			if ($hasClientLocalProof) {
+				$roleProofFailures += ("{0}/{1}: HC role contains player-client startup proof" -f $terrain, $role)
+			}
+		} elseif ($role -eq "start-client" -or $role -eq "late-JIP") {
+			if (!$hasClientLocalProof) {
+				$roleProofFailures += ("{0}/{1}: missing player-client startup proof" -f $terrain, $role)
+			}
+			if ($hasHcLocalProof) {
+				$roleProofFailures += ("{0}/{1}: client role contains HC-local startup proof" -f $terrain, $role)
+			}
 		}
 	}
 	$startTime = $startTimes[$terrain]
@@ -657,6 +745,8 @@ foreach ($expected in $expectedFiles) {
 		expectedMarker = $marker
 		expectedMarkerFound = [bool]$markerPresent
 		worldMatchesTerrain = [bool]$worldOk
+		hasHcLocalProof = if ($window.found) { [bool]$hasHcLocalProof } else { $false }
+		hasClientLocalProof = if ($window.found) { [bool]$hasClientLocalProof } else { $false }
 		freshness = $freshnessStatus
 	})
 }
@@ -728,6 +818,13 @@ $gates = @(
 		missing = @()
 		failHits = $roleIdentityFailures
 		note = "Server files must report isServer=true/isDedicated=true in MISSINIT; HC and client role files must not."
+	},
+	[ordered]@{
+		id = "per-role-proof"
+		status = if ($roleProofFailures.Count -eq 0) { "pass" } else { "fail" }
+		missing = @()
+		failHits = $roleProofFailures
+		note = "HC files must contain HC-local startup proof, player-client files must contain client-local startup proof, and copied roles must match private ledger roleProof/joinPhase metadata."
 	},
 	[ordered]@{
 		id = "per-terrain-freshness-cutoffs"

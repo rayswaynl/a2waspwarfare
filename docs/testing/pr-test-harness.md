@@ -16,6 +16,8 @@ the harness to the shipping mission payload.
 - `Tools/PrTestHarness/Overlays/pr8-stress/test/*.sqf`
 - `Tools/PrTestHarness/Rpt/Watch-WaspLiveRpt.ps1`
 - `Tools/PrTestHarness/Rpt/Analyze-WaspStressRpt.ps1`
+- `Tools/PrTestHarness/Rpt/New-WaspRuntimeRptPacket.ps1`
+- `Tools/PrTestHarness/Rpt/Test-WaspRuntimeRptPacket.ps1`
 - `Tools/PrTestHarness/Rpt/KnownNoise.txt`
 - `Tools/PrTestHarness/Rpt/MissionIssuePatterns.txt`
 - `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`

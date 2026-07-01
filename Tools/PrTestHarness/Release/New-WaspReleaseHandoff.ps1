@@ -166,10 +166,11 @@ if (Test-Path -LiteralPath $outPath) {
 $jsonOut = Join-Path $outPath "release-handoff.json"
 $markdownOut = Join-Path $outPath "release-handoff.md"
 $ledgerTemplateOut = Join-Path $outPath "runtime-run-ledger.template.json"
+$sourceMapTemplateOut = Join-Path $outPath "runtime-rpt-source-map.template.json"
 $manifestJsonOut = Join-Path $outPath "release-package-manifest.json"
 $manifestMarkdownOut = Join-Path $outPath "release-package-manifest.md"
 if (!$Force) {
-	foreach ($candidate in @($jsonOut, $markdownOut, $ledgerTemplateOut, $manifestJsonOut, $manifestMarkdownOut)) {
+	foreach ($candidate in @($jsonOut, $markdownOut, $ledgerTemplateOut, $sourceMapTemplateOut, $manifestJsonOut, $manifestMarkdownOut)) {
 		if (Test-Path -LiteralPath $candidate) {
 			throw "Output already exists: $candidate. Pass -Force to overwrite."
 		}
@@ -184,8 +185,10 @@ $markerArrayCommand = @(
 ) -join "`n"
 
 $runLedgerRecords = New-Object System.Collections.Generic.List[object]
+$sourceMapRecords = New-Object System.Collections.Generic.List[object]
 foreach ($terrain in @("chernarus", "takistan")) {
 	foreach ($role in @("server", "HC1", "HC2", "start-client", "late-JIP")) {
+		$joinPhase = if ($role -eq "start-client" -or $role -eq "late-JIP") { $role } else { "" }
 		[void]$runLedgerRecords.Add([ordered]@{
 			terrain = $terrain
 			role = $role
@@ -198,6 +201,19 @@ foreach ($terrain in @("chernarus", "takistan")) {
 			sourceRptSha256 = "<original-source-rpt-sha256>"
 			copiedRptPath = "$terrain\$role.rpt"
 			copiedRptSha256 = "<copied-packet-rpt-sha256>"
+			roleProof = $role
+			joinPhase = $joinPhase
+		})
+		[void]$sourceMapRecords.Add([ordered]@{
+			terrain = $terrain
+			role = $role
+			roleProof = $role
+			joinPhase = $joinPhase
+			terrainStartTime = "<$terrain-launch-time>"
+			pid = "<process-pid>"
+			commandLine = "<redacted-command-line>"
+			profilePath = "<profile-or-log-root>"
+			sourceRptPath = "<original-source-rpt-path>"
 		})
 	}
 }
@@ -233,10 +249,20 @@ $packet = [ordered]@{
 	gates = $gates.ToArray()
 	commands = [ordered]@{
 		markerArray = $markerArrayCommand
-		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedGit $ReleaseGit -ExpectedArchiveSha256 $expectedArchiveSha256 -RunLedgerPath `"<release-candidate-rpts>\release-run-ledger.json`" -RequireSourceRptExists"
+		runtimePacketBuilder = "& .\Tools\PrTestHarness\Rpt\New-WaspRuntimeRptPacket.ps1 -SourceMapPath `"<private-runtime-rpt-source-map.json>`" -OutDirectory `"<release-candidate-rpts>`" -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -ExpectedArchiveSha256 $expectedArchiveSha256 -Validate -RequireSourceRptExists -Force"
+		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -ExpectedArchiveSha256 $expectedArchiveSha256 -RunLedgerPath `"<release-candidate-rpts>\release-run-ledger.json`" -RequireSourceRptExists"
 		runtimeScorer = "& .\Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers"
 		runtimeSummary = "& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
 		packageProof = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1 -ArchivePath .\_MISSIONS.7z -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -OutDirectory .\wasp-release-package-manifest -Force"
+	}
+	runtimeRptSourceMapTemplate = [ordered]@{
+		schema = "a2waspwarfare-runtime-rpt-source-map-v1"
+		release = [ordered]@{
+			candidate = $ExpectedCandidate
+			git = $ReleaseGit
+			archiveSha256 = $expectedArchiveSha256
+		}
+		records = $sourceMapRecords.ToArray()
 	}
 	runtimeRunLedgerTemplate = [ordered]@{
 		schema = "a2waspwarfare-runtime-run-ledger-v1"
@@ -248,11 +274,12 @@ $packet = [ordered]@{
 		records = $runLedgerRecords.ToArray()
 	}
 	runtimeChecklist = @(
+		"Fill a private runtime-rpt-source-map.json from runtime-rpt-source-map.template.json, then run New-WaspRuntimeRptPacket.ps1 to copy the exact ten source RPTs, write release-run-ledger.json and emit runtime-rpt-packet-manifest.json.",
 		"Exactly ten copied RPT files exist: chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt and takistan/{server,HC1,HC2,start-client,late-JIP}.rpt.",
 		"No extra RPT files, duplicate copied paths, or duplicate copied/source RPT content hashes are present in the release-candidate RPT root.",
-		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker, MISSINIT worldName, and role identity: server files report isServer=true/isDedicated=true while HC/client files do not.",
+		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker, MISSINIT worldName, and role proof: server files report isServer=true/isDedicated=true, HC files contain HC-local startup proof, and player-client files contain client-local startup proof.",
 		"Every scored current-mission window keeps the startup ## Mission Name banner; files without that banner fail the all-files-have-startup-banner scorer gate.",
-		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath -RequireSourceRptExists: terrain launch times, original source RPT paths, source LastWriteTime/SHA256, copied paths/SHA256, command lines and PIDs are present; source RPT LastWriteTime must be after terrain launch time; source and copied RPT hashes must match; no original source RPT path is reused across roles.",
+		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath -RequireSourceRptExists: terrain launch times, exact roleProof/joinPhase metadata, original source RPT paths, source LastWriteTime/SHA256, copied paths/SHA256, command lines and PIDs are present; source RPT LastWriteTime must be after terrain launch time; source and copied RPT hashes must match; no original source RPT path is reused across roles.",
 		"Run ledger release.archiveSha256 matches the approved package SHA256 passed to Test-WaspRuntimeRptPacket.ps1 -ExpectedArchiveSha256.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
@@ -278,6 +305,8 @@ $packet = [ordered]@{
 	safeToPublish = @(
 		"release-handoff.json",
 		"release-handoff.md",
+		"runtime-rpt-source-map.template.json",
+		"runtime-rpt-packet-manifest.json after runtime collection",
 		"release-package-manifest.json",
 		"release-package-manifest.md",
 		"release-rpt-summary.json after runtime collection",
@@ -287,6 +316,7 @@ $packet = [ordered]@{
 }
 
 $packet | ConvertTo-Json -Depth 16 | Set-Content -LiteralPath $jsonOut -Encoding UTF8
+$packet.runtimeRptSourceMapTemplate | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $sourceMapTemplateOut -Encoding UTF8
 $packet.runtimeRunLedgerTemplate | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $ledgerTemplateOut -Encoding UTF8
 if ([System.IO.Path]::GetFullPath($manifestPath) -ne [System.IO.Path]::GetFullPath($manifestJsonOut)) {
 	Copy-Item -LiteralPath $manifestPath -Destination $manifestJsonOut -Force
@@ -332,6 +362,8 @@ foreach ($gate in $packet.gates) {
 [void]$lines.Add('```powershell')
 [void]$lines.Add($packet.commands.markerArray)
 [void]$lines.Add("")
+[void]$lines.Add($packet.commands.runtimePacketBuilder)
+[void]$lines.Add("")
 [void]$lines.Add($packet.commands.runtimePacket)
 [void]$lines.Add("")
 [void]$lines.Add($packet.commands.runtimeScorer)
@@ -339,9 +371,17 @@ foreach ($gate in $packet.gates) {
 [void]$lines.Add($packet.commands.runtimeSummary)
 [void]$lines.Add('```')
 [void]$lines.Add("")
+[void]$lines.Add("## Runtime RPT Source Map Template")
+[void]$lines.Add("")
+[void]$lines.Add('Copy this to a private `runtime-rpt-source-map.json`, replace placeholders, then run the packet builder. Keep the populated source map private.')
+[void]$lines.Add("")
+[void]$lines.Add('```json')
+[void]$lines.Add(($packet.runtimeRptSourceMapTemplate | ConvertTo-Json -Depth 10))
+[void]$lines.Add('```')
+[void]$lines.Add("")
 [void]$lines.Add("## Runtime Run Ledger Template")
 [void]$lines.Add("")
-[void]$lines.Add('Save this as `release-run-ledger.json` beside the RPT packet and replace placeholders before running the packet checker.')
+[void]$lines.Add('The packet builder writes this as `release-run-ledger.json` beside the copied RPT packet. If assembling manually, replace every placeholder before running the packet checker.')
 [void]$lines.Add("")
 [void]$lines.Add('```json')
 [void]$lines.Add(($packet.runtimeRunLedgerTemplate | ConvertTo-Json -Depth 10))
@@ -377,6 +417,7 @@ $lines | Set-Content -LiteralPath $markdownOut -Encoding UTF8
 Write-Host "Wrote release handoff:"
 Write-Host $jsonOut
 Write-Host $markdownOut
+Write-Host $sourceMapTemplateOut
 Write-Host $ledgerTemplateOut
 Write-Host $manifestJsonOut
 if ($manifestMarkdownExists) { Write-Host $manifestMarkdownOut }
