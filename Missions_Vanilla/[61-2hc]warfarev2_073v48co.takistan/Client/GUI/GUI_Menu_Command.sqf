@@ -192,12 +192,12 @@ while {alive player && dialog} do {
 				if ((_now - _lastSend) >= _cool) then {
 					if (_pb == 760 || _pb == 761) then {
 						private "_pv"; _pv = if (_pb == 760) then {"PUSH"} else {"HOLD"};
-						["RequestSpecial", ["aicom-posture", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
+						["RequestSpecial", ["aicom-posture", sideJoined, _pv, player, group player]] Call WFBE_CO_FNC_SendToServer;
 						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new nudge line
 						hintSilent parseText (format ["<t color='#A0E060'>Posture nudge sent: %1.</t>", _pv]);
 					} else {
 						private "_pv"; _pv = switch (_pb) do {case 762:{"SPLIT"};case 763:{"MASS"};case 764:{"HARASS"};default{"FALLBACK"}};
-						["RequestSpecial", ["aicom-fieldorder", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
+						["RequestSpecial", ["aicom-fieldorder", sideJoined, _pv, player, group player]] Call WFBE_CO_FNC_SendToServer;
 						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new field-order line
 						hintSilent parseText (format ["<t color='#A0E060'>Field order sent: %1.</t>", _pv]);
 					};
@@ -324,7 +324,7 @@ while {alive player && dialog} do {
 			MenuAction = -1;
 			if ((_now - _lastSend) >= _cool) then {
 				private "_send"; _send = if (_directOn) then {"ON"} else {"OFF"};
-				["RequestSpecial", ["aicom-ai-command", sideJoined, _send]] Call WFBE_CO_FNC_SendToServer;
+				["RequestSpecial", ["aicom-ai-command", sideJoined, _send, player, group player]] Call WFBE_CO_FNC_SendToServer;
 				_lastSend = _now;
 				hintSilent parseText "<t color='#A0E060'>Command mode change sent.</t>";
 			} else {
@@ -372,7 +372,7 @@ while {alive player && dialog} do {
 				} else {
 					if (_armed == "arty") then {
 						//--- HYBRID: artillery still rides the brain (works in assist-mode) via the RequestSpecial bus.
-						["RequestSpecial", ["aicom-arty-here", sideJoined, [_position select 0, _position select 1, 0]]] Call WFBE_CO_FNC_SendToServer;
+						["RequestSpecial", ["aicom-arty-here", sideJoined, [_position select 0, _position select 1, 0], player, group player]] Call WFBE_CO_FNC_SendToServer;
 						["TempAnim", _position, "selector_selectedMission", 1, "ColorRed", 1, 1.2] Spawn MarkerAnim;
 						hintSilent parseText "<t color='#A0E060'>Artillery requested.</t>";
 						_lastSend = _now; _armed = "";
@@ -443,7 +443,7 @@ while {alive player && dialog} do {
 			MenuAction = -1;
 			if ((_now - _lastSend) >= _cool) then {
 				private "_rs"; _rs = lbCurSel 14640; if (_rs == -1) then {_rs = 0};
-				["RequestSpecial", ["aicom-request-unit", sideJoined, _reqTypes select _rs]] Call WFBE_CO_FNC_SendToServer;
+				["RequestSpecial", ["aicom-request-unit", sideJoined, _reqTypes select _rs, player, group player]] Call WFBE_CO_FNC_SendToServer;
 				_lastSend = _now;
 				hintSilent parseText (format ["<t color='#A0E060'>Prioritising %1 production.</t>", _reqTypes select _rs]);
 			} else {
@@ -461,7 +461,7 @@ while {alive player && dialog} do {
 			} else {
 				if ((_now - _disbandArm) <= 5) then {
 					_disbandArm = -1000;
-					["RequestSpecial", ["aicom-team-disband", sideJoined]] Call WFBE_CO_FNC_SendToServer;
+					["RequestSpecial", ["aicom-team-disband", sideJoined, "ALL", player, group player]] Call WFBE_CO_FNC_SendToServer;
 					hintSilent parseText "<t color='#F89060'>Disband order sent - all AI field teams will stand down where safe.</t>";
 				} else {
 					_disbandArm = _now;

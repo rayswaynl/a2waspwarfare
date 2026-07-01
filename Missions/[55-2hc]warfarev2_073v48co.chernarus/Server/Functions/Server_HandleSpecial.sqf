@@ -1,6 +1,23 @@
-Private['_args'];
+Private['_args','_validateAicomConsoleRequester'];
 
 _args = _this;
+
+_validateAicomConsoleRequester = {
+	private ["_vArgs","_vSide","_vRequireCommander","_requester","_requestTeam","_cmdTeam"];
+	_vArgs = _this select 0;
+	_vSide = _this select 1;
+	_vRequireCommander = _this select 2;
+	if (count _vArgs < 5) exitWith {false};
+	_requester = _vArgs select 3;
+	_requestTeam = _vArgs select 4;
+	if ((typeName _requester != "OBJECT") || {typeName _requestTeam != "GROUP"}) exitWith {false};
+	if (isNull _requester || {!alive _requester} || {!isPlayer _requester} || {group _requester != _requestTeam} || {side _requestTeam != _vSide}) exitWith {false};
+	if (_vRequireCommander) then {
+		_cmdTeam = (_vSide) Call WFBE_CO_FNC_GetCommanderTeam;
+		if (isNull _cmdTeam || {leader _cmdTeam != _requester} || {!isPlayer (leader _cmdTeam)}) exitWith {false};
+	};
+	true
+};
 
 switch (_args select 0) do {
 	case "update-teamleader": {
@@ -336,7 +353,7 @@ switch (_args select 0) do {
 			_aX = _aPos select 0; _aY = _aPos select 1;
 			if ((typeName _aX == "SCALAR") && {typeName _aY == "SCALAR"}) then {_aValid = true};
 		};
-		if (_aValid && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0}) then {
+		if (_aValid && {_aSide in [west, east]} && {[_args, _aSide, true] Call _validateAicomConsoleRequester} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0}) then {
 			_aLogik = (_aSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _aLogik) then {
 				_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
@@ -381,7 +398,7 @@ switch (_args select 0) do {
 		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
-		if ((typeName _pPos == "STRING") && {(_pPos == "PUSH") || (_pPos == "HOLD")} && {_pSide in [west, east]}) then {
+		if ((typeName _pPos == "STRING") && {(_pPos == "PUSH") || (_pPos == "HOLD")} && {_pSide in [west, east]} && {[_args, _pSide, false] Call _validateAicomConsoleRequester}) then {
 			_pLogik = (_pSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _pLogik) then {
 				_pRun = false;
@@ -408,7 +425,7 @@ switch (_args select 0) do {
 		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
-		if ((typeName _pPos == "STRING") && {_pPos in ["SPLIT","MASS","HARASS","FALLBACK"]} && {_pSide in [west, east]}) then {
+		if ((typeName _pPos == "STRING") && {_pPos in ["SPLIT","MASS","HARASS","FALLBACK"]} && {_pSide in [west, east]} && {[_args, _pSide, false] Call _validateAicomConsoleRequester}) then {
 			_pLogik = (_pSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _pLogik) then {
 				_pRun = false;
@@ -436,7 +453,7 @@ switch (_args select 0) do {
 		//--- object getVariable [k,d] (side logic), group setVariable [k,v,true] (no A3-only group getVariable [k,d]).
 		private ["_dSide","_dLogik","_dCmd","_dHuman","_dLast","_dCool","_dTeams","_dN"];
 		_dSide = _args select 1;
-		if (_dSide in [west, east]) then {
+		if (_dSide in [west, east] && {[_args, _dSide, true] Call _validateAicomConsoleRequester}) then {
 			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _dLogik) then {
 				_dCmd = (_dSide) Call WFBE_CO_FNC_GetCommanderTeam; _dHuman = false;
@@ -466,7 +483,7 @@ switch (_args select 0) do {
 		private ["_dSide","_dVal","_dLogik"];
 		_dSide = _args select 1;
 		_dVal  = _args select 2;
-		if ((typeName _dVal == "STRING") && {(_dVal == "ON") || (_dVal == "OFF")} && {_dSide in [west, east]}) then {
+		if ((typeName _dVal == "STRING") && {(_dVal == "ON") || (_dVal == "OFF")} && {_dSide in [west, east]} && {[_args, _dSide, true] Call _validateAicomConsoleRequester}) then {
 			if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_dSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
 				_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 				if (!isNull _dLogik) then {
@@ -491,7 +508,7 @@ switch (_args select 0) do {
 		private ["_uSide","_uType","_uLogik"];
 		_uSide = _args select 1;
 		_uType = _args select 2;
-		if ((typeName _uType == "STRING") && {(_uType == "armor") || (_uType == "air") || (_uType == "infantry")} && {_uSide in [west, east]}) then {
+		if ((typeName _uType == "STRING") && {(_uType == "armor") || (_uType == "air") || (_uType == "infantry")} && {_uSide in [west, east]} && {[_args, _uSide, true] Call _validateAicomConsoleRequester}) then {
 			_uLogik = (_uSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _uLogik) then {
 				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_uSide) Call WFBE_CO_FNC_GetSideHQ)}) then {

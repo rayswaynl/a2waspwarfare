@@ -1,5 +1,20 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AI commander command-console requester guard [RELEASE LOOP]
+
+Hardened the player-facing AI commander command console request path before
+runtime collection. Client command-menu actions now include the requester
+object and requester group when sending AICOM posture, field-order, direct
+AI-command, artillery, priority-unit and disband requests. The server-side
+`Server_HandleSpecial.sqf` path now validates the requester object, live player
+state, group binding and side match before accepting those AICOM control
+requests, with commander-only actions requiring the requester to be the current
+human commander.
+
+This closes another payload-forgery surface in the AICOM support UI. It still
+requires LoadoutManager propagation to Takistan, package refresh and the normal
+runtime RPT matrix before release wording can move from runtime-pending.
+
 ## 2026-07-01 — AI commander donation authority guard [RELEASE LOOP]
 
 Hardened the live `RequestAIComDonate.sqf` PVF before the runtime RPT pass.

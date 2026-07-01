@@ -373,6 +373,27 @@ function Test-AIComDonateAuthorityGuard {
 	Add-Result "AI commander donation authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomCommandConsoleAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$clientPath = Join-Path $entry.Root "Client\GUI\GUI_Menu_Command.sqf"
+		$server = Get-Text $serverPath
+		$client = Get-Text $clientPath
+		if (-not ($client.Contains('["aicom-posture", sideJoined, _pv, player, group player]') -and $client.Contains('["aicom-fieldorder", sideJoined, _pv, player, group player]') -and $client.Contains('["aicom-ai-command", sideJoined, _send, player, group player]') -and $client.Contains('["aicom-arty-here", sideJoined, [_position select 0, _position select 1, 0], player, group player]') -and $client.Contains('["aicom-request-unit", sideJoined, _reqTypes select _rs, player, group player]') -and $client.Contains('["aicom-team-disband", sideJoined, "ALL", player, group player]'))) { $missing += "$($entry.Terrain):client-requester-context" }
+		if (-not ($server.Contains('_validateAicomConsoleRequester') -and $server.Contains('count _vArgs < 5'))) { $missing += "$($entry.Terrain):validator-shape" }
+		if (-not ($server.Contains('typeName _requester != "OBJECT"') -and $server.Contains('typeName _requestTeam != "GROUP"') -and $server.Contains('!isPlayer _requester') -and $server.Contains('group _requester != _requestTeam') -and $server.Contains('side _requestTeam != _vSide'))) { $missing += "$($entry.Terrain):requester-team-binding" }
+		if (-not ($server.Contains('leader _cmdTeam != _requester') -and $server.Contains('!isPlayer (leader _cmdTeam)'))) { $missing += "$($entry.Terrain):human-commander-binding" }
+		if (-not ($server.Contains('[_args, _aSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _pSide, false] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _dSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _uSide, true] Call _validateAicomConsoleRequester'))) { $missing += "$($entry.Terrain):case-gates" }
+	}
+	Add-Result "AICOM command-console authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomGroupVariableDefaults {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -875,6 +896,7 @@ Test-PvfIntegrity
 Test-SideSupplyAuthorityGuard
 Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
+Test-AicomCommandConsoleAuthorityGuard
 Test-AicomGroupVariableDefaults
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups
