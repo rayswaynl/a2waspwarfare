@@ -453,11 +453,11 @@ function Test-AttackWavePvGuards {
 		} else {
 			$initBlock = $initCode.Substring($initStart)
 			$shapeAt = $initBlock.IndexOf('typeName _d != "ARRAY"')
-			$countAt = $initBlock.IndexOf('count _d < 2')
+			$countAt = $initBlock.IndexOf('count _d < 4')
 			$selectAt = $initBlock.IndexOf('_d select 0')
 			if ($shapeAt -lt 0 -or $countAt -lt 0) { $missing += "$($entry.Terrain):init-payload-shape" }
 			if ($selectAt -ge 0 -and ($shapeAt -lt 0 -or $countAt -lt 0 -or $shapeAt -gt $selectAt -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):init-guard-after-select" }
-			if (-not ($initBlock.Contains('typeName _supply != "SCALAR"') -and $initBlock.Contains('_side in [west, east]') -and $initBlock.Contains('_serverSupply = _side Call GetSideSupply') -and $initBlock.Contains('_serverSupply < 25000'))) { $missing += "$($entry.Terrain):init-authority-types" }
+			if (-not ($initBlock.Contains('typeName _supply != "SCALAR"') -and $initBlock.Contains('_side in [west, east]') -and $initBlock.Contains('typeName _requester != "OBJECT"') -and $initBlock.Contains('typeName _requestTeam != "GROUP"') -and $initBlock.Contains('!isPlayer _requester') -and $initBlock.Contains('group _requester != _requestTeam') -and $initBlock.Contains('side _requestTeam != _side') -and $initBlock.Contains('_side Call WFBE_CO_FNC_GetCommanderTeam') -and $initBlock.Contains('_requestTeam != _cmdTeam') -and $initBlock.Contains('leader _cmdTeam != _requester') -and $initBlock.Contains('_side Call WFBE_CO_FNC_GetSideHQ') -and $initBlock.Contains('_requester distance _hq') -and $initBlock.Contains('_serverSupply = _side Call GetSideSupply') -and $initBlock.Contains('_serverSupply < 25000') -and $initBlock.Contains('WFBE_SE_FNC_ApplyAttackWaveDetails'))) { $missing += "$($entry.Terrain):init-authority-types" }
 			if (-not ($initBlock.Contains('rejected malformed ATTACK_WAVE_INIT') -and $initBlock.Contains('rejected short ATTACK_WAVE_INIT') -and $initBlock.Contains('rejected invalid ATTACK_WAVE_INIT'))) { $missing += "$($entry.Terrain):init-warnings" }
 		}
 
@@ -465,7 +465,7 @@ function Test-AttackWavePvGuards {
 		if ($clientStart -lt 0) {
 			$missing += "$($entry.Terrain):client-ready-missing-handler"
 		} else {
-			$clientEnd = $detailsCode.IndexOf('"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler', $clientStart)
+			$clientEnd = $detailsCode.IndexOf('WFBE_SE_FNC_ApplyAttackWaveDetails', $clientStart)
 			if ($clientEnd -lt 0) { $clientEnd = $detailsCode.Length }
 			$clientBlock = $detailsCode.Substring($clientStart, $clientEnd - $clientStart)
 			$assignAt = $clientBlock.IndexOf('_player = _this select 1')
@@ -475,9 +475,9 @@ function Test-AttackWavePvGuards {
 			if (-not $clientBlock.Contains('rejected malformed CLIENT_INIT_READY')) { $missing += "$($entry.Terrain):client-ready-warning" }
 		}
 
-		$detailsStart = $detailsCode.IndexOf('"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler')
+		$detailsStart = $detailsCode.IndexOf('WFBE_SE_FNC_ApplyAttackWaveDetails')
 		if ($detailsStart -lt 0) {
-			$missing += "$($entry.Terrain):details-missing-handler"
+			$missing += "$($entry.Terrain):details-missing-internal-handler"
 		} else {
 			$detailsBlock = $detailsCode.Substring($detailsStart)
 			$shapeAt = $detailsBlock.IndexOf('typeName _d != "ARRAY"')
@@ -488,8 +488,9 @@ function Test-AttackWavePvGuards {
 			if (-not ($detailsBlock.Contains('typeName _priceModifier != "SCALAR"') -and $detailsBlock.Contains('typeName _attackLength != "SCALAR"') -and $detailsBlock.Contains('_priceModifier <= 0') -and $detailsBlock.Contains('_attackLength < 0') -and $detailsBlock.Contains('_side in [west, east]'))) { $missing += "$($entry.Terrain):details-field-types" }
 			if (-not ($detailsBlock.Contains('rejected malformed ATTACK_WAVE_DETAILS') -and $detailsBlock.Contains('rejected short ATTACK_WAVE_DETAILS') -and $detailsBlock.Contains('rejected invalid ATTACK_WAVE_DETAILS'))) { $missing += "$($entry.Terrain):details-warnings" }
 		}
+		if ($detailsCode.Contains('"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler') -or $initCode.Contains('publicVariableServer "ATTACK_WAVE_DETAILS"')) { $missing += "$($entry.Terrain):details-public-entrypoint" }
 
-		if (-not ($client.Contains('ATTACK_WAVE_INIT = [_supply, _side]') -and $client.Contains('publicVariableServer "ATTACK_WAVE_INIT"'))) { $missing += "$($entry.Terrain):client-init-shape" }
+		if (-not ($client.Contains('_requester = player') -and $client.Contains('_requestTeam = group player') -and $client.Contains('ATTACK_WAVE_INIT = [_supply, _side, _requester, _requestTeam]') -and $client.Contains('publicVariableServer "ATTACK_WAVE_INIT"'))) { $missing += "$($entry.Terrain):client-init-shape" }
 	}
 	Add-Result "Attack Wave PV guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }

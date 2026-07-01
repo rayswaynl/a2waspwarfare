@@ -27,11 +27,11 @@
 };
 
 
-"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
+WFBE_SE_FNC_ApplyAttackWaveDetails = {
 
 	private ["_badFields", "_d", "_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
 
-	_d = _this select 1;
+	_d = _this;
     if (typeName _d != "ARRAY") exitWith {
         ["WARNING", Format ["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS payload type [%1].", typeName _d]] Call WFBE_CO_FNC_LogContent;
     };
