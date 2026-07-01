@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 18:57 Europe/Amsterdam
+Last updated: 2026-07-01 19:02 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -62,9 +62,10 @@ open, draft, and currently reported clean at head
 `153a513fb6511a4154f2ed825ba9ff2578c070e7`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
-PR #126 is now closed without merge. Its verified shippable pieces were folded
-through PR #127; keep the remaining branch separate unless it is rebased and
-revalidated.
+PR #126 is open again, draft, and GitHub reports it clean at
+`be1b83a7eca8ffe3d95d1584450fdf7d6ffdb954`. Its verified shippable pieces were
+folded through PR #127; the latest head still needs fresh triage before release
+selection.
 
 PR #129 is an open draft release-readiness hub at
 `72888f22851871c8ed967a0fd29402a0c410c0bd`. It is mission-affecting, not
@@ -330,17 +331,14 @@ Fresh triage at 2026-07-01 18:57 Europe/Amsterdam found:
 - PR #133: focused placement-preview static fix, open draft and clean at
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
-- PR #126: closed without merge after advancing again to
-  `390a6846a5d99ca28046f15ba883dad82300ad66`. Do not use it as a Thursday
-  release path unless it is deliberately reopened/rebased and revalidated.
+- PR #126: open draft, clean at
+  `be1b83a7eca8ffe3d95d1584450fdf7d6ffdb954`. This head advanced after the
+  18:57 PR #133 checkpoint and still needs fresh diff/static/runtime triage
+  before release selection.
 - PR #125: broad command-center/tooling lane at
-  `153a513fb6511a4154f2ed825ba9ff2578c070e7`. True payload from merge-base
-  `b7241a35` is 141 files, +13909/-1470, including 103 mission files across both
-  terrains plus large harness/docs/server-config additions. GitHub now reports
-  it `DIRTY` against the merged #132 master. It overlaps the placement static
-  fix in the two terrain `Client/Init/Init_Client.sqf` files. True-payload
-  `git diff --check` passed before #132 merged, but it is no longer a clean
-  current-master lane.
+  `64cbc79b185d30193d3eed7b27cbdd5219550187`. GitHub reports it `DIRTY`
+  against the merged #132 master. It remains broad mission-affecting scope and
+  still needs fresh conflict/static/runtime triage before release selection.
   Added-line A3-token scan hits docs/tooling and a string label in
   `Tools/PrTestHarness/Overlays/pr8-stress/test/wasp_selftest.sqf`, not an
   executable mission `params` command, but this lane is still too broad for a
