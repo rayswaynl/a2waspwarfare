@@ -38,12 +38,16 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - Applied a small AICOM HC-dispatch bookkeeping fix: pending-slot age now starts at dispatch and clears when HC creation acknowledges or fails before registration. This makes `HCDISPATCH_REAP` measure actual dispatch age instead of delayed scan age.
 - Darkened `WFBE_C_AICOM_HC_TOPUP_ENABLE` back to `0` because the top-up worker is still draft-only and lacks the live HC-side refill consumer. The safer group-count merge lever remains separately opt-in.
 - Reduced repeated AICOM founding scans by snapshotting `allUnits`/`allGroups`/`vehicles` once per `AI_Commander_Teams` decision and reusing those snapshots for player scaling, safe-retire checks, side-AI cap, group-cap checks, and attack-heli/artillery cap checks.
+- Removed the last AICOM `find` ambiguity review items from `AI_Commander_Base.sqf` by replacing scaffold structure lookups with an explicit A2-safe local index helper.
+- Added a static runtime-proof emitter contract to the smoke gate so AICOM, HC/delegation, town cleanup, group-budget, supply, artillery and Takistan WEST fallback source tokens cannot disappear before the runtime RPT phase.
+- Synced the Takistan in-game Help menu to the redesigned controller while keeping Takistan-specific airfield and premium-unlock anchors (`Loy Manara`, `Rasman AF`).
 - Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
 
 ## Proven Static And Package Gates
 
 - `dotnet run` from `Tools\LoadoutManager` must complete and leave no unintended tracked source diff.
-- `Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1` passed for Chernarus and Takistan: `FAIL 0`, `REVIEW 4`; the review items are legal array `find` calls on `_names` in `Server\AI\Commander\AI_Commander_Base.sqf`.
+- `Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1` passed for Chernarus and Takistan: `FAIL 0`, `REVIEW 0`.
+- `Tools\PrTestHarness\Smoke\Test-WaspStaticSmoke.ps1` includes the `Release runtime-proof token emitters` source contract. This proves emitter strings are present for the runtime scorer, not that runtime evidence has passed.
 - `Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1` must pass against `_MISSIONS.7z` with expected candidate `release-command-center-20260630` and the current `git rev-parse --short=10 HEAD`.
 - `Tools\PrTestHarness\Release\New-WaspReleaseHandoff.ps1` must pass against the current package manifest.
 - `Tools\PrTestHarness\Release\Test-WaspReleaseHandoff.SelfTest.ps1`

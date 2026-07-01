@@ -1,5 +1,25 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM lint cleanup and runtime-token source contract [RELEASE LOOP]
+
+Tightened the PR #125 static release gate in two small ways. First,
+`AI_Commander_Base.sqf` no longer uses literal `_names find "..."` scaffold
+lookups for CBRadar/Bank/Reserve/ArtilleryRadar; it now uses a local
+A2-safe index helper with the same first-match/-1 behavior. This removes the
+last four `Lint-A2Compat.ps1` REVIEW items from both Chernarus and Takistan.
+
+Second, `Test-WaspStaticSmoke.ps1` now has a
+`Release runtime-proof token emitters` source contract across both maintained
+terrains. It verifies that the mission still contains the AICOM, HC/delegation,
+town cleanup, group-budget, supply, artillery and Takistan WEST fallback emitter
+strings required later by the runtime RPT scorer. This is not runtime proof; it
+keeps the package/static gate from going green after a cleanup accidentally
+renames or removes the evidence emitters needed for the ten-file RPT matrix.
+
+Also synced the Takistan in-game Help menu to the redesigned controller while
+using Takistan-specific airfield/unlock text (`Loy Manara`, `Rasman AF`) and
+current economy/bank/patrol values.
+
 ## 2026-07-01 — PR #125 master merge gate decision [PR LOOP]
 
 `origin/master` currently adds PR #121's editor-slot empty-group reaper in
