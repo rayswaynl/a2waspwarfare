@@ -17,6 +17,7 @@
 */
 
 private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
+              "_allUnits","_allGroups","_allVehicles",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
@@ -30,6 +31,14 @@ if (isNil "_logik") exitWith {};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") then {_teams = []};
+
+//--- Snapshot the engine-global arrays once for this founding decision. The same worker pass
+//--- uses them for player scaling, safe retire checks, total-AI cap, group cap and vehicle caps;
+//--- rereading allUnits/allGroups/vehicles for each question turns one cheap decision into
+//--- several full-world scans.
+_allUnits = allUnits;
+_allGroups = allGroups;
+_allVehicles = vehicles;
 
 //--- V0.6 task 47: count FOUNDED teams (HC or server-local tag) and EDITOR-SLOT
 //--- teams separately so editor-slot population never blocks genuine army founding.
@@ -72,7 +81,7 @@ _target           = _base + _extra;
 //--- AI can't bloat back past the curve when the server is busiest (income->quality is handled by
 //--- the separate income scaler). Human count mirrors MonitorPlayerCount.sqf (isPlayer minus live HCs).
 private ["_pcN","_hcN","_pcExtraCap"];
-_pcN = {isPlayer _x} count allUnits;
+_pcN = {isPlayer _x} count _allUnits;
 _hcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 _pcN = (_pcN - _hcN) max 0;
 	//--- B74.2 UNIFIED POP-TIER publisher (Ray 2026-06-23): the live human count is already settled here, so compute
@@ -159,8 +168,8 @@ if (_foundedTeams > _target) then {
 		if (!isNull _x && {_x getVariable ["wfbe_aicom_hc", false]} && {!(_x getVariable ["wfbe_aicom_disband", false])}) then {
 			_ldr = leader _x;
 			if (!isNull _ldr && {alive _ldr}) then {
-				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count allUnits;
-				_inCombat = (behaviour _ldr == "COMBAT") || ({alive _x && {side _x != _side} && {(_x distance _ldr) < _safeDist}} count allUnits > 0);
+				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count _allUnits;
+				_inCombat = (behaviour _ldr == "COMBAT") || ({alive _x && {side _x != _side} && {(_x distance _ldr) < _safeDist}} count _allUnits > 0);
 				if (_nearP == 0 && {!_inCombat} && {(count units _x) < _pickN}) then {
 					_pickN = count units _x; _pick = _x;
 				};
@@ -190,14 +199,14 @@ if ((_foundedTeams + _pending) >= _target) exitWith {};
 //--- "infinite teams" overshoot. Same count as Produce (side AI minus players); cap from the pop-tier array.
 private ["_aiCapTier","_sideAINow"];
 _aiCapTier = (missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]) select ((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0);
-_sideAINow = {(side _x == _side) && !(isPlayer _x)} count allUnits;
+_sideAINow = {(side _x == _side) && !(isPlayer _x)} count _allUnits;
 if (_sideAINow >= _aiCapTier) exitWith {
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding skipped - side AI %2 >= tier cap %3 (tier %4, pc %5).", _sideText, _sideAINow, _aiCapTier, (missionNamespace getVariable ["WFBE_PopTier", 0]), _pcN]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
-_totalGroups = {side _x == _side} count allGroups;
+_totalGroups = {side _x == _side} count _allGroups;
 if (_totalGroups > 110) exitWith {
 	["WARNING", Format ["AI_Commander_Teams.sqf: [%1] group-cap ceiling reached (%2 groups) - founding skipped (founded %3, editor %4, pending %5, target %6).", _sideText, _totalGroups, _foundedTeams, _editorTeams, _pending, _target]] Call WFBE_CO_FNC_AICOMLog;
 };
@@ -378,7 +387,7 @@ if (count _live > 0) then {
 					};
 				};
 			};
-		} forEach vehicles;
+		} forEach _allVehicles;
 		if (_heliAlive >= _heliCap) then {
 			_eligNoAir2 = [];
 			{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir2 set [count _eligNoAir2, _x]} } forEach _eligible;
@@ -424,7 +433,7 @@ if (count _live > 0) then {
 					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side", sideUnknown]) == _side}) then {_artyAlive = _artyAlive + 1};
 				};
 			};
-		} forEach vehicles;
+		} forEach _allVehicles;
 		if (_artyAlive >= _artyCap) then {
 			_eligNoArty = [];
 			{

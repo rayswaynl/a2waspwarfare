@@ -37,6 +37,7 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - Wiki scout confirmed Chernarus and Takistan pages exist but need release-facing freshness wording, exact dual-terrain RPT status, and generated Takistan parity notes before runtime-proven claims.
 - Applied a small AICOM HC-dispatch bookkeeping fix: pending-slot age now starts at dispatch and clears when HC creation acknowledges or fails before registration. This makes `HCDISPATCH_REAP` measure actual dispatch age instead of delayed scan age.
 - Darkened `WFBE_C_AICOM_HC_TOPUP_ENABLE` back to `0` because the top-up worker is still draft-only and lacks the live HC-side refill consumer. The safer group-count merge lever remains separately opt-in.
+- Reduced repeated AICOM founding scans by snapshotting `allUnits`/`allGroups`/`vehicles` once per `AI_Commander_Teams` decision and reusing those snapshots for player scaling, safe-retire checks, side-AI cap, group-cap checks, and attack-heli/artillery cap checks.
 - Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
 
 ## Proven Static And Package Gates
