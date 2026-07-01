@@ -1,6 +1,6 @@
 /* Server_BankIncome.sqf — per-bank income drip loop.
    Spawned server-side from Construction_MediumSite.sqf when a bank is built.
-   Pays every player on the owning side 2500 every 5 minutes while the bank lives.
+   Pays a fixed $6,000 side pool split among living owning-side players every 5 minutes.
    Skips payout if the owning side has no deployed (alive) HQ — prevents free income
    while the side is wiped.
 

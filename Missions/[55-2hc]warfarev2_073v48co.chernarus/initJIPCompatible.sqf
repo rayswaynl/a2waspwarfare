@@ -27,7 +27,13 @@ publicVariable "CBA_display_ingame_warnings";
 for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
-diag_log "## Build: WASP Experital TEST (experimental feature branch)";
+diag_log "## Build: WASP Warfare release candidate";
+#ifdef WF_RELEASE_MARKER
+diag_log WF_RELEASE_MARKER;
+#else
+diag_log format ["WASPRELEASE|v1|candidate=release-command-center-20260630|git=unknown|terrain=%1", worldName];
+#endif
+diag_log format ["MISSINIT: missionName=%1, worldName=%2, isMultiplayer=%3, isServer=%4, isDedicated=%5", WF_MISSIONNAME, worldName, isMultiplayer, isServer, isDedicated];
 diag_log format ["## Starting Distance: [%1]", startingDistance];
 diag_log format ["## Max players Defined: [%1]", WF_MAXPLAYERS];
 diag_log format ["## LOG CONTENT : [%1]", LOG_CONTENT_STATE];
@@ -59,6 +65,7 @@ isHeadLessClient = Call Compile preprocessFileLineNumbers "Headless\Functions\HC
 //--- channel, and the cost lands on the HC machine, never on players or the server.
 if (isHeadLessClient) then {LOG_CONTENT_STATE = "ACTIVATED"};
 if (isHeadLessClient) then {["INITIALIZATION", "initJIPCompatible.sqf: Detected an headless client."] Call WFBE_CO_FNC_LogContent};
+if (isHeadLessClient) then {diag_log "initJIPCompatible.sqf: Detected an headless client."};
 
 
 //--- Server JIP Information
@@ -353,6 +360,7 @@ if (isHostedServer || (!isHeadLessClient && !isDedicated)) then {
 	};
 
 	["INITIALIZATION", "initJIPCompatible.sqf: Executing the Client Initialization."] Call WFBE_CO_FNC_LogContent;
+	diag_log "initJIPCompatible.sqf: Executing the Client Initialization.";
 	execVM "Client\Init\Init_Client.sqf";
 };
 

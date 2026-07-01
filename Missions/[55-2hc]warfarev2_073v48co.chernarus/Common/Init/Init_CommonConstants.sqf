@@ -89,6 +89,12 @@ with missionNamespace do {
 	if (isNil "WFBE_C_GUER_MORTAR_SPREAD_TIERSTEP") then {WFBE_C_GUER_MORTAR_SPREAD_TIERSTEP = 4};	//--- spread tightens by this many m per GUER vehicle tier.
 	if (isNil "WFBE_C_GUER_MORTAR_SPREAD_MIN")      then {WFBE_C_GUER_MORTAR_SPREAD_MIN      = 8};	//--- floor on the +/- spread (m), however high the tier.
 
+	//--- GUER improvised armour (#109, shipped default-OFF): graded non-AT damage reduction on resistance light vehicles (technicals); AT/HEAT/ATGM pass through. See Common_GuerArmor.sqf. Un-shelve by raising the base above 0.
+	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR") then {WFBE_C_GUER_IMPROVISED_ARMOR = 0};	//--- base % damage reduction vs non-AT fire (0 = whole feature OFF).
+	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR_TIERSTEP") then {WFBE_C_GUER_IMPROVISED_ARMOR_TIERSTEP = 4};	//--- extra % per WFBE_GUER_VEHICLE_TIER.
+	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR_MAX") then {WFBE_C_GUER_IMPROVISED_ARMOR_MAX = 45};	//--- hard cap on effective % reduction.
+	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR_MOBILITY_BONUS") then {WFBE_C_GUER_IMPROVISED_ARMOR_MOBILITY_BONUS = 15};	//--- extra % on drivetrain hits, keeps technicals mobile.
+
 	//--- B75 (guer-tech): KILL-BASED TECH PROGRESSION. The GUER faction earns better gear by KILLS instead of
 	//--- by elapsed match time (the old time-tier in Server_GuerStipend.sqf is removed). WFBE_GUER_PLAYER_KILLS is
 	//--- the cumulative count of enemy (WEST/EAST) units killed BY resistance PLAYERS (incremented server-side in

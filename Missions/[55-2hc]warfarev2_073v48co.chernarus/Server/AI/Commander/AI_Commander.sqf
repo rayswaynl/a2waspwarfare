@@ -1,7 +1,7 @@
 /*
 	AI Commander - per-side supervisor.
 	feat/ai-commander. Server-side; one instance spawned per present side from Init_Server.
-	Parameter: _this = side.
+	Parameter: _this = side OR [side, ownerGeneration] from the watchdog.
 
 	Always running. Each tick it asks "is the AI commanding this side right now, and how?"
 	  - No human commander -> FULL: executor + town auto-assign + economy (types/upgrade/produce).
@@ -12,12 +12,23 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy"];
 
-_side = _this;
+_args = _this;
+_side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
 _myID = (_side) Call WFBE_CO_FNC_GetSideID;
+_ownerKey = format ["wfbe_aicom_owner_%1", _myID];
+_passedOwner = -1;
+if (typeName _args == "ARRAY" && {count _args > 1}) then {_passedOwner = _args select 1};
+if (_passedOwner >= 0) then {
+	_ownerSeq = _passedOwner;
+	missionNamespace setVariable [_ownerKey, _ownerSeq];
+} else {
+	_ownerSeq = (missionNamespace getVariable [_ownerKey, 0]) + 1;
+	missionNamespace setVariable [_ownerKey, _ownerSeq];
+};
 
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
@@ -26,7 +37,7 @@ waitUntil {sleep 1; !(isNil "serverInitFull")};
 //--- variable exists the moment the loop starts (closes the 'never stamped yet' ambiguity).
 //--- Server-only; integer key by side ID; a watchdog reads time-(this) > N*TICK => loop dead.
 missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
-diag_log ("AICOMHB|v1|" + (str _side) + "|" + (str _myID) + "|SEED|" + (str (round time)));
+diag_log ("AICOMHB|v2|" + (str _side) + "|" + (str _myID) + "|SEED|" + (str (round time)) + "|owner=" + str _ownerSeq);
 
 //--- B69 worker-stagger: one-time per-side phase jitter so the two supervisors' economy
 //--- workers fall on different frames (mirrors AI_Commander_Wildcard.sqf de-correlation idiom).
@@ -109,7 +120,7 @@ _prevStipendActive = false;
 _ltStipend = -1e9;
 _noHumanSince = -1;
 
-["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1 (owner generation %2).", str _side, _ownerSeq]] Call WFBE_CO_FNC_AICOMLog;
 
 //--- WAR-BRIEF: one-time [AICOM BOOT] snapshot (server groups, HC count, aiMax, starting funds).
 _grpCount = 0;
@@ -122,7 +133,7 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
 	["INFORMATION", Format ["AI_Commander.sqf: [%1] WFBE_C_AI_COMMANDER_LOCK=1 - AI retains full command regardless of human slot occupancy.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 };
 
-while {!gameOver} do {
+while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _ownerSeq}} do {
 	//--- SUPERVISOR HEARTBEAT (B69): unconditional per-tick liveness beat. MUST be the first
 	//--- statement, above the _active gate and before EVERY worker Call, so even a worker that
 	//--- throws (e.g. createVehicle on a malformed classname, AI_Commander_Base.sqf:503-516)
@@ -753,6 +764,11 @@ while {!gameOver} do {
 	};
 
 	sleep (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TICK");
+};
+
+if (!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) != _ownerSeq}) exitWith {
+	diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SUPERVISOR_SUPERSEDED|old=" + str _ownerSeq + "|new=" + str (missionNamespace getVariable [_ownerKey, -1]));
+	["WARNING", Format ["AI_Commander.sqf: [%1] supervisor owner generation %2 superseded by %3 - exiting old instance.", str _side, _ownerSeq, missionNamespace getVariable [_ownerKey, -1]]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 //--- V0.5: round verdict - one line per side for the stats pipeline / meta-learning.
