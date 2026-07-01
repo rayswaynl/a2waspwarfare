@@ -409,6 +409,10 @@ function Test-AicomHcTopUpDraftExcluded {
 		"WFBE_C_AICOM_HC_MERGE_ENABLE",
 		"WFBE_C_AICOM_HC_MERGE_FRAC",
 		"WFBE_C_AICOM_HC_MERGE_RANGE",
+		"WFBE_C_AICOM_HC_MERGE_INTERVAL",
+		"AICOMHCMERGE",
+		"HC_TOPUP",
+		"HC_MERGE",
 		"AI_Commander_HCTopUp.DRAFT"
 	)
 	foreach ($entry in $roots) {

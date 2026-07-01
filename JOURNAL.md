@@ -10,7 +10,10 @@ merge constants and production logic remain intact.
 
 Static smoke now treats the HCTopUp draft tokens as release-forbidden across
 both generated mission outputs, so future package refreshes cannot silently
-ship the half-wired worker surface again.
+ship the half-wired worker surface again. Follow-up hygiene also removes the
+stale private declarations left behind by the supervisor-block deletion and
+adds extra HCTopUp/HC-merge log/config tokens to the release-forbidden smoke
+coverage.
 
 ## 2026-07-01 — AI commander command-console requester guard [RELEASE LOOP]
 
