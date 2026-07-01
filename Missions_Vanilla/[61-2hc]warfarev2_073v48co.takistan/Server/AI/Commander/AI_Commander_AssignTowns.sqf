@@ -208,6 +208,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
 								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
+								//--- STALL-ADVANCE FLOOR (Build84, claude-gaming 2026-07-02): stamp the "on this goto
+								//--- since" clock the moment a NEW/changed goto is booked. The uncap-parked branch below
+								//--- reads it to force a prompt retarget when a team parks on an unflippable depot for
+								//--- longer than WFBE_C_AICOM_STALL_ADVANCE_SECS even if the strike counter never accrues.
+								_team setVariable ["wfbe_aicom_goto_since", time];
 							} else {
 								if (time - (_ord select 1) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
 									private ["_ldr","_movedThr","_farThr"];
@@ -296,6 +301,34 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											_strk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
 											_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
 											diag_log (Format ["STUCKSTAT|v1|%1|%2|uncap-parked|leader=%3|distTgt=%4|cappasses=%5|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance _goto), (_team getVariable ["wfbe_aicom_cappasses", 0]), _strk]);
+											//--- STALL-ADVANCE FLOOR (Build84, claude-gaming 2026-07-02): the strike ladder above only
+											//--- reaches STUCK_ABANDON after several full 120s windows, and live RPT showed it almost never
+											//--- fires (each fresh order seq reset the phase bookkeeping before the counter accrued) -> a team
+											//--- stood at an unflippable res-near=0 depot indefinitely (0 town-captures, TARGET_ABANDON=0).
+											//--- TIME-based bypass: if this team has been parked on the SAME _goto with no flip for longer than
+											//--- WFBE_C_AICOM_STALL_ADVANCE_SECS (default 240; 0 = off), blacklist _goto for THIS team NOW (same
+											//--- [town,expiry] idiom + WFBE_C_AICOM_BLACKLIST_COOLDOWN) and set _needs=true so the nearest-
+											//--- reachable selector hands it a DIFFERENT enemy town THIS tick - bypassing the strike count. The
+											//--- goto_since clock is stamped when the goto is first booked (above) and cleared on real progress
+											//--- (below) / flip, so only a genuine stall trips it. Empty-pool guard below never blacklists the
+											//--- last enemy town. The team holds its live waypoint until re-tasked (never idle). A2-OA-safe.
+											private ["_stallSecs","_gotoSince"];
+											_stallSecs = missionNamespace getVariable ["WFBE_C_AICOM_STALL_ADVANCE_SECS", 240];
+											_gotoSince = _team getVariable "wfbe_aicom_goto_since";
+											if (isNil "_gotoSince") then {_gotoSince = time; _team setVariable ["wfbe_aicom_goto_since", time]};
+											if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs}) then {
+												private ["_saCd","_saBl","_saKeep"];
+												_saCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
+												_saBl = _team getVariable ["wfbe_aicom_blacklist", []];
+												_saKeep = [];
+												{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_saKeep set [count _saKeep, _x]} } forEach _saBl;
+												_saKeep set [count _saKeep, [_goto, time + _saCd]];
+												_team setVariable ["wfbe_aicom_blacklist", _saKeep];
+												_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+												_team setVariable ["wfbe_aicom_goto_since", time]; //--- clock reset so the fresh target starts a clean stall window.
+												_needs = true; //--- retarget THIS tick via the nearest-reachable selector (empty-pool guard protects the last enemy town).
+												diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|reason=stall-advance|onGoto=" + str (round (time - _gotoSince)) + "|cooldown=" + str _saCd);
+											};
 											if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])) then {
 												//--- Same ABANDON + per-team blacklist + side-abandon tally as the position-stuck
 												//--- ladder below-left; factored to keep both paths identical.
@@ -332,6 +365,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- breadcrumb and reset the unstuck strike ladder (the team moved, so it is not stuck).
 											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
 											_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+											//--- STALL-ADVANCE FLOOR: the team is making real progress on this goto (moving / draining),
+											//--- so restart its stall clock - the time-based bypass only fires on a genuine parked stall.
+											_team setVariable ["wfbe_aicom_goto_since", time];
 										};
 									};
 								};

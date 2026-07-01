@@ -1038,10 +1038,20 @@ while {!WFBE_GameOver && _alive} do {
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
 						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
 						//--- B74.2 (Ray 2026-06-23) NO-PROGRESS tracker for the camp-first loop (don't get stuck on camps).
-						private ["_campStallPasses","_campLastUnheld","_campStallMax"];
+						private ["_campStallPasses","_campLastUnheld","_campStallMax","_capMode","_campGateMode2"];
 						_campStallPasses = 0;
 						_campLastUnheld  = count _unheldCamps;
 						_campStallMax    = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_STALL_PASSES", 3];
+						//--- FIX A (afraid-of-camps): in the LIVE AllCamps capture mode (WFBE_C_TOWNS_CAPTURE_MODE==2,
+						//--- read the same way server_town.sqf:15 does) the depot CANNOT drain until this side holds
+						//--- EVERY camp, so the B74.2 no-progress bail is HARMFUL here: after bailing the team falls
+						//--- through to a depot hold that still can't flip, and grinds the town forever ("stands at a
+						//--- town it cannot finish"). When mode==2 AND WFBE_C_AICOM_CAMP_GATE_MODE2 (default 1) is on we
+						//--- DISABLE the stall bail and stay on the camps, clearing them harder, bounded by the SAME
+						//--- _campFirstEnd (WFBE_C_AICOM_ASSAULT_HOLD, 360s) so the team is never trapped indefinitely.
+						//--- Mode 0/1, or the flag off, behave EXACTLY as before.
+						_capMode       = missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_MODE", 0];
+						_campGateMode2 = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_GATE_MODE2", 1];
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
@@ -1077,6 +1087,24 @@ while {!WFBE_GameOver && _alive} do {
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
 							} forEach (_campTgtPos nearEntities [["Man"], 60]);
+							//--- FIX A: in the mode-2 gated path the depot can't flip until the garrison is
+							//--- cleared, so prosecute the camp HARDER: lay a live SAD ring over the camp and
+							//--- doTarget/doFire every live garrison unit so the squad ATTACKS instead of just
+							//--- planting. Still bounded by _campFirstEnd; units keep a live order (never idle).
+							if (_capMode == 2 && {_campGateMode2 != 0}) then {
+								[_team, true, [[_campTgtPos, 'SAD', (_campRange max 30), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+								_campEnemy = [];
+								{
+									if (alive _x && {side _x != _side} && {side _x != civilian}) then {
+										_team reveal _x; //--- A2: 2-operand reveal only.
+										_campEnemy = _campEnemy + [_x];
+									};
+								} forEach (_campTgtPos nearEntities [["Man"], 60]);
+								if (count _campEnemy > 0) then {
+									_campFoe = _campEnemy select 0;
+									{if (alive _x) then {_x doTarget _campFoe; _x doFire _campFoe}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+								};
+							};
 							//--- Settle: up to ~20s or leader inside the 10m camp range (mirrors the
 							//--- per-camp sweep settle at L543). Re-press stragglers toward the centre.
 							_campSettleEnd = time + 20;
@@ -1109,8 +1137,15 @@ while {!WFBE_GameOver && _alive} do {
 							} else {
 								_campStallPasses = _campStallPasses + 1;
 							};
-							if (_campStallMax > 0 && {_campStallPasses >= _campStallMax}) exitWith {
-								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first NO-PROGRESS after %3 passes (%4 camp(s) still un-held) - proceeding to town centre.", _side, _team, _campStallPasses, count _unheldCamps]] Call WFBE_CO_FNC_AICOMLog;
+							//--- FIX A: SKIP the no-progress bail in the mode-2 gated path. In AllCamps mode the
+							//--- depot cannot drain until every camp is held, so bailing to the (still-gated) depot
+							//--- hold would only grind the town forever. We stay on the camps and let _campFirstEnd
+							//--- (WFBE_C_AICOM_ASSAULT_HOLD) be the sole, bounded release. Classic/threshold (mode 0/1)
+							//--- or the flag off keep the original stall bail unchanged.
+							if !(_capMode == 2 && {_campGateMode2 != 0}) then {
+								if (_campStallMax > 0 && {_campStallPasses >= _campStallMax}) exitWith {
+									["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first NO-PROGRESS after %3 passes (%4 camp(s) still un-held) - proceeding to town centre.", _side, _team, _campStallPasses, count _unheldCamps]] Call WFBE_CO_FNC_AICOMLog;
+								};
 							};
 						};
 						//--- Release the plant so the depot-centre hold below can march these units on
