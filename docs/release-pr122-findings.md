@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 19:54 Europe/Amsterdam
+Last updated: 2026-07-01 20:09 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -90,6 +90,11 @@ PR #134 is a new Build84/cmdcon36 lane, open and non-draft at
 broad mission-affecting AICOM/client/start-spawn scope. Local package/static
 triage found a raw current-master whitespace failure and release-marker identity
 ambiguity, documented below.
+
+PR #135 is a focused draft fix for PR #134, open against
+`claude/build84-cmdcon36` at `203592daecf6444312076664ccad37471e663278`. It
+fixes the PR #134 release identity/static blockers without changing gameplay
+logic.
 
 Exact PR #133 `SERVER_DEBUG` mission-folder artifact:
 
@@ -312,6 +317,51 @@ This artifact is not runtime proof. It is an exact PR #134 package for further
 runtime collection only after the source/static identity issues are resolved or
 explicitly waived.
 
+## PR #135 Build84 Identity Fix
+
+Fresh fix and packaging for PR #135 at 2026-07-01 20:09 Europe/Amsterdam:
+
+- PR: <https://github.com/rayswaynl/a2waspwarfare/pull/135>
+- base PR: #134, <https://github.com/rayswaynl/a2waspwarfare/pull/134>
+- branch: `codex/fix-pr134-release-identity`
+- base branch: `claude/build84-cmdcon36`
+- base head: `cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`
+- fix head: `203592daecf6444312076664ccad37471e663278`
+- artifact:
+  `outputs/a2waspwarfare-pr134-release-identity-server-debug-missions.7z`
+- SHA256:
+  `EF2175B2CF00DB27A8F589350203F25A211BF6E427A4FA13A27E30DA31BE4FF0`
+- size: `7175056` bytes
+- manifest:
+  `outputs/a2waspwarfare-pr135-pr134-release-identity-artifact-2026-07-01-2009.md`
+
+Scope:
+
+- Remove the two `GUER_TECH.md` trailing-whitespace failures.
+- Change the LoadoutManager release candidate id to
+  `build84-cmdcon36-20260701`.
+- Update both terrain release marker templates and fallback startup markers.
+- Update the LoadoutManager package-validation README expected candidate.
+
+Validation:
+
+- `git diff --check origin/master`: pass, with Windows line-ending warnings only.
+- `git diff --check origin/claude/build84-cmdcon36`: pass, with Windows
+  line-ending warnings only.
+- `git diff --cached --check`: pass before commit.
+- LoadoutManager `SERVER_DEBUG` exited `0` and reached `CHERNARUS DONE` and
+  `TAKISTAN DONE`.
+- Archive integrity and extraction validation pass with 160 folders, 1727 files,
+  and 24372971 uncompressed bytes.
+- Both extracted `version.sqf` files have `WF_DEBUG` commented out,
+  `WF_LOG_CONTENT` enabled, and `WF_RELEASE_MARKER` with
+  `candidate=build84-cmdcon36-20260701`, `git=cc29feb207`, and the correct
+  terrain.
+
+This artifact is not runtime proof. It proves the PR #134 package/static
+identity blockers have a focused fix path, but final release proof still
+requires real both-map Arma 2 OA RPT evidence and human smoke notes.
+
 ## Current Master / r9 Reconciliation
 
 After fresh remote refreshes on 2026-07-01 10:33, 10:48, and 11:04
@@ -482,6 +532,10 @@ Fresh triage at 2026-07-01 19:54 Europe/Amsterdam found:
   extracted release marker still says
   `candidate=release-command-center-20260630`. Treat it as broad and
   source/identity-pending, not runtime proof.
+- PR #135: focused Build84 identity/static fix, open draft at
+  `203592daecf6444312076664ccad37471e663278` against PR #134's branch. This
+  clears the known `GUER_TECH.md` whitespace failure and produces a package with
+  `candidate=build84-cmdcon36-20260701`.
 - PR #133: focused placement-preview static fix, open draft and clean at
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
@@ -772,10 +826,11 @@ ASR-enabled RPT proof.
    `B626E746774B9B350B9431923A975C9E0087CF330B3D35808D650A254D379DFB` and
    folder-smoke kit SHA256
    `A1359392F00141BD2502293F439123C7B6DDDD449C5DAAF2F5E38DE2015EBEC7`.
-5. If the owner selects broad Build84/cmdcon36, first fix or explicitly waive
-   PR #134's reintroduced `GUER_TECH.md` whitespace failure and release-marker
-   identity mismatch. Its current package/static artifact SHA256 is
-   `F7768578727C7A16D865D31190EF72488FE0F8D21CF2ABCF670545D924122F3B`, but it
+5. If the owner selects broad Build84/cmdcon36, merge or cherry-pick PR #135
+   first so PR #134 no longer carries the `GUER_TECH.md` whitespace failure or
+   `release-command-center-20260630` marker identity. The fixed package/static
+   artifact SHA256 is
+   `EF2175B2CF00DB27A8F589350203F25A211BF6E427A4FA13A27E30DA31BE4FF0`, but it
    is not release-ready proof.
 6. Do not use the stale PR #125 body hash
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
