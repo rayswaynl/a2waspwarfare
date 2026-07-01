@@ -46,10 +46,10 @@ if (isNil "_teams") exitWith {};
 					//--- latch: the order is CHANGED only when the mode changed OR the new goto moved farther than
 					//--- WFBE_C_AICOM_ORDER_DELTA (default 80m) from the last committed goto. Plus a per-team minimum
 					//--- re-issue interval WFBE_C_AICOM_ORDER_MININT (default 6s) so rapid clicks can't re-lay inside
-					//--- the debounce window. Pure arithmetic + get/setVariable (A2-OA 1.64 safe). On-change-only and
-					//--- the HC-publish vs server-local branches below are otherwise unchanged.
-					_prevMode    = _team getVariable ["wfbe_exec_lastmode", ""];
-					_prevGoto    = _team getVariable ["wfbe_exec_lastgoto", [0,0,0]];
+					//--- the debounce window. Pure arithmetic + group-safe default reads (A2-OA 1.64 safe).
+					//--- On-change-only and the HC-publish vs server-local branches below are otherwise unchanged.
+					_prevMode    = [_team, "wfbe_exec_lastmode", ""] Call WFBE_CO_FNC_GroupGetBool;
+					_prevGoto    = [_team, "wfbe_exec_lastgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetBool;
 					_orderDelta  = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_DELTA", 80];
 					_orderMinInt = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_MININT", 6];
 					_changed = false;
@@ -59,7 +59,7 @@ if (isNil "_teams") exitWith {};
 					//--- committed one for this team within the last _orderMinInt seconds (rapid double-click guard).
 					//--- Never freezes a team: a real change simply re-lays on the next tick past the window; the
 					//--- team keeps its current live waypoint meanwhile.
-					if (_changed && {(time - (_team getVariable ["wfbe_exec_at", -1e9])) < _orderMinInt}) then {_changed = false};
+					if (_changed && {(time - ([_team, "wfbe_exec_at", -1e9] Call WFBE_CO_FNC_GroupGetBool)) < _orderMinInt}) then {_changed = false};
 					if (_changed) then {
 						//--- COMMAND CONSOLE telemetry (claude-gaming 2026-06-28): one machine-parseable line per NEWLY-
 						//--- committed direct order (the war-room's per-team task path). Previously the direct path was
