@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 12:17 Europe/Amsterdam
+Last updated: 2026-07-01 12:30 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -36,7 +36,7 @@ late join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `0b5d752d6b540aa8a1d013b3d6202514d96de4d8`
+  `ff5ce95`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -49,8 +49,8 @@ therefore needs conflict repair or replacement before it can be a current
 release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
-open, draft, and currently reported dirty at head
-`e8f2598e3bfcce4b9a797c8cb02cdea75ca0886f`. Treat it as a separate broad lane,
+open, draft, and currently reported clean at head
+`f9734c82977cff91208bb6507c851f82614f246c`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also now exists as an open draft release-readiness/AICOM guardrail lane
@@ -235,6 +235,34 @@ Build/validation:
 This artifact supersedes the `311b9d93` and PR #127-only artifacts as the
 freshest exact current-master payload. It is still not runtime proof.
 
+## Latest Master Folder Smoke Kit
+
+A portable latest-master folder-smoke kit now exists for collecting runtime
+proof from the exact `5bf5f92385ef0218c5e20fb4273cf563a295e82d` master payload:
+
+- kit: `outputs/a2waspwarfare-master-5bf5f923-folder-smoke-kit.7z`
+- SHA256: `173D16F30DF7E62AEC44E5A7354449F374894AAC3C8C8F6ADE9567E0487BD8B3`
+- size: `7168763` bytes
+- source artifact SHA256:
+  `2E88777C983CCEF2ACFF798302C33708C2561C1835981A884CE94340B61D7FEC`
+- manifest:
+  `outputs/a2waspwarfare-master-folder-smoke-kit-manifest-2026-07-01-1230.md`
+
+Validation performed:
+
+- 7-Zip archive integrity test: pass
+- extracted archive structure and file count: pass
+- all six folder-smoke PowerShell scripts parse successfully
+- extracted-kit install rehearsal and preflight pass for both missions
+- smoke evidence template generation pass
+- synthetic release-gate scanner/package rehearsal passes with both terrains,
+  server/client/latejoin/hc1/hc2 role names, AICOM telemetry, HC registry
+  markers, content logging markers, zero stop-condition matches, and
+  `failed_count = 0`
+
+This kit is still not runtime proof. It is the current portable collection path
+if `origin/master` is selected as the proof target.
+
 ## Superseded Current Master Exact Artifact
 
 An exact current-master `SERVER_DEBUG` mission-folder artifact now exists:
@@ -393,7 +421,9 @@ ASR-enabled RPT proof.
 2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
    prove latest `origin/master`.
 3. If current `origin/master` is chosen, use artifact SHA256
-   `2E88777C983CCEF2ACFF798302C33708C2561C1835981A884CE94340B61D7FEC`.
+   `2E88777C983CCEF2ACFF798302C33708C2561C1835981A884CE94340B61D7FEC` and
+   folder-smoke kit SHA256
+   `173D16F30DF7E62AEC44E5A7354449F374894AAC3C8C8F6ADE9567E0487BD8B3`.
 4. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
