@@ -8,8 +8,8 @@ candidate on `codex/release-command-center-20260630`.
 - Candidate: `release-command-center-20260630`
 - Branch: `codex/release-command-center-20260630`
 - Draft PR: `https://github.com/rayswaynl/a2waspwarfare/pull/125`
-- Package identity: use the current PR body plus the newest local `work\release-handoff-*` artifacts; the package marker changes whenever the release branch HEAD changes.
-- Package status: package provenance pass after each release-identity refresh; handoff status `ready_for_runtime_collection`
+- Package identity: use the current PR body plus the newest local handoff artifacts; the package marker changes whenever the release branch `HEAD` changes.
+- Package status: package provenance must pass after each release-identity refresh; handoff status should be `ready_for_runtime_collection` before runtime RPT collection.
 - Runtime status: pending explicit runtime approval, fresh dual-terrain RPT packet, and deploy approval
 
 Expected runtime markers use the current short release git:
@@ -41,9 +41,10 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 
 ## Proven Static And Package Gates
 
-- `dotnet run -c RELEASE --project Tools\LoadoutManager\LoadoutManager.csproj`
-- `Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1` against `_MISSIONS.7z`, expected candidate `release-command-center-20260630`, expected git from `git rev-parse --short=10 HEAD`
-- `Tools\PrTestHarness\Release\New-WaspReleaseHandoff.ps1` against the current package manifest
+- `dotnet run` from `Tools\LoadoutManager` must complete and leave no unintended tracked source diff.
+- `Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1` passed for Chernarus and Takistan: `FAIL 0`, `REVIEW 4`; the review items are legal array `find` calls on `_names` in `Server\AI\Commander\AI_Commander_Base.sqf`.
+- `Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1` must pass against `_MISSIONS.7z` with expected candidate `release-command-center-20260630` and the current `git rev-parse --short=10 HEAD`.
+- `Tools\PrTestHarness\Release\New-WaspReleaseHandoff.ps1` must pass against the current package manifest.
 - `Tools\PrTestHarness\Release\Test-WaspReleaseHandoff.SelfTest.ps1`
 - `Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.SelfTest.ps1`
 - `Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.PerTerrainSelfTest.ps1`
