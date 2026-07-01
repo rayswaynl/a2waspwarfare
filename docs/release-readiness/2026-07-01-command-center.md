@@ -8,7 +8,7 @@ candidate on `codex/release-command-center-20260630`.
 - Candidate: `release-command-center-20260630`
 - Branch: `codex/release-command-center-20260630`
 - Draft PR: `https://github.com/rayswaynl/a2waspwarfare/pull/125`
-- Current package identity: `b4628c35afeef15a1703021e6171706a949e5afa` / marker `b4628c35af`, `_MISSIONS.7z` SHA256 `FA7E07C6D8A02C0574E619C54BB61FC0D6244D3559F2C15428B3BEADD9169A54`, `1,881` entries, `7,158,447` bytes.
+- Package identity: use the current PR body plus the newest local package manifest/handoff artifacts; the package marker changes whenever the release branch `HEAD` changes.
 - Package status: package provenance must pass after each release-identity refresh; handoff status should be `ready_for_runtime_collection` before runtime RPT collection.
 - Runtime status: pending explicit runtime approval, fresh dual-terrain RPT packet, and deploy approval
 
@@ -27,7 +27,7 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 | Release/RPT scout | Package, handoff, runtime packet, final static gates | Round-40 artifacts were stale after the role-proof commit; refresh package/handoff after every new source commit. |
 | Wiki/source scout | Public wiki status, source-intake discipline, BI docs | Wiki should stay runtime-pending and sanitized; add source-intake discoverability before publishing broad release claims. |
 | Branch intake scout | Open PRs, local worktrees, candidate cherry-picks | AICOM v2, commander cache, PR #120, most PR #122 content, and newer harness gates are already included or superseded. PR #109 is the only plausible gameplay intake, and should stay explicit/deferred. |
-| Merge-gate scout | PR #125 reconciliation with `origin/master` | Build83/cmdcon35 is now reconciled into PR #125 at `b4628c35af`; GitHub reports the draft PR clean/mergeable. Keep future master drift explicit and package-gated rather than merging blindly during runtime evidence collection. |
+| Merge-gate scout | PR #125 reconciliation with `origin/master` | Build83/cmdcon35 is now reconciled into PR #125; GitHub reports the draft PR clean/mergeable. Keep future master drift explicit and package-gated rather than merging blindly during runtime evidence collection. |
 
 ## 2026-07-01 Agent Loop Update
 
@@ -52,7 +52,7 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 ## Proven Static And Package Gates
 
 - `dotnet run` from `Tools\LoadoutManager` must complete and leave no unintended tracked source diff.
-- Latest static validation at `b4628c35af`: the AICOM group/latch smoke guard passes; the remaining static smoke failures are the known RHUD/stress active-copy local prerequisites; Chernarus and Takistan `Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1` each passed with `FAIL 0`, `REVIEW 1` for the known array `find "Aircraft"` heuristic; whole-mission HIGH BugHunt is clean.
+- Latest recorded static validation: the AICOM group/latch smoke guard passes; the remaining static smoke failures are the known RHUD/stress active-copy local prerequisites; Chernarus and Takistan `Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1` each passed with `FAIL 0`, `REVIEW 1` for the known array `find "Aircraft"` heuristic; whole-mission HIGH BugHunt is clean.
 - `Tools\PrTestHarness\Smoke\Test-WaspStaticSmoke.ps1` includes the `Release runtime-proof token emitters` source contract. This proves emitter strings are present for the runtime scorer, not that runtime evidence has passed.
 - `Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1` must pass against `_MISSIONS.7z` with expected candidate `release-command-center-20260630` and the current `git rev-parse --short=10 HEAD`.
 - `Tools\PrTestHarness\Release\New-WaspReleaseHandoff.ps1` must pass against the current package manifest.
