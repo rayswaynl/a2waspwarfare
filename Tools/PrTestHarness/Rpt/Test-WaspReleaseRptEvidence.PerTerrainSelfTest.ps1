@@ -133,15 +133,12 @@ function New-TestPacket {
 					"keptGroups:0",
 					"TOWN_GROUP_COUNT cleanup_after",
 					"GCSTAT|v1",
-					"WDDM_ARTILLERY_AUDIT",
-					"WDDM_ARTILLERY_SIDE",
 					"STRUCTURE_BUILT|struct=Reserve",
 					"STRUCTURE_BUILT|struct=ArtilleryRadar",
 					"ARTY_THREAT_ARMED",
 					"SupplyMissionStart.sqf: Player Tester loaded",
 					"SupplyMissionUnload.sqf: Player Tester started helicopter unload timer",
-					"SupplyMissionCompleted.sqf: Completion accepted",
-					"SERVICE_SUPPLY_AUDIT"
+					"SupplyMissionCompleted.sqf: Completion accepted"
 				)
 				if (!$OmitEastAicomProgress) {
 					$semanticTokens += @(

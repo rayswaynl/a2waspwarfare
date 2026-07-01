@@ -332,15 +332,17 @@ $gateSpecs = @(
 	},
 	[ordered]@{
 		id = "wddm-static-artillery"
-		required = @("wddmArtilleryAudit","wddmArtillerySide","structureBuiltReserve","structureBuiltArtilleryRadar","artyThreatArmed")
+		# WDDM_ARTILLERY_AUDIT / WDDM_ARTILLERY_SIDE are pr8-stress overlay tokens, not native mission RPT tokens.
+		required = @("structureBuiltReserve","structureBuiltArtilleryRadar","artyThreatArmed")
 		fail = @()
-		note = "WDDM/static defense and artillery discoverability evidence. FIRE_MISSION is reported separately."
+		note = "WDDM/static defense and artillery discoverability via native STRUCTURE_BUILT Reserve/ArtilleryRadar plus ARTY_THREAT_ARMED evidence. Stress-overlay WDDM_ARTILLERY_AUDIT/SIDE tokens are reported when present, but not required for a native release run."
 	},
 	[ordered]@{
 		id = "supply-truck-heli"
-		required = @("supplyLoaded","supplyUnloadTimer","supplyCompleted","serviceSupplyAudit")
+		# SERVICE_SUPPLY_AUDIT is a pr8-stress overlay token; native release runs use the supply mission log-content lines below.
+		required = @("supplyLoaded","supplyUnloadTimer","supplyCompleted")
 		fail = @()
-		note = "Supply load/unload/completion/service audit evidence; cash-run/JIP cooldown still needs human-readable notes."
+		note = "Supply load/unload/completion evidence from WFBE_CO_FNC_LogContent lines; capture with LOG_CONTENT active, for example from an HC-machine client RPT or a WF_LOG_CONTENT build. Stress-overlay SERVICE_SUPPLY_AUDIT is reported when present, but not required for a native release run. Cash-run/JIP cooldown still needs human-readable notes."
 	}
 )
 
