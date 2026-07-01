@@ -20,6 +20,13 @@ core gates exactly once with `status=pass`, not only a scalar
 manifest with matching release identity, exact ten copied labels and no
 validation gates still keeps the release summary red.
 
+Follow-up in the same proof-chain pass: the summary also binds the packet
+manifest's `rptRootHash` and per-file `copiedRptSha256` values to the single
+scored `-RptDirectory`. A valid manifest from a different packet, or a manifest
+with stale copied-file hashes, can no longer be paired with another scored
+folder when producing release wording. The per-terrain self-test now includes
+mismatched-root and stale-hash manifest fixtures.
+
 ## 2026-07-01 — Release handoff contract self-test [RELEASE LOOP]
 
 Added `Tools/PrTestHarness/Release/Test-WaspReleaseHandoff.SelfTest.ps1` so the

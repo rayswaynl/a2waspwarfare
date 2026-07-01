@@ -23,6 +23,37 @@ function Get-TestArchiveSha256 {
 	return "22223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF00001111"
 }
 
+function Get-SafePathHash {
+	param([string]$Path)
+	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+	$fullPath = [System.IO.Path]::GetFullPath([System.Environment]::ExpandEnvironmentVariables($Path))
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	try {
+		$bytes = [System.Text.Encoding]::UTF8.GetBytes($fullPath.ToLowerInvariant())
+		$hash = $sha.ComputeHash($bytes)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").Substring(0, 12)
+	} finally {
+		$sha.Dispose()
+	}
+}
+
+function Get-FileSha256Value {
+	param([string]$Path)
+	if ([string]::IsNullOrWhiteSpace($Path) -or !(Test-Path -LiteralPath $Path -PathType Leaf)) { return "" }
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	$fs = [System.IO.File]::Open($Path,
+		[System.IO.FileMode]::Open,
+		[System.IO.FileAccess]::Read,
+		[System.IO.FileShare]::ReadWrite)
+	try {
+		$hash = $sha.ComputeHash($fs)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").ToUpperInvariant()
+	} finally {
+		$fs.Dispose()
+		$sha.Dispose()
+	}
+}
+
 function Get-RuntimePacketPassGates {
 	$gateIds = @(
 		"exact-ten-file-matrix",
@@ -144,6 +175,8 @@ function Write-RuntimePacketManifest {
 		[string]$ReleaseCandidate = "per-terrain-self-test",
 		[string]$ReleaseGit = "selftest01",
 		[string]$ArchiveSha256 = (Get-TestArchiveSha256),
+		[string]$RptRoot = $root,
+		[string]$RptRootHash = (Get-SafePathHash $root),
 		[switch]$IncludeValidationGates
 	)
 	$files = @(
@@ -161,11 +194,25 @@ function Write-RuntimePacketManifest {
 	if ($FileVariant -eq "wrong-file-set") {
 		$files[7] = [ordered]@{ terrain = "takistan"; role = "HC2"; copiedRptPath = "takistan\wrong-HC2.rpt" }
 	}
+	$manifestFiles = @($files | ForEach-Object {
+		$copiedPath = [string]$_["copiedRptPath"]
+		$actualPath = [System.IO.Path]::GetFullPath((Join-Path $RptRoot $copiedPath))
+		[ordered]@{
+			terrain = [string]$_["terrain"]
+			role = [string]$_["role"]
+			copiedRptPath = $copiedPath
+			copiedPathHash = Get-SafePathHash $actualPath
+			copiedRptSha256 = Get-FileSha256Value $actualPath
+		}
+	})
+	if ($FileVariant -eq "stale-hash") {
+		$manifestFiles[0]["copiedRptSha256"] = "0000000000000000000000000000000000000000000000000000000000000000"
+	}
 	$manifest = [ordered]@{
 		schema = "a2waspwarfare-runtime-rpt-packet-builder-v1"
 		generatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
 		rptRoot = "<rpt-root>"
-		rptRootHash = "selftest"
+		rptRootHash = $RptRootHash
 		release = [ordered]@{
 			candidate = $ReleaseCandidate
 			git = $ReleaseGit
@@ -175,7 +222,7 @@ function Write-RuntimePacketManifest {
 			ledgerPath = "release-run-ledger.json"
 			manifestPath = "runtime-rpt-packet-manifest.json"
 		}
-		files = $files
+		files = $manifestFiles
 		validation = [ordered]@{
 			requested = $ValidationRequested
 			overall = $ValidationOverall
@@ -297,11 +344,25 @@ try {
 		throw ("Expected summary to fail when runtime packet manifest claims pass but has no validation gates; summary={0}, packetProof={1}" -f $emptyGatesSummary.overall, $emptyGatesSummary.runtimePacketProof.status)
 	}
 
+	$wrongRootManifest = Join-Path $root "packet-wrong-root\runtime-rpt-packet-manifest.json"
+	Write-RuntimePacketManifest -Path $wrongRootManifest -ValidationRequested $true -ValidationOverall "pass" -IncludeValidationGates -RptRootHash (Get-SafePathHash (Join-Path $root "other-rpt-root"))
+	$wrongRootSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-wrong-root") -RuntimePacketManifestPath $wrongRootManifest
+	if ([string]$wrongRootSummary.overall -ne "missing_or_failed" -or [string]$wrongRootSummary.runtimePacketProof.status -ne "fail") {
+		throw ("Expected summary to fail when runtime packet manifest rptRootHash does not match the scored RPT root; summary={0}, packetProof={1}" -f $wrongRootSummary.overall, $wrongRootSummary.runtimePacketProof.status)
+	}
+
+	$staleHashManifest = Join-Path $root "packet-stale-hash\runtime-rpt-packet-manifest.json"
+	Write-RuntimePacketManifest -Path $staleHashManifest -ValidationRequested $true -ValidationOverall "pass" -IncludeValidationGates -FileVariant "stale-hash"
+	$staleHashSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-stale-hash") -RuntimePacketManifestPath $staleHashManifest
+	if ([string]$staleHashSummary.overall -ne "missing_or_failed" -or [string]$staleHashSummary.runtimePacketProof.status -ne "fail") {
+		throw ("Expected summary to fail when runtime packet manifest copiedRptSha256 does not match the scored RPT file; summary={0}, packetProof={1}" -f $staleHashSummary.overall, $staleHashSummary.runtimePacketProof.status)
+	}
+
 	$goodManifest = Join-Path $root "packet-good\runtime-rpt-packet-manifest.json"
 	Write-RuntimePacketManifest -Path $goodManifest -ValidationRequested $true -ValidationOverall "pass" -IncludeValidationGates
 	$goodSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-good") -RuntimePacketManifestPath $goodManifest
 	if ([string]$goodSummary.overall -ne "pass" -or [string]$goodSummary.runtimePacketProof.status -ne "pass") {
-		throw ("Expected summary to pass when scorer and runtime packet manifest pass; summary={0}, packetProof={1}" -f $goodSummary.overall, $goodSummary.runtimePacketProof.status)
+		throw ("Expected summary to pass when scorer and runtime packet manifest pass; summary={0}, packetProof={1}, failures={2}" -f $goodSummary.overall, $goodSummary.runtimePacketProof.status, (($goodSummary.runtimePacketProof.failHits | Out-String).Trim()))
 	}
 
 	$summaryOut = Join-Path $root "summary"

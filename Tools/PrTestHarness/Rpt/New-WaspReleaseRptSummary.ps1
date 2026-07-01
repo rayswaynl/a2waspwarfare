@@ -64,12 +64,75 @@ function Get-SafeTextHash {
 	}
 }
 
+function Get-SafePathHash {
+	param([string]$Path)
+	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+	$fullPath = [System.IO.Path]::GetFullPath([System.Environment]::ExpandEnvironmentVariables($Path))
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	try {
+		$bytes = [System.Text.Encoding]::UTF8.GetBytes($fullPath.ToLowerInvariant())
+		$hash = $sha.ComputeHash($bytes)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").Substring(0, 12)
+	} finally {
+		$sha.Dispose()
+	}
+}
+
+function Get-FileSha256Value {
+	param([string]$Path)
+	if ([string]::IsNullOrWhiteSpace($Path) -or !(Test-Path -LiteralPath $Path -PathType Leaf)) { return "" }
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	$fs = [System.IO.File]::Open($Path,
+		[System.IO.FileMode]::Open,
+		[System.IO.FileAccess]::Read,
+		[System.IO.FileShare]::ReadWrite)
+	try {
+		$hash = $sha.ComputeHash($fs)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").ToUpperInvariant()
+	} finally {
+		$fs.Dispose()
+		$sha.Dispose()
+	}
+}
+
 function Get-JsonValue {
 	param($Object, [string]$Name)
 	if ($null -eq $Object) { return $null }
 	$property = $Object.PSObject.Properties[$Name]
 	if ($null -eq $property) { return $null }
 	return $property.Value
+}
+
+function Get-RuntimePacketRootBinding {
+	param(
+		[string[]]$RptDirectory,
+		[string[]]$RptPath
+	)
+	$directories = @($RptDirectory | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+	$paths = @($RptPath | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+	if ($directories.Count -eq 1 -and $paths.Count -eq 0) {
+		$expanded = [System.Environment]::ExpandEnvironmentVariables([string]$directories[0])
+		$fullPath = if ([System.IO.Path]::IsPathRooted($expanded)) {
+			[System.IO.Path]::GetFullPath($expanded)
+		} else {
+			[System.IO.Path]::GetFullPath((Join-Path (Get-Location).Path $expanded))
+		}
+		if (Test-Path -LiteralPath $fullPath) {
+			$fullPath = (Resolve-Path -LiteralPath $fullPath).Path
+		}
+		return [ordered]@{
+			canBind = $true
+			path = $fullPath
+			expectedRptRootHash = Get-SafePathHash $fullPath
+			note = "Runtime packet manifest rptRootHash is bound to the single scored RPT directory."
+		}
+	}
+	return [ordered]@{
+		canBind = $false
+		path = ""
+		expectedRptRootHash = ""
+		note = "Use exactly one -RptDirectory and no -RptPath when binding a release summary to runtime-rpt-packet-manifest.json."
+	}
 }
 
 function ConvertTo-BoolFlag {
@@ -131,6 +194,8 @@ function Test-RuntimePacketManifestProof {
 		[string]$ExpectedCandidate,
 		[string]$ExpectedGit,
 		[string]$ExpectedArchiveSha256,
+		[string]$ExpectedRptRootHash,
+		[string]$RptRootPath,
 		[bool]$RequireRuntimePacketManifest
 	)
 	$missing = New-Object System.Collections.Generic.List[string]
@@ -148,6 +213,9 @@ function Test-RuntimePacketManifestProof {
 		releaseGit = ""
 		releaseArchiveSha256 = ""
 		schema = ""
+		rptRootHash = ""
+		expectedRptRootHash = $ExpectedRptRootHash
+		rptRootBinding = if ([string]::IsNullOrWhiteSpace($ExpectedRptRootHash)) { "not_checked" } else { "required" }
 		validationRequested = $false
 		validationOverall = ""
 		requiredValidationGates = @(Get-RequiredRuntimePacketValidationGates)
@@ -188,6 +256,17 @@ function Test-RuntimePacketManifestProof {
 	$result.schema = $schema
 	if ($schema -ne "a2waspwarfare-runtime-rpt-packet-builder-v1") {
 		[void]$failHits.Add("schema must be a2waspwarfare-runtime-rpt-packet-builder-v1")
+	}
+	$manifestRptRootHash = [string](Get-JsonValue $manifest "rptRootHash")
+	$result.rptRootHash = $manifestRptRootHash
+	if (![string]::IsNullOrWhiteSpace($ExpectedRptRootHash)) {
+		if ([string]::IsNullOrWhiteSpace($manifestRptRootHash)) {
+			[void]$failHits.Add("runtime packet manifest rptRootHash is required")
+		} elseif (!$manifestRptRootHash.Equals($ExpectedRptRootHash, [System.StringComparison]::OrdinalIgnoreCase)) {
+			[void]$failHits.Add("runtime packet manifest rptRootHash must match the scored RPT directory")
+		}
+	} elseif ($RequireRuntimePacketManifest) {
+		[void]$failHits.Add("runtime packet manifest proof requires exactly one scored RPT directory for rptRootHash binding")
 	}
 	$release = Get-JsonValue $manifest "release"
 	$releaseCandidate = [string](Get-JsonValue $release "candidate")
@@ -246,8 +325,32 @@ function Test-RuntimePacketManifestProof {
 		if ($null -eq $file) { "" } else { ConvertTo-PacketPathLabel ([string](Get-JsonValue $file "copiedRptPath")) }
 	} | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 	foreach ($expectedLabel in $expectedLabels) {
-		if (@($actualLabels | Where-Object { $_ -eq $expectedLabel }).Count -ne 1) {
+		$matchingFiles = @($manifestFiles | Where-Object { (ConvertTo-PacketPathLabel ([string](Get-JsonValue $_ "copiedRptPath"))) -eq $expectedLabel })
+		if ($matchingFiles.Count -ne 1) {
 			[void]$failHits.Add("runtime packet manifest missing exact copied file $expectedLabel")
+			continue
+		}
+		if (![string]::IsNullOrWhiteSpace($RptRootPath)) {
+			$file = $matchingFiles[0]
+			$actualPath = [System.IO.Path]::GetFullPath((Join-Path $RptRootPath $expectedLabel))
+			if (!(Test-Path -LiteralPath $actualPath -PathType Leaf)) {
+				[void]$failHits.Add("scored RPT file missing for $expectedLabel")
+				continue
+			}
+			$manifestPathHash = [string](Get-JsonValue $file "copiedPathHash")
+			$actualPathHash = Get-SafePathHash $actualPath
+			if ([string]::IsNullOrWhiteSpace($manifestPathHash)) {
+				[void]$failHits.Add("runtime packet manifest copiedPathHash is required for $expectedLabel")
+			} elseif (!$manifestPathHash.Equals($actualPathHash, [System.StringComparison]::OrdinalIgnoreCase)) {
+				[void]$failHits.Add("runtime packet manifest copiedPathHash must match scored file $expectedLabel")
+			}
+			$manifestCopiedSha256 = ([string](Get-JsonValue $file "copiedRptSha256")).ToUpperInvariant()
+			$actualCopiedSha256 = Get-FileSha256Value $actualPath
+			if ([string]::IsNullOrWhiteSpace($manifestCopiedSha256)) {
+				[void]$failHits.Add("runtime packet manifest copiedRptSha256 is required for $expectedLabel")
+			} elseif ($manifestCopiedSha256 -ne $actualCopiedSha256) {
+				[void]$failHits.Add("runtime packet manifest copiedRptSha256 must match scored file $expectedLabel")
+			}
 		}
 	}
 	foreach ($actualLabel in ($actualLabels | Select-Object -Unique)) {
@@ -256,9 +359,12 @@ function Test-RuntimePacketManifestProof {
 		}
 	}
 	$result.status = if ($missing.Count -gt 0) { "missing" } elseif ($failHits.Count -gt 0) { "fail" } else { "pass" }
+	if (![string]::IsNullOrWhiteSpace($ExpectedRptRootHash)) {
+		$result.rptRootBinding = if ([string]$result.status -eq "pass") { "pass" } else { "fail" }
+	}
 	$result.missing = $missing.ToArray()
 	$result.failHits = $failHits.ToArray()
-	$result.note = "Summary is bound to the packet builder/checker manifest, including ten-file matrix, run-ledger, archive SHA, source/copy hash, freshness and role-proof validation."
+	$result.note = "Summary is bound to the packet builder/checker manifest, including RPT root hash, ten-file matrix, run-ledger, archive SHA, source/copy hash, freshness and role-proof validation."
 	return $result
 }
 
@@ -282,7 +388,8 @@ if ([string]::IsNullOrWhiteSpace($jsonText)) {
 	throw "RPT evidence scorer produced no JSON output."
 }
 $score = $jsonText | ConvertFrom-Json
-$runtimePacketProof = Test-RuntimePacketManifestProof -Path $RuntimePacketManifestPath -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ExpectedGit -ExpectedArchiveSha256 $ExpectedArchiveSha256 -RequireRuntimePacketManifest ([bool]$RequireRuntimePacketManifest)
+$runtimePacketRootBinding = Get-RuntimePacketRootBinding -RptDirectory $RptDirectory -RptPath $RptPath
+$runtimePacketProof = Test-RuntimePacketManifestProof -Path $RuntimePacketManifestPath -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ExpectedGit -ExpectedArchiveSha256 $ExpectedArchiveSha256 -ExpectedRptRootHash ([string]$runtimePacketRootBinding.expectedRptRootHash) -RptRootPath ([string]$runtimePacketRootBinding.path) -RequireRuntimePacketManifest ([bool]$RequireRuntimePacketManifest)
 $summaryOverall = if ([string]$score.overall -eq "pass" -and ([string]$runtimePacketProof.status -eq "not_requested" -or [string]$runtimePacketProof.status -eq "pass")) { "pass" } else { "missing_or_failed" }
 
 if ([string]::IsNullOrWhiteSpace($OutDirectory)) {
@@ -352,6 +459,9 @@ $lines = New-Object System.Collections.Generic.List[string]
 [void]$lines.Add(("Manifest: {0}" -f $packet.runtimePacketProof.manifestPath))
 [void]$lines.Add(("Manifest path hash: {0}" -f (Join-Display $packet.runtimePacketProof.manifestPathHash)))
 [void]$lines.Add(("Schema: {0}" -f (Join-Display $packet.runtimePacketProof.schema)))
+[void]$lines.Add(("RPT root hash: {0}" -f (Join-Display $packet.runtimePacketProof.rptRootHash)))
+[void]$lines.Add(("Expected RPT root hash: {0}" -f (Join-Display $packet.runtimePacketProof.expectedRptRootHash)))
+[void]$lines.Add(("RPT root binding: {0}" -f (Join-Display $packet.runtimePacketProof.rptRootBinding)))
 [void]$lines.Add(("Release candidate: {0}" -f (Join-Display $packet.runtimePacketProof.releaseCandidate)))
 [void]$lines.Add(("Release git: {0}" -f (Join-Display $packet.runtimePacketProof.releaseGit)))
 [void]$lines.Add(("Release archive SHA256: {0}" -f (Join-Display $packet.runtimePacketProof.releaseArchiveSha256)))
