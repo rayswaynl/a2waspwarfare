@@ -117,7 +117,7 @@ A 9,500-supply structure, one per side, placed &gt; 800 m from your HQ. While yo
 <t size='1.2' color='" + KEY + "'>Factory queue &amp; refunds</t><br />
 The buy menu shows the queue as <t color='" + GOLD + "'>N/CAP</t>. Caps: Barracks 10, Light Factory 5, Heavy/Aircraft 3. <t color='" + GOLD + "'>Cancel Last</t> refunds your most recent queued order (up to 50% on discounted orders).<br /><br />
 <t size='1.2' color='" + KEY + "'>Premium unlocks</t><br />
-Hold <t color='" + GOLD + "'>Krasnostav</t> -> Czech T-72 at Heavy Factory L4 ($7,000). Hold <t color='" + GOLD + "'>NW Airfield</t> -> RM-70 rocket artillery at Light Factory L4 ($6,800). Unlocks apply to the holding side only.<br />",
+Hold <t color='" + GOLD + "'>Krasnostav</t> -> Czech T-72 at Heavy Factory L4 ($7,000). Hold <t color='" + GOLD + "'>NW Airfield</t> -> RM-70 rocket artillery at Light Factory L4 ($6,800). Unlocks are for the holding side only.<br />",
 
 //================================================================ 3  COMBAT & CAPTURING
 "<t size='1.4' color='" + HDR + "' underline='true'>Combat &amp; Capturing</t><br /><br />

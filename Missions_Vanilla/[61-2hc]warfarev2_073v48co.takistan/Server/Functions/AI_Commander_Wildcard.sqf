@@ -906,7 +906,7 @@ while {!gameOver} do {
 									deleteVehicle _wk;
 								};
 							};
-						} forEach (allMissionObjects "AllVehicles");
+						} forEach allDead;
 						if (_wkTotal > 0) then {
 							[_side, _wkTotal] Call ChangeAICommanderFunds;
 							_detail = Format ["salvage_funds=%1 cap=%2", _wkTotal, _wkCap];

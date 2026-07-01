@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM wildcard A2 dialect fix [RELEASE LOOP]
+
+Removed the A3-only `allMissionObjects` token from the retired W10 lucky
+salvage wildcard branch. The sweep now uses `allDead`, matching the eligibility
+proxy already documented earlier in `AI_Commander_Wildcard.sqf`, and
+LoadoutManager propagated the fix from Chernarus into Takistan.
+
+Reworded one help-menu sentence from "Unlocks apply..." to "Unlocks are..." so
+the static smoke checker no longer false-positives on the A3-only `apply` token
+inside a UI text line. After regen, `Run-WaspFinalCheck.ps1` passed: static
+smoke clean and whole-mission high bug-hunt clean.
+
 ## 2026-07-01 — Package payload HEAD binding [RELEASE LOOP]
 
 Tightened `Tools/PrTestHarness/Package/Test-WaspReleasePackage.ps1` so package
