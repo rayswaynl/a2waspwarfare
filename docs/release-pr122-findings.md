@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 18:09 Europe/Amsterdam
+Last updated: 2026-07-01 18:31 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -40,7 +40,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `029fb394337ef1c7a19b592db46e61a25f0d19c4`
+  `a5f758908b51289449d6733e92aa12ee5e88c6e8`
 
 PR #127, the curated release fold of selected legacy-fit changes from
 PR #124/#125/#126, was merged at
@@ -49,10 +49,10 @@ series of cmdcon32, cmdcon33, and cmdcon34 follow-up fixes means the PR #127-onl
 artifact is stale relative to the latest master artifact.
 
 GitHub currently reports PR #132 as open, non-draft, and clean at
-`b9b08eac7d4c8c0115cdab9a6e9e2f2566764eac`, based on the previous
+`6ff7bad28003ec6781a9346e033afbc386894b6f`, based on the previous
 `b7241a35` master. It is a broad Build 83/cmdcon35 lane and is not current
-runtime proof until it is reviewed, selected, rebuilt, and proven with exact
-RPT evidence.
+runtime proof until it is rebased/reconciled, reviewed, selected, rebuilt, and
+proven with exact RPT evidence.
 
 GitHub currently reports PR #124 as open and draft with unknown merge state.
 The old r8 branch remains stale relative to current master and needs conflict
@@ -60,11 +60,11 @@ repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`14b995d5f5ef19585aee286a9800cd6c4fab8e06`. Treat it as a separate broad lane,
+`c0d2b42ef5281dfdef1393cfc0a731e7c38375de`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also exists as an open draft release-readiness/AICOM guardrail lane at
-head `c148d0d6bb7dacc25acab2797d9e823b93c17ea4` after a force update. Its
+head `e9d52f8c61d598b5833bcbb72b014228767341be` after a force update. Its
 verified shippable pieces were folded through PR #127; keep the remaining branch
 separate unless it is rebased and revalidated.
 
@@ -328,29 +328,42 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 18:09 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 18:31 Europe/Amsterdam found:
 
 - PR #131: focused placement-preview static fix, clean at
   `bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583`. This remains the release-critical
   unblocker because current `origin/master` still fails `git diff --check` from
   `5bf5f92385` in both terrain copies of `Client/Init/Init_Client.sqf`.
 - PR #126: medium source risk, high release-gate risk until runtime proof exists.
-  It advanced to `c148d0d6bb7dacc25acab2797d9e823b93c17ea4`. Re-triage this
-  new head before selecting it; the earlier 16:19 source-risk finding applies
-  only to `5fcacca74b4cac659f34de1be89fd972d6a017cd`.
+  It advanced to `e9d52f8c61d598b5833bcbb72b014228767341be`. True payload from
+  merge-base `b7241a35` is 18 files, +867/-24, including 14 mission files plus
+  `Tools/Monitor` helper/docs and one release doc. It changes AICOM/HC/JIP
+  telemetry and throttling paths. True-payload `git diff --check` passes, but a
+  raw `origin/master..HEAD` check fails because the stale-base branch re-adds
+  deleted `GUER_TECH.md` with trailing whitespace.
 - PR #125: broad command-center/tooling lane at
-  `14b995d5f5ef19585aee286a9800cd6c4fab8e06`. Re-triage this new head before
-  selecting it; the earlier 16:19 overlap finding applies to
-  `6756df2846c8da0a7e51eb0cda0e2aad61ca4cdf`.
+  `c0d2b42ef5281dfdef1393cfc0a731e7c38375de`. True payload from merge-base
+  `b7241a35` is 137 files, +13852/-814, including 99 mission files across both
+  terrains plus large harness/docs/server-config additions. It overlaps #131 in
+  the two terrain `Client/Init/Init_Client.sqf` files and simulated stacking
+  shows real conflicts there. True-payload `git diff --check` passes, but a raw
+  `origin/master..HEAD` check fails because stale deleted docs are re-added.
 - PR #129: release-readiness hub at
   `72888f22851871c8ed967a0fd29402a0c410c0bd`, 14 files and approximately
   `+188/-92`. It is mission-affecting in AICOM commander code, group GC,
   briefings, and release docs. Its docs mention older base context, so treat
   GitHub metadata and fresh local diff checks as authoritative.
 - PR #132: broad Build 83/cmdcon35 lane at
-  `b9b08eac7d4c8c0115cdab9a6e9e2f2566764eac`. It is clean on GitHub but broad
-  enough to need separate diff/static/generator/runtime review before it can
-  replace the focused #131 path.
+  `6ff7bad28003ec6781a9346e033afbc386894b6f`. It is clean on GitHub, but the
+  current-master diff is broad: 131 files, +4416/-764, including 64 mirrored
+  Chernarus mission files and the same 64 Takistan files. It re-adds
+  `B57-SOAK-PROPOSALS.md` and `GUER_TECH.md`; `git diff --check
+  origin/master..origin/claude/build83-cmdcon35` fails on `GUER_TECH.md`
+  trailing whitespace. It does not contain the #131 placement static fix:
+  checking from `5bf5f92385` to #132 still fails on both terrain
+  `Client/Init/Init_Client.sqf` placement lines. Treat #132 as a separate
+  medium-high release-risk lane until it is rebased, reconciled with #131,
+  regenerated, packaged, and proven with exact real RPT evidence.
 
 PR #125 and PR #129 were not stacked at the 16:19 triage point and overlapped
 in shared AICOM files. Because PR #125 has advanced since then, do not combine
