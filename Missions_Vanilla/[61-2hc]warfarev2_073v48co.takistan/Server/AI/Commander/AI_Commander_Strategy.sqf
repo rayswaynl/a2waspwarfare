@@ -410,7 +410,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
 				//--- back to a fresh "towns" seq here; AssignTowns then re-issues a real attack target next cycle.
 				//--- Server-local teams ignore the order var and are driven by SetTeamMoveMode above (harmless).
-				if (_team getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
 				};
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3]%4.", _sideText, _team, _relTown getVariable ["name", "town"], if (_relExpired) then {" (hold expired -> offense)"} else {""}]] Call WFBE_CO_FNC_AICOMLog;
@@ -492,7 +492,7 @@ _relieved = 0;
 				//--- driver loop does NOT read - it reads ONLY wfbe_aicom_order. So for an HC team ALSO broadcast
 				//--- a "defense" order at the town (mirror the HQ-strike order idiom below). Server-local teams
 				//--- ignore the order var and use the SetTeamMove* writes above, so both paths stay covered.
-				if (_free getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_free, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_free setVariable ["wfbe_aicom_order", [(if (isNil {_free getVariable "wfbe_aicom_order"}) then {-1} else {(_free getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _town], true];
 				};
 				_free setVariable ["wfbe_aicom_relief", _town];
@@ -543,7 +543,7 @@ _relieved = 0;
 							[_wTeam, "towns"] Call SetTeamMoveMode;
 							_wTeam setVariable ["wfbe_aicom_townorder", []];
 							_wTeam setVariable ["wfbe_aicom_wedge_bc", nil];
-							if (_wTeam getVariable ["wfbe_aicom_hc", false]) then {
+							if ([_wTeam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 								_wTeam setVariable ["wfbe_aicom_order", [(if (isNil {_wTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wTeam getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos _wLdr], true];
 							};
 							["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] WEDGE-WATCHDOG released from %3 (no move %4m in %5s, not in contact) -> offense.", _sideText, _wTeam, _wMode, round _wMoved, round (time - _wBcT)]] Call WFBE_CO_FNC_AICOMLog;
@@ -656,7 +656,7 @@ if (_strikeOn) then {
 			_best setVariable ["wfbe_aicom_strike", true];
 		[_best, "move"] Call SetTeamMoveMode;
 		[_best, getPos _enemyHQ] Call SetTeamMovePos;
-		if (_best getVariable ["wfbe_aicom_hc", false]) then {
+		if ([_best, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true]; //--- HQ-STRIKE PRESS FIX (Ray): "defense" made the HC striker HOLD near the enemy HQ; "goto" routes through the driver else-branch (Common_RunCommanderTeam.sqf ~L749 = assault SAD WFBE_C_AICOM_ASSAULT_SAD onto _dest), so it PRESSES onto the HQ. Not "towns-target" (that triggers the town-depot capture phase, wrong for a base).
 		};
 		_strikeCount = _strikeCount + 1;

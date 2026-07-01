@@ -175,7 +175,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					[_team, "defense"] Call SetTeamMoveMode;
 					[_team, getPos _hqG] Call SetTeamMovePos;
 					//--- V0.3: HC-resident teams get their orders via the public order variable.
-					if (_team getVariable ["wfbe_aicom_hc", false]) then {
+					if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _hqG], true];
 					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
@@ -418,7 +418,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					if (!isNull _target) then {
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
-						if (_team getVariable ["wfbe_aicom_hc", false]) then {
+						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
 							//--- server-side waypoint commands on remote groups are unreliable.
 							//--- ROAD-MARCH (task #14/#16): the executor turns a bare wfbe_aicom_order

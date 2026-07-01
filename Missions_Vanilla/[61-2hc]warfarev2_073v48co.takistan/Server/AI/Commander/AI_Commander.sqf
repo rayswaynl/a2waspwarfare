@@ -169,7 +169,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				{ if (!isNull _x) then {
 					[_x, "towns"] Call SetTeamMoveMode;
 					_x setVariable ["wfbe_exec_sig", []];
-					if (_x getVariable ["wfbe_aicom_hc", false]) then {
+					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 						_x setVariable ["wfbe_aicom_order",
 							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 							 "towns", getPos (leader _x)], true];
@@ -193,7 +193,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			{ if (!isNull _x) then {
 				[_x, "towns"] Call SetTeamMoveMode;
 				_x setVariable ["wfbe_exec_sig", []];
-				if (_x getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_x setVariable ["wfbe_aicom_order",
 						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 						 "towns", getPos (leader _x)], true];

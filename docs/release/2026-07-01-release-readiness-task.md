@@ -170,6 +170,12 @@ As of 2026-07-02 after the PR #125 Build83/cmdcon35, AICOM latch-reset, release-
    - Impact: runtime proof should target the refreshed `0ee16d18e0` / `D3234346...` package tuple; older `062ab44ff5` and `78ba49d540` packets are now stale unless the release owner explicitly chooses them.
    - Action: keep `Tools/Ops/Test-WaspReleaseTupleDocs.ps1` guarding the current PR #125 branch/package/wiki tuple, and refresh this ledger plus PR bodies if PR #125 promotes another package tuple.
 
+21. Active AI Commander group bool reads needed the existing A2-safe helper consistently.
+   - `Common_GroupGetBool.sqf` documents the Arma 2 OA group `getVariable [name, default]` trap where unset group vars can behave like nil/`Type Nothing` instead of returning the default.
+   - Several active AI Commander workers still read `wfbe_aicom_hc`, `wfbe_aicom_founded`, or `wfbe_aicom_disband` with raw two-argument group `getVariable` even though sibling code already used `WFBE_CO_FNC_GroupGetBool`.
+   - Action: PR #126 now routes active reads in `AI_Commander.sqf`, `AI_Commander_AssignTypes.sqf`, `AI_Commander_AssignTowns.sqf`, `AI_Commander_Strategy.sqf`, and `AI_Commander_Teams.sqf` through `WFBE_CO_FNC_GroupGetBool` in both maintained terrains. Draft-only `AI_Commander_HCTopUp.DRAFT.sqf` remains excluded.
+   - Guard: `Tools/Ops/Test-WaspJipAicomSourceGuards.ps1` now checks Chernarus/Takistan JIP roster adoption tokens, AI Commander join-time catch-up tokens, HC drop/reconnect audit tokens, and rejects raw active `wfbe_aicom_hc` / `wfbe_aicom_founded` / `wfbe_aicom_disband` group bool reads outside `.DRAFT.sqf`.
+
 ## Working Backlog
 
 - Decide whether this branch stays as a small findings PR or merges into PR #123/#125 after review.
@@ -186,6 +192,7 @@ As of 2026-07-02 after the PR #125 Build83/cmdcon35, AICOM latch-reset, release-
 - Re-run `Tools/Monitor/Test-WaspRuntimeEvidenceManifestTemplate.SelfTest.ps1` after edits to the runtime evidence manifest template generator.
 - Re-run `Tools/Ops/Test-WaspReleaseTupleDocs.ps1` after PR #125 package/wiki tuple refreshes or edits to PR #126 release ledger and monitor examples.
 - Re-run `Tools/Ops/Test-WaspVersionTemplates.ps1` after edits to tracked `version.sqf.template` files or terrain generation settings.
+- Re-run `Tools/Ops/Test-WaspJipAicomSourceGuards.ps1` after edits to maintained `initJIPCompatible.sqf`, HC connect/disconnect instrumentation, join-time AICOM catch-up, or active `Server/AI/Commander` group-bool reads.
 
 ## Validation Expectations
 
