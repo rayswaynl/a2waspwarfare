@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Command-menu group-default follow-up [RELEASE LOOP]
+
+Closed the adjacent client command-menu group read found during the AICOM
+default sweep. `GUI_Menu_Command.sqf` now resolves the displayed team objective
+through `WFBE_CO_FNC_GroupGetValue`, avoiding the Arma 2 OA group
+`getVariable [name, default]` unset-default trap for `wfbe_teamgoto` while
+preserving the existing object/position display handling.
+
+Static smoke now asserts the command-menu helper call and scans that GUI file
+for future raw group default reads. LoadoutManager mirrored the Chernarus source
+change to Takistan and rebuilt `_MISSIONS.7z`; direct static smoke passed. No
+runtime, SSH, RPT collection, upload, restart or deploy action was performed.
+
 ## 2026-07-01 — AICOM pending-token and transport-refund authority [RELEASE LOOP]
 
 Closed the next AICOM authority slice before runtime collection. HC team

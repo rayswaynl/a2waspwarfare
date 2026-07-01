@@ -335,7 +335,7 @@ while {alive player && dialog} do {
 				//--- TARGET: the team's objective/destination town. wfbe_teamgoto is BROADCAST (SetTeamMovePos / AssignTowns
 				//--- L412), so it is client-readable: a town OBJECT (AI town assignment) OR a position (player DIRECT order).
 				//--- Resolve to a town name; if unset / autonomous with no goto -> "auto". The inner forEach rebinds _x to towns.
-				_goto = _grp getVariable ["wfbe_teamgoto", objNull];
+				_goto = [_grp, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetValue;
 				_tn = "auto";
 				if (!isNil "_goto") then {
 					if (typeName _goto == "OBJECT") then {

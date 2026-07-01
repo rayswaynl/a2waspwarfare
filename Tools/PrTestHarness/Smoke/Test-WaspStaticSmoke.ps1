@@ -480,9 +480,11 @@ function Test-AicomGroupVariableDefaults {
 		$executePath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander_Execute.sqf"
 		$commanderPath = Join-Path $entry.Root "Server\AI\Commander\AI_Commander.sqf"
 		$runTeamPath = Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf"
+		$commandGuiPath = Join-Path $entry.Root "Client\GUI\GUI_Menu_Command.sqf"
 		$initCommonPath = Join-Path $entry.Root "Common\Init\Init_Common.sqf"
 		$commanderDir = Join-Path $entry.Root "Server\AI\Commander"
 		$groupDefaultScanPaths = @(
+			$commandGuiPath,
 			$runTeamPath,
 			(Join-Path $entry.Root "Server\FSM\server_groupsGC.sqf"),
 			(Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf")
@@ -490,6 +492,7 @@ function Test-AicomGroupVariableDefaults {
 		$execute = Get-Text $executePath
 		$commander = Get-Text $commanderPath
 		$runTeam = Get-Text $runTeamPath
+		$commandGui = Get-Text $commandGuiPath
 		$initCommon = Get-Text $initCommonPath
 		if (-not $initCommon.Contains("WFBE_CO_FNC_GroupGetValue = Compile preprocessFileLineNumbers")) { $missing += "$($entry.Terrain):group-get-value-helper" }
 		if (-not $execute.Contains('[_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-mode" }
@@ -502,6 +505,8 @@ function Test-AicomGroupVariableDefaults {
 		if (-not $commander.Contains('_x setVariable ["wfbe_exec_lastmode", ""]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_lastgoto", [0,0,0]]') -or -not $commander.Contains('_x setVariable ["wfbe_exec_at", -1e9]')) { $missing += "$($entry.Terrain):commander-latch-reset" }
 		if (-not $runTeam.Contains('[_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):capture-pass-helper" }
 		if ($runTeam.Contains('_team getVariable ["wfbe_aicom_cappasses", 0]')) { $missing += "$($entry.Terrain):capture-pass-raw-group-default" }
+		if (-not $commandGui.Contains('[_grp, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):command-gui-goto-helper" }
+		if ($commandGui.Contains('_grp getVariable ["wfbe_teamgoto", objNull]')) { $missing += "$($entry.Terrain):command-gui-raw-group-default" }
 		$groupDefaultScanPaths += (Get-ChildItem -LiteralPath $commanderDir -Filter "*.sqf" -File | ForEach-Object { $_.FullName })
 		foreach ($filePath in $groupDefaultScanPaths) {
 			$lineNumber = 0
