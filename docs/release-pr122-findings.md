@@ -1,11 +1,48 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 23:26 Europe/Amsterdam
+Last updated: 2026-07-02 00:35 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 00:35 Update
+
+PR #136 advanced to `761799baa8f5115bc3b9990d33850f4786c590cb`.
+The new commits are docs-only Tick 10/Tick 11 updates in
+`docs/OVERNIGHT-LOOP-2026-07-02.md`. They state that cmdcon40 captures are now
+confirmed (`CAPTURED=6`) and that the remaining issue is not the capture-chain
+entry path, but hold/spread tuning: towns see-saw, teams leave captured towns,
+and the dominant side can stay in `HOLD` instead of pressing.
+
+I copied the current livehost RPTs from
+`C:\Users\Administrator\AppData\Local\ArmA 2 OA` into the local release evidence
+folder:
+
+- `work/live-probe-20260702-0032/ArmA2OA.RPT`
+  - SHA256:
+    `502F409A9F23F371FF7DD024AF8157DB055B30213BFEEB29AA5C63F056880C3A`
+- `work/live-probe-20260702-0032/arma2oaserver.RPT`
+  - SHA256:
+    `2ACDB5B0DAD74D143BE3752A9160E9B268E1406BCEB5D2181CA7E913B15546F7`
+
+Scoped from the cmdcon40 `MISSINIT` window, the HC/client RPT contains six
+`CAPTURED [` lines: WEST captured `Myshkino` twice and EAST captured `Khelm`
+four times. The server RPT contains `ASSAULT_DISPATCH=110`,
+`ASSAULT_ARRIVED=16`, `POSTURE=124`, `WASPSCALE=14`, and `AICOMHB=2`, with
+zero scoped `Error in expression`, `Warning Message`, `Undefined variable`,
+`Generic error`, or `Cannot load` hits.
+
+Public stats generated at `2026-07-01T22:27:07Z` match that picture: Chernarus
+minute 60, `currentRound.captures=2`, recent captures `Myshkino` and `Khelm`,
+benchmark `errors=0`, and both WEST/EAST holding one town.
+
+This changes the proof boundary: Chernarus cmdcon40 now has real current RPT
+capture-chain evidence. The release is still **NO-GO** because Takistan
+selected-build RPT proof is missing, the active `MPMissions` listing did not
+show a Takistan cmdcon PBO, and human smoke plus final selected-artifact
+identity/static proof remain required.
 
 ## Current Verdict
 
