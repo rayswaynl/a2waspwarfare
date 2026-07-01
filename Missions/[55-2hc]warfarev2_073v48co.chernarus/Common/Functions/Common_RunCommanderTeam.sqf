@@ -339,7 +339,7 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		//--- (missionNamespace getVariable (typeOf _veh)) select QUERYUNITPRICE.
 		_heliCost = 0;
 		_ud = missionNamespace getVariable (typeOf _airVeh);
-		if (!isNil "_ud") then {_heliCost = _ud select QUERYUNITPRICE};
+		if (!isNil "_ud" && {typeName _ud == "ARRAY"} && {count _ud > QUERYUNITPRICE} && {typeName (_ud select QUERYUNITPRICE) == "SCALAR"}) then {_heliCost = _ud select QUERYUNITPRICE};
 		//--- Mark this hull as an AI-commander transport so the refund path can
 		//--- never refund a player-owned or non-aicom heli.
 		_airVeh setVariable ["wfbe_aicom_transport", true, true];

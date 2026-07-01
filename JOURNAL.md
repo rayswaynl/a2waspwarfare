@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM lifecycle shape guards [RELEASE LOOP]
+
+Tightened a few malformed-state edges around AICOM team lifecycle cleanup. The
+transport refund path now validates unit-data shape before reading
+`QUERYUNITPRICE`, pending-token consumption refuses a corrupted non-array token
+store, and `WFBE_ACTIVE_AICOM_TEAMS` pruning now validates active-list entry
+unit/team types before reading them. Static smoke asserts these lifecycle shape
+guards together with the existing refund authority checks.
+
+Runtime, SSH, RPT collection, upload, restart, cache-clear and deployment remain
+explicit-approval gated.
+
 ## 2026-07-01 — AICOM feed request PV guard [RELEASE LOOP]
 
 Hardened the `WFBE_ReqAicomFeed` marker/status replay request path used by

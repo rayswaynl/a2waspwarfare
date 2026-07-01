@@ -45,6 +45,7 @@ _consumeAicomPendingToken = {
 	_logic = _this select 0;
 	_token = _this select 1;
 	_tokens = _logic getVariable ["wfbe_aicom_pending_tokens", []];
+	if (typeName _tokens != "ARRAY") exitWith {false};
 	if (count _tokens <= 0) exitWith {true};
 	if ((typeName _token != "STRING") || {_token == ""}) exitWith {false};
 	_newTokens = [];
@@ -614,7 +615,7 @@ switch (_args select 0) do {
 	//--- the Transfer menu (GUI_TransferMenu.sqf) - it shares the same "aicom-donate-confirm" client confirm. Donating
 	//--- to the AI treasury only makes sense while the AI runs the side, which that path already enforces.
 	case "aicom-team-ended": {
-		Private ["_csideID","_cside","_cteam","_cpendingToken","_clogik","_cteams","_cpending","_ctokenOk","_caicomList","_caicomNew"];
+		Private ["_csideID","_cside","_cteam","_cpendingToken","_clogik","_cteams","_cpending","_ctokenOk","_caicomList","_caicomNew","_entryUnit","_entryTeam"];
 		if (count _args < 3) exitWith {
 			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-team-ended payload."] Call WFBE_CO_FNC_LogContent;
 		};
@@ -646,7 +647,11 @@ switch (_args select 0) do {
 			_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 			_caicomNew = [];
 			{
-				if ((typeName _x == "ARRAY") && {count _x >= 4} && {!isNull (_x select 0)} && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
+				if ((typeName _x == "ARRAY") && {count _x >= 4}) then {
+					_entryUnit = _x select 0;
+					_entryTeam = _x select 3;
+					if ((typeName _entryUnit == "OBJECT") && {typeName _entryTeam == "GROUP"} && {!isNull _entryUnit} && {_entryTeam != _cteam}) then {_caicomNew = _caicomNew + [_x]};
+				};
 			} forEach _caicomList;
 			missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
 			publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
@@ -685,7 +690,7 @@ switch (_args select 0) do {
 	//--- pushes [team, dir] whenever its objective bearing changes; we update the entry's slot 2 and
 	//--- only re-broadcast WFBE_ACTIVE_AICOM_TEAMS when the arrow actually moved >7 deg (cuts PV spam).
 	case "aicom-team-heading": {
-		Private ["_hpayload","_hteam","_hdir","_hsideID","_hside","_hlogik","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi","_hldr"]; //--- B66 +_hldr
+		Private ["_hpayload","_hteam","_hdir","_hsideID","_hside","_hlogik","_haicomList","_hentry","_hold","_hdelta","_hchanged","_hi","_hldr","_hEntryLeader","_hEntryTeam"]; //--- B66 +_hldr
 		if (count _args < 2 || {typeName (_args select 1) != "ARRAY"} || {count (_args select 1) < 2}) exitWith {
 			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-team-heading payload."] Call WFBE_CO_FNC_LogContent;
 		};
@@ -712,24 +717,34 @@ switch (_args select 0) do {
 			if (!isNull _hldr) then {_hteam setVariable ["wfbe_aicom_last_heading_owner", owner _hldr, false]};
 			for "_hi" from 0 to (count _haicomList - 1) do {
 				_hentry = _haicomList select _hi;
-				if ((typeName _hentry == "ARRAY") && {count _hentry >= 4} && {(_hentry select 3) == _hteam}) then {
+				if ((typeName _hentry == "ARRAY") && {count _hentry >= 4}) then {
+					_hEntryTeam = _hentry select 3;
+					if ((typeName _hEntryTeam == "GROUP") && {_hEntryTeam == _hteam}) then {
 					//--- B66: ARROW-VANISH FIX. slot0 (leader) was captured ONCE at aicom-team-created and
 					//--- never refreshed; when the original leader died (team still alive) the client keyed
 					//--- liveness/position on a dead/null unit and dropped the arrow. Re-resolve the CURRENT
 					//--- leader from the live team (slot3) and write it back whenever it changed, so a leader
 					//--- swap keeps the arrow alive.
-					if (!isNull _hldr && {(_hentry select 0) != _hldr}) then {
+					_hEntryLeader = _hentry select 0;
+					if ((typeName _hEntryLeader != "OBJECT") || {!isNull _hldr && {_hEntryLeader != _hldr}}) then {
 						_hentry set [0, _hldr];
 						_haicomList set [_hi, _hentry];
 						_hchanged = true;
 					};
 					_hold = _hentry select 2;
-					//--- Smallest signed angle between old and new heading (handles 0/360 wrap).
-					_hdelta = abs (((_hdir - _hold) + 180) % 360 - 180);
-					if (_hdelta > 7) then {
+					if (typeName _hold != "SCALAR") then {
 						_hentry set [2, _hdir];
 						_haicomList set [_hi, _hentry];
 						_hchanged = true;
+					} else {
+						//--- Smallest signed angle between old and new heading (handles 0/360 wrap).
+						_hdelta = abs (((_hdir - _hold) + 180) % 360 - 180);
+						if (_hdelta > 7) then {
+							_hentry set [2, _hdir];
+							_haicomList set [_hi, _hentry];
+							_hchanged = true;
+						};
+					};
 					};
 				};
 			};
