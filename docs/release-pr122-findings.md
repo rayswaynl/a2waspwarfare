@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 18:31 Europe/Amsterdam
+Last updated: 2026-07-01 18:40 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -60,11 +60,11 @@ repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`c0d2b42ef5281dfdef1393cfc0a731e7c38375de`. Treat it as a separate broad lane,
+`153a513fb6511a4154f2ed825ba9ff2578c070e7`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also exists as an open draft release-readiness/AICOM guardrail lane at
-head `e9d52f8c61d598b5833bcbb72b014228767341be` after a force update. Its
+head `10c38fb47c0743b5376f592bcaca1c8247a32ef6` after a force update. Its
 verified shippable pieces were folded through PR #127; keep the remaining branch
 separate unless it is rebased and revalidated.
 
@@ -328,26 +328,31 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 18:31 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 18:40 Europe/Amsterdam found:
 
 - PR #131: focused placement-preview static fix, clean at
   `bc297a6323aa7eabaf6fd8ccdf5fefb555ad1583`. This remains the release-critical
   unblocker because current `origin/master` still fails `git diff --check` from
   `5bf5f92385` in both terrain copies of `Client/Init/Init_Client.sqf`.
 - PR #126: medium source risk, high release-gate risk until runtime proof exists.
-  It advanced to `e9d52f8c61d598b5833bcbb72b014228767341be`. True payload from
-  merge-base `b7241a35` is 18 files, +867/-24, including 14 mission files plus
+  It advanced to `10c38fb47c0743b5376f592bcaca1c8247a32ef6`. True payload from
+  merge-base `b7241a35` is 18 files, +870/-24, including 14 mission files plus
   `Tools/Monitor` helper/docs and one release doc. It changes AICOM/HC/JIP
   telemetry and throttling paths. True-payload `git diff --check` passes, but a
   raw `origin/master..HEAD` check fails because the stale-base branch re-adds
-  deleted `GUER_TECH.md` with trailing whitespace.
+  deleted `GUER_TECH.md` with trailing whitespace. Added-line scan found no
+  watched A3-only token hits.
 - PR #125: broad command-center/tooling lane at
-  `c0d2b42ef5281dfdef1393cfc0a731e7c38375de`. True payload from merge-base
-  `b7241a35` is 137 files, +13852/-814, including 99 mission files across both
+  `153a513fb6511a4154f2ed825ba9ff2578c070e7`. True payload from merge-base
+  `b7241a35` is 141 files, +13909/-1470, including 103 mission files across both
   terrains plus large harness/docs/server-config additions. It overlaps #131 in
   the two terrain `Client/Init/Init_Client.sqf` files and simulated stacking
   shows real conflicts there. True-payload `git diff --check` passes, but a raw
   `origin/master..HEAD` check fails because stale deleted docs are re-added.
+  Added-line A3-token scan hits docs/tooling and a string label in
+  `Tools/PrTestHarness/Overlays/pr8-stress/test/wasp_selftest.sqf`, not an
+  executable mission `params` command, but this lane is still too broad for a
+  Thursday selection without runtime proof.
 - PR #129: release-readiness hub at
   `72888f22851871c8ed967a0fd29402a0c410c0bd`, 14 files and approximately
   `+188/-92`. It is mission-affecting in AICOM commander code, group GC,
@@ -365,10 +370,12 @@ Fresh triage at 2026-07-01 18:31 Europe/Amsterdam found:
   medium-high release-risk lane until it is rebased, reconciled with #131,
   regenerated, packaged, and proven with exact real RPT evidence.
 
-PR #125 and PR #129 were not stacked at the 16:19 triage point and overlapped
-in shared AICOM files. Because PR #125 has advanced since then, do not combine
-#125 and #129 for Thursday without fresh conflict analysis, LoadoutManager
-regeneration/validation, new artifacts, and fresh real RPT proof.
+PR #125 and PR #126 overlap in 14 shared AICOM/HC/JIP files across Chernarus and
+Takistan. PR #126 does not overlap #131. PR #125 and PR #129 were not stacked at
+the 16:19 triage point and overlapped in shared AICOM files. Because PR #125 has
+advanced since then, do not combine #125 with #126 or #129 for Thursday without
+fresh conflict analysis, LoadoutManager regeneration/validation, new artifacts,
+and fresh real RPT proof.
 
 ## Superseded Latest Master Exact Artifact
 
