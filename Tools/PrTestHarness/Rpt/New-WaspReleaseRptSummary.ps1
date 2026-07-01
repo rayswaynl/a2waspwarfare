@@ -180,6 +180,24 @@ foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","
 	[void]$lines.Add(("| {0} | {1} |" -f $key, (Get-CountValue $score.tokenCounts $key)))
 }
 [void]$lines.Add("")
+$chernarusCounts = $null
+$takistanCounts = $null
+if ($null -ne $score.perTerrainTokenCounts) {
+	$chernarusProperty = $score.perTerrainTokenCounts.PSObject.Properties["chernarus"]
+	$takistanProperty = $score.perTerrainTokenCounts.PSObject.Properties["takistan"]
+	if ($null -ne $chernarusProperty) { $chernarusCounts = $chernarusProperty.Value }
+	if ($null -ne $takistanProperty) { $takistanCounts = $takistanProperty.Value }
+}
+if ($null -ne $chernarusCounts -or $null -ne $takistanCounts) {
+	[void]$lines.Add("## Per-Terrain Selected Token Counts")
+	[void]$lines.Add("")
+	[void]$lines.Add("| Token | Chernarus | Takistan |")
+	[void]$lines.Add("| --- | ---: | ---: |")
+	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aiCommanderActive","hcConnectCivilian","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted")) {
+		[void]$lines.Add(("| {0} | {1} | {2} |" -f $key, (Get-CountValue $chernarusCounts $key), (Get-CountValue $takistanCounts $key)))
+	}
+	[void]$lines.Add("")
+}
 [void]$lines.Add("## Human Observations Still Required")
 [void]$lines.Add("")
 foreach ($observation in $packet.requiredHumanObservations) {

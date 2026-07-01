@@ -264,14 +264,24 @@ After the packet matrix passes, the scorer checks both Chernarus and Takistan
 coverage, no generic current-window RPT stop conditions, at least two successful
 non-zero-owner CIV `HCSIDE|v1|connect` rows for HC registry proof, plus the
 round-6 AICOM, JIP, HC, town-cleanup, WDDM/static/artillery and supply evidence
-tokens. The no-human AICOM gate requires WEST/EAST heartbeats and ticks,
-`AICOMSTAT` events, `TEAM_FOUNDED`, `CMDRSTAT`, and at least one action/progress
-token such as `ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or `SNAP`. It
-exits non-zero until the bundle is complete. It scores only the current mission
-window in each RPT, including the startup banner immediately
-above the latest `MISSINIT`, and fails if any scored file lacks that startup
-Mission Name banner. It prints session names and token counts only; it does not
-echo raw RPT lines or absolute RPT paths.
+tokens. It also requires each scored RPT to resolve to exactly one runtime
+terrain and requires the core runtime evidence families to pass independently
+for Chernarus and Takistan through the `per-terrain-runtime-evidence` gate; a
+rich Chernarus run can no longer satisfy missing Takistan semantic evidence.
+The no-human AICOM gate requires WEST/EAST heartbeats and ticks, `AICOMSTAT`
+events, `TEAM_FOUNDED`, `CMDRSTAT`, and at least one action/progress token such
+as `ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or `SNAP`. It exits
+non-zero until the bundle is complete. It scores only the current mission window
+in each RPT, including the startup banner immediately above the latest
+`MISSINIT`, and fails if any scored file lacks that startup Mission Name banner.
+It prints session names and token counts only; it does not echo raw RPT lines or
+absolute RPT paths.
+
+The per-terrain false-pass fixture is executable without live Arma runtime:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.PerTerrainSelfTest.ps1
+```
 
 To produce a portable release/wiki summary packet from the same scorer output:
 
@@ -285,7 +295,9 @@ To produce a portable release/wiki summary packet from the same scorer output:
 It writes `release-rpt-summary.json` and `release-rpt-summary.md` without
 copying raw RPT lines or absolute RPT paths. Like the scorer, it exits non-zero
 until the runtime gates pass; add `-NoFail` when producing an incomplete
-diagnostic packet.
+diagnostic packet. The Markdown summary includes aggregate and per-terrain
+selected token counts so missing semantic evidence can be traced without
+publishing raw logs.
 
 ## Release Package Provenance
 

@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Per-terrain runtime evidence gate [RELEASE LOOP]
+
+The release RPT scorer now splits runtime token counts by the RPT window's
+resolved terrain and adds `per-terrain-runtime-evidence`. The existing aggregate
+gates still report continuity, but the release cannot pass if only Chernarus (or
+only Takistan) carries the AICOM, JIP, HC registry/delegation, town cleanup,
+WDDM/static/artillery and supply token families. Each scored RPT must also
+resolve to exactly one runtime terrain before those counts are accepted.
+
+Added `Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.PerTerrainSelfTest.ps1`.
+It builds a synthetic ten-RPT packet where Chernarus has all semantic evidence
+and Takistan has only marker/startup proof, verifies that the new gate fails,
+then mirrors the evidence into Takistan and verifies the scorer passes.
+
 ## 2026-07-01 — Stronger AICOM runtime scorer gate [RELEASE LOOP]
 
 The active release RPT scorer now carries the latest PR #122 scanner guardrail

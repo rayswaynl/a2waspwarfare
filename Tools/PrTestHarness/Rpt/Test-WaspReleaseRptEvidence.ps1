@@ -144,6 +144,47 @@ function Test-AnyCount {
 	return $false
 }
 
+function Test-TokenGate {
+	param($Gate, $Counts)
+	$missing = @()
+	$failHits = @()
+	foreach ($key in @($Gate.required)) {
+		if (!$Counts.Contains($key) -or [int]$Counts[$key] -eq 0) { $missing += $key }
+	}
+	if ($Gate.Contains("minCounts")) {
+		foreach ($key in @($Gate.minCounts.Keys)) {
+			$actual = if ($Counts.Contains($key)) { [int]$Counts[$key] } else { 0 }
+			$minimum = [int]$Gate.minCounts[$key]
+			if ($actual -lt $minimum) { $missing += ("{0}>={1} (actual {2})" -f $key, $minimum, $actual) }
+		}
+	}
+	if ($Gate.Contains("anyOf")) {
+		foreach ($group in @($Gate.anyOf)) {
+			$matched = $false
+			foreach ($key in @($group.keys)) {
+				if ($Counts.Contains($key) -and [int]$Counts[$key] -gt 0) {
+					$matched = $true
+					break
+				}
+			}
+			if (!$matched) {
+				$missing += ("{0}: one of {1}" -f $group.label, (($group.keys) -join ","))
+			}
+		}
+	}
+	foreach ($key in @($Gate.fail)) {
+		if ($Counts.Contains($key) -and [int]$Counts[$key] -gt 0) { $failHits += $key }
+	}
+	$status = "pass"
+	if ($failHits.Count -gt 0) { $status = "fail" }
+	elseif ($missing.Count -gt 0) { $status = "missing" }
+	return [ordered]@{
+		status = $status
+		missing = $missing
+		failHits = $failHits
+	}
+}
+
 $stopSpecs = @(
 	[pscustomobject]@{ Name = "errorInExpression"; Pattern = "Error in expression" },
 	[pscustomobject]@{ Name = "undefinedVariable"; Pattern = "Undefined variable" },
@@ -286,6 +327,18 @@ $gateSpecs = @(
 	}
 )
 
+$runtimeTerrains = @("chernarus","takistan")
+$perTerrainRuntimeGateIds = @(
+	"aicom-no-human",
+	"hq-death-and-jip",
+	"hc-delegation-locality",
+	"hc-registry-civilian",
+	"town-ai-cleanup",
+	"wddm-static-artillery",
+	"supply-truck-heli"
+)
+$perTerrainRuntimeGateSpecs = @($gateSpecs | Where-Object { $perTerrainRuntimeGateIds -contains [string]$_.id })
+
 $files = Get-RptFiles
 if ($files.Count -eq 0) {
 	Write-Host "FAIL: pass -RptPath or -RptDirectory with at least one RPT." -ForegroundColor Red
@@ -301,6 +354,8 @@ foreach ($dir in $RptDirectory) {
 $totalCounts = New-Counts $tokenSpecs
 $totalStopCounts = New-Counts $stopSpecs
 $totalStopMatches = 0
+$terrainCounts = [ordered]@{}
+foreach ($terrain in $runtimeTerrains) { $terrainCounts[$terrain] = New-Counts $tokenSpecs }
 $fileSummaries = @()
 $worlds = New-Object System.Collections.Generic.HashSet[string]
 $markerCounts = [ordered]@{}
@@ -314,6 +369,7 @@ foreach ($file in $files) {
 	$lines = @($window.lines)
 	$fileCounts = New-Counts $tokenSpecs
 	$fileStopCounts = New-Counts $stopSpecs
+	$fileTerrainHits = New-Object System.Collections.Generic.List[string]
 	$sessions = @()
 	$builds = @()
 	$startupMissionBannerFound = $false
@@ -322,9 +378,15 @@ foreach ($file in $files) {
 		$line = $lines[$i]
 		$absoluteLine = [int]$window.windowStartLine + $i
 		if ($line -match "## Mission Name") { $startupMissionBannerFound = $true }
+		if ($line -match "WASPRELEASE\|v1\|.*\|terrain=(chernarus|takistan)") {
+			$terrain = $matches[1].Trim().ToLowerInvariant()
+			[void]$worlds.Add($terrain)
+			$fileTerrainHits.Add($terrain)
+		}
 		if ($line -match "MISSINIT: missionName=([^,]+), worldName=([^,]+), isMultiplayer=([^,]+), isServer=([^,]+), isDedicated=([^\]]+)") {
 			$world = $matches[2].Trim().ToLowerInvariant()
 			[void]$worlds.Add($world)
+			if ($runtimeTerrains -contains $world) { $fileTerrainHits.Add($world) }
 			$sessions += [ordered]@{
 				line = $absoluteLine
 				missionName = $matches[1]
@@ -335,7 +397,9 @@ foreach ($file in $files) {
 			}
 		}
 		if ($line -match "SID=[^ ]+ MAP=([^ ]+)") {
-			[void]$worlds.Add($matches[1].Trim().ToLowerInvariant())
+			$world = $matches[1].Trim().ToLowerInvariant()
+			[void]$worlds.Add($world)
+			if ($runtimeTerrains -contains $world) { $fileTerrainHits.Add($world) }
 		}
 		if ($line -match "## Build: (.+)") {
 			$startupBuildBannerFound = $true
@@ -356,6 +420,10 @@ foreach ($file in $files) {
 		}
 	}
 	Add-Counts $totalCounts $fileCounts
+	$scoredTerrains = @($fileTerrainHits.ToArray() | Select-Object -Unique)
+	if ($scoredTerrains.Count -eq 1) {
+		Add-Counts $terrainCounts[$scoredTerrains[0]] $fileCounts
+	}
 	$fileSummaries += [ordered]@{
 		path = ConvertTo-PublicRptLabel -Path $item.FullName -Roots $publicRptRoots
 		pathHash = Get-SafeTextHash $item.FullName
@@ -368,6 +436,7 @@ foreach ($file in $files) {
 		windowStartLine = [int]$window.windowStartLine
 		startupMissionBannerFound = [bool]$startupMissionBannerFound
 		startupBuildBannerFound = [bool]$startupBuildBannerFound
+		scoredTerrains = $scoredTerrains
 		sessions = $sessions
 		builds = $builds
 		stopCounts = $fileStopCounts
@@ -396,6 +465,14 @@ $gateResults += [ordered]@{
 	failHits = @()
 	note = "Each scored current-mission window must retain the startup Mission Name banner before release evidence is accepted."
 }
+$filesWithoutSingleTerrain = @($fileSummaries | Where-Object { @($_.scoredTerrains).Count -ne 1 })
+$gateResults += [ordered]@{
+	id = "all-files-have-single-runtime-terrain"
+	status = if ($filesWithoutSingleTerrain.Count -eq 0) { "pass" } else { "fail" }
+	missing = @($filesWithoutSingleTerrain | ForEach-Object { $_.path })
+	failHits = @()
+	note = "Each scored RPT window must resolve to exactly one release terrain before per-terrain runtime evidence is accepted."
+}
 if ($markerCounts.Count -gt 0) {
 	$missingMarkers = @()
 	foreach ($marker in @($markerCounts.Keys)) {
@@ -413,37 +490,13 @@ foreach ($gate in $gateSpecs) {
 	$missing = @()
 	$failHits = @()
 	if ($gate.id -eq "terrain-coverage") {
-		foreach ($world in @("chernarus","takistan")) {
+		foreach ($world in $runtimeTerrains) {
 			if (!$worlds.Contains($world)) { $missing += $world }
 		}
 	} else {
-		foreach ($key in $gate.required) {
-			if (!$totalCounts.Contains($key) -or [int]$totalCounts[$key] -eq 0) { $missing += $key }
-		}
-		if ($gate.Contains("minCounts")) {
-			foreach ($key in @($gate.minCounts.Keys)) {
-				$actual = if ($totalCounts.Contains($key)) { [int]$totalCounts[$key] } else { 0 }
-				$minimum = [int]$gate.minCounts[$key]
-				if ($actual -lt $minimum) { $missing += ("{0}>={1} (actual {2})" -f $key, $minimum, $actual) }
-			}
-		}
-		if ($gate.Contains("anyOf")) {
-			foreach ($group in @($gate.anyOf)) {
-				$matched = $false
-				foreach ($key in @($group.keys)) {
-					if ($totalCounts.Contains($key) -and [int]$totalCounts[$key] -gt 0) {
-						$matched = $true
-						break
-					}
-				}
-				if (!$matched) {
-					$missing += ("{0}: one of {1}" -f $group.label, (($group.keys) -join ","))
-				}
-			}
-		}
-		foreach ($key in $gate.fail) {
-			if ($totalCounts.Contains($key) -and [int]$totalCounts[$key] -gt 0) { $failHits += $key }
-		}
+		$assessment = Test-TokenGate -Gate $gate -Counts $totalCounts
+		$missing = $assessment.missing
+		$failHits = $assessment.failHits
 	}
 	$status = "pass"
 	if ($failHits.Count -gt 0) { $status = "fail" }
@@ -454,6 +507,31 @@ foreach ($gate in $gateSpecs) {
 		missing = $missing
 		failHits = $failHits
 		note = $gate.note
+	}
+	if ($gate.id -eq "terrain-coverage") {
+		$perTerrainMissing = @()
+		$perTerrainFailHits = @()
+		foreach ($terrain in $runtimeTerrains) {
+			foreach ($terrainGate in $perTerrainRuntimeGateSpecs) {
+				$terrainAssessment = Test-TokenGate -Gate $terrainGate -Counts $terrainCounts[$terrain]
+				foreach ($item in @($terrainAssessment.missing)) {
+					$perTerrainMissing += ("{0}:{1}:{2}" -f $terrain, $terrainGate.id, $item)
+				}
+				foreach ($item in @($terrainAssessment.failHits)) {
+					$perTerrainFailHits += ("{0}:{1}:{2}" -f $terrain, $terrainGate.id, $item)
+				}
+			}
+		}
+		$perTerrainStatus = "pass"
+		if ($perTerrainFailHits.Count -gt 0) { $perTerrainStatus = "fail" }
+		elseif ($perTerrainMissing.Count -gt 0) { $perTerrainStatus = "missing" }
+		$gateResults += [ordered]@{
+			id = "per-terrain-runtime-evidence"
+			status = $perTerrainStatus
+			missing = $perTerrainMissing
+			failHits = $perTerrainFailHits
+			note = "Requires core AICOM, JIP, HC, town-cleanup, WDDM/static/artillery and supply evidence independently for Chernarus and Takistan."
+		}
 	}
 }
 
@@ -466,6 +544,7 @@ $result = [ordered]@{
 	worldsSeen = @($worlds)
 	expectedMarkerCounts = $markerCounts
 	tokenCounts = $totalCounts
+	perTerrainTokenCounts = $terrainCounts
 	stopCounts = $totalStopCounts
 	stopMatchCount = $totalStopMatches
 	gates = $gateResults
