@@ -1,5 +1,36 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Handoff stale-archive negative self-test [RELEASE LOOP]
+
+Added a release handoff self-test fixture for the package-race failure mode seen
+during the automated release loop: generate a manifest, mutate `_MISSIONS.7z`
+without changing its length, run `New-WaspReleaseHandoff.ps1` in a child
+PowerShell process, and assert that it exits nonzero while still writing a
+diagnostic handoff packet with `needs_package_or_marker_fix` and
+`archive-sha256-match=fail`.
+
+This does not change release packaging behavior; it makes the existing
+hash-mismatch gate harder to regress before the runtime RPT handoff.
+
+## 2026-07-01 — AICOM guardrail cleanup and PR #125 doc routing [RELEASE LOOP]
+
+Folded two read-only scout findings into the release branch without changing
+valid mission behavior. The low-pop AICOM banking valve now clamps
+`WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER` before selecting by population tier, so
+short or temporarily malformed tuning arrays cannot break the commander
+supervisor. Command-console artillery requests now validate `[x,y]` scalar
+positions at the server stamp point and again in both player/autonomous
+artillery resolvers before any `nearEntities` call consumes the request.
+
+LoadoutManager propagated the Chernarus source edit to maintained Takistan and
+rebuilt `_MISSIONS.7z`. Repo release notes now record that the wiki source
+intake map is already discoverable, with remaining work narrowed to
+per-source cards. The public wiki release workflow was also re-routed so PR
+#125 is the current packaged RPT gate and PR #126 is only a folded companion
+guardrail/source-notes lane unless a new package is explicitly cut.
+
+Runtime RPT collection and deployment remain approval-gated.
+
 ## 2026-07-01 — AICOM runtime scorer side-proof hardening [RELEASE LOOP]
 
 Tightened the release RPT scorer's no-human AICOM gate so both WEST and EAST

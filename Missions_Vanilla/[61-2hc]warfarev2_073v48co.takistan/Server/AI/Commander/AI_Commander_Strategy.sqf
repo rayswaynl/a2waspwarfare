@@ -779,12 +779,15 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 	//--- (Server_HandleSpecial "aicom-arty-here" stamps wfbe_aicom_arty_request=[pos,time]). When fresh it
 	//--- targets the requested pos AND bypasses the AI's own fire cooldown so the call-in actually fires; the
 	//--- request is CLEARED after this block so it fires exactly once. Additive, reversible, TTL-gated.
-	private ["_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh"];
+	private ["_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh","_riArtyX","_riArtyY"];
 	_riArtyReq = _logik getVariable "wfbe_aicom_arty_request";
 	_riArtyPos = []; _riArtyFresh = false;
 	if (!isNil "_riArtyReq" && {typeName _riArtyReq == "ARRAY"} && {count _riArtyReq == 2}) then {
 		_riArtyPos = _riArtyReq select 0; _riArtyT0 = _riArtyReq select 1;
-		if ((typeName _riArtyPos == "ARRAY") && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
+		if ((typeName _riArtyPos == "ARRAY") && {count _riArtyPos >= 2} && {typeName _riArtyT0 == "SCALAR"}) then {
+			_riArtyX = _riArtyPos select 0; _riArtyY = _riArtyPos select 1;
+			if ((typeName _riArtyX == "SCALAR") && {typeName _riArtyY == "SCALAR"} && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
+		};
 	};
 	if ((time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) || _riArtyFresh) then {
 		//--- Target: enemy HQ during a strike, else the top spearhead town.

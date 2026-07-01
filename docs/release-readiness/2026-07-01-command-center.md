@@ -88,7 +88,7 @@ Package self-test is expensive because it mutates archive fixtures; rerun it bef
 
 ## Wiki Update Plan
 
-- Add the release source-intake page to `_Sidebar.md` or `Home.md` so it is discoverable.
+- The release source-intake page is linked from the wiki sidebar and July readiness page; remaining source-intake work is per-source cards for Jerry, Miksuu dump/repo deltas, and BI forum evidence.
 - Keep public wiki claims labeled `runtime-pending` until exact RPT packets pass.
 - Update `Current-Source-Status-Snapshot.md`, `Agent-Release-Readiness-Ledger.md`, `Testing-Debugging-And-Release-Workflow.md`, `Progress-Dashboard.md`, `Arma-2-OA-Command-Version-Reference.md`, `Arma-2-OA-Compatibility-Audit.md`, and `External-Arma-2-OA-Reference-Index.md`.
 - Treat BI command pages as the source of truth for command availability. If the project blocks an available command for release safety, document it as a project rule rather than an engine fact.

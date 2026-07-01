@@ -110,8 +110,13 @@ _logik setVariable ["wfbe_aicom_pc", _pcN];
 	//--- converts to squads (livelier quiet nights). The high-pop caps (0/1) above are untouched, so a busy
 	//--- server never bloats. Toggle the flag to A/B legacy vs NEXT. The dyntarget log below records the lift.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_BANKING_VALVE", 1]) > 0 && {_pcN <= 5}) then {
-		private ["_valveCap","_valveExtra"];
-		_valveCap   = (missionNamespace getVariable ["WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER", [3,2,0,0]]) select _popTier;
+		private ["_valveCap","_valveExtra","_valveTiers","_valveIdx"];
+		_valveTiers = missionNamespace getVariable ["WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER", [3,2,0,0]];
+		if ((typeName _valveTiers != "ARRAY") || {count _valveTiers == 0}) then {_valveTiers = [missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_LOWPOP_EXTRA", 3]]};
+		_valveIdx = _popTier;
+		if (_valveIdx < 0) then {_valveIdx = 0};
+		if (_valveIdx >= count _valveTiers) then {_valveIdx = (count _valveTiers) - 1};
+		_valveCap   = _valveTiers select _valveIdx;
 		_valveExtra = floor (_funds / _fundsPerExtraTeam);
 		if (_valveExtra > _valveCap) then {_valveExtra = _valveCap};
 		if (_valveExtra > _extra) then {_extra = _valveExtra; _target = _base + _extra};

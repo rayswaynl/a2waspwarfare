@@ -328,10 +328,15 @@ switch (_args select 0) do {
 		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (which Steff hard-locks to 0 to keep the AI from using/building artillery).
 		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces that
 		//--- already exist (it never builds guns), so it does not reopen the locked AI-autonomous-artillery behaviour.
-		private ["_aSide","_aPos","_aLogik"];
+		private ["_aSide","_aPos","_aLogik","_aValid","_aX","_aY"];
 		_aSide = _args select 1;
 		_aPos  = _args select 2;
-		if ((typeName _aPos == "ARRAY") && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0}) then {
+		_aValid = false;
+		if ((typeName _aPos == "ARRAY") && {count _aPos >= 2}) then {
+			_aX = _aPos select 0; _aY = _aPos select 1;
+			if ((typeName _aX == "SCALAR") && {typeName _aY == "SCALAR"}) then {_aValid = true};
+		};
+		if (_aValid && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0}) then {
 			_aLogik = (_aSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _aLogik) then {
 				_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
