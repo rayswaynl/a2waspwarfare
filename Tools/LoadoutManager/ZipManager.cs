@@ -6,14 +6,18 @@ public class ZipManager
 {
     public static void DoZipOperations()
     {
+        if (ShouldSkipZipOperations())
+        {
+            Console.WriteLine("Skipping mission packaging because A2WASP_SKIP_ZIP is set.");
+            return;
+        }
+
         string a2waspDirectory = FileManager.FindA2WaspWarfareDirectory().FullName;
         string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions"
         string tempDirectory = Path.Combine(a2waspDirectory, "TempZippingDirectory");
         string destinationFile = Path.Combine(a2waspDirectory, "_MISSIONS.7z");
+        string tempDestinationFile = destinationFile + ".tmp";
 
-        // Resolve 7-Zip up front. Packing is OPTIONAL: if 7-Zip cannot be found we log and SKIP
-        // (the mission mirror has already completed by this point) instead of throwing an unhandled
-        // exception that would both fail the run and leave TempZippingDirectory littered on disk.
         string? sevenZipPath = ResolveSevenZip();
         if (sevenZipPath == null)
         {
@@ -25,14 +29,14 @@ public class ZipManager
         }
         Console.WriteLine($"[ZipManager] Using 7-Zip at: {sevenZipPath}");
 
-        if (File.Exists(destinationFile))
-        {
-            File.Delete(destinationFile);
-            Console.WriteLine($"Deleted existing file: {destinationFile}");
-        }
-
         try
         {
+            if (File.Exists(tempDestinationFile))
+            {
+                File.Delete(tempDestinationFile);
+                Console.WriteLine($"Deleted existing temp file: {tempDestinationFile}");
+            }
+
             CreateDirectory(tempDirectory);
 
             foreach (var missionDirectory in missionDirectories)
@@ -41,16 +45,43 @@ public class ZipManager
                 CopyFilesFromSourceToDestinationWithoutModdedTerrainsParam(sourceDirectory, tempDirectory);
             }
 
-            Create7zFromDirectory(sevenZipPath, tempDirectory, destinationFile);
+            Create7zFromDirectory(sevenZipPath, tempDirectory, tempDestinationFile);
+
+            if (File.Exists(destinationFile))
+            {
+                File.Delete(destinationFile);
+                Console.WriteLine($"Deleted existing file: {destinationFile}");
+            }
+
+            File.Move(tempDestinationFile, destinationFile);
+            Console.WriteLine($"Created 7z file: {destinationFile}");
         }
         finally
         {
-            // Always clean up the staging dir, even if packing failed, so it never lingers as working-tree noise.
             if (Directory.Exists(tempDirectory))
             {
                 DeleteDirectory(tempDirectory);
             }
+
+            if (File.Exists(tempDestinationFile))
+            {
+                File.Delete(tempDestinationFile);
+                Console.WriteLine($"Deleted temp file: {tempDestinationFile}");
+            }
         }
+    }
+
+    private static bool ShouldSkipZipOperations()
+    {
+        string skipZip = Environment.GetEnvironmentVariable("A2WASP_SKIP_ZIP");
+        if (string.IsNullOrWhiteSpace(skipZip))
+        {
+            return false;
+        }
+
+        return skipZip == "1" ||
+               skipZip.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+               skipZip.Equals("yes", StringComparison.OrdinalIgnoreCase);
     }
 
     // Locate a 7-Zip executable, in priority order:
@@ -150,17 +181,12 @@ public class ZipManager
         Process? x = Process.Start(p);
         if (x == null)
         {
-            Console.WriteLine($"[ZipManager] Failed to start 7-Zip process ({_sevenZipPath}).");
-            return;
+            throw new Exception($"Could not start 7-Zip process ({_sevenZipPath}).");
         }
         x.WaitForExit();
         if (x.ExitCode != 0)
         {
-            Console.WriteLine($"[ZipManager] 7-Zip exited with code {x.ExitCode} while creating {_destinationFile}.");
-        }
-        else
-        {
-            Console.WriteLine($"Created 7z file: {_destinationFile}");
+            throw new Exception($"7-Zip exited with code {x.ExitCode} while creating {_destinationFile}.");
         }
     }
 

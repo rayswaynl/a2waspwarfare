@@ -8,6 +8,7 @@ WFBE_CL_FNC_DelegateAIStaticDefence = Compile preprocessFileLineNumbers "Client\
 WFBE_CL_FNC_HandlePVF = Compile preprocessFileLineNumbers "Client\Functions\Client_HandlePVF.sqf";
 
 ["INITIALIZATION", "Init_HC.sqf: Running the headless client initialization."] Call WFBE_CO_FNC_LogContent;
+diag_log "Init_HC.sqf: Running the headless client initialization.";
 
 //--- wiki-wins: was a blind `sleep 20` that raced server init. Wait (bounded ~20s) for the player
 //--- object instead of always blocking the full interval; proceeds early once seated, never hangs.

@@ -1,6 +1,7 @@
 Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeployed','_oc','_weat','_rearmor','_playerObject','_hasConnectedAtLaunchACK', '_vehiclePlayer'];
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
+diag_log format ["Init_Client.sqf: Client initialization begins at [%1]", time];
 
 //--- JOIN ROBUSTNESS (B49 2026-06-19): a stalled client init must NEVER leave the player on a permanent
 //--- black screen. The BLACK FADED fade (layer 12452, set in initJIPCompatible) is normally cleared at
@@ -967,7 +968,7 @@ if (time < 30) then {
 
     // Spawn joining client at newest Barracks, Light Factory, Heavy Factory or Air Factory, whichever is the newest
     if (count _buildings > 0) then {
-	    for "_i" from ((count _buildings) - 1) to 0 do {
+	    for "_i" from ((count _buildings) - 1) to 0 step -1 do {
 	        _structureType = (_buildings select _i) getVariable "wfbe_structure_type";
 	        if ((_structureType == "Barracks" || _structureType == "Light" || _structureType == "Heavy" || _structureType == "Aircraft") && alive (_buildings select _i)) exitWith {	//--- FIX(deadspawn): only pick a LIVE factory, never a destroyed wreck
 	            _base = _buildings select _i;

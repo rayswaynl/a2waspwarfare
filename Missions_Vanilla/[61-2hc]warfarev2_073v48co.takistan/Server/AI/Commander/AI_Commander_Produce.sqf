@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -25,7 +25,12 @@ _richFlag = _logik getVariable ["wfbe_aicom_reinforce_rich", false];
 if (_richFlag) then {_batchCap = _batchCap * 2};
 
 //--- Safety cap: do not produce above the per-side AI ceiling.
-_cap = (missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]) select ((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0);   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
+_capTiers = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]];
+if ((count _capTiers) < 1) then {_capTiers = [missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", 140]]};
+_capTier = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
+_capTierLast = (count _capTiers) - 1;
+if (_capTier > _capTierLast) then {_capTier = _capTierLast};
+_cap = _capTiers select _capTier;   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
 _sideAI = {(side _x == _side) && !(isPlayer _x)} count allUnits;
 if (_sideAI >= _cap) exitWith {};
 
@@ -171,7 +176,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 					_team setVariable ["wfbe_aicom_retreat_issues", _rIssues + 1, true]; //--- B68: monotonic re-issue count, never reset by progress.
 					_team setVariable ["wfbe_aicom_retreat_lastdist", _curDist, true];
 					_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
-					_retreatOrder = [_retreatSeq, "DEFENSE", getPosATL _hqP];
+					_retreatOrder = [_retreatSeq, "defense", getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
 					["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-and-reform ordered (alive=%3, dist=%4, tries=%5).", _sideText, _team, _aliveNow, _curDist, _rTries]] Call WFBE_CO_FNC_AICOMLog;

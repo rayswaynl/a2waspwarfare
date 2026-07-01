@@ -5,11 +5,11 @@ A tool for managing loadouts and packing missions for the A2WaspWarfare project.
 ## Prerequisites
 
 - .NET 8.0 SDK
-- 7-Zip Command Line version (7za.exe)
+- 7-Zip Command Line version (7za.exe), only when building `_MISSIONS.7z`
 
 ## Environment Setup
 
-Before running the tool, you must set the `7za` environment variable to point to the 7-Zip executable (7za.exe). This is required for packing missions.
+Before running the tool, set the `7za` environment variable to point to the 7-Zip executable (7za.exe) when you want to pack missions. Without it, LoadoutManager still regenerates and copies mission files, then skips `_MISSIONS.7z`.
 
 ### Windows
 
@@ -58,7 +58,24 @@ $env:7za = "C:\Program Files\7-Zip\7za.exe"
 dotnet run -c SERVER_DEBUG
 ```
 
+To generate/copy mission files without packing `_MISSIONS.7z`, set:
+
+```powershell
+$env:A2WASP_SKIP_ZIP = "1"
+dotnet run -c RELEASE
+```
+
+To verify a release archive after packaging, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ..\PrTestHarness\Package\Test-WaspReleasePackage.ps1 `
+  -ArchivePath ..\..\_MISSIONS.7z `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit (git -C ..\.. rev-parse --short=10 HEAD)
+```
+
 ## Notes
 
-- Setting the 7za environment variable is only necessary if you're packing missions. It's not required if you're only copying files to other missions from Chernarus.
+- Setting the 7za environment variable is only necessary if you're packing missions. It's not required if you're only copying files to other missions from Chernarus or when `A2WASP_SKIP_ZIP=1`.
+- If `7za` is set but the executable is missing or exits non-zero, packaging fails instead of replacing a known-good archive.
 - Make sure to use the appropriate configuration based on your deployment target.

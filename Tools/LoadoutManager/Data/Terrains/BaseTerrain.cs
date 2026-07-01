@@ -9,6 +9,8 @@
 
 public abstract class BaseTerrain : InterfaceTerrain
 {
+    private const string ReleaseCandidateId = "release-command-center-20260630";
+
     // Properties that specifies the name/type of the terrain.
     public TerrainName TerrainName { get => terrainName; set => terrainName = value; }
     public TerrainType TerrainType { get => terrainType; set => terrainType = value; }
@@ -360,6 +362,7 @@ class CfgSounds
     {
         string wfDebug = GenerateWFDebug();
         string wfLogContent = GenerateWFLogContent();
+        string wfReleaseMarker = GenerateWFReleaseMarker();
         string terrainTypeCommentPrefix = DetermineIfTheMissionIsTakistanTypeAndReturnCommentStringIfThatIsTheCase();
         string isModMapDependant = DetermineIfTheTerrainIsNotModdedAndReturnCommentStringIfThatIsTheCase();
         string isNavalTerrain = DetermineIfTheTerrainIsNavalReturnCommentStringIfThatIsTheCase();
@@ -369,6 +372,7 @@ class CfgSounds
         
         return $@"{wfDebug}
 {wfLogContent}
+{wfReleaseMarker}
 {terrainTypeCommentPrefix}#define IS_CHERNARUS_MAP_DEPENDENT
 {isModMapDependant}#define IS_MOD_MAP_DEPENDENT
 {isNavalTerrain}#define IS_NAVAL_MAP
@@ -400,6 +404,58 @@ class CfgSounds
 #else
         return "// #define WF_LOG_CONTENT";
 #endif
+    }
+
+    private string GenerateWFReleaseMarker()
+    {
+        string terrainId = string.IsNullOrWhiteSpace(inGameMapName)
+            ? terrainName.ToString().ToLowerInvariant()
+            : inGameMapName.ToLowerInvariant();
+        string gitHead = DetermineGitShortHead();
+        string marker = $"WASPRELEASE|v1|candidate={ReleaseCandidateId}|git={gitHead}|terrain={terrainId}";
+        return $@"#define WF_RELEASE_MARKER ""{EscapeSqfString(marker)}""";
+    }
+
+    private static string DetermineGitShortHead()
+    {
+        try
+        {
+            string repoRoot = FileManager.FindA2WaspWarfareDirectory().FullName;
+            var startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = "rev-parse --short=10 HEAD",
+                WorkingDirectory = repoRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = System.Diagnostics.Process.Start(startInfo);
+            if (process == null)
+            {
+                return "unknown";
+            }
+
+            if (!process.WaitForExit(3000))
+            {
+                try { process.Kill(); } catch { }
+                return "unknown";
+            }
+
+            string output = process.StandardOutput.ReadToEnd().Trim();
+            return process.ExitCode == 0 && output.Length > 0 ? output : "unknown";
+        }
+        catch
+        {
+            return "unknown";
+        }
+    }
+
+    private static string EscapeSqfString(string value)
+    {
+        return value.Replace(@"""", @"""""");
     }
 
     private string GenerateIsAirWarEvent()

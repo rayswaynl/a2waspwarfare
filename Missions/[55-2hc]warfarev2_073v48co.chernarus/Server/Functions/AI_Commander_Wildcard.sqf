@@ -322,8 +322,8 @@ while {!gameOver} do {
 					if (!_tmpActiveUpr) then {_w9Eligible = true};
 				};
 
-				//--- W10: lucky salvage — cheap proxy: allDead covers wrecks (avoids allMissionObjects every draw).
-				//--- The full sweep (with keepAlive / WarfareBBaseStructure filters) runs only in the W10 apply block.
+				//--- W10: lucky salvage — cheap proxy: allDead covers wrecks without a broad mission-object scan.
+				//--- The filtered allDead sweep runs only in the inert W10 apply block.
 				_w10Eligible = (count allDead) > 0;
 
 				//--- W11: field hospital — wounded AI infantry present.
@@ -906,7 +906,7 @@ while {!gameOver} do {
 									deleteVehicle _wk;
 								};
 							};
-						} forEach (allMissionObjects "AllVehicles");
+						} forEach allDead;
 						if (_wkTotal > 0) then {
 							[_side, _wkTotal] Call ChangeAICommanderFunds;
 							_detail = Format ["salvage_funds=%1 cap=%2", _wkTotal, _wkCap];

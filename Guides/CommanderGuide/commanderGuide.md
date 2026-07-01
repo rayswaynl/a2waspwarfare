@@ -32,7 +32,7 @@ etc...
 
 # Basic Mechanics for the Commander
 
-- You should always have an active player commander. AI commander feature has been removed from the mission and replaced with "No commander" instead.
+- A player commander is still best, but "No commander" now leaves the side under the AI Commander fallback instead of leaving the role empty.
 - If you see this, don't be afraid to take the commander role, if no one else is willing to! Hopefully this guide will help you to be effective as possible on this role!
 - Having a commander is always better than having no commander.
 - Commander gains significant more cash, based on how many towns you have

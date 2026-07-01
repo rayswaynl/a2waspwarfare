@@ -1075,15 +1075,25 @@ WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 {_x Spawn WFBE_SE_FNC_VoteForCommander} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: harass-only, no commander election
 
 //--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
-{_x Spawn WFBE_SE_FNC_AI_Commander} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: no HQ, loop was inert (perf win)
+{
+	private ["_aicomID","_aicomOwnerKey","_aicomOwnerSeq","_aicomHandle"];
+	_aicomID = _x Call WFBE_CO_FNC_GetSideID;
+	_aicomOwnerKey = Format ["wfbe_aicom_owner_%1", _aicomID];
+	_aicomOwnerSeq = (missionNamespace getVariable [_aicomOwnerKey, 0]) + 1;
+	missionNamespace setVariable [_aicomOwnerKey, _aicomOwnerSeq];
+	_aicomHandle = [_x, _aicomOwnerSeq] Spawn WFBE_SE_FNC_AI_Commander;
+	missionNamespace setVariable [Format ["wfbe_aicom_handle_%1", _aicomID], _aicomHandle];
+} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: no HQ, loop was inert (perf win)
 
 //--- B69 AICOM SUPERVISOR WATCHDOG: a single standalone loop that re-Spawns a per-side
 //--- supervisor whose heartbeat has gone stale (uncaught error killed its while-loop).
-//--- Self-limiting against double-spawn: a fresh supervisor stamps hb on its first tick,
-//--- and a per-side cooldown bars a second restart inside the recovery window.
+//--- Self-limiting against double-spawn: watchdog terminates the stored stale handle, then
+//--- bumps a per-side owner generation before restart. Any stale supervisor that somehow
+//--- resumes sees the newer owner and exits before its next tick. A per-side cooldown also
+//--- bars a second restart inside the recovery window.
 if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
 	[] Spawn {
-		private ["_scan","_cool","_stale","_x","_myID","_hb","_lastR","_thresh","_age"];
+		private ["_scan","_cool","_stale","_x","_myID","_hb","_lastR","_thresh","_age","_ownerKey","_ownerSeq","_hKey","_oldHandle","_newHandle"];
 		waitUntil {sleep 1; !(isNil "serverInitFull")};
 		_scan = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_SCAN", 30];
 		_cool = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_COOLDOWN", 120];
@@ -1103,9 +1113,18 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
 					_lastR = missionNamespace getVariable [Format ["wfbe_aicom_wd_restart_%1", _myID], -1e9];
 					if (_stale && {(time - _lastR) > _cool}) then {
 						missionNamespace setVariable [Format ["wfbe_aicom_wd_restart_%1", _myID], time];
-						_x Spawn WFBE_SE_FNC_AI_Commander;
-						diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|WATCHDOG|restart-stale-hb age=" + str (round _age));
-						["WARNING", Format ["AICOM watchdog: %1 supervisor heartbeat stale (%2s) - restarting.", str _x, round _age]] Call WFBE_CO_FNC_AICOMLog;
+						_ownerKey = Format ["wfbe_aicom_owner_%1", _myID];
+						_ownerSeq = (missionNamespace getVariable [_ownerKey, 0]) + 1;
+						missionNamespace setVariable [_ownerKey, _ownerSeq];
+						_hKey = Format ["wfbe_aicom_handle_%1", _myID];
+						_oldHandle = missionNamespace getVariable _hKey;
+						if (!isNil "_oldHandle") then {
+							if !(scriptDone _oldHandle) then {terminate _oldHandle};
+						};
+						_newHandle = [_x, _ownerSeq] Spawn WFBE_SE_FNC_AI_Commander;
+						missionNamespace setVariable [_hKey, _newHandle];
+						diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|WATCHDOG|restart-stale-hb age=" + str (round _age) + "|owner=" + str _ownerSeq);
+						["WARNING", Format ["AICOM watchdog: %1 supervisor heartbeat stale (%2s) - restarting with owner generation %3.", str _x, round _age, _ownerSeq]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
 			} forEach (WFBE_PRESENTSIDES - [resistance]);
