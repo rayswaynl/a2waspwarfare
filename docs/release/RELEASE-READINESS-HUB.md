@@ -40,6 +40,7 @@ The `Server/AI/Commander` subsystem is **ours-only** (confirmed absent from upst
 - Group-cap founding ceiling: hardcoded `110` → tunable `WFBE_C_AICOM_GROUP_CAP` (default 110, no behavior change).
 - Scope-leak hygiene: `_ltDisband`/`_ltBeacon` added to `AI_Commander.sqf` `private[]`; `_rIssues`/`_rMaxIssues`/`_rMaxDist` added to `AI_Commander_Produce.sqf` `private[]`.
 - Aligned the dead `WFBE_C_AICOM_TEAMS_PC_LOW` fallback defaults (were 6 / 15 in two files) to the live const value 12.
+- `AI_Commander_PlayerArty.sqf`: added the missing `isNull _logik` guard (GetSideLogic returns objNull, never nil) and defaulted the two `WFBE_C_ARTILLERY` reads — defensive hardening, zero behavior change.
 
 ### 🔬 Carried on branch (Ray, `bcc6e3974`, cmdcon33) — verification-pending
 WEST founds-0-on-Takistan fallback relocation + HQ-deploy `objNull` guard / `Warfare_HQ_base_unfolded` flat-check exemption, both maps.
@@ -55,7 +56,12 @@ WEST founds-0-on-Takistan fallback relocation + HQ-deploy `objNull` guard / `War
 | P2 | Counter-battery scan radius 10 km from enemy HQ can miss a forward-deployed SPG (12.8–15 km base separation). | `AI_Commander_Base.sqf:381-403` |
 | P3 | "Smarter commander" set: doctrine de-correlation boot-race; base-defense modulo can leave 0 dedicated AT; factory-rally snapshots a stale front; concentrate-first death-marches out-of-reach teams; harass can steal the heavy punch. All behavioral — soak-gated. | `AI_Commander*.sqf` |
 
-> **Open coverage gap:** the `aicom-actions` deep-review lane stubbed at recon (its verifier only confirmed the action files are token-clean). The Execute/MHQReloc/Paratroops/Beacon/PlayerArty/BaseSell/FundsSink/DisbandLowTier/HCTopUp.DRAFT files still need a real correctness/improvement pass. **Re-run owed.**
+> **`aicom-actions` re-run (2026-07-01) — coverage gap CLOSED.** A follow-up 4-agent pass deep-reviewed all 9 action files (all A2-OA token-clean). Results:
+> - ✅ **Landed:** the two PlayerArty hardening fixes above.
+> - ⚠️ **Ray decision — feature-flag doc drift (P2):** three AICOM features' file headers claim "default-OFF / ships INERT for a soak" but the constants ship them **ON** — `WFBE_C_AICOM_PARATROOPS_ENABLE=1` (Paratroops **live**), `WFBE_C_AICOM_SPAWNBEACON_ENABLE=1` (Beacon **live**), `WFBE_C_AICOM_HC_TOPUP_ENABLE=1` (HCTopUp dark only by an un-compiled function + unwritten consumer). **Are Paratroops/Beacon meant to be live? Should HCTopUp's flag go to 0 to make its "off" contract true?** The doc-only fix (either direction) is held pending your intent.
+> - 🐛 **Notable live bug staged (P2):** `AI_Commander_BaseSell.sqf` searches `WFBE_%1STRUCTURENAMES` (classnames) with a logical `wfbe_structure_type` key ("Barracks"/"Light"/…), so `find` returns −1 for **every** structure → the cost-based Pass-2 never fires and stranded structures get recycled for **0 refund / no live-count decrement**. Real (BaseSell is armed); fix = search `WFBE_%1STRUCTURES`; needs runtime proof.
+> - 📋 Staged perf/behavioral: `DisbandLowTier` runs 2× `count allUnits` per foot team every 300 s (localise to a `nearEntities` query); Paratroops picks the "most-threatened" town by array order, not threat; Beacon O(vehicles) scan every 120 s. All soak-gated.
+> - Rejected on verify: PlayerArty↔Strategy artillery double-fire (Strategy arty is hard-locked off); MHQReloc `_back` telemetry staleness (unreachable); Execute HC-flip latch (no live path re-homes a team's HC-ness mid-order).
 
 ---
 
