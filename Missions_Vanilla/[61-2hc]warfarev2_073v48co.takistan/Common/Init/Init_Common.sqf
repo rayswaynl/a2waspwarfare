@@ -167,6 +167,7 @@ WFBE_CO_FNC_WaypointPatrolTown = Compile preprocessFileLineNumbers "Common\Funct
 WFBE_CO_FNC_WaypointSimple = Compile preprocessFileLineNumbers "Common\Functions\Common_WaypointSimple.sqf";
 WFBE_CO_FNC_WaypointsAdd = Compile preprocessFileLineNumbers "Common\Functions\Common_WaypointsAdd.sqf";
 WFBE_CO_FNC_WaypointsRemove = Compile preprocessFileLineNumbers "Common\Functions\Common_WaypointsRemove.sqf";
+WFBE_CO_FNC_BuildRoadRoute = Compile preprocessFileLineNumbers "Common\Functions\Common_BuildRoadRoute.sqf"; //--- AICOM road-march helper: road-node-snapped chain shared by AssignTowns (AI-strategy) + Execute (war-room console DIRECT orders).
 WF_createMarker = compile preprocessFileLineNumbers "Common\Functions\Common_CreateMarker.sqf";
 WFBE_CL_FNC_Delete_Marker = compile preprocessFileLineNumbers "Client\Functions\Client_Delete_Marker.sqf";
 WF_sendMessage = compile preprocessFileLineNumbers "Common\Functions\Common_SendMessage.sqf";

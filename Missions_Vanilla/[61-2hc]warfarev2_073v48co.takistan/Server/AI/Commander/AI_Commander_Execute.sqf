@@ -7,7 +7,7 @@
 	issues waypoints for them, so this is the path that finally makes the command bar work.
 	Idempotent: an unchanged order (wfbe_exec_sig) is not re-issued. "towns"/"" modes belong to AssignTowns.
 */
-private ["_side","_logik","_teams","_team","_mode","_modeL","_goto","_sig","_prevSig","_wpType","_radius","_aliveCount","_realGoto","_isHc","_hcMode","_hcSeq"]; //--- B67 +_isHc/_hcMode/_hcSeq
+private ["_side","_logik","_teams","_team","_mode","_modeL","_goto","_sig","_prevSig","_wpType","_radius","_aliveCount","_realGoto","_isHc","_hcMode","_hcSeq","_hcOrigin","_hcRoute","_laneJit","_slOrigin","_slHasVeh","_slRoute","_slWPs"]; //--- B67 +_isHc/_hcMode/_hcSeq; road-march +_hcOrigin/_hcRoute/_laneJit (HC) +_slOrigin/_slHasVeh/_slRoute/_slWPs (server-local)
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
@@ -60,6 +60,22 @@ if (isNil "_teams") exitWith {};
 						_isHc = [_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool;
 						if (_isHc) then {
 							_hcMode = if (_modeL == "defense") then {"defense"} else {_modeL}; //--- "move"/"patrol" pass through to the driver's assault-SAD branch.
+							//--- ROAD-MARCH (war-room console DIRECT order): the HC driver (Common_RunCommanderTeam)
+							//--- road-marches a ground-vehicle team on a long leg ONLY when it can read a road-node chain
+							//--- from wfbe_aicom_route - but until now ONLY AssignTowns populated that var, so a human
+							//--- console order left it stale/empty and the driver cut cross-country. Compute the SAME road-
+							//--- node chain here (server-side, off this team's leader) and broadcast it so the driver lays
+							//--- road waypoints on the long leg exactly like an AI-strategy town order. Gate on the same
+							//--- >700m long-leg threshold AssignTowns uses; the driver still applies its own ground-vehicle
+							//--- gate, so pure-infantry HC teams keep the FOOT FAST-TRANSIT column (unchanged).
+							_hcOrigin = getPos (leader _team);
+							_hcRoute = [];
+							if ((_hcOrigin distance _goto) > 700) then {
+								_laneJit = _team getVariable "wfbe_aicom_lanejit";
+								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
+								_hcRoute = [_hcOrigin, _goto, _laneJit * 120, 8] Call WFBE_CO_FNC_BuildRoadRoute;
+							};
+							_team setVariable ["wfbe_aicom_route", _hcRoute, true]; //--- broadcast BEFORE the order seq bump so the driver reads THIS order's route when it processes the new seq.
 							//--- A2: groups do not support the [name,default] getVariable form - plain get + isNil for the seq read.
 							_hcSeq = _team getVariable "wfbe_aicom_order";
 							_hcSeq = if (isNil "_hcSeq" || {count _hcSeq < 1}) then {0} else {(_hcSeq select 0) + 1};
@@ -70,9 +86,32 @@ if (isNil "_teams") exitWith {};
 							_wpType = "MOVE"; _radius = 50;
 							if (_modeL == "patrol")  then {_wpType = "SAD";  _radius = 150};
 							if (_modeL == "defense") then {_wpType = "HOLD"; _radius = 30};
-							[_team, _goto, _wpType, _radius] Call AIMoveTo;
+							//--- ROAD-MARCH (war-room console DIRECT order): a SERVER-LOCAL team's units are local to the
+							//--- server, so lay waypoints here directly. Previously this was a SINGLE cross-country MOVE/SAD/
+							//--- HOLD (AIMoveTo -> one AIWPAdd waypoint, radius/clear) that A2 OA pathfinding stutters through
+							//--- on multi-km legs. Mirror the HC driver's road-march: a GROUND-VEHICLE team on a long leg
+							//--- (>700m) gets a road-node-snapped MOVE chain (WFBE_CO_FNC_BuildRoadRoute - the same builder the
+							//--- AI-strategy town path uses) ending in this order's mode waypoint. Pure-infantry / short legs
+							//--- keep the direct AIMoveTo (the driver deliberately does not road-lock foot squads).
+							_slOrigin = getPos (leader _team);
+							_slHasVeh = false;
+							{ if (vehicle _x != _x && {alive (vehicle _x)} && {!((vehicle _x) isKindOf "Air")} && {canMove (vehicle _x)}) exitWith {_slHasVeh = true} } forEach (units _team); //--- any group member crewing a movable ground hull = a convoy that should road-march.
+							if (_slHasVeh && {(_slOrigin distance _goto) > 700}) then {
+								_laneJit = _team getVariable "wfbe_aicom_lanejit";
+								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
+								_slRoute = [_slOrigin, _goto, _laneJit * 120, 8] Call WFBE_CO_FNC_BuildRoadRoute;
+								//--- Road-march posture on the group, then road nodes as COLUMN MOVEs and the mode waypoint at _goto.
+								_team setBehaviour "AWARE"; _team setCombatMode "RED"; _team setFormation "COLUMN"; _team setSpeedMode "FULL";
+								_slWPs = [];
+								{ _slWPs = _slWPs + [[_x, "MOVE", 40, 30, [], [], ["AWARE","RED","","FULL"]]] } forEach _slRoute;
+								_slWPs = _slWPs + [[_goto, _wpType, _radius, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]];
+								[_team, true, _slWPs] Call WFBE_CO_FNC_WaypointsAdd;
+								["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4 via ROAD-MARCH (%5 road nodes).", _side, _team, _modeL, _goto, count _slRoute]] Call WFBE_CO_FNC_AICOMLog;
+							} else {
+								[_team, _goto, _wpType, _radius] Call AIMoveTo;
+								["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4.", _side, _team, _modeL, _goto]] Call WFBE_CO_FNC_AICOMLog;
+							};
 							_team setVariable ["wfbe_exec_sig", _sig];
-							["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4.", _side, _team, _modeL, _goto]] Call WFBE_CO_FNC_AICOMLog;
 						};
 					};
 				};
