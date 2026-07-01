@@ -29,5 +29,13 @@ if (typeName(_destination) == 'STRING') then {if (isMultiplayer) then {if (getPl
 
 if (_exit) exitWith {};
 
+if (isNil "WFBE_CL_PVF_ALLOWED" || {!(_script in WFBE_CL_PVF_ALLOWED)}) exitWith {
+	["WARNING", Format ["Client_HandlePVF.sqf: rejected unregistered PVF handler [%1].", _script]] Call WFBE_CO_FNC_LogContent;
+};
+
 _code = missionNamespace getVariable _script;
-if (!(isNil "_code") && {typeName _code == "CODE"}) then {_parameters Spawn _code};
+if (isNil "_code" || {typeName _code != "CODE"}) exitWith {
+	["WARNING", Format ["Client_HandlePVF.sqf: registered PVF handler [%1] is not CODE.", _script]] Call WFBE_CO_FNC_LogContent;
+};
+
+_parameters Spawn _code;

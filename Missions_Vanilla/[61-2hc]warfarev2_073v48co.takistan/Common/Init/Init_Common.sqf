@@ -314,6 +314,7 @@ Call Compile preprocessFileLineNumbers "Common\Init\Init_PublicVariables.sqf";
 //--- Client\PVFunctions\<name>.sqf + add the WFBE_PVF_<name> addPublicVariableEventHandler on clients/HC-host).
 //--- Done here (not in Init_PublicVariables) to keep the change inside the B67 edit-scope; identical effect.
 CLTFNCGuerVbiedBounty = compile preprocessFileLineNumbers "Client\PVFunctions\GuerVbiedBounty.sqf";
+if (!isNil "WFBE_CL_PVF_ALLOWED") then {WFBE_CL_PVF_ALLOWED = WFBE_CL_PVF_ALLOWED + ["CLTFNCGuerVbiedBounty"]};
 if (!isServer || local player) then {"WFBE_PVF_GuerVbiedBounty" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF}};
 
 //--- Import the desired defenses. (todo, Replace the old defense init by this one).

@@ -272,6 +272,9 @@ function Test-WddmAnchorClassValidity {
 
 function Test-PvfIntegrity {
 	$initPv = Get-Text (Join-Path $missionRoot "Common\Init\Init_PublicVariables.sqf")
+	$initCommon = Get-Text (Join-Path $missionRoot "Common\Init\Init_Common.sqf")
+	$clientHandle = Get-Text (Join-Path $missionRoot "Client\Functions\Client_HandlePVF.sqf")
+	$serverHandle = Get-Text (Join-Path $missionRoot "Server\Functions\Server_HandlePVF.sqf")
 	$serverPvDir = Join-Path $missionRoot "Server\PVFunctions"
 	$required = @("RequestEnqueue","RequestDequeue","RequestDefense","RequestSpecial","RequestUpgrade","RequestOnUnitKilled","RequestSiteClearance","CounterBatteryFired")
 	$missing = @()
@@ -280,7 +283,10 @@ function Test-PvfIntegrity {
 		$handler = Test-Path -LiteralPath (Join-Path $serverPvDir "$name.sqf")
 		if (-not ($registered -and $handler)) { $missing += "$name registered=$registered handler=$handler" }
 	}
-	Add-Result "PVF registration/handlers" ($missing.Count -eq 0) ($(if ($missing.Count) { $missing -join "; " } else { "Core PR8 server PVF channels are registered and have handlers." }))
+	$allowlists = $initPv.Contains("WFBE_CL_PVF_ALLOWED") -and $initPv.Contains("WFBE_SE_PVF_ALLOWED") -and $initPv.Contains('Format["CLTFNC%1", _x]') -and $initPv.Contains('Format["SRVFNC%1", _x]')
+	$dispatchChecks = $clientHandle.Contains("WFBE_CL_PVF_ALLOWED") -and $serverHandle.Contains("WFBE_SE_PVF_ALLOWED") -and $clientHandle.Contains("rejected unregistered PVF handler") -and $serverHandle.Contains("rejected unregistered PVF handler")
+	$directClientAllowed = $initCommon.Contains('WFBE_CL_PVF_ALLOWED = WFBE_CL_PVF_ALLOWED + ["CLTFNCGuerVbiedBounty"]')
+	Add-Result "PVF registration/handlers" ($missing.Count -eq 0 -and $allowlists -and $dispatchChecks -and $directClientAllowed) ($(if ($missing.Count) { $missing -join "; " } else { "Core PR8 server PVF channels are registered and have handlers. allowlists=$allowlists dispatchChecks=$dispatchChecks directClientAllowed=$directClientAllowed" }))
 }
 
 function Test-HcPvfGuard {
