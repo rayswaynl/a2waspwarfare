@@ -589,17 +589,17 @@ before release selection.
 ## Public Stats Snapshot - Cmdcon40
 
 Fetched public server stats from `http://78.46.107.142:8080/stats.json` at
-2026-07-01 23:42 Europe/Amsterdam:
+2026-07-01 23:50 Europe/Amsterdam:
 
-- generatedAt `2026-07-01T21:42:04Z`
-- server online, map Chernarus, 2 headless clients, uptime 21 min
-- current round elapsed 15 min
+- generatedAt `2026-07-01T21:49:04Z`
+- server online, map Chernarus, 2 headless clients, uptime 28 min
+- current round elapsed 20 min
 - `currentRound.captures` 0
 - `benchmark.current` captures 0, captureDismount 0, errors 0
-- teams WEST 7, EAST 6
-- HC1 fps=46 units=76; HC2 fps=48 units=75
-- performance towns `0:0,5:0,10:1,15:2`
-- performance units `0:40,5:46,10:130,15:153`
+- teams WEST 8, EAST 9
+- HC1 fps=46 units=65; HC2 fps=46 units=62
+- performance towns `0:0,5:0,10:1,15:2,20:2`
+- performance units `0:40,5:46,10:130,15:153,20:146`
 
 This is useful current telemetry, but it is not exact selected-build RPT proof.
 The release gate remains open until real RPTs show movement, arrival,
