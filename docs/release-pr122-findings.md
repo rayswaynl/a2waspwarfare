@@ -1,6 +1,6 @@
 # PR #122 Release Findings
 
-Last updated: 2026-07-01 11:04 Europe/Amsterdam
+Last updated: 2026-07-01 11:19 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -35,7 +35,7 @@ join, and headless-client roles.
 - PR #124 r8 head: `16bfe29eb326303848f6223bc5604b81260ca484`
 - Comparison remote `Miksuu/a2waspwarfare`: `b8389e7482438edd00f420c5bb795ac0a642971f`
 - Wiki head checked during the release loop:
-  `5cad0b02107d1b419fe2a7fabf6ecdaaa69b8dc8`
+  `e6a3d50dc309f4a3c3e72a1815cb58059eda8149`
 
 GitHub currently reports PR #124 as open, draft, and `DIRTY`, while local
 merge-tree analysis still shows conflict markers after the `origin/master`
@@ -44,11 +44,11 @@ replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`db3173e4d67b2b4dcf94a6fdea88dfcca98314fa`. Treat it as a separate broad lane,
+`0e2696f1cd831a36594836ccc7a395bd6637a0b4`. Treat it as a separate broad lane,
 not as current-master runtime proof.
 
 PR #126 also now exists as an open draft release-readiness/AICOM guardrail lane
-at head `1d12f17d24d3cfd8796bb26b18d7944bc9694956`. GitHub currently reports
+at head `5868dc91346c0d9ede6059460a88e8b75c28f762`. GitHub currently reports
 clean. It should still be reviewed as a separate focused AICOM/source-doc
 candidate before any release artifact target is reset.
 
@@ -147,12 +147,12 @@ Europe/Amsterdam:
 - PR #124/r8 is open draft; GitHub reports `DIRTY`, and local merge-tree
   analysis still shows conflicts.
 - PR #125/command-center advanced to
-  `db3173e4d67b2b4dcf94a6fdea88dfcca98314fa` and is now reported clean, but
+  `0e2696f1cd831a36594836ccc7a395bd6637a0b4` and is now reported clean, but
   remains a separate broad draft lane.
 - PR #126/release-readiness exists at
-  `1d12f17d24d3cfd8796bb26b18d7944bc9694956` and is reported clean, but
+  `5868dc91346c0d9ede6059460a88e8b75c28f762` and is reported clean, but
   remains a separate focused AICOM/source-doc lane.
-- The wiki advanced to `5cad0b02107d1b419fe2a7fabf6ecdaaa69b8dc8`.
+- The wiki advanced to `e6a3d50dc309f4a3c3e72a1815cb58059eda8149`.
 
 Non-destructive merge analysis found r8 conflicts mirrored across both maps in:
 
@@ -224,6 +224,35 @@ Build/validation:
 This artifact supersedes the 10:48 `54d0b8e7` artifact as the freshest exact
 current-master payload for proof collection if current `origin/master` is chosen
 as the release target. It is still not runtime proof.
+
+## Current Master Folder Smoke Kit
+
+A portable current-master folder-smoke kit now exists for collecting runtime
+proof from the exact `311b9d93661f292eeac9337989da44fd9b9ed8f5` master
+payload:
+
+- kit: `outputs/a2waspwarfare-master-311b9d93-folder-smoke-kit.7z`
+- SHA256: `9CDC5BB7E12C34D58B8AEF2738A0F35F4E8C5E303D4A178BA47E5E9A5FB09E1C`
+- size: `7165632` bytes
+- source artifact SHA256:
+  `789165EE6A434E16E2602A13CA2582334EBE3994E0D59D45D2B128E0CA3186C5`
+- manifest:
+  `outputs/a2waspwarfare-master-folder-smoke-kit-manifest-2026-07-01-1119.md`
+
+Validation performed:
+
+- 7-Zip archive integrity test: pass
+- extracted archive structure and file count: pass
+- all six folder-smoke PowerShell scripts parse successfully
+- extracted-kit install rehearsal and preflight pass for both missions
+- smoke evidence template generation pass
+- synthetic release-gate scanner/package rehearsal passes with both terrains,
+  server/client/latejoin/hc1/hc2 role names, AICOM telemetry, HC registry
+  markers, content logging markers, zero stop-condition matches, and
+  `failed_count = 0`
+
+This kit is still not runtime proof. It is the current best portable collection
+path if `origin/master` is selected as the proof target.
 
 ## Evidence Already Strong
 
@@ -322,7 +351,9 @@ ASR-enabled RPT proof.
    local r9-narrow.
 2. Do not use old PR #122 or r8 artifacts to prove current `origin/master`.
 3. If current `origin/master` is chosen, use artifact SHA256
-   `789165EE6A434E16E2602A13CA2582334EBE3994E0D59D45D2B128E0CA3186C5`.
+   `789165EE6A434E16E2602A13CA2582334EBE3994E0D59D45D2B128E0CA3186C5` and
+   folder-smoke kit SHA256
+   `9CDC5BB7E12C34D58B8AEF2738A0F35F4E8C5E303D4A178BA47E5E9A5FB09E1C`.
 4. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
