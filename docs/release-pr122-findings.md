@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 13:06 Europe/Amsterdam
+Last updated: 2026-07-01 15:05 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -66,7 +66,10 @@ PR #131 is the focused draft fix for the latest master static blocker. It is
 open, draft, and currently reported clean at head
 `2178b20d3ddcadda8dd9a01bf6a4c8e1db4ef793`. It only touches the Chernarus and
 generated Takistan placement preview block in `Client/Init/Init_Client.sqf`,
-splitting the dense flat-ground expression into a `_flatSpots` count check.
+splitting the dense flat-ground expression into a `_flatSpots` count check. An
+exact PR #131 `SERVER_DEBUG` mission-folder artifact now exists for runtime
+collection at `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z`
+with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`.
 
 ## R8 Integration Finding
 
@@ -249,6 +252,11 @@ Static gate:
   reaches `CHERNARUS DONE` and `TAKISTAN DONE` in LoadoutManager
   `SERVER_DEBUG`, and keeps the touched block mirrored between Chernarus and
   generated Takistan.
+- PR #131 artifact:
+  `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z`, SHA256
+  `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`,
+  archive/extraction pass, 1719 files, and both extracted `version.sqf` files
+  have `WF_RELEASE_MARKER` for `git=2178b20d3d`.
 
 This artifact supersedes the `5bf5f923`, `311b9d93`, and PR #127-only artifacts
 as the freshest exact current-master payload. It is still not runtime proof, and
