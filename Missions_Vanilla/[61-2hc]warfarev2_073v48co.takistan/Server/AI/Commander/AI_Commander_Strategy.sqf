@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -63,7 +63,9 @@ _enStr = 0;
 { if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 
 //--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.
-_lastStand = (_myTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1])) && (_myStr < (_enStr * (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
+//--- AICOM v2 M3 (Ray "almost never defensive"): gate last-stand on EFFECTIVE strength (maneuver + held-town credit), NOT raw maneuver _myStr - so a territory-leader that garrisons towns never trips the recall-all-to-HQ (the dominant-but-passive STALL the 18h soak showed). Last-stand now fires only at <=1 town AND genuinely effectively-crushed = base under real threat.
+private ["_lsTS","_lsMyEff","_lsEnEff"]; _lsTS = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2]; _lsMyEff = _myStr + (_myTowns * _lsTS); _lsEnEff = _enStr + (_enemyTowns * _lsTS);
+_lastStand = (_myTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1])) && (_lsMyEff < (_lsEnEff * (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
 _stratMode = "spearhead"; //--- default; overridden below
 _logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 if (_lastStand) then {
@@ -416,6 +418,17 @@ private ["_atkTownCheck","_reliefEnemyDist"];
 			if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _atkTownCheck) nearEntities [["Man","LandVehicle","Air"], _reliefEnemyDist])) > 0) then {_attacked = _attacked + [_atkTownCheck]};
 		};
 	} forEach towns;
+//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): honour a player-set DEFEND-town order from the command center. While
+//--- the order is fresh (WFBE_C_AICOM_DEFEND_TTL) treat that town as "under attack" so the relief loop below diverts
+//--- a reliever to it (additive + reversible + TTL-gated; offensive logic above is untouched). Server_HandleSpecial.sqf
+//--- "aicom-defend" stamps wfbe_aicom_defend_focus + _t0. A2-OA-safe: plain getVariable + isNil + time math, no A3 prims.
+_pdTown = _logik getVariable "wfbe_aicom_defend_focus";
+_pdT0   = _logik getVariable "wfbe_aicom_defend_focus_t0";
+if (!isNil "_pdTown" && {!isNull _pdTown} && {!isNil "_pdT0"}
+    && {(time - _pdT0) < (missionNamespace getVariable ["WFBE_C_AICOM_DEFEND_TTL", 300])}
+    && {(_pdTown getVariable ["sideID", -1]) == _sideID}) then {
+	if !(_pdTown in _attacked) then {_attacked = [_pdTown] + _attacked};
+};
 _relieved = 0;
 {
 	_town = _x;
@@ -565,7 +578,15 @@ if (!isNull _enemyHQ && {alive _enemyHQ} && {_myTowns > _enemyTowns}) then {
 	_rEnEff = _enStr + (_enemyTowns * _rTownStr);
 	if (_rMyEff >= _rEnEff) then {
 		if ((_enemyTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 2])) || {_myTowns >= (_enemyTowns * (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 3]))}) then {_strikeOn = true};
-		if ((_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])) then {_strikeOn = true};
+	};
+	//--- D2 (cmdcon28): STALL-OVERRIDE now fires OUTSIDE the _rMyEff>=_rEnEff gate (was inside, which made it dead -
+	//--- the streak only builds while town-dominant-but-strength-deficit, exactly the case that gate excluded). The
+	//--- override breaks a frozen front the territorial leader can't convert (assault-reach ceiling). The streak only
+	//--- accrues at >= STALL_TOWN_RATIO x towns and we're inside _myTowns>_enemyTowns, so it can never fire from behind.
+	//--- Master flag WFBE_C_AICOM_STALL_OVERRIDE_ENABLE (default 1) for a clean one-switch revert.
+	if (((missionNamespace getVariable ["WFBE_C_AICOM_STALL_OVERRIDE_ENABLE", 1]) > 0) && {(_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])}) then {
+		_strikeOn = true;
+		if (!_wasStrike) then {diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE_STALL_OVERRIDE|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _rMyEff + "|enEff=" + str _rEnEff)};
 	};
 };
 //--- B752 (Ray 2026-06-25): STICKY STRIKE. The recall gate used RAW maneuver _myStr, which dips below the concentrated
@@ -621,7 +642,7 @@ if (_strikeOn) then {
 		[_best, "move"] Call SetTeamMoveMode;
 		[_best, getPos _enemyHQ] Call SetTeamMovePos;
 		if (_best getVariable ["wfbe_aicom_hc", false]) then {
-			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _enemyHQ], true];
+			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true]; //--- HQ-STRIKE PRESS FIX (Ray): "defense" made the HC striker HOLD near the enemy HQ; "goto" routes through the driver else-branch (Common_RunCommanderTeam.sqf ~L749 = assault SAD WFBE_C_AICOM_ASSAULT_SAD onto _dest), so it PRESSES onto the HQ. Not "towns-target" (that triggers the town-depot capture phase, wrong for a base).
 		};
 		_strikeCount = _strikeCount + 1;
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] (%3 men) joins the HQ strike.", _sideText, _best, _bestAlive]] Call WFBE_CO_FNC_AICOMLog;
@@ -717,9 +738,18 @@ diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|
 //--- and is not under HQ strike, so future soak ticks make the freeze greppable and we can size the real
 //--- fix (territory-weighted aggression / garrison-vs-maneuver strength split - see B57-SOAK-PROPOSALS.md).
 //--- A2-OA-safe: pure diag_log, all operands already computed this tick; no sim/distance-gating; no antistack.
-if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * 2)} && {_posture != "PRESS"} && {!_strikeOn}) then {
-	diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
-	_logik setVariable ["wfbe_aicom_stall_streak", (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + 1]; //--- B754 (Ray 2026-06-25): count consecutive dominant-but-passive stalls; the HQ-strike relative gate uses this for a stall-triggered override. (No reset needed: the override only re-fires while still effective-strength-dominant, which is exactly when we want to close.)
+//--- D2 (cmdcon28, Ray 2026-06-30): ROUND-ENDER STALL-OVERRIDE FIX. The override counter must build whenever a side
+//--- holds a sustained TOWN lead (>= STALL_TOWN_RATIO x enemy) and is NOT already striking - REGARDLESS of posture.
+//--- Old bug: gated on (_posture != "PRESS"), so it reset on every PRESS tick AND only counted myEff<enEff stalls, which
+//--- the override gate (myEff>=enEff, line ~579) then excluded - making the override structurally unreachable (live: EAST
+//--- stalled 17x, 0 round-enders). Now: count sustained territory dominance; emit the STALL telemetry only for the
+//--- PASSIVE subset (posture != PRESS) so the greppable signal keeps its original "dominant but idle" meaning.
+private "_stallRatio"; _stallRatio = missionNamespace getVariable ["WFBE_C_AICOM_STALL_TOWN_RATIO", 2];
+if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeOn}) then {
+	_logik setVariable ["wfbe_aicom_stall_streak", (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + 1];
+	if (_posture != "PRESS") then {
+		diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]));
+	};
 } else {
 	_logik setVariable ["wfbe_aicom_stall_streak", 0];
 };
@@ -730,26 +760,45 @@ if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * 2)} && {_posture != "PRESS"
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	_upASel = (_logik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT;
 	_cd = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_upASel min ((count (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS")) - 1));
-	if (time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) then {
+	//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) ARTY HOOK: a player ARTILLERY-HERE request
+	//--- (Server_HandleSpecial "aicom-arty-here" stamps wfbe_aicom_arty_request=[pos,time]). When fresh it
+	//--- targets the requested pos AND bypasses the AI's own fire cooldown so the call-in actually fires; the
+	//--- request is CLEARED after this block so it fires exactly once. Additive, reversible, TTL-gated.
+	private ["_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh"];
+	_riArtyReq = _logik getVariable "wfbe_aicom_arty_request";
+	_riArtyPos = []; _riArtyFresh = false;
+	if (!isNil "_riArtyReq" && {typeName _riArtyReq == "ARRAY"} && {count _riArtyReq == 2}) then {
+		_riArtyPos = _riArtyReq select 0; _riArtyT0 = _riArtyReq select 1;
+		if ((typeName _riArtyPos == "ARRAY") && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
+	};
+	if ((time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) || _riArtyFresh) then {
 		//--- Target: enemy HQ during a strike, else the top spearhead town.
 		_artyTgt = [];
 		if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {_artyTgt = getPos _enemyHQ};
 		if (count _artyTgt == 0 && {count _targets > 0}) then {_artyTgt = getPos (_targets select 0)};
+		//--- COMMAND CONSOLE ARTY HOOK: a fresh player request overrides the auto target (player picks the impact).
+		if (_riArtyFresh) then {_artyTgt = _riArtyPos};
 		if (count _artyTgt > 0) then {
 			//--- Friendly-fire guard: no own troops near the impact zone.
 			_ownNear = 0;
 			{ if (side _x == _side && {alive _x}) then {_ownNear = _ownNear + 1} } forEach (_artyTgt nearEntities [["Man","Car","Tank","Air"], 400]);
 			if (_ownNear == 0) then {
 				//--- Our base guns (built by the Base worker, tagged by Construction_StationaryDefense).
-				_pieces = (getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)) nearEntities [["StaticWeapon","Tank","Car"], 250];
+				//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: scan only vehicle hulls (Tank/Car/Wheeled/Tracked APC), NOT
+				//--- StaticWeapon - the AI fires only tracked/wheeled self-propelled artillery, never a static gun.
+				_pieces = (getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)) nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], 250];
 				_fired = false;
 				{
 					_p = _x;
-					if (!_fired && {alive _p} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
+					if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
 						_idx = [typeOf _p, _side] Call IsArtillery;
 						if (_idx >= 0) then {
 							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
-							if (_p distance _artyTgt <= _maxR) then {
+							if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) && {(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
+								//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
+								//--- load a situational round (illum at night, cluster vs armour) chosen ONLY from the types the side has
+								//--- researched (helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
+								[_p, _side, _idx, _artyTgt] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
 								[_p, _artyTgt, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
 								_logik setVariable ["wfbe_aicom_arty_last", time];
 								_fired = true;
@@ -762,4 +811,6 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 			};
 		};
 	};
+	//--- COMMAND CONSOLE ARTY HOOK: consume the player request (fire-once) - clear it whether or not a gun was in range.
+	if (_riArtyFresh) then {_logik setVariable ["wfbe_aicom_arty_request", []]};
 };

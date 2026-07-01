@@ -5,7 +5,7 @@ uiNamespace setVariable ["wfbe_display_vote", _this select 0];
 
 _u = 1;
 lnbClear 509100;
-lnbAddRow[509100, ["No Commander", "0"]];
+lnbAddRow[509100, ["AI Commander", "0"]];
 lnbSetValue[509100, [0, 0], -1];
 //--- B74.2.5: cache-aware build mirroring GUI_VoteMenu. Live groups authoritative once any team is player-led;
 //--- else render names from the JIP primitive roster push. WFBE_CVOTE_USING_PRIMS gates the prune loop below.
@@ -36,7 +36,7 @@ if (WFBE_CVOTE_HasLive) then {
 WFBE_MenuAction = -1;
 _voteArray = [];
 _index = 0;
-_voted_commander = "No Commander";
+_voted_commander = "AI Commander";
 while {alive player && dialog} do {
 
 	//--- The client has selected a new com.
@@ -69,7 +69,7 @@ while {alive player && dialog} do {
 	if (WFBE_CVOTE_USING_PRIMS && _liveNow) then {
 		WFBE_CVOTE_USING_PRIMS = false;
 		lnbClear 509100;
-		lnbAddRow[509100, ["No Commander", "0"]];
+		lnbAddRow[509100, ["AI Commander", "0"]];
 		lnbSetValue[509100, [0, 0], -1];
 		_uu = 1;
 		for '_i' from 0 to count(WFBE_Client_Teams)-1 do {

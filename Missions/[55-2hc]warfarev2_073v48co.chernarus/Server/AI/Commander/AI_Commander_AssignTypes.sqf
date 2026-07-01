@@ -93,6 +93,21 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 				if (_ok) then {_eligible set [count _eligible, _i]};
 			};
 
+			//--- Ray 2026-06-29 NO STATICS / NO WEAPON TEAMS (no-HC fallback): mirror of the founding strip in
+			//--- AI_Commander_Teams.sqf - drop every eligible template containing a StaticWeapon so the AI never types a
+			//--- server-local team onto a static gun / mortar emplacement / weapon team. Self-propelled arty (GRAD/MLRS)
+			//--- are vehicle hulls, not StaticWeapon, so they survive. GUARDRAIL: keep the original set if stripping would
+			//--- empty it (founding never starved). A2-OA-safe: string-form isKindOf on the template classnames.
+			private ["_eligNoStatic","_swEi","_swHas"];
+			_eligNoStatic = [];
+			{
+				_swEi = _x;
+				_swHas = false;
+				{ if ((typeName _x == "STRING") && {_x isKindOf "StaticWeapon"}) exitWith {_swHas = true} } forEach (_templates select _swEi);
+				if (!_swHas) then {_eligNoStatic set [count _eligNoStatic, _swEi]};
+			} forEach _eligible;
+			if (count _eligNoStatic > 0) then {_eligible = _eligNoStatic};
+
 			if (count _eligible > 0) then {
 				//--- P1 combined-arms picker (claude-gaming 2026-06-15). The old logic favoured the
 				//--- doctrine's single vehicle track 70% of the time but fell back to a UNIFORM draw over
@@ -126,7 +141,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 					//--- B66 AIRFIELD-AIR RULE: a fixed-wing PLANE air template is admitted ONLY when the side holds an
 					//--- airfield-tagged town (_hasAirfield). No airfield = identical to the old blanket strip (helicopters
 					//--- only); choppers (air, no Plane) are unaffected.
-					if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {!_hasAirfield})) then {
+					if (!((_bClass == 3) && {({_x isKindOf "Plane"} count (_templates select _ti)) > 0} && {(!_hasAirfield) || (time < (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) || (random 1 >= (((((time - (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) max 0) / (((missionNamespace getVariable ["WFBE_C_AICOM_JET_FULL_SECS", 18000]) - (missionNamespace getVariable ["WFBE_C_AICOM_JET_START_SECS", 7200])) max 1)) min 1)))})) then { //--- AICOM v2 JET TIME-RAMP: planes also gated by time (no jets <2h, ramp 2h->5h).
 						(_buckets select _bClass) set [count (_buckets select _bClass), _ti];
 					};
 				} forEach _eligible;
@@ -166,6 +181,20 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 				_dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_HEAVY_MULT", 1.0])]; _dWeights set [2, (_dWeights select 2) * (missionNamespace getVariable ["WFBE_C_AICOM_MECH_BIAS", 2.0])]; _dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_MOTOR_BIAS", 1.4])]; //--- B755: mechanized/motorized bias (mirror of Teams.sqf) for the no-HC fallback path.
 				_dWeights set [1, (_dWeights select 1) * (missionNamespace getVariable ["WFBE_C_AICOM_TOWNPUNCH_LIGHT_MULT", 1.0])];
 					_dWeights set [3, (_dWeights select 3) * (1 + (((time / 60) min ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) / ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_RAMP_MIN", 45]) max 1)) * ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TIME_BIAS_MAXMULT", 2.5]) - 1))]; //--- B754: heli time-bias (mirror of Teams.sqf) for the no-HC fallback path.
+				//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) REQUEST-UNIT HOOK: a fresh player class request nudges the bucket weight (soft).
+				private ["_ruReq","_ruType","_ruT0","_ruMult","_ruIdx"];
+				_ruReq = _logik getVariable "wfbe_aicom_request_type";
+				if (!isNil "_ruReq" && {typeName _ruReq == "ARRAY"} && {count _ruReq == 2}) then {
+					_ruType = _ruReq select 0; _ruT0 = _ruReq select 1;
+					if ((time - _ruT0) < (missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_TTL", 300])) then {
+						_ruMult = missionNamespace getVariable ["WFBE_C_AICOM_REQUEST_TYPE_MULT", 3];
+						_ruIdx = -1;
+						if (_ruType == "infantry") then {_ruIdx = 0};
+						if (_ruType == "armor")    then {_ruIdx = 2};
+						if (_ruType == "air")      then {_ruIdx = 3};
+						if (_ruIdx >= 0) then {_dWeights set [_ruIdx, (_dWeights select _ruIdx) * _ruMult]};
+					};
+				};
 				//--- Zero out classes with no buildable template so the roll only lands on achievable types.
 				for "_bi" from 0 to 3 do {
 					if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
@@ -189,6 +218,12 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 					_order = [2,1,3,0];
 					{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _order;
 				};
+				//--- ALL-EMPTY GUARD (2026-06-28): if EVERY bucket is empty the degrade-walk above leaves _chosen = -1
+				//--- (the all-jets-before-the-jet-ramp edge: the lone air bucket was time-gated out and no ground bucket
+				//--- exists this cycle). The next line `_buckets select _chosen` would throw "select -1". The all-empty
+				//--- condition is GLOBAL for this cycle, so exitWith ends the team forEach (spec-sanctioned). INERT in
+				//--- normal cycles: the infantry bucket is virtually always populated, so _chosen >= 0 and this never fires.
+				if (_chosen < 0) exitWith {};
 				_pick = -1;
 					//--- B74 COST/TIER-WEIGHTED DRAW (Ray 2026-06-22): mirror of the founding picker in AI_Commander_Teams.sqf -
 					//--- weight the chosen bucket by (summed unit price)^EXP so server-local teams field their expensive unlocked

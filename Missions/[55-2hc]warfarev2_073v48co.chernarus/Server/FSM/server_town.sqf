@@ -264,7 +264,7 @@ while {!WFBE_GameOver} do {
 			if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 				if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 				WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-				diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAPTURE|" + (_location getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID);
+				diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAPTURE|" + (_location getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID + "|t=" + str (round time));
 			};
 			// END WASPSTAT CAPTURE (Task 10)
 

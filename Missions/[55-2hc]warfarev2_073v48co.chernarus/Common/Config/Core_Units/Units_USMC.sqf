@@ -54,7 +54,6 @@ _u = _u		+ ['Dingo_WDL_ACR'];
 _u = _u		+ ['Dingo_GL_Wdl_ACR'];
 _u = _u		+ ['WarfareSalvageTruck_USMC'];
 _u = _u		+ ['WarfareSupplyTruck_USMC'];
-_u = _u		+ ['WarfareSupplyTruck_USMC'];
 _u = _u		+ ['RHIB'];
 _u = _u		+ ['RHIB2Turret'];
 _u = _u		+ ['LAV25'];

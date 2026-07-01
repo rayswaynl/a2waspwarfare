@@ -11,7 +11,7 @@ _size = 0;
 {
 	_get = missionNamespace getVariable Format["Mag_%1",_x];
 	
-	if !(isNil '_x') then {
+	if !(isNil '_get') then {
 		_size = _size + (_get select 5);
 	};
 } forEach _this;

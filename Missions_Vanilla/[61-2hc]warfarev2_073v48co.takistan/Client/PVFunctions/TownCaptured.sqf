@@ -49,14 +49,12 @@ if (_town_side_value_new == WFBE_Client_SideID) then {
 		_score = -1;
 		if (_distance <= (missionNamespace getVariable "WFBE_C_TOWNS_CAPTURE_RANGE")) then {
 			//--- Capture
-			// _bonus = if (_task == _ptask) then {missionNamespace getVariable "WFBE_C_PLAYERS_BOUNTY_CAPTURE_MISSION"} else {missionNamespace getVariable "WFBE_C_PLAYERS_BOUNTY_CAPTURE"};
 			_bonus= 150*_sv;
 			_score = missionNamespace getVariable "WFBE_C_PLAYERS_SCORE_CAPTURE";
 		} else {
 			//--- Is it an assist?.
 			if (_distance <= (missionNamespace getVariable "WFBE_C_TOWNS_CAPTURE_ASSIST")) then {
 				//--- Assist.
-				// _bonus = if (_task == _ptask) then {missionNamespace getVariable "WFBE_C_PLAYERS_BOUNTY_CAPTURE_MISSION_ASSIST"} else {missionNamespace getVariable "WFBE_C_PLAYERS_BOUNTY_CAPTURE_ASSIST"};
 				_bonus= 150*_sv;
 				_score = missionNamespace getVariable "WFBE_C_PLAYERS_SCORE_CAPTURE_ASSIST";
 			};

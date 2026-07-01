@@ -49,7 +49,9 @@ if (!_skip) then {
 		// WFBE_RequestVehicleLock = ['SRVFNCREQUESTVEHICLELOCK',[_vehicle,false]];
 		// publicVariable 'WFBE_RequestVehicleLock';
 		// if (isHostedServer) then {['SRVFNCREQUESTVEHICLELOCK',[_vehicle,false]] Spawn HandleSPVF};
-		["RequestVehicleLock", [_vehicle, false]] Call WFBE_CO_FNC_SendToServer;
+		//--- DR-55: include the acting player so the server can bind the unlock to a real,
+		//--- nearby lockpicker (forged [vehicle,lock] requests are rejected when hardening is ON).
+		["RequestVehicleLock", [_vehicle, false, player]] Call WFBE_CO_FNC_SendToServer;
 		hint (localize "STR_WF_INFO_Lockpick_Succeed");
 	} else {
 		hint (localize "STR_WF_INFO_Lockpick_Failed");

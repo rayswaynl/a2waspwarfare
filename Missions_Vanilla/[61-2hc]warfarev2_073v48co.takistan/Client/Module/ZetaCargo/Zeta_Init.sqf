@@ -9,4 +9,4 @@ Zeta_DefaultPos = [0,0,-10];
 
 //--- Special vehicle with special position.
 Zeta_Special = ["C130J","C130J_US_EP1"];
-Zeta_SpecialPosition = [[0,0,-2]];
+Zeta_SpecialPosition = [[0,0,-2],[0,0,-2]];

@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff"];
 
 _sideText = sideJoinedText;
 _label = "";
@@ -13,6 +13,7 @@ _lastPositions = [];
 _lastDirs = [];
 _nextAIUpdate = 0;
 _afkMarkerDiagnosticNextLog = 0;
+_nextRebindCheck = 0;
 
 // Marty: Any open Warfare dialog can contain or lead to a minimap view; keep team markers live while these are visible.
 _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,504000,505000,508000,511000];
@@ -55,6 +56,30 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 	_count = _count + 1;
 } forEach clientTeams;
 
+//--- cmdcon26 (Game 2026-06-29) OWN-ARROW ROOT-CAUSE FIX. RPT "Zwanon" (EAST JIP joiner):
+//--- teams:27;players:0;ai:11;markerOps:0 — the player's OWN orange mil_arrow2 never drew. The per-team
+//--- loop below identifies the player by walking clientTeams and testing isPlayer (leader _team) /
+//--- player == (leader _team). clientTeams is rebound to the side-logic wfbe_teams, which holds GROUP
+//--- OBJECTS; A2-OA replicates group objects to a late JIP joiner as BROKEN/NULL refs (see
+//--- Server_OnPlayerConnected.sqf:173-176 + memory wasp-jip-slow-load-and-pv-group-gotcha), so
+//--- leader _team never resolves to this client's LOCAL 'player' object → isPlayer false for ALL teams →
+//--- players:0 → the orange arrow never positions or shows. The same-count rebind detector can't help (it
+//--- re-reads leader of the same broken remote group). FIX: draw the player's OWN arrow from the LOCAL
+//--- 'player' handle (always valid on the owning client), INDEPENDENT of clientTeams. Same marker
+//--- type/size/color idiom as the per-team player arrow above (mil_arrow2 / [0.7,0.7] / ColorOrange).
+//--- The per-team loop is left untouched: it still correctly paints AI-leader arrows whose groups are
+//--- local/valid. A2-OA-1.64 safe: createMarkerLocal / setMarker*Local / getPos / getDir / alive / abs.
+_ownMarker = Format["%1AdvancedSquadOWNMarker", _sideText];
+createMarkerLocal [_ownMarker,[0,0,0]];
+_ownMarker setMarkerTypeLocal "mil_arrow2";
+_ownMarker setMarkerSizeLocal [0.7,0.7];
+_ownMarker setMarkerColorLocal "ColorOrange";
+_ownMarker setMarkerDirLocal 0;
+_ownMarker setMarkerAlphaLocal 0;
+_ownLastPos   = [-99999,-99999,0];
+_ownLastDir   = -999;
+_ownLastAlpha = -1;
+
 while {!gameOver} do {
 	// Marty: Only refresh marker state while the player can see map data through the map, GPS, or a Warfare dialog.
 	_mapConsumerVisible = visibleMap || shownGPS;
@@ -76,6 +101,33 @@ while {!gameOver} do {
 		_updateAILeaders = time >= _nextAIUpdate;
 		if (_updateAILeaders) then {_nextAIUpdate = time + 1};
 
+		//--- cmdcon26 OWN-ARROW DRAW. Paint the player's own orange arrow straight from the LOCAL 'player'
+		//--- handle every visible tick, independent of the (possibly broken/remote) clientTeams groups.
+		//--- Same move/turn gates as the per-team loop to avoid no-op marker writes.
+		if (alive player) then {
+			_ownPos = getPos player;
+			if ((_ownPos distance _ownLastPos) > 3) then {
+				_ownMarker setMarkerPosLocal _ownPos;
+				_ownLastPos = _ownPos;
+			};
+			_ownDir = getDir (vehicle player);
+			_ownDirDiff = abs (_ownDir - _ownLastDir);
+			if (_ownDirDiff > 180) then {_ownDirDiff = 360 - _ownDirDiff};
+			if (_ownLastDir < 0 || _ownDirDiff > 5) then {
+				_ownMarker setMarkerDirLocal _ownDir;
+				_ownLastDir = _ownDir;
+			};
+			if (_ownLastAlpha != 1) then {
+				_ownMarker setMarkerAlphaLocal 1;
+				_ownLastAlpha = 1;
+			};
+		} else {
+			if (_ownLastAlpha != 0) then {
+				_ownMarker setMarkerAlphaLocal 0;
+				_ownLastAlpha = 0;
+			};
+		};
+
 		_count = 1;
 		//--- B64 (Ray 2026-06-21) PLAYER-ARROW REGRESSION FIX. The B62 own-side reconciliation
 		//--- REBINDS the global clientTeams (Init_Client.sqf: clientTeams = _teams) once a slow-sync
@@ -86,6 +138,45 @@ while {!gameOver} do {
 		//--- _lastDirs/_lastPositions reads return nil -> abs()/distance throw -> the player own
 		//--- orange arrow never (re)creates or tracks heading ("direction not working again").
 		//--- Rebuild missing markers + grow ALL caches to match clientTeams when the lengths diverge.
+		//--- cmdcon26 (Game 2026-06-29) SAME-COUNT REBIND FIX. The B64 guard below ONLY rebuilds when the COUNT
+		//--- diverges. But the B62/EARLYHEAL reconciliation in Init_Client REBINDS the global clientTeams from the
+		//--- boot SLOT-GROUPS to the live side-logic wfbe_teams, and those two lists are the SAME LENGTH (15 slot
+		//--- groups -> 15 real teams). So `count clientTeams != count _markerNames` stays FALSE, NO rebuild fires,
+		//--- and _lastLeaders keeps pointing at the now-stale/objNull original slot leaders. For a JIP slow-sync
+		//--- joiner (RPT "Zwanon": markerOps:0;skippedWrites:5) every cached leader was dead/objNull while
+		//--- clientTeams carried live leaders -> alpha stayed 0 -> own-side arrows INVISIBLE. Detect that here:
+		//--- periodically (every ~2s, cheap) compare each cached _lastLeaders entry against the LIVE
+		//--- `leader (clientTeams select _i)`. If they diverge (a same-length rebind), reseed the _last* caches to
+		//--- their force-write seeds so the very next follow-loop pass re-evaluates and re-paints every marker
+		//--- against the live leaders. A2-OA-1.64 safe: select / count / leader / objNull / isNull / alive compare.
+		_needRebind = false;
+		if (count clientTeams == count _markerNames && {time >= _nextRebindCheck}) then {
+			_nextRebindCheck = time + 2;
+			for "_i" from 0 to ((count clientTeams) - 1) do {
+				if (!_needRebind) then {
+					_liveLeader   = leader (clientTeams select _i);
+					_cachedLeader = _lastLeaders select _i;
+					_liveHas   = (!isNull _liveLeader) && {alive _liveLeader};
+					_cachedHas = (!isNull _cachedLeader) && {alive _cachedLeader};
+					//--- Diverged if the live leader differs from the cached one while the live one is real, OR the
+					//--- cache holds a dead/null leader where clientTeams now carries a live one.
+					if ((_liveHas && {_liveLeader != _cachedLeader}) || (_liveHas && {!_cachedHas})) then {
+						_needRebind = true;
+					};
+				};
+			};
+			if (_needRebind) then {
+				diag_log format ["[WFBE][cmdcon26 TEAM-MARK] same-count clientTeams rebind detected (teams=%1 cache=%2) - reseeding leader caches to re-paint own-side arrows", count clientTeams, count _markerNames];
+				for "_i" from 0 to ((count _markerNames) - 1) do {
+					_lastLeaders   set [_i, objNull];
+					_lastTexts     set [_i, ""];
+					_lastAlphas    set [_i, -1];
+					_lastColors    set [_i, "ColorBlack"];
+					_lastPositions set [_i, [-99999,-99999,0]];
+					_lastDirs      set [_i, -999];
+				};
+			};
+		};
 		if (count clientTeams != count _markerNames) then {
 			diag_log format ["[WFBE][B64 TEAM-MARK] clientTeams rebind detected: teams=%1 cache=%2 - rebuilding", count clientTeams, count _markerNames];
 			{
@@ -247,7 +338,8 @@ while {!gameOver} do {
 						_lastDir = _lastDirs select _markerIndex;
 						_dirDiff = abs (_dir - _lastDir);
 						if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};
-						if (_dirDiff > 5) then {
+						//--- _lastDir<0 forces the FIRST write past the -999 cache seed (L53): without it the >180 wrap above NEGATES _dirDiff so the arrow freezes forever (root-cause fix Game 2026-06-28).
+						if (_lastDir < 0 || _dirDiff > 5) then {
 							_marker setMarkerDirLocal _dir;
 							_lastDirs set [_markerIndex, _dir];
 							_perfMarkerOps = _perfMarkerOps + 1;

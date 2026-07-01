@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hq','_id','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik'];
+Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -15,18 +15,44 @@ sleep 0.5;
 //--- Wait for a proper common & server initialization before going any further.
 waitUntil {commonInitComplete && serverInitFull};
 
-if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
+if (_name == '__SERVER__' || local player) exitWith {};
 
-["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has left the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+//--- cmdcon30 (Ray's stuck-join, 2026-06-30): clear the UID-keyed enrollment retry counter on disconnect.
+//--- WFBE_CONNECT_RETRY_<uid> (Server_OnPlayerConnected) is cleared on enrollment SUCCESS but NEVER on
+//--- disconnect - so once a JIP enrollment exhausts its 3 re-arms, a RE-JOIN with the same UID gets only a
+//--- single resolver pass with no re-arm safety net (the cap is already maxed) and re-bails -> the player is
+//--- permanently stuck (no team / HUD / markers) until a server restart. Clearing it here makes a fresh
+//--- re-join always get the full 3-attempt self-heal again. A2-OA-1.64-safe (setVariable nil). HCs skip the
+//--- resolver so they never hold this key - the clear is a harmless no-op for them.
+if (_uid != "") then {missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil]};
 
 //--- Headless Clients disconnection?.
+_isHCDisconnect = false;
+_hcGroup = grpNull;
 if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
-	_get = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
-	if !(isNil '_get') then {
-		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", (missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") - [_get]];
-		missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
+	if (_uid != "") then {
+		_get = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
+		if !(isNil '_get') then {_hcGroup = _get; _isHCDisconnect = true};
+	};
+	if (!_isHCDisconnect && {_uid == ""}) then {
+		_get = missionNamespace getVariable Format["WFBE_HEADLESS_OWNER_%1", _id];
+		if !(isNil '_get') then {_hcGroup = _get; _isHCDisconnect = true};
+	};
+	if (_isHCDisconnect) then {
+		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", (missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") - [_hcGroup]];
+		missionNamespace setVariable [Format["WFBE_HEADLESS_OWNER_%1", _id], nil];
+		if (_uid != "") then {
+			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
+		};
+		diag_log (Format ["HCSIDE|v1|disconnect|uid=%1|owner=%2|removed=%3", _uid, _id, str _hcGroup]);
+		["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Headless client [%1] [%2] owner [%3] has left the game.", _name, _uid, _id]] Call WFBE_CO_FNC_LogContent;
 	};
 };
+if (_isHCDisconnect) exitWith {};
+
+if (_uid == '') exitWith {};
+
+["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has left the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 
 //--- Player had any objects created?
 _get = missionNamespace getVariable Format ["WFBE_CLIENT_%1_OBJECTS", _uid];
@@ -181,4 +207,4 @@ _playerScoreDiff = _playerScore - _oldScore;
 _result = ["STORE", [_uid, _playerScoreDiff]] call WFBE_SE_FNC_CallDatabaseStore;
 _result = ["STORE_SIDE", [_uid, "NONE"]] call WFBE_SE_FNC_CallDatabaseStoreSide;
 
-["ERROR", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has disconnected.", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has disconnected.", _name, _uid]] Call WFBE_CO_FNC_LogContent;

@@ -152,7 +152,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 						//--- deleted (its wfbe_teams entry becomes a null group, which every consumer already skips
 						//--- -- same lifecycle as a wiped HC team / the existing cull). Net groups -1, body preserved.
 						_mergedInto = _mergeTeam;  //--- capture for the log before _team is gutted
-						(units _team) join _mergeTeam;
+						(units _team) joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
 						deleteGroup _team;
 						_canProduce = false;

@@ -78,7 +78,7 @@ if (_killer_side != _killed_side) then {
 	if (_isArtyKill) then {
 		_victimLogik = _killed_side Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNil "_victimLogik") then {
-			_artyKillCount = _victimLogik getVariable ["wfbe_aicom_arty_kill_count", 0] + 1;
+			_artyKillCount = (_victimLogik getVariable ["wfbe_aicom_arty_kill_count", 0]) + 1;
 			_victimLogik setVariable ["wfbe_aicom_arty_kill_count", _artyKillCount];
 			if (_artyKillCount >= 2 && {!(_victimLogik getVariable ["wfbe_aicom_arty_threat", false])}) then {
 				_victimLogik setVariable ["wfbe_aicom_arty_threat", true];
@@ -224,7 +224,7 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 	};
 	if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 	WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw + "|vc=" + _killed_type;
+	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw + "|vc=" + _killed_type + "|t=" + str (round time);
 	diag_log _wsk_line;
 };
 

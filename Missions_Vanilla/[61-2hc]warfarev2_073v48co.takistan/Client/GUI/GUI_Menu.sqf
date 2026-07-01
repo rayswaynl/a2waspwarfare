@@ -28,7 +28,7 @@ while {alive player && dialog} do {
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};
-	ctrlEnable [11005,_enable]; //--- Team Orders
+	ctrlEnable [11005,true]; //--- Command war-room: always openable on WEST/EAST; the dialog gates internally (Take Command vs war room). JIP-safe.
 	ctrlEnable [11008,_enable]; //--- Commander Menu
 	ctrlEnable [11006,commandInRange && (player == leader WFBE_Client_Team)]; //--- Special Menu
 	ctrlEnable [11007,commandInRange]; //--- Upgrade Menu
@@ -106,20 +106,30 @@ while {alive player && dialog} do {
 				createDialog "WFBE_VoteMenu";
 			};
 		}else{
+			//--- No human commander: the AI is running this side.
 			_skip = false;
 			if ((WFBE_Client_Logic getVariable "wfbe_votetime") <= 0) then {_skip = true};
 			if (!_skip) then {
+				//--- Round-start vote window still open: keep the normal vote menu.
 				closeDialog 0;
 				createDialog "WFBE_VoteMenu";
 			};
 
-			if !(_skip) exitWith {};
-			["RequestCommanderVote", [sideJoined, name player]] Call WFBE_CO_FNC_SendToServer;
-			voted = true;
-			waitUntil {(WFBE_Client_Logic getVariable "wfbe_votetime") > 0 || !dialog || !alive player};
-			if (!alive player || !dialog) exitWith {};
-			closeDialog 0;
-			createDialog "WFBE_VoteMenu";
+			if (!_skip) then {
+				//--- Round-start path: cast a vote (unchanged behaviour).
+				["RequestCommanderVote", [sideJoined, name player]] Call WFBE_CO_FNC_SendToServer;
+				voted = true;
+				waitUntil {(WFBE_Client_Logic getVariable "wfbe_votetime") > 0 || !dialog || !alive player};
+				if (alive player && dialog) then {
+					closeDialog 0;
+					createDialog "WFBE_VoteMenu";
+				};
+			} else {
+				//--- Mid-round: the vote window is permanently closed for JIP joiners, so
+				//--- there is no re-vote. Claim the empty AI commander seat ("TAKE COMMAND").
+				["RequestClaimCommander", [sideJoined, group player]] Call WFBE_CO_FNC_SendToServer;
+				closeDialog 0;
+			};
 		};
 	};
 
@@ -170,7 +180,10 @@ while {alive player && dialog} do {
 		createDialog "RscDisplay_Parameters";
 	};
 
-	//--- Command Menu.
+	//--- Command Menu (commander-only war room). Open UNCONDITIONALLY on WEST/EAST: the dialog's own
+	//--- gate (GUI_Menu_Command.sqf) shows the TAKE COMMAND button + explainer when you are not (yet) the
+	//--- commander, and the war room when you are. This is what fixes the JIP dead-button - a joiner whose
+	//--- commanderTeam has not replicated still gets a live claim button instead of a disabled/blank tab.
 	if (MenuAction == 5) exitWith { //added-MrNiceGuy
 		MenuAction = -1;
 		closeDialog 0;
@@ -290,6 +303,14 @@ while {alive player && dialog} do {
 			1 fadeSound 0.2;
 			hint "Earplugs: IN";
 		};
+	};
+
+	// qol-polish-pack: friendly name-tag overlay toggle (the worldToScreen loop + RscTitles live in Init_Client.sqf / Titles.hpp).
+	if (MenuAction == 25) then {
+		MenuAction = -1;
+		if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
+		WFBE_NameTagsEnabled = !WFBE_NameTagsEnabled;
+		hint (Format ["Name tags: %1", if (WFBE_NameTagsEnabled) then {"ON"} else {"OFF"}]);
 	};
 
 	sleep 0.1;

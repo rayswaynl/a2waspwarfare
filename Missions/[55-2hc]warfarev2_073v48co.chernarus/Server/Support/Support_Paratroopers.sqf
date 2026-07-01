@@ -1,4 +1,4 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
 
 _side = _this select 1;
 _destination = _this select 2;
@@ -6,7 +6,13 @@ _playerTeam = _this select 3;
 _sideID = _side Call GetSideID;
 _starttime = time;
 
-["INFORMATION", Format["Support_Paratroopers.sqf : [%1] Team [%2] has requested paratroopers.", _side, _playerTeam]] Call WFBE_CO_FNC_LogContent;
+//--- AICOM PARATROOPS (claude-gaming 2026-06-29): the AI commander reuses this SAME player-support function to call a
+//--- reinforcement drop (see AI_Commander_Paratroops.sqf). When the requesting team's leader is NOT a player, _isAI is
+//--- true and we keep ONLY the hard 500s transit timeout (drop the "player left -> abort" leg) and skip the per-trooper
+//--- client marker-send. The human-called path (leader is a player) is byte-for-byte unchanged: _isAI is false there.
+_isAI = !(isPlayer (leader _playerTeam));
+
+["INFORMATION", Format["Support_Paratroopers.sqf : [%1] Team [%2] has requested paratroopers (ai:%3).", _side, _playerTeam, _isAI]] Call WFBE_CO_FNC_LogContent;
 
 //--- Determine a random spawn location.
 _ranPos = [];
@@ -98,7 +104,7 @@ while {true} do {
 	
 	if (({alive _x} count _vehicles) == 0) exitWith {};//--- Vehicle destruction.
 	if (({alive driver _x} count _vehicles) == 0) exitWith {};//--- Pilots are dead.
-	if (!(isPlayer (leader _playerTeam)) || time - _starttime > 500) exitWith {};//--- Timeout out AI Controlled.
+	if ((!_isAI && {!(isPlayer (leader _playerTeam))}) || time - _starttime > 500) exitWith {};//--- Timeout out AI Controlled. (AICOM: an AI drop is never aborted for "leader not a player"; only the 500s hard cap applies.)
 	
 	_vehicleCoord = [(getPos vehicle (leader _grp)) select 0, (getPos vehicle (leader _grp)) select 1];
 	_positionCoord = [_destination select 0, _destination select 1];
@@ -114,7 +120,9 @@ if (_greenlight) then {
 		{
 			_x action ["EJECT", _vehicle];
 			sleep _delay;
-			[leader _playerTeam, "HandleParatrooperMarkerCreation", [_x, _sideID]] Call WFBE_CO_FNC_SendToClient;
+			//--- AICOM PARATROOPS: only ping a real player client's map with the drop marker. An AI drop has no
+			//--- requesting client, so skip the SendToClient (sending to an AI body would be a wasted no-op).
+			if (!_isAI) then {[leader _playerTeam, "HandleParatrooperMarkerCreation", [_x, _sideID]] Call WFBE_CO_FNC_SendToClient};
 		} forEach ((crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle]);
 	} forEach _vehicles;
 	

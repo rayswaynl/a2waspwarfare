@@ -15,6 +15,16 @@ if !(alive _artillery) exitWith {false};
 if (isNull gunner _artillery) exitWith {false};
 if (isPlayer gunner _artillery) exitWith {false};
 
+//--- N-FEATUREBUG-4 (locality): addMagazineTurret/loadMagazine only take effect on the machine
+//--- where the vehicle is local. AI artillery is SERVER-local, but this is called on the
+//--- commanding PLAYER's client -> the load was a silent no-op. If the arty is not local here,
+//--- forward the request to the machine that owns it (the server) via the RequestSpecial channel.
+//--- The server re-runs THIS same loader, where `local _artillery` is true and the ops take effect.
+if !(local _artillery) exitWith {
+	["RequestSpecial", ["LoadArtilleryAmmo", _artillery, _sideText, _artilleryIndex, _ammoIndex]] Call WFBE_CO_FNC_SendToServer;
+	true
+};
+
 _options = [_side, _artilleryIndex] Call WFBE_CO_FNC_GetArtilleryAmmoOptions;
 _optionIndex = -1;
 

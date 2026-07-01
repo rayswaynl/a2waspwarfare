@@ -30,7 +30,9 @@ if (_ammo in _ammoList) then {
 	
 	//--- SADARM Rounds.
 	if (_ammo in (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_AMMO_SADARM",_side])) then {
-		[_projectile,_landDestination,_velocity] Spawn ARTY_HandleSADARM;
+		//--- N-FEATUREBUG-5: forward the real firing _side. The handler used to read sideJoined, which is
+		//--- sideEmpty on a dedicated server -> nil WFBE_%1PARACHUTE model -> createVehicle on nil.
+		[_projectile,_landDestination,_velocity,_side] Spawn ARTY_HandleSADARM;
 		_keepShellAlive = false; //--- SADARM Destroy the original round.
 	};
 		

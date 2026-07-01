@@ -69,7 +69,7 @@ if (local player) then {
 	};
 	_type = "mil_box";
 	_color = "colorBlack";
-	if (_hq) then {_type = "Headquarters"};
+	if (_hq) then {_type = "Headquarters"; _structure setVariable ["wfbe_hq_marker_name", _marker]};	//--- cmdcon28: stamp the HQ marker name so the JIP heal can verify THIS marker by name (A2 has no allMapMarkers).
 	_marker setMarkerTypeLocal _type;
 	private "_text";
 	_text = "";

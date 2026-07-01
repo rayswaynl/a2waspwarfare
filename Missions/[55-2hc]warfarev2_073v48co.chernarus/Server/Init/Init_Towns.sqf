@@ -160,6 +160,23 @@ switch (missionNamespace getVariable "WFBE_C_TOWNS_STARTING_MODE") do {
 //--- a 3-level side upgrade (WFBE_UP_PATROLS) driven by Server\FSM\server_side_patrols.sqf
 //--- (spawn at the friendly town nearest the HQ, frontline gravitation, capped per side).
 
+//--- [town-coord logger] One-shot dump of every town's real map position, for the
+//--- post-match report renderer's TOWN_COORDS table (Tools/MatchReport). Towns are
+//--- engine Locations, so their positions are STATIC per map - this only needs to run
+//--- once per world to harvest exact coords (Chernarus + Takistan). Default OFF; flip
+//--- WFBE_C_LOG_TOWN_COORDS=1 for a single boot, grep the RPT for "TOWNPOS|", paste the
+//--- values into matchdata.TOWN_COORDS, then turn it back off. Server-side, zero gameplay
+//--- effect. Line shape: TOWNPOS|v1|<world>|<name>|<x>|<y>
+if ((missionNamespace getVariable ["WFBE_C_LOG_TOWN_COORDS", 0]) == 1) then {
+	{
+		private ["_nm","_p"];
+		_nm = _x getVariable ["name", "unknown"];
+		_p  = getPos _x;
+		diag_log Format ["TOWNPOS|v1|%1|%2|%3|%4", worldName, _nm, round(_p select 0), round(_p select 1)];
+	} forEach towns;
+	diag_log Format ["TOWNPOS|v1|%1|__COUNT__|%2|0", worldName, count towns];
+};
+
 townInitServer = true;
 
 ["INITIALIZATION", "Init_Server.sqf: Town starting mode is done."] Call WFBE_CO_FNC_LogContent;

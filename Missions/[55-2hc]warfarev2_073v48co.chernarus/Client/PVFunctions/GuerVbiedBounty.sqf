@@ -16,4 +16,5 @@ if (isNil "_bounty") exitWith {};
 if (typeName _bounty != "SCALAR") exitWith {};
 if (_bounty <= 0) exitWith {};
 
+diag_log ("GUERVBIED|v1|CLIENT|received|bounty=" + (str _bounty) + "|uid=" + (getPlayerUID player) + "|crediting wallet"); //--- Ray 2026-06-27: confirm the wallet credit fires on the detonator's client (server+client round-trip trace).
 (_bounty) Call ChangePlayerFunds;

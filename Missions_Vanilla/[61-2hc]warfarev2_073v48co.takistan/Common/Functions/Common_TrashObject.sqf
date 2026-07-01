@@ -22,6 +22,17 @@ if !(isNull _object) then {
 
 	sleep _delay;
 
+	//--- qol-polish-pack: optional player-proximity guard for bodies — never pop a corpse in a player's face. Holds deletion while a player
+	//--- is within WFBE_C_UNITS_BODIES_PROX m, capped at one extra _delay so a camper can't pin a body forever. 0 = off (vanilla behaviour).
+	if (_isMan && {(missionNamespace getVariable ["WFBE_C_UNITS_BODIES_PROX", 0]) > 0}) then {
+		private ["_prox","_held"];
+		_prox = missionNamespace getVariable ["WFBE_C_UNITS_BODIES_PROX", 0];
+		_held = 0;
+		while {_held < _delay && {({isPlayer _x && {alive _x} && {_x distance _object < _prox}} count playableUnits) > 0}} do {
+			sleep 3; _held = _held + 3;
+		};
+	};
+
 	["INFORMATION", Format["Server_TrashObject.sqf: Deleting [%1], it has been [%2] seconds.", _object, _delay]] Call WFBE_CO_FNC_LogContent;
 
 	deleteVehicle _object;

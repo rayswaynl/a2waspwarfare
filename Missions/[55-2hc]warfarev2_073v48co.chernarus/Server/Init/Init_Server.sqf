@@ -32,6 +32,8 @@ Server_ConstructPosition = Compile preprocessFile "Server\Functions\Server_Const
 GetAICommanderFunds = Compile preprocessFile "Server\Functions\Server_GetAICommanderFunds.sqf";
 //--- B74.2 (Ray 2026-06-24, directive #5): AI-commander structure-sell / recycle worker (dark by default, see WFBE_C_AICOM_BASE_SELL_ENABLE).
 WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BaseSell.sqf";
+//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): drain a rich AICOM hoard into offense (dark by default, see WFBE_C_AICOM_FUNDS_SINK_ENABLE). Called from updateresources.sqf on the income cadence.
+WFBE_SE_FNC_AI_Com_FundsSink = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_FundsSink.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
 HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";
@@ -62,13 +64,20 @@ WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions
 WFBE_SE_FNC_AI_Com_AssignTypes = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTypes.sqf";
 WFBE_SE_FNC_AI_Com_AssignTowns = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTowns.sqf";
 WFBE_SE_FNC_AI_Com_Produce = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Produce.sqf";
+WFBE_SE_FNC_AI_Com_DisbandLowTier = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_DisbandLowTier.sqf";
 WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Execute.sqf";
 WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
+WFBE_SE_FNC_AI_Com_Beacon = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Beacon.sqf"; //--- AICOM FORWARD SPAWN-BEACON (Approach A): forward ambulance as a mobile spawn point (flag WFBE_C_AICOM_SPAWNBEACON_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
+WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
+WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
 WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_MHQReloc.sqf";
+WFBE_SE_FNC_AI_Com_PlayerArty = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_PlayerArty.sqf"; //--- COMMAND CONSOLE: assist-mode resolver for a player war-room ARTILLERY-HERE request (runs every tick, even under a human commander; fires only existing friendly guns).
+WFBE_SE_FNC_AI_Com_Paratroops = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Paratroops.sqf"; //--- AICOM PARATROOPS: tier+structure-gated AI paratroop reinforcement drop, reuses the player KAT_Paratroopers support fn (flag WFBE_C_AICOM_PARATROOPS_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
+WFBE_SE_FNC_AI_Commander_Wildcard_GUER = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard_GUER.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
 WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroupsDefender.sqf";
 WFBE_SE_FNC_GetTownPatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownPatrol.sqf";
@@ -828,22 +837,19 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 
 //--- tag is audit-only. The isNil guard skips any runtime group the wrapper already tagged. GUER included.
 if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
-	Private ["_reclaimed"];
-	_reclaimed = 0;
 	{
 		Private ["_src"];
 		_src = _x getVariable "wfbe_group_src";
 		if (isNil "_src" && {(side _x == west) || (side _x == east) || (side _x == resistance)}) then {
-			if ((count units _x) == 0) then {
-				//--- empty overflow slot (unit self-deleted at load): reap to free a per-side group-cap slot
-				deleteGroup _x;
-				_reclaimed = _reclaimed + 1;
-			} else {
-				_x setVariable ["wfbe_group_src", "editor-player-slot", true];
-			};
+			//--- cmdcon30 (Ray 2026-06-30): the PR#122 reap (deleteGroup of EMPTY WEST/EAST/resistance editor
+			//--- groups for group-cap headroom) deleted empty-but-JIP-SELECTABLE player-slot groups -> a joiner
+			//--- landed in a deleted group -> no wfbe_side -> enrollment exhausted (B746 x3) -> DEADSPAWN.
+			//--- REMOVED entirely (back to pre-PR122 audit-only tagging): the empty overflow slots ran the whole
+			//--- pre-PR122 history with no group-cap problem, and the only safe reap would skip them anyway (they
+			//--- carry wfbe_persistent). Never delete a JIP-selectable slot group at boot.
+			_x setVariable ["wfbe_group_src", "editor-player-slot", true];
 		};
 	} forEach allGroups;
-	["INITIALIZATION", format ["Init_Server.sqf: editor-slot sweep reclaimed %1 empty overflow groups (group-cap headroom).", _reclaimed]] Call WFBE_CO_FNC_LogContent;
 };
 
 [] Call Compile preprocessFile "Server\Config\Config_GUE.sqf";
@@ -864,13 +870,6 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	[] execVM "Server\Init\Init_NavalHVT.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
-
-//--- AIRFIELD ON-LAND PROBE (claude-gaming 2026-06-14): DIAGNOSTIC ONLY.
-//--- One-shot server-only grid scan that logs surfaceIsWater + nearRoads for a
-//--- 5x5 grid of candidate camp positions around each airfield's
-//--- LocationLogicAirport (Balota id=7, NWAF id=8). Reads AIRFIELD_PROBE|... in
-//--- the RPT to pick a verified on-land, off-road apron. Changes NO coordinates.
-[] execVM "Server\Init\Init_AirfieldProbe.sqf";
 
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
@@ -906,6 +905,7 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
+[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default ON)
 
 //--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
@@ -1065,6 +1065,9 @@ if (_antiStackEnabled) then {
 
 _logMatchWinPlayerCountThreshold = 10;
 
+//--- Default so low-pop/AI rounds don't leave it undefined (Server_LogGameEnd reads it at every match end); the >=threshold path overwrites it later.
+WFBE_Server_LogMatchWin = false;
+
 [_logMatchWinPlayerCountThreshold] execVM "Server\MonitorPlayerCount.sqf";
 
 WFBE_SE_PLAYERLIST = [[objNull, "0"]];
@@ -1113,8 +1116,16 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
 
 //--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
-	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: base-less, no wildcard events
+	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER runs its OWN base-less deck below (AI_Commander_Wildcard_GUER), not this HQ/funds-based worker
 	["INITIALIZATION", Format ["Init_Server.sqf: AI Commander Wildcard workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
+};
+
+//--- GUER (resistance) Wildcard events — base-less insurgent deck (Ray 2026-06-27). Independent of the
+//--- AI-commander gate (GUER has no commander); needs only resistance present + the toggle. Pays GUER
+//--- PLAYERS directly (see AI_Commander_Wildcard_GUER.sqf). All server-side; no client files added.
+if ((missionNamespace getVariable ["WFBE_C_GUER_WILDCARD", 1]) == 1 && {resistance in WFBE_PRESENTSIDES}) then {
+	[] Spawn WFBE_SE_FNC_AI_Commander_Wildcard_GUER;
+	["INITIALIZATION", Format ["Init_Server.sqf: GUER Wildcard worker started (interval=%1s).", missionNamespace getVariable ["WFBE_C_GUER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.

@@ -18,7 +18,7 @@
 	one-start-per-call behaviour are unchanged.
 */
 
-Private["_can_upgrade","_cost","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost","_fundsRate","_paidByFunds","_chosenByFunds","_fundsSurcharge"];
+Private["_can_upgrade","_cost","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -51,17 +51,6 @@ _headUpgrade = -1;
 _headCost = [];
 _chosen = -1;
 _chosenCost = [];
-_chosenByFunds = false; //--- task #6: was the chosen upgrade unlocked via the funds->supply fallback?
-
-//--- TASK #6 (production root cause): in dual-currency, EVERY upgrade costs SUPPLY and 0 FUNDS, and
-//--- supply income comes only from owned towns. A 0-town AI (200k+ funds, no supply) can therefore
-//--- never research Light/Heavy/Air, so the eligibility filter in Teams/AssignTypes keeps it
-//--- infantry-only despite its funds + factory tier. This OPT-IN fallback lets the AI convert its
-//--- abundant FUNDS into a tech unlock when supply is dry: it pays the funds price PLUS a surcharge
-//--- of (supply price * RATE) funds, and skips the supply deduction. AI-commander-only (this whole
-//--- worker is), so human/shared supply economics are untouched. Default RATE 0 = DISABLED (no-op,
-//--- preserves legacy<->next A/B parity); set WFBE_C_AICOM_UPGRADE_FUNDS_RATE > 0 (e.g. 2) to enable.
-_fundsRate = missionNamespace getVariable ["WFBE_C_AICOM_UPGRADE_FUNDS_RATE", 0];
 
 {
 	_upgrade = _x select 0;
@@ -83,16 +72,9 @@ _fundsRate = missionNamespace getVariable ["WFBE_C_AICOM_UPGRADE_FUNDS_RATE", 0]
 		//--- Affordability gate (reserve floor honoured): pick the first affordable one.
 		if (_chosen < 0) then {
 			_can_upgrade = false;
-			_paidByFunds = false;
 			if (_currency == 0) then {
 				//--- Reserve gate: net supply after cost must stay >= _supplyReserve.
 				if (_supply >= (_cost select 0) + _supplyReserve && _funds >= (_cost select 1)) then {_can_upgrade = true};
-				//--- TASK #6 funds->supply fallback (opt-in): supply too low, but the side can pay
-				//--- the funds price + (supply price * RATE) funds surcharge out of its war chest.
-				if (!_can_upgrade && {_fundsRate > 0} && {_funds >= ((_cost select 1) + ((_cost select 0) * _fundsRate))}) then {
-					_can_upgrade = true;
-					_paidByFunds = true;
-				};
 			} else {
 				if (_funds >= (_cost select 1)) then {_can_upgrade = true};
 			};
@@ -100,7 +82,6 @@ _fundsRate = missionNamespace getVariable ["WFBE_C_AICOM_UPGRADE_FUNDS_RATE", 0]
 			if (_can_upgrade) then {
 				_chosen = _upgrade;
 				_chosenCost = _cost;
-				_chosenByFunds = _paidByFunds;
 			};
 		};
 	};
@@ -112,10 +93,10 @@ if (_chosen >= 0) then {
 	_cost = _chosenCost;
 	["INFORMATION", Format ["Server_AI_Com_Upgrade.sqf: [%1] researching upgrade id %2 -> level %3 (supply %4, funds %5).", _side, _upgrade, (_upgrades select _upgrade) + 1, _cost select 0, _cost select 1]] Call WFBE_CO_FNC_AICOMLog;
 	//--- UPGRADE cost/currency telemetry (claude-gaming 2026-06-15): the old line carried only
-	//--- id+lvl. Add the supply/funds price and which currency actually paid (supply vs the new
-	//--- funds-fallback) so the supply-starved/funds-rich research picture is visible. _cost is
-	//--- [supplyPrice, fundsPrice]; _chosenByFunds is set when the funds->supply fallback unlocked it.
-	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|UPGRADE_RESEARCHED|id=" + str _upgrade + "|lvl=" + str ((_upgrades select _upgrade) + 1) + "|supplyCost=" + str (_cost select 0) + "|fundsCost=" + str (_cost select 1) + "|paidBy=" + (if (_chosenByFunds) then {"funds-fallback"} else {if (_currency == 0) then {"supply"} else {"funds"}}));
+	//--- id+lvl. Add the supply/funds price and which currency paid (supply for dual-currency
+	//--- research) so the research picture is visible. _cost is
+	//--- [supplyPrice, fundsPrice].
+	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|UPGRADE_RESEARCHED|id=" + str _upgrade + "|lvl=" + str ((_upgrades select _upgrade) + 1) + "|supplyCost=" + str (_cost select 0) + "|fundsCost=" + str (_cost select 1) + "|paidBy=" + (if (_currency == 0) then {"supply"} else {"funds"}));
 	[_side, _upgrade, _upgrades select _upgrade, false] Spawn WFBE_SE_FNC_ProcessUpgrade;
 	// Marty: Mirror the AI commander's active upgrade ID for client upgrade-menu status text.
 	_logik setVariable ["wfbe_upgrading", true, true];
@@ -125,16 +106,7 @@ if (_chosen >= 0) then {
 	[_side,-(_cost select 1)] Call ChangeAICommanderFunds; //--- TR12: funds price is _cost select 1 (was select 0, the supply price).
 
 	if (_currency == 0) then {
-		if (_chosenByFunds) then {
-			//--- TASK #6 funds->supply fallback: pay the supply price as a FUNDS surcharge instead of
-			//--- deducting supply (the side has none). Never synthesises or spends shared supply.
-			_fundsSurcharge = (_cost select 0) * _fundsRate;
-			[_side, -_fundsSurcharge] Call ChangeAICommanderFunds;
-			["INFORMATION", Format ["Server_AI_Com_Upgrade.sqf: [%1] FUNDS-FALLBACK unlock id %2 -> level %3 (supply dry; paid %4 funds surcharge at rate %5).", _side, _upgrade, (_upgrades select _upgrade) + 1, _fundsSurcharge, _fundsRate]] Call WFBE_CO_FNC_AICOMLog;
-			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|UPGRADE_FUNDS_FALLBACK|id" + str _upgrade + "-lvl" + str ((_upgrades select _upgrade) + 1) + "-surcharge" + str _fundsSurcharge);
-		} else {
-			[_side,-(_cost select 0),"AI commander tech upgrade.", false] Call ChangeSideSupply; //--- TR12: supply price is _cost select 0 (was select 1, the funds price).
-		};
+		[_side,-(_cost select 0),"AI commander tech upgrade.", false] Call ChangeSideSupply; //--- TR12: supply price is _cost select 0 (was select 1, the funds price).
 	};
 } else {
 	//--- V0.6.7 UPGRADE QUEUE: nothing affordable this cycle -> keep program queued,

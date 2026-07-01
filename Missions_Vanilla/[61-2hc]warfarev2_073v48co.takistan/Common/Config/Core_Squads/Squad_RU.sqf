@@ -431,6 +431,59 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
 _aiTeamTypes = _aiTeamTypes + [2];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,2,0]];
 
+//--- AICOM v2 ROSTER BOOST (Ray 2026-06-27, AI-COMMANDER-ONLY - appended to _aiTeamTemplates only, does NOT
+//--- touch the shared squads / player options): heavier armor + an attack heli + a heavy-weapons squad so a
+//--- 'strong' AI fields elite teams. Verified A2-OA classnames; gated behind TOP factory tiers so they
+//--- appear occasionally (the cost-weighted AICOM founding draw fields them as tech + funds allow).
+_u = ["T90"]; _u = _u + ["T90"]; _u = _u + ["BMP3"]; _u = _u + ["RU_Soldier_SL"]; _u = _u + ["RU_Soldier_AR"]; _u = _u + ["RU_Soldier_AT"]; _u = _u + ["RU_Soldier_Medic"]; //--- wiki cross-check fix: armor platoon now carries a BMP-3 + dismount squad so it can CAPTURE (bare-armor can't flip a town).
+_aiTeamTemplateName = _aiTeamTemplateName + ["Armor - MBT Platoon (T-90 + dismounts)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,3,0]];
+
+_u = ["Ka52"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Attack Helicopter (Ka-52)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
+
+_u = ["RU_Soldier_SL"]; _u = _u + ["RU_Soldier_MG"]; _u = _u + ["RU_Soldier_HAT"]; _u = _u + ["RU_Soldier_AT"]; _u = _u + ["RU_Soldier_Sniper"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Infantry - Heavy Weapons Squad"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
+_aiTeamTypes = _aiTeamTypes + [0];
+_aiTeamUpgrades = _aiTeamUpgrades + [[3,0,0,0]];
+
+//--- AICOM v2 AIRFIELD JETS (Ray 2026-06-27): manned CAS/strike jets, fixed-wing -> auto-gated behind AIRFIELD
+//--- ownership (AIR_REQUIRE_AIRFIELD) AND the 2h->5h jet time-ramp. Spawn on the captured airfield runway
+//--- (AI_Commander_Teams jet runway-spawn). Pure gunships (no dismounts, cannot capture).
+_u = ["Su39"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Su-25 CAS (Airfield)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+_u = ["Su34"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Su-34 Strike (Airfield)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]];
+_aiTeamTypes = _aiTeamTypes + [3];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+//--- AICOM SELF-PROPELLED ARTILLERY (Ray 2026-06-27): ONE BM-21 Grad battery per AI commander. NO tracked SP rocket-
+//--- arty class is registered on this build (RU's only SP rocket arty is the WHEELED GRAD_RU); use it + name it
+//--- honestly. LIGHT-tier-gated (unlocks at Light factory L4, matching GRAD_RU's tier), AI-only, crew-only -> fire
+//--- support, cannot capture. Capped to 1 alive per side by the arty cap.
+_u = ["GRAD_RU"];
+_aiTeamTemplateName     = _aiTeamTemplateName     + ["Artillery - Grad SP Rocket Battery"];
+_aiTeamTemplates        = _aiTeamTemplates        + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
+_aiTeamTypes            = _aiTeamTypes            + [1];
+_aiTeamUpgrades         = _aiTeamUpgrades         + [[0,4,0,0]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];

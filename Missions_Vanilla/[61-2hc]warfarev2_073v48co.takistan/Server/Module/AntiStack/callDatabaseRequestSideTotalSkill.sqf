@@ -66,8 +66,11 @@ while { (_responseCode < 0) && (_attempts < _attemptsMax) } do
 
 if (_responseCode < 0) then {
 	["ERROR", format ["CallDatabaseRequestSideTotalSkill.sqf: CRITICAL ERROR! Something went wrong with database. Couldn't retrieve team: [%1] stats. Request ID: [%2].",_side, _requestID]] Call WFBE_CO_FNC_LogContent;
-	_responseStats = [1, 1];
-	_responseStats;
+	//--- task46 (claude): return a SCALAR on timeout to match the success path (which returns the scalar
+	//--- _responseTotalSkill = _response select 1) and the disabled/nil-guard paths (which return 0).
+	//--- Callers (getTeamScore.sqf, skillDiffCompensation.sqf, Common_StagnateSupplyIncomeNoPlayers.sqf)
+	//--- consume the result as a scalar skill in arithmetic; the old [1,1] ARRAY caused a type error.
+	1;
 } else {
 	_responseTotalSkill = _response select 1;
 

@@ -40,6 +40,11 @@ if (isNil "_teams") exitWith {};
 					_sig     = [_modeL, round (_goto select 0), round (_goto select 1)];
 					_prevSig = _team getVariable ["wfbe_exec_sig", []];
 					if (str _sig != str _prevSig) then {
+						//--- COMMAND CONSOLE telemetry (claude-gaming 2026-06-28): one machine-parseable line per NEWLY-
+						//--- committed direct order (the war-room's per-team task path). Previously the direct path was
+						//--- invisible to ORDERS telemetry, so a working order looked identical to a dropped one in logs
+						//--- (part of why ORDERS(war-room) read 0 even when teams were tasked). Count these to see the path bite.
+						diag_log ("AICOM2|v1|ORDER|war-room-task|" + str _side + "|" + str (round (time / 60)) + "|mode=" + _modeL + "|goto=" + str [round (_goto select 0), round (_goto select 1)]);
 						//--- B67 HC-ORDER PATH (full-send hybrid commander, item #5 / part 3): an HC-delegated team's units
 						//--- are LOCAL to the headless client, so server-side AIMoveTo/waypoint commands on them are
 						//--- unreliable - the HC driver (Common_RunCommanderTeam) acts ONLY on the public wfbe_aicom_order

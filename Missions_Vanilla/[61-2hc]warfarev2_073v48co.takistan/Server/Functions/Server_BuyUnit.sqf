@@ -40,9 +40,49 @@ if (!isPlayer (leader _team)) then {
 	_apFac = getPos _building;
 	_apBaseBrg = getDir _building + _direction;
 	_apOk = false;
+	//--- SPAWN-PAD FIX (bug fix, ACTIVE): the PLAYER buy path (Client_BuildUnit.sqf) exits units onto the
+	//--- factory's proper spawn pads - the HeliH/HeliHRescue/HeliHCivil/Sr_border markers baked into each BI
+	//--- Warfare factory composition (the "spawn points 2/3/4/5"). The AI path never consulted them, so it
+	//--- dumped units on a raw trig offset that can sit IN the factory geometry / against a wall. Mirror the
+	//--- player's pad-type mapping here: pick the best (closest, flat, dry, object-clear) pad of the matching
+	//--- type and exit the unit there. Only fall through to the apron sweep below if NO usable pad is found,
+	//--- so this never degrades the existing behaviour. (Same _building nearObjects + isFlatEmpty idioms the
+	//--- player path / the apron sweep already use - A2-OA safe.)
+	private ["_padType","_pads","_padBest","_padBestD","_padPos","_padD"];
+	_padType = switch (_factoryType) do {
+		case "Light": {"HeliH"};
+		case "Heavy": {"HeliHRescue"};
+		case "Aircraft": {"HeliHCivil"};
+		case "Barracks": {"Sr_border"};
+		default {""};
+	};
+	if (_padType != "") then {
+		_pads = _building nearObjects [_padType, 250];
+		_padBest = objNull; _padBestD = 1e9;
+		{
+			//--- the Light pad type "HeliH" is the base class of HeliHRescue/HeliHCivil, so exclude those exactly
+			//--- like the player path does (a Heavy/Air pad must not double as a Light pad). The pad IS the designed
+			//--- spawn point (the player path trusts it unconditionally), so we only reject a pad over water; the
+			//--- factory-clearance fix in AI_Commander_Base keeps the pad ground clear. Pick the CLOSEST valid pad.
+			if ((typeOf _x == _padType) || {_padType != "HeliH"}) then {
+				_padPos = getPos _x;
+				if (!(surfaceIsWater _padPos)) then {
+					_padD = _padPos distance _apFac;
+					if (_padD < _padBestD) then {_padBestD = _padD; _padBest = _x};
+				};
+			};
+		} forEach _pads;
+		if (!isNull _padBest) then {
+			_padPos = getPos _padBest;
+			_position = [_padPos select 0, _padPos select 1, 0.5];
+			_apOk = true;
+		};
+	};
 	//--- first try the exact original offset position - if it is already flat/empty, keep it.
-	_apFlat = _position isFlatEmpty [8, 0, 2, 8, 0, false, objNull];
-	if ((count _apFlat) > 0 && {!(surfaceIsWater _position)}) then {_apOk = true};
+	if (!_apOk) then {
+		_apFlat = _position isFlatEmpty [8, 0, 2, 8, 0, false, objNull];
+		if ((count _apFlat) > 0 && {!(surfaceIsWater _position)}) then {_apOk = true};
+	};
 	//--- otherwise sweep the bearing (around the factory) and the standoff outward, up to
 	//--- ~12 tries, for the first flat dry spot. isFlatEmpty returns [] when not flat.
 	_apTry = 0;

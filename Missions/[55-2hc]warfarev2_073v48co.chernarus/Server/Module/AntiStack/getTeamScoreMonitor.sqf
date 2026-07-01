@@ -18,7 +18,14 @@ _miniSleep = 0.10;
 		_playerScoreTotal = _playerStats select 0;
 		_playerTimePlayedTotal = _playerStats select 1;
 
-		_playerSkill = _playerScoreTotal / _playerTimePlayedTotal;
+		//--- task46 (claude): zero-guard the divisor. A never-seen UID returns _playerTimePlayedTotal=0
+		//--- (DB sentinel can also drift to 0) -> div-by-zero. Mirror the [1,1] fallback used in
+		//--- mainLoop.sqf: 0 time means "no playtime yet", so contribute 0 skill rather than crash.
+		if (_playerTimePlayedTotal == 0) then {
+			_playerSkill = 0;
+		} else {
+			_playerSkill = _playerScoreTotal / _playerTimePlayedTotal;
+		};
 
 		_teamSkill = _teamSkill + _playerSkill;
 		

@@ -3569,7 +3569,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
+					description="Headless Client";
 					synchronizations[]={255};
 				};
 			};
@@ -3917,7 +3917,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={229,239,230,231,240,241,232,233,242,234,235,236,237,259};
+					synchronizations[]={229,239,230,231,240,241,232,233,242,234,235,236,237,259,268};
 				};
 			};
 		};
@@ -3936,7 +3936,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_OPF";
-					synchronizations[]={244,245,246,252,253,247,248,254,249,250,262,263,267,269};
+					synchronizations[]={244,245,246,252,253,247,248,254,249,250,262,263,267,269,307};
 				};
 			};
 		};
@@ -3999,7 +3999,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
+					description="Headless Client";
 					synchronizations[]={256};
 				};
 			};
@@ -4177,7 +4177,7 @@ class Mission
 		};
 		class Item93
 		{
-			side="CIV";
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -4185,14 +4185,15 @@ class Mission
 				{
 					position[]={1927.2078,544.75983,15282.436};
 					id=268;
-					side="CIV";
-					vehicle="Functionary1";
+					side="WEST";
+					vehicle="FR_Miles";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
+					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client";
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={255};
 				};
 			};
 		};
@@ -4962,7 +4963,7 @@ class Mission
 		};
 		class Item128
 		{
-			side="CIV";
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -4970,14 +4971,15 @@ class Mission
 				{
 					position[]={1937.2078,544.75983,15282.436};
 					id=307;
-					side="CIV";
-					vehicle="Functionary1";
+					side="EAST";
+					vehicle="RUS_Soldier1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
+					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client 2";
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={256};
 				};
 			};
 		};

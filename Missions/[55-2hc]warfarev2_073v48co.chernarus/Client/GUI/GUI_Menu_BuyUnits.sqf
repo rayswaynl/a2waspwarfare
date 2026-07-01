@@ -627,6 +627,14 @@ _IDCS = _IDCS - [_currentIDC];
 				
 				(_display displayCtrl 12022) ctrlSetStructuredText (parseText _txt);
 			};
+				//--- Spotter infantry (claude-gaming): coloured-name partner in the buy list now gets a matching on-select explainer.
+				//--- Mirrors the vehicle-specials hint convention (hintSilent parseText). Keyed on every selectable faction's spotter class (must match the buy-list tint in Client_UIFillListBuyUnits.sqf: live Chernarus WEST=USMC, EAST=RU; US/CDF/TK cover the rest + the Takistan mirror).
+				if (_unit in ["USMC_SoldierS_Spotter","RU_Soldier_Spotter","US_Soldier_Spotter_EP1","CDF_Soldier_Spotter","TK_Soldier_Spotter_EP1"]) then {
+					hintSilent parseText "<t color='#ffcc00'>Spotter</t> - a recon and target-spotting specialist, not a frontline fighter. <br/> <br/>Equipped with binoculars/optics to scout ahead, locate enemy positions and call out targets for your squad, snipers and artillery. <br/> <br/>Keep it back from direct contact and use it to reveal the enemy before you commit - eyes on, then strike.";
+				} else {
+					//--- Any OTHER infantry selection clears a lingering spotter hint (vehicles clear via the !(_isInfantry) Library block below).
+					if (_isInfantry) then {hintSilent ""};
+				};
 			
 			//--- QoL: show the full purchase cost (base + crew) in the dialog's price field (idc 12034).
 			ctrlSetText [12034, format ["$%1", _currentCost]];
@@ -652,17 +660,33 @@ _IDCS = _IDCS - [_currentIDC];
 					if (_unit in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES", sideJoinedText])) then {
 						hintSilent parseText "Ambulances are important vehicles because they can be used as mobile respawn points. <br/> <br/>You can see the current maximum allowed respawn range from any friendly ambulance from >> WF Menu -> Factory Upgrade -> Ambulance Range upgrade."
 					};
+					//--- Medic Redeployment Truck (claude-gaming): missing explainer added. Keyed on the same WFBE_%1REDEPLOYTRUCKS side-list (and the same WFBE_C_UNITS_REDEPLOYTRUCK gate) the violet buy-menu row tint uses. Sits right after the ambulance hint so the medical vehicles group together.
+					if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && {_unit in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS", sideJoinedText], []])}) then {
+						hintSilent parseText "<t color='#b266ff'>Medic Redeployment Truck</t> - a mobile forward field-aid and respawn point for your MEDICS. <br/> <br/>Drive it up behind the front line and park it. Only the MEDIC class can redeploy (respawn) at this truck, letting your medics return to the fight close to the action and keep the squad patched up - no long run back from base. <br/> <br/>Note: you need the MEDIC slot/class selected in the server lobby to spawn here. Keep the truck alive and reasonably safe - if it is destroyed the forward medic spawn is lost.";
+					};
 					if (_unit in (missionNamespace getVariable Format ["WFBE_%1REPAIRTRUCKS", sideJoinedText])) then {
 						hintSilent parseText "Repair trucks are special vehicles that can be used to build static structures and weapons. They are especially useful for advanced tactics. <br/> <br/>Get in driver seat of your repair truck and open action menu (mouse scroll). You should see the repair truck build menu option, select it and start building!";
 					};
 					if (_unit in (missionNamespace getVariable Format ["WFBE_%1SUPPLYTRUCKS", sideJoinedText])) then {
 						hintSilent parseText "Supply trucks can be used to boost the supply income of your team. <br/> <br/>You can collect extra supply by driving to friendly town center (next to main depot of town), getting out of your supply truck, aiming at it and using action menu (mouse scroll) -> LOAD SUPPLIES... Then just drive next to friendly Command Center (marked with C) on map. <br/> <br/> Note that you need to have selected Support slot/class in server lobby. There also needs to be [+SUPPLY] mark after town name for you to be able to collect the extra supply.";
 					};
+					//--- Salvage truck (claude-gaming): missing explainer added. Matches the side-list convention above (WFBE_%1SALVAGETRUCK is the same list the green buy-menu row tint keys on).
+					if (_unit in (missionNamespace getVariable Format ["WFBE_%1SALVAGETRUCK", sideJoinedText])) then {
+						hintSilent parseText "<t color='#00ff00'>Salvage Truck</t> - turns enemy and friendly wrecks into cash for your team. <br/> <br/>Drive it (a crew must be aboard) near any destroyed vehicle, ship, aircraft or static weapon. While the truck is parked nearby, wrecks in range are automatically recovered and DELETED, paying your team a share of each wreck's value. <br/> <br/>Keep it close to where vehicles are dying - frontlines, factory yards, contested towns - to keep the salvage income flowing.";
+					};
+					//--- Utility / rearm (ammo) truck (claude-gaming): missing explainer added. Keyed on the same WFBE_%1AMMOTRUCKS side-list the red buy-menu row tint uses.
+					if (_unit in (missionNamespace getVariable Format ["WFBE_%1AMMOTRUCKS", sideJoinedText])) then {
+						hintSilent parseText "<t color='#ff5555'>Utility / Ammunition Truck</t> - a mobile rearm and resupply point for your forces. <br/> <br/>Park it near friendly units and vehicles that have run dry, get in the driver seat and open the action menu (mouse scroll) to resupply ammunition, or have nearby allies rearm from it. <br/> <br/>Use it to keep an advancing push topped up on ammo without driving all the way back to base.";
+					};
 					if (_unit in WFBE_C_SUPPLY_HELI_TYPES) then {
 						hintSilent parseText "Supply helicopters work like supply trucks but deliver supply by air. <br/> <br/>Requires the Aircraft Factory at level 3. At Air level 4, deliveries become CASH RUNS straight to the commander's funds. Air delivery pays the pilot a larger reward. <br/> <br/>Aim at a friendly [+SUPPLY] town's helicopter, use LOAD SUPPLIES, then fly to your Command Center (marked C). A loaded helicopter shot down hands the enemy a share of the cargo.";
 					};
 					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 						hintSilent parseText "VBIED - driver-detonated suicide truck. <br/> <br/>Buy it, drive it into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. After a short arm delay it explodes and your GUER team is paid for the kills. One-shot - truck + driver are lost.";
+					};
+					//--- GUER improvised mortar truck (V3S_Gue): explain the driver call-in strike. Runs AFTER the ambulance hint so it overrides (V3S_Gue is the GUER ambulance class).
+					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == "V3S_Gue"}) then {
+						hintSilent parseText "<t color='#33ccff'>Improvised Mortar Truck</t> - a mobile call-in barrage. <br/> <br/>Drive it near the front, then as the DRIVER use the action menu (mouse scroll) -> <t color='#33ccff'>Call mortar strike</t>. Click the map within range to mark the impact point and a short barrage drops there. <br/> <br/>A cooldown and a small per-strike fee apply; accuracy tightens as your GUER vehicle tier rises. (This same truck also doubles as your ambulance / mobile respawn.)";
 					};
 					//--- B75 (guer-tech): kill-unlocked SECOND VBIED — the armoured M113 variant (~2x speed, no weapons).
 					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])}) then {

@@ -596,7 +596,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={7000,7001,7002,7003,7004,7005,7006,7007,7008,7009,7010,7011,7012,7013};
+					synchronizations[]={7000,7001,7002,7003,7004,7005,7006,7007,7008,7009,7010,7011,7012,7013,7027};
 				};
 			};
 		}
@@ -615,7 +615,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_OPF";
-					synchronizations[]={7014,7015,7016,7017,7018,7019,7020,7021,7022,7023,7024,7025,7026,7028};
+					synchronizations[]={7014,7015,7016,7017,7018,7019,7020,7021,7022,7023,7024,7025,7026,7028,7029};
 				};
 			};
 		}
@@ -2843,13 +2843,13 @@ class Mission
 					position[]={7182.2349,41.073147,12771.534};
 					id=7000;
 					side="WEST";
-					vehicle="FR_Corpsman";
+					vehicle="FR_Miles";
 					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
+					init="removeAllWeapons this";
+					description="Headless Client";
 					synchronizations[]={49};
 				};
 			};
@@ -3151,13 +3151,13 @@ class Mission
 					position[]={7454.5591,270.25867,57.020081};
 					id=7014;
 					side="EAST";
-					vehicle="RUS_Soldier_Medic";
+					vehicle="RUS_Soldier1";
 					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
-					description="Medic (Fast heal, Camps restore)";
+					init="removeAllWeapons this";
+					description="Headless Client";
 					synchronizations[]={50};
 				};
 			};
@@ -3428,22 +3428,23 @@ class Mission
 		}
 		class Item84
 		{
-			side="CIV";
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
 				class Item0
 				{
-					position[]={4738.8306,4.2693748,12540.03};
+					position[]={7182.2349,41.073147,12771.534};
 					id=7027;
-					side="CIV";
-					vehicle="Functionary1";
+					side="WEST";
+					vehicle="FR_Miles";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
+					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client";
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
 				};
 			};
 		}
@@ -3471,22 +3472,23 @@ class Mission
 		}
 		class Item86
 		{
-			side="CIV";
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
 				class Item0
 				{
-					position[]={4738.8306,4.2693748,12540.03};
+					position[]={7454.5591,270.25867,57.020081};
 					id=7029;
-					side="CIV";
-					vehicle="Functionary1";
+					side="EAST";
+					vehicle="RUS_Soldier1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
+					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client 2";
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={50};
 				};
 			};
 		}

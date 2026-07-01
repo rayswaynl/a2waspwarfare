@@ -1,4 +1,4 @@
-Private ["_buildings","_closest","_defense","_direction","_distance","_groups","_HC","_index","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander"];
+Private ["_buildings","_closest","_defense","_groups","_HC","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander"];
 _defense = _this select 0;
 _side = _this select 1;
 _team = _this select 2;
@@ -28,21 +28,9 @@ while {alive _defense} do {
 		//--- working GUER TOWN path (Server_OperateTownDefensesUnits.sqf) has NO barracks gate - it
 		//--- mans unconditionally. Since crews mount INSTANTLY at the gun (_moveInGunner=true, no
 		//--- walk), the barracks is irrelevant to whether the gun can be manned. So: man the gun
-		//--- ALWAYS (gun alive + gunner slot empty), and only use _closest for the legacy
-		//--- cover-position math when it happens to be a live, recognised structure (dead code
-		//--- under instant mount, but kept guarded against the `find`->-1->`select -1` throw).
+		//--- ALWAYS (gun alive + gunner slot empty). _moveInGunner is hardcoded true (l.16), so the legacy
+		//--- _closest cover-position math never ran; that dead branch has been dropped and crews seat at the gun.
 		_position = getPosATL _defense;
-		if (!_moveInGunner && {alive _closest} && {!(isNull _closest)}) then {
-			_type = typeOf _closest;
-			_index = (missionNamespace getVariable Format["WFBE_%1STRUCTURENAMES",str _side]) find _type;
-			//--- Guard: if _type is not a known structure, _index == -1 and `select -1` THROWS,
-			//--- aborting this gun's manning loop permanently. Fall back to the gun position.
-			if (_index >= 0) then {
-				_distance = (missionNamespace getVariable Format["WFBE_%1STRUCTUREDISTANCES",str _side]) select _index;
-				_direction = (missionNamespace getVariable Format["WFBE_%1STRUCTUREDIRECTIONS",str _side]) select _index;
-				_position = [getPos _closest,_distance,getDir (_closest) + _direction] Call GetPositionFrom;
-			};
-		};
 
 		_HC = missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID";
 		if (count _HC > 0) then {

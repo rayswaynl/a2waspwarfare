@@ -20,7 +20,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
-         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend",
+         "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased"];
 
 _sideID = _this select 0;
@@ -64,6 +64,17 @@ if (count _this > 3) then {
 //--- would otherwise stay engine-default. The on-objective SAD waypoints still flip to COMBAT/WEDGE.
 _team setCombatMode "RED"; _team setBehaviour "AWARE"; _team setSpeedMode "FULL";
 _team setVariable ["wfbe_aicom_hc", true, true];   //--- brain: do not Produce/waypoint this one directly.
+//--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes (which is where server-local teams get
+//--- wfbe_teamtype), so without this the disband-low-tier worker can never classify them (and used to throw on the
+//--- A2-unsafe 2-arg getVariable). AI_Commander_Teams ships the picked TEMPLATE INDEX _pick (same value AssignTypes
+//--- stores at L241; readers resolve the 0-3 type from it) as a TRAILING delegate arg; here it lands at _this index 6 (the
+//--- inner array's slot after _padClass, request string already stripped by HandleSpecial). Guard on count so the
+//--- 4-arg Wildcard / 3-arg server-local calls are unaffected (mirrors the _skillSend count>3 guard above), and
+//--- validate SCALAR (typeName, not A3 isEqualType) before stamping the GROUP object the disband worker iterates.
+if (count _this > 6) then {
+	_foundType = _this select 6;
+	if (typeName _foundType == "SCALAR" && {_foundType >= 0}) then {_team setVariable ["wfbe_teamtype", _foundType, true]};
+};
 _team setVariable ["wfbe_queue", [], false];
 
 if (isServer) then {
@@ -236,8 +247,15 @@ _airVeh   = objNull;
 _grndVehs = [];
 {
 	if (!isNull _x && {alive _x}) then {
-		if (_x isKindOf "Air" && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0} && {isNull _airVeh}) then {
-			_airVeh = _x;
+		//--- FROZEN-AIR FIX (Ray): NO "Air" hull ever enters _grndVehs (jets + pure gunships -
+		//--- isKindOf "Air" but transportSoldier=0, e.g. A10/Su39/Su34/Ka52/AH64D - were getting
+		//--- ground doMove/taxi orders instead of flying). Transport air (transportSoldier>0)
+		//--- becomes the lift _airVeh; all other air is left out of BOTH lists and flies via the
+		//--- team's normal MOVE/SAD order loop. Only true ground hulls go to _grndVehs.
+		if (_x isKindOf "Air") then {
+			if ((getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0 && {isNull _airVeh}) then {
+				_airVeh = _x;
+			};
 		} else {
 			_grndVehs = _grndVehs + [_x];
 		};
@@ -347,7 +365,16 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			//--- helis are guarded out via the wfbe_aicom_transport flag set at lift time.
 			if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
 				//--- Clamp the heli's exit toward the CLOSEST of the four map edges (worldSize box).
-				_wsz = 15360;  //--- A2-fix 2026-06-14: worldSize is A3-only in A2 OA (latent bug, fired on heli off-map exit); Chernarus = 15360
+				//--- N-FEATUREBUG-43 fix 2026-06-27: was hardcoded 15360 (Chernarus only) -> the off-map edge math + the
+				//--- waitUntil off-map exit test below were 2560m wrong on Takistan/Zargabad (both 12800), so the heli
+				//--- either never registered as off-map or refunded early. worldSize is A3-ONLY (A2 OA latent bug), so
+				//--- branch the box size off worldName, matching Init_Boundaries.sqf (chernarus=15360, takistan/zargabad=12800).
+				_wsz = switch (toLower worldName) do {
+					case "chernarus": {15360};
+					case "takistan":  {12800};
+					case "zargabad":  {12800};
+					default {15360};
+				};
 				_ex  = (getPos _h) select 0;
 				_ey  = (getPos _h) select 1;
 				//--- distance to each edge: x=0, x=worldSize, y=0, y=worldSize.
@@ -486,6 +513,61 @@ if (isNull _airVeh) then {
 //--- ===================================================================
 
 while {!WFBE_GameOver && _alive} do {
+	//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft. An airframe (heli OR plane) alive with NO alive crew is
+	//--- orphaned (crew killed/bailed/bugged) - it crashes, sits, or piles up over a long round. Delete it after a
+	//--- short grace so it can't accumulate. Stamp-on-first-seen avoids deleting a transient bail/reseat. HC-local.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_UNCREWED", 1]) > 0) then {
+		{
+			if (!isNull _x && {alive _x} && {local _x} && {_x isKindOf "Air"}) then {
+				if (({alive _x} count (crew _x)) == 0) then {
+					private ["_us"]; _us = _x getVariable "wfbe_air_uncrewed_at";
+					if (isNil "_us") then {_x setVariable ["wfbe_air_uncrewed_at", time]} else {
+						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {deleteVehicle _x};
+					};
+				} else {
+					_x setVariable ["wfbe_air_uncrewed_at", nil];
+				};
+			};
+		} forEach _vehicles;
+	};
+
+	//--- AICOM v2 (cmdcon29, Ray): crew SELF-REPAIR of an immobilized ground vehicle. A team whose vehicle
+	//--- has a shot-out wheel/track or a blown engine (!canMove) strands the whole team (moved=0). When the
+	//--- vehicle still has a live crew, is NOT in a firefight, and no enemy is near, the crew effects a field
+	//--- repair after a short delay -> mobility restored, the team rolls again instead of lingering forever.
+	//--- HC-local (vehicles are local here). The !canMove gate is checked first, so the nearEntities threat
+	//--- scan only runs for the rare actually-immobilized vehicle.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHICLE_SELFREPAIR", 1]) > 0) then {
+		private ["_srVeh","_srSafe","_srDelay"];
+		_srSafe  = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_SAFE_DIST", 250];
+		_srDelay = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_DELAY", 30];
+		{
+			_srVeh = _x;
+			if (!isNull _srVeh && {alive _srVeh} && {local _srVeh} && {_srVeh isKindOf "LandVehicle"} && {!(canMove _srVeh)} && {({alive _x} count (crew _srVeh)) > 0}) then {
+				//--- threat present (enemy/neutral-hostile within the safe radius) or the team is fighting? stand down.
+				private ["_srThreat","_srStamp"];
+				_srThreat = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_srVeh nearEntities [["Man","LandVehicle"], _srSafe]);
+				if (_srThreat == 0 && {behaviour (leader _team) != "COMBAT"}) then {
+					_srStamp = _srVeh getVariable "wfbe_aicom_repair_at";
+					if (isNil "_srStamp") then {
+						_srVeh setVariable ["wfbe_aicom_repair_at", time];
+					} else {
+						if ((time - _srStamp) >= _srDelay) then {
+							_srVeh setDamage 0;
+							_srVeh setVariable ["wfbe_aicom_repair_at", nil];
+							diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|VEHICLE_SELFREPAIR|veh=" + (typeOf _srVeh));
+						};
+					};
+				} else {
+					//--- enemy appeared or the team engaged: cancel any in-progress repair so it must re-earn the safe window.
+					_srVeh setVariable ["wfbe_aicom_repair_at", nil];
+				};
+			} else {
+				if (!isNull _srVeh) then {_srVeh setVariable ["wfbe_aicom_repair_at", nil]};
+			};
+		} forEach _vehicles;
+	};
+
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 	//--- B36.1 (Ray 2026-06-15): PC-scale retirement. The server flags a REAR team (wfbe_aicom_disband)
@@ -568,7 +650,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- only if no player is close enough to witness it.
 						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then {
 							_uPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uVeh) < 300}) then {_uPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_uPlayerNear = true} } forEach playableUnits;
 							if (!_uPlayerNear) then {
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
@@ -581,6 +663,8 @@ while {!WFBE_GameOver && _alive} do {
 								};
 							};
 						};
+						//--- B (Ray 2026-06-29 A/B): a player within 100m blocks the teleport, so un-wedge the lead hull with a small upward velocity hop - it breaks terrain friction and visibly bumps the hull free instead of leaving it frozen in the player's view (never-frozen guardrail). The fresh MOVE route below re-applies the order.
+						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = false; { if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_bNear = true} } forEach playableUnits; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
 						//--- WAVE-1 CAUSE-1 FOOT/DEAD-HULL UNSTUCK (2026-06-19): the vehicle Tier-3 above gates on
 						//--- !isNull _uVeh && alive _uVeh, so a wedged FOOT team (leader on foot) or a team whose hull
 						//--- is null/dead/immobile NEVER recovers (live: distStart=0, strikes climbed to ~43). Add a
@@ -593,7 +677,7 @@ while {!WFBE_GameOver && _alive} do {
 						_uOnFoot   = (vehicle _uLdr) == _uLdr;
 						if (_uTier >= 3 && {_uOnFoot || _uHullDead}) then {
 							_uFootPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uLdr) < 300}) then {_uFootPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uLdr) < 100}) then {_uFootPlayerNear = true} } forEach playableUnits;
 							if (!_uFootPlayerNear) then {
 								_uFootRds = (getPos _uLdr) nearRoads 150;
 								if (count _uFootRds > 0) then {
@@ -1047,17 +1131,57 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 					} else {
-						//--- Pure-armour team (no infantry at all): crew counts zero for the camp "Man"
-						//--- scan, but the HULL still counts for the TOWN scan (server_town.sqf L48
-						//--- scans Car/Tank/Air too). Park the hull dead-center so it registers WEST
-						//--- presence within 40m, and lay a SAD so it clears defenders.
-						//--- WAVE-1 A5 ARMOUR-LATCH: only latch _captureDone if the town ACTUALLY flipped (mirror the
-						//--- infantry _townFlipped check above); the old code latched after ONE pass regardless of
-						//--- outcome, so a contested depot a lone tank could not crack was abandoned after one tick.
-						//--- Leaving it false lets the 20s loop re-run + keep the hull fighting at center. SAD radius
-						//--- tightened to _capRange (was max 60) so the hull parks IN the drain ring, not on its edge.
+						//--- ===== PURE-ARMOUR DEPOT HOLD (no infantry at all) =====
+						//--- This team is tank(s)+crew with NO on-foot soldiers (_footInf is empty: the
+						//--- crew stay in their hulls above). The camp "Man" scan (server_town_camp.sqf
+						//--- L26) ignores crewed hulls, so a mounted team can never take camps - but it
+						//--- does NOT need to: the TOWN depot scan (server_town.sqf L51) is
+						//---   nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _capRange]
+						//--- and countSide on that set counts a CREWED hull as its crew's side. So a tank
+						//--- parked within _capRange (40m) of the depot centre contributes our presence to
+						//--- the flip DIRECTLY (drains the town) AND its main gun clears the depot
+						//--- defenders. We therefore drive the WHOLE mounted team onto _townCenter, lay a
+						//--- live group SAD there at _capRange (mirrors the infantry depot-hold at L1008),
+						//--- reveal the garrison, and HOLD in a fight loop until resistance-near-centre is
+						//--- zero (town drains + flips) OR a hard timeout - re-pressing stragglers and
+						//--- re-issuing the move each tick so the hulls NEVER freeze/idle (MEMORY guardrail).
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] PURE-ARMOUR depot hold at [%3] (no foot infantry; %4 hull(s)).", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)]] Call WFBE_CO_FNC_AICOMLog;
+
+						//--- WAVE-1 A5 ARMOUR-LATCH: SAD radius = _capRange so the hull parks IN the drain
+						//--- ring, not on its 40-60m edge. COMBAT/RED so it actively prosecutes the depot.
 						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+						{if (alive _x) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
+
+						//--- Hold/fight loop (mirror of the infantry depot-hold at L1018): up to the same
+						//--- WFBE_C_AICOM_ASSAULT_HOLD window. Exit early once no live resistance remains
+						//--- within _capRange of the centre (depot drains + flips). Re-reveal enemy + re-press
+						//--- stragglers each tick. Honour the same _capAbort re-task interrupt as the foot path.
+						_armHoldEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]);
+						_armResNear = 1;
+						while {time < _armHoldEnd && {_armResNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
+							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
+							if (_capAbort) exitWith {}; //--- re-tasked mid armour-hold -> bail; outer loop re-reads the new order
+							_armEnemyNear = (_townCenter nearEntities [["Man","Car","Motorcycle","Tank","Air"], _capRange]) unitsBelowHeight 10;
+							_armResNear = 0;
+							{
+								if (alive _x && {side _x != _side} && {side _x != civilian}) then {
+									_armResNear = _armResNear + 1;
+									_team reveal _x; //--- A2: 2-operand reveal only (array form is A3-only).
+								};
+							} forEach _armEnemyNear;
+							//--- Keep hulls beyond ~60% of _capRange pressing the centre (cheap re-issue, no freeze).
+							{if (alive _x && {(_x distance _townCenter) > (_capRange * 0.6)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+							//--- Early-out if the town already flipped to us.
+							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_armResNear = 0};
+							sleep 10;
+						};
+						if (_capAbort) exitWith {}; //--- armour-hold interrupted -> bail BEFORE latching captureDone; outer loop re-reads the new order
+
+						//--- WAVE-1 A5 ARMOUR-LATCH: only latch _captureDone if the town ACTUALLY flipped
+						//--- (mirror the infantry _townFlipped check). Otherwise leave it false so the 20s
+						//--- order loop re-runs this whole armour-hold next tick and keeps the hull fighting.
 						if ((!isNull _townObj) && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {
 							_captureDone = true;
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) CAPTURED [%3] - holding center.", _side, _team, _townObj getVariable ["name","?"]]] Call WFBE_CO_FNC_AICOMLog;
@@ -1066,6 +1190,8 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_teammode", "towns", true];
 							_team setVariable ["wfbe_aicom_strike", false, true];
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
+						} else {
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) depot pass at [%3] did not flip (res-near=%4) - holding + retrying.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _armResNear]] Call WFBE_CO_FNC_AICOMLog;
 						};
 					};
 				};
@@ -1156,6 +1282,57 @@ while {!WFBE_GameOver && _alive} do {
 	//--- contact, never frozen, hard en-route timeout). HC-local: the team's units are local here.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_SERVICE_ENABLED", 0]) > 0) then {
 		[_team, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMServiceTick;
+	};
+
+	//--- AICOM ARTY FIRE (Ray 2026-06-27): if this team owns a self-propelled artillery hull, run tier-scaled fire
+	//--- missions on the nearest ENEMY-held town in range. Reuses WFBE_CO_FNC_FireArtillery + the exact ARTYTIMEOUT /
+	//--- RANGES_MAX idioms from AI_Commander_Strategy's base-gun path. COOLDOWN scales with the side's ARTYTIMEOUT
+	//--- upgrade (must research it); the gun runs dry and auto-rearms at a Service Point (tier-capped fill, above).
+	//--- Friendly-fire-guarded. Runs in this same sequential sleep-8 loop (no order fight); only the fire burst Spawns.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ENABLED", 0]) > 0) then {
+		private ["_artyHull","_aLogik","_upLvl","_cd","_last","_artyText","_idx2","_maxR","_minR","_tgtT","_tgtP","_ffClear"];
+		_artyHull = objNull;
+		//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: only fire from a TRACKED/WHEELED self-propelled arty hull (GRAD/MLRS),
+		//--- never a static towed gun or mortar emplacement. IsMobileArtillery = IsArtillery!=-1 AND a vehicle chassis
+		//--- (Tank/Car/Wheeled_APC/Tracked_APC) AND NOT StaticWeapon. _vehicles only ever holds the team's mounted hulls,
+		//--- so in practice this is the GRAD/MLRS; the guard just makes "self-propelled only" explicit + future-proof.
+		{ if (alive _x && {[_x, _side] Call IsMobileArtillery} && {!isNull (gunner _x)} && {alive (gunner _x)} && {someAmmo _x}) exitWith {_artyHull = _x} } forEach _vehicles;
+		if (!isNull _artyHull && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == _sideID) && {(_artyHull distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: SPG fires only when SUPPORTED from a captured town (within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off).
+			_aLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+			_upLvl = if (isNull _aLogik) then {0} else {(_aLogik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
+			if (typeName _upLvl != "SCALAR") then {_upLvl = 0};
+			_cd = (missionNamespace getVariable ["WFBE_C_ARTILLERY_INTERVALS", [550,500,450,400,350,300,250]]) select (_upLvl min 6);
+			_last = _artyHull getVariable ["wfbe_aicom_arty_last", -1e9];
+			if ((time - _last) >= _cd) then {
+				_artyText = str _side;
+				_idx2 = [typeOf _artyHull, _side] Call IsArtillery;
+				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _artyText]) select _idx2) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1);
+				//--- MIN-RANGE GATE (Ray): a town inside the gun min range made FireArtillery a no-op but the cooldown was
+				//--- still stamped (burned the whole interval). Read the per-side RANGES_MIN (parallel to RANGES_MAX, same
+				//--- _idx2) and require the town be at least _minR away, so we never lock onto an un-shootable close target.
+				_minR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN", _artyText]) select _idx2);
+				if (typeName _minR != "SCALAR") then {_minR = 0};
+				_tgtT = objNull; _tgtP = [0,0,0];
+				{
+					if (((_x getVariable ["sideID", -1]) != _sideID) && {(_x getVariable ["sideID", -1]) >= 0} && {isNull _tgtT} && {(_artyHull distance _x) >= _minR} && {(_artyHull distance _x) <= _maxR}) then {_tgtT = _x; _tgtP = getPos _x};
+				} forEach towns;
+				if (!isNull _tgtT) then {
+					_ffClear = true;
+					//--- FF SCAN SHRINK (Ray): the old 400m ring around the TOWN CENTER vetoed every town the AI own infantry was
+					//--- assaulting (the normal case) so the gun almost never fired. Shrink to ~80m around the actual aim point.
+					{ if (alive _x && {side _x == _side} && {(_x distance _tgtP) < 80}) exitWith {_ffClear = false} } forEach (nearestObjects [_tgtP, ["Man","Car","Tank","Air"], 80]);
+					if (_ffClear) then {
+						//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
+						//--- pick + load a situational round (illum at night, cluster vs armour) from ONLY the types the side has
+						//--- researched (the helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
+						[_artyHull, _side, _idx2, _tgtP] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
+						[_artyHull, _tgtP, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
+						_artyHull setVariable ["wfbe_aicom_arty_last", time];
+						diag_log ("AICOMSTAT|v1|EVENT|" + _artyText + "|" + str (round (time / 60)) + "|FIRE_MISSION_MOBILE|" + (typeOf _artyHull) + "|tier=" + str _upLvl);
+					};
+				};
+			};
+		};
 	};
 
 	sleep 8;

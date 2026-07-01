@@ -48,6 +48,12 @@ WFBE_NavalHVT_SpawnProp = {
 	_pos = _this select 1;
 	_dir = if (count _this > 2) then {_this select 2} else {0};
 	_obj = createVehicle [_cls, [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+	//--- cmdcon28 (Ray 2026-06-30): if a class fails to create (missing addon / bad name) log it and bail,
+	//--- so a half-built carrier is diagnosable from the RPT instead of a null silently corrupting the hull.
+	if (isNull _obj) exitWith {
+		diag_log (Format ["NAVALHVT-SPAWNFAIL: class '%1' failed to createVehicle at %2 - class missing/invalid; part skipped.", _cls, _pos]);
+		_obj
+	};
 	_obj setPosASL [_pos select 0, _pos select 1, 0];	//--- ASL = sea surface, not seabed
 	_obj setDir _dir;
 	_obj enableSimulation false;
@@ -56,20 +62,26 @@ WFBE_NavalHVT_SpawnProp = {
 };
 
 //------------------------------------------------------------------------------------
-//--- A2's LHD is 9 part-objects placed at the SAME world point; the model geometry holds the
-//--- ~250 m layout internally (confirmed via the stock BIS createLHD + community assembly
-//--- scripts). Spreading them with offsets is what made it look like several carriers stacked.
-//--- Land_LHD_elev_L / Land_LHD_house_2_CP are not part of the standard set -> dropped.
+//--- A2's LHD is a set of part-objects placed at the SAME world point; each model holds the FULL
+//--- ~250 m carrier geometry internally (rendering only its own section). Git-confirmed: the old code
+//--- SPREAD them fore-to-aft (22 m apart) and that showed SEVERAL STACKED CARRIERS - so [0,0,0] is
+//--- correct and offsets must NOT be re-added (1595a461f). cmdcon28 (Ray 2026-06-30): RESTORED
+//--- Land_LHD_elev_L (port elevator) + Land_LHD_house_2_CP (island bridge), which 1595a461f dropped on
+//--- an UNVERIFIED "not standard" hunch - their removal left the port superstructure missing (the
+//--- half-carrier + camp-under-deck + scud-in-water bug). The SpawnProp null-guard below logs any part
+//--- whose class is genuinely absent, so an invalid class shows in the RPT instead of silently breaking.
 WFBE_C_NAVAL_LHD_OFFSETS = [
-	["Land_LHD_1",       [0, 0, 0]],
-	["Land_LHD_2",       [0, 0, 0]],
-	["Land_LHD_3",       [0, 0, 0]],
-	["Land_LHD_4",       [0, 0, 0]],
-	["Land_LHD_5",       [0, 0, 0]],
-	["Land_LHD_6",       [0, 0, 0]],
-	["Land_LHD_house_1", [0, 0, 0]],
-	["Land_LHD_house_2", [0, 0, 0]],
-	["Land_LHD_elev_R",  [0, 0, 0]]
+	["Land_LHD_1",          [0, 0, 0]],
+	["Land_LHD_2",          [0, 0, 0]],
+	["Land_LHD_3",          [0, 0, 0]],
+	["Land_LHD_4",          [0, 0, 0]],
+	["Land_LHD_5",          [0, 0, 0]],
+	["Land_LHD_6",          [0, 0, 0]],
+	["Land_LHD_house_1",    [0, 0, 0]],
+	["Land_LHD_house_2",    [0, 0, 0]],
+	["Land_LHD_house_2_CP", [0, 0, 0]],
+	["Land_LHD_elev_L",     [0, 0, 0]],
+	["Land_LHD_elev_R",     [0, 0, 0]]
 ];
 
 //------------------------------------------------------------------------------------
@@ -230,26 +242,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_lhdCharlieLogic]];
 				if (_isLeader) then {
 					if (isNil {_x getVariable "wfbe_scud_action_armed"}) then {
 						_x setVariable ["wfbe_scud_action_armed", true];
-						_actionID = _x addAction [
-							localize "STR_WF_SCUD_ACTION",
-							{
-								private ["_caller","_cost","_funds"];
-								_caller = _this select 1;
-								_cost   = WFBE_C_SCUD_COST;
-								_funds  = (group _caller) getVariable ["wfbe_funds", 0];
-								if (_funds < _cost) exitWith { [localize "STR_WF_SCUD_NO_FUNDS"] call WFBE_CL_FNC_Hint; };
-								[localize "STR_WF_SCUD_SELECT_TARGET"] call WFBE_CL_FNC_Hint;
-								openMap true;
-								onMapSingleClick {
-									onMapSingleClick {};
-									openMap false;
-									["RequestSpecial", ["ScudStrike", playerSide, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
-									[localize "STR_WF_SCUD_LAUNCHED"] call WFBE_CL_FNC_Hint;
-									false
-								};
-							},
-							[], 6, true, true, "", "alive _target && isPlayer _this"
-						];
+						//--- task46 (claude) N-FEAT-1: the addAction must be created on the CLIENT, not here.
+						//--- On a dedicated server _x is a remote player unit, so a server-side addAction is
+						//--- invisible to the actual client. Dispatch a signal to this player's UID; the client
+						//--- (HandleSpecial.sqf case "scud-action-add") adds the action to its local player.
+						//--- The proximity/leader/owner-side gate above stays SERVER-side; the wfbe_scud_action_armed
+						//--- latch (set just above) makes the server send this only once per player.
+						[getPlayerUID _x, "HandleSpecial", ["scud-action-add"]] Call WFBE_CO_FNC_SendToClients;
 					};
 				};
 			};

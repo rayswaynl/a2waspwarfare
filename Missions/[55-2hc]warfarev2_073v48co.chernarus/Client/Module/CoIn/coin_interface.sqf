@@ -255,7 +255,7 @@ BIS_CONTROL_CAM_Handler = {
 							_price = _get select QUERYUNITPRICE;
 							round(_price/2.5) Call ChangePlayerFunds;
 							_area = [getPos (_closest),((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
-							_get = _area getVariable 'avail';
+							_get = if (isNull _area) then {0} else {_area getVariable 'avail'};	//--- cmdcon28: _area (nearest base area) can be objNull when building/selling outside any base - the isNull guard on the NEXT line ran too late, so this getVariable threw on objNull. Guard inline (both the build and sell paths).
 
 							if (!isNull _area && _get < missionNamespace getVariable "WFBE_C_BASE_AV_STRUCTURES") then {
 							_commanderTeam =(sideJoined) Call WFBE_CO_FNC_GetCommanderTeam;
@@ -730,7 +730,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 							};
 							lastBuilt = _par;
 							_area = [_pos,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
-							_get = _area getVariable 'avail';
+							_get = if (isNull _area) then {0} else {_area getVariable 'avail'};	//--- cmdcon28: _area (nearest base area) can be objNull when building/selling outside any base - the isNull guard on the NEXT line ran too late, so this getVariable threw on objNull. Guard inline (both the build and sell paths).
 							if (!isNull _area && _get > 0) then {
 							_commanderTeam =(sideJoined) Call WFBE_CO_FNC_GetCommanderTeam;
 							_area setVariable [ "avail" ,_get -1];

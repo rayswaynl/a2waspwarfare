@@ -19,6 +19,25 @@ if (isNull _logik) exitWith {};
 //--- Must have a (human) commander team to own/pay the queue.
 if (isNull (_side Call WFBE_CO_FNC_GetCommanderTeam)) exitWith {};
 
+//--- DR-55 forged-PVF hardening (flag-gated; OFF = byte-equivalent legacy behavior).
+//--- The PVEH gives no trusted sender, so a forger can pass an ENEMY _side to grow the other
+//--- side's queue. Without the acting player in the payload we cannot fully bind the request to
+//--- the requester (see clientSendChanges), but we can tighten the owning team to be genuinely
+//--- player-led and on _side - mirroring the RequestClaimCommander membership pattern.
+if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
+	private "_cmdTeam";
+	_cmdTeam = _side Call WFBE_CO_FNC_GetCommanderTeam;
+	if (isNull _cmdTeam) exitWith {
+		["WARNING", Format ["RequestEnqueue.sqf: rejected - no commander team for side %1.", _side]] Call WFBE_CO_FNC_LogContent;
+	};
+	if (!isPlayer (leader _cmdTeam)) exitWith {
+		["WARNING", Format ["RequestEnqueue.sqf: rejected - commander team for side %1 is not player-led.", _side]] Call WFBE_CO_FNC_LogContent;
+	};
+	if (side (leader _cmdTeam) != _side) exitWith {
+		["WARNING", Format ["RequestEnqueue.sqf: rejected - commander team side mismatch for side %1.", _side]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 _enabled = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_ENABLED", str _side];
 if (_id < 0 || _id >= count _enabled) exitWith {};
 if !(_enabled select _id) exitWith {};

@@ -1,0 +1,6 @@
+# rendered output / scratch
+*.mp4
+assets/*.png
+venv/
+__pycache__/
+.venv/

@@ -1,5 +1,6 @@
 Private ["_entitie", "_group", "_side", "_unit"];
 
+_entitie = objNull;
 _unit = _this select 0;
 _group = _this select 1;
 _side = _this select 2;

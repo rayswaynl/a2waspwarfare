@@ -1,3 +1,4 @@
+disableSerialization;
 MenuAction = -1;
 
 _type = (missionNamespace getVariable 'WFBE_EASA_Vehicles') find (typeOf (vehicle player));

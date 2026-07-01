@@ -68,7 +68,7 @@ while {true} do {
 			if (isNil "_lastDir") then {_lastDir = -999};
 			_dirDiff = abs (_dir - _lastDir);
 			if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};
-			if (_dirDiff > 7) then { //--- arrow tracks the patrol's heading
+			if (_lastDir < 0 || _dirDiff > 7) then { //--- arrow tracks the patrol's heading
 				_mk setMarkerDirLocal _dir;
 				_x set [3, _dir];
 			};
@@ -129,7 +129,7 @@ while {true} do {
 			if (isNil "_lastDir") then {_lastDir = -999};
 			_dirDiff = abs (_dir - _lastDir);
 			if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};
-			if (_dirDiff > 7) then {
+			if (_lastDir < 0 || _dirDiff > 7) then {
 				_mk setMarkerDirLocal _dir;
 				_x set [3, _dir];
 			};

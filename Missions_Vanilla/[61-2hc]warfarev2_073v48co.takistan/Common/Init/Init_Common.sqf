@@ -49,6 +49,8 @@ GetTeamArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_Ge
 // Marty: Artillery ammo selector helpers used by the Tactical Center.
 WFBE_CO_FNC_GetArtilleryAmmoOptions = Compile preprocessFileLineNumbers "Common\Functions\Common_GetArtilleryAmmoOptions.sqf";
 WFBE_CO_FNC_LoadArtilleryAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_LoadArtilleryAmmo.sqf";
+// claude-gaming 2026-06-29: AICOM situational ammo-type selector (gated on WFBE_UP_ARTYAMMO; flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE, default OFF).
+WFBE_CO_FNC_AICOMArtyPickAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMArtyPickAmmo.sqf";
 // Marty: Ammo-fraction helper (vehicle current / full complement). Used by proportional rearm pricing.
 WFBE_CO_FNC_GetAmmoFraction = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAmmoFraction.sqf";
 GetTeamAutonomous = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamAutonomous.sqf";
@@ -69,6 +71,7 @@ HandleIncomingMissile = Compile preprocessFileLineNumbers "Common\Functions\Comm
 HandleShootBombs = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootBombs.sqf";
 HandleShootMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootMissiles.sqf";
 IsArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsArtillery.sqf";
+IsMobileArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsMobileArtillery.sqf"; //--- Ray 2026-06-29: TRUE only for tracked/wheeled SELF-PROPELLED arty (GRAD/MLRS), FALSE for static towed/mortar emplacements. AICOM fields/fires SPG only.
 MarkerUpdate = Compile preprocessFileLineNumbers "Common\Common_MarkerUpdate.sqf";
 WFBE_CL_MarkerLoop = Compile preprocessFileLineNumbers "Common\Common_MarkerLoop.sqf"; // Marty: PERF1 consolidated client marker loop (started by the first MarkerUpdate registration).
 PlaceNear = Compile preprocessFileLineNumbers "Common\Functions\Common_PlaceNear.sqf";

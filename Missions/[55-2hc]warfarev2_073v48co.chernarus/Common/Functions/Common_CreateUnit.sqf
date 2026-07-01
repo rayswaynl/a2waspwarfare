@@ -66,8 +66,11 @@ if (_unit isKindOf "Man" && {primaryWeapon _unit == "" && secondaryWeapon _unit 
 	private ["_cfgWeps", "_cfgMags"];
 	_cfgWeps = getArray (configFile >> "CfgVehicles" >> _type >> "weapons");
 	_cfgMags = getArray (configFile >> "CfgVehicles" >> _type >> "magazines");
+	//--- Weapons FIRST (incl. virtual Throw/Put) so each magazine binds to a matching muzzle; adding mags
+	//--- before the weapons made OA spam "Cannot use magazine X in muzzle Y" (grenade/smoke/mine mags had
+	//--- no Throw/Put muzzle to bind to). hasWeapon guard keeps it idempotent and never duplicates a weapon.
+	{if (!(_unit hasWeapon _x)) then {_unit addWeapon _x}} forEach _cfgWeps;
 	{_unit addMagazine _x} forEach _cfgMags;
-	{if (!(_unit hasWeapon _x) && {!(_x in ["Throw", "Put"])}) then {_unit addWeapon _x}} forEach _cfgWeps;
 	["WARNING", Format ["Common_CreateUnit.sqf: weapon-backfill applied to weaponless [%1] (primary now [%2]).", _type, primaryWeapon _unit]] Call WFBE_CO_FNC_LogContent;
 };
 

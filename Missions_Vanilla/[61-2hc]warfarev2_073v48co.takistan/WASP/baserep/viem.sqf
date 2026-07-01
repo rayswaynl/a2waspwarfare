@@ -27,8 +27,10 @@ waitUntil
 				};
 			};
 		};
+		// Marty: spotter path had no sleep -> per-frame busy loop. Match the commander branch cadence.
+		sleep 1;
     };
-    
+
 	/////// REPAIR BUILD (only commander)
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_isCommander = true}};
 	if (_isCommander) then {

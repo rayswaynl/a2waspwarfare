@@ -429,6 +429,42 @@ if (_isMan) then {
 		}];
 	};
 
+	//--- GUER PLAYER MORTAR STRIKE: the buyable V3S_Gue truck gets a driver-only "Call mortar strike" action — a
+	//--- cooldown-gated, range-limited call-in barrage (Action_GuerMortarStrike.sqf -> RequestSpecial "guer-mortar-strike"
+	//--- -> Server_HandleSpecial spawns scripted 82mm HE ordnance). This mirrors the GUER VBIED block above EXACTLY:
+	//--- addAction is LOCAL and not JIP-persistent, so we (a) tag the truck with a broadcast flag any machine can
+	//--- recognise, and (b) attach a GetIn driver-path that re-adds the action to the *local* driver instance whenever a
+	//--- resistance player takes the wheel — so the buyer keeps it across get-out/get-in and a local player who inherits
+	//--- the truck as driver gets it on their own machine. Idempotent via wfbe_mortar_action (one action per local
+	//--- vehicle instance). Gate-OFF / non-V3S = no flag, no EH, no action (byte-for-byte today's behaviour).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) == "V3S_Gue"}) then {
+		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
+		_vehicle setVariable ["wfbe_is_guer_mortar", true, true];
+
+		//--- Local helper: add the mortar action once per local vehicle instance (dedupe via wfbe_mortar_action).
+		WFBE_CL_FNC_AddGuerMortarAction = {
+			private ["_v","_aid"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (!(_v getVariable ["wfbe_is_guer_mortar", false])) exitWith {};
+			if ((_v getVariable ["wfbe_mortar_action", -1]) >= 0) exitWith {};   //--- already armed on this machine.
+			_aid = _v addAction ["<t color='#ffcc33'>Call mortar strike</t>","Client\Action\Action_GuerMortarStrike.sqf", [], 6, false, true, "", "driver _target == _this && {side _this == resistance}"];
+			_v setVariable ["wfbe_mortar_action", _aid];
+		};
+
+		//--- Immediate buyer-local add (instant availability) + GetIn driver-path re-add for persistence.
+		_vehicle call WFBE_CL_FNC_AddGuerMortarAction;
+		_vehicle addEventHandler ["GetIn", {
+			private ["_v","_pos","_u"];
+			_v = _this select 0;
+			_pos = _this select 1;
+			_u = _this select 2;
+			if (_pos == "driver" && {_u == player} && {side _u == resistance}) then {
+				_v call WFBE_CL_FNC_AddGuerMortarAction;
+			};
+		}];
+	};
+
 	//--- B75 (guer-tech FOB): tag a freshly-bought GUER FOB delivery truck (broadcast) so any machine can recognise it
 	//--- as a real FOB truck (vs an AI faction's Ural_INS that shares the classname). The flag gates the "Build FOB"
 	//--- action (Init_Unit.sqf) and the spawn-on-truck list (Client_GetRespawnAvailable.sqf).

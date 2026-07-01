@@ -19,7 +19,7 @@ _startingSV = _town getVariable "startingSupplyValue";
 	_x setVariable ["sideID", _side_new, true];
 	_x setVariable ["supplyValue", _startingSV, true];
 
-	(_x getVariable "wfbe_flag") setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_side_new) Call WFBE_CO_FNC_GetSideFromID]);
+	(_x getVariable "wfbe_flag") setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_side_new) Call WFBE_CO_FNC_GetSideFromID]); (_x getVariable "wfbe_flag") setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_side_new) Call WFBE_CO_FNC_GetSideFromID]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
 } forEach _camps;
 
 ["INFORMATION",Format ["Server_SetCampsToSide.sqf : [%1] Camps [%2] were set to [%3], previously owned by [%4].", _town getVariable "name", count _camps, _side_new, _side_old]] Call WFBE_CO_FNC_LogContent;

@@ -1,4 +1,4 @@
-private["_victory","_total","_side","_hq","_structures","_towns","_factories","_uid","_name"];
+private["_victory","_total","_side","_hq","_structures","_towns","_factories","_uid","_name","_winSide"];
 
 _victory = missionNamespace getVariable "WFBE_C_VICTORY_THREEWAY";
 _total = totalTowns;
@@ -13,6 +13,31 @@ while {!gameOver} do {
 	//--- (no supremacy win, no HQ-loss win). Supremacy/HQ-loss detection now runs UNCONDITIONALLY; the
 	//--- _victory param no longer gates it. We deliberately add NO new victory MODES here (Ray: no new
 	//--- modes) - this only stops the trap so the standard supremacy condition always works.
+	//--- ENDGAME SOFT-FORCING (claude-gaming 2026-06-29, SYSTEM 2): after WFBE_C_ENDGAME_FORCE_TIMER minutes of an
+	//--- unresolved round, publish an escalating GLOBAL income taper multiplier (WFBE_ENDGAME_FORCE_MULT, 1.0 -> FLOOR)
+	//--- that updateresources.sqf applies to AICOM town income, so turtling becomes unsustainable and a side must commit.
+	//--- No sim/distance-gating, no freeze/teleport, no antistack touch (Ray hard constraints) - purely an economic squeeze.
+	//--- DEFAULT-OFF (WFBE_C_ENDGAME_FORCE_ENABLE=0 -> publish a neutral 1.0 so the consumer is a no-op when dark). The
+	//--- round is "unresolved" simply because we are still in this !gameOver loop; mission 'time' is the elapsed clock.
+	if ((missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_ENABLE", 0]) > 0) then {
+		private ["_forceStartS","_overMin","_step","_floor","_mult","_prevMult"];
+		_forceStartS = (missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TIMER", 90]) * 60;
+		_overMin = ((time - _forceStartS) / 60) max 0;   //--- minutes elapsed PAST the force timer (0 before it)
+		_step  = missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TAPER_STEP", 0.04];
+		_floor = missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TAPER_FLOOR", 0.10];
+		_mult = (1 - (_overMin * _step)) max _floor;     //--- 1.0 until the timer, then escalating shrink down to FLOOR
+		_prevMult = missionNamespace getVariable ["WFBE_ENDGAME_FORCE_MULT", 1];
+		missionNamespace setVariable ["WFBE_ENDGAME_FORCE_MULT", _mult];
+		//--- one-line INFORMATION the first tick the squeeze actually starts biting (mult drops below 1), for soak proof.
+		if (_overMin > 0 && {_prevMult >= 1} && {_mult < 1}) then {
+			["INFORMATION", Format ["server_victory_threeway.sqf: ENDGAME SOFT-FORCE engaged at %1 min (past %2-min timer) - global income taper begins (mult now %3, floor %4).", round (time / 60), missionNamespace getVariable ["WFBE_C_ENDGAME_FORCE_TIMER", 90], _mult, _floor]] Call WFBE_CO_FNC_LogContent;
+			diag_log ("AICOMSTAT|v1|EVENT|ALL|" + str (round (time / 60)) + "|ENDGAME_FORCE|mult" + str _mult);
+		};
+	} else {
+		//--- Dark: keep the consumer a strict no-op (neutral multiplier).
+		missionNamespace setVariable ["WFBE_ENDGAME_FORCE_MULT", 1];
+	};
+
 	if (!gameOver) then {
 		{
 			_side = _x;
@@ -43,26 +68,36 @@ while {!gameOver} do {
 			//--- Now: fire only while NOT already over, for a clear supremacy/HQ-loss win;
 			//--- WFBE_GameOver also short-circuits any later side in the same forEach pass.
 			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0) || (_towns == _total) ) ) then {
-				[nil, "HandleSpecial", ["endgame", (_x) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
+				//--- FIX D (winner backwards): the award block fires for the evaluated side _x.
+				//--- If the towns-supremacy sub-condition is true, _x is the WINNER. Otherwise the
+				//--- HQ-loss branch fired - _x is the side whose own HQ was razed = the LOSER, so the
+				//--- real winner is the OTHER side. GUER (defender) is excluded from this loop, so the
+				//--- winner is strictly the opposite of the two-sided WEST/EAST pair.
+				if (_towns == _total) then {
+					_winSide = _x;
+				} else {
+					if (_x == west) then { _winSide = east } else { _winSide = west };
+				};
+				[nil, "HandleSpecial", ["endgame", (_winSide) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
 
 				// 0 = NONE
 				// 1 = CHERNARUS
 				// 2 = TAKISTAN
 				["SET_MAP", 0] call WFBE_SE_FNC_CallDatabaseSetMap;
 
-				WF_Logic setVariable ["WF_Winner", _x];
+				WF_Logic setVariable ["WF_Winner", _winSide];
 				gameOver = true;
 				WFBE_GameOver = true;
 
-				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _x (the loop variable for the winning side).
+				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _winSide (the real winning side).
 				// durationSec = round(time) which mirrors GlobalGameStats.sqf's _uptime source.
 				if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 					if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 					WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _x + "|" + str round(time) + "|" + worldName);
+					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _winSide + "|" + str round(time) + "|" + worldName);
 				};
 
-				[_x] call WFBE_CO_FNC_LogGameEnd;
+				[_winSide] call WFBE_CO_FNC_LogGameEnd;
 			};
 		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
 	};
@@ -75,6 +110,8 @@ while {!gameOver} do {
 // Marty: When AntiStack is disabled, no score sampling loop exists; skip final AntiStack DB persistence and finish the mission normally.
 if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWith {
 	["INFORMATION", "server_victory_threeway.sqf: AntiStack is disabled; skipped final score DB save and player list flush."] Call WFBE_CO_FNC_LogContent;
+	_hold = missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD",45];
+	sleep _hold;
 	sleep 5;
 	diag_log Format["[WFBE (OUTRO)][frameno:%1 | ticktime:%2] server_victory_threeway.sqf: Mission end - [Done]",diag_frameno,diag_tickTime];
 	failMission "END1";
@@ -107,6 +144,8 @@ if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWit
 
 ["FLUSH_PLAYERLIST"] call WFBE_SE_FNC_CallDatabaseFlushPlayerList;
 
+_hold = missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD",45];
+sleep _hold;
 sleep 5;
 diag_log Format["[WFBE (OUTRO)][frameno:%1 | ticktime:%2] server_victory_threeway.sqf: Mission end - [Done]",diag_frameno,diag_tickTime];
 failMission "END1";

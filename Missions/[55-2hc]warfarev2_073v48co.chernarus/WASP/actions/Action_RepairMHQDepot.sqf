@@ -25,7 +25,7 @@ _logik setVariable ['cashrepaired',true,true];
 hint (localize "STR_WF_INFO_Repair_MHQ_Repair");
 _hq setPos [((getPos player) select 0) + 5, (getPos player) select 1,((getPos player) select 2)+300];
 _towns =(sideJoined) call GetSideTowns;
-{_x setVariable ["supplyvalue", 10, true]} forEach _towns;
+{_x setVariable ["supplyValue", 10, true]} forEach _towns;
 hint "ALL TOWNS' SV ARE SET TO MINIMUM ...";
 sleep 5;
 hint "New HQ has been parachuted over your location !";

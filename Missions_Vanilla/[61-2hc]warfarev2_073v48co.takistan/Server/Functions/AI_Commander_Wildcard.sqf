@@ -38,6 +38,18 @@
 	  W10 Lucky Salvage     — REMOVED: its salvage function moves to the new cleaner-tied Salvage Lottery.
 	  (W8 Motor Pool Delivery RETIRED 2026-06-15: leaked a wfbe_persistent vehicle that never despawned.)
 
+	REMOVED (Ray 2026-06-27) — five more cards pulled as boring/low-payoff (weights forced to 0, apply blocks left inert):
+	  W7  Veteran Company   — REMOVED: invisible payoff (a flag on the next founded team); player sees nothing happen.
+	  W14 Iron Dome         — REMOVED: dull, rarely matters.
+	  W17 Supply Convoy     — REMOVED: dull, slow, easily ignored.
+	  W18 Bounty HVT        — REMOVED: dull, rarely engaged.
+	  W21 GUER VBIED        — REMOVED: boring/useless.
+
+	ADDED (Ray 2026-06-27) — three visible combat-reinforcement cards (mirror the W6 Air Cavalry founding path):
+	  W22 Top Gun          (6) Rare     — a fixed-wing fighter loiters the front ~180s hunting enemy aircraft, self-despawns.
+	  W23 Armor Column     (7) Uncommon — founds one free TANK team (tank-led template) at HQ; brain orders it to the front.
+	  W24 Technical Swarm  (6) Rare     — founds two free CAR-led gun-truck teams charging the front.
+
 	Human-side payout mapping:
 	  W1 -> wfbe_funds on the commander's team (instead of AI wallet).
 	  W7 -> re-draw (N/A for humans).
@@ -192,7 +204,11 @@ while {!gameOver} do {
 		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19","_wW20",
 		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
 				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang","_w21Try","_w21Roads",
-		         "_wNameMap","_wName"];
+		         "_wNameMap","_wName","_wDesc",
+		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22TargetPos","_wW22",
+		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
+		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
+		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
@@ -423,23 +439,92 @@ while {!gameOver} do {
 				    && {(missionNamespace getVariable ["WFBE_GUERRESSOLDIER", ""]) != ""}
 				    && {isClass (configFile >> "CfgVehicles" >> _w21VbiedClass)}) then {_w21Eligible = true};
 
+				//--- W22: TOP GUN (2026-06-27) - air-superiority fighter loiters the front for a window and hunts
+				//--- enemy aircraft. Eligible: HQ alive, AIR research >=1, established towns (mirror W6/W13 gate), and
+				//--- the side fields a fixed-wing PLANE in WFBE_<side>AIRCRAFTUNITS (helis don't count - this is a jet).
+				_w22Eligible   = false;
+				_w22PlaneClass = "";
+				if (!isNull _hq && {alive _hq} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])}) then {
+					_w22AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
+					{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"}) then {_w22PlaneClass = _x} } forEach _w22AirList;
+					if (_w22PlaneClass != "") then {_w22Eligible = true};
+				};
+
+				//--- W23: ARMOR COLUMN (2026-06-27) - found ONE free TANK-led team at HQ, brain orders it to the front.
+				//--- SAME founding path as W6 Air Cavalry, but the resolved template's LEAD class isKindOf "Tank" and the
+				//--- elite pick is by HEAVY-tier. Eligible: HQ alive, HEAVY research >=1, a tank-led template exists, a town to aim at.
+				_w23Eligible = false;
+				_w23Template = [];
+				_w23Tier     = -1;
+				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_HEAVY} && {(_upgrades select WFBE_UP_HEAVY) > 0}) then {
+					_w23Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
+					_w23TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
+					{
+						_w23Cand = _x;
+						if (count _w23Cand > 0) then {
+							_w23Lead = _w23Cand select 0;
+							if (isClass (configFile >> "CfgVehicles" >> _w23Lead) && {_w23Lead isKindOf "Tank"}) then {
+								_w23CandTier = 0;
+								_w23Idx = _w23Tmpls find _w23Cand;
+								if (_w23Idx >= 0 && {_w23Idx < count _w23TmplUps}) then {
+									_w23UpArr = _w23TmplUps select _w23Idx;
+									if (count _w23UpArr > WFBE_UP_HEAVY) then {_w23CandTier = _w23UpArr select WFBE_UP_HEAVY};
+								};
+								if (_w23CandTier > _w23Tier) then {_w23Tier = _w23CandTier; _w23Template = _w23Cand};
+							};
+						};
+					} forEach _w23Tmpls;
+					if (count _w23Template > 0) then {_w23Eligible = true};
+				};
+
+				//--- W24: TECHNICAL SWARM (2026-06-27) - found TWO free CAR-led (motorized gun-truck/HMMWV) teams charging
+				//--- the front. SAME founding path; LEAD class isKindOf "Car", elite pick by LIGHT-tier. Eligible: HQ alive,
+				//--- LIGHT research >=1, a car-led template exists, a town to aim at.
+				_w24Eligible = false;
+				_w24Template = [];
+				_w24Tier     = -1;
+				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_LIGHT} && {(_upgrades select WFBE_UP_LIGHT) > 0}) then {
+					_w24Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
+					_w24TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
+					{
+						_w24Cand = _x;
+						if (count _w24Cand > 0) then {
+							_w24Lead = _w24Cand select 0;
+							if (isClass (configFile >> "CfgVehicles" >> _w24Lead) && {_w24Lead isKindOf "Car"}) then {
+								_w24CandTier = 0;
+								_w24Idx = _w24Tmpls find _w24Cand;
+								if (_w24Idx >= 0 && {_w24Idx < count _w24TmplUps}) then {
+									_w24UpArr = _w24TmplUps select _w24Idx;
+									if (count _w24UpArr > WFBE_UP_LIGHT) then {_w24CandTier = _w24UpArr select WFBE_UP_LIGHT};
+								};
+								if (_w24CandTier > _w24Tier) then {_w24Tier = _w24CandTier; _w24Template = _w24Cand};
+							};
+						};
+					} forEach _w24Tmpls;
+					if (count _w24Template > 0) then {_w24Eligible = true};
+				};
+
 				_wW1  = 17; _wW2  = 17; _wW3  =  0;  //--- W3 (Bonus Patrol) REMOVED 2026-06-16 (Ray): obsolete - patrol cap was lowered. Weight forced 0 -> card can NEVER be drawn; apply block left inert.
-				_wW6  =  8; _wW7  =  8; _wW10 =  0; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8). W10 (Lucky Salvage) REMOVED 2026-06-16 (Ray): salvage function moves to the new cleaner-tied Salvage Lottery. Weight forced 0 -> never drawn; apply block left inert.
+				_wW6  =  8; _wW7  =  0; _wW10 =  0; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8). W7 (Veteran Company) REMOVED 2026-06-27 (Ray): boring/no visible payoff. Weight forced 0 -> never drawn; apply block left inert. W10 (Lucky Salvage) REMOVED 2026-06-16 (Ray): salvage moved to the cleaner-tied Salvage Lottery.
 				_wW4  =  6; _wW9  =  0;  //--- W4 Rare weight 6. W9 (Uprising) REMOVED 2026-06-16 (Ray): too invasive. Weight forced 0 -> card can NEVER be drawn; apply block left inert (W8 RETIRED 2026-06-15).
 				_wW20 =  6;  //--- W20 = CAPTURED CACHE (Uncommon, weight 6 - mirrors W16 Lend-Lease; raises a random SUPPORT-line tier).
-				_wW13 =  6; _wW18 =  5;  //--- rebalance 2026-06-14: W13 (Rare) up 4->6
+				_wW13 =  6; _wW18 =  0;  //--- rebalance 2026-06-14: W13 (Rare) up 4->6. W18 (Bounty HVT) REMOVED 2026-06-27 (Ray): boring/useless. Weight forced 0 -> never drawn; apply block left inert.
 				_wW19 =  5;  //--- W19 = HELIBORNE QRF (Rare, weight 5).
-				_wW14 =  7; _wW15 =  6; _wW16 =  6; _wW17 =  7;
-				_wW21 =  5;  //--- W21 = GUER VBIED (Feature B, Rare, weight 5).
+				_wW14 =  0; _wW15 =  6; _wW16 =  6; _wW17 =  0;  //--- W14 (Iron Dome) + W17 (Supply Convoy) REMOVED 2026-06-27 (Ray): boring/useless. Weights forced 0 -> never drawn; apply blocks left inert.
+				_wW21 =  0;  //--- W21 (GUER VBIED) REMOVED 2026-06-27 (Ray): boring/useless. Weight forced 0 -> never drawn; apply block left inert.
+				_wW22 =  6; _wW23 =  7; _wW24 =  6;  //--- NEW 2026-06-27 (Ray): W22 Top Gun (Rare), W23 Armor Column (Uncommon), W24 Technical Swarm (Rare) - all visible combat reinforcements; escalate when losing.
 
 				if (_losing) then {
 					_wW4  = round(_wW4  * _eMult);
 					_wW6  = round(_wW6  * _eMult);  //--- Air Cavalry is now a COMBAT reinforcement: a losing side draws it more (mirrors W4/W8/W9 escalation).
-					_wW7  = round(_wW7  * _eMult);
+					//--- _wW7 escalation REMOVED 2026-06-27 (Ray): W7 (Veteran Company) pulled from the deck (base weight 0). No-op kept inert.
 					//--- _wW9 escalation REMOVED 2026-06-16 (Ray): W9 (Uprising) is pulled from the deck (base weight 0). No-op kept inert.
 					_wW13 = round(_wW13 * _eMult);
-					_wW18 = round(_wW18 * _eMult);
+					//--- _wW18 escalation REMOVED 2026-06-27 (Ray): W18 (Bounty HVT) pulled from the deck (base weight 0). No-op kept inert.
 					_wW19 = round(_wW19 * _eMult);  //--- losing side draws the QRF reinforcement more (mirrors W4/W8/W9).
+					_wW22 = round(_wW22 * _eMult);  //--- Top Gun: a losing side that owns the air draws air-superiority more.
+					_wW23 = round(_wW23 * _eMult);  //--- Armor Column: losing side draws the heavy reinforcement more.
+					_wW24 = round(_wW24 * _eMult);  //--- Technical Swarm: losing side draws the fast reinforcement more.
 				};
 
 				//--- Zero ineligible cards.
@@ -461,6 +546,9 @@ while {!gameOver} do {
 				if (!_w19Eligible) then {_wW19 = 0};
 				if (!_w20Eligible) then {_wW20 = 0};
 				if (!_w21Eligible) then {_wW21 = 0};
+				if (!_w22Eligible) then {_wW22 = 0};
+				if (!_w23Eligible) then {_wW23 = 0};
+				if (!_w24Eligible) then {_wW24 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
 				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
@@ -469,7 +557,7 @@ while {!gameOver} do {
 				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
 				            [9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
 				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19],
-				            [20,_wW20],[21,_wW21]];
+				            [20,_wW20],[21,_wW21],[22,_wW22],[23,_wW23],[24,_wW24]];
 
 				_cumSum = 0;
 				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
@@ -1293,6 +1381,130 @@ while {!gameOver} do {
 						missionNamespace setVariable [_w12Key, _w12Exp];
 						_detail = Format ["expiry=t+%1 (%2 min) humanCmd=%3", 600, 10, _humanCmd];
 					};
+
+					//--- W22: TOP GUN (2026-06-27) - spawn one fixed-wing fighter that loiters the front for 180s and
+					//--- engages enemy aircraft/ground (COMBAT/RED), then self-despawns. Spawn/crew/despawn idiom mirrors
+					//--- W13 Gunship Strike; the difference is a PLANE class + a longer loiter window over the front.
+					case 22: {
+						_w22AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
+						_w22PlaneClass = "";
+						{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"}) then {_w22PlaneClass = _x} } forEach _w22AirList;
+						_w22Target  = objNull;
+						_w22Targets = _logik getVariable "wfbe_aicom_targets";
+						if (!isNil "_w22Targets" && {count _w22Targets > 0}) then {_w22Target = _w22Targets select 0};
+						if (isNull _w22Target && {count _cands > 0}) then {_w22Target = _cands select floor(random count _cands)};
+						if (_w22PlaneClass != "" && {!isNull _hq}) then {
+							_hqPos       = getPos _hq;
+							_w22Ang      = random 360;
+							_w22SpawnPos = [(_hqPos select 0) + 4000 * sin _w22Ang, (_hqPos select 1) + 4000 * cos _w22Ang, 1000];
+							_w22Plane    = [_w22PlaneClass, _w22SpawnPos, _side, random 360, true, true] Call WFBE_CO_FNC_CreateVehicle;
+							if (!isNull _w22Plane) then {
+								_w22Grp        = [_side, "aicom-topgun"] Call WFBE_CO_FNC_CreateGroup;
+								_w22PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
+								if (!isNull _w22Grp && {_w22PilotClass != ""}) then {
+									_w22Pilot = [_w22PilotClass, _w22Grp, _w22SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _w22Pilot) then {
+										_w22Pilot moveInDriver _w22Plane;
+										_w22Plane flyInHeight 600;
+										_w22Grp setBehaviour "COMBAT"; _w22Grp setCombatMode "RED";
+										_w22TargetPos = if (!isNull _w22Target) then {getPos _w22Target} else {_hqPos};
+										[_w22Grp, _w22TargetPos, 800] Call AIPatrol;
+										[_w22Plane, _w22Grp] spawn {
+											private ["_pl","_grp"];
+											_pl = _this select 0; _grp = _this select 1;
+											sleep 180;
+											{deleteVehicle _x} forEach (crew _pl);
+											if (!isNull _pl) then {deleteVehicle _pl};
+											if (!isNull _grp) then {deleteGroup _grp};
+										};
+										_detail = Format ["class=%1 loiter=%2 window=180s", _w22PlaneClass, if (!isNull _w22Target) then {_w22Target getVariable ["name","?"]} else {"HQ"}];
+									} else {
+										deleteVehicle _w22Plane; deleteGroup _w22Grp;
+										_result = "partial"; _detail = Format ["W22 no pilot for %1", _w22PlaneClass];
+									};
+								} else {
+									deleteVehicle _w22Plane;
+									_result = "partial"; _detail = "W22 no group/pilot class";
+								};
+							} else {
+								_result = "ineligible"; _detail = Format ["W22 createVehicle null for %1", _w22PlaneClass];
+							};
+						} else {
+							_result = "ineligible"; _detail = "W22 no plane class / HQ";
+						};
+					};
+
+					//--- W23: ARMOR COLUMN (2026-06-27) - found ONE free TANK team via the commander's OWN founding path
+					//--- (HC delegate 'delegate-aicom-team' -> WFBE_CO_FNC_RunCommanderTeam server-local fallback), EXACTLY
+					//--- like W6 Air Cavalry. The template (tank lead + escort + dismounts) registers in wfbe_teams and the
+					//--- brain orders it to a spearhead town - never a frozen AI, rides the normal team GC. FREE squad.
+					case 23: {
+						if (count _w23Template == 0) then {
+							_w23Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
+							_w23TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
+							_w23Tier = -1;
+							{
+								_w23Cand = _x;
+								if (count _w23Cand > 0) then {
+									_w23Lead = _w23Cand select 0;
+									if (isClass (configFile >> "CfgVehicles" >> _w23Lead) && {_w23Lead isKindOf "Tank"}) then {
+										_w23CandTier = 0; _w23Idx = _w23Tmpls find _w23Cand;
+										if (_w23Idx >= 0 && {_w23Idx < count _w23TmplUps}) then {_w23UpArr = _w23TmplUps select _w23Idx; if (count _w23UpArr > WFBE_UP_HEAVY) then {_w23CandTier = _w23UpArr select WFBE_UP_HEAVY}};
+										if (_w23CandTier > _w23Tier) then {_w23Tier = _w23CandTier; _w23Template = _w23Cand};
+									};
+								};
+							} forEach _w23Tmpls;
+						};
+						if (count _w23Template == 0) then {
+							_result = "ineligible"; _detail = "W23 no tank template for side";
+						} else {
+							_hqPos    = getPos _hq;
+							_w6HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+							if (!isNull _w6HcUnit) then {
+								[_w6HcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _w23Template, _hqPos, 0]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								[_sideID, _w23Template, _hqPos] Spawn WFBE_CO_FNC_RunCommanderTeam;
+							};
+							_detail = Format ["armor_template=%1 lead=%2 tier=%3 hc=%4", _w23Template, _w23Template select 0, _w23Tier, !isNull _w6HcUnit];
+						};
+					};
+
+					//--- W24: TECHNICAL SWARM (2026-06-27) - found TWO free CAR-led (gun-truck/HMMWV) teams the same way,
+					//--- aimed at the front: a fast, light swarm. Two foundings (1s apart); the side-team cap in
+					//--- RunCommanderTeam naturally bounds it if the side is already at capacity.
+					case 24: {
+						if (count _w24Template == 0) then {
+							_w24Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
+							_w24TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
+							_w24Tier = -1;
+							{
+								_w24Cand = _x;
+								if (count _w24Cand > 0) then {
+									_w24Lead = _w24Cand select 0;
+									if (isClass (configFile >> "CfgVehicles" >> _w24Lead) && {_w24Lead isKindOf "Car"}) then {
+										_w24CandTier = 0; _w24Idx = _w24Tmpls find _w24Cand;
+										if (_w24Idx >= 0 && {_w24Idx < count _w24TmplUps}) then {_w24UpArr = _w24TmplUps select _w24Idx; if (count _w24UpArr > WFBE_UP_LIGHT) then {_w24CandTier = _w24UpArr select WFBE_UP_LIGHT}};
+										if (_w24CandTier > _w24Tier) then {_w24Tier = _w24CandTier; _w24Template = _w24Cand};
+									};
+								};
+							} forEach _w24Tmpls;
+						};
+						if (count _w24Template == 0) then {
+							_result = "ineligible"; _detail = "W24 no motorized template for side";
+						} else {
+							_hqPos = getPos _hq;
+							for "_w24n" from 1 to 2 do {
+								_w6HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+								if (!isNull _w6HcUnit) then {
+									[_w6HcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _w24Template, _hqPos, 0]] Call WFBE_CO_FNC_SendToClient;
+								} else {
+									[_sideID, _w24Template, _hqPos] Spawn WFBE_CO_FNC_RunCommanderTeam;
+								};
+								sleep 1;
+							};
+							_detail = Format ["motor_template=%1 lead=%2 tier=%3 count=2", _w24Template, _w24Template select 0, _w24Tier];
+						};
+					};
 				};
 
 				//--- Dual logging.
@@ -1302,24 +1514,114 @@ while {!gameOver} do {
 				//--- Announcement: human-side draws go to that side only; AI-side draws
 				//--- broadcast to ALL clients (nil) so everyone sees what the AI drew.
 				//--- BUG-FIX: previously only human-side draws were announced; AI draws were silent.
+				//--- Resolve a player-facing NAME + EFFECT DESCRIPTION for the drawn card from a single
+				//--- source-of-truth map [id, name, what-it-does]. Used by BOTH the human-side and AI-side
+				//--- announcements so players always see WHAT the wildcard does, not just its name/number
+				//--- (Ray 2026-06-27). Inert ids (3/9/10) kept for completeness; they can never be drawn.
+				_wNameMap = [
+					[1,"War Chest","bonus war funds for the side"],
+					[2,"Supply Drop","+1500 supply delivered to the front"],
+					[3,"Bonus Patrol","a free patrol takes the field"],
+					[4,"Airborne Assault","elite paratroopers drop on the front line"],
+					[6,"Air Cavalry","a free elite air-assault squad deploys to the front"],
+					[7,"Veteran Company","the next reinforcement company arrives battle-hardened"],
+					[9,"Uprising","a local insurgency rises against the enemy"],
+					[10,"Lucky Salvage","battlefield wrecks are salvaged for supply"],
+					[11,"Field Hospital","all wounded infantry are healed"],
+					[12,"Spoils of War","double kill-bounty for the next 10 minutes"],
+					[13,"Gunship Strike","an attack aircraft strafes a troop cluster"],
+					[14,"Iron Dome","temporary anti-air defends a threatened town"],
+					[15,"Black Market","50% production discount for the next 10 minutes"],
+					[16,"Lend-Lease","a vehicle tier (light/heavy/air) is upgraded"],
+					[17,"Supply Convoy","a supply convoy reinforces the nearest town"],
+					[18,"Bounty HVT","an enemy VIP appears with a bounty on his head"],
+					[19,"Heliborne QRF","a helicopter inserts a QRF at a threatened town"],
+					[20,"Captured Cache","a support tier (paratroopers/supply/gear) is upgraded"],
+					[21,"Insurgent Car Bomb","a suicide car bomb rolls on a front-line town - destroy it for a bounty"],
+					[22,"Top Gun","a fighter flies cover over the front and hunts enemy aircraft"],
+					[23,"Armor Column","a free tank platoon rolls to the front"],
+					[24,"Technical Swarm","a wave of gun-trucks charges the front"]
+				];
+				_wName = Format ["W%1", _draw];
+				_wDesc = "";
+				{if ((_x select 0) == _draw) exitWith {_wName = _x select 1; _wDesc = _x select 2}} forEach _wNameMap;
+
+				//--- -----------------------------------------------------------------------
+				//--- MAP MARKER (feature: wildcard events show on the map for the OWNING side)
+				//--- -----------------------------------------------------------------------
+				//--- Only the events with a clear single world position + a bounded lifetime get a
+				//--- marker; pure-economy/flag draws (W1/W2/W11/W12/W15/W16/W20 + the inert ids) have
+				//--- no battlefield location, so they get none. We resolve the position from the SAME
+				//--- target var the apply block already computed (re-using its work; no second scan),
+				//--- and a lifetime that matches the event's own watcher/loiter window so the marker
+				//--- expires WITH the event - one marker per active event, always cleaned up.
+				//---
+				//--- LOCALITY: the marker is broadcast via WFBE_CO_FNC_SendToClients to the SIDE object
+				//--- (_side) - Client_HandlePVF matches a SIDE destination against sideJoined, so ONLY
+				//--- this side's clients run WildcardMarker.sqf and createMarkerLocal. The enemy never
+				//--- sees it. The marker uses the side colour + a distinct icon + a short label.
+				if (_result == "applied") then {
+					_mkPos  = [];
+					_mkLife = 0;
+					_mkType = "mil_objective";
+					switch (_draw) do {
+						//--- W4 Airborne Assault: the drop town (enemy/neutral front town). Short info beat.
+						case 4:  {if (!isNil "_bestTown" && {!isNull _bestTown}) then {_mkPos = getPos _bestTown}; _mkLife = 120; _mkType = "mil_pickup"};
+						//--- W6 Air Cavalry: the front town the squad is aimed at (HQ-spawned, brain-ordered fwd).
+						case 6:  {if (!isNil "_w6BestTown" && {!isNull _w6BestTown}) then {_mkPos = getPos _w6BestTown}; _mkLife = 300; _mkType = "mil_pickup"};
+						//--- W13 Gunship Strike: the strafed cluster town. Lifetime = the 90s strike window.
+						case 13: {if (!isNil "_w13TargetPos") then {_mkPos = _w13TargetPos}; _mkLife = 90; _mkType = "mil_destroy"};
+						//--- W19 Heliborne QRF: the threatened FRIENDLY town the QRF lands on.
+						case 19: {if (!isNil "_w19TownPos") then {_mkPos = _w19TownPos}; _mkLife = 300; _mkType = "mil_pickup"};
+						//--- W22 Top Gun: the loiter point over the front. Lifetime = the 180s loiter window.
+						case 22: {if (!isNil "_w22TargetPos") then {_mkPos = _w22TargetPos}; _mkLife = 180; _mkType = "mil_air"};
+						//--- W23/W24 handled below (their apply spawns at HQ; mark the front town they head to).
+						case 23: {};
+						case 24: {};
+					};
+					//--- W23 Armor Column / W24 Technical Swarm: spawn at HQ, brain orders them to the front.
+					//--- Mark the best-scored spearhead/front town (the SAME selection W4/W6 use) so the side
+					//--- sees WHERE the reinforcement is headed.
+					if (_draw == 23 || {_draw == 24}) then {
+						_mkBestTown  = objNull;
+						_mkBestScore = -1e9;
+						{
+							_mkT4    = _x;
+							_mkDNear = 1e9;
+							{ if ((_x getVariable ["sideID","?"]) == _sideID) then {_mkD = _mkT4 distance _x; if (_mkD < _mkDNear) then {_mkDNear = _mkD}} } forEach towns;
+							if (_mkDNear > 1e8 && {!isNull _hq}) then {_mkDNear = _mkT4 distance _hq};
+							_mkScore = (_mkT4 getVariable ["supplyValue", 0]) - (_mkDNear / 150);
+							if (_mkScore > _mkBestScore) then {_mkBestScore = _mkScore; _mkBestTown = _mkT4};
+						} forEach _cands;
+						if (!isNull _mkBestTown) then {_mkPos = getPos _mkBestTown; _mkLife = 300; _mkType = "mil_arrow2"};
+					};
+
+					if (count _mkPos > 0 && {_mkLife > 0}) then {
+						_mkColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};
+						_mkName  = Format ["wc_%1_%2_%3", _sideText, _draw, round time];
+						//--- CREATE on the owning side only (SIDE destination -> sideJoined match in Client_HandlePVF).
+						[_side, "WildcardMarker", ["create", _mkName, _mkPos, _mkColor, _mkType, _wName]] Call WFBE_CO_FNC_SendToClients;
+						//--- Self-expiring watcher: delete the marker on the SAME side after the event lifetime.
+						//--- One marker per event; this is the only deletion path (no leak, no spam).
+						[_side, _mkName, _mkLife] spawn {
+							private ["_s","_n","_lf"];
+							_s = _this select 0; _n = _this select 1; _lf = _this select 2;
+							sleep _lf;
+							[_s, "WildcardMarker", ["delete", _n]] Call WFBE_CO_FNC_SendToClients;
+						};
+					};
+				};
+
 				_locMsg = if (_humanCmd) then {
-					Format ["[Wildcard] Your forces receive: W%1 (%2)", _draw, _result]
+					Format ["[Wildcard] Your forces receive %1 - %2.", _wName, _wDesc]
 				} else {
-					_wNameMap = [
-						[1,"War Chest"],[2,"Supply Drop"],[3,"Bonus Patrol"],
-						[4,"Airborne Assault"],[6,"Air Cavalry"],[7,"Veteran Company"],
-						[9,"Uprising"],[10,"Lucky Salvage"],
-						[11,"Field Hospital"],[12,"Spoils of War"],
-						[13,"Gunship Strike"],[14,"Iron Dome"],[15,"Black Market"],
-						[16,"Lend-Lease"],[17,"Supply Convoy"],[18,"Bounty HVT"],
-						[19,"Heliborne QRF"],[20,"Captured Cache"],[21,"Insurgent Car Bomb"]
-					];
-					_wName = Format ["W%1", _draw];
-					{if ((_x select 0) == _draw) exitWith {_wName = _x select 1}} forEach _wNameMap;
-					Format ["[Wildcard] AI Commander (%1) drew: %2", _sideText, _wName]
+					Format ["[Wildcard] AI Commander (%1) drew %2 - %3.", _sideText, _wName, _wDesc]
 				};
 				if (_humanCmd) then {
-					[_sideText, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
+					//--- ROUTING FIX 2026-06-27: send to the SIDE object, not str _side. Client_HandlePVF only
+					//--- matches a SIDE destination against sideJoined; a STRING destination is treated as a player
+					//--- UID (matches nobody) - so the old [_sideText,...] human-side popup silently reached no one.
+					[_side, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
 				} else {
 					[nil, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
 				};

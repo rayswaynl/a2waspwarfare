@@ -8,6 +8,45 @@ _typeof = typeOf _spawn;
 WFBE_Client_IsRespawning = false;
 _allowCustom = true;
 
+//--- cmdcon23 RHUD/funds respawn re-home. GROUP respawn (respawn=3) can drop the player into a
+//--- DIFFERENT group than the init-time `clientTeam` (frozen at Init_Client.sqf:282 and never
+//--- reassigned). The RHUD reads funds via GetPlayerFunds -> (clientTeam) Call GetTeamFunds, so a
+//--- stale clientTeam makes the Money row render $0 even when the real group has funds. Re-point
+//--- clientTeam at the player's CURRENT group on every respawn so the HUD reads the right group,
+//--- and fire ONE authoritative funds re-broadcast (server-side RequestFundsResend is idempotent:
+//--- it echoes an absolute stored value, never adds, so this cannot duplicate money). A2-OA-1.64
+//--- safe (group player / typeName / SendToServer); idempotent (sets an absolute global, sends once).
+if (!isNull (group _unit)) then {clientTeam = group _unit};
+if (!isNil "WFBE_Client_SideJoined") then {
+	["RequestFundsResend", [_unit, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
+};
+
+//--- cmdcon23 deadspawn-strand fallback. _spawn arrives objNull when the respawn menu's spawn list
+//--- was empty or entirely invalid (HQ dead + no live factory = base-overran late game), because
+//--- GetClosestEntity returns objNull on an empty list and GUI_RespawnMenu never replaces the objNull
+//--- _spawn_at_current. The WEST/EAST else-branch below would then setPos [getPos objNull...] = [0,0,0]
+//--- (ocean SW corner) and strand the player. Resolve a real destination here: live side HQ if any,
+//--- else the side startpos (a POSITION array, used directly). The GUER branch already self-heals via
+//--- a random friendly town, so this is only needed for the non-resistance path. Idempotent (only acts
+//--- when _spawn is null), A2-OA-1.64 safe (isNull / GetSideHQ / GetRandomPosition / setPos).
+if (isNull _spawn && {sideJoined != resistance}) then {
+	private "_fbHQ";
+	_fbHQ = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
+	if (!isNull _fbHQ && {alive _fbHQ}) then {
+		_spawn = _fbHQ;
+		_typeof = typeOf _spawn;
+	} else {
+		private "_fbPos";
+		_fbPos = WFBE_Client_Logic getVariable "wfbe_startpos";
+		if (!isNil "_fbPos") then {
+			_unit setPos ([_fbPos, 10, 25] Call GetRandomPosition);
+			//--- Already delivered to the startpos; skip the object-based setPos branches below.
+			_spawn = _unit;
+			_typeof = typeOf _spawn;
+		};
+	};
+};
+
 // Marty: Respawn creates a fresh player object, so restart AFK tracking before any movement occurs.
 _unit setVariable ["lastActionTime", time];
 _unit setVariable ["lastPosition", position _unit];
@@ -85,7 +124,7 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 			private ["_shooter","_mag"];
 			_shooter = _this select 0;
 			_mag = _this select 5;
-			if (!isNil "_mag" && {typeName _mag == "STRING"} && {(_mag find "BAF_ied") == 0}) then {
+			if (!isNil "_mag" && {typeName _mag == "STRING"} && {_mag in ["BAF_ied_v1","BAF_ied_v2","BAF_ied_v3","BAF_ied_v4"]}) then {
 				_shooter setVariable ["wfbe_ied_recent", time, true];
 			};
 		}];

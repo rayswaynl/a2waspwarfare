@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen"];
 
 _side = _this;
 _sideText = str _side;
@@ -127,20 +127,76 @@ _nearUsableRoad = {
 	_best
 };
 
+//--- BUILDING-CLEARANCE helper (bug fix, ACTIVE). Ray report: AI factories land hard against
+//--- a house/wall, so factory output spawns INTO the geometry and breaks. _findBuildPos already
+//--- rejects roads, water and crowded friendly structures, but NOT nearby WORLD buildings. This
+//--- helper returns true when a candidate has clear ground (no House/wall within _radius). Uses
+//--- nearestObjects with the "Building"/"House" kinds (A2-OA-safe; same idiom as the cond-c
+//--- counter-battery scan above). The clearance radius is read inline-default so it ships with a
+//--- sane value and Ray can tune it later without editing Init_CommonConstants. Guarded so it never
+//--- blocks a build: callers keep a road-clear fallback that ignores this gate on try-budget failure.
+_buildPosClear = {
+	private ["_cpos","_clr","_blk"];
+	_cpos = _this;
+	_clr = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_CLEARANCE", 14];
+	if (_clr <= 0) exitWith {true};   //--- 0 disables the gate -> old behaviour.
+	_blk = false;
+	{ if (!isNull _x && {(_x distance _cpos) < _clr}) exitWith {_blk = true} } forEach (nearestObjects [_cpos, ["House","Building","Wall","Fence"], _clr + 4]);
+	!_blk
+};
+//--- NO-OVERLAP FLOOR helper (Ray 2026-06-29, req #1). The soft STRUCT_SPACING (default 45m) is a
+//--- PREFERENCE the primary _ok path enforces; but the try-budget fallback tiers (_bestBC/_best/_p)
+//--- previously had NO spacing floor, so a failed search could hand back a spot ON TOP of an existing
+//--- structure (overlapping footprints). This helper returns true only when _cand is >= the HARD floor
+//--- (WFBE_C_AICOM_STRUCT_SPACING_FLOOR, default 30m == the "big hangars reach ~30m" footprint note)
+//--- from EVERY existing friendly structure, so no fallback tier can ever overlap. Local _blk flag +
+//--- exitWith INSIDE its own forEach (same idiom as _buildPosClear) so it cannot abort an outer loop.
+_farFromStructs = {
+	private ["_cpos","_floor","_blk"];
+	_cpos = _this;
+	_floor = missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING_FLOOR", 30];
+	if (_floor <= 0) exitWith {true};   //--- 0 disables the floor.
+	_blk = false;
+	{ if ((_cpos distance _x) < _floor) exitWith {_blk = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+	!_blk
+};
+//--- NEAREST-FACTORY-DISTANCE helper (Ray 2026-06-29, req #2). Distance (m) from _cand to the closest
+//--- existing SPAWN-POINT factory (Barracks/Light/Heavy/Aircraft - the player respawn structures per
+//--- Client_GetRespawnAvailable). Used by the road-spaced mode (_nearRoad==2) to STRING factories ALONG
+//--- a road one step apart instead of clustering at one HQ angle. Returns 1e9 when the side has none yet
+//--- (so the first spawn-point factory is placed freely). Local-flag forEach idiom, no exitWith leak.
+_nearestFactoryDist = {
+	private ["_cpos","_best","_d"];
+	_cpos = _this;
+	_best = 1e9;
+	{ if (((_x getVariable ["wfbe_structure_type", ""]) in ["Barracks","Light","Heavy","Aircraft"]) && {alive _x}) then {_d = _cpos distance _x; if (_d < _best) then {_best = _d}} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+	_best
+};
 _findBuildPos = {
-	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries"];
+	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear","_bestBC","_haveBC","_isRoadMode","_stepBest","_haveStep","_stepTarget","_nf","_stepErr","_bestStepErr","_floor"];
 	_rmin = _this select 0; _rmax = _this select 1;
 	_nearRoad = if (count _this > 2) then {_this select 2} else {0};
-	//--- the USABLE-road filter rejects more candidates than the old bare nearRoads gate,
-	//--- so give the near-road mode more tries to find a paved lane to sit beside.
-	_tries = if (_nearRoad == 1) then {40} else {24};
-	_ok = false; _try = 0; _haveDry = false; _best = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+	//--- ROAD modes: 1 = beside a road (legacy near-road); 2 = beside a road AND spaced ALONG it
+	//--- (Ray 2026-06-29 req #2, spawn-point factories). Both share the perpendicular-offset/off-lane
+	//--- validation; mode 2 additionally PREFERS the all-gates-clear throw whose distance to the nearest
+	//--- existing factory is closest to WFBE_C_AICOM_FACTORY_ROAD_STEP, so factory N+1 steps one slot
+	//--- further along the road frontage instead of landing at a random ring angle next to factory N.
+	_isRoadMode = (_nearRoad == 1) || (_nearRoad == 2);
+	//--- the USABLE-road filter rejects more candidates than the old bare nearRoads gate, so give the
+	//--- near-road modes a bigger try budget to find a paved lane to sit beside AND clear the FULL
+	//--- spacing gate (Ray req #1: widen the search so an all-gates-clear spot is normally found, and
+	//--- the no-overlap floor is only ever a last resort). Build-tick only (~1/5min/side) so cost is moot.
+	_tries = if (_isRoadMode) then {(missionNamespace getVariable ["WFBE_C_AICOM_BUILDPOS_TRIES_ROAD", 64])} else {(missionNamespace getVariable ["WFBE_C_AICOM_BUILDPOS_TRIES_OFFROAD", 40])};
+	_stepTarget = missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_ROAD_STEP", 50];
+	_floor = missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING_FLOOR", 30];
+	_stepBest = [0,0,0]; _haveStep = false; _bestStepErr = 1e9;
+	_ok = false; _try = 0; _haveDry = false; _haveClear = false; _haveBC = false; _best = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
 	_p = _best;
 	while {!_ok && _try < _tries} do {
 		_ang = random 360;
 		_p = [(_hqPos select 0) + (_rmin + random (_rmax - _rmin)) * sin _ang, (_hqPos select 1) + (_rmin + random (_rmax - _rmin)) * cos _ang, 0];
-		if (_nearRoad == 1) then {
-			//--- NEAR-road (Light/Heavy/Aircraft factories): BESIDE a USABLE road on flat,
+		if (_isRoadMode) then {
+			//--- NEAR-road (Barracks/Light/Heavy/Aircraft factories): BESIDE a USABLE road on flat,
 			//--- dry ground with a real standoff, never on/over the lane. Do NOT pre-snap with
 			//--- GetEmptyPosition here - roads are the flattest/emptiest terrain, so snapping
 			//--- first drifts the candidate ONTO the track (the old order-of-operations bug).
@@ -172,13 +228,44 @@ _findBuildPos = {
 						//--- Ray reported. nearRoads 9 catches any carriageway node under the footprint; the chosen road is
 						//--- >12m off so it is not caught; the 40-try near-road budget refinds a clean spot.
 						if (!_blocked && {count (_cand nearRoads 9) > 0}) then {_blocked = true};
+					//--- MIDDLE FALLBACK TIER (_bestBC): candidate passed water/standoff/on-road AND is
+					//--- BUILDING-CLEAR (_buildPosClear) but may be spacing-crowded. Recorded BEFORE the
+					//--- STRUCT_SPACING gate so the try-budget fallback prefers a building+road-clear (off-lane,
+					//--- not-in-geometry) spot over raw 'dry' _best (which GetEmptyPosition drifts onto roads).
+					//--- Ray 2026-06-29 req #1: ALSO gate on the HARD no-overlap floor (_farFromStructs) so the
+						//--- relaxed fallback may use the cushion between FLOOR (30m) and SPACING (45m) but can NEVER
+						//--- return a spot that overlaps an existing structure. Only the 30..45m band is ever relaxed.
+						if (!_blocked && {!_haveBC} && {_cand call _buildPosClear} && {_cand call _farFromStructs}) then {_bestBC = _cand; _haveBC = true};
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
 					if (!_blocked) then {
 						{ if ((_cand distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_blocked = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 					};
-					if (!_blocked) then {_p = _cand; _ok = true};
+					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND spacing-OK
+					//--- (moved BELOW the STRUCT_SPACING check). Otherwise the try-budget fallback could hand back a
+					//--- road-clear-but-CROWDED spot (<45m from another structure -> overlapping footprints).
+					//--- CLEARANCE FIX (bug fix, ACTIVE): reject a candidate hard against a world building/wall so the
+					//--- factory spawn pads do not sit inside geometry (units spawning into a house/wall break).
+					if (!_blocked && {!(_cand call _buildPosClear)}) then {_blocked = true};
+					if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true};
+					//--- Ray 2026-06-29 req #2 (SPACED-along-road, mode 2): a fully-clear candidate is a valid
+					//--- step. Instead of accepting the FIRST one (which clusters factory N+1 right next to factory
+					//--- N at a random ring angle), keep the one whose distance to the nearest existing factory is
+					//--- closest to WFBE_C_AICOM_FACTORY_ROAD_STEP, so consecutive spawn points step evenly ALONG
+					//--- the road frontage. Spend the whole try budget hunting the best step; the first spawn-point
+					//--- factory (no factories yet -> _nf=1e9) takes the first hit immediately.
+					if (!_blocked && {_nearRoad == 2}) then {
+						_nf = _cand call _nearestFactoryDist;
+						if (_nf >= 1e8) then {
+							_p = _cand; _ok = true;   //--- first spawn point on this side: nothing to space from.
+						} else {
+							_stepErr = abs (_nf - _stepTarget);
+							if (!_haveStep || {_stepErr < _bestStepErr}) then {_stepBest = _cand; _bestStepErr = _stepErr; _haveStep = true};
+						};
+					};
+					//--- mode 1 (legacy near-road) keeps the FIRST all-gates-clear hit.
+					if (!_blocked && {_nearRoad != 2}) then {_p = _cand; _ok = true};
 				};
 			};
 		} else {
@@ -196,18 +283,55 @@ _findBuildPos = {
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
 				if (count (_p nearRoads 22) == 0) then {
+					//--- MIDDLE FALLBACK TIER (_bestBC): road-clear here; record if ALSO building-clear,
+					//--- relaxing the soft STRUCT_SPACING. Preferred over raw 'dry' _best in the fallback chain.
+					//--- Ray 2026-06-29 req #1: ALSO gate on the HARD no-overlap floor (_farFromStructs) so the
+					//--- relaxed fallback can never return a spot that overlaps an existing structure.
+					if (!_haveBC && {_p call _buildPosClear} && {_p call _farFromStructs}) then {_bestBC = _p; _haveBC = true};
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
 					_ok = true;
 					{ if ((_p distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_ok = false} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+					//--- CLEARANCE FIX (bug fix, ACTIVE): reject a candidate hard against a world building/wall so the
+					//--- factory spawn pads do not sit inside geometry (units spawning into a house/wall break).
+					if (_ok && {!(_p call _buildPosClear)}) then {_ok = false};
+					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND
+					//--- spacing-OK (_ok survives the STRUCT_SPACING forEach above) - prevents a crowded fallback.
+					if (_ok && {!_haveClear}) then {_bestClear = _p; _haveClear = true};
 				};
 			};
 		};
 		_try = _try + 1;
 	};
+	//--- Ray 2026-06-29 req #2: in SPACED mode (2), if no candidate was accepted immediately (i.e. this is
+	//--- NOT the first factory) but the budget found at least one fully-clear step, take the best-spaced one
+	//--- now. _stepBest is all-gates-clear (building+road+FULL spacing), so it is a clean accept.
+	if (!_ok && {_nearRoad == 2} && {_haveStep}) then {_p = _stepBest; _ok = true};
+	private "_via";
 	//--- try-budget failure: hand back the best dry-land candidate (never water).
-	if (!_ok && _haveDry) then {_p = _best};
+	if (!_ok) then {_p = if (_haveClear) then {_bestClear} else {if (_haveBC) then {_bestBC} else {if (_haveDry) then {_best} else {_p}}}}; //--- AICOM v2 (Ray): prefer the best ROAD-CLEAR fallback over an on-road _best, so structures stop landing on roads in road-dense base spots.
+	_via = "raw"; if (_haveDry) then {_via = "DRY"}; if (_haveBC) then {_via = "bestBC"}; if (_haveClear) then {_via = "bestClear"}; if (_haveStep) then {_via = "bestStep"}; if (_ok) then {_via = if (_nearRoad == 2) then {"okStep"} else {"ok"}};
+	//--- Ray 2026-06-29 req #1 FINAL HARD GUARD: the raw _best/_p fallback tiers have NO spacing floor, so a
+	//--- fully-failed search could still resolve _p ON TOP of an existing structure (overlap). Enforce the
+	//--- no-overlap floor unconditionally: if _p still violates the floor, NUDGE it radially OUTWARD along the
+	//--- HQ->_p bearing in 8m steps (up to +150m) until it clears every structure. Pure scalar math + distance
+	//--- loop = A2-OA-safe; runs only when the fallback actually produced an overlapping spot (rare).
+	if (!(_p call _farFromStructs) && {_floor > 0}) then {
+		private ["_bx","_by","_bh","_step","_nx","_ny","_npos","_done"];
+		_bx = (_p select 0) - (_hqPos select 0); _by = (_p select 1) - (_hqPos select 1);
+		_bh = if (_bx == 0 && {_by == 0}) then {random 360} else {_bx atan2 _by}; //--- HQ->_p bearing (random if _p == HQ).
+		_done = false; _step = 8;
+		while {!_done && {_step <= 150}} do {
+			_nx = (_p select 0) + _step * sin _bh;
+			_ny = (_p select 1) + _step * cos _bh;
+			_npos = [_nx, _ny, 0];
+			if (!(surfaceIsWater _npos) && {_npos call _farFromStructs}) then {_p = _npos; _done = true; _via = _via + "+nudge"};
+			_step = _step + 8;
+		};
+		if (!_done) then {_via = _via + "+OVERLAP!"}; //--- could not clear the floor in a crowded base; RPT-flagged.
+	};
+	diag_log (format ["AICOMPLACE|near=%1|via=%2|pos=%3|onRoad=%4|clr=%5|nf=%6|floorOK=%7", _nearRoad, _via, _p, (count (_p nearRoads 12) > 0), (_p call _buildPosClear), (round (_p call _nearestFactoryDist)), (_p call _farFromStructs)]);
 	_p
 };
 
@@ -257,18 +381,26 @@ if (_cbrIdx >= 0) then {
 	if (!_artyThreat && {time > 3600}) then {
 		_enemySide = if (_side == west) then {east} else {west};
 		_enemySideText = str _enemySide;
-		{
-			if (!_artyThreat) then {
-				if ((_x getVariable ["WFBE_CommanderArtillery", false]) &&
-				    {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _enemySideText} &&
-				    {alive _x}) then {
-					_artyThreat = true;
-					_logik setVariable ["wfbe_aicom_arty_threat", true];
-					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] wfbe_aicom_arty_threat ARMED (cond-c: enemy arty piece exists at %2 min).", _sideText, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-c");
+		//--- N-FEATUREBUG-48 fix 2026-06-27: the counter-battery scan must look at the ENEMY base, not our own.
+		//--- Anchoring nearestObjects at OUR HQ (10km) only ever scanned our own structures and never reached
+		//--- the enemy arty 12.8-15km away, so cond-c could never arm. Anchor the scan at the ENEMY HQ instead.
+		private ["_eHQ","_scanPos"];
+		_eHQ = _enemySide Call WFBE_CO_FNC_GetSideHQ;
+		if (!isNull _eHQ) then {
+			_scanPos = getPos _eHQ;
+			{
+				if (!_artyThreat) then {
+					if ((_x getVariable ["WFBE_CommanderArtillery", false]) &&
+					    {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _enemySideText} &&
+					    {alive _x}) then {
+						_artyThreat = true;
+						_logik setVariable ["wfbe_aicom_arty_threat", true];
+						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] wfbe_aicom_arty_threat ARMED (cond-c: enemy arty piece exists at %2 min).", _sideText, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-c");
+					};
 				};
-			};
-		} forEach (nearestObjects [getPos (_side Call WFBE_CO_FNC_GetSideHQ), ["StaticWeapon","Tank","Car"], 10000]);
+			} forEach (nearestObjects [_scanPos, ["StaticWeapon","Tank","Car"], 10000]);
+		};
 	};
 
 	//--- CBR enters the build order only when: threat confirmed + round > min time + supply OK.
@@ -405,22 +537,27 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				_pos = [0,0,0];
 				_placed = false;
 				if (_x == "ServicePoint") then {
-					_roads = _hqPos nearRoads 200;
-					_cand = [];
-					{ if (((getPos _x) distance _hqPos) > 25) then {_cand = _cand + [_x]} } forEach _roads;
-					if (count _cand > 0) then {
-						_pos = getPos (_cand select (floor (random (count _cand))));
-						if (!(surfaceIsWater _pos)) then {_placed = true};
-					};
+					//--- AICOM v2 (Ray 2026-06-27): place the Service Point BESIDE a road (near-road mode: offset off
+					//--- the carriageway + road-rejected), NOT ON a road node. The old code set _pos = getPos roadNode,
+					//--- so the SP sat ON the road (Ray report). Vehicles still reach it; it no longer blocks the lane.
+					_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
+					if (!(surfaceIsWater _pos)) then {_placed = true};
 				};
-				//--- task #25: production factories (Light/Heavy/Aircraft) are where commander
-				//--- teams spawn, so bias them NEAR a road for unit egress; everything else
-				//--- (CC/Barracks/Bank/CBR) keeps the default OFF-road placement.
+				//--- task #25 + Ray 2026-06-29 req #2: the SPAWN-POINT factories (Barracks/Light/Heavy/Aircraft -
+				//--- the player respawn structures per Client_GetRespawnAvailable) are placed road-ADJACENT and
+				//--- SPACED ALONG the road (mode 2) so respawning players come out near a road and the four spawn
+				//--- points don't stack at one HQ angle. Everything else (CC/Bank/CBR) keeps OFF-road placement.
+				//--- Barracks was previously OFF-road; it is now road-spaced too (it IS a respawn point).
 				if (!_placed) then {
-					if (_x in ["Light","Heavy","Aircraft"]) then {
-						//--- B67: widen the factory placement ring (was 45..75) so production
-						//--- factories spread out from the HQ core and clear the spacing gate.
-						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
+					if (_x in ["Barracks","Light","Heavy","Aircraft"]) then {
+						//--- B67 + req #2: widen the outer ring as the side accumulates spawn-point factories so each
+						//--- successive one has fresh road frontage to step onto (the FULL 45m spacing gate clears
+						//--- far more often -> the no-overlap floor stays a rare last resort). +35m per existing
+						//--- spawn-point factory, capped at +120m over the base outer ring.
+						private ["_fc","_rmaxF"];
+						_fc = {((_x getVariable ["wfbe_structure_type", ""]) in ["Barracks","Light","Heavy","Aircraft"]) && {alive _x}} count _structures;
+						_rmaxF = (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]) + ((_fc * 35) min 120);
+						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), _rmaxF, 2] Call _findBuildPos;
 					} else {
 						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110])] Call _findBuildPos;
 					};
@@ -428,7 +565,12 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};
 				_logik setVariable [Format ["wfbe_aicom_built_%1", _x], time];
 				_script = _scripts select _idx;
-				[_class, _side, _pos, random 360, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+				//--- AICOM v2 (Ray, deliberate layout): face structures toward the FRONT (HQ->spearhead bearing) so
+				//--- spawn pads / doors point at the egress instead of a random spin. Falls back to random if no front.
+				private ["_facDir","_facTgt","_facP"];
+				_facTgt = (_logik getVariable ["wfbe_aicom_targets", []]);
+				_facDir = if (count _facTgt > 0 && {!isNull (_facTgt select 0)}) then {_facP = getPos (_facTgt select 0); ((_facP select 0) - (_hqPos select 0)) atan2 ((_facP select 1) - (_hqPos select 1))} else {random 360};
+				[_class, _side, _pos, _facDir, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
 				//--- FACTORY RALLY (task #25 / bug a). Warfare has no rally MARKER: "rally" = the
 				//--- destination spawned units inherit. Players set it (shift-click); the AI never
 				//--- did, so AI factory output (troop trucks, combat teams) spawned at the in-base
@@ -518,16 +660,24 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 
 //--- 3) Base defenses: a few manned statics once the Barracks stands (crewed from it).
 _defMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_DEFENSES_MAX", 4];
-_defCount = _logik getVariable ["wfbe_aicom_defenses", 0];
+//--- AICOM v2 (Ray, SELF-HEALING within the 4-cap): count LIVE base defenses (StaticWeapon tagged wfbe_defense
+//--- near the HQ), NOT a monotonic counter, so a destroyed gun is REBUILT next pass and the base never erodes to
+//--- nothing over a long round. Mirror onto wfbe_aicom_defenses so the arty gate (~L558) reads the live value.
+_defCount = 0;
+{ if (!isNull _x && {alive _x} && {(_x getVariable ["wfbe_defense", false])}) then {_defCount = _defCount + 1} } forEach (_hqPos nearEntities [["StaticWeapon"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+_logik setVariable ["wfbe_aicom_defenses", _defCount];
 if (_defCount < _defMax) then {
 	_have = false;
 	{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 	if (_have) then {
-		//--- Alternate MG / AA pods; classnames from the faction defense config (guarded).
-		_defClass = if (_defCount % 2 == 0) then {
-			missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText]
-		} else {
-			missionNamespace getVariable Format ["WFBE_%1DEFENSES_AAPOD", _sideText]
+		//--- AICOM v2 (Ray): BALANCED light defense within the 4-cap - rotate MG / AT / GL / AA so enemy armor (AT),
+		//--- massed infantry (GL) and air (AA) all meet resistance, not just MG/AA. AT/GL guarded (some factions
+		//--- lack the class -> fall back to MG). Classnames from the faction defense config.
+		_defClass = switch (_defCount % 4) do {
+			case 1: { private "_atC"; _atC = missionNamespace getVariable Format ["WFBE_%1DEFENSES_ATPOD", _sideText]; if (isNil "_atC") then {missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText]} else {_atC} };
+			case 2: { private "_glC"; _glC = missionNamespace getVariable Format ["WFBE_%1DEFENSES_GL", _sideText]; if (isNil "_glC") then {missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText]} else {_glC} };
+			case 3: { missionNamespace getVariable Format ["WFBE_%1DEFENSES_AAPOD", _sideText] };
+			default { missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText] };
 		};
 		if (!isNil "_defClass") then {
 			if (typeName _defClass == "ARRAY") then {_defClass = _defClass select 0};
@@ -564,16 +714,31 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 			if (!isNil "_artyClasses" && {count _artyClasses > 0}) then {
 				//--- Entries are FAMILY arrays ([['M119_US_EP1'],['M252_US_EP1'],...]): pass a
 				//--- CLASSNAME on, or ConstructDefense's createVehicle throws a type error that
-				//--- kills the whole supervisor script. Family _artyBuilt, scanning past empties.
-				_i = _artyBuilt;
+				//--- kills the whole supervisor script.
+				//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: the AI may field only TRACKED/WHEELED self-propelled
+				//--- artillery - NO static towed howitzers (D30/M119) or mortar emplacements (2b14/M252). Those
+				//--- occupy ARTILLERY_CLASSNAMES indices 0/1 (StaticWeapon); the SPG (GRAD/MLRS) is a later index.
+				//--- Scan ALL families and accept the FIRST class that is a self-propelled hull (Tank/Car/Wheeled_APC/
+				//--- Tracked_APC and NOT StaticWeapon). If the side has no SPG class, build nothing - a static gun is
+				//--- never created for the AI. A2-OA-safe: string-form isKindOf on the classname (idiom: AwardBounty.sqf:34).
+				_i = 0;
 				while {_i < count _artyClasses && {_defClass == ""}} do {
+					private ["_cand","_isSP"];
 					_fam = _artyClasses select _i;
+					_cand = "";
 					if (typeName _fam == "ARRAY") then {
-						if (count _fam > 0) then {_defClass = _fam select 0};
+						if (count _fam > 0) then {_cand = _fam select 0};
 					} else {
-						_defClass = _fam;
+						_cand = _fam;
+					};
+					if (_cand != "" && {isClass (configFile >> "CfgVehicles" >> _cand)}) then {
+						_isSP = ((_cand isKindOf "Tank") || (_cand isKindOf "Car") || (_cand isKindOf "Wheeled_APC") || (_cand isKindOf "Tracked_APC")) && {!(_cand isKindOf "StaticWeapon")};
+						if (_isSP) then {_defClass = _cand};
 					};
 					_i = _i + 1;
+				};
+				if (_defClass == "") then {
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
 			if (_defClass != "") then {
@@ -586,6 +751,129 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 					[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
 					_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt + 1];
 					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/2 [%3] (cost %4 funds).", _sideText, _artyBuilt + 1, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			};
+		};
+	};
+};
+
+//--- ============================================================================================
+//--- 5) FORWARD OUTPOST (2nd base, AICOM v2 / Ray). When supply is ABUNDANT, stand up a SECOND
+//---    CommandCenter + its own doctrine factory + light defense at a DISTANT forward owned town, so
+//---    spare supply projects production toward the front. Self-contained, supply-guarded, idempotent.
+//---    REUSES _findBuildPos by repointing the _hqPos CLOSURE var to the forward center (the helper reads
+//---    _hqPos as a free var, L137/141). Runs LAST so _hqPos is free to repoint. FWDBASE_ENABLE=0 = inert.
+//--- ============================================================================================
+private ["_fwdEnable","_relocActive","_rearHQpos","_fwdMyID","_fwdCap","_fwdSupplyGate","_fwdReserve","_fwdMinDist","_ccCount","_basesMax","_frontF","_haveFront","_frontPosF","_bestFwdT","_bestFwdD","_dxF","_dyF","_dF","_standoffF","_fwdPos","_fwdOrder","_fwdHave","_ord","_fwdIdx","_fwdClass","_baseRF","_presentF","_fwdCost","_fwdFacP","_fwdScript","_fwdDir","_fwdCCpresent","_fwdDefMax","_fwdDefCount","_fwdDefClass","_fwdDefData","_fwdDefPrice","_fwdFunds","_fwdDefPos","_fwdDefDir","_fwdDx2","_fwdDy2"];
+_fwdEnable = (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_ENABLE", 1]) > 0;
+if (_fwdEnable && {_dual}) then {
+	_relocActive = _logik getVariable ["wfbe_mhqreloc_active", false];
+	if (!_relocActive && {(_side) Call WFBE_CO_FNC_GetSideHQDeployStatus} && {!(_logik getVariable ["wfbe_hqinuse", false])}) then {
+		_rearHQpos = +_hqPos;                               //--- capture the REAR HQ pos BEFORE any repoint.
+		_fwdMyID   = (_side) Call WFBE_CO_FNC_GetSideID;
+		_supply    = (_side) Call WFBE_CO_FNC_GetSideSupply; //--- re-read LIVE supply (the primary loop above already spent this tick).
+		_fwdCap    = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 40000];
+		_fwdSupplyGate = (_fwdCap min 50000) * (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FRAC", 0.80]); //--- clamp the cap at the realistic prod limit so DEBUG's inflated 900k supply-cap doesn't push the gate to 720k (unreachable); prod (40k cap) is unchanged at 32k.
+		if (_fwdSupplyGate < (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR", 24000])) then {_fwdSupplyGate = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_FLOOR", 24000]};
+		_fwdReserve = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_SUPPLY_RESERVE", 6000];
+		_fwdMinDist = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_MIN_DIST", 3500];
+		if (_supply >= _fwdSupplyGate) then {
+			_ccCount = {((_x getVariable ["wfbe_structure_type", ""]) == "CommandCenter") && {alive _x}} count _structures;
+			_basesMax = missionNamespace getVariable ["WFBE_C_AICOM_BASES_MAX", 2];
+			if (_ccCount >= 1 && {_ccCount < _basesMax}) then {
+				//--- FIND a forward owned town: own-held, >= MIN_DIST from the rear HQ, nearest the published front.
+				_frontF = objNull; _haveFront = false;
+				private "_tgF"; _tgF = _logik getVariable ["wfbe_aicom_targets", []];
+				if (typeName _tgF == "ARRAY" && {count _tgF > 0}) then {_frontF = _tgF select 0; if (!isNull _frontF) then {_haveFront = true}};
+				_frontPosF = if (_haveFront) then {getPos _frontF} else {[]};
+				_bestFwdT = objNull; _bestFwdD = 1e9;
+				{
+					if ((_x getVariable ["sideID", -1]) == _fwdMyID) then {
+						private ["_dHQ","_score"];
+						_dHQ = _x distance _rearHQpos;
+						if (_dHQ >= _fwdMinDist) then {
+							_score = if (_haveFront) then {_x distance _frontPosF} else {0 - _dHQ};
+							if (_score < _bestFwdD) then {_bestFwdD = _score; _bestFwdT = _x};
+						};
+					};
+				} forEach towns;
+					//--- FALLBACK: prod town-start owns only a rear cluster; no owned town qualifies far out.
+					//--- Build the outpost toward the published FRONT town instead (standoff math already places it rearward of the town).
+					if (isNull _bestFwdT && {_haveFront} && {!isNull _frontF}) then {
+						if ((_frontF distance _rearHQpos) >= _fwdMinDist) then {_bestFwdT = _frontF};
+					};
+					if (isNull _bestFwdT) then {
+						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FWDBASE: no eligible forward town (owned/front) >= %2m - skipping.", _sideText, _fwdMinDist]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				if (!isNull _bestFwdT) then {
+					//--- forward CENTER = standoff BEHIND the town toward the rear HQ (out of the town core).
+					_dxF = (_rearHQpos select 0) - (getPos _bestFwdT select 0);
+					_dyF = (_rearHQpos select 1) - (getPos _bestFwdT select 1);
+					_dF  = sqrt (_dxF*_dxF + _dyF*_dyF); if (_dF < 1) then {_dF = 1};
+					_standoffF = (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_TOWN_STANDOFF", 350]) min _dF;
+					_fwdPos = [(getPos _bestFwdT select 0) + (_dxF / _dF) * _standoffF, (getPos _bestFwdT select 1) + (_dyF / _dF) * _standoffF, 0];
+					if (((_fwdPos distance _rearHQpos) >= _fwdMinDist) && {!surfaceIsWater _fwdPos}) then {
+						_hqPos = _fwdPos;   //--- THE CRUX: _findBuildPos now rings the FORWARD center.
+						_fwdOrder = if (_doctrine == "HF") then {["CommandCenter","Heavy"]} else {["CommandCenter","Light"]};
+						_fwdHave = false;
+						{
+							_ord = _x;   //--- capture the order TYPE-KEY before the inner forEach clobbers _x.
+							if (!_fwdHave) then {
+								_fwdIdx = _names find _ord;
+								if (_fwdIdx >= 0) then {
+									_fwdClass = _classes select _fwdIdx;
+									_baseRF = missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450];
+									_presentF = false;
+									{ if (typeOf _x == _fwdClass && {alive _x} && {((getPos _x) distance _fwdPos) <= _baseRF}) exitWith {_presentF = true} } forEach _structures;
+									if (!_presentF && {(time - (_logik getVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], -1e6])) < 300}) then {_presentF = true};
+									if (!_presentF) then {
+										_fwdHave = true;   //--- one-per-pass latch (consume the slot whether or not affordable).
+										_fwdCost = _costs select _fwdIdx;
+										if (_supply >= (_fwdCost + _fwdReserve)) then {
+											_fwdFacP = if (_ord in ["Light","Heavy","Aircraft"]) then {
+												[(missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MAX", 110]), 1] Call _findBuildPos
+											} else {
+												[(missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MAX", 110])] Call _findBuildPos
+											};
+											if (_dual) then {[_side, -_fwdCost, Format ["AI commander forward outpost (%1).", _ord], false] Call ChangeSideSupply};
+											_logik setVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], time];
+											_fwdScript = _scripts select _fwdIdx;
+											_fwdDir = if (_haveFront) then {((_frontPosF select 0) - (_fwdPos select 0)) atan2 ((_frontPosF select 1) - (_fwdPos select 1))} else {random 360};
+											[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]);
+											["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST building %2 at %3 (town %4, cost %5, distRear %6).", _sideText, _ord, _fwdFacP, (_bestFwdT getVariable ["name","?"]), _fwdCost, round (_fwdPos distance _rearHQpos)]] Call WFBE_CO_FNC_AICOMLog;
+											diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_BUILD|struct=" + _ord + "|cost=" + str _fwdCost + "|town=" + (_bestFwdT getVariable ["name","?"]) + "|distRear=" + str (round (_fwdPos distance _rearHQpos)));
+										};
+									};
+								};
+							};
+						} forEach _fwdOrder;
+						//--- LIGHT forward defense: self-healing manned statics once the forward CC stands.
+						_fwdCCpresent = false;
+						{ if ((_x getVariable ["wfbe_structure_type", ""]) == "CommandCenter" && {alive _x} && {((getPos _x) distance _fwdPos) <= (missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450])}) exitWith {_fwdCCpresent = true} } forEach _structures;
+						if (_fwdCCpresent) then {
+							_fwdDefMax = missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_DEF_MAX", 2];
+							_fwdDefCount = 0;
+							{ if (!isNull _x && {alive _x} && {(_x getVariable ["wfbe_defense", false])}) then {_fwdDefCount = _fwdDefCount + 1} } forEach (_fwdPos nearEntities [["StaticWeapon"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+							if (_fwdDefCount < _fwdDefMax) then {
+								_fwdDefClass = missionNamespace getVariable Format ["WFBE_%1DEFENSES_MG", _sideText];
+								if (!isNil "_fwdDefClass") then {
+									if (typeName _fwdDefClass == "ARRAY") then {_fwdDefClass = _fwdDefClass select 0};
+									_fwdDefData = missionNamespace getVariable _fwdDefClass;
+									_fwdDefPrice = if (!isNil "_fwdDefData") then {_fwdDefData select QUERYUNITPRICE} else {0};
+									_fwdFunds = (_side) Call GetAICommanderFunds;
+									if (_fwdFunds >= _fwdDefPrice) then {
+										[_side, -_fwdDefPrice] Call ChangeAICommanderFunds;
+										_fwdDefPos = [22, 40] Call _findBuildPos;
+										_fwdDx2 = (_fwdDefPos select 0) - (_fwdPos select 0); _fwdDy2 = (_fwdDefPos select 1) - (_fwdPos select 1);
+										_fwdDefDir = if (abs _fwdDx2 < 0.01 && {abs _fwdDy2 < 0.01}) then {random 360} else {_fwdDx2 atan2 _fwdDy2};
+										[_fwdDefClass, _side, _fwdDefPos, _fwdDefDir, true, true] Call ConstructDefense;
+										["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST defense %2/%3 [%4].", _sideText, _fwdDefCount + 1, _fwdDefMax, _fwdDefClass]] Call WFBE_CO_FNC_AICOMLog;
+										diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_DEFENSE|n=" + str (_fwdDefCount + 1) + "|max=" + str _fwdDefMax);
+									};
+								};
+							};
+						};
+					};
 				};
 			};
 		};

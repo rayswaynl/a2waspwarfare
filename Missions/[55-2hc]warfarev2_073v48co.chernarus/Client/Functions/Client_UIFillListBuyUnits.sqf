@@ -104,7 +104,7 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 	if (!isNil "_c") then {
 		_upgradePass = if (_value >= count _currentUpgrades) then {true} else {(_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value)};
 	};
-	if ((_upgradePass && _addin) || (_addit&&_addin)) then {
+	if ((!isNil "_c") && {(_upgradePass && _addin) || (_addit&&_addin)}) then {
 		_price = round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
 		lnbAddRow [_listBox,['$'+str _price,_description]];
 		lnbSetData [_listBox,[_i,0],_filler];
@@ -159,11 +159,21 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 	if (_x in WFBE_C_SUPPLY_HELI_TYPES) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.5, 0.25, 1.0]]
 	};
+	//--- Spotter infantry (claude-gaming): amber name + [SPOTTER] tag so the recon class reads as a support role, not a rifleman. Keyed on every selectable faction's spotter class (live Chernarus WEST=USMC -> USMC_SoldierS_Spotter, EAST=RU -> RU_Soldier_Spotter; US/CDF/TK cover the other faction options + the Takistan mirror). Matches the on-select explainer in GUI_Menu_BuyUnits.sqf.
+	if (_x in ["USMC_SoldierS_Spotter","RU_Soldier_Spotter","US_Soldier_Spotter_EP1","CDF_Soldier_Spotter","TK_Soldier_Spotter_EP1"]) then {
+		lnbSetColor [_listBox,[_i,1],[1.0, 0.8, 0.0, 1.0]];
+		lnbSetText  [_listBox,[_i,1],_description + " [SPOTTER - Recon]"];
+	};
 
 	//--- GUER VBIED suicide truck: red name + [VBIED] tag so it reads as a weapon, not a civ car. Keyed off live WFBE_C_GUER_VBIED_TYPE (hilux CH / datsun TK).
 	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
 		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - Suicide Truck]"];
+	};
+	//--- GUER improvised mortar truck (V3S_Gue): cyan name + [MORTAR] tag. V3S_Gue is ALSO the GUER ambulance class, so this must run AFTER the ambulance block to win the row colour.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == "V3S_Gue"}) then {
+		lnbSetColor [_listBox,[_i,1],[0.3, 0.8, 1.0, 1.0]];
+		lnbSetText  [_listBox,[_i,1],_description + " [MORTAR - Call-in Strike]"];
 	};
 	//--- B75 (guer-tech): SECOND VBIED — the kill-gated unarmed M113 (~2x speed). Same red weapon styling as the hilux, distinct tag.
 	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])}) then {
