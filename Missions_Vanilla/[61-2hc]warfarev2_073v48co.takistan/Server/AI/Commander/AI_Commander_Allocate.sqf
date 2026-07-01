@@ -236,9 +236,9 @@ _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 	if (!isNull _grp) then {
 		_alive  = {alive _x} count (units _grp);
 		_ldr    = leader _grp;
-		_mode   = toLower (_grp getVariable ["wfbe_teammode", "towns"]);
-		_relief = _grp getVariable ["wfbe_aicom_relief", objNull];
-		_strike = _grp getVariable ["wfbe_aicom_strike", false];
+		_mode   = toLower ([_grp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+		_relief = [_grp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+		_strike = [_grp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
 		//--- ELIGIBILITY: an offensive founded/HC team Strategy hasn't claimed (relief/strike), not the base
 		//--- garrison, not player-led, not under an explicit human order (move/patrol/defense).
 		if (_alive > 0 && {!isNull _ldr} && {!isPlayer _ldr} && {_grp != _garGrp}
@@ -295,9 +295,9 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 			if (!isNull _riGrp) then {
 				_riAlive  = {alive _x} count (units _riGrp);
 				_riLdr    = leader _riGrp;
-				_riMode   = toLower (_riGrp getVariable ["wfbe_teammode", "towns"]);
-				_riRelief = _riGrp getVariable ["wfbe_aicom_relief", objNull];
-				_riStrike = _riGrp getVariable ["wfbe_aicom_strike", false];
+				_riMode   = toLower ([_riGrp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+				_riRelief = [_riGrp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+				_riStrike = [_riGrp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
 				if (_riAlive > 0 && {!isNull _riLdr} && {!isPlayer _riLdr} && {_riGrp != _garGrp}
 				    && {isNull _riRelief} && {!_riStrike} && {!(_riMode in ["move","patrol","defense"])}
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {

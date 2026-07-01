@@ -168,7 +168,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				{ if (!isNull _x) then {
 					[_x, "towns"] Call SetTeamMoveMode;
 					_x setVariable ["wfbe_exec_sig", []];
-					if (_x getVariable ["wfbe_aicom_hc", false]) then {
+					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 						_x setVariable ["wfbe_aicom_order",
 							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 							 "towns", getPos (leader _x)], true];
@@ -192,7 +192,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			{ if (!isNull _x) then {
 				[_x, "towns"] Call SetTeamMoveMode;
 				_x setVariable ["wfbe_exec_sig", []];
-				if (_x getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_x setVariable ["wfbe_aicom_order",
 						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 						 "towns", getPos (leader _x)], true];
@@ -605,7 +605,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- Mirrors the proven group-getVariable[name,default] form on line 255; local() is checked on
 		//--- the LEADER (an Object) never on the group (A2 OA 1.64 trap); team-type index bounds-guarded.
 		private ["_srvTeams","_hcTeams","_foundedN","_aliveSum","_remnants","_cmdrTpl","_isHc","_isFounded","_aliveN","_tt","_tplSize","_upt","_ldr"];
-		//--- SOAK DRAFT (claude-gaming 2026-06-20, propose-only, behaviour-neutral): the blended
+		//--- AICOM soak telemetry (behaviour-neutral): the blended
 		//--- unitsPerTeam reads BELOW the 8-12 floor (live 6.3/7.3) but RPT confirms infantry founds
 		//--- at 10 (founding-pad fires) while 4-man vehicle/armour teams (correctly NOT padded) drag
 		//--- the AVERAGE down. So the "below floor" alarm is partly a metric artifact. Split the live
@@ -628,8 +628,8 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_foundedN = _foundedN + 1;
 					_aliveN = {alive _x} count (units _x);
 					_aliveSum = _aliveSum + _aliveN;
-					_tt = _x getVariable ["wfbe_teamtype", -1];
-					//--- SOAK DRAFT: classify the team as VEHICLE (Tank or non-transport heli in its
+					_tt = [_x, "wfbe_teamtype", -1] Call WFBE_CO_FNC_GroupGetBool;
+					//--- SOAK telemetry: classify the team as VEHICLE (Tank or non-transport heli in its
 					//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
 					//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>
 					//--- infantry bucket (the common case). First match wins (exitWith).
@@ -648,7 +648,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		} forEach (_logik getVariable ["wfbe_teams", []]);
 		_upt = 0;
 		if (_foundedN > 0) then {_upt = (round ((_aliveSum / _foundedN) * 10)) / 10};
-		//--- SOAK DRAFT: per-bucket averages (0 when a side has no team of that bucket this tick).
+		//--- SOAK telemetry: per-bucket averages (0 when a side has no team of that bucket this tick).
 		_uptInf = 0; if (_infN > 0) then {_uptInf = (round ((_infSum / _infN) * 10)) / 10};
 		_uptVeh = 0; if (_vehN > 0) then {_uptVeh = (round ((_vehSum / _vehN) * 10)) / 10};
 		diag_log ("CMDRSTAT|v1|" + (str _side) + "|" + str _elMin + "|srvTeams=" + str _srvTeams + "|hcTeams=" + str _hcTeams + "|foundedTeams=" + str _foundedN + "|unitsPerTeam=" + str _upt + "|remnants=" + str _remnants + "|infPerTeam=" + str _uptInf + "|infTeams=" + str _infN + "|vehPerTeam=" + str _uptVeh + "|vehTeams=" + str _vehN);

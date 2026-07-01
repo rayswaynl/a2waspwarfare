@@ -285,8 +285,9 @@ function Test-PvfIntegrity {
 	}
 	$allowlists = $initPv.Contains("WFBE_CL_PVF_ALLOWED") -and $initPv.Contains("WFBE_SE_PVF_ALLOWED") -and $initPv.Contains('Format["CLTFNC%1", _x]') -and $initPv.Contains('Format["SRVFNC%1", _x]')
 	$dispatchChecks = $clientHandle.Contains("WFBE_CL_PVF_ALLOWED") -and $serverHandle.Contains("WFBE_SE_PVF_ALLOWED") -and $clientHandle.Contains("rejected unregistered PVF handler") -and $serverHandle.Contains("rejected unregistered PVF handler")
+	$shapeChecks = $clientHandle.Contains('typeName _publicVar != "ARRAY"') -and $clientHandle.Contains("count _publicVar < 2") -and $clientHandle.Contains('typeName _script != "STRING"') -and $serverHandle.Contains('typeName _publicVar != "ARRAY"') -and $serverHandle.Contains("count _publicVar < 1") -and $serverHandle.Contains('typeName _script != "STRING"')
 	$directClientAllowed = $initCommon.Contains('WFBE_CL_PVF_ALLOWED = WFBE_CL_PVF_ALLOWED + ["CLTFNCGuerVbiedBounty"]')
-	Add-Result "PVF registration/handlers" ($missing.Count -eq 0 -and $allowlists -and $dispatchChecks -and $directClientAllowed) ($(if ($missing.Count) { $missing -join "; " } else { "Core PR8 server PVF channels are registered and have handlers. allowlists=$allowlists dispatchChecks=$dispatchChecks directClientAllowed=$directClientAllowed" }))
+	Add-Result "PVF registration/handlers" ($missing.Count -eq 0 -and $allowlists -and $dispatchChecks -and $shapeChecks -and $directClientAllowed) ($(if ($missing.Count) { $missing -join "; " } else { "Core PR8 server PVF channels are registered and have handlers. allowlists=$allowlists dispatchChecks=$dispatchChecks shapeChecks=$shapeChecks directClientAllowed=$directClientAllowed" }))
 }
 
 function Test-SideSupplyAuthorityGuard {
@@ -389,7 +390,7 @@ function Test-AicomCommandConsoleAuthorityGuard {
 		if (-not ($server.Contains('_validateAicomConsoleRequester') -and $server.Contains('count _vArgs < 5'))) { $missing += "$($entry.Terrain):validator-shape" }
 		if (-not ($server.Contains('typeName _requester != "OBJECT"') -and $server.Contains('typeName _requestTeam != "GROUP"') -and $server.Contains('!isPlayer _requester') -and $server.Contains('group _requester != _requestTeam') -and $server.Contains('side _requestTeam != _vSide'))) { $missing += "$($entry.Terrain):requester-team-binding" }
 		if (-not ($server.Contains('leader _cmdTeam != _requester') -and $server.Contains('!isPlayer (leader _cmdTeam)'))) { $missing += "$($entry.Terrain):human-commander-binding" }
-		if (-not ($server.Contains('[_args, _aSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _pSide, false] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _dSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _uSide, true] Call _validateAicomConsoleRequester'))) { $missing += "$($entry.Terrain):case-gates" }
+		if (-not ($server.Contains('[_args, _aSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _pSide, false] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _dSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _uSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _fSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _rSide, true] Call _validateAicomConsoleRequester'))) { $missing += "$($entry.Terrain):case-gates" }
 	}
 	Add-Result "AICOM command-console authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }

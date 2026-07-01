@@ -2,6 +2,16 @@ Private['_args','_validateAicomConsoleRequester'];
 
 _args = _this;
 
+if (isNil "_args") exitWith {
+	["WARNING", "Server_HandleSpecial.sqf: rejected nil HandleSpecial payload."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _args != "ARRAY" || {count _args < 1}) exitWith {
+	["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed HandleSpecial payload type [%1].", typeName _args]] Call WFBE_CO_FNC_LogContent;
+};
+if (isNil {_args select 0} || {typeName (_args select 0) != "STRING"}) exitWith {
+	["WARNING", "Server_HandleSpecial.sqf: rejected HandleSpecial payload with invalid command."] Call WFBE_CO_FNC_LogContent;
+};
+
 _validateAicomConsoleRequester = {
 	private ["_vArgs","_vSide","_vRequireCommander","_requester","_requestTeam","_cmdTeam"];
 	_vArgs = _this select 0;
@@ -312,7 +322,7 @@ switch (_args select 0) do {
 		private ["_fSide","_fTown","_fLogik"];
 		_fSide = _args select 1;
 		_fTown = _args select 2;
-		if (!isNil "_fTown" && {!isNull _fTown} && {_fSide in [west, east]}) then {
+		if (!isNil "_fTown" && {!isNull _fTown} && {_fSide in [west, east]} && {[_args, _fSide, true] Call _validateAicomConsoleRequester}) then {
 			_fLogik = (_fSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _fLogik) then {
 				_fLogik setVariable ["wfbe_aicom_focus", _fTown];
@@ -328,7 +338,7 @@ switch (_args select 0) do {
 		private ["_dSide","_dTown","_dLogik"];
 		_dSide = _args select 1;
 		_dTown = _args select 2;
-		if (!isNil "_dTown" && {!isNull _dTown} && {_dSide in [west, east]}) then {
+		if (!isNil "_dTown" && {!isNull _dTown} && {_dSide in [west, east]} && {[_args, _dSide, true] Call _validateAicomConsoleRequester}) then {
 			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _dLogik) then {
 				_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
@@ -370,7 +380,7 @@ switch (_args select 0) do {
 		private ["_rSide","_rTown","_rLogik","_rCmd","_rHuman","_rRun","_rSID"];
 		_rSide = _args select 1;
 		_rTown = _args select 2;
-		if (!isNil "_rTown" && {!isNull _rTown} && {_rSide in [west, east]}) then {
+		if (!isNil "_rTown" && {!isNull _rTown} && {_rSide in [west, east]} && {[_args, _rSide, true] Call _validateAicomConsoleRequester}) then {
 			_rLogik = (_rSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _rLogik) then {
 				_rRun = false;

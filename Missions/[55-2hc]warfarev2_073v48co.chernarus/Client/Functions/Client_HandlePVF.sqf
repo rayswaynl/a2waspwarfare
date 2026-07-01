@@ -9,8 +9,13 @@ Private ["_code","_destination","_exit","_hcAllowed","_isHeadless","_parameters"
 _publicVar = _this;
 _exit = true;
 
+if (isNil "_publicVar") exitWith {};
+if (typeName _publicVar != "ARRAY") exitWith {};
+if (count _publicVar < 2) exitWith {};
+
 _destination = _publicVar select 0;
 _script = _publicVar select 1;
+if (isNil "_script" || {typeName _script != "STRING"}) exitWith {};
 _parameters = if (count _this > 2) then {_publicVar select 2} else {[]};
 
 _isHeadless = if !(isNil "isHeadLessClient") then {isHeadLessClient} else {!(hasInterface || isDedicated)};

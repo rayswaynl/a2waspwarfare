@@ -48,8 +48,8 @@ _editorTeams  = 0;
 {
 	if (!isNull _x) then {
 		_real = false;
-		if (_x getVariable ["wfbe_aicom_hc", false]) then {_real = true};
-		if (!_real && {_x getVariable ["wfbe_aicom_founded", false]}) then {_real = true};
+		if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
+		if (!_real && {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
 		if (_real) then {
 			_foundedTeams = _foundedTeams + 1;
 		} else {
@@ -170,7 +170,7 @@ if (_foundedTeams > _target) then {
 	_safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 	_pick = grpNull; _pickN = 1e9;
 	{
-		if (!isNull _x && {_x getVariable ["wfbe_aicom_hc", false]} && {!(_x getVariable ["wfbe_aicom_disband", false])}) then {
+		if (!isNull _x && {[_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_x, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 			_ldr = leader _x;
 			if (!isNull _ldr && {alive _ldr}) then {
 				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count _allUnits;
@@ -719,7 +719,7 @@ if (count _live > 0) then {
 	//--- templates up to the team-size floor HERE, at founding, so every team founds at 8-12. Skip MBT/attack-heli
 	//--- templates (the vehicle is the punch). The price loop below then charges for the bigger team and CreateTeam
 	//--- builds it full on the HC. A2-OA-safe (no pushBack/A3 commands; +_template copies so the shared template isn't mutated).
-	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): pad to FOUND_SIZE (midband), not the
+	//--- AICOM founding-size soak hardening: pad to FOUND_SIZE (midband), not the
 	//--- raw MIN floor. HC-founded teams are never refilled, so founding at the floor lets the live
 	//--- average dribble below the 8-12 band (soak measured 4.2-5.1). FOUND_SIZE defaults to MIN if unset
 	//--- and is clamped into [MIN,MAX]; behaviour is identical to before when FOUND_SIZE == MIN.

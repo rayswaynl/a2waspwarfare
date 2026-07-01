@@ -240,7 +240,7 @@ if (count _targets > 0) then {
 	{
 		_team = _x;
 		if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-			_wMode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+			_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 			//--- offense only: skip relief ("defense"), HQ-strike ("move") and the garrison team.
 			if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 				_wLdr = leader _team;
@@ -350,7 +350,7 @@ if (count _targets > 0) then {
 			{
 				_team = _x;
 				if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-					_wMode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+					_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 					if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 						_wLdr = leader _team;
 						if (!isNull _wLdr) then {_d = _wLdr distance _newPrim; if (_d < _newApproach) then {_newApproach = _d}};
@@ -390,7 +390,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 {
 	_team = _x;
 	if (!isNull _team) then {
-		_relTown = _team getVariable ["wfbe_aicom_relief", objNull];
+		_relTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
 			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
@@ -410,7 +410,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
 				//--- back to a fresh "towns" seq here; AssignTowns then re-issues a real attack target next cycle.
 				//--- Server-local teams ignore the order var and are driven by SetTeamMoveMode above (harmless).
-				if (_team getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
 				};
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3]%4.", _sideText, _team, _relTown getVariable ["name", "town"], if (_relExpired) then {" (hold expired -> offense)"} else {""}]] Call WFBE_CO_FNC_AICOMLog;
@@ -450,7 +450,7 @@ _relieved = 0;
 	if (_relieved < (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_RELIEF_MAX", 2])) then {
 		//--- Already has a reliever?
 		_free = grpNull;
-		{ if (!isNull _x && {(_x getVariable ["wfbe_aicom_relief", objNull]) == _town}) exitWith {_free = _x} } forEach _teams;
+		{ if (!isNull _x && {([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) == _town}) exitWith {_free = _x} } forEach _teams;
 		if (isNull _free) then {
 			//--- Nearest eligible team: AI-led, alive, plain towns-mode (not garrison/strike/relief/HC).
 			_freeD = 1e9;
@@ -474,10 +474,10 @@ _relieved = 0;
 						};
 					} forEach (units _team);
 					if (_relIsBigVeh || {_relAlive >= _relMinAlive}) then {
-						if ((toLower (_team getVariable ["wfbe_teammode", "towns"])) == "towns") then {
+						if ((toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool)) == "towns") then {
 							//--- WAVE-1 A3 (a): HC teams ARE now eligible for relief (the old !wfbe_aicom_hc exclusion made
 							//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
-							if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
+							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 								_d = (leader _team) distance _town;
 								if (_d < _freeD) then {_freeD = _d; _free = _team};
 							};
@@ -492,7 +492,7 @@ _relieved = 0;
 				//--- driver loop does NOT read - it reads ONLY wfbe_aicom_order. So for an HC team ALSO broadcast
 				//--- a "defense" order at the town (mirror the HQ-strike order idiom below). Server-local teams
 				//--- ignore the order var and use the SetTeamMove* writes above, so both paths stay covered.
-				if (_free getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_free, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_free setVariable ["wfbe_aicom_order", [(if (isNil {_free getVariable "wfbe_aicom_order"}) then {-1} else {(_free getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _town], true];
 				};
 				_free setVariable ["wfbe_aicom_relief", _town];
@@ -518,7 +518,7 @@ _relieved = 0;
 {
 	_wTeam = _x;
 	if (!isNull _wTeam && {!isPlayer (leader _wTeam)} && {({alive _x} count (units _wTeam)) > 0}) then {
-		_wMode = toLower (_wTeam getVariable ["wfbe_teammode", "towns"]);
+		_wMode = toLower ([_wTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 		if (_wMode == "defense" || {_wMode == "move"}) then {
 			_wLdr = leader _wTeam;
 			if (!isNull _wLdr && {alive _wLdr} && {behaviour _wLdr != "COMBAT"}) then {
@@ -543,7 +543,7 @@ _relieved = 0;
 							[_wTeam, "towns"] Call SetTeamMoveMode;
 							_wTeam setVariable ["wfbe_aicom_townorder", []];
 							_wTeam setVariable ["wfbe_aicom_wedge_bc", nil];
-							if (_wTeam getVariable ["wfbe_aicom_hc", false]) then {
+							if ([_wTeam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 								_wTeam setVariable ["wfbe_aicom_order", [(if (isNil {_wTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wTeam getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos _wLdr], true];
 							};
 							["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] WEDGE-WATCHDOG released from %3 (no move %4m in %5s, not in contact) -> offense.", _sideText, _wTeam, _wMode, round _wMoved, round (time - _wBcT)]] Call WFBE_CO_FNC_AICOMLog;
@@ -625,7 +625,7 @@ if (_strikeOn) then {
 	};
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
-	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
+	{ if (!isNull _x && {[_x, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
 	//--- B74.1 (Ray 2026-06-23): commit HALF the side's live field teams (was a flat 3) so a dominant side throws
 		//--- real weight at the enemy base instead of a 3-team poke that never razed it. Floor at 3 for a small army.
 		private ["_strikeLive","_strikeTarget"];
@@ -637,8 +637,8 @@ if (_strikeOn) then {
 		_best = grpNull; _bestN = 1; //--- need at least 2 men to be worth sending
 		{
 			_team = _x;
-			if (!isNull _team && {!isPlayer (leader _team)} && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
-				if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
+			if (!isNull _team && {!isPlayer (leader _team)} && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+				if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
 					if (_alive > 0) then {
 						//--- B69 (hqstrike-picker-weight-vehicle-punch): rank by PUNCH score, not raw bodycount. Heavy-detect idiom matches Common_AICOMServiceTick.sqf:103 (A2-OA-safe). _bestN now carries a score; inf 2 scores 2>1 (passes), 1-man remnant scores 1 (rejected), armour/attack-heli gets +bonus and outranks infantry.
@@ -656,7 +656,7 @@ if (_strikeOn) then {
 			_best setVariable ["wfbe_aicom_strike", true];
 		[_best, "move"] Call SetTeamMoveMode;
 		[_best, getPos _enemyHQ] Call SetTeamMovePos;
-		if (_best getVariable ["wfbe_aicom_hc", false]) then {
+		if ([_best, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true]; //--- HQ-STRIKE PRESS FIX (Ray): "defense" made the HC striker HOLD near the enemy HQ; "goto" routes through the driver else-branch (Common_RunCommanderTeam.sqf ~L749 = assault SAD WFBE_C_AICOM_ASSAULT_SAD onto _dest), so it PRESSES onto the HQ. Not "towns-target" (that triggers the town-depot capture phase, wrong for a base).
 		};
 		_strikeCount = _strikeCount + 1;
@@ -667,7 +667,7 @@ if (_strikeOn) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: edge lost (towns %2v%3, strength %4v%5) - strike recalled.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		{
 			_team = _x;
-			if (!isNull _team && {_team getVariable ["wfbe_aicom_strike", false]}) then {
+			if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 				_team setVariable ["wfbe_aicom_strike", false];
 				[_team, "towns"] Call SetTeamMoveMode;
 				_team setVariable ["wfbe_aicom_townorder", []];
@@ -690,7 +690,7 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	_ovrRaze  = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_RAZE", 400];
 	_eHQpos = getPos _enemyHQ;
 	_ovrStrikers = 0;
-	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]}) then { { if (alive _x && {(_x distance _eHQpos) < _ovrDist}) then {_ovrStrikers = _ovrStrikers + 1} } forEach (units _x) } } forEach _teams;
+	{ if (!isNull _x && {[_x, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then { { if (alive _x && {(_x distance _eHQpos) < _ovrDist}) then {_ovrStrikers = _ovrStrikers + 1} } forEach (units _x) } } forEach _teams;
 	_ovrEnemies = {alive _x && {(side _x) == _enemySide}} count (_eHQpos nearEntities [["Man","LandVehicle","Air"], _ovrClear]);
 	//--- B752 (Ray 2026-06-25): the old "0 enemy within 200m" razing gate was UNSATISFIABLE vs an entrenched/respawning
 	//--- home garrison (56-59 bodies) so a dominant strike besieged the base forever and the round NEVER closed (0 overruns
@@ -744,7 +744,7 @@ _garBodies = 0;
 diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|townStr=" + str _townStr + "|garBodies=" + str _garBodies + "|strikeOn=" + str _strikeOn);
 _primT = if (count _targets > 0) then {_targets select 0} else {objNull};
 diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
-//--- B58 SOAK DRAFT (2026-06-21, claude-gaming, propose-only): surface the DOMINANT-BUT-PASSIVE stall.
+//--- AICOM stall telemetry: surface the DOMINANT-BUT-PASSIVE stall.
 //--- The live soak FROZE at WEST 6 towns vs EAST 1 for ~5.5h with BOTH sides in DEFEND and ZERO new
 //--- captures. Mechanism: the territorial leader garrisons many towns, so its MANEUVER strength (_myStr)
 //--- dribbles BELOW the concentrated enemy's, which trips the "_myStr < _enStr -> DEFEND" gate above and

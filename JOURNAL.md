@@ -1,5 +1,29 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM/PVF static hardening and Build 83 merge-gate [RELEASE LOOP]
+
+Closed the next static release-hardening slice without touching runtime, SSH or
+deployment. Server and client PVF dispatchers now reject nil, non-array, short
+or non-string handler payloads before any `select` or allowlist lookup can throw.
+`Server_HandleSpecial.sqf` also rejects malformed command payloads before the
+main switch, and the stale `aicom-focus`, `aicom-defend` and `aicom-reinforce`
+cases now require the same human-commander requester/team validation used by the
+live command-console actions.
+
+Replaced the remaining active AICOM group receiver reads that used the Arma 2 OA
+unsafe `getVariable [name, default]` form with the existing
+`WFBE_CO_FNC_GroupGetBool` helper in the supervisor reset paths, AICOM allocation,
+spearhead/relief/HQ-strike strategy, team counting and CMDRSTAT team-type
+classification. Static smoke now also asserts the PVF shape guard and the extra
+AICOM command-case gates. `Run-WaspFinalCheck.ps1` passed after LoadoutManager
+mirrored the Chernarus source to Takistan and rebuilt `_MISSIONS.7z`.
+
+Merge-gate note: current `origin/master` is Build 83/cmdcon35 and is not a safe
+blind merge into PR #125. Local merge simulation shows it deletes the release
+harness/docs, reintroduces the HCTopUp draft worker surface, changes the release
+marker identity and carries broad gameplay changes. Keep PR #125 as the isolated
+release-readiness lane unless those changes are intentionally re-reviewed.
+
 ## 2026-07-01 — HCTopUp draft worker excluded from release package [RELEASE LOOP]
 
 Removed the uncompiled `AI_Commander_HCTopUp.DRAFT.sqf` worker from the
