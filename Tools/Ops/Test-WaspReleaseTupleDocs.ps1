@@ -11,12 +11,12 @@
 #>
 [CmdletBinding()]
 param(
-	[string]$ExpectedBranchHeadFull = "78ba49d54065f20d9f13ec7242514a00ee4e4467",
+	[string]$ExpectedBranchHeadFull = "062ab44ff5696af548e4fdcde85d4f9913a414bc",
 	[string]$ExpectedGitFull = "78ba49d54065f20d9f13ec7242514a00ee4e4467",
 	[string]$ExpectedGit = "78ba49d540",
 	[string]$ExpectedArchiveSha256 = "1C58A4A3FD2CBE90C7BF0F37062C1035D0DAD82C1875A801E639CC870EAC2C4B",
 	[string]$ExpectedPackageSize = "7,162,733",
-	[string]$ExpectedWikiCommit = "3f85c6b",
+	[string]$ExpectedWikiCommit = "e869bf0",
 	[string[]]$StaleArchiveSha256 = @(
 		"3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87",
 		"703F71E6C9F7E2FEB5323ADE32B5A4AFF7A2B277FC8B5BBE2687F5ED91601BED",
