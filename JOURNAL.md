@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Takistan WEST fallback runtime scorer gate [RELEASE LOOP]
+
+The release RPT scorer now makes the round32 Takistan WEST infantry-starvation
+fix mechanically provable instead of wiki-only: `Test-WaspReleaseRptEvidence.ps1`
+tracks `AICOMGATE|WEST|infFallback` as `aicomWestInfFallback` and adds the
+`takistan-west-aicom-infantry-fallback` gate against Takistan per-terrain token
+counts. Generic `TEAM_FOUNDED`/`CMDRSTAT`/progress evidence can no longer pass
+the release scorer if the exact-build Takistan WEST fallback marker is absent.
+
+Updated the per-terrain self-test so a mirrored Chernarus/Takistan semantic
+packet without the fallback marker fails only that new gate, then passes after
+adding the Takistan WEST fallback line. The summary packet and handoff checklist
+now surface the fallback token as a first-class runtime requirement.
+
 ## 2026-07-01 — AICOM infantry founding fallback integrated [RELEASE LOOP]
 
 Cherry-picked `8de3c4a60` into the release command-center branch as

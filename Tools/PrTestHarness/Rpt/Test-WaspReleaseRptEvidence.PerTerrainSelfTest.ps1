@@ -22,7 +22,10 @@ function Get-ExpectedMarkers {
 function New-TestPacket {
 	param(
 		[Parameter(Mandatory)] [string]$Root,
-		[Parameter(Mandatory)] [string[]]$SemanticTerrains
+		[Parameter(Mandatory)] [string[]]$SemanticTerrains,
+		[switch]$IncludeTakistanInfFallback,
+		[switch]$IncludeChernarusInfFallback,
+		[switch]$IncludeTakistanEastInfFallback
 	)
 
 	$roles = @("server","HC1","HC2","start-client","late-JIP")
@@ -84,6 +87,15 @@ function New-TestPacket {
 				)) {
 					[void]$lines.Add($token)
 				}
+				if ($terrain -eq "chernarus" -and $IncludeChernarusInfFallback) {
+					[void]$lines.Add("AICOMGATE|WEST|infFallback|admitted tmpl CDF_InfantrySquad maskSum=0 sideUpg=[0,0,0,0] (wrong terrain for Takistan gate)")
+				}
+				if ($terrain -eq "takistan" -and $IncludeTakistanEastInfFallback) {
+					[void]$lines.Add("AICOMGATE|EAST|infFallback|admitted tmpl TK_INS_InfantrySquad maskSum=0 sideUpg=[0,0,0,0] (wrong side for WEST gate)")
+				}
+				if ($terrain -eq "takistan" -and $IncludeTakistanInfFallback) {
+					[void]$lines.Add("AICOMGATE|WEST|infFallback|admitted tmpl BIS_US_InfantrySquad maskSum=1 sideUpg=[0,0,0,0] (no upgrade-0 infantry eligible)")
+				}
 			}
 			Set-Content -LiteralPath (Join-Path $terrainDir "$role.rpt") -Value $lines -Encoding UTF8
 		}
@@ -114,8 +126,37 @@ try {
 	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan")
 	$bothTerrains = Invoke-Score -Root $root
 	$perTerrainGate = @($bothTerrains.gates | Where-Object { [string]$_.id -eq "per-terrain-runtime-evidence" }) | Select-Object -First 1
-	if ([string]$bothTerrains.overall -ne "pass" -or [string]$perTerrainGate.status -ne "pass") {
-		throw ("Expected mirrored Chernarus/Takistan semantic packet to pass; overall={0}, perTerrain={1}" -f $bothTerrains.overall, $perTerrainGate.status)
+	$fallbackGate = @($bothTerrains.gates | Where-Object { [string]$_.id -eq "takistan-west-aicom-infantry-fallback" }) | Select-Object -First 1
+	if ([string]$bothTerrains.overall -ne "missing_or_failed" -or [string]$perTerrainGate.status -ne "pass" -or [string]$fallbackGate.status -ne "missing") {
+		throw ("Expected mirrored packet without Takistan WEST fallback to fail only the fallback gate; overall={0}, perTerrain={1}, fallback={2}" -f $bothTerrains.overall, $perTerrainGate.status, $fallbackGate.status)
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeChernarusInfFallback
+	$wrongTerrainFallback = Invoke-Score -Root $root
+	$fallbackGate = @($wrongTerrainFallback.gates | Where-Object { [string]$_.id -eq "takistan-west-aicom-infantry-fallback" }) | Select-Object -First 1
+	if ([string]$wrongTerrainFallback.overall -ne "missing_or_failed" -or [string]$fallbackGate.status -ne "missing") {
+		throw ("Expected Chernarus-only fallback marker not to satisfy Takistan WEST fallback gate; overall={0}, fallback={1}" -f $wrongTerrainFallback.overall, $fallbackGate.status)
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanEastInfFallback
+	$wrongSideFallback = Invoke-Score -Root $root
+	$fallbackGate = @($wrongSideFallback.gates | Where-Object { [string]$_.id -eq "takistan-west-aicom-infantry-fallback" }) | Select-Object -First 1
+	if ([string]$wrongSideFallback.overall -ne "missing_or_failed" -or [string]$fallbackGate.status -ne "missing") {
+		throw ("Expected Takistan EAST fallback marker not to satisfy Takistan WEST fallback gate; overall={0}, fallback={1}" -f $wrongSideFallback.overall, $fallbackGate.status)
+	}
+
+	Remove-Item -LiteralPath $root -Recurse -Force
+	[void](New-Item -ItemType Directory -Path $root -Force)
+	New-TestPacket -Root $root -SemanticTerrains @("chernarus","takistan") -IncludeTakistanInfFallback
+	$bothTerrains = Invoke-Score -Root $root
+	$perTerrainGate = @($bothTerrains.gates | Where-Object { [string]$_.id -eq "per-terrain-runtime-evidence" }) | Select-Object -First 1
+	$fallbackGate = @($bothTerrains.gates | Where-Object { [string]$_.id -eq "takistan-west-aicom-infantry-fallback" }) | Select-Object -First 1
+	if ([string]$bothTerrains.overall -ne "pass" -or [string]$perTerrainGate.status -ne "pass" -or [string]$fallbackGate.status -ne "pass") {
+		throw ("Expected mirrored Chernarus/Takistan semantic packet with Takistan WEST fallback to pass; overall={0}, perTerrain={1}, fallback={2}" -f $bothTerrains.overall, $perTerrainGate.status, $fallbackGate.status)
 	}
 	$summaryOut = Join-Path $root "summary"
 	& $summaryPath -RptDirectory $root -Recurse -ExpectedMarker (Get-ExpectedMarkers) -OutDirectory $summaryOut -Force
@@ -128,7 +169,7 @@ try {
 		throw "Expected summary Markdown to include per-terrain token counts."
 	}
 
-	Write-Host "PASS: per-terrain runtime evidence self-test"
+	Write-Host "PASS: per-terrain and Takistan WEST fallback runtime evidence self-test"
 } finally {
 	if (Test-Path -LiteralPath $root) {
 		Remove-Item -LiteralPath $root -Recurse -Force

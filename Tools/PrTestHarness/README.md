@@ -270,12 +270,16 @@ for Chernarus and Takistan through the `per-terrain-runtime-evidence` gate; a
 rich Chernarus run can no longer satisfy missing Takistan semantic evidence.
 The no-human AICOM gate requires WEST/EAST heartbeats and ticks, `AICOMSTAT`
 events, `TEAM_FOUNDED`, `CMDRSTAT`, and at least one action/progress token such
-as `ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or `SNAP`. It exits
-non-zero until the bundle is complete. It scores only the current mission window
-in each RPT, including the startup banner immediately above the latest
-`MISSINIT`, and fails if any scored file lacks that startup Mission Name banner.
-It prints session names and token counts only; it does not echo raw RPT lines or
-absolute RPT paths.
+as `ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or `SNAP`. The current
+release candidate also requires the Takistan WEST fallback marker
+`AICOMGATE|WEST|infFallback` through the
+`takistan-west-aicom-infantry-fallback` gate, so generic founding/progress tokens
+cannot mask the round32 WEST infantry-starvation fix. It exits non-zero until
+the bundle is complete. It scores only the current mission window in each RPT,
+including the startup banner immediately above the latest `MISSINIT`, and fails
+if any scored file lacks that startup Mission Name banner. It prints session
+names and token counts only; it does not echo raw RPT lines or absolute RPT
+paths.
 
 The per-terrain false-pass fixture is executable without live Arma runtime:
 

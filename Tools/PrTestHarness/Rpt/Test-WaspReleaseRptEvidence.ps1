@@ -209,6 +209,7 @@ $tokenSpecs = @(
 	[pscustomobject]@{ Name = "aicomFront"; Pattern = "AICOMSTAT\|v1\|FRONT\|" },
 	[pscustomobject]@{ Name = "aicomPosture"; Pattern = "AICOMSTAT\|v1\|POSTURE\|" },
 	[pscustomobject]@{ Name = "aicomSnapshot"; Pattern = "AICOM2\|v1\|SNAP\|" },
+	[pscustomobject]@{ Name = "aicomWestInfFallback"; Pattern = "AICOMGATE\|WEST\|infFallback\|" },
 	[pscustomobject]@{ Name = "aiCommanderActive"; Pattern = "AI commander ACTIVE" },
 	[pscustomobject]@{ Name = "aiCommanderAssist"; Pattern = "AI commander ASSIST" },
 	[pscustomobject]@{ Name = "aicomOrder"; Pattern = "AICOM2\|v1\|ORDER\|aicom-ai-command" },
@@ -534,6 +535,17 @@ foreach ($gate in $gateSpecs) {
 		}
 	}
 }
+$takistanInfFallbackMissing = @()
+if ([int]$terrainCounts["takistan"]["aicomWestInfFallback"] -lt 1) {
+	$takistanInfFallbackMissing += "takistan:aicom-west-infantry-fallback:aicomWestInfFallback"
+}
+$gateResults += [ordered]@{
+	id = "takistan-west-aicom-infantry-fallback"
+	status = if ($takistanInfFallbackMissing.Count -eq 0) { "pass" } else { "missing" }
+	missing = $takistanInfFallbackMissing
+	failHits = @()
+	note = "Requires exact-build Takistan WEST AICOM fallback evidence: AICOMGATE|WEST|infFallback."
+}
 
 $overallPass = (@($gateResults | Where-Object { $_.status -ne "pass" }).Count -eq 0)
 $result = [ordered]@{
@@ -576,7 +588,7 @@ if ($Json) {
 	}
 	Write-Host ""
 	Write-Host "Selected token counts:"
-	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
+	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aicomWestInfFallback","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
 		Write-Host ("{0,-28} {1}" -f $key, $totalCounts[$key])
 	}
 	Write-Host ""

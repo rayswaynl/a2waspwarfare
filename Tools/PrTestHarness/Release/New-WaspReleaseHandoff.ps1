@@ -285,6 +285,7 @@ $packet = [ordered]@{
 		"Current-mission RPT windows have no generic stop-condition errors.",
 		"Every scored RPT resolves to one runtime terrain and the per-terrain-runtime-evidence gate passes, proving Chernarus and Takistan each contribute the core semantic evidence families.",
 		"AICOM side discovery, heartbeat, WEST/EAST ticks, AICOMSTAT event, TEAM_FOUNDED, CMDRSTAT and at least one autonomous action/progress token such as ASSAULT_DISPATCH, COMBATSTAT, FRONT, POSTURE or SNAP.",
+		"Takistan WEST AICOM founding proof includes AICOMGATE|WEST|infFallback from the exact release candidate before the founding issue is called fixed.",
 		"HC registry proof has at least two non-zero-owner CIV HCSIDE connect rows and zero HCSIDE connect-skip or non-CIV HC connect rows.",
 		"HC delegation/locality, town cleanup, WDDM/static/artillery, supply and JIP/HUD evidence families."
 	)

@@ -176,7 +176,7 @@ foreach ($file in (ConvertTo-Array $score.files)) {
 [void]$lines.Add("")
 [void]$lines.Add("| Token | Count |")
 [void]$lines.Add("| --- | ---: |")
-foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aiCommanderActive","aiCommanderAssist","aicomOrder","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
+foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aicomWestInfFallback","aiCommanderActive","aiCommanderAssist","aicomOrder","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
 	[void]$lines.Add(("| {0} | {1} |" -f $key, (Get-CountValue $score.tokenCounts $key)))
 }
 [void]$lines.Add("")
@@ -193,7 +193,7 @@ if ($null -ne $chernarusCounts -or $null -ne $takistanCounts) {
 	[void]$lines.Add("")
 	[void]$lines.Add("| Token | Chernarus | Takistan |")
 	[void]$lines.Add("| --- | ---: | ---: |")
-	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aiCommanderActive","hcConnectCivilian","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted")) {
+	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aicomWestInfFallback","aiCommanderActive","hcConnectCivilian","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted")) {
 		[void]$lines.Add(("| {0} | {1} | {2} |" -f $key, (Get-CountValue $chernarusCounts $key), (Get-CountValue $takistanCounts $key)))
 	}
 	[void]$lines.Add("")
