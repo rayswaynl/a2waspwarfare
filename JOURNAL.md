@@ -2,12 +2,14 @@
 
 ## 2026-07-01 — Handoff stale-archive negative self-test [RELEASE LOOP]
 
-Added a release handoff self-test fixture for the package-race failure mode seen
+Added release handoff self-test fixtures for the package-race failure mode seen
 during the automated release loop: generate a manifest, mutate `_MISSIONS.7z`
-without changing its length, run `New-WaspReleaseHandoff.ps1` in a child
-PowerShell process, and assert that it exits nonzero while still writing a
-diagnostic handoff packet with `needs_package_or_marker_fix` and
-`archive-sha256-match=fail`.
+without changing its length, then repeat with a length-changing mutation. Both
+run `New-WaspReleaseHandoff.ps1` in a child PowerShell process and assert that
+it exits nonzero while still writing a diagnostic handoff packet with
+`needs_package_or_marker_fix`; the same-length case proves
+`archive-sha256-match=fail`, and the length-changing case proves both archive
+freshness gates fail.
 
 This does not change release packaging behavior; it makes the existing
 hash-mismatch gate harder to regress before the runtime RPT handoff.

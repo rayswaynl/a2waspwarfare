@@ -231,6 +231,29 @@ try {
 	Assert-GateStatus -Packet $badPacket -Id "archive-length-match" -ExpectedStatus "pass"
 	Assert-GateStatus -Packet $badPacket -Id "archive-sha256-match" -ExpectedStatus "fail"
 
+	$badLengthRoot = Join-Path $tempRoot "bad-archive-length"
+	[void](New-Item -ItemType Directory -Path $badLengthRoot -Force)
+	$badLengthArchivePath = Join-Path $badLengthRoot "_MISSIONS.7z"
+	[System.IO.File]::WriteAllBytes($badLengthArchivePath, [byte[]](65, 66, 67, 68))
+	$badLengthManifestInfo = New-TestPackageManifest -Root $badLengthRoot -ArchivePath $badLengthArchivePath
+	[System.IO.File]::WriteAllBytes($badLengthArchivePath, [byte[]](65, 66, 67, 68, 69))
+	$badLengthOutDir = Join-Path $badLengthRoot "handoff"
+	$badLengthResult = Invoke-HandoffChild @(
+		"-PackageManifestPath", $badLengthManifestInfo.path,
+		"-ExpectedCandidate", $candidate,
+		"-ReleaseGit", $releaseGit,
+		"-OutDirectory", $badLengthOutDir,
+		"-AllowNonHeadReleaseGit",
+		"-Force"
+	)
+	Assert-Equal ([string]$badLengthResult.exitCode) "1" "Length-drift package handoff must exit nonzero."
+	$badLengthPacketPath = Join-Path $badLengthOutDir "release-handoff.json"
+	Assert-True (Test-Path -LiteralPath $badLengthPacketPath -PathType Leaf) "Length-drift handoff should still write the diagnostic packet."
+	$badLengthPacket = Get-Content -Raw -LiteralPath $badLengthPacketPath | ConvertFrom-Json
+	Assert-Equal ([string]$badLengthPacket.status) "needs_package_or_marker_fix" "Length-drift handoff should not be runtime-ready."
+	Assert-GateStatus -Packet $badLengthPacket -Id "archive-length-match" -ExpectedStatus "fail"
+	Assert-GateStatus -Packet $badLengthPacket -Id "archive-sha256-match" -ExpectedStatus "fail"
+
 	Write-Host "WASP release handoff self-test PASS."
 } finally {
 	if ($KeepTemp) {
