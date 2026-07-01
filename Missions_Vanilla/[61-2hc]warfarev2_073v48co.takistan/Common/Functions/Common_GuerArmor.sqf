@@ -26,10 +26,44 @@ _vehicle = _this select 0;
 if (isNull _vehicle) exitWith {};
 
 _armor = {
-	private ["_sel","_dam","_ammo","_base","_tier","_step","_max","_eff","_class","_isMob","_out"];
+	private ["_sel","_dam","_ammo","_base","_tier","_step","_max","_eff","_class","_isMob","_out","_containsAny"];
 	_sel  = _this select 1;
 	_dam  = _this select 2;
 	_ammo = _this select 4;
+
+	_containsAny = {
+		private ["_hay","_needles","_hayA","_hayN","_needle","_needleA","_needleN","_max","_i","_j","_ok","_found"];
+		_hay = _this select 0;
+		_needles = _this select 1;
+		if (typeName _hay != "STRING") exitWith {false};
+		_hayA = toArray _hay;
+		_hayN = count _hayA;
+		_found = false;
+		{
+			_needle = _x;
+			if (!_found && {typeName _needle == "STRING"}) then {
+				_needleA = toArray _needle;
+				_needleN = count _needleA;
+				if (_needleN == 0) then {
+					_found = true;
+				} else {
+					if (_hayN >= _needleN) then {
+						_max = _hayN - _needleN;
+						for "_i" from 0 to _max do {
+							if (!_found) then {
+								_ok = true;
+								for "_j" from 0 to (_needleN - 1) do {
+									if ((_hayA select (_i + _j)) != (_needleA select _j)) then {_ok = false};
+								};
+								if (_ok) then {_found = true};
+							};
+						};
+					};
+				};
+			};
+		} forEach _needles;
+		_found
+	};
 
 	//--- nothing to do for a null/zero hit or before ammo is resolved.
 	if (isNil "_dam") exitWith {0};
@@ -50,22 +84,10 @@ _armor = {
 	if (isNil "_ammo") then {_ammo = ""};
 	if (typeName _ammo != "STRING") then {_ammo = ""};
 	if (_ammo != "") then {
-		if (
-			(_ammo find "_AT") >= 0 || {(_ammo find "PG7") >= 0} || {(_ammo find "PG9") >= 0}
-			|| {(_ammo find "HEAT") >= 0} || {(_ammo find "TOW") >= 0} || {(_ammo find "Maverick") >= 0}
-			|| {(_ammo find "Hellfire") >= 0} || {(_ammo find "AT13") >= 0} || {(_ammo find "Metis") >= 0}
-			|| {(_ammo find "Kornet") >= 0} || {(_ammo find "Vikhr") >= 0} || {(_ammo find "AT5") >= 0}
-			|| {(_ammo find "AT4") >= 0} || {(_ammo find "SVIR") >= 0} || {(_ammo find "M_47") >= 0}
-			|| {(_ammo find "RPG") >= 0}
-		) then {
+		if ([_ammo, ["_AT","PG7","PG9","HEAT","TOW","Maverick","Hellfire","AT13","Metis","Kornet","Vikhr","AT5","AT4","SVIR","M_47","RPG"]] Call _containsAny) then {
 			_class = 0;
 		} else {
-			if (
-				(_ammo find "_HE") >= 0 || {(_ammo find "Sh_") >= 0} || {(_ammo find "FFAR") >= 0}
-				|| {(_ammo find "S8") >= 0} || {(_ammo find "Hydra") >= 0} || {(_ammo find "GRAD") >= 0}
-				|| {(_ammo find "FAB") >= 0} || {(_ammo find "Rocket") >= 0} || {(_ammo find "Grenade") >= 0}
-				|| {(_ammo find "G_") >= 0}
-			) then {
+			if ([_ammo, ["_HE","Sh_","FFAR","S8","Hydra","GRAD","FAB","Rocket","Grenade","G_"]] Call _containsAny) then {
 				_class = 1;
 			};
 		};
@@ -77,10 +99,7 @@ _armor = {
 	//--- mobility-part bonus (non-AT only). HEURISTIC: engine selection names vary per model in A2 OA.
 	_isMob = false;
 	if (typeName _sel == "STRING" && {_sel != ""}) then {
-		if (
-			(_sel find "wheel") >= 0 || {(_sel find "motor") >= 0} || {(_sel find "engine") >= 0}
-			|| {(_sel find "palivo") >= 0} || {(_sel find "fuel") >= 0}
-		) then {
+		if ([_sel, ["wheel","motor","engine","palivo","fuel"]] Call _containsAny) then {
 			_isMob = true;
 			_eff = _eff + (missionNamespace getVariable ["WFBE_C_GUER_IMPROVISED_ARMOR_MOBILITY_BONUS", 0]);
 			if (_eff > _max) then {_eff = _max};
