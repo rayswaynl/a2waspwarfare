@@ -85,7 +85,7 @@ As of 2026-07-01 08:16 UTC:
    - Commander funds can publicVariable every 15s when exact funds change.
    - GUER stipend and air-defense state rebroadcasts are intentionally JIP-durable but chatty.
    - Pending HC dispatch and group-cap warnings can repeat heavily in long RPTs.
-   - Action: partially mitigated. `GRPBUDGET|WARN` is now edge-triggered with a `GRPBUDGET|RECOVER` latch reset, while AI Commander team-founder group-cap warnings are throttled to once per side per 15 minutes while the cap remains exceeded. The lower-level `Common_CreateGroup.sqf` emergency-GC and `grpNull` warnings, plus the `Common_CreateTeam.sqf` template-skip follow-up, are now debounced to one report per side/machine every five minutes. Still defer exact-funds quantization and JIP rebroadcast changes until live RPT evidence proves they are worth the compatibility risk.
+   - Action: partially mitigated. `GRPBUDGET|WARN` is now edge-triggered with a `GRPBUDGET|RECOVER` latch reset, while AI Commander team-founder group-cap warnings are throttled to once per side per 15 minutes while the cap remains exceeded. The lower-level `Common_CreateGroup.sqf` emergency-GC and `grpNull` warnings, plus the `Common_CreateTeam.sqf` template-skip follow-up, are now debounced to one report per side/machine every five minutes. `WFBE_PopTier` now gets a targeted join-time `publicVariableClient` catch-up so late joiners do not default their AI cap/RHUD scaling to low-pop tier until the next population-tier change. Still defer exact-funds quantization and broad JIP rebroadcast changes until live RPT evidence proves they are worth the compatibility risk.
 
 8. There is still a watched-command compatibility lead in wildcard code.
    - `Server/Functions/AI_Commander_Wildcard.sqf:325` documents the allDead replacement for lucky salvage.
@@ -102,6 +102,7 @@ As of 2026-07-01 08:16 UTC:
    - Reconcile `_guer-build/DEPLOY-RUNBOOK.md` with later Takistan slice docs.
    - Add a server-operator page and a unified RPT/performance tools page.
    - Note that generated `version.sqf` is gitignored and must be part of pack/smoke/release validation.
+   - Action: partially mitigated. The July 2026 landing page and sidebar entry are live, and Home/Sidebar now route readers to the current RPT release gate instead of the stale PR-harness anchor. The July page links the operator checklist, deployment inventory, ten-file RPT matrix, redaction-safe summary gate, and final release checklist. `AI-Commander-Execution-Loop-Reference` and `AI-Commander-Logging-And-AICOMSTAT-Telemetry` now carry PR #126 supersession notes so their old "branch-only/reverted" banners do not mislead release readers. Server ops and testing workflow pages already exist and document `version.sqf`, package provenance, and RPT gates; remaining work is pruning/labeling older branch/WIP pages.
 
 11. Public stats and server-side stats disagreed during reconnaissance.
    - Public `/api/wasp-stats` reported stale/offline.
