@@ -11,11 +11,12 @@
 #>
 [CmdletBinding()]
 param(
+	[string]$ExpectedBranchHeadFull = "78ba49d54065f20d9f13ec7242514a00ee4e4467",
 	[string]$ExpectedGitFull = "e3b6e379032d65241f0f4da1aa72a333dcd0df67",
 	[string]$ExpectedGit = "e3b6e37903",
 	[string]$ExpectedArchiveSha256 = "3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87",
 	[string]$ExpectedPackageSize = "7,162,113",
-	[string]$ExpectedWikiCommit = "069020f",
+	[string]$ExpectedWikiCommit = "1883a1b",
 	[string[]]$StaleArchiveSha256 = @(
 		"703F71E6C9F7E2FEB5323ADE32B5A4AFF7A2B277FC8B5BBE2687F5ED91601BED",
 		"40883616F483EFBB6BCB4DE9EF0FFB4CC693652F89376DBC045CE1F9C69F17BD",
@@ -69,6 +70,7 @@ $releaseLedger = Read-RepoFile "docs\release\2026-07-01-release-readiness-task.m
 $monitorReadme = Read-RepoFile "Tools\Monitor\README.md"
 
 Write-Host "Checking release-readiness ledger tuple"
+Assert-Contains $releaseLedger $ExpectedBranchHeadFull "ledger has expected current branch head"
 Assert-Contains $releaseLedger $ExpectedGitFull "ledger has expected full git identity"
 Assert-Contains $releaseLedger $ExpectedGit "ledger has expected git marker"
 Assert-Contains $releaseLedger $ExpectedArchiveSha256 "ledger has expected archive SHA"
