@@ -19,7 +19,7 @@ As of 2026-07-01 after the PR #125 Build83/cmdcon35, AICOM latch-reset, release-
 - `origin/master`: current observed head `b4a6350ca`; PR #126 has merged this head through `be1b83a7e` and GitHub reports PR #126 clean/mergeable.
 - PR #123, `[codex] running release findings log`, branch `codex/release-findings`: docs-only running findings log for release proof. Current head observed: `d238d0ad4`.
 - PR #124, `[codex] Release r8 integration findings for July 2`, branch `release/2026-07-02-stackcheck-r8`: r8 stack candidate with package hashes and NO-GO until exact runtime proof.
-- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates. GitHub currently reports the branch at `7f81115edf6226791d2156b330b7b38652d7a989` after source/harness commits `9dd208d7b` and `7f81115ed`. The refreshed package identity is marker `7f81115edf`; `_MISSIONS.7z` SHA256 `40883616F483EFBB6BCB4DE9EF0FFB4CC693652F89376DBC045CE1F9C69F17BD`, `1,885` entries, `7,162,199` bytes, handoff status `ready_for_runtime_collection`, and public wiki commit `51faaca`. Exact Chernarus and Takistan runtime RPT proof is still pending, and GitHub reports PR #125 open, draft, clean, and mergeable against `master`.
+- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates. GitHub currently reports the branch at `a94818f2ebf77a8c825df2ee9b3ae65e49a980d9` after a tooling/JOURNAL-only static-smoke follow-up, while the current package checkpoint remains marker `7f81115edf`; `_MISSIONS.7z` SHA256 `40883616F483EFBB6BCB4DE9EF0FFB4CC693652F89376DBC045CE1F9C69F17BD`, `1,885` entries, `7,162,199` bytes, handoff status `ready_for_runtime_collection`, and public wiki commit `51faaca`. Exact Chernarus and Takistan runtime RPT proof is still pending, and GitHub reports PR #125 open, draft, clean, and mergeable against `master`.
 - PR #131, `[codex] Fix placement preview static gate`, branch `codex/fix-b724-placement-static`: closed focused static-gate follow-up. Last branch head observed: `bc297a632`; prior findings artifact `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z` with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D` remains packaging/tooling proof only for old head `2178b20d3`, not exact current-head proof unless refreshed or explicitly accepted as same mission delta.
 - This branch, `codex/release-readiness-20260701`: multi-agent task ledger and AICOM guardrail/proof-instrumentation lane. HC audit source is through `f20ddfc83`, the first livehost proof-gap ledger was pushed at `5b2e29c1c`, and the local proof-instrumented archive SHA256 `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD` remains PR #126 companion evidence only; use the chosen PR #125 package tuple for active runtime collection unless the owner intentionally cuts a new package from this lane. GitHub reports PR #126 open, draft, clean, and mergeable.
 
@@ -148,11 +148,17 @@ As of 2026-07-01 after the PR #125 Build83/cmdcon35, AICOM latch-reset, release-
    - Impact: copying the tracked fallback template directly to `version.sqf` could advertise the wrong slot count in `Rsc/Header.hpp` and boot logs, confusing package/runtime proof and operator checks.
    - Action: PR #126 now sets the Chernarus fallback template to `WF_MAXPLAYERS 55`; `Tools/Ops/Test-WaspVersionTemplates.ps1` guards this alongside the Takistan fallback identity checks.
 
-17. PR #125 source and package proof were refreshed to the same head.
-   - GitHub reports PR #125 branch `codex/release-command-center-20260630` at `7f81115edf6226791d2156b330b7b38652d7a989`.
+17. PR #125 source and package proof were refreshed to the same head, then the branch gained a tooling-only follow-up.
+   - The current package checkpoint commit is `7f81115edf6226791d2156b330b7b38652d7a989`.
    - The PR/wiki/package tuple now records `_MISSIONS.7z` built from marker `7f81115edf`, SHA256 `40883616F483EFBB6BCB4DE9EF0FFB4CC693652F89376DBC045CE1F9C69F17BD`, `1,885` entries, `7,162,199` bytes, and handoff status `ready_for_runtime_collection`.
    - Validation recorded on PR #125 includes LoadoutManager RELEASE rebuild, package gates, release handoff generation, wiki parse/diff checks, Chernarus/Takistan OA lint pass, and high-only BugHunt clean; local overlay prerequisite checks remain environment-pending.
    - Action: collect runtime evidence only against the `7f81115edf` / `40883616...` tuple unless the release owner explicitly promotes a newer package.
+
+18. PR #125 branch head advanced after the current package checkpoint.
+   - GitHub now reports PR #125 branch `codex/release-command-center-20260630` at `a94818f2ebf77a8c825df2ee9b3ae65e49a980d9`.
+   - The delta from `7f81115edf` to `a94818f2` is `JOURNAL.md` plus `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`; no maintained mission files changed in that diff.
+   - Impact: the `7f81115edf` package remains the last recorded package checkpoint, but it is no longer the literal branch head. Runtime collection should still target the `7f81115edf` / `40883616...` package unless PR #125 cuts and documents a new package from `a94818f2` or a later head.
+   - Action: keep `Tools/Ops/Test-WaspReleaseTupleDocs.ps1` pointed at the active package checkpoint, and refresh this ledger plus PR bodies if PR #125 promotes a new package tuple.
 
 ## Working Backlog
 
