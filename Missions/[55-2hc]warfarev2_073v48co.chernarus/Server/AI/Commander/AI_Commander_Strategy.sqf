@@ -744,7 +744,7 @@ _garBodies = 0;
 diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|townStr=" + str _townStr + "|garBodies=" + str _garBodies + "|strikeOn=" + str _strikeOn);
 _primT = if (count _targets > 0) then {_targets select 0} else {objNull};
 diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
-//--- B58 SOAK DRAFT (2026-06-21, claude-gaming, propose-only): surface the DOMINANT-BUT-PASSIVE stall.
+//--- AICOM stall telemetry: surface the DOMINANT-BUT-PASSIVE stall.
 //--- The live soak FROZE at WEST 6 towns vs EAST 1 for ~5.5h with BOTH sides in DEFEND and ZERO new
 //--- captures. Mechanism: the territorial leader garrisons many towns, so its MANEUVER strength (_myStr)
 //--- dribbles BELOW the concentrated enemy's, which trips the "_myStr < _enStr -> DEFEND" gate above and

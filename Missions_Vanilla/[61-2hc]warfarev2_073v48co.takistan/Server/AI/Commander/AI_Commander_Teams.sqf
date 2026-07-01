@@ -672,7 +672,7 @@ if (count _live > 0) then {
 	//--- templates up to the team-size floor HERE, at founding, so every team founds at 8-12. Skip MBT/attack-heli
 	//--- templates (the vehicle is the punch). The price loop below then charges for the bigger team and CreateTeam
 	//--- builds it full on the HC. A2-OA-safe (no pushBack/A3 commands; +_template copies so the shared template isn't mutated).
-	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): pad to FOUND_SIZE (midband), not the
+	//--- AICOM founding-size soak hardening: pad to FOUND_SIZE (midband), not the
 	//--- raw MIN floor. HC-founded teams are never refilled, so founding at the floor lets the live
 	//--- average dribble below the 8-12 band (soak measured 4.2-5.1). FOUND_SIZE defaults to MIN if unset
 	//--- and is clamped into [MIN,MAX]; behaviour is identical to before when FOUND_SIZE == MIN.
