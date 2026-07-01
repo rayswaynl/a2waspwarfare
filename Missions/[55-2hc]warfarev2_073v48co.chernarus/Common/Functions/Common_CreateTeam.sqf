@@ -1,5 +1,5 @@
 // Marty: Crew placement uses explicit private locals because town AI may be created on server, client, or headless client.
-Private ['_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor'];
+Private ['_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx'];
 
 _list = _this select 0;
 _position = _this select 1;
@@ -9,6 +9,16 @@ _lockVehicles = _this select 3;
 _team = _this select 4;
 _global = if (count _this > 5) then {_this select 5} else {true};
 _probability = if (count _this > 6) then {_this select 6} else {-1};
+//--- PLANE AIR-START (Ray 2026-07-01, "free air at captured airfields" PLANE-ONLY, gate WFBE_C_AICOM_PLANE_AIRSTART default-ON): optional
+//--- 8th arg = the runway/objective heading (degrees) for PLANE hulls in this template. Only AI_Commander air-founding (via
+//--- Common_RunCommanderTeam) passes it; town/side-patrol/server_town calls omit it (count guard) so their behaviour is byte-identical.
+//--- When present AND the gate is on, each Plane-class hull is created with the airborne "FLY" special + this real heading (mirrors the
+//--- proven produce path Server_BuyUnit.sqf: planes get _special="FLY" + a real _dir) INSTEAD of the grounded "FORM"/dir 0 below, so a
+//--- founded plane spawns FLYING (never stuck on/off the runway) and points down the field. Helis + ground hulls are UNCHANGED (FORM).
+//--- _planeIdx de-conflicts a multi-plane template: each successive Plane hull is nudged +N degrees so two hulls never spawn stacked.
+_planeDir = if (count _this > 7) then {_this select 7} else {-1};
+_planeAirStart = (typeName _planeDir == "SCALAR") && {_planeDir >= 0} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLANE_AIRSTART", 1]) > 0};
+_planeIdx = 0;
 _units = [];
 _vehicles = [];
 _crews = [];
@@ -54,8 +64,13 @@ if (isNull _team) exitWith {
 		default {_groupCountUnknown};
 	};
 	_groupMachine = if (isServer) then {"SERVER"} else {if (hasInterface) then {"CLIENT"} else {"HC"}};
-	["WARNING", Format ["TOWN_GROUP_COUNT create_failed machine:%1 side:%2 sideGroups:%3 total:%4 west:%5 east:%6 guer:%7 civ:%8 logic:%9 unknown:%10", _groupMachine, _side, _groupCountSide, count allGroups, _groupCountWest, _groupCountEast, _groupCountGuer, _groupCountCiv, _groupCountLogic, _groupCountUnknown]] Call WFBE_CO_FNC_LogContent;
-	["WARNING", Format ["Common_CreateTeam.sqf: Team template for side [%1] at [%2] was skipped because no valid group could be created. Templates:%3", _side, _position, count _list]] Call WFBE_CO_FNC_LogContent;
+	_warnKey = "wfbe_createteam_null_warn_" + str _sideID + "_" + _groupMachine;
+	_warnLast = missionNamespace getVariable [_warnKey, -9999];
+	if ((time - _warnLast) >= 300) then {
+		missionNamespace setVariable [_warnKey, time];
+		["WARNING", Format ["TOWN_GROUP_COUNT create_failed machine:%1 side:%2 sideGroups:%3 total:%4 west:%5 east:%6 guer:%7 civ:%8 logic:%9 unknown:%10", _groupMachine, _side, _groupCountSide, count allGroups, _groupCountWest, _groupCountEast, _groupCountGuer, _groupCountCiv, _groupCountLogic, _groupCountUnknown]] Call WFBE_CO_FNC_LogContent;
+		["WARNING", Format ["Common_CreateTeam.sqf: Team template for side [%1] at [%2] was skipped because no valid group could be created. Templates:%3", _side, _position, count _list]] Call WFBE_CO_FNC_LogContent;
+	};
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 			_perfScope = if (isServer && !hasInterface) then {"SERVER"} else {"CLIENT"};
@@ -112,7 +127,21 @@ _rearmor = {
 				_perfInfantry = _perfInfantry + 1;
 			};
 		} else {
-			_vehicle = [_x, _position, _sideID, 0, _lockVehicles, true, _global, "FORM"] Call WFBE_CO_FNC_CreateVehicle;
+			//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): a Plane hull with the air-start heading threaded in
+			//--- (AICOM air founding at a captured airfield) is created FLYING via the "FLY" special + a real heading,
+			//--- exactly as the produce path (Server_BuyUnit.sqf L174-175) does, so it can never be stuck grounded and
+			//--- points down the field. Each successive plane in a multi-hull template is fanned +N degrees (de-conflict)
+			//--- so two hulls never air-spawn stacked and collide. Helis + every ground hull keep the grounded "FORM" path
+			//--- (unchanged). A2-OA-safe: classname-literal isKindOf, floor-div wrap for the direction (no A3 commands).
+			if (_planeAirStart && {_x isKindOf "Plane"}) then {
+				private ["_thisPlaneDir"];
+				_thisPlaneDir = _planeDir + (_planeIdx * (missionNamespace getVariable ["WFBE_C_AICOM_PLANE_STACK_DEG", 25]));
+				_thisPlaneDir = _thisPlaneDir - (360 * floor (_thisPlaneDir / 360)); //--- wrap into [0,360).
+				_planeIdx = _planeIdx + 1;
+				_vehicle = [_x, _position, _sideID, _thisPlaneDir, _lockVehicles, true, _global, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
+			} else {
+				_vehicle = [_x, _position, _sideID, 0, _lockVehicles, true, _global, "FORM"] Call WFBE_CO_FNC_CreateVehicle;
+			};
 			call {
 				// Marty: If the vehicle itself failed, skip this template entry without attempting crew work.
 				if (isNull _vehicle) exitWith {

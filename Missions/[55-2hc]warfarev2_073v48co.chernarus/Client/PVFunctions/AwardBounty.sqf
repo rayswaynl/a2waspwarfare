@@ -8,6 +8,7 @@ _assist = _this select 1;
 _ai = if (count _this > 2) then {_this select 2} else {objNull};
 
 _get = missionNamespace getVariable _type;
+if (isNil "_get") exitWith {}; //--- Build83 (Ray client RPT 2026-07-01): killed type with no price-registry entry -> _get nil -> the select lines below spammed "Undefined variable _get" every such kill. No price = no bounty, so exit cleanly.
 
 _name = _get select QUERYUNITLABEL;
 _faction = _get select QUERYUNITFACTION;
@@ -39,6 +40,11 @@ _bounty = switch  (true) do {
 
 					default {0}; //--- wiki-wins: unmatched (e.g. mod-added) classes no longer feed nil into ChangePlayerFunds
 
+};
+
+//--- Ka-137 reward nerf: a killed Ka-137 (all PMC variants) pays only the coef (default 0.4) of normal.
+if ((_type isKindOf "Ka137_MG_PMC") || (_type isKindOf "Ka137_PMC")) then {
+	_bounty = round(_bounty * (missionNamespace getVariable ["WFBE_C_KA137_REWARD_COEF", 0.4]));
 };
 
 sleep (random 3);

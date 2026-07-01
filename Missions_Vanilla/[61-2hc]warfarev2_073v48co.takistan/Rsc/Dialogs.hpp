@@ -2119,7 +2119,26 @@ class RscMenu_Command {
 			colorBackground[] = {0, 0.65, 0, 0.85};
 			colorBackgroundActive[] = {0.1, 0.85, 0.1, 1};
 		};
-		/* ROSTER of your AI teams (commander state). Row = "leader | role | town | order". Click to select. */
+		/* Command Console v2 (claude-gaming 2026-07-01): STATE-A "AI: FOCUS TOWN" advisory. Full-width button under the
+		   field-order nudges (bottom of the field-order cluster 0.816 < this 0.822). Player ARMS it, then clicks a town
+		   on the map; the controller resolves the nearest town and sends aicom-focus (the SAME mechanism the M4-key /
+		   command-center focus uses) so the still-running AI prioritises that town WITHOUT the player taking command.
+		   Inherits CA_Cmd_PosturePush (STATE-A advisory; controller ctrlShow's it only when NOT commander). Slate/teal
+		   tint distinct from the PUSH/HOLD/field-order palette. MenuAction 766. */
+		class CA_Cmd_Focus : CA_Cmd_PosturePush {
+			idc = 14617;
+			x = 0.00561695;
+			y = 0.822000;
+			w = 0.459244;
+			h = 0.040000;
+			text = "AI: FOCUS TOWN (click map)";
+			action = "MenuAction = 766";
+			tooltip = "Point the running AI commander at a town: arm this, then click the town on the map. The AI prioritises it - you do NOT take command.";
+			colorBackground[] = {0.12, 0.35, 0.42, 0.85};
+			colorBackgroundActive[] = {0.18, 0.5, 0.58, 1};
+		};
+		/* ROSTER of your AI teams (commander state). Row = "Squad type | Target | Alive" (Command Console v2). Click to
+		   select; double-click opens the unit camera on that team's leader (VIEW TEAM, MenuAction 726). */
 		class CA_Cmd_RosterTitle : RscText_SubTitle {
 			idc = 14660;
 			x = 0.00561695;
@@ -2137,6 +2156,10 @@ class RscMenu_Command {
 			rowHeight = 0.03;                  //--- REQUIRED (claude 2026-06-29): explicit rowHeight - inherited RscListBox value not in inherit-scope for this dialog; absence threw "No entry ...CA_Cmd_Roster.rowHeight" and broke the console.
 			show = 0;                          //--- STRUCTURAL GUARD (see 14660).
 			//--- selection is read live via lbCurSel 14661 in the controller loop; no onLBSelChanged needed.
+			//--- Command Console v2 (claude-gaming 2026-07-01): double-click a roster row = VIEW TEAM. The controller reads
+			//--- MenuAction 726, closes the console and opens the existing unit camera (RscMenu_UnitCamera) on the selected
+			//--- team's leader. Proven A2-OA idiom (onLBDblClick -> MenuAction, e.g. RscMenu list at Dialogs.hpp:1582).
+			onLBDblClick = "MenuAction = 726";
 		};
 		class LineCmd1 : RscText {
 			idc = 14690;
@@ -2306,6 +2329,22 @@ class RscMenu_Command {
 			text = "DISBAND AI TEAMS";
 			action = "MenuAction = 745";
 			tooltip = "FAILSAFE: stand down ALL AI field teams (the AI re-founds fresh). ~15-min cooldown. Click twice to confirm.";
+			colorBackground[] = {0.45, 0.05, 0.1, 0.85};
+			colorBackgroundActive[] = {0.7, 0.1, 0.15, 1};
+		};
+		/* DISBAND SELECTED (Command Console v2, claude-gaming 2026-07-01): stand down ONLY the highlighted roster team
+		   (same player-safe teardown as DISBAND ALL - flags wfbe_aicom_disband; the HC deletes it only when no player is
+		   near + not in combat). Sits on the same bottom row to the RIGHT of DISBAND ALL (x 0.241, right edge 0.465;
+		   Back/Exit stay at x>0.89). show=0 STRUCTURAL GUARD -> STATE-B only; added to _warCtrls. Two-click confirm client
+		   side. Server 'aicom-team-disband' handler extended to accept a specific team id. MenuAction 746. */
+		class CA_Cmd_DisbandSel : CA_Cmd_Disband {
+			idc = 14627;
+			x = 0.241244;
+			y = 0.953825;
+			w = 0.224000;
+			text = "DISBAND SELECTED";
+			action = "MenuAction = 746";
+			tooltip = "Stand down ONLY the highlighted team (player-safe: deletes it where no player is near + not in combat). Click twice to confirm.";
 			colorBackground[] = {0.45, 0.05, 0.1, 0.85};
 			colorBackgroundActive[] = {0.7, 0.1, 0.15, 1};
 		};

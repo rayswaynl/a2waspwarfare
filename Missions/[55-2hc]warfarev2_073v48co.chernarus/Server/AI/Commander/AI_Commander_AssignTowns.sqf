@@ -433,33 +433,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							_hcRoute = [];
 							if ((_hcOrigin distance _hcDest) > 700) then {
 								_rmHops = 8;  //--- A2-fix 2026-06-14: denser road-node chain (was 4) so convoys hug roads instead of cutting cross-country
-									//--- A2-fix 2026-06-14 (owner: teams move INDIVIDUALLY to same town = better speed): base-egress road node so teams escape a boxed/corner base, + per-team lateral lane so concentrated teams don't funnel one road
-									_egRds = _hcOrigin nearRoads 300;
-									if (count _egRds > 0) then {
-										_egNode = [_hcOrigin, _egRds] Call WFBE_CO_FNC_GetClosestEntity;
-										if (!isNull _egNode) then {_hcRoute = _hcRoute + [getPos _egNode]};
-									};
-									_laneDX = (_hcDest select 0) - (_hcOrigin select 0);
-									_laneDY = (_hcDest select 1) - (_hcOrigin select 1);
-									_laneLEN = sqrt ((_laneDX * _laneDX) + (_laneDY * _laneDY));
-									_lanePX = 0; _lanePY = 0;
-									if (_laneLEN > 1) then {_lanePX = - _laneDY / _laneLEN; _lanePY = _laneDX / _laneLEN};
-									_laneJit = _team getVariable "wfbe_aicom_lanejit";
-									if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
-									_laneOff = _laneJit * 120;
-								for "_rmI" from 1 to _rmHops do {
-									_rmFrac  = _rmI / (_rmHops + 1);
-									_rmGuess = [(_hcOrigin select 0) + ((_hcDest select 0) - (_hcOrigin select 0)) * _rmFrac,
-									            (_hcOrigin select 1) + ((_hcDest select 1) - (_hcOrigin select 1)) * _rmFrac, 0];
-									_rmTaper = sin (_rmFrac * 180);  //--- ~0 at route ends, max at mid: teams diverge into their own lane mid-route, converge at the town
-										_rmGuess set [0, (_rmGuess select 0) + (_lanePX * _laneOff * _rmTaper)];
-										_rmGuess set [1, (_rmGuess select 1) + (_lanePY * _laneOff * _rmTaper)];
-										_rmRds = _rmGuess nearRoads 120;  //--- A2-fix 2026-06-14: tighter snap (was 220) so nodes lie on the line, not far disconnected roads
-									if (count _rmRds > 0) then {
-										_rmNode = [_rmGuess, _rmRds] Call WFBE_CO_FNC_GetClosestEntity;
-										if (!isNull _rmNode) then {_hcRoute = _hcRoute + [getPos _rmNode]};
-									};
-								};
+								//--- A2-fix 2026-06-14 (owner: teams move INDIVIDUALLY to same town = better speed): base-egress road node so teams escape a boxed/corner base, + per-team lateral lane so concentrated teams don't funnel one road.
+								//--- Road-node chain extracted to WFBE_CO_FNC_BuildRoadRoute (shared with the war-room console path AI_Commander_Execute.sqf) - behaviour-identical to the prior inline builder; this keeps the per-team lane jitter here as the caller owns the persistent wfbe_aicom_lanejit var.
+								_laneJit = _team getVariable "wfbe_aicom_lanejit";
+								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
+								_hcRoute = [_hcOrigin, _hcDest, _laneJit * 120, _rmHops] Call WFBE_CO_FNC_BuildRoadRoute;
 							};
 							_team setVariable ["wfbe_aicom_route", _hcRoute, true];
 							_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];

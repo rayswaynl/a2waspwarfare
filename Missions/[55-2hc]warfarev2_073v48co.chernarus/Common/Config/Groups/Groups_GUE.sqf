@@ -9,37 +9,48 @@ _k = [];//--- Type used by AI.
 _side = "GUER";
 _faction = "GUE";
 
+//--- cmdcon35 (role-diversity): Squad kept at 4 units; swapped the plain GUE_Soldier_1 rifleman for a
+//--- GUE_Soldier_MG so a LARGE/HUGE garrison squad brings CO + GL + AR + MG instead of a bland filler.
+//--- All classnames registered in Core_GUE.sqf. Headcount unchanged (4).
 _k = _k + ["Squad"];
 _u		= ["GUE_Soldier_CO"];
 _u = _u + ["GUE_Soldier_GL"];
 _u = _u + ["GUE_Soldier_AR"];
-_u = _u + ["GUE_Soldier_1"];
+_u = _u + ["GUE_Soldier_MG"];
 
 _l = _l + [_u];
 
 
+//--- cmdcon35 (role-diversity): Squad_Advanced kept at 5 PMC; enriched to a specialist mix
+//--- (TL + Engineer + AA + Sniper + GL) in place of the M4A3/Bodyguard fillers. All 5 classnames
+//--- registered in Core_PMC.sqf. Headcount unchanged (5).
 _k = _k + ["Squad_Advanced"];
 _u		= ["Soldier_TL_PMC"];
-_u = _u + ["Soldier_M4A3_PMC"];
+_u = _u + ["Soldier_Engineer_PMC"];
 _u = _u + ["Soldier_AA_PMC"];
-_u = _u + ["Soldier_Bodyguard_M4_PMC"];
+_u = _u + ["Soldier_Sniper_PMC"];
 _u = _u + ["Soldier_GL_M16A2_PMC"];
 
 _l = _l + [_u];
 
 
+//--- cmdcon35 (role-diversity): Team kept at 6 units; swapped the 6 plain militia/villager fillers for a
+//--- full specialist fireteam (CO + Sniper + AR + GL + AT + Medic). All classnames registered in Core_GUE.sqf.
+//--- Headcount unchanged (6).
 _k = _k + ["Team"];
-_u		= ["GUE_Worker2"];
-_u = _u + ["GUE_Woodlander3"];
-_u = _u + ["GUE_Villager3"];
-_u = _u + ["GUE_Woodlander2"];
-_u = _u + ["GUE_Woodlander1"];
-_u = _u + ["GUE_Villager4"];
+_u		= ["GUE_Soldier_CO"];
+_u = _u + ["GUE_Soldier_Sniper"];
+_u = _u + ["GUE_Soldier_AR"];
+_u = _u + ["GUE_Soldier_GL"];
+_u = _u + ["GUE_Soldier_AT"];
+_u = _u + ["GUE_Soldier_Medic"];
 _l = _l + [_u];
 
+//--- cmdcon35 (role-diversity): Team_AT kept at 2 units; added a GL to the AT gunner so the pair
+//--- brings AT + GL rather than two identical AT. Classnames registered in Core_GUE.sqf. Headcount unchanged (2).
 _k = _k + ["Team_AT"];
 _u		= ["GUE_Soldier_AT"];
-_u = _u + ["GUE_Soldier_AT"];
+_u = _u + ["GUE_Soldier_GL"];
 
 _l = _l + [_u];
 
@@ -57,10 +68,12 @@ _l = _l + [_u];
 //--- B61 (Ray 2026-06-21): Team_MG roster. The defender selector (Server_GetTownGroupsDefender.sqf) requests
 //--- "Team_MG" for GUER on most town sizes, but GUER had NO Team_MG roster -> the request resolved nil and was
 //--- silently dropped, under-garrisoning every GUER town. Mirrors Groups_INS Team_MG (CO + 2x MG + AR).
+//--- cmdcon35 (role-diversity): Team_MG kept at 4 units; replaced the duplicate 2nd MG with a Medic
+//--- so the weapons team is CO + MG + Medic + AR. All classnames registered in Core_GUE.sqf. Headcount unchanged (4).
 _k = _k + ["Team_MG"];
 _u		= ["GUE_Soldier_CO"];
 _u = _u + ["GUE_Soldier_MG"];
-_u = _u + ["GUE_Soldier_MG"];
+_u = _u + ["GUE_Soldier_Medic"];
 _u = _u + ["GUE_Soldier_AR"];
 
 _l = _l + [_u];

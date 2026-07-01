@@ -54,7 +54,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[5000,0],[12500,0]], //--- Anti Air Radar
 	[[25000,0],[50000,0]], //--- Unit cost modifier
 	[[999999,0]], //--- (index padding: CBR — not used by this faction)
-	[[300,0],[1600,0],[2400,0],[3200,0]] //--- Patrols
+	[[150,0],[600,0],[1200,0],[2000,0]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
@@ -118,7 +118,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 	[[],[]], //--- Anti Air Radar
 	[[],[]], //--- Unit cost modifier
 	[], //--- (index padding: CBR)
-	[[],[WFBE_UP_LIGHT,1],[WFBE_UP_HEAVY,2],[WFBE_UP_HEAVY,2]] //--- Patrols
+	[[],[WFBE_UP_LIGHT,1],[WFBE_UP_LIGHT,1],[WFBE_UP_HEAVY,1]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [

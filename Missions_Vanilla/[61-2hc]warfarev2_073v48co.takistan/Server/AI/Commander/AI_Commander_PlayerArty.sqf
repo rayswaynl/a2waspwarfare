@@ -21,21 +21,24 @@
 	Call shape copied verbatim from the Strategy arty block (AI_Commander_Strategy.sqf:741-793).
 */
 
-private ["_side","_sideText","_logik","_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh","_artyTgt","_ownNear","_pieces","_p","_idx","_maxR","_fired"];
+private ["_side","_sideText","_logik","_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh","_riArtyX","_riArtyY","_artyTgt","_ownNear","_pieces","_p","_idx","_maxR","_fired"];
 
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) <= 0) exitWith {};
-if ((missionNamespace getVariable "WFBE_C_ARTILLERY") <= 0) exitWith {};
+if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) <= 0) exitWith {};
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-if (isNil "_logik") exitWith {};
+if (isNull _logik) exitWith {}; //--- GetSideLogic returns objNull (never nil) when the side logic is absent; guard isNull, matching BaseSell.sqf.
 
 //--- Read + freshness-check the player request.
 _riArtyReq = _logik getVariable "wfbe_aicom_arty_request";
 _riArtyFresh = false; _riArtyPos = [];
 if (!isNil "_riArtyReq" && {typeName _riArtyReq == "ARRAY"} && {count _riArtyReq == 2}) then {
 	_riArtyPos = _riArtyReq select 0; _riArtyT0 = _riArtyReq select 1;
-	if ((typeName _riArtyPos == "ARRAY") && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
+	if ((typeName _riArtyPos == "ARRAY") && {count _riArtyPos >= 2} && {typeName _riArtyT0 == "SCALAR"}) then {
+		_riArtyX = _riArtyPos select 0; _riArtyY = _riArtyPos select 1;
+		if ((typeName _riArtyX == "SCALAR") && {typeName _riArtyY == "SCALAR"} && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
+	};
 };
 if (!_riArtyFresh) exitWith {};
 
@@ -57,7 +60,7 @@ if (_ownNear == 0) then {
 		if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
 			_idx = [typeOf _p, _side] Call IsArtillery;
 			if (_idx >= 0) then {
-				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
+				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]);
 				if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) && {(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
 					//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
 					//--- load a situational round chosen ONLY from the types the side has researched (helper gates on

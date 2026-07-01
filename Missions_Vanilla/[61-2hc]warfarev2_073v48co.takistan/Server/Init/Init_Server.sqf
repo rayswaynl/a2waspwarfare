@@ -871,6 +871,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
+//--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
+//--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
+if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLower worldName == "takistan"}) then {
+	[] execVM "Server\Server_Oilfields.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 

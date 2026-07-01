@@ -94,7 +94,7 @@ _pcN = (_pcN - _hcN) max 0;
 		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
 	};
 _base = switch (true) do {
-	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  6]};
+	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  12]};
 	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
 	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
@@ -212,9 +212,15 @@ if (_sideAINow >= _aiCapTier) exitWith {
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
 _totalGroups = {side _x == _side} count _allGroups;
-if (_totalGroups > 110) exitWith {
-	["WARNING", Format ["AI_Commander_Teams.sqf: [%1] group-cap ceiling reached (%2 groups) - founding skipped (founded %3, editor %4, pending %5, target %6).", _sideText, _totalGroups, _foundedTeams, _editorTeams, _pending, _target]] Call WFBE_CO_FNC_AICOMLog;
+if (_totalGroups > (missionNamespace getVariable ["WFBE_C_AICOM_GROUP_CAP", 110])) exitWith {
+	private "_groupCapWarnLast";
+	_groupCapWarnLast = _logik getVariable ["wfbe_aicom_groupcap_warn_t", -9999];
+	if ((time - _groupCapWarnLast) >= 900) then {
+		_logik setVariable ["wfbe_aicom_groupcap_warn_t", time];
+		["WARNING", Format ["AI_Commander_Teams.sqf: [%1] group-cap ceiling reached (%2 groups) - founding skipped (founded %3, editor %4, pending %5, target %6).", _sideText, _totalGroups, _foundedTeams, _editorTeams, _pending, _target]] Call WFBE_CO_FNC_AICOMLog;
+	};
 };
+_logik setVariable ["wfbe_aicom_groupcap_warn_t", -9999];
 
 //--- Live HC available?
 _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
@@ -329,7 +335,7 @@ if (count _live > 0) then {
 			};
 			if (_fbBest >= 0) then {
 				_eligible set [count _eligible, _fbBest];
-				diag_log format ["AICOMGATE|%1|infFallback|admitted tmpl %2 maskSum=%3 sideUpg=%4 (no upgrade-0 infantry eligible)", _sideText, _fbBest, _fbBestMask, _upgrades];
+				diag_log format ["AICOMGATE|%1|infFallback|admitted cheapest infantry template %2 (static-strip left none upgrade-0) -> founding proceeds (maskSum=%3 sideUpg=%4)", _sideText, _fbBest, _fbBestMask, _upgrades];
 			};
 		};
 	};
@@ -364,35 +370,6 @@ if (count _live > 0) then {
 		_eligNoAir = [];
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
-	};
-	//--- STARVED-INFANTRY FALLBACK (cmdcon31, Ray 2026-07-01): the founding eligibility strip above requires EVERY unit
-	//--- in a template to be upgrade-0, but founding side-upgrades start [0,0,0,0] (Init_Server ~589). A faction whose
-	//--- BASE infantry squad carries an upgrade>=1 team-leader (BIS_US US_Soldier_TL_EP1=1; CH USMC too) has ALL its
-	//--- infantry templates stripped, leaving only appended custom armour -> the side founds one pricey armour team and
-	//--- STARVES (WEST-on-TK; latent on CH-WEST, masked by custom armour). EAST/BIS_TK escaped only because its leader
-	//--- classes are undefined in Core_TKA and read as free upgrade-0. FIX: if _eligible has NO infantry template (B66
-	//--- stored type 0), admit the CHEAPEST (lowest upgrade-mask-sum) infantry template so every faction can always
-	//--- found a basic squad. Map-independent; self-heals (the normal path re-admits richer templates as upgrades land).
-	//--- A2-OA-safe: forEach/for-do, isNil-guarded, no A3 commands.
-	if (!isNil "_storedTypes") then {
-		private ["_hasInf","_fbBest","_fbBestMask","_ti2","_tType","_maskSum","_stX"];
-		_hasInf = false;
-		{ _stX = _storedTypes select _x; if (!isNil "_stX" && {_stX == 0}) exitWith {_hasInf = true} } forEach _eligible;
-		if (!_hasInf) then {
-			_fbBest = -1; _fbBestMask = 1e9;
-			for "_ti2" from 0 to ((count _templates) - 1) do {
-				_tType = _storedTypes select _ti2;
-				if (!isNil "_tType" && {_tType == 0}) then {
-					_maskSum = 0;
-					{ _maskSum = _maskSum + _x } forEach (_tmplUpgrades select _ti2);
-					if (_maskSum < _fbBestMask) then {_fbBestMask = _maskSum; _fbBest = _ti2};
-				};
-			};
-			if (_fbBest >= 0) then {
-				_eligible set [count _eligible, _fbBest];
-				diag_log format ["AICOMGATE|%1|infFallback|admitted tmpl %2 maskSum=%3 sideUpg=%4 (no upgrade-0 infantry eligible)", _sideText, _fbBest, _fbBestMask, _upgrades];
-			};
-		};
 	};
 	if (count _eligible == 0) exitWith {};
 
@@ -828,9 +805,10 @@ if (count _live > 0) then {
 	//--- AICOM v2 JET RUNWAY-SPAWN (Ray 2026-06-27): a fixed-wing (Plane) team spawns on the CAPTURED AIRFIELD
 	//--- runway (the owned airfield town's hangar/logic), not at the rear factory - so it can take off + operate.
 	//--- Self-contained + gated to jet teams only (inert for every existing ground/heli founding).
-	private ["_spawnPos","_isJetTeam"];
+	private ["_spawnPos","_isJetTeam","_runwayDir"];
 	_isJetTeam = ({_x isKindOf "Plane"} count _template) > 0;
 	_spawnPos = getPos _facObj;
+	_runwayDir = -1; //--- PLANE AIR-START (Ray 2026-07-01): resolved below for a jet team from the airfield logic getDir (runway heading), threaded to the HC so a founded plane air-starts pointing down the field, not across it. -1 => not a jet team / no field (HC self-resolves or falls back).
 	//--- AICOM v2 (Ray): spawn at the factory's SPAWN BEACON - the HeliH-family pad players use (the closest pad
 	//--- within 80m is THIS factory's own), so AI teams egress from the designated spot, not the raw factory hull.
 	//--- HeliHRescue/HeliHCivil inherit HeliH; Sr_border is the barracks pad. Jets override to the airfield below.
@@ -847,6 +825,13 @@ if (count _live > 0) then {
 			_haObj = _afTown getVariable ["wfbe_hangar", objNull];
 			if (isNull _haObj) then {_haObj = _afTown getVariable ["wfbe_airfield_hangar_obj", objNull]};
 			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
+			//--- RUNWAY HEADING (Ray 2026-07-01, PLANE-ONLY): the airfield is anchored on a LocationLogicAirport logic whose
+			//--- getDir IS the runway orientation (server_town.sqf L569 orients the hangar off it). Resolve the nearest such
+			//--- logic to the airfield town and thread its getDir to the HC as the plane air-start heading. If none is found
+			//--- (-1 kept), Common_RunCommanderTeam self-resolves / falls back. A2-OA-safe: nearEntities on the logic class.
+			private ["_afLogic"];
+			_afLogic = ((getPos _afTown) nearEntities [["LocationLogicAirport"], 1500]);
+			if (count _afLogic > 0) then {_runwayDir = getDir (_afLogic select 0)};
 		};
 	};
 	//--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes, so they never get wfbe_teamtype
@@ -858,7 +843,10 @@ if (count _live > 0) then {
 	private ["_foundType"];
 	_foundType = -1;
 	if (!isNil "_pick" && {typeName _pick == "SCALAR"} && {_pick >= 0}) then {_foundType = _pick};
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType]] Call WFBE_CO_FNC_SendToClient;
+	//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): append the is-jet-team flag + runway heading as trailing delegate args (slots
+	//--- 8/9 of the inner array; after HandleSpecial strips the leading string they land at Common_RunCommanderTeam _this indices 7/8).
+	//--- Purely additive - every other delegate reader ignores them (count-guarded), so ground/heli founding is byte-identical.
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

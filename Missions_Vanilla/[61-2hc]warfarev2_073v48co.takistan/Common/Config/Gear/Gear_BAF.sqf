@@ -43,6 +43,21 @@ _n = _n + [''];
 _o = _o + [10];
 _z = _z + [0];
 
+//--- NLAW launcher ammo & IR strobe: required so BAF_AssaultPack_ATAmmo / _LRRAmmo
+//--- backpack contents (TransportMagazines NLAW / IR_Strobe_Marker) resolve in the
+//--- gear file (Config_Backpack.sqf checks Mag_<class> set here by Config_Magazines.sqf).
+_u = _u + ["NLAW"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [350];
+_z = _z + [2];
+
+_u = _u + ["IR_Strobe_Marker"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [30];
+_z = _z + [0];
+
 _u = _u + ["BAF_ied_v1"];
 _p = _p + [''];
 _n = _n + [''];
