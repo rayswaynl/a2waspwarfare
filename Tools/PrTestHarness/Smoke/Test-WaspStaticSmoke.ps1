@@ -322,16 +322,26 @@ function Test-UpgradeRequestAuthorityGuard {
 	$missing = @()
 	foreach ($entry in $roots) {
 		$requestPath = Join-Path $entry.Root "Server\PVFunctions\RequestUpgrade.sqf"
+		$clientPath = Join-Path $entry.Root "Client\GUI\GUI_UpgradeMenu.sqf"
+		$clientSpecialPath = Join-Path $entry.Root "Client\Functions\Client_FNC_Special.sqf"
 		$request = Get-Text $requestPath
 		$requestCode = [regex]::Replace($request, "//.*", "")
-		if (-not ($request.Contains('typeName _this != "ARRAY"') -and $request.Contains("count _args < 4"))) { $missing += "$($entry.Terrain):payload-shape" }
-		if (-not ($request.Contains('typeName _side != "SIDE"') -and $request.Contains('typeName _upgrade_id != "SCALAR"') -and $request.Contains('typeName _upgrade_level != "SCALAR"') -and $request.Contains('typeName _upgrade_isplayer != "BOOL"'))) { $missing += "$($entry.Terrain):payload-types" }
+		$client = Get-Text $clientPath
+		$clientCode = [regex]::Replace($client, "//.*", "")
+		$clientSpecial = Get-Text $clientSpecialPath
+		if (-not ($request.Contains('typeName _this != "ARRAY"') -and $request.Contains("count _args < 6"))) { $missing += "$($entry.Terrain):payload-shape" }
+		if (-not ($request.Contains('typeName _side != "SIDE"') -and $request.Contains('typeName _upgrade_id != "SCALAR"') -and $request.Contains('typeName _upgrade_level != "SCALAR"') -and $request.Contains('typeName _upgrade_isplayer != "BOOL"') -and $request.Contains('typeName _requester != "OBJECT"') -and $request.Contains('typeName _requestTeam != "GROUP"'))) { $missing += "$($entry.Terrain):payload-types" }
 		if (-not ($request.Contains('!_upgrade_isplayer') -and $request.Contains('RequestUpgrade is the player-commander path'))) { $missing += "$($entry.Terrain):player-request-only" }
-		if (-not ($request.Contains('WFBE_C_SEC_HARDENING') -and $request.Contains('!isPlayer (leader _cmdTeam)') -and $request.Contains('side (leader _cmdTeam) != _side'))) { $missing += "$($entry.Terrain):commander-team-hardening" }
-		if (-not $request.Contains('_logic getVariable "wfbe_upgrading"')) { $missing += "$($entry.Terrain):running-gate" }
-		if (-not ($request.Contains('WFBE_C_UPGRADES_%1_ENABLED') -and $request.Contains('WFBE_C_UPGRADES_%1_LEVELS') -and $request.Contains('WFBE_C_UPGRADES_%1_TIMES') -and $request.Contains('WFBE_C_UPGRADES_%1_LINKS'))) { $missing += "$($entry.Terrain):config-gates" }
+		if (-not ($request.Contains('group _requester != _requestTeam') -and $request.Contains('side _requestTeam != _side') -and $request.Contains('_requestTeam != _cmdTeam') -and $request.Contains('!isPlayer _requester'))) { $missing += "$($entry.Terrain):commander-team-hardening" }
+		if (-not $request.Contains('_logic getVariable ["wfbe_upgrading", false]')) { $missing += "$($entry.Terrain):running-gate" }
+		if (-not ($request.Contains('WFBE_C_UPGRADES_%1_ENABLED') -and $request.Contains('WFBE_C_UPGRADES_%1_LEVELS') -and $request.Contains('WFBE_C_UPGRADES_%1_TIMES') -and $request.Contains('WFBE_C_UPGRADES_%1_LINKS') -and $request.Contains('WFBE_C_UPGRADES_%1_COSTS'))) { $missing += "$($entry.Terrain):config-gates" }
 		if (-not ($request.Contains('_upgrade_level != _current') -and $request.Contains('stale/skipped upgrade level'))) { $missing += "$($entry.Terrain):server-current-level" }
 		if (-not $request.Contains('_linkNeeded')) { $missing += "$($entry.Terrain):dependency-gate" }
+		if (-not ($request.Contains('WFBE_CO_FNC_GetTeamFunds') -and $request.Contains('WFBE_CO_FNC_GetSideSupply') -and $request.Contains('WFBE_CO_FNC_ChangeTeamFunds') -and $request.Contains('Player commander tech upgrade'))) { $missing += "$($entry.Terrain):server-payment" }
+		if (-not ($request.Contains('setVariable ["wfbe_upgrading", true, true]') -and $request.Contains('accepted player commander upgrade'))) { $missing += "$($entry.Terrain):server-accept-state" }
+		if (-not ($client.Contains('player, clientTeam') -and $client.Contains('Final acceptance and payment are server-owned'))) { $missing += "$($entry.Terrain):client-request-context" }
+		if ($clientCode.Contains('WFBE_CL_FNC_ChangeClientFunds') -or $clientCode.Contains('Tech upgrade started.') -or $clientCode.Contains('WFBE_Client_Logic setVariable ["wfbe_upgrading", true, true]')) { $missing += "$($entry.Terrain):client-local-spend" }
+		if (-not ($clientSpecial.Contains('upgrade-sync') -and $clientSpecial.Contains('commanderTeam == group player'))) { $missing += "$($entry.Terrain):accepted-start-sync" }
 		if ($requestCode.Contains("_this Spawn WFBE_SE_FNC_ProcessUpgrade")) { $missing += "$($entry.Terrain):raw-spawn" }
 		if (-not $requestCode.Contains("_args Spawn WFBE_SE_FNC_ProcessUpgrade")) { $missing += "$($entry.Terrain):validated-spawn" }
 	}

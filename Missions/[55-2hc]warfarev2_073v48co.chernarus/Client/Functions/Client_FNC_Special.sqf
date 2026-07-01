@@ -114,7 +114,7 @@ WFBE_CL_FNC_Upgrade_Started = {
 	_level = _this select 1;
 
 	_upgradeCost = (missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", (sideJoined)]) select _upgrade select (_level - 1) select 0;
-	if (commanderTeam == group player) then {
+	if (!isNil "commanderTeam" && {!(isNull commanderTeam)} && {commanderTeam == group player}) then {
 		["RequestChangeScore", [player, (score player + (round ((_upgradeCost / 100) * WFBE_UPGRADE_SCORE_COEF)))]] Call WFBE_CO_FNC_SendToServer;
 	};
 
@@ -128,6 +128,12 @@ WFBE_CL_FNC_Upgrade_Started = {
 	if (_storedId != _upgrade || _storedEndTime < time) then {
 		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", _upgrade, false];
 		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", time + _upgradeTime, false];
+	};
+	if (!isServer && {!isNil "commanderTeam"} && {!(isNull commanderTeam)} && {commanderTeam == group player}) then {
+		[_upgrade, _level - 1, _upgradeTime] spawn {
+			sleep (_this select 2);
+			["RequestSpecial", ["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]] Call WFBE_CO_FNC_SendToServer;
+		};
 	};
 	(Format [Localize "STR_WF_CHAT_Upgrade_Started_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
 	// Marty: Notify side players that their upgrade has started.

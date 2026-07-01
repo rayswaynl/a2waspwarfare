@@ -1,5 +1,21 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Upgrade client/server payment contract alignment [RELEASE LOOP]
+
+Aligned the direct player upgrade GUI path with the hardened
+`RequestUpgrade.sqf` contract. The upgrade menu now sends the requester object
+and requester team, no longer performs local funds/supply debits before server
+acceptance, and presents the action as a request until the server confirms the
+upgrade-started event. `Client_FNC_Special.sqf` now guards commander-team reads
+before awarding upgrade score and owns the client-side upgrade-sync timer from
+the accepted server notification path. LoadoutManager propagated the Chernarus
+client contract and the Takistan server parity cleanup.
+
+`Run-WaspFinalCheck.ps1` passed after the contract alignment: static smoke clean
+including the updated `Upgrade request authority guard`, Chernarus and Takistan
+A2/OA lint `FAIL: 0` / `REVIEW: 0`, and whole-mission HIGH BugHunt clean.
+Runtime RPT evidence and deployment remain approval-gated.
+
 ## 2026-07-01 — Upgrade request and AICOM group-var guards [RELEASE LOOP]
 
 Closed another bounded release-readiness slice without touching runtime/SSH.
@@ -7,9 +23,9 @@ Closed another bounded release-readiness slice without touching runtime/SSH.
 non-player upgrade flags, invalid side logic, already-running upgrades, disabled
 or out-of-range upgrade ids, stale/skipped levels, missing config arrays and
 unmet dependency links before spawning the existing upgrade timer worker. The
-flag-gated commander-team hardening mirrors the queue path: when enabled, the
-server requires a player-led commander team on the requested side before
-honouring the direct player upgrade PV.
+direct player upgrade path now binds the request to the player object and group
+sent by the client and rechecks commander-team ownership server-side before any
+upgrade worker starts.
 
 The AICOM executor and capture retry loop now route the remaining release-risk
 group default reads through `WFBE_CO_FNC_GroupGetBool`, avoiding the Arma 2 OA
@@ -20,8 +36,9 @@ Chernarus source edits to maintained Takistan and rebuilt `_MISSIONS.7z`.
 Validation passed via `Run-WaspFinalCheck.ps1`: static smoke clean including the
 new `Upgrade request authority guard` and `AICOM group variable default guards`,
 Chernarus and Takistan A2/OA lint `FAIL: 0` / `REVIEW: 0`, and whole-mission
-HIGH BugHunt clean. Package provenance must be regenerated after this journaled
-source commit so PR/wiki can bind to the final commit hash and archive SHA.
+HIGH BugHunt clean. Package provenance must be regenerated after the final
+journaled source commit so PR/wiki can bind to the final commit hash and archive
+SHA.
 
 ## 2026-07-01 — Side-supply temp-channel authority guard [RELEASE LOOP]
 

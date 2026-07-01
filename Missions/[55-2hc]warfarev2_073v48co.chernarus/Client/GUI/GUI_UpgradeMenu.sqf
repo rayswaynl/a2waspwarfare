@@ -360,26 +360,9 @@ while {alive player && dialog} do {
 							};
 						};
 						if !(_link_needed) then {
-							-(_upgrade_price) Call WFBE_CL_FNC_ChangeClientFunds;
-							[WFBE_Client_SideJoined, -(_upgrade_supply),"Tech upgrade started.", false] Call ChangeSideSupply;
-							//--- todo check conditions., deduce cash etc
-							["RequestUpgrade", [WFBE_Client_SideJoined, _id, _upgrade_current, true]] call WFBE_CO_FNC_SendToServer;
-							// Marty: Keep the active upgrade ID beside the existing running flag for immediate local menu feedback.
-							WFBE_Client_Logic setVariable ["wfbe_upgrading", true, true];
-							WFBE_Client_Logic setVariable ["wfbe_upgrading_id", _id, true];
-							// Marty: Store a local end time so closing and reopening the menu does not reset the displayed countdown.
-							_upgrade_time = (_upgrade_times select _id) select _upgrade_current;
-							WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", _id, false];
-							WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", time + _upgrade_time, false];
-							//todo spawn local upgrade thread & timer & hint
-							//--- Pure client, spawn an upgrade thread, which is local to the client in case the client tickrate is above the server tickrate.
-							if !(isServer) then {
-								[_id, _upgrade_current, _upgrade_time] spawn {
-									sleep (_this select 2);
-									["RequestSpecial", ["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]] Call WFBE_CO_FNC_SendToServer;
-								};
-							};
-							hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Upgrading <t color='#B6F563'>%1</t> to level <t color='#F5D363'>%2</t></t>",_upgrade_labels select _id,_upgrade_current + 1]);
+							//--- Final acceptance and payment are server-owned in RequestUpgrade.sqf.
+							["RequestUpgrade", [WFBE_Client_SideJoined, _id, _upgrade_current, true, player, clientTeam]] call WFBE_CO_FNC_SendToServer;
+							hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Requested <t color='#B6F563'>%1</t> level <t color='#F5D363'>%2</t></t>",_upgrade_labels select _id,_upgrade_current + 1]);
 						} else {
 							hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>One or more <t color='#F56363'>dependencies</t> are needed in order to process this upgrade.");
 						};

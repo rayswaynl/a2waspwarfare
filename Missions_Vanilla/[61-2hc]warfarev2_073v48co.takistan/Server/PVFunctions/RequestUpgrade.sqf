@@ -136,11 +136,10 @@ _funds = _cmdTeam Call WFBE_CO_FNC_GetTeamFunds;
 if (_funds < (_cost select 1)) exitWith {
 	["WARNING", Format ["RequestUpgrade.sqf: rejected unaffordable funds side %1 id %2 need %3 have %4.", _side, _upgrade_id, _cost select 1, _funds]] Call WFBE_CO_FNC_LogContent;
 };
-if (_dual) then {
-	_supply = _side Call WFBE_CO_FNC_GetSideSupply;
-	if (_supply < (_cost select 0)) exitWith {
-		["WARNING", Format ["RequestUpgrade.sqf: rejected unaffordable supply side %1 id %2 need %3 have %4.", _side, _upgrade_id, _cost select 0, _supply]] Call WFBE_CO_FNC_LogContent;
-	};
+_supply = 0;
+if (_dual) then {_supply = _side Call WFBE_CO_FNC_GetSideSupply};
+if (_dual && {_supply < (_cost select 0)}) exitWith {
+	["WARNING", Format ["RequestUpgrade.sqf: rejected unaffordable supply side %1 id %2 need %3 have %4.", _side, _upgrade_id, _cost select 0, _supply]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- Commit server-owned payment and running state only after every acceptance gate passes.
