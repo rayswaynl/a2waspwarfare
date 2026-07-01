@@ -1,6 +1,6 @@
 # PR #122 Release Findings
 
-Last updated: 2026-07-01 10:33 Europe/Amsterdam
+Last updated: 2026-07-01 10:39 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -39,10 +39,15 @@ GitHub currently reports PR #124 as open, draft, and conflicting after the
 `origin/master` command-center merge. The old r8 branch therefore needs conflict
 repair or replacement before it can be a current release candidate.
 
-Another draft lane, PR #125, now exists for a broader command-center package.
-It is open, draft, and currently reported mergeable at head
-`5edb43b77137be6d4ef257e82c2444787e324e98`. Treat it as a separate broad lane,
+Another draft lane, PR #125, exists for a broader command-center package. It is
+open, draft, and currently reported clean at head
+`05db826a4ecf64dd1b42abd03b533f94a48ae081`. Treat it as a separate broad lane,
 not as r9 runtime proof.
+
+PR #126 also now exists as an open draft release-readiness/AICOM guardrail lane
+at head `66d590051e2cb8c2270bdf7a73f998199a06dc6d`. It reports clean on GitHub
+and should be reviewed as a separate focused AICOM/source-doc candidate before
+any release artifact target is reset.
 
 ## R8 Integration Finding
 
@@ -137,8 +142,11 @@ After a fresh remote refresh on 2026-07-01 10:33 Europe/Amsterdam:
 - `origin/master` is `6cbf6f6a5dc633601be39615fbb2248a8b5a1120`.
 - PR #124/r8 is open draft but GitHub reports `CONFLICTING`.
 - PR #125/command-center advanced to
-  `5edb43b77137be6d4ef257e82c2444787e324e98` and is now reported
-  `MERGEABLE`, but remains a separate broad draft lane.
+  `05db826a4ecf64dd1b42abd03b533f94a48ae081` and is now reported clean, but
+  remains a separate broad draft lane.
+- PR #126/release-readiness exists at
+  `66d590051e2cb8c2270bdf7a73f998199a06dc6d` and is reported clean, but
+  remains a separate focused AICOM/source-doc lane.
 - The wiki fast-forwarded locally to `60bd6c2`.
 
 Non-destructive merge analysis found r8 conflicts mirrored across both maps in:
