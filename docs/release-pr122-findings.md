@@ -1,11 +1,45 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 01:14 Europe/Amsterdam
+Last updated: 2026-07-02 01:19 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 01:19 Update
+
+PR #126 advanced during final validation to
+`b97c4f39fac9df2f79c33518b80a03e999bce823`. The latest commit is
+`tools: bind runtime manifest terrain and package`.
+
+The move is tooling/docs scope:
+
+- runtime marker sweep role/terrain/package binding
+- runtime evidence manifest validator updates
+- self-test updates
+- release tuple doc guard updates
+- release readiness task doc update
+
+Important release-framing change: the PR #126 body now states that PR #125 /
+`codex/release-command-center-20260630` is the active package lane:
+
+- branch/package marker: `0ee16d18e0`
+- candidate: `release-command-center-20260630`
+- archive SHA256:
+  `D323434629AB90F90CDD4C4874F164422F38B94075101861F8B1E726C76FE81E`
+- package size: `7163301`
+- wiki: `b273830`
+- status: `runtime-pending`, `not-deployed`
+
+That does not make PR #125 runtime-proven, and it does not make the PR #136
+artifact release-ready. It means the release loop must keep candidate evidence
+separate: PR #125 is the package/runtime-evidence lane according to PR #126, and
+PR #136 is a separate overnight code lane with package/static evidence but stale
+release identity and no runtime proof.
+
+Release remains **NO-GO** until the selected candidate is explicit and exact
+both-map RPT plus human smoke evidence exists for that same candidate.
 
 ## 2026-07-02 01:14 Update
 
