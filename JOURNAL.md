@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — HCTopUp draft worker excluded from release package [RELEASE LOOP]
+
+Removed the uncompiled `AI_Commander_HCTopUp.DRAFT.sqf` worker from the
+maintained Chernarus mission source and dropped the inert supervisor call,
+default-off HC top-up/merge constants and unused client `aicom-team-merge`
+consumer that only existed for that draft path. The live stranded-survivor
+merge constants and production logic remain intact.
+
+Static smoke now treats the HCTopUp draft tokens as release-forbidden across
+both generated mission outputs, so future package refreshes cannot silently
+ship the half-wired worker surface again.
+
 ## 2026-07-01 — AI commander command-console requester guard [RELEASE LOOP]
 
 Hardened the player-facing AI commander command console request path before

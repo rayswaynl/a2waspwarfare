@@ -800,8 +800,8 @@ if (count _live > 0) then {
 	_w7SkillSend = _logik getVariable "wfbe_aicom_veteran_skill";
 	if (isNil "_w7SkillSend") then {_w7SkillSend = 0};
 	_logik setVariable ["wfbe_aicom_veteran_skill", 0]; // consume
-	//--- B69 hctopup-stamp: carry the template index + refill pad-class so the HC can stamp the
-	//--- founded group (HCTopUp/merge can then resolve class without the template round-trip).
+	//--- B69 template stamp: carry the template index + refill pad-class so the founded group
+	//--- keeps its source template metadata without another template round-trip.
 	//--- _padClass = LAST Man-class in the FINAL _template (the basic dismount), "" for all-vehicle teams.
 	//--- APPENDED as trailing args (slots 5/6 of the inner array) so the W7 skill arg stays at slot 3 and
 	//--- the 3-arg server-local CreateTeam calls (which never reach this delegate) are unaffected. Purely

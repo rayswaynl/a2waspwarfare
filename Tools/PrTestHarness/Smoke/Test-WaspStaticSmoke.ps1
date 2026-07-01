@@ -394,6 +394,41 @@ function Test-AicomCommandConsoleAuthorityGuard {
 	Add-Result "AICOM command-console authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomHcTopUpDraftExcluded {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$hits = @()
+	$forbiddenTokens = @(
+		"WFBE_SE_FNC_AI_Com_HCTopUp",
+		"aicom-team-topup",
+		"aicom-team-merge",
+		"WFBE_C_AICOM_HC_TOPUP",
+		"WFBE_C_AICOM_HC_MERGE_ENABLE",
+		"WFBE_C_AICOM_HC_MERGE_FRAC",
+		"WFBE_C_AICOM_HC_MERGE_RANGE",
+		"AI_Commander_HCTopUp.DRAFT"
+	)
+	foreach ($entry in $roots) {
+		$draft = Join-Path $entry.Root "Server\AI\Commander\AI_Commander_HCTopUp.DRAFT.sqf"
+		if (Test-Path -LiteralPath $draft) { $hits += "$($entry.Terrain):draft-file" }
+		$files = Get-ChildItem -LiteralPath $entry.Root -Recurse -File -ErrorAction SilentlyContinue |
+			Where-Object { $_.Extension -in @(".sqf",".fsm",".ext",".hpp") }
+		foreach ($file in $files) {
+			$text = [System.IO.File]::ReadAllText($file.FullName)
+			foreach ($token in $forbiddenTokens) {
+				if ($text.Contains($token)) {
+					$relative = $file.FullName.Substring($entry.Root.Length).TrimStart('\')
+					$hits += "$($entry.Terrain):$($relative):$token"
+				}
+			}
+		}
+	}
+	Add-Result "AICOM HC top-up draft excluded" ($hits.Count -eq 0) "hits=$($hits -join ',')"
+}
+
 function Test-AicomGroupVariableDefaults {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -897,6 +932,7 @@ Test-SideSupplyAuthorityGuard
 Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
+Test-AicomHcTopUpDraftExcluded
 Test-AicomGroupVariableDefaults
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups

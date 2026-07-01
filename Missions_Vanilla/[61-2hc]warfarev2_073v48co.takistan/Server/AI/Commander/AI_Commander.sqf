@@ -110,7 +110,6 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0; _ltDisband = 0;
 _ltBeacon = 0; //--- AICOM FORWARD SPAWN-BEACON throttle (Approach A): gated WFBE_C_AICOM_SPAWNBEACON_ENABLE (default 0 = INERT), paced to WFBE_C_AICOM_SPAWNBEACON_INTERVAL.
 _ltPara = 0; //--- AICOM PARATROOPS throttle: cheap O(towns) scan + drop attempt; paced to the town interval (worker self-cooldowns the actual drop, gated WFBE_C_AICOM_PARATROOPS_ENABLE, default-OFF).
-_ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
 _prevDelegate = true; //--- cmdcon27 THREAD B: init TRUE to match the new delegate default (avoids a spurious edge-reset at loop start). prev value of the AI-maneuver delegate flag, for the edge-reset that neutralises sticky orders on a mode flip.
@@ -371,25 +370,6 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
 				};
 				_ltStipend = time;
-			};
-		};
-
-		//--- B69 SAME-HC MERGE PASS (fewer+bigger, group-count DOWN): consolidate two depleted same-side
-		//--- HC infantry teams that sit close together out of combat into one squad (joinSilent B -> A on the
-		//--- owning HC). FREE (no spawn) FPS lever, so it runs on the _active gate alongside the Executor /
-		//--- town auto-assign / stipend (NOT gated by _canBuild or _humanCmd) - consolidation is always worth
-		//--- doing when the side is alive. Slow ~120s cadence. HARD-gated default-OFF behind
-		//--- WFBE_C_AICOM_HC_MERGE_ENABLE (absent => false => worker early-exits, inert). The worker also runs
-		//--- the (skipped) top-up path internally, both behind their own ENABLE flags. Call is nil-guarded so it
-		//--- is a no-op until the DRAFT worker function is registered in the AICOM compile list (cross-file dep).
-		//--- A2-OA: no isEqualTo - read the flags and test typeName=="BOOL" + truthiness (same idiom the worker uses).
-		_mergeOn = missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_ENABLE", false];
-		_topupOn = missionNamespace getVariable ["WFBE_C_AICOM_HC_TOPUP_ENABLE", false];
-		_mergeWorkerOn = ((if (typeName _mergeOn == "SCALAR") then {_mergeOn} else {0}) > 0) || ((if (typeName _topupOn == "SCALAR") then {_topupOn} else {0}) > 0); //--- B69 fix: enable flags ship as Number 0/1 (SCALAR), not BOOL; the old typeName==BOOL test never fired, so the worker was never called even when the flag was set.
-		if (_mergeWorkerOn) then {
-			if (time - _ltMerge > (missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_INTERVAL", 120])) then {
-				if (!isNil "WFBE_SE_FNC_AI_Com_HCTopUp") then {(_side) Call WFBE_SE_FNC_AI_Com_HCTopUp};
-				_ltMerge = time;
 			};
 		};
 
