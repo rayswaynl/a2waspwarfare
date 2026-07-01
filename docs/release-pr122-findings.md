@@ -1,6 +1,6 @@
 # PR #122 Release Findings
 
-Last updated: 2026-07-01 09:59 Europe/Amsterdam
+Last updated: 2026-07-01 10:14 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -90,6 +90,38 @@ collection:
 
 This artifact is not runtime proof. It only gives the release loop an exact r8
 payload to launch and collect RPTs from.
+
+## R8 Folder Smoke Kit
+
+A portable r8 folder-smoke kit now exists for collecting runtime proof from the
+exact PR #124 payload:
+
+- kit: `outputs/a2waspwarfare-r8-16bfe29e-folder-smoke-kit.7z`
+- SHA256: `ADD2F064BEFE31DD8ACE0F47DDA5A18CAA0C2F86E96C1C5153FF962F3C4F8711`
+- size: `7107094` bytes
+- source artifact SHA256:
+  `4F8EE6A025405F1B777F28DFF20A290942F110E0E511A2D64CF98CA216D6B47A`
+- archive contents: `165` folders, `1704` files, `23421204` uncompressed bytes
+- included mission folders:
+  - `MPMissions/[55-2hc]warfarev2_073v48co.chernarus`
+  - `MPMissions/[61-2hc]warfarev2_073v48co.takistan`
+
+Validation performed:
+
+- 7-Zip archive integrity test: pass
+- all six folder-smoke PowerShell scripts parse successfully
+- staging install rehearsal and preflight pass for both missions
+- archive extract validation pass
+- extracted-kit install rehearsal and preflight pass
+- synthetic release-gate scanner rehearsal passes with both terrains,
+  server/client/latejoin/hc1/hc2 role names, HC registry markers, AICOM
+  telemetry, and zero stop-condition matches
+- extracted-kit evidence package validator accepts the final kit SHA with
+  `passed = true` and `failed_count = 0`
+
+This kit is still not runtime proof. It is a repeatable packaging and evidence
+collection tool for the exact r8 candidate. Final release proof still requires
+fresh real Arma 2 OA RPTs and human smoke notes from this exact kit.
 
 ## Evidence Already Strong
 
@@ -186,7 +218,8 @@ ASR-enabled RPT proof.
 1. Decide whether the release proof target is PR #122-only or r8 PR #124.
 2. If r8 is chosen, use the exact artifact SHA256
    `4F8EE6A025405F1B777F28DFF20A290942F110E0E511A2D64CF98CA216D6B47A`;
-   current PR #122 artifacts do not prove r8.
+   current PR #122 artifacts do not prove r8. The r8 folder-smoke kit SHA256 is
+   `ADD2F064BEFE31DD8ACE0F47DDA5A18CAA0C2F86E96C1C5153FF962F3C4F8711`.
 3. Run the exact chosen artifact through folder-smoke or a controlled dedicated
    proof environment with content logging enabled.
 4. Collect both-map server/client/latejoin/HC evidence.
