@@ -31,8 +31,10 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit c1c914f2d3 `
+  -ExpectedArchiveSha256 17872D1700260645AA03FAE1505923AA650705CE0C8E6D9117824DE43EE3714D `
   -RequireReleaseMarkers `
-  -Json
+  -Json `
+  -OutFile "C:\WASP\rpt-archive\marker-sweep-c1c914f2d3.json"
 ```
 
 Only add PR #126 HC-audit markers to `-RequirePattern` when the package being tested actually includes that instrumentation:
@@ -43,12 +45,14 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit c1c914f2d3 `
+  -ExpectedArchiveSha256 17872D1700260645AA03FAE1505923AA650705CE0C8E6D9117824DE43EE3714D `
   -RequireReleaseMarkers `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
-  -Json
+  -Json `
+  -OutFile "C:\WASP\rpt-archive\marker-sweep-c1c914f2d3-hc-audit.json"
 ```
 
-By default, samples include the marker name, public file label, line number, and a short line hash. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
+By default, samples include the marker name, public file label, line number, and a short line hash. `-OutFile` writes the same redaction-safe JSON that `-Json` prints, and the output records the expected candidate, git marker, archive SHA and generated terrain markers. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
 
 Useful PR #126 proof markers:
 

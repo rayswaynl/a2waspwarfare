@@ -25,8 +25,10 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory C:\WASP\rpt-archive `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit c1c914f2d3 `
+  -ExpectedArchiveSha256 17872D1700260645AA03FAE1505923AA650705CE0C8E6D9117824DE43EE3714D `
   -RequireReleaseMarkers `
-  -Json
+  -Json `
+  -OutFile C:\WASP\rpt-archive\marker-sweep.json
 #>
 
 [CmdletBinding()]
@@ -38,6 +40,7 @@ param(
 	[string[]]$RequirePattern = @(),
 	[string]$ExpectedCandidate = "",
 	[string]$ExpectedGit = "",
+	[string]$ExpectedArchiveSha256 = "",
 	[string[]]$ExpectedTerrain = @("chernarus", "takistan"),
 	[switch]$RequireReleaseMarkers,
 	[string]$WindowMarker = "",
@@ -46,7 +49,8 @@ param(
 	[switch]$Regex,
 	[switch]$IncludeLineText,
 	[switch]$NoFail,
-	[switch]$Json
+	[switch]$Json,
+	[string]$OutFile = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -293,6 +297,7 @@ $result = [pscustomobject][ordered]@{
 	windowMarker = $WindowMarker
 	expectedCandidate = $ExpectedCandidate
 	expectedGit = $ExpectedGit
+	expectedArchiveSha256 = $ExpectedArchiveSha256
 	expectedReleaseMarkers = $expectedReleaseMarkers
 	counts = $aggregate
 	missingRequired = $missingRequired
@@ -300,12 +305,26 @@ $result = [pscustomobject][ordered]@{
 	samples = $samples.ToArray()
 }
 
+$jsonOutput = $result | ConvertTo-Json -Depth 8
+if (![string]::IsNullOrWhiteSpace($OutFile)) {
+	$outFullPath = [System.IO.Path]::GetFullPath($OutFile)
+	$outDirectory = [System.IO.Path]::GetDirectoryName($outFullPath)
+	if (![string]::IsNullOrWhiteSpace($outDirectory) -and !(Test-Path -LiteralPath $outDirectory)) {
+		New-Item -ItemType Directory -Force -Path $outDirectory | Out-Null
+	}
+	$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+	[System.IO.File]::WriteAllText($outFullPath, $jsonOutput + [Environment]::NewLine, $utf8NoBom)
+}
+
 if ($Json) {
-	$result | ConvertTo-Json -Depth 8
+	$jsonOutput
 } else {
 	Write-Host ("WASP RPT marker sweep: files={0} mode={1}" -f $result.fileCount, $result.patternMode)
 	if ($missingRequired.Count -gt 0) {
 		Write-Host ("Missing required: {0}" -f ($missingRequired -join ", "))
+	}
+	if (![string]::IsNullOrWhiteSpace($OutFile)) {
+		Write-Host "Wrote redaction-safe JSON output file."
 	}
 	$result.counts.GetEnumerator() | Sort-Object Name | Format-Table -AutoSize
 }

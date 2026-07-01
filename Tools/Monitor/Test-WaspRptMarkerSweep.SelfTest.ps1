@@ -66,6 +66,7 @@ try {
 	$result = $jsonText | ConvertFrom-Json
 	Assert-Equal $result.schema "a2waspwarfare-rpt-marker-sweep-v1" "schema"
 	Assert-Equal $result.fileCount 2 "fileCount"
+	Assert-Equal $result.expectedArchiveSha256 "" "default expectedArchiveSha256"
 	Assert-Equal $result.counts.HCDROP_AICOM_AUDIT 1 "HCDROP_AICOM_AUDIT count"
 	Assert-Equal $result.counts.HCRECON_AICOM_AUDIT 1 "HCRECON_AICOM_AUDIT count"
 	Assert-Equal $result.counts.AICOMSTAT 1 "AICOMSTAT count"
@@ -88,6 +89,25 @@ try {
 	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus' 1 "chernarus release marker count"
 	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=takistan' 1 "takistan release marker count"
 	Assert-Equal @($releaseMarkerResult.missingRequired).Count 0 "release marker missingRequired count"
+
+	$outFile = Join-Path $tempRoot "marker-sweep.json"
+	$outFileText = Invoke-MarkerSweep -Arguments @(
+		"-RptDirectory", $tempRoot,
+		"-Latest", "2",
+		"-ExpectedCandidate", "release-command-center-20260630",
+		"-ExpectedGit", "test",
+		"-ExpectedArchiveSha256", "ABCDEF0123456789",
+		"-RequireReleaseMarkers",
+		"-Json",
+		"-OutFile", $outFile
+	)
+	if (!(Test-Path -LiteralPath $outFile)) { throw "Expected marker sweep JSON output file to exist." }
+	$outFileResult = (Get-Content -Raw -LiteralPath $outFile) | ConvertFrom-Json
+	$outStdoutResult = $outFileText | ConvertFrom-Json
+	Assert-Equal $outFileResult.expectedArchiveSha256 "ABCDEF0123456789" "OutFile expectedArchiveSha256"
+	Assert-Equal $outStdoutResult.expectedArchiveSha256 "ABCDEF0123456789" "stdout expectedArchiveSha256"
+	Assert-Equal @($outFileResult.expectedReleaseMarkers).Count 2 "OutFile expectedReleaseMarkers count"
+	Assert-True ((@($outFileResult.samples) | Where-Object { $_.PSObject.Properties.Name -contains "line" }).Count -eq 0) "OutFile samples must not include raw line text by default"
 
 	[void](Invoke-MarkerSweep -Arguments @(
 		"-RptPath", $serverRpt,
