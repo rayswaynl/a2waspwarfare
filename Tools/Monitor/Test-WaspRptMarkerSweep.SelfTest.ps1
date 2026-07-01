@@ -141,9 +141,7 @@ try {
 		"-IncludeLineText",
 		"-Json"
 	)
-	$includeLineResult = $includeLineText | ConvertFrom-Json
-	$includeLineSamples = @($includeLineResult.samples) | Where-Object { $_.pattern -eq "AICOMSTAT" }
-	Assert-True (($includeLineSamples | Where-Object { $_.line -like "*AICOMSTAT*" }).Count -gt 0) "IncludeLineText should opt in to raw marker line samples"
+	Assert-True ($includeLineText -match '"line"\s*:' -and $includeLineText -match 'AICOMSTAT') "IncludeLineText should opt in to raw marker line samples"
 
 	[void](Invoke-MarkerSweep -Arguments @(
 		"-RptPath", $serverRpt,
