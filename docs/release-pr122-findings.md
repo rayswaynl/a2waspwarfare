@@ -102,6 +102,32 @@ Exact PR #133 `SERVER_DEBUG` mission-folder artifact:
 This artifact is not runtime proof. It is the exact #133 bundle to launch for
 real RPT collection if #133 is selected.
 
+Exact PR #133 folder-smoke kit:
+
+- kit:
+  `outputs/a2waspwarfare-pr133-5f5eeedc-folder-smoke-kit.7z`
+- SHA256:
+  `A1359392F00141BD2502293F439123C7B6DDDD449C5DAAF2F5E38DE2015EBEC7`
+- size: `7193922` bytes
+- manifest:
+  `outputs/a2waspwarfare-pr133-5f5eeedc-folder-smoke-kit-manifest-2026-07-01-1925.md`
+- source artifact SHA256:
+  `B626E746774B9B350B9431923A975C9E0087CF330B3D35808D650A254D379DFB`
+- archive validation: pass, 165 folders, 1733 files, 24337576
+  uncompressed bytes
+- extracted-kit validation: pass, root contains `README.md`, `MPMissions`,
+  `scripts`, `Tools`, and `docs`
+- all folder-smoke PowerShell scripts parse successfully
+- stale PR #131 identity scan over staged and extracted kits: pass
+- staging and extracted install/preflight rehearsals pass for both missions
+- smoke evidence template generation records PR #133 head
+- synthetic release-gate collector/scanner/package rehearsal passes with ten
+  synthetic RPT files covering `server`, `client`, `latejoin`, `hc1`, and
+  `hc2` roles across both Chernarus and Takistan
+
+This folder-smoke kit is still not runtime proof. It is the portable exact
+#133 package to use for real RPT collection and human smoke notes.
+
 ## R8 Integration Finding
 
 PR #124, <https://github.com/rayswaynl/a2waspwarfare/pull/124>, is now the
@@ -633,14 +659,14 @@ ASR-enabled RPT proof.
    #133 first and rebuild from the new `origin/master`.
 2. Do not use old PR #122, r8, r9, `311b9d93`, or PR #127-only artifacts to
    prove latest `origin/master`.
-3. If current `origin/master` is chosen without #131, record an explicit static
+3. If current `origin/master` is chosen without #133, record an explicit static
    gate waiver first. The current master artifact SHA256 is
    `F2652CCDFF6085D73461C4FAADE4422D667F7FD245BE87556746A2CDA569545E`, but the
    source static gate is failing.
-4. If #131 is chosen, use artifact SHA256
-   `D2F3964F51A8A2647AD6A50D0BAD08016D3B35D513D41DB2A5CA931CFA483236` and
+4. If PR #133 is chosen, use artifact SHA256
+   `B626E746774B9B350B9431923A975C9E0087CF330B3D35808D650A254D379DFB` and
    folder-smoke kit SHA256
-   `4FDCCAFE489802E4D2C6A31854F43452FCF333F766996A1E108889AFA9CE8687`.
+   `A1359392F00141BD2502293F439123C7B6DDDD449C5DAAF2F5E38DE2015EBEC7`.
 5. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
    older r9 artifact SHA256
