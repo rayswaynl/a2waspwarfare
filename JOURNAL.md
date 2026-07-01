@@ -1,5 +1,25 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM infantry founding fallback integrated [RELEASE LOOP]
+
+Cherry-picked `8de3c4a60` into the release command-center branch as
+`b4df22ede`: when the founding eligibility strip leaves a side with no
+stored-type-0 infantry template, `AI_Commander_Teams.sqf` now admits the
+cheapest infantry template and logs `AICOMGATE|<side>|infFallback|...`.
+
+This targets the Takistan WEST founding-0 starvation where upgrade-0 gating
+could strip all BIS_US infantry templates because their base team leader is
+upgrade tier 1, leaving only expensive armour candidates. The previous
+cmdcon30 HC re-grab theory is now downgraded to supporting telemetry; runtime
+proof still needs exact-build Takistan WEST evidence showing fallback fire,
+`TEAM_FOUNDED`, `CMDRSTAT`, and AICOM progress without SQF/runtime errors.
+
+Static status for the intake: `git diff --check` clean; full Chernarus and
+Takistan `Lint-A2Compat.ps1` pass with four pre-existing array-`find` review
+items in `AI_Commander_Base.sqf`; `Run-WaspFinalCheck.ps1` still reports the
+known broad changed-file `A2 OA command dialect` smoke warning while BugHunt
+has no HIGH suspects.
+
 ## 2026-07-01 — Per-terrain runtime evidence gate [RELEASE LOOP]
 
 The release RPT scorer now splits runtime token counts by the RPT window's
