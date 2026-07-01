@@ -98,7 +98,7 @@ fixes the PR #134 release identity/static blockers without changing gameplay
 logic.
 
 PR #136 is the active overnight Build85 lane, open and non-draft at
-`f712857279af87deabcec9b884af664e1e84b45b`. It is stacked on PR #134's branch,
+`a203674cc19e657ccfc89d7ba44cd66d33fc4a7e`. It is stacked on PR #134's branch,
 not directly on current master. It is broad AICOM/client/live-monitor scope and
 contains live-monitor claims in `docs/OVERNIGHT-LOOP-2026-07-02.md`, but this
 repository pass did not find attached exact RPT evidence packages proving those
@@ -107,8 +107,10 @@ claims for release. Since the earlier zero-capture finding at
 `Common_WaypointsAdd.sqf` now calls `setCurrentWaypoint` on the first waypoint
 of each batch instead of only when `_WPCount == 0`. The PR #136 notes say this
 was deployed as cmdcon40 with clean boot smoke, but capture verification is
-still pending. PR #137 remains the focused draft fix for the earlier PR #136
-static/release-identity blockers at
+still pending. The latest move from `f712857279af87deabcec9b884af664e1e84b45b`
+to `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e` is docs-only
+(`docs/design/MISSION-AUDIT-60.md`). PR #137 remains the focused draft fix for
+the earlier PR #136 static/release-identity blockers at
 `4604044a255b5be2eec86d7da7ffad670d2915ef`; it is now behind the latest PR #136
 movement fix.
 
@@ -544,15 +546,17 @@ capture-phase entry.
 
 ## PR #136 Cmdcon40 Movement-Root Refresh
 
-Fresh triage at 2026-07-01 23:30 Europe/Amsterdam found PR #136 moved again:
+Fresh triage at 2026-07-01 23:36 Europe/Amsterdam found PR #136 moved again:
 
 - PR: <https://github.com/rayswaynl/a2waspwarfare/pull/136>
-- latest checked head: `f712857279af87deabcec9b884af664e1e84b45b`
+- latest checked head: `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e`
 - GitHub state: open, non-draft, clean
 - new gameplay commit after the zero-capture blocker:
   `76299d1595fbdc15b2b8c230ebea03517c033ddb`
-- latest doc commit:
+- cmdcon40 live/status doc commit:
   `f712857279af87deabcec9b884af664e1e84b45b`
+- latest move after cmdcon40:
+  `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e`, docs-only mission audit
 
 Current PR #136 notes say the zero-capture diagnosis shifted from capture-entry
 telemetry to movement activation. The reported root cause is that
@@ -575,6 +579,12 @@ stop-condition or missing-script failures.
 This update also changes the role of PR #138. PR #138 was opened from the older
 PR #137/cmdcon39 zero-capture state and is now a diagnostic fallback, not the
 primary next lane, unless cmdcon40 still fails the capture progression proof.
+
+The move from `f712857279af87deabcec9b884af664e1e84b45b` to
+`a203674cc19e657ccfc89d7ba44cd66d33fc4a7e` adds
+`docs/design/MISSION-AUDIT-60.md` only. It does not change the cmdcon40 mission
+code, but it does add morning-patch candidates that require separate triage
+before release selection.
 
 ## Current Master / r9 Reconciliation
 
@@ -736,14 +746,15 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 Fresh triage at 2026-07-01 23:30 Europe/Amsterdam found:
 
 - PR #136: active overnight Build85 lane, open non-draft and clean at
-  `f712857279af87deabcec9b884af664e1e84b45b`. It is stacked on PR #134 and
+  `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e`. It is stacked on PR #134 and
   carries broad AICOM/client/live-monitor changes. Since the earlier
   zero-capture blocker at `578e4f14c595334e8ee801e60bdc140ae342bd00`, it added
   the cmdcon40 movement root fix in `Common_WaypointsAdd.sqf`: activate the
   first waypoint of every fresh batch with `setCurrentWaypoint`, rather than
   only when `_WPCount == 0`. The overnight doc says cmdcon40 boot-smoke was
-  clean, but release proof still requires exact real RPT evidence that teams
-  move, arrive, enter capture, and flip towns.
+  clean, and the latest `a203674` move is docs-only mission audit, but release
+  proof still requires exact real RPT evidence that teams move, arrive, enter
+  capture, and flip towns.
 - PR #138: focused capture-entry telemetry lane, open draft and clean at
   `41a9048764022f4345f521bc4453b5e89aca217f` against PR #137. It adds trace
   markers only and was created from the older cmdcon39 zero-capture state. Use
@@ -1068,7 +1079,7 @@ ASR-enabled RPT proof.
    `EF2175B2CF00DB27A8F589350203F25A211BF6E427A4FA13A27E30DA31BE4FF0`, but it
    is not release-ready proof.
 6. If the owner selects the overnight Build85 lane, first prove the latest PR
-   #136 cmdcon40 head `f712857279af87deabcec9b884af664e1e84b45b` with exact
+   #136 head `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e` with exact
    real RPT evidence. The minimum proof target is movement/capture progression:
    dispatch, arrival, capture-phase entry, and at least one town flip/capture,
    with no new stop-condition or missing-script failures. The older PR #137
