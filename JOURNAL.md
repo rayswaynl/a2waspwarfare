@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Release runtime role-proof emitters [RELEASE LOOP]
+
+Scout review found the round40 package could be package-clean but still fail the
+runtime packet client-role proof: release `version.sqf` leaves `WF_LOG_CONTENT`
+disabled, while the runtime checker expected client startup strings previously
+emitted only through `WFBE_CO_FNC_LogContent`.
+
+Added raw `diag_log` startup proof lines for the existing HC/client proof
+strings in Chernarus and regenerated Takistan. This preserves quiet release
+logging while keeping the exact ten-file runtime RPT packet provable. Added a
+static smoke guard so both maintained terrains must keep those unconditional
+role-proof emitters.
+
 ## 2026-07-01 — AICOM wildcard A2 dialect fix [RELEASE LOOP]
 
 Removed the A3-only `allMissionObjects` token from the retired W10 lucky

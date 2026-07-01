@@ -1,6 +1,7 @@
 Private ['_HQRadio','_base','_buildings','_condition','_get','_idbl','_isDeployed','_oc','_weat','_rearmor','_playerObject','_hasConnectedAtLaunchACK', '_vehiclePlayer'];
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
+diag_log format ["Init_Client.sqf: Client initialization begins at [%1]", time];
 
 //--- JOIN ROBUSTNESS (B49 2026-06-19): a stalled client init must NEVER leave the player on a permanent
 //--- black screen. The BLACK FADED fade (layer 12452, set in initJIPCompatible) is normally cleared at

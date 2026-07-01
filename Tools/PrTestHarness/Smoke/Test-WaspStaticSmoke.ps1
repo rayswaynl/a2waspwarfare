@@ -599,6 +599,25 @@ function Test-ShippingMissionsExcludeHarness {
 	Add-Result "Shipping missions exclude stress harness" ($chernarusAbsent -and $takistanAbsent) "chernarusTestAbsent=$chernarusAbsent takistanTestAbsent=$takistanAbsent"
 }
 
+function Test-ReleaseRoleProofDiagLogEmitters {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$init = Get-Text (Join-Path $entry.Root "initJIPCompatible.sqf")
+		$client = Get-Text (Join-Path $entry.Root "Client\Init\Init_Client.sqf")
+		$hc = Get-Text (Join-Path $entry.Root "Headless\Init\Init_HC.sqf")
+		if (-not $init.Contains('diag_log "initJIPCompatible.sqf: Detected an headless client."')) { $missing += "$($entry.Terrain):hc-detected" }
+		if (-not $init.Contains('diag_log "initJIPCompatible.sqf: Executing the Client Initialization."')) { $missing += "$($entry.Terrain):client-init-bridge" }
+		if (-not $client.Contains('diag_log format ["Init_Client.sqf: Client initialization begins')) { $missing += "$($entry.Terrain):client-init-start" }
+		if (-not $hc.Contains('diag_log "Init_HC.sqf: Running the headless client initialization."')) { $missing += "$($entry.Terrain):hc-init-start" }
+	}
+	Add-Result "Release role-proof diag_log emitters" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-ActiveStressMissionCopy {
 	if (!(Test-Path -LiteralPath $ActiveMissionRoot)) {
 		Add-Result "Active stress mission copy" $true "Skipped: active mission root not present at $ActiveMissionRoot"
@@ -702,6 +721,7 @@ Test-Pr8StressClientHelper
 Test-Pr8StressRptAnalyzer
 Test-Pr8LiveWatcher
 Test-ShippingMissionsExcludeHarness
+Test-ReleaseRoleProofDiagLogEmitters
 Test-ActiveStressMissionCopy
 
 #--- June 2026 finalize checks

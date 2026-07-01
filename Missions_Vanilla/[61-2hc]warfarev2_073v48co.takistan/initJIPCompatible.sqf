@@ -65,6 +65,7 @@ isHeadLessClient = Call Compile preprocessFileLineNumbers "Headless\Functions\HC
 //--- channel, and the cost lands on the HC machine, never on players or the server.
 if (isHeadLessClient) then {LOG_CONTENT_STATE = "ACTIVATED"};
 if (isHeadLessClient) then {["INITIALIZATION", "initJIPCompatible.sqf: Detected an headless client."] Call WFBE_CO_FNC_LogContent};
+if (isHeadLessClient) then {diag_log "initJIPCompatible.sqf: Detected an headless client."};
 
 
 //--- Server JIP Information
@@ -359,6 +360,7 @@ if (isHostedServer || (!isHeadLessClient && !isDedicated)) then {
 	};
 
 	["INITIALIZATION", "initJIPCompatible.sqf: Executing the Client Initialization."] Call WFBE_CO_FNC_LogContent;
+	diag_log "initJIPCompatible.sqf: Executing the Client Initialization.";
 	execVM "Client\Init\Init_Client.sqf";
 };
 
