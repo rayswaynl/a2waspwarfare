@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-01 18:40 Europe/Amsterdam
+Last updated: 2026-07-01 18:50 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -551,14 +551,45 @@ and do not satisfy the release scanner gates.
 
 ## Livehost Findings
 
-Read-only probes found the active livehost config shape still using
-`cmdcon30aicom` mission template names:
+The newest read-only probe at 2026-07-01 18:44 Europe/Amsterdam found the
+active livehost config shape has moved from the earlier `cmdcon30aicom` template
+names to `cmdcon35aicom` template names:
 
-- active Chernarus resolves to a same-name live PBO
-- active Takistan does not resolve to a same-name PBO or folder in active
-  `MPMissions`
-- a parked Takistan candidate exists outside active `MPMissions`, but it is not
-  active release proof
+- line 16: `[55-2hc]warfarev2_073v48co_cmdcon35aicom.chernarus`
+- line 21: `[55-2hc]warfarev2_073v48co_cmdcon35aicom.chernarus`
+- line 26: `[61-2hc]warfarev2_073v48co_cmdcon35aicom.takistan`
+
+The checked active `MPMissions` listing shows a matching Chernarus PBO:
+
+- `[55-2hc]warfarev2_073v48co_cmdcon35aicom.chernarus.pbo`, size `11149914`,
+  last write `2026-07-01 09:13` livehost-local time
+
+The checked active `MPMissions` listing did not show a matching
+`[61-2hc]warfarev2_073v48co_cmdcon35aicom.takistan` PBO or folder, so active
+Takistan still is not resolved by configured name from this probe.
+
+Newest copied livehost server RPT:
+
+- remote path: `C:\WASP\rpt-archive\arma2oaserver-deploy35-20260701-0917.RPT`
+- local SHA256:
+  `AD59D2DB41DAE2BF98BDBE6A6DD761459D18D89C1CEDDCB8675AED260F5F35F1`
+- scanner summary:
+  `work/live-probe-20260701-1844/deploy35-summary.json`
+
+Strict release-gate scanner result over this single server RPT remains `FAIL`:
+
+- Chernarus window: `1`
+- Takistan window: `0`
+- `LOG CONTENT : [NOT ACTIVATED]`: present
+- stop-condition matches: `30`
+- AICOM telemetry: pass
+- HC registry gate: fail (`connect=14`, `group_civilian=0`,
+  `register_true=0`, `connect_skip=0`)
+- client/JIP evidence: absent, as expected from a single server RPT
+
+Minipc remains non-proof: no selected Arma process JSON was returned, and the
+checked `C:\Users\Chill\Documents\ArmA 2\MPMissions` and
+`C:\Users\Chill\AppData\Local\ArmA 2 OA` paths are absent.
 
 No livehost writes, deploys, config edits, or restarts were performed by Codex
 during this findings pass.
