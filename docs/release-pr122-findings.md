@@ -59,12 +59,12 @@ repair or replacement before it can be a current release candidate.
 
 Another draft lane, PR #125, exists for a broader command-center package. It is
 open, draft, and currently reported clean at head
-`f7a5e507398463985ab2021c8591b1b74beabc66`. Treat it as a separate broad lane,
+`c441d6f38df103e32694791f0bca5c5a70428c12`. Treat it as a separate broad lane,
 not as current-master runtime proof. The earlier `b4628c35` package validation
 is now stale because the branch advanced.
 
 PR #126 is open again, draft, and moved repeatedly during this loop; the latest
-checked head is `7f4c289e9fe8d4899515b5d39e3135fd0eaf733e`, with GitHub
+checked head is `360a4a52c811c0531d57ba4470cf04cbfc3637a0`, with GitHub
 reporting it clean. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
@@ -676,11 +676,11 @@ Fresh triage at 2026-07-01 23:08 Europe/Amsterdam found:
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
 - PR #126: open draft and moved repeatedly during this loop; latest checked
-  head is `7f4c289e9fe8d4899515b5d39e3135fd0eaf733e`, with GitHub reporting it
+  head is `360a4a52c811c0531d57ba4470cf04cbfc3637a0`, with GitHub reporting it
   clean. This lane still needs fresh diff/static/runtime triage before release
   selection.
 - PR #125: broad command-center/tooling lane at
-  `f7a5e507398463985ab2021c8591b1b74beabc66`. GitHub reports it `CLEAN`
+  `c441d6f38df103e32694791f0bca5c5a70428c12`. GitHub reports it `CLEAN`
   against merged #132 master. The prior `b4628c35` artifact SHA256
   `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2` is now
   stale because this branch advanced again.
@@ -978,7 +978,7 @@ ASR-enabled RPT proof.
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
    current command-center package identity. Also do not use the local
    `b4628c35` / `D0BD2405...` tuple as current PR #125 proof; PR #125 has
-   advanced to `f7a5e507398463985ab2021c8591b1b74beabc66` and needs a fresh
+   advanced to `c441d6f38df103e32694791f0bca5c5a70428c12` and needs a fresh
    package if selected.
 8. If r9-narrow is chosen, first rebase/rebuild it on current `origin/master`,
    then push/open or update a source PR and publish a fresh artifact/hash. The
