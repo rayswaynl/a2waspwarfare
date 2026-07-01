@@ -45,6 +45,7 @@ function Write-Sweep {
 		expectedGit = "testgit"
 		expectedArchiveSha256 = "ABCDEF0123456789"
 		expectedRole = $Role
+		expectedTerrain = @($Terrain)
 		counts = [pscustomobject]$counts
 		missingRequired = @()
 	}

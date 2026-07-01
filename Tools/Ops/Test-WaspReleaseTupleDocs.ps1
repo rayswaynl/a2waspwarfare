@@ -16,7 +16,7 @@ param(
 	[string]$ExpectedGit = "0ee16d18e0",
 	[string]$ExpectedArchiveSha256 = "D323434629AB90F90CDD4C4874F164422F38B94075101861F8B1E726C76FE81E",
 	[string]$ExpectedPackageSize = "7,163,301",
-	[string]$ExpectedWikiCommit = "1afb2df",
+	[string]$ExpectedWikiCommit = "b273830",
 	[string[]]$StaleArchiveSha256 = @(
 		"190475B4E8967B04F454A20748FE0A95E09C470821FD7304B06B3EDBED34AF4A",
 		"1C58A4A3FD2CBE90C7BF0F37062C1035D0DAD82C1875A801E639CC870EAC2C4B",
@@ -87,6 +87,8 @@ Assert-Contains $monitorReadme $ExpectedGit "monitor README has expected git mar
 Assert-Contains $monitorReadme $ExpectedArchiveSha256 "monitor README has expected archive SHA"
 Assert-Contains $monitorReadme $ExpectedPackageSize "monitor README has expected package size"
 Assert-Contains $monitorReadme "-ExpectedArchiveSha256 $ExpectedArchiveSha256" "monitor commands use expected archive SHA"
+Assert-Contains $monitorReadme "-ArchivePath" "monitor README recommends archive path hash binding"
+Assert-Contains $monitorReadme "expectedTerrain" "monitor README documents terrain stamp validation"
 
 foreach ($stale in $StaleArchiveSha256) {
 	if ($stale -ne $ExpectedArchiveSha256) {

@@ -55,7 +55,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -OutFile "C:\WASP\rpt-archive\marker-sweep-0ee16d18e0-hc-audit.json"
 ```
 
-By default, samples include the marker name, public file label, line number, and a short line hash. `-OutFile` writes the same redaction-safe JSON that `-Json` prints, and the output records the expected candidate, git marker, archive SHA, role stamp and generated terrain markers. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
+By default, samples include the marker name, public file label, line number, and a short line hash. `-OutFile` writes the same redaction-safe JSON that `-Json` prints, and the output records the expected candidate, git marker, archive SHA, role stamp, terrain stamp and generated terrain markers. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
 
 Useful PR #126 proof markers:
 
@@ -108,12 +108,13 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRuntimeEvidenc
   -ManifestPath "C:\WASP\rpt-archive\runtime-evidence-0ee16d18e0.json" `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit 0ee16d18e0 `
-  -ExpectedArchiveSha256 D323434629AB90F90CDD4C4874F164422F38B94075101861F8B1E726C76FE81E
+  -ExpectedArchiveSha256 D323434629AB90F90CDD4C4874F164422F38B94075101861F8B1E726C76FE81E `
+  -ArchivePath "C:\WASP\release\_MISSIONS.7z"
 ```
 
 Default required slots are `chernarus,takistan` x `server,hc1,hc2,start-client,late-jip`. Use `-RequiredTerrain` or `-RequiredRole` only when the release owner explicitly narrows the evidence matrix.
 
-Manifest validation also checks each marker-sweep artifact's `expectedRole` against its manifest row, so a server sweep cannot accidentally satisfy an HC or JIP slot.
+Manifest validation also checks each marker-sweep artifact's `expectedRole` and `expectedTerrain` against its manifest row, so a server sweep cannot accidentally satisfy an HC/JIP slot and a broad or wrong-terrain sweep cannot satisfy the other terrain. `-ArchivePath` is optional but recommended whenever the package artifact is locally available; it hashes the package and verifies it against `-ExpectedArchiveSha256` without copying private RPT contents into git.
 
 Run the helper contract self-test after editing it:
 

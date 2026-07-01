@@ -208,8 +208,9 @@ $defaultPatterns = @(
 
 $Pattern = @(Expand-PatternArgument -Values $Pattern)
 $RequirePattern = @(Expand-PatternArgument -Values $RequirePattern)
+$expectedTerrainList = @(Expand-PatternArgument -Values $ExpectedTerrain | ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { ![string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
 $hasExplicitPattern = $Pattern.Count -gt 0
-$expectedReleaseMarkers = @(New-ExpectedReleaseMarkers -Candidate $ExpectedCandidate -Git $ExpectedGit -Terrain $ExpectedTerrain)
+$expectedReleaseMarkers = @(New-ExpectedReleaseMarkers -Candidate $ExpectedCandidate -Git $ExpectedGit -Terrain $expectedTerrainList)
 if ($RequireReleaseMarkers -and $expectedReleaseMarkers.Count -eq 0) {
 	Write-Host "-RequireReleaseMarkers needs -ExpectedCandidate, -ExpectedGit, and at least one -ExpectedTerrain value."
 	exit 1
@@ -299,6 +300,7 @@ $result = [pscustomobject][ordered]@{
 	expectedGit = $ExpectedGit
 	expectedArchiveSha256 = $ExpectedArchiveSha256
 	expectedRole = $ExpectedRole
+	expectedTerrain = $expectedTerrainList
 	expectedReleaseMarkers = $expectedReleaseMarkers
 	counts = $aggregate
 	missingRequired = $missingRequired

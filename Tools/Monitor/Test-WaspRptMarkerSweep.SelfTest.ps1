@@ -109,6 +109,8 @@ try {
 	Assert-Equal $outStdoutResult.expectedArchiveSha256 "ABCDEF0123456789" "stdout expectedArchiveSha256"
 	Assert-Equal $outFileResult.expectedRole "server" "OutFile expectedRole"
 	Assert-Equal $outStdoutResult.expectedRole "server" "stdout expectedRole"
+	Assert-Equal (@($outFileResult.expectedTerrain) -join ",") "chernarus,takistan" "OutFile expectedTerrain"
+	Assert-Equal (@($outStdoutResult.expectedTerrain) -join ",") "chernarus,takistan" "stdout expectedTerrain"
 	Assert-Equal @($outFileResult.expectedReleaseMarkers).Count 2 "OutFile expectedReleaseMarkers count"
 	Assert-True ((@($outFileResult.samples) | Where-Object { $_.PSObject.Properties.Name -contains "line" }).Count -eq 0) "OutFile samples must not include raw line text by default"
 

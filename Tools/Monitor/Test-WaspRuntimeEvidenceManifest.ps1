@@ -27,6 +27,7 @@ param(
 	[Parameter(Mandatory)] [string]$ExpectedCandidate,
 	[Parameter(Mandatory)] [string]$ExpectedGit,
 	[Parameter(Mandatory)] [string]$ExpectedArchiveSha256,
+	[string]$ArchivePath = "",
 	[string[]]$RequiredTerrain = @("chernarus", "takistan"),
 	[string[]]$RequiredRole = @("server", "hc1", "hc2", "start-client", "late-jip"),
 	[switch]$NoFail
@@ -94,6 +95,18 @@ $manifestFullPath = [System.IO.Path]::GetFullPath($ManifestPath)
 $manifestDirectory = [System.IO.Path]::GetDirectoryName($manifestFullPath)
 $manifest = Read-JsonFile -Path $manifestFullPath
 $findings = New-Object System.Collections.Generic.List[string]
+
+if (![string]::IsNullOrWhiteSpace($ArchivePath)) {
+	$archiveFullPath = [System.IO.Path]::GetFullPath($ArchivePath)
+	if (!(Test-Path -LiteralPath $archiveFullPath)) {
+		Add-Finding $findings ("Archive file not found: {0}" -f $archiveFullPath)
+	} else {
+		$archiveHash = (Get-FileHash -LiteralPath $archiveFullPath -Algorithm SHA256).Hash.ToUpperInvariant()
+		if ($archiveHash -ne $ExpectedArchiveSha256.ToUpperInvariant()) {
+			Add-Finding $findings ("Archive SHA mismatch: expected [{0}], got [{1}]." -f $ExpectedArchiveSha256.ToUpperInvariant(), $archiveHash)
+		}
+	}
+}
 
 if ($manifest.schema -ne "a2waspwarfare-runtime-evidence-manifest-v1") {
 	Add-Finding $findings ("Manifest schema must be a2waspwarfare-runtime-evidence-manifest-v1, got [{0}]." -f $manifest.schema)
@@ -172,6 +185,10 @@ foreach ($row in $evidenceRows) {
 	}
 	if ($sweep.expectedRole -ne $role) {
 		Add-Finding $findings ("Evidence row [{0}] role mismatch: expected [{1}], got [{2}]." -f $slot, $role, $sweep.expectedRole)
+	}
+	$sweepExpectedTerrain = @(Get-JsonProperty -Object $sweep -Name "expectedTerrain" | ForEach-Object { ("" + $_).Trim().ToLowerInvariant() } | Where-Object { ![string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
+	if ($sweepExpectedTerrain.Count -ne 1 -or $sweepExpectedTerrain[0] -ne $terrain) {
+		Add-Finding $findings ("Evidence row [{0}] terrain stamp mismatch: expected [{1}], got [{2}]." -f $slot, $terrain, ($sweepExpectedTerrain -join ","))
 	}
 
 	$missingRequired = @(Get-JsonProperty -Object $sweep -Name "missingRequired")
