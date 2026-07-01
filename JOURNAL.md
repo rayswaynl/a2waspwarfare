@@ -6,8 +6,11 @@ Tightened a few malformed-state edges around AICOM team lifecycle cleanup. The
 transport refund path now validates unit-data shape before reading
 `QUERYUNITPRICE`, pending-token consumption refuses a corrupted non-array token
 store, and `WFBE_ACTIVE_AICOM_TEAMS` pruning now validates active-list entry
-unit/team types before reading them. Static smoke asserts these lifecycle shape
-guards together with the existing refund authority checks.
+unit/team types before reading them. The active AICOM marker list itself is now
+reset to an empty array if corrupted before created/ended/heading handlers
+iterate it, and the created duplicate scan validates slot 3 as a group before
+comparing it. Static smoke asserts these lifecycle shape guards together with
+the existing refund authority checks.
 
 Runtime, SSH, RPT collection, upload, restart, cache-clear and deployment remain
 explicit-approval gated.

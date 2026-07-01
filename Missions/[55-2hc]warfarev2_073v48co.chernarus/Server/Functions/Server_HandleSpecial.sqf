@@ -323,7 +323,7 @@ switch (_args select 0) do {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cside","_cteam","_cpendingToken","_clogik","_cteams","_ctokenOk","_caicomList","_caicomExists","_cdir","_cldr"];
+		Private ["_csideID","_cside","_cteam","_cpendingToken","_clogik","_cteams","_ctokenOk","_caicomList","_caicomExists","_cdir","_cldr","_cEntryTeam"];
 		if (count _args < 3) exitWith {
 			["WARNING", "Server_HandleSpecial.sqf: rejected malformed aicom-team-created payload."] Call WFBE_CO_FNC_LogContent;
 		};
@@ -360,8 +360,14 @@ switch (_args select 0) do {
 				if (!isNull _cldr) then {
 					_cdir = getDir _cldr;
 					_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+					if (typeName _caicomList != "ARRAY") then {_caicomList = []};
 					_caicomExists = false;
-					{if ((typeName _x == "ARRAY") && {count _x >= 4} && {(_x select 3) == _cteam}) exitWith {_caicomExists = true}} forEach _caicomList;
+					{
+						if ((typeName _x == "ARRAY") && {count _x >= 4}) then {
+							_cEntryTeam = _x select 3;
+							if ((typeName _cEntryTeam == "GROUP") && {_cEntryTeam == _cteam}) then {_caicomExists = true};
+						};
+					} forEach _caicomList;
 					if (!_caicomExists) then {
 						missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
 						publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
@@ -645,6 +651,7 @@ switch (_args select 0) do {
 			//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
 			//--- then re-broadcast so every client deletes the marker. Mirrors sidepatrol-ended.
 			_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+			if (typeName _caicomList != "ARRAY") then {_caicomList = []};
 			_caicomNew = [];
 			{
 				if ((typeName _x == "ARRAY") && {count _x >= 4}) then {
@@ -712,6 +719,7 @@ switch (_args select 0) do {
 			};
 			_haicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 			_hchanged = false;
+			if (typeName _haicomList != "ARRAY") then {_haicomList = []; _hchanged = true};
 			_hldr = leader _hteam;
 			_hteam setVariable ["wfbe_aicom_last_heading_t", time, false];
 			if (!isNull _hldr) then {_hteam setVariable ["wfbe_aicom_last_heading_owner", owner _hldr, false]};

@@ -411,6 +411,22 @@ function Test-AicomTeamLifecycleAuthorityGuard {
 		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
 		$runnerCode = [regex]::Replace($runner, "//.*", "")
 		$runnerCode = [regex]::Replace($runnerCode, "/\*[\s\S]*?\*/", "")
+		$createdBlock = ""
+		$createdStart = $serverCode.IndexOf('case "aicom-team-created"')
+		if ($createdStart -ge 0) {
+			$createdEnd = $serverCode.IndexOf('case "aicom-focus"', $createdStart)
+			if ($createdEnd -gt $createdStart) {
+				$createdBlock = $serverCode.Substring($createdStart, $createdEnd - $createdStart)
+			}
+		}
+		$endedBlock = ""
+		$endedStart = $serverCode.IndexOf('case "aicom-team-ended"')
+		if ($endedStart -ge 0) {
+			$endedEnd = $serverCode.IndexOf('case "aicom-team-heading"', $endedStart)
+			if ($endedEnd -gt $endedStart) {
+				$endedBlock = $serverCode.Substring($endedStart, $endedEnd - $endedStart)
+			}
+		}
 		$headingBlock = ""
 		$headingStart = $serverCode.IndexOf('case "aicom-team-heading"')
 		if ($headingStart -ge 0) {
@@ -421,9 +437,9 @@ function Test-AicomTeamLifecycleAuthorityGuard {
 		}
 		if (-not ($runnerCode.Contains('setVariable ["wfbe_aicom_sideid", _sideID, true]') -and $runnerCode.Contains('setVariable ["wfbe_aicom_transport_team", _team, true]') -and $runnerCode.Contains('setVariable ["wfbe_aicom_transport_type", typeOf _airVeh, true]') -and $runnerCode.Contains('count _this > 9') -and $runnerCode.Contains('["aicom-team-ended", _sideID, grpNull, _pendingToken]') -and $runnerCode.Contains('["aicom-team-created", _sideID, _team, _pendingToken]') -and $runnerCode.Contains('["aicom-heli-refunded", _sID, _h, _tm, _htype]'))) { $missing += "$($entry.Terrain):sender-team-binding" }
 		if (-not ($serverCode.Contains('_validateAicomManagedTeamForSide') -and $serverCode.Contains('WFBE_CO_FNC_GroupGetBool') -and $serverCode.Contains('wfbe_aicom_sideid') -and $serverCode.Contains('_consumeAicomPendingToken') -and $serverCode.Contains('wfbe_aicom_pending_tokens') -and $serverCode.Contains('typeName _tokens != "ARRAY"'))) { $missing += "$($entry.Terrain):managed-team-validator" }
-		if (-not ($serverCode.Contains('count _args < 3') -and $serverCode.Contains('rejected malformed aicom-team-created') -and $serverCode.Contains('rejected untrusted aicom-team-created') -and $serverCode.Contains('rejected duplicate aicom-team-created') -and $serverCode.Contains('rejected stale aicom-team-created pending token'))) { $missing += "$($entry.Terrain):created-guard" }
-		if (-not ($serverCode.Contains('rejected malformed aicom-team-ended') -and $serverCode.Contains('rejected untrusted aicom-team-ended') -and $serverCode.Contains('rejected unregistered aicom-team-ended') -and $serverCode.Contains('rejected live aicom-team-ended') -and $serverCode.Contains('rejected unauthenticated aicom-team-ended pending release') -and $serverCode.Contains('rejected stale aicom-team-ended pending release token') -and $serverCode.Contains('typeName _x == "ARRAY"') -and $serverCode.Contains('count _x >= 4') -and $serverCode.Contains('typeName _entryUnit == "OBJECT"') -and $serverCode.Contains('typeName _entryTeam == "GROUP"'))) { $missing += "$($entry.Terrain):ended-guard" }
-		if (-not ($serverCode.Contains('rejected malformed aicom-team-heading') -and $serverCode.Contains('typeName _hdir != "SCALAR"') -and $serverCode.Contains('rejected untrusted aicom-team-heading') -and $serverCode.Contains('rejected unregistered aicom-team-heading') -and $serverCode.Contains('typeName _hEntryTeam == "GROUP"') -and $serverCode.Contains('typeName _hEntryLeader != "OBJECT"') -and $serverCode.Contains('typeName _hold != "SCALAR"'))) { $missing += "$($entry.Terrain):heading-guard" }
+		if (-not ($createdBlock.Contains('count _args < 3') -and $createdBlock.Contains('rejected malformed aicom-team-created') -and $createdBlock.Contains('rejected untrusted aicom-team-created') -and $createdBlock.Contains('rejected duplicate aicom-team-created') -and $createdBlock.Contains('rejected stale aicom-team-created pending token') -and $createdBlock.Contains('typeName _caicomList != "ARRAY"') -and $createdBlock.Contains('typeName _cEntryTeam == "GROUP"'))) { $missing += "$($entry.Terrain):created-guard" }
+		if (-not ($endedBlock.Contains('rejected malformed aicom-team-ended') -and $endedBlock.Contains('rejected untrusted aicom-team-ended') -and $endedBlock.Contains('rejected unregistered aicom-team-ended') -and $endedBlock.Contains('rejected live aicom-team-ended') -and $endedBlock.Contains('rejected unauthenticated aicom-team-ended pending release') -and $endedBlock.Contains('rejected stale aicom-team-ended pending release token') -and $endedBlock.Contains('typeName _caicomList != "ARRAY"') -and $endedBlock.Contains('typeName _x == "ARRAY"') -and $endedBlock.Contains('count _x >= 4') -and $endedBlock.Contains('typeName _entryUnit == "OBJECT"') -and $endedBlock.Contains('typeName _entryTeam == "GROUP"'))) { $missing += "$($entry.Terrain):ended-guard" }
+		if (-not ($headingBlock.Contains('rejected malformed aicom-team-heading') -and $headingBlock.Contains('typeName _hdir != "SCALAR"') -and $headingBlock.Contains('rejected untrusted aicom-team-heading') -and $headingBlock.Contains('rejected unregistered aicom-team-heading') -and $headingBlock.Contains('typeName _haicomList != "ARRAY"') -and $headingBlock.Contains('typeName _hEntryTeam == "GROUP"') -and $headingBlock.Contains('typeName _hEntryLeader != "OBJECT"') -and $headingBlock.Contains('typeName _hold != "SCALAR"'))) { $missing += "$($entry.Terrain):heading-guard" }
 		if ($headingBlock.Contains('(_args select 1) select 0')) { $missing += "$($entry.Terrain):raw-heading-select" }
 		if (-not ($serverCode.Contains('count _args < 5') -and $serverCode.Contains('typeName _rVeh != "OBJECT"') -and $serverCode.Contains('typeName _rTeam != "GROUP"') -and $serverCode.Contains('typeName _rType != "STRING"') -and $serverCode.Contains('typeOf _rVeh != _rType') -and $serverCode.Contains('group (driver _rVeh) != _rTeam') -and $serverCode.Contains('wfbe_aicom_transport_refunded') -and $serverCode.Contains('_rCost = _rMaxCost') -and $serverCode.Contains('rejected untrusted aicom-heli-refunded') -and $serverCode.Contains('rejected unregistered aicom-heli-refunded') -and $serverCode.Contains('rejected aicom-heli-refunded transport not off-map'))) { $missing += "$($entry.Terrain):refund-guard" }
 		if (-not ($runnerCode.Contains('typeName _ud == "ARRAY"') -and $runnerCode.Contains('count _ud > QUERYUNITPRICE') -and $runnerCode.Contains('typeName (_ud select QUERYUNITPRICE) == "SCALAR"'))) { $missing += "$($entry.Terrain):transport-cost-guard" }
