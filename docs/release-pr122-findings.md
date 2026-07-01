@@ -62,11 +62,13 @@ open, draft, and currently reported clean at head
 `e3b6e379032d65241f0f4da1aa72a333dcd0df67`. Treat it as a separate broad lane,
 not as current-master runtime proof. The latest move is code-affecting
 (`Client_HandlePVF.sqf` in both maps plus smoke tooling), so it needs fresh
-triage before release selection. The earlier `b4628c35` package validation is
-now stale because the branch advanced.
+triage before release selection. The PR body now reports package/static proof at
+SHA256 `3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87`,
+but it also explicitly keeps runtime collection pending. The earlier
+`b4628c35` package validation is now stale because the branch advanced.
 
 PR #126 is open again, draft, and moved repeatedly during this loop; the latest
-checked head is `9b04db7ec1cec0935c8b67ba6fbf46b076e1ca5a`, with GitHub
+checked head is `59940ea01ab04edc0c7fc80f807a1863ea785bc9`, with GitHub
 reporting it clean. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
@@ -100,7 +102,7 @@ fixes the PR #134 release identity/static blockers without changing gameplay
 logic.
 
 PR #136 is the active overnight Build85 lane, open and non-draft at
-`80d4f31edc228450e3bebb3d8b7a84bd2b25741c`. It is stacked on PR #134's branch,
+`cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5`. It is stacked on PR #134's branch,
 not directly on current master. It is broad AICOM/client/live-monitor scope and
 contains live-monitor claims in `docs/OVERNIGHT-LOOP-2026-07-02.md`, but this
 repository pass did not find attached exact RPT evidence packages proving those
@@ -110,13 +112,17 @@ claims for release. Since the earlier zero-capture finding at
 of each batch instead of only when `_WPCount == 0`. The PR #136 notes say this
 was deployed as cmdcon40 with clean boot smoke, and the Tick 8 doc says the
 correct HC RPT scope now shows `begin_capture=2`, teams holding Myshkino, and
-0 current errors. Capture completion is still pending because that same note
-still says `CAPTURED=0`. The moves after
+0 current errors. Tick 9 says `begin_capture` climbed from 2 to 9 and
+`ASSAULT_DISPATCH=71`, but still says `CAPTURED=0`, `did_not_flip=0`, and
+`RELEASED=0`. A later public stats snapshot reports two captures, but no
+complete selected-artifact RPT package is attached here. The moves after
 `f712857279af87deabcec9b884af664e1e84b45b` are docs-only:
 `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e` adds
 `docs/design/MISSION-AUDIT-60.md`, and
 `80d4f31edc228450e3bebb3d8b7a84bd2b25741c` adds the HC-RPT wrong-log
-correction to `docs/OVERNIGHT-LOOP-2026-07-02.md`. PR #137 remains the focused draft fix for
+correction to `docs/OVERNIGHT-LOOP-2026-07-02.md`; the latest
+`cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5` move is another docs-only
+overnight note. PR #137 remains the focused draft fix for
 the earlier PR #136 static/release-identity blockers at
 `4604044a255b5be2eec86d7da7ffad670d2915ef`; it is now behind the latest PR #136
 movement fix.
@@ -556,7 +562,7 @@ capture-phase entry.
 Fresh triage at 2026-07-01 23:36 Europe/Amsterdam found PR #136 moved again:
 
 - PR: <https://github.com/rayswaynl/a2waspwarfare/pull/136>
-- latest checked head: `80d4f31edc228450e3bebb3d8b7a84bd2b25741c`
+- latest checked head: `cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5`
 - GitHub state: open, non-draft, clean
 - new gameplay commit after the zero-capture blocker:
   `76299d1595fbdc15b2b8c230ebea03517c033ddb`
@@ -566,6 +572,8 @@ Fresh triage at 2026-07-01 23:36 Europe/Amsterdam found PR #136 moved again:
   `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e`, docs-only mission audit
   `80d4f31edc228450e3bebb3d8b7a84bd2b25741c`, docs-only HC-RPT wrong-log
   correction
+  `cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5`, docs-only Tick 9 capture-status
+  update
 
 Current PR #136 notes say the zero-capture diagnosis shifted from capture-entry
 telemetry to movement activation. The reported root cause is that
@@ -582,11 +590,13 @@ deployed with clean boot smoke. Tick 8 adds an important measurement correction:
 the team-driver logs are on the HC RPT, and the scoped HC RPT reportedly shows
 `begin_capture=2`, teams holding Myshkino, and 0 current errors. That is useful
 evidence for investigation, but it is still not final release proof in this
-findings packet because the same note still says `CAPTURED=0` and no complete
-selected-artifact RPT evidence package is attached here. The next proof must
-show the exact selected build in real RPTs with movement/capture completion:
-arrival evidence, capture-phase entry, and at least one `CAPTURED`/town flip
-path, with no new stop-condition or missing-script failures.
+findings packet because Tick 9 still says `CAPTURED=0` and no complete
+selected-artifact RPT evidence package is attached here. Public stats later
+showed two captured towns, but that is telemetry rather than attached RPT proof.
+The next proof must show the exact selected build in real RPTs with
+movement/capture completion: arrival evidence, capture-phase entry, and at
+least one `CAPTURED`/town flip path, with no new stop-condition or
+missing-script failures.
 
 This update also changes the role of PR #138. PR #138 was opened from the older
 PR #137/cmdcon39 zero-capture state and is now a diagnostic fallback, not the
@@ -594,29 +604,61 @@ primary next lane, unless cmdcon40 still fails the capture progression proof.
 
 The moves from `f712857279af87deabcec9b884af664e1e84b45b` to
 `a203674cc19e657ccfc89d7ba44cd66d33fc4a7e` and then
-`80d4f31edc228450e3bebb3d8b7a84bd2b25741c` are docs-only. They do not change
-the cmdcon40 mission code, but they add morning-patch candidates and an HC-RPT
-measurement correction that require separate source/RPT triage before release
-selection.
+`80d4f31edc228450e3bebb3d8b7a84bd2b25741c` and
+`cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5` are docs-only. They do not change
+the cmdcon40 mission code, but they add morning-patch candidates, an HC-RPT
+measurement correction, and a Tick 9 capture-status update that require
+separate source/RPT triage before release selection.
 
 ## Public Stats Snapshot - Cmdcon40
 
 Fetched public server stats from `http://78.46.107.142:8080/stats.json` at
-2026-07-01 23:50 Europe/Amsterdam:
+2026-07-02 00:14 Europe/Amsterdam:
 
-- generatedAt `2026-07-01T21:49:04Z`
-- server online, map Chernarus, 2 headless clients, uptime 28 min
-- current round elapsed 20 min
-- `currentRound.captures` 0
-- `benchmark.current` captures 0, captureDismount 0, errors 0
-- teams WEST 8, EAST 9
-- HC1 fps=46 units=65; HC2 fps=46 units=62
-- performance towns `0:0,5:0,10:1,15:2,20:2`
-- performance units `0:40,5:46,10:130,15:153,20:146`
+- generatedAt `2026-07-01T22:14:06Z`
+- server online, map Chernarus, 2 headless clients, uptime 53 min
+- current round elapsed 45 min
+- `currentRound.captures` 2
+- recent captures: `Myshkino`, `Khelm`
+- `benchmark.current` captures 2, captureDismount 0, errors 0
+- teams WEST 9, EAST 10
+- active towns/townsPeak 2/2
+- delegationPct 94
+- HC1 fps=46 units=88; HC2 fps=47 units=77
 
 This is useful current telemetry, but it is not exact selected-build RPT proof.
 The release gate remains open until real RPTs show movement, arrival,
 capture-entry, and at least one `CAPTURED`/town flip on the selected artifact.
+
+## Livehost RPT Probe - 2026-07-02 00:15
+
+Read-only livehost probing found the active config now names:
+
+- `[55-2hc]warfarev2_073v48co_cmdcon40aicom.chernarus`
+- `[61-2hc]warfarev2_073v48co_cmdcon40aicom.takistan`
+
+The active `MPMissions` listing only showed the Chernarus PBO resolving:
+
+- `[55-2hc]warfarev2_073v48co_cmdcon40aicom.chernarus.pbo`
+- no matching Takistan cmdcon40 PBO/folder in the checked listing
+
+Copied server RPT:
+`work/live-probe-20260702-0015/arma2oaserver-deploy40-20260701-1421.RPT`,
+SHA256 `307A27D499D42EEFAAD90928BDCB6005F4D4F4592574053A72D1C9319E013396`.
+
+That server RPT is not release proof:
+
+- it is server-only and Chernarus-only
+- startup/log lines still identify `cmdcon39aicom`
+- `LOG CONTENT : [NOT ACTIVATED]`
+- no current HC RPT file was found in the normal searched paths
+- it contains server telemetry including first-town-captured/bootstrap-stipend
+  evidence, but it does not bind the capture to the selected cmdcon40 artifact
+  or prove Takistan
+
+Release remains NO-GO until the selected build has a complete both-map RPT
+package with server, HC1, HC2, start-client, late-JIP/client evidence and human
+smoke notes.
 
 ## Current Master / r9 Reconciliation
 
@@ -778,16 +820,16 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 Fresh triage at 2026-07-01 23:30 Europe/Amsterdam found:
 
 - PR #136: active overnight Build85 lane, open non-draft and clean at
-  `80d4f31edc228450e3bebb3d8b7a84bd2b25741c`. It is stacked on PR #134 and
+  `cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5`. It is stacked on PR #134 and
   carries broad AICOM/client/live-monitor changes. Since the earlier
   zero-capture blocker at `578e4f14c595334e8ee801e60bdc140ae342bd00`, it added
   the cmdcon40 movement root fix in `Common_WaypointsAdd.sqf`: activate the
   first waypoint of every fresh batch with `setCurrentWaypoint`, rather than
   only when `_WPCount == 0`. The overnight doc says cmdcon40 boot-smoke was
-  clean, the `a203674` move is docs-only mission audit, and the latest
-  `80d4f31` move is a docs-only HC-RPT wrong-log correction claiming
-  `begin_capture=2` with `CAPTURED=0`. Release proof still requires exact real
-  RPT evidence that teams arrive, enter capture, and flip towns.
+  clean, the moves after cmdcon40 are docs-only, and Tick 9 claims
+  `begin_capture` climbed 2 to 9 with `CAPTURED=0`. Public stats later show two
+  captured towns, but release proof still requires exact real RPT evidence that
+  teams arrive, enter capture, and flip towns on the selected artifact.
 - PR #138: focused capture-entry telemetry lane, open draft and clean at
   `41a9048764022f4345f521bc4453b5e89aca217f` against PR #137. It adds trace
   markers only and was created from the older cmdcon39 zero-capture state. Use
@@ -819,14 +861,15 @@ Fresh triage at 2026-07-01 23:30 Europe/Amsterdam found:
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
 - PR #126: open draft and moved repeatedly during this loop; latest checked
-  head is `9b04db7ec1cec0935c8b67ba6fbf46b076e1ca5a`, with GitHub reporting it
-  clean. The latest move is docs-only, but this lane still needs fresh
+  head is `59940ea01ab04edc0c7fc80f807a1863ea785bc9`, with GitHub reporting it
+  clean. The latest move is docs/tooling-only, but this lane still needs fresh
   diff/static/runtime triage before release selection.
 - PR #125: broad command-center/tooling lane at
   `e3b6e379032d65241f0f4da1aa72a333dcd0df67`. GitHub reports it `CLEAN`
   against merged #132 master. The latest move is code-affecting in both
-  `Client_HandlePVF.sqf` files and smoke tooling; it is not triaged or
-  runtime-proven. The prior `b4628c35` artifact SHA256
+  `Client_HandlePVF.sqf` files and smoke tooling. PR #125 now has package/static
+  proof at SHA256 `3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87`,
+  but it is not runtime-proven. The prior `b4628c35` artifact SHA256
   `D0BD2405E5541130BCD98D2C98B1082666537863FDF6B02E3A79A09D240EE3F2` is stale
   because this branch advanced again.
 - PR #129: release-readiness hub at
@@ -1114,12 +1157,13 @@ ASR-enabled RPT proof.
    `EF2175B2CF00DB27A8F589350203F25A211BF6E427A4FA13A27E30DA31BE4FF0`, but it
    is not release-ready proof.
 6. If the owner selects the overnight Build85 lane, first prove the latest PR
-   #136 head `80d4f31edc228450e3bebb3d8b7a84bd2b25741c` with exact
-   real RPT evidence. Tick 8 claims the correct HC RPT scope now shows
-   `begin_capture=2`, teams holding Myshkino, and 0 current errors, but it also
-   still says `CAPTURED=0`. The minimum proof target is movement/capture
-   completion: arrival, capture-phase entry, and at least one town flip/capture,
-   with no new stop-condition or missing-script failures. The older PR #137
+   #136 head `cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5` with exact
+   real RPT evidence. Tick 9 claims `begin_capture` climbed 2 to 9 but still
+   says `CAPTURED=0`; public stats later show two captures, but this is not a
+   complete selected-artifact RPT package. The minimum proof target is
+   movement/capture completion: arrival, capture-phase entry, and at least one
+   town flip/capture, with no new stop-condition or missing-script failures.
+   The older PR #137
    fixed package/static artifact SHA256
    `117E5893DB9D54BEDD57837F2DC9472CF64E87E54C3D8FA76B0288ECC720F86E` proves
    the cmdcon39 identity/static fix only; it is behind cmdcon40 and is not
