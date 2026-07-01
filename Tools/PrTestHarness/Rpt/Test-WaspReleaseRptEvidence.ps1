@@ -162,6 +162,12 @@ $tokenSpecs = @(
 	[pscustomobject]@{ Name = "aicomTickWest"; Pattern = "AICOMSTAT\|v1\|TICK\|west\|" },
 	[pscustomobject]@{ Name = "aicomTickEast"; Pattern = "AICOMSTAT\|v1\|TICK\|east\|" },
 	[pscustomobject]@{ Name = "aicomEvent"; Pattern = "AICOMSTAT\|v2\|EVENT" },
+	[pscustomobject]@{ Name = "aicomTeamFounded"; Pattern = "AICOMSTAT\|v[12]\|EVENT\|.*\|TEAM_FOUNDED" },
+	[pscustomobject]@{ Name = "aicomAssaultDispatch"; Pattern = "AICOMSTAT\|v2\|EVENT\|.*\|ASSAULT_DISPATCH" },
+	[pscustomobject]@{ Name = "aicomCombatStatus"; Pattern = "COMBATSTAT" },
+	[pscustomobject]@{ Name = "aicomFront"; Pattern = "AICOMSTAT\|v1\|FRONT\|" },
+	[pscustomobject]@{ Name = "aicomPosture"; Pattern = "AICOMSTAT\|v1\|POSTURE\|" },
+	[pscustomobject]@{ Name = "aicomSnapshot"; Pattern = "AICOM2\|v1\|SNAP\|" },
 	[pscustomobject]@{ Name = "aiCommanderActive"; Pattern = "AI commander ACTIVE" },
 	[pscustomobject]@{ Name = "aiCommanderAssist"; Pattern = "AI commander ASSIST" },
 	[pscustomobject]@{ Name = "aicomOrder"; Pattern = "AICOM2\|v1\|ORDER\|aicom-ai-command" },
@@ -225,9 +231,15 @@ $gateSpecs = @(
 	},
 	[ordered]@{
 		id = "aicom-no-human"
-		required = @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","cmdrStat","srvPerf","grpBudget")
+		required = @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","aicomEvent","aicomTeamFounded","cmdrStat","srvPerf","grpBudget")
+		anyOf = @(
+			[ordered]@{
+				label = "aicom-action-or-progress"
+				keys = @("aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot")
+			}
+		)
 		fail = @("watchdogRestart")
-		note = "No-human AI commander heartbeat/tick/progress gate."
+		note = "No-human AI commander heartbeat/tick/progress gate; requires team founding plus at least one autonomous AICOM action/progress token."
 	},
 	[ordered]@{
 		id = "human-takeover-revert"
@@ -415,6 +427,20 @@ foreach ($gate in $gateSpecs) {
 				if ($actual -lt $minimum) { $missing += ("{0}>={1} (actual {2})" -f $key, $minimum, $actual) }
 			}
 		}
+		if ($gate.Contains("anyOf")) {
+			foreach ($group in @($gate.anyOf)) {
+				$matched = $false
+				foreach ($key in @($group.keys)) {
+					if ($totalCounts.Contains($key) -and [int]$totalCounts[$key] -gt 0) {
+						$matched = $true
+						break
+					}
+				}
+				if (!$matched) {
+					$missing += ("{0}: one of {1}" -f $group.label, (($group.keys) -join ","))
+				}
+			}
+		}
 		foreach ($key in $gate.fail) {
 			if ($totalCounts.Contains($key) -and [int]$totalCounts[$key] -gt 0) { $failHits += $key }
 		}
@@ -471,7 +497,7 @@ if ($Json) {
 	}
 	Write-Host ""
 	Write-Host "Selected token counts:"
-	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
+	foreach ($key in @("aicomHbWest","aicomHbEast","aicomTickWest","aicomTickEast","aicomEvent","aicomTeamFounded","aicomAssaultDispatch","aicomCombatStatus","aicomFront","aicomPosture","aicomSnapshot","aiCommanderActive","hcSide","hcConnect","hcConnectCivilian","hcConnectNonCivilian","hcConnectSkip","hcStat","hcDeleg","delegStat","teamFoundedViaHC","jipMark","clientRosterRecv","hqMark","townAiHcCleanup","wddmArtilleryAudit","supplyLoaded","supplyCompleted","clientLogicError")) {
 		Write-Host ("{0,-28} {1}" -f $key, $totalCounts[$key])
 	}
 	Write-Host ""

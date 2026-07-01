@@ -1,5 +1,15 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Stronger AICOM runtime scorer gate [RELEASE LOOP]
+
+The active release RPT scorer now carries the latest PR #122 scanner guardrail
+forward into `Tools\PrTestHarness`: the no-human AICOM gate cannot pass on
+heartbeat/tick/status lines alone. It now also requires `AICOMSTAT` event proof,
+`TEAM_FOUNDED`, `CMDRSTAT` and at least one autonomous action/progress token such
+as `ASSAULT_DISPATCH`, `COMBATSTAT`, `FRONT`, `POSTURE` or `SNAP`.
+This matches the July 2 source-drift intent while keeping the release branch's
+newer redaction-safe scorer and exact dual-terrain packet flow.
+
 ## 2026-07-01 — Release runtime packet builder and role-proof gate [RELEASE LOOP]
 
 The release command-center tooling now has a source-map driven runtime RPT packet builder:

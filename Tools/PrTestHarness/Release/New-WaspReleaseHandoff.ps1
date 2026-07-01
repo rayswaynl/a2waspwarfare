@@ -283,7 +283,7 @@ $packet = [ordered]@{
 		"Run ledger release.archiveSha256 matches the approved package SHA256 passed to Test-WaspRuntimeRptPacket.ps1 -ExpectedArchiveSha256.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
-		"AICOM side discovery, heartbeat, tick and progress tokens for WEST and EAST.",
+		"AICOM side discovery, heartbeat, WEST/EAST ticks, AICOMSTAT event, TEAM_FOUNDED, CMDRSTAT and at least one autonomous action/progress token such as ASSAULT_DISPATCH, COMBATSTAT, FRONT, POSTURE or SNAP.",
 		"HC registry proof has at least two non-zero-owner CIV HCSIDE connect rows and zero HCSIDE connect-skip or non-CIV HC connect rows.",
 		"HC delegation/locality, town cleanup, WDDM/static/artillery, supply and JIP/HUD evidence families."
 	)

@@ -18,6 +18,8 @@ the harness to the shipping mission payload.
 - `Tools/PrTestHarness/Rpt/Analyze-WaspStressRpt.ps1`
 - `Tools/PrTestHarness/Rpt/New-WaspRuntimeRptPacket.ps1`
 - `Tools/PrTestHarness/Rpt/Test-WaspRuntimeRptPacket.ps1`
+- `Tools/PrTestHarness/Rpt/Test-WaspReleaseRptEvidence.ps1`
+- `Tools/PrTestHarness/Rpt/New-WaspReleaseRptSummary.ps1`
 - `Tools/PrTestHarness/Rpt/KnownNoise.txt`
 - `Tools/PrTestHarness/Rpt/MissionIssuePatterns.txt`
 - `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`
@@ -36,6 +38,7 @@ the harness to the shipping mission payload.
   empty or over-crewed statics, bad town side/supply values, and missing core
   vars/functions.
 - Existing PR8 stress coverage for factories, service/supply, WDDM/artillery, perf bursts, town lifecycle, and direct probes.
+- Release-candidate RPT scoring for exact markers, startup banners, both terrains, no stop-condition errors, HC registry proof and founded-team plus AICOM action/progress proof.
 
 ## Live Reporting Style
 
