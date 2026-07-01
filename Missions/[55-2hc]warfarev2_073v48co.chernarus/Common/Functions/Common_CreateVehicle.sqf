@@ -25,6 +25,11 @@ if (isNull _vehicle) exitWith {
 
 if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call Compile preprocessFile "Common\Functions\Common_ModifyVehicle.sqf";};
 
+//--- GUER improvised armour: scrappy up-armoured technicals (resistance light vehicles get no per-type handler).
+if ((missionNamespace getVariable ["WFBE_C_GUER_IMPROVISED_ARMOR", 0]) > 0 && {_side == WFBE_C_GUER_ID} && {!(_vehicle isKindOf "Tank")} && {!(_vehicle isKindOf "APC")} && {!(_vehicle isKindOf "Air")}) then {
+	[_vehicle] Call Compile preprocessFile "Common\Functions\Common_GuerArmor.sqf";
+};
+
 //["DEBUG (Common_CreateVehicle)", Format ["Before calling"]] Call WFBE_CO_FNC_LogContent;
 //if(_vehicle isKindOf "Air")then{ [_vehicle] Call Compile preprocessFile "Common\Functions\Common_ModifyAirVehicle.sqf";};
 //["DEBUG (Common_CreateVehicle2)", Format ["After calling"]] Call WFBE_CO_FNC_LogContent;
