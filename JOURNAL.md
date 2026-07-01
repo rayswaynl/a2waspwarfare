@@ -1,5 +1,36 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Placement preview flat-check split [RELEASE LOOP]
+
+Absorbed the safe source part of PR #131 into the command-center release lane.
+The player placement preview flat-ground check in `Init_Client.sqf` is now split
+out into a local `_flatSpots` assignment instead of a dense inline
+`count ((position _preview) isFlatEmpty ...)` expression. This preserves the
+existing water/base-area/HQ exemption behavior, keeps the check gated by
+`WFBE_C_STRUCTURES_FLAT_CHECK`, and makes the placement preview gate easier to
+lint and review.
+
+The Chernarus source edit was propagated to maintained Takistan with
+`Tools\LoadoutManager`. Focused review found no Arma 2 OA SQF blocker, and
+`Run-WaspFinalCheck.ps1` passed after the change. Runtime RPT collection and
+deployment remain approval-gated.
+
+## 2026-07-01 — PVF dispatcher registered-handler allowlist [RELEASE LOOP]
+
+Closed the next bounded server-authority hardening lane from the wiki backlog.
+The generic server and client PVF dispatchers now reject payload-selected
+handler names unless they are in the registered `SRVFNC*` / `CLTFNC*`
+allowlists exported by `Init_PublicVariables.sqf`; registered names still
+resolve through `missionNamespace getVariable` and must be `CODE` before
+spawning. The out-of-band GUER VBIED bounty client receiver is explicitly
+added to the client allowlist at its existing manual registration point.
+
+`Tools\LoadoutManager` propagated the Chernarus source edit to maintained
+Takistan and rebuilt `_MISSIONS.7z`. Static validation passed: direct
+`Test-WaspStaticSmoke.ps1`, `Run-WaspFinalCheck.ps1`, Chernarus and Takistan
+A2/OA lint `FAIL: 0` / `REVIEW: 0`, and whole-mission HIGH BugHunt clean.
+Runtime RPT collection and deployment remain approval-gated.
+
 ## 2026-07-01 — Handoff stale-archive negative self-test [RELEASE LOOP]
 
 Added release handoff self-test fixtures for the package-race failure mode seen
