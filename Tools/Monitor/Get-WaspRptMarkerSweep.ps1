@@ -209,6 +209,8 @@ $defaultPatterns = @(
 	"HCDISPATCH",
 	"HCSTAT",
 	"AICOMSTAT",
+	"B74.2 REQ-MARK",
+	"aiStatus=",
 	"WATCHDOG|restart-stale-hb",
 	"GRPBUDGET|WARN",
 	"Error in expression",

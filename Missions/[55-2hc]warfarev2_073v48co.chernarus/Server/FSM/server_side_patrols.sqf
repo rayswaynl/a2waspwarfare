@@ -11,7 +11,7 @@
 
 scriptName "Server\FSM\server_side_patrols.sqf";
 
-private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept"];
+private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept","_pLeader","_pSide","_aDir","_aTeam"];
 
 waitUntil {townInitServer};
 sleep 30;
@@ -43,14 +43,25 @@ while {!WFBE_GameOver} do {
 	if (time - _scrubLast > 20) then {
 		_kept = [];
 		_changed = false;
-		{
-			_entry = _x;
-			if (alive (_entry select 0)) then {
-				_kept set [count _kept, _entry];
-			} else {
-				_changed = true;
-			};
-		} forEach WFBE_ACTIVE_PATROLS;
+		if ((typeName WFBE_ACTIVE_PATROLS) != "ARRAY") then {
+			WFBE_ACTIVE_PATROLS = [];
+			_changed = true;
+		} else {
+			{
+				_entry = _x;
+				if ((typeName _entry) == "ARRAY" && {(count _entry) >= 2}) then {
+					_pLeader = _entry select 0;
+					_pSide = _entry select 1;
+					if ((typeName _pLeader) == "OBJECT" && {(typeName _pSide) == "SCALAR"} && {alive _pLeader}) then {
+						_kept set [count _kept, _entry];
+					} else {
+						_changed = true;
+					};
+				} else {
+					_changed = true;
+				};
+			} forEach WFBE_ACTIVE_PATROLS;
+		};
 		if (_changed) then {
 			_removed = (count WFBE_ACTIVE_PATROLS) - (count _kept);
 			WFBE_ACTIVE_PATROLS = _kept;
@@ -61,13 +72,24 @@ while {!WFBE_GameOver} do {
 		//--- dropped ONLY on the aicom-team-ended event; a leader killed without that event left a
 		//--- stale arrow on every client. Slots: [leader, sideID, dir, team].
 		_aKept = [];
-		{
-			//--- B66 (Ray 2026-06-21): key the keep-test on the TEAM (slot3) having a LIVE member,
-			//--- NOT on the original leader being alive. A team whose founding leader died but still has
-			//--- live units must keep its arrow (pairs with the aicom-arrows fix); the B63 form
-			//--- `alive (_x select 0)` wrongly dropped a live team the instant its first leader fell.
-			if (!isNull (_x select 3) && {{alive _x} count (units (_x select 3)) > 0}) then {_aKept set [count _aKept, _x]};
-		} forEach WFBE_ACTIVE_AICOM_TEAMS;
+		if ((typeName WFBE_ACTIVE_AICOM_TEAMS) != "ARRAY") then {
+			WFBE_ACTIVE_AICOM_TEAMS = [];
+		} else {
+			{
+				_entry = _x;
+				if ((typeName _entry) == "ARRAY" && {(count _entry) >= 4}) then {
+					_pLeader = _entry select 0;
+					_pSide = _entry select 1;
+					_aDir = _entry select 2;
+					_aTeam = _entry select 3;
+					//--- B66 (Ray 2026-06-21): key the keep-test on the TEAM (slot3) having a LIVE member,
+					//--- NOT on the original leader being alive. A team whose founding leader died but still has
+					//--- live units must keep its arrow (pairs with the aicom-arrows fix); the B63 form
+					//--- `alive (_x select 0)` wrongly dropped a live team the instant its first leader fell.
+					if ((typeName _pLeader) == "OBJECT" && {(typeName _pSide) == "SCALAR"} && {(typeName _aDir) == "SCALAR"} && {(typeName _aTeam) == "GROUP"} && {!isNull _aTeam} && {{alive _x} count (units _aTeam) > 0}) then {_aKept set [count _aKept, _entry]};
+				};
+			} forEach WFBE_ACTIVE_AICOM_TEAMS;
+		};
 		WFBE_ACTIVE_AICOM_TEAMS = _aKept;
 
 		//--- B63 (Ray 2026-06-21) JIP-DURABILITY FIX (THE no-own-markers root cause). In A2-OA a

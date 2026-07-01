@@ -49,6 +49,8 @@ Useful PR #125 proof markers:
 - `HCDISPATCH`
 - `HCSTAT`
 - `AICOMSTAT`
+- `B74.2 REQ-MARK`
+- `aiStatus=`
 
 Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against the current PR body/wiki package tuple.
 

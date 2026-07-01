@@ -8,7 +8,7 @@
 
 scriptName "Client\FSM\updatepatrolmarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_mk","_known","_i","_k","_pos","_dir","_lastPos","_lastDir","_dirDiff","_t0","_alist","_trackedAir","_airNow","_typeTag"];
+private ["_list","_safeList","_entry","_tracked","_keep","_unit","_sid","_mk","_known","_i","_k","_pos","_dir","_lastPos","_lastDir","_dirDiff","_t0","_alist","_trackedAir","_airNow","_typeTag"];
 
 //--- B63 (Ray 2026-06-21): bounded gate (mirrors updateaicommarkers) so a stalled client init can't
 //--- suppress the friendly patrol arrows forever; proceed after 90s of in-game time at the latest.
@@ -21,6 +21,22 @@ _i = 0;
 
 while {true} do {
 	_list = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []];
+	if ((typeName _list) != "ARRAY") then {
+		diag_log format ["[WFBE][B74.2 PATROL-MARK] rejected malformed WFBE_ACTIVE_PATROLS feed type=%1", typeName _list];
+		_list = [];
+	};
+	_safeList = [];
+	{
+		_entry = _x;
+		if ((typeName _entry) == "ARRAY" && {(count _entry) >= 2}) then {
+			_unit = _entry select 0;
+			_sid = _entry select 1;
+			if ((typeName _unit) == "OBJECT" && {(typeName _sid) == "SCALAR"}) then {
+				_safeList set [count _safeList, _entry];
+			};
+		};
+	} forEach _list;
+	_list = _safeList;
 
 	//--- New friendly patrols.
 	{

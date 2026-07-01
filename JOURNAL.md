@@ -1,5 +1,20 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Marker feed consumer shape guards [RELEASE LOOP]
+
+Closed the remaining marker-feed consumer hardening gap. The server-side
+patrol/AICOM feed scrub and the client AICOM/patrol marker loops now normalize
+malformed public feed values before reading list slots, so corrupted
+`WFBE_ACTIVE_PATROLS` or `WFBE_ACTIVE_AICOM_TEAMS` state cannot throw in the
+scrub or drawing loops before the next clean feed arrives.
+
+Static smoke now checks these feed-consumer shape guards across Chernarus and
+generated Takistan. The redaction-safe marker sweep defaults also include the
+late-JIP feed-request proof markers `B74.2 REQ-MARK` and `aiStatus=` so quick
+RPT triage no longer misses the status replay path. Runtime, SSH, RPT
+collection, upload, restart, cache-clear and deployment remain
+explicit-approval gated.
+
 ## 2026-07-02 — FPS telemetry payload guard [RELEASE LOOP]
 
 Closed the FPS telemetry public-variable hardening slice. The

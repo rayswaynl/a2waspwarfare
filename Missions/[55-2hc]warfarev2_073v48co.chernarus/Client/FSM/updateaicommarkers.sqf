@@ -12,7 +12,7 @@
 
 scriptName "Client\FSM\updateaicommarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN","_reqSent","_reqTicks","_typeTag","_label","_ldr"];
+private ["_list","_safeList","_entry","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN","_reqSent","_reqTicks","_typeTag","_label","_ldr"];
 
 //--- B63 (Ray 2026-06-21): BOUNDED gate. The loop must wait for client init, but if a blocking
 //--- init waitUntil ever stalls, the old unbounded `waitUntil {clientInitComplete}` would suppress
@@ -39,6 +39,24 @@ _reqTicks = 0;
 
 while {true} do {
 	_list = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+	if ((typeName _list) != "ARRAY") then {
+		diag_log format ["[WFBE][B74.2 AICOM-MARK] rejected malformed WFBE_ACTIVE_AICOM_TEAMS feed type=%1", typeName _list];
+		_list = [];
+	};
+	_safeList = [];
+	{
+		_entry = _x;
+		if ((typeName _entry) == "ARRAY" && {(count _entry) >= 4}) then {
+			_unit = _entry select 0;
+			_sid = _entry select 1;
+			_dir = _entry select 2;
+			_team = _entry select 3;
+			if ((typeName _unit) == "OBJECT" && {(typeName _sid) == "SCALAR"} && {(typeName _dir) == "SCALAR"} && {(typeName _team) == "GROUP"}) then {
+				_safeList set [count _safeList, _entry];
+			};
+		};
+	} forEach _list;
+	_list = _safeList;
 
 	//--- B74.2: bounded feed-gap recovery. Only while the feed is empty AND we are still early (first ~12 ticks).
 	//--- Send the PLAYER OBJECT (not a network id) so the server can resolve `owner _player` for the targeted

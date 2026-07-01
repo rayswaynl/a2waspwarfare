@@ -482,6 +482,28 @@ function Test-AicomHandleSpecialShapeGuards {
 	Add-Result "AICOM HandleSpecial shape guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-MarkerFeedConsumerShapeGuards {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\FSM\server_side_patrols.sqf"
+		$aicomPath = Join-Path $entry.Root "Client\FSM\updateaicommarkers.sqf"
+		$patrolPath = Join-Path $entry.Root "Client\FSM\updatepatrolmarkers.sqf"
+		$server = Get-Text $serverPath
+		$aicom = Get-Text $aicomPath
+		$patrol = Get-Text $patrolPath
+		if (-not ($server.Contains('typeName WFBE_ACTIVE_PATROLS') -and $server.Contains('typeName _entry') -and $server.Contains('typeName _pLeader') -and $server.Contains('typeName _pSide'))) { $missing += "$($entry.Terrain):server-patrol-feed-shape" }
+		if (-not ($server.Contains('typeName WFBE_ACTIVE_AICOM_TEAMS') -and $server.Contains('typeName _aTeam') -and $server.Contains('typeName _aDir'))) { $missing += "$($entry.Terrain):server-aicom-feed-shape" }
+		if (-not ($aicom.Contains('rejected malformed WFBE_ACTIVE_AICOM_TEAMS feed') -and $aicom.Contains('typeName _entry') -and $aicom.Contains('count _entry') -and $aicom.Contains('typeName _team'))) { $missing += "$($entry.Terrain):client-aicom-feed-shape" }
+		if (-not ($patrol.Contains('rejected malformed WFBE_ACTIVE_PATROLS feed') -and $patrol.Contains('typeName _entry') -and $patrol.Contains('count _entry') -and $patrol.Contains('typeName _unit'))) { $missing += "$($entry.Terrain):client-patrol-feed-shape" }
+	}
+	Add-Result "Marker feed consumer shape guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomTeamLifecycleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1268,6 +1290,7 @@ Test-AIComDonateAuthorityGuard
 Test-FpsReportPvGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
+Test-MarkerFeedConsumerShapeGuards
 Test-AicomTeamLifecycleAuthorityGuard
 Test-AicomFeedRequestPvGuard
 Test-AicomHcTopUpDraftExcluded

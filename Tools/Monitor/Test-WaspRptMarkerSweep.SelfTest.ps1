@@ -53,6 +53,8 @@ try {
 		"""WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus""",
 		"MISSINIT: missionName=current",
 		"""AICOMSTAT|v1|EVENT|WEST|0|TEAM_FOUNDED""",
+		"""[WFBE][B74.2 REQ-MARK] feed empty after 1 ticks - requested targeted rebroadcast (player=B Alpha 1-1:1).""",
+		"""[WFBE][B74.2 REQ-MARK] replied to owner=3 aiStatus=1 patrols=2 aicom=4""",
 		"""HCSTAT|v1|HC-1|fps=45|units=1"""
 	)
 	Set-Content -LiteralPath $hcRpt -Encoding ASCII -Value @(
@@ -75,6 +77,8 @@ try {
 	Assert-Equal $result.counts.HCDROP_AICOM_AUDIT 1 "HCDROP_AICOM_AUDIT count"
 	Assert-Equal $result.counts.HCRECON_AICOM_AUDIT 1 "HCRECON_AICOM_AUDIT count"
 	Assert-Equal $result.counts.AICOMSTAT 1 "AICOMSTAT count"
+	Assert-Equal $result.counts.'B74.2 REQ-MARK' 2 "B74.2 REQ-MARK count"
+	Assert-Equal $result.counts.'aiStatus=' 1 "aiStatus count"
 	Assert-Equal $result.counts.HCSTAT 1 "HCSTAT count"
 	Assert-Equal @($result.missingRequired).Count 0 "missingRequired count"
 	Assert-True ((@($result.samples) | Where-Object { $_.PSObject.Properties.Name -contains "line" }).Count -eq 0) "Default samples must not include raw line text"
@@ -91,6 +95,8 @@ try {
 	$releaseMarkerResult = $releaseMarkerText | ConvertFrom-Json
 	Assert-Equal @($releaseMarkerResult.expectedReleaseMarkers).Count 2 "expectedReleaseMarkers count"
 	Assert-Equal $releaseMarkerResult.counts.AICOMSTAT 1 "release marker mode should retain default AICOMSTAT count"
+	Assert-Equal $releaseMarkerResult.counts.'B74.2 REQ-MARK' 2 "release marker mode should retain B74.2 REQ-MARK count"
+	Assert-Equal $releaseMarkerResult.counts.'aiStatus=' 1 "release marker mode should retain aiStatus count"
 	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=chernarus' 1 "chernarus release marker count"
 	Assert-Equal $releaseMarkerResult.counts.'WASPRELEASE|v1|candidate=release-command-center-20260630|git=test|terrain=takistan' 1 "takistan release marker count"
 	Assert-Equal @($releaseMarkerResult.missingRequired).Count 0 "release marker missingRequired count"
