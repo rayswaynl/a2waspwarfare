@@ -11,10 +11,10 @@ least 1 before computing range.
 This prevents missing or malformed artillery config state from turning an AICOM
 strategy tick or player fire-mission request into a select/divide runtime error.
 Static smoke includes an `AICOM artillery config guards` check across Chernarus
-and generated Takistan. LoadoutManager propagation refreshed `_MISSIONS.7z`
-(`7050E187DCC3862CA40B1EB360C1FCFD49A9CED4D83ED3E5A050662897D177E0`,
-7,160,902 bytes, 1,723 archive files). `Run-WaspFinalCheck.ps1` passed:
-static smoke, Chernarus OA lint, Takistan OA lint, and high-only bug hunt.
+and generated Takistan. LoadoutManager propagation refreshed `_MISSIONS.7z`;
+the canonical package hash/size/entry tuple is recorded in the release package
+manifest, PR body and wiki after the final post-commit proof. `Run-WaspFinalCheck.ps1`
+passed: static smoke, Chernarus OA lint, Takistan OA lint, and high-only bug hunt.
 
 Parallel scouts also identified two next release-loop candidates: harden
 `wfbe_aicom_order` sequence reads, and close the explicit Jerry file 5420 /
