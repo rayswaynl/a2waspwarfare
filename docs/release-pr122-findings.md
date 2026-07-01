@@ -63,9 +63,9 @@ open, draft, and currently reported clean at head
 not as current-master runtime proof. The earlier `b4628c35` package validation
 is now stale because the branch advanced.
 
-PR #126 is open again, draft, and actively moving; the latest checked head is
-`b0b28dc743af9c0035629829bb3c1622adf860f2`, with GitHub reporting merge state
-`UNKNOWN`. Its verified shippable pieces were
+PR #126 is open again, draft, and moved repeatedly during this loop; the latest
+checked head is `b0b28dc743af9c0035629829bb3c1622adf860f2`, with GitHub
+reporting it clean. Its verified shippable pieces were
 folded through PR #127; the latest head still needs fresh triage before release
 selection.
 
@@ -540,10 +540,10 @@ Fresh triage at 2026-07-01 20:35 Europe/Amsterdam found:
 - PR #133: focused placement-preview static fix, open draft and clean at
   `5f5eeedcbfd9f2b8da63451e155c3a252ded3bf0`. This is the current static
   unblocker for `origin/master` after PR #132 merged.
-- PR #126: open draft and actively moving; latest checked head is
-  `b0b28dc743af9c0035629829bb3c1622adf860f2`, with GitHub reporting
-  `UNKNOWN` merge state. This lane still needs fresh diff/static/runtime triage
-  before release selection.
+- PR #126: open draft and moved repeatedly during this loop; latest checked
+  head is `b0b28dc743af9c0035629829bb3c1622adf860f2`, with GitHub reporting it
+  clean. This lane still needs fresh diff/static/runtime triage before release
+  selection.
 - PR #125: broad command-center/tooling lane at
   `b3f4d3664f10b3a40f1ffe0aee22653bbef8c754`. GitHub reports it `CLEAN`
   against merged #132 master. The prior `b4628c35` artifact SHA256
