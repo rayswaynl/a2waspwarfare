@@ -1,5 +1,25 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Runtime handoff checklist identity coverage [RELEASE LOOP]
+
+Tightened the generated release handoff checklist so operators see the same
+release identity contract that the tooling now enforces: the private
+`runtime-rpt-source-map.json`, generated `release-run-ledger.json`, packet
+manifest and summary must agree on candidate, git and package archive SHA before
+runtime proof can be accepted.
+
+Extended `Test-WaspReleaseHandoff.SelfTest.ps1` to assert that the runtime
+packet validator command itself carries `-ExpectedCandidate`, `-ExpectedGit` and
+`-ExpectedArchiveSha256`, and that both generated source-map and run-ledger
+templates contain the expected candidate/git/archive tuple.
+
+Closed the adjacent summary-proof gap from the same pass: `New-WaspReleaseRptSummary.ps1`
+now requires `runtime-rpt-packet-manifest.json` to include the packet validator's
+core gates exactly once with `status=pass`, not only a scalar
+`validation.overall=pass`. The per-terrain self-test now proves a forged/minimal
+manifest with matching release identity, exact ten copied labels and no
+validation gates still keeps the release summary red.
+
 ## 2026-07-01 — Release handoff contract self-test [RELEASE LOOP]
 
 Added `Tools/PrTestHarness/Release/Test-WaspReleaseHandoff.SelfTest.ps1` so the

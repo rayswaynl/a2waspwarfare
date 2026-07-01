@@ -276,14 +276,14 @@ $packet = [ordered]@{
 	}
 	runtimeChecklist = @(
 		"Steff explicitly approves local Arma launch and runtime RPT collection before any runtime commands in this handoff are executed.",
-		"Fill a private runtime-rpt-source-map.json from runtime-rpt-source-map.template.json, then run New-WaspRuntimeRptPacket.ps1 to copy the exact ten source RPTs, write release-run-ledger.json and emit runtime-rpt-packet-manifest.json.",
+		"Fill a private runtime-rpt-source-map.json from runtime-rpt-source-map.template.json, then run New-WaspRuntimeRptPacket.ps1 to copy the exact ten source RPTs, write release-run-ledger.json and emit runtime-rpt-packet-manifest.json; the source-map release.candidate, release.git and release.archiveSha256 values must match the expected command-line release identity when present.",
 		"Exactly ten copied RPT files exist: chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt and takistan/{server,HC1,HC2,start-client,late-JIP}.rpt.",
 		"No extra RPT files, duplicate copied paths, or duplicate copied/source RPT content hashes are present in the release-candidate RPT root.",
 		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker, MISSINIT worldName, and role proof: server files report isServer=true/isDedicated=true, HC files contain HC-local startup proof, and player-client files contain client-local startup proof.",
 		"Every scored current-mission window keeps the startup ## Mission Name banner; files without that banner fail the all-files-have-startup-banner scorer gate.",
 		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath -RequireSourceRptExists: terrain launch times, exact roleProof/joinPhase metadata, original source RPT paths, source LastWriteTime/SHA256, copied paths/SHA256, command lines and PIDs are present; source RPT LastWriteTime must be after terrain launch time; source and copied RPT hashes must match; no original source RPT path is reused across roles.",
-		"Run ledger release.archiveSha256 matches the approved package SHA256 passed to Test-WaspRuntimeRptPacket.ps1 -ExpectedArchiveSha256.",
-		"Release RPT summary is generated with -RuntimePacketManifestPath, -ExpectedCandidate, -ExpectedGit, -ExpectedArchiveSha256 and -RequireRuntimePacketManifest, and records matching release identity, validation.requested=true, validation.overall=pass and the exact ten copied RPT files from runtime-rpt-packet-manifest.json before summary overall can pass.",
+		"Run ledger release.candidate, release.git and release.archiveSha256 are non-empty and match the expected candidate, git and approved package SHA256 passed to Test-WaspRuntimeRptPacket.ps1.",
+		"Release RPT summary is generated with -RuntimePacketManifestPath, -ExpectedCandidate, -ExpectedGit, -ExpectedArchiveSha256 and -RequireRuntimePacketManifest, and records matching release identity, validation.requested=true, validation.overall=pass, all required packet-validator gates passing and the exact ten copied RPT files from runtime-rpt-packet-manifest.json before summary overall can pass.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
 		"Every scored RPT resolves to one runtime terrain and the per-terrain-runtime-evidence gate passes, proving Chernarus and Takistan each contribute the core semantic evidence families.",

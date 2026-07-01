@@ -23,6 +23,28 @@ function Get-TestArchiveSha256 {
 	return "22223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF00001111"
 }
 
+function Get-RuntimePacketPassGates {
+	$gateIds = @(
+		"exact-ten-file-matrix",
+		"no-extra-rpt-files",
+		"no-duplicate-copied-paths",
+		"no-duplicate-rpt-content",
+		"runtime-run-ledger",
+		"per-file-marker-world",
+		"per-role-identity",
+		"per-role-proof",
+		"per-terrain-freshness-cutoffs"
+	)
+	return @($gateIds | ForEach-Object {
+		[ordered]@{
+			id = $_
+			status = "pass"
+			missing = @()
+			failHits = @()
+		}
+	})
+}
+
 function New-TestPacket {
 	param(
 		[Parameter(Mandatory)] [string]$Root,
@@ -121,7 +143,8 @@ function Write-RuntimePacketManifest {
 		[string]$FileVariant = "valid",
 		[string]$ReleaseCandidate = "per-terrain-self-test",
 		[string]$ReleaseGit = "selftest01",
-		[string]$ArchiveSha256 = (Get-TestArchiveSha256)
+		[string]$ArchiveSha256 = (Get-TestArchiveSha256),
+		[switch]$IncludeValidationGates
 	)
 	$files = @(
 		[ordered]@{ terrain = "chernarus"; role = "server"; copiedRptPath = "chernarus\server.rpt" },
@@ -156,7 +179,7 @@ function Write-RuntimePacketManifest {
 		validation = [ordered]@{
 			requested = $ValidationRequested
 			overall = $ValidationOverall
-			gates = @()
+			gates = if ($IncludeValidationGates) { @(Get-RuntimePacketPassGates) } else { @() }
 		}
 		privacy = "self-test"
 	}
@@ -267,8 +290,15 @@ try {
 		throw ("Expected summary to fail when required runtime packet manifest is missing; summary={0}, packetProof={1}" -f $missingSummary.overall, $missingSummary.runtimePacketProof.status)
 	}
 
+	$emptyGatesManifest = Join-Path $root "packet-empty-gates\runtime-rpt-packet-manifest.json"
+	Write-RuntimePacketManifest -Path $emptyGatesManifest -ValidationRequested $true -ValidationOverall "pass"
+	$emptyGatesSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-empty-gates") -RuntimePacketManifestPath $emptyGatesManifest
+	if ([string]$emptyGatesSummary.overall -ne "missing_or_failed" -or [string]$emptyGatesSummary.runtimePacketProof.status -ne "fail") {
+		throw ("Expected summary to fail when runtime packet manifest claims pass but has no validation gates; summary={0}, packetProof={1}" -f $emptyGatesSummary.overall, $emptyGatesSummary.runtimePacketProof.status)
+	}
+
 	$goodManifest = Join-Path $root "packet-good\runtime-rpt-packet-manifest.json"
-	Write-RuntimePacketManifest -Path $goodManifest -ValidationRequested $true -ValidationOverall "pass"
+	Write-RuntimePacketManifest -Path $goodManifest -ValidationRequested $true -ValidationOverall "pass" -IncludeValidationGates
 	$goodSummary = Invoke-BoundSummary -Root $root -OutDirectory (Join-Path $root "summary-good") -RuntimePacketManifestPath $goodManifest
 	if ([string]$goodSummary.overall -ne "pass" -or [string]$goodSummary.runtimePacketProof.status -ne "pass") {
 		throw ("Expected summary to pass when scorer and runtime packet manifest pass; summary={0}, packetProof={1}" -f $goodSummary.overall, $goodSummary.runtimePacketProof.status)

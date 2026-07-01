@@ -157,6 +157,9 @@ try {
 	Assert-Contains ([string]$packet.commands.runtimePacketBuilder) "-ExpectedArchiveSha256 $($manifestInfo.sha256)" "Packet-builder command should bind archive SHA."
 	Assert-Contains ([string]$packet.commands.runtimePacketBuilder) "-RequireSourceRptExists" "Packet-builder command should require source RPTs."
 	Assert-Contains ([string]$packet.commands.runtimePacket) "-RunLedgerPath" "Packet validator command should include run ledger."
+	Assert-Contains ([string]$packet.commands.runtimePacket) "-ExpectedCandidate $candidate" "Packet validator command should bind candidate."
+	Assert-Contains ([string]$packet.commands.runtimePacket) "-ExpectedGit $releaseGit" "Packet validator command should bind git."
+	Assert-Contains ([string]$packet.commands.runtimePacket) "-ExpectedArchiveSha256 $($manifestInfo.sha256)" "Packet validator command should bind archive SHA."
 	Assert-Contains ([string]$packet.commands.runtimePacket) "-RequireSourceRptExists" "Packet validator command should require source RPTs."
 	Assert-Contains ([string]$packet.commands.runtimeSummary) "-RuntimePacketManifestPath" "Runtime summary command should include packet manifest path."
 	Assert-Contains ([string]$packet.commands.runtimeSummary) "-ExpectedCandidate $candidate" "Runtime summary command should bind candidate."
@@ -167,11 +170,18 @@ try {
 	$runtimeChecklistText = (($packet.runtimeChecklist | Out-String).Trim())
 	Assert-Contains $runtimeChecklistText "Steff explicitly approves local Arma launch" "Runtime checklist should preserve approval boundary."
 	Assert-Contains $runtimeChecklistText "validation.overall=pass" "Runtime checklist should require passing packet validation."
+	Assert-Contains $runtimeChecklistText "all required packet-validator gates passing" "Runtime checklist should require packet validator gate proof."
+	Assert-Contains $runtimeChecklistText "source-map release.candidate" "Runtime checklist should bind source-map release candidate."
+	Assert-Contains $runtimeChecklistText "release.git" "Runtime checklist should bind release git."
 	Assert-Contains $runtimeChecklistText "release.archiveSha256" "Runtime checklist should bind release summary to packet proof."
 
 	$sourceMapTemplate = Get-Content -Raw -LiteralPath $sourceMapTemplatePath | ConvertFrom-Json
 	$runLedgerTemplate = Get-Content -Raw -LiteralPath $runLedgerTemplatePath | ConvertFrom-Json
+	Assert-Equal ([string]$sourceMapTemplate.release.candidate) $candidate "Written source-map template candidate mismatch."
+	Assert-Equal ([string]$sourceMapTemplate.release.git) $releaseGit "Written source-map template git mismatch."
 	Assert-Equal ([string]$sourceMapTemplate.release.archiveSha256) $manifestInfo.sha256 "Written source-map template archive SHA mismatch."
+	Assert-Equal ([string]$runLedgerTemplate.release.candidate) $candidate "Written run-ledger template candidate mismatch."
+	Assert-Equal ([string]$runLedgerTemplate.release.git) $releaseGit "Written run-ledger template git mismatch."
 	Assert-Equal ([string]$runLedgerTemplate.release.archiveSha256) $manifestInfo.sha256 "Written run-ledger template archive SHA mismatch."
 	Assert-Equal ([string](@($sourceMapTemplate.records).Count)) "10" "Source-map template should include ten runtime RPT records."
 	Assert-Equal ([string](@($runLedgerTemplate.records).Count)) "10" "Run-ledger template should include ten runtime RPT records."

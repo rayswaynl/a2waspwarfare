@@ -316,9 +316,10 @@ copying raw RPT lines or absolute RPT paths. Like the scorer, it exits non-zero
 until the runtime gates pass. When `-RuntimePacketManifestPath` is supplied, the
 summary also requires `runtime-rpt-packet-manifest.json` to show
 the expected candidate, git marker and archive SHA, `validation.requested=true`,
-`validation.overall=pass` and the exact ten copied RPT files, binding the
-portable summary to the packet matrix, run-ledger, archive SHA, source/copy hash,
-freshness and role-proof checks. Add `-RequireRuntimePacketManifest` for release
+`validation.overall=pass`, the required packet-validator gates all passing and
+the exact ten copied RPT files, binding the portable summary to the packet
+matrix, run-ledger, archive SHA, source/copy hash, freshness and role-proof
+checks. Add `-RequireRuntimePacketManifest` for release
 handoffs so a missing manifest cannot pass as a diagnostic summary. Add `-NoFail` when
 producing an incomplete diagnostic packet. The Markdown summary includes
 aggregate and per-terrain selected token counts so missing semantic evidence can

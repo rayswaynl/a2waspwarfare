@@ -96,6 +96,20 @@ function Get-ExpectedRuntimePacketLabels {
 	return $labels.ToArray()
 }
 
+function Get-RequiredRuntimePacketValidationGates {
+	return @(
+		"exact-ten-file-matrix",
+		"no-extra-rpt-files",
+		"no-duplicate-copied-paths",
+		"no-duplicate-rpt-content",
+		"runtime-run-ledger",
+		"per-file-marker-world",
+		"per-role-identity",
+		"per-role-proof",
+		"per-terrain-freshness-cutoffs"
+	)
+}
+
 function Format-SessionSummary {
 	param($Sessions)
 	$parts = @()
@@ -136,6 +150,8 @@ function Test-RuntimePacketManifestProof {
 		schema = ""
 		validationRequested = $false
 		validationOverall = ""
+		requiredValidationGates = @(Get-RequiredRuntimePacketValidationGates)
+		validationGates = @()
 		fileCount = 0
 		expectedFiles = @(Get-ExpectedRuntimePacketLabels)
 		missing = @()
@@ -201,6 +217,25 @@ function Test-RuntimePacketManifestProof {
 	}
 	if ($validationOverall -ne "pass") {
 		[void]$failHits.Add("runtime packet manifest validation.overall must be pass")
+	}
+	$requiredGateIds = @(Get-RequiredRuntimePacketValidationGates)
+	$manifestGates = @(ConvertTo-Array (Get-JsonValue $validation "gates") | Where-Object { $null -ne $_ })
+	$result.validationGates = @($manifestGates | ForEach-Object {
+		[ordered]@{
+			id = [string](Get-JsonValue $_ "id")
+			status = [string](Get-JsonValue $_ "status")
+		}
+	})
+	foreach ($requiredGateId in $requiredGateIds) {
+		$matches = @($manifestGates | Where-Object { [string](Get-JsonValue $_ "id") -eq $requiredGateId })
+		if ($matches.Count -ne 1) {
+			[void]$failHits.Add("runtime packet manifest validation.gates must include $requiredGateId exactly once")
+			continue
+		}
+		$gateStatus = [string](Get-JsonValue $matches[0] "status")
+		if ($gateStatus -ne "pass") {
+			[void]$failHits.Add("runtime packet manifest validation.gates.$requiredGateId must be pass")
+		}
 	}
 	if ([int]$result.fileCount -ne 10) {
 		[void]$failHits.Add("runtime packet manifest must list the exact ten copied RPT files")
