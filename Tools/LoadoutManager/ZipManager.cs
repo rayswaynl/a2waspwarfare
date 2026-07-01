@@ -93,14 +93,9 @@ public class ZipManager
     {
         // 1) Explicit override.
         string? env = Environment.GetEnvironmentVariable("7za");
-        if (!string.IsNullOrWhiteSpace(env))
+        if (!string.IsNullOrWhiteSpace(env) && File.Exists(env))
         {
-            if (File.Exists(env))
-            {
-                return env;
-            }
-
-            throw new FileNotFoundException("7za environment variable points to a missing executable.", env);
+            return env;
         }
 
         // 2) Standard 7-Zip install locations.
@@ -191,11 +186,7 @@ public class ZipManager
         x.WaitForExit();
         if (x.ExitCode != 0)
         {
-            throw new Exception($"7-Zip failed with exit code {x.ExitCode} while creating {_destinationFile}.");
-        }
-        else
-        {
-            Console.WriteLine($"Created 7z file: {_destinationFile}");
+            throw new Exception($"7-Zip exited with code {x.ExitCode} while creating {_destinationFile}.");
         }
     }
 
