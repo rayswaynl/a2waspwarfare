@@ -30,7 +30,7 @@ No limitations for the FOB amounts so we dont need the base area script, just se
 When building use the guerilla factories for sure, they have their own assets for these.
 
 ---
-Add UI status on the RHUD like fob avaibility: B 1 | LF 3 | HF 2 (for 1 available barracks, 3 available LF, and 2 available HF for the each of the corresponding destroyed factories) 
+Add UI status on the RHUD like fob avaibility: B 1 | LF 3 | HF 2 (for 1 available barracks, 3 available LF, and 2 available HF for the each of the corresponding destroyed factories)
 ---
 Show the current GUER tech kill count on the RHUD as its own row, placed directly ABOVE the FOB availability row (B n | LF n | HF n). It reads the live cumulative GUER player-kill total that drives the kill-based unlocks.
 ---
@@ -42,7 +42,7 @@ Normalize the guerilla building times to be same than OPFOR and BLUFOR in terms 
 ---
 maintain this flie too for later reference if needed commit it last before the final step
 ---
-After done, commiting each part of the changes seperately as mentioned in the prompt push and merge this branch to master and push master so that it can be deployed on the server. 
+After done, commiting each part of the changes seperately as mentioned in the prompt push and merge this branch to master and push master so that it can be deployed on the server.
 
 ---
 
