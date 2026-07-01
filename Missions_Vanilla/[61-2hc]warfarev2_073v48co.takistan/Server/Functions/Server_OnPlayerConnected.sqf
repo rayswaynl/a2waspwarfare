@@ -159,6 +159,23 @@ if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
 diag_log format ["[WFBE][B63 JIP-MARK] pushed marker feeds to joiner %1 (aicom=%2, patrols=%3)", _name, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
 
+//--- B74.2: AICOM intent/objective vars are side-keyed and published only on change, so a late joiner can miss
+//--- the current command-console/RHUD/objective-marker state until the next strategic change. Seed this joiner
+//--- with the current side's primitive AICOM status vars, keeping the publisher itself change-cheap.
+if (_sideJoined in [west, east]) then {
+	private ["_aiSid","_aiKey","_aiSent"];
+	_aiSid = _sideJoined Call WFBE_CO_FNC_GetSideID;
+	_aiSent = 0;
+	{
+		_aiKey = Format [_x, _aiSid];
+		if (!isNil {missionNamespace getVariable _aiKey}) then {
+			_id publicVariableClient _aiKey;
+			_aiSent = _aiSent + 1;
+		};
+	} forEach ["WFBE_AICOM_INTENT_%1","WFBE_AICOM_OBJNAME_%1","WFBE_AICOM_OBJPOS_%1","WFBE_AICOM_ACTIVE_%1","WFBE_AICOM_FOCUS_NAME_%1","WFBE_AICOM_TEAMS_%1","WFBE_AICOM_FUNDS_%1"];
+	if (_aiSent > 0) then {diag_log format ["[WFBE][B74.2 AICOM-JIP] pushed %1 AI intent/status vars to joiner %2 for side %3", _aiSent, _name, _sideJoined]};
+};
+
 //--- B74.2.4 (Ray 2026-06-24, P0): re-broadcast the side's wfbe_teams to re-trigger object-state replication to
 //--- THIS joiner. The team roster lives on the side logic (object setVariable, broadcast) but under heavy AI load
 //--- it can be slow/stuck reaching a JIP/lobby client, leaving clientTeams empty (no funds/marker/vote-menu =

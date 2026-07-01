@@ -85,7 +85,7 @@ As of 2026-07-01 08:16 UTC:
    - Commander funds can publicVariable every 15s when exact funds change.
    - GUER stipend and air-defense state rebroadcasts are intentionally JIP-durable but chatty.
    - Pending HC dispatch and group-cap warnings can repeat heavily in long RPTs.
-   - Action: partially mitigated. `GRPBUDGET|WARN` is now edge-triggered with a `GRPBUDGET|RECOVER` latch reset, while AI Commander team-founder group-cap warnings are throttled to once per side per 15 minutes while the cap remains exceeded. The lower-level `Common_CreateGroup.sqf` emergency-GC and `grpNull` warnings, plus the `Common_CreateTeam.sqf` template-skip follow-up, are now debounced to one report per side/machine every five minutes. `WFBE_PopTier` now gets a targeted join-time `publicVariableClient` catch-up so late joiners do not default their AI cap/RHUD scaling to low-pop tier until the next population-tier change. Still defer exact-funds quantization and broad JIP rebroadcast changes until live RPT evidence proves they are worth the compatibility risk.
+   - Action: partially mitigated. `GRPBUDGET|WARN` is now edge-triggered with a `GRPBUDGET|RECOVER` latch reset, while AI Commander team-founder group-cap warnings are throttled to once per side per 15 minutes while the cap remains exceeded. The lower-level `Common_CreateGroup.sqf` emergency-GC and `grpNull` warnings, plus the `Common_CreateTeam.sqf` template-skip follow-up, are now debounced to one report per side/machine every five minutes. `WFBE_PopTier` now gets a targeted join-time `publicVariableClient` catch-up so late joiners do not default their AI cap/RHUD scaling to low-pop tier until the next population-tier change. The side-keyed `WFBE_AICOM_*` intent/objective/active/focus/team/funds HUD variables now also get targeted join-time catch-up, keeping command-console, RHUD and friendly objective-marker state current for late joiners without making the strategy publisher chatty. Still defer exact-funds quantization and broad JIP rebroadcast changes until live RPT evidence proves they are worth the compatibility risk.
 
 8. There is still a watched-command compatibility lead in wildcard code.
    - `Server/Functions/AI_Commander_Wildcard.sqf:325` documents the allDead replacement for lucky salvage.
@@ -116,6 +116,11 @@ As of 2026-07-01 08:16 UTC:
    - `C:/WASP/rpt-archive/arma2oaserver-preFIXch-20260630-1952.RPT`
    - Action: only copy/analyze private RPTs after the owner confirms the target build/window and privacy scope.
 
+13. HC-disconnect adoption is still a release-risk lead.
+   - `Server_OnPlayerDisconnected.sqf` removes a disconnected HC from future delegation registries, but does not yet prove already-running HC-owned AICOM teams have been re-adopted by the server after locality migrates.
+   - `Common_RunCommanderTeam.sqf` marks HC teams with `wfbe_aicom_hc`; `AI_Commander_Produce.sqf` and `AI_Commander_Execute.sqf` treat HC teams differently from server-local teams.
+   - Action: defer code change until a focused HC drop/reconnect RPT pass can prove whether existing HC teams become inert. Candidate patch is a delayed, server-side re-adoption sweep gated on `wfbe_aicom_hc` and server-local leaders, with RPT proof for order resumption and no duplicate team accounting.
+
 ## Working Backlog
 
 - Decide whether this branch stays as a small findings PR or merges into PR #123/#125 after review.
@@ -124,6 +129,7 @@ As of 2026-07-01 08:16 UTC:
 - Mine the Miksuu original repo with a long-path-safe or sparse checkout for mission-level diffs.
 - Select concrete Jerry/Miksuu dump packages before downloading large archives.
 - Collect or import RPT evidence only after explicit approval for SSH/server access.
+- Run a focused HC disconnect/reconnect proof pass before changing HC team re-adoption behavior.
 
 ## Validation Expectations
 
