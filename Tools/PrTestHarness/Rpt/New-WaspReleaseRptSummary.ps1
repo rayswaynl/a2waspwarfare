@@ -76,6 +76,22 @@ function ConvertTo-BoolFlag {
 	return ($text -eq "true")
 }
 
+function ConvertTo-PacketPathLabel {
+	param([string]$Path)
+	if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+	return (([string]$Path).Trim() -replace "/", "\").ToLowerInvariant()
+}
+
+function Get-ExpectedRuntimePacketLabels {
+	$labels = New-Object System.Collections.Generic.List[string]
+	foreach ($terrain in @("chernarus", "takistan")) {
+		foreach ($rolePath in @("server.rpt", "HC1.rpt", "HC2.rpt", "start-client.rpt", "late-JIP.rpt")) {
+			[void]$labels.Add((ConvertTo-PacketPathLabel (Join-Path $terrain $rolePath)))
+		}
+	}
+	return $labels.ToArray()
+}
+
 function Format-SessionSummary {
 	param($Sessions)
 	$parts = @()
@@ -104,6 +120,7 @@ function Test-RuntimePacketManifestProof {
 		validationRequested = $false
 		validationOverall = ""
 		fileCount = 0
+		expectedFiles = @(Get-ExpectedRuntimePacketLabels)
 		missing = @()
 		failHits = @()
 		note = "Pass -RuntimePacketManifestPath to bind this summary to the ten-file packet validator proof."
@@ -138,7 +155,8 @@ function Test-RuntimePacketManifestProof {
 	$validationOverall = [string](Get-JsonValue $validation "overall")
 	$result.validationRequested = $validationRequested
 	$result.validationOverall = $validationOverall
-	$result.fileCount = @(ConvertTo-Array (Get-JsonValue $manifest "files")).Count
+	$manifestFiles = @(ConvertTo-Array (Get-JsonValue $manifest "files"))
+	$result.fileCount = $manifestFiles.Count
 	if (!$validationRequested) {
 		[void]$failHits.Add("runtime packet manifest validation.requested must be true")
 	}
@@ -147,6 +165,21 @@ function Test-RuntimePacketManifestProof {
 	}
 	if ([int]$result.fileCount -ne 10) {
 		[void]$failHits.Add("runtime packet manifest must list the exact ten copied RPT files")
+	}
+	$expectedLabels = @(Get-ExpectedRuntimePacketLabels)
+	$actualLabels = @($manifestFiles | ForEach-Object {
+		$file = $_
+		if ($null -eq $file) { "" } else { ConvertTo-PacketPathLabel ([string](Get-JsonValue $file "copiedRptPath")) }
+	} | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+	foreach ($expectedLabel in $expectedLabels) {
+		if (@($actualLabels | Where-Object { $_ -eq $expectedLabel }).Count -ne 1) {
+			[void]$failHits.Add("runtime packet manifest missing exact copied file $expectedLabel")
+		}
+	}
+	foreach ($actualLabel in ($actualLabels | Select-Object -Unique)) {
+		if (@($expectedLabels | Where-Object { $_ -eq $actualLabel }).Count -eq 0) {
+			[void]$failHits.Add("runtime packet manifest contains unexpected copied file $actualLabel")
+		}
 	}
 	$result.status = if ($missing.Count -gt 0) { "missing" } elseif ($failHits.Count -gt 0) { "fail" } else { "pass" }
 	$result.missing = $missing.ToArray()

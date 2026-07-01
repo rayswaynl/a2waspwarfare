@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Runtime summary manifest file-set proof [RELEASE LOOP]
+
+Tightened `New-WaspReleaseRptSummary.ps1` one step further: when a runtime packet
+manifest is supplied, the summary now validates the actual copied packet labels
+for `chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt` and
+`takistan/{server,HC1,HC2,start-client,late-JIP}.rpt`, not only the manifest's
+file count and validation status.
+
+The per-terrain self-test now includes a malformed manifest fixture with ten
+files but the wrong Takistan HC2 copied path. That keeps a manually edited or
+otherwise malformed `runtime-rpt-packet-manifest.json` from making the portable
+summary look green while the exact runtime packet matrix is not present.
+
 ## 2026-07-01 — Runtime packet self-test committed [RELEASE LOOP]
 
 Added `Tools/PrTestHarness/Rpt/Test-WaspRuntimeRptPacket.SelfTest.ps1` so the

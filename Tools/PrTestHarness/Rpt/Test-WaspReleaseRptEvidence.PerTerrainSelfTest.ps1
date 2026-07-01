@@ -113,8 +113,24 @@ function Write-RuntimePacketManifest {
 	param(
 		[Parameter(Mandatory)] [string]$Path,
 		[bool]$ValidationRequested,
-		[Parameter(Mandatory)] [string]$ValidationOverall
+		[Parameter(Mandatory)] [string]$ValidationOverall,
+		[string]$FileVariant = "valid"
 	)
+	$files = @(
+		[ordered]@{ terrain = "chernarus"; role = "server"; copiedRptPath = "chernarus\server.rpt" },
+		[ordered]@{ terrain = "chernarus"; role = "HC1"; copiedRptPath = "chernarus\HC1.rpt" },
+		[ordered]@{ terrain = "chernarus"; role = "HC2"; copiedRptPath = "chernarus\HC2.rpt" },
+		[ordered]@{ terrain = "chernarus"; role = "start-client"; copiedRptPath = "chernarus\start-client.rpt" },
+		[ordered]@{ terrain = "chernarus"; role = "late-JIP"; copiedRptPath = "chernarus\late-JIP.rpt" },
+		[ordered]@{ terrain = "takistan"; role = "server"; copiedRptPath = "takistan\server.rpt" },
+		[ordered]@{ terrain = "takistan"; role = "HC1"; copiedRptPath = "takistan\HC1.rpt" },
+		[ordered]@{ terrain = "takistan"; role = "HC2"; copiedRptPath = "takistan\HC2.rpt" },
+		[ordered]@{ terrain = "takistan"; role = "start-client"; copiedRptPath = "takistan\start-client.rpt" },
+		[ordered]@{ terrain = "takistan"; role = "late-JIP"; copiedRptPath = "takistan\late-JIP.rpt" }
+	)
+	if ($FileVariant -eq "wrong-file-set") {
+		$files[7] = [ordered]@{ terrain = "takistan"; role = "HC2"; copiedRptPath = "takistan\wrong-HC2.rpt" }
+	}
 	$manifest = [ordered]@{
 		schema = "a2waspwarfare-runtime-rpt-packet-builder-v1"
 		generatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
@@ -129,18 +145,7 @@ function Write-RuntimePacketManifest {
 			ledgerPath = "release-run-ledger.json"
 			manifestPath = "runtime-rpt-packet-manifest.json"
 		}
-		files = @(
-			[ordered]@{ terrain = "chernarus"; role = "server"; copiedRptPath = "chernarus\server.rpt" },
-			[ordered]@{ terrain = "chernarus"; role = "HC1"; copiedRptPath = "chernarus\HC1.rpt" },
-			[ordered]@{ terrain = "chernarus"; role = "HC2"; copiedRptPath = "chernarus\HC2.rpt" },
-			[ordered]@{ terrain = "chernarus"; role = "start-client"; copiedRptPath = "chernarus\start-client.rpt" },
-			[ordered]@{ terrain = "chernarus"; role = "late-JIP"; copiedRptPath = "chernarus\late-JIP.rpt" },
-			[ordered]@{ terrain = "takistan"; role = "server"; copiedRptPath = "takistan\server.rpt" },
-			[ordered]@{ terrain = "takistan"; role = "HC1"; copiedRptPath = "takistan\HC1.rpt" },
-			[ordered]@{ terrain = "takistan"; role = "HC2"; copiedRptPath = "takistan\HC2.rpt" },
-			[ordered]@{ terrain = "takistan"; role = "start-client"; copiedRptPath = "takistan\start-client.rpt" },
-			[ordered]@{ terrain = "takistan"; role = "late-JIP"; copiedRptPath = "takistan\late-JIP.rpt" }
-		)
+		files = $files
 		validation = [ordered]@{
 			requested = $ValidationRequested
 			overall = $ValidationOverall
@@ -219,6 +224,13 @@ try {
 	$badSummary = Invoke-Summary -Root $root -OutDirectory (Join-Path $root "summary-bad") -RuntimePacketManifestPath $badManifest
 	if ([string]$badSummary.overall -ne "missing_or_failed" -or [string]$badSummary.runtimePacketProof.status -ne "fail") {
 		throw ("Expected summary to fail when runtime packet manifest validation is skipped; summary={0}, packetProof={1}" -f $badSummary.overall, $badSummary.runtimePacketProof.status)
+	}
+
+	$wrongFilesManifest = Join-Path $root "packet-wrong-files\runtime-rpt-packet-manifest.json"
+	Write-RuntimePacketManifest -Path $wrongFilesManifest -ValidationRequested $true -ValidationOverall "pass" -FileVariant "wrong-file-set"
+	$wrongFilesSummary = Invoke-Summary -Root $root -OutDirectory (Join-Path $root "summary-wrong-files") -RuntimePacketManifestPath $wrongFilesManifest
+	if ([string]$wrongFilesSummary.overall -ne "missing_or_failed" -or [string]$wrongFilesSummary.runtimePacketProof.status -ne "fail") {
+		throw ("Expected summary to fail when runtime packet manifest has ten files but wrong copied paths; summary={0}, packetProof={1}" -f $wrongFilesSummary.overall, $wrongFilesSummary.runtimePacketProof.status)
 	}
 
 	$goodManifest = Join-Path $root "packet-good\runtime-rpt-packet-manifest.json"
