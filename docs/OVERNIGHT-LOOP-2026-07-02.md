@@ -39,6 +39,26 @@
 5. **Camp-grab (Fix B, optional)** — commander peels 1 idle team to grab a lone front-line camp; default OFF.
 6. **Pre-existing `_govSteep` cleanup + any new fault the loop surfaces.**
 
+## MORNING PATCH QUEUE (Ray directives, 2026-07-02)
+1. **NO TOWN IS UNCAPTURABLE.** Design guarantee: no town may ever be permanently un-takeable by the AI.
+   Current mechanic (`server_town.sqf` mode 0/Classic): a town drains+flips with ≥1 attacker in the 40m
+   depot ring AND no live defender of the current owner present (a defender sets `_skip=true` → protected,
+   regens supply). So the only "uncapturable" states are (a) a town whose defenders the AI can't fully clear
+   (they out-reinforce the attacker), and (b) the `RELEASED uncapturable` abandon after N no-flip passes
+   (`Common_RunCommanderTeam.sqf:1235`). Plan: make the AI ESCALATE force onto a stubborn town (concentrate
+   more teams / heavier units) instead of abandoning, and audit for any true mechanical dead-end. Pairs with
+   tonight's drain-wait (`e1d031f47`) + arrival-gate (`87d7b3d94`) fixes. Consider a per-town "assault escalation"
+   counter that raises committed force each failed pass rather than releasing.
+2. **PLAYER CLASS-ICON MARKER.** Tonight's `4f33143cd` reverted the A3-invalid `b_inf` back to the working
+   `mil_arrow2` heading arrow (class still shows as a `[SOL]/[MED]/…` text tag). Ray wants the marker to show
+   his CLASS as an icon. A2-OA-1.64 has no native class-symbol markers (b_inf is A3-only), so a true class icon
+   needs a custom `CfgMarkers` texture in description.ext — background research agent `ac94170c925754a1b` is
+   finding a valid A2-OA icon path / the best built-in per-class mapping. Ship in the morning bundle.
+
+**Morning deploy bundle (staged in PR, NOT yet live):** arrival-gate `87d7b3d94` + marker revert `4f33143cd`
+(+ the class-icon + no-town-uncapturable work once designed). Deploy together as one build in the morning
+(or fold the arrival-gate sooner if tonight's capture verification shows `begin_capture` still 0).
+
 ## Tick log
 - **Tick 0** (setup): server healthy (3/3 procs, cmdcon36, 0 errors, AICOMHB v2, WEST 10-0). No issue →
   shipped the pending batch above (grade-stamp, marker b_inf, WASPSCALE v2 emitter, HC label). Loop armed.
