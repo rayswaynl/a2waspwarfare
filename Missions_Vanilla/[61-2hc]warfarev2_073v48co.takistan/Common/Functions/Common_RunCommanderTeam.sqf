@@ -1053,10 +1053,12 @@ while {!WFBE_GameOver && _alive} do {
 						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
 						_campFirstEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer camp-first window = the team actually finishes taking both camps.
 						//--- B74.2 (Ray 2026-06-23) NO-PROGRESS tracker for the camp-first loop (don't get stuck on camps).
-						private ["_campStallPasses","_campLastUnheld","_campStallMax"];
+						private ["_campStallPasses","_campLastUnheld","_campStallMax","_capMode","_campGateMode2","_campEnemy","_campFoe"];
 						_campStallPasses = 0;
 						_campLastUnheld  = count _unheldCamps;
 						_campStallMax    = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_STALL_PASSES", 3];
+						_capMode       = missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_MODE", 0];
+						_campGateMode2 = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_GATE_MODE2", 1];
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
@@ -1092,6 +1094,20 @@ while {!WFBE_GameOver && _alive} do {
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
 							} forEach (_campTgtPos nearEntities [["Man"], 60]);
+							if (_capMode == 2 && {_campGateMode2 != 0}) then {
+								[_team, true, [[_campTgtPos, 'SAD', (_campRange max 30), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+								_campEnemy = [];
+								{
+									if (alive _x && {side _x != _side} && {side _x != civilian}) then {
+										_team reveal _x;
+										_campEnemy = _campEnemy + [_x];
+									};
+								} forEach (_campTgtPos nearEntities [["Man"], 60]);
+								if (count _campEnemy > 0) then {
+									_campFoe = _campEnemy select 0;
+									{if (alive _x) then {_x doTarget _campFoe; _x doFire _campFoe}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+								};
+							};
 							//--- Settle: up to ~20s or leader inside the 10m camp range (mirrors the
 							//--- per-camp sweep settle at L543). Re-press stragglers toward the centre.
 							_campSettleEnd = time + 20;
@@ -1124,8 +1140,10 @@ while {!WFBE_GameOver && _alive} do {
 							} else {
 								_campStallPasses = _campStallPasses + 1;
 							};
-							if (_campStallMax > 0 && {_campStallPasses >= _campStallMax}) exitWith {
-								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first NO-PROGRESS after %3 passes (%4 camp(s) still un-held) - proceeding to town centre.", _side, _team, _campStallPasses, count _unheldCamps]] Call WFBE_CO_FNC_AICOMLog;
+							if !(_capMode == 2 && {_campGateMode2 != 0}) then {
+								if (_campStallMax > 0 && {_campStallPasses >= _campStallMax}) exitWith {
+									["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first NO-PROGRESS after %3 passes (%4 camp(s) still un-held) - proceeding to town centre.", _side, _team, _campStallPasses, count _unheldCamps]] Call WFBE_CO_FNC_AICOMLog;
+								};
 							};
 						};
 						//--- Release the plant so the depot-centre hold below can march these units on
@@ -1155,8 +1173,8 @@ while {!WFBE_GameOver && _alive} do {
 						//--- town drains and flips). Re-reveal enemy each tick. Every iteration leaves
 						//--- units on a live SAD order (never idle).
 						_holdEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer depot-center hold = the team holds long enough to drain + flip the town.
-						_resNear = 1;
-						while {time < _holdEnd && {_resNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+						_resNear = 1; _holdFlipped = false;
+						while {time < _holdEnd && {!_holdFlipped} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
 							if (_capAbort) exitWith {}; //--- B69: re-tasked mid depot-hold -> bail; outer loop re-reads the new order
@@ -1173,7 +1191,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- but past ~24m get pulled to the exact center so the depot-center presence scan ticks.
 							{if (alive _x && {(_x distance _townCenter) > (_capRange * 0.6)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 							//--- Early-out if the town already flipped to us.
-							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_resNear = 0};
+							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_holdFlipped = true};
 							sleep 10;
 						};
 
@@ -1259,8 +1277,8 @@ while {!WFBE_GameOver && _alive} do {
 						//--- within _capRange of the centre (depot drains + flips). Re-reveal enemy + re-press
 						//--- stragglers each tick. Honour the same _capAbort re-task interrupt as the foot path.
 						_armHoldEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]);
-						_armResNear = 1;
-						while {time < _armHoldEnd && {_armResNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+						_armResNear = 1; _armHoldFlipped = false;
+						while {time < _armHoldEnd && {!_armHoldFlipped} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
 							if (_capAbort) exitWith {}; //--- re-tasked mid armour-hold -> bail; outer loop re-reads the new order
@@ -1275,7 +1293,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Keep hulls beyond ~60% of _capRange pressing the centre (cheap re-issue, no freeze).
 							{if (alive _x && {(_x distance _townCenter) > (_capRange * 0.6)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 							//--- Early-out if the town already flipped to us.
-							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_armResNear = 0};
+							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_armHoldFlipped = true};
 							sleep 10;
 						};
 						if (_capAbort) exitWith {}; //--- armour-hold interrupted -> bail BEFORE latching captureDone; outer loop re-reads the new order

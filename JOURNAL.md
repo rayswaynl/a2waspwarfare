@@ -1,5 +1,24 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM capture drain-wait and release marker guardrails [RELEASE LOOP]
+
+Ported the narrow cmdcon37/cmdcon38 AICOM capture fixes onto the PR #125
+release lane without merging the broader Build84/overnight branches. Camp-first
+logic now keeps the no-progress bail disabled only in AllCamps mode, where the
+depot cannot flip until every camp is owned, and actively prosecutes camp
+garrisons while still bounded by `WFBE_C_AICOM_ASSAULT_HOLD`. Infantry and
+pure-armour depot holds now wait for the town to actually flip, not merely for
+nearby resistance to clear. AssignTowns also stamps `wfbe_aicom_goto_since` and
+uses `WFBE_C_AICOM_STALL_ADVANCE_SECS` as a time-based retarget floor when a
+team remains parked on the same unflipped town.
+
+Also changed ungenerated release-marker fallbacks from stale
+`build83-cmdcon35` strings to `candidate=unpackaged|git=missing-version`, and
+added the redaction-safe `Tools/Monitor` RPT marker sweep helper plus self-test
+for exact runtime-marker preflight. LoadoutManager mirrored the Chernarus edits
+to Takistan and rebuilt `_MISSIONS.7z`; runtime, SSH, RPT collection, upload,
+restart, cache-clear and deployment remain explicit-approval gated.
+
 ## 2026-07-01 — AICOM order sequence helper [RELEASE LOOP]
 
 Closed another HC-order churn edge in the AI commander. Added

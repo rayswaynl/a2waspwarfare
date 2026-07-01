@@ -208,6 +208,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
 								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
+								_team setVariable ["wfbe_aicom_goto_since", time];
 							} else {
 								if (time - (_ord select 1) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
 									private ["_ldr","_movedThr","_farThr"];
@@ -227,6 +228,23 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetValue) + 1;
 										_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
 										diag_log (Format ["STUCKSTAT|v1|%1|%2|stuck|leader=%3|distStart=%4|distTgt=%5|reissue|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance (_ord select 2)), round (_ldr distance _goto), _strk]);
+										private ["_stallSecs","_gotoSince"];
+										_stallSecs = missionNamespace getVariable ["WFBE_C_AICOM_STALL_ADVANCE_SECS", 420];
+										_gotoSince = [_team, "wfbe_aicom_goto_since", -1] Call WFBE_CO_FNC_GroupGetValue;
+										if (_gotoSince < 0) then {_gotoSince = time; _team setVariable ["wfbe_aicom_goto_since", time]};
+										if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs}) then {
+											private ["_saCd","_saBl","_saKeep"];
+											_saCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
+											_saBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetValue;
+											_saKeep = [];
+											{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_saKeep set [count _saKeep, _x]} } forEach _saBl;
+											_saKeep set [count _saKeep, [_goto, time + _saCd]];
+											_team setVariable ["wfbe_aicom_blacklist", _saKeep];
+											_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+											_team setVariable ["wfbe_aicom_goto_since", time];
+											_needs = true;
+											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|reason=stall-advance|onGoto=" + str (round (time - _gotoSince)) + "|cooldown=" + str _saCd);
+										};
 										//--- WAVE-1 CAUSE-2 TARGET-ABANDON: a team grinding one unreachable/unflippable town forever
 										//--- (re-issue keeps re-picking the same _goto). Once strikes exceed WFBE_C_AICOM_STUCK_ABANDON,
 										//--- BLACKLIST this town for THIS team for a cooldown (stored [town,expiry] on wfbe_aicom_blacklist),
@@ -271,6 +289,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										//--- reset the unstuck strike ladder (the team moved, so it is not stuck).
 										_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
 										_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+										_team setVariable ["wfbe_aicom_goto_since", time];
 									};
 								};
 							};
