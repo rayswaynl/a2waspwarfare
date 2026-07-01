@@ -142,9 +142,10 @@ It also checks that each role file contains the terrain-specific release marker
 and matching `MISSINIT` world, rejects extra/duplicate copied RPTs, and can
 reject stale RPTs from the terrain launch times in the run ledger. The run
 ledger is machine-checked too: it must record the original source RPT path,
-copied packet path, command line, PID and terrain start time for each role.
-Duplicate original source RPT paths fail the packet gate. Copied file
-LastWriteTime values are read by the checker itself.
+original source RPT LastWriteTime and SHA256, copied packet path and SHA256,
+command line, PID and terrain start time for each role. Duplicate original
+source RPT paths fail the packet gate. Copied file LastWriteTime values are
+read by the checker itself.
 
 ```powershell
 $releaseGit = git rev-parse --short=10 HEAD
@@ -167,7 +168,8 @@ values so runtime proof ties back to the exact release HEAD.
   -RptRoot "C:\WASP\rpts\release-candidate" `
   -ExpectedGit $releaseGit `
   -ExpectedArchiveSha256 "<_MISSIONS.7z-sha256>" `
-  -RunLedgerPath "C:\WASP\rpts\release-candidate\release-run-ledger.json"
+  -RunLedgerPath "C:\WASP\rpts\release-candidate\release-run-ledger.json" `
+  -RequireSourceRptExists
 ```
 
 The ledger is intentionally structured as flat records so copied packet files
@@ -190,7 +192,10 @@ and original live/source RPT files can be audited separately:
       "commandLine": "<redacted-command-line>",
       "profilePath": "<profile-or-log-root>",
       "sourceRptPath": "C:\\ArmaProfiles\\server\\arma2oaserver.RPT",
-      "copiedRptPath": "chernarus\\server.rpt"
+      "sourceRptLastWriteTime": "2026-07-01T20:03:21+02:00",
+      "sourceRptSha256": "<source-rpt-sha256>",
+      "copiedRptPath": "chernarus\\server.rpt",
+      "copiedRptSha256": "<copied-rpt-sha256>"
     }
   ]
 }
@@ -199,8 +204,12 @@ and original live/source RPT files can be audited separately:
 When `-ExpectedArchiveSha256` is supplied, the packet checker requires the run
 ledger `release.archiveSha256` value to match the approved package archive. This
 prevents runtime RPT proof from being attached to a different rebuilt archive
-that happens to share the same git marker. Public duplicate-process failures
-emit the PID and a command-line hash, not the raw launch command.
+that happens to share the same git marker. The packet checker also compares
+each copied RPT to `copiedRptSha256`, requires `sourceRptLastWriteTime` to be
+after the terrain launch time, and with `-RequireSourceRptExists` recomputes the
+source RPT timestamp/SHA256 and verifies that the source and copied content are
+identical. Public duplicate-process failures emit the PID and a command-line
+hash, not the raw launch command.
 
 After the packet matrix passes, the scorer checks both Chernarus and Takistan
 coverage, no generic current-window RPT stop conditions, at least two successful

@@ -81,6 +81,51 @@ function Get-SafeTextHash {
 	}
 }
 
+function Get-FileSha256Value {
+	param([string]$Path)
+	if ([string]::IsNullOrWhiteSpace($Path) -or !(Test-Path -LiteralPath $Path -PathType Leaf)) { return "" }
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	$fs = [System.IO.File]::Open($Path,
+		[System.IO.FileMode]::Open,
+		[System.IO.FileAccess]::Read,
+		[System.IO.FileShare]::ReadWrite)
+	try {
+		$hash = $sha.ComputeHash($fs)
+		return ([System.BitConverter]::ToString($hash) -replace "-", "").ToUpperInvariant()
+	} finally {
+		$fs.Dispose()
+		$sha.Dispose()
+	}
+}
+
+function ConvertTo-Sha256Text {
+	param([string]$Value)
+	if ([string]::IsNullOrWhiteSpace($Value)) { return "" }
+	return $Value.Trim().ToUpperInvariant()
+}
+
+function Test-IsSha256Text {
+	param([string]$Value)
+	return (![string]::IsNullOrWhiteSpace($Value) -and $Value -match "^[A-Fa-f0-9]{64}$")
+}
+
+function ConvertFrom-LedgerDateTime {
+	param([string]$Value, [ref]$Result)
+	if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
+	$styles = [System.Globalization.DateTimeStyles]::AllowWhiteSpaces
+	$offsetValue = [System.DateTimeOffset]::MinValue
+	if ([System.DateTimeOffset]::TryParse($Value, [System.Globalization.CultureInfo]::InvariantCulture, $styles, [ref]$offsetValue)) {
+		$Result.Value = $offsetValue.LocalDateTime
+		return $true
+	}
+	$dateValue = [datetime]::MinValue
+	if ([datetime]::TryParse($Value, [System.Globalization.CultureInfo]::InvariantCulture, $styles, [ref]$dateValue)) {
+		$Result.Value = $dateValue
+		return $true
+	}
+	return $false
+}
+
 function ConvertTo-LedgerRecords {
 	param($Ledger)
 	$records = New-Object System.Collections.Generic.List[object]
@@ -227,6 +272,9 @@ function Test-WaspRuntimeRunLedger {
 		$commandLine = [string](Get-JsonValue $record "commandLine")
 		$pidValue = Get-JsonValue $record "pid"
 		$copiedLastWriteRaw = [string](Get-JsonValue $record "copiedLastWriteTime")
+		$sourceLastWriteRaw = [string](Get-JsonValue $record "sourceRptLastWriteTime")
+		$sourceSha256 = ConvertTo-Sha256Text ([string](Get-JsonValue $record "sourceRptSha256"))
+		$copiedSha256 = ConvertTo-Sha256Text ([string](Get-JsonValue $record "copiedRptSha256"))
 		$terrainStartRaw = [string](Get-JsonValue $record "terrainStartTime")
 		if ([string]::IsNullOrWhiteSpace($terrainStartRaw)) { $terrainStartRaw = [string](Get-JsonValue $record "startTime") }
 		if ([string]::IsNullOrWhiteSpace($terrainStartRaw) -and $null -ne $topLevelStartTimes) { $terrainStartRaw = [string](Get-JsonValue $topLevelStartTimes $terrain) }
@@ -236,6 +284,11 @@ function Test-WaspRuntimeRunLedger {
 		if ([string]::IsNullOrWhiteSpace($commandLine)) { [void]$missing.Add("commandLine for $terrain/$role") }
 		if ($null -eq $pidValue -or [string]::IsNullOrWhiteSpace([string]$pidValue)) { [void]$missing.Add("pid for $terrain/$role") }
 		if ([string]::IsNullOrWhiteSpace($terrainStartRaw)) { [void]$missing.Add("terrainStartTime for $terrain/$role") }
+		if ([string]::IsNullOrWhiteSpace($sourceLastWriteRaw)) { [void]$missing.Add("sourceRptLastWriteTime for $terrain/$role") }
+		if ([string]::IsNullOrWhiteSpace($sourceSha256)) { [void]$missing.Add("sourceRptSha256 for $terrain/$role") }
+		if ([string]::IsNullOrWhiteSpace($copiedSha256)) { [void]$missing.Add("copiedRptSha256 for $terrain/$role") }
+		if (![string]::IsNullOrWhiteSpace($sourceSha256) -and !(Test-IsSha256Text $sourceSha256)) { [void]$failHits.Add("sourceRptSha256 for $terrain/$role must be a SHA256 hex value") }
+		if (![string]::IsNullOrWhiteSpace($copiedSha256) -and !(Test-IsSha256Text $copiedSha256)) { [void]$failHits.Add("copiedRptSha256 for $terrain/$role must be a SHA256 hex value") }
 
 		$sourcePath = Resolve-LedgerPathValue $sourceRaw $ledgerDir
 		$copiedPath = Resolve-LedgerPathValue $copiedRaw $RootPath
@@ -249,6 +302,27 @@ function Test-WaspRuntimeRunLedger {
 		}
 		if (![string]::IsNullOrWhiteSpace($sourcePath) -and $sourcePath.Equals($copiedPath, [System.StringComparison]::OrdinalIgnoreCase)) {
 			[void]$failHits.Add("sourceRptPath and copiedRptPath are the same for $terrain/$role")
+		}
+		if ((Test-Path -LiteralPath $expectedCopiedPath -PathType Leaf) -and !(Test-IsSha256Text $copiedSha256)) {
+			[void]$failHits.Add("copiedRptSha256 for $terrain/$role is required before copied file hash can be verified")
+		} elseif ((Test-Path -LiteralPath $expectedCopiedPath -PathType Leaf) -and (Get-FileSha256Value $expectedCopiedPath) -ne $copiedSha256) {
+			[void]$failHits.Add("copiedRptSha256 for $terrain/$role does not match copied file")
+		}
+		if ($RequireSourceRptExists -and ![string]::IsNullOrWhiteSpace($sourcePath) -and (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
+			$actualSourceItem = Get-Item -LiteralPath $sourcePath
+			$actualSourceSha256 = Get-FileSha256Value $sourcePath
+			if ((Test-IsSha256Text $sourceSha256) -and $actualSourceSha256 -ne $sourceSha256) {
+				[void]$failHits.Add("sourceRptSha256 for $terrain/$role does not match source file")
+			}
+			if ((Test-IsSha256Text $copiedSha256) -and $actualSourceSha256 -ne $copiedSha256) {
+				[void]$failHits.Add("source RPT content does not match copied packet file for $terrain/$role")
+			}
+			if (![string]::IsNullOrWhiteSpace($sourceLastWriteRaw)) {
+				$recordedSourceLastWrite = [datetime]::MinValue
+				if ((ConvertFrom-LedgerDateTime $sourceLastWriteRaw ([ref]$recordedSourceLastWrite)) -and [Math]::Abs(($actualSourceItem.LastWriteTime - $recordedSourceLastWrite).TotalSeconds) -gt 2) {
+					[void]$failHits.Add("sourceRptLastWriteTime for $terrain/$role does not match source file")
+				}
+			}
 		}
 
 		$pidInt = 0
@@ -264,7 +338,7 @@ function Test-WaspRuntimeRunLedger {
 
 		$terrainStart = [datetime]::MinValue
 		if (![string]::IsNullOrWhiteSpace($terrainStartRaw)) {
-			if (![datetime]::TryParse($terrainStartRaw, [ref]$terrainStart)) {
+			if (!(ConvertFrom-LedgerDateTime $terrainStartRaw ([ref]$terrainStart))) {
 				[void]$failHits.Add("terrainStartTime for $terrain/$role is not a datetime")
 			} else {
 				if (!$ledgerStartTimes.ContainsKey($terrain)) {
@@ -278,9 +352,18 @@ function Test-WaspRuntimeRunLedger {
 			}
 		}
 
+		$sourceLastWrite = [datetime]::MinValue
+		if (![string]::IsNullOrWhiteSpace($sourceLastWriteRaw)) {
+			if (!(ConvertFrom-LedgerDateTime $sourceLastWriteRaw ([ref]$sourceLastWrite))) {
+				[void]$failHits.Add("sourceRptLastWriteTime for $terrain/$role is not a datetime")
+			} elseif ($terrainStart -ne [datetime]::MinValue -and $sourceLastWrite -le $terrainStart) {
+				[void]$failHits.Add("sourceRptLastWriteTime for $terrain/$role is not after terrainStartTime")
+			}
+		}
+
 		$copiedLastWrite = [datetime]::MinValue
 		if (![string]::IsNullOrWhiteSpace($copiedLastWriteRaw)) {
-			if (![datetime]::TryParse($copiedLastWriteRaw, [ref]$copiedLastWrite)) {
+			if (!(ConvertFrom-LedgerDateTime $copiedLastWriteRaw ([ref]$copiedLastWrite))) {
 				[void]$failHits.Add("copiedLastWriteTime for $terrain/$role is not a datetime")
 			} elseif (Test-Path -LiteralPath $expectedCopiedPath) {
 				$actualLastWrite = (Get-Item -LiteralPath $expectedCopiedPath).LastWriteTime
@@ -299,6 +382,9 @@ function Test-WaspRuntimeRunLedger {
 			pidRecorded = ($pidInt -gt 0)
 			commandLineRecorded = (![string]::IsNullOrWhiteSpace($commandLine))
 			terrainStartTime = if ($terrainStart -eq [datetime]::MinValue) { "" } else { $terrainStart.ToString("yyyy-MM-ddTHH:mm:sszzz") }
+			sourceRptLastWriteTime = if ($sourceLastWrite -eq [datetime]::MinValue) { "" } else { $sourceLastWrite.ToString("yyyy-MM-ddTHH:mm:sszzz") }
+			sourceRptSha256Recorded = (Test-IsSha256Text $sourceSha256)
+			copiedRptSha256Recorded = (Test-IsSha256Text $copiedSha256)
 			copiedLastWriteTime = if ($copiedLastWrite -eq [datetime]::MinValue) { "" } else { $copiedLastWrite.ToString("yyyy-MM-ddTHH:mm:sszzz") }
 		})
 	}
@@ -562,7 +648,7 @@ $gates = @(
 		status = $ledgerResult.status
 		missing = @($ledgerResult.missing)
 		failHits = @($ledgerResult.failHits)
-		note = "Requires a JSON run ledger with unique original source RPT paths, copied packet paths, command lines, PIDs and per-terrain launch start times."
+		note = "Requires a JSON run ledger with unique original source RPT paths, source LastWriteTime/SHA256, copied packet paths/SHA256, command lines, PIDs and per-terrain launch start times."
 	},
 	[ordered]@{
 		id = "per-file-marker-world"
@@ -576,7 +662,7 @@ $gates = @(
 		status = if ($freshnessMissing.Count -eq 0 -and $freshnessFailures.Count -eq 0) { "pass" } elseif ($freshnessFailures.Count -gt 0) { "fail" } else { "missing" }
 		missing = @($freshnessMissing | ForEach-Object { "{0} start time" -f $_ })
 		failHits = $freshnessFailures
-		note = "Use -RunLedgerPath or explicit terrain start times; copied RPT LastWriteTime must be after that terrain's launch start."
+		note = "Use -RunLedgerPath or explicit terrain start times; copied RPT LastWriteTime must be after launch, while source RPT freshness is enforced by the runtime run ledger."
 	}
 )
 
