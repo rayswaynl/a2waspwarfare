@@ -65,6 +65,61 @@
 
 **Agent model:** parallel research/audit subagents (Sonnet) per lane → orchestrator verifies criticals in-tree → fixes land in focused child branches → this PR tracks status. Loops re-run lanes until dry.
 
+## Phase-3 perf backlog — adversarially validated (2026-07-01)
+
+Lane L proposed 10 optimizations; a 10-skeptic verification workflow tested each against the RC code. **6 of 10 were rejected or moot** — two of them because the *fix itself* was unsafe. Survivors:
+
+**Do (safe):**
+| Item | Where | Win | Note |
+|---|---|---|---|
+| Income player-count scan | `Server/FSM/updateresources.sqf:~28` | med | `{isPlayer} count allUnits` runs every income tick (~1–3s). Fix = throttle recompute to every 5th tick. (Do NOT use `MonitorPlayerCount` as a cache — it publishes no count var.) |
+| GroupsGC per-side hoist | `Server/FSM/server_groupsGC.sqf:82,189` | med | Hoist ONLY the per-side allUnits (82) + allGroups (189) above the `forEach [west,east,resistance]`. The cap-safety scans (296/315) are separate single-passes — leave them. |
+| GRPBUDGET triple-count | `Server/AI/Commander/AI_Commander.sqf:714-716` | low | Replace 3 filtered `count allGroups` with one bucketed pass. Logging-only, zero cap impact — free but small. |
+
+**Do only with the SAFE reformulation (highest value; needs a test-server run):**
+| Item | Where | Win | Safe form |
+|---|---|---|---|
+| Common_CreateGroup first-pass scan | `Common/Functions/Common_CreateGroup.sqf:~30` | med-high | The unconditional `count allGroups` on *every* createGroup is the real hotspot during town-activation bursts. **Do NOT** let the `wfbe_grpcnt` cache gate the ≥140 emergency-GC directly — a stale cached count during the 60s warmup could skip the GC and hit the 144-cap. Safe form: cache as early-exit only when cached `< 120`; always live-scan when cache is ≥120, stale, or absent. |
+
+**Rejected / moot (do NOT change):**
+- Vehicles OB scan (item 2) — already co-gated with the 25-min audit.
+- Wildcard `PickLeastLoadedHC` hoist (item 4) — Wildcard fires every 1800s, one branch per draw; hoist would break W24's intentional double-pick load-spread.
+- Boot diagnostic scan (item 6) — one-shot; cache-read would corrupt the boot snapshot.
+- Disband-guard `nearEntities` (item 8) — **safety regression**: `nearEntities ["Man"]` misses mounted players → team deleted under a watching player. One-shot anyway.
+- Seed `wfbe_grpcnt_guer=0` (item 9) — would silently disable the GUER 80-cap during the 60s warmup.
+- groupsMonitor gate (item 10) — spawn already commented out in all 5 mission variants.
+
+## Phase-5 wiki fix-list — verified (2026-07-01)
+
+Lane J audited the wiki vs RC; the HIGH factual errors were spot-verified against code:
+
+| Wiki page(s) | Stale claim | Correct (verified) |
+|---|---|---|
+| `AI-Commander-Execution-Loop-Reference` | UPGRADE_INTERVAL = 120s | **300s** (B67, `Init_CommonConstants.sqf:241`) ✅ (a sister page already has 300 — they contradict) |
+| `New-Player-Quickstart` + `Earning-Funds-And-Score` | supply delivery = SV × 4, citing `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF` | **floor(SV × 20)** via `WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER=20` (`:901`). The cited COEF is **dead code** — 1 reference total (its own definition) ✅ |
+| `Commanders-Handbook` + `Upgrade-Research-Cross-Faction` | Fast Travel prereq = Light 1 + Supply 1 | **Light 3 + Supply Rate 1** (`Upgrades_USMC.sqf` LINKS) — agent-reported; confirm the LINKS row at edit time |
+| +7 line-number drift cites (4 pages) | EXPERITAL block cites off by ~183 lines | refresh inline `Init_CommonConstants.sqf:NNN` cites |
+
+Already-accurate (no edit): `July-2026-Release-Readiness`, `AI-Commander-Tunable-Constants-Reference`, `Supply-Mission-Player-Guide`, GUER overview, `Current-Source-Status-Snapshot`. All wiki edits stay **runtime-pending** until Phase 2 passes.
+
+## Phase-4 AICOM improvement catalog — grounded (2026-07-01)
+
+10 lineage-mined ideas (HETMAN / ALiVE / Field of War / Benny) were grounded against the fork's 18-file Commander layer. The fork is **more complete than the generic ideas assume** — most are already partly built.
+
+**Real gaps worth building (ranked by value):**
+| # | Idea | Status | Pri / effort | Note |
+|---|---|---|---|---|
+| 6 | FPS-gated AI throttle | PARTIAL | **med / small** | Fork samples `diag_fps` (SRVPERF) but **discards it**. Wire it to widen Produce/Teams intervals under low FPS → fixes the "AI stops shooting after an hour" death-spiral. Highest-value real gap. |
+| 2 | Personality presets (Turtle/Balanced/Rusher) | NO | med / small | Only an economic LEVEL param exists; aggression constants aren't preset-wired. Lobby param + one switch block, no runtime-file edits. |
+| 5 | Defensive reserve fraction + per-objective type caps | PARTIAL | med / small | Concentration + hard-cap exist; no reserve floor / per-type sub-cap. Both flag-gated inert-by-default. |
+| 1 | Treasury-depth armor weighting | PARTIAL | low / small | Factory/air gates + maturity ramp exist; only treasury-depth bucket weighting missing. Polish. |
+| 4 | Tunable cadence + HQ-attack interrupt | PARTIAL | low / small | 60s interval is fixed; no HQ-under-attack fast-refresh path. |
+| 7 | Ringfenced defense fund reserve | PARTIAL | low / small | Team-role separation exists (RELIEF_MAX); no fund reservation. |
+| 3 | Front-pressure / morale feedback | NO | low / med | ⚠️ surfaced a **latent dead input**: `wfbe_aicom_town_weight` is read by the spearhead scorer (`Strategy.sqf:204,331`) but **never written** — a scaffolded-but-unfinished feature. Either complete it (#3) or remove the dead read. |
+| 8 | AA-before-CAS air sequencing | NO | low / med | CAS wildcards (W13/W22) never check AA coverage before drawing. |
+
+**Do NOT build:** #10 player-count-scaled economy is **already fully implemented** (3 interlocking layers) — the live 39:1 K/D is the `AI_MAX=4-vs-12` config issue, not an economy gap. #9 HC decision-loop offload is **architecturally blocked** in A2 SQF (per-unit FSM already on HC; only config levers remain).
+
 ## 6. Owner-assisted / gated items
 - Runtime RPT matrix (needs a human at an Arma 2 OA install) — turnkey checklist ready.
 - Live/PC RPT via SSH — read-only pull available on request (live host runs Miksuu/PR8, not the RC → limited RC-proof value).
@@ -73,3 +128,5 @@
 
 ## 7. Changelog
 - **v0 (2026-07-01):** program stood up; Waves 1–2 (9 lanes, incl. terrain-parity) consolidated; RC identified (#125); release blockers surfaced.
+- **v0.1 (2026-07-01):** Phase-3 perf backlog adversarially validated — 6/10 raw candidates rejected as moot or unsafe (two fixes would have re-introduced bugs). AICOM idea-grounding + wiki-reconciliation lanes still running.
+- **v0.2 (2026-07-01):** Phase-4 AICOM catalog grounded against code (3 real gaps, 5 partial, 1 already-done, 1 architecturally-blocked; top gap = wire the already-sampled server FPS into an AI throttle; found a latent dead input `wfbe_aicom_town_weight`). Phase-5 wiki fix-list verified (4 factual errors incl. a dead-constant citation).
