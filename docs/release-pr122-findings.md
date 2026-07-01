@@ -1,11 +1,47 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 00:57 Europe/Amsterdam
+Last updated: 2026-07-02 01:06 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 01:06 Update
+
+PR #136 advanced again. The current PR #136 head is now
+`4a9b2ac1860767e852ca4a2de72c0bf43e966550`.
+
+This move includes another code-affecting commit:
+
+- `c179aa86fba81e26d787e1f36a80029d375e6374`
+- subject: `fix (60-audit): RequestStructure guard unknown/forged structure type (find->-1 select)`
+- touched both map copies of `Server/PVFunctions/RequestStructure.sqf`
+
+The changed `RequestStructure.sqf` file is mirrored between Chernarus and
+Takistan:
+
+- shared blob hash:
+  `71dd701b622f21901d3b5c766f8259b281a03f03`
+
+Static result:
+
+- true-payload `git diff --check` from merge base
+  `6ff7bad28003ec6781a9346e033afbc386894b6f` to latest PR #136 head: pass
+- raw current-master static check still fails on inherited `GUER_TECH.md`
+  trailing whitespace at lines 33 and 45
+
+The active cmdcon40 PBO pair now predates two later PR #136 code fixes:
+
+- `52f9eb169d6eab574284f34d7c72506a037da055` for the HQ `_mhq` / `_MHQ`
+  killed round-ending bug
+- `c179aa86fba81e26d787e1f36a80029d375e6374` for the `RequestStructure`
+  unknown/forged type guard
+
+Release remains **NO-GO** as a latest-PR-#136 claim. Either freeze and prove the
+currently deployed cmdcon40 PBO pair as the selected candidate, explicitly not
+latest PR #136, or rebuild/package/deploy latest PR #136 for both maps and
+collect fresh exact-build RPT plus human smoke evidence.
 
 ## 2026-07-02 00:57 Update
 
@@ -1280,9 +1316,11 @@ ASR-enabled RPT proof.
    proof. Then launch Takistan and collect exact selected-artifact RPT plus
    human smoke evidence for both maps. If the owner selects the latest overnight
    Build85 lane instead, rebuild/package/deploy PR #136 head
-   `9b33c606aa47361526dd4bb1c151152747b5076d` for both maps first, because the
+   `4a9b2ac1860767e852ca4a2de72c0bf43e966550` for both maps first, because the
    active cmdcon40 PBOs predate the HQ `_MHQ` round-ending fix in
-   `52f9eb169d6eab574284f34d7c72506a037da055`. The minimum proof target remains
+   `52f9eb169d6eab574284f34d7c72506a037da055` and the `RequestStructure`
+   unknown-type guard in `c179aa86fba81e26d787e1f36a80029d375e6374`. The
+   minimum proof target remains
    movement/capture completion: arrival, capture-phase entry, and at least one
    town flip/capture, with no new stop-condition or missing-script failures.
    The older PR #137
