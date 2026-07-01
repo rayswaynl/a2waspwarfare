@@ -1,11 +1,37 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 01:19 Europe/Amsterdam
+Last updated: 2026-07-02 01:23 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 01:23 Update
+
+PR #136 advanced again during final validation. The current PR #136 head is now
+`32d2724f5b846152ccf6e40ce453d39448ef67c3`.
+
+The new code-affecting commit is:
+
+- `42c899d31`
+- subject: `fix (60-audit): Core_MVD.sqf init log said 'Core_RU' (copy-paste) -> 'Core_MVD' (log triage)`
+- touched both map copies of `Common/Config/Core/Core_MVD.sqf`
+
+Parity/static result:
+
+- Chernarus/Takistan `Core_MVD.sqf` blob hash:
+  `2c6994d932eb5a3b08b5ea45e1f7227179dee402`
+- true-payload `git diff --check` from merge base
+  `6ff7bad28003ec6781a9346e033afbc386894b6f`: pass
+- raw current-master static check still fails inherited `GUER_TECH.md`
+  trailing whitespace
+
+The PR #136 artifact built at 01:14 from `4a9b2ac1860767e852ca4a2de72c0bf43e966550`
+is already stale relative to latest PR #136. It remains useful historical
+package/static evidence only, not latest-head release proof.
+
+Release remains **NO-GO**.
 
 ## 2026-07-02 01:19 Update
 
