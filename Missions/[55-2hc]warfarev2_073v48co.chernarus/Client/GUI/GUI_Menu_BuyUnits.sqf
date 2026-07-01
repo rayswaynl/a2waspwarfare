@@ -675,7 +675,10 @@ _IDCS = _IDCS - [_currentIDC];
 						hintSilent parseText "<t color='#00ff00'>Salvage Truck</t> - turns enemy and friendly wrecks into cash for your team. <br/> <br/>Drive it (a crew must be aboard) near any destroyed vehicle, ship, aircraft or static weapon. While the truck is parked nearby, wrecks in range are automatically recovered and DELETED, paying your team a share of each wreck's value. <br/> <br/>Keep it close to where vehicles are dying - frontlines, factory yards, contested towns - to keep the salvage income flowing.";
 					};
 					//--- Utility / rearm (ammo) truck (claude-gaming): missing explainer added. Keyed on the same WFBE_%1AMMOTRUCKS side-list the red buy-menu row tint uses.
-					if (_unit in (missionNamespace getVariable Format ["WFBE_%1AMMOTRUCKS", sideJoinedText])) then {
+					//--- GUER MARKER FIX (claude 2026-07-01): nil-guard with [Format[...], []] - WFBE_GUERAMMOTRUCKS is undefined for the
+					//--- playable GUER faction, so the bare read threw `_unit in nil` here and aborted the rest of this selection handler
+					//--- (the GUER VBIED / mortar-truck / special-unit hints below never ran). Matches the L696 nil-safe form.
+					if (_unit in (missionNamespace getVariable [Format ["WFBE_%1AMMOTRUCKS", sideJoinedText], []])) then {
 						hintSilent parseText "<t color='#ff5555'>Utility / Ammunition Truck</t> - a mobile rearm and resupply point for your forces. <br/> <br/>Park it near friendly units and vehicles that have run dry, get in the driver seat and open the action menu (mouse scroll) to resupply ammunition, or have nearby allies rearm from it. <br/> <br/>Use it to keep an advancing push topped up on ammo without driving all the way back to base.";
 					};
 					if (_unit in WFBE_C_SUPPLY_HELI_TYPES) then {
