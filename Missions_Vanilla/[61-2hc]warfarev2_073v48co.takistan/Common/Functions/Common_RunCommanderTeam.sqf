@@ -1175,8 +1175,16 @@ while {!WFBE_GameOver && _alive} do {
 						//--- town drains and flips). Re-reveal enemy each tick. Every iteration leaves
 						//--- units on a live SAD order (never idle).
 						_holdEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]); //--- punchy-AICOM (Ray 2026-06-17): hard-coded 150 -> WFBE_C_AICOM_ASSAULT_HOLD (360). Longer depot-center hold = the team holds long enough to drain + flip the town.
-						_resNear = 1;
-						while {time < _holdEnd && {_resNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+						_resNear = 1; _holdFlipped = false;
+						//--- WAVE-2 DRAIN-WAIT (claude-gaming 2026-07-01): the OLD loop exited the instant enemies
+						//--- cleared (_resNear==0), but server_town.sqf drains the depot over MANY 5s ticks while OUR
+						//--- bodies sit in the 40m ring - so a peaceful, capturable town exited the hold in ~10s,
+						//--- never flipped, and got RELEASED as "uncapturable" after 2 empty passes (the live
+						//--- "res-near=0 never flips / standing around / afraid of camps" bug). Now we HOLD until the
+						//--- town actually flips to us OR the hard timeout/abort - keying the loop on the flip flag,
+						//--- not the enemy count. Still bounded by _holdEnd (360s), _capAbort, and the stall-advance
+						//--- floor, so units are never frozen and always on a live SAD order.
+						while {time < _holdEnd && {!_holdFlipped} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
 							if (_capAbort) exitWith {}; //--- B69: re-tasked mid depot-hold -> bail; outer loop re-reads the new order
@@ -1193,7 +1201,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- but past ~24m get pulled to the exact center so the depot-center presence scan ticks.
 							{if (alive _x && {(_x distance _townCenter) > (_capRange * 0.6)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 							//--- Early-out if the town already flipped to us.
-							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_resNear = 0};
+							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_holdFlipped = true};
 							sleep 10;
 						};
 
@@ -1279,8 +1287,11 @@ while {!WFBE_GameOver && _alive} do {
 						//--- within _capRange of the centre (depot drains + flips). Re-reveal enemy + re-press
 						//--- stragglers each tick. Honour the same _capAbort re-task interrupt as the foot path.
 						_armHoldEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]);
-						_armResNear = 1;
-						while {time < _armHoldEnd && {_armResNear > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+						_armResNear = 1; _armHoldFlipped = false;
+						//--- WAVE-2 DRAIN-WAIT (mirror of the infantry depot-hold): hold until the depot actually
+						//--- flips to us, not merely until enemies clear - a crewed hull in the 40m ring drains the
+						//--- town over many server ticks, so exiting on _armResNear==0 abandoned it before the flip.
+						while {time < _armHoldEnd && {!_armHoldFlipped} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
 							if (_capAbort) exitWith {}; //--- re-tasked mid armour-hold -> bail; outer loop re-reads the new order
@@ -1295,7 +1306,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Keep hulls beyond ~60% of _capRange pressing the centre (cheap re-issue, no freeze).
 							{if (alive _x && {(_x distance _townCenter) > (_capRange * 0.6)}) then {_x doMove _townCenter}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 							//--- Early-out if the town already flipped to us.
-							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_armResNear = 0};
+							if (!isNull _townObj && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {_armHoldFlipped = true};
 							sleep 10;
 						};
 						if (_capAbort) exitWith {}; //--- armour-hold interrupted -> bail BEFORE latching captureDone; outer loop re-reads the new order
