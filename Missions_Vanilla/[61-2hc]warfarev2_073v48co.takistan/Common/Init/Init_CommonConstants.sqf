@@ -677,7 +677,7 @@ with missionNamespace do {
 	//--- so founding AT the floor (8) guarantees the LIVE average dribbles BELOW the 8-12 band the instant
 	//--- attrition starts - the soak measured unitsPerTeam 4.2-5.1. Found nearer the midband so the live
 	//--- average settles INSIDE the band. Clamped into [MIN,MAX]. Cheap stopgap; the real fix is a
-	//--- reinforcement/top-up pass (see B57-SOAK-PROPOSALS.md, AI Commander section). Economy tradeoff:
+	//--- reinforcement/top-up pass. Economy tradeoff:
 	//--- bigger founds cost ~25% more supply under SUPPLY_INCOME_MULT=0.35 - review with Ray before deploy.
 	if (isNil "WFBE_C_AICOM_TEAM_FOUND_SIZE") then {WFBE_C_AICOM_TEAM_FOUND_SIZE = 10}; //--- DRAFT founding target (>=MIN, <=MAX).
 	//--- RELIEF HOLD: a team diverted to defend a town holds for this long, then - if the town is

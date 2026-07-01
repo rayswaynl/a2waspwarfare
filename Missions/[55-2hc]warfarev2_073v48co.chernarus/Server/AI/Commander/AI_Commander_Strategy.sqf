@@ -751,7 +751,7 @@ diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|
 //--- PRESS never fires - the side that is WINNING on holdings goes passive. This is telemetry-ONLY (no
 //--- behaviour change): emit a STALL flag whenever a side holds >=2x the enemy's towns yet is not PRESSing
 //--- and is not under HQ strike, so future soak ticks make the freeze greppable and we can size the real
-//--- fix (territory-weighted aggression / garrison-vs-maneuver strength split - see B57-SOAK-PROPOSALS.md).
+//--- fix (territory-weighted aggression / garrison-vs-maneuver strength split).
 //--- A2-OA-safe: pure diag_log, all operands already computed this tick; no sim/distance-gating; no antistack.
 //--- D2 (cmdcon28, Ray 2026-06-30): ROUND-ENDER STALL-OVERRIDE FIX. The override counter must build whenever a side
 //--- holds a sustained TOWN lead (>= STALL_TOWN_RATIO x enemy) and is NOT already striking - REGARDLESS of posture.
