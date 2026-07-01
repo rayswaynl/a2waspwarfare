@@ -44,6 +44,7 @@ WASPRELEASE|v1|candidate=release-command-center-20260630|git=<current-short-git>
 - Hardened town-AI HC delegation mode so stale/dead HC registry groups no longer suppress server-side fallback town-unit creation.
 - Strengthened `Run-WaspFinalCheck.ps1` so the final pre-test gate now runs whole-root A2/OA compatibility lint for both Chernarus and Takistan, in addition to smoke and HIGH BugHunt; the smoke gate's changed-file dialect scan now covers both maintained mission roots.
 - Debounced repeated group-cap diagnostics: `GRPBUDGET|WARN` is edge-triggered with `GRPBUDGET|RECOVER`, AI Commander founding cap warnings are throttled to once per side per 15 minutes, and lower-level create-group/create-team cap failures report once per side/machine every five minutes.
+- Reduced repeated AICOM Strategy town scans by consuming the freshly published `wfbe_aicom2_snap` town census in `AI_Commander_Strategy.sqf`, with the old live `towns` scan kept as fallback. Spearhead scoring/debug and the optional commander-artillery support-town guard now reuse the same per-tick owned/capturable town arrays.
 - Runtime status is unchanged: not release-ready until an exact ten-file Chernarus/Takistan RPT packet passes the packet validator and release scorer.
 
 ## Proven Static And Package Gates

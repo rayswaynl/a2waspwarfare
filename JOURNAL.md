@@ -108,6 +108,20 @@ Also synced the Takistan in-game Help menu to the redesigned controller while
 using Takistan-specific airfield/unlock text (`Loy Manara`, `Rasman AF`) and
 current economy/bank/patrol values.
 
+## 2026-07-01 — AICOM Strategy snapshot town-cache reuse [PR LOOP]
+
+Reduced duplicate AICOM Strategy town scans in both maintained terrains. The
+strategy supervisor already refreshes `wfbe_aicom2_snap` immediately before
+`AI_Commander_Strategy.sqf`; Strategy now consumes the snapshot's owned-town
+and capturable-town arrays for its town census, spearhead scorer/debug, and
+optional artillery support-town guard, with the old live `towns` scan kept as a
+fallback for direct/manual calls.
+
+This is behavior-neutral: candidate sets and nearest-front calculations still
+come from the same town ownership state for the strategy tick, but repeated
+full-town rescans inside candidate scoring are avoided. Regenerated Takistan
+through `Tools\LoadoutManager` and kept release proof runtime-pending.
+
 ## 2026-07-01 — PR #125 master merge gate decision [PR LOOP]
 
 `origin/master` currently adds PR #121's editor-slot empty-group reaper in
@@ -129,8 +143,8 @@ branch intake. The useful findings are now summarized in
 `docs/release-readiness/2026-07-01-command-center.md` and will be mirrored into
 the PR thread.
 
-Refreshed the package/handoff proof after the role-proof emitter commit:
-current candidate identity is `2bdf79f398`, package SHA256
+Historical package/handoff proof after the role-proof emitter commit:
+candidate identity was `2bdf79f398`, package SHA256
 `1B9D4FF61DBD7A1BA0BE01C31DEE394586AC1F11238EA75CB343992DFC01E4FA`,
 1882 archive entries, and local handoff status remains
 `ready_for_runtime_collection`.

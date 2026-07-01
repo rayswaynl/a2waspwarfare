@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_myTowns","_enemyTowns","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -32,12 +32,29 @@ if (!(_enemySide in WFBE_PRESENTSIDES)) exitWith {};
 _enemyID = (_enemySide) Call WFBE_CO_FNC_GetSideID;
 _enemyLogik = (_enemySide) Call WFBE_CO_FNC_GetSideLogic;
 
-//--- War state metrics.
-_myTowns = 0; _enemyTowns = 0;
-{
-	if ((_x getVariable "sideID") == _sideID) then {_myTowns = _myTowns + 1};
-	if ((_x getVariable "sideID") == _enemyID) then {_enemyTowns = _enemyTowns + 1};
-} forEach towns;
+//--- War state metrics. AICOM2_Snapshot is refreshed immediately before Strategy in
+//--- AI_Commander.sqf; consume its town census here so legacy Strategy no longer
+//--- recomputes the same ownership split. Direct/manual calls fall back to the old scan.
+_snap = _logik getVariable ["wfbe_aicom2_snap", []];
+_snapOk = ((count _snap) >= 26) && {(_snap select WFBE_SNAP_SIDEID) == _sideID} && {(time - (_snap select WFBE_SNAP_TIME)) <= ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60]) + 5)};
+if (_snapOk) then {
+	_myTowns    = _snap select WFBE_SNAP_MYTOWNS;
+	_enemyTowns = _snap select WFBE_SNAP_ENTOWNS;
+	_ownTownObjs = _snap select WFBE_SNAP_OWNTOWNOBJS;
+	_candTowns   = _snap select WFBE_SNAP_TGTTOWNOBJS;
+} else {
+	_myTowns = 0; _enemyTowns = 0; _ownTownObjs = []; _candTowns = [];
+	{
+		_townSide = _x getVariable ["sideID", -1];
+		if (_townSide == _sideID) then {
+			_myTowns = _myTowns + 1;
+			_ownTownObjs set [count _ownTownObjs, _x];
+		} else {
+			_candTowns set [count _candTowns, _x];
+		};
+		if (_townSide == _enemyID) then {_enemyTowns = _enemyTowns + 1};
+	} forEach towns;
+};
 //--- B68 (Ray 2026-06-21) ATTACK-BIAS: _myStr is the MANEUVER strength that gates LAST-STAND (and the HQ-strike).
 //--- Exclude stranded lone-survivor remnants (alive < N AND far from HQ) and in-refit teams so a few far-flung
 //--- survivors do not deflate strength below the enemy and falsely trip the defensive gates (the b67 "EAST amasses
@@ -111,8 +128,7 @@ if (_lastStand) exitWith {};
 //--- GUARDRAIL: the far penalty is a deprioritiser, not a ban - if NO town is on the front
 //--- (front fully owned / island target), the deep towns still score and get picked, so
 //--- teams always have a valid target and never idle.
-_cands = [];
-{ if ((_x getVariable "sideID") != _sideID) then {_cands = _cands + [_x]} } forEach towns;
+_cands = +_candTowns;
 //--- B61 (Ray 2026-06-21) SPEARHEAD RE-PICK: side-level stall-blacklist. The picker re-scores
 //--- deterministically every ~60s with no progress memory, so it re-targets the SAME town forever
 //--- (live: EAST froze on one town for hours). Read this side's spearhead blacklist off the side LOGIC
@@ -156,7 +172,7 @@ for "_i" from 1 to _want do {
 			//--- Frontline distance = to our nearest OWN town (fallback: our HQ) = the
 			//--- coherent-front / adjacency signal. Small dNear = borders owned territory.
 			_dNear = 1e9;
-			{ if ((_x getVariable "sideID") == _sideID) then {_d = _t distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
+			{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
 			if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
 			//--- Distance toward the ENEMY HQ (avoid binary getDir per A2 rules - plain distance).
 			_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
@@ -271,8 +287,7 @@ if (count _targets > 0) then {
 		//--- Rebuild the candidate set MINUS the live blacklist (same empty-set guardrail as AssignTowns:290-295).
 		_spBlTowns = [];
 		{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_spBlTowns set [count _spBlTowns, (_x select 0)]} } forEach _spBlKeep;
-		_cands = [];
-		{ if ((_x getVariable "sideID") != _sideID) then {_cands = _cands + [_x]} } forEach towns;
+		_cands = +_candTowns;
 		private ["_candsF"];
 		_candsF = _cands - _spBlTowns;
 		if (count _candsF == 0) then {
@@ -291,7 +306,7 @@ if (count _targets > 0) then {
 				_t = _x;
 				if (!(_t in _targets)) then {
 					_dNear = 1e9;
-					{ if ((_x getVariable "sideID") == _sideID) then {_d = _t distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
+					{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
 					if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
 					_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
 					private ["_hardTier","_softW","_valDiv"];
@@ -352,7 +367,7 @@ _anyFront = false;
 if (count _targets > 0) then {
 	_t = _targets select 0;
 	_dNear = 1e9;
-	{ if ((_x getVariable "sideID") == _sideID) then {_d = _t distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
+	{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
 	if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
 	_anyFront = (_dNear <= _frontRad);
 };
@@ -364,7 +379,7 @@ private ["_tDbg", "_dDbg", "_dd"];
 {
 	_tDbg = _x;
 	_dDbg = 1e9;
-	{ if ((_x getVariable "sideID") == _sideID) then {_dd = _tDbg distance _x; if (_dd < _dDbg) then {_dDbg = _dd}} } forEach towns;
+	{ _dd = _tDbg distance _x; if (_dd < _dDbg) then {_dDbg = _dd} } forEach _ownTownObjs;
 	if (_dDbg > 1e8) then {_dDbg = _tDbg distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};   //--- match the real scorer's HQ fallback (no 1e9 sentinel in telemetry)
 	diag_log ("AICOMDBG|v1|SPEARHEAD|" + (str _side) + "|" + str (round (time / 60)) + "|town=" + (_tDbg getVariable ["name", "?"]) + "|supply=" + str (_tDbg getVariable ["supplyValue", 0]) + "|distFront=" + str (round _dDbg) + "|onFront=" + str (_dDbg <= _frontRad) + "|teams=" + str (count _teams) + "|want=" + str _want + "|conc=" + str (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3]));
 } forEach _targets;
@@ -794,7 +809,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 						_idx = [typeOf _p, _side] Call IsArtillery;
 						if (_idx >= 0) then {
 							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
-							if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) && {(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
+							if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
 								//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
 								//--- load a situational round (illum at night, cluster vs armour) chosen ONLY from the types the side has
 								//--- researched (helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
