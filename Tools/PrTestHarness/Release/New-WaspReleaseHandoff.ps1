@@ -209,10 +209,12 @@ $packet = [ordered]@{
 		"Exactly ten copied RPT files exist: chernarus/{server,HC1,HC2,start-client,late-JIP}.rpt and takistan/{server,HC1,HC2,start-client,late-JIP}.rpt.",
 		"No extra RPT files or duplicate copied paths are present in the release-candidate RPT root.",
 		"Each role file's latest startup window contains the terrain-matching WASPRELEASE marker and MISSINIT worldName.",
+		"Every scored current-mission window keeps the startup ## Mission Name banner; files without that banner fail the all-files-have-startup-banner scorer gate.",
 		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath: terrain launch times, original source RPT paths, copied paths, command lines and PIDs are present; copied RPT LastWriteTime values are read from the copied files and must be after their terrain launch time; no original source RPT path is reused across roles.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
 		"AICOM side discovery, heartbeat, tick and progress tokens for WEST and EAST.",
+		"HC registry proof has at least two non-zero-owner CIV HCSIDE connect rows and zero HCSIDE connect-skip or non-CIV HC connect rows.",
 		"HC delegation/locality, town cleanup, WDDM/static/artillery, supply and JIP/HUD evidence families."
 	)
 	deploymentChecklist = @(
