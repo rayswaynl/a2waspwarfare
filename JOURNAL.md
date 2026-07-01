@@ -1,5 +1,27 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — PR #126 guardrail intake into command-center lane [RELEASE LOOP]
+
+Folded the low-risk release-readiness guardrails from the narrower PR #126 lane
+into PR #125's command-center/package branch. The AI Commander supervisor now
+uses per-side owner generations on the initial spawn and watchdog restart path;
+the watchdog terminates the stored stale script handle before starting a
+replacement, and old supervisors exit if they ever resume after being superseded.
+The heartbeat proof token stays `AICOMHB|v1|` so the existing RPT scorer contract
+does not drift.
+
+Hardened AI Commander production/founding cap lookups against short or empty
+`WFBE_C_TOTAL_AI_MAX_BY_TIER` arrays and normalized the retreat/refit order mode
+to lowercase `"defense"`, matching the team-driver dialect. Also tightened town
+and base static-defense HC delegation gates: stale `WFBE_HEADLESSCLIENTS_ID`
+registry entries no longer suppress or delay the server-side gunner fallback
+unless a live HC group leader is present.
+
+Public wiki release-readiness docs are being realigned to PR #125 and its exact
+runtime evidence matrix. Runtime RPT collection remains approval-gated; no local
+Arma launch, SSH collection, live upload, restart, deploy, or rollback has been
+performed in this loop.
+
 ## 2026-07-01 — AICOM lint cleanup and runtime-token source contract [RELEASE LOOP]
 
 Tightened the PR #125 static release gate in two small ways. First,

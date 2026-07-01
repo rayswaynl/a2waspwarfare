@@ -197,8 +197,13 @@ if ((_foundedTeams + _pending) >= _target) exitWith {};
 //--- B74.2 (Ray 2026-06-23): enforce the TIERED per-side TOTAL_AI ceiling AT FOUNDING. The HC founding path had NO
 //--- side-AI gate (only AI_Commander_Produce.sqf:28-30 did), so at low pop founding blew past the cap = the
 //--- "infinite teams" overshoot. Same count as Produce (side AI minus players); cap from the pop-tier array.
-private ["_aiCapTier","_sideAINow"];
-_aiCapTier = (missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]) select ((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0);
+private ["_aiCapTier","_aiCapTiers","_aiCapTierIndex","_aiCapTierLast","_sideAINow"];
+_aiCapTiers = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]];
+if ((count _aiCapTiers) < 1) then {_aiCapTiers = [missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", 140]]};
+_aiCapTierIndex = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
+_aiCapTierLast = (count _aiCapTiers) - 1;
+if (_aiCapTierIndex > _aiCapTierLast) then {_aiCapTierIndex = _aiCapTierLast};
+_aiCapTier = _aiCapTiers select _aiCapTierIndex;
 _sideAINow = {(side _x == _side) && !(isPlayer _x)} count _allUnits;
 if (_sideAINow >= _aiCapTier) exitWith {
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding skipped - side AI %2 >= tier cap %3 (tier %4, pc %5).", _sideText, _sideAINow, _aiCapTier, (missionNamespace getVariable ["WFBE_PopTier", 0]), _pcN]] Call WFBE_CO_FNC_AICOMLog;
