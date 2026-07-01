@@ -318,6 +318,32 @@ if (count _live > 0) then {
 		};
 		if (_ok) then {_eligible set [count _eligible, _i]};
 	};
+	//--- STARVED-INFANTRY FALLBACK (cmdcon33 fix, Ray 2026-07-01): MUST run BEFORE the empty-set early-exit below.
+	//--- The founding strip requires EVERY unit in a template to be upgrade-0, but side-upgrades start [0,0,0,0]. A
+	//--- faction whose BASE infantry squad carries an upgrade>=1 leader (BIS_US US_Soldier_TL_EP1=1) has ALL infantry
+	//--- stripped -> _eligible EMPTY -> the original cmdcon31 placement (AFTER this exitWith) never ran and WEST
+	//--- founded 0 teams on Takistan. Admit the CHEAPEST (lowest upgrade-mask-sum) type-0 infantry so every faction
+	//--- always founds a basic squad. Map-independent; self-heals as upgrades land. A2-OA-safe: forEach/for-do, isNil-guarded.
+	if (!isNil "_storedTypes") then {
+		private ["_hasInf","_fbBest","_fbBestMask","_ti2","_tType","_maskSum","_stX"];
+		_hasInf = false;
+		{ _stX = _storedTypes select _x; if (!isNil "_stX" && {_stX == 0}) exitWith {_hasInf = true} } forEach _eligible;
+		if (!_hasInf) then {
+			_fbBest = -1; _fbBestMask = 1e9;
+			for "_ti2" from 0 to ((count _templates) - 1) do {
+				_tType = _storedTypes select _ti2;
+				if (!isNil "_tType" && {_tType == 0}) then {
+					_maskSum = 0;
+					{ _maskSum = _maskSum + _x } forEach (_tmplUpgrades select _ti2);
+					if (_maskSum < _fbBestMask) then {_fbBestMask = _maskSum; _fbBest = _ti2};
+				};
+			};
+			if (_fbBest >= 0) then {
+				_eligible set [count _eligible, _fbBest];
+				diag_log format ["AICOMGATE|%1|infFallback|admitted tmpl %2 maskSum=%3 sideUpg=%4 (no upgrade-0 infantry eligible)", _sideText, _fbBest, _fbBestMask, _upgrades];
+			};
+		};
+	};
 	if (count _eligible == 0) exitWith {};
 
 	//--- Ray 2026-06-29 NO STATICS / NO WEAPON TEAMS: strip every eligible template that contains a StaticWeapon
