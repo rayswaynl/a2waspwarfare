@@ -208,6 +208,12 @@ $requirements = New-Object System.Collections.ArrayList
     detail = "$filesWithoutLines files with empty current-mission windows"
 }))
 [void]$requirements.Add((New-Object psobject -Property @{
+    name = 'all_files_have_startup_banner'
+    required = $true
+    passed = ($filesWithoutStartup -eq 0)
+    detail = "$filesWithoutStartup files without startup mission banner"
+}))
+[void]$requirements.Add((New-Object psobject -Property @{
     name = 'server_debug_content_logging'
     required = [bool]$RequireServerDebug
     passed = (-not $RequireServerDebug -or ($logContentNotActivated -eq 0 -and $aggregateMarkers['log_content'] -gt 0))
