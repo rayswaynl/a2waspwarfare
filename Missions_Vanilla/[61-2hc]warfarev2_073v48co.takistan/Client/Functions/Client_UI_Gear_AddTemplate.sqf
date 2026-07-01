@@ -92,7 +92,7 @@ if (count _magazines > 0) then {
 };
 
 //--- Backpacks
-if (_u_backpack != "" && count(_backpack_content) > 0) then {
+if (_u_backpack != "" && ((count _backpack_content) > 0)) then {
 	_prefix = "";
 	for '_i' from 0 to count(_backpack_content)-1 do {
 		_emplacement = _backpack_content select _i;

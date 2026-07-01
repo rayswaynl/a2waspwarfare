@@ -35,7 +35,7 @@ while {true} do {
 	} else {
 	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 	_lvl = 0;
-	if (!isNil "WFBE_UP_RESPAWNRANGE" && count _upgrades > WFBE_UP_RESPAWNRANGE) then {
+	if (!isNil "WFBE_UP_RESPAWNRANGE" && ((count _upgrades) > WFBE_UP_RESPAWNRANGE)) then {
 		_lvl = _upgrades select WFBE_UP_RESPAWNRANGE;
 	};
 	_range = (missionNamespace getVariable "WFBE_C_RESPAWN_RANGES") select _lvl;

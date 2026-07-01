@@ -201,7 +201,7 @@ while {!WFBE_GameOver && _alive} do {
 							sleep 75;
 
 							//--- REMOUNT: re-assign cargo and order back in (25 s grace, then proceed regardless).
-							if (count _vehicles > 0 && count _dismounted > 0) then {
+							if (((count _vehicles) > 0) && ((count _dismounted) > 0)) then {
 								_veh = _vehicles select 0;
 								{
 									if (alive _x && alive _veh) then {

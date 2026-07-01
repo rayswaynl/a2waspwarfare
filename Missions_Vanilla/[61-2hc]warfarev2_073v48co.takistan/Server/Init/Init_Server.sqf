@@ -821,29 +821,24 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 
 //--- WFBE_CO_FNC_CreateGroup never tags them and they show as "untagged" in the server_groupsGC audit -
 //--- indistinguishable from genuinely leaked groups. Of those, ~13/side are "overflow" slots whose unit
 //--- self-deletes at load (mission.sqm init="... deleteVehicle this"), leaving an EMPTY group that still
-//--- permanently occupies one of the 144 per-side group slots. One-shot sweep: REAP the empty overflow
-//--- groups (reclaim ~13/side headroom; they are unsynced + never enter wfbe_teams, so nothing references
-//--- them) and TAG the remaining active player-slot groups "editor-player-slot" (broadcast) so the audit
-//--- can tell them from leaks. Active groups carry wfbe_persistent=true so the GC never reaps them; the
-//--- tag is audit-only. The isNil guard skips any runtime group the wrapper already tagged. GUER included.
+//--- permanently occupies one of the 144 per-side group slots. Tag editor player-slot groups for audit only.
+//--- Do NOT delete empty groups here: some overflow slot units self-delete during load, leaving an empty
+//--- but still JIP-selectable group. Reaping it can strand a late joiner in DEADSPAWN with no wfbe_side.
+//--- Active groups carry wfbe_persistent=true so the GC never reaps them; the tag lets GROUPAUDIT distinguish
+//--- editor-slot groups from real leaks. The isNil guard skips any runtime group the wrapper already tagged.
 if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
-	Private ["_reclaimed"];
-	_reclaimed = 0;
+	Private ["_tagged"];
+	_tagged = 0;
 	{
 		Private ["_src"];
 		_src = _x getVariable "wfbe_group_src";
 		if (isNil "_src" && {(side _x == west) || (side _x == east) || (side _x == resistance)}) then {
-			if ((count units _x) == 0) then {
-				//--- empty overflow slot (unit self-deleted at load): reap to free a per-side group-cap slot
-				deleteGroup _x;
-				_reclaimed = _reclaimed + 1;
-			} else {
-				_x setVariable ["wfbe_group_src", "editor-player-slot", true];
-			};
+			_x setVariable ["wfbe_group_src", "editor-player-slot", true];
+			_tagged = _tagged + 1;
 		};
 	} forEach allGroups;
-	["INITIALIZATION", format ["Init_Server.sqf: editor-slot sweep reclaimed %1 empty overflow groups (group-cap headroom).", _reclaimed]] Call WFBE_CO_FNC_LogContent;
+	["INITIALIZATION", format ["Init_Server.sqf: editor-slot audit tagged %1 player-slot groups; no groups reaped.", _tagged]] Call WFBE_CO_FNC_LogContent;
 };
 
 [] Call Compile preprocessFile "Server\Config\Config_GUE.sqf";
@@ -906,6 +901,7 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
+[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default OFF unless configured on)
 
 //--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s

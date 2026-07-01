@@ -265,9 +265,17 @@ WFBE_CL_FNC_Upgrade_Complete = {
 		playSound "ARTY_cooldown_over";
 	}; //--- end _upgrade_isplayer guard
 	// Marty: Clear the local cached upgrade ID and countdown when completion is announced.
-	WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
-	WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
-	WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", -1, false];
+	if !(isNil "WFBE_Client_Logic") then {
+		if !(isNull WFBE_Client_Logic) then {
+			WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
+			WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
+			WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", -1, false];
+		} else {
+			diag_log "CLIENTUPGRADE|SKIP|WFBE_Client_Logic objNull at completion";
+		};
+	} else {
+		diag_log "CLIENTUPGRADE|SKIP|WFBE_Client_Logic nil at completion";
+	};
 
 	// Marty: Refresh local artillery vehicles after Artillery Ammunition unlocks new special rounds.
 	// Existing empty artillery is equipped only when it is bought, built or rearmed, so scanning group units is not enough.
