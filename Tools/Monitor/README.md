@@ -28,7 +28,7 @@ By default, samples include the marker name, public file label, line number, and
 Useful PR #126 proof markers:
 
 - `WASPRELEASE`
-- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=b4628c35af`
+- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=1d713bcf2b`
 - `HCDROP_AICOM_AUDIT`
 - `HCRECON_AICOM_AUDIT`
 - `HCSIDE|v1|disconnect`
@@ -37,7 +37,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-Current PR #125 source/package identity is `codex/release-command-center-20260630@b4628c35af`, `_MISSIONS.7z` SHA256 `FA7E07C6D8A02C0574E619C54BB61FC0D6244D3559F2C15428B3BEADD9169A54`, `1,881` entries, `7,158,447` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
+Current PR #125 source/package identity is `codex/release-command-center-20260630@1d713bcf2b`, `_MISSIONS.7z` SHA256 `2513C37DFDA376EA15D631AD7490B2133BCCFE78726B684960F26EF6BF82F8B6`, `1,881` entries, `7,158,563` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
 
 Run the helper contract self-test after editing it:
 
