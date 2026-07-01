@@ -707,7 +707,37 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 
 		//--- WASPSCALE (claude-gaming 2026-07-01): perf/scope tracker - one allUnits pass per 5-min window (reuses this
 		//--- SRVPERF throttle, zero per-frame cost) buckets live AI by side + counts humans, groups, fps, tier and map.
-		private ["_aiW","_aiE","_aiG","_humN","_tier"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0]; diag_log ("WASPSCALE|v1|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName);
+		//--- v2 (claude-gaming 2026-07-01): APPEND-ONLY - all v1 fields kept in the same order, two new trailing fields:
+		//---   build=<tag>  a stable short build id. Source (in the prompt's priority order): there is no runtime build
+		//---                CONSTANT (version.sqf's WF_RELEASE_MARKER is a #define, not readable here, and its literal is
+		//---                already stale vs the Build-84/cmdcon36 constants). The LIVE, self-updating source is the
+		//---                deployed PBO filename (missionName), which the deploy convention bumps with the cmdcon token
+		//---                per the wiki filename-cache rule. We parse the cmdcon<...> token out of missionName ONCE and
+		//---                cache it in wfbe_buildtag (falls back to the raw missionName if no cmdcon token is present).
+		//---   hc_fps=<n>   min diag_fps across HCs that reported (via the existing 60s HCStat channel, cached in
+		//---                WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
+		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
+		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
+		if (_bt == "") then {
+			_mn = missionName; if (typeName _mn != "STRING") then {_mn = ""};
+			_ci = _mn find "cmdcon";
+			if (_ci >= 0) then {
+				//--- Slice "cmdcon..." to next '_' (95) or '.' (46) via the A2-OA-safe toArray/toString idiom (string
+					//--- `select [start,count]` substring is A3-only). "..._cmdcon36aicom.chernarus" -> "cmdcon36aicom".
+				private ["_mnA","_btA","_j","_c"]; _mnA = toArray _mn; _btA = [];
+				for "_j" from _ci to ((count _mnA) - 1) do {
+					_c = _mnA select _j;
+					if ((_c == 95) || (_c == 46)) exitWith {};
+					_btA = _btA + [_c];
+				};
+				if (count _btA > 0) then {_bt = toString _btA} else {_bt = _mn};
+			} else { _bt = _mn };
+			if (_bt == "") then {_bt = "unknown"};
+			missionNamespace setVariable ["wfbe_buildtag", _bt];
+		};
+		_hcFps = -1; _hcReg2 = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
+		{ if (((time - (_x select 2)) <= 120) && {(typeName (_x select 1)) == "SCALAR"}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1} } } forEach _hcReg2;
+		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps));
 
 		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
 		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent

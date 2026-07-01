@@ -30,7 +30,7 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 	//--- military marker "mil_arrow2" with setMarkerDirLocal; "Arrow" was the lone legacy type
 	//--- that never got converted, so setMarkerDirLocal was a no-op on it. Switch to mil_arrow2
 	//--- so the existing (correct) getDir heading below actually renders. A2-OA-1.64-safe.
-	_marker setMarkerTypeLocal "mil_arrow2";
+	_marker setMarkerTypeLocal "b_inf";
 	_marker setMarkerDirLocal 0;
 	_marker setMarkerSizeLocal [0.7,0.7];
 	_marker setMarkerAlphaLocal 0;
@@ -71,7 +71,7 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 //--- local/valid. A2-OA-1.64 safe: createMarkerLocal / setMarker*Local / getPos / getDir / alive / abs.
 _ownMarker = Format["%1AdvancedSquadOWNMarker", _sideText];
 createMarkerLocal [_ownMarker,[0,0,0]];
-_ownMarker setMarkerTypeLocal "mil_arrow2";
+_ownMarker setMarkerTypeLocal "b_inf";
 _ownMarker setMarkerSizeLocal [0.7,0.7];
 _ownMarker setMarkerColorLocal "ColorOrange";
 _ownMarker setMarkerDirLocal 0;
@@ -183,7 +183,7 @@ while {!gameOver} do {
 				if ((_count - 1) >= count _markerNames) then {
 					_marker = Format["%1AdvancedSquad%2Marker", _sideText, _count];
 					createMarkerLocal [_marker,[0,0,0]];
-					_marker setMarkerTypeLocal "mil_arrow2";
+					_marker setMarkerTypeLocal "b_inf";
 					_marker setMarkerDirLocal 0;
 					_marker setMarkerSizeLocal [0.7,0.7];
 					_marker setMarkerAlphaLocal 0;

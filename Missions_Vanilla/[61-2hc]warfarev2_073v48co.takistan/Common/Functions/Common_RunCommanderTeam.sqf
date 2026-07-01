@@ -855,7 +855,7 @@ while {!WFBE_GameOver && _alive} do {
 						_team setVariable ["wfbe_aicom_grade_stamp", _govGradeStamp];
 					};
 					_govGradeRaw = _govGradeStamp select 0;
-					if (_govGradeRaw != _govSteep) then {
+					if (if (_govGradeRaw) then {!_govSteep} else {_govSteep}) then {
 						//--- raw slope state changed this tick: restart the dwell clock.
 						_govGradeStamp = [_govSteep, time];
 						_team setVariable ["wfbe_aicom_grade_stamp", _govGradeStamp];

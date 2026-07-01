@@ -3569,7 +3569,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="Headless Client";
+					description="HC";
 					synchronizations[]={255};
 				};
 			};
@@ -3999,7 +3999,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="Headless Client";
+					description="HC";
 					synchronizations[]={256};
 				};
 			};
