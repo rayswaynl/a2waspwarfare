@@ -1,11 +1,39 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 00:50 Europe/Amsterdam
+Last updated: 2026-07-02 00:57 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 00:57 Update
+
+PR #136 advanced after the Takistan cmdcon40 PBO was copied into active
+`MPMissions`. The current PR #136 head is now
+`9b33c606aa47361526dd4bb1c151152747b5076d`.
+
+This is not docs-only drift. Commit
+`52f9eb169d6eab574284f34d7c72506a037da055` changes both Chernarus and Takistan
+HQ construction/repair logic:
+
+- `Server/Construction/Construction_HQSite.sqf`
+- `Server/Functions/Server_MHQRepair.sqf`
+
+The fix is the case-sensitive `_mhq` / `_MHQ` mismatch in the HQ killed
+round-ending path after repair and mobilize. The active cmdcon40 PBOs still
+exist in `MPMissions`, but they predate this fix:
+
+- Chernarus SHA256:
+  `659A90BDA050278A4549092E06CE4D233B74983893A0903D026F374F0AA82C4F`
+- Takistan SHA256:
+  `872D72681660792320258BDBB20AF3DB7B580FAB207BE1989C53AEF42ED38F35`
+
+Release remains **NO-GO** as a latest-PR-#136 claim. The next path must be made
+explicit: either freeze the already deployed cmdcon40 PBO pair as the selected
+candidate and collect Takistan proof from that exact pair, or rebuild/deploy
+latest PR #136 head for both maps and recollect exact-build RPT plus human smoke
+evidence. Do not mix those evidence sets.
 
 ## 2026-07-02 00:50 Update
 
@@ -1247,11 +1275,14 @@ ASR-enabled RPT proof.
    artifact SHA256 is
    `EF2175B2CF00DB27A8F589350203F25A211BF6E427A4FA13A27E30DA31BE4FF0`, but it
    is not release-ready proof.
-6. If the owner selects the overnight Build85 lane, first prove the latest PR
-   #136 head `cdd2ac82a1dffa2029f6f1496b2371c147bfb0b5` with exact
-   real RPT evidence. Tick 9 claims `begin_capture` climbed 2 to 9 but still
-   says `CAPTURED=0`; public stats later show two captures, but this is not a
-   complete selected-artifact RPT package. The minimum proof target is
+6. If the owner selects the already deployed cmdcon40 pair, explicitly freeze
+   that PBO pair as the release candidate and do not call it latest PR #136
+   proof. Then launch Takistan and collect exact selected-artifact RPT plus
+   human smoke evidence for both maps. If the owner selects the latest overnight
+   Build85 lane instead, rebuild/package/deploy PR #136 head
+   `9b33c606aa47361526dd4bb1c151152747b5076d` for both maps first, because the
+   active cmdcon40 PBOs predate the HQ `_MHQ` round-ending fix in
+   `52f9eb169d6eab574284f34d7c72506a037da055`. The minimum proof target remains
    movement/capture completion: arrival, capture-phase entry, and at least one
    town flip/capture, with no new stop-condition or missing-script failures.
    The older PR #137
