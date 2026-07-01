@@ -1,11 +1,34 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 00:45 Europe/Amsterdam
+Last updated: 2026-07-02 00:50 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 00:50 Update
+
+The Takistan active-artifact visibility gap is now closed. After explicit
+approval, I copied the parked Takistan cmdcon40 PBO from
+`C:\WASP\mission-park\tk` into the active Arma `MPMissions` folder. The running
+server was not restarted.
+
+Active `MPMissions` now contains both selected cmdcon40 PBOs:
+
+- Chernarus:
+  `[55-2hc]warfarev2_073v48co_cmdcon40aicom.chernarus.pbo`
+  - SHA256:
+    `659A90BDA050278A4549092E06CE4D233B74983893A0903D026F374F0AA82C4F`
+- Takistan:
+  `[61-2hc]warfarev2_073v48co_cmdcon40aicom.takistan.pbo`
+  - SHA256:
+    `872D72681660792320258BDBB20AF3DB7B580FAB207BE1989C53AEF42ED38F35`
+
+This removes the "configured but missing PBO" blocker. The release remains
+**NO-GO** because Takistan still has not been launched and scanned after the
+copy. The next required gate is a Takistan selected-build proof round with
+server/client/HC RPT evidence and human smoke notes.
 
 ## 2026-07-02 00:45 Update
 
