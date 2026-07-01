@@ -270,9 +270,12 @@ foreach ($file in $files) {
 	$fileStopCounts = New-Counts $stopSpecs
 	$sessions = @()
 	$builds = @()
+	$startupMissionBannerFound = $false
+	$startupBuildBannerFound = $false
 	for ($i = 0; $i -lt $lines.Count; $i++) {
 		$line = $lines[$i]
 		$absoluteLine = [int]$window.windowStartLine + $i
+		if ($line -match "## Mission Name") { $startupMissionBannerFound = $true }
 		if ($line -match "MISSINIT: missionName=([^,]+), worldName=([^,]+), isMultiplayer=([^,]+), isServer=([^,]+), isDedicated=([^\]]+)") {
 			$world = $matches[2].Trim().ToLowerInvariant()
 			[void]$worlds.Add($world)
@@ -289,6 +292,7 @@ foreach ($file in $files) {
 			[void]$worlds.Add($matches[1].Trim().ToLowerInvariant())
 		}
 		if ($line -match "## Build: (.+)") {
+			$startupBuildBannerFound = $true
 			$builds += [ordered]@{ line = $absoluteLine; build = ($matches[1] -replace '"', '').Trim() }
 		}
 		foreach ($marker in @($markerCounts.Keys)) {
@@ -315,6 +319,8 @@ foreach ($file in $files) {
 		windowMarker = $WindowMarker
 		windowMarkerFound = [bool]$window.windowMarkerFound
 		windowStartLine = [int]$window.windowStartLine
+		startupMissionBannerFound = [bool]$startupMissionBannerFound
+		startupBuildBannerFound = [bool]$startupBuildBannerFound
 		sessions = $sessions
 		builds = $builds
 		stopCounts = $fileStopCounts
@@ -334,6 +340,14 @@ $gateResults += [ordered]@{
 	missing = @()
 	failHits = $stopFailHits
 	note = "Generic RPT stop-condition scan in current-mission windows only; no raw RPT lines are emitted."
+}
+$filesWithoutStartupBanner = @($fileSummaries | Where-Object { -not $_.startupMissionBannerFound })
+$gateResults += [ordered]@{
+	id = "all-files-have-startup-banner"
+	status = if ($filesWithoutStartupBanner.Count -eq 0) { "pass" } else { "fail" }
+	missing = @($filesWithoutStartupBanner | ForEach-Object { $_.path })
+	failHits = @()
+	note = "Each scored current-mission window must retain the startup Mission Name banner before release evidence is accepted."
 }
 if ($markerCounts.Count -gt 0) {
 	$missingMarkers = @()
