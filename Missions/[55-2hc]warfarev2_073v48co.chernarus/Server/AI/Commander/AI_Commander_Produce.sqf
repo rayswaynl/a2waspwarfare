@@ -55,6 +55,35 @@ _ownTowns = 0;
 if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
 	_facDefs = _facDefs + [["Aircraft","AIRCRAFTUNITS",WFBE_UP_AIR]];
 };
+//--- Build83 FLAT AIR CAP at the PRODUCE/refill gate (Ray cmdcon34, 2026-07-01): mirror the founding-gate flat cap
+//--- (AI_Commander_Teams.sqf). If the side already has >= WFBE_C_AICOM_AIR_MAX_TOTAL (default 3) ALIVE air units (planes +
+//--- attack helis + transport helis TOGETHER), REMOVE "Aircraft" from _facDefs so the producer SKIPS every air refill this
+//--- cycle - no factory then handles an air class, so the deficit loop below falls through to a ground/foot class (the same
+//--- degrade the founding strip achieves). Self-limiting: the count drops when an airframe dies and air refill resumes. COUNT
+//--- matches the founding gate: side-resolved alive isKindOf "Air" (crewed -> crew side; crewless -> wfbe_side tag), which is
+//--- AICOM air since town garrisons are ground-only in this mission. A2-OA-safe: isKindOf "Air" + crew/side resolve over vehicles.
+private ["_airMaxTotalP","_airAliveP","_facDefsNoAir"];
+_airMaxTotalP = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
+if (_airMaxTotalP > 0) then {
+	_airAliveP = 0;
+	{
+		if (alive _x && {_x isKindOf "Air"}) then {
+			private ["_airSideOKP"];
+			_airSideOKP = false;
+			if ((count crew _x) > 0) then {
+				if (side ((crew _x) select 0) == _side) then {_airSideOKP = true};
+			} else {
+				if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_airSideOKP = true};
+			};
+			if (_airSideOKP) then {_airAliveP = _airAliveP + 1};
+		};
+	} forEach vehicles;
+	if (_airAliveP >= _airMaxTotalP) then {
+		_facDefsNoAir = [];
+		{ if ((_x select 0) != "Aircraft") then {_facDefsNoAir set [count _facDefsNoAir, _x]} } forEach _facDefs;
+		_facDefs = _facDefsNoAir;
+	};
+};
 
 {
 	_team = _x;

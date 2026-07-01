@@ -450,6 +450,7 @@ while {alive player && dialog} do {
 			if (!isNull _selTeam) then {
 				[_selTeam, "towns"] Call SetTeamMoveMode;
 				[_selTeam, true]    Call SetTeamAutonomous;          //--- let AssignTowns re-grab it
+				_selTeam setVariable ["wfbe_aicom_manualpin", nil, true]; //--- MANUAL-PIN (Build83): RELEASE clears the pin (broadcast) so AssignTowns is free to re-grab this team immediately.
 				_lastDirect = _now;                                  //--- DIRECT group-var order: stamp the short-cooldown clock (Build83 smoother-console).
 				hintSilent parseText ("<t color='#A0E060'>" + (name (leader _selTeam)) + " released to auto.</t>");
 			} else {
@@ -506,6 +507,7 @@ while {alive player && dialog} do {
 							[_team, _position] Call SetTeamMovePos;
 							[_team, _armed]    Call SetTeamMoveMode;
 							[_team, false]     Call SetTeamAutonomous; //--- pin under manual order (don't let AssignTowns re-grab it)
+							_team setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): stamp the human order time so AssignTowns treats this team as explicit for WFBE_C_AICOM_MANUALPIN_TTL (600s) and does not re-grab it on the next 120s tick. Broadcast so the SERVER's AssignTowns reads it.
 							["TempAnim", _position, "selector_selectedMission", 1, _col, 1, 1.2] Spawn MarkerAnim;
 							hintSilent parseText ("<t color='#A0E060'>" + (name (leader _team)) + " -> " + (toUpper _armed) + ".</t>");
 							_lastDirect = _now; _armed = "";
@@ -529,6 +531,7 @@ while {alive player && dialog} do {
 						if (_b == 710) then {
 							[_x, "towns"] Call SetTeamMoveMode;
 							[_x, true]    Call SetTeamAutonomous;
+							_x setVariable ["wfbe_aicom_manualpin", nil, true]; //--- MANUAL-PIN (Build83): ALL-PUSH releases every team to auto, so clear each pin (broadcast) - AssignTowns re-grabs them freely.
 						} else {
 							//--- Build83 smoother-console CHANGE 2 (claude-gaming 2026-07-01): a bulk HOLD must not freeze a team
 							//--- off-road mid-march. Pull each team's hold point to the nearest road node before stamping defense
@@ -543,6 +546,7 @@ while {alive player && dialog} do {
 							[_x, _hp]       Call SetTeamMovePos;
 							[_x, "defense"] Call SetTeamMoveMode;
 							[_x, false]     Call SetTeamAutonomous;
+							_x setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): ALL-HOLD is a human DIRECT defense order, so pin each team (broadcast) - AssignTowns won't re-grab it for WFBE_C_AICOM_MANUALPIN_TTL (600s).
 						};
 						_n = _n + 1;
 					};
