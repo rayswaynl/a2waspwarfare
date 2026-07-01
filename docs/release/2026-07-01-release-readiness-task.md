@@ -79,7 +79,7 @@ As of 2026-07-01 08:16 UTC:
 6. AICOM supervisor watchdog can overlap after a long stall.
    - The watchdog respawns a commander supervisor when heartbeat age exceeds the timeout, but does not prove the old supervisor is dead.
    - Impact: a long synchronous stall could allow the old supervisor to resume after the watchdog spawned a replacement, causing double order/funds writers.
-   - Action: defer to a follow-up patch with a per-side generation/owner token checked by supervisors before doing work.
+   - Action: patched in both maintained terrains. Initial supervisors now store a per-side script handle and owner generation; watchdog recovery terminates the stale handle, bumps the owner generation, and passes it to the replacement. Any stale supervisor that somehow resumes exits before its next tick and skips round-end logging. Runtime proof still needs an RPT line showing `WATCHDOG|restart-stale-hb` followed by no duplicate commander writers.
 
 7. Public variable and log cadence need soak review.
    - Commander funds can publicVariable every 15s when exact funds change.
