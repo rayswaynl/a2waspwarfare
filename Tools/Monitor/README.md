@@ -30,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory "C:\WASP\rpt-archive" `
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit b3f4d3664f `
+  -ExpectedGit 5face13a0a `
   -RequireReleaseMarkers `
   -Json
 ```
@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory "C:\WASP\rpt-archive" `
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit b3f4d3664f `
+  -ExpectedGit 5face13a0a `
   -RequireReleaseMarkers `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
   -Json
@@ -53,7 +53,7 @@ By default, samples include the marker name, public file label, line number, and
 Useful PR #126 proof markers:
 
 - `WASPRELEASE`
-- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=b3f4d3664f`
+- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=5face13a0a`
 - `HCDROP_AICOM_AUDIT`
 - `HCRECON_AICOM_AUDIT`
 - `HCSIDE|v1|disconnect`
@@ -62,7 +62,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-Current PR #125 source/package identity is `codex/release-command-center-20260630@b3f4d3664f`, `_MISSIONS.7z` SHA256 `4CE5BF8843C880F2D16D0027BEC807620377DBEFD1061D85EE07F415C7ED7803`, `1,881` entries, `7,159,557` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
+Current PR #125 source/package identity is `codex/release-command-center-20260630@5face13a0a`, `_MISSIONS.7z` SHA256 `06A7E8C3EF1DFE9BC67306D43C5CF66AD79D26401CA87E815434B92B13A17608`, `1,885` entries, `7,161,540` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
 
 Run the helper contract self-test after editing it:
 
