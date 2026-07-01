@@ -290,7 +290,7 @@ foreach ($gate in $packet.gates) {
 [void]$lines.Add("")
 [void]$lines.Add("## Runtime Run Ledger Template")
 [void]$lines.Add("")
-[void]$lines.Add("Save this as `release-run-ledger.json` beside the RPT packet and replace placeholders before running the packet checker.")
+[void]$lines.Add('Save this as `release-run-ledger.json` beside the RPT packet and replace placeholders before running the packet checker.')
 [void]$lines.Add("")
 [void]$lines.Add('```json')
 [void]$lines.Add(($packet.runtimeRunLedgerTemplate | ConvertTo-Json -Depth 10))
