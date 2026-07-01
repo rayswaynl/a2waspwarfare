@@ -408,6 +408,26 @@ function Test-FpsReportPvGuard {
 	Add-Result "FPS report PV guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-FactoryQueueEmptyHeadGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$buyPath = Join-Path $entry.Root "Server\Functions\Server_BuyUnit.sqf"
+		$buy = Get-Text $buyPath
+		$code = [regex]::Replace($buy, "//.*", "")
+		$code = [regex]::Replace($code, "/\*[\s\S]*?\*/", "")
+		if (-not $code.Contains('while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do')) { $missing += "$($entry.Terrain):wait-head-count" }
+		if (-not $code.Contains('if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]}')) { $missing += "$($entry.Terrain):guarded-head-remove" }
+		if (-not $code.Contains('if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) == (_queu2 select 0)}) then')) { $missing += "$($entry.Terrain):guarded-head-compare" }
+		if ($code.Contains('while {_id select 0 != _queu select 0} do') -or $code.Contains('if (_queu select 0 == _queu2 select 0) then')) { $missing += "$($entry.Terrain):unguarded-head-read" }
+	}
+	Add-Result "Factory queue empty-head guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomCommandConsoleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1288,6 +1308,7 @@ Test-SideSupplyAuthorityGuard
 Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
 Test-FpsReportPvGuard
+Test-FactoryQueueEmptyHeadGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards

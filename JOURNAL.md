@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Factory queue empty-head guard [RELEASE LOOP]
+
+Closed the factory queue empty-array guard found in the overnight audit without
+porting the broader Build84 spawn/routing changes. `Server_BuyUnit.sqf` now
+checks the shared factory queue count before reading slot 0 in the wait-loop
+condition, stale-head comparison, and purge paths, so concurrent AI/player
+queue churn cannot throw a generic `_queu select 0` error when the queue is
+temporarily empty.
+
+Static smoke now checks the guarded wait condition and empty-head removal paths
+across Chernarus and generated Takistan. Runtime, SSH, RPT collection, upload,
+restart, cache-clear and deployment remain explicit-approval gated.
+
 ## 2026-07-02 — Marker feed consumer shape guards [RELEASE LOOP]
 
 Closed the remaining marker-feed consumer hardening gap. The server-side

@@ -108,7 +108,7 @@ if (count _queu > 0) then {
 	_queu2 = _building getVariable "queu";
 };
 
-while {_id select 0 != _queu select 0} do {
+while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {
 	sleep 4;
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
@@ -117,17 +117,17 @@ while {_id select 0 != _queu select 0} do {
 		_gbq = (_team getVariable "wfbe_queue") - _id;
 		_team setVariable ["wfbe_queue",_gbq];
 		_queu = _building getVariable "queu";
-		_queu = _queu - [_queu select 0];
+		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 		_building setVariable ["queu",_queu,true];
 		if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
 
-	if (_queu select 0 == _queu2 select 0) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) == (_queu2 select 0)}) then {
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
-				_queu = _queu - [_queu select 0];
+				if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 				_building setVariable ["queu",_queu,true];
 			};
 		};
