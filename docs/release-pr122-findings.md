@@ -97,22 +97,29 @@ PR #135 is a focused draft fix for PR #134, open against
 fixes the PR #134 release identity/static blockers without changing gameplay
 logic.
 
-PR #136 is a new overnight Build85/cmdcon39 lane, open and non-draft at
-`578e4f14c595334e8ee801e60bdc140ae342bd00`. It is stacked on PR #134's branch,
+PR #136 is the active overnight Build85 lane, open and non-draft at
+`f712857279af87deabcec9b884af664e1e84b45b`. It is stacked on PR #134's branch,
 not directly on current master. It is broad AICOM/client/live-monitor scope and
 contains live-monitor claims in `docs/OVERNIGHT-LOOP-2026-07-02.md`, but this
 repository pass did not find attached exact RPT evidence packages proving those
-claims for release. Its latest docs say captures are still zero at minute 20,
-so runtime release proof remains blocked pending root-cause evidence. PR #137
-is the focused draft fix for PR #136's inherited
+claims for release. Since the earlier zero-capture finding at
+`578e4f14c595334e8ee801e60bdc140ae342bd00`, PR #136 added a movement root fix:
+`Common_WaypointsAdd.sqf` now calls `setCurrentWaypoint` on the first waypoint
+of each batch instead of only when `_WPCount == 0`. The PR #136 notes say this
+was deployed as cmdcon40 with clean boot smoke, but capture verification is
+still pending. PR #137 remains the focused draft fix for the earlier PR #136
 static/release-identity blockers at
-`4604044a255b5be2eec86d7da7ffad670d2915ef`.
+`4604044a255b5be2eec86d7da7ffad670d2915ef`; it is now behind the latest PR #136
+movement fix.
 
 PR #138 is a focused draft trace lane stacked on PR #137 at
 `41a9048764022f4345f521bc4453b5e89aca217f`. It adds capture-entry telemetry
 only, so the next exact RPT can distinguish order publication, HC driver order
 acceptance, arrival-gate crossing, arrival waits, and capture-phase entry.
-It is not a gameplay fix and not runtime proof.
+It is not a gameplay fix and not runtime proof. Because PR #136 has since added
+the cmdcon40 movement root fix, PR #138 should be treated as a diagnostic
+fallback only if cmdcon40 still fails to produce `ASSAULT_ARRIVED`,
+`begin_capture`, and `CAPTURED` evidence.
 
 Exact PR #133 `SERVER_DEBUG` mission-folder artifact:
 
@@ -535,6 +542,40 @@ AssignTowns does publish `towns-target` for HC teams. PR #138 is intended to
 prove whether the real break is order publication, HC delivery, arrival gate, or
 capture-phase entry.
 
+## PR #136 Cmdcon40 Movement-Root Refresh
+
+Fresh triage at 2026-07-01 23:30 Europe/Amsterdam found PR #136 moved again:
+
+- PR: <https://github.com/rayswaynl/a2waspwarfare/pull/136>
+- latest checked head: `f712857279af87deabcec9b884af664e1e84b45b`
+- GitHub state: open, non-draft, clean
+- new gameplay commit after the zero-capture blocker:
+  `76299d1595fbdc15b2b8c230ebea03517c033ddb`
+- latest doc commit:
+  `f712857279af87deabcec9b884af664e1e84b45b`
+
+Current PR #136 notes say the zero-capture diagnosis shifted from capture-entry
+telemetry to movement activation. The reported root cause is that
+`Common_WaypointsAdd.sqf` only called `setCurrentWaypoint` when `_WPCount == 0`,
+but A2 OA can retain a residual index-0 waypoint after waypoint removal. On a
+re-laid commander order, `_WPCount` was therefore non-zero, the fresh MOVE chain
+was not activated, and teams stayed near spawn. The current code changes that
+gate to `_forEachIndex == 0`, activating the first waypoint of every new batch at
+the current engine index.
+
+The same PR also widened the AICOM assault arrival gate through
+`WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS` and its overnight doc says cmdcon40 was
+deployed with clean boot smoke. That is useful evidence for investigation, but
+it is still not release proof in this findings packet. The next proof must show
+the exact selected build in real RPTs with movement/capture progression:
+`ASSAULT_DISPATCH`, `ASSAULT_ARRIVED` or equivalent arrival evidence,
+`begin capture`, and at least one `CAPTURED`/town flip path, with no new
+stop-condition or missing-script failures.
+
+This update also changes the role of PR #138. PR #138 was opened from the older
+PR #137/cmdcon39 zero-capture state and is now a diagnostic fallback, not the
+primary next lane, unless cmdcon40 still fails the capture progression proof.
+
 ## Current Master / r9 Reconciliation
 
 After fresh remote refreshes on 2026-07-01 10:33, 10:48, and 11:04
@@ -692,25 +733,28 @@ payload and tooling to use for real RPT collection if PR #131 is selected.
 
 ## Current Draft Lane Triage
 
-Fresh triage at 2026-07-01 23:26 Europe/Amsterdam found:
+Fresh triage at 2026-07-01 23:30 Europe/Amsterdam found:
 
+- PR #136: active overnight Build85 lane, open non-draft and clean at
+  `f712857279af87deabcec9b884af664e1e84b45b`. It is stacked on PR #134 and
+  carries broad AICOM/client/live-monitor changes. Since the earlier
+  zero-capture blocker at `578e4f14c595334e8ee801e60bdc140ae342bd00`, it added
+  the cmdcon40 movement root fix in `Common_WaypointsAdd.sqf`: activate the
+  first waypoint of every fresh batch with `setCurrentWaypoint`, rather than
+  only when `_WPCount == 0`. The overnight doc says cmdcon40 boot-smoke was
+  clean, but release proof still requires exact real RPT evidence that teams
+  move, arrive, enter capture, and flip towns.
 - PR #138: focused capture-entry telemetry lane, open draft and clean at
   `41a9048764022f4345f521bc4453b5e89aca217f` against PR #137. It adds trace
-  markers only and is intended to make the next RPT proof decisive; it is not a
-  gameplay fix or release proof.
+  markers only and was created from the older cmdcon39 zero-capture state. Use
+  it as a fallback diagnostic package only if cmdcon40 still fails capture
+  progression; it is not a gameplay fix or release proof.
 - PR #137: focused Build85/cmdcon39 identity/static fix, open draft and clean
   at `4604044a255b5be2eec86d7da7ffad670d2915ef` against PR #136's branch. This
   clears PR #136's inherited `GUER_TECH.md` whitespace failure and produces a
   package with `candidate=build85-cmdcon39-20260702` and archive SHA256
-  `117E5893DB9D54BEDD57837F2DC9472CF64E87E54C3D8FA76B0288ECC720F86E`.
-- PR #136: overnight Build85/cmdcon39 lane, open non-draft and clean at
-  `578e4f14c595334e8ee801e60bdc140ae342bd00`. It is stacked on PR #134 and
-  carries broad AICOM/client/live-monitor changes. Raw current-master
-  `git diff --check` fails on inherited `GUER_TECH.md` whitespace; unpatched
-  package marker says `candidate=release-command-center-20260630`. Its latest
-  docs report captures still at zero at minute 20, so treat it as runtime
-  blocked unless PR #137 is merged/cherry-picked and the capture issue receives
-  exact RPT proof.
+  `117E5893DB9D54BEDD57837F2DC9472CF64E87E54C3D8FA76B0288ECC720F86E`, but it is
+  behind the latest PR #136/cmdcon40 movement fix.
 
 - PR #134: new Build84/cmdcon36 lane, open non-draft and clean at
   `cc29feb2077e2ebc7e946847fbdef78ae0f3c5eb`. True mission payload from merge
@@ -1023,17 +1067,20 @@ ASR-enabled RPT proof.
    artifact SHA256 is
    `EF2175B2CF00DB27A8F589350203F25A211BF6E427A4FA13A27E30DA31BE4FF0`, but it
    is not release-ready proof.
-6. If the owner selects the overnight Build85/cmdcon39 lane, merge or
-   cherry-pick PR #137 first so PR #136 no longer carries the inherited
-   `GUER_TECH.md` whitespace failure or stale release marker. The fixed
-   package/static artifact SHA256 is
-   `117E5893DB9D54BEDD57837F2DC9472CF64E87E54C3D8FA76B0288ECC720F86E`, but it
-   is not release-ready proof.
-7. If Build85 capture proof is pursued before a direct gameplay fix lands, use
-   PR #138's trace artifact SHA256
-   `BBC224FF0C2DDE0FDFB8B61502D97923D06B69740CAB61754010C71074CE8BC3` to collect
-   exact RPT evidence for `ORDER_PUBLISHED`, `ORDER_ACCEPT`, `ARRIVAL_WAIT`,
-   `ARRIVAL_GATE`, and `BEGIN_CAPTURE`.
+6. If the owner selects the overnight Build85 lane, first prove the latest PR
+   #136 cmdcon40 head `f712857279af87deabcec9b884af664e1e84b45b` with exact
+   real RPT evidence. The minimum proof target is movement/capture progression:
+   dispatch, arrival, capture-phase entry, and at least one town flip/capture,
+   with no new stop-condition or missing-script failures. The older PR #137
+   fixed package/static artifact SHA256
+   `117E5893DB9D54BEDD57837F2DC9472CF64E87E54C3D8FA76B0288ECC720F86E` proves
+   the cmdcon39 identity/static fix only; it is behind cmdcon40 and is not
+   release-ready proof.
+7. If cmdcon40 still fails to produce capture progression, use PR #138's trace
+   artifact SHA256
+   `BBC224FF0C2DDE0FDFB8B61502D97923D06B69740CAB61754010C71074CE8BC3` as a
+   diagnostic fallback to collect exact RPT evidence for `ORDER_PUBLISHED`,
+   `ORDER_ACCEPT`, `ARRIVAL_WAIT`, `ARRIVAL_GATE`, and `BEGIN_CAPTURE`.
 8. Do not use the stale PR #125 body hash
    `77315B9AE6B43B087E024497A0877A1ADAC94F90461939A75D3E252946E55545` as the
    current command-center package identity. Also do not use the local
