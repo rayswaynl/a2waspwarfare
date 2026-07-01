@@ -430,6 +430,24 @@ function Test-AicomTeamLifecycleAuthorityGuard {
 	Add-Result "AICOM lifecycle/refund authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-AicomFeedRequestPvGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverInit = Get-Text (Join-Path $entry.Root "Server\Init\Init_Server.sqf")
+		$constants = Get-Text (Join-Path $entry.Root "Common\Init\Init_CommonConstants.sqf")
+		if (-not ($serverInit.Contains('"WFBE_ReqAicomFeed" addPublicVariableEventHandler') -and $serverInit.Contains('typeName _raw != "OBJECT"') -and $serverInit.Contains('!isPlayer _player') -and $serverInit.Contains('!alive _player') -and $serverInit.Contains('_id <= 0'))) { $missing += "$($entry.Terrain):payload-player-owner-guard" }
+		if (-not ($serverInit.Contains('WFBE_C_AICOM_FEED_REQ_MIN_INTERVAL') -and $serverInit.Contains('WFBE_ReqAicomFeed_Last_') -and $serverInit.Contains('throttled marker feed request'))) { $missing += "$($entry.Terrain):throttle" }
+		if (-not ($serverInit.Contains('publicVariableClient "WFBE_ACTIVE_AICOM_TEAMS"') -and $serverInit.Contains('publicVariableClient _aiKey') -and $serverInit.Contains('side (group _player)'))) { $missing += "$($entry.Terrain):targeted-replay" }
+		if (-not $constants.Contains('WFBE_C_AICOM_FEED_REQ_MIN_INTERVAL')) { $missing += "$($entry.Terrain):constant" }
+	}
+	Add-Result "AICOM feed request PV guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomHcTopUpDraftExcluded {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1121,6 +1139,7 @@ Test-UpgradeRequestAuthorityGuard
 Test-AIComDonateAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomTeamLifecycleAuthorityGuard
+Test-AicomFeedRequestPvGuard
 Test-AicomHcTopUpDraftExcluded
 Test-AicomGroupVariableDefaults
 Test-AicomArtilleryConfigGuards

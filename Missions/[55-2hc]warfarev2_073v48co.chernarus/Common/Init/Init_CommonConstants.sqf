@@ -788,6 +788,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- Patch F: pending-slot timeout reaper. A reserved (pending) team-build slot that never materialises is
 	//--- reaped after this many s so it can't permanently occupy the team budget (3 * TEAMS_INTERVAL[=90]).
 	if (isNil "WFBE_C_AICOM_PENDING_TIMEOUT") then {WFBE_C_AICOM_PENDING_TIMEOUT = 270}; //--- s before a never-filled pending team slot is reaped.
+	if (isNil "WFBE_C_AICOM_FEED_REQ_MIN_INTERVAL") then {WFBE_C_AICOM_FEED_REQ_MIN_INTERVAL = 5}; //--- s: per-player throttle for WFBE_ReqAicomFeed marker/status replays.
 	//--- B69 FINAL PIECES (Ray 2026-06-22). New AICOM tunables; isNil-guarded so a lobby param / saved profile
 	//--- cannot override them. Inert until the matching B69 server logic ships.
 	//--- #16 town-assault PUNCH: per-tier strength multipliers on the assault-team punch score (the AICOM weights

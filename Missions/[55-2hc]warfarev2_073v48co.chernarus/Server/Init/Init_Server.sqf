@@ -980,10 +980,28 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 //--- the SAME proven targeted-reply pattern as REQUEST_SUPPLY_VALUE (Server_PV_RequestSupplyValue.sqf). Unconditional
 //--- (always armed); server_side_patrols also re-broadcasts every ~20s as a safety net.
 "WFBE_ReqAicomFeed" addPublicVariableEventHandler {
-	private ["_player","_id","_side","_sid","_aiKey","_aiSent"];
-	_player = _this select 1;
-	if (isNull _player) exitWith {};
+	private ["_raw","_player","_id","_side","_sid","_aiKey","_aiSent","_uid","_feedKey","_last","_minInt"];
+	_raw = _this select 1;
+	if (typeName _raw != "OBJECT") exitWith {
+		diag_log format ["[WFBE][B74.2 REQ-MARK] rejected malformed feed request type %1.", typeName _raw];
+	};
+	_player = _raw;
+	if (isNull _player || {!isPlayer _player} || {!alive _player}) exitWith {
+		diag_log format ["[WFBE][B74.2 REQ-MARK] rejected non-player feed request object %1.", _player];
+	};
 	_id = owner _player;
+	if (_id <= 0) exitWith {
+		diag_log format ["[WFBE][B74.2 REQ-MARK] rejected feed request with invalid owner %1 for %2.", _id, _player];
+	};
+	_uid = getPlayerUID _player;
+	if (_uid == "") then {_uid = str _id};
+	_feedKey = "WFBE_ReqAicomFeed_Last_" + _uid;
+	_minInt = missionNamespace getVariable ["WFBE_C_AICOM_FEED_REQ_MIN_INTERVAL", 5];
+	_last = missionNamespace getVariable [_feedKey, -1e9];
+	if (_minInt > 0 && {(time - _last) < _minInt}) exitWith {
+		diag_log format ["[WFBE][B74.2 REQ-MARK] throttled marker feed request from %1.", _id];
+	};
+	missionNamespace setVariable [_feedKey, time];
 	if (!isNil "WFBE_ACTIVE_AICOM_TEAMS") then {_id publicVariableClient "WFBE_ACTIVE_AICOM_TEAMS"};
 	if (!isNil "WFBE_ACTIVE_PATROLS") then {_id publicVariableClient "WFBE_ACTIVE_PATROLS"};
 	_side = side _player;

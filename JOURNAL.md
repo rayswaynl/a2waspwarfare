@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — AICOM feed request PV guard [RELEASE LOOP]
+
+Hardened the `WFBE_ReqAicomFeed` marker/status replay request path used by
+late or racing clients to recover AICOM and patrol map feeds. The server-side
+handler now rejects malformed payloads, non-player/dead/null request objects
+and invalid owners before targeted `publicVariableClient` replies, and adds a
+per-player `WFBE_C_AICOM_FEED_REQ_MIN_INTERVAL` throttle so repeated marker
+replay requests cannot spam the server/client feed path.
+
+Static smoke now asserts the guard and throttle across both maintained terrains.
+LoadoutManager mirrored the Chernarus source changes to Takistan and rebuilt
+`_MISSIONS.7z`. Runtime, SSH, RPT collection, upload, restart, cache-clear and
+deployment remain explicit-approval gated.
+
 ## 2026-07-01 — AICOM arrival gate SAD-ring follow-up [RELEASE LOOP]
 
 Closed a small follow-up on the capture-stall guardrails. The assault arrival
