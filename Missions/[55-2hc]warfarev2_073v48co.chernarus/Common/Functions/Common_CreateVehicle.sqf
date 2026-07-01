@@ -29,6 +29,13 @@ if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call Com
 if(_vehicle isKindOf "Air")then{ [_vehicle] Call Compile preprocessFile "Common\Functions\Common_ModifyAirVehicle.sqf";};
 //["DEBUG (Common_CreateVehicle2)", Format ["After calling"]] Call WFBE_CO_FNC_LogContent;
 
+//--- GUER improvised armour (#109, gate WFBE_C_GUER_IMPROVISED_ARMOR, default 0 = OFF): resistance light
+//--- vehicles (technicals) get a graded non-AT HandleDamage reduction; AT/HEAT/ATGM pass straight through.
+//--- Tank/APC/Air excluded. Inert while the base % is 0, so shipping default-OFF adds no runtime cost.
+if ((missionNamespace getVariable ["WFBE_C_GUER_IMPROVISED_ARMOR", 0]) > 0 && {_side == WFBE_C_GUER_ID} && {!(_vehicle isKindOf "Tank")} && {!(_vehicle isKindOf "APC")} && {!(_vehicle isKindOf "Air")}) then {
+	[_vehicle] Call Compile preprocessFile "Common\Functions\Common_GuerArmor.sqf";
+};
+
 //--- Miksuu team markings (experital): stamp the resolved side id + apply per-side recognition
 //--- markings BEFORE the texture pass so Common_AddVehicleTexture.sqf can read wfbe_side_id for
 //--- its side-gated skins. Both APPEND to wfbe_pending_texture (gate: WFBE_C_VEHICLE_MARKINGS).
