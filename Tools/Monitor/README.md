@@ -67,8 +67,38 @@ Useful PR #126 proof markers:
 
 Current PR #125 package checkpoint is `codex/release-command-center-20260630@e3b6e37903`, `_MISSIONS.7z` SHA256 `3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87`, `1,885` entries, `7,162,113` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
 
+## Runtime Evidence Manifest
+
+`Test-WaspRuntimeEvidenceManifest.ps1` validates the redaction-safe handoff manifest after marker-sweep JSON files have been produced. The manifest proves the release gate has one matching sweep for every required terrain/role slot without copying private RPT contents into git:
+
+```json
+{
+  "schema": "a2waspwarfare-runtime-evidence-manifest-v1",
+  "evidence": [
+    {
+      "terrain": "chernarus",
+      "role": "server",
+      "markerSweepPath": "marker-sweep-chernarus-server.json"
+    }
+  ]
+}
+```
+
+Run it against the current package tuple before treating runtime evidence as complete:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRuntimeEvidenceManifest.ps1 `
+  -ManifestPath "C:\WASP\rpt-archive\runtime-evidence-e3b6e37903.json" `
+  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedGit e3b6e37903 `
+  -ExpectedArchiveSha256 3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87
+```
+
+Default required slots are `chernarus,takistan` x `server,hc1,hc2,start-client,late-jip`. Use `-RequiredTerrain` or `-RequiredRole` only when the release owner explicitly narrows the evidence matrix.
+
 Run the helper contract self-test after editing it:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRptMarkerSweep.SelfTest.ps1
+powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRuntimeEvidenceManifest.SelfTest.ps1
 ```

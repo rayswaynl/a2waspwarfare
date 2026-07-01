@@ -158,6 +158,11 @@ As of 2026-07-01 after the PR #125 Build83/cmdcon35, AICOM latch-reset, release-
    - `Tools/Ops/Test-WaspReleaseTupleDocs.ps1` checks the PR #126 release ledger and monitor examples for expected git marker `e3b6e37903`, archive SHA `3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87`, package size `7,162,113`, wiki commit `00cdc18`, runtime-pending wording, and absence of stale `703F71E6...`, `40883616...`, `50AD...`, and `F057...` active-surface archive hashes.
    - Action: keep `Tools/Ops/Test-WaspReleaseTupleDocs.ps1` pointed at the active package checkpoint, and refresh this ledger plus PR bodies if PR #125 promotes a new package tuple.
 
+19. Marker sweeps needed a matrix-level proof wrapper.
+   - `Get-WaspRptMarkerSweep.ps1` proves redaction-safe package/marker presence for selected RPT files, but it does not know whether the operator collected the full Chernarus/Takistan role matrix.
+   - Impact: a set of marker sweeps could look healthy while still missing HC2, late-JIP, or one terrain.
+   - Action: PR #126 now adds `Tools/Monitor/Test-WaspRuntimeEvidenceManifest.ps1` and `Test-WaspRuntimeEvidenceManifest.SelfTest.ps1`. The manifest checker requires one marker-sweep JSON per `chernarus,takistan` x `server,hc1,hc2,start-client,late-jip` slot by default, verifies each sweep matches candidate `release-command-center-20260630`, git marker `e3b6e37903`, archive SHA `3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87`, has no missing required markers, and contains the terrain release marker for its slot. Use narrower required terrain/role arguments only if the release owner explicitly reduces the runtime evidence matrix.
+
 ## Working Backlog
 
 - Decide whether this branch stays as a small findings PR or merges into PR #123/#125 after review.
@@ -168,7 +173,9 @@ As of 2026-07-01 after the PR #125 Build83/cmdcon35, AICOM latch-reset, release-
 - Collect or import RPT evidence only after explicit approval for SSH/server access.
 - Run a focused HC disconnect/reconnect proof pass and capture `HCSIDE|disconnect`, `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSTAT`, `AICOMSTAT|...|HCDISPATCH`, and post-drop heading/marker continuity before changing HC team re-adoption behavior, but require the PR #126 audit marker pair only for packages that actually include the PR #126 instrumentation.
 - Use `Tools/Monitor/Get-WaspRptMarkerSweep.ps1` with `-ExpectedCandidate release-command-center-20260630 -ExpectedGit e3b6e37903 -ExpectedArchiveSha256 3DB01AC1656329ECCAE9896CE9442680D5D904C563DD44590FFBD20954CF7B87 -RequireReleaseMarkers -OutFile <redaction-safe-marker-sweep.json>` for redaction-safe first-pass livehost/archive RPT marker counts before deciding whether any private RPT copies are needed.
+- Build a redaction-safe `a2waspwarfare-runtime-evidence-manifest-v1` manifest that maps each terrain/role slot to its marker-sweep JSON, then run `Tools/Monitor/Test-WaspRuntimeEvidenceManifest.ps1` against the active package tuple before declaring runtime proof complete.
 - Re-run `Tools/Monitor/Test-WaspRptMarkerSweep.SelfTest.ps1` after edits to the marker-sweep helper.
+- Re-run `Tools/Monitor/Test-WaspRuntimeEvidenceManifest.SelfTest.ps1` after edits to the runtime evidence manifest checker.
 - Re-run `Tools/Ops/Test-WaspReleaseTupleDocs.ps1` after PR #125 package/wiki tuple refreshes or edits to PR #126 release ledger and monitor examples.
 - Re-run `Tools/Ops/Test-WaspVersionTemplates.ps1` after edits to tracked `version.sqf.template` files or terrain generation settings.
 
