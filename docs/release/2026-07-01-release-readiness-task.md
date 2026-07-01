@@ -14,13 +14,13 @@ The working standard is source parity, runtime evidence, and wiki/player documen
 
 ## Active PR Map
 
-As of 2026-07-01 13:19 UTC:
+As of 2026-07-01 13:45 UTC:
 
 - PR #123, `[codex] running release findings log`, branch `codex/release-findings`: docs-only running findings log for release proof. Current head observed: `19fe9e4e5`.
 - PR #124, `[codex] Release r8 integration findings for July 2`, branch `release/2026-07-02-stackcheck-r8`: r8 stack candidate with package hashes and NO-GO until exact runtime proof.
-- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates. Current head observed: `8ee3860d6`; wiki currently records packaged identity `1c101121b` with archive SHA `A984112809175432E98F19856C78BDC6C0EAFB5F8CAA54D2B4C979E37311E1E3`.
+- PR #125, `[codex] Prepare WASP release command center`, branch `codex/release-command-center-20260630`: broad release command-center candidate with tooling, package provenance, AICOM work, and runtime collection gates. Current head observed: `8ee3860d6`; wiki currently records packaged identity `8ee3860d6` with archive SHA `41F926A8B44F757B3F8218DFBE0A1119AAFC2550A9BB1D77C9E70B4A7B2EF3A2`, `1,879` entries, `7,139,063` bytes.
 - PR #131, `[codex] Fix placement preview static gate`, branch `codex/fix-b724-placement-static`: focused static-gate follow-up for the latest master placement-preview blocker. Findings log records artifact `outputs/a2waspwarfare-pr131-2178b20d-server-debug-missions.7z` with SHA256 `4B6E14D5528B5037C6387832B4A8A4DBF555EA251748E9D3A349BB83E93CD95D`; this is packaging/tooling proof only.
-- This branch, `codex/release-readiness-20260701`: multi-agent task ledger and AICOM guardrail/proof-instrumentation lane. Current head observed: `f20ddfc83`; latest local proof-instrumented archive SHA256 `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD`; GitHub reports PR #126 open, draft, clean, and mergeable.
+- This branch, `codex/release-readiness-20260701`: multi-agent task ledger and AICOM guardrail/proof-instrumentation lane. Current head observed: `7e97c78b9`; latest local proof-instrumented archive SHA256 `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD`; GitHub reports PR #126 open, draft, clean, and mergeable.
 
 ## Agent Lanes
 
@@ -32,8 +32,8 @@ As of 2026-07-01 13:19 UTC:
 
 | Source | Current status | Use in this loop |
 | --- | --- | --- |
-| `rayswaynl/a2waspwarfare` | Local PR #126 refresh worktree is based on current `origin/master` through `b7241a35f` plus the rebased release-readiness stack ending at `f20ddfc83`. The original branch root was `6cbf6f6a5`. | Primary code, docs, tools, release branches, PR evidence. |
-| `rayswaynl/a2waspwarfare.wiki` | Cloned locally and synced through `aea5283`, with PR #126 companion head and HC audit gate aligned to `f20ddfc83`. | Wiki freshness and release-doc synchronization. |
+| `rayswaynl/a2waspwarfare` | Local PR #126 refresh worktree is based on current `origin/master` through `b7241a35f` plus the rebased release-readiness stack ending at `7e97c78b9`. The original branch root was `6cbf6f6a5`. | Primary code, docs, tools, release branches, PR evidence. |
+| `rayswaynl/a2waspwarfare.wiki` | Cloned locally and synced through `c4436df`, with PR #126 companion head `7e97c78b9`, HC audit source through `f20ddfc83`, livehost marker-sweep caveat, and the newer PR #125 package tuple preserved from remote wiki work. | Wiki freshness and release-doc synchronization. |
 | `Miksuu/a2waspwarfare` | Public repo reachable; local clone exists at `work/miksuu-original`, remote `https://github.com/Miksuu/a2waspwarfare.git`, HEAD `b8389e74` from 2026-06-09. Checkout hit Windows long-path failure on one very long LoadoutManager filename. | Historical/original mission comparison where files are present; full comparison needs long-path-safe checkout or sparse checkout. |
 | Jerry mission dump | Public index reachable; Arma2 section reports 1498 files / 24.23 GB and Arma2 OA reports 535 files / 29.42 GB. Exact useful query: `https://bidentify.jerryhopper.com/api/search/WarfareV2_073`. Key package lead: `WarfareV2_073LiteCO.zip`, which lists Takistan, Zargabad, and Chernarus PBOs. | Historical Benny/Warfare 0.73 baseline, hashes, archive contents, and downloadable reference PBOs once a specific comparison is needed. |
 | Miksuu Google Drive mission dump | Not fetched yet. Password `armedassault` is known, but no exact folder URL was discovered from public/local notes beyond the user-provided Drive view. | Requires Drive/browser download handling; add only after exact candidate packages are identified. |
@@ -43,7 +43,7 @@ As of 2026-07-01 13:19 UTC:
 | `https://miksuu.com/leaderboard` | Public leaderboard reachable; current scrape shows 33 players and no AI-commander round data yet. | Cross-check stats pipeline and AI commander telemetry visibility. |
 | `https://miksuu.com/api/wasp-stats` | Public API reachable but returned `online:false`, `stale:true` during the sweep. | Compare public API freshness against server-side stats files. |
 | `http://78.46.107.142:8080/` | Direct page timed out in this environment. | Dashboard/runtime status source; verify from an environment that can reach the port. |
-| SSH RPTs on Game PC / Hetzner | Read-only `livehost` alias was discoverable and worked. Backing stats files exist under `C:/WASP/web`; latest server-side stats showed `generatedAt: 2026-07-01T08:23:06Z`, server online, Chernarus, 2 players, and 2 headless clients. | Deeper RPT harvesting needs explicit scope: which RPT window, which terrain/build, and whether to copy logs locally. |
+| SSH RPTs on Game PC / Hetzner | Read-only `livehost` alias was discoverable and worked. Backing stats files exist under `C:/WASP/web`; latest server-side stats observed `generatedAt: 2026-07-01T13:42:08Z`, server online, Chernarus, 4 players, 2 headless clients, server FPS last/avg `47/46`, and HC delegation `93%`. Latest RPT sweep shows live `AICOMSTAT`/`HCSTAT` but no PR #126 `HCDROP_AICOM_AUDIT`/`HCRECON_AICOM_AUDIT` markers and no `7e97c78b9`/`f20ddfc83` release marker. | Current live telemetry is useful health evidence, but not exact PR #126 runtime proof. |
 
 ## First Findings
 
@@ -108,15 +108,22 @@ As of 2026-07-01 13:19 UTC:
 
 11. Public stats and server-side stats disagreed during reconnaissance.
    - Public `/api/wasp-stats` reported stale/offline.
-   - Read-only SSH stats files were fresher and showed the server online on Chernarus with 2 players and 2 HCs.
-   - Action: include public API freshness and dashboard backing-file freshness in the release/server-ops checks.
+   - Read-only SSH stats files were fresher; the latest `C:/WASP/web/stats.json` observed at `2026-07-01T13:42:08Z` showed Chernarus online with 4 players, 2 HCs, server FPS last/avg `47/46`, HC delegation `93%`, and active commander-intel/pop-tier data.
+   - Action: include public API freshness and dashboard backing-file freshness in the release/server-ops checks, and keep exact build provenance separate from dashboard health.
 
-12. Latest RPT candidates exist but need scoped harvesting.
+12. Latest RPT candidates exist and were marker-swept without copying private logs.
+   - `C:/WASP/rpt-archive/arma2oaserver-rot-ch-20260701-0538.RPT`
+   - `C:/WASP/rpt-archive/arma2oaserver-deploy34-20260701-0356.RPT`
+   - `C:/WASP/rpt-archive/arma2oaserver-deploy33-20260701-0341.RPT`
+   - `C:/WASP/rpt-archive/arma2oaserver-deploy32-20260701-0303.RPT`
+   - `C:/WASP/rpt-archive/arma2oaserver-deploy31-20260701-0247.RPT`
    - `C:/WASP/rpt-archive/arma2oaserver-recover-20260701-0019.RPT`
    - `C:/WASP/rpt-archive/arma2oaserver-seatheal2-20260701-0009.RPT`
    - `C:/WASP/rpt-archive/arma2oaserver-seatheal1-20260630-2359.RPT`
    - `C:/WASP/rpt-archive/arma2oaserver-preFIXch-20260630-1952.RPT`
-   - Action: only copy/analyze private RPTs after the owner confirms the target build/window and privacy scope.
+   - Latest 8 RPTs contain many `AICOMSTAT` and `HCSTAT` lines, plus `WASPRELEASE|v1|candidate=release-command-center-20260630|git=5b1640cf88|terrain=takistan` and `git=6e0e324b79` samples.
+   - Latest 8 RPTs contain no `HCDROP_AICOM_AUDIT`, `HCRECON_AICOM_AUDIT`, `HCSIDE|v1|disconnect`, `HCSIDE|v1|reconnect`, `HCDISPATCH`, `WF_RELEASE_MARKER`, `2178b20d`, `7e97c78b`, `f20ddfc83`, or `C0220856B624ABDA4204D1A6C554505C54C4B75541B6900D2725E08C522763CD` markers.
+   - Action: these live logs confirm useful pre-instrumentation AICOM/HC health, but cannot satisfy the PR #126 exact-build HC-drop audit gate. Only copy/analyze broader private RPT contents after the owner confirms target build/window and privacy scope.
 
 13. HC-disconnect adoption is still a release-risk lead.
    - `Server_OnPlayerDisconnected.sqf` removes a disconnected HC from future delegation registries, but does not yet prove already-running HC-owned AICOM teams have been re-adopted by the server after locality migrates.
