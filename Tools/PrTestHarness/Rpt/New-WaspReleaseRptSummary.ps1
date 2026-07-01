@@ -4,6 +4,7 @@ param(
 	[string[]]$RptDirectory = @(),
 	[string[]]$ExpectedMarker = @(),
 	[string]$OutDirectory = "",
+	[string]$RuntimePacketManifestPath = "",
 	[switch]$Recurse,
 	[switch]$Force,
 	[switch]$NoFail
@@ -46,6 +47,35 @@ function Format-TimeValue {
 	return [string]$Value
 }
 
+function Get-SafeTextHash {
+	param([string]$Text)
+	if ([string]::IsNullOrEmpty($Text)) { return "" }
+	$sha = [System.Security.Cryptography.SHA256]::Create()
+	try {
+		$bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+		$hash = $sha.ComputeHash($bytes)
+		return (($hash | ForEach-Object { $_.ToString("x2") }) -join "").Substring(0, 12)
+	} finally {
+		$sha.Dispose()
+	}
+}
+
+function Get-JsonValue {
+	param($Object, [string]$Name)
+	if ($null -eq $Object) { return $null }
+	$property = $Object.PSObject.Properties[$Name]
+	if ($null -eq $property) { return $null }
+	return $property.Value
+}
+
+function ConvertTo-BoolFlag {
+	param($Value)
+	if ($null -eq $Value) { return $false }
+	if ($Value -is [bool]) { return [bool]$Value }
+	$text = ([string]$Value).Trim().ToLowerInvariant()
+	return ($text -eq "true")
+}
+
 function Format-SessionSummary {
 	param($Sessions)
 	$parts = @()
@@ -59,6 +89,70 @@ function Format-SessionSummary {
 	$unique = @($parts | Select-Object -Unique)
 	if ($unique.Count -le 6) { return (Join-Display $unique) }
 	return ("{0} (+{1} more)" -f (($unique | Select-Object -First 6) -join ", "), ($unique.Count - 6))
+}
+
+function Test-RuntimePacketManifestProof {
+	param([string]$Path)
+	$missing = New-Object System.Collections.Generic.List[string]
+	$failHits = New-Object System.Collections.Generic.List[string]
+	$result = [ordered]@{
+		status = "not_requested"
+		requested = $false
+		manifestPath = ""
+		manifestPathHash = ""
+		schema = ""
+		validationRequested = $false
+		validationOverall = ""
+		fileCount = 0
+		missing = @()
+		failHits = @()
+		note = "Pass -RuntimePacketManifestPath to bind this summary to the ten-file packet validator proof."
+	}
+	if ([string]::IsNullOrWhiteSpace($Path)) {
+		return $result
+	}
+	$result.requested = $true
+	$result.manifestPath = "<runtime-rpt-packet-manifest>"
+	$result.manifestPathHash = Get-SafeTextHash $Path
+	if (!(Test-Path -LiteralPath $Path -PathType Leaf)) {
+		[void]$missing.Add("runtime-rpt-packet-manifest.json")
+		$result.status = "missing"
+		$result.missing = $missing.ToArray()
+		return $result
+	}
+	try {
+		$manifest = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json
+	} catch {
+		[void]$failHits.Add("runtime packet manifest JSON parse failed")
+		$result.status = "fail"
+		$result.failHits = $failHits.ToArray()
+		return $result
+	}
+	$schema = [string](Get-JsonValue $manifest "schema")
+	$result.schema = $schema
+	if ($schema -ne "a2waspwarfare-runtime-rpt-packet-builder-v1") {
+		[void]$failHits.Add("schema must be a2waspwarfare-runtime-rpt-packet-builder-v1")
+	}
+	$validation = Get-JsonValue $manifest "validation"
+	$validationRequested = ConvertTo-BoolFlag (Get-JsonValue $validation "requested")
+	$validationOverall = [string](Get-JsonValue $validation "overall")
+	$result.validationRequested = $validationRequested
+	$result.validationOverall = $validationOverall
+	$result.fileCount = @(ConvertTo-Array (Get-JsonValue $manifest "files")).Count
+	if (!$validationRequested) {
+		[void]$failHits.Add("runtime packet manifest validation.requested must be true")
+	}
+	if ($validationOverall -ne "pass") {
+		[void]$failHits.Add("runtime packet manifest validation.overall must be pass")
+	}
+	if ([int]$result.fileCount -ne 10) {
+		[void]$failHits.Add("runtime packet manifest must list the exact ten copied RPT files")
+	}
+	$result.status = if ($missing.Count -gt 0) { "missing" } elseif ($failHits.Count -gt 0) { "fail" } else { "pass" }
+	$result.missing = $missing.ToArray()
+	$result.failHits = $failHits.ToArray()
+	$result.note = "Summary is bound to the packet builder/checker manifest, including ten-file matrix, run-ledger, archive SHA, source/copy hash, freshness and role-proof validation."
+	return $result
 }
 
 $scorerPath = Join-Path $PSScriptRoot "Test-WaspReleaseRptEvidence.ps1"
@@ -81,6 +175,8 @@ if ([string]::IsNullOrWhiteSpace($jsonText)) {
 	throw "RPT evidence scorer produced no JSON output."
 }
 $score = $jsonText | ConvertFrom-Json
+$runtimePacketProof = Test-RuntimePacketManifestProof -Path $RuntimePacketManifestPath
+$summaryOverall = if ([string]$score.overall -eq "pass" -and ([string]$runtimePacketProof.status -eq "not_requested" -or [string]$runtimePacketProof.status -eq "pass")) { "pass" } else { "missing_or_failed" }
 
 if ([string]::IsNullOrWhiteSpace($OutDirectory)) {
 	$OutDirectory = Join-Path (Get-Location).Path "wasp-release-rpt-summary"
@@ -105,6 +201,7 @@ if (!$Force) {
 $packet = [ordered]@{
 	schema = "a2waspwarfare-release-rpt-summary-v1"
 	generatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+	overall = $summaryOverall
 	scorerScript = "Tools/PrTestHarness/Rpt/Test-WaspReleaseRptEvidence.ps1"
 	scorerSchema = $score.schema
 	input = [ordered]@{
@@ -112,8 +209,10 @@ $packet = [ordered]@{
 		rptDirectoryCount = @($RptDirectory | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }).Count
 		recurse = [bool]$Recurse
 		expectedMarker = @($ExpectedMarker | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+		runtimePacketManifestProvided = ![string]::IsNullOrWhiteSpace($RuntimePacketManifestPath)
 	}
 	result = $score
+	runtimePacketProof = $runtimePacketProof
 	requiredHumanObservations = @(
 		"Client fade clears and late-JIP player can move/use HUD after loading.",
 		"Human commander takeover pauses autonomous AICOM build/upgrade behavior and revert resumes it.",
@@ -128,11 +227,29 @@ $lines = New-Object System.Collections.Generic.List[string]
 [void]$lines.Add("# WASP Release RPT Summary")
 [void]$lines.Add("")
 [void]$lines.Add(("Generated: {0}" -f $packet.generatedAt))
-[void]$lines.Add(("Overall: {0}" -f $score.overall))
+[void]$lines.Add(("Overall: {0}" -f $packet.overall))
+[void]$lines.Add(("Scorer overall: {0}" -f $score.overall))
+[void]$lines.Add(("Runtime packet proof: {0}" -f $packet.runtimePacketProof.status))
 [void]$lines.Add(("Worlds seen: {0}" -f (Join-Display $score.worldsSeen)))
 [void]$lines.Add(("Files scored: {0}" -f @(ConvertTo-Array $score.files).Count))
 [void]$lines.Add("")
 [void]$lines.Add("Privacy: no raw RPT lines or absolute RPT paths are emitted or copied. File paths come from the scorer's public RPT-root-relative labels with short path hashes.")
+[void]$lines.Add("")
+[void]$lines.Add("## Runtime Packet Proof")
+[void]$lines.Add("")
+[void]$lines.Add(("Status: {0}" -f $packet.runtimePacketProof.status))
+[void]$lines.Add(("Manifest: {0}" -f $packet.runtimePacketProof.manifestPath))
+[void]$lines.Add(("Manifest path hash: {0}" -f (Join-Display $packet.runtimePacketProof.manifestPathHash)))
+[void]$lines.Add(("Schema: {0}" -f (Join-Display $packet.runtimePacketProof.schema)))
+[void]$lines.Add(("Validation requested: {0}" -f $packet.runtimePacketProof.validationRequested))
+[void]$lines.Add(("Validation overall: {0}" -f (Join-Display $packet.runtimePacketProof.validationOverall)))
+[void]$lines.Add(("Files in manifest: {0}" -f $packet.runtimePacketProof.fileCount))
+if (@(ConvertTo-Array $packet.runtimePacketProof.missing).Count -gt 0) {
+	[void]$lines.Add(("Missing: {0}" -f (Join-Display $packet.runtimePacketProof.missing)))
+}
+if (@(ConvertTo-Array $packet.runtimePacketProof.failHits).Count -gt 0) {
+	[void]$lines.Add(("Failures: {0}" -f (Join-Display $packet.runtimePacketProof.failHits)))
+}
 [void]$lines.Add("")
 [void]$lines.Add("## Expected Markers")
 [void]$lines.Add("")
@@ -204,10 +321,10 @@ foreach ($observation in $packet.requiredHumanObservations) {
 	[void]$lines.Add(("- {0}" -f $observation))
 }
 [void]$lines.Add("")
-if ([string]$score.overall -eq "pass") {
-	[void]$lines.Add("Result: scorer gates pass. Pair this with human notes for client playability, commander handoff observations, and package/deployment provenance before calling the release complete.")
+if ([string]$packet.overall -eq "pass") {
+	[void]$lines.Add("Result: scorer gates and supplied runtime packet proof pass. Pair this with human notes for client playability, commander handoff observations, and package/deployment provenance before calling the release complete.")
 } else {
-	[void]$lines.Add("Result: scorer gates are still missing or failed. Keep this packet as diagnostic evidence only; collect fresh Chernarus and Takistan RPTs until all gates pass.")
+	[void]$lines.Add("Result: scorer gates or supplied runtime packet proof are still missing or failed. Keep this packet as diagnostic evidence only; collect fresh Chernarus and Takistan RPTs until all gates pass.")
 }
 $lines | Set-Content -LiteralPath $markdownOut -Encoding UTF8
 
@@ -215,4 +332,4 @@ Write-Host "Wrote release RPT summary:"
 Write-Host $jsonOut
 Write-Host $markdownOut
 
-if ([string]$score.overall -ne "pass" -and !$NoFail) { exit 1 }
+if ([string]$packet.overall -ne "pass" -and !$NoFail) { exit 1 }

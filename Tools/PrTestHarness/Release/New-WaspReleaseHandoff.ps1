@@ -252,7 +252,7 @@ $packet = [ordered]@{
 		runtimePacketBuilder = "& .\Tools\PrTestHarness\Rpt\New-WaspRuntimeRptPacket.ps1 -SourceMapPath `"<private-runtime-rpt-source-map.json>`" -OutDirectory `"<release-candidate-rpts>`" -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -ExpectedArchiveSha256 $expectedArchiveSha256 -Validate -RequireSourceRptExists -Force"
 		runtimePacket = "& .\Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.ps1 -RptRoot `"<release-candidate-rpts>`" -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -ExpectedArchiveSha256 $expectedArchiveSha256 -RunLedgerPath `"<release-candidate-rpts>\release-run-ledger.json`" -RequireSourceRptExists"
 		runtimeScorer = "& .\Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers"
-		runtimeSummary = "& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
+		runtimeSummary = "& .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 -RptDirectory `"<release-candidate-rpts>`" -Recurse -ExpectedMarker `$expectedReleaseMarkers -RuntimePacketManifestPath `"<release-candidate-rpts>\runtime-rpt-packet-manifest.json`" -OutDirectory `"<release-candidate-rpts>\summary`" -Force"
 		packageProof = "pwsh -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Package\Test-WaspReleasePackage.ps1 -ArchivePath .\_MISSIONS.7z -ExpectedCandidate $ExpectedCandidate -ExpectedGit $ReleaseGit -OutDirectory .\wasp-release-package-manifest -Force"
 	}
 	runtimeRptSourceMapTemplate = [ordered]@{
@@ -281,6 +281,7 @@ $packet = [ordered]@{
 		"Every scored current-mission window keeps the startup ## Mission Name banner; files without that banner fail the all-files-have-startup-banner scorer gate.",
 		"Run ledger validates with Test-WaspRuntimeRptPacket.ps1 -RunLedgerPath -RequireSourceRptExists: terrain launch times, exact roleProof/joinPhase metadata, original source RPT paths, source LastWriteTime/SHA256, copied paths/SHA256, command lines and PIDs are present; source RPT LastWriteTime must be after terrain launch time; source and copied RPT hashes must match; no original source RPT path is reused across roles.",
 		"Run ledger release.archiveSha256 matches the approved package SHA256 passed to Test-WaspRuntimeRptPacket.ps1 -ExpectedArchiveSha256.",
+		"Release RPT summary is generated with -RuntimePacketManifestPath and records validation.requested=true, validation.overall=pass and the exact ten copied RPT files from runtime-rpt-packet-manifest.json before summary overall can pass.",
 		"WFBE_C_AI_DELEGATION=2 for the release pass.",
 		"Current-mission RPT windows have no generic stop-condition errors.",
 		"Every scored RPT resolves to one runtime terrain and the per-terrain-runtime-evidence gate passes, proving Chernarus and Takistan each contribute the core semantic evidence families.",

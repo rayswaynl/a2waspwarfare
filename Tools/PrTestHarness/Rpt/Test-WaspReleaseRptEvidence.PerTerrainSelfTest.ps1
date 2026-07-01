@@ -109,6 +109,61 @@ function Invoke-Score {
 	return (($json | Out-String).Trim() | ConvertFrom-Json)
 }
 
+function Write-RuntimePacketManifest {
+	param(
+		[Parameter(Mandatory)] [string]$Path,
+		[bool]$ValidationRequested,
+		[Parameter(Mandatory)] [string]$ValidationOverall
+	)
+	$manifest = [ordered]@{
+		schema = "a2waspwarfare-runtime-rpt-packet-builder-v1"
+		generatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+		rptRoot = "<rpt-root>"
+		rptRootHash = "selftest"
+		release = [ordered]@{
+			candidate = "per-terrain-self-test"
+			git = "selftest01"
+			archiveSha256 = "22223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF00001111"
+		}
+		artifacts = [ordered]@{
+			ledgerPath = "release-run-ledger.json"
+			manifestPath = "runtime-rpt-packet-manifest.json"
+		}
+		files = @(
+			[ordered]@{ terrain = "chernarus"; role = "server"; copiedRptPath = "chernarus\server.rpt" },
+			[ordered]@{ terrain = "chernarus"; role = "HC1"; copiedRptPath = "chernarus\HC1.rpt" },
+			[ordered]@{ terrain = "chernarus"; role = "HC2"; copiedRptPath = "chernarus\HC2.rpt" },
+			[ordered]@{ terrain = "chernarus"; role = "start-client"; copiedRptPath = "chernarus\start-client.rpt" },
+			[ordered]@{ terrain = "chernarus"; role = "late-JIP"; copiedRptPath = "chernarus\late-JIP.rpt" },
+			[ordered]@{ terrain = "takistan"; role = "server"; copiedRptPath = "takistan\server.rpt" },
+			[ordered]@{ terrain = "takistan"; role = "HC1"; copiedRptPath = "takistan\HC1.rpt" },
+			[ordered]@{ terrain = "takistan"; role = "HC2"; copiedRptPath = "takistan\HC2.rpt" },
+			[ordered]@{ terrain = "takistan"; role = "start-client"; copiedRptPath = "takistan\start-client.rpt" },
+			[ordered]@{ terrain = "takistan"; role = "late-JIP"; copiedRptPath = "takistan\late-JIP.rpt" }
+		)
+		validation = [ordered]@{
+			requested = $ValidationRequested
+			overall = $ValidationOverall
+			gates = @()
+		}
+		privacy = "self-test"
+	}
+	$dir = Split-Path -Parent $Path
+	[void](New-Item -ItemType Directory -Path $dir -Force)
+	$manifest | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $Path -Encoding UTF8
+}
+
+function Invoke-Summary {
+	param(
+		[Parameter(Mandatory)] [string]$Root,
+		[Parameter(Mandatory)] [string]$OutDirectory,
+		[Parameter(Mandatory)] [string]$RuntimePacketManifestPath
+	)
+	$expectedMarkers = Get-ExpectedMarkers
+	& $summaryPath -RptDirectory $Root -Recurse -ExpectedMarker $expectedMarkers -RuntimePacketManifestPath $RuntimePacketManifestPath -OutDirectory $OutDirectory -Force -NoFail | Out-Null
+	return (Get-Content -Raw -LiteralPath (Join-Path $OutDirectory "release-rpt-summary.json") | ConvertFrom-Json)
+}
+
 $root = Join-Path ([System.IO.Path]::GetTempPath()) ("wasp-release-rpt-evidence-selftest-" + [System.Guid]::NewGuid().ToString("N"))
 try {
 	[void](New-Item -ItemType Directory -Path $root -Force)
@@ -158,8 +213,23 @@ try {
 	if ([string]$bothTerrains.overall -ne "pass" -or [string]$perTerrainGate.status -ne "pass" -or [string]$fallbackGate.status -ne "pass") {
 		throw ("Expected mirrored Chernarus/Takistan semantic packet with Takistan WEST fallback to pass; overall={0}, perTerrain={1}, fallback={2}" -f $bothTerrains.overall, $perTerrainGate.status, $fallbackGate.status)
 	}
+
+	$badManifest = Join-Path $root "packet-failed\runtime-rpt-packet-manifest.json"
+	Write-RuntimePacketManifest -Path $badManifest -ValidationRequested $false -ValidationOverall "skipped"
+	$badSummary = Invoke-Summary -Root $root -OutDirectory (Join-Path $root "summary-bad") -RuntimePacketManifestPath $badManifest
+	if ([string]$badSummary.overall -ne "missing_or_failed" -or [string]$badSummary.runtimePacketProof.status -ne "fail") {
+		throw ("Expected summary to fail when runtime packet manifest validation is skipped; summary={0}, packetProof={1}" -f $badSummary.overall, $badSummary.runtimePacketProof.status)
+	}
+
+	$goodManifest = Join-Path $root "packet-good\runtime-rpt-packet-manifest.json"
+	Write-RuntimePacketManifest -Path $goodManifest -ValidationRequested $true -ValidationOverall "pass"
+	$goodSummary = Invoke-Summary -Root $root -OutDirectory (Join-Path $root "summary-good") -RuntimePacketManifestPath $goodManifest
+	if ([string]$goodSummary.overall -ne "pass" -or [string]$goodSummary.runtimePacketProof.status -ne "pass") {
+		throw ("Expected summary to pass when scorer and runtime packet manifest pass; summary={0}, packetProof={1}" -f $goodSummary.overall, $goodSummary.runtimePacketProof.status)
+	}
+
 	$summaryOut = Join-Path $root "summary"
-	& $summaryPath -RptDirectory $root -Recurse -ExpectedMarker (Get-ExpectedMarkers) -OutDirectory $summaryOut -Force
+	& $summaryPath -RptDirectory $root -Recurse -ExpectedMarker (Get-ExpectedMarkers) -RuntimePacketManifestPath $goodManifest -OutDirectory $summaryOut -Force
 	$summaryMarkdown = Join-Path $summaryOut "release-rpt-summary.md"
 	if (!(Test-Path -LiteralPath $summaryMarkdown -PathType Leaf)) {
 		throw "Expected summary Markdown was not written."
@@ -167,6 +237,9 @@ try {
 	$summaryText = Get-Content -Raw -LiteralPath $summaryMarkdown
 	if ($summaryText -notmatch "Per-Terrain Selected Token Counts") {
 		throw "Expected summary Markdown to include per-terrain token counts."
+	}
+	if ($summaryText -notmatch "Runtime Packet Proof") {
+		throw "Expected summary Markdown to include runtime packet proof."
 	}
 
 	Write-Host "PASS: per-terrain and Takistan WEST fallback runtime evidence self-test"

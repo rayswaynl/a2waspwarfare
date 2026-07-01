@@ -1,5 +1,24 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-01 — Runtime packet self-test committed [RELEASE LOOP]
+
+Added `Tools/PrTestHarness/Rpt/Test-WaspRuntimeRptPacket.SelfTest.ps1` so the
+runtime packet builder/checker gates are reproducible instead of only recorded
+as ad hoc round evidence. The fixture builds a synthetic ten-RPT packet from a
+private-style source map, validates the happy path through
+`New-WaspRuntimeRptPacket.ps1 -Validate`, then proves the checker rejects
+duplicate RPT content, wrong client/HC role proof and a missing run-ledger
+archive SHA. This keeps the runtime proof path stricter while live Chernarus and
+Takistan RPT collection remains pending approval.
+
+Also bound `New-WaspReleaseRptSummary.ps1` to the runtime packet proof path:
+when `-RuntimePacketManifestPath` is supplied, the portable summary now requires
+the packet builder manifest to have `validation.requested=true` and
+`validation.overall=pass` with the exact ten copied RPT files. The handoff
+summary command passes the manifest path, so a green release summary can no
+longer be detached from the ten-file packet matrix, run-ledger, archive-SHA,
+source/copy hash, freshness and role-proof validation.
+
 ## 2026-07-01 — Takistan WEST fallback runtime scorer gate [RELEASE LOOP]
 
 The release RPT scorer now makes the round32 Takistan WEST infantry-starvation

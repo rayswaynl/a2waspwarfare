@@ -287,21 +287,35 @@ The per-terrain false-pass fixture is executable without live Arma runtime:
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspReleaseRptEvidence.PerTerrainSelfTest.ps1
 ```
 
+The runtime packet builder/checker has its own synthetic fixture as well. It
+builds a ten-file packet from a private-style source map, proves the happy path,
+then verifies that duplicate RPT content, wrong client/HC role proof and a
+missing run-ledger archive SHA fail the relevant gates:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Test-WaspRuntimeRptPacket.SelfTest.ps1
+```
+
 To produce a portable release/wiki summary packet from the same scorer output:
 
 ```powershell
 & .\Tools\PrTestHarness\Rpt\New-WaspReleaseRptSummary.ps1 `
   -RptDirectory "C:\WASP\rpts\release-candidate" -Recurse `
   -ExpectedMarker $expectedReleaseMarkers `
+  -RuntimePacketManifestPath "C:\WASP\rpts\release-candidate\runtime-rpt-packet-manifest.json" `
   -OutDirectory "C:\WASP\rpts\release-candidate\summary" -Force
 ```
 
 It writes `release-rpt-summary.json` and `release-rpt-summary.md` without
 copying raw RPT lines or absolute RPT paths. Like the scorer, it exits non-zero
-until the runtime gates pass; add `-NoFail` when producing an incomplete
-diagnostic packet. The Markdown summary includes aggregate and per-terrain
-selected token counts so missing semantic evidence can be traced without
-publishing raw logs.
+until the runtime gates pass. When `-RuntimePacketManifestPath` is supplied, the
+summary also requires `runtime-rpt-packet-manifest.json` to show
+`validation.requested=true`, `validation.overall=pass` and the exact ten copied
+RPT files, binding the portable summary to the packet matrix, run-ledger, archive
+SHA, source/copy hash, freshness and role-proof checks. Add `-NoFail` when
+producing an incomplete diagnostic packet. The Markdown summary includes
+aggregate and per-terrain selected token counts so missing semantic evidence can
+be traced without publishing raw logs.
 
 ## Release Package Provenance
 
