@@ -165,7 +165,13 @@ _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_facto
 	_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
 };
 
-varQueu = Format["%1_%2", getPlayerUID player, diag_tickTime];
+if ((missionNamespace getVariable ["WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING", 0]) > 0) then {
+	if (isNil "WFBE_CL_FACTORY_QUEUE_SEQUENCE") then {WFBE_CL_FACTORY_QUEUE_SEQUENCE = 0};
+	WFBE_CL_FACTORY_QUEUE_SEQUENCE = WFBE_CL_FACTORY_QUEUE_SEQUENCE + 1;
+	varQueu = Format["%1_%2_%3_%4", getPlayerUID player, diag_tickTime, WFBE_CL_FACTORY_QUEUE_SEQUENCE, floor random 1000000];
+} else {
+	varQueu = Format["%1_%2", getPlayerUID player, diag_tickTime];
+};
 _unique = varQueu;
 _queu = _building getVariable "queu";
 if (isNil "_queu") then {_queu = []};
