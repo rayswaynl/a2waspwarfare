@@ -40,6 +40,7 @@ class Mission
 		items=87;
 		class Item0
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=6;
@@ -94,6 +95,7 @@ class Mission
 		};
 		class Item1
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=2;
@@ -117,6 +119,7 @@ class Mission
 		};
 		class Item2
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=3;
@@ -148,6 +151,7 @@ class Mission
 		};
 		class Item3
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=3;
@@ -179,6 +183,7 @@ class Mission
 		};
 		class Item4
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=5;
@@ -225,6 +230,7 @@ class Mission
 		};
 		class Item5
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=3;
@@ -256,6 +262,7 @@ class Mission
 		};
 		class Item6
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=3;
@@ -287,6 +294,7 @@ class Mission
 		};
 		class Item7
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=4;
@@ -326,6 +334,7 @@ class Mission
 		};
 		class Item8
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=3;
@@ -357,6 +366,7 @@ class Mission
 		};
 		class Item9
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=3;
@@ -388,6 +398,7 @@ class Mission
 		};
 		class Item10
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=3;
@@ -419,6 +430,7 @@ class Mission
 		};
 		class Item11
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -434,6 +446,7 @@ class Mission
 		};
 		class Item12
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -449,6 +462,7 @@ class Mission
 		};
 		class Item13
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -464,6 +478,7 @@ class Mission
 		};
 		class Item14
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -478,6 +493,7 @@ class Mission
 		};
 		class Item15
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -492,6 +508,7 @@ class Mission
 		};
 		class Item16
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -506,6 +523,7 @@ class Mission
 		};
 		class Item17
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -520,6 +538,7 @@ class Mission
 		};
 		class Item18
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -534,6 +553,7 @@ class Mission
 		};
 		class Item19
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -548,6 +568,7 @@ class Mission
 		};
 		class Item20
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -562,6 +583,7 @@ class Mission
 		};
 		class Item21
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -582,6 +604,7 @@ class Mission
 		};
 		class Item22
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -602,6 +625,7 @@ class Mission
 		};
 		class Item23
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -622,6 +646,7 @@ class Mission
 		};
 		class Item24
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -642,6 +667,7 @@ class Mission
 		};
 		class Item25
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -662,6 +688,7 @@ class Mission
 		};
 		class Item26
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -682,6 +709,7 @@ class Mission
 		};
 		class Item27
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -702,6 +730,7 @@ class Mission
 		};
 		class Item28
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -722,6 +751,7 @@ class Mission
 		};
 		class Item29
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -742,6 +772,7 @@ class Mission
 		};
 		class Item30
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -762,6 +793,7 @@ class Mission
 		};
 		class Item31
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -782,6 +814,7 @@ class Mission
 		};
 		class Item32
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -802,6 +835,7 @@ class Mission
 		};
 		class Item33
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -822,6 +856,7 @@ class Mission
 		};
 		class Item34
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -842,6 +877,7 @@ class Mission
 		};
 		class Item35
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -862,6 +898,7 @@ class Mission
 		};
 		class Item36
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -882,6 +919,7 @@ class Mission
 		};
 		class Item37
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -902,6 +940,7 @@ class Mission
 		};
 		class Item38
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -922,6 +961,7 @@ class Mission
 		};
 		class Item39
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -942,6 +982,7 @@ class Mission
 		};
 		class Item40
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -962,6 +1003,7 @@ class Mission
 		};
 		class Item41
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -982,6 +1024,7 @@ class Mission
 		};
 		class Item42
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -1002,6 +1045,7 @@ class Mission
 		};
 		class Item43
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -1022,6 +1066,7 @@ class Mission
 		};
 		class Item44
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -1042,6 +1087,7 @@ class Mission
 		};
 		class Item45
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -1062,6 +1108,7 @@ class Mission
 		};
 		class Item46
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -1082,6 +1129,7 @@ class Mission
 		};
 		class Item47
 		{
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -1102,6 +1150,7 @@ class Mission
 		};
 		class Item48
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1122,6 +1171,7 @@ class Mission
 		};
 		class Item49
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1142,6 +1192,7 @@ class Mission
 		};
 		class Item50
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1162,6 +1213,7 @@ class Mission
 		};
 		class Item51
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1182,6 +1234,7 @@ class Mission
 		};
 		class Item52
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1202,6 +1255,7 @@ class Mission
 		};
 		class Item53
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1222,6 +1276,7 @@ class Mission
 		};
 		class Item54
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1242,6 +1297,7 @@ class Mission
 		};
 		class Item55
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1262,6 +1318,7 @@ class Mission
 		};
 		class Item56
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1282,6 +1339,7 @@ class Mission
 		};
 		class Item57
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1302,6 +1360,7 @@ class Mission
 		};
 		class Item58
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1322,6 +1381,7 @@ class Mission
 		};
 		class Item59
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1342,6 +1402,7 @@ class Mission
 		};
 		class Item60
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1362,6 +1423,7 @@ class Mission
 		};
 		class Item61
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1382,6 +1444,7 @@ class Mission
 		};
 		class Item62
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1402,6 +1465,7 @@ class Mission
 		};
 		class Item63
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1422,6 +1486,7 @@ class Mission
 		};
 		class Item64
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1442,6 +1507,7 @@ class Mission
 		};
 		class Item65
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1462,6 +1528,7 @@ class Mission
 		};
 		class Item66
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1482,6 +1549,7 @@ class Mission
 		};
 		class Item67
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1502,6 +1570,7 @@ class Mission
 		};
 		class Item68
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1522,6 +1591,7 @@ class Mission
 		};
 		class Item69
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1542,6 +1612,7 @@ class Mission
 		};
 		class Item70
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1562,6 +1633,7 @@ class Mission
 		};
 		class Item71
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1582,6 +1654,7 @@ class Mission
 		};
 		class Item72
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1602,6 +1675,7 @@ class Mission
 		};
 		class Item73
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1622,6 +1696,7 @@ class Mission
 		};
 		class Item74
 		{
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -1642,6 +1717,7 @@ class Mission
 		};
 		class Item75
 		{
+			side="CIV";
 			class Vehicles
 			{
 				items=1;
@@ -1660,6 +1736,7 @@ class Mission
 		};
 		class Item76
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -1675,6 +1752,7 @@ class Mission
 		};
 		class Item77
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -1778,6 +1856,7 @@ class Mission
 		};
 		class Item82
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -1793,6 +1872,7 @@ class Mission
 		};
 		class Item83
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -1809,6 +1889,7 @@ class Mission
 		};
 		class Item84
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -1824,6 +1905,7 @@ class Mission
 		};
 		class Item85
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
@@ -1839,6 +1921,7 @@ class Mission
 		};
 		class Item86
 		{
+			side="LOGIC";
 			class Vehicles
 			{
 				items=1;
