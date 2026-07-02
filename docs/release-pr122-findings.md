@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 08:05 Europe/Amsterdam
+Last updated: 2026-07-02 08:11 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -195,6 +195,31 @@ head.
 Release remains **NO-GO**. Current-head source/static/package-content validation
 passes locally, but there is no current public package/wiki/handoff tuple and no
 runtime RPT evidence for the latest PR #125 head.
+
+## 2026-07-02 08:11 Update
+
+Final PR snapshot found PR #136 moved from
+`adcb00d24d540349094522ca81adbb0b79d61065` to
+`bad15e5756e0c57bb07669ff8e49d71506aca5d3`.
+
+New commits:
+
+- `dea402c7d` - handoff / WEST-win recap and match-report auto-poster plan
+- `bad15e575` - Ray directives recorded, no deploy yet, base assault ON, Khe
+  Sanh symptoms, no-HCs-in-stats and all-town-nodes replay notes
+
+Scope:
+
+- docs/status only: `docs/MORNING-HANDOFF-2026-07-02.md`
+- focused `git diff --check adcb00d24..origin/claude/overnight-2026-07-02`:
+  pass
+- broad raw `git diff --check origin/master..origin/claude/overnight-2026-07-02`:
+  still fails inherited `GUER_TECH.md` trailing whitespace at lines 33 and 45
+
+No new exact selected-artifact RPT package was found locally. Treat PR #136
+runtime statements as PR-doc telemetry/status, not release proof.
+
+Release remains **NO-GO**.
 
 ## 2026-07-02 01:29 Update
 
