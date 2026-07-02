@@ -55,7 +55,7 @@ for "_i" from 0 to ((count _cfgFaction) - 1) do {
 							_require set [_type, true];
 							_levels set [_type, _upgrade];
 						} else {
-							["ERROR", Format ["Squads_SetFactionGroups.sqf: Unit [%1] is not defined in the Core files.", _unit]] Call WFBE_CO_FNC_LogContent;
+							["ERROR", Format ["Squads_GetFactionGroups.sqf: Unit [%1] is not defined in the Core files.", _unit]] Call WFBE_CO_FNC_LogContent;
 							/* TODO, Attempt to define*/
 						};
 					};
