@@ -158,4 +158,22 @@ class CfgSounds
         sound[] = {"\Sounds\SidewinderLock-1.ogg", 1, 1};
         titles[] = {};
     };
+
+    class upgradeStartedSound {
+        name = "upgradeStartedSound";
+        sound[] = {"\Sounds\commanderNotification-10.ogg", 2.5, 1};
+        titles[] = {};
+    };
+
+    class WFBE_UpgradeStart_Quiet {
+        name = "WFBE_UpgradeStart_Quiet";
+        sound[] = {"\Sounds\commanderNotification-10.ogg", 0.6, 1};
+        titles[] = {};
+    };
+
+    class WFBE_UpgradeComplete_Quiet {
+        name = "WFBE_UpgradeComplete_Quiet";
+        sound[] = {"\Sounds\ARTY_cooldown_over-8.ogg", 2, 1};
+        titles[] = {};
+    };
 };

@@ -140,16 +140,25 @@ while {alive player && dialog} do {
 
 		for '_i' from 1 to ((lnbSize 500100) select 0)-1 do { //--- Update the UI list properties (name / votes) for players.
 			_value = lnbValue [500100,[_i, 0]];
-			_team = WFBE_Client_Teams select _value;
-			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
-			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
 			if ((missionNamespace getVariable ["WFBE_C_FIX_VOTE_QA_EXECUTION", 0]) > 0) then {
-				if ((_team getVariable "wfbe_vote") != -1) then {
-					lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
-				} else {
-					lnbSetColor [500100, [_i,0], [1,1,1,1]]
+				_valid = false;
+				if (_value >= 0 && {_value < count(WFBE_Client_Teams)}) then {
+					_team = WFBE_Client_Teams select _value;
+					if !(isNil "_team") then {_valid = true};
+				};
+				if (_valid) then {
+					if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
+					if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
+					if ((_team getVariable "wfbe_vote") != -1) then {
+						lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
+					} else {
+						lnbSetColor [500100, [_i,0], [1,1,1,1]]
+					};
 				};
 			} else {
+				_team = WFBE_Client_Teams select _value;
+				if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
+				if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
 				if (((WFBE_Client_Teams select _i) getVariable "wfbe_vote") != -1) then {
 					lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
 				} else {

@@ -11,6 +11,7 @@ _unit Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\OnKilled.sqf";
 player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
 (vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}];
+(vehicle player) addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 
 _rearmor = {
    				_ammo = _this select 4;

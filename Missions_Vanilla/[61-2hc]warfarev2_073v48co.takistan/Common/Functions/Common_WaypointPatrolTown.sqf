@@ -6,7 +6,7 @@
 		- {Radius}.
 */
 
-Private ['_camps','_insert','_insertObject','_insertStep','_maxWaypoints','_pos','_radius','_rand1','_rand2','_team','_town','_townPos','_type','_update','_usable','_wpcompletionRadius','_wpradius','_wps'];
+Private ['_camps','_insert','_insertObject','_insertStep','_maxWaypoints','_pos','_radius','_rand1','_rand2','_team','_town','_townPos','_type','_update','_usable','_waterRetries','_waterRetryCap','_wpcompletionRadius','_wpradius','_wps'];
 
 _team = _this select 0;
 _town = _this select 1;
@@ -14,6 +14,7 @@ _radius = if (count _this > 2) then {_this select 2} else {30};
 if (typeName _town != 'OBJECT') exitWith {};
 if (isNull _team) exitWith {};
 _townPos = getPos _town;
+_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 0];
 
 _camps = _town getVariable 'camps';//wf2
 
@@ -45,11 +46,14 @@ for '_z' from 0 to _maxWaypoints do {
 		_rand1 = random _radius - random _radius;
 		_rand2 = random _radius - random _radius;
 		_pos = [(_townPos select 0)+_rand1,(_townPos select 1)+_rand2,0];
-		while {surfaceIsWater _pos} do {
+		_waterRetries = 0;
+		while {(surfaceIsWater _pos) && {(_waterRetryCap <= 0) || {_waterRetries < _waterRetryCap}}} do {
+			if (_waterRetryCap > 0) then {_waterRetries = _waterRetries + 1};
 			_rand1 = random _radius - random _radius;
 			_rand2 = random _radius - random _radius;
 			_pos = [(_townPos select 0)+_rand1,(_townPos select 1)+_rand2,0];
 		};
+		if ((surfaceIsWater _pos) && {_waterRetryCap > 0}) then {_pos = [(_townPos select 0),(_townPos select 1),0]};
 		_wpradius = 32;
 		_wpcompletionRadius = 44;
 	} else {

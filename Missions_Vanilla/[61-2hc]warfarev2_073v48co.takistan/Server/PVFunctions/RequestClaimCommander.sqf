@@ -11,10 +11,11 @@
 	a player from stealing a seat that is locked, occupied by a human, or not theirs.
 */
 
-Private ["_side","_claimTeam","_logic","_currentCommander"];
+Private ["_side","_claimTeam","_logic","_currentCommander","_syncAicomState"];
 
 _side = _this select 0;
 _claimTeam = _this select 1;
+_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
 
 _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 
@@ -39,5 +40,5 @@ _logic setVariable ["wfbe_commander", _claimTeam, true];
 
 //--- Stand the AI down the SAME way Server_VoteForCommander.sqf:60-61 does.
 if !(isNull _claimTeam) then {
-	if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false]};
+	if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false, _syncAicomState]};
 };
