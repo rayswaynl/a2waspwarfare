@@ -179,4 +179,4 @@ if ((missionNamespace getVariable ["WFBE_C_LOG_TOWN_COORDS", 0]) == 1) then {
 
 townInitServer = true;
 
-["INITIALIZATION", "Init_Server.sqf: Town starting mode is done."] Call WFBE_CO_FNC_LogContent;
+["INITIALIZATION", "Init_Towns.sqf: Town starting mode is done."] Call WFBE_CO_FNC_LogContent;
