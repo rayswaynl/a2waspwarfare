@@ -1,11 +1,51 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 01:29 Europe/Amsterdam
+Last updated: 2026-07-02 07:30 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 07:30 Update
+
+Reconciled current repo/wiki/PR state after tool access resumed.
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki: `8099a35`
+- PR #125: `f894419db929d0900160944760f1c6646a6fa3d9`
+- PR #126: `858074d944779e9fe387da95a88732eac7bcf684`
+- PR #136: `adcb00d24d540349094522ca81adbb0b79d61065`
+
+Current PR #125 package tuple from its body:
+
+- marker: `f894419db9`
+- candidate: `release-command-center-20260630`
+- package SHA256:
+  `0EFED527088FE4EBD0F0C94702DE9A1818972EE9741597F8B400E9B78268A74C`
+- package size: `7164905`
+- entries: `1885`
+- handoff: `ready_for_runtime_collection`
+- status: not deployed, runtime pending
+
+PR #125 latest movement adds supply mission PV payload guards across both maps;
+`git diff --check origin/master..origin/codex/release-command-center-20260630`
+passes.
+
+PR #126 is clean at `858074d944779e9fe387da95a88732eac7bcf684`, but its body
+still mirrors the older PR #125 tuple `d8f15b554f` /
+`35B864A10626B8AA92F4C7A7729E1CF889310A8DA8E3BAEE58C09BA2BFC5053E`. Treat PR
+#125 as authoritative for its own current package tuple until PR #126 is
+refreshed.
+
+PR #136 is clean at `adcb00d24d540349094522ca81adbb0b79d61065`. Latest movement
+since `32d2724f5` is docs-only and reports runtime progress, including WEST win
+and fresh-match capture progress. This pass did not find an attached exact RPT
+evidence package in the workspace, so those remain PR-doc status claims, not
+release proof.
+
+Release remains **NO-GO** until a selected candidate has exact both-map RPT
+evidence, human smoke notes, and deployment approval.
 
 ## 2026-07-02 01:29 Update
 
