@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 07:55 Europe/Amsterdam
+Last updated: 2026-07-02 08:05 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -151,6 +151,50 @@ static proof for current source, not exact proof of the PR-body archive.
 
 Release remains **NO-GO**. Runtime RPT evidence must bind to the exact selected
 archive/PBOs that are deployed and tested.
+
+## 2026-07-02 08:05 Update
+
+Final validation found PR #125 moved again from
+`132af4ee66800c9eab1b140aae3dc328cc786ae1` to
+`6363f4cb5b23448abc55ceb7e39cda2448233ac5`.
+
+The new commit is mission-affecting:
+
+- `6363f4cb5` - `fix: guard guer mortar request authority`
+- changed both-map `Server/Functions/Server_HandleSpecial.sqf`
+- changed `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`
+- `git diff --check origin/master..HEAD`: pass
+
+Validation in detached worktree `work/a2waspwarfare-pr125-6363f4cb`:
+
+- `Test-WaspStaticSmoke.ps1 -BaseRef origin/master -HeadRef HEAD`: pass,
+  including `GUER mortar RequestSpecial authority guard`
+- `Run-WaspFinalCheck.ps1 -BaseRef origin/master -HeadRef HEAD`: pass
+- Chernarus A2 OA lint: pass, 744 SQF files, 0 fail, 0 review
+- Takistan A2 OA lint: pass, 747 SQF files, 0 fail, 0 review
+- High-only BugHunt: no suspects
+- touched `Server_HandleSpecial.sqf` blob is identical across Chernarus and
+  Takistan: `c8f3191a1916a264423c77f9a802b78141e76423`
+
+LoadoutManager/package gate:
+
+- `dotnet run -c RELEASE --project Tools\LoadoutManager\LoadoutManager.csproj`:
+  exit 0, `CHERNARUS DONE`, `TAKISTAN DONE`
+- `Test-WaspReleasePackage.ps1 -ArchivePath _MISSIONS.7z -ExpectedGit 6363f4cb5b -Force`:
+  pass, entries `1885`
+- local package manifest:
+  `outputs/a2waspwarfare-pr125-6363f4cb-local-package-manifest-2026-07-02-0805.json`
+- local rebuild SHA256:
+  `E93896A4610C5B5A8CBCC4287F49BFF894D312930153A9BCF906CAD130F7D792`
+- local rebuild size: `7165093`
+
+PR #125 body is now stale: it still advertises the previous `132af4ee66` /
+`DF37FA9E...` package tuple and wiki `8461f4b`, not the current `6363f4cb5b`
+head.
+
+Release remains **NO-GO**. Current-head source/static/package-content validation
+passes locally, but there is no current public package/wiki/handoff tuple and no
+runtime RPT evidence for the latest PR #125 head.
 
 ## 2026-07-02 01:29 Update
 
