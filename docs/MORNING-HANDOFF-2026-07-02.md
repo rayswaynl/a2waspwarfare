@@ -97,3 +97,15 @@ false "0 captures / 0 errors" and cost hours. Check the HC log for anything abou
 
 ## Full night-by-night detail
 `docs/OVERNIGHT-LOOP-2026-07-02.md` (Tick 0-14+). All work is in PR #136 on branch `claude/overnight-2026-07-02`.
+
+## ▶ RAY'S WAVE-2 DECISIONS (2026-07-02)
+1. **F1 march posture: YELLOW transit / RED objective** (flag-gated; reverts the untested punchy-era RED-march).
+2. **Retreat lane: FULL** (rally-mode bounding withdrawal + graceful-withdrawal evaluator + combat-guarded recycle
+   after 6 failed journeys) **+ Ray addition: mauled teams may rally AND REINFORCE at FRIENDLY TOWN CENTERS**, not
+   just HQ (top-up at the rally point via the owning-HC delegate; svc refit flip armour-only→all with headcount gate).
+3. **GUER: NO cap — "GUER is the point."** GUER volume untouched (the cap idea is dropped; YELLOW-march +
+   near-targets carry the armies through the insurgent sea).
+4. **Econ sink: balanced blend, BUT must RESPECT the research tree + dependencies** (reuse the RequestUpgrade
+   dep-validation); upgrades may include **better equipment for AI squads**, and **EASA loadouts on AI helis/jets
+   once unlocked** (EASA-for-AI = design follow-up if complex). Staging-mass before the HQ assault: approved (FYI'd).
+F8 skill: DROPPED — verified units already get skill at founding (Common_CreateTeam.sqf:57, driver passes 90).
