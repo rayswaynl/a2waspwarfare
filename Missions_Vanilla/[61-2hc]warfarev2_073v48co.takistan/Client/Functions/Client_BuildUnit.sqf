@@ -342,6 +342,22 @@ if (_isMan) then {
 		} forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
 	};
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
+
+	//--- cmdcon42c HOTFIX (Ray 2026-07-02): UNIVERSAL BUYFAIL-REFUND GUARD. WFBE_CO_FNC_CreateVehicle
+	//--- returns objNull whenever the engine cannot spawn the hull - a bad/unresolved buy class (e.g. a
+	//--- synthetic AH6X_M134 / TKV_* token whose remap above did not resolve to a real hull), a blocked
+	//--- spawn position, or any createVehicle failure. The player was ALREADY charged at buy time
+	//--- (GUI_Menu_BuyUnits.sqf: -(_currentCost) Call ChangePlayerFunds), so a silent null spawn = the
+	//--- player pays and gets nothing. Detect it here and (a) release the per-factory queue slot + unitQueu
+	//--- (else the factory soft-locks at its cap, exactly like the empty-vehicle exit does), and (b) refund
+	//--- the exact price paid. Same idiom as the destroyed-factory refund path (:282-287 above).
+	if (isNull _vehicle) exitWith {
+		unitQueu = unitQueu - _cpt;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
+		["WARNING", Format ["Client_BuildUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded $%2 and released queue slot for factory [%3].", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	clientTeam reveal _vehicle;
 
 	//--- cmdcon42 Option C Row 2: arm the AH-6X hull with the AH-6J's minigun. The AH6X_EP1 hull ships
