@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 07:44 Europe/Amsterdam
+Last updated: 2026-07-02 07:55 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -105,6 +105,52 @@ PR #125 tuple again. Its latest checked body mirrors `f894419db9` /
 
 Release remains **NO-GO** until exact selected-candidate Chernarus + Takistan RPT
 evidence, human smoke notes, and deployment approval are attached.
+
+## 2026-07-02 07:55 Update
+
+Ran independent local validation for current PR #125 head
+`132af4ee66800c9eab1b140aae3dc328cc786ae1` in detached worktree
+`work/a2waspwarfare-pr125-132af4ee`.
+
+Static/source gates:
+
+- `git diff --check origin/master..HEAD`: pass
+- `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`: pass, including
+  `SCUD RequestSpecial authority guard`
+- `Tools/PrTestHarness/Run-WaspFinalCheck.ps1 -BaseRef origin/master -HeadRef HEAD`:
+  pass
+- Chernarus A2 OA lint: pass, 744 SQF files, 0 fail, 0 review
+- Takistan A2 OA lint: pass, 747 SQF files, 0 fail, 0 review
+- High-only BugHunt: no suspects
+
+Latest SCUD authority mission files are hash-identical across Chernarus and
+Takistan:
+
+- `Client/PVFunctions/HandleSpecial.sqf`:
+  `bc1fff38a8f3aa20be3adca47068901982bd3db3`
+- `Server/Functions/Server_HandleSpecial.sqf`:
+  `4c5696dceefa07c25f17aba3421bb7d9fea525dd`
+- `Server/Support/Support_ScudStrike.sqf`:
+  `45053f32084ab67a6c64495e7f91a57af6ecfec2`
+
+LoadoutManager/package gate:
+
+- `dotnet run -c RELEASE --project Tools\LoadoutManager\LoadoutManager.csproj`:
+  exit 0, `CHERNARUS DONE`, `TAKISTAN DONE`
+- `Test-WaspReleasePackage.ps1 -ArchivePath _MISSIONS.7z -ExpectedGit 132af4ee66 -Force`:
+  pass
+- local package manifest:
+  `outputs/a2waspwarfare-pr125-132af4ee-local-package-manifest-2026-07-02-0755.json`
+
+Boundary: the fresh local rebuild produced archive SHA256
+`4D632093F54EF020ACA5A6B4A9B4A273ED0DA148CD688961DF2C3A8DBD2401A2`,
+size `7164844`, entries `1885`. PR #125 body currently claims
+`DF37FA9EBEC4F650A7A37CB6C2ED0842C59860CAE18617BB61A3C56010E603CE`,
+size `7164821`, entries `1885`. Treat the local rebuild as package-content and
+static proof for current source, not exact proof of the PR-body archive.
+
+Release remains **NO-GO**. Runtime RPT evidence must bind to the exact selected
+archive/PBOs that are deployed and tested.
 
 ## 2026-07-02 01:29 Update
 
