@@ -65,8 +65,9 @@
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][string]$CfgPath,
+    [Parameter(Mandatory)][ValidateNotNullOrEmpty()][string]$CfgPath,
     [Parameter(Mandatory)][ValidateNotNullOrEmpty()][string]$MissionName,
+    [ValidateNotNullOrEmpty()]
     [string]$Pattern = '(?m)(?<=^[ \t]*)template\s*=\s*"\[55-2hc\][^"]*chernarus[^"]*"\s*;',
     [switch]$Apply
 )
