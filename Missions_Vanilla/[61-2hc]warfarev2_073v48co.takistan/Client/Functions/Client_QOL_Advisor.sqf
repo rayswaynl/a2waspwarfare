@@ -9,16 +9,13 @@
 	Last-purchase tracking: GUI_Menu_BuyUnits.sqf stamps WFBE_QOL_LAST_PURCHASE_TIME = time
 	on each purchase.  This script reads that variable.
 
-	Also shows a once-per-session nudge to the side commander when:
-	  - player IS the side commander (commanderTeam == group player)
-	  - side owns >= 3 towns
-	  - Patrols upgrade is unresearched (wfbe_upgrades index WFBE_UP_PATROLS == 0)
-	  - round time > 15 min
+	Also shows once-per-session nudges for new commanders, researched EASA, supply delivery,
+	economy split, and Patrols.
 	(WILDCARD V2 RECONCILIATION: owner-approved commander Patrols nudge)
 
 	Spawned from Init_Client.sqf after commonInitComplete.
 */
-Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed","_patrolNudgeDone","_upgrades","_townsHeld","_patrolLvl","_inRangeKeys"];
+Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed","_patrolNudgeDone","_upgrades","_townsHeld","_patrolLvl","_inRangeKeys","_advisorNudged","_commanderNudgeDone","_easaNudgeDone","_economyNudgeDone","_supplyNudgeDone","_isCommander","_easaLvl"];
 
 //--- Master toggle.
 if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) < 1) exitWith {};
@@ -38,6 +35,10 @@ if (isNil "WFBE_QOL_LAST_PURCHASE_TIME") then {
 
 //--- Commander Patrols nudge: once per session.
 _patrolNudgeDone = false;
+_commanderNudgeDone = false;
+_easaNudgeDone = false;
+_economyNudgeDone = false;
+_supplyNudgeDone = false;
 
 while {!gameOver} do {
 	sleep _interval;
@@ -49,6 +50,9 @@ while {!gameOver} do {
 
 	//--- Only nudge while the player is alive and not in respawn.
 	if (alive player) then {
+		_advisorNudged = false;
+		_isCommander = (!isNull commanderTeam) && {(group player) in [commanderTeam]};
+
 		//--- Only nudge when last purchase was more than one interval ago.
 		_lastBuy = missionNamespace getVariable ["WFBE_QOL_LAST_PURCHASE_TIME", 0];
 		_elapsed = time - _lastBuy;
@@ -61,7 +65,7 @@ while {!gameOver} do {
 			if (heavyInRange) then {_inRangeKeys set [count _inRangeKeys, "Heavy"]};
 			if (aircraftInRange) then {_inRangeKeys set [count _inRangeKeys, "Aircraft"]};
 			if (hangarInRange) then {_inRangeKeys set [count _inRangeKeys, "Airport"]};
-			if (depotInRange || sideJoined == resistance) then {_inRangeKeys set [count _inRangeKeys, "Depot"]};
+			if (depotInRange || {sideJoined in [resistance]}) then {_inRangeKeys set [count _inRangeKeys, "Depot"]};
 
 			//--- Derive the cheapest unit the player can actually buy from those in-range pools.
 			_threshold = 0;
@@ -70,7 +74,7 @@ while {!gameOver} do {
 					_unitData = missionNamespace getVariable _x;
 					if !(isNil "_unitData") then {
 						_price = _unitData select QUERYUNITPRICE;
-						if (_threshold == 0 || _price < _threshold) then {_threshold = _price};
+						if (_threshold < 1 || {_price < _threshold}) then {_threshold = _price};
 					};
 				} forEach (missionNamespace getVariable [Format ["WFBE_%1%2UNITS", WFBE_Client_SideJoinedText, _x], []]);
 			} forEach _inRangeKeys;
@@ -83,13 +87,48 @@ while {!gameOver} do {
 				if (_funds >= _threshold) then {
 					_nudgeText = Format ["You have $%1 unspent - visit a factory or the gear menu.", _funds];
 					hintSilent _nudgeText;
+					_advisorNudged = true;
 				};
 			};
 		};
 
+		if (!_advisorNudged && {!_easaNudgeDone}) then {
+			_upgrades = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
+			_easaLvl = 0;
+			if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_EASA}) then {
+				_easaLvl = _upgrades select WFBE_UP_EASA;
+			};
+			if (_easaLvl > 0) then {
+				hintSilent "Advisor: EASA is researched - aircraft can swap loadouts at air service points.";
+				_easaNudgeDone = true;
+				_advisorNudged = true;
+			};
+		};
+
+		if (!_advisorNudged && {!_supplyNudgeDone}) then {
+			_townsHeld = sideJoined Call GetTownsHeld;
+			if (_townsHeld >= 2) then {
+				hintSilent "Advisor: supply trucks can run deliveries from base to towns; escort them for steady supply.";
+				_supplyNudgeDone = true;
+				_advisorNudged = true;
+			};
+		};
+
+		if (!_advisorNudged && {_isCommander} && {!_commanderNudgeDone} && {time > 120}) then {
+			hintSilent "Commander tip: open the WF menu for build, upgrades, economy, and AI command options.";
+			_commanderNudgeDone = true;
+			_advisorNudged = true;
+		};
+
+		if (!_advisorNudged && {_isCommander} && {!_economyNudgeDone} && {time > 300}) then {
+			hintSilent "Commander tip: the Economy menu lets you tune income split and keep supply flowing.";
+			_economyNudgeDone = true;
+			_advisorNudged = true;
+		};
+
 		//--- Commander Patrols nudge (once per session, separate flag).
 		//--- Gates: player IS commander + side owns 3+ towns + Patrols unresearched + round > 15 min.
-		if (!_patrolNudgeDone && {!isNull commanderTeam} && {commanderTeam == group player} && {time > 900}) then {
+		if (!_advisorNudged && {!_patrolNudgeDone} && {_isCommander} && {time > 900}) then {
 			_townsHeld = sideJoined Call GetTownsHeld;
 			if (_townsHeld >= 3) then {
 				_upgrades = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
@@ -97,9 +136,10 @@ while {!gameOver} do {
 				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_PATROLS}) then {
 					_patrolLvl = _upgrades select WFBE_UP_PATROLS;
 				};
-				if (_patrolLvl == 0) then {
+				if (_patrolLvl < 1) then {
 					hintSilent "Commander tip: you hold 3+ towns - research Patrols (upgrade menu) to push the frontline automatically.";
 					_patrolNudgeDone = true;
+					_advisorNudged = true;
 				};
 			};
 		};
