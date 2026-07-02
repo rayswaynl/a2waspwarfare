@@ -8,9 +8,13 @@
 python Tools\Lint\check_sqf.py Missions\[55-2hc]warfarev2_073v48co.chernarus\Client\GUI\GUI_Menu_Tactical.sqf
 python Tools\Lint\check_sqf.py --no-classname-index Missions\[55-2hc]warfarev2_073v48co.chernarus
 python Tools\Lint\test_check_sqf.py
+python Tools\Lint\check_sqf.py --select A3CMD,BRACKET --no-classname-index
+python Tools\Lint\check_sqf.py --ignore BOOLCMP,CLASSREF Missions\[55-2hc]warfarev2_073v48co.chernarus
 ```
 
 With no paths, the checker scans both maintained mission roots.
+
+Use `--select` for focused gates, such as an Arma 3 command-trap pass that should not fail on broad legacy `BOOLCMP` review findings. Use `--ignore` when you want the normal checker minus one or more noisy codes. Both options take comma-separated finding codes.
 
 ## Checks
 

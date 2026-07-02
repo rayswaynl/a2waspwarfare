@@ -58,6 +58,19 @@ GROUP_GETVARIABLE_ARRAY_RE = re.compile(
     r")\s+getVariable\s*\[",
     re.IGNORECASE,
 )
+FINDING_CODES = (
+    "A3CMD",
+    "A3MARKER",
+    "A3REVEAL",
+    "A3SELECT",
+    "A3SORT",
+    "A3STRING",
+    "BOOLCMP",
+    "BRACKET",
+    "CLASSREF",
+    "DISABLESER",
+    "GROUPGETVAR",
+)
 
 
 @dataclass
@@ -286,14 +299,28 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
     return findings
 
 
+def parse_code_filter(value: str, parser: argparse.ArgumentParser, option_name: str) -> set[str]:
+    codes = {part.strip().upper() for part in value.split(",") if part.strip()}
+    unknown = sorted(codes - set(FINDING_CODES))
+    if unknown:
+        parser.error(f"{option_name} contains unknown finding code(s): {', '.join(unknown)}")
+    if not codes:
+        parser.error(f"{option_name} requires at least one finding code")
+    return codes
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Run WASP SQF lint checks.")
     parser.add_argument("paths", nargs="*", type=Path, help="Files or directories to scan. Defaults to both maintained mission roots.")
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root for relative paths and classname indexing.")
     parser.add_argument("--no-classname-index", action="store_true", help="Skip quoted classname-like token uniqueness checks.")
+    parser.add_argument("--select", help="Comma-separated finding codes to include, e.g. A3CMD,BRACKET.")
+    parser.add_argument("--ignore", help="Comma-separated finding codes to suppress, e.g. BOOLCMP,CLASSREF.")
     args = parser.parse_args(argv)
 
     root = args.root.resolve()
+    selected_codes = parse_code_filter(args.select, parser, "--select") if args.select else None
+    ignored_codes = parse_code_filter(args.ignore, parser, "--ignore") if args.ignore else set()
     default_paths = [
         root / "Missions" / "[55-2hc]warfarev2_073v48co.chernarus",
         root / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.takistan",
@@ -305,12 +332,17 @@ def main(argv: list[str]) -> int:
         return 2
 
     token_index: dict[str, set[Path]] = {}
-    if not args.no_classname_index:
+    needs_classname_index = (selected_codes is None or "CLASSREF" in selected_codes) and "CLASSREF" not in ignored_codes
+    if not args.no_classname_index and needs_classname_index:
         token_index = build_token_index(root)
 
     findings: list[Finding] = []
     for path in files:
         findings.extend(lint_text(path.resolve(), read_text(path), root, token_index))
+    if selected_codes is not None:
+        findings = [finding for finding in findings if finding.code in selected_codes]
+    if ignored_codes:
+        findings = [finding for finding in findings if finding.code not in ignored_codes]
 
     for finding in findings:
         print(finding.render(root))
