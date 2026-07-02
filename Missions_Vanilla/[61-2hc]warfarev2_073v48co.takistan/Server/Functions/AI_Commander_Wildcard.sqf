@@ -9,7 +9,7 @@
 	  AI-commanded side: normal draw, AI wallet.
 	  Human-commanded side: draw fires too (PvE spice); human-side payout mapping applies.
 
-	DECK (weights, total=123):
+	DECK (default-on weights, total=123; W25 is flag-gated off):
 	  W1  War Chest         (17) Common    — AI funds +25% FUNDS_START.
 	  W2  Supply Drop       (17) Common    — side supply +1500, capped.
 	  W6  Air Cavalry       ( 8) Uncommon  — free ELITE air-assault squad founded as a one-off commander
@@ -49,6 +49,7 @@
 	  W22 Top Gun          (6) Rare     — a fixed-wing fighter loiters the front ~180s hunting enemy aircraft, self-despawns.
 	  W23 Armor Column     (7) Uncommon — founds one free TANK team (tank-led template) at HQ; brain orders it to the front.
 	  W24 Technical Swarm  (6) Rare     — founds two free CAR-led gun-truck teams charging the front.
+	  W25 Osprey Lift      (4) Rare     — default-off WEST MV-22 visual lift to a friendly town; no team/economy change.
 
 	Human-side payout mapping:
 	  W1 -> wfbe_funds on the commander's team (instead of AI wallet).
@@ -208,6 +209,7 @@ while {!gameOver} do {
 		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22TargetPos","_wW22",
 		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
 		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
+		         "_w25Eligible","_w25Class","_w25Key","_w25Target","_w25TownObj","_w25BestThreat","_w25Threat","_w25NearD","_w25D","_w25TargetPos","_w25Ang","_w25SpawnPos","_w25Osprey","_w25Grp","_w25PilotClass","_w25Pilot","_wW25",
 		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore"];
 
 				_side     = _this select 0;
@@ -504,6 +506,20 @@ while {!gameOver} do {
 					if (count _w24Template > 0) then {_w24Eligible = true};
 				};
 
+				//--- W25: OSPREY LIFT (lane 44) - default-off WEST visual reinforcement flavour.
+				//--- It spawns one crewed MV-22 to fly over a friendly town, then self-cleans. No troops,
+				//--- no wfbe_teams entry, no funds/supply delta. Config-gated so non-CO maps stay dark.
+				_w25Eligible = false;
+				_w25Class = "MV22";
+				_w25Key = Format ["wfbe_aicom_osprey_lift_done_%1", _sideText];
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_OSPREY_LIFT", 0]) > 0
+				    && {_side in [west]}
+				    && {!isNull _hq}
+				    && {alive _hq}
+				    && {count _owned > 0}
+				    && {!(missionNamespace getVariable [_w25Key, false])}
+				    && {isClass (configFile >> "CfgVehicles" >> _w25Class)}) then {_w25Eligible = true};
+
 				_wW1  = 17; _wW2  = 17; _wW3  =  0;  //--- W3 (Bonus Patrol) REMOVED 2026-06-16 (Ray): obsolete - patrol cap was lowered. Weight forced 0 -> card can NEVER be drawn; apply block left inert.
 				_wW6  =  8; _wW7  =  0; _wW10 =  0; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8). W7 (Veteran Company) REMOVED 2026-06-27 (Ray): boring/no visible payoff. Weight forced 0 -> never drawn; apply block left inert. W10 (Lucky Salvage) REMOVED 2026-06-16 (Ray): salvage moved to the cleaner-tied Salvage Lottery.
 				_wW4  =  6; _wW9  =  0;  //--- W4 Rare weight 6. W9 (Uprising) REMOVED 2026-06-16 (Ray): too invasive. Weight forced 0 -> card can NEVER be drawn; apply block left inert (W8 RETIRED 2026-06-15).
@@ -513,6 +529,7 @@ while {!gameOver} do {
 				_wW14 =  0; _wW15 =  6; _wW16 =  6; _wW17 =  0;  //--- W14 (Iron Dome) + W17 (Supply Convoy) REMOVED 2026-06-27 (Ray): boring/useless. Weights forced 0 -> never drawn; apply blocks left inert.
 				_wW21 =  0;  //--- W21 (GUER VBIED) REMOVED 2026-06-27 (Ray): boring/useless. Weight forced 0 -> never drawn; apply block left inert.
 				_wW22 =  6; _wW23 =  7; _wW24 =  6;  //--- NEW 2026-06-27 (Ray): W22 Top Gun (Rare), W23 Armor Column (Uncommon), W24 Technical Swarm (Rare) - all visible combat reinforcements; escalate when losing.
+				_wW25 = if ((missionNamespace getVariable ["WFBE_C_AICOM_OSPREY_LIFT", 0]) > 0) then {missionNamespace getVariable ["WFBE_C_AICOM_OSPREY_LIFT_WEIGHT", 4]} else {0};
 
 				if (_losing) then {
 					_wW4  = round(_wW4  * _eMult);
@@ -549,6 +566,7 @@ while {!gameOver} do {
 				if (!_w22Eligible) then {_wW22 = 0};
 				if (!_w23Eligible) then {_wW23 = 0};
 				if (!_w24Eligible) then {_wW24 = 0};
+				if (!_w25Eligible) then {_wW25 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
 				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
@@ -557,7 +575,7 @@ while {!gameOver} do {
 				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
 				            [9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
 				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19],
-				            [20,_wW20],[21,_wW21],[22,_wW22],[23,_wW23],[24,_wW24]];
+				            [20,_wW20],[21,_wW21],[22,_wW22],[23,_wW23],[24,_wW24],[25,_wW25]];
 
 				_cumSum = 0;
 				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
@@ -1247,8 +1265,71 @@ while {!gameOver} do {
 										_detail = Format ["air_template=%1 lead=%2 tier=%3 town=%4 threat=%5 price=%6 free hc=%7 humanCmd=%8", _w6AirTemplate, _w6AirTemplate select 0, _w6AirTier, _w19Town getVariable ["name","?"], _w19BestThreat, _w19Price, !isNull _w19HcUnit, _humanCmd];
 									};
 								};
+						};
+					};
+
+					//--- W25: OSPREY LIFT - one default-off WEST MV-22 fly-in over a friendly town.
+					//--- Pure visual flavour: no team founding, no cargo, no economy state. Self-cleans.
+					case 25: {
+						_w25Target = objNull;
+						_w25BestThreat = 0;
+						{
+							_w25TownObj = _x;
+							_w25Threat = {alive _x && {(side _x) in [_enemySide]} && {(_x distance _w25TownObj) < 600}} count allUnits;
+							if (_w25Threat > _w25BestThreat) then {_w25BestThreat = _w25Threat; _w25Target = _w25TownObj};
+						} forEach _owned;
+						if (isNull _w25Target) then {
+							_w25NearD = 1e9;
+							{
+								_w25TownObj = _x;
+								_w25D = 1e9;
+								{ _w25D = _w25D min (_w25TownObj distance _x) } forEach _cands;
+								if (count _cands < 1) then {_w25D = _w25TownObj distance _hq};
+								if (_w25D < _w25NearD) then {_w25NearD = _w25D; _w25Target = _w25TownObj};
+							} forEach _owned;
+						};
+
+						if (!(_side in [west]) || {isNull _w25Target} || {!isClass (configFile >> "CfgVehicles" >> _w25Class)}) then {
+							_result = "ineligible";
+							_detail = "W25 requires WEST, MV22 class, and an owned town";
+						} else {
+							_w25TargetPos = getPos _w25Target;
+							_w25Ang = random 360;
+							_w25SpawnPos = [(_w25TargetPos select 0) + 2500 * sin _w25Ang, (_w25TargetPos select 1) + 2500 * cos _w25Ang, 450];
+							_w25Osprey = [_w25Class, _w25SpawnPos, _side, _w25Ang, true, true, true, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
+							if (!isNull _w25Osprey) then {
+								_w25Grp = [_side, "aicom-osprey-lift"] Call WFBE_CO_FNC_CreateGroup;
+								_w25PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
+								if (!isNull _w25Grp && {!(_w25PilotClass in [""])}) then {
+									_w25Pilot = [_w25PilotClass, _w25Grp, _w25SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _w25Pilot) then {
+										_w25Pilot moveInDriver _w25Osprey;
+										_w25Osprey flyInHeight 350;
+										_w25Grp setBehaviour "CARELESS";
+										_w25Grp setCombatMode "BLUE";
+										[_w25Grp, _w25TargetPos, 350] Call AIPatrol;
+										missionNamespace setVariable [_w25Key, true];
+										[_w25Osprey, _w25Grp] spawn {
+											private ["_os","_grp"];
+											_os = _this select 0; _grp = _this select 1;
+											sleep 240;
+											if (!isNull _os && {({isPlayer _x} count (crew _os)) < 1}) then {{deleteVehicle _x} forEach (crew _os); deleteVehicle _os};
+											if (!isNull _grp) then {{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _grp); deleteGroup _grp};
+										};
+										_detail = Format ["class=%1 town=%2 window=240s visual_only=1", _w25Class, _w25Target getVariable ["name","?"]];
+									} else {
+										deleteVehicle _w25Osprey; deleteGroup _w25Grp;
+										_result = "partial"; _detail = Format ["W25 no pilot for %1", _w25Class];
+									};
+								} else {
+									deleteVehicle _w25Osprey;
+									_result = "partial"; _detail = "W25 no group/pilot class";
+								};
+							} else {
+								_result = "ineligible"; _detail = Format ["W25 createVehicle null for %1", _w25Class];
 							};
 						};
+					};
 
 						//--- W20: CAPTURED CACHE - raise ONE random SUPPORT-line tier (Paratroopers/Supply/Gear) +1, bounded
 						//--- by its configured max. SAME write + broadcast path as W16 Lend-Lease (wfbe_upgrades + NewIntel +
@@ -1540,7 +1621,8 @@ while {!gameOver} do {
 					[21,"Insurgent Car Bomb","a suicide car bomb rolls on a front-line town - destroy it for a bounty"],
 					[22,"Top Gun","a fighter flies cover over the front and hunts enemy aircraft"],
 					[23,"Armor Column","a free tank platoon rolls to the front"],
-					[24,"Technical Swarm","a wave of gun-trucks charges the front"]
+					[24,"Technical Swarm","a wave of gun-trucks charges the front"],
+					[25,"Osprey Lift","an MV-22 flies a visual reinforcement pass over a friendly town"]
 				];
 				_wName = Format ["W%1", _draw];
 				_wDesc = "";
@@ -1578,6 +1660,8 @@ while {!gameOver} do {
 						//--- W23/W24 handled below (their apply spawns at HQ; mark the front town they head to).
 						case 23: {};
 						case 24: {};
+						//--- W25 Osprey Lift: friendly town fly-in marker, same lifetime as the aircraft.
+						case 25: {if (!isNil "_w25TargetPos") then {_mkPos = _w25TargetPos}; _mkLife = 240; _mkType = "mil_air"};
 					};
 					//--- W23 Armor Column / W24 Technical Swarm: spawn at HQ, brain orders them to the front.
 					//--- Mark the best-scored spearhead/front town (the SAME selection W4/W6 use) so the side

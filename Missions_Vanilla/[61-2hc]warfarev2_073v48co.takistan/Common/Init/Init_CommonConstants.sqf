@@ -517,6 +517,8 @@ with missionNamespace do {
 	//--- V0.6: Wildcard events - one free random event per AI-commanded side per interval.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD") then {WFBE_C_AI_COMMANDER_WILDCARD = 1};           //--- 0 disables wildcard events entirely.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL") then {WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL = 900}; //--- Seconds between wildcard events per side (15 min - faster testing cadence, claude-gaming 2026-06-14; was 1800/30min).
+	if (isNil "WFBE_C_AICOM_OSPREY_LIFT") then {WFBE_C_AICOM_OSPREY_LIFT = 0}; //--- Lane 44: 1 enables default-off WEST MV-22 visual reinforcement flavour card (W25); 0 keeps deck unchanged.
+	if (isNil "WFBE_C_AICOM_OSPREY_LIFT_WEIGHT") then {WFBE_C_AICOM_OSPREY_LIFT_WEIGHT = 4}; //--- W25 draw weight when enabled; one successful Osprey lift per side/round.
 	WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN = 3;   //--- V0.5: teams concentrated per spearhead town (legacy/fallback quota; per-tier quota below overrides).
 	//--- V0.8 COHERENT FRONT (claude-gaming 2026-06-14): the old spearhead scorer was
 	//--- supplyValue - dNear/150, which let a fat enemy city 8km away outscore the nearest
