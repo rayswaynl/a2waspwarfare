@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="Warfare V48 Chernarus [GUER]";
-		briefingDescription="WASP Warfare release candidate: AI commander, command-center, supply, WDDM/artillery, UI/UX, GPS, factories, and performance updates.";
+		briefingName="WASP Warfare Build 86 (Chernarus)";
+		briefingDescription="Build 86: SCUD program, territorial victory, skin selector, command verbs, AI support, richer air and A-life.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;

@@ -70,7 +70,7 @@ To verify a release archive after packaging, run:
 ```powershell
 powershell -ExecutionPolicy Bypass -File ..\PrTestHarness\Package\Test-WaspReleasePackage.ps1 `
   -ArchivePath ..\..\_MISSIONS.7z `
-  -ExpectedCandidate build85-cmdcon39-20260702 `
+  -ExpectedCandidate build86-cmdcon41-20260702 `
   -ExpectedGit (git -C ..\.. rev-parse --short=10 HEAD)
 ```
 
