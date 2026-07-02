@@ -139,14 +139,20 @@ _team setVariable ["wfbe_aicom_airborne_until", time + 600, true];
 //--- town along the town->enemy-HQ (enemy-rear) axis, so the vehicle + crew land 1-2km BEHIND the lines and
 //--- attack the objective from the REAR (Ray's flanking intent). Decisions made HERE (driver context = _h is
 //--- LOCAL, so the attachTo/detach later run where the heli is local, as required):
-//---   ELIGIBILITY: a hull that is (config armor <= *_MAXARMOR, CALIBRATED default 150 - admits ALL HMMWV
-//---     variants incl. M2 (120)/CROWS (100)/Avenger (150), UAZs, Vodniks (85-100), technicals/light trucks)
-//---     AND ("Car" AND NOT "Wheeled_APC"). The CLASS test is what excludes the APC family - BTR60 (120)/
-//---     LAV25/BTR90 (150)/Stryker (160) overlap the armor range but are Wheeled_APC (which derives FROM Car
-//---     in A2, so the NOT-clause is load-bearing); BMP/Bradley are Tank-family = not "Car"; tanks fail both.
-//---     OR isKindOf one of the *_ALLOW base classes (armour-misread fallback, still gated NOT-Wheeled_APC/
-//---     NOT-Tank). It must be alive, canMove, NOT the transport, and NOT an Air hull. ONE lift per leg
-//---     (first match wins).
+//---   ELIGIBILITY - TIERED BY THE SIDE'S AIR-FACTORY RESEARCH (Ray expansion: "BTR/LAV/Stryker should be
+//---     included, at higher AF tiers heavier vehicles as well"). One tier-resolve per leg via the same
+//---     GetSideUpgrades/WFBE_UP_AIR read the roster rows use (AIR research has 5 levels; ICBM deps prove L5):
+//---       TIER 1 (AIR < *_T2_AIR [2]): "Car" AND NOT "Wheeled_APC" AND armor <= *_MAXARMOR (150) - armed
+//---         HMMWVs incl. M2 (120)/CROWS (100)/Avenger (150), UAZs, Vodniks (85-100), technicals, light trucks.
+//---       TIER 2 (AIR >= 2): ALSO Wheeled_APC-family with armor <= *_T2_MAXARMOR (200) - BTR-60 (120),
+//---         LAV-25/BTR-90 (150), Strykers (160) become liftable (the NOT-Wheeled_APC clause drops here).
+//---       TIER 3 (AIR >= *_T3_AIR [4]): ANY LandVehicle with armor <= *_T3_MAXARMOR (400) - tracked IFVs
+//---         (BMP-2 250, Bradley 300/400) join; MBTs stay excluded NATURALLY by armor (T-72 690, M1A1 850).
+//---     Never Air/Ship (LandVehicle-only at every tier; candidates are pre-filtered NOT-Air). The *_ALLOW
+//---     base-class fallback (armour-misread, still gated NOT-Wheeled_APC/NOT-Tank) stays as the tier-1 net.
+//---     It must be alive, canMove, NOT the transport. ONE lift per leg (first match wins). LIFTER: any
+//---     transport lifts anything (arcade-lore by design - no heavy-lifter preference; teams own ONE transport
+//---     and the -7 sling hangs the same for every hull, it's a game).
 //---   SURVIVAL GUARD: skip the lift if this vehicle is the team's ONLY drivable ground transport (never lift
 //---     what the team needs to survive - only lift a SPARE light vehicle).
 //---   DROP POINT: *_DEPTH (+-300 jitter) BEYOND _dest along the _dest->enemy-HQ bearing (A2-safe atan2 delta;
@@ -162,21 +168,43 @@ private ["_liftVeh","_vehDrop"];
 _liftVeh = objNull;
 _vehDrop = [];
 if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT", 1]) > 0) then {
-	private ["_maxArmor","_allow","_grndCount"];
+	private ["_maxArmor","_allow","_grndCount","_liftTier","_t2Max","_t3Max"];
 	_maxArmor = missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_MAXARMOR", 150];
+	_t2Max    = missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_T2_MAXARMOR", 200];
+	_t3Max    = missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_T3_MAXARMOR", 400];
 	_allow    = missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_ALLOW", ["Car"]];
+	//--- TIER RESOLVE (once per leg): the side's AIR-FACTORY research level gates how heavy a hull the
+	//--- transport may sling. Same GetSideUpgrades/WFBE_UP_AIR read the roster rows + supplyMission use;
+	//--- count-guarded so a short/empty upgrade array (GUER zero-array) degrades to tier 1, never errors.
+	private ["_upgV","_airLvl"];
+	_liftTier = 1;
+	_airLvl = 0;
+	_upgV = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+	if (!isNil "_upgV" && {typeName _upgV == "ARRAY"} && {count _upgV > WFBE_UP_AIR}) then {_airLvl = _upgV select WFBE_UP_AIR};
+	if (_airLvl >= (missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_T2_AIR", 2])) then {_liftTier = 2};
+	if (_airLvl >= (missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_T3_AIR", 4])) then {_liftTier = 3};
 	//--- Count the team's own drivable GROUND transports (non-air, canMove) so we never lift the team's ONLY
 	//--- one (never lift what the team needs to survive). _teamVehs = the caller's authoritative hull list.
 	_grndCount = { !isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} } count _teamVehs;
-	//--- Pick the FIRST eligible LIGHT ground vehicle owned by the team (first match wins = ONE lift per leg).
+	//--- Pick the FIRST eligible ground vehicle owned by the team (first match wins = ONE lift per leg).
 	{
 		if (isNull _liftVeh && {!isNull _x} && {alive _x} && {canMove _x} && {!(_x isKindOf "Air")} && {_x != _h}) then {
 			private ["_type","_armor","_isLight","_isAllow"];
 			_type  = typeOf _x;
 			_armor = getNumber (configFile >> "CfgVehicles" >> _type >> "armor");
-			//--- LIGHT if the armour reads at/below the ceiling AND it is a "Car" that is NOT a "Wheeled_APC"
-			//--- (LAV25/BTR90 are Wheeled_APC -> excluded even at a low armour misread; tanks are not "Car").
+			//--- TIER 1 (always on): a "Car" that is NOT a "Wheeled_APC" at/below the light ceiling
+			//--- (Wheeled_APC derives FROM Car in A2, so the NOT-clause is load-bearing at this tier).
 			_isLight = (_armor > 0) && {_armor <= _maxArmor} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")};
+			//--- TIER 2 (AIR >= T2_AIR): Wheeled_APC-family joins - BTR-60/90, LAV-25, Strykers.
+			if (!_isLight && {_liftTier >= 2}) then {
+				_isLight = (_armor > 0) && {_armor <= _t2Max} && {_x isKindOf "Wheeled_APC"};
+			};
+			//--- TIER 3 (AIR >= T3_AIR): ANY LandVehicle at/below the heavy ceiling - tracked IFVs (BMP-2 250,
+			//--- Bradley 300/400) join; MBTs (T-72 690, M1A1 850) stay excluded naturally by armor. LandVehicle
+			//--- keeps Air/Ship out at every tier.
+			if (!_isLight && {_liftTier >= 3}) then {
+				_isLight = (_armor > 0) && {_armor <= _t3Max} && {_x isKindOf "LandVehicle"};
+			};
 			//--- Allowlist fallback (armour read 0/unreliable): a base-class match, still gated NOT-Wheeled_APC/NOT-Tank.
 			_isAllow = false;
 			if (!_isLight && {!(_x isKindOf "Wheeled_APC")} && {!(_x isKindOf "Tank")}) then {
@@ -240,8 +268,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT", 1]) > 0) then {
 		//--- ride it down and drive off the drop.
 		_liftVeh attachTo [_h, [0, 0, -7]];
 		_liftVeh setVariable ["wfbe_aicom_slung", true, true]; //--- mark so nothing else reaps/re-tasks a slung hull mid-flight.
-		diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|VEHLIFT|team=" + (str _team) + "|veh=" + (typeOf _liftVeh) + "|depth=" + str (round (_liftVeh distance _vehDrop)));
-		["INFORMATION", Format ["Common_AICOMAirLeg.sqf: [%1] team [%2] SLINGS %3 for a deep drop %4m behind %5 (enemy-rear flank).", _side, _team, typeOf _liftVeh, round _depth, _dest]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|VEHLIFT|team=" + (str _team) + "|veh=" + (typeOf _liftVeh) + "|depth=" + str (round (_liftVeh distance _vehDrop)) + "|tier=" + str _liftTier);
+		["INFORMATION", Format ["Common_AICOMAirLeg.sqf: [%1] team [%2] SLINGS %3 (lift tier %4) for a deep drop %5m behind %6 (enemy-rear flank).", _side, _team, typeOf _liftVeh, _liftTier, round _depth, _dest]] Call WFBE_CO_FNC_AICOMLog;
 	};
 };
 
