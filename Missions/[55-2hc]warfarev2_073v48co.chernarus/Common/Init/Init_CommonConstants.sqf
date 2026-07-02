@@ -146,6 +146,13 @@ with missionNamespace do {
 		if (isNil "WFBE_C_GUER_FOB_BUILD_DIST") then {WFBE_C_GUER_FOB_BUILD_DIST = 22};   //--- metres in front of the truck where the FOB factory is placed.
 		if (isNil "WFBE_C_GUER_FOB_BUILD_RANGE") then {WFBE_C_GUER_FOB_BUILD_RANGE = 30}; //--- max player->truck distance to use the Build-FOB action.
 		if (isNil "WFBE_C_GUER_FOB_TOWN_BLOCK") then {WFBE_C_GUER_FOB_TOWN_BLOCK = 600};  //--- no FOB within this many metres of a WEST/EAST-held town.
+		//--- cmdcon43-n2 (2026-07-03) GUER TOWN-CENTER BUY FIX: base-less GUER buys every vehicle from the town-center
+		//--- DEPOT (their only vehicle economy). This flag makes Client_GetClosestDepot.sqf resolve the depot for a GUER
+		//--- buyer at ANY friendly town center - GUER-held OR neutral (not WEST-held, not EAST-held) - the same idiom
+		//--- Client_CanUseTownCenterEASA + the GUER spawn/respawn town pick use, and reads sideID with a -1 default so a
+		//--- transiently-unset/contested friendly town is not silently dropped. 1 = widened (fixed, matches the documented
+		//--- friendly-town design); 0 = restore the stock strict own-side (sideID == sideID) gate. WEST/EAST are unaffected.
+		if (isNil "WFBE_C_GUER_DEPOT_NEUTRAL_BUY") then {WFBE_C_GUER_DEPOT_NEUTRAL_BUY = 1};
 		//--- Shared placement gate (client preview + server authoritative): true if _pos (the world position passed as
 		//--- _this) is inside an enemy (WEST/EAST) build-restricted area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an
 		//--- enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-held towns are allowed (you can "extend"
