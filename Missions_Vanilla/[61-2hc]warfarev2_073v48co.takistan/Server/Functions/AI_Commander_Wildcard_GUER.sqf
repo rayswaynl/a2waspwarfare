@@ -19,13 +19,7 @@
 	                               - GUER HOLDS it to timeout -> a FOB FACTORY TOKEN (WFBE_GUER_FOB_AVAIL), type scaled
 	                                 by the checkpoint tier: tier0-1 Barracks / tier2 Light Factory / tier3 Heavy Factory.
 	                                 i.e. a held checkpoint = captured materiel to deploy a forward factory of that type.
-	  G4 Mortar Pit (6)      — flag WFBE_C_GUER_MORTARPIT default 0. Eligibility = a contested front town within
-	                           ~1500m of a GUER-owned town; spawn a static 2b14_82mm mortar + 2-man GUER crew
-	                           (GUE_Soldier_Crew) 300-600m from that town in a concealed flat spot (isFlatEmpty);
-	                           SAD waypoint at the town centre; crew lobs inaccurate barrages every 45-90s;
-	                           auto-despawn after WFBE_C_GUER_MORTARPIT_TTL (default 600s) or crew killed;
-	                           cap 2 simultaneous pits (counter wfbe_guer_mortarpit_count on missionNamespace);
-	                           keep >=125m from friendly units; bounty=true so crew kills pay via OnUnitKilled.
+		  (G4 Mortar Pit card SHELVED — Ray 2026-07-02 "Shelve mortar pit"; see wiki Shelved-GUER-wildcard-mortar-pit.)
 	  G5 Scavenger Team (5)  — flag WFBE_C_GUER_SCAV default 0. Eligibility = >=2 alive mission objects with
 	                           wfbe_aicom_abandoned=true; spawn a 4-man foot team (GUE_Soldier_1) at a GUER-owned
 	                           town; MOVE to the nearest abandoned wreck; 30s scavenge delay; award
@@ -47,8 +41,6 @@
 	  WFBE_C_GUER_CP_TAX             default 60    (occupier supply drained per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_TOLL            default 250   (cash paid to GUER players per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_CLEAR           default 700   (supply granted to the clearing side, scaled by tier)
-	  WFBE_C_GUER_MORTARPIT          default 0     (0=disable G4 Mortar Pit card)
-	  WFBE_C_GUER_MORTARPIT_TTL      default 600   (mortar pit lifetime in seconds)
 	  WFBE_C_GUER_SCAV               default 0     (0=disable G5 Scavenger Team card)
 	  WFBE_C_GUER_SCAV_REWARD        default 300   (cash per wreck scrapped, paid to GUER players)
 	  WFBE_C_GUER_SCAV_PLAYER_BONUS  default 150   (extra kill-bounty on each scav team member)
@@ -56,7 +48,7 @@
 	  (held-to-timeout grants one FOB factory token of a tier-scaled type - no tunable; always exactly one)
 */
 
-private ["_enabled","_interval","_sideID","_mortarPitCount"];
+private ["_enabled","_interval","_sideID"];
 
 if (!isServer) exitWith {};
 
@@ -69,11 +61,6 @@ if (_enabled == 0) exitWith {
 	["INFORMATION", "AI_Commander_Wildcard_GUER.sqf: disabled (WFBE_C_GUER_WILDCARD=0)."] Call WFBE_CO_FNC_AICOMLog;
 };
 
-//--- G4: initialise the simultaneous mortar-pit counter (lives on missionNamespace so both spawn/watcher see it).
-if ((missionNamespace getVariable ["wfbe_guer_mortarpit_count", -1]) < 0) then {
-	missionNamespace setVariable ["wfbe_guer_mortarpit_count", 0];
-};
-
 _sideID = resistance Call WFBE_CO_FNC_GetSideID;
 
 sleep _interval;
@@ -83,15 +70,12 @@ while {!gameOver} do {
 	sleep (random 30);   //--- jitter (de-correlate from the WEST/EAST workers)
 
 	[_sideID] spawn {
-		private ["_sideID","_westID","_eastID","_occTowns","_owned","_gG1","_gG2","_gG4","_gG5",
+		private ["_sideID","_westID","_eastID","_occTowns","_owned","_gG1","_gG2","_gG5",
 		         "_weights","_cumSum","_roll",
 		         "_i","_chosen","_draw","_result","_detail","_soldierClass","_vbiedClass","_target","_nearD",
 		         "_candTown","_dd","_targetPos","_ang","_spawnPos","_try","_roads","_truck","_grp","_drv",
 		         "_tier","_cpVeh","_cpLabel","_veh","_d1","_d2","_n","_footN","_u","_pos","_mk","_occSide",
 		         "_locMsg","_wName","_wDesc","_wMap","_g1Mk",
-		         "_crewClass","_mortarClass","_mortarPos","_mortarFlat","_mortarDist","_mortarAng",
-		         "_mortarTry","_friendlyNear","_mortarVeh","_mortarGrp","_mortarCrew1","_mortarCrew2",
-		         "_mortarWP","_mortarTTL","_mortarCount",
 		         "_abandVehs","_scavTeam","_scavGrp","_nearWreck","_scavDist","_scavReward",
 		         "_scavBonus","_scavTTL","_scavMember","_scavPos"];
 
@@ -109,24 +93,10 @@ while {!gameOver} do {
 		_vbiedClass   = missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"];
 
 		//--- ELIGIBILITY -> weights (0 = ineligible).
-		_gG1 = 6; _gG2 = 8; _gG4 = 0; _gG5 = 0;
+		//--- G4 Mortar Pit card SHELVED (Ray 2026-07-02) — removed from the deck so it can never be drawn.
+		_gG1 = 6; _gG2 = 8; _gG5 = 0;
 		if (!(count _occTowns > 0 && {_soldierClass != ""} && {isClass (configFile >> "CfgVehicles" >> _vbiedClass)})) then {_gG1 = 0};
 		if (!(count _occTowns > 0 && {_soldierClass != ""})) then {_gG2 = 0};
-
-		//--- G4: MORTAR PIT eligibility: flag on, soldier class known, pit cap < 2,
-		//--- a contested town within 1500m of at least one GUER-owned town.
-		if ((missionNamespace getVariable ["WFBE_C_GUER_MORTARPIT", 0]) > 0) then {
-			_crewClass = missionNamespace getVariable ["WFBE_GUERRESCREW", "GUE_Soldier_Crew"];
-			_mortarClass = "2b14_82mm";
-			_mortarCount = missionNamespace getVariable ["wfbe_guer_mortarpit_count", 0];
-			if (_crewClass != "" && {isClass (configFile >> "CfgVehicles" >> _mortarClass)} && {_mortarCount < 2}) then {
-				//--- Need a contested front town within 1500m of a GUER-owned town.
-				{
-					_candTown = _x;
-					{ if ((_candTown distance _x) <= 1500) exitWith {_gG4 = 6} } forEach _owned;
-				} forEach _occTowns;
-			};
-		};
 
 		//--- G5: SCAVENGER TEAM eligibility: flag on, >=2 abandoned wrecks, GUER owns at least one town (spawn anchor).
 		if ((missionNamespace getVariable ["WFBE_C_GUER_SCAV", 0]) > 0 && {_soldierClass != ""} && {count _owned > 0}) then {
@@ -136,7 +106,7 @@ while {!gameOver} do {
 			if (count _abandVehs >= 2) then {_gG5 = 5};
 		};
 
-		_weights = [[1,_gG1],[2,_gG2],[4,_gG4],[5,_gG5]];
+		_weights = [[1,_gG1],[2,_gG2],[5,_gG5]];
 		_cumSum = 0; { _cumSum = _cumSum + (_x select 1) } forEach _weights;
 		_draw = 0;
 		if (_cumSum > 0) then {
@@ -344,102 +314,6 @@ while {!gameOver} do {
 				} else { _result = "ineligible"; _detail = "G2 no occupied town"; };
 			};
 
-			//--- G4: MORTAR PIT — static 2b14_82mm + 2-man GUER crew at a concealed flat spot; SAD at contested town.
-			case 4: {
-				if (!isNull _target) then {
-					_mortarClass = "2b14_82mm";
-					_crewClass   = missionNamespace getVariable ["WFBE_GUERRESCREW", "GUE_Soldier_Crew"];
-					_targetPos   = getPos _target;
-					_mortarTTL   = missionNamespace getVariable ["WFBE_C_GUER_MORTARPIT_TTL", 600];
-
-					//--- Pick a concealed flat spawn 300-600m from the contested town,
-					//--- clear of water and >=125m from friendly units.
-					_mortarPos = [];
-					_mortarTry = 0;
-					while {(count _mortarPos == 0) && {_mortarTry < 20}} do {
-						_mortarDist = 300 + floor (random 301);   //--- 300-600m
-						_mortarAng  = random 360;
-						_spawnPos   = [(_targetPos select 0) + _mortarDist * sin _mortarAng,
-						               (_targetPos select 1) + _mortarDist * cos _mortarAng, 0];
-						_mortarTry  = _mortarTry + 1;
-						if (!(surfaceIsWater _spawnPos)) then {
-							//--- isFlatEmpty: radius 6, min flat dist 0, max slope 20 deg, max height diff 3, checkEmpty=false
-							_mortarFlat = _spawnPos isFlatEmpty [6, 0, 20, 3, 0, false, objNull];
-							if (count _mortarFlat > 0) then {
-								//--- >=125m clearance from any alive GUER unit.
-								_friendlyNear = {alive _x && {(side _x) == resistance} && {(_x distance _mortarFlat) < 125}} count allUnits;
-								if (_friendlyNear == 0) then {_mortarPos = _mortarFlat};
-							};
-						};
-					};
-					//--- Fallback: use raw bearing pos without flat check rather than skip the card.
-					if (count _mortarPos == 0) then {_mortarPos = _spawnPos};
-
-					//--- Claim the counter BEFORE spawning so a simultaneous draw cannot double-book.
-					_mortarCount = missionNamespace getVariable ["wfbe_guer_mortarpit_count", 0];
-					if (_mortarCount < 2) then {
-						missionNamespace setVariable ["wfbe_guer_mortarpit_count", _mortarCount + 1];
-
-						_mortarGrp = [resistance, "guer-wc-mortarpit"] Call WFBE_CO_FNC_CreateGroup;
-						if (!isNull _mortarGrp) then {
-							_mortarVeh = [_mortarClass, _mortarPos, resistance, random 360, false, true] Call WFBE_CO_FNC_CreateVehicle;
-							if (!isNull _mortarVeh) then {
-								_mortarCrew1 = [_crewClass, _mortarGrp, _mortarPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
-								if (!isNull _mortarCrew1) then {
-									_mortarCrew1 moveInGunner _mortarVeh;
-									_mortarCrew1 setVariable ["WFBE_IsTownDefenderAI", true, true];
-								};
-								_mortarCrew2 = [_crewClass, _mortarGrp, _mortarPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
-								if (!isNull _mortarCrew2) then {
-									_mortarCrew2 moveInDriver _mortarVeh;
-									_mortarCrew2 setVariable ["WFBE_IsTownDefenderAI", true, true];
-								};
-								//--- SAD waypoint at the contested town so the mortar crew lobs at it autonomously.
-								_mortarWP = _mortarGrp addWaypoint [_targetPos, 0];
-								[_mortarGrp, 0] setWaypointType "SAD";
-								_mortarGrp setCombatMode "RED"; _mortarGrp setBehaviour "COMBAT";
-
-								_detail = Format ["target=%1 mortarPos=%2 ttl=%3s count=%4",
-								                  _target getVariable ["name","?"], _mortarPos, _mortarTTL, _mortarCount + 1];
-
-								//--- WATCHER: TTL or crew wiped -> release counter + delete.
-								[_mortarGrp, _mortarVeh, _mortarTTL] spawn {
-									private ["_mg","_mv","_ttl","_el","_alive"];
-									_mg  = _this select 0; _mv = _this select 1; _ttl = _this select 2;
-									_el  = 0; _alive = true;
-									while {_alive && {_el < _ttl} && {!gameOver}} do {
-										sleep 15; _el = _el + 15;
-										if (({alive _x} count (units _mg)) == 0) then {_alive = false};
-									};
-									//--- Cleanup: crew -> mortar -> group -> counter.
-									if (!isNull _mv) then {{deleteVehicle _x} forEach (crew _mv); deleteVehicle _mv};
-									{deleteVehicle _x} forEach (units _mg);
-									if (!isNull _mg) then {deleteGroup _mg};
-									missionNamespace setVariable ["wfbe_guer_mortarpit_count",
-									    (missionNamespace getVariable ["wfbe_guer_mortarpit_count", 0] - 1) max 0];
-									diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERMORTAR_DESPAWN|ttl=" + str _ttl + "|crewWiped=" + str (!_alive));
-								};
-							} else {
-								//--- Mortar createVehicle failed: release counter + group.
-								deleteGroup _mortarGrp;
-								missionNamespace setVariable ["wfbe_guer_mortarpit_count",
-								    (missionNamespace getVariable ["wfbe_guer_mortarpit_count", 0] - 1) max 0];
-								_result = "partial"; _detail = "G4 mortar createVehicle null";
-							};
-						} else {
-							//--- Group creation failed: release counter.
-							missionNamespace setVariable ["wfbe_guer_mortarpit_count",
-							    (missionNamespace getVariable ["wfbe_guer_mortarpit_count", 0] - 1) max 0];
-							_result = "partial"; _detail = "G4 group null at cap";
-						};
-					} else {
-						_result = "ineligible"; _detail = "G4 mortar pit cap=2 already reached";
-					};
-				} else {
-					_result = "ineligible"; _detail = "G4 no contested front town within 1500m of GUER town";
-				};
-			};
-
 			//--- G5: SCAVENGER TEAM — 4-man foot team moves to abandoned wrecks, scraps them, pays GUER players.
 			case 5: {
 				if (count _owned > 0) then {
@@ -546,7 +420,6 @@ while {!gameOver} do {
 		_wMap = [
 			[1,"Car Bomb","a suicide car bomb rolls on an occupied town - destroy it for a bounty"],
 			[2,"Pop-up Checkpoint","a roadblock chokes an occupied supply road - clear it for supply, or it bleeds you"],
-			[4,"Mortar Pit","a hidden mortar crew is lobbing rounds at an occupied town - hunt the pit by sound and flash"],
 			[5,"Scavenger Team","insurgent scavengers are stripping abandoned wrecks off the battlefield"]
 		];
 		_wName = Format ["G%1", _draw]; _wDesc = "";
