@@ -447,7 +447,7 @@ WFBE_FNC_OilfieldClearPull = {
 			_cur = _t getVariable ["wfbe_aicom_town_weight", 0];
 			_t setVariable ["wfbe_aicom_town_weight", _cur - _amt, true];
 		};
-		missionNamespace setVariable [_key, [], true];
+		missionNamespace setVariable [_key, []];
 	};
 };
 
@@ -469,7 +469,7 @@ WFBE_FNC_OilfieldApplyPull = {
 	};
 	_cur = _t getVariable ["wfbe_aicom_town_weight", 0];
 	_t setVariable ["wfbe_aicom_town_weight", _cur + _amt, true];
-	missionNamespace setVariable [_key, [_t, _amt], true];
+	missionNamespace setVariable [_key, [_t, _amt]];
 };
 
 //------------------------------------------------------------------------------------

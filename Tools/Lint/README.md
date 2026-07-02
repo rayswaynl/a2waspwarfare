@@ -36,6 +36,7 @@ Use `--select` for focused gates, such as an Arma 3 command-trap pass that shoul
 - `CLASSREF`: quoted classname-like token appears only in the edited file.
 - `DISABLESER`: UI control helpers appear without `disableSerialization`.
 - `GROUPGETVAR`: two-argument `getVariable` on group-like expressions.
+- `NSSETVAR3`: `missionNamespace`/`uiNamespace`/`profileNamespace` `setVariable` with three or more top-level elements. The public-flag form is Arma 3-only; A2/OA 1.64 throws `Error 3 elements provided, 2 expected` at runtime and leaves the variable unset (shipped in Build 87, hotfixed in cmdcon42b). Object and group `setVariable` with a public flag is valid on A2/OA and is not flagged.
 
 ## Stringtable Checks
 
