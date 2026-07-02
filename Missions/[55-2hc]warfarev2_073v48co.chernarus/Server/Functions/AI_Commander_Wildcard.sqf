@@ -76,6 +76,7 @@
 	  WFBE_C_AI_COMMANDER_WILDCARD               default 1 (0=disable)
 	  WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_MULT   default 2.0
 	  WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_TOWNS  default 5 (gap threshold)
+	  WFBE_C_MV22_REINFORCEMENT_FLAVOUR         default 0 (1=first WEST W19 QRF uses MV22 lift hull)
 */
 
 private ["_side","_logik","_sideID","_interval","_enabled","_humanCmdWEST","_humanCmdEAST",
@@ -201,7 +202,7 @@ while {!gameOver} do {
 	         "_w16Eligible","_maxLevels","_raisableTiers","_chosenUpID","_newUpgrades","_tierName",
 	         "_w17Eligible","_w17TruckClass","_w17Truck","_w17Grp","_w17Driver","_w17Gunner","_w17Target","_w17TargetPos","_w17MarkerName","_w17SpawnPos","_w17Ang",
 	         "_w18Eligible","_w18OfficerClass","_w18ParaL3","_w18Pos","_w18Grp","_w18HVT","_w18MarkerID","_w18Target","_w18Near","_w1Eligible",
-		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19","_wW20",
+		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_w44Class","_w44Template","_w44Used","_wW19","_wW20",
 		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
 				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang","_w21Try","_w21Roads",
 		         "_wNameMap","_wName","_wDesc",
@@ -1224,6 +1225,24 @@ while {!gameOver} do {
 										//--- so the QRF squad lands ON that town (the only divergence from W6, which anchors at HQ).
 										_w19TownPos  = getPos _w19Town;
 										_w19SpawnPos = _w19TownPos;
+
+										//--- Lane 44: optional MV-22 visual flavour for the FIRST WEST relief wave only.
+										//--- It reuses the proven W6/W19 founding + air-insertion path; only the lift hull is swapped.
+										_w44Template = +_w6AirTemplate;
+										_w44Used = false;
+										_w44Class = missionNamespace getVariable ["WFBE_C_MV22_REINFORCEMENT_CLASS", "MV22"];
+										if (((missionNamespace getVariable ["WFBE_C_MV22_REINFORCEMENT_FLAVOUR", 0]) > 0)
+										    && {_side == west}
+										    && {!(_logik getVariable ["wfbe_mv22_reinforcement_flown", false])}
+										    && {typeName _w44Class == "STRING"}
+										    && {_w44Class != ""}
+										    && {isClass (configFile >> "CfgVehicles" >> _w44Class)}
+										    && {_w44Class isKindOf "Air"}
+										    && {(getNumber (configFile >> "CfgVehicles" >> _w44Class >> "transportSoldier")) > 0}) then {
+											_w44Template set [0, _w44Class];
+											_w44Used = true;
+											_logik setVariable ["wfbe_mv22_reinforcement_flown", true];
+										};
 						
 										//--- Telemetry-only template price (squad is FREE; mirrors W6's canonical lookup).
 										_w19Price = 0;
@@ -1231,20 +1250,20 @@ while {!gameOver} do {
 											_w19PriceCN = _x;
 											_w19PriceUD = missionNamespace getVariable _w19PriceCN;
 											if (!isNil "_w19PriceUD") then {_w19Price = _w19Price + (_w19PriceUD select QUERYUNITPRICE)};
-										} forEach _w6AirTemplate;
+										} forEach _w44Template;
 						
 										//--- FOUND ONE TEAM via the commander's own founding path (HC delegate -> server-local
 										//--- fallback) - IDENTICAL to W6 Air Cavalry. Least-loaded HC keeps the big air lump off
 										//--- an already-heavy HC. 4th delegate slot = skill 0 (no veteran boost), matching W6.
 										_w19HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
 										if (!isNull _w19HcUnit) then {
-											[_w19HcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _w6AirTemplate, _w19SpawnPos, 0]] Call WFBE_CO_FNC_SendToClient;
+											[_w19HcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _w44Template, _w19SpawnPos, 0]] Call WFBE_CO_FNC_SendToClient;
 										} else {
 											//--- No live HC: run the SAME function server-local (self-detects isServer for routing).
-											[_sideID, _w6AirTemplate, _w19SpawnPos] Spawn WFBE_CO_FNC_RunCommanderTeam;
+											[_sideID, _w44Template, _w19SpawnPos] Spawn WFBE_CO_FNC_RunCommanderTeam;
 										};
 						
-										_detail = Format ["air_template=%1 lead=%2 tier=%3 town=%4 threat=%5 price=%6 free hc=%7 humanCmd=%8", _w6AirTemplate, _w6AirTemplate select 0, _w6AirTier, _w19Town getVariable ["name","?"], _w19BestThreat, _w19Price, !isNull _w19HcUnit, _humanCmd];
+										_detail = Format ["air_template=%1 lead=%2 tier=%3 town=%4 threat=%5 price=%6 free hc=%7 humanCmd=%8 mv22=%9", _w44Template, _w44Template select 0, _w6AirTier, _w19Town getVariable ["name","?"], _w19BestThreat, _w19Price, !isNull _w19HcUnit, _humanCmd, _w44Used];
 									};
 								};
 							};

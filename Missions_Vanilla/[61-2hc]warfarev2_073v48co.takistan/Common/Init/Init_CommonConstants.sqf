@@ -517,6 +517,8 @@ with missionNamespace do {
 	//--- V0.6: Wildcard events - one free random event per AI-commanded side per interval.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD") then {WFBE_C_AI_COMMANDER_WILDCARD = 1};           //--- 0 disables wildcard events entirely.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL") then {WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL = 900}; //--- Seconds between wildcard events per side (15 min - faster testing cadence, claude-gaming 2026-06-14; was 1800/30min).
+	if (isNil "WFBE_C_MV22_REINFORCEMENT_FLAVOUR") then {WFBE_C_MV22_REINFORCEMENT_FLAVOUR = 0}; //--- Lane 44: 1 lets WEST's first W19 Heliborne QRF use the MV-22 lift hull; default OFF.
+	if (isNil "WFBE_C_MV22_REINFORCEMENT_CLASS") then {WFBE_C_MV22_REINFORCEMENT_CLASS = "MV22"}; //--- Config-proofed before use in AI_Commander_Wildcard.sqf.
 	WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN = 3;   //--- V0.5: teams concentrated per spearhead town (legacy/fallback quota; per-tier quota below overrides).
 	//--- V0.8 COHERENT FRONT (claude-gaming 2026-06-14): the old spearhead scorer was
 	//--- supplyValue - dNear/150, which let a fat enemy city 8km away outscore the nearest
