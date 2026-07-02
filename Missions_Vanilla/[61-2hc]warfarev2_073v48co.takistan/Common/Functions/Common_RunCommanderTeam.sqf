@@ -673,11 +673,11 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				//--- N-FEATUREBUG-43 fix 2026-06-27: was hardcoded 15360 (Chernarus only) -> the off-map edge math + the
 				//--- waitUntil off-map exit test below were 2560m wrong on Takistan/Zargabad (both 12800), so the heli
 				//--- either never registered as off-map or refunded early. worldSize is A3-ONLY (A2 OA latent bug), so
-				//--- branch the box size off worldName, matching Init_Boundaries.sqf (chernarus=15360, takistan/zargabad=12800).
+				//--- branch the box size off worldName, matching Init_Boundaries.sqf (chernarus=15360, takistan=12800, zargabad=8192).
 				_wsz = switch (toLower worldName) do {
 					case "chernarus": {15360};
 					case "takistan":  {12800};
-					case "zargabad":  {12800};
+					case "zargabad":  {8192};
 					default {15360};
 				};
 				_ex  = (getPos _h) select 0;

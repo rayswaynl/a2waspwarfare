@@ -349,12 +349,16 @@ class CfgSounds
         File.WriteAllText(finalPathToEdit, content);
     }
 
-    // Ensures the Takistan init_server uses the correct map id after copying from Chernarus
+    // Ensures a vanilla map's init_server uses its own database map id after copying
+    // from Chernarus (which carries SET_MAP 1). Ids: 1=Chernarus, 2=Takistan, 3=Zargabad.
     private void EnsureTakistanInitServerUsesCorrectMapId(string _destinationDirectory)
     {
-        if (terrainName != TerrainName.TAKISTAN)
+        int mapId;
+        switch (terrainName)
         {
-            return;
+            case TerrainName.TAKISTAN: mapId = 2; break;
+            case TerrainName.ZARGABAD: mapId = 3; break;
+            default: return;
         }
 
         string initServerPath = Path.Combine(_destinationDirectory, @"Server\Init\Init_Server.sqf");
@@ -365,23 +369,27 @@ class CfgSounds
             return;
         }
 
-        const string chernarusMapLine = "[\"SET_MAP\", 1] call WFBE_SE_FNC_CallDatabaseSetMap;";
-        const string takistanMapLine = "[\"SET_MAP\", 2] call WFBE_SE_FNC_CallDatabaseSetMap;";
+        string terrainMapLine = $"[\"SET_MAP\", {mapId}] call WFBE_SE_FNC_CallDatabaseSetMap;";
 
         string fileContent = File.ReadAllText(initServerPath);
 
-        if (fileContent.Contains(takistanMapLine))
+        if (fileContent.Contains(terrainMapLine))
         {
             return;
         }
 
-        if (fileContent.Contains(chernarusMapLine))
+        string updatedContent = System.Text.RegularExpressions.Regex.Replace(
+            fileContent,
+            "\\[\"SET_MAP\", \\d+\\] call WFBE_SE_FNC_CallDatabaseSetMap;",
+            terrainMapLine.Replace("$", "$$"));
+
+        if (updatedContent != fileContent)
         {
-            File.WriteAllText(initServerPath, fileContent.Replace(chernarusMapLine, takistanMapLine));
+            File.WriteAllText(initServerPath, updatedContent);
             return;
         }
 
-        Console.WriteLine($"SET_MAP definition not updated for Takistan in {initServerPath}.");
+        Console.WriteLine($"SET_MAP definition not updated for {terrainName} in {initServerPath}.");
     }
 
     // Generates and returns the SQF code for a specific terrain. This method is built upon 
