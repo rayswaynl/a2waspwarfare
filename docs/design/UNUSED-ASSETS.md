@@ -39,7 +39,7 @@ The big structural facts that create most of the dormant pools:
 | 9 | **MV-22 Osprey heavy-lift event** | `MV22` | `Core_USMC` only → dormant (USMC not live WEST). | **Match-start / relief** flavour: an Osprey flies in the first reinforcement wave to a friendly town (visual only, reuse the W6 Air Cavalry air-insertion). Distinctive silhouette players will notice. | **M** |
 | 10 | **Static ZU-23 / SearchLight town dressing** | `ZU23_Gue`, `Ural_ZU23_INS`, `SearchLight_US_EP1`, `SearchLight_RUS` | ZU-23 truck is GUE/RU pool; static ZU-23 & searchlights are buyable defences but almost never bought. | Seed **contested/GUER towns with a static ZU-23 + sweeping searchlights** at night as garrison flavour — instantly reads as "occupied town" and gives attacking players a target. | **S** |
 | 11 | **Pchela-1T recon drone (EAST mirror of #1)** | `Pchela1T` | RU-buyable but obscure; AI never founds a drone team. | EAST counterpart to the Ka-137 recon wildcard — keeps the drone card faction-symmetric so both AI commanders can "call a UAV." Bundle with #1. | **M** |
-| 12 | **AAV amphibious "Beach Assault" (naval-map re-enable hook)** | `AAV` | `Core_USMC` only → dormant. | Park it behind a `WFBE_C_NAVAL_*`-style flag: on a future **naval map** the AAV becomes the WEST amphibious assault vehicle launching from a Khe Sanh carrier. Low effort as a *hook* now, big payoff if naval maps return. | **S** (hook) / **L** (full) |
+| 12 | **AAV amphibious "Beach Assault" (naval-map re-enable hook)** | `AAV` | `Core_USMC` only → dormant. | Lane 45 adds the default-off `WFBE_C_NAVAL_WEST_AAV` buy-row metadata hook in `Core_US.sqf`; flag 0 keeps live WEST behavior unchanged, while flag 1 gives a future naval-map lane a registered WEST amphibious APC. Full carrier launch behavior remains future work. | **S** hook shipped / **L** full |
 
 **Fast wins:** #2 (VBIED revive — code already exists), #5 (GUER civ depot), #10 (static garrison dressing) are all **S** and need only config/pool edits.
 **Highest "cool" per effort:** #1 (Ka-137 drone — Ray asked for it by name) and #3 (AN-2 smuggler run).
@@ -61,7 +61,7 @@ None of the pool rows in the **live** faction files (`Core_US`, `Core_RU`, `Core
 ### A. Dormant because USMC is not the live WEST faction (`Core_USMC.sqf` only)
 | Class | Category | Why dormant |
 |-------|----------|-------------|
-| `AAV` | Amphibious APC | USMC buy list only; also appears in `Units_CO_US` heavy pool but only under CH branch → AI can field it, players can't buy it. |
+| `AAV` | Amphibious APC | USMC buy list only; also appears in `Units_CO_US` heavy pool. Lane 45 adds a default-off `WFBE_C_NAVAL_WEST_AAV` metadata hook in live WEST `Core_US.sqf`; players still cannot buy it while the flag stays 0. |
 | `MV22` | Tiltrotor transport | USMC buy list + US aircraft pool; never bought (US faction has no MV22 buy row). |
 | `Zodiac` | Small boat | USMC buy list + naval-gated depot rows. |
 | `RHIB`, `RHIB2Turret` | Patrol boats | USMC buy list + `Units_USMC` pool; naval-dead. |
