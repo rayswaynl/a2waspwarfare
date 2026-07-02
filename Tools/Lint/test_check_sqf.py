@@ -25,7 +25,7 @@ def lint_codes(source: str) -> list[str]:
 
 class CheckSqfTests(unittest.TestCase):
     def test_a3_prompt_traps_are_case_insensitive(self) -> None:
-        codes = lint_codes("_xs pushback 1;\n_pistol = handgunWeapon player;\n")
+        codes = lint_codes("_xs pushback 1;\n_d = player distance2d target;\n")
         self.assertGreaterEqual(codes.count("A3CMD"), 2)
 
     def test_a3_syntax_forms_are_reported(self) -> None:

@@ -37,7 +37,6 @@ A3_TRAPS = (
     "setGroupOwner",
     "groupOwner",
     "joinGroup",
-    "handgunWeapon",
 )
 BOOLEAN_OP_RE = re.compile(r"\b(if|while|waitUntil)\b[^\n]*(==|!=)")
 QUOTED_TOKEN_RE = re.compile(r'"([A-Za-z][A-Za-z0-9_]{2,})"|\'([A-Za-z][A-Za-z0-9_]{2,})\'')
