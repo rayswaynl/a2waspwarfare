@@ -419,6 +419,7 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 				_riStrike = _riGrp getVariable ["wfbe_aicom_strike", false];
 				if (_riAlive > 0 && {!isNull _riLdr} && {!isPlayer _riLdr} && {_riGrp != _garGrp}
 				    && {isNull _riRelief} && {!_riStrike} && {!(_riMode in ["move","patrol","defense"])}
+				    && {(_riGrp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
 					if (_riD < _riBestD) then {_riBestD = _riD; _riBest = _riGrp};
