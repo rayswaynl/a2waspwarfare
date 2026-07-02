@@ -426,6 +426,21 @@ class WFBE_RespawnMenu {
 			tooltip = $STR_WF_TOOLTIP_RespawnDefault;
 			onButtonClick = "WFBE_MenuAction = 1;";
 		};
+		//--- respawn-ui-v2: footer legend strip (IDC 511005).
+		//--- Sits in the map/label gap (y=0.923), above the countdown/location labels at y=0.965.
+		//--- Static text - no SQF loop needed; localised via STR_WF_RESPAWN_Legend.
+		//--- Hidden at menu open when WFBE_C_RESPAWN_UI_V2=0 (SQF-controlled visibility).
+		class CA_RespawnLegend : RscStructuredText {
+			idc = 511005;
+			show = 0;
+			x = 0.01;
+			y = 0.923;
+			w = 0.66;
+			h = 0.035;
+			size = 0.022;
+			shadow = 1;
+			text = $STR_WF_RESPAWN_Legend;
+		};
 	};
 };
 
@@ -511,6 +526,7 @@ class WFBE_TransferMenu {
 			h = 0.035;
 			sizeEx = 0.035;
 			text = $STR_WF_Send;
+			tooltip = "Send the selected amount to the highlighted player";
 			action = "WFBE_MenuAction = 1";
 		};
 		class CA_AmountDetails : RscText {
@@ -584,6 +600,7 @@ class WFBE_BuyGearMenu {
 			y = 0.01;
 			w = 0.5;
 			text = "Gear Purchase Menu :";
+			tooltip = "Buy gear, manage templates, and edit unit or vehicle cargo";
 			colorText[] = WFBE_Menu_Title_Color;
 		};
 		class CA_Menu_Gear : RscText {
@@ -675,36 +692,42 @@ class WFBE_BuyGearMenu {
 			w = 0.0699999;
 			h = 0.11;
 			text = "Client\Images\gearicontemplate.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonTemplate;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 0];";
 		};
 		class FilterButtonAll : FilterButtonTemplate {
 			idc = 503302;
 			x = 0.0814287;
 			text = "Client\Images\geariconall.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonAll;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 1];";
 		};
 		class FilterButtonPrimary : FilterButtonTemplate {
 			idc = 503303;
 			x = 0.16979;
 			text = "Client\Images\geariconprimary.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonPrimary;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 2];";
 		};
 		class FilterButtonSecondary : FilterButtonTemplate {
 			idc = 503304;
 			x = 0.259109;
 			text = "Client\Images\geariconsecondary.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonSecondary;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 3];";
 		};
 		class FilterButtonSidearm : FilterButtonTemplate {
 			idc = 503305;
 			x = 0.33979;
 			text = "Client\Images\geariconsidearm.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonSidearm;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 4];";
 		};
 		class FilterButtonMisc : FilterButtonTemplate {
 			idc = 503306;
 			x = 0.421555;
 			text = "Client\Images\geariconmisc.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonMisc;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 5];";
 		};
 		class PrimaryWeapon : RscClickableText {
@@ -722,12 +745,14 @@ class WFBE_BuyGearMenu {
 			colorText[] = {0.85, 0.85, 0.85, 1};
 			colorActive[] = {1, 1, 1, 1};
 			text = "\Ca\UI\Data\ui_gear_gun_gs.paa";
+			tooltip = "Remove the current primary weapon from the loadout";
 			action = "WFBE_MenuAction = 901";
 		};
 		class SecondaryWeapon : PrimaryWeapon {
 			idc = 503402;
 			y = 0.401362;
 			text = "\Ca\UI\Data\ui_gear_sec_gs.paa";
+			tooltip = "Remove the current launcher, backpack, or secondary weapon";
 			action = "WFBE_MenuAction = 902";
 		};
 		class Sidearm : PrimaryWeapon {
@@ -737,6 +762,7 @@ class WFBE_BuyGearMenu {
 			w = 0.113;
 			h = 0.15;
 			text = "\Ca\UI\Data\ui_gear_hgun_gs.paa";
+			tooltip = "Remove the current sidearm from the loadout";
 			action = "WFBE_MenuAction = 903";
 		};
 		class InventorySlot0 : RscClickableText {
@@ -746,6 +772,7 @@ class WFBE_BuyGearMenu {
 			w = 0.06;
 			h = 0.08;
 			text = "\Ca\UI\Data\ui_gear_mag_gs.paa";
+			tooltip = "Remove a primary weapon magazine from the loadout";
 			action = "UINamespace setVariable ['wfbe_display_buygear_pool_main', 1]";
 		};
 		class InventorySlot1 : InventorySlot0 {
@@ -821,6 +848,7 @@ class WFBE_BuyGearMenu {
 			w = 0.055;
 			h = 0.074;
 			text = "\Ca\UI\Data\ui_gear_hgunmag_gs.paa";
+			tooltip = "Remove a sidearm magazine from the loadout";
 			action = "UINamespace setVariable ['wfbe_display_buygear_pool_gun', 1]";
 		};
 		class SidearmInventorySlot1 : SidearmInventorySlot0 {
@@ -873,6 +901,7 @@ class WFBE_BuyGearMenu {
 			h = 0.074;
 			colorActive[] = {0.85, 0.85, 0.85, 1};
 			text = "\Ca\UI\Data\ui_gear_eq_gs.paa";
+			tooltip = "Remove an equipment item from the loadout";
 			action = "UINamespace setVariable ['wfbe_display_buygear_misc', 0]";
 		};
 		class MiscInventorySlot1 : MiscInventorySlot0 {
@@ -949,12 +978,14 @@ class WFBE_BuyGearMenu {
 			h = 0.136554;
 			colorActive[] = {0.85, 0.85, 0.85, 1};
 			text = "\Ca\UI\Data\ui_gear_eq_gs.paa";
+			tooltip = "Remove the first special item from the loadout";
 			action = "WFBE_MenuAction = 904";
 		};
 		class SpecialInventorySlot1 : SpecialInventorySlot0 {
 			idc = 503534;
 			x = 0.880612;
 			y = 0.0575075;
+			tooltip = "Remove the second special item from the loadout";
 			action = "WFBE_MenuAction = 905";
 		};
 		class CA_CargoList : CA_GearList {
@@ -962,6 +993,7 @@ class WFBE_BuyGearMenu {
 			x = 0.500983551;
 			w = 0.493697;
 			h = 0.505;
+			tooltip = "Double-click a cargo item to remove it from the selected container";
 			
 			onLBDblClick = "WFBE_MenuAction = 906";
 		};
@@ -985,6 +1017,7 @@ class WFBE_BuyGearMenu {
 			h = 0.035;
 			sizeEx = 0.035;
 			text = "Buy";
+			tooltip = "Buy the selected loadout for the current target";
 			action = "WFBE_MenuAction = 501";
 		};
 		class CA_PurchaseDetails : CA_CargoDetails {
@@ -1005,12 +1038,14 @@ class WFBE_BuyGearMenu {
 			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
 			
 			text = "Create Template";
+			tooltip = "Save the current loadout as a reusable template";
 			action = "WFBE_MenuAction = 601";
 		};
 		class CA_DeleteTemplate : CA_MakeTemplate {
 			idc = 503010;
 			x = 0.255;
 			text = "Delete Template";
+			tooltip = "Delete the highlighted gear template";
 			action = "WFBE_MenuAction = 602";
 		};
 		class CA_FundsDetails : CA_CargoDetails {
@@ -1026,6 +1061,7 @@ class WFBE_BuyGearMenu {
 			y = 0.01;
 			w = 0.17;
 			text = "Reload";
+			tooltip = $STR_WF_TOOLTIP_GearReload;
 			action = "WFBE_MenuAction = 701";
 		};
 		class CA_QuickClear : CA_MakeTemplate {
@@ -1034,6 +1070,7 @@ class WFBE_BuyGearMenu {
 			y = 0.01;
 			w = 0.17;
 			text = "Clear";
+			tooltip = $STR_WF_TOOLTIP_GearClear;
 			action = "WFBE_MenuAction = 702";
 		};
 	};
@@ -1302,6 +1339,21 @@ class WF_Menu {
 			action = "MenuAction = 25";
 			tooltip = "Friendly name tags On/Off";
 		};
+		//--- cmdcon41-w3l: Command-Deck Skin Selector re-open button. The former SKIN slot (idc 11021)
+		//--- was repurposed to SETUP on 2026-06-24, leaving MenuAction 21 (GUI_Menu.sqf) unreachable.
+		//--- This restores a live footer entry in the gap between the HeadBug icon and HUD. The handler
+		//--- itself re-checks SkinSelector_Enabled + alive + on-foot, so a disabled/dead player is a no-op.
+		class CA_SkinSel_Button : RscButton_Main {
+			idc = 11025;
+			x = 0.362;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = $STR_WF_SkinSelector_MenuButton;
+			sizeEx = 0.024;
+			action = "MenuAction = 21";
+			tooltip = $STR_WF_SkinSelector_Title;
+		};
 	};
 };
 
@@ -1483,6 +1535,7 @@ class RscMenu_Team {
 				y = 0.733;
 				w = 0.279;
 				text = "";
+				tooltip = "Toggle whether newly bought vehicles start with high climbing enabled";
 				action = "MenuAction = 14";
 			};
 			/* Vote PopUp */
@@ -1492,6 +1545,7 @@ class RscMenu_Team {
 				y = 0.772;
 				w = 0.279;
 				text = "";
+				tooltip = "Toggle the commander vote popup on join";
 				action = "MenuAction = 13";
 			};
 			/* Seperator */
@@ -1746,6 +1800,7 @@ class RscMenu_BuyUnits {
 			h = 0.035;
 			sizeEx = 0.022;
 			text = "Cancel Last";
+			tooltip = "Cancel and refund the most recent queued unit order";
 			colorBackground[] = {0.6, 0.1, 0.0, 0.8};
 			colorBackgroundActive[] = {0.8, 0.2, 0.0, 0.9};
 			colorText[] = {1, 1, 1, 1};
@@ -2137,6 +2192,23 @@ class RscMenu_Command {
 			colorBackground[] = {0.12, 0.35, 0.42, 0.85};
 			colorBackgroundActive[] = {0.18, 0.5, 0.58, 1};
 		};
+		/* cmdcon41-w3d COMMAND-MENU V2: REQUEST AI SUPPORT (non-commander). Any player (even under a HUMAN commander, where
+		   the posture/focus nudges are inert) can call the nearest free same-side AI team to their position. STATE-A control
+		   (added to _adviseCtrls); shown only when NOT the commander. Full-width, below the FOCUS button (14617 bottom 0.862).
+		   Sends the player's own pos to the server, which validates + road-moves ONE nearby idle team (per-player cooldown).
+		   MenuAction 767. Amber/help tint, distinct from the AI-steering palette. */
+		class CA_Cmd_ReqSupport : CA_Cmd_PosturePush {
+			idc = 14618;
+			x = 0.00561695;
+			y = 0.866000;
+			w = 0.459244;
+			h = 0.038000;
+			text = "REQUEST AI SUPPORT (to me)";
+			action = "MenuAction = 767";
+			tooltip = "Call the nearest free friendly AI team to your position. Works even under a human commander. Cooldown applies.";
+			colorBackground[] = {0.5, 0.35, 0, 0.85};
+			colorBackgroundActive[] = {0.7, 0.5, 0.05, 1};
+		};
 		/* ROSTER of your AI teams (commander state). Row = "Squad type | Target | Alive" (Command Console v2). Click to
 		   select; double-click opens the unit camera on that team's leader (VIEW TEAM, MenuAction 726). */
 		class CA_Cmd_RosterTitle : RscText_SubTitle {
@@ -2305,13 +2377,58 @@ class RscMenu_Command {
 			action = "MenuAction = 740";
 			tooltip = $STR_WF_CMD_BuildBtn_TT;
 		};
-		/* Status / hint line at the bottom of the console. */
+		/* cmdcon41-w3d COMMAND-MENU V2: three per-team STEERING VERBS (act on the selected roster team) - RALLY (pull back
+		   to the nearest own HQ/town), REFIT (funds-charged infantry top-up), HOLD (garrison the nearest own town). Thin
+		   3-across row squeezed into the top of the old help-line band (help shrunk + moved down below). show=0 STRUCTURAL
+		   GUARD -> STATE-B (commander) only; added to _warCtrls in GUI_Menu_Command.sqf. MenuAction 727/728/729. Inherit
+		   CA_Cmd_Move (RscButton_Main + show=0). Distinct tints from the order palette. */
+		class CA_Cmd_Rally : CA_Cmd_Move {
+			idc = 14628;
+			x = 0.00561695;
+			y = 0.872000;
+			w = 0.148000;
+			h = 0.030000;
+			text = "RALLY";
+			action = "MenuAction = 727";
+			tooltip = "Pull the SELECTED team back to your nearest HQ / owned town. It re-tasks normally once it arrives.";
+			colorBackground[] = {0.35, 0.25, 0.5, 0.85};
+			colorBackgroundActive[] = {0.5, 0.35, 0.7, 1};
+		};
+		class CA_Cmd_Refit : CA_Cmd_Rally {
+			idc = 14629;
+			x = 0.160244;
+			y = 0.872000;
+			w = 0.148000;
+			text = "REFIT";
+			action = "MenuAction = 728";
+			tooltip = "Buy infantry replacements for the SELECTED team (charged from the war chest; per-team cooldown).";
+			colorBackground[] = {0.15, 0.4, 0.45, 0.85};
+			colorBackgroundActive[] = {0.2, 0.55, 0.6, 1};
+		};
+		class CA_Cmd_HoldTown : CA_Cmd_Rally {
+			idc = 14630;
+			x = 0.317244;
+			y = 0.872000;
+			w = 0.148000;
+			text = "HOLD";
+			action = "MenuAction = 729";
+			tooltip = "Garrison the SELECTED team on its nearest OWNED town (it stays put until the hold expires).";
+			colorBackground[] = {0, 0.5, 0, 0.85};
+			colorBackgroundActive[] = {0.1, 0.7, 0.1, 1};
+		};
+		/* cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD (carrier) button (was idc 14631 / MenuAction 770) and
+		   the two land-TEL munition buttons (were idc 14632/14633 "TEL: SATURATE"/"TEL: RECON", MenuActions 771/772) have
+		   been REMOVED from the war room. ALL SCUD/TEL fire calls now live in the TACTICAL menu (Client/GUI/GUI_Menu_Tactical.sqf)
+		   as support-list entries beside the classic ICBM/NUKE — "SCUD STRIKE (carrier)", "SCUD: SATURATION", "SCUD: RECON FLASH",
+		   "SCUD: FASCAM (mines)", "SCUD: STEEL RAIN (anti-inf)", "SCUD: BUNKER BUSTER (point)". idc 14631/14632/14633 and
+		   MenuActions 770/771/772 are now FREE. The carrier deck addAction is unchanged. */
+		/* Status / hint line at the bottom of the console (shrunk + moved down to make room for the steering-verb row above). */
 		class CA_Cmd_Help : RscStructuredText {
 			idc = 14650;
 			x = 0.00561695;
-			y = 0.872000;
+			y = 0.906000;
 			w = 0.459244;
-			h = 0.070000;
+			h = 0.040000;
 			size = 0.027;
 		};
 		/* DISBAND AI TEAMS (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - flags every AI field team for

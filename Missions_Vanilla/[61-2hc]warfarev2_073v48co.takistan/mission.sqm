@@ -29,8 +29,8 @@ class Mission
 	randomSeed=6848509;
 	class Intel
 	{
-		briefingName="PR 8 - June Feature Bundle (Takistan)";
-		briefingDescription="June release test build: UI/UX, GPS, factories, supply, WDDM/arty, AI/perf.";
+		briefingName="WASP Warfare Build 88 (Takistan)";
+		briefingDescription="Build 88: new respawn screen, GUER town-center buying and mortar HUD, commander defense menu priced from supply, quieter upgrades, salvage-farm block, repaired wheels and engines, foot-squad ladder tuning, and a wave of menu and QoL polish.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
@@ -42,7 +42,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=91;
+		items=98;
 		class Item0
 		{
 			side="LOGIC";
@@ -58,7 +58,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WF_Logic";
-					init="this setVariable [""totalTowns"",31];this enableSimulation false;this setVariable [""Towns_RemovedXSmall"",[""FeeruzAbad"",""Nagara"",""Garmsar"",""Bastam"",""Zavarak"",""ChakChak"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Nur"",""Karachinar"",""Rasman"",""Ravanay"",""Imarat"",""Shamali"",""Gospandi"",""Landay"",""Jaza"",""Timurkalay"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedSmall"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Chardarakht"",""Karachinar"",""Ravanay"",""Imarat"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedMedium"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Chaman"",""Chardarakht"",""Nur"",""Karachinar"",""Ravanay"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedLarge"",[""Chaman"",""HazarBagh"",""Nur"",""Landay""]];nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
+					init="this setVariable [""totalTowns"",31];this enableSimulation false;this setVariable [""Towns_RemovedXSmall"",[""FeeruzAbad"",""Nagara"",""Garmsar"",""Bastam"",""Zavarak"",""ChakChak"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Nur"",""Karachinar"",""Rasman"",""Ravanay"",""Imarat"",""Shamali"",""Gospandi"",""Landay"",""Jaza"",""Timurkalay"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedSmall"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Chardarakht"",""Karachinar"",""Ravanay"",""Imarat"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedMedium"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Chaman"",""Chardarakht"",""Nur"",""Karachinar"",""Ravanay"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedLarge"",[""Chaman"",""HazarBagh"",""Nur"",""Landay""]];this setVariable [""Towns_RemovedBigTowns"",[""FeeruzAbad"",""LoyManara"",""Garmsar"",""Nagara"",""Rasman"",""ChakChak"",""Sakhee"",""Zavarak"",""Bastam""]];this setVariable [""Towns_RemovedCentralLine"",[""Anar"",""Falar"",""FeeruzAbad"",""Kakaru"",""Imarat"",""Bastam"",""Garmarud"",""Timurkalay"",""Sakhee"",""Gospandi""]];this setVariable [""Towns_RemovedSmallTowns"",[""Landay"",""Jaza"",""HazarBagh"",""Ravanay"",""Sultansafee"",""Chardarakht"",""Chaman"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""Timurkalay"",""Imarat"",""Gospandi"",""Karachinar"",""Nur"",""Shamali""]];nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
 				};
 			};
 		}
@@ -196,7 +196,7 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={169.98264,494.25732,7329.5396};
+					position[]={11500,150,2750};
 					azimut=90;
 					id=34;
 					side="LOGIC";
@@ -669,7 +669,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		}
@@ -851,7 +851,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		}
@@ -2633,10 +2633,10 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={4747.4932,544.16034,3135.9883};
+					position[]={10300,150,2450};
 					id=228;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -2667,10 +2667,10 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={3714.6399,171.13455,5635.7466};
+					position[]={10850,150,6250};
 					id=230;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -2684,7 +2684,7 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={648.13586,417.86884,4569.1333};
+					position[]={11350,150,8300};
 					id=231;
 					side="LOGIC";
 					vehicle="LocationLogicStart";
@@ -2849,7 +2849,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="Headless Client";
+					description="HC";
 					synchronizations[]={49};
 				};
 			};
@@ -3157,7 +3157,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="Headless Client";
+					description="HC";
 					synchronizations[]={50};
 				};
 			};
@@ -3580,7 +3580,126 @@ class Mission
 				};
 			};
 		}
-	};
+			class Item91
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12050,150,10250};
+					id=260;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item92
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={1900,150,11650};
+					id=261;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item93
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={2150,150,520};
+					id=262;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item94
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={900,150,2950};
+					id=263;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item95
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={9150,150,6650};
+					id=264;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item96
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={2350,150,7550};
+					id=265;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item97
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={8850,150,5250};
+					id=266;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+};
 	class Markers
 	{
 		items=5;

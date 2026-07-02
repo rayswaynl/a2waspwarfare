@@ -23,7 +23,9 @@ while {!gameOver} do {
 
     if (_timer > WFBE_CO_VAR_AFKkickThreshold) then {
         publicVariableServer "AFKthresholdExceededName";
-        failMission "END1";
+        //--- SG14: authority relocated to server; client only REPORTS — server validates and kicks.
+        WFBE_PVF_RequestAFKKick = ["SRVFNCRequestAFKKick", [player]];
+        publicVariableServer "WFBE_PVF_RequestAFKKick";
     };
 
     _sleep = 60 call GetSleepFPS;

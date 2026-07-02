@@ -9,7 +9,7 @@
 
 public abstract class BaseTerrain : InterfaceTerrain
 {
-    private const string ReleaseCandidateId = "release-command-center-20260630";
+    private const string ReleaseCandidateId = "build88-cmdcon43-20260703";
 
     // Properties that specifies the name/type of the terrain.
     public TerrainName TerrainName { get => terrainName; set => terrainName = value; }
@@ -30,9 +30,14 @@ public abstract class BaseTerrain : InterfaceTerrain
 
     // Method that writes and updates the terrain files.
     public void WriteAndUpdateTerrainFiles(
-        string _easaFileString, string _commonBalanceFileString, string _aircraftDisplayNameStrings, string _addedAircraftDamageModelChanges, string _coreModFile = "")
+        string _easaFileString,
+        string _commonBalanceFileString,
+        string _aircraftDisplayNameStrings,
+        string _addedAircraftDamageModelChanges,
+        string _coreModFile = "",
+        string? destinationDirectoryOverride = null)
     {
-        string destinationDirectory = DetermineDestinationDirectory();
+        string destinationDirectory = destinationDirectoryOverride ?? DetermineDestinationDirectory();
 
         if (terrainName == TerrainName.CHERNARUS)
         {
@@ -57,11 +62,41 @@ public abstract class BaseTerrain : InterfaceTerrain
                 soundClasses.Add(soundClass);
             }
 
+            // cmdcon43-g (Ray 2026-07-02): factory-upgrade sound MODE classes. The auto-generated
+            // classes above are 1:1 with the ogg files (class name + volume parsed from the
+            // "<name>-<volume>.ogg" filename), so a QUIET/legacy variant that REUSES an existing
+            // ogg at a different volume cannot be expressed as a file - it must be appended here.
+            // All three REUSE existing files (commanderNotification-10.ogg + ARTY_cooldown_over-8.ogg)
+            // => zero new audio, zero pbo-size cost. Selected by WFBE_C_UPGRADE_SOUNDS at the two
+            // call sites in Client\Functions\Client_FNC_Special.sqf (0 silent / 1 legacy / 2 quiet).
+            // "upgradeStartedSound" was referenced in mission code for a long time but never actually
+            // registered (silent no-op); registering it here makes LEGACY mode 1 behave as the old
+            // code comment intended (short commanderNotification chime, moderate volume 2.5).
+            string upgradeSoundModeClasses = $@"
+
+    class upgradeStartedSound {{
+        name = ""upgradeStartedSound"";
+        sound[] = {{""\Sounds\commanderNotification-10.ogg"", 2.5, 1}};
+        titles[] = {{}};
+    }};
+
+    class WFBE_UpgradeStart_Quiet {{
+        name = ""WFBE_UpgradeStart_Quiet"";
+        sound[] = {{""\Sounds\commanderNotification-10.ogg"", 0.6, 1}};
+        titles[] = {{}};
+    }};
+
+    class WFBE_UpgradeComplete_Quiet {{
+        name = ""WFBE_UpgradeComplete_Quiet"";
+        sound[] = {{""\Sounds\ARTY_cooldown_over-8.ogg"", 2, 1}};
+        titles[] = {{}};
+    }};";
+
             string cfgSounds = $@"
 class CfgSounds
 {{
     sounds[] = {{}};
-    {string.Join(Environment.NewLine, soundClasses)}
+    {string.Join(Environment.NewLine, soundClasses)}{upgradeSoundModeClasses}
 }};";
 
             File.WriteAllText(soundDirectory + "description.ext", cfgSounds);
@@ -70,14 +105,14 @@ class CfgSounds
         // Handle writing to the vanilla maps (Utes, Zargabad) more properly here later
         if (terrainModStatus == TerrainModStatus.VANILLA)
         {
-            UpdateFilesForTakistan();
+            UpdateFilesForTakistan(destinationDirectory);
             EnsureTakistanInitServerUsesCorrectMapId(destinationDirectory);
         }
 
         // Perhaps do a inherited class from this to reduce spaghetti
         if (terrainModStatus == TerrainModStatus.MODDED)
         {
-            UpdateFilesForModdedTerrains();
+            UpdateFilesForModdedTerrains(destinationDirectory);
 
             WriteFilesToTheModdedTerrains(destinationDirectory, _coreModFile);
             ReplaceInitCommmonSqfForCoreModInit(destinationDirectory);
@@ -206,25 +241,23 @@ class CfgSounds
     }
 
     // Method to update all the files for Takistan, and the modded maps
-    private void UpdateFilesForTakistan()
+    private void UpdateFilesForTakistan(string _destinationDirectory)
     {
         // Determine the source and destination directories for file operations
         string sourceDirectory = DetermineChernarusDirectory();
-        string destinationDirectory = DetermineDestinationDirectory();
 
         // Copy files from the source to the destination directory
-        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, destinationDirectory, terrainModStatus);
+        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, _destinationDirectory, terrainModStatus);
     }
 
     // Method to update all the files for the modded terrains
-    private void UpdateFilesForModdedTerrains()
+    private void UpdateFilesForModdedTerrains(string _destinationDirectory)
     {
         // Determine the source and destination directories for file operations
         string sourceDirectory = DetermineSourceDirectoryForModdedTerrains();
-        string destinationDirectory = DetermineDestinationDirectory();
 
         // Copy files from the source to the destination directory
-        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, destinationDirectory, terrainModStatus);
+        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, _destinationDirectory, terrainModStatus);
     }
 
     // Replaces the gui menu help mission name according to the current Terrain name
@@ -316,12 +349,16 @@ class CfgSounds
         File.WriteAllText(finalPathToEdit, content);
     }
 
-    // Ensures the Takistan init_server uses the correct map id after copying from Chernarus
+    // Ensures a vanilla map's init_server uses its own database map id after copying
+    // from Chernarus (which carries SET_MAP 1). Ids: 1=Chernarus, 2=Takistan, 3=Zargabad.
     private void EnsureTakistanInitServerUsesCorrectMapId(string _destinationDirectory)
     {
-        if (terrainName != TerrainName.TAKISTAN)
+        int mapId;
+        switch (terrainName)
         {
-            return;
+            case TerrainName.TAKISTAN: mapId = 2; break;
+            case TerrainName.ZARGABAD: mapId = 3; break;
+            default: return;
         }
 
         string initServerPath = Path.Combine(_destinationDirectory, @"Server\Init\Init_Server.sqf");
@@ -332,23 +369,27 @@ class CfgSounds
             return;
         }
 
-        const string chernarusMapLine = "[\"SET_MAP\", 1] call WFBE_SE_FNC_CallDatabaseSetMap;";
-        const string takistanMapLine = "[\"SET_MAP\", 2] call WFBE_SE_FNC_CallDatabaseSetMap;";
+        string terrainMapLine = $"[\"SET_MAP\", {mapId}] call WFBE_SE_FNC_CallDatabaseSetMap;";
 
         string fileContent = File.ReadAllText(initServerPath);
 
-        if (fileContent.Contains(takistanMapLine))
+        if (fileContent.Contains(terrainMapLine))
         {
             return;
         }
 
-        if (fileContent.Contains(chernarusMapLine))
+        string updatedContent = System.Text.RegularExpressions.Regex.Replace(
+            fileContent,
+            "\\[\"SET_MAP\", \\d+\\] call WFBE_SE_FNC_CallDatabaseSetMap;",
+            terrainMapLine.Replace("$", "$$"));
+
+        if (updatedContent != fileContent)
         {
-            File.WriteAllText(initServerPath, fileContent.Replace(chernarusMapLine, takistanMapLine));
+            File.WriteAllText(initServerPath, updatedContent);
             return;
         }
 
-        Console.WriteLine($"SET_MAP definition not updated for Takistan in {initServerPath}.");
+        Console.WriteLine($"SET_MAP definition not updated for {terrainName} in {initServerPath}.");
     }
 
     // Generates and returns the SQF code for a specific terrain. This method is built upon 

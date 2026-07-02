@@ -138,7 +138,13 @@
 		title = "$STR_WF_PARAMETER_StartingLocations";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_PARAMETER_StartingLocations_WestNorth","$STR_WF_PARAMETER_StartingLocations_WestSouth","$STR_WF_PARAMETER_StartingLocations_Random"};
-		default = 2;
+		default = 2;  //--- cmdcon41 (Ray): default RANDOM (was Build84 fixed Miksuu spawns; options 0/1 keep the fixed layouts).
+	};
+	class WFBE_C_BASE_RANDOM_PURE {
+		title = "$STR_WF_PARAMETER_RandomPure";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_PARAMETER_RandomPure_Hardened","$STR_WF_PARAMETER_RandomPure_Original"};
+		default = 1;  //--- cmdcon41 (Ray): default PURE (Miksuu-original unfiltered random, distance-spacing only). 0 = hardened filtered random.
 	};
 	class WFBE_C_ECONOMY_CURRENCY_SYSTEM {
 		title = "$STR_WF_PARAMETER_Currency";
@@ -327,6 +333,16 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1; //--- B66 trial: 0->1 (combat-marker blinking on for this round).
 	};
+	//--- cmdcon42-m: master gate for the optional client-mod hooks (Client_ModDetect + FX-suppression +
+	//--- one-time ack). Default 1 (on): if a player runs a curated sound/visual/HUD mod, the mission
+	//--- detects it, suppresses its own overlapping FX for that client, and acks once. 0 = all hooks
+	//--- no-op (mission renders its own FX for everyone). Literal title: no stringtable entry needed.
+	class WFBE_C_MODHOOKS {
+		title = "Optional Client-Mod Hooks";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
 	class WFBE_C_UNITS_BALANCING {
 		title = "$STR_WF_PARAMETER_Balance";
 		values[] = {0,1};
@@ -345,6 +361,24 @@
 		texts[] = {"$STR_WF_PARAMETER_Victory_Annihilation","$STR_WF_PARAMETER_Victory_Assassination","$STR_WF_PARAMETER_Victory_Supremacy","$STR_WF_PARAMETER_Victory_Towns"};
 		default = 2;
 	};
+	class WFBE_C_VICTORY_TERRITORIAL {
+		title = "Territorial Victory";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_VICTORY_TERRITORIAL_FRAC {
+		title = "Territorial Victory Town Share";
+		values[] = {0.6,0.7,0.75,0.8,0.85,0.9};
+		texts[] = {"60%","70%","75%","80%","85%","90%"};
+		default = 0.8;
+	};
+	class WFBE_C_VICTORY_TERRITORIAL_MINS {
+		title = "Territorial Victory Hold Time";
+		values[] = {15,30,45,60,90};
+		texts[] = {"15 Minutes","30 Minutes","45 Minutes","1 Hour","90 Minutes"};
+		default = 30;
+	};
 	class WFBE_C_ENVIRONMENT_MAX_VIEW {
 		title = "$STR_WF_PARAMETER_ViewDistance";
 		values[] = {200,500,800,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000};
@@ -361,7 +395,7 @@
 		title = "$STR_WF_PARAMETER_AutoCM_OA";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- cmdcon41-w3f: 0 -> 1. Auto-flares for OA AI aircraft; FLARES (this feature's dependency) defaults to 2 (Enabled) above, so the gate in Init_Unit.sqf is satisfied. Matches the SQF constant default in Init_CommonConstants.sqf.
 	};
 	class WFBE_C_MODULE_WFBE_EASA {
 		title = "$STR_WF_PARAMETER_EASA";
@@ -375,6 +409,30 @@
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
+	};
+	class WFBE_C_SCUD_COST {
+		title = "Carrier SCUD Cost";
+		values[] = {10000,15000,20000,25000,30000,40000,50000};
+		texts[] = {"$ 10000","$ 15000","$ 20000","$ 25000","$ 30000","$ 40000","$ 50000"};
+		default = 25000;
+	};
+	class WFBE_C_SCUD_COOLDOWN {
+		title = "Carrier SCUD Cooldown";
+		values[] = {180,300,420,600,900};
+		texts[] = {"3 Minutes","5 Minutes","7 Minutes","10 Minutes","15 Minutes"};
+		default = 300;
+	};
+	class WFBE_C_ICBM_TEL_COUNTDOWN {
+		title = "SCUD TEL Nuke Countdown";
+		values[] = {120,180,300,420,600};
+		texts[] = {"2 Minutes","3 Minutes","5 Minutes","7 Minutes","10 Minutes"};
+		default = 300;
+	};
+	class WFBE_C_ICBM_TEL_COOLDOWN {
+		title = "SCUD TEL Shared Cooldown";
+		values[] = {180,300,420,600,900};
+		texts[] = {"3 Minutes","5 Minutes","7 Minutes","10 Minutes","15 Minutes"};
+		default = 300;
 	};
 	class WFBE_C_MODULE_WFBE_IRS {
 		title = "$STR_WF_PARAMETER_IRS";
@@ -466,6 +524,24 @@
 		values[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,32,34,36,38,40,50,60,70,80,90,100};
 		texts[] = {"$STR_WF_Disabled","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","22","24","26","28","30","32","34","36","38","40","50","60","70","80","90","100"};
 		default = 6;   //--- Town patrols ON by default (up to 6 towns); DR-57 fix makes them work. Set 0 in the lobby to disable, or raise the count. Each patrol is a roaming AI group — main perf lever.
+	};
+	class WFBE_C_PATROLS_ESCALATE {
+		title = "Side Patrol Escalation";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_PATROLS_ESCALATE_MINS {
+		title = "Side Patrol Escalation Step";
+		values[] = {30,45,60,90,120};
+		texts[] = {"30 Minutes","45 Minutes","1 Hour","90 Minutes","2 Hours"};
+		default = 45;
+	};
+	class WFBE_C_PATROLS_ESCALATE_POPTIER_MAX {
+		title = "Side Patrol Escalation Pop Cap";
+		values[] = {0,1,2,3};
+		texts[] = {"Low Only","Low/Mid","Low/Mid/High","All Populations"};
+		default = 1;
 	};
 	class WFBE_C_TOWNS_BUILD_PROTECTION_RANGE {
 		title = "$STR_WF_PARAMETER_TownProtectionRange";
@@ -562,6 +638,33 @@
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
+	};
+
+	// G4 GUER Mortar Pit wildcard card SHELVED (Ray 2026-07-02 "Shelve mortar pit"); its lobby toggles removed.
+	// G5: GUER Scavenger Team wildcard card (default OFF - flag-gated).
+	class WFBE_C_GUER_SCAV {
+		title = "GUER Scavenger Team wildcard (G5)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	class WFBE_C_GUER_SCAV_REWARD {
+		title = "GUER Scav wreck reward (cash per wreck)";
+		values[] = {150,300,600};
+		texts[] = {"150","300","600"};
+		default = 300;
+	};
+	class WFBE_C_GUER_SCAV_PLAYER_BONUS {
+		title = "GUER Scav player-kill bonus";
+		values[] = {0,150,300};
+		texts[] = {"None","150","300"};
+		default = 150;
+	};
+	class WFBE_C_GUER_SCAV_TTL {
+		title = "GUER Scav team TTL (seconds)";
+		values[] = {180,300,600};
+		texts[] = {"3 min","5 min","10 min"};
+		default = 300;
 	};
 
 };

@@ -79,6 +79,15 @@ for [{_i=_i}, {_i<count _structures}, {_i = _i+1}] do {
 };
 
 _fix = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {1} else {0};
+//--- cmdcon43-d (Build 88 FIX): commander (MCoin, _extra=="") defenses read side SUPPLY (index 0), not
+//--- personal funds (index 1). Under dual-currency BIS_COIN_funds is [supply, funds]; _fix=0 makes the
+//--- affordability check (coin_interface.sqf:909/922) evaluate against supply - the same pool base structures
+//--- use - so defense/fortification/strategic items stop greying out when the commander's funds are drained
+//--- while supply is ample. Only for the commander console + dual-currency; REPAIR (RCoin) keeps _fix=0 with a
+//--- scalar funds pool below (that path already read funds via index 0 and is intentionally left on funds).
+//--- Flag WFBE_C_CMD_DEF_SUPPLY (default 1); 0 = legacy funds pricing. The matching CHARGE switch is in
+//--- coin_interface.sqf (the "//--- Defense." block deducts side supply instead of player funds under the flag).
+if (_extra == "" && {(missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0} && {(missionNamespace getVariable ["WFBE_C_CMD_DEF_SUPPLY", 1]) > 0}) then {_fix = 0};
 if (_extra == "REPAIR") then {_coinItemArray = [];_indexCategory=0;_fix = 0};
 for '_i' from 0 to count(_defenses)-1 do {
 	_curId = _indexCategory;

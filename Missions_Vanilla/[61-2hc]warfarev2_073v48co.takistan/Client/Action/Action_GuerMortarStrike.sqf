@@ -9,7 +9,7 @@
 	  - cooldown gate (per-player time stamp, WFBE_C_GUER_MORTAR_COOLDOWN seconds);
 	  - one-shot map designation via vanilla onMapSingleClick: open the map, the next map click is the impact point;
 	  - the clicked position must be within WFBE_C_GUER_MORTAR_RANGE of the caller (else titleText + keep waiting);
-	  - on a valid click: clear the handler, close the map, stamp the cooldown, send the RequestSpecial to the server.
+	  - on a valid click: clear the handler, close the map, stamp the cooldown, mark the impact, send the RequestSpecial.
 
 	A2 OA 1.62/1.63/1.64 safe: array-form private only (no inline `private _x =`), `_arr + [x]` (no pushBack), no
 	params/select-with-code/isEqualType, titleText (not the A3 hint structures). The onMapSingleClick code is a STRING
@@ -22,7 +22,7 @@ _veh    = _this select 0;
 _player = _this select 1;
 
 if (isNull _veh || {!alive _veh}) exitWith {};
-if (driver _veh != _player) exitWith {};                 //--- driver only (belt-and-braces vs the action condition).
+if !((driver _veh) in [_player]) exitWith {};            //--- driver only (belt-and-braces vs the action condition).
 
 _cooldown = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_COOLDOWN", 240];
 _range    = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_RANGE", 1200];
@@ -32,7 +32,7 @@ _range    = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_RANGE", 1200];
 _last = _player getVariable ["wfbe_mortar_last", -9999];
 if ((time - _last) < _cooldown) exitWith {
 	_remain = ceil (_cooldown - (time - _last));
-	titleText [format ["Mortar crew reloading - %1s left.", _remain], "PLAIN"];
+	titleText [format ["Mortar crew reloading - %1s left. Last impact is marked on your map.", _remain], "PLAIN"];
 };
 
 //--- Re-select guard: if a designation is already pending on this player, do not stack a second onMapSingleClick.
@@ -51,9 +51,11 @@ openMap true;
 //--- One-shot map designation. The onMapSingleClick code is a STRING (compiled by the engine); inside it the clicked
 //--- world position is `_this select 1`. We validate range against the stashed caller; a too-far click is rejected
 //--- with a titleText and the handler stays armed for another click (so the player can retry without re-scrolling).
-//--- A valid click clears the handler, closes the map, stamps the cooldown, and sends the RequestSpecial.
+//--- A valid click clears the handler, closes the map, stamps the cooldown, marks the caller's map, and sends the
+//--- RequestSpecial. The marker is LOCAL to the caller: the server already creates the short global Incoming marker
+//--- after it accepts/debits the strike, while this one is just the caller's impact/cooldown breadcrumb.
 onMapSingleClick "
-	private ['_pos','_p','_rng','_d'];
+	private ['_pos','_p','_rng','_d','_m','_cool','_start'];
 	_pos = _this select 1;
 	_p = WFBE_MortarDesignator;
 	_rng = WFBE_MortarDesignRange;
@@ -69,7 +71,38 @@ onMapSingleClick "
 	onMapSingleClick '';
 	openMap false;
 	_p setVariable ['wfbe_mortar_designating', false];
-	_p setVariable ['wfbe_mortar_last', time];
+	_cool = missionNamespace getVariable ['WFBE_C_GUER_MORTAR_COOLDOWN', 240];
+	_start = time;
+	_p setVariable ['wfbe_mortar_last', _start];
+	_m = Format ['wfbe_guer_mortar_impact_%1', round (diag_tickTime * 1000)];
+	createMarkerLocal [_m, _pos];
+	_m setMarkerTypeLocal 'mil_destroy';
+	_m setMarkerColorLocal 'ColorOrange';
+	_m setMarkerSizeLocal [0.9, 0.9];
+	_m setMarkerTextLocal Format ['Mortar impact - ready in %1s', ceil _cool];
+	[_m, _p, _start, _cool] spawn {
+		private ['_marker','_player','_start','_cool','_left','_currentLast','_ready'];
+		_marker = _this select 0;
+		_player = _this select 1;
+		_start = _this select 2;
+		_cool = _this select 3;
+		_ready = false;
+		while {true} do {
+			if (isNull _player) exitWith {};
+			_currentLast = _player getVariable ['wfbe_mortar_last', -9999];
+			if !(_currentLast >= _start) exitWith {
+				deleteMarkerLocal _marker;
+			};
+			_left = ceil (_cool - (time - _start));
+			if (_left <= 0) exitWith {_ready = true};
+			_marker setMarkerTextLocal Format ['Mortar impact - ready in %1s', _left];
+			sleep 5;
+		};
+		if !(isNull _player) then {
+			deleteMarkerLocal _marker;
+			if (_ready && {alive _player}) then {titleText ['Mortar crew ready.', 'PLAIN']};
+		};
+	};
 	['RequestSpecial', ['guer-mortar-strike', _pos, _p]] Call WFBE_CO_FNC_SendToServer;
-	titleText ['Strike inbound.', 'PLAIN'];
+	titleText [Format ['Strike inbound. Mortar reloading - %1s.', ceil _cool], 'PLAIN'];
 ";

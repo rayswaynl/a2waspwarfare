@@ -48,4 +48,4 @@ for '_z' from 0 to (count _c)-1 do {
 	};
 };
 
-diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_RU: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];
+diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_MVD: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];

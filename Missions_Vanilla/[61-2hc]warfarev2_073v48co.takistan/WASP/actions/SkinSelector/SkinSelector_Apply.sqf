@@ -5,7 +5,7 @@
 	Preconditions:
 	  - player is alive
 	  - vehicle player == player  (infantry only)
-	  - WFBE_C_SKIN_SELECTOR == 1
+	  - selector enabled (SkinSelector_Enabled.sqf: WFBE_C_SKINSEL default 1, or legacy WFBE_C_SKIN_SELECTOR)
 	Known limitation: vehicle Fired EHs (HandleAT / HandleRocketTraccer / blinking marker)
 	  are attached to (vehicle player) at the time of swap. After the swap the new unit
 	  is on foot, so the EHs are re-added on the new unit. If the player entered a vehicle
@@ -30,7 +30,8 @@
 
 Private ["_chosenClass","_oldUnit","_oldGrp","_swapGrp","_pos","_dir",
          "_unitName","_unitRank","_unitFace","_unitSpeaker",
-         "_gear","_newUnit","_wasLeader","_uid"];
+         "_gear","_newUnit","_wasLeader","_uid","_waitStart","_verifyStart",
+         "_carryFunds","_carrySide","_curGrp","_curFunds"];
 
 _chosenClass = _this select 0;
 
@@ -66,6 +67,22 @@ if (!(isNil "WFBE_SkinSelector_InProgress") && {WFBE_SkinSelector_InProgress}) e
 WFBE_SkinSelector_InProgress = true;
 
 _oldGrp  = group _oldUnit;
+
+//--- cmdcon43-h WALLET-CARRY (Ray 2026-07-02): the player's money lives on his GROUP object as
+//--- wfbe_funds; GetPlayerFunds reads (clientTeam) Call GetTeamFunds and clientTeam is re-pointed at
+//--- (group player) after the swap (BUG-8 line ~301). The swap creates a FRESH group (_swapGrp,
+//--- createGroup - never funded) and relies solely on `[_newUnit] join _oldGrp` to land the player back
+//--- in his funded slot group. When that rejoin does NOT put him in the funded group (original group
+//--- empty/reaped, the CreateUnit non-local-leader fallback diverting to a fresh "misc" group, or a JIP
+//--- CIV-drift swap group), the player ends up in a group with NO wfbe_funds -> GetTeamFunds returns 0
+//--- -> wallet reads $0 AND every purchase/refund charges an empty wallet. LIVE-CONFIRMED (server RPT
+//--- cmdcon42b: a WEST player's own group resolved side=CIV, funds=0, RequestFundsResend stamped
+//--- START funds=0 because no WFBE_C_ECONOMY_FUNDS_START_CIVILIAN constant exists). Fix: snapshot the
+//--- funded group's wfbe_funds + wfbe_side NOW, before any group juggling, and re-stamp them onto the
+//--- player's CURRENT group after selectPlayer if that group lost them. Flag-gated (default ON). A2-OA
+//--- 1.64 safe: getVariable / typeName / plain locals (no A3 commands, no isNil-less reads).
+_carryFunds = _oldGrp getVariable "wfbe_funds";   //--- may be nil if _oldGrp was itself already unfunded
+_carrySide  = _oldGrp getVariable "wfbe_side";     //--- may be nil on a transient/civilian group
 
 //--- Capture position / orientation.
 _pos = getPosATL _oldUnit;
@@ -136,14 +153,39 @@ _newUnit setRank    _unitRank;
 _newUnit setVariable ["lastActionTime", time];
 _newUnit setVariable ["lastPosition",   getPosATL _newUnit];
 
+//--- cmdcon42 SELECTPLAYER HARDENING (Ray 2026-07-02): selectPlayer requires the target unit to be
+//--- non-null AND LOCAL to this client, and to have finished initialising. The unit was just created
+//--- into a fresh LOCAL swap group (swapGrpLocal true), so it is normally local immediately, but wait
+//--- for it explicitly with a ~3s timeout so a slow-init frame never selects a half-built body.
+//--- A2-OA-1.64 safe: waitUntil / isNull / local / time. (No && {} lazy operand: nested condition.)
+_waitStart = time;
+waitUntil {
+	if (isNull _newUnit) exitWith {true};
+	if (local _newUnit) exitWith {true};
+	if (time - _waitStart > 3) exitWith {true};
+	false
+};
+
+//--- Abort cleanly if the unit vanished or never became local — never selectPlayer a bad handle.
+if (isNull _newUnit || !(local _newUnit)) exitWith {
+	diag_log format ["[WFBE (SKIN)] B5_FAIL new unit not usable before selectPlayer (isNull=%1 local=%2) — cleaning up, player kept in old body", isNull _newUnit, local _newUnit];
+	if (!isNull _newUnit) then {deleteVehicle _newUnit};
+	if (!isNull _swapGrp) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
+	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on failure
+	hint "Skin swap failed (unit not ready). Please try again.";
+};
+
 //--- Rejoin the original group BEFORE selectPlayer so the player transitions
 //--- with the correct group context. If the original group is empty or gone
 //--- (edge case: everyone left while selector was open) remain in _swapGrp.
 //--- A2-OA fix: && {code} / || {code} lazy-eval operands are Arma-3-only syntax and
 //--- produce "Missing ;" parse errors in A2 OA 1.64.  Use nested if instead.
+//--- cmdcon42 A2-OA FIX: `joinGroup` is ALSO Arma-3-only and threw "Missing ;" at this line on
+//--- EVERY swap (RPT-confirmed), collapsing this whole if/then block. A2 OA uses `[unit] join grp`
+//--- (array LHS), matching Common_ChangeUnitGroup.sqf:11 / Server_OnPlayerDisconnected.sqf:105.
 if (!(isNull _oldGrp)) then {
 	if (!(isNull (leader _oldGrp)) || (count units _oldGrp > 0)) then {
-		_newUnit joinGroup _oldGrp;
+		[_newUnit] join _oldGrp;
 	} else {
 		diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
 	};
@@ -155,6 +197,26 @@ if (!(isNull _oldGrp)) then {
 diag_log format ["[WFBE (SKIN)] B4 selectPlayer -> '%1' grp=%2 wasLeader=%3",
 	_chosenClass, group _newUnit, _wasLeader];
 selectPlayer _newUnit;
+
+//--- VERIFY the transfer actually took: player must BE the new unit within ~5s. In A2 MP a
+//--- selectPlayer into a non-local group (or mid-JIP) can silently fail, leaving the player in the
+//--- OLD body while the new unit stands idle. Confirm before we touch/delete anything.
+_verifyStart = time;
+waitUntil {
+	if (player == _newUnit) exitWith {true};
+	if (time - _verifyStart > 5) exitWith {true};
+	false
+};
+
+if (!(player == _newUnit)) exitWith {
+	diag_log format ["[WFBE (SKIN)] B5_FAIL selectPlayer did not transfer control (player=%1 newUnit=%2) — deleting spawned unit, restoring old body", player, _newUnit];
+	//--- Undo the neutralisation-that-hasn't-happened-yet is N/A (old body untouched here). Just remove the
+	//--- orphan skinned unit so no zombie soldier is left standing, and leave the player in the old body.
+	if (!isNull _newUnit) then {deleteVehicle _newUnit};
+	if (!isNull _swapGrp) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
+	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on failure
+	hint "Skin swap failed (control did not transfer). You are still in your original body.";
+};
 
 //--- Restore group leadership if the player led the original group.
 if (_wasLeader) then {(group _newUnit) selectLeader _newUnit};
@@ -238,6 +300,68 @@ player Call WFBE_SK_FNC_Apply;
 player Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\AddActions.sqf";
 player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
+
+//--- cmdcon42 BUG-8 RESPAWN/ENROLLMENT RE-REGISTRATION (Ray 2026-07-02): the swap unit is created with
+//--- WFBE_CO_FNC_CreateUnit _global=false, so Common\Init\Init_Unit.sqf NEVER runs on it, and the
+//--- engine group-respawn (Header.hpp respawn=3) binds a player to BASE spawns through the enrollment
+//--- GLOBALS + the group, NOT through per-unit slot state. Init_Client.sqf sets these once
+//--- (sideJoined/WFBE_Client_SideJoined/sideID/WFBE_Client_SideID + clientTeam/WFBE_Client_Team = group
+//--- player) and Client_OnKilled re-asserts leadership each death. After selectPlayer into a fresh body
+//--- those team GLOBALS can point at the OLD (now-deleted) group object; when the swapped body later
+//--- DIES the death chain then reads a stale team and the RespawnMenu's [sideJoined, WFBE_DeathLocation]
+//--- Call GetRespawnAvailable produced NO base spawns (RPT: only deadspawn entries, then a stranded
+//--- dead player). Re-point the team globals at the player's CURRENT group so the enrollment the respawn
+//--- system reads is valid on the new body. sideJoined/sideID are SIDE-derived and unchanged by the swap
+//--- (same side), so we leave them; we only fix the GROUP-bound handles. Idempotent, A2-OA-1.64 safe
+//--- (isNull / group / plain global assignment - no A3-only commands).
+if (!isNull (group player)) then {
+	clientTeam = group player;
+	WFBE_Client_Team = group player;
+};
+
+//--- cmdcon43-h WALLET-CARRY apply (Ray 2026-07-02): before clientTeam becomes authoritative for the
+//--- wallet, make sure the player's CURRENT group actually carries his money. If the rejoin above put
+//--- him back in the funded slot group its wfbe_funds is intact and this is a no-op. If it did NOT
+//--- (fresh/diverted/CIV group) the group has no numeric wfbe_funds and GetPlayerFunds would read $0 -
+//--- re-stamp the snapshot taken from _oldGrp so the wallet follows the player across the swap. Also
+//--- carry wfbe_side so a diverted group is still recognised as a real warfare slot (RequestFundsResend
+//--- + the connect resolver both key off wfbe_side; a group missing it reads civilian -> funds=0). We
+//--- ONLY stamp when the current group is MISSING a numeric value (never overwrite a real live balance,
+//--- so no duplication and a legitimately-spent-low balance is preserved). Broadcast (3rd arg true) so
+//--- the server-side view of this group matches. Flag WFBE_C_SKINSWAP_FUNDS_CARRY (default 1) lets Ray
+//--- disable it. A2-OA-1.64 safe: isNull / group / getVariable / typeName == / setVariable[_,_,true].
+if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then {
+	_curGrp = group player;
+	if (!isNull _curGrp) then {
+		_curFunds = _curGrp getVariable "wfbe_funds";
+		//--- Only heal a group that has NO numeric funds of its own (the orphaned-wallet case).
+		if (isNil "_curFunds" || {typeName _curFunds != "SCALAR"}) then {
+			//--- Prefer the exact snapshot from the pre-swap funded group; if that too was missing
+			//--- (a chain of prior orphaning), fall back to the side START so the player is never
+			//--- left at a phantom $0. _carrySide feeds the START lookup and re-slots the group.
+			if (!isNil "_carryFunds" && {typeName _carryFunds == "SCALAR"}) then {
+				_curGrp setVariable ["wfbe_funds", _carryFunds, true];
+			} else {
+				private "_startFunds";
+				_startFunds = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", (side player)], 0];
+				_curGrp setVariable ["wfbe_funds", _startFunds, true];
+			};
+			//--- Restore the group's warfare-slot identity so the server never reads it as civilian.
+			if (isNil {_curGrp getVariable "wfbe_side"} && {!isNil "_carrySide"}) then {
+				_curGrp setVariable ["wfbe_side", _carrySide, true];
+			};
+			diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - re-stamped wfbe_funds=%1 (carried=%2) side=%3 grp=%4",
+				(_curGrp getVariable ["wfbe_funds", 0]), (if (isNil "_carryFunds") then {"nil"} else {_carryFunds}), (side player), _curGrp];
+			//--- Ask the server to re-broadcast the AUTHORITATIVE value onto this group (idempotent:
+			//--- it echoes an absolute stored value, never adds). This reconciles the server's own
+			//--- record with the client re-stamp and covers the case where _oldGrp's balance had
+			//--- diverged from the client snapshot. Mirrors the respawn-handler funds resend.
+			if (!isNil "WFBE_Client_SideJoined") then {
+				["RequestFundsResend", [player, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
+			};
+		};
+	};
+};
 
 //--- Re-add the User11 KeyDown EH — it lived on the old (deleted) unit.
 player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];

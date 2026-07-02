@@ -11,7 +11,12 @@
 
 scriptName "Server\FSM\server_side_patrols.sqf";
 
-private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept"];
+private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept",
+	"_mpEnabled","_mpMotoPool","_mpEntry","_mpHasVeh","_mpC",
+	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh",
+	"_homePool","_spSkipNaval","_hpX",
+	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
+	"_perfProbe","_perfCap","_perfReason","_perfPopTier"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -31,11 +36,15 @@ _delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
 //--- (re)assigned at the top of every loop cycle below. A2-OA-safe (plain getVariable+select, `max 0`).
 _max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
 _scrubLast = -999;
+_feedLastSig = "";
+_feedLastBroadcast = -999;
+_perfProbe = (missionNamespace getVariable ["WFBE_C_PERFORMANCE_AUDIT_SIDE_PATROL_PROBES", 0]) > 0;
 
 while {!WFBE_GameOver} do {
 	//--- B74.2 (Ray 2026-06-23): re-read the pop-tier-scaled WEST/EAST cap each cycle so it tracks the live
 	//--- WFBE_PopTier (republished ~every 90s) instead of being frozen at the value read once at startup.
-	_max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
+	_perfPopTier = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
+	_max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select ((_perfPopTier) min 3);
 
 	//--- PATROL-MARKER SCRUB: every ~20 s, purge dead-unit entries from WFBE_ACTIVE_PATROLS
 	//--- so HC-disconnect mid-patrol can't leave stale entries that JIP clients render.
@@ -84,8 +93,29 @@ while {!WFBE_GameOver} do {
 		//--- patrols/teams existing (it sits in the unconditional ~20s timer block), so a joiner whose
 		//--- connect-time catch-up was missed always gets a fresh copy of BOTH feeds within one cycle. The
 		//--- WFBE_ReqAicomFeed request handler (Init_Server) provides an instant on-demand path on top of this.
-		publicVariable "WFBE_ACTIVE_PATROLS";
-		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+		//--- Lane 111: operators can opt into change-aware broadcasts. Default 0 preserves the exact
+		//--- legacy every-cycle rebroadcast; mode 1 publishes on feed changes and keeps a bounded
+		//--- heartbeat so missed connect-time catch-up still self-heals.
+		_feedChangeOnly = (missionNamespace getVariable ["WFBE_C_SIDE_PATROL_FEED_CHANGE_ONLY", 0]) > 0;
+		if (_feedChangeOnly) then {
+			_feedKeepAlive = missionNamespace getVariable ["WFBE_C_SIDE_PATROL_FEED_KEEPALIVE", 60];
+			if (_feedKeepAlive < 20) then {_feedKeepAlive = 20};
+			_feedSig = str [WFBE_ACTIVE_PATROLS, WFBE_ACTIVE_AICOM_TEAMS];
+			_feedChanged = false;
+			if (!(_feedSig in [_feedLastSig])) then {_feedChanged = true};
+			_feedDue = (time - _feedLastBroadcast) >= _feedKeepAlive;
+			if (_feedChanged || {_feedDue}) then {
+				publicVariable "WFBE_ACTIVE_PATROLS";
+				publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+				_feedLastSig = _feedSig;
+				_feedLastBroadcast = time;
+			};
+		} else {
+			publicVariable "WFBE_ACTIVE_PATROLS";
+			publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+			_feedLastSig = str [WFBE_ACTIVE_PATROLS, WFBE_ACTIVE_AICOM_TEAMS];
+			_feedLastBroadcast = time;
+		};
 
 		_scrubLast = time;
 	};
@@ -112,6 +142,22 @@ while {!WFBE_GameOver} do {
 			if (_lvl > 0) then {
 				_active = _logik getVariable ["wfbe_side_patrols", 0];
 				_last = _logik getVariable ["wfbe_side_patrol_last", -(_delay)];
+				_perfCap = _maxSide min _lvl;
+				if (_perfProbe) then {
+					_perfReason = "ready";
+					if (_active >= _perfCap) then {
+						_perfReason = "cap";
+					} else {
+						if (time - _last <= _delay) then {_perfReason = "cooldown"};
+					};
+					if (!(_perfReason in ["ready"])) then {
+						if (!isNil "PerformanceAudit_Record") then {
+							if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+								["side_patrol_dispatch_state", 0, Format["side:%1;lvl:%2;active:%3;cap:%4;popTier:%5;reason:%6;cooldownLeft:%7", _side, _lvl, _active, _perfCap, _perfPopTier, _perfReason, round ((_delay - (time - _last)) max 0)], "SERVER"] Call PerformanceAudit_Record;
+							};
+						};
+					};
+				};
 				if (_active < (_maxSide min _lvl) && {time - _last > _delay}) then {  //--- B36.1 (Ray 2026-06-15): EFFECTIVE patrol cap is level-aware = min(side cap, patrol level). patrol-1 => 1, patrol-2+ => 2 (side cap is 2 for W/E, 2/1 for GUER). HQ teams scale via the curve; patrols stay low.
 					_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 					_owned = [];
@@ -121,16 +167,103 @@ while {!WFBE_GameOver} do {
 						_logik setVariable ["wfbe_patrol_waitlog", true];
 						["INFORMATION", Format ["server_side_patrols.sqf: [%1] Patrols %2 researched but NO owned towns yet - waiting for the first capture.", _side, _lvl]] Call WFBE_CO_FNC_AICOMLog;
 					};
+					if (_perfProbe && {count _owned < 1}) then {
+						if (!isNil "PerformanceAudit_Record") then {
+							if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+								["side_patrol_dispatch_state", 0, Format["side:%1;lvl:%2;active:%3;cap:%4;popTier:%5;reason:noOwned;hq:%6", _side, _lvl, _active, _perfCap, _perfPopTier, !isNull _hq], "SERVER"] Call PerformanceAudit_Record;
+							};
+						};
+					};
 					if (!isNull _hq && count _owned > 0) then {
-						_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
-						_tier = switch (_lvl) do {case 1: {"LIGHT"}; case 2: {"MEDIUM"}; default {"HEAVY"}};
+						//--- cmdcon41-w3m (ground-patrol-skip-naval-hvt): _home is the town the patrol SPAWNS at. An owned
+						//--- offshore carrier (wfbe_is_naval_hvt / over-water) must NOT be a spawn town - a ground patrol
+						//--- would spawn over water. Pick _home from a naval-EXCLUDED pool; fall back to _owned only if EVERY
+						//--- owned town is naval (keeps a valid spawn). _owned + its count-based GUER tier logic stay untouched.
+						//--- Gated by WFBE_C_PATROLS_SKIP_NAVAL (default 1). 2-arg getVariable + surfaceIsWater: A2-OA-safe.
+						_spSkipNaval = (missionNamespace getVariable ["WFBE_C_PATROLS_SKIP_NAVAL", 1]) > 0;
+						_homePool = [];
+						{_hpX = _x; if (!(_spSkipNaval && {(_hpX getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _hpX)}})) then {_homePool = _homePool + [_hpX]}} forEach _owned;
+						if (count _homePool == 0) then {_homePool = _owned};
+						_home = [_hq, _homePool] Call WFBE_CO_FNC_GetClosestEntity;
+						_escTiers  = ["LIGHT","MEDIUM","HEAVY"];
+						_escBaseIdx = switch (_lvl) do {case 1: {0}; case 2: {1}; default {2}};
+						_tier = _escTiers select _escBaseIdx;
+						//--- LATE-GAME THREAT ESCALATION + FPS-AWARE CLAMP (cmdcon41-w3e, Ray 2026-07-02). Behind
+						//--- WFBE_C_PATROLS_ESCALATE (default 1). As the match runs longer AND the side's Patrols upgrade
+						//--- climbs, an escalation SCORE shifts the TIER DRAW upward so LIGHT fades and MEDIUM/HEAVY dominate
+						//--- late game. Score = (upgradeLevel-1) + floor(matchMinutes / WFBE_C_PATROLS_ESCALATE_MINS(45)); each
+						//--- +1 of score bumps the tier index one step, capped at HEAVY (idx 2). This is COMPOSITION-at-spawn
+						//--- only (heavier template drawn) - it NEVER touches counts (the pop-tier cap at L98 owns those) and
+						//--- does NO sim/distance gating. FPS-AWARE: reuse the existing WFBE_PopTier load proxy (published by
+						//--- AI_Commander_Teams; higher tier = more humans = more server load). When PopTier exceeds
+						//--- WFBE_C_PATROLS_ESCALATE_POPTIER_MAX (default 1 => escalate only at LOW/MID pop) we CLAMP the tier
+						//--- draw back to the plain level-derived base index - never spawn a heavier template under load. GUER
+						//--- keeps its own owned-town comeback-force scaling below (not upgrade-driven), so escalation is
+						//--- WEST/EAST only. A2-OA-1.64-safe: plain getVariable+select, floor, min/max, if/else (no A3 ops).
+						_escEnabled = (missionNamespace getVariable ["WFBE_C_PATROLS_ESCALATE", 1]) > 0;
+						_escVehCap  = false;
+						if (_escEnabled && {_side != WFBE_DEFENDER}) then {
+							_escPopMax = missionNamespace getVariable ["WFBE_C_PATROLS_ESCALATE_POPTIER_MAX", 1];
+							if (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) <= _escPopMax) then {
+								_escMins  = missionNamespace getVariable ["WFBE_C_PATROLS_ESCALATE_MINS", 45];
+								if (_escMins < 1) then {_escMins = 45};
+								_escScore = (_lvl - 1) + floor ((time / 60) / _escMins);
+								_escTierIdx = (_escBaseIdx + _escScore) min 2;
+								if (_escTierIdx < _escBaseIdx) then {_escTierIdx = _escBaseIdx};
+								_tier = _escTiers select _escTierIdx;
+								//--- At MAX escalation (already drawing HEAVY via score, not just base level) allow +1 escort
+								//--- vehicle to be appended to the chosen template below (still LOW/MID pop only).
+								if (_escTierIdx >= 2 && {_escScore >= 1}) then {_escVehCap = true};
+							};
+						};
 						//--- B36 (Ray 2026-06-15): GUER patrols = a MECHANIZED insurgent COMEBACK force. Always mounted
 						//--- (min MEDIUM = SPG-9 technical); the FEWER towns GUER holds the BETTER the patrol - at <=2 towns
 						//--- they field HEAVY (BRDM-2 armor + AT/AA). Owned-town-count scaled, gated to the defender side.
 						if (_side == WFBE_DEFENDER) then {_tier = if (count _owned < 20) then {"HEAVY"} else {"MEDIUM"}};
 						_pool = missionNamespace getVariable Format["WFBE_%1_PATROL_%2", _side, _tier];
 						if (!isNil "_pool" && {count _pool > 0}) then {
-							_template = _pool select floor(random count _pool);
+							//--- MOTORIZED ROAD-PATROL PICK (cmdcon41-w3c, Ray pick). When the w3 road-bias is on
+							//--- (WFBE_C_PATROLS_ROADBIAS==1) AND WFBE_C_PATROLS_ROADBIAS_MOTORIZED==1 (both default 1),
+							//--- prefer pool entries that CONTAIN at least one VEHICLE classname so the resulting patrol
+							//--- actually rides the road corridor AI_Patrol.sqf lays (a foot-only entry crawls cross-town
+							//--- and never uses the road route). Detect vehicle elements with the codebase-proven,
+							//--- A2-OA-1.64-safe classname-literal `!(_c isKindOf "Man")` idiom (same as AI_Commander_Produce/
+							//--- Teams; annotated A2-safe there). Collect vehicle-containing entries, pick randomly among them;
+							//--- FALL BACK to the full pool when NONE exist (e.g. TKGUE foot-only pools) so a patrol is never
+							//--- blocked. Bounded: one pass over the (tiny) pool, once per DISPATCH (not per tick).
+							_mpEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS_MOTORIZED", 1]) > 0};
+							if (_mpEnabled) then {
+								_mpMotoPool = [];
+								{
+									_mpEntry = _x;
+									_mpHasVeh = false;
+									{ _mpC = _x; if (!(_mpC isKindOf "Man")) exitWith {_mpHasVeh = true} } forEach _mpEntry;
+									if (_mpHasVeh) then {_mpMotoPool set [count _mpMotoPool, _mpEntry]};
+								} forEach _pool;
+								if (count _mpMotoPool > 0) then {
+									_template = _mpMotoPool select floor(random count _mpMotoPool);
+								} else {
+									_template = _pool select floor(random count _pool);
+								};
+							} else {
+								_template = _pool select floor(random count _pool);
+							};
+							//--- MAX-ESCALATION +1 ESCORT VEHICLE (cmdcon41-w3e). Only when _escVehCap is set (LOW/MID pop,
+							//--- HEAVY-by-score late game) AND the drawn template already CONTAINS a vehicle: append a COPY of
+							//--- that template's FIRST vehicle classname so the patrol gains one extra escort hull. We reuse a
+							//--- classname that is ALREADY IN THE TEMPLATE (never invent one), and we build a fresh array
+							//--- ([] + _template copies) so the shared pool entry is NOT mutated. FPS-safe: gated off under load
+							//--- by _escVehCap; counts stay pop-tier-capped elsewhere. A2-OA-safe: isKindOf "Man" literal, array +.
+							if (_escVehCap) then {
+								_escHadVeh  = false;
+								_escSideVeh = "";
+								{ if (!(_x isKindOf "Man")) exitWith {_escHadVeh = true; _escSideVeh = _x} } forEach _template;
+								if (_escHadVeh) then {
+									_escEscort = [] + _template;
+									_escEscort set [count _escEscort, _escSideVeh];
+									_template = _escEscort;
+								};
+							};
 							//--- Book the slot synchronously; the started/ended events keep the
 							//--- public marker list, the ended event re-arms the cooldown.
 							_logik setVariable ["wfbe_side_patrols", _active + 1];
@@ -147,6 +280,9 @@ while {!WFBE_GameOver} do {
 							if (!isNil "PerformanceAudit_Record") then {
 								if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 									["side_patrol_spawn", 0, Format["side:%1;tier:%2;active:%3;hc:%4", _side, _tier, _active + 1, !isNull _hcUnit], "SERVER"] Call PerformanceAudit_Record;
+									if (_perfProbe) then {
+										["side_patrol_dispatch_state", 0, Format["side:%1;lvl:%2;tier:%3;active:%4;cap:%5;popTier:%6;owned:%7;home:%8;hc:%9;reason:dispatched", _side, _lvl, _tier, _active + 1, _perfCap, _perfPopTier, count _owned, _home getVariable "name", !isNull _hcUnit], "SERVER"] Call PerformanceAudit_Record;
+									};
 								};
 							};
 						};

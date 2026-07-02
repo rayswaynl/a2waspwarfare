@@ -164,14 +164,21 @@ switch (_localize) do {
         // _this: [1]=category string, [2]=used count, [3]=cap,
         //        [4]=refund — NUMBER (refund directly) or classname STRING (look up the
         //        price this client charged; covers entries the server cannot price).
-        private ["_refArg","_refGet"];
+        //--- cmdcon43-d (Build 88 FIX): a COMMANDER defense is now charged from side SUPPLY (see
+        //--- coin_interface.sqf "//--- Defense." block) under WFBE_C_CMD_DEF_SUPPLY + dual-currency,
+        //--- so the rejection refund must return SUPPLY, not funds - otherwise a rejected commander
+        //--- defense would silently convert supply into personal cash. WFBE_CMD_DEF_SUPPLY_REFUND
+        //--- routes the refund to the pool that was actually charged.
+        private ["_refArg","_refGet","_refAmt"];
         _refArg = _this select 4;
+        _refAmt = 0;
         if (typeName _refArg == "STRING") then {
             _refGet = missionNamespace getVariable _refArg;
-            if (!isNil "_refGet") then { (_refGet select QUERYUNITPRICE) Call ChangePlayerFunds };
+            if (!isNil "_refGet") then { _refAmt = _refGet select QUERYUNITPRICE };
         } else {
-            if (_refArg > 0) then { _refArg Call ChangePlayerFunds };
+            if (_refArg > 0) then { _refAmt = _refArg };
         };
+        if (_refAmt > 0) then { _refAmt Call WFBE_CMD_DEF_SUPPLY_REFUND };
         _txt = Format [Localize "DefenseBudgetFull", _this select 1, _this select 2, _this select 3];
     };
 
@@ -183,7 +190,9 @@ switch (_localize) do {
         private ["_anchorClass","_get"];
         _anchorClass = _this select 3;
         _get = missionNamespace getVariable _anchorClass;
-        if (!isNil "_get") then { (_get select QUERYUNITPRICE) Call ChangePlayerFunds };
+        //--- cmdcon43-d (Build 88 FIX): refund to the pool that was charged (supply for a commander under
+        //--- WFBE_C_CMD_DEF_SUPPLY, else funds) - see WFBE_CMD_DEF_SUPPLY_REFUND definition below.
+        if (!isNil "_get") then { (_get select QUERYUNITPRICE) Call WFBE_CMD_DEF_SUPPLY_REFUND };
         _txt = Format [Localize "WddmCompositionCapReached", _this select 1, _this select 2];
     };
 
@@ -192,19 +201,24 @@ switch (_localize) do {
 
     //--- AI Commander Wildcard event announcement: _this select 1 is the already display-ready message text.
     case "Wildcard": {_txt = _this select 1; _commandChat = true;};
+    case "QuartermasterRefit": {_txt = _this select 1; _commandChat = true;}; //--- cmdcon42 TOPUP Option B: server-built quartermaster refit-charge line, UID-targeted at the seated human commander only (Client_HandlePVF STRING-destination filter).
 
     case "DefenseThreatGate": {
         // _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the
         //        price this client charged for it; covers WDDM anchors whose price the
         //        server cannot resolve from a single global). Refund, then warn.
-        private ["_refArg","_refGet"];
+        //--- cmdcon43-d (Build 88 FIX): refund via WFBE_CMD_DEF_SUPPLY_REFUND so a commander (charged from
+        //--- supply under WFBE_C_CMD_DEF_SUPPLY) is refunded in supply, not funds.
+        private ["_refArg","_refGet","_refAmt"];
         _refArg = _this select 1;
+        _refAmt = 0;
         if (typeName _refArg == "STRING") then {
             _refGet = missionNamespace getVariable _refArg;
-            if (!isNil "_refGet") then { (_refGet select QUERYUNITPRICE) Call ChangePlayerFunds };
+            if (!isNil "_refGet") then { _refAmt = _refGet select QUERYUNITPRICE };
         } else {
-            if (_refArg > 0) then { _refArg Call ChangePlayerFunds };
+            if (_refArg > 0) then { _refAmt = _refArg };
         };
+        if (_refAmt > 0) then { _refAmt Call WFBE_CMD_DEF_SUPPLY_REFUND };
         _txt = Localize "DefenseThreatGate";
     };
 };

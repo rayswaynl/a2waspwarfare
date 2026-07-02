@@ -90,6 +90,12 @@ _u = _u		+ ['ZSU_TK_EP1'];
 _u = _u		+ ['T34_TK_EP1'];
 _u = _u		+ ['T55_TK_EP1'];
 _u = _u		+ ['T72_TK_EP1'];
+//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD at the HEAVY FACTORY on TAKISTAN ONLY. worldName-gated so the row
+//--- only registers on TK (this file is a TK faction file, but we gate explicitly per the TK-only mandate). The row's
+//--- price + HEAVY-factory tier live in Core_TKA.sqf metadata; it is a driveable owned purchase like any heavy vehicle.
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"}) then {
+	_u = _u	+ [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
@@ -100,6 +106,13 @@ _u = _u		+ ['Mi24_D_TK_EP1'];
 _u = _u		+ ['An2_TK_EP1'];
 // _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
 _u = _u		+ ['Su25_TK_EP1'];
+
+//--- cmdcon42-i: append TAKISTAN-only EASA-loadout air variant tokens to the TKA Aircraft-Factory list
+//--- (non-airfield-exclusive rows only; the top-tier row is added to the per-airfield roster in Init_Common).
+//--- Catalog self-gates on worldName + WFBE_C_TK_EASA_ROSTER (returns [] when the flag is off). AI never
+//--- founds these (no squad template lists them; the founding/produce paths only use this list for a
+//--- factory-membership lookup on classes already in a template).
+{ if (((_x select 2) == "TKA") && {!(_x select 6)}) then {_u = _u + [_x select 0]}; } forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};

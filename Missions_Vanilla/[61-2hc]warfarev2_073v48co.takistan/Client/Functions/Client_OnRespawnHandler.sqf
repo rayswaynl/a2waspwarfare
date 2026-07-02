@@ -196,17 +196,27 @@ case "SpecOps": {_default = missionNamespace getVariable Format["WFBE_%1_Default
 case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGearMedic", WFBE_Client_SideJoinedText]};
 };
 	
-	//_default = missionNamespace getVariable Format["WFBE_%1_DefaultGear", WFBE_Client_SideJoinedText];
-	if (count _default <= 3) then {
-		[_unit, _default select 0, _default select 1, _default select 2] Call WFBE_CO_FNC_EquipUnit;
+	//--- GUER-GEARFIX (2026-07-02): same fallback as Init_Client.sqf - a "" skill type (unregistered playerType,
+	//--- e.g. the CH-classname GUER slots on Takistan) or a nil per-role WFBE_%1_DefaultGearXXX used to strip the
+	//--- respawned player NAKED. Fall back to the faction-wide WFBE_%1_DefaultGear and warn in the RPT.
+	if (isNil '_default' || {count _default == 0}) then {
+		["WARNING", Format ["Client_OnRespawnHandler.sqf : No role default gear for type [%1] (playerType [%2]) - falling back to WFBE_%3_DefaultGear.", WFBE_SK_V_Type, typeOf _unit, WFBE_Client_SideJoinedText]] Call WFBE_CO_FNC_LogContent;
+		_default = missionNamespace getVariable Format["WFBE_%1_DefaultGear", WFBE_Client_SideJoinedText];
+	};
+	if (!isNil '_default' && {count _default >= 3}) then {
+		if (count _default <= 3) then {
+			[_unit, _default select 0, _default select 1, _default select 2] Call WFBE_CO_FNC_EquipUnit;
+		} else {
+			[_unit, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
+		};
 	} else {
-		[_unit, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
+		["WARNING", Format ["Client_OnRespawnHandler.sqf : WFBE_%1_DefaultGear is missing/short too - keeping the unit's config gear.", WFBE_Client_SideJoinedText]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 
 //--- Command Deck: re-apply persisted skin class after respawn.
 //--- sleep 0.5 first so the engine completes unit creation before we swap models.
-if (WFBE_C_SKIN_SELECTOR == 1 && {WFBE_SkinSelector_Applied}) then {
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {WFBE_SkinSelector_Applied}) then {
 	Private ["_uid","_skinKey","_savedSkin"];
 	_uid     = getPlayerUID _unit;
 	_skinKey = "WFBE_SkinSelector_Skin_" + _uid;

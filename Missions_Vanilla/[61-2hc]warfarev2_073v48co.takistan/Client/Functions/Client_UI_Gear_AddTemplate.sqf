@@ -6,7 +6,7 @@
 		- Backpack Content
 */
 
-Private ["_backpack_content","_counts","_counts_b","_emplacement","_flag_cannotadd","_get","_index","_items","_mags","_magazines","_prefix","_process","_side_equipment","_template","_upgrades","_u_backpack","_u_belong","_u_label","_u_labels","_u_picture","_u_pictures","_u_price","_u_upgrade","_weapons"];
+Private ["_backpack_content","_counts","_counts_b","_emplacement","_flag_cannotadd","_get","_index","_items","_mags","_magazines","_prefix","_process","_side_equipment","_template","_upgrade_ok","_upgrades","_u_backpack","_u_belong","_u_label","_u_labels","_u_picture","_u_pictures","_u_price","_u_upgrade","_weapons"];
 
 _weapons = +(_this select 0);
 _magazines = +(_this select 1);
@@ -133,7 +133,11 @@ if (_flag_cannotadd) exitWith {hint parseText("<t color='#42b6ff' size='1.2' und
 
 //--- Check the final upgrade level.
 _upgrades = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
-if (_u_upgrade <= (_upgrades select WFBE_UP_BARRACKS) || _u_upgrade <= (_upgrades select WFBE_UP_GEAR)) then {
+_upgrade_ok = (_u_upgrade <= (_upgrades select WFBE_UP_BARRACKS) || _u_upgrade <= (_upgrades select WFBE_UP_GEAR));
+//--- GUER-BUYMENU (2026-07-02): GUER has no upgrade system (zero array) - allow saving any template built
+//--- from its own gear list for the playable GUER side (see Client_UI_Gear_FillList.sqf for the rationale).
+if ((WFBE_Client_SideJoined == resistance) && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {_upgrade_ok = true};
+if (_upgrade_ok) then {
 	_set set [0,_u_picture];
 	_set set [1,_u_label];
 	_set set [2,_u_price];

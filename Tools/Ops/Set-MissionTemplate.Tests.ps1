@@ -162,6 +162,13 @@ $after = [System.IO.File]::ReadAllText($p, $enc)
 Assert ($after -match [regex]::Escape('template = "' + $target + '";')) "T10 template still repointed"
 Remove-Item $p -Force
 
+Write-Host "TEST 11: empty pattern is rejected before regex replacement"
+$c = New-Cfg 'template = "[55-2hc]warfarev2_073v48co_b741aicom.chernarus";'
+$threw = $false
+try { & $helper -CfgPath $c -MissionName $target -Pattern '' -Apply } catch { $threw = $true }
+Assert ($threw -eq $true) "T11 throws on empty Pattern"
+Remove-Item $c -Force
+
 Write-Host ""
 if ($script:fails -eq 0) { Write-Host "ALL TESTS PASSED" -ForegroundColor Green; exit 0 }
 else { Write-Host "$($script:fails) TEST(S) FAILED" -ForegroundColor Red; exit 1 }

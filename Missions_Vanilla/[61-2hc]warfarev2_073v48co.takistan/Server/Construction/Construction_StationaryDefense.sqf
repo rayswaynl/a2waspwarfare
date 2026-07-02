@@ -118,6 +118,10 @@ if (!isNull _area) then {
 			_area setVariable ["DefenseTeam", _team];
 		};
 
+		//--- AI16 (lane118): stamp the base-area logic on the defense so Server_HandleDefense can
+		//--- recheck ownership at re-man time and stop spawning soldiers if the area has changed hands.
+		_defense setVariable ["WFBE_DefenseBaseArea", _area];
+
 		emptyQueu = emptyQueu + [_defense];
 		[_defense] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
 		if (_manned) then {

@@ -50,6 +50,79 @@ missionNamespace setVariable ['WFBE_NEURODEF_BANK_WALLS',[
 
 ]];
 
+//=============================================================================
+//--- cmdcon43-c: FACTORY WALL SLABS v3 (WFBE_C_WALLS_V3). Ray-approved 2026-07-02.
+//--- Ray's verbatim ask (Build 88): "revert the factory wall changes, and then just add
+//--- additional concrete slabs to them like the HQ has for survivability".
+//---
+//--- The cmdcon42-g wall LADDER v2 (bagfence/HESCO/concrete material swap) is REVERTED —
+//--- those *_WALLS_V2 factory arrays are DELETED and the factories are back on their
+//--- ORIGINAL legacy *_WALLS compositions (untouched above / in the HEAVY+AIRCRAFT blocks below).
+//--- WFBE_C_WALLS_V2 stays REGISTERED but is now DEAD (default 0); see Init_CommonConstants.sqf.
+//---
+//--- These *_WALLS_V3 arrays = the ORIGINAL legacy factory walls PLUS a ring/segments of
+//--- Concrete_Wall_EP1 slabs, the EXACT class the HQ funnel uses (WFBE_NEURODEF_HEADQUARTERS_WALLS
+//--- below, 20x Concrete_Wall_EP1). Slabs are near-indestructible cover = the survivability Ray wants.
+//--- Construction_Small/MediumSite.sqf select _V3 vs legacy by WFBE_C_WALLS_V3 at spawn time.
+//--- REVERSIBILITY: WFBE_C_WALLS_V3 = 0 -> the hooks read the plain legacy *_WALLS -> exact
+//--- original walls, no slabs. No legacy array is edited or deleted.
+//---
+//--- Format ['classname',[xOff,yOff,zOff],relDir]; +Y=model front, +X=model right; identical math
+//--- to the HQ array + CreateDefenseTemplate (setDir (dir - relDir), origin modelToWorld relPos, z=0).
+//--- Concrete_Wall_EP1 is ~3.6 m wide. Placement rules kept from the legacy layouts:
+//---   * Vehicle factories (Light/Heavy/Aircraft) spawn vehicles toward +X (model right, _dir=90,
+//---     Client_BuildUnit.sqf pads/fallback) -> the +X face is left OPEN (no slabs) for egress.
+//---   * Slabs are pushed to the OUTSIDE of the legacy wall ring so foot traffic + the legacy
+//---     walking gaps are preserved; they add a second, harder cover layer, not a new blocker.
+//=============================================================================
+
+//--- BARRACKS v3. Legacy = 8x Base_WarfareBBarrier5x closed ring w/ front+rear walking gaps (infantry
+//--- factory, no vehicle egress). Add a concrete slab apron OUTSIDE the front (+Y) and rear (-Y) faces,
+//--- offset past the legacy 11 m ring, leaving the same center walking gaps open. Legacy 8 + 6 slabs = 14.
+missionNamespace setVariable ['WFBE_NEURODEF_BARRACKS_WALLS_V3',
+	(missionNamespace getVariable 'WFBE_NEURODEF_BARRACKS_WALLS') +
+	[
+		['Concrete_Wall_EP1',[-5.4,13.5,0],0],['Concrete_Wall_EP1',[5.4,13.5,0],0],
+		['Concrete_Wall_EP1',[-5.4,-13.5,0],0],['Concrete_Wall_EP1',[5.4,-13.5,0],0],
+		['Concrete_Wall_EP1',[-13.5,0,0],90],['Concrete_Wall_EP1',[13.5,0,0],90]
+	]
+];
+
+//--- LIGHT v3. Legacy = 10x Land_HBarrier_large U-ring; vehicles exit +X (right). Add a concrete slab
+//--- backing layer OUTSIDE the -X, +Y and -Y legacy walls; +X (egress) face stays OPEN. Legacy 10 + 7 slabs = 17.
+missionNamespace setVariable ['WFBE_NEURODEF_LIGHT_WALLS_V3',
+	(missionNamespace getVariable 'WFBE_NEURODEF_LIGHT_WALLS') +
+	[
+		['Concrete_Wall_EP1',[-14,-6.5,0],90],['Concrete_Wall_EP1',[-14,-2.9,0],90],
+		['Concrete_Wall_EP1',[-14,0.7,0],90],['Concrete_Wall_EP1',[-14,4.3,0],90],
+		['Concrete_Wall_EP1',[-3.6,15,0],0],['Concrete_Wall_EP1',[3.6,15,0],0],
+		['Concrete_Wall_EP1',[0,-15,0],0]
+	]
+];
+
+//--- COMMANDCENTER v3. Legacy = 6x Land_HBarrier_large + 1x Land_HBarrier5, front walking gap. No vehicle
+//--- egress. Add a concrete slab ring OUTSIDE the ~7.5 m legacy walls on both sides + rear, front gap kept.
+//--- Legacy 7 + 8 slabs = 15.
+missionNamespace setVariable ['WFBE_NEURODEF_COMMANDCENTER_WALLS_V3',
+	(missionNamespace getVariable 'WFBE_NEURODEF_COMMANDCENTER_WALLS') +
+	[
+		['Concrete_Wall_EP1',[7.5,-3.6,0],90],['Concrete_Wall_EP1',[7.5,0,0],90],['Concrete_Wall_EP1',[7.5,3.6,0],90],
+		['Concrete_Wall_EP1',[-9,-3.6,0],90],['Concrete_Wall_EP1',[-9,0,0],90],['Concrete_Wall_EP1',[-9,3.6,0],90],
+		['Concrete_Wall_EP1',[-1.8,-10,0],0],['Concrete_Wall_EP1',[1.8,-10,0],0]
+	]
+];
+
+//--- SERVICEPOINT v3. Legacy is EMPTY [] (drive-through service bay, both X faces open). Ray's ask is
+//--- "additional slabs" on the factories — the service point is a repair pad, not a walled factory, and
+//--- has no legacy walls to add to. Keep it EMPTY (no slabs) so both drive-through faces stay clear.
+missionNamespace setVariable ['WFBE_NEURODEF_SERVICEPOINT_WALLS_V3',
+	(missionNamespace getVariable 'WFBE_NEURODEF_SERVICEPOINT_WALLS')
+];
+
+//--- HEAVY v3 and AIRCRAFT v3 are defined LATER in this file, immediately after their legacy
+//--- WFBE_NEURODEF_HEAVY_WALLS / WFBE_NEURODEF_AIRCRAFT_WALLS arrays (which live further down),
+//--- because each _V3 array is built by concatenating slabs onto the legacy array it references.
+
 //--- OWNER OVERRIDE 2026-06-14: ArtyRadar + Reserve must be a TIGHT cluster of <=6 THEMED props (antenna/crate/etc),
 //--- NOT a walled HESCO compound with watchtowers. These four NEURODEF vars are the dressing templates read by
 //--- Construction_MediumSite.sqf (WFBE_NEURODEF_ARTILLERYRADAR_/RESERVE_WEST|EAST); both rlTypes are excluded from the
@@ -234,6 +307,32 @@ missionNamespace setVariable ['WFBE_NEURODEF_AIRCRAFT_WALLS',[
 	['Land_HBarrier_large',[-11,6,0],90],
 	['Land_HBarrier_large',[-11,9,0],90]
 ]];
+
+//--- cmdcon43-c: HEAVY v3 slabs (see the WFBE_C_WALLS_V3 block near the top of this file).
+//--- Legacy HEAVY = 13x Land_HBarrier_large enclosure (~28x30 m); armor exits +X (right, model x=+14 face
+//--- which the legacy layout already leaves gapped). Add a Concrete_Wall_EP1 backing layer OUTSIDE the rear
+//--- (-X, x=-14) and the +Y / -Y legacy walls; the +X egress face is left UNTOUCHED. Legacy 13 + 7 slabs = 20.
+missionNamespace setVariable ['WFBE_NEURODEF_HEAVY_WALLS_V3',
+	(missionNamespace getVariable 'WFBE_NEURODEF_HEAVY_WALLS') +
+	[
+		['Concrete_Wall_EP1',[-17,-7.2,0],90],['Concrete_Wall_EP1',[-17,-3.6,0],90],
+		['Concrete_Wall_EP1',[-17,0,0],90],['Concrete_Wall_EP1',[-17,3.6,0],90],['Concrete_Wall_EP1',[-17,7.2,0],90],
+		['Concrete_Wall_EP1',[-3.6,16,0],0],['Concrete_Wall_EP1',[-3.6,-17.5,0],0]
+	]
+];
+
+//--- cmdcon43-c: AIRCRAFT v3 slabs (see the WFBE_C_WALLS_V3 block near the top of this file).
+//--- Legacy AIRCRAFT = 10x Land_HBarrier_large U-ring (~22x24 m); aircraft exit +X (right, apron at model
+//--- x=+10). Add a Concrete_Wall_EP1 backing layer OUTSIDE the rear (-X, x=-11) and the +Y / -Y legacy walls;
+//--- the +X apron is left OPEN. Legacy 10 + 7 slabs = 17.
+missionNamespace setVariable ['WFBE_NEURODEF_AIRCRAFT_WALLS_V3',
+	(missionNamespace getVariable 'WFBE_NEURODEF_AIRCRAFT_WALLS') +
+	[
+		['Concrete_Wall_EP1',[-14,-7.2,0],90],['Concrete_Wall_EP1',[-14,-3.6,0],90],
+		['Concrete_Wall_EP1',[-14,0,0],90],['Concrete_Wall_EP1',[-14,3.6,0],90],['Concrete_Wall_EP1',[-14,7.2,0],90],
+		['Concrete_Wall_EP1',[-3.6,15,0],0],['Concrete_Wall_EP1',[-3.6,-15,0],0]
+	]
+];
 
 missionNamespace setVariable ['WFBE_NEURODEF_MG',[
 	[if (WF_A2_Vanilla) then {'Land_fortified_nest_small'} else {'Land_fortified_nest_small_EP1'},[0.25,0,0],180],
@@ -507,6 +606,31 @@ if (WF_A2_Arrowhead) then {
 };
 missionNamespace setVariable ['WFBE_NEURODEF_BANK_EAST', _b];
 
+//======================================================================================
+//--- cmdcon42-g: DEFENSES/FORTIFICATIONS MENU v2 — anchor-composition buildables.
+//--- HEDGEHOG LINE: one-click AT obstacle (4x Hedgehog_EP1 in a line). Side-neutral. Flat.
+//--- FLAK TOWER: elevated AA static + pooled AI gunner on a tower deck (WEST/EAST variants).
+//---   The AA child carries a NON-ZERO z offset (deck height). The generic ConstructPosition
+//---   path flattens z, so a flak-tower-specific block in Server_ConstructPosition.sqf lifts the
+//---   gun onto the deck via setPosATL (per proposal B.5 idiom). Manning is the existing pooled
+//---   DefenseTeam (ConstructDefense mans any gun with an empty gunner slot). NEEDS-BOX-VERIFY.
+//======================================================================================
+missionNamespace setVariable ['WFBE_NEURODEF_HEDGEHOGLINE',[
+	['Hedgehog_EP1',[-4.5,0,0],0],['Hedgehog_EP1',[-1.5,0,0],0],
+	['Hedgehog_EP1',[1.5,0,0],0],['Hedgehog_EP1',[4.5,0,0],0]
+]];
+//--- Flak tower: element 0 = host tower @ ground (z=0), element 1 = AA gun @ deck height (z>0).
+//--- WEST: A2-OA has no US static bullet-AA -> Stinger_Pod is the WEST AA mount.
+missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_WEST',[
+	['Land_Fort_Watchtower_EP1',[0,0,0],0],
+	['Stinger_Pod_US_EP1',[0,0,5.4],0]
+]];
+//--- EAST / GUER: the true ZU-23 auto-cannon on the deck.
+missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_EAST',[
+	['Land_Fort_Watchtower_EP1',[0,0,0],0],
+	['ZU23_TK_EP1',[0,0,5.4],0]
+]];
+
 //--- Anchor (build-menu placeholder classname) -> composition template map.
 // [anchorClassname, baseTemplateVar, factionSpecific?]  (factionSpecific appends _WEST / _EAST at build time)
 WFBE_POSITION_TEMPLATE_MAP = [
@@ -518,6 +642,9 @@ WFBE_POSITION_TEMPLATE_MAP = [
 	['RoadCone','WFBE_NEURODEF_MIXEDPOS_HEAVY',true],			//--- Mixed (heavy, 4 AI)
 	['Paleta1','WFBE_NEURODEF_WALL_STRAIGHT',false],
 	['Paleta2','WFBE_NEURODEF_WALL_CORNER',false],
-	['Land_Ind_Timbers','WFBE_NEURODEF_WALL_GATE',false]
+	['Land_Ind_Timbers','WFBE_NEURODEF_WALL_GATE',false],
+	//--- cmdcon42-g menu v2 anchors (side-neutral hedgehog line; faction-specific flak tower).
+	['Misc_cargo_cont_small','WFBE_NEURODEF_HEDGEHOGLINE',false],	//--- Hedgehog Line (AT obstacle)
+	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true]			//--- Flak Tower (elevated AA, 1 AI)
 ];
-WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers'];
+WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall'];

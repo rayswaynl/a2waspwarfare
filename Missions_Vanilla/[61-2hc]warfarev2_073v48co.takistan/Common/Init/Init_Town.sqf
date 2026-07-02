@@ -85,7 +85,7 @@ if (isServer) then {
 		_townModel = createVehicle [missionNamespace getVariable "WFBE_C_DEPOT", getPos _town, [], 0, "NONE"];
 		_townModel setDir ((getDir _town) + (missionNamespace getVariable "WFBE_C_DEPOT_RDIR"));
 		_townModel setPos (getPos _town);
-		_townModel addEventHandler ["handleDamage", {false}];
+		_townModel addEventHandler ["handleDamage", {0}];
 
 		if (isNil {_town getVariable "sideID"}) then {_town setVariable ["sideID",WFBE_DEFENDER_ID,true]};
 		_town setVariable ["supplyValue",_townStartSV,true];

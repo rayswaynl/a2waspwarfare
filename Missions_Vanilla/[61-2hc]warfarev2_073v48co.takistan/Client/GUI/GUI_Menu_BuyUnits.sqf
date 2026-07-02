@@ -121,6 +121,22 @@ _IDCS = _IDCS - [_currentIDC];
             _currentUnitLabelForFundsMissing = _currentUnit select QUERYUNITLABEL;
 
 			if (_funds < _currentCost) then {_skip = true;hint parseText(Format[localize 'STR_WF_INFO_Funds_Missing',_currentCost - _funds,_currentUnitLabelForFundsMissing])};
+			//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD per-side live cap (Takistan). Refuse UP FRONT (before queuing +
+			//--- spending) when the side already fields WFBE_C_TK_SCUD_HF_MAX bought SCUDs. Reads the server-broadcast platform
+			//--- array (client-visible). The server re-enforces the cap on registration (delete + refund) as the authority.
+			if (!_skip && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan"} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
+				private ["_scudArr","_scudLive","_scudMax"];
+				_scudArr = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
+				_scudLive = 0;
+				if (typeName _scudArr == "ARRAY") then {
+					{ if (!isNull _x && {alive _x}) then {_scudLive = _scudLive + 1} } forEach _scudArr;
+				};
+				_scudMax = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+				if (_scudLive >= _scudMax) then {
+					_skip = true;
+					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);
+				};
+			};
 			//--- Make sure that we own all camps before being able to purchase infantry.
 			if (_type == "Depot" && _isInfantry && sideJoined != resistance) then {
 				_totalCamps = _closest Call GetTotalCamps;
@@ -729,7 +745,7 @@ _IDCS = _IDCS - [_currentIDC];
 					};
 					//--- Salvage truck (claude-gaming): missing explainer added. Matches the side-list convention above (WFBE_%1SALVAGETRUCK is the same list the green buy-menu row tint keys on).
 					if (_unit in (missionNamespace getVariable Format ["WFBE_%1SALVAGETRUCK", sideJoinedText])) then {
-						hintSilent parseText "<t color='#00ff00'>Salvage Truck</t> - turns enemy and friendly wrecks into cash for your team. <br/> <br/>Drive it (a crew must be aboard) near any destroyed vehicle, ship, aircraft or static weapon. While the truck is parked nearby, wrecks in range are automatically recovered and DELETED, paying your team a share of each wreck's value. <br/> <br/>Keep it close to where vehicles are dying - frontlines, factory yards, contested towns - to keep the salvage income flowing.";
+						hintSilent parseText "<t color='#00ff00'>Salvage Truck</t> - turns enemy and neutral wrecks into cash for your team. <br/> <br/>Drive it (a crew must be aboard) near any destroyed vehicle, ship, aircraft or static weapon. While the truck is parked nearby, eligible wrecks in range are automatically recovered and DELETED, paying your team a share of each wreck's value. <br/> <br/>Keep it close to where hostile vehicles are dying - frontlines, contested towns, and enemy pushes - to keep the salvage income flowing.";
 					};
 					//--- Utility / rearm (ammo) truck (claude-gaming): missing explainer added. Keyed on the same WFBE_%1AMMOTRUCKS side-list the red buy-menu row tint uses.
 					//--- GUER MARKER FIX (claude 2026-07-01): nil-guard with [Format[...], []] - WFBE_GUERAMMOTRUCKS is undefined for the

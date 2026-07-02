@@ -126,18 +126,22 @@ if (!_fromFocus) then {
 		if (_hN > 0) then {_supportCen = [_hx / _hN, _hy / _hN, 0]; _supportOn = true};
 	};
 	//--- AUTO scorer: nearest-front + value, with an optional support-push pull toward the human axis.
-	private ["_fistMax","_frontRad","_distDiv","_farPen","_supDiv","_scored","_i"];
+	private ["_fistMax","_frontRad","_distDiv","_farPen","_supDiv","_scored","_i","_nearBand","_nearBandDist","_nearBandBonus"];
 	_fistMax  = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_TOWNS", 1];
 	_frontRad = missionNamespace getVariable ["WFBE_C_AICOM_FRONTIER_RADIUS", 3000];
 	_distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50]; if (_distDiv <= 0) then {_distDiv = 1};
 	_farPen   = missionNamespace getVariable ["WFBE_C_AICOM_FAR_PENALTY", 1000];
-	_supDiv   = missionNamespace getVariable ["WFBE_C_AICOM2_SUPPORT_DIVISOR", 50]; if (_supDiv <= 0) then {_supDiv = 1};
+	_supDiv        = missionNamespace getVariable ["WFBE_C_AICOM2_SUPPORT_DIVISOR", 50]; if (_supDiv <= 0) then {_supDiv = 1};
+	_nearBand      = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND", 0];
+	_nearBandDist  = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_DIST", 2000];
+	_nearBandBonus = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_BONUS", 300];
 	_scored = [];
 	{
 		private ["_tt","_dNear","_sc"];
 		_tt = _x; _dNear = _tt Call _frontDist;
 		_sc = (_tt getVariable ["supplyValue", 0]) - (_dNear / _distDiv);
 		if (_dNear > _frontRad) then {_sc = _sc - _farPen};
+		if (_nearBand > 0 && {_dNear < _nearBandDist}) then {_sc = _sc + _nearBandBonus};   //--- F5: near-band bonus for towns immediately adjacent to our front (re-ranks; does not change eligibility).
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
 		_scored set [count _scored, [_sc, _tt]];
 	} forEach _tgtTowns;
@@ -230,6 +234,13 @@ _neutTowns = [];
 private ["_assigned","_harassAssigned"];
 _garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 _assigned = 0; _harassAssigned = 0; _expandCount = 0;
+//--- SPREAD (cmdcon41, claude-gaming 2026-07-02): per-fist-town load counter + cap. With a widened fist
+//--- (WFBE_C_AICOM2_FIST_TOWNS>1) the L268-272 nearest pick otherwise funnels every team onto the single
+//--- closest fist town = the dogpile. _fistCounts is index-aligned with _fist; _capPerFist caps stacking
+//--- per fist town before teams spill onto the next. A2-OA-safe (count / array set-select / getVariable).
+private ["_fistCounts","_capPerFist"];
+_fistCounts = []; { _fistCounts set [_forEachIndex, 0] } forEach _fist;
+_capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 {
 	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
 	_grp = _x;
@@ -266,9 +277,34 @@ _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 					if (!isNull _eTgt) then {_tgt = _eTgt; _expandCount = _expandCount + 1};
 				};
 				if (isNull _tgt) then {
-					//--- concentrate on the fist: nearest in reach; else nearest outright (stay offensive, never idle).
-					{ _v = _ldrPos distance _x; if (_v <= _reach && {_v < _tgtD}) then {_tgtD = _v; _tgt = _x} } forEach _fist;
-					if (isNull _tgt) then { { _v = _ldrPos distance _x; if (_v < _tgtD) then {_tgtD = _v; _tgt = _x} } forEach _fist };
+					//--- concentrate on the fist. SPREAD (cmdcon41): cap-aware nearest pick so teams fan across the
+					//--- widened fist instead of dogpiling the single closest town. Legacy (SPREAD_MODE=0) keeps the
+					//--- verbatim uncapped nearest-then-nearest pick = instant rollback. Never idle: if every reachable
+					//--- fist town is capped we spill onto the LEAST-LOADED fist town outright.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_SPREAD_MODE", 1]) > 0) then {
+						private ["_bestIdx"];
+						//--- pass 1: nearest in-reach fist town whose count is still below the per-town cap.
+						_bestIdx = -1;
+						{
+							_v = _ldrPos distance _x;
+							if (_v <= _reach && {_v < _tgtD} && {(_fistCounts select _forEachIndex) < _capPerFist}) then {_tgtD = _v; _tgt = _x; _bestIdx = _forEachIndex};
+						} forEach _fist;
+						//--- fall-through: everything in reach is capped (or nothing in reach) -> pick the LEAST-LOADED
+						//--- fist town outright so no team idles (preserves the never-idle SAD guarantee).
+						if (isNull _tgt) then {
+							private ["_leastLoad"];
+							_leastLoad = 1e9;
+							{
+								if ((_fistCounts select _forEachIndex) < _leastLoad) then {_leastLoad = _fistCounts select _forEachIndex; _tgt = _x; _bestIdx = _forEachIndex};
+							} forEach _fist;
+						};
+						//--- book the chosen fist town so the next team sees the updated load.
+						if (_bestIdx >= 0) then {_fistCounts set [_bestIdx, (_fistCounts select _bestIdx) + 1]};
+					} else {
+						//--- concentrate on the fist: nearest in reach; else nearest outright (stay offensive, never idle).
+						{ _v = _ldrPos distance _x; if (_v <= _reach && {_v < _tgtD}) then {_tgtD = _v; _tgt = _x} } forEach _fist;
+						if (isNull _tgt) then { { _v = _ldrPos distance _x; if (_v < _tgtD) then {_tgtD = _v; _tgt = _x} } forEach _fist };
+					};
 				};
 			};
 			if (!isNull _tgt) then {

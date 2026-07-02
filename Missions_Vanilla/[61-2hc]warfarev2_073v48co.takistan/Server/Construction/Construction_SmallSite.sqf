@@ -121,7 +121,17 @@ if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_CO
 };
 
 if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","CBRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
-	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
+	//--- cmdcon43-c: WFBE_C_WALLS_V3 selects the "original walls + HQ-style concrete slabs" array
+	//--- (_WALLS_V3) over the plain legacy one at spawn time. Falls back to legacy if the _V3 var is
+	//--- missing (defensive, never nil-spawns). Flag=0 -> legacy name -> exact original walls (no slabs).
+	//--- (The cmdcon42-g _WALLS_V2 wall-ladder is reverted; WFBE_C_WALLS_V2 is dead.) See Server\Init\Init_Defenses.sqf.
+	private ["_wallVarName","_wallTpl"];
+	_wallVarName = format ["WFBE_NEURODEF_%1_WALLS", _rlType];
+	if ((missionNamespace getVariable ["WFBE_C_WALLS_V3", 1]) > 0) then {
+		if !(isNil {missionNamespace getVariable (_wallVarName + "_V3")}) then {_wallVarName = _wallVarName + "_V3"};
+	};
+	_wallTpl = missionNamespace getVariable _wallVarName;
+	_defenses = [_site, _wallTpl] call CreateDefenseTemplate;
 	_site setVariable ["WFBE_Walls", _defenses];
 } else {
 	_site setVariable ["WFBE_Walls", []];

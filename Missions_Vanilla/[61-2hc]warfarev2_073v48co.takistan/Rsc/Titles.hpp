@@ -73,7 +73,7 @@ class RscTitles {
 
         class RscOverlay
 	{
-		idd=10200;
+		idd=10201;
 		movingEnable = 0;
 		duration=15000;
 		// GPS FIX: was name="gps", which bound this map-LESS HUD overlay to the engine GPS slot,
@@ -644,7 +644,9 @@ class RscTitles {
 					  EastSoldiersRecruitedBar,EastSoldiersRecruitedCount,WestSoldiersRecruitedBar,WestSoldiersRecruitedCount,
 					  EastSoldiersLostBar,EastSoldiersLostCount,WestSoldiersLostBar,WestSoldiersLostCount,
 					  EastVehiclesCreatedBar,EastVehiclesCreatedCount,WestVehiclesCreatedBar,WestVehiclesCreatedCount,
-					  EastVehiclesLostBar,EastVehiclesLostCount,WestVehiclesLostBar,WestVehiclesLostCount};
+					  EastVehiclesLostBar,EastVehiclesLostCount,WestVehiclesLostBar,WestVehiclesLostCount,
+					  GuerSoldiersRecruitedBar,GuerSoldiersRecruitedCount,GuerSoldiersLostBar,GuerSoldiersLostCount,
+					  GuerVehiclesCreatedBar,GuerVehiclesCreatedCount,GuerVehiclesLostBar,GuerVehiclesLostCount};
 
 		controlsBackground[] = {};
 
@@ -739,6 +741,17 @@ class RscTitles {
 			x = 0.55;
 		};
 
+		class GuerSoldiersRecruitedCount : SoldiersRecruitedCountBase {
+			idc = 90300;
+			x = 2;
+		};
+
+		class GuerSoldiersRecruitedBar : EastSoldiersRecruitedBar {
+			idc = 90301;
+			x = 2;
+			w = 0.27;
+		};
+
 		class SoldiersLostLabel : SoldiersRecruitedLabel {
 			y = 0.4;
 			text = $STR_WF_END_Soldier_Lost;
@@ -764,6 +777,18 @@ class RscTitles {
 		class WestSoldiersLostBar : EastSoldiersLostBar	{
 			idc = 90203;
 			x = 0.55;
+		};
+
+		class GuerSoldiersLostCount : SoldiersRecruitedCountBase {
+			idc = 90302;
+			x = 2;
+			y = 0.45;
+		};
+
+		class GuerSoldiersLostBar : EastSoldiersLostBar {
+			idc = 90303;
+			x = 2;
+			w = 0.27;
 		};
 
 		class VehiclesCreatedLabel : SoldiersRecruitedLabel {
@@ -793,6 +818,18 @@ class RscTitles {
 			x = 0.55;
 		};
 
+		class GuerVehiclesCreatedCount : SoldiersRecruitedCountBase {
+			idc = 90304;
+			x = 2;
+			y = 0.6;
+		};
+
+		class GuerVehiclesCreatedBar : EastVehiclesCreatedBar {
+			idc = 90305;
+			x = 2;
+			w = 0.27;
+		};
+
 		class VehiclesLostLabel : SoldiersRecruitedLabel {
 			y = 0.7;
 			text = $STR_WF_END_Vehicle_Lost;
@@ -818,6 +855,18 @@ class RscTitles {
 		class WestVehiclesLostBar : EastVehiclesLostBar	{
 			idc = 90207;
 			x = 0.55;
+		};
+
+		class GuerVehiclesLostCount : SoldiersRecruitedCountBase {
+			idc = 90306;
+			x = 2;
+			y = 0.75;
+		};
+
+		class GuerVehiclesLostBar : EastVehiclesLostBar {
+			idc = 90307;
+			x = 2;
+			w = 0.27;
 		};
 	};
 
@@ -895,7 +944,7 @@ class RscTitles {
 	//--- ============================================================================
 	//--- b67 item #3 (claude-gaming 2026-06-21): VEHICLE-TINT LEGEND (top-right pop-up).
 	//--- Shown by Init_Client.sqf via cutRsc on layer 12460 - ONCE on first spawn + toggled with "]".
-	//--- Mirrors the IDD-10200 RscOverlay HUD region (top-right corner, RscStructuredText). Sits in the
+	//--- Mirrors the IDD-10201 RscOverlay HUD region (top-right corner, RscStructuredText). Sits in the
 	//--- empty band ABOVE the RUBHUD stats column (RUBHUD starts at y~=0.186*safezoneH), so no overlap.
 	//--- Swatch colours MATCH the per-side body tints set in Common_AddVehicleTexture.sqf (the cheap
 	//--- setObjectTexture colour strings gated by WFBE_C_VEHICLE_TINTS, default ON, decoupled from the

@@ -1,4 +1,5 @@
 scriptName "Client\GUI\GUI_VoteMenu.sqf";
+disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop touches display/controls across sleep; guard against "does not support serialization" (matches the convention already in the other GUI_Menu_* handlers).
 
 //--- Register the UI.
 uiNamespace setVariable ["wfbe_display_vote", _this select 0];
@@ -98,10 +99,22 @@ while {alive player && dialog} do {
 		//--- Live maintenance pass only when NOT on primitives (otherwise leave the primitive rows untouched).
 		if (!WFBE_VOTE_USING_PRIMS) then {
 			_list_present = [];
-			for '_i' from 1 to ((lnbSize 500100) select 0)-1 do { //--- Remove potential non-player controlled slots.
-				_value = lnbValue [500100,[_i, 0]];
-				_team = WFBE_Client_Teams select _value;
-				if !(isPlayer leader _team) then {lnbDeleteRow [500100, _i]} else {[_list_present, _value] Call WFBE_CO_FNC_ArrayPush};
+			if ((missionNamespace getVariable ["WFBE_C_FIX_VOTE_LIST_PRUNE", 0]) > 0) then {
+				for '_i' from (((lnbSize 500100) select 0) - 1) to 1 step -1 do {
+					_value = lnbValue [500100,[_i, 0]];
+					_valid = false;
+					if (_value >= 0 && {_value < count(WFBE_Client_Teams)}) then {
+						_team = WFBE_Client_Teams select _value;
+						if !(isNil "_team") then {_valid = isPlayer leader _team};
+					};
+					if !(_valid) then {lnbDeleteRow [500100, _i]} else {[_list_present, _value] Call WFBE_CO_FNC_ArrayPush};
+				};
+			} else {
+				for '_i' from 1 to ((lnbSize 500100) select 0)-1 do { //--- Remove potential non-player controlled slots.
+					_value = lnbValue [500100,[_i, 0]];
+					_team = WFBE_Client_Teams select _value;
+					if !(isPlayer leader _team) then {lnbDeleteRow [500100, _i]} else {[_list_present, _value] Call WFBE_CO_FNC_ArrayPush};
+				};
 			};
 
 			for '_i' from 0 to WFBE_Client_Teams_Count do { //--- Add potential new player controlled slots.
@@ -127,14 +140,31 @@ while {alive player && dialog} do {
 
 		for '_i' from 1 to ((lnbSize 500100) select 0)-1 do { //--- Update the UI list properties (name / votes) for players.
 			_value = lnbValue [500100,[_i, 0]];
-			_team = WFBE_Client_Teams select _value;
-			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
-			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
-		if (((WFBE_Client_Teams select _i) getVariable "wfbe_vote") != -1) then {
-		lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
-		} else {
-		lnbSetColor [500100, [_i,0], [1,1,1,1]]
-		};
+			if ((missionNamespace getVariable ["WFBE_C_FIX_VOTE_QA_EXECUTION", 0]) > 0) then {
+				_valid = false;
+				if (_value >= 0 && {_value < count(WFBE_Client_Teams)}) then {
+					_team = WFBE_Client_Teams select _value;
+					if !(isNil "_team") then {_valid = true};
+				};
+				if (_valid) then {
+					if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
+					if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
+					if ((_team getVariable "wfbe_vote") != -1) then {
+						lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
+					} else {
+						lnbSetColor [500100, [_i,0], [1,1,1,1]]
+					};
+				};
+			} else {
+				_team = WFBE_Client_Teams select _value;
+				if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
+				if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
+				if (((WFBE_Client_Teams select _i) getVariable "wfbe_vote") != -1) then {
+					lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
+				} else {
+					lnbSetColor [500100, [_i,0], [1,1,1,1]]
+				};
+			};
 
 		};
 

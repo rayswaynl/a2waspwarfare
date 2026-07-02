@@ -15,12 +15,16 @@
 function Get-WindowedRpt {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)] [string] $RptPath,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $RptPath,
         # Marker that opens the window; default = mission init line stamped at every mission start.
+        [ValidateNotNullOrEmpty()]
         [string] $WindowMarker = 'MISSINIT',
         # Optional regex applied to lines inside the window.
         [string] $Pattern,
         # Return at most this many lines from the end of the window (0 = all).
+        [ValidateRange(0, 2147483647)]
         [int] $Tail = 0
     )
 

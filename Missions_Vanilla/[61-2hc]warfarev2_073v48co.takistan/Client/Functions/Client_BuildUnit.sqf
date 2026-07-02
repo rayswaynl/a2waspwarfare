@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33"];
+Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -165,7 +165,13 @@ _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_facto
 	_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
 };
 
-varQueu = Format["%1_%2", getPlayerUID player, diag_tickTime];
+if ((missionNamespace getVariable ["WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING", 0]) > 0) then {
+	if (isNil "WFBE_CL_FACTORY_QUEUE_SEQUENCE") then {WFBE_CL_FACTORY_QUEUE_SEQUENCE = 0};
+	WFBE_CL_FACTORY_QUEUE_SEQUENCE = WFBE_CL_FACTORY_QUEUE_SEQUENCE + 1;
+	varQueu = Format["%1_%2_%3_%4", getPlayerUID player, diag_tickTime, WFBE_CL_FACTORY_QUEUE_SEQUENCE, floor random 1000000];
+} else {
+	varQueu = Format["%1_%2", getPlayerUID player, diag_tickTime];
+};
 _unique = varQueu;
 _queu = _building getVariable "queu";
 if (isNil "_queu") then {_queu = []};
@@ -204,13 +210,23 @@ _queu2 = [0];
 if (count _queu > 0) then {_queu2 = _building getVariable "queu"};
 
 _show = false;
-while {_unique != _queu select 0 && alive _building && !isNull _building} do {
+_nextQueueHint = time;
+while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
 	sleep 4;
 	_show = true;
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
+	if ((count _queu > 0) && {time >= _nextQueueHint}) then {
+		_nextQueueHint = time + 12;
+		_queuePos = _queu find _unique;
+		if (_queuePos >= 0) then {
+			_queueEta = (_queuePos * _longest) + _waitTime;
+			if (_queueEta < _waitTime) then {_queueEta = _waitTime};
+			titleText [Format ["Build queue: %1 position %2/%3, ETA about %4s.", _description, _queuePos + 1, count _queu, ceil _queueEta], "PLAIN"];
+		};
+	};
 
-	if (_queu select 0 == _queu2 select 0) then {
+	if ((_queu select 0) in [_queu2 select 0]) then {
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
@@ -219,7 +235,7 @@ while {_unique != _queu select 0 && alive _building && !isNull _building} do {
 			};
 		};
 	};
-	if (count _queu != count _queu2) then {
+	if !((count _queu) in [count _queu2]) then {
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
@@ -313,13 +329,147 @@ if (_isMan) then {
 	if (_spawnpaddir==2) then {//there is no spawnpad
 	_direction = -((((_position select 1) - (_factoryPosition select 1)) atan2 ((_position select 0) - (_factoryPosition select 0))) - 90);//--- model to world that later on.
 	};
+	//--- cmdcon42 Option C Row 2: the synthetic buy token "AH6X_M134" is NOT a CfgVehicles class, so
+	//--- createVehicle on it would return objNull. Capture the variant flag (the tuple time/label were
+	//--- already read from the synthetic key at :21-23 above, giving the 5500 price + "AH-6X (M134)" name),
+	//--- then remap _unit to the real hull AH6X_EP1 BEFORE createVehicle. After this line every downstream
+	//--- _unit use (createVehicle, isKindOf "Air" pilot-crew + CM/AA blocks) sees the real hull.
+	_ah6xM134Kit = (_unit == "AH6X_M134");
+	if (_ah6xM134Kit) then {_unit = "AH6X_EP1"};
+
+	//--- cmdcon42-i: TK-EASA variant tokens (e.g. "TKV_AH64D_HELLFIRE") are SYNTHETIC buy keys, NOT CfgVehicles
+	//--- classes, so createVehicle on the token would return objNull. Resolve the catalog row (self-gates on
+	//--- worldName + WFBE_C_TK_EASA_ROSTER -> [] on Chernarus), capture the kit, then remap _unit to the real base
+	//--- hull BEFORE createVehicle so every downstream _unit use (createVehicle, isKindOf "Air" crew/CM blocks)
+	//--- sees the real hull. Mirrors the AH6X_M134 precedent (Core_US.sqf synthetic token, PR #151).
+	//--- Cheap prefix guard: TK-EASA synthetic tokens are the only classes prefixed "TKV_", so a normal purchase
+	//--- (real hull, any map) skips the catalog lookup entirely (no compile, no forEach) - the catalog is only
+	//--- consulted for an actual variant buy, which only exists on Takistan with the flag on.
+	_tkEasaKit = [];
+	if ((_unit find "TKV_") == 0) then {
+		{
+			if ((_x select 0) == _unit) exitWith { _tkeRow = _x; _unit = _x select 1; _tkEasaKit = _x select 7; };
+		} forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
+	};
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
+
+	//--- cmdcon42c HOTFIX (Ray 2026-07-02): UNIVERSAL BUYFAIL-REFUND GUARD. WFBE_CO_FNC_CreateVehicle
+	//--- returns objNull whenever the engine cannot spawn the hull - a bad/unresolved buy class (e.g. a
+	//--- synthetic AH6X_M134 / TKV_* token whose remap above did not resolve to a real hull), a blocked
+	//--- spawn position, or any createVehicle failure. The player was ALREADY charged at buy time
+	//--- (GUI_Menu_BuyUnits.sqf: -(_currentCost) Call ChangePlayerFunds), so a silent null spawn = the
+	//--- player pays and gets nothing. Detect it here and (a) release the per-factory queue slot + unitQueu
+	//--- (else the factory soft-locks at its cap, exactly like the empty-vehicle exit does), and (b) refund
+	//--- the exact price paid. Same idiom as the destroyed-factory refund path (:282-287 above).
+	if (isNull _vehicle) exitWith {
+		unitQueu = unitQueu - _cpt;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
+		["WARNING", Format ["Client_BuildUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded $%2 and released queue slot for factory [%3].", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	clientTeam reveal _vehicle;
+
+	//--- cmdcon42 Option C Row 2: arm the AH-6X hull with the AH-6J's minigun. The AH6X_EP1 hull ships
+	//--- UNARMED (weapons[]={}/magazines[]={}, config-proven from CfgVehicles AH6X_EP1). We add the exact
+	//--- weapon+magazine the armed AH6J_EP1 carries: weapon "TwinM134" (class TwinM134 : M134) and magazine
+	//--- "4000Rnd_762x51_M134" (both config-proven present in CfgWeapons/CfgMagazines). On the AH-6 these are
+	//--- HULL-level (AH6J_EP1 weapons[]/magazines[] sit on the vehicle body, class Turrets {} is empty), so
+	//--- plain addWeapon/addMagazine (NOT the [-1] turret path used for the Ka-137). Runs on the buyer's client
+	//--- on the freshly-created local hull (same machine/timing as the existing GUER Ka-137 flares kit below);
+	//--- Common_CreateVehicle globalizes the hull via setVehicleInit right after creation, so the weapon state
+	//--- replicates. Idempotent remove-then-add so a re-buy or JIP re-run cannot stack duplicate mags.
+	if (_ah6xM134Kit && {!isNull _vehicle}) then {
+		_vehicle removeMagazine "4000Rnd_762x51_M134";
+		_vehicle removeWeapon "TwinM134";
+		_vehicle addWeapon "TwinM134";
+		_vehicle addMagazine "4000Rnd_762x51_M134";
+		["INFORMATION", Format ["Client_BuildUnit.sqf: AH-6X (M134) armed with TwinM134 + 4000Rnd_762x51_M134 [%1].", typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+	};
+
+	//--- cmdcon42-i: arm the freshly-created base hull with the variant's EASA-proven weapon+magazine kit.
+	//--- All four TK-EASA base hulls (AH64D_EP1 / A10_US_EP1 / Mi24_D_TK_EP1 / Su25_TK_EP1) mount at HULL level
+	//--- (none is in EASA_Equip's turret-special list), so plain addWeapon/addMagazine is correct - same path,
+	//--- machine and timing as the AH6X_M134 kit. Idempotent remove-then-add so a re-buy / JIP re-run cannot
+	//--- stack duplicate mags. Runs on the buyer's client on the local hull; WFBE_CO_FNC_CreateVehicle globalises
+	//--- the hull (setVehicleInit) right after creation, so the weapon state replicates. Kit classnames are reused
+	//--- verbatim from Client\Module\EASA\EASA_Init.sqf for the same base hull (all config-proven on that airframe).
+	if ((count _tkEasaKit) == 2 && {!isNull _vehicle}) then {
+		{ _vehicle removeMagazine _x } forEach (_tkEasaKit select 1);
+		{ _vehicle removeWeapon _x }   forEach (_tkEasaKit select 0);
+		{ _vehicle addWeapon _x }      forEach (_tkEasaKit select 0);
+		{ _vehicle addMagazine _x }    forEach (_tkEasaKit select 1);
+		["INFORMATION", Format ["Client_BuildUnit.sqf: TK-EASA variant '%1' armed on %2 (weapons %3).", (_tkeRow select 0), typeOf _vehicle, (_tkEasaKit select 0)]] Call WFBE_CO_FNC_LogContent;
+	};
 
 	_vehicles = (WF_Logic getVariable "emptyVehicles") + [_vehicle];
 	WF_Logic setVariable ["emptyVehicles",_vehicles,true];
 
 	if (isHostedServer) then {_vehicle setVariable ["WFBE_Taxi_Prohib", true]};
+
+	//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (Takistan). A bought MAZ_543_SCUD_TK_EP1 becomes a side launch
+	//--- platform: (a) ask the SERVER to register it (cap-enforced there — a surplus purchase is deleted + refunded), and
+	//--- (b) give the vehicle a "SCUD Fire Mission (map-click)" action for its crew/owner-side players that opens a map-click
+	//--- and sends the SAME icbm-tel-fire payload the Tactical menu uses, WITH this specific hull as the platform hint (the
+	//--- server re-validates everything). Fires a SATURATION conventional strike (the flagship conventional munition). Mirrors
+	//--- the carrier scud-action-add + GUER-VBIED buyer-local-add / GetIn-re-add persistence idioms. TK + flag gated.
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
+		//--- (a) SERVER-SIDE registration request (side-keyed platform array + cap enforcement live on the server). Pass the
+		//--- ACTUAL price paid (_currentCost, incl. modifiers + crew) so an over-cap refusal refunds the exact amount deducted.
+		["RequestSpecial", ["tk-scud-register", _vehicle, sideJoined, group player, _currentCost]] Call WFBE_CO_FNC_SendToServer;
+
+		//--- Global flag so any machine that gets this hull local can recognise it + (re)arm the action.
+		_vehicle setVariable ["wfbe_is_tk_scud", true, true];
+
+		//--- Local helper: add the fire-mission action once per local hull instance (dedupe via wfbe_tk_scud_action). The
+		//--- condition restricts the action to the owning side; the server still validates side/cooldown/range/funds on fire.
+		WFBE_CL_FNC_AddTkScudAction = {
+			private ["_v","_aid"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (!(_v getVariable ["wfbe_is_tk_scud", false])) exitWith {};
+			if ((_v getVariable ["wfbe_tk_scud_action", -1]) >= 0) exitWith {};   //--- already armed on this machine.
+			_aid = _v addAction [
+				"<t color='#ff9900'>SCUD Fire Mission (map-click)</t>",
+				{
+					private ["_v","_caller","_cost"];
+					_v = _this select 0;
+					_caller = _this select 1;
+					_cost = missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000];
+					if (((group _caller) Call WFBE_CO_FNC_GetTeamFunds) < _cost) exitWith { hintSilent parseText Format ["<t color='#F8D664'>Not enough funds for a SCUD saturation strike ($%1).</t>", _cost]; };
+					hintSilent parseText "<t color='#F89060'>SCUD: click the target on the map.</t>";
+					openMap true;
+					//--- capture the firing hull so onMapSingleClick can hint it as the platform.
+					wfbe_tk_scud_fire_veh = _v;
+					onMapSingleClick {
+						onMapSingleClick {};
+						openMap false;
+						private ["_veh"];
+						_veh = wfbe_tk_scud_fire_veh;
+						if (isNull _veh || {!alive _veh}) exitWith { hintSilent parseText "<t color='#ff5a5a'>That SCUD is gone.</t>"; };
+						//--- SAME payload the Tactical menu sends, + this hull as the platform hint. No client fund deduction
+						//--- (the server WFBE_SE_FNC_IcbmTelFire re-validates platform/cooldown/range/funds and charges).
+						["RequestSpecial", ["icbm-tel-fire", playerSide, [_pos select 0, _pos select 1, 0], "SATURATION", group player, 0, _veh]] Call WFBE_CO_FNC_SendToServer;
+						hintSilent parseText "<t color='#F89060'>SCUD saturation order sent (server validates SCUD + range + funds).</t>";
+						false
+					};
+				},
+				//--- Show only to a crew member whose side matches the hull's registered owner side (server-set wfbe_tk_scud_side;
+				//--- falls back to playerSide before registration replicates). Server re-validates side on fire regardless.
+				[], 6, false, true, "", "alive _target && {_this in crew _target} && {(_target getVariable ['wfbe_tk_scud_side', playerSide]) == side _this}"
+			];
+			_v setVariable ["wfbe_tk_scud_action", _aid];
+		};
+
+		//--- Immediate buyer-local add (instant availability) + GetIn re-add for persistence (mirrors the VBIED idiom).
+		_vehicle call WFBE_CL_FNC_AddTkScudAction;
+		_vehicle addEventHandler ["GetIn", {
+			private ["_v","_u"];
+			_v = _this select 0;
+			_u = _this select 2;
+			if (_u == player) then { _v call WFBE_CL_FNC_AddTkScudAction };
+		}];
+	};
 
 	//--- Clear the vehicle.
 	(_vehicle) call WFBE_CO_FNC_ClearVehicleCargo;

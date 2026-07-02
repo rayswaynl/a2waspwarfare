@@ -1,5 +1,14 @@
 private ["_unit","_weapon","_ammo","_rocket","_sp","_fp","_fp1","_at","_li","_vx","_vy","_vz"];
 
+//--- OPTIONAL CLIENT MODS (cmdcon42-m) — HOOK 2: skip this mission's hand-rolled rocket-motor smoke/flame
+//--- trail (#particlesource) when a client FX / tracer mod (Blastcore / JTD) is loaded, so FX-mod users
+//--- don't get the mission trail layered on top of the mod's own trail (visible double-trail). This is the
+//--- single funnel for all three attach points (Init_Client.sqf Fired EH, Client_BuildUnit.sqf:569,
+//--- SkinSelector_Apply.sqf), so guarding the body covers them all. WFBE_HAS_FX_MOD is set once by
+//--- Client_ModDetect (false unless WFBE_C_MODHOOKS on AND an FX mod present) -> players without an FX mod
+//--- get the unchanged mission trail. Purely cosmetic, per-client; the AT damage/ballistics are untouched.
+if (missionNamespace getVariable ["WFBE_HAS_FX_MOD", false]) exitWith {};
+
 _ammo = _this select 4;
 _at=["M_47_AT_EP1","M_AT13_AT","M_AT5_AT","M_AT2_AT","M_AT9_AT","M_AT6_AT","M_TOW_AT","M_TOW2_AT","M_Vikhr_AT","M_AT10_AT","M_AT11_AT"];
 

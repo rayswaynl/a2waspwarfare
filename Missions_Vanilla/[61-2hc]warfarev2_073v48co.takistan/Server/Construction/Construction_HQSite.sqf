@@ -101,7 +101,7 @@ if (!_deployed) then {
 	[_side,"Mobilized", ["Base", _MHQ]] Spawn SideMessage;
 	_MHQ addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}]; //--- Killed EH fires localy, this is the server.
 
-	if (isMultiplayer) then {[_side, "HandleSpecial", ["set-hq-killed-eh", _mhq]] Call WFBE_CO_FNC_SendToClients}; //--- Since the Killed EH fires localy, we send the information to the existing clients, JIP clients need to have the event in init_client.sqf (if !deployed).
+	if (isMultiplayer) then {[_side, "HandleSpecial", ["set-hq-killed-eh", _MHQ]] Call WFBE_CO_FNC_SendToClients}; //--- WAVE-3 (60-audit): _mhq -> _MHQ (case-sensitive local was nil -> mobilized HQ's killed round-ender wired to nothing). Since the Killed EH fires localy, we send the information to the existing clients, JIP clients need to have the event in init_client.sqf (if !deployed).
 
 	_MHQ addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3] Call BuildingHandleDamages}];
 

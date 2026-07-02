@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_basePlayers","_basePcN","_baseHcN","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -20,6 +20,12 @@ while {!WFBE_GameOver} do {
 	// GCSTAT counters (claude-gaming 2026-06-15): _gcEmptyFound = all zero-unit groups seen this
 	// pass (incl. persistent, which are NOT reaped); _gcReaped = non-persistent empties deleted.
 	_gcReaped = 0; _gcEmptyFound = 0;
+	//--- cmdcon41-w3c: TWO-PASS collect-then-delete. The old single pass called deleteGroup INLINE
+	//--- while iterating allGroups; A2 OA 1.64 leaves forEach behaviour UNDEFINED when the collection
+	//--- is mutated mid-iteration (same trap already avoided in Common_CreateGroup.sqf:36-54), which
+	//--- can skip the element after each reap -> empties survive an extra 60s sweep (a contributor to
+	//--- the observed transient empty-group pile-up). Collect candidates first, delete in a 2nd pass.
+	private "_gcCands"; _gcCands = [];
 	{
 		_grp = _x;
 		if (!isNull _grp && {(count (units _grp)) == 0}) then {
@@ -29,11 +35,14 @@ while {!WFBE_GameOver} do {
 			private "_isPers"; _isPers = _grp getVariable "wfbe_persistent";
 			if (isNil "_isPers") then {_isPers = false};
 			if (!_isPers) then {
-				deleteGroup _grp;
-				_gcReaped = _gcReaped + 1;
+				_gcCands set [count _gcCands, _grp]; //--- defer delete out of the allGroups iteration
 			};
 		};
 	} forEach allGroups;
+	{
+		deleteGroup _x;
+		_gcReaped = _gcReaped + 1;
+	} forEach _gcCands;
 
 	// --- B61 (Ray 2026-06-21) BASE-GC / RE-ADOPT pass ---
 	// The legacy GC above reaps ONLY empty groups. The BASE fills with units the commander neither
@@ -52,6 +61,17 @@ while {!WFBE_GameOver} do {
 		_baseIdleSpeed   = missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED",   5];
 		_basePlayerGuard = missionNamespace getVariable ["WFBE_C_BASEGC_PLAYER_GUARD", 0];
 		_baseReadopted = 0; _baseRetasked = 0; _baseDeletedAir = 0;
+		//--- Build one live-player snapshot for the BASE-GC pass; reuse it for cap math and optional guards.
+		_basePcN = 0;
+		_basePlayers = [];
+		{
+			if (isPlayer _x) then {
+				_basePcN = _basePcN + 1;
+				if (_basePlayerGuard > 0 && {alive _x}) then {_basePlayers set [count _basePlayers, _x]};
+			};
+		} forEach allUnits;
+		_baseHcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+		_basePcN = (_basePcN - _baseHcN) max 0;
 
 		{
 			_baseSide = _x;
@@ -78,16 +98,15 @@ while {!WFBE_GameOver} do {
 						};
 					} forEach _baseTeams;
 				};
-				private ["_basePcN","_baseHcN"];
-				_basePcN = {isPlayer _x} count allUnits;
-				_baseHcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
-				_basePcN = (_basePcN - _baseHcN) max 0;
 				_baseCap = switch (true) do {
 					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  15]};
 					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  5]};
 					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
 				};
+				//--- cmdcon42-k: the re-adoption ceiling honours the same team-target delta+floor the founding
+				//--- loop applies (Ray: -3 teams/commander) so GC cannot re-adopt teams the founding lane retires.
+				_baseCap = (_baseCap + (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_DELTA", -1])) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 3]);
 
 				//--- Nearest uncaptured town to the HQ = the front objective for re-task (same OA-safe
 				//--- sideID filter as AI_Commander_AssignTowns:32). Fallback: enemy HQ direction is implicit
@@ -137,7 +156,7 @@ while {!WFBE_GameOver} do {
 									//--- PLAYER-PROXIMITY guard (tunable; 0 = does NOT block).
 									_basePlayerNear = false;
 									if (_basePlayerGuard > 0) then {
-										{ if (isPlayer _x && {alive _x} && {(_x distance _baseLdr) <= _basePlayerGuard}) exitWith {_basePlayerNear = true} } forEach allUnits;
+										{ if ((_x distance _baseLdr) <= _basePlayerGuard) exitWith {_basePlayerNear = true} } forEach _basePlayers;
 									};
 
 									if (_baseInCombat || {_baseEnemyNear > 0} || {_baseDmgNow > _baseDmgPrev} || {_basePlayerNear}) then {
@@ -224,7 +243,7 @@ while {!WFBE_GameOver} do {
 
 								_basePlayerNear = false;
 								if (_basePlayerGuard > 0) then {
-									{ if (isPlayer _x && {alive _x} && {(_x distance _baseVeh) <= _basePlayerGuard}) exitWith {_basePlayerNear = true} } forEach allUnits;
+									{ if ((_x distance _baseVeh) <= _basePlayerGuard) exitWith {_basePlayerNear = true} } forEach _basePlayers;
 								};
 
 								if (_baseInCombat || {_baseEnemyNear > 0} || {_baseDmgNow > _baseDmgPrev} || {_basePlayerNear}) then {

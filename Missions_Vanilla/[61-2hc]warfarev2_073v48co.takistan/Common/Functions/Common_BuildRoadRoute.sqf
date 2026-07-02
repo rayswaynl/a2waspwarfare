@@ -9,7 +9,7 @@
 		0 - _origin  : Position array (e.g. getPos (leader _team)).
 		1 - _dest    : Position array (the order destination).
 		2 - _laneOff : Scalar lateral lane offset in metres (0 = straight snap; the caller
-		               manages any per-team jitter, e.g. wfbe_aicom_lanejit * 120, so several
+		               manages any per-team jitter, e.g. wfbe_aicom_lanejit * WFBE_C_AICOM_LANE_OFFSET (CH 120 / TK 60), so several
 		               teams sent to the same place don't funnel down one road).
 		3 - _hops    : Max intermediate road hops to attempt (AssignTowns uses 8).
 
@@ -51,7 +51,7 @@ for "_rmI" from 1 to _hops do {
 	_rmTaper = sin (_rmFrac * 180);  //--- ~0 at route ends, max at mid: teams diverge into their own lane mid-route, converge at the dest.
 	_rmGuess set [0, (_rmGuess select 0) + (_lanePX * _laneOff * _rmTaper)];
 	_rmGuess set [1, (_rmGuess select 1) + (_lanePY * _laneOff * _rmTaper)];
-	_rmRds = _rmGuess nearRoads 120;  //--- tight snap so nodes lie on the line, not far disconnected roads.
+	_rmRds = _rmGuess nearRoads (missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_SNAP_RADIUS", 250]);  //--- Build84: wider snap (was 120) so long-leg hops find a road node instead of being silently dropped into beeline gaps.
 	if (count _rmRds > 0) then {
 		_rmNode = [_rmGuess, _rmRds] Call WFBE_CO_FNC_GetClosestEntity;
 		if (!isNull _rmNode) then {_route = _route + [getPos _rmNode]};

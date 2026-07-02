@@ -29,6 +29,35 @@ def asset(aid):
     except Exception: img = None
     _acache[aid] = img; return img
 
+# --- asset VARIETY: drop <slot>_2.png, <slot>_3.png … next to <slot>.png and they auto-rotate
+# per match (chosen by m.seed), so a feed of many reports never reuses the same backdrop. ---
+_vfiles = {}
+def _variant_files(aid):
+    if aid in _vfiles: return _vfiles[aid]
+    out = []
+    try:
+        from assets import ASSETS
+        base = ASSETS.get(aid, {}).get("file")
+        if base:
+            stem, ext = os.path.splitext(base)
+            if os.path.exists(os.path.join(ASSET_DIR, base)): out.append(base)
+            k = 2
+            while os.path.exists(os.path.join(ASSET_DIR, f"{stem}_{k}{ext}")):
+                out.append(f"{stem}_{k}{ext}"); k += 1
+    except Exception: pass
+    _vfiles[aid] = out; return out
+
+def vasset(aid, seed=0):
+    """Load a seed-chosen variant image for aid (base file + any <stem>_k siblings)."""
+    files = _variant_files(aid)
+    if not files: return asset(aid)
+    f = files[abs(int(seed)) % len(files)]
+    key = "__v_" + f
+    if key in _acache: return _acache[key]
+    try: img = Image.open(os.path.join(ASSET_DIR, f)).convert("RGBA")
+    except Exception: img = None
+    _acache[key] = img; return img
+
 _BLOGO = os.path.join(os.path.dirname(__file__), "brand", "logo")
 def brand_logo(name):
     key = "__blogo_" + name
@@ -66,13 +95,27 @@ def MONO(sz): return _bf("JetBrainsMono-600.ttf",sz)
 f_huge=DISP(118); f_h1=DISP(80); f_h2=DISP(58); f_h3=DISP(44)
 f_md=SANS(34,True); f_sm=SANS(28,True); f_xs=SANS(23,False); f_num=MONO(58)
 
+# Scene plan — single source of truth for lengths so audio.py can find the winner-reveal
+# "climax" frame and stay in sync if scene timing changes. (name, frames, fade-in, fade-out)
+SCENE_PLAN = [("intro",54,18,10),("battle",420,12,10),("momentum",168,12,10),("mvp",156,12,10),
+              ("board",186,12,10),("combat",198,12,10),("decisive",120,12,10),("winner",126,4,2),
+              ("outro",102,10,10)]
+HOLD_FRAMES = 18
+def climax_frame():
+    f=0
+    for name,nf,_,_ in SCENE_PLAN:
+        if name=="winner": return f
+        f+=nf
+    return f
+
 def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
 def mix(c,t): return lerp(BG,c,t)
 
-def paste_cover(im, aid, box=None, opacity=1.0):
-    """Paste an asset scaled to COVER box (default whole frame). Returns True if used."""
-    a = asset(aid)
+def paste_cover(im, aid, box=None, opacity=1.0, seed=None):
+    """Paste an asset scaled to COVER box (default whole frame). Returns True if used.
+    Pass seed to rotate among dropped <slot>_k.png variants for per-match variety."""
+    a = vasset(aid, seed) if seed is not None else asset(aid)
     if a is None: return False
     bx = box or (0, 0, W, H); bw = bx[2]-bx[0]; bh = bx[3]-bx[1]
     s = max(bw/a.width, bh/a.height); a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
@@ -80,21 +123,64 @@ def paste_cover(im, aid, box=None, opacity=1.0):
         a2 = a2.copy(); a2.putalpha(a2.split()[3].point(lambda v:int(v*opacity)))
     im.paste(a2, (bx[0]+(bw-a2.width)//2, bx[1]+(bh-a2.height)//2), a2); return True
 
-def paste_emblem(im, aid, cx, cy, maxw):
-    a = asset(aid)
+def paste_emblem(im, aid, cx, cy, maxw, seed=None):
+    a = vasset(aid, seed) if seed is not None else asset(aid)
     if a is None: return False
     s = maxw/a.width; a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     im.paste(a2, (int(cx-a2.width/2), int(cy-a2.height/2)), a2); return True
 
-def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10):
-    """Faint drifting vehicle 'blackout' behind open scenes, if the asset exists."""
+# Per-silhouette animated FX (easy to extend: map a new asset id to "rotor"/"jet").
+VEHICLE_FX = {"silhouette_hind": "rotor", "silhouette_jet": "jet"}
+
+def _rotor(d, x, y, w, h, i, opacity, flipped):
+    """Subtle spinning-rotor tell. The static silhouette already has the blades, so this is just a
+    small orange tip-glint sweeping ALONG the blade line + a faint tail-rotor flicker — no heavy bar."""
+    base = min(220, int(255*opacity*1.8) + 22)
+    ry = y + int(h*0.34); rx0 = x + int(w*0.18); rx1 = x + int(w*0.78); rmid = (rx0+rx1)//2
+    d.line([(rx0,ry),(rx1,ry)], fill=(22,24,30,int(base*0.16)), width=1)        # faint disc shimmer
+    gx = rmid + (rx1-rmid)*math.sin(i*0.8); gr = max(2,int(h*0.016))            # tip glint sweeping
+    d.ellipse([gx-gr,ry-gr,gx+gr,ry+gr], fill=(217,118,60,min(210,int(base))))
+    tx = x + int(w*(0.17 if flipped else 0.83)); ty = y + int(h*0.30); tr = int(h*0.07)
+    fl = 0.4 + 0.6*abs(math.sin(i*0.9))
+    d.line([(tx,ty-tr),(tx,ty+tr)], fill=(22,24,30,int(base*0.3*fl)), width=1)  # tail rotor flicker
+
+def _jet_fx(d, x, y, w, h, i, opacity, flipped):
+    """Animate a jet engine: a pulsing afterburner glow at the rear nozzle + a short heat trail."""
+    nx = x + int(w*(0.18 if flipped else 0.82)); ny = y + int(h*0.60)
+    pulse = 0.62 + 0.30*math.sin(i*0.9) + 0.12*math.sin(i*2.7)
+    base = min(255, int(255*opacity*2.0) + 30); tdir = -1 if flipped else 1   # exhaust streams behind
+    for k in range(1, 5):                                       # tapering heat trail
+        tx = nx + tdir*int(h*0.11*k); rr = max(1, int(h*0.055*(1-k/5)))
+        d.ellipse([tx-rr,ny-rr,tx+rr,ny+rr], fill=(217,118,60,int(base*0.45*pulse*(1-k/5))))
+    for rr,col,af in [(int(h*0.085),(217,118,60),0.9),(int(h*0.05),(245,180,100),0.85),(int(h*0.026),(255,232,182),0.95)]:
+        d.ellipse([nx-rr,ny-rr*0.78,nx+rr,ny+rr*0.78], fill=col+(int(min(255,base*af*pulse)),))  # nozzle core
+
+def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10, direction=-1, hover=False):
+    """Drifting vehicle 'blackout' across a scene. The PNGs are drawn facing LEFT, so the sprite is
+    flipped to face its travel direction (never drives backwards). Helicopters get an animated rotor.
+    hover=True keeps it on-screen with a gentle bob (showcases the spinning rotor)."""
     if not SILHOUETTES: return
-    a = asset(SILHOUETTES[idx % len(SILHOUETTES)])
+    aid = SILHOUETTES[idx % len(SILHOUETTES)]
+    if aid == "silhouette_hind": return   # Hind pulled from the drift layer (too noisy)
+    a = asset(aid)
     if a is None: return
-    w = int(W*wfrac); a2 = a.resize((w, max(1, int(a.height*w/a.width)))).copy()
+    w = int(W*wfrac); h = max(1, int(a.height*w/a.width)); a2 = a.resize((w, h)).copy()
+    flipped = direction > 0
+    if flipped: a2 = a2.transpose(Image.FLIP_LEFT_RIGHT)        # face right when moving right
     a2.putalpha(a2.split()[3].point(lambda v: int(v*opacity)))
-    x = int(-w*0.25 + (i/max(1, n))*(W + w*0.25)); y = int(H*yfrac)
+    if hover:
+        x = int(W*0.5 - w*0.5 + W*0.05*math.sin(i/max(1,n)*math.pi*2))   # gentle centred drift
+        y = int(H*yfrac + H*0.010*math.sin(i*0.45))                      # slight vertical bob
+    else:
+        travel = i/max(1, n)
+        x = int(-w*0.25 + travel*(W + w*0.25)) if flipped else int(W + w*0.25 - travel*(W + w*0.25))
+        y = int(H*yfrac)
     im.paste(a2, (x, y), a2)
+    fx = VEHICLE_FX.get(aid)
+    if fx:
+        dd = ImageDraw.Draw(im, "RGBA")
+        if fx == "rotor": _rotor(dd, x, y, w, h, i, opacity, flipped)
+        elif fx == "jet":  _jet_fx(dd, x, y, w, h, i, opacity, flipped)
 
 _fx = {}
 def _fx_vignette():
@@ -138,18 +224,33 @@ def overlay_fx(im, i=0):
 MX0,MY0,MS=40,470,1000
 
 WATER=(15,38,56); LAND_BASE=(22,30,28); COAST=(70,120,150)
+# Chernarus land/sea trace (world metres). The sea is an L in the south + east; these points run
+# just SEAWARD of the harvested coastal town logics — Kamenka/Komarovo/Balota/Chernogorsk/
+# Elektrozavodsk/Kamyshovo along the south, then Tulga/Solnichniy/Nizhnoye/Olsha up the east —
+# and close along the SE map edges so the enclosed polygon IS the sea. No heightmap rip needed;
+# reads as Chernarus because it's anchored to real town positions + the map's known geography.
+CHERNARUS_SEA=[(0,1850),(2100,1650),(4200,1700),(6600,1500),(9000,1450),(11000,1850),
+               (12500,3100),(13750,5500),(14150,8500),(14450,11500),(14650,14200),
+               (15360,15360),(15360,0),(0,0)]
 class Renderer:
     def __init__(self, m):
         self.m=m; S=m.world_size
-        # coastline: world_y below coast_y(x) is sea (Chernarus' south edge is all coast).
+        # coastline: world_y below coast_y(x) is sea (fallback for non-Chernarus maps).
         self._coast=lambda x:1100+500*(x/S)+200*math.sin(x/S*8.0)
         # precompute a relief-noise field + sea/land mask + land-owner tint base on the grid.
         GC=m.grid_n; rngn=np.random.default_rng(5)
         self.sea=np.zeros((GC,GC),bool); self.relief=np.zeros((GC,GC),np.float32)
+        self.coast_poly=None; _seamask=None
+        if m.map_name.lower()=="chernarus":
+            _poly=[(x/S*GC,(1-y/S)*GC) for (x,y) in CHERNARUS_SEA]   # world -> grid (y flips)
+            _mk=Image.new("L",(GC,GC),0); ImageDraw.Draw(_mk).polygon(_poly,fill=255)
+            _seamask=np.asarray(_mk)
+            self.coast_poly=list(CHERNARUS_SEA[:11])                 # land-side trace for the stroke
         for r in range(GC):
             for c in range(GC):
                 gx=(c+0.5)/GC*S; gy=(1-(r+0.5)/GC)*S
-                self.sea[r,c]= gy < self._coast(gx) or (gx>0.94*S and gy<0.42*S)
+                if _seamask is not None: self.sea[r,c]= _seamask[r,c]>128
+                else: self.sea[r,c]= gy < self._coast(gx) or (gx>0.94*S and gy<0.42*S)
                 self.relief[r,c]=0.5+0.5*math.sin(gx/S*22+gy/S*6)*math.cos(gy/S*17)
         self.relief=0.6*self.relief+0.4*rngn.random((GC,GC))
         # roads: connect each town to its 2 nearest neighbours (deduped undirected edges).
@@ -175,11 +276,15 @@ class Renderer:
                     terr[r,c]=tuple(min(255,int(v*rel)) for v in base)
         im.paste(Image.fromarray(terr).resize((size,size),Image.NEAREST),(x0,y0))
         # --- coastline stroke ---
-        coastpts=[]
-        for c in range(0,size+1,8):
-            gx=c/size*S; cy=y0+(1-self._coast(gx)/S)*size
-            if y0<=cy<=y0+size: coastpts.append((x0+c,cy))
-        if len(coastpts)>1: d.line(coastpts,fill=COAST,width=2)
+        if self.coast_poly:
+            cpts=[(x0+wx/S*size, y0+(1-wy/S)*size) for (wx,wy) in self.coast_poly]
+            d.line(cpts,fill=COAST,width=max(2,int(2*sc)),joint="curve")
+        else:
+            coastpts=[]
+            for c in range(0,size+1,8):
+                gx=c/size*S; cy=y0+(1-self._coast(gx)/S)*size
+                if y0<=cy<=y0+size: coastpts.append((x0+c,cy))
+            if len(coastpts)>1: d.line(coastpts,fill=COAST,width=2)
         # --- military grid + edge coordinates ---
         for k in range(12):
             gx=x0+k*size/11; gy=y0+k*size/11
@@ -207,10 +312,12 @@ class Renderer:
             placed=[]
             for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):  # north-first
                 cx=x0+x/S*size; cy=y0+(1-y/S)*size
-                if any(abs(cx-px)<150*sc and abs(cy-py)<22*sc for px,py in placed): continue
+                if any(abs(cx-px)<104*sc and abs(cy-py)<18*sc for px,py in placed): continue
                 placed.append((cx,cy))
-                d.text((cx+11*sc,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
-                d.text((cx+10*sc,cy-10*sc),t,font=f_xs,fill=(220,228,240))
+                lw=d.textlength(t,font=f_xs); lx=cx+10*sc
+                if lx+lw>x0+size-4: lx=cx-10*sc-lw   # flip label left of the dot near the east edge
+                d.text((lx+1,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
+                d.text((lx,cy-10*sc),t,font=f_xs,fill=(220,228,240))
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
 def footer(im,d):
@@ -249,13 +356,67 @@ def donut(d,cx,cy,r,segs):
     for frac,col in segs: a1=a0+frac*360; d.pieslice([cx-r,cy-r,cx+r,cy+r],a0,a1,fill=col); a0=a1
     d.ellipse([cx-r*0.58,cy-r*0.58,cx+r*0.58,cy+r*0.58],fill=BG)
 
+def _side_split_line(m):
+    """Readable per-side kill split, e.g. 'GUER 2186 · BLUFOR 1043 · OPFOR 582'."""
+    ks = getattr(m, "kills_by_side", None)
+    if not ks: return ""
+    parts = [(SIDE_NAME.get(s, s.upper()), ks.get(s, 0)) for s in ("west", "east", "guer")]
+    parts = [p for p in parts if p[1] > 0]
+    parts.sort(key=lambda x: -x[1])
+    return "  ·  ".join(f"{nm} {n}" for nm, n in parts)
+
+def _support_line(m):
+    """Readable SCUD/TEL support-event summary for captions."""
+    total = getattr(m, "support_total", 0)
+    if not total: return ""
+    counts = getattr(m, "support_counts", {}) or {}
+    bits = [f"{kind} {counts[kind]}" for kind in sorted(counts)]
+    events = getattr(m, "support_events", []) or []
+    first = events[0] if events else {}
+    lead = f"first at {m.fmt_duration(first.get('t', 0))}" if first else ""
+    return f"Support events — {' · '.join(bits)}" + (f" ({lead})." if lead else ".")
+
 def caption(m):
-    """Social caption built from the match — used as the Discord/TikTok post text."""
-    mm, ss = divmod(m.duration, 60)
+    """Social caption built from the match — used as the Discord/TikTok post text.
+    Honest: labels the kill number as total-across-all-forces and always prints the per-side
+    split (so GUER, which can top the charts yet win nothing, is never invisible). AI-only
+    matches feature the fiercest side / flashpoint instead of a phantom MVP."""
+    dur = m.fmt_duration(m.duration)
     side = SIDE_NAME.get(m.winner, m.winner.upper())
-    mvp = f" MVP {m.mvp['name']} ({m.mvp['kills']}K)." if m.mvp else ""
-    return (f"{side} victory on {m.map_name.title()} — {m.total_kills} kills in {mm:02d}:{ss:02d}.{mvp}\n"
-            f"#arma2 #warfare #cti #miksuuswarfare #gaming #milsim")
+    how = getattr(m, "win_how", {}) or {}
+    split = _side_split_line(m)
+    support = _support_line(m)
+
+    if getattr(m, "ai_only", False) or not m.mvp:
+        # AI-only fallback: no operators, so headline the fiercest fighting side + flashpoint.
+        ts = getattr(m, "top_side", None); fb = getattr(m, "fiercest", None)
+        if ts:
+            hook = f"🔥 {SIDE_NAME.get(ts['side'], ts['side'].upper())} led all forces with {ts['kills']} kills."
+        else:
+            hook = f"⚔ {side} take {m.map_name.title()} — {m.total_kills} total kills."
+        feat = ""
+        if fb: feat = f"\n💥 Fiercest fight: {fb['town']} ({fb['kills']} kills in the swing)."
+        body = (f"{hook} {side} take {m.map_name.title()} in {dur} ({how.get('text','')}).{feat}\n"
+                f"Total kills (all forces): {m.total_kills}."
+                + (f"\nBy side — {split}." if split else "")
+                + (f"\n{support}" if support else ""))
+        return body + ("\nAI war rages 24/7 — new recap every round.\n"
+                       "#arma2 #warfare #cti #miksuuswarfare")
+
+    h = getattr(m, "hero", None) or {}
+    if h.get("label") == "LONGEST SHOT":  hook = f"🎯 {h['num']}m ONE-SHOT by {h['who']}."
+    elif h.get("label") == "TOP FRAGGER": hook = f"🔥 {h['who']} dropped {h['num']} kills."
+    else:                                 hook = f"⚔ {side} WIN — {m.total_kills} total kills."
+    cb = getattr(m, "comeback", {}) or {}
+    arc = f" {cb['line'].title()}." if cb.get("badge") else ""
+    mvp = (f"\n🎖 MVP {m.mvp['name']} ({m.mvp['kills']}K)"
+           f"{' — '+m.mvp['award'] if m.mvp.get('award') else ''}")
+    splitline = f"\nBy side — {split}." if split else ""
+    supportline = f"\n{support}" if support else ""
+    return (f"{hook} {side} take {m.map_name.title()} in {dur}.{arc}{mvp}"
+            f"\nTotal kills (all forces): {m.total_kills}.{splitline}{supportline}\n"
+            f"New match recap every round — follow for more.\n"
+            f"#arma2 #warfare #cti #miksuuswarfare")
 
 
 def render(m, out_path):
@@ -272,46 +433,64 @@ def render(m, out_path):
             frames.append(np.asarray(fade(im,k)))
 
     def s_intro(im,d,i,n):
-        paste_cover(im,"intro_splash")   # generated background if present, else dark base
+        # COLD OPEN (fleet plan): no logo-first bumper — winner wash + the match's biggest REAL
+        # number counting up + a burned-in sound-off hook line. Brand shrunk to a top lockup.
+        col=SIDE_COL[m.winner]
+        wash=np.asarray(im).astype(np.float32); wash[:]=lerp(BG,col,0.18)
+        im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0))
+        paste_cover(im,"intro_splash",opacity=0.40,seed=m.seed)
+        d=ImageDraw.Draw(im,"RGBA")
         mk=brand_logo("mark")
         if mk is not None:
-            m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
-        tracked(d,(W/2,H/2-92),"MIKSUU'S WARFARE",DISP(82),INK,anchor="mm",track=6)
-        tracked(d,(W/2,H/2+10),m.map_name.upper(),DISP(50),GOLD,anchor="mm",track=14)
-        tracked(d,(W/2,H/2+80),"POST-MATCH REPORT",SANS(26,False),DIM,anchor="mm",track=8)
+            m2=mk.resize((46,46)); im.paste(m2,(int(W/2-120),108),m2)
+        tracked(d,(W/2-60,131),"MIKSUU'S WARFARE",SANS(19,False),(196,196,184),anchor="lm",track=2)
+        h=m.hero; kk=ease(min(1,i/22))
+        tracked(d,(W/2,H/2-300),h["label"],SANS(31,False),INK,anchor="mm",track=12)
+        tracked(d,(W/2,H/2-138),str(int(h["num"]*kk)),DISP(180),col,anchor="mm",track=2)
+        unit="METRES" if h["label"]=="LONGEST SHOT" else "KILLS"
+        tracked(d,(W/2,H/2+22),(h["who"].upper()+"   ·   "+unit) if h["who"] else unit,SANS(28,False),INK,anchor="mm",track=6)
+        rule(d,W/2,H/2+98,half=170)
         mm,ss=divmod(m.duration,60)
-        tracked(d,(W/2,H/2+152),f"{len(m.players)} OPERATORS      {mm:02d}:{ss:02d}      {m.total_kills} KILLS",SANS(23,False),(150,150,138),anchor="mm",track=3)
+        tracked(d,(W/2,H/2+164),f"{SIDE_NAME[m.winner]} WIN   ·   {m.total_kills} KILLS   ·   {mm:02d}:{ss:02d}",SANS(25,False),INK,anchor="mm",track=3)
+        tracked(d,(W/2,H/2+222),m.map_name.upper(),SANS(21,False),DIM,anchor="mm",track=10)
 
     def s_battle(im,d,i,n):
         ts=i/n*m.duration; ft=None; fk=0
         for (t,town,s) in m.caps:
             if abs(ts-t)<(m.duration/n)*8: ft=town; fk=max(fk,1-abs(ts-t)/((m.duration/n)*8))
         header(d,"THE BATTLE","territory control over the match")
-        o=m.owners_at(ts); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values()); tot=len(m.towns); nn=tot-w-e
+        o=m.owners_at(ts); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values())
+        g=sum(v=="guer" for v in o.values()); tot=len(m.towns); nn=tot-w-e-g
         d.text((60,300),"BLUFOR",font=f_h3,fill=WEST); d.text((60,346),str(w),font=f_num,fill=INK)
         d.text((W-60,300),"OPFOR",font=f_h3,fill=EAST,anchor="ra"); d.text((W-60,346),str(e),font=f_num,fill=INK,anchor="ra")
-        d.text((W/2,330),f"{nn} contested",font=f_sm,fill=DIM,anchor="ma")
+        _mid=f"{nn} contested" + (f"  ·  GUER {g}" if getattr(m,"guer_active",False) and g else "")
+        d.text((W/2,330),_mid,font=f_sm,fill=DIM,anchor="ma")
         bx,by,bw=40,440,W-80; t2=max(1,tot)
         d.rectangle([bx,by,bx+bw,by+12],fill=(40,46,56)); d.rectangle([bx,by,bx+int(bw*w/t2),by+12],fill=WEST)
         d.rectangle([bx+bw-int(bw*e/t2),by,bx+bw,by+12],fill=EAST)
         R.control_map(d,im,ts,ft,fk)
-        mm,ss=divmod(int(ts),60); d.text((W/2,1452),f"{mm:02d}:{ss:02d}",font=f_h1,fill=INK,anchor="ma")
-        tracked(d,(W/2,1566),"RECENT CONTACTS",SANS(20,False),(120,126,118),anchor="mm",track=5)
-        feed=[k for k in m.kills if k[0]<=ts][-4:]; y=1600
-        for (t,nm,s,wp,cat,dd) in feed:
-            c=SIDE_COL[s]; d.rectangle([60,y+7,74,y+31],fill=c); d.text((90,y),(nm or "AI"),font=f_sm,fill=c)
-            d.text((W-205,y),wp,font=f_sm,fill=DIM,anchor="ra"); d.text((W-60,y),f"{dd}m",font=f_sm,fill=(150,160,176),anchor="ra"); y+=56
+        hh,mmn=divmod(int(ts)//60,60); d.text((W/2,1452),(f"{hh}:{mmn:02d}:{int(ts)%60:02d}" if hh else f"{mmn:02d}:{int(ts)%60:02d}"),font=f_h1,fill=INK,anchor="ma")
+        # (fleet plan) the old RECENT CONTACTS kill-feed faked per-kill timing the data lacks — removed.
+        # Honest real totals + per-side kill split (so GUER isn't invisible):
+        tracked(d,(W/2,1560),f"{len(m.caps)} TOWN CAPTURES    ·    {m.total_kills} KILLS (ALL FORCES)",SANS(23,False),(150,156,148),anchor="mm",track=4)
+        _sp=_side_split_line(m)
+        if _sp: tracked(d,(W/2,1604),_sp.upper(),SANS(21,False),(150,156,148),anchor="mm",track=3)
         footer(im,d)
 
     def s_momentum(im,d,i,n):
-        paste_cover(im,"bg_momentum",opacity=0.5)   # generated scene backdrop if present
+        paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed)   # generated scene backdrop (seed rotates)
+        drift_silhouette(im,2,i,n,yfrac=0.78,wfrac=0.46,opacity=0.40,direction=(-1 if m.seed%2 else 1))  # jet w/ afterburner, clear lower band
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
         prog=ease(min(1,i/(n-12))); nshow=max(2,int(len(m.ser_x)*prog))
         def pt(idx,val): return px0+m.ser_x[idx]/m.duration*pw, py0+ph-val/20*ph
         for g in range(0,21,5):
             yy=py0+ph-g/20*ph; d.line([(px0,yy),(px0+pw,yy)],fill=(46,54,66)); d.text((px0-14,yy),str(g),font=f_xs,fill=DIM,anchor="rm")
-        for ser,col in [(m.ser_w,WEST),(m.ser_e,EAST)]:
+        # draw GUER too when it holds ground / fights (real capturing side in this mission)
+        series=[(m.ser_w,WEST)]
+        if getattr(m,"guer_active",False) and getattr(m,"ser_g",None): series.append((m.ser_g,GUER))
+        series.append((m.ser_e,EAST))
+        for ser,col in series:
             pts=[pt(j,ser[j]) for j in range(nshow)]
             if len(pts)>1:
                 d.line(pts,fill=col,width=5,joint="curve"); d.polygon(pts+[(pts[-1][0],py0+ph),(pts[0][0],py0+ph)],fill=col+(40,))
@@ -320,41 +499,118 @@ def render(m, out_path):
         if m.ser_x[nshow-1]>=dt:
             mxp=px0+dt/m.duration*pw; d.line([(mxp,py0),(mxp,py0+ph)],fill=GOLD+(150,),width=2); d.text((mxp,py0-8),"supremacy",font=f_xs,fill=GOLD,anchor="mb")
         chip(d,px0,py0+ph+24,"west"); chip(d,px0+200,py0+ph+24,"east")
-        _dmin=max(1,round(m.decisive[0]/60))
-        d.text((W/2,1280),f"{SIDE_NAME[m.winner]} seized supremacy around minute {_dmin} and never gave it back.",font=f_sm,fill=DIM,anchor="ma")
+        if getattr(m,"guer_active",False) and getattr(m,"ser_g",None): chip(d,px0+400,py0+ph+24,"guer")
+        # (fleet plan) replace the hardcoded subtitle (which sometimes lied) with the REAL arc.
+        cb=m.comeback
+        if cb.get("badge"):
+            d.rounded_rectangle([W/2-165,1236,W/2+165,1294],radius=16,fill=mix(GOLD,0.20),outline=GOLD,width=2)
+            tracked(d,(W/2,1265),cb["badge"],SANS(26,False),GOLD,anchor="mm",track=8)
+            tracked(d,(W/2,1342),cb["line"],SANS(27,False),INK,anchor="mm",track=3)
+        else:
+            tracked(d,(W/2,1300),cb["line"],SANS(27,False),INK,anchor="mm",track=3)
+        footer(im,d)
+
+    def s_ai_feature(im,d,i,n):
+        # AI-ONLY match: no operators -> feature the fiercest fighting SIDE + the fiercest flashpoint
+        # instead of a phantom MVP card. Clearly labelled so nobody mistakes it for a human award.
+        paste_cover(im,"mvp_backdrop",opacity=0.5,seed=m.seed)
+        header(d,"FIERCEST FORCE","no human operators — AI war"); kk=ease(min(1,i/26))
+        ts=getattr(m,"top_side",None)
+        s=ts["side"] if ts else m.winner; col=SIDE_COL[s]
+        panel(d,140,300,W-140,486,fill=mix(col,0.10),outline=col)
+        if not paste_emblem(im, emblem_id(s), 258, 393, 130):
+            d.ellipse([200,332,316,448],fill=mix(col,0.25),outline=col,width=3)
+            d.text((258,390),SIDE_NAME[s][:2],font=f_h2,fill=INK,anchor="mm")
+        d.text((360,336),SIDE_NAME[s],font=DISP(64),fill=INK)
+        tracked(d,(362,432),"LED ALL FORCES IN KILLS",SANS(22,False),DIM,anchor="lm",track=2)
+        d.text((W-182,326),str(int((ts["kills"] if ts else m.total_kills)*kk)),font=DISP(84),fill=col,anchor="ra")
+        d.text((W-182,452),"KILLS",font=SANS(22,False),fill=DIM,anchor="ra")
+        # per-side kill split bars — the honest three-way accounting
+        ks=getattr(m,"kills_by_side",{}) or {}
+        rows=[(x,ks.get(x,0)) for x in ("west","east","guer") if ks.get(x,0)>0]
+        rows.sort(key=lambda r:-r[1]); mx=max((v for _,v in rows),default=1)
+        by,gy=560,560
+        for idx,(sd,v) in enumerate(rows):
+            y=gy+idx*118; c=SIDE_COL[sd]; panel(d,180,y,W-180,y+96)
+            bw=int((W-420)*v/mx*kk); d.rounded_rectangle([180,y,180+bw+40,y+96],radius=16,fill=mix(c,0.28),outline=c,width=2)
+            d.rectangle([190,y+22,206,y+74],fill=c); d.text((236,y+22),SIDE_NAME[sd],font=f_h3,fill=INK)
+            d.text((W-210,y+26),str(int(v*kk)),font=f_h3,fill=c,anchor="ra")
+        fb=getattr(m,"fiercest",None); yb=gy+len(rows)*118+30
+        if fb:
+            panel(d,140,yb,W-140,yb+150,fill=mix(GOLD,0.10),outline=GOLD)
+            tracked(d,(W/2,yb+40),"FIERCEST FLASHPOINT",SANS(22,False),GOLD,anchor="mm",track=6)
+            hh,mmn=divmod(fb["t"]//60,60); tstr=f"{hh}:{mmn:02d}" if hh else f"{mmn}m"
+            d.text((W/2,yb+74),f'{fb["town"]} — {fb["kills"]} kills around the flip',font=f_sm,fill=INK,anchor="ma")
+            d.text((W/2,yb+112),f'contested at {tstr}',font=f_xs,fill=DIM,anchor="ma")
+        rule(d,W/2,1660,half=120,accent=False)
+        tracked(d,(W/2,1694),"TOTAL KILLS COUNT ALL FORCES (INCL. AI VS AI)",SANS(19,False),(190,194,186),anchor="mm",track=3)
         footer(im,d)
 
     def s_mvp(im,d,i,n):
-        if not m.mvp: return
-        paste_cover(im,"mvp_backdrop",opacity=0.5)   # dimmed so the stat card pops
+        if not m.mvp: return s_ai_feature(im,d,i,n)
+        paste_cover(im,"mvp_backdrop",opacity=0.5,seed=m.seed)   # dimmed so the stat card pops
         header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
         if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
             d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
-        d.text((352,342),p["name"],font=DISP(60),fill=INK); chip(d,354,420,p["side"],SANS(24,False))
+        d.text((352,344),p["name"],font=DISP(58),fill=INK); chip(d,354,422,p["side"],SANS(24,False))
+        # hero kill count fills the right of the card (the MVP's signature number, counts up)
+        d.text((W-182,322),str(int(p["kills"]*kk)),font=DISP(80),fill=col,anchor="ra")
+        d.text((W-182,442),"KILLS",font=SANS(22,False),fill=DIM,anchor="ra")
+        if p.get("award"):                                          # (fleet plan) superlative -> "that's me"
+            tracked(d,(W/2,506),p["award"],SANS(26,False),GOLD,anchor="mm",track=8)
         gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
-        cells=[("KILLS",num(p["kills"]),col),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',GOLD),
-               ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",col)]
+        cells=[("SCORE",num(p["score"]),GOLD),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',col),
+               ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",GOLD)]
         for idx,(lab,val,c) in enumerate(cells):
             x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
             d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
-        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),f"TOP SCORE   {int(p['score']*kk)}",SANS(24,False),(200,204,196),anchor="mm",track=6); footer(im,d)
+        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),"MOST VALUABLE PLAYER",SANS(24,False),(200,204,196),anchor="mm",track=6); footer(im,d)
+
+    def s_caps_timeline(im,d,i,n):
+        # Towns-captured timeline — the story of the map changing hands. Used for AI-only matches
+        # (no operator board) and always meaningful. Each row: time · town · who took it.
+        header(d,"TOWNS CAPTURED","how the map changed hands")
+        caps=m.caps
+        if not caps:
+            tracked(d,(W/2,H/2),"NO TOWNS CHANGED HANDS",SANS(30,False),DIM,anchor="mm",track=4)
+            footer(im,d); return
+        show=caps[:9]; y0=300; rh=min(150,int((1520-y0)/max(1,len(show))))
+        prog=ease(min(1,i/(n-10)))
+        for idx,(t,town,s) in enumerate(show):
+            if idx> (len(show))*prog+0.5: break
+            y=y0+idx*rh; col=SIDE_COL[s]
+            panel(d,120,y,W-120,y+rh-16)
+            d.rectangle([128,y+16,146,y+rh-32],fill=col)
+            hh,mmn=divmod(t//60,60); tstr=f"{hh}:{mmn:02d}" if hh else f"{mmn:02d}m"
+            d.text((176,y+18),tstr,font=f_h3,fill=GOLD)
+            d.text((176,y+74),town,font=f_h3,fill=INK)
+            tracked(d,(W-150,y+(rh-16)//2),SIDE_NAME[s]+" TOOK IT",SANS(24,False),col,anchor="rm",track=3)
+        tracked(d,(W/2,1560),f"{len(caps)} TOWN CAPTURES OVER THE MATCH",SANS(22,False),(150,156,148),anchor="mm",track=4)
+        footer(im,d)
 
     def s_board(im,d,i,n):
+        if not m.players: return s_caps_timeline(im,d,i,n)
         header(d,"TOP OPERATORS","by match score"); top=m.players[:6]
-        if not top: return
-        mx=max(p["score"] for p in top) or 1; y0=320; bh=92; gap=22
+        if not top: return s_caps_timeline(im,d,i,n)
+        mx=max(p["score"] for p in top) or 1; y0=288; bh=186; gap=36   # tall rows fill the frame
         for idx,p in enumerate(top):
-            y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-300)*p["score"]/mx*prog)
-            if idx==0 and paste_emblem(im,"icon_mvp",92,y+bh/2,52): pass   # medal on #1 if generated
-            else: d.text((92,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
-            panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
-            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+16),p["name"],font=f_h3,fill=INK)
-            d.text((158,y+58),f'{SIDE_NAME[p["side"]]}  ·  {p["kills"]}K / {p["d"][6]}D  ·  {p["d"][10]} caps',font=f_xs,fill=DIM)
-            d.text((W-84,y+bh/2),str(int(p["score"]*prog)),font=f_h3,fill=INK,anchor="rm")
+            y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-320)*p["score"]/mx*prog)
+            if idx==0 and paste_emblem(im,"icon_mvp",86,y+bh/2,64): pass   # medal on #1 if generated
+            else: d.text((86,y+bh/2),f"{idx+1}",font=f_h1,fill=GOLD if idx==0 else DIM,anchor="mm")
+            panel(d,132,y,W-60,y+bh); d.rounded_rectangle([132,y,132+bw+40,y+bh],radius=20,fill=mix(col,0.22),outline=col,width=2)
+            d.rectangle([138,y+28,156,y+bh-28],fill=col); d.text((182,y+38),p["name"],font=f_h2,fill=INK)
+            if p.get("award"):                                      # (fleet plan) per-row superlative
+                _nw=sum(d.textlength(_c,font=f_h2) for _c in p["name"])
+                d.text((182+_nw+22,y+66),p["award"],font=f_xs,fill=GOLD,anchor="lm")
+            _sub=f'{SIDE_NAME[p["side"]]}    ·    {p["kills"]} kills    ·    {p["d"][6]} deaths    ·    {p["d"][10]} caps'
+            d.text((184,y+118),_sub,font=f_sm,fill=(14,16,20)); d.text((183,y+116),_sub,font=f_sm,fill=(198,202,192))
+            d.text((W-88,y+bh/2-18),str(int(p["score"]*prog)),font=f_h1,fill=INK,anchor="rm")
+            d.text((W-88,y+bh/2+34),"score",font=f_xs,fill=DIM,anchor="rm")
         footer(im,d)
 
     def s_combat(im,d,i,n):
+        drift_silhouette(im,m.seed+2,i,n,yfrac=0.30,wfrac=0.5,opacity=0.08,direction=(1 if m.seed%2 else -1))
         header(d,"COMBAT BREAKDOWN"); kk=ease(min(1,i/26))
         order=[("INF","Infantry",(198,178,142)),("VEH","Vehicle",(217,118,60)),("AIR","Air",(122,134,72)),("STATIC","Static",(120,128,138))]  # brand: bone/orange/olive/steel
         tot=sum(m.catcount.values()) or 1; segs=[(m.catcount[c]/tot*kk,col) for c,_,col in order]
@@ -367,11 +623,19 @@ def render(m, out_path):
             d.text((x+36,y),name,font=f_sm,fill=INK); d.text((x+360,y),f"{int(m.catcount[c]/tot*100)}%",font=f_sm,fill=DIM,anchor="ra")
         gy=1010; cw=(W-220)//2
         cards=[("LONGEST KILL",f"{m.longest[5]} m",f"{m.longest[3]}",GOLD,"icon_longest"),("TOP WEAPON",m.topweap[0],f"{m.topweap[1]} kills",WEST,"icon_weapon"),
-               ("PVP KILLS",str(m.pvp_total),"player vs player",INK,"icon_pvp"),("TOWN CAPTURES",str(m.cap_total),"ownership flips",GUER,"icon_captures")]
+               ("PVP KILLS",str(m.pvp_total),"player vs player",INK,"icon_pvp"),
+               ("HARDWARE KILLED",str(m.hw_veh+m.hw_air),f"{m.hw_veh} veh · {m.hw_air} air",GUER,"icon_captures")]
         for idx,(lab,big,sub,c,ic) in enumerate(cards):
             x=110+(idx%2)*cw; y=gy+(idx//2)*200; panel(d,x,y,x+cw-20,y+175)
             paste_emblem(im,ic,x+cw-58,y+44,48)   # stat icon (top-right) if generated
             d.text((x+26,y+22),lab,font=f_xs,fill=DIM); d.text((x+26,y+52),big,font=f_h3 if len(big)<12 else f_md,fill=c); d.text((x+26,y+120),sub,font=f_xs,fill=DIM)
+        # (fleet plan) rivalry / nemesis — human-vs-human grudge framing drives @-mentions
+        if getattr(m,"rivalry",None):
+            rv=m.rivalry
+            tracked(d,(W/2,1440),"GRUDGE MATCH",SANS(20,False),DIM,anchor="mm",track=8)
+            tracked(d,(W/2,1488),f"{rv['a'].upper()}   {rv['af']}–{rv['bf']}   {rv['b'].upper()}",SANS(31,False),INK,anchor="mm",track=3)
+            if getattr(m,"nemesis",None):
+                tracked(d,(W/2,1542),f"MVP'S NEMESIS — {m.nemesis['who'].upper()} ({m.nemesis['n']})",SANS(20,False),GOLD,anchor="mm",track=4)
         footer(im,d)
 
     def s_decisive(im,d,i,n):
@@ -388,32 +652,150 @@ def render(m, out_path):
 
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
-        if paste_cover(im, winner_bg_id(m.winner)):
+        if paste_cover(im, winner_bg_id(m.winner), seed=m.seed):
             d=ImageDraw.Draw(im,"RGBA")
         else:
             wash=np.asarray(im).astype(np.float32); wash[:]=mix(lerp(BG,col,0.20),k); im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0)); d=ImageDraw.Draw(im,"RGBA")
             for j in range(80):
                 px=(j*977)%W; sp=40+(j*53)%120; py=H-(i*sp/6)%H; d.ellipse([px,py,px+5,py+5],fill=lerp(col,INK,(j%5)/5))
-        drift_silhouette(im, 0, i, n, yfrac=0.72, wfrac=0.60, opacity=0.10)  # faint blackout low, if generated
-        paste_emblem(im, emblem_id(m.winner), W/2, 320, 200)
+        drift_silhouette(im, m.seed, i, n, yfrac=0.72, wfrac=0.60, opacity=0.10)  # seed picks the vehicle
+        paste_emblem(im, emblem_id(m.winner), W/2, 320, 200, seed=m.seed)
         tracked(d,(W/2,522),SIDE_NAME[m.winner],DISP(100),INK,anchor="mm",track=8); tracked(d,(W/2,648),"VICTORY",DISP(100),col,anchor="mm",track=16)
-        mm,ss=divmod(m.duration,60); o=m.owners_at(m.duration); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values())
-        mvp=m.mvp["name"]+f' ({m.mvp["kills"]}K)' if m.mvp else "—"
-        rows=[("DURATION",f"{mm:02d}:{ss:02d}"),("FINAL TOWNS",f"{w} – {e}"),("TOTAL KILLS",str(m.total_kills)),("MVP",mvp),("MAP",m.map_name)]
-        y=940
+        o=m.owners_at(m.duration); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values()); g=sum(v=="guer" for v in o.values())
+        how=getattr(m,"win_how",{}) or {}
+        finaltowns=f"{w} – {e}" + (f" – {g}" if getattr(m,"guer_active",False) and g else "")
+        rows=[("DURATION",m.fmt_duration(m.duration)),("FINAL TOWNS",finaltowns),("TOTAL KILLS",str(m.total_kills)),("HOW",how.get("mode","—")),("MAP",m.map_name)]
+        if m.mvp: rows.insert(3,("MVP",m.mvp["name"]+f' ({m.mvp["kills"]}K)'))
+        if getattr(m,"support_total",0): rows.insert(-1,("SUPPORT",str(m.support_total)+" SCUD/TEL"))
+        y=920
         for lab,val in rows:
-            d.text((W/2-40,y),lab,font=f_md,fill=(225,231,240),anchor="ra"); d.text((W/2+40,y),val,font=f_md,fill=col,anchor="la"); y+=88
+            d.text((W/2-40,y),lab,font=f_md,fill=(225,231,240),anchor="ra"); d.text((W/2+40,y),val,font=f_md,fill=col,anchor="la"); y+=82
+        # one-line "how they won" under the stat block
+        if how.get("text"):
+            tracked(d,(W/2,y+8),how["text"].upper(),SANS(21,False),(200,204,196),anchor="mm",track=2)
         mk=brand_logo("mark")
         if mk is not None:
             m2=mk.resize((60,60)); im.paste(m2,(int(W/2-30),1498),m2)
         d.text((W/2,1580),"MIKSUU'S WARFARE",font=f_sm,fill=INK,anchor="mm")
 
-    scene(54,s_intro,fin=18,fout=10); scene(420,s_battle); scene(168,s_momentum); scene(156,s_mvp)
-    scene(186,s_board); scene(198,s_combat); scene(120,s_decisive); scene(126,s_winner,fin=4,fout=2)
-    for _ in range(18): frames.append(frames[-1])
+    def s_outro(im,d,i,n):
+        # closing call-to-action card — converts a view into a follow / a player.
+        if not paste_cover(im,"outro_bg",seed=m.seed): paste_cover(im,"intro_splash",seed=m.seed)
+        d=ImageDraw.Draw(im,"RGBA")
+        drift_silhouette(im,m.seed+3,i,n,yfrac=0.66,wfrac=0.66,opacity=0.12)
+        mk=brand_logo("mark")
+        if mk is not None:
+            sz=int(206+8*math.sin(i/7)); m2=mk.resize((sz,sz)); im.paste(m2,(int(W/2-sz/2),int(H/2-470)),m2)
+        tracked(d,(W/2,H/2-150),"MIKSUU'S WARFARE",DISP(66),INK,anchor="mm",track=6)
+        rule(d,W/2,H/2-82,half=160)
+        tracked(d,(W/2,H/2-14),"FOLLOW FOR MORE WAR STORIES",SANS(28,False),INK,anchor="mm",track=4)
+        tracked(d,(W/2,H/2+56),"NEW MATCH RECAP EVERY ROUND",SANS(23,False),GOLD,anchor="mm",track=4)
+        footer(im,d)
+
+    fns={"intro":s_intro,"battle":s_battle,"momentum":s_momentum,"mvp":s_mvp,"board":s_board,
+         "combat":s_combat,"decisive":s_decisive,"winner":s_winner,"outro":s_outro}
+    for _name,_nf,_fin,_fout in SCENE_PLAN:
+        scene(_nf, fns[_name], fin=_fin, fout=_fout)
+    for _ in range(HOLD_FRAMES): frames.append(frames[-1])
 
     imageio.mimwrite(out_path,frames,fps=FPS,codec="libx264",macro_block_size=8,
-                     ffmpeg_params=["-crf","24","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
-    # crf 24 keeps a 48s clip ~6 MB — comfortably under Discord's non-boosted upload limit
+                     ffmpeg_params=["-crf","25","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
+    # crf 25 keeps the ~52s clip + audio bed under Discord's non-boosted ~10 MB upload limit
     # (10.9 MB was rejected) while staying crisp at 1080p. Bump lower (19) only for off-Discord exports.
     return len(frames)
+
+
+def render_leaderboard(data, out_path):
+    """Render the real server leaderboard (LeaderboardData) -> mp4. Reuses the branded helpers."""
+    frames=[]
+    def base(): im=Image.new("RGB",(W,H),BG); return im,ImageDraw.Draw(im,"RGBA")
+    def _fade(im,k): return im if k>=1 else Image.fromarray((np.asarray(im).astype(np.float32)*k).astype(np.uint8))
+    def scn(n,fn,fin=12,fout=10):
+        for i in range(n):
+            im,d=base(); fn(im,d,i,n); im=overlay_fx(im,i)
+            k=1.0
+            if i<fin: k=ease(i/fin)
+            if i>n-fout: k=ease((n-i)/fout)
+            frames.append(np.asarray(_fade(im,k)))
+
+    def s_intro(im,d,i,n):
+        mk=brand_logo("mark")
+        if mk is not None: m2=mk.resize((300,300)); im.paste(m2,(int(W/2-150),int(H/2-455)),m2)
+        tracked(d,(W/2,H/2-92),"MIKSUU'S WARFARE",DISP(78),INK,anchor="mm",track=6)
+        tracked(d,(W/2,H/2+8),"SERVER LEADERBOARD",DISP(46),GOLD,anchor="mm",track=10)
+        tracked(d,(W/2,H/2+80),f"{data.n_players} OPERATORS      {data.total_kills} KILLS LOGGED",SANS(24,False),(150,150,138),anchor="mm",track=3)
+
+    def s_board(im,d,i,n):
+        header(d,"TOP OPERATORS","by total score"); top=data.players[:6]
+        if not top: return
+        mx=max(p["score"] for p in top) or 1; y0=320; bh=92; gap=22
+        for idx,p in enumerate(top):
+            y=y0+idx*(bh+gap); col=SIDE_COL[p["side"]]; prog=ease(min(1,(i-idx*4)/26)); bw=int((W-300)*p["score"]/mx*prog)
+            if idx==0 and paste_emblem(im,"icon_mvp",92,y+bh/2,52): pass
+            else: d.text((92,y+bh/2),f"{idx+1}",font=f_h2,fill=GOLD if idx==0 else DIM,anchor="mm")
+            panel(d,120,y,W-60,y+bh); d.rounded_rectangle([120,y,120+bw+40,y+bh],radius=18,fill=mix(col,0.22),outline=col,width=2)
+            d.rectangle([124,y+18,138,y+bh-18],fill=col); d.text((158,y+13),p["name"],font=f_h3,fill=INK)
+            _sub=f'{SIDE_NAME[p["side"]]}   ·   {p["kills"]} kills   ·   {p["caps"]} caps'
+            d.text((159,y+63),_sub,font=f_xs,fill=(14,16,20)); d.text((158,y+62),_sub,font=f_xs,fill=(196,199,189))
+            d.text((W-84,y+bh/2),str(int(p["score"]*prog)),font=f_h3,fill=INK,anchor="rm")
+        footer(im,d)
+
+    def s_mvp(im,d,i,n):
+        if not data.mvp: return
+        paste_cover(im,"mvp_backdrop",opacity=0.5)
+        header(d,"SERVER MVP"); p=data.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
+        panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
+        if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
+            d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
+        d.text((352,342),p["name"],font=DISP(60),fill=INK); chip(d,354,420,p["side"],SANS(24,False))
+        gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
+        cells=[("KILLS",num(p["kills"]),col),("SCORE",num(p["score"]),GOLD),("INFANTRY",num(p["inf"]),INK),
+               ("VEHICLE",num(p["veh"]),col),("AIR",num(p["air"]),INK),("TOWN CAPS",num(p["caps"]),col)]
+        for idx,(lab,val,c) in enumerate(cells):
+            x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
+            d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
+        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),"TOP OPERATOR ON THE SERVER",SANS(22,False),(200,204,196),anchor="mm",track=6); footer(im,d)
+
+    def s_combat(im,d,i,n):
+        header(d,"COMBAT BREAKDOWN","all operators, all time"); kk=ease(min(1,i/26))
+        order=[("INF","Infantry",(198,178,142)),("VEH","Vehicle",(217,118,60)),("AIR","Air",(122,134,72)),("STATIC","Static",(120,128,138))]
+        tot=sum(data.catcount.values()) or 1; segs=[(data.catcount[c]/tot*kk,col) for c,_,col in order]
+        if kk<1: segs.append((1-kk,(40,46,56)))
+        cx,cy,r=W/2,540,210; donut(d,cx,cy,r,segs)
+        d.text((cx,cy-18),str(int(data.total_kills*kk)),font=f_h1,fill=INK,anchor="mm"); d.text((cx,cy+44),"TOTAL KILLS",font=f_xs,fill=DIM,anchor="mm")
+        lx,ly=160,820
+        for idx,(c,name,col) in enumerate(order):
+            x=lx+(idx%2)*420; y=ly+(idx//2)*70; d.rectangle([x,y+4,x+24,y+28],fill=col)
+            d.text((x+36,y),name,font=f_sm,fill=INK); d.text((x+360,y),f"{int(data.catcount[c]/tot*100)}%",font=f_sm,fill=DIM,anchor="ra")
+        gy=1010; cw=(W-220)//2; top=data.mvp
+        mostcaps=max(data.players,key=lambda p:p["caps"]) if data.players else None
+        cards=[("TOP FRAGGER",top["name"] if top else "—",f"{top['kills']} kills" if top else "",GOLD,"icon_kills"),
+               ("MOST CAPTURES",mostcaps["name"] if mostcaps else "—",f"{mostcaps['caps']} towns" if mostcaps else "",GUER,"icon_captures"),
+               ("OPERATORS",str(data.n_players),"tracked",INK,"icon_mvp"),
+               ("TOTAL CAPTURES",str(sum(p["caps"] for p in data.players)),"all time",WEST,"icon_towns")]
+        for idx,(lab,big,sub,c,ic) in enumerate(cards):
+            x=110+(idx%2)*cw; y=gy+(idx//2)*200; panel(d,x,y,x+cw-20,y+175)
+            paste_emblem(im,ic,x+cw-58,y+44,48)
+            d.text((x+26,y+22),lab,font=f_xs,fill=DIM); d.text((x+26,y+52),str(big),font=f_h3 if len(str(big))<12 else f_md,fill=c); d.text((x+26,y+120),sub,font=f_xs,fill=DIM)
+        footer(im,d)
+
+    def s_outro(im,d,i,n):
+        paste_cover(im,"outro_bg")
+        mk=brand_logo("mark")
+        if mk is not None: m2=mk.resize((220,220)); im.paste(m2,(int(W/2-110),int(H/2-360)),m2)
+        tracked(d,(W/2,H/2-90),"JOIN THE WAR",DISP(74),INK,anchor="mm",track=8)
+        tracked(d,(W/2,H/2+6),"MIKSUU'S WARFARE",DISP(44),GOLD,anchor="mm",track=10)
+        tracked(d,(W/2,H/2+86),"MIKSUUSWARFARE.COM",SANS(26,False),(200,204,196),anchor="mm",track=6)
+
+    scn(54,s_intro,fin=18,fout=10); scn(210,s_board); scn(156,s_mvp); scn(186,s_combat); scn(120,s_outro,fin=12,fout=2)
+    for _ in range(18): frames.append(frames[-1])
+    imageio.mimwrite(out_path,frames,fps=FPS,codec="libx264",macro_block_size=8,
+                     ffmpeg_params=["-crf","24","-preset","slow","-pix_fmt","yuv420p","-movflags","+faststart"])
+    return len(frames)
+
+
+def caption_leaderboard(data):
+    mvp = f" Top operator: {data.mvp['name']} ({data.mvp['kills']}K)." if data.mvp else ""
+    return (f"MIKSUU'S WARFARE — server leaderboard. {data.n_players} operators, "
+            f"{data.total_kills} kills logged.{mvp}\n"
+            f"#arma2 #warfare #cti #miksuuswarfare #leaderboard #milsim")

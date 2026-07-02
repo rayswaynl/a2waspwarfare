@@ -65,12 +65,24 @@ $env:A2WASP_SKIP_ZIP = "1"
 dotnet run -c RELEASE
 ```
 
+To check whether the committed Takistan mirror matches what LoadoutManager would generate,
+run:
+
+```powershell
+dotnet run -c RELEASE -- --check
+```
+
+The check builds the expected Takistan mission in a temporary directory, compares it to
+`Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`, ignores the gitignored
+`version.sqf`, and exits `1` when drift is detected. Aliases: `--dry-run` and
+`--check-takistan-mirror`.
+
 To verify a release archive after packaging, run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ..\PrTestHarness\Package\Test-WaspReleasePackage.ps1 `
   -ArchivePath ..\..\_MISSIONS.7z `
-  -ExpectedCandidate release-command-center-20260630 `
+  -ExpectedCandidate build88-cmdcon43-20260703 `
   -ExpectedGit (git -C ..\.. rev-parse --short=10 HEAD)
 ```
 

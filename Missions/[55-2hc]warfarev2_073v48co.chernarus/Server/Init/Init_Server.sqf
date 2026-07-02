@@ -14,6 +14,12 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
 };
 
 AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
+//--- AICOM HIGH-CLIMB (claude-gaming 2026-07-01): give AI-commander tanks the Valhalla low-gear terrain
+//--- assist on the SERVER, where server-local founded commander teams are local (the player client assist
+//--- never runs here). The manager self-gates OFF unless WFBE_C_AICOM_HIGHCLIMB==1 and enumerates only the
+//--- side-logic wfbe_teams (bounded, no allUnits). Each HC starts its own copy from Init_HC.sqf.
+if (isServer) then { [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HighClimb.sqf" };
+if (isServer) then { [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_AutoFlip.sqf" };  //--- Build84 (Ray): auto-right flipped AICOM ground vehicles (server-local founded teams).
 if (WF_A2_Vanilla) then {AISquadRespawn = Compile preprocessFile "Server\AI\AI_SquadRespawn.sqf"};
 if !(WF_A2_Vanilla) then {AIAdvancedRespawn = Compile preprocessFile "Server\AI\AI_AdvancedRespawn.sqf"};
 AIMoveTo = Compile preprocessFile "Server\AI\Orders\AI_MoveTo.sqf";
@@ -234,6 +240,8 @@ if ((missionNamespace getVariable "WFBE_C_BASE_START_TOWN") > 0) then {
 //--- (id 278/279=NWAF, id 300=NE) -> HQ/base spawning ON the runway. Drop any candidate within ~1500m of
 //--- a map airport anchor, terrain-independent (LocationLogicAirport). A2-OA-safe. GUARD: if the filter
 //--- empties the set, keep the unfiltered set (never zero candidates).
+//--- Build84 (backlog#2): SKIPPED when WFBE_C_BASE_RANDOM_PURE==1 (Miksuu-original unfiltered pure-random).
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
 private ["_b62_airports","_b62_filtered","_s"];
 _b62_airports = nearestObjects [[7680,7680,0], ["LocationLogicAirport"], 99999];
 //--- A2-OA 1.64: 'ARRAY select {CODE}' is A3-only (see Server_CounterBattery.sqf:101) -> explicit filter loop.
@@ -249,6 +257,7 @@ if (count _b62_filtered > 0) then {
 	["INITIALIZATION", Format ["Init_Server.sqf: B62 airfield filter kept %1 start candidates (dropped %2 on/near airfields).", count _b62_filtered, count _b62_airports]] Call WFBE_CO_FNC_LogContent;
 } else {
 	["WARNING", "Init_Server.sqf: B62 airfield filter emptied the candidate set - keeping the unfiltered starts."] Call WFBE_CO_FNC_LogContent;
+};
 };
 
 //--- B66 (Ray 2026-06-21) STABLE ROTATION KEY: the B62 rotation keyed on `str _x` of an unnamed
@@ -272,6 +281,8 @@ WFBE_FNC_B66_StartKey = {
 //--- the stable rounded-position key above) so the random draw varies match-to-match beyond the B57
 //--- RNG-advance. Fall back to the full filtered set if exclusion would empty it.
 //--- A2-OA-safe: plain string-compare via the stable key + == (no A3-only equality/search/random commands).
+//--- Build84 (backlog#2): SKIPPED when WFBE_C_BASE_RANDOM_PURE==1 (Miksuu-original unfiltered pure-random).
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
 private ["_b62_lastW","_b62_lastE","_b62_rotPool","_id"];
 _b62_lastW = profileNamespace getVariable ["WFBE_LAST_START_W", ""];
 _b62_lastE = profileNamespace getVariable ["WFBE_LAST_START_E", ""];
@@ -286,6 +297,48 @@ _b62_rotPool = [];
 if (count _b62_rotPool > 1) then {
 	_locationLogics = _b62_rotPool;
 	["INITIALIZATION", Format ["Init_Server.sqf: B62/B66 rotation excluded last-used starts -> %1 candidates remain.", count _b62_rotPool]] Call WFBE_CO_FNC_LogContent;
+};
+};
+
+//--- BUILD88 (cmdcon43-f, Ray 2026-07-02) TOWN-CLEARANCE FILTER: Build86's spawn rework validated pair
+//--- separation/egress but NOT town-radius clearance, so some LocationLogicStart candidates sit INSIDE a
+//--- town's own range (600m, see Common\Init\Init_Town.sqf) -> the match-start HQ deploys on top of a town
+//--- (Ray live-report B87, both maps). Drop any start candidate whose distance to the NEAREST town centre is
+//--- below (townRange + WFBE_C_BASE_TOWN_CLEAR_MARGIN). Margin default 120 = WFBE_C_BASE_HQ_BUILD_RANGE, so
+//--- the HQ's close build ring clears the town zone; threshold 600+120 = 720m. Modelled on the B62 airfield
+//--- filter idiom: explicit loops (no A3 'select {CODE}'/isEqualTo), and the SAME never-empty GUARD - if the
+//--- filter would empty the candidate set, keep the unfiltered set (placement > perfect clearance). Uses the
+//--- live 'towns' array + each town's per-object "range" var (nil-safe fallback 600), so it is authoritative
+//--- on BOTH maps from this one mirror-managed change. Skipped under WFBE_C_BASE_RANDOM_PURE==1 (Miksuu-
+//--- original unfiltered pure-random), consistent with the B62/B66 filters above.
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
+	private ["_tcMargin","_tcFiltered","_s","_sPos","_tooClose","_tw","_twPos","_twRange","_twClear"];
+	_tcMargin = missionNamespace getVariable ["WFBE_C_BASE_TOWN_CLEAR_MARGIN", 120];
+	_tcFiltered = [];
+	{
+		_s = _x;
+		_sPos = getPos _s;
+		_tooClose = false;
+		{
+			_tw = _x;
+			if (isNil {_tw getVariable "wfbe_inactive"} || {!(_tw getVariable "wfbe_inactive")}) then {
+				_twPos = getPos _tw;
+				_twRange = _tw getVariable "range";
+				if (isNil "_twRange") then {_twRange = 600};
+				_twClear = _twRange + _tcMargin;
+				if ((_sPos distance _twPos) < _twClear) then {_tooClose = true};
+			};
+		} forEach towns;
+		if (!_tooClose) then {_tcFiltered set [count _tcFiltered, _s]};
+	} forEach _locationLogics;
+	if (count _tcFiltered > 0) then {
+		["INITIALIZATION", Format ["Init_Server.sqf: BUILD88 town-clearance filter kept %1 start candidates (dropped %2 within townRange+%3m of a town centre).", count _tcFiltered, (count _locationLogics) - (count _tcFiltered), _tcMargin]] Call WFBE_CO_FNC_LogContent;
+		diag_log format ["## SPAWNCHK: town-clearance filter kept %1 of %2 start candidates (margin=%3, drop<townRange+margin).", count _tcFiltered, count _locationLogics, _tcMargin];
+		_locationLogics = _tcFiltered;
+	} else {
+		["WARNING", "Init_Server.sqf: BUILD88 town-clearance filter emptied the candidate set - keeping the unfiltered starts (placement > clearance)."] Call WFBE_CO_FNC_LogContent;
+		diag_log "## SPAWNCHK: town-clearance filter would EMPTY the pool - kept unfiltered starts (check start layout vs towns).";
+	};
 };
 
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
@@ -327,7 +380,11 @@ _egressOK = {
 	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
 
 	//--- Reject candidates hugging any map edge (corner-box guard).
-	_ws = 15360;  //--- A2-fix 2026-06-14: worldSize is A3-only (undefined in A2 OA -> spammed "Undefined variable worldsize"); Chernarus map size = 15360
+	_ws = 15360;  //--- Legacy default: A2 OA has no dynamic map-size command, and Chernarus map size is 15360.
+	if ((missionNamespace getVariable ["WFBE_C_BASE_EGRESS_MAP_BOUNDS", 0]) > 0) then {
+		_ws = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
+		if (_ws < 1) then {_ws = 15360};
+	};
 	if ((_pos select 0) < _margin || (_pos select 0) > (_ws - _margin)) exitWith {false};
 	if ((_pos select 1) < _margin || (_pos select 1) > (_ws - _margin)) exitWith {false};
 
@@ -357,6 +414,9 @@ _egressOK = {
 //--- every match, the very bug we are fixing). startingDistance(7500) spacing is also large on Chernarus, so
 //--- a thin egress-passing pool is realistic. A2-OA-safe (explicit count loop, no A3 commands).
 missionNamespace setVariable ["WFBE_B66_EGRESS_RELAX", 0];
+//--- Build84 (backlog#2): the egress pool-measure + relax pass is a no-op under WFBE_C_BASE_RANDOM_PURE==1
+//--- (the draw-loop egress clauses auto-pass), so SKIP the whole measure/relax to keep the pure path unfiltered.
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
 private ["_b66_egressPass","_b66_relax"];
 _b66_relax = 0;
 _b66_egressPass = 0;
@@ -369,6 +429,7 @@ while {_b66_egressPass < 2 && {_b66_relax < 2}} do {
 	_b66_egressPass = 0;
 	{ if (_x call _egressOK) then {_b66_egressPass = _b66_egressPass + 1} } forEach _locationLogics;
 	["WARNING", Format ["Init_Server.sqf: B66 egress pool too thin - relaxed minRoads by %1 -> now %2 candidates pass (never collapse to 1).", _b66_relax, _b66_egressPass]] Call WFBE_CO_FNC_LogContent;
+};
 };
 
 _spawn_north = objNull;
@@ -449,13 +510,13 @@ if (_use_random) then {
 			_rPosW = _locationLogics select floor(random _total);
 			//--- Egress-quality gate (EAST-EGRESS fix): require distance spacing AND a usable egress road
 			//--- network clear of the map edges. Symmetric with east. Fallback below still guarantees placement.
-			if (_rPosW distance _startE > _minDist && {!_guerReal || {_rPosW distance _startG > _minDist}} && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
+			if (_rPosW distance _startE > _minDist && {!_guerReal || {_rPosW distance _startG > _minDist}} && {(missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 1 || {_rPosW call _egressOK}}) then {_startW = _rPosW; _setWest = false};
 		};
 
 		// --- Determine west starting location if necessary.
 		if (_setEast) then {
 			_rPosE = _locationLogics select floor(random _total);
-			if (_rPosE distance _startW > _minDist && {!_guerReal || {_rPosE distance _startG > _minDist}} && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
+			if (_rPosE distance _startW > _minDist && {!_guerReal || {_rPosE distance _startG > _minDist}} && {(missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 1 || {_rPosE call _egressOK}}) then {_startE = _rPosE; _setEast = false};
 		};
 
 		_i = _i + 1;
@@ -534,6 +595,43 @@ if (_keyE != "") then { profileNamespace setVariable ["WFBE_LAST_START_E", _keyE
 saveProfileNamespace;
 diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; should vary match-to-match).", _keyW, _keyE];
 
+//--- BUILD88 (cmdcon43-f, Ray 2026-07-02) SPAWNCHK REGRESSION GUARD: the town-clearance filter above should
+//--- have kept every chosen start clear of town ranges, but a force-fall / pure-random / MODE 0-1 named-spawn
+//--- path can still hand back an inside-town start. Log a permanent WARNING line for the ACTUALLY CHOSEN WEST
+//--- and EAST starts if either sits within (townRange + margin) of a town centre, so any future regression is
+//--- visible in the RPT forever (SPAWNCHK|start=SIDE|town=NAME|dist=D|clear=C). Report-only, never blocks the
+//--- match. A2-OA-safe: getPos guarded on OBJECT only (the [0,0,0] absent-side placeholder is skipped).
+{
+	private ["_sideName","_chosen","_cPos","_tcMargin","_nrTown","_nrDist","_nrRange","_tw","_twPos","_twRange"];
+	_sideName = _x select 0;
+	_chosen   = _x select 1;
+	if (typeName _chosen == "OBJECT" && {!(isNull _chosen)}) then {
+		_cPos = getPos _chosen;
+		_tcMargin = missionNamespace getVariable ["WFBE_C_BASE_TOWN_CLEAR_MARGIN", 120];
+		_nrTown = "?"; _nrDist = 1e12; _nrRange = 600;
+		{
+			_tw = _x;
+			if (isNil {_tw getVariable "wfbe_inactive"} || {!(_tw getVariable "wfbe_inactive")}) then {
+				_twPos = getPos _tw;
+				_twRange = _tw getVariable "range";
+				if (isNil "_twRange") then {_twRange = 600};
+				if ((_cPos distance _twPos) < _nrDist) then {
+					_nrDist = _cPos distance _twPos;
+					_nrRange = _twRange;
+					_nrTown = _tw getVariable "name";
+					if (isNil "_nrTown") then {_nrTown = "?"};
+				};
+			};
+		} forEach towns;
+		if (_nrDist < (_nrRange + _tcMargin)) then {
+			["WARNING", Format ["Init_Server.sqf: SPAWNCHK - chosen %1 start is INSIDE town range! start=%1|town=%2|dist=%3|clear=%4", _sideName, _nrTown, round _nrDist, _nrRange + _tcMargin]] Call WFBE_CO_FNC_LogContent;
+			diag_log format ["## SPAWNCHK|start=%1|town=%2|dist=%3|clear=%4", _sideName, _nrTown, round _nrDist, _nrRange + _tcMargin];
+		} else {
+			diag_log format ["## SPAWNCHK|start=%1|town=%2|dist=%3|clear=%4|OK", _sideName, _nrTown, round _nrDist, _nrRange + _tcMargin];
+		};
+	};
+} forEach [["WEST", _startW], ["EAST", _startE]];
+
 ["INITIALIZATION", Format ["Init_Server.sqf: Starting location mode is on [%1].",missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE"]] Call WFBE_CO_FNC_LogContent;
 
 [] execVM "Server\CallExtensions\GlobalGameStats.sqf";
@@ -606,10 +704,11 @@ emptyQueu = [];
 		_logik setVariable ["wfbe_startpos", _pos, true];
 		_logik setVariable ["wfbe_structure_lasthit", 0];
 		_logik setVariable ["wfbe_structures", [], true];
-		_logik setVariable ["wfbe_aicom_running", false];
+		_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
+		_logik setVariable ["wfbe_aicom_running", false, _syncAicomState];
 		//--- V0.4.1: synthetic MONEY is fine (PvE pacing) - synthetic SUPPLY is not.
 		//--- Funds seed = commander start funds x FUNDS_MULT; supply spending stays 100% real.
-		_logik setVariable ["wfbe_aicom_funds", (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_START_FUNDS", 200000])]; //--- B36 hotfix (Ray): flat 200k AI-commander start cash (was FUNDS_START x FUNDS_MULT)
+		_logik setVariable ["wfbe_aicom_funds", (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_START_FUNDS", 200000]), _syncAicomState]; //--- B36 hotfix (Ray): flat 200k AI-commander start cash (was FUNDS_START x FUNDS_MULT)
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.
@@ -897,6 +996,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): compiles the TEL spawn/fire functions + gates on
+//--- WFBE_C_ICBM_TEL. Same launch pattern as Init_NavalHVT above. The TEL itself is spawned per side when that
+//--- side COMPLETES the ICBM upgrade (hook in Server_ProcessUpgrade.sqf), NOT at boot, so it appears with the tech.
+if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
+	[] execVM "Server\Init\Init_IcbmTel.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_IcbmTel.sqf launched (WFBE_C_ICBM_TEL=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
 //--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
 //--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
@@ -939,7 +1046,13 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
-[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default ON)
+[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default ON) - SERVER-LOCAL air incl. non-team paradrop/supply/GUER/W13.
+//--- AICOM HELI TERRAIN-GUARD twin (cmdcon41-w3j 2026-07-02): the bounded wfbe_teams-scoped guard covering AICOM
+//--- helicopter TEAMS wherever they are local. On the server this catches server-local founded air teams (no-HC
+//--- fallback); the same file is spawned on each HC (Init_HC.sqf) for the delegated teams that are the live case.
+//--- Reuses the server guard's look-ahead climb verbatim; shares WFBE_C_AIHELI_TERRAIN_GUARD (default ON). A hull
+//--- covered by both server loops is harmless (both only raise flyInHeight, never lower it).
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HeliTerrainGuard.sqf";
 
 //--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s

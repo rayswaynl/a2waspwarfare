@@ -1,4 +1,4 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
 
 _side = _this select 1;
 _destination = _this select 2;
@@ -130,11 +130,13 @@ if (_greenlight) then {
 	[_grp, (_ranPos select _ran), "MOVE", 10] Call AIMoveTo;
 	
 	//--- Loop until death or arrival.
+	_returnStart = time;
 	while {true} do {
 		sleep 1;
 		
 		if (({alive _x} count _vehicles) == 0) exitWith {};//--- Vehicle destruction.
 		if (({alive driver _x} count _vehicles) == 0) exitWith {};//--- Pilots are dead.
+		if (time - _returnStart > 500) exitWith {};//--- Return leg timeout.
 		
 		_vehicleCoord = [(getPos vehicle (leader _grp)) select 0, (getPos vehicle (leader _grp)) select 1];
 		_positionCoord = [(_ranPos select _ran) select 0, (_ranPos select _ran) select 1];

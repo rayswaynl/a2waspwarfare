@@ -120,24 +120,39 @@ public class SqfFileGenerator
     // The generated strings are then written to files specific to different terrains.
     public static void GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()
     {
-        GenerateLoadoutsForAllVehicleTypes();
-
-        // Move these to a better file managing solution on refactoring
-        var easaFileStrings = GenerateEasaFileString();
-        var commonBalanceFileStrings = GenerateCommonBalanceFileString();
-        var aircraftDisplayNameStrings = GenerateAircraftDisplayNameFileString();
-        var addedAircraftDamageModelChanges = GenerateAircraftDamageModelChanges();
-        string coreModFileStrings = GenerateCoreModFileString();
+        var generatedFiles = BuildGeneratedFileStrings();
 
         // First go through vanilla maps (copied to mod maps later)
-        WriteAndUpdateToFilesForATerrain(easaFileStrings.vanilla, commonBalanceFileStrings.vanilla, aircraftDisplayNameStrings.vanilla, addedAircraftDamageModelChanges.vanilla, TerrainName.CHERNARUS);
-        WriteAndUpdateToFilesForATerrain(easaFileStrings.vanilla, commonBalanceFileStrings.vanilla, aircraftDisplayNameStrings.vanilla, addedAircraftDamageModelChanges.vanilla, TerrainName.TAKISTAN);
+        WriteAndUpdateToFilesForATerrain(generatedFiles.Easa.vanilla, generatedFiles.CommonBalance.vanilla, generatedFiles.AircraftDisplayNames.vanilla, generatedFiles.AircraftDamageModelChanges.vanilla, TerrainName.CHERNARUS);
+        WriteAndUpdateToFilesForATerrain(generatedFiles.Easa.vanilla, generatedFiles.CommonBalance.vanilla, generatedFiles.AircraftDisplayNames.vanilla, generatedFiles.AircraftDamageModelChanges.vanilla, TerrainName.TAKISTAN);
+        WriteAndUpdateToFilesForATerrain(generatedFiles.Easa.vanilla, generatedFiles.CommonBalance.vanilla, generatedFiles.AircraftDisplayNames.vanilla, generatedFiles.AircraftDamageModelChanges.vanilla, TerrainName.ZARGABAD);
 
         // Write to the modded maps
-        //WriteAndUpdateToFilesForModdedTerrains(easaFileStrings.modded, commonBalanceFileStrings.modded, aircraftDisplayNameStrings.modded, addedAircraftDamageModelChanges.modded, coreModFileStrings);
+        //WriteAndUpdateToFilesForModdedTerrains(generatedFiles.Easa.modded, generatedFiles.CommonBalance.modded, generatedFiles.AircraftDisplayNames.modded, generatedFiles.AircraftDamageModelChanges.modded, generatedFiles.CoreMod);
         // TODO: Add the modded maps back here later
 
         ZipManager.DoZipOperations();
+    }
+
+    public static GeneratedLoadoutFiles BuildGeneratedFileStrings()
+    {
+        ResetGeneratedContent();
+        GenerateLoadoutsForAllVehicleTypes();
+
+        return new GeneratedLoadoutFiles(
+            GenerateEasaFileString(),
+            GenerateCommonBalanceFileString(),
+            GenerateAircraftDisplayNameFileString(),
+            GenerateAircraftDamageModelChanges(),
+            GenerateCoreModFileString());
+    }
+
+    private static void ResetGeneratedContent()
+    {
+        aircraftEasaLoadoutsFile = string.Empty;
+        aircraftEasaLoadoutsFileForModdedMaps = string.Empty;
+        commonBalanceInitFile = string.Empty;
+        commonBalanceInitFileForModdedMaps = string.Empty;
     }
 
     public static MapFileProperties GenerateAircraftDamageModelChanges()

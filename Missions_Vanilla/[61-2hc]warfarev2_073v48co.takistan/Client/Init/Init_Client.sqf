@@ -103,10 +103,35 @@ player addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
 [] execVM "Common\Functions\Common_Bipod.sqf";
 
 UpdateMarker = Compile preprocessFile "Common\Functions\Common_UpdateMarker.sqf";
+//--- OPTIONAL CLIENT MODS (cmdcon42-m): detect curated sound/visual/HUD mods on THIS client and cache
+//--- flags (WFBE_HAS_FX_MOD / WFBE_HAS_SOUND_MOD / WFBE_HAS_HUD_MOD) that the FX-suppression hooks read.
+//--- Whole feature gated by WFBE_C_MODHOOKS (default 1). Safe no-op for players without any mod.
+WFBE_CL_FNC_ModDetect = Compile preprocessFileLineNumbers "Client\Functions\Client_ModDetect.sqf";
 BoundariesIsOnMap = Compile preprocessFile "Client\Functions\Client_IsOnMap.sqf";
 BoundariesHandleOnMap = Compile preprocessFile "Client\Functions\Client_HandleOnMap.sqf";
 BuildUnit = Compile preprocessFile "Client\Functions\Client_BuildUnit.sqf";
 ChangePlayerFunds = Compile preprocessFile "Client\Functions\Client_ChangePlayerFunds.sqf";
+//--- cmdcon43-d (Build 88 FIX): refund helper that mirrors the commander defense CHARGE currency.
+//--- A commander (commanderTeam == group player) building a defense is charged from side SUPPLY under
+//--- WFBE_C_CMD_DEF_SUPPLY + dual-currency (coin_interface.sqf "//--- Defense." block); everyone else and the
+//--- funds-only currency system are charged funds. On a server-side reject the refund MUST return the pool
+//--- that was charged, so LocalizeMessage.sqf routes all defense refunds through here. _this = amount (>0).
+//--- A2-OA-safe: group player / getVariable / == / ChangeSideSupply|ChangePlayerFunds only.
+WFBE_CMD_DEF_SUPPLY_REFUND = {
+	private ["_amt"];
+	_amt = _this;
+	if (isNil "_amt" || {typeName _amt != "SCALAR"} || {_amt <= 0}) exitWith {};
+	//--- WFBE_LastDefenseChargeSupply is stamped by coin_interface.sqf at the moment of charge (true =
+	//--- side supply via the MCoin commander console, false = player funds). Refund the SAME pool. Defense
+	//--- place -> server-reject is sequential per client, so the last stamp reliably identifies the pending
+	//--- charge. Default false (funds) if never stamped this session (pre-any-placement / legacy behaviour).
+	if (!isNil "WFBE_LastDefenseChargeSupply" && {WFBE_LastDefenseChargeSupply}) then {
+		[sideJoined, _amt, "Commander defense refund.", false] Call ChangeSideSupply;
+	} else {
+		_amt Call ChangePlayerFunds;
+	};
+};
+if (isNil "WFBE_LastDefenseChargeSupply") then {WFBE_LastDefenseChargeSupply = false};
 CommandChatMessage = Compile preprocessFile "Client\Functions\Client_CommandChatMessage.sqf";
 FX = Compile preprocessFile "Client\Functions\Client_FX.sqf";
 GetIncome = Compile preprocessFile "Client\Functions\Client_GetIncome.sqf";
@@ -135,6 +160,22 @@ UIFillListBuyUnits = Compile preprocessFile "Client\Functions\Client_UIFillListB
 UIFillListTeamOrders = Compile preprocessFile "Client\Functions\Client_UIFillListTeamOrders.sqf";
 UIFindLBValue = Compile preprocessFile "Client\Functions\Client_UIFindLBValue.sqf";
 
+//--- OPTIONAL CLIENT MODS (cmdcon42-m) — HOOK 3: run detection ONCE and, if any curated optional mod is
+//--- loaded on this client, emit a single friendly ack (systemChat + RPT line). Read-only, per-client, no
+//--- gameplay effect. Players without any optional mod: WFBE_CL_FNC_ModDetect returns [] -> no chat, no log,
+//--- behaviour identical to today. Gated by WFBE_C_MODHOOKS inside the helper.
+if (!isNil "WFBE_CL_FNC_ModDetect") then {
+	private ["_mods"];
+	_mods = [] call WFBE_CL_FNC_ModDetect;
+	if (count _mods > 0) then {
+		private ["_names"];
+		_names = _mods select 0;
+		{ if (_forEachIndex > 0) then { _names = _names + ", " + _x }; } forEach _mods;
+		systemChat (Format ["[WASP] Optional mods detected: %1 - enjoy!", _names]);
+		diag_log (Format ["MODHOOKS|ACK|optional client mods detected on this client: %1", _mods]);
+		["INFORMATION", Format ["Init_Client.sqf: optional client mods detected: %1", _mods]] Call WFBE_CO_FNC_LogContent;
+	};
+};
 
 //--- Namespace related (GUI).
 BIS_FNC_GUIset = {UInamespace setVariable [_this select 0, _this select 1]};
@@ -231,6 +272,7 @@ waitUntil {commonInitComplete};
 //--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition / ctrlSetStructuredText, no A3 commands.
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
+	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
 	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
 	_max = 18;
 	while {!WFBE_gameover} do {
@@ -489,6 +531,7 @@ lastParaCall = -1200;
 lastSupplyCall = -1200;
 canBuildWHQ = true;
 WFBE_RespawnDefaultGear = false;
+WFBE_LastSelectedSpawn = objNull; //--- respawn-ui-v2: remember last chosen spawn across deaths.
 WFBE_ForceUpdate = true;
 
 //--- Load Terrain grid if it wasn't loaded from the profile.
@@ -975,7 +1018,7 @@ if (time < 30) then {
     // Spawn joining client at newest Barracks, Light Factory, Heavy Factory or Air Factory, whichever is the newest
     if (count _buildings > 0) then {
 	    for "_i" from ((count _buildings) - 1) to 0 step -1 do {
-	        _structureType = (_buildings select _i) getVariable "wfbe_structure_type";
+	        _structureType = (_buildings select _i) getVariable ["wfbe_structure_type", ""];
 	        if ((_structureType == "Barracks" || _structureType == "Light" || _structureType == "Heavy" || _structureType == "Aircraft") && alive (_buildings select _i)) exitWith {	//--- FIX(deadspawn): only pick a LIVE factory, never a destroyed wreck
 	            _base = _buildings select _i;
 			};
@@ -1069,11 +1112,23 @@ case "SpecOps": {_default = missionNamespace getVariable Format["WFBE_%1_Default
 case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGearMedic", WFBE_Client_SideJoinedText]};
 };
 
-//_default = missionNamespace getVariable Format["WFBE_%1_DefaultGear", WFBE_Client_SideJoinedText];
-if (count _default <= 3) then {
-	[player, _default select 0, _default select 1, _default select 2] Call WFBE_CO_FNC_EquipUnit;
+//--- GUER-GEARFIX (2026-07-02): never equip from an empty/undefined role loadout. WFBE_SK_V_Type can be ""
+//--- (playerType not registered in any WFBE_SK_V_* list) and the per-role WFBE_%1_DefaultGearXXX can be nil
+//--- (the GUER overlay defines only Engineer/Spot/Medic) - both used to strip the player NAKED (no ItemMap
+//--- = fully black map). Fall back to the faction-wide WFBE_%1_DefaultGear (defined in every Root_*.sqf)
+//--- and warn in the RPT; if even that is missing, skip the equip so the unit keeps its config gear.
+if (isNil '_default' || {count _default == 0}) then {
+	["WARNING", Format ["Init_Client.sqf : No role default gear for type [%1] (playerType [%2]) - falling back to WFBE_%3_DefaultGear.", WFBE_SK_V_Type, playerType, WFBE_Client_SideJoinedText]] Call WFBE_CO_FNC_LogContent;
+	_default = missionNamespace getVariable Format["WFBE_%1_DefaultGear", WFBE_Client_SideJoinedText];
+};
+if (!isNil '_default' && {count _default >= 3}) then {
+	if (count _default <= 3) then {
+		[player, _default select 0, _default select 1, _default select 2] Call WFBE_CO_FNC_EquipUnit;
+	} else {
+		[player, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
+	};
 } else {
-	[player, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
+	["WARNING", Format ["Init_Client.sqf : WFBE_%1_DefaultGear is missing/short too - keeping the unit's config gear.", WFBE_Client_SideJoinedText]] Call WFBE_CO_FNC_LogContent;
 };
 
 /* Default gear menu filler. */
@@ -1551,5 +1606,14 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- Self-gates on WFBE_C_ONBOARDING_ENABLE (default 1) and a uiNamespace once-flag inside the function;
 //--- detects JIP from mission time. Spawned (never blocks input/enrollment), placed after init completes.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Common_Onboarding.sqf";
+
+//--- Rotating gameplay-tip feed (cmdcon42-q, claude-gaming 2026-07-02). Ray: "add 50 more hints
+//--- that come by on rotation in the chat". Pure client cosmetic: posts one short tip via
+//--- systemChat every WFBE_C_TIPS_PERIOD seconds from a 50-tip pool; each feature-tip is gated on
+//--- its own feature flag so it auto-hides when Ray shelves the feature (or the feature's PR is
+//--- unmerged). Self-gates on WFBE_C_TIPS_ENABLE (default 1) and uiSleep's WFBE_C_TIPS_INITIAL
+//--- first so a fresh joiner isn't spammed over the onboarding cards. Spawned (never blocks input),
+//--- placed after init completes - same guarded-spawn pattern as the onboarding call above.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_TipRotation.sqf";
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

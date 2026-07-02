@@ -12,12 +12,13 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_syncAicomState"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
+_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
 _myID = (_side) Call WFBE_CO_FNC_GetSideID;
 _ownerKey = format ["wfbe_aicom_owner_%1", _myID];
 _passedOwner = -1;
@@ -142,6 +143,15 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 	//--- Distinct from wfbe_aicom_lastbrief (300s, written inside the loop -> useless as liveness).
 	missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
 
+	//--- WASPSCALE fpsmin sampler (cmdcon42, claude-gaming 2026-07-02): fold THIS tick's server diag_fps into a
+	//--- server-global running min (wfbe_fpsmin_acc) that the WASPSCALE emit block consumes+resets each 300s window.
+	//--- Runs every supervisor tick (~15s per worker, ~2 workers) BEFORE the _active gate so it samples even when the
+	//--- AI is dormant - the real perf floor vs the instant fps snapshot on the emit line. One diag_fps read + one
+	//--- compare/setVariable; zero scans. A2-OA-safe. Sentinel -1 = "no sample yet this window".
+	private ["_fpsNow","_fpsAcc"]; _fpsNow = diag_fps;
+	_fpsAcc = missionNamespace getVariable ["wfbe_fpsmin_acc", -1];
+	if (_fpsAcc < 0 || {_fpsNow < _fpsAcc}) then { missionNamespace setVariable ["wfbe_fpsmin_acc", _fpsNow] };
+
 	_active = false;
 	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0) then { //--- FIX7 (Ray): defaulted [..,0] - the bare single-arg getVariable threw if nil at an early-boot race.
 		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
@@ -153,6 +163,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		if (!isNull _cmdTeam) then {
 			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
 		};
+
+		//--- cmdcon42 (Ray 2026-07-02): RAW human-seated flag, captured BEFORE the LOCK override below.
+		//--- The ECON_SINK block must pause whenever a human physically occupies the commander slot, even
+		//--- under WFBE_C_AI_COMMANDER_LOCK (which forces _humanCmd=false to keep the AI in full command for
+		//--- eval/night protection). _canBuild already blocks the sink for the normal no-lock case, but a lock
+		//--- would otherwise let the sink spend the human commander's side supply uncommanded. Keep this raw.
+		_humanSeated = _humanCmd;
 
 		//--- AI COMMANDER LOCK: when lock=1, treat _humanCmd as false so AI keeps full command
 		//--- even if a human occupies the commander slot (eval/night protection).
@@ -227,7 +244,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- Lifecycle log + running flag (full command only; income routes to aicom_funds only with no human).
 		_state = if (_humanCmd) then {"assist"} else {"full"};
 		if (_state != _prevState) then {
-			_logik setVariable ["wfbe_aicom_running", !_humanCmd];
+			_logik setVariable ["wfbe_aicom_running", !_humanCmd, _syncAicomState];
 			if (_state == "full")   then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ACTIVE (full command).", str _side]] Call WFBE_CO_FNC_AICOMLog};
 			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander; executor + town auto-assign + B67 team-found/refill quartermaster, base/upgrade OFF).", str _side]] Call WFBE_CO_FNC_AICOMLog};
 			_prevState = _state;
@@ -263,6 +280,26 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			_tg = _logik getVariable ["wfbe_aicom_targets", []];
 			_objT = if (count _tg > 0) then {_tg select 0} else {objNull};
 			_objNm = if (!isNull _objT) then {_objT getVariable ["name", "?"]} else {""};
+			//--- cmdcon42-o ENEMY-BASE INTEL-LEAK CLAMP (Ray 2026-07-02): the published objective (OBJPOS/OBJNAME) is
+			//--- drawn as a "mil_objective" marker on the joined side's map (updateaicommarkers.sqf). _objT is normally a
+			//--- TOWN (targets[0]), but if the spearhead target sits inside the enemy base bubble (deep-push / an enemy
+			//--- town adjacent to the HQ), that marker would pin the hidden base. Clamp PRODUCER-SIDE: if the objective
+			//--- is within WFBE_C_CMD_INTEL_HQ_RADIUS of any ENEMY HQ, blank the published pos/name so no base pin is
+			//--- drawn (the INTENT text above still shows "ASSAULTING HQ" - a description, not a coordinate).
+			private ["_objPos","_objLeak"];
+			_objPos = if (!isNull _objT) then {getPos _objT} else {[0,0,0]};
+			if ((missionNamespace getVariable ["WFBE_C_CMD_INTEL_SANITIZE", 1]) > 0 && {!isNull _objT}) then {
+				private ["_iRad","_iEnemies","_iHq"];
+				_iRad = missionNamespace getVariable ["WFBE_C_CMD_INTEL_HQ_RADIUS", 800];
+				_iEnemies = [];
+				{ if (_x != _side) then {_iEnemies = _iEnemies + [_x]} } forEach [west, east, resistance];
+				_objLeak = false;
+				{
+					_iHq = _x Call WFBE_CO_FNC_GetSideHQ;
+					if (!isNull _iHq && {(_objPos distance (getPos _iHq)) < _iRad}) then {_objLeak = true};
+				} forEach _iEnemies;
+				if (_objLeak) then {_objPos = [0,0,0]; _objNm = ""};   //--- blank name -> updateaicommarkers deletes the objective marker (its (_objNm != "") gate); no base pin.
+			};
 			_intent = switch (_sm) do {
 				case "strike":    {"ASSAULTING HQ"};
 				case "laststand": {"DEFENDING BASE"};
@@ -277,7 +314,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			};
 			if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
 				missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
-				missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
+				missionNamespace setVariable [_pKey, _objPos]; publicVariable _pKey;   //--- cmdcon42-o: _objPos is the intel-clamped position ([0,0,0] when the objective was inside an enemy base).
 			};
 			//--- ACTIVE = the AI actually HOLDS command this side now (no human commander) so a player's nudge will
 			//--- steer it; FOCUS_NAME = the player-set focus town (TTL'd) or "" when none/expired. PV only on change.
@@ -516,6 +553,134 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				_logik setVariable ["wfbe_aicom_reinforce_rich", false];
 			};
 
+			//--- ECON SINK (cmdcon41-w2, Ray-approved): when a commander pins near the funds cap it has NOTHING
+			//--- to spend on (team hard-cap blocks more squads; tech finishes) so the war chest just balloons and
+			//--- the money means nothing. Drain it into three legit sinks while rich:
+			//---   (a) RESEARCH one more upgrade it doesn't own yet (deps + level-order respected exactly like the
+			//---       player path - see the LINKS validation mirror below), started via the SAME server worker the
+			//---       program uses (WFBE_SE_FNC_AI_Com_Upgrade). One research at a time (it self-gates on wfbe_upgrading).
+			//---   (b) TEAM-CAP SURGE: raise a logik flag wfbe_aicom_econ_surge so Teams.sqf adds +TEAMCAP to the
+			//---       founding target (still clamped by the hard cap).
+			//---   (c) HEAVY BIAS: AssignTypes reads the same flag to richen the price-weighted tier draw (+0.5 exp).
+			//--- Flag-gated (WFBE_C_AICOM_ECON_SINK, default 1). Funds cap = WFBE_C_AICOM_WEALTH_CAP (the anti-hoard
+			//--- ceiling town income/stipend stop crediting past). A2-OA-safe: transition if/else (no Bool ==), plain
+			//--- object getVariable [name,default] on the logic OBJECT (reliable), hand LINKS scan (no A3 helpers).
+			//--- cmdcon42 (Ray 2026-07-02) HUMAN-COMMANDER GATE: pause the ENTIRE econ-sink (surge flag + research
+			//--- scanner) whenever a human physically occupies the commander slot. _canBuild already blocks this
+			//--- for the normal no-lock case, but WFBE_C_AI_COMMANDER_LOCK forces _humanCmd=false to keep the AI in
+			//--- full command - which would let the sink spend the human commander's side SUPPLY uncommanded ("the
+			//--- AI keeps upgrading buildings, for free"). Gate on the RAW seated flag (_humanSeated, captured pre-lock)
+			//--- behind WFBE_C_AICOM_ECON_SINK_HUMAN_OFF (default 1 = pause under human command). When a human is
+			//--- seated we also CLEAR the surge flag (broadcast, mirroring the w3b HC-sync fix) so the heavy-bias /
+			//--- team-cap consumers that read wfbe_aicom_econ_surge stand down instead of latching on stale.
+			if (_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0}) then {
+				if (_logik getVariable ["wfbe_aicom_econ_surge", false]) then {
+					_logik setVariable ["wfbe_aicom_econ_surge", false, true];
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK paused (human commander seated) - surge flag cleared.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=off|reason=human_commander");
+				};
+			};
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}) then {
+				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur","_esSupply","_esDual"];
+				_esFrac = missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_FRAC", 0.85];
+				_esCap  = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
+				_esFunds = (_side) Call GetAICommanderFunds;
+				_esRich = _esFunds >= (_esFrac * _esCap);
+
+				//--- (b) SURGE flag: raise while rich, clear otherwise (transition-logged, no per-tick spam).
+				_esPrevSurge = _logik getVariable ["wfbe_aicom_econ_surge", false];
+				if (_esRich && !_esPrevSurge) then {
+					_logik setVariable ["wfbe_aicom_econ_surge", true, true]; //--- cmdcon41-w3b: BROADCAST - the HC founding pass (RICH_GEAR surge tier) reads this on the HC; without the flag the read is server-local and always false there.
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK surge ON (funds %2 >= %3%% of cap %4) - team-cap +%5 and heavy tier bias armed.", str _side, _esFunds, round (_esFrac * 100), _esCap, missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_TEAMCAP", 2]]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=on|funds=" + str _esFunds + "|cap=" + str _esCap);
+				};
+				if (!_esRich && _esPrevSurge) then {
+					_logik setVariable ["wfbe_aicom_econ_surge", false, true]; //--- cmdcon41-w3b: broadcast the clear too (keep HC view in sync).
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK surge OFF (funds %2 < %3%% of cap %4).", str _side, _esFunds, round (_esFrac * 100), _esCap]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=off|funds=" + str _esFunds + "|cap=" + str _esCap);
+				};
+
+				//--- (a) RESEARCH: while rich AND not already upgrading, pick the next upgrade the side does NOT have
+				//--- whose DEPENDENCIES + level-order are satisfied, and start it. This scans the FULL upgrade table (not
+				//--- only the AI program order) so a pinned commander eventually researches EVERYTHING it can afford - but
+				//--- it never skips levels (walks level-by-level via the live _upgrades array) and never violates a LINK
+				//--- (mirrors RequestUpgrade/RequestEnqueue's LINKS validation: link met = live level of the dep >= need).
+				if (_esRich && {!(_logik getVariable ["wfbe_upgrading", false])}) then {
+					_esUpg   = _side Call WFBE_CO_FNC_GetSideUpgrades;
+					_esLvls  = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", str _side], []];
+					_esCosts = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_COSTS",  str _side], []];
+					_esLinks = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LINKS",  str _side], []];
+					_esOrder = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_ENABLED", str _side], []];
+					//--- cmdcon42 FREE-SV FIX (Ray 2026-07-02): read the side's live SUPPLY exactly like the player
+					//--- path (RequestUpgrade.sqf:134-140). _esCost = [supplyPrice, fundsPrice]. In dual-currency mode
+					//--- (WFBE_C_ECONOMY_CURRENCY_SYSTEM==0) an upgrade also costs SUPPLY, and there is NO cash->supply
+					//--- conversion in-game, so the sink MUST verify + pay supply. In single-currency mode supply is
+					//--- not a resource (the player path skips it), so treat it as unlimited (esDual false).
+					_esDual   = (missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0;
+					_esSupply = if (_esDual) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {0};
+					_esChosen = -1; _esChosenCur = -1;
+					if (!isNil "_esUpg" && {!isNil "_esLvls"} && {!isNil "_esCosts"} && {!isNil "_esLinks"}) then {
+						for "_esUp" from 0 to ((count _esUpg) - 1) do {
+							if (_esChosen < 0) then {
+								//--- enabled? (disabled upgrades are never researchable)
+								_esOk = true;
+								if (_esUp < count _esOrder) then {if !(_esOrder select _esUp) then {_esOk = false}};
+								if (_esOk) then {
+									_esCur = _esUpg select _esUp;
+									//--- not maxed?
+									if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
+										//--- price of THIS level (researching level N+1 costs COSTS select N - the b74 off-by-one fix).
+										_esCost = ((_esCosts select _esUp) select _esCur);
+										//--- affordable on BOTH funds AND supply? (_esCost = [supplyPrice, fundsPrice]). Supply is
+										//--- only a gate in dual-currency mode; single-currency ignores it because _esDual is false
+										//--- (matches the player path skipping the supply check off-dual).
+										if (_esFunds >= (_esCost select 1) && {(!_esDual) || (_esSupply >= (_esCost select 0))}) then {
+											//--- DEPENDENCY gate: LINKS select _esUp select _esCur. Empty = none; [id,lvl] = single; [[id,lvl],..] = many.
+											_esLnk = [];
+											if (_esUp < count _esLinks) then {
+												_esLnk = _esLinks select _esUp;
+												if (_esCur < count _esLnk) then {_esLnk = _esLnk select _esCur} else {_esLnk = []};
+											};
+											_esLinkNeeded = false;
+											if (count _esLnk > 0) then {
+												if (typeName (_esLnk select 0) == "ARRAY") then {
+													for "_esLi" from 0 to ((count _esLnk) - 1) do {
+														_esClink = _esLnk select _esLi;
+														_esTgt = _esClink select 0; _esNeed = _esClink select 1;
+														if ((_esUpg select _esTgt) < _esNeed) exitWith {_esLinkNeeded = true};
+													};
+												} else {
+													_esTgt = _esLnk select 0; _esNeed = _esLnk select 1;
+													if ((_esUpg select _esTgt) < _esNeed) then {_esLinkNeeded = true};
+												};
+											};
+											if (!_esLinkNeeded) then {_esChosen = _esUp; _esChosenCur = _esCur};
+										};
+									};
+								};
+							};
+						};
+					};
+					if (_esChosen >= 0) then {
+						//--- Start via the SAME server path players/AI/queue use. WFBE_SE_FNC_ProcessUpgrade takes
+						//--- [side, upgradeId, currentLevel, isPlayer=false] and both runs the timer AND flips the level.
+						//--- cmdcon42 FREE-SV FIX: ProcessUpgrade charges NOTHING (verified Server_ProcessUpgrade.sqf) - the
+						//--- caller pays. Mirror RequestUpgrade.sqf:148-151 EXACTLY: in dual mode deduct SUPPLY via
+						//--- ChangeSideSupply(-supplyCost) THEN funds; single-currency charges funds only. The selection gate
+						//--- above already re-checked _esSupply >= supplyCost so this cannot drive the pool negative; if supply
+						//--- was short the candidate was skipped and it retries when supply accrues (wfbe_upgrading guard intact).
+						_esCost = ((_esCosts select _esChosen) select _esChosenCur);
+						[_side, _esChosen, _esChosenCur, false] Spawn WFBE_SE_FNC_ProcessUpgrade;
+						if (_esDual) then {[_side, -(_esCost select 0), "AICOM econ-sink tech upgrade.", false] Call ChangeSideSupply};
+						[_side, -(_esCost select 1)] Call ChangeAICommanderFunds;
+						_logik setVariable ["wfbe_upgrading", true, true];
+						_logik setVariable ["wfbe_upgrading_id", _esChosen, true];
+						["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK research: upgrade id %2 -> level %3 (supplyCost %4, fundsCost %5, funds %6, supply %7).", str _side, _esChosen, _esChosenCur + 1, _esCost select 0, _esCost select 1, _esFunds, _esSupply]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_RESEARCH|id=" + str _esChosen + "|lvl=" + str (_esChosenCur + 1) + "|fundsCost=" + str (_esCost select 1) + "|sv=" + str (_esCost select 0));
+					};
+				};
+			};
+
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
 			//--- once, the first tick after wfbe_aicom_arty_threat is set.  No-op if the constant
 			//--- or the upgrades-levels array doesn't include CBR (vanilla / non-experital builds).
@@ -532,7 +697,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		};
 	} else {
 		if (_prevState != "stopped") then {
-			_logik setVariable ["wfbe_aicom_running", false];
+			_logik setVariable ["wfbe_aicom_running", false, _syncAicomState];
 			["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander STOPPED (disabled / HQ down).", str _side]] Call WFBE_CO_FNC_AICOMLog;
 			_prevState = "stopped"; _prevHuman = false;
 		};
@@ -707,7 +872,100 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 
 		//--- WASPSCALE (claude-gaming 2026-07-01): perf/scope tracker - one allUnits pass per 5-min window (reuses this
 		//--- SRVPERF throttle, zero per-frame cost) buckets live AI by side + counts humans, groups, fps, tier and map.
-		private ["_aiW","_aiE","_aiG","_humN","_tier"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0]; diag_log ("WASPSCALE|v1|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName);
+		//--- v2 (claude-gaming 2026-07-01): APPEND-ONLY - all v1 fields kept in the same order, two new trailing fields:
+		//---   build=<tag>  a stable short build id. Source (in the prompt's priority order): there is no runtime build
+		//---                CONSTANT (version.sqf's WF_RELEASE_MARKER is a #define, not readable here, and its literal is
+		//---                already stale vs the Build-84/cmdcon36 constants). The LIVE, self-updating source is the
+		//---                deployed PBO filename (missionName), which the deploy convention bumps with the cmdcon token
+		//---                per the wiki filename-cache rule. We parse the cmdcon<...> token out of missionName ONCE and
+		//---                cache it in wfbe_buildtag (falls back to the raw missionName if no cmdcon token is present).
+		//---   hc_fps=<n>   min diag_fps across HCs that reported (via the existing 60s HCStat channel, cached in
+		//---                WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
+		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
+		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
+		if (_bt == "") then {
+			_mn = missionName; if (typeName _mn != "STRING") then {_mn = ""};
+			private ["_mnAf","_ndl","_nlen","_ok"]; _mnAf = toArray _mn; _ndl = toArray "cmdcon"; _nlen = count _ndl; _ci = -1; for "_k" from 0 to ((count _mnAf) - _nlen) do { _ok = true; { if ((_mnAf select (_k + _forEachIndex)) != _x) exitWith {_ok = false} } forEach _ndl; if (_ok) exitWith {_ci = _k} };  //--- A2-OA fix: string 'find' is A3-only; char-scan toArray for the "cmdcon" token start.
+			if (_ci >= 0) then {
+				//--- Slice "cmdcon..." to next '_' (95) or '.' (46) via the A2-OA-safe toArray/toString idiom (string
+					//--- `select [start,count]` substring is A3-only). "..._cmdcon36aicom.chernarus" -> "cmdcon36aicom".
+				private ["_mnA","_btA","_j","_c"]; _mnA = toArray _mn; _btA = [];
+				for "_j" from _ci to ((count _mnA) - 1) do {
+					_c = _mnA select _j;
+					if ((_c == 95) || (_c == 46)) exitWith {};
+					_btA = _btA + [_c];
+				};
+				if (count _btA > 0) then {_bt = toString _btA} else {_bt = _mn};
+			} else { _bt = _mn };
+			if (_bt == "") then {_bt = "unknown"};
+			missionNamespace setVariable ["wfbe_buildtag", _bt];
+		};
+		_hcFps = -1; _hcReg2 = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
+		//--- WASPSCALE v2-EXT (cmdcon42, claude-gaming 2026-07-02): hc_fps stays the MIN across fresh HCs (byte-identical
+		//--- to before). hc2fps = the MAX fresh HC fps in the SAME single pass, so a 2-HC box exposes BOTH HCs' fps as a
+		//--- min/max bracket without a second registry walk or any HC-side change (both HCs already stamp WFBE_HCFPS_REG
+		//--- keyed by netId via HCStat.sqf). Single HC -> hc2fps == hc_fps; no fresh HC -> both -1. New key `hc2fps=`
+		//--- follows the SAME shape as the existing `hc_fps=` (which already contains the substring `fps=`), so pipe-
+		//--- anchored `|fps=` greps and longest-key KV parsers keep resolving each field distinctly (no TFPS-style collision).
+		private ["_hc2Fps"]; _hc2Fps = -1;
+		{ if (((time - (_x select 2)) <= 120) && {(typeName (_x select 1)) == "SCALAR"}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1}; if ((_hc2Fps < 0) || {(_x select 1) > _hc2Fps}) then {_hc2Fps = _x select 1} } } forEach _hcReg2;
+		//--- APPENDED v2-EXT telemetry (all CHEAP reads of state the systems already maintain; NO new allUnits/allGroups walk):
+		//---   townsW/E/G  per-side towns held: iterate `towns` ONCE bucketing by the SAME `sideID` var GetTownsHeld reads
+		//---               (W=0 E=1 G=2). Also collect the per-town sortie flag in the SAME pass -> `sort` (active sorties).
+		//---   postW/E     AICOM posture string off each side logic (wfbe_aicom_strat_mode; spearhead/laststand/relief/strike).
+		//---   disp/arrv   cumulative ASSAULT dispatches / arrivals this match (counters bumped at the AssignTowns log sites).
+		//---   recov       cumulative SERVER-LOCAL recovery actions (unstuck + auto-flip); HC-delegated recoveries live on the
+		//---               HC RPT's own UNSTUCK_FIRED lines (analyze_soak already reads those) - this is the server-visible subset.
+		//---   mhqrel      cumulative AI MHQ relocations DEPLOYED (both AI sides; bumped at the MHQReloc DEPLOYED log site).
+		//---   patr        currently ACTIVE side-patrol groups (count of the live public WFBE_ACTIVE_PATROLS registry).
+		//---   telW/E      SCUD TEL state per side: 0=none/absent, 1=alive, 2=dead-awaiting-respawn (killed-EH nulled the ref).
+		//---   terr        territorial-victory clock: none | <W|E>:<mins-remaining> from WFBE_TERRITORIAL_CLOCK_<sid>.
+		//---   fpsmin      LOWEST server fps sampled since the previous emit (the tiny sampler below feeds wfbe_fpsmin_acc).
+		//---   grpW/E      per-side group counts from the wfbe_grpcnt_* cache server_groupsGC already maintains (its walk, not ours).
+		private ["_townsW","_townsE","_townsG","_sortN","_tn","_postW","_postE","_lw","_le","_disp","_arrv","_recov","_mhqrel","_patrN","_telW","_telE","_terr","_fpsMin","_grpW","_grpE","_terrSid","_terrMinsC","_terrRem","_telObjW","_telObjE"];
+		_townsW = 0; _townsE = 0; _townsG = 0; _sortN = 0;
+		{ _tn = _x getVariable ["sideID", -1]; if (_tn == 0) then {_townsW = _townsW + 1}; if (_tn == 1) then {_townsE = _townsE + 1}; if (_tn == 2) then {_townsG = _townsG + 1}; if (!isNull (_x getVariable ["wfbe_sortie_grp", grpNull])) then {_sortN = _sortN + 1} } forEach towns;
+		_lw = west Call WFBE_CO_FNC_GetSideLogic; _le = east Call WFBE_CO_FNC_GetSideLogic;   //--- returns objNull (never nil) when a side logic is absent -> guard with isNull.
+		_postW = "?"; if (!isNull _lw) then {_postW = _lw getVariable ["wfbe_aicom_strat_mode", "?"]};
+		_postE = "?"; if (!isNull _le) then {_postE = _le getVariable ["wfbe_aicom_strat_mode", "?"]};
+		_disp   = missionNamespace getVariable ["wfbe_waspscale_disp", 0];
+		_arrv   = missionNamespace getVariable ["wfbe_waspscale_arrv", 0];
+		_recov  = missionNamespace getVariable ["wfbe_waspscale_recov", 0];
+		_mhqrel = missionNamespace getVariable ["wfbe_waspscale_mhqrel", 0];
+		_patrN  = count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []]);
+		//--- TEL state: alive=1; a stored-but-dead ref or (killed-EH null) with a live TEL feature = 2 (awaiting respawn); no feature/never-spawned = 0.
+		_telObjW = missionNamespace getVariable ["WFBE_ICBM_TEL_west", objNull];
+		_telObjE = missionNamespace getVariable ["WFBE_ICBM_TEL_east", objNull];
+		_telW = 0; if (!isNull _telObjW) then { if (alive _telObjW) then {_telW = 1} else {_telW = 2} } else { if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1 && {!isNil "WFBE_SE_FNC_SpawnIcbmTel"}) then {_telW = 2} };
+		_telE = 0; if (!isNull _telObjE) then { if (alive _telObjE) then {_telE = 1} else {_telE = 2} } else { if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1 && {!isNil "WFBE_SE_FNC_SpawnIcbmTel"}) then {_telE = 2} };
+		//--- territorial clock: report the first side with a running clock (start >= 0), mins-remaining rounded UP (matches the victory display).
+		_terr = "none"; _terrMinsC = missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL_MINS", 30];
+		_terrSid = missionNamespace getVariable ["WFBE_TERRITORIAL_CLOCK_0", -1];
+		if (_terrSid >= 0) then { _terrRem = ceil (((_terrMinsC * 60) - (time - _terrSid)) / 60) max 0; _terr = "W:" + str _terrRem } else {
+			_terrSid = missionNamespace getVariable ["WFBE_TERRITORIAL_CLOCK_1", -1];
+			if (_terrSid >= 0) then { _terrRem = ceil (((_terrMinsC * 60) - (time - _terrSid)) / 60) max 0; _terr = "E:" + str _terrRem };
+		};
+		//--- fpsmin: consume + reset the running server-fps min the in-loop sampler (below the throttle block) accumulates; -1 until the first sample.
+		_fpsMin = missionNamespace getVariable ["wfbe_fpsmin_acc", -1];
+		missionNamespace setVariable ["wfbe_fpsmin_acc", -1];
+		//--- per-side group counts from the groupsGC cache (server_groupsGC maintains it on ITS allGroups pass); fallback to the total-derived cache, else -1 (never a second walk here).
+		_grpW = missionNamespace getVariable ["wfbe_grpcnt_west", -1];
+		_grpE = missionNamespace getVariable ["wfbe_grpcnt_east", -1];
+		//--- WASPSCALE v2-EXT (cmdcon42-oilrig, claude-gaming 2026-07-02): OILFIELD stakes telemetry (Takistan-only feature;
+		//--- both keys are -/-1 on Chernarus and until the field unlocks). CHEAP reads of state Server_Oilfields.sqf already
+		//--- publishes - no scan here. `oilOwn=` = the field's owner as W|E|G|N|- ( - = feature absent/pre-unlock; N = neutral;
+		//--- suffixed with `!` when currently SABOTAGED, e.g. W! ). `oilInc=` = cumulative supply the field has paid this round.
+		//--- New keys `oilOwn=`/`oilInc=` contain no existing key as a substring and are pipe-anchored, so `|fps=`-style greps and
+		//--- longest-key KV parsers keep resolving every field distinctly (same append rule the hc2fps=/grpW= keys followed).
+		private ["_oilOwnObj","_oilOwnKV","_oilIncKV"];
+		_oilOwnKV = "-"; _oilIncKV = "-1";
+		if (!isNil "WFBE_OILFIELD_POS_LIVE") then {
+			_oilOwnObj = missionNamespace getVariable ["WFBE_OILFIELD_OWNER", sideLogic];
+			_oilOwnKV = switch (_oilOwnObj) do { case west: {"W"}; case east: {"E"}; case resistance: {"G"}; default {"N"} };
+			if (missionNamespace getVariable ["WFBE_OILFIELD_SABOTAGED", false]) then {_oilOwnKV = _oilOwnKV + "!"};
+			_oilIncKV = str (missionNamespace getVariable ["WFBE_OILFIELD_INCOME_ACCRUED", 0]);
+		};
+		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE + "|oilOwn=" + _oilOwnKV + "|oilInc=" + _oilIncKV);
 
 		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
 		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent

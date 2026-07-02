@@ -86,13 +86,20 @@ activeAnimMarker = false;
 //--- All war-room controls (shown only in the commander STATE B). Roster, order buttons, request combo+label, lines.
 private "_warCtrls";
 //--- Command Console v2 (claude-gaming 2026-07-01): +14627 DISBAND SELECTED (per-team teardown beside DISBAND ALL 14626).
+//--- cmdcon41-w3d COMMAND-MENU V2: +14628/14629/14630 STEERING VERBS (RALLY/REFIT/HOLD) appended below when flag on.
 _warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14626,14627,14610,14611,14640,14641,14642,14690,14691];
+if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {_warCtrls = _warCtrls + [14628,14629,14630]};
+//--- cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD (14631) + TEL SATURATE/RECON (14632/14633) war-room buttons
+//--- were REMOVED — all SCUD/TEL fire now lives in the Tactical menu (GUI_Menu_Tactical.sqf) beside the classic ICBM/NUKE.
+//--- So they are no longer added to _warCtrls (and their gating/arm/fire blocks below were deleted). idcs 14631/14632/14633 free.
 //--- STATE-A (NOT commander) advisory controls: the live AI-intent readout + the PUSH/HOLD posture nudge. Shown
 //--- only when the AI runs the side (so the nudge actually bites the brain) - hidden in STATE B.
 private "_adviseCtrls";
 //--- cmdcon27 THREAD C: +4 field-order nudges (SPLIT UP / PUSH TOGETHER / HARASS / FALL BACK).
 //--- Command Console v2 (claude-gaming 2026-07-01): +14617 "AI: FOCUS TOWN" (map-click advisory focus).
+//--- cmdcon41-w3d COMMAND-MENU V2: +14618 REQUEST AI SUPPORT (non-commander nudge), shown in STATE A when the flag is on.
 _adviseCtrls = [14606,14607,14608,14609,14612,14613,14614,14615,14616,14617];
+if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {_adviseCtrls = _adviseCtrls + [14618]};
 
 (_display displayCtrl 14650) ctrlSetStructuredText (parseText "Opening the war room...");
 
@@ -267,6 +274,25 @@ while {alive player && dialog} do {
 			};
 		};
 
+		//--- ----- REQUEST AI SUPPORT (cmdcon41-w3d COMMAND-MENU V2, non-commander) -----
+		//--- Any player (even under a HUMAN commander, where the posture/focus nudges are inert) calls the nearest free
+		//--- same-side AI team to their position. Send [side, player, getPos player]; the server validates the sender is
+		//--- alive/on-side/near the pos, picks ONE nearby non-busy team within range, road-moves it, and enforces the
+		//--- per-player cooldown. Left autonomous server-side so AssignTowns re-tasks it after arrival (commander not
+		//--- overridden). Client shows a soft local echo on the shared _cool clock so a double-tap is not spammed.
+		if (MenuAction == 767) then {
+			MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {
+				if ((_now - _lastSend) >= _cool) then {
+					["RequestSpecial", ["aicom-support", sideJoined, player, getPos player]] Call WFBE_CO_FNC_SendToServer;
+					_lastSend = _now;
+					hintSilent parseText "<t color='#A0E060'>Support requested - the nearest free AI team is inbound (if one is in range).</t>";
+				} else {
+					hintSilent parseText "<t color='#F8D664'>Support request on cooldown - wait a moment.</t>";
+				};
+			};
+		};
+
 		//--- Back / Exit still work in this state.
 		if (MenuAction == 4) exitWith {MenuAction = -1; activeAnimMarker = false; closeDialog 0; createDialog "WF_Menu"};
 		sleep 0.2;
@@ -317,7 +343,7 @@ while {alive player && dialog} do {
 			//--- {alive _y} read an undefined _y -> THREW every iteration (22,529 RPT errors on cmdcon25) AND the
 			//--- failing count broke the filter so no row ever passed. Use {alive _x}; _grp already holds the team.
 			if (!isNull _grp && {!isPlayer (leader _grp)} && {({alive _x} count units _grp) > 0}) then {
-				private ["_tn","_td","_lbl","_typeTag","_goto","_gotoTown","_alive","_total"];
+				private ["_tn","_td","_lbl","_typeTag","_goto","_gotoTown","_alive","_total","_verb"];
 				//--- SQUAD TYPE: the SAME heaviest-hull classifier the map team markers use (updateaicommarkers.sqf:118-128).
 				//--- Priority: any Air hull -> AIR; else any Tank (tracked armour/IFV) -> HVY; else any wheeled APC/Car -> LGHT;
 				//--- else INF. The inner forEach rebinds _x to the team's UNITS, so keep using _grp for the team afterwards.
@@ -335,6 +361,15 @@ while {alive player && dialog} do {
 				//--- TARGET: the team's objective/destination town. wfbe_teamgoto is BROADCAST (SetTeamMovePos / AssignTowns
 				//--- L412), so it is client-readable: a town OBJECT (AI town assignment) OR a position (player DIRECT order).
 				//--- Resolve to a town name; if unset / autonomous with no goto -> "auto". The inner forEach rebinds _x to towns.
+				//--- cmdcon42-o ENEMY-BASE INTEL-LEAK CLAMP (Ray 2026-07-02): if the SERVER/HC published a display clamp for
+				//--- this team (wfbe_teamgoto_disp = [ clampPos, clampTownName ], set producer-side by Common_SetTeamMovePos
+				//--- ONLY when the true destination is inside an enemy base), render THAT enemy-held town + "(advancing)"
+				//--- instead of the real destination - the player sees the push toward enemy lines but gets no base pin. The
+				//--- clamp carries no HQ coordinates, so nothing here can be script-sniffed back to the hidden base.
+				private "_disp"; _disp = _grp getVariable "wfbe_teamgoto_disp";
+				if (!isNil "_disp" && {typeName _disp == "ARRAY"} && {count _disp >= 2}) then {
+					_tn = (_disp select 1) + " (advancing)";
+				} else {
 				_goto = _grp getVariable ["wfbe_teamgoto", objNull];
 				_tn = "auto";
 				if (!isNil "_goto") then {
@@ -351,10 +386,35 @@ while {alive player && dialog} do {
 						};
 					};
 				};
+				};   //--- cmdcon42-o: close the display-clamp else-branch (true-goto path when not clamped).
 				//--- ALIVE: alive/total members (e.g. 6/8).
 				_alive = {alive _x} count units _grp;
 				_total = count units _grp;
-				_lbl = _typeTag + "  |  " + _tn + "  |  " + str _alive + "/" + str _total;
+				//--- cmdcon41-w3d COMMAND-MENU V2 (UX): show the team's current ORDER VERB. Priority: HOLD latch > rally >
+				//--- strike/capture > the broadcast wfbe_teammode (move/patrol/defense) > "towns" (autonomous). A2-OA: groups
+				//--- take plain single-arg getVariable + isNil (NOT the [name,default] form). Flag-gated - falls back to the
+				//--- pre-w3d 3-column label when WFBE_C_CMD_MENU_V2 is off.
+				_verb = "";
+				if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {
+					private ["_hg","_rg","_sg","_mg"];
+					_verb = "towns";
+					_hg = _grp getVariable "wfbe_aicom_holding_town";
+					_rg = _grp getVariable "wfbe_aicom_rallying";
+					_sg = _grp getVariable "wfbe_aicom_strike";
+					_mg = _grp getVariable "wfbe_teammode";
+					if (!isNil "_mg" && {typeName _mg == "STRING"}) then {
+						private "_mgL"; _mgL = toLower _mg;
+						if (_mgL == "move" || _mgL == "patrol" || _mgL == "defense") then {_verb = _mgL};
+					};
+					if (!isNil "_sg" && {_sg}) then {_verb = "strike"};
+					if (!isNil "_rg" && {_rg}) then {_verb = "rally"};
+					if (!isNil "_hg" && {!isNull _hg}) then {_verb = "hold"};
+				};
+				if (_verb != "") then {
+					_lbl = _typeTag + "  |  " + _tn + "  |  " + str _alive + "/" + str _total + "  |  " + _verb;
+				} else {
+					_lbl = _typeTag + "  |  " + _tn + "  |  " + str _alive + "/" + str _total;
+				};
 				_rows = _rows + [_lbl];
 				_cmdTeams = _cmdTeams + [_grp];
 				_hash = _hash + _lbl + "#";
@@ -444,6 +504,10 @@ while {alive player && dialog} do {
 			};
 		};
 
+		//--- cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD-carrier + TEL SATURATE/RECON war-room button
+		//--- gating (idc 14631/14632/14633) and their MenuAction 770/771/772 arm blocks were REMOVED. All SCUD/TEL fire
+		//--- now lives in the Tactical menu (GUI_Menu_Tactical.sqf). The carrier-ownership + TEL-alive gates moved there.
+
 		//--- ----- RELEASE selected team to autonomous (mode "towns"). -----
 		if (MenuAction == 724) then {
 			MenuAction = -1;
@@ -475,6 +539,8 @@ while {alive player && dialog} do {
 						_lastSend = _now; _armed = "";
 					};
 				} else {
+					//--- cmdcon41-w3i (Ray 2026-07-02): the SCUD + TEL (telsat/telrecon) map-click FIRE branches were REMOVED here;
+					//--- all SCUD/TEL fire now goes through the Tactical menu. Only ARTY (above) + the DIRECT team order (below) remain.
 					//--- DIRECT map-click order (Move/Defend/Patrol) = pure LOCAL setVariable, no server load ->
 					//--- gate on the SHORT _lastDirect / _directCool. Within that window do NOT clear _armed (leave the
 					//--- order armed so the very next click lands without re-arming) and show a soft "ready in Ns" hint.
@@ -625,6 +691,45 @@ while {alive player && dialog} do {
 						} else {
 							_disbandSelArm = _now;
 							hintSilent parseText (format ["<t color='#F85050'>DISBAND %1? Click again within 5s to confirm.</t>", (name (leader _selTeam))]);
+						};
+					};
+				};
+			};
+		};
+
+		//--- ----- STEERING VERBS (cmdcon41-w3d COMMAND-MENU V2): RALLY (727) / REFIT (728) / HOLD (729) on the SELECTED
+		//--- roster team. Each resolves _selTeam's index in the broadcast wfbe_teams registry (the SAME server-matching
+		//--- idiom as DISBAND SELECTED above) and sends a RequestSpecial the server re-validates (commander-only, side,
+		//--- team-valid). All the real work (rally pos / funds charge / hold latch) is server-side; the client only sends
+		//--- the index. Gated on the 8s brain-send cooldown (_lastSend). Flag-gated via WFBE_C_CMD_MENU_V2. -----
+		if (MenuAction == 727 || MenuAction == 728 || MenuAction == 729) then {
+			private "_vb"; _vb = MenuAction; MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) <= 0) then {
+				//--- flag off: swallow the press (buttons are hidden anyway).
+			} else {
+				if (isNull _selTeam) then {
+					hintSilent parseText "<t color='#F8D664'>Select a team in the roster first.</t>";
+				} else {
+					if ((_now - _lastSend) < _cool) then {
+						hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+					} else {
+						//--- Resolve the selected team's index in the broadcast wfbe_teams registry (server-matching order).
+						private ["_vRegTeams","_vIdx"];
+						_vRegTeams = []; _vIdx = -1;
+						if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
+							private "_vrt"; _vrt = WFBE_Client_Logic getVariable "wfbe_teams";
+							if (!isNil "_vrt" && {(typeName _vrt) == "ARRAY"}) then {_vRegTeams = _vrt};
+						};
+						{ if (_x == _selTeam) exitWith {_vIdx = _forEachIndex} } forEach _vRegTeams;
+						if (_vIdx < 0) then {
+							hintSilent parseText "<t color='#F8D664'>Cannot target that team yet - try again in a moment.</t>";
+						} else {
+							private ["_vSpecial","_vLabel"];
+							_vSpecial = switch (_vb) do {case 727:{"aicom-rally"};case 728:{"aicom-refit"};default{"aicom-hold"}};
+							_vLabel   = switch (_vb) do {case 727:{"Rally"};case 728:{"Refit"};default{"Hold"}};
+							["RequestSpecial", [_vSpecial, sideJoined, _vIdx]] Call WFBE_CO_FNC_SendToServer;
+							_lastSend = _now;
+							hintSilent parseText (format ["<t color='#A0E060'>%1 order sent - %2.</t>", _vLabel, (name (leader _selTeam))]);
 						};
 					};
 				};

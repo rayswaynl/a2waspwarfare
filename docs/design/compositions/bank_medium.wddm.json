@@ -1,0 +1,18 @@
+{
+  "name": "WFBE_NEURODEF_BANK_WEST",
+  "parentW": 16,
+  "parentD": 12,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "defense",
+  "objs": [
+    {"cls":"Base_WarfareBBarrier10x","x":0,"y":13,"z":0,"dir":0},
+    {"cls":"Base_WarfareBBarrier10x","x":-15,"y":0,"z":0,"dir":90},
+    {"cls":"Base_WarfareBBarrier10x","x":15,"y":0,"z":0,"dir":90},
+    {"cls":"Land_HBarrier_large","x":-10,"y":-13,"z":0,"dir":0},
+    {"cls":"Land_HBarrier_large","x":-5,"y":-13,"z":0,"dir":0},
+    {"cls":"Land_HBarrier_large","x":5,"y":-13,"z":0,"dir":0},
+    {"cls":"Land_HBarrier_large","x":10,"y":-13,"z":0,"dir":0}
+  ]
+}

@@ -30,7 +30,7 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 	//--- military marker "mil_arrow2" with setMarkerDirLocal; "Arrow" was the lone legacy type
 	//--- that never got converted, so setMarkerDirLocal was a no-op on it. Switch to mil_arrow2
 	//--- so the existing (correct) getDir heading below actually renders. A2-OA-1.64-safe.
-	_marker setMarkerTypeLocal "mil_arrow2";
+	_marker setMarkerTypeLocal "mil_arrow2"; //--- WAVE-2 MARKER FIX (2026-07-02): revert b_inf (an ARMA 3 marker type - invalid/blank in A2-OA-1.64, which broke both the own-arrow and squad markers) back to mil_arrow2, the working heading arrow the rest of this mission uses. Player class still shows via the [SOL]/[MED]/... label tag below. A true class ICON needs a custom CfgMarkers texture (morning enhancement).
 	_marker setMarkerDirLocal 0;
 	_marker setMarkerSizeLocal [0.7,0.7];
 	_marker setMarkerAlphaLocal 0;
@@ -71,7 +71,7 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 //--- local/valid. A2-OA-1.64 safe: createMarkerLocal / setMarker*Local / getPos / getDir / alive / abs.
 _ownMarker = Format["%1AdvancedSquadOWNMarker", _sideText];
 createMarkerLocal [_ownMarker,[0,0,0]];
-_ownMarker setMarkerTypeLocal "mil_arrow2";
+_ownMarker setMarkerTypeLocal "mil_arrow2"; //--- WAVE-2 MARKER FIX (2026-07-02): revert b_inf (an ARMA 3 marker type - invalid/blank in A2-OA-1.64, which broke both the own-arrow and squad markers) back to mil_arrow2, the working heading arrow the rest of this mission uses. Player class still shows via the [SOL]/[MED]/... label tag below. A true class ICON needs a custom CfgMarkers texture (morning enhancement).
 _ownMarker setMarkerSizeLocal [0.7,0.7];
 _ownMarker setMarkerColorLocal "ColorOrange";
 _ownMarker setMarkerDirLocal 0;
@@ -79,6 +79,12 @@ _ownMarker setMarkerAlphaLocal 0;
 _ownLastPos   = [-99999,-99999,0];
 _ownLastDir   = -999;
 _ownLastAlpha = -1;
+//--- cmdcon42 (Ray 2026-07-02) DOUBLE-CLASS-TAG FIX: the WAVE-2 own-marker CLASS TEXT block that stamped the
+//--- BARE class ("ENG") straight onto the AdvancedSquadOWNMarker has been REMOVED. That own-marker sits at the
+//--- player's exact position, so its bare "ENG" rendered as a leading prefix ON TOP of the per-team player marker,
+//--- which already appends the "[ENG]" bracket suffix (the class-tag path further below at the QoL-S4 block). The
+//--- player therefore saw the class abbreviation TWICE ("ENG ... [ENG]"). Ray wants ONLY the bracket suffix, so the
+//--- prefix writer is gone; the own-marker keeps drawing the orange heading arrow with NO text (as it did pre-WAVE-2).
 
 while {!gameOver} do {
 	// Marty: Only refresh marker state while the player can see map data through the map, GPS, or a Warfare dialog.
@@ -111,6 +117,9 @@ while {!gameOver} do {
 				_ownLastPos = _ownPos;
 			};
 			_ownDir = getDir (vehicle player);
+			//--- cmdcon42: the WAVE-2 own-marker CLASS TEXT writer was here and is intentionally removed
+			//--- (see the DOUBLE-CLASS-TAG FIX note above). The own-marker draws heading only; the class tag
+			//--- shows once via the per-team player marker's "[ENG]" suffix in the QoL-S4 block below.
 			_ownDirDiff = abs (_ownDir - _ownLastDir);
 			if (_ownDirDiff > 180) then {_ownDirDiff = 360 - _ownDirDiff};
 			if (_ownLastDir < 0 || _ownDirDiff > 5) then {
@@ -183,7 +192,7 @@ while {!gameOver} do {
 				if ((_count - 1) >= count _markerNames) then {
 					_marker = Format["%1AdvancedSquad%2Marker", _sideText, _count];
 					createMarkerLocal [_marker,[0,0,0]];
-					_marker setMarkerTypeLocal "mil_arrow2";
+					_marker setMarkerTypeLocal "mil_arrow2"; //--- WAVE-2 MARKER FIX (2026-07-02): revert b_inf (an ARMA 3 marker type - invalid/blank in A2-OA-1.64, which broke both the own-arrow and squad markers) back to mil_arrow2, the working heading arrow the rest of this mission uses. Player class still shows via the [SOL]/[MED]/... label tag below. A true class ICON needs a custom CfgMarkers texture (morning enhancement).
 					_marker setMarkerDirLocal 0;
 					_marker setMarkerSizeLocal [0.7,0.7];
 					_marker setMarkerAlphaLocal 0;
@@ -302,7 +311,7 @@ while {!gameOver} do {
 						_classTag = switch (_leaderClass) do {
 							case "Engineer": {"ENG"};
 							case "Soldier":  {"SOL"};
-							case "SpecOps":  {"SUP"};
+							case "SpecOps":  {"SPEC"};
 							case "Spotter":  {"SNI"};
 							case "Medic":    {"MED"};
 							case "Officer":  {"OFF"};

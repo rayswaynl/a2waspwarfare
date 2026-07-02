@@ -71,6 +71,38 @@ _u = _u + ["ArmoredSUV_PMC"];
 
 _l = _l + [_u];
 
+if ((missionNamespace getVariable ["WFBE_C_GUER_WAVE_DEPTH_VARIANTS", 0]) > 0) then {
+	//--- Optional lane 31 variants: same group keys, existing classnames only, no flag-0 roster change.
+	_k = _k + ["Squad"];
+	_u		= ["TK_GUE_Warlord_EP1"];
+	_u = _u + ["TK_GUE_Bonesetter_EP1"];
+	_u = _u + ["TK_GUE_Soldier_AT_EP1"];
+	_u = _u + ["TK_GUE_Soldier_AR_EP1"];
+	_u = _u + ["TK_GUE_Soldier_MG_EP1"];
+	_l = _l + [_u];
+
+	_k = _k + ["Team"];
+	_u		= ["TK_GUE_Warlord_EP1"];
+	_u = _u + ["TK_GUE_Bonesetter_EP1"];
+	_u = _u + ["TK_GUE_Soldier_AT_EP1"];
+	_u = _u + ["TK_GUE_Soldier_MG_EP1"];
+	_l = _l + [_u];
+
+	_k = _k + ["Team_MG"];
+	_u		= ["TK_GUE_Warlord_EP1"];
+	_u = _u + ["TK_GUE_Soldier_MG_EP1"];
+	_u = _u + ["TK_GUE_Soldier_AR_EP1"];
+	_u = _u + ["TK_GUE_Bonesetter_EP1"];
+	_l = _l + [_u];
+
+	_k = _k + ["Motorized"];
+	_u		= ["Offroad_SPG9_TK_GUE_EP1"];
+	_u = _u + ["TK_GUE_Soldier_AT_EP1"];
+	_u = _u + ["TK_GUE_Bonesetter_EP1"];
+	_u = _u + ["TK_GUE_Soldier_AR_EP1"];
+	_l = _l + [_u];
+};
+
 _k = _k + ["AA_Light"];
 _u		= ["Ural_ZU23_TK_GUE_EP1"];
 _u = _u + ["Ural_ZU23_TK_GUE_EP1"];

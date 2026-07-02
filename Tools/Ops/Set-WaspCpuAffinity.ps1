@@ -1,3 +1,4 @@
+#requires -Version 5.1
 <#
 .SYNOPSIS
     Pin the Arma 2 OA dedicated server + its headless clients to chosen CPU cores
@@ -23,11 +24,13 @@
     HC2 0xC00 (CPUs 10-11).
 
 .PARAMETER ServerMask
-    Affinity bitmask for arma2oaserver.exe (e.g. 0x0FF). If omitted, the server is left untouched.
+    Affinity bitmask for arma2oaserver.exe (e.g. 0x0FF). If omitted or 0, the server is left untouched.
+    Negative masks are rejected because processor-affinity masks are unsigned bit fields.
 
 .PARAMETER HcMasks
     One affinity bitmask per HC, in connection order (e.g. 0x300,0xC00). HCs beyond the
-    supplied masks are left untouched. If omitted, HCs are left untouched.
+    supplied masks are left untouched. A 0 entry leaves that HC untouched. Negative masks
+    are rejected because processor-affinity masks are unsigned bit fields.
 
 .PARAMETER Apply
     Actually set the affinities. Without this switch the script only reports (dry run).
@@ -38,7 +41,15 @@
 #>
 [CmdletBinding()]
 param(
+    [ValidateScript({
+        if ($_ -lt 0) { throw 'Affinity masks must be non-negative. Use 0 to leave a target untouched.' }
+        $true
+    })]
     [int64]$ServerMask = 0,
+    [ValidateScript({
+        if ($_ -lt 0) { throw 'Affinity masks must be non-negative. Use 0 to leave a target untouched.' }
+        $true
+    })]
     [int64[]]$HcMasks = @(),
     [switch]$Apply
 )
