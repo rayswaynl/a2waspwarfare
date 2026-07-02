@@ -228,18 +228,13 @@ for '_z' from 0 to (count _c)-1 do {
 };
 
 //--- Lane 184: EAST already has PBX in the Light-factory roster and metadata. Keep legacy defaults
-//--- untouched, then normalize it as the cheap coastal utility row only when the lane flag passes.
+//--- untouched, then normalize it as the cheap utility row only when a configured probe confirms coastal water.
 if ((missionNamespace getVariable ["WFBE_C_COASTAL_UTILITY_BOATS", 0]) > 0) then {
 	_wfbeCoastalUtility = false;
-	if !(isNil "IS_naval_map") then {
-		if (IS_naval_map) then {_wfbeCoastalUtility = true};
-	};
-	if (!_wfbeCoastalUtility) then {
-		{
-			_wfbeProbe = _x;
-			if (surfaceIsWater _wfbeProbe) exitWith {_wfbeCoastalUtility = true};
-		} forEach (missionNamespace getVariable ["WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES", []]);
-	};
+	{
+		_wfbeProbe = _x;
+		if (surfaceIsWater _wfbeProbe) exitWith {_wfbeCoastalUtility = true};
+	} forEach (missionNamespace getVariable ["WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES", []]);
 	if (_wfbeCoastalUtility) then {
 		_get = missionNamespace getVariable "PBX";
 		if !(isNil "_get") then {
