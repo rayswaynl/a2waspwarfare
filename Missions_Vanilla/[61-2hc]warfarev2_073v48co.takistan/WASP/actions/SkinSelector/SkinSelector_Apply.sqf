@@ -284,6 +284,24 @@ player Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\AddActions.sqf";
 player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
 
+//--- cmdcon42 BUG-8 RESPAWN/ENROLLMENT RE-REGISTRATION (Ray 2026-07-02): the swap unit is created with
+//--- WFBE_CO_FNC_CreateUnit _global=false, so Common\Init\Init_Unit.sqf NEVER runs on it, and the
+//--- engine group-respawn (Header.hpp respawn=3) binds a player to BASE spawns through the enrollment
+//--- GLOBALS + the group, NOT through per-unit slot state. Init_Client.sqf sets these once
+//--- (sideJoined/WFBE_Client_SideJoined/sideID/WFBE_Client_SideID + clientTeam/WFBE_Client_Team = group
+//--- player) and Client_OnKilled re-asserts leadership each death. After selectPlayer into a fresh body
+//--- those team GLOBALS can point at the OLD (now-deleted) group object; when the swapped body later
+//--- DIES the death chain then reads a stale team and the RespawnMenu's [sideJoined, WFBE_DeathLocation]
+//--- Call GetRespawnAvailable produced NO base spawns (RPT: only deadspawn entries, then a stranded
+//--- dead player). Re-point the team globals at the player's CURRENT group so the enrollment the respawn
+//--- system reads is valid on the new body. sideJoined/sideID are SIDE-derived and unchanged by the swap
+//--- (same side), so we leave them; we only fix the GROUP-bound handles. Idempotent, A2-OA-1.64 safe
+//--- (isNull / group / plain global assignment - no A3-only commands).
+if (!isNull (group player)) then {
+	clientTeam = group player;
+	WFBE_Client_Team = group player;
+};
+
 //--- Re-add the User11 KeyDown EH — it lived on the old (deleted) unit.
 player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];
 
