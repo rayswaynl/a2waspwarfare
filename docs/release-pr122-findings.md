@@ -1,11 +1,88 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 09:24 Europe/Amsterdam
+Last updated: 2026-07-02 09:36 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 09:36 Update
+
+Final snapshot found new PR #125 movement after the 09:24 findings push.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `1710fcfe1fd3b6a51843946f56f040ac79987b99`
+- PR #125: `4893faaa5dc7942f04e9993fb93fb44c8425cc98`
+- PR #126: `46ed989e4db966cf02d20c498bfca53490b651b2`
+- PR #136: `d22455ca3d1a6c0b32d4e2a90082ebd11fa55254`
+
+PR #125 moved from `cf4e93af1a2665bdab13448a03d2fbf3e3b33edf` to
+`4893faaa5dc7942f04e9993fb93fb44c8425cc98`.
+
+New commit:
+
+- `4893faaa5` - `fix: guard repair and guer support authority`
+
+Scope:
+
+- both-map `Client/Action/Action_RepairCamp.sqf`
+- both-map `Client/Action/Action_RepairCampEngineer.sqf`
+- both-map `Client/GUI/GUI_Menu_Economy.sqf`
+- both-map `Server/Functions/Server_HandleSpecial.sqf`
+- both-map `Server/PVFunctions/RequestFOBStructure.sqf`
+- `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`
+
+Validation:
+
+- focused `git diff --check cf4e93af1a..origin/codex/release-command-center-20260630`:
+  pass
+- `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`: pass, including
+  `Camp repair authority guard` and `GUER vehicle action authority guard`
+- `Tools/PrTestHarness/Run-WaspFinalCheck.ps1`: pass
+- Chernarus A2 OA lint: `744` SQF files, `0` fail, `0` review
+- Takistan A2 OA lint: `747` SQF files, `0` fail, `0` review
+- High-only BugHunt: no suspects
+- LoadoutManager RELEASE: exit `0`, `CHERNARUS DONE`, `TAKISTAN DONE`
+- release package validation for local `_MISSIONS.7z`, expected git
+  `4893faaa5d`, entries `1885`
+
+Local package-content rebuild:
+
+- SHA256:
+  `408DCA8D382610F4EB11A190181700C74A9E52EF16D50A5AC07A10EEF43A62B4`
+- size: `7167238`
+- entries: `1885`
+- manifests:
+  `outputs/a2waspwarfare-pr125-4893faaa-local-package-manifest-2026-07-02-0933.json`
+  and
+  `outputs/a2waspwarfare-pr125-4893faaa-local-package-manifest-2026-07-02-0933.md`
+
+Both maintained terrain hashes match for the touched mission files:
+
+- `Client/Action/Action_RepairCamp.sqf`:
+  `acb3eacaaa8dceaa1ca911d3123e252a2005ba6a`
+- `Client/Action/Action_RepairCampEngineer.sqf`:
+  `5608e542fc6c556a70ee9e35d1827c1f66c72807`
+- `Client/GUI/GUI_Menu_Economy.sqf`:
+  `56d10b57b514bcf20bceb4fedec33c9610aee9df`
+- `Server/Functions/Server_HandleSpecial.sqf`:
+  `7e16e21186e04432578d73c8ae6a9e822a038478`
+- `Server/PVFunctions/RequestFOBStructure.sqf`:
+  `e63a6cebb35823f640fc6c17f338d83b7d5ea870`
+
+Boundary: PR #125's GitHub body is stale because it still advertises the prior
+`cf4e93af1a` /
+`0AC507E1493C82975F8F945B618FBF04268303C4D6B605B5A2C6BD6B4FEAC2C5` package
+tuple and wiki `1710fcf`, while the branch head is now `4893faaa5`. PR #126 is
+also stale for active package identity because it targets `cf4e93af1a` /
+`F4F19086...` / wiki `a82afcd`.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 09:24 Update
 
