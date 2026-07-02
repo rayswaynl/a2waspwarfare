@@ -298,33 +298,38 @@ switch (_args select 0) do {
 	};
 
 	case "RespawnST": {
-		Private ["_cmdTeam","_playerTeam","_requester","_side","_st"];
+		Private ["_cmdTeam","_requester","_requestTeam","_side","_st"];
 		if (count _args < 4) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: rejected short RespawnST payload [%1].", _args]] Call WFBE_CO_FNC_LogContent;
 		};
 		_side = _args select 1;
-		_requester = _args select 2;
-		_playerTeam = _args select 3;
+		_requestTeam = _args select 2;
+		_requester = _args select 3;
 		if (!(_side in [west, east])) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST with invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
 		};
-		if ((typeName _requester != "OBJECT") || {typeName _playerTeam != "GROUP"}) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed RespawnST requester=%1 team=%2.", typeName _requester, typeName _playerTeam]] Call WFBE_CO_FNC_LogContent;
+		if ((typeName _requestTeam != "GROUP") || {typeName _requester != "OBJECT"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed RespawnST team=%1 requester=%2.", typeName _requestTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
 		};
-		if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side}) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		if (isNull _requestTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _requestTeam} || {side _requestTeam != _side}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _requestTeam, _side]] Call WFBE_CO_FNC_LogContent;
 		};
 		_cmdTeam = _side Call WFBE_CO_FNC_GetCommanderTeam;
-		if (isNull _cmdTeam || {leader _cmdTeam != _requester} || {!isPlayer (leader _cmdTeam)}) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST from non-commander requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		if (isNull _cmdTeam || {_requestTeam != _cmdTeam} || {leader _cmdTeam != _requester} || {!isPlayer (leader _cmdTeam)}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST from non-commander requester=%1 team=%2 commander=%3 side=%4.", _requester, _requestTeam, _cmdTeam, _side]] Call WFBE_CO_FNC_LogContent;
 		};
 		if ((missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 0]) != 0) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST while supply system is disabled for [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
 		};
 		_st = (_side call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_ai_supplytrucks";
 		if (isNil "_st" || {typeName _st != "ARRAY"}) then {_st = []};
-		{if (!isNull (driver _x)) then {driver _x setDammage 1};_x setDammage 1} forEach _st;
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Supply Trucks were forced respawn.", str _side]] Call WFBE_CO_FNC_LogContent;
+		{
+			if ((typeName _x == "OBJECT") && {!isNull _x}) then {
+				if (!isNull (driver _x)) then {driver _x setDammage 1};
+				_x setDammage 1;
+			};
+		} forEach _st;
+		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Supply Trucks were forced respawn by commander [%2].", str _side, name _requester]] Call WFBE_CO_FNC_LogContent;
 	};
 
 	case "uav": {

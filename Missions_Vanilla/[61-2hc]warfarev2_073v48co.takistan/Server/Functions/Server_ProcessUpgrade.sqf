@@ -7,7 +7,7 @@
 		- Player's call
 */
 
-Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_logic","_ownedBySide","_refreshedArtillery","_side","_sideText","_stime","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle","_patrolNewLevel","_patrolCashPool","_patrolPlayers","_patrolShare","_patrolSupply"];
+Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_logic","_ownedBySide","_refreshedArtillery","_side","_sideText","_stime","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle","_vehSide","_patrolNewLevel","_patrolCashPool","_patrolPlayers","_patrolShare","_patrolSupply"];
 
 _side = _this select 0;
 _upgrade_id = _this select 1;
@@ -96,8 +96,9 @@ if (_upgrade_id == WFBE_UP_ARTYAMMO) then {
 		{
 			_vehicle = _x;
 			if ((local _vehicle) && ((typeOf _vehicle) in _artilleryTypes) && !(_vehicle in _refreshedArtillery)) then {
-				_ownedBySide = true;
-				if !(isNil {_vehicle getVariable "side"}) then {_ownedBySide = (_vehicle getVariable "side") == _side};
+				_vehSide = _vehicle getVariable "wfbe_side";
+				if (isNil "_vehSide") then {_vehSide = _vehicle getVariable "side"};
+				_ownedBySide = if (isNil "_vehSide") then {true} else {_vehSide == _side};
 
 				if (_ownedBySide) then {
 					[_vehicle, _artilleryIndex, _side] Call EquipArtillery;

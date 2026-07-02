@@ -97,10 +97,10 @@ while {alive player && dialog} do {
 	//--- Respawn Supply Trucks.
 	if (MenuAction == 4) then {
 		MenuAction = -1;
-		// WFBE_RequestSpecial = ['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined,player,clientTeam]];
+		// WFBE_RequestSpecial = ['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined,clientTeam,player]];
 		// publicVariable 'WFBE_RequestSpecial';
-		// if (isHostedServer) then {['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined,player,clientTeam]] Spawn HandleSPVF};
-		["RequestSpecial", ["RespawnST",sideJoined,player,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+		// if (isHostedServer) then {['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined]] Spawn HandleSPVF};
+		["RequestSpecial", ["RespawnST",sideJoined,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 		_lastUse = time;
 	};
 	

@@ -308,6 +308,8 @@ function Test-SideSupplyAuthorityGuard {
 		if (-not ($server.Contains('typeName _payload != "ARRAY"') -and $server.Contains("count _payload < 3"))) { $missing += "$($entry.Terrain):payload-shape" }
 		if (-not ($server.Contains('typeName _side != "SIDE"') -and $server.Contains("_side != _expectedSide"))) { $missing += "$($entry.Terrain):side-channel" }
 		if (-not $server.Contains('typeName _amount != "SCALAR"')) { $missing += "$($entry.Terrain):amount-type" }
+		if (-not ($server.Contains('_cmdTeam = (_side) call WFBE_CO_FNC_GetCommanderTeam') -and $server.Contains('_cmdName = "AI/None"') -and $server.Contains('if (!isNull _cmdTeam) then {_cmdName = name leader _cmdTeam}'))) { $missing += "$($entry.Terrain):safe-commander-log" }
+		if ($serverCode.Contains('name leader ((_side) call WFBE_CO_FNC_GetCommanderTeam)')) { $missing += "$($entry.Terrain):legacy-unsafe-commander-log" }
 		if (-not ($server.Contains('[_this, west] Call WFBE_SE_FNC_HandleSideSupplyChange') -and $server.Contains('[_this, resistance] Call WFBE_SE_FNC_HandleSideSupplyChange') -and $server.Contains('[_this, east] Call WFBE_SE_FNC_HandleSideSupplyChange'))) { $missing += "$($entry.Terrain):handler-wiring" }
 		if ($serverCode.Contains("_currentSupply - _amount") -or $commonCode.Contains("_currentSupply - _amount")) { $missing += "$($entry.Terrain):old-negative-floor" }
 	}
@@ -323,10 +325,13 @@ function Test-UpgradeRequestAuthorityGuard {
 	$missing = @()
 	foreach ($entry in $roots) {
 		$requestPath = Join-Path $entry.Root "Server\PVFunctions\RequestUpgrade.sqf"
+		$processPath = Join-Path $entry.Root "Server\Functions\Server_ProcessUpgrade.sqf"
 		$clientPath = Join-Path $entry.Root "Client\GUI\GUI_UpgradeMenu.sqf"
 		$clientSpecialPath = Join-Path $entry.Root "Client\Functions\Client_FNC_Special.sqf"
 		$request = Get-Text $requestPath
+		$process = Get-Text $processPath
 		$requestCode = [regex]::Replace($request, "//.*", "")
+		$processCode = [regex]::Replace($process, "//.*", "")
 		$client = Get-Text $clientPath
 		$clientCode = [regex]::Replace($client, "//.*", "")
 		$clientSpecial = Get-Text $clientSpecialPath
@@ -345,6 +350,8 @@ function Test-UpgradeRequestAuthorityGuard {
 		if (-not ($clientSpecial.Contains('upgrade-sync') -and $clientSpecial.Contains('commanderTeam == group player'))) { $missing += "$($entry.Terrain):accepted-start-sync" }
 		if ($requestCode.Contains("_this Spawn WFBE_SE_FNC_ProcessUpgrade")) { $missing += "$($entry.Terrain):raw-spawn" }
 		if (-not $requestCode.Contains("_args Spawn WFBE_SE_FNC_ProcessUpgrade")) { $missing += "$($entry.Terrain):validated-spawn" }
+		if (-not ($process.Contains('_vehSide = _vehicle getVariable "wfbe_side"') -and $process.Contains('_vehSide = _vehicle getVariable "side"') -and $process.Contains('_ownedBySide = if (isNil "_vehSide") then {true} else {_vehSide == _side}'))) { $missing += "$($entry.Terrain):artillery-side-ownership" }
+		if ($processCode.Contains('if !(isNil {_vehicle getVariable "side"})')) { $missing += "$($entry.Terrain):legacy-artillery-side-only" }
 	}
 	Add-Result "Upgrade request authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
@@ -758,7 +765,7 @@ function Test-PlayerSupportRequestSpecialAuthorityGuard {
 	Add-Result "Player support RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
-function Test-SupplyTruckRespawnAuthorityGuard {
+function Test-RespawnSupplyTruckAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
 		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
@@ -766,8 +773,10 @@ function Test-SupplyTruckRespawnAuthorityGuard {
 	)
 	$missing = @()
 	foreach ($entry in $roots) {
-		$server = Get-Text (Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf")
-		$economy = Get-Text (Join-Path $entry.Root "Client\GUI\GUI_Menu_Economy.sqf")
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$clientPath = Join-Path $entry.Root "Client\GUI\GUI_Menu_Economy.sqf"
+		$server = Get-Text $serverPath
+		$client = Get-Text $clientPath
 		$serverCode = [regex]::Replace($server, "//.*", "")
 		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
 		$caseAt = $serverCode.IndexOf('case "RespawnST"')
@@ -775,20 +784,22 @@ function Test-SupplyTruckRespawnAuthorityGuard {
 			$missing += "$($entry.Terrain):missing-case"
 			continue
 		}
-		$nextAt = $serverCode.IndexOf('case "', $caseAt + 1)
-		if ($nextAt -lt 0) { $nextAt = $serverCode.Length }
-		$block = $serverCode.Substring($caseAt, $nextAt - $caseAt)
+		$caseEnd = $serverCode.IndexOf('case "uav"', $caseAt)
+		if ($caseEnd -lt 0) { $caseEnd = $serverCode.Length }
+		$block = $serverCode.Substring($caseAt, $caseEnd - $caseAt)
 		$countAt = $block.IndexOf('count _args < 4')
 		$selectAt = $block.IndexOf('_args select 1')
 		if ($countAt -lt 0) { $missing += "$($entry.Terrain):short-payload-guard" }
 		if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):guard-after-select" }
-		if (-not ($block.Contains('_side in [west, east]') -and $block.Contains('typeName _requester != "OBJECT"') -and $block.Contains('typeName _playerTeam != "GROUP"'))) { $missing += "$($entry.Terrain):payload-types" }
-		if (-not ($block.Contains('!isPlayer _requester') -and $block.Contains('group _requester != _playerTeam') -and $block.Contains('side _playerTeam != _side'))) { $missing += "$($entry.Terrain):requester-team-binding" }
-		if (-not ($block.Contains('WFBE_CO_FNC_GetCommanderTeam') -and $block.Contains('leader _cmdTeam != _requester') -and $block.Contains('!isPlayer (leader _cmdTeam)') -and $block.Contains('rejected RespawnST from non-commander'))) { $missing += "$($entry.Terrain):commander-binding" }
+		if (-not ($block.Contains('_side in [west, east]') -and $block.Contains('typeName _requestTeam != "GROUP"') -and $block.Contains('typeName _requester != "OBJECT"'))) { $missing += "$($entry.Terrain):payload-types" }
+		if (-not ($block.Contains('!isPlayer _requester') -and $block.Contains('group _requester != _requestTeam') -and $block.Contains('side _requestTeam != _side'))) { $missing += "$($entry.Terrain):requester-team-binding" }
+		if (-not ($block.Contains('_side Call WFBE_CO_FNC_GetCommanderTeam') -and $block.Contains('_requestTeam != _cmdTeam') -and $block.Contains('leader _cmdTeam != _requester') -and $block.Contains('rejected RespawnST from non-commander'))) { $missing += "$($entry.Terrain):commander-binding" }
 		if (-not ($block.Contains('WFBE_C_ECONOMY_SUPPLY_SYSTEM') -and $block.Contains('rejected RespawnST while supply system is disabled'))) { $missing += "$($entry.Terrain):supply-system-gate" }
-		if (-not $economy.Contains('["RequestSpecial", ["RespawnST",sideJoined,player,clientTeam]]')) { $missing += "$($entry.Terrain):client-requester-context" }
+		if (-not ($block.Contains('typeName _st != "ARRAY"') -and $block.Contains('typeName _x == "OBJECT"') -and $block.Contains('Supply Trucks were forced respawn by commander'))) { $missing += "$($entry.Terrain):supplytruck-array-guard" }
+		if (-not $client.Contains('["RequestSpecial", ["RespawnST",sideJoined,clientTeam,player]]')) { $missing += "$($entry.Terrain):client-requester-context" }
+		if ($client.Contains('["RequestSpecial", ["RespawnST",sideJoined]]')) { $missing += "$($entry.Terrain):legacy-client-shape" }
 	}
-	Add-Result "Supply truck respawn authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+	Add-Result "Respawn supply truck authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
 function Test-AicomCommandConsoleAuthorityGuard {
@@ -803,7 +814,7 @@ function Test-AicomCommandConsoleAuthorityGuard {
 		$clientPath = Join-Path $entry.Root "Client\GUI\GUI_Menu_Command.sqf"
 		$server = Get-Text $serverPath
 		$client = Get-Text $clientPath
-		if (-not ($client.Contains('["aicom-posture", sideJoined, _pv, player, group player]') -and $client.Contains('["aicom-fieldorder", sideJoined, _pv, player, group player]') -and $client.Contains('["aicom-ai-command", sideJoined, _send, player, group player]') -and $client.Contains('["aicom-arty-here", sideJoined, [_position select 0, _position select 1, 0], player, group player]') -and $client.Contains('["aicom-request-unit", sideJoined, _reqTypes select _rs, player, group player]') -and $client.Contains('["aicom-team-disband", sideJoined, "ALL", player, group player]'))) { $missing += "$($entry.Terrain):client-requester-context" }
+		if (-not ($client.Contains('["aicom-posture", sideJoined, _pv, player, group player]') -and $client.Contains('["aicom-fieldorder", sideJoined, _pv, player, group player]') -and $client.Contains('["aicom-focus", sideJoined, _fT, player, group player]') -and $client.Contains('["aicom-ai-command", sideJoined, _send, player, group player]') -and $client.Contains('["aicom-arty-here", sideJoined, [_position select 0, _position select 1, 0], player, group player]') -and $client.Contains('["aicom-request-unit", sideJoined, _reqTypes select _rs, player, group player]') -and $client.Contains('["aicom-team-disband", sideJoined, "ALL", player, group player]'))) { $missing += "$($entry.Terrain):client-requester-context" }
 		if (-not ($server.Contains('_validateAicomConsoleRequester') -and $server.Contains('count _vArgs < 5'))) { $missing += "$($entry.Terrain):validator-shape" }
 		if (-not ($server.Contains('typeName _requester != "OBJECT"') -and $server.Contains('typeName _requestTeam != "GROUP"') -and $server.Contains('!isPlayer _requester') -and $server.Contains('group _requester != _requestTeam') -and $server.Contains('side _requestTeam != _vSide'))) { $missing += "$($entry.Terrain):requester-team-binding" }
 		if (-not ($server.Contains('leader _cmdTeam != _requester') -and $server.Contains('!isPlayer (leader _cmdTeam)'))) { $missing += "$($entry.Terrain):human-commander-binding" }
@@ -1009,6 +1020,7 @@ function Test-AicomGroupVariableDefaults {
 		$runTeamPath = Join-Path $entry.Root "Common\Functions\Common_RunCommanderTeam.sqf"
 		$commandGuiPath = Join-Path $entry.Root "Client\GUI\GUI_Menu_Command.sqf"
 		$initCommonPath = Join-Path $entry.Root "Common\Init\Init_Common.sqf"
+		$getAicomFundsPath = Join-Path $entry.Root "Server\Functions\Server_GetAICommanderFunds.sqf"
 		$commanderDir = Join-Path $entry.Root "Server\AI\Commander"
 		$groupDefaultScanPaths = @(
 			$commandGuiPath,
@@ -1024,7 +1036,10 @@ function Test-AicomGroupVariableDefaults {
 		$runTeam = Get-Text $runTeamPath
 		$commandGui = Get-Text $commandGuiPath
 		$initCommon = Get-Text $initCommonPath
+		$getAicomFunds = Get-Text $getAicomFundsPath
 		if (-not $initCommon.Contains("WFBE_CO_FNC_GroupGetValue = Compile preprocessFileLineNumbers")) { $missing += "$($entry.Terrain):group-get-value-helper" }
+		if (-not $getAicomFunds.Contains('getVariable ["wfbe_aicom_funds", 0]')) { $missing += "$($entry.Terrain):aicom-funds-default" }
+		if ($getAicomFunds.Contains('getVariable "wfbe_aicom_funds"')) { $missing += "$($entry.Terrain):aicom-funds-raw-get" }
 		if (-not $execute.Contains('[_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-mode" }
 		if (-not $execute.Contains('[_team, "wfbe_teamgoto", [0,0,0]] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-goto" }
 		if (-not $execute.Contains('[_team, "wfbe_exec_lastmode", ""] Call WFBE_CO_FNC_GroupGetValue')) { $missing += "$($entry.Terrain):execute-lastmode" }
@@ -1744,12 +1759,12 @@ Test-FactoryQueueEmptyHeadGuard
 Test-AttackWavePvGuards
 Test-IcbmRequestSpecialAuthorityGuard
 Test-SupplyMissionPvGuards
-Test-SupplyTruckRespawnAuthorityGuard
 Test-ScudStrikeAuthorityGuard
 Test-GuerMortarRequestSpecialAuthorityGuard
 Test-CampRepairAuthorityGuard
 Test-GuerVehicleActionAuthorityGuard
 Test-PlayerSupportRequestSpecialAuthorityGuard
+Test-RespawnSupplyTruckAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards
