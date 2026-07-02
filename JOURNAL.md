@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Lane 116 dead patrol-loop stale audit [codex/lane116-dead-patrol-loop-audit]
+
+Verified the lane 116 prompt item against current `origin/claude/build84-cmdcon36`. The live
+town-AI patrol monitor is not dead code (`Common_CreateTownUnits.sqf` still launches
+`server_town_patrol.sqf` for valid town groups), but the actual defect is already fixed in both
+mission roots: null teams exit early, `_aliveTeam` is recomputed, and the loop uses
+`while {!WFBE_GameOver && _aliveTeam}` instead of the old non-terminating shape.
+
+Also checked the adjacent lane 123 boundary while in the same files: `Server_GetTownPatrol.sqf`
+already maps SV `>= 60` to HEAVY in Chernarus and Takistan, and repo-wide caller search only finds
+the compile registration. Added `docs/design/DEAD-PATROL-LOOP-AUDIT-2026-07-02.md`; no mission
+source changed, so no LoadoutManager mirror was required.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
