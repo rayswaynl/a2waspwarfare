@@ -1,4 +1,4 @@
-private["_is","_ii","_awaits","_incomeCoef","_divisor","_commander_enabled","_currency_system","_logik","_playerOldScore","_playerNewScore","_scoreDiff","_income","_income_player","_income_commander","_supply","_comTeam","_paycheck", "_supply_max_limit"];
+private["_is","_ii","_awaits","_incomeCoef","_divisor","_commander_enabled","_currency_system","_logik","_playerOldScore","_playerNewScore","_scoreDiff","_income","_income_player","_income_commander","_supply","_comTeam","_paycheck", "_supply_max_limit","_ticker","_tickerAfter","_tickerDelta","_tickerIncome","_tickerLast","_tickerLeader","_tickerMsg","_tickerOther","_tickerSign"];
 
 _is = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM";
 _ii = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_INTERVAL";
@@ -11,6 +11,7 @@ _currency_system = missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM"
 _supply_max_limit = missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT";
 _playerOldScore = 0;
 _playerNewScore = 0;
+_ticker = missionNamespace getVariable ["WFBE_C_ECONOMY_TRANSACTION_TICKER", 0];
 
 if (_is == 3) then {
 	_incomeCoef = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_COEF";
@@ -63,6 +64,11 @@ while {!gameOver} do {
 		_supply = 0;
 
 		_supply =  (_x) Call WFBE_CO_FNC_GetTownsSupply;
+		if (_ticker > 0) then {
+			{
+				if !(isNil "_x") then {_x setVariable ["wfbe_econ_ticker_income", 0]};
+			} forEach (_logik getVariable "wfbe_teams");
+		};
 		//--- B74.1 (Ray 2026-06-23): AICOM income TAPER for the territorial leader - diminishing per-town funds above
 		//--- TAPER_TOWNS so a runaway leader's treasury can't compound unbounded (soak: leader ran to +281k/tick). Each
 		//--- town beyond the threshold contributes only TAPER_RATE of a normal town. AICOM-ONLY: applied ONLY to the
@@ -108,6 +114,11 @@ while {!gameOver} do {
 						};
 
 						if (_paycheck != 0) then {[_x, _paycheck] Call WFBE_CO_FNC_ChangeTeamFunds};
+						if (_ticker > 0 && {_paycheck > 0}) then {
+							_tickerIncome = _x getVariable "wfbe_econ_ticker_income";
+							if (isNil "_tickerIncome") then {_tickerIncome = 0};
+							_x setVariable ["wfbe_econ_ticker_income", _tickerIncome + _paycheck];
+						};
 					};
 				} forEach (_logik getVariable "wfbe_teams");
 
@@ -148,6 +159,36 @@ while {!gameOver} do {
 		//--- so this is a no-op until armed. _x = side (commander treasury is per-side; GUER already excluded by the forEach).
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_FUNDS_SINK_ENABLE", 0]) > 0 && _commander_enabled && {!isNil "WFBE_SE_FNC_AI_Com_FundsSink"}) then {
 			(_x) Call WFBE_SE_FNC_AI_Com_FundsSink;
+		};
+
+		if (_ticker > 0) then {
+			{
+				if !(isNil "_x") then {
+					_tickerLeader = leader _x;
+					if (isPlayer _tickerLeader) then {
+						_tickerAfter = _x getVariable "wfbe_funds";
+						if (isNil "_tickerAfter") then {_tickerAfter = 0};
+						_tickerLast = _x getVariable "wfbe_econ_ticker_last_funds";
+						_tickerIncome = _x getVariable "wfbe_econ_ticker_income";
+						if (isNil "_tickerIncome") then {_tickerIncome = 0};
+						if (isNil "_tickerLast") then {
+							_x setVariable ["wfbe_econ_ticker_last_funds", _tickerAfter];
+						} else {
+							_tickerDelta = _tickerAfter - _tickerLast;
+							if (_tickerDelta > 0 || {_tickerDelta < 0}) then {
+								_tickerOther = _tickerDelta - _tickerIncome;
+								_tickerSign = if (_tickerDelta > 0) then {"+"} else {"-"};
+								_tickerMsg = Format ["Economy: %1$%2 net last %3s", _tickerSign, (abs _tickerDelta), round _ii];
+								if (_tickerIncome > 0) then {_tickerMsg = Format ["%1 (+$%2 income)", _tickerMsg, _tickerIncome]};
+								if (_tickerOther > 0) then {_tickerMsg = Format ["%1 (+$%2 other)", _tickerMsg, _tickerOther]};
+								if (_tickerOther < 0) then {_tickerMsg = Format ["%1 (-$%2 spend/fees)", _tickerMsg, (abs _tickerOther)]};
+								[_tickerLeader, "DashboardAnnounce", [Format ["%1.", _tickerMsg]]] Call WFBE_CO_FNC_SendToClient;
+							};
+							_x setVariable ["wfbe_econ_ticker_last_funds", _tickerAfter];
+						};
+					};
+				};
+			} forEach (_logik getVariable "wfbe_teams");
 		};
 
 	} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: funds-only stipend, no supply/commander economy
