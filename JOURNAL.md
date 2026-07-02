@@ -1,5 +1,21 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 121 MHQ cash-repair audit [codex/lane121-mhq-cashrepair-audit]
+
+The fleet prompt row saying `Action_RepairMHQDepot.sqf` leaves `cashrepaired` permanently set is stale
+on the current `claude/build84-cmdcon36` target. Both maintained roots already use `cashrepaired` as an
+in-flight duplicate-use guard and clear it after the rebuilt HQ is registered:
+
+- `WASP/actions/Action_RepairMHQDepot.sqf` reads `cashrepaired` with default `false`, sends
+  `RequestMHQRepair`, then sets `cashrepaired` true while the cash repair is underway.
+- `Server/Functions/Server_MHQRepair.sqf` sets `wfbe_hq_repairing` true on entry, then clears both
+  `wfbe_hq_repairing` and `cashrepaired` after the new HQ object is installed on side logic.
+- The Chernarus and Takistan copies match for `Action_RepairMHQDepot.sqf` and
+  `Server_MHQRepair.sqf` on this lane's relevant paths.
+
+No mission source changed in this lane. The existing Mission Audit 60 repaired-HQ killed-EH note and
+the open DR-6 `RequestMHQRepair` authority-hardening PR are separate from this cash latch audit.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
