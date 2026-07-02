@@ -29,8 +29,8 @@ class Mission
 	randomSeed=6848509;
 	class Intel
 	{
-		briefingName="WASP Warfare Build 86 (Takistan)";
-		briefingDescription="Build 86: SCUD program, territorial victory, skin selector, command verbs, AI support, richer air and A-life.";
+		briefingName="WASP Warfare Build 87 (Takistan)";
+		briefingDescription="Build 87: producible SCUD and AI SCUD, dynamic oilfield with sabotage, EASA air roster, air cavalry and airlift, walls and defenses, chat tips.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;

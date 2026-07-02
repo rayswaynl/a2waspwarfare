@@ -9,7 +9,7 @@
 
 public abstract class BaseTerrain : InterfaceTerrain
 {
-    private const string ReleaseCandidateId = "build86-cmdcon41-20260702";
+    private const string ReleaseCandidateId = "build87-cmdcon42-20260702";
 
     // Properties that specifies the name/type of the terrain.
     public TerrainName TerrainName { get => terrainName; set => terrainName = value; }
