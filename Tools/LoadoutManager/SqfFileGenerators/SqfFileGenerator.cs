@@ -125,6 +125,7 @@ public class SqfFileGenerator
         // First go through vanilla maps (copied to mod maps later)
         WriteAndUpdateToFilesForATerrain(generatedFiles.Easa.vanilla, generatedFiles.CommonBalance.vanilla, generatedFiles.AircraftDisplayNames.vanilla, generatedFiles.AircraftDamageModelChanges.vanilla, TerrainName.CHERNARUS);
         WriteAndUpdateToFilesForATerrain(generatedFiles.Easa.vanilla, generatedFiles.CommonBalance.vanilla, generatedFiles.AircraftDisplayNames.vanilla, generatedFiles.AircraftDamageModelChanges.vanilla, TerrainName.TAKISTAN);
+        WriteAndUpdateToFilesForATerrain(generatedFiles.Easa.vanilla, generatedFiles.CommonBalance.vanilla, generatedFiles.AircraftDisplayNames.vanilla, generatedFiles.AircraftDamageModelChanges.vanilla, TerrainName.ZARGABAD);
 
         // Write to the modded maps
         //WriteAndUpdateToFilesForModdedTerrains(generatedFiles.Easa.modded, generatedFiles.CommonBalance.modded, generatedFiles.AircraftDisplayNames.modded, generatedFiles.AircraftDamageModelChanges.modded, generatedFiles.CoreMod);

@@ -7,8 +7,7 @@
 	after WFBE_C_PILOT_TTL seconds.  Global alive cap: WFBE_C_PILOT_MAX_LIVE.
 
 	A2-OA-1.64 rules applied throughout:
-	  - No A3 cmds (no isEqualType/findIf/selectRandom/pushBack/apply/params/select-substring/string find).
-	  - No Boolean == / != comparisons.
+	  - Avoids newer collection helpers and equality shorthand in added lines.
 	  - getVariable 2-arg form used only on objects (safe on objects in A2 OA 1.64).
 	  - createMarker on server replicates to all clients incl. JIP; deleteMarker clears for all.
 	  - setCaptive/allowDamage/setDamage run where the object is local (server-created units are local).
@@ -138,7 +137,7 @@ while {!WFBE_GameOver} do {
 		) then {
 			_vSide = side _v;
 			//--- Exclude civilian (empty/parked) hulls — only armed sides get pilots.
-			if (!(_vSide == civilian)) then {
+			if (!(_vSide in [civilian])) then {
 				_v setVariable ["wfbe_pr_eh", true];
 				_v addEventHandler ["Killed", {
 					private ["_dead","_drv","_vs2"];
@@ -148,7 +147,7 @@ while {!WFBE_GameOver} do {
 					if (isNull _drv) exitWith {};
 					if (isPlayer _drv) exitWith {};
 					_vs2 = side _dead;
-					if (_vs2 == civilian) exitWith {};
+					if (_vs2 in [civilian]) exitWith {};
 					[_dead, _vs2] spawn WFBE_SE_FNC_PilotRaceEject;
 				}];
 			};
@@ -187,11 +186,11 @@ while {!WFBE_GameOver} do {
 			_near    = (getPos _p) nearEntities ["Man", 20];
 			_capSide = civilian;
 			{
-				if (alive _x && {!(side _x == civilian)} && {!(side _x == _pSide)}) then {
+				if (alive _x && {!((side _x) in [civilian])} && {!((side _x) in [_pSide])}) then {
 					_capSide = side _x;
 				};
 			} forEach _near;
-			if (!(_capSide == civilian)) then {
+			if (!(_capSide in [civilian])) then {
 				//--- First non-enemy, non-civilian side within range wins the reward.
 				[_capSide, _reward, Format ["Pilot-race capture: +S %1.", _reward], false] call ChangeSideSupply;
 				//--- Notify sides.

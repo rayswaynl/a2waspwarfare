@@ -1,4 +1,4 @@
-Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_repairRange','_repTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
+Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_hitCfg','_hitName','_hitPoints','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_repairRange','_repTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
 _veh = _this select 0;
 _supports = _this select 1;
 _typeRepair = _this select 2;
@@ -76,6 +76,15 @@ while {true} do {
 //--- Fix the damages?
 if (_cts != 0) then {
 	_veh setDammage 0;
+	//--- setDammage clears the global scalar; clear config hitpoints too so wheels/engine do not stay broken.
+	_hitPoints = configFile >> "CfgVehicles" >> (typeOf _veh) >> "HitPoints";
+	if (isClass _hitPoints && {(count _hitPoints) > 0}) then {
+		for "_i" from 0 to ((count _hitPoints) - 1) do {
+			_hitCfg = _hitPoints select _i;
+			_hitName = getText (_hitCfg >> "name");
+			if (!(_hitName in [""])) then {_veh setHit [_hitName, 0]};
+		};
+	};
 	//--- Jets: a full repair restores fuel to 100% and re-arms the SPAAG survival mechanic.
 	if (_veh isKindOf "Plane") then {
 		_veh setFuel 1;

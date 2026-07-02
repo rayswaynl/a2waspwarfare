@@ -101,7 +101,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 
 	missionNamespace setVariable [_key, _tel];
 	//--- Clear any stale countdown latch on (re)spawn.
-	missionNamespace setVariable [Format ["WFBE_ICBM_TEL_CD_%1", _sideText], -1, true];
+	missionNamespace setVariable [Format ["WFBE_ICBM_TEL_CD_%1", _sideText], -1];
 
 	//--- KILLED EH: on death, either CANCEL an in-flight NUKE (big secondary + both-sides announce, no refund) or
 	//--- just schedule a respawn. Runs server-side (the TEL is server-local; it was createVehicle'd here).
@@ -113,12 +113,12 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 		_dSideText = str _dSide;
 		//--- Clear the stored ref if it points at this corpse.
 		if ((missionNamespace getVariable [Format ["WFBE_ICBM_TEL_%1", _dSideText], objNull]) == _dead) then {
-			missionNamespace setVariable [Format ["WFBE_ICBM_TEL_%1", _dSideText], objNull, true];
+			missionNamespace setVariable [Format ["WFBE_ICBM_TEL_%1", _dSideText], objNull];
 		};
 		//--- Was a NUKE counting down? (only NUKE arms a countdown latch.) If so -> CANCEL.
 		_cdEnd = missionNamespace getVariable [Format ["WFBE_ICBM_TEL_CD_%1", _dSideText], -1];
 		if (_cdEnd > time) then {
-			missionNamespace setVariable [Format ["WFBE_ICBM_TEL_CD_%1", _dSideText], -1, true];
+			missionNamespace setVariable [Format ["WFBE_ICBM_TEL_CD_%1", _dSideText], -1];
 			//--- big LOCAL secondary at the TEL: 3x the SAME large HE the ScudStrike uses (Sh_125_HE, in-tree).
 			_secHE = missionNamespace getVariable ["WFBE_C_SCUD_WARHEAD_HE", "Sh_125_HE"];
 			for "_i" from 0 to 2 do { _secHE createVehicle (getPosATL _dead) };

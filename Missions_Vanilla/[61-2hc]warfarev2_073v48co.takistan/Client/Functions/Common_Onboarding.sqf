@@ -29,7 +29,7 @@
 	A3-only commands.
 */
 
-private ["_enable","_jipThreshold","_isJip","_welcome","_scrollHint","_jipNote","_respawnNote"];
+private ["_enable","_guerNote","_isGuer","_isJip","_jipThreshold","_jipNote","_respawnNote","_scrollHint","_welcome"];
 
 //--- Master toggle (default ON). Read locally so we never edit the shared Init_CommonConstants.
 _enable = missionNamespace getVariable ["WFBE_C_ONBOARDING_ENABLE", 1];
@@ -44,6 +44,7 @@ uiNamespace setVariable ["WFBE_CL_VAR_OnboardingShown", true];
 //--- join sits well above the threshold. Mirrors the existing time<30 / time>7 conventions.
 _jipThreshold = missionNamespace getVariable ["WFBE_CL_VAR_OnboardingJipThreshold", 60];
 _isJip = (time > _jipThreshold);
+_isGuer = false;
 
 //--- Wait until the player object is real and alive before showing anything (covers a slow JIP
 //--- spawn). uiSleep is real-time so this still advances if the sim is briefly paused. Bounded
@@ -51,6 +52,11 @@ _isJip = (time > _jipThreshold);
 private "_t0"; _t0 = time;
 waitUntil { uiSleep 1; (!isNull player && {alive player}) || ((time - _t0) > 120) };
 if (isNull player) exitWith {};
+if !(isNil "sideJoined") then {
+	if (sideJoined in [resistance] && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+		_isGuer = true;
+	};
+};
 
 //--- Let the join / BLACK-IN loading titles and the legacy v-stamp hint clear first.
 uiSleep 7;
@@ -76,7 +82,18 @@ _scrollHint = parseText (
 hint _scrollHint;
 uiSleep 13;
 
-//--- CARD 3: JIP cue - only for a mid-round joiner.
+//--- CARD 3: GUER cue - only for playable resistance slots.
+if (_isGuer) then {
+	_guerNote = parseText (
+		"<t size='1.2' color='#28ff14'>GUER plays differently.</t><br/><br/>"
+		+ "You are the resistance side: no standard commander upgrade queue. Your kills unlock field tech, and destroyed enemy factories unlock FOB truck options.<br/><br/>"
+		+ "Open the action / buy menus for <t color='#FFAC1C'>VBIED</t>, <t color='#FFAC1C'>mortar truck</t> and <t color='#FFAC1C'>FOB truck</t> plays. The RHUD shows <t color='#42b6ff'>Tech Kills</t> and <t color='#42b6ff'>FOB</t> tokens."
+	);
+	hint _guerNote;
+	uiSleep 13;
+};
+
+//--- CARD 4: JIP cue - only for a mid-round joiner.
 if (_isJip) then {
 	_jipNote = parseText (
 		"<t size='1.2' color='#28ff14'>You joined a match in progress.</t><br/><br/>"
@@ -86,7 +103,7 @@ if (_isJip) then {
 	uiSleep 11;
 };
 
-//--- CARD 4: RESPAWN legend (one-liner on death/respawn).
+//--- CARD 5: RESPAWN legend (one-liner on death/respawn).
 _respawnNote = parseText (
 	"<t size='1.2' color='#28ff14'>If you go down...</t><br/><br/>"
 	+ "You respawn back at base (or a mobile respawn point) and keep playing - no permadeath. Re-buy / re-gear from the action menu and head back to the fight.<br/><br/>"

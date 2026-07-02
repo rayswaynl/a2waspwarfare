@@ -55,8 +55,19 @@ class Finding:
         return f"{shown}:{self.line}:{self.col}: {self.code}: {self.message}"
 
 
+@dataclass(frozen=True)
+class LanguageGap:
+    location: Location
+    language: str
+    reason: str
+
+
 def normalize_key(key: str) -> str:
     return key.upper()
+
+
+def normalize_language(language: str) -> str:
+    return language.casefold()
 
 
 def line_starts(text: str) -> list[int]:
@@ -178,6 +189,71 @@ def parse_stringtable(path: Path) -> dict[str, list[Location]]:
     return locations
 
 
+def parse_requested_languages(values: Iterable[str], include_russian: bool) -> list[str]:
+    languages: list[str] = []
+    if include_russian:
+        languages.append("Russian")
+    for value in values:
+        languages.extend(part.strip() for part in value.split(","))
+
+    seen: set[str] = set()
+    unique: list[str] = []
+    for language in languages:
+        if not language:
+            continue
+        normalized = normalize_language(language)
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        unique.append(language)
+    return unique
+
+
+def collect_language_gaps(
+    path: Path,
+    definitions: dict[str, list[Location]],
+    requested_languages: Iterable[str],
+) -> list[LanguageGap]:
+    requested = list(requested_languages)
+    if not requested:
+        return []
+
+    text = read_text(path)
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError as exc:
+        raise ValueError(f"{path}: XML parse failed: {exc}") from exc
+
+    occurrence_counts: dict[str, int] = {}
+    gaps: list[LanguageGap] = []
+    for element in root.iter():
+        tag = element.tag.rsplit("}", 1)[-1]
+        if tag != "Key":
+            continue
+        key = element.attrib.get("ID")
+        if not key or not KEY_RE.fullmatch(key):
+            continue
+
+        normalized = normalize_key(key)
+        occurrence = occurrence_counts.get(normalized, 0)
+        occurrence_counts[normalized] = occurrence + 1
+        definition_locations = definitions.get(normalized, [Location(key, path, 1, 1)])
+        location = definition_locations[min(occurrence, len(definition_locations) - 1)]
+
+        child_text_by_language: dict[str, str] = {}
+        for child in list(element):
+            child_tag = child.tag.rsplit("}", 1)[-1]
+            child_text_by_language[normalize_language(child_tag)] = "".join(child.itertext()).strip()
+
+        for language in requested:
+            text_value = child_text_by_language.get(normalize_language(language))
+            if text_value is None:
+                gaps.append(LanguageGap(location, language, "missing"))
+            elif text_value == "":
+                gaps.append(LanguageGap(location, language, "blank"))
+    return gaps
+
+
 def collect_references(paths: Iterable[Path]) -> dict[str, list[Location]]:
     references: dict[str, list[Location]] = {}
     for path in paths:
@@ -203,6 +279,7 @@ def build_findings(
     ignored_prefixes: Iterable[str],
     include_orphans: bool,
     max_locations_per_key: int,
+    language_gaps: Iterable[LanguageGap],
 ) -> list[Finding]:
     del root
     findings: list[Finding] = []
@@ -253,6 +330,27 @@ def build_findings(
                 )
             )
 
+    for gap in sorted(
+        language_gaps,
+        key=lambda item: (
+            str(item.location.path),
+            item.location.line,
+            item.location.col,
+            normalize_key(item.location.key),
+            normalize_language(item.language),
+        ),
+    ):
+        verb = "has blank" if gap.reason == "blank" else "is missing"
+        findings.append(
+            Finding(
+                gap.location.path,
+                gap.location.line,
+                gap.location.col,
+                "STRLANG",
+                f"{gap.location.key} {verb} {gap.language} text in stringtable.xml",
+            )
+        )
+
     return findings
 
 
@@ -289,6 +387,17 @@ def main(argv: list[str]) -> int:
         help="Maximum missing-reference locations to print per key.",
     )
     parser.add_argument(
+        "--languages",
+        action="append",
+        default=[],
+        help="Comma-separated stringtable language columns to report when missing or blank. May be repeated.",
+    )
+    parser.add_argument(
+        "--ru-gaps",
+        action="store_true",
+        help="Shorthand for --languages Russian; reports missing or blank Russian stringtable text.",
+    )
+    parser.add_argument(
         "--exit-zero",
         action="store_true",
         help="Always exit 0 after a successful scan, useful for report-only CI jobs.",
@@ -303,6 +412,13 @@ def main(argv: list[str]) -> int:
 
     try:
         definitions = parse_stringtable(stringtable)
+    except (OSError, ValueError) as exc:
+        print(exc, file=sys.stderr)
+        return 2
+
+    requested_languages = parse_requested_languages(args.languages, args.ru_gaps)
+    try:
+        language_gaps = collect_language_gaps(stringtable, definitions, requested_languages)
     except (OSError, ValueError) as exc:
         print(exc, file=sys.stderr)
         return 2
@@ -322,6 +438,7 @@ def main(argv: list[str]) -> int:
         ignored_prefixes,
         args.orphans,
         max(1, args.max_locations_per_key),
+        language_gaps,
     )
 
     for finding in findings:

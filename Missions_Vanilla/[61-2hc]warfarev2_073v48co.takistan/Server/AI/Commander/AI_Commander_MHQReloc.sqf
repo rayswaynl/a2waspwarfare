@@ -92,7 +92,7 @@ if ((_hq distance _frontPos) <= _frontDist) exitWith {};
 //--- validate it sits clear of EVERY enemy-held AND resistance-held town's 600m activation ring
 //--- by an extra WFBE_C_AICOM_MHQ_TOWN_BUFFER of margin. First town that yields a buffer-clear
 //--- standoff wins. If none does, ABORT this interval (never deploy into a ring).
-_townBuffer = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_TOWN_BUFFER", 1000];
+_townBuffer = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_TOWN_BUFFER", 200];
 _ringClear  = 600 + _townBuffer;   //--- B67: required clearance from every hostile town centre.
 
 //--- Collect own-side-held towns (explicit forEach; no findIf/selectRandom - A2-OA-safe).

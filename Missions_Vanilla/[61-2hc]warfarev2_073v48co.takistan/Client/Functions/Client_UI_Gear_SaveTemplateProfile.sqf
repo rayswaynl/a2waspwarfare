@@ -13,6 +13,10 @@ _upgrades = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 _upgrade_barracks = _upgrades select WFBE_UP_BARRACKS;
 _upgrade_gear = _upgrades select WFBE_UP_GEAR;
 
+//--- GUER-BUYMENU (2026-07-02): GUER has no upgrade system (zero array) - persist templates regardless of
+//--- tier for the playable GUER side (see Client_UI_Gear_FillList.sqf for the full rationale).
+if ((WFBE_Client_SideJoined == resistance) && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {_upgrade_gear = 99};
+
 {
 	Private ["_can_save", "_get", "_item", "_prefix", "_template_backpack", "_template_magazines", "_template_upgrade", "_template_weapons"];
 	

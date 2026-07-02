@@ -180,6 +180,13 @@ _i = _i + [['','',6500,40,-2,4,2,0,'US',[]]];
 _c = _c + ['M6_EP1'];
 _i = _i + [['','',7500,35,-2,4,2,0,'US',[]]];
 
+//--- Lane 45: dormant USMC AAV metadata hook for a future WEST naval beach-assault lane.
+//--- Flag 0 keeps current US/US_Camo heavy-factory behavior unchanged.
+if ((missionNamespace getVariable ["WFBE_C_NAVAL_WEST_AAV", 0]) > 0) then {
+	_c = _c + ['AAV'];
+	_i = _i + [['AAV Amphibious APC','',1300,18,-2,0,2,0,'USMC',[]]];
+};
+
 //--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (conventional) buy-row metadata — TAKISTAN ONLY (WEST/US). Price + tier
 //--- from flags (default 28000 / HEAVY level 3). Fields: [label,picture,PRICE,TIME,CREW(-2=auto),UPGRADE,FACTORY(2=Heavy),SKILL,faction,turrets].
 //--- Registered only when the master flag is on AND worldName=="Takistan". Explicit label so the menu shows the friendly name.
