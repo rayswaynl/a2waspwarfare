@@ -865,6 +865,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_SMOKE")                   then {WFBE_C_AICOM_SMOKE = 1};                   //--- smoke discipline: shells on the assault approach axis + covering smoke on break-off.
 	if (isNil "WFBE_C_AICOM_SMOKE_COOLDOWN")          then {WFBE_C_AICOM_SMOKE_COOLDOWN = 120};        //--- s between smoke uses per team.
 	if (isNil "WFBE_C_NAVAL_TWIN_HULLS")              then {WFBE_C_NAVAL_TWIN_HULLS = 1};              //--- Khe Sanh: outer carriers become deck-bridged TWIN-HULL super-carriers (middle keeps the SCUD, single hull).
+	if (isNil "WFBE_C_NAVAL_WEST_AAV")                then {WFBE_C_NAVAL_WEST_AAV = 0};                //--- Lane 45: default-off WEST AAV buy-row metadata hook for future naval-map beach-assault work.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL")           then {WFBE_C_VICTORY_TERRITORIAL = 1};           //--- Ray: hold >= FRAC of all towns for MINS unbroken -> win (announced start/milestones/broken; existing win path).
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_FRAC")      then {WFBE_C_VICTORY_TERRITORIAL_FRAC = 0.8};    //--- town share required to run the clock.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_MINS")      then {WFBE_C_VICTORY_TERRITORIAL_MINS = 30};     //--- unbroken minutes at/above FRAC to win.
