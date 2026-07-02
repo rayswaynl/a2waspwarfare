@@ -1,11 +1,83 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 09:08 Europe/Amsterdam
+Last updated: 2026-07-02 09:24 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 09:24 Update
+
+Reconciled after the cf4e validation pass and final remote refresh.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `1710fcfe1fd3b6a51843946f56f040ac79987b99`
+- PR #125: `cf4e93af1a2665bdab13448a03d2fbf3e3b33edf`
+- PR #126: `46ed989e4db966cf02d20c498bfca53490b651b2`
+- PR #136: `d22455ca3d1a6c0b32d4e2a90082ebd11fa55254`
+
+PR #125 stayed at source head `cf4e93af1a2665bdab13448a03d2fbf3e3b33edf`.
+Its current PR body advertises:
+
+- expected git: `cf4e93af1a`
+- SHA256:
+  `0AC507E1493C82975F8F945B618FBF04268303C4D6B605B5A2C6BD6B4FEAC2C5`
+- size: `7166789`
+- entries: `1885`
+- wiki: `1710fcf`
+- handoff: `ready_for_runtime_collection`
+- status: runtime pending, not deployed
+
+Independent detached-worktree validation for the same source head passed:
+
+- `git diff --check origin/master..HEAD`
+- `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`
+- `Tools/PrTestHarness/Run-WaspFinalCheck.ps1`
+- Chernarus A2 OA lint: `744` SQF files, `0` fail, `0` review
+- Takistan A2 OA lint: `747` SQF files, `0` fail, `0` review
+- High-only BugHunt: no suspects
+- LoadoutManager RELEASE: exit `0`, `CHERNARUS DONE`, `TAKISTAN DONE`
+- release package validation for local `_MISSIONS.7z`, expected git
+  `cf4e93af1a`, entries `1885`
+
+Local package-content rebuild for this source marker:
+
+- SHA256:
+  `61056E0E79965957AEE338A27CC859CEBBB3A6BE2D3F43B1805E5E9253D0A80D`
+- size: `7166407`
+- entries: `1885`
+- manifests:
+  `outputs/a2waspwarfare-pr125-cf4e93a-local-package-manifest-2026-07-02-0920.json`
+  and
+  `outputs/a2waspwarfare-pr125-cf4e93a-local-package-manifest-2026-07-02-0920.md`
+
+Both maintained `Client/PVFunctions/HandleSpecial.sqf` files match at
+`9c1cd5a8a0c888e654387249b771719170f5db64`.
+
+Boundary: this local rebuild is source/package-content proof only. Runtime
+evidence must bind to the exact selected PR-body archive/PBO
+`0AC507E1493C82975F8F945B618FBF04268303C4D6B605B5A2C6BD6B4FEAC2C5`.
+
+PR #126 stayed at `46ed989e4db966cf02d20c498bfca53490b651b2`. Its focused
+tuple/version/JIP guard tests passed earlier in this loop, but the branch still
+targets the earlier `cf4e93af1a` /
+`F4F19086A4D51881C61B16CA024FE1C586478161672C7EFE268F5A42C4852B7A` /
+wiki `a82afcd` tuple. It is now stale relative to PR #125's current
+`0AC507...` / wiki `1710fcf` package proof.
+
+PR #136 moved from `3aaa444d588f64c3a1b02d8e9211e8b120272e1b` to
+`d22455ca3d1a6c0b32d4e2a90082ebd11fa55254` with a docs-only change to
+`docs/MORNING-HANDOFF-2026-07-02.md`. Focused diff-check from `3aaa444d` to
+`d22455ca` passes. This does not change the release boundary: PR #136's earlier
+mission-affecting `09ce177d` cmdcon41 changes remain unpackaged and
+runtime-unproven.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 09:08 Update
 
