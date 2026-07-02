@@ -1,10 +1,12 @@
-//--- Support_ScudStrike.sqf — SCUD Saturation Strike (oil-platform payoff). [feat/naval-hvt-objectives]
-//--- One Chukar_EP1 launches from the owning oil platform and flies BALLISTIC toward the target
+//--- Support_ScudStrike.sqf — SCUD Saturation Strike (carrier payoff). [feat/naval-hvt-objectives]
+//--- cmdcon41-w2 (Ray 2026-07-02): stale "oil platform" wording corrected to "carrier" throughout — the
+//--- naval HVTs are LHD carriers (Khe Sanh Alpha/Bravo/Charlie), never oil platforms. Behaviour unchanged.
+//--- One Chukar_EP1 launches from the owning carrier and flies BALLISTIC toward the target
 //--- (self-propelled via setVelocity/flyInHeight — NO AI pilot; the Chukar is a missile, mirroring
 //--- the live ICBM module, not a piloted aircraft like the drone strike). On arrival the SCUD MIRVs
 //--- a saturation barrage over the target zone, then is deleted. NO enemy warning is broadcast.
 //--- Payload: ["ScudStrike", _side, _destination, _playerTeam]
-//--- Server-authoritative: validates owned oil platform + per-platform cooldown + funds before firing.
+//--- Server-authoritative: validates owned carrier + per-carrier cooldown + funds before firing.
 //---
 //--- Warheads (Sh_125_HE + Bo_GBU12_LGB are EXACTLY what the live drone-saturation-strike uses -> proven):
 //---   HE x3      Sh_125_HE        scattered area bursts (anti-infantry / soft)
@@ -32,14 +34,14 @@ _warWP       = WFBE_C_SCUD_WARHEAD_WP;
 
 ["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] team [%2] SCUD request at %3.", str _side, _playerTeam, _destination]] Call WFBE_CO_FNC_LogContent;
 
-//--- VALIDATION 1: the caller's side must OWN an oil-platform HVT.
+//--- VALIDATION 1: the caller's side must OWN a carrier HVT.
 _hvtList = missionNamespace getVariable ["WFBE_NAVAL_HVT_PLATFORMS", []];
 _platform = objNull;
 {
 	if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID} && {_x getVariable ["wfbe_is_naval_hvt", false]}) then {_platform = _x};
 } forEach _hvtList;
 if (isNull _platform) exitWith {
-	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- no owned oil platform.", str _side]] Call WFBE_CO_FNC_LogContent;
+	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- no owned carrier.", str _side]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- VALIDATION 2: per-platform cooldown.
@@ -62,7 +64,47 @@ missionNamespace setVariable [_cooldownKey, _now];
 
 ["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] AUTHORISED -- launching from %2 at target %3.", str _side, getPos _platform, _destination]] Call WFBE_CO_FNC_LogContent;
 
-//--- LAUNCH: one Chukar from the platform, flown ballistic toward the target (pure vector, no pilot).
+//--- ============================================================================================
+//--- cmdcon41 THEATRICAL CARRIER LAUNCH (feature 1, Ray 2026-07-02). Flag WFBE_C_SCUD_THEATRICS (default 1).
+//--- Before the Chukar spawns, play a launch sequence on the firing carrier's DECK SCUD launcher:
+//---   (a) ERECT via the VERIFIED in-tree action "scudLaunch" (Init_NavalHVT.sqf:348 uses this exact action to
+//---       raise the deck SCUD at spawn -> proven present on MAZ_543_SCUD_TK_EP1). The deck launcher is spawned
+//---       ALREADY erect + attachTo-pinned static, so we re-issue scudLaunch (harmless, keeps it vertical) rather
+//---       than a config animate with an unverified anim name. NO A3 anim source was verifiable, so per the brief
+//---       we do NOT call animate with a guessed name (would silently no-op / error); scudLaunch is the safe path.
+//---   (b) FX: a SmokeShellWhite backblast cluster at the launcher (SmokeShellWhite is confirmed in-tree -- it is
+//---       WFBE_C_SCUD_WARHEAD_WP). NO deck light: "Land_Fire" is NOT present anywhere in this mission tree (grep
+//---       verified), so per the brief we SKIP the light and do smoke only. No invented ammo classnames.
+//---   (c) KLAXON: the base-under-attack alarm alias "inbound" (registered CfgSound; Common_HandleAlarm.sqf:11,
+//---       CampCaptured.sqf:50) to OWNING-SIDE clients only, via a side-scoped SendToClients HandleSpecial case.
+//---   (d) DE-ERECT: there is NO verified reverse action for the A2 Scud (scudLaunch is the only proven one), and
+//---       the launcher is a permanent static deck prop that is erect at round start anyway, so we log + skip the
+//---       reverse rather than call an unverified "scudDown". The tube simply stays up (as it already was).
+//--- Independently flag-gated; everything is server-side createVehicle + one side-scoped klaxon. No perf loop.
+if ((missionNamespace getVariable ["WFBE_C_SCUD_THEATRICS", 1]) == 1) then {
+	private ["_scudVeh"];
+	_scudVeh = _platform getVariable ["wfbe_hvt_scud", objNull];
+	if (isNull _scudVeh) then {
+		["INFORMATION", "Support_ScudStrike.sqf : SCUD_THEATRICS deck launcher ref missing (wfbe_hvt_scud null) -- skipping theatrics, strike continues."] Call WFBE_CO_FNC_LogContent;
+	} else {
+		//--- (a) ERECT (proven action). The launcher is static/erect already; re-issue is a safe no-op-if-up.
+		_scudVeh action ["scudLaunch", _scudVeh];
+		["INFORMATION", "Support_ScudStrike.sqf : SCUD_THEATRICS erect via action scudLaunch (deck launcher already vertical)."] Call WFBE_CO_FNC_LogContent;
+		//--- (b) BACKBLAST smoke cluster at the launcher base (createVehicle GLOBAL so all clients see it). 4 puffs.
+		private ["_sp","_i","_ang","_r"];
+		_sp = getPosASL _scudVeh;
+		for "_i" from 0 to 3 do {
+			_ang = random 360; _r = random 4;
+			(createVehicle ["SmokeShellWhite", [(_sp select 0) + _r * sin _ang, (_sp select 1) + _r * cos _ang, (_sp select 2)], [], 0, "NONE"]);
+		};
+		//--- (d) DE-ERECT: no verified reverse action for the A2 Scud -> log + skip (tube stays up, as at round start).
+		["INFORMATION", "Support_ScudStrike.sqf : SCUD_THEATRICS de-erect skipped (no verified reverse action for MAZ_543_SCUD_TK_EP1 scud launcher)."] Call WFBE_CO_FNC_LogContent;
+	};
+	//--- (c) KLAXON to the OWNING side only (side-scoped SendToClients; the client HandleSpecial case plays "inbound").
+	[_side, "HandleSpecial", ["scud-klaxon"]] Call WFBE_CO_FNC_SendToClients;
+};
+
+//--- LAUNCH: one Chukar from the carrier, flown ballistic toward the target (pure vector, no pilot).
 _enemySides = (WFBE_PRESENTSIDES - [_side]) + [resistance];
 _launchPos = [getPos _platform select 0, getPos _platform select 1, 350];
 _dx = (_destination select 0) - (_launchPos select 0);

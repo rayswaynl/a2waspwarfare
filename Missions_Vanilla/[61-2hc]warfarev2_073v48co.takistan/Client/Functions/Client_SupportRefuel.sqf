@@ -5,7 +5,7 @@ _typeRepair = _this select 2;
 _spType = _this select 3;
 _supportRange = missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_RANGE";
 _repairRange = missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE";
-_get = _veh getVariable "stopped";
+_get = _veh getVariable ["stopped", false]; //--- cmdcon41-w3m (P2, live client RPT): "stopped" is set ONLY by the stealth engine toggle (Startengine.sqf false / Stopengine.sqf true); a support vehicle never toggled has NIL here, so the bare 1-arg read fed a nil into the if() below and threw ("Type Nothing, expected Bool"). Object 2-arg getVariable [name,default] is reliable in A2-OA 1.64 and returns false when unset.
 if (_get) exitWith {hint "Quit the stealth mode !";};
 //--- Retrieve Informations.
 _name = [typeOf _veh, 'displayName'] Call GetConfigInfo;

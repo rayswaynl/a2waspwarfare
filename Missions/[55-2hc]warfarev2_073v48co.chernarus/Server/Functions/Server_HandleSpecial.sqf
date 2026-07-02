@@ -131,6 +131,23 @@ switch (_args select 0) do {
 			_x setVariable ["WFBE_Taxi_Prohib", true];
 		} forEach _vehicles;
 	};
+	//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): the commander's ICBM fire, intercepted client-side
+	//--- (GUI_Menu_Tactical.sqf when WFBE_C_ICBM_TEL=1) and routed here. Server-authoritative gate lives in
+	//--- WFBE_SE_FNC_IcbmTelFire (TEL alive + shared cooldown + range + funds); it spawns/refuses accordingly.
+	//--- Payload: ["icbm-tel-fire", side, target, munition, playerTeam, fee]. Fn-guarded (Init_IcbmTel compiles it).
+	case "icbm-tel-fire": {
+		if (!isNil "WFBE_SE_FNC_IcbmTelFire") then {
+			private ["_tSide","_tTarget","_tMuni","_tTeam","_tFee"];
+			_tSide   = _args select 1;
+			_tTarget = _args select 2;
+			_tMuni   = _args select 3;
+			_tTeam   = _args select 4;
+			_tFee    = if (count _args > 5) then {_args select 5} else {0};
+			[_tSide, _tTarget, _tMuni, _tTeam, _tFee] Spawn WFBE_SE_FNC_IcbmTelFire;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: icbm-tel-fire received but WFBE_SE_FNC_IcbmTelFire is nil (WFBE_C_ICBM_TEL=0?)."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
 	case "ICBM": {
 		Private ["_base","_playerTeam","_side","_target"];
 
@@ -518,6 +535,216 @@ switch (_args select 0) do {
 				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_uSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
 					_uLogik setVariable ["wfbe_aicom_request_type", [_uType, time]];
 					diag_log ("AICOM2|v1|ORDER|aicom-request-unit|" + str _uSide + "|" + str (round (time / 60)) + "|type=" + _uType);
+				};
+			};
+		};
+	};
+	case "aicom-rally": {
+		//--- cmdcon41-w3d COMMAND-MENU V2 (RALLY): the human commander ordered ONE team to pull back to the nearest own
+		//--- HQ / OWN-side town centre. Client sends [side, teamIdx] (index into this side's wfbe_teams, resolved the SAME
+		//--- way as aicom-team-disband). NEVER trust the client: require a HUMAN commander on the side, validate west/east,
+		//--- and validate the team object (non-null, AI-led). We stamp the DIRECT order via the codebase-standard broadcast
+		//--- setters (SetTeamMoveMode "move" + SetTeamMovePos rallyPos) so AI_Commander_Execute lays the road-aware
+		//--- waypoints (server-local) or re-publishes wfbe_aicom_order (HC) every tick, exactly like the console's own
+		//--- map-click Move. A short manualpin keeps AssignTowns off it until it arrives; the pin TTL-expires so it is
+		//--- re-taskable afterwards (normal towns re-entry). Flag-gated (WFBE_C_CMD_MENU_V2).
+		private ["_ryEnabled","_rySide","_ryIdx","_ryLogik","_ryCmd","_ryHuman","_ryTeams","_ryTeam","_ryHQ","_ryPos","_ryBest","_rySID"];
+		_ryEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
+		_rySide = _args select 1;
+		_ryIdx  = -1;
+		if (count _args >= 3) then {private "_ryRaw"; _ryRaw = _args select 2; if (!isNil "_ryRaw" && {typeName _ryRaw == "SCALAR"}) then {_ryIdx = _ryRaw}};
+		if (_ryEnabled && {_rySide in [west, east]} && {_ryIdx >= 0}) then {
+			_ryLogik = (_rySide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _ryLogik) then {
+				_ryCmd = (_rySide) Call WFBE_CO_FNC_GetCommanderTeam; _ryHuman = false;
+				if (!isNull _ryCmd) then {if (isPlayer (leader _ryCmd)) then {_ryHuman = true}};
+				_ryTeams = _ryLogik getVariable ["wfbe_teams", []];
+				if (_ryHuman && {_ryIdx < (count _ryTeams)}) then {
+					_ryTeam = _ryTeams select _ryIdx;
+					if (!isNull _ryTeam && {!isPlayer (leader _ryTeam)}) then {
+						//--- Nearest own rally point: own HQ, else nearest OWN-side town centre (fall back to HQ).
+						_rySID = (_rySide) Call WFBE_CO_FNC_GetSideID;
+						_ryHQ  = (_rySide) Call WFBE_CO_FNC_GetSideHQ;
+						_ryPos = if (!isNull _ryHQ) then {getPos _ryHQ} else {getPos (leader _ryTeam)};
+						_ryBest = 1e12;
+						{ if ((_x getVariable ["sideID", -1]) == _rySID) then {private "_d"; _d = (leader _ryTeam) distance _x; if (_d < _ryBest) then {_ryBest = _d; _ryPos = getPos _x}} } forEach towns;
+						[_ryTeam, _ryPos]  Call SetTeamMovePos;
+						[_ryTeam, "move"]  Call SetTeamMoveMode;
+						[_ryTeam, false]   Call SetTeamAutonomous;
+						_ryTeam setVariable ["wfbe_aicom_manualpin", time, true];
+						diag_log ("AICOM2|v1|ORDER|aicom-rally|" + str _rySide + "|" + str (round (time / 60)) + "|idx=" + str _ryIdx + "|pos=" + str [round (_ryPos select 0), round (_ryPos select 1)]);
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-rally|REJECT|" + str _rySide + "|idx=" + str _ryIdx + "|nullOrPlayer");
+					};
+				} else {
+					diag_log ("AICOM2|v1|ORDER|aicom-rally|REJECT|" + str _rySide + "|human=" + str _ryHuman + "|idx=" + str _ryIdx + "|teams=" + str (count _ryTeams));
+				};
+			};
+		};
+	};
+	case "aicom-refit": {
+		//--- cmdcon41-w3d COMMAND-MENU V2 (REFIT): the human commander requested a funds-charged infantry TOP-UP for ONE
+		//--- team - the exact same consumer path Produce's auto top-up uses (wfbe_aicom_topup_req [count,pos,classes] on the
+		//--- team; the owning HC/server driver spawns the bodies in Common_RunCommanderTeam). We mirror Produce's cost +
+		//--- rate-limit gates: flat WFBE_C_AICOM_TOPUP_UNIT_COST per missing man toward 6 (cap 4), charged from the AI
+		//--- commander treasury up front; one refit per team per WFBE_C_AICOM_TOPUP_COOLDOWN via the SAME wfbe_aicom_topup_stamp
+		//--- Produce stamps. NEVER trust the client: human commander required, side + team validated, funds re-checked here.
+		private ["_rfEnabled","_rfSide","_rfIdx","_rfLogik","_rfCmd","_rfHuman","_rfTeams","_rfTeam","_rfAlive","_rfNow","_rfLast","_rfCd","_rfMissing","_rfSText","_rfBarr","_rfCls","_rfCost","_rfCharge","_rfFunds"];
+		_rfEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
+		_rfSide = _args select 1;
+		_rfIdx  = -1;
+		if (count _args >= 3) then {private "_rfRaw"; _rfRaw = _args select 2; if (!isNil "_rfRaw" && {typeName _rfRaw == "SCALAR"}) then {_rfIdx = _rfRaw}};
+		if (_rfEnabled && {_rfSide in [west, east]} && {_rfIdx >= 0}) then {
+			_rfLogik = (_rfSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _rfLogik) then {
+				_rfCmd = (_rfSide) Call WFBE_CO_FNC_GetCommanderTeam; _rfHuman = false;
+				if (!isNull _rfCmd) then {if (isPlayer (leader _rfCmd)) then {_rfHuman = true}};
+				_rfTeams = _rfLogik getVariable ["wfbe_teams", []];
+				if (_rfHuman && {_rfIdx < (count _rfTeams)}) then {
+					_rfTeam = _rfTeams select _rfIdx;
+					if (!isNull _rfTeam && {!isPlayer (leader _rfTeam)}) then {
+						_rfAlive = {alive _x} count (units _rfTeam);
+						_rfNow   = time;
+						_rfLast  = _rfTeam getVariable "wfbe_aicom_topup_stamp"; if (isNil "_rfLast") then {_rfLast = -1e9};
+						_rfCd    = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_COOLDOWN", 240];
+						if ((_rfNow - _rfLast) >= _rfCd) then {
+							_rfMissing = (6 - _rfAlive) min 4;
+							if (_rfMissing > 0) then {
+								//--- Resolve up to 3 basic infantry classnames (same source + naming as Produce's rally top-up: str _side).
+								_rfSText = str _rfSide;
+								_rfBarr  = missionNamespace getVariable [Format ["WFBE_%1BARRACKSUNITS", _rfSText], []];
+								_rfCls   = [];
+								{ if ((count _rfCls) < 3 && {_x isKindOf "Man"}) then {_rfCls = _rfCls + [_x]} } forEach _rfBarr;
+								if (count _rfCls > 0) then {
+									_rfCost   = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_UNIT_COST", 300];
+									_rfCharge = _rfCost * _rfMissing;
+									_rfFunds  = (_rfSide) Call GetAICommanderFunds;
+									if (_rfFunds >= _rfCharge) then {
+										[_rfSide, -_rfCharge] Call ChangeAICommanderFunds;
+										_rfTeam setVariable ["wfbe_aicom_topup_req", [_rfMissing, getPosATL (leader _rfTeam), _rfCls], true];
+										_rfTeam setVariable ["wfbe_aicom_topup_stamp", _rfNow, false];
+										diag_log ("AICOM2|v1|ORDER|aicom-refit|" + str _rfSide + "|" + str (round (time / 60)) + "|idx=" + str _rfIdx + "|missing=" + str _rfMissing + "|cost=" + str _rfCharge);
+									} else {
+										diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|idx=" + str _rfIdx + "|funds=" + str (round _rfFunds) + "|need=" + str _rfCharge);
+									};
+								};
+							} else {
+								diag_log ("AICOM2|v1|ORDER|aicom-refit|SKIP|" + str _rfSide + "|idx=" + str _rfIdx + "|fullstrength=" + str _rfAlive);
+							};
+						} else {
+							diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|idx=" + str _rfIdx + "|cdLeft=" + str (round (_rfCd - (_rfNow - _rfLast))));
+						};
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|idx=" + str _rfIdx + "|nullOrPlayer");
+					};
+				} else {
+					diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|human=" + str _rfHuman + "|idx=" + str _rfIdx + "|teams=" + str (count _rfTeams));
+				};
+			};
+		};
+	};
+	case "aicom-hold": {
+		//--- cmdcon41-w3d COMMAND-MENU V2 (HOLD): the human commander ordered ONE team to garrison the town it is IN /
+		//--- nearest to. Client sends [side, teamIdx]. We resolve the nearest OWN-side town, stamp the SAME hold latch the
+		//--- auto capture-hold uses (town var wfbe_aicom_hold_until = now+HOLD_SECS; team var wfbe_aicom_holding_town = the
+		//--- town) so AssignTowns' holder-skip (AI_Commander_AssignTowns.sqf:253-263) leaves the team garrisoning it, plus
+		//--- a "defense" order at the town centre via the broadcast setters (Execute HOLDs it). NEVER trust the client:
+		//--- human commander required, side + team validated, and the held town must currently be OURS. Flag-gated.
+		private ["_hdEnabled","_hdSide","_hdIdx","_hdLogik","_hdCmd","_hdHuman","_hdTeams","_hdTeam","_hdSID","_hdTown","_hdBest","_hdSecs"];
+		_hdEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
+		_hdSide = _args select 1;
+		_hdIdx  = -1;
+		if (count _args >= 3) then {private "_hdRaw"; _hdRaw = _args select 2; if (!isNil "_hdRaw" && {typeName _hdRaw == "SCALAR"}) then {_hdIdx = _hdRaw}};
+		if (_hdEnabled && {_hdSide in [west, east]} && {_hdIdx >= 0}) then {
+			_hdLogik = (_hdSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _hdLogik) then {
+				_hdCmd = (_hdSide) Call WFBE_CO_FNC_GetCommanderTeam; _hdHuman = false;
+				if (!isNull _hdCmd) then {if (isPlayer (leader _hdCmd)) then {_hdHuman = true}};
+				_hdTeams = _hdLogik getVariable ["wfbe_teams", []];
+				if (_hdHuman && {_hdIdx < (count _hdTeams)}) then {
+					_hdTeam = _hdTeams select _hdIdx;
+					if (!isNull _hdTeam && {!isPlayer (leader _hdTeam)}) then {
+						_hdSID = (_hdSide) Call WFBE_CO_FNC_GetSideID;
+						_hdTown = objNull; _hdBest = 1e12;
+						{ if ((_x getVariable ["sideID", -1]) == _hdSID) then {private "_d"; _d = (leader _hdTeam) distance _x; if (_d < _hdBest) then {_hdBest = _d; _hdTown = _x}} } forEach towns;
+						if (!isNull _hdTown) then {
+							_hdSecs = missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180];
+							_hdTown setVariable ["wfbe_aicom_hold_until", time + _hdSecs, true];
+							[_hdTeam, "defense"]      Call SetTeamMoveMode;
+							[_hdTeam, getPos _hdTown] Call SetTeamMovePos;
+							[_hdTeam, false]          Call SetTeamAutonomous;
+							_hdTeam setVariable ["wfbe_aicom_holding_town", _hdTown, true];
+							_hdTeam setVariable ["wfbe_aicom_manualpin", time, true];
+							diag_log ("AICOM2|v1|ORDER|aicom-hold|" + str _hdSide + "|" + str (round (time / 60)) + "|idx=" + str _hdIdx + "|town=" + (_hdTown getVariable ["name", "?"]));
+						} else {
+							diag_log ("AICOM2|v1|ORDER|aicom-hold|REJECT|" + str _hdSide + "|idx=" + str _hdIdx + "|noOwnTownNear");
+						};
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-hold|REJECT|" + str _hdSide + "|idx=" + str _hdIdx + "|nullOrPlayer");
+					};
+				} else {
+					diag_log ("AICOM2|v1|ORDER|aicom-hold|REJECT|" + str _hdSide + "|human=" + str _hdHuman + "|idx=" + str _hdIdx + "|teams=" + str (count _hdTeams));
+				};
+			};
+		};
+	};
+	case "aicom-support": {
+		//--- cmdcon41-w3d COMMAND-MENU V2 (REQUEST AI SUPPORT, non-commander): ANY player asks the nearest same-side AI
+		//--- team to move to them. Client sends [side, player, playerPos]. We NEVER trust the client for identity beyond the
+		//--- side membership check + a server-side proximity sanity check (the passed player must be alive, on the side, and
+		//--- actually near the passed pos). Pick the nearest AI-led team NOT mid-capture/strike/rally and within
+		//--- WFBE_C_CMD_NUDGE_RANGE, issue a road-aware DIRECT move via the broadcast setters (Execute road-routes it), and
+		//--- leave it AUTONOMOUS + UNPINNED so AssignTowns re-tasks it normally after arrival (commander never overridden).
+		//--- Per-player cooldown WFBE_C_CMD_NUDGE_COOLDOWN keyed by player UID on the side logic. Flag-gated.
+		private ["_spEnabled","_spSide","_spPlayer","_spPos","_spLogik","_spNow","_spCd","_spUID","_spKey","_spLast","_spBest","_spTeam","_spTeams","_spRange"];
+		_spEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
+		if (_spEnabled && {count _args >= 4}) then {
+			_spSide   = _args select 1;
+			_spPlayer = _args select 2;
+			_spPos    = _args select 3;
+			if (_spSide in [west, east] && {!isNil "_spPlayer"} && {!isNull _spPlayer} && {alive _spPlayer} && {side (group _spPlayer) == _spSide} && {typeName _spPos == "ARRAY"} && {count _spPos >= 2} && {(_spPlayer distance _spPos) < 200}) then {
+				_spLogik = (_spSide) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _spLogik) then {
+					_spNow = time;
+					_spCd  = missionNamespace getVariable ["WFBE_C_CMD_NUDGE_COOLDOWN", 180];
+					_spUID = getPlayerUID _spPlayer; if (isNil "_spUID" || {_spUID == ""}) then {_spUID = str _spPlayer};
+					_spKey = "wfbe_cmd_nudge_" + _spUID;
+					_spLast = _spLogik getVariable [_spKey, -1e9];
+					if ((_spNow - _spLast) >= _spCd) then {
+						_spRange = missionNamespace getVariable ["WFBE_C_CMD_NUDGE_RANGE", 1500];
+						_spTeams = _spLogik getVariable ["wfbe_teams", []];
+						_spBest  = _spRange; _spTeam = objNull;
+						{
+							if (!isNull _x && {!isPlayer (leader _x)}) then {
+								private "_alv"; _alv = {alive _x} count (units _x);
+								if (_alv > 0) then {
+									//--- skip teams mid-capture/strike, rallying, or on an active hold latch (leave the AI's own
+									//--- priorities alone). A team on a strike mission is "capturing"; there is no separate
+									//--- capturing flag in this build. A2-OA: plain single-arg getVariable on the GROUP + isNil.
+									private ["_busy","_str","_ral","_hld"];
+									_str = _x getVariable "wfbe_aicom_strike"; _busy = (!isNil "_str" && {_str});
+									if (!_busy) then {_ral = _x getVariable "wfbe_aicom_rallying"; _busy = (!isNil "_ral" && {_ral})};
+									if (!_busy) then {_hld = _x getVariable "wfbe_aicom_holding_town"; _busy = (!isNil "_hld" && {!isNull _hld})};
+									if (!_busy) then {
+										private "_d"; _d = _spPos distance (getPos (leader _x));
+										if (_d < _spBest) then {_spBest = _d; _spTeam = _x};
+									};
+								};
+							};
+						} forEach _spTeams;
+						if (!isNull _spTeam) then {
+							[_spTeam, _spPos] Call SetTeamMovePos;
+							[_spTeam, "move"] Call SetTeamMoveMode;
+							[_spTeam, true]   Call SetTeamAutonomous;                 //--- stay autonomous: AssignTowns re-tasks it after arrival (commander not overridden)
+							_spTeam setVariable ["wfbe_aicom_manualpin", nil, true];  //--- no manual pin -> normal towns re-entry
+							_spLogik setVariable [_spKey, _spNow, false];
+							diag_log ("AICOM2|v1|ORDER|CMD_NUDGE|" + str _spSide + "|" + str (round (time / 60)) + "|uid=" + str _spUID + "|dist=" + str (round _spBest));
+						} else {
+							diag_log ("AICOM2|v1|ORDER|CMD_NUDGE|NONE|" + str _spSide + "|uid=" + str _spUID + "|noTeamInRange=" + str _spRange);
+						};
+					} else {
+						diag_log ("AICOM2|v1|ORDER|CMD_NUDGE|REJECT|" + str _spSide + "|uid=" + str _spUID + "|cdLeft=" + str (round (_spCd - (_spNow - _spLast))));
+					};
 				};
 			};
 		};

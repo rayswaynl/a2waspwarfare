@@ -224,7 +224,7 @@ while {alive player && dialog} do {
 	//--- Command Deck: Skin Selector (re-open from WF menu footer).
 	if (MenuAction == 21) exitWith {
 		MenuAction = -1;
-		if (WFBE_C_SKIN_SELECTOR == 1 && {alive player} && {vehicle player == player}) then {
+		if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {alive player} && {vehicle player == player}) then {
 			closeDialog 0;
 			[] execVM "WASP\actions\SkinSelector\SkinSelector_Open.sqf";
 		};

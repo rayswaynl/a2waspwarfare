@@ -6,7 +6,7 @@
 		- Town Assigned.
 */
 
-Private ["_distance_node","_select","_side","_team","_town_assigned","_wp_dest","_wp_origin","_wp_sel"];
+Private ["_distance_node","_select","_side","_team","_town_assigned","_wp_dest","_wp_origin","_wp_sel","_marchCombat"];  //--- cmdcon41-w2: +_marchCombat (yellow-march transit combat-mode token).
 
 _team = _this select 0;
 _town_assigned = _this select 1;
@@ -19,6 +19,13 @@ _select = _wp_origin;
 (_team) Call WFBE_CO_FNC_WaypointsRemove;
 _distance_node = 700;
 _side = (_team getVariable "wfbe_side") Call WFBE_CO_FNC_GetSideID;
+
+//--- cmdcon41-w2 (mhq-... yellow-march): behind WFBE_C_AICOM_MARCH_YELLOW>0, the TRANSIT MOVE nodes' combat
+//--- mode switches "RED"->"YELLOW" so a marching column returns fire but does NOT peel off to hunt every
+//--- contact on the approach (less roving/stalling en route). The depot SAD/MOVE entries at the very end
+//--- STAY COMBAT/RED (they must actually clear the objective's defenders). 0 = unchanged legacy RED transit.
+//--- A2-OA-safe: plain missionNamespace getVariable + exact-case mode string token in the props array.
+_marchCombat = if ((missionNamespace getVariable ["WFBE_C_AICOM_MARCH_YELLOW", 1]) > 0) then {"YELLOW"} else {"RED"};
 
 //--- If the leader is further than 550m we use a proper attack system.
 if (_wp_origin distance _wp_dest > _distance_node) then {
@@ -36,7 +43,7 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 	_max_hops = (missionNamespace getVariable "WFBE_C_AI_TOWN_ATTACK_HOPS_WP")-2;
 	
 	//--- First WP
-	_wp_sel = [[([_nodes_a select 0, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was ""/NORMAL).
+	_wp_sel = [[([_nodes_a select 0, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE",_marchCombat,"COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was ""/NORMAL). cmdcon41-w2: transit combat mode = _marchCombat (RED->YELLOW behind WFBE_C_AICOM_MARCH_YELLOW).
 	
 	if (random 100 < 30) exitWith {[_team, false, _wp_sel] Call WFBE_CO_FNC_WaypointsAdd;};
 	
@@ -55,7 +62,7 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 	
 	for '_i' from 0 to 1 do {_nodes_a set [_i, false]};
 	_nodes_a = _nodes_a - [false];
-	[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE","RED","WEDGE","FULL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): RED/FULL advance-and-engage (was ""/NORMAL).
+	[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE",_marchCombat,"WEDGE","FULL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): RED/FULL advance-and-engage (was ""/NORMAL). cmdcon41-w2: transit combat mode = _marchCombat (RED->YELLOW behind WFBE_C_AICOM_MARCH_YELLOW).
 
 	//--- Random Path
 	for '_i' from 0 to _nodes-1 do {
@@ -66,7 +73,7 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 		_select = _nodes_a select 0;
 		_a_safe = [_select, _side, _town_assigned] Call WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe;
 		if !(_a_safe) exitWith {};
-		if (_a_safe) then {[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 60, 30, [], [], ["AWARE","RED","","FULL"]]] Call WFBE_CO_FNC_ArrayPush};  //--- STANCE (task #1): RED/FULL advance-and-engage (was empty props -> engine default).
+		if (_a_safe) then {[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 60, 30, [], [], ["AWARE",_marchCombat,"","FULL"]]] Call WFBE_CO_FNC_ArrayPush};  //--- STANCE (task #1): RED/FULL advance-and-engage (was empty props -> engine default). cmdcon41-w2: transit combat mode = _marchCombat (RED->YELLOW behind WFBE_C_AICOM_MARCH_YELLOW).
 	};
 	[_team, false, _wp_sel] Call WFBE_CO_FNC_WaypointsAdd;
 };

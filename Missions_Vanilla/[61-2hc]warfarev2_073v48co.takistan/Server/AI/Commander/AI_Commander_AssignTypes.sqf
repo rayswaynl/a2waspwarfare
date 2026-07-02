@@ -231,6 +231,11 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 					private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwPrice","_cwW","_cwRoll","_cwAcc","_cwI","_cwUd"];
 					_cwBucket = _buckets select _chosen;
 					_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_TIER_BIAS_EXP", 1.5];
+					//--- ECON SINK heavy bias (cmdcon41-w2, Ray-approved): while the commander is pinned rich
+					//--- (AI_Commander.sqf set wfbe_aicom_econ_surge on _logik), richen the price-weighted draw by
+					//--- +0.5 on the exponent so the fatter war chest buys pricier (heavier) templates more often.
+					//--- Flag-gated (WFBE_C_AICOM_ECON_SINK). A2-OA-safe: object getVariable [name,default] on _logik.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {_logik getVariable ["wfbe_aicom_econ_surge", false]}) then {_cwExp = _cwExp + 0.5};
 					if (_cwExp <= 0 || {count _cwBucket <= 1}) then {
 						_pick = _cwBucket select (floor (random (count _cwBucket)));
 					} else {

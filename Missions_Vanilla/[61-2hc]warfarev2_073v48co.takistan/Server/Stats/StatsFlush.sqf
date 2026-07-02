@@ -17,7 +17,10 @@ while {true} do {
 
 	// 1) Credit playtime + record current side for every connected human player.
 	{
-		if (isPlayer _x) then {
+		// cmdcon41 (P0-5): HC-FILTER AT SOURCE. A headless client is an isPlayer unit but is NOT a human
+		// participant - crediting it here leaks a phantom "HC" entry into WASPSTAT -> leaderboard/report.
+		// Skip any unit whose name is a known HC name (A2-OA-safe exact `in` check - no A3 string find/substring).
+		if ((isPlayer _x) && {!((name _x) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"])}) then {
 			private ["_uid","_sideNum"];
 			_uid = getPlayerUID _x;
 			if (_uid != "") then {

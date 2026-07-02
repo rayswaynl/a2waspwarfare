@@ -122,6 +122,16 @@ _logik setVariable ["wfbe_aicom_pc", _pcN];
 private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 8];
 if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
 
+//--- ECON SINK team-cap surge (cmdcon41-w2, Ray-approved): when the commander is pinned rich (AI_Commander.sqf set
+//--- wfbe_aicom_econ_surge on the logic OBJECT), lift the founding target by WFBE_C_AICOM_ECON_SINK_TEAMCAP so the
+//--- war chest converts to a bigger army instead of ballooning. STILL clamped by the hard cap (so at low pop where
+//--- _target already sits at _teamsHardCap this is a no-op; it only bites when target is below the ceiling). Flag-gated
+//--- (WFBE_C_AICOM_ECON_SINK). A2-OA-safe: plain object getVariable [name,default] on _logik (reliable on objects/logics).
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {_logik getVariable ["wfbe_aicom_econ_surge", false]}) then {
+	_target = (_target + (missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_TEAMCAP", 2])) min _teamsHardCap;
+	_extra = (_target - _base) max 0;
+};
+
 //--- Log only when the effective target changes (avoid RPT spam).
 _lastDynTarget = _logik getVariable ["wfbe_aicom_dyntarget", _base];
 if (_target > _base && {_target != _lastDynTarget}) then {
@@ -1035,8 +1045,14 @@ if (count _live > 0) then {
 	//--- AICOM v2 JET RUNWAY-SPAWN (Ray 2026-06-27): a fixed-wing (Plane) team spawns on the CAPTURED AIRFIELD
 	//--- runway (the owned airfield town's hangar/logic), not at the rear factory - so it can take off + operate.
 	//--- Self-contained + gated to jet teams only (inert for every existing ground/heli founding).
-	private ["_spawnPos","_isJetTeam","_runwayDir"];
+	private ["_spawnPos","_isJetTeam","_isAirTeam","_runwayDir"];
 	_isJetTeam = ({_x isKindOf "Plane"} count _template) > 0;
+	//--- cmdcon41 (Ray 2026-07-02, AICOM-AIRCRAFT Bug 1): helis are "Helicopter", never "Plane", so the
+	//--- jet-only relocation gate below skipped them -> helis spawned at the rear factory pad, not the owned
+	//--- airfield. Widen the AIRFIELD-RELOCATION test to any Air hull (isKindOf "Air" = A2-OA superclass of
+	//--- Helicopter + Plane); the typeName=="STRING" guard mirrors the existing idiom at Teams.sqf:304. Keep
+	//--- the FLY air-start + runway heading + dispatch flag PLANE-only (_isJetTeam) -> helis spawn GROUNDED.
+	_isAirTeam = ({(typeName _x == "STRING") && {_x isKindOf "Air"}} count _template) > 0;
 	_spawnPos = getPos _facObj;
 	_runwayDir = -1; //--- PLANE AIR-START (Ray 2026-07-01): resolved below for a jet team from the airfield logic getDir (runway heading), threaded to the HC so a founded plane air-starts pointing down the field, not across it. -1 => not a jet team / no field (HC self-resolves or falls back).
 	//--- AICOM v2 (Ray): spawn at the factory's SPAWN BEACON - the HeliH-family pad players use (the closest pad
@@ -1047,7 +1063,7 @@ if (count _live > 0) then {
 	_bestPad = objNull; _bestD = 1e9;
 	{ if (!isNull _x && {(_x distance _facObj) < _bestD}) then {_bestD = _x distance _facObj; _bestPad = _x} } forEach _padList;
 	if (!isNull _bestPad) then {_spawnPos = getPos _bestPad};
-	if (_isJetTeam && {_hasAirfield}) then {
+	if (_isAirTeam && {_hasAirfield}) then { //--- cmdcon41: widened from _isJetTeam -> _isAirTeam so helis relocate to the owned airfield too.
 		private ["_afTown","_haObj"];
 		_afTown = objNull;
 		{ if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_afTown = _x} } forEach towns;
@@ -1055,6 +1071,13 @@ if (count _live > 0) then {
 			_haObj = _afTown getVariable ["wfbe_hangar", objNull];
 			if (isNull _haObj) then {_haObj = _afTown getVariable ["wfbe_airfield_hangar_obj", objNull]};
 			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
+			//--- cmdcon41 (optional, HELI-ONLY): prefer an airfield HeliH pad near the hangar so a grounded
+			//--- heli lands on tarmac, not the hangar hull. Jets keep the raw hangar/field getPos (runway air-start).
+			if ((!_isJetTeam) && {!isNull _haObj}) then {
+				private ["_heliPads"];
+				_heliPads = _haObj nearObjects ["HeliH", 80];
+				if (count _heliPads > 0) then {_spawnPos = getPos (_heliPads select 0)};
+			};
 			//--- RUNWAY HEADING (Ray 2026-07-01, PLANE-ONLY): the airfield is anchored on a LocationLogicAirport logic whose
 			//--- getDir IS the runway orientation (server_town.sqf L569 orients the hangar off it). Resolve the nearest such
 			//--- logic to the airfield town and thread its getDir to the HC as the plane air-start heading. If none is found
