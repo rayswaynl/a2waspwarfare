@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 161 capture notification fallback audit [codex/lane161-capture-notification-fallback]
+
+The fleet prompt row saying capture notifications are titleText-only is stale on the current
+`claude/build84-cmdcon36` target. The live capture path is `Server/FSM/server_town.sqf` broadcasting
+the `TownCaptured` PVF, not a `LocalizeMessage` town case, and both maintained roots already run the
+same client fallback:
+
+- `Client/PVFunctions/TownCaptured.sqf`: formats `STR_WF_CHAT_Town_Captured`.
+- It calls `TitleTextMessage` for the on-screen flash.
+- It immediately also calls `CommandChatMessage`, giving HUD-minimized players a chat-log copy.
+
+No mission source changed in this lane; it records the current fixed state so future fleet workers do
+not reopen lane 161 as an implementation task.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
