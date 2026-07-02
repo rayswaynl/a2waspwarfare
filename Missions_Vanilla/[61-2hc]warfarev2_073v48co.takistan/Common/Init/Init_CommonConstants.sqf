@@ -1771,5 +1771,22 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Read idiom at the call sites: missionNamespace getVariable ["WFBE_C_UPGRADE_SOUNDS", 2].
 	if (isNil "WFBE_C_UPGRADE_SOUNDS") then {WFBE_C_UPGRADE_SOUNDS = 2};
 
+//======================================================================================
+//--- RESPAWN UI V2 (fable/respawn-ui-v2): master flag + tunables.
+//--- WFBE_C_RESPAWN_UI_V2 = 1  → all v2 improvements active (type-tags, safety colors,
+//---   leader marker, distance, tighter zoom, legend, clearer gear toggle, last-spawn memory).
+//--- WFBE_C_RESPAWN_UI_V2 = 0  → byte-identical legacy respawn screen; set to revert.
+//======================================================================================
+	if (isNil "WFBE_C_RESPAWN_UI_V2") then {WFBE_C_RESPAWN_UI_V2 = 1};
+
+//--- Map zoom level when the respawn menu first opens (ctrlMapAnimAdd zoom arg).
+//--- Smaller = tighter / more zoomed-in. Default 0.03 (was 0.095 legacy).
+//--- Set WFBE_C_RESPAWN_UI_V2 = 0 to restore the old 0.095 zoom.
+	if (isNil "WFBE_C_RESPAWN_MAP_ZOOM") then {WFBE_C_RESPAWN_MAP_ZOOM = 0.03};
+
+//--- Radius (metres) within which an enemy-held town makes a spawn point "contested"
+//--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
+	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

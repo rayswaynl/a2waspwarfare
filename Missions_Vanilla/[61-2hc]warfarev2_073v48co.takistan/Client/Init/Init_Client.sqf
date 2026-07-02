@@ -531,6 +531,7 @@ lastParaCall = -1200;
 lastSupplyCall = -1200;
 canBuildWHQ = true;
 WFBE_RespawnDefaultGear = false;
+WFBE_LastSelectedSpawn = objNull; //--- respawn-ui-v2: remember last chosen spawn across deaths.
 WFBE_ForceUpdate = true;
 
 //--- Load Terrain grid if it wasn't loaded from the profile.
