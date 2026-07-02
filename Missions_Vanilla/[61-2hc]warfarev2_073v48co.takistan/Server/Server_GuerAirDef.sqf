@@ -28,6 +28,11 @@
 	Defenders are tagged wfbe_guer_airdef and carry their town; crew+hull+group are deleted on
 	despawn (W13 pattern). Nothing is wfbe_persistent, so it can't accumulate.
 
+	Optional cmdcon43 Avenger SAM ambush: when WFBE_C_AVENGER_SAM_AMBUSH is enabled, the same
+	maintain loop watches ACTIVE WEST-held towns for enemy EAST/GUER aircraft and spawns one
+	crewed HMMWV_Avenger_DES_EP1 near the town for a short defensive window. It has its own
+	registry/cap/quiet-despawn path and is default-OFF.
+
 	EASA AT method (resolved): EASA_Init.sqf runs CLIENT-ONLY (Client\Init\Init_Client.sqf), so
 	WFBE_EASA_Loadouts / WFBE_EASA_Vehicles are NOT present in the server's missionNamespace and the
 	client EASA_Equip path is unusable here. We therefore apply the AT loadout directly on the server
@@ -45,7 +50,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_samOn","_samChance","_samMax","_samLifetime","_samQuiet","_samRange","_samClass","_samCrewClass","_samAmbushes"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -99,6 +104,19 @@ if (_flareMax < _flareMin) then { _flareMax = _flareMin; }; //--- guard MAX>=MIN
 _flareLauncher = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_LAUNCHER", "CMFlareLauncher"];
 _flareMag      = "60Rnd_CMFlareMagazine"; //--- smallest OA flare mag (A2-OA has no 30Rnd); manual-flare backing for the launcher. The MIN-MAX AUTO budget is the FlareCount integer, independent of this mag's round count.
 
+//--- AVENGER SAM AMBUSH (cmdcon43, default OFF). WEST-owned town mirror of the GUER counter-air branch:
+//--- enemy EAST/GUER aircraft near an active WEST town can pull one scripted Avenger for a short window.
+_samOn       = missionNamespace getVariable ["WFBE_C_AVENGER_SAM_AMBUSH", 0];
+_samChance   = missionNamespace getVariable ["WFBE_C_AVENGER_SAM_AMBUSH_CHANCE", 1];
+_samMax      = missionNamespace getVariable ["WFBE_C_AVENGER_SAM_AMBUSH_MAX", 2];
+_samLifetime = missionNamespace getVariable ["WFBE_C_AVENGER_SAM_AMBUSH_LIFETIME", 600];
+_samQuiet    = missionNamespace getVariable ["WFBE_C_AVENGER_SAM_AMBUSH_QUIET_DESPAWN", 180];
+_samRange    = missionNamespace getVariable ["WFBE_C_AVENGER_SAM_AMBUSH_RANGE", 900];
+_samClass    = missionNamespace getVariable ["WFBE_C_AVENGER_SAM_AMBUSH_CLASS", "HMMWV_Avenger_DES_EP1"];
+if (_samChance < 0) then {_samChance = 0};
+if (_samChance > 1) then {_samChance = 1};
+if (_samMax < 0) then {_samMax = 0};
+
 //--- Wait for towns + the GUER side logic to exist, then let town ownership settle (mirror of GuerStipend).
 waitUntil {
 	(!isNil "towns") && {(count towns) > 0}
@@ -108,6 +126,7 @@ sleep 45;
 
 _pilotClass = missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"];
 _crewClass  = missionNamespace getVariable ["WFBE_GUERRESCREW",  "GUE_Soldier_Crew"];
+_samCrewClass = missionNamespace getVariable ["WFBE_WESTCREW", "US_Soldier_Crew_EP1"];
 
 //--- FLARE-STOCK applicator (shared by the leader + each swarm extra). _this = [_vehicle]. Rolls a flare budget
 //--- of _flareMin.._flareMax (default 5-20), mounts the manual OA launcher + a flare mag on the turret (path [-1],
@@ -145,8 +164,16 @@ _defenders = [];
 //--- (_dropMax) and separate prune pass below keep it from being spammed exactly like the air branches.
 _drops = [];
 
+//--- Live registry of optional WEST Avenger SAM ambushes. Each entry:
+//--- [_town, _vehicle, _group, _spawnTime, _lastEnemyAirTime].
+_samAmbushes = [];
+
 ["INITIALIZATION", Format ["Server_GuerAirDef.sqf: GUER air defense started (interval=%1 cap=%2 atChance=%3 mi24Chance=%4).", _interval, _maxAir, _atChance, _mi24Chance]] Call WFBE_CO_FNC_LogContent;
 diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7|dropChance=%8|dropCount=%9|dropMax=%10", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24, _dropChance, _dropCount, _dropMax];
+if (_samOn >= 1) then {
+	["INITIALIZATION", Format ["Server_GuerAirDef.sqf: Avenger SAM ambush enabled (class=%1 cap=%2 chance=%3 range=%4).", _samClass, _samMax, _samChance, _samRange]] Call WFBE_CO_FNC_LogContent;
+	diag_log format ["AVENGERSAM|START|class=%1|cap=%2|chance=%3|range=%4|lifetime=%5|quiet=%6|crew=%7", _samClass, _samMax, _samChance, _samRange, _samLifetime, _samQuiet, _samCrewClass];
+};
 
 //--- B67 (Ray 2026-06-21): publish the GUER-air list for the client map-marker loop (updatepatrolmarkers.sqf
 //--- reads WFBE_ACTIVE_GUER_AIR = [[vehicle, sideID], ...]). Init empty + broadcast so a JIP client never sees
@@ -267,6 +294,54 @@ while {!WFBE_GameOver} do {
 	} forEach _drops;
 	_drops     = _keptDrops;
 	_dropAlive = count _drops;
+
+	//=== (1c) PRUNE + SELF-CLEAN optional WEST Avenger SAM ambushes ============================
+	private ["_samKept","_samAlive","_samTowns"];
+	_samKept = [];
+	_samTowns = [];
+	{
+		private ["_sEntry","_sTown","_sVeh","_sGrp","_sSpawn","_sLastEnemy","_sDrop","_sReason","_sTownSide","_sTownActive","_sEnemyAirNow","_sScanRange"];
+		_sEntry     = _x;
+		_sTown      = _sEntry select 0;
+		_sVeh       = _sEntry select 1;
+		_sGrp       = _sEntry select 2;
+		_sSpawn     = _sEntry select 3;
+		_sLastEnemy = _sEntry select 4;
+
+		_sDrop   = false;
+		_sReason = "";
+
+		if (isNull _sVeh || {!(alive _sVeh)}) then { _sDrop = true; _sReason = "destroyed"; };
+
+		if (!_sDrop) then {
+			_sTownSide   = if (isNull _sTown) then {-1} else {_sTown getVariable ["sideID", -1]};
+			_sTownActive = if (isNull _sTown) then {false} else {_sTown getVariable ["wfbe_active", false]};
+			if (_sTownSide != WFBE_C_WEST_ID) then { _sDrop = true; _sReason = "town_lost"; };
+			if (!_sDrop && !_sTownActive) then { _sDrop = true; _sReason = "town_inactive"; };
+		};
+
+		//--- Refresh last-air timestamp. WEST's air foes here are EAST and GUER/resistance aircraft.
+		if (!_sDrop && !(isNull _sTown)) then {
+			_sScanRange = ((_sTown getVariable ["range", 600]) max _samRange);
+			_sEnemyAirNow = {alive _x && {_x isKindOf "Air"} && {((side _x) == east) || {(side _x) == resistance}} && {(_x distance _sTown) < _sScanRange}} count vehicles;
+			if (_sEnemyAirNow > 0) then { _sLastEnemy = _now; };
+		};
+
+		if (!_sDrop && {(_now - _sLastEnemy) > _samQuiet}) then { _sDrop = true; _sReason = "quiet"; };
+		if (!_sDrop && {(_now - _sSpawn) > _samLifetime}) then { _sDrop = true; _sReason = "lifetime"; };
+
+		if (_sDrop) then {
+			//--- Player-safe teardown: a player who steals/boards the Avenger keeps it; the registry just lets go.
+			if (!isNull _sVeh && {({isPlayer _x} count (crew _sVeh)) == 0}) then { {deleteVehicle _x} forEach (crew _sVeh); deleteVehicle _sVeh; };
+			if (!isNull _sGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _sGrp); deleteGroup _sGrp; };
+			diag_log format ["AVENGERSAM|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _sTown) then {"?"} else {_sTown getVariable ["name","?"]}), _sReason, (count _samKept)];
+		} else {
+			_samKept = _samKept + [[_sTown, _sVeh, _sGrp, _sSpawn, _sLastEnemy]];
+			_samTowns = _samTowns + [_sTown];
+		};
+	} forEach _samAmbushes;
+	_samAmbushes = _samKept;
+	_samAlive = count _samAmbushes;
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
@@ -617,6 +692,114 @@ while {!WFBE_GameOver} do {
 			};
 		};
 	} forEach towns;
+
+	//=== (3b) MAINTAIN: optional WEST Avenger SAM ambush ==============================
+	if (_samOn >= 1
+		&& {_samMax > 0}
+		&& {_samChance > 0}
+		&& {typeName _samClass == "STRING"}
+		&& {_samClass != ""}
+		&& {isClass (configFile >> "CfgVehicles" >> _samClass)}) then {
+		{
+			private ["_samTown","_samPos","_samScanRange","_samTarget","_samBestD","_samD","_samEnemyAir","_samTry","_samSpawnPos","_samFlat","_samFound","_samAng","_samDist","_samVeh","_samGrp","_samDriver","_samGunner"];
+			_samTown = _x;
+
+			if (_samAlive < _samMax
+				&& {!(isNull _samTown)}
+				&& {(_samTown getVariable ["sideID", -1]) == WFBE_C_WEST_ID}
+				&& {_samTown getVariable ["wfbe_active", false]}
+				&& {!(_samTown in _samTowns)}) then {
+
+				_samPos = getPos _samTown;
+				_samScanRange = ((_samTown getVariable ["range", 600]) max _samRange);
+				_samTarget = objNull;
+				_samBestD = 1e9;
+				_samEnemyAir = 0;
+
+				{
+					if (alive _x
+						&& {_x isKindOf "Air"}
+						&& {((side _x) == east) || {(side _x) == resistance}}
+						&& {(_x distance _samTown) < _samScanRange}) then {
+						_samEnemyAir = _samEnemyAir + 1;
+						_samD = _x distance _samTown;
+						if (_samD < _samBestD) then { _samBestD = _samD; _samTarget = _x; };
+					};
+				} forEach vehicles;
+
+				if (_samEnemyAir > 0 && {(random 1) < _samChance}) then {
+					_samSpawnPos = _samPos;
+					_samFound = false;
+					_samTry = 0;
+					_samAng = random 360;
+					while {!_samFound && {_samTry < 8}} do {
+						_samAng = random 360;
+						_samDist = 140 + random 120;
+						_samSpawnPos = [(_samPos select 0) + _samDist * (sin _samAng), (_samPos select 1) + _samDist * (cos _samAng), 0];
+						if (!(surfaceIsWater _samSpawnPos)) then {
+							_samFlat = _samSpawnPos isFlatEmpty [8, 0, 2, 8, 0, false, objNull];
+							if ((count _samFlat) > 0) then { _samSpawnPos = _samFlat; _samFound = true; };
+						};
+						_samTry = _samTry + 1;
+					};
+					if (!_samFound) then {
+						_samAng = random 360;
+						_samDist = 160;
+						_samSpawnPos = [(_samPos select 0) + _samDist * (sin _samAng), (_samPos select 1) + _samDist * (cos _samAng), 0];
+					};
+
+					_samVeh = [_samClass, _samSpawnPos, west, _samAng, false, true, true, "NONE"] Call WFBE_CO_FNC_CreateVehicle;
+					if (!isNull _samVeh) then {
+						_samGrp = [west, "avenger-sam"] Call WFBE_CO_FNC_CreateGroup;
+						if (!isNull _samGrp) then {
+							_samDriver = [_samCrewClass, _samGrp, _samSpawnPos, WFBE_C_WEST_ID] Call WFBE_CO_FNC_CreateUnit;
+							if (!isNull _samDriver) then {
+								_samDriver moveInDriver _samVeh;
+								_samGunner = [_samCrewClass, _samGrp, _samSpawnPos, WFBE_C_WEST_ID] Call WFBE_CO_FNC_CreateUnit;
+								if (!isNull _samGunner) then {
+									_samGunner moveInGunner _samVeh;
+
+									_samVeh setVariable ["wfbe_avenger_sam_ambush", true, true];
+									_samVeh setVariable ["wfbe_avenger_sam_town", _samTown];
+
+									[_samGrp, _samSpawnPos, 120] Call AIPatrol;
+									_samGrp setBehaviour "COMBAT";
+									_samGrp setCombatMode "RED";
+									_samGrp setSpeedMode "LIMITED";
+
+									if (!isNull _samTarget) then {
+										_samVeh reveal _samTarget;
+										_samDriver reveal _samTarget;
+										_samGunner reveal _samTarget;
+										_samGunner doTarget _samTarget;
+										_samGunner doFire _samTarget;
+									};
+
+									_samAmbushes = _samAmbushes + [[_samTown, _samVeh, _samGrp, time, time]];
+									_samTowns = _samTowns + [_samTown];
+									_samAlive = _samAlive + 1;
+									diag_log format ["AVENGERSAM|SPAWN|town=%1|class=%2|enemyAir=%3|target=%4|alive=%5", (_samTown getVariable ["name","?"]), _samClass, _samEnemyAir, (if (isNull _samTarget) then {"?"} else {typeOf _samTarget}), _samAlive];
+								} else {
+									if (!isNull _samVeh && {({isPlayer _x} count (crew _samVeh)) == 0}) then { {deleteVehicle _x} forEach (crew _samVeh); deleteVehicle _samVeh; };
+									if (!isNull _samGrp) then { {deleteVehicle _x} forEach (units _samGrp); deleteGroup _samGrp; };
+									diag_log format ["AVENGERSAM|SPAWNFAIL|town=%1|class=%2|reason=no_gunner", (_samTown getVariable ["name","?"]), _samClass];
+								};
+							} else {
+								if (!isNull _samVeh && {({isPlayer _x} count (crew _samVeh)) == 0}) then { {deleteVehicle _x} forEach (crew _samVeh); deleteVehicle _samVeh; };
+								if (!isNull _samGrp) then { {deleteVehicle _x} forEach (units _samGrp); deleteGroup _samGrp; };
+								diag_log format ["AVENGERSAM|SPAWNFAIL|town=%1|class=%2|reason=no_driver", (_samTown getVariable ["name","?"]), _samClass];
+							};
+						} else {
+							if (!isNull _samVeh && {({isPlayer _x} count (crew _samVeh)) == 0}) then {deleteVehicle _samVeh};
+							diag_log format ["AVENGERSAM|SPAWNFAIL|town=%1|class=%2|reason=no_group", (_samTown getVariable ["name","?"]), _samClass];
+						};
+					} else {
+						diag_log format ["AVENGERSAM|SPAWNFAIL|town=%1|class=%2|reason=createVehicle_null", (_samTown getVariable ["name","?"]), _samClass];
+					};
+				};
+			};
+		} forEach towns;
+	};
 
 	//--- B67 (Ray 2026-06-21): rebuild + broadcast the GUER-air marker feed from the live registry (alive hulls
 	//--- only). Runs AFTER both the prune and the maintain passes, so it self-heals on despawn/spawn. The

@@ -224,6 +224,17 @@ with missionNamespace do {
 	if (isNil "WFBE_C_GUER_KA137_FLARES_MIN") then {WFBE_C_GUER_KA137_FLARES_MIN = 5};      //--- lower bound of the rolled flare stock (inclusive).
 	if (isNil "WFBE_C_GUER_KA137_FLARES_MAX") then {WFBE_C_GUER_KA137_FLARES_MAX = 20};     //--- upper bound of the rolled flare stock (inclusive; clamped up to MIN if misconfigured below it).
 
+//--- AVENGER SAM AMBUSH (cmdcon43, Ray 2026-07-02): optional WEST mirror of the GUER air-def loop.
+//--- When enabled, enemy EAST/GUER aircraft over an active WEST-held town can pull one crewed
+//--- HMMWV_Avenger_DES_EP1 for a short defensive window. Default OFF so shipping behaviour is unchanged.
+	if (isNil "WFBE_C_AVENGER_SAM_AMBUSH") then {WFBE_C_AVENGER_SAM_AMBUSH = 0};                 //--- master switch (0 = inert, 1 = enabled).
+	if (isNil "WFBE_C_AVENGER_SAM_AMBUSH_CHANCE") then {WFBE_C_AVENGER_SAM_AMBUSH_CHANCE = 1};   //--- per-incursion spawn roll once a WEST town lacks an ambush.
+	if (isNil "WFBE_C_AVENGER_SAM_AMBUSH_MAX") then {WFBE_C_AVENGER_SAM_AMBUSH_MAX = 2};         //--- global alive cap on scripted Avengers.
+	if (isNil "WFBE_C_AVENGER_SAM_AMBUSH_LIFETIME") then {WFBE_C_AVENGER_SAM_AMBUSH_LIFETIME = 600}; //--- max seconds before forced cleanup.
+	if (isNil "WFBE_C_AVENGER_SAM_AMBUSH_QUIET_DESPAWN") then {WFBE_C_AVENGER_SAM_AMBUSH_QUIET_DESPAWN = 180}; //--- despawn after this many seconds with no enemy air nearby.
+	if (isNil "WFBE_C_AVENGER_SAM_AMBUSH_RANGE") then {WFBE_C_AVENGER_SAM_AMBUSH_RANGE = 900};   //--- minimum scan radius around the town for enemy air.
+	if (isNil "WFBE_C_AVENGER_SAM_AMBUSH_CLASS") then {WFBE_C_AVENGER_SAM_AMBUSH_CLASS = "HMMWV_Avenger_DES_EP1"};
+
 //--- Day/night cycles.
 	// Marty: Defaults used when mission parameters do not provide the accelerated day/night settings.
 	WFBE_DAYNIGHT_ENABLED = 0; //--- Night mode removed (Ray 2026-06-18): hard-force the accelerated day/night cycle OFF (permanent daylight). SET (not isNil-guarded) so a stale lobby param / saved profile can't re-enable it; every cycle site gates on ==1.
