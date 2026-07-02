@@ -386,6 +386,15 @@ with missionNamespace do {
 	if (isNil "WFBE_C_OILFIELD_ROAD_CLEAR") then {WFBE_C_OILFIELD_ROAD_CLEAR = 60};        //--- candidate rejected if any road within this (m) (nearRoads).
 	if (isNil "WFBE_C_OILFIELD_TOWN_CLEAR") then {WFBE_C_OILFIELD_TOWN_CLEAR = 500};       //--- candidate rejected if any town center (towns list) within this (m).
 	if (isNil "WFBE_C_OILFIELD_HOUSE_CLEAR") then {WFBE_C_OILFIELD_HOUSE_CLEAR = 80};      //--- candidate rejected if any building ("House") within this (m).
+	//--- === t34 ARTY CACHE (fable/arty-cache-objective, 2026-07-02) ===
+	//--- Capturable neutral static-gun side-objective (Chernarus only). Default OFF.
+	if (isNil "WFBE_C_ARTY_CACHE") then {WFBE_C_ARTY_CACHE = 0};                          //--- master gate DEFAULT 0 (behavioral: adds world object + scan loop + supply reward).
+	if (isNil "WFBE_C_ARTY_CACHE_CLASS") then {WFBE_C_ARTY_CACHE_CLASS = "D30_CDF"};      //--- static gun classname (A2-OA base class, confirmed in Structures_CDF.sqf).
+	if (isNil "WFBE_C_ARTY_CACHE_POS") then {WFBE_C_ARTY_CACHE_POS = [7300, 7900, 0]};   //--- spawn position (rough CH map centre; map author must validate in-engine).
+	if (isNil "WFBE_C_ARTY_CACHE_RADIUS") then {WFBE_C_ARTY_CACHE_RADIUS = 80};           //--- capture/hold radius (m).
+	if (isNil "WFBE_C_ARTY_CACHE_SCAN_INTERVAL") then {WFBE_C_ARTY_CACHE_SCAN_INTERVAL = 15}; //--- seconds between presence scans (floored 5s in code).
+	if (isNil "WFBE_C_ARTY_CACHE_BONUS") then {WFBE_C_ARTY_CACHE_BONUS = 1500};           //--- one-time supply bonus on first-ever capture (ChangeSideSupply, includeStagnation=false).
+	if (isNil "WFBE_C_ARTY_CACHE_GUN_TRANSFER") then {WFBE_C_ARTY_CACHE_GUN_TRANSFER = 0}; //--- 1 = enable gun + AI crew transfer on subsequent recaptures (adds AI — group-budget risk). DEFAULT OFF.
 	if (isNil "WFBE_C_PATROL_T3_CASH") then {WFBE_C_PATROL_T3_CASH = 8000};                //--- Build83 (Ray): one-time CASH granted to a side on completing Patrol upgrade level 3 (split among alive players via BankPayout). 0 = off.
 	if (isNil "WFBE_C_PATROL_T4_SUPPLY") then {WFBE_C_PATROL_T4_SUPPLY = 1500};             //--- Build83 (Ray): one-time SUPPLY granted to a side's pool on completing Patrol upgrade level 4 (ChangeSideSupply, clamped). 0 = off.
 	if (isNil "WFBE_C_AICOM_PLANE_AIRSTART") then {WFBE_C_AICOM_PLANE_AIRSTART = 1};        //--- Build83 (Ray): founded PLANES air-start (FLY) at the captured airfield, aligned to the runway logic, de-conflicted (helis/ground unchanged). 0 = old grounded/scattered FORM behavior.

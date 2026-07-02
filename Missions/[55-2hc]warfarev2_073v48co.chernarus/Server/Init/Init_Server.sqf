@@ -1012,6 +1012,14 @@ if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLowe
 	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- ARTY CACHE (t34, fable/arty-cache-objective, 2026-07-02): capturable neutral static-gun
+//--- side-objective on Chernarus (map-gated inside the file). Launched AFTER townInit
+//--- (the file self-waits townInit internally). Default OFF (WFBE_C_ARTY_CACHE=0).
+if ((missionNamespace getVariable ["WFBE_C_ARTY_CACHE", 0]) == 1) then {
+	[] execVM "Server\Server_ArtyCache.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_ArtyCache.sqf launched (WFBE_C_ARTY_CACHE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 
