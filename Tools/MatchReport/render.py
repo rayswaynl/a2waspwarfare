@@ -365,6 +365,17 @@ def _side_split_line(m):
     parts.sort(key=lambda x: -x[1])
     return "  ·  ".join(f"{nm} {n}" for nm, n in parts)
 
+def _support_line(m):
+    """Readable SCUD/TEL support-event summary for captions."""
+    total = getattr(m, "support_total", 0)
+    if not total: return ""
+    counts = getattr(m, "support_counts", {}) or {}
+    bits = [f"{kind} {counts[kind]}" for kind in sorted(counts)]
+    events = getattr(m, "support_events", []) or []
+    first = events[0] if events else {}
+    lead = f"first at {m.fmt_duration(first.get('t', 0))}" if first else ""
+    return f"Support events — {' · '.join(bits)}" + (f" ({lead})." if lead else ".")
+
 def caption(m):
     """Social caption built from the match — used as the Discord/TikTok post text.
     Honest: labels the kill number as total-across-all-forces and always prints the per-side
@@ -374,6 +385,7 @@ def caption(m):
     side = SIDE_NAME.get(m.winner, m.winner.upper())
     how = getattr(m, "win_how", {}) or {}
     split = _side_split_line(m)
+    support = _support_line(m)
 
     if getattr(m, "ai_only", False) or not m.mvp:
         # AI-only fallback: no operators, so headline the fiercest fighting side + flashpoint.
@@ -386,7 +398,8 @@ def caption(m):
         if fb: feat = f"\n💥 Fiercest fight: {fb['town']} ({fb['kills']} kills in the swing)."
         body = (f"{hook} {side} take {m.map_name.title()} in {dur} ({how.get('text','')}).{feat}\n"
                 f"Total kills (all forces): {m.total_kills}."
-                + (f"\nBy side — {split}." if split else ""))
+                + (f"\nBy side — {split}." if split else "")
+                + (f"\n{support}" if support else ""))
         return body + ("\nAI war rages 24/7 — new recap every round.\n"
                        "#arma2 #warfare #cti #miksuuswarfare")
 
@@ -399,8 +412,9 @@ def caption(m):
     mvp = (f"\n🎖 MVP {m.mvp['name']} ({m.mvp['kills']}K)"
            f"{' — '+m.mvp['award'] if m.mvp.get('award') else ''}")
     splitline = f"\nBy side — {split}." if split else ""
+    supportline = f"\n{support}" if support else ""
     return (f"{hook} {side} take {m.map_name.title()} in {dur}.{arc}{mvp}"
-            f"\nTotal kills (all forces): {m.total_kills}.{splitline}\n"
+            f"\nTotal kills (all forces): {m.total_kills}.{splitline}{supportline}\n"
             f"New match recap every round — follow for more.\n"
             f"#arma2 #warfare #cti #miksuuswarfare")
 
@@ -652,6 +666,7 @@ def render(m, out_path):
         finaltowns=f"{w} – {e}" + (f" – {g}" if getattr(m,"guer_active",False) and g else "")
         rows=[("DURATION",m.fmt_duration(m.duration)),("FINAL TOWNS",finaltowns),("TOTAL KILLS",str(m.total_kills)),("HOW",how.get("mode","—")),("MAP",m.map_name)]
         if m.mvp: rows.insert(3,("MVP",m.mvp["name"]+f' ({m.mvp["kills"]}K)'))
+        if getattr(m,"support_total",0): rows.insert(-1,("SUPPORT",str(m.support_total)+" SCUD/TEL"))
         y=920
         for lab,val in rows:
             d.text((W/2-40,y),lab,font=f_md,fill=(225,231,240),anchor="ra"); d.text((W/2+40,y),val,font=f_md,fill=col,anchor="la"); y+=82
