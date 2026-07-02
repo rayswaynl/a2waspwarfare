@@ -361,6 +361,15 @@ while {alive player && dialog} do {
 				//--- TARGET: the team's objective/destination town. wfbe_teamgoto is BROADCAST (SetTeamMovePos / AssignTowns
 				//--- L412), so it is client-readable: a town OBJECT (AI town assignment) OR a position (player DIRECT order).
 				//--- Resolve to a town name; if unset / autonomous with no goto -> "auto". The inner forEach rebinds _x to towns.
+				//--- cmdcon42-o ENEMY-BASE INTEL-LEAK CLAMP (Ray 2026-07-02): if the SERVER/HC published a display clamp for
+				//--- this team (wfbe_teamgoto_disp = [ clampPos, clampTownName ], set producer-side by Common_SetTeamMovePos
+				//--- ONLY when the true destination is inside an enemy base), render THAT enemy-held town + "(advancing)"
+				//--- instead of the real destination - the player sees the push toward enemy lines but gets no base pin. The
+				//--- clamp carries no HQ coordinates, so nothing here can be script-sniffed back to the hidden base.
+				private "_disp"; _disp = _grp getVariable "wfbe_teamgoto_disp";
+				if (!isNil "_disp" && {typeName _disp == "ARRAY"} && {count _disp >= 2}) then {
+					_tn = (_disp select 1) + " (advancing)";
+				} else {
 				_goto = _grp getVariable ["wfbe_teamgoto", objNull];
 				_tn = "auto";
 				if (!isNil "_goto") then {
@@ -377,6 +386,7 @@ while {alive player && dialog} do {
 						};
 					};
 				};
+				};   //--- cmdcon42-o: close the display-clamp else-branch (true-goto path when not clamped).
 				//--- ALIVE: alive/total members (e.g. 6/8).
 				_alive = {alive _x} count units _grp;
 				_total = count units _grp;

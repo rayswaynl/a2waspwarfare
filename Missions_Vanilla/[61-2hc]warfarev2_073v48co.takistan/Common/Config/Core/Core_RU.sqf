@@ -173,14 +173,15 @@ _c = _c + ['D30_RU'];
 _i = _i + [['','',2800,0,1,0,'Defense',0,'Russians',[]]];
 
 /* Defense Structures */
+//--- cmdcon42-g: WFBE_C_DEFMENU_V2 recategorises camo nets Strategic -> Fortification.
 _c = _c + ['Land_CamoNet_EAST'];
-_i = _i + [['','',35,0,0,0,'Strategic',0,'Russians',[]]];
+_i = _i + [['','',35,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Russians',[]]];
 
 _c = _c + ['Land_CamoNetVar_EAST'];
-_i = _i + [['','',45,0,0,0,'Strategic',0,'Russians',[]]];
+_i = _i + [['','',45,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Russians',[]]];
 
 _c = _c + ['Land_CamoNetB_EAST'];
-_i = _i + [['','',55,0,0,0,'Strategic',0,'Russians',[]]];
+_i = _i + [['','',55,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Russians',[]]];
 
 _c = _c + ['RUOrdnanceBox'];
 _i = _i + [['','',850,0,0,0,'Ammo',0,'Russians',[]]];

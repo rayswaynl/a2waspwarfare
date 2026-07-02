@@ -130,7 +130,7 @@ if (_airMaxTotalP > 0) then {
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
 		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not).
-		private ["_wm_rally","_wm_parked","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr"];
+		private ["_wm_rally","_wm_parked","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -163,14 +163,35 @@ if (_airMaxTotalP > 0) then {
 						if (count _wm_infCls > 0) then {
 							//--- CHARGE the side up front: flat per-unit cost * missing (mirrors founding's charge-then-build).
 							_wm_unitCost = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_UNIT_COST", 300];
-							_wm_charge   = _wm_unitCost * _wm_missing;
+							//--- cmdcon42 TOPUP OPTION B (Ray 2026-07-02): keep the quartermaster auto-refit running under a
+							//--- HUMAN commander, but HEAVILY DISCOUNT it (the player commander gets no kill income from his
+							//--- squads, as intended) and make each charge VISIBLE to that commander. Human-seat detection is
+							//--- the same RAW idiom as AI_Commander.sqf _humanSeated (isPlayer leader of the commander team,
+							//--- deliberately NOT the AICOM-LOCK-overridden state: the discount tracks the REAL seat).
+							//--- The AI commander keeps paying full price; payer (AICOM treasury) and cooldown are unchanged.
+							_wm_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+							_wm_humanSeated = false;
+							if (!isNull _wm_cmdTeam) then { if (isPlayer (leader _wm_cmdTeam)) then {_wm_humanSeated = true} };
+							_wm_mult = 1;
+							if (_wm_humanSeated) then {_wm_mult = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_HUMAN_MULT", 0.33]};
+							_wm_charge   = round (_wm_unitCost * _wm_missing * _wm_mult);
 							_wm_curFunds = (_side) Call GetAICommanderFunds;
 							if (_wm_curFunds >= _wm_charge) then {
 								[_side, -_wm_charge] Call ChangeAICommanderFunds;
 								_wm_rallyPos = getPosATL _wm_ldr; //--- plain array = the rally pos the driver spawns at
 								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls], true];
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
-								["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ (missing=%3, alive=%4, rally=%5, cost=%6, classes=%7) - charged, broadcast to HC driver.", _sideText, _team, _wm_missing, _wm_alive, _wm_rally, _wm_charge, _wm_infCls]] Call WFBE_CO_FNC_AICOMLog;
+								//--- VISIBILITY: UID-targeted command-chat line to the seated human commander ONLY (Client_HandlePVF
+								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).
+								//--- Spam-bounded by the per-team 240s cooldown above - one line per real refit charge, human era only.
+								if (_wm_humanSeated) then {
+									_wm_cmdUID = getPlayerUID (leader _wm_cmdTeam);
+									if (_wm_cmdUID != "") then {
+										[_wm_cmdUID, "LocalizeMessage", ["QuartermasterRefit", Format ["Quartermaster: -%1 refit %2 (%3 men)", _wm_charge, str _team, _wm_missing]]] Call WFBE_CO_FNC_SendToClients;
+									};
+								};
+								_wm_humanTag = ""; if (_wm_humanSeated) then {_wm_humanTag = Format ["|human=1|mult=%1", _wm_mult]};
+								["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ (missing=%3, alive=%4, rally=%5, cost=%6, classes=%7)%8 - charged, broadcast to HC driver.", _sideText, _team, _wm_missing, _wm_alive, _wm_rally, _wm_charge, _wm_infCls, _wm_humanTag]] Call WFBE_CO_FNC_AICOMLog;
 							};
 						};
 					};

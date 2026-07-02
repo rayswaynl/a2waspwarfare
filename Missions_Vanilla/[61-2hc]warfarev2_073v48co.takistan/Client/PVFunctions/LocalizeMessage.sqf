@@ -192,6 +192,7 @@ switch (_localize) do {
 
     //--- AI Commander Wildcard event announcement: _this select 1 is the already display-ready message text.
     case "Wildcard": {_txt = _this select 1; _commandChat = true;};
+    case "QuartermasterRefit": {_txt = _this select 1; _commandChat = true;}; //--- cmdcon42 TOPUP Option B: server-built quartermaster refit-charge line, UID-targeted at the seated human commander only (Client_HandlePVF STRING-destination filter).
 
     case "DefenseThreatGate": {
         // _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the

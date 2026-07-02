@@ -109,7 +109,11 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	_v = _v		+ ["Bank"];
-	_n = _n		+ ["Land_fortified_nest_big_EP1"];	//--- was Land_Mil_hangar_EP1 (giant ~36x18 aircraft hangar). Swapped to the EP1 fortified-nest compound (~16x16): PROVEN-loadable = it is WFBE_C_DEPOT (Core_Models\CombinedOps.sqf:10 / Arrowhead.sqf:10) and a live cursorTarget (WASP\actions\AddActions.sqf:15); EP1 installed; smaller + reads as fortified vault, distinct from Reserve (Land_Mil_Barracks_i).
+	//--- cmdcon42-g (part C): WFBE_C_BANK_MODEL_V2 swaps the Bank model to the office building
+	//--- (WFBE_C_BANK_MODEL_V2_CLASS, default Land_A_Office01_EP1) so it reads as "money lives here".
+	//--- Flag=0 -> legacy bunker Land_fortified_nest_big_EP1. Bank logic keys on the 'Bank' rlType tag,
+	//--- so income/registry/kill-handling are model-agnostic. WFBE_C_DEPOT (towns) untouched.
+	_n = _n		+ [if ((missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2_CLASS", "Land_A_Office01_EP1"]} else {"Land_fortified_nest_big_EP1"}];
 	_d = _d		+ ["Federal Reserve"];
 	_c = _c		+ [9500];
 	_t = _t		+ [if (WF_Debug) then {1} else {300}];
@@ -146,7 +150,7 @@ for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR",_ARTRAD],["BANK","Land_fortified_nest_big_EP1"],["ARTRAD",_ARTRAD],["RES",_RES]];	//--- BANK anchor model matches the Bank structure model above (was Land_Mil_hangar_EP1).
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR",_ARTRAD],["BANK",(if ((missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2_CLASS", "Land_A_Office01_EP1"]} else {"Land_fortified_nest_big_EP1"})],["ARTRAD",_ARTRAD],["RES",_RES]];	//--- cmdcon42-g (part C): BANK anchor model matches the flag-selected Bank structure model above (WFBE_C_BANK_MODEL_V2).
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];
@@ -233,5 +237,30 @@ missionNamespace setVariable [Format["WFBE_%1DEFENSES_ATPOD", _side], ['TOW_TriP
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_CANNON", _side], ['M119_US_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MASH", _side], ['MASH_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MORTAR", _side], ['M252_US_EP1']];
+
+//======================================================================================
+//--- cmdcon42-g: DEFENSES/FORTIFICATIONS MENU v2 (WFBE_C_DEFMENU_V2). WEST / US list.
+//--- The legacy `_n` above (lines ~161-226) is UNTOUCHED. This block mutates a COPY only
+//--- when the flag is on, then registers it. Flag=0 -> exact legacy list registered below.
+//--- Removes: dead BAF tripods (no data array -> already invisible; pruned for cleanliness),
+//---   SearchLight (permanent-daylight server), Land_Campfire (decoration).
+//--- Adds: Watchtower (buildable overwatch), Flak Tower anchor (sub-flag WFBE_C_DEF_FLAKTOWER),
+//---   Hedgehog line anchor (one-click AT obstacle). Camo-net recategorisation + WEST cheap-AT
+//---   reprice are data-only and live in Core_US.sqf (also flag-gated there).
+//======================================================================================
+if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {
+	//--- REMOVE dead / struck entries.
+	_n = _n - ["BAF_GPMG_Minitripod_W","BAF_GMG_Tripod_W","BAF_L2A1_Minitripod_W","BAF_L2A1_Tripod_W"];
+	_n = _n - ["SearchLight_US_EP1"];	//--- permanent-daylight clamp -> zero function
+	_n = _n - ["Land_Campfire"];		//--- decoration only
+	//--- ADD gap-fill buildables. Watchtower: elevated overwatch (Land_Fort_Watchtower_EP1 = WFBE_C_CAMP, IN-TREE).
+	_n = _n + ["Land_Fort_Watchtower_EP1"];
+	//--- Hedgehog line: one-click 4x Hedgehog_EP1 AT obstacle (anchor -> WFBE_NEURODEF_HEDGEHOGLINE).
+	_n = _n + ["Misc_cargo_cont_small"];
+	//--- Flak Tower (elevated AA + pooled AI gunner) — own sub-flag so it can be pulled independently.
+	if ((missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER", 1]) > 0) then {
+		_n = _n + ["Land_Ind_TankSmall"];	//--- anchor -> WFBE_NEURODEF_FLAKTOWER_WEST/EAST
+	};
+};
 
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];

@@ -9,7 +9,7 @@
 		0 - _origin  : Position array (e.g. getPos (leader _team)).
 		1 - _dest    : Position array (the order destination).
 		2 - _laneOff : Scalar lateral lane offset in metres (0 = straight snap; the caller
-		               manages any per-team jitter, e.g. wfbe_aicom_lanejit * 120, so several
+		               manages any per-team jitter, e.g. wfbe_aicom_lanejit * WFBE_C_AICOM_LANE_OFFSET (CH 120 / TK 60), so several
 		               teams sent to the same place don't funnel down one road).
 		3 - _hops    : Max intermediate road hops to attempt (AssignTowns uses 8).
 

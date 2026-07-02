@@ -146,6 +146,7 @@ WFBE_CO_FNC_GetSideTowns = Compile preprocessFileLineNumbers "Common\Functions\C
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 WFBE_CO_FNC_GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCamps.sqf";
+WFBE_CO_FNC_SanitizeGotoDisp = Compile preprocessFileLineNumbers "Common\Functions\Common_SanitizeGotoDisp.sqf"; //--- cmdcon42-o: enemy-base intel-leak clamp for order-destination DISPLAY surfaces (producer-side).
 WFBE_CO_FNC_GetTotalCampsOnSide = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCampsOnSide.sqf";
 WFBE_CO_FNC_GetTownsSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTownsSupply.sqf";
 WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitConfigGear.sqf";

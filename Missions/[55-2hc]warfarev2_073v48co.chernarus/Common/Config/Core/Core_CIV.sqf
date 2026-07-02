@@ -201,6 +201,26 @@ _i = _i + [['Base Wall - Corner','',300,0,0,0,'Fortification',0,'Civilians',[]]]
 _c = _c + ['Land_Ind_Timbers'];
 _i = _i + [['Base Wall - Gate','',300,0,0,0,'Fortification',0,'Civilians',[]]];
 
+//======================================================================================
+//--- cmdcon42-g: DEFENSES/FORTIFICATIONS MENU v2 — shared (side-neutral) buildables.
+//--- These data arrays are always registered (harmless if a side's DEFENSENAMES list does
+//--- not reference them; the menu only shows classes present in that side's list). The names
+//--- lists gate visibility per side + per flag (Structures_CO_*.sqf v2 blocks).
+//======================================================================================
+//--- Watchtower (OA variant, IN-TREE = WFBE_C_CAMP). Elevated overwatch buildable, Fortification/Utility.
+_c = _c + ['Land_Fort_Watchtower_EP1'];
+_i = _i + [['Watchtower','',150,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Hedgehog Line anchor (Misc_cargo_cont_small ghost -> WFBE_NEURODEF_HEDGEHOGLINE = 4x Hedgehog_EP1).
+//--- One-click AT obstacle line. Category Fortification.
+_c = _c + ['Misc_cargo_cont_small'];
+_i = _i + [['Hedgehog Line (AT obstacle)','',30,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Flak Tower anchor (Land_Ind_TankSmall ghost -> WFBE_NEURODEF_FLAKTOWER_WEST/EAST = tower + AA @ deck).
+//--- Elevated AA + pooled AI gunner. Category Defense. Sub-flag WFBE_C_DEF_FLAKTOWER gates its NAME entry.
+_c = _c + ['Land_Ind_TankSmall'];
+_i = _i + [['Flak Tower (elevated AA, 1 AI)','',1400,0,0,0,'Defense',0,'Civilians',[]]];
+
 //--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
 if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
 	_c = _c + ['Land_Pneu'];

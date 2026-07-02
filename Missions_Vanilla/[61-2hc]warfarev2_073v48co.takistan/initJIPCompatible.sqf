@@ -20,6 +20,12 @@ IS_naval_map = false;
 
 
 startingDistance = STARTING_DISTANCE;
+//--- cmdcon42-h: STARTING_DISTANCE is a compile-time #define (version.sqf), uniform 7500 both maps. On the
+//--- smaller 12800 Takistan map, 7500 is 0.59 of the width (vs 0.49 on the 15360 Chernarus map) -> TK base
+//--- pairs are proportionally closer / fewer legal spawn pairs. Apply a map-fraction-parity TK value (6300 =
+//--- 0.49 of TK width, matching CH's ratio) ONLY when the define is still its default 7500, so a deploy-time
+//--- version.sqf that explicitly overrode STARTING_DISTANCE still wins on both maps.
+if (worldName == "Takistan" && {startingDistance == 7500}) then {startingDistance = 6300};
 
 CBA_display_ingame_warnings = false;
 publicVariable "CBA_display_ingame_warnings";

@@ -58,7 +58,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WF_Logic";
-					init="this setVariable [""totalTowns"",31];this enableSimulation false;this setVariable [""Towns_RemovedXSmall"",[""FeeruzAbad"",""Nagara"",""Garmsar"",""Bastam"",""Zavarak"",""ChakChak"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Nur"",""Karachinar"",""Rasman"",""Ravanay"",""Imarat"",""Shamali"",""Gospandi"",""Landay"",""Jaza"",""Timurkalay"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedSmall"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Chardarakht"",""Karachinar"",""Ravanay"",""Imarat"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedMedium"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Chaman"",""Chardarakht"",""Nur"",""Karachinar"",""Ravanay"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedLarge"",[""Chaman"",""HazarBagh"",""Nur"",""Landay""]];nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
+					init="this setVariable [""totalTowns"",31];this enableSimulation false;this setVariable [""Towns_RemovedXSmall"",[""FeeruzAbad"",""Nagara"",""Garmsar"",""Bastam"",""Zavarak"",""ChakChak"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Nur"",""Karachinar"",""Rasman"",""Ravanay"",""Imarat"",""Shamali"",""Gospandi"",""Landay"",""Jaza"",""Timurkalay"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedSmall"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Garmarud"",""Falar"",""Chaman"",""Mulladoost"",""Chardarakht"",""Karachinar"",""Ravanay"",""Imarat"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedMedium"",[""FeeruzAbad"",""Garmsar"",""Zavarak"",""ChakChak"",""LoyManara"",""Sakhee"",""Chaman"",""Chardarakht"",""Nur"",""Karachinar"",""Ravanay"",""Landay"",""Jaza"",""Timurkalay"",""Huzrutimam"",""Sultansafee"",""Shukurkalay"",""Jilavur"",""Kakaru"",""Anar"",""HazarBagh""]];this setVariable [""Towns_RemovedLarge"",[""Chaman"",""HazarBagh"",""Nur"",""Landay""]];this setVariable [""Towns_RemovedBigTowns"",[""FeeruzAbad"",""LoyManara"",""Garmsar"",""Nagara"",""Rasman"",""ChakChak"",""Sakhee"",""Zavarak"",""Bastam""]];this setVariable [""Towns_RemovedCentralLine"",[""Anar"",""Falar"",""FeeruzAbad"",""Kakaru"",""Imarat"",""Bastam"",""Garmarud"",""Timurkalay"",""Sakhee"",""Gospandi""]];this setVariable [""Towns_RemovedSmallTowns"",[""Landay"",""Jaza"",""HazarBagh"",""Ravanay"",""Sultansafee"",""Chardarakht"",""Chaman"",""Jilavur"",""Khushab"",""Kakaru"",""Anar"",""Timurkalay"",""Imarat"",""Gospandi"",""Karachinar"",""Nur"",""Shamali""]];nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
 				};
 			};
 		}
@@ -669,7 +669,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		}
@@ -851,7 +851,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		}

@@ -167,4 +167,23 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
 	_n = _n + ["Land_Pneu"];			//--- Site Clearance (commander only)
 };
 
+//======================================================================================
+//--- cmdcon42-g: DEFENSES/FORTIFICATIONS MENU v2 (WFBE_C_DEFMENU_V2). GUER / GUE list.
+//--- Legacy `_n` above is UNTOUCHED. Mutated only when the flag is on. Flag=0 -> legacy list.
+//--- Removes struck entries (searchlight = permanent-daylight server; campfire = decoration).
+//--- Adds Watchtower + Hedgehog-line anchor. NOTE: GUER has NO AA/ATGM missile (harass faction);
+//--- the Flak Tower (elevated ZU-23) is a balance call for Ray -> INCLUDED behind its sub-flag but
+//--- ALSO gated to GUER only if Ray wants it. Per proposal it stays faction-authentic; GUER ZU-23
+//--- exists (ZU23_TK_GUE_EP1) so the flak tower is allowed for GUER.
+//======================================================================================
+if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {
+	_n = _n - ["SearchLight_TK_GUE_EP1"];	//--- permanent-daylight clamp -> zero function
+	_n = _n - ["Land_Campfire"];		//--- decoration only
+	_n = _n + ["Land_Fort_Watchtower_EP1"];	//--- elevated overwatch buildable (IN-TREE)
+	_n = _n + ["Misc_cargo_cont_small"];	//--- Hedgehog Line anchor (AT obstacle)
+	if ((missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER", 1]) > 0) then {
+		_n = _n + ["Land_Ind_TankSmall"];	//--- Flak Tower anchor (elevated AA + AI gunner)
+	};
+};
+
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];
