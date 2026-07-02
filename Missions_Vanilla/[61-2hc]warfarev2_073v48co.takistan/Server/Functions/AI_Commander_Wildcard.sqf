@@ -1584,6 +1584,10 @@ while {!gameOver} do {
 										_w25Grp setCombatMode "BLUE";   //--- recon only, do not engage
 										//--- CYCLE waypoints over the enemy town centre (~400m radius).
 										[_w25Grp, _w25TargetPos, 400] Call AIPatrol;
+										//--- AIPatrol unconditionally sets YELLOW/AWARE (lines 8-9 of AI_Patrol.sqf).
+										//--- Re-assert recon posture so the drone never reacts to or engages enemies.
+										_w25Grp setBehaviour "CARELESS";
+										_w25Grp setCombatMode "BLUE";
 										//--- Set anti-stack latch.
 										missionNamespace setVariable [_w25ActiveKey, true];
 										//--- Reveal-loop + self-despawn watcher (server-local; drone spawned on server).
