@@ -67,3 +67,8 @@ Implementation: one roll + a switch of setVariable overrides in AI_Commander boo
 
 Recommended first wave (post-cmdcon41): C personas + D1/D2/D3 + A1/A2 + B1 checkpoints — that set maximizes
 "players constantly encounter a living, theatrical war" per effort.
+
+## ▶ RAY'S PICKS (2026-07-02, wave-3)
+1. YES — wire AITownPatrol + garrison sortie loops. 2. YES — road-biased patrols. 3. SKIP personalities for now.
+4. YES — D2 smoke discipline. 5. Carriers: the MIDDLE one keeps/gets the SCUD as-is (single hull); the TWO OUTER
+carriers become TWIN-HULL SUPER-CARRIERS (second full LHD alongside, deck-bridged).
