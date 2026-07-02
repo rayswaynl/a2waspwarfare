@@ -34,6 +34,15 @@ a broken pipeline. Server healthy all night (0 HC errors, 3/3 procs, ~44 fps). N
    Still worth a daylight look at GUER wave sizing/cap (209-224 peaks are heavy), but it is NOT causing a
    sustained perf collapse. SPREAD+HOLD (item 1) still matters for the see-saw itself.
 
+## LIVE OBSERVATION (overnight, ~3h match) — the AI dominates but can't CLOSE a win
+The see-saw broke (WEST reached 2 towns + went `HQ_STRIKE`), but the HQ-strike ran **~33 min without
+converting** — no base overrun, no round-end, and WEST's strength *eroded* (81→62 as EAST recovered) while
+striking. This is the classic **"DECAPITATE doesn't finish"** gap (see the AICOM v2 plan / `NO-TOWN-UNCAPTURABLE`
+reference on the razer): the AI presses the enemy HQ but never razes HQ+factories to trigger the existing
+victory. Net: the AI can win *territory* and *dominance* but not *the round*. This is the next big AICOM
+architectural item after SPREAD+HOLD — the strike needs a durability latch + staging + conversion (razer fed by
+the HC-reported striker count). Not a tonight regression; deep + pre-existing. Flag for the daylight roadmap.
+
 ## Already handled (no morning action)
 - **Peach+ reports** — fixed live (build tag was blank after the friendly-missionName change; now reads the
   WASPSCALE `build=` tag). Your next 2h/4h/12h pulse is coherent again.
