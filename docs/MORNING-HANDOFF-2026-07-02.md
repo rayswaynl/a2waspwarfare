@@ -34,6 +34,23 @@ a broken pipeline. Server healthy all night (0 HC errors, 3/3 procs, ~44 fps). N
    Still worth a daylight look at GUER wave sizing/cap (209-224 peaks are heavy), but it is NOT causing a
    sustained perf collapse. SPREAD+HOLD (item 1) still matters for the see-saw itself.
 
+## 📹 MATCH-REPORT auto-poster — why it never fired + the fix
+Ray asked why the WEST win posted no match report. Findings: the pipeline is `Tools/MatchReport/produce-match-report.ps1`
+(renders an MP4 recap from the match WASPSTAT via `render_report.py` + posts to the **Warfare Discord #media channel**
+`1510573856275038228` via the warfare bot token `miksuus-warfare/bot/.env DISCORD_TOKEN`). It NEVER auto-posted because:
+1. **The box scheduled task was never installed** — the box only has `WaspMatchEndRotate`, no match-report task. (The 30/06
+   "auto-poster is live" Discord test was aspirational.) → install a box Scheduled Task (per "automation on the box" rule).
+2. **Quote bug** — A2-OA `diag_log` wraps the whole line in quotes, so the RPT ROUNDEND line is `"WASPSTAT|…|chernarus"`.
+   The poster's map regex captures `chernarus"` (trailing quote) → invalid output filename → **render fails every time**;
+   the quote also leaks into the caption. FIX: strip quotes on the parsed map in `produce-match-report.ps1` (~L60,
+   `$map = ($Matches[2] -replace '"','')`) AND in `render_report.py`'s caption map-parse.
+3. **Archive race** — on a win, `WaspMatchEndRotate` archives the live RPT; a standalone ~10-min task reading the LIVE RPT
+   can miss the ROUNDEND after the archive. ROBUST FIX: have `WaspMatchEndRotate` FIRE the match-report (render+post from
+   the current RPT) BEFORE it archives/rotates, instead of (or in addition to) a standalone task.
+**Overnight I manually posted the WEST-win recap** to #media (rendered `render_report.py` directly → posted the 6.5 MB MP4
+via the bot, msg `1522117964797575218`). Caption had the `Chernarus"` quote (cosmetic; fix #2 clears it). Do fixes 1-3 in
+the morning so future round-ends auto-post cleanly.
+
 ## ✅ OVERNIGHT RESULT — the AI played a FULL match to a real WIN
 The see-saw broke (WEST → 2→3→4 towns + `HQ_STRIKE`), and at match-minute ~415 **WEST WON via BASE OVERRUN** —
 razed EAST's HQ+factories via a sustained siege (`BASE_OVERRUN|strikers=8|via=siege|siege=5`,
