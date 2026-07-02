@@ -1,5 +1,21 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 169 FundsSink wiring audit [codex/lane169-fundssink-wiring-audit]
+
+The fleet prompt row saying `WFBE_C_AICOM_FUNDS_SINK_ENABLE=0` gates a complete but unwired
+`AI_Commander_FundsSink.sqf` implementation is stale on the current `claude/build84-cmdcon36`
+target. Both maintained roots already compile and hook the worker while keeping the owner-safe
+default dark:
+
+- `Common/Init/Init_CommonConstants.sqf` defines `WFBE_C_AICOM_FUNDS_SINK_ENABLE = 0` and the
+  threshold/drain tuning constants.
+- `Server/Init/Init_Server.sqf` compiles `WFBE_SE_FNC_AI_Com_FundsSink`.
+- `Server/FSM/updateresources.sqf` calls the worker on the income cadence only when the flag is enabled,
+  AI commander is enabled, and the compiled function exists.
+- `Server/AI/Commander/AI_Commander_FundsSink.sqf` also early-exits unless the same flag is enabled.
+
+No mission source changed in this lane; it records that lane 169 is already wired and still default-off.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
