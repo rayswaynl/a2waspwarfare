@@ -209,9 +209,14 @@ while {!WFBE_GameOver} do {
 		};
 
 		if !(_skip) then {
+			_totalCamps = _location Call WFBE_CO_FNC_GetTotalCamps;
 			_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID};};
 			_newSide = (_newSID) Call WFBE_CO_FNC_GetSideFromID;
-			_rate = _town_capture_rate * (([_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide) / (_location Call WFBE_CO_FNC_GetTotalCamps)) * _town_camps_capture_rate;
+			if (_totalCamps > 0) then {
+				_rate = _town_capture_rate * (([_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide) / _totalCamps) * _town_camps_capture_rate;
+			} else {
+				_rate = _town_capture_rate * _town_camps_capture_rate;
+			};
 			if (_rate < 1) then {_rate = 1};
 
 			if (_sideID != WFBE_C_UNKNOWN_ID) then {
