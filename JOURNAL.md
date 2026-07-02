@@ -1,5 +1,11 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Lane 41 B765 backlog triage [codex/lane41-b765-backlog-triage]
+
+- Claimed `fleet-lane-41-b765-backlog-triage-2026-07-02` after active-claim, open-PR, remote-branch, and live-source checks showed no lane-41 owner.
+- Added `docs/design/B765-BACKLOG-TRIAGE-2026-07-02.md` as a duplicate-guard report for stale AUDIT-60/B765 rows verified during fleet scouting.
+- Refreshed `docs/design/MISSION-AUDIT-60.md` status lines for rows #3, #4, and #6: gear double-count is live-fixed via lane 65, US/USMC garrison classnames merged via PR #176, and TKGUE patrol/air depth is no longer near-empty.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
