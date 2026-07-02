@@ -1,11 +1,54 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 09:36 Europe/Amsterdam
+Last updated: 2026-07-02 09:42 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 09:42 Update
+
+Final snapshot found additional PR #136 movement after the 09:36 findings push.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `1710fcfe1fd3b6a51843946f56f040ac79987b99`
+- PR #125: `4893faaa5dc7942f04e9993fb93fb44c8425cc98`
+- PR #126: `46ed989e4db966cf02d20c498bfca53490b651b2`
+- PR #136: `b830d173a213d746b108a0805b15b29068db7bb2`
+
+PR #136 moved from `d22455ca3d1a6c0b32d4e2a90082ebd11fa55254` to
+`b830d173a213d746b108a0805b15b29068db7bb2`.
+
+New commits:
+
+- `5cbf7e206` - `cmdcon41 wave-2: YELLOW march, journey-commit+orbiter+ladder-decay+recycle, rally/withdrawal lane + town-center top-up (Ray), dep-respecting econ sink, MHQ revival, Khe Sanh fixes, #125 RequestUpgrade anti-forge fold`
+- `b830d173a` - `design: A-Life v2 (contact/spectacle/frequency) + doctrine personalities written out + commander unit-tactics slate`
+
+Scope:
+
+- mission-affecting AICOM/cmdcon41 changes across both maintained terrains
+- both-map `RequestUpgrade.sqf` anti-forge fold from PR #125 lineage
+- both-map SCUD/support, naval HVT, commander team/strategy/production/MHQ,
+  and town-path changes
+- new soak tooling under `Tools/Soak`
+- new design docs under `docs/design`
+
+Focused `git diff --check d22455ca3..origin/claude/overnight-2026-07-02`
+passes.
+
+Boundary: this is not docs-only movement. Existing PR #136 package/runtime
+evidence is stale for `b830d173a`, and no fresh exact selected-artifact build,
+RPT matrix, or human smoke proof was collected in this pass.
+
+PR #125 remains at the validated `4893faaa5dc7942f04e9993fb93fb44c8425cc98`
+source head from the 09:36 update.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 09:36 Update
 
