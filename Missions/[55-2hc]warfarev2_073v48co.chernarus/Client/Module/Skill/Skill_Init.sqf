@@ -17,23 +17,16 @@ WFBE_SK_V_Spotters = ['US_Soldier_Sniper_EP1','TK_Soldier_Sniper_EP1','Ins_Soldi
 WFBE_SK_V_Medics = ['FR_Corpsman','US_Soldier_Medic_EP1','TK_Soldier_Medic_EP1','RUS_Soldier_Medic','GER_Soldier_Medic_EP1','BAF_Soldier_Medic_DDPM','RU_Soldier_Medic','US_Delta_Force_Medic_EP1','USMC_Soldier_Medic']; // description="Medic (Fast heal, Camps restore)";
 
 //--- GUER "Insurgents" playable classes — registered only when the faction gate is on.
-//--- Single dual-map source (#ifdef IS_CHERNARUS_MAP_DEPENDENT): Chernarus = GUE_Soldier_*, Takistan = TK_GUE_*_EP1.
-//--- LoadoutManager regen copies Chernarus->Takistan, so this stays correct on both maps.
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
-	//--- GUER-MAPFIX (2026-06-18): this file is preprocessFile'd standalone (Init_Client.sqf:624) WITHOUT
-	//--- #include "version.sqf", so IS_CHERNARUS_MAP_DEPENDENT was UNDEFINED here -> the #else (Takistan)
-	//--- branch ran even on Chernarus -> CH GUER classes never registered -> WFBE_SK_V_Type="" -> empty
-	//--- loadout -> GUER spawned with no ItemMap -> FULLY BLACK MAP. Runtime worldName check is map-correct
-	//--- on both maps and can't be silently broken by standalone loading.
-	if (worldName == "Chernarus") then {
-		WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["GUE_Soldier_Sab"];
-		WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["GUE_Soldier_Sniper"];
-		WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["GUE_Soldier_Medic"];
-	} else {
-		WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["TK_GUE_Soldier_EP1"];
-		WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["TK_GUE_Soldier_Sniper_EP1"];
-		WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["TK_GUE_Bonesetter_EP1"];
-	};
+	//--- GUER-GEARFIX (2026-07-02): BOTH maps' mission.sqm use the SAME Chernarus classnames for the playable
+	//--- GUER slots (GUE_Soldier_Medic / GUE_Soldier_Sab x2 / GUE_Soldier_Sniper), so the old worldName branch
+	//--- (GUER-MAPFIX 2026-06-18) registered only TK_GUE_*_EP1 on Takistan -> playerType never matched ->
+	//--- WFBE_SK_V_Type="" -> empty default loadout -> GUER spawned NAKED with no ItemMap (fully black map).
+	//--- Register BOTH class sets on both maps: these lists are membership lookups only, so classnames that
+	//--- never appear as a playable slot are harmless, and a future TK-native .sqm re-slot keeps working.
+	WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["GUE_Soldier_Sab","TK_GUE_Soldier_EP1"];
+	WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["GUE_Soldier_Sniper","TK_GUE_Soldier_Sniper_EP1"];
+	WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["GUE_Soldier_Medic","TK_GUE_Bonesetter_EP1"];
 };
 
 //--- Binoculars.
