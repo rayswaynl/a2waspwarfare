@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Lane 122 wheel-change one-shot stale audit [codex/lane122-wheel-change-stale-audit]
+
+Verified the lane 122 prompt item against current `origin/claude/build84-cmdcon36`. The named
+`WASP/actions/car_wheel_new.sqf` script and `wheel_change` sentinel are absent from the maintained
+Chernarus and Takistan roots. History shows the maintained Chernarus copy was removed in
+`71f8bfcb5` as an orphaned action referenced only by commented-out addAction lines.
+
+Documented the current replacement evidence: `Client_SupportRepair.sqf` clears global vehicle damage
+and iterates configured hitpoints with A2-safe `setHit`, covering wheels and engine in both roots.
+Added `docs/design/WHEEL-CHANGE-ONE-SHOT-AUDIT-2026-07-02.md`; no mission source changed, so no
+LoadoutManager mirror was required.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
