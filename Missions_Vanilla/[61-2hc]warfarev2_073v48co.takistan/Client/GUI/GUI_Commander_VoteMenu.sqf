@@ -52,11 +52,18 @@ while {alive player && dialog} do {
 
 		//--- wiki-wins: resolve by the row's stored team index, not a display-name match (duplicate names / mid-dialog renames picked the wrong commander)
 		_storedIndex = lnbValue [509100,[_index, 0]];
-		_voted_commander = if (_storedIndex < 0) then {objNull} else {group leader (WFBE_Client_Teams select _storedIndex)};
+		_isPrimitivePlaceholder = false;
+		if ((missionNamespace getVariable ["WFBE_C_FIX_VOTE_QA_EXECUTION", 0]) > 0) then {
+			if (WFBE_CVOTE_USING_PRIMS && _index > 0 && _storedIndex < 0) then {_isPrimitivePlaceholder = true};
+		};
 
-		["RequestNewCommander", [side group player, _voted_commander]] Call WFBE_CO_FNC_SendToServer;
-		voted = true;
-		closeDialog 0;
+		if !(_isPrimitivePlaceholder) then {
+			_voted_commander = if (_storedIndex < 0) then {objNull} else {group leader (WFBE_Client_Teams select _storedIndex)};
+
+			["RequestNewCommander", [side group player, _voted_commander]] Call WFBE_CO_FNC_SendToServer;
+			voted = true;
+			closeDialog 0;
+		};
 	};
 
 	//--- B74.2.5: while showing primitive rows, suppress the prune/add pass (it would delete every primitive row
