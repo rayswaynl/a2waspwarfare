@@ -1,11 +1,50 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 10:33 Europe/Amsterdam
+Last updated: 2026-07-02 10:47 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 10:47 Update
+
+Reconciled the post-10:33 package tuple movement and validated latest PR #126.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `cda71c4`
+- PR #125: `177ef1385f22aefb466368ef9c381d64a57801c0`
+- PR #126: `dde62c5085a1fa7bca8ef37f93c48658d10c920b`
+- PR #136: `5e97d91f48fa1075e870d27584a8cc45b6820077`
+
+PR #126 moved from `20931a66947f162647a8784336314dca07beef01` to
+`dde62c5085a1fa7bca8ef37f93c48658d10c920b`.
+
+New commit:
+
+- `dde62c508` - `docs: sync release tuple with 177ef proof`
+
+Validation passed in detached worktree `work/a2waspwarfare-pr126-dde62c5`:
+
+- `git diff --check origin/master..HEAD`
+- `Tools/Ops/Test-WaspReleaseTupleDocs.ps1`
+- `Tools/Ops/Test-WaspVersionTemplates.ps1`
+- `Tools/Ops/Test-WaspJipAicomSourceGuards.ps1`
+
+Boundary: PR #126 is internally consistent for `177ef1385f` /
+`F60F3C7D2C568BB1713A9C550D180B3DFA47C1400C7B1725680B8EFC3BC6B00F` /
+wiki `c27aa57`, but current PR #125 body/wiki advertise `177ef1385f` /
+`CD11B8607EE9C415D5709A1EFEA029FC90589F41C7AE617DF09F3D71B4D8CDB1` /
+wiki `cda71c4`. Local Codex validation for the same source head produced
+`177ef1385f` /
+`1960DF242EAB4CDC8ABD5A17F2072AFAC8C5E79520D6A061E1B6D27BAB19FAC6`, size
+`7167615`, entries `1885`.
+
+Release remains **NO-GO** because the package identities are not
+interchangeable and no selected exact archive/PBO has both-map RPT proof, human
+smoke notes, deployment approval, and final artifact identity binding.
 
 ## 2026-07-02 10:33 Update
 
