@@ -1422,6 +1422,8 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_TOWNS_CAPTURE_RATE = 0.4;
 	WFBE_C_TOWNS_CAPTURE_THRESHOLD_RANGE = 140;
 	WFBE_C_TOWNS_DEFENSE_RANGE = 30;
+	WFBE_C_TOWNS_AI_SCAN_RANGE_OVERRIDE = 0; //--- Fleet lane 106: 0 keeps the legacy 600m activation scan base range.
+	WFBE_C_TOWNS_AI_SCAN_BASE_RANGE = 600; //--- Used only when WFBE_C_TOWNS_AI_SCAN_RANGE_OVERRIDE > 0.
 	WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF = 1; //--- Town activation range once active (town range * coef)
 	WFBE_C_TOWNS_DETECTION_RANGE_COEF = 1; //--- Town activation range while idling (town range * coef)
 	WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50; //--- Detect Air if > x
