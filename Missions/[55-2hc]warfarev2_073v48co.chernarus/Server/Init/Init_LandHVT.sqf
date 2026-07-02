@@ -59,27 +59,26 @@ _siteMkrName setMarkerSize [0.8, 0.8];
 //--- On CH this file never runs (worldName gate above) so no double-write risk.
 missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_siteLogic]];
 
-//--- SCUD pad proximity reference (mirrors Init_NavalHVT.sqf line 284-289 idiom).
-//--- On the naval path the pad is a physical HeliHCivil on the carrier deck; here we
-//--- place an identical invisible static at the site's surface position so the same
-//--- wfbe_scud_pad_ref variable and the 50m proximity gate work unchanged on TK.
-//--- Support_ScudStrike.sqf reads wfbe_scud_pad_ref from _loc (the platform logic); if
-//--- it is objNull the reward is silently inaccessible — this write makes it valid.
-private ["_sitePad","_sitePadPos"];
-_sitePadPos = getPos _siteLogic;
-_sitePad = createVehicle ["HeliHCivil", [_sitePadPos select 0, _sitePadPos select 1, 0], [], 0, "NONE"];
-_sitePad setPosASL [_sitePadPos select 0, _sitePadPos select 1, _sitePadPos select 2];
-_sitePad enableSimulation false;
-_sitePad allowDamage false;
-_sitePad setVariable ["wfbe_is_scud_pad", true, true];
-_siteLogic setVariable ["wfbe_scud_pad_ref", _sitePad, true];
+//--- SCUD pad proximity reference.
+//--- Support_ScudStrike.sqf does NOT read wfbe_scud_pad_ref at all — the strike derives
+//--- its launch position from getPos _platform (the logic in WFBE_NAVAL_HVT_PLATFORMS).
+//--- wfbe_scud_pad_ref is used ONLY by the addAction proximity loop below for the
+//--- "_x distance _pad < 50" gate. On the naval path a physical HeliHCivil deck-pad is
+//--- needed because the logic sits at sea level while the actual deck is ~22m up; on land
+//--- the logic IS at ground level, so we use _siteLogic itself as the pad reference.
+//--- This avoids spawning a HeliHCivil near Rasman, which would collide with the Aircraft
+//--- Factory spawn picker's nearObjects ["HeliHCivil", 250] scan in Client_BuildUnit.sqf,
+//--- causing the picker to treat the invisible pad as a valid aircraft spawn point.
+//--- No new object is created; no pad to leak on round end.
+_siteLogic setVariable ["wfbe_scud_pad_ref", _siteLogic, true];
 
 //--- SCUD ADDACTION proximity loop — mirrors Init_NavalHVT.sqf lines 293-320 exactly.
-//--- While the site exists, any owning-side team-leader within 50m of the pad gets the
-//--- fire-SCUD addAction dispatched to their client (HandleSpecial case "scud-action-add").
+//--- While the site exists, any owning-side team-leader within 50m of the site logic gets
+//--- the fire-SCUD addAction dispatched to their client (HandleSpecial case "scud-action-add").
 //--- The wfbe_scud_action_armed latch (same as naval) ensures each player is signalled once.
+//--- _pad is _siteLogic (set via wfbe_scud_pad_ref above — no HeliHCivil spawned on land).
 //--- CH stays fully inert: the worldName != "takistan" exit above fires before we reach here.
-[_siteLogic, _sitePad] spawn {
+[_siteLogic, _siteLogic] spawn {
 	private ["_loc","_pad","_sideID","_ownerSide","_team","_isLeader","_x"];
 	_loc = _this select 0;
 	_pad = _this select 1;
