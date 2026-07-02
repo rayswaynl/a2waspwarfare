@@ -729,7 +729,7 @@ _IDCS = _IDCS - [_currentIDC];
 					};
 					//--- Salvage truck (claude-gaming): missing explainer added. Matches the side-list convention above (WFBE_%1SALVAGETRUCK is the same list the green buy-menu row tint keys on).
 					if (_unit in (missionNamespace getVariable Format ["WFBE_%1SALVAGETRUCK", sideJoinedText])) then {
-						hintSilent parseText "<t color='#00ff00'>Salvage Truck</t> - turns enemy and friendly wrecks into cash for your team. <br/> <br/>Drive it (a crew must be aboard) near any destroyed vehicle, ship, aircraft or static weapon. While the truck is parked nearby, wrecks in range are automatically recovered and DELETED, paying your team a share of each wreck's value. <br/> <br/>Keep it close to where vehicles are dying - frontlines, factory yards, contested towns - to keep the salvage income flowing.";
+						hintSilent parseText "<t color='#00ff00'>Salvage Truck</t> - turns enemy and neutral wrecks into cash for your team. <br/> <br/>Drive it (a crew must be aboard) near any destroyed vehicle, ship, aircraft or static weapon. While the truck is parked nearby, eligible wrecks in range are automatically recovered and DELETED, paying your team a share of each wreck's value. <br/> <br/>Keep it close to where hostile vehicles are dying - frontlines, contested towns, and enemy pushes - to keep the salvage income flowing.";
 					};
 					//--- Utility / rearm (ammo) truck (claude-gaming): missing explainer added. Keyed on the same WFBE_%1AMMOTRUCKS side-list the red buy-menu row tint uses.
 					//--- GUER MARKER FIX (claude 2026-07-01): nil-guard with [Format[...], []] - WFBE_GUERAMMOTRUCKS is undefined for the
