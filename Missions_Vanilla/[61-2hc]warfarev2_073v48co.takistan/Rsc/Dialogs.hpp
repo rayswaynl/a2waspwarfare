@@ -427,13 +427,14 @@ class WFBE_RespawnMenu {
 			onButtonClick = "WFBE_MenuAction = 1;";
 		};
 		//--- respawn-ui-v2: footer legend strip (IDC 511005).
-		//--- Sits in the footer bar (y=0.962), below the countdown/location labels at y=0.965.
+		//--- Sits in the map/label gap (y=0.923), above the countdown/location labels at y=0.965.
 		//--- Static text - no SQF loop needed; localised via STR_WF_RESPAWN_Legend.
 		//--- Hidden at menu open when WFBE_C_RESPAWN_UI_V2=0 (SQF-controlled visibility).
 		class CA_RespawnLegend : RscStructuredText {
 			idc = 511005;
+			show = 0;
 			x = 0.01;
-			y = 0.962;
+			y = 0.923;
 			w = 0.66;
 			h = 0.035;
 			size = 0.022;
