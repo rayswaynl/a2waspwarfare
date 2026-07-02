@@ -1,5 +1,16 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 - Lane 14 road checkpoint status [codex/lane14-road-checkpoint-status]
+
+Docs-only current-target status for fleet lane 14. Current `origin/claude/build84-cmdcon36@b1608b096`
+already carries the GUER G2 pop-up checkpoint in `AI_Commander_Wildcard_GUER.sqf` across Chernarus,
+Takistan and Zargabad: road-snapped occupied-town target, GUER tier vehicle, crew/foot defenders,
+contested global marker, tax/toll loop, clear reward and held-to-timeout FOB token.
+
+No mission source, LoadoutManager output, package artifact, live deploy or runtime setting changed.
+The report separates that implemented wildcard checkpoint from the larger always-on B1 A-Life
+checkpoint sketch in `docs/design/ALIFE-V2-AND-DOCTRINES.md`.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
