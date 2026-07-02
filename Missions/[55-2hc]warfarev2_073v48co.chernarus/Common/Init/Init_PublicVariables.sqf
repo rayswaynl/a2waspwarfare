@@ -29,6 +29,7 @@ _l = _l + ["CounterBatteryFired"];
 _l = _l + ["RequestSiteClearance"];
 _l = _l + ["RequestAIComDonate"];
 _l = _l + ["HCStat"];
+_l = _l + ["RequestAFKKick"]; //--- SG14: client reports AFK threshold exceeded; server validates and issues the BE kick.
 
 _serverCommandPV = _l;
 
