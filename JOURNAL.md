@@ -1,5 +1,15 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 187 balance asymmetries reference [codex/lane187-balance-asymmetries-reference]
+
+Documentation-only reference pass against `claude/build84-cmdcon36`. Added
+`docs/design/BALANCE-ASYMMETRIES-REFERENCE-2026-07-02.md` with source-cited current values for GUER
+stipend and checkpoint toll math, GUER kill-tier and bounty coefficients, CO-vs-GUE Build Ammo
+dependencies, CO-vs-GUE Supply L3 costs, and W1 War Chest sizing against late-game economy sinks.
+
+No mission source changed, no retune was proposed as code, LoadoutManager was not run, and no package or
+live-server artifact was produced.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
