@@ -485,7 +485,7 @@ while {!WFBE_GameOver} do {
 			//--- Task 12: Airfield capture — spawn repair point + exclusive hangar for the new owner.
 			//--- Task 13: Airfield built-in Counter Battery Radar (2000 m, follows owner).
 			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
-				Private ["_airfieldLogic","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos",
+				Private ["_airfieldLogic","_airfieldLogicChecks","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos",
 				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl",
 				         "_oldGarrison","_garUnit"];
 
@@ -521,8 +521,15 @@ while {!WFBE_GameOver} do {
 					default          { if (IS_chernarus_map_dependent) then {"Gue_WarfareBVehicleServicePoint"} else {"TK_GUE_WarfareBVehicleServicePoint_EP1"} };
 				};
 
-				//--- Find the nearest LocationLogicAirport (should be within 1500m of the depot logic).
-				_airfieldLogic = ((getPos _location) nearEntities [["LocationLogicAirport"], 1500]) select 0;
+				//--- Cache the nearest LocationLogicAirport on the town logic; recaptures reuse the same anchor.
+				_airfieldLogic = _location getVariable ["wfbe_airfield_logic_ref", objNull];
+				if (isNull _airfieldLogic) then {
+					_airfieldLogicChecks = (getPos _location) nearEntities [["LocationLogicAirport"], 1500];
+					if (count _airfieldLogicChecks > 0) then {
+						_airfieldLogic = _airfieldLogicChecks select 0;
+						_location setVariable ["wfbe_airfield_logic_ref", _airfieldLogic, false];
+					};
+				};
 
 				//--- Delete old repair point if present (side changed or recapture).
 				//--- Also remove from old side's structures list to avoid dead-object references.
