@@ -6,9 +6,38 @@
 		_this select 1: killer
 */
 
-Private ["_body","_wfMenuAction"];
+Private ["_body","_deathText","_killer","_killerName","_killerVehicle","_killerVehicleName","_wfMenuAction"];
 
 _body = _this select 0;
+_killer = objNull;
+_deathText = "Killed by unknown cause.";
+
+if (count _this > 1) then {
+	_killer = _this select 1;
+};
+
+if !((typeName _killer) in ["OBJECT"]) then {
+	_killer = objNull;
+};
+
+if !(isNull _killer) then {
+	if (isPlayer _killer) then {
+		_killerName = name _killer;
+		if (count (toArray _killerName) > 0) then {
+			_deathText = Format ["Killed by %1.", _killerName];
+		};
+	} else {
+		_killerVehicle = vehicle _killer;
+		if (isNull _killerVehicle) then {_killerVehicle = _killer};
+
+		_killerVehicleName = [typeOf _killerVehicle, "displayName"] Call GetConfigInfo;
+		if (isNil "_killerVehicleName") then {_killerVehicleName = ""};
+		if (count (toArray _killerVehicleName) < 1) then {_killerVehicleName = typeOf _killerVehicle};
+		if (count (toArray _killerVehicleName) > 0) then {
+			_deathText = Format ["Killed by %1.", _killerVehicleName];
+		};
+	};
+};
 
 //--- EH are flushed on unit death, still, just make sure.
 player removeEventHandler ["killed", WFBE_PLAYERKEH];
@@ -72,6 +101,7 @@ if (group player == WFBE_Client_Team) then {
 };
 
 titleCut ["", "BLACK IN", 1];
+titleText [_deathText, "PLAIN DOWN", 5];
 
 
 //--- Re-add the killed event handler to the new player unit.
