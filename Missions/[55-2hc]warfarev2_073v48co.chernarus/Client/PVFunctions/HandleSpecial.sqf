@@ -141,12 +141,13 @@ switch (_request) do {
 	//--- afford the call-in fee). Refund the client's optimistic cooldown stamp (set in Action_GuerMortarStrike.sqf
 	//--- before the request was sent) so the failed attempt does not burn the cooldown, and tell the player why.
 	case "guer-mortar-result": {
-		Private ["_ok","_msg"];
-		_ok  = _args select 0;
-		_msg = _args select 1;
+		Private ["_msg","_ok","_result"];
+		_result = if (count _args > 0 && {typeName (_args select 0) == "ARRAY"}) then {_args select 0} else {_args};
+		_ok = if (count _result > 0 && {typeName (_result select 0) == "BOOL"}) then {_result select 0} else {false};
+		_msg = if (count _result > 1 && {typeName (_result select 1) == "STRING"}) then {_result select 1} else {""};
 		if (!_ok) then {
 			player setVariable ["wfbe_mortar_last", -9999];   //--- un-stamp: the strike never fired.
 		};
-		if (typeName _msg == "STRING" && {_msg != ""}) then {titleText [_msg, "PLAIN"]};
+		if (_msg != "") then {titleText [_msg, "PLAIN"]};
 	};
 };

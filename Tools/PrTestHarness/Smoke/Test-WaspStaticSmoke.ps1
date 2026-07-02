@@ -596,8 +596,10 @@ function Test-GuerMortarRequestSpecialAuthorityGuard {
 	foreach ($entry in $roots) {
 		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
 		$clientPath = Join-Path $entry.Root "Client\Action\Action_GuerMortarStrike.sqf"
+		$handlerPath = Join-Path $entry.Root "Client\PVFunctions\HandleSpecial.sqf"
 		$server = Get-Text $serverPath
 		$client = Get-Text $clientPath
+		$handler = Get-Text $handlerPath
 		$serverCode = [regex]::Replace($server, "//.*", "")
 		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
 		$caseAt = $serverCode.IndexOf('case "guer-mortar-strike"')
@@ -616,6 +618,7 @@ function Test-GuerMortarRequestSpecialAuthorityGuard {
 		if (-not ($server.Contains('rejected GUER mortar strike with invalid target') -and $server.Contains('rejected GUER mortar strike from invalid player') -and $server.Contains('rejected GUER mortar strike from invalid vehicle') -and $server.Contains('rejected GUER mortar strike out of range'))) { $missing += "$($entry.Terrain):warnings" }
 		if (-not ($block.Contains('WFBE_CO_FNC_GetTeamFunds') -and $block.Contains('WFBE_CO_FNC_ChangeTeamFunds') -and $block.Contains('createVehicle'))) { $missing += "$($entry.Terrain):spend-and-fire-path" }
 		if (-not ($client.Contains("['RequestSpecial', ['guer-mortar-strike', _pos, _p]]") -and $client.Contains('WFBE_C_GUER_MORTAR_RANGE'))) { $missing += "$($entry.Terrain):client-shape" }
+		if (-not ($handler.Contains('case "guer-mortar-result"') -and $handler.Contains('typeName (_args select 0) == "ARRAY"') -and $handler.Contains('typeName (_result select 0) == "BOOL"') -and $handler.Contains('player setVariable ["wfbe_mortar_last", -9999]'))) { $missing += "$($entry.Terrain):client-result-handler" }
 	}
 	Add-Result "GUER mortar RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
