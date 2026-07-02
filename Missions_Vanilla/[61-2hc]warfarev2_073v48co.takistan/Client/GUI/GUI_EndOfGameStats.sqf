@@ -4,15 +4,24 @@ disableSerialization;
 
 _side = _this Select 0;
 _sideText = Localize "STR_WF_PARAMETER_Side_East";
-if (_side == West) then {_sideText = Localize "STR_WF_PARAMETER_Side_West"};
+if (_side in [West]) then {_sideText = Localize "STR_WF_PARAMETER_Side_West"};
 //--- B67 [wiki-wins]: resistance previously fell through to the East label. Name it correctly.
-if (_side == Resistance) then {_sideText = Localize "STR_WF_PARAMETER_Side_Guer"};
+if (_side in [Resistance]) then {_sideText = Localize "STR_WF_PARAMETER_Side_Guer"};
 _sideName = Format[Localize "STR_WF_END_Victory",_sideText];
 
-_width = 0.4;
+_width = 0.26;
 TitleText["","PLAIN"];
 sleep 0.5;
 CutRsc["EndOfGameStats","PLAIN",0];
+
+_getGuerStat = {
+	private ["_stat","_value"];
+	_stat = _this Select 0;
+	_value = WF_Logic getVariable [Format["resistance%1",_stat],-1];
+	if (_value < 0) then {_value = WF_Logic getVariable [Format["GUER%1",_stat],-1]};
+	if (_value < 0) then {_value = WF_Logic getVariable [Format["guer%1",_stat],0]};
+	_value
+};
 
 _eastUnitsCreated = WF_Logic getVariable "eastUnitsCreated";
 _eastCasualties = WF_Logic getVariable "eastCasualties";
@@ -22,6 +31,10 @@ _westUnitsCreated = WF_Logic getVariable "westUnitsCreated";
 _westCasualties = WF_Logic getVariable "westCasualties";
 _westVehiclesCreated = WF_Logic getVariable "westVehiclesCreated";
 _westVehiclesLost = WF_Logic getVariable "westVehiclesLost";
+_guerUnitsCreated = ["UnitsCreated"] Call _getGuerStat;
+_guerCasualties = ["Casualties"] Call _getGuerStat;
+_guerVehiclesCreated = ["VehiclesCreated"] Call _getGuerStat;
+_guerVehiclesLost = ["VehiclesLost"] Call _getGuerStat;
 
 _eastCreatedRate = _eastVehiclesCreated / 5 * .1;
 _eastLostRate = _eastVehiclesLost / 5 * .1;
@@ -32,6 +45,11 @@ _westCreatedRate = _westVehiclesCreated / 5 * .1;
 _westLostRate = _westVehiclesLost / 5 * .1;
 _westRecruitedRate = _westUnitsCreated / 5 * .1;
 _westCasualtiesRate = _westCasualties / 5 * .1;
+
+_guerCreatedRate = _guerVehiclesCreated / 5 * .1;
+_guerLostRate = _guerVehiclesLost / 5 * .1;
+_guerRecruitedRate = _guerUnitsCreated / 5 * .1;
+_guerCasualtiesRate = _guerCasualties / 5 * .1;
 
 waitUntil {!isNull (["currentCutDisplay"] call BIS_FNC_GUIget)};
 ((["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90001) CtrlSetText _sideName;
@@ -84,6 +102,55 @@ _westLostBar CtrlCommit 0;
 _position Set[2,_lost];
 _westLostBar CtrlSetPosition _position;
 _westLostBar CtrlCommit 8;
+
+_guerRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90300;
+_guerRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90301;
+_guerCasualtyCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90302;
+_guerCasualtyBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90303;
+_guerCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90304;
+_guerCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90305;
+_guerLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90306;
+_guerLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90307;
+
+_position = CtrlPosition _guerRecruitedBar;
+_recruited = _width * (_guerUnitsCreated / 500);
+if (_recruited > _width) then {_recruited = _width};
+_position Set[2,0];
+_guerRecruitedBar CtrlSetPosition _position;
+_guerRecruitedBar CtrlCommit 0;
+_position Set[2,_recruited];
+_guerRecruitedBar CtrlSetPosition _position;
+_guerRecruitedBar CtrlCommit 8;
+
+_position = CtrlPosition _guerCasualtyBar;
+_casualties = _width * (_guerCasualties / 500);
+if (_casualties > _width) then {_casualties = _width};
+_position Set[2,0];
+_guerCasualtyBar CtrlSetPosition _position;
+_guerCasualtyBar CtrlCommit 0;
+_position Set[2,_casualties];
+_guerCasualtyBar CtrlSetPosition _position;
+_guerCasualtyBar CtrlCommit 8;
+
+_position = CtrlPosition _guerCreatedBar;
+_created = _width * (_guerVehiclesCreated / 150);
+if (_created > _width) then {_created = _width};
+_position Set[2,0];
+_guerCreatedBar CtrlSetPosition _position;
+_guerCreatedBar CtrlCommit 0;
+_position Set[2,_created];
+_guerCreatedBar CtrlSetPosition _position;
+_guerCreatedBar CtrlCommit 8;
+
+_position = CtrlPosition _guerLostBar;
+_lost = _width * (_guerVehiclesLost / 150);
+if (_lost > _width) then {_lost = _width};
+_position Set[2,0];
+_guerLostBar CtrlSetPosition _position;
+_guerLostBar CtrlCommit 0;
+_position Set[2,_lost];
+_guerLostBar CtrlSetPosition _position;
+_guerLostBar CtrlCommit 8;
 
 _eastRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90101;
 _eastRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90102;
@@ -145,6 +212,11 @@ _westRecruitedCount = 0;
 _westCreatedCount = 0;
 _westLostCount = 0;
 
+_guerCasualtyCount = 0;
+_guerRecruitedCount = 0;
+_guerCreatedCount = 0;
+_guerLostCount = 0;
+
 while {_timePassed < 8} do {
 	sleep 0.1;
 
@@ -179,6 +251,22 @@ while {_timePassed < 8} do {
 	_westLostCount = _westLostCount + _westLostRate;
 	if (_westLostCount > _westVehiclesLost) then {_westLostCount = _westVehiclesLost};
 	_westLostCounter CtrlSetText Format["%1",_westLostCount - (_westLostCount % 1)];
+
+	_guerRecruitedCount = _guerRecruitedCount + _guerRecruitedRate;
+	if (_guerRecruitedCount > _guerUnitsCreated) then {_guerRecruitedCount = _guerUnitsCreated};
+	_guerRecruitedCounter CtrlSetText Format["%1",_guerRecruitedCount - (_guerRecruitedCount % 1)];
+
+	_guerCasualtyCount = _guerCasualtyCount + _guerCasualtiesRate;
+	if (_guerCasualtyCount > _guerCasualties) then {_guerCasualtyCount = _guerCasualties};
+	_guerCasualtyCounter CtrlSetText Format["%1",_guerCasualtyCount - (_guerCasualtyCount % 1)];
+
+	_guerCreatedCount = _guerCreatedCount + _guerCreatedRate;
+	if (_guerCreatedCount > _guerVehiclesCreated) then {_guerCreatedCount = _guerVehiclesCreated};
+	_guerCreatedCounter CtrlSetText Format["%1",_guerCreatedCount - (_guerCreatedCount % 1)];
+
+	_guerLostCount = _guerLostCount + _guerLostRate;
+	if (_guerLostCount > _guerVehiclesLost) then {_guerLostCount = _guerVehiclesLost};
+	_guerLostCounter CtrlSetText Format["%1",_guerLostCount - (_guerLostCount % 1)];
 
 	_timePassed = _timePassed + 0.1;
 };

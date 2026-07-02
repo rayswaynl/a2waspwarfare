@@ -640,11 +640,11 @@ class RscTitles {
 		onLoad = "_this ExecVM ""Client\GUI\GUI_SetCurrentCutDisplay.sqf""";
 		onUnload = "_this ExecVM ""Client\GUI\GUI_ClearCurrentCutDisplay.sqf""";
 
-		controls[] = {StatsBackGroundHeader,SideWinsText,StatsBackGround,EastImage,WestImage,SoldiersRecruitedLabel,SoldiersLostLabel,VehiclesCreatedLabel,VehiclesLostLabel,
-					  EastSoldiersRecruitedBar,EastSoldiersRecruitedCount,WestSoldiersRecruitedBar,WestSoldiersRecruitedCount,
-					  EastSoldiersLostBar,EastSoldiersLostCount,WestSoldiersLostBar,WestSoldiersLostCount,
-					  EastVehiclesCreatedBar,EastVehiclesCreatedCount,WestVehiclesCreatedBar,WestVehiclesCreatedCount,
-					  EastVehiclesLostBar,EastVehiclesLostCount,WestVehiclesLostBar,WestVehiclesLostCount};
+		controls[] = {StatsBackGroundHeader,SideWinsText,StatsBackGround,EastImage,GuerImage,WestImage,SoldiersRecruitedLabel,SoldiersLostLabel,VehiclesCreatedLabel,VehiclesLostLabel,
+					  EastSoldiersRecruitedBar,EastSoldiersRecruitedCount,GuerSoldiersRecruitedBar,GuerSoldiersRecruitedCount,WestSoldiersRecruitedBar,WestSoldiersRecruitedCount,
+					  EastSoldiersLostBar,EastSoldiersLostCount,GuerSoldiersLostBar,GuerSoldiersLostCount,WestSoldiersLostBar,WestSoldiersLostCount,
+					  EastVehiclesCreatedBar,EastVehiclesCreatedCount,GuerVehiclesCreatedBar,GuerVehiclesCreatedCount,WestVehiclesCreatedBar,WestVehiclesCreatedCount,
+					  EastVehiclesLostBar,EastVehiclesLostCount,GuerVehiclesLostBar,GuerVehiclesLostCount,WestVehiclesLostBar,WestVehiclesLostCount};
 
 		controlsBackground[] = {};
 
@@ -688,6 +688,18 @@ class RscTitles {
 			text = ruflag;
 		};
 
+		class GuerImage : RscText {
+			idc = 90308;
+			style = 2;
+			sizeEx = 0.04;
+			x = 0.42;
+			y = 0.13;
+			w = 0.16;
+			h = 0.06;
+			colorText[] = {0.45,0.95,0.45,1};
+			text = "GUER";
+		};
+
 		class WestImage:EastImage {
 			x = 0.792857;
 			text = usflag;
@@ -710,7 +722,7 @@ class RscTitles {
 			sizeEx = 0.06;
 			x = 0.05;
 			y = 0.3;
-			w = 0.2;
+			w = 0.13;
 			h = 0.1;
 			colorText[] = {1.0,1.0,1.0,1};
 		};
@@ -724,19 +736,29 @@ class RscTitles {
 			idc = 90102;
 			x = 0.05;
 			y = 0.31;
-			w = 0.4;
+			w = 0.26;
 			h = 0.08;
 			colorBackground[] = WFBE_EOGS_SRVBBar;
 		};
 
+		class GuerSoldiersRecruitedCount : SoldiersRecruitedCountBase {
+			idc = 90300;
+			x = 0.37;
+		};
+
+		class GuerSoldiersRecruitedBar : EastSoldiersRecruitedBar {
+			idc = 90301;
+			x = 0.37;
+		};
+
 		class WestSoldiersRecruitedCount : SoldiersRecruitedCountBase {
 			idc = 90200;
-			x = 0.55;
+			x = 0.69;
 		};
 
 		class WestSoldiersRecruitedBar : EastSoldiersRecruitedBar {
 			idc = 90201;
-			x = 0.55;
+			x = 0.69;
 		};
 
 		class SoldiersLostLabel : SoldiersRecruitedLabel {
@@ -755,15 +777,26 @@ class RscTitles {
 			colorBackground[] = WFBE_EOGS_SLVLBar;
 		};
 
+		class GuerSoldiersLostCount : SoldiersRecruitedCountBase {
+			idc = 90302;
+			y = 0.45;
+			x = 0.37;
+		};
+
+		class GuerSoldiersLostBar : EastSoldiersLostBar	{
+			idc = 90303;
+			x = 0.37;
+		};
+
 		class WestSoldiersLostCount : SoldiersRecruitedCountBase {
 			idc = 90202;
 			y = 0.45;
-			x = 0.55;
+			x = 0.69;
 		};
 
 		class WestSoldiersLostBar : EastSoldiersLostBar	{
 			idc = 90203;
-			x = 0.55;
+			x = 0.69;
 		};
 
 		class VehiclesCreatedLabel : SoldiersRecruitedLabel {
@@ -782,15 +815,26 @@ class RscTitles {
 			colorBackground[] = WFBE_EOGS_SRVBBar;
 		};
 
+		class GuerVehiclesCreatedCount : SoldiersRecruitedCountBase	{
+			idc = 90304;
+			x = 0.37;
+			y = 0.6;
+		};
+
+		class GuerVehiclesCreatedBar : EastVehiclesCreatedBar {
+			idc = 90305;
+			x = 0.37;
+		};
+
 		class WestVehiclesCreatedCount : SoldiersRecruitedCountBase {
 			idc = 90204;
-			x = 0.55;
+			x = 0.69;
 			y = 0.6;
 		};
 
 		class WestVehiclesCreatedBar : EastVehiclesCreatedBar {
 			idc = 90205;
-			x = 0.55;
+			x = 0.69;
 		};
 
 		class VehiclesLostLabel : SoldiersRecruitedLabel {
@@ -809,15 +853,26 @@ class RscTitles {
 			colorBackground[] = WFBE_EOGS_SLVLBar;
 		};
 
+		class GuerVehiclesLostCount : SoldiersRecruitedCountBase {
+			idc = 90306;
+			x = 0.37;
+			y = 0.75;
+		};
+
+		class GuerVehiclesLostBar : EastVehiclesLostBar	{
+			idc = 90307;
+			x = 0.37;
+		};
+
 		class WestVehiclesLostCount : SoldiersRecruitedCountBase {
 			idc = 90206;
-			x = 0.55;
+			x = 0.69;
 			y = 0.75;
 		};
 
 		class WestVehiclesLostBar : EastVehiclesLostBar	{
 			idc = 90207;
-			x = 0.55;
+			x = 0.69;
 		};
 	};
 
