@@ -20,7 +20,7 @@ Private [
     "_cls", "_clsIdx", "_pos", "_grp", "_veh", "_driver",
     "_i", "_routeIdx", "_route", "_wps",
     "_alive", "_next", "_townName", "_townCenter",
-    "_spawnPos", "_wpList"
+    "_spawnPos", "_wpList", "_angle", "_dist", "_tries"
 ];
 
 //--- Server-only script.
@@ -73,8 +73,9 @@ while { !(WFBE_GameOver) } do {
         if (alive _x) then {
             _alive set [count _alive, _x];
         } else {
-            if (!isNull _x) then { deleteVehicle _x };
             _grp = group _x;
+            { deleteVehicle _x } forEach (crew _x);
+            if (!isNull _x) then { deleteVehicle _x };
             if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
         };
     } forEach _boats;
@@ -86,8 +87,9 @@ while { !(WFBE_GameOver) } do {
         if (alive _x) then {
             _alive set [count _alive, _x];
         } else {
-            if (!isNull _x) then { deleteVehicle _x };
             _grp = group _x;
+            { deleteVehicle _x } forEach (crew _x);
+            if (!isNull _x) then { deleteVehicle _x };
             if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
         };
     } forEach _cars;
@@ -114,7 +116,7 @@ while { !(WFBE_GameOver) } do {
             _veh setVelocity [0, 0, 0];
 
             //--- Crew the boat with a driver from the civ group.
-            _driver = _grp createUnit ["Citizen1", _route select 0, [], 0, "NONE"];
+            _driver = _grp createUnit ["Worker1", _route select 0, [], 0, "NONE"];
             _driver moveInDriver _veh;
 
             //--- Peaceful behaviour — no fleeing, no combat.
@@ -143,8 +145,9 @@ while { !(WFBE_GameOver) } do {
         };
     };
 
-    //--- 4. Spawn car if below cap.
-    if ((count _cars) < _maxCars && { (count _boats + count _cars) < _cap }) then {
+    //--- 4. Spawn car if below cap (Chernarus only - CH town names/coords are hardcoded).
+    //--- Boats already gate on IS_naval_map (false on TK/Zargabad). Cars skip on non-CH maps.
+    if ((count _cars) < _maxCars && { (count _boats + count _cars) < _cap } && { worldName == "Chernarus" }) then {
 
         //--- Pick a random classname (A2-safe, no selectRandom).
         _clsIdx = floor (random (count _carClasses));
@@ -164,13 +167,23 @@ while { !(WFBE_GameOver) } do {
             } forEach allMapMarkers;
 
             //--- If no marker found, use a safe fallback position near center of CH.
-            if (_townCenter isEqualTo [0, 0, 0]) then { _townCenter = [11400, 11400, 0] };
+            if (((_townCenter select 0) == 0 && {(_townCenter select 1) == 0})) then { _townCenter = [11400, 11400, 0] };
 
             //--- Pick random spawn position near town center (200-600m radius).
-            _spawnPos = [_townCenter, 200, 600, 5, 0, 0.5, 0] call BIS_fnc_findSafePos;
+            //--- A2-safe: random angle+distance offset, surfaceIsWater retry loop (max 5 tries).
+            _spawnPos = [0, 0, 0];
+            _tries = 0;
+            while { _tries < 5 } do {
+                _angle = random 360;
+                _dist = 200 + (random 400);
+                _spawnPos = [(_townCenter select 0) + (_dist * (sin _angle)), (_townCenter select 1) + (_dist * (cos _angle)), 0];
+                if (!(surfaceIsWater _spawnPos)) exitWith {};
+                _spawnPos = [0, 0, 0];
+                _tries = _tries + 1;
+            };
 
-            //--- Skip if the position is water.
-            if (!(surfaceIsWater _spawnPos)) then {
+            //--- Skip if no valid dry position was found.
+            if (!(surfaceIsWater _spawnPos) && { (_spawnPos select 0) != 0 || { (_spawnPos select 1) != 0 } }) then {
 
                 //--- Create group and vehicle.
                 _grp = createGroup civilian;
@@ -179,7 +192,7 @@ while { !(WFBE_GameOver) } do {
                 _veh setVelocity [0, 0, 0];
 
                 //--- Crew the car.
-                _driver = _grp createUnit ["Citizen1", _spawnPos, [], 0, "NONE"];
+                _driver = _grp createUnit ["Worker1", _spawnPos, [], 0, "NONE"];
                 _driver moveInDriver _veh;
 
                 //--- Peaceful behaviour.
@@ -192,8 +205,17 @@ while { !(WFBE_GameOver) } do {
 
                 //--- Build a simple patrol: 2 random positions near town, CYCLE back.
                 _wpList = [];
-                _next = [_townCenter, 200, 600, 5, 0, 0.5, 0] call BIS_fnc_findSafePos;
-                if (!(surfaceIsWater _next)) then {
+                _next = [0, 0, 0];
+                _tries = 0;
+                while { _tries < 5 } do {
+                    _angle = random 360;
+                    _dist = 200 + (random 400);
+                    _next = [(_townCenter select 0) + (_dist * (sin _angle)), (_townCenter select 1) + (_dist * (cos _angle)), 0];
+                    if (!(surfaceIsWater _next)) exitWith {};
+                    _next = [0, 0, 0];
+                    _tries = _tries + 1;
+                };
+                if (!(surfaceIsWater _next) && { (_next select 0) != 0 || { (_next select 1) != 0 } }) then {
                     _wpList set [count _wpList, [_next, "MOVE", 30, 20, [], [], ["SAFE", "BLUE", "COLUMN", "LIMITED"]]];
                 };
                 _wpList set [count _wpList, [_spawnPos, "CYCLE", 30, 20, [], [], ["SAFE", "BLUE", "COLUMN", "LIMITED"]]];
@@ -219,12 +241,14 @@ _cars  = missionNamespace getVariable ["WFBE_AMBIENT_CARS",  []];
 
 {
     _grp = group _x;
+    { deleteVehicle _x } forEach (crew _x);
     if (!isNull _x) then { deleteVehicle _x };
     if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
 } forEach _boats;
 
 {
     _grp = group _x;
+    { deleteVehicle _x } forEach (crew _x);
     if (!isNull _x) then { deleteVehicle _x };
     if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
 } forEach _cars;
