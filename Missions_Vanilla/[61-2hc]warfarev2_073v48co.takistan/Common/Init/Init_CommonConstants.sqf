@@ -871,6 +871,11 @@ with missionNamespace do {
 	//--- === cmdcon41 wave-3 (Ray picks 2026-07-02): a-life encounter layer + smoke + carriers + territorial win + EASA/gear ===
 	if (isNil "WFBE_C_TOWNS_SORTIES")                 then {WFBE_C_TOWNS_SORTIES = 1};                 //--- active-town garrisons rotate a 4-man sortie on a 300-800m loop (existing teams, no new groups; instant recall on contested).
 	if (isNil "WFBE_C_TOWNS_SORTIE_MINS")             then {WFBE_C_TOWNS_SORTIE_MINS = 8};             //--- minutes per sortie rotation.
+	if (isNil "WFBE_C_CIV_COASTAL_TRAFFIC")           then {WFBE_C_CIV_COASTAL_TRAFFIC = 0};           //--- lane 42: default-off neutral boat dressing near coastal towns.
+	if (isNil "WFBE_C_CIV_COASTAL_TRAFFIC_MAX")       then {WFBE_C_CIV_COASTAL_TRAFFIC_MAX = 4};       //--- hard cap on ambient coastal boats.
+	if (isNil "WFBE_C_CIV_COASTAL_TRAFFIC_PROBE_R")   then {WFBE_C_CIV_COASTAL_TRAFFIC_PROBE_R = 700}; //--- metres from town center to probe for water.
+	if (isNil "WFBE_C_CIV_COASTAL_TRAFFIC_RADIUS")    then {WFBE_C_CIV_COASTAL_TRAFFIC_RADIUS = 1400}; //--- enable simulation only when players are nearby.
+	if (isNil "WFBE_C_CIV_COASTAL_TRAFFIC_TICK")      then {WFBE_C_CIV_COASTAL_TRAFFIC_TICK = 30};     //--- seconds between player-proximity checks.
 	if (isNil "WFBE_C_PATROLS_ROADBIAS")              then {WFBE_C_PATROLS_ROADBIAS = 1};              //--- upgrade-tier patrols route along ROADS between owned towns/HQ (players drive roads -> encounters); legacy random fallback.
 	if (isNil "WFBE_C_PATROLS_ROADBIAS_MOTORIZED")    then {WFBE_C_PATROLS_ROADBIAS_MOTORIZED = 1};    //--- road patrols prefer vehicle-containing pool entries (full-pool fallback for foot-only pools e.g. TKGUE).
 	if (isNil "WFBE_C_AICOM_SMOKE")                   then {WFBE_C_AICOM_SMOKE = 1};                   //--- smoke discipline: shells on the assault approach axis + covering smoke on break-off.

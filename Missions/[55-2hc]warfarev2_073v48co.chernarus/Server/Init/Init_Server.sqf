@@ -1004,6 +1004,13 @@ if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_IcbmTel.sqf launched (WFBE_C_ICBM_TEL=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- CIVILIAN COASTAL TRAFFIC (lane 42): default-off neutral boat dressing near coastal towns.
+//--- The initializer self-waits townInit and only enables boat simulation near real players.
+if ((missionNamespace getVariable ["WFBE_C_CIV_COASTAL_TRAFFIC", 0]) > 0) then {
+	[] execVM "Server\Init\Init_CivilianCoastalTraffic.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_CivilianCoastalTraffic.sqf launched (WFBE_C_CIV_COASTAL_TRAFFIC=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
 //--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
 //--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
