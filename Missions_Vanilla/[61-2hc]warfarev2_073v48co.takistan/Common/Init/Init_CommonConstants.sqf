@@ -1696,5 +1696,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_BANK_MODEL_V2") then {WFBE_C_BANK_MODEL_V2 = 1};
 	if (isNil "WFBE_C_BANK_MODEL_V2_CLASS") then {WFBE_C_BANK_MODEL_V2_CLASS = "Land_A_Office01_EP1"};
 
+//--- PILOT-RACE (lane B3, default 0 = inert). Owner flips WFBE_C_PILOT_RACE to 1 after grading.
+	if (isNil "WFBE_C_PILOT_RACE")            then {WFBE_C_PILOT_RACE            = 0};   //--- master switch (0 = inert, code path fully blocked).
+	if (isNil "WFBE_C_PILOT_CAPTURE_REWARD")  then {WFBE_C_PILOT_CAPTURE_REWARD  = 500}; //--- funds credited to capturing side via ChangeSideSupply.
+	if (isNil "WFBE_C_PILOT_TTL")             then {WFBE_C_PILOT_TTL             = 300}; //--- seconds before the downed pilot auto-dies + marker clears.
+	if (isNil "WFBE_C_PILOT_MAX_LIVE")        then {WFBE_C_PILOT_MAX_LIVE        = 2};   //--- global alive-cap on simultaneously active downed pilots.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
