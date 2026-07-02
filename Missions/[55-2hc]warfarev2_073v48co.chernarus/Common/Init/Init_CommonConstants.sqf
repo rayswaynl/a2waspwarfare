@@ -136,7 +136,7 @@ with missionNamespace do {
 		//--- GUER player roster; registered with "FOB (...)" labels in Core_GUE.sqf and shown ONLY in the depot when the
 		//--- matching FOB token is available. A GUER player buys one, drives it to a valid spot, then "Build FOB ...".
 		if (isNil "WFBE_C_GUER_FOB_TRUCKS") then {
-			WFBE_C_GUER_FOB_TRUCKS = if (worldName == "Takistan") then {
+			WFBE_C_GUER_FOB_TRUCKS = if (worldName == "Takistan" || worldName == "Zargabad") then {
 				["Ural_TK_CIV_EP1","V3S_Open_TK_CIV_EP1","V3S_TK_EP1"]
 			} else {
 				["Ural_INS","UralOpen_INS","GAZ_Vodnik"]
