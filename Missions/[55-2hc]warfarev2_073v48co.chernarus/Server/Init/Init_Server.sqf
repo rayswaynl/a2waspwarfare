@@ -339,7 +339,11 @@ _egressOK = {
 	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
 
 	//--- Reject candidates hugging any map edge (corner-box guard).
-	_ws = 15360;  //--- A2-fix 2026-06-14: worldSize is A3-only (undefined in A2 OA -> spammed "Undefined variable worldsize"); Chernarus map size = 15360
+	_ws = 15360;  //--- Legacy default: A2 OA has no dynamic map-size command, and Chernarus map size is 15360.
+	if ((missionNamespace getVariable ["WFBE_C_BASE_EGRESS_MAP_BOUNDS", 0]) > 0) then {
+		_ws = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
+		if (_ws < 1) then {_ws = 15360};
+	};
 	if ((_pos select 0) < _margin || (_pos select 0) > (_ws - _margin)) exitWith {false};
 	if ((_pos select 1) < _margin || (_pos select 1) > (_ws - _margin)) exitWith {false};
 

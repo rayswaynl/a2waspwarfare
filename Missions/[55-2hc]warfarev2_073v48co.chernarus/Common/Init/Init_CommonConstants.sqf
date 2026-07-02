@@ -969,6 +969,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- Symmetric for both sides; degrades to accept on Vanilla A2 (no roadsConnectedTo). Fallback intact.
 	if (isNil "WFBE_C_BASE_MIN_EGRESS_ROADS") then {WFBE_C_BASE_MIN_EGRESS_ROADS = 2}; //--- B66 (Ray 2026-06-21): 3->2, loosen the egress gate so the random-start pool isn't collapsed to ~1 viable pair (the "always same 2 spots" cause). Min usable road segments near a candidate start.
 	if (isNil "WFBE_C_BASE_EDGE_MARGIN")      then {WFBE_C_BASE_EDGE_MARGIN      = 400}; //--- Min metres a candidate start must sit from any map edge.
+	if (isNil "WFBE_C_BASE_EGRESS_MAP_BOUNDS") then {WFBE_C_BASE_EGRESS_MAP_BOUNDS = 0}; //--- Default OFF: keep the legacy 15360 edge box. 1 = use the Init_Boundaries worldName size (Takistan 12800) for random-start egress checks.
 	WFBE_C_BASE_AREA_RANGE = 250; //--- A base area has a range of x meters.
 	WFBE_C_BASE_HQ_BUILD_RANGE = 120; //--- HQ Build range.
 	WFBE_C_BASE_AV_STRUCTURES = 260; //--- Base available structures.
