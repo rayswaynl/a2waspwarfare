@@ -99,7 +99,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 	//--- Erect it (thematic; also makes it a visible landmark to hunt). Reuse the shared theatrics helper.
 	[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;
 
-	missionNamespace setVariable [_key, _tel, true];
+	missionNamespace setVariable [_key, _tel];
 	//--- Clear any stale countdown latch on (re)spawn.
 	missionNamespace setVariable [Format ["WFBE_ICBM_TEL_CD_%1", _sideText], -1, true];
 
@@ -165,7 +165,7 @@ WFBE_SE_FNC_TkScudPlatforms = {
 	_live = [];
 	{ if (!isNull _x && {alive _x}) then {_live set [count _live, _x]} } forEach _arr;
 	//--- write back only if it shrank (avoid needless broadcasts).
-	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live, true] };
+	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live] };
 	_live
 };
 
@@ -201,7 +201,7 @@ WFBE_SE_FNC_TkScudRegister = {
 	_veh setVariable ["wfbe_tk_scud_side", _side, true];
 	_veh setVariable ["wfbe_is_tk_scud", true, true];
 	_arr = _live + [_veh];
-	missionNamespace setVariable [_key, _arr, true];
+	missionNamespace setVariable [_key, _arr];
 	//--- KILLED EH: drop from the registry on death. NO respawn (it's a purchase). Server-side (hull is a shared object).
 	_veh addEventHandler ["Killed", {
 		private ["_dead","_dSide","_dKey","_dArr","_dLive","_x"];
@@ -213,7 +213,7 @@ WFBE_SE_FNC_TkScudRegister = {
 		if (typeName _dArr != "ARRAY") then {_dArr = []};
 		_dLive = [];
 		{ if (!isNull _x && {alive _x} && {_x != _dead}) then {_dLive set [count _dLive, _x]} } forEach _dArr;
-		missionNamespace setVariable [_dKey, _dLive, true];
+		missionNamespace setVariable [_dKey, _dLive];
 		diag_log (Format ["ICBMTEL|v1|SCUD-DESTROYED|%1|remaining=%2 (no respawn)", str _dSide, count _dLive]);
 	}];
 	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REGISTERED as platform (%2/%3 live).", str _side, count _arr, _max]] Call WFBE_CO_FNC_LogContent;
@@ -448,7 +448,7 @@ WFBE_SE_FNC_IcbmTelFire = {
 			_fx = _x;
 			if (typeName _fx == "ARRAY" && {({!isNull _x} count _fx) > 0}) then {_live set [count _live, _fx]};
 		} forEach _fields;
-		missionNamespace setVariable [_fKey, _live, true];
+		missionNamespace setVariable [_fKey, _live];
 		_fascamLiveN = count _live;
 		if (_fascamLiveN >= _fMax) then {_fascamAtCap = true};
 	};
@@ -471,7 +471,7 @@ WFBE_SE_FNC_IcbmTelFire = {
 	if (_perPlatform) then {
 		_platform setVariable ["wfbe_tk_scud_lastfire", _now, true];
 	} else {
-		missionNamespace setVariable [_cdKey, _now, true];
+		missionNamespace setVariable [_cdKey, _now];
 	};
 
 	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] LAUNCH AUTHORISED — munition %2 at %3 (cost %4, platform %5, perPlatformCD %6, ai=%7).", _sideText, _muni, [round (_tgtPos select 0), round (_tgtPos select 1)], _cost, typeOf _platform, _perPlatform, _isAiFire]] Call WFBE_CO_FNC_LogContent;
@@ -532,7 +532,7 @@ WFBE_SE_FNC_IcbmTelNuke = {
 	_fuzz = missionNamespace getVariable ["WFBE_C_ICBM_TEL_PING_FUZZ", 400];
 
 	//--- Arm the countdown latch (the killed-EH reads this to know a NUKE is in flight -> destroy = cancel).
-	missionNamespace setVariable [_cdKey, time + _secs, true];
+	missionNamespace setVariable [_cdKey, time + _secs];
 
 	//--- Theatrics at the TEL (erect + smoke) for the whole countdown feel.
 	[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;
@@ -563,7 +563,7 @@ WFBE_SE_FNC_IcbmTelNuke = {
 	};
 
 	//--- Clear the latch (fired successfully).
-	missionNamespace setVariable [_cdKey, -1, true];
+	missionNamespace setVariable [_cdKey, -1];
 
 	//--- FIRE the CLASSIC warhead via the EXISTING server-side path — DETERMINISTIC, no client-pick (A2-OA has no
 	//--- reliable server-side "is this a real player, not an HC" test, and picking a client risks the wrong one / an
@@ -774,7 +774,7 @@ WFBE_SE_FNC_IcbmTelFascam = {
 	_fields = missionNamespace getVariable [_fKey, []];
 	if (typeName _fields != "ARRAY") then {_fields = []};
 	_fields set [count _fields, _field];
-	missionNamespace setVariable [_fKey, _fields, true];
+	missionNamespace setVariable [_fKey, _fields];
 
 	//--- SELF-CLEAR waiter: at T+MINS deleteVehicle the survivors + drop this field entry from the registry.
 	[_side, _field, _mins] spawn {
@@ -788,7 +788,7 @@ WFBE_SE_FNC_IcbmTelFascam = {
 		_wFields = missionNamespace getVariable [_wKey, []];
 		if (typeName _wFields == "ARRAY") then {
 			_wFields = _wFields - [_wField];
-			missionNamespace setVariable [_wKey, _wFields, true];
+			missionNamespace setVariable [_wKey, _wFields];
 		};
 		diag_log (Format ["ICBMTEL|v1|FASCAM-CLEAR|%1|field cleared after %2min", str _wSide, _wMins]);
 	};

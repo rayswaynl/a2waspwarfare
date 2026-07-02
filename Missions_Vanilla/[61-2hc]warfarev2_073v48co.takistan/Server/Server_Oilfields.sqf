@@ -223,7 +223,7 @@ if (!_dynOK) then {
 
 //--- Force a ground/2D-clean [x,y,0] node position (capture uses 2D distance below anyway).
 _nodePos = [_nodePos select 0, _nodePos select 1, 0];
-missionNamespace setVariable ["WFBE_OILFIELD_POS_LIVE", _nodePos, true];
+missionNamespace setVariable ["WFBE_OILFIELD_POS_LIVE", _nodePos];
 
 //------------------------------------------------------------------------------------
 //--- DERRICK COMPOSITION (dynamic-placement success only - on the legacy path the node anchors an
@@ -264,11 +264,11 @@ if (_dynOK) then {
 			_prop setVariable ["wfbe_trashable", false];
 			_objs set [count _objs, _prop];
 			if (_cls == "Land_Ind_Oil_Pump_EP1") then {
-				missionNamespace setVariable ["WFBE_OILFIELD_DERRICK_OBJ", _prop, true];
+				missionNamespace setVariable ["WFBE_OILFIELD_DERRICK_OBJ", _prop];
 			};
 		};
 	} forEach _defs;
-	missionNamespace setVariable ["WFBE_OILFIELD_OBJS", _objs, true];
+	missionNamespace setVariable ["WFBE_OILFIELD_OBJS", _objs];
 	diag_log Format ["OILFIELD|v2|COMPOSITION|t=%1|objs=%2|pos=%3", round time, count _objs, _nodePos];
 	["INFORMATION", Format ["Server_Oilfields.sqf: derrick composition spawned (%1 objects) at %2.", count _objs, _nodePos]] Call WFBE_CO_FNC_LogContent;
 };
@@ -323,9 +323,9 @@ _mkr setMarkerText _baseLabel;
 _mkr setMarkerSize [1, 1];
 
 //--- Ownership state: sideLogic = neutral/unheld sentinel (never a real playing side).
-missionNamespace setVariable ["WFBE_OILFIELD_OWNER", sideLogic, true];
+missionNamespace setVariable ["WFBE_OILFIELD_OWNER", sideLogic];
 //--- Sabotage state: false = healthy/paying; true = burning/not-paying. Published for telemetry + label.
-missionNamespace setVariable ["WFBE_OILFIELD_SABOTAGED", false, true];
+missionNamespace setVariable ["WFBE_OILFIELD_SABOTAGED", false];
 
 //--- ANNOUNCE to ALL clients (global chat) via the existing DashboardAnnounce PVF (systemChat).
 //--- nil destination = broadcast to everyone on every side (see server_dashboard_announcer.sqf).
@@ -389,7 +389,7 @@ WFBE_FNC_OilfieldStartFX = {
 		if (!isNull _fire) then {
 			_fire setPos [_fxPos select 0, _fxPos select 1, 0];
 			_fire inflame true;
-			missionNamespace setVariable ["WFBE_OILFIELD_FIRE_OBJ", _fire, true];
+			missionNamespace setVariable ["WFBE_OILFIELD_FIRE_OBJ", _fire];
 		};
 	};
 	//--- Bounded smoke re-emitter: one thread, guarded by the sabotaged flag; one shell live at a time.
@@ -414,7 +414,7 @@ WFBE_FNC_OilfieldStopFX = {
 	private ["_fire"];
 	_fire = missionNamespace getVariable ["WFBE_OILFIELD_FIRE_OBJ", objNull];
 	if (!isNull _fire) then { _fire inflame false; deleteVehicle _fire };
-	missionNamespace setVariable ["WFBE_OILFIELD_FIRE_OBJ", objNull, true];
+	missionNamespace setVariable ["WFBE_OILFIELD_FIRE_OBJ", objNull];
 	//--- The smoke re-emitter thread self-terminates on the next tick when the sabotaged flag is false.
 };
 
@@ -590,7 +590,7 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 	if (_newOwner != sideLogic && _newOwner != _owner) then {
 		_flip = true;
 		_owner = _newOwner;
-		missionNamespace setVariable ["WFBE_OILFIELD_OWNER", _owner, true];
+		missionNamespace setVariable ["WFBE_OILFIELD_OWNER", _owner];
 
 		//--- A capture RESETS the sabotage clock (fresh holder) but does NOT auto-repair a burning field:
 		//--- the new owner must still repair it. Reset the dwell accumulators on any flip.
@@ -626,7 +626,7 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 			};
 			if (_sabProg >= _sabSecs) then {
 				//--- SABOTAGED: halt income, start FX, announce, relabel.
-				missionNamespace setVariable ["WFBE_OILFIELD_SABOTAGED", true, true];
+				missionNamespace setVariable ["WFBE_OILFIELD_SABOTAGED", true];
 				_sab = true; _sabProg = 0; _repProg = 0;
 				Call WFBE_FNC_OilfieldStartFX;
 				Call WFBE_FNC_OilfieldRefreshLabel;
@@ -647,7 +647,7 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 			};
 			if (_repProg >= _repSecs) then {
 				//--- REPAIRED: resume income, stop FX, announce, relabel.
-				missionNamespace setVariable ["WFBE_OILFIELD_SABOTAGED", false, true];
+				missionNamespace setVariable ["WFBE_OILFIELD_SABOTAGED", false];
 				_sab = false; _repProg = 0; _sabProg = 0;
 				Call WFBE_FNC_OilfieldStopFX;
 				Call WFBE_FNC_OilfieldRefreshLabel;
@@ -689,8 +689,8 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 	Call WFBE_FNC_OilfieldRefreshLabel;
 
 	//--- Publish telemetry state the WASPSCALE emitter reads (oilOwn / oilInc). Cheap setVariables.
-	missionNamespace setVariable ["WFBE_OILFIELD_OWNER", _owner, true];
-	missionNamespace setVariable ["WFBE_OILFIELD_INCOME_ACCRUED", _incomeAccrued, true];
+	missionNamespace setVariable ["WFBE_OILFIELD_OWNER", _owner];
+	missionNamespace setVariable ["WFBE_OILFIELD_INCOME_ACCRUED", _incomeAccrued];
 };
 
 //--- Game over: undo any AICOM town-weight bumps so nothing leaks into a re-init, and stop FX.
