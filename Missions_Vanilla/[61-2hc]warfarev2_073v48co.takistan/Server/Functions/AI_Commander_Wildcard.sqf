@@ -1545,6 +1545,9 @@ while {!gameOver} do {
 				_wName = Format ["W%1", _draw];
 				_wDesc = "";
 				{if ((_x select 0) == _draw) exitWith {_wName = _x select 1; _wDesc = _x select 2}} forEach _wNameMap;
+				if ((_draw in [20]) && {_result in ["applied"]} && {!(isNil "_w20TierName")} && {!(isNil "_w20ChosenID")} && {!(isNil "_w20NewUpgrades")}) then {
+					_wDesc = Format ["%1 support reaches level %2", _w20TierName, _w20NewUpgrades select _w20ChosenID];
+				};
 
 				//--- -----------------------------------------------------------------------
 				//--- MAP MARKER (feature: wildcard events show on the map for the OWNING side)
