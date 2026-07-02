@@ -262,6 +262,8 @@ missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
 _u 			= ['MH6J_EP1'];
+_u = _u		+ ['AH6X_EP1'];      //--- cmdcon42 Option C Row 1: AH-6X Scout (unarmed FLIR) at Aircraft Factory research level 0. Was registered in Core_US.sqf but reachable from no buy list until now.
+_u = _u		+ ['AH6X_M134'];     //--- cmdcon42 Option C Row 2: AH-6X (M134). SYNTHETIC buy token -> metadata registered in Core_US.sqf, remapped to the real AH6X_EP1 hull + a TwinM134/4000Rnd kit in Client_BuildUnit.sqf. Not a CfgVehicles class; only ever lives in this player buy list.
 _u = _u		+ ['MH60S'];
 _u = _u		+ ['UH60M_EP1'];
 _u = _u		+ ['UH60M_MEV_EP1'];

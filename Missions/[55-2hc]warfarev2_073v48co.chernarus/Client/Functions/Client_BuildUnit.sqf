@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33"];
+Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -313,8 +313,32 @@ if (_isMan) then {
 	if (_spawnpaddir==2) then {//there is no spawnpad
 	_direction = -((((_position select 1) - (_factoryPosition select 1)) atan2 ((_position select 0) - (_factoryPosition select 0))) - 90);//--- model to world that later on.
 	};
+	//--- cmdcon42 Option C Row 2: the synthetic buy token "AH6X_M134" is NOT a CfgVehicles class, so
+	//--- createVehicle on it would return objNull. Capture the variant flag (the tuple time/label were
+	//--- already read from the synthetic key at :21-23 above, giving the 5500 price + "AH-6X (M134)" name),
+	//--- then remap _unit to the real hull AH6X_EP1 BEFORE createVehicle. After this line every downstream
+	//--- _unit use (createVehicle, isKindOf "Air" pilot-crew + CM/AA blocks) sees the real hull.
+	_ah6xM134Kit = (_unit == "AH6X_M134");
+	if (_ah6xM134Kit) then {_unit = "AH6X_EP1"};
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
 	clientTeam reveal _vehicle;
+
+	//--- cmdcon42 Option C Row 2: arm the AH-6X hull with the AH-6J's minigun. The AH6X_EP1 hull ships
+	//--- UNARMED (weapons[]={}/magazines[]={}, config-proven from CfgVehicles AH6X_EP1). We add the exact
+	//--- weapon+magazine the armed AH6J_EP1 carries: weapon "TwinM134" (class TwinM134 : M134) and magazine
+	//--- "4000Rnd_762x51_M134" (both config-proven present in CfgWeapons/CfgMagazines). On the AH-6 these are
+	//--- HULL-level (AH6J_EP1 weapons[]/magazines[] sit on the vehicle body, class Turrets {} is empty), so
+	//--- plain addWeapon/addMagazine (NOT the [-1] turret path used for the Ka-137). Runs on the buyer's client
+	//--- on the freshly-created local hull (same machine/timing as the existing GUER Ka-137 flares kit below);
+	//--- Common_CreateVehicle globalizes the hull via setVehicleInit right after creation, so the weapon state
+	//--- replicates. Idempotent remove-then-add so a re-buy or JIP re-run cannot stack duplicate mags.
+	if (_ah6xM134Kit && {!isNull _vehicle}) then {
+		_vehicle removeMagazine "4000Rnd_762x51_M134";
+		_vehicle removeWeapon "TwinM134";
+		_vehicle addWeapon "TwinM134";
+		_vehicle addMagazine "4000Rnd_762x51_M134";
+		["INFORMATION", Format ["Client_BuildUnit.sqf: AH-6X (M134) armed with TwinM134 + 4000Rnd_762x51_M134 [%1].", typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+	};
 
 	_vehicles = (WF_Logic getVariable "emptyVehicles") + [_vehicle];
 	WF_Logic setVariable ["emptyVehicles",_vehicles,true];
