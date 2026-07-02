@@ -48,11 +48,7 @@ while {!gameOver && (alive _vehicle)} do { //--- wiki-wins: exit when the truck 
 		} foreach _wrecks;
 
 		if (_overAllCost > 0) then {
-			if ((missionNamespace getVariable ["WFBE_C_FIX_SALVAGE_PAYOUT_CASE", 0]) > 0) then {
-				(_overAllCost) Call ChangePlayerFunds;
-			} else {
-				(_overAllCost) Call ChangePlayerfunds;
-			};
+			(_overAllCost) Call ChangePlayerFunds;
 			//--- QoL trio feat.1: salvage payout toast (WFBE_C_QOL_TRIO, default 1).
 			if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) > 0) then {
 				hintSilent Format ["Salvage: +$%1", _overAllCost];
