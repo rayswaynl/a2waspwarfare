@@ -37,7 +37,7 @@ _markerOn = missionNamespace getVariable ["WFBE_C_SMUGGLER_MARKER",   1];
 private ["_route","_routeDefined"];
 _routeDefined = true;
 _route = [];
-if (worldName == "chernarus") then {
+if (worldName == "Chernarus") then {
 	_route = [
 		[1800,  8000, _alt],
 		[5500, 12000, _alt],
@@ -45,7 +45,7 @@ if (worldName == "chernarus") then {
 		[14800, 7000, _alt]
 	];
 };
-if (worldName == "takistan") then {
+if (worldName == "Takistan") then {
 	_route = [
 		[1000, 4000, _alt],
 		[3200, 7500, _alt],
@@ -53,7 +53,7 @@ if (worldName == "takistan") then {
 		[9000, 4500, _alt]
 	];
 };
-if (worldName == "zargabad") then {
+if (worldName == "Zargabad") then {
 	_route = [
 		[ 500, 2000, _alt],
 		[1600, 3800, _alt],
