@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow"];
+Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -210,13 +210,23 @@ _queu2 = [0];
 if (count _queu > 0) then {_queu2 = _building getVariable "queu"};
 
 _show = false;
-while {_unique != _queu select 0 && alive _building && !isNull _building} do {
+_nextQueueHint = time;
+while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
 	sleep 4;
 	_show = true;
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
+	if ((count _queu > 0) && {time >= _nextQueueHint}) then {
+		_nextQueueHint = time + 12;
+		_queuePos = _queu find _unique;
+		if (_queuePos >= 0) then {
+			_queueEta = (_queuePos * _longest) + _waitTime;
+			if (_queueEta < _waitTime) then {_queueEta = _waitTime};
+			titleText [Format ["Build queue: %1 position %2/%3, ETA about %4s.", _description, _queuePos + 1, count _queu, ceil _queueEta], "PLAIN"];
+		};
+	};
 
-	if (_queu select 0 == _queu2 select 0) then {
+	if ((_queu select 0) in [_queu2 select 0]) then {
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
@@ -225,7 +235,7 @@ while {_unique != _queu select 0 && alive _building && !isNull _building} do {
 			};
 		};
 	};
-	if (count _queu != count _queu2) then {
+	if !((count _queu) in [count _queu2]) then {
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
