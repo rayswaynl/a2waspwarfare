@@ -48,6 +48,12 @@ grep WASPSTAT server.rpt | python render_report.py --waspstat -
 python render_report.py --waspstat match.log --names players.tsv
 ```
 
+Each match render also writes `out.mp4.replay.json` unless `--no-replay-json` is
+passed. That sidecar is built from finalized `MatchData` and contains replay-ready
+kill timeline bins, SCUD/TEL support markers, per-side town-control area, and
+capture-streak callouts. It never reads raw PLAYERSTATS directly, so HC / AI
+controller names cannot leak into these stat surfaces.
+
 ## Data flow
 
 ```
@@ -80,6 +86,13 @@ SCUD/TEL support markers are parsed opportunistically from the same raw RPT stre
 even when they are not `WASPSTAT` records. Lines containing `SCUD`, `ICBMTEL`, or a
 standalone `TEL` token are summarized as support events; `t=<seconds>` is used when
 present, otherwise the parser spreads them across the match like untimed kills/captures.
+
+Replay sidecar fields:
+
+- `killTimeline`: fixed-width kill bins by WEST/EAST/GUER/other for a timeline strip.
+- `supportMarkers`: SCUD/TEL markers with absolute time and replay percentage.
+- `townControlArea`: exact town-seconds and share per side.
+- `captureStreaks`: consecutive same-side capture runs, suitable for callout cards.
 
 ## Generated art (optional — "prompt pack + drop folder")
 

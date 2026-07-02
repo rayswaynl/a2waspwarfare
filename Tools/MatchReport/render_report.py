@@ -13,7 +13,7 @@ Options:
 
 See README.md for the data flow and the production-wiring TODOs.
 """
-import argparse, sys, time
+import argparse, json, sys, time
 from render import render
 
 def load_names(path):
@@ -65,6 +65,7 @@ def main():
     ap.add_argument("--names", metavar="FILE", help="optional uid<TAB>name mapping")
     ap.add_argument("-o", "--out", help="output mp4 path")
     ap.add_argument("--no-sound", action="store_true", help="render silent (skip the cinematic audio bed)")
+    ap.add_argument("--no-replay-json", action="store_true", help="skip the replay metadata sidecar")
     args = ap.parse_args()
 
     if args.leaderboard:
@@ -100,6 +101,12 @@ def main():
     cap = caption(m)
     with open(out + ".caption.txt", "w", encoding="utf-8") as fh: fh.write(cap)
     print("caption -> " + out + ".caption.txt")
+    if not args.no_replay_json:
+        from replay_summary import build_replay_summary
+        with open(out + ".replay.json", "w", encoding="utf-8") as fh:
+            json.dump(build_replay_summary(m), fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+        print("replay summary -> " + out + ".replay.json")
     if not args.no_sound:
         from render import climax_frame
         add_sound(out, n, climax_frame(), seed=m.seed, winner=m.winner)
