@@ -620,7 +620,7 @@ function Test-GuerMortarRequestSpecialAuthorityGuard {
 	Add-Result "GUER mortar RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
-function Test-ParadropSupportAuthorityGuard {
+function Test-PlayerSupportRequestSpecialAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
 		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
@@ -633,28 +633,70 @@ function Test-ParadropSupportAuthorityGuard {
 		$paratroopsPath = Join-Path $entry.Root "Server\Support\Support_Paratroopers.sqf"
 		$paraVehiclesPath = Join-Path $entry.Root "Server\Support\Support_ParaVehicles.sqf"
 		$paraAmmoPath = Join-Path $entry.Root "Server\Support\Support_ParaAmmo.sqf"
+		$uavPath = Join-Path $entry.Root "Client\Module\UAV\uav.sqf"
+		$uavSupportPath = Join-Path $entry.Root "Server\Support\Support_UAV.sqf"
+		$constantsPath = Join-Path $entry.Root "Common\Init\Init_CommonConstants.sqf"
 		$server = Get-Text $serverPath
 		$tactical = Get-Text $tacticalPath
 		$paratroops = Get-Text $paratroopsPath
 		$paraVehicles = Get-Text $paraVehiclesPath
 		$paraAmmo = Get-Text $paraAmmoPath
+		$uav = Get-Text $uavPath
+		$uavSupport = Get-Text $uavSupportPath
+		$constants = Get-Text $constantsPath
 		$serverCode = [regex]::Replace($server, "//.*", "")
 		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
 		$paratroopsCode = [regex]::Replace($paratroops, "//.*", "")
 		$paraVehiclesCode = [regex]::Replace($paraVehicles, "//.*", "")
 		$paraAmmoCode = [regex]::Replace($paraAmmo, "//.*", "")
-		if (-not ($serverCode.Contains('_validateTacticalSupportRequester') -and $serverCode.Contains('count _vArgs < 5') -and $serverCode.Contains('_side in [west,east]') -and $serverCode.Contains('typeName _destination != "ARRAY"') -and $serverCode.Contains('typeName (_destination select 0) != "SCALAR"') -and $serverCode.Contains('typeName _playerTeam != "GROUP"') -and $serverCode.Contains('typeName _requester != "OBJECT"'))) { $missing += "$($entry.Terrain):validator-shape-types" }
-		if (-not ($serverCode.Contains('!isPlayer _requester') -and $serverCode.Contains('group _requester != _playerTeam') -and $serverCode.Contains('side _playerTeam != _side') -and $serverCode.Contains('leader _playerTeam != _requester'))) { $missing += "$($entry.Terrain):requester-team-binding" }
-		if (-not ($serverCode.Contains('WFBE_CO_FNC_GetSideUpgrades') -and $serverCode.Contains('_upgrades select _upgradeIndex') -and $serverCode.Contains('without required upgrade index'))) { $missing += "$($entry.Terrain):upgrade-gate" }
-		if (-not ($serverCode.Contains('[_args, "Paratroops", WFBE_UP_PARATROOPERS] Call _validateTacticalSupportRequester') -and $serverCode.Contains('_args spawn KAT_Paratroopers'))) { $missing += "$($entry.Terrain):paratroops-dispatch-gate" }
-		if (-not ($serverCode.Contains('[_args, "ParaVehi", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester') -and $serverCode.Contains('_args spawn KAT_ParaVehicles'))) { $missing += "$($entry.Terrain):paravehi-dispatch-gate" }
-		if (-not ($serverCode.Contains('[_args, "ParaAmmo", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester') -and $serverCode.Contains('_args spawn KAT_ParaAmmo'))) { $missing += "$($entry.Terrain):paraammo-dispatch-gate" }
-		if (-not ($tactical.Contains('["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam,player]]') -and $tactical.Contains('["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam,player]]') -and $tactical.Contains('["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam,player]]'))) { $missing += "$($entry.Terrain):client-requester-context" }
+
+		$playerHelperAt = $serverCode.IndexOf('_validatePlayerSupportRequest = {')
+		$uavHelperAt = $serverCode.IndexOf('_validateUavSupportRequest = {')
+		if ($playerHelperAt -lt 0 -or $uavHelperAt -lt 0) {
+			$missing += "$($entry.Terrain):missing-validator"
+			continue
+		}
+		$playerHelper = $serverCode.Substring($playerHelperAt, $uavHelperAt - $playerHelperAt)
+		$uavHelperEnd = $serverCode.IndexOf('switch (_args select 0) do', $uavHelperAt)
+		if ($uavHelperEnd -lt 0) { $uavHelperEnd = $serverCode.Length }
+		$uavHelper = $serverCode.Substring($uavHelperAt, $uavHelperEnd - $uavHelperAt)
+		$countAt = $playerHelper.IndexOf('count _vArgs < 5')
+		$selectAt = $playerHelper.IndexOf('_vArgs select 1')
+		if ($countAt -lt 0) { $missing += "$($entry.Terrain):player-support-short-payload-guard" }
+		if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):player-support-guard-after-select" }
+		if (-not ($playerHelper.Contains('_side in [west, east]') -and $playerHelper.Contains('typeName _destination != "ARRAY"') -and $playerHelper.Contains('typeName _playerTeam != "GROUP"') -and $playerHelper.Contains('typeName _requester != "OBJECT"') -and $playerHelper.Contains('count _destination < 2') -and $playerHelper.Contains('typeName (_destination select 0) != "SCALAR"') -and $playerHelper.Contains('typeName (_destination select 1) != "SCALAR"'))) { $missing += "$($entry.Terrain):player-support-payload-types" }
+		if (-not ($playerHelper.Contains('!isPlayer _requester') -and $playerHelper.Contains('group _requester != _playerTeam') -and $playerHelper.Contains('side _playerTeam != _side'))) { $missing += "$($entry.Terrain):player-support-requester-binding" }
+		if (-not ($playerHelper.Contains('WFBE_CO_FNC_GetSideUpgrades') -and $playerHelper.Contains('COMMANDCENTERTYPE') -and $playerHelper.Contains('WFBE_CO_FNC_GetSideStructures') -and $playerHelper.Contains('without live Tactical Center'))) { $missing += "$($entry.Terrain):player-support-unlock-structure-gates" }
+		if (-not ($playerHelper.Contains('WFBE_CO_FNC_GetTeamFunds') -and $playerHelper.Contains('WFBE_CO_FNC_ChangeTeamFunds') -and $playerHelper.Contains('rejected unaffordable') -and $playerHelper.Contains('wfbe_support_%1_last') -and $playerHelper.Contains('rejected %1 cooldown'))) { $missing += "$($entry.Terrain):player-support-economy-cooldown" }
+		if (-not ($serverCode.Contains('["Paratroops", _args, WFBE_UP_PARATROOPERS, "WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_COST", 8500') -and $serverCode.Contains('["ParaVehi", _args, WFBE_UP_SUPPLYPARADROP, "WFBE_C_PLAYERS_SUPPORT_PARAVEHI_COST", 3500') -and $serverCode.Contains('["ParaAmmo", _args, WFBE_UP_SUPPLYPARADROP, "WFBE_C_PLAYERS_SUPPORT_PARAAMMO_COST", 9500'))) { $missing += "$($entry.Terrain):player-support-case-gates" }
+
+		$uavCountAt = $uavHelper.IndexOf('count _vArgs < 5')
+		$uavSelectAt = $uavHelper.IndexOf('_vArgs select 1')
+		if ($uavCountAt -lt 0) { $missing += "$($entry.Terrain):uav-short-payload-guard" }
+		if ($uavSelectAt -ge 0 -and ($uavCountAt -lt 0 -or $uavCountAt -gt $uavSelectAt)) { $missing += "$($entry.Terrain):uav-guard-after-select" }
+		if (-not ($uavHelper.Contains('_side in [west, east]') -and $uavHelper.Contains('typeName _uav != "OBJECT"') -and $uavHelper.Contains('typeName _playerTeam != "GROUP"') -and $uavHelper.Contains('typeName _requester != "OBJECT"') -and $uavHelper.Contains('!isPlayer _requester') -and $uavHelper.Contains('group _requester != _playerTeam') -and $uavHelper.Contains('side _playerTeam != _side'))) { $missing += "$($entry.Terrain):uav-payload-requester-binding" }
+		if (-not ($uavHelper.Contains('typeOf _uav != _uavType') -and $uavHelper.Contains('side (group _driver) != _side') -and $uavHelper.Contains('wfbe_uav_server_authorized') -and $uavHelper.Contains('wfbe_support_uav_active'))) { $missing += "$($entry.Terrain):uav-object-binding" }
+		if (-not ($uavHelper.Contains('WFBE_UP_UAV') -and $uavHelper.Contains('COMMANDCENTERTYPE') -and $uavHelper.Contains('WFBE_C_PLAYERS_SUPPORT_UAV_COST') -and $uavHelper.Contains('WFBE_CO_FNC_GetTeamFunds') -and $uavHelper.Contains('WFBE_CO_FNC_ChangeTeamFunds'))) { $missing += "$($entry.Terrain):uav-server-gates" }
+		if (-not $serverCode.Contains('[_args] Call _validateUavSupportRequest')) { $missing += "$($entry.Terrain):uav-case-gate" }
+
+		if (-not ($constants.Contains('WFBE_C_PLAYERS_SUPPORT_PARAAMMO_COST = 9500') -and $constants.Contains('WFBE_C_PLAYERS_SUPPORT_PARAVEHI_COST = 3500') -and $constants.Contains('WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_COST = 8500') -and $constants.Contains('WFBE_C_PLAYERS_SUPPORT_UAV_COST = 12500'))) { $missing += "$($entry.Terrain):shared-cost-constants" }
+		if (-not ($tactical.Contains('missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARAAMMO_COST",9500]') -and $tactical.Contains('missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARAVEHI_COST",3500]') -and $tactical.Contains('missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_COST",8500]') -and $tactical.Contains('missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_UAV_COST",12500]'))) { $missing += "$($entry.Terrain):client-shared-costs" }
+		if (-not ($tactical.Contains('["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam,player]]') -and $tactical.Contains('["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam,player]]') -and $tactical.Contains('["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam,player]]') -and $uav.Contains('["RequestSpecial", ["uav",sideJoined,_uav,clientTeam,player]]'))) { $missing += "$($entry.Terrain):client-requester-context" }
+		$paraAt = $tactical.IndexOf('//--- Paratroops.')
+		$fastAt = $tactical.IndexOf('//--- Fast Travel.', $paraAt)
+		$vehiAt = $tactical.IndexOf('//--- Vehicle Paradrop.')
+		$ammoAt = $tactical.IndexOf('//--- Ammo Paradrop.')
+		$afterAmmoAt = if ($ammoAt -ge 0) { $tactical.IndexOf("`n`t};", $ammoAt) } else { -1 }
+		if ($paraAt -lt 0 -or $fastAt -lt 0 -or $tactical.Substring($paraAt, $fastAt - $paraAt).Contains('ChangePlayerFunds')) { $missing += "$($entry.Terrain):client-local-paratroops-debit" }
+		if ($vehiAt -lt 0 -or $ammoAt -lt 0 -or $tactical.Substring($vehiAt, $ammoAt - $vehiAt).Contains('ChangePlayerFunds')) { $missing += "$($entry.Terrain):client-local-paravehi-debit" }
+		if ($ammoAt -lt 0 -or $afterAmmoAt -lt 0 -or $tactical.Substring($ammoAt, $afterAmmoAt - $ammoAt).Contains('ChangePlayerFunds')) { $missing += "$($entry.Terrain):client-local-paraammo-debit" }
+		if ($uav.Contains('12500 Call ChangePlayerFunds') -or $uav.Contains('-12500')) { $missing += "$($entry.Terrain):client-local-uav-debit" }
+		if (-not $uavSupport.Contains('setVariable ["wfbe_support_uav_active", false, true]')) { $missing += "$($entry.Terrain):uav-active-cleanup" }
 		if (-not ($paratroopsCode.Contains('count _this < 4') -and $paratroopsCode.Contains('_side in [west,east]') -and $paratroopsCode.Contains('side _playerTeam != _side') -and $paratroopsCode.Contains('_requester = _this select 4') -and $paratroopsCode.Contains('player team without requester') -and $paratroopsCode.Contains('!isPlayer _requester') -and $paratroopsCode.Contains('group _requester != _playerTeam') -and $paratroopsCode.Contains('leader _playerTeam != _requester') -and $paratroopsCode.Contains('typeName (_destination select 0) != "SCALAR"'))) { $missing += "$($entry.Terrain):paratroops-support-revalidation" }
 		if (-not ($paraVehiclesCode.Contains('count _args < 5') -and $paraVehiclesCode.Contains('_requester = _args select 4') -and $paraVehiclesCode.Contains('typeName (_destination select 0) != "SCALAR"') -and $paraVehiclesCode.Contains('!isPlayer _requester') -and $paraVehiclesCode.Contains('group _requester != _playerTeam') -and $paraVehiclesCode.Contains('leader _playerTeam != _requester') -and $paraVehiclesCode.Contains('[_grp,_destination,"MOVE",10] Call AIMoveTo'))) { $missing += "$($entry.Terrain):paravehi-support-revalidation" }
 		if (-not ($paraAmmoCode.Contains('count _args < 5') -and $paraAmmoCode.Contains('_requester = _args select 4') -and $paraAmmoCode.Contains('typeName (_destination select 0) != "SCALAR"') -and $paraAmmoCode.Contains('!isPlayer _requester') -and $paraAmmoCode.Contains('group _requester != _playerTeam') -and $paraAmmoCode.Contains('leader _playerTeam != _requester') -and $paraAmmoCode.Contains('[_grp,_destination,"MOVE",10] Call AIMoveTo'))) { $missing += "$($entry.Terrain):paraammo-support-revalidation" }
 	}
-	Add-Result "Paradrop RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+	Add-Result "Player support RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
 function Test-AicomCommandConsoleAuthorityGuard {
@@ -1604,7 +1646,7 @@ Test-IcbmRequestSpecialAuthorityGuard
 Test-SupplyMissionPvGuards
 Test-ScudStrikeAuthorityGuard
 Test-GuerMortarRequestSpecialAuthorityGuard
-Test-ParadropSupportAuthorityGuard
+Test-PlayerSupportRequestSpecialAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards

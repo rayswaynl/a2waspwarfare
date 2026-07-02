@@ -47,9 +47,7 @@ if (sideJoined == west) then {
 [sideJoinedText,'UnitsCreated',_built] Call UpdateStatistics;
 [sideJoinedText,'VehiclesCreated',1] Call UpdateStatistics;
 
--12500 Call ChangePlayerFunds;
-
-["RequestSpecial", ["uav",sideJoined,_uav,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+["RequestSpecial", ["uav",sideJoined,_uav,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 
 sleep 0.02;
 

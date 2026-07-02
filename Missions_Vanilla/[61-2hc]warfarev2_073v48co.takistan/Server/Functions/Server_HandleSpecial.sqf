@@ -1,4 +1,4 @@
-Private['_args','_validateAicomConsoleRequester','_validateAicomManagedTeamForSide','_validateTacticalSupportRequester','_consumeAicomPendingToken'];
+Private['_args','_validateAicomConsoleRequester','_validateAicomManagedTeamForSide','_consumeAicomPendingToken','_validatePlayerSupportRequest','_validateUavSupportRequest'];
 
 _args = _this;
 
@@ -40,47 +40,6 @@ _validateAicomManagedTeamForSide = {
 	_teamSideID == _sideID
 };
 
-_validateTacticalSupportRequester = {
-	private ["_destination","_playerTeam","_requester","_side","_support","_upgradeIndex","_upgrades","_vArgs"];
-	_vArgs = _this select 0;
-	_support = _this select 1;
-	_upgradeIndex = _this select 2;
-	if (count _vArgs < 5) exitWith {
-		["WARNING", Format ["Server_HandleSpecial.sqf: rejected short %1 payload [%2].", _support, _vArgs]] Call WFBE_CO_FNC_LogContent;
-		false
-	};
-	_side = _vArgs select 1;
-	_destination = _vArgs select 2;
-	_playerTeam = _vArgs select 3;
-	_requester = _vArgs select 4;
-	if !(_side in [west,east]) exitWith {
-		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with invalid side [%2].", _support, _side]] Call WFBE_CO_FNC_LogContent;
-		false
-	};
-	if ((typeName _destination != "ARRAY") || {count _destination < 2}) exitWith {
-		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with malformed destination [%2].", _support, _destination]] Call WFBE_CO_FNC_LogContent;
-		false
-	};
-	if ((typeName (_destination select 0) != "SCALAR") || {typeName (_destination select 1) != "SCALAR"}) exitWith {
-		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with non-scalar destination [%2].", _support, _destination]] Call WFBE_CO_FNC_LogContent;
-		false
-	};
-	if ((typeName _playerTeam != "GROUP") || {typeName _requester != "OBJECT"}) exitWith {
-		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with malformed team/requester team=%2 requester=%3.", _support, typeName _playerTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
-		false
-	};
-	if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side} || {leader _playerTeam != _requester}) exitWith {
-		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 requester/team mismatch requester=%2 team=%3 side=%4.", _support, _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
-		false
-	};
-	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
-	if ((typeName _upgrades != "ARRAY") || {count _upgrades <= _upgradeIndex} || {(_upgrades select _upgradeIndex) <= 0}) exitWith {
-		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 without required upgrade index %2 for side %3.", _support, _upgradeIndex, _side]] Call WFBE_CO_FNC_LogContent;
-		false
-	};
-	true
-};
-
 _consumeAicomPendingToken = {
 	private ["_logic","_token","_tokens","_newTokens","_found"];
 	_logic = _this select 0;
@@ -100,6 +59,179 @@ _consumeAicomPendingToken = {
 	} forEach _tokens;
 	if (_found) then {_logic setVariable ["wfbe_aicom_pending_tokens", _newTokens]};
 	_found
+};
+
+_validatePlayerSupportRequest = {
+	private ["_kind","_vArgs","_upgradeIndex","_costVar","_defaultCost","_delay","_side","_destination","_playerTeam","_requester","_xPos","_yPos","_bd","_targetInBounds","_upgrades","_ccType","_cc","_hasCC","_cost","_funds","_lastVar","_last"];
+	_kind = _this select 0;
+	_vArgs = _this select 1;
+	_upgradeIndex = _this select 2;
+	_costVar = _this select 3;
+	_defaultCost = _this select 4;
+	_delay = _this select 5;
+
+	if (count _vArgs < 5) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected short %1 payload [%2].", _kind, _vArgs]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_side = _vArgs select 1;
+	_destination = _vArgs select 2;
+	_playerTeam = _vArgs select 3;
+	_requester = _vArgs select 4;
+
+	if (!(_side in [west, east])) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with invalid side [%2].", _kind, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if ((typeName _destination != "ARRAY") || {typeName _playerTeam != "GROUP"} || {typeName _requester != "OBJECT"}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed %1 fields side=%2 destination=%3 team=%4 requester=%5.", _kind, _side, typeName _destination, typeName _playerTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if ((count _destination < 2) || {typeName (_destination select 0) != "SCALAR"} || {typeName (_destination select 1) != "SCALAR"}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with malformed destination [%2].", _kind, _destination]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side} || {leader _playerTeam != _requester}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 requester/team mismatch requester=%2 team=%3 side=%4.", _kind, _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_xPos = _destination select 0;
+	_yPos = _destination select 1;
+	_targetInBounds = true;
+	_bd = missionNamespace getVariable 'WFBE_BOUNDARIESXY';
+	if !(isNil '_bd') then {
+		if (typeName _bd == "SCALAR") then {
+			if ((_xPos < 0) || {_yPos < 0} || {_xPos > _bd} || {_yPos > _bd}) then {_targetInBounds = false};
+		};
+	};
+	if (!_targetInBounds) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 outside map bounds target=%2 boundary=%3.", _kind, _destination, _bd]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_upgrades = _side Call WFBE_CO_FNC_GetSideUpgrades;
+	if (typeName _upgrades != "ARRAY" || {count _upgrades <= _upgradeIndex} || {(_upgrades select _upgradeIndex) <= 0}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 before upgrade unlock side=%2 upgrade=%3.", _kind, _side, _upgradeIndex]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_ccType = missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE", str _side];
+	_hasCC = false;
+	if (!isNil "_ccType") then {
+		_cc = [_side, _ccType, (_side Call WFBE_CO_FNC_GetSideStructures)] Call GetFactories;
+		if (count _cc > 0) then {_hasCC = true};
+	};
+	if (!_hasCC) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 without live Tactical Center side=%2.", _kind, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	if (typeName _delay != "SCALAR") then {_delay = 0};
+	_lastVar = Format ["wfbe_support_%1_last", _kind];
+	_last = _playerTeam getVariable [_lastVar, -999999];
+	if (typeName _last != "SCALAR") then {_last = -999999};
+	if ((_delay > 0) && {time - _last < _delay}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 cooldown team=%2 wait=%3.", _kind, _playerTeam, round (_delay - (time - _last))]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_cost = missionNamespace getVariable [_costVar, _defaultCost];
+	if (typeName _cost != "SCALAR") then {_cost = _defaultCost};
+	if (_cost < 0) then {_cost = 0};
+	_funds = _playerTeam Call WFBE_CO_FNC_GetTeamFunds;
+	if (_funds < _cost) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected unaffordable %1 side=%2 team=%3 need=%4 have=%5.", _kind, _side, _playerTeam, _cost, _funds]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	if (_cost > 0) then {[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds};
+	_playerTeam setVariable [_lastVar, time, true];
+	true
+};
+
+_validateUavSupportRequest = {
+	private ["_vArgs","_side","_uav","_playerTeam","_requester","_uavType","_driver","_upgrades","_ccType","_cc","_hasCC","_cost","_funds"];
+	_vArgs = _this select 0;
+
+	if (count _vArgs < 5) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected short uav payload [%1].", _vArgs]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_side = _vArgs select 1;
+	_uav = _vArgs select 2;
+	_playerTeam = _vArgs select 3;
+	_requester = _vArgs select 4;
+
+	if (!(_side in [west, east])) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav with invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if ((typeName _uav != "OBJECT") || {typeName _playerTeam != "GROUP"} || {typeName _requester != "OBJECT"}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed uav fields side=%1 uav=%2 team=%3 requester=%4.", _side, typeName _uav, typeName _playerTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (isNull _uav || {!alive _uav}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav with null/dead aircraft requester=%1 team=%2.", _requester, _playerTeam]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_uavType = missionNamespace getVariable Format ["WFBE_%1UAV", str _side];
+	if (isNil "_uavType") then {_uavType = ""};
+	if ((typeName _uavType != "STRING") || {_uavType == ""} || {typeOf _uav != _uavType}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav type mismatch side=%1 expected=%2 actual=%3.", _side, _uavType, typeOf _uav]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	_driver = driver _uav;
+	if (isNull _driver || {!alive _driver} || {side (group _driver) != _side}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav without valid pilot side=%1 uav=%2 driver=%3.", _side, _uav, _driver]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (_uav getVariable ["wfbe_uav_server_authorized", false]) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected duplicate uav authorization side=%1 uav=%2.", _side, _uav]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (_playerTeam getVariable ["wfbe_support_uav_active", false]) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav while team already has active UAV team=%1 side=%2.", _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_upgrades = _side Call WFBE_CO_FNC_GetSideUpgrades;
+	if (typeName _upgrades != "ARRAY" || {count _upgrades <= WFBE_UP_UAV} || {(_upgrades select WFBE_UP_UAV) <= 0}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav before upgrade unlock side=%1.", _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_ccType = missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE", str _side];
+	_hasCC = false;
+	if (!isNil "_ccType") then {
+		_cc = [_side, _ccType, (_side Call WFBE_CO_FNC_GetSideStructures)] Call GetFactories;
+		if (count _cc > 0) then {_hasCC = true};
+	};
+	if (!_hasCC) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected uav without live Tactical Center side=%1.", _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	_cost = missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_UAV_COST", 12500];
+	if (typeName _cost != "SCALAR") then {_cost = 12500};
+	if (_cost < 0) then {_cost = 0};
+	_funds = _playerTeam Call WFBE_CO_FNC_GetTeamFunds;
+	if (_funds < _cost) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected unaffordable uav side=%1 team=%2 need=%3 have=%4.", _side, _playerTeam, _cost, _funds]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+
+	if (_cost > 0) then {[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds};
+	_uav setVariable ["wfbe_uav_server_authorized", true, true];
+	_playerTeam setVariable ["wfbe_support_uav_active", true, true];
+	true
 };
 
 switch (_args select 0) do {
@@ -148,18 +280,21 @@ switch (_args select 0) do {
 		};
 	};
 	case "Paratroops": {
-		if !([_args, "Paratroops", WFBE_UP_PARATROOPERS] Call _validateTacticalSupportRequester) exitWith {};
-		_args spawn KAT_Paratroopers;
+		if (["Paratroops", _args, WFBE_UP_PARATROOPERS, "WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_COST", 8500, (missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY",1200])] Call _validatePlayerSupportRequest) then {
+			_args spawn KAT_Paratroopers;
+		};
 	};
 
 	case "ParaVehi": {
-		if !([_args, "ParaVehi", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester) exitWith {};
-		_args spawn KAT_ParaVehicles;
+		if (["ParaVehi", _args, WFBE_UP_SUPPLYPARADROP, "WFBE_C_PLAYERS_SUPPORT_PARAVEHI_COST", 3500, 600] Call _validatePlayerSupportRequest) then {
+			_args spawn KAT_ParaVehicles;
+		};
 	};
 
 	case "ParaAmmo": {
-		if !([_args, "ParaAmmo", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester) exitWith {};
-		_args spawn KAT_ParaAmmo;
+		if (["ParaAmmo", _args, WFBE_UP_SUPPLYPARADROP, "WFBE_C_PLAYERS_SUPPORT_PARAAMMO_COST", 9500, 800] Call _validatePlayerSupportRequest) then {
+			_args spawn KAT_ParaAmmo;
+		};
 	};
 
 	case "RespawnST": {
@@ -171,7 +306,9 @@ switch (_args select 0) do {
 	};
 
 	case "uav": {
-		_args spawn KAT_UAV;
+		if ([_args] Call _validateUavSupportRequest) then {
+			_args spawn KAT_UAV;
+		};
 	};
 
 	//--- NAVAL HVT: SCUD saturation strike (feat/naval-hvt-objectives).

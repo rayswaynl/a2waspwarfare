@@ -18,3 +18,4 @@ while {true} do {
 if (!isNull _driver) then {if (alive _driver) then {_driver setDammage 1};if (isNil {_driver getVariable "wfbe_trashed"}) then {_driver setVariable ["wfbe_trashed", true];_driver Spawn TrashObject}};
 if (!isNull _gunner) then {if (alive _gunner) then {_gunner setDammage 1};if (isNil {_gunner getVariable "wfbe_trashed"}) then {_gunner setVariable ["wfbe_trashed", true];_gunner Spawn TrashObject}};
 if (!isNull _uav) then {if (alive _uav) then {_uav setDammage 1};if (isNil {_uav getVariable "wfbe_trashed"}) then {_uav setVariable ["wfbe_trashed", true];_uav Spawn TrashObject}};
+if ((typeName _playerTeam == "GROUP") && {!isNull _playerTeam}) then {_playerTeam setVariable ["wfbe_support_uav_active", false, true]};
