@@ -270,6 +270,26 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			_tg = _logik getVariable ["wfbe_aicom_targets", []];
 			_objT = if (count _tg > 0) then {_tg select 0} else {objNull};
 			_objNm = if (!isNull _objT) then {_objT getVariable ["name", "?"]} else {""};
+			//--- cmdcon42-o ENEMY-BASE INTEL-LEAK CLAMP (Ray 2026-07-02): the published objective (OBJPOS/OBJNAME) is
+			//--- drawn as a "mil_objective" marker on the joined side's map (updateaicommarkers.sqf). _objT is normally a
+			//--- TOWN (targets[0]), but if the spearhead target sits inside the enemy base bubble (deep-push / an enemy
+			//--- town adjacent to the HQ), that marker would pin the hidden base. Clamp PRODUCER-SIDE: if the objective
+			//--- is within WFBE_C_CMD_INTEL_HQ_RADIUS of any ENEMY HQ, blank the published pos/name so no base pin is
+			//--- drawn (the INTENT text above still shows "ASSAULTING HQ" - a description, not a coordinate).
+			private ["_objPos","_objLeak"];
+			_objPos = if (!isNull _objT) then {getPos _objT} else {[0,0,0]};
+			if ((missionNamespace getVariable ["WFBE_C_CMD_INTEL_SANITIZE", 1]) > 0 && {!isNull _objT}) then {
+				private ["_iRad","_iEnemies","_iHq"];
+				_iRad = missionNamespace getVariable ["WFBE_C_CMD_INTEL_HQ_RADIUS", 800];
+				_iEnemies = [];
+				{ if (_x != _side) then {_iEnemies = _iEnemies + [_x]} } forEach [west, east, resistance];
+				_objLeak = false;
+				{
+					_iHq = _x Call WFBE_CO_FNC_GetSideHQ;
+					if (!isNull _iHq && {(_objPos distance (getPos _iHq)) < _iRad}) then {_objLeak = true};
+				} forEach _iEnemies;
+				if (_objLeak) then {_objPos = [0,0,0]; _objNm = ""};   //--- blank name -> updateaicommarkers deletes the objective marker (its (_objNm != "") gate); no base pin.
+			};
 			_intent = switch (_sm) do {
 				case "strike":    {"ASSAULTING HQ"};
 				case "laststand": {"DEFENDING BASE"};
@@ -284,7 +304,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			};
 			if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
 				missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
-				missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
+				missionNamespace setVariable [_pKey, _objPos]; publicVariable _pKey;   //--- cmdcon42-o: _objPos is the intel-clamped position ([0,0,0] when the objective was inside an enemy base).
 			};
 			//--- ACTIVE = the AI actually HOLDS command this side now (no human commander) so a player's nudge will
 			//--- steer it; FOCUS_NAME = the player-set focus town (TTL'd) or "" when none/expired. PV only on change.
