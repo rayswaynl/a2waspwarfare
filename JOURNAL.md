@@ -1,5 +1,22 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 46 build-placement parity audit [codex/lane46-build-placement-parity-audit]
+
+The fleet prompt row saying the player CoIn path simply lacks water/`isFlatEmpty` validation is only
+partly current on `claude/build84-cmdcon36`. Both maintained roots now contain the player-side hook,
+but the gate is intentionally default-disabled:
+
+- `Client/Init/Init_Client.sqf` defines `WFBE_C_STRUCTURES_PLACEMENT_METHOD` and marks previews red for
+  `surfaceIsWater`; it also runs `isFlatEmpty` for base structures when `WFBE_C_STRUCTURES_FLAT_CHECK`
+  is enabled.
+- `Client/Module/CoIn/coin_interface.sqf` applies that returned preview color and only places when
+  `_color == _colorGreen`.
+- `Common/Init/Init_CommonConstants.sqf` keeps `WFBE_C_STRUCTURES_FLAT_CHECK = 0` with comments noting
+  the previous Takistan over-blocking rollback; radius/gradient tuning remains present for a test build.
+
+No mission source changed in this lane. Re-enabling the flat gate needs owner/test sign-off because the
+later placement method can still overwrite colors and Takistan base starts need live smoke coverage.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
