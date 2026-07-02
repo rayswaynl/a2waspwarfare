@@ -109,7 +109,11 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	_v = _v		+ ["Bank"];
-	_n = _n		+ ["Land_fortified_nest_big_EP1"];	//--- was Land_Mil_hangar_EP1 (giant ~36x18 aircraft hangar). Swapped to the EP1 fortified-nest compound (~16x16): PROVEN-loadable = it is WFBE_C_DEPOT (Core_Models\CombinedOps.sqf:10 / Arrowhead.sqf:10) and a live cursorTarget (WASP\actions\AddActions.sqf:15); EP1 installed; smaller + reads as fortified vault, distinct from Reserve (Land_Mil_Barracks_i).
+	//--- cmdcon42-g (part C): WFBE_C_BANK_MODEL_V2 swaps the Bank model to the office building
+	//--- (WFBE_C_BANK_MODEL_V2_CLASS, default Land_A_Office01_EP1) so it reads as "money lives here".
+	//--- Flag=0 -> legacy bunker Land_fortified_nest_big_EP1. Bank logic keys on the 'Bank' rlType tag,
+	//--- so income/registry/kill-handling are model-agnostic. WFBE_C_DEPOT (towns) untouched.
+	_n = _n		+ [if ((missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2_CLASS", "Land_A_Office01_EP1"]} else {"Land_fortified_nest_big_EP1"}];
 	_d = _d		+ ["Federal Reserve"];
 	_c = _c		+ [9500];
 	_t = _t		+ [if (WF_Debug) then {1} else {300}];
@@ -146,7 +150,7 @@ for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR",_ARTRAD],["BANK","Land_fortified_nest_big_EP1"],["ARTRAD",_ARTRAD],["RES",_RES]];	//--- BANK anchor model matches the Bank structure model above (was Land_Mil_hangar_EP1).
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR",_ARTRAD],["BANK",(if ((missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2_CLASS", "Land_A_Office01_EP1"]} else {"Land_fortified_nest_big_EP1"})],["ARTRAD",_ARTRAD],["RES",_RES]];	//--- cmdcon42-g (part C): BANK anchor model matches the flag-selected Bank structure model above (WFBE_C_BANK_MODEL_V2).
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];

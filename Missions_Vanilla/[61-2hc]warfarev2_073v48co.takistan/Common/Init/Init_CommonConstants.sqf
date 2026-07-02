@@ -1549,5 +1549,18 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- NEEDS-BOX-VERIFY: roof-mount stability on Land_Fort_Watchtower_EP1 (per proposal B.5).
 	if (isNil "WFBE_C_DEF_FLAKTOWER") then {WFBE_C_DEF_FLAKTOWER = 1};
 
+//--- BANK MODEL v2 (proposal part C, Ray-approved Build 87). 1 = the Bank/Reserve income
+//--- objective uses the office building Land_A_Office01_EP1 (reads as "money lives here");
+//--- 0 = exact legacy bunker Land_fortified_nest_big_EP1. ONLY the Bank structure model swaps —
+//--- WFBE_C_DEPOT (towns) and the small Reserve nest are left as-is. Bank logic keys on the
+//--- 'Bank' rlType TAG (not the classname), so income/registry/kill-handling are model-agnostic.
+//--- REVERSIBILITY: set to 0 -> Structures_CO_*.sqf register the legacy bunker model + BANK anchor.
+//--- NEEDS-BOX-VERIFY: footprint/door clearance vs the v2 raid-gate ring (first boot-smoke: place a
+//--- bank on BOTH maps and eyeball clearance). Fallbacks if the office fails the box check:
+//--- Land_Mil_Guardhouse_EP1 (~8x8 blockhouse) or Land_Ind_Garage01_EP1 (~14x8 depot). To use a
+//--- fallback, change WFBE_C_BANK_MODEL_V2_CLASS below — the selection reads this one string.
+	if (isNil "WFBE_C_BANK_MODEL_V2") then {WFBE_C_BANK_MODEL_V2 = 1};
+	if (isNil "WFBE_C_BANK_MODEL_V2_CLASS") then {WFBE_C_BANK_MODEL_V2_CLASS = "Land_A_Office01_EP1"};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
