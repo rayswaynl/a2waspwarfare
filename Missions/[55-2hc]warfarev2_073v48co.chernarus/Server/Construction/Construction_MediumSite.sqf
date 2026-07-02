@@ -126,11 +126,9 @@ _site setVariable ["wfbe_structure_type", _rlType];
 if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	private ["_dressTpl","_bankKey","_markerName","_markerColor","_markerText"];
 	_dressTpl = Format ["WFBE_NEURODEF_BANK_%1", if (_side == west) then {"WEST"} else {"EAST"}];
-	//--- cmdcon42-g: WFBE_C_WALLS_V2 selects the new Bank wall-ladder dressing (_V2) over the legacy
-	//--- floodlit compound. Falls back to legacy if the _V2 var is missing. Flag=0 -> legacy dressing.
-	if ((missionNamespace getVariable ["WFBE_C_WALLS_V2", 1]) > 0) then {
-		if !(isNil {missionNamespace getVariable (_dressTpl + "_V2")}) then {_dressTpl = _dressTpl + "_V2"};
-	};
+	//--- cmdcon43-c: the cmdcon42-g Bank wall-ladder dressing (_V2) is REVERTED — the Bank is not a
+	//--- factory, so it is out of scope for the Build 88 "factory walls + slabs" change. Back to the
+	//--- legacy WFBE_NEURODEF_BANK_WEST/EAST dressing bodies.
 	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
 	//--- Register single-instance reference.
 	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
@@ -166,13 +164,14 @@ if (_rlType in ["Reserve","ArtilleryRadar"]) then {
 };
 
 if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
-	//--- cmdcon42-g: WFBE_C_WALLS_V2 selects the new wall-ladder array (_WALLS_V2) over the legacy
-	//--- one at spawn time. Falls back to legacy if the _V2 var is missing (defensive, never nil-spawns).
-	//--- Flag=0 -> legacy name -> byte-identical old walls. See Server\Init\Init_Defenses.sqf.
+	//--- cmdcon43-c: WFBE_C_WALLS_V3 selects the "original walls + HQ-style concrete slabs" array
+	//--- (_WALLS_V3) over the plain legacy one at spawn time. Falls back to legacy if the _V3 var is
+	//--- missing (defensive, never nil-spawns). Flag=0 -> legacy name -> exact original walls (no slabs).
+	//--- (The cmdcon42-g _WALLS_V2 wall-ladder is reverted; WFBE_C_WALLS_V2 is dead.) See Server\Init\Init_Defenses.sqf.
 	private ["_wallVarName","_wallTpl"];
 	_wallVarName = format ["WFBE_NEURODEF_%1_WALLS", _rlType];
-	if ((missionNamespace getVariable ["WFBE_C_WALLS_V2", 1]) > 0) then {
-		if !(isNil {missionNamespace getVariable (_wallVarName + "_V2")}) then {_wallVarName = _wallVarName + "_V2"};
+	if ((missionNamespace getVariable ["WFBE_C_WALLS_V3", 1]) > 0) then {
+		if !(isNil {missionNamespace getVariable (_wallVarName + "_V3")}) then {_wallVarName = _wallVarName + "_V3"};
 	};
 	_wallTpl = missionNamespace getVariable _wallVarName;
 	_defenses = [_site, _wallTpl] call CreateDefenseTemplate;
