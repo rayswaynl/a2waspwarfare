@@ -13,6 +13,7 @@ Usage:
     python analyze_soak.py <server.rpt> [hc.rpt]
     python analyze_soak.py <server.rpt> --hc <hc.rpt>
     python analyze_soak.py <server.rpt> --json          # machine-readable dump
+    python analyze_soak.py <server.rpt> --compare-json previous.json
     python analyze_soak.py <server.rpt> --no-color
 
 Log-format cheat-sheet (all pipe-delimited, one per RPT line, quoted):
@@ -252,6 +253,14 @@ RE_ROUNDEND = re.compile(
 RE_SCALE = re.compile(
     r"WASPSCALE\|v2\|(\d+)\|(.*)$"
 )
+RE_ICBMTEL = re.compile(r"ICBMTEL\|v1\|([^|]+)\|([^|]+)\|?(.*)$")
+RE_ICBMTEL_SPAWNFAIL = re.compile(r"ICBMTEL-SPAWNFAIL")
+RE_SCUD_SUPPORT = re.compile(r"(Support_ScudStrike\.sqf|SCUD_THEATRICS)")
+RE_BUILD_ROAD = re.compile(r"\b(BUILD_ROAD_[A-Z_]+)\b(.*)$")
+RE_PATROL_NAVAL_SKIP = re.compile(r"ground patrol SKIPPING naval-HVT town \x5b(.+?)\x5d")
+RE_SKIN = re.compile(r"\[WFBE \(SKIN\)\]\s+([^:]+):?\s*(.*)$")
+RE_EASA = re.compile(r"\b(EASA|GUI_Menu_EASA|EASA_Equip)\b")
+RE_GEAR = re.compile(r"\b(GEAR|Gear|gear|GUI_BuyGearMenu)\b")
 RE_BASE_ASSAULT = re.compile(r"BASE-ASSAULT")
 RE_CAPTURED = re.compile(r"CAPTURED \[")
 
@@ -284,7 +293,26 @@ class Soak(object):
         # MHQ
         self.mhq = defaultdict(lambda: Counter())   # side -> Counter(DEPLOYED/ABORT)
         self.mhq_abort_reasons = Counter()
+        self.mhq_verbs = Counter()
+        self.mhq_relaxed_rings = []
         self.mhq_total = 0
+        # Build 86 / cmdcon41 log families outside the core AICOM/WASPSTAT pipes.
+        self.build_road = Counter()
+        self.build_road_samples = defaultdict(list)
+        self.patrol_navskip = Counter()
+        self.patrol_navskip_lines = []
+        self.icbmtel = Counter()
+        self.icbmtel_by_side = defaultdict(Counter)
+        self.icbmtel_muni = Counter()
+        self.icbmtel_samples = defaultdict(list)
+        self.scud_lines = []
+        self.skin_steps = Counter()
+        self.skin_aborts = Counter()
+        self.skin_lines = []
+        self.easa_count = 0
+        self.gear_count = 0
+        self.easa_lines = []
+        self.gear_lines = []
         # captures (server-side WASPSTAT)
         self.captures = []                  # list of dict(town,new,old,t)
         self.capture_by_town = Counter()
@@ -374,12 +402,18 @@ class Soak(object):
                 # normalize: anything that isn't ABORT counts as DEPLOYED-ish
                 key = "ABORT" if verb_u == "ABORT" else verb_u
                 self.mhq[side][key] += 1
+                self.mhq_verbs[verb_u] += 1
                 if verb_u == "ABORT":
                     # first token of rest is the reason
                     reason = rest.split("|")[0].strip() if rest else "unspecified"
                     if not reason:
                         reason = "unspecified"
                     self.mhq_abort_reasons[reason] += 1
+                elif verb_u == "RELAXED":
+                    kv = parse_kvs(rest)
+                    ring = _to_int(kv.get("ring"), None)
+                    if ring is not None:
+                        self.mhq_relaxed_rings.append(ring)
                 continue
 
             m = RE_KILL.search(ln)
@@ -454,6 +488,67 @@ class Soak(object):
 
             if RE_BASE_ASSAULT.search(ln):
                 self.base_assault_lines.append(ln.strip())
+                continue
+
+            m = RE_ICBMTEL.search(ln)
+            if m:
+                action, side, rest = m.group(1), m.group(2), m.group(3)
+                kv = parse_kvs(rest)
+                self.icbmtel[action] += 1
+                self.icbmtel_by_side[side][action] += 1
+                if "muni" in kv:
+                    self.icbmtel_muni[kv["muni"]] += 1
+                if len(self.icbmtel_samples[action]) < 5:
+                    self.icbmtel_samples[action].append(ln.strip())
+                continue
+
+            if RE_ICBMTEL_SPAWNFAIL.search(ln):
+                self.icbmtel["SPAWNFAIL"] += 1
+                if len(self.icbmtel_samples["SPAWNFAIL"]) < 5:
+                    self.icbmtel_samples["SPAWNFAIL"].append(ln.strip())
+                continue
+
+            if RE_SCUD_SUPPORT.search(ln):
+                if len(self.scud_lines) < 8:
+                    self.scud_lines.append(ln.strip())
+                continue
+
+            m = RE_BUILD_ROAD.search(ln)
+            if m:
+                event = m.group(1)
+                self.build_road[event] += 1
+                if len(self.build_road_samples[event]) < 3:
+                    self.build_road_samples[event].append(ln.strip())
+                continue
+
+            m = RE_PATROL_NAVAL_SKIP.search(ln)
+            if m:
+                town = m.group(1)
+                self.patrol_navskip[town] += 1
+                if len(self.patrol_navskip_lines) < 5:
+                    self.patrol_navskip_lines.append(ln.strip())
+                continue
+
+            m = RE_SKIN.search(ln)
+            if m:
+                step = m.group(1).split()[0]
+                self.skin_steps[step] += 1
+                if "ABORT" in ln:
+                    self.skin_aborts[step] += 1
+                if len(self.skin_lines) < 8:
+                    self.skin_lines.append(ln.strip())
+                continue
+
+            if RE_EASA.search(ln):
+                self.easa_count += 1
+                if len(self.easa_lines) < 8:
+                    self.easa_lines.append(ln.strip())
+                continue
+
+            if RE_GEAR.search(ln):
+                self.gear_count += 1
+                if len(self.gear_lines) < 8:
+                    self.gear_lines.append(ln.strip())
                 continue
 
     def ingest_hc(self, lines):
@@ -931,8 +1026,8 @@ def render(soak, args):
     if soak.mhq_abort_reasons:
         for r, n in soak.mhq_abort_reasons.most_common(5):
             ap("       abort reason: %-32s %d" % (r, n))
-    if not any_new and not soak.base_assault_lines:
-        ap("  %s" % _c("(no cmdcon41 events present -- pre-fix RPT or events not wired)", C.YEL))
+    if not any_new and not soak.base_assault_lines and not soak.mhq_verbs:
+        ap("  %s" % _c("(no v2 cmdcon41 events present -- pre-fix RPT or events not wired)", C.YEL))
 
     # 6. HOLD / SEE-SAW -------------------------------------------------
     ap(hdr("6. HOLD / SEE-SAW  (town control)"))
@@ -1039,6 +1134,68 @@ def render(soak, args):
         else:
             ap("  territorial clock   : %s" % _c("never engaged", C.DIM))
 
+    # 9. BUILD 86 LOG FAMILIES -----------------------------------------
+    ap(hdr("9. BUILD 86 LOG FAMILIES"))
+    ap("  " + sub("MHQRELOC verbs"))
+    if soak.mhq_verbs:
+        ap("     %s" % ", ".join("%s=%d" % (k, v) for k, v in soak.mhq_verbs.most_common()))
+        if soak.mhq_relaxed_rings:
+            ap("     RELAXED rings: min=%d med=%d max=%d" % (
+                min(soak.mhq_relaxed_rings),
+                int(statistics.median(soak.mhq_relaxed_rings)),
+                max(soak.mhq_relaxed_rings)))
+    else:
+        ap("     %s" % _c("none", C.DIM))
+
+    ap("  " + sub("BUILD_ROAD_*"))
+    if soak.build_road:
+        for event, n in soak.build_road.most_common():
+            ap("     %-22s %d" % (event, n))
+            for sample in soak.build_road_samples[event][:2]:
+                ap("       %s" % sample[:110])
+    else:
+        ap("     %s" % _c("none", C.DIM))
+
+    ap("  " + sub("PATROL naval-skip"))
+    if soak.patrol_navskip:
+        ap("     total=%d  towns=%s" % (
+            sum(soak.patrol_navskip.values()),
+            ", ".join("%s=%d" % (k, v) for k, v in soak.patrol_navskip.most_common(5))))
+        for sample in soak.patrol_navskip_lines[:3]:
+            ap("       %s" % sample[:110])
+    else:
+        ap("     %s" % _c("none", C.DIM))
+
+    ap("  " + sub("ICBMTEL / SCUD"))
+    if soak.icbmtel or soak.scud_lines:
+        ap("     actions: %s" % ", ".join("%s=%d" % (k, v) for k, v in soak.icbmtel.most_common()))
+        if soak.icbmtel_muni:
+            ap("     munitions: %s" % ", ".join("%s=%d" % (k, v) for k, v in soak.icbmtel_muni.most_common()))
+        if soak.scud_lines:
+            ap("     carrier SCUD/support lines: %d" % len(soak.scud_lines))
+            for sample in soak.scud_lines[:3]:
+                ap("       %s" % sample[:110])
+        for action, samples in soak.icbmtel_samples.items():
+            for sample in samples[:2]:
+                ap("       %s" % sample[:110])
+    else:
+        ap("     %s" % _c("none", C.DIM))
+
+    ap("  " + sub("SKIN selector chain"))
+    if soak.skin_steps:
+        ap("     steps: %s" % ", ".join("%s=%d" % (k, v) for k, v in soak.skin_steps.most_common()))
+        if soak.skin_aborts:
+            ap("     aborts: %s" % ", ".join("%s=%d" % (k, v) for k, v in soak.skin_aborts.most_common()))
+        for sample in soak.skin_lines[:4]:
+            ap("       %s" % sample[:110])
+    else:
+        ap("     %s" % _c("none", C.DIM))
+
+    ap("  " + sub("EASA / gear lines"))
+    ap("     EASA=%d  gear=%d" % (soak.easa_count, soak.gear_count))
+    for sample in (soak.easa_lines[:2] + soak.gear_lines[:2]):
+        ap("       %s" % sample[:110])
+
     # VERDICT block ----------------------------------------------------
     ap(hdr("VERDICT"))
     worst = "PASS"
@@ -1049,16 +1206,25 @@ def render(soak, args):
     overall_col = {"PASS": C.GRN, "WATCH": C.YEL, "FAIL": C.RED}[worst]
     ap("  %s" % _c("-" * 30, C.DIM))
     ap("  %-14s : %s" % ("OVERALL", _c(worst, C.BOLD + overall_col)))
+    if args.compare_data:
+        ap(render_compare(build_json_data(soak, args), args.compare_data))
     ap("")
 
     return "\n".join(out)
 
 
-def render_json(soak, args):
+def build_json_data(soak, args):
     p = soak.perf_summary()
+    build = "?"
+    mapname = "?"
+    if soak.scale:
+        build = soak.scale[-1]["build"]
+        mapname = soak.scale[-1]["map"]
     data = {
         "server_rpt": args.server,
         "hc_rpt": args.hc,
+        "build": build,
+        "map": mapname,
         "hours": soak.hours(),
         "roundend": soak.roundend,
         "arrival": {
@@ -1096,6 +1262,8 @@ def render_json(soak, args):
         "mhq": {
             "deployed": sum(c.get("DEPLOYED", 0) for c in soak.mhq.values()),
             "abort": sum(c.get("ABORT", 0) for c in soak.mhq.values()),
+            "verbs": dict(soak.mhq_verbs),
+            "relaxed_rings": soak.mhq_relaxed_rings,
             "abort_reasons": dict(soak.mhq_abort_reasons),
             "baseline_aborts": BASE_MHQ_ABORTS,
         },
@@ -1114,8 +1282,103 @@ def render_json(soak, args):
         },
         # cmdcon42 WASPSCALE v2-EXT war-state block ({"present": False} on old logs).
         "war_state_ext": soak.scale_ext_summary(),
+        "build86": {
+            "build_road": dict(soak.build_road),
+            "patrol_navskip": dict(soak.patrol_navskip),
+            "icbmtel": dict(soak.icbmtel),
+            "icbmtel_by_side": {k: dict(v) for k, v in soak.icbmtel_by_side.items()},
+            "icbmtel_muni": dict(soak.icbmtel_muni),
+            "scud_support_lines": len(soak.scud_lines),
+            "skin_steps": dict(soak.skin_steps),
+            "skin_aborts": dict(soak.skin_aborts),
+            "easa_lines": soak.easa_count,
+            "gear_lines": soak.gear_count,
+        },
     }
+    if args.compare_data:
+        data["compare_to"] = {
+            "path": args.compare_json,
+            "build": args.compare_data.get("build", "?"),
+            "map": args.compare_data.get("map", "?"),
+        }
+        data["comparison"] = compare_kpis(data, args.compare_data)
+    return data
+
+
+def render_json(soak, args):
+    data = build_json_data(soak, args)
     return json.dumps(data, indent=2)
+
+
+def _nested(data, path, default=None):
+    cur = data
+    for key in path:
+        if isinstance(cur, dict):
+            if key not in cur:
+                return default
+            cur = cur[key]
+        elif isinstance(cur, (list, tuple)):
+            try:
+                cur = cur[int(key)]
+            except (ValueError, TypeError, IndexError):
+                return default
+        else:
+            return default
+    return cur
+
+
+def _as_num(value, default=0.0):
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def compare_kpis(cur, base):
+    rows = []
+
+    def add(label, path, better="up"):
+        old = _as_num(_nested(base, path, 0))
+        new = _as_num(_nested(cur, path, 0))
+        rows.append({
+            "label": label,
+            "previous": old,
+            "current": new,
+            "delta": new - old,
+            "better": better,
+        })
+
+    add("arrival_pct", ("arrival", "arrival_pct"), "up")
+    add("zombies", ("zombies", "count"), "down")
+    add("we_share_pct", ("army_vs_army", "we_share_pct"), "up")
+    add("mhq_deployed", ("mhq", "deployed"), "up")
+    add("mhq_abort", ("mhq", "abort"), "down")
+    add("server_fps_med", ("perf", "fps", 1), "up")
+    add("icbmtel_fire", ("build86", "icbmtel", "FIRE"), "up")
+    add("patrol_navskip", ("build86", "patrol_navskip_total"), "up")
+    add("skin_complete", ("build86", "skin_steps", "B6"), "up")
+    # Dictionary totals are easier to scan as explicit rows.
+    rows[-2]["current"] = sum(_nested(cur, ("build86", "patrol_navskip"), {}).values())
+    rows[-2]["previous"] = sum(_nested(base, ("build86", "patrol_navskip"), {}).values())
+    rows[-2]["delta"] = rows[-2]["current"] - rows[-2]["previous"]
+    return rows
+
+
+def render_compare(cur, base):
+    lines = ["", hdr("PER-BUILD KPI COMPARISON")]
+    lines.append("  previous : build=%s map=%s" % (base.get("build", "?"), base.get("map", "?")))
+    lines.append("  current  : build=%s map=%s" % (cur.get("build", "?"), cur.get("map", "?")))
+    lines.append("  %-18s %12s %12s %12s" % ("metric", "previous", "current", "delta"))
+    for row in compare_kpis(cur, base):
+        delta = row["delta"]
+        good = (delta >= 0) if row["better"] == "up" else (delta <= 0)
+        color = C.GRN if good else C.RED
+        lines.append("  %-18s %12.2f %12.2f %12s" % (
+            row["label"], row["previous"], row["current"],
+            _c(("%+.2f" % delta), color)))
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -1126,6 +1389,8 @@ class Args(object):
     hc = None
     json = False
     no_color = False
+    compare_json = None
+    compare_data = None
     zombie_min = ZOMBIE_MIN_DISPATCH
 
 
@@ -1140,6 +1405,9 @@ def parse_args(argv):
             a.hc = argv[i] if i < len(argv) else None
         elif tok == "--json":
             a.json = True
+        elif tok in ("--compare-json", "--compare"):
+            i += 1
+            a.compare_json = argv[i] if i < len(argv) else None
         elif tok in ("--no-color", "--nocolor"):
             a.no_color = True
         elif tok == "--zombie-min":
@@ -1157,7 +1425,7 @@ def parse_args(argv):
     if not pos:
         sys.stderr.write(
             "usage: analyze_soak.py <server.rpt> [hc.rpt] [--hc HC] "
-            "[--zombie-min N] [--json] [--no-color]\n")
+            "[--zombie-min N] [--json] [--compare-json previous.json] [--no-color]\n")
         sys.exit(2)
     a.server = pos[0]
     if len(pos) > 1 and not a.hc:
@@ -1174,6 +1442,12 @@ def main(argv):
     if not os.path.isfile(args.server):
         sys.stderr.write("server RPT not found: %s\n" % args.server)
         sys.exit(1)
+    if args.compare_json:
+        if not os.path.isfile(args.compare_json):
+            sys.stderr.write("compare JSON not found: %s\n" % args.compare_json)
+            sys.exit(1)
+        with open(args.compare_json, "r", encoding="utf-8") as fh:
+            args.compare_data = json.load(fh)
 
     soak = Soak()
     srv_lines = read_lines(args.server)

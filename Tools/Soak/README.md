@@ -26,6 +26,9 @@ python analyze_soak.py arma2oaserver.RPT --hc ArmA2OA.RPT
 # machine-readable dump (for dashboards / diffing runs)
 python analyze_soak.py arma2oaserver.RPT --hc ArmA2OA.RPT --json
 
+# compare the current run against a saved JSON run from an older build
+python analyze_soak.py arma2oaserver.RPT --hc ArmA2OA.RPT --compare-json build85.json
+
 # validate against the archived reference match (reproduces known numbers)
 python analyze_soak.py C:/Users/Game/wasp-westwin-20260701.rpt
 ```
@@ -38,6 +41,7 @@ python analyze_soak.py C:/Users/Game/wasp-westwin-20260701.rpt
 | `[hc.rpt]` or `--hc <path>` | optional Headless-Client RPT (`ArmA2OA.RPT`) |
 | `--zombie-min N` | dispatches threshold for the "zombie" definition (default **3**, which reproduces the documented baseline of 13; `2` → 15, `1` → 20) |
 | `--json` | emit JSON instead of the text scorecard |
+| `--compare-json <path>` | compare headline KPIs against a previous analyzer JSON file |
 | `--no-color` | disable ANSI color (auto-disabled when piped/redirected) |
 | `-h`, `--help` | print the module docstring (full log-format cheat-sheet) |
 
@@ -126,7 +130,26 @@ section 6.
    is supplied — the HC `CAPTURED [` driver counts per town.
 7. **PERF** — WASPSCALE server-fps / HC-fps min/median/max, AI_TOT curve, GUER
    peak, and fps at peak AI load (the FPS-cliff check).
-8. **VERDICT** — PASS/WATCH/FAIL per KPI + overall (worst-of).
+8. **BUILD 86 LOG FAMILIES** — first-class counters for `MHQRELOC` verbs
+   including `RELAXED`, `BUILD_ROAD_*` base-placement gates, ground-patrol
+   naval-HVT skips, `ICBMTEL|v1|...` SCUD/TEL events and munitions, the
+   `[WFBE (SKIN)]` B0–B6 chain, plus EASA/gear log-line samples.
+9. **VERDICT** — PASS/WATCH/FAIL per KPI + overall (worst-of).
+
+### Per-build comparison
+
+Save one run with `--json`, then pass that file to a later run with
+`--compare-json previous.json`. The text report adds a compact comparison table
+for arrival %, zombie teams, W↔E share, MHQ deployed/abort counts, median
+server FPS, TEL fires, patrol naval skips and skin-selector completions. With
+`--json`, the same comparison appears under `comparison`.
+
+The repository includes `sample_build86.rpt` as a tiny parser smoke fixture:
+
+```bash
+python analyze_soak.py Tools/Soak/sample_build86.rpt --json
+python analyze_soak.py Tools/Soak/sample_build86.rpt --compare-json previous.json
+```
 
 ### Verdict thresholds
 
