@@ -95,6 +95,14 @@ with missionNamespace do {
 	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR_MAX") then {WFBE_C_GUER_IMPROVISED_ARMOR_MAX = 45};	//--- hard cap on effective % reduction.
 	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR_MOBILITY_BONUS") then {WFBE_C_GUER_IMPROVISED_ARMOR_MOBILITY_BONUS = 15};	//--- extra % on drivetrain hits, keeps technicals mobile.
 
+	//--- Lane 183: capturable T-34 relic. Default OFF; when enabled, Server_T34Relic.sqf parks one uncrewed T34_TK_GUE_EP1 at a resistance-held town.
+	if (isNil "WFBE_C_T34_RELIC_ENABLE") then {WFBE_C_T34_RELIC_ENABLE = 0};
+	if (isNil "WFBE_C_T34_RELIC_CLASS") then {WFBE_C_T34_RELIC_CLASS = "T34_TK_GUE_EP1"};
+	if (isNil "WFBE_C_T34_RELIC_START_DELAY") then {WFBE_C_T34_RELIC_START_DELAY = 20};
+	if (isNil "WFBE_C_T34_RELIC_MIN_RADIUS") then {WFBE_C_T34_RELIC_MIN_RADIUS = 70};
+	if (isNil "WFBE_C_T34_RELIC_MAX_RADIUS") then {WFBE_C_T34_RELIC_MAX_RADIUS = 150};
+	if (isNil "WFBE_C_T34_RELIC_FUEL") then {WFBE_C_T34_RELIC_FUEL = 0.65};
+
 	//--- B75 (guer-tech): KILL-BASED TECH PROGRESSION. The GUER faction earns better gear by KILLS instead of
 	//--- by elapsed match time (the old time-tier in Server_GuerStipend.sqf is removed). WFBE_GUER_PLAYER_KILLS is
 	//--- the cumulative count of enemy (WEST/EAST) units killed BY resistance PLAYERS (incremented server-side in

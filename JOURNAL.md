@@ -1,5 +1,25 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Lane 183 default-off capturable T-34 relic [codex/lane183-t34-relic-capturable]
+
+Added a source-first, default-off server objective for one uncrewed `T34_TK_GUE_EP1` relic at a
+resistance-held town. Gate: `WFBE_C_T34_RELIC_ENABLE = 0` by default. When enabled, `Init_Server.sqf`
+launches `Server_T34Relic.sqf`; the script waits for town init, picks a GUER/resistance-held town,
+parks the tank nearby, announces it via the existing `DashboardAnnounce` PVF, and marks it yellow.
+
+The neutral hull has no killed/hit bounty handlers and is explicitly stamped `wfbe_side_id = -1`
+after the helper create path. The first live WEST/EAST/GUER crew side to board it claims the relic:
+the script stamps `wfbe_side_id`, publishes `WFBE_T34_RELIC_OWNER`, recolors the marker, announces
+the claim, and only then registers the normal vehicle killed/hit handlers so `RequestOnUnitKilled`
+can pay through the existing mission-created-vehicle path. If there is no resistance-held town, the
+script logs a skip and spawns nothing.
+
+Verification: `A2WASP_SKIP_ZIP=1 dotnet run -c Release` and `dotnet run -c Release -- --check` in
+`Tools/LoadoutManager` both passed with the repo's known nullable warnings and known "specified
+content" notices; Takistan mirror check passed. New server script hashes match across Chernarus,
+Takistan, and Zargabad. Bracket-balance deltas are zero for all touched SQF files. Focused added-line
+scans found no Arma 3-only commands and no boolean `==` / `!=` traps.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:

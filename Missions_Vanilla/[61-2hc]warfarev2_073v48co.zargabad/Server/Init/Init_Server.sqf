@@ -950,6 +950,13 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 
 	["INITIALIZATION", "Init_Server.sqf: B74.2 GUER stipend/economy loop launched (decoupled from team-registration)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- Lane 183: default-off capturable T-34 relic objective. The script self-waits for town init and
+//--- only registers normal vehicle bounty handling after the first side boards the neutral relic.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_T34_RELIC_ENABLE", 0]) > 0}) then {
+	[] execVM "Server\Server_T34Relic.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_T34Relic.sqf launched (WFBE_C_T34_RELIC_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- EDITOR-SLOT SWEEP (2026-06-15; group-cap reclaim 2026-06-29): the 27 WEST + 27 EAST editor-placed
 //--- player-slot groups in mission.sqm are born by the engine at load with no createGroup, so
 //--- WFBE_CO_FNC_CreateGroup never tags them and they show as "untagged" in the server_groupsGC audit -
