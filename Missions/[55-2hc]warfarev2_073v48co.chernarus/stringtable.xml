@@ -41,15 +41,10 @@
 
 
 <!--ACTION Strings - ALL DONE-->
-	 <!--<Key ID="str_bipod">
-   	 <Original>Bipod deployed</Original>
-    	 <English>Bipod deployed</English>
-    	 <Czech>Bipod deployed</Czech>
-   	 <Polish>Bipod deployed</Polish>
-   	 <Portuguese>Bipod deployed</Portuguese>
-   	 <Russian>Оружие установлено на сошки</Russian>
-    	<Spanish>Bipod deployed</Spanish>
-      </Key>-->
+	<Key ID="str_bipod">
+        <English>Bipod deployed</English>
+        <Russian>Оружие установлено на сошки</Russian>
+      </Key>
 	<Key ID="STR_Summary">
         <English>Summary</English>
         <Russian>О миссии</Russian>
@@ -165,6 +160,10 @@
       <Key ID="STR_WF_CHAT_AI_Commander">
         <English>No Commander Selected!</English>
         <Russian>Командует ИИ!</Russian>
+      </Key>
+      <Key ID="strwfcommanderdisconnected">
+        <English>Commander disconnected.</English>
+        <Russian>Командир отключился.</Russian>
       </Key>
       <Key ID="STR_WF_CHAT_Commander_Bounty_Town"><!--shared U-->
         <English>Our team has captured %2. $%1 Commander-Bonus.</English>
@@ -1220,6 +1219,7 @@
       </Key>
       <Key ID="STR_WF_PARAMETER_AutoCM_OA"><!---->
         <English>MODULE: Auto-Countermeasures (OA aircraft)</English>
+        <Russian>МОДУЛЬ: Автоконтрмеры - самолеты OA</Russian>
       </Key>
 	<!--Respawn-->
       <Key ID="STR_WF_PARAMETER_Camp">
@@ -2178,6 +2178,10 @@
         <English>GUI patch</English>
         <Russian>Патч графического интерфейса</Russian>
       </Key>
+	  <Key ID="STR_WF_TOOLTIP_HeadBugFix">
+        <English>GUI patch</English>
+        <Russian>Патч графического интерфейса</Russian>
+      </Key>
 	  <Key ID="STR_WF_TOOLTIP_MainMenu_Purchase_Gear">
         <English>Weapon, Ammonition, Backpacks, Bags and Misc</English>
         <Russian>Оружие, Аммуниция, Рюкзаки, Сумки и Разное</Russian>
@@ -2572,6 +2576,10 @@
         <English>Price</English>
         <Russian>Цена</Russian>
       </Key>
+      <Key ID="STR_WF_Amount">
+        <English>Amount</English>
+        <Russian>Количество</Russian>
+      </Key>
       <Key ID="STR_WF_SupportMenu"><!--shared U-->
         <English>Service Point</English>
         <Russian>Меню поддержки</Russian>
@@ -2603,6 +2611,34 @@
         <English>Command Center</English>
         <Russian>Командный центр</Russian>
       </Key>
+      <Key ID="STRHeadquarters">
+        <English>Headquarters</English>
+        <Russian>Штаб</Russian>
+      </Key>
+      <Key ID="strwfbarracks">
+        <English>Barracks</English>
+        <Russian>Казармы</Russian>
+      </Key>
+      <Key ID="STRLightVehicleSupply">
+        <English>Light Vehicle Factory</English>
+        <Russian>Завод легкой техники</Russian>
+      </Key>
+      <Key ID="STRHeavyVehicleSupply">
+        <English>Heavy Vehicle Factory</English>
+        <Russian>Завод тяжелой техники</Russian>
+      </Key>
+      <Key ID="STRHelipad">
+        <English>Aircraft Factory</English>
+        <Russian>Авиазавод</Russian>
+      </Key>
+      <Key ID="STRServicePoint">
+        <English>Service Point</English>
+        <Russian>Сервисный пункт</Russian>
+      </Key>
+      <Key ID="STRAntiAirRadar">
+        <English>Anti-Air Radar</English>
+        <Russian>Радар ПВО</Russian>
+      </Key>
       <Key ID="STR_WF_Fortification">
         <English>Fortification</English>
         <Russian>Укрепления</Russian>
@@ -2614,6 +2650,18 @@
 	  <Key ID="STR_WF_AutoDefense">
         <English>AUTO DEFENSES</English>
         <Russian>Автооборона</Russian>
+      </Key>
+	  <Key ID="strwfbase">
+        <English>Base</English>
+        <Russian>База</Russian>
+      </Key>
+	  <Key ID="str_m04t37_0">
+        <English>Defense</English>
+        <Russian>Оборона</Russian>
+      </Key>
+	  <Key ID="strwfhqmobilizeme">
+        <English>Mobilize HQ</English>
+        <Russian>Свернуть штаб</Russian>
       </Key>
 	  <Key ID="STR_WF_On">
         <English>ON</English>
@@ -2633,6 +2681,10 @@
 	<Key ID="str_coin_exit">
         <English>EXIT =</English>
         <Russian>ВЫХОД =</Russian>
+      </Key>
+	<Key ID="str_coin_name">
+        <English>Construction</English>
+        <Russian>Строительство</Russian>
       </Key>
 
 
@@ -2675,6 +2727,18 @@
 <Key ID="str_coin_fuck_this_syntax">
         <English> || </English>
         <Russian> || </Russian>
+      </Key>
+<Key ID="str_uav_action">
+        <English>UAV</English>
+        <Russian>БПЛА</Russian>
+      </Key>
+<Key ID="strwfbasestructuredestroyed">
+        <English>%1 is unavailable because the required structure has been destroyed.</English>
+        <Russian>%1 недоступен: необходимое строение уничтожено.</Russian>
+      </Key>
+<Key ID="RB_have_no_suppluys_for_rep">
+        <English>Insufficient supply for repair</English>
+        <Russian>Недостаточно снабжения для ремонта</Russian>
       </Key>
 
 
@@ -5661,6 +5725,7 @@
     <!-- Trello card #66: one-shot AAR new-contact warning. -->
     <Key ID="STR_WF_BE_AAR_NewContact">
         <English>AAR: New air contact detected!</English>
+        <Russian>Радар ПВО: обнаружен новый воздушный контакт!</Russian>
     </Key>
 
     <Key ID="STR_WF_UPGRADE_UnitCost">
@@ -5676,45 +5741,59 @@
     <!-- CBR: Counter Battery Radar strings. -->
     <Key ID="STR_WF_UPGRADE_CBRadar">
       <English>Counter Battery Radar</English>
+      <Russian>Контрбатарейный радар</Russian>
     </Key>
     <Key ID="STR_WF_UPGRADE_CBRadar_Desc">
       <English>Increases your Counter Battery Radar detection radius.&lt;br/&gt; - Level 0 = 750 m&lt;br/&gt;   Level 1 = 1,500 m&lt;br/&gt;   Level 2 = 2,000 m&lt;br/&gt;&lt;br/&gt;Note: each captured airfield provides a permanent 2,000 m CBR that is not affected by this upgrade.</English>
+      <Russian>Увеличивает радиус обнаружения контрбатарейного радара.&lt;br/&gt; - Уровень 0 = 750 м&lt;br/&gt;   Уровень 1 = 1 500 м&lt;br/&gt;   Уровень 2 = 2 000 м&lt;br/&gt;&lt;br/&gt;Примечание: каждый захваченный аэродром дает постоянный контрбатарейный радар 2 000 м, на который эта модернизация не влияет.</Russian>
     </Key>
     <Key ID="CBRadarNeedsAAR">
       <English>Counter Battery Radar requires an Anti-Air Radar to be built first.</English>
+      <Russian>Для контрбатарейного радара сначала нужен построенный радар ПВО.</Russian>
     </Key>
     <Key ID="BankAlreadyBuilt">
       <English>Your side already has a bank. Only one bank may be active per side.</English>
+      <Russian>У вашей стороны уже есть банк. На сторону может быть активен только один банк.</Russian>
     </Key>
     <Key ID="BankTooCloseToBase">
       <English>The bank must be built outside your base protection area.</English>
+      <Russian>Банк нужно строить вне зоны защиты базы.</Russian>
     </Key>
     <Key ID="BankDestroyed">
       <English>%1 has destroyed the %2 bank! The economic stronghold has fallen.</English>
+      <Russian>%1 уничтожил банк стороны %2! Экономический оплот пал.</Russian>
     </Key>
     <Key ID="BankDividend">
       <English>Bank dividend: $%1</English>
+      <Russian>Банковский дивиденд: $%1</Russian>
     </Key>
     <Key ID="SiteClearanceCommanderOnly">
       <English>Site Clearance can only be used by the commander.</English>
+      <Russian>Расчистку площадки может использовать только командир.</Russian>
     </Key>
     <Key ID="SiteClearanceNeedsBarracks1">
       <English>Site Clearance requires Barracks level 1 before use.</English>
+      <Russian>Для расчистки площадки нужны казармы уровня 1.</Russian>
     </Key>
     <Key ID="SiteClearanceNoTrees">
       <English>Site Clearance: no trees found within 25 m of that position.</English>
+      <Russian>Расчистка площадки: в радиусе 25 м деревья не найдены.</Russian>
     </Key>
     <Key ID="SiteClearanceNoSupply">
       <English>Site Clearance: insufficient supply (need %1).</English>
+      <Russian>Расчистка площадки: недостаточно снабжения - нужно %1.</Russian>
     </Key>
     <Key ID="SiteClearanceDone">
       <English>Site clearance: %1 trees felled, -%2 supply.</English>
+      <Russian>Расчистка площадки: деревьев срублено: %1, -%2 снабжения.</Russian>
     </Key>
     <Key ID="SiteClearanceOutsideBase">
       <English>Site Clearance position must be inside your base area.</English>
+      <Russian>Позиция расчистки должна быть внутри зоны базы.</Russian>
     </Key>
     <Key ID="STR_WF_CBR_Contact">
       <English>CB CONTACT</English>
+      <Russian>КБ КОНТАКТ</Russian>
     </Key>
 
     <!-- Marty: Client notification when the AI movement recovery actually made a unit move again. -->
@@ -5733,38 +5812,47 @@
     <!-- %1 = category (STATICS/FORTIFICATIONS/MINES), %2 = current count, %3 = cap -->
     <Key ID="DefenseBudgetFull">
       <English>Defense limit reached — %1: %2 of %3 built. Funds refunded.</English>
+      <Russian>Лимит обороны достигнут — %1: построено %2 из %3. Средства возвращены.</Russian>
     </Key>
 
     <!-- Marty: Defense budget — threat gate rejection (3+ enemy ground units near base, statics/mines blocked). -->
     <Key ID="DefenseThreatGate">
       <English>Cannot place statics or mines — 3 or more enemy ground units are within base range. Funds refunded.</English>
+      <Russian>Нельзя ставить стационарное оружие или мины — в радиусе базы 3 или более вражеских наземных юнитов. Средства возвращены.</Russian>
     </Key>
 
     <!-- Marty: WDDM composition cap — max 3 compositions per base area (Task 18). %1 = current count, %2 = cap -->
     <Key ID="WddmCompositionCapReached">
       <English>Base composition limit reached (%1/%2). Commander composition not built.</English>
+      <Russian>Достигнут лимит композиций базы %1/%2. Командирская композиция не построена.</Russian>
     </Key>
 
     <!-- Special-unit info popups (data-driven WFBE_SPECIAL_UNIT_HINTS map) -->
     <Key ID="STR_WF_HINT_SalvageHeli">
       <English>Salvage Helicopter - recovers wrecks for cash, salvage-only role. Unlocks at Air level 1.</English>
+      <Russian>Эвакуационный вертолет - утилизирует обломки за деньги, только роль эвакуации. Открывается на уровне авиации 1.</Russian>
     </Key>
 
     <!-- Command Deck: Skin Selector strings -->
     <Key ID="STR_WF_SkinSelector_Title">
       <English>SELECT YOUR SKIN</English>
+      <Russian>ВЫБЕРИТЕ СКИН</Russian>
     </Key>
     <Key ID="STR_WF_SkinSelector_Apply">
       <English>Apply</English>
+      <Russian>Применить</Russian>
     </Key>
     <Key ID="STR_WF_SkinSelector_Skip">
       <English>Skip</English>
+      <Russian>Пропустить</Russian>
     </Key>
     <Key ID="STR_WF_SkinSelector_GhillieNote">
       <English>Ghillie suits: Sniper class only</English>
+      <Russian>Маскхалаты: только класс снайпера</Russian>
     </Key>
     <Key ID="STR_WF_SkinSelector_MenuButton">
       <English>SKIN</English>
+      <Russian>СКИН</Russian>
     </Key>
 
     <!-- NAVAL HVT OBJECTIVES (feat/naval-hvt-objectives) -->
@@ -5778,9 +5866,11 @@
     </Key>
     <Key ID="STR_WF_SCUD_SELECT_TARGET">
       <English>SCUD ready -- click the map to designate the target.</English>
+      <Russian>СКАД готов -- щелкните по карте, чтобы указать цель.</Russian>
     </Key>
     <Key ID="STR_WF_SCUD_LAUNCHED">
       <English>SCUD launch authorized -- saturation inbound.</English>
+      <Russian>Пуск СКАД разрешен -- массированный удар на подходе.</Russian>
     </Key>
     <Key ID="STR_WF_SCUD_COOLDOWN">
       <English>SCUD Strike on cooldown. Wait before firing again.</English>
