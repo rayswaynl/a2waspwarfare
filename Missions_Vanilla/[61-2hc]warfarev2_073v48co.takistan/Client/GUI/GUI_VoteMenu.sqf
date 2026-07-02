@@ -142,11 +142,19 @@ while {alive player && dialog} do {
 			_team = WFBE_Client_Teams select _value;
 			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 0]) != name leader _team) then {lnbSetText [500100, [_i, 0], name leader _team]};
 			if ((((uiNamespace getVariable "wfbe_display_vote") displayCtrl 500100) lnbText [_i, 1]) != str(_voteArray select _value+1)) then {lnbSetText [500100, [_i, 1], str(_voteArray select _value+1)]};
-		if (((WFBE_Client_Teams select _i) getVariable "wfbe_vote") != -1) then {
-		lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
-		} else {
-		lnbSetColor [500100, [_i,0], [1,1,1,1]]
-		};
+			if ((missionNamespace getVariable ["WFBE_C_FIX_VOTE_QA_EXECUTION", 0]) > 0) then {
+				if ((_team getVariable "wfbe_vote") != -1) then {
+					lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
+				} else {
+					lnbSetColor [500100, [_i,0], [1,1,1,1]]
+				};
+			} else {
+				if (((WFBE_Client_Teams select _i) getVariable "wfbe_vote") != -1) then {
+					lnbSetColor [500100, [_i,0], [0.9,0.5,0.1,1]]
+				} else {
+					lnbSetColor [500100, [_i,0], [1,1,1,1]]
+				};
+			};
 
 		};
 
