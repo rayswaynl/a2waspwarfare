@@ -1,11 +1,50 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 09:42 Europe/Amsterdam
+Last updated: 2026-07-02 09:49 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 09:49 Update
+
+PR #136 moved again after the 09:42 findings push.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `1710fcfe1fd3b6a51843946f56f040ac79987b99`
+- PR #125: `4893faaa5dc7942f04e9993fb44c8425cc98`
+- PR #126: `46ed989e4db966cf02d20c498bfca53490b651b2`
+- PR #136: `1769aa1289bb414f9634c034a23b5505feb50f2f`
+
+PR #136 moved from `b830d173a213d746b108a0805b15b29068db7bb2` to
+`1769aa1289bb414f9634c034a23b5505feb50f2f`.
+
+New commit:
+
+- `1769aa128` - `wave-3 picks (Ray): sorties+road-patrols+smoke+twin-hull outer carriers; personalities skipped`
+
+Scope:
+
+- docs-only: `docs/design/ALIFE-V2-AND-DOCTRINES.md`
+
+Focused `git diff --check b830d173a..origin/claude/overnight-2026-07-02`
+passes.
+
+Boundary: this docs-only move does not repair the PR #136 release proof gap.
+The prior `b830d173a` and `5cbf7e206` mission-affecting cmdcon41 wave-2/AICOM
+changes still lack fresh exact selected-artifact build, RPT matrix, and human
+smoke proof.
+
+PR #125 remains at the validated `4893faaa5dc7942f04e9993fb44c8425cc98`
+source head from the 09:36 update. PR #126 remains stale against that active
+PR #125 head.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 09:42 Update
 
