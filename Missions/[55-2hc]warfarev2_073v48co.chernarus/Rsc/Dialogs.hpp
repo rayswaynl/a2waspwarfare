@@ -2361,6 +2361,12 @@ class RscMenu_Command {
 			colorBackground[] = {0, 0.5, 0, 0.85};
 			colorBackgroundActive[] = {0.1, 0.7, 0.1, 1};
 		};
+		/* cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD (carrier) button (was idc 14631 / MenuAction 770) and
+		   the two land-TEL munition buttons (were idc 14632/14633 "TEL: SATURATE"/"TEL: RECON", MenuActions 771/772) have
+		   been REMOVED from the war room. ALL SCUD/TEL fire calls now live in the TACTICAL menu (Client/GUI/GUI_Menu_Tactical.sqf)
+		   as support-list entries beside the classic ICBM/NUKE — "SCUD STRIKE (carrier)", "SCUD: SATURATION", "SCUD: RECON FLASH",
+		   "SCUD: FASCAM (mines)", "SCUD: STEEL RAIN (anti-inf)", "SCUD: BUNKER BUSTER (point)". idc 14631/14632/14633 and
+		   MenuActions 770/771/772 are now FREE. The carrier deck addAction is unchanged. */
 		/* Status / hint line at the bottom of the console (shrunk + moved down to make room for the steering-verb row above). */
 		class CA_Cmd_Help : RscStructuredText {
 			idc = 14650;

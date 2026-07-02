@@ -131,6 +131,23 @@ switch (_args select 0) do {
 			_x setVariable ["WFBE_Taxi_Prohib", true];
 		} forEach _vehicles;
 	};
+	//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): the commander's ICBM fire, intercepted client-side
+	//--- (GUI_Menu_Tactical.sqf when WFBE_C_ICBM_TEL=1) and routed here. Server-authoritative gate lives in
+	//--- WFBE_SE_FNC_IcbmTelFire (TEL alive + shared cooldown + range + funds); it spawns/refuses accordingly.
+	//--- Payload: ["icbm-tel-fire", side, target, munition, playerTeam, fee]. Fn-guarded (Init_IcbmTel compiles it).
+	case "icbm-tel-fire": {
+		if (!isNil "WFBE_SE_FNC_IcbmTelFire") then {
+			private ["_tSide","_tTarget","_tMuni","_tTeam","_tFee"];
+			_tSide   = _args select 1;
+			_tTarget = _args select 2;
+			_tMuni   = _args select 3;
+			_tTeam   = _args select 4;
+			_tFee    = if (count _args > 5) then {_args select 5} else {0};
+			[_tSide, _tTarget, _tMuni, _tTeam, _tFee] Spawn WFBE_SE_FNC_IcbmTelFire;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: icbm-tel-fire received but WFBE_SE_FNC_IcbmTelFire is nil (WFBE_C_ICBM_TEL=0?)."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
 	case "ICBM": {
 		Private ["_base","_playerTeam","_side","_target"];
 

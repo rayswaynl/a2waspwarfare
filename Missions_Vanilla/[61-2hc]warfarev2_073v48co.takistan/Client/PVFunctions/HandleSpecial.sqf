@@ -114,6 +114,87 @@ switch (_request) do {
 			[], 6, true, true, "", "alive _target && isPlayer _this"
 		];
 	};
+	//--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): base-under-attack KLAXON to the OWNING side on a SCUD
+	//--- launch. The server (Support_ScudStrike.sqf) side-scopes this send ([_side,...]) so Client_HandlePVF already
+	//--- delivered it ONLY to owning-side clients -> no extra side check here. "inbound" is the registered CfgSound
+	//--- alarm alias base-under-attack uses (Common_HandleAlarm.sqf:11, CampCaptured.sqf:50). Skip on the HC/dedicated
+	//--- (no interface), mirroring the scud-action-add guard below.
+	case "scud-klaxon": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		playSound ["inbound", true];
+	};
+	//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02) — client presentation cases.
+	//--- All are delivered side-scoped by Client_HandlePVF (the server sends [_side/nil, "HandleSpecial", ...]) so no
+	//--- extra side check is needed here. Guard the HC/dedicated (no interface), mirroring scud-klaxon/scud-action-add.
+	//---
+	//--- scud-klaxon-all: NUKE detonation alarm to EVERYONE (server sends nil-destination => all clients).
+	case "scud-klaxon-all": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		playSound ["inbound", true];
+	};
+	//--- icbm-tel-msg: a plain side-scoped chat announcement (systemChat). _args select 0 = the text.
+	case "icbm-tel-msg": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		private ["_msg"];
+		_msg = _args select 0;
+		if (typeName _msg == "STRING" && {_msg != ""}) then {systemChat _msg};
+	};
+	//--- icbm-tel-marker: FRIENDLY-ONLY TEL map marker. _args = [_tel, _sideText]. mil_triangle in side colour,
+	//--- text "ICBM TEL". A tiny local watcher deletes it when the TEL dies (server re-sends this on each respawn).
+	case "icbm-tel-marker": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		private ["_tel","_sideText","_mkr","_col"];
+		_tel = _args select 0;
+		_sideText = _args select 1;
+		if (isNull _tel) exitWith {};
+		_col = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _sideText], "ColorGreen"];
+		_mkr = createMarkerLocal [Format ["wfbe_icbmtel_mkr_%1", _sideText], getPosATL _tel];
+		_mkr setMarkerTypeLocal "mil_triangle";
+		_mkr setMarkerColorLocal _col;
+		_mkr setMarkerTextLocal "ICBM TEL";
+		[_tel, _mkr] spawn {
+			private ["_t","_m"];
+			_t = _this select 0; _m = _this select 1;
+			waitUntil {sleep 2; isNull _t || {!alive _t}};
+			deleteMarkerLocal _m;
+		};
+	};
+	//--- icbm-tel-enemy-ping: FUZZY enemy intel ping for the NUKE countdown. _args = [_pos, _secs]. Auto-deletes.
+	case "icbm-tel-enemy-ping": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		private ["_pos","_secs","_mkr"];
+		_pos  = _args select 0;
+		_secs = _args select 1;
+		_mkr = createMarkerLocal [Format ["wfbe_icbmtel_ping_%1", round (diag_tickTime * 1000)], _pos];
+		_mkr setMarkerTypeLocal "mil_warning";
+		_mkr setMarkerColorLocal "ColorRed";
+		_mkr setMarkerTextLocal "ICBM (approx)";
+		[_mkr, _secs] spawn { sleep (_this select 1); deleteMarkerLocal (_this select 0) };
+	};
+	//--- icbm-tel-recon-markers: RECON FLASH map dots for the FIRING side's players. _args = [_posList, _secs].
+	//--- One mil_dot per enemy position (already capped server-side at ~40); all auto-delete after the window.
+	case "icbm-tel-recon-markers": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		private ["_posList","_secs","_i","_mkr"];
+		_posList = _args select 0;
+		_secs    = _args select 1;
+		if (typeName _posList != "ARRAY") exitWith {};
+		_i = 0;
+		{
+			_mkr = createMarkerLocal [Format ["wfbe_icbmtel_recon_%1_%2", round (diag_tickTime * 1000), _i], [_x select 0, _x select 1, 0]];
+			_mkr setMarkerTypeLocal "mil_dot";
+			_mkr setMarkerColorLocal "ColorRed";
+			_mkr setMarkerSizeLocal [0.6, 0.6];
+			[_mkr, _secs] spawn { sleep (_this select 1); deleteMarkerLocal (_this select 0) };
+			_i = _i + 1;
+		} forEach _posList;
+	};
 	//--- cmdcon41-w2 (Ray 2026-07-02) NAVAL HVT: the server (server_town.sqf) broadcasts this on every
 	//--- carrier flip, but the client case was MISSING so the flip notification was silently dropped. Add it,
 	//--- mirroring the neighbouring case style (hint + city-marker recolor). Payload after the request-strip:

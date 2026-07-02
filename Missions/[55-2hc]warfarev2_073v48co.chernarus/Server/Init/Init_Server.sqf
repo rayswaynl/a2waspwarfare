@@ -913,6 +913,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): compiles the TEL spawn/fire functions + gates on
+//--- WFBE_C_ICBM_TEL. Same launch pattern as Init_NavalHVT above. The TEL itself is spawned per side when that
+//--- side COMPLETES the ICBM upgrade (hook in Server_ProcessUpgrade.sqf), NOT at boot, so it appears with the tech.
+if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
+	[] execVM "Server\Init\Init_IcbmTel.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_IcbmTel.sqf launched (WFBE_C_ICBM_TEL=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
 //--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
 //--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
@@ -955,7 +963,13 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
-[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default ON)
+[] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default ON) - SERVER-LOCAL air incl. non-team paradrop/supply/GUER/W13.
+//--- AICOM HELI TERRAIN-GUARD twin (cmdcon41-w3j 2026-07-02): the bounded wfbe_teams-scoped guard covering AICOM
+//--- helicopter TEAMS wherever they are local. On the server this catches server-local founded air teams (no-HC
+//--- fallback); the same file is spawned on each HC (Init_HC.sqf) for the delegated teams that are the live case.
+//--- Reuses the server guard's look-ahead climb verbatim; shares WFBE_C_AIHELI_TERRAIN_GUARD (default ON). A hull
+//--- covered by both server loops is harmless (both only raise flyInHeight, never lower it).
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HeliTerrainGuard.sqf";
 
 //--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s

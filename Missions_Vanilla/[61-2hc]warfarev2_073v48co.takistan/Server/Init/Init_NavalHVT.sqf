@@ -338,6 +338,11 @@ _scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_scudAnchor select 0) + 50,
 _scudModel setPosASL [(_scudAnchor select 0) + 50, _scudAnchor select 1, _scudDeckZ];
 _scudModel setDir 90;
 _scudModel allowDamage false;
+//--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
+//--- Support_ScudStrike.sqf can find the firing carrier's launcher and play the erect/backblast at launch. The
+//--- platform logic == the single entry stored in WFBE_NAVAL_HVT_PLATFORMS above (the object ScudStrike validates
+//--- ownership on), so a strike resolves its launcher with one getVariable. Broadcast so any locality can read it.
+_scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
 [_scudModel, (_scudAnchor select 0) + 50, (_scudAnchor select 1), _scudDeckZ, _scudDeckPart] spawn {
 	private ["_s","_px","_py","_dz","_deckPart","_off"];
 	_s        = _this select 0;

@@ -367,7 +367,7 @@
 		title = "$STR_WF_PARAMETER_AutoCM_OA";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- cmdcon41-w3f: 0 -> 1. Auto-flares for OA AI aircraft; FLARES (this feature's dependency) defaults to 2 (Enabled) above, so the gate in Init_Unit.sqf is satisfied. Matches the SQF constant default in Init_CommonConstants.sqf.
 	};
 	class WFBE_C_MODULE_WFBE_EASA {
 		title = "$STR_WF_PARAMETER_EASA";

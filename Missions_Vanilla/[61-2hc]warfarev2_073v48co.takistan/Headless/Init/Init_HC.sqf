@@ -241,3 +241,11 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 //--- its own copy from Init_Server.sqf for the server-local founded teams.
 [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HighClimb.sqf";
 [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_AutoFlip.sqf";  //--- Build84 (Ray): auto-right flipped AICOM ground vehicles (HC-delegated teams).
+
+//--- AICOM HELI TERRAIN-GUARD (cmdcon41-w3j 2026-07-02): the #1 aircraft fix. Server\server_heli_terrain_guard.sqf
+//--- is server-local only (`if (!isServer) exitWith`) and its header defers the HC copy - so on a 2-HC box the
+//--- DELEGATED AICOM gunships (which are local HERE) get NO look-ahead terrain climb and clip rising ridgelines.
+//--- This HC-local twin mirrors the HighClimb/AutoFlip pattern (bounded wfbe_teams walk, act only on LOCAL Helicopter
+//--- hulls) and reuses the server guard's proven look-ahead climb verbatim. Same flag (WFBE_C_AIHELI_TERRAIN_GUARD,
+//--- default ON) so one flip toggles heli terrain-guard everywhere. Self-gates OFF unless this is server/HC.
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HeliTerrainGuard.sqf";

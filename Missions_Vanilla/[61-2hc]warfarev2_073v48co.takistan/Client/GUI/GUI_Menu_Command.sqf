@@ -89,6 +89,9 @@ private "_warCtrls";
 //--- cmdcon41-w3d COMMAND-MENU V2: +14628/14629/14630 STEERING VERBS (RALLY/REFIT/HOLD) appended below when flag on.
 _warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14626,14627,14610,14611,14640,14641,14642,14690,14691];
 if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {_warCtrls = _warCtrls + [14628,14629,14630]};
+//--- cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD (14631) + TEL SATURATE/RECON (14632/14633) war-room buttons
+//--- were REMOVED — all SCUD/TEL fire now lives in the Tactical menu (GUI_Menu_Tactical.sqf) beside the classic ICBM/NUKE.
+//--- So they are no longer added to _warCtrls (and their gating/arm/fire blocks below were deleted). idcs 14631/14632/14633 free.
 //--- STATE-A (NOT commander) advisory controls: the live AI-intent readout + the PUSH/HOLD posture nudge. Shown
 //--- only when the AI runs the side (so the nudge actually bites the brain) - hidden in STATE B.
 private "_adviseCtrls";
@@ -491,6 +494,10 @@ while {alive player && dialog} do {
 			};
 		};
 
+		//--- cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD-carrier + TEL SATURATE/RECON war-room button
+		//--- gating (idc 14631/14632/14633) and their MenuAction 770/771/772 arm blocks were REMOVED. All SCUD/TEL fire
+		//--- now lives in the Tactical menu (GUI_Menu_Tactical.sqf). The carrier-ownership + TEL-alive gates moved there.
+
 		//--- ----- RELEASE selected team to autonomous (mode "towns"). -----
 		if (MenuAction == 724) then {
 			MenuAction = -1;
@@ -522,6 +529,8 @@ while {alive player && dialog} do {
 						_lastSend = _now; _armed = "";
 					};
 				} else {
+					//--- cmdcon41-w3i (Ray 2026-07-02): the SCUD + TEL (telsat/telrecon) map-click FIRE branches were REMOVED here;
+					//--- all SCUD/TEL fire now goes through the Tactical menu. Only ARTY (above) + the DIRECT team order (below) remain.
 					//--- DIRECT map-click order (Move/Defend/Patrol) = pure LOCAL setVariable, no server load ->
 					//--- gate on the SHORT _lastDirect / _directCool. Within that window do NOT clear _armed (leave the
 					//--- order armed so the very next click lands without re-arming) and show a soft "ready in Ns" hint.

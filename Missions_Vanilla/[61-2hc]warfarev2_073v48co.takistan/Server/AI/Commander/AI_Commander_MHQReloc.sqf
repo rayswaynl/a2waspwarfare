@@ -292,6 +292,13 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 		_cur  = getPos _mhq;
 		_curD = _mhq distance _destPos;
 
+		//--- cmdcon41-w3h (Ray): the relocating MHQ never runs dry mid-route (a fuel-stranded MHQ = a dead
+		//--- relocation the abort logic reads as "stuck"). Server-local here (AICOM MHQ is server-owned).
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_AUTOFUEL", 1]) > 0 && {(fuel _mhq) < (missionNamespace getVariable ["WFBE_C_AICOM_AUTOFUEL_BELOW", 0.25])}) then {
+			_mhq setFuel 1;
+			diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|AUTOFUEL");
+		};
+
 		//--- cmdcon41-w2 (mhq-route-contact-deescalate): sample live enemies around the MOVING MHQ this tick.
 		//--- On contact -> de-escalate the transit driver (AWARE/NORMAL) so it reacts/evades instead of
 		//--- barrelling in CARELESS/BLUE with AUTOTARGET off, AND push the stuck/deadline clocks forward by
@@ -449,6 +456,17 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 			};
 			//--- (c) never deploy on water.
 			if (!_finBad && {surfaceIsWater _finPos}) then {_finBad = true};
+			//--- (d) cmdcon41-w3k (AICOM builds-on-roads backlog): the Base worker's _findBuildPos rejects on-road
+			//--- placements, but this stranded-exit revalidation discarded that rule for the DEPLOYED MHQ position -
+			//--- same road blind spot. Reject a _finPos within WFBE_C_AICOM_BUILD_ROAD_BUFFER (14m) of ANY road so
+			//--- the re-deployed HQ site does not block a lane; the step-back-toward-HQ loop below then walks it off.
+			//--- Gated by WFBE_C_AICOM_BUILD_ROADCLEAR (default 1). nearRoads idiom == the Base worker's road gate
+			//--- (A2-OA-safe; no isOnRoad/getRoadInfo). Only the final ring-clear _destPos fallback can override.
+			if (!_finBad && {(missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROADCLEAR", 1]) > 0}) then {
+				private "_finRoadBuf";
+				_finRoadBuf = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14];
+				if (_finRoadBuf > 0 && {count (_finPos nearRoads _finRoadBuf) > 0}) then {_finBad = true};
+			};
 			if (_finBad) then {
 				//--- Step back TOWARD OWN HQ. If _finPos coincides with _hqPos, fall straight to the ring-clear _destPos.
 				_finDX = (_hqPos select 0) - (_finPos select 0);
@@ -467,6 +485,11 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 			if (!surfaceIsWater _destPos) then {
 				_finPos = _destPos;
 				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|FINAL_REVALIDATE|FALLBACK_DESTPOS|tries=" + str _finTry);
+				//--- cmdcon41-w3k: last-resort fallback dest may itself sit near a road (never deadlock the reloc);
+				//--- surface it as BUILD_ROAD_LASTRESORT so a road-blocked reloc-deploy is visible in the RPT.
+				if (((missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROADCLEAR", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14]) > 0} && {count (_finPos nearRoads (missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14])) > 0}) then {
+					["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] BUILD_ROAD_LASTRESORT - reloc fell back to ring-clear dest %2 which is road-near; deploying anyway.", _sideText, _finPos]] Call WFBE_CO_FNC_AICOMLog;
+				};
 			} else {
 				_finPos = _finRawPos;
 				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|FINAL_REVALIDATE|FALLBACK_RAW|tries=" + str _finTry);

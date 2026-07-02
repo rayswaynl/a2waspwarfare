@@ -775,6 +775,19 @@ while {!WFBE_GameOver && _alive} do {
 		} forEach _vehicles;
 	};
 
+	//--- cmdcon41-w3h (Ray 2026-07-02): AICOM vehicles never run out of fuel. A dry tank strands the whole
+	//--- team exactly like a blown engine, but no recovery tier can fix "out of gas" - so top the hull off
+	//--- silently whenever it drops low. HC-local (setFuel needs vehicle locality - guaranteed here). No
+	//--- threat gate on purpose: a dry vehicle under fire still has to be able to move (never-frozen mandate).
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AUTOFUEL", 1]) > 0) then {
+		{
+			if (!isNull _x && {alive _x} && {local _x} && {(fuel _x) < (missionNamespace getVariable ["WFBE_C_AICOM_AUTOFUEL_BELOW", 0.25])}) then {
+				_x setFuel 1;
+				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AUTOFUEL|veh=" + (typeOf _x));
+			};
+		} forEach _vehicles;
+	};
+
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 	//--- B36.1 (Ray 2026-06-15): PC-scale retirement. The server flags a REAR team (wfbe_aicom_disband)
@@ -971,6 +984,50 @@ while {!WFBE_GameOver && _alive} do {
 					};
 				};
 
+				//--- cmdcon41-w3j FIXED-WING TRANSIT (Ray aircraft lane, gate WFBE_C_AICOM_PLANE_FLYHEIGHT via the ALT const below):
+				//--- a pure fixed-wing team (_isPlaneTeam, flagged at founding) is skipped by BOTH the air-insert block (planes
+				//--- carry no troops so never become _airVeh) and the ground road-march below (`_rmHasVeh` excludes isKindOf "Air"),
+				//--- so today a jet team falls straight through to the foot `else` (a ground MOVE) and then to the arrival GROUND SAD
+				//--- - it never gets a cruise altitude and tries to prosecute the town at engine-default height, weaving/porpoising
+				//--- into terrain. Give it real air discipline instead: set a cruise flyInHeight on every live plane hull, then lay a
+				//--- SINGLE large-completion-radius MOVE over _dest (NOT a ground SAD) so the jet flies TO the objective at altitude;
+				//--- the arrival latch (plane guard, below) then keeps it orbit-attacking rather than diving to land on the town.
+				//--- Mirrors the working W22 Top-Gun loiter pattern (AI_Commander_Wildcard.sqf) which flies a plane cleanly at height.
+				//--- HONEST A2-1.64 caveat: flyInHeight reliably STEERS helicopters; for PLANES the height command is weak on 1.64
+				//--- (full plane support is 1.80) - so the big win here is "fly a wide MOVE at altitude + never a ground SAD/foot MOVE",
+				//--- with flyInHeight as a best-effort floor. A2-OA-safe: flyInHeight/doMove + a plain WaypointsAdd MOVE, no A3 commands.
+				if (_isPlaneTeam) then {
+					private ["_plAlt","_plLoiterCR","_plHulls"];
+					//--- MAP-AWARE cruise floor (doc rec #3): planes are NOT in the heli terrain-guard's Helicopter filter, so unlike
+					//--- helis they get no reactive climb - give them a higher static floor on the STEEP maps (Takistan/Zargabad
+					//--- ridgelines) than on gentle Chernarus. WFBE_C_AICOM_PLANE_FLYHEIGHT, if EXPLICITLY set (>0), overrides the map
+					//--- floor; the default (0/absent) resolves per worldName (same worldName-branch idiom the fly-off box-size uses).
+					//--- Jets orbit-ATTACK at height (not skim), so a generous 400 gentle / 500 steep. A2-OA-safe: switch toLower worldName.
+					_plAlt = missionNamespace getVariable ["WFBE_C_AICOM_PLANE_FLYHEIGHT", 0];
+					if (_plAlt <= 0) then {
+						_plAlt = switch (toLower worldName) do {
+							case "takistan": {500};
+							case "zargabad": {500};
+							case "chernarus": {400};
+							default {400};
+						};
+					};
+					_plLoiterCR = missionNamespace getVariable ["WFBE_C_AICOM_PLANE_LOITER_RADIUS", 600]; //--- large MOVE completion radius: keep bank shallow over the target (tight loiter over terrain = bank-into-hill crash, Part B/§3-iii).
+					_plHulls = 0;
+					{
+						if (!isNull _x && {alive _x} && {_x isKindOf "Plane"}) then {
+							_x flyInHeight _plAlt;                 //--- best-effort cruise floor (weak for planes on 1.64, but correct direction).
+							if (!isNull (driver _x) && {!isPlayer (driver _x)}) then {(driver _x) doMove _dest}; //--- concurrent per-hull doMove so a multi-plane team all head for the objective now.
+							_plHulls = _plHulls + 1;
+						};
+					} forEach _vehicles;
+					//--- Team-level MOVE over the objective with a GENEROUS completion radius (not a tight SAD): the jet approaches
+					//--- at altitude and the wide radius lets it wheel over the target instead of braking/circling a tight point.
+					_team setBehaviour "AWARE"; _team setCombatMode "RED"; _team setSpeedMode "FULL"; //--- fast, will-engage air posture (COLUMN/formation irrelevant for a lone/paired jet).
+					[_team, true, [[_dest, 'MOVE', 40, _plLoiterCR, [], [], ["AWARE","RED","","FULL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FIXED-WING transit (alt %5m, loiter r %6m, %7 plane hull(s)).", _side, _team, _seq, _mode, _plAlt, _plLoiterCR, _plHulls]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+
 				//--- ROAD-MARCH (task #14/#16): the old single bare 'MOVE' to the raw town
 				//--- center used EMPTY squad-props, so the engine defaulted armour/trucks to
 				//--- AWARE->COMBAT/WEDGE cross-country - A2 PFM's worst case (distStart=0 at
@@ -1079,6 +1136,7 @@ while {!WFBE_GameOver && _alive} do {
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT FAST-TRANSIT (column).", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
+				}; //--- cmdcon41-w3j: close the `if (_isPlaneTeam) {air transit} else {ground road-march/foot}` split opened just above the road-march block.
 				//--- cmdcon41-w2 RALLY MODE EXECUTOR (sketch rally-mode-bounding-withdrawal-executor): the transit lay
 				//--- above already drove a FAST bounding-withdrawal MOVE to _dest for EVERY mode (it fires regardless of
 				//--- the mode string) = exactly the fall-back leg we want (returns fire + uses cover en route, never a
@@ -1246,11 +1304,27 @@ while {!WFBE_GameOver && _alive} do {
 								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|ASSAULT|team=" + (str _team) + "|cls=" + _asCls);
 							};
 						};
+						//--- cmdcon41-w3j FIXED-WING ARRIVAL: a jet must NEVER get the ground WEDGE SAD here - a plane handed a
+						//--- tight ground-attack SAD tries to fly an unflyable low pattern (weaves, stalls, or noses into the town).
+						//--- Instead re-assert the altitude orbit-attack: a large-completion MOVE over _dest at the cruise floor, so
+						//--- the jet keeps wheeling over the objective and strafing revealed targets (engine gun/rocket runs) rather
+						//--- than trying to land on it. Re-issued whenever the arrival latch fires. HELIS are unaffected (they are
+						//--- "Helicopter", never "Plane", and keep the proven WEDGE SAD + the gun-run nudge loop above).
+						if (_isPlaneTeam) then {
+							private ["_plAlt2","_plLoiterCR2"];
+							_plAlt2 = missionNamespace getVariable ["WFBE_C_AICOM_PLANE_FLYHEIGHT", 0]; //--- cmdcon41-w3j: same map-aware floor as the transit block.
+							if (_plAlt2 <= 0) then { _plAlt2 = switch (toLower worldName) do { case "takistan": {500}; case "zargabad": {500}; case "chernarus": {400}; default {400} } };
+							_plLoiterCR2 = missionNamespace getVariable ["WFBE_C_AICOM_PLANE_LOITER_RADIUS", 600];
+							{ if (!isNull _x && {alive _x} && {_x isKindOf "Plane"}) then {_x flyInHeight _plAlt2} } forEach _vehicles;
+							[_team, true, [[_dest, 'MOVE', 40, _plLoiterCR2, [], [], ["AWARE","RED","","FULL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- orbit-attack loiter (NOT a ground SAD).
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] FIXED-WING arrival - orbit-attack loiter over objective (alt %3m, r %4m).", _side, _team, _plAlt2, _plLoiterCR2]] Call WFBE_CO_FNC_AICOMLog;
+						} else {
 						if (_mode == "defense") then {
 							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
 							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring. cmdcon41: props via _stB/_stC (remnant downshift above).
 						};
+						}; //--- cmdcon41-w3j: close the fixed-wing-vs-ground arrival split.
 						}; //--- cmdcon41-w2: close rally-vs-assault guard
 					};
 				};
@@ -1496,7 +1570,10 @@ while {!WFBE_GameOver && _alive} do {
 									sleep 3;
 								};
 								//--- Dwell so the 10m camp scan ticks (presence-based capture).
-								sleep 45;
+								//--- cmdcon41-w3f: randomize the fixed 45s dwell to 35-55s so concurrent teams don't
+								//--- lock-step on the same tick. Randomized dwell ONLY - deliberately NO exit-when-camp-flips
+								//--- polling here (recorded gotcha: that poll caused the frozen-team regression).
+								sleep (35 + random 20);
 							};
 						} forEach _townCamps;
 
@@ -1643,7 +1720,11 @@ while {!WFBE_GameOver && _alive} do {
 						//--- WAVE-1 A4 CAPTURE-HOLD: hold SAD radius = _capRange (was _capRange max 60). The town only
 						//--- drains within _capRange (40m), so a 60m hold ring left units orbiting the 40-60m band
 						//--- and never satisfying the depot-center presence scan. Tightening to _capRange pulls them in.
-						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+						//--- cmdcon41-w3f: PRIMARY depot-center hold formation WEDGE -> LINE. A bunched WEDGE at the
+						//--- depot center let one enemy grenade wipe the whole hold; LINE spreads the squad so a single
+						//--- frag can't clear them. FORMATION only - COMBAT/RED behaviour + _capRange radius unchanged.
+						//--- (Road-march arrival handoff lines and the secondary depot SADs ~L1250/1252 are left as-is.)
+						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","LINE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						{if (alive _x) then {_x doMove _townCenter}} forEach _footInf;
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
 
