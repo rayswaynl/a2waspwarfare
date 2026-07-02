@@ -81,6 +81,8 @@ if (dialog) then {
 };
 
 WFBE_DeathLocation = getPos _body;
+WFBE_DeathKillerLocation = [];
+if !(isNull _killer) then {WFBE_DeathKillerLocation = getPos _killer};
 
 
 //--- Fade transition.
@@ -127,7 +129,7 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 
 //--- Camera & post-process thread.
 [] Spawn {
-	Private ["_delay"];
+	Private ["_camEnd","_camStart","_camTarget","_deathX","_deathY","_deathZ","_delay","_dx","_dy","_killerPos","_len"];
 
 	_delay = missionNamespace getVariable "WFBE_C_RESPAWN_DELAY";
 
@@ -173,12 +175,30 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 	WFBE_DeathCamera camSetFov 0.7;
 	WFBE_DeathCamera cameraEffect ["Internal", "TOP"];
 
-	WFBE_DeathCamera camSetTarget WFBE_DeathLocation;
-	WFBE_DeathCamera camSetPos [
-		WFBE_DeathLocation select 0,
-		(WFBE_DeathLocation select 1) + 2,
-		5
-	];
+	_deathX = WFBE_DeathLocation select 0;
+	_deathY = WFBE_DeathLocation select 1;
+	_deathZ = WFBE_DeathLocation select 2;
+	_camTarget = WFBE_DeathLocation;
+	_camStart = [_deathX, _deathY + 2, 5];
+	_camEnd = [_deathX, _deathY + 2, 30];
+
+	//--- Lane 160: when the killer position is valid, look back along the incoming-fire axis.
+	if (!(isNil "WFBE_DeathKillerLocation") && {typeName WFBE_DeathKillerLocation in ["ARRAY"]} && {count WFBE_DeathKillerLocation >= 3}) then {
+		_killerPos = WFBE_DeathKillerLocation;
+		_dx = _deathX - (_killerPos select 0);
+		_dy = _deathY - (_killerPos select 1);
+		_len = sqrt ((_dx * _dx) + (_dy * _dy));
+		if (_len > 3) then {
+			_dx = _dx / _len;
+			_dy = _dy / _len;
+			_camTarget = [_killerPos select 0, _killerPos select 1, (_killerPos select 2) + 1.5];
+			_camStart = [_deathX + (_dx * 8), _deathY + (_dy * 8), _deathZ + 4];
+			_camEnd = [_deathX + (_dx * 20), _deathY + (_dy * 20), _deathZ + 28];
+		};
+	};
+
+	WFBE_DeathCamera camSetTarget _camTarget;
+	WFBE_DeathCamera camSetPos _camStart;
 
 	WFBE_DeathCamera camCommit 0;
 
@@ -186,11 +206,7 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 		camCommitted WFBE_DeathCamera
 	};
 
-	WFBE_DeathCamera camSetPos [
-		WFBE_DeathLocation select 0,
-		(WFBE_DeathLocation select 1) + 2,
-		30
-	];
+	WFBE_DeathCamera camSetPos _camEnd;
 
 	WFBE_DeathCamera camCommit (_delay + 2);
 };
