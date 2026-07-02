@@ -362,6 +362,38 @@ if (count _targets > 0) then {
 		diag_log ("AICOMSTAT|v1|SPEARHEAD_REPICK|" + _sideText + "|" + str (round (time / 60)) + "|stalled=" + (_prim getVariable ["name","?"]) + "|approach=" + str (round _spApproach) + "|evals=" + str _spLast + "|newPrimary=" + (if (isNull _newPrim) then {"none"} else {_newPrim getVariable ["name","?"]}) + "|cooldown=" + str _spBlCd);
 	};
 };
+//--- cmdcon41-w2 FRONT/SPEARHEAD HYSTERESIS (Fable F2; flag WFBE_C_AICOM_FRONT_DWELL default 480s). The picker re-scores
+//--- the primary spearhead every ~60s, so the FRONT target flipped ~every 4 min (122 EAST changes in a 7h soak) and
+//--- 20-min journeys died administratively on each flip. Once a primary is chosen, DWELL on it: keep the same primary
+//--- (skip the re-scoring flip) until the dwell elapses OR the town flips to us / becomes null. The stall-blacklist
+//--- re-pick above still overrides (a genuinely stuck primary gets blacklisted, invalidating the dwell next tick).
+//--- Selection-only: this reorders _targets before publish; it never moves a unit. A2-OA-safe: OBJECT/time/getVariable,
+//--- ==/!= only on the sideID scalar + object-null via isNull, string mode literals untouched.
+private ["_fhDwell","_fhPrim","_fhT0","_fhFresh","_fhValid"];
+_fhDwell = missionNamespace getVariable ["WFBE_C_AICOM_FRONT_DWELL", 480];
+if (_fhDwell > 0 && {count _targets > 0}) then {
+	_fhFresh = _targets select 0;
+	_fhPrim = _logik getVariable "wfbe_aicom_front_prim";
+	_fhT0   = _logik getVariable "wfbe_aicom_front_t0";
+	//--- Is the stored dwell pick still a VALID enemy/neutral target (not null, not captured by us)?
+	_fhValid = false;
+	if (!isNil "_fhPrim" && {!isNull _fhPrim} && {!isNil "_fhT0"}) then {
+		if ((_fhPrim getVariable ["sideID", -1]) != _sideID) then {_fhValid = true};
+	};
+	if (_fhValid && {(time - _fhT0) < _fhDwell}) then {
+		//--- Dwell still active + pick still valid: keep it as primary. If it is not already the scored primary,
+		//--- move it to slot 0 (drop any duplicate, prepend) so AssignTowns keeps concentrating on the dwelled town.
+		if (_fhFresh != _fhPrim) then {
+			_targets = _targets - [_fhPrim];
+			_targets = [_fhPrim] + _targets;
+			diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FRONT_DWELL_HOLD|kept=" + (_fhPrim getVariable ["name","?"]) + "|scored=" + (_fhFresh getVariable ["name","?"]) + "|age=" + str (round (time - _fhT0)));
+		};
+	} else {
+		//--- No valid dwell (first pick, elapsed, or invalidated): adopt the freshly-scored primary + restamp the clock.
+		_logik setVariable ["wfbe_aicom_front_prim", _fhFresh];
+		_logik setVariable ["wfbe_aicom_front_t0", time];
+	};
+};
 //--- Telemetry: is the chosen primary actually on the front (vs a deep fallback)?
 _anyFront = false;
 if (count _targets > 0) then {
@@ -543,6 +575,12 @@ _relieved = 0;
 							[_wTeam, "towns"] Call SetTeamMoveMode;
 							_wTeam setVariable ["wfbe_aicom_townorder", []];
 							_wTeam setVariable ["wfbe_aicom_wedge_bc", nil];
+							//--- cmdcon41-w2 (wedge-watchdog-resync-stuckstrikes): also clear the AssignTowns strike ladder.
+							//--- A team that wedged in defense/move and is now released back to offense carries a stale
+							//--- wfbe_aicom_stuckstrikes count from a PRIOR leg; leaving it set resumes the ladder mid-tier
+							//--- (or trips a teleport recovery) on the fresh towns dispatch. Reset to 0 so the offense leg
+							//--- starts the ladder clean. A2-OA-safe: plain setVariable on the group.
+							_wTeam setVariable ["wfbe_aicom_stuckstrikes", 0];
 							if (_wTeam getVariable ["wfbe_aicom_hc", false]) then {
 								_wTeam setVariable ["wfbe_aicom_order", [(if (isNil {_wTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wTeam getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos _wLdr], true];
 							};
@@ -561,6 +599,77 @@ _relieved = 0;
 		};
 	};
 } forEach _teams;
+
+//--- cmdcon41-w2 GRACEFUL WITHDRAWAL EVALUATOR (Fable F3/graceful-withdrawal-evaluator-replaces-hc-blindspot).
+//--- The Produce retreat/cull is gated !isPlayer && !wfbe_aicom_hc, so it NEVER runs for HC-resident teams (~100%
+//--- of live teams in this 2-HC mission). A bled-out HC assault squad thus has no withdrawal path and dies on the
+//--- march. This pass catches an HC team that is either (a) below WITHDRAW_MIN_ALIVE (3) live bodies and NOT already
+//--- rallying, or (b) has had its driver raise wfbe_aicom_wantrally, and pulls it back to the NEAREST friendly rally
+//--- (our HQ or an OWN-side town centre) via a fresh [seq+1,"rally",pos] HC order (the driver executes "rally" as a
+//--- fighting bounding withdrawal, then re-engages). MBT / attack-heli teams are EXEMPT (the vehicle IS the punch;
+//--- exemption idiom mirrors the relief big-veh detect ~L466-475). Flag WFBE_C_AICOM_WITHDRAW_EVAL default 1.
+//--- A2-OA-safe: plain get + isNil for GROUP vars, classname-literal isKindOf + getNumber transportSoldier for the
+//--- exemption, the proven seq-bump order idiom, lowercase exact-case mode literal "rally", no A3 primitives.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
+	private ["_gwMinAlive","_gwHQ"];
+	_gwMinAlive = missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_MIN_ALIVE", 3];
+	_gwHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	{
+		private ["_gwTeam","_gwHc","_gwLdr","_gwAlive","_gwWant","_gwRallying","_gwExempt","_gwVeh","_gwTrigger"];
+		_gwTeam = _x;
+		_gwHc = _gwTeam getVariable "wfbe_aicom_hc";
+		if (!isNull _gwTeam && {!isNil "_gwHc"} && {_gwHc} && {!isPlayer (leader _gwTeam)}) then {
+			_gwLdr = leader _gwTeam;
+			if (!isNull _gwLdr && {alive _gwLdr}) then {
+				_gwAlive = {alive _x} count (units _gwTeam);
+				_gwWant = _gwTeam getVariable "wfbe_aicom_wantrally";
+				if (isNil "_gwWant") then {_gwWant = false};
+				_gwRallying = _gwTeam getVariable "wfbe_aicom_rallying";
+				if (isNil "_gwRallying") then {_gwRallying = false};
+				//--- MBT / attack-heli exemption (mirror the relief big-veh detect): a Tank, or a Helicopter whose
+				//--- config transportSoldier == 0 (a gunship, not a transport). Never withdraw the vehicle punch.
+				_gwExempt = false;
+				{
+					if (alive _x) then {
+						_gwVeh = vehicle _x;
+						if (_gwVeh != _x) then {
+							if (_gwVeh isKindOf "Tank") exitWith {_gwExempt = true};
+							if ((_gwVeh isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _gwVeh) >> "transportSoldier")) == 0}) exitWith {_gwExempt = true};
+						};
+					};
+				} forEach (units _gwTeam);
+				//--- Trigger: driver explicitly asked to rally, OR (understrength AND not already rallying). Exempt teams never trigger.
+				_gwTrigger = false;
+				if (!_gwExempt) then {
+					if (_gwWant) then {_gwTrigger = true};
+					if (!_gwTrigger && {_gwAlive > 0} && {_gwAlive < _gwMinAlive} && {!_gwRallying}) then {_gwTrigger = true};
+				};
+				if (_gwTrigger) then {
+					//--- Rally = NEAREST of [own HQ pos] + every OWN-side town centre. Hand-rolled scalar min (no A3 sort).
+					private ["_gwRallyPos","_gwBestD","_gwLdrPos","_gwD"];
+					_gwLdrPos = getPos _gwLdr;
+					_gwRallyPos = [];
+					_gwBestD = 1e9;
+					if (!isNull _gwHQ) then {_gwRallyPos = getPos _gwHQ; _gwBestD = _gwLdr distance _gwHQ};
+					{
+						if ((_x getVariable ["sideID", -1]) == _sideID) then {
+							_gwD = _gwLdr distance _x;
+							if (_gwD < _gwBestD) then {_gwBestD = _gwD; _gwRallyPos = getPos _x};
+						};
+					} forEach towns;
+					//--- Fallback: no HQ and no own town -> rally on our own current pos (never leave the team orderless).
+					if (count _gwRallyPos == 0) then {_gwRallyPos = _gwLdrPos};
+					//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
+					_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
+					_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
+					_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
+					["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|want=" + str _gwWant);
+				};
+			};
+		};
+	} forEach _teams;
+};
 
 //--- 3) HQ HUNT: strike when clearly winning; stand down when the edge is gone.
 _enemyHQ = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
@@ -623,6 +732,68 @@ if (_strikeOn) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		_logik setVariable ["wfbe_aicom_strike_t0", time]; diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
 	};
+	//--- cmdcon41-w2 STAGING-MASS (Fable F4/hqstrike-staging-rally-mass-before-assault; flag WFBE_C_AICOM_STRIKE_STAGE
+	//--- default 1). Rather than trickle strikers onto the enemy HQ one team at a time (piecemeal, chewed up by the home
+	//--- garrison), first MASS them at a rally point ~STRIKE_STAGE_DIST (800m) SHORT of the enemy HQ, then release the
+	//--- whole fist onto the HQ once enough bodies have gathered OR a timeout elapses. While staging, strikers are issued
+	//--- to the rally pos; on release every striker is re-issued to the enemy HQ (the existing strike order). Flag off ->
+	//--- _strikeDest stays the enemy HQ from the first tick (legacy behaviour). A2-OA-safe: plain component segment math
+	//--- (no BIS_fnc, no vectorNormalized reliance), scalar/time state on the side logic, string mode literals.
+	private ["_strikeDest","_stgRallyPos"];
+	_strikeDest = getPos _enemyHQ;
+	_stgRallyPos = [];
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_STAGE", 1]) > 0) then {
+		private ["_stgDist","_stgBodiesNeed","_stgTimeout","_stgHQ","_stgEHQ","_stgHXpos","_stgEXpos","_stgDX","_stgDY","_stgLen","_stgUX","_stgUY","_stgReleased","_stgT0","_stgBodies"];
+		_stgDist       = missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_STAGE_DIST", 800];
+		_stgBodiesNeed = missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_STAGE_BODIES", 14];
+		_stgTimeout    = missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_STAGE_TIMEOUT", 240];
+		_stgHQ  = (_side) Call WFBE_CO_FNC_GetSideHQ;
+		_stgEHQ = _enemyHQ;
+		if (!isNull _stgEHQ && {!isNull _stgHQ}) then {
+			_stgEXpos = getPos _stgEHQ;
+			_stgHXpos = getPos _stgHQ;
+			//--- Unit vector from our HQ toward the enemy HQ (plain components; guard zero length).
+			_stgDX = (_stgEXpos select 0) - (_stgHXpos select 0);
+			_stgDY = (_stgEXpos select 1) - (_stgHXpos select 1);
+			_stgLen = sqrt ((_stgDX * _stgDX) + (_stgDY * _stgDY));
+			if (_stgLen > _stgDist) then {
+				_stgUX = _stgDX / _stgLen;
+				_stgUY = _stgDY / _stgLen;
+				//--- Rally = enemy HQ pulled back _stgDist along the line toward our HQ (i.e. _stgDist SHORT of the HQ).
+				_stgRallyPos = [(_stgEXpos select 0) - (_stgUX * _stgDist), (_stgEXpos select 1) - (_stgUY * _stgDist), 0];
+			};
+		};
+		if (count _stgRallyPos > 0) then {
+			_stgReleased = _logik getVariable ["wfbe_aicom_strike_staged", false];
+			if (!_stgReleased) then {
+				//--- Baseline the staging clock on the first staging tick of this strike.
+				_stgT0 = _logik getVariable "wfbe_aicom_strike_stage_t0";
+				if (isNil "_stgT0") then {_stgT0 = time; _logik setVariable ["wfbe_aicom_strike_stage_t0", _stgT0]};
+				//--- Count alive striker bodies already gathered within STAGE_ARRIVE (400m) of the rally.
+				private ["_stgArrive"]; _stgArrive = missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_STAGE_ARRIVE", 400];
+				_stgBodies = 0;
+				{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]}) then { { if (alive _x && {(_x distance _stgRallyPos) < _stgArrive}) then {_stgBodies = _stgBodies + 1} } forEach (units _x) } } forEach _teams;
+				if ((_stgBodies >= _stgBodiesNeed) || {(time - _stgT0) >= _stgTimeout}) then {
+					//--- RELEASE: enough mass (or timed out). Re-issue EVERY striker to the enemy HQ and mark released.
+					_logik setVariable ["wfbe_aicom_strike_staged", true];
+					{
+						_team = _x;
+						if (!isNull _team && {_team getVariable ["wfbe_aicom_strike", false]} && {({alive _x} count (units _team)) > 0}) then {
+							[_team, "move"] Call SetTeamMoveMode;
+							[_team, getPos _enemyHQ] Call SetTeamMovePos;
+							if (_team getVariable ["wfbe_aicom_hc", false]) then {
+								_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true];
+							};
+						};
+					} forEach _teams;
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRIKE_STAGE_RELEASE|bodies=" + str _stgBodies + "|need=" + str _stgBodiesNeed + "|held=" + str (round (time - _stgT0)));
+				} else {
+					//--- Still massing: newly-recruited strikers below are pointed at the rally, not the HQ.
+					_strikeDest = _stgRallyPos;
+				};
+			};
+		};
+	};
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
 	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
@@ -655,14 +826,19 @@ if (_strikeOn) then {
 		private "_bestAlive"; _bestAlive = {alive _x} count (units _best);
 			_best setVariable ["wfbe_aicom_strike", true];
 		[_best, "move"] Call SetTeamMoveMode;
-		[_best, getPos _enemyHQ] Call SetTeamMovePos;
+		//--- cmdcon41-w2 STAGING-MASS: while massing, point new strikers at the rally (_strikeDest = rally pos); once released it equals the enemy HQ.
+		[_best, _strikeDest] Call SetTeamMovePos;
 		if (_best getVariable ["wfbe_aicom_hc", false]) then {
-			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true]; //--- HQ-STRIKE PRESS FIX (Ray): "defense" made the HC striker HOLD near the enemy HQ; "goto" routes through the driver else-branch (Common_RunCommanderTeam.sqf ~L749 = assault SAD WFBE_C_AICOM_ASSAULT_SAD onto _dest), so it PRESSES onto the HQ. Not "towns-target" (that triggers the town-depot capture phase, wrong for a base).
+			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "goto", _strikeDest], true]; //--- HQ-STRIKE PRESS FIX (Ray): "defense" made the HC striker HOLD near the enemy HQ; "goto" routes through the driver else-branch (Common_RunCommanderTeam.sqf ~L749 = assault SAD WFBE_C_AICOM_ASSAULT_SAD onto _dest), so it PRESSES onto the HQ. Not "towns-target" (that triggers the town-depot capture phase, wrong for a base).
 		};
 		_strikeCount = _strikeCount + 1;
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] (%3 men) joins the HQ strike.", _sideText, _best, _bestAlive]] Call WFBE_CO_FNC_AICOMLog;
 	};
 } else {
+	//--- cmdcon41-w2 STAGING-MASS: strike is OFF this tick - clear the staging state so the NEXT strike stages fresh
+	//--- (rally-then-release from the top) instead of inheriting a stale released/timer from the previous strike.
+	_logik setVariable ["wfbe_aicom_strike_staged", false];
+	_logik setVariable ["wfbe_aicom_strike_stage_t0", nil];
 	if (_wasStrike) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: edge lost (towns %2v%3, strength %4v%5) - strike recalled.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		{
@@ -751,6 +927,25 @@ _posture = if (_strikeOn) then {"HQ_STRIKE"} else {
 	if (_myTowns < _enemyTowns || {_myEff < _enEff}) then {"DEFEND"} else {
 		if (_myTowns >= (_enemyTowns * 1.2) && {_myEff >= _enEff}) then {"PRESS"} else {"HOLD"}
 	}
+};
+//--- cmdcon41-w2 LOSING-SIDE PRESS FLOOR (Fable F7; flag WFBE_C_AICOM_LOSING_PRESS default 1). A losing side with an
+//--- intact army must NOT park in DEFEND (the EAST-sat-in-DEFEND-min201-415 pattern). When we are BEHIND on territory
+//--- (myTowns < enemyTowns) yet at rough strength parity (myEff >= 0.8 * enEff), NOT in last-stand, AND our own base is
+//--- not itself under direct attack, floor the posture at PRESS so the commander keeps attacking to claw territory back.
+//--- Never overrides HQ_STRIKE. A2-OA-safe: scalar math + nearEntities/side/alive/count for the base-threat probe; ==/!=
+//--- only on string/scalar operands (posture strings), never on Booleans.
+if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_strikeOn} && {!_lastStand} && {_myTowns < _enemyTowns} && {_myEff >= (_enEff * 0.8)}) then {
+	private ["_lpBaseThreat","_lpHQ","_lpDist"];
+	_lpBaseThreat = false;
+	_lpHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	_lpDist = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500];
+	if (!isNull _lpHQ) then {
+		if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _lpHQ) nearEntities [["Man","LandVehicle","Air"], _lpDist])) > 0) then {_lpBaseThreat = true};
+	};
+	if (!_lpBaseThreat) then {
+		_posture = "PRESS";
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
+	};
 };
 //--- B69 garrison-body telemetry (stall-telemetry-add-garrison-bodies): how many bodies the leader has tied up in
 //--- town OCCUPATION vs its maneuver _myStr. Pure observation, no behaviour change. Mirrors the existing _myStr idiom

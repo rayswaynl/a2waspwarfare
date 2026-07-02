@@ -23,7 +23,7 @@
 	A2-OA 1.64 ONLY: no isEqualType/isEqualTo/findIf/selectRandom/pushBack/worldSize.
 */
 
-private ["_side","_sideText","_logik","_enabled","_hq","_deployed","_targets","_front","_frontPos","_myID","_enemyID","_enemySideObj","_guerID","_hqPos","_frontDist","_standoff","_enemyClear","_arriveDist","_deadline","_stuckSecs","_destPos","_dx","_dy","_d","_back","_eNear","_busy","_townBuffer","_ringClear","_ownTowns","_t","_tD","_i","_j","_tmp","_cand","_clear","_etPos","_etD"];
+private ["_side","_sideText","_logik","_enabled","_hq","_deployed","_targets","_front","_frontPos","_myID","_enemyID","_enemySideObj","_guerID","_hqPos","_frontDist","_standoff","_enemyClear","_arriveDist","_deadline","_stuckSecs","_destPos","_dx","_dy","_d","_back","_eNear","_busy","_townBuffer","_ringClear","_ownTowns","_t","_tD","_i","_j","_tmp","_cand","_clear","_etPos","_etD","_hfDist","_hNear"];  //--- cmdcon41-w2: +_hfDist,_hNear (human-front defer gate).
 
 _side = _this;
 _sideText = str _side;
@@ -169,13 +169,33 @@ _eNear = false;
 { if (side _x == _enemySideObj && {alive _x}) then {_eNear = true} } forEach (_hqPos nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
 if (_eNear) exitWith {};
 
+//--- cmdcon41-w2 (mhq-reloc-avoid-human-front-overrun): HUMAN-FRONT DEFER. After the two enemy-clear
+//--- gates pass but BEFORE single-flight is claimed, DEFER this interval if a friendly HUMAN player is in
+//--- active COMBAT within WFBE_C_AICOM_MHQ_HUMAN_FRONT_DIST of the planned destination - don't creep the
+//--- base into a human-contested front. Pure read-only scan (same nearEntities/forEach idiom used above);
+//--- only ever skips the eval (exitWith), retries next interval - never touches the drive/deploy lifecycle.
+//--- 0 disables. A2-OA-safe: behaviour == "COMBAT" is an exact-case string compare (no A3 commands).
+//--- Compute _hNear at SCRIPT scope first (a then{} block has its own scope, so an exitWith inside it would
+//--- only exit that block, not the script - the defer exitWith below MUST live at top level).
+_hfDist = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_HUMAN_FRONT_DIST", 900];
+_hNear = false;
+if (_hfDist > 0) then {
+	{
+		if (isPlayer _x && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
+	} forEach (_destPos nearEntities [["Man"], _hfDist]);
+};
+if (_hNear) exitWith {
+	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|DEFER|human-front|dist=" + str (round _hfDist) + "|dest=" + str _destPos);
+};
+
 //--- All gates passed: claim single-flight + LAUNCH the lifecycle Spawn.
 _logik setVariable ["wfbe_mhqreloc_active", true];
 diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|TRIGGER|frontDist=" + str (round (_hq distance _frontPos)) + "|dest=" + str _destPos + "|back=" + str (round _back));
 ["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] relocation TRIGGERED - front %2m out, mobilizing toward %3.", _sideText, round (_hq distance _frontPos), _destPos]] Call WFBE_CO_FNC_AICOMLog;
 
-[_side, _sideText, _logik, _myID, _destPos, _arriveDist, _deadline, _stuckSecs, _enemyClear, _enemySideObj] Spawn {
-	private ["_side","_sideText","_logik","_myID","_destPos","_arriveDist","_deadline","_stuckSecs","_enemyClear","_enemySide","_mhq","_drvGrp","_drv","_soldier","_dir","_t0","_lastClose","_lastImprove","_done","_reason","_cur","_curD","_pNear","_safeDist","_hq0","_finPos","_finDir","_finTry","_finAng","_structClass","_nudgeSecs","_nudgeTurn","_lastNudge"];
+[_side, _sideText, _logik, _myID, _destPos, _arriveDist, _deadline, _stuckSecs, _enemyClear, _enemySideObj, _enemyID, _guerID, _ringClear, _hqPos] Spawn {
+	//--- cmdcon41-w2: +_enemyID,_guerID,_ringClear,_hqPos (final-deploy revalidate) + de-escalate/final-loop locals in private[] below.
+	private ["_side","_sideText","_logik","_myID","_destPos","_arriveDist","_deadline","_stuckSecs","_enemyClear","_enemySide","_mhq","_drvGrp","_drv","_soldier","_dir","_t0","_lastClose","_lastImprove","_done","_reason","_cur","_curD","_pNear","_safeDist","_hq0","_finPos","_finDir","_finTry","_finAng","_structClass","_nudgeSecs","_nudgeTurn","_lastNudge","_enemyID","_guerID","_ringClear","_hqPos","_routeDeesc","_routeGrace","_inContact","_eOnRoute","_finStep","_finMax","_finBad","_finChkD","_finRawPos","_finDX","_finDY","_finD"];
 	_side       = _this select 0;
 	_sideText   = _this select 1;
 	_logik      = _this select 2;
@@ -186,6 +206,10 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 	_stuckSecs  = _this select 7;
 	_enemyClear = _this select 8;
 	_enemySide  = _this select 9;
+	_enemyID    = _this select 10;   //--- cmdcon41-w2: hostile side ids + ring clearance for the final-deploy revalidate.
+	_guerID     = _this select 11;
+	_ringClear  = _this select 12;
+	_hqPos      = _this select 13;   //--- cmdcon41-w2: origin HQ pos - the "toward own HQ" step-back vector for the final revalidate.
 	_safeDist   = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 
 	//--- 1) MOBILIZE: flip the static HQ into the MHQ vehicle via the canonical toggle.
@@ -254,12 +278,53 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 	_nudgeSecs   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_NUDGE_SECS", 45];
 	_nudgeTurn   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_NUDGE_TURN", 25];
 	_lastNudge   = 0;   //--- last nudge time; 0 = none yet.
+	//--- cmdcon41-w2 (mhq-route-contact-deescalate): sense enemies around the MOVING MHQ each tick; near
+	//--- contact flip the careless transit driver to AWARE/NORMAL so it reacts/evades, and grant the
+	//--- stuck/deadline clocks a short grace so a brief contact pause does not instantly trip a deploy.
+	//--- Restore the careless transit profile when clear (never freeze). 0 = disable (stays careless).
+	_routeDeesc  = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ROUTE_DEESC", 1];
+	_routeGrace  = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ROUTE_GRACE", 12];
+	_inContact   = false;   //--- latched de-escalation state; restore transit profile exactly once on clear.
 
 	while {!_done && !gameOver} do {
 		sleep 5;
 		if (isNull _mhq || {!alive _mhq}) exitWith {_done = true; _reason = "mhq-lost"};
 		_cur  = getPos _mhq;
 		_curD = _mhq distance _destPos;
+
+		//--- cmdcon41-w2 (mhq-route-contact-deescalate): sample live enemies around the MOVING MHQ this tick.
+		//--- On contact -> de-escalate the transit driver (AWARE/NORMAL) so it reacts/evades instead of
+		//--- barrelling in CARELESS/BLUE with AUTOTARGET off, AND push the stuck/deadline clocks forward by
+		//--- _routeGrace so a brief contact pause does not instantly trip a deploy. When contact clears,
+		//--- restore the original careless transit profile exactly once (never freeze - keeps moving/re-wakes).
+		//--- Guards a live _drvGrp; skipped entirely when _routeDeesc<=0. A2-OA-safe (nearEntities/forEach,
+		//--- setBehaviour/setCombatMode/setSpeedMode, exact-case mode strings).
+		if (_routeDeesc > 0 && {!isNull _drvGrp}) then {
+			_eOnRoute = false;
+			{ if (side _x == _enemySide && {alive _x}) then {_eOnRoute = true} } forEach (_cur nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
+			if (_eOnRoute) then {
+				//--- CONTACT: grant the timers grace every contact tick so a pause never trips stuck/deadline.
+				_lastImprove = _lastImprove + _routeGrace;
+				_t0          = _t0 + _routeGrace;
+				if (!_inContact) then {
+					_inContact = true;
+					_drvGrp setBehaviour "AWARE";
+					_drvGrp setCombatMode "NORMAL";
+					if (!isNull (driver _mhq)) then {{(driver _mhq) enableAI _x} forEach ["AUTOTARGET","TARGET"]};
+					diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ROUTE_CONTACT|d=" + str (round _curD));
+				};
+			} else {
+				if (_inContact) then {
+					//--- CLEAR: restore the careless transit profile exactly once so the MHQ keeps moving.
+					_inContact = false;
+					_drvGrp setBehaviour "CARELESS";
+					_drvGrp setCombatMode "BLUE";
+					_drvGrp setSpeedMode "FULL";
+					if (!isNull (driver _mhq)) then {{(driver _mhq) disableAI _x} forEach ["AUTOTARGET","TARGET"]; (driver _mhq) doMove _destPos};
+					diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ROUTE_CLEAR|d=" + str (round _curD));
+				};
+			};
+		};
 
 		if (_curD <= _arriveDist) then {_done = true; _reason = "arrive"};
 
@@ -353,6 +418,62 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 			_finTry = _finTry + 1;
 		};
 		if (surfaceIsWater _finPos) then {_finPos = getPos _mhq};
+	};
+	//--- cmdcon41-w2 (mhq-final-deploy-clearance-revalidate): the carefully-validated _destPos ring-clearance
+	//--- is DISCARDED on a stuck/deadline/water-escape exit (the HQ deploys at getPos _mhq / a water random-walk
+	//--- spot with NO enemy-ring and NO friendly-structure check). Re-validate _finPos here against (a) the same
+	//--- hostile-ring test used for the candidate (every enemy/GUER town clear by _ringClear) AND (b) friendly-
+	//--- structure spacing (WFBE_C_AICOM_STRUCT_SPACING, the Base worker's build-reject rule). If it fails, step
+	//--- _finPos back TOWARD OWN HQ (_hqPos) by _finStep m, up to _finMax tries; deploy at the first clear spot.
+	//--- Hard fallback: the already-ring-clear _destPos, then the raw _finPos - NEVER a deadlock. Only runs on the
+	//--- stranded exits (arrive lands at/near the already-clear _destPos). A2-OA-safe (forEach towns ring test +
+	//--- GetSideStructures spacing forEach - both idioms already live in this codebase; scalar geometry only).
+	if ((_reason == "stuck") || {_reason == "stuck-teleport"} || {_reason == "deadline-teleport"} || {_reason == "deadline"}) then {
+		_finStep = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_FINAL_STEPBACK", 120];
+		_finMax  = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_FINAL_MAXTRIES", 12];
+		_finRawPos = _finPos;   //--- last-resort raw fallback (never deadlock).
+		_finTry = 0;
+		_finBad = true;
+		while {_finBad && {_finTry <= _finMax}} do {
+			_finBad = false;
+			//--- (a) hostile-ring re-check: same forEach towns test as the candidate validation.
+			{
+				if (((_x getVariable "sideID") == _enemyID) || {(_x getVariable "sideID") == _guerID}) then {
+					_finChkD = sqrt (((_finPos select 0) - (getPos _x select 0))^2 + ((_finPos select 1) - (getPos _x select 1))^2);
+					if (_finChkD < _ringClear) then {_finBad = true};
+				};
+			} forEach towns;
+			//--- (b) friendly-structure spacing re-check (Base worker's reject rule).
+			if (!_finBad) then {
+				{ if ((_finPos distance _x) < (missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING", 45])) exitWith {_finBad = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+			};
+			//--- (c) never deploy on water.
+			if (!_finBad && {surfaceIsWater _finPos}) then {_finBad = true};
+			if (_finBad) then {
+				//--- Step back TOWARD OWN HQ. If _finPos coincides with _hqPos, fall straight to the ring-clear _destPos.
+				_finDX = (_hqPos select 0) - (_finPos select 0);
+				_finDY = (_hqPos select 1) - (_finPos select 1);
+				_finD  = sqrt (_finDX*_finDX + _finDY*_finDY);
+				if (_finD >= 1) then {
+					_finPos = [(_finPos select 0) + (_finDX / _finD) * _finStep, (_finPos select 1) + (_finDY / _finD) * _finStep, 0];
+				} else {
+					_finPos = _destPos;
+				};
+				_finTry = _finTry + 1;
+			};
+		};
+		if (_finBad) then {
+			//--- Step budget exhausted -> hard-fall-back to the already-ring-clear _destPos (raw _finPos if dest is wet).
+			if (!surfaceIsWater _destPos) then {
+				_finPos = _destPos;
+				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|FINAL_REVALIDATE|FALLBACK_DESTPOS|tries=" + str _finTry);
+			} else {
+				_finPos = _finRawPos;
+				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|FINAL_REVALIDATE|FALLBACK_RAW|tries=" + str _finTry);
+			};
+		} else {
+			diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|FINAL_REVALIDATE|CLEAR|tries=" + str _finTry);
+		};
 	};
 	_structClass = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText]) select 0;
 	[_structClass, _side, _finPos, _finDir] ExecVM "Server\Construction\Construction_HQSite.sqf";

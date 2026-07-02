@@ -114,7 +114,32 @@ if (_state == "enroute") then {
 
 	//--- armour/heli gate (default: only service the costly teams)
 	_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"} || {([(typeOf (vehicle _x)), _side] Call IsArtillery) != -1}}} count _members; //--- AICOM v2 (Ray): count a self-propelled artillery hull (e.g. the wheeled GRAD = Car-kind) as 'heavy' so a crew-only arty battery isn't skipped by the armour-only service exit -> arty auto-rearms at a Service Point.
-	if (_armourOnly && {_hasHeavy == 0}) exitWith {};
+	//--- SVC REFIT FLIP (cmdcon41-w2, Ray): extend service/refit eligibility to INFANTRY (no-heavy) teams when
+	//--- WFBE_C_AICOM_SVC_ALLTEAMS > 0, keeping svc load BOUNDED with a HEADCOUNT gate - a foot team is only serviced
+	//--- when it is BADLY understrength (alive < 0.5 * TEAM_SIZE, i.e. <4 of an 8-team) OR it already has a damaged
+	//--- member (the old armour path handles hull damage/ammo further down). Heavy teams (_hasHeavy>0) fall through
+	//--- unchanged. When ALLTEAMS is off, this is byte-equivalent to the old `if (_armourOnly && _hasHeavy==0) exitWith`.
+	//--- Compute a single skip-flag and do ONE top-level exitWith so the whole script exits (an exitWith nested inside a
+	//--- then{} block would only leave that block, NOT the script). A2-OA-safe: plain missionNamespace [name,default],
+	//--- count over units, </== on SCALARs (no Boolean == operands), no A3 primitives.
+	private ["_svcAllTeams","_svcAlive","_svcSizeMax","_svcHeadGate","_svcHasDmg","_svcSkip"];
+	_svcAllTeams = (missionNamespace getVariable ["WFBE_C_AICOM_SVC_ALLTEAMS", 1]) > 0;
+	_svcSkip = false;
+	if (_armourOnly && {_hasHeavy == 0}) then {
+		if (_svcAllTeams) then {
+			//--- ALLTEAMS on: admit this foot team only if (headcount gate) it is <0.5*TEAM_SIZE alive, OR any member is
+			//--- wounded past the DMG threshold - otherwise skip (keep fighting), keeping svc load bounded.
+			_svcAlive   = {alive _x} count _members;
+			_svcSizeMax = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8];
+			_svcHeadGate = _svcAlive < (0.5 * _svcSizeMax);
+			_svcHasDmg = false;
+			{ if (!_svcHasDmg && {alive _x} && {getDammage _x > _dmgT}) then {_svcHasDmg = true} } forEach _members;
+			if (!_svcHeadGate && {!_svcHasDmg}) then {_svcSkip = true}; //--- healthy-enough foot team -> don't detour
+		} else {
+			_svcSkip = true; //--- ALLTEAMS off: original armour-only skip (no heavy hull -> never service a foot team)
+		};
+	};
+	if (_svcSkip) exitWith {};
 
 	//--- needs-service: any wounded member, OR a weaponed combat vehicle low on ammo
 	_needs = false;

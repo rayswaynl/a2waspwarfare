@@ -1,10 +1,12 @@
-//--- Support_ScudStrike.sqf — SCUD Saturation Strike (oil-platform payoff). [feat/naval-hvt-objectives]
-//--- One Chukar_EP1 launches from the owning oil platform and flies BALLISTIC toward the target
+//--- Support_ScudStrike.sqf — SCUD Saturation Strike (carrier payoff). [feat/naval-hvt-objectives]
+//--- cmdcon41-w2 (Ray 2026-07-02): stale "oil platform" wording corrected to "carrier" throughout — the
+//--- naval HVTs are LHD carriers (Khe Sanh Alpha/Bravo/Charlie), never oil platforms. Behaviour unchanged.
+//--- One Chukar_EP1 launches from the owning carrier and flies BALLISTIC toward the target
 //--- (self-propelled via setVelocity/flyInHeight — NO AI pilot; the Chukar is a missile, mirroring
 //--- the live ICBM module, not a piloted aircraft like the drone strike). On arrival the SCUD MIRVs
 //--- a saturation barrage over the target zone, then is deleted. NO enemy warning is broadcast.
 //--- Payload: ["ScudStrike", _side, _destination, _playerTeam]
-//--- Server-authoritative: validates owned oil platform + per-platform cooldown + funds before firing.
+//--- Server-authoritative: validates owned carrier + per-carrier cooldown + funds before firing.
 //---
 //--- Warheads (Sh_125_HE + Bo_GBU12_LGB are EXACTLY what the live drone-saturation-strike uses -> proven):
 //---   HE x3      Sh_125_HE        scattered area bursts (anti-infantry / soft)
@@ -32,14 +34,14 @@ _warWP       = WFBE_C_SCUD_WARHEAD_WP;
 
 ["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] team [%2] SCUD request at %3.", str _side, _playerTeam, _destination]] Call WFBE_CO_FNC_LogContent;
 
-//--- VALIDATION 1: the caller's side must OWN an oil-platform HVT.
+//--- VALIDATION 1: the caller's side must OWN a carrier HVT.
 _hvtList = missionNamespace getVariable ["WFBE_NAVAL_HVT_PLATFORMS", []];
 _platform = objNull;
 {
 	if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID} && {_x getVariable ["wfbe_is_naval_hvt", false]}) then {_platform = _x};
 } forEach _hvtList;
 if (isNull _platform) exitWith {
-	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- no owned oil platform.", str _side]] Call WFBE_CO_FNC_LogContent;
+	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- no owned carrier.", str _side]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- VALIDATION 2: per-platform cooldown.
@@ -62,7 +64,7 @@ missionNamespace setVariable [_cooldownKey, _now];
 
 ["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] AUTHORISED -- launching from %2 at target %3.", str _side, getPos _platform, _destination]] Call WFBE_CO_FNC_LogContent;
 
-//--- LAUNCH: one Chukar from the platform, flown ballistic toward the target (pure vector, no pilot).
+//--- LAUNCH: one Chukar from the carrier, flown ballistic toward the target (pure vector, no pilot).
 _enemySides = (WFBE_PRESENTSIDES - [_side]) + [resistance];
 _launchPos = [getPos _platform select 0, getPos _platform select 1, 350];
 _dx = (_destination select 0) - (_launchPos select 0);

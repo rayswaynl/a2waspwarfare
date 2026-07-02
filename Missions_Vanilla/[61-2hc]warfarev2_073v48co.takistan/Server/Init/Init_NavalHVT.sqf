@@ -178,6 +178,14 @@ _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck 
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdAlphaLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdAlphaLogic setVariable ["wfbe_is_naval_hvt", true, true];
+//--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise the town logic from sea level (z=0, set at
+//--- line ~140) to the flight-deck height so the player-facing town CENTER/marker sits ON the deck, not
+//--- WAY UNDER it in the water. The capture scan in server_town.sqf is UNAFFECTED: _capH = deckZ+12 is
+//--- measured ATL from the sea surface below each unit (unitsBelowHeight is surface-relative, NOT
+//--- caller-Z-relative), and nearEntities uses the caller XY with a large capture radius, so a ~deckZ Z
+//--- shift on the logic does not change which deck/under-deck units count. deckZ is the SAME value the
+//--- scan already reads. Keeps the scan consistent: deck units still count, under-deck/water units do not.
+_lhdAlphaLogic setPosASL [(getPos _lhdAlphaLogic) select 0, (getPos _lhdAlphaLogic) select 1, _deckZ];
 diag_log Format ["NAVALHVT-DECK: Khe Sanh Alpha partpos=%1 bbMin=%2 bbMax=%3 deckZ=%4", getPosASL _deckPart, _bb select 0, _bb select 1, _deckZ];
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [A] Khe Sanh Alpha (LHD) spawned at %1.", _aAlpha]] Call WFBE_CO_FNC_LogContent;
@@ -198,6 +206,8 @@ _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck 
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdBravoLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdBravoLogic setVariable ["wfbe_is_naval_hvt", true, true];
+//--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Bravo's logic to deck height (see Alpha note above).
+_lhdBravoLogic setPosASL [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1, _deckZ];
 diag_log Format ["NAVALHVT-DECK: Khe Sanh Bravo partpos=%1 bbMin=%2 bbMax=%3 deckZ=%4", getPosASL _deckPart, _bb select 0, _bb select 1, _deckZ];
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [B] Khe Sanh Bravo (LHD) spawned at %1.", _aBravo]] Call WFBE_CO_FNC_LogContent;
@@ -213,13 +223,15 @@ _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck 
 _deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
 _lhdCharlieLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdCharlieLogic setVariable ["wfbe_is_naval_hvt", true, true];
+//--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Charlie's logic to deck height (see Alpha note above).
+_lhdCharlieLogic setPosASL [(getPos _lhdCharlieLogic) select 0, (getPos _lhdCharlieLogic) select 1, _deckZ];
 diag_log Format ["NAVALHVT-DECK: Khe Sanh Charlie partpos=%1 bbMin=%2 bbMax=%3 deckZ=%4", getPosASL _deckPart, _bb select 0, _bb select 1, _deckZ];
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [C] Khe Sanh Charlie (LHD) spawned at %1.", _aCharlie]] Call WFBE_CO_FNC_LogContent;
 
 //--- SCUD pad on Charlie's deck (addAction proximity reference).
 _scudPad = createVehicle ["HeliHCivil", [_aCharlie select 0, _aCharlie select 1, 0], [], 0, "NONE"];
-_scudPad setPosASL [_aCharlie select 0, _aCharlie select 1, 16];
+_scudPad setPosASL [_aCharlie select 0, _aCharlie select 1, _deckZ];	//--- cmdcon41-w2 (Ray 2026-07-02): true deck height (was hardcoded 16, below the ~22m deck).
 _scudPad enableSimulation false;
 _scudPad allowDamage false;
 _scudPad setVariable ["wfbe_is_scud_pad", true, true];
@@ -261,21 +273,38 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_lhdCharlieLogic]];
 //--- owning her). Placed ~50m along the deck from the spawn/pad point; raise the missile via the
 //--- scudLaunch action, re-seat it, then freeze it static so it can't drive/fall/explode.
 //------------------------------------------------------------------------------------
-private ["_scudModel"];
+//--- cmdcon41-w2 (Ray 2026-07-02) SCUD FALLOFF FIX: the visual SCUD used a hardcoded z=16 (below the real
+//--- deck, which sits at deckZ ~22) and only enableSimulation-false AFTER a 6s free-physics erect, so during
+//--- those 6s it drifted and slid off one carrier. Fix (least invasive): (a) spawn/re-seat at the TRUE deckZ,
+//--- not 16, so it starts ON the deck surface; (b) after the erect, attachTo the carrier deck hull part —
+//--- attachTo rigidly pins a child to its (static) parent, so no residual physics can ever slide it off.
+//--- attachTo + worldToModel are A2-OA 1.64-safe (worldToModel used elsewhere for statics). The deck part is
+//--- _lhdCharlieParts select 3 (same part used for the deckZ boundingBox above).
+private ["_scudModel","_scudDeckPart"];
+_scudDeckPart = _lhdCharlieParts select 3;
 _scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_aCharlie select 0) + 50, _aCharlie select 1, 0], [], 0, "NONE"];
-_scudModel setPosASL [(_aCharlie select 0) + 50, _aCharlie select 1, 16];
+_scudModel setPosASL [(_aCharlie select 0) + 50, _aCharlie select 1, _deckZ];
 _scudModel setDir 90;
 _scudModel allowDamage false;
-[_scudModel, (_aCharlie select 0) + 50, (_aCharlie select 1)] spawn {
-	private ["_s","_px","_py"];
-	_s  = _this select 0;
-	_px = _this select 1;
-	_py = _this select 2;
-	_s action ["scudLaunch", _s];	//--- raise the missile to vertical
-	sleep 6;						//--- let the erect animation finish
-	_s setPosASL [_px, _py, 16];	//--- correct any physics drift during the erect
-	_s setVectorUp [0,0,1];			//--- re-level the launcher
-	_s enableSimulation false;		//--- freeze it static (erect)
+[_scudModel, (_aCharlie select 0) + 50, (_aCharlie select 1), _deckZ, _scudDeckPart] spawn {
+	private ["_s","_px","_py","_dz","_deckPart","_off"];
+	_s        = _this select 0;
+	_px       = _this select 1;
+	_py       = _this select 2;
+	_dz       = _this select 3;
+	_deckPart = _this select 4;
+	_s action ["scudLaunch", _s];		//--- raise the missile to vertical
+	sleep 6;							//--- let the erect animation finish
+	_s setPosASL [_px, _py, _dz];		//--- correct any physics drift during the erect (TRUE deck height)
+	_s setVectorUp [0,0,1];				//--- re-level the launcher
+	//--- Pin it to the carrier so no residual physics can slide it off the deck. attachTo keeps the child at
+	//--- a fixed model-space offset from the (static) parent; worldToModel converts the corrected world pos.
+	if (!isNull _deckPart) then {
+		_off = _deckPart worldToModel (getPosASL _s);
+		_s attachTo [_deckPart, _off];
+		_s setVectorUp [0,0,1];			//--- re-level after the attach re-orients relative to parent
+	};
+	_s enableSimulation false;			//--- freeze it static (erect)
 };
 
 //------------------------------------------------------------------------------------

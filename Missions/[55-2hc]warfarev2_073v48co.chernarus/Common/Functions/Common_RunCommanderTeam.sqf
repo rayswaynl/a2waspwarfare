@@ -7,10 +7,13 @@
 	 Parameters: [ sideID, template (unit class array), spawnPos ]
 
 	The server brain communicates through ONE public group variable:
-	  wfbe_aicom_order = [seq, mode, pos]   (mode: "towns-target" | "defense")
+	  wfbe_aicom_order = [seq, mode, pos]   (mode: "towns-target" | "defense" | "rally")
 	The driver applies an order once per seq bump: MOVE to pos, SAD on arrival
 	(towns-target) or a tight defensive SAD at pos (defense). Team wipe releases
 	the slot via aicom-team-ended.
+	//--- cmdcon41-w2 "rally" = bounding withdrawal: the EXISTING transit lay drives a fast MOVE to pos
+	//--- (returns fire + uses cover en route, never a stand-and-die SAD); at the arrival latch a rallying
+	//--- team does NOT lay the assault SAD but re-tasks itself back to "towns" so it re-engages (never idles).
 */
 
 Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team","_retVal","_units","_vehicles","_ldr","_alive","_order","_seq","_lastSeq","_mode","_dest","_arrived",
@@ -763,8 +766,14 @@ while {!WFBE_GameOver && _alive} do {
 					//--- the A3-only forceFollowRoad was removed (it throws "Unknown operation" on OA); the
 					//--- road-bias comes from the road-SNAPPED MOVE nodes below + COLUMN formation (the same
 					//--- A2 idiom Server_AI_SetTownAttackPath uses).
+					//--- cmdcon41-w2 F1 YELLOW MARCH (Ray-approved, gate WFBE_C_AICOM_MARCH_YELLOW default 1): in transit,
+					//--- use YELLOW (return fire, don't pursue) so a column rolls past insurgent pot-shots instead of
+					//--- dissolving into a firefight. The FINAL MOVE node on _dest, the arrival SAD, capture, and base-
+					//--- assault fire ALL stay COMBAT/RED (re-asserted at the arrival latch). Flag off (0) = RED everywhere
+					//--- (legacy). A2-OA-safe: inline missionNamespace getVariable + if/else on a scalar (>0), no A3 cmds.
+					private "_marchCM"; _marchCM = if ((missionNamespace getVariable ["WFBE_C_AICOM_MARCH_YELLOW", 1]) > 0) then {"YELLOW"} else {"RED"};
 					_team setBehaviour "AWARE";
-					_team setCombatMode "RED";        //--- STANCE (task #1): advance-and-engage on the march (was YELLOW).
+					_team setCombatMode _marchCM;      //--- cmdcon41-w2 F1: YELLOW transit when flagged (was hard RED); RED-on-objective re-asserted at arrival.
 					_team setFormation "COLUMN";
 					_team setSpeedMode "FULL";         //--- STANCE (task #1): full road-march speed (was NORMAL).
 
@@ -778,9 +787,9 @@ while {!WFBE_GameOver && _alive} do {
 					_rmWPs = [];
 					private "_rmInterCR"; _rmInterCR = missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_COMPLETION", 70]; //--- SMOOTHNESS (B): intermediate road-node completionRadius widened 30 -> WFBE_C_AICOM_ROUTE_COMPLETION (70) so the convoy latches each node from further out and stops braking/backtracking to hit a tight 30m ring; the FINAL _dest node below stays tight (30) so the arrival branch still trips.
 					{
-						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, _rmInterCR, [], [], ["AWARE","RED","","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was YELLOW/NORMAL). A2-fix 2026-06-14: inherit-formation (was COLUMN-locked). SMOOTHNESS (B): completion 30 -> _rmInterCR (WFBE_C_AICOM_ROUTE_COMPLETION 70) so columns open through chokepoints instead of bunching + braking to hit each node.
+						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, _rmInterCR, [], [], ["AWARE",_marchCM,"","FULL"]]];  //--- cmdcon41-w2 F1: intermediate road-node transit uses _marchCM (YELLOW when flagged, else RED). STANCE (task #1): FULL advance (was YELLOW/NORMAL). A2-fix 2026-06-14: inherit-formation (was COLUMN-locked). SMOOTHNESS (B): completion 30 -> _rmInterCR (WFBE_C_AICOM_ROUTE_COMPLETION 70) so columns open through chokepoints instead of bunching + braking to hit each node.
 					} forEach _rmRoute;
-					_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL final-approach (was YELLOW/NORMAL). FINAL node kept tight (30) so the arrival branch (leader<capRange) still latches.
+					_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- cmdcon41-w2 F1: FINAL MOVE node on _dest STAYS RED (advance-and-engage on the objective, unaffected by the march flag). STANCE (task #1): RED/FULL final-approach (was YELLOW/NORMAL). FINAL node kept tight (30) so the arrival branch (leader<capRange) still latches.
 					[_team, true, _rmWPs] Spawn WFBE_CO_FNC_WaypointsAdd;
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 ROAD-MARCH (%5 road nodes).", _side, _team, _seq, _mode, count _rmRoute]] Call WFBE_CO_FNC_AICOMLog;
 				} else {
@@ -803,6 +812,10 @@ while {!WFBE_GameOver && _alive} do {
 					//--- A2-OA-safe: getVariable + isNil guard on the GROUP route var (no [name,default] on groups),
 					//--- plain forEach node build, exact vehicle-branch WaypointsAdd signature ([_team,true,_rmWPs] Spawn).
 					//--- NEVER-FROZEN: either path hands the team a live MOVE chain; the arrival branch re-lays COMBAT/WEDGE SAD.
+					//--- cmdcon41-w2 F1 YELLOW MARCH (foot branch): recompute _marchCM here (the vehicle-branch _marchCM
+					//--- is out of scope). Intermediate foot road nodes + the short fast-transit MOVE use _marchCM (YELLOW
+					//--- when flagged, else RED); the FINAL tight MOVE on _dest STAYS RED. Flag off = RED everywhere (legacy).
+					private "_marchCM"; _marchCM = if ((missionNamespace getVariable ["WFBE_C_AICOM_MARCH_YELLOW", 1]) > 0) then {"YELLOW"} else {"RED"};
 					_rmRoute = _team getVariable "wfbe_aicom_route";
 					if (isNil "_rmRoute") then {_rmRoute = []};
 					if (((leader _team) distance _dest > (missionNamespace getVariable ["WFBE_C_AICOM_FOOT_ROUTE_DIST", 700])) && {count _rmRoute > 0}) then {
@@ -811,17 +824,31 @@ while {!WFBE_GameOver && _alive} do {
 						private "_rmFootCR"; _rmFootCR = missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_COMPLETION", 70];
 						_rmWPs = [];
 						{
-							_rmWPs = _rmWPs + [[_x, 'MOVE', 50, _rmFootCR, [], [], ["AWARE","RED","COLUMN","FULL"]]]; //--- foot road node: RED/FULL column transit, wide latch (WFBE_C_AICOM_ROUTE_COMPLETION 70).
+							_rmWPs = _rmWPs + [[_x, 'MOVE', 50, _rmFootCR, [], [], ["AWARE",_marchCM,"COLUMN","FULL"]]]; //--- cmdcon41-w2 F1: foot road node uses _marchCM (YELLOW when flagged, else RED). FULL column transit, wide latch (WFBE_C_AICOM_ROUTE_COMPLETION 70).
 						} forEach _rmRoute;
-						_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]]; //--- FINAL kept tight (30) so the arrival branch latches.
+						_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]]; //--- cmdcon41-w2 F1: FINAL node on _dest STAYS RED. Kept tight (30) so the arrival branch latches.
 						[_team, true, _rmWPs] Spawn WFBE_CO_FNC_WaypointsAdd; //--- exact vehicle-branch signature.
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT ROAD-ROUTE (%5 road nodes, long leg).", _side, _team, _seq, _mode, count _rmRoute]] Call WFBE_CO_FNC_AICOMLog;
 					} else {
-						//--- Short leg OR no road chain: proven single fast-transit MOVE (unchanged behaviour).
-						[_team, true, [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- B66 (was [_team,_dest,'MOVE',50] Spawn WFBE_CO_FNC_WaypointSimple - empty props)
+						//--- Short leg OR no road chain: proven single fast-transit MOVE. cmdcon41-w2 F1: the single transit
+						//--- node uses _marchCM (YELLOW when flagged, else RED) - it IS the whole transit for this short leg,
+						//--- and the arrival latch re-asserts RED on the objective. Flag off = RED (legacy behaviour).
+						[_team, true, [[_dest, 'MOVE', 50, 30, [], [], ["AWARE",_marchCM,"COLUMN","FULL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- B66 (was [_team,_dest,'MOVE',50] Spawn WFBE_CO_FNC_WaypointSimple - empty props)
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT FAST-TRANSIT (column).", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
+				//--- cmdcon41-w2 RALLY MODE EXECUTOR (sketch rally-mode-bounding-withdrawal-executor): the transit lay
+				//--- above already drove a FAST bounding-withdrawal MOVE to _dest for EVERY mode (it fires regardless of
+				//--- the mode string) = exactly the fall-back leg we want (returns fire + uses cover en route, never a
+				//--- stand-and-die SAD). For a fresh order whose mode is the exact-case lowercase "rally", stamp a rally
+				//--- flag so the arrival latch (below) re-tasks to "towns" instead of laying the assault SAD. A2-OA-safe:
+				//--- exact-case == on a string literal, plain broadcast setVariable, no A3 commands.
+				if (_mode == "rally") then {
+					_team setVariable ["wfbe_aicom_rallying", true, true];
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RALLY_FALLBACK|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round ((leader _team) distance _dest)));
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 RALLY bounding-withdrawal to rally pos.", _side, _team, _seq]] Call WFBE_CO_FNC_AICOMLog;
+				};
+
 			} else {
 				//--- CAREFUL-GEAR GOVERNOR (owner refinement, layered on the 20s loop):
 				//--- the road-march already drives transit FAST (AWARE/NORMAL, never LIMITED/
@@ -896,6 +923,14 @@ while {!WFBE_GameOver && _alive} do {
 						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ARRIVAL_GATE|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round _arrivalDist) + "|gate=" + str (round _arrivalGate));
 						//--- Cosmetic: faction smoke at assault onset (fires once per team via the _arrived latch). Server-only, gated + capped + cooldown.
 						[getPosATL (leader _team), side _team] call WFBE_CO_FNC_SpawnFactionSmoke;
+						//--- cmdcon41-w2 F1: RE-ASSERT team-level RED at the arrival latch. Transit may have run YELLOW
+						//--- (WFBE_C_AICOM_MARCH_YELLOW), so on reaching the objective we flip the whole team back to advance-
+						//--- and-engage before the arrival SAD / capture / base-assault fire (those all stay COMBAT/RED).
+						//--- Harmless when the flag was off (team was already RED). A2-OA-safe: plain setCombatMode.
+						_team setCombatMode "RED";
+						//--- cmdcon41-w2 RALLY MODE EXECUTOR (arrival): read the rally flag stamped on the fresh order.
+						//--- A2: groups do not support the [name,default] getVariable form; plain get + isNil.
+						private "_rallying"; _rallying = _team getVariable "wfbe_aicom_rallying"; if (isNil "_rallying") then {_rallying = false};
 						//--- ROAD-MARCH hand-off: at the objective we WANT overland combat, so
 						//--- release the road bias and assault with COMBAT/WEDGE (was empty props,
 						//--- which left the SAD at engine defaults). Feed real squad-props through
@@ -916,11 +951,27 @@ while {!WFBE_GameOver && _alive} do {
 								_stB = "AWARE"; _stC = "YELLOW"; //--- remnant: cautious advance, still moving + returns fire (never frozen).
 							};
 						};
+						if (_rallying) then {
+							//--- cmdcon41-w2 RALLY MODE EXECUTOR (arrival): a rallying team reached the rally pos. Do NOT lay the
+							//--- assault SAD - clear the rally flag and re-task to "towns" (broadcast, SAME idiom as the capture-
+							//--- success release) so AssignTowns re-tasks it next cycle and it re-engages on proximity (never idles
+							//--- at the rally point). Also clear the goto + stale strike/relief so AssignTowns owns it. A2-OA-safe:
+							//--- broadcast setVariable (same locality as the capture-success writes below).
+							_team setVariable ["wfbe_aicom_rallying", false, true];
+							_team setVariable ["wfbe_teamgoto", objNull, true];        //--- drop the rally goto -> AssignTowns retargets next tick (isNull _goto => _needs=true)
+							_team setVariable ["wfbe_aicom_townorder", [], false];     //--- 2-arg (NOT broadcast) to match existing townorder writes
+							_team setVariable ["wfbe_teammode", "towns", true];        //--- re-enter the towns retarget gate (same idiom as the capture-success release)
+							_team setVariable ["wfbe_aicom_strike", false, true];      //--- clear stale strike so Strategy.sqf does not re-grab
+							_team setVariable ["wfbe_aicom_relief", objNull, true];
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RALLY_ARRIVED|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round _arrivalDist));
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RALLY_ARRIVED - re-tasking to towns (no assault SAD).", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
+						} else {
 						if (_mode == "defense") then {
 							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
 							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring. cmdcon41: props via _stB/_stC (remnant downshift above).
 						};
+						}; //--- cmdcon41-w2: close rally-vs-assault guard
 					};
 				};
 
@@ -1342,6 +1393,21 @@ while {!WFBE_GameOver && _alive} do {
 									_team reveal _x; //--- A2: 2-operand reveal only (array form is A3-only).
 								};
 							} forEach _enemyNear;
+							//--- cmdcon41-w2 DEPOT-HOLD BREAK-OFF (sketch rally-break-off-depot-hold-attrition-trigger): a depleted
+							//--- team still being out-fought at the depot (live resistance in the ring, _resNear>0) should break off
+							//--- into a fighting withdrawal instead of grinding to extinction. When live units drop below
+							//--- WFBE_C_AICOM_BREAKOFF_MIN (default 3) AND _resNear>0, raise wfbe_aicom_wantrally (broadcast) so
+							//--- Strategy converts it to a rally order, then bail the phase via the SAME _capAbort idiom (the outer
+							//--- loop re-reads the new order; _captureDone is NOT latched). A2-OA-safe: < on numbers, && in if(),
+							//--- plain broadcast setVariable, no A3 commands. Never-frozen: the team already holds a live SAD order,
+							//--- and the outer loop hands it the rally MOVE next tick.
+							if ((count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) < (missionNamespace getVariable ["WFBE_C_AICOM_BREAKOFF_MIN", 3]) && {_resNear > 0}) then {
+								_team setVariable ["wfbe_aicom_wantrally", true, true];
+								_capAbort = true; //--- bail the depot-hold phase without latching _captureDone (same idiom as the seq-interrupt _capAbort).
+								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|BREAKOFF|team=" + (str _team) + "|live=" + str (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) + "|resNear=" + str _resNear);
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] BREAKOFF (out-fought remnant, res-near=%3) - requesting rally.", _side, _team, _resNear]] Call WFBE_CO_FNC_AICOMLog;
+							};
+							if (_capAbort) exitWith {}; //--- cmdcon41-w2: break-off (or seq-interrupt) -> bail the depot-hold loop; the post-loop _capAbort guard bails the phase.
 							//--- Keep stragglers pressing the center (cheap re-issue, prevents drift).
 							//--- WAVE-1 A4: re-press units beyond ~60% of _capRange (was max 25). Units inside the 40m ring
 							//--- but past ~24m get pulled to the exact center so the depot-center presence scan ticks.
@@ -1636,6 +1702,45 @@ while {!WFBE_GameOver && _alive} do {
 						diag_log ("AICOMSTAT|v1|EVENT|" + _artyText + "|" + str (round (time / 60)) + "|FIRE_MISSION_MOBILE|" + (typeOf _artyHull) + "|tier=" + str _upLvl);
 					};
 				};
+			};
+		};
+	};
+
+	//--- cmdcon41-w2 TOP-UP CONSUMER (Ray: reinforce at friendly towns). Strategy publishes wfbe_aicom_topup_req
+	//--- on THIS team as [count, posArray, classArray]; the units are LOCAL here (HC/server that owns the team),
+	//--- so we create them straight into _team via the mission helper WFBE_CO_FNC_CreateUnit (same signature as
+	//--- Common_RunSidePatrol.sqf:113 - it sets skill, backfills weapons, adds the Killed EH, and honours HC
+	//--- locality). Cap creations at 4 per tick; DEFER (keep the request) when a player is within 300m of pos so
+	//--- no unit ever pops in a player`s face. A2-OA: GROUP getVariable = plain get + isNil (no [name,default] on
+	//--- groups); typeName guards (no A3 isEqualType); clear the var by setting [] and testing count>0 (A2 setVariable
+	//--- nil on groups is unreliable). Never create if _team is null. Never-frozen: additions inherit the team order.
+	if (_alive && {!isNull _team}) then {
+		private ["_topReq","_topN","_topPos","_topCls","_topMade","_topDefer","_topClass","_topUnit"];
+		_topReq = _team getVariable "wfbe_aicom_topup_req";
+		if (!isNil "_topReq" && {(typeName _topReq) == "ARRAY"} && {count _topReq >= 3}) then {
+			_topN   = _topReq select 0;
+			_topPos = _topReq select 1;
+			_topCls = _topReq select 2;
+			if ((typeName _topN) == "SCALAR" && {_topN > 0} && {(typeName _topPos) == "ARRAY"} && {count _topPos >= 2} && {(typeName _topCls) == "ARRAY"} && {count _topCls > 0}) then {
+				//--- DEFER if any player is within 300m of the spawn pos (keep the request untouched for a later tick).
+				_topDefer = false;
+				{ if (isPlayer _x && {alive _x} && {(_x distance _topPos) < 300}) exitWith {_topDefer = true} } forEach playableUnits;
+				if (!_topDefer) then {
+					_topMade = 0;
+					//--- create up to _topN classes, hard-capped at 4 this tick (cycle the class list by index).
+					while {_topMade < _topN && {_topMade < 4}} do {
+						_topClass = _topCls select (_topMade mod (count _topCls));
+						_topUnit = [_topClass, _team, _topPos, _sideID] Call WFBE_CO_FNC_CreateUnit; //--- canonical mission createUnit-in-group idiom (Common_RunSidePatrol.sqf:113).
+						_topMade = _topMade + 1;
+					};
+					//--- clear the request (A2: set [] and test count>0 next tick, NOT nil).
+					_team setVariable ["wfbe_aicom_topup_req", [], true];
+					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_DONE|team=" + (str _team) + "|count=" + str _topMade);
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TOP-UP created %3 reinforcement(s).", _side, _team, _topMade]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			} else {
+				//--- Malformed request (bad counts/types): clear it so it cannot loop forever.
+				_team setVariable ["wfbe_aicom_topup_req", [], true];
 			};
 		};
 	};

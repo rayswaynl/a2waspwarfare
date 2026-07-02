@@ -114,6 +114,29 @@ switch (_request) do {
 			[], 6, true, true, "", "alive _target && isPlayer _this"
 		];
 	};
+	//--- cmdcon41-w2 (Ray 2026-07-02) NAVAL HVT: the server (server_town.sqf) broadcasts this on every
+	//--- carrier flip, but the client case was MISSING so the flip notification was silently dropped. Add it,
+	//--- mirroring the neighbouring case style (hint + city-marker recolor). Payload after the request-strip:
+	//--- _args = [_location, _newSID, _hvtName]. The marker name matches updatetownmarkers.sqf / TownCaptured.sqf
+	//--- (WFBE_%1_CityMarker keyed on the town logic). setMarkerColorLocal is client-local (A2-OA-safe).
+	case "naval-hvt-captured": {
+		if (isDedicated) exitWith {};
+		private ["_navLoc","_navNewSID","_navName","_navSide","_navColor","_navMkr"];
+		_navLoc    = _args select 0;
+		_navNewSID = _args select 1;
+		_navName   = _args select 2;
+		if (isNull _navLoc) exitWith {};
+		_navSide  = _navNewSID Call WFBE_CO_FNC_GetSideFromID;
+		//--- Recolor the carrier's city marker to the new owner (same lookup TownCaptured uses).
+		_navColor = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _navSide], "ColorGreen"];
+		_navMkr   = Format ["WFBE_%1_CityMarker", _navLoc];
+		_navMkr setMarkerColorLocal _navColor;
+		//--- Flip notification hint (localized). Prefix the carrier name so players know which one flipped.
+		//--- Guard on a real player (skip the HC, which has no interface) - mirrors the scud-action-add guard.
+		if (!isNil "player" && {!isNull player}) then {
+			hint parseText Format ["%1<br/>%2", _navName, localize "STR_WF_NAVAL_HVT_CAPTURED"];
+		};
+	};
 	case "upgrade-started": {_args spawn WFBE_CL_FNC_Upgrade_Started};
 	case "upgrade-complete": {_args spawn WFBE_CL_FNC_Upgrade_Complete};
 	case "building-started": {_args spawn WFBE_CL_FNC_Building_Started};

@@ -92,6 +92,93 @@ if (_airMaxTotalP > 0) then {
 	//--- stopping ALL factory purchases for editor teams).
 	if (!isNull _team) then {
 	_type = _team getVariable ["wfbe_teamtype", -1];
+
+	//--- =========================================================================================
+	//--- (cmdcon41-w2) HC-TEAM MAINTENANCE PASS: terminal RECYCLE + friendly-town TOP-UP DISPATCH.
+	//--- These act on the HC-resident commander teams (the live army), which the server-local
+	//--- _canProduce path below deliberately SKIPS. They only SET flags / broadcast requests that the
+	//--- owning HC driver consumes in its own lane (never delete/move a unit from here). A2-OA-safe:
+	//--- GROUP vars via plain get + isNil (the [name,default] form is unreliable on groups), no A3
+	//--- primitives, exact-case behaviour strings, playableUnits/isPlayer/distance for proximity.
+	//--- =========================================================================================
+	private ["_wm_ldr","_wm_alive"];
+	_wm_ldr = leader _team;
+	if (!isNull _wm_ldr && {!isPlayer _wm_ldr}) then {
+		_wm_alive = {alive _x} count (units _team);
+
+		//--- (2) RECYCLE CONSUMER: the driver/supervisor marks a zombie/failed-journey team wfbe_aicom_recycle.
+		//--- Retire it at a player-SAFE moment by routing it through the existing disband idiom WITHOUT the _cmd
+		//--- bypass, so the HC driver's own player-proximity + not-in-COMBAT veto still applies (never a
+		//--- player-visible vanish; founding replaces the slot naturally). Guards here are belt-and-braces so we
+		//--- never even REQUEST a disband while the team is fighting or a player is close.
+		private ["_wm_recycle","_wm_disbanding","_wm_playerNear"];
+		_wm_recycle = _team getVariable "wfbe_aicom_recycle";
+		if (!isNil "_wm_recycle" && {_wm_recycle}) then {
+			_wm_disbanding = _team getVariable "wfbe_aicom_disband"; //--- already flagged? don't re-request
+			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
+			_wm_playerNear = false;
+			{ if (isPlayer _x && {alive _x} && {(_x distance _wm_ldr) < 500}) exitWith {_wm_playerNear = true} } forEach playableUnits;
+			if ((behaviour _wm_ldr != "COMBAT") && {!_wm_playerNear} && {!_wm_disbanding}) then {
+				_team setVariable ["wfbe_aicom_disband", true, true]; //--- NO _cmd bypass -> driver still vetoes on proximity/combat
+				_team setVariable ["wfbe_aicom_recycle", false, true]; //--- clear the request (one-shot)
+				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TEAM_RECYCLE requested (alive=%3, no player within 500m, not in combat) - disband flagged (proximity-vetoed, no _cmd bypass).", _sideText, _team, _wm_alive]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+
+		//--- (3) TOWN-CENTER TOP-UP DISPATCHER (Ray: reinforce at friendly towns): an HC team that is RALLYING or
+		//--- PARKED (leader within 400m of its own HQ or an OWN-side town centre) and understrength (alive < 6)
+		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
+		//--- wfbe_aicom_topup_req the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
+		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not).
+		private ["_wm_rally","_wm_parked","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr"];
+		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
+			_wm_rally = _team getVariable "wfbe_aicom_rallying";
+			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
+			//--- PARKED test: leader hugging own HQ (<400m) or any OWN-side town centre (<400m).
+			_wm_parked = false;
+			_wm_hqP = (_side) Call WFBE_CO_FNC_GetSideHQ;
+			if (!isNull _wm_hqP && {(_wm_ldr distance _wm_hqP) < 400}) then {_wm_parked = true};
+			if (!_wm_parked) then {
+				_wm_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+				{ if (((_x getVariable ["sideID", -1]) == _wm_myID) && {(_wm_ldr distance _x) < 400}) exitWith {_wm_parked = true} } forEach towns;
+			};
+			if (_wm_rally || {_wm_parked}) then {
+				//--- COOLDOWN gate (one top-up per team per WFBE_C_AICOM_TOPUP_COOLDOWN seconds).
+				_wm_now   = time;
+				_wm_lastTU = _team getVariable "wfbe_aicom_topup_stamp"; if (isNil "_wm_lastTU") then {_wm_lastTU = -1e9};
+				_wm_cd    = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_COOLDOWN", 240];
+				if ((_wm_now - _wm_lastTU) >= _wm_cd) then {
+					_wm_missing = (6 - _wm_alive) min 4; //--- top up toward 6, at most 4 bodies per request
+					if (_wm_missing > 0) then {
+						//--- Resolve the side's BASIC infantry classnames the founding templates use: the barracks unit
+						//--- roster (WFBE_%1BARRACKSUNITS), whose [0] is the basic rifleman (same source Produce's
+						//--- BARRACKSUNITS factory list draws from). Take up to the first 3 Man-class entries so the driver
+						//--- has a small basic-infantry pool to spawn from. Falls back to the whole roster head if odd.
+						_wm_barr = missionNamespace getVariable [Format ["WFBE_%1BARRACKSUNITS", _sideText], []];
+						_wm_infCls = [];
+						{
+							if ((count _wm_infCls) < 3 && {_x isKindOf "Man"}) then {_wm_infCls = _wm_infCls + [_x]};
+						} forEach _wm_barr;
+						//--- guard: no roster / all-non-man (shouldn't happen) -> skip rather than dispatch an empty pool.
+						if (count _wm_infCls > 0) then {
+							//--- CHARGE the side up front: flat per-unit cost * missing (mirrors founding's charge-then-build).
+							_wm_unitCost = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_UNIT_COST", 300];
+							_wm_charge   = _wm_unitCost * _wm_missing;
+							_wm_curFunds = (_side) Call GetAICommanderFunds;
+							if (_wm_curFunds >= _wm_charge) then {
+								[_side, -_wm_charge] Call ChangeAICommanderFunds;
+								_wm_rallyPos = getPosATL _wm_ldr; //--- plain array = the rally pos the driver spawns at
+								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls], true];
+								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
+								["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ (missing=%3, alive=%4, rally=%5, cost=%6, classes=%7) - charged, broadcast to HC driver.", _sideText, _team, _wm_missing, _wm_alive, _wm_rally, _wm_charge, _wm_infCls]] Call WFBE_CO_FNC_AICOMLog;
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+
 	_canProduce = false;
 	//--- V0.3: HC-resident commander teams are produced whole on the HC - never here. Produce
 	//--- (and the B61 REFILL-AT-BASE below) only ever serves the SERVER-LOCAL re-adopted teams

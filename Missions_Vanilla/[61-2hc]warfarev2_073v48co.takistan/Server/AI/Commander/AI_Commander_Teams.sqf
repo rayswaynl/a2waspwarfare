@@ -122,6 +122,16 @@ _logik setVariable ["wfbe_aicom_pc", _pcN];
 private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 8];
 if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
 
+//--- ECON SINK team-cap surge (cmdcon41-w2, Ray-approved): when the commander is pinned rich (AI_Commander.sqf set
+//--- wfbe_aicom_econ_surge on the logic OBJECT), lift the founding target by WFBE_C_AICOM_ECON_SINK_TEAMCAP so the
+//--- war chest converts to a bigger army instead of ballooning. STILL clamped by the hard cap (so at low pop where
+//--- _target already sits at _teamsHardCap this is a no-op; it only bites when target is below the ceiling). Flag-gated
+//--- (WFBE_C_AICOM_ECON_SINK). A2-OA-safe: plain object getVariable [name,default] on _logik (reliable on objects/logics).
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {_logik getVariable ["wfbe_aicom_econ_surge", false]}) then {
+	_target = (_target + (missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_TEAMCAP", 2])) min _teamsHardCap;
+	_extra = (_target - _base) max 0;
+};
+
 //--- Log only when the effective target changes (avoid RPT spam).
 _lastDynTarget = _logik getVariable ["wfbe_aicom_dyntarget", _base];
 if (_target > _base && {_target != _lastDynTarget}) then {
