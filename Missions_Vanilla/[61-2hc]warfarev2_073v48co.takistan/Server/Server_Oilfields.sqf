@@ -86,51 +86,192 @@ waitUntil { sleep 1; !isNil "townInit" && townInit };
 waitUntil { time > 0 };
 
 //------------------------------------------------------------------------------------
-//--- RESOLVE NODE POSITION.
-//--- Preferred: anchor on a real Takistan oil/fuel map object via nearestObjects around a plausible
-//--- industrial area, so the node sits on an in-world derrick/fuel installation. If none resolves
-//--- (class list may not match this terrain's exact P3D names), fall back to the tunable constant
-//--- WFBE_C_OILFIELD_POS placeholder — flagged in the agent report as needing a finalized coordinate.
+//--- RESOLVE NODE POSITION (cmdcon42-oilrig, Ray's placement spec 2026-07-02).
+//--- PRIMARY (WFBE_C_OILFIELD_DYNAMIC=1, default): DYNAMIC placement, computed once per match at
+//--- start - the derrick goes on OPEN GROUND BETWEEN THE TWO TEAMS: midpoint of the WEST/EAST start
+//--- HQs (TK spawn pairs are randomized, so no fixed coordinate can ever be "between the teams"),
+//--- then an inside-out ring search snaps to the nearest valid open-ground spot: not water, not
+//--- on/near roads, >TOWN_CLEAR from every town center (the same `towns` list AICOM uses), no
+//--- buildings near, and reasonably FLAT via the mission's own slope idiom
+//--- ((surfaceNormal _pos) select 2 - Common_RunCommanderTeam.sqf:973/1174, A2-OA-safe).
+//--- A visible derrick composition (config-verified EP1 oil-mine objects) is spawned at the spot.
+//--- FALLBACK (flag=0, HQs unresolved, or no valid spot in range): the original auto-snap onto a
+//--- real industrial object near the WFBE_C_OILFIELD_POS anchor, so the feature NEVER no-ops.
 //------------------------------------------------------------------------------------
-private ["_posConst","_anchorSearch","_oilClasses","_found","_hit","_nodePos","_resolvedBy"];
+private ["_posConst","_anchorSearch","_oilClasses","_found","_hit","_nodePos","_resolvedBy","_dynOK"];
 
-//--- Tunable placeholder anchor (map [x,y,z]). Central-Takistan industrial-ish default; the search
-//--- below tries to snap onto a real installation near here first. FINAL derrick coord to confirm.
+//--- Legacy-fallback anchor (map [x,y,z]). Only used when the DYNAMIC path is off or fails.
 _posConst = missionNamespace getVariable ["WFBE_C_OILFIELD_POS", [4600, 6200, 0]];
-
-//--- Candidate oil/fuel installation classnames to snap onto (A2-OA base + TK/EP1 fuel props).
-//--- We do NOT assume any one exists; nearestObjects simply returns [] for absent classes.
-_oilClasses = [
-	"Land_A_FuelStation_Feed",
-	"Land_A_FuelStation_Build",
-	"Land_Fuelstation",
-	"Land_Fuelstation_army",
-	"FuelStation",
-	"Land_Ind_TankSmall",
-	"Land_Ind_TankBig",
-	"Land_Ind_Oil_Tower_EP1",
-	"Land_Ind_IlluminantTower"
-];
 
 _found   = objNull;
 _nodePos = _posConst;
 _resolvedBy = "constant-placeholder";
+_dynOK = false;
 
-//--- nearestObjects [pos, classnames, radius] is A2-OA 1.64-safe (used in Init_Server.sqf B62 filter).
-//--- Search a generous radius around the placeholder anchor for any listed installation.
-_anchorSearch = nearestObjects [_posConst, _oilClasses, (missionNamespace getVariable ["WFBE_C_OILFIELD_ANCHOR_SEARCH", 1200])];
-if (count _anchorSearch > 0) then {
-	_hit = _anchorSearch select 0;   //--- nearestObjects returns nearest-first
-	if (!isNull _hit) then {
-		_found = _hit;
-		_nodePos = getPos _hit;
-		_resolvedBy = Format ["map-object:%1", typeOf _hit];
+if ((missionNamespace getVariable ["WFBE_C_OILFIELD_DYNAMIC", 1]) == 1) then {
+	//--- (a) READINESS GATE: both main-side HQ objects must exist = spawn-pair placement is final.
+	//--- WFBE_CO_FNC_GetSideHQ is the mission's own nil-guarded accessor (returns objNull until
+	//--- Init_Server.sqf:622 stamps wfbe_hq on the side logic) - the SAME isNull-guard signal
+	//--- Init_IcbmTel.sqf:73-77 keys its TEL placement on. Bounded wait so a broken init can
+	//--- never hang this script forever (falls back to the legacy anchor instead).
+	private ["_gT0","_gMax","_hqW","_hqE"];
+	_gT0  = time;
+	_gMax = missionNamespace getVariable ["WFBE_C_OILFIELD_HQ_WAIT", 600];
+	waitUntil { sleep 2; ((!isNull (west Call WFBE_CO_FNC_GetSideHQ)) && {!isNull (east Call WFBE_CO_FNC_GetSideHQ)}) || {time > (_gT0 + _gMax)} };
+	_hqW = west Call WFBE_CO_FNC_GetSideHQ;
+	_hqE = east Call WFBE_CO_FNC_GetSideHQ;
+
+	if (isNull _hqW || isNull _hqE) then {
+		["WARNING", Format ["Server_Oilfields.sqf: DYNAMIC placement - HQs unresolved after %1s (W null=%2, E null=%3). Falling back to the legacy anchor.", _gMax, isNull _hqW, isNull _hqE]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		//--- (b) MIDPOINT between the two start HQs. A2-OA has NO vecAdd - manual component average.
+		private ["_pW","_pE","_mid","_step","_maxR","_r","_n","_i","_a","_c","_foundPos"];
+		_pW = getPos _hqW;
+		_pE = getPos _hqE;
+		_mid = [((_pW select 0) + (_pE select 0)) / 2, ((_pW select 1) + (_pE select 1)) / 2, 0];
+
+		//--- (c) VALIDITY test for one candidate spot. ALL must hold:
+		//---   - not water                       (surfaceIsWater)
+		//---   - not on/near a road              (nearRoads - same primitive the road-bias/slope code uses)
+		//---   - >TOWN_CLEAR from every town     (the mission's own `towns` list, AICOM's source)
+		//---   - no buildings near               (nearestObjects ["House"] - classname literal, A2-safe)
+		//---   - reasonably flat                 ((surfaceNormal _pos) select 2 >= FLAT_Z; 1.0=flat.
+		//---                                      Reuses the Common_RunCommanderTeam.sqf:973 slope idiom;
+		//---                                      its foot-snap threshold is 0.85, we default a stricter
+		//---                                      0.90 because we PLACE STRUCTURES here, not waypoints.)
+		WFBE_FNC_OilfieldSpotOK = {
+			private ["_p","_ok","_roadClr","_townClr","_houseClr","_flatZ"];
+			_p = _this;
+			_roadClr  = missionNamespace getVariable ["WFBE_C_OILFIELD_ROAD_CLEAR", 60];
+			_townClr  = missionNamespace getVariable ["WFBE_C_OILFIELD_TOWN_CLEAR", 500];
+			_houseClr = missionNamespace getVariable ["WFBE_C_OILFIELD_HOUSE_CLEAR", 80];
+			_flatZ    = missionNamespace getVariable ["WFBE_C_OILFIELD_FLAT_Z", 0.90];
+			_ok = true;
+			if (surfaceIsWater _p) then {_ok = false};
+			if (_ok) then { if (((surfaceNormal _p) select 2) < _flatZ) then {_ok = false} };
+			if (_ok) then { if (count (_p nearRoads _roadClr) > 0) then {_ok = false} };
+			if (_ok) then { { if ((_x distance _p) < _townClr) exitWith {_ok = false} } forEach towns };
+			if (_ok) then { if (count (nearestObjects [_p, ["House"], _houseClr]) > 0) then {_ok = false} };
+			_ok
+		};
+
+		//--- (d) INSIDE-OUT RING SEARCH from the midpoint: step RING_STEP (~100m) out to RING_MAX
+		//--- (~2000m); per ring, sample bearings at ~arc-step spacing (bounded 8..36 samples). The
+		//--- FIRST valid candidate wins = the valid spot nearest the midpoint (ring granularity).
+		//--- Bounded: <=21 rings x <=36 samples, each test cheap; a small per-ring sleep spreads the
+		//--- one-time cost so match start never sees a frame spike.
+		_step = missionNamespace getVariable ["WFBE_C_OILFIELD_RING_STEP", 100];
+		_maxR = missionNamespace getVariable ["WFBE_C_OILFIELD_RING_MAX", 2000];
+		if (_step < 25) then {_step = 25};
+		_foundPos = [];
+		_r = 0;
+		while { (_r <= _maxR) && (count _foundPos == 0) } do {
+			if (_r == 0) then {
+				if (_mid Call WFBE_FNC_OilfieldSpotOK) then {_foundPos = +_mid};
+			} else {
+				_n = ceil ((6.2832 * _r) / _step);
+				if (_n < 8) then {_n = 8};
+				if (_n > 36) then {_n = 36};
+				_i = 0;
+				while { (_i < _n) && (count _foundPos == 0) } do {
+					_a = _i * (360 / _n);
+					_c = [(_mid select 0) + (_r * sin _a), (_mid select 1) + (_r * cos _a), 0];
+					if (_c Call WFBE_FNC_OilfieldSpotOK) then {_foundPos = _c};
+					_i = _i + 1;
+				};
+			};
+			sleep 0.25;
+			_r = _r + _step;
+		};
+
+		if (count _foundPos > 0) then {
+			_nodePos = _foundPos;
+			_resolvedBy = Format ["dynamic-midpoint(d=%1m off mid, HQs %2m apart)", round (_mid distance _foundPos), round (_pW distance _pE)];
+			_dynOK = true;
+		} else {
+			["WARNING", Format ["Server_Oilfields.sqf: DYNAMIC placement - NO valid open-ground spot within %1m of the HQ midpoint %2. Falling back to the legacy anchor.", _maxR, _mid]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+};
+
+if (!_dynOK) then {
+	//--- LEGACY PATH (flag off / dynamic failed): auto-snap onto a real Takistan oil/fuel map object
+	//--- via nearestObjects around the WFBE_C_OILFIELD_POS anchor; else use the anchor itself.
+	//--- Candidate installation classnames (A2-OA base + TK/EP1 fuel props). nearestObjects simply
+	//--- returns [] for absent classes; A2-OA 1.64-safe (used in Init_Server.sqf B62 filter).
+	_oilClasses = [
+		"Land_A_FuelStation_Feed",
+		"Land_A_FuelStation_Build",
+		"Land_Fuelstation",
+		"Land_Fuelstation_army",
+		"FuelStation",
+		"Land_Ind_TankSmall",
+		"Land_Ind_TankBig",
+		"Land_Ind_Oil_Tower_EP1",
+		"Land_Ind_IlluminantTower"
+	];
+	_anchorSearch = nearestObjects [_posConst, _oilClasses, (missionNamespace getVariable ["WFBE_C_OILFIELD_ANCHOR_SEARCH", 1200])];
+	if (count _anchorSearch > 0) then {
+		_hit = _anchorSearch select 0;   //--- nearestObjects returns nearest-first
+		if (!isNull _hit) then {
+			_found = _hit;
+			_nodePos = getPos _hit;
+			_resolvedBy = Format ["map-object:%1", typeOf _hit];
+		};
 	};
 };
 
 //--- Force a ground/2D-clean [x,y,0] node position (capture uses 2D distance below anyway).
 _nodePos = [_nodePos select 0, _nodePos select 1, 0];
 missionNamespace setVariable ["WFBE_OILFIELD_POS_LIVE", _nodePos, true];
+
+//------------------------------------------------------------------------------------
+//--- DERRICK COMPOSITION (dynamic-placement success only - on the legacy path the node anchors an
+//--- EXISTING map installation, spawning another one there would clip). Server-side global
+//--- createVehicle of config-verified OA/EP1 classes (arma2-co-config-reference CfgVehicles.txt:
+//--- Land_Ind_Oil_Pump_EP1 :38665 [the animated pumpjack, sound "Oil_pump"], Land_Ind_Oil_Tower_EP1
+//--- :38692 [the tall derrick tower], Land_Ind_TankSmall2_EP1 :170978, Barrels :115611, Barrel1
+//--- :115621). Spawn idiom (create/null-check/setDir-then-setPos) is the proven
+//--- Server_SpawnStructureDressing.sqf:47-53 pattern. One-time, 5 objects, count-safe. All objects
+//--- kept in WFBE_OILFIELD_OBJS; the pumpjack is WFBE_OILFIELD_DERRICK_OBJ (sabotage FX anchor).
+//------------------------------------------------------------------------------------
+if (_dynOK) then {
+	private ["_objs","_baseDir","_defs","_d","_cls","_off","_dst","_ang","_oPos","_prop"];
+	_objs = [];
+	_baseDir = random 360;
+	//--- [class, bearing-offset(deg from _baseDir), distance(m)] - pumpjack center, tower off to one
+	//--- side (it is tall/wide), fuel tank + barrels dressing the pad for readability.
+	_defs = [
+		["Land_Ind_Oil_Pump_EP1",    0,   0],
+		["Land_Ind_Oil_Tower_EP1",   0,  22],
+		["Land_Ind_TankSmall2_EP1", 120, 14],
+		["Barrels",                 200,  9],
+		["Barrel1",                 250,  7]
+	];
+	{
+		_d   = _x;
+		_cls = _d select 0;
+		_off = _d select 1;
+		_dst = _d select 2;
+		_ang = _baseDir + _off;
+		_oPos = [(_nodePos select 0) + (_dst * sin _ang), (_nodePos select 1) + (_dst * cos _ang), 0];
+		_prop = createVehicle [_cls, _oPos, [], 0, "NONE"];
+		if (isNull _prop) then {
+			["WARNING", Format ["Server_Oilfields.sqf: derrick composition - class [%1] failed createVehicle at %2.", _cls, _oPos]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_prop setDir (_ang + 90);
+			_prop setPos _oPos;
+			_prop setVariable ["wfbe_trashable", false];
+			_objs set [count _objs, _prop];
+			if (_cls == "Land_Ind_Oil_Pump_EP1") then {
+				missionNamespace setVariable ["WFBE_OILFIELD_DERRICK_OBJ", _prop, true];
+			};
+		};
+	} forEach _defs;
+	missionNamespace setVariable ["WFBE_OILFIELD_OBJS", _objs, true];
+	diag_log Format ["OILFIELD|v2|COMPOSITION|t=%1|objs=%2|pos=%3", round time, count _objs, _nodePos];
+	["INFORMATION", Format ["Server_Oilfields.sqf: derrick composition spawned (%1 objects) at %2.", count _objs, _nodePos]] Call WFBE_CO_FNC_LogContent;
+};
 
 diag_log Format ["OILFIELD|v1|INIT|pos=%1|resolvedBy=%2|unlockAt=%3", _nodePos, _resolvedBy, (missionNamespace getVariable ["WFBE_C_OILFIELD_UNLOCK_TIME", 3600])];
 ["INITIALIZATION", Format ["Server_Oilfields.sqf: OILFIELD node position resolved to %1 (via %2). Unlocks at t=%3s.", _nodePos, _resolvedBy, (missionNamespace getVariable ["WFBE_C_OILFIELD_UNLOCK_TIME", 3600])]] Call WFBE_CO_FNC_LogContent;
@@ -235,13 +376,18 @@ Call WFBE_FNC_OilfieldRefreshLabel;
 //--- repair. One fire object + one smoke shell at a time = count-safe (no per-frame work, no A3 cmds).
 //------------------------------------------------------------------------------------
 WFBE_FNC_OilfieldStartFX = {
-	private ["_fire"];
+	private ["_fire","_fxPos","_drk"];
+	//--- FX anchor = the DERRICK object's actual position when the dynamic composition spawned one
+	//--- (Ray spec: the fire/smoke attach to the derrick itself), else the node position (legacy path).
+	_fxPos = _nodePos;
+	_drk = missionNamespace getVariable ["WFBE_OILFIELD_DERRICK_OBJ", objNull];
+	if (!isNull _drk) then {_fxPos = getPos _drk};
 	//--- Persistent flame: cruiseMissileFlare1 is confirmed in-tree (nukeincoming.sqf / Init_IcbmTel.sqf)
 	//--- and inflame renders an engine fire on it, globally, with no client-locality problem.
 	if (isNull (missionNamespace getVariable ["WFBE_OILFIELD_FIRE_OBJ", objNull])) then {
-		_fire = createVehicle ["cruiseMissileFlare1", [_nodePos select 0, _nodePos select 1, 0], [], 0, "NONE"];
+		_fire = createVehicle ["cruiseMissileFlare1", [_fxPos select 0, _fxPos select 1, 0], [], 0, "NONE"];
 		if (!isNull _fire) then {
-			_fire setPos [_nodePos select 0, _nodePos select 1, 0];
+			_fire setPos [_fxPos select 0, _fxPos select 1, 0];
 			_fire inflame true;
 			missionNamespace setVariable ["WFBE_OILFIELD_FIRE_OBJ", _fire, true];
 		};
@@ -249,7 +395,7 @@ WFBE_FNC_OilfieldStartFX = {
 	//--- Bounded smoke re-emitter: one thread, guarded by the sabotaged flag; one shell live at a time.
 	if (!(missionNamespace getVariable ["WFBE_OILFIELD_SMOKE_LOOP", false])) then {
 		missionNamespace setVariable ["WFBE_OILFIELD_SMOKE_LOOP", true];
-		[_nodePos] spawn {
+		[_fxPos] spawn {
 			private ["_p","_every","_smoke"];
 			_p = _this select 0;
 			while { (missionNamespace getVariable ["WFBE_OILFIELD_SABOTAGED", false]) && {!(missionNamespace getVariable ["WFBE_GameOver", false])} } do {

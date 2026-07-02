@@ -310,7 +310,7 @@ with missionNamespace do {
 	//--- === Build 83 OILFIELDS (Takistan-only neutral resource node, Ray 2026-07-01) ===
 	if (isNil "WFBE_C_OILFIELD_ENABLE") then {WFBE_C_OILFIELD_ENABLE = 1};                 //--- master on/off (Takistan only; inert on Chernarus).
 	if (isNil "WFBE_C_OILFIELD_UNLOCK_TIME") then {WFBE_C_OILFIELD_UNLOCK_TIME = 3600};    //--- ingame seconds before the node unlocks (marker+capture+income live, announced). 1 hour.
-	if (isNil "WFBE_C_OILFIELD_POS") then {WFBE_C_OILFIELD_POS = [4600, 6200, 0]};         //--- PLACEHOLDER TK node anchor; the file auto-snaps to a real oil/fuel object near here, else uses this. FINALIZE to the real derrick coord.
+	if (isNil "WFBE_C_OILFIELD_POS") then {WFBE_C_OILFIELD_POS = [4600, 6200, 0]};         //--- LEGACY-FALLBACK TK anchor (only used when WFBE_C_OILFIELD_DYNAMIC=0 or the dynamic search fails); the fallback auto-snaps to a real oil/fuel object near here, else uses this.
 	if (isNil "WFBE_C_OILFIELD_ANCHOR_SEARCH") then {WFBE_C_OILFIELD_ANCHOR_SEARCH = 1200}; //--- search radius (m) for a real oil/fuel installation to anchor on.
 	if (isNil "WFBE_C_OILFIELD_RADIUS") then {WFBE_C_OILFIELD_RADIUS = 120};               //--- capture/hold radius (m).
 	if (isNil "WFBE_C_OILFIELD_SCAN_INTERVAL") then {WFBE_C_OILFIELD_SCAN_INTERVAL = 15};   //--- seconds between presence scans (floored 5s in code).
@@ -334,6 +334,15 @@ with missionNamespace do {
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_INTERVAL") then {WFBE_C_OILFIELD_GUER_RAID_INTERVAL = 1500}; //--- min seconds between GUER raid spawns on the field.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_SIZE") then {WFBE_C_OILFIELD_GUER_RAID_SIZE = 4}; //--- GUER foot raiders per raid party.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_GRPCAP") then {WFBE_C_OILFIELD_GUER_RAID_GRPCAP = 120}; //--- do NOT spawn a raid if resistance group count is at/above this (leaves headroom below the 144 hard cap).
+	//--- === cmdcon42-oilrig DYNAMIC placement (Ray placement spec 2026-07-02: derrick on open ground BETWEEN the teams) ===
+	if (isNil "WFBE_C_OILFIELD_DYNAMIC") then {WFBE_C_OILFIELD_DYNAMIC = 1};               //--- 1 = per-match dynamic placement: HQ-midpoint + open-ground ring search + spawned derrick composition. 0 = legacy fixed-anchor auto-snap (no composition).
+	if (isNil "WFBE_C_OILFIELD_HQ_WAIT") then {WFBE_C_OILFIELD_HQ_WAIT = 600};             //--- max seconds to wait for BOTH start HQs to exist before falling back to the legacy anchor.
+	if (isNil "WFBE_C_OILFIELD_RING_STEP") then {WFBE_C_OILFIELD_RING_STEP = 100};         //--- ring-search radius step (m) out from the HQ midpoint (floored 25m in code).
+	if (isNil "WFBE_C_OILFIELD_RING_MAX") then {WFBE_C_OILFIELD_RING_MAX = 2000};          //--- max ring-search radius (m); beyond this the dynamic path gives up (WARNING + legacy fallback).
+	if (isNil "WFBE_C_OILFIELD_FLAT_Z") then {WFBE_C_OILFIELD_FLAT_Z = 0.90};              //--- min (surfaceNormal) z for a candidate spot (1.0=flat; foot-snap uses 0.85, structures want flatter).
+	if (isNil "WFBE_C_OILFIELD_ROAD_CLEAR") then {WFBE_C_OILFIELD_ROAD_CLEAR = 60};        //--- candidate rejected if any road within this (m) (nearRoads).
+	if (isNil "WFBE_C_OILFIELD_TOWN_CLEAR") then {WFBE_C_OILFIELD_TOWN_CLEAR = 500};       //--- candidate rejected if any town center (towns list) within this (m).
+	if (isNil "WFBE_C_OILFIELD_HOUSE_CLEAR") then {WFBE_C_OILFIELD_HOUSE_CLEAR = 80};      //--- candidate rejected if any building ("House") within this (m).
 	if (isNil "WFBE_C_PATROL_T3_CASH") then {WFBE_C_PATROL_T3_CASH = 8000};                //--- Build83 (Ray): one-time CASH granted to a side on completing Patrol upgrade level 3 (split among alive players via BankPayout). 0 = off.
 	if (isNil "WFBE_C_PATROL_T4_SUPPLY") then {WFBE_C_PATROL_T4_SUPPLY = 1500};             //--- Build83 (Ray): one-time SUPPLY granted to a side's pool on completing Patrol upgrade level 4 (ChangeSideSupply, clamped). 0 = off.
 	if (isNil "WFBE_C_AICOM_PLANE_AIRSTART") then {WFBE_C_AICOM_PLANE_AIRSTART = 1};        //--- Build83 (Ray): founded PLANES air-start (FLY) at the captured airfield, aligned to the runway logic, de-conflicted (helis/ground unchanged). 0 = old grounded/scattered FORM behavior.
