@@ -25,7 +25,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_ENABLED", _side], [
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") == 1) then {true} else {false}, //--- Aircraft AA Missiles
 	true, //--- Anti Air radar
 	false, //--- Unit cost modifier (GUE has no unit cost upgrade — slot required for safe indexing)
-	false, //--- Counter Battery Radar (GUE/resistance has no CBR — slot required for safe indexing)
+	if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {true} else {false}, //--- Counter Battery Radar
 	true //--- Patrols
 ]];
 
@@ -183,6 +183,10 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_EASA,1],
 	[WFBE_UP_SUPPLYPARADROP,1],
 	[WFBE_UP_AIRAAM,1],
+	[WFBE_UP_AAR,1],
+	[WFBE_UP_AAR,2],
+	[WFBE_UP_CBRADAR,1],
+	[WFBE_UP_CBRADAR,2],
 	[WFBE_UP_PATROLS,1],
 	[WFBE_UP_PATROLS,2],
 	[WFBE_UP_PATROLS,3],
