@@ -8,8 +8,9 @@
 //---   cold LZ      -> heli lands + GETS OUT (isFlatEmpty insert),
 //---   contested/enemy town -> heli holds altitude + PARADROPS the pax ~OFFSET m short.
 //--- After the drop the transport RETURNS toward the side HQ/base and HOLDS/lands there for
-//--- the NEXT order (it IS the team's vehicle - it PERSISTS, never fly-off-refunded here; the
-//--- founding fly-off/refund path in the caller is untouched). The dropped pax always get an
+//--- the NEXT order (it IS the team's vehicle - it PERSISTS, never fly-off-refunded here) via
+//--- the SHARED WFBE_CO_FNC_AICOMAirReturn - the founding retained-transport path
+//--- (WFBE_C_AICOM_AIR_RETAIN, default-ON) routes through the SAME code. The dropped pax always get an
 //--- unconditional ground doMove to the objective so the order loop's arrival latch + MOVE/SAD
 //--- capture chain folds them in EXACTLY like a road-marched or landed insert (Hook-B sees a
 //--- normal arrival). NEVER-FROZEN: every branch ends in a live pax move; the team is flagged
@@ -135,7 +136,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 //--- L584-689, minus the fly-off/refund - the transport RETURNS to base + HOLDS to persist).
 //--- ===================================================================
 [_h, _lzPos, _flat, _lifted, _team, _dest, _side, _sideID] Spawn {
-	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0","_hqPos","_reapHQ"];
+	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0"];
 	_h    = _this select 0;
 	_lz   = _this select 1;
 	_fl   = _this select 2;
@@ -193,29 +194,12 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 
 	//--- TRANSPORT PERSISTS: the empty transport now RETURNS toward the side HQ/base and HOLDS there
 	//--- (lands) so it is available for the team's NEXT order. NO fly-off / NO refund / NO despawn -
-	//--- this IS the team's vehicle. The B74.2 HELI BASE-REAP in the order loop only reaps NON-transport
-	//--- (attack) helis (transportSoldier==0), so a parked transport is never auto-reaped here.
-	if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)}) then {
-		_reapHQ = (_sd) Call WFBE_CO_FNC_GetSideHQ;
-		_hqPos = if (!isNull _reapHQ) then {getPos _reapHQ} else {getPos _h};
-		_h flyInHeight (90 + random 30);
-		(driver _h) doMove _hqPos;
-		//--- Bounded run-home; land + hold when near base (or on loss). Keep the exemption alive while it
-		//--- flies home so the return leg is not misread as a stuck team either.
-		_t0 = time + 300;
-		waitUntil {
-			sleep 3;
-			if (!isNull _tm) then {_tm setVariable ["wfbe_aicom_airborne_until", time + 120, true]};
-			time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_h distance _hqPos) < (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])}
-		};
-		if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)}) then {
-			_h land "GET OUT";      //--- hold on the pad (GET OUT idle-land); crew stays with the hull for the next lift.
-			_h flyInHeight 0;
-			["INFORMATION", Format ["Common_AICOMAirLeg.sqf: [%1] team transport %2 returned to base + holding for next order.", _sd, typeOf _h]] Call WFBE_CO_FNC_AICOMLog;
-		};
-	};
-	//--- Leg done: clear the airborne exemption so the ground team is watched normally again.
-	if (!isNull _tm) then {_tm setVariable ["wfbe_aicom_airborne_until", 0, true]};
+	//--- this IS the team's vehicle. cmdcon42-f: ONE shared implementation (WFBE_CO_FNC_AICOMAirReturn) -
+	//--- the founding retained-transport path (WFBE_C_AICOM_AIR_RETAIN) calls the SAME code, no duplication.
+	//--- The helper refreshes the airborne window on the way home and CLEARS it on every exit path.
+	//--- The B74.2 HELI BASE-REAP in the order loop only reaps NON-transport (attack) helis
+	//--- (transportSoldier==0), so a parked transport is never auto-reaped here.
+	[_h, _tm, _sd] Call WFBE_CO_FNC_AICOMAirReturn;
 };
 
 true

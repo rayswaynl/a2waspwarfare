@@ -635,6 +635,37 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			//--- If it is destroyed before reaching the edge, NO refund. Player/non-aicom
 			//--- helis are guarded out via the wfbe_aicom_transport flag set at lift time.
 			if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
+				//--- ===================================================================
+				//--- cmdcon42-f RETAINED TRANSPORT (Ray: HQ air squads should BE air squads; gate
+				//--- WFBE_C_AICOM_AIR_RETAIN default-ON): instead of the legacy off-map fly-off + delete +
+				//--- REFUND below, KEEP the team's transport - route it through the SAME shared
+				//--- return-to-base-and-hold path the air-mobile legs use (WFBE_CO_FNC_AICOMAirReturn, one
+				//--- implementation, no duplication), so the hull parks at the side base and the order
+				//--- loop's AIR-MOBILE branch can fly the team's NEXT orders with it. ECONOMICS (by design):
+				//--- retaining FORGOES the legacy refund (_cost = the hull's QUERYUNITPRICE credited back to
+				//--- the AI treasury on edge-exit) - the side keeps a REAL transport asset instead of the
+				//--- credit. Flag 0 = fall through to the UNTOUCHED legacy body below (byte-identical
+				//--- fly-off + delete + refund). LEADER-IS-CREW edge guard: if the group LEADER is part of
+				//--- the transport CREW (aboard the hull but NOT one of the lifted pax), retaining would
+				//--- park the team leader at base and the HC arrival latch (leader-distance) could never
+				//--- latch for the dropped pax - fall back to the legacy fly-off for that founding (it
+				//--- deletes the crew; the engine promotes a ground leader, exactly as today). Retained-hull
+				//--- coverage (verified): B74.2 base-reap only reaps transportSoldier==0 attack helis;
+				//--- AIR_REAP_UNCREWED skips it while the pilot lives; AUTOFUEL tops it off (it is in
+				//--- _vehicles); the stuck-watcher airborne exemption covers its later legs. A2-OA-safe:
+				//--- vehicle/in/leader tests + exitWith out of this then-scope only.
+				private ["_retain"];
+				_retain = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_RETAIN", 1]) > 0;
+				if (_retain && {!isNull _tm} && {!isNull (leader _tm)} && {(vehicle (leader _tm)) == _h} && {!((leader _tm) in _pax)}) then {
+					_retain = false;
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] AIR_RETAIN skipped - leader is transport crew; legacy fly-off/refund keeps the arrival latch on a ground leader.", _sd, _tm]] Call WFBE_CO_FNC_AICOMLog;
+				};
+				if (_retain) exitWith {
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sID + "|" + str (round (time / 60)) + "|AIR_RETAIN|team=" + (str _tm) + "|heli=" + (typeOf _h));
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] transport %3 RETAINED (no refund) - returning to base to hold for the next order.", _sd, _tm, typeOf _h]] Call WFBE_CO_FNC_AICOMLog;
+					[_h, _tm, _sd] Call WFBE_CO_FNC_AICOMAirReturn;
+				};
+				//--- ===================================================================
 				//--- Clamp the heli's exit toward the CLOSEST of the four map edges (worldSize box).
 				//--- N-FEATUREBUG-43 fix 2026-06-27: was hardcoded 15360 (Chernarus only) -> the off-map edge math + the
 				//--- waitUntil off-map exit test below were 2560m wrong on Takistan/Zargabad (both 12800), so the heli
