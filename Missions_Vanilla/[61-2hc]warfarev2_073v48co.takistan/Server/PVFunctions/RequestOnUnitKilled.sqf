@@ -276,6 +276,12 @@ if ((missionNamespace getVariable ["WFBE_C_NOTABLE_KILL_FEED", 0]) > 0 && {isSer
 			//--- suitable for a dynamic string; use WF_sendMessage (text+sound) for the text display
 			//--- and a separate SideMessage for the radio callout if desired.
 			//--- WF_sendMessage: [text, sound, side, isLocalized].
+			//--- Note (dedicated-server playerSide==sideUnknown path): WF_sendMessage's local
+			//--- "if (playerSide == _side_who_receive_message)" guard in Common_SendMessage.sqf
+			//--- will be false on a dedi (playerSide is sideUnknown), so the server's own
+			//--- systemChat call is skipped. This is harmless: the broadcast fires unconditionally
+			//--- via publicVariable "SEND_MESSAGE" (Common_SendMessage.sqf line 59), so all
+			//--- eligible clients receive the feed message correctly regardless.
 			[_feedMsg, "", _killer_side, false] Call WF_sendMessage;
 			["INFORMATION", Format ["RequestOnUnitKilled.sqf: notable-kill feed: [%1] %2 (%3)", _killer_side, typeOf _killed, _feedMsg]] Call WFBE_CO_FNC_LogContent;
 		};

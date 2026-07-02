@@ -11,6 +11,10 @@
    Flag gate: WFBE_C_SPOTTER_TEAM_MARKS (default 0). The spotter already guards before
    sending, so this handler runs only when the flag is on.
 */
+//--- Malformed-payload guard (matches WildcardMarker.sqf idiom). Bail out early if
+//--- the PVF payload is not an ARRAY or has fewer than 3 elements (pos, spotTime, name).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 3}) exitWith {};
+
 Private ["_pos","_spotTime","_markerName"];
 
 if (isNil "WFBE_Client_SideID") exitWith {};
