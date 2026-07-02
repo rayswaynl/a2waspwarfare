@@ -206,12 +206,16 @@ with missionNamespace do {
 	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE") then {WFBE_C_GUER_KA137_SWARM_CHANCE = 0.25}; //--- chance a combat Ka-137 spawn also fields a 2nd drone in the same group.
 	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE3") then {WFBE_C_GUER_KA137_SWARM_CHANCE3 = 0.15}; //--- chance (only if the 2nd rolled) for a 3rd drone in the same group.
 
-//--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02): AI-spawned Ka-137s (leader + swarm extras) get a
-//--- chance-based 10-30 countermeasure budget. Build86 flipped WFBE_C_MODULE_AUTO_CM_OA ON; that auto-CM module
-//--- (Client\Module\CM\CM_AutoCM_OA.sqf) consumes an INTEGER "FlareCount" vehicle variable (one FlareCountermeasure
-//--- decoy per point), so the 10-30 stock is expressed EXACTLY as that integer — no magazine rounding. The hull
-//--- also gets the manual CMFlareLauncher + a 60Rnd flare mag (player-Ka-137 idiom). Default-ON; set 0 to disable.
-	if (isNil "WFBE_C_GUER_KA137_FLARES") then {WFBE_C_GUER_KA137_FLARES = 1};              //--- master switch (1 = roll a 10-30 auto-CM flare stock on AI Ka-137s, 0 = none).
+//--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02; retuned 5-20 same day): AI-spawned Ka-137s (leader +
+//--- swarm extras) get a chance-based MIN-MAX countermeasure budget (variance-nerf vs the flat CM_Set default 32).
+//--- Build86 flipped WFBE_C_MODULE_AUTO_CM_OA ON; that auto-CM module (Client\Module\CM\CM_AutoCM_OA.sqf) consumes
+//--- an INTEGER "FlareCount" vehicle variable (one FlareCountermeasure decoy per point), so the rolled stock is
+//--- expressed EXACTLY as that integer — no magazine rounding. Roll = MIN + floor(random (MAX - MIN + 1)); MAX is
+//--- clamped up to MIN at the consumer so a bad config can never make the roll negative. The hull also gets the
+//--- manual CMFlareLauncher + a 60Rnd flare mag (player-Ka-137 idiom). Default-ON; set FLARES 0 to disable.
+	if (isNil "WFBE_C_GUER_KA137_FLARES") then {WFBE_C_GUER_KA137_FLARES = 1};              //--- master switch (1 = roll a MIN-MAX auto-CM flare stock on AI Ka-137s, 0 = none).
+	if (isNil "WFBE_C_GUER_KA137_FLARES_MIN") then {WFBE_C_GUER_KA137_FLARES_MIN = 5};      //--- lower bound of the rolled flare stock (inclusive).
+	if (isNil "WFBE_C_GUER_KA137_FLARES_MAX") then {WFBE_C_GUER_KA137_FLARES_MAX = 20};     //--- upper bound of the rolled flare stock (inclusive; clamped up to MIN if misconfigured below it).
 
 //--- Day/night cycles.
 	// Marty: Defaults used when mission parameters do not provide the accelerated day/night settings.

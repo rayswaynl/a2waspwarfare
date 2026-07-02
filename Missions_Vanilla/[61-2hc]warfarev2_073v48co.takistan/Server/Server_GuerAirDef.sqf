@@ -45,7 +45,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareLauncher","_flareMag","_applyKaFlares"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -78,21 +78,26 @@ _swarmOn     = missionNamespace getVariable ["WFBE_C_GUER_KA137_SWARM", 1];
 _swarmChance = missionNamespace getVariable ["WFBE_C_GUER_KA137_SWARM_CHANCE", 0.25];
 _swarmChance3= missionNamespace getVariable ["WFBE_C_GUER_KA137_SWARM_CHANCE3", 0.15];
 
-//--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02): give each AI-spawned Ka-137 (leader + swarm extras) a
-//--- CHANCE-BASED countermeasure budget of 10-30 flares. Build86 flipped WFBE_C_MODULE_AUTO_CM_OA ON: the auto-CM
+//--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02; retuned same day): give each AI-spawned Ka-137 (leader +
+//--- swarm extras) a CHANCE-BASED countermeasure budget of FLARES_MIN..FLARES_MAX (default 5-20 — a deliberate
+//--- variance-NERF vs the flat CM_Set default of 32). Build86 flipped WFBE_C_MODULE_AUTO_CM_OA ON: the auto-CM
 //--- module (Client\Module\CM\CM_AutoCM_OA.sqf) fires on the "incomingMissile" EH and consumes an INTEGER budget
 //--- stored as the vehicle variable "FlareCount" (createVehicleLocal "FlareCountermeasure" per shot; NOT a magazine
-//--- burn), so a partial budget like 23 is expressed EXACTLY as setVariable ["FlareCount", 23] — no magazine
+//--- burn), so a partial budget like 13 is expressed EXACTLY as setVariable ["FlareCount", 13] — no magazine
 //--- rounding. WFBE_CO_FNC_CreateVehicle already broadcasts Init_Unit.sqf (global=true) which adds the auto-CM EH
-//--- and a DEFAULT FlareCount via CM_Set.sqf, so here we OVERRIDE that default with the rolled 10-30 (public
+//--- and a DEFAULT FlareCount via CM_Set.sqf, so here we OVERRIDE that default with the rolled stock (public
 //--- setVariable so it is authoritative on whichever machine owns the hull/EH). We ALSO mount the manual OA flare
 //--- launcher + one flare magazine (same CMFlareLauncher / 60Rnd_CMFlareMagazine idiom as the player Ka-137 in
 //--- Client_BuildUnit.sqf) so the hull additionally has native manual flares. CM_Set.sqf does waitUntil
 //--- commonInitComplete + sleep 2 before writing its default, so we stamp the rolled budget from a short deferred
-//--- spawn (sleep 3) to deterministically WIN that race. FLARES = master switch (default 1).
+//--- spawn (sleep 3) to deterministically WIN that race. FLARES = master switch (default 1); MIN/MAX = roll bounds
+//--- so future retunes are config-only (MAX is clamped up to MIN so a bad config can never make random negative).
 _flareOn       = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARES", 1];
+_flareMin      = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARES_MIN", 5];
+_flareMax      = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARES_MAX", 20];
+if (_flareMax < _flareMin) then { _flareMax = _flareMin; }; //--- guard MAX>=MIN (degenerates to a fixed MIN stock).
 _flareLauncher = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_LAUNCHER", "CMFlareLauncher"];
-_flareMag      = "60Rnd_CMFlareMagazine"; //--- smallest OA flare mag (A2-OA has no 30Rnd); manual-flare backing for the launcher. The 10-30 AUTO budget is the FlareCount integer, independent of this mag's round count.
+_flareMag      = "60Rnd_CMFlareMagazine"; //--- smallest OA flare mag (A2-OA has no 30Rnd); manual-flare backing for the launcher. The MIN-MAX AUTO budget is the FlareCount integer, independent of this mag's round count.
 
 //--- Wait for towns + the GUER side logic to exist, then let town ownership settle (mirror of GuerStipend).
 waitUntil {
@@ -104,17 +109,18 @@ sleep 45;
 _pilotClass = missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"];
 _crewClass  = missionNamespace getVariable ["WFBE_GUERRESCREW",  "GUE_Soldier_Crew"];
 
-//--- FLARE-STOCK applicator (shared by the leader + each swarm extra). _this = [_vehicle]. Rolls a 10-30 flare
-//--- budget, mounts the manual OA launcher + a flare mag on the turret (path [-1], same idiom the player Ka-137
-//--- uses in Client_BuildUnit.sqf), and stamps the rolled budget as the PUBLIC "FlareCount" integer that the
-//--- auto-CM module consumes. Returns the rolled count (0 = disabled). Runs on the server, where these AI hulls
-//--- are local. The FlareCount write is deferred (sleep 3) so it lands AFTER CM_Set.sqf's default write.
+//--- FLARE-STOCK applicator (shared by the leader + each swarm extra). _this = [_vehicle]. Rolls a flare budget
+//--- of _flareMin.._flareMax (default 5-20), mounts the manual OA launcher + a flare mag on the turret (path [-1],
+//--- same idiom the player Ka-137 uses in Client_BuildUnit.sqf), and stamps the rolled budget as the PUBLIC
+//--- "FlareCount" integer that the auto-CM module consumes. Returns the rolled count (0 = disabled). Runs on the
+//--- server, where these AI hulls are local. The FlareCount write is deferred (sleep 3) so it lands AFTER
+//--- CM_Set.sqf's default write.
 _applyKaFlares = {
 	private ["_v","_n"];
 	_v = _this select 0;
 	_n = 0;
 	if (_flareOn >= 1 && {!isNull _v}) then {
-		_n = 10 + floor(random 21); //--- 10..30 inclusive.
+		_n = _flareMin + floor(random (_flareMax - _flareMin + 1)); //--- MIN..MAX inclusive (MAX>=MIN guarded above).
 		//--- Mount the manual OA launcher + one flare mag (turret path [-1], as the Ka-137 fires from MainTurret).
 		{_v addMagazineTurret [_x, [-1]]} forEach [_flareMag];
 		{_v addWeaponTurret  [_x, [-1]]} forEach [_flareLauncher];
@@ -368,8 +374,9 @@ while {!WFBE_GameOver} do {
 						_veh setVariable ["wfbe_guer_airdef", true, true];
 						_veh setVariable ["wfbe_guer_airdef_town", _town];
 
-						//--- FLARE STOCK (cmdcon42 item2): chance-based 10-30 auto-CM budget on the Ka-137 leader (all
-						//--- Ka-137 variants: recon-MG / AT / AA / drop bird). Mi-24 excluded (Ka-137-only per spec).
+						//--- FLARE STOCK (cmdcon42 item2): chance-based MIN-MAX (default 5-20) auto-CM budget on the
+						//--- Ka-137 leader (all Ka-137 variants: recon-MG / AT / AA / drop bird). Mi-24 excluded
+						//--- (Ka-137-only per spec).
 						_flareN = 0;
 						if (_class == _classKa) then {
 							_flareN = [_veh] Call _applyKaFlares;
@@ -455,8 +462,8 @@ while {!WFBE_GameOver} do {
 										_eVeh2 setVariable ["wfbe_guer_airdef_town", _town];
 										_eVeh2 flyInHeight _flyHeight;
 
-										//--- FLARE STOCK (cmdcon42 item2): same chance-based 10-30 auto-CM budget on each extra
-										//--- (extras are always _classKa). One log line per extra that rolls a stock.
+										//--- FLARE STOCK (cmdcon42 item2): same chance-based MIN-MAX (default 5-20) auto-CM budget
+										//--- on each extra (extras are always _classKa). One log line per extra that rolls a stock.
 										_eFlareN = [_eVeh2] Call _applyKaFlares;
 										if (_eFlareN > 0) then {
 											["INFORMATION", Format ["Server_GuerAirDef.sqf: KA137_FLARES|n=%1|town=%2|load=%3|swarmExtra=1", _eFlareN, (_town getVariable ["name","?"]), _loadName]] Call WFBE_CO_FNC_LogContent;
