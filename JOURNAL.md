@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Lane 187 balance asymmetries reference [codex/lane187-balance-asymmetries-reference]
+
+Docs-only source reference added at `docs/design/BALANCE-ASYMMETRIES-REFERENCE-2026-07-02.md`.
+It records the current GUER checkpoint toll vs stipend math, GUER kill-tier and bounty split, CO
+RU/US vs GUE upgrade dependency asymmetries, and W1 War Chest sizing against live constants.
+
+Key correction: GUER tech kills are not multiplied by the `0.5` bounty coefficient; each eligible
+resistance-player kill increments `WFBE_GUER_PLAYER_KILLS` by exactly one. The slowdown comes from
+doubled thresholds plus reduced kill cash, not a fractional tech counter.
+
+Verification target: docs-only `git diff --check` and source-anchor scans. LoadoutManager is not
+needed because no mission source or generated mirror files changed.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
