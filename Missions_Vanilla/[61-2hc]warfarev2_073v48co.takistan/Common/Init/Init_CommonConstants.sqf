@@ -1665,17 +1665,27 @@ WFBE_STATS_DIRTY_UIDS = [];
 	WFBE_C_SCUD_WARHEAD_WP    = "SmokeShellWhite";	//--- WP/incendiary smoke layer (final phase)
 
 //======================================================================================
-//--- cmdcon42-g: FACTORY WALL LADDER v2 + DEFENSES/FORTIFICATIONS MENU REDO
-//--- Both features are behind ONE flag each so Ray can revert either independently.
-//--- The LEGACY arrays stay UNTOUCHED in their files; the flag SELECTS v2 vs legacy.
+//--- FACTORY WALL SLABS v3 (cmdcon43-c) + DEFENSES/FORTIFICATIONS MENU REDO (cmdcon42-g)
+//--- Each feature is behind ONE flag so Ray can revert it independently.
+//--- The LEGACY arrays stay UNTOUCHED in their files; the flag SELECTS the variant vs legacy.
 //======================================================================================
 
-//--- WALLS v2 (factory wall-material ladder). 1 = new tiered wall compositions
-//--- (barracks/light = bagfence, heavy/bank = HESCO 10x, aircraft/cmd-ctr = HQ concrete);
-//--- 0 = byte-identical legacy walls (the old WFBE_NEURODEF_<TYPE>_WALLS arrays).
-//--- REVERSIBILITY: set to 0 -> Construction_*Site.sqf select the legacy _WALLS vars and
-//--- the Bank dressing uses the legacy WFBE_NEURODEF_BANK_WEST/EAST bodies. No deletions.
-	if (isNil "WFBE_C_WALLS_V2") then {WFBE_C_WALLS_V2 = 1};
+//--- WALLS v2 (factory wall-MATERIAL ladder, cmdcon42-g). REVERTED in Build 88 (cmdcon43-c):
+//--- Ray asked to undo the bagfence/HESCO/concrete material swap and instead keep the ORIGINAL
+//--- walls + add concrete slabs (see WFBE_C_WALLS_V3 below). The *_WALLS_V2 factory arrays are
+//--- DELETED and the Construction_*Site hooks no longer read this flag, so it is now DEAD.
+//--- Kept REGISTERED (default 0) only as a tombstone so no stale host profile forces the old ladder.
+	if (isNil "WFBE_C_WALLS_V2") then {WFBE_C_WALLS_V2 = 0};
+
+//--- WALLS v3 (factory ORIGINAL walls + HQ-style concrete SLABS, cmdcon43-c). Ray Build 88:
+//--- "revert the factory wall changes, and then just add additional concrete slabs to them like
+//--- the HQ has for survivability". 1 = each factory keeps its exact legacy walls AND gets an added
+//--- ring/backing layer of Concrete_Wall_EP1 slabs (the same near-indestructible class the HQ funnel
+//--- uses, WFBE_NEURODEF_HEADQUARTERS_WALLS); vehicle factories keep their +X egress face open.
+//--- 0 = exact original legacy walls, NO slabs.
+//--- REVERSIBILITY: set to 0 -> Construction_*Site.sqf read the plain legacy WFBE_NEURODEF_<TYPE>_WALLS
+//--- (the *_WALLS_V3 arrays are only ever appended to; the legacy arrays are never edited). No deletions.
+	if (isNil "WFBE_C_WALLS_V3") then {WFBE_C_WALLS_V3 = 1};
 
 //--- DEFENSES/FORTIFICATIONS MENU v2. 1 = redone data-driven lists (dead entries pruned,
 //--- recategorised, gap-fill items added: watchtower, cheaper WEST AT, hedgehog line, flak tower);
