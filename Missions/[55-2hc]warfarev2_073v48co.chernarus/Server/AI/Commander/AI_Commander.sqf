@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -163,6 +163,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
 		};
 
+		//--- cmdcon42 (Ray 2026-07-02): RAW human-seated flag, captured BEFORE the LOCK override below.
+		//--- The ECON_SINK block must pause whenever a human physically occupies the commander slot, even
+		//--- under WFBE_C_AI_COMMANDER_LOCK (which forces _humanCmd=false to keep the AI in full command for
+		//--- eval/night protection). _canBuild already blocks the sink for the normal no-lock case, but a lock
+		//--- would otherwise let the sink spend the human commander's side supply uncommanded. Keep this raw.
+		_humanSeated = _humanCmd;
+
 		//--- AI COMMANDER LOCK: when lock=1, treat _humanCmd as false so AI keeps full command
 		//--- even if a human occupies the commander slot (eval/night protection).
 		if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
@@ -272,6 +279,26 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			_tg = _logik getVariable ["wfbe_aicom_targets", []];
 			_objT = if (count _tg > 0) then {_tg select 0} else {objNull};
 			_objNm = if (!isNull _objT) then {_objT getVariable ["name", "?"]} else {""};
+			//--- cmdcon42-o ENEMY-BASE INTEL-LEAK CLAMP (Ray 2026-07-02): the published objective (OBJPOS/OBJNAME) is
+			//--- drawn as a "mil_objective" marker on the joined side's map (updateaicommarkers.sqf). _objT is normally a
+			//--- TOWN (targets[0]), but if the spearhead target sits inside the enemy base bubble (deep-push / an enemy
+			//--- town adjacent to the HQ), that marker would pin the hidden base. Clamp PRODUCER-SIDE: if the objective
+			//--- is within WFBE_C_CMD_INTEL_HQ_RADIUS of any ENEMY HQ, blank the published pos/name so no base pin is
+			//--- drawn (the INTENT text above still shows "ASSAULTING HQ" - a description, not a coordinate).
+			private ["_objPos","_objLeak"];
+			_objPos = if (!isNull _objT) then {getPos _objT} else {[0,0,0]};
+			if ((missionNamespace getVariable ["WFBE_C_CMD_INTEL_SANITIZE", 1]) > 0 && {!isNull _objT}) then {
+				private ["_iRad","_iEnemies","_iHq"];
+				_iRad = missionNamespace getVariable ["WFBE_C_CMD_INTEL_HQ_RADIUS", 800];
+				_iEnemies = [];
+				{ if (_x != _side) then {_iEnemies = _iEnemies + [_x]} } forEach [west, east, resistance];
+				_objLeak = false;
+				{
+					_iHq = _x Call WFBE_CO_FNC_GetSideHQ;
+					if (!isNull _iHq && {(_objPos distance (getPos _iHq)) < _iRad}) then {_objLeak = true};
+				} forEach _iEnemies;
+				if (_objLeak) then {_objPos = [0,0,0]; _objNm = ""};   //--- blank name -> updateaicommarkers deletes the objective marker (its (_objNm != "") gate); no base pin.
+			};
 			_intent = switch (_sm) do {
 				case "strike":    {"ASSAULTING HQ"};
 				case "laststand": {"DEFENDING BASE"};
@@ -286,7 +313,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			};
 			if ((missionNamespace getVariable [_nKey, ""]) != _objNm) then {
 				missionNamespace setVariable [_nKey, _objNm]; publicVariable _nKey;
-				missionNamespace setVariable [_pKey, (if (!isNull _objT) then {getPos _objT} else {[0,0,0]})]; publicVariable _pKey;
+				missionNamespace setVariable [_pKey, _objPos]; publicVariable _pKey;   //--- cmdcon42-o: _objPos is the intel-clamped position ([0,0,0] when the objective was inside an enemy base).
 			};
 			//--- ACTIVE = the AI actually HOLDS command this side now (no human commander) so a player's nudge will
 			//--- steer it; FOCUS_NAME = the player-set focus town (TTL'd) or "" when none/expired. PV only on change.
@@ -537,8 +564,23 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			//--- Flag-gated (WFBE_C_AICOM_ECON_SINK, default 1). Funds cap = WFBE_C_AICOM_WEALTH_CAP (the anti-hoard
 			//--- ceiling town income/stipend stop crediting past). A2-OA-safe: transition if/else (no Bool ==), plain
 			//--- object getVariable [name,default] on the logic OBJECT (reliable), hand LINKS scan (no A3 helpers).
-			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0) then {
-				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur"];
+			//--- cmdcon42 (Ray 2026-07-02) HUMAN-COMMANDER GATE: pause the ENTIRE econ-sink (surge flag + research
+			//--- scanner) whenever a human physically occupies the commander slot. _canBuild already blocks this
+			//--- for the normal no-lock case, but WFBE_C_AI_COMMANDER_LOCK forces _humanCmd=false to keep the AI in
+			//--- full command - which would let the sink spend the human commander's side SUPPLY uncommanded ("the
+			//--- AI keeps upgrading buildings, for free"). Gate on the RAW seated flag (_humanSeated, captured pre-lock)
+			//--- behind WFBE_C_AICOM_ECON_SINK_HUMAN_OFF (default 1 = pause under human command). When a human is
+			//--- seated we also CLEAR the surge flag (broadcast, mirroring the w3b HC-sync fix) so the heavy-bias /
+			//--- team-cap consumers that read wfbe_aicom_econ_surge stand down instead of latching on stale.
+			if (_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0}) then {
+				if (_logik getVariable ["wfbe_aicom_econ_surge", false]) then {
+					_logik setVariable ["wfbe_aicom_econ_surge", false, true];
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK paused (human commander seated) - surge flag cleared.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=off|reason=human_commander");
+				};
+			};
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}) then {
+				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur","_esSupply","_esDual"];
 				_esFrac = missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_FRAC", 0.85];
 				_esCap  = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
 				_esFunds = (_side) Call GetAICommanderFunds;
@@ -568,6 +610,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_esCosts = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_COSTS",  str _side], []];
 					_esLinks = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LINKS",  str _side], []];
 					_esOrder = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_ENABLED", str _side], []];
+					//--- cmdcon42 FREE-SV FIX (Ray 2026-07-02): read the side's live SUPPLY exactly like the player
+					//--- path (RequestUpgrade.sqf:134-140). _esCost = [supplyPrice, fundsPrice]. In dual-currency mode
+					//--- (WFBE_C_ECONOMY_CURRENCY_SYSTEM==0) an upgrade also costs SUPPLY, and there is NO cash->supply
+					//--- conversion in-game, so the sink MUST verify + pay supply. In single-currency mode supply is
+					//--- not a resource (the player path skips it), so treat it as unlimited (esDual false).
+					_esDual   = (missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0;
+					_esSupply = if (_esDual) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {0};
 					_esChosen = -1; _esChosenCur = -1;
 					if (!isNil "_esUpg" && {!isNil "_esLvls"} && {!isNil "_esCosts"} && {!isNil "_esLinks"}) then {
 						for "_esUp" from 0 to ((count _esUpg) - 1) do {
@@ -581,8 +630,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 									if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
 										//--- price of THIS level (researching level N+1 costs COSTS select N - the b74 off-by-one fix).
 										_esCost = ((_esCosts select _esUp) select _esCur);
-										//--- affordable on funds? (_esCost = [supplyPrice, fundsPrice]; funds is what the treasury pays)
-										if (_esFunds >= (_esCost select 1)) then {
+										//--- affordable on BOTH funds AND supply? (_esCost = [supplyPrice, fundsPrice]). Supply is
+										//--- only a gate in dual-currency mode; single-currency ignores it because _esDual is false
+										//--- (matches the player path skipping the supply check off-dual).
+										if (_esFunds >= (_esCost select 1) && {(!_esDual) || (_esSupply >= (_esCost select 0))}) then {
 											//--- DEPENDENCY gate: LINKS select _esUp select _esCur. Empty = none; [id,lvl] = single; [[id,lvl],..] = many.
 											_esLnk = [];
 											if (_esUp < count _esLinks) then {
@@ -612,15 +663,19 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					if (_esChosen >= 0) then {
 						//--- Start via the SAME server path players/AI/queue use. WFBE_SE_FNC_ProcessUpgrade takes
 						//--- [side, upgradeId, currentLevel, isPlayer=false] and both runs the timer AND flips the level.
-						//--- Deduct funds here (ProcessUpgrade does not charge - the callers do); supply is not charged
-						//--- (fundsPrice is what the treasury pays; the AICOM research economy uses funds, cost select 1).
+						//--- cmdcon42 FREE-SV FIX: ProcessUpgrade charges NOTHING (verified Server_ProcessUpgrade.sqf) - the
+						//--- caller pays. Mirror RequestUpgrade.sqf:148-151 EXACTLY: in dual mode deduct SUPPLY via
+						//--- ChangeSideSupply(-supplyCost) THEN funds; single-currency charges funds only. The selection gate
+						//--- above already re-checked _esSupply >= supplyCost so this cannot drive the pool negative; if supply
+						//--- was short the candidate was skipped and it retries when supply accrues (wfbe_upgrading guard intact).
 						_esCost = ((_esCosts select _esChosen) select _esChosenCur);
 						[_side, _esChosen, _esChosenCur, false] Spawn WFBE_SE_FNC_ProcessUpgrade;
+						if (_esDual) then {[_side, -(_esCost select 0), "AICOM econ-sink tech upgrade.", false] Call ChangeSideSupply};
 						[_side, -(_esCost select 1)] Call ChangeAICommanderFunds;
 						_logik setVariable ["wfbe_upgrading", true, true];
 						_logik setVariable ["wfbe_upgrading_id", _esChosen, true];
-						["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK research: upgrade id %2 -> level %3 (fundsCost %4, funds %5).", str _side, _esChosen, _esChosenCur + 1, _esCost select 1, _esFunds]] Call WFBE_CO_FNC_AICOMLog;
-						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_RESEARCH|id=" + str _esChosen + "|lvl=" + str (_esChosenCur + 1) + "|fundsCost=" + str (_esCost select 1));
+						["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK research: upgrade id %2 -> level %3 (supplyCost %4, fundsCost %5, funds %6, supply %7).", str _side, _esChosen, _esChosenCur + 1, _esCost select 0, _esCost select 1, _esFunds, _esSupply]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_RESEARCH|id=" + str _esChosen + "|lvl=" + str (_esChosenCur + 1) + "|fundsCost=" + str (_esCost select 1) + "|sv=" + str (_esCost select 0));
 					};
 				};
 			};
@@ -895,7 +950,21 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- per-side group counts from the groupsGC cache (server_groupsGC maintains it on ITS allGroups pass); fallback to the total-derived cache, else -1 (never a second walk here).
 		_grpW = missionNamespace getVariable ["wfbe_grpcnt_west", -1];
 		_grpE = missionNamespace getVariable ["wfbe_grpcnt_east", -1];
-		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE);
+		//--- WASPSCALE v2-EXT (cmdcon42-oilrig, claude-gaming 2026-07-02): OILFIELD stakes telemetry (Takistan-only feature;
+		//--- both keys are -/-1 on Chernarus and until the field unlocks). CHEAP reads of state Server_Oilfields.sqf already
+		//--- publishes - no scan here. `oilOwn=` = the field's owner as W|E|G|N|- ( - = feature absent/pre-unlock; N = neutral;
+		//--- suffixed with `!` when currently SABOTAGED, e.g. W! ). `oilInc=` = cumulative supply the field has paid this round.
+		//--- New keys `oilOwn=`/`oilInc=` contain no existing key as a substring and are pipe-anchored, so `|fps=`-style greps and
+		//--- longest-key KV parsers keep resolving every field distinctly (same append rule the hc2fps=/grpW= keys followed).
+		private ["_oilOwnObj","_oilOwnKV","_oilIncKV"];
+		_oilOwnKV = "-"; _oilIncKV = "-1";
+		if (!isNil "WFBE_OILFIELD_POS_LIVE") then {
+			_oilOwnObj = missionNamespace getVariable ["WFBE_OILFIELD_OWNER", sideLogic];
+			_oilOwnKV = switch (_oilOwnObj) do { case west: {"W"}; case east: {"E"}; case resistance: {"G"}; default {"N"} };
+			if (missionNamespace getVariable ["WFBE_OILFIELD_SABOTAGED", false]) then {_oilOwnKV = _oilOwnKV + "!"};
+			_oilIncKV = str (missionNamespace getVariable ["WFBE_OILFIELD_INCOME_ACCRUED", 0]);
+		};
+		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE + "|oilOwn=" + _oilOwnKV + "|oilInc=" + _oilIncKV);
 
 		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
 		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent

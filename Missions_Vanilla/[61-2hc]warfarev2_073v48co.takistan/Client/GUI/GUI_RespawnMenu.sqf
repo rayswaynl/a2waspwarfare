@@ -1,6 +1,20 @@
 scriptName "Client\GUI\GUI_RespawnMenu.sqf";
+disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop touches display/controls across sleep; guard against "does not support serialization" (matches the convention already in the other GUI_Menu_* handlers).
 
 uiNamespace setVariable ["wfbe_display_respawn", _this select 0];
+
+//--- cmdcon42 BUG-8 ANTI-STRAND (Ray 2026-07-02): WFBE_DeathLocation is a GLOBAL set by
+//--- Client_OnKilled.sqf:54 (= getPos _body). If the fatal body's Killed EH never ran OnKilled
+//--- (e.g. a skin-swapped body whose EH re-add was missed), this menu can open with
+//--- WFBE_DeathLocation nil/undefined - the RPT showed exactly that (Undefined variable
+//--- wfbe_deathlocation at lines 7 & 49), which broke ctrlMapAnimAdd here AND the GetRespawnAvailable
+//--- base-spawn query below, so the player saw NO base spawn and got stranded on close. Reconstruct a
+//--- safe death location from the current player position (or [0,0,0] worst case) so the map anim,
+//--- camera and the [side, WFBE_DeathLocation] Call GetRespawnAvailable list all get a valid ARRAY.
+//--- A2-OA-1.64 safe (isNil / typeName / getPos). Idempotent: only fills when actually missing.
+if (isNil "WFBE_DeathLocation" || {typeName WFBE_DeathLocation != "ARRAY"} || {count WFBE_DeathLocation < 3}) then {
+	WFBE_DeathLocation = if (!isNull player) then {getPos player} else {[0,0,0]};
+};
 
 //--- Focus on the player death location.
 ((uiNamespace getVariable "wfbe_display_respawn") displayCtrl 511001) ctrlMapAnimAdd [0, .095, WFBE_DeathLocation];
@@ -12,6 +26,10 @@ ctrlSetText [511004, if (WFBE_RespawnDefaultGear) then {localize "STR_WF_RESPAWN
 //--- Register the UI (if needed).
 if (isNil 'WFBE_RespawnTime') then {
 	WFBE_RespawnTime = missionNamespace getVariable "WFBE_C_RESPAWN_DELAY";
+	//--- cmdcon42 BUG-8: never let a nil/non-number param leave WFBE_RespawnTime undefined - the RPT
+	//--- showed "Undefined variable wfbe_respawntime" at line 19, which meant the countdown loop and the
+	//--- whole spawn-list `while` never ran, freezing the menu. Fall back to the config default (10).
+	if (isNil "WFBE_RespawnTime" || {typeName WFBE_RespawnTime != "SCALAR"}) then {WFBE_RespawnTime = 10};
 	if (WF_Debug) then {WFBE_RespawnTime = 5};
 
 	[] Spawn {

@@ -1,0 +1,22 @@
+{
+  "name": "WFBE_NEURODEF_COMMANDCENTER_WALLS",
+  "parentW": 12,
+  "parentD": 10,
+  "parentDir": 0,
+  "structureType": "commandcenter",
+  "fortOnly": true,
+  "mode": "defense",
+  "objs": [
+    {"cls":"Concrete_Wall_EP1","x":-3.6,"y":7,"z":0,"dir":0},
+    {"cls":"Concrete_Wall_EP1","x":0,"y":7,"z":0,"dir":0},
+    {"cls":"Concrete_Wall_EP1","x":3.6,"y":7,"z":0,"dir":0},
+    {"cls":"Concrete_Wall_EP1","x":-7,"y":-3.6,"z":0,"dir":90},
+    {"cls":"Concrete_Wall_EP1","x":-7,"y":0,"z":0,"dir":90},
+    {"cls":"Concrete_Wall_EP1","x":-7,"y":3.6,"z":0,"dir":90},
+    {"cls":"Concrete_Wall_EP1","x":7,"y":-3.6,"z":0,"dir":90},
+    {"cls":"Concrete_Wall_EP1","x":7,"y":0,"z":0,"dir":90},
+    {"cls":"Concrete_Wall_EP1","x":7,"y":3.6,"z":0,"dir":90},
+    {"cls":"Concrete_Wall_EP1","x":-3.6,"y":-7,"z":0,"dir":0},
+    {"cls":"Concrete_Wall_EP1","x":3.6,"y":-7,"z":0,"dir":0}
+  ]
+}

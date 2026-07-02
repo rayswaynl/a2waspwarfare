@@ -20,6 +20,12 @@ IS_naval_map = false;
 
 
 startingDistance = STARTING_DISTANCE;
+//--- cmdcon42-h: STARTING_DISTANCE is a compile-time #define (version.sqf), uniform 7500 both maps. On the
+//--- smaller 12800 Takistan map, 7500 is 0.59 of the width (vs 0.49 on the 15360 Chernarus map) -> TK base
+//--- pairs are proportionally closer / fewer legal spawn pairs. Apply a map-fraction-parity TK value (6300 =
+//--- 0.49 of TK width, matching CH's ratio) ONLY when the define is still its default 7500, so a deploy-time
+//--- version.sqf that explicitly overrode STARTING_DISTANCE still wins on both maps.
+if (worldName == "Takistan" && {startingDistance == 7500}) then {startingDistance = 6300};
 
 CBA_display_ingame_warnings = false;
 publicVariable "CBA_display_ingame_warnings";
@@ -27,11 +33,11 @@ publicVariable "CBA_display_ingame_warnings";
 for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
-diag_log "## Build: WASP Warfare Build 86 / cmdcon41";
+diag_log "## Build: WASP Warfare Build 87 / cmdcon42";
 #ifdef WF_RELEASE_MARKER
 diag_log WF_RELEASE_MARKER;
 #else
-diag_log format ["WASPRELEASE|v1|candidate=build86-cmdcon41-20260702|git=build86-cmdcon41|terrain=%1", worldName];
+diag_log format ["WASPRELEASE|v1|candidate=build87-cmdcon42-20260702|git=build87-cmdcon42|terrain=%1", worldName];
 #endif
 diag_log format ["MISSINIT: missionName=%1, worldName=%2, isMultiplayer=%3, isServer=%4, isDedicated=%5", WF_MISSIONNAME, worldName, isMultiplayer, isServer, isDedicated];
 diag_log format ["## Starting Distance: [%1]", startingDistance];

@@ -151,6 +151,15 @@ _i = _i + [['','',3600,27,-2,2,2,0,'Takistani Army',[]]];
 _c = _c + ['T72_TK_EP1'];
 _i = _i + [['','',5200,30,-2,3,2,0,'Takistani Army',[]]];
 
+//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (conventional) buy-row metadata — TAKISTAN ONLY. Price + tier come from
+//--- flags (default 28000 / HEAVY level 3). Fields: [label,picture,PRICE,TIME,CREW(-2=auto),UPGRADE,FACTORY(2=Heavy),SKILL,faction,turrets].
+//--- Registered only when the master flag is on AND worldName=="Takistan" so the row never surfaces off-TK. Explicit label
+//--- (index 0) so the buy menu shows "SCUD Launcher (conventional)" instead of the raw config displayName.
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"}) then {
+	_c = _c + [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
+	_i = _i + [['SCUD Launcher (conventional)','',(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]),40,-2,(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_LEVEL", 3]),2,0,'Takistani Army',[]]];
+};
+
 /* Air Vehicles */
 _c = _c + ['An2_TK_EP1'];
 _i = _i + [['','',8265,30,-2,1,3,0,'Takistani Army',[]]];
@@ -214,14 +223,15 @@ _i = _i + [['','',100,0,0,0,'Fortification',0,'Takistani Army',[]]];
 _c = _c + ['TK_WarfareBBarrier10xTall_EP1'];
 _i = _i + [['','',200,0,0,0,'Fortification',0,'Takistani Army',[]]];
 
+//--- cmdcon42-g: WFBE_C_DEFMENU_V2 recategorises camo nets Strategic -> Fortification.
 _c = _c + ['Land_CamoNet_EAST_EP1'];
-_i = _i + [['','',35,0,0,0,'Strategic',0,'Takistani Army',[]]];
+_i = _i + [['','',35,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
 
 _c = _c + ['Land_CamoNetVar_EAST_EP1'];
-_i = _i + [['','',45,0,0,0,'Strategic',0,'Takistani Army',[]]];
+_i = _i + [['','',45,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
 
 _c = _c + ['Land_CamoNetB_EAST_EP1'];
-_i = _i + [['','',55,0,0,0,'Strategic',0,'Takistani Army',[]]];
+_i = _i + [['','',55,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
 
 _c = _c + ['TKOrdnanceBox_EP1'];
 _i = _i + [['','',850,0,0,0,'Ammo',0,'Takistani Army',[]]];
@@ -273,5 +283,27 @@ for '_z' from 0 to (count _c)-1 do {
 		diag_log Format ["[WFBE (ERROR)][frameno:%2 | ticktime:%3] Core_TKA: Element '%1' is not a valid class.",(_c select _z),diag_frameno,diag_tickTime];
 	};
 };
+
+//--- cmdcon42-i: Takistan-only EASA-loadout air variant roster (EAST/TKA rows). See Core_US.sqf for the
+//--- mechanism (deep-copy the resolved base-hull tuple, override name/price/air-tier, remap+arm in
+//--- Client_BuildUnit). Catalog is TAKISTAN + flag gated internally, so on Chernarus this block is a no-op.
+private ["_tkEasaRoster","_tkeRow","_tkeBase","_tkeTuple"];
+_tkEasaRoster = Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf";
+{
+	_tkeRow = _x;
+	if ((_tkeRow select 2) == "TKA") then {
+		_tkeBase = missionNamespace getVariable (_tkeRow select 1); //--- resolved base-hull tuple (registered above)
+		if (!isNil "_tkeBase") then {
+			_tkeTuple = +_tkeBase;                                   //--- deep copy: inherits [1] picture, [4] crew, [6] factory, [9] turrets
+			_tkeTuple set [QUERYUNITLABEL,   _tkeRow select 3];      //--- [0] display name
+			_tkeTuple set [QUERYUNITPRICE,   _tkeRow select 4];      //--- [2] price
+			_tkeTuple set [QUERYUNITUPGRADE, _tkeRow select 5];      //--- [5] air-research level gate
+			missionNamespace setVariable [(_tkeRow select 0), _tkeTuple];
+			diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_TKA: Registered TK-EASA variant token '%1' (base %4).",(_tkeRow select 0),diag_frameno,diag_tickTime,(_tkeRow select 1)];
+		} else {
+			diag_log Format ["[WFBE (WARNING)] Core_TKA: TK-EASA base hull '%1' not registered - variant '%2' hidden.",(_tkeRow select 1),(_tkeRow select 0)];
+		};
+	};
+} forEach _tkEasaRoster;
 
 diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_TKA: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];

@@ -195,7 +195,9 @@ _c = _c + ['MK19_TriPod'];
 _i = _i + [['','',700,0,1,0,'Defense',0,'USMC',[]]];
 
 _c = _c + ['TOW_TriPod'];
-_i = _i + [['','',2000,0,1,0,'Defense',0,'USMC',[]]];
+//--- cmdcon42-g: WFBE_C_DEFMENU_V2 drops the WEST AT price cliff (2000 -> 900; EAST SPG-9 = 475).
+//--- Legacy price 2000 kept when the flag is off. No new class (A2-OA has no cheaper US static AT).
+_i = _i + [['','',(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {900} else {2000}),0,1,0,'Defense',0,'USMC',[]]];
 
 _c = _c + ['Stinger_Pod'];
 _i = _i + [['','',3000,0,1,0,'Defense',0,'USMC',[]]];
@@ -207,14 +209,16 @@ _c = _c + ['M119'];
 _i = _i + [['','',2800,0,1,0,'Defense',0,'USMC',[]]];
 
 /* Defense Structures */
+//--- cmdcon42-g: WFBE_C_DEFMENU_V2 recategorises camo nets Strategic -> Fortification (findability).
+//--- Legacy 'Strategic' kept when the flag is off. WFBE_C_DEFMENU_V2_CAMOCAT resolved once below.
 _c = _c + ['Land_CamoNet_NATO'];
-_i = _i + [['','',35,0,0,0,'Strategic',0,'USMC',[]]];
+_i = _i + [['','',35,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'USMC',[]]];
 
 _c = _c + ['Land_CamoNetVar_NATO'];
-_i = _i + [['','',45,0,0,0,'Strategic',0,'USMC',[]]];
+_i = _i + [['','',45,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'USMC',[]]];
 
 _c = _c + ['Land_CamoNetB_NATO'];
-_i = _i + [['','',55,0,0,0,'Strategic',0,'USMC',[]]];
+_i = _i + [['','',55,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'USMC',[]]];
 
 _c = _c + ['USOrdnanceBox'];
 _i = _i + [['','',850,0,0,0,'Ammo',0,'USMC',[]]];

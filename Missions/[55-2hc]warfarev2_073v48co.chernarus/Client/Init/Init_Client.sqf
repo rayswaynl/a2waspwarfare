@@ -103,6 +103,10 @@ player addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
 [] execVM "Common\Functions\Common_Bipod.sqf";
 
 UpdateMarker = Compile preprocessFile "Common\Functions\Common_UpdateMarker.sqf";
+//--- OPTIONAL CLIENT MODS (cmdcon42-m): detect curated sound/visual/HUD mods on THIS client and cache
+//--- flags (WFBE_HAS_FX_MOD / WFBE_HAS_SOUND_MOD / WFBE_HAS_HUD_MOD) that the FX-suppression hooks read.
+//--- Whole feature gated by WFBE_C_MODHOOKS (default 1). Safe no-op for players without any mod.
+WFBE_CL_FNC_ModDetect = Compile preprocessFileLineNumbers "Client\Functions\Client_ModDetect.sqf";
 BoundariesIsOnMap = Compile preprocessFile "Client\Functions\Client_IsOnMap.sqf";
 BoundariesHandleOnMap = Compile preprocessFile "Client\Functions\Client_HandleOnMap.sqf";
 BuildUnit = Compile preprocessFile "Client\Functions\Client_BuildUnit.sqf";
@@ -135,6 +139,22 @@ UIFillListBuyUnits = Compile preprocessFile "Client\Functions\Client_UIFillListB
 UIFillListTeamOrders = Compile preprocessFile "Client\Functions\Client_UIFillListTeamOrders.sqf";
 UIFindLBValue = Compile preprocessFile "Client\Functions\Client_UIFindLBValue.sqf";
 
+//--- OPTIONAL CLIENT MODS (cmdcon42-m) — HOOK 3: run detection ONCE and, if any curated optional mod is
+//--- loaded on this client, emit a single friendly ack (systemChat + RPT line). Read-only, per-client, no
+//--- gameplay effect. Players without any optional mod: WFBE_CL_FNC_ModDetect returns [] -> no chat, no log,
+//--- behaviour identical to today. Gated by WFBE_C_MODHOOKS inside the helper.
+if (!isNil "WFBE_CL_FNC_ModDetect") then {
+	private ["_mods"];
+	_mods = [] call WFBE_CL_FNC_ModDetect;
+	if (count _mods > 0) then {
+		private ["_names"];
+		_names = _mods select 0;
+		{ if (_forEachIndex > 0) then { _names = _names + ", " + _x }; } forEach _mods;
+		systemChat (Format ["[WASP] Optional mods detected: %1 - enjoy!", _names]);
+		diag_log (Format ["MODHOOKS|ACK|optional client mods detected on this client: %1", _mods]);
+		["INFORMATION", Format ["Init_Client.sqf: optional client mods detected: %1", _mods]] Call WFBE_CO_FNC_LogContent;
+	};
+};
 
 //--- Namespace related (GUI).
 BIS_FNC_GUIset = {UInamespace setVariable [_this select 0, _this select 1]};
@@ -231,6 +251,7 @@ waitUntil {commonInitComplete};
 //--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition / ctrlSetStructuredText, no A3 commands.
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
+	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
 	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
 	_max = 18;
 	while {!WFBE_gameover} do {
@@ -1551,5 +1572,14 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- Self-gates on WFBE_C_ONBOARDING_ENABLE (default 1) and a uiNamespace once-flag inside the function;
 //--- detects JIP from mission time. Spawned (never blocks input/enrollment), placed after init completes.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Common_Onboarding.sqf";
+
+//--- Rotating gameplay-tip feed (cmdcon42-q, claude-gaming 2026-07-02). Ray: "add 50 more hints
+//--- that come by on rotation in the chat". Pure client cosmetic: posts one short tip via
+//--- systemChat every WFBE_C_TIPS_PERIOD seconds from a 50-tip pool; each feature-tip is gated on
+//--- its own feature flag so it auto-hides when Ray shelves the feature (or the feature's PR is
+//--- unmerged). Self-gates on WFBE_C_TIPS_ENABLE (default 1) and uiSleep's WFBE_C_TIPS_INITIAL
+//--- first so a fresh joiner isn't spammed over the onboarding cards. Spawned (never blocks input),
+//--- placed after init completes - same guarded-spawn pattern as the onboarding call above.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_TipRotation.sqf";
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

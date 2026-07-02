@@ -176,6 +176,12 @@ _u = _u		+ ['M1A2_US_TUSK_MG_EP1'];
 _u = _u		+ ['M6_EP1'];
 _u = _u		+ ['BAF_FV510_W'];
 _u = _u		+ ['BAF_FV510_D'];
+//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD at the HEAVY FACTORY on TAKISTAN ONLY (WEST/US faction here). This US
+//--- config only loads on Takistan (Chernarus WEST = USMC), but we worldName-gate explicitly per the TK-only mandate. The
+//--- row's price + HEAVY-factory tier live in Core_US.sqf metadata; it is a driveable owned purchase like any heavy vehicle.
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"}) then {
+	_u = _u	+ [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};

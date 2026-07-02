@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="WASP Warfare Build 86 (Chernarus)";
-		briefingDescription="Build 86: SCUD program, territorial victory, skin selector, command verbs, AI support, richer air and A-life.";
+		briefingName="WASP Warfare Build 87 (Chernarus)";
+		briefingDescription="Build 87: air cavalry and vehicle airlift, AH-6X, Ka-137 swarm, walls and defenses, chat tips, plus commander and fix polish.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;

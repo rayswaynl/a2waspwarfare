@@ -296,13 +296,23 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								_team setVariable ["wfbe_aicom_goto_since", time];
 							} else {
 								if (time - (_ord select 1) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
-									private ["_ldr","_movedThr","_farThr"];
+									private ["_ldr","_movedThr","_farThr","_airborne"];
 									_ldr = leader _team;
 									_movedThr = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200];
 									_farThr   = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_FAR", 300];
+									//--- cmdcon42-f AIR-MOBILE EXEMPTION: a team FLYING an air-mobile leg is progressing, not
+									//--- stuck - its leader rides the transport and may hover/idle near the breadcrumb while boarding
+									//--- or on the run-in, which the position-stuck gate below would misread as parked-and-stuck and
+									//--- (at the terminal tier) TELEPORT a flying leader. Exempt it: EITHER the leg-runner's broadcast
+									//--- wfbe_aicom_airborne_until window is still open, OR the leader is physically inside an aircraft.
+									//--- A2-OA-safe: getVariable [name,default] on a GROUP is illegal, so read + isNil-guard; isKindOf "Air".
+									_airborne = false;
+									private ["_amUntil"]; _amUntil = _team getVariable "wfbe_aicom_airborne_until"; if (isNil "_amUntil") then {_amUntil = 0};
+									if (_amUntil > time) then {_airborne = true};
+									if (!_airborne && {!isNull _ldr} && {(vehicle _ldr) != _ldr} && {(vehicle _ldr) isKindOf "Air"}) then {_airborne = true};
 									//--- In-contact teams are legitimately stationary (firefight/bounding); never
 									//--- treat as stuck - refresh the breadcrumb so they keep fighting.
-									if ((behaviour _ldr != "COMBAT") && {_ldr distance (_ord select 2) < _movedThr} && {_ldr distance _goto > _farThr}) then {
+									if ((!_airborne) && {behaviour _ldr != "COMBAT"} && {_ldr distance (_ord select 2) < _movedThr} && {_ldr distance _goto > _farThr}) then {
 										_needs = true; //--- parked far from target, not in contact: re-issue (unstick)
 										//--- REAL UNSTUCK (task #14/#16): the old remedy just re-emitted the same
 										//--- un-followable order. Bump a per-team STRIKE counter so the HC executor
@@ -700,7 +710,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								//--- Road-node chain extracted to WFBE_CO_FNC_BuildRoadRoute (shared with the war-room console path AI_Commander_Execute.sqf) - behaviour-identical to the prior inline builder; this keeps the per-team lane jitter here as the caller owns the persistent wfbe_aicom_lanejit var.
 								_laneJit = _team getVariable "wfbe_aicom_lanejit";
 								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
-								_hcRoute = [_hcOrigin, _hcDest, _laneJit * 120, _rmHops] Call WFBE_CO_FNC_BuildRoadRoute;
+								_hcRoute = [_hcOrigin, _hcDest, _laneJit * (missionNamespace getVariable ["WFBE_C_AICOM_LANE_OFFSET", 120]), _rmHops] Call WFBE_CO_FNC_BuildRoadRoute; //--- cmdcon42-h: lane amplitude is worldName-aware (CH 120 / TK 60) via WFBE_C_AICOM_LANE_OFFSET.
 							};
 							_team setVariable ["wfbe_aicom_route", _hcRoute, true];
 							_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];

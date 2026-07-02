@@ -262,6 +262,8 @@ missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
 _u 			= ['MH6J_EP1'];
+_u = _u		+ ['AH6X_EP1'];      //--- cmdcon42 Option C Row 1: AH-6X Scout (unarmed FLIR) at Aircraft Factory research level 0. Was registered in Core_US.sqf but reachable from no buy list until now.
+_u = _u		+ ['AH6X_M134'];     //--- cmdcon42 Option C Row 2: AH-6X (M134). SYNTHETIC buy token -> metadata registered in Core_US.sqf, remapped to the real AH6X_EP1 hull + a TwinM134/4000Rnd kit in Client_BuildUnit.sqf. Not a CfgVehicles class; only ever lives in this player buy list.
 _u = _u		+ ['MH60S'];
 _u = _u		+ ['UH60M_EP1'];
 _u = _u		+ ['UH60M_MEV_EP1'];
@@ -287,6 +289,13 @@ _u = _u		+ ['A10_US_EP1'];
 _u = _u		+ ['AV8B'];
 _u = _u		+ ['AV8B2'];
 _u = _u		+ ['F35B'];
+
+//--- cmdcon42-i: append TAKISTAN-only EASA-loadout air variant tokens to the WEST Aircraft-Factory list.
+//--- Only the NON-airfield-exclusive rows go here; the top-tier (airfield-exclusive) rows are added to the
+//--- per-airfield roster in Init_Common instead. The catalog self-gates on worldName + WFBE_C_TK_EASA_ROSTER,
+//--- returning [] on Chernarus, so this is a no-op there. AI never founds these (they are in NO squad template;
+//--- the founding/produce paths select from templates and only use this list for a factory-membership lookup).
+{ if (((_x select 2) == "US") && {!(_x select 6)}) then {_u = _u + [_x select 0]}; } forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};

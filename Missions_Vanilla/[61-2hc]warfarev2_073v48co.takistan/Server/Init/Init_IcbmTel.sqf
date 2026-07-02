@@ -148,18 +148,139 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 };
 
 //------------------------------------------------------------------------------------
+//--- cmdcon42-j (Ray 2026-07-02) PRODUCIBLE SCUD (Takistan): bought SCUDs are side launch PLATFORMS. Registered
+//--- server-side into a side-keyed missionNamespace array (WFBE_TK_SCUD_PLATFORMS_<side>) at purchase (client sends
+//--- "tk-scud-register"). Platforms are pruned lazily (dead/deleted refs dropped) wherever the array is read. A bought
+//--- SCUD is a CONVENTIONAL platform only — it can NEVER nuke (NUKE stays research-TEL-only, gated in the fire path).
+//------------------------------------------------------------------------------------
+
+//--- Return the compacted (alive-only) bought-SCUD platform list for a side; also writes the compacted list back.
+WFBE_SE_FNC_TkScudPlatforms = {
+	private ["_side","_key","_arr","_live","_x"];
+	_side = _this select 0;
+	if !(_side in [west, east, resistance]) exitWith {[]};
+	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
+	_arr = missionNamespace getVariable [_key, []];
+	if (typeName _arr != "ARRAY") then {_arr = []};
+	_live = [];
+	{ if (!isNull _x && {alive _x}) then {_live set [count _live, _x]} } forEach _arr;
+	//--- write back only if it shrank (avoid needless broadcasts).
+	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live, true] };
+	_live
+};
+
+//--- Register a freshly-bought SCUD as a side platform. Enforces the per-side live cap (WFBE_C_TK_SCUD_HF_MAX):
+//--- at/over cap the vehicle is DELETED and the buyer refunded, and the caller is told (refused-at-cap message).
+//--- Returns true if registered, false if refused. Server-authoritative.
+WFBE_SE_FNC_TkScudRegister = {
+	private ["_veh","_side","_team","_paid","_key","_live","_max","_arr","_refund"];
+	_veh  = _this select 0;
+	_side = _this select 1;
+	_team = if (count _this > 2) then {_this select 2} else {grpNull};
+	_paid = if (count _this > 3) then {_this select 3} else {-1};   //--- actual price paid (for an exact over-cap refund); <0 => fall back to the flag cost.
+	if (isNull _veh) exitWith {false};
+	if !(_side in [west, east, resistance]) exitWith {false};
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) <= 0) exitWith {false};
+	if (worldName != "Takistan") exitWith {false};
+	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
+	_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;   //--- compacted current list.
+	//--- already registered? (idempotent — a double send must not double-count).
+	if (_veh in _live) exitWith {true};
+	_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+	if (count _live >= _max) exitWith {
+		//--- refuse: destroy the surplus purchase + refund the buying team the EXACT amount paid (flag cost fallback), tell the side.
+		_refund = if (_paid >= 0) then {_paid} else {missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]};
+		if (!isNull _team) then { [_team, _refund] Call WFBE_CO_FNC_ChangeTeamFunds };
+		deleteVehicle _veh;
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["SCUD refused: your side already fields %1 SCUD launchers (max %2). Refunded.", count _live, _max]]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REFUSED at cap (%2/%3) - deleted + refunded.", str _side, count _live, _max]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|SCUDBUY-REFUSE-CAP|%1|live=%2|max=%3", str _side, count _live, _max]);
+		false
+	};
+	//--- register: tag the hull (side + platform marker + no-respawn), append to the side array, broadcast.
+	_veh setVariable ["wfbe_tk_scud_side", _side, true];
+	_veh setVariable ["wfbe_is_tk_scud", true, true];
+	_arr = _live + [_veh];
+	missionNamespace setVariable [_key, _arr, true];
+	//--- KILLED EH: drop from the registry on death. NO respawn (it's a purchase). Server-side (hull is a shared object).
+	_veh addEventHandler ["Killed", {
+		private ["_dead","_dSide","_dKey","_dArr","_dLive","_x"];
+		_dead = _this select 0;
+		_dSide = _dead getVariable ["wfbe_tk_scud_side", sideUnknown];
+		if !(_dSide in [west, east, resistance]) exitWith {};
+		_dKey = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _dSide];
+		_dArr = missionNamespace getVariable [_dKey, []];
+		if (typeName _dArr != "ARRAY") then {_dArr = []};
+		_dLive = [];
+		{ if (!isNull _x && {alive _x} && {_x != _dead}) then {_dLive set [count _dLive, _x]} } forEach _dArr;
+		missionNamespace setVariable [_dKey, _dLive, true];
+		diag_log (Format ["ICBMTEL|v1|SCUD-DESTROYED|%1|remaining=%2 (no respawn)", str _dSide, count _dLive]);
+	}];
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REGISTERED as platform (%2/%3 live).", str _side, count _arr, _max]] Call WFBE_CO_FNC_LogContent;
+	diag_log (Format ["ICBMTEL|v1|SCUDBUY|%1|live=%2|max=%3", str _side, count _arr, _max]);
+	true
+};
+
+//--- Return ALL alive conventional launch platforms for a side = the research TEL (if alive) + every alive bought SCUD.
+//--- Used by the fire path (nearest-to-target selection) and the menu-enable gate (side has ANY platform).
+WFBE_SE_FNC_TkScudAllPlatforms = {
+	private ["_side","_out","_tel"];
+	_side = _this select 0;
+	if !(_side in [west, east, resistance]) exitWith {[]};
+	_out = [];
+	_tel = missionNamespace getVariable [Format ["WFBE_ICBM_TEL_%1", str _side], objNull];
+	if (!isNull _tel && {alive _tel}) then {_out set [count _out, _tel]};
+	{ _out set [count _out, _x] } forEach ([_side] Call WFBE_SE_FNC_TkScudPlatforms);
+	_out
+};
+
+//--- Pick the alive platform NEAREST to a target position (research TEL or bought SCUD). objNull if none.
+WFBE_SE_FNC_TkScudNearestPlatform = {
+	private ["_side","_tgtPos","_plats","_best","_bestD","_ref","_x","_d"];
+	_side   = _this select 0;
+	_tgtPos = _this select 1;
+	_plats  = [_side] Call WFBE_SE_FNC_TkScudAllPlatforms;
+	_best  = objNull;
+	_bestD = 999999999;
+	_ref = [_tgtPos select 0, _tgtPos select 1, 0];
+	{
+		_d = (getPosATL _x) distance _ref;
+		if (_d < _bestD) then {_bestD = _d; _best = _x};
+	} forEach _plats;
+	_best
+};
+
+//------------------------------------------------------------------------------------
 //--- FIRE: routed here from GUI_Menu_Tactical (via Server_HandleSpecial case "icbm-tel-fire").
-//--- Payload: [_side, _target(pos/obj), _munition(STRING), _playerTeam, _fee(SCALAR)].
-//--- Server re-validates TEL alive + shared cooldown + range (non-NUKE) + funds, then executes.
+//--- Payload: [_side, _target(pos/obj), _munition(STRING), _playerTeam, _fee(SCALAR), _platformHint(OBJECT|objNull), _aiTreasury(SIDE|sideUnknown)].
+//--- Server re-validates TEL alive + cooldown + range (non-NUKE) + funds, then executes.
+//--- cmdcon42-n (Ray 2026-07-02): when the 7th param is a real side the fire is an AI COMMANDER launch — funds are read/charged
+//--- against that side's AI treasury (wfbe_aicom_funds) instead of a player team, and the null-team guard is bypassed. All other
+//--- validation (platform selection, level, cooldown, range, cap) is IDENTICAL to a human fire. NUKE is never an AI munition (v1).
+//--- cmdcon42-j (Ray 2026-07-02): for CONVENTIONAL munitions the launch platform is the NEAREST ALIVE side platform
+//--- (research TEL OR bought SCUD) to the target; range is measured from THAT platform; per-platform cooldown. NUKE is
+//--- research-TEL-only (a bought SCUD can never nuke) and keeps the side-shared cooldown/countdown/counterplay unchanged.
 //------------------------------------------------------------------------------------
 WFBE_SE_FNC_IcbmTelFire = {
-	private ["_side","_target","_muni","_playerTeam","_fee","_sideText","_telKey","_tel","_now","_cdKey","_last","_cool",
-	         "_tgtPos","_range","_dist","_cost","_funds"];
-	_side       = _this select 0;
-	_target     = _this select 1;
-	_muni       = _this select 2;
-	_playerTeam = _this select 3;
-	_fee        = if (count _this > 4) then {_this select 4} else {0};
+	private ["_side","_target","_muni","_playerTeam","_fee","_platformHint","_aiTreasury","_isAiFire","_sideText","_telKey","_tel","_now","_cdKey","_last","_cool",
+	         "_tgtPos","_range","_dist","_cost","_funds","_platform"];
+	_side         = _this select 0;
+	_target       = _this select 1;
+	_muni         = _this select 2;
+	_playerTeam   = _this select 3;
+	_fee          = if (count _this > 4) then {_this select 4} else {0};
+	//--- cmdcon42-j (Ray 2026-07-02): OPTIONAL platform hint (the specific bought SCUD whose vehicle-action fired). The
+	//--- server IGNORES it for NUKE and only HONOURS it for conventional munitions if it is an alive side platform; otherwise
+	//--- (or when nil) the nearest-to-target platform is chosen. Never trusted blindly — always re-validated below.
+	_platformHint = if (count _this > 5) then {_this select 5} else {objNull};
+	if (typeName _platformHint != "OBJECT") then {_platformHint = objNull};
+	//--- cmdcon42-n (Ray 2026-07-02): OPTIONAL AI-treasury flag (7th param). When it is a real side, this fire is an AI
+	//--- COMMANDER launch: funds are read/charged against the SEPARATE AI treasury (wfbe_aicom_funds via GetAICommanderFunds /
+	//--- ChangeAICommanderFunds) instead of a player team's wfbe_funds, and the null-team guard is bypassed (an AI fire carries
+	//--- no player team). Every other check (platform selection, level gate, cooldown, range, cap) is IDENTICAL to a human fire —
+	//--- the AI plays by the same launch rules; only the wallet differs. A2-OA-safe: a plain side test (no isEqualType/isNil abuse).
+	_aiTreasury = if (count _this > 6) then {_this select 6} else {sideUnknown};
+	_isAiFire = (_aiTreasury in [west, east, resistance]);
 
 	if !(_side in [west, east, resistance]) exitWith {};
 	_sideText = str _side;
@@ -168,28 +289,13 @@ WFBE_SE_FNC_IcbmTelFire = {
 	//--- + guaranteed nearest-enemy-structure kill). All conventional (level >= 1, like SATURATION/RECON), shared cooldown/range/funds.
 	if !(_muni in ["NUKE","SATURATION","RECON","FASCAM","STEELRAIN","BUSTER"]) then {_muni = "NUKE"};
 
-	//--- cmdcon41 TWO-LEVEL "SCUD" UPGRADE GATE (Ray 2026-07-02): the ICBM upgrade (WFBE_UP_ICBM) is being restructured
-	//--- into a 2-level tech renamed "SCUD" (a PARALLEL lane owns Core_Upgrades/* + display name — NOT touched here):
-	//---   level >= 1 ("SCUD" platform) : TEL exists + conventional munitions (SATURATION, RECON).
-	//---   level >= 2 ("ICBM")          : the NUKE munition (classic ICBM warhead + countdown/counterplay).
-	//--- Server-authoritative read of THIS side's current level. NUKE requires >= 2; SAT/RECON require >= 1 (the TEL
-	//--- only spawns at >= 1 anyway, but we gate explicitly so a stale ref can't slip a sub-level fire through).
+	//--- Read THIS side's SCUD/ICBM research level up front (used by the level gate below).
 	private ["_telLevel"];
 	_telLevel = 0;
 	if (!isNil "WFBE_UP_ICBM") then {
 		private ["_upg"];
 		_upg = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 		if (typeName _upg == "ARRAY" && {WFBE_UP_ICBM < count _upg}) then {_telLevel = _upg select WFBE_UP_ICBM};
-	};
-	if (_muni == "NUKE" && {_telLevel < 2}) exitWith {
-		[_side, "HandleSpecial", ["icbm-tel-msg", "The NUKE needs the ICBM tech (SCUD level 2). Research it to arm the nuclear warhead."]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] NUKE REFUSED — SCUD level %2 < 2.", _sideText, _telLevel]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=NUKE|level=%2", _sideText, _telLevel]);
-	};
-	if (_muni != "NUKE" && {_telLevel < 1}) exitWith {
-		[_side, "HandleSpecial", ["icbm-tel-msg", "That munition needs the SCUD platform (level 1)."]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] %2 REFUSED — SCUD level %3 < 1.", _sideText, _muni, _telLevel]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=%2|level=%3", _sideText, _muni, _telLevel]);
 	};
 
 	//--- Resolve target position (accept an OBJECT or a position array).
@@ -199,36 +305,92 @@ WFBE_SE_FNC_IcbmTelFire = {
 		["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — bad target.", _sideText]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	//--- TEL alive?
+	//--- PLATFORM SELECTION (cmdcon42-j) — done BEFORE the level gate so a bought SCUD can WAIVE the conventional research
+	//--- requirement (the 28000 purchase IS the unlock). NUKE still uses the research TEL only.
+	//---   NUKE       : research TEL ONLY (a bought SCUD can never nuke). Uses the classic WFBE_ICBM_TEL_<side> ref.
+	//---   CONVENTIONAL: the NEAREST alive side platform (research TEL OR bought SCUD) to the target — UNLESS a valid hint
+	//---                 (an alive side platform) was passed by the SCUD vehicle-action, in which case that specific hull
+	//---                 fires. Range is measured FROM THE CHOSEN PLATFORM (drive closer to reach further).
 	_telKey = Format ["WFBE_ICBM_TEL_%1", _sideText];
-	_tel = missionNamespace getVariable [_telKey, objNull];
-	if (isNull _tel || {!alive _tel}) exitWith {
-		//--- REFUSE + ensure a replacement is scheduled (in case the killed-EH respawn was missed).
-		[_side, "HandleSpecial", ["icbm-tel-msg", "ICBM refused: your TEL is destroyed. A replacement is inbound."]] Call WFBE_CO_FNC_SendToClients;
-		if (isNull _tel) then { [_side] spawn { sleep (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600]); if (!WFBE_GameOver) then {[_this select 0] Call WFBE_SE_FNC_SpawnIcbmTel} } };
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL fire REFUSED — TEL dead/absent (munition %2).", _sideText, _muni]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["ICBMTEL|v1|REFUSE-NOTEL|%1|muni=%2", _sideText, _muni]);
+	_tel = missionNamespace getVariable [_telKey, objNull];   //--- the research TEL (may be null/dead for a SCUD-only side).
+	if (_muni == "NUKE") then {
+		_platform = _tel;
+	} else {
+		//--- honour a valid hint (alive + registered platform for THIS side), else nearest-to-target.
+		private ["_allPlats"];
+		_allPlats = [_side] Call WFBE_SE_FNC_TkScudAllPlatforms;
+		if (!isNull _platformHint && {alive _platformHint} && {_platformHint in _allPlats}) then {
+			_platform = _platformHint;
+		} else {
+			_platform = [_side, _tgtPos] Call WFBE_SE_FNC_TkScudNearestPlatform;
+		};
+	};
+
+	//--- TWO-LEVEL "SCUD" UPGRADE GATE (cmdcon41). NUKE requires research level >= 2 (research TEL only). CONVENTIONAL
+	//--- normally requires research level >= 1 — BUT a bought SCUD launch platform WAIVES that (a purchased SCUD can fire
+	//--- conventional munitions with no research). Server-authoritative; the NUKE gate is never waivable.
+	private ["_isBoughtScud"];
+	_isBoughtScud = (!isNull _platform && {_platform getVariable ["wfbe_is_tk_scud", false]});
+	if (_muni == "NUKE" && {_telLevel < 2}) exitWith {
+		[_side, "HandleSpecial", ["icbm-tel-msg", "The NUKE needs the ICBM tech (SCUD level 2). Research it to arm the nuclear warhead."]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] NUKE REFUSED — SCUD level %2 < 2.", _sideText, _telLevel]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=NUKE|level=%2", _sideText, _telLevel]);
+	};
+	if (_muni != "NUKE" && {_telLevel < 1} && {!_isBoughtScud}) exitWith {
+		[_side, "HandleSpecial", ["icbm-tel-msg", "That munition needs the SCUD platform (research level 1) or a bought SCUD launcher."]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] %2 REFUSED — SCUD level %3 < 1 and no bought SCUD.", _sideText, _muni, _telLevel]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=%2|level=%3", _sideText, _muni, _telLevel]);
+	};
+
+	if (isNull _platform || {!alive _platform}) exitWith {
+		//--- No launch platform. NUKE: refuse + ensure a research-TEL replacement is scheduled. Conventional: no platform at all.
+		if (_muni == "NUKE") then {
+			[_side, "HandleSpecial", ["icbm-tel-msg", "ICBM refused: your TEL is destroyed. A replacement is inbound."]] Call WFBE_CO_FNC_SendToClients;
+			if (isNull _tel) then { [_side] spawn { sleep (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600]); if (!WFBE_GameOver) then {[_this select 0] Call WFBE_SE_FNC_SpawnIcbmTel} } };
+		} else {
+			[_side, "HandleSpecial", ["icbm-tel-msg", "That munition refused: no launch platform (TEL or SCUD) is alive."]] Call WFBE_CO_FNC_SendToClients;
+		};
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] fire REFUSED — no alive platform (munition %2).", _sideText, _muni]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-NOPLATFORM|%1|muni=%2", _sideText, _muni]);
 	};
 
 	_now = time;
-	//--- SHARED cooldown across ALL munitions (one clock per side).
-	_cdKey = Format ["WFBE_ICBM_TEL_LASTFIRE_%1", _sideText];
-	_last  = missionNamespace getVariable [_cdKey, -99999];
+	//--- COOLDOWN.
+	//---   NUKE / research-TEL semantics: SHARED per-side clock (WFBE_ICBM_TEL_LASTFIRE_<side>) — UNCHANGED.
+	//---   CONVENTIONAL from a bought SCUD: PER-PLATFORM clock stored on the hull (multiple launchers fire in parallel).
+	//---   CONVENTIONAL from the research TEL: keep the side-shared clock so a single research TEL can't rapid-fire.
+	//--- Same duration (WFBE_C_ICBM_TEL_COOLDOWN) either way.
 	_cool  = missionNamespace getVariable ["WFBE_C_ICBM_TEL_COOLDOWN", 300];
+	private ["_perPlatform"];
+	_perPlatform = (_muni != "NUKE" && {_platform getVariable ["wfbe_is_tk_scud", false]});
+	if (_perPlatform) then {
+		_last = _platform getVariable ["wfbe_tk_scud_lastfire", -99999];
+		_cdKey = "";   //--- (per-platform: stamped on the hull below).
+	} else {
+		_cdKey = Format ["WFBE_ICBM_TEL_LASTFIRE_%1", _sideText];
+		_last  = missionNamespace getVariable [_cdKey, -99999];
+	};
 	if ((_now - _last) < _cool) exitWith {
-		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["TEL on cooldown - %1s until the next launch.", round (_cool - (_now - _last))]]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL fire on cooldown (%2s left).", _sideText, round (_cool - (_now - _last))]] Call WFBE_CO_FNC_LogContent;
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["%1 on cooldown - %2s until the next launch.", (if (_perPlatform) then {"That SCUD"} else {"TEL"}), round (_cool - (_now - _last))]]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] fire on cooldown (%2s left, perPlatform=%3).", _sideText, round (_cool - (_now - _last)), _perPlatform]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	//--- RANGE: NUKE unlimited; SATURATION/RECON limited to WFBE_C_ICBM_TEL_RANGE (GRAD 9000 x1.15 = 10350 default).
+	//--- RANGE: NUKE unlimited; conventional limited to WFBE_C_ICBM_TEL_RANGE, measured FROM THE CHOSEN PLATFORM.
+	//--- A2-OA gotcha (per the FASCAM-cap note below): an `exitWith` nested inside a `then {}` exits only that block, not the
+	//--- function — so a nested range refusal would fall through and FIRE anyway. Compute the out-of-range flag inside the
+	//--- non-NUKE `then {}`, then refuse with a TOP-LEVEL `if ... exitWith` so it truly aborts the fire.
+	_range = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RANGE", 10350];
+	_dist  = -1;
+	private ["_outOfRange"];
+	_outOfRange = false;
 	if (_muni != "NUKE") then {
-		_range = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RANGE", 10350];
-		_dist  = (getPosATL _tel) distance [_tgtPos select 0, _tgtPos select 1, 0];
-		if (_dist > _range) exitWith {
-			[_side, "HandleSpecial", ["icbm-tel-msg", Format ["Target out of TEL range (%1m > %2m). Only the NUKE has unlimited range.", round _dist, _range]]] Call WFBE_CO_FNC_SendToClients;
-			["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL %2 fire REFUSED — out of range (%3 > %4).", _sideText, _muni, round _dist, _range]] Call WFBE_CO_FNC_LogContent;
-			diag_log (Format ["ICBMTEL|v1|REFUSE-RANGE|%1|muni=%2|dist=%3|max=%4", _sideText, _muni, round _dist, _range]);
-		};
+		_dist = (getPosATL _platform) distance [_tgtPos select 0, _tgtPos select 1, 0];
+		if (_dist > _range) then {_outOfRange = true};
+	};
+	if (_outOfRange) exitWith {
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["Target out of launcher range (%1m > %2m). Drive a SCUD closer, or only the NUKE has unlimited range.", round _dist, _range]]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] %2 fire REFUSED — out of range (%3 > %4).", _sideText, _muni, round _dist, _range]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-RANGE|%1|muni=%2|dist=%3|max=%4", _sideText, _muni, round _dist, _range]);
 	};
 
 	//--- FUNDS (server-authoritative; the client does NOT deduct when the TEL flag is on). Cost by munition:
@@ -244,13 +406,25 @@ WFBE_SE_FNC_IcbmTelFire = {
 		case "BUSTER":     {missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000]};
 		default            {_fee};
 	};
-	if (isNull _playerTeam) exitWith {["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — null team.", _sideText]] Call WFBE_CO_FNC_LogContent};
-	//--- A2-OA rule: read team funds via the canonical getter (plain group getVariable + isNil inside), NOT a [name,default]
-	//--- group getVariable. Deduct via the canonical changer (broadcasts + keeps team-funds bookkeeping consistent).
-	_funds = _playerTeam Call WFBE_CO_FNC_GetTeamFunds;
+	//--- cmdcon42-n (Ray 2026-07-02): AI fire reads/charges the AI treasury (wfbe_aicom_funds), not a player team; the null-team
+	//--- guard only applies to a human fire (an AI fire legitimately carries no player team). Human path is byte-unchanged.
+	//--- A2-OA gotcha (the FASCAM-cap note above): an `exitWith` nested inside a `then/else {}` exits ONLY that block, not the
+	//--- function — so the null-team refusal MUST be a TOP-LEVEL `if ... exitWith` (compute the flag first, then refuse) or a
+	//--- human fire with a null team would fall through and continue. AI fires carry no team, so the guard is human-only.
+	private ["_badTeam"];
+	_badTeam = (!_isAiFire) && {isNull _playerTeam};
+	if (_badTeam) exitWith {["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — null team.", _sideText]] Call WFBE_CO_FNC_LogContent};
+	if (_isAiFire) then {
+		_funds = _aiTreasury Call GetAICommanderFunds;
+	} else {
+		//--- A2-OA rule: read team funds via the canonical getter (plain group getVariable + isNil inside), NOT a [name,default]
+		//--- group getVariable. Deduct via the canonical changer (broadcasts + keeps team-funds bookkeeping consistent).
+		_funds = _playerTeam Call WFBE_CO_FNC_GetTeamFunds;
+	};
 	if (_funds < _cost) exitWith {
-		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["Not enough funds for that TEL munition ($%1 needed).", _cost]]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL %2 fire REFUSED — funds (%3 < %4).", _sideText, _muni, _funds, _cost]] Call WFBE_CO_FNC_LogContent;
+		//--- AI fire refusals are logged only (no client message — there is no human commander to inform).
+		if (!_isAiFire) then {[_side, "HandleSpecial", ["icbm-tel-msg", Format ["Not enough funds for that TEL munition ($%1 needed).", _cost]]] Call WFBE_CO_FNC_SendToClients};
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL %2 fire REFUSED — funds (%3 < %4, ai=%5).", _sideText, _muni, _funds, _cost, _isAiFire]] Call WFBE_CO_FNC_LogContent;
 	};
 
 	//--- cmdcon41-w3i (Ray 2026-07-02) FASCAM FIELD CAP: at most WFBE_C_ICBM_TEL_FASCAM_MAX (2) LIVE mine fields per side.
@@ -286,20 +460,30 @@ WFBE_SE_FNC_IcbmTelFire = {
 		diag_log (Format ["ICBMTEL|v1|REFUSE-FASCAMCAP|%1|live=%2|max=%3", _sideText, _fascamLiveN, _fMaxMsg]);
 	};
 
-	//--- All checks pass: charge + stamp the shared cooldown BEFORE firing (anti double-fire race).
-	[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
-	missionNamespace setVariable [_cdKey, _now, true];
+	//--- All checks pass: charge + stamp the cooldown BEFORE firing (anti double-fire race). Per-platform (bought SCUD) =
+	//--- stamp the hull; otherwise (NUKE / research-TEL conventional) = stamp the side-shared clock.
+	//--- cmdcon42-n: an AI fire debits the AI treasury; a human fire debits the player team (byte-unchanged path).
+	if (_isAiFire) then {
+		[_aiTreasury, -_cost] Call ChangeAICommanderFunds;
+	} else {
+		[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
+	};
+	if (_perPlatform) then {
+		_platform setVariable ["wfbe_tk_scud_lastfire", _now, true];
+	} else {
+		missionNamespace setVariable [_cdKey, _now, true];
+	};
 
-	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL AUTHORISED — munition %2 at %3 (cost %4).", _sideText, _muni, [round (_tgtPos select 0), round (_tgtPos select 1)], _cost]] Call WFBE_CO_FNC_LogContent;
-	diag_log (Format ["ICBMTEL|v1|FIRE|%1|muni=%2|cost=%3", _sideText, _muni, _cost]);
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] LAUNCH AUTHORISED — munition %2 at %3 (cost %4, platform %5, perPlatformCD %6, ai=%7).", _sideText, _muni, [round (_tgtPos select 0), round (_tgtPos select 1)], _cost, typeOf _platform, _perPlatform, _isAiFire]] Call WFBE_CO_FNC_LogContent;
+	diag_log (Format ["ICBMTEL|v1|FIRE|%1|muni=%2|cost=%3|scudPlatform=%4|ai=%5", _sideText, _muni, _cost, _perPlatform, _isAiFire]);
 
 	if (_muni == "NUKE") then {
-		[_side, _tel, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelNuke;
+		[_side, _platform, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelNuke;
 	} else {
-		//--- PROMPT munitions (SATURATION / RECON / cmdcon41-w3i FASCAM / STEELRAIN / BUSTER): erect+FX now, GLOBAL 60s
-		//--- launch marker, then deliver. All non-NUKE munitions share this exposure idiom + shared cooldown.
-		[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;
-		[_tel] Call WFBE_SE_FNC_IcbmTelLaunchMarker;   //--- everyone sees "SCUD LAUNCH DETECTED" at the TEL for 60s.
+		//--- PROMPT munitions (SATURATION / RECON / cmdcon41-w3i FASCAM / STEELRAIN / BUSTER): erect+FX now on THE CHOSEN
+		//--- PLATFORM, GLOBAL 60s launch marker AT THAT PLATFORM, then deliver. Marks whichever launcher fired.
+		[_platform] Call WFBE_SE_FNC_IcbmTelTheatrics;
+		[_platform] Call WFBE_SE_FNC_IcbmTelLaunchMarker;   //--- everyone sees "SCUD LAUNCH DETECTED" at the firing platform for 60s.
 		switch (_muni) do {
 			case "SATURATION": {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSaturation};
 			case "RECON":      {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelRecon};
@@ -727,6 +911,316 @@ WFBE_SE_FNC_IcbmTelBuster = {
 		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL BUSTER — no enemy structure within %2m of the point (bombs fell, no refund).", str _side, _r]] Call WFBE_CO_FNC_LogContent;
 		diag_log (Format ["ICBMTEL|v1|BUSTER_NO_TARGET|%1|r=%2", str _side, _r]);
 	};
+};
+
+//====================================================================================
+//--- cmdcon42-n (Ray 2026-07-02) AI COMMANDER SCUD (Takistan only). Ray: "allow AI commanders on Takistan to use the
+//--- SCUD, just not spam it at enemy base." Builds on the #174 plumbing above: it reuses WFBE_SE_FNC_IcbmTelFire (with the
+//--- new AI-treasury 7th param), the side platform registry, nearest-platform selection and per-platform cooldowns UNCHANGED.
+//---
+//--- WHAT IT DOES (per AI-commanded side, low cadence ~120s):
+//---   • Skips a side a HUMAN commands (same isPlayer-leader-of-commander-team idiom AI_Commander.sqf uses) — humans keep the
+//---     Tactical menu; the AI never fires for a human-led side.
+//---   • Requires SCUD research level >= 1 AND at least one alive launch platform (research TEL or a bought SCUD).
+//---   • Picks a TACTICAL target = the LARGEST cluster of ENEMY units. Anchors are bounded to the top ~6 candidate points
+//---     (enemy-held town centres + this side's own CONTESTED towns) — a 300m nearEntities cluster scan around each, keeping
+//---     the biggest cluster with >= MIN_CLUSTER (8) enemy units that is IN RANGE of some side platform.
+//---   • ANTI-BASE RULE (Ray's explicit constraint): HARD-EXCLUDE any candidate within HQ_EXCLUSION (900m) of the enemy
+//---     HQ/base centre — the AI never SCUDs the enemy base area. (A rare-base-strike variant is one flag away: drop the
+//---     exclusion test / add a chance gate — intentionally NOT enabled per Ray.)
+//---   • Fires "SATURATION" (v1 keeps the proven munition) via WFBE_SE_FNC_IcbmTelFire, paying the AI treasury; skips when
+//---     side funds < 2x the SAT cost so the AI never bankrupts itself.
+//---   • CADENCE guards on top of the per-platform cooldown: a per-side minimum interval (AI_INTERVAL, 600s) AND a
+//---     2-tick confirmation — a cluster must PERSIST across two consecutive evaluator ticks (last-seen pos+time stored;
+//---     re-confirm within 350m) so a passing patrol is never reflex-nuked.
+//---   • OPTIONAL PURCHASE (sub-flag WFBE_C_TK_SCUD_AI_BUY): when rich (econ-surge OR funds > AI_BUY_FUNDS) and the side owns
+//---     < 1 bought SCUD and its HEAVY factory upgrade >= the buy-row level, buy ONE via the SAME server register path players
+//---     use (charge AI treasury, register platform, per-side cap still enforced by TkScudRegister).
+//---   • TELEMETRY: AICOMSTAT ...|AI_SCUD|... per fire; |AI_SCUD_BUY| on purchase. The existing 60s global launch marker +
+//---     theatrics apply as normal — players can hunt the AI's launchers (that's the game).
+//---
+//--- A2-OA-1.64 safe throughout: no isEqualType/isEqualTo; ==/!= only on non-Boolean operands (if/else for bools); plain
+//--- getVariable + isNil; nearEntities/nearestObjects bounded; side tests via `in [west,east,resistance]`.
+//====================================================================================
+
+//--- Is a side currently commanded by a HUMAN? (mirror AI_Commander.sqf: commander team leader is a real player.) Honours the
+//--- AICOM LOCK (lock=1 => treat as AI-commanded so the AI keeps firing during evals/night, same as the supervisor).
+WFBE_SE_FNC_IcbmTelSideIsAI = {
+	private ["_side","_cmdTeam"];
+	_side = _this select 0;
+	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) exitWith {true};
+	_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+	if (isNull _cmdTeam) exitWith {true};   //--- no commander team object => not a human commander.
+	if (isPlayer (leader _cmdTeam)) exitWith {false};
+	true
+};
+
+//--- A side's SCUD/ICBM research level (0 if the constant/upgrade array is absent). Same read the fire path uses.
+WFBE_SE_FNC_IcbmTelSideScudLevel = {
+	private ["_side","_lvl","_upg"];
+	_side = _this select 0;
+	_lvl = 0;
+	if (!isNil "WFBE_UP_ICBM") then {
+		_upg = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+		if (typeName _upg == "ARRAY" && {WFBE_UP_ICBM < count _upg}) then {_lvl = _upg select WFBE_UP_ICBM};
+	};
+	_lvl
+};
+
+//--- Count ALIVE enemy entities (men + crewed vehicles) within _radius of _pos. Bounded by nearEntities radius. Returns a
+//--- SCALAR count. _enemySides is precomputed by the caller (all present sides + resistance, minus the firing side).
+WFBE_SE_FNC_IcbmTelEnemyClusterN = {
+	private ["_pos","_radius","_enemySides","_n","_e"];
+	_pos        = _this select 0;
+	_radius     = _this select 1;
+	_enemySides = _this select 2;
+	_n = 0;
+	{
+		_e = _x;
+		if (alive _e && {(side _e) in _enemySides}) then {
+			//--- on-foot man OR a crewed vehicle (empty hulls don't count as a target mass). A2-OA-safe crew test.
+			if (_e isKindOf "Man") then {
+				_n = _n + 1;
+			} else {
+				if (({alive _x} count (crew _e)) > 0) then {_n = _n + 1};
+			};
+		};
+	} forEach (_pos nearEntities [["Man","LandVehicle","Air"], _radius]);
+	_n
+};
+
+//--- ONE AI-side SCUD evaluation tick. Returns nothing; self-gates on every rule. Called by the spawned loop below.
+WFBE_SE_FNC_IcbmTelAiEval = {
+	private ["_side","_sideText","_enemySides","_enemyHQ","_hqExcl","_clusterRad","_minCluster","_range",
+	         "_scudLvl","_plats","_anchors","_maxAnchors","_myID","_t","_tSideID","_bestPos","_bestN","_n","_np","_confKey","_confTKey",
+	         "_lastPos","_lastT","_confirmR","_confirmed","_now","_lastFireKey","_lastFire","_aiInterval","_satCost","_funds"];
+	_side = _this select 0;
+	if !(_side in [west, east, resistance]) exitWith {};
+	_sideText = str _side;
+
+	//--- Only AI-commanded sides fire (human commanders keep the Tactical menu).
+	if !([_side] Call WFBE_SE_FNC_IcbmTelSideIsAI) exitWith {};
+
+	//--- Research + platform gates.
+	_scudLvl = [_side] Call WFBE_SE_FNC_IcbmTelSideScudLevel;
+	if (_scudLvl < 1) exitWith {};
+	_plats = [_side] Call WFBE_SE_FNC_TkScudAllPlatforms;
+	if (count _plats == 0) exitWith {};
+
+	//--- Enemy set (the firing side is excluded; resistance folded in so GUER towns/units count as enemy mass).
+	_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_side];
+	//--- Enemy HQ centre for the anti-base exclusion. On a 2-AI-side match the enemy is the OTHER main side; we also fold in
+	//--- every OTHER present side's HQ so no side's base is ever struck. HQ_EXCLUSION is a hard radius (Ray: never SCUD the base).
+	_hqExcl     = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_HQ_EXCLUSION", 900];
+	_clusterRad = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_CLUSTER_R", 300];
+	_minCluster = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_MIN_CLUSTER", 8];
+	_maxAnchors = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_MAX_ANCHORS", 6];
+	_range      = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RANGE", 10350];
+	_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+
+	//--- BUILD ANCHOR LIST (bounded): enemy-held town centres + this side's OWN contested towns (a town we hold but that has
+	//--- enemies pressing it is exactly where a cluster forms). Cap to the nearest _maxAnchors to a side platform so the
+	//--- cluster scan stays cheap (<= _maxAnchors nearEntities calls per side per tick). Positions are town-object positions.
+	private ["_platAnchor","_candsRaw"];
+	//--- reference point for anchor ranking = the side's FIRST platform (any platform; nearest-to-target is re-resolved at fire).
+	_platAnchor = getPosATL (_plats select 0);
+	_candsRaw = [];
+	{
+		_t = _x;
+		_tSideID = _t getVariable ["sideID", -1];
+		//--- enemy-held town (sideID != mine and not neutral -1) OR my own town (contested clusters form on our front towns too).
+		if ((_tSideID != _myID && {_tSideID >= 0}) || {_tSideID == _myID}) then {
+			_np = getPos _t;
+			//--- ANTI-BASE: skip any anchor within HQ_EXCLUSION of ANY enemy HQ (never build a target near a base).
+			private ["_tooCloseToBase"];
+			_tooCloseToBase = false;
+			{
+				_enemyHQ = (_x) Call WFBE_CO_FNC_GetSideHQ;
+				if (!isNull _enemyHQ) then {
+					if ((_np distance (getPos _enemyHQ)) < _hqExcl) exitWith {_tooCloseToBase = true};
+				};
+			} forEach _enemySides;
+			//--- must also be reachable by SOME platform (range measured from the nearest platform, as at fire time).
+			if (!_tooCloseToBase) then {
+				private ["_nearPlat"];
+				_nearPlat = [_side, _np] Call WFBE_SE_FNC_TkScudNearestPlatform;
+				if (!isNull _nearPlat && {(getPosATL _nearPlat) distance [_np select 0, _np select 1, 0] <= _range}) then {
+					_candsRaw set [count _candsRaw, _np];
+				};
+			};
+		};
+	} forEach towns;
+
+	//--- Keep the _maxAnchors positions CLOSEST to the platform-anchor (bounded scan) WITHOUT the sort/resize commands (not used
+	//--- anywhere else in this tree — we don't assume them). Manual repeated min-find: pull the nearest still-unpicked cand up to
+	//--- _maxAnchors times. O(candsRaw * maxAnchors) which is tiny (towns count * 6). A2-OA-safe: only distance/set/forEach.
+	if (count _candsRaw == 0) exitWith {};   //--- nothing valid, in-range, and away from bases.
+	_anchors = [];
+	private ["_picked","_pi","_bestI","_bestD","_ci","_cd2","_already"];
+	_picked = [];
+	for "_pi" from 1 to (_maxAnchors min (count _candsRaw)) do {
+		_bestI = -1; _bestD = 1e12;
+		for "_ci" from 0 to ((count _candsRaw) - 1) do {
+			_already = false;
+			{ if (_x == _ci) exitWith {_already = true} } forEach _picked;
+			if (!_already) then {
+				_cd2 = ((_candsRaw select _ci) distance _platAnchor);
+				if (_cd2 < _bestD) then {_bestD = _cd2; _bestI = _ci};
+			};
+		};
+		if (_bestI >= 0) then {
+			_picked set [count _picked, _bestI];
+			_anchors set [count _anchors, (_candsRaw select _bestI)];
+		};
+	};
+
+	if (count _anchors == 0) exitWith {};
+
+	//--- CLUSTER SCAN: pick the anchor with the largest enemy cluster (>= _minCluster). Bounded to <= _maxAnchors scans.
+	_bestPos = [0,0,0]; _bestN = 0;
+	{
+		_np = _x;
+		_n = [_np, _clusterRad, _enemySides] Call WFBE_SE_FNC_IcbmTelEnemyClusterN;
+		if (_n > _bestN) then {_bestN = _n; _bestPos = _np};
+	} forEach _anchors;
+
+	if (_bestN < _minCluster) exitWith {
+		//--- no worthy mass this tick; clear the pending confirmation (we require CONSECUTIVE re-confirmation).
+		missionNamespace setVariable [Format ["WFBE_TK_SCUD_AI_CLUST_%1", _sideText], [0,0,0]];
+		missionNamespace setVariable [Format ["WFBE_TK_SCUD_AI_CLUSTT_%1", _sideText], -1];
+	};
+
+	//--- 2-TICK PERSISTENCE: only fire when the SAME cluster (within _confirmR) was seen on the PREVIOUS tick too.
+	_now = time;
+	_confKey  = Format ["WFBE_TK_SCUD_AI_CLUST_%1",  _sideText];
+	_confTKey = Format ["WFBE_TK_SCUD_AI_CLUSTT_%1", _sideText];
+	_confirmR = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_CONFIRM_R", 350];
+	_lastPos = missionNamespace getVariable [_confKey, [0,0,0]];
+	_lastT   = missionNamespace getVariable [_confTKey, -1];
+	//--- a valid prior sighting = within 2.5 evaluator intervals (so a skipped tick doesn't force a full re-warm-up).
+	_confirmed = false;
+	if (_lastT > 0 && {(_now - _lastT) <= (2.5 * (missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_TICK", 120]))}) then {
+		if ((_bestPos distance _lastPos) <= _confirmR) then {_confirmed = true};
+	};
+	//--- always (re)store this tick's cluster as the new "last seen" so next tick can confirm.
+	missionNamespace setVariable [_confKey, _bestPos];
+	missionNamespace setVariable [_confTKey, _now];
+
+	if (!_confirmed) exitWith {
+		diag_log (Format ["AICOMSTAT|v2|EVENT|%1|%2|AI_SCUD_TRACK|clusterN=%3|pos=%4|awaiting-confirm", _sideText, round (_now / 60), _bestN, [round (_bestPos select 0), round (_bestPos select 1)]]);
+	};
+
+	//--- PER-SIDE MINIMUM INTERVAL (on top of the per-platform cooldown enforced inside the fire fn).
+	_lastFireKey = Format ["WFBE_TK_SCUD_AI_LASTFIRE_%1", _sideText];
+	_lastFire    = missionNamespace getVariable [_lastFireKey, -99999];
+	_aiInterval  = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_INTERVAL", 600];
+	if ((_now - _lastFire) < _aiInterval) exitWith {};
+
+	//--- FUNDS GATE: never bankrupt the AI — require >= 2x the SATURATION cost before firing.
+	_satCost = missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000];
+	_funds   = _side Call GetAICommanderFunds;
+	if (_funds < (2 * _satCost)) exitWith {
+		diag_log (Format ["AICOMSTAT|v2|EVENT|%1|%2|AI_SCUD_SKIP_FUNDS|funds=%3|need=%4", _sideText, round (_now / 60), _funds, 2 * _satCost]);
+	};
+
+	//--- FIRE. SATURATION (v1). platformHint=objNull -> the fire fn resolves the nearest platform to _bestPos itself and
+	//--- measures range from it. _aiTreasury=_side -> charges wfbe_aicom_funds. grpNull team (unused on the AI path).
+	private ["_nearPlatForLog"];
+	_nearPlatForLog = [_side, _bestPos] Call WFBE_SE_FNC_TkScudNearestPlatform;
+	[_side, _bestPos, "SATURATION", grpNull, _satCost, objNull, _side] Call WFBE_SE_FNC_IcbmTelFire;
+	missionNamespace setVariable [_lastFireKey, _now];
+	diag_log (Format ["AICOMSTAT|v2|EVENT|%1|%2|AI_SCUD|side=%1|target=%3|clusterN=%4|platform=%5", _sideText, round (_now / 60), [round (_bestPos select 0), round (_bestPos select 1)], _bestN, (if (isNull _nearPlatForLog) then {"none"} else {typeOf _nearPlatForLog})]);
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] AI SCUD launch — SATURATION at %2 (clusterN %3, funds %4).", _sideText, [round (_bestPos select 0), round (_bestPos select 1)], _bestN, _funds]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- OPTIONAL AI SCUD PURCHASE (sub-flag WFBE_C_TK_SCUD_AI_BUY). When rich AND the side owns < 1 bought SCUD AND its HEAVY
+//--- factory upgrade >= the buy-row level, buy ONE via the SAME server register path players use (charge AI treasury, then
+//--- TkScudRegister which tags + registers + enforces the per-side cap). Server-authoritative; spawns the hull near the HQ.
+WFBE_SE_FNC_IcbmTelAiBuy = {
+	private ["_side","_sideText","_bought","_hfLvl","_needLvl","_upg","_rich","_surge","_funds","_buyFunds","_cost","_hq","_hqPos","_pos","_veh"];
+	_side = _this select 0;
+	if !(_side in [west, east, resistance]) exitWith {};
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_BUY", 1]) <= 0) exitWith {};
+	if !([_side] Call WFBE_SE_FNC_IcbmTelSideIsAI) exitWith {};
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) <= 0) exitWith {};
+	if (worldName != "Takistan") exitWith {};
+	_sideText = str _side;
+
+	//--- own < 1 bought SCUD? (research TEL doesn't count — this buys a mobile launcher.)
+	_bought = count ([_side] Call WFBE_SE_FNC_TkScudPlatforms);
+	if (_bought >= 1) exitWith {};
+
+	//--- HEAVY factory upgrade >= the buy-row level. WFBE_UP_HEAVY is a core constant (Init_CommonConstants.sqf) always defined,
+	//--- so it is used directly (mirrors AI_Commander.sqf's direct WFBE_UP_HEAVY use — no isNil guard needed / no phantom classref).
+	_needLvl = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_LEVEL", 3];
+	_hfLvl = 0;
+	_upg = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+	if (typeName _upg == "ARRAY" && {WFBE_UP_HEAVY < count _upg}) then {_hfLvl = _upg select WFBE_UP_HEAVY};
+	if (_hfLvl < _needLvl) exitWith {};
+
+	//--- RICH signal: the AICOM econ-surge flag (logik) OR raw funds over the buy threshold.
+	_funds    = _side Call GetAICommanderFunds;
+	_buyFunds = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_BUY_FUNDS", 60000];
+	private ["_logik"];
+	_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+	_surge = if (isNil "_logik" || {isNull _logik}) then {false} else {_logik getVariable ["wfbe_aicom_econ_surge", false]};
+	_rich  = _surge || {_funds > _buyFunds};
+	if (!_rich) exitWith {};
+
+	//--- affordability: don't buy if it would drop the treasury below one SAT shot (keeps a shot in reserve).
+	_cost = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000];
+	if (_funds < (_cost + (missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000]))) exitWith {};
+
+	_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	if (isNull _hq) exitWith {};
+	_hqPos = getPos _hq;
+	_pos = [_hqPos, 55] Call WFBE_CO_FNC_GetEmptyPosition;
+	if (typeName _pos != "ARRAY" || {count _pos < 2}) then {_pos = [(_hqPos select 0) + 40, (_hqPos select 1) + 40, 0]};
+
+	//--- spawn the hull (same class as the research TEL / player buy row) and register it via the shared server path. We charge
+	//--- the AI treasury FIRST (the register path only refunds a player TEAM on over-cap; passing grpNull team + our own charge
+	//--- keeps the AI economy authoritative). If register refuses at cap it deletes the surplus (rare — we gate on _bought<1).
+	_veh = createVehicle [(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+	if (isNull _veh) exitWith {
+		["WARNING", Format ["Init_IcbmTel.sqf : [%1] AI SCUD buy — createVehicle FAILED at %2.", _sideText, _pos]] Call WFBE_CO_FNC_LogContent;
+	};
+	_veh setPos [_pos select 0, _pos select 1, 0];
+	_veh setVehicleLock "LOCKED";
+	_veh setDir (random 360);
+	[_side, -_cost] Call ChangeAICommanderFunds;
+	//--- register (grpNull team => no player refund path taken; our AI charge above is the debit). Cap enforced inside.
+	[_veh, _side, grpNull, _cost] Call WFBE_SE_FNC_TkScudRegister;
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] AI SCUD PURCHASED (cost %2, funds now %3, hfLvl %4).", _sideText, _cost, _side Call GetAICommanderFunds, _hfLvl]] Call WFBE_CO_FNC_LogContent;
+	diag_log (Format ["AICOMSTAT|v2|EVENT|%1|%2|AI_SCUD_BUY|side=%1|cost=%3|funds=%4", _sideText, round (time / 60), _cost, _side Call GetAICommanderFunds]);
+};
+
+//--- SPAWNED LOOP: low-cadence AI-SCUD evaluator for all present AI-capable sides (west/east; GUER has no upgrade economy so
+//--- it never passes the research gate — harmless to include). One cheap tick every WFBE_C_TK_SCUD_AI_TICK (120s); each side's
+//--- eval self-gates. TK-only (worldName) + master flag WFBE_C_TK_SCUD_AI. Guarded so it never runs off-Takistan or when off.
+if (worldName == "Takistan" && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_AI", 1]) > 0}) then {
+	[] spawn {
+		private ["_tick","_sides","_s"];
+		//--- let the AI commanders + platform registry warm up before the first evaluation.
+		waitUntil {sleep 5; (!isNil "serverInitFull") || WFBE_GameOver};
+		sleep 60;
+		["INITIALIZATION", "Init_IcbmTel.sqf : AI SCUD evaluator loop ONLINE (Takistan, WFBE_C_TK_SCUD_AI=1)."] Call WFBE_CO_FNC_LogContent;
+		diag_log ("AICOMSTAT|v2|EVENT|all|" + str (round (time / 60)) + "|AI_SCUD_LOOP|online");
+		while {!WFBE_GameOver} do {
+			_tick = missionNamespace getVariable ["WFBE_C_TK_SCUD_AI_TICK", 120];
+			_sides = WFBE_PRESENTSIDES - [resistance];   //--- the two main AI-capable sides (GUER has no research economy).
+			{
+				_s = _x;
+				//--- each side eval is fully self-guarded; wrap nothing else — a slow scan on one side must not stall the other.
+				[_s] Call WFBE_SE_FNC_IcbmTelAiEval;
+				//--- optional purchase pass (own sub-flag + rich/level gates inside).
+				[_s] Call WFBE_SE_FNC_IcbmTelAiBuy;
+			} forEach _sides;
+			sleep _tick;
+		};
+		diag_log ("AICOMSTAT|v2|EVENT|all|" + str (round (time / 60)) + "|AI_SCUD_LOOP|offline (game over)");
+	};
+} else {
+	["INFORMATION", Format ["Init_IcbmTel.sqf : AI SCUD evaluator SKIPPED (worldName=%1, WFBE_C_TK_SCUD_AI=%2).", worldName, missionNamespace getVariable ["WFBE_C_TK_SCUD_AI", 1]]] Call WFBE_CO_FNC_LogContent;
 };
 
 ["INITIALIZATION", "Init_IcbmTel.sqf : land ICBM TEL functions compiled + ready."] Call WFBE_CO_FNC_LogContent;

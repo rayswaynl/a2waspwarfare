@@ -1,4 +1,4 @@
-Private ["_buildings","_closest","_defense","_groups","_HC","_liveHCs","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander"];
+Private ["_buildings","_closest","_defense","_groups","_HC","_liveHCs","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander","_sideStillValid","_defenseArea","_areaTeam"];
 _defense = _this select 0;
 _side = _this select 1;
 _team = _this select 2;
@@ -14,11 +14,27 @@ _defense setVariable ["WFBE_DefenseManningLoopActive", true, true];
 //--- Owner call 2026-06-11: ALL base-defense crews mount instantly (spawn at the gun,
 //--- teleport in). No barracks walk = no pathfinding cost, no stalled walk-in boarding.
 _moveInGunner = true;
+//--- AI16 (lane118): loop exits when the base area that this defense belongs to changes hands.
+_sideStillValid = true;
 
-while {alive _defense} do {
+while {alive _defense && _sideStillValid} do {
 	if (isNull(gunner _defense) || !alive gunner _defense) then {
 
 		sleep 7;
+
+		//--- AI16 (lane118): stop re-manning if the base area this defense was built for has changed hands.
+		//--- WFBE_DefenseBaseArea is stamped by Construction_StationaryDefense at placement time (non-nil only
+		//--- for manned base statics). If the area's DefenseTeam now belongs to a different side, the original
+		//--- builder side no longer owns the area — stop producing ghost defenders and let the loop exit.
+		_defenseArea = _defense getVariable ["WFBE_DefenseBaseArea", objNull];
+		if (!isNull _defenseArea) then {
+			_areaTeam = _defenseArea getVariable ["DefenseTeam", grpNull];
+			if (!isNull _areaTeam && {side _areaTeam != _side}) then {
+				_sideStillValid = false;
+				["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] base area changed hands — stopping re-manning for [%2].", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
+		if (!_sideStillValid) exitWith {};
 
 		//--- EAST/OPFOR empty-static fix (2026-06-14): this base-static path used to GATE all
 		//--- manning behind `alive _closest` (a side-Barracks within WFBE_C_BASE_DEFENSE_MANNING_RANGE

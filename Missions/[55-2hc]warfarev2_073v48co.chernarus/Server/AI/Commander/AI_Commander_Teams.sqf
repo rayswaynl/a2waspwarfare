@@ -99,10 +99,33 @@ _base = switch (true) do {
 	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
 };
+//--- cmdcon42-k TEAM-COUNT REDUCTION (Ray 2026-07-02, both maps via LoadoutManager mirror): drop WFBE_C_AICOM_TEAMS_DELTA
+//--- (default -3) teams off the PC-scaled BASE founding target for EACH AI commander so the new Build-87 dynamic systems
+//--- (retained transports, patrol escalation, swarms) have per-team AI headroom. This is the SINGLE authoritative adjusted
+//--- read of the base target: _base drives the funds-extra sum, the banking valve, the hard-cap clamp, the econ-sink surge,
+//--- the (_foundedTeams+_pending)>=_target founding gate, the PC-cleanup retire AND the wfbe_aicom_dyntarget publish below,
+//--- so every consumer inherits the reduction from here. The FLOOR (WFBE_C_AICOM_TEAMS_FLOOR, default 6) prevents a config
+//--- accident from zeroing the army (a side founding 0 teams loses this fork by walkover). The funds-extra + econ-sink surge
+//--- (+2) stay RELATIVE to the reduced base; the hard cap is untouched. DELTA 0 => _base unchanged => EXACT old behaviour.
+//--- A2-OA-safe: getVariable-with-default + plain max arithmetic, no A3 commands. _baseRaw kept for the once-per-side log.
+private ["_baseRaw","_teamsDelta"];
+_baseRaw    = _base;
+_teamsDelta = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_DELTA", -1];
+_base       = (_base + _teamsDelta) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 6]);
 _pcExtraCap = switch (true) do { case (_pcN >= 10): {0}; case (_pcN >= 6): {1}; default {_maxExtra} };
 if (_extra > _pcExtraCap) then {_extra = _pcExtraCap};
 _target = _base + _extra;
 _logik setVariable ["wfbe_aicom_pc", _pcN];
+
+//--- cmdcon42-k STARTUP LOG (once per side, latched on the logic): emit the base/delta/effective triple in the AICOMSTAT
+//--- format so soak analysis can correlate the founded-team count with the applied reduction. Latched so it prints once at
+//--- boot and again only if the reduced base changes (e.g. a pop-tier shift moves the PC-scaled base), never every 90s tick.
+private ["_tgtLogPrev"];
+_tgtLogPrev = _logik getVariable ["wfbe_aicom_teamstgt_log", -9999];
+if (_base != _tgtLogPrev) then {
+	_logik setVariable ["wfbe_aicom_teamstgt_log", _base];
+	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAMS_TARGET|base=" + str _baseRaw + "|delta=" + str _teamsDelta + "|effective=" + str _base + "|floor=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 6]) + "|pc=" + str _pcN);
+};
 
 	//--- B37 BANKING VALVE (Ray 2026-06-16, gated WFBE_C_AICOM_BANKING_VALVE default-ON): at LOW/MID pop a
 	//--- rich commander banks income it can't spend because the funds-extra is hard-capped (MAX_EXTRA=1).

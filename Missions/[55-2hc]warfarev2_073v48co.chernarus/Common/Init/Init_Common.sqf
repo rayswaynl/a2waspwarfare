@@ -108,6 +108,8 @@ WFBE_CO_FNC_CreateTeam = Compile preprocessFileLineNumbers "Common\Functions\Com
 WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTownUnits.sqf";
 WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
 WFBE_CO_FNC_RunCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_RunCommanderTeam.sqf";
+WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirLeg.sqf"; //--- cmdcon42-f AIR-MOBILE: fly an ORDERED leg with the team's own live transport heli + hot-LZ (cold=land, contested=paradrop); transport returns to base + persists. Gate WFBE_C_AICOM_AIRMOBILE.
+WFBE_CO_FNC_AICOMAirReturn = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirReturn.sqf"; //--- cmdcon42-f shared post-drop RETURN-TO-BASE-AND-HOLD (the founding WFBE_C_AICOM_AIR_RETAIN path + air-mobile legs call this SAME code - no duplication). Scheduled-context only (it sleeps).
 WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMServiceTick.sqf"; //--- B48 AICOM self-service (default OFF: WFBE_C_AICOM_SERVICE_ENABLED)
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
 WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functions\Common_SpawnFactionSmoke.sqf"; //--- Cosmetic: server-only triggered faction smoke (gated WFBE_C_FSMOKE_ENABLED; capped+TTL+cooldown).
@@ -146,6 +148,7 @@ WFBE_CO_FNC_GetSideTowns = Compile preprocessFileLineNumbers "Common\Functions\C
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 WFBE_CO_FNC_GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCamps.sqf";
+WFBE_CO_FNC_SanitizeGotoDisp = Compile preprocessFileLineNumbers "Common\Functions\Common_SanitizeGotoDisp.sqf"; //--- cmdcon42-o: enemy-base intel-leak clamp for order-destination DISPLAY surfaces (producer-side).
 WFBE_CO_FNC_GetTotalCampsOnSide = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCampsOnSide.sqf";
 WFBE_CO_FNC_GetTownsSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTownsSupply.sqf";
 WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitConfigGear.sqf";
@@ -420,10 +423,26 @@ if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
 
 	//--- Per-airfield specials: units added ONLY at the named airfield.
 	//--- Chernarus: L-39C is exclusive to Balota (closest prestige-aviation context).
-	//--- Takistan: no per-airfield specials defined (no clean equivalent for L-39C there).
-	WFBE_AIRFIELD_UNITS_SPECIAL = [
-		["Balota", ["L39_TK_EP1"]]
-	];
+	//--- Takistan (cmdcon42-i): the two REAL TK airfields Rasman + Loy Manara (exact town names from the
+	//---   Takistan mission.sqm) gain the TOP-tier (level-5, airfield-exclusive) TK-EASA air variant rows,
+	//---   so owning a TK airfield finally unlocks the heaviest warloads (audit item #4). Cross-faction
+	//---   listing is intentional (same soft-faction-walls precedent as Su25_Ins/L159_ACR above): the
+	//---   airfield capture IS the unlock, and the buy pipeline resolves each token's own faction tuple.
+	//---   The exclusive rows are collected from the catalog (isAirfieldExclusive flag), which self-gates on
+	//---   worldName + WFBE_C_TK_EASA_ROSTER -> [] when the flag is off, leaving the TK airfields plain.
+	WFBE_AIRFIELD_UNITS_SPECIAL = if (IS_chernarus_map_dependent) then {
+		[
+			["Balota", ["L39_TK_EP1"]]
+		]
+	} else {
+		private ["_tkeExclusive"];
+		_tkeExclusive = [];
+		{ if (_x select 6) then {_tkeExclusive = _tkeExclusive + [_x select 0]}; } forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
+		[
+			["Rasman",      _tkeExclusive],
+			["Loy Manara",  _tkeExclusive]
+		]
+	};
 };
 
 //--- Data-driven special-unit info popups.

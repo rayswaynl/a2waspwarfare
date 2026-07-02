@@ -1,0 +1,17 @@
+{
+  "name": "WFBE_NEURODEF_BARRACKS_WALLS",
+  "parentW": 18,
+  "parentD": 12,
+  "parentDir": 0,
+  "structureType": "barracks",
+  "fortOnly": true,
+  "mode": "defense",
+  "objs": [
+    {"cls":"Land_fort_bagfence_long","x":-6,"y":8,"z":0,"dir":0},
+    {"cls":"Land_fort_bagfence_long","x":-2.9,"y":8,"z":0,"dir":0},
+    {"cls":"Land_fort_bagfence_long","x":2.9,"y":8,"z":0,"dir":0},
+    {"cls":"Land_fort_bagfence_long","x":6,"y":8,"z":0,"dir":0},
+    {"cls":"Land_fort_bagfence_long","x":-10,"y":0,"z":0,"dir":90},
+    {"cls":"Land_fort_bagfence_long","x":10,"y":0,"z":0,"dir":90}
+  ]
+}

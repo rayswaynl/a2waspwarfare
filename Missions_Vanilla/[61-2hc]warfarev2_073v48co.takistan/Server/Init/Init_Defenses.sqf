@@ -50,6 +50,84 @@ missionNamespace setVariable ['WFBE_NEURODEF_BANK_WALLS',[
 
 ]];
 
+//=============================================================================
+//--- cmdcon42-g: FACTORY WALL LADDER v2 (WFBE_C_WALLS_V2). Ray-approved 2026-07-02.
+//--- Source of truth: docs/design/BASE-COMPOSITIONS-PROPOSAL.md (rev 2) +
+//--- docs/design/compositions/PROPOSED_Init_Defenses_blocks.sqf.
+//--- These are the *_V2 arrays. The LEGACY *_WALLS arrays above are UNTOUCHED.
+//--- Construction_SmallSite.sqf / Construction_MediumSite.sqf select v2 vs legacy by the
+//--- flag at spawn time; Bank dressing (Construction_MediumSite.sqf) selects _V2 vs legacy too.
+//--- REVERSIBILITY: WFBE_C_WALLS_V2 = 0 -> the hooks read the legacy names -> byte-identical
+//--- old behaviour. No legacy array is edited or deleted.
+//---
+//--- PURE WALL-MATERIAL LADDER (Ray spec): no wire/nests/towers/flags/chicanes.
+//---   LOW    (Barracks, Light)          -> Land_fort_bagfence_long (~2.85 m)
+//---   MEDIUM (Heavy, ServicePoint, Bank)-> Base_WarfareBBarrier10x (~24 m) + Land_HBarrier_large (~5 m)
+//---   HIGH   (Command Center, Aircraft) -> Concrete_Wall_EP1 (~3.6 m, the EXACT HQ wall class)
+//--- All four classes are IN-TREE (already spawned by legacy templates in this same file).
+//--- Format ['classname',[xOff,yOff,zOff],relDir]; +Y=front, +X=right; identical math to the HQ
+//--- array + CreateDefenseTemplate (setDir (dir - relDir), origin modelToWorld relPos). Vehicle
+//--- factories keep the +X (model-right) face OPEN (pad / fallback egress side, _dir=90).
+//=============================================================================
+
+//--- BARRACKS (LOW = bagfence). 18x12, infantry factory, no vehicle egress. 6 objects. NO closed ring.
+missionNamespace setVariable ['WFBE_NEURODEF_BARRACKS_WALLS_V2',[
+	['Land_fort_bagfence_long',[-6,8,0],0],['Land_fort_bagfence_long',[-2.9,8,0],0],
+	['Land_fort_bagfence_long',[2.9,8,0],0],['Land_fort_bagfence_long',[6,8,0],0],
+	['Land_fort_bagfence_long',[-10,0,0],90],['Land_fort_bagfence_long',[10,0,0],90]
+]];
+
+//--- LIGHT FACTORY (LOW = bagfence). 22x14, vehicles exit +X (right) -> right face OPEN. 10 objects.
+missionNamespace setVariable ['WFBE_NEURODEF_LIGHT_WALLS_V2',[
+	['Land_fort_bagfence_long',[-6.5,9,0],0],['Land_fort_bagfence_long',[-3.4,9,0],0],
+	['Land_fort_bagfence_long',[3.4,9,0],0],['Land_fort_bagfence_long',[6.5,9,0],0],
+	['Land_fort_bagfence_long',[-6.5,-9,0],0],['Land_fort_bagfence_long',[-3.4,-9,0],0],
+	['Land_fort_bagfence_long',[3.4,-9,0],0],['Land_fort_bagfence_long',[6.5,-9,0],0],
+	['Land_fort_bagfence_long',[-13,1.6,0],90],['Land_fort_bagfence_long',[-13,-1.6,0],90]
+]];
+
+//--- HEAVY FACTORY (MEDIUM = big HESCO). 28x16, armor exits +X (right) -> right face OPEN. 3 objects.
+missionNamespace setVariable ['WFBE_NEURODEF_HEAVY_WALLS_V2',[
+	['Base_WarfareBBarrier10x',[0,12,0],0],
+	['Base_WarfareBBarrier10x',[0,-12,0],0],
+	['Base_WarfareBBarrier10x',[-17,0,0],90]
+]];
+
+//--- SERVICE POINT (MEDIUM = big HESCO). 16x8, keep BOTH X faces open; single rear slab. 1 object.
+//--- Legacy is empty []; v2 gives it a light rear screen (still fully drive-through both sides).
+missionNamespace setVariable ['WFBE_NEURODEF_SERVICEPOINT_WALLS_V2',[
+	['Base_WarfareBBarrier10x',[0,7,0],0]
+]];
+
+//--- AIRCRAFT FACTORY (HIGH = concrete, HQ-grade). 30x18, aircraft exit +X (right) -> apron OPEN. 16 objects.
+missionNamespace setVariable ['WFBE_NEURODEF_AIRCRAFT_WALLS_V2',[
+	['Concrete_Wall_EP1',[-9,12,0],0],['Concrete_Wall_EP1',[-5.4,12,0],0],['Concrete_Wall_EP1',[-1.8,12,0],0],
+	['Concrete_Wall_EP1',[1.8,12,0],0],['Concrete_Wall_EP1',[5.4,12,0],0],['Concrete_Wall_EP1',[9,12,0],0],
+	['Concrete_Wall_EP1',[-9,-12,0],0],['Concrete_Wall_EP1',[-5.4,-12,0],0],['Concrete_Wall_EP1',[-1.8,-12,0],0],
+	['Concrete_Wall_EP1',[1.8,-12,0],0],['Concrete_Wall_EP1',[5.4,-12,0],0],['Concrete_Wall_EP1',[9,-12,0],0],
+	['Concrete_Wall_EP1',[-18,-5.4,0],90],['Concrete_Wall_EP1',[-18,-1.8,0],90],
+	['Concrete_Wall_EP1',[-18,1.8,0],90],['Concrete_Wall_EP1',[-18,5.4,0],90]
+]];
+
+//--- COMMAND CENTER (HIGH = concrete, HQ-grade). 12x10, no vehicle egress. Single ~3.6 m front gate. 11 objects.
+missionNamespace setVariable ['WFBE_NEURODEF_COMMANDCENTER_WALLS_V2',[
+	['Concrete_Wall_EP1',[-3.6,7,0],0],['Concrete_Wall_EP1',[0,7,0],0],['Concrete_Wall_EP1',[3.6,7,0],0],
+	['Concrete_Wall_EP1',[-7,-3.6,0],90],['Concrete_Wall_EP1',[-7,0,0],90],['Concrete_Wall_EP1',[-7,3.6,0],90],
+	['Concrete_Wall_EP1',[7,-3.6,0],90],['Concrete_Wall_EP1',[7,0,0],90],['Concrete_Wall_EP1',[7,3.6,0],90],
+	['Concrete_Wall_EP1',[-3.6,-7,0],0],['Concrete_Wall_EP1',[3.6,-7,0],0]
+]];
+
+//--- BANK v2 (MEDIUM = big walls). Dressing path (WFBE_SE_FNC_SpawnStructureDressing). Both sides
+//--- identical (no faction props). 24 m HESCO on rear+sides; HBarrier_large front with a ~5 m raid gate. 7 objects.
+missionNamespace setVariable ['WFBE_NEURODEF_BANK_WEST_V2',[
+	['Base_WarfareBBarrier10x',[0,13,0],0],
+	['Base_WarfareBBarrier10x',[-15,0,0],90],
+	['Base_WarfareBBarrier10x',[15,0,0],90],
+	['Land_HBarrier_large',[-10,-13,0],0],['Land_HBarrier_large',[-5,-13,0],0],
+	['Land_HBarrier_large',[5,-13,0],0],['Land_HBarrier_large',[10,-13,0],0]
+]];
+missionNamespace setVariable ['WFBE_NEURODEF_BANK_EAST_V2', missionNamespace getVariable 'WFBE_NEURODEF_BANK_WEST_V2'];
+
 //--- OWNER OVERRIDE 2026-06-14: ArtyRadar + Reserve must be a TIGHT cluster of <=6 THEMED props (antenna/crate/etc),
 //--- NOT a walled HESCO compound with watchtowers. These four NEURODEF vars are the dressing templates read by
 //--- Construction_MediumSite.sqf (WFBE_NEURODEF_ARTILLERYRADAR_/RESERVE_WEST|EAST); both rlTypes are excluded from the
@@ -507,6 +585,31 @@ if (WF_A2_Arrowhead) then {
 };
 missionNamespace setVariable ['WFBE_NEURODEF_BANK_EAST', _b];
 
+//======================================================================================
+//--- cmdcon42-g: DEFENSES/FORTIFICATIONS MENU v2 — anchor-composition buildables.
+//--- HEDGEHOG LINE: one-click AT obstacle (4x Hedgehog_EP1 in a line). Side-neutral. Flat.
+//--- FLAK TOWER: elevated AA static + pooled AI gunner on a tower deck (WEST/EAST variants).
+//---   The AA child carries a NON-ZERO z offset (deck height). The generic ConstructPosition
+//---   path flattens z, so a flak-tower-specific block in Server_ConstructPosition.sqf lifts the
+//---   gun onto the deck via setPosATL (per proposal B.5 idiom). Manning is the existing pooled
+//---   DefenseTeam (ConstructDefense mans any gun with an empty gunner slot). NEEDS-BOX-VERIFY.
+//======================================================================================
+missionNamespace setVariable ['WFBE_NEURODEF_HEDGEHOGLINE',[
+	['Hedgehog_EP1',[-4.5,0,0],0],['Hedgehog_EP1',[-1.5,0,0],0],
+	['Hedgehog_EP1',[1.5,0,0],0],['Hedgehog_EP1',[4.5,0,0],0]
+]];
+//--- Flak tower: element 0 = host tower @ ground (z=0), element 1 = AA gun @ deck height (z>0).
+//--- WEST: A2-OA has no US static bullet-AA -> Stinger_Pod is the WEST AA mount.
+missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_WEST',[
+	['Land_Fort_Watchtower_EP1',[0,0,0],0],
+	['Stinger_Pod_US_EP1',[0,0,5.4],0]
+]];
+//--- EAST / GUER: the true ZU-23 auto-cannon on the deck.
+missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_EAST',[
+	['Land_Fort_Watchtower_EP1',[0,0,0],0],
+	['ZU23_TK_EP1',[0,0,5.4],0]
+]];
+
 //--- Anchor (build-menu placeholder classname) -> composition template map.
 // [anchorClassname, baseTemplateVar, factionSpecific?]  (factionSpecific appends _WEST / _EAST at build time)
 WFBE_POSITION_TEMPLATE_MAP = [
@@ -518,6 +621,9 @@ WFBE_POSITION_TEMPLATE_MAP = [
 	['RoadCone','WFBE_NEURODEF_MIXEDPOS_HEAVY',true],			//--- Mixed (heavy, 4 AI)
 	['Paleta1','WFBE_NEURODEF_WALL_STRAIGHT',false],
 	['Paleta2','WFBE_NEURODEF_WALL_CORNER',false],
-	['Land_Ind_Timbers','WFBE_NEURODEF_WALL_GATE',false]
+	['Land_Ind_Timbers','WFBE_NEURODEF_WALL_GATE',false],
+	//--- cmdcon42-g menu v2 anchors (side-neutral hedgehog line; faction-specific flak tower).
+	['Misc_cargo_cont_small','WFBE_NEURODEF_HEDGEHOGLINE',false],	//--- Hedgehog Line (AT obstacle)
+	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true]			//--- Flak Tower (elevated AA, 1 AI)
 ];
-WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers'];
+WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall'];

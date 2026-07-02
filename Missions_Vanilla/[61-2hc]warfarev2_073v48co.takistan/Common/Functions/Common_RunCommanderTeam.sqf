@@ -503,6 +503,67 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		_flat  = _pos isFlatEmpty [12, 0, 2, 12, 0, false, objNull];
 		if (count _flat > 0) then {_lzPos = _flat} else {_lzPos = _pos};
 
+		//--- ===================================================================
+		//--- cmdcon42 HOT-LZ PARADROP DECISION (Ray 2026-07-02, gate WFBE_C_AICOM_AIR_PARADROP default-ON):
+		//--- if the transport would insert onto a CONTESTED or ENEMY-HELD LZ, the infantry PARADROPS (reuses the
+		//--- proven no-flat-LZ EJECT fallback below) instead of the heli descending to land in the depot guns. ONE
+		//--- bounded, decision-time evaluation - NO per-tick scans. Hot when EITHER:
+		//---   (a) the LZ's nearest town is not our side (town logic getVariable "sideID" - broadcast, readable on the
+		//---       HC where this runs; neutral/GUER/enemy all treated as jump-worthy), OR
+		//---   (b) any HOSTILE unit (the ((side _team) getFriend (side _x)) < 0.6 idiom used elsewhere in this file) is
+		//---       inside WFBE_C_AICOM_AIR_PARADROP_SCAN_R of the LZ (one nearEntities scan).
+		//--- On a hot LZ we hand the Spawn a DROP POINT that is WFBE_C_AICOM_AIR_PARADROP_OFFSET m SHORT of the town
+		//--- centre, back along the heli->town approach vector, and an EMPTY flat-list so the existing branch takes the
+		//--- para path (the transport holds altitude, ejects there, then flies home/despawns exactly as today). A2-OA-safe:
+		//--- getVariable "sideID" on a TOWN OBJECT (objects accept the [name,default] form; only GROUPS reject it),
+		//--- getFriend/nearEntities, plain atan2 position-delta bearing (binary getDir is A3-only). NEVER-FROZEN: this only
+		//--- chooses jump-vs-land; either way the pax get their unconditional post-insert doMove _obj into the order loop.
+		private ["_forceDrop","_dropLz","_hotTown","_hotReason"];
+		_forceDrop = false;
+		_dropLz    = _lzPos;
+		_hotReason = "";
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP", 1]) > 0) then {
+			//--- (a) LZ town ownership: nearest town to the LZ, its broadcast sideID vs our sideID.
+			_hotTown = objNull;
+			if (count towns > 0) then {_hotTown = [_lzPos, towns] Call WFBE_CO_FNC_GetClosestEntity};
+			if (!isNull _hotTown && {(_hotTown getVariable ["sideID", -1]) != _sideID}) then {
+				_forceDrop = true;
+				_hotReason = "enemy-town";
+			};
+			//--- (b) enemies near the LZ: ONE decision-time hostile scan (skip if (a) already tripped).
+			if (!_forceDrop) then {
+				private ["_scanR","_hostiles"];
+				_scanR = missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_SCAN_R", 400];
+				_hostiles = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_lzPos nearEntities [["Man","LandVehicle","Tank"], _scanR]);
+				if (_hostiles > 0) then {
+					_forceDrop = true;
+					_hotReason = "contested";
+				};
+			};
+			//--- On a hot LZ, resolve a drop point OFFSET m short of the town centre, back along the heli->town vector, so
+			//--- the jumpers do not eject directly over the depot guns. Fall back to the raw LZ if geometry is degenerate.
+			if (_forceDrop) then {
+				private ["_offset","_tc","_hp","_brg","_seg","_tcName"];
+				_offset = missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_OFFSET", 250];
+				_tc = if (!isNull _hotTown) then {getPos _hotTown} else {_lzPos};
+				_hp = getPos _airVeh;                                     //--- heli origin = approach source.
+				_seg = _hp distance _tc;
+				if (_seg > 5) then {
+					//--- bearing heli -> town (A2-safe atan2 position-delta; binary getDir is A3-only).
+					_brg = ((_tc select 0) - (_hp select 0)) atan2 ((_tc select 1) - (_hp select 1));
+					//--- eject point = town centre pulled back _offset m toward the heli (clamped so we never overshoot past the heli).
+					if (_offset > (_seg - 20)) then {_offset = (_seg - 20) max 0};
+					_dropLz = [ (_tc select 0) - (_offset * sin _brg), (_tc select 1) - (_offset * cos _brg), 0 ];
+				} else {
+					_dropLz = _lzPos;
+				};
+				_tcName = if (!isNull _hotTown) then {_hotTown getVariable ["name","?"]} else {"pos"};
+				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIR_PARADROP|team=" + (str _team) + "|town=" + _tcName + "|reason=" + _hotReason);
+				["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] HOT-LZ paradrop into [%3] (reason %4) - ejecting %5m short.", _side, _team, _tcName, _hotReason, _offset]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+		//--- ===================================================================
+
 		//--- Pre-compute the heli's build cost NOW (clean scope) so the disembark
 		//--- Spawn can REFUND it to the AI-commander treasury after a successful
 		//--- fly-off to the map edge. Mirrors the canonical price lookup used by
@@ -517,6 +578,9 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 
 		//--- Fly the heli to the objective and unload. doMove + flyInHeight, then
 		//--- land+disembark when close (heli-land) OR para-eject if no flat LZ.
+		//--- cmdcon42 HOT-LZ: force the para branch by handing the Spawn the OFFSET drop point as the LZ and an EMPTY
+		//--- flat-list, so the run-in halts short of the town and the existing (count _fl > 0) land-gate is false -> eject.
+		if (_forceDrop) then {_lzPos = _dropLz; _flat = []};
 		[_airVeh, _lzPos, _flat, _lifted, _team, _pos, _side, _sideID, _heliCost] Spawn {
 			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew","_approachLimited"];
 			_h    = _this select 0;
@@ -574,6 +638,37 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			//--- If it is destroyed before reaching the edge, NO refund. Player/non-aicom
 			//--- helis are guarded out via the wfbe_aicom_transport flag set at lift time.
 			if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
+				//--- ===================================================================
+				//--- cmdcon42-f RETAINED TRANSPORT (Ray: HQ air squads should BE air squads; gate
+				//--- WFBE_C_AICOM_AIR_RETAIN default-ON): instead of the legacy off-map fly-off + delete +
+				//--- REFUND below, KEEP the team's transport - route it through the SAME shared
+				//--- return-to-base-and-hold path the air-mobile legs use (WFBE_CO_FNC_AICOMAirReturn, one
+				//--- implementation, no duplication), so the hull parks at the side base and the order
+				//--- loop's AIR-MOBILE branch can fly the team's NEXT orders with it. ECONOMICS (by design):
+				//--- retaining FORGOES the legacy refund (_cost = the hull's QUERYUNITPRICE credited back to
+				//--- the AI treasury on edge-exit) - the side keeps a REAL transport asset instead of the
+				//--- credit. Flag 0 = fall through to the UNTOUCHED legacy body below (byte-identical
+				//--- fly-off + delete + refund). LEADER-IS-CREW edge guard: if the group LEADER is part of
+				//--- the transport CREW (aboard the hull but NOT one of the lifted pax), retaining would
+				//--- park the team leader at base and the HC arrival latch (leader-distance) could never
+				//--- latch for the dropped pax - fall back to the legacy fly-off for that founding (it
+				//--- deletes the crew; the engine promotes a ground leader, exactly as today). Retained-hull
+				//--- coverage (verified): B74.2 base-reap only reaps transportSoldier==0 attack helis;
+				//--- AIR_REAP_UNCREWED skips it while the pilot lives; AUTOFUEL tops it off (it is in
+				//--- _vehicles); the stuck-watcher airborne exemption covers its later legs. A2-OA-safe:
+				//--- vehicle/in/leader tests + exitWith out of this then-scope only.
+				private ["_retain"];
+				_retain = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_RETAIN", 1]) > 0;
+				if (_retain && {!isNull _tm} && {!isNull (leader _tm)} && {(vehicle (leader _tm)) == _h} && {!((leader _tm) in _pax)}) then {
+					_retain = false;
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] AIR_RETAIN skipped - leader is transport crew; legacy fly-off/refund keeps the arrival latch on a ground leader.", _sd, _tm]] Call WFBE_CO_FNC_AICOMLog;
+				};
+				if (_retain) exitWith {
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sID + "|" + str (round (time / 60)) + "|AIR_RETAIN|team=" + (str _tm) + "|heli=" + (typeOf _h));
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] transport %3 RETAINED (no refund) - returning to base to hold for the next order.", _sd, _tm, typeOf _h]] Call WFBE_CO_FNC_AICOMLog;
+					[_h, _tm, _sd] Call WFBE_CO_FNC_AICOMAirReturn;
+				};
+				//--- ===================================================================
 				//--- Clamp the heli's exit toward the CLOSEST of the four map edges (worldSize box).
 				//--- N-FEATUREBUG-43 fix 2026-06-27: was hardcoded 15360 (Chernarus only) -> the off-map edge math + the
 				//--- waitUntil off-map exit test below were 2560m wrong on Takistan/Zargabad (both 12800), so the heli
@@ -1033,6 +1128,39 @@ while {!WFBE_GameOver && _alive} do {
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FIXED-WING transit (alt %5m, loiter r %6m, %7 plane hull(s)).", _side, _team, _seq, _mode, _plAlt, _plLoiterCR, _plHulls]] Call WFBE_CO_FNC_AICOMLog;
 				} else {
 
+				//--- ===================================================================
+				//--- cmdcon42-f AIR-MOBILE ORDERS (Ray 2026-07-02, gate WFBE_C_AICOM_AIRMOBILE default-ON):
+				//--- if this team STILL HAS its own live transport helicopter (alive, driver alive, has fuel -
+				//--- AUTOFUEL keeps it fed) and the ordered destination is beyond WFBE_C_AICOM_AIRMOBILE_MIN_DIST,
+				//--- FLY the leg (WFBE_CO_FNC_AICOMAirLeg) instead of road-marching. The helper mounts the pax,
+				//--- flies at altitude, and at the destination runs the SAME hot-LZ decision the founding insert
+				//--- uses (cold -> land+GET OUT; contested/enemy town -> paradrop OFFSET m short), then RETURNS the
+				//--- transport to base + HOLDS it for the next order (persists - it IS the team's vehicle; no
+				//--- fly-off/refund here). The dropped pax get an unconditional ground doMove to _dest, so the
+				//--- arrival latch + MOVE/SAD capture chain fold them in exactly like a road-marched team (Hook-B
+				//--- sees a normal arrival). GUARDS: transport-LESS remnants (no heli / dead heli) fall through to
+				//--- the unchanged road-march below; the helper stamps wfbe_aicom_airborne_until so the AssignTowns
+				//--- stuck-watcher never teleports a flying leader; a mid-flight order change continues to the drop
+				//--- then re-evaluates next seq (no mid-air re-vector). NEVER-FROZEN: on any early-out (no heli /
+				//--- nobody to lift) the helper returns false and we road-march as today. A2-OA-safe: transportSoldier
+				//--- config read + isKindOf "Air" + fuel, all mirrored from the founding air-insert split.
+				private ["_amDone","_amHeli"];
+				_amDone = false;
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE", 1]) > 0 && {(leader _team) distance _dest > (missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE_MIN_DIST", 1200])}) then {
+					_amHeli = objNull;
+					{
+						if (!isNull _x && {alive _x} && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0} && {isNull _amHeli} && {!isNull (driver _x)} && {alive (driver _x)} && {canMove _x} && {(fuel _x) > 0}) then {_amHeli = _x};
+					} forEach _vehicles;
+					if (!isNull _amHeli) then {
+						//--- Fly this leg. The helper Spawns its own non-blocking flight + return-to-base; it returns
+						//--- true when it committed the leg (pax lifted). Only then do we SKIP the road-march.
+						//--- cmdcon42-l: pass the team's authoritative _vehicles list so the helper can pick a LIGHT
+						//--- ground vehicle to SLING + deep-drop behind the lines (WFBE_C_AICOM_VEHLIFT).
+						if ([_amHeli, _team, _dest, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
+					};
+				};
+				if (!_amDone) then {
+
 				//--- ROAD-MARCH (task #14/#16): the old single bare 'MOVE' to the raw town
 				//--- center used EMPTY squad-props, so the engine defaulted armour/trucks to
 				//--- AWARE->COMBAT/WEDGE cross-country - A2 PFM's worst case (distStart=0 at
@@ -1141,6 +1269,7 @@ while {!WFBE_GameOver && _alive} do {
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT FAST-TRANSIT (column).", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
+				}; //--- cmdcon42-f: close the `if (!_amDone) {ground road-march/foot}` guard - when the air-mobile leg committed (_amDone), the road-march is SKIPPED (the helper handed the team its live flight + drop + pax moves).
 				}; //--- cmdcon41-w3j: close the `if (_isPlaneTeam) {air transit} else {ground road-march/foot}` split opened just above the road-march block.
 				//--- cmdcon41-w2 RALLY MODE EXECUTOR (sketch rally-mode-bounding-withdrawal-executor): the transit lay
 				//--- above already drove a FAST bounding-withdrawal MOVE to _dest for EVERY mode (it fires regardless of

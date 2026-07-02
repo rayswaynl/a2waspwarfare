@@ -180,6 +180,14 @@ _i = _i + [['','',6500,40,-2,4,2,0,'US',[]]];
 _c = _c + ['M6_EP1'];
 _i = _i + [['','',7500,35,-2,4,2,0,'US',[]]];
 
+//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (conventional) buy-row metadata — TAKISTAN ONLY (WEST/US). Price + tier
+//--- from flags (default 28000 / HEAVY level 3). Fields: [label,picture,PRICE,TIME,CREW(-2=auto),UPGRADE,FACTORY(2=Heavy),SKILL,faction,turrets].
+//--- Registered only when the master flag is on AND worldName=="Takistan". Explicit label so the menu shows the friendly name.
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"}) then {
+	_c = _c + [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
+	_i = _i + [['SCUD Launcher (conventional)','',(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]),40,-2,(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_LEVEL", 3]),2,0,'US',[]]];
+};
+
 /* Air Vehicles */
 _c = _c + ['MH6J_EP1'];
 _i = _i + [['','',4928,25,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): MH6J_EP1 air-upgrade 0->1. Was a tier-0 heli, so the strict-> tech gate passed it at air-research 0; aircraft must require an air factory (AIR-1). Rollback: ...,0,3,0,...
@@ -197,7 +205,7 @@ _c = _c + ['C130J_US_EP1'];
 _i = _i + [['','',9440,30,-2,1,3,0,'US',[]]];
 
 _c = _c + ['AH6X_EP1'];
-_i = _i + [['','',4416,50,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): AH6X_EP1 air-upgrade 0->1 (same tier-0-heli fix as MH6J). Rollback: ...,0,3,0,...
+_i = _i + [['AH-6X Scout','',3500,50,-2,0,3,0,'US',[]]];   //--- cmdcon42 Option C Row 1: unarmed FLIR scout Little Bird at Aircraft-Factory research level 0, 3500. Gate 0 is SAFE: the player Aircraft menu only opens with a live aircraft factory in range (updateavailableactions.fsm aircraftInRange -> Common_BuildingInRange), so the row's upgrade field is a research gate, NOT the factory-existence gate. The pre-B59 hole was the AI FOUNDING path, since independently hardened (AI_Commander_Teams.sqf air-strip until AICOM_AIR_MIN_TOWNS). Rollback to gated: ...,1,3,0,...
 
 _c = _c + ['AH6J_EP1'];
 _i = _i + [['','',9119,35,-2,2,3,0,'US',[]]];
@@ -231,7 +239,9 @@ _c = _c + ['MK19_TriPod_US_EP1'];
 _i = _i + [['','',700,0,1,0,'Defense',0,'US',[]]];
 
 _c = _c + ['TOW_TriPod_US_EP1'];
-_i = _i + [['','',2000,0,1,0,'Defense',0,'US',[]]];
+//--- cmdcon42-g: WFBE_C_DEFMENU_V2 drops the WEST AT price cliff (2000 -> 900; EAST SPG-9 = 475).
+//--- Legacy price 2000 kept when the flag is off. No new class (A2-OA has no cheaper US static AT).
+_i = _i + [['','',(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {900} else {2000}),0,1,0,'Defense',0,'US',[]]];
 
 _c = _c + ['Stinger_Pod_US_EP1'];
 _i = _i + [['','',3000,0,1,0,'Defense',0,'US',[]]];
@@ -252,14 +262,16 @@ _i = _i + [['','',100,0,0,0,'Fortification',0,'US',[]]];
 _c = _c + ['US_WarfareBBarrier10xTall_EP1'];
 _i = _i + [['','',200,0,0,0,'Fortification',0,'US',[]]];
 
+//--- cmdcon42-g: WFBE_C_DEFMENU_V2 recategorises camo nets Strategic -> Fortification (findability).
+//--- Legacy 'Strategic' kept when the flag is off.
 _c = _c + ['Land_CamoNet_NATO_EP1'];
-_i = _i + [['','',35,0,0,0,'Strategic',0,'US',[]]];
+_i = _i + [['','',35,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'US',[]]];
 
 _c = _c + ['Land_CamoNetVar_NATO_EP1'];
-_i = _i + [['','',45,0,0,0,'Strategic',0,'US',[]]];
+_i = _i + [['','',45,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'US',[]]];
 
 _c = _c + ['Land_CamoNetB_NATO_EP1'];
-_i = _i + [['','',55,0,0,0,'Strategic',0,'US',[]]];
+_i = _i + [['','',55,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'US',[]]];
 
 _c = _c + ['USOrdnanceBox_EP1'];
 _i = _i + [['','',850,0,0,0,'Ammo',0,'US',[]]];
@@ -307,5 +319,54 @@ for '_z' from 0 to (count _c)-1 do {
 		diag_log Format ["[WFBE (ERROR)][frameno:%2 | ticktime:%3] Core_US: Element '%1' is not a valid class.",(_c select _z),diag_frameno,diag_tickTime];
 	};
 };
+
+//--- cmdcon42 Option C Row 2: SYNTHETIC buy token "AH6X_M134" ("AH-6X (M134)").
+//--- The buy pipeline (GUI_Menu_BuyUnits -> Client_BuildUnit) keys a purchase entirely on its
+//--- classname STRING, both as the metadata-registry key AND as the createVehicle class, and the
+//--- row's index/label are discarded. So two buy rows that spawn the SAME hull with DIFFERENT
+//--- loadouts are impossible unless the second row carries a distinct registry key. "AH6X_M134"
+//--- is that distinct key: it is NOT a CfgVehicles class (so it is registered here MANUALLY, after
+//--- the isClass-guarded loop above that would reject it), and it is remapped to the real hull
+//--- AH6X_EP1 inside Client_BuildUnit.sqf BEFORE createVehicle, which then arms it with a TwinM134.
+//--- We register by DEEP-COPYing the already-resolved AH6X_EP1 tuple so the crew-slot [4], turret
+//--- list [9] and portrait [1] are byte-identical to the real hull (the buy dialog crew icons and
+//--- Client_BuildUnit moveInTurret read [4]/[9] straight from the tuple), then override name [0]
+//--- and price [2]. isNil-guarded so a missing base registration only drops the row (never errors).
+if (!isNil {missionNamespace getVariable "AH6X_EP1"}) then {
+	private "_ah6xM134";
+	_ah6xM134 = +(missionNamespace getVariable "AH6X_EP1");   //--- deep copy: inherits [1] picture, [4] crew, [5] gate=0, [6] air, [9] turrets
+	_ah6xM134 set [QUERYUNITLABEL, "AH-6X (M134)"];           //--- [0] display name
+	_ah6xM134 set [QUERYUNITPRICE, 5500];                     //--- [2] price
+	missionNamespace setVariable ["AH6X_M134", _ah6xM134];
+	diag_log Format ["[WFBE (INIT)][frameno:%1 | ticktime:%2] Core_US: Registered synthetic buy token 'AH6X_M134' (AH-6X M134) as a copy of AH6X_EP1.",diag_frameno,diag_tickTime];
+} else {
+	diag_log "[WFBE (WARNING)] Core_US: AH6X_EP1 not registered - cannot create synthetic AH6X_M134 token; the AH-6X (M134) buy row will be hidden.";
+};
+
+//--- cmdcon42-i: Takistan-only EASA-loadout air variant roster (WEST/US rows).
+//--- Each synthetic buy token is registered as a DEEP COPY of its already-resolved base-hull buy tuple
+//--- (so crew [4]/turrets [9]/picture [1] are byte-identical to the real hull the buy dialog + Client_BuildUnit
+//--- read), then name [0], price [2] and air-research level [5] (QUERYUNITUPGRADE) are overridden. The token
+//--- is remapped to its base hull in Client_BuildUnit BEFORE createVehicle and armed with the kit there.
+//--- Mirrors the AH6X_M134 precedent (PR #151 / commit a6a61a098). Catalog is TAKISTAN + flag gated internally
+//--- (returns [] on Chernarus or when WFBE_C_TK_EASA_ROSTER <= 0), so this whole block is a no-op on Chernarus.
+private ["_tkEasaRoster","_tkeRow","_tkeBase","_tkeTuple"];
+_tkEasaRoster = Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf";
+{
+	_tkeRow = _x;
+	if ((_tkeRow select 2) == "US") then {
+		_tkeBase = missionNamespace getVariable (_tkeRow select 1); //--- resolved base-hull tuple (registered above)
+		if (!isNil "_tkeBase") then {
+			_tkeTuple = +_tkeBase;                                   //--- deep copy: inherits [1] picture, [4] crew, [6] factory, [9] turrets
+			_tkeTuple set [QUERYUNITLABEL,   _tkeRow select 3];      //--- [0] display name
+			_tkeTuple set [QUERYUNITPRICE,   _tkeRow select 4];      //--- [2] price
+			_tkeTuple set [QUERYUNITUPGRADE, _tkeRow select 5];      //--- [5] air-research level gate
+			missionNamespace setVariable [(_tkeRow select 0), _tkeTuple];
+			diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_US: Registered TK-EASA variant token '%1' (base %4).",(_tkeRow select 0),diag_frameno,diag_tickTime,(_tkeRow select 1)];
+		} else {
+			diag_log Format ["[WFBE (WARNING)] Core_US: TK-EASA base hull '%1' not registered - variant '%2' hidden.",(_tkeRow select 1),(_tkeRow select 0)];
+		};
+	};
+} forEach _tkEasaRoster;
 
 diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_US: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];

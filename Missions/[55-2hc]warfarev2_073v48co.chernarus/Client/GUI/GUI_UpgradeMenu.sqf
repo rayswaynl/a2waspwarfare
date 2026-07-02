@@ -360,14 +360,27 @@ while {alive player && dialog} do {
 							};
 						};
 						if !(_link_needed) then {
-							-(_upgrade_price) Call WFBE_CL_FNC_ChangeClientFunds;
-							[WFBE_Client_SideJoined, -(_upgrade_supply),"Tech upgrade started.", false] Call ChangeSideSupply;
-							//--- todo check conditions., deduce cash etc
-							["RequestUpgrade", [WFBE_Client_SideJoined, _id, _upgrade_current, true]] call WFBE_CO_FNC_SendToServer;
-							// Marty: Keep the active upgrade ID beside the existing running flag for immediate local menu feedback.
-							WFBE_Client_Logic setVariable ["wfbe_upgrading", true, true];
-							WFBE_Client_Logic setVariable ["wfbe_upgrading_id", _id, true];
+							//--- cmdcon42 BUG-7 FIX (Ray 2026-07-02, "factory upgrade timer keeps resetting"): the cmdcon41-w2
+							//--- #125 anti-forge fold rewrote Server\PVFunctions\RequestUpgrade.sqf to a 6-element contract
+							//--- ([side,id,level,isplayer,requester,requestTeam] + full server-side validation AND server-side
+							//--- payment) but this sender was never updated - it still sent the legacy 4-element payload, so the
+							//--- server REJECTED every direct commander upgrade ("rejected short payload"; the WARNING is level-0
+							//--- and suppressed by WFBE_LogLevel, hence the silent RPT). Meanwhile this branch had already
+							//--- (a) deducted player funds + side supply CLIENT-side and (b) force-broadcast wfbe_upgrading=true,
+							//--- which NOTHING ever cleared (only Server_ProcessUpgrade clears it, and it never ran) -> the
+							//--- countdown spawn's recompute branch re-armed a full timer every time it expired = the endless
+							//--- "timer keeps resetting" + the stuck flag also blocked the upgrade QUEUE worker + resources were
+							//--- charged for nothing on every attempt. Fix, matching the #125 server contract exactly:
+							//---   1) send the 6-element payload (player/group player = the requester binding the server checks);
+							//---   2) NO client-side deduction - RequestUpgrade.sqf:148-151 charges supply + commander-team funds
+							//---      authoritatively after every acceptance gate (keeping the client deduction would DOUBLE-charge);
+							//---   3) NO optimistic wfbe_upgrading broadcast - the server sets wfbe_upgrading/wfbe_upgrading_id
+							//---      (broadcast) on acceptance, so a rejected request can never wedge the side again.
+							//--- The funds/supply/link pre-checks above stay: instant UX feedback, server re-validates anyway.
+							["RequestUpgrade", [WFBE_Client_SideJoined, _id, _upgrade_current, true, player, group player]] call WFBE_CO_FNC_SendToServer;
 							// Marty: Store a local end time so closing and reopening the menu does not reset the displayed countdown.
+							//--- (cmdcon42: these seeds are inert until the SERVER flips wfbe_upgrading true - the countdown
+							//--- spawn's idle branch clears them - so they are safe to keep for the accepted-request case.)
 							_upgrade_time = (_upgrade_times select _id) select _upgrade_current;
 							WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", _id, false];
 							WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", time + _upgrade_time, false];
