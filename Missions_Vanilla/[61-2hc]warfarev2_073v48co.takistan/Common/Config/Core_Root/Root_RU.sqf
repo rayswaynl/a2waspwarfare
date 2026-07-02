@@ -82,7 +82,9 @@ if (isServer) then {
 		//--- mechanized assault: BMP-3 pair + full dismounted squad.
 		['BMP3','BMP3','RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_Marksman','RU_Soldier_Medic','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier'],
 		//--- mechanized AT-hunter: T-90 + BTR-90 with AT-led screen.
-		['T90','BTR90','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier_Medic']
+		['T90','BTR90','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_HAT','RU_Soldier_Medic'],
+		//--- AA picket (cmdcon41-w3e): 2S6 Tunguska SPAAG + MANPADS dismounts - late-game air deterrent.
+		['2S6M_Tunguska','RU_Soldier_AA','RU_Soldier_AA','RU_Soldier_TL','RU_Soldier_Medic']
 	]];
 
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

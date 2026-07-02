@@ -5,7 +5,7 @@
 	Preconditions:
 	  - player is alive
 	  - vehicle player == player  (infantry only)
-	  - WFBE_C_SKIN_SELECTOR == 1
+	  - selector enabled (SkinSelector_Enabled.sqf: WFBE_C_SKINSEL default 1, or legacy WFBE_C_SKIN_SELECTOR)
 	Known limitation: vehicle Fired EHs (HandleAT / HandleRocketTraccer / blinking marker)
 	  are attached to (vehicle player) at the time of swap. After the swap the new unit
 	  is on foot, so the EHs are re-added on the new unit. If the player entered a vehicle

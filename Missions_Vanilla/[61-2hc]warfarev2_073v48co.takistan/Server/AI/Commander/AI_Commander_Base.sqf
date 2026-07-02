@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
 
 _side = _this;
 _sideText = str _side;
@@ -50,7 +50,15 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 		//--- WFBE_C_AICOM_HQ_NUDGE_MAX_R (default 200m). Pure scalar math + nearRoads/surfaceIsWater
 		//--- (A2-OA-safe, same gate as the factory finder and the ServicePoint road-snap).
 		_dPos = getPos _hq;
-		if ((count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}) then {
+			//--- cmdcon41-w3k: the HQ deploy (the CC/HQ site itself) is a base-structure placement too, so honour the
+			//--- SAME road-clear flag+buffer as _findBuildPos. _roadClearOK is compiled LATER in this script (after the
+			//--- HQ block), so read the flag/buffer INLINE here with the identical nearRoads idiom. Flag off (=0) -> only
+			//--- the water nudge remains (old road behaviour disabled); buffer default 14 == the prior hardcoded value.
+			private ["_hqRoadClear","_hqRoadBuf"];
+			_hqRoadClear = (missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROADCLEAR", 1]) > 0;
+			_hqRoadBuf = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14];
+			if (_hqRoadBuf <= 0) then {_hqRoadClear = false};
+			if ((_hqRoadClear && {count (_dPos nearRoads _hqRoadBuf) > 0}) || {surfaceIsWater _dPos}) then {
 			private ["_hqRaw","_nudgeMaxR","_nudgeStep","_nudgeRad","_nudgeAng","_cand","_haveCand","_bestCand","_bestRoadD","_candRoadD","_candOK"];
 			_hqRaw = getPos _hq;
 			_nudgeMaxR = missionNamespace getVariable ["WFBE_C_AICOM_HQ_NUDGE_MAX_R", 200];
@@ -73,7 +81,7 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 						//--- distance to the nearest road (60 == none within 60m -> treat as fully clear).
 						_candRoadD = 60;
 						{ private "_rd"; _rd = (getPos _x) distance _cand; if (_rd < _candRoadD) then {_candRoadD = _rd} } forEach (_cand nearRoads 60);
-						_candOK = (count (_cand nearRoads 14) == 0);
+						_candOK = ((!_hqRoadClear) || {count (_cand nearRoads _hqRoadBuf) == 0}); //--- cmdcon41-w3k: flag-gated + tunable buffer (was hardcoded 14).
 						//--- track the best DRY candidate by road-clearance so give-up never returns on-road.
 						if (_candRoadD > _bestRoadD) then {_bestRoadD = _candRoadD; _bestCand = _cand};
 						if (_candOK) then {_haveCand = true; _bestCand = _cand};
@@ -195,6 +203,23 @@ _farFromStructs = {
 	{ if ((_cpos distance _x) < _floor) exitWith {_blk = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 	!_blk
 };
+//--- ROAD-CLEAR helper (cmdcon41-w3k, Ray backlog: AICOM builds base structures ON ROADS - observed live on
+//--- Takistan, whose dense road net near the start locations kept planting factories/CC on the carriageway).
+//--- Returns true when _cand is far enough from EVERY road segment (paved AND dirt) that a footprint cannot
+//--- straddle the lane. Gate behind WFBE_C_AICOM_BUILD_ROADCLEAR (default 1 = ON); the reject radius is
+//--- WFBE_C_AICOM_BUILD_ROAD_BUFFER (default 14 m). Idiom: `_pos nearRoads _buffer, count > 0 = reject`, the
+//--- exact proven A2-OA pattern already live in the HQ-deploy block (L53), BuildRoadRoute and recovery v2
+//--- (no isOnRoad/getRoadInfo - those are A3-only). This is the SAME kind of per-candidate gate as the
+//--- STRUCT_SPACING check, wired into every accept path in _findBuildPos below so no fallback tier can
+//--- reintroduce an on-road placement. _this = candidate pos -> bool.
+_roadClearOK = {
+	private ["_cpos","_rb"];
+	_cpos = _this;
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROADCLEAR", 1]) <= 0) exitWith {true}; //--- 0 disables the gate -> old behaviour.
+	_rb = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14];
+	if (_rb <= 0) exitWith {true};
+	(count (_cpos nearRoads _rb) == 0)
+};
 //--- NEAREST-FACTORY-DISTANCE helper (Ray 2026-06-29, req #2). Distance (m) from _cand to the closest
 //--- existing SPAWN-POINT factory (Barracks/Light/Heavy/Aircraft - the player respawn structures per
 //--- Client_GetRespawnAvailable). Used by the road-spaced mode (_nearRoad==2) to STRING factories ALONG
@@ -208,7 +233,8 @@ _nearestFactoryDist = {
 	_best
 };
 _findBuildPos = {
-	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear","_bestBC","_haveBC","_isRoadMode","_stepBest","_haveStep","_stepTarget","_nf","_stepErr","_bestStepErr","_floor"];
+	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear","_bestBC","_haveBC","_isRoadMode","_stepBest","_haveStep","_stepTarget","_nf","_stepErr","_bestStepErr","_floor","_roadRejLogged"];  //--- cmdcon41-w3k: +_roadRejLogged (rate-limit the road-reject log to first per placement attempt).
+	_roadRejLogged = false; //--- cmdcon41-w3k: one always-on INFORMATION line per rejected-for-road cluster (first reject only, not per nudge/try).
 	_rmin = _this select 0; _rmax = _this select 1;
 	_nearRoad = if (count _this > 2) then {_this select 2} else {0};
 	//--- ROAD modes: 1 = beside a road (legacy near-road); 2 = beside a road AND spaced ALONG it
@@ -242,8 +268,8 @@ _findBuildPos = {
 				//--- carriageway and the lane stays clear for egress.
 				_rp = getPos _rd;
 				_hd = ((_p select 0) - (_rp select 0)) atan2 ((_p select 1) - (_rp select 1)); //--- bearing road->candidate = the side we push out to
-				_ox = (_rp select 0) + 16 * sin _hd;
-				_oy = (_rp select 1) + 16 * cos _hd;
+				_ox = (_rp select 0) + (missionNamespace getVariable ["WFBE_C_AICOM_ROAD_STANDOFF", 16]) * sin _hd;  //--- Build84: map-aware road standoff (TK 40 / CH 24; was hardcoded 16)
+				_oy = (_rp select 1) + (missionNamespace getVariable ["WFBE_C_AICOM_ROAD_STANDOFF", 16]) * cos _hd;
 				_cand = [_ox, _oy, 0];
 				//--- settle onto flat-empty ground with a SMALL radius so it cannot drift back
 				//--- onto the lane, then validate: dry, and a clear drivable strip between the
@@ -256,13 +282,26 @@ _findBuildPos = {
 					_sy = (((_cand select 1) + (_rp select 1)) / 2);
 					if (surfaceIsWater [_sx, _sy, 0]) then {_blocked = true};
 					//--- standoff must survive the empty-pos settle (>= 12m off the carriageway).
-					if (((_cand distance _rp) < 12)) then {_blocked = true};
+					if (((_cand distance _rp) < ((missionNamespace getVariable ["WFBE_C_AICOM_ROAD_STANDOFF", 16]) * 0.6))) then {_blocked = true};  //--- Build84: scale min-standoff with the tunable (was bare 12)
 						//--- B752 (Ray 2026-06-25): also reject a candidate that SETTLED ONTO a road (paved OR DIRT).
 						//--- The 16m offset is from the CHOSEN usable road (kept >12m off above), but GetEmptyPosition can
 						//--- drift _cand onto an ADJACENT dirt track (flat+empty = preferred) = the "factory on a dirt road"
 						//--- Ray reported. nearRoads 9 catches any carriageway node under the footprint; the chosen road is
 						//--- >12m off so it is not caught; the 40-try near-road budget refinds a clean spot.
 						if (!_blocked && {count (_cand nearRoads 9) > 0}) then {_blocked = true};
+						//--- cmdcon41-w3k ROAD-BUFFER GATE: reject any candidate within WFBE_C_AICOM_BUILD_ROAD_BUFFER (14m)
+						//--- of ANY road segment (paved OR dirt). Wired into the SAME _blocked chain as the STRUCT_SPACING
+						//--- reject below so no accept path OR fallback tier (_bestBC/_bestClear/_p) can keep an on-road spot.
+						//--- The near-road modes deliberately sit BESIDE a chosen road; the standoff (16m) normally clears
+						//--- the 14m buffer, but GetEmptyPosition can drift the settle back toward an adjacent lane - this
+						//--- gate is the backstop. Rate-limited log: first road reject per placement attempt only.
+						if (!_blocked && {!(_cand call _roadClearOK)}) then {
+							_blocked = true;
+							if (!_roadRejLogged) then {
+								_roadRejLogged = true;
+								["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] BUILD_ROAD_REJECT near=%2 - candidate %3 within %4m of a road (WFBE_C_AICOM_BUILD_ROADCLEAR); searching off-road.", _sideText, _nearRoad, _cand, (missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14])]] Call WFBE_CO_FNC_AICOMLog;
+							};
+						};
 					//--- MIDDLE FALLBACK TIER (_bestBC): candidate passed water/standoff/on-road AND is
 					//--- BUILDING-CLEAR (_buildPosClear) but may be spacing-crowded. Recorded BEFORE the
 					//--- STRUCT_SPACING gate so the try-budget fallback prefers a building+road-clear (off-lane,
@@ -317,7 +356,15 @@ _findBuildPos = {
 			_p = [_p, 30] Call WFBE_CO_FNC_GetEmptyPosition;
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
-				if (count (_p nearRoads 22) == 0) then {
+				//--- cmdcon41-w3k ROAD-BUFFER GATE (off-road path): the existing nearRoads 22 gate below already
+				//--- rejects any road within 22m (>= the 14m default buffer), so this is normally satisfied; it is
+				//--- kept explicit so the flag WFBE_C_AICOM_BUILD_ROADCLEAR is the single authoritative road gate and
+				//--- a tuned WFBE_C_AICOM_BUILD_ROAD_BUFFER > 22 is honoured here too. Rate-limited log (first only).
+				if (!(_p call _roadClearOK) && {!_roadRejLogged}) then {
+					_roadRejLogged = true;
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] BUILD_ROAD_REJECT near=%2 - candidate %3 within %4m of a road (WFBE_C_AICOM_BUILD_ROADCLEAR); searching off-road.", _sideText, _nearRoad, _p, (missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14])]] Call WFBE_CO_FNC_AICOMLog;
+				};
+				if ((count (_p nearRoads 22) == 0) && {_p call _roadClearOK}) then {
 					//--- MIDDLE FALLBACK TIER (_bestBC): road-clear here; record if ALSO building-clear,
 					//--- relaxing the soft STRUCT_SPACING. Preferred over raw 'dry' _best in the fallback chain.
 					//--- Ray 2026-06-29 req #1: ALSO gate on the HARD no-overlap floor (_farFromStructs) so the
@@ -355,8 +402,18 @@ _findBuildPos = {
 	//--- the no-overlap hard guard below (which then still runs on the stepped-off spot, so spacing
 	//--- is preserved). Pure scalar math + nearRoads/surfaceIsWater = A2-OA-safe; only fires when the
 	//--- try-budget genuinely failed AND the chosen fallback landed on a road (rare, road-dense base).
-	if (count (_p nearRoads 14) > 0) then {
-		private ["_rbx","_rby","_rbh","_rstep","_rnx","_rny","_rnpos","_rdone"];
+	//--- cmdcon41-w3k: gate the terminal step-out on the SAME flag+buffer as the per-candidate reject, so
+	//--- WFBE_C_AICOM_BUILD_ROADCLEAR=0 disables the whole road behaviour and WFBE_C_AICOM_BUILD_ROAD_BUFFER
+	//--- tunes the reject/clear radius consistently. The step-out clear test also uses the tunable buffer.
+	if (!(_p call _roadClearOK)) then {
+		private ["_rbx","_rby","_rbh","_rstep","_rnx","_rny","_rnpos","_rdone","_rbuf"];
+		_rbuf = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14];
+		//--- cmdcon41-w3k: rate-limited road-reject log (fires here iff the per-candidate gates above never
+		//--- logged for this attempt, e.g. a purely-DRY fallback _best recorded before any road test).
+		if (!_roadRejLogged) then {
+			_roadRejLogged = true;
+			["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] BUILD_ROAD_REJECT near=%2 - fallback %3 within %4m of a road (WFBE_C_AICOM_BUILD_ROADCLEAR); stepping off-road.", _sideText, _nearRoad, _p, _rbuf]] Call WFBE_CO_FNC_AICOMLog;
+		};
 		_rbx = (_p select 0) - (_hqPos select 0); _rby = (_p select 1) - (_hqPos select 1);
 		_rbh = if (_rbx == 0 && {_rby == 0}) then {random 360} else {_rbx atan2 _rby}; //--- HQ->_p bearing (random if _p == HQ).
 		_rdone = false; _rstep = 8;
@@ -364,10 +421,16 @@ _findBuildPos = {
 			_rnx = (_p select 0) + _rstep * sin _rbh;
 			_rny = (_p select 1) + _rstep * cos _rbh;
 			_rnpos = [_rnx, _rny, 0];
-			if (!(surfaceIsWater _rnpos) && {count (_rnpos nearRoads 14) == 0}) then {_p = _rnpos; _rdone = true; _via = _via + "+offroad"};
+			if (!(surfaceIsWater _rnpos) && {_rnpos call _roadClearOK}) then {_p = _rnpos; _rdone = true; _via = _via + "+offroad"};
 			_rstep = _rstep + 8;
 		};
-		if (!_rdone) then {_via = _via + "+ONROAD!"}; //--- could not step clear of roads within +150m; RPT-flagged.
+		//--- cmdcon41-w3k LAST RESORT: could not step clear of roads within +150m (base boxed in by roads, dense
+		//--- Takistan net). Allow the placement here rather than deadlocking the whole base, but emit an always-on
+		//--- INFORMATION line so BUILD_ROAD_LASTRESORT is visible in the RPT and we can tune/relocate.
+		if (!_rdone) then {
+			_via = _via + "+ONROAD!"; //--- could not step clear of roads within +150m; RPT-flagged.
+			["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] BUILD_ROAD_LASTRESORT near=%2 - could not clear roads within +150m of %3; placing anyway (road-dense base spot).", _sideText, _nearRoad, _p]] Call WFBE_CO_FNC_AICOMLog;
+		};
 	};
 	//--- Ray 2026-06-29 req #1 FINAL HARD GUARD: the raw _best/_p fallback tiers have NO spacing floor, so a
 	//--- fully-failed search could still resolve _p ON TOP of an existing structure (overlap). Enforce the

@@ -84,5 +84,3 @@ _k = _k + ["Artillery"];
 if (isServer) then {[_side, _c, _k] Call Compile preprocessFile "Common\Config\Config_Defenses_Towns.sqf"};
 
 //--- Fortitications and rest.
-
-// [_faction, _c, _n, _o, _t] Call Compile preprocessFile "Common\Config\Config_Defenses.sqf";

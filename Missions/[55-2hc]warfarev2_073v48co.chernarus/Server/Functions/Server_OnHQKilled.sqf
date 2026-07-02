@@ -60,17 +60,26 @@ if (isServer && (missionNamespace getVariable ["WFBE_C_BASEFALL_SMOKE_ENABLED", 
 	_smoke setPos (getPos _wreckObject);
 };
 
-if (isServer) then {
-	['SRVFNCREQUESTCHANGESCORE',[leader _killer_group, (score leader _killer_group) + _points]] Spawn WFBE_SE_FNC_HandlePVF;
-} else {
-	["RequestChangeScore", [leader _killer_group, (score leader _killer_group) + _points]] Call WFBE_CO_FNC_SendToServer;
+//--- Teamkill? [_side, "SendMessage", ["command", "tkill", [name _killer, _structure_kind]]] Call WFBE_CO_FNC_SendToClients
+//--- DR-50 (cmdcon41-w3f): compute the teamkill flag BEFORE any score award (it was computed below,
+//--- AFTER the award, so the award fired even on a teamkill). Same test as the old inline form.
+_teamkill = if (side _killer == _side) then {true} else {false};
+
+//--- DR-50 (cmdcon41-w3f): award the HQ-kill points EXACTLY ONCE, and ONLY on a clean enemy kill.
+//--- Previously this award was UNCONDITIONAL (paid on teamkills too), and a SECOND guarded award of a
+//--- hardcoded 900 fired below on clean kills - so a clean enemy HQ kill paid TWICE and a teamkill paid
+//--- ONCE. Gate the single canonical (coef-scaled _points) award on non-teamkill; the duplicate 900
+//--- block below is removed. Net: clean enemy kill pays _points once; teamkill pays nothing.
+if (!_teamkill) then {
+	if (isServer) then {
+		['SRVFNCREQUESTCHANGESCORE',[leader _killer_group, (score leader _killer_group) + _points]] Spawn WFBE_SE_FNC_HandlePVF;
+	} else {
+		["RequestChangeScore", [leader _killer_group, (score leader _killer_group) + _points]] Call WFBE_CO_FNC_SendToServer;
+	};
 };
 
 //--- Spawn a radio message.
 [_side, "Destroyed", ["Base", _structure]] Spawn SideMessage;
-
-//--- Teamkill? [_side, "SendMessage", ["command", "tkill", [name _killer, _structure_kind]]] Call WFBE_CO_FNC_SendToClients
-_teamkill = if (side _killer == _side) then {true} else {false};
 
 
 _killer_uid = getPlayerUID _killer;
@@ -104,15 +113,9 @@ if ((!isNull _killer) && (isPlayer _killer)) then
 //---   nil-recipient SendToClients idiom as the HeadHunter bounty broadcast above.
 [nil, "LocalizeMessage", ["BaseFallSting"]] call WFBE_CO_FNC_SendToClients;
 
-// Only awards score for non-teamkills of the HQ
-if (_side != side _killer) then
-{
-    Private ["_score"];
-    _score = 900; // HQ bounty award / 100*3
-
-    // Change the score of the leader of the group upon killing the hq
-    ['SRVFNCREQUESTCHANGESCORE',[leader _killerGroup, score leader _killerGroup + _score]] Spawn WFBE_SE_FNC_HandlePVF;
-};
+//--- DR-50 (cmdcon41-w3f): the duplicate "award 900 on non-teamkill" block that used to live here was
+//--- removed - it double-paid a clean HQ kill on top of the (now teamkill-gated) _points award above.
+//--- The single canonical award is the coef-scaled _points, paid once, only when !_teamkill.
 
 // Marty : HQ wreck marker data.
 // The marker itself is created locally on allied clients only.
