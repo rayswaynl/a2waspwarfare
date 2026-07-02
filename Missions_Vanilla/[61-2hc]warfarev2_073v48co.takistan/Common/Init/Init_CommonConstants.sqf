@@ -829,6 +829,12 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_PLANE_LOITER_RADIUS")     then {WFBE_C_AICOM_PLANE_LOITER_RADIUS = 600};    //--- completion radius of the plane orbit-attack MOVE (large = shallow bank, no terrain clipping).
 	if (isNil "WFBE_C_AICOM_BUILD_ROADCLEAR")         then {WFBE_C_AICOM_BUILD_ROADCLEAR = 1};          //--- Ray backlog: AICOM never places base structures/HQ/MHQ-deploy on or beside roads.
 	if (isNil "WFBE_C_AICOM_BUILD_ROAD_BUFFER")       then {WFBE_C_AICOM_BUILD_ROAD_BUFFER = 14};       //--- m minimum clearance from the nearest road segment (<=0 disables).
+	if (isNil "WFBE_C_SKINSEL")                       then {WFBE_C_SKINSEL = 1};                       //--- cmdcon41-w3l: skin selector master (WF-menu SKIN button + first-spawn dialog + respawn re-apply). Legacy WFBE_C_SKIN_SELECTOR still honored as an OR.
+
+	//--- === cmdcon41 wave-3m (live-RPT findings 2026-07-02): MHQ comeback + naval patrol guard ===
+	if (isNil "WFBE_C_AICOM_MHQ_RELAX")               then {WFBE_C_AICOM_MHQ_RELAX = 1};               //--- losing-side comeback: when no standoff clears the full ring, relax 600+buffer -> 600 -> FLOOR instead of aborting forever (live WEST: 21/21 aborts while ringed).
+	if (isNil "WFBE_C_AICOM_MHQ_RELAX_FLOOR")         then {WFBE_C_AICOM_MHQ_RELAX_FLOOR = 350};       //--- m hard floor - never deploy closer than this to a hostile town centre.
+	if (isNil "WFBE_C_PATROLS_SKIP_NAVAL")            then {WFBE_C_PATROLS_SKIP_NAVAL = 1};            //--- ground patrols/sorties never target offshore naval-HVT towns (live: one patrol thrashed 80 unstucks all match on a carrier).
 
 	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): FOUND size decoupled from the live MIN
 	//--- floor. HC-founded teams are NEVER refilled after founding (see AI_Commander_Teams.sqf B57 block),
