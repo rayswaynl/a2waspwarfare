@@ -1,10 +1,13 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget
+
+_townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
+if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
 	_loc = towns select _j;
 	["INITIALIZATION",Format ["server_town_ai.sqf : Initialized for [%1].", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
-	sleep 0.01;
+	sleep _townInitSleep;
 };
 
 _range = 600;
@@ -50,7 +53,7 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	//--- launch time (drives the WFBE_C_TOWNS_SORTIE_MINS rotation). HARD bound: max 1 sortie per town (Ray).
 	_town setVariable ["wfbe_sortie_grp", grpNull];
 	_town setVariable ["wfbe_sortie_started", 0];
-	sleep 0.01;
+	sleep _townInitSleep;
 };
 
 while {!WFBE_GameOver} do {
