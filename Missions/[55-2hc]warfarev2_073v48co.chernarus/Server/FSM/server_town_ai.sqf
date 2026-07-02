@@ -321,14 +321,18 @@ while {!WFBE_GameOver} do {
 					_localTeams = [];
 					{
 						if (!isNil "_x") then {
-							if (!isNull _x && {local _x} && {count units _x > 0}) then { _localTeams = _localTeams + [_x]; };
+							//--- cmdcon42 BUG-6: `local <group>` is A3-only (A2 `local` takes Objects; threw "Type Group,
+							//--- expected Object" once per GUER town activation on live). A2-safe group locality = the
+							//--- leader's locality; count-first so a leader exists before we test it.
+							if (!isNull _x && {count units _x > 0} && {local (leader _x)}) then { _localTeams = _localTeams + [_x]; };
 						};
 					} forEach (_town getVariable ["wfbe_town_teams", []]);
 
 					//--- Is the current sortie group still valid (alive, local, has men)?
 					_sortieValid = false;
 					if (!isNull _sortieGrp) then {
-						if (local _sortieGrp && {count units _sortieGrp > 0} && {_sortieGrp in _localTeams}) then { _sortieValid = true; };
+						//--- cmdcon42 BUG-6: same A2 `local`-on-group fix as above (count-first, then leader locality).
+						if (count units _sortieGrp > 0 && {local (leader _sortieGrp)} && {_sortieGrp in _localTeams}) then { _sortieValid = true; };
 					};
 
 					if (_currentEnemies > 0) then {
