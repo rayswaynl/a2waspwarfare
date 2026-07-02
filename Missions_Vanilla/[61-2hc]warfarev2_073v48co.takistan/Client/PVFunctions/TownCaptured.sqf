@@ -6,7 +6,7 @@
 		- New side ID.
 */
 
-Private ["_color","_town","_townMarker","_town_side_value","_town_side_value_new","_sv"];
+Private ["_captureText","_color","_town","_townMarker","_town_side_value","_town_side_value_new","_sv"];
 
 _town = _this select 0;
 _town_side_value = _this select 1;
@@ -25,7 +25,10 @@ _townMarker setMarkerColorLocal _color;
 
 //--- Display a title message.
 _side_label = switch (_side_captured) do {case west: {localize "STR_WF_PARAMETER_Side_West"}; case east: {localize "STR_WF_PARAMETER_Side_East"}; case resistance: {localize "STR_WF_Side_Resistance"};	default {"Civilian"}};
-[Format[Localize "STR_WF_CHAT_Town_Captured", _town getVariable "name", _side_label]] Call TitleTextMessage;
+_captureText = Format[Localize "STR_WF_CHAT_Town_Captured", _town getVariable "name", _side_label];
+[_captureText] Call TitleTextMessage;
+//--- Chat fallback for players who hide or miss the title text channel.
+_captureText Call CommandChatMessage;
 
 //--- Task.
 _task = _town getVariable 'taskLink';
