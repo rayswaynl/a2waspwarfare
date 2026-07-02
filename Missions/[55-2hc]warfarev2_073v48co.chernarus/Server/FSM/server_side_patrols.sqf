@@ -14,7 +14,8 @@ scriptName "Server\FSM\server_side_patrols.sqf";
 private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept",
 	"_mpEnabled","_mpMotoPool","_mpEntry","_mpHasVeh","_mpC",
 	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh",
-	"_homePool","_spSkipNaval","_hpX"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool).
+	"_homePool","_spSkipNaval","_hpX",
+	"_perfProbe","_perfCap","_perfReason","_perfPopTier"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -34,11 +35,13 @@ _delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
 //--- (re)assigned at the top of every loop cycle below. A2-OA-safe (plain getVariable+select, `max 0`).
 _max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
 _scrubLast = -999;
+_perfProbe = (missionNamespace getVariable ["WFBE_C_PERFORMANCE_AUDIT_SIDE_PATROL_PROBES", 0]) > 0;
 
 while {!WFBE_GameOver} do {
 	//--- B74.2 (Ray 2026-06-23): re-read the pop-tier-scaled WEST/EAST cap each cycle so it tracks the live
 	//--- WFBE_PopTier (republished ~every 90s) instead of being frozen at the value read once at startup.
-	_max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
+	_perfPopTier = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
+	_max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select ((_perfPopTier) min 3);
 
 	//--- PATROL-MARKER SCRUB: every ~20 s, purge dead-unit entries from WFBE_ACTIVE_PATROLS
 	//--- so HC-disconnect mid-patrol can't leave stale entries that JIP clients render.
@@ -115,6 +118,22 @@ while {!WFBE_GameOver} do {
 			if (_lvl > 0) then {
 				_active = _logik getVariable ["wfbe_side_patrols", 0];
 				_last = _logik getVariable ["wfbe_side_patrol_last", -(_delay)];
+				_perfCap = _maxSide min _lvl;
+				if (_perfProbe) then {
+					_perfReason = "ready";
+					if (_active >= _perfCap) then {
+						_perfReason = "cap";
+					} else {
+						if (time - _last <= _delay) then {_perfReason = "cooldown"};
+					};
+					if (!(_perfReason in ["ready"])) then {
+						if (!isNil "PerformanceAudit_Record") then {
+							if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+								["side_patrol_dispatch_state", 0, Format["side:%1;lvl:%2;active:%3;cap:%4;popTier:%5;reason:%6;cooldownLeft:%7", _side, _lvl, _active, _perfCap, _perfPopTier, _perfReason, round ((_delay - (time - _last)) max 0)], "SERVER"] Call PerformanceAudit_Record;
+							};
+						};
+					};
+				};
 				if (_active < (_maxSide min _lvl) && {time - _last > _delay}) then {  //--- B36.1 (Ray 2026-06-15): EFFECTIVE patrol cap is level-aware = min(side cap, patrol level). patrol-1 => 1, patrol-2+ => 2 (side cap is 2 for W/E, 2/1 for GUER). HQ teams scale via the curve; patrols stay low.
 					_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 					_owned = [];
@@ -123,6 +142,13 @@ while {!WFBE_GameOver} do {
 					if (count _owned == 0 && {!(_logik getVariable ["wfbe_patrol_waitlog", false])}) then {
 						_logik setVariable ["wfbe_patrol_waitlog", true];
 						["INFORMATION", Format ["server_side_patrols.sqf: [%1] Patrols %2 researched but NO owned towns yet - waiting for the first capture.", _side, _lvl]] Call WFBE_CO_FNC_AICOMLog;
+					};
+					if (_perfProbe && {count _owned < 1}) then {
+						if (!isNil "PerformanceAudit_Record") then {
+							if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+								["side_patrol_dispatch_state", 0, Format["side:%1;lvl:%2;active:%3;cap:%4;popTier:%5;reason:noOwned;hq:%6", _side, _lvl, _active, _perfCap, _perfPopTier, !isNull _hq], "SERVER"] Call PerformanceAudit_Record;
+							};
+						};
 					};
 					if (!isNull _hq && count _owned > 0) then {
 						//--- cmdcon41-w3m (ground-patrol-skip-naval-hvt): _home is the town the patrol SPAWNS at. An owned
@@ -230,6 +256,9 @@ while {!WFBE_GameOver} do {
 							if (!isNil "PerformanceAudit_Record") then {
 								if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 									["side_patrol_spawn", 0, Format["side:%1;tier:%2;active:%3;hc:%4", _side, _tier, _active + 1, !isNull _hcUnit], "SERVER"] Call PerformanceAudit_Record;
+									if (_perfProbe) then {
+										["side_patrol_dispatch_state", 0, Format["side:%1;lvl:%2;tier:%3;active:%4;cap:%5;popTier:%6;owned:%7;home:%8;hc:%9;reason:dispatched", _side, _lvl, _tier, _active + 1, _perfCap, _perfPopTier, count _owned, _home getVariable "name", !isNull _hcUnit], "SERVER"] Call PerformanceAudit_Record;
+									};
 								};
 							};
 						};
