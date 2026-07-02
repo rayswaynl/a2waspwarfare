@@ -540,7 +540,8 @@ while {!gameOver} do {
 				_wW20 =  6;  //--- W20 = CAPTURED CACHE (Uncommon, weight 6 - mirrors W16 Lend-Lease; raises a random SUPPORT-line tier).
 				_wW13 =  6; _wW18 =  0;  //--- rebalance 2026-06-14: W13 (Rare) up 4->6. W18 (Bounty HVT) REMOVED 2026-06-27 (Ray): boring/useless. Weight forced 0 -> never drawn; apply block left inert.
 				_wW19 =  5;  //--- W19 = HELIBORNE QRF (Rare, weight 5).
-				_wW14 =  0; _wW15 =  6; _wW16 =  6; _wW17 =  0;  //--- W14 (Iron Dome) + W17 (Supply Convoy) REMOVED 2026-06-27 (Ray): boring/useless. Weights forced 0 -> never drawn; apply blocks left inert.
+				_wW14 = missionNamespace getVariable ["WFBE_C_WILDCARD_IRON_DOME", 0]; if (_wW14 > 0) then {_wW14 = 7};  //--- W14 Iron Dome: weight 7 (Uncommon) when WFBE_C_WILDCARD_IRON_DOME=1, else 0 (dark).
+				_wW15 =  6; _wW16 =  6; _wW17 =  0;  //--- W17 (Supply Convoy) REMOVED 2026-06-27 (Ray): boring/useless. Weight forced 0 -> never drawn; apply block left inert.
 				_wW21 =  0;  //--- W21 (GUER VBIED) REMOVED 2026-06-27 (Ray): boring/useless. Weight forced 0 -> never drawn; apply block left inert.
 				_wW22 =  6; _wW23 =  7; _wW24 =  6;  //--- NEW 2026-06-27 (Ray): W22 Top Gun (Rare), W23 Armor Column (Uncommon), W24 Technical Swarm (Rare) - all visible combat reinforcements; escalate when losing.
 				_wW25 =  5; _wW26 =  5;   //--- NEW (Ray 2026-07-02): W25 Recon Drone Ka-137 (WEST) / W26 Recon Drone Pchela (EAST). Rare weight 5.
