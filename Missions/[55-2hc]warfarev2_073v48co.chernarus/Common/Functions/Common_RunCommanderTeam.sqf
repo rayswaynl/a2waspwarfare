@@ -1465,7 +1465,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- group vars via single-arg getVariable + isNil (groups reject 2-arg form);
 							//--- missionNamespace 2-arg getVariable is fine. No pushBack/findIf/params/A3.
 							if ((missionNamespace getVariable ["WFBE_C_AICOM_ARMOR_SCREEN", 0]) > 0) then {
-								private ["_ascrR","_ascrBase","_ascrBrg","_ascrIdx","_ascrUnit","_ascrVeh","_ascrScrPos"];
+								private ["_ascrR","_ascrBase","_ascrBrg","_ascrIdx"];
 								_ascrR    = missionNamespace getVariable ["WFBE_C_AICOM_ARMOR_SCREEN_R", 80];
 								//--- Bearing: team leader -> _dest (atan2 delta, same idiom as L1429).
 								//--- Guard a zero-length delta so atan2 does not divide by zero.
@@ -1489,22 +1489,21 @@ while {!WFBE_GameOver && _alive} do {
 										_ascrOffset = (_ascrIdx mod 2) * 60 - 30; //--- hull 0 -> -30 deg, hull 1 -> +30 deg, repeats.
 										_ascrHdg    = (_ascrBrg + 180 + _ascrOffset) mod 360;
 										_ascrP      = [(_dest select 0) + _ascrR * (sin _ascrHdg), (_dest select 1) + _ascrR * (cos _ascrHdg), 0];
-										//--- Order the DRIVER (or the unit itself on foot) to the screen pos.
-										//--- A2 idiom: (driver vehicle _x) for crewed hulls (same as L1120).
-										_ascrVeh = vehicle _x;
-										if (_ascrVeh != _x) then {
-											if (!isNull (driver _ascrVeh) && {alive (driver _ascrVeh)}) then {
-												(driver _ascrVeh) doMove _ascrP;
-											};
-										} else {
-											_x doMove _ascrP;
-										};
-										//--- Hull-down watch posture: COMBAT/RED so it returns fire; LIMITED
-										//--- so it settles and watches rather than advancing. A2-safe setters.
-										_x setCombatMode "RED";
-										_x setBehaviour "COMBAT";
-										_x setSpeedMode "LIMITED";
-										_ascrIdx = _ascrIdx + 1;
+										//--- Order the DRIVER (not the hull) to the screen pos.
+										//--- _x IS already a vehicle; vehicle _x == _x always, so the old
+										//--- "_ascrVeh != _x" guard was dead code and the driver branch
+										//--- never ran. Fix (review defect): guard driver directly, skip
+										//--- driverless/dead-driver tanks entirely (no doMove, no counter).
+										//--- Idiom matches L475 and L1120 (driver _x for vehicle objects).
+										if (!isNull (driver _x) && {alive (driver _x)}) then {
+											(driver _x) doMove _ascrP;
+											//--- Hull-down watch posture: COMBAT/RED so it returns fire; LIMITED
+											//--- so it settles and watches rather than advancing. A2-safe setters.
+											_x setCombatMode "RED";
+											_x setBehaviour "COMBAT";
+											_x setSpeedMode "LIMITED";
+											_ascrIdx = _ascrIdx + 1;
+										}; //--- else: no live driver -> tank is driverless or crew is dead; skip entirely.
 									};
 								} forEach _vehicles;
 								if (_ascrIdx > 0) then {
