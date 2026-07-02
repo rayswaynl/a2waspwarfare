@@ -31,7 +31,7 @@ _k = _k + ["Squad_2"];
 _u		= ["USMC_Soldier_SL"];
 _u = _u + ["USMC_Soldier_AR"];
 _u = _u + ["USMC_Soldier_SL"];
-_u = _u + ["BAF_Soldier_AAT_W"];
+_u = _u + ["USMC_Soldier_HAT"];
 _u = _u + ["USMC_Soldier_AR"];
 _u = _u + ["USMC_Soldier_Medic"];
 _l = _l + [_u];
@@ -115,10 +115,10 @@ _u = _u + ["USMC_Soldier_Medic"];
 _l = _l + [_u];
 
 _k = _k + ["Team_MG_3"];
-_u		= ["BAF_Soldier_MG_W"];
-_u = _u + ["BAF_Soldier_MG_W"];
-_u = _u + ["BAF_Soldier_MG_W"];
-_u = _u + ["BAF_Soldier_MG_W"];
+_u		= ["USMC_Soldier_MG"];
+_u = _u + ["USMC_Soldier_MG"];
+_u = _u + ["USMC_Soldier_MG"];
+_u = _u + ["USMC_Soldier_MG"];
 _l = _l + [_u];
 
 _k = _k + ["Team_AT_0"];
@@ -131,14 +131,14 @@ _l = _l + [_u];
 _k = _k + ["Team_AT_1"];
 _u		= ["USMC_Soldier_LAT"];
 _u = _u + ["USMC_Soldier_LAT"];
-_u = _u + ["BAF_Soldier_AT_W"];
+_u = _u + ["USMC_Soldier_AT"];
 _u = _u + ["USMC_Soldier_Medic"];
 _l = _l + [_u];
 
 _k = _k + ["Team_AT_2"];
-_u		= ["BAF_Soldier_AT_W"];
-_u = _u + ["BAF_Soldier_AT_W"];
-_u = _u + ["BAF_Soldier_AAT_W"];
+_u		= ["USMC_Soldier_AT"];
+_u = _u + ["USMC_Soldier_AT"];
+_u = _u + ["USMC_Soldier_HAT"];
 _u = _u + ["USMC_Soldier_Medic"];
 _l = _l + [_u];
 
@@ -174,7 +174,7 @@ _l = _l + [_u];
 _k = _k + ["Team_Sniper_3"];
 _u		= ["US_Soldier_Spotter_EP1"];
 _u = _u + ["USMC_SoldierS_SniperH"];
-_u = _u + ["BAF_Soldier_SniperH_W"];
+_u = _u + ["USMC_SoldierS_SniperH"];
 _l = _l + [_u];
 
 _k = _k + ["Motorized_0"];
