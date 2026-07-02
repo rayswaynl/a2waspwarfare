@@ -38,6 +38,87 @@ while {!gameOver} do {
 		missionNamespace setVariable ["WFBE_ENDGAME_FORCE_MULT", 1];
 	};
 
+	//--- TERRITORIAL VICTORY (Ray, cmdcon41-w3b): a side that holds >= FRAC of all towns for MINS
+	//--- unbroken WINS. This is a NEW win MODE (explicitly requested by Ray for build84), flag-gated
+	//--- so it can be dialled off without a code change. It does NOT touch the supremacy/HQ-loss
+	//--- detection below - it only, when its clock completes, feeds the SAME award block (via the
+	//--- per-side WFBE_TERRITORIAL_WIN_<sid> marker read inside that block) so ROUNDEND / WASPSTAT /
+	//--- winner plumbing / map rotation all fire IDENTICALLY. Clock state lives in missionNamespace,
+	//--- keyed by side-ID; announcements route through the existing DashboardAnnounce PVF (systemChat
+	//--- to every client on every side - same reach the OILFIELD opener uses). Milestones are
+	//--- rate-limited to once each via a "last minute-bucket announced" marker per side.
+	//--- Flags (integrator registers in Init_CommonConstants; read inline here with safe defaults):
+	//---   WFBE_C_VICTORY_TERRITORIAL      (default 1)   master enable
+	//---   WFBE_C_VICTORY_TERRITORIAL_FRAC (default 0.8) fraction of towns that must be held
+	//---   WFBE_C_VICTORY_TERRITORIAL_MINS (default 30)  minutes the fraction must be held unbroken
+	if ( !WFBE_GameOver && ((missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL", 1]) > 0) && (_total > 0) ) then {
+		private ["_terrFrac","_terrMins","_terrHoldS","_sid","_clockKey","_mileKey","_winKey","_held","_needed","_startS","_elapsedS","_remainS","_remMin","_sideName"];
+		_terrFrac  = missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL_FRAC", 0.8];
+		_terrMins  = missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL_MINS", 30];
+		_terrHoldS = _terrMins * 60;
+		{
+			_sid      = (_x) Call WFBE_CO_FNC_GetSideID;
+			_clockKey = Format ["WFBE_TERRITORIAL_CLOCK_%1", _sid];  //--- start-time (seconds) while a clock runs; -1 = no clock (numeric sentinel, 2-arg get)
+			_mileKey  = Format ["WFBE_TERRITORIAL_MILE_%1", _sid];   //--- last milestone minute-bucket announced (rate-limit)
+			_winKey   = Format ["WFBE_TERRITORIAL_WIN_%1", _sid];    //--- 1 = clock completed -> award loop should crown this side
+			_held     = (_x) Call GetTownsHeld;
+			//--- We gate on the RATIO (_held/_total >= _frac) rather than a pre-rounded town count, so
+			//--- there is no off-by-one rounding ambiguity at the threshold. _needed is display-only.
+			_needed   = _terrFrac * _total;
+			_sideName = str _x;
+			//--- Read the running-clock start with the blessed 2-arg default form (-1 = not running).
+			_startS   = missionNamespace getVariable [_clockKey, -1];
+			if ((_held / _total) >= _terrFrac) then {
+				//--- Side is AT/ABOVE the threshold this tick.
+				if (_startS < 0) then {
+					//--- No clock yet -> start one and announce the threat to BOTH sides.
+					missionNamespace setVariable [_clockKey, time];
+					missionNamespace setVariable [_mileKey, -1];        //--- no milestone announced yet
+					missionNamespace setVariable [_winKey, 0];
+					[nil, "DashboardAnnounce", [Format ["%1 dominates the region (%2 of %3 towns) - VICTORY in %4:00 unless their grip is broken!", _sideName, _held, _total, _terrMins]]] Call WFBE_CO_FNC_SendToClients;
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|VICTORY_TERRITORIAL|clock-start held" + str _held + "/" + str _total + " mins" + str _terrMins);
+					["INFORMATION", Format ["server_victory_threeway.sqf: TERRITORIAL clock STARTED for %1 (holds %2/%3 towns, need %4) - win in %5 min unbroken.", _sideName, _held, _total, _needed, _terrMins]] Call WFBE_CO_FNC_LogContent;
+				} else {
+					//--- Clock already running (_startS is its start time) -> advance milestones + check completion.
+					_elapsedS = time - _startS;
+					_remainS  = (_terrHoldS - _elapsedS) max 0;
+					_remMin   = ceil (_remainS / 60);   //--- minutes remaining, rounded UP for the human-facing countdown
+					if (_elapsedS >= _terrHoldS) then {
+						//--- COMPLETED: mark ready. The existing award block (below) reads _winKey and
+						//--- crowns _x through the SAME win path (double-fire guard preserved there).
+						missionNamespace setVariable [_winKey, 1];
+					} else {
+						//--- Milestone re-announce at 20/10/5/1 minutes remaining, once each (rate-limited by
+						//--- the last-bucket marker). Buckets are the exact minute thresholds.
+						private ["_lastBucket","_bucket"];
+						_lastBucket = missionNamespace getVariable [_mileKey, -1];
+						_bucket = 0;
+						if (_remMin <= 20 && _remMin > 10) then {_bucket = 20};
+						if (_remMin <= 10 && _remMin > 5)  then {_bucket = 10};
+						if (_remMin <= 5  && _remMin > 1)  then {_bucket = 5};
+						if (_remMin <= 1)                  then {_bucket = 1};
+						if (_bucket > 0 && _bucket != _lastBucket) then {
+							missionNamespace setVariable [_mileKey, _bucket];
+							[nil, "DashboardAnnounce", [Format ["%1 still holds the region (%2/%3 towns) - VICTORY in %4 minute(s) unless broken!", _sideName, _held, _total, _bucket]]] Call WFBE_CO_FNC_SendToClients;
+							diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|VICTORY_TERRITORIAL|milestone-" + str _bucket + "min held" + str _held + "/" + str _total);
+						};
+					};
+				};
+			} else {
+				//--- Side dropped BELOW the threshold -> break the siege: cancel any running clock and
+				//--- announce it to BOTH sides. Only announce when a clock was actually running (_startS >= 0).
+				if (_startS >= 0) then {
+					missionNamespace setVariable [_clockKey, -1];
+					missionNamespace setVariable [_mileKey, -1];
+					missionNamespace setVariable [_winKey, 0];
+					[nil, "DashboardAnnounce", [Format ["The siege is broken! %1 no longer dominates the region (down to %2/%3 towns) - the victory clock is reset.", _sideName, _held, _total]]] Call WFBE_CO_FNC_SendToClients;
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|VICTORY_TERRITORIAL|clock-broken held" + str _held + "/" + str _total);
+					["INFORMATION", Format ["server_victory_threeway.sqf: TERRITORIAL clock BROKEN for %1 (now holds %2/%3 towns) - reset.", _sideName, _held, _total]] Call WFBE_CO_FNC_LogContent;
+				};
+			};
+		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
+	};
+
 	if (!gameOver) then {
 		{
 			_side = _x;
@@ -61,22 +142,39 @@ while {!gameOver} do {
 				_factories = _factories + count([_side,missionNamespace getVariable Format ["WFBE_%1%2TYPE",_side,_x], _structures] Call GetFactories);
 			} forEach ["BARRACKS","LIGHT","HEAVY","AIRCRAFT"];
 
+			//--- TERRITORIAL VICTORY (cmdcon41-w3b): read the completion marker the clock block above set
+			//--- for THIS side. When 1, this side held >= FRAC of towns for the full duration -> it is the
+			//--- WINNER, and we route through the SAME award path so ROUNDEND / WASPSTAT / rotation match.
+			//--- Default-0 via the blessed 2-arg get (no A3 ops) so this is inert until a clock completes.
+			private ["_terrWin"];
+			_terrWin = (missionNamespace getVariable [Format ["WFBE_TERRITORIAL_WIN_%1", ((_x) Call WFBE_CO_FNC_GetSideID)], 0]) > 0;
+
 			//--- B67 [wiki-wins]: explicit parenthesisation. The old expression
 			//---   !(alive _hq) && _factories==0 || _towns==_total && !WFBE_GameOver
 			//--- relies on left-to-right SQF precedence and reads ambiguously, and the
 			//--- forEach could fire the award block twice in one tick (once per side).
 			//--- Now: fire only while NOT already over, for a clear supremacy/HQ-loss win;
 			//--- WFBE_GameOver also short-circuits any later side in the same forEach pass.
-			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0) || (_towns == _total) ) ) then {
+			//--- cmdcon41-w3b: the territorial clock (_terrWin) is OR-ed in as a third win trigger.
+			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0) || (_towns == _total) || _terrWin ) ) then {
 				//--- FIX D (winner backwards): the award block fires for the evaluated side _x.
 				//--- If the towns-supremacy sub-condition is true, _x is the WINNER. Otherwise the
 				//--- HQ-loss branch fired - _x is the side whose own HQ was razed = the LOSER, so the
 				//--- real winner is the OTHER side. GUER (defender) is excluded from this loop, so the
 				//--- winner is strictly the opposite of the two-sided WEST/EAST pair.
-				if (_towns == _total) then {
+				//--- cmdcon41-w3b: territorial completion means _x (the dominating holder) is the WINNER,
+				//--- same as the supremacy branch, so it shares the _winSide = _x assignment.
+				if (_terrWin) then {
 					_winSide = _x;
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _x) + "|" + str (round (time / 60)) + "|VICTORY_TERRITORIAL|win-awarded held" + str _towns + "/" + str _total);
+					["INFORMATION", Format ["server_victory_threeway.sqf: TERRITORIAL VICTORY awarded to %1 (held %2/%3 towns for the full duration).", str _x, _towns, _total]] Call WFBE_CO_FNC_LogContent;
+					[nil, "DashboardAnnounce", [Format ["%1 has WON by TERRITORIAL DOMINANCE - held the region long enough to secure victory!", str _x]]] Call WFBE_CO_FNC_SendToClients;
 				} else {
-					if (_x == west) then { _winSide = east } else { _winSide = west };
+					if (_towns == _total) then {
+						_winSide = _x;
+					} else {
+						if (_x == west) then { _winSide = east } else { _winSide = west };
+					};
 				};
 				[nil, "HandleSpecial", ["endgame", (_winSide) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
 

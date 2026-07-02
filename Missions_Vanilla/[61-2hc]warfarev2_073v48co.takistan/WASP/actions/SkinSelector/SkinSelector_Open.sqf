@@ -13,8 +13,8 @@ Private ["_display","_pool","_visiblePool","_i","_cls","_lbl","_isGhillie",
          "_selectedIdx","_selectedCls","_selectedLbl","_portrait",
          "_regEntry","_factionText","_WFBE_MenuAction"];
 
-//--- Guard.
-if (WFBE_C_SKIN_SELECTOR != 1) exitWith {};
+//--- Guard. cmdcon41-w3l: WFBE_C_SKINSEL master (default 1) OR legacy WFBE_C_SKIN_SELECTOR.
+if (!(call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf"))) exitWith {};
 if (!(alive player)) exitWith {};
 if (!(vehicle player == player)) exitWith {hint "Skin selection is only available on foot."};
 if (dialog) exitWith {};

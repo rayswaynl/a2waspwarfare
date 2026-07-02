@@ -16,11 +16,17 @@
 
         _discountPercentage = 0.7 * _discountPercentage;
 
-        ATTACK_WAVE_PRICE_MODIFIER = _discountPercentage;
-
+        //--- AI4 (cmdcon41-w3f): do NOT stash the discount in the bare global ATTACK_WAVE_PRICE_MODIFIER here.
+        //--- Two sides running concurrent waves each ran their OWN copy of this spawn and both wrote/read that
+        //--- single global across the sleep below, so one side's wave clobbered the other's discount mid-flight.
+        //--- The per-side truth is carried in the ATTACK_WAVE_DETAILS array (it already contains _side) and is
+        //--- stored per-side downstream (ATTACK_WAVE_WEST/EAST_PRICE_MODIFIER in Server/PVFunctions/AttackWave.sqf,
+        //--- sourced from the array - NOT this global). So we pass the spawn-local _discountPercentage straight
+        //--- into the array; nothing on the server reads the bare global (client copies are set per-client per-side
+        //--- via the "attack-wave" HandleSpecial). This removes the clobber at the root with no shared server state.
         _attackWaveLength = (1 - _discountPercentage) * 1500;
 
-        ATTACK_WAVE_DETAILS = [_side, ATTACK_WAVE_PRICE_MODIFIER, _attackWaveLength];
+        ATTACK_WAVE_DETAILS = [_side, _discountPercentage, _attackWaveLength];
 
         diag_log ATTACK_WAVE_DETAILS;
 
@@ -30,10 +36,8 @@
 
         _attackWaveLength = 0;
 
-        // Return to normal units' pricing after the wave
-        ATTACK_WAVE_PRICE_MODIFIER = 1;
-
-        ATTACK_WAVE_DETAILS = [_side, ATTACK_WAVE_PRICE_MODIFIER, _attackWaveLength];
+        // Return to normal units' pricing after the wave (per-side value carried in the array; no shared global).
+        ATTACK_WAVE_DETAILS = [_side, 1, _attackWaveLength];
 
         publicVariableServer "ATTACK_WAVE_DETAILS";
     };

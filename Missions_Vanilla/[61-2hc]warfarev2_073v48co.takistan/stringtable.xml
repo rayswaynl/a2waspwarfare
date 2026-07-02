@@ -1797,6 +1797,18 @@
         <English>West = South | East = North</English>
         <Russian>Запад Ю | Восток С</Russian>
       </Key>
+      <Key ID="STR_WF_PARAMETER_RandomPure"><!--Build84 backlog#2-->
+        <English>Random Start Filtering</English>
+        <Russian>Random Start Filtering</Russian>
+      </Key>
+      <Key ID="STR_WF_PARAMETER_RandomPure_Hardened"><!--Build84 backlog#2-->
+        <English>Hardened (road-connected)</English>
+        <Russian>Hardened (road-connected)</Russian>
+      </Key>
+      <Key ID="STR_WF_PARAMETER_RandomPure_Original"><!--Build84 backlog#2-->
+        <English>Original (unfiltered)</English>
+        <Russian>Original (unfiltered)</Russian>
+      </Key>
       <Key ID="STR_WF_PARAMETER_Small">
         <English>Small</English>
         <Russian>Маленький</Russian>
@@ -2472,9 +2484,9 @@
         <English>This upgrade unlocks countermeasures.&lt;br/&gt;&lt;br/&gt;This allows the use of defensive countermeasures (flares) on aircraft.</English>
         <Russian>Данная модернизация разблокирует Контрмеры.&lt;br/&gt;&lt;br/&gt;Это позволяет использовать оборонительные контрмеры (ЛТЦ) на воздушных судах.</Russian>
       </Key>
-	  <Key ID="STR_WF_UPGRADE_ICBM_Desc">
-        <English>This upgrade unlocks ICBM.&lt;br/&gt;&lt;br/&gt;This allows the team to buy an ICBM from the Tactical Center.&lt;br/&gt;&lt;br/&gt;Maximum pain for our good friends.</English>
-        <Russian>Данная модернизация разблокирует МБР.&lt;br/&gt;&lt;br/&gt;Это поможет купить Межконтинентальную баллистическую ракету в Тактическом центре.&lt;br/&gt;&lt;br/&gt;Максимальный урон для наших друзей;).</Russian>
+	  <Key ID="STR_WF_UPGRADE_ICBM_Desc"><!--cmdcon41-w3h: two-level SCUD description.-->
+        <English>The SCUD is a two-level strategic tech.&lt;br/&gt;&lt;br/&gt;Level 1: SCUD tactical missile platform (conventional munitions) - deploys your side's land TEL and unlocks its conventional strikes from the Command menu.&lt;br/&gt;&lt;br/&gt;Level 2: ICBM (nuclear strike) - arms the nuclear warhead, fired from the Tactical Center.&lt;br/&gt;&lt;br/&gt;Maximum pain for our good friends.</English>
+        <Russian>SCUD - двухуровневая стратегическая технология.&lt;br/&gt;&lt;br/&gt;Уровень 1: тактическая ракетная платформа SCUD (обычные боеприпасы) - разворачивает наземную ПУ и открывает обычные удары в меню командования.&lt;br/&gt;&lt;br/&gt;Уровень 2: МБР (ядерный удар) - снаряжает ядерную боеголовку, запуск из Тактического центра.&lt;br/&gt;&lt;br/&gt;Максимальный урон для наших друзей;).</Russian>
       </Key>
 	  <Key ID="STR_WF_UPGRADE_EASA_Desc">
         <English>This upgrade unlocks EASA.&lt;br/&gt;&lt;br/&gt;This allows the team using EASA to change the primary loadout of aircraft.&lt;br/&gt; - Bomb&lt;br/&gt; - AT Guided Missile&lt;br/&gt; - AA Guided Missile</English>
@@ -2564,9 +2576,9 @@
         <English>Income: $%1 ($%2/Min)</English>
         <Russian>Наличные: $%1 ($%2/мин)</Russian>
       </Key>
-      <Key ID="STR_WF_ICBM"><!--shared W-->
-        <English>ICBM</English>
-        <Russian>МБР</Russian>
+      <Key ID="STR_WF_ICBM"><!--shared W--><!--cmdcon41-w3h: upgrade + tactical-launch label renamed ICBM->SCUD (two-level SCUD tech). Key ID unchanged to avoid churn.-->
+        <English>SCUD</English>
+        <Russian>SCUD</Russian>
       </Key>
       <Key ID="STR_WF_Price"><!--shared W-->
         <English>Price</English>

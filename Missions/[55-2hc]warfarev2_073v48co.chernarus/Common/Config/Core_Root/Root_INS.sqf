@@ -38,22 +38,28 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSuppl
 if (isServer) then {
 	//--- Patrols.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
-		['Ins_Commander','Ins_Soldier_MG','Ins_Soldier_Sniper','Ins_Soldier_Medic'], 
+		['Ins_Commander','Ins_Soldier_MG','Ins_Soldier_Sniper','Ins_Soldier_Medic'],
 		['Ins_Commander','Ins_Soldier_AR','Ins_Soldier_GL','Ins_Soldier_AT','Ins_Soldier_1'], // Ins_Soldier_AT acts as Dragon soldier now
-		['UAZ_MG_INS','UAZ_SPG9_INS']
+		['UAZ_MG_INS','UAZ_SPG9_INS'],
+		//--- mixed technical (cmdcon41-w3e): UAZ MG + dismounted AT/MG screen (crewed + on foot).
+		['UAZ_MG_INS','Ins_Commander','Ins_Soldier_AT','Ins_Soldier_MG'] // Ins_Soldier_AT acts as Dragon soldier now
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['BRDM2_INS','BRDM2_ATGM_INS'], 
+		['BRDM2_INS','BRDM2_ATGM_INS'],
 		['Ural_INS','Ins_Commander','Ins_Soldier_AT','Ins_Soldier_MG','Ins_Soldier_AT'], // Ins_Soldier_AT acts as Dragon soldier now
-		['BMP2_INS','Ins_Soldier_AA','Ins_Soldier_AA','Ins_Soldier_Medic']
+		['BMP2_INS','Ins_Soldier_AA','Ins_Soldier_AA','Ins_Soldier_Medic'],
+		//--- AA picket (cmdcon41-w3e): ZU-23 truck + MANPADS dismounts.
+		['Ural_ZU23_INS','Ins_Soldier_AA','Ins_Commander','Ins_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['T72_INS','BMP2_INS'], 
+		['T72_INS','BMP2_INS'],
 		['T72_INS','T72_INS'],
 		['BMP2_INS','BMP2_INS','Ins_Commander','Ins_Soldier_MG','Ins_Soldier_Sniper','Ins_Soldier_Medic','Ins_Soldier_AT','Ins_Soldier_AT','Ins_Soldier_1'], // Ins_Soldier_AT acts as Dragon soldier now
-		['BMP2_INS','Ins_Commander','Ins_Soldier_Medic','Ins_Soldier_GL','Ins_Soldier_1','Ins_Soldier_AR']
+		['BMP2_INS','Ins_Commander','Ins_Soldier_Medic','Ins_Soldier_GL','Ins_Soldier_1','Ins_Soldier_AR'],
+		//--- AA picket at HEAVY (cmdcon41-w3e): ZU-23 truck + BMP-2 + MANPADS dismounts - air deterrent.
+		['Ural_ZU23_INS','BMP2_INS','Ins_Soldier_AA','Ins_Soldier_AA','Ins_Commander']
 	]];
 	
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

@@ -3,7 +3,16 @@ Private["_damage","_damagedBy","_logik","_side","_structure","_redu"];
 _structure = _this select 0;
 _damagedBy = _this select 1;
 _damage = _this select 2;
-_redu = if (_structure isKindOf "Warfare_HQ_base_unfolded") then {5} else {missionNamespace getVariable "WFBE_C_STRUCTURES_DAMAGES_REDUCTION"};
+//--- cmdcon41 (REAL-BASE-ASSAULT part 1): flag-gated enemy-assault divisor, mirrors Server_HandleBuildingDamage.
+//--- WFBE_C_STRUCTURES_ENEMY_DESTROYABLE (default 1) on -> WFBE_C_STRUCTURES_ENEMY_REDU (default 2 factory,
+//--- default+1 HQ) instead of the never-dies 5/6. Flag off -> legacy 5/6 verbatim.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_ENEMY_DESTROYABLE", 1]) > 0) then {
+	private "_eRedu";
+	_eRedu = missionNamespace getVariable ["WFBE_C_STRUCTURES_ENEMY_REDU", 2];
+	_redu = if (_structure isKindOf "Warfare_HQ_base_unfolded") then {_eRedu + 1} else {_eRedu};
+} else {
+	_redu = if (_structure isKindOf "Warfare_HQ_base_unfolded") then {5} else {missionNamespace getVariable "WFBE_C_STRUCTURES_DAMAGES_REDUCTION"};
+};
 _side = _structure getVariable "wfbe_side";
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 
