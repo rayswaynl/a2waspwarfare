@@ -985,6 +985,67 @@ function Test-SupplyHeliTimers {
 	Add-Result "Supply heli load/unload timers" ($load -eq 15 -and $unload -eq 15 -and $compileOnly -and $noCallCompile -and $guardedCursor) "load=$load unload=$unload compileOnly=$compileOnly noCallCompile=$noCallCompile guardedCursor=$guardedCursor"
 }
 
+function Test-SupplyMissionPvGuards {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$startedPath = Join-Path $entry.Root "Server\Module\supplyMission\supplyMissionStarted.sqf"
+		$completedPath = Join-Path $entry.Root "Server\Module\supplyMission\supplyMissionCompleted.sqf"
+		$activePath = Join-Path $entry.Root "Server\Module\supplyMission\isSupplyMissionActiveInTown.sqf"
+		$clientStartPath = Join-Path $entry.Root "Client\Module\supplyMission\supplyMissionStart.sqf"
+		$clientUnloadPath = Join-Path $entry.Root "Client\Module\supplyMission\supplyMissionUnload.sqf"
+		$started = Get-Text $startedPath
+		$completed = Get-Text $completedPath
+		$active = Get-Text $activePath
+		$clientStart = Get-Text $clientStartPath
+		$clientUnload = Get-Text $clientUnloadPath
+		$startedCode = [regex]::Replace($started, "//.*", "")
+		$startedCode = [regex]::Replace($startedCode, "/\*[\s\S]*?\*/", "")
+		$completedCode = [regex]::Replace($completed, "//.*", "")
+		$completedCode = [regex]::Replace($completedCode, "/\*[\s\S]*?\*/", "")
+		$activeCode = [regex]::Replace($active, "//.*", "")
+		$activeCode = [regex]::Replace($activeCode, "/\*[\s\S]*?\*/", "")
+
+		$shapeAt = $startedCode.IndexOf('typeName _d != "ARRAY"')
+		$countAt = $startedCode.IndexOf('count _d < 4')
+		$selectAt = $startedCode.IndexOf('_d select 0')
+		if ($shapeAt -lt 0 -or $countAt -lt 0) { $missing += "$($entry.Terrain):started-payload-shape" }
+		if ($selectAt -ge 0 -and ($shapeAt -lt 0 -or $countAt -lt 0 -or $shapeAt -gt $selectAt -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):started-guard-after-select" }
+		if (-not ($startedCode.Contains('typeName _playerObject != "OBJECT"') -and $startedCode.Contains('typeName _associatedSupplyTruck != "OBJECT"') -and $startedCode.Contains('typeName _associatedSourceTown != "OBJECT"') -and $startedCode.Contains('typeName _sidePlayer != "SIDE"') -and $startedCode.Contains('!isPlayer _playerObject') -and $startedCode.Contains('_sidePlayer in [west, east]') -and $startedCode.Contains('side _playerObject != _sidePlayer') -and $startedCode.Contains('WFBE_C_SUPPLY_VEHICLE_TYPES') -and $startedCode.Contains('_associatedSupplyTruck distance _playerObject > 80'))) { $missing += "$($entry.Terrain):started-authority-fields" }
+		if (-not ($startedCode.Contains('_associatedSourceTown in towns') -and $startedCode.Contains('getVariable ["sideID", -99]') -and $startedCode.Contains('Call WFBE_CO_FNC_GetSideID'))) { $missing += "$($entry.Terrain):started-friendly-town" }
+		if (-not ($startedCode.Contains('getVariable ["SupplyAmount", 0]') -and $startedCode.Contains('getVariable ["supplyValue", -1]') -and $startedCode.Contains('typeName _supplyAmount != "SCALAR"') -and $startedCode.Contains('WFBE_UP_SUPPLYRATE') -and $startedCode.Contains('WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER') -and $startedCode.Contains('_supplyAmount > _expectedSupplyAmount') -and $startedCode.Contains('setVariable ["SupplyExpectedMax", _expectedSupplyAmount, true]') -and $startedCode.Contains('setVariable ["wfbe_supply_side", _sidePlayer, true]'))) { $missing += "$($entry.Terrain):started-supply-cap" }
+		if (-not ($startedCode.Contains('_ccSide = _x getVariable ["wfbe_side", sideLogic]') -and $startedCode.Contains('_ccSide == _sidePlayer'))) { $missing += "$($entry.Terrain):started-friendly-cc" }
+		if (-not ($started.Contains('rejected malformed WFBE_Client_PV_SupplyMissionStarted') -and $started.Contains('rejected short WFBE_Client_PV_SupplyMissionStarted') -and $started.Contains('rejected invalid WFBE_Client_PV_SupplyMissionStarted') -and $started.Contains('rejected overfilled WFBE_Client_PV_SupplyMissionStarted'))) { $missing += "$($entry.Terrain):started-warnings" }
+		if (-not ($clientStart.Contains('WFBE_Client_PV_SupplyMissionStarted = [player, WFBE_CL_VAR_ASSOCIATED_SUPPLY_TRUCK, _sourceTown, sideJoined]') -and $clientStart.Contains('publicVariableServer "WFBE_Client_PV_SupplyMissionStarted"'))) { $missing += "$($entry.Terrain):client-start-shape" }
+
+		$shapeAt = $completedCode.IndexOf('typeName _d != "ARRAY"')
+		$countAt = $completedCode.IndexOf('count _d < 3')
+		$selectAt = $completedCode.IndexOf('_d select 0')
+		if ($shapeAt -lt 0 -or $countAt -lt 0) { $missing += "$($entry.Terrain):completed-payload-shape" }
+		if ($selectAt -ge 0 -and ($shapeAt -lt 0 -or $countAt -lt 0 -or $shapeAt -gt $selectAt -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):completed-guard-after-select" }
+		if (-not ($completedCode.Contains('typeName _playerObject != "OBJECT"') -and $completedCode.Contains('typeName _associatedSupplyTruck != "OBJECT"') -and $completedCode.Contains('typeName _requestedSide != "SIDE"') -and $completedCode.Contains('!isPlayer _playerObject') -and $completedCode.Contains('_requestedSide in [west, east]') -and $completedCode.Contains('_sidePlayer = side _playerObject') -and $completedCode.Contains('_sidePlayer != _requestedSide') -and $completedCode.Contains('WFBE_C_SUPPLY_VEHICLE_TYPES') -and $completedCode.Contains('wfbe_supply_side'))) { $missing += "$($entry.Terrain):completed-authority-fields" }
+		if (-not ($completedCode.Contains('getVariable ["SupplyAmount", 0]') -and $completedCode.Contains('getVariable ["SupplyFromTown", objNull]') -and $completedCode.Contains('getVariable ["SupplyByHeli", false]') -and $completedCode.Contains('typeName _supplyAmount != "SCALAR"') -and $completedCode.Contains('typeName _sourceTown != "OBJECT"') -and $completedCode.Contains('typeName _byHeli != "BOOL"') -and $completedCode.Contains('_sourceTown in towns') -and $completedCode.Contains('getVariable ["sideID", -99]'))) { $missing += "$($entry.Terrain):completed-source-fields" }
+		if (-not ($completedCode.Contains('getVariable ["SupplyExpectedMax", -1]') -and $completedCode.Contains('WFBE_UP_SUPPLYRATE') -and $completedCode.Contains('WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER') -and $completedCode.Contains('_supplyAmount > _expectedSupplyAmount') -and $completed.Contains('rejected overfilled WFBE_Server_PV_SupplyMissionCompleted'))) { $missing += "$($entry.Terrain):completed-supply-cap" }
+		if (-not ($completedCode.Contains('_friendlyCommandCenterInProximity') -and $completedCode.Contains('_ccSide = _x getVariable ["wfbe_side", sideLogic]') -and $completedCode.Contains('_ccSide == _sidePlayer') -and $completed.Contains('away from friendly Command Center'))) { $missing += "$($entry.Terrain):completed-friendly-cc" }
+		if (-not ($completedCode.Contains('setVariable ["SupplyExpectedMax", 0, true]') -and $completedCode.Contains('setVariable ["wfbe_supply_side", sideLogic, true]') -and $completed.Contains('publicVariable "WFBE_Server_PV_SupplyMissionCompletedMessage"'))) { $missing += "$($entry.Terrain):completed-reset-broadcast" }
+		if (-not ($completed.Contains('rejected malformed WFBE_Server_PV_SupplyMissionCompleted') -and $completed.Contains('rejected short WFBE_Server_PV_SupplyMissionCompleted') -and $completed.Contains('rejected invalid WFBE_Server_PV_SupplyMissionCompleted'))) { $missing += "$($entry.Terrain):completed-warnings" }
+		if (-not ($clientUnload.Contains('WFBE_Server_PV_SupplyMissionCompleted = [player, _associatedSupplyTruck, sideJoined]') -and $clientUnload.Contains('publicVariableServer "WFBE_Server_PV_SupplyMissionCompleted"'))) { $missing += "$($entry.Terrain):client-unload-shape" }
+
+		$shapeAt = $activeCode.IndexOf('typeName _d != "ARRAY"')
+		$countAt = $activeCode.IndexOf('count _d < 2')
+		$selectAt = $activeCode.IndexOf('_d select 0')
+		if ($shapeAt -lt 0 -or $countAt -lt 0) { $missing += "$($entry.Terrain):active-payload-shape" }
+		if ($selectAt -ge 0 -and ($shapeAt -lt 0 -or $countAt -lt 0 -or $shapeAt -gt $selectAt -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):active-guard-after-select" }
+		if (-not ($activeCode.Contains('typeName _player != "OBJECT"') -and $activeCode.Contains('typeName _sourceTown != "OBJECT"') -and $activeCode.Contains('!isPlayer _player') -and $activeCode.Contains('_sourceTown in towns') -and $activeCode.Contains('typeName _lastActivationTime != "SCALAR"') -and $active.Contains('publicVariable "WFBE_Server_PV_IsSupplyMissionActiveInTown"'))) { $missing += "$($entry.Terrain):active-field-guards" }
+		if (-not ($active.Contains('rejected malformed WFBE_Client_PV_IsSupplyMissionActiveInTown') -and $active.Contains('rejected short WFBE_Client_PV_IsSupplyMissionActiveInTown') -and $active.Contains('rejected invalid WFBE_Client_PV_IsSupplyMissionActiveInTown'))) { $missing += "$($entry.Terrain):active-warnings" }
+	}
+	Add-Result "Supply mission PV guards" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-ServiceMenuDisplayGuard {
 	$service = Get-Text (Join-Path $missionRoot "Client\GUI\GUI_Menu_Service.sqf")
 	$activeService = if (Test-Path -LiteralPath $ActiveMissionRoot) { Get-Text (Join-Path $ActiveMissionRoot "Client\GUI\GUI_Menu_Service.sqf") } else { "" }
@@ -1395,7 +1456,7 @@ function Test-HqWallLeakFix {
 
 function Test-InterdictionEnemyGuard {
 	$supply = Get-Text (Join-Path $missionRoot "Server\Module\supplyMission\supplyMissionStarted.sqf")
-	$ok = $supply.Contains("(side _veh)") -and $supply.Contains("_killerSide != ")
+	$ok = $supply.Contains('setVariable ["wfbe_supply_side", _sidePlayer, true]') -and $supply.Contains('getVariable ["wfbe_supply_side", side _veh]') -and $supply.Contains("_killerSide != ")
 	Add-Result "Supply interdiction enemy-side guard" $ok "enemyGuard=$ok"
 }
 
@@ -1429,6 +1490,7 @@ Test-FpsReportPvGuard
 Test-FactoryQueueEmptyHeadGuard
 Test-AttackWavePvGuards
 Test-IcbmRequestSpecialAuthorityGuard
+Test-SupplyMissionPvGuards
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards

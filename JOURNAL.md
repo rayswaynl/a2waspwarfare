@@ -1,5 +1,21 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Supply mission PV guards [RELEASE LOOP]
+
+Hardened the supply-mission public-variable entrypoints without changing the
+client flow. `WFBE_Client_PV_SupplyMissionStarted`,
+`WFBE_Server_PV_SupplyMissionCompleted` and
+`WFBE_Client_PV_IsSupplyMissionActiveInTown` now reject malformed/short payloads
+before slot reads, validate player/object/side ownership, require friendly source
+towns, and cap delivered supply against the server-side town/upgrade calculation.
+The start path stamps the accepted cargo max and owning side on the vehicle, while
+completion requires a friendly Command Center in range before minting side supply
+and then clears the supply stamps for reuse.
+
+Static smoke now checks the supply mission PV guard surface across Chernarus and
+generated Takistan. Runtime, SSH, RPT collection, upload, restart, cache-clear
+and deployment remain explicit-approval gated.
+
 ## 2026-07-02 — Factory queue empty-head guard [RELEASE LOOP]
 
 Closed the factory queue empty-array guard found in the overnight audit without
