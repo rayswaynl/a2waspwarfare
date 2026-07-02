@@ -1004,6 +1004,13 @@ if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_IcbmTel.sqf launched (WFBE_C_ICBM_TEL=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- Lane 11 AN-2 smuggler run: default-off ambient server event. The worker self-guards isServer and
+//--- the flag too; this boot gate avoids an idle loop while the feature stays dark.
+if ((missionNamespace getVariable ["WFBE_C_AN2_SMUGGLER_RUN", 0]) == 1) then {
+	[] execVM "Server\Server_An2SmugglerRun.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_An2SmugglerRun.sqf launched (WFBE_C_AN2_SMUGGLER_RUN=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
 //--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
 //--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.

@@ -377,6 +377,22 @@ with missionNamespace do {
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_INTERVAL") then {WFBE_C_OILFIELD_GUER_RAID_INTERVAL = 1500}; //--- min seconds between GUER raid spawns on the field.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_SIZE") then {WFBE_C_OILFIELD_GUER_RAID_SIZE = 4}; //--- GUER foot raiders per raid party.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_GRPCAP") then {WFBE_C_OILFIELD_GUER_RAID_GRPCAP = 120}; //--- do NOT spawn a raid if resistance group count is at/above this (leaves headroom below the 144 hard cap).
+	//--- Lane 11 dormant asset: AN-2 "Smuggler Run" a-life encounter. Default OFF: when enabled, a rare
+	//--- server-only civilian/TK AN-2 crosses the map; killing the hull drops a crate marker and credits
+	//--- the killer side/team with a small cargo reward. Kept separate from GUER air-def/naval-HVT loops.
+	if (isNil "WFBE_C_AN2_SMUGGLER_RUN") then {WFBE_C_AN2_SMUGGLER_RUN = 0};
+	if (isNil "WFBE_C_AN2_SMUGGLER_INTERVAL") then {WFBE_C_AN2_SMUGGLER_INTERVAL = 1800};
+	if (isNil "WFBE_C_AN2_SMUGGLER_CHANCE") then {WFBE_C_AN2_SMUGGLER_CHANCE = 0.35};
+	if (isNil "WFBE_C_AN2_SMUGGLER_CLASSES") then {WFBE_C_AN2_SMUGGLER_CLASSES = ["An2_1_TK_CIV_EP1","An2_2_TK_CIV_EP1","An2_TK_EP1"]};
+	if (isNil "WFBE_C_AN2_SMUGGLER_PILOT") then {WFBE_C_AN2_SMUGGLER_PILOT = "GUE_Soldier_Pilot"};
+	if (isNil "WFBE_C_AN2_SMUGGLER_HEIGHT") then {WFBE_C_AN2_SMUGGLER_HEIGHT = 140};
+	if (isNil "WFBE_C_AN2_SMUGGLER_TIMEOUT") then {WFBE_C_AN2_SMUGGLER_TIMEOUT = 900};
+	if (isNil "WFBE_C_AN2_SMUGGLER_EDGE_PAD") then {WFBE_C_AN2_SMUGGLER_EDGE_PAD = 250};
+	if (isNil "WFBE_C_AN2_SMUGGLER_MIN_PLAYERS") then {WFBE_C_AN2_SMUGGLER_MIN_PLAYERS = 1};
+	if (isNil "WFBE_C_AN2_SMUGGLER_REWARD_SUPPLY") then {WFBE_C_AN2_SMUGGLER_REWARD_SUPPLY = 2500};
+	if (isNil "WFBE_C_AN2_SMUGGLER_REWARD_FUNDS") then {WFBE_C_AN2_SMUGGLER_REWARD_FUNDS = 1000};
+	if (isNil "WFBE_C_AN2_SMUGGLER_CRATE") then {WFBE_C_AN2_SMUGGLER_CRATE = "USBasicAmmunitionBox_EP1"};
+	if (isNil "WFBE_C_AN2_SMUGGLER_CRATE_TTL") then {WFBE_C_AN2_SMUGGLER_CRATE_TTL = 900};
 	//--- === cmdcon42-oilrig DYNAMIC placement (Ray placement spec 2026-07-02: derrick on open ground BETWEEN the teams) ===
 	if (isNil "WFBE_C_OILFIELD_DYNAMIC") then {WFBE_C_OILFIELD_DYNAMIC = 1};               //--- 1 = per-match dynamic placement: HQ-midpoint + open-ground ring search + spawned derrick composition. 0 = legacy fixed-anchor auto-snap (no composition).
 	if (isNil "WFBE_C_OILFIELD_HQ_WAIT") then {WFBE_C_OILFIELD_HQ_WAIT = 600};             //--- max seconds to wait for BOTH start HQs to exist before falling back to the legacy anchor.
