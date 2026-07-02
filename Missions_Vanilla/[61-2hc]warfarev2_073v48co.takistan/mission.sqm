@@ -42,7 +42,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=98;
+		items=99;
 		class Item0
 		{
 			side="LOGIC";
@@ -3698,6 +3698,28 @@ class Mission
 					skill=0.60000002;
 				};
 			};
+		}
+		class Item98
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={6100,55,10500};
+					azimut=0;
+					special="NONE";
+					id=9010;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Rasman SCUD Site";
+					init="nullReturn = [this,""Rasman SCUD Site"",""+""  ,10,50,400,[""LargeTown1""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+				};
+			};
+			id=9011;
 		}
 };
 	class Markers

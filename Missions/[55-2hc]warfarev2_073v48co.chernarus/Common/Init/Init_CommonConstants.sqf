@@ -1652,6 +1652,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Default 1 for testing; flip to 0 for a byte-for-byte vanilla session.
 	if (isNil "WFBE_C_NAVAL_HVT") then {WFBE_C_NAVAL_HVT = 1};
 
+//--- LAND HVT OBJECTIVES (TK-DEEP-PARITY action #5, Takistan-only)
+//--- Master gate: set to 0 to fully disable the TK land SCUD-site HVT.
+//--- Default 1 on Takistan; inert on CH (worldName gate inside Init_LandHVT.sqf).
+	if (isNil "WFBE_C_LAND_HVT") then {WFBE_C_LAND_HVT = 1};
+
 //--- SCUD Strike tunables (oil-platform payoff).
 	if (isNil "WFBE_C_SCUD_COST")     then {WFBE_C_SCUD_COST     = 25000};	//--- server-validated funds cost
 	if (isNil "WFBE_C_SCUD_COOLDOWN") then {WFBE_C_SCUD_COOLDOWN = 300};	//--- per-platform cooldown (s)
