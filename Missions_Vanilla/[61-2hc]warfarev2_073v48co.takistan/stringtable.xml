@@ -1959,6 +1959,13 @@
         <Russian>Нет доступного ИИ группы для укомплектования артиллерии.</Russian>
         <Italian>Nessuna IA di gruppo disponibile per equipaggiare l'artiglieria.</Italian>
       </Key>
+      <Key ID="STR_WF_TACTICAL_ArtilleryAmmoRequested">
+        <English>Artillery ammo %1 requested on %2 unit(s).</English>
+        <French>Munitions d'artillerie %1 demandées pour %2 unité(s).</French>
+        <German>Artilleriemunition %1 für %2 Einheit(en) angefordert.</German>
+        <Russian>Боеприпасы артиллерии %1 запрошены для ед.: %2.</Russian>
+        <Italian>Munizioni d'artiglieria %1 richieste per %2 unità.</Italian>
+      </Key>
       <Key ID="STR_WF_TACTICAL_Artillery"><!--shared U-->
         <English>Artillery:</English>
         <Russian>Артиллерия:</Russian>
