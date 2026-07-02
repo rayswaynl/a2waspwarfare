@@ -1295,9 +1295,11 @@ WFBE_PLAYERKEH = player addEventHandler ['Killed', {[_this select 0,_this select
 
 //if (!WF_Debug) then {playMusic "Track11_Large_Scale_Assault";};
 
-/* B69 S2: Round-start intro music hook. SAFE NO-OP until Ray adds the track to Music/description.ext CfgMusic and sets WFBE_C_INTRO_MUSIC_TRACK. Plays nothing while the constant is "". */
-_introTrack = missionNamespace getVariable ["WFBE_C_INTRO_MUSIC_TRACK", ""];
-if (_introTrack != "") then { playMusic _introTrack; };
+/* Lane 51: optional round-start music hook. Default-off until WFBE_C_MUSIC_ENABLE is set and soundtrack files are present. */
+if ((missionNamespace getVariable ["WFBE_C_MUSIC_ENABLE", 0]) > 0) then {
+	_introTrack = missionNamespace getVariable ["WFBE_C_MUSIC_MATCH_START_TRACK", missionNamespace getVariable ["WFBE_C_INTRO_MUSIC_TRACK", ""]];
+	if ((count (toArray _introTrack)) > 0) then {playMusic _introTrack;};
+};
 
 
 waitUntil {!(isNull player)};

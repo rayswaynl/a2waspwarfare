@@ -959,6 +959,13 @@ with missionNamespace do {
 	if (isNil "WFBE_C_TIPS_ENABLE")                   then {WFBE_C_TIPS_ENABLE = 1};                   //--- cmdcon42-q: master on/off for the rotating chat-tip feed (0 = no tips at all).
 	if (isNil "WFBE_C_TIPS_PERIOD")                   then {WFBE_C_TIPS_PERIOD = 900};                 //--- cmdcon42-q: seconds between tips (Ray: 15 min; floored to 30s in the client). 50-tip deck = a full cycle every ~12.5 h.
 	if (isNil "WFBE_C_TIPS_INITIAL")                  then {WFBE_C_TIPS_INITIAL = 420};                //--- cmdcon42-q: seconds a fresh/JIP client waits before the FIRST tip, so it doesn't overlap the onboarding cards.
+	//--- Lane 51: optional soundtrack plumbing. Master default 0 keeps every new hook inert until audio files are added and Ray enables it.
+	if (isNil "WFBE_C_MUSIC_ENABLE")                  then {WFBE_C_MUSIC_ENABLE = 0};                  //--- 1 = client-side playMusic hooks may use the class names below.
+	if (isNil "WFBE_C_MUSIC_MATCH_START_TRACK")       then {WFBE_C_MUSIC_MATCH_START_TRACK = "wf_music_match_start"};
+	if (isNil "WFBE_C_INTRO_MUSIC_TRACK")             then {WFBE_C_INTRO_MUSIC_TRACK = ""};            //--- legacy alias kept for old profile/constant overrides.
+	if (isNil "WFBE_C_MUSIC_TOWN_CAPTURE_TRACK")      then {WFBE_C_MUSIC_TOWN_CAPTURE_TRACK = "wf_music_town_capture"};
+	if (isNil "WFBE_C_MUSIC_TOWN_CAPTURE_COOLDOWN")   then {WFBE_C_MUSIC_TOWN_CAPTURE_COOLDOWN = 180}; //--- seconds between capture music starts on one client.
+	if (isNil "WFBE_C_MUSIC_VICTORY_TRACK")           then {WFBE_C_MUSIC_VICTORY_TRACK = "wf_music_victory"};
 
 	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): FOUND size decoupled from the live MIN
 	//--- floor. HC-founded teams are NEVER refilled after founding (see AI_Commander_Teams.sqf B57 block),
