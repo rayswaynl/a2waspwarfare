@@ -1,11 +1,95 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 08:34 Europe/Amsterdam
+Last updated: 2026-07-02 08:49 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 08:49 Update
+
+Final validation found more movement after the 08:34 findings push.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `15be4d9`
+- PR #125: `fa2e4019d9e7d81ccfffcb16a67f17d1746c6bc8`
+- PR #126: `97db8180c257e33a53bad66e06bb1c7b6220ee25`
+- PR #136: `1c965f29253b2357c55c2e6873baf1eb5d29ace3`
+
+PR #125 moved from `fa3d0a159d1746e860c1cbf12062b2f45835ab57` to
+`fa2e4019d9e7d81ccfffcb16a67f17d1746c6bc8` with mission-affecting tactical
+support authority hardening:
+
+- `fa2e4019d` - `fix: guard tactical support authority`
+- changed both-map `GUI_Menu_Tactical.sqf`, `uav.sqf`,
+  `Init_CommonConstants.sqf`, `Server_HandleSpecial.sqf`, `Support_UAV.sqf`,
+  plus static smoke coverage
+- `git diff --check origin/master..origin/codex/release-command-center-20260630`:
+  pass
+- `Test-WaspStaticSmoke.ps1 -BaseRef origin/master -HeadRef HEAD`: pass,
+  including `Player support RequestSpecial authority guard`
+- `Run-WaspFinalCheck.ps1 -BaseRef origin/master -HeadRef HEAD`: pass
+- Chernarus A2 OA lint: pass, 744 SQF files, 0 fail, 0 review
+- Takistan A2 OA lint: pass, 747 SQF files, 0 fail, 0 review
+- High-only BugHunt: no suspects
+- LoadoutManager RELEASE: exit 0, `CHERNARUS DONE`, `TAKISTAN DONE`
+- package validator: pass for `_MISSIONS.7z`, expected git `fa2e4019d9`,
+  entries `1885`
+
+Touched tactical support/UAV files are hash-identical across Chernarus and
+Takistan:
+
+- `Client/GUI/GUI_Menu_Tactical.sqf`:
+  `9dad7cdb5b174e0e4c7fbdccc19248e815fc7842`
+- `Client/Module/UAV/uav.sqf`:
+  `112046e6fb2d47f182e9299c65d8d347a150cd91`
+- `Common/Init/Init_CommonConstants.sqf`:
+  `4244c311476d4455dffeb6e802c5e9f50cd6f430`
+- `Server/Functions/Server_HandleSpecial.sqf`:
+  `9e6b77e1509aa0f30996ed8b75d993e625c99389`
+- `Server/Support/Support_UAV.sqf`:
+  `b639df4ff3b1e9fa636ccfac862b8191b8014310`
+
+Local package-content validation for current PR #125 head:
+
+- expected git: `fa2e4019d9`
+- SHA256:
+  `9BB79035867AD954CA47FA969D0776D05EB078DCDD982C65F787BB8D74DC7616`
+- size: `7166356`
+- entries: `1885`
+- manifest:
+  `outputs/a2waspwarfare-pr125-fa2e4019-local-package-manifest-2026-07-02-0849.json`
+
+Artifact identity boundary:
+
+- PR #125 body currently has head `fa2e4019...`, but its release identity section
+  still advertises older `fa3d0a159d` /
+  `8D06CDA3AEF8A200CFC49306E41CC6FE25FE72015451F8D264BB14D753F8BD90`,
+  size `7166062`, entries `1885`, wiki `15be4d9`.
+- PR #126 body mirrors older `fa3d0a159d` /
+  `76A5EE569DDA8E1486A16A7C20DF44E3332170F7590A2AE3008C6058E32E25DA`,
+  size `7165509`, entries `1885`, wiki `299fad9`.
+- Local validation for current `fa2e4019d9` produced
+  `9BB79035867AD954CA47FA969D0776D05EB078DCDD982C65F787BB8D74DC7616`,
+  size `7166356`, entries `1885`.
+
+PR #126 moved from `070972b006a50dba12ef2c262f28acdd6dc69f5c` to
+`97db8180c257e33a53bad66e06bb1c7b6220ee25` with docs/tooling-only tuple sync
+for the prior paradrop proof. Its diff-check passes, but it is stale for current
+PR #125 because PR #125 has since moved to `fa2e4019d9`.
+
+PR #136 moved from `a6a1f15a159b9e2f51add9c5eb9296177d071698` to
+`1c965f29253b2357c55c2e6873baf1eb5d29ace3` with docs/design-only additions:
+`docs/design/NEW-SPAWNS-PROPOSAL.md` and
+`docs/design/AICOM-UNIT-BEHAVIOR-FABLE.md`. Broad diff-check passes, but no
+fresh exact selected-artifact RPT package was found for `1c965f29`.
+
+Release remains **NO-GO**. Current PR #125 source/static/package-content gates
+pass locally, but exact selected-archive/PBO runtime RPT evidence, human smoke
+notes, deployment approval, and final artifact identity are still missing.
 
 ## 2026-07-02 08:34 Update
 
