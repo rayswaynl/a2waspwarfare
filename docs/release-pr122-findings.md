@@ -1,11 +1,71 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 08:57 Europe/Amsterdam
+Last updated: 2026-07-02 09:08 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 09:08 Update
+
+Reconciled live state again and validated the current PR #126 tuple tooling.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `6d0dfa8d2a22d85003b75b0539b039b1ff79bc4b`
+- PR #125: `fa2e4019d9e7d81ccfffcb16a67f17d1746c6bc8`
+- PR #126: `00c3f8a471a75cd589b79b1bd90a839f4f24abd8`
+- PR #136: `3aaa444d588f64c3a1b02d8e9211e8b120272e1b`
+
+PR #125 stayed at `fa2e4019d9e7d81ccfffcb16a67f17d1746c6bc8`. Its current
+PR body advertises:
+
+- expected git: `fa2e4019d9`
+- SHA256:
+  `E887E7920AAE620A7DFCB20FFD17FFAB5F16DF8B1F40D58E73173DB9CD236B77`
+- size: `7166244`
+- entries: `1885`
+- wiki: `6d0dfa8`
+- handoff: `ready_for_runtime_collection`
+- status: runtime pending, not deployed
+
+Boundary: independent local rebuild/package validation for the same source
+marker produced `9BB79035867AD954CA47FA969D0776D05EB078DCDD982C65F787BB8D74DC7616`,
+size `7166356`, entries `1885`. Treat local rebuilds as package-content proof
+only; runtime evidence must bind to the exact selected archive/PBO.
+
+PR #126 moved from `97db8180c257e33a53bad66e06bb1c7b6220ee25` to
+`00c3f8a471a75cd589b79b1bd90a839f4f24abd8` with docs/tooling-only tuple sync:
+
+- changed `Tools/LoadoutManager/README.md`,
+  `Tools/Monitor/Get-WaspRptMarkerSweep.ps1`,
+  `Tools/Monitor/README.md`,
+  `Tools/Ops/Test-WaspReleaseTupleDocs.ps1`, and
+  `docs/release/2026-07-01-release-readiness-task.md`
+- `git diff --check origin/master..origin/codex/release-readiness-20260701`:
+  pass
+- `Tools/Ops/Test-WaspReleaseTupleDocs.ps1`: pass
+- `Tools/Ops/Test-WaspVersionTemplates.ps1`: pass
+- `Tools/Ops/Test-WaspJipAicomSourceGuards.ps1`: pass
+
+PR #126 files now validate `fa2e4019d9` /
+`E887E7920AAE620A7DFCB20FFD17FFAB5F16DF8B1F40D58E73173DB9CD236B77` /
+wiki `6d0dfa8`, and the tuple-doc test denies stale archive hashes including
+`76A5EE56...` and `8D06CDA3...`. The PR #126 GitHub body is still stale: it
+shows older `fa3d0a159d` / `76A5EE56...` / wiki `299fad9`.
+
+PR #136 moved from `09ce177dc39255973e471afede380cc5b0b1ab35` to
+`3aaa444d588f64c3a1b02d8e9211e8b120272e1b` with a docs-only change to
+`docs/design/AICOM-UNIT-BEHAVIOR-FABLE.md`. Broad diff-check passes. This does
+not change the release boundary from the previous update: PR #136's
+mission-affecting `09ce177d` cmdcon41 changes remain unpackaged and
+runtime-unproven.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 08:57 Update
 
