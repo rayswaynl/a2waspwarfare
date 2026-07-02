@@ -29,13 +29,13 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory "C:\WASP\rpt-archive" `
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit 6363f4cb5b `
-  -ExpectedArchiveSha256 ECC6F9D51DD9BD459677863E585F313921E55BAE905C83431EB7EB7596E7D416 `
+  -ExpectedGit fa3d0a159d `
+  -ExpectedArchiveSha256 76A5EE569DDA8E1486A16A7C20DF44E3332170F7590A2AE3008C6058E32E25DA `
   -ExpectedRole server `
   -ExpectedTerrain chernarus `
   -RequireReleaseMarkers `
   -Json `
-  -OutFile "C:\WASP\rpt-archive\marker-sweep-6363f4cb5b.json"
+  -OutFile "C:\WASP\rpt-archive\marker-sweep-fa3d0a159d.json"
 ```
 
 Only add PR #126 HC-audit markers to `-RequirePattern` when the package being tested actually includes that instrumentation:
@@ -45,14 +45,14 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -RptDirectory "C:\WASP\rpt-archive" `
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit 6363f4cb5b `
-  -ExpectedArchiveSha256 ECC6F9D51DD9BD459677863E585F313921E55BAE905C83431EB7EB7596E7D416 `
+  -ExpectedGit fa3d0a159d `
+  -ExpectedArchiveSha256 76A5EE569DDA8E1486A16A7C20DF44E3332170F7590A2AE3008C6058E32E25DA `
   -ExpectedRole hc1 `
   -ExpectedTerrain chernarus `
   -RequireReleaseMarkers `
   -RequirePattern HCDROP_AICOM_AUDIT,HCRECON_AICOM_AUDIT `
   -Json `
-  -OutFile "C:\WASP\rpt-archive\marker-sweep-6363f4cb5b-hc-audit.json"
+  -OutFile "C:\WASP\rpt-archive\marker-sweep-fa3d0a159d-hc-audit.json"
 ```
 
 By default, samples include the marker name, public file label, line number, and a short line hash. `-OutFile` writes the same redaction-safe JSON that `-Json` prints, and the output records the expected candidate, git marker, archive SHA, role stamp, terrain stamp and generated terrain markers. Use `-IncludeLineText` only when the log owner accepts that marker lines may contain names, UIDs, owner IDs, positions, or other operational details.
@@ -60,7 +60,7 @@ By default, samples include the marker name, public file label, line number, and
 Useful PR #126 proof markers:
 
 - `WASPRELEASE`
-- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=6363f4cb5b`
+- `WASPRELEASE|v1|candidate=release-command-center-20260630|git=fa3d0a159d`
 - `HCDROP_AICOM_AUDIT`
 - `HCRECON_AICOM_AUDIT`
 - `HCSIDE|v1|disconnect`
@@ -69,7 +69,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-Current PR #125 package checkpoint is `codex/release-command-center-20260630@6363f4cb5b`, `_MISSIONS.7z` SHA256 `ECC6F9D51DD9BD459677863E585F313921E55BAE905C83431EB7EB7596E7D416`, `1,885` entries, `7,164,669` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
+Current PR #125 package checkpoint is `codex/release-command-center-20260630@fa3d0a159d`, `_MISSIONS.7z` SHA256 `76A5EE569DDA8E1486A16A7C20DF44E3332170F7590A2AE3008C6058E32E25DA`, `1,885` entries, `7,165,509` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
 
 ## Runtime Evidence Manifest
 
@@ -92,11 +92,11 @@ Generate the full default manifest skeleton instead of hand-writing the ten rows
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\New-WaspRuntimeEvidenceManifestTemplate.ps1 `
-  -OutFile "C:\WASP\rpt-archive\runtime-evidence-6363f4cb5b.json" `
-  -CommandOutFile "C:\WASP\rpt-archive\marker-sweep-commands-6363f4cb5b.ps1" `
+  -OutFile "C:\WASP\rpt-archive\runtime-evidence-fa3d0a159d.json" `
+  -CommandOutFile "C:\WASP\rpt-archive\marker-sweep-commands-fa3d0a159d.ps1" `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit 6363f4cb5b `
-  -ExpectedArchiveSha256 ECC6F9D51DD9BD459677863E585F313921E55BAE905C83431EB7EB7596E7D416
+  -ExpectedGit fa3d0a159d `
+  -ExpectedArchiveSha256 76A5EE569DDA8E1486A16A7C20DF44E3332170F7590A2AE3008C6058E32E25DA
 ```
 
 `-CommandOutFile` writes a local marker-sweep command template with one command per terrain/role slot. Fill in private RPT paths locally and do not commit populated private paths or raw RPT contents.
@@ -105,10 +105,10 @@ Run it against the current package tuple before treating runtime evidence as com
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRuntimeEvidenceManifest.ps1 `
-  -ManifestPath "C:\WASP\rpt-archive\runtime-evidence-6363f4cb5b.json" `
+  -ManifestPath "C:\WASP\rpt-archive\runtime-evidence-fa3d0a159d.json" `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit 6363f4cb5b `
-  -ExpectedArchiveSha256 ECC6F9D51DD9BD459677863E585F313921E55BAE905C83431EB7EB7596E7D416 `
+  -ExpectedGit fa3d0a159d `
+  -ExpectedArchiveSha256 76A5EE569DDA8E1486A16A7C20DF44E3332170F7590A2AE3008C6058E32E25DA `
   -ArchivePath "C:\WASP\release\_MISSIONS.7z"
 ```
 
