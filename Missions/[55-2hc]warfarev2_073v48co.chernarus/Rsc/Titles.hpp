@@ -73,7 +73,7 @@ class RscTitles {
 
         class RscOverlay
 	{
-		idd=10200;
+		idd=10201;
 		movingEnable = 0;
 		duration=15000;
 		// GPS FIX: was name="gps", which bound this map-LESS HUD overlay to the engine GPS slot,
@@ -895,7 +895,7 @@ class RscTitles {
 	//--- ============================================================================
 	//--- b67 item #3 (claude-gaming 2026-06-21): VEHICLE-TINT LEGEND (top-right pop-up).
 	//--- Shown by Init_Client.sqf via cutRsc on layer 12460 - ONCE on first spawn + toggled with "]".
-	//--- Mirrors the IDD-10200 RscOverlay HUD region (top-right corner, RscStructuredText). Sits in the
+	//--- Mirrors the IDD-10201 RscOverlay HUD region (top-right corner, RscStructuredText). Sits in the
 	//--- empty band ABOVE the RUBHUD stats column (RUBHUD starts at y~=0.186*safezoneH), so no overlap.
 	//--- Swatch colours MATCH the per-side body tints set in Common_AddVehicleTexture.sqf (the cheap
 	//--- setObjectTexture colour strings gated by WFBE_C_VEHICLE_TINTS, default ON, decoupled from the
