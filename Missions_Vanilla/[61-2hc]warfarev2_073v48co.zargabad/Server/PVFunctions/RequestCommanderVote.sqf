@@ -1,9 +1,32 @@
 Private["_commanderTeam","_logik","_name","_side","_team"];
 
+if !((typeName _this) in ["ARRAY"]) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - expected array payload, got %1.", typeName _this]] Call WFBE_CO_FNC_LogContent;
+};
+
+if ((count _this) < 2) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - expected [side,name], got %1 element(s).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+
 _side = _this select 0;
 _name = _this select 1;
 
+if !((typeName _side) in ["SIDE"]) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - side field type was %1.", typeName _side]] Call WFBE_CO_FNC_LogContent;
+};
+
+if !(_side in WFBE_PRESENTSIDES) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - side %1 is not present in this mission.", _side]] Call WFBE_CO_FNC_LogContent;
+};
+
+if !((typeName _name) in ["STRING"]) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - name field type was %1.", typeName _name]] Call WFBE_CO_FNC_LogContent;
+};
+
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+if (isNull _logik) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - side logic for %1 is null.", _side]] Call WFBE_CO_FNC_LogContent;
+};
 
 if ((_logik getVariable "wfbe_votetime") <= 0) then {
 	_team = -1;

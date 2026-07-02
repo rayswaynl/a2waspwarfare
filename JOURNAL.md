@@ -1,5 +1,9 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 — Lane 138 RequestCommanderVote shape guard [codex/lane138-request-commander-vote-shape-guard]
+
+Added a narrow server-side malformed-payload guard for `RequestCommanderVote.sqf`: reject non-array payloads, short arrays, non-side side fields, sides outside `WFBE_PRESENTSIDES`, non-string names and null side logic before the existing vote restart code indexes or broadcasts. Honest `[sideJoined, name player]` vote-restart behavior is unchanged; vote-resolution semantics and requester authority migration remain separate commander-owner work.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
