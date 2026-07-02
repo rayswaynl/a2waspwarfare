@@ -1,5 +1,20 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 132 commander reassignment payload audit [codex/lane132-commander-reassign-audit]
+
+The fleet prompt row saying `RequestNewCommander.sqf` passes `[_side,_cmdr]` while
+`Server_AssignNewCommander.sqf` treats the whole payload as `_side` is stale on the current
+`claude/build84-cmdcon36` target. Both maintained roots now keep the payload shape intact:
+
+- `RequestNewCommander.sqf` reads `_side = _this select 0` and `_assigned_commander = _this select 1`.
+- It calls `[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander`.
+- `Server_AssignNewCommander.sqf` reads `_side = _this select 0` and `_commander = _this select 1`, then
+  uses the side scalar for `GetSideLogic` and client broadcasts.
+
+No mission source changed in this lane. Adjacent vote-menu `objNull`/primitive-row UX from
+`docs/design/VOTE-SYSTEM-QA-2026-07-02.md` remains a separate follow-up, not the lane 132 side-payload
+corruption.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
