@@ -746,6 +746,7 @@ class WFBE_BuyGearMenu {
 			w = 0.06;
 			h = 0.08;
 			text = "\Ca\UI\Data\ui_gear_mag_gs.paa";
+			tooltip = "Primary / launcher magazine slot";
 			action = "UINamespace setVariable ['wfbe_display_buygear_pool_main', 1]";
 		};
 		class InventorySlot1 : InventorySlot0 {
@@ -821,6 +822,7 @@ class WFBE_BuyGearMenu {
 			w = 0.055;
 			h = 0.074;
 			text = "\Ca\UI\Data\ui_gear_hgunmag_gs.paa";
+			tooltip = "Sidearm magazine slot";
 			action = "UINamespace setVariable ['wfbe_display_buygear_pool_gun', 1]";
 		};
 		class SidearmInventorySlot1 : SidearmInventorySlot0 {
@@ -873,6 +875,7 @@ class WFBE_BuyGearMenu {
 			h = 0.074;
 			colorActive[] = {0.85, 0.85, 0.85, 1};
 			text = "\Ca\UI\Data\ui_gear_eq_gs.paa";
+			tooltip = "Inventory item slot";
 			action = "UINamespace setVariable ['wfbe_display_buygear_misc', 0]";
 		};
 		class MiscInventorySlot1 : MiscInventorySlot0 {
