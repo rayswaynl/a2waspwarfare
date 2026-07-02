@@ -1,4 +1,4 @@
-Private ["_availableSpawn","_autonomous","_buildings","_checks","_closestRespawn","_deathLoc","_enemySide","_hq","_isForcedRespawn","_leader","_loadout","_mobileRespawns","_moveMode","_pos","_ran","_range","_rcm'","_rd","_respawn","_respawnLoc","_side","_sideID","_sideText","_team","_update","_upgrades"];
+Private ["_availableSpawn","_autonomous","_buildings","_checks","_closestRespawn","_deathLoc","_enemySide","_hq","_isForcedRespawn","_leader","_loadout","_loadoutCount","_mobileRespawns","_moveMode","_pos","_ran","_range","_rcm'","_rd","_respawn","_respawnLoc","_side","_sideID","_sideText","_team","_update","_upgrades"];
 _side = _this select 0;
 _team = _this select 1;
 _sideText = str _side;
@@ -55,11 +55,25 @@ while {!gameOver} do {
 	//--- Equip the AI.
 	_loadout = missionNamespace getVariable Format["WFBE_%1_AI_Loadout_%2", _sideText, _upgrades select 13];
 	if !(isNil '_loadout') then {
-		_loadout = _loadout select floor (random count _loadout);
-		if (count _loadout <= 3) then {
-			[_leader, _loadout select 0, _loadout select 1, _loadout select 2] Call WFBE_CO_FNC_EquipUnit;
+		_loadoutCount = count _loadout;
+		if (_loadoutCount > 0) then {
+			_loadout = _loadout select floor (random _loadoutCount);
+			_loadoutCount = count _loadout;
+			if (_loadoutCount < 3) then {
+				["WARNING", Format ["AI_SquadRespawn.sqf: [%1] AI loadout tier [%2] selected an invalid entry of length [%3]; keeping current gear on [%4].", _sideText, _upgrades select 13, _loadoutCount, _leader]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				if (_loadoutCount < 4) then {
+					[_leader, _loadout select 0, _loadout select 1, _loadout select 2] Call WFBE_CO_FNC_EquipUnit;
+				} else {
+					if (_loadoutCount < 5) then {
+						["WARNING", Format ["AI_SquadRespawn.sqf: [%1] AI loadout tier [%2] selected an invalid entry of length [%3]; keeping current gear on [%4].", _sideText, _upgrades select 13, _loadoutCount, _leader]] Call WFBE_CO_FNC_LogContent;
+					} else {
+						[_leader, _loadout select 0, _loadout select 1, _loadout select 2, _loadout select 3, _loadout select 4] Call WFBE_CO_FNC_EquipUnit;
+					};
+				};
+			};
 		} else {
-			[_leader, _loadout select 0, _loadout select 1, _loadout select 2, _loadout select 3, _loadout select 4] Call WFBE_CO_FNC_EquipUnit;
+			["WARNING", Format ["AI_SquadRespawn.sqf: [%1] AI loadout tier [%2] is empty; keeping current gear on [%3].", _sideText, _upgrades select 13, _leader]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
