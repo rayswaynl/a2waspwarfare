@@ -45,7 +45,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -68,6 +68,37 @@ _dropChance = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_CHANCE", 0.
 _dropCount  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_COUNT", 5];
 _dropMax    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_MAX", 2];
 
+//--- KA-137 SWARM ROLL (cmdcon42, Ray 2026-07-02): when a COMBAT Ka-137 is fielded (recon-MG / AT / AA — NOT
+//--- the paradrop delivery bird, NOT the Mi-24), roll for it to be MORE THAN ONE. Extras are created into the
+//--- SAME group (the group slot is already paid) so they formation-fly as a drone flock and inherit the leader's
+//--- patrol/engage orders. SWARM = master switch; CHANCE = roll for a 2nd drone; CHANCE3 = roll (only if the 2nd
+//--- rolled) for a 3rd. Extras COUNT toward the global _maxAir alive-cap and each is registered as its own
+//--- registry entry (own hull, shared group) so the prune/self-clean sweep tears each one down like the leader.
+_swarmOn     = missionNamespace getVariable ["WFBE_C_GUER_KA137_SWARM", 1];
+_swarmChance = missionNamespace getVariable ["WFBE_C_GUER_KA137_SWARM_CHANCE", 0.25];
+_swarmChance3= missionNamespace getVariable ["WFBE_C_GUER_KA137_SWARM_CHANCE3", 0.15];
+
+//--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02; retuned same day): give each AI-spawned Ka-137 (leader +
+//--- swarm extras) a CHANCE-BASED countermeasure budget of FLARES_MIN..FLARES_MAX (default 5-20 — a deliberate
+//--- variance-NERF vs the flat CM_Set default of 32). Build86 flipped WFBE_C_MODULE_AUTO_CM_OA ON: the auto-CM
+//--- module (Client\Module\CM\CM_AutoCM_OA.sqf) fires on the "incomingMissile" EH and consumes an INTEGER budget
+//--- stored as the vehicle variable "FlareCount" (createVehicleLocal "FlareCountermeasure" per shot; NOT a magazine
+//--- burn), so a partial budget like 13 is expressed EXACTLY as setVariable ["FlareCount", 13] — no magazine
+//--- rounding. WFBE_CO_FNC_CreateVehicle already broadcasts Init_Unit.sqf (global=true) which adds the auto-CM EH
+//--- and a DEFAULT FlareCount via CM_Set.sqf, so here we OVERRIDE that default with the rolled stock (public
+//--- setVariable so it is authoritative on whichever machine owns the hull/EH). We ALSO mount the manual OA flare
+//--- launcher + one flare magazine (same CMFlareLauncher / 60Rnd_CMFlareMagazine idiom as the player Ka-137 in
+//--- Client_BuildUnit.sqf) so the hull additionally has native manual flares. CM_Set.sqf does waitUntil
+//--- commonInitComplete + sleep 2 before writing its default, so we stamp the rolled budget from a short deferred
+//--- spawn (sleep 3) to deterministically WIN that race. FLARES = master switch (default 1); MIN/MAX = roll bounds
+//--- so future retunes are config-only (MAX is clamped up to MIN so a bad config can never make random negative).
+_flareOn       = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARES", 1];
+_flareMin      = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARES_MIN", 5];
+_flareMax      = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARES_MAX", 20];
+if (_flareMax < _flareMin) then { _flareMax = _flareMin; }; //--- guard MAX>=MIN (degenerates to a fixed MIN stock).
+_flareLauncher = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_LAUNCHER", "CMFlareLauncher"];
+_flareMag      = "60Rnd_CMFlareMagazine"; //--- smallest OA flare mag (A2-OA has no 30Rnd); manual-flare backing for the launcher. The MIN-MAX AUTO budget is the FlareCount integer, independent of this mag's round count.
+
 //--- Wait for towns + the GUER side logic to exist, then let town ownership settle (mirror of GuerStipend).
 waitUntil {
 	(!isNil "towns") && {(count towns) > 0}
@@ -77,6 +108,32 @@ sleep 45;
 
 _pilotClass = missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"];
 _crewClass  = missionNamespace getVariable ["WFBE_GUERRESCREW",  "GUE_Soldier_Crew"];
+
+//--- FLARE-STOCK applicator (shared by the leader + each swarm extra). _this = [_vehicle]. Rolls a flare budget
+//--- of _flareMin.._flareMax (default 5-20), mounts the manual OA launcher + a flare mag on the turret (path [-1],
+//--- same idiom the player Ka-137 uses in Client_BuildUnit.sqf), and stamps the rolled budget as the PUBLIC
+//--- "FlareCount" integer that the auto-CM module consumes. Returns the rolled count (0 = disabled). Runs on the
+//--- server, where these AI hulls are local. The FlareCount write is deferred (sleep 3) so it lands AFTER
+//--- CM_Set.sqf's default write.
+_applyKaFlares = {
+	private ["_v","_n"];
+	_v = _this select 0;
+	_n = 0;
+	if (_flareOn >= 1 && {!isNull _v}) then {
+		_n = _flareMin + floor(random (_flareMax - _flareMin + 1)); //--- MIN..MAX inclusive (MAX>=MIN guarded above).
+		//--- Mount the manual OA launcher + one flare mag (turret path [-1], as the Ka-137 fires from MainTurret).
+		{_v addMagazineTurret [_x, [-1]]} forEach [_flareMag];
+		{_v addWeaponTurret  [_x, [-1]]} forEach [_flareLauncher];
+		//--- Public FlareCount = the AUTO-CM budget the module decrements. Deferred so it beats CM_Set's default.
+		[_v, _n] Spawn {
+			private ["_veh","_cnt"];
+			_veh = _this select 0; _cnt = _this select 1;
+			sleep 3;
+			if (!isNull _veh) then { _veh setVariable ["FlareCount", _cnt, true]; };
+		};
+	};
+	_n
+};
 
 //--- Live registry of defenders. Each entry: [_town, _vehicle, _group, _spawnTime, _lastEnemyTime].
 //--- Script-local (NOT wfbe_persistent) so it can't outlive a despawn / leak groups.
@@ -213,7 +270,7 @@ while {!WFBE_GameOver} do {
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_spawnPos","_ang","_loadName"];
+		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_flareN","_eFlareN"];
 		_town = _x;
 
 		if (_aliveCount < _maxAir
@@ -317,6 +374,18 @@ while {!WFBE_GameOver} do {
 						_veh setVariable ["wfbe_guer_airdef", true, true];
 						_veh setVariable ["wfbe_guer_airdef_town", _town];
 
+						//--- FLARE STOCK (cmdcon42 item2): chance-based MIN-MAX (default 5-20) auto-CM budget on the
+						//--- Ka-137 leader (all Ka-137 variants: recon-MG / AT / AA / drop bird). Mi-24 excluded
+						//--- (Ka-137-only per spec).
+						_flareN = 0;
+						if (_class == _classKa) then {
+							_flareN = [_veh] Call _applyKaFlares;
+							if (_flareN > 0) then {
+								["INFORMATION", Format ["Server_GuerAirDef.sqf: KA137_FLARES|n=%1|town=%2|load=%3", _flareN, (_town getVariable ["name","?"]), _loadName]] Call WFBE_CO_FNC_LogContent;
+								diag_log format ["GUERAIRDEF|KA137_FLARES|n=%1|town=%2|load=%3", _flareN, (_town getVariable ["name","?"]), _loadName];
+							};
+						};
+
 						//--- NEVER idle: immediate patrol + COMBAT/RED over the town.
 						//--- B66: order fixed. AIPatrol internally re-sets behaviour to AWARE/YELLOW,
 						//--- so it MUST run BEFORE the engage posture or it clobbers COMBAT/RED and the
@@ -331,6 +400,97 @@ while {!WFBE_GameOver} do {
 						_defenders  = _defenders + [[_town, _veh, _grp, time, time]];
 						_townsWithAir = _townsWithAir + [_town];
 						_aliveCount = _aliveCount + 1;
+
+						//=== KA-137 SWARM ROLL (cmdcon42, Ray 2026-07-02) ===================================
+						//--- After the FIRST combat Ka-137 is created + crewed + registered, roll for extra drones
+						//--- INTO THE SAME GROUP (_grp) so they formation-fly and inherit the leader's patrol/engage
+						//--- orders (set below on the group). Extras are the SAME airframe + crew idiom as the leader
+						//--- (copy verbatim: CreateVehicle FLY + pilot + gunner + the SAME loadout swap so extras carry
+						//--- the same kit), spawned ~30-50m off the leader (setPos + matching flyInHeight) so they do
+						//--- not collide on spawn. SCOPE: combat Ka-137 only (_class == _classKa) and NOT the paradrop
+						//--- delivery bird (_useDrop) — the drop bird is a single mission asset whose stick is already
+						//--- capped by _dropMax/_dropCount. GUARD: each extra COUNTS toward the global _maxAir alive-cap;
+						//--- roll each extra only while _aliveCount < _maxAir so a swarm can never exceed the air budget.
+						//--- Each extra is registered as its OWN _defenders entry (own hull, SHARED group) so the
+						//--- prune/self-clean sweep tears each hull down exactly like the leader; NO new group is created.
+						if (_swarmOn >= 1
+							&& {_class == _classKa}
+							&& {!_useDrop}
+							&& {_aliveCount < _maxAir}
+							&& {(random 1) < _swarmChance}) then {
+
+							//--- Decide the flock size up-front: always at least the 2nd (chance already passed); the
+							//--- 3rd only if _swarmChance3 also passes AND there is still room under the cap.
+							_swarmN = 2;
+							if ((_aliveCount + 1) < _maxAir && {(random 1) < _swarmChance3}) then { _swarmN = 3; };
+
+							_swarmMade = 0;
+							_swarmI = 2;
+							while {_swarmI <= _swarmN && {_aliveCount < _maxAir}} do {
+								//--- Same airborne-spawn idiom as the leader, but a short offset off the leader hull so
+								//--- the extras do not overlap on spawn (30-50m radial + a little height stagger).
+								_eAng = random 360;
+								_ePos = [(_spawnPos select 0) + (30 + random 20) * (sin _eAng),
+								         (_spawnPos select 1) + (30 + random 20) * (cos _eAng),
+								         (_spawnPos select 2) + 15 * _swarmI];
+								_eVeh2 = [_class, _ePos, resistance, _ang, false, true, true, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
+								if (!isNull _eVeh2) then {
+									_ePilot = [_pilotClass, _grp, _ePos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _ePilot) then {
+										_ePilot moveInDriver _eVeh2;
+										_eGunner = [_crewClass, _grp, _ePos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+										if (!isNull _eGunner) then { _eGunner moveInGunner _eVeh2; };
+
+										//--- Same loadout swap the leader got (kit parity): AT-5 set, or Igla AA set,
+										//--- else the default recon MG. SAME turret-path [-1] remove/add idiom as above.
+										if (_useAT) then {
+											{_eVeh2 removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
+											{_eVeh2 removeWeaponTurret  [_x, [-1]]} forEach ["PKT"];
+											{_eVeh2 addMagazineTurret [_x, [-1]]} forEach ["5Rnd_AT5_BRDM2","64Rnd_57mm"];
+											{_eVeh2 addWeaponTurret  [_x, [-1]]} forEach ["AT5Launcher","57mmLauncher"];
+										};
+										if (_useAA) then {
+											{_eVeh2 removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
+											{_eVeh2 removeWeaponTurret  [_x, [-1]]} forEach ["PKT"];
+											{_eVeh2 addMagazineTurret [_x, [-1]]} forEach ["2Rnd_Igla","2Rnd_Igla"];
+											{_eVeh2 addWeaponTurret  [_x, [-1]]} forEach ["Igla_twice"];
+										};
+
+										//--- Tag + flyInHeight to match the leader; the group already carries the
+										//--- patrol + COMBAT/RED orders (set above), which the extra inherits as a member.
+										_eVeh2 setVariable ["wfbe_guer_airdef", true, true];
+										_eVeh2 setVariable ["wfbe_guer_airdef_town", _town];
+										_eVeh2 flyInHeight _flyHeight;
+
+										//--- FLARE STOCK (cmdcon42 item2): same chance-based MIN-MAX (default 5-20) auto-CM budget
+										//--- on each extra (extras are always _classKa). One log line per extra that rolls a stock.
+										_eFlareN = [_eVeh2] Call _applyKaFlares;
+										if (_eFlareN > 0) then {
+											["INFORMATION", Format ["Server_GuerAirDef.sqf: KA137_FLARES|n=%1|town=%2|load=%3|swarmExtra=1", _eFlareN, (_town getVariable ["name","?"]), _loadName]] Call WFBE_CO_FNC_LogContent;
+											diag_log format ["GUERAIRDEF|KA137_FLARES|n=%1|town=%2|load=%3|swarmExtra=1", _eFlareN, (_town getVariable ["name","?"]), _loadName];
+										};
+
+										//--- Own registry entry (shared group) so prune/self-clean handles each hull.
+										_defenders  = _defenders + [[_town, _eVeh2, _grp, time, time]];
+										_aliveCount = _aliveCount + 1;
+										_swarmMade  = _swarmMade + 1;
+									} else {
+										//--- No pilot for the extra: tear down the empty hull so nothing leaks (freshly
+										//--- created, no player possible). Group is shared/leader-owned — do NOT delete it.
+										if (!isNull _eVeh2 && {({isPlayer _x} count (crew _eVeh2)) == 0}) then {deleteVehicle _eVeh2};
+									};
+								};
+								_swarmI = _swarmI + 1;
+							};
+
+							//--- One AICOMSTAT/INFORMATION line per swarm that actually fielded extras (n = TOTAL drones
+							//--- in the flock incl. leader = 1 + _swarmMade). Only emit when >=1 extra was built (a cap
+							//--- edge or create failure can leave _swarmMade at 0 despite the roll passing).
+							if (_swarmMade > 0) then {
+								["INFORMATION", Format ["Server_GuerAirDef.sqf: KA137_SWARM|n=%1|town=%2|load=%3", (1 + _swarmMade), (_town getVariable ["name","?"]), _loadName]] Call WFBE_CO_FNC_LogContent;
+								diag_log format ["GUERAIRDEF|KA137_SWARM|n=%1|town=%2|load=%3|alive=%4", (1 + _swarmMade), (_town getVariable ["name","?"]), _loadName, _aliveCount];
+							};
+						};
 
 						//=== CARGO/PARADROP variant (build83) ===============================================
 						//--- The Ka-137 is a DRONE (no cargo), so we SCRIPT-spawn the reinforcement stick rather
