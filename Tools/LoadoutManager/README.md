@@ -74,7 +74,7 @@ powershell -ExecutionPolicy Bypass -File ..\PrTestHarness\Package\Test-WaspRelea
   -ExpectedGit (git -C ..\.. rev-parse --short=10 HEAD)
 ```
 
-Use the dynamic `git rev-parse` form only when validating an archive built from that same checkout. For the current PR #125 package tuple, pass `-ExpectedGit fa3d0a159d` with the matching archive SHA proof instead of a companion-branch HEAD.
+Use the dynamic `git rev-parse` form only when validating an archive built from that same checkout. For the current PR #125 package tuple, pass `-ExpectedGit fa2e4019d9` with the matching archive SHA proof instead of a companion-branch HEAD.
 
 ## Notes
 
