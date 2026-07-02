@@ -620,4 +620,18 @@
 		default = 300;
 	};
 
+	// G3: GUER Road Ambush wildcard (default OFF - flag-gated).
+	class WFBE_C_GUER_ROAD_AMBUSH {
+		title = "GUER Road Ambush wildcard (G3)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	class WFBE_C_GUER_ROAD_AMBUSH_TTL {
+		title = "GUER Road Ambush TTL (seconds)";
+		values[] = {180,300,420,600};
+		texts[] = {"3 min","5 min","7 min","10 min"};
+		default = 420;
+	};
+
 };

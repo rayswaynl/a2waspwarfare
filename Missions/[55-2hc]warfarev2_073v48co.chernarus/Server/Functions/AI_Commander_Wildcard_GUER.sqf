@@ -74,6 +74,17 @@ if (_enabled == 0) exitWith {
 	["INFORMATION", "AI_Commander_Wildcard_GUER.sqf: disabled (WFBE_C_GUER_WILDCARD=0)."] Call WFBE_CO_FNC_AICOMLog;
 };
 
+//--- G3: initialise the simultaneous road-ambush counter, cap constant, and marker serial.
+if ((missionNamespace getVariable ["wfbe_guer_road_ambush_count", -1]) < 0) then {
+	missionNamespace setVariable ["wfbe_guer_road_ambush_count", 0];
+};
+if ((missionNamespace getVariable ["WFBE_C_GUER_ROAD_AMBUSH_MAX", -1]) < 0) then {
+	missionNamespace setVariable ["WFBE_C_GUER_ROAD_AMBUSH_MAX", 2];
+};
+if ((missionNamespace getVariable ["wfbe_guer_road_ambush_serial", -1]) < 0) then {
+	missionNamespace setVariable ["wfbe_guer_road_ambush_serial", 0];
+};
+
 //--- G4: initialise the simultaneous mortar-pit counter (lives on missionNamespace so both spawn/watcher see it).
 if ((missionNamespace getVariable ["wfbe_guer_mortarpit_count", -1]) < 0) then {
 	missionNamespace setVariable ["wfbe_guer_mortarpit_count", 0];
@@ -101,7 +112,7 @@ while {!gameOver} do {
 		         "_scavBonus","_scavTTL","_scavMember","_scavPos",
 		         "_gG3","_ambTownA","_ambTownB","_ambMid","_ambRds","_ambNode","_ambGrp",
 		         "_ambU","_ambTTL","_ambMk","_ambBestDist",
-		         "_ambI","_ambJ","_ambTA","_ambTB","_ambD","_ambEl"];
+		         "_ambI","_ambJ","_ambTA","_ambTB","_ambD"];
 
 		_sideID = _this select 0;
 		_westID = west Call WFBE_CO_FNC_GetSideID;
@@ -121,8 +132,8 @@ while {!gameOver} do {
 		if (!(count _occTowns > 0 && {_soldierClass != ""} && {isClass (configFile >> "CfgVehicles" >> _vbiedClass)})) then {_gG1 = 0};
 		if (!(count _occTowns > 0 && {_soldierClass != ""})) then {_gG2 = 0};
 
-		//--- G3: ROAD AMBUSH eligibility: flag on, soldier class known, >=2 occupied towns.
-		if ((missionNamespace getVariable ["WFBE_C_GUER_ROAD_AMBUSH", 0]) > 0 && {_soldierClass != ""} && {count _occTowns >= 2}) then {_gG3 = 7};
+		//--- G3: ROAD AMBUSH eligibility: flag on, soldier class known, >=2 occupied towns, cap not reached.
+		if ((missionNamespace getVariable ["WFBE_C_GUER_ROAD_AMBUSH", 0]) > 0 && {_soldierClass != ""} && {count _occTowns >= 2} && {(missionNamespace getVariable ["wfbe_guer_road_ambush_count", 0]) < (missionNamespace getVariable ["WFBE_C_GUER_ROAD_AMBUSH_MAX", 2])}) then {_gG3 = 7};
 
 		//--- G4: MORTAR PIT eligibility: flag on, soldier class known, pit cap < 2,
 		//--- a contested town within 1500m of at least one GUER-owned town.
@@ -404,8 +415,15 @@ while {!gameOver} do {
 
 						_ambTTL = missionNamespace getVariable ["WFBE_C_GUER_ROAD_AMBUSH_TTL", 420];
 
+						//--- Increment the concurrency counter BEFORE spawning (mirrors G4 pattern).
+						missionNamespace setVariable ["wfbe_guer_road_ambush_count",
+						    (missionNamespace getVariable ["wfbe_guer_road_ambush_count", 0]) + 1];
+
 						//--- Local-side marker (GUER players only) via WildcardMarker PVF.
-						_ambMk = Format ["wc_GUER_G3_%1", round time];
+						//--- Use incrementing serial - NOT round time (1s resolution collides under load).
+						missionNamespace setVariable ["wfbe_guer_road_ambush_serial",
+						    (missionNamespace getVariable ["wfbe_guer_road_ambush_serial", 0]) + 1];
+						_ambMk = Format ["wc_GUER_G3_%1", missionNamespace getVariable ["wfbe_guer_road_ambush_serial", 0]];
 						[resistance, "WildcardMarker", ["create", _ambMk, _ambNode, "ColorGreen", "mil_triangle", "Road Ambush"]] Call WFBE_CO_FNC_SendToClients;
 
 						_detail = Format ["towns=%1/%2 node=%3 ttl=%4s",
@@ -424,9 +442,15 @@ while {!gameOver} do {
 							{deleteVehicle _x} forEach (units _ag);
 							if (!isNull _ag) then {deleteGroup _ag};
 							[resistance, "WildcardMarker", ["delete", _mk]] Call WFBE_CO_FNC_SendToClients;
+							//--- Release the concurrency slot.
+							missionNamespace setVariable ["wfbe_guer_road_ambush_count",
+							    (missionNamespace getVariable ["wfbe_guer_road_ambush_count", 0] - 1) max 0];
 							diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERROADAMBUSH_DESPAWN|el=" + str _el + "|ttl=" + str _ttl);
 						};
 					} else {
+						//--- Group creation failed: release the counter claimed above.
+						missionNamespace setVariable ["wfbe_guer_road_ambush_count",
+						    (missionNamespace getVariable ["wfbe_guer_road_ambush_count", 0] - 1) max 0];
 						_result = "partial"; _detail = "G3 group null at cap";
 					};
 				} else {
