@@ -6,7 +6,7 @@
    Parameters (received via WFBE_CL_FNC_HandlePVF dispatch):
      0 - screen-to-world position [x, y, z] of the spotted contact
      1 - mission time (time) when the spot was placed
-     2 - marker name string (Spot<N>)
+     2 - marker name string (Spot_<UID>_<seq>, globally unique per spotter UID + sequence counter)
 
    Flag gate: WFBE_C_SPOTTER_TEAM_MARKS (default 0). The spotter already guards before
    sending, so this handler runs only when the flag is on.
