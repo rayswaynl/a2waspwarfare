@@ -395,6 +395,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_ARTY_CACHE_SCAN_INTERVAL") then {WFBE_C_ARTY_CACHE_SCAN_INTERVAL = 15}; //--- seconds between presence scans (floored 5s in code).
 	if (isNil "WFBE_C_ARTY_CACHE_BONUS") then {WFBE_C_ARTY_CACHE_BONUS = 1500};           //--- one-time supply bonus on first-ever capture (ChangeSideSupply, includeStagnation=false).
 	if (isNil "WFBE_C_ARTY_CACHE_GUN_TRANSFER") then {WFBE_C_ARTY_CACHE_GUN_TRANSFER = 0}; //--- 1 = enable gun + AI crew transfer on subsequent recaptures (adds AI — group-budget risk). DEFAULT OFF.
+	if (isNil "WFBE_C_ARTY_CACHE_CREW_CLASS") then {WFBE_C_ARTY_CACHE_CREW_CLASS = "RU_Soldier"}; //--- soldier classname spawned as gun crew on GUN_TRANSFER recaptures. RU_Soldier = A2-OA base, faction-neutral default.
 	if (isNil "WFBE_C_PATROL_T3_CASH") then {WFBE_C_PATROL_T3_CASH = 8000};                //--- Build83 (Ray): one-time CASH granted to a side on completing Patrol upgrade level 3 (split among alive players via BankPayout). 0 = off.
 	if (isNil "WFBE_C_PATROL_T4_SUPPLY") then {WFBE_C_PATROL_T4_SUPPLY = 1500};             //--- Build83 (Ray): one-time SUPPLY granted to a side's pool on completing Patrol upgrade level 4 (ChangeSideSupply, clamped). 0 = off.
 	if (isNil "WFBE_C_AICOM_PLANE_AIRSTART") then {WFBE_C_AICOM_PLANE_AIRSTART = 1};        //--- Build83 (Ray): founded PLANES air-start (FLY) at the captured airfield, aligned to the runway logic, de-conflicted (helis/ground unchanged). 0 = old grounded/scattered FORM behavior.

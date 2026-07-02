@@ -88,7 +88,7 @@ if (getMarkerColor _mkrName == "") then {
 //--- Current owner (sideLogic = no owner / neutral).
 missionNamespace setVariable ["WFBE_ARTY_CACHE_OWNER", sideLogic, true];
 //--- First-capture bonus paid flag.
-missionNamespace setVariable ["wfbe_arty_cache_paid", false];
+missionNamespace setVariable ["wfbe_arty_cache_paid", false, true];
 
 //--- ─────────────────────────────────────────────────────────────────────────
 //--- SIDE COLOUR HELPER (absolute; mirrors Server_Oilfields.sqf WFBE_FNC_OilfieldColor).
@@ -125,7 +125,7 @@ WFBE_FNC_ArtyCacheSideName = {
 while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
     sleep _scanInterval;
 
-    private ["_nearby","_westCount","_eastCount","_curOwner","_newSide","_sideStr","_mkrColor","_msg","_paid","_gunTransfer"];
+    private ["_nearby","_westCount","_eastCount","_curOwner","_newSide","_sideStr","_mkrColor","_msg","_alreadyPaid","_gunTransfer","_crewClass"];
     _curOwner = missionNamespace getVariable ["WFBE_ARTY_CACHE_OWNER", sideLogic];
 
     //--- Scan all alive man/vehicle types in the capture radius (A2-OA nearEntities syntax).
@@ -158,28 +158,36 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
         //--- Update owner in namespace (broadcast to JIP clients via true).
         missionNamespace setVariable ["WFBE_ARTY_CACHE_OWNER", _newSide, true];
 
+        //--- Capture the paid-flag state BEFORE mutating it (HIGH fix: first-capture
+        //--- and subsequent-capture gates both read the pre-mutation value).
+        _alreadyPaid = missionNamespace getVariable ["wfbe_arty_cache_paid", false];
+
         //--- One-time supply bonus on the FIRST EVER capture.
-        _paid = missionNamespace getVariable ["wfbe_arty_cache_paid", false];
-        if (!_paid) then {
-            [_newSide, _bonus, "Arty cache captured - first-capture supply bonus.", false] Call ChangeSideSupply;
-            missionNamespace setVariable ["wfbe_arty_cache_paid", true];
+        if (!_alreadyPaid) then {
+            //--- CRITICAL fix: direct server-side supply call.
+            //--- Common_ChangeSideSupply uses publicVariableServer which is a no-op
+            //--- from the server; call WFBE_SE_FNC_HandleSideSupplyChange directly.
+            [[Format ["wfbe_supply_temp_%1", str _newSide], [_newSide, _bonus, "Arty cache captured - first-capture supply bonus."]], _newSide] Call WFBE_SE_FNC_HandleSideSupplyChange;
+            missionNamespace setVariable ["wfbe_arty_cache_paid", true, true];
             diag_log Format ["ARTYCACHE|BONUS|side=%1|bonus=%2|t=%3", _sideStr, _bonus, round time];
             ["INFORMATION", Format ["Server_ArtyCache.sqf: First-capture bonus of %1 supply awarded to %2.", _bonus, _sideStr]] Call WFBE_CO_FNC_LogContent;
         };
 
         //--- Optional gun transfer (GUN_TRANSFER=1 only; adds AI crew — off by default).
+        //--- Semantic (HIGH fix): fires on SUBSEQUENT captures only (_alreadyPaid=true before this flip).
+        //--- First capture: gun stays a prop; bonus only. Later flips: crew re-spawns for new owner.
         _gunTransfer = missionNamespace getVariable ["WFBE_C_ARTY_CACHE_GUN_TRANSFER", 0];
-        if (_gunTransfer == 1 && (missionNamespace getVariable ["wfbe_arty_cache_paid", false])) then {
-            //--- Transfer the gun to the capturing side by enabling simulation + setting a new crew.
-            //--- Group-budget note: this spawns one group (1-2 crew). Spec: only at SUBSEQUENT recaptures
-            //--- (after the first-capture bonus has been paid), so the bonus path stays simple.
+        if (_gunTransfer == 1 && _alreadyPaid) then {
+            //--- CRITICAL fix: use WFBE_C_ARTY_CACHE_CREW_CLASS (soldier), NOT _gunClass (vehicle).
+            _crewClass = missionNamespace getVariable ["WFBE_C_ARTY_CACHE_CREW_CLASS", "RU_Soldier"];
+            if (isNil "_crewClass" || _crewClass == "") then { _crewClass = "RU_Soldier" };
             _gun enableSimulation true;
             _gun allowDamage true;
             private ["_crewGrp","_crewUnit"];
             _crewGrp = createGroup _newSide;
-            _crewUnit = _crewGrp createUnit [_gunClass, _gunPos, [], 0, "NONE"];
+            _crewUnit = _crewGrp createUnit [_crewClass, _gunPos, [], 0, "NONE"];
             if (!isNull _crewUnit) then { _crewUnit moveInAny _gun };
-            diag_log Format ["ARTYCACHE|GUNTRANSFER|side=%1|t=%2", _sideStr, round time];
+            diag_log Format ["ARTYCACHE|GUNTRANSFER|side=%1|crew=%2|t=%3", _sideStr, _crewClass, round time];
         };
 
         //--- Announce to all clients.
