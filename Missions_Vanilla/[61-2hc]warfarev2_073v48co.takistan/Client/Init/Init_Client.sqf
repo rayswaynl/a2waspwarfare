@@ -1552,4 +1552,12 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- detects JIP from mission time. Spawned (never blocks input/enrollment), placed after init completes.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Common_Onboarding.sqf";
 
+//--- Chernarus "No Trees" visual toggle (cmdcon43-a / Build 88). Server-wide fair-by-design tree
+//--- hide: grid-swept nearestObjects [cell,[],r] -> hideObject true on every classless WRP tree/bush.
+//--- Runs on EVERY machine (hideObject is LOCAL; no hideObjectGlobal in 1.64) incl. JIP joiners here;
+//--- Init_Server/Init_HC register the same file. Self-gates on worldName=="Chernarus" AND
+//--- WFBE_C_CH_NOTREES (default OFF). EXPERIMENTAL: hides RENDER only — AI/ballistics geometry persists
+//--- in A2-OA 1.64 (see docs/design/CH-NOTREES-FEASIBILITY.md). Chunked+uiSleep so it never frame-spikes.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_NoTrees.sqf";
+
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

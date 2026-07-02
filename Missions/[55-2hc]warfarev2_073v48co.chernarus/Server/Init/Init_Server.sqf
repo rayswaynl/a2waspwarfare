@@ -1220,4 +1220,11 @@ if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
 };
 
+//--- Chernarus "No Trees" visual toggle (cmdcon43-a / Build 88). hideObject is LOCAL and there is no
+//--- hideObjectGlobal in 1.64, so the tree-hide pass must run on the SERVER too (kept uniform with the
+//--- player/HC passes registered from Init_Client / Init_HC). The render-hide is cosmetically inert on a
+//--- dedicated server, but running it here keeps every machine's pass identical and documents intent.
+//--- Self-gates on worldName=="Chernarus" AND WFBE_C_CH_NOTREES (default OFF). See CH-NOTREES-FEASIBILITY.md.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_NoTrees.sqf";
+
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

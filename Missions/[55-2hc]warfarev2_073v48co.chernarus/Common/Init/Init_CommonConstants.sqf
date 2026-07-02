@@ -1402,6 +1402,18 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_FSMOKE_TTL") then {WFBE_C_FSMOKE_TTL = 20}; // Seconds before each spawned shell is deleteVehicle'd + de-listed.
 	if (isNil "WFBE_C_FSMOKE_COOLDOWN") then {WFBE_C_FSMOKE_COOLDOWN = 150}; // Per-100m-grid-key cooldown (s) so one spot can't re-trigger smoke spam.
 
+	//--- cmdcon43-a (Build 88, Ray ask): Chernarus "No Trees" toggle. 1 = every machine grid-sweeps
+	//--- nearestObjects[cell,[],r] and hideObject-true's every classless WRP tree/bush (Client_NoTrees.sqf,
+	//--- run from Init_Client + Init_Server + Init_HC, JIP-safe). Gated on worldName=="Chernarus" inside the
+	//--- function, so this flag is inert on other maps. DEFAULT 0 (OFF): trees stay unless a host flips it.
+	//--- ⚠️ EXPERIMENTAL — hides RENDER ONLY. In A2-OA 1.64 hideObject does NOT strip the Geometry / View-Geometry
+	//--- LODs, so AI still SEE + shoot through the cleared trees and bullets/vehicles still collide with the
+	//--- invisible trunks (uniform for all players, but player-vs-engine confusing). A genuinely fair tree-free
+	//--- Chernarus needs a server terrain ADDON, not mission SQF. Full write-up: docs/design/CH-NOTREES-FEASIBILITY.md.
+	//--- Also exposed as the "Chernarus: No Trees (experimental)" lobby param (Rsc\Parameters.hpp), which
+	//--- overwrites this in MP via Init_Parameters.sqf; this nil-guard only supplies the SP/standalone default.
+	if (isNil "WFBE_C_CH_NOTREES") then {WFBE_C_CH_NOTREES = 0};
+
 	//--- Units Factions.
 switch (true) do {
 	case (WF_A2_CombinedOps): {

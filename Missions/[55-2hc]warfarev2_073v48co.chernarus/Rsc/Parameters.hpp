@@ -570,4 +570,15 @@
 		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
 	};
 
+	// cmdcon43-a (Build 88): Chernarus "No Trees" — server-wide, fair-by-design tree hide (everyone runs the
+	// same pass). EXPERIMENTAL / DEFAULT OFF: in A2-OA 1.64 hideObject hides RENDER only, so AI still see + shoot
+	// through the cleared trees and bullets/vehicles still collide with the invisible trunks (see
+	// docs/design/CH-NOTREES-FEASIBILITY.md). Inert on non-Chernarus maps (Client_NoTrees.sqf gates on worldName).
+	class WFBE_C_CH_NOTREES {
+		title = "Chernarus: No Trees (experimental)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+
 };

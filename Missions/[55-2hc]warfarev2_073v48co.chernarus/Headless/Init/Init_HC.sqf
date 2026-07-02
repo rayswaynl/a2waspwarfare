@@ -249,3 +249,9 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 //--- hulls) and reuses the server guard's proven look-ahead climb verbatim. Same flag (WFBE_C_AIHELI_TERRAIN_GUARD,
 //--- default ON) so one flip toggles heli terrain-guard everywhere. Self-gates OFF unless this is server/HC.
 [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HeliTerrainGuard.sqf";
+
+//--- Chernarus "No Trees" visual toggle (cmdcon43-a / Build 88). hideObject is LOCAL (no hideObjectGlobal in
+//--- 1.64), so the tree-hide pass runs on THIS headless client too, keeping every machine's pass uniform with
+//--- the server (Init_Server) and player-client (Init_Client) copies. Cosmetically inert on an HC (no interface)
+//--- but kept identical by design. Self-gates on worldName=="Chernarus" AND WFBE_C_CH_NOTREES (default OFF).
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_NoTrees.sqf";
