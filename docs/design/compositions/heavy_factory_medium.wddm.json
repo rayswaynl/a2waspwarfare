@@ -1,0 +1,14 @@
+{
+  "name": "WFBE_NEURODEF_HEAVY_WALLS",
+  "parentW": 28,
+  "parentD": 16,
+  "parentDir": 0,
+  "structureType": "heavy",
+  "fortOnly": true,
+  "mode": "defense",
+  "objs": [
+    {"cls":"Base_WarfareBBarrier10x","x":0,"y":12,"z":0,"dir":0},
+    {"cls":"Base_WarfareBBarrier10x","x":0,"y":-12,"z":0,"dir":0},
+    {"cls":"Base_WarfareBBarrier10x","x":-17,"y":0,"z":0,"dir":90}
+  ]
+}
