@@ -1,5 +1,15 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 - Lane 39 TKGUE patrol depth status [codex/lane39-tkgue-patrol-depth-status]
+
+Docs-only status pass for fleet lane 39. Current `origin/claude/build84-cmdcon36@b1608b096eb4`
+already carries the `cmdcon41-w3e` TKGUE patrol diversity fill across maintained roots, plus
+`UH1H_TK_GUE_EP1` air registration in `Core_TKGUE.sqf` and `Units_OA_TKGUE.sqf`.
+
+Added `docs/design/TKGUE-PATROL-DEPTH-STATUS-2026-07-03.md` to separate the stale
+`MISSION-AUDIT-60.md` near-empty/no-helo finding from current source. No SQF/SQM/HPP/EXT mission
+source files changed, no LoadoutManager run, no package artifact and no live/runtime touch.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
