@@ -22,7 +22,7 @@ _veh    = _this select 0;
 _player = _this select 1;
 
 if (isNull _veh || {!alive _veh}) exitWith {};
-if (driver _veh != _player) exitWith {};                 //--- driver only (belt-and-braces vs the action condition).
+if !(_player in [driver _veh]) exitWith {};              //--- driver only (belt-and-braces vs the action condition).
 
 _cooldown = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_COOLDOWN", 240];
 _range    = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_RANGE", 1200];
@@ -44,6 +44,7 @@ _player setVariable ["wfbe_mortar_designating", true];
 //--- Stash the caller + range for the onMapSingleClick string to read (it runs in a different scope).
 WFBE_MortarDesignator = _player;
 WFBE_MortarDesignRange = _range;
+WFBE_MortarCooldown = _cooldown;
 
 titleText ["Click the map to mark the mortar impact point.", "PLAIN"];
 openMap true;
@@ -53,10 +54,11 @@ openMap true;
 //--- with a titleText and the handler stays armed for another click (so the player can retry without re-scrolling).
 //--- A valid click clears the handler, closes the map, stamps the cooldown, and sends the RequestSpecial.
 onMapSingleClick "
-	private ['_pos','_p','_rng','_d'];
+	private ['_pos','_p','_rng','_cd','_d','_mk'];
 	_pos = _this select 1;
 	_p = WFBE_MortarDesignator;
 	_rng = WFBE_MortarDesignRange;
+	_cd = WFBE_MortarCooldown;
 	if (isNull _p || {!alive _p}) exitWith {
 		onMapSingleClick '';
 		openMap false;
@@ -70,6 +72,13 @@ onMapSingleClick "
 	openMap false;
 	_p setVariable ['wfbe_mortar_designating', false];
 	_p setVariable ['wfbe_mortar_last', time];
+	_mk = Format ['wfbe_guer_mortar_target_%1', round (diag_tickTime * 1000)];
+	createMarkerLocal [_mk, _pos];
+	_mk setMarkerTypeLocal 'mil_destroy';
+	_mk setMarkerColorLocal 'ColorRed';
+	_mk setMarkerTextLocal 'Mortar target';
+	_mk setMarkerSizeLocal [0.8, 0.8];
+	[_mk, 45] call WFBE_CL_FNC_Delete_Marker;
 	['RequestSpecial', ['guer-mortar-strike', _pos, _p]] Call WFBE_CO_FNC_SendToServer;
-	titleText ['Strike inbound.', 'PLAIN'];
+	titleText [format ['Strike inbound. Mortar crew reloading for %1s.', _cd], 'PLAIN'];
 ";
