@@ -116,11 +116,11 @@ while {!WFBE_GameOver} do {
 			if(_side_enabled) then
 			{
 				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
+				_scanStart = diag_tickTime;
 				_detected = (_town nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"],_dynRange]) unitsBelowHeight 20;
 
 				//--- Defender classification: town/static defender AI must not wake towns (its own
 				//--- OR a neighbouring enemy town it wandered near) - only players and bought AI count.
-				_scanStart = diag_tickTime;
 				_detectedFiltered = [];
 				_defendersIgnored = 0;
 				{
