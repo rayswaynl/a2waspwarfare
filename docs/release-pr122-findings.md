@@ -1,11 +1,94 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 09:49 Europe/Amsterdam
+Last updated: 2026-07-02 10:01 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 10:01 Update
+
+Reconciled the coordinated PR #125/#126/#136 movement found after the 09:49
+snapshot.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `0cc616e4314fbf4a24deee4b120e8a32248ed995`
+- PR #125: `9e628781a8a0e6ed9089d55f5226c2b03031bece`
+- PR #126: `91367f9c731363f37873d9573c2ca069b42e50f4`
+- PR #136: `867aa75734d9cc03595bd286873b9326f78eb7e9`
+
+PR #125 moved from `4893faaa5dc7942f04e9993fb93fb44c8425cc98` to
+`9e628781a8a0e6ed9089d55f5226c2b03031bece`.
+
+New commit:
+
+- `9e628781a` - `fix: harden commander support requests`
+
+Validation passed:
+
+- focused `git diff --check 4893faaa5d..origin/codex/release-command-center-20260630`
+- static smoke, including the commander-support authority guard surface
+- final check: static smoke, Chernarus OA lint, Takistan OA lint, high-only
+  BugHunt
+- LoadoutManager RELEASE: exit `0`, `CHERNARUS DONE`, `TAKISTAN DONE`
+- package validation for local `_MISSIONS.7z`, expected git `9e628781a8`,
+  entries `1885`
+
+Local package-content rebuild:
+
+- SHA256:
+  `B261AF1A584AD04DF9DA05971775A57BEE4C0F8B267752E4438D3093F5482EEF`
+- size: `7167527`
+- entries: `1885`
+- manifests:
+  `outputs/a2waspwarfare-pr125-9e628781-local-package-manifest-2026-07-02-0959.json`
+  and
+  `outputs/a2waspwarfare-pr125-9e628781-local-package-manifest-2026-07-02-0959.md`
+
+Both maintained terrain hashes match for the touched mission files:
+
+- `Client/GUI/GUI_Menu_Command.sqf`:
+  `f9a286ae84f967f01cc50e43621d07f0f70c38d7`
+- `Client/GUI/GUI_Menu_Economy.sqf`:
+  `1404f84731d2daf7ffa8a4b54ada0f4bc74c5f1a`
+- `Server/Functions/Server_ChangeSideSupply.sqf`:
+  `f2178104a49a688ea09e7d16339b359556444878`
+- `Server/Functions/Server_GetAICommanderFunds.sqf`:
+  `8b73b8568fe3764cc262166bee808a4924835f26`
+- `Server/Functions/Server_HandleSpecial.sqf`:
+  `02f9251fbd7eb36f84101b77601c8478dd50d158`
+- `Server/Functions/Server_ProcessUpgrade.sqf`:
+  `5dbf1409f569bad9a6d760b4fc1a7c7d84ba02c1`
+
+Public wiki now records a `9e628781a8` package tuple:
+
+- SHA256:
+  `FB52623DAC5CF93EE8E4E9E2B1542E1A531C5EF0FE063AADED33892439027245`
+- size: `7166946`
+- entries: `1885`
+- wiki: `0cc616e`
+
+Boundary: the current PR #125 GitHub body is stale because it still advertises
+`4893faaa5d` /
+`E7B12EDACD4835489229A910057EE0F511AFC83DE19F8B9CE2E47C710FC3CFEF` /
+wiki `d751f81`. PR #126 files at `91367f9c7` pass focused
+tuple/version/JIP guard tests, but they target older `4893faaa5d` /
+`22F5AEE4BAF78FCB417A5C7CB7C76B2E1C67B7968541F95EB47527E0AF2A085E` /
+wiki `9d22444`, and its GitHub body is older still. Runtime proof must bind to
+the exact selected archive/PBO; these package identities are not interchangeable.
+
+PR #136 moved from `1769aa1289bb414f9634c034a23b5505feb50f2f` to
+`867aa75734d9cc03595bd286873b9326f78eb7e9` with docs-only
+`docs/design/ALIFE-V2-AND-DOCTRINES.md` changes; focused diff-check passes. The
+prior mission-affecting `b830d173a` / `5cbf7e206` cmdcon41 wave-2 changes still
+lack fresh exact artifact/RPT proof.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 09:49 Update
 
