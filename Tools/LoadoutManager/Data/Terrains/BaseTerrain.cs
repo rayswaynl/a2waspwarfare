@@ -30,9 +30,14 @@ public abstract class BaseTerrain : InterfaceTerrain
 
     // Method that writes and updates the terrain files.
     public void WriteAndUpdateTerrainFiles(
-        string _easaFileString, string _commonBalanceFileString, string _aircraftDisplayNameStrings, string _addedAircraftDamageModelChanges, string _coreModFile = "")
+        string _easaFileString,
+        string _commonBalanceFileString,
+        string _aircraftDisplayNameStrings,
+        string _addedAircraftDamageModelChanges,
+        string _coreModFile = "",
+        string? destinationDirectoryOverride = null)
     {
-        string destinationDirectory = DetermineDestinationDirectory();
+        string destinationDirectory = destinationDirectoryOverride ?? DetermineDestinationDirectory();
 
         if (terrainName == TerrainName.CHERNARUS)
         {
@@ -70,14 +75,14 @@ class CfgSounds
         // Handle writing to the vanilla maps (Utes, Zargabad) more properly here later
         if (terrainModStatus == TerrainModStatus.VANILLA)
         {
-            UpdateFilesForTakistan();
+            UpdateFilesForTakistan(destinationDirectory);
             EnsureTakistanInitServerUsesCorrectMapId(destinationDirectory);
         }
 
         // Perhaps do a inherited class from this to reduce spaghetti
         if (terrainModStatus == TerrainModStatus.MODDED)
         {
-            UpdateFilesForModdedTerrains();
+            UpdateFilesForModdedTerrains(destinationDirectory);
 
             WriteFilesToTheModdedTerrains(destinationDirectory, _coreModFile);
             ReplaceInitCommmonSqfForCoreModInit(destinationDirectory);
@@ -206,25 +211,23 @@ class CfgSounds
     }
 
     // Method to update all the files for Takistan, and the modded maps
-    private void UpdateFilesForTakistan()
+    private void UpdateFilesForTakistan(string _destinationDirectory)
     {
         // Determine the source and destination directories for file operations
         string sourceDirectory = DetermineChernarusDirectory();
-        string destinationDirectory = DetermineDestinationDirectory();
 
         // Copy files from the source to the destination directory
-        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, destinationDirectory, terrainModStatus);
+        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, _destinationDirectory, terrainModStatus);
     }
 
     // Method to update all the files for the modded terrains
-    private void UpdateFilesForModdedTerrains()
+    private void UpdateFilesForModdedTerrains(string _destinationDirectory)
     {
         // Determine the source and destination directories for file operations
         string sourceDirectory = DetermineSourceDirectoryForModdedTerrains();
-        string destinationDirectory = DetermineDestinationDirectory();
 
         // Copy files from the source to the destination directory
-        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, destinationDirectory, terrainModStatus);
+        FileManager.CopyFilesFromSourceToDestination(sourceDirectory, _destinationDirectory, terrainModStatus);
     }
 
     // Replaces the gui menu help mission name according to the current Terrain name
