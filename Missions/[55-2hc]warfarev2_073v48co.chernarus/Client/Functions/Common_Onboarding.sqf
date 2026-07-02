@@ -17,6 +17,8 @@
 	    round restart within the same client launch, so it does not re-spam every round).
 	  - Default-ON, A/B'able via WFBE_C_ONBOARDING_ENABLE (read here with getVariable
 	    [name,1] so we do NOT have to touch the shared Init_CommonConstants).
+	  - Extra commander/supply/EASA cards are opt-in via WFBE_C_ONBOARDING_EXTENDED_CARDS
+	    (default 0) so the live first-spawn sequence length is unchanged unless enabled.
 
 	JIP vs fresh detection:
 	  - No explicit JIP boolean exists in this mission; the convention is mission-`time`
@@ -29,11 +31,12 @@
 	A3-only commands.
 */
 
-private ["_enable","_jipThreshold","_isJip","_welcome","_scrollHint","_jipNote","_respawnNote"];
+private ["_commanderNote","_easaNote","_enable","_extended","_isJip","_jipNote","_jipThreshold","_respawnNote","_scrollHint","_supplyNote","_welcome"];
 
 //--- Master toggle (default ON). Read locally so we never edit the shared Init_CommonConstants.
 _enable = missionNamespace getVariable ["WFBE_C_ONBOARDING_ENABLE", 1];
 if (_enable < 1) exitWith {};
+_extended = missionNamespace getVariable ["WFBE_C_ONBOARDING_EXTENDED_CARDS", 0];
 
 //--- ONCE per game-client session. uiNamespace survives mission restart / respawn within the
 //--- same client launch, so a returning player is not re-onboarded every round.
@@ -75,6 +78,33 @@ _scrollHint = parseText (
 );
 hint _scrollHint;
 uiSleep 13;
+
+//--- Optional extended cards: default OFF, useful for servers that want a deeper first-spawn tour.
+if (_extended > 0) then {
+	_commanderNote = parseText (
+		"<t size='1.2' color='#28ff14'>Commanders steer the war.</t><br/><br/>"
+		+ "Use the WF menu to vote for a commander when your side needs one. The commander spends side supply on upgrades, base structures and AI team orders.<br/><br/>"
+		+ "If the AI commander is running, the command menu still shows side intent. When available, <t color='#42b6ff'>REQUEST AI SUPPORT</t> can pull a nearby team toward your fight."
+	);
+	hint _commanderNote;
+	uiSleep 13;
+
+	_supplyNote = parseText (
+		"<t size='1.2' color='#28ff14'>Supply runs keep the front moving.</t><br/><br/>"
+		+ "Support players can load supplies at friendly towns marked <t color='#FFAC1C'>[+SUPPLY]</t>, then deliver them to the <t color='#42b6ff'>Command Center</t> for income and town value.<br/><br/>"
+		+ "Supply helicopters unlock from Air level 3; at Air level 4 they become cash runs that feed the commander economy."
+	);
+	hint _supplyNote;
+	uiSleep 13;
+
+	_easaNote = parseText (
+		"<t size='1.2' color='#28ff14'>Aircraft can be re-armed.</t><br/><br/>"
+		+ "The <t color='#42b6ff'>EASA</t> menu swaps aircraft loadouts at service points for mission roles like AA, AG and multi-role kits.<br/><br/>"
+		+ "Engineers can use repair-truck service points; GUER pilots use friendly town-center access when their faction rules allow it."
+	);
+	hint _easaNote;
+	uiSleep 13;
+};
 
 //--- CARD 3: JIP cue - only for a mid-round joiner.
 if (_isJip) then {
