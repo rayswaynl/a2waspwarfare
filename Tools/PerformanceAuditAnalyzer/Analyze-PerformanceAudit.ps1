@@ -26,17 +26,10 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
+$sharedRptParsing = Join-Path $PSScriptRoot "..\RptParsing\RptParsing.psm1"
+Import-Module $sharedRptParsing -Force
+
 $script:InvariantCulture = [System.Globalization.CultureInfo]::InvariantCulture
-
-function Get-CsvDelimiter {
-	param([string]$Name)
-
-	switch ($Name) {
-		"Comma" { return "," }
-		"Tab" { return "`t" }
-		default { return ";" }
-	}
-}
 
 function ConvertTo-AuditNumber {
 	param($Value)
@@ -354,42 +347,7 @@ function ConvertFrom-PerformanceAuditLine {
 function Get-InputFiles {
 	param([string]$Path)
 
-	if (Test-Path -LiteralPath $Path -PathType Leaf) {
-		return @(Get-Item -LiteralPath $Path)
-	}
-
-	if (Test-Path -LiteralPath $Path -PathType Container) {
-		$parameters = @{
-			LiteralPath = $Path
-			File = $true
-		}
-		if ($Recurse) { $parameters["Recurse"] = $true }
-		return @(Get-ChildItem @parameters | Where-Object { $_.Extension -in @(".rpt", ".log", ".txt") })
-	}
-
-	$resolved = @(Resolve-Path -Path $Path -ErrorAction SilentlyContinue)
-	if ($resolved.Count -gt 0) {
-		return @($resolved | ForEach-Object { Get-Item -LiteralPath $_.Path } | Where-Object { -not $_.PSIsContainer })
-	}
-
-	throw "InputPath not found: $Path"
-}
-
-function Export-AuditCsv {
-	param(
-		[object[]]$Rows,
-		[string]$Path,
-		[string]$Delimiter
-	)
-
-	$Rows | Export-Csv -LiteralPath $Path -NoTypeInformation -Encoding UTF8 -Delimiter $Delimiter
-}
-
-function ConvertTo-HtmlText {
-	param($Value)
-
-	if ($null -eq $Value) { return "" }
-	return [System.Net.WebUtility]::HtmlEncode([string]$Value)
+	return @(Resolve-WaspRptInputFiles -Path @($Path) -Recurse:$Recurse | ForEach-Object { $_.FileInfo })
 }
 
 function Get-FpsClass {
