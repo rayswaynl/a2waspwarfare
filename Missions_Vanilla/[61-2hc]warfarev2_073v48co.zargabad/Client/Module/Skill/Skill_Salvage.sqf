@@ -17,7 +17,7 @@ _vehicles = nearestObjects [getPos player, ['Car','Motorcycle','Ship','Air','Tan
 
 _wrecks = [];
 {
-	if !(alive _x) then {_wrecks = _wrecks + [_x]};
+	if (!(alive _x) && {!(side _x == side player)}) then {_wrecks = _wrecks + [_x]};
 } forEach _vehicles;
 
 _hqs = [];
