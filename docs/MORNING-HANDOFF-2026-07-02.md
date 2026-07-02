@@ -34,14 +34,25 @@ a broken pipeline. Server healthy all night (0 HC errors, 3/3 procs, ~44 fps). N
    Still worth a daylight look at GUER wave sizing/cap (209-224 peaks are heavy), but it is NOT causing a
    sustained perf collapse. SPREAD+HOLD (item 1) still matters for the see-saw itself.
 
-## LIVE OBSERVATION (overnight, ~3h match) — the AI dominates but can't CLOSE a win
-The see-saw broke (WEST reached 2 towns + went `HQ_STRIKE`), but the HQ-strike ran **~33 min without
-converting** — no base overrun, no round-end, and WEST's strength *eroded* (81→62 as EAST recovered) while
-striking. This is the classic **"DECAPITATE doesn't finish"** gap (see the AICOM v2 plan / `NO-TOWN-UNCAPTURABLE`
-reference on the razer): the AI presses the enemy HQ but never razes HQ+factories to trigger the existing
-victory. Net: the AI can win *territory* and *dominance* but not *the round*. This is the next big AICOM
-architectural item after SPREAD+HOLD — the strike needs a durability latch + staging + conversion (razer fed by
-the HC-reported striker count). Not a tonight regression; deep + pre-existing. Flag for the daylight roadmap.
+## ✅ OVERNIGHT RESULT — the AI played a FULL match to a real WIN
+The see-saw broke (WEST → 2→3→4 towns + `HQ_STRIKE`), and at match-minute ~415 **WEST WON via BASE OVERRUN** —
+razed EAST's HQ+factories via a sustained siege (`BASE_OVERRUN|strikers=8|via=siege|siege=5`,
+`WASPSTAT|ROUNDEND|WEST`, `ROUNDSTAT winner=WEST townsW=4 townsE=2`). So the whole chain works end-to-end:
+**capture → dominate → HQ-strike → base overrun → victory.** The strike-conversion is SLOW (the strike ran
+~2h, bleeding WEST's strength, before the siege counter accrued + razed the HQ) — so the "DECAPITATE doesn't
+finish" concern is **slow, not broken**. Speeding up conversion (durability latch + staging so the siege
+accrues faster) is a worthwhile AICOM tune, but NOT urgent — the AI genuinely closes games. HUGE validation of
+the night's capture fix.
+
+## ⚠️ NEW BUG found at the win — match-end rotation gets STUCK (ambiguous both-maps)
+When WEST won, `WaspMatchEndRotate` tried to rotate and hit: **`AMBIGUOUS state (chActive=True tkActive=True)
+- abort to avoid corrupting`** — BOTH the Chernarus and Takistan pbos were in MPMissions, so rotate2 refused
+to act (safety guard) and the server was left stuck on the ended round. Overnight I recovered it by running
+`deploy40ch.ps1` (retires all MPMissions pbos → clean fresh CH match). **Morning fix:** find why both maps end
+up in MPMissions at match-end (likely the deploy/park-model + rotate2 interaction — my cmdcon deploys park TK
+while CH is active, but at rotate the swap left both present) and make rotate2 resolve the ambiguity (retire the
+old, activate the intended next map) instead of aborting. Until fixed, each match-end may need a manual
+`deploy40ch.ps1` (matches run ~6h so it's infrequent).
 
 ## Already handled (no morning action)
 - **Peach+ reports** — fixed live (build tag was blank after the friendly-missionName change; now reads the
