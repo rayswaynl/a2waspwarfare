@@ -72,3 +72,9 @@ Recommended first wave (post-cmdcon41): C personas + D1/D2/D3 + A1/A2 + B1 check
 1. YES — wire AITownPatrol + garrison sortie loops. 2. YES — road-biased patrols. 3. SKIP personalities for now.
 4. YES — D2 smoke discipline. 5. Carriers: the MIDDLE one keeps/gets the SCUD as-is (single hull); the TWO OUTER
 carriers become TWIN-HULL SUPER-CARRIERS (second full LHD alongside, deck-bridged).
+
+## ▶ RAY ADDITIONS (wave-3b)
+6. TERRITORIAL VICTORY: ADD — hold >=80% of towns for 30 MINUTES -> win (visible countdown/milestones both sides).
+7. EASA-for-AI + RICH GEAR: YES — HARD-BOUND to the actual in-game research unlocks/factories: EASA kits ONLY when
+   WFBE_UP_EASA is genuinely researched (>=1; NO airfield-ownership shortcut), gear deltas ONLY per the actual
+   researched WFBE_UP_GEAR level (aircraft themselves already require the factory chain). No freebies.
