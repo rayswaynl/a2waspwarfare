@@ -35,20 +35,47 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'V3S_Supply_T
 
 //--- Server only.
 if (isServer) then {
-	//--- Patrols.
+	//--- Patrols. TKGUE DIVERSITY FILL (cmdcon41-w3e, Ray-approved). The pools were near-empty + FOOT-ONLY
+	//--- (LIGHT 2 / MEDIUM 2 / HEAVY 1, no vehicles) so the w3c motorized road-pick had nothing to prefer.
+	//--- Grown to 4-6 varied comps per tier using ONLY known-good TK_GUE classnames already present in the
+	//--- mission tree (donors: this Root's STARTINGVEHICLES/PARAVEHICARGO + Root_PMC's TKGUE armor pool +
+	//--- Groups/wildcard TK_GUE infantry). Archetypes: foot AT-hunter, MG/sniper team, technical vehicle pair,
+	//--- mixed inf+vehicle, AA picket (Ural ZU-23 / Strela) at MEDIUM+HEAVY. Insurgent flavour: light technicals
+	//--- (DSHKM/SPG9/PK offroad+pickup) at LIGHT, BTR-40/BRDM at MEDIUM, T-34/T-55 armor at HEAVY.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
-		['TK_GUE_Soldier_EP1','TK_GUE_Soldier_MG_EP1','TK_GUE_Soldier_Sniper_EP1','TK_GUE_Bonesetter_EP1'], 
-		['TK_GUE_Warlord_EP1','TK_GUE_Soldier_AR_EP1','TK_GUE_Soldier_3_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_4_EP1']
+		//--- MG/sniper scout team (foot).
+		['TK_GUE_Soldier_EP1','TK_GUE_Soldier_MG_EP1','TK_GUE_Soldier_Sniper_EP1','TK_GUE_Bonesetter_EP1'],
+		//--- foot AT-hunter rifle squad.
+		['TK_GUE_Warlord_EP1','TK_GUE_Soldier_AR_EP1','TK_GUE_Soldier_3_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_4_EP1'],
+		//--- technical pair: DSHKM offroad + SPG-9 offroad (mounted, road-capable).
+		['Offroad_DSHKM_TK_GUE_EP1','Offroad_SPG9_TK_GUE_EP1'],
+		//--- mixed: PK pickup + dismounted AT/MG screen.
+		['Pickup_PK_TK_GUE_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_MG_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
+		//--- foot HAT-hunter command team.
 		['TK_GUE_Warlord_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_MG_EP1','TK_GUE_Soldier_HAT_EP1'],
-		['TK_GUE_Soldier_AA_EP1','TK_GUE_Soldier_AA_EP1','TK_GUE_Bonesetter_EP1']
+		//--- MANPADS AA picket (foot Strela team).
+		['TK_GUE_Soldier_AA_EP1','TK_GUE_Soldier_AA_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Bonesetter_EP1'],
+		//--- motorized: BTR-40 MG + dismounted AT/HAT screen.
+		['BTR40_MG_TK_GUE_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_HAT_EP1'],
+		//--- technical AA picket: Ural ZU-23 + AAT gunner + medic.
+		['Ural_ZU23_TK_GUE_EP1','TK_GUE_Soldier_AAT_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Bonesetter_EP1'],
+		//--- BRDM scout + dismounted AT.
+		['BRDM2_TK_GUE_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_MG_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['TK_GUE_Soldier_Sniper_EP1','TK_GUE_Soldier_5_EP1','TK_GUE_Soldier_Sniper_EP1']
-	]];	
+		//--- armor pair: T-34 + T-55 (crewed) with dismounted HAT escort.
+		['T55_TK_GUE_EP1','T34_TK_GUE_EP1','TK_GUE_Soldier_HAT_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Bonesetter_EP1'],
+		//--- mechanized assault: T-55 + BTR-40 MG + full dismounted squad.
+		['T55_TK_GUE_EP1','BTR40_MG_TK_GUE_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Soldier_MG_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_HAT_EP1','TK_GUE_Bonesetter_EP1'],
+		//--- AA picket at HEAVY: Ural ZU-23 + BRDM + Strela dismounts.
+		['Ural_ZU23_TK_GUE_EP1','BRDM2_TK_GUE_EP1','TK_GUE_Soldier_AA_EP1','TK_GUE_Soldier_AAT_EP1','TK_GUE_Soldier_TL_EP1'],
+		//--- foot elite AT/sniper strike team (retained legacy entry, expanded).
+		['TK_GUE_Soldier_Sniper_EP1','TK_GUE_Soldier_5_EP1','TK_GUE_Soldier_Sniper_EP1','TK_GUE_Soldier_HAT_EP1','TK_GUE_Soldier_AT_EP1']
+	]];
 	
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].
 	missionNamespace setVariable [Format["WFBE_%1_AI_Loadout_0", _side], [

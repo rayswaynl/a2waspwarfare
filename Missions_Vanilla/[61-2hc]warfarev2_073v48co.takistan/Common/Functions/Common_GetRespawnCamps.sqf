@@ -1,4 +1,4 @@
-Private ['_availableSpawn','_camps','_closestCamp','_deathLoc','_enemySide','_get','_hostiles','_nearestCamps','_respawnCampsRuleMode','_respawnMinRange','_side','_town','_townSID'],;
+Private ['_availableSpawn','_camps','_closestCamp','_deathLoc','_enemySide','_get','_hostiles','_nearestCamps','_respawnCampsRuleMode','_respawnMinRange','_side','_town','_townSID']; //--- cmdcon41-w3: removed stray trailing comma after Private[] (was `],;` = parse error).
 
 _deathLoc = _this select 0;
 _side = _this select 1;

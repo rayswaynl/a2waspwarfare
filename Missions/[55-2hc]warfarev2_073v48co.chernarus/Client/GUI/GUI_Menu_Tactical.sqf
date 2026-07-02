@@ -75,6 +75,31 @@ _addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratro
 _addToListFee = [0,75000,9500,3500,8500,0,12500,0,0];
 _addToListInterval = [0,1000,800,600,_pard,0,0,0,0];	//--- QoL fix: paratrooper cooldown now respects WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY (was hardcoded 900, silently ignoring the mission param)
 
+//--- cmdcon41-w3i (Ray 2026-07-02) SCUD/TEL MUNITIONS moved into the Tactical menu (this is the ONE place all SCUD/TEL
+//--- fire calls now live, beside the classic ICBM/NUKE row — the w3g war-room buttons were removed). Each is appended as a
+//--- support-list entry with plain-string labels; enable-gated in the switch below; each arms a map-click that sends the
+//--- SAME server payload the buttons used (icbm-tel-fire for the 5 TEL munitions; ScudStrike for the carrier). Entries are
+//--- feature-flag-gated at BUILD time: the 5 TEL munitions require WFBE_C_ICBM_TEL; the carrier SCUD requires WFBE_C_SCUD_MENU.
+//--- Fees pull live from the same cost flags the server charges (server remains authoritative; the client display matches).
+if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) > 0) then {
+	_addToList = _addToList + ["SCUD: SATURATION", "SCUD: RECON FLASH", "SCUD: FASCAM (mines)", "SCUD: STEEL RAIN (anti-inf)", "SCUD: BUNKER BUSTER (point)"];
+	_addToListID = _addToListID + ["TEL_Saturation","TEL_Recon","TEL_Fascam","TEL_SteelRain","TEL_Buster"];
+	_addToListFee = _addToListFee + [
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_COST", 10000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000])
+	];
+	_addToListInterval = _addToListInterval + [0,0,0,0,0];	//--- server enforces the SHARED TEL cooldown (WFBE_C_ICBM_TEL_COOLDOWN); no client interval gate.
+};
+if ((missionNamespace getVariable ["WFBE_C_SCUD_MENU", 1]) > 0) then {
+	_addToList = _addToList + ["SCUD STRIKE (carrier)"];
+	_addToListID = _addToListID + ["SCUD_Carrier"];
+	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])];
+	_addToListInterval = _addToListInterval + [0];	//--- server enforces the per-carrier cooldown (WFBE_C_SCUD_COOLDOWN).
+};
+
 for '_i' from 0 to count(_addToList)-1 do {
 	lbAdd [_listBox,_addToList select _i];
 	lbSetValue [_listBox, _i, _i];
@@ -145,6 +170,25 @@ lbSetCurSel[_listbox, 0];
 
 if ((missionNamespace getVariable "WFBE_C_ARTILLERY") == 0) then {
 	(_display displayCtrl 17016) ctrlSetStructuredText (parseText Format['<t align="right" color="#FF4747">%1</t>',localize 'STR_WF_Disabled']);
+};
+
+//--- cmdcon41-w3i (Ray 2026-07-02) SHARED ENABLE PREDICATE for the 5 land-TEL munition list entries. Input:
+//--- [_currentUpgrades, _currentFee, _funds]. Returns TRUE only when the player is the commander AND holds the SCUD
+//--- platform (WFBE_UP_ICBM level >= 1 — L1 conventional; the NUKE separately needs >= 2) AND this side's land TEL is
+//--- alive (the WFBE_ICBM_TEL_<sideJoined> broadcast object ref, client-readable, same as the war-room gate used) AND can
+//--- afford the fee. The server (WFBE_SE_FNC_IcbmTelFire) independently re-validates every one of these on fire.
+WFBE_CL_FNC_TelMuniEnable = {
+	private ["_upg","_fee","_fnd","_lvl","_cmd","_telObj","_telAlive"];
+	_upg = _this select 0;
+	_fee = _this select 1;
+	_fnd = _this select 2;
+	_lvl = 0;
+	if (typeName _upg == "ARRAY" && {!isNil "WFBE_UP_ICBM"} && {WFBE_UP_ICBM < count _upg}) then {_lvl = _upg select WFBE_UP_ICBM};
+	_cmd = false;
+	if (!isNull commanderTeam) then { if (commanderTeam == group player) then {_cmd = true} };
+	_telObj = missionNamespace getVariable [format ["WFBE_ICBM_TEL_%1", str sideJoined], objNull];
+	_telAlive = (!isNull _telObj && {alive _telObj});
+	if (_lvl >= 1 && _cmd && _telAlive && _fnd >= _fee) then {true} else {false}
 };
 
 _textAnimHandler = [] spawn {};
@@ -271,8 +315,30 @@ while {alive player && dialog} do {
 						if (commanderTeam == group player) then {_commander = true};
 					};
 					_currentLevel = _currentUpgrades select WFBE_UP_ICBM;
-					_controlEnable = if (_currentLevel > 0 && _commander && _funds >= _currentFee) then {true} else {false};
+					//--- cmdcon41-w3h TWO-LEVEL SCUD: the Tactical-Center launch button fires the NUKE (classic ICBM -> MenuAction 8),
+					//--- which now requires SCUD level 2 (L1 = platform only). Gate the button ENABLE at >= 2 so it greys out at L1
+					//--- instead of enabling then refusing at the fire path (GUI_Menu_Tactical fire block + WFBE_SE_FNC_IcbmTelFire both re-check >= 2).
+					_controlEnable = if (_currentLevel >= 2 && _commander && _funds >= _currentFee) then {true} else {false};
 				};
+			};
+			//--- cmdcon41-w3i (Ray 2026-07-02): the 5 land-TEL munitions. ENABLE gate (shared helper) = commander AND SCUD
+			//--- platform level >= 1 (the same WFBE_UP_ICBM upgrade the NUKE reads at >= 2; L1 = platform/conventional) AND this
+			//--- side's TEL alive (WFBE_ICBM_TEL_<side> broadcast ref) AND funds. Server (WFBE_SE_FNC_IcbmTelFire) re-validates all.
+			case "TEL_Saturation": { _controlEnable = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniEnable };
+			case "TEL_Recon":      { _controlEnable = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniEnable };
+			case "TEL_Fascam":     { _controlEnable = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniEnable };
+			case "TEL_SteelRain":  { _controlEnable = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniEnable };
+			case "TEL_Buster":     { _controlEnable = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniEnable };
+			//--- cmdcon41-w3i: the carrier SCUD (migrated from war-room button 14631). ENABLE = commander AND this side owns a
+			//--- Khe Sanh carrier HVT (the SAME towns[]-scan ownership read the button used) AND funds. Server re-validates.
+			case "SCUD_Carrier": {
+				_commander = false;
+				if (!isNull(commanderTeam)) then { if (commanderTeam == group player) then {_commander = true} };
+				_ownsCarrier = false;
+				if (!isNil "towns") then {
+					{ if (!isNull _x && {_x getVariable ["wfbe_is_naval_hvt", false]} && {(_x getVariable ["sideID", -1]) == sideID}) exitWith {_ownsCarrier = true} } forEach towns;
+				};
+				_controlEnable = if (_commander && _ownsCarrier && _funds >= _currentFee) then {true} else {false};
 			};
 			case "Paratroopers": {
 				_currentLevel = _currentUpgrades select WFBE_UP_PARATROOPERS;
@@ -321,6 +387,14 @@ while {alive player && dialog} do {
 				if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 				_textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim;
 			};
+			//--- cmdcon41-w3i (Ray 2026-07-02): arm the map-click for each SCUD/TEL munition (unique MenuAction per munition,
+			//--- resolved in the map-click block below). Same "click on the map" prompt idiom as the ICBM/paradrop entries.
+			case "SCUD_Carrier": { MenuAction = 80; if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler}; _textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim; };
+			case "TEL_Saturation": { MenuAction = 81; if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler}; _textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim; };
+			case "TEL_Recon": { MenuAction = 82; if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler}; _textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim; };
+			case "TEL_Fascam": { MenuAction = 83; if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler}; _textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim; };
+			case "TEL_SteelRain": { MenuAction = 84; if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler}; _textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim; };
+			case "TEL_Buster": { MenuAction = 85; if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler}; _textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim; };
 			case "Paratroopers": {
 				MenuAction = 3;
 				if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
@@ -496,9 +570,31 @@ while {alive player && dialog} do {
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
-			-_currentFee Call ChangePlayerFunds;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			_obj = "HeliHEmpty" createVehicle _callPos; 
+			//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): when the TEL feature is ON, the classic ICBM fire is
+			//--- INTERCEPTED and routed through the side's land TEL. We do NOT deduct funds or spawn the warhead client-side;
+			//--- the SERVER (WFBE_SE_FNC_IcbmTelFire) validates TEL-alive + shared cooldown + funds, runs the 5-min NUKE
+			//--- countdown at the TEL (destroy-to-cancel), and at T-0 fires the SAME NukeDammage warhead. Munition = "NUKE"
+			//--- (the classic ICBM call maps to NUKE per spec; SATURATION/RECON have their own command-menu buttons). Payload
+			//--- carries the tactical-menu ICBM fee so the server charges the classic cost for a NUKE. group player = commander team.
+			if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) > 0) exitWith {
+				//--- cmdcon41 TWO-LEVEL "SCUD" GATE (Ray 2026-07-02): the NUKE (classic ICBM) now REQUIRES SCUD level >= 2.
+				//--- The legacy enable check for this ICBM entry is at GUI_Menu_Tactical.sqf case "ICBM" (_currentLevel > 0,
+				//--- i.e. >= 1) — that validator belongs to the PARALLEL upgrade lane (Core_Upgrades/display-name); we do NOT
+				//--- change it, but we enforce >= 2 HERE at the fire path (server re-validates in WFBE_SE_FNC_IcbmTelFire).
+				//--- _currentUpgrades/WFBE_UP_ICBM are already in scope in this menu loop (the enable switch reads them).
+				private ["_scudLvl"];
+				_scudLvl = 0;
+				if (!isNil "_currentUpgrades" && {!isNil "WFBE_UP_ICBM"} && {WFBE_UP_ICBM < count _currentUpgrades}) then {_scudLvl = _currentUpgrades select WFBE_UP_ICBM};
+				if (_scudLvl < 2) exitWith {
+					hintSilent parseText "<t color='#F8D664'>The NUKE needs the ICBM tech (SCUD level 2). Research it first.</t>";
+				};
+				["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "NUKE", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+				hintSilent parseText "<t color='#F89060'>ICBM launch order sent to your land TEL. Protect it - if it is destroyed before impact, the strike aborts.</t>";
+			};
+			//--- CLASSIC path (WFBE_C_ICBM_TEL=0): fire immediately from the commander's client as before.
+			-_currentFee Call ChangePlayerFunds;
+			_obj = "HeliHEmpty" createVehicle _callPos;
 			
 			//--- Marty : Creating the ICBM marker on map for the commander who give the order:
 			_ICBM_marker_name 		= "ICBM_" + str(time) ;
@@ -555,6 +651,79 @@ while {alive player && dialog} do {
 			-_currentFee Call ChangePlayerFunds;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
 			["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+		};
+		//--- cmdcon41-w3i (Ray 2026-07-02) CARRIER SCUD fire (migrated from war-room button 14631 / MenuAction 770). Sends the
+		//--- EXACT existing ScudStrike payload the deck addAction + old button used; server Support_ScudStrike re-validates carrier
+		//--- ownership + per-carrier cooldown + funds + charges (NO client deduction). Two-click map confirm.
+		if (MenuAction == 80) then {
+			if (!(["wf_scud_carrier", Format ["<t color='#ff5a5a' size='1.1'>Confirm SCUD strike?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			_forceReload = true;
+			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+			[17022] Call SetControlFadeAnimStop;
+			MenuAction = -1;
+			_callPos = _map PosScreenToWorld[mouseX,mouseY];
+			["RequestSpecial", ["ScudStrike", playerSide, [_callPos select 0, _callPos select 1, 0], group player]] Call WFBE_CO_FNC_SendToServer;
+			hintSilent parseText "<t color='#F89060'>SCUD strike requested - saturation inbound (server validates carrier + funds).</t>";
+		};
+		//--- cmdcon41-w3i (Ray 2026-07-02) TEL SATURATION fire. Two-click map confirm (ICBM idiom); NO client fund deduction
+		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
+		if (MenuAction == 81) then {
+			if (!(["wf_tel_tel_sat", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL saturation?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			_forceReload = true;
+			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+			[17022] Call SetControlFadeAnimStop;
+			MenuAction = -1;
+			_callPos = _map PosScreenToWorld[mouseX,mouseY];
+			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "SATURATION", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			hintSilent parseText "<t color='#F89060'>TEL saturation order sent to your land TEL (server validates TEL + range + funds).</t>";
+		};
+		//--- cmdcon41-w3i (Ray 2026-07-02) TEL RECON fire. Two-click map confirm (ICBM idiom); NO client fund deduction
+		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
+		if (MenuAction == 82) then {
+			if (!(["wf_tel_tel_recon", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL recon flash?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_COST", 10000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			_forceReload = true;
+			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+			[17022] Call SetControlFadeAnimStop;
+			MenuAction = -1;
+			_callPos = _map PosScreenToWorld[mouseX,mouseY];
+			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "RECON", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			hintSilent parseText "<t color='#F89060'>TEL recon flash order sent to your land TEL (server validates TEL + range + funds).</t>";
+		};
+		//--- cmdcon41-w3i (Ray 2026-07-02) TEL FASCAM fire. Two-click map confirm (ICBM idiom); NO client fund deduction
+		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
+		if (MenuAction == 83) then {
+			if (!(["wf_tel_tel_fascam", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL FASCAM mine barrage?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			_forceReload = true;
+			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+			[17022] Call SetControlFadeAnimStop;
+			MenuAction = -1;
+			_callPos = _map PosScreenToWorld[mouseX,mouseY];
+			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "FASCAM", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			hintSilent parseText "<t color='#F89060'>TEL FASCAM mine barrage order sent to your land TEL (server validates TEL + range + funds).</t>";
+		};
+		//--- cmdcon41-w3i (Ray 2026-07-02) TEL STEELRAIN fire. Two-click map confirm (ICBM idiom); NO client fund deduction
+		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
+		if (MenuAction == 84) then {
+			if (!(["wf_tel_tel_rain", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL steel rain?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			_forceReload = true;
+			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+			[17022] Call SetControlFadeAnimStop;
+			MenuAction = -1;
+			_callPos = _map PosScreenToWorld[mouseX,mouseY];
+			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "STEELRAIN", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			hintSilent parseText "<t color='#F89060'>TEL steel rain order sent to your land TEL (server validates TEL + range + funds).</t>";
+		};
+		//--- cmdcon41-w3i (Ray 2026-07-02) TEL BUSTER fire. Two-click map confirm (ICBM idiom); NO client fund deduction
+		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
+		if (MenuAction == 85) then {
+			if (!(["wf_tel_tel_buster", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL bunker buster?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			_forceReload = true;
+			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+			[17022] Call SetControlFadeAnimStop;
+			MenuAction = -1;
+			_callPos = _map PosScreenToWorld[mouseX,mouseY];
+			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "BUSTER", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			hintSilent parseText "<t color='#F89060'>TEL bunker buster order sent to your land TEL (server validates TEL + range + funds).</t>";
 		};
 	};
 	

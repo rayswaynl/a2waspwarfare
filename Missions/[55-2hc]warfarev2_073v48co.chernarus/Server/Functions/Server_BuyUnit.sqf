@@ -97,6 +97,21 @@ if (!isPlayer (leader _team)) then {
 		_apTry = _apTry + 1;
 	};
 	//--- no flat dry apron found in budget: _position is left as the original fixed offset.
+	//--- Build84 SPAWN-ON-ROADS (AI-only, gated WFBE_C_AICOM_SPAWN_ON_ROADS default 1): Ray wants AI-commander
+	//--- factory output to appear ON A ROAD near the owning factory (so fresh teams start on the road net and
+	//--- flow forward, not dumped on the raw apron off-road). Take the pad/apron _position resolved above as the
+	//--- reference and snap it to the CLOSEST road node within ~SNAP m; if no road is near, _position is left as
+	//--- the pad (fallback = current behaviour). Flag 0 => whole block skipped = pre-Build84 pad behaviour.
+	//--- A2-OA-safe: nearRoads + WFBE_CO_FNC_GetClosestEntity + getPos (same idiom as Common_BuildRoadRoute.sqf).
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_SPAWN_ON_ROADS", 1]) != 0) then {
+		private ["_padPos","_rds","_rdNode"];
+		_padPos = _position;
+		_rds = _padPos nearRoads (missionNamespace getVariable ["WFBE_C_AICOM_SPAWN_ROAD_RADIUS", 60]);
+		if (count _rds > 0) then {
+			_rdNode = [_padPos, _rds] Call WFBE_CO_FNC_GetClosestEntity;
+			if (!isNull _rdNode) then {_position = getPos _rdNode};
+		};
+	};
 };
 _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];  //--- queue-fix 2026-06-14: keys stored UPPERCASE (Init_Common.sqf:356) but _factoryType is mixed-case -> _longest was nil -> the stuck-head purge (_ret>_longest) NEVER fired. toUpper re-arms it.
 if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety floor so the deadline is always a real number
@@ -108,7 +123,7 @@ if (count _queu > 0) then {
 	_queu2 = _building getVariable "queu";
 };
 
-while {_id select 0 != _queu select 0} do {
+while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- queue-fix: guard empty shared queu (concurrent AI teams / player drain) -> keep polling instead of indexing [] (was: Generic error at [] select 0)
 	sleep 4;
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
@@ -117,17 +132,17 @@ while {_id select 0 != _queu select 0} do {
 		_gbq = (_team getVariable "wfbe_queue") - _id;
 		_team setVariable ["wfbe_queue",_gbq];
 		_queu = _building getVariable "queu";
-		_queu = _queu - [_queu select 0];
+		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 		_building setVariable ["queu",_queu,true];
 		if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
 
-	if (_queu select 0 == _queu2 select 0) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) == (_queu2 select 0)}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
-				_queu = _queu - [_queu select 0];
+				if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 				_building setVariable ["queu",_queu,true];
 			};
 		};
