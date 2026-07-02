@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
+Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades","_moveInPlace","_labelCullEnabled","_labelCullThreshold","_labelCulled","_regCount","_mapperfDiag","_mapperfNext"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -34,6 +34,20 @@ _lowFpsSince = -1;
 _rebuildCooldownUntil = 0;
 _rebuildFps = missionNamespace getVariable ["WFBE_C_MARKER_REBUILD_FPS", 15];
 
+// cmdcon43-b (Build 88): big-map FPS - marker render-pass levers. Read once at loop start; each
+// independently flag-gated. See Init_CommonConstants.sqf for what each does.
+//  - _moveInPlace: give the REBUILD path an in-place nudge (setMarker*Local) for markers that still
+//    exist, only falling back to delete+recreate for markers that are actually gone / need a heal.
+//  - label culling: when the registered unit-marker count is high, blank the TEXT on bulk unit
+//    markers (keep HQ + own-team + already-empty). Text is the expensive part of the A2 marker draw.
+//  - MAPPERF diag: one throttled RPT line while the big map is open so a soak can confirm the fix.
+_moveInPlace        = (missionNamespace getVariable ["WFBE_C_MARKER_MOVE_INPLACE", 1]) > 0;
+_labelCullEnabled   = (missionNamespace getVariable ["WFBE_C_MARKER_LABEL_CULL", 1]) > 0;
+_labelCullThreshold = missionNamespace getVariable ["WFBE_C_MARKER_LABEL_CULL_THRESHOLD", 120];
+_mapperfDiag        = (missionNamespace getVariable ["WFBE_C_MARKER_MAPPERF_DIAG", 1]) > 0;
+_labelCulled        = false; //--- current cull state (hysteresis-latched below)
+_mapperfNext        = 0;     //--- next diag_tickTime the MAPPERF line may fire (>=30s apart)
+
 _mapWasClosed = false;
 
 while {true} do {
@@ -46,6 +60,26 @@ while {true} do {
 	// under large AI wars. Default 30 = 150 markers/sec at 5 Hz; override via missionNamespace.
 	_budgetMax = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_PER_TICK", 30];
 	_budgetServiced = 0;
+
+	// cmdcon43-b (Build 88) LABEL CULLING (WFBE_C_MARKER_LABEL_CULL=1): decide once per tick whether the
+	// bulk unit markers should have their TEXT blanked. Text is the expensive part of the A2 big-map draw
+	// (each label is rasterised every frame the map is shown); at wide zoom with 150-400 own-side markers
+	// the labels dominate the render pass. When the registered-marker count crosses the threshold we blank
+	// the text on the anonymous unit dots (kept: HQ, the player's own group, and markers that are already
+	// blank) and restore it when back under. HYSTERESIS: engage at >= threshold, release only below
+	// threshold*0.85, so a count hovering on the line does not flip-flop the whole label set every tick.
+	// _regCount includes tombstones (compacted at >64), so it slightly over-counts near the boundary - fine
+	// for a soft load signal. Culling is a no-op while the map is closed (nothing is drawn anyway).
+	_regCount = count WFBE_CL_UnitMarkerRegistry;
+	if (_labelCullEnabled) then {
+		if (!_labelCulled) then {
+			if (_regCount >= _labelCullThreshold) then {_labelCulled = true};
+		} else {
+			if (_regCount < (_labelCullThreshold * 0.85)) then {_labelCulled = false};
+		};
+	} else {
+		_labelCulled = false;
+	};
 
 	// Marty: PERF2 map-open dirty pass - when map transitions from closed to open, reset
 	// every unit-marker nextDue to 0 so they all re-service immediately on this tick,
@@ -94,15 +128,31 @@ while {true} do {
 				_entry = _x;
 				_markerName = _entry select 1;
 				_tracked = _entry select 0;
-				deleteMarkerLocal _markerName;
 				if (isNull _tracked) then {
+					// Tombstoned unit: drop the marker outright (delete regardless of the in-place lever).
+					deleteMarkerLocal _markerName;
 					WFBE_CL_UnitMarkerRegistry set [_forEachIndex, 0];
 				} else {
-					createMarkerLocal [_markerName, getPos _tracked];
-					// PERF4 - rebuild re-creates the marker at the live position, so resync the
+					// cmdcon43-b (Build 88) IN-PLACE REBUILD (WFBE_C_MARKER_MOVE_INPLACE=1): the rebuild
+					// used to delete+recreate EVERY live marker - the heaviest possible way to touch an
+					// on-screen marker, and the whole registry does it at once (manual action / 60s-low-FPS
+					// auto). For a marker that still EXISTS the recreate is pure churn: we can nudge its
+					// position and re-assert its cached type/color/size/text in place with the same
+					// setMarker*Local calls the recreate path already used. Fall back to delete+recreate ONLY
+					// when the marker is actually GONE (markerType "" - culled/orphaned/never-drawn) so the
+					// "accumulated-state heal" intent of the rebuild is preserved for the cases that need it.
+					// A2-OA-1.64-safe: markerType read + setMarker*Local (all already used across this file).
+					_currentPos = getPos _tracked;
+					if (_moveInPlace && {(markerType _markerName) != ""}) then {
+						_markerName setMarkerPosLocal _currentPos;
+					} else {
+						deleteMarkerLocal _markerName;
+						createMarkerLocal [_markerName, _currentPos];
+					};
+					// PERF4 - rebuild redraws at the live position (in place or via recreate), so resync the
 					// position-delta cache (slot 18) to match what was just drawn; otherwise a stale
 					// lastPos could suppress the next legitimate move-write for a unit sitting near it.
-					_entry set [18, getPos _tracked];
+					_entry set [18, _currentPos];
 					if ((_entry select 16) == 1) then {
 						_markerName setMarkerTypeLocal (_entry select 7);
 						_markerName setMarkerColorLocal (_entry select 8);
@@ -321,6 +371,16 @@ while {true} do {
 							_targetMarkerText = Format["%1 | %2", _targetMarkerText, _cargoText];
 						};
 					};
+				};
+
+				// cmdcon43-b (Build 88) LABEL CULL override: while culling is engaged, blank the TEXT on the
+				// bulk anonymous unit markers so the big-map render pass stops rasterising hundreds of labels.
+				// KEEP text on the player's OWN group (the crew/AI-digit readout the player actually reads);
+				// HQ markers already exitWith'd above the text block, so they are never culled. The write goes
+				// through the SAME change-gated slot-12 cache below, so blanking is a single write per marker on
+				// engage and the real text is a single write per marker on release - no per-tick churn either way.
+				if (_labelCulled) then {
+					if (group _tracked != group player) then {_targetMarkerText = ""};
 				};
 
 				if (_targetMarkerText != (_entry select 12)) then {
@@ -554,6 +614,16 @@ while {true} do {
 
 	// Marty: PERF3 publish serviced count so Client_StateAudit can read it cheaply.
 	WFBE_CL_MarkerBudgetLastServiced = _budgetServiced;
+
+	// cmdcon43-b (Build 88) MAPPERF diag (WFBE_C_MARKER_MAPPERF_DIAG=1): one lightweight RPT line, at most
+	// once per 30s and ONLY while the full-screen map is open, so the 15-min soak can confirm the fix live
+	// without spamming the log. Independent of WF_Debug (always-on-but-throttled by design; a few lines/min
+	// worst case). fps = the diag reading this frame, reg = registered unit-marker count, culled = whether
+	// label culling is currently engaged. A2-OA-1.64-safe (diag_fps / diag_tickTime / diag_log / format).
+	if (_mapperfDiag && _mapVisible && {diag_tickTime >= _mapperfNext}) then {
+		_mapperfNext = diag_tickTime + 30;
+		diag_log format ["MAPPERF|v1|fps=%1|reg=%2|culled=%3", round diag_fps, _regCount, (if (_labelCulled) then {1} else {0})];
+	};
 
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {

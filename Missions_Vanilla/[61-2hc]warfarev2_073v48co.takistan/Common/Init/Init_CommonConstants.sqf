@@ -1224,6 +1224,22 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	BLINKING_VEHICLES_WEST = [];
 	BLINKING_VEHICLES_EAST = [];
 
+//--- cmdcon43-b (Build 88): BIG-MAP FPS - marker RENDER-pass mitigation. The consolidated marker loop
+//--- (Common\Common_MarkerLoop.sqf) gates identically on any map consumer, so the script load is the same
+//--- whether the player has the full-screen map (M) or a menu minimap open. The difference is the ENGINE
+//--- marker render pass: the big map draws every registered own-side unit marker + its TEXT label at wide
+//--- zoom (150-400 at peak), a menu minimap draws a handful. These flags cut the render + churn cost.
+//--- Each is INDEPENDENTLY toggleable and default-safe; both maps read the same constants (mirrored to TK).
+	if (isNil "WFBE_C_MARKER_MOVE_INPLACE") then {WFBE_C_MARKER_MOVE_INPLACE = 1};      //--- 1: refresh nudges marker pos/dir/text in place (setMarker*Local) instead of delete+recreate on the rebuild path. 0: legacy delete+recreate. Cheapest win; no visible change.
+	if (isNil "WFBE_C_MARKER_LABEL_CULL") then {WFBE_C_MARKER_LABEL_CULL = 1};          //--- 1: when registered unit markers exceed the threshold, blank the TEXT on bulk unit markers (keep HQ/own-team/named); restore under threshold. Text draw is the expensive part of the A2 marker pass. 0: never cull.
+	if (isNil "WFBE_C_MARKER_LABEL_CULL_THRESHOLD") then {WFBE_C_MARKER_LABEL_CULL_THRESHOLD = 120}; //--- Registered-unit-marker count at/above which label culling engages (hysteresis-guarded in the loop).
+	//--- SHELVED (item 3, not shipped): wide-zoom per-group AGGREGATION would need the map control's zoom to
+	//--- know when to collapse per-unit markers to one per group. The only zoom read is ctrlMapScale, which is
+	//--- Arma-3-only (unavailable in A2-OA 1.64 - verified: used nowhere in this map-heavy mission), and the
+	//--- brief forbids a zoom hack. No flag is registered (an inert never-read constant is just dead code); to
+	//--- revive, first find/confirm an A2-OA zoom source, then add WFBE_C_MARKER_GROUP_AGG here + a read path.
+	if (isNil "WFBE_C_MARKER_MAPPERF_DIAG") then {WFBE_C_MARKER_MAPPERF_DIAG = 1};      //--- 1: emit a throttled MAPPERF|v1 RPT line (<=1/30s while the big map is open) so a live soak can verify the fix. 0: silent.
+
 // Attack wave.
 	ATTACK_WAVE_PRICE_MODIFIER = 1;
 	ATTACK_WAVE_ACTIVE_WEST = false;
