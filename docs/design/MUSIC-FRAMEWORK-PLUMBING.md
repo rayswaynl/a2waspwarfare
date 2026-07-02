@@ -20,10 +20,10 @@ All hooks are client-local. No server loop, HC, AI, or stats path is touched.
 | `wf_music_town_capture` | `Music/wasp_town_capture.ogg` |
 | `wf_music_victory` | `Music/wasp_victory.ogg` |
 
-The repo currently ships only the legacy `wf_outro` audio. Leave `WFBE_C_MUSIC_ENABLE=0` until the expected files are present in both maintained mission roots.
+The repo currently ships only the legacy `wf_outro` audio. Leave `WFBE_C_MUSIC_ENABLE=0` until the expected files are present in Chernarus and both generated Vanilla map roots.
 
 ## Notes
 
 - Use `CfgMusic` plus `playMusic` for soundtrack tracks. Do not route this through `CfgSounds` just to chase volume: A2 OA `playSound` volume is not reliably quieted by description.ext volume values in the way this lane needs.
-- Keep the files mission-relative under `Music/` so LoadoutManager mirrors them to Takistan.
+- Keep the files mission-relative under `Music/` so LoadoutManager mirrors them to Takistan and Zargabad.
 - Do not enable the framework in the same PR that adds plumbing. Audio choice, length, and live enablement are owner calls.
