@@ -39,22 +39,28 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSuppl
 if (isServer) then {
 	//--- Patrols.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
-		['CDF_Soldier_TL','CDF_Soldier_MG','CDF_Soldier_Sniper','CDF_Soldier_Medic'], 
+		['CDF_Soldier_TL','CDF_Soldier_MG','CDF_Soldier_Sniper','CDF_Soldier_Medic'],
 		['CDF_Soldier_TL','CDF_Soldier_AR','CDF_Soldier_GL','CDF_Soldier_RPG','CDF_Soldier'],
-		['UAZ_MG_CDF','UAZ_AGS30_CDF']
+		['UAZ_MG_CDF','UAZ_AGS30_CDF'],
+		//--- mixed technical (cmdcon41-w3e): UAZ MG + dismounted AT/MG screen (spawns crewed + on foot).
+		['UAZ_MG_CDF','CDF_Soldier_TL','CDF_Soldier_RPG','CDF_Soldier_MG']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['BRDM2_CDF','BRDM2_ATGM_CDF'], 
+		['BRDM2_CDF','BRDM2_ATGM_CDF'],
 		['Ural_CDF','CDF_Soldier_TL','CDF_Soldier_RPG','CDF_Soldier_MG','CDF_Soldier_RPG'],
-		['BMP2_CDF','CDF_Soldier_Strela','CDF_Soldier_Strela','CDF_Soldier_Medic']
+		['BMP2_CDF','CDF_Soldier_Strela','CDF_Soldier_Strela','CDF_Soldier_Medic'],
+		//--- AA picket (cmdcon41-w3e): ZU-23 truck + Strela dismounts.
+		['Ural_ZU23_CDF','CDF_Soldier_Strela','CDF_Soldier_TL','CDF_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['T72_CDF','BMP2_CDF'], 
+		['T72_CDF','BMP2_CDF'],
 		['T72_CDF','T72_CDF'],
 		['BMP2_CDF','BMP2_CDF','CDF_Soldier_TL','CDF_Soldier_MG','CDF_Soldier_Marksman','CDF_Soldier_Medic','CDF_Soldier_RPG','CDF_Soldier_RPG','CDF_Soldier'],
-		['BMP2_CDF','CDF_Soldier_TL','CDF_Soldier_Medic','CDF_Soldier_GL','CDF_Soldier','CDF_Soldier_AR']
+		['BMP2_CDF','CDF_Soldier_TL','CDF_Soldier_Medic','CDF_Soldier_GL','CDF_Soldier','CDF_Soldier_AR'],
+		//--- AA picket at HEAVY (cmdcon41-w3e): ZU-23 truck + BMP-2 + Strela dismounts - air deterrent.
+		['Ural_ZU23_CDF','BMP2_CDF','CDF_Soldier_Strela','CDF_Soldier_Strela','CDF_Soldier_TL']
 	]];
 	
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].
