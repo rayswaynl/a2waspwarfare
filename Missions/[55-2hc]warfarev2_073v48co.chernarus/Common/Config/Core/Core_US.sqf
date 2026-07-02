@@ -308,4 +308,30 @@ for '_z' from 0 to (count _c)-1 do {
 	};
 };
 
+//--- cmdcon42-i: Takistan-only EASA-loadout air variant roster (WEST/US rows).
+//--- Each synthetic buy token is registered as a DEEP COPY of its already-resolved base-hull buy tuple
+//--- (so crew [4]/turrets [9]/picture [1] are byte-identical to the real hull the buy dialog + Client_BuildUnit
+//--- read), then name [0], price [2] and air-research level [5] (QUERYUNITUPGRADE) are overridden. The token
+//--- is remapped to its base hull in Client_BuildUnit BEFORE createVehicle and armed with the kit there.
+//--- Mirrors the AH6X_M134 precedent (PR #151 / commit a6a61a098). Catalog is TAKISTAN + flag gated internally
+//--- (returns [] on Chernarus or when WFBE_C_TK_EASA_ROSTER <= 0), so this whole block is a no-op on Chernarus.
+private ["_tkEasaRoster","_tkeRow","_tkeBase","_tkeTuple"];
+_tkEasaRoster = Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf";
+{
+	_tkeRow = _x;
+	if ((_tkeRow select 2) == "US") then {
+		_tkeBase = missionNamespace getVariable (_tkeRow select 1); //--- resolved base-hull tuple (registered above)
+		if (!isNil "_tkeBase") then {
+			_tkeTuple = +_tkeBase;                                   //--- deep copy: inherits [1] picture, [4] crew, [6] factory, [9] turrets
+			_tkeTuple set [QUERYUNITLABEL,   _tkeRow select 3];      //--- [0] display name
+			_tkeTuple set [QUERYUNITPRICE,   _tkeRow select 4];      //--- [2] price
+			_tkeTuple set [QUERYUNITUPGRADE, _tkeRow select 5];      //--- [5] air-research level gate
+			missionNamespace setVariable [(_tkeRow select 0), _tkeTuple];
+			diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_US: Registered TK-EASA variant token '%1' (base %4).",(_tkeRow select 0),diag_frameno,diag_tickTime,(_tkeRow select 1)];
+		} else {
+			diag_log Format ["[WFBE (WARNING)] Core_US: TK-EASA base hull '%1' not registered - variant '%2' hidden.",(_tkeRow select 1),(_tkeRow select 0)];
+		};
+	};
+} forEach _tkEasaRoster;
+
 diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_US: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];

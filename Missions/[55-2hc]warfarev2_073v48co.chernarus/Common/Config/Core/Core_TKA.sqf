@@ -274,4 +274,26 @@ for '_z' from 0 to (count _c)-1 do {
 	};
 };
 
+//--- cmdcon42-i: Takistan-only EASA-loadout air variant roster (EAST/TKA rows). See Core_US.sqf for the
+//--- mechanism (deep-copy the resolved base-hull tuple, override name/price/air-tier, remap+arm in
+//--- Client_BuildUnit). Catalog is TAKISTAN + flag gated internally, so on Chernarus this block is a no-op.
+private ["_tkEasaRoster","_tkeRow","_tkeBase","_tkeTuple"];
+_tkEasaRoster = Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf";
+{
+	_tkeRow = _x;
+	if ((_tkeRow select 2) == "TKA") then {
+		_tkeBase = missionNamespace getVariable (_tkeRow select 1); //--- resolved base-hull tuple (registered above)
+		if (!isNil "_tkeBase") then {
+			_tkeTuple = +_tkeBase;                                   //--- deep copy: inherits [1] picture, [4] crew, [6] factory, [9] turrets
+			_tkeTuple set [QUERYUNITLABEL,   _tkeRow select 3];      //--- [0] display name
+			_tkeTuple set [QUERYUNITPRICE,   _tkeRow select 4];      //--- [2] price
+			_tkeTuple set [QUERYUNITUPGRADE, _tkeRow select 5];      //--- [5] air-research level gate
+			missionNamespace setVariable [(_tkeRow select 0), _tkeTuple];
+			diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_TKA: Registered TK-EASA variant token '%1' (base %4).",(_tkeRow select 0),diag_frameno,diag_tickTime,(_tkeRow select 1)];
+		} else {
+			diag_log Format ["[WFBE (WARNING)] Core_TKA: TK-EASA base hull '%1' not registered - variant '%2' hidden.",(_tkeRow select 1),(_tkeRow select 0)];
+		};
+	};
+} forEach _tkEasaRoster;
+
 diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_TKA: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];
