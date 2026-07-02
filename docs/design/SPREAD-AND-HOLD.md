@@ -1,6 +1,30 @@
-# Design: SPREAD + HOLD — the real capture tuning (morning patch)
+# Design: SPREAD + HOLD - capture tuning status
 
 Fleet `wg2d9lgvs` (2 Explore analyses + synthesis), line-verified against build84 Chernarus.
+
+## Build 86 live status (2026-07-02)
+
+This design is implemented on the build84/cmdcon36 line. The sections below remain useful as the original
+diagnosis and rollback notes, but they are no longer a pending morning patch.
+
+Live anchors:
+- `Common/Init/Init_CommonConstants.sqf:560` defaults `WFBE_C_AICOM2_FIST_TOWNS = 2`.
+- `Common/Init/Init_CommonConstants.sqf:731-734` defaults spread and hold on: `WFBE_C_AICOM_SPREAD_MODE = 1`,
+  `WFBE_C_AICOM2_FIST_PERTOWN = 4`, `WFBE_C_AICOM_HOLD_MODE = 1`, `WFBE_C_AICOM_HOLD_SECS = 180`.
+- `Server/AI/Commander/AI_Commander_Allocate.sqf:234-280` applies the cap-aware fist assignment.
+- `Server/AI/Commander/AI_Commander_AssignTowns.sqf:247-265` preserves a live holder's assignment and clears stale latches.
+- `Common/Functions/Common_RunCommanderTeam.sqf:1841-1855` claims the first-captor hold and emits `HOLD-CLAIM`.
+- `Client/GUI/GUI_Menu_Command.sqf:391` and `Server/Functions/Server_HandleSpecial.sqf:649-727` already understand
+  `wfbe_aicom_holding_town`.
+
+Open follow-up:
+- Soak a full commander round and confirm captures distribute across more than one front town, `HOLD-CLAIM` appears
+  after flips, and owned-town count climbs instead of see-sawing at one town per side.
+- Keep `NO-TOWN-UNCAPTURABLE.md` shelved unless post-soak evidence proves a specific town is still uncrackable; the
+  old escalation design fights this spread cap by concentrating too many teams on one town.
+
+## Historical design plan
+
 **Context:** cmdcon40 CONFIRMED the AI captures towns (CAPTURED=6). Remaining live problems at match-min 60:
 (A) **dogpile** — ~7 teams funnel onto ONE enemy town (Khelm); (B) **no hold** — every captor immediately
 retargets+leaves → town flips back → see-saw → territory stuck at 1/side even with a 2:1 strength lead.

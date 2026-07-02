@@ -1,10 +1,38 @@
-# Design: AICOM aircraft — spawn at owned airfield + respect factory research (morning patch)
+# Design: AICOM aircraft - airfield spawn and research-gate status
 
 **Ray (2026-07-02, live):** "I now own an airfield and the AI commander just spawns high-tier helicopters
 at base. (1) They should spawn on the airstrip at the airport owned by the faction. (2) They should respect
 factory levels — I had no Aircraft Factory 1 researched and it still built aircraft."
 
-Fleet diagnosis `a2a87bb4` (read-only, validated against code). **Design/plan — implement in the morning.**
+Fleet diagnosis `a2a87bb4` (read-only, validated against code). The original plan is preserved below as
+historical context; the current live status follows first.
+
+## Build 86 live status (2026-07-02)
+
+Bug 1 is implemented. Bug 2 is still a balance/research-policy decision, not a safe one-line cleanup.
+
+Live anchors:
+- `Server/AI/Commander/AI_Commander_Teams.sqf:1048-1066` now detects any air template with `_isAirTeam` and
+  sends helicopters as well as planes to an owned airfield.
+- `Server/AI/Commander/AI_Commander_Teams.sqf:1074-1079` prefers nearby `HeliH` pads for helicopter spawns and
+  keeps runway heading / fly-start behavior plane-only.
+- `Common/Init/Init_CommonConstants.sqf:329` still defaults `WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI = 1`, so a held
+  Aircraft Factory can waive the air research gate for helis.
+- `Common/Init/Init_CommonConstants.sqf:337` still defaults `WFBE_C_AICOM_AIRFIELD_FREE_AIR = 1`, so a captured
+  airfield can waive air research for airfield-origin air buys.
+- `Server/AI/Commander/AI_Commander_Teams.sqf:272-330` contains the live heli/airfield waiver logic.
+- `Server/AI/Commander/AI_Commander.sqf:528-626` can eventually buy AIR through the wealth-driven upgrade sink, but
+  that is not the deliberate Aircraft Factory research accelerator described in the original plan.
+
+Open follow-up:
+- Do not flip `WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI` to `0` by itself; that risks suppressing AICOM helicopter
+  use until AIR research happens through a separate path.
+- If strict research gating is desired, pair the flag flip with a deliberate AIR research rule gated on held Aircraft
+  Factory or captured airfield, then soak to prove AICOM still flies from the owned airfield.
+- Recheck any future code change against the open aircraft-related work in PR `#151` (`claude/cmdcon42-ah6x`) and
+  PR `#172` (`claude/cmdcon42-tkair`) before editing the live aircraft path.
+
+## Historical diagnosis
 
 ## Bug 1 — helis spawn at BASE, not the owned airfield
 The founding spawn-position block `AI_Commander_Teams.sqf:1039-1066` gates the airfield relocation on
