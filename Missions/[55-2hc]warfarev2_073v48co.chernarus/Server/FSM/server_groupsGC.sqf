@@ -97,6 +97,9 @@ while {!WFBE_GameOver} do {
 					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
 				};
+				//--- cmdcon42-k: the re-adoption ceiling honours the same team-target delta+floor the founding
+				//--- loop applies (Ray: -3 teams/commander) so GC cannot re-adopt teams the founding lane retires.
+				_baseCap = (_baseCap + (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_DELTA", -3])) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 3]);
 
 				//--- Nearest uncaptured town to the HQ = the front objective for re-task (same OA-safe
 				//--- sideID filter as AI_Commander_AssignTowns:32). Fallback: enemy HQ direction is implicit
