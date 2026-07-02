@@ -503,6 +503,67 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		_flat  = _pos isFlatEmpty [12, 0, 2, 12, 0, false, objNull];
 		if (count _flat > 0) then {_lzPos = _flat} else {_lzPos = _pos};
 
+		//--- ===================================================================
+		//--- cmdcon42 HOT-LZ PARADROP DECISION (Ray 2026-07-02, gate WFBE_C_AICOM_AIR_PARADROP default-ON):
+		//--- if the transport would insert onto a CONTESTED or ENEMY-HELD LZ, the infantry PARADROPS (reuses the
+		//--- proven no-flat-LZ EJECT fallback below) instead of the heli descending to land in the depot guns. ONE
+		//--- bounded, decision-time evaluation - NO per-tick scans. Hot when EITHER:
+		//---   (a) the LZ's nearest town is not our side (town logic getVariable "sideID" - broadcast, readable on the
+		//---       HC where this runs; neutral/GUER/enemy all treated as jump-worthy), OR
+		//---   (b) any HOSTILE unit (the ((side _team) getFriend (side _x)) < 0.6 idiom used elsewhere in this file) is
+		//---       inside WFBE_C_AICOM_AIR_PARADROP_SCAN_R of the LZ (one nearEntities scan).
+		//--- On a hot LZ we hand the Spawn a DROP POINT that is WFBE_C_AICOM_AIR_PARADROP_OFFSET m SHORT of the town
+		//--- centre, back along the heli->town approach vector, and an EMPTY flat-list so the existing branch takes the
+		//--- para path (the transport holds altitude, ejects there, then flies home/despawns exactly as today). A2-OA-safe:
+		//--- getVariable "sideID" on a TOWN OBJECT (objects accept the [name,default] form; only GROUPS reject it),
+		//--- getFriend/nearEntities, plain atan2 position-delta bearing (binary getDir is A3-only). NEVER-FROZEN: this only
+		//--- chooses jump-vs-land; either way the pax get their unconditional post-insert doMove _obj into the order loop.
+		private ["_forceDrop","_dropLz","_hotTown","_hotReason"];
+		_forceDrop = false;
+		_dropLz    = _lzPos;
+		_hotReason = "";
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP", 1]) > 0) then {
+			//--- (a) LZ town ownership: nearest town to the LZ, its broadcast sideID vs our sideID.
+			_hotTown = objNull;
+			if (count towns > 0) then {_hotTown = [_lzPos, towns] Call WFBE_CO_FNC_GetClosestEntity};
+			if (!isNull _hotTown && {(_hotTown getVariable ["sideID", -1]) != _sideID}) then {
+				_forceDrop = true;
+				_hotReason = "enemy-town";
+			};
+			//--- (b) enemies near the LZ: ONE decision-time hostile scan (skip if (a) already tripped).
+			if (!_forceDrop) then {
+				private ["_scanR","_hostiles"];
+				_scanR = missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_SCAN_R", 400];
+				_hostiles = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_lzPos nearEntities [["Man","LandVehicle","Tank"], _scanR]);
+				if (_hostiles > 0) then {
+					_forceDrop = true;
+					_hotReason = "contested";
+				};
+			};
+			//--- On a hot LZ, resolve a drop point OFFSET m short of the town centre, back along the heli->town vector, so
+			//--- the jumpers do not eject directly over the depot guns. Fall back to the raw LZ if geometry is degenerate.
+			if (_forceDrop) then {
+				private ["_offset","_tc","_hp","_brg","_seg","_tcName"];
+				_offset = missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_OFFSET", 250];
+				_tc = if (!isNull _hotTown) then {getPos _hotTown} else {_lzPos};
+				_hp = getPos _airVeh;                                     //--- heli origin = approach source.
+				_seg = _hp distance _tc;
+				if (_seg > 5) then {
+					//--- bearing heli -> town (A2-safe atan2 position-delta; binary getDir is A3-only).
+					_brg = ((_tc select 0) - (_hp select 0)) atan2 ((_tc select 1) - (_hp select 1));
+					//--- eject point = town centre pulled back _offset m toward the heli (clamped so we never overshoot past the heli).
+					if (_offset > (_seg - 20)) then {_offset = (_seg - 20) max 0};
+					_dropLz = [ (_tc select 0) - (_offset * sin _brg), (_tc select 1) - (_offset * cos _brg), 0 ];
+				} else {
+					_dropLz = _lzPos;
+				};
+				_tcName = if (!isNull _hotTown) then {_hotTown getVariable ["name","?"]} else {"pos"};
+				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIR_PARADROP|team=" + (str _team) + "|town=" + _tcName + "|reason=" + _hotReason);
+				["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] HOT-LZ paradrop into [%3] (reason %4) - ejecting %5m short.", _side, _team, _tcName, _hotReason, _offset]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+		//--- ===================================================================
+
 		//--- Pre-compute the heli's build cost NOW (clean scope) so the disembark
 		//--- Spawn can REFUND it to the AI-commander treasury after a successful
 		//--- fly-off to the map edge. Mirrors the canonical price lookup used by
@@ -517,6 +578,9 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 
 		//--- Fly the heli to the objective and unload. doMove + flyInHeight, then
 		//--- land+disembark when close (heli-land) OR para-eject if no flat LZ.
+		//--- cmdcon42 HOT-LZ: force the para branch by handing the Spawn the OFFSET drop point as the LZ and an EMPTY
+		//--- flat-list, so the run-in halts short of the town and the existing (count _fl > 0) land-gate is false -> eject.
+		if (_forceDrop) then {_lzPos = _dropLz; _flat = []};
 		[_airVeh, _lzPos, _flat, _lifted, _team, _pos, _side, _sideID, _heliCost] Spawn {
 			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew"];
 			_h    = _this select 0;
