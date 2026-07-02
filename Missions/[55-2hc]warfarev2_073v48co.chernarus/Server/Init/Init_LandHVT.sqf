@@ -59,4 +59,47 @@ _siteMkrName setMarkerSize [0.8, 0.8];
 //--- On CH this file never runs (worldName gate above) so no double-write risk.
 missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_siteLogic]];
 
+//--- SCUD pad proximity reference (mirrors Init_NavalHVT.sqf line 284-289 idiom).
+//--- On the naval path the pad is a physical HeliHCivil on the carrier deck; here we
+//--- place an identical invisible static at the site's surface position so the same
+//--- wfbe_scud_pad_ref variable and the 50m proximity gate work unchanged on TK.
+//--- Support_ScudStrike.sqf reads wfbe_scud_pad_ref from _loc (the platform logic); if
+//--- it is objNull the reward is silently inaccessible — this write makes it valid.
+private ["_sitePad","_sitePadPos"];
+_sitePadPos = getPos _siteLogic;
+_sitePad = createVehicle ["HeliHCivil", [_sitePadPos select 0, _sitePadPos select 1, 0], [], 0, "NONE"];
+_sitePad setPosASL [_sitePadPos select 0, _sitePadPos select 1, _sitePadPos select 2];
+_sitePad enableSimulation false;
+_sitePad allowDamage false;
+_sitePad setVariable ["wfbe_is_scud_pad", true, true];
+_siteLogic setVariable ["wfbe_scud_pad_ref", _sitePad, true];
+
+//--- SCUD ADDACTION proximity loop — mirrors Init_NavalHVT.sqf lines 293-320 exactly.
+//--- While the site exists, any owning-side team-leader within 50m of the pad gets the
+//--- fire-SCUD addAction dispatched to their client (HandleSpecial case "scud-action-add").
+//--- The wfbe_scud_action_armed latch (same as naval) ensures each player is signalled once.
+//--- CH stays fully inert: the worldName != "takistan" exit above fires before we reach here.
+[_siteLogic, _sitePad] spawn {
+	private ["_loc","_pad","_sideID","_ownerSide","_team","_isLeader","_x"];
+	_loc = _this select 0;
+	_pad = _this select 1;
+	while { !WFBE_GameOver } do {
+		sleep 15;
+		_sideID    = _loc getVariable ["sideID", WFBE_C_GUER_ID];
+		_ownerSide = _sideID Call WFBE_CO_FNC_GetSideFromID;
+		{
+			if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _pad) < 50}) then {
+				_team = group _x;
+				_isLeader = (_x == leader _team);
+				if (_isLeader) then {
+					if (isNil {_x getVariable "wfbe_scud_action_armed"}) then {
+						_x setVariable ["wfbe_scud_action_armed", true];
+						[getPlayerUID _x, "HandleSpecial", ["scud-action-add"]] Call WFBE_CO_FNC_SendToClients;
+					};
+				};
+			};
+		} forEach playableUnits;
+	};
+};
+
 ["INITIALIZATION", Format ["Init_LandHVT.sqf : Rasman SCUD Site wired as land HVT platform at %1.", getPos _siteLogic]] Call WFBE_CO_FNC_LogContent;
