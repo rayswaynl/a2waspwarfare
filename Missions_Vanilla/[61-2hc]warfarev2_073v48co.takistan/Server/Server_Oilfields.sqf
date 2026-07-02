@@ -355,15 +355,15 @@ if ((missionNamespace getVariable ["WFBE_C_OILFIELD_PREMARK", 1]) == 1) then {
 		_mkr setMarkerSize [1, 1];
 	};
 	_remain = _unlockAt - time;
-	_mkr setMarkerText (Format [_preFmt, ([_remain] Call WFBE_FNC_OilfieldFmtMMSS)]);
+	_mkr setMarkerText (Format [_preFmt, ((_remain) Call WFBE_FNC_OilfieldFmtMMSS)]);
 	diag_log Format ["OILFIELD|v3|PREMARK|t=%1|pos=%2|remain=%3|upd=%4", round time, _nodePos, round _remain, _preUpd];
-	["INFORMATION", Format ["Server_Oilfields.sqf: PRE-UNLOCK marker [%1] created at %2 (opens in %3, countdown every %4s).", _mkr, _nodePos, ([_remain] Call WFBE_FNC_OilfieldFmtMMSS), _preUpd]] Call WFBE_CO_FNC_LogContent;
+	["INFORMATION", Format ["Server_Oilfields.sqf: PRE-UNLOCK marker [%1] created at %2 (opens in %3, countdown every %4s).", _mkr, _nodePos, ((_remain) Call WFBE_FNC_OilfieldFmtMMSS), _preUpd]] Call WFBE_CO_FNC_LogContent;
 
 	//--- Countdown loop: refresh the label on the coarse cadence until unlock. Optional one-shot T-5min
 	//--- DashboardAnnounce garnish (same PREMARK flag; skipped if the message is "").
 	while { time <= _unlockAt } do {
 		_remain = _unlockAt - time;
-		_mkr setMarkerText (Format [_preFmt, ([_remain] Call WFBE_FNC_OilfieldFmtMMSS)]);
+		_mkr setMarkerText (Format [_preFmt, ((_remain) Call WFBE_FNC_OilfieldFmtMMSS)]);
 		if (!_t5Fired && _remain <= 300 && _remain > 0 && _t5Msg != "") then {
 			_t5Fired = true;
 			[nil, "DashboardAnnounce", [_t5Msg]] Call WFBE_CO_FNC_SendToClients;
