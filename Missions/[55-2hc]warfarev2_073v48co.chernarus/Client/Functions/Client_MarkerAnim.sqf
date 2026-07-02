@@ -30,7 +30,7 @@ if (_additionalErase != "") then {
 };
 
 while {activeAnimMarker} do {
-	sleep 0.03;
+	sleep (missionNamespace getVariable ["WFBE_C_MARKER_ANIM_LOOP_SLEEP", 0.03]);
 
 	_direction = (_direction + 1) % 360;
 	_markerName setMarkerDirLocal _direction;

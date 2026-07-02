@@ -107,7 +107,7 @@ _logic spawn {
 		};
 		if (isNil "BIS_CONTROL_CAM") exitWith {};
 		showCommandingMenu "#USER:BIS_Coin_categories_0";
-		sleep 0.01;
+		sleep (missionNamespace getVariable ["WFBE_C_COIN_MENU_LOOP_SLEEP", 0.01]);
 	};
 };
 
@@ -959,7 +959,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 		};
 	};
 	_oldMenu = commandingMenu;
-	sleep 0.01;
+	sleep (missionNamespace getVariable ["WFBE_C_COIN_MAIN_LOOP_SLEEP", 0.01]);
 };
 112200 cuttext ["","plain"]; //---added-MrNiceGuy
 showCommandingMenu '';

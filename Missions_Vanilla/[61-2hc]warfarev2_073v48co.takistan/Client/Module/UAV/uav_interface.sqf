@@ -125,7 +125,7 @@ _IGUI_update = [] spawn {scriptName "UAV\data\scripts\uav_interface.sqf: IGUI Up
 		};
 		((uinamespace getvariable "BIS_UAV_DISPLAY") displayctrl 112411) ctrlsettext str (round speed _uav);
 		((uinamespace getvariable "BIS_UAV_DISPLAY") displayctrl 112411) ctrlcommit 0;
-		sleep 0.01;
+		sleep (missionNamespace getVariable ["WFBE_C_UAV_IGUI_LOOP_SLEEP", 0.01]);
 	};
 };
 

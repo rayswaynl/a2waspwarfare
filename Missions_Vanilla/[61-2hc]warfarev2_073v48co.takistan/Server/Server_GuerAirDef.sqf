@@ -45,7 +45,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_allUnits"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -156,6 +156,7 @@ publicVariable "WFBE_ACTIVE_GUER_AIR";
 
 while {!WFBE_GameOver} do {
 	sleep _interval;
+	_allUnits = allUnits;
 
 	private ["_now","_kept","_townsWithAir","_aliveCount"];
 	_now = time;
@@ -189,7 +190,7 @@ while {!WFBE_GameOver} do {
 
 		//--- Refresh last-enemy timestamp (enemies of GUER = west + east near the town).
 		if (!_drop && !(isNull _eTown)) then {
-			_enemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _eTown) < ((_eTown getVariable ["range", 600]) max 600)}} count allUnits;
+			_enemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _eTown) < ((_eTown getVariable ["range", 600]) max 600)}} count _allUnits;
 			if (_enemiesNow > 0) then { _eLastEnemy = _now; };
 		};
 
@@ -249,7 +250,7 @@ while {!WFBE_GameOver} do {
 
 		//--- Refresh last-enemy timestamp (west + east near the town).
 		if (!_dDrop && !(isNull _dTown)) then {
-			_dEnemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _dTown) < ((_dTown getVariable ["range", 600]) max 600)}} count allUnits;
+			_dEnemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _dTown) < ((_dTown getVariable ["range", 600]) max 600)}} count _allUnits;
 			if (_dEnemiesNow > 0) then { _dLastEnemy = _now; };
 		};
 
@@ -282,7 +283,7 @@ while {!WFBE_GameOver} do {
 			_pos = getPos _town;
 
 			//--- Enemies near the town (west + east, GUER's foes).
-			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count allUnits;
+			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count _allUnits;
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - the counter-air trigger. Scanned over
 			//--- `vehicles` (hull objects); side comes from the crewed hull, so an empty parked heli reads CIV

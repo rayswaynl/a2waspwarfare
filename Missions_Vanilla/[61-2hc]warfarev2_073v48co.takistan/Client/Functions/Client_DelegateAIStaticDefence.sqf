@@ -50,12 +50,23 @@ _watchedGrps = [];
 		[_watchedGrps, _grp] call WFBE_CO_FNC_ArrayPush;
 	};
 } forEach _teams;
+//--- wiki-wins: cap the watcher; WFBE_C_StaticDefCorpseDrain=1 enables fast-drain with player/locality guards.
 {
 	_x Spawn {
-		Private ["_team"];
+		Private ["_team", "_corpseMode", "_u", "_prox"];
 		_team = _this;
-		private "_wDeadline"; _wDeadline = time + 600; //--- wiki-wins: cap the watcher (was unbounded; a zombified/never-emptied group leaked this spawned thread for the rest of the mission)
+		_corpseMode = missionNamespace getVariable ["WFBE_C_StaticDefCorpseDrain", 0];
+		private "_wDeadline"; _wDeadline = time + 600;
+		if (_corpseMode > 0) then {
+			_prox = missionNamespace getVariable ["WFBE_C_UNITS_BODIES_PROX", 30];
+			while {({alive _x} count (units _team)) > 0 && time < _wDeadline} do {sleep 1};
+			{
+				_u = _x;
+				if (!(isPlayer _u) && {!(alive _u)} && {!(isNull _u)} && {local _u} && {(({isPlayer _x && {alive _x} && {(_x distance _u) < _prox}} count allPlayers)) == 0}) then {deleteVehicle _u};
+			} forEach (units _team);
+		} else {
 			while {count (units _team) > 0 && time < _wDeadline} do {sleep 1};
+		};
 		deleteGroup _team;
 	};
 } forEach _watchedGrps;

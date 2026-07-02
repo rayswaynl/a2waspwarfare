@@ -1696,5 +1696,18 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_BANK_MODEL_V2") then {WFBE_C_BANK_MODEL_V2 = 1};
 	if (isNil "WFBE_C_BANK_MODEL_V2_CLASS") then {WFBE_C_BANK_MODEL_V2_CLASS = "Land_A_Office01_EP1"};
 
+//--- Tier 3 foundations: 5 new flag-gated constants, each defaulting to the original behaviour.
+//--- WFBE_C_StaticDefCorpseDrain: 0 = current watcher (wait for group empty, then deleteGroup);
+//---   1 = fast-drain (delete dead non-player bodies once all alive units are gone, locality+prox guarded).
+if (isNil "WFBE_C_StaticDefCorpseDrain")    then {WFBE_C_StaticDefCorpseDrain = 0};
+//--- WFBE_C_COIN_MENU_LOOP_SLEEP: sleep in the CoIn menu-restore sub-loop (default = original 0.01s cadence).
+if (isNil "WFBE_C_COIN_MENU_LOOP_SLEEP")    then {WFBE_C_COIN_MENU_LOOP_SLEEP = 0.01};
+//--- WFBE_C_COIN_MAIN_LOOP_SLEEP: sleep in the CoIn main while-loop (default = original 0.01s cadence).
+if (isNil "WFBE_C_COIN_MAIN_LOOP_SLEEP")    then {WFBE_C_COIN_MAIN_LOOP_SLEEP = 0.01};
+//--- WFBE_C_UAV_IGUI_LOOP_SLEEP: sleep in the UAV IGUI update loop (default = original 0.01s cadence).
+if (isNil "WFBE_C_UAV_IGUI_LOOP_SLEEP")     then {WFBE_C_UAV_IGUI_LOOP_SLEEP = 0.01};
+//--- WFBE_C_MARKER_ANIM_LOOP_SLEEP: sleep in the Client_MarkerAnim while loop (default = original 0.03s cadence).
+if (isNil "WFBE_C_MARKER_ANIM_LOOP_SLEEP")  then {WFBE_C_MARKER_ANIM_LOOP_SLEEP = 0.03};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

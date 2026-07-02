@@ -172,7 +172,7 @@ if (_sideJoined in [west, east]) then {
 			_id publicVariableClient _aiKey;
 			_aiSent = _aiSent + 1;
 		};
-	} forEach ["WFBE_AICOM_INTENT_%1","WFBE_AICOM_OBJNAME_%1","WFBE_AICOM_OBJPOS_%1","WFBE_AICOM_ACTIVE_%1","WFBE_AICOM_FOCUS_NAME_%1","WFBE_AICOM_TEAMS_%1","WFBE_AICOM_FUNDS_%1"];
+	} forEach ["WFBE_AICOM_INTENT_%1","WFBE_AICOM_OBJNAME_%1","WFBE_AICOM_OBJPOS_%1","WFBE_AICOM_ACTIVE_%1","WFBE_AICOM_FOCUS_NAME_%1"];
 	if (_aiSent > 0) then {diag_log format ["[WFBE][B74.2 AICOM-JIP] pushed %1 AI intent/status vars to joiner %2 for side %3", _aiSent, _name, _sideJoined]};
 };
 

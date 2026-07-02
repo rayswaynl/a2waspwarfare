@@ -341,17 +341,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			if ((missionNamespace getVariable [_fKey, ""]) != _focusNm) then {
 				missionNamespace setVariable [_fKey, _focusNm]; publicVariable _fKey;
 			};
-			private ["_tKey","_uKey","_teamsN","_fundsN"];
-			_tKey = format ["WFBE_AICOM_TEAMS_%1", _myID];
-			_uKey = format ["WFBE_AICOM_FUNDS_%1", _myID];
-			_teamsN = count (_logik getVariable ["wfbe_teams", []]);
-			_fundsN = (_side) Call GetAICommanderFunds;
-			if ((missionNamespace getVariable [_tKey, -1]) != _teamsN) then {
-				missionNamespace setVariable [_tKey, _teamsN]; publicVariable _tKey;
-			};
-			if ((missionNamespace getVariable [_uKey, -1]) != _fundsN) then {
-				missionNamespace setVariable [_uKey, _fundsN]; publicVariable _uKey;
-			};
+
 		};
 
 		//--- Town auto-assign: worker self-gates per team by delegation.
