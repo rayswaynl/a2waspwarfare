@@ -48,7 +48,7 @@ class Mission
 					position[]={4071.37,0,4183.32};
 					vehicle="LocationLogicDepot";
 					text="Zargabad";
-					init="nullReturn=[this,\"Zargabad\",\"+\",30,120,1200,[\"HugeTown1\",\"HugeTown2\"]] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Zargabad"",""+"",30,120,1200,[""HugeTown1"",""HugeTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=0;
 					synchronizations[]={1,2,3,4,5};
 				};
@@ -70,7 +70,7 @@ class Mission
 				{
 					position[]={3900,0,4000};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MG\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MG""]];";
 					id=3;
 					synchronizations[]={0};
 				};
@@ -78,7 +78,7 @@ class Mission
 				{
 					position[]={4250,0,4400};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"AA\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""AA""]];";
 					id=4;
 					synchronizations[]={0};
 				};
@@ -86,7 +86,7 @@ class Mission
 				{
 					position[]={4080,0,3900};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MGNest\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MGNest""]];";
 					id=5;
 					synchronizations[]={0};
 				};
@@ -102,7 +102,7 @@ class Mission
 					position[]={3386.26,0,4082.67};
 					vehicle="LocationLogicDepot";
 					text="ZargabadAF";
-					init="nullReturn=[this,\"Zargabad AF\",\"++\",10,40,400,\"PMCAirfield\"] execVM \"Common\\Init\\Init_Town.sqf\";this setVariable [\"wfbe_is_airfield\",true,true];this enableSimulation false;";
+					init="nullReturn=[this,""Zargabad AF"",""++"",10,40,400,""PMCAirfield""] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 					id=6;
 					synchronizations[]={7};
 				};
@@ -125,7 +125,7 @@ class Mission
 					position[]={4154.24,0,3592.65};
 					vehicle="LocationLogicDepot";
 					text="Yarum";
-					init="nullReturn=[this,\"Yarum\",\"+\",10,50,500,[\"SmallTown1\",\"SmallTown2\"]] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Yarum"",""+"",10,50,500,[""SmallTown1"",""SmallTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=8;
 					synchronizations[]={9,10};
 				};
@@ -140,7 +140,7 @@ class Mission
 				{
 					position[]={4030,0,3520};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MGNest\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MGNest""]];";
 					id=10;
 					synchronizations[]={8};
 				};
@@ -156,7 +156,7 @@ class Mission
 					position[]={4813.26,0,4645.28};
 					vehicle="LocationLogicDepot";
 					text="TheVilla";
-					init="nullReturn=[this,\"The Villa\",\"+\",10,50,500,[\"SmallTown1\",\"SmallTown2\"]] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""The Villa"",""+"",10,50,500,[""SmallTown1"",""SmallTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=11;
 					synchronizations[]={12,13};
 				};
@@ -171,7 +171,7 @@ class Mission
 				{
 					position[]={4700,0,4560};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MG\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MG""]];";
 					id=13;
 					synchronizations[]={11};
 				};
@@ -187,7 +187,7 @@ class Mission
 					position[]={2823.53,0,5022.13};
 					vehicle="LocationLogicDepot";
 					text="Nango";
-					init="nullReturn=[this,\"Nango\",\"+\",20,80,800,[\"LargeTown1\",\"LargeTown2\"]] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Nango"",""+"",20,80,800,[""LargeTown1"",""LargeTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=14;
 					synchronizations[]={15,16,17,18};
 				};
@@ -209,7 +209,7 @@ class Mission
 				{
 					position[]={2700,0,4950};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MG\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MG""]];";
 					id=17;
 					synchronizations[]={14};
 				};
@@ -217,7 +217,7 @@ class Mission
 				{
 					position[]={2900,0,5150};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"AA\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""AA""]];";
 					id=18;
 					synchronizations[]={14};
 				};
@@ -233,7 +233,7 @@ class Mission
 					position[]={1929.89,0,4652.94};
 					vehicle="LocationLogicDepot";
 					text="Azizayt";
-					init="nullReturn=[this,\"Azizayt\",\"+\",10,40,400,\"SmallTown1\"] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Azizayt"",""+"",10,40,400,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=19;
 					synchronizations[]={20,21};
 				};
@@ -248,7 +248,7 @@ class Mission
 				{
 					position[]={2020,0,4740};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MGNest\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MGNest""]];";
 					id=21;
 					synchronizations[]={19};
 				};
@@ -264,7 +264,7 @@ class Mission
 					position[]={3943.51,0,5957.63};
 					vehicle="LocationLogicDepot";
 					text="HazarBagh";
-					init="nullReturn=[this,\"Hazar Bagh\",\"+\",10,40,400,\"SmallTown1\"] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Hazar Bagh"",""+"",10,40,400,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=22;
 					synchronizations[]={23,24};
 				};
@@ -279,7 +279,7 @@ class Mission
 				{
 					position[]={4050,0,6070};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MG\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MG""]];";
 					id=24;
 					synchronizations[]={22};
 				};
@@ -295,7 +295,7 @@ class Mission
 					position[]={4982.72,0,6207.94};
 					vehicle="LocationLogicDepot";
 					text="MilitaryBase";
-					init="nullReturn=[this,\"Military Base\",\"+\",10,60,600,[\"MediumTown1\",\"MediumTown2\"]] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Military Base"",""+"",10,60,600,[""MediumTown1"",""MediumTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=25;
 					synchronizations[]={26,27,28};
 				};
@@ -310,7 +310,7 @@ class Mission
 				{
 					position[]={5100,0,6300};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"AA\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""AA""]];";
 					id=27;
 					synchronizations[]={25};
 				};
@@ -318,7 +318,7 @@ class Mission
 				{
 					position[]={4870,0,6320};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MG\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MG""]];";
 					id=28;
 					synchronizations[]={25};
 				};
@@ -334,7 +334,7 @@ class Mission
 					position[]={3528.11,0,1932.74};
 					vehicle="LocationLogicDepot";
 					text="Shahbaz";
-					init="nullReturn=[this,\"Shahbaz\",\"+\",10,40,400,\"SmallTown1\"] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Shahbaz"",""+"",10,40,400,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=29;
 					synchronizations[]={30,31};
 				};
@@ -349,7 +349,7 @@ class Mission
 				{
 					position[]={3420,0,1840};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MGNest\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MGNest""]];";
 					id=31;
 					synchronizations[]={29};
 				};
@@ -365,7 +365,7 @@ class Mission
 					position[]={5059.49,0,1878.24};
 					vehicle="LocationLogicDepot";
 					text="FiruzBaharv";
-					init="nullReturn=[this,\"Firuz Baharv\",\"+\",10,40,400,\"SmallTown1\"] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Firuz Baharv"",""+"",10,40,400,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=32;
 					synchronizations[]={33,34};
 				};
@@ -380,7 +380,7 @@ class Mission
 				{
 					position[]={5170,0,1990};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MG\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MG""]];";
 					id=34;
 					synchronizations[]={32};
 				};
@@ -396,7 +396,7 @@ class Mission
 					position[]={2889.65,0,3143.63};
 					vehicle="LocationLogicDepot";
 					text="ShurDam";
-					init="nullReturn=[this,\"Shur Dam\",\"+\",10,40,400,\"SmallTown1\"] execVM \"Common\\Init\\Init_Town.sqf\";this enableSimulation false;";
+					init="nullReturn=[this,""Shur Dam"",""+"",10,40,400,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					id=35;
 					synchronizations[]={36,37};
 				};
@@ -411,7 +411,7 @@ class Mission
 				{
 					position[]={2980,0,3050};
 					vehicle="Logic";
-					init="this setVariable [\"wfbe_defense_kind\",[\"MGNest\"]];";
+					init="this setVariable [""wfbe_defense_kind"",[""MGNest""]];";
 					id=37;
 					synchronizations[]={35};
 				};
@@ -1802,7 +1802,7 @@ class Mission
 					position[]={1022.3998933333334,0.1286,29.19824};
 					vehicle="Logic";
 					text="WF_Logic";
-					init="this setVariable [\"totalTowns\",10];this setVariable [\"Towns_RemovedXSmall\",[\"Nango\",\"Azizayt\",\"HazarBagh\",\"MilitaryBase\",\"Shahbaz\",\"FiruzBaharv\",\"ShurDam\"]];this setVariable [\"Towns_RemovedSmall\",[\"Azizayt\",\"HazarBagh\",\"Shahbaz\",\"FiruzBaharv\",\"ShurDam\"]];this setVariable [\"Towns_RemovedMedium\",[\"Azizayt\",\"Shahbaz\",\"FiruzBaharv\"]];this setVariable [\"Towns_RemovedLarge\",[]];this setVariable [\"Towns_RemovedBigTowns\",[]];this setVariable [\"Towns_RemovedCentralLine\",[]];this setVariable [\"Towns_RemovedSmallTowns\",[]];this enableSimulation false; nullReturn = [this] ExecVM \"Common\\Init\\Init_TownMode.sqf\"";
+					init="this setVariable [""totalTowns"",10];this setVariable [""Towns_RemovedXSmall"",[""Nango"",""Azizayt"",""HazarBagh"",""MilitaryBase"",""Shahbaz"",""FiruzBaharv"",""ShurDam""]];this setVariable [""Towns_RemovedSmall"",[""Azizayt"",""HazarBagh"",""Shahbaz"",""FiruzBaharv"",""ShurDam""]];this setVariable [""Towns_RemovedMedium"",[""Azizayt"",""Shahbaz"",""FiruzBaharv""]];this setVariable [""Towns_RemovedLarge"",[]];this setVariable [""Towns_RemovedBigTowns"",[]];this setVariable [""Towns_RemovedCentralLine"",[]];this setVariable [""Towns_RemovedSmallTowns"",[]];this enableSimulation false; nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
 					id=110;
 					synchronizations[]={};
 				};
