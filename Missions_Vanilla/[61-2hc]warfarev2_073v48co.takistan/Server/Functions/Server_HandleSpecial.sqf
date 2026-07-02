@@ -667,24 +667,26 @@ switch (_args select 0) do {
 		//--- Stamp it on the side logic; the Allocator reads it (TTL'd) and makes it the side's fist.
 		//--- Bind the requester to the side, then require the AI-commander-run state server-side.
 		private ["_fSide","_fTown","_fLogik","_fCmd","_fHuman","_fRun"];
-		_fSide = _args select 1;
-		_fTown = _args select 2;
-		if (!isNil "_fTown" && {!isNull _fTown} && {_fSide in [west, east]} && {[_args, _fSide, false] Call _validateAicomConsoleRequester}) then {
-			_fLogik = (_fSide) Call WFBE_CO_FNC_GetSideLogic;
-			if (!isNull _fLogik) then {
-				_fRun = false;
-				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_fSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
-					_fCmd = (_fSide) Call WFBE_CO_FNC_GetCommanderTeam; _fHuman = false;
-					if (!isNull _fCmd) then {if (isPlayer (leader _fCmd)) then {_fHuman = true}};
-					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_fHuman = false};
-					_fRun = !_fHuman;
-				};
-				if (_fRun) then {
-					_fLogik setVariable ["wfbe_aicom_focus", _fTown];
-					_fLogik setVariable ["wfbe_aicom_focus_t0", time];
-					diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]));
-				} else {
-					diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|run=" + str _fRun);
+		if (count _args >= 5) then {
+			_fSide = _args select 1;
+			_fTown = _args select 2;
+			if ((typeName _fSide == "SIDE") && {typeName _fTown == "OBJECT"} && {!isNull _fTown} && {_fSide in [west, east]} && {[_args, _fSide, false] Call _validateAicomConsoleRequester}) then {
+				_fLogik = (_fSide) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _fLogik) then {
+					_fRun = false;
+					if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_fSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
+						_fCmd = (_fSide) Call WFBE_CO_FNC_GetCommanderTeam; _fHuman = false;
+						if (!isNull _fCmd) then {if (isPlayer (leader _fCmd)) then {_fHuman = true}};
+						if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_fHuman = false};
+						_fRun = !_fHuman;
+					};
+					if (_fRun) then {
+						_fLogik setVariable ["wfbe_aicom_focus", _fTown];
+						_fLogik setVariable ["wfbe_aicom_focus_t0", time];
+						diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]));
+					} else {
+						diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|run=" + str _fRun);
+					};
 				};
 			};
 		};

@@ -819,7 +819,25 @@ function Test-AicomCommandConsoleAuthorityGuard {
 		if (-not ($server.Contains('typeName _requester != "OBJECT"') -and $server.Contains('typeName _requestTeam != "GROUP"') -and $server.Contains('!isPlayer _requester') -and $server.Contains('group _requester != _requestTeam') -and $server.Contains('side _requestTeam != _vSide'))) { $missing += "$($entry.Terrain):requester-team-binding" }
 		if (-not ($server.Contains('leader _cmdTeam != _requester') -and $server.Contains('!isPlayer (leader _cmdTeam)'))) { $missing += "$($entry.Terrain):human-commander-binding" }
 		if (-not ($server.Contains('[_args, _aSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _pSide, false] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _dSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _uSide, true] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _fSide, false] Call _validateAicomConsoleRequester') -and $server.Contains('[_args, _rSide, true] Call _validateAicomConsoleRequester'))) { $missing += "$($entry.Terrain):case-gates" }
-		if (-not ($server.Contains('WFBE_C_AI_COMMANDER_LOCK') -and $server.Contains('_fRun = !_fHuman') -and $server.Contains('AICOM2|v1|FOCUS|REJECT'))) { $missing += "$($entry.Terrain):focus-ai-run-gate" }
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$focusAt = $serverCode.IndexOf('case "aicom-focus"')
+		if ($focusAt -lt 0) {
+			$missing += "$($entry.Terrain):focus-case"
+		} else {
+			$focusEnd = $serverCode.IndexOf('case "aicom-defend"', $focusAt)
+			if ($focusEnd -lt 0) { $focusEnd = $serverCode.Length }
+			$focusBlock = $serverCode.Substring($focusAt, $focusEnd - $focusAt)
+			$countAt = $focusBlock.IndexOf('count _args >= 5')
+			$selectAt = $focusBlock.IndexOf('_args select 1')
+			$runIfAt = $focusBlock.IndexOf('if (_fRun) then')
+			$focusSetAt = $focusBlock.IndexOf('setVariable ["wfbe_aicom_focus", _fTown]')
+			if ($countAt -lt 0) { $missing += "$($entry.Terrain):focus-short-payload-guard" }
+			if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):focus-guard-after-select" }
+			if (-not ($focusBlock.Contains('typeName _fSide == "SIDE"') -and $focusBlock.Contains('typeName _fTown == "OBJECT"'))) { $missing += "$($entry.Terrain):focus-payload-types" }
+			if (-not ($focusBlock.Contains('WFBE_C_AI_COMMANDER_LOCK') -and $focusBlock.Contains('_fRun = !_fHuman') -and $focusBlock.Contains('AICOM2|v1|FOCUS|REJECT'))) { $missing += "$($entry.Terrain):focus-ai-run-gate" }
+			if ($runIfAt -lt 0 -or $focusSetAt -lt 0 -or $runIfAt -gt $focusSetAt) { $missing += "$($entry.Terrain):focus-set-outside-run-gate" }
+		}
 	}
 	Add-Result "AICOM command-console authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
