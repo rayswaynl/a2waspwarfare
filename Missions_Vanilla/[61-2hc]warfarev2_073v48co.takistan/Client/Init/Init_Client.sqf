@@ -231,6 +231,7 @@ waitUntil {commonInitComplete};
 //--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition / ctrlSetStructuredText, no A3 commands.
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
+	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
 	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
 	_max = 18;
 	while {!WFBE_gameover} do {

@@ -30,7 +30,7 @@
 
 Private ["_chosenClass","_oldUnit","_oldGrp","_swapGrp","_pos","_dir",
          "_unitName","_unitRank","_unitFace","_unitSpeaker",
-         "_gear","_newUnit","_wasLeader","_uid"];
+         "_gear","_newUnit","_wasLeader","_uid","_waitStart","_verifyStart"];
 
 _chosenClass = _this select 0;
 
@@ -136,14 +136,39 @@ _newUnit setRank    _unitRank;
 _newUnit setVariable ["lastActionTime", time];
 _newUnit setVariable ["lastPosition",   getPosATL _newUnit];
 
+//--- cmdcon42 SELECTPLAYER HARDENING (Ray 2026-07-02): selectPlayer requires the target unit to be
+//--- non-null AND LOCAL to this client, and to have finished initialising. The unit was just created
+//--- into a fresh LOCAL swap group (swapGrpLocal true), so it is normally local immediately, but wait
+//--- for it explicitly with a ~3s timeout so a slow-init frame never selects a half-built body.
+//--- A2-OA-1.64 safe: waitUntil / isNull / local / time. (No && {} lazy operand: nested condition.)
+_waitStart = time;
+waitUntil {
+	if (isNull _newUnit) exitWith {true};
+	if (local _newUnit) exitWith {true};
+	if (time - _waitStart > 3) exitWith {true};
+	false
+};
+
+//--- Abort cleanly if the unit vanished or never became local — never selectPlayer a bad handle.
+if (isNull _newUnit || !(local _newUnit)) exitWith {
+	diag_log format ["[WFBE (SKIN)] B5_FAIL new unit not usable before selectPlayer (isNull=%1 local=%2) — cleaning up, player kept in old body", isNull _newUnit, local _newUnit];
+	if (!isNull _newUnit) then {deleteVehicle _newUnit};
+	if (!isNull _swapGrp) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
+	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on failure
+	hint "Skin swap failed (unit not ready). Please try again.";
+};
+
 //--- Rejoin the original group BEFORE selectPlayer so the player transitions
 //--- with the correct group context. If the original group is empty or gone
 //--- (edge case: everyone left while selector was open) remain in _swapGrp.
 //--- A2-OA fix: && {code} / || {code} lazy-eval operands are Arma-3-only syntax and
 //--- produce "Missing ;" parse errors in A2 OA 1.64.  Use nested if instead.
+//--- cmdcon42 A2-OA FIX: `joinGroup` is ALSO Arma-3-only and threw "Missing ;" at this line on
+//--- EVERY swap (RPT-confirmed), collapsing this whole if/then block. A2 OA uses `[unit] join grp`
+//--- (array LHS), matching Common_ChangeUnitGroup.sqf:11 / Server_OnPlayerDisconnected.sqf:105.
 if (!(isNull _oldGrp)) then {
 	if (!(isNull (leader _oldGrp)) || (count units _oldGrp > 0)) then {
-		_newUnit joinGroup _oldGrp;
+		[_newUnit] join _oldGrp;
 	} else {
 		diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
 	};
@@ -155,6 +180,26 @@ if (!(isNull _oldGrp)) then {
 diag_log format ["[WFBE (SKIN)] B4 selectPlayer -> '%1' grp=%2 wasLeader=%3",
 	_chosenClass, group _newUnit, _wasLeader];
 selectPlayer _newUnit;
+
+//--- VERIFY the transfer actually took: player must BE the new unit within ~5s. In A2 MP a
+//--- selectPlayer into a non-local group (or mid-JIP) can silently fail, leaving the player in the
+//--- OLD body while the new unit stands idle. Confirm before we touch/delete anything.
+_verifyStart = time;
+waitUntil {
+	if (player == _newUnit) exitWith {true};
+	if (time - _verifyStart > 5) exitWith {true};
+	false
+};
+
+if (!(player == _newUnit)) exitWith {
+	diag_log format ["[WFBE (SKIN)] B5_FAIL selectPlayer did not transfer control (player=%1 newUnit=%2) — deleting spawned unit, restoring old body", player, _newUnit];
+	//--- Undo the neutralisation-that-hasn't-happened-yet is N/A (old body untouched here). Just remove the
+	//--- orphan skinned unit so no zombie soldier is left standing, and leave the player in the old body.
+	if (!isNull _newUnit) then {deleteVehicle _newUnit};
+	if (!isNull _swapGrp) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
+	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on failure
+	hint "Skin swap failed (control did not transfer). You are still in your original body.";
+};
 
 //--- Restore group leadership if the player led the original group.
 if (_wasLeader) then {(group _newUnit) selectLeader _newUnit};

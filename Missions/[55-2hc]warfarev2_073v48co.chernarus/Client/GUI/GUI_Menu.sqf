@@ -259,6 +259,13 @@ while {alive player && dialog} do {
 	};
 
 	// Marty: Reuse the old FPS-only slot as a GPS enabler; client/server FPS now lives in RHUD.
+	//--- cmdcon42 (Ray 2026-07-02) GPS/Mini-Map button fix. Previous behaviour: the button set showGPS true
+	//--- but then read `shownGPS` ~0.2s later and, on a false-negative race, hinted "GPS could not be enabled"
+	//--- even after a successful enable — so the button LOOKED dead. Also, if the player genuinely had no way
+	//--- to get ItemGPS the failure was silent. New behaviour: guarantee ItemGPS (add it), enable GPS reliably
+	//--- once the WF dialog has actually closed (showGPS draws nothing while idd 11000 is still up), and give a
+	//--- single clear hint. `showGPS`/`shownGPS` are the same A2-OA-1.64 commands the Tactical menu and every
+	//--- marker loop already rely on. An always-on RPT line records the transition so a tester can confirm.
 	if (MenuAction == 19) exitWith {
 		MenuAction = -1;
 		missionNamespace setVariable ["WFBE_Client_MenuGPSState", true];
@@ -270,20 +277,26 @@ while {alive player && dialog} do {
 			// with no dialog open. Wait for the WF menu display to actually close before enabling
 			// GPS so the in-game HUD renders. Capped at 1.5s so a stuck display cannot hang this
 			// thread; on timeout it falls back to the previous fixed-delay behaviour.
-			private ["_deadline"];
+			private ["_deadline","_hasGPS"];
 			_deadline = time + 1.5;
 			waitUntil {(isNull (findDisplay 11000)) || (time > _deadline)};
 			sleep 0.10;
 			missionNamespace setVariable ["WFBE_Client_MenuGPSState", true];
+			//--- Guarantee the GPS receiver: showGPS renders NOTHING without ItemGPS in the player's kit.
 			if (!isNull player && {!("ItemGPS" in weapons player)}) then {player addWeapon "ItemGPS"};
+			_hasGPS = (!isNull player) && {"ItemGPS" in weapons player};
 			RUBGPS = 1;
 			showGPS true;
 			sleep 0.10;
 			showGPS true;
-			if (shownGPS) then {
-				hint "GPS enabled.\nIf the mini-map stays hidden, press CTRL + M to toggle it.";
+			//--- Always-on state line so a tester can confirm the button fired and whether the kit has GPS.
+			diag_log format ["[WFBE (GPS)] GPS button: hasItemGPS=%1 shownGPS=%2 (menu closed, showGPS true issued)", _hasGPS, shownGPS];
+			//--- Base the hint on whether the player actually HAS the receiver, not on the racey shownGPS read
+			//--- (shownGPS can lag one frame behind showGPS true and produced false "could not enable" hints).
+			if (_hasGPS) then {
+				hint "GPS / Mini-Map enabled.\nIf the mini-map stays hidden, press CTRL + M to toggle it.";
 			} else {
-				hint "GPS could not be enabled yet.\nCheck that your unit has GPS gear.";
+				hint "Requires GPS.\nGet ItemGPS (equip GPS gear) and try again.";
 			};
 		};
 	};
