@@ -60,6 +60,10 @@ def build_sample():
         kills.append((int(rng.integers(20,m.duration)), None, s, wp, cat, dist(cat,wp)))
     kills.sort(key=lambda k: k[0])
     m.kills = kills
+    m.support_events = [
+        {"t": 980, "kind": "SCUD/TEL", "label": "SCUD/TEL launch"},
+        {"t": 1775, "kind": "TEL", "label": "TEL destroyed"},
+    ]
     # synthetic player-vs-player rivalries for the offline demo (real matches derive these from victim UIDs)
     m.pvp_pairs = Counter({("Krait","Ghost"):5,("Ghost","Krait"):3,("Viper","Krait"):4,
                            ("Volk","Viper"):3,("Viper","Volk"):2,("Tsar","Reaper"):2})

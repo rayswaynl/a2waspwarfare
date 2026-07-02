@@ -23,8 +23,9 @@ slots straight onto the existing telemetry pipeline.
 
 intro → **battle** (animated territory-control map) → **momentum** (towns-held line
 chart) → **MVP** → **top operators** leaderboard → **combat breakdown** (kill-category
-donut, longest kill, top weapon, PvP, captures) → **decisive blow** → **winner card**.
-~48 s by default.
+donut, longest kill, top weapon, PvP, captures) → **decisive blow** → **winner card**
+with SCUD/TEL support-event counts when the RPT includes those markers. ~48 s by
+default.
 
 ## Install
 
@@ -74,6 +75,11 @@ Hetzner server RPT  ──WASPSTAT|v1|…──►  box.ps1 / poster.ps1  ──
 
 Telemetry contract: see `docs/WASPSTAT-FORMAT.md` in the repo (PLAYERSTATS `d0..d14`,
 `KILL`, `CAPTURE`, `ROUNDEND`).
+
+SCUD/TEL support markers are parsed opportunistically from the same raw RPT stream,
+even when they are not `WASPSTAT` records. Lines containing `SCUD`, `ICBMTEL`, or a
+standalone `TEL` token are summarized as support events; `t=<seconds>` is used when
+present, otherwise the parser spreads them across the match like untimed kills/captures.
 
 ## Generated art (optional — "prompt pack + drop folder")
 

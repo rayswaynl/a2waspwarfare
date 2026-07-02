@@ -10,6 +10,7 @@ there is exactly one place that data enters the system. Two producers exist:
 Both return a finalized MatchData. See docs reference: a2waspwarfare
 docs/WASPSTAT-FORMAT.md (PLAYERSTATS d0..d14, KILL, CAPTURE, ROUNDEND).
 """
+import re
 from collections import Counter
 
 # ---- side handling -------------------------------------------------------
@@ -77,6 +78,33 @@ def _time_token(toks):
             try: return int(p[2:])
             except ValueError: return None
     return None
+
+_SUPPORT_TIME_RE = re.compile(r"(?:^|[|,\s])t=(\d+)(?:$|[|,\s])", re.IGNORECASE)
+_TEL_RE = re.compile(r"\bTEL\b|ICBMTEL", re.IGNORECASE)
+
+def _support_event(raw):
+    """Return a compact SCUD/TEL support-event marker parsed from a raw RPT line."""
+    up = raw.upper()
+    has_scud = "SCUD" in up
+    has_tel = bool(_TEL_RE.search(up))
+    if not (has_scud or has_tel):
+        return None
+    if any(token in up for token in ("TELEMETRY", "SATELLITE")) and not has_scud:
+        return None
+
+    if has_scud and has_tel: kind = "SCUD/TEL"
+    elif has_scud: kind = "SCUD"
+    else: kind = "TEL"
+
+    action = "event"
+    for needle, label in (("LAUNCH", "launch"), ("FIRED", "fired"), ("STRIKE", "strike"),
+                          ("DESTROY", "destroyed"), ("KILLED", "destroyed"),
+                          ("SPAWN", "spawned"), ("READY", "ready"), ("CANCEL", "cancelled")):
+        if needle in up:
+            action = label
+            break
+    mt = _SUPPORT_TIME_RE.search(raw)
+    return {"t": int(mt.group(1)) if mt else None, "kind": kind, "label": f"{kind} {action}"}
 
 # ---- town coordinates (metres, map origin SW, y = north) -----------------
 # These are STATIC per map. The values below are hand-approximated for Chernarus;
@@ -154,6 +182,7 @@ class MatchData:
         self.caps = []             # (t_sec, town, new_side)  ordered
         self.players = []          # {name, side, d[15], kills, score, kd, fav}
         self.kills = []            # (t_sec, name_or_None, side, weapon, cat, dist)
+        self.support_events = []   # {t, kind, label} SCUD/TEL support-event markers
         self.total_kills = 0
         self.ai_only = False       # no human operators -> AI-only match (no phantom MVP)
 
@@ -214,6 +243,9 @@ class MatchData:
         if self.mvp:
             c = Counter(k[3] for k in self.kills if k[1] == self.mvp["name"])
             self.mvp["fav"] = c.most_common(1)[0][0] if c else "—"
+        self.support_events = sorted(getattr(self, "support_events", []), key=lambda e: e.get("t", 0))
+        self.support_total = len(self.support_events)
+        self.support_counts = Counter(e.get("kind", "SUPPORT") for e in self.support_events)
 
         # decisive capture = first cap after which the winner reaches its peak town count
         self.decisive = self.caps[-1] if self.caps else (self.duration, "—", self.winner)
@@ -364,13 +396,16 @@ def parse_waspstat(lines, names=None, line_times=None):
                  "Known gap: event timestamps".
     """
     names = names or {}
-    caps_raw, kills_raw, pstats = [], [], {}
+    caps_raw, kills_raw, support_raw, pstats = [], [], [], {}
     winner, duration, map_name = "west", 0, "chernarus"
 
-    for raw in lines:
+    for line_no, raw in enumerate(lines):
         # Peel the diag_log '"..."' wrapper FIRST so the final field (map name) and any embedded
         # name tokens don't carry stray quotes. Without this, map parsed as 'chernarus"'.
         raw = _dequote(raw)
+        support = _support_event(raw)
+        if support:
+            support_raw.append((line_no, support["t"], support["kind"], support["label"]))
         i = raw.find("WASPSTAT|v1|")
         if i < 0: continue
         parts = raw[i:].strip().split("|")
@@ -443,6 +478,9 @@ def parse_waspstat(lines, names=None, line_times=None):
         if line_times and seq in line_times: return line_times[seq]
         return int((idx + 1) / (total + 1) * m.duration)
     m.caps  = [(t_for(ct, s, i, len(caps_raw)), town, new) for i, (s, town, _o, new, ct) in enumerate(caps_raw)]
+    support_raw.sort(key=lambda r: (r[1] if r[1] is not None else m.duration + r[0], r[0]))
+    m.support_events = [{"t": t_for(st, line_no, i, len(support_raw)), "kind": kind, "label": label}
+                        for i, (line_no, st, kind, label) in enumerate(support_raw)]
     # resolve display names: WASPSTAT now embeds them (~name); fall back to a passed map, then Op-XXXX.
     allnames = dict(names)
     for uid, acc in pstats.items():
