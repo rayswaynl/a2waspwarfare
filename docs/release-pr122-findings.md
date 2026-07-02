@@ -1,11 +1,52 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 08:49 Europe/Amsterdam
+Last updated: 2026-07-02 08:57 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 08:57 Update
+
+Final validation found PR #136 moved again after the 08:49 findings push.
+
+Current heads:
+
+- PR #125: `fa2e4019d9e7d81ccfffcb16a67f17d1746c6bc8`
+- PR #126: `97db8180c257e33a53bad66e06bb1c7b6220ee25`
+- PR #136: `09ce177dc39255973e471afede380cc5b0b1ab35`
+
+PR #125 and PR #126 stayed stable during this check. PR #136 moved from
+`1c965f29253b2357c55c2e6873baf1eb5d29ace3` to
+`09ce177dc39255973e471afede380cc5b0b1ab35`.
+
+New PR #136 commits:
+
+- `c69d8c7ee` - `cmdcon41 wave-1: SPREAD+HOLD, REAL-COMBAT BASE ASSAULT (ON),
+  siege decay, heli airfield spawn, HC disarm+sea-park, stats HC-filter,
+  match-report rebuild, random-PURE spawn default`
+- `43bdcfb09` - `trace build85 capture entry path`
+- `09ce177dc` - `cmdcon41: mirror wave-1 + #138 CAPTURE_TRACE to Takistan
+  (LoadoutManager)`
+
+Scope:
+
+- mission-affecting both-terrain AICOM commander, HC init, parameters,
+  base-assault/building-damage, stats flush, and commander team changes
+- match-report tooling additions/updates under `Tools/MatchReport`
+- `git diff --check 1c965f29253b2357c55c2e6873baf1eb5d29ace3..origin/claude/overnight-2026-07-02`:
+  pass
+- `git diff --check origin/master..origin/claude/overnight-2026-07-02`:
+  pass
+
+This is not docs-only movement. Existing PR #136 package/runtime evidence is
+stale for `09ce177d`; no fresh exact selected-artifact RPT package was found or
+built in this pass.
+
+Release remains **NO-GO**. PR #136 must not be treated as release-proven unless
+it is explicitly selected, rebuilt/regenerated, artifact-bound, and proven with
+exact Chernarus plus Takistan runtime RPT evidence and human smoke notes.
 
 ## 2026-07-02 08:49 Update
 
