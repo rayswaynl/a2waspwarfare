@@ -29,8 +29,8 @@ class Mission
 	randomSeed=6848509;
 	class Intel
 	{
-		briefingName="PR 8 - June Feature Bundle (Takistan)";
-		briefingDescription="June release test build: UI/UX, GPS, factories, supply, WDDM/arty, AI/perf.";
+		briefingName="WASP Warfare Build 86 (Takistan)";
+		briefingDescription="Build 86: SCUD program, territorial victory, skin selector, command verbs, AI support, richer air and A-life.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;

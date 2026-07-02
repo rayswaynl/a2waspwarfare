@@ -27,11 +27,11 @@ publicVariable "CBA_display_ingame_warnings";
 for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
-diag_log "## Build: WASP Warfare release candidate";
+diag_log "## Build: WASP Warfare Build 86 / cmdcon41";
 #ifdef WF_RELEASE_MARKER
 diag_log WF_RELEASE_MARKER;
 #else
-diag_log format ["WASPRELEASE|v1|candidate=build85-cmdcon39-20260702|git=build85-cmdcon39|terrain=%1", worldName];
+diag_log format ["WASPRELEASE|v1|candidate=build86-cmdcon41-20260702|git=build86-cmdcon41|terrain=%1", worldName];
 #endif
 diag_log format ["MISSINIT: missionName=%1, worldName=%2, isMultiplayer=%3, isServer=%4, isDedicated=%5", WF_MISSIONNAME, worldName, isMultiplayer, isServer, isDedicated];
 diag_log format ["## Starting Distance: [%1]", startingDistance];
