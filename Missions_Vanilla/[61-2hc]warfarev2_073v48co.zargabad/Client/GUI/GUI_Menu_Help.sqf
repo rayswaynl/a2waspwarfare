@@ -4,11 +4,48 @@ _action = _this select 0;
 
 switch (_action) do {
 	case "onLoad": {
-		{((findDisplay 508000) displayCtrl 160001) lbAdd _x} forEach ["Introduction", "Respawn", "Towns", "Base Structures and Functions", "Experimental Changes", "About the Mission","Server Rules"];
+		{((findDisplay 508000) displayCtrl 160001) lbAdd _x} forEach ["Introduction", "Respawn", "Towns", "Base Structures and Functions", "Experimental Changes", "Wildcards", "About the Mission","Server Rules"];
 		((findDisplay 508000) displayCtrl 160001) lbSetCurSel 0;
 	};
 	case "onHelpLBSelChanged": {
+		private ["_changeTo", "_wildcardHelp", "_deck", "_card", "_next", "_remaining", "_mins", "_secs", "_timerText", "_nextText"];
 		_changeTo = _this select 1;
+		_next = -1;
+		switch (sideJoined) do {
+			case west: {_next = missionNamespace getVariable ["WFBE_WILDCARD_NEXT_WEST", -1]};
+			case east: {_next = missionNamespace getVariable ["WFBE_WILDCARD_NEXT_EAST", -1]};
+			case resistance: {_next = missionNamespace getVariable ["WFBE_WILDCARD_NEXT_GUER", -1]};
+		};
+		_timerText = "not scheduled";
+		if (_next > 0) then {
+			_remaining = ceil (_next - time);
+			if (_remaining < 0) then {_remaining = 0};
+			_mins = floor (_remaining / 60);
+			_secs = _remaining - (_mins * 60);
+			_timerText = Format ["about %1m %2s", _mins, _secs];
+		};
+		_wildcardHelp = "<t size='1.4' color='#2394ef' underline='true'>Wildcards</t><br /><br />" +
+			"Wildcards are periodic battlefield events. The timer below is approximate because the server adds a small random jitter before each draw.<br /><br />" +
+			"<t size='1.2' color='#ffec1c'>Your side's next draw</t><br />";
+		_nextText = "Time remaining: <t color='#F5D363'>" + _timerText + "</t><br /><br />";
+		_wildcardHelp = _wildcardHelp + _nextText;
+		_deck = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_DECK_INFO", []];
+		if (count _deck > 0) then {
+			_wildcardHelp = _wildcardHelp + "<t size='1.2' color='#ffec1c'>West / East AI Commander deck</t><br />";
+			{
+				_card = _x;
+				_wildcardHelp = _wildcardHelp + Format ["- <t color='#F5D363'>%1 %2</t> (%3): %4<br />", _card select 0, _card select 1, _card select 2, _card select 3];
+			} forEach _deck;
+			_wildcardHelp = _wildcardHelp + "<br />";
+		};
+		_deck = missionNamespace getVariable ["WFBE_C_GUER_WILDCARD_DECK_INFO", []];
+		if (count _deck > 0) then {
+			_wildcardHelp = _wildcardHelp + "<t size='1.2' color='#ffec1c'>GUER insurgent deck</t><br />";
+			{
+				_card = _x;
+				_wildcardHelp = _wildcardHelp + Format ["- <t color='#F5D363'>%1 %2</t> (%3): %4<br />", _card select 0, _card select 1, _card select 2, _card select 3];
+			} forEach _deck;
+		};
 _helps = [
 //-------------------------------------Introductions
 "<t size='1.4' color='#2394ef' underline='true'>Introduction</t><br />
@@ -205,6 +242,8 @@ Class info shown on join and via 'Class Info' action. Tags (SOL/SUP/MED/ENG/SNI)
 - Earplugs toggle fades radio/voice and works while mounted.<br />
 <br />
 ",
+//--------------------Wildcards
+_wildcardHelp,
 //--------------------WarFare Info
 "<br />
 <t size='1.2' color='#2394ef' align='center'>Warfare WASP-AWESOME EDITION | v48 | - CO - Zargabad</t><br />

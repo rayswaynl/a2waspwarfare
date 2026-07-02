@@ -157,6 +157,9 @@ if (!isNil "WFBE_GUER_PLAYER_KILLS") then {_id publicVariableClient "WFBE_GUER_P
 if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_VEHICLE_TIER"}; //--- B75: GUER vehicle tier JIP catch-up (kill-derived).
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+if (!isNil "WFBE_WILDCARD_NEXT_WEST") then {_id publicVariableClient "WFBE_WILDCARD_NEXT_WEST"}; //--- Lane 156: Help menu wildcard next-draw timer catch-up.
+if (!isNil "WFBE_WILDCARD_NEXT_EAST") then {_id publicVariableClient "WFBE_WILDCARD_NEXT_EAST"}; //--- Lane 156: Help menu wildcard next-draw timer catch-up.
+if (!isNil "WFBE_WILDCARD_NEXT_GUER") then {_id publicVariableClient "WFBE_WILDCARD_NEXT_GUER"}; //--- Lane 156: Help menu wildcard next-draw timer catch-up.
 diag_log format ["[WFBE][B63 JIP-MARK] pushed marker feeds to joiner %1 (aicom=%2, patrols=%3)", _name, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
 
 //--- B74.2: AICOM intent/objective vars are side-keyed and published only on change, so a late joiner can miss

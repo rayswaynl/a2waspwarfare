@@ -79,7 +79,7 @@
 */
 
 private ["_side","_logik","_sideID","_interval","_enabled","_humanCmdWEST","_humanCmdEAST",
-         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI"];
+         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI","_nextKey"];
 
 _side    = _this;
 _logik   = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -91,14 +91,20 @@ _sideText = str _side;
 
 _interval = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800];
 _enabled  = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1];
+_nextKey = "WFBE_WILDCARD_NEXT_EAST";
+if (_side in [west]) then {_nextKey = "WFBE_WILDCARD_NEXT_WEST"};
 
 ["INITIALIZATION", Format ["AI_Commander_Wildcard.sqf: worker started for %1 (interval=%2s, enabled=%3).", _sideText, _interval, _enabled]] Call WFBE_CO_FNC_AICOMLog;
 
-if (_enabled == 0) exitWith {
+if (_enabled < 1) exitWith {
+	missionNamespace setVariable [_nextKey, -1];
+	publicVariable _nextKey;
 	["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - WFBE_C_AI_COMMANDER_WILDCARD disabled", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 //--- First event fires after one full interval.
+missionNamespace setVariable [_nextKey, time + _interval];
+publicVariable _nextKey;
 sleep _interval;
 
 while {!gameOver} do {
@@ -1634,5 +1640,7 @@ while {!gameOver} do {
 		}; //--- end !_skipAI
 	}; //--- end !_bothHuman
 
+	missionNamespace setVariable [_nextKey, time + _interval];
+	publicVariable _nextKey;
 	sleep _interval;
 };

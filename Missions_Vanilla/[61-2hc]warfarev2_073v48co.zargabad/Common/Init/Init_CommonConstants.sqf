@@ -517,6 +517,34 @@ with missionNamespace do {
 	//--- V0.6: Wildcard events - one free random event per AI-commanded side per interval.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD") then {WFBE_C_AI_COMMANDER_WILDCARD = 1};           //--- 0 disables wildcard events entirely.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL") then {WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL = 900}; //--- Seconds between wildcard events per side (15 min - faster testing cadence, claude-gaming 2026-06-14; was 1800/30min).
+	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_DECK_INFO") then {
+		WFBE_C_AI_COMMANDER_WILDCARD_DECK_INFO = [
+			["W1","War Chest","Common","bonus war funds for the side"],
+			["W2","Supply Drop","Common","+1500 side supply, capped by the side supply limit"],
+			["W4","Airborne Assault","Rare","elite paratroopers drop on the front line"],
+			["W6","Air Cavalry","Uncommon","a free elite air-assault squad deploys to the front"],
+			["W11","Field Hospital","Uncommon","all wounded infantry are healed"],
+			["W12","Spoils of War","Uncommon","double kill-bounty for the next 10 minutes"],
+			["W13","Gunship Strike","Rare","an attack aircraft strafes a troop cluster"],
+			["W15","Black Market","Uncommon","50% production discount for the next 10 minutes"],
+			["W16","Lend-Lease","Uncommon","one vehicle tier line gains a level"],
+			["W19","Heliborne QRF","Rare","a helicopter inserts a quick-reaction squad at a threatened town"],
+			["W20","Captured Cache","Uncommon","one support tier line gains a level"],
+			["W22","Top Gun","Rare","a fighter patrols the front and hunts enemy aircraft"],
+			["W23","Armor Column","Uncommon","a free tank platoon rolls to the front"],
+			["W24","Technical Swarm","Rare","two gun-truck teams charge the front"]
+		];
+	};
+	if (isNil "WFBE_C_GUER_WILDCARD_DECK_INFO") then {
+		WFBE_C_GUER_WILDCARD_DECK_INFO = [
+			["G1","Car Bomb","Common","a driver-detonated VBIED rolls on an occupied town"],
+			["G2","Pop-up Checkpoint","Common","a roadblock taxes an occupied supply road until cleared"],
+			["G5","Scavenger Team","Rare","insurgent scavengers strip abandoned wrecks when enabled"]
+		];
+	};
+	if (isNil "WFBE_WILDCARD_NEXT_WEST") then {WFBE_WILDCARD_NEXT_WEST = -1};
+	if (isNil "WFBE_WILDCARD_NEXT_EAST") then {WFBE_WILDCARD_NEXT_EAST = -1};
+	if (isNil "WFBE_WILDCARD_NEXT_GUER") then {WFBE_WILDCARD_NEXT_GUER = -1};
 	WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN = 3;   //--- V0.5: teams concentrated per spearhead town (legacy/fallback quota; per-tier quota below overrides).
 	//--- V0.8 COHERENT FRONT (claude-gaming 2026-06-14): the old spearhead scorer was
 	//--- supplyValue - dNear/150, which let a fat enemy city 8km away outscore the nearest

@@ -1,5 +1,22 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 — Lane 156 wildcard deck transparency [codex/lane156-wildcard-deck-transparency]
+
+Added player-visible wildcard transparency without changing card balance or draw eligibility.
+
+- Common constants now expose `WFBE_C_AI_COMMANDER_WILDCARD_DECK_INFO` and
+  `WFBE_C_GUER_WILDCARD_DECK_INFO` as client-readable display manifests.
+- The conventional and GUER wildcard workers publish approximate next-draw mission-time stamps through
+  `WFBE_WILDCARD_NEXT_WEST`, `WFBE_WILDCARD_NEXT_EAST` and `WFBE_WILDCARD_NEXT_GUER`, with JIP catch-up in
+  `Server_OnPlayerConnected.sqf`.
+- Chernarus Help gets a new Wildcards page in the redesigned Help menu; Takistan and Zargabad get the same
+  page as an added section in their older map-specific Help menu, preserving existing local text.
+
+Verification so far: `A2WASP_SKIP_ZIP=1 dotnet run -c Release` completed with existing nullable/content-not-found
+warnings only and packaging skipped; `git diff --check` clean; focused SQF lint for A3 commands/brackets over all
+15 changed SQF files reported 0 findings; added-line trap scan found no lazy-code operands, boolean-literal
+comparisons or A3-only helper calls. No `_MISSIONS.7z` package artifact was created.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:

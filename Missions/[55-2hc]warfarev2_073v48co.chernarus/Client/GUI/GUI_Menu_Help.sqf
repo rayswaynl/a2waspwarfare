@@ -17,8 +17,9 @@
      2 Economy
      3 Combat & Capturing
      4 Commanding the AI
-     5 Factions
-     6 FAQ
+     5 Wildcards
+     6 Factions
+     7 FAQ
 
    Only A2-OA-valid commands used: displayCtrl, lbAdd, lbSetCurSel,
    ctrlSetStructuredText, parseText, findDisplay, compile,
@@ -50,6 +51,7 @@ switch (_action) do {
 			"Economy",
 			"Combat & Capturing",
 			"Commanding the AI",
+			"Wildcards",
 			"Factions",
 			"FAQ"
 		];
@@ -57,7 +59,7 @@ switch (_action) do {
 	};
 
 	case "onHelpLBSelChanged": {
-		private ["_changeTo", "_disp", "_titles", "_helps"];
+		private ["_changeTo", "_disp", "_titles", "_helps", "_wildcardHelp", "_deck", "_card", "_next", "_remaining", "_mins", "_secs", "_timerText", "_nextText"];
 		_changeTo = _this select 1;
 		_disp = findDisplay 508000;
 
@@ -68,9 +70,50 @@ switch (_action) do {
 			"Economy",
 			"Combat & Capturing",
 			"Commanding the AI",
+			"Wildcards",
 			"Factions",
 			"Frequently Asked Questions"
 		];
+
+		_next = -1;
+		switch (sideJoined) do {
+			case west: {_next = missionNamespace getVariable ["WFBE_WILDCARD_NEXT_WEST", -1]};
+			case east: {_next = missionNamespace getVariable ["WFBE_WILDCARD_NEXT_EAST", -1]};
+			case resistance: {_next = missionNamespace getVariable ["WFBE_WILDCARD_NEXT_GUER", -1]};
+		};
+		_timerText = "not scheduled";
+		if (_next > 0) then {
+			_remaining = ceil (_next - time);
+			if (_remaining < 0) then {_remaining = 0};
+			_mins = floor (_remaining / 60);
+			_secs = _remaining - (_mins * 60);
+			_timerText = Format ["about %1m %2s", _mins, _secs];
+		};
+
+		_wildcardHelp = "<t size='1.4' color='" + HDR + "' underline='true'>Wildcards</t><br /><br />" +
+			"Wildcards are periodic battlefield events. The timer below is approximate because the server adds a small random jitter before each draw.<br /><br />" +
+			"<t size='1.2' color='" + KEY + "'>Your side's next draw</t><br />";
+		_nextText = "Time remaining: <t color='" + GOLD + "'>" + _timerText + "</t><br /><br />";
+		_wildcardHelp = _wildcardHelp + _nextText;
+
+		_deck = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_DECK_INFO", []];
+		if (count _deck > 0) then {
+			_wildcardHelp = _wildcardHelp + "<t size='1.2' color='" + KEY + "'>West / East AI Commander deck</t><br />";
+			{
+				_card = _x;
+				_wildcardHelp = _wildcardHelp + Format ["- <t color='%1'>%2 %3</t> (%4): %5<br />", GOLD, _card select 0, _card select 1, _card select 2, _card select 3];
+			} forEach _deck;
+			_wildcardHelp = _wildcardHelp + "<br />";
+		};
+
+		_deck = missionNamespace getVariable ["WFBE_C_GUER_WILDCARD_DECK_INFO", []];
+		if (count _deck > 0) then {
+			_wildcardHelp = _wildcardHelp + "<t size='1.2' color='" + KEY + "'>GUER insurgent deck</t><br />";
+			{
+				_card = _x;
+				_wildcardHelp = _wildcardHelp + Format ["- <t color='%1'>%2 %3</t> (%4): %5<br />", GOLD, _card select 0, _card select 1, _card select 2, _card select 3];
+			} forEach _deck;
+		};
 
 		_helps = [
 
@@ -153,7 +196,10 @@ Patrols upgrade across 4 levels (300 / 1,600 / 2,400 / 3,200 supply). Up to <t c
 - Commander field compositions are capped at 3 per base area (cash refunded over-cap).<br />
 - Defense budgets cap statics / fortifications / mines per category; statics &amp; mines are blocked when 3+ enemy ground units are in base range.<br />",
 
-//================================================================ 5  FACTIONS
+//================================================================ 5  WILDCARDS
+_wildcardHelp,
+
+//================================================================ 6  FACTIONS
 "<t size='1.4' color='" + HDR + "' underline='true'>Factions</t><br /><br />
 WASP runs <t color='" + GOLD + "'>three</t> living factions, not two sides plus neutral garrisons.<br /><br />
 <t size='1.2' color='" + KEY + "'>West &amp; East</t><br />
@@ -167,7 +213,7 @@ Random battlefield events fire through the round - veteran companies, town upris
 <t size='1.2' color='" + KEY + "'>Classes (both sides)</t><br />
 SOL / SUP / MED / ENG / SNI, shown on join and via the <t color='" + GOLD + "'>Class Info</t> action; tags appear on the map and in Notes. A medic-only <t color='" + KEY + "'>Redeployment Truck</t> (Light Factory, violet row) gives medics a forward spawn.<br />",
 
-//================================================================ 6  FAQ
+//================================================================ 7  FAQ
 "<t size='1.4' color='" + HDR + "' underline='true'>Frequently Asked Questions</t><br /><br />
 <t size='1.2' color='" + KEY + "'>Where do I buy things?</t><br />
 Open the WF Menu in range of the right structure: gear at the <t color='" + GOLD + "'>Barracks</t> (or a captured town centre's stairs), infantry/vehicles at the matching <t color='" + GOLD + "'>Factory</t>. A <t color='" + GOLD + "'>Command Center</t> lets you remote-buy infantry and vehicles from anywhere.<br /><br />

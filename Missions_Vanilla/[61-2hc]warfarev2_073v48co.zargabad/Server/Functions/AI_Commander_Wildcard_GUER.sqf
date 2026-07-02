@@ -48,21 +48,26 @@
 	  (held-to-timeout grants one FOB factory token of a tier-scaled type - no tunable; always exactly one)
 */
 
-private ["_enabled","_interval","_sideID"];
+private ["_enabled","_interval","_sideID","_nextKey"];
 
 if (!isServer) exitWith {};
 
 _enabled  = missionNamespace getVariable ["WFBE_C_GUER_WILDCARD", 1];
 _interval = missionNamespace getVariable ["WFBE_C_GUER_WILDCARD_INTERVAL", 1800];
+_nextKey  = "WFBE_WILDCARD_NEXT_GUER";
 
 ["INITIALIZATION", Format ["AI_Commander_Wildcard_GUER.sqf: worker started (interval=%1s, enabled=%2).", _interval, _enabled]] Call WFBE_CO_FNC_AICOMLog;
 
-if (_enabled == 0) exitWith {
+if (_enabled < 1) exitWith {
+	missionNamespace setVariable [_nextKey, -1];
+	publicVariable _nextKey;
 	["INFORMATION", "AI_Commander_Wildcard_GUER.sqf: disabled (WFBE_C_GUER_WILDCARD=0)."] Call WFBE_CO_FNC_AICOMLog;
 };
 
 _sideID = resistance Call WFBE_CO_FNC_GetSideID;
 
+missionNamespace setVariable [_nextKey, time + _interval];
+publicVariable _nextKey;
 sleep _interval;
 
 while {!gameOver} do {
@@ -429,5 +434,7 @@ while {!gameOver} do {
 
 	}; //--- end isolation spawn
 
+	missionNamespace setVariable [_nextKey, time + _interval];
+	publicVariable _nextKey;
 	sleep _interval;
 };
