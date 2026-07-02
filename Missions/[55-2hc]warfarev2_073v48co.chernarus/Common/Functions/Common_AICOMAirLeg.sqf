@@ -139,10 +139,14 @@ _team setVariable ["wfbe_aicom_airborne_until", time + 600, true];
 //--- town along the town->enemy-HQ (enemy-rear) axis, so the vehicle + crew land 1-2km BEHIND the lines and
 //--- attack the objective from the REAR (Ray's flanking intent). Decisions made HERE (driver context = _h is
 //--- LOCAL, so the attachTo/detach later run where the heli is local, as required):
-//---   ELIGIBILITY: a hull that is (config armor <= *_MAXARMOR, default 120) AND ("Car" AND NOT "Wheeled_APC")
-//---     - so LAV25/BTR90 (Wheeled_APC) and tanks (armor >> MAXARMOR, not "Car") NEVER qualify - OR isKindOf one
-//---     of the *_ALLOW base classes (armour-misread fallback, still gated NOT-Wheeled_APC/NOT-Tank). It must be
-//---     alive, canMove, NOT the transport, and NOT an Air hull. ONE lift per leg (first match wins).
+//---   ELIGIBILITY: a hull that is (config armor <= *_MAXARMOR, CALIBRATED default 150 - admits ALL HMMWV
+//---     variants incl. M2 (120)/CROWS (100)/Avenger (150), UAZs, Vodniks (85-100), technicals/light trucks)
+//---     AND ("Car" AND NOT "Wheeled_APC"). The CLASS test is what excludes the APC family - BTR60 (120)/
+//---     LAV25/BTR90 (150)/Stryker (160) overlap the armor range but are Wheeled_APC (which derives FROM Car
+//---     in A2, so the NOT-clause is load-bearing); BMP/Bradley are Tank-family = not "Car"; tanks fail both.
+//---     OR isKindOf one of the *_ALLOW base classes (armour-misread fallback, still gated NOT-Wheeled_APC/
+//---     NOT-Tank). It must be alive, canMove, NOT the transport, and NOT an Air hull. ONE lift per leg
+//---     (first match wins).
 //---   SURVIVAL GUARD: skip the lift if this vehicle is the team's ONLY drivable ground transport (never lift
 //---     what the team needs to survive - only lift a SPARE light vehicle).
 //---   DROP POINT: *_DEPTH (+-300 jitter) BEYOND _dest along the _dest->enemy-HQ bearing (A2-safe atan2 delta;
@@ -159,7 +163,7 @@ _liftVeh = objNull;
 _vehDrop = [];
 if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT", 1]) > 0) then {
 	private ["_maxArmor","_allow","_grndCount"];
-	_maxArmor = missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_MAXARMOR", 120];
+	_maxArmor = missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_MAXARMOR", 150];
 	_allow    = missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT_ALLOW", ["Car"]];
 	//--- Count the team's own drivable GROUND transports (non-air, canMove) so we never lift the team's ONLY
 	//--- one (never lift what the team needs to survive). _teamVehs = the caller's authoritative hull list.
