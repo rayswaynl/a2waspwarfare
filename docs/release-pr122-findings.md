@@ -1,11 +1,82 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 10:20 Europe/Amsterdam
+Last updated: 2026-07-02 10:33 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 10:33 Update
+
+Final reconcile after the 10:20 push found more coordinated movement.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `440dc7692b9a0e91cb0311287a99427a1d82709a`
+- PR #125: `177ef1385f22aefb466368ef9c381d64a57801c0`
+- PR #126: `20931a66947f162647a8784336314dca07beef01`
+- PR #136: `5e97d91f48fa1075e870d27584a8cc45b6820077`
+
+PR #125 moved from `e2b26027a63b8606dd14fdc248e6cdd3def5f6bd` to
+`177ef1385f22aefb466368ef9c381d64a57801c0`.
+
+New commit:
+
+- `177ef1385` - `fix: harden ai commander focus request guard`
+
+Validation passed in detached worktree `work/a2waspwarfare-pr125-177ef138`:
+
+- focused `git diff --check e2b26027a6..HEAD`
+- broad `git diff --check origin/master..HEAD`
+- static smoke
+- final check: static smoke, Chernarus OA lint, Takistan OA lint, high-only
+  BugHunt
+- LoadoutManager RELEASE: exit `0`, `CHERNARUS DONE`, `TAKISTAN DONE`
+- package validation for local `_MISSIONS.7z`, expected git `177ef1385f`,
+  entries `1885`
+
+Local package-content rebuild:
+
+- SHA256:
+  `1960DF242EAB4CDC8ABD5A17F2072AFAC8C5E79520D6A061E1B6D27BAB19FAC6`
+- size: `7167615`
+- entries: `1885`
+- manifests:
+  `outputs/a2waspwarfare-pr125-177ef138-local-package-manifest-2026-07-02-1033.json`
+  and
+  `outputs/a2waspwarfare-pr125-177ef138-local-package-manifest-2026-07-02-1033.md`
+
+Both maintained terrain copies of the touched mission file are hash-identical:
+
+- `Server/Functions/Server_HandleSpecial.sqf`:
+  `1898598a67b90cbf1bf1c718e64bec04326d311b`
+
+Public boundary: the PR #125 GitHub body and public wiki now record an
+`e2b26027a6` package tuple with SHA256
+`11AEED5CB0820ABF5934FA32EA4FD4FDE76914708A7ED9AD3D6676E2F8351F2A`, size
+`7167842`, entries `1885`, wiki `440dc76`. That public tuple is not latest-head
+proof because PR #125 source is now `177ef1385f`.
+
+PR #126 moved to `20931a66947f162647a8784336314dca07beef01`; focused
+diff-check, tuple docs, version-template, and JIP/AICOM guard tests pass.
+Boundary: PR #126 branch files are internally consistent for an older
+`e2b26027a6` tuple
+`3E98F3B65C3D1FA4EB04F02D752EB6484DCDA94411BEAAB3F18E22C77E36678A` /
+wiki `f593b34`, and the PR body is older still. They are stale relative to the
+public PR #125/wiki `e2b26027a6` tuple `11AEED5C...` / wiki `440dc76`, and
+stale relative to current PR #125 source head `177ef1385f`.
+
+PR #136 moved to `5e97d91f48fa1075e870d27584a8cc45b6820077` with broad
+mission-affecting cmdcon41 wave-3 changes across both maintained terrains:
+A-life layer, territorial victory, EASA-for-AI, command menu verbs, performance
+sweep, and patrol economy. No fresh exact artifact, package validation, or RPT
+matrix was collected for PR #136 `5e97d91f4`.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 10:20 Update
 
