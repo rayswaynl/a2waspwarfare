@@ -19,7 +19,10 @@
 	                               - GUER HOLDS it to timeout -> a FOB FACTORY TOKEN (WFBE_GUER_FOB_AVAIL), type scaled
 	                                 by the checkpoint tier: tier0-1 Barracks / tier2 Light Factory / tier3 Heavy Factory.
 	                                 i.e. a held checkpoint = captured materiel to deploy a forward factory of that type.
-	  G4 Mortar Pit (6)      — flag WFBE_C_GUER_MORTARPIT default 0. Eligibility = a contested front town within
+	  G3 Road Ambush (7)     — flag WFBE_C_GUER_ROAD_AMBUSH default 0. AT/MG ambush team
+                           at a road node between two contested/occupied towns; TTL despawn
+                           (WFBE_C_GUER_ROAD_AMBUSH_TTL default 420s). Bounty-enabled crew.
+  G4 Mortar Pit (6)      — flag WFBE_C_GUER_MORTARPIT default 0. Eligibility = a contested front town within
 	                           ~1500m of a GUER-owned town; spawn a static 2b14_82mm mortar + 2-man GUER crew
 	                           (GUE_Soldier_Crew) 300-600m from that town in a concealed flat spot (isFlatEmpty);
 	                           SAD waypoint at the town centre; crew lobs inaccurate barrages every 45-90s;
@@ -47,7 +50,9 @@
 	  WFBE_C_GUER_CP_TAX             default 60    (occupier supply drained per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_TOLL            default 250   (cash paid to GUER players per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_CLEAR           default 700   (supply granted to the clearing side, scaled by tier)
-	  WFBE_C_GUER_MORTARPIT          default 0     (0=disable G4 Mortar Pit card)
+	  WFBE_C_GUER_ROAD_AMBUSH        default 0     (0=disable G3 Road Ambush card)
+  WFBE_C_GUER_ROAD_AMBUSH_TTL    default 420   (ambush team despawn timeout in seconds)
+  WFBE_C_GUER_MORTARPIT          default 0     (0=disable G4 Mortar Pit card)
 	  WFBE_C_GUER_MORTARPIT_TTL      default 600   (mortar pit lifetime in seconds)
 	  WFBE_C_GUER_SCAV               default 0     (0=disable G5 Scavenger Team card)
 	  WFBE_C_GUER_SCAV_REWARD        default 300   (cash per wreck scrapped, paid to GUER players)
@@ -93,7 +98,10 @@ while {!gameOver} do {
 		         "_mortarTry","_friendlyNear","_mortarVeh","_mortarGrp","_mortarCrew1","_mortarCrew2",
 		         "_mortarWP","_mortarTTL","_mortarCount",
 		         "_abandVehs","_scavTeam","_scavGrp","_nearWreck","_scavDist","_scavReward",
-		         "_scavBonus","_scavTTL","_scavMember","_scavPos"];
+		         "_scavBonus","_scavTTL","_scavMember","_scavPos",
+		         "_gG3","_ambTownA","_ambTownB","_ambMid","_ambRds","_ambNode","_ambGrp",
+		         "_ambU","_ambTTL","_ambMk","_ambBestDist",
+		         "_ambI","_ambJ","_ambTA","_ambTB","_ambD","_ambEl"];
 
 		_sideID = _this select 0;
 		_westID = west Call WFBE_CO_FNC_GetSideID;
@@ -109,9 +117,12 @@ while {!gameOver} do {
 		_vbiedClass   = missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"];
 
 		//--- ELIGIBILITY -> weights (0 = ineligible).
-		_gG1 = 6; _gG2 = 8; _gG4 = 0; _gG5 = 0;
+		_gG1 = 6; _gG2 = 8; _gG3 = 0; _gG4 = 0; _gG5 = 0;
 		if (!(count _occTowns > 0 && {_soldierClass != ""} && {isClass (configFile >> "CfgVehicles" >> _vbiedClass)})) then {_gG1 = 0};
 		if (!(count _occTowns > 0 && {_soldierClass != ""})) then {_gG2 = 0};
+
+		//--- G3: ROAD AMBUSH eligibility: flag on, soldier class known, >=2 occupied towns.
+		if ((missionNamespace getVariable ["WFBE_C_GUER_ROAD_AMBUSH", 0]) > 0 && {_soldierClass != ""} && {count _occTowns >= 2}) then {_gG3 = 7};
 
 		//--- G4: MORTAR PIT eligibility: flag on, soldier class known, pit cap < 2,
 		//--- a contested town within 1500m of at least one GUER-owned town.
@@ -136,7 +147,7 @@ while {!gameOver} do {
 			if (count _abandVehs >= 2) then {_gG5 = 5};
 		};
 
-		_weights = [[1,_gG1],[2,_gG2],[4,_gG4],[5,_gG5]];
+		_weights = [[1,_gG1],[2,_gG2],[3,_gG3],[4,_gG4],[5,_gG5]];
 		_cumSum = 0; { _cumSum = _cumSum + (_x select 1) } forEach _weights;
 		_draw = 0;
 		if (_cumSum > 0) then {
@@ -344,6 +355,85 @@ while {!gameOver} do {
 				} else { _result = "ineligible"; _detail = "G2 no occupied town"; };
 			};
 
+			//--- G3: ROAD AMBUSH — AT/MG team at a road node between two contested towns.
+			case 3: {
+				//--- Find the pair of occupied towns closest to each other (the front corridor).
+				_ambTownA = objNull; _ambTownB = objNull; _ambBestDist = 1e9;
+				_ambI = 0;
+				while {_ambI < (count _occTowns)} do {
+					_ambTA = _occTowns select _ambI;
+					_ambJ = _ambI + 1;
+					while {_ambJ < (count _occTowns)} do {
+						_ambTB = _occTowns select _ambJ;
+						_ambD = _ambTA distance _ambTB;
+						if (_ambD < _ambBestDist) then {
+							_ambBestDist = _ambD;
+							_ambTownA = _ambTA;
+							_ambTownB = _ambTB;
+						};
+						_ambJ = _ambJ + 1;
+					};
+					_ambI = _ambI + 1;
+				};
+
+				if (!isNull _ambTownA && {!isNull _ambTownB}) then {
+					//--- Midpoint between the two towns; snap to nearest road within 200m.
+					_ambMid = [
+						((getPos _ambTownA select 0) + (getPos _ambTownB select 0)) / 2,
+						((getPos _ambTownA select 1) + (getPos _ambTownB select 1)) / 2,
+						0
+					];
+					_ambRds = _ambMid nearRoads 200;
+					_ambNode = _ambMid;
+					if (count _ambRds > 0) then {_ambNode = getPos (_ambRds select 0)};
+
+					//--- Create group: 1x MG + 2x AT + 1x infantry.
+					_ambGrp = [resistance, "guer-wc-ambush"] Call WFBE_CO_FNC_CreateGroup;
+					if (!isNull _ambGrp) then {
+						_ambU = ["GUE_Soldier_MG", _ambGrp, _ambNode, _sideID] Call WFBE_CO_FNC_CreateUnit;
+						if (!isNull _ambU) then {_ambU setVariable ["WFBE_IsTownDefenderAI", true, true]};
+						_ambU = ["GUE_Soldier_AT", _ambGrp, _ambNode, _sideID] Call WFBE_CO_FNC_CreateUnit;
+						if (!isNull _ambU) then {_ambU setVariable ["WFBE_IsTownDefenderAI", true, true]};
+						_ambU = ["GUE_Soldier_AT", _ambGrp, _ambNode, _sideID] Call WFBE_CO_FNC_CreateUnit;
+						if (!isNull _ambU) then {_ambU setVariable ["WFBE_IsTownDefenderAI", true, true]};
+						_ambU = ["GUE_Soldier_1", _ambGrp, _ambNode, _sideID] Call WFBE_CO_FNC_CreateUnit;
+						if (!isNull _ambU) then {_ambU setVariable ["WFBE_IsTownDefenderAI", true, true]};
+
+						[_ambGrp, _ambNode, 80] Call AIPatrol;
+						_ambGrp setBehaviour "COMBAT"; _ambGrp setCombatMode "RED";
+
+						_ambTTL = missionNamespace getVariable ["WFBE_C_GUER_ROAD_AMBUSH_TTL", 420];
+
+						//--- Local-side marker (GUER players only) via WildcardMarker PVF.
+						_ambMk = Format ["wc_GUER_G3_%1", round time];
+						[resistance, "WildcardMarker", ["create", _ambMk, _ambNode, "ColorGreen", "mil_triangle", "Road Ambush"]] Call WFBE_CO_FNC_SendToClients;
+
+						_detail = Format ["towns=%1/%2 node=%3 ttl=%4s",
+							_ambTownA getVariable ["name","?"], _ambTownB getVariable ["name","?"],
+							_ambNode, _ambTTL];
+
+						//--- WATCHER: TTL or all dead -> cleanup units, group, marker.
+						[_ambGrp, _ambMk, _ambTTL] spawn {
+							private ["_ag","_mk","_ttl","_el"];
+							_ag  = _this select 0; _mk  = _this select 1; _ttl = _this select 2;
+							_el  = 0;
+							waitUntil {
+								sleep 5; _el = _el + 5;
+								(({alive _x} count (units _ag)) == 0 || {_el >= _ttl} || gameOver)
+							};
+							{deleteVehicle _x} forEach (units _ag);
+							if (!isNull _ag) then {deleteGroup _ag};
+							[resistance, "WildcardMarker", ["delete", _mk]] Call WFBE_CO_FNC_SendToClients;
+							diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERROADAMBUSH_DESPAWN|el=" + str _el + "|ttl=" + str _ttl);
+						};
+					} else {
+						_result = "partial"; _detail = "G3 group null at cap";
+					};
+				} else {
+					_result = "ineligible"; _detail = "G3 fewer than 2 occupied towns (null pair)";
+				};
+			};
+
 			//--- G4: MORTAR PIT — static 2b14_82mm + 2-man GUER crew at a concealed flat spot; SAD at contested town.
 			case 4: {
 				if (!isNull _target) then {
@@ -546,6 +636,7 @@ while {!gameOver} do {
 		_wMap = [
 			[1,"Car Bomb","a suicide car bomb rolls on an occupied town - destroy it for a bounty"],
 			[2,"Pop-up Checkpoint","a roadblock chokes an occupied supply road - clear it for supply, or it bleeds you"],
+			[3,"Road Ambush","an AT/MG team is dug in on the road between two enemy towns - watch your vehicles"],
 			[4,"Mortar Pit","a hidden mortar crew is lobbing rounds at an occupied town - hunt the pit by sound and flash"],
 			[5,"Scavenger Team","insurgent scavengers are stripping abandoned wrecks off the battlefield"]
 		];
