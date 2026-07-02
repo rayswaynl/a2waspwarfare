@@ -14,47 +14,74 @@
 	  - setCaptive/allowDamage/setDamage run where the object is local (server-created units are local).
 	  - ParachuteC classname confirmed via WFBE_GUERPARACHUTE in Root_GUE.sqf:34.
 	  - Reward via [side, amount, reason, false] call ChangeSideSupply (server-side pattern used throughout).
+
+	FIX (2026-07-02, review): previous version stored the live-pilot registry as a script-local
+	  (_livePilots) and spawn/call helpers as script-locals (_spawnPilot/_maxLive).  These did NOT
+	  survive A2 OA spawn/call thread-boundary crossings:
+	    BLOCKER: WFBE_SE_FNC_PilotRaceEject body ran in a new spawn thread; _livePilots/_maxLive/
+	             _spawnPilot were nil there -> count nil / call nil -> no pilot ever spawned.
+	    HIGH:    _livePilots = _livePilots + [...] inside a call block wrote to the call's child scope;
+	             the outer variable never grew -> MAX_LIVE cap was never reached.
+	  Resolution: registry stored in missionNamespace ("WFBE_PilotRace_Live").
+	  WFBE_SE_FNC_PilotRaceEject is now fully self-contained: reads NS var, checks cap via
+	  missionNamespace getVariable, spawns inline, writes NS var back.  Main loop likewise reads/
+	  writes NS var each tick.  No script-local state crosses any thread boundary.
 */
 if (!isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_PILOT_RACE", 0]) < 1) exitWith {};
 
-private ["_reward","_ttl","_maxLive","_livePilots","_mkPrefix","_spawnPilot"];
+private ["_reward","_ttl","_mkPrefix"];
 
 _reward   = missionNamespace getVariable ["WFBE_C_PILOT_CAPTURE_REWARD", 500];
 _ttl      = missionNamespace getVariable ["WFBE_C_PILOT_TTL",            300];
-_maxLive  = missionNamespace getVariable ["WFBE_C_PILOT_MAX_LIVE",       2];
 _mkPrefix = "wfbe_pilotrace_mk_";
 
-//--- Live registry: each entry [_pilot, _markerName, _spawnTime, _pilotSide, _chute].
-//--- Script-local (NOT persistent) so it cannot outlive the round or leak.
-_livePilots = [];
+//--- Persistent live registry in missionNamespace.
+//--- Each entry: [_pilot, _markerName, _spawnTime, _pilotSide, _chute].
+//--- Written/read via NS so it survives all spawn/call thread crossings.
+missionNamespace setVariable ["WFBE_PilotRace_Live", []];
 
-["INITIALIZATION", Format ["Server_PilotRace.sqf: PILOT-RACE started (reward=%1 ttl=%2 max=%3).", _reward, _ttl, _maxLive]] Call WFBE_CO_FNC_LogContent;
+["INITIALIZATION", Format ["Server_PilotRace.sqf: PILOT-RACE started (reward=%1 ttl=%2 max=%3).", _reward, _ttl, (missionNamespace getVariable ["WFBE_C_PILOT_MAX_LIVE", 2])]] Call WFBE_CO_FNC_LogContent;
 
-//--- HELPER: spawn a downed pilot + fuzzy marker, register in _livePilots.
-//--- _this = [_aircraft, _acSide].  Aircraft is local to server (killed EH fires where object is local).
-//--- Returns nothing; silently exits if cap reached.
-_spawnPilot = {
-	private ["_ac","_acSide","_pos","_fuzz","_mk","_pilotClass","_chuteModel","_grp","_pilot","_chute","_uid"];
+//--- WFBE_SE_FNC_PilotRaceEject: self-contained spawn handler.
+//--- _this = [_aircraft, _acSide].
+//--- Reads + writes WFBE_PilotRace_Live and WFBE_C_PILOT_MAX_LIVE directly from missionNamespace
+//--- so it is independent of any parent-thread scope.  Called via:
+//---   [_dead, _vs2] spawn WFBE_SE_FNC_PilotRaceEject
+//--- from the killed EH, which already runs on the server (object local = server).
+WFBE_SE_FNC_PilotRaceEject = {
+	private ["_ac","_acSide","_liveNow","_maxLive","_pos","_fuzz","_mk","_pilotClass","_chuteModel"];
+	private ["_grp","_pilot","_chute","_uid","_liveArr","_entry"];
 
-	if ((count _livePilots) >= _maxLive) exitWith {};
+	_ac      = _this select 0;
+	_acSide  = _this select 1;
 
-	_ac     = _this select 0;
-	_acSide = _this select 1;
+	//--- Read registry + cap from namespace each time (no parent-thread locals).
+	_liveNow = missionNamespace getVariable ["WFBE_PilotRace_Live", []];
+	_maxLive = missionNamespace getVariable ["WFBE_C_PILOT_MAX_LIVE", 2];
+
+	if ((count _liveNow) >= _maxLive) exitWith {
+		diag_log format ["PILOTRACE|CAP|alive=%1 max=%2|skip", count _liveNow, _maxLive];
+	};
 
 	_pos = getPos _ac;
 
 	//--- Pilot classname: reuse GUER pilot (confirmed GUE_Soldier_Pilot in Config_GUE.sqf:88).
 	//--- Group: civilian so the pilot does not fight back but is not auto-hostile to either side.
-	_pilotClass  = missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"];
-	_chuteModel  = missionNamespace getVariable ["WFBE_GUERPARACHUTE", "ParachuteC"];
+	_pilotClass = missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"];
+	_chuteModel = missionNamespace getVariable ["WFBE_GUERPARACHUTE", "ParachuteC"];
 
 	_grp = createGroup civilian;
-	if (isNull _grp) exitWith {};
+	if (isNull _grp) exitWith {
+		diag_log "PILOTRACE|ERROR|createGroup civilian returned null";
+	};
 
 	//--- Spawn pilot at crash altitude so he visibly descends under a chute.
 	_pilot = _grp createUnit [_pilotClass, [(_pos select 0), (_pos select 1), ((_pos select 2) max 80)], [], 0, "NONE"];
-	if (isNull _pilot) exitWith { deleteGroup _grp; };
+	if (isNull _pilot) exitWith {
+		deleteGroup _grp;
+		diag_log "PILOTRACE|ERROR|createUnit pilot returned null";
+	};
 
 	//--- Captive + injured, AI disabled so he does not fight or move.
 	_pilot setCaptive true;
@@ -67,30 +94,22 @@ _spawnPilot = {
 	_pilot moveInDriver _chute;
 
 	//--- Fuzzy marker: offset up to 400 m from real position to force a foot search.
-	_uid = Format ["%1_%2", round time, count _livePilots];
-	_mk  = _mkPrefix + _uid;
+	//--- Use count of current registry (re-read to be safe) for unique suffix.
+	_liveArr = missionNamespace getVariable ["WFBE_PilotRace_Live", []];
+	_uid = Format ["%1_%2", round time, count _liveArr];
+	_mk  = "wfbe_pilotrace_mk_" + _uid;
 	_fuzz = [(_pos select 0) + (200 - random 400), (_pos select 1) + (200 - random 400), 0];
 	createMarker [_mk, _fuzz];
 	_mk setMarkerType "mil_dot";
 	_mk setMarkerColor "ColorYellow";
 	_mk setMarkerText "DOWNED PILOT";
 
-	_livePilots = _livePilots + [[_pilot, _mk, time, _acSide, _chute]];
+	//--- Append to registry and write back to namespace.
+	_entry = [_pilot, _mk, time, _acSide, _chute];
+	_liveArr = _liveArr + [_entry];
+	missionNamespace setVariable ["WFBE_PilotRace_Live", _liveArr];
 
-	diag_log format ["PILOTRACE|SPAWN|side=%1|pos=%2|fuzzy=%3|mk=%4|alive=%5", _acSide, _pos, _fuzz, _mk, count _livePilots];
-};
-
-//--- Bridge function stored in missionNamespace so the killed EH string can reach it.
-//--- EH bodies cannot close over script-local vars directly in A2 OA; the Spawn call places
-//--- the body in the server's scheduler where _livePilots, _maxLive, _spawnPilot are in scope.
-//--- Pattern confirmed: {_this Spawn WFBE_SE_FNC_OnHQKilled} used throughout Init_Server.sqf.
-WFBE_SE_FNC_PilotRaceEject = {
-	private ["_dead","_vs"];
-	_dead = _this select 0;
-	_vs   = _this select 1;
-	if ((count _livePilots) < _maxLive) then {
-		[_dead, _vs] call _spawnPilot;
-	};
+	diag_log format ["PILOTRACE|SPAWN|side=%1|pos=%2|fuzzy=%3|mk=%4|alive=%5", _acSide, _pos, _fuzz, _mk, count _liveArr];
 };
 
 //--- MAIN LOOP: runs every 5 s, two duties:
@@ -99,7 +118,7 @@ WFBE_SE_FNC_PilotRaceEject = {
 while {!WFBE_GameOver} do {
 	sleep 5;
 
-	private ["_now","_keptPilots"];
+	private ["_now","_livePilots","_keptPilots"];
 	_now = time;
 
 	//--- (A) EH ATTACHMENT SCAN: walk all vehicles, find untagged AI Air.
@@ -132,7 +151,8 @@ while {!WFBE_GameOver} do {
 		};
 	} forEach vehicles;
 
-	//--- (B) LIVE REGISTRY: capture check + TTL cleanup.
+	//--- (B) LIVE REGISTRY: read from namespace, do capture check + TTL cleanup, write back.
+	_livePilots = missionNamespace getVariable ["WFBE_PilotRace_Live", []];
 	_keptPilots = [];
 	{
 		private ["_entry","_p","_mk","_spawnT","_pSide","_pChute","_drop","_reason","_near","_capSide"];
@@ -196,7 +216,9 @@ while {!WFBE_GameOver} do {
 			_keptPilots = _keptPilots + [_entry];
 		};
 	} forEach _livePilots;
-	_livePilots = _keptPilots;
+
+	//--- Write pruned registry back to namespace.
+	missionNamespace setVariable ["WFBE_PilotRace_Live", _keptPilots];
 };
 
 //--- Round-end: clean all live pilots + markers so nothing persists into the next match.
@@ -213,5 +235,5 @@ while {!WFBE_GameOver} do {
 		deleteVehicle _p;
 		if (!isNull _g) then { deleteGroup _g; };
 	};
-} forEach _livePilots;
-_livePilots = [];
+} forEach (missionNamespace getVariable ["WFBE_PilotRace_Live", []]);
+missionNamespace setVariable ["WFBE_PilotRace_Live", []];
