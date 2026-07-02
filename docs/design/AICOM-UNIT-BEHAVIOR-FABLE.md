@@ -118,3 +118,34 @@ phase, siege decay, remnant caution, refit flip (svc), GUER cap (wave-2 with sti
 wave-2** — same files as wave-1, so they implement AFTER integration, as one reviewed batch, then
 cmdcon41. F1+F2+F4 are the big three; F6 the sleeper. Soak metric: arrival rate (target: 6.9% → >30%),
 army-vs-army kill share, zombie-team count (target: 0 teams >10 dispatches without arrival).
+
+---
+
+## 6. Wiki cross-check addendum (canonical wiki, 2026-07-02)
+
+- **F1 (YELLOW-march):** the wiki CONFIRMS RED-on-march was deliberate — `AIMoveTo` is documented as "aggressive
+  march posture" and a purpose-built guard stops `UpdateTeam` re-stamping AICOM teams back to AWARE/NORMAL/YELLOW.
+  BUT: no recorded experiment with YELLOW transit, no dawdling-vs-banzai trade-off discussion anywhere — the choice
+  predates the arrival telemetry. My 32-vs-2187 / 4.6%-arrival data is the first hard evidence on it. (The
+  garrison-stance→RED record is about DEFENDERS standing passive — different context, not a contradiction.)
+  → Ray's call (his design lineage).
+- **F2:** an AssignTowns sticky-order guard + committed-mass pre-seed ALREADY exist (V0.8 "advance as a wave") —
+  the live churn (122 FRONT changes, 135 repicks, 59-dispatch zombies) defeats them via abandon/strike/fist paths.
+  Journey-commit + hysteresis is additive and in the spirit of the recorded design. Wave-1's FIST_TOWNS=2 matches
+  the wiki's SPEARHEAD_TOWNS_MAX=2 intent.
+- **F4 (recycle):** precedent exists — B68 retreat-cull recycles far lone survivors, and the B69 roadmap demands a
+  `behaviour != COMBAT` guard on any cull. My zombie-recycle adopts both guards (never cull a fighting team, never
+  near a player).
+- **F6 (MHQ):** the B69 roadmap already contains the fix rows (per-tick re-drive ✅ done; MIN NET-ADVANCE gate;
+  final-deploy re-validation; contact de-escalation; human-contact defer). Implement ring-relax WITH those rows,
+  not instead of them.
+- **F8 (skill):** the wiki records `CreateTeam (skill 90)` at team build + the W7 veteran scalar — units may
+  already be ~0.9 skill; my "engine default" assumption needs code verification before any change. VERIFY FIRST.
+- **GUER stipend CORRECTION:** the recon's "stipend economy dead / kill-attribution mis-wired" is a FALSE ALARM
+  for AI-only matches — the stipend + kill counter gate on GUER *PLAYERS* (`isPlayer`, WFBE_GUER_PLAYER_KILLS)
+  by design; zero GUER players overnight → zeros are CORRECT (matches memory `wasp-guer-stipend-not-broken`).
+  GUER wave-2 work reduces to BODY-count capping (GROUPS_MAX=80 exists; bodies still peak 224).
+- **Cheap adds from the wiki's own quick-win list (wave-2):** depot-hold formation LINE/STAG instead of WEDGE
+  (one grenade wipes a WEDGE cluster at the hold); randomize the camp dwell `sleep 45` → `35 + random 20`.
+- Unmined wiki sources (B69 sketch bodies, full roadmap, worklogs, jsonl stores) could still hold stance-era
+  journal entries — noted as a gap, not blocking.
