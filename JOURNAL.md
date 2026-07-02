@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Lane 133 HC delegate load-aware stale audit [codex/lane133-hc-delegate-load-audit]
+
+Verified the lane 133 prompt item against current `origin/claude/build84-cmdcon36`. The old
+pure-random HC town-delegation shape is gone in both maintained roots: `Server_DelegateAITownHeadless.sqf`
+calls `WFBE_CO_FNC_PickLeastLoadedHC`, seeds the town batch from that pick, and then round-robins
+remaining groups across live HCs. The helper counts HC-owned units and only randomizes ties.
+
+Also checked the broader HC delegate call sites: side patrols, AICOM teams, static-defense delegation,
+and wildcard-spawned delegates all route through `WFBE_CO_FNC_PickLeastLoadedHC`. Added
+`docs/design/HC-DELEGATE-LOAD-AUDIT-2026-07-02.md`; no mission source changed, so no LoadoutManager
+mirror was required.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
