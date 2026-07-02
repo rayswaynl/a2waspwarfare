@@ -1092,6 +1092,37 @@ while {!WFBE_GameOver && _alive} do {
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FIXED-WING transit (alt %5m, loiter r %6m, %7 plane hull(s)).", _side, _team, _seq, _mode, _plAlt, _plLoiterCR, _plHulls]] Call WFBE_CO_FNC_AICOMLog;
 				} else {
 
+				//--- ===================================================================
+				//--- cmdcon42-f AIR-MOBILE ORDERS (Ray 2026-07-02, gate WFBE_C_AICOM_AIRMOBILE default-ON):
+				//--- if this team STILL HAS its own live transport helicopter (alive, driver alive, has fuel -
+				//--- AUTOFUEL keeps it fed) and the ordered destination is beyond WFBE_C_AICOM_AIRMOBILE_MIN_DIST,
+				//--- FLY the leg (WFBE_CO_FNC_AICOMAirLeg) instead of road-marching. The helper mounts the pax,
+				//--- flies at altitude, and at the destination runs the SAME hot-LZ decision the founding insert
+				//--- uses (cold -> land+GET OUT; contested/enemy town -> paradrop OFFSET m short), then RETURNS the
+				//--- transport to base + HOLDS it for the next order (persists - it IS the team's vehicle; no
+				//--- fly-off/refund here). The dropped pax get an unconditional ground doMove to _dest, so the
+				//--- arrival latch + MOVE/SAD capture chain fold them in exactly like a road-marched team (Hook-B
+				//--- sees a normal arrival). GUARDS: transport-LESS remnants (no heli / dead heli) fall through to
+				//--- the unchanged road-march below; the helper stamps wfbe_aicom_airborne_until so the AssignTowns
+				//--- stuck-watcher never teleports a flying leader; a mid-flight order change continues to the drop
+				//--- then re-evaluates next seq (no mid-air re-vector). NEVER-FROZEN: on any early-out (no heli /
+				//--- nobody to lift) the helper returns false and we road-march as today. A2-OA-safe: transportSoldier
+				//--- config read + isKindOf "Air" + fuel, all mirrored from the founding air-insert split.
+				private ["_amDone","_amHeli"];
+				_amDone = false;
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE", 1]) > 0 && {(leader _team) distance _dest > (missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE_MIN_DIST", 1200])}) then {
+					_amHeli = objNull;
+					{
+						if (!isNull _x && {alive _x} && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0} && {isNull _amHeli} && {!isNull (driver _x)} && {alive (driver _x)} && {canMove _x} && {(fuel _x) > 0}) then {_amHeli = _x};
+					} forEach _vehicles;
+					if (!isNull _amHeli) then {
+						//--- Fly this leg. The helper Spawns its own non-blocking flight + return-to-base; it returns
+						//--- true when it committed the leg (pax lifted). Only then do we SKIP the road-march.
+						if ([_amHeli, _team, _dest, _side, _sideID] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
+					};
+				};
+				if (!_amDone) then {
+
 				//--- ROAD-MARCH (task #14/#16): the old single bare 'MOVE' to the raw town
 				//--- center used EMPTY squad-props, so the engine defaulted armour/trucks to
 				//--- AWARE->COMBAT/WEDGE cross-country - A2 PFM's worst case (distStart=0 at
@@ -1200,6 +1231,7 @@ while {!WFBE_GameOver && _alive} do {
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 FOOT FAST-TRANSIT (column).", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
+				}; //--- cmdcon42-f: close the `if (!_amDone) {ground road-march/foot}` guard - when the air-mobile leg committed (_amDone), the road-march is SKIPPED (the helper handed the team its live flight + drop + pax moves).
 				}; //--- cmdcon41-w3j: close the `if (_isPlaneTeam) {air transit} else {ground road-march/foot}` split opened just above the road-march block.
 				//--- cmdcon41-w2 RALLY MODE EXECUTOR (sketch rally-mode-bounding-withdrawal-executor): the transit lay
 				//--- above already drove a FAST bounding-withdrawal MOVE to _dest for EVERY mode (it fires regardless of
