@@ -1227,6 +1227,7 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_DEFENSE_THREAT_MIN = 3;        // Min enemy ground units (west/east, no Air/GUER) inside base range before the statics/mines threat gate fires
 	WFBE_C_WDDM_COMP_CAP = 3;            //--- Max WDDM commander compositions per base area (size-independent).
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
+	if (isNil "WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING") then {WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING = 0}; //--- Default-off: opt-in stronger player-buy FIFO tokens; 0 keeps legacy UID+diag_tickTime tokens.
 	WFBE_C_STATLOG = 1;                   // [WASPSTAT] structured telemetry RPT lines
 	WFBE_C_LOG_TOWN_COORDS = 1;           // One-shot: dump every town's map position (TOWNPOS|... RPT lines) for the post-match report's TOWN_COORDS. Flip to 1 for a single boot per map, harvest, flip back. Off = zero effect.
 	if (isNil "WFBE_C_TOWNS_GUNNERS_ON_CAPTURE") then {WFBE_C_TOWNS_GUNNERS_ON_CAPTURE = true}; // Immediately man static defenses at capture (all sides); false = reactive only
