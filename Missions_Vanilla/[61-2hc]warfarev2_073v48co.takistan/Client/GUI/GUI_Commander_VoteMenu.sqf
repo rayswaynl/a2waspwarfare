@@ -53,11 +53,19 @@ while {alive player && dialog} do {
 		//--- wiki-wins: resolve by the row's stored team index, not a display-name match (duplicate names / mid-dialog renames picked the wrong commander)
 		_storedIndex = lnbValue [509100,[_index, 0]];
 		_isPrimitivePlaceholder = false;
+		_validStoredTeam = true;
 		if ((missionNamespace getVariable ["WFBE_C_FIX_VOTE_QA_EXECUTION", 0]) > 0) then {
 			if (WFBE_CVOTE_USING_PRIMS && _index > 0 && _storedIndex < 0) then {_isPrimitivePlaceholder = true};
+			if (_storedIndex >= 0) then {
+				_validStoredTeam = false;
+				if (_storedIndex < count(WFBE_Client_Teams)) then {
+					_team = WFBE_Client_Teams select _storedIndex;
+					if !(isNil "_team") then {_validStoredTeam = isPlayer leader _team};
+				};
+			};
 		};
 
-		if !(_isPrimitivePlaceholder) then {
+		if (!(_isPrimitivePlaceholder) && {_validStoredTeam}) then {
 			_voted_commander = if (_storedIndex < 0) then {objNull} else {group leader (WFBE_Client_Teams select _storedIndex)};
 
 			["RequestNewCommander", [side group player, _voted_commander]] Call WFBE_CO_FNC_SendToServer;
