@@ -557,7 +557,7 @@ with missionNamespace do {
 	//--- M1 single-authority Allocator (AI_Commander_Allocate.sqf). 0 = inert (legacy Strategy/AssignTowns
 	//--- targeting runs unchanged = instant rollback); 1 = the Allocator concentrates force on a front fist.
 	if (isNil "WFBE_C_AICOM2_ALLOCATE_ENABLE") then {WFBE_C_AICOM2_ALLOCATE_ENABLE = 1};  //--- v2try (Ray 2026-06-27): brain ON for the live try-out. Rollback = set back to 0 (legacy targeting, instant).
-	if (isNil "WFBE_C_AICOM2_FIST_TOWNS")      then {WFBE_C_AICOM2_FIST_TOWNS      = 1};  //--- front towns the side concentrates on at once (Ray: 1 = STEAMROLLER, max local overmatch).
+	if (isNil "WFBE_C_AICOM2_FIST_TOWNS")      then {WFBE_C_AICOM2_FIST_TOWNS      = 2};  //--- front towns the side concentrates on at once. cmdcon41 SPREAD: 1 -> 2 (1 = STEAMROLLER caused the live 7-teams-on-one-town dogpile; 2-3 = spread front, pairs with WFBE_C_AICOM2_FIST_PERTOWN).
 	if (isNil "WFBE_C_AICOM2_HARASS_TEAMS")    then {WFBE_C_AICOM2_HARASS_TEAMS    = 1};  //--- M2: how many (mounted) teams peel off the fist to raid the enemy's deepest REAR town (supply hub). 0 = pure concentration.
 	if (isNil "WFBE_C_AICOM2_EXPAND_TEAMS")    then {WFBE_C_AICOM2_EXPAND_TEAMS    = 3};  //--- Ray 2026-06-28: up to N teams divert to capture the nearest reachable NEUTRAL town instead of all-in on the fist (issue: 42/46 towns sat neutral). 0 = off (restores fist-only).
 	if (isNil "WFBE_C_AICOM_ENGAGE_MIN_TOWNS") then {WFBE_C_AICOM_ENGAGE_MIN_TOWNS = 10};//--- Ray 2026-06-28 EXPANSION-FIRST: a commander captures NEUTRAL towns only (fist+harass) until it OWNS this many towns, THEN it attacks the enemy - so both sides build an empire before they clash (no early enemy-rush that ends matches premature). ANTI-STALL: if no neutral town remains reachable it engages the enemy anyway. Round-ender HQ-strike keeps its own higher gate (WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS). 0 = disable (engage from turn one).
@@ -726,6 +726,18 @@ with missionNamespace do {
 	//--- === cmdcon37 AI-behaviour fixes (claude-gaming overnight 2026-07-02) ===
 	if (isNil "WFBE_C_AICOM_CAMP_GATE_MODE2") then {WFBE_C_AICOM_CAMP_GATE_MODE2 = 1};        //--- cmdcon37 (afraid-of-camps): in AllCamps mode (WFBE_C_TOWNS_CAPTURE_MODE=2) hold + aggressively clear a town's camps instead of bailing to a depot that can't flip. 0 = old bail behaviour.
 	if (isNil "WFBE_C_AICOM_STALL_ADVANCE_SECS") then {WFBE_C_AICOM_STALL_ADVANCE_SECS = 420}; //--- cmdcon37 (never-stand floor): if a team is parked at a town > this many s with no flip/progress, blacklist it + retarget to the nearest OTHER enemy town same tick (bypasses the strike ladder that rarely accrues live). 0 = off. cmdcon38: 240 -> 420 so it no longer preempts a full travel(~60s)+drain-wait-hold(360s) capture attempt (the WAVE-2 DRAIN-WAIT fix in Common_RunCommanderTeam now holds up to _holdEnd to finish a slow drain); this stays the backstop for genuinely-stuck teams.
+	//--- === cmdcon41 wave-1 (claude-gaming 2026-07-02): SPREAD+HOLD, real-combat base assault (Ray: ON), siege decay, remnant caution ===
+	if (isNil "WFBE_C_AICOM_SPREAD_MODE")            then {WFBE_C_AICOM_SPREAD_MODE = 1};            //--- anti-dogpile: cap teams per fist town in the Allocator (0 = legacy uncapped pile-up).
+	if (isNil "WFBE_C_AICOM2_FIST_PERTOWN")          then {WFBE_C_AICOM2_FIST_PERTOWN = 4};          //--- max teams the Allocator stacks on one fist town before spilling to the next.
+	if (isNil "WFBE_C_AICOM_HOLD_MODE")              then {WFBE_C_AICOM_HOLD_MODE = 1};              //--- first captor HOLDS the just-captured town on DEFEND (0 = every captor leaves -> see-saw).
+	if (isNil "WFBE_C_AICOM_HOLD_SECS")              then {WFBE_C_AICOM_HOLD_SECS = 180};            //--- hold window (garrison re-arm time) before the holder rejoins the offense.
+	if (isNil "WFBE_C_AICOM_ASSAULT_STRUCTURES")     then {WFBE_C_AICOM_ASSAULT_STRUCTURES = 1};     //--- REAL-COMBAT BASE ASSAULT (Ray): strike teams doTarget/doFire the enemy HQ+factories (factories first).
+	if (isNil "WFBE_C_AICOM_ASSAULT_ENGAGE_RANGE")   then {WFBE_C_AICOM_ASSAULT_ENGAGE_RANGE = 400}; //--- leader within this range of the enemy HQ -> the fire phase engages (ordinary goto moves untouched).
+	if (isNil "WFBE_C_STRUCTURES_ENEMY_DESTROYABLE") then {WFBE_C_STRUCTURES_ENEMY_DESTROYABLE = 1}; //--- enemy weapons actually DAMAGE HQ/factory structures (0 = legacy invulnerable-to-enemy gate).
+	if (isNil "WFBE_C_STRUCTURES_ENEMY_REDU")        then {WFBE_C_STRUCTURES_ENEMY_REDU = 2};        //--- damage-reduction divisor vs enemy fire (factories 2, HQ +1=3; legacy never-dies was 5/6).
+	if (isNil "WFBE_C_AICOM_OVERRUN_SIEGE_DECAY")    then {WFBE_C_AICOM_OVERRUN_SIEGE_DECAY = 1};    //--- siege counter DECAYS (-1) on a momentary 0-striker tick instead of hard-resetting to 0.
+	if (isNil "WFBE_C_AICOM_OVERRUN_SCRIPTRAZE")     then {WFBE_C_AICOM_OVERRUN_SCRIPTRAZE = 0};     //--- Ray: the scripted siege-timer raze is OFF - the win comes from REAL destruction by the assault.
+	if (isNil "WFBE_C_AICOM_REMNANT_CAUTION")        then {WFBE_C_AICOM_REMNANT_CAUTION = 1};        //--- mauled remnant teams (<3 live) assault at AWARE/YELLOW instead of banzai COMBAT/RED.
 	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): FOUND size decoupled from the live MIN
 	//--- floor. HC-founded teams are NEVER refilled after founding (see AI_Commander_Teams.sqf B57 block),
 	//--- so founding AT the floor (8) guarantees the LIVE average dribbles BELOW the 8-12 band the instant
@@ -850,8 +862,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_BASE_DEFENSE_MAX_AI") then {WFBE_C_BASE_DEFENSE_MAX_AI = 40}; //--- Maximum AIs that will be able to man defense within the barracks area.
 	if (isNil "WFBE_C_BASE_DEFENSE_MANNING_RANGE") then {WFBE_C_BASE_DEFENSE_MANNING_RANGE = 250}; //--- Within x meters, defenses may be manned.
 	if (isNil "WFBE_C_BASE_START_TOWN") then {WFBE_C_BASE_START_TOWN = 1}; //--- Remove the spawn locations which are too far away from the towns.
-	if (isNil "WFBE_C_BASE_STARTING_MODE") then {WFBE_C_BASE_STARTING_MODE = 0}; //--- Starting Locations Mode: 0 = WN|ES; 1 = WS|EN; 2 = Random;
-	if (isNil "WFBE_C_BASE_RANDOM_PURE") then {WFBE_C_BASE_RANDOM_PURE = 0}; //--- Build84 (backlog#2): 1 = Miksuu-original UNFILTERED pure-random when MODE=2 (skips the B62 airfield / B66 egress-edge / rotation filters in Init_Server); 0 = hardened filtered random (default).
+	if (isNil "WFBE_C_BASE_STARTING_MODE") then {WFBE_C_BASE_STARTING_MODE = 2}; //--- Starting Locations Mode: 0 = WN|ES; 1 = WS|EN; 2 = Random. cmdcon41 (Ray): default 0 -> 2 (spawns "didn't seem random" - they were the fixed Build84 default).
+	if (isNil "WFBE_C_BASE_RANDOM_PURE") then {WFBE_C_BASE_RANDOM_PURE = 1}; //--- cmdcon41 (Ray): random-PURE default (original unfiltered Miksuu random). //--- Build84 (backlog#2): 1 = Miksuu-original UNFILTERED pure-random when MODE=2 (skips the B62 airfield / B66 egress-edge / rotation filters in Init_Server); 0 = hardened filtered random (default).
 	//--- Egress-quality gate (A2-fix 2026-06-14): random base placement (MODE=2) can box a side into a
 	//--- corner with a single egress road, stalling its AI-commander teams (empty HC route -> PFM stall).
 	//--- The Init_Server start-picker requires a candidate to have >= MIN_EGRESS_ROADS usable road

@@ -184,6 +184,28 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				};
 			};
 		};
+		//--- HOLD SKIP-RETARGET (cmdcon41, claude-gaming 2026-07-02): the FIRST captor of a town claims a short
+		//--- DEFEND hold (latched in Common_RunCommanderTeam on capture: team var wfbe_aicom_holding_town = the
+		//--- town, town var wfbe_aicom_hold_until = expiry). While that latch is LIVE - the held town is still
+		//--- ours and the window has not lapsed - treat the team as explicitly ordered so this tick does NOT
+		//--- retarget it off the just-taken centre (stops the see-saw). Once the town flips back, or the window
+		//--- lapses, the latch is CLEARED and the team retargets normally next pass. A2-OA-safe (plain getVariable
+		//--- + isNil guard, typeName OBJECT test, numeric sideID compare, objNull broadcast clear).
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1]) > 0) then {
+			private ["_ht","_htLive"];
+			_ht = _team getVariable "wfbe_aicom_holding_town";
+			_htLive = false;
+			if (!isNil "_ht") then {
+				if (typeName _ht == "OBJECT" && {!isNull _ht}) then {
+					if ((_ht getVariable ["sideID", -1]) == _sideID && {time < (_ht getVariable ["wfbe_aicom_hold_until", 0])}) then {_htLive = true};
+				};
+			};
+			if (_htLive) then {
+				_explicitMode = true;
+			} else {
+				_team setVariable ["wfbe_aicom_holding_town", objNull, true];
+			};
+		};
 		if (!_explicitMode) then {
 			_mode = _team getVariable ["wfbe_teammode", ""];
 			_goto = _team getVariable ["wfbe_teamgoto", objNull];

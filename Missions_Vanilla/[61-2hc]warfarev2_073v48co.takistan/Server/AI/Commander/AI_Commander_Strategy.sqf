@@ -699,14 +699,38 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	private ["_ovrRatio","_ovrSiege","_ovrSiegeNeed","_ovrVia"];
 	_ovrRatio = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_RATIO", 2];
 	_ovrSiegeNeed = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_SIEGE_TICKS", 5];
-	if (_ovrStrikers > 0) then {_ovrSiege = (_logik getVariable ["wfbe_aicom_overrun_siege", 0]) + 1} else {_ovrSiege = 0};
+	//--- cmdcon41 (REAL-BASE-ASSAULT P0-1 SIEGE DECAY): the legacy hard reset to 0 on ANY 0-striker tick meant
+	//--- one momentary gap (a striker briefly leaving the _ovrDist radius, or all dying/reviving) wiped the whole
+	//--- accumulated siege. When WFBE_C_AICOM_OVERRUN_SIEGE_DECAY (default 1) is on, DECAY by 1 (floored at 0)
+	//--- instead of zeroing, so a sustained-but-flickering presence still counts up. Flag off -> legacy reset.
+	if (_ovrStrikers > 0) then {
+		_ovrSiege = (_logik getVariable ["wfbe_aicom_overrun_siege", 0]) + 1;
+	} else {
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_SIEGE_DECAY", 1]) > 0) then {
+			_ovrSiege = ((_logik getVariable ["wfbe_aicom_overrun_siege", 0]) - 1) max 0;
+		} else {
+			_ovrSiege = 0;
+		};
+	};
 	_logik setVariable ["wfbe_aicom_overrun_siege", _ovrSiege];
 	_ovrVia = if (_ovrEnemies == 0) then {"clear"} else {if (_ovrStrikers >= (_ovrEnemies * _ovrRatio)) then {"ratio"} else {"siege"}};
 	if (_ovrStrikers > 0 && {(_ovrEnemies == 0) || {_ovrStrikers >= (_ovrEnemies * _ovrRatio)} || {_ovrSiege >= _ovrSiegeNeed}}) then {
-		_enemyHQ setDamage 1;
-		{ if (!isNull _x && {alive _x} && {(_x distance _eHQpos) < _ovrRaze}) then {_x setDamage 1} } forEach ((_enemySide) Call WFBE_CO_FNC_GetSideStructures);
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BASE_OVERRUN|enemy HQ+factories razed|strikers=" + str _ovrStrikers + "|enemies=" + str _ovrEnemies + "|via=" + _ovrVia + "|siege=" + str _ovrSiege);
-		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] ENEMY BASE OVERRUN - razed enemy HQ + structures (strikers on objective, enemy cleared) -> supremacy win imminent.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+		//--- cmdcon41 (REAL-BASE-ASSAULT part 3): the win must come from REAL destruction (driver fire-phase + the now-
+		//--- unblocked handleDamage). The scripted setDamage-1 raze is demoted to a FALLBACK gated by
+		//--- WFBE_C_AICOM_OVERRUN_SCRIPTRAZE (default 0 = OFF). With scriptraze off we keep the SIEGE TELEMETRY (the
+		//--- BASE_OVERRUN AICOMSTAT line) as info-only (via=assault-progress) so the soak still shows siege pressure,
+		//--- but do NOT manufacture the base death. The existing victory FSM (server_victory_threeway) reads the real
+		//--- HQ/factory state (!alive HQ && factories==0) and fires the win when units actually destroy them - that read
+		//--- is untouched here (we only stop faking the state). Flag on -> legacy raze restored (one-flip rollback).
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_SCRIPTRAZE", 0]) > 0) then {
+			_enemyHQ setDamage 1;
+			{ if (!isNull _x && {alive _x} && {(_x distance _eHQpos) < _ovrRaze}) then {_x setDamage 1} } forEach ((_enemySide) Call WFBE_CO_FNC_GetSideStructures);
+			diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BASE_OVERRUN|enemy HQ+factories razed|strikers=" + str _ovrStrikers + "|enemies=" + str _ovrEnemies + "|via=" + _ovrVia + "|siege=" + str _ovrSiege);
+			["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] ENEMY BASE OVERRUN - razed enemy HQ + structures (strikers on objective, enemy cleared) -> supremacy win imminent.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+		} else {
+			diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BASE_OVERRUN|siege pressure at enemy base (no script-raze)|strikers=" + str _ovrStrikers + "|enemies=" + str _ovrEnemies + "|via=assault-progress|siege=" + str _ovrSiege);
+			["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] ENEMY BASE UNDER SIEGE - strikers on objective (via=assault-progress); real weapon destruction earns the supremacy win, no script-raze.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+		};
 	};
 };
 

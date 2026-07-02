@@ -19,7 +19,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_townCenter","_capRange","_footInf","_holdEnd","_resNear","_enemyNear","_townFlipped",
          "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
-         "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
+         "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir"];
 
@@ -638,6 +638,8 @@ while {!WFBE_GameOver && _alive} do {
 				_lastSeq = _seq;
 				_arrived = false;
 				_captureDone = false;
+				_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
+				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_ACCEPT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round ((leader _team) distance _dest)));
 
 				//--- REAL UNSTUCK (task #14/#16): if this fresh order is a STUCK re-issue
 				//--- (server bumped wfbe_aicom_unstuck > 0 because the team sat parked far
@@ -887,8 +889,11 @@ while {!WFBE_GameOver && _alive} do {
 
 				//--- On arrival, switch to the mode's local behaviour once.
 				if (!_arrived) then {
-					if ((leader _team) distance _dest < ((missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]) max (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20))) then { //--- WAVE-3 ARRIVAL-GATE ROOT FIX (2026-07-02): the 100m gate was STILL too tight -> live begin_capture=0 both sides at min 20: teams reach the 250m telemetry arrive-radius (ASSAULT_DISPATCH/ARRIVED) but WEDGE outside 100m, never latch _arrived, never enter the capture block (L934). Widen to the SAME WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS (250m); the in-phase code re-drives units onto the exact depot centre (getPos _townObj, 40m). Fleet root-cause wln6wj9cn.
+					_arrivalGate = (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]) max (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20); //--- WAVE-3 250m arrival-gate (fleet wln6wj9cn) kept through the #138 CAPTURE_TRACE locals restructure (the #138 hunk carried the stale 100m math).
+					_arrivalDist = (leader _team) distance _dest;
+					if (_arrivalDist < _arrivalGate) then {
 						_arrived = true;
+						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ARRIVAL_GATE|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round _arrivalDist) + "|gate=" + str (round _arrivalGate));
 						//--- Cosmetic: faction smoke at assault onset (fires once per team via the _arrived latch). Server-only, gated + capped + cooldown.
 						[getPosATL (leader _team), side _team] call WFBE_CO_FNC_SpawnFactionSmoke;
 						//--- ROAD-MARCH hand-off: at the objective we WANT overland combat, so
@@ -897,10 +902,150 @@ while {!WFBE_GameOver && _alive} do {
 						//--- WaypointsAdd so behaviour/formation actually apply.
 						//--- (A2-fix: removed the A3-only forceFollowRoad clear; COMBAT/WEDGE props set the assault posture.)
 						_team setSpeedMode "NORMAL";
+						//--- REMNANT STANCE DOWNSHIFT (cmdcon41): a badly-attrited squad should not
+						//--- bull-rush COMBAT/RED into a dug-in objective and get finished off - it should
+						//--- advance CAUTIOUSLY (AWARE/YELLOW: still MOVING, still returns fire, never
+						//--- frozen). Gate on WFBE_C_AICOM_REMNANT_CAUTION and a remnant test: no founding-
+						//--- size var exists on the team, so use the spec fallback of < 3 live units.
+						//--- A2-OA-safe (== on numbers, if/else - no bool ==, no A3 commands). Props are the
+						//--- ONLY thing tuned; the SAD radius/completion + never-idle order are unchanged.
+						private ["_stB","_stC"];
+						_stB = "COMBAT"; _stC = "RED";
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_REMNANT_CAUTION", 1]) > 0) then {
+							if ((count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) < 3) then {
+								_stB = "AWARE"; _stC = "YELLOW"; //--- remnant: cautious advance, still moving + returns fire (never frozen).
+							};
+						};
 						if (_mode == "defense") then {
-							[_team, true, [[_dest, 'SAD', 100, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
-							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring.
+							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring. cmdcon41: props via _stB/_stC (remnant downshift above).
+						};
+					};
+				};
+
+				//--- ===================================================================
+				//--- REAL-COMBAT BASE-ASSAULT FIRE PHASE (cmdcon41, REAL-BASE-ASSAULT.md sec 2).
+				//--- A "goto" strike order presses onto the enemy HQ (Strategy L660 lays getPos
+				//--- _enemyHQ as a plain goto). Today "goto" falls into the arrival SAD only -> units
+				//--- fight nearby MEN, never the HQ/factory structures, so the base is never destroyed
+				//--- by weapons. This phase - parallel to the towns-target capture block below and
+				//--- built on the SAME proven, A2-OA-safe idioms (2-operand reveal, doTarget/doFire,
+				//--- WFBE_CO_FNC_GetClosestEntity, a live SAD WaypointsAdd underneath so units are
+				//--- never idle, the _holdEnd time-box + _capAbort seq-interrupt from the capture
+				//--- hold) - orders EVERY live unit to reveal+doTarget+doFire the nearest alive enemy
+				//--- structure (factories FIRST, the HQ LAST). It only engages once the leader is
+				//--- within ~400m of the enemy HQ, so ordinary long "goto" moves are untouched. It
+				//--- exits when the HQ is dead AND no alive enemy structures remain, on _capAbort
+				//--- (re-tasked mid-assault), or on the hard timeout - the team then flows on normally.
+				if (_arrived && {!_captureDone} && {_mode == "goto"} && {(missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_STRUCTURES", 1]) > 0}) then {
+
+					//--- Early-exit if the team is gone / has no live units (mirrors the capture-phase guard).
+					if (isNull _team || {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) == 0}) exitWith {};
+
+					//--- Resolve the enemy side (opposite of _side; A2-OA: switch on Side, no A3 commands).
+					private ["_enemySide"];
+					_enemySide = switch (_side) do {
+						case west: {east};
+						case east: {west};
+						default {sideEnemy}; //--- resistance/other: fall back to A2's global OPFOR alias.
+					};
+
+					//--- Alive-filtered enemy HQ + structures (both helpers alive-filter; _eHQ may be objNull mid-mobilize).
+					private ["_eHQ","_eStructs"];
+					_eHQ     = _enemySide Call WFBE_CO_FNC_GetSideHQ;
+					_eStructs = _enemySide Call WFBE_CO_FNC_GetSideStructures;
+					if (isNil "_eStructs" || {typeName _eStructs != "ARRAY"}) then {_eStructs = []};
+
+					//--- ENGAGE-GATE: only prosecute structures once the leader is within ~400m of the
+					//--- enemy HQ pos - so a team still road-marching a long "goto" leg is NOT pulled into
+					//--- the fire loop (ordinary goto moves untouched). If the HQ is null/mobilizing we
+					//--- cannot range-gate, so skip (the arrival SAD keeps the team fighting meanwhile).
+					private ["_engageRange","_hqPos","_inRange"];
+					_engageRange = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ENGAGE_RANGE", 400];
+					_inRange = false;
+					if (!isNull _eHQ && {alive _eHQ}) then {
+						_hqPos = getPos _eHQ;
+						if (!isNull leader _team && {alive leader _team} && {((leader _team) distance _hqPos) < _engageRange}) then {_inRange = true};
+					};
+
+					if (_inRange) then {
+						//--- Seq-interrupt snapshot (identical idiom to the capture hold): if a fresh order
+						//--- (bumped seq) arrives mid-assault the outer ~8s loop must re-read within one tick
+						//--- instead of finishing a multi-minute press. A2-OA: plain single-arg getVariable on
+						//--- the GROUP + isNil (the [name,default] form is unreliable on groups).
+						private ["_asInt","_asOrd0","_asSeq","_asAbort","_asOrdN","_asEnd","_asDone"];
+						_asInt  = (missionNamespace getVariable ["WFBE_C_AICOM_CAPTURE_INTERRUPT", 1]) > 0;
+						_asOrd0 = _team getVariable "wfbe_aicom_order"; if (isNil "_asOrd0") then {_asOrd0 = []};
+						_asSeq  = if (count _asOrd0 >= 1) then {_asOrd0 select 0} else {-1};
+						_asAbort = false;
+						_asDone  = false;
+
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] BASE-ASSAULT fire phase begin vs %3 HQ (%4 structure(s)).", _side, _team, _enemySide, count _eStructs]] Call WFBE_CO_FNC_AICOMLog;
+
+						//--- Time-boxed fire loop (bounded by _asEnd + _asAbort exactly like the capture hold).
+						//--- Each ~10s tick: (a) re-resolve the live structure list, (b) pick the nearest ALIVE
+						//--- FACTORY first (HQ only once no factories remain) via WFBE_CO_FNC_GetClosestEntity,
+						//--- (c) lay a live SAD waypoint at the target so the squad is NEVER idle (manoeuvres even
+						//--- with no LOS), (d) order every live unit to reveal+doTarget+doFire the target. Exit
+						//--- when the HQ is dead AND no alive enemy structures remain, on _asAbort, or on timeout.
+						_asEnd = time + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_HOLD", 360]);
+						while {time < _asEnd && {!_asDone} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+							//--- Seq-interrupt check (same as the capture hold).
+							_asOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_asOrdN") then {_asOrdN = []};
+							if (_asInt && {count _asOrdN >= 1} && {(_asOrdN select 0) != _asSeq}) then {_asAbort = true};
+							if (_asAbort) exitWith {}; //--- re-tasked mid-assault -> bail; outer loop re-reads the new order.
+
+							//--- Re-resolve live targets this tick (structures die out from under us).
+							_eHQ     = _enemySide Call WFBE_CO_FNC_GetSideHQ;
+							_eStructs = _enemySide Call WFBE_CO_FNC_GetSideStructures;
+							if (isNil "_eStructs" || {typeName _eStructs != "ARRAY"}) then {_eStructs = []};
+
+							//--- Build the alive FACTORY-FIRST list (exclude the HQ; append it LAST so
+							//--- factories fall before the HQ per the design's kill order).
+							private ["_liveStructs","_tgt","_ldrRef"];
+							_liveStructs = [];
+							{
+								if (!isNil "_x") then {
+									if (!isNull _x && {alive _x} && {_x != _eHQ}) then {_liveStructs = _liveStructs + [_x]};
+								};
+							} forEach _eStructs;
+
+							//--- Pick the nearest alive factory to the leader; if none remain, target the HQ last.
+							_ldrRef = if (!isNull leader _team && {alive leader _team}) then {leader _team} else {_team};
+							_tgt = objNull;
+							if (count _liveStructs > 0) then {
+								_tgt = [_ldrRef, _liveStructs] Call WFBE_CO_FNC_GetClosestEntity;
+							} else {
+								if (!isNull _eHQ && {alive _eHQ}) then {_tgt = _eHQ};
+							};
+
+							//--- Victory-of-this-phase test: HQ dead AND no alive enemy structures -> done.
+							if (isNull _tgt) then {
+								_asDone = true;
+							} else {
+								//--- Lay a live SAD at the target so the squad closes + manoeuvres even without LOS
+								//--- (never idle - MEMORY guardrail), then order the fire. SAD radius mirrors the
+								//--- assault-SAD ring used on arrival; completion 30 like the other WaypointsAdd calls.
+								[_team, true, [[getPos _tgt, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+								{
+									if (alive _x) then {
+										_x reveal _tgt;   //--- A2: 2-operand reveal only (array form is A3-only).
+										_x doTarget _tgt;
+										_x doFire _tgt;
+									};
+								} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+							};
+							sleep 10; //--- re-issue each ~10s tick.
+						};
+						if (_asAbort) exitWith {}; //--- assault interrupted -> bail the phase; outer loop re-tasks.
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] BASE-ASSAULT fire phase end (HQ alive=%3, structures left=%4).", _side, _team, (!isNull _eHQ && {alive _eHQ}), count _eStructs]] Call WFBE_CO_FNC_AICOMLog;
+					} else {
+						_arrivalTraceAt = _team getVariable "wfbe_aicom_arrival_trace_at";
+						if (isNil "_arrivalTraceAt") then {_arrivalTraceAt = time};
+						if (time >= _arrivalTraceAt) then {
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ARRIVAL_WAIT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round _arrivalDist) + "|gate=" + str (round _arrivalGate));
+							_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
 						};
 					};
 				};
@@ -932,6 +1077,7 @@ while {!WFBE_GameOver && _alive} do {
 				//--- 20s loop re-runs this phase next tick (units keep fighting at the center) so
 				//--- a single failed pass is never a dead end.
 				if (_arrived && !_captureDone && _mode == "towns-target") then {
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|BEGIN_CAPTURE|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round ((leader _team) distance _dest)));
 
 					//--- WAVE-1 CAUSE-3 EARLY-EXIT: bail the whole capture phase if the team is gone or has
 					//--- no live units (a wipe mid-phase would otherwise run scans/waypoints on a dead group).
@@ -1212,6 +1358,32 @@ while {!WFBE_GameOver && _alive} do {
 						if (_townFlipped) then {
 							_captureDone = true;
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] CAPTURED [%3] - holding center.", _side, _team, _townObj getVariable ["name","?"]]] Call WFBE_CO_FNC_AICOMLog;
+							//--- SPREAD+HOLD (cmdcon41, SPREAD-AND-HOLD.md sec 2a): the FIRST team to flip a
+							//--- fresh town claims a short DEFEND hold via a self-expiring latch STAMPED ON THE
+							//--- TOWN OBJECT (broadcast, so AssignTowns can honour it) - so the captor keeps a
+							//--- body in the drain ring while the garrison re-arms, instead of every captor
+							//--- immediately retargeting and leaving the centre empty (the see-saw). Later
+							//--- captors (or the same team past expiry) fall through to the verbatim release.
+							//--- A2-OA-safe: object getVariable [name,default] is fine (object, not a group);
+							//--- SetTeamMoveMode/SetTeamMovePos are the codebase-standard broadcast setters.
+							private ["_holdMode","_holdUntil","_holdClaimed"];
+							_holdMode  = missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1];
+							_holdUntil = _townObj getVariable ["wfbe_aicom_hold_until", 0];
+							_holdClaimed = false;
+							if (_holdMode > 0 && {time > _holdUntil}) then {
+								//--- Claim the hold: stamp the town's expiry, put THIS team on DEFEND at the
+								//--- town centre, flag which town it is holding, clear stale strike/relief, and
+								//--- do NOT null the goto (so AssignTowns' holder-skip keeps it here).
+								_townObj setVariable ["wfbe_aicom_hold_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180]), true];
+								[_team, "defense"] Call SetTeamMoveMode;               //--- broadcast wfbe_teammode "defense"
+								[_team, getPos _townObj] Call SetTeamMovePos;          //--- broadcast wfbe_teamgoto = town centre (goto NOT nulled)
+								_team setVariable ["wfbe_aicom_holding_town", _townObj, true]; //--- which town this team is holding (AssignTowns holder-skip reads it)
+								_team setVariable ["wfbe_aicom_strike", false, true];  //--- clear stale strike state so Strategy.sqf doesn't re-grab
+								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								_holdClaimed = true;
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] HOLD-CLAIM [%3] on defense for %4s.", _side, _team, _townObj getVariable ["name","?"], (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180])]] Call WFBE_CO_FNC_AICOMLog;
+							};
+							if (!_holdClaimed) then {
 							//--- ON-CAPTURE RE-TASK (BUG B): drop the captured-town order so AssignTowns
 							//--- retargets THIS team next tick instead of letting it idle ~2 min at the
 							//--- center. AssignTowns L168-169 retargets when isNull _goto (=> _needs=true),
@@ -1225,6 +1397,7 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_teammode", "towns", true];        //--- ensure strike/relief teams re-enter the towns retarget gate
 							_team setVariable ["wfbe_aicom_strike", false, true];      //--- clear stale strike state so Strategy.sqf doesn't re-grab
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
+							};
 						} else {
 							//--- WAVE-1 CAUSE-3 BOUND-CAPTURE-LOOP: on a contested/uncapturable depot the old code held
 							//--- the center FOREVER ("did not flip res-near=0"). Track consecutive non-flip passes on a
