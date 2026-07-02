@@ -518,7 +518,7 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		//--- Fly the heli to the objective and unload. doMove + flyInHeight, then
 		//--- land+disembark when close (heli-land) OR para-eject if no flat LZ.
 		[_airVeh, _lzPos, _flat, _lifted, _team, _pos, _side, _sideID, _heliCost] Spawn {
-			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew"];
+			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew","_approachLimited"];
 			_h    = _this select 0;
 			_lz   = _this select 1;
 			_fl   = _this select 2;
@@ -535,6 +535,8 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
 				{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
 			};
+			_approachLimited = (missionNamespace getVariable ["WFBE_C_AICOM_HELI_APPROACH_LIMITED", 0]) > 0;
+			if (_approachLimited) then {(group (driver _h)) setSpeedMode "LIMITED"};
 			(driver _h) doMove _lz;
 			_h flyInHeight 60;
 			//--- Run in until near the LZ (or timeout / loss).
@@ -543,6 +545,7 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 				{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
 			};
+			if (_approachLimited) then {(group (driver _h)) setSpeedMode "FULL"};
 			if (count _fl > 0) then {
 				//--- Flat LZ: command a real landing and disembark.
 				_h land "GET OUT";
