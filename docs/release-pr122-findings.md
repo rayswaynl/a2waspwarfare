@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 07:36 Europe/Amsterdam
+Last updated: 2026-07-02 07:44 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -69,6 +69,42 @@ tuple and wiki `8099a35`.
 This removes the PR #126 tuple-lag warning. Release remains **NO-GO** because no
 exact selected-candidate Chernarus + Takistan RPT evidence, human smoke notes, or
 deployment approval were added.
+
+## 2026-07-02 07:44 Update
+
+Final validation found PR #125 moved from
+`f894419db929d0900160944760f1c6646a6fa3d9` to
+`132af4ee66800c9eab1b140aae3dc328cc786ae1`.
+
+The new commit is mission-affecting:
+
+- `132af4ee6` - `fix: bind SCUD request authority`
+- changed both-map `Client/PVFunctions/HandleSpecial.sqf`,
+  `Server/Functions/Server_HandleSpecial.sqf`,
+  `Server/Support/Support_ScudStrike.sqf`, and static smoke coverage
+- `git diff --check origin/master..origin/codex/release-command-center-20260630`
+  passes
+
+Current PR #125 body tuple:
+
+- marker: `132af4ee66`
+- candidate: `release-command-center-20260630`
+- package SHA256:
+  `DF37FA9EBEC4F650A7A37CB6C2ED0842C59860CAE18617BB61A3C56010E603CE`
+- package size: `7164821`
+- entries: `1885`
+- wiki: `8461f4b`
+- handoff: `ready_for_runtime_collection`
+- status: not deployed, runtime pending
+
+The local wiki mirror fast-forwarded to `8461f4b`.
+
+Because PR #125 moved after PR #126's sync, PR #126 is now behind the current
+PR #125 tuple again. Its latest checked body mirrors `f894419db9` /
+`0EFED527...`, not `132af4ee66` / `DF37FA9E...`.
+
+Release remains **NO-GO** until exact selected-candidate Chernarus + Takistan RPT
+evidence, human smoke notes, and deployment approval are attached.
 
 ## 2026-07-02 01:29 Update
 
