@@ -19,6 +19,8 @@ _dir     = _this select 2;
 _truck   = _this select 3;
 _player  = _this select 4;
 
+if !(isPlayer _player) exitWith {["WARNING", Format ["RequestFOBStructure.sqf: non-player sender rejected (unit: %1).", _player]] Call WFBE_CO_FNC_LogContent};
+
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
 
 _idx = (missionNamespace getVariable ["WFBE_C_GUER_FOB_STRUCTS", ["Barracks","Light","Heavy"]]) find _facType;

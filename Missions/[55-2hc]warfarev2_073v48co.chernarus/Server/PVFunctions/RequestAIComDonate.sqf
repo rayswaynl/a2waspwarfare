@@ -34,6 +34,7 @@ if (isNil "_donorTeam") exitWith {};
 if (isNil "_amount")    exitWith {};
 
 if (isNull _donor)     exitWith {};
+if !(isPlayer _donor) exitWith {["WARNING", Format ["RequestAIComDonate.sqf: [DONATION] rejected - _donor is not a player (%1).", _donor]] Call WFBE_CO_FNC_AICOMLog;};
 if (isNull _donorTeam) exitWith {};
 
 //--- Validate amount > 0.

@@ -26,4 +26,5 @@ _side      = _this select 0;
 _pos       = _this select 1;
 _reqPlayer = _this select 2;
 
+if (!isPlayer _reqPlayer) exitWith {["WARNING", "RequestSiteClearance.sqf: rejected - _reqPlayer is not a player."] Call WFBE_CO_FNC_LogContent;};
 [_side, _pos, _reqPlayer] Call WFBE_SE_FNC_SiteClearance;

@@ -1,6 +1,7 @@
 "CLIENT_INIT_READY" addPublicVariableEventHandler {
     private ["_player"];
 
+    if (count _this < 2) exitWith {};
     _player = _this select 1;
 
     //--- Set attack mode status properly.
@@ -18,11 +19,16 @@
 
 "ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
 
-	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
+	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage", "_payload"];
 
-	_side = ((_this select 1) select 0);
-	_priceModifier = ((_this select 1) select 1);
-    _attackLength = ((_this select 1) select 2);
+	_payload = _this select 1;
+	if (!((typeName _payload) == "ARRAY") || {count _payload < 3}) exitWith {
+		["WARNING","AttackWave.sqf: ATTACK_WAVE_DETAILS payload malformed, ignoring."] call WFBE_CO_FNC_LogContent;
+	};
+
+	_side = (_payload select 0);
+	_priceModifier = (_payload select 1);
+    _attackLength = (_payload select 2);
 
     _priceModifierPercentage = round (_priceModifier * 100);
 
