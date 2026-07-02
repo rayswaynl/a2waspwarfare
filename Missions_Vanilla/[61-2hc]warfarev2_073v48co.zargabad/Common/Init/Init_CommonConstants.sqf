@@ -853,7 +853,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_JOURNEY_COMMIT")          then {WFBE_C_AICOM_JOURNEY_COMMIT = 1};          //--- never retarget a team that is closing on its town (progress >= 150m since dispatch).
 	if (isNil "WFBE_C_AICOM_STRIKE_COMMIT") then {WFBE_C_AICOM_STRIKE_COMMIT = 0}; //--- 0=current (any towns-mode team is strike-grabbable); 1=a PROGRESSING team (open dispatch + progress>=150m + target still enemy) is skipped for the HQ strike-grab so an active journey is not killed. Exempts recycle-flagged + genuinely-stuck teams.
 	if (isNil "WFBE_C_AICOM_LADDER_DECAY")            then {WFBE_C_AICOM_LADDER_DECAY = 1};            //--- stuck-strike ladder decays (-1) on progress instead of resetting to 0 (wedgers eventually reach tier-3 recovery).
-	if (isNil "WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE") then {WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE = 6}; //--- a team with this many failed journeys since its last arrival is recycled (combat- and player-guarded).
+	if (isNil "WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE") then {WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE = 0}; //--- 0=off; >0=recycle a team that has this many failed journeys since its last arrival (combat- and player-guarded); owner enables by setting e.g. 6.
 	//--- cmdcon43-pack2: AICOM effectiveness additions (items 2-4).
 	if (isNil "WFBE_C_AICOM_RESEARCH_AIR")    then {WFBE_C_AICOM_RESEARCH_AIR    = 0}; //--- 0=off; 1=AI appends [AIR,1][AIR,2] to doctrine research when an Aircraft Factory is present.
 	if (isNil "WFBE_C_AICOM_STRIKE_AT_BONUS") then {WFBE_C_AICOM_STRIKE_AT_BONUS = 0}; //--- 0=off; >0=score bonus for launcher-carrying teams in the HQ-strike picker (suggest 50).
