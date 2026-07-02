@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -8,6 +8,15 @@ for "_j" from 0 to ((count towns) - 1) step 1 do
 };
 
 _range = 600;
+if ((missionNamespace getVariable ["WFBE_C_TOWNS_AI_SCAN_RANGE_OVERRIDE", 0]) > 0) then {
+	_scanRange = missionNamespace getVariable ["WFBE_C_TOWNS_AI_SCAN_BASE_RANGE", 600];
+	switch (typeName _scanRange) do {
+		case "SCALAR": {
+			_range = _scanRange;
+			if (_range < 100) then {_range = 100};
+		};
+	};
+};
 _range_detect = _range * (missionNamespace getVariable "WFBE_C_TOWNS_DETECTION_RANGE_COEF");
 _range_detect_active = _range * (missionNamespace getVariable "WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF");
 
