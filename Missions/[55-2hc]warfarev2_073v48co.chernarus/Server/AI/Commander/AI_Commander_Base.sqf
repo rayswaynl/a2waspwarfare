@@ -508,7 +508,11 @@ if (_cbrIdx >= 0) then {
 		_eHQ = _enemySide Call WFBE_CO_FNC_GetSideHQ;
 		if (!isNull _eHQ) then {
 			_scanPos = getPos _eHQ;
-			_artyScanRadius = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_THREAT_SCAN_RADIUS", 10000];
+			_artyScanRadius = 10000;
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_THREAT_SCAN_RADIUS_ENABLE", 0]) > 0) then {
+				_artyScanRadius = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_THREAT_SCAN_RADIUS", 10000];
+				if (_artyScanRadius < 0) then {_artyScanRadius = 0};
+			};
 			{
 				if (!_artyThreat) then {
 					if ((_x getVariable ["WFBE_CommanderArtillery", false]) &&
