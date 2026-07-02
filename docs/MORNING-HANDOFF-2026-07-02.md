@@ -1,5 +1,17 @@
 # WASP overnight handoff → morning (2026-07-02)
 
+## ▶ RAY'S MORNING DIRECTIVES (answered 2026-07-02 morning — this section governs the day)
+Full list: night-RPT digest · match stat reports HEAVY improve · miksuu.com pass (stats!) · HC weaponless +
+deadspawns out at sea · Khe Sanh carriers proper · check all PRs · AICOM behavior + its units. Subagents = Opus 4.8.
+1. **Deploy:** KEEP BUILDING toward cmdcon41, talking to Ray as we go — **no deploy until he says**.
+2. **Real-combat base assault:** implement + flag-gated **DEFAULT ON** (enemy fire damages structures, strike
+   teams doTarget/doFire the HQ+factories, win from real destruction; siege-timer raze removed/OFF-fallback).
+3. **Khe Sanh symptoms (observed):** town-center logic sits WAY UNDER the deck (visually broken); a **SCUD falls
+   off** one carrier; implementation overall incomplete — rework properly.
+4. **Match report:** ALL improvements, plus two hard rules — **NO HCs in any stats** (match report AND website;
+   MVP was "HC-AI-Control-1 (0K)"), and the replay must show **ALL town nodes** as the standard map graph, not
+   only captured towns. (Saved as memory `wasp-no-hcs-in-stats`.)
+
 ## TL;DR
 **The all-night problem — "AI doesn't capture towns" — is SOLVED and verified.** The AI now road-marches
 to towns, holds the depot, and flips them (live cmdcon40, `CAPTURED=6+` confirmed). The remaining behavior is
