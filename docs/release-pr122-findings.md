@@ -1,11 +1,81 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 10:01 Europe/Amsterdam
+Last updated: 2026-07-02 10:20 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 10:20 Update
+
+Final reconcile after the 10:01 push found new PR #125 and PR #126 movement.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `0cc616e4314fbf4a24deee4b120e8a32248ed995`
+- PR #125: `e2b26027a63b8606dd14fdc248e6cdd3def5f6bd`
+- PR #126: `76ed27ef973d05dd19c28ed29012cbdbcabbe66d`
+- PR #136: `867aa75734d9cc03595bd286873b9326f78eb7e9`
+
+PR #125 moved from `9e628781a8a0e6ed9089d55f5226c2b03031bece` to
+`e2b26027a63b8606dd14fdc248e6cdd3def5f6bd`.
+
+New commit:
+
+- `e2b26027a` - `fix: allow ai commander focus nudges`
+
+Changed files:
+
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf`
+- `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandleSpecial.sqf`
+- `Tools/PrTestHarness/Smoke/Test-WaspStaticSmoke.ps1`
+
+Validation passed in detached worktree `work/a2waspwarfare-pr125-e2b26027`:
+
+- focused `git diff --check 9e628781a8..HEAD`
+- broad `git diff --check origin/master..HEAD`
+- static smoke, including the AICOM command-console authority guard
+- final check: static smoke, Chernarus OA lint, Takistan OA lint, high-only
+  BugHunt
+- LoadoutManager RELEASE: exit `0`, `CHERNARUS DONE`, `TAKISTAN DONE`
+- package validation for local `_MISSIONS.7z`, expected git `e2b26027a6`,
+  entries `1885`
+
+Local package-content rebuild:
+
+- SHA256:
+  `B874210D5C99C841E6178541B1BAE4571F48EB21A450C1B6CC91F28B2D574D90`
+- size: `7167617`
+- entries: `1885`
+- manifests:
+  `outputs/a2waspwarfare-pr125-e2b26027-local-package-manifest-2026-07-02-1020.json`
+  and
+  `outputs/a2waspwarfare-pr125-e2b26027-local-package-manifest-2026-07-02-1020.md`
+
+Both maintained terrain copies of the touched mission file are hash-identical:
+
+- `Server/Functions/Server_HandleSpecial.sqf`:
+  `55e9cd71c691c6869bae82ab2e61727b00220138`
+
+PR #126 moved from `91367f9c731363f37873d9573c2ca069b42e50f4` to
+`76ed27ef973d05dd19c28ed29012cbdbcabbe66d` with docs/tooling tuple sync to the
+previous PR #125 `9e628781a8` package proof. Focused PR #126 checks passed:
+`git diff --check origin/master..HEAD`,
+`Tools/Ops/Test-WaspReleaseTupleDocs.ps1`,
+`Tools/Ops/Test-WaspVersionTemplates.ps1`, and
+`Tools/Ops/Test-WaspJipAicomSourceGuards.ps1`.
+
+Boundary: PR #126 is internally consistent for `9e628781a8` /
+`FB52623D...` / wiki `0cc616e`, but it is stale relative to current PR #125
+source head `e2b26027a6` and local package-content rebuild `B874210D...`.
+The public PR #125 body and wiki package tuple also still bind to `9e628781a8`,
+not `e2b26027a6`.
+
+Release remains **NO-GO** until the selected exact archive/PBO has both-map RPT
+evidence, human smoke notes, deployment approval, and final artifact identity
+binding.
 
 ## 2026-07-02 10:01 Update
 
