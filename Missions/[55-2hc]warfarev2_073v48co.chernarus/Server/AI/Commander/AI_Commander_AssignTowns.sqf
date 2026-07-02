@@ -165,8 +165,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						private ["_fjS","_fjThrS"];
 						_fjS = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 						_team setVariable ["wfbe_aicom_failedjourneys", _fjS];
-						_fjThrS = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-						if (_fjS >= _fjThrS && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+						_fjThrS = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+						if (_fjThrS > 0 && {_fjS >= _fjThrS} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 							_team setVariable ["wfbe_aicom_recycle", true, true];
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjS + "|reason=stranded");
 						};
@@ -345,8 +345,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												private ["_fjA","_fjThrA"];
 												_fjA = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 												_team setVariable ["wfbe_aicom_failedjourneys", _fjA];
-												_fjThrA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-												if (_fjA >= _fjThrA && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+												_fjThrA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+												if (_fjThrA > 0 && {_fjA >= _fjThrA} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 													_team setVariable ["wfbe_aicom_recycle", true, true];
 													diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjA + "|reason=abandon");
 												};
@@ -434,8 +434,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_fjSA","_fjThrSA"];
 													_fjSA = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjSA];
-													_fjThrSA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-													if (_fjSA >= _fjThrSA && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+													_fjThrSA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+													if (_fjThrSA > 0 && {_fjSA >= _fjThrSA} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjSA + "|reason=abandon");
 													};
@@ -456,8 +456,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_fjUC","_fjThrUC"];
 													_fjUC = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjUC];
-													_fjThrUC = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-													if (_fjUC >= _fjThrUC && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+													_fjThrUC = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+													if (_fjThrUC > 0 && {_fjUC >= _fjThrUC} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjUC + "|reason=abandon");
 													};
