@@ -1,4 +1,38 @@
-Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reject']; //--- B66: added _reject
+Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reject','_guardSide','_guardLogik','_guardCmdTeam']; //--- B66: added _reject; DR-6: added guard locals
+
+//--- DR-6: always-on authority guards for RequestStructure PVF.
+//--- A2 PVEH gives no sender identity, so we validate server-owned facts instead.
+if (typeName _this != "ARRAY" || {count _this < 4}) exitWith {
+	["WARNING", "RequestStructure.sqf: DR-6 rejected - malformed payload (not ARRAY or count < 4)."] Call WFBE_CO_FNC_LogContent;
+};
+_guardSide = _this select 0;
+if (typeName _guardSide != "SIDE") exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - index 0 is not SIDE [%1].", typeName _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+if (_guardSide != west && {_guardSide != east}) exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - side [%1] not west/east (GUER uses RequestFOBStructure).", str _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+_guardLogik = _guardSide Call WFBE_CO_FNC_GetSideLogic;
+if (isNull _guardLogik) exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - GetSideLogic returned null for [%1].", str _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+_guardCmdTeam = _guardSide Call WFBE_CO_FNC_GetCommanderTeam;
+if (isNull _guardCmdTeam) exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - GetCommanderTeam returned null for [%1].", str _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+if (!isPlayer (leader _guardCmdTeam)) exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - commander is not a human player for [%1].", str _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+if (!(_guardSide Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - HQ not deployed for [%1].", str _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName (_this select 1) != "STRING") exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - structureType (index 1) is not STRING [%1].", typeName (_this select 1)]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName (_this select 2) != "ARRAY") exitWith {
+	["WARNING", Format ["RequestStructure.sqf: DR-6 rejected - pos (index 2) is not ARRAY [%1].", typeName (_this select 2)]] Call WFBE_CO_FNC_LogContent;
+};
+//--- DR-6 guards passed.
 
 _side = _this select 0;
 _structureType = _this select 1;

@@ -1,4 +1,41 @@
-Private ["_builtByRepairTruck","_defenseType","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure"];
+Private ["_builtByRepairTruck","_defenseType","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure","_guardSide","_guardReject","_guardReqPlayer"]; //--- DR-6: added guard locals
+
+//--- DR-6: always-on authority guards for RequestDefense PVF.
+//--- A2 PVEH gives no sender identity, so we validate what the server can know.
+if (typeName _this != "ARRAY" || {count _this < 5}) exitWith {
+	["WARNING", "RequestDefense.sqf: DR-6 rejected - malformed payload (not ARRAY or count < 5)."] Call WFBE_CO_FNC_LogContent;
+};
+_guardSide = _this select 0;
+if (typeName _guardSide != "SIDE") exitWith {
+	["WARNING", Format ["RequestDefense.sqf: DR-6 rejected - index 0 is not SIDE [%1].", typeName _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+if (_guardSide != west && {_guardSide != east} && {_guardSide != resistance}) exitWith {
+	["WARNING", Format ["RequestDefense.sqf: DR-6 rejected - side [%1] not west/east/resistance.", str _guardSide]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName (_this select 1) != "STRING") exitWith {
+	["WARNING", Format ["RequestDefense.sqf: DR-6 rejected - defenseType (index 1) is not STRING [%1].", typeName (_this select 1)]] Call WFBE_CO_FNC_LogContent;
+};
+//--- Optional requester-player check (index 6). Uses _reject-flag idiom because the checks are nested
+//--- inside then{} blocks — exitWith inside then{} only exits the block, NOT the script (A2 rule).
+//--- A null _guardReqPlayer MUST pass: EASA repair-truck and JIP paths legitimately send null.
+//--- We only reject if a non-null, non-player object or cross-side object is present.
+private ["_guardReject"]; _guardReject = false;
+if (count _this > 6) then {
+	_guardReqPlayer = _this select 6;
+	if (!isNull _guardReqPlayer) then {
+		if (!isPlayer _guardReqPlayer) then {
+			_guardReject = true;
+			["WARNING", Format ["RequestDefense.sqf: DR-6 rejected - non-player requester [%1].", _guardReqPlayer]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (!_guardReject && {side _guardReqPlayer != _guardSide}) then {
+			_guardReject = true;
+			["WARNING", "RequestDefense.sqf: DR-6 rejected - requester side mismatch."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+};
+if (_guardReject) exitWith {};
+//--- DR-6 guards passed.
+
 _side            = _this select 0;
 _defenseType     = _this select 1;
 _pos             = _this select 2;
