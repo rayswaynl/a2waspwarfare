@@ -1714,5 +1714,25 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_BANK_MODEL_V2") then {WFBE_C_BANK_MODEL_V2 = 1};
 	if (isNil "WFBE_C_BANK_MODEL_V2_CLASS") then {WFBE_C_BANK_MODEL_V2_CLASS = "Land_A_Office01_EP1"};
 
+//======================================================================================
+//--- cmdcon43-g (Ray 2026-07-02): FACTORY UPGRADE SOUND MODE
+//--- Ray on Build 87/88: the factory/structure UPGRADE audio cues are too intrusive; he is
+//--- leaning "keep but unobtrusive". This single MODE flag governs the two upgrade-flow
+//--- playSound call sites in Client\Functions\Client_FNC_Special.sqf (upgrade STARTED +
+//--- upgrade COMPLETE). No other notification sound (arty cooldown for artillery itself,
+//--- commander notifications, victory music, SCUD voice lines) is touched - only the
+//--- upgrade-flow call sites read this flag.
+//---   0 = SILENT   - no upgrade sound at all.
+//---   1 = LEGACY   - the historical sounds at their historical volume (upgrade-start =
+//---                  "upgradeStartedSound" [now a real registered class, aliasing
+//---                  commanderNotification's ogg per the long-standing code comment];
+//---                  upgrade-complete = "ARTY_cooldown_over", the shared 4.1s cooldown chime).
+//---   2 = QUIET    - the SAME two ogg files replayed through parallel low-volume CfgSounds
+//---                  classes (WFBE_UpgradeStart_Quiet / WFBE_UpgradeComplete_Quiet in
+//---                  Sounds\description.ext) - ~12 dB down, no new audio files, zero pbo cost.
+//--- DEFAULT = 2 (quiet). Flip to 0 for full silence or 1 to restore the loud legacy cue.
+//--- Read idiom at the call sites: missionNamespace getVariable ["WFBE_C_UPGRADE_SOUNDS", 2].
+	if (isNil "WFBE_C_UPGRADE_SOUNDS") then {WFBE_C_UPGRADE_SOUNDS = 2};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

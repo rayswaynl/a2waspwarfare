@@ -62,11 +62,41 @@ public abstract class BaseTerrain : InterfaceTerrain
                 soundClasses.Add(soundClass);
             }
 
+            // cmdcon43-g (Ray 2026-07-02): factory-upgrade sound MODE classes. The auto-generated
+            // classes above are 1:1 with the ogg files (class name + volume parsed from the
+            // "<name>-<volume>.ogg" filename), so a QUIET/legacy variant that REUSES an existing
+            // ogg at a different volume cannot be expressed as a file - it must be appended here.
+            // All three REUSE existing files (commanderNotification-10.ogg + ARTY_cooldown_over-8.ogg)
+            // => zero new audio, zero pbo-size cost. Selected by WFBE_C_UPGRADE_SOUNDS at the two
+            // call sites in Client\Functions\Client_FNC_Special.sqf (0 silent / 1 legacy / 2 quiet).
+            // "upgradeStartedSound" was referenced in mission code for a long time but never actually
+            // registered (silent no-op); registering it here makes LEGACY mode 1 behave as the old
+            // code comment intended (short commanderNotification chime, moderate volume 2.5).
+            string upgradeSoundModeClasses = $@"
+
+    class upgradeStartedSound {{
+        name = ""upgradeStartedSound"";
+        sound[] = {{""\Sounds\commanderNotification-10.ogg"", 2.5, 1}};
+        titles[] = {{}};
+    }};
+
+    class WFBE_UpgradeStart_Quiet {{
+        name = ""WFBE_UpgradeStart_Quiet"";
+        sound[] = {{""\Sounds\commanderNotification-10.ogg"", 0.6, 1}};
+        titles[] = {{}};
+    }};
+
+    class WFBE_UpgradeComplete_Quiet {{
+        name = ""WFBE_UpgradeComplete_Quiet"";
+        sound[] = {{""\Sounds\ARTY_cooldown_over-8.ogg"", 2, 1}};
+        titles[] = {{}};
+    }};";
+
             string cfgSounds = $@"
 class CfgSounds
 {{
     sounds[] = {{}};
-    {string.Join(Environment.NewLine, soundClasses)}
+    {string.Join(Environment.NewLine, soundClasses)}{upgradeSoundModeClasses}
 }};";
 
             File.WriteAllText(soundDirectory + "description.ext", cfgSounds);
