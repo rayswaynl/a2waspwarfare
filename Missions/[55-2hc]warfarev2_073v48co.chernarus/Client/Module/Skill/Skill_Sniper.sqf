@@ -20,6 +20,13 @@ _markerName setMarkerSizeLocal [0.5,0.5];
 markerID = markerID + 1;
 
 WFBE_SK_V_LastUse_Spot = time;
+//--- team-intel-pack: if WFBE_C_SPOTTER_TEAM_MARKS is set, broadcast the spot to same-side
+//--- clients via SpotterMarkContact PVF. The local mark already exists above; the PVF
+//--- receiver guards against re-creating it on this machine (isNil check on the name).
+if ((missionNamespace getVariable ["WFBE_C_SPOTTER_TEAM_MARKS", 0]) > 0) then {
+	[sideJoined, "SpotterMarkContact", [_screenPos, time, _markerName]] Call WFBE_CO_FNC_SendToClients;
+};
+
 
 [_markerName] Spawn {
 	Private ["_marker"];
