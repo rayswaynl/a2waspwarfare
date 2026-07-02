@@ -23,8 +23,8 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
 powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.ps1 `
   -RptDirectory C:\WASP\rpt-archive `
   -ExpectedCandidate release-command-center-20260630 `
-  -ExpectedGit 9e628781a8 `
-  -ExpectedArchiveSha256 FB52623DAC5CF93EE8E4E9E2B1542E1A531C5EF0FE063AADED33892439027245 `
+  -ExpectedGit e2b26027a6 `
+  -ExpectedArchiveSha256 3E98F3B65C3D1FA4EB04F02D752EB6484DCDA94411BEAAB3F18E22C77E36678A `
   -RequireReleaseMarkers `
   -Json `
   -OutFile C:\WASP\rpt-archive\marker-sweep.json
