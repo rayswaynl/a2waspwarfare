@@ -253,7 +253,15 @@ BIS_CONTROL_CAM_Handler = {
 						if (!isNil '_get' && isNil '_sold') then {
 							_closest setVariable ['sold',true];
 							_price = _get select QUERYUNITPRICE;
-							round(_price/2.5) Call ChangePlayerFunds;
+							//--- cmdcon43-d (Build 88 FIX): sell-refund into the SAME pool the commander buys defenses from
+							//--- (side SUPPLY under WFBE_C_CMD_DEF_SUPPLY + dual-currency) so buy/sell cannot convert supply<->funds.
+							//--- Commander-only sell path (commanderTeam == clientTeam above). Flag 0 / funds-only currency -> legacy
+							//--- funds refund. Mirrors the buy charge in the "//--- Defense." block.
+							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0 && {(missionNamespace getVariable ["WFBE_C_CMD_DEF_SUPPLY", 1]) > 0}) then {
+								[sideJoined, round(_price/2.5), "Commander defense sold.", false] Call ChangeSideSupply;
+							} else {
+								round(_price/2.5) Call ChangePlayerFunds;
+							};
 							_area = [getPos (_closest),((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 							_get = if (isNull _area) then {0} else {_area getVariable ['avail', 0]};	//--- Build83: default 0 so a non-null base area with 'avail' unset yields 0 not nil (nil _get then threw "Undefined variable _get" on the next compare - seen in Ray's client RPT). cmdcon28: _area (nearest base area) can be objNull when building/selling outside any base - the isNull guard on the NEXT line ran too late, so this getVariable threw on objNull. Guard inline (both the build and sell paths).
 
@@ -691,7 +699,23 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_get = missionNamespace getVariable _class;
 						if !(isNil '_get') then {
 							_price = _get select QUERYUNITPRICE;
-							-(_price) Call ChangePlayerFunds;
+							//--- cmdcon43-d (Build 88 FIX): commander (MCoin) defenses are paid from side SUPPLY under
+							//--- dual-currency + WFBE_C_CMD_DEF_SUPPLY, mirroring the structure charge above (line ~672) and
+							//--- the Init_Coin.sqf pricing switch (_fix=0). The repair truck (RCoin) and the funds-only
+							//--- currency system keep paying player funds. This keeps the menu affordability check (which now
+							//--- reads supply for the commander) and the actual deduction on the SAME pool - no charge/price
+							//--- mismatch. Flag 0 = legacy funds charge for everyone.
+							//--- Stamp WHICH pool this placement charged so a later server-reject refund
+							//--- (LocalizeMessage.sqf) returns the SAME pool - no supply<->funds conversion. The
+							//--- commander console (MCoin) is the only supply-charged path; the repair truck (RCoin)
+							//--- and funds-only currency always charge funds, even when the placer is the commander.
+							if (_logic == MCoin && {(missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0} && {(missionNamespace getVariable ["WFBE_C_CMD_DEF_SUPPLY", 1]) > 0}) then {
+								WFBE_LastDefenseChargeSupply = true;
+								[sideJoined, -_price, (format ["Commander defense built. Class: %1", _class]), false] Call ChangeSideSupply;
+							} else {
+								WFBE_LastDefenseChargeSupply = false;
+								-(_price) Call ChangePlayerFunds;
+							};
 						};
 					};
 
