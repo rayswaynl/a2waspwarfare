@@ -183,10 +183,19 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
             if (isNil "_crewClass" || _crewClass == "") then { _crewClass = "RU_Soldier" };
             _gun enableSimulation true;
             _gun allowDamage true;
+            //--- Cleanup previous crew group to prevent group leak on recapture.
+            private ["_prevCrwGrp"];
+            _prevCrwGrp = missionNamespace getVariable ["wfbe_arty_cache_crewgrp", grpNull];
+            if (!isNull _prevCrwGrp) then {
+                { deleteVehicle _x } forEach units _prevCrwGrp;
+                deleteGroup _prevCrwGrp;
+            };
             private ["_crewGrp","_crewUnit"];
             _crewGrp = createGroup _newSide;
             _crewUnit = _crewGrp createUnit [_crewClass, _gunPos, [], 0, "NONE"];
             if (!isNull _crewUnit) then { _crewUnit moveInAny _gun };
+            //--- Store the new group so the next flip can clean it up.
+            missionNamespace setVariable ["wfbe_arty_cache_crewgrp", _crewGrp];
             diag_log Format ["ARTYCACHE|GUNTRANSFER|side=%1|crew=%2|t=%3", _sideStr, _crewClass, round time];
         };
 
