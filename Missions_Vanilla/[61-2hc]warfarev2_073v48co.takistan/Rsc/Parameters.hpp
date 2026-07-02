@@ -667,4 +667,18 @@
 		default = 300;
 	};
 
+	// Gx: GUER civilian transport depot -- add low-cost unarmed civvie vehicles to the GUER depot pool (default OFF).
+	class WFBE_C_GUER_CIVILIAN_DEPOT {
+		title = "GUER Civilian Vehicle Depot";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	// GUER wave composition depth variants (lane 31). OFF = original single-roster tables only.
+	class WFBE_C_GUER_WAVE_DEPTH_VARIANTS {
+		title = "GUER wave depth variants";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
 };

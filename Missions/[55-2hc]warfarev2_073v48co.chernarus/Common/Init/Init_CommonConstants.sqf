@@ -153,6 +153,7 @@ with missionNamespace do {
 		//--- transiently-unset/contested friendly town is not silently dropped. 1 = widened (fixed, matches the documented
 		//--- friendly-town design); 0 = restore the stock strict own-side (sideID == sideID) gate. WEST/EAST are unaffected.
 		if (isNil "WFBE_C_GUER_DEPOT_NEUTRAL_BUY") then {WFBE_C_GUER_DEPOT_NEUTRAL_BUY = 1};
+		if (isNil "WFBE_C_GUER_CIVILIAN_DEPOT") then {WFBE_C_GUER_CIVILIAN_DEPOT = 0}; //--- Gx: 0=off; 1=add low-cost CIV transport vehicles to the GUER depot pool.
 		//--- Shared placement gate (client preview + server authoritative): true if _pos (the world position passed as
 		//--- _this) is inside an enemy (WEST/EAST) build-restricted area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an
 		//--- enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-held towns are allowed (you can "extend"
