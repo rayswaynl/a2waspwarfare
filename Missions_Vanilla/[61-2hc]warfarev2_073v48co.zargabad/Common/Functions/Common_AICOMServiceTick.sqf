@@ -1,0 +1,206 @@
+/*
+	Common_AICOMServiceTick.sqf   (B48, claude-gaming 2026-06-19)
+
+	Per-tick AICOM SELF-SERVICE. A damaged / low-ammo AI-commander team (default: only teams
+	with armour/heli, the costly-to-replace ones) detours to the nearest SAFE friendly
+	town-centre, REPAIRS + REARMS + HEALS with the same primitives players use, then clears
+	its goto so AI_Commander_AssignTowns retargets it back to the front.
+
+	ENABLED for the soak: WFBE_C_AICOM_SERVICE_ENABLED is hard-set to 1 in Init_CommonConstants.sqf
+	(Ray 2026-06-19 all-day Chernarus soak). Rollback to dark = restore the "if (isNil ...) then {... = 0}" guard.
+
+	LOCALITY: HC-local. Called from Common_RunCommanderTeam.sqf's 20s order loop, where the
+	team's units are local to this machine, so setDamage / setVehicleAmmo / setFuel / doMove
+	all have correct locality.
+
+	GUARDRAILS (hard):
+	  - never pulled out of a firefight: skip while leader behaviour == "COMBAT" or any enemy
+	    within WFBE_C_AICOM_SVC_SAFE_DIST of the leader.
+	  - abort + return to the front if an enemy enters SAFE_DIST while en-route.
+	  - the team ALWAYS holds a live MOVE order (en-route) or is retargeted (done/abort) -
+	    it is never doStop-frozen. A player must never see a standing-still AI.
+	  - hard en-route timeout (never drives to an unreachable point forever).
+	  - NO sim-gating / distance-gating; antistack untouched.
+
+	A2-OA SAFETY: group vars use plain getVariable + isNil (A2 groups do NOT support the
+	[name,default] form); type tests use classname isKindOf "X" (valid in A2 OA); getPos is
+	only called on objects; NO isEqualType / isEqualTo; reveal is not used.
+
+	params: _this = [ _team(group), _side, _sideID, _vehicles(array of the team's vehicles) ]
+*/
+
+private ["_team","_side","_sideID","_vehicles","_ldr","_state","_safeDist","_supRange",
+         "_enemySide","_enemyNear","_armourOnly","_members","_dmgT","_ammoT","_hasHeavy",
+         "_needs","_reach","_best","_bestD","_twn","_d","_svcPos","_deadline"];
+
+_team     = _this select 0;
+_side     = _this select 1;
+_sideID   = _this select 2;
+_vehicles = _this select 3;
+
+if (isNull _team) exitWith {};
+_ldr = leader _team;
+if (isNull _ldr || {!alive _ldr}) exitWith {};
+
+_safeDist  = missionNamespace getVariable ["WFBE_C_AICOM_SVC_SAFE_DIST", 600];
+_supRange  = missionNamespace getVariable ["WFBE_C_UNITS_SUPPORT_RANGE", 70];
+_enemySide = if (_side == west) then {east} else {if (_side == east) then {west} else {east}};
+
+//--- A2: plain get + isNil (NO [name,default] on groups)
+_state = _team getVariable "wfbe_aicom_svcstate";
+if (isNil "_state") then {_state = ""};
+
+//--- live enemy presence near the leader (never-pull-out-of-contact / abort guard)
+_enemyNear = {alive _x && {side _x == _enemySide}} count ((getPos _ldr) nearEntities [["Man","LandVehicle","Air"], _safeDist]);
+
+if (_state == "enroute") then {
+	//--- ============ EN-ROUTE: driving to the service point ============
+	_svcPos   = _team getVariable "wfbe_aicom_svcpos";
+	_deadline = _team getVariable "wfbe_aicom_svcdeadline";
+	if (isNil "_svcPos" || {isNil "_deadline"}) exitWith {
+		_team setVariable ["wfbe_aicom_svcstate", ""];
+	};
+	if (_enemyNear > 0 || {time > _deadline}) exitWith {
+		//--- threatened or timed out -> drop the detour, retarget to the front and fight
+		_team setVariable ["wfbe_aicom_svcstate", ""];
+		_team setVariable ["wfbe_teamgoto", objNull, true];
+		_team setVariable ["wfbe_aicom_townorder", [], false];
+		_team setVariable ["wfbe_teammode", "towns", true];
+	};
+	if ((_ldr distance _svcPos) <= _supRange) then {
+		//--- ARRIVED + SAFE: snap repair/rearm/heal (SAFE_DIST guarantees no witnesses).
+		//--- HEAL every member (units _team are all men, incl. the vehicle crews who are
+		//--- group members), then REPAIR+REARM+REFUEL the team's vehicles.
+		{if (alive _x) then {_x setDamage 0}} forEach (units _team);
+		{
+			if (!isNull _x && {alive _x}) then {
+				_x setDamage 0;
+				//--- AICOM v2 (Ray): a self-propelled artillery hull is REARMED only to its ARTYTIMEOUT-tier fraction
+				//--- (low tier = smaller reload, must research to earn full salvos); everything else rearms to full as before.
+				if (([(typeOf _x), _side] Call IsArtillery) != -1) then {
+					private ["_svcAL","_svcUL","_svcAF"];
+					_svcAL = (_side) Call WFBE_CO_FNC_GetSideLogic;
+					_svcUL = if (isNull _svcAL) then {0} else {(_svcAL getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
+					if (typeName _svcUL != "SCALAR") then {_svcUL = 0};
+					_svcAF = (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_AMMO_FRAC", [0.50,0.65,0.80,0.90,1.00,1.00,1.00]]) select (_svcUL min 6);
+					_x setVehicleAmmo _svcAF;
+				} else {
+					_x setVehicleAmmo 1;
+				};
+				if (_x isKindOf "Air") then {_x setFuel 1};
+			};
+		} forEach _vehicles;
+		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SERVICE_DONE|" + (str _team));
+		//--- clear + retarget to the front (same idiom as the on-capture re-task)
+		_team setVariable ["wfbe_aicom_svcstate", ""];
+		_team setVariable ["wfbe_teamgoto", objNull, true];
+		_team setVariable ["wfbe_aicom_townorder", [], false];
+		_team setVariable ["wfbe_teammode", "towns", true];
+	};
+	//--- else: still driving; the MOVE waypoint laid below carries it (never frozen).
+} else {
+	//--- ============ IDLE: decide whether to detour ============
+	//--- B49 RELAX: use TRIGGER_DIST (smaller than SAFE_DIST) for the START gate so a DISENGAGED team can
+	//--- detour to service even with enemies 300-600m off (the old SAFE_DIST gate blocked every grinding
+	//--- team so this never fired). COMBAT teams are still never pulled out; the en-route abort below still
+	//--- uses the full SAFE_DIST. A2-safe (nearEntities + side/alive checks, same idiom as _enemyNear).
+	private "_enemyTrig";
+	_enemyTrig = {alive _x && {side _x == _enemySide}} count ((getPos _ldr) nearEntities [["Man","LandVehicle","Air"], (missionNamespace getVariable ["WFBE_C_AICOM_SVC_TRIGGER_DIST", 300])]);
+	if (behaviour _ldr == "COMBAT" || {_enemyTrig > 0}) exitWith {}; //--- never leave a fight; no enemy within trigger-dist
+	_armourOnly = (missionNamespace getVariable ["WFBE_C_AICOM_SVC_ARMOUR_ONLY", 1]) > 0;
+	_members    = (units _team) - [objNull];
+	_dmgT       = missionNamespace getVariable ["WFBE_C_AICOM_SVC_DMG_THRESH", 0.5];
+	_ammoT      = missionNamespace getVariable ["WFBE_C_AICOM_SVC_AMMO_THRESH", 0.35];
+
+	//--- armour/heli gate (default: only service the costly teams)
+	_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"} || {([(typeOf (vehicle _x)), _side] Call IsArtillery) != -1}}} count _members; //--- AICOM v2 (Ray): count a self-propelled artillery hull (e.g. the wheeled GRAD = Car-kind) as 'heavy' so a crew-only arty battery isn't skipped by the armour-only service exit -> arty auto-rearms at a Service Point.
+	//--- SVC REFIT FLIP (cmdcon41-w2, Ray): extend service/refit eligibility to INFANTRY (no-heavy) teams when
+	//--- WFBE_C_AICOM_SVC_ALLTEAMS > 0, keeping svc load BOUNDED with a HEADCOUNT gate - a foot team is only serviced
+	//--- when it is BADLY understrength (alive < 0.5 * TEAM_SIZE, i.e. <4 of an 8-team) OR it already has a damaged
+	//--- member (the old armour path handles hull damage/ammo further down). Heavy teams (_hasHeavy>0) fall through
+	//--- unchanged. When ALLTEAMS is off, this is byte-equivalent to the old `if (_armourOnly && _hasHeavy==0) exitWith`.
+	//--- Compute a single skip-flag and do ONE top-level exitWith so the whole script exits (an exitWith nested inside a
+	//--- then{} block would only leave that block, NOT the script). A2-OA-safe: plain missionNamespace [name,default],
+	//--- count over units, </== on SCALARs (no Boolean == operands), no A3 primitives.
+	private ["_svcAllTeams","_svcAlive","_svcSizeMax","_svcHeadGate","_svcHasDmg","_svcSkip"];
+	_svcAllTeams = (missionNamespace getVariable ["WFBE_C_AICOM_SVC_ALLTEAMS", 1]) > 0;
+	_svcSkip = false;
+	if (_armourOnly && {_hasHeavy == 0}) then {
+		if (_svcAllTeams) then {
+			//--- ALLTEAMS on: admit this foot team only if (headcount gate) it is <0.5*TEAM_SIZE alive, OR any member is
+			//--- wounded past the DMG threshold - otherwise skip (keep fighting), keeping svc load bounded.
+			_svcAlive   = {alive _x} count _members;
+			_svcSizeMax = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8];
+			_svcHeadGate = _svcAlive < (0.5 * _svcSizeMax);
+			_svcHasDmg = false;
+			{ if (!_svcHasDmg && {alive _x} && {getDammage _x > _dmgT}) then {_svcHasDmg = true} } forEach _members;
+			if (!_svcHeadGate && {!_svcHasDmg}) then {_svcSkip = true}; //--- healthy-enough foot team -> don't detour
+		} else {
+			_svcSkip = true; //--- ALLTEAMS off: original armour-only skip (no heavy hull -> never service a foot team)
+		};
+	};
+	if (_svcSkip) exitWith {};
+
+	//--- needs-service: any wounded member, OR a weaponed combat vehicle low on ammo
+	_needs = false;
+	{
+		if (!_needs && {alive _x} && {getDammage _x > _dmgT}) then {_needs = true};
+	} forEach _members;
+	if (!_needs) then {
+		{
+			if (!_needs && {!isNull _x} && {alive _x}
+			    && {(_x isKindOf "Tank") || {(_x isKindOf "APC")} || {(_x isKindOf "Air")} || {(_x isKindOf "Car")}}
+			    && {count (weapons _x) > 0}) then {
+				if ((_x Call WFBE_CO_FNC_GetAmmoFraction) < _ammoT) then {_needs = true};
+			};
+		} forEach _vehicles;
+	};
+	if (!_needs) exitWith {};
+
+	//--- nearest SAFE friendly town-centre within reach
+	_reach = missionNamespace getVariable ["WFBE_C_AICOM_SVC_REACH", 4000];
+	_best = objNull; _bestD = 1e9;
+	{
+		_twn = _x;
+		if ((_twn getVariable ["sideID", -1]) == _sideID) then {
+			_d = _ldr distance _twn;
+			if (_d < _bestD && {_d <= _reach}) then {
+				if (({alive _x && {side _x == _enemySide}} count ((getPos _twn) nearEntities [["Man"], _safeDist])) == 0) then {
+					_best = _twn; _bestD = _d;
+				};
+			};
+		};
+	} forEach towns;
+
+	//--- B74 (Ray 2026-06-22): AIR teams rearm/repair at a captured AIRFIELD (the proper hangar) when one is held -
+	//--- prefer the nearest SAFE friendly airfield town over a generic town centre. Falls back to _best (nearest
+	//--- town) when no safe airfield is in reach. Ground teams are unaffected. Airfield = baked wfbe_is_airfield or
+	//--- the runtime hangar-obj marker (same test the founding air-rule uses).
+	private ["_hasAirSvc","_afBest","_afBestD","_twnA","_dA"];
+	_hasAirSvc = ({!isNull _x && {alive _x} && {_x isKindOf "Air"}} count _vehicles) > 0;
+	if (_hasAirSvc) then {
+		_afBest = objNull; _afBestD = 1e9;
+		{
+			_twnA = _x;
+			if (((_twnA getVariable ["sideID", -1]) == _sideID) && {(_twnA getVariable ["wfbe_is_airfield", false]) || {!(isNull (_twnA getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) then {
+				_dA = _ldr distance _twnA;
+				if (_dA < _afBestD && {_dA <= _reach}) then {
+					if (({alive _x && {side _x == _enemySide}} count ((getPos _twnA) nearEntities [["Man"], _safeDist])) == 0) then {
+						_afBest = _twnA; _afBestD = _dA;
+					};
+				};
+			};
+		} forEach towns;
+		if (!isNull _afBest) then {_best = _afBest; _bestD = _afBestD};
+	};
+
+	if (isNull _best) exitWith {}; //--- nothing safe in reach -> keep fighting
+
+	//--- DETOUR: road-march MOVE + stamp state/pos/deadline (en-route drive cap)
+	_svcPos = getPos _best;
+	_team setVariable ["wfbe_aicom_svcstate", "enroute"];
+	_team setVariable ["wfbe_aicom_svcpos", _svcPos];
+	_team setVariable ["wfbe_aicom_svcdeadline", time + (missionNamespace getVariable ["WFBE_C_AICOM_SVC_TIMEOUT", 300])];
+	[_team, _svcPos, 'MOVE', 40] Spawn WFBE_CO_FNC_WaypointSimple;
+	diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SERVICE_ENROUTE|" + (_best getVariable ["name", "?"]));
+};

@@ -1875,6 +1875,20 @@
         <English>Keep current Gear</English>
         <Russian>Сохр. текущее снаряж-е</Russian>
       </Key>
+      <!-- respawn-ui-v2: clearer gear-toggle button labels (IDC 511004) -->
+      <Key ID="STR_WF_RESPAWN_GearV2Default">
+        <English>Gear: DEFAULT</English>
+        <Russian>Снаряжение: СТАНДАРТ</Russian>
+      </Key>
+      <Key ID="STR_WF_RESPAWN_GearV2Current">
+        <English>Gear: KEEP CURRENT</English>
+        <Russian>Снаряжение: СОХРАНИТЬ</Russian>
+      </Key>
+      <!-- respawn-ui-v2: footer legend (IDC 511005) -->
+      <Key ID="STR_WF_RESPAWN_Legend">
+        <English>Click a marker to choose your spawn. Green = safe, amber = contested.</English>
+        <Russian>Нажмите на маркер для выбора точки возрождения. Зелёный = безопасно, жёлтый = оспаривается.</Russian>
+      </Key>
       <Key ID="STR_WF_RESPAWN_Status">
         <English>&lt;t color='#42b6ff'&gt;Respawning in &lt;t color='#F5D363'&gt;%1&lt;/t&gt;&lt;/t&gt;</English>
         <Russian>&lt;t color='#42b6ff'&gt;Respawning in &lt;t color='#F5D363'&gt;%1&lt;/t&gt;&lt;/t&gt;</Russian>

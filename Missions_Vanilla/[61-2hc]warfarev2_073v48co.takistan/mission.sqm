@@ -29,8 +29,8 @@ class Mission
 	randomSeed=6848509;
 	class Intel
 	{
-		briefingName="WASP Warfare Build 87 (Takistan)";
-		briefingDescription="Build 87: producible SCUD and AI SCUD, dynamic oilfield with sabotage, EASA air roster, air cavalry and airlift, walls and defenses, chat tips.";
+		briefingName="WASP Warfare Build 88 (Takistan)";
+		briefingDescription="Build 88: new respawn screen, GUER town-center buying and mortar HUD, commander defense menu priced from supply, quieter upgrades, salvage-farm block, repaired wheels and engines, foot-squad ladder tuning, and a wave of menu and QoL polish.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
@@ -2636,7 +2636,7 @@ class Mission
 					position[]={10300,150,2450};
 					id=228;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -2670,7 +2670,7 @@ class Mission
 					position[]={10850,150,6250};
 					id=230;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -3591,7 +3591,7 @@ class Mission
 					position[]={12050,150,10250};
 					id=260;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -3608,7 +3608,7 @@ class Mission
 					position[]={1900,150,11650};
 					id=261;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -3625,7 +3625,7 @@ class Mission
 					position[]={2150,150,520};
 					id=262;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -3642,7 +3642,7 @@ class Mission
 					position[]={900,150,2950};
 					id=263;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -3659,7 +3659,7 @@ class Mission
 					position[]={9150,150,6650};
 					id=264;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -3676,7 +3676,7 @@ class Mission
 					position[]={2350,150,7550};
 					id=265;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -3693,7 +3693,7 @@ class Mission
 					position[]={8850,150,5250};
 					id=266;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};

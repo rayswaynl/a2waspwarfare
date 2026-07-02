@@ -52,3 +52,23 @@ objNull. Server-side this falls back to AI commander (probably acceptable), but 
 does not distinguish "roster not live yet" from "AI Commander", so an early-JIP commander
 can hand off to AI by accident. Options: disable confirm until live handover, or render
 primitive rows visually read-only. No code change shipped; UX call for the owner.
+
+## Lane 66 execution follow-up (Codex-Fleet-11, 2026-07-02)
+
+Live lineage already contains the first execution pass from merged PR #187
+(`codex/vote-qa-execution`), including default-off `WFBE_C_FIX_VOTE_QA_EXECUTION`
+registration in `Init_CommonConstants.sqf` and the two vote-dialog branches.
+
+This follow-up tightens the guarded path to match the original fix candidate:
+
+- `GUI_VoteMenu.sqf` now proves the stored row index is within
+  `WFBE_Client_Teams` and resolves to a non-nil team before the guarded name,
+  vote-count, or color refresh reads it. The legacy default-off branch is kept
+  unchanged.
+- `GUI_Commander_VoteMenu.sqf` keeps the existing primitive-row no-op and also
+  treats stale positive stored indexes as read-only under the same flag, avoiding
+  a client-side `WFBE_Client_Teams select _storedIndex` fault before sending
+  `RequestNewCommander`.
+
+The AI Commander row still intentionally maps to `objNull`; only primitive or
+stale player rows are suppressed by the guarded path.

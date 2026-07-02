@@ -126,18 +126,22 @@ if (!_fromFocus) then {
 		if (_hN > 0) then {_supportCen = [_hx / _hN, _hy / _hN, 0]; _supportOn = true};
 	};
 	//--- AUTO scorer: nearest-front + value, with an optional support-push pull toward the human axis.
-	private ["_fistMax","_frontRad","_distDiv","_farPen","_supDiv","_scored","_i"];
+	private ["_fistMax","_frontRad","_distDiv","_farPen","_supDiv","_scored","_i","_nearBand","_nearBandDist","_nearBandBonus"];
 	_fistMax  = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_TOWNS", 1];
 	_frontRad = missionNamespace getVariable ["WFBE_C_AICOM_FRONTIER_RADIUS", 3000];
 	_distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50]; if (_distDiv <= 0) then {_distDiv = 1};
 	_farPen   = missionNamespace getVariable ["WFBE_C_AICOM_FAR_PENALTY", 1000];
-	_supDiv   = missionNamespace getVariable ["WFBE_C_AICOM2_SUPPORT_DIVISOR", 50]; if (_supDiv <= 0) then {_supDiv = 1};
+	_supDiv        = missionNamespace getVariable ["WFBE_C_AICOM2_SUPPORT_DIVISOR", 50]; if (_supDiv <= 0) then {_supDiv = 1};
+	_nearBand      = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND", 0];
+	_nearBandDist  = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_DIST", 2000];
+	_nearBandBonus = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_BONUS", 300];
 	_scored = [];
 	{
 		private ["_tt","_dNear","_sc"];
 		_tt = _x; _dNear = _tt Call _frontDist;
 		_sc = (_tt getVariable ["supplyValue", 0]) - (_dNear / _distDiv);
 		if (_dNear > _frontRad) then {_sc = _sc - _farPen};
+		if (_nearBand > 0 && {_dNear < _nearBandDist}) then {_sc = _sc + _nearBandBonus};   //--- F5: near-band bonus for towns immediately adjacent to our front (re-ranks; does not change eligibility).
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
 		_scored set [count _scored, [_sc, _tt]];
 	} forEach _tgtTowns;
