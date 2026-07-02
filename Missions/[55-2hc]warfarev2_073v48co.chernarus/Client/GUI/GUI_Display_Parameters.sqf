@@ -13,10 +13,6 @@ for [{_i = 0},{_i < (count (missionConfigFile/"Params"))},{_i = _i + 1}]  do {
 };
 
 while {alive player && dialog} do {
-/*---it is in the Main Menu now //MrNiceGuy
-	_uptime = Call GetTime;
-	ctrlSetText [22005,Format[localize 'STR_WF_MAIN_Uptime',_uptime select 0,_uptime select 1,_uptime select 2, _uptime select 3]];
-*/
 	sleep 0.1;
 	if (side group player != sideJoined) exitWith {closeDialog 0};
 	if (!dialog) exitWith {};
