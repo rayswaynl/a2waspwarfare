@@ -155,15 +155,17 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 			};
 
 			//--- v2 feature 3: safety color non-leader markers green (safe) or orange (contested).
+			//--- Save outer forEach _x to _v2SpawnObj before the nested towns forEach shadows it.
 			if (_uiV2 > 0) then {
-				_v2Mid = _x getVariable 'wfbe_respawn_marker';
+				_v2SpawnObj = _x;
+				_v2Mid = _v2SpawnObj getVariable 'wfbe_respawn_marker';
 				if (!(isNil "_v2Mid")) then {
-					_v2IsLeader = (!isNull player && {_x == leader group player} && {_x != player});
+					_v2IsLeader = (!isNull player && {_v2SpawnObj == leader group player} && {_v2SpawnObj != player});
 					if (!_v2IsLeader) then {
 						_v2Contested = false;
 						{
-							_v2TownSID = _x2 getVariable ["sideID", -1];
-							if (_v2TownSID != _v2SideID && {_x distance _x2 < _v2ContestRadius}) then {_v2Contested = true};
+							_v2TownSID = _x getVariable ["sideID", -1];
+							if (_v2TownSID != _v2SideID && {_v2SpawnObj distance _x < _v2ContestRadius}) then {_v2Contested = true};
 						} forEach towns;
 						if (_v2Contested) then {
 							_v2Mid setMarkerColorLocal "ColorOrange";
