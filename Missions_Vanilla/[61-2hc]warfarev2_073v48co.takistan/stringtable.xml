@@ -2207,10 +2207,6 @@
         <English>Reload the previous loadout</English>
         <Russian>Вернуть предыдущее снаряжение</Russian>
       </Key>
-	  <Key ID="STR_WF_TOOLTIP_HeadbugFix">
-        <English>GUI patch</English>
-        <Russian>Патч графического интерфейса</Russian>
-      </Key>
 	  <Key ID="STR_WF_TOOLTIP_HeadBugFix">
         <English>GUI patch</English>
         <Russian>Патч графического интерфейса</Russian>
