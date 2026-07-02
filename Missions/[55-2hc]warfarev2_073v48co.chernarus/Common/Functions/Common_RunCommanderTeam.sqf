@@ -1457,6 +1457,60 @@ while {!WFBE_GameOver && _alive} do {
 							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
 							[_team, true, [[_dest, 'SAD', (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80]), 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd; //--- punchy-AICOM (Ray 2026-06-17): 250 -> WFBE_C_AICOM_ASSAULT_SAD (80m). Tighter approach SAD = the squad closes onto the objective instead of roving a 250m ring. cmdcon41: props via _stB/_stC (remnant downshift above).
+							//--- armor-screen: tanks screen OUTWARD while infantry/APCs hold the SAD.
+							//--- Gate: WFBE_C_AICOM_ARMOR_SCREEN > 0. At flag 0 this block is inert;
+							//--- the SAD above already covered ALL units and we do nothing extra.
+							//--- A2-OA-safe: isKindOf "Tank" (confirmed codebase idiom); atan2 delta
+							//--- bearing (same idiom as L1429 smoke block); vehicle driver doMove;
+							//--- group vars via single-arg getVariable + isNil (groups reject 2-arg form);
+							//--- missionNamespace 2-arg getVariable is fine. No pushBack/findIf/params/A3.
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_ARMOR_SCREEN", 0]) > 0) then {
+								private ["_ascrR","_ascrBase","_ascrBrg","_ascrIdx","_ascrUnit","_ascrVeh","_ascrScrPos"];
+								_ascrR    = missionNamespace getVariable ["WFBE_C_AICOM_ARMOR_SCREEN_R", 80];
+								//--- Bearing: team leader -> _dest (atan2 delta, same idiom as L1429).
+								//--- Guard a zero-length delta so atan2 does not divide by zero.
+								_ascrBase = getPos (leader _team);
+								_ascrBrg  = getDir (leader _team);
+								if (((leader _team) distance _dest) > 5) then {
+									_ascrBrg = ((_dest select 0) - (_ascrBase select 0)) atan2 ((_dest select 1) - (_ascrBase select 1));
+								};
+								//--- Walk _vehicles; for each Tank hull issue a doMove to a staggered outward
+								//--- screen pos. Infantry and light vehicles already have the SAD above.
+								//--- "Outward" = heading away from _dest (opposite of the approach bearing), so
+								//--- tanks fan out as a hull-down watch arc facing the enemy.
+								//--- Stagger: index * 30 deg offset so two tanks do not converge on the same point.
+								_ascrIdx = 0;
+								{
+									if (!isNull _x && {alive _x} && {_x isKindOf "Tank"}) then {
+										//--- Screen heading: OPPOSITE of approach (face outward from objective).
+										//--- Add +/-30 deg stagger per hull so a 2-tank section fans left/right.
+										//--- A2: no selectRandom/apply; plain numeric index arithmetic is A2-safe.
+										private ["_ascrOffset","_ascrHdg","_ascrP"];
+										_ascrOffset = (_ascrIdx mod 2) * 60 - 30; //--- hull 0 -> -30 deg, hull 1 -> +30 deg, repeats.
+										_ascrHdg    = (_ascrBrg + 180 + _ascrOffset) mod 360;
+										_ascrP      = [(_dest select 0) + _ascrR * (sin _ascrHdg), (_dest select 1) + _ascrR * (cos _ascrHdg), 0];
+										//--- Order the DRIVER (or the unit itself on foot) to the screen pos.
+										//--- A2 idiom: (driver vehicle _x) for crewed hulls (same as L1120).
+										_ascrVeh = vehicle _x;
+										if (_ascrVeh != _x) then {
+											if (!isNull (driver _ascrVeh) && {alive (driver _ascrVeh)}) then {
+												(driver _ascrVeh) doMove _ascrP;
+											};
+										} else {
+											_x doMove _ascrP;
+										};
+										//--- Hull-down watch posture: COMBAT/RED so it returns fire; LIMITED
+										//--- so it settles and watches rather than advancing. A2-safe setters.
+										_x setCombatMode "RED";
+										_x setBehaviour "COMBAT";
+										_x setSpeedMode "LIMITED";
+										_ascrIdx = _ascrIdx + 1;
+									};
+								} forEach _vehicles;
+								if (_ascrIdx > 0) then {
+									["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ARMOR_SCREEN - %3 tank(s) screened outward r=%4m hdg=%5.", _side, _team, _ascrIdx, _ascrR, round _ascrBrg]] Call WFBE_CO_FNC_AICOMLog;
+								};
+							};
 						};
 						}; //--- cmdcon41-w3j: close the fixed-wing-vs-ground arrival split.
 						}; //--- cmdcon41-w2: close rally-vs-assault guard
