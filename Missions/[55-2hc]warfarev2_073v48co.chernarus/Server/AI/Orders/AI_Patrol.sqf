@@ -1,5 +1,5 @@
 Private ["_destination","_maxWaypoints","_pos","_radius","_rand1","_rand2","_team","_type","_update","_wps","_z",
-	"_rbEnabled","_rbSideID","_rbOwned","_rbOrigin","_rbDest","_rbHQ","_rbA","_rbB","_rbLane","_rbHops","_rbRoute","_rbNodeCount","_rbI","_rbNode","_rbType"];
+	"_rbEnabled","_rbSideID","_rbOwned","_rbOrigin","_rbDest","_rbHQ","_rbA","_rbB","_rbLane","_rbHops","_rbRoute","_rbNodeCount","_rbI","_rbNode","_rbType","_rbSkipNaval"];  //--- cmdcon41-w3m: +_rbSkipNaval (naval-HVT corridor-endpoint exclusion).
 _team = _this select 0;
 _destination = _this select 1;
 _radius = if (count _this > 2) then {_this select 2} else {30};
@@ -35,7 +35,13 @@ _rbEnabled = (missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0;
 if (_rbEnabled) then {
 	_rbSideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 	_rbOwned = [];
-	{if ((_x getVariable ["sideID", -1]) == _rbSideID) then {_rbOwned = _rbOwned + [_x]}} forEach towns;
+	//--- cmdcon41-w3m (ground-patrol-skip-naval-hvt): the road corridor runs between OWNED towns; an owned
+	//--- offshore carrier (wfbe_is_naval_hvt / over-water) must NOT be a corridor endpoint - a ground road
+	//--- patrol can't reach it (BuildRoadRoute finds no road there -> the whole patrol falls through to the
+	//--- legacy random-point block). Exclude it here so a valid land corridor is chosen instead. Gated by
+	//--- WFBE_C_PATROLS_SKIP_NAVAL (default 1). 2-arg getVariable on the town logic + surfaceIsWater: A2-OA-safe.
+	_rbSkipNaval = (missionNamespace getVariable ["WFBE_C_PATROLS_SKIP_NAVAL", 1]) > 0;
+	{if (((_x getVariable ["sideID", -1]) == _rbSideID) && {!(_rbSkipNaval && {(_x getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _x)}})}) then {_rbOwned = _rbOwned + [_x]}} forEach towns;
 
 	_rbOrigin = objNull;
 	_rbDest   = objNull;

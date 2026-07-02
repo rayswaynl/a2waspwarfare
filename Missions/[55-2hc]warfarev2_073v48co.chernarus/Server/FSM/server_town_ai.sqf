@@ -306,7 +306,13 @@ while {!WFBE_GameOver} do {
 				//--- below are untouched (this block only issues orders; it never flips wfbe_active or teams).
 				//--- Ground-only (skip air-only activation), server-local groups only (delegated town AI is
 				//--- HC/client-local; deleteGroup/waypoints must run where the group is local), max 1/town.
-				if ((missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES", 1]) > 0 && (_town getVariable "wfbe_active")) then {
+				//--- cmdcon41-w3m (ground-patrol-skip-naval-hvt): a naval-HVT carrier town (wfbe_is_naval_hvt / over-water)
+				//--- must NEVER launch a garrison sortie - the 300-800m ring below is issued around the carrier's own pos,
+				//--- which for an offshore carrier lies over OPEN WATER, sending the ground garrison swimming (the exact
+				//--- ground-patrol-targets-naval failure). Skip the whole sortie block for naval towns; gated by
+				//--- WFBE_C_PATROLS_SKIP_NAVAL (default 1). 2-arg getVariable + surfaceIsWater on the town logic: A2-OA-safe.
+				private "_townIsNaval"; _townIsNaval = ((missionNamespace getVariable ["WFBE_C_PATROLS_SKIP_NAVAL", 1]) > 0) && {(_town getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _town)}};
+				if ((missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES", 1]) > 0 && (_town getVariable "wfbe_active") && {!_townIsNaval}) then {
 					_sortieMins = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_MINS", 8]; if (_sortieMins < 1) then {_sortieMins = 8};
 					_sortieGrp = _town getVariable ["wfbe_sortie_grp", grpNull];
 					_sortieStarted = _town getVariable ["wfbe_sortie_started", 0];

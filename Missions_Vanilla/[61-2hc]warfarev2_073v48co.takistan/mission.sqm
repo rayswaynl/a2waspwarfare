@@ -42,7 +42,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=91;
+		items=98;
 		class Item0
 		{
 			side="LOGIC";
@@ -196,7 +196,7 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={169.98264,494.25732,7329.5396};
+					position[]={11500,150,2750};
 					azimut=90;
 					id=34;
 					side="LOGIC";
@@ -2633,7 +2633,7 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={4747.4932,544.16034,3135.9883};
+					position[]={10300,150,2450};
 					id=228;
 					side="LOGIC";
 					vehicle="LocationLogicStart";
@@ -2667,7 +2667,7 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={3714.6399,171.13455,5635.7466};
+					position[]={10850,150,6250};
 					id=230;
 					side="LOGIC";
 					vehicle="LocationLogicStart";
@@ -2684,7 +2684,7 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={648.13586,417.86884,4569.1333};
+					position[]={11350,150,8300};
 					id=231;
 					side="LOGIC";
 					vehicle="LocationLogicStart";
@@ -3580,7 +3580,126 @@ class Mission
 				};
 			};
 		}
-	};
+			class Item91
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12050,150,10250};
+					id=260;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item92
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={1900,150,11650};
+					id=261;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item93
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={2150,150,520};
+					id=262;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item94
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={900,150,2950};
+					id=263;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item95
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={9150,150,6650};
+					id=264;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item96
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={2350,150,7550};
+					id=265;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+		class Item97
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={8850,150,5250};
+					id=266;
+					side="LOGIC";
+					vehicle="LocationLogicStart";
+					leader=1;
+					skill=0.60000002;
+				};
+			};
+		}
+};
 	class Markers
 	{
 		items=5;

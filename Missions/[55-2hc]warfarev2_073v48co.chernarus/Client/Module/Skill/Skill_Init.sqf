@@ -77,7 +77,7 @@ player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
 
 //--- Command Deck: show the skin selector once on first join (or on slot-switch rejoin).
 //--- Show-once flag is stored on the player object so a mid-game slot-switch rejoin re-offers it.
-if (WFBE_C_SKIN_SELECTOR == 1 && {!(player getVariable ["WFBE_SkinSelector_ShownOnJoin", false])}) then {
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {!(player getVariable ["WFBE_SkinSelector_ShownOnJoin", false])}) then {
 	player setVariable ["WFBE_SkinSelector_ShownOnJoin", true];
 	[] execVM "WASP\actions\SkinSelector\SkinSelector_Open.sqf";
 };

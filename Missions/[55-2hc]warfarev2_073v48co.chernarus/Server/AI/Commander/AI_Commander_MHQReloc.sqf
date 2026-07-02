@@ -113,30 +113,71 @@ for "_i" from 1 to ((count _ownTowns) - 1) do {
 	_ownTowns set [_j + 1, _cand];
 };
 
-//--- Walk friendly towns nearest-to-front first; first buffer-clear standoff wins.
-_destPos = [];
+//--- cmdcon41-w3m (mhq-reloc-relaxation-ladder, HIGH): a LOSING side compressed to ~1 town ringed by
+//--- hostile/GUER towns can NEVER satisfy the full-clearance standoff (live WEST logged 21/21 ABORT|
+//--- no-buffer-clear-standoff|ringClear=1400 while holding 1 town) -> the MHQ never relocates -> the side
+//--- stays collapsed (feedback loop). RELAXATION LADDER: when the full own-town walk yields no buffer-clear
+//--- standoff, retry the SAME walk with progressively SMALLER required clearance and take the first hit.
+//--- Ladder = [ 600+buffer (full, preferred) , 600 (raw activation ring) , WFBE_C_AICOM_MHQ_RELAX_FLOOR
+//--- (default 350) ]. NEVER below the floor - a deploy INSIDE a hostile activation ring stays forbidden.
+//--- If even the floor pass fails, fall through to the existing ABORT (+ abort-cooldown stamp) untouched.
+//--- Gated by WFBE_C_AICOM_MHQ_RELAX (default 1); at 0 the ladder is just the single full-clearance ring,
+//--- so behaviour is IDENTICAL to before this change. A2-OA-1.64-safe: plain array/forEach, no A3 ops; the
+//--- walk body is byte-identical to the prior single-pass walk (it reads the free var _ringClear per pass).
+private ["_relaxOn","_ringFloor","_ringLadder","_usedRing"];
+_relaxOn   = (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_RELAX", 1]) > 0;
+_ringFloor = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_RELAX_FLOOR", 350];
+//--- Build the descending ladder. Only append a rung that is STRICTLY smaller than the previous AND not
+//--- below the floor (so 600 and the floor are skipped if the full ring is already <= them). The floor is
+//--- always the last rung (never below it). Relaxation disabled -> ladder is just the full ring.
+_ringLadder = [_ringClear];
+if (_relaxOn) then {
+	if (600 < _ringClear && {600 > _ringFloor}) then {_ringLadder set [count _ringLadder, 600]};
+	if (_ringFloor < _ringClear) then {_ringLadder set [count _ringLadder, _ringFloor]};
+};
+
+//--- Walk friendly towns nearest-to-front first; first buffer-clear standoff wins. Repeated per ladder rung
+//--- (descending clearance) until a candidate is found or the ladder is exhausted.
+_destPos  = [];
+_usedRing = _ringClear;
 {
-	_t = _x;
-	//--- Standoff = STANDOFF metres from this town toward the current HQ (behind the town,
-	//--- away from the front). If HQ and town coincide, skip - no usable direction.
-	_dx = (_hqPos select 0) - (getPos _t select 0);
-	_dy = (_hqPos select 1) - (getPos _t select 1);
-	_d  = sqrt (_dx*_dx + _dy*_dy);
-	if (_d >= 1 && {count _destPos == 0}) then {
-		_back = _standoff min _d;
-		_cand = [(getPos _t select 0) + (_dx / _d) * _back, (getPos _t select 1) + (_dy / _d) * _back, 0];
-		//--- Validate: clear of EVERY enemy-held AND resistance-held town by _ringClear.
-		_clear = true;
+	if (count _destPos == 0) then {
+		_ringClear = _x;   //--- the walk body below reads _ringClear as its required hostile-ring clearance.
 		{
-			if (((_x getVariable "sideID") == _enemyID) || {(_x getVariable "sideID") == _guerID}) then {
-				_etPos = getPos _x;
-				_etD   = sqrt (((_cand select 0) - (_etPos select 0))^2 + ((_cand select 1) - (_etPos select 1))^2);
-				if (_etD < _ringClear) then {_clear = false};
+			_t = _x;
+			//--- Standoff = STANDOFF metres from this town toward the current HQ (behind the town,
+			//--- away from the front). If HQ and town coincide, skip - no usable direction.
+			_dx = (_hqPos select 0) - (getPos _t select 0);
+			_dy = (_hqPos select 1) - (getPos _t select 1);
+			_d  = sqrt (_dx*_dx + _dy*_dy);
+			if (_d >= 1 && {count _destPos == 0}) then {
+				_back = _standoff min _d;
+				_cand = [(getPos _t select 0) + (_dx / _d) * _back, (getPos _t select 1) + (_dy / _d) * _back, 0];
+				//--- Validate: clear of EVERY enemy-held AND resistance-held town by _ringClear.
+				_clear = true;
+				{
+					if (((_x getVariable "sideID") == _enemyID) || {(_x getVariable "sideID") == _guerID}) then {
+						_etPos = getPos _x;
+						_etD   = sqrt (((_cand select 0) - (_etPos select 0))^2 + ((_cand select 1) - (_etPos select 1))^2);
+						if (_etD < _ringClear) then {_clear = false};
+					};
+				} forEach towns;
+				if (_clear && {!surfaceIsWater _cand}) then {_destPos = _cand; _usedRing = _ringClear};
 			};
-		} forEach towns;
-		if (_clear && {!surfaceIsWater _cand}) then {_destPos = _cand};
+		} forEach _ownTowns;
 	};
-} forEach _ownTowns;
+} forEach _ringLadder;
+//--- Pin _ringClear to the rung the winning candidate was validated against (_usedRing) so the DOWNSTREAM
+//--- final-deploy revalidation inside the Spawn (which receives _ringClear at line ~233 and re-checks the
+//--- deployed pos against every hostile ring) uses the SAME clearance the candidate passed - a relaxed
+//--- candidate must not then be rejected by a stricter full-ring final check. Invariant already holds (the
+//--- outer loop stops advancing once _destPos is set), this makes it explicit and stale-proof.
+if (count _destPos > 0) then {_ringClear = _usedRing};
+//--- If a RELAXED rung (below the full clearance) produced the standoff, surface it so a compressed side's
+//--- salvaged relocation is visible in the RPT (once per successful relaxed pass, not per tick).
+if (count _destPos > 0 && {_usedRing < (600 + _townBuffer)}) then {
+	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|RELAXED|ring=" + str (round _usedRing));
+};
 
 //--- B74 MIN-ADVANCE (Ray 2026-06-22): reject a relocation that is not a real forward leap - the new base
 //--- must be at least MHQ_MIN_ADVANCE metres from the OLD HQ, else keep the current base. Ray saw the HQ
@@ -154,10 +195,12 @@ if (count _destPos > 0) then {
 	};
 };
 
-//--- No friendly town yields a buffer-clear standoff -> ABORT (never deploy into a ring).
+//--- No friendly town yields a buffer-clear standoff even at the RELAXED floor -> ABORT (never deploy into a
+//--- ring). cmdcon41-w3m: ringClear here is the SMALLEST rung tried (the floor when relaxation ran); the added
+//--- |full=/floor= fields show the ladder was walked to the floor and still failed (topology too compressed).
 if (count _destPos == 0) exitWith {
 	_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
-	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|no-buffer-clear-standoff|ringClear=" + str (round _ringClear));
+	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|no-buffer-clear-standoff|ringClear=" + str (round _ringClear) + "|full=" + str (round (600 + _townBuffer)) + "|floor=" + str (round _ringFloor));
 };
 
 //--- RAIL 2 (ENEMY STANDOFF) + no-water destination.

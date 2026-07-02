@@ -1302,6 +1302,21 @@ class WF_Menu {
 			action = "MenuAction = 25";
 			tooltip = "Friendly name tags On/Off";
 		};
+		//--- cmdcon41-w3l: Command-Deck Skin Selector re-open button. The former SKIN slot (idc 11021)
+		//--- was repurposed to SETUP on 2026-06-24, leaving MenuAction 21 (GUI_Menu.sqf) unreachable.
+		//--- This restores a live footer entry in the gap between the HeadBug icon and HUD. The handler
+		//--- itself re-checks SkinSelector_Enabled + alive + on-foot, so a disabled/dead player is a no-op.
+		class CA_SkinSel_Button : RscButton_Main {
+			idc = 11025;
+			x = 0.362;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = $STR_WF_SkinSelector_MenuButton;
+			sizeEx = 0.024;
+			action = "MenuAction = 21";
+			tooltip = $STR_WF_SkinSelector_Title;
+		};
 	};
 };
 

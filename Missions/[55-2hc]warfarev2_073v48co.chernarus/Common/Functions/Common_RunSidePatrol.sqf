@@ -26,7 +26,8 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
          "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
-         "_pUnstuckStreak","_pUnstuckMax","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided"];
+         "_pUnstuckStreak","_pUnstuckMax","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
+         "_cIsNaval","_navSkipLogged"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch).
 
 _sideID   = _this select 0;
 _template = _this select 1;
@@ -129,6 +130,14 @@ _paidThisVisit = false;
 //--- frontline town. _pAvoid holds [town, expiry] pairs (A2-safe plain array on a local).
 _pUnstuckStreak = 0;
 _pAvoid         = [];
+//--- cmdcon41-w3m (ground-patrol-skip-naval-hvt, HIGH behavioral): a GROUND patrol can NEVER path to an
+//--- OFFSHORE carrier town (Khe Sanh Alpha/Bravo/Charlie, stamped wfbe_is_naval_hvt in Init_NavalHVT.sqf).
+//--- Live EAST patrol O 1-1-G thrashed ALL MATCH cycling PATROL_UNSTUCK (80x) / PATROL_RETARGET because the
+//--- target pick below re-selected a carrier forever (unstuck -> retarget -> re-pick same offshore town). The
+//--- candidate build + BOTH fallbacks now EXCLUDE any town flagged wfbe_is_naval_hvt OR sitting over water
+//--- (surfaceIsWater belt-and-braces). One INFORMATION log the FIRST time this group skips a naval town (latched,
+//--- not per tick). Gated by WFBE_C_PATROLS_SKIP_NAVAL (default 1); at 0 the old unfiltered pick returns.
+_navSkipLogged = false;
 
 while {!WFBE_GameOver && _alive} do {
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
@@ -142,20 +151,34 @@ while {!WFBE_GameOver && _alive} do {
 			_pAvoidKeep = [];
 			{if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_pAvoidKeep set [count _pAvoidKeep, _x]}} forEach _pAvoid;
 			_pAvoid = _pAvoidKeep;
+			private "_skipNaval"; _skipNaval = (missionNamespace getVariable ["WFBE_C_PATROLS_SKIP_NAVAL", 1]) > 0;
 			_candidates = [];
 			{
 				private ["_cTown"];
 				_cTown = _x;
 				if ((_cTown getVariable "sideID") != _sideID) then {
-					_cIsAvoided = false;
-					{if ((_x select 0) == _cTown) then {_cIsAvoided = true}} forEach _pAvoid;
-					if (!_cIsAvoided) then {_candidates = _candidates + [_cTown]};
+					//--- cmdcon41-w3m: never target an offshore naval-HVT carrier (ground units can't path to it).
+					_cIsNaval = _skipNaval && {(_cTown getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _cTown)}};
+					if (_cIsNaval && {!_navSkipLogged}) then {
+						_navSkipLogged = true;
+						["INFORMATION", Format ["Common_RunSidePatrol.sqf: [%1] ground patrol SKIPPING naval-HVT town [%2] (offshore/over-water - unreachable by ground).", _side, _cTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogContent;
+					};
+					if (!_cIsNaval) then {
+						_cIsAvoided = false;
+						{if ((_x select 0) == _cTown) then {_cIsAvoided = true}} forEach _pAvoid;
+						if (!_cIsAvoided) then {_candidates = _candidates + [_cTown]};
+					};
 				};
 			} forEach towns;
 			if (count _candidates == 0) then {
-				//--- Everything owned or everything avoided: fall back to any non-owned town, else all towns.
-				{if ((_x getVariable "sideID") != _sideID) then {_candidates = _candidates + [_x]}} forEach towns;
-				if (count _candidates == 0) then {_candidates = + towns};
+				//--- Everything owned or everything avoided: fall back to any non-owned NON-NAVAL town. cmdcon41-w3m:
+				//--- the fallback MUST keep excluding naval towns (else a compressed side falls back onto a carrier).
+				{if (((_x getVariable "sideID") != _sideID) && {!(_skipNaval && {(_x getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _x)}})}) then {_candidates = _candidates + [_x]}} forEach towns;
+				//--- Last-ditch (never-idle guarantee): any NON-NAVAL town at all; only if THAT is empty use raw towns.
+				if (count _candidates == 0) then {
+					{if (!(_skipNaval && {(_x getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _x)}})) then {_candidates = _candidates + [_x]}} forEach towns;
+					if (count _candidates == 0) then {_candidates = + towns};
+				};
 			};
 			_target = [leader _team, _candidates] Call WFBE_CO_FNC_GetClosestEntity;
 			if (!isNull _target) then {

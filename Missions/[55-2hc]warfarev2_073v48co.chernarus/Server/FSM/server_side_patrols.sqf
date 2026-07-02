@@ -13,7 +13,8 @@ scriptName "Server\FSM\server_side_patrols.sqf";
 
 private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept",
 	"_mpEnabled","_mpMotoPool","_mpEntry","_mpHasVeh","_mpC",
-	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh"];
+	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh",
+	"_homePool","_spSkipNaval","_hpX"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -124,7 +125,16 @@ while {!WFBE_GameOver} do {
 						["INFORMATION", Format ["server_side_patrols.sqf: [%1] Patrols %2 researched but NO owned towns yet - waiting for the first capture.", _side, _lvl]] Call WFBE_CO_FNC_AICOMLog;
 					};
 					if (!isNull _hq && count _owned > 0) then {
-						_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
+						//--- cmdcon41-w3m (ground-patrol-skip-naval-hvt): _home is the town the patrol SPAWNS at. An owned
+						//--- offshore carrier (wfbe_is_naval_hvt / over-water) must NOT be a spawn town - a ground patrol
+						//--- would spawn over water. Pick _home from a naval-EXCLUDED pool; fall back to _owned only if EVERY
+						//--- owned town is naval (keeps a valid spawn). _owned + its count-based GUER tier logic stay untouched.
+						//--- Gated by WFBE_C_PATROLS_SKIP_NAVAL (default 1). 2-arg getVariable + surfaceIsWater: A2-OA-safe.
+						_spSkipNaval = (missionNamespace getVariable ["WFBE_C_PATROLS_SKIP_NAVAL", 1]) > 0;
+						_homePool = [];
+						{_hpX = _x; if (!(_spSkipNaval && {(_hpX getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _hpX)}})) then {_homePool = _homePool + [_hpX]}} forEach _owned;
+						if (count _homePool == 0) then {_homePool = _owned};
+						_home = [_hq, _homePool] Call WFBE_CO_FNC_GetClosestEntity;
 						_escTiers  = ["LIGHT","MEDIUM","HEAVY"];
 						_escBaseIdx = switch (_lvl) do {case 1: {0}; case 2: {1}; default {2}};
 						_tier = _escTiers select _escBaseIdx;
