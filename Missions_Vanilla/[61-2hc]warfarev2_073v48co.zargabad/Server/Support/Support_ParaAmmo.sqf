@@ -63,7 +63,7 @@ while {true} do {
 		_ammo = _x createVehicle [0,0,0];
 		
 		[_chopper,_ammo,_side] Spawn {
-			Private ['_ammo','_chopper','_chute','_pos','_side','_type'];
+			Private ['_ammo','_chopper','_chute','_dropStart','_pos','_side','_type'];
 			_chopper = _this select 0;
 			_ammo = _this select 1;
 			_side = _this select 2;
@@ -74,7 +74,9 @@ while {true} do {
 			
 			_ammo setPos getPos _chute;
 			_ammo attachTo [_chute,[0,0,0]];
-			waitUntil {getPos _ammo select 2 < 3};
+			_dropStart = time;
+			while {!isNull _ammo && ((getPos _ammo select 2) >= 3) && ((time - _dropStart) < 120)} do {sleep 1};
+			if (isNull _ammo) exitWith {deleteVehicle _chute};
 			detach _ammo;
 			
 			_type = typeOf _ammo;
