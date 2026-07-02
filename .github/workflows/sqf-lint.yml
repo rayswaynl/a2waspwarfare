@@ -1,0 +1,51 @@
+name: WASP lint
+
+on:
+  pull_request:
+    branches:
+      - claude/build84-cmdcon36
+      - master
+  push:
+    branches:
+      - claude/build84-cmdcon36
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: SQF lint and tool tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run lint tool unit tests
+        run: python -m unittest discover -s Tools/Lint -p "test_*.py"
+
+      - name: Check maintained mission bracket balance
+        run: python Tools/Lint/check_sqf.py --select BRACKET --no-classname-index
+
+      - name: Check A3 command traps in mission code paths
+        run: |
+          python Tools/Lint/check_sqf.py --select A3CMD --no-classname-index \
+            "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client" \
+            "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common" \
+            "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless" \
+            "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server" \
+            "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP" \
+            "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client" \
+            "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common" \
+            "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Headless" \
+            "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server" \
+            "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/WASP"
+
+      - name: Report stringtable reference findings
+        run: python Tools/Lint/check_stringtable_refs.py --exit-zero

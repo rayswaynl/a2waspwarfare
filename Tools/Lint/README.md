@@ -17,6 +17,17 @@ python Tools\Lint\check_stringtable_refs.py --exit-zero
 
 With no paths, `check_sqf.py` scans both maintained mission roots.
 
+## CI
+
+`.github/workflows/sqf-lint.yml` runs a low-noise pull-request gate:
+
+- `python -m unittest discover -s Tools/Lint -p "test_*.py"`
+- `python Tools/Lint/check_sqf.py --select BRACKET --no-classname-index`
+- `python Tools/Lint/check_sqf.py --select A3CMD --no-classname-index` over SQF-heavy mission code paths
+- `python Tools/Lint/check_stringtable_refs.py --exit-zero`
+
+The A3 command-trap gate intentionally scans code directories rather than the full mission roots because `Rsc/Parameters.hpp` currently contains known legacy `params` false positives. The stringtable job is report-only until existing duplicate/localization debt is cleaned up.
+
 With no paths, `check_stringtable_refs.py` scans the maintained Chernarus source mission and checks it against that mission's `stringtable.xml`. Pass explicit paths to scan a narrower file set or a per-map exception. BI/expansion keys such as `STR_EP1_`, `STR_DN_`, `STR_TASK*`, and input-display keys are ignored by default; use `--check-builtins` when you deliberately want to audit those too.
 
 Use `--exit-zero` for report-only CI jobs that should print findings without failing the run.
