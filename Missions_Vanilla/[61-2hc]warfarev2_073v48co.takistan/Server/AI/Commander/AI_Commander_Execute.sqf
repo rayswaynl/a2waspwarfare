@@ -87,7 +87,7 @@ if (isNil "_teams") exitWith {};
 							if ((_hcOrigin distance _goto) > 700) then {
 								_laneJit = _team getVariable "wfbe_aicom_lanejit";
 								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
-								_hcRoute = [_hcOrigin, _goto, _laneJit * 120, 8] Call WFBE_CO_FNC_BuildRoadRoute;
+								_hcRoute = [_hcOrigin, _goto, _laneJit * (missionNamespace getVariable ["WFBE_C_AICOM_LANE_OFFSET", 120]), 8] Call WFBE_CO_FNC_BuildRoadRoute; //--- cmdcon42-h: lane amplitude worldName-aware (CH 120 / TK 60).
 							};
 							_team setVariable ["wfbe_aicom_route", _hcRoute, true]; //--- broadcast BEFORE the seq bump so the driver reads THIS order's route.
 							//--- A2: groups do not support the [name,default] getVariable form - plain get + isNil for the seq read.
@@ -109,7 +109,7 @@ if (isNil "_teams") exitWith {};
 							if (_slHasVeh && {(_slOrigin distance _goto) > 700}) then {
 								_laneJit = _team getVariable "wfbe_aicom_lanejit";
 								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
-								_slRoute = [_slOrigin, _goto, _laneJit * 120, 8] Call WFBE_CO_FNC_BuildRoadRoute;
+								_slRoute = [_slOrigin, _goto, _laneJit * (missionNamespace getVariable ["WFBE_C_AICOM_LANE_OFFSET", 120]), 8] Call WFBE_CO_FNC_BuildRoadRoute; //--- cmdcon42-h: lane amplitude worldName-aware (CH 120 / TK 60).
 								_team setBehaviour "AWARE"; _team setCombatMode "RED"; _team setFormation "COLUMN"; _team setSpeedMode "FULL";
 								_slWPs = [];
 								{ _slWPs = _slWPs + [[_x, "MOVE", 40, 30, [], [], ["AWARE","RED","","FULL"]]] } forEach _slRoute;
