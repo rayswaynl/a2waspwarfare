@@ -88,7 +88,7 @@ switch (_request) do {
 				onMapSingleClick {
 					onMapSingleClick {};
 					openMap false;
-					["RequestSpecial", ["ScudStrike", playerSide, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
+					["RequestSpecial", ["ScudStrike", playerSide, _pos, group player, player]] Call WFBE_CO_FNC_SendToServer;
 					hint localize "STR_WF_SCUD_LAUNCHED";
 					false
 				};

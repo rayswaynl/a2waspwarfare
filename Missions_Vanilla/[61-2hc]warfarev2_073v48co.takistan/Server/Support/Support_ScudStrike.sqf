@@ -3,8 +3,8 @@
 //--- (self-propelled via setVelocity/flyInHeight — NO AI pilot; the Chukar is a missile, mirroring
 //--- the live ICBM module, not a piloted aircraft like the drone strike). On arrival the SCUD MIRVs
 //--- a saturation barrage over the target zone, then is deleted. NO enemy warning is broadcast.
-//--- Payload: ["ScudStrike", _side, _destination, _playerTeam]
-//--- Server-authoritative: validates owned oil platform + per-platform cooldown + funds before firing.
+//--- Payload: ["ScudStrike", _side, _destination, _playerTeam, _requester]
+//--- Server-authoritative: validates requester/team/action grant + owned oil platform + per-platform cooldown + funds before firing.
 //---
 //--- Warheads (Sh_125_HE + Bo_GBU12_LGB are EXACTLY what the live drone-saturation-strike uses -> proven):
 //---   HE x3      Sh_125_HE        scattered area bursts (anti-infantry / soft)
@@ -16,13 +16,34 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) != 1) exitWith {
 	["INFORMATION","Support_ScudStrike.sqf : feature disabled (WFBE_C_NAVAL_HVT=0), ignoring."] Call WFBE_CO_FNC_LogContent;
 };
 
-private ["_side","_destination","_playerTeam","_sideID","_enemySides","_hvtList","_platform",
+private ["_side","_destination","_playerTeam","_requester","_sideID","_enemySides","_hvtList","_platform","_pad",
          "_cooldownKey","_lastFired","_now","_funds","_launchPos","_dx","_dy","_len","_dist",
          "_chukar","_travelTime","_zoneR","_warHE","_warSADARM","_warWP","_caller","_x"];
 
+if (typeName _this != "ARRAY" || {count _this < 5}) exitWith {
+	["WARNING", Format ["Support_ScudStrike.sqf : rejected malformed payload [%1].", _this]] Call WFBE_CO_FNC_LogContent;
+};
 _side        = _this select 1;
 _destination = _this select 2;
 _playerTeam  = _this select 3;
+_requester   = _this select 4;
+
+if (!(_side in [west, east])) exitWith {
+	["WARNING", Format ["Support_ScudStrike.sqf : rejected invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+};
+if ((typeName _destination != "ARRAY") || {typeName _playerTeam != "GROUP"} || {typeName _requester != "OBJECT"}) exitWith {
+	["WARNING", Format ["Support_ScudStrike.sqf : rejected malformed fields side=%1 destination=%2 team=%3 requester=%4.", _side, typeName _destination, typeName _playerTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
+};
+if ((count _destination < 2) || {typeName (_destination select 0) != "SCALAR"} || {typeName (_destination select 1) != "SCALAR"}) exitWith {
+	["WARNING", Format ["Support_ScudStrike.sqf : rejected malformed destination [%1].", _destination]] Call WFBE_CO_FNC_LogContent;
+};
+if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side} || {leader _playerTeam != _requester}) exitWith {
+	["WARNING", Format ["Support_ScudStrike.sqf : rejected requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+};
+if !(_requester getVariable ["wfbe_scud_action_armed", false]) exitWith {
+	["WARNING", Format ["Support_ScudStrike.sqf : rejected requester without server-granted action requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+};
+
 _sideID      = _side call GetSideID;
 _now         = time;
 _zoneR       = WFBE_C_SCUD_ZONE_RADIUS;
@@ -40,6 +61,10 @@ _platform = objNull;
 } forEach _hvtList;
 if (isNull _platform) exitWith {
 	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- no owned oil platform.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
+_pad = _platform getVariable ["wfbe_scud_pad_ref", objNull];
+if (isNull _pad || {(_requester distance _pad) > 75}) exitWith {
+	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- requester not near SCUD pad.", str _side]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- VALIDATION 2: per-platform cooldown.
@@ -80,7 +105,7 @@ _chukar setSpeedMode "FULL";
 _chukar setVariable ["wfbe_naval_cap", true, true];	//--- exempt from group/vehicle GC
 
 _travelTime = ((_dist / 140) min 30) max 4;
-_caller = leader _playerTeam;
+_caller = _requester;
 
 //--- SATURATION: after flight, MIRV the warhead mix over the target zone, then clean up the missile.
 [_chukar, _destination, _zoneR, _warHE, _warSADARM, _warWP, _enemySides, _caller, _travelTime] spawn {

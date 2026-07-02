@@ -133,6 +133,29 @@ switch (_args select 0) do {
 	//--- NAVAL HVT: SCUD saturation strike (feat/naval-hvt-objectives).
 	//--- Server validates ownership + cooldown inside KAT_ScudStrike before firing.
 	case "ScudStrike": {
+		Private ["_destination","_playerTeam","_requester","_side"];
+		if (count _args < 5) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected short ScudStrike payload [%1].", _args]] Call WFBE_CO_FNC_LogContent;
+		};
+		_side = _args select 1;
+		_destination = _args select 2;
+		_playerTeam = _args select 3;
+		_requester = _args select 4;
+		if (!(_side in [west, east])) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ScudStrike with invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((typeName _destination != "ARRAY") || {typeName _playerTeam != "GROUP"} || {typeName _requester != "OBJECT"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed ScudStrike fields side=%1 destination=%2 team=%3 requester=%4.", _side, typeName _destination, typeName _playerTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((count _destination < 2) || {typeName (_destination select 0) != "SCALAR"} || {typeName (_destination select 1) != "SCALAR"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ScudStrike with malformed destination [%1].", _destination]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side} || {leader _playerTeam != _requester}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ScudStrike requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		if !(_requester getVariable ["wfbe_scud_action_armed", false]) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected ScudStrike from requester without server-granted action requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		};
 		if (!isNil "KAT_ScudStrike") then {
 			_args spawn KAT_ScudStrike;
 		} else {

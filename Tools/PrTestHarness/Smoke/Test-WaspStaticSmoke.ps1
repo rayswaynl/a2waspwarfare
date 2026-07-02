@@ -546,6 +546,46 @@ function Test-IcbmRequestSpecialAuthorityGuard {
 	Add-Result "ICBM RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-ScudStrikeAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$supportPath = Join-Path $entry.Root "Server\Support\Support_ScudStrike.sqf"
+		$clientPath = Join-Path $entry.Root "Client\PVFunctions\HandleSpecial.sqf"
+		$server = Get-Text $serverPath
+		$support = Get-Text $supportPath
+		$client = Get-Text $clientPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$supportCode = [regex]::Replace($support, "//.*", "")
+		$supportCode = [regex]::Replace($supportCode, "/\*[\s\S]*?\*/", "")
+		$caseAt = $serverCode.IndexOf('case "ScudStrike"')
+		if ($caseAt -lt 0) {
+			$missing += "$($entry.Terrain):missing-case"
+			continue
+		}
+		$caseEnd = $serverCode.IndexOf('case "upgrade-sync"', $caseAt)
+		if ($caseEnd -lt 0) { $caseEnd = $serverCode.Length }
+		$block = $serverCode.Substring($caseAt, $caseEnd - $caseAt)
+		$countAt = $block.IndexOf('count _args < 5')
+		$selectAt = $block.IndexOf('_args select 1')
+		if ($countAt -lt 0) { $missing += "$($entry.Terrain):short-payload-guard" }
+		if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):guard-after-select" }
+		if (-not ($block.Contains('_side in [west, east]') -and $block.Contains('typeName _destination != "ARRAY"') -and $block.Contains('typeName _playerTeam != "GROUP"') -and $block.Contains('typeName _requester != "OBJECT"') -and $block.Contains('count _destination < 2') -and $block.Contains('typeName (_destination select 0) != "SCALAR"') -and $block.Contains('typeName (_destination select 1) != "SCALAR"'))) { $missing += "$($entry.Terrain):payload-types" }
+		if (-not ($block.Contains('!isPlayer _requester') -and $block.Contains('group _requester != _playerTeam') -and $block.Contains('side _playerTeam != _side') -and $block.Contains('leader _playerTeam != _requester') -and $block.Contains('wfbe_scud_action_armed'))) { $missing += "$($entry.Terrain):requester-action-binding" }
+		if (-not ($block.Contains('rejected short ScudStrike payload') -and $block.Contains('rejected ScudStrike requester/team mismatch') -and $block.Contains('without server-granted action') -and $block.Contains('KAT_ScudStrike'))) { $missing += "$($entry.Terrain):warnings-and-dispatch" }
+		if (-not $client.Contains('["RequestSpecial", ["ScudStrike", playerSide, _pos, group player, player]]')) { $missing += "$($entry.Terrain):client-requester-context" }
+		if (-not ($supportCode.Contains('count _this < 5') -and $supportCode.Contains('_requester   = _this select 4') -and $supportCode.Contains('typeName _requester != "OBJECT"') -and $supportCode.Contains('count _destination < 2') -and $supportCode.Contains('group _requester != _playerTeam') -and $supportCode.Contains('leader _playerTeam != _requester') -and $supportCode.Contains('wfbe_scud_action_armed') -and $supportCode.Contains('_caller = _requester'))) { $missing += "$($entry.Terrain):support-script-revalidation" }
+		if (-not ($supportCode.Contains('WFBE_NAVAL_HVT_PLATFORMS') -and $supportCode.Contains('wfbe_scud_pad_ref') -and $supportCode.Contains('_requester distance _pad') -and $supportCode.Contains('WFBE_C_SCUD_COOLDOWN') -and $supportCode.Contains('WFBE_CO_FNC_GetTeamFunds') -and $supportCode.Contains('WFBE_CO_FNC_ChangeTeamFunds'))) { $missing += "$($entry.Terrain):existing-server-gates" }
+	}
+	Add-Result "SCUD RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomCommandConsoleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1491,6 +1531,7 @@ Test-FactoryQueueEmptyHeadGuard
 Test-AttackWavePvGuards
 Test-IcbmRequestSpecialAuthorityGuard
 Test-SupplyMissionPvGuards
+Test-ScudStrikeAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards
