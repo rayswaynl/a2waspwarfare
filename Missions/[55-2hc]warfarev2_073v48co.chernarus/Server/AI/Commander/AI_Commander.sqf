@@ -142,6 +142,15 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 	//--- Distinct from wfbe_aicom_lastbrief (300s, written inside the loop -> useless as liveness).
 	missionNamespace setVariable [format ["wfbe_aicom_hb_%1", _myID], time];
 
+	//--- WASPSCALE fpsmin sampler (cmdcon42, claude-gaming 2026-07-02): fold THIS tick's server diag_fps into a
+	//--- server-global running min (wfbe_fpsmin_acc) that the WASPSCALE emit block consumes+resets each 300s window.
+	//--- Runs every supervisor tick (~15s per worker, ~2 workers) BEFORE the _active gate so it samples even when the
+	//--- AI is dormant - the real perf floor vs the instant fps snapshot on the emit line. One diag_fps read + one
+	//--- compare/setVariable; zero scans. A2-OA-safe. Sentinel -1 = "no sample yet this window".
+	private ["_fpsNow","_fpsAcc"]; _fpsNow = diag_fps;
+	_fpsAcc = missionNamespace getVariable ["wfbe_fpsmin_acc", -1];
+	if (_fpsAcc < 0 || {_fpsNow < _fpsAcc}) then { missionNamespace setVariable ["wfbe_fpsmin_acc", _fpsNow] };
+
 	_active = false;
 	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0) then { //--- FIX7 (Ray): defaulted [..,0] - the bare single-arg getVariable threw if nil at an early-boot race.
 		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
@@ -836,8 +845,57 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			missionNamespace setVariable ["wfbe_buildtag", _bt];
 		};
 		_hcFps = -1; _hcReg2 = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
-		{ if (((time - (_x select 2)) <= 120) && {(typeName (_x select 1)) == "SCALAR"}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1} } } forEach _hcReg2;
-		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps));
+		//--- WASPSCALE v2-EXT (cmdcon42, claude-gaming 2026-07-02): hc_fps stays the MIN across fresh HCs (byte-identical
+		//--- to before). hc2fps = the MAX fresh HC fps in the SAME single pass, so a 2-HC box exposes BOTH HCs' fps as a
+		//--- min/max bracket without a second registry walk or any HC-side change (both HCs already stamp WFBE_HCFPS_REG
+		//--- keyed by netId via HCStat.sqf). Single HC -> hc2fps == hc_fps; no fresh HC -> both -1. New key `hc2fps=`
+		//--- follows the SAME shape as the existing `hc_fps=` (which already contains the substring `fps=`), so pipe-
+		//--- anchored `|fps=` greps and longest-key KV parsers keep resolving each field distinctly (no TFPS-style collision).
+		private ["_hc2Fps"]; _hc2Fps = -1;
+		{ if (((time - (_x select 2)) <= 120) && {(typeName (_x select 1)) == "SCALAR"}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1}; if ((_hc2Fps < 0) || {(_x select 1) > _hc2Fps}) then {_hc2Fps = _x select 1} } } forEach _hcReg2;
+		//--- APPENDED v2-EXT telemetry (all CHEAP reads of state the systems already maintain; NO new allUnits/allGroups walk):
+		//---   townsW/E/G  per-side towns held: iterate `towns` ONCE bucketing by the SAME `sideID` var GetTownsHeld reads
+		//---               (W=0 E=1 G=2). Also collect the per-town sortie flag in the SAME pass -> `sort` (active sorties).
+		//---   postW/E     AICOM posture string off each side logic (wfbe_aicom_strat_mode; spearhead/laststand/relief/strike).
+		//---   disp/arrv   cumulative ASSAULT dispatches / arrivals this match (counters bumped at the AssignTowns log sites).
+		//---   recov       cumulative SERVER-LOCAL recovery actions (unstuck + auto-flip); HC-delegated recoveries live on the
+		//---               HC RPT's own UNSTUCK_FIRED lines (analyze_soak already reads those) - this is the server-visible subset.
+		//---   mhqrel      cumulative AI MHQ relocations DEPLOYED (both AI sides; bumped at the MHQReloc DEPLOYED log site).
+		//---   patr        currently ACTIVE side-patrol groups (count of the live public WFBE_ACTIVE_PATROLS registry).
+		//---   telW/E      SCUD TEL state per side: 0=none/absent, 1=alive, 2=dead-awaiting-respawn (killed-EH nulled the ref).
+		//---   terr        territorial-victory clock: none | <W|E>:<mins-remaining> from WFBE_TERRITORIAL_CLOCK_<sid>.
+		//---   fpsmin      LOWEST server fps sampled since the previous emit (the tiny sampler below feeds wfbe_fpsmin_acc).
+		//---   grpW/E      per-side group counts from the wfbe_grpcnt_* cache server_groupsGC already maintains (its walk, not ours).
+		private ["_townsW","_townsE","_townsG","_sortN","_tn","_postW","_postE","_lw","_le","_disp","_arrv","_recov","_mhqrel","_patrN","_telW","_telE","_terr","_fpsMin","_grpW","_grpE","_terrSid","_terrMinsC","_terrRem","_telObjW","_telObjE"];
+		_townsW = 0; _townsE = 0; _townsG = 0; _sortN = 0;
+		{ _tn = _x getVariable ["sideID", -1]; if (_tn == 0) then {_townsW = _townsW + 1}; if (_tn == 1) then {_townsE = _townsE + 1}; if (_tn == 2) then {_townsG = _townsG + 1}; if (!isNull (_x getVariable ["wfbe_sortie_grp", grpNull])) then {_sortN = _sortN + 1} } forEach towns;
+		_lw = west Call WFBE_CO_FNC_GetSideLogic; _le = east Call WFBE_CO_FNC_GetSideLogic;   //--- returns objNull (never nil) when a side logic is absent -> guard with isNull.
+		_postW = "?"; if (!isNull _lw) then {_postW = _lw getVariable ["wfbe_aicom_strat_mode", "?"]};
+		_postE = "?"; if (!isNull _le) then {_postE = _le getVariable ["wfbe_aicom_strat_mode", "?"]};
+		_disp   = missionNamespace getVariable ["wfbe_waspscale_disp", 0];
+		_arrv   = missionNamespace getVariable ["wfbe_waspscale_arrv", 0];
+		_recov  = missionNamespace getVariable ["wfbe_waspscale_recov", 0];
+		_mhqrel = missionNamespace getVariable ["wfbe_waspscale_mhqrel", 0];
+		_patrN  = count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []]);
+		//--- TEL state: alive=1; a stored-but-dead ref or (killed-EH null) with a live TEL feature = 2 (awaiting respawn); no feature/never-spawned = 0.
+		_telObjW = missionNamespace getVariable ["WFBE_ICBM_TEL_west", objNull];
+		_telObjE = missionNamespace getVariable ["WFBE_ICBM_TEL_east", objNull];
+		_telW = 0; if (!isNull _telObjW) then { if (alive _telObjW) then {_telW = 1} else {_telW = 2} } else { if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1 && {!isNil "WFBE_SE_FNC_SpawnIcbmTel"}) then {_telW = 2} };
+		_telE = 0; if (!isNull _telObjE) then { if (alive _telObjE) then {_telE = 1} else {_telE = 2} } else { if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1 && {!isNil "WFBE_SE_FNC_SpawnIcbmTel"}) then {_telE = 2} };
+		//--- territorial clock: report the first side with a running clock (start >= 0), mins-remaining rounded UP (matches the victory display).
+		_terr = "none"; _terrMinsC = missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL_MINS", 30];
+		_terrSid = missionNamespace getVariable ["WFBE_TERRITORIAL_CLOCK_0", -1];
+		if (_terrSid >= 0) then { _terrRem = ceil (((_terrMinsC * 60) - (time - _terrSid)) / 60) max 0; _terr = "W:" + str _terrRem } else {
+			_terrSid = missionNamespace getVariable ["WFBE_TERRITORIAL_CLOCK_1", -1];
+			if (_terrSid >= 0) then { _terrRem = ceil (((_terrMinsC * 60) - (time - _terrSid)) / 60) max 0; _terr = "E:" + str _terrRem };
+		};
+		//--- fpsmin: consume + reset the running server-fps min the in-loop sampler (below the throttle block) accumulates; -1 until the first sample.
+		_fpsMin = missionNamespace getVariable ["wfbe_fpsmin_acc", -1];
+		missionNamespace setVariable ["wfbe_fpsmin_acc", -1];
+		//--- per-side group counts from the groupsGC cache (server_groupsGC maintains it on ITS allGroups pass); fallback to the total-derived cache, else -1 (never a second walk here).
+		_grpW = missionNamespace getVariable ["wfbe_grpcnt_west", -1];
+		_grpE = missionNamespace getVariable ["wfbe_grpcnt_east", -1];
+		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE);
 
 		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
 		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent

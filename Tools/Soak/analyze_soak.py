@@ -34,6 +34,13 @@ Log-format cheat-sheet (all pipe-delimited, one per RPT line, quoted):
     WASPSTAT|v1|<seq>|CAPTURE|<Town>|<newOwner>|<oldOwner>|t=<sec>
     WASPSTAT|v1|<seq>|ROUNDEND|<winner>|<clockSec>|<map>
     WASPSCALE|v2|<tick>|tier=|players=|AI_W=|AI_E=|AI_GUER=|AI_TOT=|groups=|fps=|map=|build=|hc_fps=
+        (cmdcon42 v2-EXT, all APPENDED after hc_fps, all OPTIONAL / older logs omit them):
+        |townsW=|townsE=|townsG=|postW=|postE=|disp=|arrv=|recov=|mhqrel=|patr=|sort=
+        |telW=|telE=|terr=|fpsmin=|hc2fps=|grpW=|grpE=
+        disp/arrv/recov/mhqrel are CUMULATIVE counters (arrival rate = d(arrv)/d(disp));
+        townsW/E/G + patr/sort/grpW/E + telW/E are instantaneous gauges; postW/E are the
+        AICOM strat_mode; terr is none|<W|E>:<mins>; fpsmin is the per-window server-fps floor;
+        hc2fps is the 2nd HC's fps (hc_fps stays the min across HCs, unchanged).
 
 IMPORTANT (per project memory):
   * AICOM TEAMS run on the HC -> driver / CAPTURED logs go to the HC RPT
@@ -419,6 +426,29 @@ class Soak(object):
                     "hc_fps": _to_float(kv.get("hc_fps"), None),
                     "build": kv.get("build", "?"),
                     "map": kv.get("map", "?"),
+                    # --- cmdcon42 WASPSCALE v2-EXT appended fields. All optional: absent
+                    #     on pre-cmdcon42 logs, so every read is .get()-with-default and
+                    #     None-tolerant. This keeps the analyzer backward-compatible with
+                    #     old (v2 base) and even v1-shaped RPTs (which never match RE_SCALE
+                    #     v2 anyway). Do NOT assume any of these keys are present.
+                    "townsW": _to_int(kv.get("townsW"), None),
+                    "townsE": _to_int(kv.get("townsE"), None),
+                    "townsG": _to_int(kv.get("townsG"), None),
+                    "postW": kv.get("postW", None),
+                    "postE": kv.get("postE", None),
+                    "disp": _to_int(kv.get("disp"), None),
+                    "arrv": _to_int(kv.get("arrv"), None),
+                    "recov": _to_int(kv.get("recov"), None),
+                    "mhqrel": _to_int(kv.get("mhqrel"), None),
+                    "patr": _to_int(kv.get("patr"), None),
+                    "sort": _to_int(kv.get("sort"), None),
+                    "telW": _to_int(kv.get("telW"), None),
+                    "telE": _to_int(kv.get("telE"), None),
+                    "terr": kv.get("terr", None),
+                    "fpsmin": _to_float(kv.get("fpsmin"), None),
+                    "hc2fps": _to_float(kv.get("hc2fps"), None),
+                    "grpW": _to_int(kv.get("grpW"), None),
+                    "grpE": _to_int(kv.get("grpE"), None),
                 })
                 continue
 
@@ -566,6 +596,13 @@ class Soak(object):
         hcfps = [s["hc_fps"] for s in self.scale if s["hc_fps"] is not None]
         ai = [s["AI_TOT"] for s in self.scale if s["AI_TOT"] is not None]
         guer = [s["AI_GUER"] for s in self.scale if s["AI_GUER"] is not None]
+        # cmdcon42 v2-EXT: fpsmin (per-window server-fps floor) and hc2fps (2nd HC).
+        # Both optional; only present on cmdcon42+ logs. -1 is the SQF "no sample"
+        # sentinel and is filtered out so it never poisons the min/median.
+        fpsmin = [s["fpsmin"] for s in self.scale
+                  if s.get("fpsmin") is not None and s["fpsmin"] >= 0]
+        hc2fps = [s["hc2fps"] for s in self.scale
+                  if s.get("hc2fps") is not None and s["hc2fps"] >= 0]
 
         def mm(xs):
             if not xs:
@@ -577,7 +614,104 @@ class Soak(object):
             "hc_fps": mm(hcfps),
             "ai_tot": mm(ai),
             "guer": mm(guer),
+            "fpsmin": mm(fpsmin),
+            "hc2fps": mm(hc2fps),
             "samples": len(self.scale),
+        }
+
+    def scale_ext_summary(self):
+        """Derived KPIs from the cmdcon42 WASPSCALE v2-EXT appended fields.
+
+        Backward-compatible: returns present=False when no sample carries the
+        extended fields (pre-cmdcon42 logs), so the renderer can skip the whole
+        section rather than print a wall of n/a.
+        """
+        s = self.scale
+        # A sample is "extended" if it carried at least one v2-EXT field.
+        ext = [x for x in s if x.get("disp") is not None
+               or x.get("townsW") is not None or x.get("fpsmin") is not None]
+        if not ext:
+            return {"present": False}
+
+        first, last = ext[0], ext[-1]
+
+        def _span(key):
+            """(first, last, delta) over samples that have this key, else Nones."""
+            vals = [(x["tick"], x[key]) for x in ext if x.get(key) is not None]
+            if not vals:
+                return (None, None, None)
+            f, l = vals[0][1], vals[-1][1]
+            return (f, l, l - f)
+
+        # disp/arrv are cumulative counters -> arrival RATE = total arr / total disp
+        # over the run (last cumulative value minus the first sample's value, so a
+        # mid-match RPT scope doesn't over-credit dispatches that predate the window).
+        d0 = first.get("disp"); d1 = last.get("disp")
+        a0 = first.get("arrv"); a1 = last.get("arrv")
+        disp_run = (d1 - d0) if (d0 is not None and d1 is not None) else None
+        arrv_run = (a1 - a0) if (a0 is not None and a1 is not None) else None
+        arr_pct = None
+        if disp_run and disp_run > 0 and arrv_run is not None:
+            arr_pct = 100.0 * arrv_run / disp_run
+
+        # towns trajectory (per side): first / max / last, from the periodic samples.
+        def _traj(key):
+            vals = [x[key] for x in ext if x.get(key) is not None]
+            if not vals:
+                return (None, None, None)
+            return (vals[0], max(vals), vals[-1])
+
+        # recovery + mhq relocations are cumulative counters too.
+        r0 = first.get("recov"); r1 = last.get("recov")
+        m0 = first.get("mhqrel"); m1 = last.get("mhqrel")
+        recov_run = (r1 - r0) if (r0 is not None and r1 is not None) else None
+        mhqrel_run = (m1 - m0) if (m0 is not None and m1 is not None) else None
+
+        # posture: last observed + how many distinct posture strings each side cycled.
+        postW = [x["postW"] for x in ext if x.get("postW") is not None]
+        postE = [x["postE"] for x in ext if x.get("postE") is not None]
+
+        # live registry gauges (instantaneous, not cumulative): min/med/max.
+        def _mmg(key):
+            vals = [x[key] for x in ext if x.get(key) is not None]
+            if not vals:
+                return (None, None, None)
+            return (min(vals), statistics.median(vals), max(vals))
+
+        # TEL: fraction of samples each side's TEL was alive (state==1).
+        def _tel_alive_pct(key):
+            vals = [x[key] for x in ext if x.get(key) is not None]
+            if not vals:
+                return None
+            return 100.0 * sum(1 for v in vals if v == 1) / len(vals)
+
+        # territorial clock: any sample where a clock was running (terr != "none").
+        terr_active = [x["terr"] for x in ext
+                       if x.get("terr") not in (None, "none")]
+
+        return {
+            "present": True,
+            "ext_samples": len(ext),
+            "disp_run": disp_run,
+            "arrv_run": arrv_run,
+            "arr_pct": arr_pct,
+            "recov_run": recov_run,
+            "mhqrel_run": mhqrel_run,
+            "townsW": _traj("townsW"),
+            "townsE": _traj("townsE"),
+            "townsG": _traj("townsG"),
+            "postW_last": postW[-1] if postW else None,
+            "postE_last": postE[-1] if postE else None,
+            "postW_distinct": len(set(postW)) if postW else 0,
+            "postE_distinct": len(set(postE)) if postE else 0,
+            "patr": _mmg("patr"),
+            "sort": _mmg("sort"),
+            "grpW": _mmg("grpW"),
+            "grpE": _mmg("grpE"),
+            "telW_alive_pct": _tel_alive_pct("telW"),
+            "telE_alive_pct": _tel_alive_pct("telE"),
+            "terr_active_samples": len(terr_active),
+            "terr_last": terr_active[-1] if terr_active else None,
         }
 
 
@@ -834,7 +968,13 @@ def render(soak, args):
 
     ap("  samples    : %d" % p["samples"])
     ap("  server fps : %s" % fmt_mm(p["fps"]))
+    # cmdcon42 v2-EXT: fpsmin is the per-window server-fps FLOOR (the real perf
+    # signal vs the instant fps). Only present on cmdcon42+ logs.
+    if p["fpsmin"][0] is not None:
+        ap("  server fpsmin (per-window floor) : %s" % fmt_mm(p["fpsmin"]))
     ap("  HC fps     : %s" % fmt_mm(p["hc_fps"]))
+    if p["hc2fps"][0] is not None:
+        ap("  HC2 fps    : %s" % fmt_mm(p["hc2fps"]))
     ap("  AI_TOT     : %s" % fmt_mm(p["ai_tot"]))
     ap("  GUER AI    : %s" % fmt_mm(p["guer"]))
     # fps-at-peak-AI: find sample with max AI_TOT
@@ -843,6 +983,61 @@ def render(soak, args):
         ap("  at peak AI_TOT=%d : fps=%s hc_fps=%s (t%d)" % (
             peak["AI_TOT"],
             _c(str(peak["fps"]), C.BOLD), str(peak["hc_fps"]), peak["tick"]))
+
+    # 8. WAR STATE (WASPSCALE v2-EXT) ----------------------------------
+    ext = soak.scale_ext_summary()
+    if ext.get("present"):
+        ap(hdr("8. WAR STATE  (WASPSCALE v2-EXT: dispatch/arrival, towns, posture, TEL)"))
+        ap("  ext samples : %d" % ext["ext_samples"])
+        # arrival rate DIRECTLY from disp/arrv cumulative counters (no team-pairing
+        # heuristic needed -- this is the emitter's own bookkeeping).
+        if ext["arr_pct"] is not None:
+            ap("  ASSAULT arrival rate (from disp/arrv counters): %s  (%d arr / %d disp over run)" % (
+                _c("%.1f%%" % ext["arr_pct"], C.BOLD),
+                ext["arrv_run"] or 0, ext["disp_run"] or 0))
+        else:
+            ap("  ASSAULT arrival rate: %s" % _c("n/a (counters flat or single sample)", C.DIM))
+        if ext["recov_run"] is not None:
+            ap("  recovery actions (server-local, over run): %s" % _c(str(ext["recov_run"]), C.BOLD))
+        if ext["mhqrel_run"] is not None:
+            ap("  MHQ relocations DEPLOYED (over run): %s" % _c(str(ext["mhqrel_run"]), C.BOLD))
+
+        def _traj_str(t):
+            if t[0] is None:
+                return _c("n/a", C.DIM)
+            return "first=%d  peak=%d  last=%d" % (t[0], t[1], t[2])
+        ap("  " + sub("towns trajectory (per side)"))
+        ap("     WEST : %s" % _traj_str(ext["townsW"]))
+        ap("     EAST : %s" % _traj_str(ext["townsE"]))
+        if ext["townsG"][0] is not None and ext["townsG"][1] > 0:
+            ap("     GUER : %s" % _traj_str(ext["townsG"]))
+
+        ap("  " + sub("AICOM posture (strat_mode)"))
+        ap("     WEST last=%s  (%d distinct this run)" % (
+            _c(str(ext["postW_last"]), C.BOLD), ext["postW_distinct"]))
+        ap("     EAST last=%s  (%d distinct this run)" % (
+            _c(str(ext["postE_last"]), C.BOLD), ext["postE_distinct"]))
+
+        def _g_str(g):
+            if g[0] is None:
+                return _c("n/a", C.DIM)
+            return "min %d / med %g / max %d" % (g[0], g[1], g[2])
+        ap("  active side-patrols : %s" % _g_str(ext["patr"]))
+        ap("  active town sorties : %s" % _g_str(ext["sort"]))
+        ap("  groups per side     : WEST %s | EAST %s" % (
+            _g_str(ext["grpW"]), _g_str(ext["grpE"])))
+
+        if ext["telW_alive_pct"] is not None or ext["telE_alive_pct"] is not None:
+            def _pct(v):
+                return ("%.0f%%" % v) if v is not None else "n/a"
+            ap("  SCUD TEL uptime     : WEST %s alive | EAST %s alive  (share of samples)" % (
+                _pct(ext["telW_alive_pct"]), _pct(ext["telE_alive_pct"])))
+        if ext["terr_active_samples"] > 0:
+            ap("  territorial clock   : %s  (running in %d samples; last seen %s)" % (
+                _c("ACTIVE at some point", C.YEL), ext["terr_active_samples"],
+                _c(str(ext["terr_last"]), C.BOLD)))
+        else:
+            ap("  territorial clock   : %s" % _c("never engaged", C.DIM))
 
     # VERDICT block ----------------------------------------------------
     ap(hdr("VERDICT"))
@@ -915,7 +1110,10 @@ def render_json(soak, args):
         "perf": {
             "fps": p["fps"], "hc_fps": p["hc_fps"],
             "ai_tot": p["ai_tot"], "guer": p["guer"], "samples": p["samples"],
+            "fpsmin": p["fpsmin"], "hc2fps": p["hc2fps"],
         },
+        # cmdcon42 WASPSCALE v2-EXT war-state block ({"present": False} on old logs).
+        "war_state_ext": soak.scale_ext_summary(),
     }
     return json.dumps(data, indent=2)
 

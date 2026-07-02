@@ -871,6 +871,8 @@ while {!WFBE_GameOver && _alive} do {
 						//--- strike -> fire -> recover lifecycle is visible (UNSTUCK_STRIKE -> UNSTUCK_FIRED ->
 						//--- next ASSAULT_STRANDED moved=).
 						diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_FIRED|team=" + (str _uTeam) + "|tier=" + str _uTier);
+							//--- WASPSCALE recov counter (cmdcon42): shared cumulative recovery-action counter the WASPSCALE emit reads (recov=). Bumped in the missionNamespace of WHICHEVER machine this team is local to; the server emit therefore reports its own SERVER-LOCAL recoveries (HC-delegated team recoveries show as UNSTUCK_FIRED on the HC RPT, which analyze_soak reads). Monotonic.
+							missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
 						//--- B37 RE-MOUNT (Ray's mechanized-infantry ask): any team member on foot but with a live,
 						//--- drivable assigned vehicle is ordered back in, so infantry that fell out during the stall
 						//--- actually rides to the objective instead of walking/idling.
