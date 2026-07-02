@@ -65,13 +65,18 @@ while {_i > 0} do {
 //--- Make sure that the AI didn't die or that a player hasn't replaced him before going any further.
 if !(_skip) then {
 	//--- Equip the AI.
-	_loadout = missionNamespace getVariable Format["WFBE_%1_AI_Loadout_%2", _sideText, _upgrades select 13];
-	if !(isNil '_loadout') then {
-		_loadout = _loadout select floor (random count _loadout);
-		if (count _loadout <= 3) then {
-			[_respawnedUnit, _loadout select 0, _loadout select 1, _loadout select 2] Call WFBE_CO_FNC_EquipUnit;
-		} else {
-			[_respawnedUnit, _loadout select 0, _loadout select 1, _loadout select 2, _loadout select 3, _loadout select 4] Call WFBE_CO_FNC_EquipUnit;
+	//--- Guard: _upgrades may be [] for civilian/unknown sides (Common_GetSideUpgrades default branch returns []).
+	if (count _upgrades > 13) then {
+		_loadout = missionNamespace getVariable Format["WFBE_%1_AI_Loadout_%2", _sideText, _upgrades select 13];
+		if !(isNil '_loadout') then {
+			if (count _loadout > 0) then {
+				_loadout = _loadout select floor (random count _loadout);
+				if (count _loadout <= 3) then {
+					[_respawnedUnit, _loadout select 0, _loadout select 1, _loadout select 2] Call WFBE_CO_FNC_EquipUnit;
+				} else {
+					[_respawnedUnit, _loadout select 0, _loadout select 1, _loadout select 2, _loadout select 3, _loadout select 4] Call WFBE_CO_FNC_EquipUnit;
+				};
+			};
 		};
 	};
 	_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
