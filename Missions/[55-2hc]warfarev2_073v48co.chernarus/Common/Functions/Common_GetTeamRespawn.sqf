@@ -1,3 +1,7 @@
+Private ["_value"];
+
 if (isNull _this) exitWith {""};
 
-_this getVariable "wfbe_respawn"
+_value = _this getVariable "wfbe_respawn";
+if (isNil "_value") exitWith {""};
+_value
