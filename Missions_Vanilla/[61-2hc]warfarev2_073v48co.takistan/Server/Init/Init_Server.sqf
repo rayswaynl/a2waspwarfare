@@ -300,6 +300,47 @@ if (count _b62_rotPool > 1) then {
 };
 };
 
+//--- BUILD88 (cmdcon43-f, Ray 2026-07-02) TOWN-CLEARANCE FILTER: Build86's spawn rework validated pair
+//--- separation/egress but NOT town-radius clearance, so some LocationLogicStart candidates sit INSIDE a
+//--- town's own range (600m, see Common\Init\Init_Town.sqf) -> the match-start HQ deploys on top of a town
+//--- (Ray live-report B87, both maps). Drop any start candidate whose distance to the NEAREST town centre is
+//--- below (townRange + WFBE_C_BASE_TOWN_CLEAR_MARGIN). Margin default 120 = WFBE_C_BASE_HQ_BUILD_RANGE, so
+//--- the HQ's close build ring clears the town zone; threshold 600+120 = 720m. Modelled on the B62 airfield
+//--- filter idiom: explicit loops (no A3 'select {CODE}'/isEqualTo), and the SAME never-empty GUARD - if the
+//--- filter would empty the candidate set, keep the unfiltered set (placement > perfect clearance). Uses the
+//--- live 'towns' array + each town's per-object "range" var (nil-safe fallback 600), so it is authoritative
+//--- on BOTH maps from this one mirror-managed change. Skipped under WFBE_C_BASE_RANDOM_PURE==1 (Miksuu-
+//--- original unfiltered pure-random), consistent with the B62/B66 filters above.
+if ((missionNamespace getVariable ["WFBE_C_BASE_RANDOM_PURE", 0]) == 0) then {
+	private ["_tcMargin","_tcFiltered","_s","_sPos","_tooClose","_tw","_twPos","_twRange","_twClear"];
+	_tcMargin = missionNamespace getVariable ["WFBE_C_BASE_TOWN_CLEAR_MARGIN", 120];
+	_tcFiltered = [];
+	{
+		_s = _x;
+		_sPos = getPos _s;
+		_tooClose = false;
+		{
+			_tw = _x;
+			if (isNil {_tw getVariable "wfbe_inactive"} || {!(_tw getVariable "wfbe_inactive")}) then {
+				_twPos = getPos _tw;
+				_twRange = _tw getVariable "range";
+				if (isNil "_twRange") then {_twRange = 600};
+				_twClear = _twRange + _tcMargin;
+				if ((_sPos distance _twPos) < _twClear) then {_tooClose = true};
+			};
+		} forEach towns;
+		if (!_tooClose) then {_tcFiltered set [count _tcFiltered, _s]};
+	} forEach _locationLogics;
+	if (count _tcFiltered > 0) then {
+		["INITIALIZATION", Format ["Init_Server.sqf: BUILD88 town-clearance filter kept %1 start candidates (dropped %2 within townRange+%3m of a town centre).", count _tcFiltered, (count _locationLogics) - (count _tcFiltered), _tcMargin]] Call WFBE_CO_FNC_LogContent;
+		diag_log format ["## SPAWNCHK: town-clearance filter kept %1 of %2 start candidates (margin=%3, drop<townRange+margin).", count _tcFiltered, count _locationLogics, _tcMargin];
+		_locationLogics = _tcFiltered;
+	} else {
+		["WARNING", "Init_Server.sqf: BUILD88 town-clearance filter emptied the candidate set - keeping the unfiltered starts (placement > clearance)."] Call WFBE_CO_FNC_LogContent;
+		diag_log "## SPAWNCHK: town-clearance filter would EMPTY the pool - kept unfiltered starts (check start layout vs towns).";
+	};
+};
+
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
 
 Private ["_i", "_maxAttempts", "_minDist", "_rPosE", "_rPosW", "_setEast", "_setGuer", "_setWest", "_startE", "_startG", "_startW", "_egressOK"];
@@ -553,6 +594,43 @@ if (_keyW != "") then { profileNamespace setVariable ["WFBE_LAST_START_W", _keyW
 if (_keyE != "") then { profileNamespace setVariable ["WFBE_LAST_START_E", _keyE] };
 saveProfileNamespace;
 diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; should vary match-to-match).", _keyW, _keyE];
+
+//--- BUILD88 (cmdcon43-f, Ray 2026-07-02) SPAWNCHK REGRESSION GUARD: the town-clearance filter above should
+//--- have kept every chosen start clear of town ranges, but a force-fall / pure-random / MODE 0-1 named-spawn
+//--- path can still hand back an inside-town start. Log a permanent WARNING line for the ACTUALLY CHOSEN WEST
+//--- and EAST starts if either sits within (townRange + margin) of a town centre, so any future regression is
+//--- visible in the RPT forever (SPAWNCHK|start=SIDE|town=NAME|dist=D|clear=C). Report-only, never blocks the
+//--- match. A2-OA-safe: getPos guarded on OBJECT only (the [0,0,0] absent-side placeholder is skipped).
+{
+	private ["_sideName","_chosen","_cPos","_tcMargin","_nrTown","_nrDist","_nrRange","_tw","_twPos","_twRange"];
+	_sideName = _x select 0;
+	_chosen   = _x select 1;
+	if (typeName _chosen == "OBJECT" && {!(isNull _chosen)}) then {
+		_cPos = getPos _chosen;
+		_tcMargin = missionNamespace getVariable ["WFBE_C_BASE_TOWN_CLEAR_MARGIN", 120];
+		_nrTown = "?"; _nrDist = 1e12; _nrRange = 600;
+		{
+			_tw = _x;
+			if (isNil {_tw getVariable "wfbe_inactive"} || {!(_tw getVariable "wfbe_inactive")}) then {
+				_twPos = getPos _tw;
+				_twRange = _tw getVariable "range";
+				if (isNil "_twRange") then {_twRange = 600};
+				if ((_cPos distance _twPos) < _nrDist) then {
+					_nrDist = _cPos distance _twPos;
+					_nrRange = _twRange;
+					_nrTown = _tw getVariable "name";
+					if (isNil "_nrTown") then {_nrTown = "?"};
+				};
+			};
+		} forEach towns;
+		if (_nrDist < (_nrRange + _tcMargin)) then {
+			["WARNING", Format ["Init_Server.sqf: SPAWNCHK - chosen %1 start is INSIDE town range! start=%1|town=%2|dist=%3|clear=%4", _sideName, _nrTown, round _nrDist, _nrRange + _tcMargin]] Call WFBE_CO_FNC_LogContent;
+			diag_log format ["## SPAWNCHK|start=%1|town=%2|dist=%3|clear=%4", _sideName, _nrTown, round _nrDist, _nrRange + _tcMargin];
+		} else {
+			diag_log format ["## SPAWNCHK|start=%1|town=%2|dist=%3|clear=%4|OK", _sideName, _nrTown, round _nrDist, _nrRange + _tcMargin];
+		};
+	};
+} forEach [["WEST", _startW], ["EAST", _startE]];
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Starting location mode is on [%1].",missionNamespace getVariable "WFBE_C_BASE_STARTING_MODE"]] Call WFBE_CO_FNC_LogContent;
 
