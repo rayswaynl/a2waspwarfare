@@ -48,6 +48,19 @@ _upgrades set [_upgrade_id, (_upgrades select _upgrade_id) + 1];
 
 _logic setVariable ["wfbe_upgrades", _upgrades, true];
 _logic setVariable ["wfbe_upgrading", false, true];
+
+//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): the moment a side COMPLETES an ICBM/SCUD upgrade LEVEL, ensure
+//--- its land TEL exists near the HQ (empty + locked = side-safe; destroyable = counterplay). The upgrade is being
+//--- restructured (parallel lane) into a 2-level "SCUD" tech: level 1 = SCUD platform (TEL + SAT/RECON), level 2 = ICBM
+//--- (NUKE). This hook fires at EVERY completed level of WFBE_UP_ICBM; WFBE_SE_FNC_SpawnIcbmTel is IDEMPOTENT (skips if a
+//--- live TEL already exists), so the TEL is created at level 1 and the level-2 completion is a harmless no-op. Fires for
+//--- BOTH the player upgrade path AND the AI-commander research path (Server_AI_Com_Upgrade -> this file) => AICOM symmetry
+//--- (an AI side gets a TEL too). The per-munition LEVEL gates (NUKE>=2, SAT/RECON>=1) are enforced at fire time in
+//--- WFBE_SE_FNC_IcbmTelFire. Flag-gated + fn-existence-guarded (Init_IcbmTel compiles the fn; research is long).
+if (!isNil "WFBE_UP_ICBM" && {_upgrade_id == WFBE_UP_ICBM} && {(missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1} && {!isNil "WFBE_SE_FNC_SpawnIcbmTel"}) then {
+	[_side] Call WFBE_SE_FNC_SpawnIcbmTel;
+	["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] SCUD/ICBM upgrade level complete -> ensure land TEL (WFBE_C_ICBM_TEL=1).", str _side]] Call WFBE_CO_FNC_LogContent;
+};
 // Marty: Clear the active upgrade ID once the running upgrade has completed.
 _logic setVariable ["wfbe_upgrading_id", -1, true];
 // Marty: Clear the replicated authoritative end time too, so a stale value cannot drive a

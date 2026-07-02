@@ -45,6 +45,11 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	//--- Episode latch: true while this episode's units are live; cleared only after cleanup completes.
 	//--- Prevents re-activation before the old complement is fully deleted.
 	_town setVariable ["wfbe_episode_spawned", false];
+	//--- cmdcon41-w3 GARRISON SORTIES: per-town sortie state seeded here so the manager never reads nil.
+	//--- wfbe_sortie_grp = the ONE group currently out on patrol (grpNull = none); wfbe_sortie_started = its
+	//--- launch time (drives the WFBE_C_TOWNS_SORTIE_MINS rotation). HARD bound: max 1 sortie per town (Ray).
+	_town setVariable ["wfbe_sortie_grp", grpNull];
+	_town setVariable ["wfbe_sortie_started", 0];
 	sleep 0.01;
 };
 
@@ -289,6 +294,86 @@ while {!WFBE_GameOver} do {
 			};//// end of side_enabled
 
 			if((_town getVariable "wfbe_active") || (_town getVariable "wfbe_active_air")) then {
+
+				//--- cmdcon41-w3 GARRISON SORTIES: the encounter-rate win. When a GROUND garrison is awake
+				//--- (wfbe_active), rotate ONE 4-man-ish patrol element out of the EXISTING town groups on a
+				//--- 300-800m ring around the town, then rotate it back after WFBE_C_TOWNS_SORTIE_MINS min so a
+				//--- different group takes a turn. Reuses the town's own groups (wfbe_town_teams) so it NEVER
+				//--- exceeds per-town AI caps and the sortie group stays a town defender: it is still in
+				//--- wfbe_town_teams, so deactivation cleanup deletes it and it counts as a defender.
+				//--- CRITICAL (wiki lesson): the moment the town is contested again (_currentEnemies>0) the
+				//--- sortie is RECALLED so it returns for defense, and active-state/defender-origin semantics
+				//--- below are untouched (this block only issues orders; it never flips wfbe_active or teams).
+				//--- Ground-only (skip air-only activation), server-local groups only (delegated town AI is
+				//--- HC/client-local; deleteGroup/waypoints must run where the group is local), max 1/town.
+				//--- cmdcon41-w3m (ground-patrol-skip-naval-hvt): a naval-HVT carrier town (wfbe_is_naval_hvt / over-water)
+				//--- must NEVER launch a garrison sortie - the 300-800m ring below is issued around the carrier's own pos,
+				//--- which for an offshore carrier lies over OPEN WATER, sending the ground garrison swimming (the exact
+				//--- ground-patrol-targets-naval failure). Skip the whole sortie block for naval towns; gated by
+				//--- WFBE_C_PATROLS_SKIP_NAVAL (default 1). 2-arg getVariable + surfaceIsWater on the town logic: A2-OA-safe.
+				private "_townIsNaval"; _townIsNaval = ((missionNamespace getVariable ["WFBE_C_PATROLS_SKIP_NAVAL", 1]) > 0) && {(_town getVariable ["wfbe_is_naval_hvt", false]) || {surfaceIsWater (getPos _town)}};
+				if ((missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES", 1]) > 0 && (_town getVariable "wfbe_active") && {!_townIsNaval}) then {
+					_sortieMins = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_MINS", 8]; if (_sortieMins < 1) then {_sortieMins = 8};
+					_sortieGrp = _town getVariable ["wfbe_sortie_grp", grpNull];
+					_sortieStarted = _town getVariable ["wfbe_sortie_started", 0];
+					_townPos = getPos _town;
+					//--- Only manage sorties over SERVER-LOCAL town groups (delegated AI lives elsewhere).
+					_localTeams = [];
+					{
+						if (!isNil "_x") then {
+							if (!isNull _x && {local _x} && {count units _x > 0}) then { _localTeams = _localTeams + [_x]; };
+						};
+					} forEach (_town getVariable ["wfbe_town_teams", []]);
+
+					//--- Is the current sortie group still valid (alive, local, has men)?
+					_sortieValid = false;
+					if (!isNull _sortieGrp) then {
+						if (local _sortieGrp && {count units _sortieGrp > 0} && {_sortieGrp in _localTeams}) then { _sortieValid = true; };
+					};
+
+					if (_currentEnemies > 0) then {
+						//--- CONTESTED: recall the sortie for defense immediately (tight move back onto the town),
+						//--- then clear the slot so no new sortie launches while the town is under attack.
+						if (_sortieValid) then {
+							[_sortieGrp, _townPos, "MOVE", 40] Call AIMoveTo;
+							["INFORMATION", Format ["server_town_ai.sqf: sortie RECALLED (contested) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+						};
+						_town setVariable ["wfbe_sortie_grp", grpNull];
+						_town setVariable ["wfbe_sortie_started", 0];
+					} else {
+						if (_sortieValid) then {
+							//--- Rotation: after WFBE_C_TOWNS_SORTIE_MINS, bring this group home and free the slot
+							//--- so a different group takes the next turn on the following eligible sweep.
+							if ((time - _sortieStarted) >= (_sortieMins * 60)) then {
+								[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
+								_town setVariable ["wfbe_sortie_grp", grpNull];
+								_town setVariable ["wfbe_sortie_started", 0];
+								["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+							};
+						} else {
+							//--- No live sortie: pick the LEAST-ENGAGED local group (fewest units currently in
+							//--- combat) and send it out on a 300-800m patrol ring. Bounded scan over the town's
+							//--- own (typically <=6) groups; no allUnits, no per-frame work.
+							if (count _localTeams > 0) then {
+								_bestGrp = grpNull;
+								_bestScore = 999999;
+								{
+									_g = _x;
+									_inCombat = {behaviour _x == "COMBAT"} count (units _g);
+									if (_inCombat < _bestScore) then { _bestScore = _inCombat; _bestGrp = _g; };
+								} forEach _localTeams;
+								if (!isNull _bestGrp) then {
+									_ringR = 300 + (random 500); //--- 300-800m ring around the town.
+									[_bestGrp, _townPos, _ringR] Call AIPatrol; //--- CYCLE waypoint ring (never idle).
+									_town setVariable ["wfbe_sortie_grp", _bestGrp];
+									_town setVariable ["wfbe_sortie_started", time];
+									["INFORMATION", Format ["server_town_ai.sqf: sortie LAUNCHED for %1 (ring %2m).", _town getVariable "name", floor _ringR]] Call WFBE_CO_FNC_AICOMLog;
+								};
+							};
+						};
+					};
+				};
+
 				//--- Deactivation guard: only consider deactivating when enemies are genuinely absent
 				//--- (_currentEnemies == 0). If enemies are present the inactivity timer was just
 				//--- refreshed above, so the time-check would not fire anyway — but guarding here
@@ -350,6 +435,11 @@ while {!WFBE_GameOver} do {
 					//--- is now permitted. Clearing before this point would allow a re-spawn during
 					//--- the cleanup window (groups being deleted on HC while new ones are created).
 					_town setVariable ["wfbe_episode_spawned", false];
+					//--- cmdcon41-w3 GARRISON SORTIES: sorties END on deactivation. The sortie group was one of
+					//--- wfbe_town_teams and is already deleted by the cleanup above; just clear the pointers so
+					//--- no stale group reference survives into the next activation episode.
+					_town setVariable ["wfbe_sortie_grp", grpNull];
+					_town setVariable ["wfbe_sortie_started", 0];
 					//// end of inner block
 				};
 			};

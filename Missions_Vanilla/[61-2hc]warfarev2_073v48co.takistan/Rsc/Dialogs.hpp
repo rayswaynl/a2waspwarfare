@@ -1302,6 +1302,21 @@ class WF_Menu {
 			action = "MenuAction = 25";
 			tooltip = "Friendly name tags On/Off";
 		};
+		//--- cmdcon41-w3l: Command-Deck Skin Selector re-open button. The former SKIN slot (idc 11021)
+		//--- was repurposed to SETUP on 2026-06-24, leaving MenuAction 21 (GUI_Menu.sqf) unreachable.
+		//--- This restores a live footer entry in the gap between the HeadBug icon and HUD. The handler
+		//--- itself re-checks SkinSelector_Enabled + alive + on-foot, so a disabled/dead player is a no-op.
+		class CA_SkinSel_Button : RscButton_Main {
+			idc = 11025;
+			x = 0.362;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = $STR_WF_SkinSelector_MenuButton;
+			sizeEx = 0.024;
+			action = "MenuAction = 21";
+			tooltip = $STR_WF_SkinSelector_Title;
+		};
 	};
 };
 
@@ -2137,6 +2152,23 @@ class RscMenu_Command {
 			colorBackground[] = {0.12, 0.35, 0.42, 0.85};
 			colorBackgroundActive[] = {0.18, 0.5, 0.58, 1};
 		};
+		/* cmdcon41-w3d COMMAND-MENU V2: REQUEST AI SUPPORT (non-commander). Any player (even under a HUMAN commander, where
+		   the posture/focus nudges are inert) can call the nearest free same-side AI team to their position. STATE-A control
+		   (added to _adviseCtrls); shown only when NOT the commander. Full-width, below the FOCUS button (14617 bottom 0.862).
+		   Sends the player's own pos to the server, which validates + road-moves ONE nearby idle team (per-player cooldown).
+		   MenuAction 767. Amber/help tint, distinct from the AI-steering palette. */
+		class CA_Cmd_ReqSupport : CA_Cmd_PosturePush {
+			idc = 14618;
+			x = 0.00561695;
+			y = 0.866000;
+			w = 0.459244;
+			h = 0.038000;
+			text = "REQUEST AI SUPPORT (to me)";
+			action = "MenuAction = 767";
+			tooltip = "Call the nearest free friendly AI team to your position. Works even under a human commander. Cooldown applies.";
+			colorBackground[] = {0.5, 0.35, 0, 0.85};
+			colorBackgroundActive[] = {0.7, 0.5, 0.05, 1};
+		};
 		/* ROSTER of your AI teams (commander state). Row = "Squad type | Target | Alive" (Command Console v2). Click to
 		   select; double-click opens the unit camera on that team's leader (VIEW TEAM, MenuAction 726). */
 		class CA_Cmd_RosterTitle : RscText_SubTitle {
@@ -2305,13 +2337,58 @@ class RscMenu_Command {
 			action = "MenuAction = 740";
 			tooltip = $STR_WF_CMD_BuildBtn_TT;
 		};
-		/* Status / hint line at the bottom of the console. */
+		/* cmdcon41-w3d COMMAND-MENU V2: three per-team STEERING VERBS (act on the selected roster team) - RALLY (pull back
+		   to the nearest own HQ/town), REFIT (funds-charged infantry top-up), HOLD (garrison the nearest own town). Thin
+		   3-across row squeezed into the top of the old help-line band (help shrunk + moved down below). show=0 STRUCTURAL
+		   GUARD -> STATE-B (commander) only; added to _warCtrls in GUI_Menu_Command.sqf. MenuAction 727/728/729. Inherit
+		   CA_Cmd_Move (RscButton_Main + show=0). Distinct tints from the order palette. */
+		class CA_Cmd_Rally : CA_Cmd_Move {
+			idc = 14628;
+			x = 0.00561695;
+			y = 0.872000;
+			w = 0.148000;
+			h = 0.030000;
+			text = "RALLY";
+			action = "MenuAction = 727";
+			tooltip = "Pull the SELECTED team back to your nearest HQ / owned town. It re-tasks normally once it arrives.";
+			colorBackground[] = {0.35, 0.25, 0.5, 0.85};
+			colorBackgroundActive[] = {0.5, 0.35, 0.7, 1};
+		};
+		class CA_Cmd_Refit : CA_Cmd_Rally {
+			idc = 14629;
+			x = 0.160244;
+			y = 0.872000;
+			w = 0.148000;
+			text = "REFIT";
+			action = "MenuAction = 728";
+			tooltip = "Buy infantry replacements for the SELECTED team (charged from the war chest; per-team cooldown).";
+			colorBackground[] = {0.15, 0.4, 0.45, 0.85};
+			colorBackgroundActive[] = {0.2, 0.55, 0.6, 1};
+		};
+		class CA_Cmd_HoldTown : CA_Cmd_Rally {
+			idc = 14630;
+			x = 0.317244;
+			y = 0.872000;
+			w = 0.148000;
+			text = "HOLD";
+			action = "MenuAction = 729";
+			tooltip = "Garrison the SELECTED team on its nearest OWNED town (it stays put until the hold expires).";
+			colorBackground[] = {0, 0.5, 0, 0.85};
+			colorBackgroundActive[] = {0.1, 0.7, 0.1, 1};
+		};
+		/* cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD (carrier) button (was idc 14631 / MenuAction 770) and
+		   the two land-TEL munition buttons (were idc 14632/14633 "TEL: SATURATE"/"TEL: RECON", MenuActions 771/772) have
+		   been REMOVED from the war room. ALL SCUD/TEL fire calls now live in the TACTICAL menu (Client/GUI/GUI_Menu_Tactical.sqf)
+		   as support-list entries beside the classic ICBM/NUKE — "SCUD STRIKE (carrier)", "SCUD: SATURATION", "SCUD: RECON FLASH",
+		   "SCUD: FASCAM (mines)", "SCUD: STEEL RAIN (anti-inf)", "SCUD: BUNKER BUSTER (point)". idc 14631/14632/14633 and
+		   MenuActions 770/771/772 are now FREE. The carrier deck addAction is unchanged. */
+		/* Status / hint line at the bottom of the console (shrunk + moved down to make room for the steering-verb row above). */
 		class CA_Cmd_Help : RscStructuredText {
 			idc = 14650;
 			x = 0.00561695;
-			y = 0.872000;
+			y = 0.906000;
 			w = 0.459244;
-			h = 0.070000;
+			h = 0.040000;
 			size = 0.027;
 		};
 		/* DISBAND AI TEAMS (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - flags every AI field team for

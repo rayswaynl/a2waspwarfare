@@ -20,6 +20,12 @@ while {!WFBE_GameOver} do {
 	// GCSTAT counters (claude-gaming 2026-06-15): _gcEmptyFound = all zero-unit groups seen this
 	// pass (incl. persistent, which are NOT reaped); _gcReaped = non-persistent empties deleted.
 	_gcReaped = 0; _gcEmptyFound = 0;
+	//--- cmdcon41-w3c: TWO-PASS collect-then-delete. The old single pass called deleteGroup INLINE
+	//--- while iterating allGroups; A2 OA 1.64 leaves forEach behaviour UNDEFINED when the collection
+	//--- is mutated mid-iteration (same trap already avoided in Common_CreateGroup.sqf:36-54), which
+	//--- can skip the element after each reap -> empties survive an extra 60s sweep (a contributor to
+	//--- the observed transient empty-group pile-up). Collect candidates first, delete in a 2nd pass.
+	private "_gcCands"; _gcCands = [];
 	{
 		_grp = _x;
 		if (!isNull _grp && {(count (units _grp)) == 0}) then {
@@ -29,11 +35,14 @@ while {!WFBE_GameOver} do {
 			private "_isPers"; _isPers = _grp getVariable "wfbe_persistent";
 			if (isNil "_isPers") then {_isPers = false};
 			if (!_isPers) then {
-				deleteGroup _grp;
-				_gcReaped = _gcReaped + 1;
+				_gcCands set [count _gcCands, _grp]; //--- defer delete out of the allGroups iteration
 			};
 		};
 	} forEach allGroups;
+	{
+		deleteGroup _x;
+		_gcReaped = _gcReaped + 1;
+	} forEach _gcCands;
 
 	// --- B61 (Ray 2026-06-21) BASE-GC / RE-ADOPT pass ---
 	// The legacy GC above reaps ONLY empty groups. The BASE fills with units the commander neither

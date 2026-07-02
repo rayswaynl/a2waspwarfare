@@ -516,6 +516,106 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				_logik setVariable ["wfbe_aicom_reinforce_rich", false];
 			};
 
+			//--- ECON SINK (cmdcon41-w2, Ray-approved): when a commander pins near the funds cap it has NOTHING
+			//--- to spend on (team hard-cap blocks more squads; tech finishes) so the war chest just balloons and
+			//--- the money means nothing. Drain it into three legit sinks while rich:
+			//---   (a) RESEARCH one more upgrade it doesn't own yet (deps + level-order respected exactly like the
+			//---       player path - see the LINKS validation mirror below), started via the SAME server worker the
+			//---       program uses (WFBE_SE_FNC_AI_Com_Upgrade). One research at a time (it self-gates on wfbe_upgrading).
+			//---   (b) TEAM-CAP SURGE: raise a logik flag wfbe_aicom_econ_surge so Teams.sqf adds +TEAMCAP to the
+			//---       founding target (still clamped by the hard cap).
+			//---   (c) HEAVY BIAS: AssignTypes reads the same flag to richen the price-weighted tier draw (+0.5 exp).
+			//--- Flag-gated (WFBE_C_AICOM_ECON_SINK, default 1). Funds cap = WFBE_C_AICOM_WEALTH_CAP (the anti-hoard
+			//--- ceiling town income/stipend stop crediting past). A2-OA-safe: transition if/else (no Bool ==), plain
+			//--- object getVariable [name,default] on the logic OBJECT (reliable), hand LINKS scan (no A3 helpers).
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0) then {
+				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur"];
+				_esFrac = missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_FRAC", 0.85];
+				_esCap  = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
+				_esFunds = (_side) Call GetAICommanderFunds;
+				_esRich = _esFunds >= (_esFrac * _esCap);
+
+				//--- (b) SURGE flag: raise while rich, clear otherwise (transition-logged, no per-tick spam).
+				_esPrevSurge = _logik getVariable ["wfbe_aicom_econ_surge", false];
+				if (_esRich && !_esPrevSurge) then {
+					_logik setVariable ["wfbe_aicom_econ_surge", true, true]; //--- cmdcon41-w3b: BROADCAST - the HC founding pass (RICH_GEAR surge tier) reads this on the HC; without the flag the read is server-local and always false there.
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK surge ON (funds %2 >= %3%% of cap %4) - team-cap +%5 and heavy tier bias armed.", str _side, _esFunds, round (_esFrac * 100), _esCap, missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_TEAMCAP", 2]]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=on|funds=" + str _esFunds + "|cap=" + str _esCap);
+				};
+				if (!_esRich && _esPrevSurge) then {
+					_logik setVariable ["wfbe_aicom_econ_surge", false, true]; //--- cmdcon41-w3b: broadcast the clear too (keep HC view in sync).
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK surge OFF (funds %2 < %3%% of cap %4).", str _side, _esFunds, round (_esFrac * 100), _esCap]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=off|funds=" + str _esFunds + "|cap=" + str _esCap);
+				};
+
+				//--- (a) RESEARCH: while rich AND not already upgrading, pick the next upgrade the side does NOT have
+				//--- whose DEPENDENCIES + level-order are satisfied, and start it. This scans the FULL upgrade table (not
+				//--- only the AI program order) so a pinned commander eventually researches EVERYTHING it can afford - but
+				//--- it never skips levels (walks level-by-level via the live _upgrades array) and never violates a LINK
+				//--- (mirrors RequestUpgrade/RequestEnqueue's LINKS validation: link met = live level of the dep >= need).
+				if (_esRich && {!(_logik getVariable ["wfbe_upgrading", false])}) then {
+					_esUpg   = _side Call WFBE_CO_FNC_GetSideUpgrades;
+					_esLvls  = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", str _side], []];
+					_esCosts = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_COSTS",  str _side], []];
+					_esLinks = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LINKS",  str _side], []];
+					_esOrder = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_ENABLED", str _side], []];
+					_esChosen = -1; _esChosenCur = -1;
+					if (!isNil "_esUpg" && {!isNil "_esLvls"} && {!isNil "_esCosts"} && {!isNil "_esLinks"}) then {
+						for "_esUp" from 0 to ((count _esUpg) - 1) do {
+							if (_esChosen < 0) then {
+								//--- enabled? (disabled upgrades are never researchable)
+								_esOk = true;
+								if (_esUp < count _esOrder) then {if !(_esOrder select _esUp) then {_esOk = false}};
+								if (_esOk) then {
+									_esCur = _esUpg select _esUp;
+									//--- not maxed?
+									if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
+										//--- price of THIS level (researching level N+1 costs COSTS select N - the b74 off-by-one fix).
+										_esCost = ((_esCosts select _esUp) select _esCur);
+										//--- affordable on funds? (_esCost = [supplyPrice, fundsPrice]; funds is what the treasury pays)
+										if (_esFunds >= (_esCost select 1)) then {
+											//--- DEPENDENCY gate: LINKS select _esUp select _esCur. Empty = none; [id,lvl] = single; [[id,lvl],..] = many.
+											_esLnk = [];
+											if (_esUp < count _esLinks) then {
+												_esLnk = _esLinks select _esUp;
+												if (_esCur < count _esLnk) then {_esLnk = _esLnk select _esCur} else {_esLnk = []};
+											};
+											_esLinkNeeded = false;
+											if (count _esLnk > 0) then {
+												if (typeName (_esLnk select 0) == "ARRAY") then {
+													for "_esLi" from 0 to ((count _esLnk) - 1) do {
+														_esClink = _esLnk select _esLi;
+														_esTgt = _esClink select 0; _esNeed = _esClink select 1;
+														if ((_esUpg select _esTgt) < _esNeed) exitWith {_esLinkNeeded = true};
+													};
+												} else {
+													_esTgt = _esLnk select 0; _esNeed = _esLnk select 1;
+													if ((_esUpg select _esTgt) < _esNeed) then {_esLinkNeeded = true};
+												};
+											};
+											if (!_esLinkNeeded) then {_esChosen = _esUp; _esChosenCur = _esCur};
+										};
+									};
+								};
+							};
+						};
+					};
+					if (_esChosen >= 0) then {
+						//--- Start via the SAME server path players/AI/queue use. WFBE_SE_FNC_ProcessUpgrade takes
+						//--- [side, upgradeId, currentLevel, isPlayer=false] and both runs the timer AND flips the level.
+						//--- Deduct funds here (ProcessUpgrade does not charge - the callers do); supply is not charged
+						//--- (fundsPrice is what the treasury pays; the AICOM research economy uses funds, cost select 1).
+						_esCost = ((_esCosts select _esChosen) select _esChosenCur);
+						[_side, _esChosen, _esChosenCur, false] Spawn WFBE_SE_FNC_ProcessUpgrade;
+						[_side, -(_esCost select 1)] Call ChangeAICommanderFunds;
+						_logik setVariable ["wfbe_upgrading", true, true];
+						_logik setVariable ["wfbe_upgrading_id", _esChosen, true];
+						["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK research: upgrade id %2 -> level %3 (fundsCost %4, funds %5).", str _side, _esChosen, _esChosenCur + 1, _esCost select 1, _esFunds]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_RESEARCH|id=" + str _esChosen + "|lvl=" + str (_esChosenCur + 1) + "|fundsCost=" + str (_esCost select 1));
+					};
+				};
+			};
+
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
 			//--- once, the first tick after wfbe_aicom_arty_threat is set.  No-op if the constant
 			//--- or the upgrades-levels array doesn't include CBR (vanilla / non-experital builds).
@@ -707,7 +807,37 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 
 		//--- WASPSCALE (claude-gaming 2026-07-01): perf/scope tracker - one allUnits pass per 5-min window (reuses this
 		//--- SRVPERF throttle, zero per-frame cost) buckets live AI by side + counts humans, groups, fps, tier and map.
-		private ["_aiW","_aiE","_aiG","_humN","_tier"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0]; diag_log ("WASPSCALE|v1|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName);
+		//--- v2 (claude-gaming 2026-07-01): APPEND-ONLY - all v1 fields kept in the same order, two new trailing fields:
+		//---   build=<tag>  a stable short build id. Source (in the prompt's priority order): there is no runtime build
+		//---                CONSTANT (version.sqf's WF_RELEASE_MARKER is a #define, not readable here, and its literal is
+		//---                already stale vs the Build-84/cmdcon36 constants). The LIVE, self-updating source is the
+		//---                deployed PBO filename (missionName), which the deploy convention bumps with the cmdcon token
+		//---                per the wiki filename-cache rule. We parse the cmdcon<...> token out of missionName ONCE and
+		//---                cache it in wfbe_buildtag (falls back to the raw missionName if no cmdcon token is present).
+		//---   hc_fps=<n>   min diag_fps across HCs that reported (via the existing 60s HCStat channel, cached in
+		//---                WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
+		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
+		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
+		if (_bt == "") then {
+			_mn = missionName; if (typeName _mn != "STRING") then {_mn = ""};
+			private ["_mnAf","_ndl","_nlen","_ok"]; _mnAf = toArray _mn; _ndl = toArray "cmdcon"; _nlen = count _ndl; _ci = -1; for "_k" from 0 to ((count _mnAf) - _nlen) do { _ok = true; { if ((_mnAf select (_k + _forEachIndex)) != _x) exitWith {_ok = false} } forEach _ndl; if (_ok) exitWith {_ci = _k} };  //--- A2-OA fix: string 'find' is A3-only; char-scan toArray for the "cmdcon" token start.
+			if (_ci >= 0) then {
+				//--- Slice "cmdcon..." to next '_' (95) or '.' (46) via the A2-OA-safe toArray/toString idiom (string
+					//--- `select [start,count]` substring is A3-only). "..._cmdcon36aicom.chernarus" -> "cmdcon36aicom".
+				private ["_mnA","_btA","_j","_c"]; _mnA = toArray _mn; _btA = [];
+				for "_j" from _ci to ((count _mnA) - 1) do {
+					_c = _mnA select _j;
+					if ((_c == 95) || (_c == 46)) exitWith {};
+					_btA = _btA + [_c];
+				};
+				if (count _btA > 0) then {_bt = toString _btA} else {_bt = _mn};
+			} else { _bt = _mn };
+			if (_bt == "") then {_bt = "unknown"};
+			missionNamespace setVariable ["wfbe_buildtag", _bt];
+		};
+		_hcFps = -1; _hcReg2 = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
+		{ if (((time - (_x select 2)) <= 120) && {(typeName (_x select 1)) == "SCALAR"}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1} } } forEach _hcReg2;
+		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps));
 
 		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
 		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent

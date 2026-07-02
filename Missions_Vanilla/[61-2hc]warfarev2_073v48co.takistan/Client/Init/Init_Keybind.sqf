@@ -4,7 +4,7 @@ WF_SkinSelector_Hotkey = {
 	_key = _this select 1;
 
 	if (_key in (actionKeys "User11")) then {
-		if (WFBE_C_SKIN_SELECTOR == 1 && {alive player} && {vehicle player == player}) then {
+		if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {alive player} && {vehicle player == player}) then {
 			if (!dialog) then {
 				[] execVM "WASP\actions\SkinSelector\SkinSelector_Open.sqf";
 			};

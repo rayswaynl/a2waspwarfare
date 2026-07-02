@@ -37,21 +37,29 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'V3S_Supply_T
 if (isServer) then {
 	//--- Patrols.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
-		['Soldier_PMC','Soldier_MG_PKM_PMC','Soldier_Sniper_PMC','Soldier_Medic_PMC'], 
+		['Soldier_PMC','Soldier_MG_PKM_PMC','Soldier_Sniper_PMC','Soldier_Medic_PMC'],
 		['Soldier_TL_PMC','Soldier_MG_PMC','Soldier_M4A3_PMC','Soldier_AT_PMC','Soldier_GL_PMC'],
-		['ArmoredSUV_PMC','ArmoredSUV_PMC']
+		['ArmoredSUV_PMC','ArmoredSUV_PMC'],
+		//--- mixed technical (cmdcon41-w3e): armored SUV + dismounted AT/MG screen (crewed + on foot).
+		['ArmoredSUV_PMC','Soldier_TL_PMC','Soldier_AT_PMC','Soldier_MG_PMC']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['BTR40_MG_TK_GUE_EP1','Ural_ZU23_TK_GUE_EP1'], 
+		['BTR40_MG_TK_GUE_EP1','Ural_ZU23_TK_GUE_EP1'],
 		['SUV_PMC','Soldier_TL_PMC','Soldier_AT_PMC','Soldier_Bodyguard_AA12_PMC'],
-		['BTR40_MG_TK_GUE_EP1','Soldier_AA_PMC','Soldier_AA_PMC','Soldier_Medic_PMC']
+		['BTR40_MG_TK_GUE_EP1','Soldier_AA_PMC','Soldier_AA_PMC','Soldier_Medic_PMC'],
+		//--- AA picket (cmdcon41-w3e): ZU-23 truck + MANPADS dismounts.
+		['Ural_ZU23_TK_GUE_EP1','Soldier_AA_PMC','Soldier_TL_PMC','Soldier_Medic_PMC']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['T34_TK_GUE_EP1','T34_TK_GUE_EP1'], 
+		['T34_TK_GUE_EP1','T34_TK_GUE_EP1'],
 		['T55_TK_GUE_EP1','T55_TK_GUE_EP1'],
-		['Ka60_GL_PMC','Soldier_TL_PMC','Soldier_AT_PMC','Soldier_Bodyguard_M4_PMC','Soldier_Bodyguard_M4_PMC']
+		['Ka60_GL_PMC','Soldier_TL_PMC','Soldier_AT_PMC','Soldier_Bodyguard_M4_PMC','Soldier_Bodyguard_M4_PMC'],
+		//--- mechanized: T-55 + BTR-40 MG + dismounted strike team.
+		['T55_TK_GUE_EP1','BTR40_MG_TK_GUE_EP1','Soldier_TL_PMC','Soldier_AT_PMC','Soldier_MG_PKM_PMC','Soldier_Medic_PMC'],
+		//--- AA picket at HEAVY (cmdcon41-w3e): ZU-23 truck + BTR-40 + MANPADS dismounts - air deterrent.
+		['Ural_ZU23_TK_GUE_EP1','BTR40_MG_TK_GUE_EP1','Soldier_AA_PMC','Soldier_AA_PMC','Soldier_TL_PMC']
 	]];
 	
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].
