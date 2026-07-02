@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 - Lane 82 HQ-strike finisher status [codex/lane82-hq-strike-finisher-status]
+
+Docs-only reconciliation of the stale fleet prompt row that said the HQ-strike finisher still
+targets a nearby town instead of the enemy HQ. Current `origin/claude/build84-cmdcon36@b1608b096eb4`
+already carries B69 Patch A (`35547c471`) and later round-closure refinements: `AI_Commander_Strategy.sqf`
+resolves `_enemyHQ`, sends strikers to `getPos _enemyHQ`, publishes `HQ_STRIKE|launched` and
+`STRIKE_STAGE_RELEASE`, weights vehicle punch in the picker, and uses the base-overrun closure path
+to damage the enemy HQ.
+
+Added `docs/design/HQ-STRIKE-FINISHER-STATUS-2026-07-03.md`. No mission source, LoadoutManager output,
+package artifact, deploy or live runtime setting changed.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
