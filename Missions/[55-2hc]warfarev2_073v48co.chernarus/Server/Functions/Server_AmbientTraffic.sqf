@@ -73,9 +73,10 @@ while { !(WFBE_GameOver) } do {
         if (alive _x) then {
             _alive set [count _alive, _x];
         } else {
-            _grp = group _x;
-            { deleteVehicle _x } forEach (crew _x);
-            if (!isNull _x) then { deleteVehicle _x };
+            _veh = _x;
+            _grp = group _veh;
+            { deleteVehicle _x } forEach (crew _veh);
+            if (!isNull _veh) then { deleteVehicle _veh };
             if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
         };
     } forEach _boats;
@@ -87,9 +88,10 @@ while { !(WFBE_GameOver) } do {
         if (alive _x) then {
             _alive set [count _alive, _x];
         } else {
-            _grp = group _x;
-            { deleteVehicle _x } forEach (crew _x);
-            if (!isNull _x) then { deleteVehicle _x };
+            _veh = _x;
+            _grp = group _veh;
+            { deleteVehicle _x } forEach (crew _veh);
+            if (!isNull _veh) then { deleteVehicle _veh };
             if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
         };
     } forEach _cars;
@@ -240,16 +242,18 @@ _boats = missionNamespace getVariable ["WFBE_AMBIENT_BOATS", []];
 _cars  = missionNamespace getVariable ["WFBE_AMBIENT_CARS",  []];
 
 {
-    _grp = group _x;
-    { deleteVehicle _x } forEach (crew _x);
-    if (!isNull _x) then { deleteVehicle _x };
+    _veh = _x;
+    _grp = group _veh;
+    { deleteVehicle _x } forEach (crew _veh);
+    if (!isNull _veh) then { deleteVehicle _veh };
     if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
 } forEach _boats;
 
 {
-    _grp = group _x;
-    { deleteVehicle _x } forEach (crew _x);
-    if (!isNull _x) then { deleteVehicle _x };
+    _veh = _x;
+    _grp = group _veh;
+    { deleteVehicle _x } forEach (crew _veh);
+    if (!isNull _veh) then { deleteVehicle _veh };
     if (!isNull _grp && { count units _grp == 0 }) then { deleteGroup _grp };
 } forEach _cars;
 
