@@ -1294,6 +1294,13 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_WILDCARD", 1]) == 1 && {resistan
 	["INITIALIZATION", Format ["Init_Server.sqf: GUER Wildcard worker started (interval=%1s).", missionNamespace getVariable ["WFBE_C_GUER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
 };
 
+//--- PILOT-RACE (lane B3, Ray 2026-07-02): downed AI pilot capture/rescue race.
+//--- Feature-flagged behind WFBE_C_PILOT_RACE (default 0 = inert). Same launch pattern as Init_NavalHVT above.
+if ((missionNamespace getVariable ["WFBE_C_PILOT_RACE", 0]) > 0) then {
+	[] execVM "Server\Server_PilotRace.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_PilotRace.sqf launched (WFBE_C_PILOT_RACE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
