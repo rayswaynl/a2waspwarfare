@@ -981,6 +981,10 @@ with missionNamespace do {
 	if (isNil "WFBE_C_TIPS_ENABLE")                   then {WFBE_C_TIPS_ENABLE = 1};                   //--- cmdcon42-q: master on/off for the rotating chat-tip feed (0 = no tips at all).
 	if (isNil "WFBE_C_TIPS_PERIOD")                   then {WFBE_C_TIPS_PERIOD = 900};                 //--- cmdcon42-q: seconds between tips (Ray: 15 min; floored to 30s in the client). 50-tip deck = a full cycle every ~12.5 h.
 	if (isNil "WFBE_C_TIPS_INITIAL")                  then {WFBE_C_TIPS_INITIAL = 420};                //--- cmdcon42-q: seconds a fresh/JIP client waits before the FIRST tip, so it doesn't overlap the onboarding cards.
+	//--- Lane 182: profile-once contextual hints. Default off; client-only presentation.
+	if (isNil "WFBE_C_ONBOARDING_CONTEXT_HINTS")      then {WFBE_C_ONBOARDING_CONTEXT_HINTS = 0};
+	if (isNil "WFBE_C_ONBOARDING_CONTEXT_DELAY")      then {WFBE_C_ONBOARDING_CONTEXT_DELAY = 35};
+	if (isNil "WFBE_C_ONBOARDING_CONTEXT_FUNDS")      then {WFBE_C_ONBOARDING_CONTEXT_FUNDS = 300};
 
 	//--- B57 SOAK DRAFT (2026-06-20, claude-gaming, propose-only): FOUND size decoupled from the live MIN
 	//--- floor. HC-founded teams are NEVER refilled after founding (see AI_Commander_Teams.sqf B57 block),

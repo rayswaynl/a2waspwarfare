@@ -1607,6 +1607,9 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- detects JIP from mission time. Spawned (never blocks input/enrollment), placed after init completes.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Common_Onboarding.sqf";
 
+//--- Contextual first-time hints. Default-off profile-once layer; no menu or player state mutation.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_ContextOnboardingHints.sqf";
+
 //--- Rotating gameplay-tip feed (cmdcon42-q, claude-gaming 2026-07-02). Ray: "add 50 more hints
 //--- that come by on rotation in the chat". Pure client cosmetic: posts one short tip via
 //--- systemChat every WFBE_C_TIPS_PERIOD seconds from a 50-tip pool; each feature-tip is gated on
