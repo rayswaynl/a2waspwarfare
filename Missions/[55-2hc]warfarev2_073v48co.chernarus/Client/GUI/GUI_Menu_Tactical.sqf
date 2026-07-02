@@ -696,7 +696,7 @@ while {alive player && dialog} do {
 					};
 				} forEach _units;
 
-				hintSilent Format ["Artillery ammo %1 requested on %2 unit(s).", _ammoName, _loadedCount];
+				hintSilent Format [localize "STR_WF_TACTICAL_ArtilleryAmmoRequested", _ammoName, _loadedCount];
 				["INFORMATION", Format ["GUI_Menu_Tactical.sqf: Player [%1] requested artillery ammo [%2] for [%3] [%4 unit(s)].", name player, _ammoName, (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText]) select _artilleryIndex, _loadedCount]] Call WFBE_CO_FNC_LogContent;
 			};
 		};
