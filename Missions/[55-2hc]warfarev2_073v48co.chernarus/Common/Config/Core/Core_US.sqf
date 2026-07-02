@@ -197,7 +197,7 @@ _c = _c + ['C130J_US_EP1'];
 _i = _i + [['','',9440,30,-2,1,3,0,'US',[]]];
 
 _c = _c + ['AH6X_EP1'];
-_i = _i + [['','',4416,50,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): AH6X_EP1 air-upgrade 0->1 (same tier-0-heli fix as MH6J). Rollback: ...,0,3,0,...
+_i = _i + [['AH-6X Scout','',3500,50,-2,0,3,0,'US',[]]];   //--- cmdcon42 Option C Row 1: unarmed FLIR scout Little Bird at Aircraft-Factory research level 0, 3500. Gate 0 is SAFE: the player Aircraft menu only opens with a live aircraft factory in range (updateavailableactions.fsm aircraftInRange -> Common_BuildingInRange), so the row's upgrade field is a research gate, NOT the factory-existence gate. The pre-B59 hole was the AI FOUNDING path, since independently hardened (AI_Commander_Teams.sqf air-strip until AICOM_AIR_MIN_TOWNS). Rollback to gated: ...,1,3,0,...
 
 _c = _c + ['AH6J_EP1'];
 _i = _i + [['','',9119,35,-2,2,3,0,'US',[]]];
@@ -310,6 +310,29 @@ for '_z' from 0 to (count _c)-1 do {
 	} else {
 		diag_log Format ["[WFBE (ERROR)][frameno:%2 | ticktime:%3] Core_US: Element '%1' is not a valid class.",(_c select _z),diag_frameno,diag_tickTime];
 	};
+};
+
+//--- cmdcon42 Option C Row 2: SYNTHETIC buy token "AH6X_M134" ("AH-6X (M134)").
+//--- The buy pipeline (GUI_Menu_BuyUnits -> Client_BuildUnit) keys a purchase entirely on its
+//--- classname STRING, both as the metadata-registry key AND as the createVehicle class, and the
+//--- row's index/label are discarded. So two buy rows that spawn the SAME hull with DIFFERENT
+//--- loadouts are impossible unless the second row carries a distinct registry key. "AH6X_M134"
+//--- is that distinct key: it is NOT a CfgVehicles class (so it is registered here MANUALLY, after
+//--- the isClass-guarded loop above that would reject it), and it is remapped to the real hull
+//--- AH6X_EP1 inside Client_BuildUnit.sqf BEFORE createVehicle, which then arms it with a TwinM134.
+//--- We register by DEEP-COPYing the already-resolved AH6X_EP1 tuple so the crew-slot [4], turret
+//--- list [9] and portrait [1] are byte-identical to the real hull (the buy dialog crew icons and
+//--- Client_BuildUnit moveInTurret read [4]/[9] straight from the tuple), then override name [0]
+//--- and price [2]. isNil-guarded so a missing base registration only drops the row (never errors).
+if (!isNil {missionNamespace getVariable "AH6X_EP1"}) then {
+	private "_ah6xM134";
+	_ah6xM134 = +(missionNamespace getVariable "AH6X_EP1");   //--- deep copy: inherits [1] picture, [4] crew, [5] gate=0, [6] air, [9] turrets
+	_ah6xM134 set [QUERYUNITLABEL, "AH-6X (M134)"];           //--- [0] display name
+	_ah6xM134 set [QUERYUNITPRICE, 5500];                     //--- [2] price
+	missionNamespace setVariable ["AH6X_M134", _ah6xM134];
+	diag_log Format ["[WFBE (INIT)][frameno:%1 | ticktime:%2] Core_US: Registered synthetic buy token 'AH6X_M134' (AH-6X M134) as a copy of AH6X_EP1.",diag_frameno,diag_tickTime];
+} else {
+	diag_log "[WFBE (WARNING)] Core_US: AH6X_EP1 not registered - cannot create synthetic AH6X_M134 token; the AH-6X (M134) buy row will be hidden.";
 };
 
 diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_US: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];
