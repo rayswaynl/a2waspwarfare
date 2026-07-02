@@ -70,6 +70,8 @@ WFBE_CO_FNC_AICOM_AutoFlip_Check = {
 	_vehicle setVelocity [0,0,-0.5];
 	_vehicle setVariable ["WFBE_AICOM_AutoFlip_LastFlip", _now, true];
 	_vehicle setVariable ["WFBE_AICOM_AutoFlip_StuckSince", -1, false];
+	//--- WASPSCALE recov counter (cmdcon42): same shared cumulative recovery-action counter as the unstuck site (recov= on the WASPSCALE line). Auto-flip righting is a recovery action; bumped in this machine's missionNamespace (server or HC, wherever the hull is local). Server emit reports its server-local share. Monotonic.
+	missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
 	diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|AUTOFLIP|righted=%3", str isServer, round (time / 60), typeOf _vehicle]);
 };
 

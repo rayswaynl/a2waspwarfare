@@ -101,6 +101,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				_toSecs = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420];
 				_elapsed = round (time - _dt0);
 				if (_ddist <= _arrR) then {
+					//--- WASPSCALE arrv counter (cmdcon42): bump the cumulative-arrival counter the server-side WASPSCALE emit reads (arrv=). One per successful journey (latched once per dispatch by wfbe_aicom_dispatch_open). Server-local, monotonic.
+					missionNamespace setVariable ["wfbe_waspscale_arrv", (missionNamespace getVariable ["wfbe_waspscale_arrv", 0]) + 1];
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_ARRIVED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed);
 					_team setVariable ["wfbe_aicom_dispatch_open", false];
 					//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, claude-gaming 2026-07-02): the team reached a town
@@ -735,6 +737,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- resolves exactly one ARRIVED or STRANDED per dispatch. Logging only - no behaviour
 						//--- change. Town center = getPos _target; name via the broadcast "name" var.
 						_team setVariable ["wfbe_aicom_dispatch_open", true];
+						//--- WASPSCALE disp counter (cmdcon42): bump the cumulative-dispatch counter the server-side WASPSCALE emit reads (disp=). Server-local, monotonic; counts every (re)dispatch, matching the ASSAULT_DISPATCH log below.
+						missionNamespace setVariable ["wfbe_waspscale_disp", (missionNamespace getVariable ["wfbe_waspscale_disp", 0]) + 1];
 						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_DISPATCH|team=" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round ((leader _team) distance _target)) + "|reissue=" + str (_priorOpen && _sameTgt));
 						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 					};
