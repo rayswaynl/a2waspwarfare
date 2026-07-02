@@ -1,3 +1,4 @@
+#requires -Version 5.1
 # Get-WindowedRpt.ps1 - shared windowed-RPT reader (claude-inbox#2 item 4).
 #
 # A2 OA RPT files NEVER truncate during a server's lifetime; whole-file greps get
@@ -15,13 +16,13 @@
 function Get-WindowedRpt {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)] [string] $RptPath,
+        [Parameter(Mandatory)] [ValidateNotNullOrEmpty()] [string] $RptPath,
         # Marker that opens the window; default = mission init line stamped at every mission start.
-        [string] $WindowMarker = 'MISSINIT',
+        [ValidateNotNullOrEmpty()] [string] $WindowMarker = 'MISSINIT',
         # Optional regex applied to lines inside the window.
         [string] $Pattern,
         # Return at most this many lines from the end of the window (0 = all).
-        [int] $Tail = 0
+        [ValidateRange(0, 2147483647)] [int] $Tail = 0
     )
 
     if (-not (Test-Path -LiteralPath $RptPath)) {

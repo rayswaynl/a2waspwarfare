@@ -1,3 +1,4 @@
+#requires -Version 5.1
 <#
 .SYNOPSIS
     Pin the Arma 2 OA dedicated server + its headless clients to chosen CPU cores
@@ -29,19 +30,81 @@
     One affinity bitmask per HC, in connection order (e.g. 0x300,0xC00). HCs beyond the
     supplied masks are left untouched. If omitted, HCs are left untouched.
 
+.PARAMETER LogicalProcessorCount
+    Optional validation guard. When provided, every non-zero mask must fit within this
+    many logical CPUs. Example: -LogicalProcessorCount 12 rejects masks using CPU12+.
+
+.PARAMETER StrictDisjoint
+    Treat overlapping non-zero masks as an error instead of a warning. By default overlaps
+    warn only, preserving emergency operator flexibility.
+
 .PARAMETER Apply
     Actually set the affinities. Without this switch the script only reports (dry run).
 
 .EXAMPLE
-    .\Set-WaspCpuAffinity.ps1 -ServerMask 0x0FF -HcMasks 0x300,0xC00          # dry run
-    .\Set-WaspCpuAffinity.ps1 -ServerMask 0x0FF -HcMasks 0x300,0xC00 -Apply   # apply
+    .\Set-WaspCpuAffinity.ps1 -ServerMask 0x0FF -HcMasks 0x300,0xC00 -LogicalProcessorCount 12 -StrictDisjoint
+    .\Set-WaspCpuAffinity.ps1 -ServerMask 0x0FF -HcMasks 0x300,0xC00 -LogicalProcessorCount 12 -StrictDisjoint -Apply
 #>
 [CmdletBinding()]
 param(
     [int64]$ServerMask = 0,
     [int64[]]$HcMasks = @(),
+    [ValidateRange(0, 62)][int]$LogicalProcessorCount = 0,
+    [switch]$StrictDisjoint,
     [switch]$Apply
 )
+
+$ErrorActionPreference = 'Stop'
+
+function Get-AffinityMaskEntries {
+    $entries = @()
+
+    if ($ServerMask -ne 0) {
+        $entries += [pscustomobject]@{ Label = 'server'; Mask = [int64]$ServerMask }
+    }
+
+    for ($i = 0; $i -lt $HcMasks.Count; $i++) {
+        if ($HcMasks[$i] -ne 0) {
+            $entries += [pscustomobject]@{ Label = ("HC{0}" -f ($i + 1)); Mask = [int64]$HcMasks[$i] }
+        }
+    }
+
+    return $entries
+}
+
+function Test-AffinityMaskPlan {
+    param(
+        [object[]]$Entries,
+        [int]$LogicalProcessorCount,
+        [switch]$StrictDisjoint
+    )
+
+    foreach ($entry in $Entries) {
+        if ($entry.Mask -lt 0) {
+            throw ("{0} affinity mask must be zero or positive; got {1}." -f $entry.Label, $entry.Mask)
+        }
+    }
+
+    if ($LogicalProcessorCount -gt 0) {
+        $maxMask = ([int64]1 -shl $LogicalProcessorCount) - 1
+        foreach ($entry in $Entries) {
+            if (($entry.Mask -band (-bnot $maxMask)) -ne 0) {
+                throw ("{0} affinity mask 0x{1:X} uses a CPU outside LogicalProcessorCount={2}." -f $entry.Label, $entry.Mask, $LogicalProcessorCount)
+            }
+        }
+    }
+
+    for ($i = 0; $i -lt $Entries.Count; $i++) {
+        for ($j = $i + 1; $j -lt $Entries.Count; $j++) {
+            $overlap = $Entries[$i].Mask -band $Entries[$j].Mask
+            if ($overlap -ne 0) {
+                $message = "affinity masks overlap: {0}=0x{1:X} and {2}=0x{3:X} share 0x{4:X}" -f $Entries[$i].Label, $Entries[$i].Mask, $Entries[$j].Label, $Entries[$j].Mask, $overlap
+                if ($StrictDisjoint) { throw $message }
+                Write-Warning $message
+            }
+        }
+    }
+}
 
 function Get-HcProcesses {
     # HC clients = ArmA2OA.exe with '-client' on the command line. Win32_Process exposes CommandLine.
@@ -65,6 +128,9 @@ function Set-Affinity([int]$ProcId, [int64]$Mask, [string]$Label) {
         Write-Warning ("{0} (PID {1}): {2}" -f $Label, $ProcId, $_.Exception.Message)
     }
 }
+
+$maskPlan = @(Get-AffinityMaskEntries)
+Test-AffinityMaskPlan -Entries $maskPlan -LogicalProcessorCount $LogicalProcessorCount -StrictDisjoint:$StrictDisjoint
 
 Write-Host ("=== Set-WaspCpuAffinity ({0}) ===" -f $(if ($Apply) { 'APPLY' } else { 'DRY RUN - pass -Apply to commit' }))
 
