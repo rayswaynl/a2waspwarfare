@@ -348,6 +348,12 @@ with missionNamespace do {
 	if (isNil "WFBE_C_OILFIELD_MARKER_TYPE") then {WFBE_C_OILFIELD_MARKER_TYPE = "mil_circle"}; //--- map marker type.
 	if (isNil "WFBE_C_OILFIELD_MARKER_TEXT") then {WFBE_C_OILFIELD_MARKER_TEXT = "OILFIELD"};   //--- map marker label.
 	if (isNil "WFBE_C_OILFIELD_OPEN_MSG") then {WFBE_C_OILFIELD_OPEN_MSG = "The OILFIELD is now active! Hold it with your units to earn passive supply income. Check your map."}; //--- 1h-unlock broadcast line.
+	//--- === cmdcon43-m OILFIELD pre-unlock visibility (marker + countdown from match start; Takistan-only) ===
+	if (isNil "WFBE_C_OILFIELD_PREMARK") then {WFBE_C_OILFIELD_PREMARK = 1};                //--- 1 = create the map marker EARLY (as soon as the derrick position resolves) with a "OILFIELD - opens in mm:ss" countdown label, so players see the field + timer from match start; 0 = classic marker-only-at-unlock.
+	if (isNil "WFBE_C_OILFIELD_PREMARK_UPDATE") then {WFBE_C_OILFIELD_PREMARK_UPDATE = 30}; //--- countdown label refresh cadence (s); 30s is negligible marker-churn while per-second would be render spam (floored 10s in code).
+	if (isNil "WFBE_C_OILFIELD_PREMARK_COLOR") then {WFBE_C_OILFIELD_PREMARK_COLOR = "ColorYellow"}; //--- pre-unlock (neutral/locked) marker colour; handed off to the side-absolute owner colour at unlock.
+	if (isNil "WFBE_C_OILFIELD_PREMARK_LABEL") then {WFBE_C_OILFIELD_PREMARK_LABEL = "OILFIELD - opens in %1"};  //--- pre-unlock countdown label; %1 = mm:ss remaining. At T=0-countdown it reads "OILFIELD - opens in 60:00" etc.
+	if (isNil "WFBE_C_OILFIELD_PREMARK_T5_MSG") then {WFBE_C_OILFIELD_PREMARK_T5_MSG = "The OILFIELD opens in 5 minutes - it lies between the two armies. Rally your units."}; //--- one-shot T-5min DashboardAnnounce garnish (same PREMARK flag gate); "" to disable just the announce.
 	//--- === cmdcon42 OILFIELD upgrade (stakes visibility + sabotage/repair loop + AICOM pull + GUER raids; Takistan-only) ===
 	if (isNil "WFBE_C_OILFIELD_MARKER_LIVE") then {WFBE_C_OILFIELD_MARKER_LIVE = 1};       //--- (stakes visibility) 1 = marker LABEL shows live owner + supply/tick (e.g. "OILFIELD [BLUFOR] +25/60s"); 0 = static label.
 	if (isNil "WFBE_C_OILFIELD_SABOTAGE") then {WFBE_C_OILFIELD_SABOTAGE = 1};             //--- master on/off for the sabotage+repair loop (fire/smoke spectacle, income halt). 0 = classic capture-only node.
