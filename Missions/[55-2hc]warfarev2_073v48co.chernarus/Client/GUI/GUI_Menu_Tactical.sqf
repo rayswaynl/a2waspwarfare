@@ -385,7 +385,7 @@ while {alive player && dialog} do {
 			if (!surfaceIsWater _callPos) then {
 				lastParaCall = time;
 				-(_currentFee) Call ChangePlayerFunds;
-				["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+				["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 				
 				hint (localize "STR_WF_INFO_Paratroop_Info");
 			};
@@ -542,7 +542,7 @@ while {alive player && dialog} do {
 			lastSupplyCall = time;
 			-_currentFee Call ChangePlayerFunds;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+			["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 		};
 		//--- Ammo Paradrop.
 		if (MenuAction == 10) then {
@@ -553,7 +553,7 @@ while {alive player && dialog} do {
 			lastSupplyCall = time;
 			-_currentFee Call ChangePlayerFunds;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+			["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 		};
 	};
 	

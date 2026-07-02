@@ -620,6 +620,43 @@ function Test-GuerMortarRequestSpecialAuthorityGuard {
 	Add-Result "GUER mortar RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-ParadropSupportAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$tacticalPath = Join-Path $entry.Root "Client\GUI\GUI_Menu_Tactical.sqf"
+		$paratroopsPath = Join-Path $entry.Root "Server\Support\Support_Paratroopers.sqf"
+		$paraVehiclesPath = Join-Path $entry.Root "Server\Support\Support_ParaVehicles.sqf"
+		$paraAmmoPath = Join-Path $entry.Root "Server\Support\Support_ParaAmmo.sqf"
+		$server = Get-Text $serverPath
+		$tactical = Get-Text $tacticalPath
+		$paratroops = Get-Text $paratroopsPath
+		$paraVehicles = Get-Text $paraVehiclesPath
+		$paraAmmo = Get-Text $paraAmmoPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$paratroopsCode = [regex]::Replace($paratroops, "//.*", "")
+		$paraVehiclesCode = [regex]::Replace($paraVehicles, "//.*", "")
+		$paraAmmoCode = [regex]::Replace($paraAmmo, "//.*", "")
+		if (-not ($serverCode.Contains('_validateTacticalSupportRequester') -and $serverCode.Contains('count _vArgs < 5') -and $serverCode.Contains('_side in [west,east]') -and $serverCode.Contains('typeName _destination != "ARRAY"') -and $serverCode.Contains('typeName (_destination select 0) != "SCALAR"') -and $serverCode.Contains('typeName _playerTeam != "GROUP"') -and $serverCode.Contains('typeName _requester != "OBJECT"'))) { $missing += "$($entry.Terrain):validator-shape-types" }
+		if (-not ($serverCode.Contains('!isPlayer _requester') -and $serverCode.Contains('group _requester != _playerTeam') -and $serverCode.Contains('side _playerTeam != _side') -and $serverCode.Contains('leader _playerTeam != _requester'))) { $missing += "$($entry.Terrain):requester-team-binding" }
+		if (-not ($serverCode.Contains('WFBE_CO_FNC_GetSideUpgrades') -and $serverCode.Contains('_upgrades select _upgradeIndex') -and $serverCode.Contains('without required upgrade index'))) { $missing += "$($entry.Terrain):upgrade-gate" }
+		if (-not ($serverCode.Contains('[_args, "Paratroops", WFBE_UP_PARATROOPERS] Call _validateTacticalSupportRequester') -and $serverCode.Contains('_args spawn KAT_Paratroopers'))) { $missing += "$($entry.Terrain):paratroops-dispatch-gate" }
+		if (-not ($serverCode.Contains('[_args, "ParaVehi", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester') -and $serverCode.Contains('_args spawn KAT_ParaVehicles'))) { $missing += "$($entry.Terrain):paravehi-dispatch-gate" }
+		if (-not ($serverCode.Contains('[_args, "ParaAmmo", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester') -and $serverCode.Contains('_args spawn KAT_ParaAmmo'))) { $missing += "$($entry.Terrain):paraammo-dispatch-gate" }
+		if (-not ($tactical.Contains('["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam,player]]') -and $tactical.Contains('["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam,player]]') -and $tactical.Contains('["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam,player]]'))) { $missing += "$($entry.Terrain):client-requester-context" }
+		if (-not ($paratroopsCode.Contains('count _this < 4') -and $paratroopsCode.Contains('_side in [west,east]') -and $paratroopsCode.Contains('side _playerTeam != _side') -and $paratroopsCode.Contains('_requester = _this select 4') -and $paratroopsCode.Contains('player team without requester') -and $paratroopsCode.Contains('!isPlayer _requester') -and $paratroopsCode.Contains('group _requester != _playerTeam') -and $paratroopsCode.Contains('leader _playerTeam != _requester') -and $paratroopsCode.Contains('typeName (_destination select 0) != "SCALAR"'))) { $missing += "$($entry.Terrain):paratroops-support-revalidation" }
+		if (-not ($paraVehiclesCode.Contains('count _args < 5') -and $paraVehiclesCode.Contains('_requester = _args select 4') -and $paraVehiclesCode.Contains('typeName (_destination select 0) != "SCALAR"') -and $paraVehiclesCode.Contains('!isPlayer _requester') -and $paraVehiclesCode.Contains('group _requester != _playerTeam') -and $paraVehiclesCode.Contains('leader _playerTeam != _requester') -and $paraVehiclesCode.Contains('[_grp,_destination,"MOVE",10] Call AIMoveTo'))) { $missing += "$($entry.Terrain):paravehi-support-revalidation" }
+		if (-not ($paraAmmoCode.Contains('count _args < 5') -and $paraAmmoCode.Contains('_requester = _args select 4') -and $paraAmmoCode.Contains('typeName (_destination select 0) != "SCALAR"') -and $paraAmmoCode.Contains('!isPlayer _requester') -and $paraAmmoCode.Contains('group _requester != _playerTeam') -and $paraAmmoCode.Contains('leader _playerTeam != _requester') -and $paraAmmoCode.Contains('[_grp,_destination,"MOVE",10] Call AIMoveTo'))) { $missing += "$($entry.Terrain):paraammo-support-revalidation" }
+	}
+	Add-Result "Paradrop RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomCommandConsoleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1567,6 +1604,7 @@ Test-IcbmRequestSpecialAuthorityGuard
 Test-SupplyMissionPvGuards
 Test-ScudStrikeAuthorityGuard
 Test-GuerMortarRequestSpecialAuthorityGuard
+Test-ParadropSupportAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards

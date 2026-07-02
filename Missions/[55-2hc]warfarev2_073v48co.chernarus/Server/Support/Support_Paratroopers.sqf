@@ -1,8 +1,27 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_requester','_side','_sideID','_starttime','_units','_valid','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
 
+if ((typeName _this != "ARRAY") || {count _this < 4}) exitWith {["WARNING", Format ["Support_Paratroopers.sqf : rejected malformed payload [%1].", _this]] Call WFBE_CO_FNC_LogContent};
 _side = _this select 1;
 _destination = _this select 2;
 _playerTeam = _this select 3;
+if !(_side in [west,east]) exitWith {["WARNING", Format ["Support_Paratroopers.sqf : rejected invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent};
+if ((typeName _destination != "ARRAY") || {count _destination < 2} || {typeName (_destination select 0) != "SCALAR"} || {typeName (_destination select 1) != "SCALAR"}) exitWith {["WARNING", Format ["Support_Paratroopers.sqf : rejected malformed destination [%1].", _destination]] Call WFBE_CO_FNC_LogContent};
+if ((typeName _playerTeam != "GROUP") || {isNull _playerTeam}) exitWith {["WARNING", Format ["Support_Paratroopers.sqf : rejected malformed player team [%1].", _playerTeam]] Call WFBE_CO_FNC_LogContent};
+if (side _playerTeam != _side) exitWith {["WARNING", Format ["Support_Paratroopers.sqf : rejected side/team mismatch team=%1 side=%2.", _playerTeam, _side]] Call WFBE_CO_FNC_LogContent};
+_valid = true;
+if (count _this > 4) then {
+	_requester = _this select 4;
+	if ((typeName _requester != "OBJECT") || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side} || {leader _playerTeam != _requester}) then {
+		["WARNING", Format ["Support_Paratroopers.sqf : rejected requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		_valid = false;
+	};
+} else {
+	if (isPlayer (leader _playerTeam)) then {
+		["WARNING", Format ["Support_Paratroopers.sqf : rejected player team without requester team=%1 side=%2.", _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		_valid = false;
+	};
+};
+if (!_valid) exitWith {};
 _sideID = _side Call GetSideID;
 _starttime = time;
 

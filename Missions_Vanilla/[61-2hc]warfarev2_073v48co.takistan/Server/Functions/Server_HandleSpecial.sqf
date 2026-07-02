@@ -1,4 +1,4 @@
-Private['_args','_validateAicomConsoleRequester','_validateAicomManagedTeamForSide','_consumeAicomPendingToken'];
+Private['_args','_validateAicomConsoleRequester','_validateAicomManagedTeamForSide','_validateTacticalSupportRequester','_consumeAicomPendingToken'];
 
 _args = _this;
 
@@ -38,6 +38,47 @@ _validateAicomManagedTeamForSide = {
 	_teamSideID = _team getVariable "wfbe_aicom_sideid";
 	if (isNil "_teamSideID" || {typeName _teamSideID != "SCALAR"}) exitWith {false};
 	_teamSideID == _sideID
+};
+
+_validateTacticalSupportRequester = {
+	private ["_destination","_playerTeam","_requester","_side","_support","_upgradeIndex","_upgrades","_vArgs"];
+	_vArgs = _this select 0;
+	_support = _this select 1;
+	_upgradeIndex = _this select 2;
+	if (count _vArgs < 5) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected short %1 payload [%2].", _support, _vArgs]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	_side = _vArgs select 1;
+	_destination = _vArgs select 2;
+	_playerTeam = _vArgs select 3;
+	_requester = _vArgs select 4;
+	if !(_side in [west,east]) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with invalid side [%2].", _support, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if ((typeName _destination != "ARRAY") || {count _destination < 2}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with malformed destination [%2].", _support, _destination]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if ((typeName (_destination select 0) != "SCALAR") || {typeName (_destination select 1) != "SCALAR"}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with non-scalar destination [%2].", _support, _destination]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if ((typeName _playerTeam != "GROUP") || {typeName _requester != "OBJECT"}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 with malformed team/requester team=%2 requester=%3.", _support, typeName _playerTeam, typeName _requester]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side} || {leader _playerTeam != _requester}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 requester/team mismatch requester=%2 team=%3 side=%4.", _support, _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+	if ((typeName _upgrades != "ARRAY") || {count _upgrades <= _upgradeIndex} || {(_upgrades select _upgradeIndex) <= 0}) exitWith {
+		["WARNING", Format ["Server_HandleSpecial.sqf: rejected %1 without required upgrade index %2 for side %3.", _support, _upgradeIndex, _side]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	true
 };
 
 _consumeAicomPendingToken = {
@@ -107,14 +148,17 @@ switch (_args select 0) do {
 		};
 	};
 	case "Paratroops": {
+		if !([_args, "Paratroops", WFBE_UP_PARATROOPERS] Call _validateTacticalSupportRequester) exitWith {};
 		_args spawn KAT_Paratroopers;
 	};
 
 	case "ParaVehi": {
+		if !([_args, "ParaVehi", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester) exitWith {};
 		_args spawn KAT_ParaVehicles;
 	};
 
 	case "ParaAmmo": {
+		if !([_args, "ParaAmmo", WFBE_UP_SUPPLYPARADROP] Call _validateTacticalSupportRequester) exitWith {};
 		_args spawn KAT_ParaAmmo;
 	};
 
