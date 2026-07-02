@@ -379,8 +379,9 @@ while {alive player && dialog} do {
 		};
 		
 		ctrlEnable[17020, _controlEnable];
-		//--- QoL item2 (client-qol-batch2): show a one-line deny reason when the selected
-		//--- special is blocked, so the player knows WHY the button is greyed.
+		//--- QoL item2 (client-qol-batch2): show a one-line deny reason on IDC 17027 when
+		//--- Fast Travel is blocked, so the player knows WHY the button is greyed.
+		//--- Uses dedicated IDC 17027 (17022 is the shared animation text, written by every special).
 		if (!_controlEnable) then {
 			private "_ftDenyReason";
 			_ftDenyReason = "";
@@ -393,19 +394,25 @@ while {alive player && dialog} do {
 						if (_currentLevel <= 0) then {
 							_ftDenyReason = "Fast Travel not yet unlocked (upgrade required).";
 						} else {
-							if (count _FTLocations <= 0) then {
-								_ftDenyReason = "No eligible FT destinations in range from your position.";
+							if (!canMove (vehicle player)) then {
+								_ftDenyReason = "Your vehicle cannot move.";
+							} else {
+								if (count _FTLocations <= 0) then {
+									if (_ft == 2) then {
+										_ftDenyReason = "No affordable FT destinations (all require more funds than you have).";
+									} else {
+										_ftDenyReason = "No eligible FT destinations in range from your position.";
+									};
+								};
 							};
 						};
 					};
 				};
 			};
-			if (_ftDenyReason != "") then {
-				ctrlSetText [17022, _ftDenyReason];
-			};
+			ctrlSetText [17027, _ftDenyReason];
 		} else {
-			//--- Clear any lingering deny reason when the button is enabled.
-			if (_currentSpecial == "Fast_Travel") then {ctrlSetText [17022, ""]};
+			//--- Clear the deny reason whenever the special is re-evaluated and enable.
+			ctrlSetText [17027, ""];
 		};
 		MenuAction = -1;
 	};
@@ -528,29 +535,14 @@ while {alive player && dialog} do {
 				} forEach _trackingArrayID;
 				_mode = -1;
 
-				//--- QoL item3 (client-qol-batch2): pre-compute the total FT cost (base + per-vehicle
-				//--- surcharge) and show a confirm dialog before deducting or teleporting.
-				_travelingWith = [];
-				{if (_x distance _startPoint < _ftr && !(_x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
 				if (_ft == 2) then {
-					private ["_ftBaseFee","_ftVehFee","_ftVehCount","_ftVehList","_ftTotal","_ftConfirmMsg"];
-					_ftBaseFee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
-					_ftVehList = []; _ftVehFee = 0;
-					{if (!(_x in _ftVehList) && !(_x isKindOf "Man")) then {_ftVehList = _ftVehList + [_x]}} forEach _travelingWith;
-					_ftVehCount = count _ftVehList;
-					_ftVehFee = _ftVehCount * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE");
-					_ftTotal = _ftBaseFee + _ftVehFee;
-					_ftConfirmMsg = "<t color='#85B5FA'>Confirm Fast Travel?</t><br/>Base fee: $" + str _ftBaseFee;
-					if (_ftVehCount > 0) then {
-						_ftConfirmMsg = _ftConfirmMsg + "<br/>Vehicle surcharge: " + str _ftVehCount + " vehicle(s) x $" + str (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") + " = $" + str _ftVehFee;
-					};
-					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total: $" + str _ftTotal + "</t>";
-					if (!(["wf_ft_confirm", _ftConfirmMsg] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
-					_fee = _ftBaseFee;
+					_fee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
 					-(_fee) Call ChangePlayerFunds;
 				};
-				//--- (travelingWith already computed above for the cost preview)
-				//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE per DISTINCT real vehicle taken along.
+				
+				_travelingWith = [];
+				{if (_x distance _startPoint < _ftr && !(_x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
+				//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE per DISTINCT real vehicle taken along (dedupe dup crew-seat handles + exclude foot units).
 				if (_ft == 2) then {private "_ftSeen"; _ftSeen = []; {if (!(_x in _ftSeen) && !(_x isKindOf "Man")) then {_ftSeen set [count _ftSeen, _x]; -(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds}} forEach _travelingWith;};
 				
 				ForceMap true;

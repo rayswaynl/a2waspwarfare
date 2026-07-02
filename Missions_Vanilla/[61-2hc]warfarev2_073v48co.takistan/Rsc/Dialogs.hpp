@@ -2696,6 +2696,21 @@ class RscMenu_Tactical {
 				align = "center";
 			};
 		};
+		//--- QoL item2 (client-qol-batch2): dedicated deny-reason text for Fast Travel.
+		//--- Positioned just below CA_InformationText (17022). Separate IDC so it is
+		//--- never overwritten by the SetControlFadeAnim that owns 17022.
+		class CA_FTDenyReason : RscText {
+			idc = 17027;
+			x = 0.380816;
+			y = 0.0558458;
+			w = 0.614286;
+			h = 0.030;
+			sizeEx = 0.025;
+			colorText[] = {1, 0.65, 0.1, 1};
+			class Attributes {
+				align = "center";
+			};
+		};
 		class Ca_ArtilleryToggle : RscClickableText {
 			idc = 17023;
 			x = 0.310672;
