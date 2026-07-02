@@ -17,7 +17,7 @@ private[
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
 	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd",
-	"_RHUDUpdateArty"
+	"_RHUDGuerTechText", "_RHUDUpdateArty"
 ];
 
 _total = count towns;
@@ -197,6 +197,30 @@ _RHUDUpdateUpgrade = {
 		[25, ""] call _RHUDSetText;
 		[26, ""] call _RHUDSetText;
 	};
+};
+
+_RHUDGuerTechText = {
+	private ["_kills","_targets","_nextKills","_nextLabel","_idx","_threshold","_label","_remain"];
+	_kills = _this select 0;
+	_targets = [
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30], "T1"],
+		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80], "T2"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160], "T3"]
+	];
+	_nextKills = -1;
+	_nextLabel = "";
+	for "_idx" from 0 to ((count _targets) - 1) do {
+		_threshold = (_targets select _idx) select 0;
+		_label = (_targets select _idx) select 1;
+		if (_threshold > _kills && {(_nextKills < 0) || {_threshold < _nextKills}}) then {
+			_nextKills = _threshold;
+			_nextLabel = _label;
+		};
+	};
+	if (_nextKills < 0) exitWith {Format ["%1 | max", _kills]};
+	_remain = _nextKills - _kills;
+	Format ["%1 | %2 to %3", _kills, _remain, _nextLabel]
 };
 
 _RHUDSetFPSPosition = {
@@ -508,12 +532,12 @@ while {true} do {
 
 			if (_side == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
 					//--- B75 (guer-tech): GUER-only rows. Tech-Kills (cumulative kill total driving the kill-based tech)
-					//--- sits directly ABOVE the FOB availability row (B n | LF n | HF n = still-buildable field bases).
+					//--- sits directly ABOVE the FOB availability row and now includes the next durable unlock target.
 					private ["_gKills","_gFob"];
 					_gKills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
 					_gFob   = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
 					if (typeName _gFob != "ARRAY" || {count _gFob < 3}) then {_gFob = [0,0,0]};
-					[16, Format ["%1", _gKills]] call _RHUDSetText;
+					[16, [_gKills] call _RHUDGuerTechText] call _RHUDSetText;
 					[16, [0.72, 0.96, 0.39, 1]] call _RHUDSetColor;
 					[18, Format ["B %1 | LF %2 | HF %3", _gFob select 0, _gFob select 1, _gFob select 2]] call _RHUDSetText;
 					[18, [0.46, 0.78, 1, 1]] call _RHUDSetColor;
