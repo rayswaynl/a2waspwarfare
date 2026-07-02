@@ -48,6 +48,29 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes('// "abc" find "b"\n_hit = "abc" find "b";\n')
         self.assertEqual(codes.count("A3STRING"), 1)
 
+    def test_namespace_three_arg_setvariable_is_reported(self) -> None:
+        codes = lint_codes('missionNamespace setVariable ["WFBE_ICBM_STATE", _state, true];\n')
+        self.assertIn("NSSETVAR3", codes)
+
+    def test_namespace_setvariable_detection_is_case_insensitive_and_multiline(self) -> None:
+        codes = lint_codes(
+            'uinamespace setvariable ["wfbe_hud", _hud, false];\n'
+            'profileNamespace setVariable [\n\t"wfbe_pref",\n\t_value,\n\ttrue\n];\n'
+        )
+        self.assertEqual(codes.count("NSSETVAR3"), 2)
+
+    def test_object_three_arg_setvariable_is_not_reported(self) -> None:
+        codes = lint_codes('_vehicle setVariable ["wfbe_owner", _uid, true];\n')
+        self.assertNotIn("NSSETVAR3", codes)
+
+    def test_namespace_two_arg_with_nested_array_value_is_not_reported(self) -> None:
+        codes = lint_codes(
+            'missionNamespace setVariable ["wfbe_pair", [_town, false]];\n'
+            'missionNamespace setVariable ["wfbe_label", Format ["%1,%2", _a, _b]];\n'
+            'missionNamespace setVariable ["wfbe_sum", (_a + _b)];\n'
+        )
+        self.assertNotIn("NSSETVAR3", codes)
+
 
 if __name__ == "__main__":
     unittest.main()
