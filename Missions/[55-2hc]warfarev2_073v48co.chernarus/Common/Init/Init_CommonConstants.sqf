@@ -1159,7 +1159,11 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_MODULE_WFBE_FLARES") then {WFBE_C_MODULE_WFBE_FLARES = 1}; //--- Enable the countermeasure system (0: Disabled, 1: Enabled with upgrade, 2: Enabled).
 	if (isNil "WFBE_C_MODULE_AUTO_CM_OA") then {WFBE_C_MODULE_AUTO_CM_OA = 1}; //--- cmdcon41-w3f: 0 -> 1. Auto-deploy countermeasures on OA aircraft (native OA flares are manual). Requires WFBE_C_MODULE_WFBE_FLARES > 0, which is ON (SQF default 1 / param default 2), so the dependency is met; enabling this helps AI aircraft survive IR missiles (pairs with EASA-on-AI kits). Param default in Rsc\Parameters.hpp flipped to 1 to match (dedicated reads the param).
 	if (isNil "WFBE_C_MODULE_WFBE_ICBM") then {WFBE_C_MODULE_WFBE_ICBM = 1}; //--- Enable the Intercontinental Ballistic Missile call for the commander.
+	if (isNil "WFBE_C_FIX_IRSMOKE_PARAM_ALIAS") then {WFBE_C_FIX_IRSMOKE_PARAM_ALIAS = 0}; //--- Lane 27: default-off alias for the lobby WFBE_C_MODULE_WFBE_IRS name to the runtime WFBE_C_MODULE_WFBE_IRSMOKE name.
 	if (isNil "WFBE_C_MODULE_WFBE_IRSMOKE") then {WFBE_C_MODULE_WFBE_IRSMOKE = 1}; //--- Enable the use of IR Smoke.
+	if ((missionNamespace getVariable ["WFBE_C_FIX_IRSMOKE_PARAM_ALIAS", 0]) > 0) then {
+		if !(isNil "WFBE_C_MODULE_WFBE_IRS") then {WFBE_C_MODULE_WFBE_IRSMOKE = WFBE_C_MODULE_WFBE_IRS};
+	};
 	if (isNil "WFBE_ICBM_TIME_TO_IMPACT") then {WFBE_ICBM_TIME_TO_IMPACT = 1}; //--- Time for ICBM to impact 
 	if (isNil "WFBE_RADZONE_TIME") then {WFBE_RADZONE_TIME = 1}; //--- Time for radiation effect 
 
