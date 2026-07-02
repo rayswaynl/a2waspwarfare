@@ -14,6 +14,8 @@
 	- Repoints WFBE_GUERDEPOTUNITS (buy-menu depot pool) from the AI-faction pool (civ cars + 1 soldier)
 	  to the GUER player arsenal, time-gated by WFBE_GUER_VEHICLE_TIER (broadcast by Server_GuerStipend.sqf):
 	  technicals + BTR-40 always (tier 0); BRDM @tier1; T-55 @tier2; T-72/T-55 @tier3 (map-dependent). [2026-07-01: BTR-40 moved to tier-0. Kill-tiers, not time now — the (30m/1.5h/3h) hints are stale from the old time-gate.]
+	  Optional WFBE_C_GUER_CIVILIAN_DEPOT appends already-registered CIV/TKCIV transport classnames to this
+	  player depot pool without re-registering them in Core_GUE.
 	- Defines per-role default respawn gear (Engineer/Sniper/Medic).
 
 	A2 OA 1.62/1.63 safe: array-form private only (no inline `private _x =`), `_arr + [x]` (no pushBack),
@@ -44,9 +46,14 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 //--- Dynamic buy pool: rebuild WFBE_GUERDEPOTUNITS whenever the server vehicle tier changes.
 //--- (The buy menu reads WFBE_GUERDEPOTUNITS at open time, so updating it dynamically time-gates vehicles.)
 //--- Map-branching: IS_CHERNARUS_MAP_DEPENDENT is defined in version.sqf for Chernarus; commented-out for Takistan.
-missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","BTR40_TK_GUE_EP1","hilux1_civil_2_covered","Ka137_MG_PMC"]]; //--- first-tick synchronous seed (tier loop below re-sets on tier change). BTR-40 is tier-0 (always available) as of 2026-07-01.
+private ["_seedPool"];
+_seedPool = ["GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper","Offroad_DSHKM_Gue","V3S_Gue","BTR40_TK_GUE_EP1","hilux1_civil_2_covered","Ka137_MG_PMC"];
+if ((missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0) then {
+	_seedPool = _seedPool + ["TT650_Civ","Tractor","SkodaRed","car_sedan","UralCivil"];
+};
+missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tick synchronous seed (tier loop below re-sets on tier change). BTR-40 is tier-0 (always available) as of 2026-07-01.
 [] spawn {
-	private ["_lastSig","_tier","_kills","_m113On","_fobAvail","_fobTrucks","_fi","_sig","_pool"];
+	private ["_lastSig","_tier","_kills","_m113On","_fobAvail","_fobTrucks","_fi","_sig","_pool","_civDepotOn"];
 	_lastSig = "";
 	while {!WFBE_GameOver && (local player) && {side group player == resistance}} do {
 		_tier = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
@@ -56,7 +63,8 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 		_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
 		_m113On = _kills >= (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25]);
 		_fobAvail = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
-		_sig = Format ["%1|%2|%3", _tier, _m113On, _fobAvail];
+		_civDepotOn = (missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0;
+		_sig = Format ["%1|%2|%3|%4", _tier, _m113On, _fobAvail, _civDepotOn];
 		if (_sig != _lastSig) then {
 			_lastSig = _sig;
 
@@ -69,6 +77,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 				"hilux1_civil_2_covered",   //--- VBIED: driver-detonated suicide truck. "Detonate VBIED" action + cash-for-kills (mirrors AI wildcard W21). Always available (tier 0).
 				"Ka137_MG_PMC"   //--- armed recon heli, pilot-fired; EASA AG/AA loadouts at a service point (see 8AM note)
 			];
+			if (_civDepotOn) then {_pool = _pool + ["TT650_Civ","Tractor","SkodaRed","car_sedan","UralCivil"]};
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
 			if (_tier >= 3) then {_pool = _pool + ["T72_Gue","BMP2_Gue"]};
@@ -84,6 +93,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", ["GUE_Soldier_Sab","GUE_Sol
 				"datsun1_civil_2_covered",   //--- VBIED: driver-detonated suicide truck (TK covered civilian pickup). Mirrors the Chernarus hilux. Always available (tier 0).
 				"Ka137_MG_PMC"
 			];
+			if (_civDepotOn) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","Ural_TK_CIV_EP1"]};
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_TK_GUE_EP1","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 (MG) moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
 			if (_tier >= 3) then {_pool = _pool + ["Ural_ZU23_TK_GUE_EP1"]};
