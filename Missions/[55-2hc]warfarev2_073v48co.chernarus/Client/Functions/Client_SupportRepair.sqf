@@ -75,6 +75,9 @@ while {true} do {
 
 //--- Fix the damages?
 if (_cts != 0) then {
+	//--- Zero every named hitpoint (wheel/engine/fuel tank) so paid repair is thorough.
+	//--- setDammage 0 alone only clears the hull scalar; component hitpoints remain damaged.
+	{_veh setHitPointDamage [_x select 0, 0]} forEach (getAllHitPointsDamage _veh);
 	_veh setDammage 0;
 	//--- Jets: a full repair restores fuel to 100% and re-arms the SPAAG survival mechanic.
 	if (_veh isKindOf "Plane") then {
