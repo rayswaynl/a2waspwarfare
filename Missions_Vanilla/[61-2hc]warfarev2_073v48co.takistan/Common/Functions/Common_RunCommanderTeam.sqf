@@ -1149,7 +1149,9 @@ while {!WFBE_GameOver && _alive} do {
 					if (!isNull _amHeli) then {
 						//--- Fly this leg. The helper Spawns its own non-blocking flight + return-to-base; it returns
 						//--- true when it committed the leg (pax lifted). Only then do we SKIP the road-march.
-						if ([_amHeli, _team, _dest, _side, _sideID] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
+						//--- cmdcon42-l: pass the team's authoritative _vehicles list so the helper can pick a LIGHT
+						//--- ground vehicle to SLING + deep-drop behind the lines (WFBE_C_AICOM_VEHLIFT).
+						if ([_amHeli, _team, _dest, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
 					};
 				};
 				if (!_amDone) then {
