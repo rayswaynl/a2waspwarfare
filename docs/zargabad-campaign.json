@@ -1,0 +1,104 @@
+{
+  "_comment": "Zargabad WASP campaign definition — input for sector-planner tools/gen_mission.mjs (--campaign). Town positions are the real CfgWorlds named locations (maps.json, alignment-verified); supply/value tiers mirror the Takistan campaign (400/500/600/800/1200 = Small/Small2/Medium/Large/Huge). 'factory' location omitted: 245 m from Nango, capture rings would overlap.",
+  "map": "zargabad",
+  "size": 8192,
+  "towns": [
+    {
+      "name": "Zargabad", "dubbing": "+", "startSV": 30, "maxSV": 120, "value": 1200,
+      "type": ["HugeTown1", "HugeTown2"], "pos": [4071.37, 4183.32],
+      "camps": [ { "pos": [3830, 4390] }, { "pos": [4330, 3980] } ],
+      "defenses": [
+        { "pos": [3900, 4000], "kind": ["MG"] },
+        { "pos": [4250, 4400], "kind": ["AA"] },
+        { "pos": [4080, 3900], "kind": ["MGNest"] }
+      ]
+    },
+    {
+      "name": "Airfield", "dubbing": "+", "startSV": 10, "maxSV": 60, "value": 600,
+      "type": ["MediumTown1", "MediumTown2"], "pos": [3386.26, 4082.67],
+      "camps": [ { "pos": [3300, 3830] } ],
+      "defenses": [
+        { "pos": [3390, 4330], "kind": ["AA"] },
+        { "pos": [3350, 3760], "kind": ["MG"] }
+      ]
+    },
+    {
+      "name": "Yarum", "dubbing": "+", "startSV": 10, "maxSV": 50, "value": 500,
+      "type": ["SmallTown1", "SmallTown2"], "pos": [4154.24, 3592.65],
+      "camps": [ { "pos": [4290, 3480] } ],
+      "defenses": [ { "pos": [4030, 3520], "kind": ["MGNest"] } ]
+    },
+    {
+      "name": "The Villa", "dubbing": "+", "startSV": 10, "maxSV": 50, "value": 500,
+      "type": ["SmallTown1", "SmallTown2"], "pos": [4813.26, 4645.28],
+      "camps": [ { "pos": [4930, 4760] } ],
+      "defenses": [ { "pos": [4700, 4560], "kind": ["MG"] } ]
+    },
+    {
+      "name": "Nango", "dubbing": "+", "startSV": 20, "maxSV": 80, "value": 800,
+      "type": ["LargeTown1", "LargeTown2"], "pos": [2823.53, 5022.13],
+      "camps": [ { "pos": [2680, 5170] }, { "pos": [2950, 4900] } ],
+      "defenses": [
+        { "pos": [2700, 4950], "kind": ["MG"] },
+        { "pos": [2900, 5150], "kind": ["AA"] }
+      ]
+    },
+    {
+      "name": "Azizayt", "dubbing": "+", "startSV": 10, "maxSV": 40, "value": 400,
+      "type": ["SmallTown1"], "pos": [1929.89, 4652.94],
+      "camps": [ { "pos": [2080, 4560] } ],
+      "defenses": [ { "pos": [2020, 4740], "kind": ["MGNest"] } ]
+    },
+    {
+      "name": "Hazar Bagh", "dubbing": "+", "startSV": 10, "maxSV": 40, "value": 400,
+      "type": ["SmallTown1"], "pos": [3943.51, 5957.63],
+      "camps": [ { "pos": [3820, 5840] } ],
+      "defenses": [ { "pos": [4050, 6070], "kind": ["MG"] } ]
+    },
+    {
+      "name": "Military Base", "dubbing": "+", "startSV": 10, "maxSV": 60, "value": 600,
+      "type": ["MediumTown1", "MediumTown2"], "pos": [4982.72, 6207.94],
+      "camps": [ { "pos": [4820, 6100] } ],
+      "defenses": [
+        { "pos": [5100, 6300], "kind": ["AA"] },
+        { "pos": [4870, 6320], "kind": ["MG"] }
+      ]
+    },
+    {
+      "name": "Shahbaz", "dubbing": "+", "startSV": 10, "maxSV": 40, "value": 400,
+      "type": ["SmallTown1"], "pos": [3528.11, 1932.74],
+      "camps": [ { "pos": [3650, 2050] } ],
+      "defenses": [ { "pos": [3420, 1840], "kind": ["MGNest"] } ]
+    },
+    {
+      "name": "Firuz Baharv", "dubbing": "+", "startSV": 10, "maxSV": 40, "value": 400,
+      "type": ["SmallTown1"], "pos": [5059.49, 1878.24],
+      "camps": [ { "pos": [4920, 1990] } ],
+      "defenses": [ { "pos": [5170, 1990], "kind": ["MG"] } ]
+    },
+    {
+      "name": "Shur Dam", "dubbing": "+", "startSV": 10, "maxSV": 40, "value": 400,
+      "type": ["SmallTown1"], "pos": [2889.65, 3143.63],
+      "camps": [ { "pos": [3040, 3230] } ],
+      "defenses": [ { "pos": [2980, 3050], "kind": ["MGNest"] } ]
+    }
+  ],
+  "spawns": [
+    { "pos": [4620, 1180], "side": "west", "spawn_pos": "south" },
+    { "pos": [3350, 7280], "side": "east", "spawn_pos": "north" },
+    { "pos": [1050, 6950], "side": "resistance", "spawn_pos": null },
+    { "pos": [5950, 3250], "side": null, "spawn_pos": null },
+    { "pos": [2280, 6420], "side": null, "spawn_pos": null },
+    { "pos": [5650, 5350], "side": null, "spawn_pos": null },
+    { "pos": [2400, 2400], "side": null, "spawn_pos": null },
+    { "pos": [1720, 4180], "side": null, "spawn_pos": null },
+    { "pos": [4680, 6950], "side": null, "spawn_pos": null }
+  ],
+  "airports": [ { "pos": [3386.26, 4082.67] } ],
+  "presets": {
+    "XSmall": ["Nango", "Azizayt", "HazarBagh", "MilitaryBase", "Shahbaz", "FiruzBaharv", "ShurDam"],
+    "Small":  ["Azizayt", "HazarBagh", "Shahbaz", "FiruzBaharv", "ShurDam"],
+    "Medium": ["Azizayt", "Shahbaz", "FiruzBaharv"],
+    "Large":  []
+  }
+}
