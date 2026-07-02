@@ -812,12 +812,44 @@ if (_strikeOn) then {
 				if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
 					if (_alive > 0) then {
-						//--- B69 (hqstrike-picker-weight-vehicle-punch): rank by PUNCH score, not raw bodycount. Heavy-detect idiom matches Common_AICOMServiceTick.sqf:103 (A2-OA-safe). _bestN now carries a score; inf 2 scores 2>1 (passes), 1-man remnant scores 1 (rejected), armour/attack-heli gets +bonus and outranks infantry.
-						private ["_hasHeavy","_score"];
-						_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"}}} count (units _team);
-						_score = _alive;
-						if (_hasHeavy > 0) then {_score = _score + (missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_VEH_BONUS", 100])};
-						if (_score > _bestN) then {_bestN = _score; _best = _team};
+						//--- F2 (fable/aicom-f2-strike-commit-f6, 2026-07-02): STRIKE-COMMIT guard. When WFBE_C_AICOM_STRIKE_COMMIT=1,
+						//--- a team with an OPEN dispatch that is PROGRESSING toward its target (closed >=150m) is skipped for the
+						//--- HQ strike-grab so an active journey is not killed. Default 0 = exact pre-F2 behaviour (nothing skipped).
+						//--- Exemptions: recycle-flagged teams and genuinely-stuck teams (stuckstrikes >= WFBE_C_AICOM_STUCK_ABANDON).
+						//--- Group-var idiom: 2-arg getVariable on a GROUP matches the idiom used in AI_Commander_Strategy.sqf
+						//--- (e.g. L811 _team getVariable ["wfbe_aicom_strike", false]) and in AI_Commander_AssignTowns.sqf
+						//--- (L525 _team getVariable ["wfbe_aicom_recycle", false]) for these exact vars.
+						//--- A2-OA 1.64: plain getVariable 2-arg + isNil, typeName OBJECT, numeric compare only, no Boolean ==/!=.
+						private ["_scSkip","_scRecycle","_scStrk","_scOrd","_scTgt","_scBc","_scProg"];
+						_scSkip = false;
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_COMMIT", 0]) > 0) then {
+							_scRecycle = _team getVariable ["wfbe_aicom_recycle", false];
+							_scStrk = _team getVariable ["wfbe_aicom_stuckstrikes", 0];
+							if (isNil "_scStrk") then {_scStrk = 0};
+							if (!_scRecycle && {_scStrk < (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])}) then {
+								if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
+									_scOrd = _team getVariable ["wfbe_aicom_townorder", []];
+									if (count _scOrd >= 3) then {
+										_scTgt = _scOrd select 0;
+										_scBc  = _scOrd select 2;
+										if (typeName _scTgt == "OBJECT" && {!isNull _scTgt}) then {
+											if ((_scTgt getVariable ["sideID", -1]) != _sideID) then {
+												_scProg = (_scBc distance _scTgt) - ((leader _team) distance _scTgt);
+												if (_scProg >= 150) then {_scSkip = true};
+											};
+										};
+									};
+								};
+							};
+						};
+						if (!_scSkip) then {
+							//--- B69 (hqstrike-picker-weight-vehicle-punch): rank by PUNCH score, not raw bodycount. Heavy-detect idiom matches Common_AICOMServiceTick.sqf:103 (A2-OA-safe). _bestN now carries a score; inf 2 scores 2>1 (passes), 1-man remnant scores 1 (rejected), armour/attack-heli gets +bonus and outranks infantry.
+							private ["_hasHeavy","_score"];
+							_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"}}} count (units _team);
+							_score = _alive;
+							if (_hasHeavy > 0) then {_score = _score + (missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_VEH_BONUS", 100])};
+							if (_score > _bestN) then {_bestN = _score; _best = _team};
+						};
 					};
 				};
 			};
