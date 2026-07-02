@@ -1,5 +1,10 @@
 Private ["_amount","_vehicle"];
-_vehicle = _this select 0;
+_vehicle = objNull;
+if (typeName _this == "ARRAY") then {
+	if (count _this > 0) then {_vehicle = _this select 0};
+} else {
+	if (typeName _this == "OBJECT") then {_vehicle = _this};
+};
 
 if (isNull _vehicle) exitWith {};
 waitUntil {commonInitComplete};

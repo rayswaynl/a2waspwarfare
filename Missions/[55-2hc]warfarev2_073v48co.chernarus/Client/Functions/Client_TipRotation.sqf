@@ -44,15 +44,18 @@
 	findIf / selectRandom / apply / forEachIndex - none of those exist in OA 1.64.
 */
 
-private ["_enable","_period","_initial","_tips","_gate","_flag","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
+private ["_enable","_period","_initial","_tips","_gate","_flag","_gateValue","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
 
 //--- Master toggle (default ON). Registered in Common\Init\Init_CommonConstants.sqf (cmdcon42-q).
 _enable = missionNamespace getVariable ["WFBE_C_TIPS_ENABLE", 1];
+if (typeName _enable != "SCALAR") exitWith {};
 if (_enable < 1) exitWith {};
 
 //--- Cadence + first-line delay (both real-time seconds). Defaults mirror Init_CommonConstants.
 _period  = missionNamespace getVariable ["WFBE_C_TIPS_PERIOD", 900];
 _initial = missionNamespace getVariable ["WFBE_C_TIPS_INITIAL", 420];
+if (typeName _period != "SCALAR") then {_period = 900};
+if (typeName _initial != "SCALAR") then {_initial = 420};
 if (_period < 30) then {_period = 30};       //--- floor so a mis-set param can't hammer the chat.
 if (_initial < 0) then {_initial = 0};
 
@@ -176,8 +179,15 @@ while {true} do {
 	_flag = _pair select 1;
 
 	_ok = true;
-	if (typeName _flag == "STRING" && {_flag != ""}) then {
-		if ((missionNamespace getVariable [_flag, 0]) < 1) then {_ok = false};
+	if (typeName _flag == "STRING") then {
+		if (_flag != "") then {
+			_gateValue = missionNamespace getVariable [_flag, 0];
+			if (typeName _gateValue == "SCALAR") then {
+				if (_gateValue < 1) then {_ok = false};
+			} else {
+				_ok = false;
+			};
+		};
 	};
 
 	//--- Only a gated-out tip is skipped silently; an eligible tip is posted and counts as "last".

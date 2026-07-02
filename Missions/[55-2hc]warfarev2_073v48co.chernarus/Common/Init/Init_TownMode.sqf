@@ -1,6 +1,9 @@
 Private ['_towns','_value'];
 
-waitUntil {WFBE_Parameters_Ready};
+waitUntil {
+	if (isNil "WFBE_Parameters_Ready") exitWith {false};
+	WFBE_Parameters_Ready
+};
 
 TownTemplate = [];
 switch (missionNamespace getVariable "WFBE_C_TOWNS_AMOUNT") do {
