@@ -1523,5 +1523,31 @@ WFBE_STATS_DIRTY_UIDS = [];
 	WFBE_C_SCUD_WARHEAD_SADARM = "Bo_GBU12_LGB";	//--- Top-attack precision (odd-phase warheads)
 	WFBE_C_SCUD_WARHEAD_WP    = "SmokeShellWhite";	//--- WP/incendiary smoke layer (final phase)
 
+//======================================================================================
+//--- cmdcon42-g: FACTORY WALL LADDER v2 + DEFENSES/FORTIFICATIONS MENU REDO
+//--- Both features are behind ONE flag each so Ray can revert either independently.
+//--- The LEGACY arrays stay UNTOUCHED in their files; the flag SELECTS v2 vs legacy.
+//======================================================================================
+
+//--- WALLS v2 (factory wall-material ladder). 1 = new tiered wall compositions
+//--- (barracks/light = bagfence, heavy/bank = HESCO 10x, aircraft/cmd-ctr = HQ concrete);
+//--- 0 = byte-identical legacy walls (the old WFBE_NEURODEF_<TYPE>_WALLS arrays).
+//--- REVERSIBILITY: set to 0 -> Construction_*Site.sqf select the legacy _WALLS vars and
+//--- the Bank dressing uses the legacy WFBE_NEURODEF_BANK_WEST/EAST bodies. No deletions.
+	if (isNil "WFBE_C_WALLS_V2") then {WFBE_C_WALLS_V2 = 1};
+
+//--- DEFENSES/FORTIFICATIONS MENU v2. 1 = redone data-driven lists (dead entries pruned,
+//--- recategorised, gap-fill items added: watchtower, cheaper WEST AT, hedgehog line, flak tower);
+//--- 0 = exact legacy menu (legacy WFBE_<SIDE>DEFENSENAMES + legacy Core_*.sqf price/category rows).
+//--- REVERSIBILITY: set to 0 -> Structures_CO_*.sqf register the legacy names list and
+//--- Core_*.sqf register the legacy per-class data arrays. Legacy arrays left in place, untouched.
+	if (isNil "WFBE_C_DEFMENU_V2") then {WFBE_C_DEFMENU_V2 = 1};
+
+//--- FLAK TOWER sub-flag (elevated AA static + AI gunner on a tower deck). Independent of the
+//--- menu flag so the physics-fragile roof-mount item can be pulled without reverting the menu.
+//--- Only honoured when WFBE_C_DEFMENU_V2 == 1. 1 = flak tower buyable; 0 = flak tower hidden.
+//--- NEEDS-BOX-VERIFY: roof-mount stability on Land_Fort_Watchtower_EP1 (per proposal B.5).
+	if (isNil "WFBE_C_DEF_FLAKTOWER") then {WFBE_C_DEF_FLAKTOWER = 1};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

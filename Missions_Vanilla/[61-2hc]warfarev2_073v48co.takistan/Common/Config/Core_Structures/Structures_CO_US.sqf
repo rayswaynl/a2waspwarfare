@@ -234,4 +234,29 @@ missionNamespace setVariable [Format["WFBE_%1DEFENSES_CANNON", _side], ['M119_US
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MASH", _side], ['MASH_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MORTAR", _side], ['M252_US_EP1']];
 
+//======================================================================================
+//--- cmdcon42-g: DEFENSES/FORTIFICATIONS MENU v2 (WFBE_C_DEFMENU_V2). WEST / US list.
+//--- The legacy `_n` above (lines ~161-226) is UNTOUCHED. This block mutates a COPY only
+//--- when the flag is on, then registers it. Flag=0 -> exact legacy list registered below.
+//--- Removes: dead BAF tripods (no data array -> already invisible; pruned for cleanliness),
+//---   SearchLight (permanent-daylight server), Land_Campfire (decoration).
+//--- Adds: Watchtower (buildable overwatch), Flak Tower anchor (sub-flag WFBE_C_DEF_FLAKTOWER),
+//---   Hedgehog line anchor (one-click AT obstacle). Camo-net recategorisation + WEST cheap-AT
+//---   reprice are data-only and live in Core_US.sqf (also flag-gated there).
+//======================================================================================
+if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {
+	//--- REMOVE dead / struck entries.
+	_n = _n - ["BAF_GPMG_Minitripod_W","BAF_GMG_Tripod_W","BAF_L2A1_Minitripod_W","BAF_L2A1_Tripod_W"];
+	_n = _n - ["SearchLight_US_EP1"];	//--- permanent-daylight clamp -> zero function
+	_n = _n - ["Land_Campfire"];		//--- decoration only
+	//--- ADD gap-fill buildables. Watchtower: elevated overwatch (Land_Fort_Watchtower_EP1 = WFBE_C_CAMP, IN-TREE).
+	_n = _n + ["Land_Fort_Watchtower_EP1"];
+	//--- Hedgehog line: one-click 4x Hedgehog_EP1 AT obstacle (anchor -> WFBE_NEURODEF_HEDGEHOGLINE).
+	_n = _n + ["Misc_cargo_cont_small"];
+	//--- Flak Tower (elevated AA + pooled AI gunner) — own sub-flag so it can be pulled independently.
+	if ((missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER", 1]) > 0) then {
+		_n = _n + ["Land_Ind_TankSmall"];	//--- anchor -> WFBE_NEURODEF_FLAKTOWER_WEST/EAST
+	};
+};
+
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];

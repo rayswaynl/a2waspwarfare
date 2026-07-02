@@ -65,6 +65,22 @@ for "_i" from 0 to (count _template - 1) do {
 	if (!isNil "_one") then {
 		if (typeName _one == "OBJECT") then {
 			_one setVariable ["WFBE_WDDMPositionAnchor", _placementID, true];
+			//--- cmdcon42-g: elevated children (non-zero z offset, e.g. the Flak Tower AA gun on the
+			//--- tower deck) - ConstructDefense placed the child at ground (z flattened above), so lift
+			//--- it onto the deck now via setPosATL + level it (proposal B.5 roof-mount idiom).
+			//--- Static-on-building is physics-fragile in A2 (settle/jitter) -> NEEDS-BOX-VERIFY.
+			private ["_zOff"];
+			_zOff = _relPos select 2;
+			if (_zOff > 0.1) then {
+				_worldPos set [2, _zOff];
+				_one setPosATL _worldPos;
+				_one setVectorDirAndUp [[sin _worldDir, cos _worldDir, 0], [0,0,1]];
+				if (WF_Debug) then {
+					["DEBUG (Server_ConstructPosition.sqf)", Format ["cmdcon42-g flak/elevated child [%1] lifted to deck z=%2 at %3 (anchor %4).", _cls, _zOff, _worldPos, _anchorType]] Call WFBE_CO_FNC_LogContent;
+				};
+				//--- Always-on state line so the tester can confirm the roof-mount fired on the box RPT.
+				["INFORMATION", Format ["Server_ConstructPosition.sqf: [%1] elevated child [%2] mounted on deck (z=%3) for anchor [%4].", str _side, _cls, _zOff, _anchorType]] Call WFBE_CO_FNC_LogContent;
+			};
 		};
 		_created = _created + [_one];
 	};
