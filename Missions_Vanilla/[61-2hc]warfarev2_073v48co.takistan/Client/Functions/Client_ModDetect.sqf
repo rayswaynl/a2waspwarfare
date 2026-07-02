@@ -54,26 +54,34 @@ _hasHUD    = false;
 if (_enabled != 0) then {
 
 	//--- SOUND: JSRS 1.5 (LordJarhead). Root patch class "JSRS".
-	if (["JSRS"] call _isLoaded) then {
+	//--- JSRS 1.5 has NO monolithic root patch; it ships per-item classes (JSRS_<item>) after the
+	//--- confirmed JSRS_*_c.pbo files (Armaholic id 11549). OR several near-always-present ones. Bare
+	//--- "JSRS" kept last as a best-effort fallback only (unconfirmed as a real class on A2).
+	if (["JSRS_Movement","JSRS_Abrams","JSRS_M134","JSRS_UH1","JSRS_T72","JSRS"] call _isLoaded) then {
 		_detected set [count _detected, "JSRS"];
 		_hasSound = true;
 	};
 
-	//--- VISUAL FX: Blastcore / WarFX (Opticalsnare). Root patch historically "WarFXPE"; aliases OR'd.
-	if (["WarFXPE","blastcore","Blastcore_Visuals"] call _isLoaded) then {
+	//--- VISUAL FX: Blastcore / WarFX (Opticalsnare). Confirmed patches: WarFXPE (primary) + WarFXVeh +
+	//--- WarFXWeps (Armaholic id 12975 / WarFXPE config.cpp). "blastcore"/"Blastcore_Visuals" are folder
+	//--- names, NOT config classes -> dropped.
+	if (["WarFXPE","WarFXVeh","WarFXWeps"] call _isLoaded) then {
 		_detected set [count _detected, "Blastcore"];
 		_hasFX = true;
 	};
 
-	//--- VISUAL FX: JTD FireAndSmoke (JTD team). Root patch "JTD_FireAndSmoke".
+	//--- VISUAL FX: JTD FireAndSmoke (JTD team). Single patch "JTD_FireAndSmoke" (bare "JTD" is the
+	//--- signature tag, not the config class).
 	if (["JTD_FireAndSmoke"] call _isLoaded) then {
 		_detected set [count _detected, "JTD FireAndSmoke"];
 		_hasFX = true;
 	};
 
-	//--- HUD/UI: ShackTac Fireteam HUD (STHUD). Root patch "sthud" (CBA-dependent).
-	if (["sthud","STHUD"] call _isLoaded) then {
-		_detected set [count _detected, "STHUD"];
+	//--- HUD/UI: ShackTac Fireteam HUD. On A2/OA the HUD patch is "fthud" (+ "stgi" group indicators);
+	//--- the A2 build ships fthud.pbo/stgi.pbo, NOT sthud.pbo (Armaholic id 9936). "sthud"/"STHUD" are
+	//--- the A3 names -> kept only as best-effort fallback for A3-style repacks.
+	if (["fthud","stgi","sthud","STHUD"] call _isLoaded) then {
+		_detected set [count _detected, "ShackTac HUD"];
 		_hasHUD = true;
 	};
 };
