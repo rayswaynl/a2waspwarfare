@@ -1,4 +1,4 @@
-private["_capacity", "_clear", "_firstDelay", "_maxPerCycle", "_scanCentre", "_scanRadius",
+private["_capacity", "_clear", "_firstDelay", "_mapHalf", "_mapSize", "_maxPerCycle", "_scanCentre", "_scanRadius",
         "_perfActive", "_perfDeleted", "_perfItemStart", "_perfMines", "_perfScanned",
         "_perfStart", "_perfWeaponholders", "_scanItems", "_timer", "_perfExtra"];
 
@@ -30,9 +30,16 @@ if (_firstDelay < 1) then {_firstDelay = 90};
 _maxPerCycle = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_MAX_PER_CYCLE", 150];
 if (_maxPerCycle < 1) then {_maxPerCycle = 150};
 
-//--- Whole-island scan anchor + radius (weaponholders only; ~20km covers the map).
+//--- Whole-island scan anchor + radius (weaponholders only; ~20km covers the legacy Chernarus map).
 _scanCentre = [7000, 7500, 0];
 _scanRadius = 20000;
+if ((missionNamespace getVariable ["WFBE_C_CLEANER_MAP_AWARE_ORIGINS", 0]) > 0) then {
+	_mapSize = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
+	if (_mapSize < 1) then {_mapSize = 15360};
+	_mapHalf = _mapSize / 2;
+	_scanCentre = [_mapHalf, _mapHalf, 0];
+	_scanRadius = _mapSize * 0.72;
+};
 
 //--- For one class, return every matching object within the full-island radius of the centre.
 _scanItems = {
