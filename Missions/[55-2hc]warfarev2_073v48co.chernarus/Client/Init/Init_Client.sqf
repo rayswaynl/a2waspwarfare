@@ -1573,4 +1573,13 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- detects JIP from mission time. Spawned (never blocks input/enrollment), placed after init completes.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Common_Onboarding.sqf";
 
+//--- Rotating gameplay-tip feed (cmdcon42-q, claude-gaming 2026-07-02). Ray: "add 50 more hints
+//--- that come by on rotation in the chat". Pure client cosmetic: posts one short tip via
+//--- systemChat every WFBE_C_TIPS_PERIOD seconds from a 50-tip pool; each feature-tip is gated on
+//--- its own feature flag so it auto-hides when Ray shelves the feature (or the feature's PR is
+//--- unmerged). Self-gates on WFBE_C_TIPS_ENABLE (default 1) and uiSleep's WFBE_C_TIPS_INITIAL
+//--- first so a fresh joiner isn't spammed over the onboarding cards. Spawned (never blocks input),
+//--- placed after init completes - same guarded-spawn pattern as the onboarding call above.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_TipRotation.sqf";
+
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
