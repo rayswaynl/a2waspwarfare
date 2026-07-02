@@ -887,6 +887,9 @@ with missionNamespace do {
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL")           then {WFBE_C_VICTORY_TERRITORIAL = 1};           //--- Ray: hold >= FRAC of all towns for MINS unbroken -> win (announced start/milestones/broken; existing win path).
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_FRAC")      then {WFBE_C_VICTORY_TERRITORIAL_FRAC = 0.8};    //--- town share required to run the clock.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_MINS")      then {WFBE_C_VICTORY_TERRITORIAL_MINS = 30};     //--- unbroken minutes at/above FRAC to win.
+	if (isNil "WFBE_C_VICTORY_PROGRESS_ANNOUNCE")     then {WFBE_C_VICTORY_PROGRESS_ANNOUNCE = 0};     //--- Lane 175: default-off chat standings when a side nears the territorial lock.
+	if (isNil "WFBE_C_VICTORY_PROGRESS_FRAC")         then {WFBE_C_VICTORY_PROGRESS_FRAC = 0.7};       //--- town share that starts the progress pulse before the lock clock.
+	if (isNil "WFBE_C_VICTORY_PROGRESS_INTERVAL")     then {WFBE_C_VICTORY_PROGRESS_INTERVAL = 300};   //--- seconds between progress pulses while a side remains near the lock.
 	if (isNil "WFBE_C_AICOM_EASA_AI")                 then {WFBE_C_AICOM_EASA_AI = 1};                 //--- AICOM air hulls get EASA kits at founding - ONLY when WFBE_UP_EASA is genuinely researched (>=1, no shortcuts).
 	if (isNil "WFBE_C_AICOM_RICH_GEAR")               then {WFBE_C_AICOM_RICH_GEAR = 1};               //--- AI squads draw richer gear per the ACTUAL researched WFBE_UP_GEAR level (ammo-safe magazine deltas only).
 	if (isNil "WFBE_C_AICOM_RICH_GEAR_MIN_TIER")      then {WFBE_C_AICOM_RICH_GEAR_MIN_TIER = 2};      //--- below this researched gear tier the pass does nothing (+1 virtual tier while econ-surge, capped 5).

@@ -38,6 +38,37 @@ while {!gameOver} do {
 		missionNamespace setVariable ["WFBE_ENDGAME_FORCE_MULT", 1];
 	};
 
+	if ( !WFBE_GameOver && ((missionNamespace getVariable ["WFBE_C_VICTORY_PROGRESS_ANNOUNCE", 0]) > 0) && (_total > 0) ) then {
+		private ["_progressNext","_progressInterval","_progressFrac","_progressNeed","_progressSides","_progressText","_progressHit","_progressSide","_progressHeld","_progressPct","_progressMsg","_progressMins"];
+		_progressNext = missionNamespace getVariable ["WFBE_VICTORY_PROGRESS_NEXT", 0];
+		if (time >= _progressNext) then {
+			_progressInterval = missionNamespace getVariable ["WFBE_C_VICTORY_PROGRESS_INTERVAL", 300];
+			missionNamespace setVariable ["WFBE_VICTORY_PROGRESS_NEXT", time + _progressInterval];
+			_progressFrac = missionNamespace getVariable ["WFBE_C_VICTORY_PROGRESS_FRAC", 0.7];
+			_progressNeed = ceil (_progressFrac * _total);
+			_progressMins = missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL_MINS", 30];
+			_progressSides = WFBE_PRESENTSIDES - [WFBE_DEFENDER];
+			_progressText = "";
+			_progressHit = false;
+			{
+				_progressSide = _x;
+				_progressHeld = (_progressSide) Call GetTownsHeld;
+				_progressPct = round ((_progressHeld * 100) / _total);
+				if (_progressHeld >= _progressNeed) then {_progressHit = true};
+				if (_progressText in [""]) then {
+					_progressText = Format ["%1 %2/%3 towns (%4 pct)", str _progressSide, _progressHeld, _total, _progressPct];
+				} else {
+					_progressText = _progressText + Format [" | %1 %2/%3 towns (%4 pct)", str _progressSide, _progressHeld, _total, _progressPct];
+				};
+			} forEach _progressSides;
+			if (_progressHit) then {
+				_progressMsg = Format ["Victory progress: %1. Territorial lock threshold: %2 towns for %3 minutes.", _progressText, _progressNeed, _progressMins];
+				{[_x, "DashboardAnnounce", [_progressMsg]] Call WFBE_CO_FNC_SendToClients} forEach _progressSides;
+				diag_log ("AICOMSTAT|v1|EVENT|ALL|" + str (round (time / 60)) + "|VICTORY_PROGRESS|threshold" + str _progressNeed + "/" + str _total + "|standings=" + _progressText);
+			};
+		};
+	};
+
 	//--- TERRITORIAL VICTORY (Ray, cmdcon41-w3b): a side that holds >= FRAC of all towns for MINS
 	//--- unbroken WINS. This is a NEW win MODE (explicitly requested by Ray for build84), flag-gated
 	//--- so it can be dialled off without a code change. It does NOT touch the supremacy/HQ-loss
