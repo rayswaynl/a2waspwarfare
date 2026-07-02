@@ -13,6 +13,7 @@ if (isNil "_blinks") then {
 };
 
 if (isNull _unit) exitWith {_unit setVariable ["LFTB", false, false]; };
+if (isNil "_marker" || {typeName _marker != "STRING"} || {_marker == ""}) exitWith {_unit setVariable ["LFTB", false, false]; };
 
 if (_flashRed) then {
     _marker setMarkerColorLocal "ColorRed";    

@@ -7,7 +7,9 @@ _dir = _this select 3;
 
 _structures = missionNamespace getVariable Format ['WFBE_%1STRUCTURES',str _side];
 _structuresNames = missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',str _side];
-_rlType = _structures select (_structuresNames find _structureType);
+_index = _structuresNames find _structureType;
+if (_index < 0) exitWith {}; //--- WAVE-3 (60-audit): unknown/forged structure type -> find returns -1 and `select -1` yields nil/garbage; ignore the malformed request instead. Legit types are always in the names list, so no effect on normal builds.
+_rlType = _structures select _index;
 
 if (WF_Debug) then {["DEBUG (RequestStructure.sqf)", Format ["Building: %1", _rlType]] Call WFBE_CO_FNC_LogContent};
 

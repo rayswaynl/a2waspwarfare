@@ -41,7 +41,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[1000,0]], //--- Airlift
 	[[4500,0]], //--- Custom Flares
 	[[800,0],[1400,0],[2200,0],[3700,0],[6100,0],[10000,0]], //--- Artillery Time
-	[[49500,80000]], //--- ICBM
+	[[18000,10000],[49500,80000]], //--- ICBM (SCUD): L1 platform, L2 nuke //--- cmdcon41-w3h
 	[[12000,0]], //--- Fast Travel
 	[[250,0],[650,0],[1200,0],[2100,0],[2400,0]], //--- Gear
 	[[750,0]], //--- Build Ammo
@@ -54,7 +54,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[5000,0],[12500,0]], //--- Anti Air Radar
 	[[25000,0],[50000,0]], //--- Unit cost modifier
 	[[3500,0],[6500,0]], //--- Counter Battery Radar
-	[[150,0],[600,0],[1200,0],[2000,0]] //--- Patrols
+	[[350,0],[1400,0],[2800,0],[5000,0]] //--- Patrols //--- cmdcon41-w3e
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
@@ -69,7 +69,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
 	1, //--- Airlift
 	1, //--- Custom Flares
 	6, //--- Artillery Time
-	1, //--- ICBM
+	2, //--- ICBM (SCUD) //--- cmdcon41-w3h
 	1, //--- Fast Travel
 	5, //--- Gear
 	1, //--- Build Ammo
@@ -101,7 +101,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 	[[WFBE_UP_AIR,1]], //--- Airlift
 	[[WFBE_UP_AIR,2]], //--- Custom Flares
     [[],[],[],[],[],[]], //--- Artillery Time
-	[[WFBE_UP_AIR,5]], //--- ICBM
+	[[WFBE_UP_AIR,5],[WFBE_UP_AIR,5]], //--- ICBM (SCUD): per-level dep //--- cmdcon41-w3h
 	[
 		[[WFBE_UP_LIGHT,3],[WFBE_UP_SUPPLYRATE,1]]
 	], //--- Fast Travel
@@ -133,7 +133,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	[30], //--- Airlift
 	[100], //--- Custom Flares
 	[40, 70, 100, 130, 160, 190], //--- Artillery Time
-	[300], //--- ICBM
+	[180,300], //--- ICBM (SCUD) //--- cmdcon41-w3h
 	[60], //--- Fast Travel
 	[25,50,75,100,125], //--- Gear
 	[40], //--- Build Ammo
@@ -146,7 +146,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	[50,125], //--- Anti Air Radar
 	[120,200], //--- Unit cost modifier
 	[60, 90], //--- Counter Battery Radar
-	[90,150,240,240] //--- Patrols
+	[120,180,240,300] //--- Patrols //--- cmdcon41-w3e
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.
