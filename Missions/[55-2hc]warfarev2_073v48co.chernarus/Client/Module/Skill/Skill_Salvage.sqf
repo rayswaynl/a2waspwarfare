@@ -47,4 +47,10 @@ _overAllCost = 0;
 	};
 } foreach _wrecks;
 
-if (_overAllCost > 0) then {(_overAllCost) Call ChangePlayerfunds};
+if (_overAllCost > 0) then {
+	if ((missionNamespace getVariable ["WFBE_C_FIX_SALVAGE_PAYOUT_CASE", 0]) > 0) then {
+		(_overAllCost) Call ChangePlayerFunds;
+	} else {
+		(_overAllCost) Call ChangePlayerfunds;
+	};
+};

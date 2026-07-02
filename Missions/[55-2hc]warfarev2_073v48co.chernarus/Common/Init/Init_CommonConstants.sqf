@@ -1174,6 +1174,7 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_UNITS_REPAIR_TRUCK_RANGE = 40;
 	WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE = 60;
 	WFBE_C_UNITS_SALVAGER_SCAVENGE_RATIO = 60; //--- Salvager Sell %.
+	WFBE_C_FIX_SALVAGE_PAYOUT_CASE = 0; //--- 1 uses the compiled ChangePlayerFunds helper spelling for salvage payouts.
 	WFBE_C_UNITS_SKILL_DEFAULT = 1;
 	WFBE_C_UNITS_SUPPORT_RANGE = 70; //--- Action range for repair/rearm/refuel.
 	WFBE_C_UNITS_SUPPORT_HEAL_PRICE = 125;
