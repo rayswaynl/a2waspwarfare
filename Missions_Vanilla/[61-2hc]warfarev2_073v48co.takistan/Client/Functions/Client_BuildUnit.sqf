@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit"];
+Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -326,6 +326,21 @@ if (_isMan) then {
 	//--- _unit use (createVehicle, isKindOf "Air" pilot-crew + CM/AA blocks) sees the real hull.
 	_ah6xM134Kit = (_unit == "AH6X_M134");
 	if (_ah6xM134Kit) then {_unit = "AH6X_EP1"};
+
+	//--- cmdcon42-i: TK-EASA variant tokens (e.g. "TKV_AH64D_HELLFIRE") are SYNTHETIC buy keys, NOT CfgVehicles
+	//--- classes, so createVehicle on the token would return objNull. Resolve the catalog row (self-gates on
+	//--- worldName + WFBE_C_TK_EASA_ROSTER -> [] on Chernarus), capture the kit, then remap _unit to the real base
+	//--- hull BEFORE createVehicle so every downstream _unit use (createVehicle, isKindOf "Air" crew/CM blocks)
+	//--- sees the real hull. Mirrors the AH6X_M134 precedent (Core_US.sqf synthetic token, PR #151).
+	//--- Cheap prefix guard: TK-EASA synthetic tokens are the only classes prefixed "TKV_", so a normal purchase
+	//--- (real hull, any map) skips the catalog lookup entirely (no compile, no forEach) - the catalog is only
+	//--- consulted for an actual variant buy, which only exists on Takistan with the flag on.
+	_tkEasaKit = [];
+	if ((_unit find "TKV_") == 0) then {
+		{
+			if ((_x select 0) == _unit) exitWith { _tkeRow = _x; _unit = _x select 1; _tkEasaKit = _x select 7; };
+		} forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
+	};
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
 	clientTeam reveal _vehicle;
 
@@ -344,6 +359,21 @@ if (_isMan) then {
 		_vehicle addWeapon "TwinM134";
 		_vehicle addMagazine "4000Rnd_762x51_M134";
 		["INFORMATION", Format ["Client_BuildUnit.sqf: AH-6X (M134) armed with TwinM134 + 4000Rnd_762x51_M134 [%1].", typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+	};
+
+	//--- cmdcon42-i: arm the freshly-created base hull with the variant's EASA-proven weapon+magazine kit.
+	//--- All four TK-EASA base hulls (AH64D_EP1 / A10_US_EP1 / Mi24_D_TK_EP1 / Su25_TK_EP1) mount at HULL level
+	//--- (none is in EASA_Equip's turret-special list), so plain addWeapon/addMagazine is correct - same path,
+	//--- machine and timing as the AH6X_M134 kit. Idempotent remove-then-add so a re-buy / JIP re-run cannot
+	//--- stack duplicate mags. Runs on the buyer's client on the local hull; WFBE_CO_FNC_CreateVehicle globalises
+	//--- the hull (setVehicleInit) right after creation, so the weapon state replicates. Kit classnames are reused
+	//--- verbatim from Client\Module\EASA\EASA_Init.sqf for the same base hull (all config-proven on that airframe).
+	if ((count _tkEasaKit) == 2 && {!isNull _vehicle}) then {
+		{ _vehicle removeMagazine _x } forEach (_tkEasaKit select 1);
+		{ _vehicle removeWeapon _x }   forEach (_tkEasaKit select 0);
+		{ _vehicle addWeapon _x }      forEach (_tkEasaKit select 0);
+		{ _vehicle addMagazine _x }    forEach (_tkEasaKit select 1);
+		["INFORMATION", Format ["Client_BuildUnit.sqf: TK-EASA variant '%1' armed on %2 (weapons %3).", (_tkeRow select 0), typeOf _vehicle, (_tkEasaKit select 0)]] Call WFBE_CO_FNC_LogContent;
 	};
 
 	_vehicles = (WF_Logic getVariable "emptyVehicles") + [_vehicle];

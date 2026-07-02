@@ -101,6 +101,13 @@ _u = _u		+ ['An2_TK_EP1'];
 // _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
 _u = _u		+ ['Su25_TK_EP1'];
 
+//--- cmdcon42-i: append TAKISTAN-only EASA-loadout air variant tokens to the TKA Aircraft-Factory list
+//--- (non-airfield-exclusive rows only; the top-tier row is added to the per-airfield roster in Init_Common).
+//--- Catalog self-gates on worldName + WFBE_C_TK_EASA_ROSTER (returns [] when the flag is off). AI never
+//--- founds these (no squad template lists them; the founding/produce paths only use this list for a
+//--- factory-membership lookup on classes already in a template).
+{ if (((_x select 2) == "TKA") && {!(_x select 6)}) then {_u = _u + [_x select 0]}; } forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
+
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 

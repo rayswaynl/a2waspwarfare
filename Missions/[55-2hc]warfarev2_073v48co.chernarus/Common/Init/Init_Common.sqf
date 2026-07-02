@@ -423,10 +423,26 @@ if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
 
 	//--- Per-airfield specials: units added ONLY at the named airfield.
 	//--- Chernarus: L-39C is exclusive to Balota (closest prestige-aviation context).
-	//--- Takistan: no per-airfield specials defined (no clean equivalent for L-39C there).
-	WFBE_AIRFIELD_UNITS_SPECIAL = [
-		["Balota", ["L39_TK_EP1"]]
-	];
+	//--- Takistan (cmdcon42-i): the two REAL TK airfields Rasman + Loy Manara (exact town names from the
+	//---   Takistan mission.sqm) gain the TOP-tier (level-5, airfield-exclusive) TK-EASA air variant rows,
+	//---   so owning a TK airfield finally unlocks the heaviest warloads (audit item #4). Cross-faction
+	//---   listing is intentional (same soft-faction-walls precedent as Su25_Ins/L159_ACR above): the
+	//---   airfield capture IS the unlock, and the buy pipeline resolves each token's own faction tuple.
+	//---   The exclusive rows are collected from the catalog (isAirfieldExclusive flag), which self-gates on
+	//---   worldName + WFBE_C_TK_EASA_ROSTER -> [] when the flag is off, leaving the TK airfields plain.
+	WFBE_AIRFIELD_UNITS_SPECIAL = if (IS_chernarus_map_dependent) then {
+		[
+			["Balota", ["L39_TK_EP1"]]
+		]
+	} else {
+		private ["_tkeExclusive"];
+		_tkeExclusive = [];
+		{ if (_x select 6) then {_tkeExclusive = _tkeExclusive + [_x select 0]}; } forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
+		[
+			["Rasman",      _tkeExclusive],
+			["Loy Manara",  _tkeExclusive]
+		]
+	};
 };
 
 //--- Data-driven special-unit info popups.
