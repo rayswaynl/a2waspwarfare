@@ -148,18 +148,129 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 };
 
 //------------------------------------------------------------------------------------
+//--- cmdcon42-j (Ray 2026-07-02) PRODUCIBLE SCUD (Takistan): bought SCUDs are side launch PLATFORMS. Registered
+//--- server-side into a side-keyed missionNamespace array (WFBE_TK_SCUD_PLATFORMS_<side>) at purchase (client sends
+//--- "tk-scud-register"). Platforms are pruned lazily (dead/deleted refs dropped) wherever the array is read. A bought
+//--- SCUD is a CONVENTIONAL platform only — it can NEVER nuke (NUKE stays research-TEL-only, gated in the fire path).
+//------------------------------------------------------------------------------------
+
+//--- Return the compacted (alive-only) bought-SCUD platform list for a side; also writes the compacted list back.
+WFBE_SE_FNC_TkScudPlatforms = {
+	private ["_side","_key","_arr","_live","_x"];
+	_side = _this select 0;
+	if !(_side in [west, east, resistance]) exitWith {[]};
+	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
+	_arr = missionNamespace getVariable [_key, []];
+	if (typeName _arr != "ARRAY") then {_arr = []};
+	_live = [];
+	{ if (!isNull _x && {alive _x}) then {_live set [count _live, _x]} } forEach _arr;
+	//--- write back only if it shrank (avoid needless broadcasts).
+	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live, true] };
+	_live
+};
+
+//--- Register a freshly-bought SCUD as a side platform. Enforces the per-side live cap (WFBE_C_TK_SCUD_HF_MAX):
+//--- at/over cap the vehicle is DELETED and the buyer refunded, and the caller is told (refused-at-cap message).
+//--- Returns true if registered, false if refused. Server-authoritative.
+WFBE_SE_FNC_TkScudRegister = {
+	private ["_veh","_side","_team","_paid","_key","_live","_max","_arr","_refund"];
+	_veh  = _this select 0;
+	_side = _this select 1;
+	_team = if (count _this > 2) then {_this select 2} else {grpNull};
+	_paid = if (count _this > 3) then {_this select 3} else {-1};   //--- actual price paid (for an exact over-cap refund); <0 => fall back to the flag cost.
+	if (isNull _veh) exitWith {false};
+	if !(_side in [west, east, resistance]) exitWith {false};
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) <= 0) exitWith {false};
+	if (worldName != "Takistan") exitWith {false};
+	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
+	_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;   //--- compacted current list.
+	//--- already registered? (idempotent — a double send must not double-count).
+	if (_veh in _live) exitWith {true};
+	_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+	if (count _live >= _max) exitWith {
+		//--- refuse: destroy the surplus purchase + refund the buying team the EXACT amount paid (flag cost fallback), tell the side.
+		_refund = if (_paid >= 0) then {_paid} else {missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]};
+		if (!isNull _team) then { [_team, _refund] Call WFBE_CO_FNC_ChangeTeamFunds };
+		deleteVehicle _veh;
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["SCUD refused: your side already fields %1 SCUD launchers (max %2). Refunded.", count _live, _max]]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REFUSED at cap (%2/%3) - deleted + refunded.", str _side, count _live, _max]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|SCUDBUY-REFUSE-CAP|%1|live=%2|max=%3", str _side, count _live, _max]);
+		false
+	};
+	//--- register: tag the hull (side + platform marker + no-respawn), append to the side array, broadcast.
+	_veh setVariable ["wfbe_tk_scud_side", _side, true];
+	_veh setVariable ["wfbe_is_tk_scud", true, true];
+	_arr = _live + [_veh];
+	missionNamespace setVariable [_key, _arr, true];
+	//--- KILLED EH: drop from the registry on death. NO respawn (it's a purchase). Server-side (hull is a shared object).
+	_veh addEventHandler ["Killed", {
+		private ["_dead","_dSide","_dKey","_dArr","_dLive","_x"];
+		_dead = _this select 0;
+		_dSide = _dead getVariable ["wfbe_tk_scud_side", sideUnknown];
+		if !(_dSide in [west, east, resistance]) exitWith {};
+		_dKey = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _dSide];
+		_dArr = missionNamespace getVariable [_dKey, []];
+		if (typeName _dArr != "ARRAY") then {_dArr = []};
+		_dLive = [];
+		{ if (!isNull _x && {alive _x} && {_x != _dead}) then {_dLive set [count _dLive, _x]} } forEach _dArr;
+		missionNamespace setVariable [_dKey, _dLive, true];
+		diag_log (Format ["ICBMTEL|v1|SCUD-DESTROYED|%1|remaining=%2 (no respawn)", str _dSide, count _dLive]);
+	}];
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REGISTERED as platform (%2/%3 live).", str _side, count _arr, _max]] Call WFBE_CO_FNC_LogContent;
+	diag_log (Format ["ICBMTEL|v1|SCUDBUY|%1|live=%2|max=%3", str _side, count _arr, _max]);
+	true
+};
+
+//--- Return ALL alive conventional launch platforms for a side = the research TEL (if alive) + every alive bought SCUD.
+//--- Used by the fire path (nearest-to-target selection) and the menu-enable gate (side has ANY platform).
+WFBE_SE_FNC_TkScudAllPlatforms = {
+	private ["_side","_out","_tel"];
+	_side = _this select 0;
+	if !(_side in [west, east, resistance]) exitWith {[]};
+	_out = [];
+	_tel = missionNamespace getVariable [Format ["WFBE_ICBM_TEL_%1", str _side], objNull];
+	if (!isNull _tel && {alive _tel}) then {_out set [count _out, _tel]};
+	{ _out set [count _out, _x] } forEach ([_side] Call WFBE_SE_FNC_TkScudPlatforms);
+	_out
+};
+
+//--- Pick the alive platform NEAREST to a target position (research TEL or bought SCUD). objNull if none.
+WFBE_SE_FNC_TkScudNearestPlatform = {
+	private ["_side","_tgtPos","_plats","_best","_bestD","_ref","_x","_d"];
+	_side   = _this select 0;
+	_tgtPos = _this select 1;
+	_plats  = [_side] Call WFBE_SE_FNC_TkScudAllPlatforms;
+	_best  = objNull;
+	_bestD = 999999999;
+	_ref = [_tgtPos select 0, _tgtPos select 1, 0];
+	{
+		_d = (getPosATL _x) distance _ref;
+		if (_d < _bestD) then {_bestD = _d; _best = _x};
+	} forEach _plats;
+	_best
+};
+
+//------------------------------------------------------------------------------------
 //--- FIRE: routed here from GUI_Menu_Tactical (via Server_HandleSpecial case "icbm-tel-fire").
-//--- Payload: [_side, _target(pos/obj), _munition(STRING), _playerTeam, _fee(SCALAR)].
-//--- Server re-validates TEL alive + shared cooldown + range (non-NUKE) + funds, then executes.
+//--- Payload: [_side, _target(pos/obj), _munition(STRING), _playerTeam, _fee(SCALAR), _platformHint(OBJECT|objNull)].
+//--- Server re-validates TEL alive + cooldown + range (non-NUKE) + funds, then executes.
+//--- cmdcon42-j (Ray 2026-07-02): for CONVENTIONAL munitions the launch platform is the NEAREST ALIVE side platform
+//--- (research TEL OR bought SCUD) to the target; range is measured from THAT platform; per-platform cooldown. NUKE is
+//--- research-TEL-only (a bought SCUD can never nuke) and keeps the side-shared cooldown/countdown/counterplay unchanged.
 //------------------------------------------------------------------------------------
 WFBE_SE_FNC_IcbmTelFire = {
-	private ["_side","_target","_muni","_playerTeam","_fee","_sideText","_telKey","_tel","_now","_cdKey","_last","_cool",
-	         "_tgtPos","_range","_dist","_cost","_funds"];
-	_side       = _this select 0;
-	_target     = _this select 1;
-	_muni       = _this select 2;
-	_playerTeam = _this select 3;
-	_fee        = if (count _this > 4) then {_this select 4} else {0};
+	private ["_side","_target","_muni","_playerTeam","_fee","_platformHint","_sideText","_telKey","_tel","_now","_cdKey","_last","_cool",
+	         "_tgtPos","_range","_dist","_cost","_funds","_platform"];
+	_side         = _this select 0;
+	_target       = _this select 1;
+	_muni         = _this select 2;
+	_playerTeam   = _this select 3;
+	_fee          = if (count _this > 4) then {_this select 4} else {0};
+	//--- cmdcon42-j (Ray 2026-07-02): OPTIONAL platform hint (the specific bought SCUD whose vehicle-action fired). The
+	//--- server IGNORES it for NUKE and only HONOURS it for conventional munitions if it is an alive side platform; otherwise
+	//--- (or when nil) the nearest-to-target platform is chosen. Never trusted blindly — always re-validated below.
+	_platformHint = if (count _this > 5) then {_this select 5} else {objNull};
+	if (typeName _platformHint != "OBJECT") then {_platformHint = objNull};
 
 	if !(_side in [west, east, resistance]) exitWith {};
 	_sideText = str _side;
@@ -168,28 +279,13 @@ WFBE_SE_FNC_IcbmTelFire = {
 	//--- + guaranteed nearest-enemy-structure kill). All conventional (level >= 1, like SATURATION/RECON), shared cooldown/range/funds.
 	if !(_muni in ["NUKE","SATURATION","RECON","FASCAM","STEELRAIN","BUSTER"]) then {_muni = "NUKE"};
 
-	//--- cmdcon41 TWO-LEVEL "SCUD" UPGRADE GATE (Ray 2026-07-02): the ICBM upgrade (WFBE_UP_ICBM) is being restructured
-	//--- into a 2-level tech renamed "SCUD" (a PARALLEL lane owns Core_Upgrades/* + display name — NOT touched here):
-	//---   level >= 1 ("SCUD" platform) : TEL exists + conventional munitions (SATURATION, RECON).
-	//---   level >= 2 ("ICBM")          : the NUKE munition (classic ICBM warhead + countdown/counterplay).
-	//--- Server-authoritative read of THIS side's current level. NUKE requires >= 2; SAT/RECON require >= 1 (the TEL
-	//--- only spawns at >= 1 anyway, but we gate explicitly so a stale ref can't slip a sub-level fire through).
+	//--- Read THIS side's SCUD/ICBM research level up front (used by the level gate below).
 	private ["_telLevel"];
 	_telLevel = 0;
 	if (!isNil "WFBE_UP_ICBM") then {
 		private ["_upg"];
 		_upg = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 		if (typeName _upg == "ARRAY" && {WFBE_UP_ICBM < count _upg}) then {_telLevel = _upg select WFBE_UP_ICBM};
-	};
-	if (_muni == "NUKE" && {_telLevel < 2}) exitWith {
-		[_side, "HandleSpecial", ["icbm-tel-msg", "The NUKE needs the ICBM tech (SCUD level 2). Research it to arm the nuclear warhead."]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] NUKE REFUSED — SCUD level %2 < 2.", _sideText, _telLevel]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=NUKE|level=%2", _sideText, _telLevel]);
-	};
-	if (_muni != "NUKE" && {_telLevel < 1}) exitWith {
-		[_side, "HandleSpecial", ["icbm-tel-msg", "That munition needs the SCUD platform (level 1)."]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] %2 REFUSED — SCUD level %3 < 1.", _sideText, _muni, _telLevel]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=%2|level=%3", _sideText, _muni, _telLevel]);
 	};
 
 	//--- Resolve target position (accept an OBJECT or a position array).
@@ -199,36 +295,92 @@ WFBE_SE_FNC_IcbmTelFire = {
 		["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — bad target.", _sideText]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	//--- TEL alive?
+	//--- PLATFORM SELECTION (cmdcon42-j) — done BEFORE the level gate so a bought SCUD can WAIVE the conventional research
+	//--- requirement (the 28000 purchase IS the unlock). NUKE still uses the research TEL only.
+	//---   NUKE       : research TEL ONLY (a bought SCUD can never nuke). Uses the classic WFBE_ICBM_TEL_<side> ref.
+	//---   CONVENTIONAL: the NEAREST alive side platform (research TEL OR bought SCUD) to the target — UNLESS a valid hint
+	//---                 (an alive side platform) was passed by the SCUD vehicle-action, in which case that specific hull
+	//---                 fires. Range is measured FROM THE CHOSEN PLATFORM (drive closer to reach further).
 	_telKey = Format ["WFBE_ICBM_TEL_%1", _sideText];
-	_tel = missionNamespace getVariable [_telKey, objNull];
-	if (isNull _tel || {!alive _tel}) exitWith {
-		//--- REFUSE + ensure a replacement is scheduled (in case the killed-EH respawn was missed).
-		[_side, "HandleSpecial", ["icbm-tel-msg", "ICBM refused: your TEL is destroyed. A replacement is inbound."]] Call WFBE_CO_FNC_SendToClients;
-		if (isNull _tel) then { [_side] spawn { sleep (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600]); if (!WFBE_GameOver) then {[_this select 0] Call WFBE_SE_FNC_SpawnIcbmTel} } };
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL fire REFUSED — TEL dead/absent (munition %2).", _sideText, _muni]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["ICBMTEL|v1|REFUSE-NOTEL|%1|muni=%2", _sideText, _muni]);
+	_tel = missionNamespace getVariable [_telKey, objNull];   //--- the research TEL (may be null/dead for a SCUD-only side).
+	if (_muni == "NUKE") then {
+		_platform = _tel;
+	} else {
+		//--- honour a valid hint (alive + registered platform for THIS side), else nearest-to-target.
+		private ["_allPlats"];
+		_allPlats = [_side] Call WFBE_SE_FNC_TkScudAllPlatforms;
+		if (!isNull _platformHint && {alive _platformHint} && {_platformHint in _allPlats}) then {
+			_platform = _platformHint;
+		} else {
+			_platform = [_side, _tgtPos] Call WFBE_SE_FNC_TkScudNearestPlatform;
+		};
+	};
+
+	//--- TWO-LEVEL "SCUD" UPGRADE GATE (cmdcon41). NUKE requires research level >= 2 (research TEL only). CONVENTIONAL
+	//--- normally requires research level >= 1 — BUT a bought SCUD launch platform WAIVES that (a purchased SCUD can fire
+	//--- conventional munitions with no research). Server-authoritative; the NUKE gate is never waivable.
+	private ["_isBoughtScud"];
+	_isBoughtScud = (!isNull _platform && {_platform getVariable ["wfbe_is_tk_scud", false]});
+	if (_muni == "NUKE" && {_telLevel < 2}) exitWith {
+		[_side, "HandleSpecial", ["icbm-tel-msg", "The NUKE needs the ICBM tech (SCUD level 2). Research it to arm the nuclear warhead."]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] NUKE REFUSED — SCUD level %2 < 2.", _sideText, _telLevel]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=NUKE|level=%2", _sideText, _telLevel]);
+	};
+	if (_muni != "NUKE" && {_telLevel < 1} && {!_isBoughtScud}) exitWith {
+		[_side, "HandleSpecial", ["icbm-tel-msg", "That munition needs the SCUD platform (research level 1) or a bought SCUD launcher."]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] %2 REFUSED — SCUD level %3 < 1 and no bought SCUD.", _sideText, _muni, _telLevel]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-LEVEL|%1|muni=%2|level=%3", _sideText, _muni, _telLevel]);
+	};
+
+	if (isNull _platform || {!alive _platform}) exitWith {
+		//--- No launch platform. NUKE: refuse + ensure a research-TEL replacement is scheduled. Conventional: no platform at all.
+		if (_muni == "NUKE") then {
+			[_side, "HandleSpecial", ["icbm-tel-msg", "ICBM refused: your TEL is destroyed. A replacement is inbound."]] Call WFBE_CO_FNC_SendToClients;
+			if (isNull _tel) then { [_side] spawn { sleep (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600]); if (!WFBE_GameOver) then {[_this select 0] Call WFBE_SE_FNC_SpawnIcbmTel} } };
+		} else {
+			[_side, "HandleSpecial", ["icbm-tel-msg", "That munition refused: no launch platform (TEL or SCUD) is alive."]] Call WFBE_CO_FNC_SendToClients;
+		};
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] fire REFUSED — no alive platform (munition %2).", _sideText, _muni]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-NOPLATFORM|%1|muni=%2", _sideText, _muni]);
 	};
 
 	_now = time;
-	//--- SHARED cooldown across ALL munitions (one clock per side).
-	_cdKey = Format ["WFBE_ICBM_TEL_LASTFIRE_%1", _sideText];
-	_last  = missionNamespace getVariable [_cdKey, -99999];
+	//--- COOLDOWN.
+	//---   NUKE / research-TEL semantics: SHARED per-side clock (WFBE_ICBM_TEL_LASTFIRE_<side>) — UNCHANGED.
+	//---   CONVENTIONAL from a bought SCUD: PER-PLATFORM clock stored on the hull (multiple launchers fire in parallel).
+	//---   CONVENTIONAL from the research TEL: keep the side-shared clock so a single research TEL can't rapid-fire.
+	//--- Same duration (WFBE_C_ICBM_TEL_COOLDOWN) either way.
 	_cool  = missionNamespace getVariable ["WFBE_C_ICBM_TEL_COOLDOWN", 300];
+	private ["_perPlatform"];
+	_perPlatform = (_muni != "NUKE" && {_platform getVariable ["wfbe_is_tk_scud", false]});
+	if (_perPlatform) then {
+		_last = _platform getVariable ["wfbe_tk_scud_lastfire", -99999];
+		_cdKey = "";   //--- (per-platform: stamped on the hull below).
+	} else {
+		_cdKey = Format ["WFBE_ICBM_TEL_LASTFIRE_%1", _sideText];
+		_last  = missionNamespace getVariable [_cdKey, -99999];
+	};
 	if ((_now - _last) < _cool) exitWith {
-		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["TEL on cooldown - %1s until the next launch.", round (_cool - (_now - _last))]]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL fire on cooldown (%2s left).", _sideText, round (_cool - (_now - _last))]] Call WFBE_CO_FNC_LogContent;
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["%1 on cooldown - %2s until the next launch.", (if (_perPlatform) then {"That SCUD"} else {"TEL"}), round (_cool - (_now - _last))]]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] fire on cooldown (%2s left, perPlatform=%3).", _sideText, round (_cool - (_now - _last)), _perPlatform]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	//--- RANGE: NUKE unlimited; SATURATION/RECON limited to WFBE_C_ICBM_TEL_RANGE (GRAD 9000 x1.15 = 10350 default).
+	//--- RANGE: NUKE unlimited; conventional limited to WFBE_C_ICBM_TEL_RANGE, measured FROM THE CHOSEN PLATFORM.
+	//--- A2-OA gotcha (per the FASCAM-cap note below): an `exitWith` nested inside a `then {}` exits only that block, not the
+	//--- function — so a nested range refusal would fall through and FIRE anyway. Compute the out-of-range flag inside the
+	//--- non-NUKE `then {}`, then refuse with a TOP-LEVEL `if ... exitWith` so it truly aborts the fire.
+	_range = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RANGE", 10350];
+	_dist  = -1;
+	private ["_outOfRange"];
+	_outOfRange = false;
 	if (_muni != "NUKE") then {
-		_range = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RANGE", 10350];
-		_dist  = (getPosATL _tel) distance [_tgtPos select 0, _tgtPos select 1, 0];
-		if (_dist > _range) exitWith {
-			[_side, "HandleSpecial", ["icbm-tel-msg", Format ["Target out of TEL range (%1m > %2m). Only the NUKE has unlimited range.", round _dist, _range]]] Call WFBE_CO_FNC_SendToClients;
-			["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL %2 fire REFUSED — out of range (%3 > %4).", _sideText, _muni, round _dist, _range]] Call WFBE_CO_FNC_LogContent;
-			diag_log (Format ["ICBMTEL|v1|REFUSE-RANGE|%1|muni=%2|dist=%3|max=%4", _sideText, _muni, round _dist, _range]);
-		};
+		_dist = (getPosATL _platform) distance [_tgtPos select 0, _tgtPos select 1, 0];
+		if (_dist > _range) then {_outOfRange = true};
+	};
+	if (_outOfRange) exitWith {
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["Target out of launcher range (%1m > %2m). Drive a SCUD closer, or only the NUKE has unlimited range.", round _dist, _range]]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] %2 fire REFUSED — out of range (%3 > %4).", _sideText, _muni, round _dist, _range]] Call WFBE_CO_FNC_LogContent;
+		diag_log (Format ["ICBMTEL|v1|REFUSE-RANGE|%1|muni=%2|dist=%3|max=%4", _sideText, _muni, round _dist, _range]);
 	};
 
 	//--- FUNDS (server-authoritative; the client does NOT deduct when the TEL flag is on). Cost by munition:
@@ -286,20 +438,25 @@ WFBE_SE_FNC_IcbmTelFire = {
 		diag_log (Format ["ICBMTEL|v1|REFUSE-FASCAMCAP|%1|live=%2|max=%3", _sideText, _fascamLiveN, _fMaxMsg]);
 	};
 
-	//--- All checks pass: charge + stamp the shared cooldown BEFORE firing (anti double-fire race).
+	//--- All checks pass: charge + stamp the cooldown BEFORE firing (anti double-fire race). Per-platform (bought SCUD) =
+	//--- stamp the hull; otherwise (NUKE / research-TEL conventional) = stamp the side-shared clock.
 	[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
-	missionNamespace setVariable [_cdKey, _now, true];
+	if (_perPlatform) then {
+		_platform setVariable ["wfbe_tk_scud_lastfire", _now, true];
+	} else {
+		missionNamespace setVariable [_cdKey, _now, true];
+	};
 
-	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL AUTHORISED — munition %2 at %3 (cost %4).", _sideText, _muni, [round (_tgtPos select 0), round (_tgtPos select 1)], _cost]] Call WFBE_CO_FNC_LogContent;
-	diag_log (Format ["ICBMTEL|v1|FIRE|%1|muni=%2|cost=%3", _sideText, _muni, _cost]);
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] LAUNCH AUTHORISED — munition %2 at %3 (cost %4, platform %5, perPlatformCD %6).", _sideText, _muni, [round (_tgtPos select 0), round (_tgtPos select 1)], _cost, typeOf _platform, _perPlatform]] Call WFBE_CO_FNC_LogContent;
+	diag_log (Format ["ICBMTEL|v1|FIRE|%1|muni=%2|cost=%3|scudPlatform=%4", _sideText, _muni, _cost, _perPlatform]);
 
 	if (_muni == "NUKE") then {
-		[_side, _tel, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelNuke;
+		[_side, _platform, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelNuke;
 	} else {
-		//--- PROMPT munitions (SATURATION / RECON / cmdcon41-w3i FASCAM / STEELRAIN / BUSTER): erect+FX now, GLOBAL 60s
-		//--- launch marker, then deliver. All non-NUKE munitions share this exposure idiom + shared cooldown.
-		[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;
-		[_tel] Call WFBE_SE_FNC_IcbmTelLaunchMarker;   //--- everyone sees "SCUD LAUNCH DETECTED" at the TEL for 60s.
+		//--- PROMPT munitions (SATURATION / RECON / cmdcon41-w3i FASCAM / STEELRAIN / BUSTER): erect+FX now on THE CHOSEN
+		//--- PLATFORM, GLOBAL 60s launch marker AT THAT PLATFORM, then deliver. Marks whichever launcher fired.
+		[_platform] Call WFBE_SE_FNC_IcbmTelTheatrics;
+		[_platform] Call WFBE_SE_FNC_IcbmTelLaunchMarker;   //--- everyone sees "SCUD LAUNCH DETECTED" at the firing platform for 60s.
 		switch (_muni) do {
 			case "SATURATION": {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSaturation};
 			case "RECON":      {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelRecon};

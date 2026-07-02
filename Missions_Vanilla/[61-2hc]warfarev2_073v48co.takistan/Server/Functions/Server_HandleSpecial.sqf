@@ -134,18 +134,36 @@ switch (_args select 0) do {
 	//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): the commander's ICBM fire, intercepted client-side
 	//--- (GUI_Menu_Tactical.sqf when WFBE_C_ICBM_TEL=1) and routed here. Server-authoritative gate lives in
 	//--- WFBE_SE_FNC_IcbmTelFire (TEL alive + shared cooldown + range + funds); it spawns/refuses accordingly.
-	//--- Payload: ["icbm-tel-fire", side, target, munition, playerTeam, fee]. Fn-guarded (Init_IcbmTel compiles it).
+	//--- Payload: ["icbm-tel-fire", side, target, munition, playerTeam, fee, platformHint?]. Fn-guarded (Init_IcbmTel compiles it).
+	//--- cmdcon42-j (Ray 2026-07-02): optional 7th element = a specific bought-SCUD platform hint (from the vehicle action).
+	//--- The server re-validates it (ignored for NUKE; only honoured if an alive side platform) — never trusted blindly.
 	case "icbm-tel-fire": {
 		if (!isNil "WFBE_SE_FNC_IcbmTelFire") then {
-			private ["_tSide","_tTarget","_tMuni","_tTeam","_tFee"];
+			private ["_tSide","_tTarget","_tMuni","_tTeam","_tFee","_tPlat"];
 			_tSide   = _args select 1;
 			_tTarget = _args select 2;
 			_tMuni   = _args select 3;
 			_tTeam   = _args select 4;
 			_tFee    = if (count _args > 5) then {_args select 5} else {0};
-			[_tSide, _tTarget, _tMuni, _tTeam, _tFee] Spawn WFBE_SE_FNC_IcbmTelFire;
+			_tPlat   = if (count _args > 6) then {_args select 6} else {objNull};
+			[_tSide, _tTarget, _tMuni, _tTeam, _tFee, _tPlat] Spawn WFBE_SE_FNC_IcbmTelFire;
 		} else {
 			["WARNING", "Server_HandleSpecial.sqf: icbm-tel-fire received but WFBE_SE_FNC_IcbmTelFire is nil (WFBE_C_ICBM_TEL=0?)."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+	//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (Takistan) registration. Payload: ["tk-scud-register", vehicle, side, team, paidCost].
+	//--- Sent by the buyer's client (Client_BuildUnit) right after a SCUD is bought at the HF. Server-authoritative: enforces
+	//--- the per-side live cap (deletes + refunds the exact paid amount on a surplus purchase), tags the hull, registers it.
+	case "tk-scud-register": {
+		if (!isNil "WFBE_SE_FNC_TkScudRegister") then {
+			private ["_sVeh","_sSide","_sTeam","_sCost"];
+			_sVeh  = _args select 1;
+			_sSide = _args select 2;
+			_sTeam = if (count _args > 3) then {_args select 3} else {grpNull};
+			_sCost = if (count _args > 4) then {_args select 4} else {-1};
+			[_sVeh, _sSide, _sTeam, _sCost] Call WFBE_SE_FNC_TkScudRegister;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: tk-scud-register received but WFBE_SE_FNC_TkScudRegister is nil (WFBE_C_ICBM_TEL=0 / WFBE_C_TK_SCUD_HF=0?)."] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	case "ICBM": {

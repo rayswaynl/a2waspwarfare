@@ -180,6 +180,14 @@ _i = _i + [['','',6500,40,-2,4,2,0,'US',[]]];
 _c = _c + ['M6_EP1'];
 _i = _i + [['','',7500,35,-2,4,2,0,'US',[]]];
 
+//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (conventional) buy-row metadata — TAKISTAN ONLY (WEST/US). Price + tier
+//--- from flags (default 28000 / HEAVY level 3). Fields: [label,picture,PRICE,TIME,CREW(-2=auto),UPGRADE,FACTORY(2=Heavy),SKILL,faction,turrets].
+//--- Registered only when the master flag is on AND worldName=="Takistan". Explicit label so the menu shows the friendly name.
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"}) then {
+	_c = _c + [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
+	_i = _i + [['SCUD Launcher (conventional)','',(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]),40,-2,(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_LEVEL", 3]),2,0,'US',[]]];
+};
+
 /* Air Vehicles */
 _c = _c + ['MH6J_EP1'];
 _i = _i + [['','',4928,25,-2,1,3,0,'US',[]]];   //--- B59 (Ray 2026-06-20): MH6J_EP1 air-upgrade 0->1. Was a tier-0 heli, so the strict-> tech gate passed it at air-research 0; aircraft must require an air factory (AIR-1). Rollback: ...,0,3,0,...
