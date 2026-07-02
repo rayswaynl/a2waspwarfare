@@ -78,7 +78,16 @@ while {!WFBE_GameOver} do {
 				} else {
 					_contested = (_activeEnemies > 0);
 				};
-				_location setVariable ["wfbe_contested", _contested];
+				//--- cmdcon41-w3c WRITE-ON-CHANGE (claude-gaming 2026-07-02): only stamp wfbe_contested when the
+				//--- value actually FLIPS, not every 5s x every town. VERIFIED this write is LOCAL (no ,true
+				//--- broadcast flag) and the sole reader (server_groupsGC.sqf:353) uses a default-false 2-arg get,
+				//--- so unchanged/never-written towns read false safely - the task's "per-tick global broadcast x40
+				//--- towns = network churn" suspicion is DISPROVEN (there is no broadcast). This is a pure local
+				//--- setVariable-count trim (~40 no-op writes/5s -> only real transitions). A2-OA-safe: plain 2-arg
+				//--- getVariable, == on Bools avoided (compares two booleans via if-guard, not ==).
+				private "_prevContested"; _prevContested = _location getVariable ["wfbe_contested", false];
+				if (_contested && !_prevContested) then {_location setVariable ["wfbe_contested", true]};
+				if (!_contested && _prevContested) then {_location setVariable ["wfbe_contested", false]};
 
 				_supplyValue = _location getVariable "supplyValue";
 

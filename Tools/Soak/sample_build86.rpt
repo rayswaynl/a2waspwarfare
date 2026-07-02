@@ -1,0 +1,21 @@
+MISSINIT build86 soak fixture
+AICOMSTAT|v2|EVENT|WEST|1|ASSAULT_DISPATCH|team=W-1|town=Vybor|dist=900|reissue=false
+AICOMSTAT|v2|EVENT|WEST|4|ASSAULT_ARRIVED|team=W-1|town=Vybor|dist=90|elapsed=180
+AICOMSTAT|v1|POSTURE|WEST|5|RED|myTowns=12|enTowns=10|myStr=3
+AICOMSTAT|v1|FRONT|WEST|5|held=12|enemyHeld=10|contested=1|primary=Vybor|onFront=1
+AICOMSTAT|v1|FRONT|WEST|6|held=12|enemyHeld=10|contested=1|primary=Stary|onFront=1
+AICOMSTAT|v1|MHQRELOC|WEST|7|RELAXED|ring=420
+AICOMSTAT|v1|MHQRELOC|WEST|8|DEPLOYED|reason=front|pos=[1000,2000,0]
+WASPSTAT|v1|1|KILL|||WEST|EAST|Tank|700|cannon|hw=M1A1|vc=T72|t=360
+WASPSTAT|v1|2|CAPTURE|Vybor|0|1|t=420
+WASPSCALE|v2|8|tier=1|players=2|AI_W=50|AI_E=45|AI_GUER=10|AI_TOT=105|groups=30|fps=42|map=chernarus|build=cmdcon41|hc_fps=48
+AI_Commander_Base.sqf: [WEST] BUILD_ROAD_REJECT near=road1 - candidate [1,2,0] within 14m of a road (WFBE_C_AICOM_BUILD_ROADCLEAR); searching off-road.
+Common_RunSidePatrol.sqf: [EAST] ground patrol SKIPPING naval-HVT town [Khe Sanh Alpha] (offshore/over-water - unreachable by ground).
+ICBMTEL|v1|SPAWN|WEST|pos=[100,200]
+ICBMTEL|v1|FIRE|WEST|muni=SATURATION|cost=12000
+ICBMTEL|v1|RECON|WEST|enemies=8|markers=8
+Support_ScudStrike.sqf : [WEST] AUTHORISED -- launching from [100,200,0] at target [300,400,0].
+[WFBE (SKIN)] B0 Apply pressed: class='US_Soldier_EP1' player='Tester'
+[WFBE (SKIN)] B6 COMPLETE: player='Tester' class='US_Soldier_EP1' uid='123'
+GUI_Menu_EASA.sqf: Player vehicle [objNull] was not found within the list.
+GUI_BuyGearMenu.sqf: synthetic gear fixture line

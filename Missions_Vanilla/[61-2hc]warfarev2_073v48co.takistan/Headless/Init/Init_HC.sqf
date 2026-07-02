@@ -102,6 +102,67 @@ WFBE_HC_FNC_ParkDeadspawn = {
 	};
 };
 
+//--- HC WEAPONS-STRIP + SEA-PARK (cmdcon41, Ray 2026-07-02): a stronger "hide the HC body" than the deadspawn
+//--- park above. Ray wants the HC-occupied avatar disarmed and moved FAR OUT (at sea on water maps), so it can
+//--- never appear as a stray armed body near play and can never fire. Keyed on `player` (this whole file only
+//--- runs on HCs; belt+suspenders name-check against the known HC unit names too), so BOTH HC1+HC2 run it. We
+//--- STRIP weapons/items/backpack then setPos far away - we NEVER delete/kill the unit and NEVER touch its group
+//--- or slot (the HC must stay seated as the SOLE leader of its own civ infra group). Idempotent; A2-OA-1.64-safe
+//--- (removeAllWeapons/removeAllItems/removeBackpack, surfaceIsWater, enableSimulation, setPos - all verified in
+//--- this mission's own code). ORDER INVARIANT: like the deadspawn park, only acts while civilian, and setPos
+//--- moves the body only (never changes side/group), so it can never knock the HC off civilian.
+WFBE_HC_FNC_ParkSeaHC = {
+	if (side group player != civilian) exitWith {}; //--- guard: only park a civilian-seated HC.
+	private "_u"; _u = player;
+	//--- belt+suspenders identity check: `player` on this file is always the HC, but also accept the known
+	//--- HC unit names (A2-safe `in` on a string list - no A3 find/select-substring). If somehow neither, we
+	//--- still proceed because this file only executes on a headless client (the whole run is HC-scoped).
+	private "_isHC"; _isHC = (name _u) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"];
+	//--- PROTECT + DISARM the body (same rationale as ParkDeadspawn's allowDamage/setCaptive): the HC avatar is
+	//--- the lone client-init-skipped body; keep it unkillable + non-hostile, and now fully disarmed.
+	_u allowDamage false;
+	_u setCaptive true;
+	removeAllWeapons _u;
+	removeAllItems _u;
+	removeBackpack _u; //--- A2-OA-safe (Common_EquipBackpack.sqf uses it); no-op if the HC carries no pack.
+	//--- Resolve a FAR park position. Chernarus has open sea to the WEST/SOUTH -> ring-search outward from a
+	//--- known SW sea seed until surfaceIsWater confirms deep water. Takistan is LANDLOCKED (no water) -> park at
+	//--- a far map corner on the ground with simulation disabled (NEVER setPos underground - that kills the unit).
+	private ["_seaPos","_placed"];
+	_placed = false;
+	if (toLower worldName != "takistan") then {
+		//--- WATER MAP (Chernarus + others): seed near the SW corner (sea) and ring-search outward for water.
+		private ["_seed","_ring","_step"];
+		_seed = [1000, 1000, 0];
+		_seaPos = [];
+		if (surfaceIsWater _seed) then { _seaPos = _seed };
+		//--- expand a ring outward (toward open water) until surfaceIsWater is true or we exhaust the sweep.
+		_ring = 0;
+		while {count _seaPos == 0 && {_ring < 40}} do {
+			_ring = _ring + 1;
+			_step = _ring * 250;
+			{
+				if (count _seaPos == 0) then {
+					private "_cand"; _cand = [(1000 + ((_x select 0) * _step)), (1000 + ((_x select 1) * _step)), 0];
+					if (surfaceIsWater _cand) then { _seaPos = _cand };
+				};
+			} forEach [[-1,-1],[-1,0],[0,-1],[-1,1],[1,-1],[0,1],[1,0],[1,1]]; //--- bias SW first (sea), then outward.
+		};
+		if (count _seaPos > 0) then {
+			_u setPos _seaPos;
+			_placed = true;
+			["INFORMATION", Format ["Init_HC.sqf: HC %1 (isHC=%2) disarmed + parked AT SEA at %3.", name _u, _isHC, _seaPos]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+	if (!_placed) then {
+		//--- LANDLOCKED / no water found: far map corner on the GROUND (do NOT sink underground), sim off if safe.
+		_seaPos = [100, 100, 0];
+		_u setPos _seaPos;
+		_u enableSimulation false; //--- A2-OA-safe (mission.sqm inits use it); keeps the parked body inert without deleting it.
+		["INFORMATION", Format ["Init_HC.sqf: HC %1 (isHC=%2) disarmed + parked at far map corner (landlocked/no water) at %3.", name _u, _isHC, getPos _u]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 //--- BOUNDED POLLING LOOP (task #29 follow-up): the single-shot fixed-sleep attempt missed whenever the
 //--- engine seated the HC late or locality hadn't transferred at the guard. We wait for the player object
 //--- (above), then poll for up to ~60s, retrying the reseat until `side group player == civilian`.
@@ -109,7 +170,9 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 //--- TELEMETRY (task #34): report whether the reseat converged (done / skipped / failed).
 ["RequestSpecial", ["hc-reseat-result", [name player, _reseatResult, str (side group player)]]] Call WFBE_CO_FNC_SendToServer;
 //--- Park AFTER the reseat has converged (park is a no-op unless we are civilian).
-[] Call WFBE_HC_FNC_ParkDeadspawn;
+//--- cmdcon41: sea-park supersedes the deadspawn park for HC body placement (disarmed + far out). A short
+//--- spawn+sleep after init keeps it off the init hot-path and lets the reseat/locality settle first.
+[] Spawn { uiSleep 5; [] Call WFBE_HC_FNC_ParkSeaHC; };
 
 //--- PERSISTENT RESEAT WATCHER (post-restart re-grab fix): a one-shot reseat exits permanently the moment
 //--- the HC first reaches CIVILIAN. But an in-place MISSION RESTART (a 2nd MISSINIT on the same server
@@ -127,7 +190,7 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 			["WARNING", Format ["Init_HC.sqf: HC %1 was re-grabbed onto %2 after reseat (mission-restart re-slot?) - re-reseating.", name player, str (side group player)]] Call WFBE_CO_FNC_LogContent;
 			private "_r"; _r = 30 Call WFBE_HC_FNC_ReseatCivilian;
 			["RequestSpecial", ["hc-reseat-result", [name player, "rewatch:" + _r, str (side group player)]]] Call WFBE_CO_FNC_SendToServer;
-			[] Call WFBE_HC_FNC_ParkDeadspawn;
+			[] Call WFBE_HC_FNC_ParkSeaHC; //--- cmdcon41: re-disarm + re-sea-park after any re-reseat (was ParkDeadspawn).
 			//--- re-announce so the server re-resolves `group _hc` onto the fresh civ group after a re-reseat.
 			if (side group player == civilian) then {
 				["RequestSpecial", ["connected-hc", player]] Call WFBE_CO_FNC_SendToServer;
@@ -169,3 +232,20 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 //--- protect. Reaps client-LOCAL empty, non-persistent, non-player, non-town-tracked groups once
 //--- per 60s and logs a CLIENT_EMPTY_GROUP_CLEANUP wire line tagged HC-<netId> for visibility.
 [] ExecVM "Client\Functions\Client_GroupsGC.sqf";
+
+//--- AICOM HIGH-CLIMB (claude-gaming 2026-07-01): give AI-commander tanks the Valhalla low-gear terrain
+//--- assist on THIS headless client, where its DELEGATED commander teams (and their tank hulls) are local -
+//--- the player client low-gear manager only iterates `units group player`, so an HC's own AICOM tanks never
+//--- get the assist. The manager self-gates OFF unless WFBE_C_AICOM_HIGHCLIMB==1 and enumerates only the
+//--- side-logic wfbe_teams (bounded, no allUnits), touching only hulls local to this machine. Server runs
+//--- its own copy from Init_Server.sqf for the server-local founded teams.
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HighClimb.sqf";
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_AutoFlip.sqf";  //--- Build84 (Ray): auto-right flipped AICOM ground vehicles (HC-delegated teams).
+
+//--- AICOM HELI TERRAIN-GUARD (cmdcon41-w3j 2026-07-02): the #1 aircraft fix. Server\server_heli_terrain_guard.sqf
+//--- is server-local only (`if (!isServer) exitWith`) and its header defers the HC copy - so on a 2-HC box the
+//--- DELEGATED AICOM gunships (which are local HERE) get NO look-ahead terrain climb and clip rising ridgelines.
+//--- This HC-local twin mirrors the HighClimb/AutoFlip pattern (bounded wfbe_teams walk, act only on LOCAL Helicopter
+//--- hulls) and reuses the server guard's proven look-ahead climb verbatim. Same flag (WFBE_C_AIHELI_TERRAIN_GUARD,
+//--- default ON) so one flip toggles heli terrain-guard everywhere. Self-gates OFF unless this is server/HC.
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HeliTerrainGuard.sqf";

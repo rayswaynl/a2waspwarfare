@@ -25,9 +25,20 @@ _n = 1;
 	};
 } forEach clientTeams;
 
-_player_group = group player; 
-_id = clientTeams find _player_group; 
-
+_player_group = group player;
+//--- cmdcon41-w3d TAG-CLICK POPUP FIX: the roster listbox (21002) lists ONLY player-led clientTeams (the _list_Players
+//--- loop above), but the old start index was `clientTeams find _player_group` - an index into the FULL clientTeams array,
+//--- not the filtered player-led list, and -1 when the caller's group is not a player-led clientTeams entry (the war-room
+//--- VIEW-TEAM path, or an HC-seated / solo commander). `lbSetCurSel [21002,-1]` then left NO row selected, so the first
+//--- Leader-Selection action (MenuAction 101) did `_list_Players select (lbCurSel 21002)` = `select -1` = a "Zero divisor /
+//--- index" popup (the reported tag-click error, RPT-silent because it is an engine dialog fault). Resolve the index INTO
+//--- _list_Players and clamp to a valid row (0 if the player's own group is not player-led, so a row is always selected).
+//--- Flag-gated so it can be disabled if ever needed (default ON).
+_id = _list_Players find _player_group;
+if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {
+	if (_id < 0) then {_id = 0};                                  //--- caller not a player-led team -> default to the first listed player team so a row is always selected
+	if (count _list_Players == 0) then {_id = -1};               //--- but if NO player teams exist, leave nothing selected (the 101 handler is guarded below)
+};
 lbSetCurSel[21002,_id];
 _currentUnit = (player) Call GetUnitVehicle;
 //--- Command Console v2 (claude-gaming 2026-07-01): VIEW TEAM entry. The command console seeds WFBE_CmdCon_CamUnit with a
@@ -81,24 +92,34 @@ while {true} do {
 	//--- Leader Selection.
 	if (MenuAction == 101) then {
 		MenuAction = -1;
-		_selected = leader (_list_Players select (lbCurSel 21002));
-		
-		_currentUnit = (_selected) Call GetUnitVehicle;
-		_units = (Units (group _selected) - [_selected]) Call GetLiveUnits;
-		lbClear 21004;
-		{
-			_unitNumber = (_x) Call GetAIDigit;
-			lbAdd[21004,Format["[%1] (%2) %3", _unitNumber, GetText (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "displayName"),name _x]];			
-		} forEach _units;
-		_cameraSwap = true; 
+		//--- cmdcon41-w3d TAG-CLICK POPUP FIX: guard `_list_Players select (lbCurSel 21002)` against an empty player-team
+		//--- list AND a -1 current selection (both threw the "Zero divisor / index" popup). Only index when a valid row is
+		//--- selected into a non-empty list; otherwise no-op the swap so the camera stays on its current unit.
+		private "_lsSel"; _lsSel = lbCurSel 21002;
+		if (count _list_Players > 0 && {_lsSel >= 0} && {_lsSel < (count _list_Players)}) then {
+			_selected = leader (_list_Players select _lsSel);
+
+			_currentUnit = (_selected) Call GetUnitVehicle;
+			_units = (Units (group _selected) - [_selected]) Call GetLiveUnits;
+			lbClear 21004;
+			{
+				_unitNumber = (_x) Call GetAIDigit;
+				lbAdd[21004,Format["[%1] (%2) %3", _unitNumber, GetText (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "displayName"),name _x]];
+			} forEach _units;
+			_cameraSwap = true;
+		};
 	};
 	// Marty end.
 	
 	//--- Leader commands AIs.
 	if (MenuAction == 102) then {
 		MenuAction = -1;
-		_currentUnit = (_units select (lbCurSel 21004)) Call GetUnitVehicle;
-		_cameraSwap = true;
+		//--- cmdcon41-w3d TAG-CLICK POPUP FIX: same empty-list / -1 guard for the unit sub-list (21004).
+		private "_unSel"; _unSel = lbCurSel 21004;
+		if (count _units > 0 && {_unSel >= 0} && {_unSel < (count _units)}) then {
+			_currentUnit = (_units select _unSel) Call GetUnitVehicle;
+			_cameraSwap = true;
+		};
 	};
 	
 	//--- Camera Modes
