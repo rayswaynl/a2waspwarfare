@@ -19,9 +19,12 @@ switch (_incomeSystem) do {
 		};
 	};
 	case 4: {
-		Private["_ply"];
+		Private["_ply","_incomeDisplayMult"];
 		_commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 		if (isNull _commanderTeam) then {_commanderTeam = grpNull};
+		_incomeDisplayMult = 1;
+		if ((missionNamespace getVariable ["WFBE_C_FIX_INCOME_SYSTEM4_DISPLAY", 0]) > 0) then {_incomeDisplayMult = 1.5};
+		_income = _income * _incomeDisplayMult;
 		_ply = round(_income * (100 - (WFBE_Client_Logic getVariable "wfbe_commander_percent")) / 100);
 		if (_commanderTeam == group player) then {
 			_income = _ply + round((_income - _ply)*WFBE_Client_Teams_Count);
