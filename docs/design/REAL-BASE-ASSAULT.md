@@ -1,4 +1,4 @@
-# Design: REAL-COMBAT BASE ASSAULT (Ray: implement + DEFAULT ON)
+# Design: REAL-COMBAT BASE ASSAULT - status
 
 Ray (2026-07-02): the AI must WIN by physically assaulting and destroying the enemy base - units engage
 defenders and destroy the HQ + factory structures with WEAPONS - NOT the siege presence-timer that scripts
@@ -6,7 +6,32 @@ the base away. Fleet design woxi685l8 (verified against code). Flag-gated, A2-OA
 
 ---
 
-# REAL-COMBAT BASE ASSAULT — Implementation Plan (staged, flag-gated, A2-OA-1.64-safe)
+## Build 86 live status (2026-07-02)
+
+This design is implemented on the build84/cmdcon36 line. The implementation uses slightly different flag names
+than the original plan below, so treat the plan sections as historical design context.
+
+Live anchors:
+- `Common/Init/Init_CommonConstants.sqf:735-740` defaults real-combat assault on with
+  `WFBE_C_AICOM_ASSAULT_STRUCTURES = 1`, `WFBE_C_STRUCTURES_ENEMY_DESTROYABLE = 1`,
+  `WFBE_C_STRUCTURES_ENEMY_REDU = 2`, `WFBE_C_AICOM_OVERRUN_SIEGE_DECAY = 1`, and
+  `WFBE_C_AICOM_OVERRUN_SCRIPTRAZE = 0`.
+- `Server/Functions/Server_BuildingHandleDamages.sqf:12-18` lets enemy weapon damage reach the normal structure
+  damage path while still blocking own-side friendly fire.
+- `Server/Functions/Server_HandleBuildingDamage.sqf:6-12` and `Server/Functions/Server_BuildingDamaged.sqf:6-11`
+  apply the enemy-destroyable damage reducer.
+- `Common/Functions/Common_RunCommanderTeam.sqf:1338-1452` runs the `BASE-ASSAULT` target/fire phase against
+  enemy HQ and structures.
+- `Server/AI/Commander/AI_Commander_Strategy.sqf:856-907` keeps overrun telemetry and siege decay but leaves
+  scripted raze disabled by default through `WFBE_C_AICOM_OVERRUN_SCRIPTRAZE = 0`.
+- `server_victory_threeway.sqf` still resolves victory from real HQ/factory state, so no victory-script change was needed.
+
+Open follow-up:
+- Soak until a base actually falls to weapon fire and capture the `BASE-ASSAULT` / `BASE_OVERRUN` log story for review.
+- The proposed per-structure `ASSAULT_STRUCT_KILL` telemetry line was not found in the live implementation. If more
+  proof is needed, add it later as telemetry only, without changing assault behavior.
+
+## Historical implementation plan
 
 ## Root-cause correction to the two analyses
 Both analyses missed the single most important fact for part (1). The enemy HQ/factories are **NOT** killable by AI/enemy weapons today — not because of `allowDamage false`, but because the `handleDamage` handler **zeroes enemy damage**:
