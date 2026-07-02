@@ -1,5 +1,18 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 178 spectator AI-teams audit [codex/lane178-spectator-ai-teams-audit]
+
+The lane-178 spectator/unit-camera prompt is already covered on `claude/build84-cmdcon36`.
+The standalone `GUI_Menu_UnitCamera.sqf` leader list intentionally remains player-led only, but
+the command-console roster uses the live side-logic `wfbe_teams` registry, filters to non-player-led
+alive AI groups, and double-clicks route through `MenuAction = 726` into the existing UnitCamera.
+`GUI_Menu_Command.sqf` seeds `WFBE_CmdCon_CamUnit` with the selected AI team's leader; UnitCamera
+consumes and clears that one-shot seed on load, then starts the camera on the selected leader's
+vehicle. Chernarus and Takistan copies of the checked GUI files are byte-identical.
+
+No mission source changed in this lane. Added `docs/design/SPECTATOR-AI-TEAMS-AUDIT-2026-07-02.md`
+with source anchors and smoke steps.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
