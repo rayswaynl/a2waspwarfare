@@ -1364,34 +1364,49 @@ switch (_args select 0) do {
 	//--- kill credit + createVehicle damage behave normally. Gate-guarded; the client only sends this for a resistance
 	//--- V3S_Gue driver, so gate-OFF is a byte-for-byte no-op.
 	case "guer-mortar-strike": {
-		Private ["_pos","_player","_team","_cost","_funds"];
+		Private ["_pos","_player","_veh","_range","_dist","_team","_cost","_funds"];
 		//--- GUARD (claude-gaming): mirror the group-query guard - a short payload (count _args <= 2) used to
 		//--- crash at "_player = _args select 2". The valid sender is a 3-arg ["guer-mortar-strike",_pos,_player];
 		//--- bail safely on anything shorter rather than select-crash.
 		if (count _args < 3) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: guer-mortar-strike received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
+		if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) <= 0) exitWith {};
 		_pos    = _args select 1;
 		_player = _args select 2;
-		if ((typeName _pos == "ARRAY") && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
-			//--- COST: debit the GUER player's team funds before firing. The funds-holding team is `group _player`
-			//--- (the SAME team the VBIED case pays via WFBE_CO_FNC_ChangeTeamFunds). If the team cannot afford the
-			//--- call-in fee we DON'T fire, DON'T let the cooldown burn (the client optimistically stamped it before
-			//--- sending), and tell the player why via the guer-mortar-result client receiver.
-			_team = group _player;
-			_cost = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_COST", 200];
-			_funds = _team Call WFBE_CO_FNC_GetTeamFunds;
-			if (isNull _team || {_funds < _cost}) exitWith {
-				//--- Refund cooldown + notify the caller (dual path: object send on non-vanilla, UID send on vanilla).
-				if (WF_A2_Vanilla) then {
-					[getPlayerUID _player, "HandleSpecial", ["guer-mortar-result", [false, Format ["Mortar strike needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClients;
-				} else {
-					[_player, "HandleSpecial", ["guer-mortar-result", [false, Format ["Mortar strike needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClient;
-				};
-				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike DENIED (insufficient funds) for [%1] team [%2] (have %3, need %4).", name _player, _team, _funds, _cost]] Call WFBE_CO_FNC_LogContent;
+		if ((typeName _pos != "ARRAY") || {count _pos < 2} || {typeName (_pos select 0) != "SCALAR"} || {typeName (_pos select 1) != "SCALAR"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected GUER mortar strike with invalid target [%1].", _pos]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((typeName _player != "OBJECT") || {isNull _player} || {!alive _player} || {!isPlayer _player} || {side _player != resistance}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected GUER mortar strike from invalid player [%1].", _player]] Call WFBE_CO_FNC_LogContent;
+		};
+		_veh = vehicle _player;
+		if (isNull _veh || {!alive _veh} || {!(((typeOf _veh) == "V3S_Gue") || {_veh getVariable ["wfbe_is_guer_mortar", false]})} || {driver _veh != _player}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected GUER mortar strike from invalid vehicle [%1] player [%2].", _veh, _player]] Call WFBE_CO_FNC_LogContent;
+		};
+		_range = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_RANGE", 1200];
+		_dist = _player distance _pos;
+		if (_dist > _range) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected GUER mortar strike out of range (%1 > %2) player [%3] target %4.", round _dist, round _range, _player, _pos]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- COST: debit the GUER player's team funds before firing. The funds-holding team is `group _player`
+		//--- (the SAME team the VBIED case pays via WFBE_CO_FNC_ChangeTeamFunds). If the team cannot afford the
+		//--- call-in fee we DON'T fire, DON'T let the cooldown burn (the client optimistically stamped it before
+		//--- sending), and tell the player why via the guer-mortar-result client receiver.
+		_team = group _player;
+		_cost = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_COST", 200];
+		_funds = _team Call WFBE_CO_FNC_GetTeamFunds;
+		if (isNull _team || {_funds < _cost}) exitWith {
+			//--- Refund cooldown + notify the caller (dual path: object send on non-vanilla, UID send on vanilla).
+			if (WF_A2_Vanilla) then {
+				[getPlayerUID _player, "HandleSpecial", ["guer-mortar-result", [false, Format ["Mortar strike needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClients;
+			} else {
+				[_player, "HandleSpecial", ["guer-mortar-result", [false, Format ["Mortar strike needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClient;
 			};
-			//--- Affordable: debit now (negative delta = spend), then fire.
-			[_team, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike DENIED (insufficient funds) for [%1] team [%2] (have %3, need %4).", name _player, _team, _funds, _cost]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Affordable: debit now (negative delta = spend), then fire.
+		[_team, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
 
 			//--- INCOMING WARNING (counter-play + atmosphere): drop a cheap GLOBAL "Incoming" marker at the impact
 			//--- point so EVERYONE (incl. the targeted enemy) gets a fair chance to scatter. Plain createMarker on the
@@ -1470,7 +1485,6 @@ switch (_args select 0) do {
 					};
 				};
 			};
-			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike called by [%1] at %2 (%3 shells, cost %4).", name _player, _pos, missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SHELLS", 6], _cost]] Call WFBE_CO_FNC_LogContent;
-		};
+		["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike called by [%1] at %2 (%3 shells, cost %4).", name _player, _pos, missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SHELLS", 6], _cost]] Call WFBE_CO_FNC_LogContent;
 	};
 };

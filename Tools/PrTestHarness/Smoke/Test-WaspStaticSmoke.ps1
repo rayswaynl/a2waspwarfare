@@ -586,6 +586,40 @@ function Test-ScudStrikeAuthorityGuard {
 	Add-Result "SCUD RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-GuerMortarRequestSpecialAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$serverPath = Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf"
+		$clientPath = Join-Path $entry.Root "Client\Action\Action_GuerMortarStrike.sqf"
+		$server = Get-Text $serverPath
+		$client = Get-Text $clientPath
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$caseAt = $serverCode.IndexOf('case "guer-mortar-strike"')
+		if ($caseAt -lt 0) {
+			$missing += "$($entry.Terrain):missing-case"
+			continue
+		}
+		$block = $serverCode.Substring($caseAt)
+		$countAt = $block.IndexOf("count _args < 3")
+		$selectAt = $block.IndexOf("_args select 1")
+		if ($countAt -lt 0) { $missing += "$($entry.Terrain):short-payload-guard" }
+		if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):guard-after-select" }
+		if (-not ($block.Contains('typeName _pos != "ARRAY"') -and $block.Contains('count _pos < 2') -and $block.Contains('typeName (_pos select 0) != "SCALAR"') -and $block.Contains('typeName (_pos select 1) != "SCALAR"') -and $block.Contains('typeName _player != "OBJECT"') -and $block.Contains('!isPlayer _player') -and $block.Contains('side _player != resistance'))) { $missing += "$($entry.Terrain):payload-player-types" }
+		if (-not ($block.Contains('_veh = vehicle _player') -and $block.Contains('typeOf _veh') -and $block.Contains('"V3S_Gue"') -and $block.Contains('wfbe_is_guer_mortar') -and $block.Contains('driver _veh != _player'))) { $missing += "$($entry.Terrain):vehicle-driver-binding" }
+		if (-not ($block.Contains('WFBE_C_GUER_MORTAR_RANGE') -and $block.Contains('_player distance _pos') -and $block.Contains('_dist > _range'))) { $missing += "$($entry.Terrain):server-range-gate" }
+		if (-not ($server.Contains('rejected GUER mortar strike with invalid target') -and $server.Contains('rejected GUER mortar strike from invalid player') -and $server.Contains('rejected GUER mortar strike from invalid vehicle') -and $server.Contains('rejected GUER mortar strike out of range'))) { $missing += "$($entry.Terrain):warnings" }
+		if (-not ($block.Contains('WFBE_CO_FNC_GetTeamFunds') -and $block.Contains('WFBE_CO_FNC_ChangeTeamFunds') -and $block.Contains('createVehicle'))) { $missing += "$($entry.Terrain):spend-and-fire-path" }
+		if (-not ($client.Contains("['RequestSpecial', ['guer-mortar-strike', _pos, _p]]") -and $client.Contains('WFBE_C_GUER_MORTAR_RANGE'))) { $missing += "$($entry.Terrain):client-shape" }
+	}
+	Add-Result "GUER mortar RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-AicomCommandConsoleAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -1532,6 +1566,7 @@ Test-AttackWavePvGuards
 Test-IcbmRequestSpecialAuthorityGuard
 Test-SupplyMissionPvGuards
 Test-ScudStrikeAuthorityGuard
+Test-GuerMortarRequestSpecialAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards
 Test-MarkerFeedConsumerShapeGuards
