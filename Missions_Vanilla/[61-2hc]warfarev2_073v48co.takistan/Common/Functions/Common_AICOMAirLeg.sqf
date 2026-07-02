@@ -281,7 +281,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 //--- L584-689, minus the fly-off/refund - the transport RETURNS to base + HOLDS to persist).
 //--- ===================================================================
 [_h, _lzPos, _flat, _lifted, _team, _dest, _side, _sideID, _liftVeh, _vehDrop] Spawn {
-	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0","_lveh","_vdrop"];
+	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0","_lveh","_vdrop","_approachLimited"];
 	_h    = _this select 0;
 	_lz   = _this select 1;
 	_fl   = _this select 2;

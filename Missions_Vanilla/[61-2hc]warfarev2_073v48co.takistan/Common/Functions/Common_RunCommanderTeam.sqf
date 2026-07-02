@@ -606,10 +606,10 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			//--- Run in until near the LZ (or timeout / loss).
 			_t0 = time + 240;
 			waitUntil {sleep 2; time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_h distance _lz) < 120}};
+			if (_approachLimited) then {(group (driver _h)) setSpeedMode "FULL"};
 			if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 				{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
 			};
-			if (_approachLimited) then {(group (driver _h)) setSpeedMode "FULL"};
 			if (count _fl > 0) then {
 				//--- Flat LZ: command a real landing and disembark.
 				_h land "GET OUT";
