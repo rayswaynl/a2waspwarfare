@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 07:30 Europe/Amsterdam
+Last updated: 2026-07-02 07:36 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -46,6 +46,29 @@ release proof.
 
 Release remains **NO-GO** until a selected candidate has exact both-map RPT
 evidence, human smoke notes, and deployment approval.
+
+## 2026-07-02 07:36 Update
+
+Final validation found PR #126 moved from
+`858074d944779e9fe387da95a88732eac7bcf684` to
+`62f60bed836c5e458117583740f05c8077e5e800`.
+
+The new commit is docs/tooling only:
+
+- `62f60bed8` - `docs: sync pr125 supply release tuple`
+- changed `Tools/Monitor/README.md`,
+  `Tools/Ops/Test-WaspReleaseTupleDocs.ps1`, and
+  `docs/release/2026-07-01-release-readiness-task.md`
+- `git diff --check origin/master..origin/codex/release-readiness-20260701`
+  passes
+
+PR #126 now mirrors PR #125's current `f894419db9` /
+`0EFED527088FE4EBD0F0C94702DE9A1818972EE9741597F8B400E9B78268A74C` package
+tuple and wiki `8099a35`.
+
+This removes the PR #126 tuple-lag warning. Release remains **NO-GO** because no
+exact selected-candidate Chernarus + Takistan RPT evidence, human smoke notes, or
+deployment approval were added.
 
 ## 2026-07-02 01:29 Update
 
