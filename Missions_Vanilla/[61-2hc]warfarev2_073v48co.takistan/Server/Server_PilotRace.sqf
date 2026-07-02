@@ -37,7 +37,9 @@ _ttl      = missionNamespace getVariable ["WFBE_C_PILOT_TTL",            300];
 _mkPrefix = "wfbe_pilotrace_mk_";
 
 //--- Persistent live registry in missionNamespace.
-//--- Each entry: [_pilot, _markerName, _spawnTime, _pilotSide, _chute].
+//--- Each entry: [_pilot, _markerName, _spawnTime, _pilotSide, _chute, _pilotGroup].
+//--- Index 5 = pilot group (stored at spawn so it can be deleteGroup'd even if pilot
+//--- goes null externally before the cleanup path runs).
 //--- Written/read via NS so it survives all spawn/call thread crossings.
 missionNamespace setVariable ["WFBE_PilotRace_Live", []];
 
@@ -105,7 +107,9 @@ WFBE_SE_FNC_PilotRaceEject = {
 	_mk setMarkerText "DOWNED PILOT";
 
 	//--- Append to registry and write back to namespace.
-	_entry = [_pilot, _mk, time, _acSide, _chute];
+	//--- Store _grp as index 5 so every cleanup path can deleteGroup it even if
+	//--- the pilot unit goes null externally before cleanup runs.
+	_entry = [_pilot, _mk, time, _acSide, _chute, _grp];
 	_liveArr = _liveArr + [_entry];
 	missionNamespace setVariable ["WFBE_PilotRace_Live", _liveArr];
 
@@ -155,13 +159,14 @@ while {!WFBE_GameOver} do {
 	_livePilots = missionNamespace getVariable ["WFBE_PilotRace_Live", []];
 	_keptPilots = [];
 	{
-		private ["_entry","_p","_mk","_spawnT","_pSide","_pChute","_drop","_reason","_near","_capSide"];
+		private ["_entry","_p","_mk","_spawnT","_pSide","_pChute","_pGrp","_drop","_reason","_near","_capSide"];
 		_entry  = _x;
 		_p      = _entry select 0;
 		_mk     = _entry select 1;
 		_spawnT = _entry select 2;
 		_pSide  = _entry select 3;
 		_pChute = _entry select 4;
+		_pGrp   = _entry select 5;
 
 		_drop   = false;
 		_reason = "";
@@ -204,13 +209,13 @@ while {!WFBE_GameOver} do {
 			deleteMarker _mk;
 			//--- Chute cleanup.
 			if (!isNull _pChute) then { deleteVehicle _pChute; };
-			//--- Pilot + group cleanup (pilot is civilian/captive — no player can be in this group).
-			if (!isNull _p) then {
-				private ["_g"];
-				_g = group _p;
-				deleteVehicle _p;
-				if (!isNull _g) then { deleteGroup _g; };
-			};
+			//--- Pilot cleanup (pilot is civilian/captive — no player can be in this group).
+			if (!isNull _p) then { deleteVehicle _p; };
+			//--- Group cleanup: UNCONDITIONAL — uses the stored group ref (index 5) so the
+			//--- group is deleteGroup'd even if _p went null externally before this path ran.
+			//--- deleteGroup only removes an empty group; unit is already deleted above (or was
+			//--- already gone), so the group is empty by the time we reach this line.
+			if (!isNull _pGrp) then { deleteGroup _pGrp; };
 			diag_log format ["PILOTRACE|DESPAWN|reason=%1|remaining=%2", _reason, count _keptPilots];
 		} else {
 			_keptPilots = _keptPilots + [_entry];
@@ -223,17 +228,16 @@ while {!WFBE_GameOver} do {
 
 //--- Round-end: clean all live pilots + markers so nothing persists into the next match.
 {
-	private ["_entry","_p","_mk","_pChute","_g"];
+	private ["_entry","_p","_mk","_pChute","_pGrp"];
 	_entry  = _x;
 	_p      = _entry select 0;
 	_mk     = _entry select 1;
 	_pChute = _entry select 4;
+	_pGrp   = _entry select 5;
 	deleteMarker _mk;
 	if (!isNull _pChute) then { deleteVehicle _pChute; };
-	if (!isNull _p) then {
-		_g = group _p;
-		deleteVehicle _p;
-		if (!isNull _g) then { deleteGroup _g; };
-	};
+	if (!isNull _p) then { deleteVehicle _p; };
+	//--- Unconditional group cleanup using stored ref — safe even if pilot was already null.
+	if (!isNull _pGrp) then { deleteGroup _pGrp; };
 } forEach (missionNamespace getVariable ["WFBE_PilotRace_Live", []]);
 missionNamespace setVariable ["WFBE_PilotRace_Live", []];
