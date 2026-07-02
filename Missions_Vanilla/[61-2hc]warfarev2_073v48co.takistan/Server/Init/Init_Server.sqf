@@ -933,6 +933,12 @@ if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLowe
 	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- COASTAL TRAFFIC: default-off Chernarus water ambience. The file self-gates again and creates neutral no-crew props only.
+if ((missionNamespace getVariable ["WFBE_C_COASTAL_TRAFFIC_ENABLE", 0]) > 0 && {(["chernarus"] find (toLower worldName)) > -1}) then {
+	[] execVM "Server\Init\Init_CoastalTraffic.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_CoastalTraffic.sqf launched (WFBE_C_COASTAL_TRAFFIC_ENABLE active)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 

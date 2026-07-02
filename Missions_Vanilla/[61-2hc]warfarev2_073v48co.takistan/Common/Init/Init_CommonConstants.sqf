@@ -335,6 +335,10 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_ORDER_DELTA") then {WFBE_C_AICOM_ORDER_DELTA = 80};            //--- Build83 movement: console/HC order re-issue distance gate (m) - nearby re-clicks don't tear the march.
 	if (isNil "WFBE_C_AICOM_ORDER_MININT") then {WFBE_C_AICOM_ORDER_MININT = 6};           //--- Build83 movement: per-team min seconds between order re-lays (debounce).
 	if (isNil "WFBE_C_AICOM_DIRECT_COOLDOWN") then {WFBE_C_AICOM_DIRECT_COOLDOWN = 1.5};   //--- Build83 console: short cooldown for DIRECT map-click Move/Defend/Patrol (local setVariable) - separate from the 8s RequestSpecial brain-send gate so re-targeting feels responsive.
+	//--- Build 87 coastal traffic hook (Chernarus-only neutral water props).
+	if (isNil "WFBE_C_COASTAL_TRAFFIC_ENABLE") then {WFBE_C_COASTAL_TRAFFIC_ENABLE = 0};    //--- master on/off. Default off; no boats are spawned unless explicitly enabled.
+	if (isNil "WFBE_C_COASTAL_TRAFFIC_SIM_RADIUS") then {WFBE_C_COASTAL_TRAFFIC_SIM_RADIUS = 900}; //--- player proximity radius for enabling neutral boat simulation.
+	if (isNil "WFBE_C_COASTAL_TRAFFIC_INTERVAL") then {WFBE_C_COASTAL_TRAFFIC_INTERVAL = 15}; //--- seconds between simulation-gate sweeps.
 	//--- === Build 83 OILFIELDS (Takistan-only neutral resource node, Ray 2026-07-01) ===
 	if (isNil "WFBE_C_OILFIELD_ENABLE") then {WFBE_C_OILFIELD_ENABLE = 1};                 //--- master on/off (Takistan only; inert on Chernarus).
 	if (isNil "WFBE_C_OILFIELD_UNLOCK_TIME") then {WFBE_C_OILFIELD_UNLOCK_TIME = 3600};    //--- ingame seconds before the node unlocks (marker+capture+income live, announced). 1 hour.
