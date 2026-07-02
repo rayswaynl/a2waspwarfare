@@ -580,4 +580,44 @@
 		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
 	};
 
+	// G4: GUER Mortar Pit wildcard card (default OFF - flag-gated).
+	class WFBE_C_GUER_MORTARPIT {
+		title = "GUER Mortar Pit wildcard (G4)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	class WFBE_C_GUER_MORTARPIT_TTL {
+		title = "GUER Mortar Pit TTL (seconds)";
+		values[] = {300,600,900,1200};
+		texts[] = {"5 min","10 min","15 min","20 min"};
+		default = 600;
+	};
+
+	// G5: GUER Scavenger Team wildcard card (default OFF - flag-gated).
+	class WFBE_C_GUER_SCAV {
+		title = "GUER Scavenger Team wildcard (G5)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	class WFBE_C_GUER_SCAV_REWARD {
+		title = "GUER Scav wreck reward (cash per wreck)";
+		values[] = {150,300,600};
+		texts[] = {"150","300","600"};
+		default = 300;
+	};
+	class WFBE_C_GUER_SCAV_PLAYER_BONUS {
+		title = "GUER Scav player-kill bonus";
+		values[] = {0,150,300};
+		texts[] = {"None","150","300"};
+		default = 150;
+	};
+	class WFBE_C_GUER_SCAV_TTL {
+		title = "GUER Scav team TTL (seconds)";
+		values[] = {180,300,600};
+		texts[] = {"3 min","5 min","10 min"};
+		default = 300;
+	};
+
 };
