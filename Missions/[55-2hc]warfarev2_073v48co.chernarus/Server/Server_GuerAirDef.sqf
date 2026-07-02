@@ -157,7 +157,10 @@ publicVariable "WFBE_ACTIVE_GUER_AIR";
 while {!WFBE_GameOver} do {
 	sleep _interval;
 
-	private ["_now","_kept","_townsWithAir","_aliveCount"];
+	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore"];
+	_perfStart = diag_tickTime;
+	_perfAirBefore = count _defenders;
+	_perfDropsBefore = count _drops;
 	_now = time;
 
 	//=== (1) PRUNE + (2) SELF-CLEAN ==========================================================
@@ -628,4 +631,7 @@ while {!WFBE_GameOver} do {
 	{ if (!isNull (_x select 1) && {alive (_x select 1)}) then { _airList = _airList + [[(_x select 1), WFBE_C_GUER_ID]] } } forEach _defenders;
 	WFBE_ACTIVE_GUER_AIR = _airList;
 	publicVariable "WFBE_ACTIVE_GUER_AIR";
+	if !(isNil "PerformanceAudit_Record") then {
+		["guer_airdef_cycle", diag_tickTime - _perfStart, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax], "SERVER"] Call PerformanceAudit_Record;
+	};
 };
