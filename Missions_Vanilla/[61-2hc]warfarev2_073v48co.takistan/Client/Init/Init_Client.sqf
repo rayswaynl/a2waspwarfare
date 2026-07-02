@@ -111,6 +111,27 @@ BoundariesIsOnMap = Compile preprocessFile "Client\Functions\Client_IsOnMap.sqf"
 BoundariesHandleOnMap = Compile preprocessFile "Client\Functions\Client_HandleOnMap.sqf";
 BuildUnit = Compile preprocessFile "Client\Functions\Client_BuildUnit.sqf";
 ChangePlayerFunds = Compile preprocessFile "Client\Functions\Client_ChangePlayerFunds.sqf";
+//--- cmdcon43-d (Build 88 FIX): refund helper that mirrors the commander defense CHARGE currency.
+//--- A commander (commanderTeam == group player) building a defense is charged from side SUPPLY under
+//--- WFBE_C_CMD_DEF_SUPPLY + dual-currency (coin_interface.sqf "//--- Defense." block); everyone else and the
+//--- funds-only currency system are charged funds. On a server-side reject the refund MUST return the pool
+//--- that was charged, so LocalizeMessage.sqf routes all defense refunds through here. _this = amount (>0).
+//--- A2-OA-safe: group player / getVariable / == / ChangeSideSupply|ChangePlayerFunds only.
+WFBE_CMD_DEF_SUPPLY_REFUND = {
+	private ["_amt"];
+	_amt = _this;
+	if (isNil "_amt" || {typeName _amt != "SCALAR"} || {_amt <= 0}) exitWith {};
+	//--- WFBE_LastDefenseChargeSupply is stamped by coin_interface.sqf at the moment of charge (true =
+	//--- side supply via the MCoin commander console, false = player funds). Refund the SAME pool. Defense
+	//--- place -> server-reject is sequential per client, so the last stamp reliably identifies the pending
+	//--- charge. Default false (funds) if never stamped this session (pre-any-placement / legacy behaviour).
+	if (!isNil "WFBE_LastDefenseChargeSupply" && {WFBE_LastDefenseChargeSupply}) then {
+		[sideJoined, _amt, "Commander defense refund.", false] Call ChangeSideSupply;
+	} else {
+		_amt Call ChangePlayerFunds;
+	};
+};
+if (isNil "WFBE_LastDefenseChargeSupply") then {WFBE_LastDefenseChargeSupply = false};
 CommandChatMessage = Compile preprocessFile "Client\Functions\Client_CommandChatMessage.sqf";
 FX = Compile preprocessFile "Client\Functions\Client_FX.sqf";
 GetIncome = Compile preprocessFile "Client\Functions\Client_GetIncome.sqf";
@@ -510,6 +531,7 @@ lastParaCall = -1200;
 lastSupplyCall = -1200;
 canBuildWHQ = true;
 WFBE_RespawnDefaultGear = false;
+WFBE_LastSelectedSpawn = objNull; //--- respawn-ui-v2: remember last chosen spawn across deaths.
 WFBE_ForceUpdate = true;
 
 //--- Load Terrain grid if it wasn't loaded from the profile.
@@ -1090,11 +1112,23 @@ case "SpecOps": {_default = missionNamespace getVariable Format["WFBE_%1_Default
 case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGearMedic", WFBE_Client_SideJoinedText]};
 };
 
-//_default = missionNamespace getVariable Format["WFBE_%1_DefaultGear", WFBE_Client_SideJoinedText];
-if (count _default <= 3) then {
-	[player, _default select 0, _default select 1, _default select 2] Call WFBE_CO_FNC_EquipUnit;
+//--- GUER-GEARFIX (2026-07-02): never equip from an empty/undefined role loadout. WFBE_SK_V_Type can be ""
+//--- (playerType not registered in any WFBE_SK_V_* list) and the per-role WFBE_%1_DefaultGearXXX can be nil
+//--- (the GUER overlay defines only Engineer/Spot/Medic) - both used to strip the player NAKED (no ItemMap
+//--- = fully black map). Fall back to the faction-wide WFBE_%1_DefaultGear (defined in every Root_*.sqf)
+//--- and warn in the RPT; if even that is missing, skip the equip so the unit keeps its config gear.
+if (isNil '_default' || {count _default == 0}) then {
+	["WARNING", Format ["Init_Client.sqf : No role default gear for type [%1] (playerType [%2]) - falling back to WFBE_%3_DefaultGear.", WFBE_SK_V_Type, playerType, WFBE_Client_SideJoinedText]] Call WFBE_CO_FNC_LogContent;
+	_default = missionNamespace getVariable Format["WFBE_%1_DefaultGear", WFBE_Client_SideJoinedText];
+};
+if (!isNil '_default' && {count _default >= 3}) then {
+	if (count _default <= 3) then {
+		[player, _default select 0, _default select 1, _default select 2] Call WFBE_CO_FNC_EquipUnit;
+	} else {
+		[player, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
+	};
 } else {
-	[player, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
+	["WARNING", Format ["Init_Client.sqf : WFBE_%1_DefaultGear is missing/short too - keeping the unit's config gear.", WFBE_Client_SideJoinedText]] Call WFBE_CO_FNC_LogContent;
 };
 
 /* Default gear menu filler. */

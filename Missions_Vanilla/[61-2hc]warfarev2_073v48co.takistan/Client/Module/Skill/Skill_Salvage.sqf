@@ -1,9 +1,10 @@
-private["_salvagerRange","_percentage","_salvageTruckTypes"];
+private["_get","_hqs","_isNeeded","_overAllCost","_percentage","_playerSideID","_salvageCost","_salvagerRange","_salvageTruckTypes","_vehicles","_wrecks","_wreckSideID"];
 
 WFBE_SK_V_LastUse_Salvage = time;
 
 _salvagerRange = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE";
 _percentage = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RATIO";
+_playerSideID = sideID;
 
 //--- Trello #15: block engineer manual salvage when a FRIENDLY salvage truck is already in range
 //--- (it auto-salvages via Client\FSM\updatesalvage.sqf). Reuse the per-side truck class list.
@@ -26,9 +27,11 @@ _wrecks = _wrecks - _hqs;
 
 _overAllCost = 0;
 {
+	_wreckSideID = _x getVariable ["wfbe_side_id", -1];
+	if (_wreckSideID < 0) then {_wreckSideID = _x getVariable ["sideID", -1]};
 	_isNeeded = _x getVariable 'keepAlive';
 
-	if (isNil '_isNeeded') then {
+	if ((isNil '_isNeeded') && {(_wreckSideID < 0) || {_wreckSideID != _playerSideID}}) then {
 		_get = missionNamespace getVariable (typeOf _x);
 		_salvageCost = 250;
 		if !(isNil '_get') then {

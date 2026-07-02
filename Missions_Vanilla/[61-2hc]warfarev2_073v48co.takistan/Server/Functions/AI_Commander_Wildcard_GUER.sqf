@@ -19,6 +19,14 @@
 	                               - GUER HOLDS it to timeout -> a FOB FACTORY TOKEN (WFBE_GUER_FOB_AVAIL), type scaled
 	                                 by the checkpoint tier: tier0-1 Barracks / tier2 Light Factory / tier3 Heavy Factory.
 	                                 i.e. a held checkpoint = captured materiel to deploy a forward factory of that type.
+		  (G4 Mortar Pit card SHELVED — Ray 2026-07-02 "Shelve mortar pit"; see wiki Shelved-GUER-wildcard-mortar-pit.)
+	  G5 Scavenger Team (5)  — flag WFBE_C_GUER_SCAV default 0. Eligibility = >=2 alive mission objects with
+	                           wfbe_aicom_abandoned=true; spawn a 4-man foot team (GUE_Soldier_1) at a GUER-owned
+	                           town; MOVE to the nearest abandoned wreck; 30s scavenge delay; award
+	                           WFBE_C_GUER_SCAV_REWARD (default 300) per wreck to GUER players via GuerVbiedBounty
+	                           PVF + deleteVehicle the wreck; player-kill bounty WFBE_C_GUER_SCAV_PLAYER_BONUS
+	                           (default 150) via WFBE_IsTownDefenderAI=true on crew; despawn after
+	                           WFBE_C_GUER_SCAV_TTL (default 300s) or crew wiped.
 
 	PAYOUT MODEL: GUER is base-less, so cash goes straight to GUER players via the EXISTING client PVFunction
 	  GuerVbiedBounty, sent to the resistance SIDE object (Client_HandlePVF matches a SIDE dest against sideJoined;
@@ -33,6 +41,10 @@
 	  WFBE_C_GUER_CP_TAX             default 60    (occupier supply drained per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_TOLL            default 250   (cash paid to GUER players per 30s tick, scaled by tier)
 	  WFBE_C_GUER_CP_CLEAR           default 700   (supply granted to the clearing side, scaled by tier)
+	  WFBE_C_GUER_SCAV               default 0     (0=disable G5 Scavenger Team card)
+	  WFBE_C_GUER_SCAV_REWARD        default 300   (cash per wreck scrapped, paid to GUER players)
+	  WFBE_C_GUER_SCAV_PLAYER_BONUS  default 150   (extra kill-bounty on each scav team member)
+	  WFBE_C_GUER_SCAV_TTL           default 300   (scav team despawn timeout in seconds)
 	  (held-to-timeout grants one FOB factory token of a tier-scaled type - no tunable; always exactly one)
 */
 
@@ -58,11 +70,14 @@ while {!gameOver} do {
 	sleep (random 30);   //--- jitter (de-correlate from the WEST/EAST workers)
 
 	[_sideID] spawn {
-		private ["_sideID","_westID","_eastID","_occTowns","_owned","_gG1","_gG2","_weights","_cumSum","_roll",
+		private ["_sideID","_westID","_eastID","_occTowns","_owned","_gG1","_gG2","_gG5",
+		         "_weights","_cumSum","_roll",
 		         "_i","_chosen","_draw","_result","_detail","_soldierClass","_vbiedClass","_target","_nearD",
 		         "_candTown","_dd","_targetPos","_ang","_spawnPos","_try","_roads","_truck","_grp","_drv",
 		         "_tier","_cpVeh","_cpLabel","_veh","_d1","_d2","_n","_footN","_u","_pos","_mk","_occSide",
-		         "_locMsg","_wName","_wDesc","_wMap","_g1Mk"];
+		         "_locMsg","_wName","_wDesc","_wMap","_g1Mk",
+		         "_abandVehs","_scavTeam","_scavGrp","_nearWreck","_scavDist","_scavReward",
+		         "_scavBonus","_scavTTL","_scavMember","_scavPos"];
 
 		_sideID = _this select 0;
 		_westID = west Call WFBE_CO_FNC_GetSideID;
@@ -78,11 +93,20 @@ while {!gameOver} do {
 		_vbiedClass   = missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"];
 
 		//--- ELIGIBILITY -> weights (0 = ineligible).
-		_gG1 = 6; _gG2 = 8;
+		//--- G4 Mortar Pit card SHELVED (Ray 2026-07-02) — removed from the deck so it can never be drawn.
+		_gG1 = 6; _gG2 = 8; _gG5 = 0;
 		if (!(count _occTowns > 0 && {_soldierClass != ""} && {isClass (configFile >> "CfgVehicles" >> _vbiedClass)})) then {_gG1 = 0};
 		if (!(count _occTowns > 0 && {_soldierClass != ""})) then {_gG2 = 0};
 
-		_weights = [[1,_gG1],[2,_gG2]];
+		//--- G5: SCAVENGER TEAM eligibility: flag on, >=2 abandoned wrecks, GUER owns at least one town (spawn anchor).
+		if ((missionNamespace getVariable ["WFBE_C_GUER_SCAV", 0]) > 0 && {_soldierClass != ""} && {count _owned > 0}) then {
+			_abandVehs = [];
+			{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {_abandVehs = _abandVehs + [_x]} } forEach allMissionObjects "LandVehicle";
+			{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {_abandVehs = _abandVehs + [_x]} } forEach allDead;
+			if (count _abandVehs >= 2) then {_gG5 = 5};
+		};
+
+		_weights = [[1,_gG1],[2,_gG2],[5,_gG5]];
 		_cumSum = 0; { _cumSum = _cumSum + (_x select 1) } forEach _weights;
 		_draw = 0;
 		if (_cumSum > 0) then {
@@ -289,6 +313,102 @@ while {!gameOver} do {
 					} else { _result = "partial"; _detail = "G2 group null at cap"; };
 				} else { _result = "ineligible"; _detail = "G2 no occupied town"; };
 			};
+
+			//--- G5: SCAVENGER TEAM — 4-man foot team moves to abandoned wrecks, scraps them, pays GUER players.
+			case 5: {
+				if (count _owned > 0) then {
+					//--- Re-scan abandoned vehicles (state may have changed since eligibility check).
+					_abandVehs = [];
+					{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {_abandVehs = _abandVehs + [_x]} } forEach allMissionObjects "LandVehicle";
+					{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {if (!(_x in _abandVehs)) then {_abandVehs = _abandVehs + [_x]}} } forEach allDead;
+
+					if (count _abandVehs >= 2) then {
+						_scavReward = missionNamespace getVariable ["WFBE_C_GUER_SCAV_REWARD", 300];
+						_scavBonus  = missionNamespace getVariable ["WFBE_C_GUER_SCAV_PLAYER_BONUS", 150];
+						_scavTTL    = missionNamespace getVariable ["WFBE_C_GUER_SCAV_TTL", 300];
+
+						//--- Spawn anchor: GUER-owned town nearest the wreck cluster.
+						_nearWreck = _abandVehs select 0;
+						_scavDist  = 1e9;
+						{ _dd = _target distance _x; if (_dd < _scavDist) then {_scavDist = _dd; _nearWreck = _x} } forEach _abandVehs;
+
+						_spawnPos = getPos (_owned select floor (random count _owned));
+
+						_scavGrp = [resistance, "guer-wc-scav"] Call WFBE_CO_FNC_CreateGroup;
+						if (!isNull _scavGrp) then {
+							for "_n" from 1 to 4 do {
+								_scavPos = [(_spawnPos select 0) + (random 20) - 10,
+								            (_spawnPos select 1) + (random 20) - 10, 0];
+								_scavMember = [_soldierClass, _scavGrp, _scavPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+								if (!isNull _scavMember) then {
+									_scavMember setVariable ["WFBE_IsTownDefenderAI", true, true];
+								};
+							};
+							_scavGrp setBehaviour "CARELESS"; _scavGrp setCombatMode "BLUE";
+
+							_detail = Format ["spawnTown=%1 wrecks=%2 nearWreck=%3 ttl=%4s",
+							                  (_owned select 0) getVariable ["name","?"], count _abandVehs, typeOf _nearWreck, _scavTTL];
+
+							//--- WATCHER: iterate wrecks, scav each, pay reward, delete; TTL or wipe -> cleanup.
+							[_scavGrp, _abandVehs, _spawnPos, _scavReward, _scavBonus, _scavTTL, _sideID] spawn {
+								private ["_sg","_vehs","_base","_rew","_bonus","_ttl","_sID",
+								         "_el","_alive","_v","_nearD","_bestV","_dd","_ldr"];
+								_sg    = _this select 0; _vehs  = _this select 1; _base  = _this select 2;
+								_rew   = _this select 3; _bonus = _this select 4; _ttl   = _this select 5;
+								_sID   = _this select 6;
+								_el    = 0; _alive = true;
+
+								//--- Iterate wrecks while team lives and TTL not expired.
+								while {_alive && {_el < _ttl} && {!gameOver} && {count _vehs > 0}} do {
+									//--- Find nearest surviving wreck.
+									_ldr    = leader _sg;
+									_bestV  = objNull; _nearD = 1e9;
+									{
+										if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {
+											_dd = if (!isNull _ldr && {alive _ldr}) then {_ldr distance _x} else {_nearD};
+											if (_dd < _nearD) then {_nearD = _dd; _bestV = _x};
+										};
+									} forEach _vehs;
+
+									if (isNull _bestV) exitWith {};   //--- no wrecks left.
+
+									//--- Move to wreck.
+									{if (alive _x) then {_x doMove (getPos _bestV)}} forEach (units _sg);
+									waitUntil {
+										sleep 5; _el = _el + 5;
+										if (({alive _x} count (units _sg)) == 0) then {_alive = false};
+										(!_alive || {_el >= _ttl} || {(!isNull _ldr && {alive _ldr} && {(_ldr distance _bestV) < 15})} || gameOver)
+									};
+									if (!_alive || {_el >= _ttl}) exitWith {};
+
+									//--- 30s scavenge delay.
+									sleep 30; _el = _el + 30;
+									if (({alive _x} count (units _sg)) == 0) then {_alive = false; _el = _ttl};
+
+									if (_alive && {_el < _ttl}) then {
+										//--- Reward + delete wreck.
+										[resistance, "GuerVbiedBounty", _rew] Call WFBE_CO_FNC_SendToClients;
+										if (!isNull _bestV) then {deleteVehicle _bestV};
+										_vehs = _vehs - [_bestV];
+										diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERSCAV_WRECK|reward=" + str _rew + "|type=" + typeOf _bestV + "|remaining=" + str (count _vehs));
+									};
+								};
+
+								//--- Cleanup: units -> group.
+								{deleteVehicle _x} forEach (units _sg);
+								if (!isNull _sg) then {deleteGroup _sg};
+								diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERSCAV_DESPAWN|el=" + str _el + "|ttl=" + str _ttl);
+							};
+						} else {
+							_result = "partial"; _detail = "G5 scav group null at cap";
+						};
+					} else {
+						_result = "ineligible"; _detail = "G5 re-scan found <2 abandoned wrecks";
+					};
+				} else {
+					_result = "ineligible"; _detail = "G5 no GUER-owned town for spawn anchor";
+				};
+			};
 		};
 
 		//--- Logging (mirror the conventional worker's AICOMSTAT line).
@@ -299,7 +419,8 @@ while {!gameOver} do {
 		//--- own resolution line from the watcher above; this is the initial "it appeared" beat.
 		_wMap = [
 			[1,"Car Bomb","a suicide car bomb rolls on an occupied town - destroy it for a bounty"],
-			[2,"Pop-up Checkpoint","a roadblock chokes an occupied supply road - clear it for supply, or it bleeds you"]
+			[2,"Pop-up Checkpoint","a roadblock chokes an occupied supply road - clear it for supply, or it bleeds you"],
+			[5,"Scavenger Team","insurgent scavengers are stripping abandoned wrecks off the battlefield"]
 		];
 		_wName = Format ["G%1", _draw]; _wDesc = "";
 		{if ((_x select 0) == _draw) exitWith {_wName = _x select 1; _wDesc = _x select 2}} forEach _wMap;

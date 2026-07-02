@@ -133,7 +133,13 @@ WFBE_CL_FNC_Upgrade_Started = {
 	// Marty: Notify side players that their upgrade has started.
 	//--- Task 29: dedicated quiet alias (same ogg, volume 2.5) — commanderNotification (10)
 	//--- is shared by other notifications and stays loud for those.
-	playSound "upgradeStartedSound";
+	//--- cmdcon43-g (Ray 2026-07-02): mode-gate the upgrade-START cue. 0 = silent, 1 = legacy
+	//--- (upgradeStartedSound, now a real registered class), 2 = quiet (same ogg, ~12 dB down).
+	//--- Default 2. See Init_CommonConstants WFBE_C_UPGRADE_SOUNDS. == on numbers is A2-OA safe.
+	private "_upSndMode";
+	_upSndMode = missionNamespace getVariable ["WFBE_C_UPGRADE_SOUNDS", 2];
+	if (_upSndMode == 1) then {playSound "upgradeStartedSound"};
+	if (_upSndMode == 2) then {playSound "WFBE_UpgradeStart_Quiet"};
 };
 
 WFBE_CL_FNC_Building_Started = {
@@ -262,7 +268,14 @@ WFBE_CL_FNC_Upgrade_Complete = {
 	//--- AI-commander upgrades (prime suspect for "sounds out of nowhere") remain silent.
 	if (_upgrade_isplayer) then {
 		// Marty: Notify side players that their upgrade has completed.
-		playSound "ARTY_cooldown_over";
+		//--- cmdcon43-g (Ray 2026-07-02): mode-gate the upgrade-COMPLETE cue INSIDE the existing
+		//--- player-initiated guard (AI upgrades already silent). 0 = silent, 1 = legacy
+		//--- (ARTY_cooldown_over at db 8), 2 = quiet (WFBE_UpgradeComplete_Quiet: same ogg, db 2).
+		//--- Default 2. Shared ogg is NOT deleted — artillery/fire-mission still use it loud.
+		private "_upSndModeC";
+		_upSndModeC = missionNamespace getVariable ["WFBE_C_UPGRADE_SOUNDS", 2];
+		if (_upSndModeC == 1) then {playSound "ARTY_cooldown_over"};
+		if (_upSndModeC == 2) then {playSound "WFBE_UpgradeComplete_Quiet"};
 	}; //--- end _upgrade_isplayer guard
 	// Marty: Clear the local cached upgrade ID and countdown when completion is announced.
 	//--- cmdcon30 (staged): a JIP client (or the HC running this client fn) can reach here before WFBE_Client_Logic

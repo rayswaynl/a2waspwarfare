@@ -1,5 +1,33 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
+
+Two GUER player-side gear bugs, fixed in two commits:
+
+**Naked spawn (no gear, no ItemMap = black map), Takistan.** Both maps' `mission.sqm` use the SAME
+Chernarus classnames for the playable GUER slots (`GUE_Soldier_Medic` / `GUE_Soldier_Sab` x2 /
+`GUE_Soldier_Sniper`), but `Skill_Init.sqf`'s worldName branch registered only `TK_GUE_*_EP1` on
+Takistan, so `playerType` matched no `WFBE_SK_V_*` list -> `WFBE_SK_V_Type=""` -> empty role loadout
+-> `EquipUnit` stripped the player. Same failure shape as the 2026-06-18 GUER-MAPFIX, other map.
+Fix: register BOTH class sets on both maps (membership lookups, extras harmless), plus defense in
+depth in `Init_Client.sqf` / `Client_OnRespawnHandler.sqf`: nil/empty role gear now falls back to the
+faction-wide `WFBE_%1_DefaultGear` with an always-on RPT WARNING instead of equipping from nothing.
+
+**Rifles missing from the GUER gear buy menu (both maps).** GUER has no upgrade system —
+`GetSideUpgrades` returns a zero array — so `Client_UI_Gear_FillList.sqf`'s
+`(_get select 3) <= _upgrade_level` filter permanently hid everything above gear tier 0. Weapon
+metadata is first-wins per classname (`Config_Weapons.sqf`) and Gear_US/Gear_TKA load before
+Gear_GUE, so even the rifles Gear_GUE prices at tier 0 (AK_47_M etc.) carry TKA's tier >= 1: at
+level 0 GUER saw only RPG18/Makarov/revolver/binocs/items — zero rifles. Fix: for the playable GUER
+side (resistance + `WFBE_C_GUER_PLAYERSIDE > 0`) treat the gear tier as unlocked in FillList,
+FillTemplates, AddTemplate and SaveTemplateProfile — the curated Loadout_GUE/TKGUE list and prices
+remain the actual gate. WEST/EAST behavior unchanged.
+
+Verification: static SQF review (A2-OA-safe constructs only) + `dotnet run` in `Tools/LoadoutManager`
+regenerated the Takistan mirror both commits (7-Zip absent -> packing skipped, mirror OK). RPT
+confirmables: the new WARNING lines fire if any role gear is still missing; GUER gear menu should now
+list rifles on both maps.
+
 ## 2026-06-28 — PR #119 low-id CIV HC slot magnet [PR]
 
 PR #119 now layers the static lobby-slot experiment on top of the runtime HC CIV hardening. The two

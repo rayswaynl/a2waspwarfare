@@ -1,4 +1,4 @@
-private["_camp","_town","_flag","_newSID","_force","_camp_cap_rate","_camp_range","_camp_range_players","_town_starting_sv"];
+private["_camp","_town","_flag","_newSID","_force","_camp_cap_rate","_camp_range","_camp_range_players","_town_starting_sv","_camp_throttle","_camp_step_sleep","_camp_loop_sleep"];
 
 _town = _this select 1;
 
@@ -12,6 +12,13 @@ _camp_cap_rate = missionNamespace getVariable "WFBE_C_CAMPS_CAPTURE_RATE";
 _camp_range = missionNamespace getVariable "WFBE_C_CAMPS_RANGE";
 _camp_range_players = missionNamespace getVariable "WFBE_C_CAMPS_RANGE_PLAYERS";
 _town_starting_sv = _town getVariable "startingSupplyValue";
+_camp_throttle = missionNamespace getVariable ["WFBE_C_TOWN_CAMP_SCAN_THROTTLE", 0];
+_camp_step_sleep = 0.01;
+_camp_loop_sleep = 0.1;
+if (_camp_throttle > 0) then {
+	_camp_step_sleep = missionNamespace getVariable ["WFBE_C_TOWN_CAMP_STEP_SLEEP", 0.03];
+	_camp_loop_sleep = missionNamespace getVariable ["WFBE_C_TOWN_CAMP_LOOP_SLEEP", 0.25];
+};
 
 while {!WFBE_GameOver} do {
 	for "_i" from 0 to ((count _camps) - 1) step 1 do
@@ -95,7 +102,7 @@ while {!WFBE_GameOver} do {
 			};
 		}else{};
 
-		sleep 0.01;
+		sleep _camp_step_sleep;
 	};
-	sleep 0.1;
+	sleep _camp_loop_sleep;
 };

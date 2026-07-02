@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow"];
+Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -210,13 +210,23 @@ _queu2 = [0];
 if (count _queu > 0) then {_queu2 = _building getVariable "queu"};
 
 _show = false;
-while {_unique != _queu select 0 && alive _building && !isNull _building} do {
+_nextQueueHint = time;
+while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
 	sleep 4;
 	_show = true;
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
+	if ((count _queu > 0) && {time >= _nextQueueHint}) then {
+		_nextQueueHint = time + 12;
+		_queuePos = _queu find _unique;
+		if (_queuePos >= 0) then {
+			_queueEta = (_queuePos * _longest) + _waitTime;
+			if (_queueEta < _waitTime) then {_queueEta = _waitTime};
+			titleText [Format ["Build queue: %1 position %2/%3, ETA about %4s.", _description, _queuePos + 1, count _queu, ceil _queueEta], "PLAIN"];
+		};
+	};
 
-	if (_queu select 0 == _queu2 select 0) then {
+	if ((_queu select 0) in [_queu2 select 0]) then {
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
@@ -225,7 +235,7 @@ while {_unique != _queu select 0 && alive _building && !isNull _building} do {
 			};
 		};
 	};
-	if (count _queu != count _queu2) then {
+	if !((count _queu) in [count _queu2]) then {
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
@@ -342,6 +352,22 @@ if (_isMan) then {
 		} forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
 	};
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
+
+	//--- cmdcon42c HOTFIX (Ray 2026-07-02): UNIVERSAL BUYFAIL-REFUND GUARD. WFBE_CO_FNC_CreateVehicle
+	//--- returns objNull whenever the engine cannot spawn the hull - a bad/unresolved buy class (e.g. a
+	//--- synthetic AH6X_M134 / TKV_* token whose remap above did not resolve to a real hull), a blocked
+	//--- spawn position, or any createVehicle failure. The player was ALREADY charged at buy time
+	//--- (GUI_Menu_BuyUnits.sqf: -(_currentCost) Call ChangePlayerFunds), so a silent null spawn = the
+	//--- player pays and gets nothing. Detect it here and (a) release the per-factory queue slot + unitQueu
+	//--- (else the factory soft-locks at its cap, exactly like the empty-vehicle exit does), and (b) refund
+	//--- the exact price paid. Same idiom as the destroyed-factory refund path (:282-287 above).
+	if (isNull _vehicle) exitWith {
+		unitQueu = unitQueu - _cpt;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
+		["WARNING", Format ["Client_BuildUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded $%2 and released queue slot for factory [%3].", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	clientTeam reveal _vehicle;
 
 	//--- cmdcon42 Option C Row 2: arm the AH-6X hull with the AH-6J's minigun. The AH6X_EP1 hull ships

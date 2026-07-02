@@ -15,6 +15,7 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_mpEnabled","_mpMotoPool","_mpEntry","_mpHasVeh","_mpC",
 	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh",
 	"_homePool","_spSkipNaval","_hpX",
+	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
 	"_perfProbe","_perfCap","_perfReason","_perfPopTier"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool).
 
 waitUntil {townInitServer};
@@ -35,6 +36,8 @@ _delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
 //--- (re)assigned at the top of every loop cycle below. A2-OA-safe (plain getVariable+select, `max 0`).
 _max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
 _scrubLast = -999;
+_feedLastSig = "";
+_feedLastBroadcast = -999;
 _perfProbe = (missionNamespace getVariable ["WFBE_C_PERFORMANCE_AUDIT_SIDE_PATROL_PROBES", 0]) > 0;
 
 while {!WFBE_GameOver} do {
@@ -90,8 +93,29 @@ while {!WFBE_GameOver} do {
 		//--- patrols/teams existing (it sits in the unconditional ~20s timer block), so a joiner whose
 		//--- connect-time catch-up was missed always gets a fresh copy of BOTH feeds within one cycle. The
 		//--- WFBE_ReqAicomFeed request handler (Init_Server) provides an instant on-demand path on top of this.
-		publicVariable "WFBE_ACTIVE_PATROLS";
-		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+		//--- Lane 111: operators can opt into change-aware broadcasts. Default 0 preserves the exact
+		//--- legacy every-cycle rebroadcast; mode 1 publishes on feed changes and keeps a bounded
+		//--- heartbeat so missed connect-time catch-up still self-heals.
+		_feedChangeOnly = (missionNamespace getVariable ["WFBE_C_SIDE_PATROL_FEED_CHANGE_ONLY", 0]) > 0;
+		if (_feedChangeOnly) then {
+			_feedKeepAlive = missionNamespace getVariable ["WFBE_C_SIDE_PATROL_FEED_KEEPALIVE", 60];
+			if (_feedKeepAlive < 20) then {_feedKeepAlive = 20};
+			_feedSig = str [WFBE_ACTIVE_PATROLS, WFBE_ACTIVE_AICOM_TEAMS];
+			_feedChanged = false;
+			if (!(_feedSig in [_feedLastSig])) then {_feedChanged = true};
+			_feedDue = (time - _feedLastBroadcast) >= _feedKeepAlive;
+			if (_feedChanged || {_feedDue}) then {
+				publicVariable "WFBE_ACTIVE_PATROLS";
+				publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+				_feedLastSig = _feedSig;
+				_feedLastBroadcast = time;
+			};
+		} else {
+			publicVariable "WFBE_ACTIVE_PATROLS";
+			publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+			_feedLastSig = str [WFBE_ACTIVE_PATROLS, WFBE_ACTIVE_AICOM_TEAMS];
+			_feedLastBroadcast = time;
+		};
 
 		_scrubLast = time;
 	};

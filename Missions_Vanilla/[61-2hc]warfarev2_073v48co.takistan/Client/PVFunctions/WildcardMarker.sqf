@@ -17,18 +17,18 @@
 		- _this : ARRAY, [_op, _mkName, ...] as above.
 */
 
-Private ["_op","_mkName","_pos","_color","_type","_label"];
+Private ["_op","_mkName","_pos","_color","_type","_label","_detail"];
 
 if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
 if (isDedicated) exitWith {};
 if (isNull player) exitWith {};
 
-if (typeName _this != "ARRAY") exitWith {};
+if !((typeName _this) in ["ARRAY"]) exitWith {};
 if (count _this < 2) exitWith {};
 
 _op     = _this select 0;
 _mkName = _this select 1;
-if (typeName _op != "STRING" || {typeName _mkName != "STRING"} || {_mkName == ""}) exitWith {};
+if (!((typeName _op) in ["STRING"]) || {!((typeName _mkName) in ["STRING"])} || {_mkName in [""]}) exitWith {};
 
 switch (_op) do {
 
@@ -38,17 +38,30 @@ switch (_op) do {
 		_color = _this select 3;
 		_type  = _this select 4;
 		_label = _this select 5;
+		if !((typeName _label) in ["STRING"]) then {_label = str _label};
 		//--- Idempotent: if a marker by this name already exists locally, drop it first
 		//--- so a re-create never stacks (one marker per active event).
-		if (markerType _mkName != "") then {deleteMarkerLocal _mkName};
+		if !((markerType _mkName) in [""]) then {deleteMarkerLocal _mkName};
 		createMarkerLocal [_mkName, _pos];
 		_mkName setMarkerTypeLocal _type;
 		_mkName setMarkerColorLocal _color;
 		_mkName setMarkerSizeLocal [1, 1];
 		_mkName setMarkerTextLocal _label;
+		_detail = switch (_label) do {
+			case "Airborne Assault": {"elite paratroopers are dropping near the front"};
+			case "Air Cavalry": {"air assault troops are moving to the front"};
+			case "Gunship Strike": {"an attack aircraft is striking the marked area"};
+			case "Heliborne QRF": {"a quick reaction force is landing at a threatened friendly town"};
+			case "Top Gun": {"a fighter is loitering over the front"};
+			case "Armor Column": {"a tank platoon is rolling toward the front"};
+			case "Technical Swarm": {"gun trucks are charging toward the front"};
+			case "Car Bomb": {"a GUER VBIED is rolling toward its target"};
+			default {"event location marked on your map"};
+		};
+		titleText [Format ["Wildcard: %1 - %2.", _label, _detail], "PLAIN"];
 	};
 
 	case "delete": {
-		if (markerType _mkName != "") then {deleteMarkerLocal _mkName};
+		if !((markerType _mkName) in [""]) then {deleteMarkerLocal _mkName};
 	};
 };

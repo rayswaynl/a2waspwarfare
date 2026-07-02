@@ -30,7 +30,8 @@
 
 Private ["_chosenClass","_oldUnit","_oldGrp","_swapGrp","_pos","_dir",
          "_unitName","_unitRank","_unitFace","_unitSpeaker",
-         "_gear","_newUnit","_wasLeader","_uid","_waitStart","_verifyStart"];
+         "_gear","_newUnit","_wasLeader","_uid","_waitStart","_verifyStart",
+         "_carryFunds","_carrySide","_curGrp","_curFunds"];
 
 _chosenClass = _this select 0;
 
@@ -66,6 +67,22 @@ if (!(isNil "WFBE_SkinSelector_InProgress") && {WFBE_SkinSelector_InProgress}) e
 WFBE_SkinSelector_InProgress = true;
 
 _oldGrp  = group _oldUnit;
+
+//--- cmdcon43-h WALLET-CARRY (Ray 2026-07-02): the player's money lives on his GROUP object as
+//--- wfbe_funds; GetPlayerFunds reads (clientTeam) Call GetTeamFunds and clientTeam is re-pointed at
+//--- (group player) after the swap (BUG-8 line ~301). The swap creates a FRESH group (_swapGrp,
+//--- createGroup - never funded) and relies solely on `[_newUnit] join _oldGrp` to land the player back
+//--- in his funded slot group. When that rejoin does NOT put him in the funded group (original group
+//--- empty/reaped, the CreateUnit non-local-leader fallback diverting to a fresh "misc" group, or a JIP
+//--- CIV-drift swap group), the player ends up in a group with NO wfbe_funds -> GetTeamFunds returns 0
+//--- -> wallet reads $0 AND every purchase/refund charges an empty wallet. LIVE-CONFIRMED (server RPT
+//--- cmdcon42b: a WEST player's own group resolved side=CIV, funds=0, RequestFundsResend stamped
+//--- START funds=0 because no WFBE_C_ECONOMY_FUNDS_START_CIVILIAN constant exists). Fix: snapshot the
+//--- funded group's wfbe_funds + wfbe_side NOW, before any group juggling, and re-stamp them onto the
+//--- player's CURRENT group after selectPlayer if that group lost them. Flag-gated (default ON). A2-OA
+//--- 1.64 safe: getVariable / typeName / plain locals (no A3 commands, no isNil-less reads).
+_carryFunds = _oldGrp getVariable "wfbe_funds";   //--- may be nil if _oldGrp was itself already unfunded
+_carrySide  = _oldGrp getVariable "wfbe_side";     //--- may be nil on a transient/civilian group
 
 //--- Capture position / orientation.
 _pos = getPosATL _oldUnit;
@@ -300,6 +317,50 @@ player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
 if (!isNull (group player)) then {
 	clientTeam = group player;
 	WFBE_Client_Team = group player;
+};
+
+//--- cmdcon43-h WALLET-CARRY apply (Ray 2026-07-02): before clientTeam becomes authoritative for the
+//--- wallet, make sure the player's CURRENT group actually carries his money. If the rejoin above put
+//--- him back in the funded slot group its wfbe_funds is intact and this is a no-op. If it did NOT
+//--- (fresh/diverted/CIV group) the group has no numeric wfbe_funds and GetPlayerFunds would read $0 -
+//--- re-stamp the snapshot taken from _oldGrp so the wallet follows the player across the swap. Also
+//--- carry wfbe_side so a diverted group is still recognised as a real warfare slot (RequestFundsResend
+//--- + the connect resolver both key off wfbe_side; a group missing it reads civilian -> funds=0). We
+//--- ONLY stamp when the current group is MISSING a numeric value (never overwrite a real live balance,
+//--- so no duplication and a legitimately-spent-low balance is preserved). Broadcast (3rd arg true) so
+//--- the server-side view of this group matches. Flag WFBE_C_SKINSWAP_FUNDS_CARRY (default 1) lets Ray
+//--- disable it. A2-OA-1.64 safe: isNull / group / getVariable / typeName == / setVariable[_,_,true].
+if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then {
+	_curGrp = group player;
+	if (!isNull _curGrp) then {
+		_curFunds = _curGrp getVariable "wfbe_funds";
+		//--- Only heal a group that has NO numeric funds of its own (the orphaned-wallet case).
+		if (isNil "_curFunds" || {typeName _curFunds != "SCALAR"}) then {
+			//--- Prefer the exact snapshot from the pre-swap funded group; if that too was missing
+			//--- (a chain of prior orphaning), fall back to the side START so the player is never
+			//--- left at a phantom $0. _carrySide feeds the START lookup and re-slots the group.
+			if (!isNil "_carryFunds" && {typeName _carryFunds == "SCALAR"}) then {
+				_curGrp setVariable ["wfbe_funds", _carryFunds, true];
+			} else {
+				private "_startFunds";
+				_startFunds = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", (side player)], 0];
+				_curGrp setVariable ["wfbe_funds", _startFunds, true];
+			};
+			//--- Restore the group's warfare-slot identity so the server never reads it as civilian.
+			if (isNil {_curGrp getVariable "wfbe_side"} && {!isNil "_carrySide"}) then {
+				_curGrp setVariable ["wfbe_side", _carrySide, true];
+			};
+			diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - re-stamped wfbe_funds=%1 (carried=%2) side=%3 grp=%4",
+				(_curGrp getVariable ["wfbe_funds", 0]), (if (isNil "_carryFunds") then {"nil"} else {_carryFunds}), (side player), _curGrp];
+			//--- Ask the server to re-broadcast the AUTHORITATIVE value onto this group (idempotent:
+			//--- it echoes an absolute stored value, never adds). This reconciles the server's own
+			//--- record with the client re-stamp and covers the case where _oldGrp's balance had
+			//--- diverged from the client snapshot. Mirrors the respawn-handler funds resend.
+			if (!isNil "WFBE_Client_SideJoined") then {
+				["RequestFundsResend", [player, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
+			};
+		};
+	};
 };
 
 //--- Re-add the User11 KeyDown EH — it lived on the old (deleted) unit.
