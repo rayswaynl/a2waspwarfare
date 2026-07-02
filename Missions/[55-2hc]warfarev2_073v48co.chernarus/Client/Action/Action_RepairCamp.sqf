@@ -35,8 +35,7 @@ if ((missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") > 0) then {
 	//--- Check that the player has enough funds for a repair.
 	if ((Call WFBE_CL_FNC_GetClientFunds) < (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE")) exitWith {hint Format [localize "STR_WF_Repair_Camp_NoFunds", (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") - (Call WFBE_CL_FNC_GetClientFunds)]};
 
-	//--- Purchase a repair.
-	-(missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") Call WFBE_CL_FNC_ChangeClientFunds;
+	//--- The server revalidates and debits at completion so forged repair requests cannot bypass funds.
 };
 	
 //--- Get the closest camp then.
@@ -58,12 +57,10 @@ if (!(alive _vehicle) || (_vehicle distance _camp > _range)) exitWith {hint (loc
 if (alive (_camp getVariable 'wfbe_camp_bunker')) exitWith {
 	hint (localize "STR_WF_Repair_Camp_IsAlive");
 	
-	//--- Refunds the player.
-	(missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") Call WFBE_CL_FNC_ChangeClientFunds;
 };
 
 //--- Repair order is sent to the server.
-["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID]] Call WFBE_CO_FNC_SendToServer;
+["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID, player, clientTeam, _vehicle]] Call WFBE_CO_FNC_SendToServer;
 
 //sleep 4;
 

@@ -12,7 +12,8 @@
 
 	_this = [facType("Barracks"/"Light"/"Heavy"), pos, dir, truck, player]
 */
-private ["_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script"];
+private ["_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script","_truckIdx","_truckTypes","_range"];
+if (count _this < 5) exitWith {["WARNING", Format ["RequestFOBStructure.sqf: short payload [%1] - rejected.", _this]] Call WFBE_CO_FNC_LogContent};
 _facType = _this select 0;
 _pos     = _this select 1;
 _dir     = _this select 2;
@@ -20,9 +21,32 @@ _truck   = _this select 3;
 _player  = _this select 4;
 
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
+if ((typeName _facType != "STRING") || {typeName _pos != "ARRAY"} || {typeName _dir != "SCALAR"} || {typeName _truck != "OBJECT"} || {typeName _player != "OBJECT"}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: malformed payload fac=%1 pos=%2 dir=%3 truck=%4 player=%5 - rejected.", typeName _facType, typeName _pos, typeName _dir, typeName _truck, typeName _player]] Call WFBE_CO_FNC_LogContent;
+};
+if ((count _pos < 2) || {typeName (_pos select 0) != "SCALAR"} || {typeName (_pos select 1) != "SCALAR"}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: malformed position [%1] - rejected.", _pos]] Call WFBE_CO_FNC_LogContent;
+};
+if (isNull _player || {!alive _player} || {!isPlayer _player} || {side _player != resistance}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: invalid requester [%1] - rejected.", _player]] Call WFBE_CO_FNC_LogContent;
+};
+if (isNull _truck || {!alive _truck} || {!(_truck getVariable ["wfbe_is_guer_fob", false])}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: invalid FOB truck [%1] - rejected.", _truck]] Call WFBE_CO_FNC_LogContent;
+};
+_range = missionNamespace getVariable ["WFBE_C_GUER_FOB_BUILD_RANGE", 30];
+if (typeName _range != "SCALAR") then {_range = 30};
+if ((_player distance _truck) > _range) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: requester too far from FOB truck (%1 > %2) - rejected.", round (_player distance _truck), _range]] Call WFBE_CO_FNC_LogContent;
+};
 
 _idx = (missionNamespace getVariable ["WFBE_C_GUER_FOB_STRUCTS", ["Barracks","Light","Heavy"]]) find _facType;
 if (_idx < 0) exitWith {["WARNING", Format ["RequestFOBStructure.sqf: unknown FOB type [%1] - rejected.", _facType]] Call WFBE_CO_FNC_LogContent};
+_truckTypes = missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []];
+if (typeName _truckTypes != "ARRAY") then {_truckTypes = []};
+_truckIdx = _truckTypes find (typeOf _truck);
+if (_truckIdx != _idx) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: FOB truck/type mismatch truck=%1 idx=%2 requested=%3 idx=%4 - rejected.", typeOf _truck, _truckIdx, _facType, _idx]] Call WFBE_CO_FNC_LogContent;
+};
 
 _avail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]);
 _reject = false;

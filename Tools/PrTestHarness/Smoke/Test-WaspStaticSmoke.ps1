@@ -623,6 +623,62 @@ function Test-GuerMortarRequestSpecialAuthorityGuard {
 	Add-Result "GUER mortar RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
+function Test-CampRepairAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$server = Get-Text (Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf")
+		$repairTruck = Get-Text (Join-Path $entry.Root "Client\Action\Action_RepairCamp.sqf")
+		$repairEngineer = Get-Text (Join-Path $entry.Root "Client\Action\Action_RepairCampEngineer.sqf")
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$caseAt = $serverCode.IndexOf('case "repair-camp"')
+		if ($caseAt -lt 0) {
+			$missing += "$($entry.Terrain):missing-case"
+			continue
+		}
+		$nextAt = $serverCode.IndexOf('case "', $caseAt + 1)
+		if ($nextAt -lt 0) { $nextAt = $serverCode.Length }
+		$block = $serverCode.Substring($caseAt, $nextAt - $caseAt)
+		$countAt = $block.IndexOf('count _args < 6')
+		$selectAt = $block.IndexOf('_args select 1')
+		if ($countAt -lt 0) { $missing += "$($entry.Terrain):short-payload-guard" }
+		if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):guard-after-select" }
+		if (-not ($block.Contains('typeName _logic != "OBJECT"') -and $block.Contains('typeName _requester != "OBJECT"') -and $block.Contains('typeName _playerTeam != "GROUP"') -and $block.Contains('typeName _repairActor != "OBJECT"'))) { $missing += "$($entry.Terrain):payload-types" }
+		if (-not ($block.Contains('!isPlayer _requester') -and $block.Contains('group _requester != _playerTeam') -and $block.Contains('side _playerTeam != _repairSide'))) { $missing += "$($entry.Terrain):requester-team-binding" }
+		if (-not ($block.Contains('WFBE_C_CAMPS_REPAIR_RANGE') -and $block.Contains('_repairActor distance _logic') -and $block.Contains('wfbe_camp_bunker'))) { $missing += "$($entry.Terrain):range-bunker-binding" }
+		if (-not ($block.Contains('WFBE_C_CAMPS_REPAIR_PRICE') -and $block.Contains('WFBE_CO_FNC_GetTeamFunds') -and $block.Contains('WFBE_CO_FNC_ChangeTeamFunds') -and $block.Contains('rejected repair-camp unaffordable'))) { $missing += "$($entry.Terrain):server-funds-debit" }
+		if (-not ($repairTruck.Contains('["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID, player, clientTeam, _vehicle]]') -and $repairEngineer.Contains('["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID, player, clientTeam, _vehicle]]'))) { $missing += "$($entry.Terrain):client-requester-context" }
+		if ($repairTruck.Contains('Call WFBE_CL_FNC_ChangeClientFunds') -or $repairEngineer.Contains('Call WFBE_CL_FNC_ChangeClientFunds')) { $missing += "$($entry.Terrain):client-local-repair-debit" }
+	}
+	Add-Result "Camp repair authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
+function Test-GuerVehicleActionAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$server = Get-Text (Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf")
+		$fob = Get-Text (Join-Path $entry.Root "Server\PVFunctions\RequestFOBStructure.sqf")
+		$vbiedAction = Get-Text (Join-Path $entry.Root "Client\Action\Action_GuerVbiedDetonate.sqf")
+		$fobAction = Get-Text (Join-Path $entry.Root "Client\Action\Action_BuildFOB.sqf")
+		if (-not ($server.Contains('guer-vbied-detonate received a short payload') -and $server.Contains('typeName _veh != "OBJECT"') -and $server.Contains('typeName _driver != "OBJECT"') -and $server.Contains('isPlayer _driver') -and $server.Contains('wfbe_is_guer_vbied') -and $server.Contains('wfbe_vbied_fired_server'))) { $missing += "$($entry.Terrain):vbied-server-binding" }
+		if (-not $vbiedAction.Contains('["RequestSpecial", ["guer-vbied-detonate", _veh, _player]]')) { $missing += "$($entry.Terrain):vbied-client-context" }
+		if (-not ($fob.Contains('short payload') -and $fob.Contains('typeName _facType != "STRING"') -and $fob.Contains('typeName _truck != "OBJECT"') -and $fob.Contains('typeName _player != "OBJECT"') -and $fob.Contains('side _player != resistance') -and $fob.Contains('wfbe_is_guer_fob'))) { $missing += "$($entry.Terrain):fob-payload-requester-binding" }
+		if (-not ($fob.Contains('WFBE_C_GUER_FOB_BUILD_RANGE') -and $fob.Contains('_player distance _truck') -and $fob.Contains('WFBE_C_GUER_FOB_TRUCKS') -and $fob.Contains('_truckIdx != _idx') -and $fob.Contains('FOB truck/type mismatch'))) { $missing += "$($entry.Terrain):fob-range-token-binding" }
+		if (-not $fobAction.Contains('["RequestFOBStructure", [_facType, _pos, _dir, _truck, _player]]')) { $missing += "$($entry.Terrain):fob-client-context" }
+	}
+	Add-Result "GUER vehicle action authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
 function Test-PlayerSupportRequestSpecialAuthorityGuard {
 	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$roots = @(
@@ -700,6 +756,39 @@ function Test-PlayerSupportRequestSpecialAuthorityGuard {
 		if (-not ($paraAmmoCode.Contains('count _args < 5') -and $paraAmmoCode.Contains('_requester = _args select 4') -and $paraAmmoCode.Contains('typeName (_destination select 0) != "SCALAR"') -and $paraAmmoCode.Contains('!isPlayer _requester') -and $paraAmmoCode.Contains('group _requester != _playerTeam') -and $paraAmmoCode.Contains('leader _playerTeam != _requester') -and $paraAmmoCode.Contains('[_grp,_destination,"MOVE",10] Call AIMoveTo'))) { $missing += "$($entry.Terrain):paraammo-support-revalidation" }
 	}
 	Add-Result "Player support RequestSpecial authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
+}
+
+function Test-SupplyTruckRespawnAuthorityGuard {
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$server = Get-Text (Join-Path $entry.Root "Server\Functions\Server_HandleSpecial.sqf")
+		$economy = Get-Text (Join-Path $entry.Root "Client\GUI\GUI_Menu_Economy.sqf")
+		$serverCode = [regex]::Replace($server, "//.*", "")
+		$serverCode = [regex]::Replace($serverCode, "/\*[\s\S]*?\*/", "")
+		$caseAt = $serverCode.IndexOf('case "RespawnST"')
+		if ($caseAt -lt 0) {
+			$missing += "$($entry.Terrain):missing-case"
+			continue
+		}
+		$nextAt = $serverCode.IndexOf('case "', $caseAt + 1)
+		if ($nextAt -lt 0) { $nextAt = $serverCode.Length }
+		$block = $serverCode.Substring($caseAt, $nextAt - $caseAt)
+		$countAt = $block.IndexOf('count _args < 4')
+		$selectAt = $block.IndexOf('_args select 1')
+		if ($countAt -lt 0) { $missing += "$($entry.Terrain):short-payload-guard" }
+		if ($selectAt -ge 0 -and ($countAt -lt 0 -or $countAt -gt $selectAt)) { $missing += "$($entry.Terrain):guard-after-select" }
+		if (-not ($block.Contains('_side in [west, east]') -and $block.Contains('typeName _requester != "OBJECT"') -and $block.Contains('typeName _playerTeam != "GROUP"'))) { $missing += "$($entry.Terrain):payload-types" }
+		if (-not ($block.Contains('!isPlayer _requester') -and $block.Contains('group _requester != _playerTeam') -and $block.Contains('side _playerTeam != _side'))) { $missing += "$($entry.Terrain):requester-team-binding" }
+		if (-not ($block.Contains('WFBE_CO_FNC_GetCommanderTeam') -and $block.Contains('leader _cmdTeam != _requester') -and $block.Contains('!isPlayer (leader _cmdTeam)') -and $block.Contains('rejected RespawnST from non-commander'))) { $missing += "$($entry.Terrain):commander-binding" }
+		if (-not ($block.Contains('WFBE_C_ECONOMY_SUPPLY_SYSTEM') -and $block.Contains('rejected RespawnST while supply system is disabled'))) { $missing += "$($entry.Terrain):supply-system-gate" }
+		if (-not $economy.Contains('["RequestSpecial", ["RespawnST",sideJoined,player,clientTeam]]')) { $missing += "$($entry.Terrain):client-requester-context" }
+	}
+	Add-Result "Supply truck respawn authority guard" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
 function Test-AicomCommandConsoleAuthorityGuard {
@@ -1092,16 +1181,24 @@ function Test-HcPvfGuard {
 }
 
 function Test-HcDelegatedAiLocalGroups {
-	$delegateTown = Get-Text (Join-Path $missionRoot "Client\Functions\Client_DelegateTownAI.sqf")
-	$delegateStatic = Get-Text (Join-Path $missionRoot "Client\Functions\Client_DelegateAIStaticDefence.sqf")
-	$createStatic = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateUnitForStaticDefence.sqf")
-	$createUnit = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateUnit.sqf")
-	$createTeam = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateTeam.sqf")
-	$townLocalizes = $delegateTown.Contains("count units _team") -and $delegateTown.Contains('[_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup') -and $delegateTown.Contains("_teams set [_i, _team]")
-	$staticLocalizes = $delegateStatic.Contains("GROUP BLOAT REDUCTION") -and $delegateStatic.Contains("WFBE_CO_FNC_CreateUnitForStaticDefence") -and $createStatic.Contains('[_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup') -and $createStatic.Contains("wfbe_hc_local_grp")
-	$unitFallback = $createUnit.Contains("_teamLeader = leader _team") -and $createUnit.Contains("!local _teamLeader") -and $createUnit.Contains("is not local here; creating local fallback group") -and $createUnit.Contains("if (isNull _unit) exitWith") -and (-not $createUnit.Contains("local _team)"))
-	$teamFiltersNull = $createTeam.Contains("if (isNull _unit) then") -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}")   # recalibrated: baseline guards the null-unit case with isNull (not !isNull)
-	Add-Result "HC delegated AI local groups" ($townLocalizes -and $staticLocalizes -and $unitFallback -and $teamFiltersNull) "town=$townLocalizes static=$staticLocalizes unitFallback=$unitFallback nullFilter=$teamFiltersNull"
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$roots = @(
+		[pscustomobject]@{ Terrain = "chernarus"; Root = $missionRoot },
+		[pscustomobject]@{ Terrain = "takistan"; Root = $takistanRoot }
+	)
+	$missing = @()
+	foreach ($entry in $roots) {
+		$delegateTown = Get-Text (Join-Path $entry.Root "Client\Functions\Client_DelegateTownAI.sqf")
+		$delegateStatic = Get-Text (Join-Path $entry.Root "Client\Functions\Client_DelegateAIStaticDefence.sqf")
+		$createStatic = Get-Text (Join-Path $entry.Root "Common\Functions\Common_CreateUnitForStaticDefence.sqf")
+		$createUnit = Get-Text (Join-Path $entry.Root "Common\Functions\Common_CreateUnit.sqf")
+		$createTeam = Get-Text (Join-Path $entry.Root "Common\Functions\Common_CreateTeam.sqf")
+		if (-not ($delegateTown.Contains("count units _team") -and $delegateTown.Contains('[_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup') -and $delegateTown.Contains("_teams set [_i, _team]"))) { $missing += "$($entry.Terrain):town-local-group" }
+		if (-not ($delegateStatic.Contains("GROUP BLOAT REDUCTION") -and $delegateStatic.Contains("WFBE_CO_FNC_CreateUnitForStaticDefence") -and $createStatic.Contains('[_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup') -and $createStatic.Contains("wfbe_hc_local_grp"))) { $missing += "$($entry.Terrain):static-local-group" }
+		if (-not ($createUnit.Contains("_teamLeader = leader _team") -and $createUnit.Contains("!local _teamLeader") -and $createUnit.Contains("is not local here; creating local fallback group") -and $createUnit.Contains("if (isNull _unit) exitWith") -and (-not $createUnit.Contains("local _team)")))) { $missing += "$($entry.Terrain):unit-fallback" }
+		if (-not ($createTeam.Contains("if (isNull _unit) then") -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}"))) { $missing += "$($entry.Terrain):null-unit-filter" }
+	}
+	Add-Result "HC delegated AI local groups" ($missing.Count -eq 0) "missing=$($missing -join ',')"
 }
 
 function Test-GuiImageTabGuard {
@@ -1647,8 +1744,11 @@ Test-FactoryQueueEmptyHeadGuard
 Test-AttackWavePvGuards
 Test-IcbmRequestSpecialAuthorityGuard
 Test-SupplyMissionPvGuards
+Test-SupplyTruckRespawnAuthorityGuard
 Test-ScudStrikeAuthorityGuard
 Test-GuerMortarRequestSpecialAuthorityGuard
+Test-CampRepairAuthorityGuard
+Test-GuerVehicleActionAuthorityGuard
 Test-PlayerSupportRequestSpecialAuthorityGuard
 Test-AicomCommandConsoleAuthorityGuard
 Test-AicomHandleSpecialShapeGuards

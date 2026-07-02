@@ -298,9 +298,31 @@ switch (_args select 0) do {
 	};
 
 	case "RespawnST": {
-		Private ["_side","_st"];
+		Private ["_cmdTeam","_playerTeam","_requester","_side","_st"];
+		if (count _args < 4) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected short RespawnST payload [%1].", _args]] Call WFBE_CO_FNC_LogContent;
+		};
 		_side = _args select 1;
+		_requester = _args select 2;
+		_playerTeam = _args select 3;
+		if (!(_side in [west, east])) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST with invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((typeName _requester != "OBJECT") || {typeName _playerTeam != "GROUP"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed RespawnST requester=%1 team=%2.", typeName _requester, typeName _playerTeam]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNull _playerTeam || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _side}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST requester/team mismatch requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		_cmdTeam = _side Call WFBE_CO_FNC_GetCommanderTeam;
+		if (isNull _cmdTeam || {leader _cmdTeam != _requester} || {!isPlayer (leader _cmdTeam)}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST from non-commander requester=%1 team=%2 side=%3.", _requester, _playerTeam, _side]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 0]) != 0) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected RespawnST while supply system is disabled for [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+		};
 		_st = (_side call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_ai_supplytrucks";
+		if (isNil "_st" || {typeName _st != "ARRAY"}) then {_st = []};
 		{if (!isNull (driver _x)) then {driver _x setDammage 1};_x setDammage 1} forEach _st;
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Supply Trucks were forced respawn.", str _side]] Call WFBE_CO_FNC_LogContent;
 	};
@@ -1349,11 +1371,49 @@ switch (_args select 0) do {
 		};
 	};
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel"];
+		Private ["_bunker","_camp_sideID","_funds","_logic","_playerTeam","_price","_range","_repairActor","_repairSide","_repairSideID","_requester","_townModel"];
+		if (count _args < 6) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected short repair-camp payload [%1].", _args]] Call WFBE_CO_FNC_LogContent;
+		};
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
+		_requester = _args select 3;
+		_playerTeam = _args select 4;
+		_repairActor = _args select 5;
 
-		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {};
+		if ((typeName _logic != "OBJECT") || {typeName _repairSideID != "SCALAR"} || {typeName _requester != "OBJECT"} || {typeName _playerTeam != "GROUP"} || {typeName _repairActor != "OBJECT"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed repair-camp fields camp=%1 sideID=%2 requester=%3 team=%4 actor=%5.", typeName _logic, typeName _repairSideID, typeName _requester, typeName _playerTeam, typeName _repairActor]] Call WFBE_CO_FNC_LogContent;
+		};
+		_repairSide = _repairSideID Call WFBE_CO_FNC_GetSideFromID;
+		if !(_repairSide in [west, east, resistance]) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected repair-camp with invalid sideID [%1].", _repairSideID]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNull _logic || {isNull _playerTeam} || {isNull _requester} || {!alive _requester} || {!isPlayer _requester} || {group _requester != _playerTeam} || {side _playerTeam != _repairSide}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected repair-camp requester/team mismatch requester=%1 team=%2 sideID=%3.", _requester, _playerTeam, _repairSideID]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNull _repairActor || {!alive _repairActor} || {(_requester distance _repairActor) > 25}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected repair-camp invalid repair actor requester=%1 actor=%2.", _requester, _repairActor]] Call WFBE_CO_FNC_LogContent;
+		};
+		_range = missionNamespace getVariable ["WFBE_C_CAMPS_REPAIR_RANGE", 30];
+		if (typeName _range != "SCALAR") then {_range = 30};
+		if ((_repairActor distance _logic) > _range) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected repair-camp actor too far actor=%1 camp=%2 range=%3.", _repairActor, _logic, _range]] Call WFBE_CO_FNC_LogContent;
+		};
+		_bunker = _logic getVariable "wfbe_camp_bunker";
+		if (isNil "_bunker" || {typeName _bunker != "OBJECT"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected repair-camp with missing bunker camp=%1.", _logic]] Call WFBE_CO_FNC_LogContent;
+		};
+
+		if (alive _bunker) exitWith {};
+
+		_price = missionNamespace getVariable ["WFBE_C_CAMPS_REPAIR_PRICE", 0];
+		if (typeName _price != "SCALAR") then {_price = 0};
+		if (_price < 0) then {_price = 0};
+		_funds = _playerTeam Call WFBE_CO_FNC_GetTeamFunds;
+		if (_funds < _price) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected repair-camp unaffordable requester=%1 team=%2 need=%3 have=%4.", _requester, _playerTeam, _price, _funds]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_price > 0) then {[_playerTeam, -_price] Call WFBE_CO_FNC_ChangeTeamFunds};
 
 		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle (getPos _logic);
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
@@ -1387,9 +1447,16 @@ switch (_args select 0) do {
 	//--- Gate-guarded; the client only sends this for a GUER VBIED driver, so gate-OFF is a byte-for-byte no-op.
 	case "guer-vbied-detonate": {
 		Private ["_veh","_driver"];
+		if (count _args < 3) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: guer-vbied-detonate received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
 		_veh = _args select 1;
 		_driver = _args select 2;
-		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]))}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC).
+		if ((typeName _veh != "OBJECT") || {typeName _driver != "OBJECT"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected malformed GUER VBIED payload veh=%1 driver=%2.", typeName _veh, typeName _driver]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {!isNull _driver} && {alive _driver} && {isPlayer _driver} && {side _driver == resistance} && {_veh getVariable ["wfbe_is_guer_vbied", false]} && {!(_veh getVariable ["wfbe_vbied_fired_server", false])} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]))}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC).
+			_veh setVariable ["wfbe_vbied_fired_server", true, true];
 			[_veh, _driver] spawn {
 				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail"];
 				_veh = _this select 0;
