@@ -616,6 +616,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_HELI_CANNON_RANGE") then {WFBE_C_AICOM_HELI_CANNON_RANGE = 700}; //--- m: enemy within this band -> nudge gunner to cannon.
 	if (isNil "WFBE_C_AICOM_HELI_GUN_ALT")      then {WFBE_C_AICOM_HELI_GUN_ALT      = 35};  //--- m: low gun-run altitude so the engine acquires inside guided-min-range (tradeoff: more AA exposure).
 	if (isNil "WFBE_C_AICOM_HELI_NUDGE_PERIOD") then {WFBE_C_AICOM_HELI_NUDGE_PERIOD = 7};   //--- s between nudges.
+	if (isNil "WFBE_C_AICOM_HELI_APPROACH_LIMITED") then {WFBE_C_AICOM_HELI_APPROACH_LIMITED = 0}; //--- Fleet lane 18: 1 = slow AICOM transport helis to LIMITED only for the final LZ run-in.
 	//--- V0.7 bootstrap: until the side owns >= 1 town, bias target selection to the
 	//--- nearest-to-base, lowest-value town so the AI captures its first income source fast.
 	if (isNil "WFBE_C_AICOM_BOOTSTRAP_BIAS") then {WFBE_C_AICOM_BOOTSTRAP_BIAS = 1};         //--- 1 enable, 0 disable.
