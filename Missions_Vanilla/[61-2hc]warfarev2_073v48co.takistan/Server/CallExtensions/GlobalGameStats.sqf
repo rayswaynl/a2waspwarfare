@@ -1,4 +1,4 @@
-Private ["_cSharpClassName","_scoreSideWest","_scoreSideEast","_currentMap","_uptime","_playerCount","_hcCount"];
+Private ["_cSharpClassName","_scoreSideWest","_scoreSideEast","_currentMap","_uptime","_playerCount","_hcCount","_players"];
 _cSharpClassName = "GLOBALGAMESTATS";
 _currentMap = worldName;
 
@@ -10,12 +10,9 @@ while {true} do {
 
     ["INFORMATION", Format ["Running with old vars %1: %2 | %3 | %4 | %5 | %6",_cSharpClassName,_scoreSideWest,_scoreSideEast,_currentMap,_uptime,_playerCount]] Call WFBE_CO_FNC_LogContent;
 
-    // Count the actual players, skip bots that are in the deadspawns
-    {
-        if (isPlayer _x) then {
-            _playerCount = _playerCount + 1;
-        }
-    } forEach call BIS_fnc_listPlayers;
+    // Count the actual players, skip bots that are in the deadspawns.
+    _players = call BIS_fnc_listPlayers;
+    _playerCount = count _players;
 
     // Exclude connected headless clients. This mission runs multiple HCs, so subtract the
     // live HC count from the registry (mirrors the validity check in Server_HandleSpecial.sqf)
