@@ -4,11 +4,12 @@
 		- Side.
 */
 
-Private ["_logic", "_side", "_voteTime"];
+Private ["_logic", "_side", "_syncAicomState", "_voteTime"];
 
 _side = _this;
 _voteTime = (missionNamespace getVariable 'WFBE_C_GAMEPLAY_VOTE_TIME');
 _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
 
 //--- Vote countdown.
 while {_voteTime > -1} do {_voteTime = _voteTime - 1;_logic setVariable ["wfbe_votetime", _voteTime, true];sleep 1};
@@ -58,5 +59,5 @@ _logic setVariable ["wfbe_commander", _commander, true];
 
 //--- Process the AI Commander FSM if it's not running.
 if !(isNull _commander) then {
-	if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false]};
+	if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false, _syncAicomState]};
 };

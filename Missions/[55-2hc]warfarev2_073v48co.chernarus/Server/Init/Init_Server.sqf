@@ -626,10 +626,11 @@ emptyQueu = [];
 		_logik setVariable ["wfbe_startpos", _pos, true];
 		_logik setVariable ["wfbe_structure_lasthit", 0];
 		_logik setVariable ["wfbe_structures", [], true];
-		_logik setVariable ["wfbe_aicom_running", false];
+		_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
+		_logik setVariable ["wfbe_aicom_running", false, _syncAicomState];
 		//--- V0.4.1: synthetic MONEY is fine (PvE pacing) - synthetic SUPPLY is not.
 		//--- Funds seed = commander start funds x FUNDS_MULT; supply spending stays 100% real.
-		_logik setVariable ["wfbe_aicom_funds", (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_START_FUNDS", 200000])]; //--- B36 hotfix (Ray): flat 200k AI-commander start cash (was FUNDS_START x FUNDS_MULT)
+		_logik setVariable ["wfbe_aicom_funds", (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_START_FUNDS", 200000]), _syncAicomState]; //--- B36 hotfix (Ray): flat 200k AI-commander start cash (was FUNDS_START x FUNDS_MULT)
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.
