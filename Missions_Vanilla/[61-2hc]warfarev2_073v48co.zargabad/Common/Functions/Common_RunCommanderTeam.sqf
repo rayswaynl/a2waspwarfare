@@ -213,7 +213,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 						_tgt = objNull;
 						{ if (alive _x && {side _x == _enSide} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Tank","Air"], _band]);
 						if (!isNull _tgt) then {
-							_h flyInHeight (missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUN_ALT", 35]);
+							_h flyInHeight ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUN_ALT", 35]) max (missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUNFLOOR", 0]));
 							//--- B66 MUZZLE FIX: in OA selectWeapon wants a MUZZLE, not a weapon classname; a
 							//--- multi-muzzle cannon (e.g. M197/2A42 with HE+AP muzzles) is never switched if you
 							//--- pass the weapon name. Resolve the weapon`s muzzles (CfgWeapons >> _cannon >> muzzles):
@@ -602,7 +602,7 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			_approachLimited = (missionNamespace getVariable ["WFBE_C_AICOM_HELI_APPROACH_LIMITED", 0]) > 0;
 			if (_approachLimited) then {(group (driver _h)) setSpeedMode "LIMITED"};
 			(driver _h) doMove _lz;
-			_h flyInHeight 60;
+			_h flyInHeight (60 max (missionNamespace getVariable ["WFBE_C_AICOM_HELI_RUNINFLOOR", 0]));
 			//--- Run in until near the LZ (or timeout / loss).
 			_t0 = time + 240;
 			waitUntil {sleep 2; time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_h distance _lz) < 120}};

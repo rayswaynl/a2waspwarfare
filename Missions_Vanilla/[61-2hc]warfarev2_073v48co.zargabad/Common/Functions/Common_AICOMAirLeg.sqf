@@ -311,14 +311,17 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 
 	//--- Run in to the LZ at altitude. Refresh the airborne exemption every leg-tick so a long
 	//--- flight never lets the server stuck-watcher window lapse mid-air.
+	_approachLimited = (missionNamespace getVariable ["WFBE_C_AICOM_HELI_APPROACH_LIMITED", 0]) > 0;
+	if (_approachLimited) then {(group (driver _h)) setSpeedMode "LIMITED"};
 	(driver _h) doMove _lz;
-	_h flyInHeight 60;
+	_h flyInHeight (60 max (missionNamespace getVariable ["WFBE_C_AICOM_HELI_RUNINFLOOR", 0]));
 	_t0 = time + 240;
 	waitUntil {
 		sleep 2;
 		_tm setVariable ["wfbe_aicom_airborne_until", time + 120, true];
 		time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_h distance _lz) < 120}
 	};
+	if (_approachLimited) then {(group (driver _h)) setSpeedMode "FULL"};
 	if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
 		if (!isNull _lveh && {alive _lveh}) then {
