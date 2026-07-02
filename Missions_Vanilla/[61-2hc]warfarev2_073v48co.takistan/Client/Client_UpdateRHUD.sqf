@@ -17,7 +17,7 @@ private[
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
 	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd",
-	"_RHUDUpdateArty"
+	"_RHUDUpdateArty", "_RHUDGetGuerProgressText"
 ];
 
 _total = count towns;
@@ -280,6 +280,30 @@ _RHUDUpdateArty = {
 	Format ["  Arty %1s", _remain]
 };
 
+_RHUDGetGuerProgressText = {
+	private ["_kills", "_milestones", "_nextKills", "_nextLabel", "_i", "_entry", "_threshold", "_need"];
+	_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+	_milestones = [
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30], "T1"],
+		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80], "T2"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160], "T3"]
+	];
+	_nextKills = 999999;
+	_nextLabel = "";
+	for "_i" from 0 to ((count _milestones) - 1) do {
+		_entry = _milestones select _i;
+		_threshold = _entry select 0;
+		if (_threshold > _kills && {_threshold < _nextKills}) then {
+			_nextKills = _threshold;
+			_nextLabel = _entry select 1;
+		};
+	};
+	if (_nextKills >= 999999) exitWith {Format ["%1 | max tech", _kills]};
+	_need = (_nextKills - _kills) max 0;
+	Format ["%1 | %2 to %3", _kills, _need, _nextLabel]
+};
+
 sleep 10;
 
 _RHUD_upgId = -1;
@@ -344,7 +368,7 @@ while {true} do {
 				[13, "FPS C/S:"] call _RHUDSetText;
 					//--- B75 (guer-tech): GUER-only Tech-Kills + FOB labels (rows 15/16 above 17/18). A resistance player
 					//--- gets the two extra rows; everyone else has those spare controls hidden.
-					if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+					if ((side group player) in [resistance] && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
 						[15, "Tech Kills:"] call _RHUDSetText;
 						[17, "FOB:"] call _RHUDSetText;
 					} else {
@@ -506,14 +530,14 @@ while {true} do {
 			[12, _baseText + (call _RHUDUpdateArty)] call _RHUDSetText;	//--- b764 (Ray 2026-06-26): arty cooldown suffix ("  Arty Rdy" / "  Arty 12s") folded onto the Base row (computed per-tick for a smooth countdown; "" when the side fields no artillery).
 			[12, _baseColor] call _RHUDSetColor;
 
-			if (_side == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
-					//--- B75 (guer-tech): GUER-only rows. Tech-Kills (cumulative kill total driving the kill-based tech)
-					//--- sits directly ABOVE the FOB availability row (B n | LF n | HF n = still-buildable field bases).
-					private ["_gKills","_gFob"];
-					_gKills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+			if (_side in [resistance] && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+					//--- B75/B154 (guer-tech): GUER-only rows. Tech-Kills now also shows the remaining kills to the
+					//--- next unlock, directly above FOB availability (B n | LF n | HF n = still-buildable field bases).
+					private ["_gProgress","_gFob"];
+					_gProgress = call _RHUDGetGuerProgressText;
 					_gFob   = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
-					if (typeName _gFob != "ARRAY" || {count _gFob < 3}) then {_gFob = [0,0,0]};
-					[16, Format ["%1", _gKills]] call _RHUDSetText;
+					if (!(typeName _gFob in ["ARRAY"]) || {count _gFob < 3}) then {_gFob = [0,0,0]};
+					[16, _gProgress] call _RHUDSetText;
 					[16, [0.72, 0.96, 0.39, 1]] call _RHUDSetColor;
 					[18, Format ["B %1 | LF %2 | HF %3", _gFob select 0, _gFob select 1, _gFob select 2]] call _RHUDSetText;
 					[18, [0.46, 0.78, 1, 1]] call _RHUDSetColor;
