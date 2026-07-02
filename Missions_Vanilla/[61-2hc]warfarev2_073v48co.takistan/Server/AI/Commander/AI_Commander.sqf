@@ -950,7 +950,21 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- per-side group counts from the groupsGC cache (server_groupsGC maintains it on ITS allGroups pass); fallback to the total-derived cache, else -1 (never a second walk here).
 		_grpW = missionNamespace getVariable ["wfbe_grpcnt_west", -1];
 		_grpE = missionNamespace getVariable ["wfbe_grpcnt_east", -1];
-		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE);
+		//--- WASPSCALE v2-EXT (cmdcon42-oilrig, claude-gaming 2026-07-02): OILFIELD stakes telemetry (Takistan-only feature;
+		//--- both keys are -/-1 on Chernarus and until the field unlocks). CHEAP reads of state Server_Oilfields.sqf already
+		//--- publishes - no scan here. `oilOwn=` = the field's owner as W|E|G|N|- ( - = feature absent/pre-unlock; N = neutral;
+		//--- suffixed with `!` when currently SABOTAGED, e.g. W! ). `oilInc=` = cumulative supply the field has paid this round.
+		//--- New keys `oilOwn=`/`oilInc=` contain no existing key as a substring and are pipe-anchored, so `|fps=`-style greps and
+		//--- longest-key KV parsers keep resolving every field distinctly (same append rule the hc2fps=/grpW= keys followed).
+		private ["_oilOwnObj","_oilOwnKV","_oilIncKV"];
+		_oilOwnKV = "-"; _oilIncKV = "-1";
+		if (!isNil "WFBE_OILFIELD_POS_LIVE") then {
+			_oilOwnObj = missionNamespace getVariable ["WFBE_OILFIELD_OWNER", sideLogic];
+			_oilOwnKV = switch (_oilOwnObj) do { case west: {"W"}; case east: {"E"}; case resistance: {"G"}; default {"N"} };
+			if (missionNamespace getVariable ["WFBE_OILFIELD_SABOTAGED", false]) then {_oilOwnKV = _oilOwnKV + "!"};
+			_oilIncKV = str (missionNamespace getVariable ["WFBE_OILFIELD_INCOME_ACCRUED", 0]);
+		};
+		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE + "|oilOwn=" + _oilOwnKV + "|oilInc=" + _oilIncKV);
 
 		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
 		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent
