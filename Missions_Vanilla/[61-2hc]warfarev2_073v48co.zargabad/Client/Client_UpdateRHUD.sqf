@@ -24,7 +24,7 @@ _total = count towns;
 _display = displayNull;
 _lastDisplay = displayNull;
 _controls = [];
-_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371,1372,1373];
+_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371,1372,1373,1374,1375];
 _lastTexts = [];
 _lastColors = [];
 _lastShown = [];
@@ -243,7 +243,7 @@ _RHUDSetFullPosition = {
 	//--- B75 (guer-tech): two GUER-only rows reuse the spare control pairs 15/16 (Tech Kills) and 17/18 (FOB) - kills
 	//--- ABOVE the FOB row. Positioned for everyone here; shown + filled only for resistance (hidden otherwise).
 	//--- b757 (Trello #219): + artillery-cooldown row pair 27/28 appended after master's GUER rows.
-	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[23,24],[25,26]];	//--- b760: arty pair [27,28] removed; the cooldown is now folded into the FPS C/S line (13/14).
+	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[23,24],[25,26],[29,30]];	//--- b760: arty pair [27,28] removed; the cooldown is now folded into the FPS C/S line (13/14).
 	for "_idx" from 0 to ((count _layoutPairs) - 1) do {
 		_rowY = _startY + (_idx * _rowH);
 		(_controls select ((_layoutPairs select _idx) select 0)) ctrlSetPosition [_labelX, _rowY, _labelW, _lineH];
@@ -375,6 +375,7 @@ while {true} do {
 						{[_x, false] call _RHUDSetShow} forEach [15,16,17,18];
 					};
 				{[_x, false] call _RHUDSetShow} forEach [27,28];	//--- b760: arty box folded into the FPS C/S line; keep its now-unused controls hidden.
+				[29, "Time:"] call _RHUDSetText;	//--- wf-clock-readout: static label, set once per display/toggle.
 				_labelsApplied = true;
 				_hiddenApplied = false;
 			};
@@ -546,6 +547,15 @@ while {true} do {
 				call _RHUDUpdateServerFPSRow;
 			call _RHUDUpdateUpgrade;
 			/* b760: arty cooldown is folded into the FPS C/S line via _RHUDUpdateServerFPSRow; no standalone row. */
+
+			//--- wf-clock-readout: write HH:MM + daylight tag to clock row every tick (client-local, no server round-trip).
+			private ["_clkH","_clkM","_clkTag","_clkHStr","_clkMStr"];
+			_clkH = floor(daytime);
+			_clkM = floor((daytime - _clkH) * 60);
+			_clkTag = if (_clkH >= 6 && {_clkH < 18}) then {"Day"} else {if (_clkH >= 5 && {_clkH < 6}) then {"Dawn"} else {if (_clkH >= 18 && {_clkH < 20}) then {"Dusk"} else {"Night"}}};
+			_clkHStr = if (_clkH < 10) then {format ["0%1", _clkH]} else {format ["%1", _clkH]};
+			_clkMStr = if (_clkM < 10) then {format ["0%1", _clkM]} else {format ["%1", _clkM]};
+			[30, format ["%1:%2 %3", _clkHStr, _clkMStr, _clkTag]] call _RHUDSetText;
 			};
 		};
 
