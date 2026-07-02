@@ -110,7 +110,7 @@ _base = switch (true) do {
 //--- A2-OA-safe: getVariable-with-default + plain max arithmetic, no A3 commands. _baseRaw kept for the once-per-side log.
 private ["_baseRaw","_teamsDelta"];
 _baseRaw    = _base;
-_teamsDelta = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_DELTA", -3];
+_teamsDelta = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_DELTA", -1];
 _base       = (_base + _teamsDelta) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 6]);
 _pcExtraCap = switch (true) do { case (_pcN >= 10): {0}; case (_pcN >= 6): {1}; default {_maxExtra} };
 if (_extra > _pcExtraCap) then {_extra = _pcExtraCap};
