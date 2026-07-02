@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
 
 _side = _this;
 _sideText = str _side;
@@ -508,6 +508,11 @@ if (_cbrIdx >= 0) then {
 		_eHQ = _enemySide Call WFBE_CO_FNC_GetSideHQ;
 		if (!isNull _eHQ) then {
 			_scanPos = getPos _eHQ;
+			_artyScanRadius = 10000;
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_THREAT_SCAN_RADIUS_ENABLE", 0]) > 0) then {
+				_artyScanRadius = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_THREAT_SCAN_RADIUS", 10000];
+				if (_artyScanRadius < 0) then {_artyScanRadius = 0};
+			};
 			{
 				if (!_artyThreat) then {
 					if ((_x getVariable ["WFBE_CommanderArtillery", false]) &&
@@ -519,7 +524,7 @@ if (_cbrIdx >= 0) then {
 						diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-c");
 					};
 				};
-			} forEach (nearestObjects [_scanPos, ["StaticWeapon","Tank","Car"], 10000]);
+			} forEach (nearestObjects [_scanPos, ["StaticWeapon","Tank","Car"], _artyScanRadius]);
 		};
 	};
 
