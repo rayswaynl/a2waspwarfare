@@ -381,6 +381,70 @@ if (_isMan) then {
 
 	if (isHostedServer) then {_vehicle setVariable ["WFBE_Taxi_Prohib", true]};
 
+	//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (Takistan). A bought MAZ_543_SCUD_TK_EP1 becomes a side launch
+	//--- platform: (a) ask the SERVER to register it (cap-enforced there — a surplus purchase is deleted + refunded), and
+	//--- (b) give the vehicle a "SCUD Fire Mission (map-click)" action for its crew/owner-side players that opens a map-click
+	//--- and sends the SAME icbm-tel-fire payload the Tactical menu uses, WITH this specific hull as the platform hint (the
+	//--- server re-validates everything). Fires a SATURATION conventional strike (the flagship conventional munition). Mirrors
+	//--- the carrier scud-action-add + GUER-VBIED buyer-local-add / GetIn-re-add persistence idioms. TK + flag gated.
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
+		//--- (a) SERVER-SIDE registration request (side-keyed platform array + cap enforcement live on the server). Pass the
+		//--- ACTUAL price paid (_currentCost, incl. modifiers + crew) so an over-cap refusal refunds the exact amount deducted.
+		["RequestSpecial", ["tk-scud-register", _vehicle, sideJoined, group player, _currentCost]] Call WFBE_CO_FNC_SendToServer;
+
+		//--- Global flag so any machine that gets this hull local can recognise it + (re)arm the action.
+		_vehicle setVariable ["wfbe_is_tk_scud", true, true];
+
+		//--- Local helper: add the fire-mission action once per local hull instance (dedupe via wfbe_tk_scud_action). The
+		//--- condition restricts the action to the owning side; the server still validates side/cooldown/range/funds on fire.
+		WFBE_CL_FNC_AddTkScudAction = {
+			private ["_v","_aid"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (!(_v getVariable ["wfbe_is_tk_scud", false])) exitWith {};
+			if ((_v getVariable ["wfbe_tk_scud_action", -1]) >= 0) exitWith {};   //--- already armed on this machine.
+			_aid = _v addAction [
+				"<t color='#ff9900'>SCUD Fire Mission (map-click)</t>",
+				{
+					private ["_v","_caller","_cost"];
+					_v = _this select 0;
+					_caller = _this select 1;
+					_cost = missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000];
+					if (((group _caller) Call WFBE_CO_FNC_GetTeamFunds) < _cost) exitWith { hintSilent parseText Format ["<t color='#F8D664'>Not enough funds for a SCUD saturation strike ($%1).</t>", _cost]; };
+					hintSilent parseText "<t color='#F89060'>SCUD: click the target on the map.</t>";
+					openMap true;
+					//--- capture the firing hull so onMapSingleClick can hint it as the platform.
+					wfbe_tk_scud_fire_veh = _v;
+					onMapSingleClick {
+						onMapSingleClick {};
+						openMap false;
+						private ["_veh"];
+						_veh = wfbe_tk_scud_fire_veh;
+						if (isNull _veh || {!alive _veh}) exitWith { hintSilent parseText "<t color='#ff5a5a'>That SCUD is gone.</t>"; };
+						//--- SAME payload the Tactical menu sends, + this hull as the platform hint. No client fund deduction
+						//--- (the server WFBE_SE_FNC_IcbmTelFire re-validates platform/cooldown/range/funds and charges).
+						["RequestSpecial", ["icbm-tel-fire", playerSide, [_pos select 0, _pos select 1, 0], "SATURATION", group player, 0, _veh]] Call WFBE_CO_FNC_SendToServer;
+						hintSilent parseText "<t color='#F89060'>SCUD saturation order sent (server validates SCUD + range + funds).</t>";
+						false
+					};
+				},
+				//--- Show only to a crew member whose side matches the hull's registered owner side (server-set wfbe_tk_scud_side;
+				//--- falls back to playerSide before registration replicates). Server re-validates side on fire regardless.
+				[], 6, false, true, "", "alive _target && {_this in crew _target} && {(_target getVariable ['wfbe_tk_scud_side', playerSide]) == side _this}"
+			];
+			_v setVariable ["wfbe_tk_scud_action", _aid];
+		};
+
+		//--- Immediate buyer-local add (instant availability) + GetIn re-add for persistence (mirrors the VBIED idiom).
+		_vehicle call WFBE_CL_FNC_AddTkScudAction;
+		_vehicle addEventHandler ["GetIn", {
+			private ["_v","_u"];
+			_v = _this select 0;
+			_u = _this select 2;
+			if (_u == player) then { _v call WFBE_CL_FNC_AddTkScudAction };
+		}];
+	};
+
 	//--- Clear the vehicle.
 	(_vehicle) call WFBE_CO_FNC_ClearVehicleCargo;
 

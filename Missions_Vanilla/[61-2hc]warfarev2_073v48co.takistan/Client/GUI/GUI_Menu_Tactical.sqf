@@ -178,7 +178,7 @@ if ((missionNamespace getVariable "WFBE_C_ARTILLERY") == 0) then {
 //--- alive (the WFBE_ICBM_TEL_<sideJoined> broadcast object ref, client-readable, same as the war-room gate used) AND can
 //--- afford the fee. The server (WFBE_SE_FNC_IcbmTelFire) independently re-validates every one of these on fire.
 WFBE_CL_FNC_TelMuniEnable = {
-	private ["_upg","_fee","_fnd","_lvl","_cmd","_telObj","_telAlive"];
+	private ["_upg","_fee","_fnd","_lvl","_cmd","_telObj","_telAlive","_platformAlive"];
 	_upg = _this select 0;
 	_fee = _this select 1;
 	_fnd = _this select 2;
@@ -188,7 +188,18 @@ WFBE_CL_FNC_TelMuniEnable = {
 	if (!isNull commanderTeam) then { if (commanderTeam == group player) then {_cmd = true} };
 	_telObj = missionNamespace getVariable [format ["WFBE_ICBM_TEL_%1", str sideJoined], objNull];
 	_telAlive = (!isNull _telObj && {alive _telObj});
-	if (_lvl >= 1 && _cmd && _telAlive && _fnd >= _fee) then {true} else {false}
+	//--- cmdcon42-j (Ray 2026-07-02): TK-aware conventional-platform check. On Takistan a side may have NO research TEL but
+	//--- own bought SCUDs — so a conventional entry should enable when the side has ANY alive platform (research TEL OR a
+	//--- registered bought SCUD, server-broadcast array). Off-TK / flag-off this is byte-for-byte the old research-TEL gate.
+	_platformAlive = _telAlive;
+	if (!_platformAlive && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan"}) then {
+		private ["_scuds","_x"];
+		_scuds = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
+		if (typeName _scuds == "ARRAY") then {
+			{ if (!isNull _x && {alive _x}) exitWith {_platformAlive = true} } forEach _scuds;
+		};
+	};
+	if (_lvl >= 1 && _cmd && _platformAlive && _fnd >= _fee) then {true} else {false}
 };
 
 _textAnimHandler = [] spawn {};
