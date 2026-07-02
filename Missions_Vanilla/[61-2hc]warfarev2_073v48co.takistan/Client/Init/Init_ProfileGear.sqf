@@ -14,7 +14,7 @@ _side_equipment = missionNamespace getVariable Format ["WFBE_%1_All", WFBE_Clien
 //--- Browse each templates in the profile.
 {
 	if (typeName _x == "ARRAY") then {
-		if (count _x >= 6) then {
+		if (count _x >= 7) then {
 			Private ["_backpack","_can_load","_item","_label","_magazines","_picture","_prefix","_price","_price_total","_upgrade","_upgrade_max","_weapons"];
 			_picture = _x select 0;
 			_label = _x select 1;
@@ -45,8 +45,10 @@ _side_equipment = missionNamespace getVariable Format ["WFBE_%1_All", WFBE_Clien
 							_can_load = false;
 						};
 						
-						//--- Belong to side next.
-						if ({_x == _item} count _side_equipment == 0) then {_can_load = false};
+						//--- Belong to side next, unless saved hostile/captured gear is allowed.
+						if !(WFBE_Allow_HostileGearSaving) then {
+							if ((_side_equipment find _item) < 0) then {_can_load = false};
+						};
 					} else { _can_load = false };
 					
 					if !(_can_load) exitWith {};
