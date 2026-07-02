@@ -77,10 +77,14 @@ if (_enabled != 0) then {
 		_hasFX = true;
 	};
 
-	//--- HUD/UI: ShackTac Fireteam HUD. On A2/OA the HUD patch is "fthud" (+ "stgi" group indicators);
-	//--- the A2 build ships fthud.pbo/stgi.pbo, NOT sthud.pbo (Armaholic id 9936). "sthud"/"STHUD" are
-	//--- the A3 names -> kept only as best-effort fallback for A3-style repacks.
-	if (["fthud","stgi","sthud","STHUD"] call _isLoaded) then {
+	//--- HUD/UI: ShackTac Fireteam HUD. GROUND TRUTH (CfgPatches read from the actual signed A2
+	//--- distribution 121209_sthud_islandfree.7z): fthud.pbo declares class "ST_FTHud" and
+	//--- fthud_usermenu.pbo declares "ST_FTHud_Usermenu" -- "fthud" is only the pbo FILENAME, not a
+	//--- config class, and "sthud"/"STHUD"/"ST_STHud" are the A3-line names. Primary detection =
+	//--- ST_FTHud (+ Usermenu). stgi's real class is UNVERIFIED (stgi.pbo absent from that archive);
+	//--- it and the filename/A3 spellings are kept only as harmless best-effort fallbacks (isClass on
+	//--- a nonexistent class is simply false).
+	if (["ST_FTHud","ST_FTHud_Usermenu","fthud","stgi","sthud","STHUD"] call _isLoaded) then {
 		_detected set [count _detected, "ShackTac HUD"];
 		_hasHUD = true;
 	};
