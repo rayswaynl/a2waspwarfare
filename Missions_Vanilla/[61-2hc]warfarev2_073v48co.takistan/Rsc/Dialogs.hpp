@@ -511,6 +511,7 @@ class WFBE_TransferMenu {
 			h = 0.035;
 			sizeEx = 0.035;
 			text = $STR_WF_Send;
+			tooltip = "Send the selected amount to the highlighted player";
 			action = "WFBE_MenuAction = 1";
 		};
 		class CA_AmountDetails : RscText {
@@ -584,6 +585,7 @@ class WFBE_BuyGearMenu {
 			y = 0.01;
 			w = 0.5;
 			text = "Gear Purchase Menu :";
+			tooltip = "Buy gear, manage templates, and edit unit or vehicle cargo";
 			colorText[] = WFBE_Menu_Title_Color;
 		};
 		class CA_Menu_Gear : RscText {
@@ -675,36 +677,42 @@ class WFBE_BuyGearMenu {
 			w = 0.0699999;
 			h = 0.11;
 			text = "Client\Images\gearicontemplate.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonTemplate;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 0];";
 		};
 		class FilterButtonAll : FilterButtonTemplate {
 			idc = 503302;
 			x = 0.0814287;
 			text = "Client\Images\geariconall.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonAll;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 1];";
 		};
 		class FilterButtonPrimary : FilterButtonTemplate {
 			idc = 503303;
 			x = 0.16979;
 			text = "Client\Images\geariconprimary.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonPrimary;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 2];";
 		};
 		class FilterButtonSecondary : FilterButtonTemplate {
 			idc = 503304;
 			x = 0.259109;
 			text = "Client\Images\geariconsecondary.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonSecondary;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 3];";
 		};
 		class FilterButtonSidearm : FilterButtonTemplate {
 			idc = 503305;
 			x = 0.33979;
 			text = "Client\Images\geariconsidearm.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonSidearm;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 4];";
 		};
 		class FilterButtonMisc : FilterButtonTemplate {
 			idc = 503306;
 			x = 0.421555;
 			text = "Client\Images\geariconmisc.paa";
+			tooltip = $STR_WF_TOOLTIP_FilterButtonMisc;
 			action = "UINamespace setVariable ['wfbe_display_buygear_tab', 5];";
 		};
 		class PrimaryWeapon : RscClickableText {
@@ -722,12 +730,14 @@ class WFBE_BuyGearMenu {
 			colorText[] = {0.85, 0.85, 0.85, 1};
 			colorActive[] = {1, 1, 1, 1};
 			text = "\Ca\UI\Data\ui_gear_gun_gs.paa";
+			tooltip = "Remove the current primary weapon from the loadout";
 			action = "WFBE_MenuAction = 901";
 		};
 		class SecondaryWeapon : PrimaryWeapon {
 			idc = 503402;
 			y = 0.401362;
 			text = "\Ca\UI\Data\ui_gear_sec_gs.paa";
+			tooltip = "Remove the current launcher, backpack, or secondary weapon";
 			action = "WFBE_MenuAction = 902";
 		};
 		class Sidearm : PrimaryWeapon {
@@ -737,6 +747,7 @@ class WFBE_BuyGearMenu {
 			w = 0.113;
 			h = 0.15;
 			text = "\Ca\UI\Data\ui_gear_hgun_gs.paa";
+			tooltip = "Remove the current sidearm from the loadout";
 			action = "WFBE_MenuAction = 903";
 		};
 		class InventorySlot0 : RscClickableText {
@@ -746,6 +757,7 @@ class WFBE_BuyGearMenu {
 			w = 0.06;
 			h = 0.08;
 			text = "\Ca\UI\Data\ui_gear_mag_gs.paa";
+			tooltip = "Remove a primary weapon magazine from the loadout";
 			action = "UINamespace setVariable ['wfbe_display_buygear_pool_main', 1]";
 		};
 		class InventorySlot1 : InventorySlot0 {
@@ -821,6 +833,7 @@ class WFBE_BuyGearMenu {
 			w = 0.055;
 			h = 0.074;
 			text = "\Ca\UI\Data\ui_gear_hgunmag_gs.paa";
+			tooltip = "Remove a sidearm magazine from the loadout";
 			action = "UINamespace setVariable ['wfbe_display_buygear_pool_gun', 1]";
 		};
 		class SidearmInventorySlot1 : SidearmInventorySlot0 {
@@ -873,6 +886,7 @@ class WFBE_BuyGearMenu {
 			h = 0.074;
 			colorActive[] = {0.85, 0.85, 0.85, 1};
 			text = "\Ca\UI\Data\ui_gear_eq_gs.paa";
+			tooltip = "Remove an equipment item from the loadout";
 			action = "UINamespace setVariable ['wfbe_display_buygear_misc', 0]";
 		};
 		class MiscInventorySlot1 : MiscInventorySlot0 {
@@ -949,12 +963,14 @@ class WFBE_BuyGearMenu {
 			h = 0.136554;
 			colorActive[] = {0.85, 0.85, 0.85, 1};
 			text = "\Ca\UI\Data\ui_gear_eq_gs.paa";
+			tooltip = "Remove the first special item from the loadout";
 			action = "WFBE_MenuAction = 904";
 		};
 		class SpecialInventorySlot1 : SpecialInventorySlot0 {
 			idc = 503534;
 			x = 0.880612;
 			y = 0.0575075;
+			tooltip = "Remove the second special item from the loadout";
 			action = "WFBE_MenuAction = 905";
 		};
 		class CA_CargoList : CA_GearList {
@@ -962,6 +978,7 @@ class WFBE_BuyGearMenu {
 			x = 0.500983551;
 			w = 0.493697;
 			h = 0.505;
+			tooltip = "Double-click a cargo item to remove it from the selected container";
 			
 			onLBDblClick = "WFBE_MenuAction = 906";
 		};
@@ -985,6 +1002,7 @@ class WFBE_BuyGearMenu {
 			h = 0.035;
 			sizeEx = 0.035;
 			text = "Buy";
+			tooltip = "Buy the selected loadout for the current target";
 			action = "WFBE_MenuAction = 501";
 		};
 		class CA_PurchaseDetails : CA_CargoDetails {
@@ -1005,12 +1023,14 @@ class WFBE_BuyGearMenu {
 			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
 			
 			text = "Create Template";
+			tooltip = "Save the current loadout as a reusable template";
 			action = "WFBE_MenuAction = 601";
 		};
 		class CA_DeleteTemplate : CA_MakeTemplate {
 			idc = 503010;
 			x = 0.255;
 			text = "Delete Template";
+			tooltip = "Delete the highlighted gear template";
 			action = "WFBE_MenuAction = 602";
 		};
 		class CA_FundsDetails : CA_CargoDetails {
@@ -1026,6 +1046,7 @@ class WFBE_BuyGearMenu {
 			y = 0.01;
 			w = 0.17;
 			text = "Reload";
+			tooltip = $STR_WF_TOOLTIP_GearReload;
 			action = "WFBE_MenuAction = 701";
 		};
 		class CA_QuickClear : CA_MakeTemplate {
@@ -1034,6 +1055,7 @@ class WFBE_BuyGearMenu {
 			y = 0.01;
 			w = 0.17;
 			text = "Clear";
+			tooltip = $STR_WF_TOOLTIP_GearClear;
 			action = "WFBE_MenuAction = 702";
 		};
 	};
@@ -1498,6 +1520,7 @@ class RscMenu_Team {
 				y = 0.733;
 				w = 0.279;
 				text = "";
+				tooltip = "Toggle whether newly bought vehicles start with high climbing enabled";
 				action = "MenuAction = 14";
 			};
 			/* Vote PopUp */
@@ -1507,6 +1530,7 @@ class RscMenu_Team {
 				y = 0.772;
 				w = 0.279;
 				text = "";
+				tooltip = "Toggle the commander vote popup on join";
 				action = "MenuAction = 13";
 			};
 			/* Seperator */
@@ -1761,6 +1785,7 @@ class RscMenu_BuyUnits {
 			h = 0.035;
 			sizeEx = 0.022;
 			text = "Cancel Last";
+			tooltip = "Cancel and refund the most recent queued unit order";
 			colorBackground[] = {0.6, 0.1, 0.0, 0.8};
 			colorBackgroundActive[] = {0.8, 0.2, 0.0, 0.9};
 			colorText[] = {1, 1, 1, 1};
