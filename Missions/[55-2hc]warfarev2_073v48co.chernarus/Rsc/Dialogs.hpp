@@ -2929,6 +2929,10 @@ class RscMenu_Service {
 		class CA_LabelHealAll : CA_LabelRearmAll {
 			idc = 20020;
 		};
+		// QoL item4 (client-qol-batch2): refuel-all batch price label (matches the pattern of 20016/20018/20020).
+		class CA_LabelRefuelAll : CA_LabelRearmAll {
+			idc = 20025;
+		};
 		class CA_FullService_Button : RscButton {
 			idc = 20023;
 			x = 0.161261;

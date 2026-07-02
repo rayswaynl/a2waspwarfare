@@ -320,8 +320,21 @@ _IDCS = _IDCS - [_currentIDC];
 		_updateDetails = true;
 	};
 	
-	//--- Player funds.
-	ctrlSetText [12019,Format [localize 'STR_WF_UNITS_Cash',Call GetPlayerFunds]];
+	//--- Player funds + QoL item1 live squad cap counter (client-qol-batch2).
+	//--- Mirrors _realSize formula from the purchase guard; same vars already in scope.
+	private ["_capSize","_capAlive","_capUsed"];
+	_capSize = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
+	_capSize = (10 + (_capSize * 2)) min _mbu;
+	if (!isNull(commanderTeam) && {commanderTeam == group player}) then {_capSize = _capSize + 10};
+	if (sideJoined == resistance) then {
+		private ["_capGK","_capGC"];
+		_capGK = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+		_capGC = (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4]) + floor (_capGK / (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10]));
+		_capSize = _capGC min (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12]);
+	};
+	_capAlive = count ((units (group player)) Call GetLiveUnits);
+	_capUsed = unitQueu + _capAlive;
+	ctrlSetText [12019, Format [localize 'STR_WF_UNITS_Cash', Call GetPlayerFunds] + "   Squad: " + str _capUsed + "/" + str _capSize];
 
 	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: recompute per-factory caps from current upgrade levels each tick.
 	//--- Formula: max(FLOOR, level+offset) — floors prevent early-game starvation.
