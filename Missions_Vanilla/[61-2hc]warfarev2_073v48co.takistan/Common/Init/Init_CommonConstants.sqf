@@ -1797,5 +1797,17 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+
+//======================================================================================
+//--- AMBIENT CIVILIAN TRAFFIC (civ-coastal-traffic lane): atmosphere-only boat + car spawner.
+//--- WFBE_C_AMBIENT_TRAFFIC = 0  -> completely disabled (default, byte-identical mission).
+//--- WFBE_C_AMBIENT_TRAFFIC = 1  -> enables light ambient civ boats + road cars.
+//--- Default 0: civ vehicles near combat attract AI fire (collateral damage / kill spam),
+//---   and civilian groups consume the 144/side group cap shared with HC military groups.
+//======================================================================================
+	if (isNil "WFBE_C_AMBIENT_TRAFFIC")   then {WFBE_C_AMBIENT_TRAFFIC   = 0};
+	if (isNil "WFBE_C_AMBIENT_BOATS_MAX") then {WFBE_C_AMBIENT_BOATS_MAX = 3};
+	if (isNil "WFBE_C_AMBIENT_CARS_MAX")  then {WFBE_C_AMBIENT_CARS_MAX  = 4};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

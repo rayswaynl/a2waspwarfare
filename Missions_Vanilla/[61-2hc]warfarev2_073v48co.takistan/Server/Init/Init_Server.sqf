@@ -1143,6 +1143,13 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_BIS_ALICE") > 0) then {
 // Execute the server fps script on a seperate thread
 [] ExecVM "Server\GUI\serverFpsGUI.sqf";
 
+
+//--- AMBIENT CIVILIAN TRAFFIC (civ-coastal-traffic lane). Default 0 = no-op.
+if ((missionNamespace getVariable ["WFBE_C_AMBIENT_TRAFFIC", 0]) > 0) then {
+	[] execVM "Server\Functions\Server_AmbientTraffic.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_AmbientTraffic.sqf launched (WFBE_C_AMBIENT_TRAFFIC=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
 //--- Waiting until that the game is launched.
@@ -1297,6 +1304,13 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_WILDCARD", 1]) == 1 && {resistan
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
+};
+
+
+//--- AMBIENT CIVILIAN TRAFFIC (civ-coastal-traffic lane). Default 0 = no-op.
+if ((missionNamespace getVariable ["WFBE_C_AMBIENT_TRAFFIC", 0]) > 0) then {
+	[] execVM "Server\Functions\Server_AmbientTraffic.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_AmbientTraffic.sqf launched (WFBE_C_AMBIENT_TRAFFIC=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
