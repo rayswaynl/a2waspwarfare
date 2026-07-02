@@ -8,6 +8,17 @@ if (player distance _target < 4000) then {
 	"dynamicBlur" ppEffectCommit 1;
 };
 
+//--- OPTIONAL CLIENT MODS (cmdcon42-m) — HOOK 1: suppress this mission's hand-rolled mushroom-cloud
+//--- particle/light emitters when a client FX mod (Blastcore / JTD) is loaded, so Blastcore's own far
+//--- better explosion visuals aren't double-stacked with the mission's raw #particlesource layer. The
+//--- screen-blur cue above is KEPT (it's a mission ppEffect, not a particle Blastcore replaces). Per-
+//--- client, cosmetic only. WFBE_HAS_FX_MOD is set once by Client_ModDetect (false unless WFBE_C_MODHOOKS
+//--- is on AND an FX mod is present) -> players without an FX mod fall through to the full mission cloud,
+//--- exactly as today. The ICBM damage/radiation (server-side, damage.sqf/radzone.sqf) is untouched.
+if (missionNamespace getVariable ["WFBE_HAS_FX_MOD", false]) exitWith {
+	diag_log "MODHOOKS|NUKE|FX mod present -> mission mushroom-cloud particles suppressed (Blastcore/JTD renders the blast)";
+};
+
 _Cone = "#particlesource" createVehicleLocal getPos _target;
 _Cone setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48], "", "Billboard", 1, 10, [0, 0, 0],
 				[0, 0, 0], 0, 1.275, 1, 0, [40,80], [[0.25, 0.25, 0.25, 0], [0.25, 0.25, 0.25, 0.5], 

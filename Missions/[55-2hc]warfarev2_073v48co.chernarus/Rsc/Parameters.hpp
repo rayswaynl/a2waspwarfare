@@ -333,6 +333,16 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1; //--- B66 trial: 0->1 (combat-marker blinking on for this round).
 	};
+	//--- cmdcon42-m: master gate for the optional client-mod hooks (Client_ModDetect + FX-suppression +
+	//--- one-time ack). Default 1 (on): if a player runs a curated sound/visual/HUD mod, the mission
+	//--- detects it, suppresses its own overlapping FX for that client, and acks once. 0 = all hooks
+	//--- no-op (mission renders its own FX for everyone). Literal title: no stringtable entry needed.
+	class WFBE_C_MODHOOKS {
+		title = "Optional Client-Mod Hooks";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
 	class WFBE_C_UNITS_BALANCING {
 		title = "$STR_WF_PARAMETER_Balance";
 		values[] = {0,1};
