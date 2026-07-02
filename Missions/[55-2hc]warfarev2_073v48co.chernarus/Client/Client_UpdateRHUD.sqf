@@ -17,7 +17,8 @@ private[
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
 	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd",
-	"_RHUDUpdateArty", "_RHUDGetGuerProgressText"
+	"_RHUDUpdateArty", "_RHUDGetGuerProgressText",
+	"_clkH", "_clkM", "_clkTag", "_clkHStr", "_clkMStr"
 ];
 
 _total = count towns;
@@ -549,7 +550,6 @@ while {true} do {
 			/* b760: arty cooldown is folded into the FPS C/S line via _RHUDUpdateServerFPSRow; no standalone row. */
 
 			//--- wf-clock-readout: write HH:MM + daylight tag to clock row every tick (client-local, no server round-trip).
-			private ["_clkH","_clkM","_clkTag","_clkHStr","_clkMStr"];
 			_clkH = floor(daytime);
 			_clkM = floor((daytime - _clkH) * 60);
 			_clkTag = if (_clkH >= 6 && {_clkH < 18}) then {"Day"} else {if (_clkH >= 5 && {_clkH < 6}) then {"Dawn"} else {if (_clkH >= 18 && {_clkH < 20}) then {"Dusk"} else {"Night"}}};
