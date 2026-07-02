@@ -1,5 +1,5 @@
 /* US Configuration */
-Private ['_c','_get','_i','_p','_z'];
+Private ['_c','_get','_i','_p','_wfbeCoastalUtility','_wfbeProbe','_z'];
 
 _c = [];
 _i = [];
@@ -141,6 +141,24 @@ _i = _i + [['','',500,22,-2,1,1,0,'US',[]]];
 _c = _c + ['MtvrSupply_DES_EP1'];
 _i = _i + [['','',550,25,-2,0,1,0,'US',[]]];
 
+//--- Lane 184: default-off coastal utility boat. Units_CO_US already has RHIB in the Light-factory roster;
+//--- this first-wins row makes it cheap/tier-0 only on naval/coastal maps when the lane flag is enabled.
+if ((missionNamespace getVariable ["WFBE_C_COASTAL_UTILITY_BOATS", 0]) > 0) then {
+	_wfbeCoastalUtility = false;
+	if !(isNil "IS_naval_map") then {
+		if (IS_naval_map) then {_wfbeCoastalUtility = true};
+	};
+	if (!_wfbeCoastalUtility) then {
+		{
+			_wfbeProbe = _x;
+			if (surfaceIsWater _wfbeProbe) exitWith {_wfbeCoastalUtility = true};
+		} forEach (missionNamespace getVariable ["WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES", []]);
+	};
+	if (_wfbeCoastalUtility) then {
+		_c = _c + ['RHIB'];
+		_i = _i + [['Utility RHIB','',300,15,-2,0,1,0,'USMC',[]]];
+	};
+};
 
 _c = _c + ['M1126_ICV_M2_EP1'];
 _i = _i + [['','',1200,25,[false,true,2,0],3,2,0,'US',[]]];

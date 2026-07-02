@@ -1,5 +1,5 @@
 /* RU Configuration */
-Private ['_c','_get','_i','_p','_z'];
+Private ['_c','_get','_i','_p','_wfbeCoastalUtility','_wfbeProbe','_z'];
 
 _c = [];
 _i = [];
@@ -224,6 +224,31 @@ for '_z' from 0 to (count _c)-1 do {
 		};
 	} else {
 		diag_log Format ["[WFBE (ERROR)][frameno:%2 | ticktime:%3] Core_RU: Element '%1' is not a valid class.",(_c select _z),diag_frameno,diag_tickTime];
+	};
+};
+
+//--- Lane 184: EAST already has PBX in the Light-factory roster and metadata. Keep legacy defaults
+//--- untouched, then normalize it as the cheap coastal utility row only when the lane flag passes.
+if ((missionNamespace getVariable ["WFBE_C_COASTAL_UTILITY_BOATS", 0]) > 0) then {
+	_wfbeCoastalUtility = false;
+	if !(isNil "IS_naval_map") then {
+		if (IS_naval_map) then {_wfbeCoastalUtility = true};
+	};
+	if (!_wfbeCoastalUtility) then {
+		{
+			_wfbeProbe = _x;
+			if (surfaceIsWater _wfbeProbe) exitWith {_wfbeCoastalUtility = true};
+		} forEach (missionNamespace getVariable ["WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES", []]);
+	};
+	if (_wfbeCoastalUtility) then {
+		_get = missionNamespace getVariable "PBX";
+		if !(isNil "_get") then {
+			_get set [QUERYUNITLABEL, "PBX Utility Boat"];
+			_get set [QUERYUNITPRICE, 225];
+			_get set [QUERYUNITUPGRADE, 0];
+			_get set [QUERYUNITFACTORY, 1];
+			missionNamespace setVariable ["PBX", _get];
+		};
 	};
 };
 
