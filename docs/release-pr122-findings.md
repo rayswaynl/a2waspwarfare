@@ -1,11 +1,92 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 08:16 Europe/Amsterdam
+Last updated: 2026-07-02 08:34 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
 mission generation output, livehost config, or private credential is included
 here.
+
+## 2026-07-02 08:34 Update
+
+Reconciled live PR movement and validated the new PR #125 head.
+
+Current heads:
+
+- `origin/master`: `b4a6350ca0f90c9b0316570473c05a5e790aea96`
+- wiki mirror: `8a6554814a2d780ba9b737d4259bd62644494dc4`
+- PR #125: `fa3d0a159d1746e860c1cbf12062b2f45835ab57`
+- PR #126: `070972b006a50dba12ef2c262f28acdd6dc69f5c`
+- PR #136: `a6a1f15a159b9e2f51add9c5eb9296177d071698`
+- PR #137: merged into PR #136 at `a6a1f15a159b9e2f51add9c5eb9296177d071698`
+- PR #138: closed, not merged
+
+PR #125 moved from `6363f4cb5b23448abc55ceb7e39cda2448233ac5` to
+`fa3d0a159d1746e860c1cbf12062b2f45835ab57` with mission-affecting paradrop
+support authority binding:
+
+- `fa3d0a159` - `fix: bind paradrop support requests`
+- changed both-map `GUI_Menu_Tactical.sqf`, `Server_HandleSpecial.sqf`,
+  `Support_ParaAmmo.sqf`, `Support_ParaVehicles.sqf`,
+  `Support_Paratroopers.sqf`, plus static smoke coverage
+- `git diff --check origin/master..origin/codex/release-command-center-20260630`:
+  pass
+- `Test-WaspStaticSmoke.ps1 -BaseRef origin/master -HeadRef HEAD`: pass,
+  including `Paradrop RequestSpecial authority guard`
+- `Run-WaspFinalCheck.ps1 -BaseRef origin/master -HeadRef HEAD`: pass
+- Chernarus A2 OA lint: pass, 744 SQF files, 0 fail, 0 review
+- Takistan A2 OA lint: pass, 747 SQF files, 0 fail, 0 review
+- High-only BugHunt: no suspects
+- LoadoutManager RELEASE: exit 0, `CHERNARUS DONE`, `TAKISTAN DONE`
+- package validator: pass for `_MISSIONS.7z`, expected git `fa3d0a159d`,
+  entries `1885`
+
+Touched paradrop authority files are hash-identical across Chernarus and
+Takistan:
+
+- `Client/GUI/GUI_Menu_Tactical.sqf`:
+  `d716100151fcc92514512c5616c2491607ab6fca`
+- `Server/Functions/Server_HandleSpecial.sqf`:
+  `03a003c7be70716077e2adf015eb1c6f35d7c0fd`
+- `Server/Support/Support_ParaAmmo.sqf`:
+  `deba5726a8967cd7d3dd9999818a1dd694d3d0ac`
+- `Server/Support/Support_ParaVehicles.sqf`:
+  `2d40aeee88e27113819c1d4014e6327d19ca514e`
+- `Server/Support/Support_Paratroopers.sqf`:
+  `d6e00edd0f71b3682868a4fff39d30f63652717e`
+
+Local package-content validation for current PR #125 head:
+
+- expected git: `fa3d0a159d`
+- SHA256:
+  `9C6E70BBDECD2B5E69539B3922FD280716BD8D68574F940314CD5909F1BAA7AA`
+- size: `7165720`
+- entries: `1885`
+- manifest:
+  `outputs/a2waspwarfare-pr125-fa3d0a-local-package-manifest-2026-07-02-0832.json`
+
+Artifact identity boundary:
+
+- PR #125 body still advertises older `6363f4cb5b` /
+  `D5CA434E1CD80FFF8C787889FE54C8E63365B5587DCEE093E365D5CC2EC4195B`,
+  size `7165557`, entries `1885`, wiki `8a65548`.
+- PR #126 body mirrors `6363f4cb5b` /
+  `ECC6F9D51DD9BD459677863E585F313921E55BAE905C83431EB7EB7596E7D416`,
+  size `7164669`, entries `1885`, wiki `4f35132`.
+- Local validation for current `fa3d0a159d` produced
+  `9C6E70BBDECD2B5E69539B3922FD280716BD8D68574F940314CD5909F1BAA7AA`,
+  size `7165720`, entries `1885`.
+
+PR #136 moved from `bad15e5756e0c57bb07669ff8e49d71506aca5d3` to
+`a6a1f15a159b9e2f51add9c5eb9296177d071698` by merging PR #137
+(`fix: align build85 release identity`). This changes seven identity/static-gate
+files and `git diff --check origin/master..origin/claude/overnight-2026-07-02`
+now passes. Existing PR #136 package/runtime evidence is still stale relative to
+`a6a1f15a`.
+
+Release remains **NO-GO**. Current PR #125 source/static/package-content gates
+pass locally, but exact selected-archive/PBO runtime RPT evidence, human smoke
+notes, deployment approval, and final artifact identity are still missing.
 
 ## 2026-07-02 07:30 Update
 
