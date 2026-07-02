@@ -1653,7 +1653,6 @@ class Mission
 					leader=1;
 					init="this allowdamage false;";
 					description="Headless Client";
-					forceHeadlessClient=1;
 					id=104;
 					synchronizations[]={};
 				};
