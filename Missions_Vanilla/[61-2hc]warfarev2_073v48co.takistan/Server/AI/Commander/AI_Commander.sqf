@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -153,6 +153,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		if (!isNull _cmdTeam) then {
 			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
 		};
+
+		//--- cmdcon42 (Ray 2026-07-02): RAW human-seated flag, captured BEFORE the LOCK override below.
+		//--- The ECON_SINK block must pause whenever a human physically occupies the commander slot, even
+		//--- under WFBE_C_AI_COMMANDER_LOCK (which forces _humanCmd=false to keep the AI in full command for
+		//--- eval/night protection). _canBuild already blocks the sink for the normal no-lock case, but a lock
+		//--- would otherwise let the sink spend the human commander's side supply uncommanded. Keep this raw.
+		_humanSeated = _humanCmd;
 
 		//--- AI COMMANDER LOCK: when lock=1, treat _humanCmd as false so AI keeps full command
 		//--- even if a human occupies the commander slot (eval/night protection).
@@ -528,8 +535,23 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			//--- Flag-gated (WFBE_C_AICOM_ECON_SINK, default 1). Funds cap = WFBE_C_AICOM_WEALTH_CAP (the anti-hoard
 			//--- ceiling town income/stipend stop crediting past). A2-OA-safe: transition if/else (no Bool ==), plain
 			//--- object getVariable [name,default] on the logic OBJECT (reliable), hand LINKS scan (no A3 helpers).
-			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0) then {
-				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur"];
+			//--- cmdcon42 (Ray 2026-07-02) HUMAN-COMMANDER GATE: pause the ENTIRE econ-sink (surge flag + research
+			//--- scanner) whenever a human physically occupies the commander slot. _canBuild already blocks this
+			//--- for the normal no-lock case, but WFBE_C_AI_COMMANDER_LOCK forces _humanCmd=false to keep the AI in
+			//--- full command - which would let the sink spend the human commander's side SUPPLY uncommanded ("the
+			//--- AI keeps upgrading buildings, for free"). Gate on the RAW seated flag (_humanSeated, captured pre-lock)
+			//--- behind WFBE_C_AICOM_ECON_SINK_HUMAN_OFF (default 1 = pause under human command). When a human is
+			//--- seated we also CLEAR the surge flag (broadcast, mirroring the w3b HC-sync fix) so the heavy-bias /
+			//--- team-cap consumers that read wfbe_aicom_econ_surge stand down instead of latching on stale.
+			if (_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0}) then {
+				if (_logik getVariable ["wfbe_aicom_econ_surge", false]) then {
+					_logik setVariable ["wfbe_aicom_econ_surge", false, true];
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK paused (human commander seated) - surge flag cleared.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=off|reason=human_commander");
+				};
+			};
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}) then {
+				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur","_esSupply","_esDual"];
 				_esFrac = missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_FRAC", 0.85];
 				_esCap  = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
 				_esFunds = (_side) Call GetAICommanderFunds;
@@ -559,6 +581,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_esCosts = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_COSTS",  str _side], []];
 					_esLinks = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LINKS",  str _side], []];
 					_esOrder = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_ENABLED", str _side], []];
+					//--- cmdcon42 FREE-SV FIX (Ray 2026-07-02): read the side's live SUPPLY exactly like the player
+					//--- path (RequestUpgrade.sqf:134-140). _esCost = [supplyPrice, fundsPrice]. In dual-currency mode
+					//--- (WFBE_C_ECONOMY_CURRENCY_SYSTEM==0) an upgrade also costs SUPPLY, and there is NO cash->supply
+					//--- conversion in-game, so the sink MUST verify + pay supply. In single-currency mode supply is
+					//--- not a resource (the player path skips it), so treat it as unlimited (esDual false).
+					_esDual   = (missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0;
+					_esSupply = if (_esDual) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {0};
 					_esChosen = -1; _esChosenCur = -1;
 					if (!isNil "_esUpg" && {!isNil "_esLvls"} && {!isNil "_esCosts"} && {!isNil "_esLinks"}) then {
 						for "_esUp" from 0 to ((count _esUpg) - 1) do {
@@ -572,8 +601,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 									if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
 										//--- price of THIS level (researching level N+1 costs COSTS select N - the b74 off-by-one fix).
 										_esCost = ((_esCosts select _esUp) select _esCur);
-										//--- affordable on funds? (_esCost = [supplyPrice, fundsPrice]; funds is what the treasury pays)
-										if (_esFunds >= (_esCost select 1)) then {
+										//--- affordable on BOTH funds AND supply? (_esCost = [supplyPrice, fundsPrice]). Supply is
+										//--- only a gate in dual-currency mode; single-currency ignores it because _esDual is false
+										//--- (matches the player path skipping the supply check off-dual).
+										if (_esFunds >= (_esCost select 1) && {(!_esDual) || (_esSupply >= (_esCost select 0))}) then {
 											//--- DEPENDENCY gate: LINKS select _esUp select _esCur. Empty = none; [id,lvl] = single; [[id,lvl],..] = many.
 											_esLnk = [];
 											if (_esUp < count _esLinks) then {
@@ -603,15 +634,19 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					if (_esChosen >= 0) then {
 						//--- Start via the SAME server path players/AI/queue use. WFBE_SE_FNC_ProcessUpgrade takes
 						//--- [side, upgradeId, currentLevel, isPlayer=false] and both runs the timer AND flips the level.
-						//--- Deduct funds here (ProcessUpgrade does not charge - the callers do); supply is not charged
-						//--- (fundsPrice is what the treasury pays; the AICOM research economy uses funds, cost select 1).
+						//--- cmdcon42 FREE-SV FIX: ProcessUpgrade charges NOTHING (verified Server_ProcessUpgrade.sqf) - the
+						//--- caller pays. Mirror RequestUpgrade.sqf:148-151 EXACTLY: in dual mode deduct SUPPLY via
+						//--- ChangeSideSupply(-supplyCost) THEN funds; single-currency charges funds only. The selection gate
+						//--- above already re-checked _esSupply >= supplyCost so this cannot drive the pool negative; if supply
+						//--- was short the candidate was skipped and it retries when supply accrues (wfbe_upgrading guard intact).
 						_esCost = ((_esCosts select _esChosen) select _esChosenCur);
 						[_side, _esChosen, _esChosenCur, false] Spawn WFBE_SE_FNC_ProcessUpgrade;
+						if (_esDual) then {[_side, -(_esCost select 0), "AICOM econ-sink tech upgrade.", false] Call ChangeSideSupply};
 						[_side, -(_esCost select 1)] Call ChangeAICommanderFunds;
 						_logik setVariable ["wfbe_upgrading", true, true];
 						_logik setVariable ["wfbe_upgrading_id", _esChosen, true];
-						["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK research: upgrade id %2 -> level %3 (fundsCost %4, funds %5).", str _side, _esChosen, _esChosenCur + 1, _esCost select 1, _esFunds]] Call WFBE_CO_FNC_AICOMLog;
-						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_RESEARCH|id=" + str _esChosen + "|lvl=" + str (_esChosenCur + 1) + "|fundsCost=" + str (_esCost select 1));
+						["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK research: upgrade id %2 -> level %3 (supplyCost %4, fundsCost %5, funds %6, supply %7).", str _side, _esChosen, _esChosenCur + 1, _esCost select 0, _esCost select 1, _esFunds, _esSupply]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_RESEARCH|id=" + str _esChosen + "|lvl=" + str (_esChosenCur + 1) + "|fundsCost=" + str (_esCost select 1) + "|sv=" + str (_esCost select 0));
 					};
 				};
 			};
