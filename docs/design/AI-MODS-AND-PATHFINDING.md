@@ -377,6 +377,8 @@ feed the engine a helipad/`landAt` target — which our mission already does.
 **Trial candidate: `SLX_AI_Steering` (isolated PBO only) — as a bounded aircraft experiment.** It's the only
 catalog item with a direct "less air crashing" claim, standalone, no CBA dep. But it's an **author claim**, so
 treat it as an experiment, not a rollout.
+- **Operator runbook:** `docs/design/SLX-AI-STEERING-TRIAL-RUNBOOK.md` (exact isolated-PBO staging, server/HC
+  launch edits, rollback, and soak metrics).
 - **Source:** SLX for A2 CO (Solus) — extract only `slx_ai_steering.pbo` (+ its `.bisign` if present). SLX is on
   bIdentify via the COSLX line (`COSLX_Patch_v2.6.zip`, UUID `d44655a4-9538-4429-abe0-12be799e04bd`, Gunter
   Severloh 2013-09-19) and ModDB `slx-mod-co`; **do NOT deploy the full bundle** (it harms aircraft — heli/UAV
