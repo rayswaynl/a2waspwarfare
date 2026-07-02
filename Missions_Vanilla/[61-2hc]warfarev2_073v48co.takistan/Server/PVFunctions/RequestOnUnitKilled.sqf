@@ -6,23 +6,23 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_payloadCount","_payloadType","_points","_nameOfKilledUnit","_rejectPayload","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak"];
 
-_rejectPayload = false;
-if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
-	_payloadType = typeName _this;
-	if !(_payloadType in ["ARRAY"]) then {
-		["WARNING", Format ["RequestOnUnitKilled.sqf: rejected malformed payload type [%1] while WFBE_C_SEC_HARDENING is enabled.", _payloadType]] Call WFBE_CO_FNC_LogContent;
-		_rejectPayload = true;
-	} else {
-		_payloadCount = count _this;
-		if (_payloadCount < 3) then {
-			["WARNING", Format ["RequestOnUnitKilled.sqf: rejected short payload with [%1] field(s) while WFBE_C_SEC_HARDENING is enabled.", _payloadCount]] Call WFBE_CO_FNC_LogContent;
-			_rejectPayload = true;
-		};
-	};
+if !((typeName _this) in ["ARRAY"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (non-array)."] Call WFBE_CO_FNC_LogContent;
 };
-if (_rejectPayload) exitWith {};
+if ((count _this) < 3) exitWith {
+	["WARNING", Format ["RequestOnUnitKilled.sqf: Rejected malformed kill payload (count %1).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 0)) in ["OBJECT"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (killed is not an object)."] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 1)) in ["OBJECT"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (killer is not an object)."] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 2)) in ["SCALAR"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (side id is not scalar)."] Call WFBE_CO_FNC_LogContent;
+};
 
 _killed = _this select 0;
 _killer = _this select 1;
