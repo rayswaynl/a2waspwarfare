@@ -1,10 +1,11 @@
 // Marty: Performance Audit locals.
-private["_vehicle","_salvagerRange","_percentage","_perfStart","_perfVehicles","_perfWrecks"];
+private["_get","_hqs","_isNeeded","_overAllCost","_percentage","_perfStart","_perfVehicles","_perfWrecks","_playerSideID","_salvageCost","_salvagerRange","_vehicle","_vehicles","_wrecks","_wreckSideID"];
 
 _vehicle = _this select 0;
 
 _salvagerRange = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE";
 _percentage = missionNamespace getVariable "WFBE_C_UNITS_SALVAGER_SCAVENGE_RATIO";
+_playerSideID = sideID;
 
 
 while {!gameOver && (alive _vehicle)} do { //--- wiki-wins: exit when the truck dies (was || !(alive _vehicle), which never exited mid-game)
@@ -31,9 +32,11 @@ while {!gameOver && (alive _vehicle)} do { //--- wiki-wins: exit when the truck 
 
 		_overAllCost = 0;
 		{
+			_wreckSideID = _x getVariable ["wfbe_side_id", -1];
+			if (_wreckSideID < 0) then {_wreckSideID = _x getVariable ["sideID", -1]};
 			_isNeeded = _x getVariable 'keepAlive';
 		
-			if (isNil '_isNeeded') then {
+			if ((isNil '_isNeeded') && {(_wreckSideID < 0) || {_wreckSideID != _playerSideID}}) then {
 				_get = missionNamespace getVariable (typeOf _x);
 				_salvageCost = 250;
 				if !(isNil '_get') then {

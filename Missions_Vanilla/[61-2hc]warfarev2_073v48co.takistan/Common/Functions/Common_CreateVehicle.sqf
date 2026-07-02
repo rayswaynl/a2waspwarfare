@@ -23,6 +23,10 @@ if (isNull _vehicle) exitWith {
 	objNull
 };
 
+//--- Fleet lane 75: keep a cheap authoritative owner-side stamp on mission-created vehicles.
+//--- Dead empty vehicles report engine side poorly, so salvage uses this numeric side id to block same-side farming.
+_vehicle setVariable ["wfbe_side_id", _side, true];
+
 if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call Compile preprocessFile "Common\Functions\Common_ModifyVehicle.sqf";};
 
 //["DEBUG (Common_CreateVehicle)", Format ["Before calling"]] Call WFBE_CO_FNC_LogContent;
