@@ -1,5 +1,22 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 - Lane 135 victory winner audit [codex/lane135-victory-winner-audit]
+
+The fleet prompt row saying `server_victory_threeway.sqf` still logs/persists the losing side as
+the winner is stale on the current `claude/build84-cmdcon36` target. Both maintained roots already
+route the corrected winner side through the full endgame chain:
+
+- `Server/FSM/server_victory_threeway.sqf` keeps `_winSide = _x` for town/territorial wins, but
+  flips west/east for the HQ-loss branch because `_x` is the side whose HQ/factories were defeated.
+- The same `_winSide` is sent to client endgame, stored as `WF_Winner`, emitted as WASPSTAT
+  `ROUNDEND`, and passed to `WFBE_CO_FNC_LogGameEnd`.
+- `Client_EndGame.sqf` now treats the payload as the winner and no longer inverts west/east.
+- `Server_LogGameEnd.sqf` reads `_this select 0` as `_winnerTeam` and increments that side's win
+  counter; the Chernarus and Takistan copies match for the lane-relevant files.
+
+No mission source changed in this lane. The remaining legacy `*_WIN_CHERNARUS` stat-key/map-label
+wording in `Server_LogGameEnd.sqf` is separate from the loser-as-winner inversion claim.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
