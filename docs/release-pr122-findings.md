@@ -1,6 +1,6 @@
 # Running Release Findings
 
-Last updated: 2026-07-02 08:11 Europe/Amsterdam
+Last updated: 2026-07-02 08:16 Europe/Amsterdam
 
 This document is the running Codex release-captain findings log for the July 2
 release pass. It is intentionally documentation-only: no gameplay source,
@@ -219,6 +219,36 @@ Scope:
 No new exact selected-artifact RPT package was found locally. Treat PR #136
 runtime statements as PR-doc telemetry/status, not release proof.
 
+Release remains **NO-GO**.
+
+## 2026-07-02 08:16 Update
+
+Final PR snapshot found PR #126 moved from
+`62f60bed836c5e458117583740f05c8077e5e800` to
+`070972b006a50dba12ef2c262f28acdd6dc69f5c`.
+
+New commit:
+
+- `070972b00` - `docs: align release tuple guard with guer mortar proof`
+
+Scope:
+
+- docs/tooling only:
+  `Tools/LoadoutManager/README.md`,
+  `Tools/Monitor/Get-WaspRptMarkerSweep.ps1`,
+  `Tools/Monitor/README.md`,
+  `Tools/Ops/Test-WaspReleaseTupleDocs.ps1`,
+  `docs/release/2026-07-01-release-readiness-task.md`
+- `git diff --check origin/master..origin/codex/release-readiness-20260701`:
+  pass
+
+Boundary: PR #126 body still mirrors stale PR #125 tuple `132af4ee66` /
+`DF37FA9E...` and wiki `8461f4b`. Current PR #125 head is
+`6363f4cb5b23448abc55ceb7e39cda2448233ac5`, with local package-content
+validation tuple `6363f4cb5b` /
+`E93896A4610C5B5A8CBCC4287F49BFF894D312930153A9BCF906CAD130F7D792`.
+
+Treat PR #126 as docs/tooling only and stale for current PR #125 package claims.
 Release remains **NO-GO**.
 
 ## 2026-07-02 01:29 Update
