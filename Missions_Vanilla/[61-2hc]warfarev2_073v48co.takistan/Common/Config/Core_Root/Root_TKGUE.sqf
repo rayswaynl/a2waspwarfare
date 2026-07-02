@@ -161,3 +161,13 @@ if (WF_A2_CombinedOps) then {
 	//--- Upgrades.
 	(_side) Call Compile preprocessFileLineNumbers "Common\Config\Core_Upgrades\Upgrades_OA_TKGUE.sqf";
 };
+
+//--- Match Root_GUE's post-units player-pool seed: Units_*_GUE overwrites WFBE_GUERDEPOTUNITS after the
+//--- overlay loads, so restore the Takistan GUER player depot immediately instead of waiting for the overlay loop.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {local player} && {side group player == resistance}) then {
+	private ["_pool"];
+	WFBE_C_GUER_VBIED_TYPE = "datsun1_civil_2_covered";
+	_pool = ["TK_GUE_Soldier_EP1","TK_GUE_Bonesetter_EP1","TK_GUE_Soldier_MG_EP1","TK_GUE_Soldier_AT_EP1","TK_GUE_Soldier_AA_EP1","TK_GUE_Soldier_Sniper_EP1","Offroad_DSHKM_TK_GUE_EP1","Pickup_PK_TK_GUE_EP1","V3S_TK_GUE_EP1","BTR40_MG_TK_GUE_EP1","datsun1_civil_2_covered","Ka137_MG_PMC"]; //--- BTR-40 (MG) tier-0 (2026-07-01).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","Ural_TK_CIV_EP1"]};
+	missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _pool];
+};
