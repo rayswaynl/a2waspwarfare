@@ -1,4 +1,5 @@
-> **⚠️ SHELVED (2026-07-02) — superseded by [SPREAD-AND-HOLD.md](SPREAD-AND-HOLD.md).** Once live cmdcon40
+> **⚠️ SHELVED (2026-07-02) — superseded by [SPREAD-AND-HOLD.md](SPREAD-AND-HOLD.md).** Follow-through audit:
+> [NO-TOWN-UNCAPTURABLE-FOLLOWUP-2026-07-02.md](NO-TOWN-UNCAPTURABLE-FOLLOWUP-2026-07-02.md). Once live cmdcon40
 > proved the AI *does* capture towns, the real problem is the OPPOSITE of this design: teams DOGPILE one town
 > and don't HOLD captures. This escalation ladder *concentrates* up to 12 teams on one town → it would make the
 > dogpile worse. DO NOT implement the escalation in the morning. Keep only its verdict "drain is linear → no
