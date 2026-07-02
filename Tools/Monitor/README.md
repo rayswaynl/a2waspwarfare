@@ -30,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit 177ef1385f `
-  -ExpectedArchiveSha256 F60F3C7D2C568BB1713A9C550D180B3DFA47C1400C7B1725680B8EFC3BC6B00F `
+  -ExpectedArchiveSha256 5910819DF9840B06146A5C237691AD159B507162399AF596050822EB86F2E5F2 `
   -ExpectedRole server `
   -ExpectedTerrain chernarus `
   -RequireReleaseMarkers `
@@ -46,7 +46,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
   -Latest 8 `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit 177ef1385f `
-  -ExpectedArchiveSha256 F60F3C7D2C568BB1713A9C550D180B3DFA47C1400C7B1725680B8EFC3BC6B00F `
+  -ExpectedArchiveSha256 5910819DF9840B06146A5C237691AD159B507162399AF596050822EB86F2E5F2 `
   -ExpectedRole hc1 `
   -ExpectedTerrain chernarus `
   -RequireReleaseMarkers `
@@ -69,7 +69,7 @@ Useful PR #126 proof markers:
 - `HCSTAT`
 - `AICOMSTAT`
 
-Current PR #125 package checkpoint is `codex/release-command-center-20260630@177ef1385f`, `_MISSIONS.7z` SHA256 `F60F3C7D2C568BB1713A9C550D180B3DFA47C1400C7B1725680B8EFC3BC6B00F`, `1,885` entries, `7,167,223` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
+Current PR #125 package checkpoint is `codex/release-command-center-20260630@177ef1385f`, `_MISSIONS.7z` SHA256 `5910819DF9840B06146A5C237691AD159B507162399AF596050822EB86F2E5F2`, `1,885` entries, `7,167,459` bytes, handoff `ready_for_runtime_collection`. Treat marker sweeps as health/provenance triage only until the exact Chernarus and Takistan RPT packet is collected and scored against that package tuple.
 
 ## Runtime Evidence Manifest
 
@@ -96,7 +96,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\New-WaspRuntimeEvidence
   -CommandOutFile "C:\WASP\rpt-archive\marker-sweep-commands-177ef1385f.ps1" `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit 177ef1385f `
-  -ExpectedArchiveSha256 F60F3C7D2C568BB1713A9C550D180B3DFA47C1400C7B1725680B8EFC3BC6B00F
+  -ExpectedArchiveSha256 5910819DF9840B06146A5C237691AD159B507162399AF596050822EB86F2E5F2
 ```
 
 `-CommandOutFile` writes a local marker-sweep command template with one command per terrain/role slot. Fill in private RPT paths locally and do not commit populated private paths or raw RPT contents.
@@ -108,7 +108,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRuntimeEvidenc
   -ManifestPath "C:\WASP\rpt-archive\runtime-evidence-177ef1385f.json" `
   -ExpectedCandidate release-command-center-20260630 `
   -ExpectedGit 177ef1385f `
-  -ExpectedArchiveSha256 F60F3C7D2C568BB1713A9C550D180B3DFA47C1400C7B1725680B8EFC3BC6B00F `
+  -ExpectedArchiveSha256 5910819DF9840B06146A5C237691AD159B507162399AF596050822EB86F2E5F2 `
   -ArchivePath "C:\WASP\release\_MISSIONS.7z"
 ```
 
