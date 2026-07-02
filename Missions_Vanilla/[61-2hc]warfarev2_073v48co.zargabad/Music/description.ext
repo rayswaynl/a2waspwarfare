@@ -1,0 +1,13 @@
+class CfgMusic
+{
+	tracks[] = {};
+	class wf_outro
+	{
+		// display name
+		name	= "Warfare Victory OST";
+
+		// filename, volume, pitch
+		sound[]	= { "\Music\wf_intro_2_7.ogg", db + 10, 1.0 };
+	};
+
+};

@@ -33,8 +33,10 @@ public class FileManager
             bool shouldSkipDirectory = blacklistedDirectories.Any(blacklist => directory.EndsWith(blacklist));
 
             // Check if directoryName ends with any string in blacklistedDirectories
-            // Only when copying to takistan
-            if (shouldSkipDirectory && _destination.Contains("co.takistan"))
+            // Only when copying to the vanilla desert maps, which keep their own
+            // map-specific Textures / Server\Config / Core_Artillery
+            if (shouldSkipDirectory &&
+                (_destination.Contains("co.takistan") || _destination.Contains("co.zargabad")))
             {
                 continue; // Exit the method if the directory is blacklisted
             }

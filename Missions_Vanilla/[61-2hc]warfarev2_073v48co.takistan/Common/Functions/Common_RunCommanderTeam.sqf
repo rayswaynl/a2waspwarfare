@@ -673,11 +673,11 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				//--- N-FEATUREBUG-43 fix 2026-06-27: was hardcoded 15360 (Chernarus only) -> the off-map edge math + the
 				//--- waitUntil off-map exit test below were 2560m wrong on Takistan/Zargabad (both 12800), so the heli
 				//--- either never registered as off-map or refunded early. worldSize is A3-ONLY (A2 OA latent bug), so
-				//--- branch the box size off worldName, matching Init_Boundaries.sqf (chernarus=15360, takistan/zargabad=12800).
+				//--- branch the box size off worldName, matching Init_Boundaries.sqf (chernarus=15360, takistan=12800, zargabad=8192).
 				_wsz = switch (toLower worldName) do {
 					case "chernarus": {15360};
 					case "takistan":  {12800};
-					case "zargabad":  {12800};
+					case "zargabad":  {8192};
 					default {15360};
 				};
 				_ex  = (getPos _h) select 0;
@@ -968,7 +968,19 @@ while {!WFBE_GameOver && _alive} do {
 						//--- B37 (Ray 2026-06-16): log that the unstuck ACTION fired at this tier, so the
 						//--- strike -> fire -> recover lifecycle is visible (UNSTUCK_STRIKE -> UNSTUCK_FIRED ->
 						//--- next ASSAULT_STRANDED moved=).
-						diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_FIRED|team=" + (str _uTeam) + "|tier=" + str _uTier);
+						//--- cmdcon43-j (telemetry, minimal): tag the UNSTUCK_FIRED line with map= (worldName) + dist= (leader->order-dest
+						//--- metres = the stall severity at fire-time) so future ladder tuning can attribute recoveries per-map + see how far
+						//--- out the wedge is (a near-target uncap-park wedge vs a far cross-country strand escalate very differently on the
+						//--- steep maps). worldName is a global command; the dest is read HC-locally from the team's own order (A2-safe: groups
+						//--- reject the [name,default] getVariable form -> plain get + isNil + count guard, no A3 ops).
+						private ["_uDbgDest","_uDbgDist","_uDbgOrder"];
+						_uDbgDist = -1;
+						_uDbgOrder = _uTeam getVariable "wfbe_aicom_order";
+						if (!isNil "_uDbgOrder" && {count _uDbgOrder >= 3}) then {
+							_uDbgDest = _uDbgOrder select 2;
+							if (!isNil "_uDbgDest") then {_uDbgDist = round (_uLdr distance _uDbgDest)};
+						};
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_FIRED|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|dist=" + str _uDbgDist);
 							//--- WASPSCALE recov counter (cmdcon42): shared cumulative recovery-action counter the WASPSCALE emit reads (recov=). Bumped in the missionNamespace of WHICHEVER machine this team is local to; the server emit therefore reports its own SERVER-LOCAL recoveries (HC-delegated team recoveries show as UNSTUCK_FIRED on the HC RPT, which analyze_soak reads). Monotonic.
 							missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
 						//--- B37 RE-MOUNT (Ray's mechanized-infantry ask): any team member on foot but with a live,
@@ -1017,7 +1029,7 @@ while {!WFBE_GameOver && _alive} do {
 								if (isNil "_uJit") then {_uJit = (random 2) - 1};
 								if ((abs _uJit) < 0.05) then {_uJit = 1}; //--- a zero lane cannot flip; seed it so the re-path actually diverges.
 								_uTeam setVariable ["wfbe_aicom_lanejit", (- _uJit), true];
-								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RECOVERY_V2 reverse-pulse + lane-flip (newLane=%3).", _uSide, _uTeam, (- _uJit)]] Call WFBE_CO_FNC_AICOMLog;
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RECOVERY_V2 reverse-pulse + lane-flip (newLane=%3, map=%4).", _uSide, _uTeam, (- _uJit), worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution (this tier-1 wedge recovery fires FAR more on steep Takistan).
 							};
 							_uLdr doMove (_uVeh modelToWorld [0,-14,0]); //--- short reverse-ish nudge.
 							sleep 4;
@@ -1035,7 +1047,7 @@ while {!WFBE_GameOver && _alive} do {
 									if (!isNull _uNode && {!surfaceIsWater (getPos _uNode)}) then {
 										_uVeh setVelocity [0,0,0];
 										_uVeh setPos (getPos _uNode);
-										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 unstuck teleport-nudge to road node.", _uSide, _uTeam]] Call WFBE_CO_FNC_AICOMLog;
+										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 unstuck teleport-nudge to road node (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
 									};
 								};
 							};
@@ -1076,7 +1088,7 @@ while {!WFBE_GameOver && _alive} do {
 										_uLdr setPos (getPos _uFootNode);
 										//--- Re-form the squad on the relocated leader so dismounts/stragglers regroup (never idle).
 										{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
-										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 FOOT/dead-hull unstuck teleport-nudge to road node (re-formed on leader).", _uSide, _uTeam]] Call WFBE_CO_FNC_AICOMLog;
+										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 FOOT/dead-hull unstuck teleport-nudge to road node (re-formed on leader) (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
 									};
 								};
 							};

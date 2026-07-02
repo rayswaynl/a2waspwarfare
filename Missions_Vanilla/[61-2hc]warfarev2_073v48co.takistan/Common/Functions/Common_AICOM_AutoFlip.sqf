@@ -15,7 +15,28 @@
 		reusing Marty's exact tilt/slow/grounded/dry/cooldown/stuck-timer thresholds and righting.
 		It only ever acts when a vehicle is genuinely flipped AND stuck (never a moving/upright one).
 
-		Flag: WFBE_C_AICOM_AUTOFLIP (default 1 = ON).
+		Flag: WFBE_C_AICOM_AUTOFLIP (default 1 = ON - see Init_CommonConstants.sqf:794).
+
+		DIAGNOSIS NOTE (cmdcon43-k, 2026-07-02): a four-RPT review saw the manager 'started (HC)' line
+		but ZERO 'righted=' events on both maps. VERDICT: WORKING-BUT-IDLE, detection is SOUND (it is a
+		faithful copy of Marty's proven client AutoFlip). Unlike HighClimb, the righting site already
+		carries an ALWAYS-ON diag_log (AICOMSTAT|...|AUTOFLIP|righted=) that flushes to the RPT directly
+		(no PerformanceAudit dependency), so zero rightings is real telemetry: no crewed AICOM ground
+		hull sat flipped+stuck+grounded+dry+off-cooldown for the 10s window today. That is expected -
+		AICOM road-marches (BuildRoadRoute) and the heli terrain-guard / TIER-3 recovery nudge keep
+		hulls off the terrain that rolls them. To let a FUTURE soak tell IDLE from a wiring fault, a
+		rate-limited manager heartbeat is added below (localVeh + how many were tilted this pass).
+
+		VERIFIED TRIGGER MATH (all conditions must hold, re-checked each 5s pass; any one unmet clears
+		the stuck timer): tilt  = (vectorUp _veh) select 2 < 0.35 (hull rolled >~69 deg off level);
+		slow  = |velocity| < 2 m/s; grounded = (getPos _veh select 2) < 3 (ASL-Z gate keeps it from
+		firing mid-fall/lift); dry = NOT surfaceIsWater (never right a hull in the sea - it belongs to
+		the unstuck ladder, cf. Common_RunCommanderTeam:961); off-cooldown = (now - lastFlip) > 45.
+		A hull that satisfies all five for >= 10 continuous seconds is righted (setVectorUp [0,0,1] +
+		setPos z=0.5 + a small downward settle velocity). KNOWN LIMIT (shared with HighClimb, by
+		design): a hull whose crew ejected/died is an EMPTY hull, absent from `units _team`, so it is
+		not reached - this manager only rights hulls that flipped WITH crew still aboard (the common
+		steep-terrain roll). To PROVOKE one for verification see the PR boot-smoke checklist.
 */
 
 //--- Read inline (Init_CommonConstants owner registers the constant later). Default ON.
@@ -76,12 +97,17 @@ WFBE_CO_FNC_AICOM_AutoFlip_Check = {
 };
 
 //--- Manager loop: bounded enumeration over the side-logic wfbe_teams group arrays.
-private ["_sides","_seen","_side","_logik","_teams","_team","_veh","_now"];
+private ["_sides","_seen","_side","_logik","_teams","_team","_veh","_now","_localVeh","_tilted","_lastHeartbeat"];
 _sides = [west, east, resistance];
+//--- cmdcon43-k: always-on heartbeat clock (rate-limited 120s below). Lets a soak reading the HC RPT
+//--- tell IDLE (localVeh>0 but never tilted -> nothing to right) from a wiring fault (localVeh=0).
+_lastHeartbeat = -999;
 
 while {!gameOver} do {
 	_now  = time;
 	_seen = [];   //--- dedupe hulls inspected this pass.
+	_localVeh = 0; //--- distinct machine-local team hulls inspected this pass.
+	_tilted   = 0; //--- of those, how many are currently rolled past the tilt threshold (0.35).
 	{
 		_side  = _x;
 		_logik = _side Call WFBE_CO_FNC_GetSideLogic;
@@ -95,6 +121,9 @@ while {!gameOver} do {
 						_veh = vehicle _x;
 						if (!isNull _veh && {_veh != _x} && {local _veh} && {!(_veh in _seen)}) then {
 							_seen set [count _seen, _veh];
+							_localVeh = _localVeh + 1;
+							//--- cheap tilt read for the heartbeat only (the Check fn re-reads + owns the act decision).
+							if (alive _veh && {((vectorUp _veh) select 2) < 0.35}) then {_tilted = _tilted + 1};
 							[_veh, _now] Call WFBE_CO_FNC_AICOM_AutoFlip_Check;
 						};
 					} forEach (units _team);
@@ -102,5 +131,13 @@ while {!gameOver} do {
 			} forEach _teams;
 		};
 	} forEach _sides;
+
+	//--- cmdcon43-k ALWAYS-ON heartbeat (rate-limited 120s). A2-OA-safe: diag_log + round + arithmetic,
+	//--- no A3 commands, no ==/!= on booleans.
+	if ((diag_tickTime - _lastHeartbeat) > 120) then {
+		_lastHeartbeat = diag_tickTime;
+		diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|AUTOFLIP_HB|machine=%3|localVeh=%4|tilted=%5", str isServer, round (time / 60), _machineTag, _localVeh, _tilted]);
+	};
+
 	sleep 5;
 };

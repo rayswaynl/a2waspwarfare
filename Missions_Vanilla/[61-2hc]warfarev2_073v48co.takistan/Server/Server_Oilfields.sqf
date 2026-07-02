@@ -299,6 +299,27 @@ WFBE_FNC_OilfieldSideName = {
 	switch (_s) do { case west: {"BLUFOR"}; case east: {"OPFOR"}; case resistance: {"GUER"}; default {"NEUTRAL"} };
 };
 
+//--- (cmdcon43-m) mm:ss formatter for a whole-second count. A2-OA has NO A3 string helpers, so we do
+//--- the floor/mod math by hand and zero-pad each field to two chars. Negative/absent -> "00:00".
+WFBE_FNC_OilfieldFmtMMSS = {
+	private ["_sec","_m","_s","_ms","_ss"];
+	_sec = _this;
+	if (_sec < 0) then {_sec = 0};
+	_sec = floor _sec;
+	_m = floor (_sec / 60);
+	_s = _sec - (_m * 60);        //--- A2-OA-safe modulo (no `%` operator reliance): remainder after whole minutes.
+	_ms = str _m; if (_m < 10) then {_ms = "0" + _ms};
+	_ss = str _s; if (_s < 10) then {_ss = "0" + _ss};
+	_ms + ":" + _ss
+};
+
+//--- Node/marker identity shared by BOTH the pre-unlock countdown marker and the post-unlock live marker
+//--- so there is exactly ONE marker across the whole lifecycle (pre-unlock reuses this same name; the
+//--- unlock path re-uses it if present, never a duplicate).
+private ["_mkr","_baseLabel"];
+_mkr = "WFBE_OILFIELD";
+_baseLabel = missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_TEXT", "OILFIELD"];
+
 //------------------------------------------------------------------------------------
 //--- (2) UNLOCK WAIT + ANNOUNCE.
 //--- Sleep until the ingame clock passes the unlock mark, then create the marker and announce.
@@ -306,17 +327,65 @@ WFBE_FNC_OilfieldSideName = {
 private ["_unlockAt"];
 _unlockAt = missionNamespace getVariable ["WFBE_C_OILFIELD_UNLOCK_TIME", 3600];
 
-//--- DORMANT until unlock: poll cheaply (no marker, no capture, no income yet).
-waitUntil { sleep 10; time > _unlockAt };
+//------------------------------------------------------------------------------------
+//--- (cmdcon43-m) PRE-UNLOCK VISIBILITY: create the marker EARLY (now that the position has resolved and
+//--- the derrick is spawned) so players see the field + a live countdown from the moment it exists, then
+//--- run a COARSE countdown loop that updates the label until unlock. Reuses the SAME marker name as the
+//--- post-unlock live path, so there is never a duplicate: the unlock code below detects the existing
+//--- marker and simply recolours/relabels it in place.
+//---   Cadence: WFBE_C_OILFIELD_PREMARK_UPDATE (default 30s, floored 10s). Per-second updates would be
+//---   marker-text render churn (the big-map FPS work) for no player benefit; 30s label updates are
+//---   negligible and the countdown still reads accurately to the nearest half-minute.
+//------------------------------------------------------------------------------------
+if ((missionNamespace getVariable ["WFBE_C_OILFIELD_PREMARK", 1]) == 1) then {
+	private ["_preColor","_preFmt","_preUpd","_t5Msg","_t5Fired","_remain"];
+	_preColor = missionNamespace getVariable ["WFBE_C_OILFIELD_PREMARK_COLOR", "ColorYellow"];
+	_preFmt   = missionNamespace getVariable ["WFBE_C_OILFIELD_PREMARK_LABEL", "OILFIELD - opens in %1"];
+	_preUpd   = missionNamespace getVariable ["WFBE_C_OILFIELD_PREMARK_UPDATE", 30];
+	if (_preUpd < 10) then {_preUpd = 10};     //--- never churn the marker text faster than every 10s.
+	_t5Msg    = missionNamespace getVariable ["WFBE_C_OILFIELD_PREMARK_T5_MSG", ""];
+	_t5Fired  = false;
+
+	//--- Create the (locked/neutral) countdown marker in place. Only if it does not already exist (a
+	//--- re-entry guard; createMarker on an existing name would fail).
+	if (getMarkerColor _mkr == "") then {
+		createMarker [_mkr, _nodePos];
+		_mkr setMarkerType (missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_TYPE", "mil_circle"]);
+		_mkr setMarkerColor _preColor;
+		_mkr setMarkerSize [1, 1];
+	};
+	_remain = _unlockAt - time;
+	_mkr setMarkerText (Format [_preFmt, ((_remain) Call WFBE_FNC_OilfieldFmtMMSS)]);
+	diag_log Format ["OILFIELD|v3|PREMARK|t=%1|pos=%2|remain=%3|upd=%4", round time, _nodePos, round _remain, _preUpd];
+	["INFORMATION", Format ["Server_Oilfields.sqf: PRE-UNLOCK marker [%1] created at %2 (opens in %3, countdown every %4s).", _mkr, _nodePos, ((_remain) Call WFBE_FNC_OilfieldFmtMMSS), _preUpd]] Call WFBE_CO_FNC_LogContent;
+
+	//--- Countdown loop: refresh the label on the coarse cadence until unlock. Optional one-shot T-5min
+	//--- DashboardAnnounce garnish (same PREMARK flag; skipped if the message is "").
+	while { time <= _unlockAt } do {
+		_remain = _unlockAt - time;
+		_mkr setMarkerText (Format [_preFmt, ((_remain) Call WFBE_FNC_OilfieldFmtMMSS)]);
+		if (!_t5Fired && _remain <= 300 && _remain > 0 && _t5Msg != "") then {
+			_t5Fired = true;
+			[nil, "DashboardAnnounce", [_t5Msg]] Call WFBE_CO_FNC_SendToClients;
+			diag_log Format ["OILFIELD|v3|PREMARK_T5|t=%1|remain=%2", round time, round _remain];
+		};
+		sleep _preUpd;
+	};
+} else {
+	//--- PREMARK off: classic behaviour - stay DORMANT until unlock (no marker, no countdown).
+	waitUntil { sleep 10; time > _unlockAt };
+};
 
 //--- Create the persistent GLOBAL marker (createMarker on the server replicates to all clients incl. JIP,
 //--- exactly like the bank marker in Construction_MediumSite.sqf). Start NEUTRAL (yellow).
-private ["_mkr","_neutralColor","_baseLabel"];
-_mkr = "WFBE_OILFIELD";
+//--- (cmdcon43-m) If the pre-unlock countdown marker already exists, REUSE it in place (recolour +
+//--- relabel below) instead of creating a duplicate - there is exactly one WFBE_OILFIELD marker.
+private ["_neutralColor"];
 _neutralColor = "ColorYellow"; //--- unheld / neutral node colour (side-absolute; see WFBE_FNC_OilfieldColor default)
-_baseLabel = missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_TEXT", "OILFIELD"];
 
-createMarker [_mkr, _nodePos];
+if (getMarkerColor _mkr == "") then {
+	createMarker [_mkr, _nodePos];
+};
 _mkr setMarkerType (missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_TYPE", "mil_circle"]);
 _mkr setMarkerColor _neutralColor;
 _mkr setMarkerText _baseLabel;
@@ -447,7 +516,11 @@ WFBE_FNC_OilfieldClearPull = {
 			_cur = _t getVariable ["wfbe_aicom_town_weight", 0];
 			_t setVariable ["wfbe_aicom_town_weight", _cur - _amt, true];
 		};
-		missionNamespace setVariable [_key, [], true];
+		//--- (cmdcon43-m) namespace setVariable is 2-arg ONLY on A2-OA 1.64 (the cmdcon42b NSSETVAR3 hotfix
+		//--- missed this + line below): the 3-arg `public` form throws "3 elements provided, 2 expected" and
+		//--- leaves the var UNSET. This record is only read via server-local missionNamespace getVariable,
+		//--- so the broadcast was both pointless and fatal. Strip it.
+		missionNamespace setVariable [_key, []];
 	};
 };
 
@@ -469,7 +542,8 @@ WFBE_FNC_OilfieldApplyPull = {
 	};
 	_cur = _t getVariable ["wfbe_aicom_town_weight", 0];
 	_t setVariable ["wfbe_aicom_town_weight", _cur + _amt, true];
-	missionNamespace setVariable [_key, [_t, _amt], true];
+	//--- (cmdcon43-m) 2-arg namespace setVariable (NSSETVAR3 trap; server-local record, see ClearPull note).
+	missionNamespace setVariable [_key, [_t, _amt]];
 };
 
 //------------------------------------------------------------------------------------

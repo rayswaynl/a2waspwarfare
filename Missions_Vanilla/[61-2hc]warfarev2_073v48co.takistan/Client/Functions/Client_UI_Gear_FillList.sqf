@@ -11,6 +11,13 @@ _gear = _this select 1;
 
 _upgrade_level = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_GEAR;
 
+//--- GUER-BUYMENU (2026-07-02): playable GUER has NO upgrade system (GetSideUpgrades returns a zero array for
+//--- resistance), so the tier filter below permanently hid every item priced above gear level 0 - in practice
+//--- ALL rifles (shared classnames like AK_47_M are first-registered by Gear_US/Gear_TKA at tier >= 1, and
+//--- Config_Weapons.sqf is first-wins), leaving only the RPG18/Makarov/items subset. The curated
+//--- Loadout_GUE/TKGUE list + prices are the real GUER gate: unlock all gear tiers for the playable GUER side.
+if ((sideJoined == resistance) && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {_upgrade_level = 99};
+
 _j = 0;
 for '_i' from 0 to count(_gear)-1 do {
 	_values = (_gear select _i) select 0;

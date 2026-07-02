@@ -1,4 +1,4 @@
-Private['_args','_bd','_cargo','_grp','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_side','_sideID','_timeStart','_vehicle','_vehicleCoord'];
+Private['_args','_bd','_cargo','_grp','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_timeStart','_vehicle','_vehicleCoord'];
 
 _args = _this;
 _side = _args select 1;
@@ -95,9 +95,11 @@ while {true} do {
 
 [_grp,(_ranPos select _ran),"MOVE",10] Call AIMoveTo;
 
+_returnStart = time;
 while {true} do {
 	sleep 1;
 	if (!alive _pilot || !alive _vehicle || isNull _vehicle || isNull _pilot) exitWith {};
+	if (time - _returnStart > 500) exitWith {};
 	_vehicleCoord = [getPos _pilot select 0,getpos _pilot select 1];
 	_positionCoord = [(_ranPos select _ran) select 0,(_ranPos select _ran) select 1];
 	if (_vehicleCoord distance _positionCoord < 200) exitWith {};

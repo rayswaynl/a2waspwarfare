@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="WASP Warfare Build 87 (Chernarus)";
-		briefingDescription="Build 87: air cavalry and vehicle airlift, AH-6X, Ka-137 swarm, walls and defenses, chat tips, plus commander and fix polish.";
+		briefingName="WASP Warfare Build 88 (Chernarus)";
+		briefingDescription="Build 88: new respawn screen, GUER town-center buying and mortar HUD, commander defense menu priced from supply, quieter upgrades, salvage-farm block, repaired wheels and engines, and a wave of menu and QoL polish.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
@@ -4417,7 +4417,7 @@ class Mission
 					azimut=90;
 					id=279;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -5135,7 +5135,7 @@ class Mission
 					position[]={11200,150,11900};
 					id=312;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -5169,7 +5169,7 @@ class Mission
 					position[]={12600,150,9200};
 					id=314;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -5186,7 +5186,7 @@ class Mission
 					position[]={2500,150,9900};
 					id=315;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -5203,7 +5203,7 @@ class Mission
 					position[]={3900,150,8600};
 					id=316;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -5220,7 +5220,7 @@ class Mission
 					position[]={3500,150,2400};
 					id=317;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};
@@ -5237,7 +5237,7 @@ class Mission
 					position[]={12200,150,3600};
 					id=318;
 					side="LOGIC";
-					vehicle="LocationLogicStart";
+					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
 				};

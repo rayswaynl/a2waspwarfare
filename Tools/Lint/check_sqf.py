@@ -58,6 +58,10 @@ GROUP_GETVARIABLE_ARRAY_RE = re.compile(
     r")\s+getVariable\s*\[",
     re.IGNORECASE,
 )
+NAMESPACE_SETVARIABLE_RE = re.compile(
+    r"\b(missionNamespace|uiNamespace|profileNamespace)\s+setVariable\s*\[",
+    re.IGNORECASE,
+)
 FINDING_CODES = (
     "A3CMD",
     "A3MARKER",
@@ -70,6 +74,7 @@ FINDING_CODES = (
     "CLASSREF",
     "DISABLESER",
     "GROUPGETVAR",
+    "NSSETVAR3",
 )
 
 
@@ -217,6 +222,36 @@ def mask_comments(text: str) -> str:
     return "".join(out)
 
 
+def count_top_level_elements(masked: str, open_index: int) -> int | None:
+    """Count comma-separated top-level elements of the bracket opening at open_index.
+
+    Expects masked text (string contents already blanked), so commas inside
+    string literals never reach the counter. Returns None when the bracket
+    never closes; BRACKET reports that case separately.
+    """
+    depth = 0
+    commas = 0
+    has_content = False
+    for index in range(open_index, len(masked)):
+        ch = masked[index]
+        if ch in "([{":
+            if depth > 0:
+                has_content = True
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+            if depth == 0:
+                if commas:
+                    return commas + 1
+                return 1 if has_content else 0
+        elif depth == 1:
+            if ch == ",":
+                commas += 1
+            elif not ch.isspace():
+                has_content = True
+    return None
+
+
 def build_token_index(root: Path) -> dict[str, set[Path]]:
     index: dict[str, set[Path]] = {}
     for path in root.rglob("*"):
@@ -255,6 +290,22 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         for match in regex.finditer(masked):
             line, col = line_col(starts, match.start())
             findings.append(Finding(path, line, col, code, message))
+
+    for match in NAMESPACE_SETVARIABLE_RE.finditer(masked):
+        elements = count_top_level_elements(masked, match.end() - 1)
+        if elements is not None and elements >= 3:
+            line, col = line_col(starts, match.start())
+            findings.append(
+                Finding(
+                    path,
+                    line,
+                    col,
+                    "NSSETVAR3",
+                    f"{match.group(1)} setVariable takes exactly [name, value] on A2/OA 1.64; "
+                    f"the {elements}-element public-flag form is Arma 3-only, throws "
+                    "'Error 3 elements provided, 2 expected' and leaves the variable unset",
+                )
+            )
 
     for match in A3_MARKER_TYPE_RE.finditer(comments_masked):
         line, col = line_col(comments_starts, match.start())
