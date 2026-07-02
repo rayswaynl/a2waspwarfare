@@ -1797,5 +1797,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+
+//--- NEUTRAL AN-2 SMUGGLER RUN (fable/an2-smuggler): periodic biplane bounty event.
+//--- Set WFBE_C_SMUGGLER_ENABLE = 1 to activate. All other constants are tunables.
+	if (isNil "WFBE_C_SMUGGLER_ENABLE")   then {WFBE_C_SMUGGLER_ENABLE   = 0};	//--- Master gate: 0=dark, 1=active.
+	if (isNil "WFBE_C_SMUGGLER_BOUNTY")   then {WFBE_C_SMUGGLER_BOUNTY   = 5000};	//--- Supply granted to killing side.
+	if (isNil "WFBE_C_SMUGGLER_INTERVAL") then {WFBE_C_SMUGGLER_INTERVAL = 900};	//--- Seconds between runs.
+	if (isNil "WFBE_C_SMUGGLER_ALTITUDE") then {WFBE_C_SMUGGLER_ALTITUDE = 350};	//--- Flight altitude (m).
+	if (isNil "WFBE_C_SMUGGLER_MARKER")   then {WFBE_C_SMUGGLER_MARKER   = 1};	//--- 1 = kill marker (90s TTL).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

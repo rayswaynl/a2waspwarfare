@@ -1012,6 +1012,12 @@ if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLowe
 	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- AN-2 SMUGGLER RUN (fable/an2-smuggler): neutral biplane periodic bounty event.
+if ((missionNamespace getVariable ["WFBE_C_SMUGGLER_ENABLE", 0]) == 1) then {
+	[] execVM "Server\Init\Init_SmugAir.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_SmugAir.sqf launched (WFBE_C_SMUGGLER_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 
