@@ -47,20 +47,26 @@ if (isServer) then {
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
 		['USMC_Soldier_TL','USMC_Soldier_MG','USMC_SoldierS_Sniper','USMC_Soldier_Medic'],
 		['USMC_Soldier_TL','USMC_Soldier_AR','USMC_Soldier_GL','USMC_Soldier_LAT','USMC_Soldier'],
-		['HMMWV_M2','HMMWV_MK19']
+		['HMMWV_M2','HMMWV_MK19'],
+		//--- technical pair (cmdcon41-w3c): HMMWV HMG + dismounted TL/LAT AT gunner (mirrors the RU Vodnik technical entry).
+		['HMMWV_M2','USMC_Soldier_TL','USMC_Soldier_LAT']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
 		['LAV25','LAV25'],
 		['MTVR','USMC_Soldier_TL','USMC_Soldier_AT','USMC_Soldier_MG','USMC_Soldier_LAT'],
-		['AAV','USMC_Soldier_AA','USMC_Soldier_AA','USMC_Soldier_Medic']
+		['AAV','USMC_Soldier_AA','USMC_Soldier_AA','USMC_Soldier_Medic'],
+		//--- motorized AA picket (cmdcon41-w3e): MTVR + Stinger dismounts (USMC has no dedicated SPAAG).
+		['MTVR','USMC_Soldier_AA','USMC_Soldier_AA','USMC_Soldier_TL','USMC_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
 		['M1A1','AAV'],
 		['M1A1','M1A1'],
 		['AAV','AAV','USMC_Soldier_TL','USMC_Soldier_MG','USMC_SoldierM_Marksman','USMC_Soldier_Medic','USMC_Soldier_AT','USMC_Soldier_HAT','USMC_Soldier'],
-		['LAV25','USMC_Soldier_TL','USMC_Soldier_Medic','USMC_Soldier_GL','USMC_Soldier','USMC_Soldier_AR']
+		['LAV25','USMC_Soldier_TL','USMC_Soldier_Medic','USMC_Soldier_GL','USMC_Soldier','USMC_Soldier_AR'],
+		//--- AA picket at HEAVY (cmdcon41-w3e): LAV-25 + Stinger dismounts - late-game air deterrent (no USMC SPAAG).
+		['LAV25','USMC_Soldier_AA','USMC_Soldier_AA','USMC_Soldier_TL','USMC_Soldier_Medic']
 	]];
 
 	//--- AI Loadouts [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

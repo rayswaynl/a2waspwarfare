@@ -126,9 +126,19 @@ if (isServer) then {
 //--- RequestSpecial path the create/end messages use. The server re-broadcasts only when the
 //--- arrow moved >7 deg. Exits when the team is null or wiped (mirrors the marker lifecycle).
 [_team, _side] Spawn {
-	Private ["_hTeam","_hSide","_hOrder","_hDest","_hLdr","_hDir"];
+	Private ["_hTeam","_hSide","_hOrder","_hDest","_hLdr","_hDir","_hLastDir","_hDelta","_hSend"]; //--- cmdcon41-w3c +_hLastDir/_hDelta/_hSend
 	_hTeam = _this select 0;
 	_hSide = _this select 1;
+	//--- cmdcon41-w3c (HC-LOAD): SENDER-SIDE heading dedup. Previously this loop shipped an
+	//--- aicom-team-heading PV to the server EVERY 8s per team unconditionally; the server then
+	//--- discarded it unless the arrow moved >7 deg (Server_HandleSpecial:568). With ~36 AICOM
+	//--- teams/side that is a steady stream of HC->server PVs the server throws away. Cache the
+	//--- last DIR we actually sent and skip the PV when the new bearing is within the SAME 7 deg
+	//--- the server uses, so a team holding a bearing sends nothing. First send always fires
+	//--- (sentinel _hLastDir=-999) and any real >7 deg turn still reports immediately -> the arrow
+	//--- feed is behaviour-identical, just far quieter. A2-OA-safe: abs + 360 wrap for the angular
+	//--- delta (no A3 ops), plain scalar cache in this spawn scope.
+	_hLastDir = -999;
 	while {!WFBE_GameOver && !isNull _hTeam && {(count ((units _hTeam) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 		_hLdr = leader _hTeam;
 		if (!isNull _hLdr && {alive _hLdr}) then {
@@ -143,10 +153,22 @@ if (isServer) then {
 					_hDir = ((_hDest select 0) - ((getPosATL _hLdr) select 0)) atan2 ((_hDest select 1) - ((getPosATL _hLdr) select 1)); //--- A2-safe bearing leader->dest (binary getDir is A3-only).
 				};
 			};
-			if (isServer) then {
-				["aicom-team-heading", [_hTeam, _hDir]] Call HandleSpecial;
+			//--- cmdcon41-w3c: only send when the bearing moved beyond the server's own 7 deg gate.
+			_hSend = false;
+			if (_hLastDir < -900) then {
+				_hSend = true; //--- first report: always send so the arrow appears.
 			} else {
-				["RequestSpecial", ["aicom-team-heading", [_hTeam, _hDir]]] Call WFBE_CO_FNC_SendToServer;
+				_hDelta = abs (_hDir - _hLastDir);
+				if (_hDelta > 180) then {_hDelta = 360 - _hDelta}; //--- wrap-around shortest angle (A2-safe).
+				if (_hDelta > 7) then {_hSend = true};
+			};
+			if (_hSend) then {
+				_hLastDir = _hDir;
+				if (isServer) then {
+					["aicom-team-heading", [_hTeam, _hDir]] Call HandleSpecial;
+				} else {
+					["RequestSpecial", ["aicom-team-heading", [_hTeam, _hDir]]] Call WFBE_CO_FNC_SendToServer;
+				};
 			};
 		};
 		sleep 8;
@@ -293,6 +315,159 @@ _grndVehs = [];
 		};
 	};
 } forEach _vehicles;
+
+//--- ===================================================================
+//--- cmdcon41-w3b (Ray wish): EASA-on-AI + richer AI squad gear, both HARD-BOUND to REAL researched upgrades.
+//--- Runs ONCE here on the founding machine (the HC for delegate teams; server for the W6/W19 fallbacks), right
+//--- after the _vehicles list is split into _airVeh/_grndVehs and BEFORE the air-insert block, so the hulls are
+//--- freshly created + LOCAL and their weapon state replicates with the vehicle (JIP-safe). Self-contained: the
+//--- kit table is an inline local (design says do NOT hoist into Init_CommonConstants this pass). A2-OA-safe:
+//--- typeName guards (no isEqualType), no A3 commands, bounded single-pass forEach, no sleeps.
+//--- ===================================================================
+
+//--- (1) EASA-ON-AI (gate WFBE_C_AICOM_EASA_AI default 1): apply an EASA kit to each local alive AICOM air hull whose
+//--- typeOf matches a row, but ONLY once the side has actually RESEARCHED EASA ((GetSideUpgrades select WFBE_UP_EASA) >= 1).
+//--- Classnames copied VERBATIM from Client\Module\EASA\EASA_Init.sqf rows; the remove-stock/add-kit idiom mirrors the
+//--- proven Server_GuerAirDef.sqf:295-311 swap. Rows: [class, stockW, stockM, kitW, kitM, turretBool]. Turret rows use the
+//--- [-1] turret add/remove; hull rows use plain add/removeWeapon+Magazine. We do NOT set WFBE_EASA_Setup on AI hulls
+//--- (a non-index value breaks Common_RearmVehicle player loadout indexing - design R3). Log one EASA_AI_KIT line per hull.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_EASA_AI", 1]) > 0) then {
+	private ["_easaUpg","_easaHas"];
+	_easaUpg = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+	//--- HARD research gate (Ray): kit ONLY when EASA is actually unlocked. count-guard the select so a short/empty
+	//--- upgrade array (GUER zero-array / CIV []) degrades to "not unlocked" instead of erroring.
+	_easaHas = (count _easaUpg > WFBE_UP_EASA) && {(_easaUpg select WFBE_UP_EASA) >= 1};
+	if (_easaHas) then {
+		private ["_easaKits"];
+		//--- INLINE default-kit table. Jets verified present in EASA_Init rows: Su34 (L11), Su25_TK_EP1 (L133),
+		//--- A10 (L377), AV8B2 (L481). Helis: AH64D_EP1 (L592), AH1Z (L610), Ka52 (L651), Ka52Black (L660),
+		//--- Mi24_P (L640), Mi24_V (L631), AW159_Lynx_BAF (L620 TURRET). Each kitW/kitM copied EXACTLY from one
+		//--- balanced AG/AA loadout row for that airframe; stockW/stockM copied EXACTLY from its _easaDefault row.
+		_easaKits = [
+			//--- HELIS ---
+			//--- AH-64D (Hellfire): stock HellfireLauncher/8Rnd_Hellfire -> +Stinger AA pair (row L596).
+			["AH64D_EP1", ["HellfireLauncher"], ["8Rnd_Hellfire"], ["HellfireLauncher","StingerLauncher_twice"], ["8Rnd_Hellfire","2Rnd_Stinger"], false],
+			//--- AH-1Z: stock HellfireLauncher/8Rnd_Hellfire x2 -> AGM-114(8)+AIM-9L(2) (row L614).
+			["AH1Z", ["HellfireLauncher"], ["8Rnd_Hellfire","8Rnd_Hellfire"], ["HellfireLauncher","SidewinderLaucher_AH1Z"], ["8Rnd_Hellfire","2Rnd_Sidewinder_AH1Z"], false],
+			//--- Ka-52: stock AT9/AT-9 x3 -> Ataka-V(12)+Igla-V(2) (row L655).
+			["Ka52", ["AT9Launcher"], ["4Rnd_AT9_Mi24P","4Rnd_AT9_Mi24P","4Rnd_AT9_Mi24P"], ["AT9Launcher","Igla_twice"], ["4Rnd_AT9_Mi24P","4Rnd_AT9_Mi24P","4Rnd_AT9_Mi24P","2Rnd_Igla"], false],
+			//--- Ka-52 (Black): stock Vikhr/12Rnd -> R-73(2)+Vikhr(12) (row L664).
+			["Ka52Black", ["VikhrLauncher"], ["12Rnd_Vikhr_KA50"], ["R73Launcher_2","VikhrLauncher"], ["2Rnd_R73","12Rnd_Vikhr_KA50"], false],
+			//--- Mi-24P: stock AT9+HeliBomb -> Ataka-V(4)+Igla-V(2) (row L645).
+			["Mi24_P", ["AT9Launcher","HeliBombLauncher"], ["4Rnd_AT9_Mi24P","2Rnd_FAB_250"], ["AT9Launcher","Igla_twice"], ["4Rnd_AT9_Mi24P","2Rnd_Igla"], false],
+			//--- Mi-24V: stock AT9/4Rnd -> Ataka-V(4)+Igla-V(2) (row L635).
+			["Mi24_V", ["AT9Launcher"], ["4Rnd_AT9_Mi24P"], ["AT9Launcher","Igla_twice"], ["4Rnd_AT9_Mi24P","2Rnd_Igla"], false],
+			//--- Wildcat AH11 (TURRET path - manned turret, mirrors AW159 in EASA_Equip): stock -> Spike(2)+Stinger(2) (row L624).
+			["AW159_Lynx_BAF", ["CRV7_HEPD","CTWS","SpikeLauncher_ACR"], ["6Rnd_CRV7_HEPD","200Rnd_40mmHE_FV510","200Rnd_40mmSABOT_FV510","2Rnd_Spike_ACR","2Rnd_Spike_ACR"], ["CRV7_HEPD","CTWS","SpikeLauncher_ACR","StingerLauncher_twice"], ["6Rnd_CRV7_HEPD","200Rnd_40mmHE_FV510","200Rnd_40mmSABOT_FV510","2Rnd_Spike_ACR","2Rnd_Stinger"], true],
+			//--- JETS (one balanced AG/AA kit per side) ---
+			//--- Su-34 [EAST]: stock Ch29+R73 -> FAB-250(6)+Kh-29(4)+R-73(2)+GBU-12(2) (row L15).
+			["Su34", ["Ch29Launcher_Su34","R73Launcher_2"], ["6Rnd_Ch29","2Rnd_R73","2Rnd_R73"], ["AirBombLauncher","BombLauncherF35","Ch29Launcher_Su34","R73Launcher_2"], ["4Rnd_FAB_250","2Rnd_FAB_250","2Rnd_GBU12","4Rnd_Ch29","2Rnd_R73"], false],
+			//--- Su-25T [EAST/TK]: stock AT9+R73+S8 -> Ataka-V(4)+FAB-250(6)+R-73(2)+S-8(40) (row L140).
+			["Su25_TK_EP1", ["AT9Launcher","R73Launcher_2","S8Launcher"], ["4Rnd_AT9_Mi24P","4Rnd_AT9_Mi24P","2Rnd_R73","40Rnd_S8T"], ["AT9Launcher","AirBombLauncher","R73Launcher_2","S8Launcher"], ["4Rnd_AT9_Mi24P","4Rnd_FAB_250","2Rnd_FAB_250","2Rnd_R73","40Rnd_S8T"], false],
+			//--- A-10 [WEST]: stock FFAR+Mk82 -> AGM-65(2)+Hydra(38)+Stinger... use AGM-65(2)+Stinger(2) balanced (row L383).
+			["A10", ["FFARLauncher","Mk82BombLauncher_6"], ["38Rnd_FFAR","6Rnd_Mk82"], ["MaverickLauncher","StingerLauncher_twice"], ["2Rnd_Maverick_A10","2Rnd_Stinger"], false],
+			//--- AV-8B II [WEST]: stock Maverick+Sidewinder -> AGM-114(8)+AGM-65(2)+AIM-9L(2) (row L485).
+			["AV8B2", ["MaverickLauncher","SidewinderLaucher_AH1Z"], ["2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], ["HellfireLauncher","MaverickLauncher","SidewinderLaucher_AH1Z"], ["8Rnd_Hellfire","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], false]
+		];
+		{
+			private ["_kh"];
+			_kh = _x;
+			if (!isNull _kh && {alive _kh} && {local _kh} && {_kh isKindOf "Air"}) then {
+				private ["_khType","_khRow","_khHit"];
+				_khType = typeOf _kh;
+				_khHit = false;
+				{
+					if (!_khHit && {(_x select 0) == _khType}) then {
+						_khHit = true;
+						_khRow = _x;
+						private ["_stW","_stM","_kW","_kM","_kTur"];
+						_stW  = _khRow select 1; _stM = _khRow select 2;
+						_kW   = _khRow select 3; _kM  = _khRow select 4;
+						_kTur = _khRow select 5;
+						if (_kTur) then {
+							//--- TURRET path (manned turret; [-1] = the vehicle's primary/main turret, exactly as Server_GuerAirDef).
+							{_kh removeMagazineTurret [_x, [-1]]} forEach _stM;
+							{_kh removeWeaponTurret  [_x, [-1]]} forEach _stW;
+							{_kh addMagazineTurret [_x, [-1]]} forEach _kM;
+							{_kh addWeaponTurret  [_x, [-1]]} forEach _kW;
+						} else {
+							//--- HULL path (jets + non-turret gunships fire from the hull).
+							{_kh removeMagazine _x} forEach _stM;
+							{_kh removeWeapon   _x} forEach _stW;
+							{_kh addMagazine _x} forEach _kM;
+							{_kh addWeapon   _x} forEach _kW;
+						};
+						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|EASA_AI_KIT|type=" + _khType + "|turret=" + str _kTur);
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] EASA_AI_KIT applied to %2 (turret=%3, EASA researched).", _side, _khType, _kTur]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				} forEach _easaKits;
+			};
+		} forEach _vehicles;
+	};
+};
+
+//--- (2) RICH-GEAR (gate WFBE_C_AICOM_RICH_GEAR default 1): a TINY, ammo-safe post-create gear bump for the team's Man units,
+//--- HARD-BOUND to the ACTUAL researched WFBE_UP_GEAR level. tier = (GetSideUpgrades select WFBE_UP_GEAR), +1 while the side
+//--- logic's wfbe_aicom_econ_surge is true (still hard-capped at 5). Below WFBE_C_AICOM_RICH_GEAR_MIN_TIER (2) do nothing.
+//--- Delta is intentionally minimal (design R5 - ammo compat is the main hazard, NO weapon swaps this pass): each Man gets +1
+//--- magazine of its OWN current primary weapon's first config magazine type; tier>=4 gives +2 mags each PLUS the leader one
+//--- extra AT round copied from an AT soldier's launcher magazine IF the team has one. A2-OA-safe: getArray on CfgWeapons
+//--- magazines (same idiom this file uses at ~L186), typeName guards, bounded single-pass loops, no sleeps.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_RICH_GEAR", 1]) > 0) then {
+	private ["_rgUpg","_rgTier","_rgMin"];
+	_rgUpg = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+	//--- HARD research gate (Ray): tier is the ACTUAL researched gear level. count-guard the select so a short array degrades to 0.
+	_rgTier = if (count _rgUpg > WFBE_UP_GEAR) then {_rgUpg select WFBE_UP_GEAR} else {0};
+	//--- Econ-surge +1 (still capped at 5). The surge flag lives on the side logic OBJECT; read it via GetSideLogic + plain
+	//--- object getVariable [name,default] (objects support the 2-arg form; only GROUPS do not). Degrades to false if unset.
+	if (_rgTier > 0) then {
+		private ["_rgLogik"];
+		_rgLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _rgLogik && {_rgLogik getVariable ["wfbe_aicom_econ_surge", false]}) then {_rgTier = _rgTier + 1};
+	};
+	if (_rgTier > 5) then {_rgTier = 5};
+	_rgMin = missionNamespace getVariable ["WFBE_C_AICOM_RICH_GEAR_MIN_TIER", 2];
+	if (_rgTier >= _rgMin) then {
+		private ["_rgExtra","_rgAtMag"];
+		//--- tier>=4 -> +2 mags each; tier 2-3 -> +1 mag each.
+		_rgExtra = if (_rgTier >= 4) then {2} else {1};
+		_rgAtMag = ""; //--- resolved below (an AT soldier's launcher magazine), only used at tier>=4 for the leader.
+		{
+			private ["_ru"];
+			_ru = _x;
+			if (!isNull _ru && {alive _ru} && {local _ru}) then {
+				private ["_rw","_rmags","_rmag"];
+				//--- +N mags of the unit's OWN current primary weapon's FIRST config magazine type (safest possible compat).
+				_rw = primaryWeapon _ru;
+				if (!(_rw == "")) then {
+					_rmags = getArray (configFile >> "CfgWeapons" >> _rw >> "magazines");
+					if (count _rmags > 0) then {
+						_rmag = _rmags select 0;
+						for "_ri" from 1 to _rgExtra do {_ru addMagazine _rmag};
+					};
+				};
+				//--- While scanning, note an AT soldier's launcher magazine (secondaryWeapon = launcher) for the tier>=4 leader bonus.
+				if (_rgAtMag == "" && {_rgTier >= 4}) then {
+					private ["_rsw","_rsmags"];
+					_rsw = secondaryWeapon _ru;
+					if (!(_rsw == "")) then {
+						_rsmags = getArray (configFile >> "CfgWeapons" >> _rsw >> "magazines");
+						if (count _rsmags > 0) then {_rgAtMag = _rsmags select 0};
+					};
+				};
+			};
+		} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+		//--- tier>=4: the LEADER gets ONE extra AT round of the team's own AT class (copied above), IF the team fields an AT soldier.
+		if (_rgTier >= 4 && {!(_rgAtMag == "")}) then {
+			private ["_rgLdr"];
+			_rgLdr = leader _team;
+			if (!isNull _rgLdr && {alive _rgLdr} && {local _rgLdr}) then {_rgLdr addMagazine _rgAtMag};
+		};
+		diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RICH_GEAR|tier=" + str _rgTier + "|extraMags=" + str _rgExtra + "|atMag=" + _rgAtMag);
+		["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] RICH_GEAR applied (tier %2, +%3 mag/unit, atMag=%4).", _side, _rgTier, _rgExtra, _rgAtMag]] Call WFBE_CO_FNC_AICOMLog;
+	};
+};
+//--- ===================================================================
 
 if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (driver _airVeh)}) then {
 	//--- Concurrent ground roll-out: never leave crewed hulls idle during the lift.
@@ -659,12 +834,26 @@ while {!WFBE_GameOver && _alive} do {
 				if (isNil "_usTier") then {_usTier = 0};
 				if (_usTier > 0) then {
 					[_team, _usTier, _side] Spawn {
-						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode"];
+						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode","_recV2","_uOnWater","_uForceRoad"]; //--- cmdcon41-w3e +_recV2/_uOnWater/_uForceRoad
 						_uTeam = _this select 0;
 						_uTier = _this select 1;
 						_uSide = _this select 2;
 						_uLdr  = leader _uTeam;
 						if (isNull _uLdr || {!alive _uLdr}) exitWith {};
+						//--- cmdcon41-w3e RECOVERY V2 (gate WFBE_C_AICOM_RECOVERY_V2 default 1): three verified-safe upgrades
+						//--- layered onto the EXISTING strike-ladder recovery Spawn (no new per-tick scan - this Spawn only fires on a
+						//--- stuck re-issue). (c) DEAD-DRIVER SWAP: a live drivable hull whose driver is dead/empty but that still has a
+						//--- live crewman gets that crewman moved into the driver seat (locality-safe: this Spawn runs where the group +
+						//--- its hulls are local). (b) LANE-FLIP re-path: on a tier-1 wedge add a real reverse-velocity pulse along
+						//--- -vectorDir AND flip the sign of the team persistent wfbe_aicom_lanejit so the NEXT server-side
+						//--- BuildRoadRoute lays a DIFFERENT lane instead of re-snapping the same stuck path. (e) WATER GUARD: a
+						//--- hull/leader on water is exactly the case Common_AICOM_AutoFlip refuses (it exits on surfaceIsWater) -
+						//--- force the tier-3 road-snap recovery immediately regardless of tier. Candidate (a) vehicle UNFLIP is NOT
+						//--- added here: it already ships as Common_AICOM_AutoFlip.sqf (Build84, server+HC 5s loop). A2-OA-safe:
+						//--- surfaceIsWater / vectorDir / crew / moveInDriver / setVelocity only (no A3 ops, no isEqualType).
+						_recV2 = (missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_V2", 1]) > 0;
+						_uOnWater = false;
+						_uForceRoad = false;
 						//--- B37 (Ray 2026-06-16): log that the unstuck ACTION fired at this tier, so the
 						//--- strike -> fire -> recover lifecycle is visible (UNSTUCK_STRIKE -> UNSTUCK_FIRED ->
 						//--- next ASSAULT_STRANDED moved=).
@@ -674,15 +863,56 @@ while {!WFBE_GameOver && _alive} do {
 						//--- actually rides to the objective instead of walking/idling.
 						{ if (alive _x && {vehicle _x == _x} && {!isNull (assignedVehicle _x)} && {alive (assignedVehicle _x)} && {canMove (assignedVehicle _x)}) then {[_x] orderGetIn true} } forEach (units _uTeam);
 						_uVeh = vehicle _uLdr;
+						//--- cmdcon41-w3e (e) WATER GUARD precompute: is the stuck hull (or on-foot leader) sitting on water?
+						//--- A beached/water hull never self-frees and AutoFlip skips it, so flag it to force the road-snap below.
+						if (_recV2) then {
+							if (!isNull _uVeh && {alive _uVeh} && {surfaceIsWater (getPos _uVeh)}) then {_uOnWater = true};
+							if (((vehicle _uLdr) == _uLdr) && {surfaceIsWater (getPos _uLdr)}) then {_uOnWater = true};
+							if (_uOnWater) then {_uForceRoad = true};
+						};
+						//--- cmdcon41-w3e (c) DEAD-DRIVER SWAP: the lead hull is alive + drivable but has no live driver, yet a
+						//--- live crewman remains aboard - move the first alive non-player crewman into the driver seat so the
+						//--- reverse nudge + road route below actually have a driver (else the hull sits crewed-but-driverless).
+						//--- Locality-safe: the group + its hulls are local on this machine. A2-OA-safe: crew / moveInDriver.
+						if (_recV2 && {!isNull _uVeh} && {_uVeh != _uLdr} && {alive _uVeh} && {canMove _uVeh} && {(isNull (driver _uVeh)) || {!alive (driver _uVeh)}}) then {
+							private ["_swapCrew","_swapPick"];
+							_swapCrew = crew _uVeh;
+							_swapPick = objNull;
+							{ if (isNull _swapPick && {alive _x} && {!isPlayer _x} && {_x != (driver _uVeh)}) then {_swapPick = _x} } forEach _swapCrew;
+							if (!isNull _swapPick) then {
+								_swapPick moveInDriver _uVeh;
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RECOVERY_V2 dead-driver swap - moved live crewman into %3 driver seat.", _uSide, _uTeam, typeOf _uVeh]] Call WFBE_CO_FNC_AICOMLog;
+							};
+						};
 						//--- Tier 1: break a physical wedge on the lead hull.
 						if (!isNull _uVeh && {_uVeh != _uLdr} && {alive _uVeh} && {canMove _uVeh}) then {
 							_uVeh setVelocity [0,0,0];
+							//--- cmdcon41-w3e (b) REVERSE-THEN-REPATH: a couple of real reverse-velocity pulses along -vectorDir
+							//--- physically back the wedged hull out of the obstacle it climbed, THEN flip the team persistent
+							//--- wfbe_aicom_lanejit sign so the NEXT server-side BuildRoadRoute (AssignTowns reads wfbe_aicom_lanejit
+							//--- for the lateral lane) re-lays the leg on a DIFFERENT lane instead of the same stuck path. Legacy path
+							//--- (flag off) keeps only the doMove reverse-nudge. A2-OA-safe: vectorDir / setVelocity / setVariable.
+							if (_recV2) then {
+								private ["_uDir","_uRevSpd","_uJit"];
+								_uDir = vectorDir _uVeh; //--- unit forward vector; reverse = negate + scale.
+								_uRevSpd = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_REVERSE_SPEED", 6];
+								_uVeh setVelocity [(- (_uDir select 0)) * _uRevSpd, (- (_uDir select 1)) * _uRevSpd, (velocity _uVeh) select 2];
+								sleep 1.5;
+								if (!isNull _uVeh && {alive _uVeh}) then {_uVeh setVelocity [(- (_uDir select 0)) * _uRevSpd, (- (_uDir select 1)) * _uRevSpd, (velocity _uVeh) select 2]};
+								//--- LANE-FLIP: flip the persistent per-team lane sign so the re-lay picks a different lane offset.
+								_uJit = _uTeam getVariable "wfbe_aicom_lanejit";
+								if (isNil "_uJit") then {_uJit = (random 2) - 1};
+								if ((abs _uJit) < 0.05) then {_uJit = 1}; //--- a zero lane cannot flip; seed it so the re-path actually diverges.
+								_uTeam setVariable ["wfbe_aicom_lanejit", (- _uJit), true];
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RECOVERY_V2 reverse-pulse + lane-flip (newLane=%3).", _uSide, _uTeam, (- _uJit)]] Call WFBE_CO_FNC_AICOMLog;
+							};
 							_uLdr doMove (_uVeh modelToWorld [0,-14,0]); //--- short reverse-ish nudge.
 							sleep 4;
 						};
 						//--- Tier 3: last-resort teleport-nudge to the nearest clear road node,
 						//--- only if no player is close enough to witness it.
-						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then {
+						//--- cmdcon41-w3e (e) WATER GUARD: fire the road-snap at ANY tier when the hull is water-stuck (_uForceRoad).
+						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {!isNull _uVeh} && {alive _uVeh}) then {
 							_uPlayerNear = false;
 							{ if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_uPlayerNear = true} } forEach playableUnits;
 							if (!_uPlayerNear) then {
@@ -709,11 +939,23 @@ while {!WFBE_GameOver && _alive} do {
 						//--- (laid after this Spawn) still hands the team a live MOVE order, so it is never left idle.
 						_uHullDead = isNull _uVeh || {!alive _uVeh} || {!(canMove _uVeh)};
 						_uOnFoot   = (vehicle _uLdr) == _uLdr;
-						if (_uTier >= 3 && {_uOnFoot || _uHullDead}) then {
+						//--- cmdcon41-w3e (e) WATER GUARD: fire the foot road-snap at ANY tier when water-stuck (_uForceRoad).
+						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {_uOnFoot || _uHullDead || {_recV2 && _uForceRoad}}) then {
 							_uFootPlayerNear = false;
 							{ if (isPlayer _x && {(_x distance _uLdr) < 100}) then {_uFootPlayerNear = true} } forEach playableUnits;
 							if (!_uFootPlayerNear) then {
-								_uFootRds = (getPos _uLdr) nearRoads 150;
+								//--- cmdcon41-w3e (d) SLOPE-AWARE FOOT SNAP: a foot team grinding a steep Takistan slope (surfaceNormal
+								//--- z below WFBE_C_AICOM_RECOVERY_SLOPE_Z, default 0.85) is exactly the hill-grind case - widen the road
+								//--- search radius to WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R (default 200m) so it snaps onto the nearest road
+								//--- and stops grinding, instead of the default 150m ring that often misses a mountain track. Flat foot
+								//--- teams (and flag off) keep the proven 150m radius. A2-OA-safe: surfaceNormal / nearRoads.
+								private ["_uFootR","_uSlopeZ"];
+								_uFootR = 150;
+								if (_recV2) then {
+									_uSlopeZ = (surfaceNormal (getPos _uLdr)) select 2;
+									if ((_uSlopeZ < (missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_SLOPE_Z", 0.85])) || _uForceRoad) then {_uFootR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R", 200]};
+								};
+								_uFootRds = (getPos _uLdr) nearRoads _uFootR;
 								if (count _uFootRds > 0) then {
 									_uFootNode = [getPos _uLdr, _uFootRds] Call WFBE_CO_FNC_GetClosestEntity;
 									if (!isNull _uFootNode && {!surfaceIsWater (getPos _uFootNode)}) then {
@@ -966,6 +1208,44 @@ while {!WFBE_GameOver && _alive} do {
 							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RALLY_ARRIVED|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round _arrivalDist));
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RALLY_ARRIVED - re-tasking to towns (no assault SAD).", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
 						} else {
+						//--- cmdcon41-w3 ASSAULT APPROACH SMOKE (gate WFBE_C_AICOM_SMOKE default 1): the moment the team latches
+						//--- arrival on a towns-target (NON-rally) objective, before the assault SAD is laid, pop ONE covering
+						//--- volley of 2 smoke shells ~45-60m AHEAD of the leader toward _dest so the final approach is screened.
+						//--- HC-local, bounded (2 createVehicle, no loop/sleep), rate-limited to one smoke event per team per
+						//--- WFBE_C_AICOM_SMOKE_COOLDOWN (120s) via the SAME group-var stamp the break-off smoke uses (get + isNil,
+						//--- A2-safe - groups reject the [name,default] form). Bearing leader->_dest via the atan2 position-delta
+						//--- idiom already used in this file. createVehicle [class,pos,[],0,'NONE'] is A2-OA-safe. Never-frozen:
+						//--- purely cosmetic; the assault SAD below (unchanged) still hands the team a live order this same tick.
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_SMOKE", 1]) > 0) then {
+							private ["_asLdr","_asLast","_asCool","_asOK"];
+							_asLdr  = leader _team;
+							_asCool = missionNamespace getVariable ["WFBE_C_AICOM_SMOKE_COOLDOWN", 120];
+							_asLast = _team getVariable "wfbe_aicom_smoke_last";
+							_asOK   = if (isNil "_asLast") then {true} else {(time - _asLast) >= _asCool};
+							if (!isNull _asLdr && {alive _asLdr} && {_asOK}) then {
+								private ["_asCls","_asBase","_asBrg","_asFwd","_asP0","_asP1"];
+								//--- Faction-appropriate smoke (WEST white, EAST red, resistance green; A2-OA base classes).
+								_asCls = switch (_side) do {
+									case west: {"SmokeShell"};
+									case east: {"SmokeShellRed"};
+									default {"SmokeShellGreen"};
+								};
+								_asBase = getPosATL _asLdr;
+								//--- Bearing leader -> _dest (A2-safe atan2 position-delta; binary getDir is A3-only). Guard a zero-length delta.
+								_asBrg = getDir _asLdr;
+								if ((_asLdr distance _dest) > 5) then {
+									_asBrg = ((_dest select 0) - (_asBase select 0)) atan2 ((_dest select 1) - (_asBase select 1));
+								};
+								//--- One volley: two shells 45m and 60m ahead toward _dest (a screening pair on the approach line).
+								_asFwd = 45;
+								_asP0 = [(_asBase select 0) + _asFwd * (sin _asBrg), (_asBase select 1) + _asFwd * (cos _asBrg), 0];
+								_asP1 = [(_asBase select 0) + (_asFwd + 15) * (sin _asBrg), (_asBase select 1) + (_asFwd + 15) * (cos _asBrg), 0];
+								createVehicle [_asCls, _asP0, [], 0, "NONE"];
+								createVehicle [_asCls, _asP1, [], 0, "NONE"];
+								_team setVariable ["wfbe_aicom_smoke_last", time];
+								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|ASSAULT|team=" + (str _team) + "|cls=" + _asCls);
+							};
+						};
 						if (_mode == "defense") then {
 							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						} else {
@@ -1403,6 +1683,45 @@ while {!WFBE_GameOver && _alive} do {
 							//--- and the outer loop hands it the rally MOVE next tick.
 							if ((count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) < (missionNamespace getVariable ["WFBE_C_AICOM_BREAKOFF_MIN", 3]) && {_resNear > 0}) then {
 								_team setVariable ["wfbe_aicom_wantrally", true, true];
+								//--- cmdcon41-w3 BREAK-OFF SMOKE (gate WFBE_C_AICOM_SMOKE default 1): as the out-fought remnant breaks off
+								//--- it pops covering smoke so the fighting withdrawal is screened instead of running exposed. HC-local,
+								//--- bounded (2 createVehicle, no loop/sleep), rate-limited to one smoke event per team per
+								//--- WFBE_C_AICOM_SMOKE_COOLDOWN (120s) via a plain group-var stamp (get + isNil, A2-safe - groups reject the
+								//--- [name,default] form). Two shells in a ~15m ring around the leader offset by the enemy bearing (the
+								//--- _resNear ring gave us the enemy already this tick) so the screen sits between us and them. createVehicle
+								//--- [class,pos,[],0,'NONE'] is A2-OA-safe. Never-frozen: purely cosmetic; the outer loop hands the rally MOVE next tick.
+								if ((missionNamespace getVariable ["WFBE_C_AICOM_SMOKE", 1]) > 0) then {
+									private ["_smkLdr","_smkLast","_smkCool","_smkOK"];
+									_smkLdr  = leader _team;
+									_smkCool = missionNamespace getVariable ["WFBE_C_AICOM_SMOKE_COOLDOWN", 120];
+									_smkLast = _team getVariable "wfbe_aicom_smoke_last";
+									_smkOK   = if (isNil "_smkLast") then {true} else {(time - _smkLast) >= _smkCool};
+									if (!isNull _smkLdr && {alive _smkLdr} && {_smkOK}) then {
+										private ["_smkCls","_smkBase","_smkBrg","_smkP0","_smkP1"];
+										//--- Faction-appropriate covering smoke (WEST white, EAST red, resistance green; A2-OA base classes).
+										_smkCls = switch (_side) do {
+											case west: {"SmokeShell"};
+											case east: {"SmokeShellRed"};
+											default {"SmokeShellGreen"};
+										};
+										_smkBase = getPosATL _smkLdr;
+										//--- Bearing toward the nearest live enemy in the capture ring so the screen sits between us and them
+										//--- (atan2 position-delta idiom; binary getDir is A3-only). Fall back to the leader heading if none resolves.
+										_smkBrg = getDir _smkLdr;
+										{
+											if (alive _x && {side _x != _side} && {side _x != civilian}) exitWith {
+												_smkBrg = (((getPosATL _x) select 0) - (_smkBase select 0)) atan2 (((getPosATL _x) select 1) - (_smkBase select 1));
+											};
+										} forEach (_smkBase nearEntities [["Man"], _capRange]);
+										//--- Two shells ~15m out on either side of the enemy bearing (a covering arc, not a stack).
+										_smkP0 = [(_smkBase select 0) + 15 * (sin (_smkBrg - 30)), (_smkBase select 1) + 15 * (cos (_smkBrg - 30)), 0];
+										_smkP1 = [(_smkBase select 0) + 15 * (sin (_smkBrg + 30)), (_smkBase select 1) + 15 * (cos (_smkBrg + 30)), 0];
+										createVehicle [_smkCls, _smkP0, [], 0, "NONE"];
+										createVehicle [_smkCls, _smkP1, [], 0, "NONE"];
+										_team setVariable ["wfbe_aicom_smoke_last", time];
+										diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|BREAKOFF|team=" + (str _team) + "|cls=" + _smkCls);
+									};
+								};
 								_capAbort = true; //--- bail the depot-hold phase without latching _captureDone (same idiom as the seq-interrupt _capAbort).
 								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|BREAKOFF|team=" + (str _team) + "|live=" + str (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) + "|resNear=" + str _resNear);
 								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] BREAKOFF (out-fought remnant, res-near=%3) - requesting rally.", _side, _team, _resNear]] Call WFBE_CO_FNC_AICOMLog;

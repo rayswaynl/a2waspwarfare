@@ -538,12 +538,12 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				//--- (b) SURGE flag: raise while rich, clear otherwise (transition-logged, no per-tick spam).
 				_esPrevSurge = _logik getVariable ["wfbe_aicom_econ_surge", false];
 				if (_esRich && !_esPrevSurge) then {
-					_logik setVariable ["wfbe_aicom_econ_surge", true];
+					_logik setVariable ["wfbe_aicom_econ_surge", true, true]; //--- cmdcon41-w3b: BROADCAST - the HC founding pass (RICH_GEAR surge tier) reads this on the HC; without the flag the read is server-local and always false there.
 					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK surge ON (funds %2 >= %3%% of cap %4) - team-cap +%5 and heavy tier bias armed.", str _side, _esFunds, round (_esFrac * 100), _esCap, missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_TEAMCAP", 2]]] Call WFBE_CO_FNC_AICOMLog;
 					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=on|funds=" + str _esFunds + "|cap=" + str _esCap);
 				};
 				if (!_esRich && _esPrevSurge) then {
-					_logik setVariable ["wfbe_aicom_econ_surge", false];
+					_logik setVariable ["wfbe_aicom_econ_surge", false, true]; //--- cmdcon41-w3b: broadcast the clear too (keep HC view in sync).
 					["INFORMATION", Format ["AI_Commander.sqf: [%1] ECON_SINK surge OFF (funds %2 < %3%% of cap %4).", str _side, _esFunds, round (_esFrac * 100), _esCap]] Call WFBE_CO_FNC_AICOMLog;
 					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_SURGE|state=off|funds=" + str _esFunds + "|cap=" + str _esCap);
 				};

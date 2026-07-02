@@ -54,7 +54,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[5000,0],[12500,0]], //--- Anti Air Radar
 	[[25000,0],[50000,0]], //--- Unit cost modifier
 	[[3500,0],[6500,0]], //--- Counter Battery Radar
-	[[150,0],[600,0],[1200,0],[2000,0]] //--- Patrols
+	[[350,0],[1400,0],[2800,0],[5000,0]] //--- Patrols //--- cmdcon41-w3e
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
@@ -146,7 +146,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	[50,125], //--- Anti Air Radar
 	[120, 200], //--- Unit cost modifier
 	[60, 90], //--- Counter Battery Radar
-	[90,150,240,240] //--- Patrols
+	[120,180,240,300] //--- Patrols //--- cmdcon41-w3e
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.

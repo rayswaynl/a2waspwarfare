@@ -11,7 +11,9 @@
 
 scriptName "Server\FSM\server_side_patrols.sqf";
 
-private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept"];
+private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept",
+	"_mpEnabled","_mpMotoPool","_mpEntry","_mpHasVeh","_mpC",
+	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh"];
 
 waitUntil {townInitServer};
 sleep 30;
@@ -123,14 +125,85 @@ while {!WFBE_GameOver} do {
 					};
 					if (!isNull _hq && count _owned > 0) then {
 						_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
-						_tier = switch (_lvl) do {case 1: {"LIGHT"}; case 2: {"MEDIUM"}; default {"HEAVY"}};
+						_escTiers  = ["LIGHT","MEDIUM","HEAVY"];
+						_escBaseIdx = switch (_lvl) do {case 1: {0}; case 2: {1}; default {2}};
+						_tier = _escTiers select _escBaseIdx;
+						//--- LATE-GAME THREAT ESCALATION + FPS-AWARE CLAMP (cmdcon41-w3e, Ray 2026-07-02). Behind
+						//--- WFBE_C_PATROLS_ESCALATE (default 1). As the match runs longer AND the side's Patrols upgrade
+						//--- climbs, an escalation SCORE shifts the TIER DRAW upward so LIGHT fades and MEDIUM/HEAVY dominate
+						//--- late game. Score = (upgradeLevel-1) + floor(matchMinutes / WFBE_C_PATROLS_ESCALATE_MINS(45)); each
+						//--- +1 of score bumps the tier index one step, capped at HEAVY (idx 2). This is COMPOSITION-at-spawn
+						//--- only (heavier template drawn) - it NEVER touches counts (the pop-tier cap at L98 owns those) and
+						//--- does NO sim/distance gating. FPS-AWARE: reuse the existing WFBE_PopTier load proxy (published by
+						//--- AI_Commander_Teams; higher tier = more humans = more server load). When PopTier exceeds
+						//--- WFBE_C_PATROLS_ESCALATE_POPTIER_MAX (default 1 => escalate only at LOW/MID pop) we CLAMP the tier
+						//--- draw back to the plain level-derived base index - never spawn a heavier template under load. GUER
+						//--- keeps its own owned-town comeback-force scaling below (not upgrade-driven), so escalation is
+						//--- WEST/EAST only. A2-OA-1.64-safe: plain getVariable+select, floor, min/max, if/else (no A3 ops).
+						_escEnabled = (missionNamespace getVariable ["WFBE_C_PATROLS_ESCALATE", 1]) > 0;
+						_escVehCap  = false;
+						if (_escEnabled && {_side != WFBE_DEFENDER}) then {
+							_escPopMax = missionNamespace getVariable ["WFBE_C_PATROLS_ESCALATE_POPTIER_MAX", 1];
+							if (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) <= _escPopMax) then {
+								_escMins  = missionNamespace getVariable ["WFBE_C_PATROLS_ESCALATE_MINS", 45];
+								if (_escMins < 1) then {_escMins = 45};
+								_escScore = (_lvl - 1) + floor ((time / 60) / _escMins);
+								_escTierIdx = (_escBaseIdx + _escScore) min 2;
+								if (_escTierIdx < _escBaseIdx) then {_escTierIdx = _escBaseIdx};
+								_tier = _escTiers select _escTierIdx;
+								//--- At MAX escalation (already drawing HEAVY via score, not just base level) allow +1 escort
+								//--- vehicle to be appended to the chosen template below (still LOW/MID pop only).
+								if (_escTierIdx >= 2 && {_escScore >= 1}) then {_escVehCap = true};
+							};
+						};
 						//--- B36 (Ray 2026-06-15): GUER patrols = a MECHANIZED insurgent COMEBACK force. Always mounted
 						//--- (min MEDIUM = SPG-9 technical); the FEWER towns GUER holds the BETTER the patrol - at <=2 towns
 						//--- they field HEAVY (BRDM-2 armor + AT/AA). Owned-town-count scaled, gated to the defender side.
 						if (_side == WFBE_DEFENDER) then {_tier = if (count _owned < 20) then {"HEAVY"} else {"MEDIUM"}};
 						_pool = missionNamespace getVariable Format["WFBE_%1_PATROL_%2", _side, _tier];
 						if (!isNil "_pool" && {count _pool > 0}) then {
-							_template = _pool select floor(random count _pool);
+							//--- MOTORIZED ROAD-PATROL PICK (cmdcon41-w3c, Ray pick). When the w3 road-bias is on
+							//--- (WFBE_C_PATROLS_ROADBIAS==1) AND WFBE_C_PATROLS_ROADBIAS_MOTORIZED==1 (both default 1),
+							//--- prefer pool entries that CONTAIN at least one VEHICLE classname so the resulting patrol
+							//--- actually rides the road corridor AI_Patrol.sqf lays (a foot-only entry crawls cross-town
+							//--- and never uses the road route). Detect vehicle elements with the codebase-proven,
+							//--- A2-OA-1.64-safe classname-literal `!(_c isKindOf "Man")` idiom (same as AI_Commander_Produce/
+							//--- Teams; annotated A2-safe there). Collect vehicle-containing entries, pick randomly among them;
+							//--- FALL BACK to the full pool when NONE exist (e.g. TKGUE foot-only pools) so a patrol is never
+							//--- blocked. Bounded: one pass over the (tiny) pool, once per DISPATCH (not per tick).
+							_mpEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS_MOTORIZED", 1]) > 0};
+							if (_mpEnabled) then {
+								_mpMotoPool = [];
+								{
+									_mpEntry = _x;
+									_mpHasVeh = false;
+									{ _mpC = _x; if (!(_mpC isKindOf "Man")) exitWith {_mpHasVeh = true} } forEach _mpEntry;
+									if (_mpHasVeh) then {_mpMotoPool set [count _mpMotoPool, _mpEntry]};
+								} forEach _pool;
+								if (count _mpMotoPool > 0) then {
+									_template = _mpMotoPool select floor(random count _mpMotoPool);
+								} else {
+									_template = _pool select floor(random count _pool);
+								};
+							} else {
+								_template = _pool select floor(random count _pool);
+							};
+							//--- MAX-ESCALATION +1 ESCORT VEHICLE (cmdcon41-w3e). Only when _escVehCap is set (LOW/MID pop,
+							//--- HEAVY-by-score late game) AND the drawn template already CONTAINS a vehicle: append a COPY of
+							//--- that template's FIRST vehicle classname so the patrol gains one extra escort hull. We reuse a
+							//--- classname that is ALREADY IN THE TEMPLATE (never invent one), and we build a fresh array
+							//--- ([] + _template copies) so the shared pool entry is NOT mutated. FPS-safe: gated off under load
+							//--- by _escVehCap; counts stay pop-tier-capped elsewhere. A2-OA-safe: isKindOf "Man" literal, array +.
+							if (_escVehCap) then {
+								_escHadVeh  = false;
+								_escSideVeh = "";
+								{ if (!(_x isKindOf "Man")) exitWith {_escHadVeh = true; _escSideVeh = _x} } forEach _template;
+								if (_escHadVeh) then {
+									_escEscort = [] + _template;
+									_escEscort set [count _escEscort, _escSideVeh];
+									_template = _escEscort;
+								};
+							};
 							//--- Book the slot synchronously; the started/ended events keep the
 							//--- public marker list, the ended event re-arms the cooldown.
 							_logik setVariable ["wfbe_side_patrols", _active + 1];

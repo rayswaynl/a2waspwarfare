@@ -157,6 +157,41 @@ _aBravo   = [(getPos _lhdBravoLogic)   select 0, (getPos _lhdBravoLogic)   selec
 _aCharlie = [(getPos _lhdCharlieLogic) select 0, (getPos _lhdCharlieLogic) select 1];
 
 //------------------------------------------------------------------------------------
+//--- cmdcon41-w3 (Ray 2026-07-02) TWIN-HULL SUPER-CARRIERS — MIDDLE detection.
+//--- The MIDDLE of the three carriers keeps a SINGLE hull and MUST be the SCUD carrier; the two
+//--- OUTER carriers each get a second parallel hull (built lower down, guarded by
+//--- WFBE_C_NAVAL_TWIN_HULLS). "Middle" = geometry, computed at RUNTIME so it stays correct if the
+//--- mission.sqm anchors ever move: the OUTER pair is the pair with the LARGEST separation, so the
+//--- remaining (third) carrier is the middle. Distances use straight XY (A2-OA `distance` on
+//--- 2-element points is 1.64-safe). No perf cost — three one-time distance compares.
+private ["_dAB","_dAC","_dBC","_midAnchor","_midLogic","_midName","_outer"];
+_dAB = _aAlpha   distance _aBravo;
+_dAC = _aAlpha   distance _aCharlie;
+_dBC = _aBravo   distance _aCharlie;
+//--- Pick the largest-separation pair; the carrier NOT in that pair is the middle. == on Numbers is
+//--- 1.64-safe; nested if/else avoids any Bool-in-== pitfalls.
+if (_dAB >= _dAC && _dAB >= _dBC) then {
+	//--- Alpha & Bravo are the outer pair -> Charlie is the middle.
+	_midAnchor = _aCharlie; _midLogic = _lhdCharlieLogic; _midName = "Khe Sanh Charlie";
+	_outer = [["Khe Sanh Alpha", _aAlpha], ["Khe Sanh Bravo", _aBravo]];
+} else {
+	if (_dAC >= _dAB && _dAC >= _dBC) then {
+		//--- Alpha & Charlie are the outer pair -> Bravo is the middle.
+		_midAnchor = _aBravo; _midLogic = _lhdBravoLogic; _midName = "Khe Sanh Bravo";
+		_outer = [["Khe Sanh Alpha", _aAlpha], ["Khe Sanh Charlie", _aCharlie]];
+	} else {
+		//--- Bravo & Charlie are the outer pair -> Alpha is the middle.
+		_midAnchor = _aAlpha; _midLogic = _lhdAlphaLogic; _midName = "Khe Sanh Alpha";
+		_outer = [["Khe Sanh Bravo", _aBravo], ["Khe Sanh Charlie", _aCharlie]];
+	};
+};
+missionNamespace setVariable ["WFBE_NAVAL_MIDDLE_ANCHOR", _midAnchor];
+missionNamespace setVariable ["WFBE_NAVAL_MIDDLE_LOGIC",  _midLogic];
+missionNamespace setVariable ["WFBE_NAVAL_MIDDLE_NAME",   _midName];
+missionNamespace setVariable ["WFBE_NAVAL_OUTER_PAIR",    _outer];
+diag_log Format ["NAVALHVT-TWIN: middle carrier = %1 (dAB=%2 dAC=%3 dBC=%4); outer pair = %5,%6. SCUD stays on the middle.", _midName, _dAB, _dAC, _dBC, (_outer select 0) select 0, (_outer select 1) select 0];
+
+//------------------------------------------------------------------------------------
 //--- SPAWN BOTH LHD ASSETS
 //------------------------------------------------------------------------------------
 private ["_lhdAlphaParts","_lhdBravoParts","_lhdCharlieParts","_pad","_deckPart","_deckZ","_bb","_scudPad"];
@@ -229,17 +264,33 @@ diag_log Format ["NAVALHVT-DECK: Khe Sanh Charlie partpos=%1 bbMin=%2 bbMax=%3 d
 
 ["INITIALIZATION", Format ["Init_NavalHVT.sqf : [C] Khe Sanh Charlie (LHD) spawned at %1.", _aCharlie]] Call WFBE_CO_FNC_LogContent;
 
-//--- SCUD pad on Charlie's deck (addAction proximity reference).
-_scudPad = createVehicle ["HeliHCivil", [_aCharlie select 0, _aCharlie select 1, 0], [], 0, "NONE"];
-_scudPad setPosASL [_aCharlie select 0, _aCharlie select 1, _deckZ];	//--- cmdcon41-w2 (Ray 2026-07-02): true deck height (was hardcoded 16, below the ~22m deck).
+//--- cmdcon41-w3 (Ray 2026-07-02) TWIN-HULL: the SCUD pad + visual SCUD must live on the MIDDLE carrier
+//--- (computed above), not a hardcoded Charlie. Resolve the middle carrier's anchor/parts/deckZ/logic here
+//--- so the whole SCUD setup (pad + addAction + visual launcher + attachTo target) follows the middle even
+//--- if the mission.sqm anchors move and a different carrier becomes the middle. In the current layout the
+//--- middle IS Charlie, so this is behaviour-identical; the indirection satisfies the "MOVE the SCUD to the
+//--- middle" requirement generically. deckZ is read back from the middle logic's wfbe_naval_deckz (set per
+//--- carrier above) so the pad sits on the correct deck; parts are picked to match the middle logic.
+private ["_scudAnchor","_scudLogic","_scudParts","_scudDeckZ"];
+_scudLogic  = missionNamespace getVariable ["WFBE_NAVAL_MIDDLE_LOGIC", _lhdCharlieLogic];
+_scudAnchor = missionNamespace getVariable ["WFBE_NAVAL_MIDDLE_ANCHOR", _aCharlie];
+_scudDeckZ  = _scudLogic getVariable ["wfbe_naval_deckz", _deckZ];
+//--- Match the parts list to whichever carrier is the middle (deck part = index 3, per the boundingBox above).
+_scudParts = _lhdCharlieParts;
+if (_scudLogic == _lhdAlphaLogic) then { _scudParts = _lhdAlphaParts };
+if (_scudLogic == _lhdBravoLogic) then { _scudParts = _lhdBravoParts };
+
+//--- SCUD pad on the MIDDLE carrier's deck (addAction proximity reference).
+_scudPad = createVehicle ["HeliHCivil", [_scudAnchor select 0, _scudAnchor select 1, 0], [], 0, "NONE"];
+_scudPad setPosASL [_scudAnchor select 0, _scudAnchor select 1, _scudDeckZ];	//--- cmdcon41-w2 (Ray 2026-07-02): true deck height (was hardcoded 16, below the ~22m deck).
 _scudPad enableSimulation false;
 _scudPad allowDamage false;
 _scudPad setVariable ["wfbe_is_scud_pad", true, true];
-_lhdCharlieLogic setVariable ["wfbe_scud_pad_ref", _scudPad, true];
-missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_lhdCharlieLogic]];
+_scudLogic setVariable ["wfbe_scud_pad_ref", _scudPad, true];
+missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_scudLogic]];
 
-//--- SCUD ADDACTION on Charlie's deck. Only team-leaders of the owning side near the pad see it.
-[_lhdCharlieLogic, _scudPad] spawn {
+//--- SCUD ADDACTION on the middle carrier's deck. Only team-leaders of the owning side near the pad see it.
+[_scudLogic, _scudPad] spawn {
 	private ["_loc","_pad","_sideID","_ownerSide","_actionID","_team","_isLeader","_x"];
 	_loc = _this select 0;
 	_pad = _this select 1;
@@ -279,14 +330,15 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_lhdCharlieLogic]];
 //--- not 16, so it starts ON the deck surface; (b) after the erect, attachTo the carrier deck hull part —
 //--- attachTo rigidly pins a child to its (static) parent, so no residual physics can ever slide it off.
 //--- attachTo + worldToModel are A2-OA 1.64-safe (worldToModel used elsewhere for statics). The deck part is
-//--- _lhdCharlieParts select 3 (same part used for the deckZ boundingBox above).
+//--- the MIDDLE carrier's parts select 3 (cmdcon41-w3: middle carrier, resolved above — same part used for
+//--- the deckZ boundingBox on that carrier).
 private ["_scudModel","_scudDeckPart"];
-_scudDeckPart = _lhdCharlieParts select 3;
-_scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_aCharlie select 0) + 50, _aCharlie select 1, 0], [], 0, "NONE"];
-_scudModel setPosASL [(_aCharlie select 0) + 50, _aCharlie select 1, _deckZ];
+_scudDeckPart = _scudParts select 3;
+_scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_scudAnchor select 0) + 50, _scudAnchor select 1, 0], [], 0, "NONE"];
+_scudModel setPosASL [(_scudAnchor select 0) + 50, _scudAnchor select 1, _scudDeckZ];
 _scudModel setDir 90;
 _scudModel allowDamage false;
-[_scudModel, (_aCharlie select 0) + 50, (_aCharlie select 1), _deckZ, _scudDeckPart] spawn {
+[_scudModel, (_scudAnchor select 0) + 50, (_scudAnchor select 1), _scudDeckZ, _scudDeckPart] spawn {
 	private ["_s","_px","_py","_dz","_deckPart","_off"];
 	_s        = _this select 0;
 	_px       = _this select 1;
@@ -305,6 +357,80 @@ _scudModel allowDamage false;
 		_s setVectorUp [0,0,1];			//--- re-level after the attach re-orients relative to parent
 	};
 	_s enableSimulation false;			//--- freeze it static (erect)
+};
+
+//------------------------------------------------------------------------------------
+//--- cmdcon41-w3 (Ray 2026-07-02) TWIN-HULL SUPER-CARRIERS — build the second hull on each OUTER carrier
+//--- and bridge the gap with walkable pier statics. The MIDDLE carrier (SCUD carrier, resolved above) is
+//--- untouched — single hull. Guarded by WFBE_C_NAVAL_TWIN_HULLS (default 1).
+//---
+//--- Geometry: all three carriers spawn with heading _dir = 90 (see the SpawnLHD calls above). The twin
+//--- hull is offset LATERALLY (perpendicular to the ship heading) by ~42m so the two decks run parallel:
+//---   perp offset = [x + 42*cos(dir), y - 42*sin(dir)].
+//--- SIGN CHECK vs this file's conventions: A2 forward for setDir _dir is [sin dir, cos dir]; the right-hand
+//--- perpendicular is [cos dir, -sin dir]. At dir=90 that is [cos90, -sin90] = [0,-1], i.e. a pure -Y shift,
+//--- which is genuinely perpendicular to heading-90 (which points +X). This is a rotation-correct perpendicular
+//--- (NOT the same as the WFBE_NavalHVT_Off helper, which is a raw un-rotated XY add used only for the pad at
+//--- dir=90); here we need the true perpendicular for arbitrary headings, so we spell out cos/sin. The twin
+//--- hull is spawned with the SAME heading via WFBE_NavalHVT_SpawnLHD, so its deck is parallel and level.
+//---
+//--- Bridge: 3 walkable pier segments (Land_nav_pier_m_1 — CONFIRMED present in this mission, see
+//--- Client\Module\Nuke\damage.sqf's pier-preserve list; the prompt's suggested Land_nav_pier_m_2 is NOT in
+//--- that confirmed list, so we use the verified _m_1) set at the deck height, spaced across the 42m gap so
+//--- players can cross between the two hulls. SpawnProp null-guards each (logs to RPT if a class is absent).
+//---
+//--- Perf: purely static, one-time (11 LHD parts + 3 piers per outer carrier). No loops, no per-frame scans.
+if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
+	private ["_twinDir","_twinGap","_bridgeClass","_bridgeCount"];
+	_twinDir     = 90;			//--- same heading as the original hulls (SpawnLHD dir above)
+	_twinGap     = 42;			//--- lateral (perpendicular) offset to the twin hull, metres
+	_bridgeClass = "Land_nav_pier_m_1";	//--- confirmed A2 Chernarus flat walkable pier (damage.sqf preserve list)
+	_bridgeCount = 3;			//--- pier segments spanning the gap
+
+	{
+		private ["_ocName","_ocAnchor","_ocLogic","_ocDeckZ","_perpX","_perpY","_twinAnchor","_twinParts","_bx","_by","_frac","_j","_pier"];
+		_ocName   = _x select 0;
+		_ocAnchor = _x select 1;
+
+		//--- Resolve this outer carrier's logic + deck height (deckZ was stored per carrier above).
+		_ocLogic = objNull;
+		if (_ocName == "Khe Sanh Alpha")   then { _ocLogic = _lhdAlphaLogic };
+		if (_ocName == "Khe Sanh Bravo")   then { _ocLogic = _lhdBravoLogic };
+		if (_ocName == "Khe Sanh Charlie") then { _ocLogic = _lhdCharlieLogic };
+		_ocDeckZ = 16;
+		if (!isNull _ocLogic) then { _ocDeckZ = _ocLogic getVariable ["wfbe_naval_deckz", 16] };
+
+		//--- Perpendicular unit vector for heading _twinDir: [cos dir, -sin dir] (right-hand side of forward).
+		_perpX = cos _twinDir;
+		_perpY = -(sin _twinDir);
+		_twinAnchor = [(_ocAnchor select 0) + _twinGap * _perpX, (_ocAnchor select 1) + _twinGap * _perpY];
+
+		//--- Second full LHD hull, same heading -> deck runs parallel to the original.
+		_twinParts = [[_twinAnchor select 0, _twinAnchor select 1, 0], _twinDir] Call WFBE_NavalHVT_SpawnLHD;
+
+		//--- Bridge the gap with walkable piers, spaced across the 42m span at deck height. The piers sit at
+		//--- fractional steps between the original hull anchor and the twin anchor (excluding the very ends so
+		//--- they land in the gap, not inside a hull).
+		for [{_j = 1}, {_j <= _bridgeCount}, {_j = _j + 1}] do {
+			_frac = _j / (_bridgeCount + 1);
+			_bx = (_ocAnchor select 0) + ((_twinAnchor select 0) - (_ocAnchor select 0)) * _frac;
+			_by = (_ocAnchor select 1) + ((_twinAnchor select 1) - (_ocAnchor select 1)) * _frac;
+			//--- SpawnProp sets it static/indestructible + logs to RPT if the class is missing. Face it along
+			//--- the gap (perpendicular to ship heading) so the pier's long axis bridges hull-to-hull.
+			_pier = [_bridgeClass, [_bx, _by, 0], (_twinDir + 90)] Call WFBE_NavalHVT_SpawnProp;
+			//--- SpawnProp forces z=0 (sea level, correct for the shared hull parts); the pier must sit ON the
+			//--- deck, so re-seat the returned object at deck height here (helper left untouched). Guard isNull
+			//--- so a missing pier class (already logged by SpawnProp) does not error on setPosASL.
+			if (!isNull _pier) then {
+				_pier setPosASL [_bx, _by, _ocDeckZ];
+			};
+		};
+
+		["INITIALIZATION", Format ["Init_NavalHVT.sqf : cmdcon41-w3 twin hull built for OUTER carrier [%1] at %2 (gap %3m, %4 piers).", _ocName, _twinAnchor, _twinGap, _bridgeCount]] Call WFBE_CO_FNC_LogContent;
+		diag_log Format ["NAVALHVT-TWIN: [%1] twinAnchor=%2 deckZ=%3 perp=[%4,%5]", _ocName, _twinAnchor, _ocDeckZ, _perpX, _perpY];
+	} forEach _outer;
+} else {
+	["INFORMATION", "Init_NavalHVT.sqf : WFBE_C_NAVAL_TWIN_HULLS=0 — twin-hull super-carriers OFF (single hulls only)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //------------------------------------------------------------------------------------
