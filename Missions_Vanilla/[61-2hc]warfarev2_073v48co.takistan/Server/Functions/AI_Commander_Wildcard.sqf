@@ -208,7 +208,10 @@ while {!gameOver} do {
 		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22TargetPos","_wW22",
 		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
 		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
-		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore"];
+		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore",
+	         "_w25Eligible","_w25DroneClass","_w25Pilot","_w25Drone","_w25Grp","_w25Ang","_w25SpawnPos","_w25TargetPos","_w25Target","_w25PilotClass","_w25TTL","_w25ActiveKey","_w25Active",
+	         "_w26Eligible","_w26DroneClass","_w26Pilot","_w26Drone","_w26Grp","_w26Ang","_w26SpawnPos","_w26TargetPos","_w26Target","_w26PilotClass","_w26TTL","_w26ActiveKey","_w26Active",
+	         "_wW25","_wW26"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
@@ -504,6 +507,33 @@ while {!gameOver} do {
 					if (count _w24Template > 0) then {_w24Eligible = true};
 				};
 
+				//--- W25: RECON DRONE (Ka-137, WEST) / W26: RECON DRONE (Pchela, EAST) — flag-gated.
+				//--- Eligible when: WFBE_C_AICOM_DRONE_RECON > 0, HQ alive, at least one enemy town to overfly,
+				//--- the side's drone class is a valid CfgVehicles entry, a pilot class is set, and no drone
+				//--- for this side is already active (per-side latch wfbe_aicom_drone_active_<sideText>).
+				_w25Eligible   = false;
+				_w26Eligible   = false;
+				_w25DroneClass = if (_side == west) then {"Ka137_PMC"} else {""};
+				_w26DroneClass = if (_side == east) then {"Pchela1T"}  else {""};
+
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_DRONE_RECON", 0]) > 0
+				    && {!isNull _hq} && {alive _hq}
+				    && {count _cands > 0}) then {
+					_w25ActiveKey = Format ["wfbe_aicom_drone_active_%1", _sideText];
+					_w25Active    = missionNamespace getVariable _w25ActiveKey;
+					if (isNil "_w25Active") then {_w25Active = false};
+					if (!_w25Active) then {
+						if (_side == west && {isClass (configFile >> "CfgVehicles" >> _w25DroneClass)}) then {
+							_w25PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
+							if (_w25PilotClass != "") then {_w25Eligible = true};
+						};
+						if (_side == east && {isClass (configFile >> "CfgVehicles" >> _w26DroneClass)}) then {
+							_w26PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
+							if (_w26PilotClass != "") then {_w26Eligible = true};
+						};
+					};
+				};
+
 				_wW1  = 17; _wW2  = 17; _wW3  =  0;  //--- W3 (Bonus Patrol) REMOVED 2026-06-16 (Ray): obsolete - patrol cap was lowered. Weight forced 0 -> card can NEVER be drawn; apply block left inert.
 				_wW6  =  8; _wW7  =  0; _wW10 =  0; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8). W7 (Veteran Company) REMOVED 2026-06-27 (Ray): boring/no visible payoff. Weight forced 0 -> never drawn; apply block left inert. W10 (Lucky Salvage) REMOVED 2026-06-16 (Ray): salvage moved to the cleaner-tied Salvage Lottery.
 				_wW4  =  6; _wW9  =  0;  //--- W4 Rare weight 6. W9 (Uprising) REMOVED 2026-06-16 (Ray): too invasive. Weight forced 0 -> card can NEVER be drawn; apply block left inert (W8 RETIRED 2026-06-15).
@@ -513,6 +543,7 @@ while {!gameOver} do {
 				_wW14 =  0; _wW15 =  6; _wW16 =  6; _wW17 =  0;  //--- W14 (Iron Dome) + W17 (Supply Convoy) REMOVED 2026-06-27 (Ray): boring/useless. Weights forced 0 -> never drawn; apply blocks left inert.
 				_wW21 =  0;  //--- W21 (GUER VBIED) REMOVED 2026-06-27 (Ray): boring/useless. Weight forced 0 -> never drawn; apply block left inert.
 				_wW22 =  6; _wW23 =  7; _wW24 =  6;  //--- NEW 2026-06-27 (Ray): W22 Top Gun (Rare), W23 Armor Column (Uncommon), W24 Technical Swarm (Rare) - all visible combat reinforcements; escalate when losing.
+				_wW25 =  5; _wW26 =  5;   //--- NEW (Ray 2026-07-02): W25 Recon Drone Ka-137 (WEST) / W26 Recon Drone Pchela (EAST). Rare weight 5.
 
 				if (_losing) then {
 					_wW4  = round(_wW4  * _eMult);
@@ -525,6 +556,8 @@ while {!gameOver} do {
 					_wW22 = round(_wW22 * _eMult);  //--- Top Gun: a losing side that owns the air draws air-superiority more.
 					_wW23 = round(_wW23 * _eMult);  //--- Armor Column: losing side draws the heavy reinforcement more.
 					_wW24 = round(_wW24 * _eMult);  //--- Technical Swarm: losing side draws the fast reinforcement more.
+					_wW25 = round(_wW25 * _eMult);  //--- Recon Drone: losing side draws ISR more.
+					_wW26 = round(_wW26 * _eMult);
 				};
 
 				//--- Zero ineligible cards.
@@ -549,6 +582,8 @@ while {!gameOver} do {
 				if (!_w22Eligible) then {_wW22 = 0};
 				if (!_w23Eligible) then {_wW23 = 0};
 				if (!_w24Eligible) then {_wW24 = 0};
+				if (!_w25Eligible) then {_wW25 = 0};
+				if (!_w26Eligible) then {_wW26 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
 				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
@@ -557,7 +592,7 @@ while {!gameOver} do {
 				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
 				            [9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
 				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19],
-				            [20,_wW20],[21,_wW21],[22,_wW22],[23,_wW23],[24,_wW24]];
+				            [20,_wW20],[21,_wW21],[22,_wW22],[23,_wW23],[24,_wW24],[25,_wW25],[26,_wW26]];
 
 				_cumSum = 0;
 				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
@@ -1507,6 +1542,100 @@ while {!gameOver} do {
 					};
 				};
 
+					//--- W25: RECON DRONE (Ka-137, WEST) / W26: RECON DRONE (Pchela, EAST)
+					//--- One unmanned recon drone loiters the nearest enemy front town, revealing nearby enemy
+					//--- units to the side's AI every ~8s, then self-despawns after WFBE_C_AICOM_DRONE_TTL.
+					//--- Flag WFBE_C_AICOM_DRONE_RECON=0: both cards have weight 0 and this block is unreachable.
+					//--- Anti-stack: missionNamespace latch wfbe_aicom_drone_active_<sideText> is set true for
+					//--- the drone's lifetime so a second draw while one is up yields weight 0.
+					case 25:
+					case 26: {
+						_w25DroneClass = if (_side == west) then {"Ka137_PMC"} else {"Pchela1T"};
+						_w25PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
+						_w25TTL        = missionNamespace getVariable ["WFBE_C_AICOM_DRONE_TTL", 180];
+						_w25ActiveKey  = Format ["wfbe_aicom_drone_active_%1", _sideText];
+
+						//--- Target: nearest enemy town to the front (same idiom as W4/W6/W22 spearhead selection).
+						_w25Target = objNull;
+						{_w25Target = _x} forEach _cands;
+						//--- Prefer the AICOM spearhead target if available.
+						_w25TargetPos = [];
+						if (!isNil "_logik") then {
+							_w26Target = _logik getVariable "wfbe_aicom_targets";
+							if (!isNil "_w26Target" && {count _w26Target > 0}) then {_w25Target = _w26Target select 0};
+						};
+						if (!isNull _w25Target) then {_w25TargetPos = getPos _w25Target} else {_w25TargetPos = getPos _hq};
+
+						if (_w25DroneClass != "" && {_w25PilotClass != ""} && {!isNull _hq}) then {
+							//--- Spawn 2000m from HQ at 120m ASL, random bearing (mirrors W22 spawn-offset idiom).
+							_w25Ang      = random 360;
+							_w25SpawnPos = [(getPos _hq select 0) + 2000 * sin _w25Ang,
+							                (getPos _hq select 1) + 2000 * cos _w25Ang,
+							                120];
+							_w25Drone = [_w25DroneClass, _w25SpawnPos, _side, random 360, true, true] Call WFBE_CO_FNC_CreateVehicle;
+							if (!isNull _w25Drone) then {
+								_w25Grp = [_side, "aicom-drone"] Call WFBE_CO_FNC_CreateGroup;
+								if (!isNull _w25Grp) then {
+									_w25Pilot = [_w25PilotClass, _w25Grp, _w25SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _w25Pilot) then {
+										_w25Pilot moveInDriver _w25Drone;
+										_w25Drone flyInHeight 80;
+										_w25Grp setBehaviour "CARELESS";
+										_w25Grp setCombatMode "BLUE";   //--- recon only, do not engage
+										//--- CYCLE waypoints over the enemy town centre (~400m radius).
+										[_w25Grp, _w25TargetPos, 400] Call AIPatrol;
+										//--- Set anti-stack latch.
+										missionNamespace setVariable [_w25ActiveKey, true];
+										//--- Reveal-loop + self-despawn watcher (server-local; drone spawned on server).
+										[_w25Drone, _w25Grp, _w25TargetPos, _side, _w25TTL, _w25ActiveKey, _sideID] spawn {
+											private ["_dr","_grp","_tgt","_sd","_ttl","_lk","_sdID","_el","_u"];
+											_dr   = _this select 0;
+											_grp  = _this select 1;
+											_tgt  = _this select 2;
+											_sd   = _this select 3;
+											_ttl  = _this select 4;
+											_lk   = _this select 5;
+											_sdID = _this select 6;
+											_el   = 0;
+											//--- Reveal loop: every ~8s reveal nearby enemy units to the drone group.
+											//--- 2-operand reveal (A2-OA-safe; array form is A3-only).
+											//--- Locality: this spawn runs server-side; the drone is local to the server.
+											while {_el < _ttl && {!gameOver} && {!isNull _dr} && {alive _dr}} do {
+												sleep 8;
+												_el = _el + 8;
+												{
+													if (alive _x && {(side _x) != _sd} && {(side _x) != civilian}
+													    && {(_x distance _tgt) < 600}) then {
+														_grp reveal _x;
+													};
+												} forEach allUnits;
+											};
+											//--- Despawn.
+											missionNamespace setVariable [_lk, false];
+											{deleteVehicle _x} forEach (crew _dr);
+											if (!isNull _dr) then {deleteVehicle _dr};
+											if (!isNull _grp) then {deleteGroup _grp};
+										};
+										_detail = Format ["class=%1 target=%2 ttl=%3s flyH=80 radius=400", _w25DroneClass, _w25TargetPos, _w25TTL];
+									} else {
+										deleteVehicle _w25Drone; deleteGroup _w25Grp;
+										missionNamespace setVariable [_w25ActiveKey, false];
+										_result = "partial"; _detail = Format ["W%1 createUnit null (pilot)", _draw];
+									};
+								} else {
+									deleteVehicle _w25Drone;
+									missionNamespace setVariable [_w25ActiveKey, false];
+									_result = "partial"; _detail = Format ["W%1 group null at cap", _draw];
+								};
+							} else {
+								missionNamespace setVariable [_w25ActiveKey, false];
+								_result = "ineligible"; _detail = Format ["W%1 createVehicle null for %2", _draw, _w25DroneClass];
+							};
+						} else {
+							_result = "ineligible"; _detail = Format ["W%1 no drone/pilot class or HQ null", _draw];
+						};
+					};
+
 				//--- Dual logging.
 				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: [WILDCARD] side=%1 draw=W%2 result=%3 detail=(%4)", _sideText, _draw, _result, _detail]] Call WFBE_CO_FNC_AICOMLog;
 				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|WILDCARD_W" + str _draw + "|" + _result + "|" + _detail);
@@ -1540,7 +1669,9 @@ while {!gameOver} do {
 					[21,"Insurgent Car Bomb","a suicide car bomb rolls on a front-line town - destroy it for a bounty"],
 					[22,"Top Gun","a fighter flies cover over the front and hunts enemy aircraft"],
 					[23,"Armor Column","a free tank platoon rolls to the front"],
-					[24,"Technical Swarm","a wave of gun-trucks charges the front"]
+					[24,"Technical Swarm","a wave of gun-trucks charges the front"],
+					[25,"Recon Drone","an unmanned recon drone loiters the enemy front and spots their forces"],
+					[26,"Recon Drone","an unmanned recon drone loiters the enemy front and spots their forces"]
 				];
 				_wName = Format ["W%1", _draw];
 				_wDesc = "";
@@ -1578,6 +1709,8 @@ while {!gameOver} do {
 						//--- W23/W24 handled below (their apply spawns at HQ; mark the front town they head to).
 						case 23: {};
 						case 24: {};
+						case 25: {if (count _w25TargetPos > 0) then {_mkPos = _w25TargetPos}; _mkLife = (missionNamespace getVariable ["WFBE_C_AICOM_DRONE_TTL", 180]); _mkType = "mil_recon"};
+						case 26: {if (count _w25TargetPos > 0) then {_mkPos = _w25TargetPos}; _mkLife = (missionNamespace getVariable ["WFBE_C_AICOM_DRONE_TTL", 180]); _mkType = "mil_recon"};
 					};
 					//--- W23 Armor Column / W24 Technical Swarm: spawn at HQ, brain orders them to the front.
 					//--- Mark the best-scored spearhead/front town (the SAME selection W4/W6 use) so the side

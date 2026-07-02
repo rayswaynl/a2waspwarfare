@@ -308,6 +308,8 @@ with missionNamespace do {
 	WFBE_C_AICOM_INCOME_PC_BONUS_VALVE = 0.045; //--- B37: gentler low-pop income boost when the valve is on (vs 0.06), so more-squads does not over-bank.
 	WFBE_C_AICOM_INCOME_MULT_MAX = 4.0;        //--- B67 (Ray 2026-06-21): 3.0->4.0 - lift the town-cash multiplier ceiling so the low-pop inverted bonus is not clipped (keeps near-empty-server PvE well-funded). CASH only. hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 3}; //--- B66: 4->3 - bring air online a town sooner. Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
+	if (isNil "WFBE_C_AICOM_DRONE_RECON") then {WFBE_C_AICOM_DRONE_RECON = 0};     //--- W25/W26 Recon Drone cards (Ka-137 WEST / Pchela EAST). Default 0 = inert.
+	if (isNil "WFBE_C_AICOM_DRONE_TTL") then {WFBE_C_AICOM_DRONE_TTL = 180};        //--- Seconds the wildcard recon drone loiters before self-despawn.
 	//--- B74.2 EMPTY-HELI FIX (Ray 2026-06-24, AH1Z piling at base): hard per-side cap on how many attack-heli
 	//--- (non-transport Helicopter) airframes the commander may have ALIVE at once. Once at/over the cap the
 	//--- founding path strips air templates from _eligible (it degrade-walks to a buildable ground class), so it
