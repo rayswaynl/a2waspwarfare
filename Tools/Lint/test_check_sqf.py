@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""Focused regression tests for check_sqf.py.
+
+Run with:
+    python Tools/Lint/test_check_sqf.py
+"""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+import check_sqf
+
+
+def lint_codes(source: str) -> list[str]:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        path = root / "sample.sqf"
+        path.write_text(source, encoding="utf-8")
+        index = check_sqf.build_token_index(root)
+        return [finding.code for finding in check_sqf.lint_text(path, source, root, index)]
+
+
+class CheckSqfTests(unittest.TestCase):
+    def test_a3_prompt_traps_are_case_insensitive(self) -> None:
+        codes = lint_codes("_xs pushback 1;\n_d = player distance2d target;\n")
+        self.assertGreaterEqual(codes.count("A3CMD"), 2)
+
+    def test_a3_syntax_forms_are_reported(self) -> None:
+        codes = lint_codes(
+            '"b_inf" setMarkerTypeLocal "b_inf";\n'
+            "[player] reveal enemy;\n"
+            "_xs = _xs select [0, 2];\n"
+            "_xs sort {_x select 0};\n"
+        )
+        self.assertIn("A3MARKER", codes)
+        self.assertIn("A3REVEAL", codes)
+        self.assertIn("A3SELECT", codes)
+        self.assertIn("A3SORT", codes)
+
+    def test_group_getvariable_array_form_is_reported(self) -> None:
+        codes = lint_codes('_team getVariable ["wfbe_aicom_order", []];\n')
+        self.assertIn("GROUPGETVAR", codes)
+
+    def test_string_find_preserves_string_context_but_ignores_comments(self) -> None:
+        codes = lint_codes('// "abc" find "b"\n_hit = "abc" find "b";\n')
+        self.assertEqual(codes.count("A3STRING"), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
