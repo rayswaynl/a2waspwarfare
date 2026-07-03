@@ -16,7 +16,7 @@ _color_tab = [0.258823529, 0.713725490, 1, 1];
 _idc_tabs = [503301,503302,503303,503304,503305,503306];
 _lb_main = 503001;_lb_secondary = 503002;_lb_cargo = 503005;
 _tabs = ["Template","All","Primary","Secondary","Pistols","Equipment"];
-_funds_cli = 0;_price = 0;_tab_current_last = -1;
+_funds_cli = 0;_price = 0;_tab_current_last = -1;_tab_switch = false;
 _target = player;
 //--- Todo secure vanilla, remove not used.
 _target_weapons = weapons player;
@@ -52,6 +52,7 @@ while {true} do {
 		_tab_prev = _tab_current_last;
 		_tab_current_last = _tab_current;
 		_update_tab = true;
+		_tab_switch = true;
 	};
 	if (_click_misc != -1) then {uiNamespace setVariable ['wfbe_display_buygear_misc', -1]; if (_click_misc < count _gear_items && count _gear_items > 0) then {_gear_sel_weapons = _gear_sel_weapons - [_gear_items select _click_misc];_gear_items = _gear_items - [_gear_items select _click_misc]; _gear_refresh = ["items"]; _update_inventory = true;_has_inv_changed = true;}};
 	if (_click_pool_main != -1) then {uiNamespace setVariable ['wfbe_display_buygear_pool_main', -1]; _size = (_gear_mag_main) Call WFBE_CL_FNC_GetMagazinesSize; if (_click_pool_main <= _size && _size > 0) then {_gear_mag_main = [_gear_mag_main, _click_pool_main] Call WFBE_CL_FNC_RemoveMagazineGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_main"];_update_inventory = true;_has_inv_changed = true;}};
@@ -130,13 +131,15 @@ while {true} do {
 		{((uiNamespace getVariable "wfbe_display_buygear") displayCtrl _x) ctrlSetTextColor [0.7490, 0.7490, 0.7490, 0.7]} forEach _idc_tabs;
 		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl (_idc_tabs select _tab_current)) ctrlSetTextColor _color_tab;
 		//--- Lane 204 (review fix): save the cursor row for the tab we are LEAVING (_tab_prev).
-		//--- _tab_current_last is already the new tab at this point; use _tab_prev captured above.
-		if (_tab_prev >= 0) then {
+		//--- Only save on a real tab-switch (_tab_switch=true); template-create/delete also set
+		//--- _update_tab=true but must NOT clobber the row store for an unrelated tab.
+		if (_tab_switch && _tab_prev >= 0) then {
 			private ["_leaving_row"];
 			_leaving_row = lnbCurSelRow _lb_main;
 			if (_leaving_row < 0) then {_leaving_row = 0};
 			uiNamespace setVariable [("wfbe_buygear_row_" + str _tab_prev), _leaving_row];
 		};
+		_tab_switch = false;
 		lnbClear _lb_main;
 		lnbClear _lb_secondary;
 
