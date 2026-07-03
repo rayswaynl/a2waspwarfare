@@ -57,9 +57,6 @@ if (_side == west) then {
     };
 };
 
-publicVariable "TEAM_WEST_TICKS_NO_PLAYERS";
-publicVariable "TEAM_EAST_TICKS_NO_PLAYERS";
-
 if (_supplyDecreasePercentage > 1) then {
     _supplyDecreasePercentage = 1;
 };
