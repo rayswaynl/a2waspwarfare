@@ -421,7 +421,14 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
 		_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
 		if (_stipendActive && !_prevStipendActive) then {
-			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+			private ["_stipendSupplyFlag","_stipendSupplyState"];
+			_stipendFunds = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS", 100];
+			_stipendSupplyFlag = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE", 0];
+			_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+			_stipendSupplyOn = _dual && {_stipendSupplyFlag > 0};
+			_stipendSupplyState = if (_stipendSupplyOn) then {"ENABLED"} else {"SUPPRESSED"};
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s; funds/min %4; supply %5, flag %6, dual %7).", str _side, round time, _stipendMaxTime, _stipendFunds, _stipendSupplyState, _stipendSupplyFlag, _dual]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|STIPEND_CONFIG|fundsGrant=" + str _stipendFunds + "|supplyEnable=" + str _stipendSupplyFlag + "|dual=" + str _dual + "|supply=" + _stipendSupplyState);
 			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
 		};
 		if (!_stipendActive && _prevStipendActive) then {
