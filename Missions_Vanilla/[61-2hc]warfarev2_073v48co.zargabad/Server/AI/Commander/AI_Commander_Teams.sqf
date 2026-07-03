@@ -1232,5 +1232,14 @@ if (count _live > 0) then {
 	[_g, [0,0,0]] Call SetTeamMovePos;
 	_logik setVariable ["wfbe_teams", _teams + [_g], true];
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founded server-local AI team (founded %2->%3 editor %4 target %5) [%6].", _sideText, _foundedTeams, _foundedTeams + 1, _editorTeams, _target, _g]] Call WFBE_CO_FNC_AICOMLog;
-	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|server-local");
+	//--- L339: keep no-HC TEAM_FOUNDED telemetry on the same v2 schema as the HC founding path.
+	private ["_clsU","_cls"];
+	_clsU = _tmplUpgrades select _pick;
+	_cls = "infantry";
+	if ((_clsU select WFBE_UP_AIR) > 0) then {_cls = "air"} else {
+		if ((_clsU select WFBE_UP_HEAVY) > 0) then {_cls = "heavy"} else {
+			if ((_clsU select WFBE_UP_LIGHT) > 0) then {_cls = "light"};
+		};
+	};
+	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=server-local|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
 };
