@@ -577,6 +577,11 @@ while {alive player && dialog} do {
 								_rAllCamps = _destination getVariable "camps";
 								if (count _rCamps != count _rAllCamps) then {_ftRecheckOk = false};
 							};
+						} else {
+							//--- sideID -1: factory/HQ; has no sideID var. Verify it is in the OWN side structures list.
+							private ["_rStructs"];
+							_rStructs = sideJoined Call WFBE_CO_FNC_GetSideStructures;
+							if (!(_destination in _rStructs)) then {_ftRecheckOk = false};
 						};
 					};
 				};
