@@ -192,7 +192,46 @@ while {!gameOver} do {
 				if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 					if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 					WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _winSide + "|" + str round(time) + "|" + worldName);
+
+					// AICOM_FINAL: one final per-side summary at game-over, before the round-end marker.
+					private ["_aicomRoundSec","_aicomElMin","_aicomSide","_aicomSideText","_aicomLogic","_aicomSnap","_aicomSnapOk","_aicomFunds","_aicomSupply","_aicomTowns","_aicomTeams","_aicomTeamDigest","_aicomCas","_aicomVeh","_aicomMade","_aicomKilled"];
+					_aicomRoundSec = round(time);
+					_aicomElMin = round(_aicomRoundSec / 60);
+					{
+						_aicomSide = _x;
+						_aicomSideText = str _aicomSide;
+						_aicomLogic = (_aicomSide) Call WFBE_CO_FNC_GetSideLogic;
+						_aicomSnap = [];
+						_aicomSnapOk = false;
+						_aicomFunds = 0;
+						_aicomSupply = 0;
+						_aicomTowns = 0;
+						_aicomTeams = 0;
+						_aicomTeamDigest = [];
+						if (!isNil "_aicomLogic" && {!isNull _aicomLogic}) then {
+							_aicomSnap = _aicomLogic getVariable ["wfbe_aicom2_snap", []];
+							_aicomSnapOk = (count _aicomSnap) >= 26;
+						};
+						if (_aicomSnapOk) then {
+							_aicomFunds = _aicomSnap select WFBE_SNAP_FUNDS;
+							_aicomSupply = _aicomSnap select WFBE_SNAP_SUPPLY;
+							_aicomTowns = _aicomSnap select WFBE_SNAP_MYTOWNS;
+							_aicomTeamDigest = _aicomSnap select WFBE_SNAP_TEAMS;
+							_aicomTeams = count _aicomTeamDigest;
+						} else {
+							_aicomFunds = (_aicomSide) Call GetAICommanderFunds;
+							_aicomSupply = (_aicomSide) Call WFBE_CO_FNC_GetSideSupply;
+							_aicomTowns = (_aicomSide) Call GetTownsHeld;
+							if (!isNil "_aicomLogic" && {!isNull _aicomLogic}) then {_aicomTeams = count (_aicomLogic getVariable ["wfbe_teams", []])};
+						};
+						_aicomCas = WF_Logic getVariable [Format ["%1Casualties", _aicomSideText], 0];
+						_aicomVeh = WF_Logic getVariable [Format ["%1VehiclesLost", _aicomSideText], 0];
+						_aicomMade = WF_Logic getVariable [Format ["%1UnitsCreated", _aicomSideText], 0];
+						_aicomKilled = WF_Logic getVariable [Format ["%1KilledEnemy", _aicomSideText], 0];
+						diag_log ("AICOMSTAT|v2|FINAL|" + _aicomSideText + "|" + str _aicomElMin + "|winner=" + str _winSide + "|durationSec=" + str _aicomRoundSec + "|cas=" + str _aicomCas + "|vehLost=" + str _aicomVeh + "|made=" + str _aicomMade + "|killed=" + str _aicomKilled + "|funds=" + str _aicomFunds + "|supply=" + str _aicomSupply + "|towns=" + str _aicomTowns + "|foundedTeams=" + str _aicomTeams + "|world=" + worldName);
+					} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
+
+					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _winSide + "|" + str _aicomRoundSec + "|" + worldName);
 				};
 
 				[_winSide] call WFBE_CO_FNC_LogGameEnd;
