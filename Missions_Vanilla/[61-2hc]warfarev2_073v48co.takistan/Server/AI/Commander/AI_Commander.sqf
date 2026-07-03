@@ -88,6 +88,26 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 			[WFBE_UP_PATROLS,2],
 			[WFBE_UP_PATROLS,3]
 		];
+		//--- RESEARCH AIR (cmdcon43-pack2): when flag WFBE_C_AICOM_RESEARCH_AIR>0 AND the side owns at
+		//--- least one Aircraft Factory, append [WFBE_UP_AIR,1] then [WFBE_UP_AIR,2] so the AI commander
+		//--- researches air doctrine after its primary factory path. A2-OA-safe: structTypes/buildings
+		//--- not available here; use missionNamespace Format pattern to check AIRCRAFTUNITS registration.
+		//--- Factory presence is inferred via the GetFactories idiom (Buildings array loaded by map-init;
+		//--- never modify _program in place to stay A2-OA-safe - build a new local array).
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_RESEARCH_AIR", 0]) > 0) then {
+			private ["_raStructTypes","_raKind","_raBuildings","_raFacs","_raExtend"];
+			_raStructTypes = missionNamespace getVariable [Format ["WFBE_%1STRUCTURES", str _side], []];
+			_raBuildings   = (_side) Call WFBE_CO_FNC_GetSideStructures;
+			_raKind        = _raStructTypes find "Aircraft";
+			_raFacs        = [];
+			if (_raKind >= 0) then {_raFacs = [_side, _raKind, _raBuildings] Call GetFactories};
+			if (count _raFacs > 0) then {
+				_raExtend = [[WFBE_UP_AIR,1],[WFBE_UP_AIR,2]];
+				_program = _program + _raExtend;
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] RESEARCH_AIR: appended [AIR,1][AIR,2] to doctrine program (aircraft factory present).", str _side]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|0|RESEARCH_AIR|appended");
+			};
+		};
 		missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _program + _order];
 		["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine research program set (%2: factory id %3 to lvl 3, Gear 3, Barracks 2, then branch out).", str _side, _doctrine, _factory]] Call WFBE_CO_FNC_AICOMLog;
 

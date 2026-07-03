@@ -848,6 +848,19 @@ if (_strikeOn) then {
 							_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"}}} count (units _team);
 							_score = _alive;
 							if (_hasHeavy > 0) then {_score = _score + (missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_VEH_BONUS", 100])};
+							//--- STRIKE AT BONUS (cmdcon43-pack2, WFBE_C_AICOM_STRIKE_AT_BONUS): extra score for launcher-carrying teams
+							//--- so the AI prefers to send armed anti-tank teams at the enemy HQ.
+							//--- Idiom from Common_RunCommanderTeam.sqf (RICH_GEAR scan ~L452): secondaryWeapon is the launcher slot for
+							//--- AT/AA infantry in A2-OA; non-empty string = unit carries a launcher. Flag-off (0) adds 0 - fully inert.
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_AT_BONUS", 0]) > 0) then {
+								private ["_hasLauncher","_atBns"];
+								_hasLauncher = 0;
+								{ if (alive _x && {!(secondaryWeapon _x == "")}) then {_hasLauncher = _hasLauncher + 1} } forEach (units _team);
+								if (_hasLauncher > 0) then {
+									_atBns = missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_AT_BONUS", 0];
+									_score = _score + _atBns;
+								};
+							};
 							if (_score > _bestN) then {_bestN = _score; _best = _team};
 						};
 					};
