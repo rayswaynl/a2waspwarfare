@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_syncAicomState"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -820,6 +820,17 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ECONFLOW|playerFunds=" + str _ptFunds + "|netPlayerFunds=" + str _dPtFunds + "|aicomFunds=" + str _funds + "|supply=" + str _supply);
 		};
 		_logik setVariable [_prevPtKey, _ptFunds];
+
+		//--- Lane 362: per-window assault-arrival latency histogram. AssignTowns bumps counters; this tick emits and resets them.
+		_arrFast = _logik getVariable ["wfbe_aicom_arrival_fast", 0];
+		_arrMed = _logik getVariable ["wfbe_aicom_arrival_med", 0];
+		_arrSlow = _logik getVariable ["wfbe_aicom_arrival_slow", 0];
+		_arrDisp = _logik getVariable ["wfbe_aicom_arrival_dispatched", 0];
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp);
+		_logik setVariable ["wfbe_aicom_arrival_fast", 0];
+		_logik setVariable ["wfbe_aicom_arrival_med", 0];
+		_logik setVariable ["wfbe_aicom_arrival_slow", 0];
+		_logik setVariable ["wfbe_aicom_arrival_dispatched", 0];
 
 		_ltStat = time; //--- advance the throttle BEFORE CMDRSTAT so a CMDRSTAT failure could never spam/stall the AICOMSTAT tick
 
