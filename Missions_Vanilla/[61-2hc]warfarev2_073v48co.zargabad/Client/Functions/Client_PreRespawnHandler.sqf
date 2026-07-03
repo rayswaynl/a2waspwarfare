@@ -2,6 +2,8 @@ Private ["_hq","_unit","_rearmor"];
 
 _unit = _this;
 
+unitQueu = 0;
+
 (_unit) Call WFBE_SK_FNC_Apply;
 [] execFSM "Client\FSM\updateactions.fsm";
 
