@@ -138,7 +138,7 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 	if (_mode in [0,2,3,4,5]) then {
 		//--- Calculate the price/funds.
 		_skip = false;
-		_gear_cost = _unit getVariable "wfbe_custom_gear_cost";
+		_gear_cost = _unit getVariable ["wfbe_custom_gear_cost", 0];
 		if (_mode != 0) then {
 			_price = 0;
 			
@@ -174,6 +174,8 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 			[_unit, _get select 0, _get select 1, _get select 4, _get select 2, _get select 3] Call WFBE_CO_FNC_EquipUnit;
 			_loadDefault = false;
 		};
+	} else {
+		if (_mode in [1]) then {(localize 'STR_WF_PARAMETER_Respawn_Penalty_Remove') Call GroupChatMessage};
 	};
 };
 
@@ -216,7 +218,7 @@ case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGe
 
 //--- Command Deck: re-apply persisted skin class after respawn.
 //--- sleep 0.5 first so the engine completes unit creation before we swap models.
-if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {WFBE_SkinSelector_Applied}) then {
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {missionNamespace getVariable ["WFBE_SkinSelector_Applied", false]}) then {
 	Private ["_uid","_skinKey","_savedSkin"];
 	_uid     = getPlayerUID _unit;
 	_skinKey = "WFBE_SkinSelector_Skin_" + _uid;
