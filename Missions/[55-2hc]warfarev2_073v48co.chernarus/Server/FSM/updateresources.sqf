@@ -82,7 +82,7 @@ while {!gameOver} do {
 			switch (_is) do {
 				case 2: {_income = round(_income / 2)};
 				case 3: {
-					_income_player = round(_income * (((100 - (_logik getVariable "wfbe_commander_percent"))/100)/(_logik getVariable "wfbe_teams_count")));
+					_income_player = round(_income * (((100 - (_logik getVariable "wfbe_commander_percent"))/100)/((_logik getVariable "wfbe_teams_count") max 1)));
 					_income_commander = round((_income * ((_logik getVariable "wfbe_commander_percent")/100)) / _divisor) + _income_player;
 				};
 				case 4: {
