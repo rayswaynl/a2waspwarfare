@@ -1730,6 +1730,11 @@ missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 };
 };
 
+if (isNil "WFBE_C_FIX_NEUTRAL_MAP_COLOR") then {WFBE_C_FIX_NEUTRAL_MAP_COLOR = 1};
+if (isNil "WFBE_C_NEUTRAL_COLOR") then {WFBE_C_NEUTRAL_COLOR = "ColorGray"};
+missionNamespace setVariable ["WFBE_C_FIX_NEUTRAL_MAP_COLOR", WFBE_C_FIX_NEUTRAL_MAP_COLOR];
+missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
+
 	/* Special Variables, Those are used after the typical declaration above. */
 
 //--- Build area (Radius/Height).
