@@ -164,7 +164,7 @@ while {!gameOver} do {
 				         "_gapThresh","_eMult",
 				         "_humanCmdWEST","_humanCmdEAST",
 				         "_upgrades","_lvl","_owned","_hq","_hqPos",
-				         "_tier","_pool","_w3Eligible",
+				         "_tier","_pool","_w2Eligible","_w3Eligible",
 				         "_w4Eligible","_w4Units","_w4Model","_w4Cargo",
 				         "_w6Eligible","_defMax","_defCount","_defClass","_defData","_defPrice","_defFunds",
 				         "_w6AirTemplate","_w6AirTier","_w6Tmpls","_w6TmplUps","_w6Cand","_w6Lead","_w6CandTier","_w6Idx","_w6UpArr",
@@ -337,6 +337,19 @@ while {!gameOver} do {
 				//--- so the draw is pure waste; zeroing W1 hands those draws to more useful cards. Humans always eligible
 				//--- (their draw credits the commander team's wfbe_funds, which IS useful).
 				_w1Eligible = _humanCmd || {((_side) Call GetAICommanderFunds) < (2 * (missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 100000]))};
+
+				//--- W2: SUPPLY DROP eligibility pre-check (Lane195): mirror W1 pattern - zero
+				//--- the card when supply is already at WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT so the
+				//--- draw slot goes to a useful card instead of producing a 0-grant ineligible
+				//--- result in the apply block. Gated on WFBE_C_W2_SUPPLY_PRECHECK (default 1).
+				_w2Eligible = true;
+				if ((missionNamespace getVariable ["WFBE_C_W2_SUPPLY_PRECHECK", 1]) > 0) then {
+					private ["_w2Supply","_w2MaxSupply"];
+					_w2Supply = (_side) Call WFBE_CO_FNC_GetSideSupply;
+					if (isNil "_w2Supply") then {_w2Supply = 0};
+					_w2MaxSupply = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 99999];
+					if (_w2Supply >= _w2MaxSupply) then {_w2Eligible = false};
+				};
 
 				//--- W13: gunship strike - air tier unlocked + attack-capable class + 3+ enemy cluster near an enemy town.
 				_w13Eligible = false;
@@ -562,6 +575,7 @@ while {!gameOver} do {
 				};
 
 				//--- Zero ineligible cards.
+				if (!_w2Eligible)  then {_wW2  = 0};
 				if (!_w3Eligible)  then {_wW3  = 0};
 				if (!_w4Eligible)  then {_wW4  = 0};
 				if (!_w6Eligible)  then {_wW6  = 0};
