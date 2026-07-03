@@ -39,6 +39,12 @@ _unit addWeapon "Put";
 {_unit addWeapon _x} forEach _weapons;
 {_unit addMagazine _x} forEach _magazines;
 
+//--- A weapon added BEFORE its magazines spawns UNLOADED in OA (players must hand-reload every gun on
+//--- respawn; addMagazine afterwards never chambers it). Re-add each weapon now that the magazines are
+//--- in inventory so the engine chambers it - all addMagazine calls above already ran with the muzzles
+//--- present, so the muzzle-bind RPT stays quiet (preserves the build-31 weapons-first fix).
+{_unit removeWeapon _x; _unit addWeapon _x} forEach _weapons;
+
 //--- Get a proper muzzle.
 _use = "";
 {if (_x != "") exitWith {_use = _x}} forEach _eligible;
