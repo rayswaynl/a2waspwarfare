@@ -18,7 +18,7 @@
 	one-start-per-call behaviour are unchanged.
 */
 
-Private["_can_upgrade","_cost","_enabled","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost"];
+Private["_can_upgrade","_cost","_enabled","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_lastExhaustedKey","_lastExhaustedTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -113,9 +113,17 @@ if (_chosen >= 0) then {
 		[_side,-(_cost select 0),"AI commander tech upgrade.", false] Call ChangeSideSupply; //--- TR12: supply price is _cost select 0 (was select 1, the funds price).
 	};
 } else {
-	//--- V0.6.7 UPGRADE QUEUE: nothing affordable this cycle -> keep program queued,
-	//--- debounced warn only (reports the head item, which is what's being waited on).
-	if (_headUpgrade >= 0) then {
+	if (_headUpgrade < 0) then {
+		_nowTime = time;
+		_lastExhaustedKey = Format ["wfbe_aicom_upg_exhausted_%1", _side];
+		_lastExhaustedTime = missionNamespace getVariable [_lastExhaustedKey, -301];
+		if (_nowTime - _lastExhaustedTime >= 300) then {
+			missionNamespace setVariable [_lastExhaustedKey, _nowTime];
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|PROGRAM_EXHAUSTED|path=" + str (count _path));
+		};
+	} else {
+		//--- V0.6.7 UPGRADE QUEUE: nothing affordable this cycle -> keep program queued,
+		//--- debounced warn only (reports the head item, which is what's being waited on).
 		_nowTime = time;
 		_lastWarnKey = Format ["wfbe_aicom_upg_warn_%1", _side];
 		_lastWarnTime = missionNamespace getVariable [_lastWarnKey, -301];
