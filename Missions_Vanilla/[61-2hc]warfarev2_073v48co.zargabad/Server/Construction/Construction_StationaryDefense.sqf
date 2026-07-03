@@ -174,7 +174,7 @@ if (!isNull _area) then {
 if (isNull _area && (missionNamespace getVariable "WFBE_C_FWD_STATIC_MANNING") > 0) then {
 	//--- HIGH-2: honour the operator AI kill-switch identically to the base-area path (line 96).
 	if (_defense emptyPositions "gunner" > 0 && _manned && (((missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI") > 0) || _isAIQuery)) then {
-		Private ["_fwdTeam","_fwdBuildings"];
+		Private ["_fwdTeam"];
 		//--- HIGH-1: reuse an existing group stored on this gun object if one already exists
 		//--- (e.g. double-call guard). On fresh construction the var is nil so we create one.
 		_fwdTeam = _defense getVariable "WFBE_FwdDefenseTeam";
@@ -197,7 +197,6 @@ if (isNull _area && (missionNamespace getVariable "WFBE_C_FWD_STATIC_MANNING") >
 		//--- MODERATE: stamp a FWD side marker so future capture-side logic or HandleDefense
 		//--- extensions can exit on side mismatch. The current loop exits via !alive _defense.
 		_defense setVariable ["WFBE_FwdOwnerSide", _sideID];
-		_fwdBuildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
 		//--- LOW fix: pass objNull as anchor — _moveInGunner=true makes the anchor unused;
 		//--- avoids the barracks/HQ lookup overhead and suppresses the spurious HQ WARNING.
 		emptyQueu = emptyQueu + [_defense];
@@ -219,3 +218,4 @@ if (_isArtillery != -1) then {
 };
 
 _defense
+
