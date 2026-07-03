@@ -1280,6 +1280,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- B36 hotfix (Ray 2026-06-15): AI commander starts with a flat 200k cash (was FUNDS_START x FUNDS_MULT ~=45k); it runs the whole side. Players start with 30k.
 	if (isNil "WFBE_C_AI_COMMANDER_START_FUNDS") then {WFBE_C_AI_COMMANDER_START_FUNDS = 200000}; //--- B67 (Ray 2026-06-21): RESTORED to 200000 (cash-rich directive). The earlier 60k trim was counterproductive - START_FUNDS cannot prepay un-unlocked tech (tech is interval-gated at 300s, money-independent), it only fuels UNIT FIELDING, which Ray now wants maximised. CASH only; never supply.
 	if (isNil "WFBE_C_ECONOMY_INCOME_INTERVAL") then {WFBE_C_ECONOMY_INCOME_INTERVAL = 60}; //--- Income Interval (Delay between each paycheck).
+	if (isNil "WFBE_C_INCOME_SLEEP_FPS_SCALE") then {WFBE_C_INCOME_SLEEP_FPS_SCALE = 1}; //--- Fleet lane 279: GetSleepFPS no longer shortens sleeps under low server FPS. 1 = raw configured interval; 2 = full load-shedding extension (5 fps -> 1.5x sleep), values between scale proportionally.
 	if (isNil "WFBE_C_ECONOMY_INCOME_SYSTEM") then {WFBE_C_ECONOMY_INCOME_SYSTEM = 3}; //--- Income System (1:Full, 2:Half (Half -> 120 SV Town = 60$ / 60SV), 3: Commander System, 4: Commander System: Full)
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_START_WEST") then {WFBE_C_ECONOMY_SUPPLY_START_WEST = if (WF_Debug) then {900000} else {12800}};
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_START_EAST") then {WFBE_C_ECONOMY_SUPPLY_START_EAST = if (WF_Debug) then {900000} else {12800}};
