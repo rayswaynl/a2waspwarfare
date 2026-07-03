@@ -13,6 +13,7 @@ import argparse
 import bisect
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -104,6 +105,67 @@ def iter_files(paths: Iterable[Path]) -> list[Path]:
         elif path.is_file() and path.suffix.lower() in SQF_SUFFIXES:
             files.append(path)
     return sorted(set(files))
+
+
+def git_pathspec(root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def parse_added_lines_from_diff(diff_text: str, root: Path) -> dict[Path, set[int]]:
+    added_lines: dict[Path, set[int]] = {}
+    current_path: Path | None = None
+    next_new_line: int | None = None
+
+    for line in diff_text.splitlines():
+        if line.startswith("+++ ") and (line.startswith("+++ b/") or line.startswith("+++ /dev/null")):
+            shown = line[4:].strip()
+            if shown == "/dev/null":
+                current_path = None
+                next_new_line = None
+                continue
+            if shown.startswith("b/"):
+                shown = shown[2:]
+            current_path = (root / shown).resolve()
+            added_lines.setdefault(current_path, set())
+            next_new_line = None
+            continue
+
+        if line.startswith("@@ "):
+            match = re.match(r"@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", line)
+            if match:
+                next_new_line = int(match.group(1))
+            continue
+
+        if current_path is None or next_new_line is None:
+            continue
+        if line.startswith("+") and not line.startswith("+++ "):
+            added_lines.setdefault(current_path, set()).add(next_new_line)
+            next_new_line += 1
+        elif line.startswith("-") and not line.startswith("--- "):
+            continue
+        elif line.startswith(" "):
+            next_new_line += 1
+
+    return {path: lines for path, lines in added_lines.items() if lines}
+
+
+def collect_diff_added_lines(root: Path, ref: str, paths: Iterable[Path]) -> dict[Path, set[int]]:
+    pathspecs = [git_pathspec(root, path) for path in paths]
+    command = ["git", "-C", str(root), "diff", "--unified=0", "--no-ext-diff", ref, "--", *pathspecs]
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    return parse_added_lines_from_diff(result.stdout, root)
+
+
+def filter_findings_to_added_lines(findings: Iterable[Finding], added_lines: dict[Path, set[int]]) -> list[Finding]:
+    filtered: list[Finding] = []
+    for finding in findings:
+        lines = added_lines.get(finding.path.resolve())
+        if lines is not None and finding.line in lines:
+            filtered.append(finding)
+    return filtered
 
 
 def read_text(path: Path) -> str:
@@ -362,11 +424,12 @@ def parse_code_filter(value: str, parser: argparse.ArgumentParser, option_name: 
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Run WASP SQF lint checks.")
-    parser.add_argument("paths", nargs="*", type=Path, help="Files or directories to scan. Defaults to both maintained mission roots.")
+    parser.add_argument("paths", nargs="*", type=Path, help="Files or directories to scan. Defaults to the maintained mission roots.")
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root for relative paths and classname indexing.")
     parser.add_argument("--no-classname-index", action="store_true", help="Skip quoted classname-like token uniqueness checks.")
     parser.add_argument("--select", help="Comma-separated finding codes to include, e.g. A3CMD,BRACKET.")
     parser.add_argument("--ignore", help="Comma-separated finding codes to suppress, e.g. BOOLCMP,CLASSREF.")
+    parser.add_argument("--diff-from", metavar="REF", help="Only report findings whose primary line was added since REF.")
     args = parser.parse_args(argv)
 
     root = args.root.resolve()
@@ -375,9 +438,25 @@ def main(argv: list[str]) -> int:
     default_paths = [
         root / "Missions" / "[55-2hc]warfarev2_073v48co.chernarus",
         root / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.takistan",
+        root / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.zargabad",
     ]
     scan_paths = [path if path.is_absolute() else root / path for path in (args.paths or default_paths)]
-    files = iter_files(scan_paths)
+
+    added_lines: dict[Path, set[int]] | None = None
+    if args.diff_from:
+        try:
+            added_lines = collect_diff_added_lines(root, args.diff_from, scan_paths)
+        except subprocess.CalledProcessError as exc:
+            stderr = exc.stderr.strip()
+            print(f"git diff failed for --diff-from {args.diff_from}: {stderr or exc}", file=sys.stderr)
+            return 2
+        files = sorted(path for path in added_lines if path.exists() and path.suffix.lower() in SQF_SUFFIXES)
+        if not files:
+            print("No added SQF/HPP/EXT/FSM/SQM lines found for requested diff scope.")
+            return 0
+    else:
+        files = iter_files(scan_paths)
+
     if not files:
         print("No SQF/HPP/EXT/FSM/SQM files found for requested paths.", file=sys.stderr)
         return 2
@@ -390,6 +469,8 @@ def main(argv: list[str]) -> int:
     findings: list[Finding] = []
     for path in files:
         findings.extend(lint_text(path.resolve(), read_text(path), root, token_index))
+    if added_lines is not None:
+        findings = filter_findings_to_added_lines(findings, added_lines)
     if selected_codes is not None:
         findings = [finding for finding in findings if finding.code in selected_codes]
     if ignored_codes:

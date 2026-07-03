@@ -71,6 +71,34 @@ class CheckSqfTests(unittest.TestCase):
         )
         self.assertNotIn("NSSETVAR3", codes)
 
+    def test_parse_added_lines_from_diff_tracks_new_line_numbers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            diff = (
+                "diff --git a/sample.sqf b/sample.sqf\n"
+                "--- a/sample.sqf\n"
+                "+++ b/sample.sqf\n"
+                "@@ -1,2 +1,4 @@\n"
+                " private _x;\n"
+                "+params [\"_unit\"];\n"
+                " _unit = player;\n"
+                "+_items pushBack _unit;\n"
+            )
+            added = check_sqf.parse_added_lines_from_diff(diff, root)
+
+        self.assertEqual(added[(root / "sample.sqf").resolve()], {2, 4})
+
+    def test_added_line_filter_drops_legacy_findings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "sample.sqf"
+            source = 'params ["_old"];\n_items pushBack player;\n'
+            path.write_text(source, encoding="utf-8")
+            findings = check_sqf.lint_text(path, source, root, check_sqf.build_token_index(root))
+            filtered = check_sqf.filter_findings_to_added_lines(findings, {path.resolve(): {2}})
+
+        self.assertEqual([finding.code for finding in filtered], ["A3CMD"])
+
 
 if __name__ == "__main__":
     unittest.main()
