@@ -5,6 +5,8 @@ disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop tou
 uiNamespace setVariable ["wfbe_display_buygear", _this select 0];
 if (isNil {uiNamespace getVariable 'wfbe_display_buygear_tab'}) then {uiNamespace setVariable ['wfbe_display_buygear_tab', 2]};
 //--- Lane 204: row-memory per tab (0-5); persists across tab switches.
+//--- NOTE (review MODERATE): after this block _x == 5 in the outer scope (A2 forEach does not isolate _x).
+//--- No later code before the main loop reads _x, so this is safe; document here to prevent future confusion.
 {
 	if (isNil {uiNamespace getVariable ("wfbe_buygear_row_" + str _x)}) then {uiNamespace setVariable [("wfbe_buygear_row_" + str _x), 0]};
 } forEach [0,1,2,3,4,5];
@@ -44,7 +46,13 @@ while {true} do {
 	_click_misc = uiNamespace getVariable 'wfbe_display_buygear_misc';
 	_click_pool_main = uiNamespace getVariable 'wfbe_display_buygear_pool_main';
 	_click_pool_gun = uiNamespace getVariable 'wfbe_display_buygear_pool_gun';
-	if (_tab_current != _tab_current_last) then {_tab_current_last = _tab_current; _update_tab = true};
+	//--- Lane 204 (review fix): capture the leaving tab BEFORE overwriting _tab_current_last.
+	if (_tab_current != _tab_current_last) then {
+		private ["_tab_prev"];
+		_tab_prev = _tab_current_last;
+		_tab_current_last = _tab_current;
+		_update_tab = true;
+	};
 	if (_click_misc != -1) then {uiNamespace setVariable ['wfbe_display_buygear_misc', -1]; if (_click_misc < count _gear_items && count _gear_items > 0) then {_gear_sel_weapons = _gear_sel_weapons - [_gear_items select _click_misc];_gear_items = _gear_items - [_gear_items select _click_misc]; _gear_refresh = ["items"]; _update_inventory = true;_has_inv_changed = true;}};
 	if (_click_pool_main != -1) then {uiNamespace setVariable ['wfbe_display_buygear_pool_main', -1]; _size = (_gear_mag_main) Call WFBE_CL_FNC_GetMagazinesSize; if (_click_pool_main <= _size && _size > 0) then {_gear_mag_main = [_gear_mag_main, _click_pool_main] Call WFBE_CL_FNC_RemoveMagazineGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_main"];_update_inventory = true;_has_inv_changed = true;}};
 	if (_click_pool_gun != -1) then {uiNamespace setVariable ['wfbe_display_buygear_pool_gun', -1]; _size = (_gear_mag_pool) Call WFBE_CL_FNC_GetMagazinesSize; if (_click_pool_gun <= _size && _size > 0) then {_gear_mag_pool = [_gear_mag_pool, _click_pool_gun] Call WFBE_CL_FNC_RemoveMagazineGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_hand"];_update_inventory = true;_has_inv_changed = true;}};
@@ -121,12 +129,13 @@ while {true} do {
 		_update_tab = false;
 		{((uiNamespace getVariable "wfbe_display_buygear") displayCtrl _x) ctrlSetTextColor [0.7490, 0.7490, 0.7490, 0.7]} forEach _idc_tabs;
 		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl (_idc_tabs select _tab_current)) ctrlSetTextColor _color_tab;
-		//--- Lane 204: save the cursor row for the tab we are leaving.
-		if (_tab_current_last >= 0) then {
+		//--- Lane 204 (review fix): save the cursor row for the tab we are LEAVING (_tab_prev).
+		//--- _tab_current_last is already the new tab at this point; use _tab_prev captured above.
+		if (_tab_prev >= 0) then {
 			private ["_leaving_row"];
 			_leaving_row = lnbCurSelRow _lb_main;
 			if (_leaving_row < 0) then {_leaving_row = 0};
-			uiNamespace setVariable [("wfbe_buygear_row_" + str _tab_current_last), _leaving_row];
+			uiNamespace setVariable [("wfbe_buygear_row_" + str _tab_prev), _leaving_row];
 		};
 		lnbClear _lb_main;
 		lnbClear _lb_secondary;
@@ -536,5 +545,7 @@ while {true} do {
 
 //--- Release the UI.
 {uiNamespace setVariable [_x, nil]} forEach ["wfbe_display_buygear","wfbe_display_buygear_misc","wfbe_display_buygear_pool_main","wfbe_display_buygear_pool_gun"];
+//--- Lane 204 (review fix): clear per-tab row memory so reopening the dialog always starts at row 0.
+{uiNamespace setVariable [("wfbe_buygear_row_" + str _x), nil]} forEach [0,1,2,3,4,5];
 //--- Update the profile if needed.
 if (_need_save && !isNil 'WFBE_CL_FNC_UI_Gear_SaveTemplateProfile') then { [] Spawn WFBE_CL_FNC_UI_Gear_SaveTemplateProfile };
