@@ -7,7 +7,7 @@
 
 	_min_fps_targeted = _auto_distance_view_target_fps - 4; //we aim this fps at least.
 	_max_fps_targeted = _auto_distance_view_target_fps + 4;
-	_max_distance_view = 6000;
+	_max_distance_view = 6000 min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 6000]); //--- respect the per-map ceiling (ZG=3000).
 	_min_distance_view = 500;
 
 	_player_fps = diag_fps;
