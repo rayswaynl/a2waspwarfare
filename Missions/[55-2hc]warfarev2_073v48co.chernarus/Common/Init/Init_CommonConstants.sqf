@@ -1623,6 +1623,7 @@ if (WF_A2_Vanilla) then {
 	//--- Linger time (seconds): the old owner's gunners keep fighting after capture before being cleaned up.
 	//--- A fire-time guard aborts cleanup if the town has flipped back to the old owner's side.
 	WFBE_C_TOWNS_DEFENDER_LINGER = 180;
+	if (isNil "WFBE_C_TOWNS_MOPUP_TTL") then {WFBE_C_TOWNS_MOPUP_TTL = 600}; //--- Lane 200: max seconds a captured-town mop-up squad may keep scanning before it stands down.
 	if (isNil "WFBE_C_EASA_CATEGORIES") then {WFBE_C_EASA_CATEGORIES = 1}; // EASA loadout category tags [AA]/[AG]/[MR] prefixed on each row (display-only)
 	if (isNil "WFBE_C_AIRFIELDS") then {WFBE_C_AIRFIELDS = 1}; // Airfield capture points (NWAF/NEAF/Balota): repair-point + exclusive hangar on capture
 	if (isNil "WFBE_C_CAPTURE_UNLOCKS") then {WFBE_C_CAPTURE_UNLOCKS = 1}; // Holding trigger towns unlocks premium ACR units at own factories (Krasnostav->T72M4CZ lvl4 Heavy; NWAF->RM70_ACR lvl4 Light)

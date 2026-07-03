@@ -409,7 +409,7 @@ while {!WFBE_GameOver} do {
 					[_location, _newSide, _newSID] spawn {
 						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
 						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
-						         "_retVal","_scanActive","_townRange","_guerCount"];
+						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_newSIDAtCapture = _this select 2;
@@ -453,8 +453,9 @@ while {!WFBE_GameOver} do {
 						_scanActive  = true;
 						//--- Use the town activation detection range (600m base) for the straggler scan.
 						_townRange   = 600 * (missionNamespace getVariable ["WFBE_C_TOWNS_DETECTION_RANGE_COEF", 1]);
+						_mopupEnd   = time + (missionNamespace getVariable ["WFBE_C_TOWNS_MOPUP_TTL", 600]);
 
-						while {_scanActive && !isNull _squadGrp && {count (units _squadGrp) > 0}} do {
+						while {_scanActive && !isNull _squadGrp && {count (units _squadGrp) > 0} && {time < _mopupEnd}} do {
 							sleep 30;
 
 							//--- Hard-despawn if town deactivated or flipped.
@@ -492,7 +493,7 @@ while {!WFBE_GameOver} do {
 						};
 						_loc setVariable ["wfbe_mopup_group", grpNull, false];
 						_loc setVariable ["wfbe_mopup_units", [], false];
-						["INFORMATION", Format ["server_town.sqf: mop-up squad stood down for %1 (no GUER detected).", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
+						["INFORMATION", Format ["server_town.sqf: mop-up squad stood down for %1.", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
 			};
