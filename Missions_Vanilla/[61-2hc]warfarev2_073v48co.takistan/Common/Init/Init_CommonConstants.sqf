@@ -503,7 +503,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD") then {WFBE_C_AI_COMMANDER_WILDCARD = 1};           //--- 0 disables wildcard events entirely.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL") then {WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL = 900}; //--- Seconds between wildcard events per side (15 min - faster testing cadence, claude-gaming 2026-06-14; was 1800/30min).
 	if (isNil "WFBE_C_WILDCARD_IRON_DOME") then {WFBE_C_WILDCARD_IRON_DOME = 0};  //--- 1 = re-enable W14 Iron Dome (2x crewed AA pod, 300s, near most-threatened town); default 0 (zeroed 2026-06-27).
-	if (isNil "WFBE_C_W15_HUMAN_DISCOUNT") then {WFBE_C_W15_HUMAN_DISCOUNT = 0};  //--- Lane195: 1 = W15 Black Market 50%% discount also refunds human-commander AI-team buys in Server_BuyUnit; default 0 (dark).
+	if (isNil "WFBE_C_W15_HUMAN_DISCOUNT") then {WFBE_C_W15_HUMAN_DISCOUNT = 0};  //--- Lane195: 1 = W15 Black Market 50%% discount applies to Black-Market wildcard event only; Server_BuyUnit refund block removed in review (r2), flag retained for future use; default 0 (dark).
 	if (isNil "WFBE_C_W2_SUPPLY_PRECHECK") then {WFBE_C_W2_SUPPLY_PRECHECK = 1};  //--- Lane195: 1 = W2 Supply Drop pre-checks supply cap at eligibility time (zeroes card when side is at cap, saves a wasted draw); default 1 (on).
 	WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN = 3;   //--- V0.5: teams concentrated per spearhead town (legacy/fallback quota; per-tier quota below overrides).
 	//--- V0.8 COHERENT FRONT (claude-gaming 2026-06-14): the old spearhead scorer was
