@@ -644,6 +644,24 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
 	};
+	class WFBE_C_GUER_KILLTIER_1 {
+		title = "GUER kill tier 1 threshold";
+		values[] = {10,20,30,40,60};
+		texts[] = {"10 kills","20 kills","30 kills","40 kills","60 kills"};
+		default = 30;
+	};
+	class WFBE_C_GUER_KILLTIER_2 {
+		title = "GUER kill tier 2 threshold";
+		values[] = {40,60,80,120,160};
+		texts[] = {"40 kills","60 kills","80 kills","120 kills","160 kills"};
+		default = 80;
+	};
+	class WFBE_C_GUER_KILLTIER_3 {
+		title = "GUER kill tier 3 threshold";
+		values[] = {80,120,160,200};
+		texts[] = {"80 kills","120 kills","160 kills","200 kills"};
+		default = 160;
+	};
 
 	// G4 GUER Mortar Pit wildcard card SHELVED (Ray 2026-07-02 "Shelve mortar pit"); its lobby toggles removed.
 	// G5: GUER Scavenger Team wildcard card (default OFF - flag-gated).
