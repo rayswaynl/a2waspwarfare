@@ -39,7 +39,7 @@
 private ["_side","_sideText","_logik","_enable","_teams","_sizeMin","_floor","_funds",
          "_perUnitCost","_picked","_team","_ldr","_aliveNow","_nearSupply","_myID",
          "_shortBy","_classes","_template","_templates","_type","_man","_want","_inContact","_isArmour",
-         "_mergeEnable","_topupEnable","_sizeMax","_mFloor","_mRange","_cands","_t","_tl","_an","_ty","_arm",
+         "_mergeEnable","_topupEnable","_sizeMax","_mFloor","_mRange","_cands","_t","_tl","_an","_ty","_arm","_hcFlag","_disband","_relief",
          "_bestA","_bestB","_bestSum","_nC","_ca","_cb","_sum","_sent","_bSideID"];
 
 //--- HARD GATE: inert unless EITHER pass is explicitly enabled (absent variable => false).
@@ -84,17 +84,20 @@ if (_mergeEnable) then {
 	_mFloor  = round (_sizeMin * (missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_FRAC", 0.6]));
 	_mRange  = missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_RANGE", 300];
 	//--- Build the list of merge-eligible HC infantry teams: below floor, alive, NOT in combat, NOT
-	//--- player-led, NOT armour/heli (MBT/attack-heli teams are the hull+crew punch - never consolidate
+	//--- player-led, NOT pending disband, NOT armour/heli (MBT/attack-heli teams are the hull+crew punch - never consolidate
 	//--- those), and NOT currently tasked relief / garrison / strike (those teams have a live job; the
 	//--- merge would abandon B's order). Each candidate carries [team, aliveCount, leader].
 	_cands = [];
 	{
 		_t = _x;
-		if (!isNull _t && {_t getVariable ["wfbe_aicom_hc", false]}) then {
+		if (!isNull _t) then {
+			_hcFlag = _t getVariable "wfbe_aicom_hc";
+			if (isNil "_hcFlag") then {_hcFlag = false};
+			if (_hcFlag) then {
 			_tl = leader _t;
 			//--- only consider teams whose LEADER is a sane, non-player, non-combat AI body.
 			if (!isNull _tl && {alive _tl} && {!(isPlayer _tl)} && {(behaviour _tl) != "COMBAT"}) then {
-				//--- skip teams with a live special JOB (don't yank a tasked team into a merge):
+				//--- skip pending-disband teams and teams with a live special JOB (don't yank a tasked team into a merge):
 				//---   - GARRISON: the side logic tracks the single garrison team in wfbe_aicom_garrison
 				//---     (set AI_Commander_AssignTowns.sqf:153; read Strategy.sqf:227/337/557).
 				//---   - RELIEF: a relief assignment stamps wfbe_aicom_relief on the team (Strategy.sqf:557).
@@ -102,16 +105,22 @@ if (_mergeEnable) then {
 				//---    either armour (already excluded below) or marching under a defense order, so they are
 				//---    caught by the COMBAT / armour tests; no separate A2-safe flag exists to test for it.)
 				//--- NOTE: wfbe_aicom_order is an ARRAY [seq,mode,pos], NOT a string - do not string-compare it.
-				if (!(((_logik getVariable ["wfbe_aicom_garrison", grpNull]) == _t) || {!isNull (_t getVariable ["wfbe_aicom_relief", objNull])})) then {
+				_disband = _t getVariable "wfbe_aicom_disband";
+				if (isNil "_disband") then {_disband = false};
+				_relief = _t getVariable "wfbe_aicom_relief";
+				if (isNil "_relief") then {_relief = objNull};
+				if (!_disband && {!(((_logik getVariable ["wfbe_aicom_garrison", grpNull]) == _t) || {!isNull _relief})}) then {
 					_an = {alive _x} count (units _t);
 					//--- armour/heli exemption: any Tank in the team's template => leave it alone.
-					_ty = _t getVariable ["wfbe_teamtype", -1];
+					_ty = _t getVariable "wfbe_teamtype";
+					if (isNil "_ty") then {_ty = -1};
 					_arm = false;
 					if (!isNil "_templates" && {_ty >= 0} && {_ty < count _templates}) then {
 						{ if (_x isKindOf "Tank") exitWith {_arm = true} } forEach (_templates select _ty);
 					};
 					if (!_arm && {_an > 0} && {_an < _mFloor}) then { _cands = _cands + [[_t, _an, _tl]]; };
 				};
+			};
 			};
 		};
 	} forEach _teams;
@@ -180,13 +189,16 @@ _picked = objNull;
 	_team = _x;
 	if (isNull _picked && {!isNull _team}) then {
 		//--- HC-founded teams only (server-local teams are handled by Produce already).
-		if (_team getVariable ["wfbe_aicom_hc", false]) then {
+		_hcFlag = _team getVariable "wfbe_aicom_hc";
+		if (isNil "_hcFlag") then {_hcFlag = false};
+		if (_hcFlag) then {
 			_ldr = leader _team;
 			if (!isNull _ldr && {alive _ldr}) then {
 				_aliveNow = {alive _x} count (units _team);
 				//--- Skip MBT / attack-heli teams: their punch is the hull+crew, never pad with rifles.
 				//--- (A non-infantry template is identified the same way Produce does: any Tank in it.)
-				_type = _team getVariable ["wfbe_teamtype", -1];
+				_type = _team getVariable "wfbe_teamtype";
+				if (isNil "_type") then {_type = -1};
 				_isArmour = false;
 				if (!isNil "_templates" && {_type >= 0} && {_type < count _templates}) then {
 					{ if (_x isKindOf "Tank") exitWith {_isArmour = true} } forEach (_templates select _type);
@@ -221,7 +233,8 @@ _shortBy = _want - _aliveNow;
 if (_shortBy <= 0) exitWith {};
 
 _man = "";
-_type = _team getVariable ["wfbe_teamtype", -1];
+_type = _team getVariable "wfbe_teamtype";
+if (isNil "_type") then {_type = -1};
 if (!isNil "_templates" && {_type >= 0} && {_type < count _templates}) then {
 	_template = _templates select _type;
 	{ if (_x isKindOf "Man") then {_man = _x} } forEach _template;   //--- last Man-class = basic dismount.
