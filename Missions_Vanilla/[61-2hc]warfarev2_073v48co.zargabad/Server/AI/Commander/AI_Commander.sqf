@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_syncAicomState"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_syncAicomState"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -127,6 +127,21 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 		//--- (WFBE_UP_CBRADAR guard kept so the flag is checked only when CBR exists in upgrades.)
 	};
 };
+
+_aicomConstLog = "AICOMSTAT|v2|CONSTANTS|" + (str _side) + "|0" +
+	"|STRATEGY_INTERVAL=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60]) +
+	"|CONCENTRATION=" + str (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 6]) +
+	"|SPEARHEAD_TOWNS_MAX=" + str (missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]) +
+	"|STRIKE_MIN_TOWNS=" + str (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 12]) +
+	"|LANE_OFFSET=" + str (missionNamespace getVariable ["WFBE_C_AICOM_LANE_OFFSET", 120]) +
+	"|TEAMS_TARGET=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_TARGET", 4]) +
+	"|FUNDS_PER_EXTRA_TEAM=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_PER_EXTRA_TEAM", 15000]) +
+	"|STR_LONE_ALIVE=" + str (missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_ALIVE", 2]) +
+	"|STR_LONE_FARHQ=" + str (missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_FARHQ", 1500]) +
+	"|TOPUP_COOLDOWN=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_COOLDOWN", 240]) +
+	"|AIR_MAX_TOTAL=" + str (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3]) +
+	"|PRODUCE_BATCH=" + str (missionNamespace getVariable ["WFBE_C_AICOM_PRODUCE_BATCH", 3]);
+diag_log _aicomConstLog;
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0; _ltDisband = 0;
 _ltBeacon = 0; //--- AICOM FORWARD SPAWN-BEACON throttle (Approach A): gated WFBE_C_AICOM_SPAWNBEACON_ENABLE (default 0 = INERT), paced to WFBE_C_AICOM_SPAWNBEACON_INTERVAL.
