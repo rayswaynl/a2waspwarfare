@@ -140,6 +140,16 @@ player createDiaryRecord [_subAdvanced, ["Patrols, Convoys & Queues",
 	"Medics only - a forward spawn truck from the Light Factory (violet row). It activates when parked with the engine off, a free cargo seat, and at least 500 m from any non-friendly town."
 ]];
 
+if (worldName == "Takistan") then {
+player createDiaryRecord [_subAdvanced, ["Takistan Airfields & Oilfield",
+	"<br/><t size='1.2' color='#F5D363'>Rasman and Loy Manara airfields</t><br/>" +
+	"Rasman and Loy Manara are the Takistan airfield capture towns. Holding one gives the same repair point, permanent 2,000 m CBR, and exclusive hangar role as Chernarus airfields.<br/><br/>" +
+	"Takistan airfield hangars stock An-2 and Mi-17 aircraft, then add the top-tier TK-EASA air variants at Rasman and Loy Manara when that roster is enabled. Rasman also mirrors the NW Airfield premium-unlock role for the RM-70 rocket artillery.<br/><br/>" +
+	"<t size='1.2' color='#F5D363'>Oilfield</t><br/>" +
+	"The OILFIELD marker appears early with a countdown and becomes active after about 1 hour. Hold the 120 m field with WEST or EAST units while the other main side is clear to earn +25 side supply every 60 seconds, up to the round cap.<br/><br/>" +
+	"Enemies, including GUER, can sabotage a held field after 45 seconds of uncontested presence; a sabotaged field stops paying and burns. The owner repairs it by holding the field for 40 seconds, faster with an engineer or repair truck."
+]];
+} else {
 player createDiaryRecord [_subAdvanced, ["Airfields & Premium Unlocks",
 	"<br/><t size='1.2' color='#F5D363'>Airfields</t><br/>" +
 	"NWAF, NEAF and Balota Airfield are capturable towns (max 40 SV; resets to 10 on capture). Holding an airfield gives a repair point, a permanent 2,000 m CBR for that field, and an exclusive hangar stocking aircraft found nowhere else (L-39, An-2, Mi-17 variants on Chernarus).<br/><br/>" +
@@ -148,6 +158,7 @@ player createDiaryRecord [_subAdvanced, ["Airfields & Premium Unlocks",
 	"Holding <t color='#F5D363'>NW Airfield</t> unlocks the RM-70 rocket artillery (Light Factory level 4, $6,800, fully integrated into artillery fire missions).<br/>" +
 	"Each unlocks for the holding side only, at your own factories, while you hold the trigger town."
 ]];
+};
 
 player createDiaryRecord [_subAdvanced, ["Building Bases (Commander)",
 	"<br/>Each side starts with one <t color='#F5D363'>Mobile HQ [MHQ]</t>. Deploy it to found a base, then add Barracks, Light/Heavy/Air factories, a Command Center, an Anti-Air Radar and a Service Point from the Construction Menu.<br/><br/>" +
