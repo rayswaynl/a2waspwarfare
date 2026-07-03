@@ -378,7 +378,11 @@ if (_fhDwell > 0 && {count _targets > 0}) then {
 	//--- Is the stored dwell pick still a VALID enemy/neutral target (not null, not captured by us)?
 	_fhValid = false;
 	if (!isNil "_fhPrim" && {!isNull _fhPrim} && {!isNil "_fhT0"}) then {
-		if ((_fhPrim getVariable ["sideID", -1]) != _sideID) then {_fhValid = true};
+		//--- Lane-323: reject neutralised towns (sideID -1) as dwell targets — a recaptured-neutral
+		//--- town has no enemy affiliation and must not be kept as the active front priority.
+		//--- Review note (PR #530): cache sideID once to avoid double-read in the lazy-and expression.
+		private "_fhSID"; _fhSID = _fhPrim getVariable ["sideID", -1];
+		if (_fhSID != _sideID && {_fhSID != -1}) then {_fhValid = true};
 	};
 	if (_fhValid && {(time - _fhT0) < _fhDwell}) then {
 		//--- Dwell still active + pick still valid: keep it as primary. If it is not already the scored primary,
@@ -730,7 +734,9 @@ if (_strikeOn) then {
 	_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 	if (!_wasStrike) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
-		_logik setVariable ["wfbe_aicom_strike_t0", time]; diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
+		_logik setVariable ["wfbe_aicom_strike_t0", time];
+		_logik setVariable ["wfbe_aicom_stall_streak", 0]; //--- Lane-324: belt-and-suspenders guard (review: the else-branch at line ~1037 already zeros streak on every strike tick via !_strikeOn; this entry-only reset is redundant but harmless).
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
 	};
 	//--- cmdcon41-w2 STAGING-MASS (Fable F4/hqstrike-staging-rally-mass-before-assault; flag WFBE_C_AICOM_STRIKE_STAGE
 	//--- default 1). Rather than trickle strikers onto the enemy HQ one team at a time (piecemeal, chewed up by the home
@@ -1094,5 +1100,10 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 		};
 	};
 	//--- COMMAND CONSOLE ARTY HOOK: consume the player request (fire-once) - clear it whether or not a gun was in range.
-	if (_riArtyFresh) then {_logik setVariable ["wfbe_aicom_arty_request", []]};
+	if (_riArtyFresh) then {
+		_logik setVariable ["wfbe_aicom_arty_request", []];
+		//--- Lane-326: stamp cooldown timer at the request-clear point so that when no gun is
+		//--- in range the next cadence tick cannot fire a free salvo on an unstamped timer.
+		_logik setVariable ["wfbe_aicom_arty_last", time];
+	};
 };
