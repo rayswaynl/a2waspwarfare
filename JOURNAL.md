@@ -529,3 +529,14 @@ Validation:
 - `check_sqf.py --select BRACKET` and `--select A3CMD` reported zero findings on the four touched files.
 - Added-line A3/boolean trap scan found no matches.
 - Chernarus/Takistan touched file pairs match after mirroring.
+
+---
+
+## 2026-07-03 — Fleet lane 356: bootstrap stipend windfall telemetry
+
+Claimed `fleet-lane-356-bootstrap-stipend-windfall-telemetry-2026-07-03` as `Codex-Fleet-9`.
+
+Scope:
+- Keep bootstrap stipend behavior unchanged while aligning the first-grant sentinel and guard in `AI_Commander.sqf`.
+- Add `AICOMSTAT|v2|EVENT|...|BOOTSTRAP_STIPEND_WINDFALL` telemetry when a delayed stipend tick grants more than two minutes of catch-up income.
+- Mirror maintained Vanilla Takistan/Zargabad through `Tools\LoadoutManager` after the Chernarus source edit.

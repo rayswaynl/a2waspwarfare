@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_syncAicomState"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_syncAicomState"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -138,7 +138,7 @@ _prevDelegate = true; //--- cmdcon27 THREAD B: init TRUE to match the new delega
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 //--- V0.7 bootstrap stipend state.
 _prevStipendActive = false;
-_ltStipend = -1e9;
+_ltStipend = -1e8; //--- First-grant sentinel; keep aligned with the guard below.
 _noHumanSince = -1;
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1 (owner generation %2).", str _side, _ownerSeq]] Call WFBE_CO_FNC_AICOMLog;
@@ -414,17 +414,23 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				//--- Scale configured per-minute amounts by actual elapsed time since last grant
 				//--- so a missed tick doesn't silently drop income (capped at 3x to avoid windfalls).
 				_tickS = (time - _ltStipend) min 180;
-				if (_ltStipend < -1e8) then {_tickS = 60}; //--- first grant: treat as one minute.
+				if (_ltStipend <= -1e8) then {_tickS = 60}; //--- first grant: treat as one minute.
 				_stipendFunds  = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS",  100];
 				_stipendSupply = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY",  50];
 				_stipendFundsGrant  = round (_stipendFunds  * (_tickS / 60));
 				_stipendSupplyGrant = round (_stipendSupply * (_tickS / 60));
 				[_side, _stipendFundsGrant] Call ChangeAICommanderFunds;
 				_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+				_stipendSupplyOn = _dual && {(missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE", 0]) > 0};
+				_stipendSupplyApplied = 0;
+				if (_stipendSupplyOn) then {_stipendSupplyApplied = _stipendSupplyGrant};
+				if (_tickS > 120) then {
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND_WINDFALL|tickS=" + str (round _tickS) + "|funds=" + str _stipendFundsGrant + "|supply=" + str _stipendSupplyApplied + "|supplyPotential=" + str _stipendSupplyGrant);
+				};
 				//--- B74.2 (Ray 2026-06-24, directive #3): CASH-only AICOM boost. The bootstrap stipend's synthetic SUPPLY grant is
 				//--- the only supply the AI is ever handed that it did not earn from towns; gate it behind BOOTSTRAP_SUPPLY_ENABLE
 				//--- (default 0 = off) so AICOM keeps its funds trickle but no longer gets free supply. Town supply income is untouched.
-				if (_dual && {(missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE", 0]) > 0}) then {
+				if (_stipendSupplyOn) then {
 					[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
 				};
 				_ltStipend = time;
