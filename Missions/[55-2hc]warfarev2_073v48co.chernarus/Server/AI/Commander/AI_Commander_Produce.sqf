@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -266,6 +266,22 @@ if (_airMaxTotalP > 0) then {
 					_rTries = _rTries + 1;
 				};
 				if (_rTries >= _rBudget || {_rIssues >= _rMaxIssues} || {_curDist > _rMaxDist}) then {
+					//--- cmdcon36 lane342: if an AICOM air leg is currently slinging this team's vehicle,
+					//--- do NOT merge/cull the group out from under the attached hull. AirLeg clears the marker
+					//--- on detach/drop/fail, so the next Produce pass can re-evaluate normally.
+					_slungVeh = objNull;
+					{
+						if (isNull _slungVeh && {alive _x}) then {
+							_unitVeh = vehicle _x;
+							if (!isNull _unitVeh && {_unitVeh != _x} && {alive _unitVeh} && {(_unitVeh getVariable ["wfbe_aicom_slung", false])}) then {
+								_slungVeh = _unitVeh;
+							};
+						};
+					} forEach (units _team);
+					if (!isNull _slungVeh) then {
+						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash cull DEFERRED while %3 is slung (alive=%4, dist=%5, tries=%6, issues=%7).", _sideText, _team, typeOf _slungVeh, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
+						_canProduce = false;
+					} else {
 					//--- B68 STRANDED-MERGE (item stranded-survivor-merge-into-nearest-team-before-cull):
 					//--- before throwing away a live trained body, try to JOIN the survivor into the nearest
 					//--- healthy same-side SERVER-LOCAL team. Net groups DROP by one and the body keeps fighting.
@@ -310,6 +326,7 @@ if (_airMaxTotalP > 0) then {
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
 						deleteGroup _team;
 						_canProduce = false;
+					};
 					};
 				} else {
 					//--- Still within budget: re-issue retreat + record this cycle's distance for the next
