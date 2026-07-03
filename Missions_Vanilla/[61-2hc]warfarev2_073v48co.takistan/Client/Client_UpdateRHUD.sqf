@@ -256,11 +256,10 @@ _RHUDSetFullPosition = {
 };
 
 // Card #219: artillery cooldown row (indices 27 label / 28 value).
-// Client-local only: reads the global fireMissionTime (set in GUI_Menu_Tactical on request,
-// initialised to -1000 in Init_Client) and the upgrade-scaled reload interval that the fire
-// action itself uses to gate cooldown. No server round-trip, no publicVariable.
+// Optional shared artillery cooldown: legacy reads fireMissionTime; WFBE_C_ARTY_SHARED_COOLDOWN
+// also reads the side-logic wfbe_arty_last_fire stamp broadcast by the server.
 _RHUDUpdateArty = {
-	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last"];
+	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last", "_logik", "_sharedLast"];
 	//--- b760: folded into the FPS C/S line as a compact "  Arty ..." suffix (no standalone box).
 	//--- Returns the suffix string ("" when this side fields no artillery); the FPS-row builder appends it.
 	if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) <= 0) exitWith {""};
@@ -272,6 +271,15 @@ _RHUDUpdateArty = {
 
 	_last = fireMissionTime;
 	if (isNil "_last") then {_last = -1000};
+	if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+		_logik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _logik) then {
+			_sharedLast = _logik getVariable ["wfbe_arty_last_fire", _last];
+			if (typeName _sharedLast == "SCALAR") then {
+				if (_sharedLast > _last) then {_last = _sharedLast};
+			};
+		};
+	};
 	_elapsed = time - _last;
 
 	if (_elapsed > _fireTime) exitWith {"  Arty Rdy"};
