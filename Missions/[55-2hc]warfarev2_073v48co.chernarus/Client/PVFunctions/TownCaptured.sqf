@@ -6,7 +6,7 @@
 		- New side ID.
 */
 
-Private ["_captureText","_color","_town","_townMarker","_town_side_value","_town_side_value_new","_sv"];
+Private ["_captureText","_color","_musicCooldown","_musicLast","_musicNow","_musicTrack","_town","_townMarker","_town_side_value","_town_side_value_new","_sv"];
 
 _town = _this select 0;
 _town_side_value = _this select 1;
@@ -29,6 +29,21 @@ _captureText = Format[Localize "STR_WF_CHAT_Town_Captured", _town getVariable "n
 [_captureText] Call TitleTextMessage;
 //--- Chat fallback for players who hide or miss the title text channel.
 _captureText Call CommandChatMessage;
+
+//--- Lane 51: optional town-capture music. Client-local and cooldowned so mass flips do not restart the track every town.
+if ((missionNamespace getVariable ["WFBE_C_MUSIC_ENABLE", 0]) > 0) then {
+	_musicTrack = missionNamespace getVariable ["WFBE_C_MUSIC_TOWN_CAPTURE_TRACK", ""];
+	if ((count (toArray _musicTrack)) > 0) then {
+		_musicNow = time;
+		_musicLast = missionNamespace getVariable ["WFBE_Client_LastCaptureMusic", -9999];
+		_musicCooldown = missionNamespace getVariable ["WFBE_C_MUSIC_TOWN_CAPTURE_COOLDOWN", 180];
+		if (_musicCooldown < 0) then {_musicCooldown = 0};
+		if ((_musicNow - _musicLast) >= _musicCooldown) then {
+			missionNamespace setVariable ["WFBE_Client_LastCaptureMusic", _musicNow];
+			playMusic _musicTrack;
+		};
+	};
+};
 
 //--- Task.
 _task = _town getVariable 'taskLink';
