@@ -52,17 +52,19 @@ _headCost = [];
 _chosen = -1;
 _chosenCost = [];
 
+//--- Lane 201 (review fix): _enabled is constant per call (same _side throughout);
+//--- hoist the read above the forEach to avoid re-fetching on every iteration.
+_enabled = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_ENABLED", _side];
+
 {
 	_upgrade = _x select 0;
 	_level = _x select 1;
 
-	//--- Lane 201: skip upgrades that are disabled in the ENABLED array (mirrors
-	//--- RequestUpgrade.sqf:73-76 and AI_Commander.sqf:645-647). Without this guard
-	//--- the AI queues disabled slots and burns supply/funds on them.
-	_enabled = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_ENABLED", _side];
-	if (typeName _enabled != "ARRAY") exitWith {};
-	if (_upgrade >= count _enabled) exitWith {};
-	if !(_enabled select _upgrade) exitWith {};
+	//--- Lane 201 (review fix): skip disabled entries WITHOUT exitWith so later
+	//--- enabled entries in _path still process.  exitWith inside forEach aborts
+	//--- the entire loop, not just the current iteration.
+	//--- (_enabled is hoisted above the forEach; it is constant per call.)
+	if (typeName _enabled == "ARRAY" && {_upgrade < count _enabled} && {_enabled select _upgrade}) then {
 
 	//--- Only consider unmet upgrades.
 	if (_upgrades select _upgrade < _level && {!(_upgrade == _patrolsId && _ownTowns < 1)}) then {
@@ -92,6 +94,7 @@ _chosenCost = [];
 				_chosenCost = _cost;
 			};
 		};
+	};
 	};
 } forEach _path;
 
