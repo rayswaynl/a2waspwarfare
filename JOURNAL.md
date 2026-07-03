@@ -565,3 +565,19 @@ Scope:
 - Keep bootstrap stipend behavior unchanged while aligning the first-grant sentinel and guard in `AI_Commander.sqf`.
 - Add `AICOMSTAT|v2|EVENT|...|BOOTSTRAP_STIPEND_WINDFALL` telemetry when a delayed stipend tick grants more than two minutes of catch-up income.
 - Mirror maintained Vanilla Takistan/Zargabad through `Tools\LoadoutManager` after the Chernarus source edit.
+
+---
+
+## 2026-07-03 - Fleet lane 248: AICOM spectator RHUD row
+
+Claimed `fleet-lane-248-aicom-intent-spectator-rhud-2026-07-03` as `Codex-Fleet-9-loop` on current Build84 `4910fc3f5`.
+
+Scope:
+- `Client_UpdateRHUD.sqf` now keeps the AI commander name + intent row visible for dead/spectator clients whose live player/group side is null or transient civilian, using the stable `WFBE_Client_SideID`.
+- Added `WFBE_C_AICOM_INTENT_SPECTATOR` default 1; setting it to 0 restores the legacy spectator fallback while leaving normal WEST/EAST RHUD behavior unchanged.
+- Mirrored maintained Takistan/Zargabad through `Tools\LoadoutManager` with `A2WASP_SKIP_ZIP=1`; no package artifact, no deploy, no AICOM behavior change.
+
+Validation:
+- Focused SQF lint over the six touched files reported 0 findings.
+- Full repo SQF trap gate still reports pre-existing unrelated findings outside this lane.
+- Diff checks, delimiter deltas, conflict-marker/NUL/backtick-zero scans, added-line trap scan, HUD SHA256 mirror parity, and constant flag presence checks passed.
