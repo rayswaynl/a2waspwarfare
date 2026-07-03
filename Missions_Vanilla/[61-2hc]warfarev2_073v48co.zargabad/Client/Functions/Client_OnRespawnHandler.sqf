@@ -87,7 +87,7 @@ if !(_spawnInside) then {
 		//--- WFBE_C_GUER_FALLBACK_SAFE=1: place the player at the GUER start pos instead;
 		//--- WFBE_C_GUER_FALLBACK_SAFE=0: restores old all-towns behaviour (rollback).
 		if (count _owned == 0) then {
-			if ((missionNamespace getVariable "WFBE_C_GUER_FALLBACK_SAFE") > 0) then {
+			if ((missionNamespace getVariable ["WFBE_C_GUER_FALLBACK_SAFE", 1]) > 0) then {
 				private "_fbGuerPos";
 				_fbGuerPos = WFBE_Client_Logic getVariable "wfbe_startpos";
 				if (!isNil "_fbGuerPos") then {
