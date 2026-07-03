@@ -6,6 +6,8 @@ Analyzes Arma 2 Warfare RPT logs for town defense spawning problems, especially 
 
 The tool is external to the mission and has no gameplay or FPS impact.
 
+Shared RPT input, delimiter, CSV export and HTML-escape helpers live in `Tools/RptParsing`.
+
 ## Usage
 
 Double-click:

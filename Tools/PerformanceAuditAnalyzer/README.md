@@ -6,6 +6,8 @@ Parses Arma 2 Warfare RPT lines containing `[Performance Audit]` and exports Exc
 
 The analyzer separates appended RPT content by audit session. New logs use `SID=...`; older logs without `SID` are grouped into `LEGACY_001`, `LEGACY_002`, etc. when `NAME=session EXTRA=state:start` is detected.
 
+Shared RPT input, delimiter, CSV export and HTML-escape helpers live in `Tools/RptParsing`.
+
 ## Easy Usage
 
 Double-click:

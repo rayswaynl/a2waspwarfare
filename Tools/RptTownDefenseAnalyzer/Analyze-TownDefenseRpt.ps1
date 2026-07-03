@@ -27,15 +27,8 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
-function Get-CsvDelimiter {
-	param([string]$Name)
-
-	switch ($Name) {
-		"Comma" { return "," }
-		"Tab" { return "`t" }
-		default { return ";" }
-	}
-}
+$sharedRptParsing = Join-Path $PSScriptRoot "..\RptParsing\RptParsing.psm1"
+Import-Module $sharedRptParsing -Force
 
 function Get-InputFiles {
 	param(
@@ -43,25 +36,8 @@ function Get-InputFiles {
 		$ExplicitRole
 	)
 
-	$files = New-Object System.Collections.Generic.List[object]
-
-	foreach ($path in $Paths) {
-		if ([string]::IsNullOrWhiteSpace($path)) { continue }
-
-		$item = Get-Item -LiteralPath $path
-		if ($item.PSIsContainer) {
-			$option = if ($Recurse) { [System.IO.SearchOption]::AllDirectories } else { [System.IO.SearchOption]::TopDirectoryOnly }
-			[System.IO.Directory]::EnumerateFiles($item.FullName, "*.*", $option) |
-				Where-Object { $_ -match '\.(rpt|log|txt)$' } |
-				ForEach-Object {
-					$files.Add([pscustomobject]@{ Path = $_; Role = if ($ExplicitRole) { $ExplicitRole } else { Get-RoleFromPath $_ } })
-				}
-		} else {
-			$files.Add([pscustomobject]@{ Path = $item.FullName; Role = if ($ExplicitRole) { $ExplicitRole } else { Get-RoleFromPath $item.FullName } })
-		}
-	}
-
-	return $files
+	return @(Resolve-WaspRptInputFiles -Path $Paths -Recurse:$Recurse -ExplicitRole $ExplicitRole -RoleResolver ${function:Get-RoleFromPath} |
+		ForEach-Object { [pscustomobject]@{ Path = $_.Path; Role = $_.Role } })
 }
 
 function Get-RoleFromPath {
@@ -96,14 +72,6 @@ function Get-Int {
 	return [int]::Parse($Value, [System.Globalization.CultureInfo]::InvariantCulture)
 }
 
-function Get-ItemCount {
-	param($Items)
-
-	if ($null -eq $Items) { return 0 }
-	$array = @($Items)
-	return $array.Length
-}
-
 function Test-HasProperty {
 	param(
 		$Object,
@@ -112,11 +80,6 @@ function Test-HasProperty {
 
 	if ($null -eq $Object) { return $false }
 	return ($Object.PSObject.Properties.Name -contains $Name)
-}
-
-function ConvertTo-SafeFileName {
-	param([string]$Name)
-	return ($Name -replace '[\\/:*?"<>|]', '_')
 }
 
 function Add-LineMatch {
@@ -253,28 +216,6 @@ function Get-CountBySideText {
 	if ($other -gt 0) { $parts.Add("OTHER=$other") }
 	if ($parts.Count -eq 0) { return "none" }
 	return ($parts -join ", ")
-}
-
-function Export-Rows {
-	param(
-		[object[]]$Rows,
-		[string]$Path,
-		[string]$Delimiter
-	)
-
-	if ((Get-ItemCount $Rows) -eq 0) {
-		"no_rows" | Set-Content -LiteralPath $Path -Encoding UTF8
-		return
-	}
-
-	$Rows | Export-Csv -LiteralPath $Path -Delimiter $Delimiter -NoTypeInformation -Encoding UTF8
-}
-
-function ConvertTo-HtmlText {
-	param($Value)
-
-	if ($null -eq $Value) { return "" }
-	return [System.Net.WebUtility]::HtmlEncode([string]$Value)
 }
 
 function Add-HtmlTable {
