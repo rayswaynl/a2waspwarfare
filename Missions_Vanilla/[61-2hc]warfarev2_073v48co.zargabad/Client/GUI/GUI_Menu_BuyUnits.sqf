@@ -121,6 +121,20 @@ _IDCS = _IDCS - [_currentIDC];
             _currentUnitLabelForFundsMissing = _currentUnit select QUERYUNITLABEL;
 
 			if (_funds < _currentCost) then {_skip = true;hint parseText(Format[localize 'STR_WF_INFO_Funds_Missing',_currentCost - _funds,_currentUnitLabelForFundsMissing])};
+			//--- GUER DEPOT SPAWN FIX (fable/guer-vehicle-spawn 2026-07-03): a Depot buy whose depot logic did not resolve
+			//--- (_closest == objNull) was still CHARGED here and spawned to Client_BuildUnit with _building = objNull, which
+			//--- takes the top-scope `isNull _building` exit (Client_BuildUnit.sqf:314) -> silent refund, NOTHING spawns and
+			//--- NO player feedback + NO always-on RPT line. That is the 'GUER buys a car, nothing appears' report: GUER is
+			//--- base-less and buys EVERYTHING from the town-center depot (line 68 forces _type='Depot'), so a stale/unresolved
+			//--- _closest (walked out of WFBE_C_TOWNS_PURCHASE_RANGE, or standing at a WEST/EAST-held town = deny-cap) hits this
+			//--- every time. Refuse UP FRONT (before charging), tell the player why, and log one always-on WARNING breadcrumb so
+			//--- the next 'still broken' report has evidence. WEST/EAST are unaffected: they buy vehicles at FACTORIES (a real
+			//--- _building), never reaching a null-depot buy - and the guard is Depot-scoped.
+			if (!_skip && {_type == 'Depot'} && {isNull _closest}) then {
+				_skip = true;
+				hint parseText "<t color='#ff9060'>No friendly town center in range. GUER buys vehicles at a town center you hold or that is neutral (not held by BLUFOR/OPFOR) - move to one and try again.</t>";
+				["WARNING", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy of [%1] refused up-front - no depot resolved in range %2 (side=%3). Buy NOT charged (prevents the silent charge-then-refund).", _unit, (missionNamespace getVariable ["WFBE_C_TOWNS_PURCHASE_RANGE", 60]), sideJoinedText]] Call WFBE_CO_FNC_LogContent;
+			};
 			//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD per-side live cap (Takistan). Refuse UP FRONT (before queuing +
 			//--- spending) when the side already fields WFBE_C_TK_SCUD_HF_MAX bought SCUDs. Reads the server-broadcast platform
 			//--- array (client-visible). The server re-enforces the cap on registration (delete + refund) as the authority.
