@@ -12,7 +12,7 @@ _side = _this select 1;
 _aa_get = if (count _this > 2) then {_this select 2} else {false};
 
 _sv = _town getVariable "supplyValue";
-_town_airactive = _town getVariable "wfbe_active_air";
+_town_airactive = _town getVariable ["wfbe_active_air", false];
 
 _units = [];
 _percentage_inf = 50;
@@ -151,7 +151,7 @@ _unit_vehicles = [];
 		if (_aa_get) then {
 			if !((_x select 0) in ["AA_Light","AA_Heavy","Team_AA"]) then {_add = false}
 		} else {
-			if (!(_town_airactive) && (_x select 0) in ["AA_Light","AA_Heavy","Team_AA"]) then {_add = false};
+			if (!_town_airactive && (_x select 0) in ["AA_Light","AA_Heavy","Team_AA"]) then {_add = false};
 		};
 		if (_add) then {
 			_array = if ((_x select 2) == 0) then {_unit_infantry} else {_unit_vehicles};
