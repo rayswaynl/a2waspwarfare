@@ -30,6 +30,7 @@ Use `--select` for focused gates, such as an Arma 3 command-trap pass that shoul
 ## Checks
 
 - `A3CMD`: common Arma 3 command traps from the fleet prompt.
+- `A3BISFNC`: `call BIS_fnc_*` usage that depends on Arma 3 function-library helpers.
 - `A3MARKER`: A3 NATO marker types such as `b_inf`.
 - `A3REVEAL`: array-form `reveal` usage.
 - `A3SELECT`: `select [start,count]` slice syntax.
