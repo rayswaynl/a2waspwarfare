@@ -59,6 +59,7 @@ _westCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90
 _westCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90205;
 _westLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90206;
 _westLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90207;
+_playerSummary = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90010;
 
 _eastRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90101;
 _eastRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90102;
@@ -91,6 +92,13 @@ if (_guerPanel) then {
 		[_westRecruitedCounter,0.70,0.13],[_westRecruitedBar,0.70,_width],[_westCasualtyCounter,0.70,0.13],[_westCasualtyBar,0.70,_width],[_westCreatedCounter,0.70,0.13],[_westCreatedBar,0.70,_width],[_westLostCounter,0.70,0.13],[_westLostBar,0.70,_width]
 	];
 };
+
+_playerScore = score player;
+_playerFunds = 0;
+_playerIncome = 0;
+if (!isNil "GetPlayerFunds" && {!isNil "clientTeam"}) then {_playerFunds = Call GetPlayerFunds};
+if (!isNil "GetIncome") then {_playerIncome = Call GetIncome};
+_playerSummary CtrlSetText Format ["Your round  |  Score %1  |  Funds $%2  |  Income $%3/min", _playerScore, round _playerFunds, round _playerIncome];
 
 _position = CtrlPosition _westRecruitedBar;
 _recruited = _width * (_westUnitsCreated / 500);
