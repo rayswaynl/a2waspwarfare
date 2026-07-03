@@ -1,4 +1,4 @@
-Private ["_additionalErase","_direction","_expand","_markerColor","_markerMax","_markerMin","_markerName","_markerPosition","_markerSize","_markerType"];
+Private ["_additionalErase","_direction","_expand","_markerAnimSleep","_markerColor","_markerMax","_markerMin","_markerName","_markerPosition","_markerSize","_markerType"];
 _markerName = _this select 0;
 _markerPosition = _this select 1;
 _markerType = _this select 2;
@@ -19,6 +19,7 @@ _difference = (_markerMax - _markerMin)/10;
 _direction = 0;
 _expand = true;
 activeAnimMarker = true;
+_markerAnimSleep = (missionNamespace getVariable ["WFBE_C_MARKERANIM_SLEEP", 0.1]) max 0.03;
 
 if (_additionalErase != "") then {
 	Private ["_pr"];
@@ -30,7 +31,7 @@ if (_additionalErase != "") then {
 };
 
 while {activeAnimMarker} do {
-	sleep 0.03;
+	sleep _markerAnimSleep;
 
 	_direction = (_direction + 1) % 360;
 	_markerName setMarkerDirLocal _direction;
