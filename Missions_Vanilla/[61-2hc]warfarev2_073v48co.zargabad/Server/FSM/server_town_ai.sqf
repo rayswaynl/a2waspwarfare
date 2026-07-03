@@ -410,7 +410,12 @@ while {!WFBE_GameOver} do {
 					["INFORMATION", Format ["server_town_ai.sqf: Town [%1] DEACTIVATED for [%2] (inactivity, teams=%3).", _town getVariable "name", _side, count _town_teams]] Call WFBE_CO_FNC_AICOMLog;
 
 					// Marty: Ask delegated clients/HCs to delete their local town AI groups where deleteGroup can actually work.
-					if (isMultiplayer) then {[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients};
+					if (isMultiplayer) then {
+						[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients;
+						if !(isNil {_town getVariable "wfbe_airfield_garrison_units"}) then {
+							[nil, "HandleSpecial", ["cleanup-airfield-garrison", _town]] Call WFBE_CO_FNC_SendToClients;
+						};
+					};
 
 					//--- Teams Units.
 					//--- Marty: delete only SERVER-LOCAL units here; HC-delegated units are deleted by the
