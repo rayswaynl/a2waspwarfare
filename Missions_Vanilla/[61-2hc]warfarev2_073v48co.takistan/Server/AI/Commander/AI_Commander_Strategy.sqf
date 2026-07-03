@@ -437,14 +437,18 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 			//--- has elapsed, so a diverted team returns to OFFENSE instead of idling on a town that
 			//--- is no longer actively contested. SetTeamMoveMode "towns" immediately re-tasks it
 			//--- (AssignTowns gives it a fresh attack order next cycle) - never a standing-still AI.
-			private ["_relUntil","_relExpired"];
+			private ["_relUntil","_relExpired","_relLost"];
 			_relUntil = _team getVariable "wfbe_aicom_relief_until";
 			if (isNil "_relUntil") then {_relUntil = 0};
 			_relExpired = (_relUntil > 0) && {time > _relUntil};
-			if (_quiet || {(_relTown getVariable "sideID") != _sideID} || _relExpired) then {
+			_relLost = (_relTown getVariable "sideID") != _sideID;
+			if (_quiet || {_relLost} || _relExpired) then {
 				//--- Town safe / lost / hold expired: release back to offense.
 				_team setVariable ["wfbe_aicom_relief", objNull];
 				_team setVariable ["wfbe_aicom_relief_until", 0];
+				if (_relLost) then {
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF_TOWN_LOST|team=" + (str _team) + "|town=" + (_relTown getVariable ["name","town"]));
+				};
 				[_team, "towns"] Call SetTeamMoveMode;
 				_team setVariable ["wfbe_aicom_townorder", []];
 				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
