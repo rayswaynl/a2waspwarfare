@@ -11,8 +11,8 @@ The original fleet prompt lanes `1-187` are saturated: each lane number is repre
 | Prompt lane coverage | `187 / 187` represented |
 | Missing lane numbers | none |
 | Open PRs at scan time | `197` |
-| Open PRs targeting `claude/build84-cmdcon36` | `194` |
-| Dirty open PRs | `#320` on `claude/build84-cmdcon36`; `#129` on `master` |
+| Open PRs targeting `claude/build84-cmdcon36` | `195` |
+| Dirty open PRs | `#368` and `#320` on `claude/build84-cmdcon36`; `#129` on `master` |
 
 ## Refresh - 2026-07-03T05:07:17+02:00
 
@@ -22,14 +22,29 @@ The only drift was PR-board volume: the open board moved from `196` to `197` tot
 
 No new non-overlapping source lane became available. This refresh updates the existing draft PR #470 instead of opening a duplicate availability report.
 
+## Refresh - 2026-07-03T06:08:30+02:00
+
+A later heartbeat re-ran the board after Fleet-9 retargeted PR #368 to `claude/build84-cmdcon36`. The lane coverage result stayed unchanged: `187 / 187` original prompt lanes are represented, with no missing lane numbers.
+
+The live-base open PR count moved from `194` to `195` because PR #368 now targets `claude/build84-cmdcon36`. Dirty open PRs are now #368 and #320 on Build84, plus #129 on `master`.
+
+No source repair was opened for #368 in this pass. Fleet-9 already recorded that its conflict scope is `AI_Commander_Wildcard_GUER.sqf` in Chernarus and maintained Takistan, which is on the current night-wave avoid list and needs owner/manual combat-AI repair if the card should continue. This refresh keeps the existing PR #470 current instead of opening a duplicate availability report.
+
 ## Why No Hot-File Repair Was Opened
 
-PR #320, `Lane 44: add MV-22 QRF lift flavour`, is the only dirty open PR on the live fleet base. It is not a safe automatic repair target during this heartbeat:
+PR #320, `Lane 44: add MV-22 QRF lift flavour`, remains an unsafe automatic repair target during this heartbeat:
 
 - It changes `AI_Commander_Wildcard.sqf` in Chernarus and Takistan.
 - `AI_Commander_Wildcard.sqf` is on the current night-wave avoid list in `CODEX-FLEET-PROMPT.md`.
 - Existing shepherd comment `https://github.com/rayswaynl/a2waspwarfare/pull/320#issuecomment-4871571577` already records that #320 is an owner-choice alternate to clean PR #318, not an exact duplicate.
 - Repairing #320 now would both touch a hot AICOM file and risk stacking two Osprey features.
+
+PR #368, `fable/guer-road-ambush`, is also not a safe automatic repair target during this heartbeat:
+
+- It now targets `claude/build84-cmdcon36` after the dependency PR #308 merged.
+- GitHub reports it dirty/conflicting after the retarget.
+- Fleet-9 recorded the conflict scope as `AI_Commander_Wildcard_GUER.sqf` in Chernarus and maintained Takistan.
+- `AI_Commander_Wildcard_GUER.sqf` is on the current night-wave avoid list, so repair should be owner/manual rather than an automated fleet loop patch.
 
 ## Safe Working-Lane Guidance
 
