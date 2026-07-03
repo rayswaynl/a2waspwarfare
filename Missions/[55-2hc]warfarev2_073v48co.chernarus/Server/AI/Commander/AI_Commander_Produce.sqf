@@ -85,6 +85,9 @@ if (_airMaxTotalP > 0) then {
 	};
 };
 
+//--- Keep stranded-merge and refill sizing on the same per-pass max-team value.
+_sizeMax = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+
 {
 	_team = _x;
 	//--- V0.6.5: skip NULL entries (wiped HC teams; getVariable on a null group returns
@@ -280,7 +283,6 @@ if (_airMaxTotalP > 0) then {
 					//--- LEADER object (never on the group). Fall through to the existing cull if no eligible target.
 					_mergeOn    = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE", 1];
 					_mergeRange = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE_RANGE", 1200];
-					_sizeMax    = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12]; //--- _sizeMax is declared later inside if(_canProduce); read a local copy here for the 8-12 ceiling guard.
 					_mergeTeam  = grpNull;
 					_mergeBest  = _mergeRange;  //--- only accept candidates strictly inside the range cap
 					if (_mergeOn > 0) then {
@@ -378,10 +380,9 @@ if (_airMaxTotalP > 0) then {
 		//--- floor, the selector below pads with an extra dismount (FILL-TO-FLOOR) so small patrols actually
 		//--- reach 8-12. Still bounded by sizeMax/AI_MAX, the batch/funds caps, and the per-side AI ceiling.
 		//--- A2-OA detection: classname-literal isKindOf + getNumber transportSoldier (no A3 primitives).
-		private ["_tmplSize","_isMBT","_isAttackHeli","_floorN","_sizeMin","_sizeMax"];
+		private ["_tmplSize","_isMBT","_isAttackHeli","_floorN","_sizeMin"];
 		_tmplSize = count _template;
 		_sizeMin  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
-		_sizeMax  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
 		_isMBT = false;
 		{ if (_x isKindOf "Tank") exitWith {_isMBT = true} } forEach _template;
 		_isAttackHeli = false;
