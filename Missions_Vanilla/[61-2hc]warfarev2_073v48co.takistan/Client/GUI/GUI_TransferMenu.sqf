@@ -6,7 +6,7 @@ uiNamespace setVariable ["wfbe_display_transfer", _this select 0];
 
 // Marty : Modifying the script in order to display only human player and not bots in the advanced fund transfer list :
 
-private ["_list_Players","_aicom_row"];
+private ["_list_Players","_aicom_row","_teamTotal","_teamTotalLast","_cmdPercent","_cmdPercentLast","_funds_refresh"];
 _list_Players = [];
 _aicom_row = -1; //--- Sentinel index of the AI Commander row; -1 = not present.
 
@@ -39,6 +39,10 @@ if (_showAICom) then {
 };
 
 _funds_last = -1;
+_teamTotal = -1;
+_teamTotalLast = -1;
+_cmdPercent = -1;
+_cmdPercentLast = -1;
 _last_update = time;
 _update_slider = true;
 
@@ -48,6 +52,7 @@ while {alive player && dialog} do {
 	if (WFBE_MenuAction == 2) then {WFBE_MenuAction = -1; _update_slider = true};
 
 	_funds = Call WFBE_CL_FNC_GetClientFunds;
+	_funds_refresh = false;
 
 	if (time - _last_update > 1) then {
 		_last_update = time;
@@ -66,6 +71,10 @@ while {alive player && dialog} do {
 				lnbSetText [505001, [_i, 2], _name_leader] ;
 			};
 		};
+		_teamTotal = 0;
+		{_teamTotal = _teamTotal + (_x Call WFBE_CO_FNC_GetTeamFunds);} forEach WFBE_Client_Teams;
+		_cmdPercent = WFBE_Client_Logic getVariable ["wfbe_commander_percent", 0];
+		if ((_teamTotal != _teamTotalLast) || {_cmdPercent != _cmdPercentLast}) then {_funds_refresh = true};
 		//reload if everyone funds is different, reload on timer or fund transfer.
 	};
 
@@ -118,10 +127,14 @@ while {alive player && dialog} do {
 
 	if (_funds != _funds_last) then {
 		sliderSetRange[505002, 0, _funds];
-		private ["_teamTotal","_cmdPercent","_fundsText"];
 		_teamTotal = 0;
 		{_teamTotal = _teamTotal + (_x Call WFBE_CO_FNC_GetTeamFunds);} forEach WFBE_Client_Teams;
 		_cmdPercent = WFBE_Client_Logic getVariable ["wfbe_commander_percent", 0];
+		_funds_refresh = true;
+	};
+
+	if (_funds_refresh) then {
+		private ["_fundsText"];
 		_fundsText = Format [localize "STR_WF_INFO_Funds", _funds];
 		_fundsText = _fundsText + Format ["<br />Team: $%1  |  Cmd share: %2%3", _teamTotal, _cmdPercent, "%"];
 		//--- Trello #204: surface the price of a new HQ so the commander can weigh a transfer
@@ -129,6 +142,8 @@ while {alive player && dialog} do {
 		//--- configs charge for the HQ (Common\Config\Core_Structures\*: WFBE_C_STRUCTURES_HQ_COST_DEPLOY).
 		_fundsText = _fundsText + Format ["<br />" + (localize "STR_WF_INFO_NewHQCost"), missionNamespace getVariable "WFBE_C_STRUCTURES_HQ_COST_DEPLOY"];
 		((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505004) ctrlSetStructuredText (parseText _fundsText);
+		_teamTotalLast = _teamTotal;
+		_cmdPercentLast = _cmdPercent;
 	};
 
 	_funds_last = _funds;
