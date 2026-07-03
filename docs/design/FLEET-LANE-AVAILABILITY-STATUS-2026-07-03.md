@@ -10,9 +10,17 @@ The original fleet prompt lanes `1-187` are saturated: each lane number is repre
 | --- | --- |
 | Prompt lane coverage | `187 / 187` represented |
 | Missing lane numbers | none |
-| Open PRs at scan time | `196` |
-| Open PRs targeting `claude/build84-cmdcon36` | `193` |
+| Open PRs at scan time | `197` |
+| Open PRs targeting `claude/build84-cmdcon36` | `194` |
 | Dirty open PRs | `#320` on `claude/build84-cmdcon36`; `#129` on `master` |
+
+## Refresh - 2026-07-03T05:07:17+02:00
+
+A later heartbeat re-ran the same combined wiki plus GitHub scan. The lane coverage result stayed unchanged: `187 / 187` original prompt lanes are represented, with no missing lane numbers.
+
+The only drift was PR-board volume: the open board moved from `196` to `197` total PRs and from `193` to `194` PRs targeting `claude/build84-cmdcon36`. Dirty open PRs were unchanged: #320 remains the only dirty live-base PR, while #129 remains dirty on `master`.
+
+No new non-overlapping source lane became available. This refresh updates the existing draft PR #470 instead of opening a duplicate availability report.
 
 ## Why No Hot-File Repair Was Opened
 
