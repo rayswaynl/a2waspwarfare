@@ -40,6 +40,8 @@ _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
+if (isNil "towns") exitWith {["WARNING", "AI_Commander_Snapshot: towns global is nil or empty; snapshot skipped."] Call WFBE_CO_FNC_AICOMLog};
+if ((count towns) < 1) exitWith {["WARNING", "AI_Commander_Snapshot: towns global is nil or empty; snapshot skipped."] Call WFBE_CO_FNC_AICOMLog};
 
 _enemySide = if (_side == west) then {east} else {west};
 if (!(_enemySide in WFBE_PRESENTSIDES)) exitWith {};
@@ -124,9 +126,13 @@ _teamDigests = [];
 			_ldr = leader _team;
 			_ldrPos = if (!isNull _ldr) then {getPos _ldr} else {[0,0,0]};
 			_isGar = (_team == _garGrp);
-			_mode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
-			_strikeFlag = _team getVariable ["wfbe_aicom_strike", false];
-			_reliefTown = _team getVariable ["wfbe_aicom_relief", objNull];
+			_mode = _team getVariable "wfbe_teammode";
+			if (isNil "_mode") then {_mode = "towns"};
+			_mode = toLower _mode;
+			_strikeFlag = _team getVariable "wfbe_aicom_strike";
+			if (isNil "_strikeFlag") then {_strikeFlag = false};
+			_reliefTown = _team getVariable "wfbe_aicom_relief";
+			if (isNil "_reliefTown") then {_reliefTown = objNull};
 			//--- transport state: owns a drivable ground hull (reach-IF-remounted), anyone mounted now,
 			//--- and has a heavy punch vehicle. Classname-literal isKindOf only (A2-OA-safe).
 			_hasGndVeh = false; _mountedNow = false; _hasHeavy = false;
