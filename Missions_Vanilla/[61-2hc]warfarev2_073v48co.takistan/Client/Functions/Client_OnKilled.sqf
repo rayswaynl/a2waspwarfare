@@ -40,7 +40,7 @@ if !(isNull _killer) then {
 };
 
 //--- EH are flushed on unit death, still, just make sure.
-player removeEventHandler ["killed", WFBE_PLAYERKEH];
+if (!isNil "WFBE_PLAYERKEH") then {player removeEventHandler ["killed", WFBE_PLAYERKEH]};
 
 WFBE_Client_IsRespawning = true;
 
