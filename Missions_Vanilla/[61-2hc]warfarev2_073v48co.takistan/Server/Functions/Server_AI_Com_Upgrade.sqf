@@ -18,7 +18,7 @@
 	one-start-per-call behaviour are unchanged.
 */
 
-Private["_can_upgrade","_cost","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost"];
+Private["_can_upgrade","_cost","_enabled","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -55,6 +55,14 @@ _chosenCost = [];
 {
 	_upgrade = _x select 0;
 	_level = _x select 1;
+
+	//--- Lane 201: skip upgrades that are disabled in the ENABLED array (mirrors
+	//--- RequestUpgrade.sqf:73-76 and AI_Commander.sqf:645-647). Without this guard
+	//--- the AI queues disabled slots and burns supply/funds on them.
+	_enabled = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_ENABLED", _side];
+	if (typeName _enabled != "ARRAY") exitWith {};
+	if (_upgrade >= count _enabled) exitWith {};
+	if !(_enabled select _upgrade) exitWith {};
 
 	//--- Only consider unmet upgrades.
 	if (_upgrades select _upgrade < _level && {!(_upgrade == _patrolsId && _ownTowns < 1)}) then {
