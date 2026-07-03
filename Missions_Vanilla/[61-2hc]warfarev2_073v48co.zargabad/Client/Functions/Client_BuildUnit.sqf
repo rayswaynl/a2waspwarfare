@@ -147,9 +147,18 @@ if (_factoryType in ["Aircraft"]) then {
 
 };};};
 
-_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
-	
-	
+//--- cmdcon44-f (Ray 2026-07-03, Zargabad live): CASE FIX. Init_Common.sqf:369 stores these keys UPPERCASE
+//--- (forEach ["BARRACKS","LIGHT","HEAVY","AIRCRAFT","AIRPORT","DEPOT"]) but _factoryType here is Title-case
+//--- ("Barracks"/"Light"/"Heavy"/"Aircraft"), so Format["WFBE_LONGEST%1BUILDTIME",_factoryType] built a
+//--- non-existent Title-cased key (e.g. ...LONGEST + Light + BUILDTIME) -> _longest was nil on EVERY player buy. A2-OA
+//--- silently evaluates `_ret > nil` and `_queuePos * nil` as nil (no RPT error), so the stuck-head purge
+//--- (the _ret>_longest branch below) never fired and the queue-ETA hint rendered garbage - a batch of buys
+//--- could pile in the queue, climb unitQueu and never spawn with ZERO logged error. toUpper re-arms the
+//--- lookup exactly like the AI path already does (Server_BuyUnit.sqf:101). Floor guarantees a real number.
+_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];
+if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety floor: the purge deadline must always be a real number (mirrors Server_BuyUnit.sqf:102).
+
+
 } else {
 	if (_type == WFBE_Logic_Depot) then {
 		_distance = missionNamespace getVariable "WFBE_C_DEPOT_BUY_DISTANCE";
@@ -162,7 +171,10 @@ _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_facto
 		_factoryType = "Airport";
 	};
 	_position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
-	_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
+	//--- cmdcon44-f: same case fix as the factory branch above - "Depot"/"Airport" must be UPPERCASEd to match
+	//--- the WFBE_LONGEST*BUILDTIME keys stored in Init_Common.sqf:369 (DEPOT/AIRPORT), else _longest = nil.
+	_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];
+	if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety floor (mirrors Server_BuyUnit.sqf:102).
 };
 
 if ((missionNamespace getVariable ["WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING", 0]) > 0) then {
@@ -298,6 +310,22 @@ if (!alive _building || isNull _building) exitWith {
 
 if (_isMan) then {
 	_soldier = [_unit,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
+
+	//--- cmdcon44-f (Ray 2026-07-03, Zargabad live): INFANTRY BUYFAIL-REFUND GUARD, the missing sibling of the
+	//--- vehicle BUYFAIL guard (cmdcon42c, further below). WFBE_CO_FNC_CreateUnit returns objNull whenever the
+	//--- engine refuses the unit (group/unit limit, null group, bad class) - Common_CreateUnit.sqf logs a WARNING
+	//--- but still hands back objNull. The player was ALREADY charged at buy time (GUI_Menu_BuyUnits.sqf:
+	//--- -(_currentCost) Call ChangePlayerFunds), so a silent null soldier = pay-and-get-nothing AND a leaked
+	//--- squad slot: unitQueu never comes back down, so the player hits "max group" with fewer real units than
+	//--- the counter claims (exactly Ray's "added to my unit count but nothing spawned"). Release the per-factory
+	//--- queue slot + unitQueu and refund the exact price - byte-for-byte the vehicle guard's contract. Same
+	//--- inline-decrement + exitWith idiom as the destroyed-factory / empty-vehicle / vehicle-BUYFAIL exits.
+	if (isNull _soldier) exitWith {
+		unitQueu = unitQueu - _cpt;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
+		["WARNING", Format ["Client_BuildUnit.sqf: BUYFAIL infantry buy of [%1] produced objNull (spawn failed) - refunded $%2 and released queue slot for factory [%3].", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
+	};
 
 	//--- OA or CO, Since BIS will soon fix it... not!, we fix unit backpack attachment on creation.
 	if (WF_A2_Arrowhead || WF_A2_CombinedOps) then {
