@@ -26,11 +26,12 @@ _town_supply_time = if ((missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_SYS
 _town_defender_enabled = if ((missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0) then {true} else {false};
 _town_occupation_enabled = if ((missionNamespace getVariable "WFBE_C_TOWNS_OCCUPATION") > 0) then {true} else {false};
 _isTimeToUpdateSuppluys = false;
+_townInitSleepST = missionNamespace getVariable ["WFBE_C_TOWNS_ST_STARTUP_SLEEP", 0.01];
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
 	_loc = towns select _j;
 	["INITIALIZATION",Format ["server_town.sqf : Initialized for [%1].", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
-	sleep 0.01;
+	sleep _townInitSleepST;
 };
 
 while {!WFBE_GameOver} do {
