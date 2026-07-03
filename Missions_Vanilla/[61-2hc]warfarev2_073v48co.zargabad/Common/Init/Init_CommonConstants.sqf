@@ -1901,5 +1901,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+//--- T-34 RELIC (lane 183): one contested uncrewed T34_TK_GUE_EP1 spawns at a neutral
+//--- town at match start; first side to man it claims it + registers the kill bounty.
+//--- Default 0 = inert (dark); set 1 to enable.
+    if (isNil "WFBE_C_T34_RELIC") then {WFBE_C_T34_RELIC = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

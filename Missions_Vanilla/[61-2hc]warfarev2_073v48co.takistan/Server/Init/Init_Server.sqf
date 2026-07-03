@@ -1150,6 +1150,12 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_BIS_ALICE") > 0) then {
 // Execute the server fps script on a seperate thread
 [] ExecVM "Server\GUI\serverFpsGUI.sqf";
 
+
+//--- T-34 RELIC (lane 183): contested vehicle; spawns once, server-side only (flag WFBE_C_T34_RELIC default 0).
+if ((missionNamespace getVariable ["WFBE_C_T34_RELIC", 0]) == 1) then {
+    [] spawn Compile preprocessFileLineNumbers "Server\Server_T34Relic.sqf";
+    ["INITIALIZATION", "Init_Server.sqf: Server_T34Relic spawned (WFBE_C_T34_RELIC=1)."] Call WFBE_CO_FNC_LogContent;
+};
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
 //--- Waiting until that the game is launched.
