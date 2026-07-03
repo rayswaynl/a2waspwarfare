@@ -64,11 +64,15 @@ class CheckSqfTests(unittest.TestCase):
         self.assertNotIn("NSSETVAR3", codes)
 
     def test_namespace_two_arg_with_nested_array_value_is_not_reported(self) -> None:
-        codes = lint_codes(
-            'missionNamespace setVariable ["wfbe_pair", [_town, false]];\n'
-            'missionNamespace setVariable ["wfbe_label", Format ["%1,%2", _a, _b]];\n'
-            'missionNamespace setVariable ["wfbe_sum", (_a + _b)];\n'
-        )
+        codes = lint_codes('missionNamespace setVariable ["k", [_a, _b]];\n')
+        self.assertNotIn("NSSETVAR3", codes)
+
+    def test_namespace_two_arg_with_format_value_is_not_reported(self) -> None:
+        codes = lint_codes('missionNamespace setVariable ["k", Format ["%1", _v]];\n')
+        self.assertNotIn("NSSETVAR3", codes)
+
+    def test_namespace_two_arg_with_parenthesized_expression_value_is_not_reported(self) -> None:
+        codes = lint_codes('missionNamespace setVariable ["k", (_a + _b)];\n')
         self.assertNotIn("NSSETVAR3", codes)
 
 
