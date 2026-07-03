@@ -8,7 +8,7 @@ _focus = if (count _this > 3) then {_this select 3} else {objNull};
 // Marty: Town unit creation can fail under engine limits; do not keep a patrol script alive for a null group.
 if (isNull _team) exitWith {};
 
-_lastSV = _location getVariable 'supplyValue';
+_lastSV = _location getVariable ['supplyValue', 0];
 _startSV = _location getVariable 'startingSupplyValue';
 _mode = "patrol";
 _lastMode = "nil";
@@ -24,7 +24,7 @@ while {!WFBE_GameOver && _aliveTeam} do {
 	_perfModeChange = 0;
 	_aliveTeam = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
-	_currentSV = _location getVariable 'supplyValue';
+	_currentSV = _location getVariable ['supplyValue', 0];
 	_sideChanged = !(_sideID in [_location getVariable 'sideID']);
 	_supplyDrop = (_currentSV < _lastSV || _currentSV < _startSV);
 	_townContested = _location getVariable ["wfbe_contested", false];

@@ -20,6 +20,6 @@ if (count _camps == 0) exitWith {1};
 
 _total = 0;
 
-{if ((_x getVariable "sideID") == _sideID) then {_total = _total + 1}} forEach _camps;
+{if (!isNull _x && {(_x getVariable ["sideID",-1]) == _sideID}) then {_total = _total + 1}} forEach _camps;
 
 _total
