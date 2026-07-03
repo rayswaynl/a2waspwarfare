@@ -154,6 +154,11 @@ WFBE_C_GUER_PLAYERSIDE = getNumber (missionConfigFile >> "Params" >> "WFBE_C_GUE
 //--- Single-block change: revert this block (or the commit) to restore lobby-param control.
 WFBE_C_ENVIRONMENT_MAX_VIEW = getNumber (missionConfigFile >> "Params" >> "WFBE_C_ENVIRONMENT_MAX_VIEW" >> "default");
 diag_log Format ["[WFBE (INIT)] INFORMATION: ViewDistance force ACTIVE: WFBE_C_ENVIRONMENT_MAX_VIEW=%1 (mission param default; cached/lobby paramsArray value ignored)", WFBE_C_ENVIRONMENT_MAX_VIEW];
+//--- ZG RE-CLAMP (Ray 2026-07-03 HARD ORDER: Zargabad max view distance = 3km for client fps). The force
+//--- above restores the 6000 param default on EVERY map and runs AFTER Init_CommonConstants, which is where
+//--- the deliberate ZG cap lives - so without this line the force silently undoes the cap. Re-apply it here
+//--- so BOTH fixes hold: stale-param-cache immunity (Miksuu, CH/TK) + the 3km ZG ceiling (Ray).
+if (worldName == "Zargabad") then {WFBE_C_ENVIRONMENT_MAX_VIEW = WFBE_C_ENVIRONMENT_MAX_VIEW min 3000};
 
 //--- AICOM: +50% starting economy. MUST live here: in MP Init_Parameters always sets these from paramsArray,
 //--- so the isNil fallbacks in Init_CommonConstants never fire on a dedicated server (why earlier raises had no effect).
