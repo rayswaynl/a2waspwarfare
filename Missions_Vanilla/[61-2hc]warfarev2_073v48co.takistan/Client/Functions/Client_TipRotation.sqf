@@ -180,6 +180,7 @@ while {true} do {
 		private ["_fval"];
 		_fval = missionNamespace getVariable [_flag, 0];
 		if (typeName _fval == "SCALAR" && {_fval < 1}) then {_ok = false};
+		if (typeName _fval == "BOOL" && {!_fval}) then {_ok = false};
 	};
 
 	//--- Only a gated-out tip is skipped silently; an eligible tip is posted and counts as "last".

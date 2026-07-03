@@ -4,10 +4,6 @@ if (isNil "WFBE_Parameters_Ready") then {
 	WFBE_Parameters_Ready = false;
 };
 
-if (isNil "WFBE_Parameters_Ready") then {
-	WFBE_Parameters_Ready = false;
-};
-
 waitUntil {WFBE_Parameters_Ready};
 
 TownTemplate = [];
