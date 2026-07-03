@@ -880,6 +880,12 @@ with missionNamespace do {
 	if (isNil "WFBE_C_TOWNS_SORTIE_MINS")             then {WFBE_C_TOWNS_SORTIE_MINS = 8};             //--- minutes per sortie rotation.
 	if (isNil "WFBE_C_PATROLS_ROADBIAS")              then {WFBE_C_PATROLS_ROADBIAS = 1};              //--- upgrade-tier patrols route along ROADS between owned towns/HQ (players drive roads -> encounters); legacy random fallback.
 	if (isNil "WFBE_C_PATROLS_ROADBIAS_MOTORIZED")    then {WFBE_C_PATROLS_ROADBIAS_MOTORIZED = 1};    //--- road patrols prefer vehicle-containing pool entries (full-pool fallback for foot-only pools e.g. TKGUE).
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH")              then {WFBE_C_AMBIENT_SKIRMISH = 0};              //--- Lane 180: default-off background 2v2/3v3 WEST/EAST skirmish cells, far from players/towns, one at a time.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_INTERVAL")     then {WFBE_C_AMBIENT_SKIRMISH_INTERVAL = 300};   //--- seconds between ambient skirmish spawn attempts after each cell despawns.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_TTL")          then {WFBE_C_AMBIENT_SKIRMISH_TTL = 120};        //--- seconds before the active skirmish cell is force-cleaned.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_PLAYER_MIN")   then {WFBE_C_AMBIENT_SKIRMISH_PLAYER_MIN = 1500};//--- minimum distance from any live player at spawn; active cells also clean up if a player approaches.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_TOWN_MIN")     then {WFBE_C_AMBIENT_SKIRMISH_TOWN_MIN = 1500};  //--- minimum distance from any town logic.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_RADIUS")       then {WFBE_C_AMBIENT_SKIRMISH_RADIUS = 90};      //--- local SAD/MOVE waypoint radius for each small firefight.
 	if (isNil "WFBE_C_AICOM_SMOKE")                   then {WFBE_C_AICOM_SMOKE = 1};                   //--- smoke discipline: shells on the assault approach axis + covering smoke on break-off.
 	if (isNil "WFBE_C_AICOM_SMOKE_COOLDOWN")          then {WFBE_C_AICOM_SMOKE_COOLDOWN = 120};        //--- s between smoke uses per team.
 	if (isNil "WFBE_C_NAVAL_TWIN_HULLS")              then {WFBE_C_NAVAL_TWIN_HULLS = 1};              //--- Khe Sanh: outer carriers become deck-bridged TWIN-HULL super-carriers (middle keeps the SCUD, single hull).
