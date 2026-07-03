@@ -1,5 +1,17 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-02 — Lane 180 ambient skirmish cells [codex/180-ambient-skirmish-cells]
+
+Added a default-off server worker, `Server_AmbientSkirmish.sqf`, mirrored to Chernarus,
+Takistan, and Zargabad. Gate: `WFBE_C_AMBIENT_SKIRMISH = 0` by default. When enabled, it waits
+for towns, requires at least one human player, finds a water-free position outside configured
+player/town radii, spawns one small WEST/EAST foot clash through `WFBE_CO_FNC_CreateGroup` and
+`WFBE_CO_FNC_CreateUnit`, and self-cleans the groups after `WFBE_C_AMBIENT_SKIRMISH_LIFETIME`.
+
+Scope deliberately stays out of AICOM, town, supply, score, and victory systems. Verification:
+LoadoutManager mirror with `A2WASP_SKIP_ZIP=1`, identical worker hashes across all three maintained
+roots, focused SQF lint zero findings, cached diff checks clean, and no `_MISSIONS.7z` artifact.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:

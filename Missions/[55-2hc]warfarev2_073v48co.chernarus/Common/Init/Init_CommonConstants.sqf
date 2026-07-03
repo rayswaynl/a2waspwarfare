@@ -1380,6 +1380,18 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL") then {WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL = 0}; //--- Default-off: show the already-recorded GUER endgame stats as a third stats-panel column.
 	if (isNil "WFBE_C_FIX_VOTE_LIST_PRUNE") then {WFBE_C_FIX_VOTE_LIST_PRUNE = 0}; //--- Default-off: safer vote-dialog live-team row prune (reverse pass + stale index guard). 0 = legacy forward delete behaviour.
 	if (isNil "WFBE_C_FIX_VOTE_QA_EXECUTION") then {WFBE_C_FIX_VOTE_QA_EXECUTION = 0}; //--- Default-off: vote QA follow-up fixes for stored-index row color and commander primitive placeholder confirms.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH") then {WFBE_C_AMBIENT_SKIRMISH = 0}; //--- Lane 180: default-off ambient WEST/EAST skirmish cells; server-only, one active cell cap, no AICOM/town/supply budget integration.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_INTERVAL") then {WFBE_C_AMBIENT_SKIRMISH_INTERVAL = 600}; //--- Seconds between spawn attempts while enabled.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_LIFETIME") then {WFBE_C_AMBIENT_SKIRMISH_LIFETIME = 120}; //--- Seconds before the ambient cell self-cleans.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_PLAYER_RADIUS") then {WFBE_C_AMBIENT_SKIRMISH_PLAYER_RADIUS = 1500}; //--- Never spawn inside this distance of a human player.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_TOWN_RADIUS") then {WFBE_C_AMBIENT_SKIRMISH_TOWN_RADIUS = 1500}; //--- Never spawn inside this distance of a town logic.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_GROUP_MIN") then {WFBE_C_AMBIENT_SKIRMISH_GROUP_MIN = 2}; //--- Units per side, minimum.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_GROUP_MAX") then {WFBE_C_AMBIENT_SKIRMISH_GROUP_MAX = 3}; //--- Units per side, maximum.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_SPAWN_TRIES") then {WFBE_C_AMBIENT_SKIRMISH_SPAWN_TRIES = 24}; //--- Candidate positions checked per attempt.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_CENTER") then {WFBE_C_AMBIENT_SKIRMISH_CENTER = if (worldName == "Takistan") then {[6400,6400,0]} else {if (worldName == "Zargabad") then {[4000,4000,0]} else {[7680,7680,0]}}};
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_RADIUS") then {WFBE_C_AMBIENT_SKIRMISH_RADIUS = if (worldName == "Takistan") then {5600} else {if (worldName == "Zargabad") then {3000} else {6200}}};
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_WEST_CLASSES") then {WFBE_C_AMBIENT_SKIRMISH_WEST_CLASSES = if (IS_chernarus_map_dependent) then {["USMC_Soldier","USMC_Soldier_LAT","USMC_Soldier_AR"]} else {["US_Soldier_EP1","US_Soldier_LAT_EP1","US_Soldier_AR_EP1"]}};
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH_EAST_CLASSES") then {WFBE_C_AMBIENT_SKIRMISH_EAST_CLASSES = if (IS_chernarus_map_dependent) then {["RU_Soldier","RU_Soldier_LAT","RU_Soldier_AR"]} else {["TK_Soldier_EP1","TK_Soldier_LAT_EP1","TK_Soldier_AR_EP1"]}};
 
 //--- Modules.
 	if (isNil "WFBE_C_MODULE_BIS_PMC") then {WFBE_C_MODULE_BIS_PMC = 1}; //--- Enable PMC content.
