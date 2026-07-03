@@ -17,7 +17,7 @@ _colorEnemy =_colorRed;
 _colorResistance =_colorBlue;
 
 _ui_bg = [0,0,0,0.7];
-_town_capture_mode = missionNamespace getVariable "WFBE_C_TOWNS_CAPTURE_MODE";
+_town_capture_mode = missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_MODE", 0];
 
 while {!WFBE_GameOver} do {
 	_nearest = [player,towns] Call WFBE_CO_FNC_GetClosestEntity;
