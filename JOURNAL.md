@@ -499,3 +499,21 @@ Evidence:
   entry / RPT error in the 12018 dropdown. Cheap fix if ever wanted:
   `if !(isNull (_sorted select 0)) then { ...forEach _sorted... }` around the lbClear/forEach
   block (or `lbAdd [12018, localize 'STR_...none-in-range']` in the else).
+
+---
+
+## 2026-07-02 — Fleet lane 157: end-of-round player summary
+
+Claimed `fleet-lane-157-end-of-round-screen-2026-07-02` as `Codex-Fleet-11-loop`.
+
+Scope kept to the endgame title and its client fill script:
+- `Client/GUI/GUI_EndOfGameStats.sqf` now fills a local player summary row with score, funds, and income using existing client-visible values only.
+- `Rsc/Titles.hpp` adds that summary row plus a small Close button that closes the current cut display.
+- Takistan was mirrored through `Tools/LoadoutManager` with `A2WASP_SKIP_ZIP=1`.
+
+Validation:
+- `dotnet run -c Release` from `Tools/LoadoutManager` completed with packaging skipped.
+- `git diff --check` clean except existing CRLF warnings.
+- `check_sqf.py --select BRACKET` and `--select A3CMD` reported zero findings on the four touched files.
+- Added-line A3/boolean trap scan found no matches.
+- Chernarus/Takistan touched file pairs match after mirroring.
