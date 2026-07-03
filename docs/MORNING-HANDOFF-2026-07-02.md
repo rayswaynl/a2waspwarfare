@@ -1,3 +1,5 @@
+> **HISTORICAL** — This handoff was written 2026-07-02 when the live build was cmdcon40aicom. The current live tip is Build 89 (`claude/build84-cmdcon36`). Do not act on lane assignments or build references in this document.
+
 # WASP overnight handoff → morning (2026-07-02)
 
 ## ▶ RAY'S MORNING DIRECTIVES (answered 2026-07-02 morning — this section governs the day)

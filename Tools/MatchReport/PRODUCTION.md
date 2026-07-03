@@ -1,7 +1,11 @@
 # Production — auto-generate a report per match
 
-The report runs as a **box-side scheduled task** on the gaming PC (per the "automation
-on the box, never Claude crons" rule). Each run pulls the live server RPT, finds the
+> **Note (GR-2026-07-03a):** The `WaspMatchReport` scheduled task described in the Deploy
+> section below has **not been registered** on the Game PC as of this writing. Reports must
+> be triggered manually. See Known caveats for other open issues.
+
+The report is designed to run as a **box-side scheduled task** on the gaming PC (per the
+"automation on the box, never Claude crons" rule). Each run pulls the live server RPT, finds the
 newest completed match, and — if it hasn't already — renders that match's report and
 drops the MP4 for you to post to TikTok.
 
@@ -44,13 +48,24 @@ latest** match (correct slice by ROUNDEND seq) → ~10 MB MP4, and a second run 
 3. **Output:** `C:\Users\Game\wasp-match-reports\*.mp4`. With `-Notify`, Peach DMs Ray the path
    when each report is ready.
 
+## Known bugs (GR-2026-07-03a)
+- **Trailing-quote map parse failure.** The RPT map-name parser fails when the `WASPSTAT` line
+  has a trailing quote inside the map string. Check the parsed map field in `replay_summary.py`
+  output before rendering.
+- **`WaspMatchEndRotate` dual-PBO abort.** When two PBO files exist for the same build in
+  `MPMissions`, `produce-match-report.ps1` may select the wrong one and abort. Ensure only one
+  PBO is present for the active build.
+- **Scheduled task not installed.** `WaspMatchReport` has not been registered on the Game PC
+  as of GR-2026-07-03a. Trigger manually with `pwsh -File produce-match-report.ps1 -RptFile <log>`.
+
 ## Known caveats (v1)
 - **Event timing is by sequence, not seconds.** `CAPTURE`/`KILL` carry no match-time, so the
   battle/momentum animation spreads events evenly across the match. Frame-accurate timing needs
   `round(time)` added to those emitters (`server_town.sqf`, `RequestOnUnitKilled.sqf`) — a small
   mission change.
 - **Town coords are approximate** until the `WFBE_C_LOG_TOWN_COORDS` boot-logger (PR #116) is run
-  once per map to harvest exact positions into `matchdata.TOWN_COORDS`.
+  once per map to harvest exact positions into `matchdata.TOWN_COORDS`. Reset `WFBE_C_LOG_TOWN_COORDS`
+  to 0 in `Common/Init/Init_CommonConstants.sqf` after harvesting — leaving it at 1 causes log noise.
 - **Player names** fall back to `Op-<last4>` unless `-NamesTsv <uid\tname>` is supplied (generate
   from the leaderboard `ingame_stats`/`members` table).
 - Auto-posting to TikTok is **out of scope** for v1 (needs the TikTok Content Posting API + app

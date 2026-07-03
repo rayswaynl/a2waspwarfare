@@ -1,3 +1,5 @@
+> **HISTORICAL** — This loop ran 2026-07-02 when the live build was cmdcon40aicom. The current live tip is Build 89 (`claude/build84-cmdcon36`). Do not act on lane assignments or build references in this document.
+
 # Overnight autonomous loop — 2026-07-02 (claude-gaming)
 
 ## Directive (Ray, 2026-07-01 night)

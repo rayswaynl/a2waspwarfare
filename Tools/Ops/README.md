@@ -11,7 +11,7 @@ cfg after a build name changes:
 
 ```powershell
 .\Set-MissionTemplate.ps1 `
-    -CfgPath C:\WASP\server.cfg `
+    -CfgPath <path-to-server.cfg> `
     -MissionName '[55-2hc]warfarev2_073v48co_b86.chernarus'
 ```
 
