@@ -2074,11 +2074,15 @@ while {!WFBE_GameOver && _alive} do {
 							if (_resNear > 0) then {
 								_team setVariable ["wfbe_aicom_cappasses", 0];
 							} else {
-								_capPasses = (_team getVariable ["wfbe_aicom_cappasses", 0]) + 1;
+								_capPasses = _team getVariable "wfbe_aicom_cappasses";
+								if (isNil "_capPasses") then {_capPasses = 0};
+								_capPasses = _capPasses + 1;
 								_team setVariable ["wfbe_aicom_cappasses", _capPasses];
 							};
 							_capReleased = false;
-							if ((_team getVariable ["wfbe_aicom_cappasses", 0]) >= _capMaxPasses) then {
+							_capPasses = _team getVariable "wfbe_aicom_cappasses";
+							if (isNil "_capPasses") then {_capPasses = 0};
+							if (_capPasses >= _capMaxPasses) then {
 								//--- Bail this depot: same release idiom as the capture-success block above so AssignTowns
 								//--- retargets (isNull _goto => _needs=true), and clear strike/relief so Strategy will not re-grab.
 								_captureDone = true;     //--- stop re-running this phase for the dropped order
@@ -2306,7 +2310,7 @@ while {!WFBE_GameOver && _alive} do {
 	};
 
 	//--- cmdcon41-w2 TOP-UP CONSUMER (Ray: reinforce at friendly towns). Strategy publishes wfbe_aicom_topup_req
-	//--- on THIS team as [count, posArray, classArray]; the units are LOCAL here (HC/server that owns the team),
+	//--- on THIS team as [count, posArray, classArray, issuedTime]; the units are LOCAL here (HC/server that owns the team),
 	//--- so we create them straight into _team via the mission helper WFBE_CO_FNC_CreateUnit (same signature as
 	//--- Common_RunSidePatrol.sqf:113 - it sets skill, backfills weapons, adds the Killed EH, and honours HC
 	//--- locality). Cap creations at 4 per tick; DEFER (keep the request) when a player is within 300m of pos so
@@ -2314,28 +2318,39 @@ while {!WFBE_GameOver && _alive} do {
 	//--- groups); typeName guards (no A3 isEqualType); clear the var by setting [] and testing count>0 (A2 setVariable
 	//--- nil on groups is unreliable). Never create if _team is null. Never-frozen: additions inherit the team order.
 	if (_alive && {!isNull _team}) then {
-		private ["_topReq","_topN","_topPos","_topCls","_topMade","_topDefer","_topClass","_topUnit"];
+		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topDefer","_topClass","_topUnit"];
 		_topReq = _team getVariable "wfbe_aicom_topup_req";
 		if (!isNil "_topReq" && {(typeName _topReq) == "ARRAY"} && {count _topReq >= 3}) then {
 			_topN   = _topReq select 0;
 			_topPos = _topReq select 1;
 			_topCls = _topReq select 2;
+			_topIssued = time;
+			if ((count _topReq) > 3) then {_topIssued = _topReq select 3};
+			_topTtl = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_REQ_TTL", 300];
+			if ((typeName _topTtl) != "SCALAR") then {_topTtl = 300};
 			if ((typeName _topN) == "SCALAR" && {_topN > 0} && {(typeName _topPos) == "ARRAY"} && {count _topPos >= 2} && {(typeName _topCls) == "ARRAY"} && {count _topCls > 0}) then {
-				//--- DEFER if any player is within 300m of the spawn pos (keep the request untouched for a later tick).
-				_topDefer = false;
-				{ if (isPlayer _x && {alive _x} && {(_x distance _topPos) < 300}) exitWith {_topDefer = true} } forEach playableUnits;
-				if (!_topDefer) then {
-					_topMade = 0;
-					//--- create up to _topN classes, hard-capped at 4 this tick (cycle the class list by index).
-					while {_topMade < _topN && {_topMade < 4}} do {
-						_topClass = _topCls select (_topMade mod (count _topCls));
-						_topUnit = [_topClass, _team, _topPos, _sideID] Call WFBE_CO_FNC_CreateUnit; //--- canonical mission createUnit-in-group idiom (Common_RunSidePatrol.sqf:113).
-						_topMade = _topMade + 1;
-					};
-					//--- clear the request (A2: set [] and test count>0 next tick, NOT nil).
+				if ((typeName _topIssued) != "SCALAR") then {_topIssued = time};
+				if ((count _topReq) < 4) then {_team setVariable ["wfbe_aicom_topup_req", [_topN, _topPos, _topCls, _topIssued], true]}; //--- legacy 3-slot request: stamp once so it can age out.
+				if ((_topTtl > 0) && {(time - _topIssued) > _topTtl}) then {
 					_team setVariable ["wfbe_aicom_topup_req", [], true];
-					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_DONE|team=" + (str _team) + "|count=" + str _topMade);
-					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TOP-UP created %3 reinforcement(s).", _side, _team, _topMade]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE|team=" + (str _team) + "|age=" + str (round (time - _topIssued)) + "|ttl=" + str _topTtl);
+				} else {
+					//--- DEFER if any player is within 300m of the spawn pos (keep the request untouched for a later tick).
+					_topDefer = false;
+					{ if (isPlayer _x && {alive _x} && {(_x distance _topPos) < 300}) exitWith {_topDefer = true} } forEach playableUnits;
+					if (!_topDefer) then {
+						_topMade = 0;
+						//--- create up to _topN classes, hard-capped at 4 this tick (cycle the class list by index).
+						while {_topMade < _topN && {_topMade < 4}} do {
+							_topClass = _topCls select (_topMade mod (count _topCls));
+							_topUnit = [_topClass, _team, _topPos, _sideID] Call WFBE_CO_FNC_CreateUnit; //--- canonical mission createUnit-in-group idiom (Common_RunSidePatrol.sqf:113).
+							_topMade = _topMade + 1;
+						};
+						//--- clear the request (A2: set [] and test count>0 next tick, NOT nil).
+						_team setVariable ["wfbe_aicom_topup_req", [], true];
+						diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_DONE|team=" + (str _team) + "|count=" + str _topMade);
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TOP-UP created %3 reinforcement(s).", _side, _team, _topMade]] Call WFBE_CO_FNC_AICOMLog;
+					};
 				};
 			} else {
 				//--- Malformed request (bad counts/types): clear it so it cannot loop forever.

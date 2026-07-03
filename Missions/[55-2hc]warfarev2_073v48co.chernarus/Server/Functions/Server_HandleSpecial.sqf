@@ -616,7 +616,7 @@ switch (_args select 0) do {
 	};
 	case "aicom-refit": {
 		//--- cmdcon41-w3d COMMAND-MENU V2 (REFIT): the human commander requested a funds-charged infantry TOP-UP for ONE
-		//--- team - the exact same consumer path Produce's auto top-up uses (wfbe_aicom_topup_req [count,pos,classes] on the
+		//--- team - the exact same consumer path Produce's auto top-up uses (wfbe_aicom_topup_req [count,pos,classes,issuedTime] on the
 		//--- team; the owning HC/server driver spawns the bodies in Common_RunCommanderTeam). We mirror Produce's cost +
 		//--- rate-limit gates: flat WFBE_C_AICOM_TOPUP_UNIT_COST per missing man toward 6 (cap 4), charged from the AI
 		//--- commander treasury up front; one refit per team per WFBE_C_AICOM_TOPUP_COOLDOWN via the SAME wfbe_aicom_topup_stamp
@@ -653,7 +653,7 @@ switch (_args select 0) do {
 									_rfFunds  = (_rfSide) Call GetAICommanderFunds;
 									if (_rfFunds >= _rfCharge) then {
 										[_rfSide, -_rfCharge] Call ChangeAICommanderFunds;
-										_rfTeam setVariable ["wfbe_aicom_topup_req", [_rfMissing, getPosATL (leader _rfTeam), _rfCls], true];
+										_rfTeam setVariable ["wfbe_aicom_topup_req", [_rfMissing, getPosATL (leader _rfTeam), _rfCls, _rfNow], true];
 										_rfTeam setVariable ["wfbe_aicom_topup_stamp", _rfNow, false];
 										diag_log ("AICOM2|v1|ORDER|aicom-refit|" + str _rfSide + "|" + str (round (time / 60)) + "|idx=" + str _rfIdx + "|missing=" + str _rfMissing + "|cost=" + str _rfCharge);
 									} else {

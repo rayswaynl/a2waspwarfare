@@ -1,5 +1,19 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 — Fleet lane 376: AICOM top-up request TTL
+
+Added a default-on stale-request guard for `wfbe_aicom_topup_req` across Chernarus plus maintained
+Takistan/Zargabad mirrors. Producers now publish `[count, pos, classes, issuedTime]`, the commander
+team driver stamps legacy 3-slot requests once, and deferred requests older than
+`WFBE_C_AICOM_TOPUP_REQ_TTL` (default 300s) are cleared so the server can re-evaluate instead of
+keeping a player-proximity-deferred request forever.
+
+Also cleaned an inherited two-argument group `getVariable` in the same driver file while it was in
+scope, using the repo's plain-get plus `isNil` pattern. Verification: LoadoutManager mirror with
+`A2WASP_SKIP_ZIP=1`, focused SQF lint zero findings, `git diff --check` clean except CRLF warnings,
+NUL/backtick-zero scan clean, delimiter deltas paired, no `_MISSIONS.7z` artifact, and SHA256 parity
+matched for the four touched SQF paths across Chernarus, Takistan and Zargabad.
+
 ## 2026-07-02 — Lane 180 ambient skirmish cells [codex/180-ambient-skirmish-cells]
 
 Added a default-off server worker, `Server_AmbientSkirmish.sqf`, mirrored to Chernarus,
