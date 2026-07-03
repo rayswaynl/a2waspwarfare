@@ -1,0 +1,29 @@
+{
+  "name": "WFBE_NEURODEF_FORT_CHECKPOINT",
+  "parentW": 20,
+  "parentD": 14,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "ROADBLOCK / CHECKPOINT (fortification, side-neutral, 0 gun-AI). Designed to sit ACROSS a road (road runs +Y through the position). Soldier logic: concrete barriers are staggered left/right to force any vehicle into a slow single-file chicane instead of a straight run — it cannot be rushed. A gate bar marks the stop line. On EACH side of the chicane a bag-fence firing position gives the guards protected cover with arcs onto the stopped vehicle and onto the approach, mutually supporting across the road. A camo-netted checkpoint shelter/ammo point sits behind cover to the rear. Hedgehogs on the shoulders stop anyone bypassing off-road; wire ties the obstacle into the terrain. The stop line faces the threat approach (+Y); the friendly rear (-Y) is left open to drive through once cleared.",
+  "objs": [
+    {"cls":"Land_CncBlock_Stripes","x":-3,"y":5,"z":0,"dir":0,"role":"chicane block 1 (left) — forces vehicles right"},
+    {"cls":"Land_CncBlock_Stripes","x":3,"y":2,"z":0,"dir":0,"role":"chicane block 2 (right) — forces vehicles left"},
+    {"cls":"Land_CncBlock_Stripes","x":-3,"y":-1,"z":0,"dir":0,"role":"chicane block 3 (left) — completes the S-bend"},
+    {"cls":"Land_BarGate2","x":0,"y":3.5,"z":0,"dir":0,"role":"gate bar — the stop line"},
+    {"cls":"Land_fort_bagfence_corner","x":-6,"y":3,"z":0,"dir":0,"role":"left guard position — cover, arc onto the stop line"},
+    {"cls":"Land_fort_bagfence_long","x":-6,"y":3,"z":0,"dir":90,"role":"left guard wall"},
+    {"cls":"Land_fort_bagfence_corner","x":6,"y":1,"z":0,"dir":270,"role":"right guard position — cover, mutually supports left"},
+    {"cls":"Land_fort_bagfence_long","x":6,"y":1,"z":0,"dir":90,"role":"right guard wall"},
+    {"cls":"Misc_cargo_cont_small","x":-5,"y":-3,"z":0,"dir":90,"role":"checkpoint shelter / ammo point — behind cover, rear"},
+    {"cls":"Land_CamoNetVar_NATO","x":-5,"y":-2.4,"z":0,"dir":0,"role":"camo net over the shelter"},
+    {"cls":"Hedgehog","x":-8,"y":5,"z":0,"dir":0,"role":"left shoulder trap — stops off-road bypass"},
+    {"cls":"Hedgehog","x":8,"y":5,"z":0,"dir":0,"role":"right shoulder trap — stops off-road bypass"},
+    {"cls":"Sign_Danger","x":2,"y":6,"z":0,"dir":180,"role":"checkpoint warning sign — faces the approach"},
+    {"cls":"RoadCone","x":-1.5,"y":7,"z":0,"dir":0,"role":"approach cone (left)"},
+    {"cls":"RoadCone","x":1.5,"y":7,"z":0,"dir":0,"role":"approach cone (right)"},
+    {"cls":"Fort_RazorWire","x":-8,"y":2,"z":0,"dir":0,"role":"wire — ties left shoulder to terrain"},
+    {"cls":"Fort_RazorWire","x":8,"y":-1,"z":0,"dir":0,"role":"wire — ties right shoulder to terrain"}
+  ]
+}

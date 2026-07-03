@@ -1,0 +1,31 @@
+{
+  "name": "WFBE_NEURODEF_AAPOS_HEAVY_EAST",
+  "parentW": 30,
+  "parentD": 22,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "AA BATTERY / SAM SITE (HEAVY, 4 AI) — EAST. Battery layout mirrors the WEST SAM site with RU/TK kit: two ZU-23 auto-cannons on the flanks (heavy bullet AA + anti-ground) and a centre Igla, all on a wide 18 m dispersed arc (+Y) so no single pass or counter-battery salvo kills the battery. Each gun in its own pit; earthen ramparts between them eat near-miss shrapnel without capping elevation. Camo-netted control/radar point centre-rear cues the guns. Rear DShK is the local security over the blind side. Split ammo left/right. HBarrier flank screens, forward wire, open covered rear entrance.",
+  "objs": [
+    {"cls":"ZU23_TK_EP1","x":-10,"y":6,"z":0,"dir":330,"role":"ZU-23 (far left) — arc NW, wide dispersion"},
+    {"cls":"Igla_AA_pod_TK_EP1","x":0,"y":9,"z":0,"dir":0,"role":"Igla MANPADS (centre) — arc N"},
+    {"cls":"ZU23_TK_EP1","x":10,"y":6,"z":0,"dir":30,"role":"ZU-23 (far right) — arc NE, wide dispersion"},
+    {"cls":"Land_fort_bagfence_round","x":-10,"y":4.4,"z":0,"dir":0,"role":"pit — left ZU-23"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":7.4,"z":0,"dir":0,"role":"pit — Igla"},
+    {"cls":"Land_fort_bagfence_round","x":10,"y":4.4,"z":0,"dir":0,"role":"pit — right ZU-23"},
+    {"cls":"Land_fort_rampart_EP1","x":-5,"y":5,"z":0,"dir":0,"role":"revetment berm — shrapnel screen (left pair)"},
+    {"cls":"Land_fort_rampart_EP1","x":5,"y":5,"z":0,"dir":0,"role":"revetment berm — shrapnel screen (right pair)"},
+    {"cls":"Misc_cargo_cont_small","x":0,"y":-3,"z":0,"dir":90,"role":"control/radar point — battery command, dispersed rear"},
+    {"cls":"Land_CamoNet_EAST","x":0,"y":-2.4,"z":0,"dir":0,"role":"camo net over the control point"},
+    {"cls":"DSHKM_TK_INS_EP1","x":-7,"y":-6,"z":0,"dir":200,"role":"local security DShK — covers rear/left blind side"},
+    {"cls":"Land_fort_bagfence_round","x":-7,"y":-6,"z":0,"dir":0,"role":"sandbag ring — security MG"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":-6,"y":1,"z":0,"dir":0,"role":"ammo point — left (split store)"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":6,"y":1,"z":0,"dir":0,"role":"ammo point — right (split store)"},
+    {"cls":"Land_HBarrier_large","x":-14,"y":2,"z":0,"dir":90,"role":"HBarrier wing — left flank screen"},
+    {"cls":"Land_HBarrier_large","x":14,"y":2,"z":0,"dir":90,"role":"HBarrier wing — right flank screen"},
+    {"cls":"Hedgehog","x":-8,"y":9,"z":0,"dir":0,"role":"forward tank trap — canalizes vehicles (left)"},
+    {"cls":"Hedgehog","x":8,"y":9,"z":0,"dir":0,"role":"forward tank trap — canalizes vehicles (right)"},
+    {"cls":"Fort_RazorWire","x":0,"y":10,"z":0,"dir":0,"role":"forward wire — closes the centre approach"}
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST",
+  "parentW": 26,
+  "parentD": 22,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "MIXED STRONGPOINT (HEAVY, 4 AI) — WEST. The premium 'hold this crossroads' emplacement, built for all-round defence. Two .50 cals on the front corners angled outward give interlocking arcs across the whole frontage (+Y) while covering each other's flanks; a TOW between them on higher ground kills armour down the main approach; a Stinger at the rear covers air AND the strongpoint's back. The heart of the position is a covered infantry bunker (Bunker/fortified nest) at the rear centre — the fallback the crew fights from if the guns are suppressed, and the reason this reads as a strongpoint not a gun cluster. HBarrier horseshoe on three sides (flanks + a rear screen) with bag-fence corner tie-ins gives 360 protection; the front is open for the guns; a gap by the bunker is the entrance. Wire on the forward flanks canalizes the assault into the crossfire.",
+  "objs": [
+    {"cls":"M2StaticMG","x":-9,"y":3,"z":0,"dir":330,"role":".50 (left corner) — arc front-left, interlocks with right MG"},
+    {"cls":"M2StaticMG","x":9,"y":3,"z":0,"dir":30,"role":".50 (right corner) — arc front-right, interlocks with left MG"},
+    {"cls":"TOW_TriPod_US_EP1","x":0,"y":6,"z":0,"dir":0,"role":"TOW — anti-armour down the main approach"},
+    {"cls":"Stinger_Pod_US_EP1","x":0,"y":-3,"z":0,"dir":180,"role":"Stinger — air lane + covers the rear/blind side"},
+    {"cls":"Land_fortified_nest_small_EP1","x":0,"y":-6,"z":0,"dir":0,"role":"COVERED INFANTRY BUNKER — fallback fighting position (rear centre)"},
+    {"cls":"Land_fort_bagfence_round","x":-9,"y":3,"z":0,"dir":0,"role":"sandbag ring — left MG"},
+    {"cls":"Land_fort_bagfence_round","x":9,"y":3,"z":0,"dir":0,"role":"sandbag ring — right MG"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-4,"y":0,"z":0,"dir":0,"role":"ammo point — left"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":4,"y":0,"z":0,"dir":0,"role":"ammo point — right"},
+    {"cls":"Land_HBarrier_large","x":-11,"y":3,"z":0,"dir":90,"role":"left flank wall"},
+    {"cls":"Land_HBarrier_large","x":11,"y":3,"z":0,"dir":90,"role":"right flank wall"},
+    {"cls":"Land_HBarrier_large","x":-6,"y":9,"z":0,"dir":0,"role":"forward-left screen (does not block MG arc)"},
+    {"cls":"Land_HBarrier_large","x":6,"y":9,"z":0,"dir":0,"role":"forward-right screen (does not block MG arc)"},
+    {"cls":"Land_fort_bagfence_corner","x":-10,"y":-2,"z":0,"dir":270,"role":"rear-left corner tie-in"},
+    {"cls":"Land_fort_bagfence_corner","x":10,"y":-2,"z":0,"dir":180,"role":"rear-right corner tie-in"},
+    {"cls":"Fort_RazorWire","x":-7,"y":7,"z":0,"dir":0,"role":"forward wire (left) — canalizes the assault"},
+    {"cls":"Fort_RazorWire","x":7,"y":7,"z":0,"dir":0,"role":"forward wire (right) — canalizes the assault"}
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "WFBE_NEURODEF_ARTYPOS_EAST",
+  "parentW": 34,
+  "parentD": 22,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "ARTILLERY BATTERY (HEAVY, 4 AI) — EAST. Three D-30 howitzers, each in its own earthen artillery revetment, spaced ~10 m apart for counter-battery survivability, all with clear overhead. The outer two guns are toed slightly outward (fan) for a wider beaten zone. Paired rear DShK pickets cover both blind corners; ammo dispersed one dump per gun; flank blast walls stop enfilade; rear concealment nets sit behind the gun line only; rear-centre crew entrance. Mirrors the WEST battery with RU/TK kit.",
+  "objs": [
+    {"cls":"Land_fort_artillery_nest_EP1","x":-11,"y":4,"z":0,"dir":0,"role":"revetment — gun 1"},
+    {"cls":"Land_fort_artillery_nest_EP1","x":0,"y":5,"z":0,"dir":0,"role":"revetment — gun 2 (centre)"},
+    {"cls":"Land_fort_artillery_nest_EP1","x":11,"y":4,"z":0,"dir":0,"role":"revetment — gun 3"},
+    {"cls":"D30_TK_EP1","x":-11,"y":4,"z":0,"dir":8,"role":"howitzer 1 — fanned left, clear overhead"},
+    {"cls":"D30_TK_EP1","x":0,"y":5,"z":0,"dir":0,"role":"howitzer 2 — centre, clear overhead"},
+    {"cls":"D30_TK_EP1","x":11,"y":4,"z":0,"dir":352,"role":"howitzer 3 — fanned right, clear overhead"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":-11,"y":0,"z":0,"dir":0,"role":"ammo dump — gun 1 (dispersed)"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":0,"y":1,"z":0,"dir":0,"role":"ammo dump — gun 2 (dispersed)"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":11,"y":0,"z":0,"dir":0,"role":"ammo dump — gun 3 (dispersed)"},
+    {"cls":"DSHKM_TK_INS_EP1","x":-6,"y":-6,"z":0,"dir":205,"role":"rear DShK picket (left) — covers rear-left blind corner"},
+    {"cls":"DSHKM_TK_INS_EP1","x":6,"y":-6,"z":0,"dir":155,"role":"rear DShK picket (right) — covers rear-right blind corner"},
+    {"cls":"Land_fort_bagfence_round","x":-6,"y":-6,"z":0,"dir":0,"role":"sandbag ring — left picket"},
+    {"cls":"Land_fort_bagfence_round","x":6,"y":-6,"z":0,"dir":0,"role":"sandbag ring — right picket"},
+    {"cls":"Land_HBarrier_large","x":-16,"y":3,"z":0,"dir":90,"role":"left flank blast wall — anti-enfilade"},
+    {"cls":"Land_HBarrier_large","x":16,"y":3,"z":0,"dir":90,"role":"right flank blast wall — anti-enfilade"},
+    {"cls":"Land_CamoNet_EAST","x":-6,"y":-2,"z":0,"dir":0,"role":"rear concealment (left) — behind the gun line only"},
+    {"cls":"Land_CamoNet_EAST","x":6,"y":-2,"z":0,"dir":0,"role":"rear concealment (right) — behind the gun line only"},
+    {"cls":"Hedgehog","x":-10,"y":-8,"z":0,"dir":0,"role":"rear tank trap (left) — canalizes vehicles"},
+    {"cls":"Hedgehog","x":10,"y":-8,"z":0,"dir":0,"role":"rear tank trap (right) — canalizes vehicles"}
+  ]
+}

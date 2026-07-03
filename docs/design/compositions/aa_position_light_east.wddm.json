@@ -1,0 +1,24 @@
+{
+  "name": "WFBE_NEURODEF_AAPOS_EAST",
+  "parentW": 18,
+  "parentD": 16,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "AA POSITION (LIGHT, 2 AI) — EAST. Same soldier logic as the WEST twin: a ZU-23 auto-cannon (bullet AA, also murders soft ground targets) paired with an Igla MANPADS on a dispersed sandbag pit facing the air-threat arc (+Y), ~8 m apart for survivability. Rear DShK covers the guns' blind side and gives 360 self-defence. HBarrier flank wings stop enfilade without capping elevation. Ammo behind cover left; camo nets set behind the guns, never overhead; forward wire canalizes dismounts and leaves a clear rear-right entrance.",
+  "objs": [
+    {"cls":"ZU23_TK_EP1","x":-4,"y":4,"z":0,"dir":335,"role":"ZU-23 auto-cannon (left) — primary arc NW, dispersed"},
+    {"cls":"Igla_AA_pod_TK_EP1","x":4,"y":4,"z":0,"dir":25,"role":"Igla MANPADS (right) — primary arc NE, dispersed"},
+    {"cls":"Land_fort_bagfence_round","x":-4,"y":4,"z":0,"dir":0,"role":"sandbag ring — ZU-23 pit"},
+    {"cls":"Land_fort_bagfence_round","x":4,"y":4,"z":0,"dir":0,"role":"sandbag ring — Igla pit"},
+    {"cls":"DSHKM_TK_INS_EP1","x":0,"y":-4,"z":0,"dir":180,"role":"rear DShK — covers blind side + 360 self-defence"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-4,"z":0,"dir":0,"role":"sandbag ring — rear MG"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":-6,"y":-1,"z":0,"dir":0,"role":"ammo/reload point — behind cover, left"},
+    {"cls":"Land_HBarrier_large","x":-8,"y":0,"z":0,"dir":90,"role":"left flank wing — stops enfilade, no overhead"},
+    {"cls":"Land_HBarrier_large","x":8,"y":0,"z":0,"dir":90,"role":"right flank wing — stops enfilade, no overhead"},
+    {"cls":"Land_CamoNet_EAST","x":-6,"y":3,"z":0,"dir":0,"role":"concealment — behind ZU-23, off the firing line"},
+    {"cls":"Land_CamoNet_EAST","x":6,"y":3,"z":0,"dir":0,"role":"concealment — behind Igla, off the firing line"},
+    {"cls":"Fort_RazorWire","x":-3,"y":7,"z":0,"dir":20,"role":"forward-left wire — canalizes dismounts, rear-right entrance clear"}
+  ]
+}

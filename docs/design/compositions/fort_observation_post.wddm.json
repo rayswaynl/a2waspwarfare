@@ -1,0 +1,20 @@
+{
+  "name": "WFBE_NEURODEF_FORT_OP",
+  "parentW": 14,
+  "parentD": 14,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "OBSERVATION POST (fortification, side-neutral, 0 gun-AI). Purpose is to SEE, not to be seen or to slug it out. Soldier logic: an elevated bunker-tower gives the observer height and long fields of view over the approach (+Y) while a camo net breaks up its silhouette so it does not read as an obvious tower from distance. A low bag-fence ring at the base is a protected fallback / self-defence position for when the OP is compromised, NOT a fighting bastion — an OP that looks like a strongpoint gets shelled. Ammo/supply cached low behind the tower. A single wire run and the tight footprint keep it discreet; the rear is open as the covered withdrawal route (an OP must be able to bug out). Concealment over firepower throughout.",
+  "objs": [
+    {"cls":"Land_Fort_Watchtower_EP1","x":0,"y":2,"z":0,"dir":0,"role":"ELEVATED OBSERVATION — bunker-tower, long view over the approach"},
+    {"cls":"Land_CamoNetVar_NATO","x":0,"y":4,"z":0,"dir":0,"role":"concealment — breaks the tower silhouette (front)"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-1,"z":0,"dir":0,"role":"low fallback ring at the base (self-defence, not a bastion)"},
+    {"cls":"Land_fort_bagfence_long","x":-4,"y":0,"z":0,"dir":90,"role":"left cover — low"},
+    {"cls":"Land_fort_bagfence_long","x":4,"y":0,"z":0,"dir":90,"role":"right cover — low"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-2,"y":-3,"z":0,"dir":0,"role":"supply cache — low, behind the tower"},
+    {"cls":"Land_CamoNetVar_NATO","x":-2,"y":-3,"z":0,"dir":0,"role":"net over the cache — concealment"},
+    {"cls":"Fort_RazorWire","x":0,"y":5,"z":0,"dir":0,"role":"single forward wire — early warning, stays discreet"}
+  ]
+}
