@@ -71,17 +71,20 @@
 
 ---
 
-## TIER 4 — expansion: stat icons (128×128, transparent)
+## TIER 4 — expansion: stat icons (transparent)
 
 Wired into the Combat Breakdown cards + leaderboard #1. **Dual-use:** these are also the
 Discord custom-emoji set on `ASSET-WISHLIST.md`. Brief §9 "emoji/small icon" recipe — readable
 at 32px, thick clean shapes, olive + gunmetal, subtle orange edge light, transparent, no text.
 
-- `icon_longest.png` — sniper crosshair / reticle (longest-kill card)
-- `icon_weapon.png` — side-profile assault rifle (top-weapon card)
-- `icon_pvp.png` — two crossed combat knives (PvP card)
-- `icon_captures.png` — planted capture flag (captures card)
-- `icon_mvp.png` — military medal / star award (leaderboard #1)
+Size note: `icon_longest`, `icon_weapon`, `icon_pvp`, `icon_captures` are 128×128.
+`icon_mvp` is **256×256** (authoritative size per `assets/README.md`).
+
+- `icon_longest.png` — 128×128 — sniper crosshair / reticle (longest-kill card)
+- `icon_weapon.png` — 128×128 — side-profile assault rifle (top-weapon card)
+- `icon_pvp.png` — 128×128 — two crossed combat knives (PvP card)
+- `icon_captures.png` — 128×128 — planted capture flag (captures card)
+- `icon_mvp.png` — **256×256** — military medal / star award (leaderboard #1)
 
 ---
 
