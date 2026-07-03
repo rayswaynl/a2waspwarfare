@@ -24,8 +24,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="WASP Warfare Build 88 (Zargabad)";
-		briefingDescription="Build 88: Zargabad urban theatre folded into rotation - new respawn screen, GUER town-center buying and mortar HUD, commander defense menu priced from supply, quieter upgrades, salvage-farm block, repaired wheels and engines, foot-squad ladder tuning, and a wave of menu and QoL polish.";
+		briefingName="WASP Warfare Build 89 (Zargabad)";
+		briefingDescription="Build 89: Zargabad towns are now capturable (the stale-file fix) with capture-chain armor, plus WDDM-designed defense positions & fortifications with thin-tower flak, a big AI commander wave (SCUD research restored, armor screens, target-aware team comps, feints, stuck-team watchers, air discipline), town AA fixed to guard active-air towns, ambient skirmish cells, GUER respawn fixes, JIP state sync, artillery-radar structures, economy divide-by-zero and crew-dismiss fixes, endgame summary, and a QoL batch.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
