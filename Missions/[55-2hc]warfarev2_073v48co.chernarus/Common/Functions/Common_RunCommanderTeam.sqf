@@ -21,7 +21,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_liveUnits","_dismounted","_veh","_u","_settleTimeout","_hasCargo",
          "_townCenter","_capRange","_footInf","_holdEnd","_resNear","_enemyNear","_townFlipped",
          "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
-         "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
+         "_airVeh","_grndVehs","_footPax","_cargoSeats","_copilotTurret","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir"];
@@ -475,13 +475,31 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		if (!isNull _x && {alive _x} && {!isNull (driver _x)}) then {(driver _x) doMove _pos};
 	} forEach _grndVehs;
 
-	//--- Load the team's FOOT infantry into the team's own heli (cargo seats only).
+	//--- Load the team's FOOT infantry into the team's own heli (cargo seats plus one config-marked copilot turret).
 	_footPax = [];
 	{
 		if (alive _x && {vehicle _x == _x} && {_x != (driver _airVeh)}) then {_footPax = _footPax + [_x]};
 	} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 
 	_cargoSeats = _airVeh emptyPositions "cargo";
+	_copilotTurret = [];
+	if ((count _footPax) > _cargoSeats) then {
+		private ["_airTurrets","_airTi","_airTc","_airSubs","_airTj","_airSc"];
+		_airTurrets = configFile >> "CfgVehicles" >> (typeOf _airVeh) >> "Turrets";
+		if ((count _airTurrets) > 0) then {
+			for "_airTi" from 0 to ((count _airTurrets) - 1) do {
+				_airTc = _airTurrets select _airTi;
+				if ((count _copilotTurret) == 0 && {(getNumber (_airTc >> "isCopilot")) > 0} && {isNull (_airVeh turretUnit [_airTi])}) then {_copilotTurret = [_airTi]};
+				_airSubs = _airTc >> "Turrets";
+				if ((count _airSubs) > 0) then {
+					for "_airTj" from 0 to ((count _airSubs) - 1) do {
+						_airSc = _airSubs select _airTj;
+						if ((count _copilotTurret) == 0 && {(getNumber (_airSc >> "isCopilot")) > 0} && {isNull (_airVeh turretUnit [_airTi, _airTj])}) then {_copilotTurret = [_airTi, _airTj]};
+					};
+				};
+			};
+		};
+	};
 	_lifted  = [];
 	_walkers = [];
 	{
@@ -490,7 +508,17 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			[_x] orderGetIn true;
 			_lifted = _lifted + [_x];
 		} else {
-			_walkers = _walkers + [_x];
+			if ((count _copilotTurret) > 0) then {
+				_x moveInTurret [_airVeh, _copilotTurret];
+				_copilotTurret = [];
+				if (vehicle _x == _airVeh) then {
+					_lifted = _lifted + [_x];
+				} else {
+					_walkers = _walkers + [_x];
+				};
+			} else {
+				_walkers = _walkers + [_x];
+			};
 		};
 	} forEach _footPax;
 

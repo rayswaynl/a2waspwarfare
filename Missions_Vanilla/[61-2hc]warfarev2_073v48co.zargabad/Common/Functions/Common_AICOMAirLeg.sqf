@@ -47,14 +47,32 @@ if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || 
 //--- belt-and-braces - top the transport off before a long leg so it never strands mid-flight.
 if ((fuel _h) < 0.35) then {_h setFuel 1};
 
-//--- Load the team's on-FOOT infantry into the transport (cargo seats only; crew/driver excluded).
-private ["_footPax","_cargoSeats","_lifted","_walkers"];
+//--- Load the team's on-FOOT infantry into the transport (cargo seats plus one config-marked copilot turret; crew/driver excluded).
+private ["_footPax","_cargoSeats","_copilotTurret","_lifted","_walkers"];
 _footPax = [];
 {
 	if (alive _x && {vehicle _x == _x} && {_x != (driver _h)}) then {_footPax = _footPax + [_x]};
 } forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 
 _cargoSeats = _h emptyPositions "cargo";
+_copilotTurret = [];
+if ((count _footPax) > _cargoSeats) then {
+	private ["_airTurrets","_airTi","_airTc","_airSubs","_airTj","_airSc"];
+	_airTurrets = configFile >> "CfgVehicles" >> (typeOf _h) >> "Turrets";
+	if ((count _airTurrets) > 0) then {
+		for "_airTi" from 0 to ((count _airTurrets) - 1) do {
+			_airTc = _airTurrets select _airTi;
+			if ((count _copilotTurret) == 0 && {(getNumber (_airTc >> "isCopilot")) > 0} && {isNull (_h turretUnit [_airTi])}) then {_copilotTurret = [_airTi]};
+			_airSubs = _airTc >> "Turrets";
+			if ((count _airSubs) > 0) then {
+				for "_airTj" from 0 to ((count _airSubs) - 1) do {
+					_airSc = _airSubs select _airTj;
+					if ((count _copilotTurret) == 0 && {(getNumber (_airSc >> "isCopilot")) > 0} && {isNull (_h turretUnit [_airTi, _airTj])}) then {_copilotTurret = [_airTi, _airTj]};
+				};
+			};
+		};
+	};
+};
 _lifted  = [];
 _walkers = [];
 {
@@ -63,7 +81,17 @@ _walkers = [];
 		[_x] orderGetIn true;
 		_lifted = _lifted + [_x];
 	} else {
-		_walkers = _walkers + [_x];
+		if ((count _copilotTurret) > 0) then {
+			_x moveInTurret [_h, _copilotTurret];
+			_copilotTurret = [];
+			if (vehicle _x == _h) then {
+				_lifted = _lifted + [_x];
+			} else {
+				_walkers = _walkers + [_x];
+			};
+		} else {
+			_walkers = _walkers + [_x];
+		};
 	};
 } forEach _footPax;
 
