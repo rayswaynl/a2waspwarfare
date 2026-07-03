@@ -360,6 +360,7 @@ _limitHOld = -1;
 _limitVOld = -1;
 _loaded = false;
 _localtime = time;
+_pollSleep = (missionNamespace getVariable ["WFBE_C_COIN_POLL_SLEEP", 0.1]) max 0.01;
 
 while {!isNil "BIS_CONTROL_CAM"} do {
 	//if (isnull (uiNamespace getVariable 'BIS_CONTROL_CAM_DISPLAY') && !_loaded) then {
@@ -983,7 +984,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 		};
 	};
 	_oldMenu = commandingMenu;
-	sleep 0.01;
+	sleep _pollSleep;
 };
 112200 cuttext ["","plain"]; //---added-MrNiceGuy
 showCommandingMenu '';
