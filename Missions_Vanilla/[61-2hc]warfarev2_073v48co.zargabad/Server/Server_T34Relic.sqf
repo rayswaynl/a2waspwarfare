@@ -53,9 +53,10 @@ if (count _neutralTowns > 0) then {
     //--- Pick a random neutral town.  A2-OA random() is fine here (town pick variety is low-stakes).
     _pickTown = _neutralTowns select (floor (random (count _neutralTowns)));
 } else {
-    //--- Fallback: town nearest map centre (15360/2 = 7680).
-    _midX = 7680;
-    _midY = 7680;
+    //--- Fallback: town nearest map centre. Derive centre from WFBE_BOUNDARIESXY so
+    //--- ZG (8192m map, centre ~4096) and TK (12800m, centre ~6400) are correct too.
+    _midX = (missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360]) / 2;
+    _midY = _midX;
     _bestDist = 1e9;
     {
         _d = (getPos _x) distance [_midX, _midY, 0];
@@ -145,7 +146,7 @@ diag_log Format ["WFBE|T34RELIC|spawned|class=T34_TK_GUE_EP1|pos=%1|dir=%2|town=
 //--- Side-switch:  update wfbe_side_id + re-wire the kill bounty EH to the new side.
 //--- Runs until the relic is destroyed or no longer alive.
 [] spawn {
-    private ["_t","_claimedSide","_driver","_driverSide","_dSideID","_oldEH","_newSideID","_crew"];
+    private ["_t","_claimedSide","_driver","_driverSide","_oldEH","_newSideID"];
 
     //--- Recover the relic reference from missionNamespace (spawned block has no closure).
     _t = missionNamespace getVariable ["WFBE_T34_RELIC_OBJ", objNull];
@@ -161,7 +162,6 @@ diag_log Format ["WFBE|T34RELIC|spawned|class=T34_TK_GUE_EP1|pos=%1|dir=%2|town=
 
         if (!alive _t) exitWith {};
 
-        _crew   = crew _t;
         _driver = objNull;
 
         //--- Find the driver slot.  'driver _t' is A2-OA-safe (returns objNull if empty).
@@ -169,8 +169,7 @@ diag_log Format ["WFBE|T34RELIC|spawned|class=T34_TK_GUE_EP1|pos=%1|dir=%2|town=
 
         if (!isNull _driver && { isPlayer _driver } && { alive _driver }) then {
             _driverSide = side group _driver;
-            _dSideID    = _driverSide Call WFBE_CO_FNC_GetSideFromID;
-            //--- Resolve numeric side id from SIDE value.
+            //--- Convert SIDE -> numeric sideID (GetSideID takes a SIDE, returns a number).
             _newSideID = _driverSide Call WFBE_CO_FNC_GetSideID;
 
             if (_newSideID != _claimedSide) then {
@@ -186,6 +185,10 @@ diag_log Format ["WFBE|T34RELIC|spawned|class=T34_TK_GUE_EP1|pos=%1|dir=%2|town=
                 private ["_newEH"];
                 _newEH = _t addEventHandler ["killed", Format ['[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled', _newSideID]];
                 _t setVariable ["wfbe_relic_kill_eh", _newEH];
+
+                //--- Re-broadcast init so JIP clients see the updated owner side (not the baked RESISTANCEID).
+                _t setVehicleInit Format ["[this, %1] ExecVM 'Common\Init\Init_Unit.sqf'", _newSideID];
+                processInitCommands;
 
                 diag_log Format ["WFBE|T34RELIC|claimed|sideID=%1|driver=%2", _newSideID, name _driver];
                 ["INFORMATION", Format ["Server_T34Relic.sqf: T-34 relic claimed by sideID=%1 (driver: %2).", _newSideID, name _driver]] Call WFBE_CO_FNC_LogContent;
