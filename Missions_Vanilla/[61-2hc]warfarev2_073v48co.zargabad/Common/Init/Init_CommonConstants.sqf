@@ -87,6 +87,12 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ENGAGE_MIN_TOWNS")   then {WFBE_C_AICOM_ENGAGE_MIN_TOWNS   = 4};
 	if (isNil "WFBE_C_AICOM_LANE_OFFSET")         then {WFBE_C_AICOM_LANE_OFFSET         = 60};
 	if (isNil "WFBE_C_AICOM_ASSAULT_REACH_FOOT")  then {WFBE_C_AICOM_ASSAULT_REACH_FOOT  = 1800};
+	//--- NOTE: this 1800 matches TK's empirical value set at line ~1229 below, but via a different
+	//--- path. Line ~1229 uses `if (worldName == "Takistan") then {1800} else {2500}` -- on ZG that
+	//--- guard evaluates the else branch (worldName is "Zargabad") and would set 2500, not 1800.
+	//--- This ZG pre-set runs BEFORE that line, lands 1800 first, and the isNil guard at ~1229
+	//--- finds the var already set and skips. So this line is the only path to 1800 on ZG; on TK
+	//--- the pre-set is never reached (worldName guard skips the entire ZG block). No double-assignment.
 	if (isNil "WFBE_C_BASE_EGRESS_MAP_BOUNDS")    then {WFBE_C_BASE_EGRESS_MAP_BOUNDS    = 1};
 };
 //--- End ZG-FIX Zargabad-scoped pre-sets.
