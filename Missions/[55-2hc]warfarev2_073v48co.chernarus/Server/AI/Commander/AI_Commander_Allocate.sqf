@@ -208,12 +208,76 @@ _harassTgt = objNull;
 if (_harassN > 0) then {
 	private ["_harassFar"];
 	_harassFar = -1;
-	{
-		private ["_tt","_depth"];
-		_tt = _x;
-		_depth = (_tt Call _frontDist) + (if ((_tt getVariable ["sideID", -1]) == _enemyID) then {3000} else {0});
-		if (_depth > _harassFar && {!(_tt in _fist)}) then {_harassFar = _depth; _harassTgt = _tt};
-	} forEach _tgtTowns;
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_HARASS_FALLBACK", 0]) > 0) then {
+		//--- HARASS FALLBACK (block-m): pick deepest town reachable by >=1 mounted eligible team.
+		//--- Pre-scan: collect positions of eligible mounted teams so we can test reachability upfront.
+		private ["_hfMntPos","_hfMntReach","_hfGrp","_hfLdr","_hfMode","_hfRelief","_hfStrike","_hfHasVeh","_hfGar"];
+		_hfMntPos   = [];
+		_hfMntReach = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
+		_hfGar      = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+		{
+			_hfGrp = _x;
+			if (!isNull _hfGrp) then {
+				_hfLdr    = leader _hfGrp;
+				_hfMode   = toLower (_hfGrp getVariable ["wfbe_teammode", "towns"]);
+				_hfRelief = _hfGrp getVariable ["wfbe_aicom_relief", objNull];
+				_hfStrike = _hfGrp getVariable ["wfbe_aicom_strike", false];
+				_hfHasVeh = false;
+				{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_hfHasVeh = true} } forEach (units _hfGrp);
+				if (_hfHasVeh && {({alive _x} count (units _hfGrp)) > 0} && {!isNull _hfLdr} && {!isPlayer _hfLdr}
+				    && {_hfGrp != _hfGar} && {isNull _hfRelief} && {!_hfStrike}
+				    && {!(_hfMode in ["move","patrol","defense"])}
+				    && {([_hfGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_hfGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
+					_hfMntPos set [count _hfMntPos, getPos _hfLdr];
+				};
+			};
+		} forEach _teams;
+		//--- Build depth-scored list, then insertion-sort descending (deepest first). A2-OA safe (no apply/sort).
+		private ["_hfCands","_hfI","_hfJ","_hfTmp","_hfPair","_hfDepth","_hfTown","_hfReach","_hfPos","_hfSkip","_hfFirst"];
+		_hfCands = [];
+		{
+			private ["_tt","_depth"];
+			_tt = _x;
+			_depth = (_tt Call _frontDist) + (if ((_tt getVariable ["sideID", -1]) == _enemyID) then {3000} else {0});
+			if (!(_tt in _fist)) then {_hfCands set [count _hfCands, [_depth, _tt]]};
+		} forEach _tgtTowns;
+		_hfI = 1;
+		while {_hfI < (count _hfCands)} do {
+			_hfJ   = _hfI;
+			_hfTmp = _hfCands select _hfI;
+			while {_hfJ > 0 && {((_hfCands select (_hfJ - 1)) select 0) < (_hfTmp select 0)}} do {
+				_hfCands set [_hfJ, _hfCands select (_hfJ - 1)];
+				_hfJ = _hfJ - 1;
+			};
+			_hfCands set [_hfJ, _hfTmp];
+			_hfI = _hfI + 1;
+		};
+		//--- Walk sorted candidates; pick deepest with >= 1 mounted team in reach.
+		_hfSkip  = false; _hfFirst = objNull;
+		{
+			_hfPair  = _x;
+			_hfDepth = _hfPair select 0;
+			_hfTown  = _hfPair select 1;
+			_hfReach = false;
+			{ _hfPos = _x; if ((_hfPos distance _hfTown) <= _hfMntReach) exitWith {_hfReach = true} } forEach _hfMntPos;
+			if (_hfReach) then {
+				if (isNull _harassTgt) then {_harassTgt = _hfTown; _harassFar = _hfDepth};
+			} else {
+				if (isNull _hfFirst && {isNull _harassTgt}) then {_hfFirst = _hfTown; _hfSkip = true};
+			};
+		} forEach _hfCands;
+		if (_hfSkip) then {
+			diag_log ("AICOMSTAT|v2|EVENT|HARASS_SKIP|" + str _side + "|skipped=" + (_hfFirst getVariable ["name","?"]) + "|pickedReachable=" + (if (!isNull _harassTgt) then {_harassTgt getVariable ["name","?"]} else {"none"}));
+		};
+	} else {
+		//--- legacy path (WFBE_C_AICOM_HARASS_FALLBACK=0): byte-identical simple deepest pick.
+		{
+			private ["_tt","_depth"];
+			_tt = _x;
+			_depth = (_tt Call _frontDist) + (if ((_tt getVariable ["sideID", -1]) == _enemyID) then {3000} else {0});
+			if (_depth > _harassFar && {!(_tt in _fist)}) then {_harassFar = _depth; _harassTgt = _tt};
+		} forEach _tgtTowns;
+	};
 };
 
 //--- M? EXPANSION LANE (Ray, Issue 5): the capturable list includes ~42 NEUTRAL/uncaptured towns the all-in
@@ -231,9 +295,10 @@ _neutTowns = [];
 
 //--- ASSIGN every ELIGIBLE team: a light MOUNTED detachment to the rear harass target (M2), up to _expandN
 //--- teams to capture NEUTRAL towns (expansion lane), the rest concentrated on the fist (reach-aware; never idle).
-private ["_assigned","_harassAssigned"];
+private ["_assigned","_harassAssigned","_expandClaimed"];
 _garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 _assigned = 0; _harassAssigned = 0; _expandCount = 0;
+_expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick
 //--- SPREAD (cmdcon41, claude-gaming 2026-07-02): per-fist-town load counter + cap. With a widened fist
 //--- (WFBE_C_AICOM2_FIST_TOWNS>1) the L268-272 nearest pick otherwise funnels every team onto the single
 //--- closest fist town = the dogpile. _fistCounts is index-aligned with _fist; _capPerFist caps stacking
@@ -274,8 +339,18 @@ _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 				if (_expandCount < _expandN) then {
 					private ["_eTgt","_eD","_ev"];
 					_eTgt = objNull; _eD = 1e9;
-					{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
-					if (!isNull _eTgt) then {_tgt = _eTgt; _expandCount = _expandCount + 1};
+					//--- DEDUP (block-m, WFBE_C_AICOM_EXPAND_DEDUP): skip towns already claimed this tick
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0) then {
+						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD} && {!(_x in _expandClaimed)}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
+					} else {
+						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
+					};
+					if (!isNull _eTgt) then {
+						_tgt = _eTgt; _expandCount = _expandCount + 1;
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0) then {
+							_expandClaimed set [count _expandClaimed, _eTgt];
+						};
+					};
 				};
 				if (isNull _tgt) then {
 					//--- concentrate on the fist. SPREAD (cmdcon41): cap-aware nearest pick so teams fan across the
