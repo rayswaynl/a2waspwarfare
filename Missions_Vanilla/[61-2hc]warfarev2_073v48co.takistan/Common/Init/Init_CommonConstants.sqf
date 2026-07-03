@@ -1890,5 +1890,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+//--- Lane 190 (fable/lane190-patrol-contested): PATROL CONTESTED-ONLY GATE.
+//--- When 1, server_town_patrol.sqf will NOT flip a garrison from patrol->defense
+//--- merely because the town's supplyValue fell (passive time-drain or rounding).
+//--- The flip is gated on the town actually being contested (enemies present, as
+//--- detected and stamped by server_town.sqf's wfbe_contested setVariable).
+//--- Ownership-change (side flip) always triggers defense regardless of this flag.
+//--- 0 = legacy behaviour (any SV drop -> patrol->defense). Default 0 (dark).
+	if (isNil "WFBE_C_TOWNS_PATROL_CONTESTED_ONLY") then {WFBE_C_TOWNS_PATROL_CONTESTED_ONLY = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

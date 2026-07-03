@@ -25,10 +25,27 @@ while {!WFBE_GameOver && _aliveTeam} do {
 	_aliveTeam = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 	_currentSV = _location getVariable 'supplyValue';
-	if (_currentSV < _lastSV || _currentSV < _startSV || _sideID != (_location getVariable 'sideID')) then {
-		_mode = "defense";
+	//--- Lane 190: gate patrol->defense flip. SV-drop ONLY triggers defense when the town is
+	//--- actually contested (enemies present). Ownership-change always triggers defense.
+	//--- When WFBE_C_TOWNS_PATROL_CONTESTED_ONLY is 0 (default) this is byte-identical to legacy.
+	if (missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_CONTESTED_ONLY", 0] == 1) then {
+		private ["_isContested"];
+		_isContested = _location getVariable ["wfbe_contested", false];
+		if ((_currentSV < _lastSV || _currentSV < _startSV) && _isContested) then {
+			_mode = "defense";
+		} else {
+			if (_sideID != (_location getVariable "sideID")) then {
+				_mode = "defense";
+			} else {
+				_mode = "patrol";
+			};
+		};
 	} else {
-		_mode = "patrol";
+		if (_currentSV < _lastSV || _currentSV < _startSV || _sideID != (_location getVariable 'sideID')) then {
+			_mode = "defense";
+		} else {
+			_mode = "patrol";
+		};
 	};
 
 	_lastSV = _currentSV;
