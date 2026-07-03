@@ -205,15 +205,14 @@ switch (_args select 0) do {
 	//--- broadcast to all clients (setVariable ..., true) so JIP / multi-player same-side
 	//--- clients can read the real cooldown. Flag-gated: inert when WFBE_C_ARTY_SHARED_COOLDOWN is 0.
 	case "ArtySharedCooldown": {
-		//--- GUARD (lane202-review): a short/malformed PVF payload crashes at select 1/2.
+		//--- GUARD (lane202-review): a short/malformed PVF payload crashes at select 1.
 		//--- Matches the group-query and guer-mortar-strike guard idiom already in this file.
-		if (count _args < 3) exitWith {
+		if (count _args < 2) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: ArtySharedCooldown received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
 		if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
-			private ["_artyStampSide","_artyStampTime","_artyStampLogik"];
+			private ["_artyStampSide","_artyStampLogik"];
 			_artyStampSide = _args select 1;
-			_artyStampTime = _args select 2;
 			_artyStampLogik = (_artyStampSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _artyStampLogik) then {
 				//--- HIGH (lane202-review): never trust the client-supplied time; stamp server's own `time`
