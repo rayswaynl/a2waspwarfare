@@ -62,6 +62,9 @@ _ownTownObjs = []; _tgtTownObjs = [];
 		if ((_x getVariable "sideID") == _enemyID) then {_enemyTowns = _enemyTowns + 1} else {_neutTowns = _neutTowns + 1};
 	};
 } forEach towns;
+if (_totTowns == 0 && {!isNil "towns"} && {(count towns) > 0}) then {
+	["WARNING", Format ["AI_Commander_Snapshot: census totTowns=0 but towns array has %1 entries - town sideID vars may not be initialised yet.", count towns]] Call WFBE_CO_FNC_AICOMLog;
+};
 
 //--- HQ OBJECTS (server-authoritative).
 _myHQ    = (_side)      Call WFBE_CO_FNC_GetSideHQ;
