@@ -12,7 +12,7 @@ _HEAVY = "USMC_WarfareBHeavyFactory";
 _AIR = "USMC_WarfareBAircraftFactory";
 _SP = "USMC_WarfareBVehicleServicePoint";
 _AAR = "USMC_WarfareBAntiAirRadar";
-_ARTRAD = "USMC_WarfareBArtilleryRadar";
+_ARTRAD = if (IS_chernarus_map_dependent) then {"USMC_WarfareBArtilleryRadar"} else {"US_WarfareBArtilleryRadar_EP1"};
 _RES = "Land_fortified_nest_small";
 
 /* Mash used after being deployed */

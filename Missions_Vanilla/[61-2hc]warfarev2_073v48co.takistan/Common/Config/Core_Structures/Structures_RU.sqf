@@ -12,7 +12,7 @@ _HEAVY = "RU_WarfareBHeavyFactory";
 _AIR = "RU_WarfareBAircraftFactory";
 _SP = "RU_WarfareBVehicleServicePoint";
 _AAR = "RU_WarfareBAntiAirRadar";
-_ARTRAD = "RU_WarfareBArtilleryRadar";
+_ARTRAD = if (IS_chernarus_map_dependent) then {"RU_WarfareBArtilleryRadar"} else {"TK_WarfareBArtilleryRadar_EP1"};
 _RES = "Land_fortified_nest_small";
 
 /* Mash used after being deployed */
