@@ -5,8 +5,14 @@ _townName = _this select 1;
 _townDubbingName = _this select 2;
 _townStartSV = _this select 3;
 _townMaxSV = _this select 4;
-_townValue = _this select 5;
-_town_type = _this select 6;
+//--- Older/custom maps may omit the town-value column and pass town type in arg 5.
+_townValue = 0;
+if ((count _this) > 6) then {
+	_townValue = _this select 5;
+	_town_type = _this select 6;
+} else {
+	_town_type = if ((count _this) > 5) then {_this select 5} else {""};
+};
 _townRange = 600;
 townModeSet = false;
 
@@ -40,7 +46,7 @@ if (typeName _town_type == "ARRAY") then {_town_type = _town_type select floor(r
 _town setVariable ["wfbe_town_type", _town_type];
 //--- A8 (claude-gaming): wire in the previously-dead _townValue (Init_Town arg 6) so the
 //--- AI-commander spearhead ranking can reward high-value towns (read nil-safe in Strategy).
-_town setVariable ["wfbe_town_value", _townValue];
+if (!isNil "_townValue") then {_town setVariable ["wfbe_town_value", _townValue]};
 
 waitUntil {commonInitComplete};
 
