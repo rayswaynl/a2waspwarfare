@@ -11,7 +11,7 @@ _lastUp = 0;
 _skipTimeSupply = false;
 _newSID = -1;
 _newSide = civilian;
-_town_camps_capture_rate = missionNamespace getVariable "WFBE_C_CAMPS_CAPTURE_RATE_MAX";
+_town_camps_capture_rate = missionNamespace getVariable ["WFBE_C_CAMPS_CAPTURE_RATE_MAX", 25]; //--- MUST default: a nil read here (constants race at FSM start) undefines the local and every capture-rate calc below errors for the whole match (ZG 2026-07-03).
 _town_capture_mode = missionNamespace getVariable "WFBE_C_TOWNS_CAPTURE_MODE";
 _town_capture_range = switch (_town_capture_mode) do {
 	case  0: {"WFBE_C_TOWNS_CAPTURE_RANGE"};
