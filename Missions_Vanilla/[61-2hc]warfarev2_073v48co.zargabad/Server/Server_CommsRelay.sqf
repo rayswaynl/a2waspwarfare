@@ -84,10 +84,9 @@ missionNamespace setVariable ["WFBE_COMMS_RELAY_POS",  _mastPos, true];
 //--- Server re-validates cooldown (authority); if OK: stamps, clears latch, fires recon.
 //------------------------------------------------------------------------------------
 WFBE_SE_FNC_CommsRelayActivate = {
-	private ["_args","_sideVal","_uid","_cooldown","_sideCD","_now","_sideObj","_mastPos"];
-	_args     = _this select 0;
-	_sideVal  = _args select 0;
-	_uid      = _args select 1;
+	private ["_sideVal","_uid","_cooldown","_sideCD","_now","_sideObj","_mastPos"];
+	_sideVal  = _this select 1;
+	_uid      = _this select 2;
 	_cooldown = missionNamespace getVariable ["WFBE_C_COMMS_RELAY_COOLDOWN", 600];
 	_sideCD   = missionNamespace getVariable [Format ["wfbe_relay_cd_%1", _sideVal], 0];
 	_now      = time;
@@ -126,10 +125,10 @@ WFBE_SE_FNC_CommsRelayActivate = {
 	private ["_mast","_mastPos","_cooldown","_sideVal","_sideCD","_now","_uid","_x"];
 	_mast    = _this select 0;
 	_mastPos = _this select 1;
-	_cooldown = missionNamespace getVariable ["WFBE_C_COMMS_RELAY_COOLDOWN", 600];
 
 	while { !WFBE_GameOver } do {
 		sleep 10;
+		_cooldown = missionNamespace getVariable ["WFBE_C_COMMS_RELAY_COOLDOWN", 600];
 
 		//--- Expire latches for players who left range or died.
 		{
