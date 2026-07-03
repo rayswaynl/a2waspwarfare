@@ -245,6 +245,7 @@ while {!WFBE_GameOver} do {
 			//--- never flip while contested (systemic on 3-way urban ZG). Tie = no dominant attacker = owner keeps.
 			_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID}; default {_sideID};};
 			_newSide = (_newSID) Call WFBE_CO_FNC_GetSideFromID;
+			_rate = 1;
 			if (_totalCamps > 0) then {
 				_rate = _town_capture_rate * (([_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide) / _totalCamps) * _town_camps_capture_rate;
 			} else {
