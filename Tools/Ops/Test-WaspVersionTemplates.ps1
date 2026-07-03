@@ -10,6 +10,7 @@
       * WF_DEBUG must never be left active (WF_DEBUG ON = instant funds + all tiers).
       * A well-formed WASPRELEASE marker line must be present.
       * Chernarus keeps its map-dependent + naval defines active.
+      * Desert/non-naval templates keep Chernarus + naval defines inactive.
     Salvaged from PR #126 (release-readiness) onto the live lane; the original
     checked stale master-era values (unpackaged marker, maxplayers 55/61) that do
     not match the live convention of a build-tagged marker in the tracked template.
@@ -60,6 +61,7 @@ function Read-Template {
 
 $chernarus = Read-Template "Missions\[55-2hc]warfarev2_073v48co.chernarus\version.sqf.template"
 $takistan = Read-Template "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan\version.sqf.template"
+$zargabad = Read-Template "Missions_Vanilla\[61-2hc]warfarev2_073v48co.zargabad\version.sqf.template"
 
 # Live convention: the tracked template carries a build-tagged WASPRELEASE marker.
 # We validate that the marker line is present and well-formed, not its exact build id.
@@ -74,6 +76,19 @@ Assert-Match $chernarus '(?m)^#define IS_NAVAL_MAP\r?$' "Chernarus naval define 
 Write-Host "Checking Takistan version.sqf.template"
 Assert-Match $takistan $markerPattern "Takistan release marker line is present and well-formed"
 Assert-NotMatch $takistan '(?m)^#define WF_DEBUG\b' "Takistan WF_DEBUG is not active"
+Assert-NotMatch $takistan '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Takistan map-dependent define is not active"
+Assert-NotMatch $takistan '(?m)^#define IS_NAVAL_MAP\r?$' "Takistan naval define is not active"
+Assert-Match $takistan '(?m)^#define WF_MAXPLAYERS 61\r?$' "Takistan max-player define is 61"
+Assert-Match $takistan '(?m)^#define WF_MISSIONNAME "\[61\] Warfare V48 Takistan"\r?$' "Takistan mission name is Takistan"
+
+Write-Host "Checking Zargabad version.sqf.template"
+Assert-Match $zargabad $markerPattern "Zargabad release marker line is present and well-formed"
+Assert-NotMatch $zargabad '(?m)^#define WF_DEBUG\b' "Zargabad WF_DEBUG is not active"
+Assert-NotMatch $zargabad '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Zargabad map-dependent define is not active"
+Assert-NotMatch $zargabad '(?m)^#define IS_NAVAL_MAP\r?$' "Zargabad naval define is not active"
+Assert-Match $zargabad '(?m)^#define WF_MAXPLAYERS 61\r?$' "Zargabad max-player define is 61"
+Assert-Match $zargabad '(?m)^#define WF_MISSIONNAME "\[61\] Warfare V48 Zargabad"\r?$' "Zargabad mission name is Zargabad"
+Assert-Match $zargabad '(?m)^#define STARTING_DISTANCE 5000\r?$' "Zargabad starting distance matches its map size"
 
 Write-Host ""
 if ($script:fails -eq 0) {
