@@ -312,8 +312,8 @@ _buyFailed = false;
 //--- TOP-SCOPE exitWith: verified to abort the whole spawned script (the shared tail below never runs),
 //--- so THIS exit must keep releasing the counters inline - unlike the block-level exits further down.
 if (!alive _building || isNull _building) exitWith {
-	unitQueu = unitQueu - _cpt;
-	missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+	unitQueu = (unitQueu - _cpt) max 0;  //--- salvage-522: clamp so an in-flight coroutine firing after a respawn-reset (WFBE_C_FIX_RESPAWN_UNITQUEU_RESET) cannot drive the group-cap counter negative.
+	missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1) max 0];  //--- salvage-522: clamp per-factory queue slot to >=0 (mirror of the unitQueu clamp).
 	//--- FC2: factory was destroyed mid-build (nothing spawned) -> refund the purchase price. This is the real destroyed-factory path.
 	if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
 };
@@ -934,9 +934,9 @@ if (!_buyFailed && {_factory in ["Barracks","Light","Heavy","Aircraft","Depot","
 	[_group, _spawnedUnits] call WFBE_CL_FNC_SendSpawnedUnitsToLeaderWaypoint;
 };
 
-unitQueu = unitQueu - _cpt;
+unitQueu = (unitQueu - _cpt) max 0;  //--- salvage-522: clamp so an in-flight coroutine firing after a respawn-reset (WFBE_C_FIX_RESPAWN_UNITQUEU_RESET) cannot drive the group-cap counter negative.
 
-missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1) max 0];  //--- salvage-522: clamp per-factory queue slot to >=0 (mirror of the unitQueu clamp).
 if (_buyFailed) then {
 	//--- failed buy: the player already got the refund (guard above); tell them instead of "complete".
 	hint parseText(Format ["<t color='#ff9060'>%1 could not be built - price refunded.</t>", _description]);

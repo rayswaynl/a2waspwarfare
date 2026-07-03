@@ -1936,5 +1936,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- 0 = dark/original behaviour (forward guns do NOT re-man). 1 = re-man enabled.
 	if (isNil "WFBE_C_FWD_STATIC_MANNING") then {WFBE_C_FWD_STATIC_MANNING = 0};
 
+//--- salvage-522 / Lane 193: reset unitQueu (and per-factory queue slots) to 0 on player respawn
+//--- (Client_PreRespawnHandler.sqf) so the factory-queue cap counter cannot accumulate across deaths.
+//--- Default 0 (dark). Set 1 to activate the reset. The Client_BuildUnit.sqf decrements are `max 0`-clamped
+//--- (salvage-522) so an in-flight buy that resolves after a reset clamps to 0 instead of going negative.
+	if (isNil "WFBE_C_FIX_RESPAWN_UNITQUEU_RESET") then {WFBE_C_FIX_RESPAWN_UNITQUEU_RESET = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

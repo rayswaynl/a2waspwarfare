@@ -119,7 +119,7 @@ while {alive player && dialog} do {
 			if (_vehicle != _targetUnit) then {
 				_liveCrew = [];
 				{
-					if (alive _x) then {
+					if (alive _x || isPlayer _x) then {  //--- salvage-522 (c): a dead player still in a seat has alive==false; isPlayer keeps the vehicle so we don't wreck it around them.
 						if (_x != _targetUnit) then {_liveCrew = _liveCrew + [_x]};
 					};
 				} forEach crew _vehicle;
