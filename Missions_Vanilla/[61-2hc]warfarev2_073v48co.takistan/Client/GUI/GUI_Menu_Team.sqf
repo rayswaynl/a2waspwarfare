@@ -121,12 +121,18 @@ while {alive player && dialog} do {
 			_destroy = [_targetUnit];
 			if (_vehicle != _targetUnit) then {
 				if ((missionNamespace getVariable ["WFBE_C_FIX_DISMISS_SOLO_CREW", 0]) > 0) then {
-					//--- Check that no OTHER live unit (player or AI belonging to a different
-					//--- player) still occupies the vehicle before we add it to _destroy.
+					//--- Check that no OTHER live or player unit still occupies the vehicle
+					//--- before we add it to _destroy.  Dead players still sitting in a seat
+					//--- have alive == false, so the old `alive _x` test would wrongly wreck
+					//--- the vehicle around them; block on `isPlayer _x` too (MODERATE fix).
+					//--- exitWith {} short-circuits after the first blocking crew member (LOW fix).
 					private ["_otherCrew"];
 					_otherCrew = false;
 					{
-						if ((_x != _targetUnit) && {alive _x}) then {_otherCrew = true};
+						if ((_x != _targetUnit) && {alive _x || isPlayer _x}) then {
+							_otherCrew = true;
+							exitWith {};
+						};
 					} forEach (crew _vehicle);
 					if (!_otherCrew) then {_destroy = _destroy + [_vehicle]};
 				} else {

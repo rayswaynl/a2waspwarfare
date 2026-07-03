@@ -6,7 +6,17 @@ _unit = _this;
 //--- increments at line 11 (unitQueu = unitQueu + _cpt).  Without this reset
 //--- the value climbs across deaths, blocking further purchases once it exceeds
 //--- the factory's queue cap.  Flag WFBE_C_FIX_RESPAWN_UNITQUEU_RESET must be 1.
-if ((missionNamespace getVariable ["WFBE_C_FIX_RESPAWN_UNITQUEU_RESET", 0]) > 0) then {unitQueu = 0};
+if ((missionNamespace getVariable ["WFBE_C_FIX_RESPAWN_UNITQUEU_RESET", 0]) > 0) then {
+	//--- HIGH fix (review): zero the group-cap counter AND every per-factory queue slot so
+	//--- in-flight Client_BuildUnit coroutines cannot decrement them below 0 and bypass
+	//--- cap-checks on the next life.  All decrements in Client_BuildUnit use `max 0` so
+	//--- a mid-sleep death causes a clamp-to-0 rather than a negative overshoot.
+	unitQueu = 0;
+	{missionNamespace setVariable [_x, 0]} forEach [
+		"WFBE_C_QUEUE_BARRACKS","WFBE_C_QUEUE_LIGHT","WFBE_C_QUEUE_HEAVY",
+		"WFBE_C_QUEUE_AIRCRAFT","WFBE_C_QUEUE_AIRPORT","WFBE_C_QUEUE_DEPOT"
+	];
+};
 
 (_unit) Call WFBE_SK_FNC_Apply;
 [] execFSM "Client\FSM\updateactions.fsm";

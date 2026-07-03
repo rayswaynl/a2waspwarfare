@@ -290,8 +290,8 @@ if (_qIdx < 0) exitWith {};
 _group = group player;
 _spawnedUnits = [];
 if (!alive _building || isNull _building) exitWith {
-	unitQueu = unitQueu - _cpt;
-	missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+	unitQueu = (unitQueu - _cpt) max 0;
+	missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1) max 0];
 	//--- FC2: factory was destroyed mid-build (nothing spawned) -> refund the purchase price. This is the real destroyed-factory path.
 	if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
 };
@@ -362,8 +362,8 @@ if (_isMan) then {
 	//--- (else the factory soft-locks at its cap, exactly like the empty-vehicle exit does), and (b) refund
 	//--- the exact price paid. Same idiom as the destroyed-factory refund path (:282-287 above).
 	if (isNull _vehicle) exitWith {
-		unitQueu = unitQueu - _cpt;
-		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		unitQueu = (unitQueu - _cpt) max 0;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1) max 0];
 		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
 		["WARNING", Format ["Client_BuildUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded $%2 and released queue slot for factory [%3].", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
 	};
@@ -786,8 +786,8 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		//--- otherwise WFBE_C_QUEUE_<type> leaks one each empty purchase and the factory soft-locks at its cap.
 		//--- NO refund here: this is the normal crewless/Depot purchase path and the vehicle WAS already
 		//--- spawned above. (The genuine destroyed-factory refund lives in the !alive _building exit earlier.)
-		unitQueu = unitQueu - _cpt;
-		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		unitQueu = (unitQueu - _cpt) max 0;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1) max 0];
 	};
 
 	//--- Crew Management.
@@ -890,7 +890,7 @@ if (_factory in ["Barracks","Light","Heavy","Aircraft","Depot","Airport"]) then 
 	[_group, _spawnedUnits] call WFBE_CL_FNC_SendSpawnedUnitsToLeaderWaypoint;
 };
 
-unitQueu = unitQueu - _cpt;
+unitQueu = (unitQueu - _cpt) max 0;
 
-missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1) max 0];
 hint parseText(Format [localize "STR_WF_INFO_Build_Complete",_description]);
