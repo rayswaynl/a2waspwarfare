@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_funds','_get','_id','_max','_name','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_sideJoined','_sideOrigin','_team','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -157,6 +157,24 @@ if (!isNil "WFBE_GUER_PLAYER_KILLS") then {_id publicVariableClient "WFBE_GUER_P
 if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_VEHICLE_TIER"}; //--- B75: GUER vehicle tier JIP catch-up (kill-derived).
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+
+//--- B63.2: late joiners also need side logic/object economy state that is only published on change.
+//--- wfbe_upgrades lives on the side logic object, so re-setting the same value with public=true dirties the
+//--- object var for replication; side supply is a missionNamespace primitive and can be targeted directly.
+_jipLogik = _sideJoined Call WFBE_CO_FNC_GetSideLogic;
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_upgrades"}) then {
+		_jipLogik setVariable ["wfbe_upgrades", (_jipLogik getVariable "wfbe_upgrades"), true];
+		diag_log format ["[WFBE][B63.2 JIP-UPGRADES] re-broadcast wfbe_upgrades (count %1) for side %2 to joiner %3", count (_jipLogik getVariable "wfbe_upgrades"), _sideJoined, _name];
+	};
+};
+if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
+	_jipSupplyKey = Format ["wfbe_supply_%1", str _sideJoined];
+	if !(isNil {missionNamespace getVariable _jipSupplyKey}) then {
+		_id publicVariableClient _jipSupplyKey;
+		diag_log format ["[WFBE][B63.2 JIP-SUPPLY] pushed %1=%2 to joiner %3", _jipSupplyKey, missionNamespace getVariable _jipSupplyKey, _name];
+	};
+};
 diag_log format ["[WFBE][B63 JIP-MARK] pushed marker feeds to joiner %1 (aicom=%2, patrols=%3)", _name, count (missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []]), count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []])];
 
 //--- B74.2: AICOM intent/objective vars are side-keyed and published only on change, so a late joiner can miss
