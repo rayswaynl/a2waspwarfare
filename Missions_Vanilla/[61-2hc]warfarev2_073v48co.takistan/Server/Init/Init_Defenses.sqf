@@ -620,16 +620,177 @@ missionNamespace setVariable ['WFBE_NEURODEF_HEDGEHOGLINE',[
 	['Hedgehog_EP1',[1.5,0,0],0],['Hedgehog_EP1',[4.5,0,0],0]
 ]];
 //--- Flak tower: element 0 = host tower @ ground (z=0), element 1 = AA gun @ deck height (z>0).
+//--- Server_ConstructPosition.sqf lifts any child with z>0.1 onto the deck via setPosATL + levels it.
+//--- cmdcon44-a (Build 89, Ray 2026-07-03): "much HIGHER structure, the bunker is a good MVP". The host
+//--- structure classname + deck z-offset are now flag-driven (WFBE_C_DEF_FLAKTOWER_STRUCTURE / _DECK_Z,
+//--- Init_CommonConstants.sqf) so the tower can be swapped/retuned on the box with no code change or re-mirror.
+//--- DEFAULT = Land_Mil_ControlTower @ z=12.5 (airfield control tower — tall structure w/ a real flat deck;
+//--- confirmed in the A2 config reference; loads on both maps under Combined Operations). Was the too-short
+//--- Land_Fort_Watchtower_EP1 @ 5.4. Bunker MVP fallback: Land_fortified_nest_big_EP1 @ 2.7 (see flag block).
+private ["_flakHost","_flakDeckZ"];
+_flakHost  = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_STRUCTURE", "Land_Mil_ControlTower"];
+_flakDeckZ = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_DECK_Z", 12.5];
 //--- WEST: A2-OA has no US static bullet-AA -> Stinger_Pod is the WEST AA mount.
 missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_WEST',[
-	['Land_Fort_Watchtower_EP1',[0,0,0],0],
-	['Stinger_Pod_US_EP1',[0,0,5.4],0]
+	[_flakHost,[0,0,0],0],
+	['Stinger_Pod_US_EP1',[0,0,_flakDeckZ],0]
 ]];
 //--- EAST / GUER: the true ZU-23 auto-cannon on the deck.
 missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_EAST',[
-	['Land_Fort_Watchtower_EP1',[0,0,0],0],
-	['ZU23_TK_EP1',[0,0,5.4],0]
+	[_flakHost,[0,0,0],0],
+	['ZU23_TK_EP1',[0,0,_flakDeckZ],0]
 ]];
+
+//======================================================================================
+//--- cmdcon44-a (Build 89, Ray 2026-07-03): DEFENSES LIST — AA / ARTILLERY / MIXED POSITIONS REWORK.
+//--- Ray: "Defenses list has not changed, AA/Art/Mix positions are still the same."
+//--- ROOT CAUSE: the Build 88 DEFMENU_V2 rework (per docs\design\BASE-COMPOSITIONS-PROPOSAL.md B.2,
+//---   which explicitly marked the AA/Arty/Mixed positions "keep") only PRUNED dead entries and ADDED
+//---   watchtower/hedgehog/flak — it deliberately left the six AA/Art/Mix WDDM positions (added back in
+//---   Build 31, commit dfbc6b6d4) and their compositions untouched. So from the commander's seat the
+//---   AA/Art/Mix rows are byte-identical to before -> "still the same".
+//--- FIX: this flag-gated block REDEFINES the six WFBE_NEURODEF_*POS_* composition arrays with genuinely
+//---   reworked, beefier + better-laid-out emplacements (the template map + anchors are unchanged, so no
+//---   menu-plumbing risk). Server_ConstructPosition.sqf resolves *_WEST/_EAST at build time and picks up
+//---   whichever definition is live. The legacy arrays above are LEFT INTACT; flag=0 -> exact old positions.
+//--- REVERSIBILITY: WFBE_C_DEFMENU_V2_POSITIONS = 0 -> the legacy compositions above stand, no change.
+//--- All classnames below are already spawned by the legacy compositions in THIS file (proven in-tree):
+//---   Stinger_Pod_US_EP1, ZU23_TK_EP1, Igla_AA_pod_TK_EP1, M2StaticMG, DSHKM_TK_INS_EP1, M119_US_EP1,
+//---   D30_TK_EP1, TOW_TriPod_US_EP1, SPG9_TK_INS_EP1, Metis_TK_EP1, US/TKBasicAmmunitionBox_EP1,
+//---   Land_fort_bagfence_long/round/corner, Land_HBarrier_large, Land_CamoNetVar_NATO / Land_CamoNet_EAST,
+//---   Fort_RazorWire, Hedgehog. Format ['classname',[xOff,yOff,zOff],relDir]; +Y=front, +X=right (z=0 flat).
+//--- NOTE FOR RAY: this is a first PROPOSED reworked set (heavier weapons + tighter interlocking layouts,
+//---   signature radar/AA dressing). The definitive AA/Art/Mix content is your call — see the PR body.
+//======================================================================================
+if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then {
+
+	//--- AA (LIGHT, 2 AI) — was twin AA behind camo. Reworked: twin AA on a bag-ring + a rear .50 for
+	//--- self-defence against infantry, wire screen forward. Reads as a real light AA nest, not two loose pods.
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_WEST',[
+		['Stinger_Pod_US_EP1',[-4,4,0],335],['Stinger_Pod_US_EP1',[4,4,0],25],
+		['Land_fort_bagfence_round',[-4,4,0],0],['Land_fort_bagfence_round',[4,4,0],0],
+		['M2StaticMG',[0,-4,0],180],['Land_fort_bagfence_round',[0,-4,0],0],
+		['USBasicAmmunitionBox_EP1',[-6,-1,0],0],
+		['Land_CamoNetVar_NATO',[-6,3,0],0],['Land_CamoNetVar_NATO',[6,3,0],0],
+		['Land_HBarrier_large',[-8,0,0],90],['Land_HBarrier_large',[8,0,0],90],
+		['Fort_RazorWire',[0,6,0],0]
+	]];
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_EAST',[
+		['ZU23_TK_EP1',[-4,4,0],335],['Igla_AA_pod_TK_EP1',[4,4,0],25],
+		['Land_fort_bagfence_round',[-4,4,0],0],['Land_fort_bagfence_round',[4,4,0],0],
+		['DSHKM_TK_INS_EP1',[0,-4,0],180],['Land_fort_bagfence_round',[0,-4,0],0],
+		['TKBasicAmmunitionBox_EP1',[-6,-1,0],0],
+		['Land_CamoNet_EAST',[-6,3,0],0],['Land_CamoNet_EAST',[6,3,0],0],
+		['Land_HBarrier_large',[-8,0,0],90],['Land_HBarrier_large',[8,0,0],90],
+		['Fort_RazorWire',[0,6,0],0]
+	]];
+
+	//--- AA (HEAVY, 4 AI) — SAM/flak battery. Reworked into a 3-launcher arc + rear MG, ammo, and a
+	//--- HESCO-backed horseshoe so it reads as a premium radar-era AA site (the priciest AA the menu sells).
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_HEAVY_WEST',[
+		['Stinger_Pod_US_EP1',[-9,6,0],325],['Stinger_Pod_US_EP1',[0,8,0],0],['Stinger_Pod_US_EP1',[9,6,0],35],
+		['Land_fort_bagfence_round',[-9,4.4,0],0],['Land_fort_bagfence_round',[0,6.2,0],0],['Land_fort_bagfence_round',[9,4.4,0],0],
+		['M2StaticMG',[0,-5,0],180],['Land_fort_bagfence_round',[0,-7,0],0],
+		['USBasicAmmunitionBox_EP1',[-4,1,0],0],['USBasicAmmunitionBox_EP1',[4,1,0],0],
+		['Base_WarfareBBarrier5x',[-12,2,0],90],['Base_WarfareBBarrier5x',[12,2,0],90],
+		['Base_WarfareBBarrier5x',[-7,10,0],0],['Base_WarfareBBarrier5x',[7,10,0],0],
+		['Land_CamoNetVar_NATO',[-5,7,0],0],['Land_CamoNetVar_NATO',[5,7,0],0],
+		['Fort_RazorWire',[-9,-8,0],0],['Fort_RazorWire',[9,-8,0],0]
+	]];
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_HEAVY_EAST',[
+		['ZU23_TK_EP1',[-9,6,0],335],['ZU23_TK_EP1',[9,6,0],25],['Igla_AA_pod_TK_EP1',[0,8,0],0],
+		['Land_fort_bagfence_round',[-9,4.4,0],0],['Land_fort_bagfence_round',[9,4.4,0],0],['Land_fort_bagfence_round',[0,6.4,0],0],
+		['DSHKM_TK_INS_EP1',[0,-5,0],180],['Land_fort_bagfence_round',[0,-7,0],0],
+		['TKBasicAmmunitionBox_EP1',[-4,1,0],0],['TKBasicAmmunitionBox_EP1',[4,1,0],0],
+		['Land_HBarrier_large',[-12,2,0],90],['Land_HBarrier_large',[12,2,0],90],
+		['Land_HBarrier_large',[-7,10,0],0],['Land_HBarrier_large',[7,10,0],0],
+		['Land_CamoNet_EAST',[-5,7,0],0],['Land_CamoNet_EAST',[5,7,0],0],
+		['Hedgehog',[-9,-8,0],0],['Hedgehog',[9,-8,0],0],['Fort_RazorWire',[0,-9,0],0]
+	]];
+
+	//--- ARTILLERY (LIGHT, 1 AI) — was a lone gun. Reworked: gun kept clear overhead (high-angle fire) with a
+	//--- proper ammo point, sandbag horseshoe and a rear MG picket so a lone shell-lobber isn't a free kill.
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_WEST',[
+		['M119_US_EP1',[0,4,0],0],
+		['USBasicAmmunitionBox_EP1',[-3,-1,0],0],['USBasicAmmunitionBox_EP1',[3,-1,0],0],
+		['M2StaticMG',[0,-5,0],180],['Land_fort_bagfence_round',[0,-5,0],0],
+		['Land_fort_bagfence_long',[-6,1,0],90],['Land_fort_bagfence_long',[6,1,0],90],
+		['Land_fort_bagfence_corner',[-6,-3,0],270],['Land_fort_bagfence_corner',[6,-3,0],180],
+		['Fort_RazorWire',[0,7,0],0]
+	]];
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_EAST',[
+		['D30_TK_EP1',[0,4,0],0],
+		['TKBasicAmmunitionBox_EP1',[-3,-1,0],0],['TKBasicAmmunitionBox_EP1',[3,-1,0],0],
+		['DSHKM_TK_INS_EP1',[0,-5,0],180],['Land_fort_bagfence_round',[0,-5,0],0],
+		['Land_HBarrier_large',[-6,1,0],90],['Land_HBarrier_large',[6,1,0],90],
+		['Land_HBarrier_large',[-3,-4,0],0],['Land_HBarrier_large',[3,-4,0],0],
+		['Fort_RazorWire',[0,7,0],0]
+	]];
+
+	//--- ARTILLERY (HEAVY, 4 AI) — was 3 guns + 1 MG. Reworked into a proper 3-gun battery with a paired
+	//--- rear-MG picket, dispersed ammo, flank blast walls and rear concealment (guns stay clear overhead).
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_WEST',[
+		['M119_US_EP1',[-10,5,0],0],['M119_US_EP1',[0,6,0],0],['M119_US_EP1',[10,5,0],0],
+		['USBasicAmmunitionBox_EP1',[-10,0,0],0],['USBasicAmmunitionBox_EP1',[0,1,0],0],['USBasicAmmunitionBox_EP1',[10,0,0],0],
+		['M2StaticMG',[-5,-5,0],200],['M2StaticMG',[5,-5,0],160],
+		['Land_fort_bagfence_round',[-5,-5,0],0],['Land_fort_bagfence_round',[5,-5,0],0],
+		['Land_HBarrier_large',[-14,3,0],90],['Land_HBarrier_large',[14,3,0],90],
+		['Land_HBarrier_large',[-8,-3,0],0],['Land_HBarrier_large',[8,-3,0],0],
+		['Land_CamoNetVar_NATO',[-6,-2,0],0],['Land_CamoNetVar_NATO',[6,-2,0],0],
+		['Fort_RazorWire',[-10,-8,0],0],['Fort_RazorWire',[10,-8,0],0]
+	]];
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_EAST',[
+		['D30_TK_EP1',[-10,5,0],8],['D30_TK_EP1',[0,6,0],0],['D30_TK_EP1',[10,5,0],352],
+		['TKBasicAmmunitionBox_EP1',[-10,0,0],0],['TKBasicAmmunitionBox_EP1',[0,1,0],0],['TKBasicAmmunitionBox_EP1',[10,0,0],0],
+		['DSHKM_TK_INS_EP1',[-5,-5,0],200],['DSHKM_TK_INS_EP1',[5,-5,0],160],
+		['Land_fort_bagfence_round',[-5,-5,0],0],['Land_fort_bagfence_round',[5,-5,0],0],
+		['Land_HBarrier_large',[-14,3,0],90],['Land_HBarrier_large',[14,3,0],90],
+		['Land_HBarrier_large',[-9,-2,0],0],['Land_HBarrier_large',[-3,-2,0],0],['Land_HBarrier_large',[3,-2,0],0],['Land_HBarrier_large',[9,-2,0],0],
+		['Land_CamoNet_EAST',[-6,-3.5,0],0],['Land_CamoNet_EAST',[6,-3.5,0],0],
+		['Hedgehog',[-8,-8,0],0],['Hedgehog',[8,-8,0],0]
+	]];
+
+	//--- MIXED (LIGHT, 2 AI) — was MG + AT crossfire. Reworked: MG + AT + a forward AA pod so a light mixed
+	//--- position actually covers all three threat lanes (infantry, armor, air), tighter bag ring.
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_WEST',[
+		['M2StaticMG',[-5,3,0],335],['TOW_TriPod_US_EP1',[5,3,0],25],
+		['Stinger_Pod_US_EP1',[0,-4,0],180],
+		['Land_fort_bagfence_round',[-5,3,0],0],['Land_fort_bagfence_round',[5,3,0],0],['Land_fort_bagfence_round',[0,-4,0],0],
+		['USBasicAmmunitionBox_EP1',[0,0,0],0],
+		['Land_fort_bagfence_long',[-7,0,0],0],['Land_fort_bagfence_long',[7,0,0],0],
+		['Fort_RazorWire',[0,6,0],0]
+	]];
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_EAST',[
+		['DSHKM_TK_INS_EP1',[-5,3,0],335],['SPG9_TK_INS_EP1',[5,3,0],25],
+		['Igla_AA_pod_TK_EP1',[0,-4,0],180],
+		['Land_fort_bagfence_round',[-5,3,0],0],['Land_fort_bagfence_round',[5,3,0],0],['Land_fort_bagfence_round',[0,-4,0],0],
+		['TKBasicAmmunitionBox_EP1',[0,0,0],0],
+		['Land_fort_bagfence_long',[-7,0,0],0],['Land_fort_bagfence_long',[7,0,0],0],
+		['Fort_RazorWire',[0,6,0],0]
+	]];
+
+	//--- MIXED (HEAVY, 4 AI) — was 2 MG + AT/ATGM. Reworked into a full strongpoint: twin MG, ATGM, AA pod,
+	//--- ammo, HESCO/HBarrier horseshoe + wire — the premium "hold this crossroads" mixed emplacement.
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST',[
+		['M2StaticMG',[-9,3,0],330],['M2StaticMG',[9,3,0],30],['TOW_TriPod_US_EP1',[0,6,0],0],
+		['Stinger_Pod_US_EP1',[0,-3,0],180],['Land_fort_bagfence_round',[0,-5,0],0],
+		['USBasicAmmunitionBox_EP1',[-4,0,0],0],['USBasicAmmunitionBox_EP1',[4,0,0],0],
+		['Land_HBarrier_large',[-11,3,0],90],['Land_HBarrier_large',[11,3,0],90],
+		['Land_HBarrier_large',[-6,9,0],0],['Land_HBarrier_large',[6,9,0],0],
+		['Land_fort_bagfence_corner',[-10,-2,0],270],['Land_fort_bagfence_corner',[10,-2,0],180],
+		['Fort_RazorWire',[-7,-7,0],0],['Fort_RazorWire',[7,-7,0],0]
+	]];
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST',[
+		['DSHKM_TK_INS_EP1',[-9,3,0],330],['DSHKM_TK_INS_EP1',[9,3,0],30],['Metis_TK_EP1',[0,6,0],0],
+		['Igla_AA_pod_TK_EP1',[0,-3,0],180],['Land_fort_bagfence_round',[0,-5,0],0],
+		['TKBasicAmmunitionBox_EP1',[-4,0,0],0],['TKBasicAmmunitionBox_EP1',[4,0,0],0],
+		['Land_HBarrier_large',[-11,3,0],90],['Land_HBarrier_large',[11,3,0],90],
+		['Land_HBarrier_large',[-6,9,0],0],['Land_HBarrier_large',[6,9,0],0],
+		['Land_HBarrier_large',[-6,-3,0],0],['Land_HBarrier_large',[6,-3,0],0],
+		['Hedgehog',[-7,-7,0],0],['Hedgehog',[7,-7,0],0],['Fort_RazorWire',[0,-8,0],0]
+	]];
+
+};
 
 //--- Anchor (build-menu placeholder classname) -> composition template map.
 // [anchorClassname, baseTemplateVar, factionSpecific?]  (factionSpecific appends _WEST / _EAST at build time)

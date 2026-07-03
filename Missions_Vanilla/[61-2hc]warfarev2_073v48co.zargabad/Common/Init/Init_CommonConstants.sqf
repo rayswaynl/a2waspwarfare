@@ -1775,8 +1775,45 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- FLAK TOWER sub-flag (elevated AA static + AI gunner on a tower deck). Independent of the
 //--- menu flag so the physics-fragile roof-mount item can be pulled without reverting the menu.
 //--- Only honoured when WFBE_C_DEFMENU_V2 == 1. 1 = flak tower buyable; 0 = flak tower hidden.
-//--- NEEDS-BOX-VERIFY: roof-mount stability on Land_Fort_Watchtower_EP1 (per proposal B.5).
 	if (isNil "WFBE_C_DEF_FLAKTOWER") then {WFBE_C_DEF_FLAKTOWER = 1};
+
+//--- cmdcon44-a (Build 89, Ray 2026-07-03): FLAK TOWER — MUCH TALLER structure ("Flak tower should be
+//--- a much higher structure, the bunker is a good MVP"). Build 87/88 mounted the AA gun on
+//--- Land_Fort_Watchtower_EP1 ("Bunker (Tower)"), deck ~5.4 m = too short. The host structure + deck
+//--- height are now flag-selected (read once by Init_Defenses.sqf when it builds WFBE_NEURODEF_FLAKTOWER_*),
+//--- so the structure/height can be retuned on the box WITHOUT a code change or CH->TK re-mirror.
+//---
+//---   WFBE_C_DEF_FLAKTOWER_STRUCTURE = host classname. DEFAULT = "Land_Mil_ControlTower"
+//---     (the airfield control tower — the tallest structure with a real flat railed observation deck +
+//---     interior stairs; ~12.5 m deck). CLASSNAME CONFIRMED: it is in the arma2-co-config-reference A2
+//---     building catalog, and this server runs COMBINED OPERATIONS, so A2 building classes load on BOTH
+//---     maps — proven by Land_Ind_IlluminantTower (another A2-only, no-_EP1 class) being registered LIVE
+//---     in the Takistan defense list (Core_CIV/Core_TKCIV/Structures_CDF). It is the base-A2 tower; there
+//---     is NO Land_Mil_ControlTower_EP1 in the config reference (do not use the _EP1 form — unverified).
+//---   WFBE_C_DEF_FLAKTOWER_DECK_Z = deck z-offset the AA gun is lifted to (setPosATL, Server_ConstructPosition).
+//---     DEFAULT 12.5 (control-tower deck estimate). The always-on RPT line in Server_ConstructPosition.sqf:82
+//---     prints the mounted z after one placement, so the exact deck can be read back and nudged here (no re-mirror).
+//---
+//--- RAY-DECISION / MVP FALLBACK: Ray's "the bunker is a good MVP" = Land_fortified_nest_big_EP1
+//---   ("Bunker (large)", the proven WFBE_C_DEPOT / legacy Bank model, physics-solid, _EP1 = both maps). BUT
+//---   its firing deck is only ~2.7 m — that is SHORTER than the current watchtower, i.e. "bunker MVP" and
+//---   "much taller" pull in opposite directions. So the DEFAULT ships the genuinely-tall control tower
+//---   (answers "much higher"); to fall back to the rock-solid bunker set STRUCTURE="Land_fortified_nest_big_EP1"
+//---   + DECK_Z=2.7, or revert to the original watchtower with STRUCTURE="Land_Fort_Watchtower_EP1" + DECK_Z=5.4.
+//---   Static-on-building is physics-fragile in A2 (settle/jitter) -> NEEDS-BOX-VERIFY the control-tower mount
+//---   holds the gun stable AND the control tower loads on Takistan; if either fails, the bunker fallback is the safe MVP.
+	if (isNil "WFBE_C_DEF_FLAKTOWER_STRUCTURE") then {WFBE_C_DEF_FLAKTOWER_STRUCTURE = "Land_Mil_ControlTower"};
+	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 12.5};
+
+//--- cmdcon44-a (Build 89, Ray 2026-07-03): AA / ARTILLERY / MIXED POSITIONS REWORK. Ray: "Defenses list
+//--- has not changed, AA/Art/Mix positions are still the same." The Build 88 DEFMENU_V2 pass deliberately
+//--- left the six WDDM AA/Art/Mix positions unchanged (docs\design\BASE-COMPOSITIONS-PROPOSAL.md B.2 marked
+//--- them "keep"); it only pruned dead rows and added watchtower/hedgehog/flak. This flag turns ON a genuinely
+//--- reworked set of those six composition arrays (Init_Defenses.sqf: beefier weapons + tighter interlocking
+//--- layouts + relabelled menu rows in Core_CIV.sqf). 1 = reworked positions + labels; 0 = exact legacy
+//--- positions + labels (both the legacy compositions and the legacy Core_CIV labels are left intact).
+//--- NOTE: the definitive AA/Art/Mix content is a Ray design call — the shipped set is a first proposal.
+	if (isNil "WFBE_C_DEFMENU_V2_POSITIONS") then {WFBE_C_DEFMENU_V2_POSITIONS = 1};
 
 //--- BANK MODEL v2 (proposal part C, Ray-approved Build 87). 1 = the Bank/Reserve income
 //--- objective uses the office building Land_A_Office01_EP1 (reads as "money lives here");
