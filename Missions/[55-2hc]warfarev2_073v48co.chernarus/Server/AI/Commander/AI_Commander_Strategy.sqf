@@ -968,7 +968,7 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 //--- (pressing vs consolidating vs defending) is explicit; FRONT reconstructs the front line (held /
 //--- contested counts + the primary target's name and whether it borders our territory). Both ride
 //--- the existing AI_Commander_Strategy worker (per side / ~60s; gated in AI_Commander.sqf:133-134).
-private ["_posture","_primT","_townStr","_myEff","_enEff","_garBodies","_garTeams"];
+private ["_posture","_primT","_townStr","_myEff","_enEff","_garBodies","_garTeams","_losingPress"];
 //--- B69 territory-credited-press-gate: effective strength credits held towns (garrison bodies never counted in _myStr).
 //--- POSTURE-gate ONLY; last-stand (l.66) + HQ-strike keep reading raw _myStr (those are maneuver-commit gates).
 _townStr = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2];
@@ -979,6 +979,7 @@ _posture = if (_strikeOn) then {"HQ_STRIKE"} else {
 		if (_myTowns >= (_enemyTowns * 1.2) && {_myEff >= _enEff}) then {"PRESS"} else {"HOLD"}
 	}
 };
+_losingPress = false;
 //--- cmdcon41-w2 LOSING-SIDE PRESS FLOOR (Fable F7; flag WFBE_C_AICOM_LOSING_PRESS default 1). A losing side with an
 //--- intact army must NOT park in DEFEND (the EAST-sat-in-DEFEND-min201-415 pattern). When we are BEHIND on territory
 //--- (myTowns < enemyTowns) yet at rough strength parity (myEff >= 0.8 * enEff), NOT in last-stand, AND our own base is
@@ -995,6 +996,7 @@ if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_
 	};
 	if (!_lpBaseThreat) then {
 		_posture = "PRESS";
+		_losingPress = true;
 		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
 	};
 };
@@ -1029,8 +1031,9 @@ diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|
 //--- the override gate (myEff>=enEff, line ~579) then excluded - making the override structurally unreachable (live: EAST
 //--- stalled 17x, 0 round-enders). Now: count sustained territory dominance; emit the STALL telemetry only for the
 //--- PASSIVE subset (posture != PRESS) so the greppable signal keeps its original "dominant but idle" meaning.
+//--- Lane 328: losing-press-floor ticks are recovery aggression, not dominant-side stall evidence.
 private "_stallRatio"; _stallRatio = missionNamespace getVariable ["WFBE_C_AICOM_STALL_TOWN_RATIO", 2];
-if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeOn}) then {
+if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeOn} && {!_losingPress}) then {
 	_logik setVariable ["wfbe_aicom_stall_streak", (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + 1];
 	if (_posture != "PRESS") then {
 		diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]));
