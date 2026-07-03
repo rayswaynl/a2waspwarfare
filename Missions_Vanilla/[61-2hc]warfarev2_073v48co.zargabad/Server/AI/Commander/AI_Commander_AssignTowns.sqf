@@ -634,13 +634,19 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					};
 					//--- AICOM v2 (M1): if the single-authority Allocator assigned THIS team a target this cycle,
 					//--- USE it (concentrate on the fist) and skip the legacy spearhead/nearest pick below. Fresh-gated
-					//--- (<180s) so a stale assignment (Allocator off / not run) falls through to legacy = instant rollback.
+					//--- (WFBE_C_AICOM2_ALLOC_TICK_TTL, default 180s) so a stale assignment (Allocator off / not run) falls through to legacy = instant rollback.
 					if (isNull _target && {(missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0}) then {
-						private ["_allocT","_allocTick"];
+						private ["_allocT","_allocTick","_allocTtl","_allocAge"];
 						_allocT    = _team getVariable "wfbe_aicom_alloc_target";
 						_allocTick = _team getVariable "wfbe_aicom_alloc_tick";
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {(time - _allocTick) < 180} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)}) then { //--- wiki cross-check fix: respect this team's stuck-abandon blacklist (don't re-send it at a town it gave up on as unreachable).
+						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
+						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)}) then { //--- wiki cross-check fix: respect this team's stuck-abandon blacklist (don't re-send it at a town it gave up on as unreachable).
 							_target = _allocT;
+						} else {
+							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ALLOC_TICK_STALE|team=" + (str _team) + "|town=" + (_allocT getVariable ["name","town"]) + "|age=" + str (round _allocAge) + "|ttl=" + str (round _allocTtl));
+							};
 						};
 					};
 					_spear = _logik getVariable ["wfbe_aicom_targets", []];
