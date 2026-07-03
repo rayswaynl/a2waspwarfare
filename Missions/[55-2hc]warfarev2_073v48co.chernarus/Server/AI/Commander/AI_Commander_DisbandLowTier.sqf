@@ -50,7 +50,7 @@ _bestN = 1e9;
 			private ["_hc","_flagged","_md","_open"];
 			_hc      = [_team,"wfbe_aicom_hc",false]              Call WFBE_CO_FNC_GroupGetBool;
 			_flagged = [_team,"wfbe_aicom_disband",false]         Call WFBE_CO_FNC_GroupGetBool;
-			_md      = _team getVariable ["wfbe_teammode","towns"];
+			_md      = _team getVariable "wfbe_teammode"; if (isNil "_md") then {_md = "towns"};
 			_open    = [_team,"wfbe_aicom_dispatch_open",false]   Call WFBE_CO_FNC_GroupGetBool;
 			//--- candidate = HC-owned, not player-led, idle (auto town-mode, no open dispatch), not flagged.
 			if (_hc && {!_flagged} && {!isPlayer (leader _team)} && {_md == "towns"} && {!_open}) then {
@@ -76,4 +76,5 @@ if (isNull _best) exitWith {};
 
 //--- flag it; the HC executor self-deletes with its own re-check, aicom-team-ended deregisters from wfbe_teams.
 _best setVariable ["wfbe_aicom_disband", true, true];
+["INFORMATION", Format ["AI_Commander_DisbandLowTier.sqf: [%1] low-tier TEAM_RETIRED flagged best-team %2 (footTeams %3, units %4); HC self-deletes.", _sideText, _best, _footCount, _bestN]] Call WFBE_CO_FNC_AICOMLog;
 diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_RETIRED|reason=lowtier-cull|footTeams=" + str _footCount + "|units=" + str _bestN);

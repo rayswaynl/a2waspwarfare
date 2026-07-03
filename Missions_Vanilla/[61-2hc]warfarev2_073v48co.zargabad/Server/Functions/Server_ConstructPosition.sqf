@@ -8,12 +8,23 @@
 
    Called from Server\PVFunctions\RequestDefense.sqf:  [_side,_anchorType,_pos,_dir,_manned] Spawn Server_ConstructPosition;
 */
-Private ["_side","_anchorType","_pos","_dir","_manned","_map","_base","_factionSpecific","_tplName","_template","_origin","_created","_i","_entry","_cls","_relPos","_relDir","_worldPos","_worldDir","_one","_placementID"];
+Private ["_side","_anchorType","_pos","_dir","_manned","_map","_base","_factionSpecific","_tplName","_template","_origin","_created","_i","_entry","_cls","_relPos","_relDir","_worldPos","_worldDir","_one","_placementID","_flakHostCls","_flakAutoZ","_deckTop","_bb"];
 _side       = _this select 0;
 _anchorType = _this select 1;
 _pos        = _this select 2;
 _dir        = _this select 3;
 _manned     = _this select 4;
+
+//--- cmdcon44-c (Build 89): flak-tower deck AUTO-HEIGHT. The Flak Tower composition mounts an AA gun on a
+//--- non-zero z (the tower deck). Rather than trust a hardcoded deck estimate (the thin illuminant tower's
+//--- top platform height was never measured empirically), measure the just-spawned HOST tower's REAL top via
+//--- boundingBox and lift the gun to that (self-correcting). Same idiom Ray used in Init_NavalHVT.sqf (B754:
+//--- boundingBox carrier-deck measurement replacing a hardcoded 16 guess; boundingBox is A2-OA 1.64-safe).
+//--- _deckTop is captured when a GROUND child (z~0) whose class == the configured flak host is created, then
+//--- reused for the elevated gun child later in the same composition. Guarded by WFBE_C_DEF_FLAKTOWER_AUTOZ.
+_flakHostCls = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_STRUCTURE", "Land_Ind_IlluminantTower"];
+_flakAutoZ   = (missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_AUTOZ", 1]) > 0;
+_deckTop     = 0;
 
 //--- Resolve which composition template this anchor maps to (faction-specific or neutral).
 _base = "";
@@ -65,6 +76,21 @@ for "_i" from 0 to (count _template - 1) do {
 	if (!isNil "_one") then {
 		if (typeName _one == "OBJECT") then {
 			_one setVariable ["WFBE_WDDMPositionAnchor", _placementID, true];
+				//--- cmdcon44-c: capture the flak-tower HOST deck height. This ground child (z~0) is the tower;
+				//--- measure its real top via boundingBox so the gun child (later in this composition) mounts on
+				//--- the actual platform, not a guessed z. boundingBox max-z is the model top above the object's
+				//--- position; the host sits at ground z=0 so this IS the deck height. A2-OA 1.64-safe.
+				if (_flakAutoZ && {(_relPos select 2) <= 0.1} && {_cls == _flakHostCls}) then {
+					_bb = boundingBox _one;
+					//--- cmdcon44f (rig XWT46/47 + Ray field report 'ZU-23 halfway up'): A2 boundingBox returns a
+					//--- SYMMETRIC rotation-safe box (+/-11.83 on the 23.7m illuminant mast) - max-Z alone is HALF
+					//--- the real height. Full height (maxZ - minZ) = the true platform top; statics do not settle
+					//--- in A2 so the gun stays exactly where lifted (rig-verified at 23.66 ATL).
+					_deckTop = ((_bb select 1) select 2) - ((_bb select 0) select 2);
+					if (WF_Debug) then {
+						["DEBUG (Server_ConstructPosition.sqf)", Format ["cmdcon44-c flak host [%1] boundingBox deck top measured = %2 (anchor %3).", _cls, _deckTop, _anchorType]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
 			//--- cmdcon42-g: elevated children (non-zero z offset, e.g. the Flak Tower AA gun on the
 			//--- tower deck) - ConstructDefense placed the child at ground (z flattened above), so lift
 			//--- it onto the deck now via setPosATL + level it (proposal B.5 roof-mount idiom).
@@ -72,6 +98,8 @@ for "_i" from 0 to (count _template - 1) do {
 			private ["_zOff"];
 			_zOff = _relPos select 2;
 			if (_zOff > 0.1) then {
+				//--- cmdcon44-c: prefer the auto-measured host deck top over the flag's fallback estimate.
+				if (_flakAutoZ && {_deckTop > 0.1}) then { _zOff = _deckTop; };
 				_worldPos set [2, _zOff];
 				_one setPosATL _worldPos;
 				_one setVectorDirAndUp [[sin _worldDir, cos _worldDir, 0], [0,0,1]];

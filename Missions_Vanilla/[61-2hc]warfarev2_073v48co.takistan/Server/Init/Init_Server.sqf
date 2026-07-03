@@ -213,6 +213,7 @@ Call {
 		case 2: {_oc = 1};
 	};
 	60 setOvercast _oc;
+	if (_weat == 2) then {60 setRain 0.5}; //--- lane199(e): Rainy lobby option now actually sets rain.
 };
 
 ["INITIALIZATION", "Init_Server.sqf: Weather module is loaded."] Call WFBE_CO_FNC_LogContent;
@@ -1010,6 +1011,13 @@ if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
 if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLower worldName == "takistan"}) then {
 	[] execVM "Server\Server_Oilfields.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Lane 180 ambient skirmish cells: default-off, server-only flavor loop with a hard cap of one active
+//--- WEST/EAST foot skirmish. The worker self-waits for towns and self-cleans its groups.
+if ((missionNamespace getVariable ["WFBE_C_AMBIENT_SKIRMISH", 0]) > 0) then {
+	[] execVM "Server\Server_AmbientSkirmish.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_AmbientSkirmish.sqf launched (WFBE_C_AMBIENT_SKIRMISH=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 // run one global server town script to process supply updates in each town

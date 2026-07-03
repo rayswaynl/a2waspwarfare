@@ -143,6 +143,10 @@ if (!_fromFocus) then {
 		if (_dNear > _frontRad) then {_sc = _sc - _farPen};
 		if (_nearBand > 0 && {_dNear < _nearBandDist}) then {_sc = _sc + _nearBandBonus};   //--- F5: near-band bonus for towns immediately adjacent to our front (re-ranks; does not change eligibility).
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
+		if (isNil "_sc") then {
+			diag_log ("CAPDBG|SC|" + (_tt getVariable ["name","?"]) + "|dNear=" + str(isNil "_dNear") + "|residual");
+		};
+		_sc = if (isNil "_sc") then {-99999} else {_sc};
 		_scored set [count _scored, [_sc, _tt]];
 	} forEach _tgtTowns;
 	//--- cmdcon27 THREAD C: _fistMax field-order lever - MUST land before its consumption just below.
@@ -208,12 +212,80 @@ _harassTgt = objNull;
 if (_harassN > 0) then {
 	private ["_harassFar"];
 	_harassFar = -1;
-	{
-		private ["_tt","_depth"];
-		_tt = _x;
-		_depth = (_tt Call _frontDist) + (if ((_tt getVariable ["sideID", -1]) == _enemyID) then {3000} else {0});
-		if (_depth > _harassFar && {!(_tt in _fist)}) then {_harassFar = _depth; _harassTgt = _tt};
-	} forEach _tgtTowns;
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_HARASS_FALLBACK", 0]) > 0) then {
+		//--- HARASS FALLBACK (block-m): pick deepest town reachable by >=1 mounted eligible team.
+		//--- Pre-scan: collect positions of eligible mounted teams so we can test reachability upfront.
+		private ["_hfMntPos","_hfMntReach","_hfGrp","_hfLdr","_hfMode","_hfRelief","_hfStrike","_hfHasVeh","_hfGar"];
+		_hfMntPos   = [];
+		_hfMntReach = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
+		_hfGar      = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+		{
+			_hfGrp = _x;
+			if (!isNull _hfGrp) then {
+				_hfLdr    = leader _hfGrp;
+				_hfMode   = toLower (_hfGrp getVariable ["wfbe_teammode", "towns"]);
+				_hfRelief = _hfGrp getVariable ["wfbe_aicom_relief", objNull];
+				_hfStrike = _hfGrp getVariable ["wfbe_aicom_strike", false];
+				_hfHasVeh = false;
+				{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_hfHasVeh = true} } forEach (units _hfGrp);
+				if (_hfHasVeh && {({alive _x} count (units _hfGrp)) > 0} && {!isNull _hfLdr} && {!isPlayer _hfLdr}
+				    && {_hfGrp != _hfGar} && {isNull _hfRelief} && {!_hfStrike}
+				    && {!(_hfMode in ["move","patrol","defense"])}
+				    && {([_hfGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_hfGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
+					_hfMntPos set [count _hfMntPos, getPos _hfLdr];
+				};
+			};
+		} forEach _teams;
+		//--- Build depth-scored list, then insertion-sort descending (deepest first). A2-OA safe (no apply/sort).
+		private ["_hfCands","_hfI","_hfJ","_hfTmp","_hfPair","_hfDepth","_hfTown","_hfReach","_hfPos","_hfSkip","_hfFirst"];
+		_hfCands = [];
+		{
+			private ["_tt","_depth"];
+			_tt = _x;
+			_depth = (_tt Call _frontDist) + (if ((_tt getVariable ["sideID", -1]) == _enemyID) then {3000} else {0});
+			if (!(_tt in _fist)) then {_hfCands set [count _hfCands, [_depth, _tt]]};
+		} forEach _tgtTowns;
+		_hfI = 1;
+		while {_hfI < (count _hfCands)} do {
+			_hfJ   = _hfI;
+			_hfTmp = _hfCands select _hfI;
+			while {_hfJ > 0 && {((_hfCands select (_hfJ - 1)) select 0) < (_hfTmp select 0)}} do {
+				_hfCands set [_hfJ, _hfCands select (_hfJ - 1)];
+				_hfJ = _hfJ - 1;
+			};
+			_hfCands set [_hfJ, _hfTmp];
+			_hfI = _hfI + 1;
+		};
+		//--- Walk sorted candidates; pick deepest with >= 1 mounted team in reach.
+		_hfSkip  = false; _hfFirst = objNull;
+		{
+			_hfPair  = _x;
+			_hfDepth = _hfPair select 0;
+			_hfTown  = _hfPair select 1;
+			//--- Once a target is picked the guard makes remaining iterations no-ops (a bare
+			//--- exitWith inside then{} is invalid A2 grammar and broke this file's compile).
+			if (isNull _harassTgt) then {
+				_hfReach = false;
+				{ _hfPos = _x; if ((_hfPos distance _hfTown) <= _hfMntReach) exitWith {_hfReach = true} } forEach _hfMntPos;
+				if (_hfReach) then {
+					_harassTgt = _hfTown; _harassFar = _hfDepth;
+				} else {
+					if (isNull _hfFirst) then {_hfFirst = _hfTown; _hfSkip = true};
+				};
+			};
+		} forEach _hfCands;
+		if (_hfSkip) then {
+			diag_log ("AICOMSTAT|v2|EVENT|HARASS_SKIP|" + str _side + "|skipped=" + (_hfFirst getVariable ["name","?"]) + "|pickedReachable=" + (if (!isNull _harassTgt) then {_harassTgt getVariable ["name","?"]} else {"none"}));
+		};
+	} else {
+		//--- legacy path (WFBE_C_AICOM_HARASS_FALLBACK=0): byte-identical simple deepest pick.
+		{
+			private ["_tt","_depth"];
+			_tt = _x;
+			_depth = (_tt Call _frontDist) + (if ((_tt getVariable ["sideID", -1]) == _enemyID) then {3000} else {0});
+			if (_depth > _harassFar && {!(_tt in _fist)}) then {_harassFar = _depth; _harassTgt = _tt};
+		} forEach _tgtTowns;
+	};
 };
 
 //--- M? EXPANSION LANE (Ray, Issue 5): the capturable list includes ~42 NEUTRAL/uncaptured towns the all-in
@@ -231,9 +303,10 @@ _neutTowns = [];
 
 //--- ASSIGN every ELIGIBLE team: a light MOUNTED detachment to the rear harass target (M2), up to _expandN
 //--- teams to capture NEUTRAL towns (expansion lane), the rest concentrated on the fist (reach-aware; never idle).
-private ["_assigned","_harassAssigned"];
+private ["_assigned","_harassAssigned","_expandClaimed","_dedupOn"];
 _garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 _assigned = 0; _harassAssigned = 0; _expandCount = 0;
+_expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick
 //--- SPREAD (cmdcon41, claude-gaming 2026-07-02): per-fist-town load counter + cap. With a widened fist
 //--- (WFBE_C_AICOM2_FIST_TOWNS>1) the L268-272 nearest pick otherwise funnels every team onto the single
 //--- closest fist town = the dogpile. _fistCounts is index-aligned with _fist; _capPerFist caps stacking
@@ -241,6 +314,7 @@ _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 private ["_fistCounts","_capPerFist"];
 _fistCounts = []; { _fistCounts set [_forEachIndex, 0] } forEach _fist;
 _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
+_dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 {
 	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
 	_grp = _x;
@@ -254,6 +328,7 @@ _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 		//--- garrison, not player-led, not under an explicit human order (move/patrol/defense).
 		if (_alive > 0 && {!isNull _ldr} && {!isPlayer _ldr} && {_grp != _garGrp}
 		    && {isNull _relief} && {!_strike} && {!(_mode in ["move","patrol","defense"])}
+		    && {(_grp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
 		    && {([_grp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 			_ldrPos = getPos _ldr;
 			_hasVeh = false;
@@ -273,8 +348,18 @@ _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 				if (_expandCount < _expandN) then {
 					private ["_eTgt","_eD","_ev"];
 					_eTgt = objNull; _eD = 1e9;
-					{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
-					if (!isNull _eTgt) then {_tgt = _eTgt; _expandCount = _expandCount + 1};
+					//--- DEDUP (block-m, WFBE_C_AICOM_EXPAND_DEDUP): skip towns already claimed this tick
+					if (_dedupOn) then {
+						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD} && {!(_x in _expandClaimed)}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
+					} else {
+						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
+					};
+					if (!isNull _eTgt) then {
+						_tgt = _eTgt; _expandCount = _expandCount + 1;
+						if (_dedupOn) then {
+							_expandClaimed set [count _expandClaimed, _eTgt];
+						};
+					};
 				};
 				if (isNull _tgt) then {
 					//--- concentrate on the fist. SPREAD (cmdcon41): cap-aware nearest pick so teams fan across the
@@ -316,6 +401,88 @@ _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 	};
 } forEach _teams;
 
+//--- D7 AICOM FEINT: optional feint dispatch. Self-contained, flag-gated (WFBE_C_AICOM_FEINT_ENABLE).
+//--- Runs AFTER the main ASSIGN loop so the feint write is the LAST write to wfbe_aicom_alloc_target this tick (wins).
+//--- Recall pass runs every tick (clears expired feint tags -> main fist/loop picks up the team next tick).
+//--- Dispatch pass runs when the per-side cooldown has elapsed and conditions are met.
+//--- HARD-COLLISION NOTE: this entire block is a new addition; no existing line is modified.
+//--- Rebase after PR #286 (F5) which modifies AI_Commander_Allocate.sqf.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_FEINT_ENABLE", 0]) > 0 && {!_expandFirst} && {!_concentrate}) then {
+	private ["_feintTgt","_feintTeam","_feintT0","_feintDur","_feintInterval","_feintGrp","_feintLdr","_feintAlive","_feintMode","_feintRelief","_feintStrike","_feintHasVeh","_feintExpiry","_feintRecalled","_feintFar","_feintD","_feintI","_feintGarGrp"];
+	_feintGarGrp   = _logik getVariable ["wfbe_aicom_garrison", grpNull];   //--- FIX(review HIGH): read garrison before team-picker uses it
+	_feintInterval = missionNamespace getVariable ["WFBE_C_AICOM_FEINT_INTERVAL", 600];
+	_feintDur      = missionNamespace getVariable ["WFBE_C_AICOM_FEINT_DUR", 120];
+	_feintT0       = _logik getVariable ["wfbe_aicom_feint_t0", -1e9];
+
+	//--- RECALL PASS: on every tick check all teams for an EXPIRED feint tag and redirect to the fist.
+	_feintRecalled = false;
+	{
+		_feintGrp    = _x;
+		_feintExpiry = _feintGrp getVariable ["wfbe_aicom_feint_expiry", 0];
+		if (!isNull _feintGrp && {_feintExpiry > 0} && {time > _feintExpiry}) then {
+			_feintGrp setVariable ["wfbe_aicom_feint_expiry", 0];
+			if (count _fist > 0) then {
+				_feintGrp setVariable ["wfbe_aicom_alloc_target", (_fist select 0)];
+				_feintGrp setVariable ["wfbe_aicom_alloc_tick", time];
+				diag_log ("AICOM2|v1|FEINT|RECALL|" + str _side + "|" + str (round (time / 60)) + "|team=" + str _feintGrp + "|returnTo=" + ((_fist select 0) getVariable ["name","?"]));
+			};
+			_feintRecalled = true;
+		};
+	} forEach _teams;
+
+	//--- DISPATCH PASS: only when cooldown elapsed AND no recall happened this tick (FIX(review LOW): skip same-tick re-dispatch after a recall).
+	if ((time - _feintT0) >= _feintInterval && {!_feintRecalled}) then {
+		//--- Pick feint target: enemy-held, NOT in _fist, NOT the harass target, nearest front (most shallow = most visible distraction).
+		_feintTgt  = objNull;
+		_feintFar  = 1e9;
+		{
+			_feintD = _x Call _frontDist;
+			if ((_x getVariable ["sideID", -1]) == _enemyID
+				&& {!(_x in _fist)}
+				&& {!(!isNull _harassTgt && {_x == _harassTgt})}
+				&& {_feintD < _feintFar}) then {
+				_feintFar = _feintD;
+				_feintTgt = _x;
+			};
+		} forEach _tgtTowns;
+
+		if (!isNull _feintTgt) then {
+			//--- Pick feint team: first eligible MOUNTED team not already feint-tagged, not harass/relief/strike/garrison.
+			_feintTeam = grpNull;
+			_feintI    = 0;
+			while {isNull _feintTeam && {_feintI < (count _teams)}} do {
+				_feintGrp    = _teams select _feintI;
+				_feintAlive  = {alive _x} count (units _feintGrp);
+				_feintLdr    = leader _feintGrp;
+				_feintMode   = toLower (_feintGrp getVariable ["wfbe_teammode", "towns"]);
+				_feintRelief = _feintGrp getVariable ["wfbe_aicom_relief", objNull];
+				_feintStrike = _feintGrp getVariable ["wfbe_aicom_strike", false];
+				_feintExpiry = _feintGrp getVariable ["wfbe_aicom_feint_expiry", 0];
+				_feintHasVeh = false;
+				{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_feintHasVeh = true} } forEach (units _feintGrp);
+				if (!isNull _feintGrp && {_feintAlive > 0} && {!isNull _feintLdr} && {!isPlayer _feintLdr}
+					&& {_feintGrp != _feintGarGrp} && {isNull _feintRelief} && {!_feintStrike}
+					&& {!(_feintMode in ["move","patrol","defense"])}
+					&& {_feintExpiry <= 0}
+					&& {_feintHasVeh}
+					&& {([_feintGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_feintGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
+					_feintTeam = _feintGrp;
+				};
+				_feintI = _feintI + 1;
+			};
+
+			if (!isNull _feintTeam) then {
+				_feintTeam setVariable ["wfbe_aicom_feint_expiry", time + _feintDur];
+				_feintTeam setVariable ["wfbe_aicom_alloc_target", _feintTgt];
+				_feintTeam setVariable ["wfbe_aicom_alloc_tick", time];
+				_logik setVariable ["wfbe_aicom_feint_t0", time];
+				diag_log ("AICOM2|v1|FEINT|DISPATCH|" + str _side + "|" + str (round (time / 60)) + "|feintTo=" + (_feintTgt getVariable ["name","?"]) + "|team=" + str _feintTeam + "|dur=" + str _feintDur);
+			};
+		};
+	};
+};
+
+
 //--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) REINFORCE HOOK: a fresh player REINFORCE order routes ONE
 //--- eligible team to that town (single-team alloc_target override; reversible; auto-clears at WFBE_C_AICOM_REINFORCE_TTL).
 private ["_riPair","_riTown","_riT0"];
@@ -336,6 +503,7 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 				_riStrike = _riGrp getVariable ["wfbe_aicom_strike", false];
 				if (_riAlive > 0 && {!isNull _riLdr} && {!isPlayer _riLdr} && {_riGrp != _garGrp}
 				    && {isNull _riRelief} && {!_riStrike} && {!(_riMode in ["move","patrol","defense"])}
+				    && {(_riGrp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
 					if (_riD < _riBestD) then {_riBestD = _riD; _riBest = _riGrp};

@@ -71,8 +71,7 @@ public static class CommandHandler
                     var client = BotReference.GetClientRef();
                     if (client != null)
                     {
-                        await client.SetGameAsync(newChannelName, null, ActivityType.Playing);
-                        Log.WriteLine($"Bot status updated to: {newChannelName}", LogLevel.DEBUG);
+                        await DiscordPresenceUpdater.TrySetGameAsync(client, newChannelName, "/setup command");
                     }
                 }
                 

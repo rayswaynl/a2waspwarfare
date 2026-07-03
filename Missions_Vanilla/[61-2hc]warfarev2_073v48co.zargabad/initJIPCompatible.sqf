@@ -33,11 +33,11 @@ publicVariable "CBA_display_ingame_warnings";
 for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
-diag_log "## Build: WASP Warfare Build 88 / cmdcon43";
+diag_log "## Build: WASP Warfare Build 89 / cmdcon44";
 #ifdef WF_RELEASE_MARKER
 diag_log WF_RELEASE_MARKER;
 #else
-diag_log format ["WASPRELEASE|v1|candidate=build88-cmdcon43-20260703|git=build88-cmdcon43|terrain=%1", worldName];
+diag_log format ["WASPRELEASE|v1|candidate=build89-cmdcon44-20260703|git=build89-cmdcon44|terrain=%1", worldName];
 #endif
 diag_log format ["MISSINIT: missionName=%1, worldName=%2, isMultiplayer=%3, isServer=%4, isDedicated=%5", WF_MISSIONNAME, worldName, isMultiplayer, isServer, isDedicated];
 diag_log format ["## Starting Distance: [%1]", startingDistance];
@@ -92,7 +92,7 @@ if (isHostedServer || (!isHeadLessClient && !isDedicated)) then {
 	if (isNil "WFBE_CLIENT_BLACKFADE_APPLIED") then { WFBE_CLIENT_BLACKFADE_APPLIED = true; 12452 cutText [(localize 'STR_WF_Loading')+"...","BLACK FADED",180]; }; //--- B65 Fix-2 (one-shot black-fade guard): a JIP state re-push must not re-darken an already-initialised client. missionNamespace global persists across re-runs in a session; re-arms on a genuine new mission. A2-OA-safe. Original note: //--- B56: was 50000s. Bounded so a stalled JIP init can never strand a client on permanent black; the Init_Client fade-clear still cuts it early on success.
 };
 
-setViewDistance 3500; //--- Server & Client default View Distance.
+setViewDistance (if (worldName == "Zargabad") then {3000} else {3500}); //--- Server & Client default View Distance (ZG capped at 3km: dense urban map, client fps).
 
 clientInitComplete = false;
 commonInitComplete = false;
@@ -154,6 +154,11 @@ WFBE_C_GUER_PLAYERSIDE = getNumber (missionConfigFile >> "Params" >> "WFBE_C_GUE
 //--- Single-block change: revert this block (or the commit) to restore lobby-param control.
 WFBE_C_ENVIRONMENT_MAX_VIEW = getNumber (missionConfigFile >> "Params" >> "WFBE_C_ENVIRONMENT_MAX_VIEW" >> "default");
 diag_log Format ["[WFBE (INIT)] INFORMATION: ViewDistance force ACTIVE: WFBE_C_ENVIRONMENT_MAX_VIEW=%1 (mission param default; cached/lobby paramsArray value ignored)", WFBE_C_ENVIRONMENT_MAX_VIEW];
+//--- ZG RE-CLAMP (Ray 2026-07-03 HARD ORDER: Zargabad max view distance = 3km for client fps). The force
+//--- above restores the 6000 param default on EVERY map and runs AFTER Init_CommonConstants, which is where
+//--- the deliberate ZG cap lives - so without this line the force silently undoes the cap. Re-apply it here
+//--- so BOTH fixes hold: stale-param-cache immunity (Miksuu, CH/TK) + the 3km ZG ceiling (Ray).
+if (worldName == "Zargabad") then {WFBE_C_ENVIRONMENT_MAX_VIEW = WFBE_C_ENVIRONMENT_MAX_VIEW min 3000};
 
 //--- AICOM: +50% starting economy. MUST live here: in MP Init_Parameters always sets these from paramsArray,
 //--- so the isNil fallbacks in Init_CommonConstants never fire on a dedicated server (why earlier raises had no effect).

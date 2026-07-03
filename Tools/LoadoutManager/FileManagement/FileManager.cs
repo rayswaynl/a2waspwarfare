@@ -7,17 +7,46 @@ public class FileManager
     // Ensures the destination directory exists, copies the files, and cleans up any extra files and directories.
     public static void CopyFilesFromSourceToDestination(string _source, string _destination, TerrainModStatus _terrainModStatus)
     {
+        var copyErrors = new List<string>();
+
+        CopyFilesFromSourceToDestination(_source, _destination, _terrainModStatus, copyErrors);
+
+        if (copyErrors.Count > 0)
+        {
+            string errorSummary = "LoadoutManager failed to copy " + copyErrors.Count + " file(s):" +
+                Environment.NewLine + "- " + string.Join(Environment.NewLine + "- ", copyErrors);
+            throw new IOException(errorSummary);
+        }
+    }
+
+    private static void CopyFilesFromSourceToDestination(
+        string _source,
+        string _destination,
+        TerrainModStatus _terrainModStatus,
+        List<string> _copyErrors)
+    {
         bool _isModdedTerrainBool = _terrainModStatus == TerrainModStatus.MODDED;
+        int errorCountBeforeCopy = _copyErrors.Count;
 
         EnsureDirectoryExists(_destination);
-        CopyFiles(_source, _destination, _isModdedTerrainBool);
-        RecursivelyCopySubdirectories(_source, _destination, _isModdedTerrainBool);
+        CopyFiles(_source, _destination, _isModdedTerrainBool, _copyErrors);
+        RecursivelyCopySubdirectories(_source, _destination, _isModdedTerrainBool, _copyErrors);
+
+        if (_copyErrors.Count > errorCountBeforeCopy)
+        {
+            return;
+        }
+
         DeleteExtraFiles(_source, _destination, _isModdedTerrainBool);
         DeleteExtraDirectories(_source, _destination);
     }
 
     // Recursively copies all subdirectories from the source to the destination using the main orchestrator method.
-    private static void RecursivelyCopySubdirectories(string _source, string _destination, bool _isModdedTerrain)
+    private static void RecursivelyCopySubdirectories(
+        string _source,
+        string _destination,
+        bool _isModdedTerrain,
+        List<string> _copyErrors)
     {
         List<string> blacklistedDirectories = new List<string>
         {
@@ -47,7 +76,7 @@ public class FileManager
 
             string destinationDirectory = Path.Combine(_destination, directoryName);
             CopyFilesFromSourceToDestination(directory, destinationDirectory, 
-                terrainModStatusForReturnedTerrain);
+                terrainModStatusForReturnedTerrain, _copyErrors);
         }
     }
 
@@ -59,7 +88,7 @@ public class FileManager
     }
 
     // Copies each file from the source directory to the destination directory. Overwrites existing files.
-    private static void CopyFiles(string _source, string _destination, bool _isModdedTerrain)
+    private static void CopyFiles(string _source, string _destination, bool _isModdedTerrain, List<string> _copyErrors)
     {
         foreach (var file in Directory.GetFiles(_source))
         {
@@ -79,9 +108,11 @@ public class FileManager
                     sourceStream.CopyTo(destStream);
                 }
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                Console.WriteLine($"Error copying file: {ex.Message}");
+                string copyError = $"Error copying '{file}' to '{destFile}': {ex.Message}";
+                _copyErrors.Add(copyError);
+                Console.WriteLine(copyError);
             }
         }
     }

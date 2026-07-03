@@ -1,288 +1,195 @@
+/* =====================================================================
+   WASP WARFARE - HELP MENU CONTROLLER (REDESIGN)   A2 OA 1.64
+   Draft REPLACEMENT for Client\GUI\GUI_Menu_Help.sqf.
+
+   Same stateless switch-on-arg contract the dialog expects:
+     ['onLoad'] execVM ...                     -> populate list, select 0
+     ['onHelpLBSelChanged', _idx] call compile -> swap content + title
+
+   Controls (see Dialogs_HelpMenu.hpp):
+     160001  RscListBox        section list (left)
+     160002  RscStructuredText content pane (right, in a controls group)
+     160003  RscStructuredText dynamic title bar
+
+   Sections (label list and _helps array MUST stay index-aligned & same length):
+     0 Getting Started
+     1 Controls
+     2 Economy
+     3 Combat & Capturing
+     4 Commanding the AI
+     5 Factions
+     6 FAQ
+
+   Only A2-OA-valid commands used: displayCtrl, lbAdd, lbSetCurSel,
+   ctrlSetStructuredText, parseText, findDisplay, compile,
+   preprocessFileLineNumbers. No A3-only commands.
+   ===================================================================== */
+
 private ["_action"];
 disableSerialization;
 _action = _this select 0;
 
-switch (_action) do {
-	case "onLoad": {
-		{((findDisplay 508000) displayCtrl 160001) lbAdd _x} forEach ["Introduction", "Respawn", "Towns", "Base Structures and Functions", "Experimental Changes", "About the Mission","Server Rules"];
-		((findDisplay 508000) displayCtrl 160001) lbSetCurSel 0;
-	};
-	case "onHelpLBSelChanged": {
-		_changeTo = _this select 1;
-_helps = [
-//-------------------------------------Introductions
-"<t size='1.4' color='#2394ef' underline='true'>Introduction</t><br />
-<br />
-<br />
-<br />
-<t><t color='#ffec1c'>CTI</t> (<t color='#ffec1c'>Conquer The Island</t>) is a gamemode where two sides, West and East fight for the control of an island.</t><br />
-<br />
-Each side are led by a <t color='#e8bd12'>Commander</t> which may construct a base thanks to the <t color='#e8bd12'>MHQ</t>.<br />
-<br />
-As soon as the base is available, you may decide to reinforce your team by purchasing additional units and vehicles.<br />
-<br />
-Keep in mind that the <t color='#e8bd12'>Commander</t> may assign assign different tasks to your team.<br />
-<br />
-According to mission parameters there are several conditions under which game can be won: standardparameter is 'towns', <br />
-which means you have to capture a certain number of towns to win the game. <br />
-<br />
-<br />
-For optional victory-conditions, check parameters <br />
-(e.g: 'annihilation' = all enemy forces and structures have to be destroyed).<br />
-<br />
-",
-//----------------------------------------RESPAWN
-"<t size='1.4' color='#2394ef' underline='true'>Respawn</t><br />
-<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Respawnpoints:</t><br />
-<br />
-<br />
-Generally respawnpoints are displayed as yellow circles on the map, which you see during your respawntime.<br />
-<br />
-These locations can be chosen by clicking on the circle. There are certain objects which establish spawn-locations:<br />
-<br />
-MEVs (an ambulance-vehicle is included in the set of vehicles you have from beginning or several vehicles can be purchased for purpose of spawning in light factory, heavy factory or air factory).<br />
-<br />
-MEV-spawns are limited in range (max is 500m), where they provide 'spawnability', that means if you die more than 500m away from these objects, you have to spawn at an unlimited spawnpoint.<br />
-<br />
-Spawnpoints of unlimited range are any buildings of base, except servicepoint, command center and anti-airradar.<br />
-<br />
-Spawnbuldings: <br />
-MHQ, Baracks [B],Light-Factory [LF], Heavy-Factory [HF], Air-Factory [AF]).<br />
-You can spawn there, no matter where you die on map.<br />
-<br />
-<br />
-<br />
-<t size='1.4' color='#2394ef' underline='true'>So:</t><br /><br />
-be careful when you die and where you die. Always be aware of your spawn-locations. <br />
-It might save time, if you wait with the attack on a town untill spawn is established. <br />
-An existing spawnpoint prevents players from having to travel all the way from base to town over and over again.<br />
+//--- Shared palette (kept consistent with the rest of the WF UI).
+#define HDR  "#2394ef"   /* section heading - WF blue   */
+#define KEY  "#ffec1c"   /* key term / label - yellow   */
+#define GOLD "#F5D363"   /* emphasis - gold             */
+#define WARN "#e8bd12"   /* caution / commander - amber */
 
-",
-//--------------------------------------------------Towns
-"<t size='1.4' color='#2394ef' underline='true'>Towns</t><br />
-<br />
-<br />
-<br />
-As mentioned above it is goal of the game to capture a number of towns. Each of these towns is represented by a big circle (500m radius) on the map.<br />
-<br />
-There are several states a town can have, indicated by colour markings. Towns which can be captured have a blue or red marking in a 400m-radius around the center. These towns are adjacent to the territory already occupied by one side. <br />
-<br />
-Towns with a hatched yellow marking in a 600m radius are also not capturable, because enemy captured it recently and it is in so called 'peace-time' (details see below). When you start an attack on a town (with orange 400m-radius), notice that the defending units first spawn, when a friendly unit crosses the 600m-radius. So pay attention when crossing the line.<br />
-<br />
-<br />
-The relevant buildings of a town are the depot (town-center) in the center of the circle, surrounded by a 50m-radius of slightly darker colour marking. More over a town can have one or more strongpoints (SPs, small cylinders on map).<br />
-<br />
-You have to capture these SPs (notice counter 'strongpoint'), before you advance to the towncenter and finally capture the town by creating numerical superiority within the 50m radius of towncenter (notice counter 'town').<br />
-<br />
-Once a town is captured it will switch its colour marking to hatched green 600m-radius. Next to towncenter, a supplyvalue (SV) is displayed, e.g. 10/70. This SV can be increased by sending supplytrucks between MHQ or servicepoint (for reload) and the 50m-radius of towncenter. <br />
-<br />
-A fully 'pushed' town creates a higher income of supplies and money for the <br />
-commander and if town is attacked, there will spawn more and better units to defend it. <br />
-<br />
-<br />
-Most of explanations refer to default parameters. If lobby settings are changed, some explanations are no longer valid. <br />
-<br />
-",
-//------------------------------Base Structures
-"<t size='1.4' color='#2394ef' underline='true'>Base Structures and Functions</t><br />
-<br />
-<br />
-<br />
-The Base Structures can be used for various purposes. <br />
-As soon as the player is in range of a structure he may decide to purchase additional units or vehicles. <br />
-<br />
-<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Mobile-Headquarters [MHQ]</t><br />
-<br />
-Required to build base-structures.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>CommandCenter [CC]</t><br />
-<br />
-For players: >>WF-Menu Purchase Units (remote enabled)/ Tactical Center to order UAVs, Ammodrops,Arty, etc.<br />
-for commander: >>WF-Menu Economy to sell Base-Structures and distribution income / Command Center to set Orders and Sqad-Respawn/ Upgrade-Menu to Make Upgrades for better equipment.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Barracks [B]</t><br />
-<br />
->>WF-Menu Purchase Gear (when player is in range of 120m)<br />
->>WF-Menu Purchase Units (normally in range of 120m - if Command Center exists, infantry can be purchased remote)<br />
-- alternatively it is possible to purchase gear at the stairs of  captured towncenters.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Light-Factory [LF]</t><br />
-<br />
->>WF-Menu Purchase Units (normally in range of 120m - if Command Center exists, light vehicles can be purchased remote)<br />
-- alternatively it is possible to purchase simple vehicles at the stairs of captured towncenters.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Heavy-Factory [HF]</t><br />
-<br />
->>WF-Menu Purchase Units (normally in range of 120m - if Command Center exists, Tanks can be purchased remote)<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Air-Factory [AF]</t><br />
-<br />
->>WF-Menu Purchase Units (normally in range of 120m - if Command Center exists, helicopters can be purchased remote)<br />
-notice: airplanes can be purchased at hangars (displayed with a green symbol at airfields on map), if airfactory exists.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Anti-Air-Radar [AAR]</t><br />
-Tracks enemy aircraft above ~30 m altitude (red diamond on map). Required before building a Counter Battery Radar.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Counter Battery Radar [CBR]</t><br />
-<br />
-2,400 supply. Detects and marks enemy artillery firing positions for 75 s. Requires your AAR to be alive. Upgrade 'CBR Radar' to extend detection radius: 750 m → 1,500 m → 2,000 m. Capturing an airfield gives a permanent 2,000 m CBR for free.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Federal Reserve / Bank Rossii [Bank]</t><br />
-<br />
-9,500 supply. Must be placed more than 800 m from your HQ. One per side. While your HQ stands it pays $6,000 total every 5 minutes split among living players. Destroying the enemy bank awards +$40,000 side supply and $25,000 to the killer. Both banks are marked on the map for both sides.<br />
-<br />
-<t size='1.2' color='#ffec1c' align='left'>Servicepoint [SP]</t><br />
-<br />
-Reload and refuel supply trucks.<br />
->>WF-Menu Servicepoint to Rearm, Refuel, Repair your vehicle and heal yourself and your units. Rearm cost is proportional to ammo missing (10% floor; artillery exempt).<br />
-<br />
-<br />
-You may choose to buy a vehicle manned or empty (without driver, gunner, commander or turrets; locked or unlocked).<br />
-<br />
-Useful fast commands from the Construction Menu:<br />
-- Auto Wall Construction Mode -> custom action 14<br />
-- Auto Manning Defence Mode -> custom action 16<br />
-- Sell Fortification, Static Defence -> custom action 17<br />
-<br />
-",
-//--------------------Experimental Changes
-"<t size='1.4' color='#2394ef' underline='true'>Experimental Changes</t><br />
-<br />
-This is the <t color='#F5D363'>WASP Experimental</t> build — an experimental test version featuring new structures, mechanics and balance changes.<br />
-<br />
-<t size='1.2' color='#ffec1c'>AI Commander</t><br />
-Any side can be run by an AI Commander - it manages the economy, builds the base, researches upgrades, and leads its combat teams assaulting towns. If no human takes the Commander slot within 5 minutes of the round start (re-armed when a player commander leaves), the AI takes over building. You can claim Commander any time; even then the AI keeps its own HQ teams fighting and never leaves them idle, while you run the economy and issue orders - any team you order directly stays yours.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Three Factions</t><br />
-GUER resistance is a living third faction, not just neutral garrisons. Its mechanized patrols grow MORE dangerous the more towns it loses - technicals while it holds the map, escalating to BRDM-2 armour + AT/AA and a second patrol once squeezed below 20 towns.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Clean Captures</t><br />
-Capturing a town from GUER no longer grants you its static weapon emplacements - you take the ground clean and bring or build your own defences (GUER rebuilds its statics on recapture).<br />
-<br />
-<t size='1.2' color='#ffec1c'>Wildcards</t><br />
-Random battlefield events fire through the round - veteran companies, uprisings, heliborne QRF and more.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Performance Telemetry</t><br />
-This build samples each client's FPS and reports it to the server for the day/night perf study (diagnostic only).<br />
-<br />
-<t size='1.2' color='#ffec1c'>Starting Economy</t><br />
-Both sides start with <t color='#F5D363'>$11,600 cash</t> and <t color='#F5D363'>7,400 supply</t>.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Bank (endgame objective)</t><br />
-Commander can build a Federal Reserve / Bank Rossii (9,500 supply, &gt;800 m from HQ, one per side). pays $6,000/5 min split among living players while HQ stands. Destroying enemy bank: +$40,000 side supply + $25,000 to the killer. Both banks are marked on the map.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Counter Battery Radar</t><br />
-2,400 supply; marks enemy artillery positions for 75 s. Requires AAR. CBR Radar upgrade: 750 m → 1,500 m → 2,000 m. Airfields give a free permanent 2,000 m CBR.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Airfields</t><br />
-NWAF, NEAF and Balota are capturable towns (50 SV, PMC garrison). Capturing gives a repair point and an exclusive hangar with unique aircraft (L-39, An-2, Mi-17 variants).<br />
-<br />
-<t size='1.2' color='#ffec1c'>Capture-to-Unlock Premium Units</t><br />
-Hold <t color='#F5D363'>Krasnostav</t>: Czech T-72 at Heavy Factory level 4 ($7,000).<br />
-Hold <t color='#F5D363'>NW Airfield</t>: RM-70 rocket artillery at Light Factory level 4 ($6,800, integrated fire missions).<br />
-Unlocks for the holding side only.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Patrols and Convoys</t><br />
-Upgrade: Patrols (300 / 1,600 / 2,400 / 3,200 supply for 4 levels). Up to 3 active patrols per side; each active patrol reduces every player's max AI by 1.<br />
-Level 4 Convoys: patrol fields a supply truck that pays $750 split equally at every town stop.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Factory Queue</t><br />
-Buy menu shows queue as N/CAP. Caps: Barracks min 10, Light Factory min 5, Heavy/Aircraft min 3. Cancel Last button refunds the most recent queued order (up to 50% for discounted orders).<br />
-<br />
-<t size='1.2' color='#ffec1c'>Classes</t><br />
-Class info shown on join and via 'Class Info' action. Tags (SOL/SUP/MED/ENG/SNI) visible on map and in Notes.<br />
-<br />
-<t size='1.2' color='#ffec1c'>Other</t><br />
-- Medic Redeployment Truck: medic-only forward spawn (Light Factory, violet row).<br />
-- EASA loadout tags: [AA], [AG], [MR] prefixes on each loadout row.<br />
-- WDDM commander compositions capped at 3 per base area (cash refunded on over-cap).<br />
-- Defense budgets cap statics/fortifications/mines per category. Statics and mines blocked at 3+ enemy ground units in base range.<br />
-- Tanks and wheeled APCs come crewed by engineers.<br />
-- Earplugs toggle fades radio/voice and works while mounted.<br />
-<br />
-",
-//--------------------WarFare Info
-"<br />
-<t size='1.2' color='#2394ef' align='center'>Warfare WASP-AWESOME EDITION | v48 | - CO - Zargabad</t><br />
-<t align='center'>
-<br />
-<br />
-<br />
-<img size='8' image='Textures\logo1.paa'/>
-<br/>
-<br/>
--The Mission is currently at version 48
-<br/>
-<br/>
--This is not the original version of Benny!
-<br/>
--The original was created by Benny.
-<br/>
--Big thanks to him!
-<br/>
-<br/>
-<br/>
-Changelog (48): <br/>
-- Added max limit parameter in mission list of parameters (default 40000)
-- Added an unique mark on map for salvage trucks <br/>
-- Added yellow marks for friendly ambulance on map <br/>
-- Fixed often calls to db with updating of current match round <br/>
-- Fixed crew(in tanks, apcs) vulnerability from HE rounds <br/>
-- Added nvg for opfor bots <br/>
-- Added fast key description in help menu (Base Structures section) for construction menu <br/>
-- Added small resistance bases (only barracks) that randomly appear on map <br/>
-- Decreased amount of bots for player from 16 to 10 in parameter list <br/>
-- Added HC support for static defence on bases and in res rowns <br/>
-- Added dynamic defender resp in town according current upgrade level on team side <br/>
-- Added switcher to enable/disable auto wall construction around base structures (user/custom action 14)<br/>
-- Enabled friendly ai tacking on map<br/>
-Changelog (47): <br/>
-- Added item's cleaners and their settings in parameter list (GLOBAL section); <br/>
-- Added a message of what upgrade was started in team of player; <br/>
-- Added a restriction to build structures, statics and fortifications on base of an enemy team is around (250m radius); <br/>
-- Removed Artillery Computer from parameter list;<br/>
-- Fixed rocket glitch of AT missiles; <br/>
-- Added feature to assign a new commander without voting (works only for current commanders in teams); <br/>
-- Fixed set of script errrors on server and client sides; <br/>
-- Added logginf for money transfer, commander's voting; <br/>
-- Fixed HE shells of the 30mm cannons <br/>
-- Fixed Reflex for T90. Fast reloading time <br/>
-- Fixed TOW from ERA-Bradley is too powerfull <br/>
-- Fixed Players who leave stay at the map with their Icon <br/>
-- Fixed Some Upgrades at Blufor costs money <br/>
-- Fixed Selling factories gives 100% supplys back <br/>
-- Max suppluy limit is 50000 <br/>
-- Fixed mine bug <br/>
-- Added camos for btr60 and opf t34 <br/>
-- Removed tanks from start vehicles <br/>
-- Decreased damage for structures by shilka and tunga <br/>
-<br/>
-<br/>
-<br/>
-",
-//--------------------Server Rules
-"<t size='1.4' color='#2394ef' underline='true'>SERVER RULES</t><br />
-<br />
-<br />
-<br />
-The following penalty scale represents the maximum penalty admins may give for breaching of rules: <br />
-- Teamkilling, Stealing or destroying teammates property without compensation: 1) kick 2) !btk 1h ban 3) 2 weeks timeban <br />
-- Intentional(attempted) HQ-Teamkill: 2 weeks timeban <br />
-- Entering HQ without beeing commander: kick <br />
-- Insults aiming at players real life: 1) warnings, 2) kick <br />
-- Racism 1) kick 2) 2 weeks timeban <br />
-- Bugusing*: 1) kick 2) 2 weeks timeban <br />
-- Hacking: ban <br />
-- Producing factories (B,LF,HF,AF) must have an entrance 1) warning 2) kick 3) 2 weeks timeban <br />
-- You may not stack a WF-building (HQ,B,LF,HF,AF,S,C,AAR) inside enviroment objects to more than 50%.  1) warning 2) kick 3) 2 weeks timeban <br />
- <br/>
-<br/>
-<br/>"
-];
-		((findDisplay 508000) displayCtrl 160002) ctrlSetStructuredText parseText (_helps select _changeTo);
+switch (_action) do {
+
+	case "onLoad": {
+		private ["_disp", "_lb"];
+		_disp = findDisplay 508000;
+		_lb = _disp displayCtrl 160001;
+		lbClear _lb;
+		{
+			_lb lbAdd _x;
+		} forEach [
+			"Getting Started",
+			"Controls",
+			"Economy",
+			"Combat & Capturing",
+			"Commanding the AI",
+			"Factions",
+			"FAQ"
+		];
+		_lb lbSetCurSel 0;   // fires onLBSelChanged -> paints title + page 0
+	};
+
+	case "onHelpLBSelChanged": {
+		private ["_changeTo", "_disp", "_titles", "_helps"];
+		_changeTo = _this select 1;
+		_disp = findDisplay 508000;
+
+		//--- Title-bar label per section (index-aligned to the list).
+		_titles = [
+			"Getting Started",
+			"Controls",
+			"Economy",
+			"Combat & Capturing",
+			"Commanding the AI",
+			"Factions",
+			"Frequently Asked Questions"
+		];
+
+		_helps = [
+
+//================================================================ 0  GETTING STARTED
+"<t size='1.4' color='" + HDR + "' underline='true'>Getting Started</t><br /><br />
+<t color='" + KEY + "'>CTI</t> (Conquer The Island) pits <t color='" + KEY + "'>West</t> against <t color='" + KEY + "'>East</t> for control of the map. Each side is led by a <t color='" + WARN + "'>Commander</t> who builds a base from the <t color='" + WARN + "'>MHQ</t> (Mobile HQ) and reinforces the team with bought units and vehicles.<br /><br />
+<t size='1.2' color='" + KEY + "'>Your first five minutes</t><br />
+1. Pick a class in the lobby (SOL / SUP / MED / ENG / SNI). Tags show on the map and in your Notes.<br />
+2. Spawn, then open the <t color='" + GOLD + "'>WF Menu</t> (scroll-wheel action, blue 'Options') for everything: buy gear, buy units, give orders.<br />
+3. Head to the nearest contested <t color='" + KEY + "'>town</t> (blue/red circle on the map) and help capture it.<br /><br />
+<t size='1.2' color='" + KEY + "'>How you win</t><br />
+Default victory is <t color='" + GOLD + "'>Towns</t>: hold a target number of towns. Lobby parameters can switch this (e.g. <t color='" + GOLD + "'>Annihilation</t> = destroy all enemy forces and structures). Check the parameter screen if unsure.<br /><br />
+<t size='1.2' color='" + KEY + "'>Respawn &amp; forward spawns</t><br />
+While dead you pick a spawn from the yellow circles on the map. Base buildings (MHQ, Barracks, all Factories) are <t color='" + GOLD + "'>unlimited-range</t> spawns. A <t color='" + KEY + "'>MEV</t> (medical/ambulance vehicle) gives a <t color='" + GOLD + "'>forward</t> spawn within 500 m of it - drive one up to the fight so the team does not run from base every time. Service points, the Command Center and radars are NOT spawn points.<br /><br />
+Tip: wait until a forward spawn exists before pushing a town, so deaths cost seconds, not a long walk.<br />",
+
+//================================================================ 1  CONTROLS
+"<t size='1.4' color='" + HDR + "' underline='true'>Controls</t><br /><br />
+Most of WASP is driven from the <t color='" + GOLD + "'>WF Menu</t> rather than hotkeys. Open it from the <t color='" + KEY + "'>scroll-wheel action menu</t> -> blue <t color='" + GOLD + "'>Options</t> (works on foot and while mounted).<br /><br />
+<t size='1.2' color='" + KEY + "'>WF Menu buttons</t><br />
+- <t color='" + GOLD + "'>Purchase Gear</t> - weapons/equipment (in Barracks range, or at a captured town centre's stairs).<br />
+- <t color='" + GOLD + "'>Purchase Units</t> - infantry/vehicles/aircraft (in a Factory's range; remote-buy if a Command Center exists).<br />
+- <t color='" + GOLD + "'>Tactical Center</t> - UAV, ammo drops, artillery and support requests.<br />
+- <t color='" + GOLD + "'>Service Point</t> - rearm, refuel, repair, heal.<br />
+- <t color='" + GOLD + "'>Economy / Command / Upgrades</t> - commander tools (sell structures, set orders, research).<br />
+- <t color='" + GOLD + "'>Help</t> - this panel.<br /><br />
+<t size='1.2' color='" + KEY + "'>Construction quick-actions</t> (scroll-wheel custom actions)<br />
+- Action 14 - <t color='" + GOLD + "'>Auto Wall Construction</t> toggle around base structures.<br />
+- Action 16 - <t color='" + GOLD + "'>Auto Manning Defence</t> mode.<br />
+- Action 17 - <t color='" + GOLD + "'>Sell</t> the nearest fortification / static defence.<br /><br />
+<t size='1.2' color='" + KEY + "'>Comfort</t><br />
+- <t color='" + GOLD + "'>Earplugs</t> toggle fades radio/voice and works while mounted.<br />
+- <t color='" + GOLD + "'>Class Info</t> action (and the join screen) explains your role's kit.<br /><br />
+Note: WASP intentionally uses the action menu instead of a help hotkey, so there is no key to memorise - it is always one scroll away.<br />",
+
+//================================================================ 2  ECONOMY
+"<t size='1.4' color='" + HDR + "' underline='true'>Economy</t><br /><br />
+Two currencies drive the war: <t color='" + GOLD + "'>$ cash</t> (you spend it on gear and units) and <t color='" + GOLD + "'>supply</t> (the side resource the commander spends on structures and upgrades). Both sides start with <t color='" + GOLD + "'>$30,000</t> and <t color='" + GOLD + "'>12,800 supply</t>.<br /><br />
+<t size='1.2' color='" + KEY + "'>Where income comes from</t><br />
+- Captured <t color='" + KEY + "'>towns</t> pay supply and cash. A fully 'pushed' town (high Supply Value) pays more and defends harder.<br />
+- <t color='" + KEY + "'>Supply trucks</t> raise a town's Supply Value: shuttle them between MHQ / Service Point (to reload) and the town centre's 30 m delivery range. The counter reads e.g. 10/70.<br /><br />
+<t size='1.2' color='" + KEY + "'>The Bank (Federal Reserve / Bank Rossii)</t><br />
+A 9,500-supply structure, one per side, placed &gt; 800 m from your HQ. While your HQ stands it pays <t color='" + GOLD + "'>$6,000 every 5 minutes</t> split among living players. Destroying the enemy Bank awards <t color='" + GOLD + "'>+10,000</t> side supply and <t color='" + GOLD + "'>$25,000</t> to the killer. Both Banks are marked on the map for both sides - it is a real endgame objective.<br /><br />
+<t size='1.2' color='" + KEY + "'>Factory queue &amp; refunds</t><br />
+The buy menu shows the queue as <t color='" + GOLD + "'>N/CAP</t>. Caps: Barracks 10, Light Factory 5, Heavy/Aircraft 3. <t color='" + GOLD + "'>Cancel Last</t> refunds your most recent queued order (up to 50% on discounted orders).<br /><br />
+<t size='1.2' color='" + KEY + "'>Premium unlocks</t><br />
+Hold <t color='" + GOLD + "'>Krasnostav</t> -> Czech T-72 at Heavy Factory L4 ($7,000). Hold <t color='" + GOLD + "'>NW Airfield</t> -> RM-70 rocket artillery at Light Factory L4 ($6,800). Unlocks apply to the holding side only.<br />",
+
+//================================================================ 3  COMBAT & CAPTURING
+"<t size='1.4' color='" + HDR + "' underline='true'>Combat &amp; Capturing</t><br /><br />
+The map is a ring of <t color='" + KEY + "'>towns</t>, each a 500 m circle. You can only attack towns adjacent to ground you already hold.<br /><br />
+<t size='1.2' color='" + KEY + "'>Reading town markings</t><br />
+- <t color='" + KEY + "'>Blue / red 400 m</t> ring - capturable, adjacent to your territory.<br />
+- <t color='" + WARN + "'>Hatched yellow 600 m</t> - in 'peace-time' after a recent capture; not yet attackable.<br />
+- <t color='#ff8800'>Orange 400 m</t> - an attack is in progress.<br />
+- <t color='#33cc33'>Hatched green 600 m</t> - captured by your side.<br /><br />
+<t size='1.2' color='" + KEY + "'>How a capture works</t><br />
+1. Defenders only spawn when a friendly unit crosses the <t color='" + GOLD + "'>600 m</t> line - cross deliberately.<br />
+2. Take the town's <t color='" + KEY + "'>Strongpoints</t> (small cylinders; watch the 'strongpoint' counter).<br />
+3. Then create numerical superiority in the <t color='" + GOLD + "'>40 m</t> ring around the depot (the 'town' counter) to capture.<br /><br />
+<t size='1.2' color='" + KEY + "'>Counter-battery &amp; air defence</t><br />
+- <t color='" + KEY + "'>Anti-Air Radar (AAR)</t> tracks enemy aircraft above ~30 m (red diamond on map); prerequisite for the CBR.<br />
+- <t color='" + KEY + "'>Counter Battery Radar (CBR)</t>, 2,400 supply, marks enemy artillery firing positions for 75 s while your AAR is alive. The CBR upgrade grows its radius 750 -> 1,500 -> 2,000 m. Capturing an airfield grants a free permanent 2,000 m CBR.<br /><br />
+<t size='1.2' color='" + KEY + "'>Airfields</t><br />
+Some maps feature capturable PMC airfields (40 SV, PMC garrison). Taking one gives a repair point and an exclusive hangar with unique aircraft. Aircraft buy at hangars (green map symbol) when an Air Factory exists.<br />",
+
+//================================================================ 4  COMMANDING THE AI
+"<t size='1.4' color='" + HDR + "' underline='true'>Commanding the AI</t><br /><br />
+Either side can be run by an <t color='" + GOLD + "'>AI Commander</t>. It manages supply, builds the base, researches upgrades and leads its HQ teams in assaults on towns.<br /><br />
+<t size='1.2' color='" + KEY + "'>Taking command</t><br />
+If no human takes the Commander slot within 5 minutes of round start (re-armed whenever a player commander leaves), the AI takes over building. You can claim Commander at any time. Even then the AI keeps fighting with its own HQ teams and never leaves them idle, while you run the economy and issue orders. <t color='" + GOLD + "'>Any team you order directly becomes yours.</t><br /><br />
+<t size='1.2' color='" + KEY + "'>Commander tools (WF Menu, in Command Center range)</t><br />
+- <t color='" + GOLD + "'>Economy</t> - sell structures, distribute income.<br />
+- <t color='" + GOLD + "'>Command Center</t> - set team orders and squad respawn.<br />
+- <t color='" + GOLD + "'>Upgrade Menu</t> - research better equipment and unlocks.<br /><br />
+<t size='1.2' color='" + KEY + "'>Patrols &amp; convoys (upgrade)</t><br />
+Patrols upgrade across 4 levels (300 / 1,600 / 2,400 / 3,200 supply). Up to <t color='" + GOLD + "'>2 active patrols</t> per side; each active patrol reduces every player's max AI by 1. Level 4 fields a <t color='" + KEY + "'>convoy</t> supply truck that pays $750 split equally at each town stop.<br /><br />
+<t size='1.2' color='" + KEY + "'>Team composition notes</t><br />
+- Tanks and wheeled APCs arrive crewed by engineers.<br />
+- Commander field compositions are capped at 3 per base area (cash refunded over-cap).<br />
+- Defense budgets cap statics / fortifications / mines per category; statics &amp; mines are blocked when 3+ enemy ground units are in base range.<br />",
+
+//================================================================ 5  FACTIONS
+"<t size='1.4' color='" + HDR + "' underline='true'>Factions</t><br /><br />
+WASP runs <t color='" + GOLD + "'>three</t> living factions, not two sides plus neutral garrisons.<br /><br />
+<t size='1.2' color='" + KEY + "'>West &amp; East</t><br />
+The two playable belligerents, each led by a human or AI Commander, fighting for the towns and the win condition above.<br /><br />
+<t size='1.2' color='" + KEY + "'>GUER resistance (third faction)</t><br />
+GUER is an active third force. Its mechanized patrols grow <t color='" + GOLD + "'>more dangerous the more towns it loses</t> - technicals while it holds the map, escalating to BRDM-2 armour with AT/AA and a second patrol once squeezed below 20 towns. Treat a cornered GUER as a real threat, not a mop-up.<br /><br />
+<t size='1.2' color='" + KEY + "'>Clean captures</t><br />
+Capturing a town from GUER no longer hands you its static weapon emplacements - you take the ground clean and bring or build your own defences. GUER rebuilds its statics if it recaptures.<br /><br />
+<t size='1.2' color='" + KEY + "'>Wildcards</t><br />
+Random battlefield events fire through the round - veteran companies, town uprisings, heliborne QRF and more. Stay flexible.<br /><br />
+<t size='1.2' color='" + KEY + "'>Classes (both sides)</t><br />
+SOL / SUP / MED / ENG / SNI, shown on join and via the <t color='" + GOLD + "'>Class Info</t> action; tags appear on the map and in Notes. A medic-only <t color='" + KEY + "'>Redeployment Truck</t> (Light Factory, violet row) gives medics a forward spawn.<br />",
+
+//================================================================ 6  FAQ
+"<t size='1.4' color='" + HDR + "' underline='true'>Frequently Asked Questions</t><br /><br />
+<t size='1.2' color='" + KEY + "'>Where do I buy things?</t><br />
+Open the WF Menu in range of the right structure: gear at the <t color='" + GOLD + "'>Barracks</t> (or a captured town centre's stairs), infantry/vehicles at the matching <t color='" + GOLD + "'>Factory</t>. A <t color='" + GOLD + "'>Command Center</t> lets you remote-buy infantry and vehicles from anywhere.<br /><br />
+<t size='1.2' color='" + KEY + "'>Why can't I attack that town?</t><br />
+It is either not adjacent to your territory, or it is in hatched-yellow <t color='" + GOLD + "'>peace-time</t> after a recent capture. Wait for the marker to clear, or push an adjacent town first.<br /><br />
+<t size='1.2' color='" + KEY + "'>I keep spawning at base - why?</t><br />
+You died more than 500 m from any MEV / forward spawn. Drive a MEV up near the fight, or capture a closer town, to create a nearer spawn.<br /><br />
+<t size='1.2' color='" + KEY + "'>How do I get money?</t><br />
+Capture and push towns, build the Bank (pays every 5 min while your HQ stands), kill the enemy Bank, and run convoy supply trucks.<br /><br />
+<t size='1.2' color='" + KEY + "'>What are the structure tags on the map?</t><br />
+MHQ, B (Barracks), LF/HF/AF (Light/Heavy/Air Factory), S (Service Point), C (Command Center), AAR (Anti-Air Radar), CBR (Counter Battery Radar), Bank (Federal Reserve).<br /><br />
+<t size='1.2' color='" + KEY + "'>Server rules</t><br />
+No team-killing, HQ-entry only as commander, no building-stacking inside objects &gt;50%, factories must have an entrance, no bug-using or hacking. Admins escalate: warning -> kick -> time-ban. Play fair.<br />"
+
+		];
+
+		//--- Guard the index, then paint title + content.
+		if (_changeTo < 0 || _changeTo >= (count _helps)) exitWith {};
+
+		(_disp displayCtrl 160003) ctrlSetStructuredText parseText
+			("<t size='1.25' color='#2394ef' shadow='1'>WASP Warfare  -  " + (_titles select _changeTo) + "</t>");
+
+		(_disp displayCtrl 160002) ctrlSetStructuredText parseText (_helps select _changeTo);
 	};
 };

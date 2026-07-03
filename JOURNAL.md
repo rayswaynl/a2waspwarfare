@@ -1,5 +1,31 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 — Fleet lane 376: AICOM top-up request TTL
+
+Added a default-on stale-request guard for `wfbe_aicom_topup_req` across Chernarus plus maintained
+Takistan/Zargabad mirrors. Producers now publish `[count, pos, classes, issuedTime]`, the commander
+team driver stamps legacy 3-slot requests once, and deferred requests older than
+`WFBE_C_AICOM_TOPUP_REQ_TTL` (default 300s) are cleared so the server can re-evaluate instead of
+keeping a player-proximity-deferred request forever.
+
+Also cleaned an inherited two-argument group `getVariable` in the same driver file while it was in
+scope, using the repo's plain-get plus `isNil` pattern. Verification: LoadoutManager mirror with
+`A2WASP_SKIP_ZIP=1`, focused SQF lint zero findings, `git diff --check` clean except CRLF warnings,
+NUL/backtick-zero scan clean, delimiter deltas paired, no `_MISSIONS.7z` artifact, and SHA256 parity
+matched for the four touched SQF paths across Chernarus, Takistan and Zargabad.
+
+## 2026-07-02 — Lane 180 ambient skirmish cells [codex/180-ambient-skirmish-cells]
+
+Added a default-off server worker, `Server_AmbientSkirmish.sqf`, mirrored to Chernarus,
+Takistan, and Zargabad. Gate: `WFBE_C_AMBIENT_SKIRMISH = 0` by default. When enabled, it waits
+for towns, requires at least one human player, finds a water-free position outside configured
+player/town radii, spawns one small WEST/EAST foot clash through `WFBE_CO_FNC_CreateGroup` and
+`WFBE_CO_FNC_CreateUnit`, and self-cleans the groups after `WFBE_C_AMBIENT_SKIRMISH_LIFETIME`.
+
+Scope deliberately stays out of AICOM, town, supply, score, and victory systems. Verification:
+LoadoutManager mirror with `A2WASP_SKIP_ZIP=1`, identical worker hashes across all three maintained
+roots, focused SQF lint zero findings, cached diff checks clean, and no `_MISSIONS.7z` artifact.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
@@ -499,3 +525,43 @@ Evidence:
   entry / RPT error in the 12018 dropdown. Cheap fix if ever wanted:
   `if !(isNull (_sorted select 0)) then { ...forEach _sorted... }` around the lbClear/forEach
   block (or `lbAdd [12018, localize 'STR_...none-in-range']` in the else).
+
+---
+
+## 2026-07-02 — Fleet lane 157: end-of-round player summary
+
+Claimed `fleet-lane-157-end-of-round-screen-2026-07-02` as `Codex-Fleet-11-loop`.
+
+Scope kept to the endgame title and its client fill script:
+- `Client/GUI/GUI_EndOfGameStats.sqf` now fills a local player summary row with score, funds, and income using existing client-visible values only.
+- `Rsc/Titles.hpp` adds that summary row plus a small Close button that closes the current cut display.
+- Takistan was mirrored through `Tools/LoadoutManager` with `A2WASP_SKIP_ZIP=1`.
+
+Validation:
+- `dotnet run -c Release` from `Tools/LoadoutManager` completed with packaging skipped.
+- `git diff --check` clean except existing CRLF warnings.
+- `check_sqf.py --select BRACKET` and `--select A3CMD` reported zero findings on the four touched files.
+- Added-line A3/boolean trap scan found no matches.
+- Chernarus/Takistan touched file pairs match after mirroring.
+
+---
+
+## 2026-07-03 - Fleet lane 338: skip top-up for disbanding HC teams
+
+Claimed `fleet-lane-338-topup-skip-disbanding-teams-2026-07-03` as `Codex-Fleet-9`.
+
+Scope:
+- `AI_Commander_Produce.sqf` now reads `wfbe_aicom_disband` with the existing A2-safe group-var idiom before dispatching a town-center top-up request.
+- Teams already queued for disband no longer receive replacement infantry and refit charges immediately before the HC driver deletes them.
+- Vanilla mission roots are expected to be mirrored through `Tools/LoadoutManager` with packaging skipped.
+
+---
+
+## 2026-07-03 — Fleet lane 356: bootstrap stipend windfall telemetry
+
+Claimed `fleet-lane-356-bootstrap-stipend-windfall-telemetry-2026-07-03` as `Codex-Fleet-9`.
+
+Scope:
+- Keep bootstrap stipend behavior unchanged while aligning the first-grant sentinel and guard in `AI_Commander.sqf`.
+- Add `AICOMSTAT|v2|EVENT|...|BOOTSTRAP_STIPEND_WINDFALL` telemetry when a delayed stipend tick grants more than two minutes of catch-up income.
+- Mirror maintained Vanilla Takistan/Zargabad through `Tools\LoadoutManager` after the Chernarus source edit.

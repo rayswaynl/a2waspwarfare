@@ -24,6 +24,28 @@ The big structural facts that create most of the dormant pools:
 
 ---
 
+## 2026-07-03 Block K refresh: wave 1-3 consumption status
+
+This refresh is report-only. It marks which dormant-asset proposals are already represented by open draft PRs on or near `claude/build84-cmdcon36`; it does not declare those features merged until Claude folds them.
+
+| Original proposal | Current status | Evidence / next action |
+| --- | --- | --- |
+| #1 + #11 Ka-137/Pchela recon drone wildcard | Represented by open draft PR | PR #287 (`fable/aicom-recon-drone-wildcard`) covers W25/W26 Ka-137/Pchela behind default-off flags. Do not re-open a duplicate drone wildcard lane unless #287 is rejected. |
+| #2 GUER VBIED / W21 | Partly represented; main W21 remains sensitive | PR #413 adds a default-off VBIED detonation confirmation and PR #455 documents Iron Dome/VBIED status. The main AI-command W21 card is still weight 0 in the deck, and the owner notes call it boring/useless, so do not revive it without a fresh owner decision. |
+| #3 AN-2 smuggler run | Represented by open draft PRs | PR #365 (`fable/an2-smuggler`) and PR #367 (`codex/11-an2-smuggler-run`) cover the smuggler-run concept. Treat future work as review/shepherding, not a new implementation. |
+| #4 Civilian/coastal boat life | Partly represented | PR #313 covers default-off civilian coastal traffic; PR #396 gates cheap coastal utility boat metadata. Remaining full ambient/coastal behavior should stack on those decisions rather than starting from this inventory. |
+| #5 GUER civilian depot | Represented by open draft/status work | PR #361 exposes GUER civilian-depot related params; PR #456 records GUER depot/ZU-23 status. Re-check those before editing any depot rows. |
+| #6 T-34 relic | Represented by open draft PR | PR #388 (`codex/lane183-t34-relic-capturable`) owns the capturable T-34 relic lane. |
+| #7 Artillery cache objective | Status-covered, not clearly folded | PR #452 documents capture-objective coverage. A future code owner should verify whether the abandoned artillery-cache implementation exists before writing new source. |
+| #8 Avenger SAM ambush | Represented by open draft PR | PR #315 owns the Avenger SAM ambush hook. |
+| #9 MV-22 Osprey lift flavour | Represented, with duplicate conflict note | PR #318 is the clean default-off Osprey lift-flavour PR; PR #320 is a dirty duplicate/alternate. Use #318 as the canonical candidate unless the owner chooses otherwise. |
+| #10 Static ZU-23 / searchlight dressing | Status-covered | PR #456 documents GUER depot/ZU-23 status. Keep source edits out of this lane unless a follow-up owner explicitly asks for the dressing implementation. |
+| #12 AAV amphibious hook | Represented as metadata/status, full behavior still future | PR #326 documents AAV naval-hook status and PR #396 covers coastal utility boat metadata. The full beach-assault/carrier behavior remains a larger naval-map lane. |
+
+Remaining useful inventory value is now mostly a **coordination map**: it points reviewers to the owning draft PRs and leaves genuinely unowned leftovers for later owner decisions. Before claiming any proposal below, first check the PR numbers above and the current wiki claim board.
+
+---
+
 # TOP-12 PROPOSALS (ranked for Ray to pick from)
 
 | # | Proposal | Asset(s) | Where it's dormant | One cool use | Effort |

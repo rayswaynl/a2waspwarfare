@@ -1,4 +1,4 @@
-Private ['_HQ','_base','_blist','_camShotOrder','_camera','_nvgstate','_position','_secTarget','_side','_track','_vehi'];
+Private ['_HQ','_base','_blist','_camShotOrder','_camera','_musicTrack','_nvgstate','_position','_secTarget','_side','_track','_vehi'];
 
 _side = _this;
 
@@ -10,8 +10,11 @@ _side = _this;
 
 [_side] ExecVM "Client\GUI\GUI_EndOfGameStats.sqf";
 //_track = if (WF_A2_Vanilla) then {"Track21_Rise_Of_The_Fallen"} else {"EP1_Track15"}; //---old
-_track = "wf_outro"; //---changed-MrNiceGuy
-playMusic _track;
+_musicTrack = "wf_outro"; //---changed-MrNiceGuy; lane 51 keeps this legacy fallback while optional soundtrack is disabled.
+if ((missionNamespace getVariable ["WFBE_C_MUSIC_ENABLE", 0]) > 0) then {
+	_musicTrack = missionNamespace getVariable ["WFBE_C_MUSIC_VICTORY_TRACK", "wf_outro"];
+};
+if ((count (toArray _musicTrack)) > 0) then {playMusic _musicTrack;};
 
 _track_hq = [];
 _track = [];

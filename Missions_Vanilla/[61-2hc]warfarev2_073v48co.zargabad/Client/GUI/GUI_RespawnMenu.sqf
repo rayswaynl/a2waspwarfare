@@ -125,9 +125,9 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 		_found = false;
 		{
 			if !(_x in _spawn_locations) then {
-				_marker_id = _x getVariable 'wfbe_respawn_marker';
+				_marker_id = _x getVariable ['wfbe_respawn_marker', ""];
 				_spawn_markers = _spawn_markers - [_marker_id];
-				deleteMarkerLocal _marker_id;
+				if (_marker_id != "") then {deleteMarkerLocal _marker_id};
 				_x setVariable ['wfbe_respawn_marker', nil];
 				if (_x == _spawn_at_current && !_found) then {
 					_found = true;

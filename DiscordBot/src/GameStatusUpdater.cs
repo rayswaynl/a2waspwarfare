@@ -99,11 +99,7 @@ public class GameStatusUpdater
             // Update bot status (with timeout)
             if (client != null)
             {
-                using (var cts = new CancellationTokenSource(DISCORD_TIMEOUT_MS))
-                {
-                    await client.SetGameAsync(newChannelName, null, ActivityType.Playing);
-                    Log.WriteLine($"Bot status updated to: {newChannelName}", LogLevel.DEBUG);
-                }
+                await DiscordPresenceUpdater.TrySetGameAsync(client, newChannelName, "status timer");
             }
             
             // Try to get and modify the existing message, or create a new one if it doesn't exist
@@ -219,4 +215,4 @@ public class GameStatusUpdater
         updateSemaphore.Dispose();
         Log.WriteLine("Game status updater stopped", LogLevel.DEBUG);
     }
-} 
+}

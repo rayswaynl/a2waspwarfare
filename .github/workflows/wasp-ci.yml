@@ -1,0 +1,78 @@
+name: WASP CI
+
+on:
+  pull_request:
+    branches:
+      - claude/build84-cmdcon36
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tooling:
+    name: Tooling and report-only audits
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Python unit tests
+        shell: pwsh
+        run: |
+          python Tools\Lint\test_check_sqf.py
+          python Tools\Lint\test_check_stringtable_refs.py
+          python Tools\Soak\test_analyze_soak.py
+
+      - name: Soak analyzer sample smoke
+        shell: pwsh
+        run: |
+          python Tools\Soak\analyze_soak.py Tools\Soak\sample_build86.rpt --json > $env:RUNNER_TEMP\wasp_soak_sample.json
+          Get-Item $env:RUNNER_TEMP\wasp_soak_sample.json
+
+      - name: MatchReport tests or syntax smoke
+        shell: pwsh
+        run: |
+          $tests = @(Get-ChildItem -Path Tools\MatchReport -Recurse -File -Filter "test_*.py" -ErrorAction SilentlyContinue)
+          if ($tests.Count -gt 0) {
+            foreach ($test in $tests) {
+              python $test.FullName
+            }
+          } else {
+            python -m compileall -q Tools\MatchReport
+          }
+
+      - name: Build LoadoutManager
+        shell: pwsh
+        run: |
+          dotnet build Tools\LoadoutManager\LoadoutManager.csproj -c RELEASE
+
+      - name: SQF lint report
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          python Tools\Lint\check_sqf.py --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET --no-classname-index
+
+      - name: Stringtable reference report
+        shell: pwsh
+        run: |
+          python Tools\Lint\check_stringtable_refs.py --exit-zero
+
+      - name: Takistan mirror drift report
+        shell: pwsh
+        continue-on-error: true
+        env:
+          A2WASP_SKIP_ZIP: "1"
+        run: |
+          dotnet run -c RELEASE --project Tools\LoadoutManager -- --check

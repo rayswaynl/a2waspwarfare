@@ -9,7 +9,7 @@ not touch the network.
 ```powershell
 python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki
 python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --no-orphans
-python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --include-stale-builds --current-build 86
+python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --include-stale-builds --current-build 89
 python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --json
 ```
 

@@ -8,7 +8,7 @@
 	respective team. No global marker leak to the enemy.
 
 	Two ops, one marker per active event (the server cleans up by name on expiry):
-	  ["create", _mkName, _pos, _color, _type, _label]
+	  ["create", _mkName, _pos, _color, _type, _label, optional detail]
 	  ["delete", _mkName]
 
 	A2 OA 1.64: createMarkerLocal / setMarkerType(Local) / setMarkerColor(Local) /
@@ -17,7 +17,7 @@
 		- _this : ARRAY, [_op, _mkName, ...] as above.
 */
 
-Private ["_op","_mkName","_pos","_color","_type","_label","_detail"];
+Private ["_op","_mkName","_pos","_color","_type","_label","_detail","_markerText"];
 
 if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
 if (isDedicated) exitWith {};
@@ -39,6 +39,24 @@ switch (_op) do {
 		_type  = _this select 4;
 		_label = _this select 5;
 		if !((typeName _label) in ["STRING"]) then {_label = str _label};
+		_detail = "";
+		if (count _this > 6) then {_detail = _this select 6};
+		if !((typeName _detail) in ["STRING"]) then {_detail = str _detail};
+		if (_detail in [""]) then {
+			_detail = switch (_label) do {
+				case "Airborne Assault": {"elite paratroopers are dropping near the front"};
+				case "Air Cavalry": {"air assault troops are moving to the front"};
+				case "Gunship Strike": {"an attack aircraft is striking the marked area"};
+				case "Heliborne QRF": {"a quick reaction force is landing at a threatened friendly town"};
+				case "Top Gun": {"a fighter is loitering over the front"};
+				case "Armor Column": {"a tank platoon is rolling toward the front"};
+				case "Technical Swarm": {"gun trucks are charging toward the front"};
+				case "Car Bomb": {"a GUER VBIED is rolling toward its target"};
+				default {"event location marked on your map"};
+			};
+		};
+		_markerText = _label;
+		if !(_detail in [""]) then {_markerText = Format ["%1 - %2", _label, _detail]};
 		//--- Idempotent: if a marker by this name already exists locally, drop it first
 		//--- so a re-create never stacks (one marker per active event).
 		if !((markerType _mkName) in [""]) then {deleteMarkerLocal _mkName};
@@ -46,18 +64,7 @@ switch (_op) do {
 		_mkName setMarkerTypeLocal _type;
 		_mkName setMarkerColorLocal _color;
 		_mkName setMarkerSizeLocal [1, 1];
-		_mkName setMarkerTextLocal _label;
-		_detail = switch (_label) do {
-			case "Airborne Assault": {"elite paratroopers are dropping near the front"};
-			case "Air Cavalry": {"air assault troops are moving to the front"};
-			case "Gunship Strike": {"an attack aircraft is striking the marked area"};
-			case "Heliborne QRF": {"a quick reaction force is landing at a threatened friendly town"};
-			case "Top Gun": {"a fighter is loitering over the front"};
-			case "Armor Column": {"a tank platoon is rolling toward the front"};
-			case "Technical Swarm": {"gun trucks are charging toward the front"};
-			case "Car Bomb": {"a GUER VBIED is rolling toward its target"};
-			default {"event location marked on your map"};
-		};
+		_mkName setMarkerTextLocal _markerText;
 		titleText [Format ["Wildcard: %1 - %2.", _label, _detail], "PLAIN"];
 	};
 

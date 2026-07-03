@@ -1317,9 +1317,11 @@ WFBE_PLAYERKEH = player addEventHandler ['Killed', {[_this select 0,_this select
 
 //if (!WF_Debug) then {playMusic "Track11_Large_Scale_Assault";};
 
-/* B69 S2: Round-start intro music hook. SAFE NO-OP until Ray adds the track to Music/description.ext CfgMusic and sets WFBE_C_INTRO_MUSIC_TRACK. Plays nothing while the constant is "". */
-_introTrack = missionNamespace getVariable ["WFBE_C_INTRO_MUSIC_TRACK", ""];
-if (_introTrack != "") then { playMusic _introTrack; };
+/* Lane 51: optional round-start music hook. Default-off until WFBE_C_MUSIC_ENABLE is set and soundtrack files are present. */
+if ((missionNamespace getVariable ["WFBE_C_MUSIC_ENABLE", 0]) > 0) then {
+	_introTrack = missionNamespace getVariable ["WFBE_C_MUSIC_MATCH_START_TRACK", missionNamespace getVariable ["WFBE_C_INTRO_MUSIC_TRACK", ""]];
+	if ((count (toArray _introTrack)) > 0) then {playMusic _introTrack;};
+};
 
 
 waitUntil {!(isNull player)};
@@ -1615,5 +1617,8 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- first so a fresh joiner isn't spammed over the onboarding cards. Spawned (never blocks input),
 //--- placed after init completes - same guarded-spawn pattern as the onboarding call above.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_TipRotation.sqf";
+
+//--- Late-join catch-up card. Self-gates on WFBE_C_JIP_CATCHUP_BRIEFING and reads only local or join-seeded state.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_JIPCatchupBriefing.sqf";
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

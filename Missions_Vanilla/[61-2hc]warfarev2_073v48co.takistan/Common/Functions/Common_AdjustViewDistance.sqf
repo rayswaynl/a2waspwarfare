@@ -22,7 +22,7 @@ if (_key in (actionKeys "User18")) then
         "Automatic view distance is now OFF" call GroupChatMessage;
         playSound ["autoViewDistanceToggledOff",true];
         _savedViewDistance = missionNamespace getVariable "SAVED_VIEW_DISTANCE";
-        setViewDistance _savedViewDistance;
+        setViewDistance (_savedViewDistance min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 10000]));
     } else 
     {
         missionNamespace setVariable ["SAVED_VIEW_DISTANCE", viewDistance];

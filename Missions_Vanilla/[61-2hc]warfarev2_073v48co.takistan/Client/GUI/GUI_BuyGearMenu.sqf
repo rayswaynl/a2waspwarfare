@@ -4,13 +4,19 @@ disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop tou
 //--- Register the UI.
 uiNamespace setVariable ["wfbe_display_buygear", _this select 0];
 if (isNil {uiNamespace getVariable 'wfbe_display_buygear_tab'}) then {uiNamespace setVariable ['wfbe_display_buygear_tab', 2]};
+//--- Lane 204: row-memory per tab (0-5); persists across tab switches.
+//--- NOTE (review MODERATE): after this block _x == 5 in the outer scope (A2 forEach does not isolate _x).
+//--- No later code before the main loop reads _x, so this is safe; document here to prevent future confusion.
+{
+	if (isNil {uiNamespace getVariable ("wfbe_buygear_row_" + str _x)}) then {uiNamespace setVariable [("wfbe_buygear_row_" + str _x), 0]};
+} forEach [0,1,2,3,4,5];
 uiNamespace setVariable ['wfbe_display_buygear_misc', -1];uiNamespace setVariable ['wfbe_display_buygear_pool_main', -1];uiNamespace setVariable ['wfbe_display_buygear_pool_gun', -1];
 
 _color_tab = [0.258823529, 0.713725490, 1, 1];
 _idc_tabs = [503301,503302,503303,503304,503305,503306];
 _lb_main = 503001;_lb_secondary = 503002;_lb_cargo = 503005;
 _tabs = ["Template","All","Primary","Secondary","Pistols","Equipment"];
-_funds_cli = 0;_price = 0;_tab_current_last = -1;
+_funds_cli = 0;_price = 0;_tab_current_last = -1;_tab_prev = -1;_tab_switch = false;
 _target = player;
 //--- Todo secure vanilla, remove not used.
 _target_weapons = weapons player;
@@ -40,7 +46,13 @@ while {true} do {
 	_click_misc = uiNamespace getVariable 'wfbe_display_buygear_misc';
 	_click_pool_main = uiNamespace getVariable 'wfbe_display_buygear_pool_main';
 	_click_pool_gun = uiNamespace getVariable 'wfbe_display_buygear_pool_gun';
-	if (_tab_current != _tab_current_last) then {_tab_current_last = _tab_current; _update_tab = true};
+	//--- Lane 204 (review fix): capture the leaving tab BEFORE overwriting _tab_current_last.
+	if (_tab_current != _tab_current_last) then {
+		_tab_prev = _tab_current_last;
+		_tab_current_last = _tab_current;
+		_update_tab = true;
+		_tab_switch = true;
+	};
 	if (_click_misc != -1) then {uiNamespace setVariable ['wfbe_display_buygear_misc', -1]; if (_click_misc < count _gear_items && count _gear_items > 0) then {_gear_sel_weapons = _gear_sel_weapons - [_gear_items select _click_misc];_gear_items = _gear_items - [_gear_items select _click_misc]; _gear_refresh = ["items"]; _update_inventory = true;_has_inv_changed = true;}};
 	if (_click_pool_main != -1) then {uiNamespace setVariable ['wfbe_display_buygear_pool_main', -1]; _size = (_gear_mag_main) Call WFBE_CL_FNC_GetMagazinesSize; if (_click_pool_main <= _size && _size > 0) then {_gear_mag_main = [_gear_mag_main, _click_pool_main] Call WFBE_CL_FNC_RemoveMagazineGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_main"];_update_inventory = true;_has_inv_changed = true;}};
 	if (_click_pool_gun != -1) then {uiNamespace setVariable ['wfbe_display_buygear_pool_gun', -1]; _size = (_gear_mag_pool) Call WFBE_CL_FNC_GetMagazinesSize; if (_click_pool_gun <= _size && _size > 0) then {_gear_mag_pool = [_gear_mag_pool, _click_pool_gun] Call WFBE_CL_FNC_RemoveMagazineGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_hand"];_update_inventory = true;_has_inv_changed = true;}};
@@ -117,10 +129,20 @@ while {true} do {
 		_update_tab = false;
 		{((uiNamespace getVariable "wfbe_display_buygear") displayCtrl _x) ctrlSetTextColor [0.7490, 0.7490, 0.7490, 0.7]} forEach _idc_tabs;
 		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl (_idc_tabs select _tab_current)) ctrlSetTextColor _color_tab;
+		//--- Lane 204 (review fix): save the cursor row for the tab we are LEAVING (_tab_prev).
+		//--- Only save on a real tab-switch (_tab_switch=true); template-create/delete also set
+		//--- _update_tab=true but must NOT clobber the row store for an unrelated tab.
+		if (_tab_switch && _tab_prev >= 0) then {
+			private ["_leaving_row"];
+			_leaving_row = lnbCurSelRow _lb_main;
+			if (_leaving_row < 0) then {_leaving_row = 0};
+			uiNamespace setVariable [("wfbe_buygear_row_" + str _tab_prev), _leaving_row];
+		};
+		_tab_switch = false;
 		lnbClear _lb_main;
 		lnbClear _lb_secondary;
 
-		//todo - remember the previously chosen gun/mag etc
+		//--- Fill the list for the new tab.
 		switch (_tab_current) do {
 			case 0: {[_lb_main, missionNamespace getVariable Format ["WFBE_%1_Template", WFBE_Client_SideJoinedText]] Call WFBE_CL_FNC_UI_Gear_FillTemplates};
 			case 1: {[_lb_main, [[(missionNamespace getVariable Format ["WFBE_%1_Primary", WFBE_Client_SideJoinedText]) + (missionNamespace getVariable Format ["WFBE_%1_Secondary", WFBE_Client_SideJoinedText]) + (missionNamespace getVariable Format ["WFBE_%1_Pistols", WFBE_Client_SideJoinedText]) + (missionNamespace getVariable Format ["WFBE_%1_Equipment", WFBE_Client_SideJoinedText])],[missionNamespace getVariable Format ["WFBE_%1_Magazines", WFBE_Client_SideJoinedText], "Mag_"]]] Call WFBE_CL_FNC_UI_Gear_FillList};
@@ -130,10 +152,14 @@ while {true} do {
 			case 5: {[_lb_main, [[(missionNamespace getVariable Format ["WFBE_%1_Equipment", WFBE_Client_SideJoinedText])],[missionNamespace getVariable Format ["WFBE_%1_Magazines", WFBE_Client_SideJoinedText], "Mag_"]]] Call WFBE_CL_FNC_UI_Gear_FillList};
 		};
 
-		//--- Smart Update, tbd improve per tab.
-		_ui_lnb_currow = lnbCurSelRow _lb_main;
-		if (_ui_lnb_currow != -1 && ((lnbSize _lb_main) select 0) > 0) then {
-			lnbSetCurSelRow [_lb_main, 0];
+		//--- Lane 204: restore the remembered row for this tab (clamped to list size).
+		private ["_row_count", "_saved_row"];
+		_row_count = (lnbSize _lb_main) select 0;
+		if (_row_count > 0) then {
+			_saved_row = uiNamespace getVariable ("wfbe_buygear_row_" + str _tab_current);
+			if (isNil "_saved_row") then {_saved_row = 0};
+			if (_saved_row >= _row_count) then {_saved_row = 0};
+			lnbSetCurSelRow [_lb_main, _saved_row];
 		};
 	};
 
@@ -521,5 +547,7 @@ while {true} do {
 
 //--- Release the UI.
 {uiNamespace setVariable [_x, nil]} forEach ["wfbe_display_buygear","wfbe_display_buygear_misc","wfbe_display_buygear_pool_main","wfbe_display_buygear_pool_gun"];
+//--- Lane 204 (review fix): clear per-tab row memory so reopening the dialog always starts at row 0.
+{uiNamespace setVariable [("wfbe_buygear_row_" + str _x), nil]} forEach [0,1,2,3,4,5];
 //--- Update the profile if needed.
 if (_need_save && !isNil 'WFBE_CL_FNC_UI_Gear_SaveTemplateProfile') then { [] Spawn WFBE_CL_FNC_UI_Gear_SaveTemplateProfile };

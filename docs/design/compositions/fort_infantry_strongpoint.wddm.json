@@ -1,0 +1,24 @@
+{
+  "name": "WFBE_NEURODEF_FORT_STRONGPOINT",
+  "parentW": 20,
+  "parentD": 18,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "INFANTRY STRONGPOINT (fortification, side-neutral, 0 gun-AI — infantry fight from it). Soldier logic: a central Bunker (large) is the hard core; two forward fighting bays built from bag-fence corners+walls give riflemen protected firing positions with primary arcs across the front (+Y), tied in to each other so there is no dead ground between them. A run of bag fences links the bays back to the bunker like a communication trench, so men can move between positions under cover. Earthen ramparts on the flanks give dispersion and stop enfilade. The rear is deliberately open (one covered entrance/exit) — a strongpoint that cannot be resupplied or reinforced is a tomb. Wire forward canalizes any assault into the bays' interlocking fire. Nothing is placed where it blocks a firing bay's arc.",
+  "objs": [
+    {"cls":"Land_fortified_nest_big_EP1","x":0,"y":0,"z":0,"dir":0,"role":"HARD CORE — central bunker (large)"},
+    {"cls":"Land_fort_bagfence_corner","x":-7,"y":6,"z":0,"dir":0,"role":"forward-left fighting bay — corner (arc front-left)"},
+    {"cls":"Land_fort_bagfence_long","x":-7,"y":6,"z":0,"dir":90,"role":"forward-left bay wall"},
+    {"cls":"Land_fort_bagfence_corner","x":7,"y":6,"z":0,"dir":270,"role":"forward-right fighting bay — corner (arc front-right)"},
+    {"cls":"Land_fort_bagfence_long","x":7,"y":6,"z":0,"dir":90,"role":"forward-right bay wall"},
+    {"cls":"Land_fort_bagfence_long","x":-4,"y":3,"z":0,"dir":25,"role":"comms trench — links left bay to the bunker (covered movement)"},
+    {"cls":"Land_fort_bagfence_long","x":4,"y":3,"z":0,"dir":335,"role":"comms trench — links right bay to the bunker (covered movement)"},
+    {"cls":"Land_fort_rampart","x":-9,"y":-1,"z":0,"dir":0,"role":"left flank rampart — dispersion + anti-enfilade"},
+    {"cls":"Land_fort_rampart","x":9,"y":-1,"z":0,"dir":0,"role":"right flank rampart — dispersion + anti-enfilade"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-2,"y":-3,"z":0,"dir":0,"role":"ammo/resupply — behind the bunker"},
+    {"cls":"Fort_RazorWire","x":-4,"y":9,"z":0,"dir":15,"role":"forward wire (left) — canalizes into the bays"},
+    {"cls":"Fort_RazorWire","x":4,"y":9,"z":0,"dir":345,"role":"forward wire (right) — canalizes into the bays"}
+  ]
+}

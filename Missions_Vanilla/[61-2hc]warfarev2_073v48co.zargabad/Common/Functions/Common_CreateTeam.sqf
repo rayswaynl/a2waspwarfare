@@ -1,5 +1,5 @@
 // Marty: Crew placement uses explicit private locals because town AI may be created on server, client, or headless client.
-Private ['_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx'];
+Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx'];
 
 _list = _this select 0;
 _position = _this select 1;
@@ -19,6 +19,9 @@ _probability = if (count _this > 6) then {_this select 6} else {-1};
 _planeDir = if (count _this > 7) then {_this select 7} else {-1};
 _planeAirStart = (typeName _planeDir == "SCALAR") && {_planeDir >= 0} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLANE_AIRSTART", 1]) > 0};
 _planeIdx = 0;
+_airTeamHulls = 0;
+_airTeamMaxHulls = missionNamespace getVariable ["WFBE_C_AICOM_AIR_TEAM_MAX_HULLS", 0];
+_airTeamStagger = missionNamespace getVariable ["WFBE_C_AICOM_AIR_TEAM_STAGGER", 0];
 _units = [];
 _vehicles = [];
 _crews = [];
@@ -127,74 +130,92 @@ _rearmor = {
 				_perfInfantry = _perfInfantry + 1;
 			};
 		} else {
-			//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): a Plane hull with the air-start heading threaded in
-			//--- (AICOM air founding at a captured airfield) is created FLYING via the "FLY" special + a real heading,
-			//--- exactly as the produce path (Server_BuyUnit.sqf L174-175) does, so it can never be stuck grounded and
-			//--- points down the field. Each successive plane in a multi-hull template is fanned +N degrees (de-conflict)
-			//--- so two hulls never air-spawn stacked and collide. Helis + every ground hull keep the grounded "FORM" path
-			//--- (unchanged). A2-OA-safe: classname-literal isKindOf, floor-div wrap for the direction (no A3 commands).
-			if (_planeAirStart && {_x isKindOf "Plane"}) then {
-				private ["_thisPlaneDir"];
-				_thisPlaneDir = _planeDir + (_planeIdx * (missionNamespace getVariable ["WFBE_C_AICOM_PLANE_STACK_DEG", 25]));
-				_thisPlaneDir = _thisPlaneDir - (360 * floor (_thisPlaneDir / 360)); //--- wrap into [0,360).
-				_planeIdx = _planeIdx + 1;
-				_vehicle = [_x, _position, _sideID, _thisPlaneDir, _lockVehicles, true, _global, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
+			_isAirHull = _x isKindOf "Air";
+			if (_isAirHull && {_airTeamMaxHulls > 0} && {_airTeamHulls >= _airTeamMaxHulls}) then {
+				_perfSkipped = _perfSkipped + 1;
+				if (missionNamespace getVariable ["WF_Debug", false]) then {
+					["INFORMATION", Format ["Common_CreateTeam.sqf: skipped extra air hull [%1] for side [%2] because WFBE_C_AICOM_AIR_TEAM_MAX_HULLS=%3.", _x, _side, _airTeamMaxHulls]] Call WFBE_CO_FNC_LogContent;
+				};
 			} else {
-				_vehicle = [_x, _position, _sideID, 0, _lockVehicles, true, _global, "FORM"] Call WFBE_CO_FNC_CreateVehicle;
-			};
-			call {
-				// Marty: If the vehicle itself failed, skip this template entry without attempting crew work.
-				if (isNull _vehicle) exitWith {
-					_perfSkipped = _perfSkipped + 1;
-				};
-
-				_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
-				_vehicleCrews = [];
-				// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
-				_vehicle allowCrewInImmobile true;
-				_team addVehicle _vehicle;
-				{
-					_crewRole = _x;
-					call {
-						if ((_vehicle emptyPositions _crewRole) <= 0) exitWith {};
-						_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
-						if (isNull _crewUnit) exitWith {};
-						[_crewUnit] allowGetIn true;
-
-						switch (_crewRole) do {
-							case "driver": {
-								_crewUnit assignAsDriver _vehicle;
-								[_crewUnit] orderGetIn true;
-								_crewUnit moveInDriver _vehicle;
-							};
-							case "gunner": {
-								_crewUnit assignAsGunner _vehicle;
-								[_crewUnit] orderGetIn true;
-								_crewUnit moveInGunner _vehicle;
-							};
-							case "commander": {
-								_crewUnit assignAsCommander _vehicle;
-								[_crewUnit] orderGetIn true;
-								_crewUnit moveInCommander _vehicle;
-							};
-						};
-
-						_crewUnit addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
-						_vehicleCrews = _vehicleCrews + [_crewUnit];
+				if (_isAirHull && {_airTeamStagger > 0}) then {
+					_airTeamStaggerKey = Format ["wfbe_aicom_airteam_next_%1", _sideID];
+					_airTeamNext = missionNamespace getVariable [_airTeamStaggerKey, time];
+					if (_airTeamNext > time) then {
+						_airTeamDelay = _airTeamNext - time;
+						sleep _airTeamDelay;
 					};
-				} forEach ["driver","gunner","commander"];
-
-				// Marty: A town combat vehicle without any crew is worse than no vehicle; remove it immediately.
-				if (count _vehicleCrews == 0) exitWith {
-					["WARNING", Format ["Common_CreateTeam.sqf: Vehicle [%1] for side [%2] at [%3] had no crew and was removed to prevent empty town defenses.", typeOf _vehicle, _side, _position]] Call WFBE_CO_FNC_LogContent;
-					deleteVehicle _vehicle;
-					_perfSkipped = _perfSkipped + 1;
+					missionNamespace setVariable [_airTeamStaggerKey, time + _airTeamStagger];
 				};
+				//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): a Plane hull with the air-start heading threaded in
+				//--- (AICOM air founding at a captured airfield) is created FLYING via the "FLY" special + a real heading,
+				//--- exactly as the produce path (Server_BuyUnit.sqf L174-175) does, so it can never be stuck grounded and
+				//--- points down the field. Each successive plane in a multi-hull template is fanned +N degrees (de-conflict)
+				//--- so two hulls never air-spawn stacked and collide. Helis + every ground hull keep the grounded "FORM" path
+				//--- (unchanged). A2-OA-safe: classname-literal isKindOf, floor-div wrap for the direction (no A3 commands).
+				if (_planeAirStart && {_x isKindOf "Plane"}) then {
+					private ["_thisPlaneDir"];
+					_thisPlaneDir = _planeDir + (_planeIdx * (missionNamespace getVariable ["WFBE_C_AICOM_PLANE_STACK_DEG", 25]));
+					_thisPlaneDir = _thisPlaneDir - (360 * floor (_thisPlaneDir / 360)); //--- wrap into [0,360).
+					_planeIdx = _planeIdx + 1;
+					_vehicle = [_x, _position, _sideID, _thisPlaneDir, _lockVehicles, true, _global, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
+				} else {
+					_vehicle = [_x, _position, _sideID, 0, _lockVehicles, true, _global, "FORM"] Call WFBE_CO_FNC_CreateVehicle;
+				};
+				call {
+					// Marty: If the vehicle itself failed, skip this template entry without attempting crew work.
+					if (isNull _vehicle) exitWith {
+						_perfSkipped = _perfSkipped + 1;
+					};
 
-				_crews = _crews + _vehicleCrews;
-				_perfCrew = _perfCrew + count _vehicleCrews;
-				_vehicles = _vehicles + [_vehicle];
-				_perfVehicles = _perfVehicles + 1;
+					_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
+					_vehicleCrews = [];
+					// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
+					_vehicle allowCrewInImmobile true;
+					_team addVehicle _vehicle;
+					{
+						_crewRole = _x;
+						call {
+							if ((_vehicle emptyPositions _crewRole) <= 0) exitWith {};
+							_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+							if (isNull _crewUnit) exitWith {};
+							[_crewUnit] allowGetIn true;
+
+							switch (_crewRole) do {
+								case "driver": {
+									_crewUnit assignAsDriver _vehicle;
+									[_crewUnit] orderGetIn true;
+									_crewUnit moveInDriver _vehicle;
+								};
+								case "gunner": {
+									_crewUnit assignAsGunner _vehicle;
+									[_crewUnit] orderGetIn true;
+									_crewUnit moveInGunner _vehicle;
+								};
+								case "commander": {
+									_crewUnit assignAsCommander _vehicle;
+									[_crewUnit] orderGetIn true;
+									_crewUnit moveInCommander _vehicle;
+								};
+							};
+
+							_crewUnit addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+							_vehicleCrews = _vehicleCrews + [_crewUnit];
+						};
+					} forEach ["driver","gunner","commander"];
+
+					// Marty: A town combat vehicle without any crew is worse than no vehicle; remove it immediately.
+					if (count _vehicleCrews == 0) exitWith {
+						["WARNING", Format ["Common_CreateTeam.sqf: Vehicle [%1] for side [%2] at [%3] had no crew and was removed to prevent empty town defenses.", typeOf _vehicle, _side, _position]] Call WFBE_CO_FNC_LogContent;
+						deleteVehicle _vehicle;
+						_perfSkipped = _perfSkipped + 1;
+					};
+
+					_crews = _crews + _vehicleCrews;
+					_perfCrew = _perfCrew + count _vehicleCrews;
+					_vehicles = _vehicles + [_vehicle];
+					_perfVehicles = _perfVehicles + 1;
+					if (_isAirHull) then {_airTeamHulls = _airTeamHulls + 1};
+				};
 			};
 		};
 			}; //--- claude-gaming: close the isClass(CfgVehicles) guard added above.

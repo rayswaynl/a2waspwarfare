@@ -301,7 +301,8 @@ if ((missionNamespace getVariable ["WFBE_C_VEHICLE_TINTS", 0]) > 0) then {
 	//--- fill Textures\mks_medic_cross_ca.paa from image-gen.
 	//if (_type == "M113Ambul_TK_EP1") then { _skinCmd = _skinCmd + "; this setObjectTexture [1,'Textures\mks_medic_cross_ca.paa']"; }; //--- fill from image-gen
 
-	//--- TODO v2: kill-tally livery (needs kill-attribution design).
+	//--- Lane 205 kill-tally marker is installed in Common_AddVehicleMarking.sqf. It watches the
+	//--- server-broadcast wfbe_kill_tally value and stays independent from these body tint selections.
 
 	if (_skinCmd != "") then {
 		_pendingSkin = _vehicle getVariable ["wfbe_pending_texture", ""];

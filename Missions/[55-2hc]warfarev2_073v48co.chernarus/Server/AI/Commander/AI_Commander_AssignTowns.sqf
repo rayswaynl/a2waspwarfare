@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle"]; //--- cmdcon41-w2: journey-commit privates
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle"]; //--- cmdcon41-w2: journey-commit privates
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -112,43 +112,47 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_team setVariable ["wfbe_aicom_orbitwatchdist", nil];
 					_team setVariable ["wfbe_aicom_orbitnoprog", 0];
 				} else {
-					//--- ORBITER DETECTION (cmdcon41-w2, F3, claude-gaming 2026-07-02): a team permanently entangled
-					//--- with GUER en route is in behaviour "COMBAT", moves constantly, and closes on the target
-					//--- never - it is invisible to the position-stuck ladder below (which exempts COMBAT). Parallel
-					//--- path: on each watcher pass, if the leader is in COMBAT AND dist-to-target has NOT dropped
-					//--- >= 100m since the last recorded watch dist, count it as a no-progress window; after 3
-					//--- consecutive such windows treat it as stuck (bump the SAME strike ladder + log ORBITER_STUCK).
-					//--- The COMBAT exempt on the _stuck telemetry below is KEPT (it is a separate signal). Per-team
-					//--- state = plain group vars + isNil (group getVariable [name,default] is unreliable on groups).
-					//--- A2-OA-safe: behaviour string compare (exact-case "COMBAT"), numeric distance, no A3 commands.
-					private ["_owDistPrev","_owNoProg"];
-					_owDistPrev = _team getVariable "wfbe_aicom_orbitwatchdist";
-					_owNoProg   = _team getVariable "wfbe_aicom_orbitnoprog";
-					if (isNil "_owNoProg") then {_owNoProg = 0};
-					if (behaviour _dldr == "COMBAT") then {
-						if (isNil "_owDistPrev") then {
-							_owNoProg = 0; //--- first COMBAT window on this dispatch: seed the baseline, no verdict yet.
-						} else {
-							if ((_owDistPrev - _ddist) >= 100) then {
-								_owNoProg = 0; //--- closed >= 100m since last watch: real progress despite the firefight.
+					//--- ORBITER DETECT (cmdcon41-w3-orbiter, claude-gaming 2026-07-02, gate WFBE_C_AICOM_ORBITER_DETECT default 0):
+					//--- a team permanently entangled with GUER en route is in behaviour "COMBAT", moves constantly,
+					//--- and closes on the target never - it is invisible to the position-stuck ladder below (which
+					//--- exempts COMBAT). When WFBE_C_AICOM_ORBITER_DETECT > 0: on each watcher pass, if the leader
+					//--- is in COMBAT AND dist-to-target has NOT dropped >= 100m since the last recorded watch dist,
+					//--- count it as a no-progress window; after N consecutive such windows (WFBE_C_AICOM_ORBITER_WIN,
+					//--- default 4) treat it as stuck (bump the SAME strike ladder + log ORBITER_STUCK). Per-team
+					//--- state via plain getVariable + isNil (group [name,default] getVariable is unreliable on groups).
+					//--- The COMBAT exempt on the position-stuck telemetry below is KEPT. Flag 0 = feature dark.
+					//--- A2-OA-safe: behaviour exact-case string compare, numeric distance, no A3 commands.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_ORBITER_DETECT", 0]) > 0) then {
+						private ["_owDistPrev","_owNoProg","_owWin","_owStrk"];
+						_owDistPrev = _team getVariable "wfbe_aicom_orbitwatchdist";
+						_owNoProg   = _team getVariable "wfbe_aicom_orbitnoprog";
+						if (isNil "_owNoProg") then {_owNoProg = 0};
+						_owWin = missionNamespace getVariable ["WFBE_C_AICOM_ORBITER_WIN", 4];
+						if (behaviour _dldr == "COMBAT") then {
+							if (isNil "_owDistPrev") then {
+								_owNoProg = 0; //--- first COMBAT window on this dispatch: seed the baseline, no verdict yet.
 							} else {
-								_owNoProg = _owNoProg + 1;
+								if ((_owDistPrev - _ddist) >= 100) then {
+									_owNoProg = 0; //--- closed >= 100m since last watch: real progress despite the firefight.
+								} else {
+									_owNoProg = _owNoProg + 1;
+								};
 							};
+							_team setVariable ["wfbe_aicom_orbitwatchdist", _ddist];
+							_team setVariable ["wfbe_aicom_orbitnoprog", _owNoProg];
+							if (_owNoProg >= _owWin) then {
+								_owStrk = _team getVariable "wfbe_aicom_stuckstrikes";
+								if (isNil "_owStrk") then {_owStrk = 0};
+								_owStrk = _owStrk + 1;
+								_team setVariable ["wfbe_aicom_stuckstrikes", _owStrk];
+								_team setVariable ["wfbe_aicom_orbitnoprog", 0]; //--- consume the verdict; re-earn a fresh window.
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORBITER_STUCK|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|strike=" + str _owStrk);
+							};
+						} else {
+							//--- Not in COMBAT this pass: clear the orbiter window so a later COMBAT entanglement earns a clean window.
+							_team setVariable ["wfbe_aicom_orbitwatchdist", nil];
+							_team setVariable ["wfbe_aicom_orbitnoprog", 0];
 						};
-						_team setVariable ["wfbe_aicom_orbitwatchdist", _ddist];
-						_team setVariable ["wfbe_aicom_orbitnoprog", _owNoProg];
-						if (_owNoProg >= 3) then {
-							private ["_owStrk"];
-							_owStrk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
-							_team setVariable ["wfbe_aicom_stuckstrikes", _owStrk];
-							_team setVariable ["wfbe_aicom_orbitnoprog", 0]; //--- consume the verdict; re-earn a fresh window.
-							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORBITER_STUCK|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|strike=" + str _owStrk);
-						};
-					} else {
-						//--- Not in COMBAT this pass: the position-stuck ladder handles it; clear the orbiter window
-						//--- so a later COMBAT entanglement earns a clean 3-window verdict.
-						_team setVariable ["wfbe_aicom_orbitwatchdist", nil];
-						_team setVariable ["wfbe_aicom_orbitnoprog", 0];
 					};
 					if ((time - _dt0) > _toSecs) then {
 						private ["_moved","_stuck"];
@@ -165,8 +169,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						private ["_fjS","_fjThrS"];
 						_fjS = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 						_team setVariable ["wfbe_aicom_failedjourneys", _fjS];
-						_fjThrS = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-						if (_fjS >= _fjThrS && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+						_fjThrS = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+						if (_fjThrS > 0 && {_fjS >= _fjThrS} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 							_team setVariable ["wfbe_aicom_recycle", true, true];
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjS + "|reason=stranded");
 						};
@@ -225,8 +229,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_GARRISON", 0]) > 0) && {!_humanCmd} && {!_explicitMode} && {_aliveCount > 0}) then {
 			_gar = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 			_garDead = true;
+			_garAlive = 0;
 			if (!isNull _gar) then {
-				if (({alive _x} count (units _gar)) > 0) then {_garDead = false};
+				_garAlive = {alive _x} count (units _gar);
+				if (_garAlive > 0) then {_garDead = false};
 			};
 			if (_garDead) then {
 				_hqG = (_side) Call WFBE_CO_FNC_GetSideHQ;
@@ -238,6 +244,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _hqG], true];
 					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|GARRISON_REASSIGN|team=" + (str _team) + "|previous=" + (str _gar) + "|prevAlive=" + str _garAlive + "|hq=" + (str _hqG));
 					_explicitMode = true; //--- now an explicit order; the executor drives it home
 					["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] assigned as base garrison.", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
 				};
@@ -345,8 +352,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												private ["_fjA","_fjThrA"];
 												_fjA = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 												_team setVariable ["wfbe_aicom_failedjourneys", _fjA];
-												_fjThrA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-												if (_fjA >= _fjThrA && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+												_fjThrA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+												if (_fjThrA > 0 && {_fjA >= _fjThrA} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 													_team setVariable ["wfbe_aicom_recycle", true, true];
 													diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjA + "|reason=abandon");
 												};
@@ -434,8 +441,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_fjSA","_fjThrSA"];
 													_fjSA = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjSA];
-													_fjThrSA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-													if (_fjSA >= _fjThrSA && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+													_fjThrSA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+													if (_fjThrSA > 0 && {_fjSA >= _fjThrSA} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjSA + "|reason=abandon");
 													};
@@ -456,8 +463,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_fjUC","_fjThrUC"];
 													_fjUC = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjUC];
-													_fjThrUC = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 6];
-													if (_fjUC >= _fjThrUC && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+													_fjThrUC = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+													if (_fjThrUC > 0 && {_fjUC >= _fjThrUC} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjUC + "|reason=abandon");
 													};
@@ -484,14 +491,16 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- Real progress (en-route, actually moving, town not yet reached): refresh the
 											//--- breadcrumb and DECAY the unstuck strike ladder (the team moved, so it is not stuck).
 											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
-											//--- LADDER DECAY (cmdcon41-w2, F4a, claude-gaming 2026-07-02): the legacy remedy RESET the
-											//--- strike ladder to 0 on ANY progress, so an oscillating wedger that lurches 200m and re-sticks
-											//--- cycles tier-1 forever and never earns the tier-3 teleport recovery. When WFBE_C_AICOM_LADDER_DECAY
-											//--- is on, DECAY by 1 ((v-1) max 0) instead of zeroing, so a chronic wedger climbs the ladder over
-											//--- time and reaches the terminal tier; legacy hard-reset when the flag is off. A2-OA-safe (numeric).
-											if ((missionNamespace getVariable ["WFBE_C_AICOM_LADDER_DECAY", 1]) > 0) then {
+											//--- STUCK DECAY (cmdcon41-w3-orbiter, claude-gaming 2026-07-02, gate WFBE_C_AICOM_STUCK_DECAY default 0):
+											//--- an oscillating wedger that lurches 200m and re-sticks cycles tier-1 forever when the strike counter
+											//--- hard-resets to 0 on ANY forward lurch. When WFBE_C_AICOM_STUCK_DECAY > 0: DECAY by 1 ((v-1) max 0)
+											//--- instead of zeroing, so a chronic wedger climbs the ladder over time to the terminal tier.
+											//--- Flag 0 = legacy hard-reset (byte-identical to pre-LADDER_DECAY behavior). A2-OA-safe (numeric).
+											if ((missionNamespace getVariable ["WFBE_C_AICOM_STUCK_DECAY", 0]) > 0) then {
 												private ["_decStrk"];
-												_decStrk = ((_team getVariable ["wfbe_aicom_stuckstrikes", 0]) - 1) max 0;
+												_decStrk = _team getVariable "wfbe_aicom_stuckstrikes";
+												if (isNil "_decStrk") then {_decStrk = 0};
+												_decStrk = (_decStrk - 1) max 0;
 												_team setVariable ["wfbe_aicom_stuckstrikes", _decStrk];
 											} else {
 												_team setVariable ["wfbe_aicom_stuckstrikes", 0];
@@ -556,6 +565,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					{
 						_bootDist = if (!isNull _hqObj) then {_x distance _hqObj} else {0};
 						_bootScore = (0 - _bootDist) - ((_x getVariable ["supplyValue", 0]) * 10);
+						if (isNil "_bootScore") then {
+							diag_log ("CAPDBG|BOOT|" + (_x getVariable ["name","?"]) + "|residual");
+						};
+						_bootScore = if (isNil "_bootScore") then {-9999999} else {_bootScore};
 						if (_bootScore > _bestBootScore) then {_bestBootScore = _bootScore; _bestBoot = _x};
 					} forEach _uncaptured;
 					if (!isNull _bestBoot) then {_target = _bestBoot};

@@ -31,7 +31,7 @@ while {_elapsedTime < _timerDuration} do {
 };
 
 if (_changeTheViewDistance) then {
-    setViewDistance newViewDistance;
+    setViewDistance (newViewDistance min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 10000]));
 
     (format ["Set the view distance to: %1", str(newViewDistance)]) call GroupChatMessage;
 

@@ -36,7 +36,7 @@ while {alive player && dialog} do {
 		} else {
 			//--- Restore the saved view distance when turning auto-VD off (mirrors Common_AdjustViewDistance).
 			_saved = missionNamespace getVariable ["SAVED_VIEW_DISTANCE", viewDistance];
-			if (typeName _saved == "SCALAR") then {setViewDistance _saved};
+			if (typeName _saved == "SCALAR") then {setViewDistance (_saved min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 10000]))};
 		};
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {
 			["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", _toggleOn] Call WFBE_CO_FNC_SetProfileVariable;

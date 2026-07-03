@@ -646,7 +646,7 @@ class RscTitles {
 					  EastVehiclesCreatedBar,EastVehiclesCreatedCount,WestVehiclesCreatedBar,WestVehiclesCreatedCount,
 					  EastVehiclesLostBar,EastVehiclesLostCount,WestVehiclesLostBar,WestVehiclesLostCount,
 					  GuerSoldiersRecruitedBar,GuerSoldiersRecruitedCount,GuerSoldiersLostBar,GuerSoldiersLostCount,
-					  GuerVehiclesCreatedBar,GuerVehiclesCreatedCount,GuerVehiclesLostBar,GuerVehiclesLostCount};
+					  GuerVehiclesCreatedBar,GuerVehiclesCreatedCount,GuerVehiclesLostBar,GuerVehiclesLostCount,PlayerSummaryText,CloseButton};
 
 		controlsBackground[] = {};
 
@@ -677,7 +677,7 @@ class RscTitles {
 			x = 0;
 			y = 0.24;
 			w = 1;
-			h = 0.62;
+			h = 0.68;
 			colorBackground[] = WFBE_EOGS_Background;
 		};
 
@@ -867,6 +867,29 @@ class RscTitles {
 			idc = 90307;
 			x = 2;
 			w = 0.27;
+		};
+
+		class PlayerSummaryText : RscText {
+			idc = 90010;
+			style = 2;
+			sizeEx = 0.022;
+			x = 0.05;
+			y = 0.86;
+			w = 0.70;
+			h = 0.04;
+			colorText[] = {1.0,1.0,1.0,1};
+		};
+
+		class CloseButton : RscButton_Main {
+			idc = 90011;
+			x = 0.78;
+			y = 0.865;
+			w = 0.16;
+			h = 0.035;
+			sizeEx = 0.026;
+			text = "Close";
+			action = "private ['_d']; _d = ['currentCutDisplay'] call BIS_FNC_GUIget; if (!isNull _d) then {_d closeDisplay 0};";
+			tooltip = "Hide end-round stats";
 		};
 	};
 

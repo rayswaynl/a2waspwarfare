@@ -91,7 +91,8 @@ if (_airMaxTotalP > 0) then {
 	//--- nil even with a default -> the lazy-brace check below threw and killed Produce,
 	//--- stopping ALL factory purchases for editor teams).
 	if (!isNull _team) then {
-	_type = _team getVariable ["wfbe_teamtype", -1];
+	_type = _team getVariable "wfbe_teamtype";
+	if (isNil "_type") then {_type = -1};
 
 	//--- =========================================================================================
 	//--- (cmdcon41-w2) HC-TEAM MAINTENANCE PASS: terminal RECYCLE + friendly-town TOP-UP DISPATCH.
@@ -128,9 +129,9 @@ if (_airMaxTotalP > 0) then {
 		//--- (3) TOWN-CENTER TOP-UP DISPATCHER (Ray: reinforce at friendly towns): an HC team that is RALLYING or
 		//--- PARKED (leader within 400m of its own HQ or an OWN-side town centre) and understrength (alive < 6)
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
-		//--- wfbe_aicom_topup_req the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
-		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not).
-		private ["_wm_rally","_wm_parked","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
+		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
+		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
+		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -142,7 +143,9 @@ if (_airMaxTotalP > 0) then {
 				_wm_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 				{ if (((_x getVariable ["sideID", -1]) == _wm_myID) && {(_wm_ldr distance _x) < 400}) exitWith {_wm_parked = true} } forEach towns;
 			};
-			if (_wm_rally || {_wm_parked}) then {
+			_wm_disbanding = _team getVariable "wfbe_aicom_disband";
+			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
+			if (!_wm_disbanding && {_wm_rally || {_wm_parked}}) then {
 				//--- COOLDOWN gate (one top-up per team per WFBE_C_AICOM_TOPUP_COOLDOWN seconds).
 				_wm_now   = time;
 				_wm_lastTU = _team getVariable "wfbe_aicom_topup_stamp"; if (isNil "_wm_lastTU") then {_wm_lastTU = -1e9};
@@ -179,7 +182,7 @@ if (_airMaxTotalP > 0) then {
 							if (_wm_curFunds >= _wm_charge) then {
 								[_side, -_wm_charge] Call ChangeAICommanderFunds;
 								_wm_rallyPos = getPosATL _wm_ldr; //--- plain array = the rally pos the driver spawns at
-								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls], true];
+								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now], true];
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
 								//--- VISIBILITY: UID-targeted command-chat line to the seated human commander ONLY (Client_HandlePVF
 								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).
@@ -211,7 +214,9 @@ if (_airMaxTotalP > 0) then {
 	if (!isPlayer (leader _team) && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- B66
 		if (_type >= 0) then {
 			if (_type < count _templates) then {
-				if (count (_team getVariable ["wfbe_queue", []]) == 0) then {_canProduce = true};
+				_q = _team getVariable "wfbe_queue";
+				if (isNil "_q") then {_q = []};
+				if ((count _q) < 1) then {_canProduce = true};
 			};
 		};
 	};
@@ -312,7 +317,9 @@ if (_airMaxTotalP > 0) then {
 					_team setVariable ["wfbe_aicom_retreat_tries", _rTries, true];
 					_team setVariable ["wfbe_aicom_retreat_issues", _rIssues + 1, true]; //--- B68: monotonic re-issue count, never reset by progress.
 					_team setVariable ["wfbe_aicom_retreat_lastdist", _curDist, true];
-					_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
+					_retreatOrder = _team getVariable "wfbe_aicom_order";
+					if (isNil "_retreatOrder") then {_retreatOrder = [-1]};
+					_retreatSeq = (_retreatOrder select 0) + 1;
 					_retreatOrder = [_retreatSeq, "defense", getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
@@ -455,9 +462,12 @@ if (_airMaxTotalP > 0) then {
 					_w15Exp = missionNamespace getVariable _w15Key;
 					_priceCharged = if (!isNil "_w15Exp" && {_w15Exp > time}) then {round (_price * 0.5)} else {_price};
 					[_side, -_priceCharged] Call ChangeAICommanderFunds;
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNIT_PRODUCED|class=" + _toBuild + "|factory=" + _typeName + "|cost=" + str _priceCharged + "|listCost=" + str _price + "|batch=" + str (_batchOrdered + 1));
 				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
 				_id = [floor (random 1000000)];
-				_q = (_team getVariable ["wfbe_queue", []]) + [_id];
+				_q = _team getVariable "wfbe_queue";
+				if (isNil "_q") then {_q = []};
+				_q = _q + [_id];
 				_team setVariable ["wfbe_queue", _q];
 				[_id, _facObj, _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it

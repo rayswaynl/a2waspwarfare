@@ -93,7 +93,7 @@ COMBAT exempts them from everything).
 
 **F4 — Ladder decay + terminal recycle.** (a) Stuck-strike ladder DECAYS by 1 on progress instead of
 resetting to 0 → oscillating wedgers eventually reach tier-3 teleport recovery. (b)
-`WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE` (default 6): a team accumulating N STRANDED/abandon closures
+`WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE` (default 0 = off; set e.g. 6 to enable): a team accumulating N STRANDED/abandon closures
 since its last arrival is RETIRED at a player-safe moment (existing disband idiom, never player-visible)
 and refounded fresh at base — mounted, near base, short first leg. Ends the 59-dispatch zombies.
 

@@ -174,23 +174,29 @@ _i = _i + [['','',200,0,0,0,'Fortification',0,'Civilians',[]]];
 //--- WDDM commander positions (Stage 1): anchor placeholders for composition buildables.
 //--- Label/price/category only; the anchor model is just the placement ghost (the composition
 //--- itself is spawned by Server\Functions\Server_ConstructPosition.sqf). Price is a flat MVP value.
+//--- cmdcon44-a (Build 89): WFBE_C_DEFMENU_V2_POSITIONS ON = reworked positions -> relabel the six rows so
+//--- the change is visible in the menu text (the weapon + role are named). Flag OFF = exact legacy labels.
+//--- The composition rework itself lives in Init_Defenses.sqf under the same flag.
+private "_defPosV2";
+_defPosV2 = ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0);
+
 _c = _c + ['Land_Ind_BoardsPack1'];
-_i = _i + [['AA Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'AA Nest — Stinger/ZU-23 (Light, 2 AI)'} else {'AA Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_CncBlock_Stripes'];
-_i = _i + [['AA Position (Heavy, 4 AI)','',4500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'AA Battery — SAM/flak (Heavy, 4 AI)'} else {'AA Position (Heavy, 4 AI)'}),'',4500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Barrel_sand'];
-_i = _i + [['Artillery (Light, 1 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Artillery Pit — howitzer (Light, 1 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Ind_BoardsPack2'];
-_i = _i + [['Artillery (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Artillery Battery — 3 guns (Heavy, 4 AI)'} else {'Artillery (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_WoodenRamp'];
-_i = _i + [['Mixed Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Post — MG/AT/AA (Light, 2 AI)'} else {'Mixed Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['RoadCone'];
-_i = _i + [['Mixed Position (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Strongpoint — MG/ATGM/AA (Heavy, 4 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Paleta1'];
 _i = _i + [['Base Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
@@ -218,8 +224,27 @@ _i = _i + [['Hedgehog Line (AT obstacle)','',30,0,0,0,'Fortification',0,'Civilia
 
 //--- Flak Tower anchor (Land_Ind_TankSmall ghost -> WFBE_NEURODEF_FLAKTOWER_WEST/EAST = tower + AA @ deck).
 //--- Elevated AA + pooled AI gunner. Category Defense. Sub-flag WFBE_C_DEF_FLAKTOWER gates its NAME entry.
+//--- cmdcon44-c: host is now the thin lattice light tower (Land_Ind_IlluminantTower) per Ray — label names it.
 _c = _c + ['Land_Ind_TankSmall'];
-_i = _i + [['Flak Tower (elevated AA, 1 AI)','',1400,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [['Flak Tower — AA on light tower (1 AI)','',1400,0,0,0,'Defense',0,'Civilians',[]]];
+
+//======================================================================================
+//--- cmdcon44-c (Build 89, Ray item 36): WDDM-AUTHORED FORTIFICATIONS SET. Three side-neutral
+//--- fortification compositions (Init_Defenses.sqf: WFBE_NEURODEF_FORT_STRONGPOINT / _CHECKPOINT / _OP),
+//--- each authored in Ray's WDDM tool (docs/design/compositions/fort_*.wddm.json). Category Fortification.
+//--- Ghosts are unused cargo/barrel models (validated by the registration loop below). Prices are flat MVP.
+//======================================================================================
+//--- Infantry Strongpoint: bunker core + interlocking fighting bays + comms trench + ramparts.
+_c = _c + ['Land_Misc_Cargo1B'];
+_i = _i + [['Infantry Strongpoint (bunker + bays)','',400,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Roadblock / Checkpoint: concrete chicane + gate + protected guard positions (place across a road).
+_c = _c + ['Land_transport_crates_EP1'];
+_i = _i + [['Roadblock / Checkpoint','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Observation Post: elevated bunker-tower + concealment + discreet fallback.
+_c = _c + ['Land_Barrel_water'];
+_i = _i + [['Observation Post (elevated)','',200,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
 if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {

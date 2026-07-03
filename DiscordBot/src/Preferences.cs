@@ -2,6 +2,8 @@
 
 public sealed class Preferences
 {
+    private const string PreferencesFileName = "preferences.json";
+
     // Singleton stuff
     private static Preferences? instance;
     private static readonly object padlock = new object();
@@ -17,21 +19,75 @@ public sealed class Preferences
     {
         get
         {
-            lock (padlock)
+            if (!TryLoad(out string errorMessage))
             {
-                if (instance == null)
-                {
-                    string json = File.ReadAllText("preferences.json");
-                    instance = JsonConvert.DeserializeObject<Preferences>(json);
-                }
+                throw new InvalidOperationException(errorMessage);
             }
-#pragma warning disable CS8603 // Possible null reference return.
-            return instance;
-#pragma warning restore CS8603 // Possible null reference return.
+
+            return instance ?? throw new InvalidOperationException("Preferences were not loaded.");
         }
         set
         {
-            instance = value;
+            lock (padlock)
+            {
+                instance = value;
+            }
+        }
+    }
+
+    public static bool TryLoad(out string errorMessage)
+    {
+        lock (padlock)
+        {
+            if (instance != null)
+            {
+                errorMessage = string.Empty;
+                return true;
+            }
+
+            if (!File.Exists(PreferencesFileName))
+            {
+                errorMessage = $"Preferences file '{PreferencesFileName}' not found in the application directory. Please create it before starting the Discord bot.";
+                return false;
+            }
+
+            string json;
+            try
+            {
+                json = File.ReadAllText(PreferencesFileName);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                errorMessage = $"Could not read preferences file '{PreferencesFileName}': {ex.Message}";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                errorMessage = $"Preferences file '{PreferencesFileName}' is empty. Please add a valid JSON preferences object.";
+                return false;
+            }
+
+            try
+            {
+                Preferences? loadedPreferences = JsonConvert.DeserializeObject<Preferences>(json);
+
+                if (loadedPreferences == null)
+                {
+                    errorMessage = $"Preferences file '{PreferencesFileName}' contains JSON null. Please replace it with a valid preferences object.";
+                    return false;
+                }
+
+                loadedPreferences.AuthorizedUserIDs ??= Array.Empty<ulong>();
+                instance = loadedPreferences;
+                errorMessage = string.Empty;
+                return true;
+            }
+            catch (JsonException ex)
+            {
+                errorMessage = $"Could not parse preferences file '{PreferencesFileName}': {ex.Message}";
+                return false;
+            }
         }
     }
 
@@ -40,7 +96,7 @@ public sealed class Preferences
         lock (padlock)
         {
             string json = JsonConvert.SerializeObject(Instance, Formatting.Indented);
-            File.WriteAllText("preferences.json", json);
+            File.WriteAllText(PreferencesFileName, json);
         }
     }
 

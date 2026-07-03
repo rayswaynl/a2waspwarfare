@@ -1,4 +1,4 @@
-Private ["_availableSpawn","_autonomous","_buildings","_checks","_closestRespawn","_deathLoc","_enemySide","_hq","_isForcedRespawn","_leader","_loadout","_mobileRespawns","_moveMode","_pos","_ran","_range","_rcm'","_rd","_respawn","_respawnLoc","_side","_sideID","_sideText","_team","_update","_upgrades"];
+Private ["_availableSpawn","_autonomous","_buildings","_checks","_closestRespawn","_deathLoc","_enemySide","_hq","_isForcedRespawn","_leader","_loadout","_mobileRespawns","_moveMode","_pos","_ran","_range","_rcm","_rd","_respawn","_respawnLoc","_side","_sideID","_sideText","_team","_update","_upgrades"];
 _side = _this select 0;
 _team = _this select 1;
 _sideText = str _side;

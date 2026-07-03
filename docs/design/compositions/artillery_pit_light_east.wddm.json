@@ -1,0 +1,22 @@
+{
+  "name": "WFBE_NEURODEF_ARTYPOS_LIGHT_EAST",
+  "parentW": 16,
+  "parentD": 16,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "ARTILLERY PIT (LIGHT, 1 AI) — EAST. A single D-30 howitzer in an earthen artillery revetment (clear overhead for high-angle fire, hidden from ground observation, shrapnel-resistant). Rear DShK picket guards the back door; ammo dump behind cover to the rear; HBarrier horseshoe closes the flanks; open front for the tube; rear-left crew entrance. Same soldier logic as the WEST pit with RU/TK kit.",
+  "objs": [
+    {"cls":"Land_fort_artillery_nest_EP1","x":0,"y":3,"z":0,"dir":0,"role":"earthen artillery revetment — hides gun, clear overhead"},
+    {"cls":"D30_TK_EP1","x":0,"y":3,"z":0,"dir":0,"role":"howitzer — high-angle fire, tube +Y, NO overhead cover"},
+    {"cls":"DSHKM_TK_INS_EP1","x":0,"y":-5,"z":0,"dir":180,"role":"rear DShK picket — covers the back door"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-5,"z":0,"dir":0,"role":"sandbag ring — MG picket"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":-3,"y":-2,"z":0,"dir":0,"role":"ammo dump — behind cover, rear-left"},
+    {"cls":"Land_HBarrier_large","x":-6,"y":0,"z":0,"dir":90,"role":"left flank HBarrier"},
+    {"cls":"Land_HBarrier_large","x":6,"y":0,"z":0,"dir":90,"role":"right flank HBarrier"},
+    {"cls":"Land_HBarrier_large","x":-3,"y":-4,"z":0,"dir":0,"role":"rear-left tie-in"},
+    {"cls":"Land_HBarrier_large","x":3,"y":-4,"z":0,"dir":0,"role":"rear-right tie-in"},
+    {"cls":"Fort_RazorWire","x":0,"y":7,"z":0,"dir":0,"role":"forward wire — keeps dismounts off the muzzle"}
+  ]
+}

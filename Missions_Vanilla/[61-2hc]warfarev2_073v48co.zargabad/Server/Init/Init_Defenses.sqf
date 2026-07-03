@@ -620,15 +620,327 @@ missionNamespace setVariable ['WFBE_NEURODEF_HEDGEHOGLINE',[
 	['Hedgehog_EP1',[1.5,0,0],0],['Hedgehog_EP1',[4.5,0,0],0]
 ]];
 //--- Flak tower: element 0 = host tower @ ground (z=0), element 1 = AA gun @ deck height (z>0).
+//--- Server_ConstructPosition.sqf lifts any child with z>0.1 onto the deck via setPosATL + levels it, and
+//--- (when WFBE_C_DEF_FLAKTOWER_AUTOZ=1) auto-corrects that z to the host tower's REAL boundingBox top.
+//--- cmdcon44-c (Build 89, Ray 2026-07-03): "isnt there like a thinner tall tower? like one of the light
+//--- towers or something". The host classname + deck z are flag-driven (WFBE_C_DEF_FLAKTOWER_STRUCTURE /
+//--- _DECK_Z / _AUTOZ, Init_CommonConstants.sqf) so the tower can be swapped/retuned on the box with no code
+//--- change or re-mirror. DEFAULT = Land_Ind_IlluminantTower (thin lattice floodlight/"light" tower, mapSize
+//--- 2; CONFIRMED in the arma2-co-config-reference catalog + already spawned live as the Bank centrepiece =>
+//--- loads on both maps). Deck z is auto-measured; _DECK_Z=17.0 is only the fallback if AUTOZ is off/fails.
+private ["_flakHost","_flakDeckZ"];
+_flakHost  = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_STRUCTURE", "Land_Ind_IlluminantTower"];
+_flakDeckZ = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_DECK_Z", 23.7]; //--- cmdcon44f: match rig-measured mast top.
 //--- WEST: A2-OA has no US static bullet-AA -> Stinger_Pod is the WEST AA mount.
 missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_WEST',[
-	['Land_Fort_Watchtower_EP1',[0,0,0],0],
-	['Stinger_Pod_US_EP1',[0,0,5.4],0]
+	[_flakHost,[0,0,0],0],
+	['Stinger_Pod_US_EP1',[0,0,_flakDeckZ],0]
 ]];
 //--- EAST / GUER: the true ZU-23 auto-cannon on the deck.
 missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_EAST',[
-	['Land_Fort_Watchtower_EP1',[0,0,0],0],
-	['ZU23_TK_EP1',[0,0,5.4],0]
+	[_flakHost,[0,0,0],0],
+	['ZU23_TK_EP1',[0,0,_flakDeckZ],0]
+]];
+
+//======================================================================================
+//--- cmdcon44-c (Build 89, Ray 2026-07-03): DEFENSES LIST — AA / ARTILLERY / MIXED POSITIONS
+//--- + FORTIFICATIONS, AUTHORED IN RAY'S WDDM TOOL. Ray (item 36): "Did u fully remake these as
+//--- fable using my WDDM tool? if not, do so - and think like an actual soldier in what would be
+//--- useful (same for fortifications)". cmdcon44-a had hand-coded these arrays inline; this pass
+//--- REPLACES them with compositions authored as .wddm.json design files (openable/iterable in the
+//--- WDDM editor, rayswaynl/WDDM) under docs/design/compositions/*.wddm.json, converted to the SQF
+//--- below by Tools/WddmToSqf/wddm_to_sqf.py. The .wddm.json is the SOURCE OF TRUTH; to change a
+//--- layout, edit it in WDDM and re-run the converter (do not hand-edit these arrays).
+//---
+//--- SOLDIER LOGIC in every design (full rationale in each .wddm.json 'notes' field):
+//---   * 360 security or tied-in flanks — every gun's blind side is covered by another weapon or cover;
+//---   * clear primary arcs AND flank/rear protection for the firer (interlocking fields of fire);
+//---   * dispersion vs artillery (batteries spread + revetted, not clustered);
+//---   * an entrance/exit is always left open (a position you can't resupply/withdraw from is a tomb);
+//---   * nothing decorative blocks a weapon's fire (nets/cover sit behind or beside the guns).
+//--- All classnames config-verified against the rayswaynl/arma2-co-config-reference CfgVehicles catalog.
+//--- REVERSIBILITY: WFBE_C_DEFMENU_V2_POSITIONS = 0 -> the legacy compositions further up this file stand.
+//--- Format ['classname',[xOff,yOff,zOff],relDir]; +Y=front, +X=right (z=0 flat).
+//======================================================================================
+if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then {
+
+	//--- AA NEST (LIGHT, 2 AI) WEST — twin Stinger on a bag ring + rear .50 for 360 self-defence, flank HBarrier wings, forward wire.
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_WEST',[
+		['Stinger_Pod_US_EP1',[-4,4,0],335],
+		['Stinger_Pod_US_EP1',[4,4,0],25],
+		['Land_fort_bagfence_round',[-4,4,0],0],
+		['Land_fort_bagfence_round',[4,4,0],0],
+		['M2StaticMG',[0,-4,0],180],
+		['Land_fort_bagfence_round',[0,-4,0],0],
+		['USBasicAmmunitionBox_EP1',[-6,-1,0],0],
+		['Land_HBarrier_large',[-8,0,0],90],
+		['Land_HBarrier_large',[8,0,0],90],
+		['Land_CamoNetVar_NATO',[-6,3,0],0],
+		['Land_CamoNetVar_NATO',[6,3,0],0],
+		['Fort_RazorWire',[-3,7,0],20]
+	]];
+
+	//--- AA NEST (LIGHT, 2 AI) EAST — ZU-23 + Igla dispersed pit, rear DShK self-defence, flank wings, forward wire.
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_EAST',[
+		['ZU23_TK_EP1',[-4,4,0],335],
+		['Igla_AA_pod_TK_EP1',[4,4,0],25],
+		['Land_fort_bagfence_round',[-4,4,0],0],
+		['Land_fort_bagfence_round',[4,4,0],0],
+		['DSHKM_TK_INS_EP1',[0,-4,0],180],
+		['Land_fort_bagfence_round',[0,-4,0],0],
+		['TKBasicAmmunitionBox_EP1',[-6,-1,0],0],
+		['Land_HBarrier_large',[-8,0,0],90],
+		['Land_HBarrier_large',[8,0,0],90],
+		['Land_CamoNet_EAST',[-6,3,0],0],
+		['Land_CamoNet_EAST',[6,3,0],0],
+		['Fort_RazorWire',[-3,7,0],20]
+	]];
+
+	//--- AA BATTERY / SAM (HEAVY, 4 AI) WEST — 3 dispersed Stingers on an 18 m arc, revetment berms, camo-netted control/radar point, rear MG security, split ammo, HESCO wings.
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_HEAVY_WEST',[
+		['Stinger_Pod_US_EP1',[-10,6,0],320],
+		['Stinger_Pod_US_EP1',[0,9,0],0],
+		['Stinger_Pod_US_EP1',[10,6,0],40],
+		['Land_fort_bagfence_round',[-10,4.4,0],0],
+		['Land_fort_bagfence_round',[0,7.4,0],0],
+		['Land_fort_bagfence_round',[10,4.4,0],0],
+		[if (WF_A2_Vanilla) then {'Land_fort_rampart'} else {'Land_fort_rampart_EP1'},[-5,5,0],0],
+		[if (WF_A2_Vanilla) then {'Land_fort_rampart'} else {'Land_fort_rampart_EP1'},[5,5,0],0],
+		['Misc_cargo_cont_small',[0,-3,0],90],
+		['Land_CamoNetVar_NATO',[0,-2.4,0],0],
+		['M2StaticMG',[-7,-6,0],200],
+		['Land_fort_bagfence_round',[-7,-6,0],0],
+		['USBasicAmmunitionBox_EP1',[-6,1,0],0],
+		['USBasicAmmunitionBox_EP1',[6,1,0],0],
+		['Base_WarfareBBarrier5x',[-14,2,0],90],
+		['Base_WarfareBBarrier5x',[14,2,0],90],
+		['Fort_RazorWire',[-8,9,0],10],
+		['Fort_RazorWire',[8,9,0],350]
+	]];
+
+	//--- AA BATTERY / SAM (HEAVY, 4 AI) EAST — 2 ZU-23 + centre Igla dispersed, ramparts, control point, rear DShK, split ammo, HBarrier wings, forward traps.
+	missionNamespace setVariable ['WFBE_NEURODEF_AAPOS_HEAVY_EAST',[
+		['ZU23_TK_EP1',[-10,6,0],330],
+		['Igla_AA_pod_TK_EP1',[0,9,0],0],
+		['ZU23_TK_EP1',[10,6,0],30],
+		['Land_fort_bagfence_round',[-10,4.4,0],0],
+		['Land_fort_bagfence_round',[0,7.4,0],0],
+		['Land_fort_bagfence_round',[10,4.4,0],0],
+		['Land_fort_rampart_EP1',[-5,5,0],0],
+		['Land_fort_rampart_EP1',[5,5,0],0],
+		['Misc_cargo_cont_small',[0,-3,0],90],
+		['Land_CamoNet_EAST',[0,-2.4,0],0],
+		['DSHKM_TK_INS_EP1',[-7,-6,0],200],
+		['Land_fort_bagfence_round',[-7,-6,0],0],
+		['TKBasicAmmunitionBox_EP1',[-6,1,0],0],
+		['TKBasicAmmunitionBox_EP1',[6,1,0],0],
+		['Land_HBarrier_large',[-14,2,0],90],
+		['Land_HBarrier_large',[14,2,0],90],
+		['Hedgehog',[-8,9,0],0],
+		['Hedgehog',[8,9,0],0],
+		['Fort_RazorWire',[0,10,0],0]
+	]];
+
+	//--- ARTILLERY PIT (LIGHT, 1 AI) WEST — M119 in an earthen artillery revetment (clear overhead), rear .50 picket, ammo behind cover, bag horseshoe.
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_WEST',[
+		['Land_fort_artillery_nest_EP1',[0,3,0],0],
+		['M119_US_EP1',[0,3,0],0],
+		['M2StaticMG',[0,-5,0],180],
+		['Land_fort_bagfence_round',[0,-5,0],0],
+		['USBasicAmmunitionBox_EP1',[-3,-2,0],0],
+		['Land_fort_bagfence_long',[-6,0,0],90],
+		['Land_fort_bagfence_long',[6,0,0],90],
+		['Land_fort_bagfence_corner',[-6,-3,0],270],
+		['Land_fort_bagfence_corner',[6,-3,0],180],
+		['Fort_RazorWire',[0,7,0],0]
+	]];
+
+	//--- ARTILLERY PIT (LIGHT, 1 AI) EAST — D-30 in a revetment, rear DShK picket, ammo behind cover, HBarrier horseshoe.
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_EAST',[
+		['Land_fort_artillery_nest_EP1',[0,3,0],0],
+		['D30_TK_EP1',[0,3,0],0],
+		['DSHKM_TK_INS_EP1',[0,-5,0],180],
+		['Land_fort_bagfence_round',[0,-5,0],0],
+		['TKBasicAmmunitionBox_EP1',[-3,-2,0],0],
+		['Land_HBarrier_large',[-6,0,0],90],
+		['Land_HBarrier_large',[6,0,0],90],
+		['Land_HBarrier_large',[-3,-4,0],0],
+		['Land_HBarrier_large',[3,-4,0],0],
+		['Fort_RazorWire',[0,7,0],0]
+	]];
+
+	//--- ARTILLERY BATTERY (HEAVY, 4 AI) WEST — 3 M119 each in its own revetment, ~10 m spacing (counter-battery), paired rear .50 pickets, dispersed ammo, flank blast walls, rear nets.
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_WEST',[
+		['Land_fort_artillery_nest_EP1',[-11,4,0],0],
+		['Land_fort_artillery_nest_EP1',[0,5,0],0],
+		['Land_fort_artillery_nest_EP1',[11,4,0],0],
+		['M119_US_EP1',[-11,4,0],0],
+		['M119_US_EP1',[0,5,0],0],
+		['M119_US_EP1',[11,4,0],0],
+		['USBasicAmmunitionBox_EP1',[-11,0,0],0],
+		['USBasicAmmunitionBox_EP1',[0,1,0],0],
+		['USBasicAmmunitionBox_EP1',[11,0,0],0],
+		['M2StaticMG',[-6,-6,0],205],
+		['M2StaticMG',[6,-6,0],155],
+		['Land_fort_bagfence_round',[-6,-6,0],0],
+		['Land_fort_bagfence_round',[6,-6,0],0],
+		['Land_HBarrier_large',[-16,3,0],90],
+		['Land_HBarrier_large',[16,3,0],90],
+		['Land_CamoNetVar_NATO',[-6,-2,0],0],
+		['Land_CamoNetVar_NATO',[6,-2,0],0],
+		['Fort_RazorWire',[-10,-8,0],0],
+		['Fort_RazorWire',[10,-8,0],0]
+	]];
+
+	//--- ARTILLERY BATTERY (HEAVY, 4 AI) EAST — 3 D-30 fanned in revetments, spaced, paired rear DShK pickets, dispersed ammo, flank walls, rear nets, rear traps.
+	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_EAST',[
+		['Land_fort_artillery_nest_EP1',[-11,4,0],0],
+		['Land_fort_artillery_nest_EP1',[0,5,0],0],
+		['Land_fort_artillery_nest_EP1',[11,4,0],0],
+		['D30_TK_EP1',[-11,4,0],8],
+		['D30_TK_EP1',[0,5,0],0],
+		['D30_TK_EP1',[11,4,0],352],
+		['TKBasicAmmunitionBox_EP1',[-11,0,0],0],
+		['TKBasicAmmunitionBox_EP1',[0,1,0],0],
+		['TKBasicAmmunitionBox_EP1',[11,0,0],0],
+		['DSHKM_TK_INS_EP1',[-6,-6,0],205],
+		['DSHKM_TK_INS_EP1',[6,-6,0],155],
+		['Land_fort_bagfence_round',[-6,-6,0],0],
+		['Land_fort_bagfence_round',[6,-6,0],0],
+		['Land_HBarrier_large',[-16,3,0],90],
+		['Land_HBarrier_large',[16,3,0],90],
+		['Land_CamoNet_EAST',[-6,-2,0],0],
+		['Land_CamoNet_EAST',[6,-2,0],0],
+		['Hedgehog',[-10,-8,0],0],
+		['Hedgehog',[10,-8,0],0]
+	]];
+
+	//--- MIXED POST (LIGHT, 2 AI) WEST — .50 + TOW interlocking front arcs, rear Stinger (air + blind side), central ammo, flank walls, forward wire.
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_WEST',[
+		['M2StaticMG',[-5,3,0],335],
+		['TOW_TriPod_US_EP1',[5,3,0],25],
+		['Stinger_Pod_US_EP1',[0,-4,0],180],
+		['Land_fort_bagfence_round',[-5,3,0],0],
+		['Land_fort_bagfence_round',[5,3,0],0],
+		['Land_fort_bagfence_round',[0,-4,0],0],
+		['USBasicAmmunitionBox_EP1',[0,0,0],0],
+		['Land_fort_bagfence_long',[-7,0,0],0],
+		['Land_fort_bagfence_long',[7,0,0],0],
+		['Fort_RazorWire',[0,6,0],0]
+	]];
+
+	//--- MIXED POST (LIGHT, 2 AI) EAST — DShK + SPG-9 interlocking arcs, rear Igla, central ammo, flank walls, forward wire.
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_EAST',[
+		['DSHKM_TK_INS_EP1',[-5,3,0],335],
+		['SPG9_TK_INS_EP1',[5,3,0],25],
+		['Igla_AA_pod_TK_EP1',[0,-4,0],180],
+		['Land_fort_bagfence_round',[-5,3,0],0],
+		['Land_fort_bagfence_round',[5,3,0],0],
+		['Land_fort_bagfence_round',[0,-4,0],0],
+		['TKBasicAmmunitionBox_EP1',[0,0,0],0],
+		['Land_fort_bagfence_long',[-7,0,0],0],
+		['Land_fort_bagfence_long',[7,0,0],0],
+		['Fort_RazorWire',[0,6,0],0]
+	]];
+
+	//--- MIXED STRONGPOINT (HEAVY, 4 AI) WEST — twin .50 + TOW + rear Stinger + COVERED INFANTRY BUNKER fallback, HBarrier horseshoe, forward wire.
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST',[
+		['M2StaticMG',[-9,3,0],330],
+		['M2StaticMG',[9,3,0],30],
+		['TOW_TriPod_US_EP1',[0,6,0],0],
+		['Stinger_Pod_US_EP1',[0,-3,0],180],
+		['Land_fortified_nest_small_EP1',[0,-6,0],0],
+		['Land_fort_bagfence_round',[-9,3,0],0],
+		['Land_fort_bagfence_round',[9,3,0],0],
+		['USBasicAmmunitionBox_EP1',[-4,0,0],0],
+		['USBasicAmmunitionBox_EP1',[4,0,0],0],
+		['Land_HBarrier_large',[-11,3,0],90],
+		['Land_HBarrier_large',[11,3,0],90],
+		['Land_HBarrier_large',[-6,9,0],0],
+		['Land_HBarrier_large',[6,9,0],0],
+		['Land_fort_bagfence_corner',[-10,-2,0],270],
+		['Land_fort_bagfence_corner',[10,-2,0],180],
+		['Fort_RazorWire',[-7,7,0],0],
+		['Fort_RazorWire',[7,7,0],0]
+	]];
+
+	//--- MIXED STRONGPOINT (HEAVY, 4 AI) EAST — twin DShK + Metis + rear Igla + COVERED INFANTRY BUNKER fallback, HBarrier horseshoe + rear screen, forward traps.
+	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST',[
+		['DSHKM_TK_INS_EP1',[-9,3,0],330],
+		['DSHKM_TK_INS_EP1',[9,3,0],30],
+		['Metis_TK_EP1',[0,6,0],0],
+		['Igla_AA_pod_TK_EP1',[0,-3,0],180],
+		['Land_fortified_nest_small_EP1',[0,-6,0],0],
+		['Land_fort_bagfence_round',[-9,3,0],0],
+		['Land_fort_bagfence_round',[9,3,0],0],
+		['TKBasicAmmunitionBox_EP1',[-4,0,0],0],
+		['TKBasicAmmunitionBox_EP1',[4,0,0],0],
+		['Land_HBarrier_large',[-11,3,0],90],
+		['Land_HBarrier_large',[11,3,0],90],
+		['Land_HBarrier_large',[-6,9,0],0],
+		['Land_HBarrier_large',[6,9,0],0],
+		['Land_HBarrier_large',[-6,-3,0],0],
+		['Land_HBarrier_large',[6,-3,0],0],
+		['Hedgehog',[-7,7,0],0],
+		['Hedgehog',[7,7,0],0],
+		['Fort_RazorWire',[0,-8,0],0]
+	]];
+
+};
+
+//======================================================================================
+//--- cmdcon44-c (Build 89): FORTIFICATIONS SET (Ray item 36 "same for fortifications"). Three new
+//--- side-neutral fortification compositions, likewise WDDM-authored (docs/design/compositions/
+//--- fort_*.wddm.json) + converted below, wired into WFBE_POSITION_TEMPLATE_MAP + the Core_CIV
+//--- Fortification menu rows. Always defined (harmless if a side's menu list omits the anchor).
+//======================================================================================
+//--- INFANTRY STRONGPOINT (fortification, side-neutral) — central Bunker (large) hard core, two forward fighting bays with interlocking arcs, comms-trench bag runs linking them, flank ramparts (dispersion), rear resupply, open covered entrance, forward canalizing wire.
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_STRONGPOINT',[
+	['Land_fortified_nest_big_EP1',[0,0,0],0],
+	['Land_fort_bagfence_corner',[-7,6,0],0],
+	['Land_fort_bagfence_long',[-7,6,0],90],
+	['Land_fort_bagfence_corner',[7,6,0],270],
+	['Land_fort_bagfence_long',[7,6,0],90],
+	['Land_fort_bagfence_long',[-4,3,0],25],
+	['Land_fort_bagfence_long',[4,3,0],335],
+	[if (WF_A2_Vanilla) then {'Land_fort_rampart'} else {'Land_fort_rampart_EP1'},[-9,-1,0],0],
+	[if (WF_A2_Vanilla) then {'Land_fort_rampart'} else {'Land_fort_rampart_EP1'},[9,-1,0],0],
+	['USBasicAmmunitionBox_EP1',[-2,-3,0],0],
+	['Fort_RazorWire',[-4,9,0],15],
+	['Fort_RazorWire',[4,9,0],345]
+]];
+
+//--- ROADBLOCK / CHECKPOINT (fortification, side-neutral) — staggered concrete chicane forces vehicles single-file, gate stop line, mutually-supporting bag-fence guard positions, rear camo-netted shelter, shoulder tank traps, warning sign/cones, tie-in wire.
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT',[
+	['Land_CncBlock_Stripes',[-3,5,0],0],
+	['Land_CncBlock_Stripes',[3,2,0],0],
+	['Land_CncBlock_Stripes',[-3,-1,0],0],
+	['Land_CncBlock_Stripes',[0,3.5,0],0],
+	['Land_fort_bagfence_corner',[-6,3,0],0],
+	['Land_fort_bagfence_long',[-6,3,0],90],
+	['Land_fort_bagfence_corner',[6,1,0],270],
+	['Land_fort_bagfence_long',[6,1,0],90],
+	['Misc_cargo_cont_small',[-5,-3,0],90],
+	['Land_CamoNetVar_NATO',[-5,-2.4,0],0],
+	['Hedgehog',[-8,5,0],0],
+	['Hedgehog',[8,5,0],0],
+	['Sign_Danger',[2,6,0],180],
+	['RoadCone',[-1.5,7,0],0],
+	['RoadCone',[1.5,7,0],0],
+	['Fort_RazorWire',[-8,2,0],0],
+	['Fort_RazorWire',[8,-1,0],0]
+]];
+
+//--- OBSERVATION POST (fortification, side-neutral) — elevated bunker-tower for long fields of view, camo net breaking the silhouette, low bag-ring fallback (not a bastion), concealed rear supply cache, single discreet forward wire. Concealment over firepower.
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP',[
+	['Land_Fort_Watchtower_EP1',[0,2,0],0],
+	['Land_CamoNetVar_NATO',[0,4,0],0],
+	['Land_fort_bagfence_round',[0,-1,0],0],
+	['Land_fort_bagfence_long',[-4,0,0],90],
+	['Land_fort_bagfence_long',[4,0,0],90],
+	['USBasicAmmunitionBox_EP1',[-2,-3,0],0],
+	['Land_CamoNetVar_NATO',[-2,-3,0],0],
+	['Fort_RazorWire',[0,5,0],0]
 ]];
 
 //--- Anchor (build-menu placeholder classname) -> composition template map.
@@ -645,6 +957,10 @@ WFBE_POSITION_TEMPLATE_MAP = [
 	['Land_Ind_Timbers','WFBE_NEURODEF_WALL_GATE',false],
 	//--- cmdcon42-g menu v2 anchors (side-neutral hedgehog line; faction-specific flak tower).
 	['Misc_cargo_cont_small','WFBE_NEURODEF_HEDGEHOGLINE',false],	//--- Hedgehog Line (AT obstacle)
-	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true]			//--- Flak Tower (elevated AA, 1 AI)
+	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true],			//--- Flak Tower (elevated AA, 1 AI)
+	//--- cmdcon44-c WDDM fortifications set (side-neutral compositions; ghosts are unused cargo/barrel models).
+	['Land_Misc_Cargo1B','WFBE_NEURODEF_FORT_STRONGPOINT',false],		//--- Infantry Strongpoint
+	['Land_transport_crates_EP1','WFBE_NEURODEF_FORT_CHECKPOINT',false],	//--- Roadblock / Checkpoint
+	['Land_Barrel_water','WFBE_NEURODEF_FORT_OP',false]					//--- Observation Post
 ];
-WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall'];
+WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall','Land_Misc_Cargo1B','Land_transport_crates_EP1','Land_Barrel_water'];

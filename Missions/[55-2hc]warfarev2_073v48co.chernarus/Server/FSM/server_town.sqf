@@ -11,7 +11,7 @@ _lastUp = 0;
 _skipTimeSupply = false;
 _newSID = -1;
 _newSide = civilian;
-_town_camps_capture_rate = missionNamespace getVariable "WFBE_C_CAMPS_CAPTURE_RATE_MAX";
+_town_camps_capture_rate = missionNamespace getVariable ["WFBE_C_CAMPS_CAPTURE_RATE_MAX", 25]; //--- MUST default: a nil read here (constants race at FSM start) undefines the local and every capture-rate calc below errors for the whole match (ZG 2026-07-03).
 _town_capture_mode = missionNamespace getVariable "WFBE_C_TOWNS_CAPTURE_MODE";
 _town_capture_range = switch (_town_capture_mode) do {
 	case  0: {"WFBE_C_TOWNS_CAPTURE_RANGE"};
@@ -39,8 +39,15 @@ while {!WFBE_GameOver} do {
 	{
 
 		_location = towns select _i;
-		_startingSupplyValue = _location getVariable "startingSupplyValue";
-		_maxSupplyValue = _location getVariable "maxSupplyValue";
+		//--- cmdcon44-d (claude-gaming 2026-07-03) NIL-SAFE SV READS: a transplanted map (Zargabad) can leave a
+		//--- town's supply/camp vars unset for a window (Init_Town server-block race), and an OLDER server_town.sqf
+		//--- shipped in the live ZG pbo read these 1-arg -> the locals came up Undefined and the capture-drain block
+		//--- threw every scan (server RPT: "Undefined variable _supplyvalue"/"_rate" at server_town.sqf) so no town's
+		//--- supplyValue ever drained -> ZERO flips. 2-arg getVariable defaults keep the locals numeric so the drain
+		//--- math (and the GetTotalCamps division below) can never be poisoned by a nil town var. A2-OA-safe (plain
+		//--- 2-arg getVariable; no == on Bool). Fallbacks mirror Init_Town: start/max default to a sane 30.
+		_startingSupplyValue = _location getVariable ["startingSupplyValue", 30];
+		_maxSupplyValue = _location getVariable ["maxSupplyValue", 30];
 
 				_sideID = _location getVariable "sideID";
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
@@ -59,6 +66,15 @@ while {!WFBE_GameOver} do {
 					case WFBE_C_WEST_ID: {_east + _resistance};
 					case WFBE_C_EAST_ID: {_west + _resistance};
 					case WFBE_C_GUER_ID: {_east + _west};
+					//--- FIX (cmdcon44-e, claude-gaming 2026-07-03): neutral towns (WFBE_C_UNKNOWN_ID) have
+					//--- no owner so none of the three named cases matched -> _activeEnemies stayed undefined
+					//--- -> every downstream read ('_supplyValue', '_rate'...) threw Undefined. Live evidence:
+					//--- 391x/_supplyValue + 319x/_rate errors in the 66-min ZG soak (0 flips). ZG simply
+					//--- starts with ALL towns neutral (WFBE_C_TOWNS_STARTING_MODE=0 default) so the nil fired
+					//--- on every town every 5s from tick 1. The same nil fires on CH/TK mode-0 neutral towns
+					//--- too -- this fix is beneficial on all maps; ZG just has far more neutral towns from
+					//--- match start. Default = all combatants present (correct count for a neutral contested town).
+					default {_west + _east + _resistance};
 				};
 
 				//--- CONTESTED stamp (wasp-dash-safe-telemetry, claude-gaming 2026-06-21): mark this town as
@@ -89,7 +105,20 @@ while {!WFBE_GameOver} do {
 				if (_contested && !_prevContested) then {_location setVariable ["wfbe_contested", true]};
 				if (!_contested && _prevContested) then {_location setVariable ["wfbe_contested", false]};
 
-				_supplyValue = _location getVariable "supplyValue";
+				//--- cmdcon44-d: nil-safe (see SV-reads note above). A town mid-init (or from a stale transplant)
+				//--- may not yet have "supplyValue" set; default to startingSupplyValue so this scan drains from
+				//--- full instead of throwing Undefined at the first "_supplyValue < _maxSupplyValue" test.
+				_supplyValue = _location getVariable ["supplyValue", _startingSupplyValue];
+				//--- CAPDBG (cmdcon44d diagnostic): the live 44b/44c boots report _supplyValue/_rate Undefined at the
+				//--- consumers with no upstream error; log exactly WHICH input is nil, then self-heal so the drain runs.
+				if (isNil "_supplyValue") then {
+					diag_log ("CAPDBG|SV|" + (_location getVariable ["name","?"]) + "|poisoned-town-var (set-nil, XWT45-P5)");
+				};
+				//--- heal MUST be a top-level assignment: assigning inside then{} to an undefined outer local
+				//--- creates a block-local that dies at the brace (the 44d heal was inert for this reason).
+				_supplyValue = if (isNil "_supplyValue") then {_startingSupplyValue} else {_supplyValue};
+				//--- cleanse the set-nil poison on the town var itself (2-arg defaults never apply to set-nil vars).
+				if (isNil {_location getVariable "supplyValue"}) then {_location setVariable ["supplyValue", _supplyValue, true]};
 
 				if (!WFBE_ISTHREEWAY && _town_supply_time) then {
 					//--- If we're running on 2 sides, skip the time based supply if the defender hold the town.
@@ -210,13 +239,22 @@ while {!WFBE_GameOver} do {
 
 		if !(_skip) then {
 			_totalCamps = _location Call WFBE_CO_FNC_GetTotalCamps;
-			_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID};};
+			//--- ROOT FIX (cmdcon44e, rig-verified XWT45): a no-match default-less switch returns the switch
+			//--- VALUE (boolean true) - the tie case (dominion logic zeroes all three counts) fed boolean into
+			//--- _newSID -> GetTotalCampsOnSide aborted on number==bool -> _rate Voided -> towncenters could
+			//--- never flip while contested (systemic on 3-way urban ZG). Tie = no dominant attacker = owner keeps.
+			_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID}; default {_sideID};};
 			_newSide = (_newSID) Call WFBE_CO_FNC_GetSideFromID;
+			_rate = 1;
 			if (_totalCamps > 0) then {
 				_rate = _town_capture_rate * (([_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide) / _totalCamps) * _town_camps_capture_rate;
 			} else {
 				_rate = _town_capture_rate * _town_camps_capture_rate;
 			};
+			if (isNil "_rate") then {
+				diag_log ("CAPDBG|RATE|" + (_location getVariable ["name","?"]) + "|newSID=" + str(_newSID) + "|residual (should be silent post-44e)");
+			};
+			_rate = if (isNil "_rate") then {1} else {_rate};
 			if (_rate < 1) then {_rate = 1};
 
 			if (_sideID != WFBE_C_UNKNOWN_ID) then {
@@ -399,7 +437,7 @@ while {!WFBE_GameOver} do {
 					[_location, _newSide, _newSID] spawn {
 						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
 						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
-						         "_retVal","_scanActive","_townRange","_guerCount"];
+						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_newSIDAtCapture = _this select 2;
@@ -443,8 +481,9 @@ while {!WFBE_GameOver} do {
 						_scanActive  = true;
 						//--- Use the town activation detection range (600m base) for the straggler scan.
 						_townRange   = 600 * (missionNamespace getVariable ["WFBE_C_TOWNS_DETECTION_RANGE_COEF", 1]);
+						_mopupEnd   = time + (missionNamespace getVariable ["WFBE_C_TOWNS_MOPUP_TTL", 600]);
 
-						while {_scanActive && !isNull _squadGrp && {count (units _squadGrp) > 0}} do {
+						while {_scanActive && !isNull _squadGrp && {count (units _squadGrp) > 0} && {time < _mopupEnd}} do {
 							sleep 30;
 
 							//--- Hard-despawn if town deactivated or flipped.
@@ -482,7 +521,7 @@ while {!WFBE_GameOver} do {
 						};
 						_loc setVariable ["wfbe_mopup_group", grpNull, false];
 						_loc setVariable ["wfbe_mopup_units", [], false];
-						["INFORMATION", Format ["server_town.sqf: mop-up squad stood down for %1 (no GUER detected).", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
+						["INFORMATION", Format ["server_town.sqf: mop-up squad stood down for %1.", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
 			};

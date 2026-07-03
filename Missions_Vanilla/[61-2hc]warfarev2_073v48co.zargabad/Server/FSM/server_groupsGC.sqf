@@ -267,6 +267,11 @@ while {!WFBE_GameOver} do {
 								if (!isNil {_baseVeh getVariable "wfbe_basegc_at"}) then {_baseVeh setVariable ["wfbe_basegc_at", nil]};
 							};
 						};
+					} else {
+						if (!isNull _baseVeh && {!local _baseVeh} && {alive _baseVeh} && {(_baseVeh isKindOf "Air") || {_baseVeh isKindOf "Tank"} || {_baseVeh isKindOf "APC"}}) then {
+							//--- locality may transfer back later; restart the idle timer on the next server-local pass.
+							if (!isNil {_baseVeh getVariable "wfbe_basegc_at"}) then {_baseVeh setVariable ["wfbe_basegc_at", nil, false]};
+						};
 					};
 				} forEach vehicles;
 			};

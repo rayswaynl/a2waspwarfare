@@ -111,12 +111,20 @@ while {alive player && dialog} do {
 		titleText [localize "STR_WF_TEAM_MapShortcutDisbandTip", "PLAIN DOWN", 3];
 		_curUnitSel = lbCurSel 13013;
 		if (_curUnitSel != -1) then {
-			Private ["_targetUnit"];
+			Private ["_targetUnit","_liveCrew"];
 			_targetUnit = _units select _curUnitSel;
 			_vehicle = vehicle _targetUnit;
 
 			_destroy = [_targetUnit];
-			if (_vehicle != _targetUnit) then {_destroy = _destroy + [_vehicle]};
+			if (_vehicle != _targetUnit) then {
+				_liveCrew = [];
+				{
+					if (alive _x || isPlayer _x) then {  //--- salvage-522 (c): a dead player still in a seat has alive==false; isPlayer keeps the vehicle so we don't wreck it around them.
+						if (_x != _targetUnit) then {_liveCrew = _liveCrew + [_x]};
+					};
+				} forEach crew _vehicle;
+				if (count _liveCrew == 0) then {_destroy = _destroy + [_vehicle]};
+			};
 			{
 				if !(isPlayer _x) then {
 					if (_x isKindOf 'Man') then {removeAllWeapons _x};

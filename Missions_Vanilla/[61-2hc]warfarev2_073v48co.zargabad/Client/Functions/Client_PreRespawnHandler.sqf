@@ -1,6 +1,20 @@
-Private ["_hq","_unit","_rearmor"];
+Private ["_hq","_unit","_rearmor","_x"];
 
 _unit = _this;
+
+//--- salvage-522 / Lane 193: reset the factory-queue counters on respawn. Client_BuildUnit.sqf
+//--- increments unitQueu at buy time; without a reset the value climbs across deaths and eventually
+//--- exceeds the factory queue cap, silently blocking further purchases. Gated behind
+//--- WFBE_C_FIX_RESPAWN_UNITQUEU_RESET (default 0 = dark). Zeroes the group-cap counter AND every
+//--- per-factory queue slot so an in-flight Client_BuildUnit coroutine that fires after this reset
+//--- clamps to 0 (all its decrements use `max 0`, salvage-522) rather than overshooting negative.
+if ((missionNamespace getVariable ["WFBE_C_FIX_RESPAWN_UNITQUEU_RESET", 0]) > 0) then {
+	unitQueu = 0;
+	{missionNamespace setVariable [_x, 0]} forEach [
+		"WFBE_C_QUEUE_BARRACKS","WFBE_C_QUEUE_LIGHT","WFBE_C_QUEUE_HEAVY",
+		"WFBE_C_QUEUE_AIRCRAFT","WFBE_C_QUEUE_AIRPORT","WFBE_C_QUEUE_DEPOT"
+	];
+};
 
 (_unit) Call WFBE_SK_FNC_Apply;
 [] execFSM "Client\FSM\updateactions.fsm";

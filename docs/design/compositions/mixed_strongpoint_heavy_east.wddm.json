@@ -1,0 +1,30 @@
+{
+  "name": "WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST",
+  "parentW": 26,
+  "parentD": 22,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "MIXED STRONGPOINT (HEAVY, 4 AI) — EAST. Premium all-round crossroads strongpoint with RU/TK kit. Twin DShKs on the front corners angled outward interlock across the frontage; a Metis ATGM between them kills armour down the main approach; a rear Igla covers air and the back. A covered infantry bunker (Bunker/fortified nest) at the rear centre is the fallback fighting position. HBarrier horseshoe on flanks + rear screen gives 360 protection with a bunker-side entrance gap; front open for the guns; forward-flank wire canalizes the assault into the crossfire. Mirrors the WEST strongpoint.",
+  "objs": [
+    {"cls":"DSHKM_TK_INS_EP1","x":-9,"y":3,"z":0,"dir":330,"role":"DShK (left corner) — arc front-left, interlocks with right"},
+    {"cls":"DSHKM_TK_INS_EP1","x":9,"y":3,"z":0,"dir":30,"role":"DShK (right corner) — arc front-right, interlocks with left"},
+    {"cls":"Metis_TK_EP1","x":0,"y":6,"z":0,"dir":0,"role":"Metis ATGM — anti-armour down the main approach"},
+    {"cls":"Igla_AA_pod_TK_EP1","x":0,"y":-3,"z":0,"dir":180,"role":"Igla — air lane + covers the rear/blind side"},
+    {"cls":"Land_fortified_nest_small_EP1","x":0,"y":-6,"z":0,"dir":0,"role":"COVERED INFANTRY BUNKER — fallback fighting position (rear centre)"},
+    {"cls":"Land_fort_bagfence_round","x":-9,"y":3,"z":0,"dir":0,"role":"sandbag ring — left DShK"},
+    {"cls":"Land_fort_bagfence_round","x":9,"y":3,"z":0,"dir":0,"role":"sandbag ring — right DShK"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":-4,"y":0,"z":0,"dir":0,"role":"ammo point — left"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":4,"y":0,"z":0,"dir":0,"role":"ammo point — right"},
+    {"cls":"Land_HBarrier_large","x":-11,"y":3,"z":0,"dir":90,"role":"left flank wall"},
+    {"cls":"Land_HBarrier_large","x":11,"y":3,"z":0,"dir":90,"role":"right flank wall"},
+    {"cls":"Land_HBarrier_large","x":-6,"y":9,"z":0,"dir":0,"role":"forward-left screen (does not block DShK arc)"},
+    {"cls":"Land_HBarrier_large","x":6,"y":9,"z":0,"dir":0,"role":"forward-right screen (does not block DShK arc)"},
+    {"cls":"Land_HBarrier_large","x":-6,"y":-3,"z":0,"dir":0,"role":"rear screen (left) — closes the back"},
+    {"cls":"Land_HBarrier_large","x":6,"y":-3,"z":0,"dir":0,"role":"rear screen (right) — closes the back"},
+    {"cls":"Hedgehog","x":-7,"y":7,"z":0,"dir":0,"role":"forward tank trap (left) — canalizes vehicles"},
+    {"cls":"Hedgehog","x":7,"y":7,"z":0,"dir":0,"role":"forward tank trap (right) — canalizes vehicles"},
+    {"cls":"Fort_RazorWire","x":0,"y":-8,"z":0,"dir":0,"role":"rear wire — closes the far approach"}
+  ]
+}

@@ -3,13 +3,13 @@
 // (WF_DEBUG ON = instant funds + all tiers unlocked; smoke-test ONLY, never a deploy).
 // #define WF_DEBUG 1
 // #define WF_LOG_CONTENT
-#define WF_RELEASE_MARKER "WASPRELEASE|v1|candidate=build88-cmdcon43-20260703|git=build88-cmdcon43|terrain=manual"
-#define IS_CHERNARUS_MAP_DEPENDENT
+#define WF_RELEASE_MARKER "WASPRELEASE|v1|candidate=build89-cmdcon44e-20260703|git=build89-cmdcon44e|terrain=manual"
+//#define IS_CHERNARUS_MAP_DEPENDENT
 //#define IS_MOD_MAP_DEPENDENT
-#define IS_NAVAL_MAP
+//#define IS_NAVAL_MAP
 //#define IS_AIR_WAR_EVENT
-#define WF_MAXPLAYERS 34
-#define WF_MISSIONNAME "[55] Warfare V48 Chernarus"
-#define STARTING_DISTANCE 7500
+#define WF_MAXPLAYERS 61
+#define WF_MISSIONNAME "[61] Warfare V48 Zargabad"
+#define STARTING_DISTANCE 5000
 #define COMBINEDOPS 1
 #define WF_RESPAWNDELAY 2

@@ -391,6 +391,8 @@ while {true} do {
 	ctrlSetText [20016,"$"+str(_martyRearmPrice)];
 	ctrlSetText [20018,"$"+str(_martyRepairPrice)];
 	ctrlSetText [20020,"$"+str(_martyHealPrice)];
+	//--- QoL item4 (client-qol-batch2): refuel-all batch price label (idc 20025, mirrors 20016/18/20).
+	ctrlSetText [20025,"$"+str(_martyRefuelPrice)];
 
 	_martyEnableRearm = false;
 	_martyEnableRepair = false;
