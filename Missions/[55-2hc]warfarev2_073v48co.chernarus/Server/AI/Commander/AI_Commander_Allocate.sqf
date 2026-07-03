@@ -254,6 +254,7 @@ _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 		//--- garrison, not player-led, not under an explicit human order (move/patrol/defense).
 		if (_alive > 0 && {!isNull _ldr} && {!isPlayer _ldr} && {_grp != _garGrp}
 		    && {isNull _relief} && {!_strike} && {!(_mode in ["move","patrol","defense"])}
+		    && {(_grp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
 		    && {([_grp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 			_ldrPos = getPos _ldr;
 			_hasVeh = false;
@@ -316,6 +317,88 @@ _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 	};
 } forEach _teams;
 
+//--- D7 AICOM FEINT: optional feint dispatch. Self-contained, flag-gated (WFBE_C_AICOM_FEINT_ENABLE).
+//--- Runs AFTER the main ASSIGN loop so the feint write is the LAST write to wfbe_aicom_alloc_target this tick (wins).
+//--- Recall pass runs every tick (clears expired feint tags -> main fist/loop picks up the team next tick).
+//--- Dispatch pass runs when the per-side cooldown has elapsed and conditions are met.
+//--- HARD-COLLISION NOTE: this entire block is a new addition; no existing line is modified.
+//--- Rebase after PR #286 (F5) which modifies AI_Commander_Allocate.sqf.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_FEINT_ENABLE", 0]) > 0 && {!_expandFirst} && {!_concentrate}) then {
+	private ["_feintTgt","_feintTeam","_feintT0","_feintDur","_feintInterval","_feintGrp","_feintLdr","_feintAlive","_feintMode","_feintRelief","_feintStrike","_feintHasVeh","_feintExpiry","_feintRecalled","_feintFar","_feintD","_feintI","_feintGarGrp"];
+	_feintGarGrp   = _logik getVariable ["wfbe_aicom_garrison", grpNull];   //--- FIX(review HIGH): read garrison before team-picker uses it
+	_feintInterval = missionNamespace getVariable ["WFBE_C_AICOM_FEINT_INTERVAL", 600];
+	_feintDur      = missionNamespace getVariable ["WFBE_C_AICOM_FEINT_DUR", 120];
+	_feintT0       = _logik getVariable ["wfbe_aicom_feint_t0", -1e9];
+
+	//--- RECALL PASS: on every tick check all teams for an EXPIRED feint tag and redirect to the fist.
+	_feintRecalled = false;
+	{
+		_feintGrp    = _x;
+		_feintExpiry = _feintGrp getVariable ["wfbe_aicom_feint_expiry", 0];
+		if (!isNull _feintGrp && {_feintExpiry > 0} && {time > _feintExpiry}) then {
+			_feintGrp setVariable ["wfbe_aicom_feint_expiry", 0];
+			if (count _fist > 0) then {
+				_feintGrp setVariable ["wfbe_aicom_alloc_target", (_fist select 0)];
+				_feintGrp setVariable ["wfbe_aicom_alloc_tick", time];
+				diag_log ("AICOM2|v1|FEINT|RECALL|" + str _side + "|" + str (round (time / 60)) + "|team=" + str _feintGrp + "|returnTo=" + ((_fist select 0) getVariable ["name","?"]));
+			};
+			_feintRecalled = true;
+		};
+	} forEach _teams;
+
+	//--- DISPATCH PASS: only when cooldown elapsed AND no recall happened this tick (FIX(review LOW): skip same-tick re-dispatch after a recall).
+	if ((time - _feintT0) >= _feintInterval && {!_feintRecalled}) then {
+		//--- Pick feint target: enemy-held, NOT in _fist, NOT the harass target, nearest front (most shallow = most visible distraction).
+		_feintTgt  = objNull;
+		_feintFar  = 1e9;
+		{
+			_feintD = _x Call _frontDist;
+			if ((_x getVariable ["sideID", -1]) == _enemyID
+				&& {!(_x in _fist)}
+				&& {!(!isNull _harassTgt && {_x == _harassTgt})}
+				&& {_feintD < _feintFar}) then {
+				_feintFar = _feintD;
+				_feintTgt = _x;
+			};
+		} forEach _tgtTowns;
+
+		if (!isNull _feintTgt) then {
+			//--- Pick feint team: first eligible MOUNTED team not already feint-tagged, not harass/relief/strike/garrison.
+			_feintTeam = grpNull;
+			_feintI    = 0;
+			while {isNull _feintTeam && {_feintI < (count _teams)}} do {
+				_feintGrp    = _teams select _feintI;
+				_feintAlive  = {alive _x} count (units _feintGrp);
+				_feintLdr    = leader _feintGrp;
+				_feintMode   = toLower (_feintGrp getVariable ["wfbe_teammode", "towns"]);
+				_feintRelief = _feintGrp getVariable ["wfbe_aicom_relief", objNull];
+				_feintStrike = _feintGrp getVariable ["wfbe_aicom_strike", false];
+				_feintExpiry = _feintGrp getVariable ["wfbe_aicom_feint_expiry", 0];
+				_feintHasVeh = false;
+				{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_feintHasVeh = true} } forEach (units _feintGrp);
+				if (!isNull _feintGrp && {_feintAlive > 0} && {!isNull _feintLdr} && {!isPlayer _feintLdr}
+					&& {_feintGrp != _feintGarGrp} && {isNull _feintRelief} && {!_feintStrike}
+					&& {!(_feintMode in ["move","patrol","defense"])}
+					&& {_feintExpiry <= 0}
+					&& {_feintHasVeh}
+					&& {([_feintGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_feintGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
+					_feintTeam = _feintGrp;
+				};
+				_feintI = _feintI + 1;
+			};
+
+			if (!isNull _feintTeam) then {
+				_feintTeam setVariable ["wfbe_aicom_feint_expiry", time + _feintDur];
+				_feintTeam setVariable ["wfbe_aicom_alloc_target", _feintTgt];
+				_feintTeam setVariable ["wfbe_aicom_alloc_tick", time];
+				_logik setVariable ["wfbe_aicom_feint_t0", time];
+				diag_log ("AICOM2|v1|FEINT|DISPATCH|" + str _side + "|" + str (round (time / 60)) + "|feintTo=" + (_feintTgt getVariable ["name","?"]) + "|team=" + str _feintTeam + "|dur=" + str _feintDur);
+			};
+		};
+	};
+};
+
+
 //--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) REINFORCE HOOK: a fresh player REINFORCE order routes ONE
 //--- eligible team to that town (single-team alloc_target override; reversible; auto-clears at WFBE_C_AICOM_REINFORCE_TTL).
 private ["_riPair","_riTown","_riT0"];
@@ -336,6 +419,7 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 				_riStrike = _riGrp getVariable ["wfbe_aicom_strike", false];
 				if (_riAlive > 0 && {!isNull _riLdr} && {!isPlayer _riLdr} && {_riGrp != _garGrp}
 				    && {isNull _riRelief} && {!_riStrike} && {!(_riMode in ["move","patrol","defense"])}
+				    && {(_riGrp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
 					if (_riD < _riBestD) then {_riBestD = _riD; _riBest = _riGrp};
