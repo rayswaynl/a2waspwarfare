@@ -6,7 +6,7 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount"];
 
 _killed = _this select 0;
 _killer = _this select 1;
@@ -66,6 +66,12 @@ if (_killer_side == sideEnemy) then { //--- Make sure the killer is not renegade
 
 if (_killer_side == civilian) exitWith {}; //--- Side couldn't be determined? exit.
 
+//--- Lane 205: optional vehicle kill tally. The visual marker watcher is installed at vehicle creation
+//--- by Common_AddVehicleMarking.sqf, so this path only owns the authoritative counter.
+if ((missionNamespace getVariable ["WFBE_C_KILL_TALLY_DECAL", 0]) > 0 && {!(_killer_side in [_killed_side])} && {!(_killer_vehicle isKindOf "Man")} && {alive _killer_vehicle}) then {
+	_tallyCount = (_killer_vehicle getVariable ["wfbe_kill_tally", 0]) + 1;
+	_killer_vehicle setVariable ["wfbe_kill_tally", _tallyCount, true];
+};
 //--- Condition (a): own-side unit killed by enemy artillery.
 //--- Arm wfbe_aicom_arty_threat on the VICTIM side's logic after >= 2 arty kills.
 //--- Nil-guard the killer vehicle: disconnected/deleted killers are nil-prone.
