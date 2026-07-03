@@ -72,7 +72,12 @@ while {!gameOver} do {
 				//--- Side is AT/ABOVE the threshold this tick.
 				if (_startS < 0) then {
 					//--- No clock yet -> start one and announce the threat to BOTH sides.
-					missionNamespace setVariable [_clockKey, time];
+					//--- L194 (lane194-victory-pack) HOLDTICKS: store 0 (tick accumulator) when flag ON, wall-time start when OFF.
+					if ((missionNamespace getVariable ["WFBE_C_TERRVIC_HOLDTICKS", 0]) > 0) then {
+						missionNamespace setVariable [_clockKey, 0];
+					} else {
+						missionNamespace setVariable [_clockKey, time];
+					};
 					missionNamespace setVariable [_mileKey, -1];        //--- no milestone announced yet
 					missionNamespace setVariable [_winKey, 0];
 					[nil, "DashboardAnnounce", [Format ["%1 dominates the region (%2 of %3 towns) - VICTORY in %4:00 unless their grip is broken!", _sideName, _held, _total, _terrMins]]] Call WFBE_CO_FNC_SendToClients;
@@ -80,7 +85,16 @@ while {!gameOver} do {
 					["INFORMATION", Format ["server_victory_threeway.sqf: TERRITORIAL clock STARTED for %1 (holds %2/%3 towns, need %4) - win in %5 min unbroken.", _sideName, _held, _total, _needed, _terrMins]] Call WFBE_CO_FNC_LogContent;
 				} else {
 					//--- Clock already running (_startS is its start time) -> advance milestones + check completion.
-					_elapsedS = time - _startS;
+					//--- L194 HOLDTICKS: when flag ON, _startS stores accumulated qualifying seconds; increment each tick.
+					private ["_useHoldTicks"];
+					_useHoldTicks = (missionNamespace getVariable ["WFBE_C_TERRVIC_HOLDTICKS", 0]) > 0;
+					if (_useHoldTicks) then {
+						missionNamespace setVariable [_clockKey, _startS + _loopTimer];
+						_startS = _startS + _loopTimer;
+						_elapsedS = _startS;
+					} else {
+						_elapsedS = time - _startS;
+					};
 					_remainS  = (_terrHoldS - _elapsedS) max 0;
 					_remMin   = ceil (_remainS / 60);   //--- minutes remaining, rounded UP for the human-facing countdown
 					if (_elapsedS >= _terrHoldS) then {
@@ -173,7 +187,16 @@ while {!gameOver} do {
 					if (_towns == _total) then {
 						_winSide = _x;
 					} else {
-						if (_x == west) then { _winSide = east } else { _winSide = west };
+						//--- L194 (lane194-victory-pack) HQ-LOSS WINNER FIX: derive winner from present sides minus defender minus loser.
+						//--- Hardcoding west<->east is wrong when resistance participates and loses (3-way match).
+						private ["_candidateWinners"];
+						_candidateWinners = (WFBE_PRESENTSIDES - [WFBE_DEFENDER] - [_x]);
+						if (count _candidateWinners > 0) then {
+							_winSide = _candidateWinners select 0;
+						} else {
+							//--- Fallback: no surviving non-defender side found -> legacy west<->east swap.
+							if (_x == west) then { _winSide = east } else { _winSide = west };
+						};
 					};
 				};
 				[nil, "HandleSpecial", ["endgame", (_winSide) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
@@ -189,6 +212,26 @@ while {!gameOver} do {
 
 				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _winSide (the real winning side).
 				// durationSec = round(time) which mirrors GlobalGameStats.sqf's _uptime source.
+				//--- L194 (lane194-victory-pack) STATS_ROUNDEND_FLUSH: flush per-player stats inline at win-declaration.
+				//--- The post-loop flush block only runs on the AntiStack-enabled exit path; this covers all paths.
+				if ((missionNamespace getVariable ["WFBE_C_STATS_ROUNDEND_FLUSH", 1]) > 0) then {
+					private ["_flushUid","_flushName","_flushScore","_flushOld","_flushDiff"];
+					{
+						if (isPlayer _x) then {
+							_flushUid   = getPlayerUID _x;
+							_flushName  = name _x;
+							_flushScore = missionNamespace getVariable format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", _flushUid];
+							if (isNil "_flushScore") then { _flushScore = 0 };
+							_flushOld  = missionNamespace getVariable format ["WFBE_CO_OLD_SCORE_PLAYER_%1", _flushUid];
+							if (isNil "_flushOld") then { _flushOld = 0 };
+							missionNamespace setVariable [format ["WFBE_CO_OLD_SCORE_PLAYER_%1", _flushUid], _flushScore];
+							_flushDiff = _flushScore - _flushOld;
+							["STORE", [_flushUid, _flushDiff]] call WFBE_SE_FNC_CallDatabaseStore;
+						};
+					} forEach allUnits;
+					["FLUSH_PLAYERLIST"] call WFBE_SE_FNC_CallDatabaseFlushPlayerList;
+					["INFORMATION", "server_victory_threeway.sqf: L194 ROUNDEND stats flush complete."] Call WFBE_CO_FNC_LogContent;
+				};
 				if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 					if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 					WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;

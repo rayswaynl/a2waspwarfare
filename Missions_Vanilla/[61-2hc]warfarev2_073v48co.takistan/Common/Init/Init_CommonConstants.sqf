@@ -1890,5 +1890,24 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+//======================================================================================
+//--- lane194-victory-pack (2026-07-03): TERRITORIAL VICTORY HOLD-TICKS
+//--- When 1, the territorial victory clock counts QUALIFYING LOOP TICKS (each _loopTimer
+//--- seconds wide, incremented only when the side is AT/ABOVE threshold at check time)
+//--- rather than raw wall-time since the clock started. Prevents a side that dips below
+//--- the fraction threshold mid-sleep-window from "banking" wall-time across the dip.
+//--- When 0 (default OFF), the existing wall-time clock is used (legacy behaviour).
+//--- See server_victory_threeway.sqf: WFBE_C_VICTORY_TERRITORIAL block.
+	if (isNil "WFBE_C_TERRVIC_HOLDTICKS") then {WFBE_C_TERRVIC_HOLDTICKS = 0};
+
+//======================================================================================
+//--- lane194-victory-pack (2026-07-03): STATS ROUND-END FLUSH
+//--- When 1 (default ON), per-player stats are flushed to the database inline at the
+//--- moment a winner is declared, before the ROUNDEND log. Guarantees stats land on ALL
+//--- exit paths (AntiStack-enabled and AntiStack-disabled). When 0, the inline flush
+//--- site is skipped; only the post-loop flush runs (AntiStack-enabled path only).
+//--- See server_victory_threeway.sqf: L194 STATS_ROUNDEND_FLUSH comment.
+	if (isNil "WFBE_C_STATS_ROUNDEND_FLUSH") then {WFBE_C_STATS_ROUNDEND_FLUSH = 1};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
