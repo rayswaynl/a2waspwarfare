@@ -37,6 +37,14 @@ while {true} do {
 	};
 
 	_tab_current = uiNamespace getVariable 'wfbe_display_buygear_tab';
+	_ui_lnb_currow = lnbCurSelRow _lb_main;
+	if (_ui_lnb_currow > -1) then {
+		if (_tab_current_last != -1) then {
+			missionNamespace setVariable [Format ["wfbe_display_buygear_row_%1", _tab_current_last], _ui_lnb_currow];
+		} else {
+			missionNamespace setVariable [Format ["wfbe_display_buygear_row_%1", _tab_current], _ui_lnb_currow];
+		};
+	};
 	_click_misc = uiNamespace getVariable 'wfbe_display_buygear_misc';
 	_click_pool_main = uiNamespace getVariable 'wfbe_display_buygear_pool_main';
 	_click_pool_gun = uiNamespace getVariable 'wfbe_display_buygear_pool_gun';
@@ -120,7 +128,6 @@ while {true} do {
 		lnbClear _lb_main;
 		lnbClear _lb_secondary;
 
-		//todo - remember the previously chosen gun/mag etc
 		switch (_tab_current) do {
 			case 0: {[_lb_main, missionNamespace getVariable Format ["WFBE_%1_Template", WFBE_Client_SideJoinedText]] Call WFBE_CL_FNC_UI_Gear_FillTemplates};
 			case 1: {[_lb_main, [[(missionNamespace getVariable Format ["WFBE_%1_Primary", WFBE_Client_SideJoinedText]) + (missionNamespace getVariable Format ["WFBE_%1_Secondary", WFBE_Client_SideJoinedText]) + (missionNamespace getVariable Format ["WFBE_%1_Pistols", WFBE_Client_SideJoinedText]) + (missionNamespace getVariable Format ["WFBE_%1_Equipment", WFBE_Client_SideJoinedText])],[missionNamespace getVariable Format ["WFBE_%1_Magazines", WFBE_Client_SideJoinedText], "Mag_"]]] Call WFBE_CL_FNC_UI_Gear_FillList};
@@ -130,10 +137,12 @@ while {true} do {
 			case 5: {[_lb_main, [[(missionNamespace getVariable Format ["WFBE_%1_Equipment", WFBE_Client_SideJoinedText])],[missionNamespace getVariable Format ["WFBE_%1_Magazines", WFBE_Client_SideJoinedText], "Mag_"]]] Call WFBE_CL_FNC_UI_Gear_FillList};
 		};
 
-		//--- Smart Update, tbd improve per tab.
-		_ui_lnb_currow = lnbCurSelRow _lb_main;
-		if (_ui_lnb_currow != -1 && ((lnbSize _lb_main) select 0) > 0) then {
-			lnbSetCurSelRow [_lb_main, 0];
+		_ui_lnb_row_count = (lnbSize _lb_main) select 0;
+		if (_ui_lnb_row_count > 0) then {
+			_ui_lnb_restore = missionNamespace getVariable [Format ["wfbe_display_buygear_row_%1", _tab_current], 0];
+			if (_ui_lnb_restore < 0) then {_ui_lnb_restore = 0};
+			if (_ui_lnb_restore >= _ui_lnb_row_count) then {_ui_lnb_restore = _ui_lnb_row_count - 1};
+			lnbSetCurSelRow [_lb_main, _ui_lnb_restore];
 		};
 	};
 
