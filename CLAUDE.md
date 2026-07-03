@@ -57,6 +57,7 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
 
 - `isEqualType`, `isEqualTo`, `params`, `pushBack`, `findIf`, `apply`
 - `selectRandom` (command form), `forceFollowRoad`, `worldSize`, `getPosVisual`
+- `remoteExec`, `distance2D`, `setGroupOwner`, `groupOwner`, `joinGroup`
 - Array-form `reveal`, A3 `find` on strings, substring `select [a, b]`, sort-by-code
 - `inline private _x =` — use `private ["_x"]`
 - `==` / `!=` with Boolean operands — use `if (_flag)` / `if (!_flag)`
@@ -114,7 +115,10 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
 ## Claim protocol
 
 Before starting any task:
-1. Check `agent-status.json` for in-progress claims on the target files.
+1. Check `agent-status.json` for in-progress claims on the target files. This is a
+   fleet-coordinator runtime artifact and may be absent in the repo — if not present,
+   fall back to the wiki Agent-Worklog page
+   (`https://github.com/rayswaynl/a2waspwarfare/wiki/Agent-Worklog`) and open-PR check.
 2. Check open PRs for in-flight branches touching the same files.
 3. Check the Block J avoid-list in the fleet prompt for forbidden file sets.
 4. If a target file is touched by an in-flight PR, base on that PR's HEAD and declare
@@ -122,6 +126,8 @@ Before starting any task:
 5. One active claim at a time per lane.
 
 See `CODEX-FLEET-PROMPT.md` for the full lane board and lane assignment rules.
+`CODEX-FLEET-PROMPT.md` is a fleet-coordinator runtime artifact and may be absent
+from the repo; if not present, check the wiki Agent-Worklog and open PRs directly.
 
 ---
 
@@ -133,7 +139,7 @@ See `CODEX-FLEET-PROMPT.md` for the full lane board and lane assignment rules.
 - Fleet lanes: `CODEX-FLEET-PROMPT.md`
 - Deep tooling reference (LoadoutManager full flow, template restore, RPT smoke, stacked-PR walkthrough,
   full trap taxonomy, match-report bugs, ZG constants): `docs/AGENT-HANDBOOK.md`
-- Wiki Agent-Guide: `wiki/AI-Assistant-Developer-Guide.md`
+- Wiki Agent-Guide: https://github.com/rayswaynl/a2waspwarfare/wiki/AI-Assistant-Developer-Guide
 
 ---
 
@@ -144,13 +150,17 @@ See `CODEX-FLEET-PROMPT.md` for the full lane board and lane assignment rules.
 - GUER volume is the point; no caps or nerfs to GUER output.
 - Do not re-propose: TPWCAS, AI supply trucks, satchel AI, EMP/WP/DECOY SCUD munitions,
   doctrine personalities, antistack touch, ACR content.
-- Shelved PRs (`wiki/Shelved-PR-*.md`) are closed proposals; do not re-open or duplicate.
-  Check the shelved-PR register before proposing any audit-flagged fix.
+- Shelved PRs (https://github.com/rayswaynl/a2waspwarfare/wiki/Shelved-PR-*) are closed
+  proposals; do not re-open or duplicate. Check the shelved-PR register before proposing
+  any audit-flagged fix.
 - Convention pointers:
   - Global hotkeys: `Client/Init/Init_Client.sqf` via `findDisplay 46` `KeyDown` handlers.
     Unrelated features go in separate `Common/Functions/Common_*.sqf` files.
     Gear filler hotkeys: `Client/Init/Init_Keybind.sqf`.
   - Unit purchases: `Client/GUI/GUI_Menu_BuyUnits.sqf` → `Client/Functions/Client_BuildUnit.sqf` (player);
     `Server/Functions/Server_BuyUnit.sqf` (AI team).
-  - Debug lines: `WF_Debug`-gated `WFBE_CO_FNC_LogContent` for values; one always-on
-    `INFORMATION`/`WARNING` line for the feature state transition or failure to confirm in RPT.
+  - Debug lines: `WFBE_CO_FNC_LogContent` output is gated by the `WF_LOG_CONTENT` define
+    (set in `version.sqf`), NOT by `WF_Debug`. On the HC, LogContent is ALWAYS active
+    regardless of the define (`initJIPCompatible.sqf:72` forces it on for every HC).
+    Use one always-on `INFORMATION`/`WARNING` line for the feature state transition or
+    failure to confirm in RPT; gate verbose value dumps behind `WF_LOG_CONTENT`.

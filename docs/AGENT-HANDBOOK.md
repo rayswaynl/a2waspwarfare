@@ -174,9 +174,9 @@ call the server callback function directly.
 
 ### Numeric flags
 
-`if (WFBE_C_SOME_FLAG)` when the flag is a number (0/1) evaluates 0 as true in A2 OA
-because any number is truthy except... it is in fact false for 0. Safe to use with
-`> 0` guard for clarity and lint compliance: `if (WFBE_C_SOME_FLAG > 0)`.
+`if (FLAG)` on 0/1 integers works (0 is falsy) but the lint requires the explicit `> 0`
+form for numeric flags for consistency and to catch boolean misuse:
+`if (WFBE_C_SOME_FLAG > 0)`.
 
 ### isKindOf on weapons/magazines
 
@@ -220,33 +220,45 @@ AICOM team events (expansion, assault, strike, lane allocation) go to the HC RPT
 
 The server RPT carries spawn, town-capture, player-purchase, and supply events.
 
-### Live watch
+### Live marker sweep (privacy-safe)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Watch-WaspLiveRpt.ps1 -Once
+powershell -ExecutionPolicy Bypass -File Tools\Monitor\Get-WaspRptMarkerSweep.ps1 `
+  -RptDirectory C:\WASP\rpt-archive -Latest 8 -Json
 ```
 
-During a Steff playtest, report inline ticks in chat rather than setting up recurring automation
-unless Steff explicitly asks for it.
+Counts WASP release, AICOM, and HC markers without dumping raw log lines. Use
+`-IncludeLineText` only when the log owner accepts that marker lines may contain
+names, UIDs, or positions. The `-Json` flag produces machine-readable output
+suitable for diffing or dashboards.
 
-### Post-run analysis
+### Windowed RPT read (current-mission scope only)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Analyze-WaspStressRpt.ps1 -CurrentRun -LiveSummary
+. Tools\Monitor\Get-WindowedRpt.ps1
+$lines = Get-WindowedRpt -RptPath $rpt                         # current-mission window
+$errs  = Get-WindowedRpt -RptPath $rpt -Pattern 'Error|ERROR'
+$boot  = Get-WindowedRpt -RptPath $rpt -WindowMarker 'Dedicated host created'
 ```
+
+`Get-WindowedRpt` reads from the most recent `MISSINIT` boundary, avoiding stale
+errors from earlier missions. It opens the file with ReadWrite share, so it never
+locks the server's RPT out from under the running process.
+
+### Post-soak KPI analysis
+
+```powershell
+python Tools\Soak\analyze_soak.py arma2oaserver.RPT --hc ArmA2OA.RPT
+```
+
+Grades a soak against the cmdcon41 fix-package KPIs (arrival %, zombies,
+W-vs-E kill share, churn, MHQRELOC, new events) and prints a PASS/WATCH/FAIL
+scorecard. Full options and KPI thresholds: `Tools/Soak/README.md`.
 
 Key tokens to search for in RPT:
 `QUEUE_PROOF`, `QUEUE_STEP`, `QUEUE_END`, `QUEUE_NOT_TRIGGERED`, `AI_BEHAVIOR`,
 `AI_DELEGATION_AUDIT`, `GPS_UI_AUDIT`, `CLIENT_GPS_STATE`, `BUGHUNT_AUDIT`,
 `FACTORY_AUDIT`, `SERVICE_SUPPLY_AUDIT`, `WDDM_ARTILLERY_AUDIT`, `PERF_BURST`, `PERF #`.
-
-### Pre-test final check
-
-```powershell
-pwsh Tools\PrTestHarness\Run-WaspFinalCheck.ps1
-```
-
-Runs the static smoke gate + whole-mission bug-hunt. Does not replace in-engine testing.
 
 ---
 
@@ -304,9 +316,10 @@ Location: `Tools/MatchReport/`
    (e.g., from a mid-session switch), `produce-match-report.ps1` may pick the wrong one
    and abort. Fix: ensure only one PBO is present in `MPMissions` for the active build.
 
-3. **Scheduled task not installed.** `PRODUCTION.md` describes a `WaspMatchReport` scheduled
-   task; as of GR-2026-07-03a it has not been registered on the Game PC. Reports must be
-   triggered manually with `pwsh -File produce-match-report.ps1 -RptFile <log>`.
+3. **Scheduled task not installed.** `Tools/MatchReport/PRODUCTION.md` describes a
+   `WaspMatchReport` scheduled task; as of GR-2026-07-03a it has not been registered on
+   the Game PC. Reports must be triggered manually with
+   `pwsh -File Tools\MatchReport\produce-match-report.ps1 -RptFile <log>`.
 
 **Town coordinates:** `WFBE_C_LOG_TOWN_COORDS` is currently set to 1 in the live build.
 This causes coordinate-harvest lines to be emitted every match. Reset to 0 in
@@ -327,13 +340,14 @@ All code changes ship as draft PRs. The owner folds PRs to the live server manua
 - The `Tools/Ops/Set-MissionTemplate.ps1` helper is an operator tool; do not call it from agent code.
 
 If you need to verify live server state for debugging, ask the owner to run the relevant
-`Tools/Ops/` or `Tools/PrTestHarness/Ops/` helper and share the output.
+`Tools/Ops/` helper and share the output.
 
 ---
 
 ## Shelved-PR register
 
-Before proposing any fix for an audit-flagged issue, check `wiki/Shelved-PR-*.md`.
+Before proposing any fix for an audit-flagged issue, check the Shelved-PR pages in the
+GitHub wiki: `https://github.com/rayswaynl/a2waspwarfare/wiki/Shelved-PR-*`
 Shelved PRs are proposals the owner explicitly rejected or deferred. Re-opening them or
 duplicating their content wastes a review slot and will be closed without merge.
 
