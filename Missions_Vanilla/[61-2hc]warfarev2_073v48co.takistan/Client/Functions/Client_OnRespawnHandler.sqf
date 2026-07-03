@@ -1,4 +1,4 @@
-Private ["_allowCustom","_buildings","_charge","_funds","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
+Private ["_allowCustom","_buildings","_charge","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
 
 _unit = _this select 0;
 _spawn = _this select 1;
@@ -78,10 +78,10 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _type
 if !(_spawnInside) then {
 	if (sideJoined == resistance) then {
 		//--- GUER respawn: honor the player's SELECTED town when valid; otherwise a random friendly town (resistance-held or neutral; never WEST/EAST = safe haven).
-		private ["_owned","_t"];
+		private ["_guerStart","_owned","_t","_usedFallbackPos"];
 		_owned = [];
+		_usedFallbackPos = false;
 		{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_owned = _owned + [_x]} } forEach towns;
-		if (count _owned == 0) then {_owned = towns};
 		//--- B75 (guer-tech FOB): a selected FOB delivery truck is a valid MOBILE spawn candidate ("freely like any
 		//--- town"). Add it so the _spawn-in-_owned preference below picks it and setPos lands the player beside it.
 		if (!isNull _spawn && {alive _spawn} && {_spawn getVariable ["wfbe_is_guer_fob", false]}) then {_owned = _owned + [_spawn]};
@@ -93,11 +93,22 @@ if !(_spawnInside) then {
 		//--- B74.1 merge: keep the respawn-guard's _spawn preference (b71 harvest) AND Naval's HVT deck-spawn.
 		_t = objNull;
 		if (!isNull _spawn && {_spawn in _owned}) then {_t = _spawn};
-		if (isNull _t) then {_t = _owned select (floor (random (count _owned)))};
-		if (_t getVariable ["wfbe_is_naval_hvt", false]) then {
-			_unit setPosASL [(getPos _t) select 0, (getPos _t) select 1, ((_t getVariable ["wfbe_naval_deckz", 16]) + 2)];
-		} else {
-			_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
+		if (isNull _t) then {
+			if (count _owned > 0) then {
+				_t = _owned select (floor (random (count _owned)));
+			} else {
+				_guerStart = WFBE_Client_Logic getVariable "wfbe_startpos";
+				if (isNil "_guerStart") then {_guerStart = getMarkerPos "GuerTempRespawnMarker"};
+				_unit setPos ([_guerStart, 10, 25] Call GetRandomPosition);
+				_usedFallbackPos = true;
+			};
+		};
+		if !(_usedFallbackPos) then {
+			if (_t getVariable ["wfbe_is_naval_hvt", false]) then {
+				_unit setPosASL [(getPos _t) select 0, (getPos _t) select 1, ((_t getVariable ["wfbe_naval_deckz", 16]) + 2)];
+			} else {
+				_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
+			};
 		};
 	} else {
 		//--- B74.2: WEST/EAST naval carrier deck-respawn. If the selected/assigned respawn point is a
@@ -135,10 +146,13 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear && _allowCustom) then {
 	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";
 	
+	if (_mode in [1]) then {
+		(Format ["%1: %2", localize "STR_WF_PARAMETER_Respawn_Penalty", localize "STR_WF_PARAMETER_Respawn_Penalty_Remove"]) Call GroupChatMessage;
+	};
 	if (_mode in [0,2,3,4,5]) then {
 		//--- Calculate the price/funds.
 		_skip = false;
-		_gear_cost = _unit getVariable "wfbe_custom_gear_cost";
+		_gear_cost = _unit getVariable ["wfbe_custom_gear_cost", 0];
 		if (_mode != 0) then {
 			_price = 0;
 			
@@ -216,7 +230,7 @@ case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGe
 
 //--- Command Deck: re-apply persisted skin class after respawn.
 //--- sleep 0.5 first so the engine completes unit creation before we swap models.
-if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {WFBE_SkinSelector_Applied}) then {
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {missionNamespace getVariable ["WFBE_SkinSelector_Applied", false]}) then {
 	Private ["_uid","_skinKey","_savedSkin"];
 	_uid     = getPlayerUID _unit;
 	_skinKey = "WFBE_SkinSelector_Skin_" + _uid;
