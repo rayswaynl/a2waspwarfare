@@ -263,17 +263,26 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		//--- lapses, the latch is CLEARED and the team retargets normally next pass. A2-OA-safe (plain getVariable
 		//--- + isNil guard, typeName OBJECT test, numeric sideID compare, objNull broadcast clear).
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1]) > 0) then {
-			private ["_ht","_htLive"];
+			private ["_ht","_htLive","_htSide","_htUntil"];
 			_ht = _team getVariable "wfbe_aicom_holding_town";
 			_htLive = false;
 			if (!isNil "_ht") then {
 				if (typeName _ht == "OBJECT" && {!isNull _ht}) then {
-					if ((_ht getVariable ["sideID", -1]) == _sideID && {time < (_ht getVariable ["wfbe_aicom_hold_until", 0])}) then {_htLive = true};
+					_htSide = _ht getVariable ["sideID", -1];
+					_htUntil = _ht getVariable ["wfbe_aicom_hold_until", 0];
+					if (_htSide == _sideID && {time < _htUntil}) then {_htLive = true};
 				};
 			};
 			if (_htLive) then {
 				_explicitMode = true;
 			} else {
+				if (!isNil "_ht") then {
+					if (typeName _ht == "OBJECT" && {!isNull _ht}) then {
+						if (_htSide != _sideID) then {
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HOLD_TOWN_LOST|team=" + (str _team) + "|town=" + (_ht getVariable ["name","town"]) + "|townSide=" + str _htSide + "|remaining=" + str (round (_htUntil - time)));
+						};
+					};
+				};
 				_team setVariable ["wfbe_aicom_holding_town", objNull, true];
 			};
 		};
