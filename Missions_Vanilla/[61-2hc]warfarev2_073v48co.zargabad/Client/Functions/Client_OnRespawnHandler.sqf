@@ -1,4 +1,4 @@
-Private ["_allowCustom","_buildings","_charge","_funds","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
+Private ["_allowCustom","_buildings","_charge","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
 
 _unit = _this select 0;
 _spawn = _this select 1;
@@ -81,7 +81,30 @@ if !(_spawnInside) then {
 		private ["_owned","_t"];
 		_owned = [];
 		{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_owned = _owned + [_x]} } forEach towns;
-		if (count _owned == 0) then {_owned = towns};
+		//--- Lane 188 (a): when ALL towns are enemy-held the old "if empty->towns" reset
+		//--- re-admitted enemy spawn points (WEST/EAST-held) as GUER fallback positions.
+		//--- WFBE_C_GUER_FALLBACK_SAFE=1: place the player at the GUER start pos instead;
+		//--- WFBE_C_GUER_FALLBACK_SAFE=0: restores old all-towns behaviour (rollback).
+		if (count _owned == 0) then {
+			if ((missionNamespace getVariable ["WFBE_C_GUER_FALLBACK_SAFE", 1]) > 0) then {
+				private "_fbGuerPos";
+				_fbGuerPos = WFBE_Client_Logic getVariable "wfbe_startpos";
+				if (!isNil "_fbGuerPos") then {
+					_unit setPos ([_fbGuerPos, 5, 15] Call GetRandomPosition);
+					//--- Already delivered; bypass the object-based setPos branches below.
+					//--- Seed _owned = [_unit] so the _t selection loop below (count-driven)
+					//--- does not crash on an empty array; the getPos _t on _unit == self is safe.
+					_spawn  = _unit;
+					_typeof = typeOf _spawn;
+					_owned  = [_unit];
+				} else {
+					//--- Start pos not yet broadcast (early JIP edge); keep minimal safe set.
+					_owned = towns;
+				};
+			} else {
+				_owned = towns;
+			};
+		};
 		//--- B75 (guer-tech FOB): a selected FOB delivery truck is a valid MOBILE spawn candidate ("freely like any
 		//--- town"). Add it so the _spawn-in-_owned preference below picks it and setPos lands the player beside it.
 		if (!isNull _spawn && {alive _spawn} && {_spawn getVariable ["wfbe_is_guer_fob", false]}) then {_owned = _owned + [_spawn]};
@@ -135,10 +158,15 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear && _allowCustom) then {
 	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";
 	
+	//--- Lane 188 (d): mode 1 silently stripped custom gear with no feedback.
+	//--- Inform the player before _loadDefault falls through to faction gear.
+	if (_mode == 1) then {
+		(localize "STR_WF_CHAT_Gear_RespawnDenied") Call GroupChatMessage;
+	};
 	if (_mode in [0,2,3,4,5]) then {
 		//--- Calculate the price/funds.
 		_skip = false;
-		_gear_cost = _unit getVariable "wfbe_custom_gear_cost";
+		_gear_cost = _unit getVariable ["wfbe_custom_gear_cost", 0]; //--- Lane 188 (c): nil default made gear FREE (_funds >= nil is always false in A2); seed 0 so mode 2-5 price is exactly the cost or 0 when not set.
 		if (_mode != 0) then {
 			_price = 0;
 			
@@ -216,7 +244,9 @@ case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGe
 
 //--- Command Deck: re-apply persisted skin class after respawn.
 //--- sleep 0.5 first so the engine completes unit creation before we swap models.
-if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {WFBE_SkinSelector_Applied}) then {
+//--- Lane 188 (b): bare WFBE_SkinSelector_Applied read fired Undefined-variable on every
+//--- pre-swap respawn (the var is set only inside SkinSelector_Apply.sqf). Guard with isNil.
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {!(isNil "WFBE_SkinSelector_Applied") && {WFBE_SkinSelector_Applied}}) then {
 	Private ["_uid","_skinKey","_savedSkin"];
 	_uid     = getPlayerUID _unit;
 	_skinKey = "WFBE_SkinSelector_Skin_" + _uid;

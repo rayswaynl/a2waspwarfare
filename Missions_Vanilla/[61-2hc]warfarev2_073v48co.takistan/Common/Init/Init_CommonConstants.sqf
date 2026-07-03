@@ -1890,5 +1890,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+//--- Lane 188 (a): GUER all-towns-enemy fallback safety. 1 = use GUER start-pos
+//--- instead of raw towns list when all towns are WEST/EAST-held (clear bug: old code
+//--- could strand GUER players at an enemy-held town). 0 = legacy all-towns fallback.
+	if (isNil "WFBE_C_GUER_FALLBACK_SAFE") then {WFBE_C_GUER_FALLBACK_SAFE = 1};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

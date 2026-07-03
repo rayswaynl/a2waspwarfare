@@ -181,6 +181,10 @@
         <English>You have received $%1 from %2.</English>
         <Russian>Вы получили $%1 от %2.</Russian>
       </Key>
+      <Key ID="STR_WF_CHAT_Gear_RespawnDenied">
+        <English>Your custom gear was stripped: gear cost overrides are disabled (mode 1).</English>
+        <Russian>Ваше снаряжение сброшено: пользовательское снаряжение отключено (режим 1).</Russian>
+      </Key>
       <Key ID="STR_WF_CHAT_Gear_RespawnCharge">
         <English>You were deducted from $%1 due to your gear</English>
         <Russian>У вас изъято $%1 за ваше снаряжение</Russian>
