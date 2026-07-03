@@ -1,5 +1,16 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-03 — Lane 185 balance-retune lobby params [PR]
+
+Exposed a small set of current balance scalars as lobby parameters without changing defaults:
+town cash income multiplier (`WFBE_C_ECONOMY_INCOME_COEF` = 14), town supply income multiplier
+(`WFBE_C_ECONOMY_SUPPLY_INCOME_MULT` = 1.0), GUER kill bounty share (0.5), and the three GUER
+vehicle-tier kill thresholds (30/80/160).
+
+`Init_CommonConstants.sqf` now nil-guards the two town-income constants so dedicated parameter
+injection can override them; the GUER controls already used nil-guarded fallbacks. Scope is
+parameter exposure only: no AICOM logic, no service GUI, no live deploy/package work.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:

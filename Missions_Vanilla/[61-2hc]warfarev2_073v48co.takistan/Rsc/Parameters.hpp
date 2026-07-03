@@ -189,6 +189,18 @@
 		texts[] = {"S 30000","S 35000","S 40000","S 45000","S 50000","S 60000","S 80000","S 100000"};
 		default = 50000;
 	};
+	class WFBE_C_ECONOMY_INCOME_COEF {
+		title = "Town Cash Income Multiplier";
+		values[] = {8,10,12,14,16,18,20};
+		texts[] = {"x8","x10","x12","x14","x16","x18","x20"};
+		default = 14;
+	};
+	class WFBE_C_ECONOMY_SUPPLY_INCOME_MULT {
+		title = "Town Supply Income Multiplier";
+		values[] = {0.35,0.5,0.75,1,1.25};
+		texts[] = {"35%","50%","75%","100%","125%"};
+		default = 1;
+	};
 
 	class WFBE_C_ENVIRONMENT_STARTING_HOUR {
 		title = "$STR_WF_PARAMETER_Hour";
@@ -638,6 +650,30 @@
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1; //--- B66: 0->1 GUER playable ON (trial round).
+	};
+	class WFBE_C_GUER_KILL_BOUNTY_COEF {
+		title = "GUER Kill Bounty Share";
+		values[] = {0.25,0.5,0.75,1};
+		texts[] = {"25%","50%","75%","100%"};
+		default = 0.5;
+	};
+	class WFBE_C_GUER_KILLTIER_1 {
+		title = "GUER Vehicle Tier 1 Kills";
+		values[] = {15,30,45,60};
+		texts[] = {"15","30","45","60"};
+		default = 30;
+	};
+	class WFBE_C_GUER_KILLTIER_2 {
+		title = "GUER Vehicle Tier 2 Kills";
+		values[] = {40,80,120,160};
+		texts[] = {"40","80","120","160"};
+		default = 80;
+	};
+	class WFBE_C_GUER_KILLTIER_3 {
+		title = "GUER Vehicle Tier 3 Kills";
+		values[] = {80,160,240,320};
+		texts[] = {"80","160","240","320"};
+		default = 160;
 	};
 
 	// G4 GUER Mortar Pit wildcard card SHELVED (Ray 2026-07-02 "Shelve mortar pit"); its lobby toggles removed.
