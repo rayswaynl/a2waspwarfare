@@ -1603,7 +1603,7 @@ while {!gameOver} do {
 						_mkColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};
 						_mkName  = Format ["wc_%1_%2_%3", _sideText, _draw, round time];
 						//--- CREATE on the owning side only (SIDE destination -> sideJoined match in Client_HandlePVF).
-						[_side, "WildcardMarker", ["create", _mkName, _mkPos, _mkColor, _mkType, _wName]] Call WFBE_CO_FNC_SendToClients;
+						[_side, "WildcardMarker", ["create", _mkName, _mkPos, _mkColor, _mkType, _wName, _wDesc]] Call WFBE_CO_FNC_SendToClients;
 						//--- Self-expiring watcher: delete the marker on the SAME side after the event lifetime.
 						//--- One marker per event; this is the only deletion path (no leak, no spam).
 						[_side, _mkName, _mkLife] spawn {

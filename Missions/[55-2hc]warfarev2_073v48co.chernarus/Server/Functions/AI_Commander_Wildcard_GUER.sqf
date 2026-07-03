@@ -180,7 +180,7 @@ while {!gameOver} do {
 								//--- A short-lived watcher deletes it when the truck resolves (death/arrival) or at the
 								//--- 600s watcher cap - one marker per active event, always cleaned up.
 								_g1Mk = Format ["wc_GUER_G1_%1", round time];
-								[resistance, "WildcardMarker", ["create", _g1Mk, _targetPos, "ColorGreen", "mil_destroy", "Car Bomb"]] Call WFBE_CO_FNC_SendToClients;
+								[resistance, "WildcardMarker", ["create", _g1Mk, _targetPos, "ColorGreen", "mil_destroy", "Car Bomb", "GUER VBIED rolling toward the marked town"]] Call WFBE_CO_FNC_SendToClients;
 								[_truck, _targetPos, _g1Mk] spawn {
 									private ["_v","_tgt","_mk","_el"];
 									_v = _this select 0; _tgt = _this select 1; _mk = _this select 2; _el = 0;
