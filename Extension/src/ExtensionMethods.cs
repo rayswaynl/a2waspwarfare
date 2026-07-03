@@ -15,8 +15,26 @@ public class ExtensionMethods
         {
             Log.WriteLine("Received args as: " + _argsAsString, LogLevel.DEBUG);
 
+            if (string.IsNullOrWhiteSpace(_argsAsString))
+            {
+                Log.WriteLine("No extension arguments received.", LogLevel.CRITICAL);
+                return;
+            }
+
             var splitArgsArray = ArrayTools.SplitArgsToArray(_argsAsString);
-            var extensionNameAsString = splitArgsArray[0];
+            if (splitArgsArray.Length == 0)
+            {
+                Log.WriteLine("No extension name found in arguments: " + _argsAsString, LogLevel.CRITICAL);
+                return;
+            }
+
+            var extensionNameAsString = splitArgsArray[0].Trim();
+            if (string.IsNullOrWhiteSpace(extensionNameAsString))
+            {
+                Log.WriteLine("Empty extension name found in arguments: " + _argsAsString, LogLevel.CRITICAL);
+                return;
+            }
+
             splitArgsArray = ArrayTools.RemoveFirstElement(splitArgsArray);
 
             Log.WriteLine("Reveived args count: " + splitArgsArray.Length +
