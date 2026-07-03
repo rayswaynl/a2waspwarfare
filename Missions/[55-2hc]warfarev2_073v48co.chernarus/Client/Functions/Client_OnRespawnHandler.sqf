@@ -1,9 +1,10 @@
-Private ["_allowCustom","_buildings","_charge","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
+Private ["_allowCustom","_buildings","_charge","_fbDelivered","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
 
 _unit = _this select 0;
 _spawn = _this select 1;
 _loadDefault = true;
 _typeof = typeOf _spawn;
+_fbDelivered = false;
 
 WFBE_Client_IsRespawning = false;
 _allowCustom = true;
@@ -86,11 +87,12 @@ if !(_spawnInside) then {
 		//--- WFBE_C_GUER_FALLBACK_SAFE=1: place the player at the GUER start pos instead;
 		//--- WFBE_C_GUER_FALLBACK_SAFE=0: restores old all-towns behaviour (rollback).
 		if (count _owned == 0) then {
-			if ((missionNamespace getVariable ["WFBE_C_GUER_FALLBACK_SAFE", 1]) > 0) then {
+			if ((missionNamespace getVariable "WFBE_C_GUER_FALLBACK_SAFE") > 0) then {
 				private "_fbGuerPos";
 				_fbGuerPos = WFBE_Client_Logic getVariable "wfbe_startpos";
 				if (!isNil "_fbGuerPos") then {
 					_unit setPos ([_fbGuerPos, 5, 15] Call GetRandomPosition);
+					_fbDelivered = true;
 					//--- Already delivered; bypass the object-based setPos branches below.
 					//--- Seed _owned = [_unit] so the _t selection loop below (count-driven)
 					//--- does not crash on an empty array; the getPos _t on _unit == self is safe.
@@ -120,7 +122,9 @@ if !(_spawnInside) then {
 		if (_t getVariable ["wfbe_is_naval_hvt", false]) then {
 			_unit setPosASL [(getPos _t) select 0, (getPos _t) select 1, ((_t getVariable ["wfbe_naval_deckz", 16]) + 2)];
 		} else {
-			_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
+			if (!_fbDelivered) then {
+				_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
+			};
 		};
 	} else {
 		//--- B74.2: WEST/EAST naval carrier deck-respawn. If the selected/assigned respawn point is a
@@ -185,9 +189,11 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 				if (_spawn in _buildings || _spawn == ((sideJoined) Call WFBE_CO_FNC_GetSideHQ)) then {_charge = false};
 			};
 			
-			//--- Charge if possible.
+			//--- Charge if possible (only when there is an actual non-zero cost).
+			//--- Review fix (MODERATE): gate on _price > 0 so $0-cost gear (wfbe_custom_gear_cost
+			//--- not set, defaults to 0) does not fire ChangePlayerFunds/GroupChatMessage on every respawn.
 			_funds = Call GetPlayerFunds;
-			if (_funds >= _price && _charge) then {
+			if (_price > 0 && {_funds >= _price} && {_charge}) then {
 				-(_price) Call ChangePlayerFunds;
 				(Format[localize 'STR_WF_CHAT_Gear_RespawnCharge',_price]) Call GroupChatMessage;
 			};
