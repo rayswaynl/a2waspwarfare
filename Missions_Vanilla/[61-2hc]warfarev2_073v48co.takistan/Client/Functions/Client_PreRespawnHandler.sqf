@@ -1,4 +1,4 @@
-Private ["_hq","_unit","_rearmor"];
+Private ["_hq","_unit","_rearmor","_x"];
 
 _unit = _this;
 
