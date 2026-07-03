@@ -19,3 +19,9 @@ Support_ScudStrike.sqf : [WEST] AUTHORISED -- launching from [100,200,0] at targ
 [WFBE (SKIN)] B6 COMPLETE: player='Tester' class='US_Soldier_EP1' uid='123'
 GUI_Menu_EASA.sqf: Player vehicle [objNull] was not found within the list.
 GUI_BuyGearMenu.sqf: synthetic gear fixture line
+UPGRADE_SOUND|v1|mode=2|side=WEST|upgrade=Supply
+TIP_SKIP|v1|id=12|flag=WFBE_C_GUER_PLAYERSIDE|value=0
+TIP_SHOW|v1|id=50|text=class-tags
+VEHLIFT_DROP|v1|vehicle=HMMWV|carrier=Mi17|reason=release
+VEHLIFT_ABORT|v1|vehicle=BMP2|reason=too-fast
+Error in expression <_free call BIS_fnc_selectRandom>: Undefined variable in expression: bis_fnc_selectrandom

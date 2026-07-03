@@ -39,6 +39,12 @@ WASPSCALE|v2|12|tier=2|players=4|AI_W=120|AI_E=118|AI_GUER=30|AI_TOT=268|groups=
 Support_ScudStrike.sqf : [WEST] denied -- cooldown (120s left).
 GUI_Menu_EASA.sqf: Player requested EASA loadout.
 BUILD_ROAD_CLEAR|type=Barracks
+UPGRADE_SOUND|v1|mode=2|side=WEST|upgrade=Supply
+TIP_SKIP|v1|id=12|flag=WFBE_C_GUER_PLAYERSIDE|value=0
+TIP_SHOW|v1|id=50|text=class-tags
+VEHLIFT_DROP|v1|vehicle=HMMWV|carrier=Mi17|reason=release
+VEHLIFT_ABORT|v1|vehicle=BMP2|reason=too-fast
+Error in expression <_free call BIS_fnc_selectRandom>: Undefined variable in expression: bis_fnc_selectrandom
 WASPSTAT|v1|9|ROUNDEND|WEST|5432|Chernarus
 """
 
@@ -103,6 +109,15 @@ class AnalyzeSoakCanonicalTests(unittest.TestCase):
         self.assertEqual(len(self.soak.scud_lines), 1)
         self.assertGreaterEqual(self.soak.easa_count, 1)
         self.assertGreaterEqual(sum(self.soak.build_road.values()), 1)
+
+    def test_cmdcon43_families(self):
+        self.assertEqual(self.soak.cmd43["UPGRADE_SOUND"], 1)
+        self.assertEqual(self.soak.upgrade_sound_modes["2"], 1)
+        self.assertEqual(self.soak.cmd43["TIP_SKIP"], 1)
+        self.assertEqual(self.soak.cmd43["TIP_SHOW"], 1)
+        self.assertEqual(self.soak.cmd43["VEHLIFT_DROP"], 1)
+        self.assertEqual(self.soak.cmd43["VEHLIFT_ABORT"], 1)
+        self.assertEqual(self.soak.cmd43["BISRNG"], 1)
 
     def test_roundend(self):
         self.assertIsNotNone(self.soak.roundend)
