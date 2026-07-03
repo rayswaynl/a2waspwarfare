@@ -787,7 +787,7 @@ switch (_args select 0) do {
 	//--- the Transfer menu (GUI_TransferMenu.sqf) - it shares the same "aicom-donate-confirm" client confirm. Donating
 	//--- to the AI treasury only makes sense while the AI runs the side, which that path already enforces.
 	case "aicom-team-ended": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew","_cteams","_cregistered"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
 		//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
@@ -806,19 +806,26 @@ switch (_args select 0) do {
 				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 				if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
 			} else {
-				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) - [_cteam], true];
-				//--- GROUP-CAP LEAK FIX (claude-gaming 2026-06-13): founded + W8 Motor Pool teams carry
-				//--- wfbe_persistent=true so the GC will not reap them during the empty-while-FILLING window.
-				//--- But on team-END (wiped) the group was only DEREGISTERED, never deleted - leaving a
-				//--- permanent empty GC-EXEMPT husk that accumulates toward the 144/side cap on every team
-				//--- death (the dominant unbounded group leak). Now that the team is ended, clear the flag so
-				//--- the existing 60s server_groupsGC reaps the empty husk (locality-safe; avoids the A2 trap
-				//--- of `local` on a Group). Gameplay-transparent: the team already has zero living units.
-				if ((count units _cteam) == 0) then {_cteam setVariable ["wfbe_persistent", false]};
-				if ((_clogik getVariable ["wfbe_aicom_garrison", grpNull]) == _cteam) then {
-					_clogik setVariable ["wfbe_aicom_garrison", grpNull];
+				_cteams = _clogik getVariable ["wfbe_teams", []];
+				_cregistered = false;
+				{
+					if (_x == _cteam) exitWith {_cregistered = true};
+				} forEach _cteams;
+				if (_cregistered) then {
+					_clogik setVariable ["wfbe_teams", _cteams - [_cteam], true];
+					//--- GROUP-CAP LEAK FIX (claude-gaming 2026-06-13): founded + W8 Motor Pool teams carry
+					//--- wfbe_persistent=true so the GC will not reap them during the empty-while-FILLING window.
+					//--- But on team-END (wiped) the group was only DEREGISTERED, never deleted - leaving a
+					//--- permanent empty GC-EXEMPT husk that accumulates toward the 144/side cap on every team
+					//--- death (the dominant unbounded group leak). Now that the team is ended, clear the flag so
+					//--- the existing 60s server_groupsGC reaps the empty husk (locality-safe; avoids the A2 trap
+					//--- of `local` on a Group). Gameplay-transparent: the team already has zero living units.
+					if ((count units _cteam) == 0) then {_cteam setVariable ["wfbe_persistent", false]};
+					if ((_clogik getVariable ["wfbe_aicom_garrison", grpNull]) == _cteam) then {
+						_clogik setVariable ["wfbe_aicom_garrison", grpNull];
+					};
+					["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 wiped and deregistered.", _csideID, _cteam]] Call WFBE_CO_FNC_AICOMLog;
 				};
-				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 wiped and deregistered.", _csideID, _cteam]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};
