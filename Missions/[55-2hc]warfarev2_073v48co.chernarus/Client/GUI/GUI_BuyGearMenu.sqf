@@ -4,12 +4,15 @@ disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop tou
 //--- Register the UI.
 uiNamespace setVariable ["wfbe_display_buygear", _this select 0];
 if (isNil {uiNamespace getVariable 'wfbe_display_buygear_tab'}) then {uiNamespace setVariable ['wfbe_display_buygear_tab', 2]};
-//--- Lane 204: row-memory per tab (0-5); persists across tab switches.
+_gearRememberRow = (missionNamespace getVariable ["WFBE_C_GEAR_REMEMBER_ROW", 1]) > 0;
+//--- Lane 243: row-memory per tab (0-5); persists across dialog reopens while enabled.
 //--- NOTE (review MODERATE): after this block _x == 5 in the outer scope (A2 forEach does not isolate _x).
 //--- No later code before the main loop reads _x, so this is safe; document here to prevent future confusion.
-{
-	if (isNil {uiNamespace getVariable ("wfbe_buygear_row_" + str _x)}) then {uiNamespace setVariable [("wfbe_buygear_row_" + str _x), 0]};
-} forEach [0,1,2,3,4,5];
+if (_gearRememberRow) then {
+	{
+		if (isNil {uiNamespace getVariable ("wfbe_buygear_row_" + str _x)}) then {uiNamespace setVariable [("wfbe_buygear_row_" + str _x), 0]};
+	} forEach [0,1,2,3,4,5];
+};
 uiNamespace setVariable ['wfbe_display_buygear_misc', -1];uiNamespace setVariable ['wfbe_display_buygear_pool_main', -1];uiNamespace setVariable ['wfbe_display_buygear_pool_gun', -1];
 
 _color_tab = [0.258823529, 0.713725490, 1, 1];
@@ -133,7 +136,7 @@ while {true} do {
 		//--- Lane 204 (review fix): save the cursor row for the tab we are LEAVING (_tab_prev).
 		//--- Only save on a real tab-switch (_tab_switch=true); template-create/delete also set
 		//--- _update_tab=true but must NOT clobber the row store for an unrelated tab.
-		if (_tab_switch && _tab_prev >= 0) then {
+		if (_gearRememberRow && {_tab_switch} && {_tab_prev >= 0}) then {
 			private ["_leaving_row"];
 			_leaving_row = lnbCurSelRow _lb_main;
 			if (_leaving_row < 0) then {_leaving_row = 0};
@@ -153,13 +156,16 @@ while {true} do {
 			case 5: {[_lb_main, [[(missionNamespace getVariable Format ["WFBE_%1_Equipment", WFBE_Client_SideJoinedText])],[missionNamespace getVariable Format ["WFBE_%1_Magazines", WFBE_Client_SideJoinedText], "Mag_"]]] Call WFBE_CL_FNC_UI_Gear_FillList};
 		};
 
-		//--- Lane 204: restore the remembered row for this tab (clamped to list size).
+		//--- Lane 243: restore the remembered row for this tab (clamped to list size).
 		private ["_row_count", "_saved_row"];
 		_row_count = (lnbSize _lb_main) select 0;
 		if (_row_count > 0) then {
-			_saved_row = uiNamespace getVariable ("wfbe_buygear_row_" + str _tab_current);
-			if (isNil "_saved_row") then {_saved_row = 0};
-			if (_saved_row >= _row_count) then {_saved_row = 0};
+			_saved_row = 0;
+			if (_gearRememberRow) then {
+				_saved_row = uiNamespace getVariable ("wfbe_buygear_row_" + str _tab_current);
+				if (isNil "_saved_row") then {_saved_row = 0};
+				if (_saved_row >= _row_count) then {_saved_row = 0};
+			};
 			lnbSetCurSelRow [_lb_main, _saved_row];
 		};
 	};
@@ -536,6 +542,13 @@ while {true} do {
 		if (_view == "gear") then {[_gear_sel_weapons, _gear_sel_magazines, _gear_refresh] Call WFBE_CL_FNC_UI_Gear_DisplayInventory};
 	};
 
+	//--- Lane 243: keep the current tab's latest row before any close/reopen path can hide the control.
+	if (_gearRememberRow) then {
+		private ["_gear_row_live"];
+		_gear_row_live = lnbCurSelRow _lb_main;
+		if (_gear_row_live >= 0) then {uiNamespace setVariable [("wfbe_buygear_row_" + str _tab_current), _gear_row_live]};
+	};
+
 	//--- Go back to the main menu.
 	if (WFBE_MenuAction == 1000) exitWith {
 		WFBE_MenuAction = -1;
@@ -548,7 +561,6 @@ while {true} do {
 
 //--- Release the UI.
 {uiNamespace setVariable [_x, nil]} forEach ["wfbe_display_buygear","wfbe_display_buygear_misc","wfbe_display_buygear_pool_main","wfbe_display_buygear_pool_gun"];
-//--- Lane 204 (review fix): clear per-tab row memory so reopening the dialog always starts at row 0.
-{uiNamespace setVariable [("wfbe_buygear_row_" + str _x), nil]} forEach [0,1,2,3,4,5];
+if (!_gearRememberRow) then {{uiNamespace setVariable [("wfbe_buygear_row_" + str _x), nil]} forEach [0,1,2,3,4,5]};
 //--- Update the profile if needed.
 if (_need_save && !isNil 'WFBE_CL_FNC_UI_Gear_SaveTemplateProfile') then { [] Spawn WFBE_CL_FNC_UI_Gear_SaveTemplateProfile };
