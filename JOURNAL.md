@@ -543,3 +543,14 @@ Validation:
 - `check_sqf.py --select BRACKET` and `--select A3CMD` reported zero findings on the four touched files.
 - Added-line A3/boolean trap scan found no matches.
 - Chernarus/Takistan touched file pairs match after mirroring.
+
+---
+
+## 2026-07-03 - Fleet lane 338: skip top-up for disbanding HC teams
+
+Claimed `fleet-lane-338-topup-skip-disbanding-teams-2026-07-03` as `Codex-Fleet-9`.
+
+Scope:
+- `AI_Commander_Produce.sqf` now reads `wfbe_aicom_disband` with the existing A2-safe group-var idiom before dispatching a town-center top-up request.
+- Teams already queued for disband no longer receive replacement infantry and refit charges immediately before the HC driver deletes them.
+- Vanilla mission roots are expected to be mirrored through `Tools/LoadoutManager` with packaging skipped.

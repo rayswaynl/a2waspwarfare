@@ -130,8 +130,8 @@ if (_airMaxTotalP > 0) then {
 		//--- PARKED (leader within 400m of its own HQ or an OWN-side town centre) and understrength (alive < 6)
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
-		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not).
-		private ["_wm_rally","_wm_parked","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
+		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
+		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -143,7 +143,9 @@ if (_airMaxTotalP > 0) then {
 				_wm_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 				{ if (((_x getVariable ["sideID", -1]) == _wm_myID) && {(_wm_ldr distance _x) < 400}) exitWith {_wm_parked = true} } forEach towns;
 			};
-			if (_wm_rally || {_wm_parked}) then {
+			_wm_disbanding = _team getVariable "wfbe_aicom_disband";
+			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
+			if (!_wm_disbanding && {_wm_rally || {_wm_parked}}) then {
 				//--- COOLDOWN gate (one top-up per team per WFBE_C_AICOM_TOPUP_COOLDOWN seconds).
 				_wm_now   = time;
 				_wm_lastTU = _team getVariable "wfbe_aicom_topup_stamp"; if (isNil "_wm_lastTU") then {_wm_lastTU = -1e9};
