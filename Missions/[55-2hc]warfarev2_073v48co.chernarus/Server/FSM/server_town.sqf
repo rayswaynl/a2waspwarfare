@@ -39,8 +39,15 @@ while {!WFBE_GameOver} do {
 	{
 
 		_location = towns select _i;
-		_startingSupplyValue = _location getVariable "startingSupplyValue";
-		_maxSupplyValue = _location getVariable "maxSupplyValue";
+		//--- cmdcon44-d (claude-gaming 2026-07-03) NIL-SAFE SV READS: a transplanted map (Zargabad) can leave a
+		//--- town's supply/camp vars unset for a window (Init_Town server-block race), and an OLDER server_town.sqf
+		//--- shipped in the live ZG pbo read these 1-arg -> the locals came up Undefined and the capture-drain block
+		//--- threw every scan (server RPT: "Undefined variable _supplyvalue"/"_rate" at server_town.sqf) so no town's
+		//--- supplyValue ever drained -> ZERO flips. 2-arg getVariable defaults keep the locals numeric so the drain
+		//--- math (and the GetTotalCamps division below) can never be poisoned by a nil town var. A2-OA-safe (plain
+		//--- 2-arg getVariable; no == on Bool). Fallbacks mirror Init_Town: start/max default to a sane 30.
+		_startingSupplyValue = _location getVariable ["startingSupplyValue", 30];
+		_maxSupplyValue = _location getVariable ["maxSupplyValue", 30];
 
 				_sideID = _location getVariable "sideID";
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
@@ -89,7 +96,10 @@ while {!WFBE_GameOver} do {
 				if (_contested && !_prevContested) then {_location setVariable ["wfbe_contested", true]};
 				if (!_contested && _prevContested) then {_location setVariable ["wfbe_contested", false]};
 
-				_supplyValue = _location getVariable "supplyValue";
+				//--- cmdcon44-d: nil-safe (see SV-reads note above). A town mid-init (or from a stale transplant)
+				//--- may not yet have "supplyValue" set; default to startingSupplyValue so this scan drains from
+				//--- full instead of throwing Undefined at the first "_supplyValue < _maxSupplyValue" test.
+				_supplyValue = _location getVariable ["supplyValue", _startingSupplyValue];
 
 				if (!WFBE_ISTHREEWAY && _town_supply_time) then {
 					//--- If we're running on 2 sides, skip the time based supply if the defender hold the town.
