@@ -12,7 +12,7 @@ WF_MenuAction = -1;
 _cameraModes = ["Internal","External","Gunner","Group"];
 
 // Marty : Modifying the script in order to display only human player and not bots (= empty slots) in the unit camera list :
-private ["_list_Players","_list_AITeams"];
+private ["_list_Players","_list_AITeams","_count_PlayerTeams"];
 _list_Players = [];
 
 _n = 1;
@@ -28,15 +28,12 @@ _n = 1;
 //--- Lane 178 AI Teams section: populate _list_AITeams from the live side-logic wfbe_teams
 //--- (the same broadcast source the Command Console uses for its roster). Filter: NOT player-led,
 //--- at least one alive unit. Camera-switch only, no order paths. No flag - pure client QoL.
+//--- HIGH/MODERATE fix (review): capture player-only count before AI rows are appended,
+//--- so the zero-team sentinel and initial-row clamp use the correct player-only count.
+_count_PlayerTeams = count _list_Players;
 _list_AITeams = [];
-{
-	private "_aiGrp178"; _aiGrp178 = _x;
-	if (!isNull _aiGrp178 && {!isPlayer (leader _aiGrp178)} && {({alive _x} count units _aiGrp178) > 0}) then
-	{
-		_list_AITeams = _list_AITeams + [_aiGrp178];
-	};
-} forEach clientTeams;
 //--- Prefer the live broadcast wfbe_teams over the frozen boot-snapshot clientTeams (same fix as Command Console).
+//--- LOW fix (review): fallback clientTeams scan moved to else branch - only runs when wfbe_teams is unavailable.
 if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
 	private "_lt178"; _lt178 = WFBE_Client_Logic getVariable "wfbe_teams";
 	if (!isNil "_lt178" && {(typeName _lt178) == "ARRAY"}) then {
@@ -49,6 +46,15 @@ if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
 			};
 		} forEach _lt178;
 	};
+} else {
+	//--- Fallback: scan clientTeams (boot-time snapshot) when wfbe_teams broadcast not yet received.
+	{
+		private "_aiGrp178"; _aiGrp178 = _x;
+		if (!isNull _aiGrp178 && {!isPlayer (leader _aiGrp178)} && {({alive _x} count units _aiGrp178) > 0}) then
+		{
+			_list_AITeams = _list_AITeams + [_aiGrp178];
+		};
+	} forEach clientTeams;
 };
 //--- Append section header + one row per AI team to listbox 21002 (read-only section below player list).
 //--- The header row maps to grpNull in _list_Players so the 101 handler skips it.
@@ -88,7 +94,13 @@ _player_group = group player;
 _id = _list_Players find _player_group;
 if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {
 	if (_id < 0) then {_id = 0};                                  //--- caller not a player-led team -> default to the first listed player team so a row is always selected
-	if (count _list_Players == 0) then {_id = -1};               //--- but if NO player teams exist, leave nothing selected (the 101 handler is guarded below)
+	//--- HIGH fix (review): _list_Players now includes AI rows (grpNull + AI groups); use
+	//--- _count_PlayerTeams (captured before AI rows) as the correct player-only empty check.
+	if (_count_PlayerTeams == 0) then {
+		//--- MODERATE fix (review): no player teams. If AI rows present, clamp _id to index 1
+		//--- (first real AI group row, past the grpNull '--- AI Teams ---' header row at index 0).
+		if (count _list_Players > 1) then {_id = 1} else {_id = -1};
+	};
 };
 lbSetCurSel[21002,_id];
 _currentUnit = (player) Call GetUnitVehicle;
