@@ -554,3 +554,14 @@ Scope:
 - `AI_Commander_Produce.sqf` now reads `wfbe_aicom_disband` with the existing A2-safe group-var idiom before dispatching a town-center top-up request.
 - Teams already queued for disband no longer receive replacement infantry and refit charges immediately before the HC driver deletes them.
 - Vanilla mission roots are expected to be mirrored through `Tools/LoadoutManager` with packaging skipped.
+
+---
+
+## 2026-07-03 — Fleet lane 356: bootstrap stipend windfall telemetry
+
+Claimed `fleet-lane-356-bootstrap-stipend-windfall-telemetry-2026-07-03` as `Codex-Fleet-9`.
+
+Scope:
+- Keep bootstrap stipend behavior unchanged while aligning the first-grant sentinel and guard in `AI_Commander.sqf`.
+- Add `AICOMSTAT|v2|EVENT|...|BOOTSTRAP_STIPEND_WINDFALL` telemetry when a delayed stipend tick grants more than two minutes of catch-up income.
+- Mirror maintained Vanilla Takistan/Zargabad through `Tools\LoadoutManager` after the Chernarus source edit.
