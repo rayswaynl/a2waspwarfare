@@ -123,6 +123,7 @@ public class FileManager
     {
         return (_fileName.EndsWith("mission.sqm", StringComparison.OrdinalIgnoreCase) ||
                _fileName.EndsWith("version.sqf", StringComparison.OrdinalIgnoreCase) ||
+               _fileName.EndsWith("version.sqf.template", StringComparison.OrdinalIgnoreCase) ||
                // Convert to list to not to convert from Cherno to takistan,
                // use as parameter to add to the list above
                _fileName.EndsWith("GUI_Menu_Help.sqf", StringComparison.OrdinalIgnoreCase) ||

@@ -3,6 +3,17 @@ public static class MirrorDriftChecker
     private const string TakistanMissionRelativePath = @"Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan";
     private const string TakistanMissionDirectoryName = "[61-2hc]warfarev2_073v48co.takistan";
     private const int MaxReportedDifferences = 200;
+    private static readonly string[] TakistanVersionGuardRelativePaths =
+    {
+        "version.sqf.template",
+        "version.sqf"
+    };
+
+    private static readonly string[] TakistanForbiddenUncommentedDefines =
+    {
+        "IS_CHERNARUS_MAP_DEPENDENT",
+        "IS_NAVAL_MAP"
+    };
 
     public static int CheckTakistanMirror()
     {
@@ -32,21 +43,34 @@ public static class MirrorDriftChecker
                 destinationDirectoryOverride: expectedTakistanPath);
 
             List<string> differences = CompareDirectories(expectedTakistanPath, actualTakistanPath);
-            if (differences.Count == 0)
+            List<string> versionGuardFindings = FindTakistanVersionGuardFindings(expectedTakistanPath);
+            if (differences.Count == 0 && versionGuardFindings.Count == 0)
             {
                 Console.WriteLine("Takistan mirror check passed: no generated drift detected.");
                 return 0;
             }
 
-            Console.Error.WriteLine($"Takistan mirror check failed: {differences.Count} difference(s) detected.");
-            foreach (string difference in differences.Take(MaxReportedDifferences))
+            if (differences.Count > 0)
             {
-                Console.Error.WriteLine(difference);
+                Console.Error.WriteLine($"Takistan mirror check failed: {differences.Count} difference(s) detected.");
+                foreach (string difference in differences.Take(MaxReportedDifferences))
+                {
+                    Console.Error.WriteLine(difference);
+                }
+
+                if (differences.Count > MaxReportedDifferences)
+                {
+                    Console.Error.WriteLine($"... {differences.Count - MaxReportedDifferences} more difference(s) not shown.");
+                }
             }
 
-            if (differences.Count > MaxReportedDifferences)
+            if (versionGuardFindings.Count > 0)
             {
-                Console.Error.WriteLine($"... {differences.Count - MaxReportedDifferences} more difference(s) not shown.");
+                Console.Error.WriteLine($"Takistan version guard failed: {versionGuardFindings.Count} finding(s).");
+                foreach (string finding in versionGuardFindings)
+                {
+                    Console.Error.WriteLine(finding);
+                }
             }
 
             return 1;
@@ -134,6 +158,59 @@ public static class MirrorDriftChecker
     private static bool ShouldIgnoreRelativePath(string _relativePath)
     {
         return _relativePath.Equals("version.sqf", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static List<string> FindTakistanVersionGuardFindings(string _expectedTakistanPath)
+    {
+        List<string> findings = new List<string>();
+
+        foreach (string relativePath in TakistanVersionGuardRelativePaths)
+        {
+            string versionPath = Path.Combine(_expectedTakistanPath, relativePath);
+            if (!File.Exists(versionPath))
+            {
+                findings.Add($"MISSING {relativePath}");
+                continue;
+            }
+
+            int lineNumber = 0;
+            foreach (string line in File.ReadLines(versionPath))
+            {
+                lineNumber++;
+                string? defineName = ReadUncommentedDefineName(line);
+                if (defineName == null)
+                {
+                    continue;
+                }
+
+                if (TakistanForbiddenUncommentedDefines.Contains(defineName, StringComparer.Ordinal))
+                {
+                    findings.Add($"{relativePath}:{lineNumber} active {defineName}");
+                }
+            }
+        }
+
+        return findings;
+    }
+
+    private static string? ReadUncommentedDefineName(string _line)
+    {
+        const string defineKeyword = "#define";
+        string trimmedLine = _line.TrimStart();
+
+        if (!trimmedLine.StartsWith(defineKeyword, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        string rest = trimmedLine.Substring(defineKeyword.Length);
+        if (rest.Length == 0 || !char.IsWhiteSpace(rest[0]))
+        {
+            return null;
+        }
+
+        string[] defineParts = rest.TrimStart().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        return defineParts.Length == 0 ? null : defineParts[0];
     }
 
     private static void TryDeleteDirectory(string _directory)
