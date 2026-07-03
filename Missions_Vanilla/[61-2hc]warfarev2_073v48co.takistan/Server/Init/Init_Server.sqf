@@ -213,6 +213,7 @@ Call {
 		case 2: {_oc = 1};
 	};
 	60 setOvercast _oc;
+	if (_weat == 2) then {60 setRain 0.5}; //--- lane199(e): Rainy lobby option now actually sets rain.
 };
 
 ["INITIALIZATION", "Init_Server.sqf: Weather module is loaded."] Call WFBE_CO_FNC_LogContent;

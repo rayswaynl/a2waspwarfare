@@ -177,7 +177,9 @@ while {true} do {
 
 	_ok = true;
 	if (typeName _flag == "STRING" && {_flag != ""}) then {
-		if ((missionNamespace getVariable [_flag, 0]) < 1) then {_ok = false};
+		private ["_fval"];
+		_fval = missionNamespace getVariable [_flag, 0];
+		if (typeName _fval == "SCALAR" && {_fval < 1}) then {_ok = false};
 	};
 
 	//--- Only a gated-out tip is skipped silently; an eligible tip is posted and counts as "last".
