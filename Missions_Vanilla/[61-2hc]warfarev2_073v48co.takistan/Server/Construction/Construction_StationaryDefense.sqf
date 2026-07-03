@@ -166,20 +166,43 @@ if (!isNull _area) then {
 //--- no base area (_area is null). Without this the first gunner death is permanent -
 //--- the re-man loop inside !isNull _area never runs for guns placed outside a base.
 //--- Flag default 0 (dark): base guns already covered above; only opt in for FWD guns.
+//--- Review fixes (cx-review):
+//---   HIGH-1: group stored on gun object + Killed EH frees it — no per-construction group leak.
+//---   HIGH-2: respect WFBE_C_BASE_DEFENSE_MAX_AI == 0 operator kill-switch (was bypassed).
+//---   MODERATE: stamp WFBE_FwdOwnerSide on gun so HandleDefense (which reads WFBE_DefenseBaseArea)
+//---             still exits via !alive _defense; side flag left for future capture logic.
 if (isNull _area && (missionNamespace getVariable "WFBE_C_FWD_STATIC_MANNING") > 0) then {
-	if (_defense emptyPositions "gunner" > 0 && _manned) then {
-		Private ["_fwdTeam","_fwdClosest","_fwdBuildings"];
-		_fwdTeam = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
-		_fwdTeam setVariable ["wfbe_persistent", true];
-		_fwdBuildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
-		_fwdClosest = ["BARRACKSTYPE", _fwdBuildings, _manRange, _side, _defense] Call BuildingInRange;
-		if (isNull _fwdClosest || !(alive _fwdClosest)) then {
-			_fwdClosest = (_side) Call WFBE_CO_FNC_GetSideHQ;
-			["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] FWD static [%2] - no barracks anchor, falling back to HQ.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
+	//--- HIGH-2: honour the operator AI kill-switch identically to the base-area path (line 96).
+	if (_defense emptyPositions "gunner" > 0 && _manned && (((missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI") > 0) || _isAIQuery)) then {
+		Private ["_fwdTeam","_fwdBuildings"];
+		//--- HIGH-1: reuse an existing group stored on this gun object if one already exists
+		//--- (e.g. double-call guard). On fresh construction the var is nil so we create one.
+		_fwdTeam = _defense getVariable "WFBE_FwdDefenseTeam";
+		if (isNil "_fwdTeam" || {isNull _fwdTeam}) then {
+			_fwdTeam = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
+			//--- Do NOT stamp wfbe_persistent — the group must be GC-able after gun death.
+			//--- Store it on the gun so the Killed EH below can find and delete it.
+			_defense setVariable ["WFBE_FwdDefenseTeam", _fwdTeam];
+			//--- HIGH-1: Killed EH — drain units then delete group to prevent GC leak.
+			_defense addEventHandler ["Killed", {
+				Private ["_gun","_grp"];
+				_gun = _this select 0;
+				_grp = _gun getVariable "WFBE_FwdDefenseTeam";
+				if (!isNil "_grp" && {!isNull _grp}) then {
+					{deleteVehicle _x} forEach (units _grp);
+					deleteGroup _grp;
+				};
+			}];
 		};
+		//--- MODERATE: stamp a FWD side marker so future capture-side logic or HandleDefense
+		//--- extensions can exit on side mismatch. The current loop exits via !alive _defense.
+		_defense setVariable ["WFBE_FwdOwnerSide", _sideID];
+		_fwdBuildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
+		//--- LOW fix: pass objNull as anchor — _moveInGunner=true makes the anchor unused;
+		//--- avoids the barracks/HQ lookup overhead and suppresses the spurious HQ WARNING.
 		emptyQueu = emptyQueu + [_defense];
 		[_defense] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
-		[_defense, _side, _fwdTeam, _fwdClosest] Spawn HandleDefense;
+		[_defense, _side, _fwdTeam, objNull] Spawn HandleDefense;
 		["INFORMATION", Format ["Construction_StationaryDefense.sqf: [%1] FWD static [%2] queued for re-manning (WFBE_C_FWD_STATIC_MANNING).", str _side, _type]] Call WFBE_CO_FNC_LogContent;
 	};
 };
