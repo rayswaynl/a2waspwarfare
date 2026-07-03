@@ -21,7 +21,8 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
-              "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger"]; //--- B66
+              "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -796,6 +797,81 @@ if (count _live > 0) then {
 	//--- this cycle and the lone artillery battery is GUARANTEED to found. _template/_price/factory/HC dispatch below
 	//--- all read _pick, so no further wiring is needed. Inert (no-op) when _forcedArtyPick < 0 (normal cycles).
 	if (_forcedArtyPick >= 0) then {_pick = _forcedArtyPick};
+
+	//--- D4 TARGET-AWARE COMPOSITIONS (flag WFBE_C_AICOM_TARGET_AWARE_COMP, default 0):
+	//--- read the current target town's camp/garrison composition and re-weight the _cwBucket draw when
+	//--- the town composition calls for AT/MG or mech-infantry templates.
+	//--- Applied AFTER _forcedArtyPick (arty guarantee takes full precedence). If _forcedArtyPick was
+	//--- taken, the re-weight is skipped (it would be a no-op anyway). Factory-tier gating unchanged.
+	//--- A2-OA-safe: getVariable with defaults, count, plain forEach/exitWith, no A3 commands.
+	//--- GUARD: _cwWeights is only populated when _cwExp > 0 and the bucket has >1 entry (the else-branch
+	//--- of the eff-weighted draw above). In the uniform-draw branch _cwWeights is nil; guard before use.
+	_d4Flag = missionNamespace getVariable ["WFBE_C_AICOM_TARGET_AWARE_COMP", 0];
+	if (_d4Flag > 0 && {_forcedArtyPick < 0} && {count _cwBucket > 1} && {!isNil "_cwWeights"} && {count _cwWeights == count _cwBucket}) then {
+		//--- Resolve the target town: read from the garrison group's alloc_target (server authority).
+		_d4Target = objNull;
+		private ["_garGrp"];
+		_garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+		if (!isNull _garGrp) then {_d4Target = _garGrp getVariable ["wfbe_aicom_alloc_target", objNull]};
+		//--- Fallback: first non-null alloc_target across all founded teams.
+		if (isNull _d4Target) then {
+			{ if (!isNull (_x getVariable ["wfbe_aicom_alloc_target", objNull])) then { _d4Target = _x getVariable ["wfbe_aicom_alloc_target", objNull] } } forEach _teams;
+		};
+		if (!isNull _d4Target) then {
+			_d4Camps   = count (_d4Target getVariable ["camps", []]);
+			_d4SV      = _d4Target getVariable ["supplyValue", 0];
+			_d4GarHeavy = missionNamespace getVariable ["WFBE_C_AICOM_COMP_GARRISON_HEAVY", 3];
+			_d4OpenSV   = missionNamespace getVariable ["WFBE_C_AICOM_COMP_OPEN_SV", 50];
+			_d4AtmgMult = missionNamespace getVariable ["WFBE_C_AICOM_COMP_ATMG_MULT", 3.0];
+			_d4MechMult = missionNamespace getVariable ["WFBE_C_AICOM_COMP_MECH_MULT", 2.5];
+			if (_d4Camps >= _d4GarHeavy) then {
+				//--- Garrison-heavy town: boost templates containing armour/APC/wheeled-APC (AT/MG proxy).
+				//--- Recompute a weighted draw over _cwBucket, scaling each entry's _cwWeights value up
+				//--- by _d4AtmgMult when the template contains a Tank, Wheeled_APC, or Tracked_APC entry.
+				private ["_d4Weights","_d4Sum","_d4Roll","_d4Acc","_d4I","_d4Pick"];
+				_d4Weights = []; _d4Sum = 0; _d4I = 0;
+				{
+					_d4CwIdx2 = _x;
+					_d4HasAtmg = false;
+					{ if ((typeName _x == "STRING") && {(_x isKindOf "Tank") || (_x isKindOf "Wheeled_APC") || (_x isKindOf "Tracked_APC")}) exitWith {_d4HasAtmg = true} } forEach (_templates select _d4CwIdx2);
+					_cwW = _cwWeights select _d4I;
+					if (_d4HasAtmg) then {_cwW = _cwW * _d4AtmgMult};
+					_d4Weights set [_d4I, _cwW]; _d4Sum = _d4Sum + _cwW; _d4I = _d4I + 1;
+				} forEach _cwBucket;
+				if (_d4Sum > 0) then {
+					_d4Roll = random _d4Sum; _d4Acc = 0; _d4I = 0; _d4Pick = _pick;
+					{ _d4Acc = _d4Acc + (_d4Weights select _d4I); if (_d4Pick == _pick && {_d4Roll < _d4Acc}) then {_d4Pick = _x}; _d4I = _d4I + 1 } forEach _cwBucket;
+					_pick = _d4Pick;
+					diag_log format ["AICOMCOMP|D4|%1|garrisonHeavy(camps=%2)->ATMGbias|pick=%3", _sideText, _d4Camps, _pick];
+				};
+			} else {
+				if (_d4SV <= _d4OpenSV) then {
+					//--- Open village: boost mech-infantry templates (bClass 1 = light bucket = IFV/APC + squad).
+					//--- Detect by checking the stored bucket type (_storedTypes) for bClass == 1.
+					private ["_d4Weights2","_d4Sum2","_d4Roll2","_d4Acc2","_d4I2","_d4Pick2"];
+					_d4Weights2 = []; _d4Sum2 = 0; _d4I2 = 0;
+					{
+						_d4CwIdx2 = _x;
+						_d4HasMech = false;
+						if (!isNil "_storedTypes" && {_d4CwIdx2 < count _storedTypes}) then {
+							private ["_st4"]; _st4 = _storedTypes select _d4CwIdx2;
+							if (!isNil "_st4" && {_st4 == 1}) then {_d4HasMech = true};
+						};
+						_cwW = _cwWeights select _d4I2;
+						if (_d4HasMech) then {_cwW = _cwW * _d4MechMult};
+						_d4Weights2 set [_d4I2, _cwW]; _d4Sum2 = _d4Sum2 + _cwW; _d4I2 = _d4I2 + 1;
+					} forEach _cwBucket;
+					if (_d4Sum2 > 0) then {
+						_d4Roll2 = random _d4Sum2; _d4Acc2 = 0; _d4I2 = 0; _d4Pick2 = _pick;
+						{ _d4Acc2 = _d4Acc2 + (_d4Weights2 select _d4I2); if (_d4Pick2 == _pick && {_d4Roll2 < _d4Acc2}) then {_d4Pick2 = _x}; _d4I2 = _d4I2 + 1 } forEach _cwBucket;
+						_pick = _d4Pick2;
+						diag_log format ["AICOMCOMP|D4|%1|openVillage(SV=%2)->mechBias|pick=%3", _sideText, _d4SV, _pick];
+					};
+				};
+			};
+		};
+	};
+
 	_template = _templates select _pick;
 	_logik setVariable ["wfbe_aicom_last_template", _pick]; //--- B74.1: record the actual founded template for the next founding's anti-repeat reroll.
 
