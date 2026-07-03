@@ -31,6 +31,7 @@ Use `--select` for focused gates, such as an Arma 3 command-trap pass that shoul
 
 - `A3CMD`: common Arma 3 command traps from the fleet prompt.
 - `A3MARKER`: A3 NATO marker types such as `b_inf`.
+- `A3NUMGATE`: numeric `getVariable` gates on string-typed constant names ending in `_TYPE`, `_CLASS`, or `_LAUNCHER`.
 - `A3REVEAL`: array-form `reveal` usage.
 - `A3SELECT`: `select [start,count]` slice syntax.
 - `A3SORT`: sort-by-code syntax.
