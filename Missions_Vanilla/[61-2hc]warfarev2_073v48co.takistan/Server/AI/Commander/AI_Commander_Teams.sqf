@@ -199,7 +199,7 @@ if (_foundedTeams > _target) then {
 	_safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 	_pick = grpNull; _pickN = 1e9;
 	{
-		if (!isNull _x && {_x getVariable ["wfbe_aicom_hc", false]} && {!(_x getVariable ["wfbe_aicom_disband", false])}) then {
+		if (!isNull _x && {[_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_x, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 			_ldr = leader _x;
 			if (!isNull _ldr && {alive _ldr}) then {
 				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count _allUnits;
@@ -211,10 +211,45 @@ if (_foundedTeams > _target) then {
 		};
 	} forEach _teams;
 	if (!isNull _pick) then {
+		_pick setVariable ["wfbe_aicom_disband_pcscale", true, true];
 		_pick setVariable ["wfbe_aicom_disband", true, true];
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] PC-cleanup flagged rear team %2 to retire (founded %3 > target %4, pc %5); HC self-deletes.", _sideText, _pick, _foundedTeams, _target, _pcN]] Call WFBE_CO_FNC_AICOMLog;
 		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_RETIRED|reason=pc-scale|founded=" + str _foundedTeams + "|target=" + str _target + "|pc=" + str _pcN);
 	};
+};
+
+//--- Lane-373: if a temporary PC-scale retirement is still queued after the team target recovers,
+//--- cancel only that tagged automatic request. Human console orders and low-tier culls keep their own
+//--- wfbe_aicom_disband flag. Also drop stale PC-scale tags after the HC executor stood a team down.
+private ["_clearPcN","_pcTeam","_pcTagged","_pcDisband","_pcCmd","_pcTargetRecovered"];
+_clearPcN = 0;
+_pcTargetRecovered = ((_foundedTeams + _pending) <= _target);
+{
+	_pcTeam = _x;
+	if (!isNull _pcTeam) then {
+		_pcTagged = [_pcTeam, "wfbe_aicom_disband_pcscale", false] Call WFBE_CO_FNC_GroupGetBool;
+		if (_pcTagged) then {
+			_pcDisband = [_pcTeam, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool;
+			if (_pcDisband) then {
+				if (_pcTargetRecovered) then {
+					_pcCmd = [_pcTeam, "wfbe_aicom_disband_cmd", false] Call WFBE_CO_FNC_GroupGetBool;
+					if (_pcCmd) then {
+						_pcTeam setVariable ["wfbe_aicom_disband_pcscale", false, true];
+					} else {
+						_pcTeam setVariable ["wfbe_aicom_disband", false, true];
+						_pcTeam setVariable ["wfbe_aicom_disband_pcscale", false, true];
+						_clearPcN = _clearPcN + 1;
+					};
+				};
+			} else {
+				_pcTeam setVariable ["wfbe_aicom_disband_pcscale", false, true];
+			};
+		};
+	};
+} forEach _teams;
+if (_clearPcN > 0) then {
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] PC-cleanup cancelled %2 stale retirement flag(s) (founded %3 pending %4 target %5).", _sideText, _clearPcN, _foundedTeams, _pending, _target]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_RETIRE_CANCELLED|reason=pc-scale-target-recovered|count=" + str _clearPcN + "|founded=" + str _foundedTeams + "|pending=" + str _pending + "|target=" + str _target);
 };
 
 //--- B74 VETERAN-SLOT (Ray 2026-06-22, review fix): the rich flag (AI_Commander.sqf) arms wfbe_aicom_veteran_next
@@ -814,12 +849,20 @@ if (count _live > 0) then {
 	if (_d4Flag > 0 && {_forcedArtyPick < 0} && {count _cwBucket > 1} && {!isNil "_cwWeights"} && {count _cwWeights == count _cwBucket}) then {
 		//--- Resolve the target town: read from the garrison group's alloc_target (server authority).
 		_d4Target = objNull;
-		private ["_garGrp"];
+		private ["_garGrp","_d4Alloc"];
 		_garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
-		if (!isNull _garGrp) then {_d4Target = _garGrp getVariable ["wfbe_aicom_alloc_target", objNull]};
+		if (!isNull _garGrp) then {
+			_d4Alloc = _garGrp getVariable "wfbe_aicom_alloc_target";
+			if (isNil "_d4Alloc") then {_d4Alloc = objNull};
+			_d4Target = _d4Alloc;
+		};
 		//--- Fallback: first non-null alloc_target across all founded teams.
 		if (isNull _d4Target) then {
-			{ if (!isNull (_x getVariable ["wfbe_aicom_alloc_target", objNull])) then { _d4Target = _x getVariable ["wfbe_aicom_alloc_target", objNull] } } forEach _teams;
+			{
+				_d4Alloc = _x getVariable "wfbe_aicom_alloc_target";
+				if (isNil "_d4Alloc") then {_d4Alloc = objNull};
+				if (!isNull _d4Alloc) then { _d4Target = _d4Alloc };
+			} forEach _teams;
 		};
 		if (!isNull _d4Target) then {
 			_d4Camps   = count (_d4Target getVariable ["camps", []]);
