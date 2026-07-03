@@ -59,6 +59,20 @@ class WikiLinkCheckerTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("BADANCHOR", output)
 
+    def test_buildref_flags_pages_behind_detected_max_build(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_page(root, "Current.md", "Build 89 release notes.\n")
+            write_page(root, "Borderline.md", "Build 79 is exactly ten builds behind.\n")
+            write_page(root, "Old.md", "B74 still needs a refresh.\n")
+
+            code, output = run_checker(root, "--no-orphans", "--include-stale-builds")
+
+        self.assertEqual(code, 0)
+        self.assertIn("Old.md:1: BUILDREF: B74", output)
+        self.assertIn("BUILDREF=1", output)
+        self.assertNotIn("Borderline.md", output)
+
 
 if __name__ == "__main__":
     unittest.main()
