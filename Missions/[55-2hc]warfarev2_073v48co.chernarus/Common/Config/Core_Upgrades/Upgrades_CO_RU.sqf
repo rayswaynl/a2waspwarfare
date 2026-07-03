@@ -180,6 +180,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_PARATROOPERS,1],
 	[WFBE_UP_PARATROOPERS,2],
 	[WFBE_UP_AIR,3],
+	[WFBE_UP_AIR,4],	//--- lane196: complete AI path to SCUD (SCUD requires Air L5)
+	[WFBE_UP_AIR,5],	//--- lane196: Air L5 gate satisfied; SCUD (ICBM) now reachable
 	[WFBE_UP_UAV,1],
 	[WFBE_UP_PARATROOPERS,3],
 	[WFBE_UP_EASA,1],
