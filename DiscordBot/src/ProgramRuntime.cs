@@ -11,6 +11,12 @@ public class ProgramRuntime
         LogLevelNormalization.InitLogLevelNormalizationStrings();
         // Do not use the logging system before this !!!
 
+        if (!Preferences.TryLoad(out string preferencesError))
+        {
+            Log.WriteLine(preferencesError, LogLevel.ERROR);
+            return;
+        }
+
         // Load the initial game data
         GameData.Instance = GameData.LoadFromFile();
 
