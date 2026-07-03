@@ -112,9 +112,13 @@ while {!WFBE_GameOver} do {
 				//--- CAPDBG (cmdcon44d diagnostic): the live 44b/44c boots report _supplyValue/_rate Undefined at the
 				//--- consumers with no upstream error; log exactly WHICH input is nil, then self-heal so the drain runs.
 				if (isNil "_supplyValue") then {
-					diag_log ("CAPDBG|SV|" + (_location getVariable ["name","?"]) + "|ssv=" + str(isNil "_startingSupplyValue") + "|msv=" + str(isNil "_maxSupplyValue") + "|sid=" + str(isNil "_sideID") + "|obj=" + str(isNil "_objects") + "|w=" + str(isNil "_west") + "|actE=" + str(isNil "_activeEnemies") + "|mode=" + str(isNil "_town_capture_mode") + "|rng=" + str(isNil "_town_capture_range") + "|tcr=" + str(isNil "_town_capture_rate") + "|tccr=" + str(isNil "_town_camps_capture_rate") + "|fnTC=" + str(isNil "WFBE_CO_FNC_GetTotalCamps") + "|fnSID=" + str(isNil "WFBE_CO_FNC_GetSideFromID"));
-					_supplyValue = if (!isNil "_startingSupplyValue") then {_startingSupplyValue} else {30};
+					diag_log ("CAPDBG|SV|" + (_location getVariable ["name","?"]) + "|poisoned-town-var (set-nil, XWT45-P5)");
 				};
+				//--- heal MUST be a top-level assignment: assigning inside then{} to an undefined outer local
+				//--- creates a block-local that dies at the brace (the 44d heal was inert for this reason).
+				_supplyValue = if (isNil "_supplyValue") then {_startingSupplyValue} else {_supplyValue};
+				//--- cleanse the set-nil poison on the town var itself (2-arg defaults never apply to set-nil vars).
+				if (isNil {_location getVariable "supplyValue"}) then {_location setVariable ["supplyValue", _supplyValue, true]};
 
 				if (!WFBE_ISTHREEWAY && _town_supply_time) then {
 					//--- If we're running on 2 sides, skip the time based supply if the defender hold the town.
@@ -235,7 +239,11 @@ while {!WFBE_GameOver} do {
 
 		if !(_skip) then {
 			_totalCamps = _location Call WFBE_CO_FNC_GetTotalCamps;
-			_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID};};
+			//--- ROOT FIX (cmdcon44e, rig-verified XWT45): a no-match default-less switch returns the switch
+			//--- VALUE (boolean true) - the tie case (dominion logic zeroes all three counts) fed boolean into
+			//--- _newSID -> GetTotalCampsOnSide aborted on number==bool -> _rate Voided -> towncenters could
+			//--- never flip while contested (systemic on 3-way urban ZG). Tie = no dominant attacker = owner keeps.
+			_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID}; default {_sideID};};
 			_newSide = (_newSID) Call WFBE_CO_FNC_GetSideFromID;
 			if (_totalCamps > 0) then {
 				_rate = _town_capture_rate * (([_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide) / _totalCamps) * _town_camps_capture_rate;
@@ -243,9 +251,9 @@ while {!WFBE_GameOver} do {
 				_rate = _town_capture_rate * _town_camps_capture_rate;
 			};
 			if (isNil "_rate") then {
-				diag_log ("CAPDBG|RATE|" + (_location getVariable ["name","?"]) + "|totalCamps=" + str(isNil "_totalCamps") + "|newSID=" + str(isNil "_newSID") + "|newSide=" + str(isNil "_newSide") + "|w=" + str(isNil "_west") + "|e=" + str(isNil "_east") + "|r=" + str(isNil "_resistance") + "|tcr=" + str(isNil "_town_capture_rate") + "|tccr=" + str(isNil "_town_camps_capture_rate") + "|fnOnSide=" + str(isNil "WFBE_CO_FNC_GetTotalCampsOnSide"));
-				_rate = 1;
+				diag_log ("CAPDBG|RATE|" + (_location getVariable ["name","?"]) + "|newSID=" + str(_newSID) + "|residual (should be silent post-44e)");
 			};
+			_rate = if (isNil "_rate") then {1} else {_rate};
 			if (_rate < 1) then {_rate = 1};
 
 			if (_sideID != WFBE_C_UNKNOWN_ID) then {

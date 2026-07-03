@@ -64,7 +64,8 @@ while {!WFBE_GameOver} do {
 				if (!_resistanceDominion && !_westDominion && !_eastDominion) then {_west = 0; _east = 0; _resistance = 0};
 
 				if !(_skip) then {
-					_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID}};
+					//--- ROOT FIX (cmdcon44e): same tie-case boolean leak as server_town (see XWT45); tie -> keep owner.
+					_newSID = switch (true) do {case (_west > 0): {WFBE_C_WEST_ID}; case (_east > 0): {WFBE_C_EAST_ID}; case (_resistance > 0): {WFBE_C_GUER_ID}; default {_sideID}};
 					_supplyValue = round(_supplyValue - ((_resistance + _east + _west)*_camp_cap_rate));
 					if (_supplyValue < 1) then {_supplyValue = _town_starting_sv; _captured = true};
 					_camp setVariable ["supplyValue",_supplyValue,true];

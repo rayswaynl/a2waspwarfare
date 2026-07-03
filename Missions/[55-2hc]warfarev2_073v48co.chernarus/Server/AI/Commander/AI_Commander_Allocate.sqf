@@ -144,9 +144,9 @@ if (!_fromFocus) then {
 		if (_nearBand > 0 && {_dNear < _nearBandDist}) then {_sc = _sc + _nearBandBonus};   //--- F5: near-band bonus for towns immediately adjacent to our front (re-ranks; does not change eligibility).
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
 		if (isNil "_sc") then {
-			diag_log ("CAPDBG|SC|" + (_tt getVariable ["name","?"]) + "|dNear=" + str(isNil "_dNear") + "|distDiv=" + str(isNil "_distDiv") + "|frontDist=" + str(isNil "_frontDist") + "|nearBand=" + str(isNil "_nearBand") + "|supportOn=" + str(isNil "_supportOn"));
-			_sc = -99999;
+			diag_log ("CAPDBG|SC|" + (_tt getVariable ["name","?"]) + "|dNear=" + str(isNil "_dNear") + "|residual");
 		};
+		_sc = if (isNil "_sc") then {-99999} else {_sc};
 		_scored set [count _scored, [_sc, _tt]];
 	} forEach _tgtTowns;
 	//--- cmdcon27 THREAD C: _fistMax field-order lever - MUST land before its consumption just below.

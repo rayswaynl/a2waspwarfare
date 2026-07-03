@@ -208,9 +208,9 @@ for "_i" from 1 to _want do {
 			//--- Off-front towns take a flat penalty so a fat deep city can't outrank a
 			//--- near contestable one. Towns on the front are unpenalised and win.
 			if (isNil "_score") then {
-				diag_log ("CAPDBG|SCORE|" + (_t getVariable ["name","?"]) + "|dNear=" + str(isNil "_dNear") + "|distDiv=" + str(isNil "_distDiv") + "|hardTier=" + str(isNil "_hardTier") + "|softW=" + str(isNil "_softW") + "|valDiv=" + str(isNil "_valDiv") + "|dHQ=" + str(isNil "_dHQ") + "|hqDiv=" + str(isNil "_hqDiv"));
-				_score = -99999;
+				diag_log ("CAPDBG|SCORE|" + (_t getVariable ["name","?"]) + "|dNear=" + str(isNil "_dNear") + "|residual");
 			};
+			_score = if (isNil "_score") then {-99999} else {_score};
 			if (_dNear > _frontRad) then {_score = _score - _farPen};
 			if (_score > _bestScore) then {_bestScore = _score; _bestTown = _t};
 		};

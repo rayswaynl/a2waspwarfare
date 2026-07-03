@@ -566,9 +566,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_bootDist = if (!isNull _hqObj) then {_x distance _hqObj} else {0};
 						_bootScore = (0 - _bootDist) - ((_x getVariable ["supplyValue", 0]) * 10);
 						if (isNil "_bootScore") then {
-							diag_log ("CAPDBG|BOOT|" + (_x getVariable ["name","?"]) + "|bootDist=" + str(isNil "_bootDist") + "|hqObj=" + str(isNil "_hqObj") + "|bestBootScore=" + str(isNil "_bestBootScore"));
-							_bootScore = -9999999;
+							diag_log ("CAPDBG|BOOT|" + (_x getVariable ["name","?"]) + "|residual");
 						};
+						_bootScore = if (isNil "_bootScore") then {-9999999} else {_bootScore};
 						if (_bootScore > _bestBootScore) then {_bestBootScore = _bootScore; _bestBoot = _x};
 					} forEach _uncaptured;
 					if (!isNull _bestBoot) then {_target = _bestBoot};
