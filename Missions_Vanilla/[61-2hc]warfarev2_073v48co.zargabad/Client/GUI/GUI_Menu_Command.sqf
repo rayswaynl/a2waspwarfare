@@ -710,8 +710,11 @@ while {alive player && dialog} do {
 				if (isNull _selTeam) then {
 					hintSilent parseText "<t color='#F8D664'>Select a team in the roster first.</t>";
 				} else {
-					if ((_now - _lastSend) < _cool) then {
-						hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+					//--- item5 (client-qol-batch2): RALLY/REFIT/HOLD are direct war-room verbs with fast
+					//--- per-order latency; gate on the short _lastDirect/_directCool (1.5s) not the 8s brain send.
+					if ((_now - _lastDirect) < _directCool) then {
+						private "_dcd5"; _dcd5 = _directCool - (_now - _lastDirect);
+						hintSilent parseText (format ["<t color='#F8D664'>Ready in %1s - wait a moment.</t>", (ceil _dcd5)]);
 					} else {
 						//--- Resolve the selected team's index in the broadcast wfbe_teams registry (server-matching order).
 						private ["_vRegTeams","_vIdx"];
@@ -728,7 +731,8 @@ while {alive player && dialog} do {
 							_vSpecial = switch (_vb) do {case 727:{"aicom-rally"};case 728:{"aicom-refit"};default{"aicom-hold"}};
 							_vLabel   = switch (_vb) do {case 727:{"Rally"};case 728:{"Refit"};default{"Hold"}};
 							["RequestSpecial", [_vSpecial, sideJoined, _vIdx]] Call WFBE_CO_FNC_SendToServer;
-							_lastSend = _now;
+							_lastSend = _now;      //--- still stamp _lastSend (brain send costs server work)
+							_lastDirect = _now;    //--- also stamp _lastDirect so rapid re-press is throttled
 							hintSilent parseText (format ["<t color='#A0E060'>%1 order sent - %2.</t>", _vLabel, (name (leader _selTeam))]);
 						};
 					};

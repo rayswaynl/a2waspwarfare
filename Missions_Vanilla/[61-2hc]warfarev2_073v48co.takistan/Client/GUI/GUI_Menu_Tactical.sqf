@@ -379,6 +379,41 @@ while {alive player && dialog} do {
 		};
 		
 		ctrlEnable[17020, _controlEnable];
+		//--- QoL item2 (client-qol-batch2): show a one-line deny reason on IDC 17027 when
+		//--- Fast Travel is blocked, so the player knows WHY the button is greyed.
+		//--- Uses dedicated IDC 17027 (17022 is the shared animation text, written by every special).
+		if (!_controlEnable) then {
+			private "_ftDenyReason";
+			_ftDenyReason = "";
+			switch (_currentSpecial) do {
+				case "Fast_Travel": {
+					if (_ft <= 0) then {
+						_ftDenyReason = "Fast Travel disabled on this server.";
+					} else {
+						_currentLevel = _currentUpgrades select WFBE_UP_FASTTRAVEL;
+						if (_currentLevel <= 0) then {
+							_ftDenyReason = "Fast Travel not yet unlocked (upgrade required).";
+						} else {
+							if (!canMove (vehicle player)) then {
+								_ftDenyReason = "Your vehicle cannot move.";
+							} else {
+								if (count _FTLocations <= 0) then {
+									if (_ft == 2) then {
+										_ftDenyReason = "No affordable FT destinations (all require more funds than you have).";
+									} else {
+										_ftDenyReason = "No eligible FT destinations in range from your position.";
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+			ctrlSetText [17027, _ftDenyReason];
+		} else {
+			//--- Clear the deny reason whenever the special is re-evaluated and enable.
+			ctrlSetText [17027, ""];
+		};
 		MenuAction = -1;
 	};
 	
