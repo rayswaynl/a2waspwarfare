@@ -1,6 +1,6 @@
 # Fleet Lane Availability Status - 2026-07-03
 
-Lane 25 shepherd pass, based on `origin/claude/build84-cmdcon36@b1608b096eb4`, the refreshed fleet prompt, the wiki coordination feed, and the GitHub PR board.
+Lane 25 shepherd pass, based on `github/claude/build84-cmdcon36@006f7b7f6`, the refreshed fleet prompt, the wiki coordination feed, and the GitHub PR board.
 
 ## Current Result
 
@@ -29,6 +29,14 @@ A later heartbeat re-ran the board after Fleet-9 retargeted PR #368 to `claude/b
 The live-base open PR count moved from `194` to `195` because PR #368 now targets `claude/build84-cmdcon36`. Dirty open PRs are now #368 and #320 on Build84, plus #129 on `master`.
 
 No source repair was opened for #368 in this pass. Fleet-9 already recorded that its conflict scope is `AI_Commander_Wildcard_GUER.sqf` in Chernarus and maintained Takistan, which is on the current night-wave avoid list and needs owner/manual combat-AI repair if the card should continue. This refresh keeps the existing PR #470 current instead of opening a duplicate availability report.
+
+## Refresh - 2026-07-03T07:09:00+02:00
+
+GitHub remote `claude/build84-cmdcon36` advanced from `b1608b096` to `006f7b7f6`. The existing PR #470 branch was merged forward with that live base using a normal non-force merge commit, then this report was refreshed in place.
+
+The board counts stayed stable after the base update: `197` open PRs, `195` targeting `claude/build84-cmdcon36`, and dirty open PRs still limited to #368 and #320 on Build84 plus #129 on `master`.
+
+No new non-overlapping source lane appeared. This pass keeps PR #470 as the single availability report, with no mission source edits by this lane, no LoadoutManager run, no live deploy, and no package output.
 
 ## Why No Hot-File Repair Was Opened
 
