@@ -109,6 +109,12 @@ while {!WFBE_GameOver} do {
 				//--- may not yet have "supplyValue" set; default to startingSupplyValue so this scan drains from
 				//--- full instead of throwing Undefined at the first "_supplyValue < _maxSupplyValue" test.
 				_supplyValue = _location getVariable ["supplyValue", _startingSupplyValue];
+				//--- CAPDBG (cmdcon44d diagnostic): the live 44b/44c boots report _supplyValue/_rate Undefined at the
+				//--- consumers with no upstream error; log exactly WHICH input is nil, then self-heal so the drain runs.
+				if (isNil "_supplyValue") then {
+					diag_log ("CAPDBG|SV|" + (_location getVariable ["name","?"]) + "|ssv=" + str(isNil "_startingSupplyValue") + "|msv=" + str(isNil "_maxSupplyValue") + "|sid=" + str(isNil "_sideID") + "|obj=" + str(isNil "_objects") + "|w=" + str(isNil "_west") + "|actE=" + str(isNil "_activeEnemies") + "|mode=" + str(isNil "_town_capture_mode") + "|rng=" + str(isNil "_town_capture_range") + "|tcr=" + str(isNil "_town_capture_rate") + "|tccr=" + str(isNil "_town_camps_capture_rate") + "|fnTC=" + str(isNil "WFBE_CO_FNC_GetTotalCamps") + "|fnSID=" + str(isNil "WFBE_CO_FNC_GetSideFromID"));
+					_supplyValue = if (!isNil "_startingSupplyValue") then {_startingSupplyValue} else {30};
+				};
 
 				if (!WFBE_ISTHREEWAY && _town_supply_time) then {
 					//--- If we're running on 2 sides, skip the time based supply if the defender hold the town.
@@ -235,6 +241,10 @@ while {!WFBE_GameOver} do {
 				_rate = _town_capture_rate * (([_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide) / _totalCamps) * _town_camps_capture_rate;
 			} else {
 				_rate = _town_capture_rate * _town_camps_capture_rate;
+			};
+			if (isNil "_rate") then {
+				diag_log ("CAPDBG|RATE|" + (_location getVariable ["name","?"]) + "|totalCamps=" + str(isNil "_totalCamps") + "|newSID=" + str(isNil "_newSID") + "|newSide=" + str(isNil "_newSide") + "|w=" + str(isNil "_west") + "|e=" + str(isNil "_east") + "|r=" + str(isNil "_resistance") + "|tcr=" + str(isNil "_town_capture_rate") + "|tccr=" + str(isNil "_town_camps_capture_rate") + "|fnOnSide=" + str(isNil "WFBE_CO_FNC_GetTotalCampsOnSide"));
+				_rate = 1;
 			};
 			if (_rate < 1) then {_rate = 1};
 
