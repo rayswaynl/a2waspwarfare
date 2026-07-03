@@ -17,8 +17,9 @@
      2 Economy
      3 Combat & Capturing
      4 Commanding the AI
-     5 Factions
-     6 FAQ
+     5 Strategic Weapons (shown when WFBE_C_ICBM_TEL > 0)
+     6 Factions
+     7 FAQ
 
    Only A2-OA-valid commands used: displayCtrl, lbAdd, lbSetCurSel,
    ctrlSetStructuredText, parseText, findDisplay, compile,
@@ -38,26 +39,29 @@ _action = _this select 0;
 switch (_action) do {
 
 	case "onLoad": {
-		private ["_disp", "_lb"];
+		private ["_disp", "_lb", "_labels"];
 		_disp = findDisplay 508000;
 		_lb = _disp displayCtrl 160001;
 		lbClear _lb;
-		{
-			_lb lbAdd _x;
-		} forEach [
+		_labels = [
 			"Getting Started",
 			"Controls",
 			"Economy",
 			"Combat & Capturing",
-			"Commanding the AI",
-			"Factions",
-			"FAQ"
+			"Commanding the AI"
 		];
+		if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) > 0) then {
+			_labels = _labels + ["Strategic Weapons"];
+		};
+		_labels = _labels + ["Factions", "FAQ"];
+		{
+			_lb lbAdd _x;
+		} forEach _labels;
 		_lb lbSetCurSel 0;   // fires onLBSelChanged -> paints title + page 0
 	};
 
 	case "onHelpLBSelChanged": {
-		private ["_changeTo", "_disp", "_titles", "_helps"];
+		private ["_changeTo", "_disp", "_titles", "_helps", "_helpIndex"];
 		_changeTo = _this select 1;
 		_disp = findDisplay 508000;
 
@@ -68,6 +72,7 @@ switch (_action) do {
 			"Economy",
 			"Combat & Capturing",
 			"Commanding the AI",
+			"Strategic Weapons",
 			"Factions",
 			"Frequently Asked Questions"
 		];
@@ -153,7 +158,34 @@ Patrols upgrade across 4 levels (300 / 1,600 / 2,400 / 3,200 supply). Up to <t c
 - Commander field compositions are capped at 3 per base area (cash refunded over-cap).<br />
 - Defense budgets cap statics / fortifications / mines per category; statics &amp; mines are blocked when 3+ enemy ground units are in base range.<br />",
 
-//================================================================ 5  FACTIONS
+
+//================================================================ 5  STRATEGIC WEAPONS
+Format ["<t size='1.4' color='" + HDR + "' underline='true'>Strategic Weapons</t><br /><br />
+<t color='" + GOLD + "'>SCUD/TEL</t> weapons live in the <t color='" + GOLD + "'>Tactical Center</t> list when the land TEL feature is enabled. The commander needs the SCUD research path: <t color='" + KEY + "'>Level 1</t> deploys the conventional land TEL platform, while <t color='" + KEY + "'>Level 2</t> unlocks the classic nuclear shot.<br /><br />
+<t size='1.2' color='" + KEY + "'>Using the TEL</t><br />
+Pick a SCUD/TEL entry, click the map target, read the confirmation, then click the target again to send the order. The server re-checks commander status, funds, TEL alive state, range and cooldown before it charges or fires.<br /><br />
+<t size='1.2' color='" + KEY + "'>Shared cooldown</t><br />
+All five land-TEL conventional munitions share one cooldown: <t color='" + GOLD + "'>%6 seconds</t>. The carrier SCUD strike is separate and uses its own per-platform cooldown.<br /><br />
+<t size='1.2' color='" + KEY + "'>Conventional munitions</t><br />
+- <t color='" + GOLD + "'>SATURATION ($%1)</t> - area missile salvo for softening a defended zone.<br />
+- <t color='" + GOLD + "'>RECON FLASH ($%2)</t> - reveals and marks enemy units around the burst for a short window.<br />
+- <t color='" + GOLD + "'>FASCAM ($%3)</t> - scatters an anti-tank minefield that later self-clears; live fields per side are capped.<br />
+- <t color='" + GOLD + "'>STEEL RAIN ($%4)</t> - rolling airbursts over an area, best against exposed infantry.<br />
+- <t color='" + GOLD + "'>BUNKER BUSTER ($%5)</t> - precision strike that attempts to destroy the nearest enemy structure close to the point.<br /><br />
+<t size='1.2' color='" + KEY + "'>Carrier SCUD</t><br />
+The <t color='" + GOLD + "'>SCUD STRIKE (carrier)</t> entry costs <t color='" + GOLD + "'>$%7</t> and uses the older carrier-platform saturation strike path. It is useful when a carrier platform is available and you want a separate cooldown track.<br /><br />
+<t size='1.2' color='" + KEY + "'>Guarding and counterplay</t><br />
+Your TEL is a strategic asset: keep base defence around it and watch for raids. Destroying the enemy TEL shuts down their SCUD/TEL options until it respawns, and killing it during a nuclear countdown cancels that launch with no refund.<br />",
+	(missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000]),
+	(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_COST", 10000]),
+	(missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000]),
+	(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000]),
+	(missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000]),
+	(missionNamespace getVariable ["WFBE_C_ICBM_TEL_COOLDOWN", 300]),
+	(missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])
+],
+
+//================================================================ 6  FACTIONS
 "<t size='1.4' color='" + HDR + "' underline='true'>Factions</t><br /><br />
 WASP runs <t color='" + GOLD + "'>three</t> living factions, not two sides plus neutral garrisons.<br /><br />
 <t size='1.2' color='" + KEY + "'>West &amp; East</t><br />
@@ -167,7 +199,7 @@ Random battlefield events fire through the round - veteran companies, town upris
 <t size='1.2' color='" + KEY + "'>Classes (both sides)</t><br />
 SOL / SUP / MED / ENG / SNI, shown on join and via the <t color='" + GOLD + "'>Class Info</t> action; tags appear on the map and in Notes. A medic-only <t color='" + KEY + "'>Redeployment Truck</t> (Light Factory, violet row) gives medics a forward spawn.<br />",
 
-//================================================================ 6  FAQ
+//================================================================ 7  FAQ
 "<t size='1.4' color='" + HDR + "' underline='true'>Frequently Asked Questions</t><br /><br />
 <t size='1.2' color='" + KEY + "'>Where do I buy things?</t><br />
 Open the WF Menu in range of the right structure: gear at the <t color='" + GOLD + "'>Barracks</t> (or a captured town centre's stairs), infantry/vehicles at the matching <t color='" + GOLD + "'>Factory</t>. A <t color='" + GOLD + "'>Command Center</t> lets you remote-buy infantry and vehicles from anywhere.<br /><br />
@@ -184,12 +216,14 @@ No team-killing, HQ-entry only as commander, no building-stacking inside objects
 
 		];
 
-		//--- Guard the index, then paint title + content.
-		if (_changeTo < 0 || _changeTo >= (count _helps)) exitWith {};
+		//--- Guard the index, then paint title + content. When TEL help is hidden, list index 5 maps to Factions.
+		_helpIndex = _changeTo;
+		if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) < 1 && {_changeTo >= 5}) then {_helpIndex = _changeTo + 1};
+		if (_helpIndex < 0 || _helpIndex >= (count _helps)) exitWith {};
 
 		(_disp displayCtrl 160003) ctrlSetStructuredText parseText
-			("<t size='1.25' color='#2394ef' shadow='1'>WASP Warfare  -  " + (_titles select _changeTo) + "</t>");
+			("<t size='1.25' color='#2394ef' shadow='1'>WASP Warfare  -  " + (_titles select _helpIndex) + "</t>");
 
-		(_disp displayCtrl 160002) ctrlSetStructuredText parseText (_helps select _changeTo);
+		(_disp displayCtrl 160002) ctrlSetStructuredText parseText (_helps select _helpIndex);
 	};
 };
