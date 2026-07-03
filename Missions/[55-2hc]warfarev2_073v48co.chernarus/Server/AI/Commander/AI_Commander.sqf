@@ -578,6 +578,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			if (!_richFlag && _prevRich) then {
 				_logik setVariable ["wfbe_aicom_reinforce_rich", false];
 			};
+			//--- Lane-358: keep the one-shot veteran founding arm tied to the rich window that armed it.
+			if (!_richFlag && {_logik getVariable ["wfbe_aicom_veteran_next", false]}) then {
+				_logik setVariable ["wfbe_aicom_veteran_next", false];
+			};
 
 			//--- ECON SINK (cmdcon41-w2, Ray-approved): when a commander pins near the funds cap it has NOTHING
 			//--- to spend on (team hard-cap blocks more squads; tech finishes) so the war chest just balloons and
