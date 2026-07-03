@@ -312,34 +312,10 @@ _vehicle allowCrewInImmobile true;
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
 
-//--- W15 BLACK MARKET HUMAN DISCOUNT (Lane195 / WFBE_C_W15_HUMAN_DISCOUNT default 0).
-//--- AI_Commander_Produce.sqf already applies 50%% off for ALL AI-team builds (both
-//--- AI- and human-commanded sides). This block closes the gap for the human-commander
-//--- case: when WFBE_C_W15_HUMAN_DISCOUNT=1 AND the W15 discount is live AND the side
-//--- commander is a human player, refund 50%% of the unit price to the AI treasury so
-//--- human-commander AI-team builds effectively see the same discount.
-//--- Flag-off (default 0): block is skipped entirely -> byte-identical to pre-patch.
-if ((missionNamespace getVariable ["WFBE_C_W15_HUMAN_DISCOUNT", 0]) > 0) then {
-	private ["_humanSeated","_cmdTeam","_w15Key","_w15Exp","_unitPriceUD","_unitPrice","_refund"];
-	_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-	_humanSeated = false;
-	if (!isNull _cmdTeam) then { if (isPlayer (leader _cmdTeam)) then {_humanSeated = true} };
-	if (_humanSeated) then {
-		_w15Key = Format ["wfbe_aicom_discount_%1", _sideText];
-		_w15Exp = missionNamespace getVariable _w15Key;
-		if (!isNil "_w15Exp" && {_w15Exp > time}) then {
-			_unitPriceUD = missionNamespace getVariable _unitType;
-			if (!isNil "_unitPriceUD") then {
-				_unitPrice = _unitPriceUD select QUERYUNITPRICE;
-				_refund = round(_unitPrice * 0.5);
-				if (_refund > 0) then {
-					[_side, _refund] Call ChangeAICommanderFunds;
-					["INFORMATION", Format ["Server_BuyUnit.sqf: W15 human-discount refund %1 for %2 side=%3", _refund, _unitType, _sideText]] Call WFBE_CO_FNC_LogContent;
-				};
-			};
-		};
-	};
-};
+//--- W15 BLACK MARKET DISCOUNT (Lane195 / review fix): AI_Commander_Produce.sqf already
+//--- applies round(price*0.5) for ALL AI-team builds when W15 is live, including
+//--- human-commanded sides. A refund here stacked to zero net cost. Removed: exactly
+//--- one 50%% discount (from Produce) now applies regardless of commander type.
 
 _gbq = (_team getVariable "wfbe_queue") - _id;
 _team setVariable ["wfbe_queue",_gbq];

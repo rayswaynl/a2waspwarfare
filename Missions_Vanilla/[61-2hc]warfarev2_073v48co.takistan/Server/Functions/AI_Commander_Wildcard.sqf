@@ -342,11 +342,15 @@ while {!gameOver} do {
 				//--- the card when supply is already at WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT so the
 				//--- draw slot goes to a useful card instead of producing a 0-grant ineligible
 				//--- result in the apply block. Gated on WFBE_C_W2_SUPPLY_PRECHECK (default 1).
+				//--- REVIEW FIX: read supply directly from missionNamespace instead of calling
+				//--- WFBE_CO_FNC_GetSideSupply. GetSideSupply's fallback does publicVariableServer
+				//--- which is a no-op from the server (server cannot pubVar to itself) - it would
+				//--- sleep ~10s then return 0, keeping W2 eligible even when supply is at cap.
 				_w2Eligible = true;
 				if ((missionNamespace getVariable ["WFBE_C_W2_SUPPLY_PRECHECK", 1]) > 0) then {
-					private ["_w2Supply","_w2MaxSupply"];
-					_w2Supply = (_side) Call WFBE_CO_FNC_GetSideSupply;
-					if (isNil "_w2Supply") then {_w2Supply = 0};
+					private ["_w2Supply","_w2MaxSupply","_w2SupplyKey"];
+					_w2SupplyKey = Format ["wfbe_supply_%1", _sideText];
+					_w2Supply = missionNamespace getVariable [_w2SupplyKey, 0];
 					_w2MaxSupply = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 99999];
 					if (_w2Supply >= _w2MaxSupply) then {_w2Eligible = false};
 				};
