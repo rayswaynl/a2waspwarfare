@@ -614,19 +614,23 @@ _relieved = 0;
 //--- march. This pass catches an HC team that is either (a) below WITHDRAW_MIN_ALIVE (3) live bodies and NOT already
 //--- rallying, or (b) has had its driver raise wfbe_aicom_wantrally, and pulls it back to the NEAREST friendly rally
 //--- (our HQ or an OWN-side town centre) via a fresh [seq+1,"rally",pos] HC order (the driver executes "rally" as a
-//--- fighting bounding withdrawal, then re-engages). MBT / attack-heli teams are EXEMPT (the vehicle IS the punch;
+//--- fighting bounding withdrawal, then re-engages). Lane-327 optionally lets server-local/non-HC teams use the same
+//--- body-count trigger, but releases them through SetTeamMoveMode/SetTeamMovePos instead of HC-only rally orders.
+//--- MBT / attack-heli teams are EXEMPT (the vehicle IS the punch;
 //--- exemption idiom mirrors the relief big-veh detect ~L466-475). Flag WFBE_C_AICOM_WITHDRAW_EVAL default 1.
 //--- A2-OA-safe: plain get + isNil for GROUP vars, classname-literal isKindOf + getNumber transportSoldier for the
 //--- exemption, the proven seq-bump order idiom, lowercase exact-case mode literal "rally", no A3 primitives.
 if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
-	private ["_gwMinAlive","_gwHQ"];
+	private ["_gwMinAlive","_gwHQ","_gwNonHc"];
 	_gwMinAlive = missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_MIN_ALIVE", 3];
 	_gwHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	_gwNonHc = (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_NON_HC", 0]) > 0;
 	{
 		private ["_gwTeam","_gwHc","_gwLdr","_gwAlive","_gwWant","_gwRallying","_gwExempt","_gwVeh","_gwTrigger"];
 		_gwTeam = _x;
 		_gwHc = _gwTeam getVariable "wfbe_aicom_hc";
-		if (!isNull _gwTeam && {!isNil "_gwHc"} && {_gwHc} && {!isPlayer (leader _gwTeam)}) then {
+		if (isNil "_gwHc") then {_gwHc = false};
+		if (!isNull _gwTeam && {!isPlayer (leader _gwTeam)} && {_gwHc || {_gwNonHc}}) then {
 			_gwLdr = leader _gwTeam;
 			if (!isNull _gwLdr && {alive _gwLdr}) then {
 				_gwAlive = {alive _x} count (units _gwTeam);
@@ -649,30 +653,46 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 				//--- Trigger: driver explicitly asked to rally, OR (understrength AND not already rallying). Exempt teams never trigger.
 				_gwTrigger = false;
 				if (!_gwExempt) then {
-					if (_gwWant) then {_gwTrigger = true};
+					if (_gwHc && {_gwWant}) then {_gwTrigger = true};
 					if (!_gwTrigger && {_gwAlive > 0} && {_gwAlive < _gwMinAlive} && {!_gwRallying}) then {_gwTrigger = true};
 				};
 				if (_gwTrigger) then {
 					//--- Rally = NEAREST of [own HQ pos] + every OWN-side town centre. Hand-rolled scalar min (no A3 sort).
-					private ["_gwRallyPos","_gwBestD","_gwLdrPos","_gwD"];
+					private ["_gwRallyPos","_gwBestD","_gwLdrPos","_gwD","_gwTown","_gwTownD","_gwTarget"];
 					_gwLdrPos = getPos _gwLdr;
 					_gwRallyPos = [];
 					_gwBestD = 1e9;
+					_gwTown = objNull;
+					_gwTownD = 1e9;
 					if (!isNull _gwHQ) then {_gwRallyPos = getPos _gwHQ; _gwBestD = _gwLdr distance _gwHQ};
 					{
 						if ((_x getVariable ["sideID", -1]) == _sideID) then {
 							_gwD = _gwLdr distance _x;
+							if (_gwD < _gwTownD) then {_gwTownD = _gwD; _gwTown = _x};
 							if (_gwD < _gwBestD) then {_gwBestD = _gwD; _gwRallyPos = getPos _x};
 						};
 					} forEach towns;
 					//--- Fallback: no HQ and no own town -> rally on our own current pos (never leave the team orderless).
 					if (count _gwRallyPos == 0) then {_gwRallyPos = _gwLdrPos};
-					//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
-					_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
-					_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
-					_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
-					["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|want=" + str _gwWant);
+					if (_gwHc) then {
+						//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
+						_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
+						_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
+						_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
+						["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|want=" + str _gwWant);
+					} else {
+						//--- Lane-327: server-local/non-HC teams have no HC driver to consume "rally"; release
+						//--- them through the normal towns setters, preferring the nearest friendly town object.
+						_gwTarget = _gwRallyPos;
+						if (!isNull _gwTown) then {_gwTarget = _gwTown};
+						[_gwTeam, "towns"] Call SetTeamMoveMode;
+						[_gwTeam, _gwTarget] Call SetTeamMovePos;
+						_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
+						_gwTeam setVariable ["wfbe_aicom_townorder", [], false];
+						["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] NONHC-WITHDRAW (%3 alive) -> towns via %4.", _sideText, _gwTeam, _gwAlive, _gwTarget]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|NONHC_WITHDRAW|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|target=" + str _gwTarget);
+					};
 				};
 			};
 		};
