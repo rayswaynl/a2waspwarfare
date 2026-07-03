@@ -1,4 +1,4 @@
-Private ['_camps','_marker','_town','_townDubbingName','_townMaxSV','_townName','_townRange','_townStartSV','_townValue'];
+Private ['_camps','_marker','_town','_townDubbingName','_townMaxSV','_townName','_townRange','_townStartSV','_townValue','_town_type'];
 
 _town = _this select 0;
 _townName = _this select 1;

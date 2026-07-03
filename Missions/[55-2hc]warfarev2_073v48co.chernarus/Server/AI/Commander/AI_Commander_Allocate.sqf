@@ -258,12 +258,16 @@ if (_harassN > 0) then {
 			_hfPair  = _x;
 			_hfDepth = _hfPair select 0;
 			_hfTown  = _hfPair select 1;
-			_hfReach = false;
-			{ _hfPos = _x; if ((_hfPos distance _hfTown) <= _hfMntReach) exitWith {_hfReach = true} } forEach _hfMntPos;
-			if (_hfReach) then {
-				if (isNull _harassTgt) then {_harassTgt = _hfTown; _harassFar = _hfDepth; exitWith {}};
-			} else {
-				if (isNull _hfFirst && {isNull _harassTgt}) then {_hfFirst = _hfTown; _hfSkip = true};
+			//--- Once a target is picked the guard makes remaining iterations no-ops (a bare
+			//--- exitWith inside then{} is invalid A2 grammar and broke this file's compile).
+			if (isNull _harassTgt) then {
+				_hfReach = false;
+				{ _hfPos = _x; if ((_hfPos distance _hfTown) <= _hfMntReach) exitWith {_hfReach = true} } forEach _hfMntPos;
+				if (_hfReach) then {
+					_harassTgt = _hfTown; _harassFar = _hfDepth;
+				} else {
+					if (isNull _hfFirst) then {_hfFirst = _hfTown; _hfSkip = true};
+				};
 			};
 		} forEach _hfCands;
 		if (_hfSkip) then {
