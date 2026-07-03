@@ -147,7 +147,7 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";
 	
 	if (_mode in [1]) then {
-		(Format ["%1: %2", localize "STR_WF_PARAMETER_Respawn_Penalty", localize "STR_WF_PARAMETER_Respawn_Penalty_Remove"]) Call GroupChatMessage;
+		(localize "STR_WF_CHAT_Gear_RespawnDenied") Call GroupChatMessage;  //--- salvage-527 (item 4): dedicated mode-1 denial feedback (was the cryptic "RESPAWN: Penalty / Default Gear" composite).
 	};
 	if (_mode in [0,2,3,4,5]) then {
 		//--- Calculate the price/funds.
@@ -173,7 +173,7 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 			
 			//--- Charge if possible.
 			_funds = Call GetPlayerFunds;
-			if (_funds >= _price && _charge) then {
+			if (_price > 0 && {_funds >= _price} && {_charge}) then {  //--- salvage-527 (item 4): gate on _price>0 so $0-cost gear (wfbe_custom_gear_cost unset -> 0) does not fire ChangePlayerFunds/GroupChatMessage every respawn.
 				-(_price) Call ChangePlayerFunds;
 				(Format[localize 'STR_WF_CHAT_Gear_RespawnCharge',_price]) Call GroupChatMessage;
 			};
