@@ -112,43 +112,47 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_team setVariable ["wfbe_aicom_orbitwatchdist", nil];
 					_team setVariable ["wfbe_aicom_orbitnoprog", 0];
 				} else {
-					//--- ORBITER DETECTION (cmdcon41-w2, F3, claude-gaming 2026-07-02): a team permanently entangled
-					//--- with GUER en route is in behaviour "COMBAT", moves constantly, and closes on the target
-					//--- never - it is invisible to the position-stuck ladder below (which exempts COMBAT). Parallel
-					//--- path: on each watcher pass, if the leader is in COMBAT AND dist-to-target has NOT dropped
-					//--- >= 100m since the last recorded watch dist, count it as a no-progress window; after 3
-					//--- consecutive such windows treat it as stuck (bump the SAME strike ladder + log ORBITER_STUCK).
-					//--- The COMBAT exempt on the _stuck telemetry below is KEPT (it is a separate signal). Per-team
-					//--- state = plain group vars + isNil (group getVariable [name,default] is unreliable on groups).
-					//--- A2-OA-safe: behaviour string compare (exact-case "COMBAT"), numeric distance, no A3 commands.
-					private ["_owDistPrev","_owNoProg"];
-					_owDistPrev = _team getVariable "wfbe_aicom_orbitwatchdist";
-					_owNoProg   = _team getVariable "wfbe_aicom_orbitnoprog";
-					if (isNil "_owNoProg") then {_owNoProg = 0};
-					if (behaviour _dldr == "COMBAT") then {
-						if (isNil "_owDistPrev") then {
-							_owNoProg = 0; //--- first COMBAT window on this dispatch: seed the baseline, no verdict yet.
-						} else {
-							if ((_owDistPrev - _ddist) >= 100) then {
-								_owNoProg = 0; //--- closed >= 100m since last watch: real progress despite the firefight.
+					//--- ORBITER DETECT (cmdcon41-w3-orbiter, claude-gaming 2026-07-02, gate WFBE_C_AICOM_ORBITER_DETECT default 0):
+					//--- a team permanently entangled with GUER en route is in behaviour "COMBAT", moves constantly,
+					//--- and closes on the target never - it is invisible to the position-stuck ladder below (which
+					//--- exempts COMBAT). When WFBE_C_AICOM_ORBITER_DETECT > 0: on each watcher pass, if the leader
+					//--- is in COMBAT AND dist-to-target has NOT dropped >= 100m since the last recorded watch dist,
+					//--- count it as a no-progress window; after N consecutive such windows (WFBE_C_AICOM_ORBITER_WIN,
+					//--- default 4) treat it as stuck (bump the SAME strike ladder + log ORBITER_STUCK). Per-team
+					//--- state via plain getVariable + isNil (group [name,default] getVariable is unreliable on groups).
+					//--- The COMBAT exempt on the position-stuck telemetry below is KEPT. Flag 0 = feature dark.
+					//--- A2-OA-safe: behaviour exact-case string compare, numeric distance, no A3 commands.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_ORBITER_DETECT", 0]) > 0) then {
+						private ["_owDistPrev","_owNoProg","_owWin","_owStrk"];
+						_owDistPrev = _team getVariable "wfbe_aicom_orbitwatchdist";
+						_owNoProg   = _team getVariable "wfbe_aicom_orbitnoprog";
+						if (isNil "_owNoProg") then {_owNoProg = 0};
+						_owWin = missionNamespace getVariable ["WFBE_C_AICOM_ORBITER_WIN", 4];
+						if (behaviour _dldr == "COMBAT") then {
+							if (isNil "_owDistPrev") then {
+								_owNoProg = 0; //--- first COMBAT window on this dispatch: seed the baseline, no verdict yet.
 							} else {
-								_owNoProg = _owNoProg + 1;
+								if ((_owDistPrev - _ddist) >= 100) then {
+									_owNoProg = 0; //--- closed >= 100m since last watch: real progress despite the firefight.
+								} else {
+									_owNoProg = _owNoProg + 1;
+								};
 							};
+							_team setVariable ["wfbe_aicom_orbitwatchdist", _ddist];
+							_team setVariable ["wfbe_aicom_orbitnoprog", _owNoProg];
+							if (_owNoProg >= _owWin) then {
+								_owStrk = _team getVariable "wfbe_aicom_stuckstrikes";
+								if (isNil "_owStrk") then {_owStrk = 0};
+								_owStrk = _owStrk + 1;
+								_team setVariable ["wfbe_aicom_stuckstrikes", _owStrk];
+								_team setVariable ["wfbe_aicom_orbitnoprog", 0]; //--- consume the verdict; re-earn a fresh window.
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORBITER_STUCK|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|strike=" + str _owStrk);
+							};
+						} else {
+							//--- Not in COMBAT this pass: clear the orbiter window so a later COMBAT entanglement earns a clean window.
+							_team setVariable ["wfbe_aicom_orbitwatchdist", nil];
+							_team setVariable ["wfbe_aicom_orbitnoprog", 0];
 						};
-						_team setVariable ["wfbe_aicom_orbitwatchdist", _ddist];
-						_team setVariable ["wfbe_aicom_orbitnoprog", _owNoProg];
-						if (_owNoProg >= 3) then {
-							private ["_owStrk"];
-							_owStrk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
-							_team setVariable ["wfbe_aicom_stuckstrikes", _owStrk];
-							_team setVariable ["wfbe_aicom_orbitnoprog", 0]; //--- consume the verdict; re-earn a fresh window.
-							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORBITER_STUCK|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|strike=" + str _owStrk);
-						};
-					} else {
-						//--- Not in COMBAT this pass: the position-stuck ladder handles it; clear the orbiter window
-						//--- so a later COMBAT entanglement earns a clean 3-window verdict.
-						_team setVariable ["wfbe_aicom_orbitwatchdist", nil];
-						_team setVariable ["wfbe_aicom_orbitnoprog", 0];
 					};
 					if ((time - _dt0) > _toSecs) then {
 						private ["_moved","_stuck"];
@@ -484,14 +488,16 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- Real progress (en-route, actually moving, town not yet reached): refresh the
 											//--- breadcrumb and DECAY the unstuck strike ladder (the team moved, so it is not stuck).
 											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
-											//--- LADDER DECAY (cmdcon41-w2, F4a, claude-gaming 2026-07-02): the legacy remedy RESET the
-											//--- strike ladder to 0 on ANY progress, so an oscillating wedger that lurches 200m and re-sticks
-											//--- cycles tier-1 forever and never earns the tier-3 teleport recovery. When WFBE_C_AICOM_LADDER_DECAY
-											//--- is on, DECAY by 1 ((v-1) max 0) instead of zeroing, so a chronic wedger climbs the ladder over
-											//--- time and reaches the terminal tier; legacy hard-reset when the flag is off. A2-OA-safe (numeric).
-											if ((missionNamespace getVariable ["WFBE_C_AICOM_LADDER_DECAY", 1]) > 0) then {
+											//--- STUCK DECAY (cmdcon41-w3-orbiter, claude-gaming 2026-07-02, gate WFBE_C_AICOM_STUCK_DECAY default 0):
+											//--- an oscillating wedger that lurches 200m and re-sticks cycles tier-1 forever when the strike counter
+											//--- hard-resets to 0 on ANY forward lurch. When WFBE_C_AICOM_STUCK_DECAY > 0: DECAY by 1 ((v-1) max 0)
+											//--- instead of zeroing, so a chronic wedger climbs the ladder over time to the terminal tier.
+											//--- Flag 0 = legacy hard-reset (byte-identical to pre-LADDER_DECAY behavior). A2-OA-safe (numeric).
+											if ((missionNamespace getVariable ["WFBE_C_AICOM_STUCK_DECAY", 0]) > 0) then {
 												private ["_decStrk"];
-												_decStrk = ((_team getVariable ["wfbe_aicom_stuckstrikes", 0]) - 1) max 0;
+												_decStrk = _team getVariable "wfbe_aicom_stuckstrikes";
+												if (isNil "_decStrk") then {_decStrk = 0};
+												_decStrk = (_decStrk - 1) max 0;
 												_team setVariable ["wfbe_aicom_stuckstrikes", _decStrk];
 											} else {
 												_team setVariable ["wfbe_aicom_stuckstrikes", 0];
