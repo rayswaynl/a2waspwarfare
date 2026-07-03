@@ -771,6 +771,8 @@ if (_strikeOn) then {
 				_stgUY = _stgDY / _stgLen;
 				//--- Rally = enemy HQ pulled back _stgDist along the line toward our HQ (i.e. _stgDist SHORT of the HQ).
 				_stgRallyPos = [(_stgEXpos select 0) - (_stgUX * _stgDist), (_stgEXpos select 1) - (_stgUY * _stgDist), 0];
+			} else {
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRIKE_STAGE_SKIP|reason=HQ_WITHIN_STAGE_DIST|dist=" + str (round _stgLen) + "|stageDist=" + str _stgDist);
 			};
 		};
 		if (count _stgRallyPos > 0) then {
