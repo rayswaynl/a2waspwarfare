@@ -123,9 +123,8 @@ public class FileManager
     {
         return (_fileName.EndsWith("mission.sqm", StringComparison.OrdinalIgnoreCase) ||
                _fileName.EndsWith("version.sqf", StringComparison.OrdinalIgnoreCase) ||
-               // Convert to list to not to convert from Cherno to takistan,
-               // use as parameter to add to the list above
-               _fileName.EndsWith("GUI_Menu_Help.sqf", StringComparison.OrdinalIgnoreCase) ||
+               // Modded terrains keep their own Help text; vanilla mirrors get a terrain-safe rewrite in BaseTerrain.
+               (_fileName.EndsWith("GUI_Menu_Help.sqf", StringComparison.OrdinalIgnoreCase) && _isModdedTerrain) ||
                _fileName.EndsWith("texHeaders.bin", StringComparison.OrdinalIgnoreCase) ||
                _fileName.EndsWith("StartVeh.sqf", StringComparison.OrdinalIgnoreCase) ||
                (_fileName.EndsWith("loadScreen.jpg", StringComparison.OrdinalIgnoreCase) && !_isModdedTerrain)
