@@ -10,12 +10,17 @@ not touch the network.
 python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki
 python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --no-orphans
 python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --include-stale-builds --current-build 86
+python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --exit-zero
 python Tools\WikiLinkChecker\check_wiki_links.py ..\wiki --json
+python Tools\WikiLinkChecker\test_check_wiki_links.py
 ```
 
 By default the tool exits non-zero for broken intra-wiki links and missing
 anchors. Orphan pages and stale build references are report-only unless their
 codes are passed to `--fail-on`.
+
+Use `--exit-zero` for report-only CI or dashboard jobs that should print
+findings without failing the run.
 
 ## Checks
 

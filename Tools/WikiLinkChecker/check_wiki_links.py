@@ -256,6 +256,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--no-orphans", action="store_true", help="Skip ORPHAN findings")
     parser.add_argument("--json", action="store_true", help="Emit JSON instead of text")
     parser.add_argument("--fail-on", default="DEADLINK,BADANCHOR", help="Comma-separated finding codes that should return exit 1")
+    parser.add_argument("--exit-zero", action="store_true", help="Always return exit code 0 after reporting findings")
     args = parser.parse_args(argv)
 
     root = args.wiki_root.resolve()
@@ -284,6 +285,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"SUMMARY: pages={len({page.rel for page in pages.values()})} findings={len(findings)} {summary}")
 
     fail_codes = {code.strip().upper() for code in args.fail_on.split(",") if code.strip()}
+    if args.exit_zero:
+        return 0
     if any(item.code in fail_codes for item in findings):
         return 1
     return 0
