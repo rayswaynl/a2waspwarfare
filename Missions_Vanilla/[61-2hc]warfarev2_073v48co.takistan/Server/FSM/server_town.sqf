@@ -66,6 +66,12 @@ while {!WFBE_GameOver} do {
 					case WFBE_C_WEST_ID: {_east + _resistance};
 					case WFBE_C_EAST_ID: {_west + _resistance};
 					case WFBE_C_GUER_ID: {_east + _west};
+					//--- ZG-FIX (cmdcon44-e, claude-gaming 2026-07-03): neutral towns (WFBE_C_UNKNOWN_ID) have
+					//--- no owner so none of the three cases matched -> _activeEnemies stayed undefined -> every
+					//--- downstream nil check ('_supplyValue < _maxSupplyValue', '_rate'...) threw Undefined
+					//--- (391x/319x in the live ZG 66-min soak) and the capture drain block never ran -> 0 flips.
+					//--- Default = all units present (contested neutral town can contribute to capture count).
+					default {_west + _east + _resistance};
 				};
 
 				//--- CONTESTED stamp (wasp-dash-safe-telemetry, claude-gaming 2026-06-21): mark this town as
