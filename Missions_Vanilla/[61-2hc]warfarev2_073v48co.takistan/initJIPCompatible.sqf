@@ -140,6 +140,15 @@ Call Compile preprocessFileLineNumbers "Common\Init\Init_CommonConstants.sqf"; /
 //--- below; keeps the gate-off design working (git default stays 0).
 WFBE_C_GUER_PLAYERSIDE = getNumber (missionConfigFile >> "Params" >> "WFBE_C_GUER_PLAYERSIDE" >> "default");
 
+//--- VIEW DISTANCE force (dedicated-MP): same stale-paramsArray failure as WFBE_C_GUER_PLAYERSIDE above -
+//--- Init_Parameters reads paramsArray positionally, so a server whose per-mission lobby cache was written by an
+//--- older build with a different param list hands this slot a stale wrong-but-legal value (fresh Zargabad deploy
+//--- ran 3000m while CH/TK ran 6000m). The mission ships its own default (Rsc\Parameters.hpp: 6000) - trust it on
+//--- every map so the view distance transfers with the mission instead of depending on the server's param cache.
+//--- Single-block change: revert this block (or the commit) to restore lobby-param control.
+WFBE_C_ENVIRONMENT_MAX_VIEW = getNumber (missionConfigFile >> "Params" >> "WFBE_C_ENVIRONMENT_MAX_VIEW" >> "default");
+diag_log Format ["[WFBE (INIT)] INFORMATION: ViewDistance force ACTIVE: WFBE_C_ENVIRONMENT_MAX_VIEW=%1 (mission param default; cached/lobby paramsArray value ignored)", WFBE_C_ENVIRONMENT_MAX_VIEW];
+
 //--- AICOM: +50% starting economy. MUST live here: in MP Init_Parameters always sets these from paramsArray,
 //--- so the isNil fallbacks in Init_CommonConstants never fire on a dedicated server (why earlier raises had no effect).
 //--- Air-event/WF_Debug overrides below still take precedence. AI commander seed funds scale with this (FUNDS_START * 1.5 in Init_Server).
