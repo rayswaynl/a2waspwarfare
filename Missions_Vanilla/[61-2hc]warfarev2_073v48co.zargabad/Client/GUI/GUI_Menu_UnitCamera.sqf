@@ -12,7 +12,7 @@ WF_MenuAction = -1;
 _cameraModes = ["Internal","External","Gunner","Group"];
 
 // Marty : Modifying the script in order to display only human player and not bots (= empty slots) in the unit camera list :
-private ["_list_Players"];
+private ["_list_Players","_list_AITeams"];
 _list_Players = [];
 
 _n = 1;
@@ -24,6 +24,57 @@ _n = 1;
 		_n = _n + 1;
 	};
 } forEach clientTeams;
+
+//--- Lane 178 AI Teams section: populate _list_AITeams from the live side-logic wfbe_teams
+//--- (the same broadcast source the Command Console uses for its roster). Filter: NOT player-led,
+//--- at least one alive unit. Camera-switch only, no order paths. No flag - pure client QoL.
+_list_AITeams = [];
+{
+	private "_aiGrp178"; _aiGrp178 = _x;
+	if (!isNull _aiGrp178 && {!isPlayer (leader _aiGrp178)} && {({alive _x} count units _aiGrp178) > 0}) then
+	{
+		_list_AITeams = _list_AITeams + [_aiGrp178];
+	};
+} forEach clientTeams;
+//--- Prefer the live broadcast wfbe_teams over the frozen boot-snapshot clientTeams (same fix as Command Console).
+if (!isNil "WFBE_Client_Logic" && {!isNull WFBE_Client_Logic}) then {
+	private "_lt178"; _lt178 = WFBE_Client_Logic getVariable "wfbe_teams";
+	if (!isNil "_lt178" && {(typeName _lt178) == "ARRAY"}) then {
+		_list_AITeams = [];
+		{
+			private "_aiGrp178b"; _aiGrp178b = _x;
+			if (!isNull _aiGrp178b && {!isPlayer (leader _aiGrp178b)} && {({alive _x} count units _aiGrp178b) > 0}) then
+			{
+				_list_AITeams = _list_AITeams + [_aiGrp178b];
+			};
+		} forEach _lt178;
+	};
+};
+//--- Append section header + one row per AI team to listbox 21002 (read-only section below player list).
+//--- The header row maps to grpNull in _list_Players so the 101 handler skips it.
+if (count _list_AITeams > 0) then {
+	lbAdd[21002,"--- AI Teams ---"];
+	_list_Players = _list_Players + [grpNull];
+	{
+		private "_aiG178"; _aiG178 = _x;
+		private ["_typeTag178","_alive178","_total178"];
+		_typeTag178 = "INF";
+		{
+			if (!isNull _x && {alive _x}) then {
+				private "_veh178"; _veh178 = vehicle _x;
+				if (_veh178 != _x) then {
+					if (_veh178 isKindOf "Air") exitWith {_typeTag178 = "AIR"};
+					if (_veh178 isKindOf "Tank") then {if (_typeTag178 != "AIR") then {_typeTag178 = "HVY"}};
+					if ((_veh178 isKindOf "Wheeled_APC") || {_veh178 isKindOf "Car"}) then {if (_typeTag178 == "INF") then {_typeTag178 = "LGHT"}};
+				};
+			};
+		} forEach units _aiG178;
+		_alive178 = {alive _x} count units _aiG178;
+		_total178 = count units _aiG178;
+		lbAdd[21002, Format["[AI] %1 (%2) %3/%4", name (leader _aiG178), _typeTag178, _alive178, _total178]];
+		_list_Players = _list_Players + [_aiG178];
+	} forEach _list_AITeams;
+};
 
 _player_group = group player;
 //--- cmdcon41-w3d TAG-CLICK POPUP FIX: the roster listbox (21002) lists ONLY player-led clientTeams (the _list_Players
@@ -97,16 +148,20 @@ while {true} do {
 		//--- selected into a non-empty list; otherwise no-op the swap so the camera stays on its current unit.
 		private "_lsSel"; _lsSel = lbCurSel 21002;
 		if (count _list_Players > 0 && {_lsSel >= 0} && {_lsSel < (count _list_Players)}) then {
-			_selected = leader (_list_Players select _lsSel);
+			private "_selGrp178"; _selGrp178 = _list_Players select _lsSel;
+			//--- Lane 178: skip grpNull (AI Teams section header) and any null/dead leader.
+			if (!isNull _selGrp178 && {alive (leader _selGrp178)}) then {
+				_selected = leader _selGrp178;
 
-			_currentUnit = (_selected) Call GetUnitVehicle;
-			_units = (Units (group _selected) - [_selected]) Call GetLiveUnits;
-			lbClear 21004;
-			{
-				_unitNumber = (_x) Call GetAIDigit;
-				lbAdd[21004,Format["[%1] (%2) %3", _unitNumber, GetText (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "displayName"),name _x]];
-			} forEach _units;
-			_cameraSwap = true;
+				_currentUnit = (_selected) Call GetUnitVehicle;
+				_units = (Units (group _selected) - [_selected]) Call GetLiveUnits;
+				lbClear 21004;
+				{
+					_unitNumber = (_x) Call GetAIDigit;
+					lbAdd[21004,Format["[%1] (%2) %3", _unitNumber, GetText (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "displayName"),name _x]];
+				} forEach _units;
+				_cameraSwap = true;
+			}; //--- Lane 178: end null/grpNull guard
 		};
 	};
 	// Marty end.
