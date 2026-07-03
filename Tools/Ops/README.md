@@ -44,6 +44,19 @@ $errors = Get-WindowedRpt -RptPath C:\WASP\arma2oaserver.RPT -Pattern 'Error|ERR
 `-Tail` returns the last N selected lines, and `-WindowMarker` can switch from the
 default `MISSINIT` mission window to a boot marker such as `Dedicated host created`.
 
+## Slot Count Consistency
+
+Use `Test-WaspSlotCountConsistency.ps1` to audit the tracked maintained mission
+folders for lobby-slot drift:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Test-WaspSlotCountConsistency.ps1
+```
+
+The check compares `WF_MAXPLAYERS` in each `version.sqf.template` with the playable
+`player="...";` declarations in the matching `mission.sqm`. It is read-only and exits
+nonzero when a terrain drifts.
+
 ## Local Checks
 
 Run the dependency-free tests before using or changing the helpers:
@@ -51,5 +64,6 @@ Run the dependency-free tests before using or changing the helpers:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Set-MissionTemplate.Tests.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Set-WaspCpuAffinity.Tests.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Test-WaspSlotCountConsistency.Tests.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WindowedRpt.Tests.ps1
 ```
