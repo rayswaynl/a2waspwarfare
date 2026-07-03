@@ -23,7 +23,6 @@ if (isNil "_position" || {typeName _position != "ARRAY"} || {count _position < 2
 };
 
 _area = [_position,((_side) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity4;
-_availweapons = _area getVariable "weapons";
 
 _defense = createVehicle [_type, _position, [], 0, "NONE"];
 _defense setDir _direction;
@@ -95,6 +94,7 @@ Call Compile Format ["_defense addEventHandler ['Killed',{[_this select 0,_this 
 
 if (!isNull _area) then {
 	if (_defense emptyPositions "gunner" > 0 && (((missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI") > 0) || _isAIQuery)) then {
+		_availweapons = _area getVariable "weapons";
 		Private ["_alives","_check","_closest","_team"];
 		_team = _area getVariable "DefenseTeam";
 
@@ -159,6 +159,28 @@ if (!isNull _area) then {
 			processInitCommands;
 			["INFORMATION", Format ["Construction_StationaryDefense.sqf: [%1] Artillery [%2] has been given the BIS ARTY UI interface.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
 		};
+	};
+};
+
+//--- Lane 198 (WFBE_C_FWD_STATIC_MANNING): re-man forward/FOB static guns that have
+//--- no base area (_area is null). Without this the first gunner death is permanent -
+//--- the re-man loop inside !isNull _area never runs for guns placed outside a base.
+//--- Flag default 0 (dark): base guns already covered above; only opt in for FWD guns.
+if (isNull _area && (missionNamespace getVariable "WFBE_C_FWD_STATIC_MANNING") > 0) then {
+	if (_defense emptyPositions "gunner" > 0 && _manned) then {
+		Private ["_fwdTeam","_fwdClosest","_fwdBuildings"];
+		_fwdTeam = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
+		_fwdTeam setVariable ["wfbe_persistent", true];
+		_fwdBuildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
+		_fwdClosest = ["BARRACKSTYPE", _fwdBuildings, _manRange, _side, _defense] Call BuildingInRange;
+		if (isNull _fwdClosest || !(alive _fwdClosest)) then {
+			_fwdClosest = (_side) Call WFBE_CO_FNC_GetSideHQ;
+			["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] FWD static [%2] - no barracks anchor, falling back to HQ.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
+		};
+		emptyQueu = emptyQueu + [_defense];
+		[_defense] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
+		[_defense, _side, _fwdTeam, _fwdClosest] Spawn HandleDefense;
+		["INFORMATION", Format ["Construction_StationaryDefense.sqf: [%1] FWD static [%2] queued for re-manning (WFBE_C_FWD_STATIC_MANNING).", str _side, _type]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

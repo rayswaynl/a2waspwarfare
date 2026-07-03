@@ -1890,5 +1890,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+//--- Lane 198 (2026-07-03): Forward static defense re-manning. When > 0, forward/FOB
+//--- static guns outside a base area will have HandleDefense spawned so they re-man
+//--- after the first gunner dies (base-area guns already re-man via existing logic).
+//--- 0 = dark/original behaviour (forward guns do NOT re-man). 1 = re-man enabled.
+	if (isNil "WFBE_C_FWD_STATIC_MANNING") then {WFBE_C_FWD_STATIC_MANNING = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
