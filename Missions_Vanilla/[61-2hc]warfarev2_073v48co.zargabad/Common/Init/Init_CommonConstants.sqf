@@ -1271,7 +1271,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- structure path. Non-commander repair-truck (RCoin/REPAIR) placement is UNCHANGED (still funds). Under
 	//--- the funds-only currency system (==1) there is no separate supply pool, so this is inert there.
 	//--- REVERSIBILITY: set to 0 -> exact legacy behaviour (commander defenses priced+charged against funds).
-	if (isNil "WFBE_C_CMD_DEF_SUPPLY") then {WFBE_C_CMD_DEF_SUPPLY = 1};
+	if (isNil "WFBE_C_CMD_DEF_SUPPLY") then {WFBE_C_CMD_DEF_SUPPLY = 0}; //--- cmdcon44f-era (Ray 2026-07-03): defenses cost CASH again (live report: defenses charged SV). 1 = the b88 supply-pricing experiment (kept as a host toggle).
 	//--- EXPERITAL: boosted starting economy (Steff, play-test 2026-06-10; baseline 800/1200;
 	//--- doubled to 1600/2400, +10k/+5k on 06-10, +20k cash/+3k supply on 06-11 - restart compensation)
 	if (isNil "WFBE_C_ECONOMY_FUNDS_START_WEST") then {WFBE_C_ECONOMY_FUNDS_START_WEST = if (WF_Debug) then {900000} else {30000}};
