@@ -1,5 +1,5 @@
 // Marty: Track artillery ammo locals used in the team notification payload.
-Private ["_ammoIndex","_ammoName","_ammoOption","_ammoOptions","_ammoSelection","_arty_countdown","_arty_radius","_count","_destination","_gunCount","_i","_index","_type","_units"];
+Private ["_ammoIndex","_ammoName","_ammoOption","_ammoOptions","_ammoSelection","_arty_countdown","_arty_radius","_count","_destination","_gunCount","_i","_index","_logik","_side","_type","_units"];
 
 _destination 	= _this select 0;
 _index 			= _this select 1;
@@ -11,6 +11,12 @@ if (count _units < 1) exitWith {};
 
 _type = ((missionNamespace getVariable Format ['WFBE_%1_ARTILLERY_CLASSNAMES', WFBE_Client_SideJoinedText]) select _index) find (typeOf (_units select 0));
 if (_type < 0) exitWith {};
+
+if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+	_logik = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideLogic;
+	if (!isNull _logik) then {_logik setVariable ["wfbe_arty_last_fire", time]};
+	["RequestSpecial", ["ArtySharedCooldown", WFBE_Client_SideJoined, group player]] Call WFBE_CO_FNC_SendToServer;
+};
 
 {[_x, _destination, WFBE_Client_SideJoined, artyRange] Spawn WFBE_CO_FNC_FireArtillery} forEach _units;
 

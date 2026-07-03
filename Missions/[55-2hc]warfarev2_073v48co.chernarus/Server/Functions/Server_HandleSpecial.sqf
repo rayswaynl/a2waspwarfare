@@ -201,6 +201,20 @@ switch (_args select 0) do {
 		};
 	};
 
+	case "ArtySharedCooldown": {
+		Private ["_side","_team","_logik"];
+		if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) <= 0) exitWith {};
+		if (count _args < 3) exitWith {};
+		_side = _args select 1;
+		_team = _args select 2;
+		if !(_side in [west, east, resistance]) exitWith {};
+		if (isNull _team) exitWith {};
+		if ((side _team) != _side) exitWith {};
+		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+		if (isNull _logik) exitWith {};
+		_logik setVariable ["wfbe_arty_last_fire", time, true];
+	};
+
 	//--- N-FEATUREBUG-4: server-side artillery ammo load. addMagazineTurret/loadMagazine only take
 	//--- effect where the vehicle is local; AI artillery is server-local, so the commanding player's
 	//--- client forwards the load request here (see Common_LoadArtilleryAmmo.sqf locality gate). We

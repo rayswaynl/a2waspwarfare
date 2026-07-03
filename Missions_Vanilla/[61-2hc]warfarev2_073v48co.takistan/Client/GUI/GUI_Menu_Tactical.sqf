@@ -776,8 +776,19 @@ while {alive player && dialog} do {
 	//--- Update the Artillery Status.
 	if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
 		_fireTime = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_currentUpgrades select WFBE_UP_ARTYTIMEOUT);
-		_status = round(_fireTime - (time - fireMissionTime));
-		_txt = if (time - fireMissionTime > _fireTime) then {Format['<t align="left" color="#73FF47">%1</t>',localize 'STR_WF_TACTICAL_Available']} else {Format ['<t align="left" color="#4782FF">%1 %2</t>',_status,localize 'STR_WF_Seconds']};
+		_artyLastFire = fireMissionTime;
+		if (isNil "_artyLastFire") then {_artyLastFire = -1000};
+		if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+			_artyLogik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _artyLogik) then {
+				_artySharedLast = _artyLogik getVariable ["wfbe_arty_last_fire", _artyLastFire];
+				if (typeName _artySharedLast == "SCALAR") then {
+					if (_artySharedLast > _artyLastFire) then {_artyLastFire = _artySharedLast};
+				};
+			};
+		};
+		_status = round(_fireTime - (time - _artyLastFire));
+		_txt = if (time - _artyLastFire > _fireTime) then {Format['<t align="left" color="#73FF47">%1</t>',localize 'STR_WF_TACTICAL_Available']} else {Format ['<t align="left" color="#4782FF">%1 %2</t>',_status,localize 'STR_WF_Seconds']};
 		(_display displayCtrl 17016) ctrlSetStructuredText (parseText _txt);
 		_enable = if (_status > 0) then {false} else {true};
 		ctrlEnable [17007,_enable];
