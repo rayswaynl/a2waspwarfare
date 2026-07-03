@@ -630,7 +630,7 @@ missionNamespace setVariable ['WFBE_NEURODEF_HEDGEHOGLINE',[
 //--- loads on both maps). Deck z is auto-measured; _DECK_Z=17.0 is only the fallback if AUTOZ is off/fails.
 private ["_flakHost","_flakDeckZ"];
 _flakHost  = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_STRUCTURE", "Land_Ind_IlluminantTower"];
-_flakDeckZ = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_DECK_Z", 17.0];
+_flakDeckZ = missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_DECK_Z", 23.7]; //--- cmdcon44f: match rig-measured mast top.
 //--- WEST: A2-OA has no US static bullet-AA -> Stinger_Pod is the WEST AA mount.
 missionNamespace setVariable ['WFBE_NEURODEF_FLAKTOWER_WEST',[
 	[_flakHost,[0,0,0],0],

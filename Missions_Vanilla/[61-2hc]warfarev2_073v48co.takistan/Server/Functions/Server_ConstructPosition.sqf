@@ -82,7 +82,11 @@ for "_i" from 0 to (count _template - 1) do {
 				//--- position; the host sits at ground z=0 so this IS the deck height. A2-OA 1.64-safe.
 				if (_flakAutoZ && {(_relPos select 2) <= 0.1} && {_cls == _flakHostCls}) then {
 					_bb = boundingBox _one;
-					_deckTop = (_bb select 1) select 2;
+					//--- cmdcon44f (rig XWT46/47 + Ray field report 'ZU-23 halfway up'): A2 boundingBox returns a
+					//--- SYMMETRIC rotation-safe box (+/-11.83 on the 23.7m illuminant mast) - max-Z alone is HALF
+					//--- the real height. Full height (maxZ - minZ) = the true platform top; statics do not settle
+					//--- in A2 so the gun stays exactly where lifted (rig-verified at 23.66 ATL).
+					_deckTop = ((_bb select 1) select 2) - ((_bb select 0) select 2);
 					if (WF_Debug) then {
 						["DEBUG (Server_ConstructPosition.sqf)", Format ["cmdcon44-c flak host [%1] boundingBox deck top measured = %2 (anchor %3).", _cls, _deckTop, _anchorType]] Call WFBE_CO_FNC_LogContent;
 					};

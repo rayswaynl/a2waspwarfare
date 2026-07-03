@@ -1870,7 +1870,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   * airfield control tower (tall, boxy): STRUCTURE="Land_Mil_ControlTower" + DECK_Z=12.5
 //---   * original watchtower: STRUCTURE="Land_Fort_Watchtower_EP1" + DECK_Z=5.4 + AUTOZ=0
 	if (isNil "WFBE_C_DEF_FLAKTOWER_STRUCTURE") then {WFBE_C_DEF_FLAKTOWER_STRUCTURE = "Land_Ind_IlluminantTower"};
-	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 17.0};
+	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 23.7}; //--- cmdcon44f: rig-measured illuminant-mast top (was 17.0 guess).
 	if (isNil "WFBE_C_DEF_FLAKTOWER_AUTOZ") then {WFBE_C_DEF_FLAKTOWER_AUTOZ = 1};
 
 //--- cmdcon44-a (Build 89, Ray 2026-07-03): AA / ARTILLERY / MIXED POSITIONS REWORK. Ray: "Defenses list
