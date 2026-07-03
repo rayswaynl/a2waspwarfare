@@ -116,7 +116,14 @@ while {alive player && dialog} do {
 			_vehicle = vehicle _targetUnit;
 
 			_destroy = [_targetUnit];
-			if (_vehicle != _targetUnit) then {_destroy = _destroy + [_vehicle]};
+			if !(_vehicle in [_targetUnit]) then {
+				Private ["_destroyVehicle"];
+				_destroyVehicle = true;
+				{
+					if (alive _x && {!(_x in [_targetUnit])}) exitWith {_destroyVehicle = false};
+				} forEach crew _vehicle;
+				if (_destroyVehicle && {!(isPlayer _targetUnit)}) then {_destroy = _destroy + [_vehicle]};
+			};
 			{
 				if !(isPlayer _x) then {
 					if (_x isKindOf 'Man') then {removeAllWeapons _x};
