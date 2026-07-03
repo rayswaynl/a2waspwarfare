@@ -1901,5 +1901,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+//--- COMMS-RELAY SIDE OBJECTIVE (lane 206)
+//--- Master gate: 0 = fully inert (no mast, no logic, no scan).
+//--- Cooldown: minimum seconds between per-side recon activations.
+	if (isNil "WFBE_C_COMMS_RELAY")          then {WFBE_C_COMMS_RELAY = 0};
+	if (isNil "WFBE_C_COMMS_RELAY_COOLDOWN") then {WFBE_C_COMMS_RELAY_COOLDOWN = 600};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

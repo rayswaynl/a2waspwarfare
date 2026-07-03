@@ -61,6 +61,13 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: KAT_ScudStrike compiled (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- COMMS-RELAY SIDE OBJECTIVE (lane 206): execVM the orchestrator script.
+//--- The script self-gates on WFBE_C_COMMS_RELAY and worldName=Chernarus.
+if ((missionNamespace getVariable ["WFBE_C_COMMS_RELAY", 0]) == 1) then {
+	execVM "Server\Server_CommsRelay.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_CommsRelay.sqf exec'd (WFBE_C_COMMS_RELAY=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- New Fnc.
 WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";

@@ -262,6 +262,32 @@ switch (_request) do {
 	//--- GUER mortar strike result (server -> caller). The server rejected the strike (e.g. the GUER team could not
 	//--- afford the call-in fee). Refund the client's optimistic cooldown stamp (set in Action_GuerMortarStrike.sqf
 	//--- before the request was sent) so the failed attempt does not burn the cooldown, and tell the player why.
+	//--- COMMS-RELAY SIDE OBJECTIVE (lane 206): server armed this action on the proximity-nearest
+	//--- player's client.  Add the local addAction; the action fires RequestSpecial which routes
+	//--- to Server_HandleSpecial case comms-relay-activate -> WFBE_SE_FNC_CommsRelayActivate.
+	case "comms-relay-action-add": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		if (player getVariable ["wfbe_relay_action_armed", false]) exitWith {};  //--- already added locally
+		private ["_sideVal"];
+		_sideVal = if (count _args > 0) then {_args select 0} else {str playerSide};
+		player setVariable ["wfbe_relay_action_armed", true];
+		player addAction [
+			"Relay Recon Sweep",
+			{
+				private ["_caller","_sv","_uid"];
+				_caller = _this select 1;
+				_sv  = str (side _caller);
+				_uid = getPlayerUID _caller;
+				_caller removeAction (_this select 2);
+				_caller setVariable ["wfbe_relay_action_armed", false];
+				["RequestSpecial", ["comms-relay-activate", _sv, _uid]] Call WFBE_CO_FNC_SendToServer;
+				hint "Comms relay activated - recon sweep inbound.";
+			},
+			[], 5, true, true, "", "alive _target && isPlayer _this"
+		];
+	};
+
 	case "guer-mortar-result": {
 		Private ["_ok","_msg"];
 		_ok  = _args select 0;

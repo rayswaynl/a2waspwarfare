@@ -1434,5 +1434,14 @@ switch (_args select 0) do {
 			};
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike called by [%1] at %2 (%3 shells, cost %4).", name _player, _pos, missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SHELLS", 6], _cost]] Call WFBE_CO_FNC_LogContent;
 		};
+	//--- COMMS-RELAY SIDE OBJECTIVE (lane 206): client fires addAction -> RequestSpecial -> here.
+	//--- WFBE_SE_FNC_CommsRelayActivate is defined in Server_CommsRelay.sqf (runs when flag=1).
+	case "comms-relay-activate": {
+		if (!isNil "WFBE_SE_FNC_CommsRelayActivate") then {
+			_args Call WFBE_SE_FNC_CommsRelayActivate;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: comms-relay-activate received but WFBE_SE_FNC_CommsRelayActivate is nil (WFBE_C_COMMS_RELAY=0?)."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
 	};
 };
