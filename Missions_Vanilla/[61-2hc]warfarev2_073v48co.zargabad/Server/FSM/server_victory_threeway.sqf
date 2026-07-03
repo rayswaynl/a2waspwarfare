@@ -73,7 +73,13 @@ while {!gameOver} do {
 				if (_startS < 0) then {
 					//--- No clock yet -> start one and announce the threat to BOTH sides.
 					//--- L194 (lane194-victory-pack) HOLDTICKS: store 0 (tick accumulator) when flag ON, wall-time start when OFF.
-					if ((missionNamespace getVariable ["WFBE_C_TERRVIC_HOLDTICKS", 0]) > 0) then {
+					//--- FIX (review cx194 MOD): cache the mode flag once at clock-start so the advance
+					//--- branch always reads the same value; a mid-clock param change cannot flip modes.
+					private ["_modeKey","_holdTicksOn"];
+					_modeKey     = Format ["WFBE_TERRITORIAL_TICKS_MODE_%1", _sid];
+					_holdTicksOn = (missionNamespace getVariable ["WFBE_C_TERRVIC_HOLDTICKS", 0]) > 0;
+					missionNamespace setVariable [_modeKey, if (_holdTicksOn) then {1} else {0}];
+					if (_holdTicksOn) then {
 						missionNamespace setVariable [_clockKey, 0];
 					} else {
 						missionNamespace setVariable [_clockKey, time];
@@ -86,8 +92,10 @@ while {!gameOver} do {
 				} else {
 					//--- Clock already running (_startS is its start time) -> advance milestones + check completion.
 					//--- L194 HOLDTICKS: when flag ON, _startS stores accumulated qualifying seconds; increment each tick.
-					private ["_useHoldTicks"];
-					_useHoldTicks = (missionNamespace getVariable ["WFBE_C_TERRVIC_HOLDTICKS", 0]) > 0;
+					//--- FIX (review cx194 MOD): read the mode that was cached at clock-start.
+					private ["_useHoldTicks","_modeKey"];
+					_modeKey      = Format ["WFBE_TERRITORIAL_TICKS_MODE_%1", _sid];
+					_useHoldTicks = (missionNamespace getVariable [_modeKey, 0]) > 0;
 					if (_useHoldTicks) then {
 						missionNamespace setVariable [_clockKey, _startS + _loopTimer];
 						_startS = _startS + _loopTimer;
@@ -189,10 +197,23 @@ while {!gameOver} do {
 					} else {
 						//--- L194 (lane194-victory-pack) HQ-LOSS WINNER FIX: derive winner from present sides minus defender minus loser.
 						//--- Hardcoding west<->east is wrong when resistance participates and loses (3-way match).
-						private ["_candidateWinners"];
+						private ["_candidateWinners","_bestSide","_bestCount","_candSide","_candTowns"];
 						_candidateWinners = (WFBE_PRESENTSIDES - [WFBE_DEFENDER] - [_x]);
 						if (count _candidateWinners > 0) then {
-							_winSide = _candidateWinners select 0;
+							//--- FIX (review cx194 MOD): pick side with most towns held, not array pos 0.
+							//--- Handles 3-way match where e.g. WEST and GUER both survive an EAST HQ-loss.
+							_bestSide  = _candidateWinners select 0;
+							_bestCount = _bestSide Call GetTownsHeld;
+							{
+								_candSide  = _x;
+								_candTowns = _candSide Call GetTownsHeld;
+								if (_candTowns > _bestCount) then {
+									_bestSide  = _candSide;
+									_bestCount = _candTowns;
+								};
+							} forEach _candidateWinners;
+							_winSide = _bestSide;
+							["INFORMATION", Format ["server_victory_threeway.sqf: HQ-loss tie-break: winner %1 (%2 towns) from %3 candidates.", str _winSide, _bestCount, count _candidateWinners]] Call WFBE_CO_FNC_LogContent;
 						} else {
 							//--- Fallback: no surviving non-defender side found -> legacy west<->east swap.
 							if (_x == west) then { _winSide = east } else { _winSide = west };
@@ -215,11 +236,14 @@ while {!gameOver} do {
 				//--- L194 (lane194-victory-pack) STATS_ROUNDEND_FLUSH: flush per-player stats inline at win-declaration.
 				//--- The post-loop flush block only runs on the AntiStack-enabled exit path; this covers all paths.
 				if ((missionNamespace getVariable ["WFBE_C_STATS_ROUNDEND_FLUSH", 1]) > 0) then {
-					private ["_flushUid","_flushName","_flushScore","_flushOld","_flushDiff"];
+					//--- FIX (review cx194 HIGH): use _unit not _x to avoid shadowing the outer
+					//--- forEach side variable. A2 OA forEach permanently rebinds _x in the enclosing scope.
+					private ["_flushUid","_flushName","_flushScore","_flushOld","_flushDiff","_unit"];
 					{
-						if (isPlayer _x) then {
-							_flushUid   = getPlayerUID _x;
-							_flushName  = name _x;
+						_unit = _x;
+						if (isPlayer _unit) then {
+							_flushUid   = getPlayerUID _unit;
+							_flushName  = name _unit;
 							_flushScore = missionNamespace getVariable format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", _flushUid];
 							if (isNil "_flushScore") then { _flushScore = 0 };
 							_flushOld  = missionNamespace getVariable format ["WFBE_CO_OLD_SCORE_PLAYER_%1", _flushUid];
@@ -230,6 +254,8 @@ while {!gameOver} do {
 						};
 					} forEach allUnits;
 					["FLUSH_PLAYERLIST"] call WFBE_SE_FNC_CallDatabaseFlushPlayerList;
+					//--- FIX (review cx194 HIGH): mark flush done so the post-loop block is skipped.
+					missionNamespace setVariable ["WFBE_ROUNDEND_FLUSH_DONE", 1];
 					["INFORMATION", "server_victory_threeway.sqf: L194 ROUNDEND stats flush complete."] Call WFBE_CO_FNC_LogContent;
 				};
 				if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
@@ -283,7 +309,11 @@ if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWit
 	};
 } forEach allUnits;
 
-["FLUSH_PLAYERLIST"] call WFBE_SE_FNC_CallDatabaseFlushPlayerList;
+//--- FIX (review cx194 HIGH): only flush here if the inline STATS_ROUNDEND_FLUSH path
+//--- did not already fire (both flags ON would otherwise double-call proc 808).
+if ((missionNamespace getVariable ["WFBE_ROUNDEND_FLUSH_DONE", 0]) == 0) then {
+	["FLUSH_PLAYERLIST"] call WFBE_SE_FNC_CallDatabaseFlushPlayerList;
+};
 
 _hold = missionNamespace getVariable ["WFBE_C_ENDGAME_HOLD",45];
 sleep _hold;
