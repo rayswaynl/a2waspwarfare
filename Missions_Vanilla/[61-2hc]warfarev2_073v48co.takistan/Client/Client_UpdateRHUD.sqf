@@ -277,6 +277,11 @@ _RHUDUpdateArty = {
 		_logik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _logik) then {
 			_last = _logik getVariable ["wfbe_arty_last_fire", -1000];
+		} else {
+			//--- MODERATE (lane202-review): JIP client before broadcast arrives - keep locked (-1000
+			//--- baseline) rather than falling through to the stale local fireMissionTime which
+			//--- may read -1000 (init) and briefly show 'Arty Rdy' to the joining client.
+			_last = -1000;
 		};
 	};
 	_elapsed = time - _last;

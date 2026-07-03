@@ -256,11 +256,11 @@ _RHUDSetFullPosition = {
 };
 
 // Card #219: artillery cooldown row (indices 27 label / 28 value).
-// Client-local only: reads the global fireMissionTime (set in GUI_Menu_Tactical on request,
-// initialised to -1000 in Init_Client) and the upgrade-scaled reload interval that the fire
-// action itself uses to gate cooldown. No server round-trip, no publicVariable.
+// lane202: when WFBE_C_ARTY_SHARED_COOLDOWN is 1, reads the side-logic stamp
+// broadcast by the server so JIP / multi-player same-side clients see the real cooldown.
+// Flag-off = legacy client-local fireMissionTime (byte-identical path).
 _RHUDUpdateArty = {
-	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last"];
+	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last", "_logik"];
 	//--- b760: folded into the FPS C/S line as a compact "  Arty ..." suffix (no standalone box).
 	//--- Returns the suffix string ("" when this side fields no artillery); the FPS-row builder appends it.
 	if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) <= 0) exitWith {""};
@@ -270,8 +270,20 @@ _RHUDUpdateArty = {
 	_ups = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 	_fireTime = _intervals select (_ups select WFBE_UP_ARTYTIMEOUT);
 
+	//--- lane202: shared cooldown read.
 	_last = fireMissionTime;
 	if (isNil "_last") then {_last = -1000};
+	if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+		_logik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _logik) then {
+			_last = _logik getVariable ["wfbe_arty_last_fire", -1000];
+		} else {
+			//--- MODERATE (lane202-review): JIP client before broadcast arrives - keep locked (-1000
+			//--- baseline) rather than falling through to the stale local fireMissionTime which
+			//--- may read -1000 (init) and briefly show 'Arty Rdy' to the joining client.
+			_last = -1000;
+		};
+	};
 	_elapsed = time - _last;
 
 	if (_elapsed > _fireTime) exitWith {"  Arty Rdy"};

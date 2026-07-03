@@ -206,6 +206,9 @@ _textAnimHandler = [] spawn {};
 
 MenuAction = -1;
 mouseButtonUp = -1;
+//--- LOW (lane202-review): hoist lane202 arty-shared vars above the loop so they are
+//--- declared once rather than re-nilified on every tick (consistency with surrounding pattern).
+private ["_artyLastFire", "_artyLogik"];
 
 while {alive player && dialog} do {
 	if (side group player != sideJoined) exitWith {deleteMarkerLocal _marker;deleteMarkerLocal _area;{deleteMarkerLocal _x} forEach _markers;closeDialog 0};
@@ -779,7 +782,6 @@ while {alive player && dialog} do {
 		//--- lane202: shared side cooldown (WFBE_C_ARTY_SHARED_COOLDOWN). When ON, read the
 		//--- side-logic stamp broadcast by the server so JIP / multi-player same-side can see
 		//--- the real cooldown. Flag-off = legacy client-local (byte-identical).
-		private ["_artyLastFire", "_artyLogik"];
 		_artyLastFire = fireMissionTime;
 		if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
 			_artyLogik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;

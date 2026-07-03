@@ -201,6 +201,28 @@ switch (_args select 0) do {
 		};
 	};
 
+	//--- lane202: ArtySharedCooldown - stamp the side logic with the last-fire time and
+	//--- broadcast to all clients (setVariable ..., true) so JIP / multi-player same-side
+	//--- clients can read the real cooldown. Flag-gated: inert when WFBE_C_ARTY_SHARED_COOLDOWN is 0.
+	case "ArtySharedCooldown": {
+		//--- GUARD (lane202-review): a short/malformed PVF payload crashes at select 1/2.
+		//--- Matches the group-query and guer-mortar-strike guard idiom already in this file.
+		if (count _args < 3) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: ArtySharedCooldown received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
+		if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+			private ["_artyStampSide","_artyStampTime","_artyStampLogik"];
+			_artyStampSide = _args select 1;
+			_artyStampTime = _args select 2;
+			_artyStampLogik = (_artyStampSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _artyStampLogik) then {
+				//--- HIGH (lane202-review): never trust the client-supplied time; stamp server's own `time`
+				//--- so a debug-console exploit cannot broadcast a far-future value and lock arty for the side.
+				_artyStampLogik setVariable ["wfbe_arty_last_fire", time, true];
+			};
+		};
+	};
+
 	//--- N-FEATUREBUG-4: server-side artillery ammo load. addMagazineTurret/loadMagazine only take
 	//--- effect where the vehicle is local; AI artillery is server-local, so the commanding player's
 	//--- client forwards the load request here (see Common_LoadArtilleryAmmo.sqf locality gate). We
