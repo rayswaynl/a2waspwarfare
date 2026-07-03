@@ -32,13 +32,19 @@ public static class MirrorDriftChecker
                 destinationDirectoryOverride: expectedTakistanPath);
 
             List<string> differences = CompareDirectories(expectedTakistanPath, actualTakistanPath);
-            if (differences.Count == 0)
+            List<string> guardFailures = CheckTakistanGeneratedTemplateDefines(expectedTakistanPath);
+            if (differences.Count == 0 && guardFailures.Count == 0)
             {
                 Console.WriteLine("Takistan mirror check passed: no generated drift detected.");
                 return 0;
             }
 
-            Console.Error.WriteLine($"Takistan mirror check failed: {differences.Count} difference(s) detected.");
+            Console.Error.WriteLine($"Takistan mirror check failed: {differences.Count} difference(s), {guardFailures.Count} guard failure(s) detected.");
+            foreach (string guardFailure in guardFailures)
+            {
+                Console.Error.WriteLine(guardFailure);
+            }
+
             foreach (string difference in differences.Take(MaxReportedDifferences))
             {
                 Console.Error.WriteLine(difference);
@@ -111,6 +117,39 @@ public static class MirrorDriftChecker
         }
 
         return differences;
+    }
+
+    private static List<string> CheckTakistanGeneratedTemplateDefines(string _expectedTakistanPath)
+    {
+        string templatePath = Path.Combine(_expectedTakistanPath, "version.sqf.template");
+        List<string> failures = new List<string>();
+
+        if (!File.Exists(templatePath))
+        {
+            failures.Add("GUARD   version.sqf.template missing from generated Takistan output.");
+            return failures;
+        }
+
+        string[] lines = File.ReadAllLines(templatePath);
+        AddFailureForUncommentedDefine(lines, "IS_CHERNARUS_MAP_DEPENDENT", failures);
+        AddFailureForUncommentedDefine(lines, "IS_NAVAL_MAP", failures);
+
+        return failures;
+    }
+
+    private static void AddFailureForUncommentedDefine(string[] _lines, string _defineName, List<string> _failures)
+    {
+        for (int index = 0; index < _lines.Length; index++)
+        {
+            string line = _lines[index].TrimStart();
+            string definePrefix = "#define " + _defineName;
+            if (line.Equals(definePrefix, StringComparison.Ordinal) ||
+                line.StartsWith(definePrefix + " ", StringComparison.Ordinal) ||
+                line.StartsWith(definePrefix + "\t", StringComparison.Ordinal))
+            {
+                _failures.Add($"GUARD   version.sqf.template:{index + 1} generated Takistan output must not uncomment {_defineName}.");
+            }
+        }
     }
 
     private static Dictionary<string, string> EnumerateComparableFiles(string _directory)
