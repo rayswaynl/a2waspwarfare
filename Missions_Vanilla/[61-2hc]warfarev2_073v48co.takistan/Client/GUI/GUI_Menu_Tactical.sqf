@@ -776,8 +776,19 @@ while {alive player && dialog} do {
 	//--- Update the Artillery Status.
 	if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
 		_fireTime = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_currentUpgrades select WFBE_UP_ARTYTIMEOUT);
-		_status = round(_fireTime - (time - fireMissionTime));
-		_txt = if (time - fireMissionTime > _fireTime) then {Format['<t align="left" color="#73FF47">%1</t>',localize 'STR_WF_TACTICAL_Available']} else {Format ['<t align="left" color="#4782FF">%1 %2</t>',_status,localize 'STR_WF_Seconds']};
+		//--- lane202: shared side cooldown (WFBE_C_ARTY_SHARED_COOLDOWN). When ON, read the
+		//--- side-logic stamp broadcast by the server so JIP / multi-player same-side can see
+		//--- the real cooldown. Flag-off = legacy client-local (byte-identical).
+		private ["_artyLastFire", "_artyLogik"];
+		_artyLastFire = fireMissionTime;
+		if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+			_artyLogik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _artyLogik) then {
+				_artyLastFire = _artyLogik getVariable ["wfbe_arty_last_fire", -1000];
+			};
+		};
+		_status = round(_fireTime - (time - _artyLastFire));
+		_txt = if (time - _artyLastFire > _fireTime) then {Format['<t align="left" color="#73FF47">%1</t>',localize 'STR_WF_TACTICAL_Available']} else {Format ['<t align="left" color="#4782FF">%1 %2</t>',_status,localize 'STR_WF_Seconds']};
 		(_display displayCtrl 17016) ctrlSetStructuredText (parseText _txt);
 		_enable = if (_status > 0) then {false} else {true};
 		ctrlEnable [17007,_enable];
@@ -789,6 +800,11 @@ while {alive player && dialog} do {
 		_units = [Group player,false,lbCurSel(17008),sideJoinedText] Call GetTeamArtillery;
 		if (Count _units > 0) then {
 			fireMissionTime = time;
+			//--- lane202: when shared cooldown is ON, stamp the side logic server-side so all
+			//--- same-side clients (including JIP) can read the real last-fire time.
+			if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+				["RequestSpecial", ["ArtySharedCooldown", playerSide, time]] Call WFBE_CO_FNC_SendToServer;
+			};
 			[GetMarkerPos "artilleryMarker",lbCurSel(17008), _fireTime, artyRange] Spawn RequestFireMission;
 			
 		} else {
