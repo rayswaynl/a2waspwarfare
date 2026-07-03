@@ -1,4 +1,4 @@
-Private ["_side"];
+Private ["_side","_aiOrder"];
 
 _side = _this;
 
@@ -150,7 +150,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.
-missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
+_aiOrder = [
 	[WFBE_UP_BARRACKS,1],
 	[WFBE_UP_GEAR,1],
 	[WFBE_UP_LIGHT,1],
@@ -186,7 +186,14 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_PARATROOPERS,3],
 	[WFBE_UP_EASA,1],
 	[WFBE_UP_SUPPLYPARADROP,1],
-	[WFBE_UP_AIRAAM,1],
+	[WFBE_UP_AIRAAM,1]
+];
+if ((missionNamespace getVariable ["WFBE_C_AICOM_RESEARCH_GAP_FIX", 0]) > 0) then {
+	_aiOrder set [count _aiOrder, [WFBE_UP_UNITCOST,1]];
+	_aiOrder set [count _aiOrder, [WFBE_UP_UNITCOST,2]];
+	_aiOrder set [count _aiOrder, [WFBE_UP_AMMOCOIN,1]];
+};
+_aiOrder = _aiOrder + [
 	[WFBE_UP_GEAR,4],
 	[WFBE_UP_LIGHT,4],
 	[WFBE_UP_AAR,1],
@@ -197,7 +204,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_PATROLS,2],
 	[WFBE_UP_PATROLS,3],
 	[WFBE_UP_PATROLS,4]
-]];
+];
+missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], _aiOrder];
 
 //--- Check potential missing definition.
 (_side) Call Compile preprocessFileLineNumbers "Common\Config\Core_Upgrades\Check_Upgrades.sqf";
