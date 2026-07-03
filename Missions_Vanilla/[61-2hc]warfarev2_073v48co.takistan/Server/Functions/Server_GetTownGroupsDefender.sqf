@@ -111,7 +111,7 @@ _unit_vehicles = [];
 		if (_aa_get) then {
 			if !((_x select 0) in ["AA_Light","AA_Heavy","Team_AA"]) then {_add = false}
 		} else {
-			if (_town_airactive && (_x select 0) in ["AA_Light","AA_Heavy","Team_AA"]) then {_add = false};
+			if ((if (missionNamespace getVariable ["WFBE_C_TOWN_AA_GATE_FIX", 1]) then {!_town_airactive} else {_town_airactive}) && (_x select 0) in ["AA_Light","AA_Heavy","Team_AA"]) then {_add = false}; //--- Lane 191: gate-fixed; flag 1 = suppress AA only when NO air threat (correct), 0 = original buggy behaviour.
 		};
 		if (_add) then {
 			_array = if ((_x select 2) == 0) then {_unit_infantry} else {_unit_vehicles};

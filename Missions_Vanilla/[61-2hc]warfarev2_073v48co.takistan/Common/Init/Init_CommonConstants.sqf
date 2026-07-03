@@ -1488,6 +1488,7 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION") then {WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION = 0}; //--- Enable towns occupation reinforcement.
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
+	if (isNil "WFBE_C_TOWN_AA_GATE_FIX") then {WFBE_C_TOWN_AA_GATE_FIX = 1}; //--- Lane 191 (2026-07-03): AA gate inversion fix. 1=fixed (AA suppressed only when NO air threat; spawns when wfbe_active_air=true). 0=original buggy behaviour (byte-identical rollback). Default 1: intent proven by server_town_ai.sqf:228-235 -- air-only activation path passes _aa_get=true to return ONLY AA groups; normal garrison (else branch) must include AA when wfbe_active_air=true.
 
 	//--- Air units.
 	if (isNil "WFBE_C_JET_AA_SURVIVE") then {WFBE_C_JET_AA_SURVIVE = 1}; //--- Jets survive the 1st SPAAG (Tunguska/Linebacker) hit: fuel drained + slight damage for a landing attempt; a 2nd hit explodes. 0 disables.
