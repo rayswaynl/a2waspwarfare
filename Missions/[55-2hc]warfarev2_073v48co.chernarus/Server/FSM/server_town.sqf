@@ -89,7 +89,7 @@ while {!WFBE_GameOver} do {
 				if (_contested && !_prevContested) then {_location setVariable ["wfbe_contested", true]};
 				if (!_contested && _prevContested) then {_location setVariable ["wfbe_contested", false]};
 
-				_supplyValue = _location getVariable "supplyValue";
+				_supplyValue = _location getVariable ["supplyValue", _startingSupplyValue];
 
 				if (!WFBE_ISTHREEWAY && _town_supply_time) then {
 					//--- If we're running on 2 sides, skip the time based supply if the defender hold the town.
