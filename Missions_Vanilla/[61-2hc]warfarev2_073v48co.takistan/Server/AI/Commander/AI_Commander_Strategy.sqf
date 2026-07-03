@@ -93,7 +93,9 @@ if (_lastStand) then {
 		_logik setVariable ["wfbe_aicom_laststand", true];
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] LAST-STAND - towns %2 strength %3v%4 - recalling all teams to HQ.", _sideText, _myTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 	};
-	//--- Recall every non-garrison, non-HC AI team to HQ in defense posture.
+	//--- Recall every non-garrison, non-player AI team to HQ in defense posture.
+	private ["_lsHqPos"];
+	_lsHqPos = getPos ((_side) Call WFBE_CO_FNC_GetSideHQ);
 	{
 		_team = _x;
 		if (!isNull _team && {!isPlayer (leader _team)}) then {
@@ -102,7 +104,10 @@ if (_lastStand) then {
 			_team setVariable ["wfbe_aicom_strike", false];
 			_team setVariable ["wfbe_aicom_townorder", []];
 			[_team, "defense"] Call SetTeamMoveMode;
-			[_team, getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)] Call SetTeamMovePos;
+			[_team, _lsHqPos] Call SetTeamMovePos;
+			if (!(isNil {_team getVariable "wfbe_aicom_hc"}) && {_team getVariable "wfbe_aicom_hc"}) then {
+				_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", _lsHqPos], true];
+			};
 		};
 	} forEach _teams;
 	_logik setVariable ["wfbe_aicom_strike_on", false];
