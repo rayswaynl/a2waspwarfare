@@ -189,6 +189,18 @@
 		texts[] = {"S 30000","S 35000","S 40000","S 45000","S 50000","S 60000","S 80000","S 100000"};
 		default = 50000;
 	};
+	class WFBE_C_AICOM_FUNDS_SINK_ENABLE {
+		title = "AI Commander Funds Sink";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};
+		default = 0;
+	};
+	class WFBE_C_ENDGAME_FORCE_ENABLE {
+		title = "Endgame Force Economy Taper";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};
+		default = 0;
+	};
 
 	class WFBE_C_ENVIRONMENT_STARTING_HOUR {
 		title = "$STR_WF_PARAMETER_Hour";
