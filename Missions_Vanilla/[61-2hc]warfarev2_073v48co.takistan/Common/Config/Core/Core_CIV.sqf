@@ -174,23 +174,29 @@ _i = _i + [['','',200,0,0,0,'Fortification',0,'Civilians',[]]];
 //--- WDDM commander positions (Stage 1): anchor placeholders for composition buildables.
 //--- Label/price/category only; the anchor model is just the placement ghost (the composition
 //--- itself is spawned by Server\Functions\Server_ConstructPosition.sqf). Price is a flat MVP value.
+//--- cmdcon44-a (Build 89): WFBE_C_DEFMENU_V2_POSITIONS ON = reworked positions -> relabel the six rows so
+//--- the change is visible in the menu text (the weapon + role are named). Flag OFF = exact legacy labels.
+//--- The composition rework itself lives in Init_Defenses.sqf under the same flag.
+private "_defPosV2";
+_defPosV2 = ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0);
+
 _c = _c + ['Land_Ind_BoardsPack1'];
-_i = _i + [['AA Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'AA Nest — Stinger/ZU-23 (Light, 2 AI)'} else {'AA Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_CncBlock_Stripes'];
-_i = _i + [['AA Position (Heavy, 4 AI)','',4500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'AA Battery — SAM/flak (Heavy, 4 AI)'} else {'AA Position (Heavy, 4 AI)'}),'',4500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Barrel_sand'];
-_i = _i + [['Artillery (Light, 1 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Artillery Pit — howitzer (Light, 1 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Ind_BoardsPack2'];
-_i = _i + [['Artillery (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Artillery Battery — 3 guns (Heavy, 4 AI)'} else {'Artillery (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_WoodenRamp'];
-_i = _i + [['Mixed Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Post — MG/AT/AA (Light, 2 AI)'} else {'Mixed Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['RoadCone'];
-_i = _i + [['Mixed Position (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Strongpoint — MG/ATGM/AA (Heavy, 4 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Paleta1'];
 _i = _i + [['Base Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
