@@ -85,7 +85,7 @@ if !(WF_A2_Vanilla) then {
 			};
 			
 			_prefix = if (_k == 0) then {"Mag_"} else {""};
-		} forEach _gear_new;
+		};
 	} forEach [_gear_bp, _gear_veh];
 };
 

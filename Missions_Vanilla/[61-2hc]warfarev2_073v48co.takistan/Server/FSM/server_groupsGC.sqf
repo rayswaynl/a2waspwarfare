@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_basePlayers","_basePcN","_baseHcN","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -61,6 +61,17 @@ while {!WFBE_GameOver} do {
 		_baseIdleSpeed   = missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED",   5];
 		_basePlayerGuard = missionNamespace getVariable ["WFBE_C_BASEGC_PLAYER_GUARD", 0];
 		_baseReadopted = 0; _baseRetasked = 0; _baseDeletedAir = 0;
+		//--- Build one live-player snapshot for the BASE-GC pass; reuse it for cap math and optional guards.
+		_basePcN = 0;
+		_basePlayers = [];
+		{
+			if (isPlayer _x) then {
+				_basePcN = _basePcN + 1;
+				if (_basePlayerGuard > 0 && {alive _x}) then {_basePlayers set [count _basePlayers, _x]};
+			};
+		} forEach allUnits;
+		_baseHcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+		_basePcN = (_basePcN - _baseHcN) max 0;
 
 		{
 			_baseSide = _x;
@@ -87,10 +98,6 @@ while {!WFBE_GameOver} do {
 						};
 					} forEach _baseTeams;
 				};
-				private ["_basePcN","_baseHcN"];
-				_basePcN = {isPlayer _x} count allUnits;
-				_baseHcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
-				_basePcN = (_basePcN - _baseHcN) max 0;
 				_baseCap = switch (true) do {
 					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  15]};
 					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  5]};
@@ -149,7 +156,7 @@ while {!WFBE_GameOver} do {
 									//--- PLAYER-PROXIMITY guard (tunable; 0 = does NOT block).
 									_basePlayerNear = false;
 									if (_basePlayerGuard > 0) then {
-										{ if (isPlayer _x && {alive _x} && {(_x distance _baseLdr) <= _basePlayerGuard}) exitWith {_basePlayerNear = true} } forEach allUnits;
+										{ if ((_x distance _baseLdr) <= _basePlayerGuard) exitWith {_basePlayerNear = true} } forEach _basePlayers;
 									};
 
 									if (_baseInCombat || {_baseEnemyNear > 0} || {_baseDmgNow > _baseDmgPrev} || {_basePlayerNear}) then {
@@ -236,7 +243,7 @@ while {!WFBE_GameOver} do {
 
 								_basePlayerNear = false;
 								if (_basePlayerGuard > 0) then {
-									{ if (isPlayer _x && {alive _x} && {(_x distance _baseVeh) <= _basePlayerGuard}) exitWith {_basePlayerNear = true} } forEach allUnits;
+									{ if ((_x distance _baseVeh) <= _basePlayerGuard) exitWith {_basePlayerNear = true} } forEach _basePlayers;
 								};
 
 								if (_baseInCombat || {_baseEnemyNear > 0} || {_baseDmgNow > _baseDmgPrev} || {_basePlayerNear}) then {

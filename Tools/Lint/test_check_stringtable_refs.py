@@ -23,9 +23,21 @@ class CheckStringtableRefsTests(unittest.TestCase):
         finally:
             temp.cleanup()
 
-    def write_stringtable(self, mission: Path, keys: list[str]) -> None:
+    def write_stringtable(
+        self,
+        mission: Path,
+        keys: list[str],
+        columns_by_key: dict[str, dict[str, str]] | None = None,
+    ) -> None:
+        columns_by_key = columns_by_key or {}
         key_xml = "\n".join(
-            f'      <Key ID="{key}"><English>{key}</English></Key>' for key in keys
+            f'      <Key ID="{key}">'
+            + "".join(
+                f"<{language}>{text}</{language}>"
+                for language, text in {"English": key, **columns_by_key.get(key, {})}.items()
+            )
+            + "</Key>"
+            for key in keys
         )
         (mission / "stringtable.xml").write_text(
             f"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project><Package>{key_xml}</Package></Project>\n",
@@ -93,6 +105,42 @@ class CheckStringtableRefsTests(unittest.TestCase):
             self.assertEqual(code_with_orphans, 1)
             self.assertIn("STRORPHAN", output_with_orphans)
             self.assertIn("STR_WF_UNUSED", output_with_orphans)
+
+    def test_ru_gap_reporting_is_opt_in(self) -> None:
+        with self.make_repo() as (root, mission):
+            self.write_stringtable(
+                mission,
+                ["STR_WF_HAS_RU", "STR_WF_NO_RU"],
+                {"STR_WF_HAS_RU": {"Russian": "Gotovo"}},
+            )
+            (mission / "empty.sqf").write_text("hint 'ready';\n", encoding="utf-8")
+
+            code_without_ru_gaps, output_without_ru_gaps = self.run_checker(root)
+            code_with_ru_gaps, output_with_ru_gaps = self.run_checker(root, "--ru-gaps")
+
+            self.assertEqual(code_without_ru_gaps, 0)
+            self.assertIn("findings: 0", output_without_ru_gaps)
+            self.assertEqual(code_with_ru_gaps, 1)
+            self.assertIn("STRLANG", output_with_ru_gaps)
+            self.assertIn("STR_WF_NO_RU", output_with_ru_gaps)
+            self.assertIn("missing Russian text", output_with_ru_gaps)
+            self.assertNotIn("STR_WF_HAS_RU", output_with_ru_gaps)
+
+    def test_language_gap_reporting_catches_blank_text(self) -> None:
+        with self.make_repo() as (root, mission):
+            self.write_stringtable(
+                mission,
+                ["STR_WF_BLANK_RU"],
+                {"STR_WF_BLANK_RU": {"Russian": "   "}},
+            )
+            (mission / "empty.sqf").write_text("hint 'ready';\n", encoding="utf-8")
+
+            code, output = self.run_checker(root, "--languages", "Russian")
+
+            self.assertEqual(code, 1)
+            self.assertIn("STRLANG", output)
+            self.assertIn("STR_WF_BLANK_RU", output)
+            self.assertIn("blank Russian text", output)
 
 
 if __name__ == "__main__":

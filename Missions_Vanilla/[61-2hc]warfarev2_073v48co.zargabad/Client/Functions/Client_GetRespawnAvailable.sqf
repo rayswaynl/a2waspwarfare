@@ -1,0 +1,136 @@
+Private ["_availableSpawn","_base_respawn","_buildings","_checks","_deathLoc","_farps","_has_baserespawn","_hq","_mobileRespawns","_range","_redeployTrucks","_side","_sideText","_sideID","_upgrades"];
+
+_side = _this select 0;
+_deathLoc = _this select 1;
+if (isNil "_side") exitWith {[]}; //--- B754 (Ray 2026-06-25): never return nil; callers forEach the result, and a nil return spams "Undefined variable _x" client-side.
+_sideText = str _side;
+
+//--- Base.
+_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+_availableSpawn = [_hq];
+_buildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
+_checks = [_side,missionNamespace getVariable Format["WFBE_%1BARRACKSTYPE",_sideText],_buildings] Call GetFactories;
+if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
+_checks = [_side,missionNamespace getVariable Format["WFBE_%1LIGHTTYPE",_sideText],_buildings] Call GetFactories;
+if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
+_checks = [_side,missionNamespace getVariable Format["WFBE_%1HEAVYTYPE",_sideText],_buildings] Call GetFactories;
+if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
+_checks = [_side,missionNamespace getVariable Format["WFBE_%1AIRCRAFTTYPE",_sideText],_buildings] Call GetFactories;
+if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
+
+_base_respawn = _availableSpawn - [_hq];
+_has_baserespawn = if (alive _hq || count _base_respawn > 0) then {true} else {false};
+
+/* _checks = [_side,missionNamespace getVariable Format["WFBE_%1COMMANDCENTERTYPE",_sideText],_buildings] Call GetFactories;
+if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
+_checks = [_side,missionNamespace getVariable Format["WFBE_%1SERVICEPOINTTYPE",_sideText],_buildings] Call GetFactories;
+if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks}; */
+
+
+//--- HQ is dead, but we can spawn at other buildings.
+if (!alive _hq && count _availableSpawn > 1) then {_availableSpawn = _availableSpawn - [_hq]};
+
+//--- Mobile respawn.
+if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {
+	_mobileRespawns = missionNamespace getVariable Format["WFBE_%1AMBULANCES",_sideText];
+	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+	_range = (missionNamespace getVariable "WFBE_C_RESPAWN_RANGES") select (_upgrades select WFBE_UP_RESPAWNRANGE);
+	_checks = _deathLoc nearEntities[_mobileRespawns,_range];
+	if (count _checks > 0) then {
+		{
+			if (_x emptyPositions "cargo" > 0) then {
+				_availableSpawn = _availableSpawn + [_x];
+			};
+		} forEach _checks;
+	};
+};
+
+//--- Medic redeployment truck (forward spawn) — v2 contract.
+//--- Medics purchase and park this truck; ONLY medics spawn at it (WFBE_SK_V_Type is the
+//--- local player's own class — local read is correct here, this is the local respawn menu).
+//--- Stationary: abs(speed) < 1 AND engine off at evaluation time (menu re-evaluates every ~1s,
+//--- so a moving truck drops off the list naturally; no 30s timer needed in v1).
+//--- Purchase restriction: MTVR/Kamaz are also ordinary transports; restricting buy by class
+//--- would break transport access for non-medics. The spawn-side gate below IS the binding rule.
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && WFBE_SK_V_Type == "Medic") then {
+	_redeployTrucks = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",_sideText],[]];
+	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+	_range = (missionNamespace getVariable "WFBE_C_RESPAWN_RANGES") select (_upgrades select WFBE_UP_RESPAWNRANGE);
+	_checks = _deathLoc nearEntities[_redeployTrucks,_range];
+	if (count _checks > 0) then {
+		_sideID = (_side) Call GetSideID;
+		{
+			private ["_veh","_tooClose"];
+			_veh = _x;
+			//--- Cargo available, stationary, engine off.
+			if (_veh emptyPositions "cargo" > 0
+				&& abs(speed _veh) < 1
+				&& !(isEngineOn _veh)) then {
+				//--- Not within 500 m of an enemy-held or contested town.
+				_tooClose = false;
+				{
+					private "_townSide";
+					_townSide = _x getVariable ["sideID",-1];
+					if (_townSide != _sideID && _veh distance _x < 500) then {_tooClose = true};
+				} forEach towns;
+				if !(_tooClose) then {
+					_availableSpawn = _availableSpawn + [_veh];
+				};
+			};
+		} forEach _checks;
+	};
+};
+
+//--- Leader.
+if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") > 0) then {
+	if (group player != WFBE_Client_Team && (leader group player) != player) then {
+		if (alive (leader group player) && _deathLoc distance vehicle(leader group player) <= (missionNamespace getVariable "WFBE_C_RESPAWN_RANGE_LEADER")) then {_availableSpawn = _availableSpawn + [leader group player]};
+	};
+};
+
+//--- In a threeway, defender players are able to respawn in side-controlled towns as long as all camps are owned by the defender's side.
+if (WFBE_ISTHREEWAY && _side == WFBE_DEFENDER) then {
+	_availableSpawn = _availableSpawn + (_side Call GetRespawnThreeway);
+	
+	//--- Victory condition may allow random respawn on startup locations.
+	if ((missionNamespace getVariable "WFBE_C_VICTORY_THREEWAY") in [0]) then {
+		//--- Make sure that at least one base respawn is available.
+		if !(_has_baserespawn) then {_availableSpawn = _availableSpawn - [_hq];_availableSpawn = _availableSpawn + [WFBE_Client_Logic getVariable "wfbe_startpos"]};
+	};
+};
+
+//--- Camps.
+if ((missionNamespace getVariable "WFBE_C_RESPAWN_CAMPS_MODE") > 0) then {
+	_availableSpawn = _availableSpawn + ([_deathLoc, _side] Call GetRespawnCamps);
+};
+
+//--- GUER (base-less): offer friendly towns (resistance-held or neutral) as selectable respawns.
+if (_side == resistance) then {
+	{
+		if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {
+			_availableSpawn = _availableSpawn + [_x];
+		};
+	} forEach towns;
+	//--- B75 (guer-tech FOB): FOB delivery trucks are mobile spawn points "freely just like any town". Offer any
+	//--- living, flag-tagged GUER FOB truck (the flag keeps an AI faction's same-class truck off the list). No range
+	//--- gate (GUER towns have none either). Built FOB FACTORIES are already offered by the GetFactories block above.
+	{
+		if (alive _x && {_x getVariable ["wfbe_is_guer_fob", false]}) then {_availableSpawn = _availableSpawn + [_x]};
+	} forEach vehicles;
+};
+
+//--- B74.2: WEST/EAST naval carrier respawn. Towns are not normally selectable respawns for
+//--- WEST/EAST, but a captured naval HVT (carrier) IS offered so its side can deck-respawn there
+//--- (Client_OnRespawnHandler reads wfbe_is_naval_hvt + wfbe_naval_deckz on the same logic object).
+//--- Only the carriers this side currently holds are added; regular towns stay non-selectable.
+if (_side != resistance) then {
+	private "_mySID";
+	_mySID = (_side) Call GetSideID;
+	{
+		if ((_x getVariable ["wfbe_is_naval_hvt", false]) && {(_x getVariable ["sideID",-1]) == _mySID}) then {
+			_availableSpawn = _availableSpawn + [_x];
+		};
+	} forEach towns;
+};
+
+_availableSpawn
