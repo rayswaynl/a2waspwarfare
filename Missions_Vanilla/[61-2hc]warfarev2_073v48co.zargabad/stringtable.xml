@@ -189,6 +189,10 @@
         <English>You were deducted from $%1 due to your gear</English>
         <Russian>У вас изъято $%1 за ваше снаряжение</Russian>
       </Key>
+      <Key ID="STR_WF_CHAT_Gear_RespawnUnaffordable">
+        <English>Your custom gear was stripped: you could not afford the $%1 respawn gear cost.</English>
+        <Russian>Ваше снаряжение сброшено: недостаточно средств на стоимость снаряжения $%1.</Russian>
+      </Key>
       <Key ID="STR_WF_CHAT_ICBM_Launch">
         <English>WARNING! An Intercontinental ballistic missile launch has been detected! Five minutes to impact!</English>
         <Russian>ВНИМАНИЕ! Зафиксирован запуск ядерной ракеты! Пять минут до удара!</Russian>

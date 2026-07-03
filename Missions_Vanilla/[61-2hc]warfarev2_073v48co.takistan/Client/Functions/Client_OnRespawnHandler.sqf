@@ -179,7 +179,7 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 			};
 			
 			//--- Check that the player has enough funds.
-			if (_charge && _funds < _price) then {_skip = true}; //--- wiki-wins: only strip gear when actually charging (mode-5-at-base sets _charge=false and charges nothing)
+			if (_charge && _funds < _price) then {_skip = true; (Format[localize 'STR_WF_CHAT_Gear_RespawnUnaffordable',_price]) Call GroupChatMessage;}; //--- wiki-wins: only strip gear when actually charging (mode-5-at-base sets _charge=false and charges nothing). GR-2026-07-03a: notify the player their custom gear was stripped for want of funds (was a silent strip).
 		};
 		
 		//--- Use the respawn loadout.

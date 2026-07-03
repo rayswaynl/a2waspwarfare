@@ -15,20 +15,20 @@ TitleText["","PLAIN"];
 sleep 0.5;
 CutRsc["EndOfGameStats","PLAIN",0];
 
-_eastUnitsCreated = WF_Logic getVariable "eastUnitsCreated";
-_eastCasualties = WF_Logic getVariable "eastCasualties";
-_eastVehiclesCreated = WF_Logic getVariable "eastVehiclesCreated";
-_eastVehiclesLost = WF_Logic getVariable "eastVehiclesLost";
-_westUnitsCreated = WF_Logic getVariable "westUnitsCreated";
-_westCasualties = WF_Logic getVariable "westCasualties";
-_westVehiclesCreated = WF_Logic getVariable "westVehiclesCreated";
-_westVehiclesLost = WF_Logic getVariable "westVehiclesLost";
+_eastUnitsCreated = WF_Logic getVariable "EASTUnitsCreated";
+_eastCasualties = WF_Logic getVariable "EASTCasualties";
+_eastVehiclesCreated = WF_Logic getVariable "EASTVehiclesCreated";
+_eastVehiclesLost = WF_Logic getVariable "EASTVehiclesLost";
+_westUnitsCreated = WF_Logic getVariable "WESTUnitsCreated";
+_westCasualties = WF_Logic getVariable "WESTCasualties";
+_westVehiclesCreated = WF_Logic getVariable "WESTVehiclesCreated";
+_westVehiclesLost = WF_Logic getVariable "WESTVehiclesLost";
 
 if (_guerPanel) then {
-	_guerUnitsCreated = WF_Logic getVariable ["resistanceUnitsCreated",0];
-	_guerCasualties = WF_Logic getVariable ["resistanceCasualties",0];
-	_guerVehiclesCreated = WF_Logic getVariable ["resistanceVehiclesCreated",0];
-	_guerVehiclesLost = WF_Logic getVariable ["resistanceVehiclesLost",0];
+	_guerUnitsCreated = WF_Logic getVariable ["GUERUnitsCreated",0];
+	_guerCasualties = WF_Logic getVariable ["GUERCasualties",0];
+	_guerVehiclesCreated = WF_Logic getVariable ["GUERVehiclesCreated",0];
+	_guerVehiclesLost = WF_Logic getVariable ["GUERVehiclesLost",0];
 };
 
 _eastCreatedRate = _eastVehiclesCreated / 5 * .1;
@@ -97,7 +97,7 @@ _playerScore = score player;
 _playerFunds = 0;
 _playerIncome = 0;
 if (!isNil "GetPlayerFunds" && {!isNil "clientTeam"}) then {_playerFunds = Call GetPlayerFunds};
-if (!isNil "GetIncome") then {_playerIncome = Call GetIncome};
+if (!isNil "GetIncome") then {_playerIncome = (sideJoined) Call GetIncome};
 _playerSummary CtrlSetText Format ["Your round  |  Score %1  |  Funds $%2  |  Income $%3/min", _playerScore, round _playerFunds, round _playerIncome];
 
 _position = CtrlPosition _westRecruitedBar;

@@ -16,7 +16,7 @@ _color_tab = [0.258823529, 0.713725490, 1, 1];
 _idc_tabs = [503301,503302,503303,503304,503305,503306];
 _lb_main = 503001;_lb_secondary = 503002;_lb_cargo = 503005;
 _tabs = ["Template","All","Primary","Secondary","Pistols","Equipment"];
-_funds_cli = 0;_price = 0;_tab_current_last = -1;_tab_switch = false;
+_funds_cli = 0;_price = 0;_tab_current_last = -1;_tab_prev = -1;_tab_switch = false;
 _target = player;
 //--- Todo secure vanilla, remove not used.
 _target_weapons = weapons player;
@@ -48,7 +48,6 @@ while {true} do {
 	_click_pool_gun = uiNamespace getVariable 'wfbe_display_buygear_pool_gun';
 	//--- Lane 204 (review fix): capture the leaving tab BEFORE overwriting _tab_current_last.
 	if (_tab_current != _tab_current_last) then {
-		private ["_tab_prev"];
 		_tab_prev = _tab_current_last;
 		_tab_current_last = _tab_current;
 		_update_tab = true;
