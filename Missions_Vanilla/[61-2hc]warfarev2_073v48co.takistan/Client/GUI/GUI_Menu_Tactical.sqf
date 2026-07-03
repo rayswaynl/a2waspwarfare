@@ -253,6 +253,7 @@ while {alive player && dialog} do {
 				if (alive _base && _isDeployed) then {_locations = _locations + [_base]};
 				_i = 0;
 				_fee = 0;
+				_feeTotal = 0;
 				_funds = if (_ft == 2) then {Call GetPlayerFunds} else {0};
 				{
 					if (_x distance player <= (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_RANGE_MAX") && _x distance player > _ftr) then {
@@ -262,12 +263,16 @@ while {alive player && dialog} do {
 							_camps = [_x,sideJoined] Call GetFriendlyCamps;
 							_allCamps = _x getVariable "camps";
 							if (_sideID != sideID || (count _camps != count _allCamps)) then {_skip = true};
-							if (_ft == 2) then {
-								_fee = round(((_x distance player)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
-								//--- lane197 (b): full bill = flat base fee + per-km fee. Per-km alone understates cost; player could
-								//--- pass filter but still not afford the flat base. Per-vehicle surcharge unknown here, not included.
-								if (_funds < ((missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + _fee)) then {_skip = true};
-							};
+						};
+						//--- fold89 BUG1: compute the fee for EVERY destination type (town, factory, deployed HQ) and
+						//--- apply the SAME affordability gate uniformly. Previously fee+gate ran only inside the town
+						//--- branch, so unaffordable factory / deployed-HQ destinations still listed and let a player
+						//--- confirm into a negative balance. Full bill = flat base fee + per-km (matches the fire-time
+						//--- charger). Per-vehicle surcharge is player-choice, not known at scan time, so not gated here.
+						if (_ft == 2) then {
+							_fee = round(((_x distance player)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
+							_feeTotal = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + _fee;
+							if (_funds < _feeTotal) then {_skip = true};
 						};
 						if !(_skip) then {
 							_FTLocations = _FTLocations + [_x];
@@ -285,7 +290,8 @@ while {alive player && dialog} do {
 								_markerName setMarkerTypeLocal "mil_circle";
 								_markerName setMarkerColorLocal "ColorYellow";
 								_markerName setMarkerSizeLocal [0,0];
-								_markerName setMarkerTextLocal Format ["$%1",_fee];
+								//--- fold89 BUG3: show the full charge (flat + per-km), not the per-km slice alone.
+								_markerName setMarkerTextLocal Format ["$%1",_feeTotal];
 							};
 							_i = _i + 1;
 						};
@@ -520,8 +526,9 @@ while {alive player && dialog} do {
 			//---       so the next map click re-enters and the second call returns true.
 			//---   C2: exitWith only exits its own block; gate the WHOLE travel sequence with _doTravel latch.
 			//---   C3: original surcharge loop below is the SOLE charger; never add another deduction above it.
-			private ["_doTravel","_ftRecheckOk","_ftConfirmMsg","_ftBaseFee","_ftVehFee","_ftVehCount","_ftVehList"];
+			private ["_doTravel","_ftRecheckOk","_ftConfirmMsg","_ftBaseFee","_ftVehFee","_ftVehCount","_ftVehList","_ftFundsShort"];
 			_doTravel = false;
+			_ftFundsShort = false;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
 			_destination = [_callPos,_FTLocations] Call WFBE_CO_FNC_GetClosestEntity;
 			if (_callPos distance _destination < 500) then {
@@ -585,9 +592,27 @@ while {alive player && dialog} do {
 						};
 					};
 				};
+				//--- fold89 BUG2: recheck funds at CONFIRM time. Click-1 and click-2 can be up to ~6s apart,
+				//--- during which the balance can drop below the bill (other spends, upkeep). Recompute the
+				//--- full bill now (flat + per-km + the per-vehicle surcharge for the vehicles taken along) and
+				//--- deny via the menu's established ctrlSetText[17027] feedback rather than charge into the red.
+				if (_ftRecheckOk && _ft == 2) then {
+					private ["_ftConfirmFee","_ftConfirmVehFee","_ftConfirmVehSeen"];
+					_ftConfirmFee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
+					_ftConfirmVehSeen = [];
+					{if (_x distance _startPoint < _ftr && !(_x in _ftConfirmVehSeen) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {_ftConfirmVehSeen set [count _ftConfirmVehSeen, vehicle _x]}} forEach units (group player);
+					_ftConfirmVehFee = (count _ftConfirmVehSeen) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE");
+					if ((Call GetPlayerFunds) < (_ftConfirmFee + _ftConfirmVehFee)) then {
+						_ftRecheckOk = false;
+						_ftFundsShort = true;
+						ctrlSetText [17027, Format ["Not enough funds - fast travel costs $%1.", (_ftConfirmFee + _ftConfirmVehFee)]];
+						_lastUpdate = 0;
+					};
+				};
 				if (!_ftRecheckOk) then {
-					//--- Destination flipped; deny and force a fresh location scan.
-					ctrlSetText [17027, "Destination lost - town was captured. Pick another."];
+					//--- Destination flipped or funds fell short; deny and force a fresh location scan.
+					//--- (funds-short path already wrote its own 17027 message and set _ftFundsShort.)
+					if (!_ftFundsShort) then {ctrlSetText [17027, "Destination lost - town was captured. Pick another."]};
 					_lastUpdate = 0;
 				} else {
 					closeDialog 0;
