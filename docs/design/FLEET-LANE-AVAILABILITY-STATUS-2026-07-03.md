@@ -1,6 +1,6 @@
 # Fleet Lane Availability Status - 2026-07-03
 
-Lane 25 shepherd pass, based on `github/claude/build84-cmdcon36@006f7b7f6`, the refreshed fleet prompt, the wiki coordination feed, and the GitHub PR board.
+Lane 25 shepherd pass, based on `github/claude/build84-cmdcon36@c76f3e007`, the refreshed fleet prompt, the wiki coordination feed, and the GitHub PR board.
 
 ## Current Result
 
@@ -13,6 +13,7 @@ The original fleet prompt lanes `1-187` are saturated: each lane number is repre
 | Open PRs at scan time | `197` |
 | Open PRs targeting `claude/build84-cmdcon36` | `195` |
 | Dirty open PRs | `#368` and `#320` on `claude/build84-cmdcon36`; `#129` on `master` |
+| New wiki-only roster | `Agent-Worklog.md` now notes Block K lanes `188-218`; this report still measures the original prompt lanes `1-187` |
 
 ## Refresh - 2026-07-03T05:07:17+02:00
 
@@ -38,6 +39,16 @@ The board counts stayed stable after the base update: `197` open PRs, `195` targ
 
 No new non-overlapping source lane appeared. This pass keeps PR #470 as the single availability report, with no mission source edits by this lane, no LoadoutManager run, no live deploy, and no package output.
 
+## Refresh - 2026-07-03T07:33:20+02:00
+
+GitHub remote `claude/build84-cmdcon36` advanced again from `006f7b7f6` to `c76f3e007`. The new live-base commit only changes `Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/mission.sqm` and this existing PR #470 branch was merged forward with that base using a normal non-force merge commit.
+
+GitHub briefly returned a broad `UNKNOWN` mergeability burst immediately after the base move. A retry settled back to the stable board: `197` open PRs, `195` targeting `claude/build84-cmdcon36`, and dirty open PRs still limited to #368 and #320 on Build84 plus #129 on `master`.
+
+The wiki worklog now has a compact "Codex roster Block K" note for lanes `188-218`. That roster is newer than the original fleet prompt file and is not counted as an unrepresented gap in the original `1-187` prompt-lane table above. Future agents should claim Block K work from its own source-backed evidence instead of treating this original-prompt saturation report as closure for those new lanes.
+
+No new non-overlapping source repair appeared in this refresh. This pass keeps PR #470 as the single availability report, with no mission source edits by this lane, no LoadoutManager run, no live deploy, and no package output.
+
 ## Why No Hot-File Repair Was Opened
 
 PR #320, `Lane 44: add MV-22 QRF lift flavour`, remains an unsafe automatic repair target during this heartbeat:
@@ -56,13 +67,15 @@ PR #368, `fable/guer-road-ambush`, is also not a safe automatic repair target du
 
 ## Safe Working-Lane Guidance
 
-Until new lanes are added or current PRs merge/close, future fleet heartbeats should prefer one of these safe actions:
+For original prompt lanes `1-187`, until current PRs merge/close, future fleet heartbeats should prefer one of these safe actions:
 
 1. Close or update stale wiki records only when the source PR is already merged and the merge commit is an ancestor of `origin/claude/build84-cmdcon36`.
 2. Shepherd existing PRs only when the touched files are outside the avoid list and the owner/reviewer intent is already clear.
 3. Use docs-only status reports for current-target-present findings, but only after confirming no open PR or wiki claim already owns that exact lane.
 
 Do not claim a new source lane from the original prompt solely because a lane number looks absent from one surface. The combined wiki plus GitHub scan is required; several lanes only appear in one of those two systems.
+
+For Block K lanes `188-218`, start from the new `Agent-Worklog.md` roster entry and require a fresh source-backed claim before editing code. Do not infer that those lanes are covered by the original prompt-lane saturation table.
 
 ## Recent Coordination Anchors
 
