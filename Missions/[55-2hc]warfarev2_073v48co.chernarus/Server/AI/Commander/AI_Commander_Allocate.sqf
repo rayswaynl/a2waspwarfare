@@ -261,7 +261,7 @@ if (_harassN > 0) then {
 			_hfReach = false;
 			{ _hfPos = _x; if ((_hfPos distance _hfTown) <= _hfMntReach) exitWith {_hfReach = true} } forEach _hfMntPos;
 			if (_hfReach) then {
-				if (isNull _harassTgt) then {_harassTgt = _hfTown; _harassFar = _hfDepth};
+				if (isNull _harassTgt) then {_harassTgt = _hfTown; _harassFar = _hfDepth; exitWith {}};
 			} else {
 				if (isNull _hfFirst && {isNull _harassTgt}) then {_hfFirst = _hfTown; _hfSkip = true};
 			};
@@ -295,7 +295,7 @@ _neutTowns = [];
 
 //--- ASSIGN every ELIGIBLE team: a light MOUNTED detachment to the rear harass target (M2), up to _expandN
 //--- teams to capture NEUTRAL towns (expansion lane), the rest concentrated on the fist (reach-aware; never idle).
-private ["_assigned","_harassAssigned","_expandClaimed"];
+private ["_assigned","_harassAssigned","_expandClaimed","_dedupOn"];
 _garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 _expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick
@@ -306,6 +306,7 @@ _expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by a
 private ["_fistCounts","_capPerFist"];
 _fistCounts = []; { _fistCounts set [_forEachIndex, 0] } forEach _fist;
 _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
+_dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 {
 	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
 	_grp = _x;
@@ -340,14 +341,14 @@ _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
 					private ["_eTgt","_eD","_ev"];
 					_eTgt = objNull; _eD = 1e9;
 					//--- DEDUP (block-m, WFBE_C_AICOM_EXPAND_DEDUP): skip towns already claimed this tick
-					if ((missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0) then {
+					if (_dedupOn) then {
 						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD} && {!(_x in _expandClaimed)}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
 					} else {
 						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
 					};
 					if (!isNull _eTgt) then {
 						_tgt = _eTgt; _expandCount = _expandCount + 1;
-						if ((missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0) then {
+						if (_dedupOn) then {
 							_expandClaimed set [count _expandClaimed, _eTgt];
 						};
 					};
