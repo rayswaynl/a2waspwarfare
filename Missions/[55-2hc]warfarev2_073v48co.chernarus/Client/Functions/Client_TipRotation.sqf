@@ -44,7 +44,7 @@
 	findIf / selectRandom / apply / forEachIndex - none of those exist in OA 1.64.
 */
 
-private ["_enable","_period","_initial","_tips","_gate","_flag","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
+private ["_enable","_period","_initial","_tips","_gate","_gateType","_flag","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
 
 //--- Master toggle (default ON). Registered in Common\Init\Init_CommonConstants.sqf (cmdcon42-q).
 _enable = missionNamespace getVariable ["WFBE_C_TIPS_ENABLE", 1];
@@ -177,7 +177,13 @@ while {true} do {
 
 	_ok = true;
 	if (typeName _flag == "STRING" && {_flag != ""}) then {
-		if ((missionNamespace getVariable [_flag, 0]) < 1) then {_ok = false};
+		_gate = missionNamespace getVariable [_flag, 0];
+		_gateType = typeName _gate;
+		switch (_gateType) do {
+			case "SCALAR": {if (_gate < 1) then {_ok = false}};
+			case "STRING": {if ((count (toArray _gate)) < 1) then {_ok = false}};
+			default {_ok = false};
+		};
 	};
 
 	//--- Only a gated-out tip is skipped silently; an eligible tip is posted and counts as "last".
