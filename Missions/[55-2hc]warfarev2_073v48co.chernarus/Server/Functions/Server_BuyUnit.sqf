@@ -128,6 +128,12 @@ while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- q
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
 
+	//--- ENGINE-VERIFIED (A2OA 1.64, XWT probe 2026-07-03): an exitWith in a while-BODY exits only the
+	//--- LOOP, not the script - after this fires, execution falls through to the sleep + spawn section
+	//--- below. That is safe here for two reasons: (a) the identical top-scope re-guard after the sleep
+	//--- aborts the script for real before anything spawns, and (b) the wfbe_queue release is an ARRAY
+	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
+	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
 	if (!(alive _building)||(isNull _building)||(isPlayer (leader _team))) exitWith {
 		_gbq = (_team getVariable "wfbe_queue") - _id;
 		_team setVariable ["wfbe_queue",_gbq];

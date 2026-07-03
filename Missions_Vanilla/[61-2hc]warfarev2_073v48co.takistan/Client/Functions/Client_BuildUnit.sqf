@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -301,6 +301,16 @@ if (_myActionID >= 0) then {
 if (_qIdx < 0) exitWith {};
 _group = group player;
 _spawnedUnits = [];
+//--- cmdcon44-g SINGLE-RELEASE CONTRACT. ENGINE-VERIFIED on A2OA 1.64 (XWT probe suite, 2026-07-03,
+//--- local offline instance of the live box's own binary): an exitWith fired INSIDE a then{}/else{}
+//--- block exits ONLY that block - execution FALLS THROUGH to the shared tail of this script; it does
+//--- NOT abort the spawned script. Only a top-scope exitWith (the two exits just above/below) aborts.
+//--- Consequence: block-level BUYFAIL exits must NOT release unitQueu / WFBE_C_QUEUE_<factory> inline -
+//--- the tail always runs and releases them exactly once. They set _buyFailed instead (refund + RPT
+//--- warning stay inline; the tail gates the success-only steps on it).
+_buyFailed = false;
+//--- TOP-SCOPE exitWith: verified to abort the whole spawned script (the shared tail below never runs),
+//--- so THIS exit must keep releasing the counters inline - unlike the block-level exits further down.
 if (!alive _building || isNull _building) exitWith {
 	unitQueu = unitQueu - _cpt;
 	missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
@@ -317,14 +327,15 @@ if (_isMan) then {
 	//--- but still hands back objNull. The player was ALREADY charged at buy time (GUI_Menu_BuyUnits.sqf:
 	//--- -(_currentCost) Call ChangePlayerFunds), so a silent null soldier = pay-and-get-nothing AND a leaked
 	//--- squad slot: unitQueu never comes back down, so the player hits "max group" with fewer real units than
-	//--- the counter claims (exactly Ray's "added to my unit count but nothing spawned"). Release the per-factory
-	//--- queue slot + unitQueu and refund the exact price - byte-for-byte the vehicle guard's contract. Same
-	//--- inline-decrement + exitWith idiom as the destroyed-factory / empty-vehicle / vehicle-BUYFAIL exits.
+	//--- the counter claims (exactly Ray's "added to my unit count but nothing spawned"). Refund the exact price
+	//--- and flag the buy failed - byte-for-byte the vehicle guard's contract.
+	//--- cmdcon44-g: this exitWith only exits the _isMan then-block (ENGINE-VERIFIED, see the _buyFailed
+	//--- contract above) - the shared tail still runs and is the single point that releases the queue slot.
+	//--- The original inline release here made every infantry BUYFAIL free the slot TWICE.
 	if (isNull _soldier) exitWith {
-		unitQueu = unitQueu - _cpt;
-		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		_buyFailed = true;
 		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
-		["WARNING", Format ["Client_BuildUnit.sqf: BUYFAIL infantry buy of [%1] produced objNull (spawn failed) - refunded $%2 and released queue slot for factory [%3].", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
+		["WARNING", Format ["Client_BuildUnit.sqf: BUYFAIL infantry buy of [%1] produced objNull (spawn failed) - refunded $%2; queue slot for factory [%3] released once by the shared tail.", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
 	};
 
 	//--- OA or CO, Since BIS will soon fix it... not!, we fix unit backpack attachment on creation.
@@ -386,14 +397,14 @@ if (_isMan) then {
 	//--- synthetic AH6X_M134 / TKV_* token whose remap above did not resolve to a real hull), a blocked
 	//--- spawn position, or any createVehicle failure. The player was ALREADY charged at buy time
 	//--- (GUI_Menu_BuyUnits.sqf: -(_currentCost) Call ChangePlayerFunds), so a silent null spawn = the
-	//--- player pays and gets nothing. Detect it here and (a) release the per-factory queue slot + unitQueu
-	//--- (else the factory soft-locks at its cap, exactly like the empty-vehicle exit does), and (b) refund
-	//--- the exact price paid. Same idiom as the destroyed-factory refund path (:282-287 above).
+	//--- player pays and gets nothing. Detect it here, refund the exact price paid, and flag the buy failed.
+	//--- cmdcon44-g: this exitWith only exits this else-block (ENGINE-VERIFIED, see the _buyFailed contract
+	//--- above) - the shared tail still runs and is the single point that releases the queue slot + unitQueu.
+	//--- The original inline release here made every vehicle BUYFAIL free the slot TWICE.
 	if (isNull _vehicle) exitWith {
-		unitQueu = unitQueu - _cpt;
-		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+		_buyFailed = true;
 		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
-		["WARNING", Format ["Client_BuildUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded $%2 and released queue slot for factory [%3].", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
+		["WARNING", Format ["Client_BuildUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded $%2; queue slot for factory [%3] released once by the shared tail.", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
 	};
 
 	clientTeam reveal _vehicle;
@@ -808,15 +819,16 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 
 
-	//--- Empty Vehicle.
-	if (!_driver && !_gunner && !_commander) exitWith {
-		//--- Release fix (#3): empty-vehicle exit must still release the per-factory queue slot,
-		//--- otherwise WFBE_C_QUEUE_<type> leaks one each empty purchase and the factory soft-locks at its cap.
-		//--- NO refund here: this is the normal crewless/Depot purchase path and the vehicle WAS already
-		//--- spawned above. (The genuine destroyed-factory refund lives in the !alive _building exit earlier.)
-		unitQueu = unitQueu - _cpt;
-		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
-	};
+	//--- Empty Vehicle: a crewless purchase is COMPLETE at this point - this exitWith only skips the
+	//--- crew-management remainder of this else-block (ENGINE-VERIFIED, see the _buyFailed contract above);
+	//--- execution falls through to the shared tail, which releases the queue slot exactly once and shows
+	//--- the Build-Complete hint. NOT a failed buy, so _buyFailed stays false.
+	//--- cmdcon44-g REVERTS fix #3 (ab828d06b): its inline release here assumed this exitWith aborted the
+	//--- script before the tail - in reality the tail always ran too, so every crewless buy (the most common
+	//--- player vehicle purchase) freed the slot TWICE and unitQueu / WFBE_C_QUEUE_<factory> drifted negative,
+	//--- quietly widening the factory queue cap. The June-2 "leak" fix #3 patched was actually the Title-case
+	//--- WFBE_LONGEST*BUILDTIME lookup bug (stuck queue head), properly fixed by the toUpper above (cmdcon44-f).
+	if (!_driver && !_gunner && !_commander) exitWith {};
 
 	//--- Crew Management.
 	_crew = missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText];
@@ -914,11 +926,20 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	[sideJoinedText,'UnitsCreated',_cpt] Call UpdateStatistics;
 };
 
-if (_factory in ["Barracks","Light","Heavy","Aircraft","Depot","Airport"]) then {
+//--- SHARED TAIL (cmdcon44-g) - the ONLY queue-slot release for every path that did not abort at top
+//--- scope. ENGINE-VERIFIED (A2OA 1.64): the block-level exits above (infantry/vehicle BUYFAIL,
+//--- empty-vehicle) fall through to here, so each buy releases its slot exactly once. Do NOT add
+//--- releases to block-level exits and do NOT gate these two counter lines on _buyFailed.
+if (!_buyFailed && {_factory in ["Barracks","Light","Heavy","Aircraft","Depot","Airport"]}) then {
 	[_group, _spawnedUnits] call WFBE_CL_FNC_SendSpawnedUnitsToLeaderWaypoint;
 };
 
 unitQueu = unitQueu - _cpt;
 
 missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
-hint parseText(Format [localize "STR_WF_INFO_Build_Complete",_description]);
+if (_buyFailed) then {
+	//--- failed buy: the player already got the refund (guard above); tell them instead of "complete".
+	hint parseText(Format ["<t color='#ff9060'>%1 could not be built - price refunded.</t>", _description]);
+} else {
+	hint parseText(Format [localize "STR_WF_INFO_Build_Complete",_description]);
+};
