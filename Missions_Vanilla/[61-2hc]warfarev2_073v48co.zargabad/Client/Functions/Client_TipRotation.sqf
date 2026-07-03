@@ -123,7 +123,7 @@ _tips = [
 	["Found a bug or a broken mechanic? Report it on our Discord (discord.me/warfare) with what you were doing - it genuinely helps us fix it.", ""],
 	["New here? Open Help in the WF menu - full pages on economy, capturing, commanding the AI and the factions, written for this exact mission.", ""],
 	["Running an optional mods setup? Check the community guide on Discord (discord.me/warfare) so you load only what this server actually supports.", ""],
-	["Class tags (SOL/SUP/MED/ENG/SNI) show on the map and in your Notes - a medic's Redeployment Truck even gives medics a forward spawn.", ""]
+	["Class tags (SOL/SPEC/MED/ENG/SNI) show on the map and in your Notes - a medic's Redeployment Truck even gives medics a forward spawn.", ""]
 ];
 
 //================================================================ ROTATION LOOP

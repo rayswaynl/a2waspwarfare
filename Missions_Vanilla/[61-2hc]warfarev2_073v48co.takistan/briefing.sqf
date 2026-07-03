@@ -38,7 +38,7 @@ _subStart    = "WFNotesStart"; player createDiarySubject ["WFNotesStart",    "St
 
 player createDiaryRecord [_subStart, ["Key Controls",
 	"<br/><t size='1.2' color='#F5D363'>The controls you need</t><br/><br/>" +
-	"<t color='#F5D363'>M</t> - open the map. Towns, both bases, both banks and airfields are marked. Your class tag (SOL/SUP/MED/ENG/SNI) follows you on the map.<br/><br/>" +
+	"<t color='#F5D363'>M</t> - open the map. Towns, both bases, both banks and airfields are marked. Your class tag (SOL/SPEC/MED/ENG/SNI) follows you on the map.<br/><br/>" +
 	"<t color='#F5D363'>Mouse scroll wheel</t> - opens your <t color='#F5D363'>action menu</t>. The <t color='#F5D363'>WF menu</t> lives here: it is how you buy gear, units and vehicles, change class, request upgrades, and more. You must be inside a base or near a factory for the buy options to appear.<br/><br/>" +
 	"<t color='#F5D363'>Class Info</t> action (scroll menu) - re-read what your current class can do at any time.<br/><br/>" +
 	"<t color='#F5D363'>Respawn</t> - when you die you pick a spawn point on the map: your base, or any town strongpoint your side holds."
@@ -128,7 +128,7 @@ player createDiaryRecord [_subAdvanced, ["Class Guide",
 	"<t color='#F5D363'>SPECOPS</t> - lockpick enemy vehicles, run supply missions.<br/><br/>" +
 	"<t color='#F5D363'>SPOTTER (Sniper)</t> - spot enemies as map marks, lockpick, restore camps.<br/><br/>" +
 	"<t color='#F5D363'>MEDIC</t> - fast healing, restore camps, and the only class that can spawn at the Medic Redeployment Truck.<br/><br/>" +
-	"Class tags (SOL/SUP/MED/ENG/SNI) appear on the map."
+	"Class tags (SOL/SPEC/MED/ENG/SNI) appear on the map."
 ]];
 
 player createDiaryRecord [_subAdvanced, ["Patrols, Convoys & Queues",
