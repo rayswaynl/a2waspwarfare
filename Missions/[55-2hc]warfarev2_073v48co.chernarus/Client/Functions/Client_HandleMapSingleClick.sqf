@@ -8,7 +8,7 @@
 */
 
 // Marty: Ctrl-click map disband falls back to the legacy setDamage disband method.
-Private ["_aiId","_alt","_candidate","_candidateDistance","_candidatePosition","_candidatePosition2D","_candidateVehicle","_clickPosition2D","_ctrlPressed","_distance","_group","_message","_position","_range","_selectedUnits","_shift","_storedPosition","_target","_units","_plainClick","_selectedGroupUnits","_targetVehicle","_driver","_gunner","_commander","_crewPriority","_crewUnit","_selectionHandled","_isSelectableMapUnit","_isVehicleIcon"];
+Private ["_aiId","_alt","_candidate","_candidateDistance","_candidatePosition","_candidatePosition2D","_candidateVehicle","_clickPosition2D","_confirmData","_confirmEnabled","_confirmExpires","_confirmTarget","_ctrlPressed","_disbandNow","_distance","_group","_message","_position","_range","_selectedUnits","_shift","_storedPosition","_target","_units","_plainClick","_selectedGroupUnits","_targetVehicle","_driver","_gunner","_commander","_crewPriority","_crewUnit","_selectionHandled","_isSelectableMapUnit","_isVehicleIcon"];
 
 _position = _this select 0;
 _shift = _this select 1;
@@ -86,9 +86,36 @@ if (_ctrlPressed) exitWith {
 	};
 
 	_aiId = _target Call WFBE_CL_FNC_GetAIID;
-	_target setDamage 1;
-	_message = Format ["Disbanded AI %1.", _aiId];
-	titleText [_message, "PLAIN DOWN"];
+	_disbandNow = true;
+	_confirmEnabled = (missionNamespace getVariable ["WFBE_C_DISBAND_CONFIRM", 1]) > 0;
+	if (_confirmEnabled) then {
+		_confirmData = missionNamespace getVariable ["WFBE_CLIENT_DISBAND_PENDING", []];
+		_confirmTarget = objNull;
+		_confirmExpires = -1;
+
+		if ((typeName _confirmData) == "ARRAY") then {
+			if ((count _confirmData) > 1) then {
+				_confirmTarget = _confirmData select 0;
+				_confirmExpires = _confirmData select 1;
+			};
+		};
+
+		if ((isNull _confirmTarget) || {_confirmTarget != _target} || {time > _confirmExpires}) then {
+			_confirmData = [_target, time + 3];
+			missionNamespace setVariable ["WFBE_CLIENT_DISBAND_PENDING", _confirmData];
+			_message = Format ["Hold CTRL-click again within 3s to disband AI %1.", _aiId];
+			titleText [_message, "PLAIN DOWN"];
+			_disbandNow = false;
+		} else {
+			missionNamespace setVariable ["WFBE_CLIENT_DISBAND_PENDING", []];
+		};
+	};
+
+	if (_disbandNow) then {
+		_target setDamage 1;
+		_message = Format ["Disbanded AI %1.", _aiId];
+		titleText [_message, "PLAIN DOWN"];
+	};
 	false
 };
 
