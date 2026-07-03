@@ -1220,6 +1220,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- parked team's order. Was hardcoded 600s (10min) = stalemate-slow. Now config-driven.
 	if (isNil 'WFBE_C_AICOM_STUCK_SECS')  then {WFBE_C_AICOM_STUCK_SECS  = 210};
 	if (isNil 'WFBE_C_AICOM_STUCK_MOVED') then {WFBE_C_AICOM_STUCK_MOVED = 200};
+	if (isNil 'WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP') then {WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP = 1}; //--- 1 = last-stand recall shields HQ defenders from wedge-watchdog release; 0 = legacy.
 	if (isNil 'WFBE_C_AICOM_STUCK_FAR')   then {WFBE_C_AICOM_STUCK_FAR   = 300};
 	//--- ASSAULT TELEMETRY (task #48, #2): dispatch->arrival watcher thresholds (AssignTowns Hook B).
 	//--- ARRIVE_RADIUS 250m ~= town SAD radius (AIMoveTo uses 200) + leader margin to count "at the town".
