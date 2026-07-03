@@ -28,7 +28,7 @@ while {!gameOver} do {
 
 		_town = _x;
 		_townIdx = _forEachIndex;
-		_range = (_town getVariable "range") * _tcarm;
+		_range = (_town getVariable ["range", 200]) * _tcarm;
 		_visible = false;
 
 		if ((_town getVariable "sideID") == sideID) then {_visible = true} else {{if (_town distance _x < _range) then {_visible = true}} forEach _units};
