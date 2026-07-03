@@ -66,6 +66,15 @@ while {!WFBE_GameOver} do {
 					case WFBE_C_WEST_ID: {_east + _resistance};
 					case WFBE_C_EAST_ID: {_west + _resistance};
 					case WFBE_C_GUER_ID: {_east + _west};
+					//--- FIX (cmdcon44-e, claude-gaming 2026-07-03): neutral towns (WFBE_C_UNKNOWN_ID) have
+					//--- no owner so none of the three named cases matched -> _activeEnemies stayed undefined
+					//--- -> every downstream read ('_supplyValue', '_rate'...) threw Undefined. Live evidence:
+					//--- 391x/_supplyValue + 319x/_rate errors in the 66-min ZG soak (0 flips). ZG simply
+					//--- starts with ALL towns neutral (WFBE_C_TOWNS_STARTING_MODE=0 default) so the nil fired
+					//--- on every town every 5s from tick 1. The same nil fires on CH/TK mode-0 neutral towns
+					//--- too -- this fix is beneficial on all maps; ZG just has far more neutral towns from
+					//--- match start. Default = all combatants present (correct count for a neutral contested town).
+					default {_west + _east + _resistance};
 				};
 
 				//--- CONTESTED stamp (wasp-dash-safe-telemetry, claude-gaming 2026-06-21): mark this town as

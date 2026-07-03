@@ -72,6 +72,31 @@ if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 3};  //--- 
 */
 with missionNamespace do {
 
+//--- ZG-FIX (cmdcon44-e, claude-gaming 2026-07-03): Zargabad-scoped constant pre-sets.
+//--- These run BEFORE the isNil-guarded CH/TK defaults below, so the ZG values win and the
+//--- CH/TK defaults (e.g. HQSTRIKE_MIN_TOWNS=12) are skipped on Zargabad. CH/TK: byte-identical
+//--- (worldName guard skips this block). isNil guards here respect lobby-param pre-sets.
+//--- Rationale: ZG is a small dense urban map (~8 towns, 8192m). The CH defaults are scaled for
+//--- Chernarus (40+ towns, 15360m) and are unreachable on ZG -> AI never entered engage/strike
+//--- phase, matches stalled (0 captures in the live 66-min soak). LANE_OFFSET and REACH_FOOT
+//--- match TK values (same map-size class, same tight-valley routing constraint).
+//--- EGRESS_MAP_BOUNDS=1: use Init_Boundaries ZG size (8192) not the legacy 15360 CH box,
+//--- so random base-start candidates are not selected in out-of-bounds ghost terrain.
+if (worldName == "Zargabad") then {
+	if (isNil "WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS") then {WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS = 5};
+	if (isNil "WFBE_C_AICOM_ENGAGE_MIN_TOWNS")   then {WFBE_C_AICOM_ENGAGE_MIN_TOWNS   = 4};
+	if (isNil "WFBE_C_AICOM_LANE_OFFSET")         then {WFBE_C_AICOM_LANE_OFFSET         = 60};
+	if (isNil "WFBE_C_AICOM_ASSAULT_REACH_FOOT")  then {WFBE_C_AICOM_ASSAULT_REACH_FOOT  = 1800};
+	//--- NOTE: this 1800 matches TK's empirical value set at line ~1229 below, but via a different
+	//--- path. Line ~1229 uses `if (worldName == "Takistan") then {1800} else {2500}` -- on ZG that
+	//--- guard evaluates the else branch (worldName is "Zargabad") and would set 2500, not 1800.
+	//--- This ZG pre-set runs BEFORE that line, lands 1800 first, and the isNil guard at ~1229
+	//--- finds the var already set and skips. So this line is the only path to 1800 on ZG; on TK
+	//--- the pre-set is never reached (worldName guard skips the entire ZG block). No double-assignment.
+	if (isNil "WFBE_C_BASE_EGRESS_MAP_BOUNDS")    then {WFBE_C_BASE_EGRESS_MAP_BOUNDS    = 1};
+};
+//--- End ZG-FIX Zargabad-scoped pre-sets.
+
 //--- GUER "Insurgents" playable faction master gate (0=off, 1=on). Default OFF = byte-for-byte today's behaviour.
 	if (isNil "WFBE_C_GUER_PLAYERSIDE") then {WFBE_C_GUER_PLAYERSIDE = 1}; //--- B66: 0->1 GUER playable ON (trial round).
 	if (isNil "WFBE_C_GUER_VBIED_ARM_DELAY") then {WFBE_C_GUER_VBIED_ARM_DELAY = 3};
