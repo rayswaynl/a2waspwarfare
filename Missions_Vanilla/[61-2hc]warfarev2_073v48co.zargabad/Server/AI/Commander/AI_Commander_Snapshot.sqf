@@ -31,7 +31,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID"
 	"_myHQ","_enemyHQ","_myStr","_enStr","_loneAlive","_loneFar","_townStr","_myEff","_enEff",
 	"_funds","_supply","_players","_myPlayers","_hcUnits","_teamDigests","_team","_tAlive",
 	"_isRemnant","_rf","_ldr","_ldrPos","_isHC","_isFound","_isGar","_mode","_strikeFlag",
-	"_reliefTown","_hasGndVeh","_mountedNow","_hasHeavy","_veh","_garGrp","_snap","_elMin"];
+	"_reliefTown","_hasGndVeh","_mountedNow","_hasHeavy","_veh","_garGrp","_snap","_elMin","_townsReady"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -45,6 +45,13 @@ _enemySide = if (_side == west) then {east} else {west};
 if (!(_enemySide in WFBE_PRESENTSIDES)) exitWith {};
 _enemyID = (_enemySide) Call WFBE_CO_FNC_GetSideID;
 _enemyLogik = (_enemySide) Call WFBE_CO_FNC_GetSideLogic;
+_townsReady = true;
+if (isNil "towns") then {_townsReady = false} else {
+	if ((count towns) < 1) then {_townsReady = false};
+};
+if (!_townsReady) exitWith {
+	["WARNING", "AI_Commander_Snapshot.sqf: towns global is nil or empty - snapshot skipped."] Call WFBE_CO_FNC_AICOMLog;
+};
 
 //--- TOWN CENSUS: my / enemy / neutral counts + the two candidate lists the allocator needs.
 _myTowns = 0; _enemyTowns = 0; _neutTowns = 0; _totTowns = 0;
@@ -124,9 +131,13 @@ _teamDigests = [];
 			_ldr = leader _team;
 			_ldrPos = if (!isNull _ldr) then {getPos _ldr} else {[0,0,0]};
 			_isGar = (_team == _garGrp);
-			_mode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
-			_strikeFlag = _team getVariable ["wfbe_aicom_strike", false];
-			_reliefTown = _team getVariable ["wfbe_aicom_relief", objNull];
+			_mode = _team getVariable "wfbe_teammode";
+			if (isNil "_mode") then {_mode = "towns"};
+			_mode = toLower _mode;
+			_strikeFlag = _team getVariable "wfbe_aicom_strike";
+			if (isNil "_strikeFlag") then {_strikeFlag = false};
+			_reliefTown = _team getVariable "wfbe_aicom_relief";
+			if (isNil "_reliefTown") then {_reliefTown = objNull};
 			//--- transport state: owns a drivable ground hull (reach-IF-remounted), anyone mounted now,
 			//--- and has a heavy punch vehicle. Classname-literal isKindOf only (A2-OA-safe).
 			_hasGndVeh = false; _mountedNow = false; _hasHeavy = false;
