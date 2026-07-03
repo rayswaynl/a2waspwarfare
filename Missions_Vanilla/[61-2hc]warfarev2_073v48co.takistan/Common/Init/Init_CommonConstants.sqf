@@ -1890,5 +1890,15 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
 
+//--- Lane 192: safe dismiss-AI vehicle kill (only destroy vehicle when dismissed unit
+//--- is the sole occupant; prevents collateral kills on shared vehicles).
+//--- Default 0 (off). Set 1 to activate the solo-crew check.
+	if (isNil "WFBE_C_FIX_DISMISS_SOLO_CREW") then {WFBE_C_FIX_DISMISS_SOLO_CREW = 0};
+
+//--- Lane 193: reset unitQueu to 0 on player respawn (Client_PreRespawnHandler.sqf)
+//--- so the factory-queue cap counter does not accumulate across deaths.
+//--- Default 0 (off). Set 1 to activate the reset.
+	if (isNil "WFBE_C_FIX_RESPAWN_UNITQUEU_RESET") then {WFBE_C_FIX_RESPAWN_UNITQUEU_RESET = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

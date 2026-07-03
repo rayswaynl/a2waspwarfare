@@ -2,6 +2,12 @@ Private ["_hq","_unit","_rearmor"];
 
 _unit = _this;
 
+//--- Lane 193: reset the factory-queue counter that Client_BuildUnit.sqf
+//--- increments at line 11 (unitQueu = unitQueu + _cpt).  Without this reset
+//--- the value climbs across deaths, blocking further purchases once it exceeds
+//--- the factory's queue cap.  Flag WFBE_C_FIX_RESPAWN_UNITQUEU_RESET must be 1.
+if ((missionNamespace getVariable ["WFBE_C_FIX_RESPAWN_UNITQUEU_RESET", 0]) > 0) then {unitQueu = 0};
+
 (_unit) Call WFBE_SK_FNC_Apply;
 [] execFSM "Client\FSM\updateactions.fsm";
 

@@ -115,8 +115,25 @@ while {alive player && dialog} do {
 			_targetUnit = _units select _curUnitSel;
 			_vehicle = vehicle _targetUnit;
 
+			//--- Lane 192: only include the vehicle in the destroy list when the dismissed
+			//--- unit is its sole (non-player) occupant; otherwise other live crew would be
+			//--- killed too.  Flag WFBE_C_FIX_DISMISS_SOLO_CREW must be 1 to activate.
 			_destroy = [_targetUnit];
-			if (_vehicle != _targetUnit) then {_destroy = _destroy + [_vehicle]};
+			if (_vehicle != _targetUnit) then {
+				if ((missionNamespace getVariable ["WFBE_C_FIX_DISMISS_SOLO_CREW", 0]) > 0) then {
+					//--- Check that no OTHER live unit (player or AI belonging to a different
+					//--- player) still occupies the vehicle before we add it to _destroy.
+					private ["_otherCrew"];
+					_otherCrew = false;
+					{
+						if ((_x != _targetUnit) && {alive _x}) then {_otherCrew = true};
+					} forEach (crew _vehicle);
+					if (!_otherCrew) then {_destroy = _destroy + [_vehicle]};
+				} else {
+					//--- Flag OFF: original behaviour (always include vehicle).
+					_destroy = _destroy + [_vehicle];
+				};
+			};
 			{
 				if !(isPlayer _x) then {
 					if (_x isKindOf 'Man') then {removeAllWeapons _x};
