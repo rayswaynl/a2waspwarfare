@@ -690,6 +690,17 @@ with missionNamespace do {
 	//--- reads these for the aicom-reinforce / aicom-posture / aicom-request-unit stamps + the aicom-donate amount. isNil-guarded.
 	if (isNil "WFBE_C_AICOM_REINFORCE_TTL")    then {WFBE_C_AICOM_REINFORCE_TTL    = 300}; //--- s a player-set REINFORCE-HERE order stays fresh; Strategy biases a fresh team toward that town while live, then it auto-clears.
 	if (isNil "WFBE_C_AICOM_POSTURE_TTL")      then {WFBE_C_AICOM_POSTURE_TTL      = 300}; //--- s a player PUSH/HOLD posture (and a request-unit hint) stays in force before it auto-clears back to the AI's own judgement.
+
+	//--- D4 TARGET-AWARE COMPOSITIONS: before the random bucket draw in AI_Commander_Teams.sqf, read
+	//--- the target town's existing camp/garrison composition and RE-WEIGHT the draw pool within the
+	//--- already-eligible tier. >=COMP_GARRISON_HEAVY camps -> boost AT/MG-containing templates;
+	//--- open village (supplyValue <= COMP_OPEN_SV) -> boost mech-infantry. Factory-tier gating unchanged.
+	//--- Flag 0 = inert (default OFF). A2-OA-safe (getVariable default, plain arithmetic).
+	if (isNil "WFBE_C_AICOM_TARGET_AWARE_COMP")   then {WFBE_C_AICOM_TARGET_AWARE_COMP   = 0};  //--- master switch: 1 = active, 0 = inert (default OFF).
+	if (isNil "WFBE_C_AICOM_COMP_GARRISON_HEAVY") then {WFBE_C_AICOM_COMP_GARRISON_HEAVY = 3};  //--- camp count (camps = town getVariable "camps") at or above which a town is "garrison-heavy" -> AT/MG boost.
+	if (isNil "WFBE_C_AICOM_COMP_OPEN_SV")        then {WFBE_C_AICOM_COMP_OPEN_SV        = 50}; //--- supplyValue at or below which a target is an "open village" -> mech-infantry boost.
+	if (isNil "WFBE_C_AICOM_COMP_ATMG_MULT")      then {WFBE_C_AICOM_COMP_ATMG_MULT      = 3.0};//--- weight multiplier applied to templates that contain an AT/MG hull or unit when garrison-heavy.
+	if (isNil "WFBE_C_AICOM_COMP_MECH_MULT")      then {WFBE_C_AICOM_COMP_MECH_MULT      = 2.5};//--- weight multiplier applied to light/heavy (mech-infantry) templates when the target is an open village.
 	if (isNil "WFBE_C_AICOM_DONATE_AMOUNT")    then {WFBE_C_AICOM_DONATE_AMOUNT    = 10000};//--- funds moved from the player's team wallet to the AI commander's treasury per Donate press (affordability checked client-side, re-validated server-side).
 	if (isNil "WFBE_C_AICOM_POSTURE_ENGAGE_DELTA") then {WFBE_C_AICOM_POSTURE_ENGAGE_DELTA = 4}; //--- COMMAND CONSOLE: how many towns a PUSH posture shaves off (HOLD adds to) the expansion-first ENGAGE gate in the Allocator. SMALL bias; the stance machine is untouched.
 	if (isNil "WFBE_C_AICOM_REQUEST_TYPE_MULT") then {WFBE_C_AICOM_REQUEST_TYPE_MULT = 3}; //--- COMMAND CONSOLE: weight multiplier the request-unit hook applies to the requested bucket (armor/air/infantry) in AssignTypes + Teams. SOFT nudge; the empty-bucket zero-out still guarantees a buildable pick.
@@ -902,6 +913,8 @@ with missionNamespace do {
 	if (isNil "WFBE_C_PATROLS_ROADBIAS_MOTORIZED")    then {WFBE_C_PATROLS_ROADBIAS_MOTORIZED = 1};    //--- road patrols prefer vehicle-containing pool entries (full-pool fallback for foot-only pools e.g. TKGUE).
 	if (isNil "WFBE_C_AICOM_SMOKE")                   then {WFBE_C_AICOM_SMOKE = 1};                   //--- smoke discipline: shells on the assault approach axis + covering smoke on break-off.
 	if (isNil "WFBE_C_AICOM_SMOKE_COOLDOWN")          then {WFBE_C_AICOM_SMOKE_COOLDOWN = 120};        //--- s between smoke uses per team.
+	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN")    then {WFBE_C_AICOM_ARMOR_SCREEN = 0};    //--- armor-screen: tanks screen outward on arrival instead of SAD with infantry (0=off, default).
+	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN_R")  then {WFBE_C_AICOM_ARMOR_SCREEN_R = 80}; //--- m stand-off radius for the outward screen position.
 	if (isNil "WFBE_C_NAVAL_TWIN_HULLS")              then {WFBE_C_NAVAL_TWIN_HULLS = 1};              //--- Khe Sanh: outer carriers become deck-bridged TWIN-HULL super-carriers (middle keeps the SCUD, single hull).
 	if (isNil "WFBE_C_NAVAL_WEST_AAV")                then {WFBE_C_NAVAL_WEST_AAV = 0};                //--- Lane 45: default-off WEST AAV buy-row metadata hook for future naval-map beach-assault work.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL")           then {WFBE_C_VICTORY_TERRITORIAL = 1};           //--- Ray: hold >= FRAC of all towns for MINS unbroken -> win (announced start/milestones/broken; existing win path).
