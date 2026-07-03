@@ -91,7 +91,8 @@ if (_airMaxTotalP > 0) then {
 	//--- nil even with a default -> the lazy-brace check below threw and killed Produce,
 	//--- stopping ALL factory purchases for editor teams).
 	if (!isNull _team) then {
-	_type = _team getVariable ["wfbe_teamtype", -1];
+	_type = _team getVariable "wfbe_teamtype";
+	if (isNil "_type") then {_type = -1};
 
 	//--- =========================================================================================
 	//--- (cmdcon41-w2) HC-TEAM MAINTENANCE PASS: terminal RECYCLE + friendly-town TOP-UP DISPATCH.
@@ -211,7 +212,9 @@ if (_airMaxTotalP > 0) then {
 	if (!isPlayer (leader _team) && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- B66
 		if (_type >= 0) then {
 			if (_type < count _templates) then {
-				if (count (_team getVariable ["wfbe_queue", []]) == 0) then {_canProduce = true};
+				_q = _team getVariable "wfbe_queue";
+				if (isNil "_q") then {_q = []};
+				if ((count _q) < 1) then {_canProduce = true};
 			};
 		};
 	};
@@ -312,7 +315,9 @@ if (_airMaxTotalP > 0) then {
 					_team setVariable ["wfbe_aicom_retreat_tries", _rTries, true];
 					_team setVariable ["wfbe_aicom_retreat_issues", _rIssues + 1, true]; //--- B68: monotonic re-issue count, never reset by progress.
 					_team setVariable ["wfbe_aicom_retreat_lastdist", _curDist, true];
-					_retreatSeq = ((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1;
+					_retreatOrder = _team getVariable "wfbe_aicom_order";
+					if (isNil "_retreatOrder") then {_retreatOrder = [-1]};
+					_retreatSeq = (_retreatOrder select 0) + 1;
 					_retreatOrder = [_retreatSeq, "defense", getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
@@ -455,9 +460,12 @@ if (_airMaxTotalP > 0) then {
 					_w15Exp = missionNamespace getVariable _w15Key;
 					_priceCharged = if (!isNil "_w15Exp" && {_w15Exp > time}) then {round (_price * 0.5)} else {_price};
 					[_side, -_priceCharged] Call ChangeAICommanderFunds;
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNIT_PRODUCED|class=" + _toBuild + "|factory=" + _typeName + "|cost=" + str _priceCharged + "|listCost=" + str _price + "|batch=" + str (_batchOrdered + 1));
 				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
 				_id = [floor (random 1000000)];
-				_q = (_team getVariable ["wfbe_queue", []]) + [_id];
+				_q = _team getVariable "wfbe_queue";
+				if (isNil "_q") then {_q = []};
+				_q = _q + [_id];
 				_team setVariable ["wfbe_queue", _q];
 				[_id, _facObj, _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
