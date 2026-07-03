@@ -1,0 +1,24 @@
+{
+  "name": "WFBE_NEURODEF_AAPOS_WEST",
+  "parentW": 18,
+  "parentD": 16,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "AA POSITION (LIGHT, 2 AI) — WEST. Soldier logic: the two Stinger pods sit on a sandbag-ringed pit facing the primary air-threat arc (+Y). They are the reason the position exists, so they get the open sky and are dispersed ~8 m apart (a single strafing run cannot kill both). Their blind side (behind/-Y) is covered by a rear .50 cal on its own bag ring that also gives the pit 360 self-defence against the infantry that come to knife an AA crew. HBarrier wings on the flanks (+/-X) stop enfilade fire down the gun line without capping upward fire. Ammo point sits behind cover on the left. Camo nets are set BEHIND the launchers (never overhead) so they break the silhouette without blocking the shot. Wire screen forward-left channels dismounts away from the guns and leaves a clear entrance on the right rear.",
+  "objs": [
+    {"cls":"Stinger_Pod_US_EP1","x":-4,"y":4,"z":0,"dir":335,"role":"AA launcher (left) — primary arc NW, dispersed from #2"},
+    {"cls":"Stinger_Pod_US_EP1","x":4,"y":4,"z":0,"dir":25,"role":"AA launcher (right) — primary arc NE, dispersed from #1"},
+    {"cls":"Land_fort_bagfence_round","x":-4,"y":4,"z":0,"dir":0,"role":"sandbag ring — left launcher pit"},
+    {"cls":"Land_fort_bagfence_round","x":4,"y":4,"z":0,"dir":0,"role":"sandbag ring — right launcher pit"},
+    {"cls":"M2StaticMG","x":0,"y":-4,"z":0,"dir":180,"role":"rear .50 — covers the launchers' blind side + 360 self-defence"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-4,"z":0,"dir":0,"role":"sandbag ring — rear MG"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-6,"y":-1,"z":0,"dir":0,"role":"ammo/reload point — behind cover, left"},
+    {"cls":"Land_HBarrier_large","x":-8,"y":0,"z":0,"dir":90,"role":"left flank wing — stops enfilade, no overhead"},
+    {"cls":"Land_HBarrier_large","x":8,"y":0,"z":0,"dir":90,"role":"right flank wing — stops enfilade, no overhead"},
+    {"cls":"Land_CamoNetVar_NATO","x":-6,"y":3,"z":0,"dir":0,"role":"concealment — behind left launcher, off the firing line"},
+    {"cls":"Land_CamoNetVar_NATO","x":6,"y":3,"z":0,"dir":0,"role":"concealment — behind right launcher, off the firing line"},
+    {"cls":"Fort_RazorWire","x":-3,"y":7,"z":0,"dir":20,"role":"forward-left wire — canalizes dismounts, entrance kept clear rear-right"}
+  ]
+}

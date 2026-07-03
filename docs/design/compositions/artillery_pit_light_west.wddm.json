@@ -1,0 +1,22 @@
+{
+  "name": "WFBE_NEURODEF_ARTYPOS_LIGHT_WEST",
+  "parentW": 16,
+  "parentD": 16,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "ARTILLERY PIT (LIGHT, 1 AI) — WEST. A single M119 howitzer in a proper earthen artillery revetment (Land_fort_artillery_nest_EP1) that hides the gun from ground observation and eats counter-battery shrapnel, while leaving the sky wide open for high-angle fire (NOTHING overhead). Soldier logic: a lone gun is a free kill without local protection, so a rear .50 picket watches the back door and the ammo dump sits BEHIND cover to the rear (a cook-off must not take the gun with it). Bag-fence horseshoe closes the flanks; the front stays open for the tube; the rear-left is the crew's covered entrance. The gun tube points +Y (firing arc away from base).",
+  "objs": [
+    {"cls":"Land_fort_artillery_nest_EP1","x":0,"y":3,"z":0,"dir":0,"role":"earthen artillery revetment — hides gun, clear overhead"},
+    {"cls":"M119_US_EP1","x":0,"y":3,"z":0,"dir":0,"role":"howitzer — high-angle fire, tube +Y, NO overhead cover"},
+    {"cls":"M2StaticMG","x":0,"y":-5,"z":0,"dir":180,"role":"rear MG picket — covers the back door"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-5,"z":0,"dir":0,"role":"sandbag ring — MG picket"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-3,"y":-2,"z":0,"dir":0,"role":"ammo dump — behind cover, rear-left"},
+    {"cls":"Land_fort_bagfence_long","x":-6,"y":0,"z":0,"dir":90,"role":"left flank sandbag wall"},
+    {"cls":"Land_fort_bagfence_long","x":6,"y":0,"z":0,"dir":90,"role":"right flank sandbag wall"},
+    {"cls":"Land_fort_bagfence_corner","x":-6,"y":-3,"z":0,"dir":270,"role":"rear-left corner tie-in"},
+    {"cls":"Land_fort_bagfence_corner","x":6,"y":-3,"z":0,"dir":180,"role":"rear-right corner tie-in"},
+    {"cls":"Fort_RazorWire","x":0,"y":7,"z":0,"dir":0,"role":"forward wire — keeps dismounts off the muzzle"}
+  ]
+}

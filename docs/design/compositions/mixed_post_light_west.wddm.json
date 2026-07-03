@@ -1,0 +1,22 @@
+{
+  "name": "WFBE_NEURODEF_MIXEDPOS_WEST",
+  "parentW": 18,
+  "parentD": 16,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "MIXED POST (LIGHT, 2 AI) — WEST. An all-threat outpost covering the three lanes with INTERLOCKING arcs: the .50 (anti-infantry) faces front-left and the TOW (anti-armour) faces front-right, their arcs crossing forward of the position so an attacker in the centre is engaged by both — classic mutual support. A Stinger tucked at the rear covers the air lane AND its own firers' blind side (facing back, +180). Each weapon sits in a sandbag ring. Ammo central. Short bag walls on the flanks. Forward wire canalizes dismounts into the crossfire; the rear stays open as the covered fallback / entrance. Nothing is placed over a weapon's firing line.",
+  "objs": [
+    {"cls":"M2StaticMG","x":-5,"y":3,"z":0,"dir":335,"role":".50 cal — anti-infantry, arc front-left (crosses TOW's arc)"},
+    {"cls":"TOW_TriPod_US_EP1","x":5,"y":3,"z":0,"dir":25,"role":"TOW — anti-armour, arc front-right (crosses MG's arc)"},
+    {"cls":"Stinger_Pod_US_EP1","x":0,"y":-4,"z":0,"dir":180,"role":"Stinger — air lane + covers the firers' blind side"},
+    {"cls":"Land_fort_bagfence_round","x":-5,"y":3,"z":0,"dir":0,"role":"sandbag ring — MG"},
+    {"cls":"Land_fort_bagfence_round","x":5,"y":3,"z":0,"dir":0,"role":"sandbag ring — TOW"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-4,"z":0,"dir":0,"role":"sandbag ring — Stinger"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":0,"y":0,"z":0,"dir":0,"role":"shared ammo point — centre"},
+    {"cls":"Land_fort_bagfence_long","x":-7,"y":0,"z":0,"dir":0,"role":"left flank bag wall"},
+    {"cls":"Land_fort_bagfence_long","x":7,"y":0,"z":0,"dir":0,"role":"right flank bag wall"},
+    {"cls":"Fort_RazorWire","x":0,"y":6,"z":0,"dir":0,"role":"forward wire — canalizes dismounts into the crossfire"}
+  ]
+}

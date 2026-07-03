@@ -1,0 +1,22 @@
+{
+  "name": "WFBE_NEURODEF_MIXEDPOS_EAST",
+  "parentW": 18,
+  "parentD": 16,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "MIXED POST (LIGHT, 2 AI) — EAST. All-threat outpost with interlocking arcs: DShK (anti-infantry) front-left crosses the SPG-9 recoilless (anti-armour) front-right, so the centre approach is caught in mutual support. Rear Igla covers the air lane and the firers' blind side. Sandbag rings per weapon, central ammo, flank bag walls, forward canalizing wire, open covered rear fallback. Mirrors the WEST post with RU/TK kit.",
+  "objs": [
+    {"cls":"DSHKM_TK_INS_EP1","x":-5,"y":3,"z":0,"dir":335,"role":"DShK — anti-infantry, arc front-left (crosses SPG's arc)"},
+    {"cls":"SPG9_TK_INS_EP1","x":5,"y":3,"z":0,"dir":25,"role":"SPG-9 — anti-armour, arc front-right (crosses DShK's arc)"},
+    {"cls":"Igla_AA_pod_TK_EP1","x":0,"y":-4,"z":0,"dir":180,"role":"Igla — air lane + covers the firers' blind side"},
+    {"cls":"Land_fort_bagfence_round","x":-5,"y":3,"z":0,"dir":0,"role":"sandbag ring — DShK"},
+    {"cls":"Land_fort_bagfence_round","x":5,"y":3,"z":0,"dir":0,"role":"sandbag ring — SPG-9"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-4,"z":0,"dir":0,"role":"sandbag ring — Igla"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":0,"y":0,"z":0,"dir":0,"role":"shared ammo point — centre"},
+    {"cls":"Land_fort_bagfence_long","x":-7,"y":0,"z":0,"dir":0,"role":"left flank bag wall"},
+    {"cls":"Land_fort_bagfence_long","x":7,"y":0,"z":0,"dir":0,"role":"right flank bag wall"},
+    {"cls":"Fort_RazorWire","x":0,"y":6,"z":0,"dir":0,"role":"forward wire — canalizes dismounts into the crossfire"}
+  ]
+}

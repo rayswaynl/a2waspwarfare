@@ -1802,33 +1802,39 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Only honoured when WFBE_C_DEFMENU_V2 == 1. 1 = flak tower buyable; 0 = flak tower hidden.
 	if (isNil "WFBE_C_DEF_FLAKTOWER") then {WFBE_C_DEF_FLAKTOWER = 1};
 
-//--- cmdcon44-a (Build 89, Ray 2026-07-03): FLAK TOWER — MUCH TALLER structure ("Flak tower should be
-//--- a much higher structure, the bunker is a good MVP"). Build 87/88 mounted the AA gun on
-//--- Land_Fort_Watchtower_EP1 ("Bunker (Tower)"), deck ~5.4 m = too short. The host structure + deck
-//--- height are now flag-selected (read once by Init_Defenses.sqf when it builds WFBE_NEURODEF_FLAKTOWER_*),
-//--- so the structure/height can be retuned on the box WITHOUT a code change or CH->TK re-mirror.
+//--- cmdcon44-c (Build 89, Ray 2026-07-03): FLAK TOWER — THIN TALL TOWER. Ray refined ask (item 35):
+//--- "isnt there like a thinner tall tower? like one of the light towers or something". cmdcon44-a had
+//--- shipped the airfield control tower (Land_Mil_ControlTower) — tall but a bulky boxy structure, not
+//--- what Ray pictured. Swap it for the thin lattice FLOODLIGHT tower, which is exactly "one of the light
+//--- towers": Land_Ind_IlluminantTower (displayName "Illuminant Tower", the sawmill light mast). The host
+//--- structure + deck height stay flag-driven (read once by Init_Defenses.sqf when it builds
+//--- WFBE_NEURODEF_FLAKTOWER_*), so both are retunable on the box WITHOUT a code change or CH->TK re-mirror.
 //---
-//---   WFBE_C_DEF_FLAKTOWER_STRUCTURE = host classname. DEFAULT = "Land_Mil_ControlTower"
-//---     (the airfield control tower — the tallest structure with a real flat railed observation deck +
-//---     interior stairs; ~12.5 m deck). CLASSNAME CONFIRMED: it is in the arma2-co-config-reference A2
-//---     building catalog, and this server runs COMBINED OPERATIONS, so A2 building classes load on BOTH
-//---     maps — proven by Land_Ind_IlluminantTower (another A2-only, no-_EP1 class) being registered LIVE
-//---     in the Takistan defense list (Core_CIV/Core_TKCIV/Structures_CDF). It is the base-A2 tower; there
-//---     is NO Land_Mil_ControlTower_EP1 in the config reference (do not use the _EP1 form — unverified).
-//---   WFBE_C_DEF_FLAKTOWER_DECK_Z = deck z-offset the AA gun is lifted to (setPosATL, Server_ConstructPosition).
-//---     DEFAULT 12.5 (control-tower deck estimate). The always-on RPT line in Server_ConstructPosition.sqf:82
-//---     prints the mounted z after one placement, so the exact deck can be read back and nudged here (no re-mirror).
+//---   WFBE_C_DEF_FLAKTOWER_STRUCTURE = host classname. DEFAULT = "Land_Ind_IlluminantTower"
+//---     (thin lattice floodlight tower; mapSize=2 => ~2 m footprint = the "thinner tall tower" Ray wants).
+//---     CLASSNAME CONFIRMED against the rayswaynl/arma2-co-config-reference CfgVehicles catalog
+//---     (class Land_Ind_IlluminantTower : House, model \CA\Structures\Ind_SawMill\Ind_IlluminantTower),
+//---     and it is ALREADY spawned live in this mission (Init_Defenses.sqf BANK_WEST/EAST centrepiece +
+//---     legacy RESERVE) => proven to load on BOTH maps under Combined Operations. It is an A2 base class
+//---     (no _EP1 form) — do not append _EP1.
+//---   WFBE_C_DEF_FLAKTOWER_DECK_Z = FALLBACK deck z-offset the AA gun is lifted to, used ONLY if the
+//---     auto-measure below is disabled or fails. DEFAULT 17.0 (documented estimate of the illuminant
+//---     tower's top light-platform; NO empirical in-repo height existed, so it is measured at runtime).
+//---   WFBE_C_DEF_FLAKTOWER_AUTOZ = 1 (default): Server_ConstructPosition.sqf measures the just-spawned
+//---     host tower's REAL top via boundingBox and mounts the gun there (self-correcting, no magic number).
+//---     This mirrors the Init_NavalHVT.sqf B754 idiom (Ray replaced a hardcoded carrier-deck "16 guess"
+//---     with a boundingBox measurement; boundingBox is A2-OA 1.64-safe). Set 0 to force the fixed DECK_Z.
 //---
-//--- RAY-DECISION / MVP FALLBACK: Ray's "the bunker is a good MVP" = Land_fortified_nest_big_EP1
-//---   ("Bunker (large)", the proven WFBE_C_DEPOT / legacy Bank model, physics-solid, _EP1 = both maps). BUT
-//---   its firing deck is only ~2.7 m — that is SHORTER than the current watchtower, i.e. "bunker MVP" and
-//---   "much taller" pull in opposite directions. So the DEFAULT ships the genuinely-tall control tower
-//---   (answers "much higher"); to fall back to the rock-solid bunker set STRUCTURE="Land_fortified_nest_big_EP1"
-//---   + DECK_Z=2.7, or revert to the original watchtower with STRUCTURE="Land_Fort_Watchtower_EP1" + DECK_Z=5.4.
-//---   Static-on-building is physics-fragile in A2 (settle/jitter) -> NEEDS-BOX-VERIFY the control-tower mount
-//---   holds the gun stable AND the control tower loads on Takistan; if either fails, the bunker fallback is the safe MVP.
-	if (isNil "WFBE_C_DEF_FLAKTOWER_STRUCTURE") then {WFBE_C_DEF_FLAKTOWER_STRUCTURE = "Land_Mil_ControlTower"};
-	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 12.5};
+//--- Gunner: seated via moveInGunner (Server_HandleDefense) — teleports to the turret at any height, no
+//--- walk/ladder, and the static gunner stays ALWAYS-ACTIVE (no sim/distance gating — standing HARD rule).
+//--- Static-on-lattice is physics-fragile in A2 (settle/jitter) -> NEEDS-BOX-VERIFY the gun sits stable on
+//--- the platform. RAY-DECISION / MVP FALLBACKS if the light-tower mount misbehaves on the box:
+//---   * bunker MVP (rock-solid, short): STRUCTURE="Land_fortified_nest_big_EP1" + DECK_Z=2.7 + AUTOZ=0
+//---   * airfield control tower (tall, boxy): STRUCTURE="Land_Mil_ControlTower" + DECK_Z=12.5
+//---   * original watchtower: STRUCTURE="Land_Fort_Watchtower_EP1" + DECK_Z=5.4 + AUTOZ=0
+	if (isNil "WFBE_C_DEF_FLAKTOWER_STRUCTURE") then {WFBE_C_DEF_FLAKTOWER_STRUCTURE = "Land_Ind_IlluminantTower"};
+	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 17.0};
+	if (isNil "WFBE_C_DEF_FLAKTOWER_AUTOZ") then {WFBE_C_DEF_FLAKTOWER_AUTOZ = 1};
 
 //--- cmdcon44-a (Build 89, Ray 2026-07-03): AA / ARTILLERY / MIXED POSITIONS REWORK. Ray: "Defenses list
 //--- has not changed, AA/Art/Mix positions are still the same." The Build 88 DEFMENU_V2 pass deliberately

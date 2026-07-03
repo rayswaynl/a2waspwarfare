@@ -1,0 +1,30 @@
+{
+  "name": "WFBE_NEURODEF_AAPOS_HEAVY_WEST",
+  "parentW": 30,
+  "parentD": 22,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "AA BATTERY / SAM SITE (HEAVY, 4 AI) — WEST. This is the premium air-defence site, so it is laid out like a real battery, not a cluster. Soldier logic: THREE Stinger launchers spread on a wide 18 m arc (+Y) so counter-battery / a strafing run cannot gut the battery in one pass — each in its own sandbag pit. Earthen ramparts (revetments) sit BETWEEN and beside the launchers to eat shrapnel from near-misses without ever capping the upward shot. A camo-netted control/radar point sits centre-rear (the 'brains' — dispersed back from the guns it cues). Local security is a rear .50 covering the whole blind side. Two ammo points are split left/right so one lucky hit does not disarm the battery. HESCO wings screen the flanks; wire closes the forward approach; the rear stays open as the crew's covered entrance/exit.",
+  "objs": [
+    {"cls":"Stinger_Pod_US_EP1","x":-10,"y":6,"z":0,"dir":320,"role":"SAM launcher 1 (far left) — arc NW, wide dispersion"},
+    {"cls":"Stinger_Pod_US_EP1","x":0,"y":9,"z":0,"dir":0,"role":"SAM launcher 2 (centre) — arc N"},
+    {"cls":"Stinger_Pod_US_EP1","x":10,"y":6,"z":0,"dir":40,"role":"SAM launcher 3 (far right) — arc NE, wide dispersion"},
+    {"cls":"Land_fort_bagfence_round","x":-10,"y":4.4,"z":0,"dir":0,"role":"pit — launcher 1"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":7.4,"z":0,"dir":0,"role":"pit — launcher 2"},
+    {"cls":"Land_fort_bagfence_round","x":10,"y":4.4,"z":0,"dir":0,"role":"pit — launcher 3"},
+    {"cls":"Land_fort_rampart","x":-5,"y":5,"z":0,"dir":0,"role":"revetment berm — shrapnel screen between L1 and L2"},
+    {"cls":"Land_fort_rampart","x":5,"y":5,"z":0,"dir":0,"role":"revetment berm — shrapnel screen between L2 and L3"},
+    {"cls":"Misc_cargo_cont_small","x":0,"y":-3,"z":0,"dir":90,"role":"control/radar point — battery command, dispersed rear"},
+    {"cls":"Land_CamoNetVar_NATO","x":0,"y":-2.4,"z":0,"dir":0,"role":"camo net over the control point"},
+    {"cls":"M2StaticMG","x":-7,"y":-6,"z":0,"dir":200,"role":"local security .50 — covers rear/left blind side"},
+    {"cls":"Land_fort_bagfence_round","x":-7,"y":-6,"z":0,"dir":0,"role":"sandbag ring — security MG"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-6,"y":1,"z":0,"dir":0,"role":"ammo point — left (split store)"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":6,"y":1,"z":0,"dir":0,"role":"ammo point — right (split store)"},
+    {"cls":"Base_WarfareBBarrier5x","x":-14,"y":2,"z":0,"dir":90,"role":"HESCO wing — left flank screen"},
+    {"cls":"Base_WarfareBBarrier5x","x":14,"y":2,"z":0,"dir":90,"role":"HESCO wing — right flank screen"},
+    {"cls":"Fort_RazorWire","x":-8,"y":9,"z":0,"dir":10,"role":"forward wire — canalizes approach (left)"},
+    {"cls":"Fort_RazorWire","x":8,"y":9,"z":0,"dir":350,"role":"forward wire — canalizes approach (right)"}
+  ]
+}

@@ -224,8 +224,27 @@ _i = _i + [['Hedgehog Line (AT obstacle)','',30,0,0,0,'Fortification',0,'Civilia
 
 //--- Flak Tower anchor (Land_Ind_TankSmall ghost -> WFBE_NEURODEF_FLAKTOWER_WEST/EAST = tower + AA @ deck).
 //--- Elevated AA + pooled AI gunner. Category Defense. Sub-flag WFBE_C_DEF_FLAKTOWER gates its NAME entry.
+//--- cmdcon44-c: host is now the thin lattice light tower (Land_Ind_IlluminantTower) per Ray — label names it.
 _c = _c + ['Land_Ind_TankSmall'];
-_i = _i + [['Flak Tower (elevated AA, 1 AI)','',1400,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [['Flak Tower — AA on light tower (1 AI)','',1400,0,0,0,'Defense',0,'Civilians',[]]];
+
+//======================================================================================
+//--- cmdcon44-c (Build 89, Ray item 36): WDDM-AUTHORED FORTIFICATIONS SET. Three side-neutral
+//--- fortification compositions (Init_Defenses.sqf: WFBE_NEURODEF_FORT_STRONGPOINT / _CHECKPOINT / _OP),
+//--- each authored in Ray's WDDM tool (docs/design/compositions/fort_*.wddm.json). Category Fortification.
+//--- Ghosts are unused cargo/barrel models (validated by the registration loop below). Prices are flat MVP.
+//======================================================================================
+//--- Infantry Strongpoint: bunker core + interlocking fighting bays + comms trench + ramparts.
+_c = _c + ['Land_Misc_Cargo1B'];
+_i = _i + [['Infantry Strongpoint (bunker + bays)','',400,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Roadblock / Checkpoint: concrete chicane + gate + protected guard positions (place across a road).
+_c = _c + ['Land_transport_crates_EP1'];
+_i = _i + [['Roadblock / Checkpoint','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Observation Post: elevated bunker-tower + concealment + discreet fallback.
+_c = _c + ['Land_Barrel_water'];
+_i = _i + [['Observation Post (elevated)','',200,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
 if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {

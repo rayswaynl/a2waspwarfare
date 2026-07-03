@@ -1,0 +1,31 @@
+{
+  "name": "WFBE_NEURODEF_ARTYPOS_WEST",
+  "parentW": 34,
+  "parentD": 22,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": false,
+  "mode": "position",
+  "notes": "ARTILLERY BATTERY (HEAVY, 4 AI) — WEST. Three M119 howitzers, EACH in its own earthen artillery revetment, spaced ~10 m apart so a counter-battery salvo or an air strike cannot bracket the whole battery in one impact (dispersion = survival for artillery). Every tube has clear sky (high-angle fire); revetments hide the guns from ground observation and eat shrapnel. Local security is a PAIR of rear .50 pickets angled outward so the battery's blind side and both rear corners are covered (a 3-gun line facing +Y is otherwise wide open behind). Ammo is dispersed one dump per gun behind the line, so a cook-off loses one gun, not three. Flank blast walls (HBarrier) stop enfilade; rear concealment nets sit BEHIND the guns only (never over the tubes); the rear centre is the crew's covered entrance.",
+  "objs": [
+    {"cls":"Land_fort_artillery_nest_EP1","x":-11,"y":4,"z":0,"dir":0,"role":"revetment — gun 1"},
+    {"cls":"Land_fort_artillery_nest_EP1","x":0,"y":5,"z":0,"dir":0,"role":"revetment — gun 2 (centre, pushed forward)"},
+    {"cls":"Land_fort_artillery_nest_EP1","x":11,"y":4,"z":0,"dir":0,"role":"revetment — gun 3"},
+    {"cls":"M119_US_EP1","x":-11,"y":4,"z":0,"dir":0,"role":"howitzer 1 — clear overhead, dispersed"},
+    {"cls":"M119_US_EP1","x":0,"y":5,"z":0,"dir":0,"role":"howitzer 2 — clear overhead, dispersed"},
+    {"cls":"M119_US_EP1","x":11,"y":4,"z":0,"dir":0,"role":"howitzer 3 — clear overhead, dispersed"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-11,"y":0,"z":0,"dir":0,"role":"ammo dump — gun 1 (dispersed)"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":0,"y":1,"z":0,"dir":0,"role":"ammo dump — gun 2 (dispersed)"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":11,"y":0,"z":0,"dir":0,"role":"ammo dump — gun 3 (dispersed)"},
+    {"cls":"M2StaticMG","x":-6,"y":-6,"z":0,"dir":205,"role":"rear .50 picket (left) — covers rear-left blind corner"},
+    {"cls":"M2StaticMG","x":6,"y":-6,"z":0,"dir":155,"role":"rear .50 picket (right) — covers rear-right blind corner"},
+    {"cls":"Land_fort_bagfence_round","x":-6,"y":-6,"z":0,"dir":0,"role":"sandbag ring — left picket"},
+    {"cls":"Land_fort_bagfence_round","x":6,"y":-6,"z":0,"dir":0,"role":"sandbag ring — right picket"},
+    {"cls":"Land_HBarrier_large","x":-16,"y":3,"z":0,"dir":90,"role":"left flank blast wall — anti-enfilade"},
+    {"cls":"Land_HBarrier_large","x":16,"y":3,"z":0,"dir":90,"role":"right flank blast wall — anti-enfilade"},
+    {"cls":"Land_CamoNetVar_NATO","x":-6,"y":-2,"z":0,"dir":0,"role":"rear concealment (left) — behind the gun line only"},
+    {"cls":"Land_CamoNetVar_NATO","x":6,"y":-2,"z":0,"dir":0,"role":"rear concealment (right) — behind the gun line only"},
+    {"cls":"Fort_RazorWire","x":-10,"y":-8,"z":0,"dir":0,"role":"rear wire (left) — closes the flank approach"},
+    {"cls":"Fort_RazorWire","x":10,"y":-8,"z":0,"dir":0,"role":"rear wire (right) — closes the flank approach"}
+  ]
+}

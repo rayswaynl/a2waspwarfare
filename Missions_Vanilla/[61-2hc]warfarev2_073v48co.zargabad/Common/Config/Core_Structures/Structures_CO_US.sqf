@@ -261,6 +261,13 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {
 	if ((missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER", 1]) > 0) then {
 		_n = _n + ["Land_Ind_TankSmall"];	//--- anchor -> WFBE_NEURODEF_FLAKTOWER_WEST/EAST
 	};
+	//--- cmdcon44-c: WDDM fortifications set (side-neutral compositions). Gated with the positions flag so the
+	//--- whole reworked-defenses menu is one toggle. Anchors -> WFBE_NEURODEF_FORT_STRONGPOINT/_CHECKPOINT/_OP.
+	if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then {
+		_n = _n + ["Land_Misc_Cargo1B"];			//--- Infantry Strongpoint
+		_n = _n + ["Land_transport_crates_EP1"];	//--- Roadblock / Checkpoint
+		_n = _n + ["Land_Barrel_water"];			//--- Observation Post
+	};
 };
 
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];
