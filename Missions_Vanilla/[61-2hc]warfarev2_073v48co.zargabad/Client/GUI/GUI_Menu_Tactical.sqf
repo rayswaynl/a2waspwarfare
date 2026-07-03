@@ -540,7 +540,7 @@ while {alive player && dialog} do {
 					if (_ftVehCount > 0) then {
 						_ftConfirmMsg = _ftConfirmMsg + "<br/>Vehicle surcharge: " + str _ftVehCount + " vehicle(s) x $" + str (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") + " = $" + str _ftVehFee;
 					};
-					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total: $" + str (_ftBaseFee + _ftVehFee) + "</t>";
+					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total (approx.): $" + str (_ftBaseFee + _ftVehFee) + "</t>"; //--- approx: vehicle scan repeats at click-2 (~6s later)
 					//--- First click: hint shown, returns false, MenuAction stays 7 (not reset). Second click: returns true.
 					if (!(["wf_ft_confirm", _ftConfirmMsg] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 					_doTravel = true;
@@ -557,14 +557,27 @@ while {alive player && dialog} do {
 				[17022] Call SetControlFadeAnimStop;
 				//--- lane197 (a): re-check destination eligibility at fire time. The cached _FTLocations list is
 				//--- up to 15s stale. Re-read sideID and full-camp ownership now. Flag-gated for safety.
+				//--- Extended (review fix): check alive unconditionally (catches ruined factory/HQ between clicks);
+				//--- apply ownership check for any destination with sideID set (covers factories on CH/TK/ZG).
 				_ftRecheckOk = true;
 				if ((missionNamespace getVariable ["WFBE_C_GAMEPLAY_FAST_TRAVEL_RECHECK", 1]) > 0) then {
-					if (_destination in towns) then {
-						private ["_rSideID","_rCamps","_rAllCamps"];
-						_rSideID = _destination getVariable "sideID";
-						_rCamps = [_destination,sideJoined] Call GetFriendlyCamps;
-						_rAllCamps = _destination getVariable "camps";
-						if (_rSideID != sideID || (count _rCamps != count _rAllCamps)) then {_ftRecheckOk = false};
+					//--- (i) liveness: catches destroyed factory or de-deployed HQ base.
+					if (!(alive _destination)) then {_ftRecheckOk = false};
+					//--- (ii) ownership: towns need full sideID+camps check; factories only expose sideID.
+					if (_ftRecheckOk) then {
+						private ["_rSideID"];
+						_rSideID = _destination getVariable ["sideID", -1];
+						if (_rSideID >= 0) then {
+							//--- destination has a sideID: check it still belongs to the player's side.
+							if (_rSideID != sideID) then {_ftRecheckOk = false};
+							//--- for towns also verify full camp ownership (factories have no camps variable).
+							if (_ftRecheckOk && {_destination in towns}) then {
+								private ["_rCamps","_rAllCamps"];
+								_rCamps = [_destination,sideJoined] Call GetFriendlyCamps;
+								_rAllCamps = _destination getVariable "camps";
+								if (count _rCamps != count _rAllCamps) then {_ftRecheckOk = false};
+							};
+						};
 					};
 				};
 				if (!_ftRecheckOk) then {
