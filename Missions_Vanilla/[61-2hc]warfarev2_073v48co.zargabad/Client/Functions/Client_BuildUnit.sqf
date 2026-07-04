@@ -1,4 +1,4 @@
-Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -462,12 +462,41 @@ if (_isMan) then {
 	//--- (real hull, any map) skips the catalog lookup entirely (no compile, no forEach) - the catalog is only
 	//--- consulted for an actual variant buy, which only exists on Takistan with the flag on.
 	_tkEasaKit = [];
-	if ((_unit find "TKV_") == 0) then {
+	//--- GR-2026-07-03a ROOT FIX (Fable, remote-factory-vehicle-buy): the prefix test was `_unit find "TKV_"`,
+	//--- but `string find string` is ARMA 3-ONLY. On A2 OA 1.64 `find` requires an ARRAY receiver, so this line
+	//--- threw "Error find: Type String, expected Array" (RPT-confirmed, Zwanon/WEST cmdcon44i Zargabad) and
+	//--- ABORTED the whole buy coroutine one line before createVehicle (:421) - every player VEHICLE purchase on
+	//--- EVERY map was charged then spawned nothing, with no BUYFAIL (createVehicle never ran). Infantry was
+	//--- unaffected (the _isMan branch returns above, never reaching here). A2-safe leading-byte compare via
+	//--- toArray, exactly the _uidPrefix33 idiom in GUI_Menu_BuyUnits.sqf:297. Keeps the cheap-guard property:
+	//--- a non-TKV_ class (the normal case, any map) fails the compare fast and skips the catalog entirely.
+	_isTkvToken = {
+		private ["_u","_uA","_pA","_pl","_ok","_j"];
+		_u = _this;
+		_uA = toArray _u;
+		_pA = toArray "TKV_";
+		_pl = count _pA;
+		_ok = (count _uA) >= _pl;
+		if (_ok) then {
+			for "_j" from 0 to (_pl - 1) do {
+				if ((_uA select _j) != (_pA select _j)) exitWith {_ok = false};
+			};
+		};
+		_ok
+	};
+	if (_unit call _isTkvToken) then {
 		{
 			if ((_x select 0) == _unit) exitWith { _tkeRow = _x; _unit = _x select 1; _tkEasaKit = _x select 7; };
 		} forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
 	};
+	//--- GR-2026-07-03a diagnostic (ALWAYS-ON, mirrors the depot-pos trace): the FACTORY branch had no spawn-position
+	//--- evidence line. Emit resolved factory obj + getPos + computed spawn pos + class right BEFORE createVehicle so a
+	//--- future failed factory buy tells a bad resolve apart from a null/blocked spawn. One line per factory buy.
+	diag_log Format ["BUYTRACE|v1|factory-pos|side=%1|factory=%2|class=%3|obj=%4|objType=%5|objPos=%6|spawnPos=%7|remote=%8", sideJoinedText, _factory, _unit, _building, typeOf _building, getPos _building, _position, !(local _building)];
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
+	//--- GR-2026-07-03a diagnostic (ALWAYS-ON): name the createVehicle RETURN at the call site so the next failed buy
+	//--- shows objNull-vs-hull without waiting for the downstream BUYFAIL guard. isNull => the BUYFAIL branch below fires.
+	diag_log Format ["BUYTRACE|v1|createveh|side=%1|factory=%2|class=%3|null=%4|veh=%5|vehPos=%6", sideJoinedText, _factory, _unit, isNull _vehicle, _vehicle, (if (isNull _vehicle) then {[]} else {getPos _vehicle})];
 
 	//--- cmdcon42c HOTFIX (Ray 2026-07-02): UNIVERSAL BUYFAIL-REFUND GUARD. WFBE_CO_FNC_CreateVehicle
 	//--- returns objNull whenever the engine cannot spawn the hull - a bad/unresolved buy class (e.g. a
