@@ -621,7 +621,7 @@ switch (_args select 0) do {
 		//--- rate-limit gates: flat WFBE_C_AICOM_TOPUP_UNIT_COST per missing man toward 6 (cap 4), charged from the AI
 		//--- commander treasury up front; one refit per team per WFBE_C_AICOM_TOPUP_COOLDOWN via the SAME wfbe_aicom_topup_stamp
 		//--- Produce stamps. NEVER trust the client: human commander required, side + team validated, funds re-checked here.
-		private ["_rfEnabled","_rfSide","_rfIdx","_rfLogik","_rfCmd","_rfHuman","_rfTeams","_rfTeam","_rfAlive","_rfNow","_rfLast","_rfCd","_rfMissing","_rfSText","_rfBarr","_rfCls","_rfCost","_rfCharge","_rfFunds"];
+		private ["_rfEnabled","_rfSide","_rfIdx","_rfLogik","_rfCmd","_rfHuman","_rfTeams","_rfTeam","_rfAlive","_rfNow","_rfLast","_rfCd","_rfMissing","_rfSText","_rfBarr","_rfCls","_rfCost","_rfCharge","_rfFunds","_rfCostOn","_rfAfford"];
 		_rfEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
 		_rfSide = _args select 1;
 		_rfIdx  = -1;
@@ -648,14 +648,22 @@ switch (_args select 0) do {
 								_rfCls   = [];
 								{ if ((count _rfCls) < 3 && {_x isKindOf "Man"}) then {_rfCls = _rfCls + [_x]} } forEach _rfBarr;
 								if (count _rfCls > 0) then {
+									//--- REFIT COST TOGGLE (Ray 2026-07-04): WFBE_C_CMD_REFIT_COST default 0 = FREE. When the flag is
+									//--- off (<= 0) the player-commander REFIT verb charges nothing and is NEVER blocked by low funds:
+									//--- skip the treasury debit AND the affordability gate, issue the top-up unconditionally. When the
+									//--- flag is > 0 the legacy behaviour is restored (flat WFBE_C_AICOM_TOPUP_UNIT_COST per missing man,
+									//--- debited up front, refit denied if the war chest cannot cover it). Cooldown + mechanics unchanged.
+									_rfCostOn = (missionNamespace getVariable ["WFBE_C_CMD_REFIT_COST", 0]) > 0;
 									_rfCost   = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_UNIT_COST", 300];
 									_rfCharge = _rfCost * _rfMissing;
 									_rfFunds  = (_rfSide) Call GetAICommanderFunds;
-									if (_rfFunds >= _rfCharge) then {
-										[_rfSide, -_rfCharge] Call ChangeAICommanderFunds;
+									_rfAfford = true;
+									if (_rfCostOn) then {_rfAfford = (_rfFunds >= _rfCharge)};
+									if (_rfAfford) then {
+										if (_rfCostOn) then {[_rfSide, -_rfCharge] Call ChangeAICommanderFunds};
 										_rfTeam setVariable ["wfbe_aicom_topup_req", [_rfMissing, getPosATL (leader _rfTeam), _rfCls, _rfNow], true];
 										_rfTeam setVariable ["wfbe_aicom_topup_stamp", _rfNow, false];
-										diag_log ("AICOM2|v1|ORDER|aicom-refit|" + str _rfSide + "|" + str (round (time / 60)) + "|idx=" + str _rfIdx + "|missing=" + str _rfMissing + "|cost=" + str _rfCharge);
+										diag_log ("AICOM2|v1|ORDER|aicom-refit|" + str _rfSide + "|" + str (round (time / 60)) + "|idx=" + str _rfIdx + "|missing=" + str _rfMissing + "|cost=" + str (if (_rfCostOn) then {_rfCharge} else {0}));
 									} else {
 										diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|idx=" + str _rfIdx + "|funds=" + str (round _rfFunds) + "|need=" + str _rfCharge);
 									};

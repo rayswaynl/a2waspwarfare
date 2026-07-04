@@ -1,4 +1,4 @@
-Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -231,6 +231,45 @@ if (count _queu > 0) then {_queu2 = _building getVariable "queu"};
 
 _show = false;
 _nextQueueHint = time;
+//--- Ray 2026-07-04: build the compact QUEUED tail from the building's real ordered label list
+//--- (queu_labels, kept parallel to queu). Drop slot 0 (the item building / next up), compress runs
+//--- of the same label to "Label xK", cap the shown segments to 5 and append " +N more" counting the
+//--- pending UNITS not shown. Empty string when nothing is pending after the head (so the readout stays
+//--- single-item, no trailing pipe). Each _out entry is [segmentText, unitCount] so +N needs no string parse.
+_qTailFn = {
+	private ["_lbls","_out","_shown","_i","_cur","_run","_more","_seg","_joined","_j"];
+	_lbls = _this;
+	if (isNil "_lbls") then {_lbls = []};
+	if ((count _lbls) <= 1) exitWith {""};
+	//--- pending = everything after the head (slot 0). Compress consecutive duplicates.
+	_out = [];
+	_i = 1;
+	while {_i < (count _lbls)} do {
+		_cur = _lbls select _i;
+		_run = 1;
+		while {((_i + _run) < (count _lbls)) && {(_lbls select (_i + _run)) == _cur}} do {_run = _run + 1};
+		_seg = if (_run > 1) then {Format ["%1 x%2", _cur, _run]} else {_cur};
+		_out = _out + [[_seg, _run]];
+		_i = _i + _run;
+	};
+	//--- cap the DISTINCT shown segments to 5; +N counts the pending UNITS beyond those 5 segments.
+	_shown = _out;
+	_more = 0;
+	if ((count _out) > 5) then {
+		_shown = [_out select 0, _out select 1, _out select 2, _out select 3, _out select 4];
+		_more = (count _lbls) - 1;
+		{_more = _more - (_x select 1)} forEach _shown;
+		if (_more < 0) then {_more = 0};
+	};
+	_joined = "";
+	_j = 0;
+	{
+		if (_j == 0) then {_joined = (_x select 0)} else {_joined = _joined + ", " + (_x select 0)};
+		_j = _j + 1;
+	} forEach _shown;
+	if (_more > 0) then {_joined = _joined + Format [" +%1 more", _more]};
+	_joined
+};
 while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
 	sleep 4;
 	_show = true;
@@ -246,6 +285,11 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 			//--- center-screen titleText. Client_UpdateRHUD.sqf renders it (small, colored) and auto-hides it
 			//--- when the timestamp goes stale, so no exit path needs to clear it. Compact: FACTORY | UNIT #p/t ~ETAs.
 			WFBE_CL_QUEUE_HUD = Format ["<t color='#ffd24a' size='0.9'>%1 | %2  #%3/%4  ~%5s</t>", _factoryType, _description, _queuePos + 1, count _queu, ceil _queueEta];
+			//--- Ray 2026-07-04: append the pending QUEUED tail (everything after the head) in a dimmer color.
+			_qTail = (_building getVariable ["queu_labels", []]) call _qTailFn;
+			if (_qTail != "") then {
+				WFBE_CL_QUEUE_HUD = WFBE_CL_QUEUE_HUD + Format ["<t color='#b9a94a' size='0.85'>  |  QUEUED: %1</t>", _qTail];
+			};
 			WFBE_CL_QUEUE_HUD_TS = time;
 		};
 	};
@@ -276,7 +320,12 @@ _buildEnd = time + _waitTime;
 while {time < _buildEnd && alive _building && !isNull _building} do {
 	_bRemain = ceil (_buildEnd - time);
 	if (_bRemain < 0) then {_bRemain = 0};
-	WFBE_CL_QUEUE_HUD = Format ["<t color='#7bd642' size='0.9'>%1 | %2  building  ~%3s</t>", _factoryType, _description, _bRemain];
+	WFBE_CL_QUEUE_HUD = Format ["<t color='#7bd642' size='0.9'>%1 | BUILDING: %2  ~%3s</t>", _factoryType, _description, _bRemain];
+	//--- Ray 2026-07-04: append the pending QUEUED tail (queu_labels after the head) in a dimmer color.
+	_qTail = (_building getVariable ["queu_labels", []]) call _qTailFn;
+	if (_qTail != "") then {
+		WFBE_CL_QUEUE_HUD = WFBE_CL_QUEUE_HUD + Format ["<t color='#5f8f3a' size='0.85'>  |  QUEUED: %1</t>", _qTail];
+	};
 	WFBE_CL_QUEUE_HUD_TS = time;
 	sleep 1;
 };
@@ -413,12 +462,41 @@ if (_isMan) then {
 	//--- (real hull, any map) skips the catalog lookup entirely (no compile, no forEach) - the catalog is only
 	//--- consulted for an actual variant buy, which only exists on Takistan with the flag on.
 	_tkEasaKit = [];
-	if ((_unit find "TKV_") == 0) then {
+	//--- GR-2026-07-03a ROOT FIX (Fable, remote-factory-vehicle-buy): the prefix test was `_unit find "TKV_"`,
+	//--- but `string find string` is ARMA 3-ONLY. On A2 OA 1.64 `find` requires an ARRAY receiver, so this line
+	//--- threw "Error find: Type String, expected Array" (RPT-confirmed, Zwanon/WEST cmdcon44i Zargabad) and
+	//--- ABORTED the whole buy coroutine one line before createVehicle (:421) - every player VEHICLE purchase on
+	//--- EVERY map was charged then spawned nothing, with no BUYFAIL (createVehicle never ran). Infantry was
+	//--- unaffected (the _isMan branch returns above, never reaching here). A2-safe leading-byte compare via
+	//--- toArray, exactly the _uidPrefix33 idiom in GUI_Menu_BuyUnits.sqf:297. Keeps the cheap-guard property:
+	//--- a non-TKV_ class (the normal case, any map) fails the compare fast and skips the catalog entirely.
+	_isTkvToken = {
+		private ["_u","_uA","_pA","_pl","_ok","_j"];
+		_u = _this;
+		_uA = toArray _u;
+		_pA = toArray "TKV_";
+		_pl = count _pA;
+		_ok = (count _uA) >= _pl;
+		if (_ok) then {
+			for "_j" from 0 to (_pl - 1) do {
+				if ((_uA select _j) != (_pA select _j)) exitWith {_ok = false};
+			};
+		};
+		_ok
+	};
+	if (_unit call _isTkvToken) then {
 		{
 			if ((_x select 0) == _unit) exitWith { _tkeRow = _x; _unit = _x select 1; _tkEasaKit = _x select 7; };
 		} forEach (Call Compile preprocessFile "Common\Functions\Common_TKEasaRoster.sqf");
 	};
+	//--- GR-2026-07-03a diagnostic (ALWAYS-ON, mirrors the depot-pos trace): the FACTORY branch had no spawn-position
+	//--- evidence line. Emit resolved factory obj + getPos + computed spawn pos + class right BEFORE createVehicle so a
+	//--- future failed factory buy tells a bad resolve apart from a null/blocked spawn. One line per factory buy.
+	diag_log Format ["BUYTRACE|v1|factory-pos|side=%1|factory=%2|class=%3|obj=%4|objType=%5|objPos=%6|spawnPos=%7|remote=%8", sideJoinedText, _factory, _unit, _building, typeOf _building, getPos _building, _position, !(local _building)];
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
+	//--- GR-2026-07-03a diagnostic (ALWAYS-ON): name the createVehicle RETURN at the call site so the next failed buy
+	//--- shows objNull-vs-hull without waiting for the downstream BUYFAIL guard. isNull => the BUYFAIL branch below fires.
+	diag_log Format ["BUYTRACE|v1|createveh|side=%1|factory=%2|class=%3|null=%4|veh=%5|vehPos=%6", sideJoinedText, _factory, _unit, isNull _vehicle, _vehicle, (if (isNull _vehicle) then {[]} else {getPos _vehicle})];
 
 	//--- cmdcon42c HOTFIX (Ray 2026-07-02): UNIVERSAL BUYFAIL-REFUND GUARD. WFBE_CO_FNC_CreateVehicle
 	//--- returns objNull whenever the engine cannot spawn the hull - a bad/unresolved buy class (e.g. a

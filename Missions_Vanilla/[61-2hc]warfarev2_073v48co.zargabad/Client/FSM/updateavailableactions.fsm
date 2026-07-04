@@ -170,7 +170,7 @@ class FSM
        "" \n
        "//--- GUER (base-less Insurgents): gear buys are gated to FRIENDLY-town-center / FOB proximity (Ray 3B, GR-2026-07-03a)." \n
        "if !(gearInRange) then {" \n
-       "	if ((sideJoined == resistance) && {(missionNamespace getVariable [\"\"WFBE_C_GUER_PLAYERSIDE\"\", 0]) > 0} && {(missionNamespace getVariable [\"\"WFBE_C_GUER_GEAR_PROXIMITY\"\", 1]) > 0}) then {" \n
+       "	if ((sideJoined == resistance) && {(missionNamespace getVariable [""WFBE_C_GUER_PLAYERSIDE"", 0]) > 0} && {(missionNamespace getVariable [""WFBE_C_GUER_GEAR_PROXIMITY"", 1]) > 0}) then {" \n
        "		_nGearSrc = [vehicle player, _pgr] Call WFBE_CL_FNC_GetClosestDepot;" \n
        "		if (isNull _nGearSrc) then {_nGearSrc = [vehicle player, _pgr] Call WFBE_CL_FNC_GetClosestCamp};" \n
        "		if !(isNull _nGearSrc) then {gearInRange = true};" \n

@@ -395,7 +395,7 @@ _display displayAddEventHandler ["KeyDown","_this call keyPressedForAdjustingVie
 	//--- Debug teleport rebind: press "[" (DIK 0x1A=26) to ARM, then the next plain map-click teleports you (was: every click teleported under WF_Debug, which ate the sell/ICBM confirm clicks).
 	_display displayAddEventHandler ["KeyDown","if ((_this select 1) == 26 && WF_Debug) then {missionNamespace setVariable ['WFBE_DEBUG_TELEPORT_ARMED', true]; hintSilent 'Debug teleport ARMED - next map click teleports you.'; true} else {false}"];
 // Marty: onMapSingleClick exposes Shift and Alt but not Ctrl, so track Ctrl state separately for map disband.
-_display displayAddEventHandler ["KeyDown","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', true]}; false"];
+_display displayAddEventHandler ["KeyDown","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', true]; missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_TS', time]}; false"];
 _display displayAddEventHandler ["KeyUp","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', false]}; false"];
 onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
 
@@ -820,7 +820,7 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 //--- (all three keep wfbe_funds on the group). A2-OA-1.64 safe: group player / getVariable / typeName == / mod;
 //--- no A3 commands. No frozen AI / no sim-gating touched.
 [] spawn {
-	private ["_grp","_f","_n","_done","_sentAny"];
+	private ["_grp","_f","_n","_done","_sentAny","_t0","_grace"];
 	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_SideJoined"}};
 	//--- Let the normal connect-handler funds broadcast have a moment to land first (avoids a needless request on
 	//--- a healthy fast join). Re-resolve group player each tick: a JIP/respawn can swap the player's group.
@@ -828,15 +828,22 @@ if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] ex
 	_done = false;
 	_sentAny = false;
 	_n = 0;
+	//--- Ray pick A (2026-07-03) ZERO-LATCH GRACE: within the first N seconds of the heal do NOT accept a
+	//--- 0 balance as "healed" - a transient 0 from a slow object-state sync was the exact value the old loop
+	//--- latched forever. Keep re-requesting so the server-side lock-step record restore (RequestFundsResend
+	//--- case-1) has time to land the real value. After the grace a genuine 0 (a real spend) is accepted.
+	//--- WFBE_C_FUNDS_HEAL_ZERO_GRACE (default 90s) is tunable; the record fix alone should already converge.
+	_t0 = time;
+	_grace = missionNamespace getVariable ["WFBE_C_FUNDS_HEAL_ZERO_GRACE", 90];
 	//--- ~300 polls x ~3s = ~15min ceiling; matches the team-heal's generous JIP window. Cheap idle cadence.
 	while {!_done && {_n < 300}} do {
 		_grp = group player;
 		if (!isNull _grp) then {
 			_f = _grp getVariable "wfbe_funds";
-			if (!isNil "_f" && {typeName _f == "SCALAR"}) then {
-				//--- Funds are present (any numeric value, incl. a legitimately-spent low balance). Done; do not
-				//--- keep asking. We do NOT treat 0 as "missing" - a player who spent down to 0 is valid, and the
-				//--- server re-broadcast would only echo that same value anyway, so stopping here is correct.
+			if (!isNil "_f" && {typeName _f == "SCALAR"} && {_f > 0 || {(time - _t0) >= _grace}}) then {
+				//--- Funds are present: a positive value, OR a 0 that has survived past the zero-grace window (a real
+				//--- spend-to-0, not a transient sync artifact). Done; stop asking. Within grace a 0 is treated as
+				//--- still-missing (falls to the else) so we keep requesting the server lock-step record restore.
 				_done = true;
 				if (_sentAny) then {
 					diag_log format ["[WFBE][B76 FUNDS-HEAL] own-group funds=%1 landed after %2 request(s); self-heal complete.", _f, _n];
