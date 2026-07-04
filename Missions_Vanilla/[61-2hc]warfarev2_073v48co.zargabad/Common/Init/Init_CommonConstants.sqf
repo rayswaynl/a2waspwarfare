@@ -178,6 +178,13 @@ if (worldName == "Zargabad") then {
 		//--- transiently-unset/contested friendly town is not silently dropped. 1 = widened (fixed, matches the documented
 		//--- friendly-town design); 0 = restore the stock strict own-side (sideID == sideID) gate. WEST/EAST are unaffected.
 		if (isNil "WFBE_C_GUER_DEPOT_NEUTRAL_BUY") then {WFBE_C_GUER_DEPOT_NEUTRAL_BUY = 1};
+		//--- Ray 3B (GR-2026-07-03a) GUER GEAR PROXIMITY: base-less GUER may buy GEAR only near a friendly gear source -
+		//--- a friendly town-center DEPOT (GUER-held or neutral; WFBE_CL_FNC_GetClosestDepot), a GUER-held town CAMP/bunker
+		//--- (WFBE_CL_FNC_GetClosestCamp), or a deployed GUER FOB BARRACKS (a real resistance BARRACKSTYPE structure, already
+		//--- caught by the barracks gearInRange check). Radius = WFBE_C_UNITS_PURCHASE_GEAR_RANGE (150m). Consumed in
+		//--- Client\FSM\updateavailableactions.fsm. 1 = gated (the fix, removes the old buy-anywhere GUER behaviour);
+		//--- 0 = restore buy-anywhere for GUER (pre-fix). WEST/EAST unaffected (they never hit this GUER-only branch).
+		if (isNil "WFBE_C_GUER_GEAR_PROXIMITY") then {WFBE_C_GUER_GEAR_PROXIMITY = 1};
 		//--- Shared placement gate (client preview + server authoritative): true if _pos (the world position passed as
 		//--- _this) is inside an enemy (WEST/EAST) build-restricted area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an
 		//--- enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-held towns are allowed (you can "extend"
