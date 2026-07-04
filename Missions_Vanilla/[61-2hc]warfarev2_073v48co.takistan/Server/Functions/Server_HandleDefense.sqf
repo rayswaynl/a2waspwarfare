@@ -22,6 +22,12 @@ while {alive _defense && _sideStillValid} do {
 
 		sleep 7;
 
+		//--- cmdcon44g-era: the gun can be destroyed/DELETED during the 7s sleep - a null object's 2-arg
+		//--- getVariable IGNORES the default (engine-verified XWT45-P4), so the read below came up nil and
+		//--- '!isNull _defenseArea' threw Undefined (2x live 2026-07-03). Block-exit falls through to the
+		//--- while condition, which ends the loop cleanly on the dead gun.
+		if (isNull _defense) exitWith {};
+
 		//--- AI16 (lane118): stop re-manning if the base area this defense was built for has changed hands.
 		//--- WFBE_DefenseBaseArea is stamped by Construction_StationaryDefense at placement time (non-nil only
 		//--- for manned base statics). If the area's DefenseTeam now belongs to a different side, the original
