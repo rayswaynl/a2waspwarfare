@@ -1,6 +1,6 @@
 # AICOM V2 Behavioral Inventory
 
-<!-- GUIDE-REV: GR-2026-07-03a; prompt-hash: 731DF072DEC219050A1B4694D1B04D36B178191C69E81FCCD28D7C4B5197A910; base: origin/claude/build84-cmdcon36@f7069d8a6d5ec85ab8a4e69b9a1186b674eee9c2 -->
+<!-- GUIDE-REV: GR-2026-07-03a; prompt-hash: 731DF072DEC219050A1B4694D1B04D36B178191C69E81FCCD28D7C4B5197A910; base: origin/claude/build84-cmdcon36@55c11551f61c5193672dd73e8c88d1aa69e88be4 -->
 
 This is the lane 400 source inventory for the AICOM V2 prep sprint. It is docs-only and treats the current Chernarus mission source as truth, with the wiki pages used as routing/context where they still match the live branch.
 
@@ -8,12 +8,12 @@ This is the lane 400 source inventory for the AICOM V2 prep sprint. It is docs-o
 
 | Item | Value |
 | --- | --- |
-| Target branch/base | `origin/claude/build84-cmdcon36@f7069d8a6d5ec85ab8a4e69b9a1186b674eee9c2` |
+| Target branch/base | `origin/claude/build84-cmdcon36@55c11551f61c5193672dd73e8c88d1aa69e88be4` |
 | Prompt hash | `731DF072DEC219050A1B4694D1B04D36B178191C69E81FCCD28D7C4B5197A910` |
 | Guide revision | `GR-2026-07-03a` |
 | Primary mission | `Missions/[55-2hc]warfarev2_073v48co.chernarus` |
 | Commander file count | 18 files under `Server/AI/Commander/` |
-| AICOM constants found | 360 unique `WFBE_C_AICOM_*` constants, 372 assignment sites |
+| AICOM constants found | 362 unique `WFBE_C_AICOM_*` constants, 374 assignment sites |
 | AI_COMMANDER constants found | 32 unique `WFBE_C_AI_COMMANDER_*` constants, included for cadence/supervisor context |
 | Conventional wildcard slots | 23 W-slots inventoried: W1-W4 and W6-W24, including retired W8 and forced-zero cards; W5 is absent from current source. |
 
@@ -88,7 +88,7 @@ The current supervisor also dispatches side controllers that materially change b
 | Paratroops | `AI_Commander_Paratroops.sqf` | Town interval = 120 s. | Active gate, nil-guarded; worker requires flag, research tier, command-center structure, no human commander, and cooldown. | Drops AI paratroop reinforcements onto eligible contested/enemy LZs. |
 | Intent publish | `AI_Commander.sqf` inline block | Strategy interval = 60 s. | Active gate and `WFBE_C_AICOM_INTENT_HUD>0`. | Publishes side-keyed intent, objective name/position, active flag, focus name, team count, and funds for command console/RHUD/JIP. |
 | Bootstrap stipend | `AI_Commander.sqf` inline block | 60 s grant cadence. | Active gate, zero owned towns, below `WFBE_C_AICOM_BOOTSTRAP_MAXTIME`. | Trickles AI commander funds and optional dual-currency supply so a broke zero-town side can recover. |
-| HCTopUp/Merge | `AI_Commander_HCTopUp.DRAFT.sqf` | `WFBE_C_AICOM_HC_MERGE_INTERVAL` = 120 s. | Active gate; called only when merge or top-up flags are numerically enabled and function is compiled. | Merges depleted HC remnants and/or ships replacement infantry to understrength HC field teams. |
+| HCTopUp/Merge | `AI_Commander_HCTopUp.DRAFT.sqf` | 120 s fallback literal from the supervisor read. | Active gate; called only when merge or top-up flags are numerically enabled and function is compiled. | Merges depleted HC remnants and/or ships replacement infantry to understrength HC field teams. |
 | Hybrid refill | `AI_Commander.sqf` calls Teams/Produce | Teams 90 s, Produce 45 s. | Human commander present and `WFBE_C_AI_COMMANDER_HYBRID_REFILL>0`. | Keeps AI bodies founded/refilled from the separate AI commander wallet while the human owns base/build/research. |
 | DisbandLowTier | `AI_Commander_DisbandLowTier.sqf` | `WFBE_C_AICOM_DISBAND_INTERVAL` = 300 s. | Active gate, nil-guarded; runs in every command mode. | Retires safe idle rear low-tier teams to reduce clutter and server load. |
 | Snapshot | `AI_Commander_Snapshot.sqf` | Strategy interval, immediately before Strategy. | `_aiStrategy` and function compiled. | Builds/publishes `wfbe_aicom2_snap` world model for V2 allocation and telemetry. |
@@ -449,6 +449,8 @@ One row appears for every unique `WFBE_C_AICOM_*` token assigned in `Init_Common
 | `WFBE_C_AICOM_RECOVERY_REVERSE_SPEED` | L1001 guarded=6 | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1024 | m/s of the brief reverse pulse before re-pathing a stuck vehicle. |
 | `WFBE_C_AICOM_RECOVERY_SLOPE_Z` | L1002 guarded=if (worldName == "Takistan") then {0.80} else {0.85} | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1074, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1082 | surfaceNormal z below this = too steep for a foot waypoint node -> snap to nearest road. TK ridge grades hit 0.85 (~32deg) far more than rolling Chernarus, so a lower TK threshold (0.80, ~37deg) snaps only genuinely-too-steep foot nodes instead of constantl... |
 | `WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R` | L1003 guarded=if (worldName == "Takistan") then {300} else {200} | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1075, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1082 | m search radius for that road snap. Wider on TK's sparse mountain road net so the snap actually finds a track. |
+| `WFBE_C_AICOM_RECOVERY_NOROAD_STEP` | L1004 guarded=1 | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1054, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1059, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1126, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1135 | cmdcon44i: when the tier-3 road-snap finds no road on a roadless shelf, step the leader/hull toward the objective instead of leaving it wedged forever. 0 = old behavior. |
+| `WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST` | L1005 guarded=90 | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1067, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1130, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1143 | metres the no-road recovery step moves toward the order destination, clamped to avoid overshoot and snapped to nearby flat, non-water ground. |
 | `WFBE_C_AICOM_AUTOFUEL` | L1006 guarded=1 | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:881, Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_MHQReloc.sqf:340 | Ray: AICOM vehicles + relocating MHQ never run dry (silent top-off below the threshold). |
 | `WFBE_C_AICOM_AUTOFUEL_BELOW` | L1007 guarded=0.25 | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:883, Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_MHQReloc.sqf:340 | fuel fraction that triggers the top-off. |
 | `WFBE_C_AICOM_PLANE_FLYHEIGHT` | L1064 guarded=0 | Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1100, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1116, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1119, Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1463 | fixed-wing altitude floor; 0 = map-aware (400 Chernarus / 500 Takistan ridges), >0 forces that value. |
