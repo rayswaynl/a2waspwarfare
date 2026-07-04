@@ -500,6 +500,8 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				//--- fist choice wins (overwrites wfbe_aicom_targets) + assigns each team an alloc_target.
 				//--- Inert unless WFBE_C_AICOM2_ALLOCATE_ENABLE>0 (checked inside) -> legacy path = instant rollback.
 				if (!isNil "WFBE_SE_FNC_AICOM2_Allocate") then {(_side) Call WFBE_SE_FNC_AICOM2_Allocate};
+				//--- M5 DECAPITATE closer runs AFTER the Allocator each tick so its HQ-commit override is the LAST target write (wins). Inert unless WFBE_C_AICOM2_DECAP_ENABLE > 0.
+				if (!isNil "WFBE_SE_FNC_AICOM2_Decapitate") then {(_side) Call WFBE_SE_FNC_AICOM2_Decapitate};
 				//--- NOTE (claude-gaming 2026-06-28): the AI-INTENT publish block was MOVED OUT of this gate
 				//--- (it used to live here) to the _active-gated block just below the Executor, so the command-console
 				//--- intent readout refreshes + reaches JIP/assist clients even when the AI is not in full-build mode.
