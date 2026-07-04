@@ -171,6 +171,14 @@ if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety flo
 		_factoryType = "Airport";
 	};
 	_position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
+	//--- depot-buy-round3 (diagnostic, ALWAYS-ON): the depot/airfield spawn path had NO observable
+	//--- output on release clients - every WFBE_CO_FNC_LogContent breadcrumb here is compiled out
+	//--- (WF_LOG_CONTENT undefined on players; only HCs force it). This one plain diag_log is the
+	//--- evidence line: the next failed Depot/Airport buy on ANY client leaves the resolved factory
+	//--- object + its getPos + the computed spawn position + side + class in that client's RPT, so a
+	//--- null/blocked spawn (createVehicle/createUnit objNull) can finally be told apart from a bad
+	//--- resolve. One line per Depot/Airport buy (not the per-second queue loop); negligible cost.
+	diag_log Format ["BUYTRACE|v1|depot-pos|side=%1|factory=%2|class=%3|obj=%4|objType=%5|objPos=%6|spawnPos=%7|dist=%8|dir=%9", sideJoinedText, _factoryType, _unit, _building, _type, getPos _building, _position, _distance, _direction];
 	//--- cmdcon44-f: same case fix as the factory branch above - "Depot"/"Airport" must be UPPERCASEd to match
 	//--- the WFBE_LONGEST*BUILDTIME keys stored in Init_Common.sqf:369 (DEPOT/AIRPORT), else _longest = nil.
 	_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];
@@ -353,6 +361,8 @@ if (_isMan) then {
 	if (isNull _soldier) exitWith {
 		_buyFailed = true;
 		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
+		//--- depot-buy-round3 (diagnostic, ALWAYS-ON): the WARNING below is compiled out on release clients.
+		diag_log Format ["BUYFAIL|v1|infantry|side=%1|factory=%2|class=%3|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _currentCost, _position];
 		["WARNING", Format ["Client_BuildUnit.sqf: BUYFAIL infantry buy of [%1] produced objNull (spawn failed) - refunded $%2; queue slot for factory [%3] released once by the shared tail.", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
 	};
 
@@ -422,6 +432,8 @@ if (_isMan) then {
 	if (isNull _vehicle) exitWith {
 		_buyFailed = true;
 		if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
+		//--- depot-buy-round3 (diagnostic, ALWAYS-ON): the WARNING below is compiled out on release clients.
+		diag_log Format ["BUYFAIL|v1|vehicle|side=%1|factory=%2|class=%3|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _currentCost, _position];
 		["WARNING", Format ["Client_BuildUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded $%2; queue slot for factory [%3] released once by the shared tail.", _unit, _currentCost, _factory]] Call WFBE_CO_FNC_LogContent;
 	};
 
