@@ -27,6 +27,10 @@ while {!WFBE_GameOver} do {
 		_flag = _flags select _i;
 
 		_base = _camp getVariable "wfbe_camp_bunker";
+		//--- cmdcon44q live-spam fix (2026-07-04, 6592 err lines in 15 min): a camp DELETED mid-match leaves
+		//--- a null ref in _camps; getVariable on a null object returns nil (2-arg defaults ignored too), so
+		//--- alive <undefined> errored 4x/sec. Top-level heal to objNull -> alive=false -> camp skipped safely.
+		_base = if (isNil "_base") then {objNull} else {_base};
 
 		if(alive _base) then {
 			//--- Filter players and ai.
