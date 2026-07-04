@@ -97,9 +97,9 @@ f_md=SANS(34,True); f_sm=SANS(28,True); f_xs=SANS(23,False); f_num=MONO(58)
 
 # Scene plan — single source of truth for lengths so audio.py can find the winner-reveal
 # "climax" frame and stay in sync if scene timing changes. (name, frames, fade-in, fade-out)
-SCENE_PLAN = [("intro",54,18,10),("battle",420,12,10),("momentum",168,12,10),("mvp",156,12,10),
-              ("board",186,12,10),("combat",198,12,10),("decisive",120,12,10),("winner",126,4,2),
-              ("outro",102,10,10)]
+SCENE_PLAN = [("intro",54,18,10),("battle",480,12,10),("momentum",168,12,10),("mvp",156,12,10),
+              ("board",186,12,10),("combat",198,12,10),("winner",126,4,2),
+              ("outro",162,10,10)]
 HOLD_FRAMES = 18
 def climax_frame():
     f=0
@@ -403,6 +403,7 @@ def caption(m):
     mvp = (f"\n🎖 MVP {m.mvp['name']} ({m.mvp['kills']}K)"
            f"{' — '+m.mvp['award'] if m.mvp.get('award') else ''}") if m.mvp else ""
     return (f"{hook} {side} take {m.map_name.title()} in {mm:02d}:{ss:02d}.{arc}{mvp}\n"
+            f"▶ Play, live stats & leaderboards: miksuu.com  ·  Join us: discord.me/warfare\n"
             f"New match recap every round — follow for more.\n"
             f"#arma2 #warfare #milsim #cti #miksuuswarfare #gaming #fyp")
 
@@ -579,18 +580,6 @@ def render(m, out_path):
                 tracked(d,(W/2,1542),f"MVP'S NEMESIS — {m.nemesis['who'].upper()} ({m.nemesis['n']})",SANS(20,False),GOLD,anchor="mm",track=4)
         footer(im,d)
 
-    def s_decisive(im,d,i,n):
-        header(d,"DECISIVE BLOW"); t,town,s=m.decisive; col=SIDE_COL[s]; mm,ss=divmod(t,60)
-        ms=560; mx0=(W-ms)//2; my0=300; R.control_map(d,im,t+1,flash=town,fk=1.0,x0=mx0,y0=my0,size=ms,labels=False)
-        if town in m.towns:
-            x,y=m.towns[town]; cx=mx0+x/m.world_size*ms; cy=my0+(1-y/m.world_size)*ms; pulse=18+8*math.sin(i/4)
-            d.ellipse([cx-pulse,cy-pulse,cx+pulse,cy+pulse],outline=GOLD,width=4)
-        tracked(d,(W/2,948),town.upper(),DISP(56),col,anchor="mm",track=10); tracked(d,(W/2,1008),f"CAPTURED AT {mm:02d}:{ss:02d}",SANS(23,False),DIM,anchor="mm",track=4)
-        w=sum(v=="west" for v in m.owners_at(t+1).values()); e=sum(v=="east" for v in m.owners_at(t+1).values())
-        panel(d,120,1110,W-120,1250,fill=mix(col,0.10),outline=col)
-        d.text((W/2,1140),f"This capture pushed {SIDE_NAME[s]} to {max(w,e)} towns",font=f_sm,fill=INK,anchor="ma")
-        d.text((W/2,1182),"— the swing that decided the match.",font=f_sm,fill=INK,anchor="ma"); footer(im,d)
-
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
         if paste_cover(im, winner_bg_id(m.winner), seed=m.seed, kb=i/n):
@@ -614,21 +603,33 @@ def render(m, out_path):
         d.text((W/2,1580),"MIKSUU'S WARFARE",font=f_sm,fill=INK,anchor="mm")
 
     def s_outro(im,d,i,n):
-        # closing call-to-action card — converts a view into a follow / a player.
+        # closing CALL-TO-ACTION — the whole point: convert a viewer into a player.
+        # Plug the website (play + stats) AND the Discord as two clear, readable pills.
         if not paste_cover(im,"outro_bg",seed=m.seed,kb=i/n): paste_cover(im,"intro_splash",seed=m.seed,kb=i/n)
+        # scrim so the CTA reads over any backdrop
+        ov=Image.new("RGBA",(W,H),(9,11,15,150)); im.paste(Image.alpha_composite(im.convert("RGBA"),ov).convert("RGB"),(0,0))
         d=ImageDraw.Draw(im,"RGBA")
-        drift_silhouette(im,m.seed+3,i,n,yfrac=0.66,wfrac=0.66,opacity=0.12)
+        drift_silhouette(im,m.seed+3,i,n,yfrac=0.70,wfrac=0.64,opacity=0.10)
         mk=brand_logo("mark")
         if mk is not None:
-            sz=int(206+8*math.sin(i/7)); m2=mk.resize((sz,sz)); im.paste(m2,(int(W/2-sz/2),int(H/2-470)),m2)
-        tracked(d,(W/2,H/2-150),"MIKSUU'S WARFARE",DISP(66),INK,anchor="mm",track=6)
-        rule(d,W/2,H/2-82,half=160)
-        tracked(d,(W/2,H/2-14),"FOLLOW FOR MORE WAR STORIES",SANS(28,False),INK,anchor="mm",track=4)
-        tracked(d,(W/2,H/2+56),"NEW MATCH RECAP EVERY ROUND",SANS(23,False),GOLD,anchor="mm",track=4)
+            sz=int(150+6*math.sin(i/7)); m2=mk.resize((sz,sz)); im.paste(m2,(int(W/2-sz/2),int(470-sz/2)),m2)
+        tracked(d,(W/2,660),"JOIN THE WAR",DISP(84),INK,anchor="mm",track=8)
+        rule(d,W/2,730,half=150)
+        tracked(d,(W/2,788),"MIKSUU'S WARFARE   ·   ARMA 2 WARFARE / CTI",SANS(24,False),DIM,anchor="mm",track=3)
+        # two CTA pills — website + discord
+        def plug(y,kicker,url,accent):
+            panel(d,110,y,W-110,y+134,fill=mix(accent,0.12),outline=accent)
+            d.rectangle([110,y+20,120,y+114],fill=accent)                 # accent spine
+            tracked(d,(160,y+40),kicker,SANS(23,False),DIM,anchor="lm",track=4)
+            d.text((158,y+62),url,font=DISP(50),fill=INK)
+        pulse=int(20*(0.5+0.5*math.sin(i/6)))                             # subtle "tap me" glow phase
+        plug(880,"PLAY  ·  LIVE STATS  ·  LEADERBOARDS","MIKSUU.COM",GOLD)
+        plug(1044,"JOIN THE COMMUNITY","DISCORD.ME/WARFARE",WEST)
+        tracked(d,(W/2,1264),"NEW MATCH RECAP EVERY ROUND — FOLLOW",SANS(25,False),(206,168,120),anchor="mm",track=3)
         footer(im,d)
 
     fns={"intro":s_intro,"battle":s_battle,"momentum":s_momentum,"mvp":s_mvp,"board":s_board,
-         "combat":s_combat,"decisive":s_decisive,"winner":s_winner,"outro":s_outro}
+         "combat":s_combat,"winner":s_winner,"outro":s_outro}
     for _name,_nf,_fin,_fout in SCENE_PLAN:
         scene(_nf, fns[_name], fin=_fin, fout=_fout)
     for _ in range(HOLD_FRAMES): frames.append(frames[-1])
