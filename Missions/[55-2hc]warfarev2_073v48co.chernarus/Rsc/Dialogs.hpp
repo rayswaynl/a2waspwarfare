@@ -3948,7 +3948,7 @@ class WFBE_PlayerSettingsMenu {
 
 	class controlsBackground {
 		class CA_Background : RscText {
-			x = 0.275; y = 0.135; w = 0.45; h = 0.775;
+			x = 0.275; y = 0.135; w = 0.45; h = 0.822;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -3957,7 +3957,7 @@ class WFBE_PlayerSettingsMenu {
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class CA_Background_Footer : CA_Background {
-			y = 0.135 + 0.735;
+			y = 0.135 + 0.782;
 			h = 0.04;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
@@ -4049,33 +4049,34 @@ class WFBE_PlayerSettingsMenu {
 			x = 0.29; y = 0.135 + 0.305; w = 0.40; h = 0.035;
 			text = "GAMEPLAY";
 		};
-		//--- Ray 2026-07-04: HUD-Overlay toggle removed (squad/info RHUD column is now hard-off; see Client_UpdateRHUD.sqf).
-		//--- Toggle rows, two columns. CA_AAR carries the shared geometry (idc 30020 retired; rows pulled up one slot,
-		//--- no gap left behind). Text set live by the controller; click flips the pref.
-		class CA_AAR : RscButton_Main {
-			idc = 30021;
+		//--- Ray 2026-07-04b: HUD-Overlay toggle RESTORED (supersedes the 2026-07-04 hard-off; Ray re-enabled the RHUD by
+		//--- default - see Client_UpdateRHUD.sqf). CA_HUD carries the shared geometry; every row keeps its original slot.
+		//--- Toggle rows, two columns. Text set live by the controller; click flips the pref.
+		class CA_HUD : RscButton_Main {
+			idc = 30020;
 			x = 0.29; y = 0.135 + 0.345; w = 0.205; h = 0.042;
 			sizeEx = 0.022;
-			text = "AAR Markers: ON";
-			action = "WFBE_MenuAction = 2";
+			text = "HUD Overlay: ON";
+			action = "WFBE_MenuAction = 1";
 		};
-		class CA_Bomb  : CA_AAR { idc = 30022; x = 0.505; y = 0.135 + 0.345; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
-		class CA_Amb   : CA_AAR { idc = 30023; x = 0.29;  y = 0.135 + 0.392; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
-		class CA_Kill  : CA_AAR { idc = 30024; x = 0.505; y = 0.135 + 0.392; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
-		class CA_IRS   : CA_AAR { idc = 30025; x = 0.29;  y = 0.135 + 0.439; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
-		class CA_Bipod : CA_AAR { idc = 30026; x = 0.505; y = 0.135 + 0.439; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
+		class CA_AAR   : CA_HUD { idc = 30021; x = 0.505; y = 0.135 + 0.345; text = "AAR Markers: ON";    action = "WFBE_MenuAction = 2"; };
+		class CA_Bomb  : CA_HUD { idc = 30022; x = 0.29;  y = 0.135 + 0.392; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
+		class CA_Amb   : CA_HUD { idc = 30023; x = 0.505; y = 0.135 + 0.392; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
+		class CA_Kill  : CA_HUD { idc = 30024; x = 0.29;  y = 0.135 + 0.439; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
+		class CA_IRS   : CA_HUD { idc = 30025; x = 0.505; y = 0.135 + 0.439; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
+		class CA_Bipod : CA_HUD { idc = 30026; x = 0.29;  y = 0.135 + 0.486; w = 0.42; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
 		//--- High-climbing default (same var/key/localized labels as the Team-menu control; text set live).
-		class CA_HighClimb : CA_AAR { idc = 30027; x = 0.29;  y = 0.135 + 0.486; w = 0.42; text = "High climbing default: OFF"; action = "WFBE_MenuAction = 10"; };
+		class CA_HighClimb : CA_HUD { idc = 30027; x = 0.29;  y = 0.135 + 0.533; w = 0.42; text = "High climbing default: OFF"; action = "WFBE_MenuAction = 10"; };
 
 		//--- ===== AUDIO =====
 		class CA_AudioHead : RscText_SubTitle {
 			idc = 30005;
-			x = 0.29; y = 0.135 + 0.545; w = 0.40; h = 0.035;
+			x = 0.29; y = 0.135 + 0.592; w = 0.40; h = 0.035;
 			text = "AUDIO";
 		};
-		class CA_Audio : CA_AAR {
+		class CA_Audio : CA_HUD {
 			idc = 30030;
-			x = 0.29; y = 0.135 + 0.585; w = 0.42;
+			x = 0.29; y = 0.135 + 0.632; w = 0.42;
 			text = "Audio Cues: OFF";
 			action = "WFBE_MenuAction = 8";
 		};
@@ -4083,7 +4084,7 @@ class WFBE_PlayerSettingsMenu {
 		//--- ===== Footer Close =====
 		class CA_Done : RscButton_Main {
 			idc = 30040;
-			x = 0.29; y = 0.135 + 0.655; w = 0.42; h = 0.045;
+			x = 0.29; y = 0.135 + 0.702; w = 0.42; h = 0.045;
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";
