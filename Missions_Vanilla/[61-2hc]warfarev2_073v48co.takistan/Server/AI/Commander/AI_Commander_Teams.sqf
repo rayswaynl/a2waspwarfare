@@ -224,7 +224,7 @@ if (_foundedTeams > _target) then {
 //--- promotes _pick to the top-tier template. Transient: next tick the flag is consumed/false and the target returns
 //--- to normal (no permanent target inflation). Placed AFTER the PC-cleanup block so the +1 never triggers a retire.
 //--- A2-OA-safe: boolean getVariable on the side-logic OBJECT _logik is reliable (not a group); plain if, no Bool ==.
-if (_logik getVariable ["wfbe_aicom_veteran_next", false]) then {_target = (_target + 1) min _teamsHardCap}; //--- B747.1: veteran +1 must still respect the hard cap (never exceed max teams).
+if ((_logik getVariable ["wfbe_aicom_veteran_next", false]) && {_logik getVariable ["wfbe_aicom_reinforce_rich", false]}) then {_target = (_target + 1) min _teamsHardCap}; //--- B747.1/Lane-358: veteran +1 must still respect the hard cap and current rich window.
 
 if ((_foundedTeams + _pending) >= _target) exitWith {};
 
@@ -775,6 +775,10 @@ if (count _live > 0) then {
 	private ["_w7Flag","_w7Skill","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best"];
 	_w7Flag = _logik getVariable "wfbe_aicom_veteran_next";
 	if (isNil "_w7Flag") then {_w7Flag = false};
+	if (_w7Flag && {!(_logik getVariable ["wfbe_aicom_reinforce_rich", false])}) then {
+		_w7Flag = false;
+		_logik setVariable ["wfbe_aicom_veteran_next", false];
+	};
 	if (_w7Flag) then {
 		_logik setVariable ["wfbe_aicom_veteran_next", false];
 		_w7BestIdx = _pick; _w7Best = -1;
