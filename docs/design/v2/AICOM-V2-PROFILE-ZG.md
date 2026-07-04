@@ -1,4 +1,4 @@
-# AICOM V2 Zargabad Profile Dataset
+﻿# AICOM V2 Zargabad Profile Dataset
 
 Guide rev: GR-2026-07-03a. Scope: static dataset/spec only.
 
@@ -10,7 +10,7 @@ Primary sources harvested in this worktree:
 - `Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/mission.sqm` `Init_Town.sqf` calls
 - Zargabad-specific constant blocks in `Common/Init/Init_CommonConstants.sqf`
 
-Current source contains 10 non-air town nodes plus 1 airfield capture node. The profile is low-pop and dense; design target boundary is `6000`, while current generated SQM positions are offset into an 8192-style coordinate space. V2 must read profile coordinates, not infer map bounds from CH defaults.
+Current source contains 10 non-air town nodes plus 1 airfield capture node. The profile is low-pop and dense; runtime `WFBE_BOUNDARIESXY` for `zargabad` is `8192` in `Common/Init/Init_Boundaries.sqf`, while the useful tactical envelope is the compact urban box around roughly `6000-6400`. V2 must read profile coordinates and zone envelopes explicitly, not infer map bounds from CH defaults and not clip ZG nodes to `6000`.
 
 Profile key: `ZG`.
 
@@ -19,7 +19,7 @@ Zone constants:
 | Field | Value |
 |---|---|
 | `worldName` | `Zargabad` |
-| `boundary` | `6000` design target |
+| `runtimeBoundary` | `8192` |
 | `STARTING_DISTANCE` | `5000` |
 | `IS_NAVAL_MAP` | `false` |
 | `IS_ZARGABAD_LOWPOP_MAP` | `true` |
@@ -110,7 +110,7 @@ ZG route graph is deliberately small. Wall-gap and rim exclusions are first-clas
 
 | zone | kind | polygon/center | tags | values |
 |---|---|---|---|---|
-| ZG_BOUNDARY | boundary | [[0,0],[6000,0],[6000,6000],[0,6000]] | lowpop,urban | [6000] |
+| ZG_BOUNDARY | boundary | [[0,0],[8192,0],[8192,8192],[0,8192]] | lowpop,urban,runtime | [8192] |
 | CENTRAL_CORE | front | [[3300,3400],[4550,3400],[4550,4650],[3300,4650]] | urban,high-value,wallGap | [0,2] |
 | H_BARRIER_WALL | urban-wall | [[3700,3300],[4500,3300],[4500,4700],[3700,4700]] | central-wall,h-barrier | [1] |
 | WALL_GAP | chokepoint | [[3850,3750],[4250,3750],[4250,4300],[3850,4300]] | wallGap,convoy-limit | [1] |
@@ -124,7 +124,7 @@ ZG route graph is deliberately small. Wall-gap and rim exclusions are first-clas
 1. Profile load must log `AICOMSTAT|v3|PROFILE|<side>|0|LOAD|map=Zargabad|profile=ZG|fallback=0|nodes=11|edges=15`.
 2. Edge-guard integration must read `edgeFlags` and reject `edgeExcluded` routes while any non-excluded route exists to the same target tier.
 3. Wall-gap routes must apply a convoy mutex keyed by `ZG_WALL_GAP`. If mutex is held, emit a wait decision rather than re-targeting.
-4. Profile coordinate conversion must be explicit if the builder normalizes from current SQM 8192-space to 6000 design-space. Do not mix normalized and raw coordinates in one profile.
+4. Profile coordinate conversion must stay in raw 8192 runtime space for node positions. If a builder adds normalized tactical-envelope coordinates for scoring, store them in separate fields and never mix them with raw `pos [x,z]` nodes.
 
 ## Paste-ready profile skeleton
 
@@ -137,6 +137,6 @@ WFBE_AICOMV2_PROFILE_Zargabad = [
   _nodes,
   _edges,
   _zones,
-  ["source","mission.sqm+docs/zargabad-campaign.json","guide","GR-2026-07-03a","nodes",11]
+  ["source","mission.sqm+docs/zargabad-campaign.json+Init_Boundaries.sqf","guide","GR-2026-07-03a","nodes",11,"runtimeBoundary",8192]
 ];
 ```

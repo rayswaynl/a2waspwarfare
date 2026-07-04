@@ -1,4 +1,4 @@
-# AICOM V2 Map Profile Format Spec
+﻿# AICOM V2 Map Profile Format Spec
 
 Guide rev: GR-2026-07-03a. Scope: final-form format spec only.
 
@@ -146,4 +146,4 @@ Do not use `params`, `pushBack`, `apply`, `findIf`, hash maps, `isEqualTo`, `dis
 |---|---:|---:|---|---:|---|
 | CH | 15360 | 7500 | yes | 3 | Forest/mixed, long coastal and central spines, wider lane offset. |
 | TK | 12800 | 7500 | no | 2 | Desert/mountain, road-spine dependent, tighter lane offset and lower slope threshold. |
-| ZG | 6000 design target, current SQM positions use 8192-shifted coordinates | 5000 | no | 1 | Dense low-pop urban, short reach, reduced AI caps, central wall gap and edge exclusions. |
+| ZG | 8192 runtime `WFBE_BOUNDARIESXY`; 6000-6400 compact tactical envelope | 5000 | no | 1 | Dense low-pop urban, short reach, reduced AI caps, central wall gap and edge exclusions. Runtime boundary is source-verified in `Init_Boundaries.sqf`; do not clip nodes to 6000 because `Military Base` sits above that line. |
