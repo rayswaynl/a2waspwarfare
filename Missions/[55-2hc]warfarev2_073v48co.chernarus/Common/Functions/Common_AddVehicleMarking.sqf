@@ -11,7 +11,8 @@
 	string set, so APPEND (never overwrite) is mandatory here.
 
 	Gate: WFBE_C_VEHICLE_MARKINGS (Init_CommonConstants.sqf). 0 = no markings AND no side-skins.
-	Kill tally marker gate: WFBE_C_KILL_TALLY_DECAL. Independent from the side lights/tints.
+	Kill tally marker gate: WFBE_C_KILL_TALLY_DECAL (default 1 since the 2026-07-04 Ray pick).
+	Independent from the side lights/tints; heat-ramp amber -> orange -> red -> white-hot, one dim local light.
 
 	Implementation: the zero-art "ships now" markings are dim LOCAL #lightpoint glows attached per
 	side (recognition-panel colour + side running light + a faint IR-strobe stand-in). Each marking
@@ -30,9 +31,10 @@ _side    = _this select 1;
 
 //--- Lane 205: JIP-safe kill-tally marker. The server owns wfbe_kill_tally in RequestOnUnitKilled.sqf;
 //--- each client runs this tiny local watcher from the vehicle init string and updates one local light.
-//--- Zero-art tier picker: 1-2 kills amber, 3-5 white, 6-9 red, 10+ violet.
+//--- Heat-ramp tier picker (Ray 2026-07-04 visual pass): 1-2 kills amber, 3-5 orange, 6-9 red, 10+ white-hot.
+//--- Deliberately warm/military - no cool or neon hues - and hull-hugging so the glow reads as a marking.
 if ((missionNamespace getVariable ["WFBE_C_KILL_TALLY_DECAL", 0]) > 0) then {
-	_tallyMk = "this spawn {private ['_veh','_last','_cnt','_tier','_light','_bright','_color']; _veh = _this; _last = -1; while {alive _veh} do {_cnt = _veh getVariable ['wfbe_kill_tally',0]; if ((abs (_cnt - _last)) > 0) then {_last = _cnt; _light = _veh getVariable ['mks_tally',objNull]; if (_cnt <= 0) then {if !(isNull _light) then {deleteVehicle _light; _veh setVariable ['mks_tally',objNull]}} else {if (isNull _light) then {_light = '#lightpoint' createVehicleLocal (position _veh); _veh setVariable ['mks_tally',_light]; _light attachTo [_veh,[0,0.8,1.8]]}; _tier = 1; if (_cnt >= 3) then {_tier = 2}; if (_cnt >= 6) then {_tier = 3}; if (_cnt >= 10) then {_tier = 4}; _bright = 0.025; _color = [1.0,0.55,0.05]; switch (_tier) do {case 2: {_bright = 0.035; _color = [0.9,0.9,0.85]}; case 3: {_bright = 0.045; _color = [1.0,0.05,0.0]}; case 4: {_bright = 0.060; _color = [0.65,0.0,1.0]};}; _light setLightBrightness _bright; _light setLightColor _color; _light setLightAmbient _color};}; sleep 2;}; _light = _veh getVariable ['mks_tally',objNull]; if !(isNull _light) then {deleteVehicle _light};}";
+	_tallyMk = "this spawn {private ['_veh','_last','_cnt','_tier','_light','_bright','_color']; _veh = _this; _last = -1; while {alive _veh} do {_cnt = _veh getVariable ['wfbe_kill_tally',0]; if ((abs (_cnt - _last)) > 0) then {_last = _cnt; _light = _veh getVariable ['mks_tally',objNull]; if (_cnt <= 0) then {if !(isNull _light) then {deleteVehicle _light; _veh setVariable ['mks_tally',objNull]}} else {if (isNull _light) then {_light = '#lightpoint' createVehicleLocal (position _veh); _veh setVariable ['mks_tally',_light]; _light attachTo [_veh,[0,0.5,1.1]]}; _tier = 1; if (_cnt >= 3) then {_tier = 2}; if (_cnt >= 6) then {_tier = 3}; if (_cnt >= 10) then {_tier = 4}; _bright = 0.025; _color = [1.0,0.55,0.05]; switch (_tier) do {case 2: {_bright = 0.032; _color = [1.0,0.33,0.02]}; case 3: {_bright = 0.040; _color = [1.0,0.08,0.0]}; case 4: {_bright = 0.050; _color = [1.0,0.85,0.6]};}; _light setLightBrightness _bright; _light setLightColor _color; _light setLightAmbient _color};}; sleep 2;}; _light = _veh getVariable ['mks_tally',objNull]; if !(isNull _light) then {deleteVehicle _light};}";
 	_pending = _vehicle getVariable ["wfbe_pending_texture", ""];
 	if ((count _pending) > 0) then {_pending = _pending + "; " + _tallyMk} else {_pending = _tallyMk};
 	_vehicle setVariable ["wfbe_pending_texture", _pending];
