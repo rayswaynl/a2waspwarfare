@@ -14,15 +14,11 @@ switch (_this) do {
 			REQUEST_SUPPLY_VALUE = player;
 			publicVariableServer "REQUEST_SUPPLY_VALUE";
 
-			//--- Bounded wait: a lost JIP packet must NOT hang this loop forever. Sleep-poll for up
-			//--- to ~10s, then fall back to a sane 0 default so callers never block indefinitely.
-			_timeout = 0;
-			while {isNil "_supplyTeam" && _timeout < 100} do {
-				sleep 0.1;
-				_timeout = _timeout + 1;
-				_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
-			};
-			if (isNil "_supplyTeam") then {_supplyTeam = 0};
+			//--- cmdcon44m: NON-BLOCKING like the resistance case below. The old sleep-poll threw
+			//--- "Generic error" from every unscheduled caller (victory/upgrade FSMs, PVFs) whenever
+			//--- the var was nil - A2 cannot suspend there. Return 0 now; the PV answer lands for the
+			//--- next read (all callers poll on a cadence).
+			_supplyTeam = 0;
 		};
 
 		_supplyTeam
@@ -34,15 +30,11 @@ switch (_this) do {
 			REQUEST_SUPPLY_VALUE = player;
 			publicVariableServer "REQUEST_SUPPLY_VALUE";
 
-			//--- Bounded wait: a lost JIP packet must NOT hang this loop forever. Sleep-poll for up
-			//--- to ~10s, then fall back to a sane 0 default so callers never block indefinitely.
-			_timeout = 0;
-			while {isNil "_supplyTeam" && _timeout < 100} do {
-				sleep 0.1;
-				_timeout = _timeout + 1;
-				_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
-			};
-			if (isNil "_supplyTeam") then {_supplyTeam = 0};
+			//--- cmdcon44m: NON-BLOCKING like the resistance case below. The old sleep-poll threw
+			//--- "Generic error" from every unscheduled caller (victory/upgrade FSMs, PVFs) whenever
+			//--- the var was nil - A2 cannot suspend there. Return 0 now; the PV answer lands for the
+			//--- next read (all callers poll on a cadence).
+			_supplyTeam = 0;
 		};
 
 		_supplyTeam
