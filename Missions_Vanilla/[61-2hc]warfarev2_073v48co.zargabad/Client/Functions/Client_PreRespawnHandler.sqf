@@ -52,3 +52,10 @@ if (!isNull commanderTeam) then {
 };
 
 [sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
+
+//--- cmdcon44q (Ray report x3, 2026-07-04): the map-marker class affix ([MED]/[ENG]...) reads
+//--- wfbe_player_class off the UNIT OBJECT (updateteamsmarkers.sqf:310). Join and skin-swap set it,
+//--- but every RESPAWN creates a new body that never got it re-broadcast - so the affix silently died
+//--- with the player's first death. Re-broadcast here on the fresh body (WFBE_SK_V_Type is global).
+player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
+
