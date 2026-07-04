@@ -317,6 +317,13 @@ sleep 10;
 _RHUD_upgId = -1;
 _RHUD_upgEnd = 0;
 
+//--- Ray 2026-07-04: squad-radar RHUD removed - "has to go, it sucks". Hard-off for EVERYONE,
+//--- irrespective of the WFBE_RUBHUD_ENABLED profile pref (old profiles carry ON and must NOT
+//--- resurrect it). The overlay controls default to empty text + transparent bg, so never
+//--- entering the update loop leaves nothing on screen. Code kept dormant; revive = git revert.
+RUBHUD = false;
+if (true) exitWith {};
+
 while {true} do {
 	sleep 1;
 

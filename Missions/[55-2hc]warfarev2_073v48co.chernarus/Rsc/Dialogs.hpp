@@ -4036,20 +4036,21 @@ class WFBE_PlayerSettingsMenu {
 			x = 0.29; y = 0.135 + 0.265; w = 0.40; h = 0.035;
 			text = "GAMEPLAY";
 		};
-		//--- Seven toggle rows, two columns. Text set live by the controller; click flips the pref.
-		class CA_HUD : RscButton_Main {
-			idc = 30020;
+		//--- Six toggle rows, two columns. Text set live by the controller; click flips the pref.
+		//--- Ray 2026-07-04: the "HUD Overlay" row (idc 30020, WFBE_MenuAction 1) was removed with the
+		//--- squad-radar RHUD. Remaining rows reflow up into a gapless grid; IDCs unchanged.
+		class CA_AAR : RscButton_Main {
+			idc = 30021;
 			x = 0.29; y = 0.135 + 0.305; w = 0.205; h = 0.042;
 			sizeEx = 0.022;
-			text = "HUD Overlay: ON";
-			action = "WFBE_MenuAction = 1";
+			text = "AAR Markers: ON";
+			action = "WFBE_MenuAction = 2";
 		};
-		class CA_AAR   : CA_HUD { idc = 30021; x = 0.505; y = 0.135 + 0.305; text = "AAR Markers: ON";    action = "WFBE_MenuAction = 2"; };
-		class CA_Bomb  : CA_HUD { idc = 30022; x = 0.29;  y = 0.135 + 0.352; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
-		class CA_Amb   : CA_HUD { idc = 30023; x = 0.505; y = 0.135 + 0.352; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
-		class CA_Kill  : CA_HUD { idc = 30024; x = 0.29;  y = 0.135 + 0.399; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
-		class CA_IRS   : CA_HUD { idc = 30025; x = 0.505; y = 0.135 + 0.399; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
-		class CA_Bipod : CA_HUD { idc = 30026; x = 0.29;  y = 0.135 + 0.446; w = 0.42; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
+		class CA_Bomb  : CA_AAR { idc = 30022; x = 0.505; y = 0.135 + 0.305; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
+		class CA_Amb   : CA_AAR { idc = 30023; x = 0.29;  y = 0.135 + 0.352; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
+		class CA_Kill  : CA_AAR { idc = 30024; x = 0.505; y = 0.135 + 0.352; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
+		class CA_IRS   : CA_AAR { idc = 30025; x = 0.29;  y = 0.135 + 0.399; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
+		class CA_Bipod : CA_AAR { idc = 30026; x = 0.505; y = 0.135 + 0.399; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
 
 		//--- ===== AUDIO =====
 		class CA_AudioHead : RscText_SubTitle {
@@ -4057,7 +4058,7 @@ class WFBE_PlayerSettingsMenu {
 			x = 0.29; y = 0.135 + 0.505; w = 0.40; h = 0.035;
 			text = "AUDIO";
 		};
-		class CA_Audio : CA_HUD {
+		class CA_Audio : CA_AAR {
 			idc = 30030;
 			x = 0.29; y = 0.135 + 0.545; w = 0.42;
 			text = "Audio Cues: OFF";

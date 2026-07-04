@@ -9,7 +9,7 @@
 
 	Player-side options (all client-local; never affect other players):
 	  VIDEO    : View distance (slider 500..map cap) | Auto view distance on/off | Target FPS 30/45/50/60
-	  GAMEPLAY : HUD overlay | AAR map markers | Bomb-altitude warning | Ambulance redeploy circles |
+	  GAMEPLAY : AAR map markers | Bomb-altitude warning | Ambulance redeploy circles |
 	             Kill feed | Auto IR smoke | Auto deploy bipod
 	  AUDIO    : Audio cues
 
@@ -19,7 +19,7 @@
 */
 
 disableSerialization;
-private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD"];
+private ["_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD"];
 
 if (!alive player) exitWith {};
 if (dialog) exitWith {};
@@ -39,7 +39,6 @@ _lastSliderVD = _curVD;
 
 while {alive player && dialog} do {
 	//--- Live label refresh (cheap; only runs while the dialog is open).
-	_hud    = missionNamespace getVariable ["RUBHUD", true];
 	_aar    = missionNamespace getVariable ["WFBE_CL_ShowAARMarkers", true];
 	_bomb   = missionNamespace getVariable ["WFBE_BOMB_WARNING_ENABLED", true];
 	_amb    = missionNamespace getVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", true];
@@ -50,7 +49,6 @@ while {alive player && dialog} do {
 	_autoOn = missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
 	_target = missionNamespace getVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
 
-	ctrlSetText [30020, if (_hud)  then {"HUD Overlay: ON"}         else {"HUD Overlay: OFF"}];
 	ctrlSetText [30021, if (_aar)  then {"AAR Markers: ON"}         else {"AAR Markers: OFF"}];
 	ctrlSetText [30022, if (_bomb) then {"Bomb Warning: ON"}        else {"Bomb Warning: OFF"}];
 	ctrlSetText [30023, if (_amb)  then {"Ambulance Rings: ON"}     else {"Ambulance Rings: OFF"}];
@@ -76,13 +74,8 @@ while {alive player && dialog} do {
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_PERSISTENT_CONST_VIEW_DISTANCE", _chosenVD] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
-	//--- HUD overlay (RUBHUD): Client_UpdateRHUD.sqf reads it each ~1s, so the flip is instant.
-	if (WFBE_MenuAction == 1) then {
-		WFBE_MenuAction = -1;
-		RUBHUD = !(missionNamespace getVariable ["RUBHUD", true]);
-		missionNamespace setVariable ["RUBHUD", RUBHUD];
-		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_RUBHUD_ENABLED", RUBHUD] Call WFBE_CO_FNC_SetProfileVariable};
-	};
+	//--- Ray 2026-07-04: HUD-overlay (RUBHUD) toggle removed with the squad-radar RHUD. WFBE_MenuAction 1
+	//--- is now unused; the render loop is hard-off in Client_UpdateRHUD.sqf regardless of the profile pref.
 
 	//--- AAR map markers: gate read live by Common_MarkerLoop.sqf. Hide currently-drawn markers at once when OFF.
 	if (WFBE_MenuAction == 2) then {
