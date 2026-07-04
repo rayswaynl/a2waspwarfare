@@ -527,7 +527,9 @@ _relieved = 0;
 						if ((toLower (_team getVariable ["wfbe_teammode", "towns"])) == "towns") then {
 							//--- WAVE-1 A3 (a): HC teams ARE now eligible for relief (the old !wfbe_aicom_hc exclusion made
 							//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
-							if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
+							//--- CAPTURE LOCK (GR-2026-07-03a): never DIVERT a mid-capture-drain team to relief (it would abandon a near-complete drain). CapLock
+							//--- returns a plain BOOL and auto-clears once the town is captured/dead/TTL/flips-to-us, so the team becomes relief-eligible again.
+							if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then {
 								_d = (leader _team) distance _town;
 								if (_d < _freeD) then {_freeD = _d; _free = _team};
 							};
@@ -830,7 +832,9 @@ if (_strikeOn) then {
 		_best = grpNull; _bestN = 1; //--- need at least 2 men to be worth sending
 		{
 			_team = _x;
-			if (!isNull _team && {!isPlayer (leader _team)} && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
+			//--- CAPTURE LOCK (GR-2026-07-03a): do not GRAB a mid-capture-drain team for the HQ strike (it would abandon a near-complete drain).
+			//--- WFBE_CO_FNC_CapLock is a plain BOOL and self-clears (captured/dead/TTL/town-ours), so the team is strike-eligible again after.
+			if (!isNull _team && {!isPlayer (leader _team)} && {!(_team getVariable ["wfbe_aicom_strike", false])} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then {
 				if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
 					if (_alive > 0) then {

@@ -553,6 +553,21 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				};
 			};
 
+			//--- CAPTURE LOCK (GR-2026-07-03a, capture-churn fix): a team that has fired BEGIN_CAPTURE and is draining a town is IMMUNE to
+			//--- re-targeting here (the single AssignTowns re-task choke-point). This is the site the behaviour data proved reaches in-drain
+			//--- teams: the ~10-min spearhead REPICK re-orders wfbe_aicom_targets, and this pass then yanks a mid-drain team onto the new
+			//--- primary, resetting its progress (62 BEGIN_CAPTURE / 27 teams / ~5 CAPTURED last night). Force _needs=false when locked so the
+			//--- team keeps its live capture order until the lock releases (captured / dead / TTL / town-flips-to-us - all in WFBE_CO_FNC_CapLock).
+			//--- ALWAYS-ON diag so the next soak can quantify suppressions. A2-OA-safe: helper returns a plain BOOL (if(!bool), no ==/!= on bools).
+			if (_needs && {[_team] Call WFBE_CO_FNC_CapLock}) then {
+				_needs = false;
+				private ["_clOrd","_clTgt","_clAge"];
+				_clOrd = _team getVariable "wfbe_aicom_caplock"; if (isNil "_clOrd") then {_clOrd = []};
+				_clTgt = if (count _clOrd >= 1 && {typeName (_clOrd select 0) == "OBJECT"} && {!isNull (_clOrd select 0)}) then {(_clOrd select 0) getVariable ["name","town"]} else {"pos"};
+				_clAge = if (count _clOrd >= 2 && {typeName (_clOrd select 1) == "SCALAR"}) then {round (time - (_clOrd select 1))} else {-1};
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|CAPTURE_LOCK_SUPPRESS|team=" + (str _team) + "|town=" + _clTgt + "|age=" + str _clAge);
+			};
+
 			if (_needs) then {
 				_target = objNull;
 				if (_bootstrap) then {

@@ -1410,6 +1410,7 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_teammode", "towns", true];        //--- re-enter the towns retarget gate (same idiom as the capture-success release)
 							_team setVariable ["wfbe_aicom_strike", false, true];      //--- clear stale strike so Strategy.sqf does not re-grab
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
+							_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
 							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RALLY_ARRIVED|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round _arrivalDist));
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RALLY_ARRIVED - re-tasking to towns (no assault SAD).", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
 						} else {
@@ -1720,6 +1721,16 @@ while {!WFBE_GameOver && _alive} do {
 
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] begin capture at [%3] (%4 camps, depot scan %5m).", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, count _townCamps, _capRange]] Call WFBE_CO_FNC_AICOMLog;
 
+					//--- CAPTURE LOCK STAMP (GR-2026-07-03a, capture-churn fix): this team has fired BEGIN_CAPTURE and is about to drain the depot.
+					//--- Stamp a BROADCAST group var wfbe_aicom_caplock = [townObj, t0] (3-arg GROUP setVariable IS valid on A2 OA; only the
+					//--- 3-arg NAMESPACE form is the trap). The driver runs on the HC; the order ISSUERS run on the server + read this via
+					//--- WFBE_CO_FNC_CapLock, so the public flag is mandatory for cross-machine visibility (mirrors wfbe_aicom_strike broadcasts).
+					//--- The lock makes the team immune to re-targeting until captured / dead / TTL / town-flips-to-us (see the helper). Re-stamped
+					//--- idempotently every capture pass; refreshing t0 is intentional (a team still actively draining should not TTL-expire).
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_CAPTURE_LOCK", 1]) > 0) then {
+						_team setVariable ["wfbe_aicom_caplock", [_townObj, time], true];
+					};
+
 					//--- ALWAYS dismount: build the on-foot infantry list from EVERY alive non-crew
 					//--- unit, dismounting any that happen to still be in cargo. Crew (driver/gunner)
 					//--- stay in their hull (keeps armour ready + parked near center). This replaces
@@ -2004,6 +2015,7 @@ while {!WFBE_GameOver && _alive} do {
 									};
 								};
 								_capAbort = true; //--- bail the depot-hold phase without latching _captureDone (same idiom as the seq-interrupt _capAbort).
+								_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): stopped draining -> re-taskable now (issuer stops skipping it).
 								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|BREAKOFF|team=" + (str _team) + "|live=" + str (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) + "|resNear=" + str _resNear);
 								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] BREAKOFF (out-fought remnant, res-near=%3) - requesting rally.", _side, _team, _resNear]] Call WFBE_CO_FNC_AICOMLog;
 							};
@@ -2046,6 +2058,7 @@ while {!WFBE_GameOver && _alive} do {
 								_team setVariable ["wfbe_aicom_holding_town", _townObj, true]; //--- which town this team is holding (AssignTowns holder-skip reads it)
 								_team setVariable ["wfbe_aicom_strike", false, true];  //--- clear stale strike state so Strategy.sqf doesn't re-grab
 								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
 								_holdClaimed = true;
 								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] HOLD-CLAIM [%3] on defense for %4s.", _side, _team, _townObj getVariable ["name","?"], (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180])]] Call WFBE_CO_FNC_AICOMLog;
 							};
@@ -2063,6 +2076,7 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_teammode", "towns", true];        //--- ensure strike/relief teams re-enter the towns retarget gate
 							_team setVariable ["wfbe_aicom_strike", false, true];      //--- clear stale strike state so Strategy.sqf doesn't re-grab
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
+							_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
 							};
 						} else {
 							//--- WAVE-1 CAUSE-3 BOUND-CAPTURE-LOOP: on a contested/uncapturable depot the old code held
@@ -2094,6 +2108,7 @@ while {!WFBE_GameOver && _alive} do {
 								_team setVariable ["wfbe_teammode", "towns", true];
 								_team setVariable ["wfbe_aicom_strike", false, true];
 								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): stopped draining -> re-taskable now (issuer stops skipping it).
 								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RELEASED uncapturable depot at [%3] after %4 empty passes - retargeting.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _capMaxPasses]] Call WFBE_CO_FNC_AICOMLog;
 							};
 							if (!_capReleased) then {
@@ -2165,6 +2180,7 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_teammode", "towns", true];
 							_team setVariable ["wfbe_aicom_strike", false, true];
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
+							_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
 						} else {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) depot pass at [%3] did not flip (res-near=%4) - holding + retrying.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _armResNear]] Call WFBE_CO_FNC_AICOMLog;
 						};
