@@ -269,6 +269,6 @@ switch (_request) do {
 		if (!_ok) then {
 			player setVariable ["wfbe_mortar_last", -9999];   //--- un-stamp: the strike never fired.
 		};
-		if (typeName _msg == "STRING" && {_msg != ""}) then {titleText [_msg, "PLAIN"]};
+		if (typeName _msg == "STRING" && {_msg != ""}) then {hint _msg};
 	};
 };

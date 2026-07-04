@@ -162,6 +162,13 @@ if (_airMaxTotalP > 0) then {
 						{
 							if ((count _wm_infCls) < 3 && {_x isKindOf "Man"}) then {_wm_infCls = _wm_infCls + [_x]};
 						} forEach _wm_barr;
+						//--- Lane-336: GUER can arrive through an alias roster; retry that before giving up.
+						if ((count _wm_infCls) == 0 && {_side == resistance}) then {
+							_wm_barr = missionNamespace getVariable ["WFBE_GUERBARRACKSUNITS", []];
+							{
+								if ((count _wm_infCls) < 3 && {_x isKindOf "Man"}) then {_wm_infCls = _wm_infCls + [_x]};
+							} forEach _wm_barr;
+						};
 						//--- guard: no roster / all-non-man (shouldn't happen) -> skip rather than dispatch an empty pool.
 						if (count _wm_infCls > 0) then {
 							//--- CHARGE the side up front: flat per-unit cost * missing (mirrors founding's charge-then-build).

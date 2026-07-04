@@ -133,6 +133,11 @@ _IDCS = _IDCS - [_currentIDC];
 			if (!_skip && {_type == 'Depot'} && {isNull _closest}) then {
 				_skip = true;
 				hint parseText "<t color='#ff9060'>No friendly town center in range. GUER buys vehicles at a town center you hold or that is neutral (not held by BLUFOR/OPFOR) - move to one and try again.</t>";
+				//--- depot-buy-round3 (diagnostic, ALWAYS-ON): PR #654 logged this refusal ONLY via WFBE_CO_FNC_LogContent,
+				//--- which is compiled out on release player clients (WF_LOG_CONTENT undefined; only HCs force it on), so the
+				//--- up-front null-depot refusal never reached ANY RPT - a whole night of failed buys logged nothing. This
+				//--- plain diag_log makes the refusal observable in the buyer's OWN client RPT (BUYTRACE-tagged, one line).
+				diag_log Format ["BUYTRACE|v1|depot-refused|side=%1|class=%2|range=%3|reason=null-depot-in-range", sideJoinedText, _unit, (missionNamespace getVariable ["WFBE_C_TOWNS_PURCHASE_RANGE", 60])];
 				["WARNING", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy of [%1] refused up-front - no depot resolved in range %2 (side=%3). Buy NOT charged (prevents the silent charge-then-refund).", _unit, (missionNamespace getVariable ["WFBE_C_TOWNS_PURCHASE_RANGE", 60]), sideJoinedText]] Call WFBE_CO_FNC_LogContent;
 			};
 			//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD per-side live cap (Takistan). Refuse UP FRONT (before queuing +
@@ -224,6 +229,9 @@ _IDCS = _IDCS - [_currentIDC];
 					if (!isNil '_queu') then {if (count _queu > 0) then {_txt = parseText(Format [localize 'STR_WF_INFO_Queu',_currentUnitLabel])}};
 					hint _txt;
 					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_currentCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt,_currentCost]};
+					//--- depot-buy-round3 (diagnostic, ALWAYS-ON): charge-time trace. Pairs with the spawn-position
+					//--- BUYTRACE in Client_BuildUnit so the next failed buy's client RPT pinpoints where the flow died.
+					diag_log Format ["BUYTRACE|v1|charge|side=%1|factory=%2|class=%3|cost=%4|cpt=%5|depot=%6|depotNull=%7", sideJoinedText, _type, _unit, _currentCost, _cpt, _closest, isNull _closest];
 					_params Spawn BuildUnit;
 					-(_currentCost) Call ChangePlayerFunds;
 					//--- QoL trio feat.3: stamp last-purchase time for advisor nudge.
@@ -232,7 +240,13 @@ _IDCS = _IDCS - [_currentIDC];
 					};
 					_updateDetails = true; //--- Task 33: refresh queue list panel after purchase.
 				} else {
-					hint parseText(Format [localize 'STR_WF_INFO_Queu_Max',missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]);
+					private ["_queueCap","_queueCount"];
+					_queueCap = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1_MAX",_type], 0];
+					_queueCount = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1",_type], 0];
+					if (_depotQueueBlocked && {!isNull _closest}) then {
+						_queueCount = count (_closest getVariable ["queu", []]);
+					};
+					hintSilent parseText ((Format [localize 'STR_WF_INFO_Queu_Max',_queueCap]) + Format [" (%1/%2)", _queueCount, _queueCap]);
 				};
 			};
 		};
@@ -502,19 +516,19 @@ _IDCS = _IDCS - [_currentIDC];
 		//--- Display Factory Queu.
 	_queu = _closest getVariable "queu";
 	_value = if (isNil '_queu') then {0} else {count (_closest getVariable "queu")};
+	private ["_qCap","_qLabel"];
+	_qCap = missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1_MAX",_type], -1];
+	_qLabel = _display DisplayCtrl 12024;
+	_qLabel ctrlSetTextColor [0.2588, 0.7137, 1, 0.9];
 	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: append /CAP to the queue count so players can see the limit.
-	//--- Falls back to plain count if WFBE_C_FACTORY_QUEUE_LIMITS=0 or the cap var is missing/zero.
-	//--- Cross-ref: cap formula lives in the WFBE_C_FACTORY_QUEUE_LIMITS block above this loop.
-	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0) then {
-		private ["_qCap"];
-		_qCap = missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1_MAX",_type], -1];
-		if (_qCap > 0) then {
-			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel', str _value + "/" + str _qCap]];
-		} else {
-			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
-		};
+	//--- The color warning uses the current cap either way so cap-full state stays visible when /CAP text is disabled.
+	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0 && {_qCap > 0}) then {
+		ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel', str _value + "/" + str _qCap]];
 	} else {
 		ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
+	};
+	if (_qCap > 0 && {_value >= _qCap}) then {
+		_qLabel ctrlSetTextColor [1, 0.58, 0.05, 1];
 	};
 	
 	//--- List selection changed.

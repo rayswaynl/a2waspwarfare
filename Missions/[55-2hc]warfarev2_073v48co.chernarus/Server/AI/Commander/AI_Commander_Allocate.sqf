@@ -125,8 +125,8 @@ if (!_fromFocus) then {
 		{ if (isPlayer _x && {(side _x) == _side} && {alive _x} && {!(_x in _hcU)}) then {_hx = _hx + ((getPos _x) select 0); _hy = _hy + ((getPos _x) select 1); _hN = _hN + 1} } forEach playableUnits;
 		if (_hN > 0) then {_supportCen = [_hx / _hN, _hy / _hN, 0]; _supportOn = true};
 	};
-	//--- AUTO scorer: nearest-front + value, with an optional support-push pull toward the human axis.
-	private ["_fistMax","_frontRad","_distDiv","_farPen","_supDiv","_scored","_i","_nearBand","_nearBandDist","_nearBandBonus"];
+	//--- AUTO scorer: nearest-front + value, with optional support-push and default-off garrison softness terms.
+	private ["_fistMax","_frontRad","_distDiv","_farPen","_supDiv","_scored","_i","_nearBand","_nearBandDist","_nearBandBonus","_garPen"];
 	_fistMax  = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_TOWNS", 1];
 	_frontRad = missionNamespace getVariable ["WFBE_C_AICOM_FRONTIER_RADIUS", 3000];
 	_distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50]; if (_distDiv <= 0) then {_distDiv = 1};
@@ -135,11 +135,28 @@ if (!_fromFocus) then {
 	_nearBand      = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND", 0];
 	_nearBandDist  = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_DIST", 2000];
 	_nearBandBonus = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_BONUS", 300];
+	_garPen        = missionNamespace getVariable ["WFBE_C_AICOM_GARRISON_PENALTY", 0];
 	_scored = [];
 	{
-		private ["_tt","_dNear","_sc"];
+		private ["_tt","_dNear","_sc","_garTier"];
 		_tt = _x; _dNear = _tt Call _frontDist;
 		_sc = (_tt getVariable ["supplyValue", 0]) - (_dNear / _distDiv);
+		if (_garPen > 0) then {
+			_garTier = switch (_tt getVariable ["wfbe_town_type", ""]) do {
+				case "TinyTown1":   {0};
+				case "SmallTown1":  {1};
+				case "SmallTown2":  {1};
+				case "MediumTown1": {2};
+				case "MediumTown2": {2};
+				case "LargeTown1":  {3};
+				case "LargeTown2":  {3};
+				case "HugeTown1":   {4};
+				case "HugeTown2":   {4};
+				case "PMCAirfield": {2};
+				default {1};
+			};
+			_sc = _sc - (_garTier * _garPen);
+		};
 		if (_dNear > _frontRad) then {_sc = _sc - _farPen};
 		if (_nearBand > 0 && {_dNear < _nearBandDist}) then {_sc = _sc + _nearBandBonus};   //--- F5: near-band bonus for towns immediately adjacent to our front (re-ranks; does not change eligibility).
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
@@ -309,11 +326,32 @@ _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 _expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick
 //--- SPREAD (cmdcon41, claude-gaming 2026-07-02): per-fist-town load counter + cap. With a widened fist
 //--- (WFBE_C_AICOM2_FIST_TOWNS>1) the L268-272 nearest pick otherwise funnels every team onto the single
-//--- closest fist town = the dogpile. _fistCounts is index-aligned with _fist; _capPerFist caps stacking
-//--- per fist town before teams spill onto the next. A2-OA-safe (count / array set-select / getVariable).
-private ["_fistCounts","_capPerFist"];
-_fistCounts = []; { _fistCounts set [_forEachIndex, 0] } forEach _fist;
+//--- closest fist town = the dogpile. _fistCounts/_fistCaps are index-aligned with _fist; tier caps
+//--- opt into the AssignTowns town-type quota shape while preserving the flat legacy cap by default.
+private ["_fistCounts","_fistCaps","_capPerFist","_tierCapOn"];
+_fistCounts = []; _fistCaps = [];
 _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
+_tierCapOn = (missionNamespace getVariable ["WFBE_C_AICOM_SPREAD_TIERCAP", 0]) > 0;
+{
+	private ["_ft","_ftCap"];
+	_ft = _x; _ftCap = _capPerFist;
+	if (_tierCapOn) then {
+		switch (_ft getVariable ["wfbe_town_type", ""]) do {
+			case "TinyTown1":   {_ftCap = (_capPerFist - 1) max 1};
+			case "SmallTown1":  {_ftCap = _capPerFist};
+			case "SmallTown2":  {_ftCap = _capPerFist};
+			case "MediumTown1": {_ftCap = _capPerFist + 1};
+			case "MediumTown2": {_ftCap = _capPerFist + 1};
+			case "LargeTown1":  {_ftCap = _capPerFist + 2};
+			case "LargeTown2":  {_ftCap = _capPerFist + 2};
+			case "HugeTown1":   {_ftCap = _capPerFist + 2};
+			case "HugeTown2":   {_ftCap = _capPerFist + 2};
+			default {_ftCap = _capPerFist};
+		};
+	};
+	_fistCounts set [_forEachIndex, 0];
+	_fistCaps set [_forEachIndex, _ftCap];
+} forEach _fist;
 _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 {
 	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
@@ -372,7 +410,7 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 						_bestIdx = -1;
 						{
 							_v = _ldrPos distance _x;
-							if (_v <= _reach && {_v < _tgtD} && {(_fistCounts select _forEachIndex) < _capPerFist}) then {_tgtD = _v; _tgt = _x; _bestIdx = _forEachIndex};
+							if (_v <= _reach && {_v < _tgtD} && {(_fistCounts select _forEachIndex) < (_fistCaps select _forEachIndex)}) then {_tgtD = _v; _tgt = _x; _bestIdx = _forEachIndex};
 						} forEach _fist;
 						//--- fall-through: everything in reach is capped (or nothing in reach) -> pick the LEAST-LOADED
 						//--- fist town outright so no team idles (preserves the never-idle SAD guarantee).

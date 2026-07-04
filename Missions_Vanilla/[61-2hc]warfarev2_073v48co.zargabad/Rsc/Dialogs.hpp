@@ -1301,7 +1301,7 @@ class WF_Menu {
 			text = "SETUP";
 			sizeEx = 0.022;
 			action = "MenuAction = 24";
-			tooltip = "Settings (view distance, HUD, markers, warnings)";
+			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
 		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
 		class CA_EAR_Button : RscButton_Main {
@@ -1325,7 +1325,7 @@ class WF_Menu {
 			text = "FPS";
 			sizeEx = 0.026;
 			action = "MenuAction = 23";
-			tooltip = "Auto VD / target FPS";
+			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
 		// qol-polish-pack: friendly name-tag overlay toggle (loop + RscTitles in Init_Client.sqf / Titles.hpp).
 		class CA_NT_Button : RscButton_Main {
@@ -3923,6 +3923,167 @@ class WFBE_FPSPickerMenu {
 			y = 0.30 + 0.325;
 			w = 0.31;
 			h = 0.04;
+			sizeEx = 0.026;
+			text = "Close";
+			action = "WFBE_MenuAction = 9";
+		};
+	};
+};
+
+//--- ============================================================================================
+//--- PLAYER SETTINGS dialog v2 (idd 30000). GR-2026-07-03a.
+//--- One native-styled screen that unifies every player-side toggle/option (was: two scroll menus,
+//--- WFBE_SettingsMenu idd 29000 + WFBE_FPSPickerMenu idd 28000). Both WF-menu footer buttons
+//--- (FPS = MenuAction 23, SETUP = MenuAction 24) now open THIS dialog.
+//--- Controller: WASP\actions\Settings\Settings_Open.sqf (polls WFBE_MenuAction; applies live;
+//--- persists via WFBE_CO_FNC_SetProfileVariable using the SAME profile keys as before).
+//--- IDC map: 30001 title | 30009 close | Video: 30010 VD-label 30011 VD-slider(RscXSliderH)
+//--- 30012 Auto-VD toggle 30013..30016 FPS 30/45/50/60 | Gameplay: 30020..30026 seven toggles
+//--- Audio: 30030 Audio Cues | 30040 footer Close. Slider range clamps to WFBE_C_ENVIRONMENT_MAX_VIEW.
+//--- A2-OA-safe: RscXSliderH (type 43) + RscButton_Main are already used by the Team menu (idd 13000).
+//--- No A3 checkbox class. ctrlShow on this idd dialog MUST use the global ctrlShow [idc,bool] form.
+class WFBE_PlayerSettingsMenu {
+	movingEnable = 1;
+	idd = 30000;
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.275; y = 0.135; w = 0.45; h = 0.775;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			y = 0.135 + 0.735;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		class CA_Border : RscText {
+			x = 0.275; y = 0.135 + 0.06; w = 0.45; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		//--- Header title.
+		class CA_Title : RscText_Title {
+			idc = 30001;
+			x = 0.29; y = 0.135 + 0.012; w = 0.40; h = 0.04;
+			text = "PLAYER SETTINGS";
+		};
+		//--- Close (X) top-right.
+		class CA_Quit_Button : RscButton_Main {
+			idc = 30008;
+			x = 0.275 + 0.405; y = 0.135 + 0.0075; w = 0.045; h = 0.045;
+			text = "X";
+			shadow = 2; sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 9;";
+		};
+
+		//--- ===== VIDEO =====
+		class CA_VideoHead : RscText_SubTitle {
+			idc = 30002;
+			x = 0.29; y = 0.135 + 0.075; w = 0.40; h = 0.035;
+			text = "VIDEO";
+		};
+		//--- View-distance label (value set live by the controller) + slider (range set live, clamped to map cap).
+		class CA_VDLabel : RscText {
+			idc = 30010;
+			x = 0.29; y = 0.135 + 0.115; w = 0.20; h = 0.03;
+			sizeEx = 0.024;
+			text = "View Distance:";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_VDSlider : RscXSliderH {
+			idc = 30011;
+			x = 0.475; y = 0.135 + 0.117; w = 0.235; h = 0.029;
+		};
+		//--- Terrain-grid / clutter label (value set live) + slider (range set live to WFBE_C_ENVIRONMENT_MAX_CLUTTER).
+		class CA_TGLabel : RscText {
+			idc = 30017;
+			x = 0.29; y = 0.135 + 0.155; w = 0.20; h = 0.03;
+			sizeEx = 0.024;
+			text = "Terrain Grid:";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_TGSlider : RscXSliderH {
+			idc = 30018;
+			x = 0.475; y = 0.135 + 0.157; w = 0.235; h = 0.029;
+		};
+		//--- Auto view-distance toggle (text set live).
+		class CA_AutoVD : RscButton_Main {
+			idc = 30012;
+			x = 0.29; y = 0.135 + 0.195; w = 0.42; h = 0.042;
+			sizeEx = 0.024;
+			text = "Auto View Distance: OFF";
+			action = "WFBE_MenuAction = 20";
+		};
+		//--- Target FPS row (auto-VD chases this): 30 / 45 / 50 / 60.
+		class CA_FPSLabel : RscText {
+			idc = 30003;
+			x = 0.29; y = 0.135 + 0.245; w = 0.16; h = 0.03;
+			sizeEx = 0.022;
+			text = "Target FPS:";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_FPS30 : RscButton_Main {
+			idc = 30013;
+			x = 0.455; y = 0.135 + 0.242; w = 0.06; h = 0.04;
+			sizeEx = 0.022;
+			text = "30";
+			action = "WFBE_MenuAction = 30";
+		};
+		class CA_FPS45 : CA_FPS30 { idc = 30014; x = 0.520; text = "45"; action = "WFBE_MenuAction = 31"; };
+		class CA_FPS50 : CA_FPS30 { idc = 30015; x = 0.585; text = "50"; action = "WFBE_MenuAction = 32"; };
+		class CA_FPS60 : CA_FPS30 { idc = 30016; x = 0.650; text = "60"; action = "WFBE_MenuAction = 33"; };
+
+		//--- ===== GAMEPLAY =====
+		class CA_GameplayHead : RscText_SubTitle {
+			idc = 30004;
+			x = 0.29; y = 0.135 + 0.305; w = 0.40; h = 0.035;
+			text = "GAMEPLAY";
+		};
+		//--- Ray 2026-07-04: HUD-Overlay toggle removed (squad/info RHUD column is now hard-off; see Client_UpdateRHUD.sqf).
+		//--- Toggle rows, two columns. CA_AAR carries the shared geometry (idc 30020 retired; rows pulled up one slot,
+		//--- no gap left behind). Text set live by the controller; click flips the pref.
+		class CA_AAR : RscButton_Main {
+			idc = 30021;
+			x = 0.29; y = 0.135 + 0.345; w = 0.205; h = 0.042;
+			sizeEx = 0.022;
+			text = "AAR Markers: ON";
+			action = "WFBE_MenuAction = 2";
+		};
+		class CA_Bomb  : CA_AAR { idc = 30022; x = 0.505; y = 0.135 + 0.345; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
+		class CA_Amb   : CA_AAR { idc = 30023; x = 0.29;  y = 0.135 + 0.392; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
+		class CA_Kill  : CA_AAR { idc = 30024; x = 0.505; y = 0.135 + 0.392; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
+		class CA_IRS   : CA_AAR { idc = 30025; x = 0.29;  y = 0.135 + 0.439; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
+		class CA_Bipod : CA_AAR { idc = 30026; x = 0.505; y = 0.135 + 0.439; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
+		//--- High-climbing default (same var/key/localized labels as the Team-menu control; text set live).
+		class CA_HighClimb : CA_AAR { idc = 30027; x = 0.29;  y = 0.135 + 0.486; w = 0.42; text = "High climbing default: OFF"; action = "WFBE_MenuAction = 10"; };
+
+		//--- ===== AUDIO =====
+		class CA_AudioHead : RscText_SubTitle {
+			idc = 30005;
+			x = 0.29; y = 0.135 + 0.545; w = 0.40; h = 0.035;
+			text = "AUDIO";
+		};
+		class CA_Audio : CA_AAR {
+			idc = 30030;
+			x = 0.29; y = 0.135 + 0.585; w = 0.42;
+			text = "Audio Cues: OFF";
+			action = "WFBE_MenuAction = 8";
+		};
+
+		//--- ===== Footer Close =====
+		class CA_Done : RscButton_Main {
+			idc = 30040;
+			x = 0.29; y = 0.135 + 0.655; w = 0.42; h = 0.045;
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";

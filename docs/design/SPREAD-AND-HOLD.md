@@ -8,13 +8,13 @@ This design is implemented on the build84/cmdcon36 line. The sections below rema
 diagnosis and rollback notes, but they are no longer a pending morning patch.
 
 Live anchors:
-- `Common/Init/Init_CommonConstants.sqf:560` defaults `WFBE_C_AICOM2_FIST_TOWNS = 2`.
-- `Common/Init/Init_CommonConstants.sqf:731-734` defaults spread and hold on: `WFBE_C_AICOM_SPREAD_MODE = 1`,
+- `Common/Init/Init_CommonConstants.sqf:642` defaults `WFBE_C_AICOM2_FIST_TOWNS = 2`.
+- `Common/Init/Init_CommonConstants.sqf:813-816` defaults spread and hold on: `WFBE_C_AICOM_SPREAD_MODE = 1`,
   `WFBE_C_AICOM2_FIST_PERTOWN = 4`, `WFBE_C_AICOM_HOLD_MODE = 1`, `WFBE_C_AICOM_HOLD_SECS = 180`.
-- `Server/AI/Commander/AI_Commander_Allocate.sqf:234-280` applies the cap-aware fist assignment.
+- `Server/AI/Commander/AI_Commander_Allocate.sqf:237-239`, `:280-298` apply the cap-aware fist assignment.
 - `Server/AI/Commander/AI_Commander_AssignTowns.sqf:247-265` preserves a live holder's assignment and clears stale latches.
-- `Common/Functions/Common_RunCommanderTeam.sqf:1841-1855` claims the first-captor hold and emits `HOLD-CLAIM`.
-- `Client/GUI/GUI_Menu_Command.sqf:391` and `Server/Functions/Server_HandleSpecial.sqf:649-727` already understand
+- `Common/Functions/Common_RunCommanderTeam.sqf:1960-1984` claims the first-captor hold and emits `HOLD-CLAIM`.
+- `Client/GUI/GUI_Menu_Command.sqf:393-411` and `Server/Functions/Server_HandleSpecial.sqf:664-704` already understand
   `wfbe_aicom_holding_town`.
 
 Open follow-up:

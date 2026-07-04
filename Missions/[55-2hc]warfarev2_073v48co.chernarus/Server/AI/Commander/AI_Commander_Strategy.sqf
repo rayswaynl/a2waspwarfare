@@ -93,7 +93,9 @@ if (_lastStand) then {
 		_logik setVariable ["wfbe_aicom_laststand", true];
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] LAST-STAND - towns %2 strength %3v%4 - recalling all teams to HQ.", _sideText, _myTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 	};
-	//--- Recall every non-garrison, non-HC AI team to HQ in defense posture.
+	//--- Recall every non-garrison, non-player AI team to HQ in defense posture.
+	private ["_lsHqPos"];
+	_lsHqPos = getPos ((_side) Call WFBE_CO_FNC_GetSideHQ);
 	{
 		_team = _x;
 		if (!isNull _team && {!isPlayer (leader _team)}) then {
@@ -102,7 +104,10 @@ if (_lastStand) then {
 			_team setVariable ["wfbe_aicom_strike", false];
 			_team setVariable ["wfbe_aicom_townorder", []];
 			[_team, "defense"] Call SetTeamMoveMode;
-			[_team, getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)] Call SetTeamMovePos;
+			[_team, _lsHqPos] Call SetTeamMovePos;
+			if (!(isNil {_team getVariable "wfbe_aicom_hc"}) && {_team getVariable "wfbe_aicom_hc"}) then {
+				_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", _lsHqPos], true];
+			};
 		};
 	} forEach _teams;
 	_logik setVariable ["wfbe_aicom_strike_on", false];
@@ -437,14 +442,18 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 			//--- has elapsed, so a diverted team returns to OFFENSE instead of idling on a town that
 			//--- is no longer actively contested. SetTeamMoveMode "towns" immediately re-tasks it
 			//--- (AssignTowns gives it a fresh attack order next cycle) - never a standing-still AI.
-			private ["_relUntil","_relExpired"];
+			private ["_relUntil","_relExpired","_relLost"];
 			_relUntil = _team getVariable "wfbe_aicom_relief_until";
 			if (isNil "_relUntil") then {_relUntil = 0};
 			_relExpired = (_relUntil > 0) && {time > _relUntil};
-			if (_quiet || {(_relTown getVariable "sideID") != _sideID} || _relExpired) then {
+			_relLost = (_relTown getVariable "sideID") != _sideID;
+			if (_quiet || {_relLost} || _relExpired) then {
 				//--- Town safe / lost / hold expired: release back to offense.
 				_team setVariable ["wfbe_aicom_relief", objNull];
 				_team setVariable ["wfbe_aicom_relief_until", 0];
+				if (_relLost) then {
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF_TOWN_LOST|team=" + (str _team) + "|town=" + (_relTown getVariable ["name","town"]));
+				};
 				[_team, "towns"] Call SetTeamMoveMode;
 				_team setVariable ["wfbe_aicom_townorder", []];
 				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
@@ -460,7 +469,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 } forEach _teams;
 
 _attacked = [];
-private ["_atkTownCheck","_reliefEnemyDist"];
+private ["_atkTownCheck","_reliefEnemyDist","_reliefMax"];
 	_reliefEnemyDist = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500];
 	//--- B74.1 (Ray 2026-06-23): only DEFEND a town that is ACTUALLY under attack, not merely "active". wfbe_active =
 	//--- "town near the front/players" (server_town_ai.sqf:182), NOT "enemy attacking" - so the old gate yanked up to
@@ -487,7 +496,8 @@ if (!isNil "_pdTown" && {!isNull _pdTown} && {!isNil "_pdT0"}
 _relieved = 0;
 {
 	_town = _x;
-	if (_relieved < (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_RELIEF_MAX", 2])) then {
+	_reliefMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_RELIEF_MAX", 2];
+	if (_relieved < _reliefMax) then {
 		//--- Already has a reliever?
 		_free = grpNull;
 		{ if (!isNull _x && {(_x getVariable ["wfbe_aicom_relief", objNull]) == _town}) exitWith {_free = _x} } forEach _teams;
@@ -546,6 +556,8 @@ _relieved = 0;
 		} else {
 			_relieved = _relieved + 1;
 		};
+	} else {
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF_CAP_SKIP|town=" + (_town getVariable ["name", "town"]) + "|relieved=" + str _relieved + "|cap=" + str _reliefMax);
 	};
 } forEach _attacked;
 

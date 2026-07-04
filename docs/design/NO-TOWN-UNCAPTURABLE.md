@@ -7,6 +7,37 @@
 
 # Design: "No town is uncapturable" (morning patch)
 
+## Lane 67 follow-through (2026-07-02)
+
+Verdict: this remains a shelved historical design. Do not implement the
+`WFBE_C_AICOM_ESCALATE_*` ladder on the live build84/cmdcon36 target unless a
+new soak proves one named town is still genuinely uncrackable after
+`SPREAD-AND-HOLD.md` is active.
+
+Live source already ships the verified small rows that made the old
+"uncapturable town" diagnosis actionable:
+
+| Row | Live anchor | Lane 67 call |
+| --- | --- | --- |
+| No `server_town.sqf` drain tweak | `Server/FSM/server_town.sqf:214-223` still drains linearly by present force and clamps the per-tick rate to at least 1. | Keep as-is. |
+| Infantry must physically enter camps and depot ring | `Common/Functions/Common_RunCommanderTeam.sqf:1657-1813` dismounts foot infantry, sweeps camps, plants them inside the camp range, and keeps live orders. | Shipped. |
+| Camp-first cannot trap a team forever | `Common_RunCommanderTeam.sqf:1728-1837` tracks no-progress camp passes and only disables that bail for capture mode 2, where camps are a real gate. | Shipped. |
+| Depot-center drain wait | `Common_RunCommanderTeam.sqf:1869-1952` holds until the town flips or the bounded hold expires; it no longer leaves on the first empty resistance scan. | Shipped. |
+| Captured towns get a short hold | `Common_RunCommanderTeam.sqf:1954-1984` emits `HOLD-CLAIM`; `Server/AI/Commander/AI_Commander_AssignTowns.sqf:246-267` preserves that holder until expiry. | Shipped by SPREAD+HOLD. |
+| Repeated empty no-flip is bounded | `Common_RunCommanderTeam.sqf:2001-2032` retries live holds, then releases via `RELEASED uncapturable depot` after `WFBE_C_AICOM_CAPTURE_MAXPASSES`. | Shipped; soak signal, not an escalation trigger by itself. |
+| AssignTowns abandon consequences | `AI_Commander_AssignTowns.sqf:326-479` still uses per-team and side blacklists, plus recycle tallies, for genuine stuck or unflippable targets. | Leave as-is; replacing this with concentration would fight SPREAD+HOLD. |
+
+No remaining default-off code row was small or isolated enough for this lane.
+The leftover proposal rows all require changing AssignTowns selection,
+blacklist/abandon behavior, or the commander-team capture phase. Those areas are
+already active in adjacent PRs and are also the exact concentration mechanics
+that caused the dogpile concern. Known adjacent PRs on this pass included #222,
+#238, #252, and AICOM follow-ups #285-#287, so lane 67 intentionally leaves code
+untouched. Keep the only open action as soak evidence: watch for repeated
+`TARGET_ABANDON`, `SIDE_BLACKLIST`, `camp-first NO-PROGRESS`,
+`camp-first window expired`, `capture pass at`, `RELEASED uncapturable depot`,
+`CAPTURED`, and `HOLD-CLAIM` for the same named town.
+
 **Ray directive (2026-07-02):** the AI must never permanently give up on a town — it should
 **escalate force** (more/heavier teams, concentrate) until the town falls.
 

@@ -181,31 +181,31 @@ private "_defPosV2";
 _defPosV2 = ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0);
 
 _c = _c + ['Land_Ind_BoardsPack1'];
-_i = _i + [[(if (_defPosV2) then {'AA Nest — Stinger/ZU-23 (Light, 2 AI)'} else {'AA Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'AA Nest (L, 2 AI)'} else {'AA Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_CncBlock_Stripes'];
-_i = _i + [[(if (_defPosV2) then {'AA Battery — SAM/flak (Heavy, 4 AI)'} else {'AA Position (Heavy, 4 AI)'}),'',4500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'AA Battery (H, 4 AI)'} else {'AA Position (Heavy, 4 AI)'}),'',4500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Barrel_sand'];
-_i = _i + [[(if (_defPosV2) then {'Artillery Pit — howitzer (Light, 1 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Arty Pit (L, 1 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Ind_BoardsPack2'];
-_i = _i + [[(if (_defPosV2) then {'Artillery Battery — 3 guns (Heavy, 4 AI)'} else {'Artillery (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Arty Battery (H, 4 AI)'} else {'Artillery (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_WoodenRamp'];
-_i = _i + [[(if (_defPosV2) then {'Mixed Post — MG/AT/AA (Light, 2 AI)'} else {'Mixed Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Post (L, 2 AI)'} else {'Mixed Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['RoadCone'];
-_i = _i + [[(if (_defPosV2) then {'Mixed Strongpoint — MG/ATGM/AA (Heavy, 4 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Strpt (H, 4 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Paleta1'];
-_i = _i + [['Base Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
+_i = _i + [['Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
 
 _c = _c + ['Paleta2'];
-_i = _i + [['Base Wall - Corner','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+_i = _i + [['Wall - Corner','',300,0,0,0,'Fortification',0,'Civilians',[]]];
 
 _c = _c + ['Land_Ind_Timbers'];
-_i = _i + [['Base Wall - Gate','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+_i = _i + [['Wall - Gate','',300,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //======================================================================================
 //--- cmdcon42-g: DEFENSES/FORTIFICATIONS MENU v2 — shared (side-neutral) buildables.
@@ -220,13 +220,13 @@ _i = _i + [['Watchtower','',150,0,0,0,'Fortification',0,'Civilians',[]]];
 //--- Hedgehog Line anchor (Misc_cargo_cont_small ghost -> WFBE_NEURODEF_HEDGEHOGLINE = 4x Hedgehog_EP1).
 //--- One-click AT obstacle line. Category Fortification.
 _c = _c + ['Misc_cargo_cont_small'];
-_i = _i + [['Hedgehog Line (AT obstacle)','',30,0,0,0,'Fortification',0,'Civilians',[]]];
+_i = _i + [['Hedgehog Line','',30,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //--- Flak Tower anchor (Land_Ind_TankSmall ghost -> WFBE_NEURODEF_FLAKTOWER_WEST/EAST = tower + AA @ deck).
 //--- Elevated AA + pooled AI gunner. Category Defense. Sub-flag WFBE_C_DEF_FLAKTOWER gates its NAME entry.
 //--- cmdcon44-c: host is now the thin lattice light tower (Land_Ind_IlluminantTower) per Ray — label names it.
 _c = _c + ['Land_Ind_TankSmall'];
-_i = _i + [['Flak Tower — AA on light tower (1 AI)','',1400,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [['Flak Tower (1 AI)','',1400,0,0,0,'Defense',0,'Civilians',[]]];
 
 //======================================================================================
 //--- cmdcon44-c (Build 89, Ray item 36): WDDM-AUTHORED FORTIFICATIONS SET. Three side-neutral
@@ -236,20 +236,20 @@ _i = _i + [['Flak Tower — AA on light tower (1 AI)','',1400,0,0,0,'Defense',0,
 //======================================================================================
 //--- Infantry Strongpoint: bunker core + interlocking fighting bays + comms trench + ramparts.
 _c = _c + ['Land_Misc_Cargo1B'];
-_i = _i + [['Infantry Strongpoint (bunker + bays)','',400,0,0,0,'Fortification',0,'Civilians',[]]];
+_i = _i + [['Strongpoint','',400,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //--- Roadblock / Checkpoint: concrete chicane + gate + protected guard positions (place across a road).
 _c = _c + ['Land_transport_crates_EP1'];
-_i = _i + [['Roadblock / Checkpoint','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+_i = _i + [['Checkpoint','',300,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //--- Observation Post: elevated bunker-tower + concealment + discreet fallback.
 _c = _c + ['Land_Barrel_water'];
-_i = _i + [['Observation Post (elevated)','',200,0,0,0,'Fortification',0,'Civilians',[]]];
+_i = _i + [['Obs. Post','',200,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
 if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
 	_c = _c + ['Land_Pneu'];
-	_i = _i + [['Site Clearance (10/tree)','',0,0,0,0,'Strategic',0,'Civilians',[]]];
+	_i = _i + [['Site Clearance','',0,0,0,0,'Strategic',0,'Civilians',[]]];
 };
 
 for '_z' from 0 to (count _c)-1 do {

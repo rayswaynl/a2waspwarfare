@@ -249,6 +249,27 @@ These are the highest-value *net-new* mechanics from the bIdentify sweep (full i
 
 ---
 
+## 4d. 2026-07-03 lane-21 candidate scout (metadata-only, no downloads)
+
+Follow-up sweep over the warfare/CTI bucket pages found four adjacent candidate archives that were not already ranked in the tables above. This pass deliberately stopped at bIdentify metadata: no archive was downloaded, unpacked, or copied into the repo.
+
+| id | Bucket | File | bIdentify metadata | WASP value | Verdict |
+|---|---|---|---|---|---|
+| `5430` | `arma2oa/scenarios/mpgamemodes/warfare` | `CWR2Warfare.7z` | "CWR2 Superpowers Warfare"; author `[ASA]ODEN`; 43,148 bytes; hash `561d85c07da9f2676edc3c16d1fb92e2ff281626ac07afebea989dc8d3df53da`; original Armaholic id 15742. | Oden-authored, very small Warfare/Superpowers variant. Could expose a compact mission-level delta around Superpowers/Warfare setup and CWR2 class separation. | Low-risk future read, but do not port content: CWR2 dependency makes it a reference-only mine unless a specific mission-logic pattern is found. |
+| `3257` | `arma2/scenarios/mpgamemodes/warfare` | `BHP_WarfareV2_073CO.saru.zip` | "Sarugao 1.0 Island Warfare mission 2.073 CO"; author `kovacsadam`; 549,012 bytes; hash `30f876a19de31541ffc80335475735ffdc0f4768f687e6d99918d0db3ce60382`; original Armaholic id 17848. | Same BE 2.073 CO lineage as WASP on a custom island. Good candidate for map-port drift, island-objective setup, and any map-aware constants that survived a community port. | Medium future read after `5420`; useful for map-port practices, not a feature proposal by itself. |
+| `3262` | `arma2/scenarios/mpgamemodes/warfare` | `WarfareV2_046Lite.Sara.zip` | "Warfare - Benny Edition -Sahrani- (@)"; author `Big`; 152,038 bytes; hash `4b4d25b2eef0d4c7c0c476a540a20fa840d676ee6f8b2b44545562dcee57fe80`; original Armaholic id 7669. | Older BE 2.046 Sahrani port. Useful only when tracing pre-2.07x behavior history or Sahrani map adaptation. | Lower priority than `5418`/`5420`; keep as lineage fallback. |
+| `3140` | `arma2/scenarios/mpgamemodes/capture_the_island` | `Carrier_WarfareBE_2.054_CVM0506@Duala.rar` | "Carrier WarfareBE @Duala Testmissions"; author `[URC]Stoned`; 1,111,578 bytes; hash `50dfcadf0a60facda558b05a0832c6843320ef23b7105c89886c8ee4fa6ad465`; original Armaholic id 9368. | Most actionable new lead in this scout: a WarfareBE carrier test mission on Duala. Could contain mission-side carrier placement, respawn/shop/access, or deck-object lessons relevant to the Khe Sanh naval-HVT carrier release problem. | Route to the existing `KHESANH-REL` owner only. This lane does not claim or edit Khe Sanh carrier work. |
+
+Bucket context checked during this pass:
+- `arma2oa/scenarios/mpgamemodes/warfare`: 2 available files and 24 missing. The already-ranked `5420` BE 2.073 parent and `5419` Gossamer rows remain the first priority; `5430` is the new small Oden/CWR2 side lead.
+- `arma2/scenarios/mpgamemodes/warfare`: 2 available files and 12 missing. The new available rows are `3257` Sarugao BE 2.073 CO and `3262` Sahrani BE 2.046.
+- `arma2/scenarios/mpgamemodes/capture_the_island`: 1 available file and 5 missing. The available row is `3140` Carrier WarfareBE @Duala; the already-ranked `3139` MCTI r10 remains missing in this bucket snapshot.
+- `arma2/scenarios/mpgamemodes/domination`: 0 available files and 6 missing. This confirms the previously ranked `3146` Domination Panthera West-AI remains metadata-only from bIdentify unless sourced elsewhere.
+
+Next selective pull order if a future mining lane downloads archives: `3140` first for the carrier/HVT owner, then `3257` for BE 2.073 map-port comparison, then `5430` for a quick Oden/CWR2 reference read. Keep `3262` as a historical fallback.
+
+---
+
 # 5. APPENDIX — reproduction & provenance
 
 - **Drive listing:** `curl -sL "https://drive.google.com/embeddedfolderview?id=1saZFKkhygT3DuG9lFkXzmcYC4rQ6lFNM"` → 3 MB HTML → parsed 4,210 `flip-entry` rows (id + title). Index at scratchpad `archive-mining/miksuu_index.tsv`.

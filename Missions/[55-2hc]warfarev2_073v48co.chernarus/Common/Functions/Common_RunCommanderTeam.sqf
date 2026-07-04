@@ -532,10 +532,11 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			};
 			//--- (b) enemies near the LZ: ONE decision-time hostile scan (skip if (a) already tripped).
 			if (!_forceDrop) then {
-				private ["_scanR","_hostiles"];
+				private ["_scanR","_hostiles","_minHostiles"];
 				_scanR = missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_SCAN_R", 400];
-				_hostiles = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_lzPos nearEntities [["Man","LandVehicle","Tank"], _scanR]);
-				if (_hostiles > 0) then {
+				_minHostiles = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_MIN_HOSTILE", 2]) max 1;
+				_hostiles = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6} && {!(_x isKindOf "Man") || {(vehicle _x) == _x}}} count (_lzPos nearEntities [["Man","LandVehicle","Tank"], _scanR]);
+				if (_hostiles >= _minHostiles) then {
 					_forceDrop = true;
 					_hotReason = "contested";
 				};

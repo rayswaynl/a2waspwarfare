@@ -178,6 +178,13 @@ if (worldName == "Zargabad") then {
 		//--- transiently-unset/contested friendly town is not silently dropped. 1 = widened (fixed, matches the documented
 		//--- friendly-town design); 0 = restore the stock strict own-side (sideID == sideID) gate. WEST/EAST are unaffected.
 		if (isNil "WFBE_C_GUER_DEPOT_NEUTRAL_BUY") then {WFBE_C_GUER_DEPOT_NEUTRAL_BUY = 1};
+		//--- Ray 3B (GR-2026-07-03a) GUER GEAR PROXIMITY: base-less GUER may buy GEAR only near a friendly gear source -
+		//--- a friendly town-center DEPOT (GUER-held or neutral; WFBE_CL_FNC_GetClosestDepot), a GUER-held town CAMP/bunker
+		//--- (WFBE_CL_FNC_GetClosestCamp), or a deployed GUER FOB BARRACKS (a real resistance BARRACKSTYPE structure, already
+		//--- caught by the barracks gearInRange check). Radius = WFBE_C_UNITS_PURCHASE_GEAR_RANGE (150m). Consumed in
+		//--- Client\FSM\updateavailableactions.fsm. 1 = gated (the fix, removes the old buy-anywhere GUER behaviour);
+		//--- 0 = restore buy-anywhere for GUER (pre-fix). WEST/EAST unaffected (they never hit this GUER-only branch).
+		if (isNil "WFBE_C_GUER_GEAR_PROXIMITY") then {WFBE_C_GUER_GEAR_PROXIMITY = 1};
 		//--- Shared placement gate (client preview + server authoritative): true if _pos (the world position passed as
 		//--- _this) is inside an enemy (WEST/EAST) build-restricted area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an
 		//--- enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-held towns are allowed (you can "extend"
@@ -435,6 +442,7 @@ if (worldName == "Zargabad") then {
 	//--- (getFriend < 0.6) within *_SCAN_R. Jumpers eject SHORT of the town (*_OFFSET m back along the approach vector) so they don't drop onto the depot guns.
 	if (isNil "WFBE_C_AICOM_AIR_PARADROP") then {WFBE_C_AICOM_AIR_PARADROP = 1};                 //--- 1 = paradrop into contested/enemy LZs (default). 0 = always attempt land-and-disembark (legacy).
 	if (isNil "WFBE_C_AICOM_AIR_PARADROP_SCAN_R") then {WFBE_C_AICOM_AIR_PARADROP_SCAN_R = 400}; //--- m: ONE decision-time hostile scan radius around the LZ. Any hostile (getFriend < 0.6) inside -> paradrop.
+	if (isNil "WFBE_C_AICOM_AIR_PARADROP_MIN_HOSTILE") then {WFBE_C_AICOM_AIR_PARADROP_MIN_HOSTILE = 2}; //--- Lane-344: hostile count required in the LZ scan before forcing paradrop; filters single-frame crew/body blips.
 	if (isNil "WFBE_C_AICOM_AIR_PARADROP_OFFSET") then {WFBE_C_AICOM_AIR_PARADROP_OFFSET = 250}; //--- m short of the town, back along the approach vector, to eject so jumpers don't land ON the depot guns.
 	//--- cmdcon42-f (Ray 2026-07-02) AICOM AIR-MOBILE ORDERS: a team that STILL HAS its own live transport helicopter FLIES an ordered leg (mount pax -> fly at
 	//--- altitude -> at the destination run the SAME hot-LZ decision above: cold LZ = land+GET OUT, contested/enemy town = paradrop OFFSET m short) instead of
@@ -557,6 +565,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_HQ_PULL_DIVISOR") then {WFBE_C_AICOM_HQ_PULL_DIVISOR = 250};    //--- score divisor on distance-to-ENEMY-HQ: adds a small spearhead bias toward the enemy capital so the front advances in one direction instead of wandering. Larger = weaker pull. 0 disables the pull.
 	if (isNil "WFBE_C_AICOM_FAR_PENALTY") then {WFBE_C_AICOM_FAR_PENALTY = 1000};           //--- flat score penalty applied to any candidate OUTSIDE the frontier radius, so a rich deep city can no longer buy its way over a near contestable town. Large enough to swamp supply spread.
 	if (isNil "WFBE_C_AICOM_SOFT_WEIGHT")  then {WFBE_C_AICOM_SOFT_WEIGHT  = 12};            //--- A8: score points SUBTRACTED per garrison hardness tier (wfbe_town_type Tiny=0..Huge=4) so at comparable distance the AI prefers SOFTER towns. Full swing ~48pts (~2.4 town-spacings at DISTANCE_DIVISOR=50); under FAR_PENALTY so front-contiguity is unaffected. 0 = rollback to distance-only.
+	if (isNil "WFBE_C_AICOM_GARRISON_PENALTY") then {WFBE_C_AICOM_GARRISON_PENALTY = 0};      //--- Lane-329: Allocate fist scorer penalty per garrison hardness tier; 0 = inert/default-off.
 	if (isNil "WFBE_C_AICOM_VALUE_DIVISOR") then {WFBE_C_AICOM_VALUE_DIVISOR = 50};           //--- A8: divisor on the (previously dead) per-town wfbe_town_value (100..1000) -> 2..20 pts; rewards rich towns at comparable distance. Larger = weaker. Clamped to 1 if <=0.
 	//--- F5 NEAR-BAND BONUS: if the candidate town is within WFBE_C_AICOM_NEAR_BAND_DIST metres of our nearest
 	//--- owned town, add a flat score bonus to boost near-front objectives relative to equally-close but
@@ -782,6 +791,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_LASTSTAND_TOWNS") then {WFBE_C_AICOM_LASTSTAND_TOWNS = 1};    //--- recall-all only at <= this many owned towns (old implicit gate <2). Rollback to old behaviour: 1 + RATIO 0.7.
 	if (isNil "WFBE_C_AICOM_LASTSTAND_RATIO") then {WFBE_C_AICOM_LASTSTAND_RATIO = 0.30}; //--- AICOM v2 (Ray 2026-06-27 "almost never defensive"): 0.45->0.30, last-stand (recall-all-to-HQ) even rarer. AND maneuver strength below this fraction of the enemy's. Rollback: 0.45.
 	if (isNil "WFBE_C_AICOM_INTENT_HUD") then {WFBE_C_AICOM_INTENT_HUD = 1};       //--- AICOM v2 preview: 1 = publish the AI commander's INTENT (side-keyed) + show it in the RHUD commander row + draw the OBJECTIVE town as a friendly-only map marker. 0 = off.
+	if (isNil "WFBE_C_AICOM_INTENT_SPECTATOR") then {WFBE_C_AICOM_INTENT_SPECTATOR = 1}; //--- 1 = dead/spectator RHUD uses stable client side id for the AI commander name + intent row when player/group side is transient civilian.
 	if (isNil "WFBE_C_AICOM_STR_LONE_ALIVE") then {WFBE_C_AICOM_STR_LONE_ALIVE = 2};      //--- a team with fewer than this many alive...
 	if (isNil "WFBE_C_AICOM_STR_LONE_FARHQ") then {WFBE_C_AICOM_STR_LONE_FARHQ = 1500};   //--- ...AND farther than this (m) from HQ is a stranded remnant, EXCLUDED from the _myStr maneuver-strength count so it does not deflate strength + trip the defensive gates. 0 disables the exclusion.
 	//--- B68 (Ray 2026-06-21) RETREAT-CULL hardening: the B67 progress-gated budget never culls a lone survivor
@@ -880,6 +890,7 @@ if (worldName == "Zargabad") then {
 	//--- === cmdcon41 wave-1 (claude-gaming 2026-07-02): SPREAD+HOLD, real-combat base assault (Ray: ON), siege decay, remnant caution ===
 	if (isNil "WFBE_C_AICOM_SPREAD_MODE")            then {WFBE_C_AICOM_SPREAD_MODE = 1};            //--- anti-dogpile: cap teams per fist town in the Allocator (0 = legacy uncapped pile-up).
 	if (isNil "WFBE_C_AICOM2_FIST_PERTOWN")          then {WFBE_C_AICOM2_FIST_PERTOWN = 4};          //--- max teams the Allocator stacks on one fist town before spilling to the next.
+	if (isNil "WFBE_C_AICOM_SPREAD_TIERCAP")         then {WFBE_C_AICOM_SPREAD_TIERCAP = 0};         //--- Lane-334: 0=flat FIST_PERTOWN cap; 1=scale fist spread cap by wfbe_town_type like AssignTowns concentration.
 	if (isNil "WFBE_C_AICOM_HOLD_MODE")              then {WFBE_C_AICOM_HOLD_MODE = 1};              //--- first captor HOLDS the just-captured town on DEFEND (0 = every captor leaves -> see-saw).
 	if (isNil "WFBE_C_AICOM_HOLD_SECS")              then {WFBE_C_AICOM_HOLD_SECS = 180};            //--- hold window (garrison re-arm time) before the holder rejoins the offense.
 	if (isNil "WFBE_C_AICOM_ASSAULT_STRUCTURES")     then {WFBE_C_AICOM_ASSAULT_STRUCTURES = 1};     //--- REAL-COMBAT BASE ASSAULT (Ray): strike teams doTarget/doFire the enemy HQ+factories (factories first).
@@ -1759,6 +1770,51 @@ missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 	if (isNil 'WFBE_C_GUER_PATROLS_LEVEL') then {WFBE_C_GUER_PATROLS_LEVEL = 2};                    //--- B67 (Ray 2026-06-21): fixed Patrols level for GUER (resistance has no upgrade system) so GUER side-patrols actually dispatch and show on GUER players' maps (server_side_patrols.sqf). Effective concurrent count = min(_maxSide, this). 0 = OFF (no GUER patrols, instant rollback); 1 = single; 2 = a pair; 4 adds the convoy supply truck.
 	WFBE_C_GROUP_BUDGET_WARN = 120;               //--- GROUP-BUDGET ALARM (claude-gaming 2026-06-13): per-side group-count WARN threshold (GRPBUDGET line in AI_Commander.sqf). Arma 2 OA hard cap is 144/side; crossing this logs a GRPBUDGET|WARN so the watchdog/dashboard flags it before the AI can no longer found teams. (120, not 125: with the persistent-husk leak fixed, steady state should drop below 120, making the WARN a true leading indicator rather than always-on.)
 	if (isNil 'WFBE_C_GROUPAUDIT_EVERY') then {WFBE_C_GROUPAUDIT_EVERY = 5}; //--- D2 server-FPS (claude-gaming 2026-06-14): run the EXPENSIVE per-faction group-classification AUDIT DUMP (server_groupsGC.sqf; auditMs ~2100ms on 276 groups) only every Nth 5-min audit window. The husk-reap GC + zombie-reap + cap-warning still run EVERY 60s cycle (they live outside the audit branch) - this throttles only diagnostic telemetry. 5 = full dump ~every 25 min instead of every 5 min. 1 = dump every window (old behavior); values < 1 are clamped to 1. Pure diagnostic throttle, no gameplay effect; instant rollback by setting to 1.
+
+//--- ZG-FIX (zg-alive-population, claude-gaming 2026-07-03): Zargabad-scoped AI-POPULATION governor overrides.
+//--- WHY: the 2026-07-02 Zargabad soak glaciated - AI grew to ~440 units / 120+ groups (WEST ~140 + EAST ~140
+//--- + GUER ~150 at the tier-0 per-side cap of 140), server fps 47->8 by hour 3, 0 captures. ~440 sits AT the
+//--- measured fps knee (~450-470 units). This block RETUNES the existing governor levers ZG-scoped so steady
+//--- state lands ~280-320 total (below the knee with margin) WITHOUT feeling empty: fewer-but-FULL commander
+//--- teams (team size 8 UNCHANGED - Ray rule), consolidated town garrisons (SAME units, fewer group-brains),
+//--- and FASTER recycling of idle rear foot teams so the bounded budget refounds at the FRONT (density, not scarcity).
+//--- CH/TK: byte-identical - the whole block is skipped by the worldName guard. GUER OUTPUT UNTOUCHED (the
+//--- DEFENDER merge target + GUER group cap + GUER patrols are NOT set here; only WEST/EAST + shared totals move).
+//--- These are POST-overrides (run AFTER the bare CH/TK assignments above), the same idiom as the ZG
+//--- WFBE_C_ENVIRONMENT_MAX_VIEW cap (~L1383). Every value is a plain missionNamespace global - Ray retunes any
+//--- of them live on the box by editing this block (no ParamsArray entry gates them). NO sim/distance-gating is
+//--- wired (owner-rejected) and antistack is not touched; this is pure lever-retuning of the existing systems.
+	if (worldName == "Zargabad") then {
+		//--- (1) MASTER per-side WEST/EAST AI ceiling by pop-tier (0=LOW/1=MID/2=HIGH/3=FULL). Read by BOTH the
+		//--- founding gate (AI_Commander_Teams.sqf ~L235) and the produce/refill gate (AI_Commander_Produce.sqf ~L28);
+		//--- counts {side==_side && !isPlayer} ALL side AI incl. WEST/EAST town garrisons. CH/TK stays [140,130,100,80].
+		//--- ZG low-pop 80/side: WEST 80 + EAST 80 + GUER ~150 = ~310 total (target 280-320, ~150 below the knee).
+		WFBE_C_TOTAL_AI_MAX_BY_TIER = [80,80,70,60];   //--- ZG (was [140,130,100,80]). Rollback: restore the CH/TK array.
+		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
+		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
+		WFBE_C_AICOM_TEAMS_HARD_CAP = 5;               //--- ZG (was 10). Rollback: 10.
+		//--- (3) low/mid-pop PC-scaled base founding target (DELTA -1 then FLOOR/hard-cap clamp still apply): keep the
+		//--- base under the new hard cap so the curve, not just the clamp, sets team count. LOW 6-1=5, MID 5-1=4.
+		WFBE_C_AICOM_TEAMS_PC_LOW  = 6;                //--- ZG (was 10). Rollback: 10.
+		WFBE_C_AICOM_TEAMS_PC_MID  = 5;                //--- ZG (was 7).  Rollback: 7.
+		//--- (4) GARRISON CONSOLIDATION (WEST/EAST only): fuse town-garrison infantry into ~9-unit group-brains
+		//--- (was 5) so a defended town spawns the SAME units in FEWER server groups (fps win, gameplay-transparent;
+		//--- vehicles never merged; town DEFENSE strength unchanged). The GUER (defender) merge target + cap are the
+		//--- separate WFBE_C_TOWNS_MERGE_*_DEFENDER constants and are DELIBERATELY NOT touched (no GUER nerf).
+		WFBE_C_TOWNS_MERGE_TARGET = 9;                 //--- ZG (was 5, capped at the global 10 in Server_GetTownGroups). Rollback: 5.
+		//--- (5) ALIVE MANDATE - stale-team recycling. Halve the disband-pass interval so idle, REAR, foot-infantry
+		//--- teams (never in-view, never in combat - the existing safety re-checks in AI_Commander_DisbandLowTier.sqf
+		//--- + Common_RunCommanderTeam.sqf stand them back up if a player nears) are retired 2x faster; the freed
+		//--- founding budget refounds at the front via the founding gate + maneuver brain. SAME bounded population,
+		//--- MORE of it actively fighting instead of sitting stale in the rear. FLOOR 2->1 lets the short ZG rear
+		//--- recycle one more idle foot team. This wires through the EXISTING disband machinery - no new system.
+		WFBE_C_AICOM_DISBAND_INTERVAL = 150;           //--- ZG (was 300s). Rollback: 300.
+		WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR = 1;       //--- ZG (was 2). Rollback: 2.
+		//--- ALWAYS-ON init telemetry: log the resolved ZG governor caps ONCE at init so the next soak can verify the
+		//--- pack loaded (diag_log, ungated). Mirrors the AICOMSTAT|v2 pipe-KV shape the soak analyzer already parses.
+		diag_log ("AICOMSTAT|v2|EVENT|ZG|0|ALIVEPOP_INIT|capAI=" + str WFBE_C_TOTAL_AI_MAX_BY_TIER + "|capTeams=" + str WFBE_C_AICOM_TEAMS_HARD_CAP + "|pcLow=" + str WFBE_C_AICOM_TEAMS_PC_LOW + "|pcMid=" + str WFBE_C_AICOM_TEAMS_PC_MID + "|merge=" + str WFBE_C_TOWNS_MERGE_TARGET + "|disbandInt=" + str WFBE_C_AICOM_DISBAND_INTERVAL + "|infFloor=" + str WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR);
+	};
+//--- End ZG-FIX zg-alive-population Zargabad-scoped governor overrides.
 };
 
 // --- Player stats (feature-flagged) ---
@@ -1870,8 +1926,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   * airfield control tower (tall, boxy): STRUCTURE="Land_Mil_ControlTower" + DECK_Z=12.5
 //---   * original watchtower: STRUCTURE="Land_Fort_Watchtower_EP1" + DECK_Z=5.4 + AUTOZ=0
 	if (isNil "WFBE_C_DEF_FLAKTOWER_STRUCTURE") then {WFBE_C_DEF_FLAKTOWER_STRUCTURE = "Land_Ind_IlluminantTower"};
-	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 23.7}; //--- cmdcon44f: rig-measured illuminant-mast top (was 17.0 guess).
+	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 20.8}; //--- cmdcon45 (Ray 2026-07-04 -12% nudge): 23.7 rig top * 0.88 ~= 20.8 (non-AUTOZ fallback matches the trimmed AUTOZ deck).
 	if (isNil "WFBE_C_DEF_FLAKTOWER_AUTOZ") then {WFBE_C_DEF_FLAKTOWER_AUTOZ = 1};
+	//--- cmdcon45 (Ray 2026-07-04 nudge order): trim factor multiplied against the boundingBox-MEASURED full illuminant-mast
+	//--- height in Server_ConstructPosition.sqf (AUTOZ path). Ray asked the flak gun "nudged down 10-15%"; 0.88 = ~12% down
+	//--- (mid of the range), 23.66m measured -> ~20.8m deck so the gun sits on the platform instead of slightly above it.
+	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_FACTOR") then {WFBE_C_DEF_FLAKTOWER_DECK_FACTOR = 0.88};
 
 //--- cmdcon44-a (Build 89, Ray 2026-07-03): AA / ARTILLERY / MIXED POSITIONS REWORK. Ray: "Defenses list
 //--- has not changed, AA/Art/Mix positions are still the same." The Build 88 DEFMENU_V2 pass deliberately

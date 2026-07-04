@@ -12,19 +12,20 @@ private[
 	"_total", "_perfStart", "_display", "_lastDisplay", "_controls", "_rhudIDC", "_lastTexts", "_lastColors", "_lastShown", "_lastBackgroundColor",
 	"_labelsApplied", "_hiddenApplied", "_hudWasShown", "_lastTownRefresh", "_incomeText", "_supplyText", "_baseText", "_baseColor",
 	"_RHUDResetControlCache", "_RHUDSetShow", "_RHUDSetText", "_RHUDSetColor", "_RHUDGetDisplay", "_idx", "_player", "_side", "_bgColor",
-	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_mbu", "_mbuByTier", "_mbuPT", "_currentUnitsCount", "_maxUnitsCount", "_ups", //--- B74.2: _mbuByTier/_mbuPT for pop-tier per-player AI cap; B76: _ups for guarded GetSideUpgrades
+	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_aiCommanderSide", "_aiCommanderSideID", "_aiInt", "_mbu", "_mbuByTier", "_mbuPT", "_currentUnitsCount", "_maxUnitsCount", "_ups", //--- B74.2: _mbuByTier/_mbuPT for pop-tier per-player AI cap; B76: _ups for guarded GetSideUpgrades
 	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_baseStructures", "_baseHq", "_baseTotal", "_baseDamaged", "_clientFPS", "_clientFPSColor",
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
 	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd",
-	"_RHUDUpdateArty", "_RHUDGetGuerProgressText"
+	"_RHUDUpdateArty", "_RHUDGetGuerProgressText",
+	"_lastQueueHud", "_queueHudTxt", "_queueHudTs", "_queueHudCtrl"	//--- Ray B89: build-queue RHUD line cache
 ];
 
 _total = count towns;
 _display = displayNull;
 _lastDisplay = displayNull;
 _controls = [];
-_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371,1372,1373];
+_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371,1372,1373,1374];	//--- Ray B89: 1374 = RUBHUD_BuildQueue (structured, rendered below via ctrlSetStructuredText; show/hide gated with the rest).
 _lastTexts = [];
 _lastColors = [];
 _lastShown = [];
@@ -33,6 +34,7 @@ _labelsApplied = false;
 _hiddenApplied = false;
 _hudWasShown = false;
 _lastHudMode = "";
+_lastQueueHud = "__init__";	//--- Ray B89: last structured text pushed to the queue line (skip redundant rewrites)
 _lastTownRefresh = -999;
 _incomeText = "";
 _supplyText = "";
@@ -54,6 +56,7 @@ _RHUDResetControlCache = {
 	_labelsApplied = false;
 	_hiddenApplied = false;
 	_lastHudMode = "";
+	_lastQueueHud = "__init__";	//--- Ray B89: force the queue line to repaint after a display rebuild
 };
 
 _RHUDSetShow = {
@@ -317,6 +320,13 @@ sleep 10;
 _RHUD_upgId = -1;
 _RHUD_upgEnd = 0;
 
+//--- Ray 2026-07-04: the squad/info RHUD column ("radar at bottom with squad") is retired - it is hard-off for
+//--- EVERYONE regardless of the saved WFBE_RUBHUD_ENABLED profile flag. Forcing RUBHUD false here pins _hudMode
+//--- to "hidden" every iteration, so the Health/Commander/AI/Money/Supply/Base/FPS/Upgrade/Arty rows never show.
+//--- The loop is deliberately NOT exited: it keeps running so the factory build-queue line (idc 1374, index 29)
+//--- still renders below (see the queue block after the switch). The full-column code path is kept dormant.
+RUBHUD = false;
+
 while {true} do {
 	sleep 1;
 
@@ -346,8 +356,11 @@ while {true} do {
 			case "hidden": {
 				if (_lastHudMode != _hudMode) then {
 					for "_idx" from 0 to ((count _rhudIDC) - 1) do {
-						[_idx, false] call _RHUDSetShow;
+						//--- Ray 2026-07-04: hide every info row EXCEPT index 29 (idc 1374 = build-queue line), which
+						//--- stays live at the bottom of the RHUD area even though the squad/info column is off.
+						if (_idx != 29) then {[_idx, false] call _RHUDSetShow};
 					};
+					[29, true] call _RHUDSetShow;	//--- ensure the queue line is shown once when we enter hidden mode.
 					_labelsApplied = false;
 					_hudWasShown = false;
 					_lastHudMode = _hudMode;
@@ -422,13 +435,18 @@ while {true} do {
 				//--- No human commander. The AI commander runs WEST/EAST when enabled (GUER is excluded
 				//--- server-side, Init_Server ~L1067), so show a stable, side-keyed human-like name + " (AI)"
 				//--- while the AI is actually in charge. Client-side deterministic = no server round-trip, JIP-safe.
-				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 1]) > 0 && {sideJoined in [west, east]}) then {
-					_commanderText = Format ["%1 (AI)", (switch (sideJoined) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
+				_aiCommanderSide = sideJoined;
+				_aiCommanderSideID = -1;
+				if (!isNil "WFBE_Client_SideID") then {_aiCommanderSideID = WFBE_Client_SideID};
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_SPECTATOR", 1]) > 0 && {(_aiCommanderSideID in [WFBE_C_WEST_ID, WFBE_C_EAST_ID]) && {(isNull player) || {_side == civilian}}}) then {
+					_aiCommanderSide = switch (_aiCommanderSideID) do {case WFBE_C_WEST_ID: {west}; case WFBE_C_EAST_ID: {east}; default {_aiCommanderSide}};
+				};
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 1]) > 0 && {_aiCommanderSide in [west, east]}) then {
+					_commanderText = Format ["%1 (AI)", (switch (_aiCommanderSide) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
 					//--- AICOM v2 PREVIEW: append the AI commander's LIVE INTENT (side-keyed PV, published by
 					//--- AI_Commander.sqf on the strategy tick; offense-forward wording). Friendly-only via the
-					//--- joined-side id. Cheap: a single Format on a value the client already has, no extra control.
+					//--- stable client side id. Cheap: a single Format on a value the client already has, no extra control.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0 && {!isNil "WFBE_Client_SideID"}) then {
-						private "_aiInt";
 						_aiInt = missionNamespace getVariable [Format ["WFBE_AICOM_INTENT_%1", WFBE_Client_SideID], ""];
 						if (_aiInt != "") then {_commanderText = Format ["%1 - %2", _commanderText, _aiInt]};
 					};
@@ -554,6 +572,27 @@ while {true} do {
 				call _RHUDUpdateServerFPSRow;
 			call _RHUDUpdateUpgrade;
 			/* b760: arty cooldown is folded into the FPS C/S line via _RHUDUpdateServerFPSRow; no standalone row. */
+
+			};
+		};
+
+		//--- Ray 2026-07-04: factory build-queue readout on the RHUD bottom line (idc 1374, index 29, structured text).
+		//--- MOVED OUT of the (now-dormant) "full" case so it renders EVERY iteration while _display is non-null, even
+		//--- though the squad/info column is hard-off. Guard on the control cache being built (index 29 resolved) so
+		//--- this is a no-op until _RHUDResetControlCache has run for the current cut display.
+		//--- Client_BuildUnit.sqf writes WFBE_CL_QUEUE_HUD + a WFBE_CL_QUEUE_HUD_TS timestamp; render it while fresh
+		//--- (<= 6s old), else blank. Empty/stale string parses to nothing, so the line self-hides (idc 1374 is shown
+		//--- once by the hidden case; its screen position is absolute in Rsc/Titles.hpp, so no full-anchor call needed).
+		if ((count _controls >= 30) && {!isNull (_controls select 29)}) then {
+			_queueHudTxt = missionNamespace getVariable ["WFBE_CL_QUEUE_HUD", ""];
+			if (typeName _queueHudTxt != "STRING") then {_queueHudTxt = ""};
+			_queueHudTs = missionNamespace getVariable ["WFBE_CL_QUEUE_HUD_TS", -1e6];
+			if (typeName _queueHudTs != "SCALAR") then {_queueHudTs = -1e6};
+			if ((time - _queueHudTs) > 6) then {_queueHudTxt = ""};	//--- stale => hide (a finished/cancelled queue leaves no writer).
+			if (_lastQueueHud != _queueHudTxt) then {
+				_queueHudCtrl = _controls select 29;	//--- 1374 is the last _rhudIDC entry (index 29).
+				_queueHudCtrl ctrlSetStructuredText parseText _queueHudTxt;
+				_lastQueueHud = _queueHudTxt;
 			};
 		};
 

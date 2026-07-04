@@ -86,7 +86,10 @@ for "_i" from 0 to (count _template - 1) do {
 					//--- SYMMETRIC rotation-safe box (+/-11.83 on the 23.7m illuminant mast) - max-Z alone is HALF
 					//--- the real height. Full height (maxZ - minZ) = the true platform top; statics do not settle
 					//--- in A2 so the gun stays exactly where lifted (rig-verified at 23.66 ATL).
-					_deckTop = ((_bb select 1) select 2) - ((_bb select 0) select 2);
+					//--- cmdcon45 (Ray 2026-07-04 -12% nudge): trim the measured full height by WFBE_C_DEF_FLAKTOWER_DECK_FACTOR
+					//--- (default 0.88 = ~12% down, mid of Ray's 10-15%) so the gun sits ON the physical platform, not above it.
+					//--- The factor multiplies the boundingBox-measured full height; box-tunable, no re-mirror.
+					_deckTop = (((_bb select 1) select 2) - ((_bb select 0) select 2)) * (missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER_DECK_FACTOR", 0.88]);
 					if (WF_Debug) then {
 						["DEBUG (Server_ConstructPosition.sqf)", Format ["cmdcon44-c flak host [%1] boundingBox deck top measured = %2 (anchor %3).", _cls, _deckTop, _anchorType]] Call WFBE_CO_FNC_LogContent;
 					};
