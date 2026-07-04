@@ -65,7 +65,13 @@ switch (_op) do {
 		_mkName setMarkerColorLocal _color;
 		_mkName setMarkerSizeLocal [1, 1];
 		_mkName setMarkerTextLocal _markerText;
-		titleText [Format ["Wildcard: %1 - %2.", _label, _detail], "PLAIN"];
+		//--- Ray order (no center-screen popups for info): the wildcard pull is telegraphed by the
+		//--- map marker above + the LocalizeMessage "Wildcard" command-chat line dispatched alongside
+		//--- this marker (AI_Commander_Wildcard.sqf). The old center-screen titleText [...,"PLAIN"] was
+		//--- a redundant middle-of-screen duplicate; route the SAME text to command chat instead.
+		if (!isNil "CommandChatMessage") then {
+			(Format ["Wildcard: %1 - %2.", _label, _detail]) Call CommandChatMessage;
+		};
 	};
 
 	case "delete": {
