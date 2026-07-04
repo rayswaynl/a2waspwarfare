@@ -232,7 +232,13 @@ _IDCS = _IDCS - [_currentIDC];
 					};
 					_updateDetails = true; //--- Task 33: refresh queue list panel after purchase.
 				} else {
-					hint parseText(Format [localize 'STR_WF_INFO_Queu_Max',missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]);
+					private ["_queueCap","_queueCount"];
+					_queueCap = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1_MAX",_type], 0];
+					_queueCount = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1",_type], 0];
+					if (_depotQueueBlocked && {!isNull _closest}) then {
+						_queueCount = count (_closest getVariable ["queu", []]);
+					};
+					hintSilent parseText ((Format [localize 'STR_WF_INFO_Queu_Max',_queueCap]) + Format [" (%1/%2)", _queueCount, _queueCap]);
 				};
 			};
 		};
@@ -502,19 +508,19 @@ _IDCS = _IDCS - [_currentIDC];
 		//--- Display Factory Queu.
 	_queu = _closest getVariable "queu";
 	_value = if (isNil '_queu') then {0} else {count (_closest getVariable "queu")};
+	private ["_qCap","_qLabel"];
+	_qCap = missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1_MAX",_type], -1];
+	_qLabel = _display DisplayCtrl 12024;
+	_qLabel ctrlSetTextColor [0.2588, 0.7137, 1, 0.9];
 	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: append /CAP to the queue count so players can see the limit.
-	//--- Falls back to plain count if WFBE_C_FACTORY_QUEUE_LIMITS=0 or the cap var is missing/zero.
-	//--- Cross-ref: cap formula lives in the WFBE_C_FACTORY_QUEUE_LIMITS block above this loop.
-	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0) then {
-		private ["_qCap"];
-		_qCap = missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1_MAX",_type], -1];
-		if (_qCap > 0) then {
-			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel', str _value + "/" + str _qCap]];
-		} else {
-			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
-		};
+	//--- The color warning uses the current cap either way so cap-full state stays visible when /CAP text is disabled.
+	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0 && {_qCap > 0}) then {
+		ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel', str _value + "/" + str _qCap]];
 	} else {
 		ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
+	};
+	if (_qCap > 0 && {_value >= _qCap}) then {
+		_qLabel ctrlSetTextColor [1, 0.58, 0.05, 1];
 	};
 	
 	//--- List selection changed.
