@@ -1,4 +1,4 @@
-Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -231,6 +231,45 @@ if (count _queu > 0) then {_queu2 = _building getVariable "queu"};
 
 _show = false;
 _nextQueueHint = time;
+//--- Ray 2026-07-04: build the compact QUEUED tail from the building's real ordered label list
+//--- (queu_labels, kept parallel to queu). Drop slot 0 (the item building / next up), compress runs
+//--- of the same label to "Label xK", cap the shown segments to 5 and append " +N more" counting the
+//--- pending UNITS not shown. Empty string when nothing is pending after the head (so the readout stays
+//--- single-item, no trailing pipe). Each _out entry is [segmentText, unitCount] so +N needs no string parse.
+_qTailFn = {
+	private ["_lbls","_out","_shown","_i","_cur","_run","_more","_seg","_joined","_j"];
+	_lbls = _this;
+	if (isNil "_lbls") then {_lbls = []};
+	if ((count _lbls) <= 1) exitWith {""};
+	//--- pending = everything after the head (slot 0). Compress consecutive duplicates.
+	_out = [];
+	_i = 1;
+	while {_i < (count _lbls)} do {
+		_cur = _lbls select _i;
+		_run = 1;
+		while {((_i + _run) < (count _lbls)) && {(_lbls select (_i + _run)) == _cur}} do {_run = _run + 1};
+		_seg = if (_run > 1) then {Format ["%1 x%2", _cur, _run]} else {_cur};
+		_out = _out + [[_seg, _run]];
+		_i = _i + _run;
+	};
+	//--- cap the DISTINCT shown segments to 5; +N counts the pending UNITS beyond those 5 segments.
+	_shown = _out;
+	_more = 0;
+	if ((count _out) > 5) then {
+		_shown = [_out select 0, _out select 1, _out select 2, _out select 3, _out select 4];
+		_more = (count _lbls) - 1;
+		{_more = _more - (_x select 1)} forEach _shown;
+		if (_more < 0) then {_more = 0};
+	};
+	_joined = "";
+	_j = 0;
+	{
+		if (_j == 0) then {_joined = (_x select 0)} else {_joined = _joined + ", " + (_x select 0)};
+		_j = _j + 1;
+	} forEach _shown;
+	if (_more > 0) then {_joined = _joined + Format [" +%1 more", _more]};
+	_joined
+};
 while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
 	sleep 4;
 	_show = true;
@@ -246,6 +285,11 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 			//--- center-screen titleText. Client_UpdateRHUD.sqf renders it (small, colored) and auto-hides it
 			//--- when the timestamp goes stale, so no exit path needs to clear it. Compact: FACTORY | UNIT #p/t ~ETAs.
 			WFBE_CL_QUEUE_HUD = Format ["<t color='#ffd24a' size='0.9'>%1 | %2  #%3/%4  ~%5s</t>", _factoryType, _description, _queuePos + 1, count _queu, ceil _queueEta];
+			//--- Ray 2026-07-04: append the pending QUEUED tail (everything after the head) in a dimmer color.
+			_qTail = (_building getVariable ["queu_labels", []]) call _qTailFn;
+			if (_qTail != "") then {
+				WFBE_CL_QUEUE_HUD = WFBE_CL_QUEUE_HUD + Format ["<t color='#b9a94a' size='0.85'>  |  QUEUED: %1</t>", _qTail];
+			};
 			WFBE_CL_QUEUE_HUD_TS = time;
 		};
 	};
@@ -276,7 +320,12 @@ _buildEnd = time + _waitTime;
 while {time < _buildEnd && alive _building && !isNull _building} do {
 	_bRemain = ceil (_buildEnd - time);
 	if (_bRemain < 0) then {_bRemain = 0};
-	WFBE_CL_QUEUE_HUD = Format ["<t color='#7bd642' size='0.9'>%1 | %2  building  ~%3s</t>", _factoryType, _description, _bRemain];
+	WFBE_CL_QUEUE_HUD = Format ["<t color='#7bd642' size='0.9'>%1 | BUILDING: %2  ~%3s</t>", _factoryType, _description, _bRemain];
+	//--- Ray 2026-07-04: append the pending QUEUED tail (queu_labels after the head) in a dimmer color.
+	_qTail = (_building getVariable ["queu_labels", []]) call _qTailFn;
+	if (_qTail != "") then {
+		WFBE_CL_QUEUE_HUD = WFBE_CL_QUEUE_HUD + Format ["<t color='#5f8f3a' size='0.85'>  |  QUEUED: %1</t>", _qTail];
+	};
 	WFBE_CL_QUEUE_HUD_TS = time;
 	sleep 1;
 };
