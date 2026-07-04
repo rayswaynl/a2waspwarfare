@@ -882,6 +882,7 @@ if (worldName == "Zargabad") then {
 	//--- === cmdcon41 wave-1 (claude-gaming 2026-07-02): SPREAD+HOLD, real-combat base assault (Ray: ON), siege decay, remnant caution ===
 	if (isNil "WFBE_C_AICOM_SPREAD_MODE")            then {WFBE_C_AICOM_SPREAD_MODE = 1};            //--- anti-dogpile: cap teams per fist town in the Allocator (0 = legacy uncapped pile-up).
 	if (isNil "WFBE_C_AICOM2_FIST_PERTOWN")          then {WFBE_C_AICOM2_FIST_PERTOWN = 4};          //--- max teams the Allocator stacks on one fist town before spilling to the next.
+	if (isNil "WFBE_C_AICOM_SPREAD_TIERCAP")         then {WFBE_C_AICOM_SPREAD_TIERCAP = 0};         //--- Lane-334: 0=flat FIST_PERTOWN cap; 1=scale fist spread cap by wfbe_town_type like AssignTowns concentration.
 	if (isNil "WFBE_C_AICOM_HOLD_MODE")              then {WFBE_C_AICOM_HOLD_MODE = 1};              //--- first captor HOLDS the just-captured town on DEFEND (0 = every captor leaves -> see-saw).
 	if (isNil "WFBE_C_AICOM_HOLD_SECS")              then {WFBE_C_AICOM_HOLD_SECS = 180};            //--- hold window (garrison re-arm time) before the holder rejoins the offense.
 	if (isNil "WFBE_C_AICOM_ASSAULT_STRUCTURES")     then {WFBE_C_AICOM_ASSAULT_STRUCTURES = 1};     //--- REAL-COMBAT BASE ASSAULT (Ray): strike teams doTarget/doFire the enemy HQ+factories (factories first).

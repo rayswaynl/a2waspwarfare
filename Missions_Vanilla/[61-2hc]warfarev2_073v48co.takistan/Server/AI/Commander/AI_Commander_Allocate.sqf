@@ -326,11 +326,32 @@ _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 _expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick
 //--- SPREAD (cmdcon41, claude-gaming 2026-07-02): per-fist-town load counter + cap. With a widened fist
 //--- (WFBE_C_AICOM2_FIST_TOWNS>1) the L268-272 nearest pick otherwise funnels every team onto the single
-//--- closest fist town = the dogpile. _fistCounts is index-aligned with _fist; _capPerFist caps stacking
-//--- per fist town before teams spill onto the next. A2-OA-safe (count / array set-select / getVariable).
-private ["_fistCounts","_capPerFist"];
-_fistCounts = []; { _fistCounts set [_forEachIndex, 0] } forEach _fist;
+//--- closest fist town = the dogpile. _fistCounts/_fistCaps are index-aligned with _fist; tier caps
+//--- opt into the AssignTowns town-type quota shape while preserving the flat legacy cap by default.
+private ["_fistCounts","_fistCaps","_capPerFist","_tierCapOn"];
+_fistCounts = []; _fistCaps = [];
 _capPerFist = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
+_tierCapOn = (missionNamespace getVariable ["WFBE_C_AICOM_SPREAD_TIERCAP", 0]) > 0;
+{
+	private ["_ft","_ftCap"];
+	_ft = _x; _ftCap = _capPerFist;
+	if (_tierCapOn) then {
+		switch (_ft getVariable ["wfbe_town_type", ""]) do {
+			case "TinyTown1":   {_ftCap = (_capPerFist - 1) max 1};
+			case "SmallTown1":  {_ftCap = _capPerFist};
+			case "SmallTown2":  {_ftCap = _capPerFist};
+			case "MediumTown1": {_ftCap = _capPerFist + 1};
+			case "MediumTown2": {_ftCap = _capPerFist + 1};
+			case "LargeTown1":  {_ftCap = _capPerFist + 2};
+			case "LargeTown2":  {_ftCap = _capPerFist + 2};
+			case "HugeTown1":   {_ftCap = _capPerFist + 2};
+			case "HugeTown2":   {_ftCap = _capPerFist + 2};
+			default {_ftCap = _capPerFist};
+		};
+	};
+	_fistCounts set [_forEachIndex, 0];
+	_fistCaps set [_forEachIndex, _ftCap];
+} forEach _fist;
 _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 {
 	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
@@ -389,7 +410,7 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 						_bestIdx = -1;
 						{
 							_v = _ldrPos distance _x;
-							if (_v <= _reach && {_v < _tgtD} && {(_fistCounts select _forEachIndex) < _capPerFist}) then {_tgtD = _v; _tgt = _x; _bestIdx = _forEachIndex};
+							if (_v <= _reach && {_v < _tgtD} && {(_fistCounts select _forEachIndex) < (_fistCaps select _forEachIndex)}) then {_tgtD = _v; _tgt = _x; _bestIdx = _forEachIndex};
 						} forEach _fist;
 						//--- fall-through: everything in reach is capped (or nothing in reach) -> pick the LEAST-LOADED
 						//--- fist town outright so no team idles (preserves the never-idle SAD guarantee).
