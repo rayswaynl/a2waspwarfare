@@ -3948,7 +3948,7 @@ class WFBE_PlayerSettingsMenu {
 
 	class controlsBackground {
 		class CA_Background : RscText {
-			x = 0.275; y = 0.135; w = 0.45; h = 0.735;
+			x = 0.275; y = 0.135; w = 0.45; h = 0.822;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -3957,7 +3957,7 @@ class WFBE_PlayerSettingsMenu {
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class CA_Background_Footer : CA_Background {
-			y = 0.135 + 0.695;
+			y = 0.135 + 0.782;
 			h = 0.04;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
@@ -4002,10 +4002,23 @@ class WFBE_PlayerSettingsMenu {
 			idc = 30011;
 			x = 0.475; y = 0.135 + 0.117; w = 0.235; h = 0.029;
 		};
+		//--- Terrain-grid / clutter label (value set live) + slider (range set live to WFBE_C_ENVIRONMENT_MAX_CLUTTER).
+		class CA_TGLabel : RscText {
+			idc = 30017;
+			x = 0.29; y = 0.135 + 0.155; w = 0.20; h = 0.03;
+			sizeEx = 0.024;
+			text = "Terrain Grid:";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_TGSlider : RscXSliderH {
+			idc = 30018;
+			x = 0.475; y = 0.135 + 0.157; w = 0.235; h = 0.029;
+		};
 		//--- Auto view-distance toggle (text set live).
 		class CA_AutoVD : RscButton_Main {
 			idc = 30012;
-			x = 0.29; y = 0.135 + 0.155; w = 0.42; h = 0.042;
+			x = 0.29; y = 0.135 + 0.195; w = 0.42; h = 0.042;
 			sizeEx = 0.024;
 			text = "Auto View Distance: OFF";
 			action = "WFBE_MenuAction = 20";
@@ -4013,7 +4026,7 @@ class WFBE_PlayerSettingsMenu {
 		//--- Target FPS row (auto-VD chases this): 30 / 45 / 50 / 60.
 		class CA_FPSLabel : RscText {
 			idc = 30003;
-			x = 0.29; y = 0.135 + 0.205; w = 0.16; h = 0.03;
+			x = 0.29; y = 0.135 + 0.245; w = 0.16; h = 0.03;
 			sizeEx = 0.022;
 			text = "Target FPS:";
 			colorText[] = WFBE_Menu_Text_Color;
@@ -4021,7 +4034,7 @@ class WFBE_PlayerSettingsMenu {
 		};
 		class CA_FPS30 : RscButton_Main {
 			idc = 30013;
-			x = 0.455; y = 0.135 + 0.202; w = 0.06; h = 0.04;
+			x = 0.455; y = 0.135 + 0.242; w = 0.06; h = 0.04;
 			sizeEx = 0.022;
 			text = "30";
 			action = "WFBE_MenuAction = 30";
@@ -4033,33 +4046,35 @@ class WFBE_PlayerSettingsMenu {
 		//--- ===== GAMEPLAY =====
 		class CA_GameplayHead : RscText_SubTitle {
 			idc = 30004;
-			x = 0.29; y = 0.135 + 0.265; w = 0.40; h = 0.035;
+			x = 0.29; y = 0.135 + 0.305; w = 0.40; h = 0.035;
 			text = "GAMEPLAY";
 		};
-		//--- Seven toggle rows, two columns. Text set live by the controller; click flips the pref.
+		//--- Toggle rows, two columns. Text set live by the controller; click flips the pref.
 		class CA_HUD : RscButton_Main {
 			idc = 30020;
-			x = 0.29; y = 0.135 + 0.305; w = 0.205; h = 0.042;
+			x = 0.29; y = 0.135 + 0.345; w = 0.205; h = 0.042;
 			sizeEx = 0.022;
 			text = "HUD Overlay: ON";
 			action = "WFBE_MenuAction = 1";
 		};
-		class CA_AAR   : CA_HUD { idc = 30021; x = 0.505; y = 0.135 + 0.305; text = "AAR Markers: ON";    action = "WFBE_MenuAction = 2"; };
-		class CA_Bomb  : CA_HUD { idc = 30022; x = 0.29;  y = 0.135 + 0.352; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
-		class CA_Amb   : CA_HUD { idc = 30023; x = 0.505; y = 0.135 + 0.352; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
-		class CA_Kill  : CA_HUD { idc = 30024; x = 0.29;  y = 0.135 + 0.399; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
-		class CA_IRS   : CA_HUD { idc = 30025; x = 0.505; y = 0.135 + 0.399; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
-		class CA_Bipod : CA_HUD { idc = 30026; x = 0.29;  y = 0.135 + 0.446; w = 0.42; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
+		class CA_AAR   : CA_HUD { idc = 30021; x = 0.505; y = 0.135 + 0.345; text = "AAR Markers: ON";    action = "WFBE_MenuAction = 2"; };
+		class CA_Bomb  : CA_HUD { idc = 30022; x = 0.29;  y = 0.135 + 0.392; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
+		class CA_Amb   : CA_HUD { idc = 30023; x = 0.505; y = 0.135 + 0.392; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
+		class CA_Kill  : CA_HUD { idc = 30024; x = 0.29;  y = 0.135 + 0.439; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
+		class CA_IRS   : CA_HUD { idc = 30025; x = 0.505; y = 0.135 + 0.439; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
+		class CA_Bipod : CA_HUD { idc = 30026; x = 0.29;  y = 0.135 + 0.486; w = 0.42; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
+		//--- High-climbing default (same var/key/localized labels as the Team-menu control; text set live).
+		class CA_HighClimb : CA_HUD { idc = 30027; x = 0.29;  y = 0.135 + 0.533; w = 0.42; text = "High climbing default: OFF"; action = "WFBE_MenuAction = 10"; };
 
 		//--- ===== AUDIO =====
 		class CA_AudioHead : RscText_SubTitle {
 			idc = 30005;
-			x = 0.29; y = 0.135 + 0.505; w = 0.40; h = 0.035;
+			x = 0.29; y = 0.135 + 0.592; w = 0.40; h = 0.035;
 			text = "AUDIO";
 		};
 		class CA_Audio : CA_HUD {
 			idc = 30030;
-			x = 0.29; y = 0.135 + 0.545; w = 0.42;
+			x = 0.29; y = 0.135 + 0.632; w = 0.42;
 			text = "Audio Cues: OFF";
 			action = "WFBE_MenuAction = 8";
 		};
@@ -4067,7 +4082,7 @@ class WFBE_PlayerSettingsMenu {
 		//--- ===== Footer Close =====
 		class CA_Done : RscButton_Main {
 			idc = 30040;
-			x = 0.29; y = 0.135 + 0.615; w = 0.42; h = 0.045;
+			x = 0.29; y = 0.135 + 0.702; w = 0.42; h = 0.045;
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";

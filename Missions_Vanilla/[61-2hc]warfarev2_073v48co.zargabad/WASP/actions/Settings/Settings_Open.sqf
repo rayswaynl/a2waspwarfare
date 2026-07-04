@@ -8,10 +8,15 @@
 	The profile KEYS are unchanged from v1, so existing player profiles carry over 1:1.
 
 	Player-side options (all client-local; never affect other players):
-	  VIDEO    : View distance (slider 500..map cap) | Auto view distance on/off | Target FPS 30/45/50/60
+	  VIDEO    : View distance (slider 500..map cap) | Terrain grid (slider 1..map clutter cap) |
+	             Auto view distance on/off | Target FPS 30/45/50/60
 	  GAMEPLAY : HUD overlay | AAR map markers | Bomb-altitude warning | Ambulance redeploy circles |
-	             Kill feed | Auto IR smoke | Auto deploy bipod
+	             Kill feed | Auto IR smoke | Auto deploy bipod | High-climbing default
 	  AUDIO    : Audio cues
+
+	The terrain-grid slider (setTerrainGrid, key WFBE_PERSISTENT_CONST_TERRAIN_GRID) and the high-climbing
+	toggle (WFBE_HighClimbingDefaultEnabled, key WFBE_HIGH_CLIMBING_DEFAULT_ENABLED) share var + key + localized
+	strings with their Team-menu controls (GUI_Menu_Team.sqf idc 13005 / idc 13020), which remain in place.
 
 	A2-OA-safe: isNil-defaulted reads; if(_bool) label branching (never == on a Boolean); global
 	ctrlSetText/sliderSet* [idc, ...] forms on this idd dialog (never (display displayCtrl) ctrlShow).
@@ -19,7 +24,7 @@
 */
 
 disableSerialization;
-private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD"];
+private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG"];
 
 if (!alive player) exitWith {};
 if (dialog) exitWith {};
@@ -37,6 +42,19 @@ _curVD = (_curVD max 500) min _maxVD;
 sliderSetPosition [30011, _curVD];
 _lastSliderVD = _curVD;
 
+//--- Terrain-grid / clutter slider (idc 30018): range 1..per-map clutter cap, thumb seeded at the live currentTG.
+//--- Mirrors the Team-menu slider (idc 13005): setTerrainGrid on change, persisted under WFBE_PERSISTENT_CONST_TERRAIN_GRID.
+_maxTG = missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_CLUTTER", 50];
+if !(typeName _maxTG == "SCALAR") then {_maxTG = 50};
+if (_maxTG < 1) then {_maxTG = 1};
+sliderSetRange [30018, 1, _maxTG];
+_curTG = missionNamespace getVariable ["currentTG", 25];
+if !(typeName _curTG == "SCALAR") then {_curTG = 25};
+_curTG = (round _curTG) max 1;
+_curTG = _curTG min _maxTG;
+sliderSetPosition [30018, _curTG];
+_lastSliderTG = _curTG;
+
 while {alive player && dialog} do {
 	//--- Live label refresh (cheap; only runs while the dialog is open).
 	_hud    = missionNamespace getVariable ["RUBHUD", true];
@@ -49,6 +67,7 @@ while {alive player && dialog} do {
 	_acue   = missionNamespace getVariable ["WFBE_AUDIO_CUES", false];
 	_autoOn = missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
 	_target = missionNamespace getVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
+	_hc     = missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false];
 
 	ctrlSetText [30020, if (_hud)  then {"HUD Overlay: ON"}         else {"HUD Overlay: OFF"}];
 	ctrlSetText [30021, if (_aar)  then {"AAR Markers: ON"}         else {"AAR Markers: OFF"}];
@@ -60,6 +79,8 @@ while {alive player && dialog} do {
 	ctrlSetText [30030, if (_acue) then {"Audio Cues: ON"}          else {"Audio Cues: OFF"}];
 	ctrlSetText [30012, if (_autoOn) then {"Auto View Distance: ON"} else {"Auto View Distance: OFF"}];
 	ctrlSetText [30010, format ["View Distance: %1 m", round viewDistance]];
+	ctrlSetText [30017, Format [localize "STR_WF_TEAM_TerrainGridLabel", round (missionNamespace getVariable ["currentTG", 25])]];
+	ctrlSetText [30027, if (_hc) then {localize "STR_WF_TEAM_HighClimbingDefaultOn"} else {localize "STR_WF_TEAM_HighClimbingDefaultOff"}];
 
 	//--- VD slider poll (drag = instant apply). Auto-VD is disabled the moment the player takes manual control,
 	//--- otherwise the adaptive loop drifts the value back. Mirrors the Team-menu slider persistence.
@@ -76,12 +97,33 @@ while {alive player && dialog} do {
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_PERSISTENT_CONST_VIEW_DISTANCE", _chosenVD] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
+	//--- Terrain-grid slider poll (drag = instant apply). Same idiom as the Team menu: setTerrainGrid + persist currentTG.
+	_sliderTG = round (sliderPosition 30018);
+	if (abs (_sliderTG - _lastSliderTG) >= 1) then {
+		_lastSliderTG = _sliderTG;
+		_chosenTG = (_sliderTG max 1) min _maxTG;
+		currentTG = _chosenTG;
+		missionNamespace setVariable ["currentTG", _chosenTG];
+		setTerrainGrid _chosenTG;
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_PERSISTENT_CONST_TERRAIN_GRID", _chosenTG] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
 	//--- HUD overlay (RUBHUD): Client_UpdateRHUD.sqf reads it each ~1s, so the flip is instant.
 	if (WFBE_MenuAction == 1) then {
 		WFBE_MenuAction = -1;
 		RUBHUD = !(missionNamespace getVariable ["RUBHUD", true]);
 		missionNamespace setVariable ["RUBHUD", RUBHUD];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_RUBHUD_ENABLED", RUBHUD] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- High-climbing default (WFBE_HighClimbingDefaultEnabled): same var + profile key as the Team-menu control.
+	//--- LowGear_Toggle / Init_Unit read it as the per-vehicle default; the flip persists and applies on the next spawn.
+	if (WFBE_MenuAction == 10) then {
+		WFBE_MenuAction = -1;
+		_hc = !(missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false]);
+		WFBE_HighClimbingDefaultEnabled = _hc;
+		missionNamespace setVariable ["WFBE_HighClimbingDefaultEnabled", _hc];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_HIGH_CLIMBING_DEFAULT_ENABLED", _hc] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	//--- AAR map markers: gate read live by Common_MarkerLoop.sqf. Hide currently-drawn markers at once when OFF.
