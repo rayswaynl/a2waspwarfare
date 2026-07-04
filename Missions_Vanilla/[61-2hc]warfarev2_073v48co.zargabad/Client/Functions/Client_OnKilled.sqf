@@ -6,7 +6,7 @@
 		_this select 1: killer
 */
 
-Private ["_body","_deathText","_killer","_killerName","_killerVehicle","_killerVehicleName","_wfMenuAction"];
+Private ["_body","_deathText","_killer","_killerName","_killerVehicle","_killerVehicleName","_wfMenuAction","_sideTag","_dist","_distStr","_weapon","_weaponName","_extra","_isTeamKill"];
 
 _body = _this select 0;
 _killer = objNull;
@@ -20,22 +20,63 @@ if !((typeName _killer) in ["OBJECT"]) then {
 	_killer = objNull;
 };
 
+//--- Killed-by polish (Ray): killer name + side tag, weapon/vehicle, and distance on one line.
+//--- All lookups guard nil/empty; null killer keeps the existing "unknown cause" fallback.
 if !(isNull _killer) then {
-	if (isPlayer _killer) then {
-		_killerName = name _killer;
-		if (count (toArray _killerName) > 0) then {
-			_deathText = Format ["Killed by %1.", _killerName];
-		};
+	if (_killer == _body) then {
+		//--- Suicide / self-inflicted (e.g. own explosive): no attacker to name.
+		_deathText = "You died.";
 	} else {
+		//--- Side tag, e.g. [EAST]. Guarded so a civilian-side killer still renders cleanly.
+		_sideTag = switch (str (side _killer)) do {
+			case "WEST": {"[WEST] "};
+			case "EAST": {"[EAST] "};
+			case "GUER": {"[GUER] "};
+			default {""};
+		};
+
+		//--- Team-kill flag: killer on the same side as the victim.
+		_isTeamKill = (side _killer == side _body);
+
+		//--- Distance victim<->killer at time of death, rounded to whole metres.
+		_dist = round (_body distance _killer);
+		_distStr = Format ["%1m", _dist];
+
+		//--- Killer label: player name, else the AI unit class display name.
+		if (isPlayer _killer) then {
+			_killerName = name _killer;
+		} else {
+			_killerName = [typeOf _killer, "displayName"] Call GetConfigInfo;
+		};
+		if (isNil "_killerName") then {_killerName = ""};
+		if (count (toArray _killerName) < 1) then {_killerName = "someone"};
+
+		//--- Weapon vs vehicle: if the killer is mounted, credit the vehicle; else the current weapon.
 		_killerVehicle = vehicle _killer;
 		if (isNull _killerVehicle) then {_killerVehicle = _killer};
-
-		_killerVehicleName = [typeOf _killerVehicle, "displayName"] Call GetConfigInfo;
-		if (isNil "_killerVehicleName") then {_killerVehicleName = ""};
-		if (count (toArray _killerVehicleName) < 1) then {_killerVehicleName = typeOf _killerVehicle};
-		if (count (toArray _killerVehicleName) > 0) then {
-			_deathText = Format ["Killed by %1.", _killerVehicleName];
+		_extra = "";
+		if (_killerVehicle != _killer) then {
+			_killerVehicleName = [typeOf _killerVehicle, "displayName"] Call GetConfigInfo;
+			if (isNil "_killerVehicleName") then {_killerVehicleName = ""};
+			if (count (toArray _killerVehicleName) < 1) then {_killerVehicleName = typeOf _killerVehicle};
+			if (count (toArray _killerVehicleName) > 0) then {_extra = _killerVehicleName};
+		} else {
+			_weapon = currentWeapon _killer;
+			if (isNil "_weapon") then {_weapon = ""};
+			if (count (toArray _weapon) > 0) then {
+				_weaponName = getText (configFile >> "CfgWeapons" >> _weapon >> "displayName");
+				if (count (toArray _weaponName) > 0) then {_extra = _weaponName};
+			};
 		};
+
+		//--- Assemble: "Killed by [EAST] SniperGuy (M24, 320m)"; drop the weapon token if unknown.
+		if (count (toArray _extra) > 0) then {
+			_deathText = Format ["Killed by %1%2 (%3, %4)", _sideTag, _killerName, _extra, _distStr];
+		} else {
+			_deathText = Format ["Killed by %1%2 (%3)", _sideTag, _killerName, _distStr];
+		};
+
+		if (_isTeamKill) then {_deathText = Format ["[TEAMKILL] %1", _deathText]};
 	};
 };
 

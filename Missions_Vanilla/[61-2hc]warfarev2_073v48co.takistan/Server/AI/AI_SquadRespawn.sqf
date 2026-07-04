@@ -29,6 +29,20 @@ while {!gameOver} do {
 	_leader addEventHandler ['Killed', Format["[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled", _sideID]];
 	_leader setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
 
+	//--- DEADSPAWN GUARD (fable/deadspawn-guard, Ray 2026-07-04): the leader is now parked on its side's
+	//--- TempRespawnMarker for the respawn wait below. The three side markers sit 44-128m apart on one
+	//--- Chernarus mountaintop, so an ARMED enemy-side leader parked here has line-of-fire onto a HUMAN
+	//--- parked on an adjacent side's marker during join ("AI killed <player> in the deadspawn"). Enforce
+	//--- Ray's rule - NO armed units in deadspawns - by making the parked body non-hostile + unkillable for
+	//--- the hold: setCaptive true stops it firing on / being targeted by other sides, allowDamage false
+	//--- stops stray fire killing it there. Restored before it leaves the marker (see release below). Same
+	//--- allowDamage/setCaptive idiom as WFBE_HC_FNC_ParkDeadspawn (Init_HC.sqf). A2-OA-1.64 safe.
+	if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0 && {alive _leader}) then {
+		_leader setCaptive true;
+		_leader allowDamage false;
+		["INFORMATION", Format ["DEADSPAWN_GUARD|park|side=%1|unit=%2", _sideText, _leader]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	_availableSpawn = [];
 	_isForcedRespawn = false;
 	if (typeName _respawn == 'STRING') then {if (_respawn == "forceRespawn") then {_isForcedRespawn = true}};
@@ -100,6 +114,13 @@ while {!gameOver} do {
 	};
 
 	["INFORMATION", Format ["AI_AdvancedRespawn.sqf: [%1] AI Team Leader [%2] [%3] has respawned at [%4].", _sideText, _team, leader _team, _respawnLoc]] Call WFBE_CO_FNC_LogContent;
+	//--- DEADSPAWN GUARD release (fable/deadspawn-guard): the leader is about to leave the deadspawn marker
+	//--- for its real respawn - restore its combat state (undo the park-time captive/allowDamage) so it
+	//--- fights normally again. Idempotent (safe if the guard was off / never applied).
+	if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0 && {alive _leader}) then {
+		_leader setCaptive false;
+		_leader allowDamage true;
+	};
 	_pos = [getPos _respawnLoc,20,30] Call GetRandomPosition;
 	_pos set [2,0];
 	_leader setPos _pos;

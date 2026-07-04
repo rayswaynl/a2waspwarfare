@@ -60,6 +60,7 @@ if (_funds < WFBE_C_SCUD_COST) exitWith {
 
 //--- All checks pass: deduct funds + stamp cooldown BEFORE firing (anti double-fire race).
 _playerTeam setVariable ["wfbe_funds", (_funds - WFBE_C_SCUD_COST), true];
+[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord; //--- Ray pick A: this direct server write bypasses ChangeTeamFunds; keep WFBE_JIP_USER<uid> cash in lock-step so a JIP zero-latch restore stays provably safe.
 missionNamespace setVariable [_cooldownKey, _now];
 
 ["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] AUTHORISED -- launching from %2 at target %3.", str _side, getPos _platform, _destination]] Call WFBE_CO_FNC_LogContent;
