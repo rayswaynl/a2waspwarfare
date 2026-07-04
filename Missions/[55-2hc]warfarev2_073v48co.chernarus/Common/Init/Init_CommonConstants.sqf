@@ -2030,5 +2030,16 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (salvage-522) so an in-flight buy that resolves after a reset clamps to 0 instead of going negative.
 	if (isNil "WFBE_C_FIX_RESPAWN_UNITQUEU_RESET") then {WFBE_C_FIX_RESPAWN_UNITQUEU_RESET = 0};
 
+//--- DEADSPAWN NO-ARMED-UNITS GUARD (fable/deadspawn-guard, Ray 2026-07-04): while a dead AI team
+//--- leader is parked on its %1TempRespawnMarker holding point during the respawn wait
+//--- (AI_AdvancedRespawn.sqf / AI_SquadRespawn.sqf), make the body non-hostile + unkillable
+//--- (setCaptive true + allowDamage false) so no ARMED unit sits in the deadspawn ring: it can
+//--- neither fire on nor be targeted by an enemy-side bot parked on an adjacent marker (the Smarty
+//--- "AI killed <player> in the deadspawn" kill), and stray fire cannot kill it there. Restored to
+//--- setCaptive false + allowDamage true the instant it leaves the marker for its real respawn.
+//--- Same allowDamage/setCaptive rationale as WFBE_HC_FNC_ParkDeadspawn (Init_HC.sqf). 1 = guard on
+//--- (default), 0 = legacy behaviour (armed leader parked live on the marker for the wait window).
+	if (isNil "WFBE_C_DEADSPAWN_GUARD") then {WFBE_C_DEADSPAWN_GUARD = 1};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
