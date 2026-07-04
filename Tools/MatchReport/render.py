@@ -491,24 +491,45 @@ def render(m, out_path):
 
     def s_mvp(im,d,i,n):
         if not m.mvp: return
-        paste_cover(im,"mvp_backdrop",opacity=0.5,seed=m.seed,kb=i/n)   # dimmed so the stat card pops
-        header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
-        panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
-        if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
-            d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
-        d.text((352,344),p["name"],font=DISP(58),fill=INK); chip(d,354,422,p["side"],SANS(24,False))
-        # hero kill count fills the right of the card (the MVP's signature number, counts up)
-        d.text((W-182,322),str(int(p["kills"]*kk)),font=DISP(80),fill=col,anchor="ra")
-        d.text((W-182,442),"KILLS",font=SANS(22,False),fill=DIM,anchor="ra")
-        if p.get("award"):                                          # (fleet plan) superlative -> "that's me"
-            tracked(d,(W/2,506),p["award"],SANS(26,False),GOLD,anchor="mm",track=8)
-        gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
-        cells=[("SCORE",num(p["score"]),GOLD),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',col),
-               ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",GOLD)]
-        for idx,(lab,val,c) in enumerate(cells):
-            x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
-            d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
-        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),"MOST VALUABLE PLAYER",SANS(24,False),(200,204,196),anchor="mm",track=6); footer(im,d)
+        p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26)); num=lambda v:str(int(v*kk))
+        # backdrop (spotlight soldier) + a readability scrim over the content zone that fades
+        # out low so the soldier in the light still reads.
+        paste_cover(im,"mvp_backdrop",opacity=0.6,seed=m.seed,kb=i/n)
+        av=np.zeros(H,np.uint8); av[:1150]=175
+        rr=np.linspace(175,0,230).astype(np.uint8); av[1150:1150+len(rr)]=rr
+        scr=Image.fromarray(np.repeat(av[:,None],W,axis=1),"L")
+        blk=Image.new("RGBA",(W,H),(9,11,15,255)); blk.putalpha(scr)
+        im.paste(Image.alpha_composite(im.convert("RGBA"),blk).convert("RGB"),(0,0))
+        d=ImageDraw.Draw(im,"RGBA")
+        header(d,"MATCH MVP")
+
+        # ── hero identity card ──────────────────────────────────────────────────
+        panel(d,70,286,W-70,516,fill=mix(col,0.12),outline=col)
+        d.rectangle([70,286,78,516],fill=col)                       # side spine
+        if not paste_emblem(im, emblem_id(p["side"]), 208, 401, 132, seed=m.seed):
+            d.ellipse([150,343,266,459],fill=mix(col,0.28),outline=col,width=3)
+            d.text((208,401),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
+        d.text((300,336),p["name"],font=DISP(60),fill=INK)          # the star's name
+        chip(d,302,430,p["side"],SANS(26,False))                    # side swatch + BLUFOR/OPFOR
+        if p.get("award"):                                          # superlative sits INLINE, not orphaned
+            axx=302+22+d.textlength(SIDE_NAME[p["side"]],font=SANS(26,False))+22
+            d.text((axx,430),f'“{p["award"]}”',font=SANS(26,False),fill=GOLD)
+        d.text((W-104,330),num(p["kills"]),font=DISP(92),fill=col,anchor="ra")   # signature number
+        d.text((W-104,456),"KILLS",font=SANS(24,False),fill=DIM,anchor="ra")
+
+        # ── stat grid: 2×3, left accent spine per cell, calm value type ──────────
+        cells=[("SCORE",num(p["score"]),GOLD),("K / D",f'{p["kd"]*kk:.2f}',col),
+               ("DEATHS",num(p["d"][6]),col),("PVP KILLS",num(p["d"][7]),col),
+               ("TOWN CAPS",num(p["d"][10]),col),("FAV WEAPON",(p.get("fav","—") if kk>0.6 else "—"),col)]
+        gx,gy,cw,ch,gap=70,580,455,168,24
+        for idx,(lab,val,acc) in enumerate(cells):
+            x=gx+(idx%2)*(cw+30); y=gy+(idx//2)*(ch+gap)
+            panel(d,x,y,x+cw,y+ch)
+            d.rectangle([x,y+18,x+7,y+ch-18],fill=acc)              # accent spine carries the colour
+            d.text((x+32,y+28),lab,font=SANS(24,False),fill=DIM)
+            vf=DISP(58) if len(str(val))<=7 else DISP(40)
+            d.text((x+30,y+72),str(val),font=vf,fill=INK)
+        footer(im,d)
 
     def s_board(im,d,i,n):
         header(d,"TOP OPERATORS","by match score"); top=m.players[:6]
