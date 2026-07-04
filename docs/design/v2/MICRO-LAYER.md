@@ -41,7 +41,29 @@ Watchdogs = array scans on driver cadence on the HCs (<1 fps there, zero on serv
 2/3/5 are net FPS-POSITIVE (shorter fights, fewer standing units, cheaper recoveries).
 Stagger simultaneous doMoves over 2 driver ticks on Zargabad (dense path mesh).
 
-## Companion engine primitives (same cost class, A2-OA-verified names, none on the banned list)
+## Approved extensions (Ray 2026-07-04, second wave — build after the five above)
+
+6. **Road-march pacing** — `setBehaviour "CARELESS"` + `setSpeedMode "FULL"` + `setFormation
+   "COLUMN"` for transit legs; flip to `"COMBAT"`+`"WEDGE"` at standoff distance from the target
+   (reuse the R-score standoff). COMBAT-mode bounding/crawling is a major cause of slow cross-map
+   legs; this likely cuts transit time more than any routing fix shipped so far. Watchdog analog:
+   the flip-to-COMBAT trigger must be unmissable (distance OR contact OR timeout) — a team that
+   arrives at a defended town still CARELESS is dead.
+7. **Fire discipline** — `enableAttack false` while mounted/in transit so transports DRIVE THROUGH
+   contact instead of stopping to fight every patrol (re-enable at the objective); `setCombatMode
+   "GREEN"` hold-fire for ambush/infiltration postures; `allowFleeing 0` on regulars so assaults
+   don't rout mid-push.
+8. **Economy of force** — `joinSilent` field-merge of two mauled teams into one full team
+   (group-count reduction = the #1 server-FPS lever; natural partner of retreat-or-disband +
+   the 50% salvage refund); `selectLeader` promotes the best survivor after losses (no panicking
+   rifleman inheriting command); `setVehicleAmmo`/`setFuel` for depot refits without service
+   infrastructure.
+9. **Air insertion modes** — `_heli land "GET OUT"` (low hover drop) vs `land "LAND"` (full
+   landing) vs para eject, plus `flyInHeight` for transit vs run-in. These are the three execution
+   modes the insertion learner (owner ask: "learn where/when to land vs parachute") picks between —
+   the learner chooses, these commands execute.
+
+## Remaining primitive catalog (not yet scheduled; same cost class, A2-OA-verified, none banned)
 
 Movement & pacing:
 - `setBehaviour "CARELESS"` + `setSpeedMode "FULL"` + `setFormation "COLUMN"` for road
