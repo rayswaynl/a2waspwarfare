@@ -142,6 +142,19 @@ _n = _n + [''];
 _o = _o + [50];
 _z = _z + [0];
 
+//--- ACR Czech gear wave (Ray pick 2026-07-04). Class names VERIFIED from mounted lite pbo configs;
+//--- Config_Weapons/Config_Magazines isClass-guard every entry, so machines without ACR mounted simply skip these.
+_u = _u + ["20Rnd_9x19_EVO"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [0];
+_u = _u + ["18Rnd_9x19_Phantom"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [8];
+_z = _z + [0];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon
@@ -296,6 +309,21 @@ _u = _u + ["ItemWatch"];
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [5];
+_z = _z + [0];
+_m = _m + [-1];
+
+//--- ACR Czech gear wave (Ray pick 2026-07-04). Class names VERIFIED from mounted lite pbo configs;
+//--- Config_Weapons/Config_Magazines isClass-guard every entry, so machines without ACR mounted simply skip these.
+_u = _u + ["Evo_ACR"]; //--- tier-1 GUER staple pattern (AKS_74_U=80/z0 anchor)
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [90];
+_z = _z + [0];
+_m = _m + [-1];
+_u = _u + ["CZ_75_SP_01_PHANTOM"]; //--- CZ 75 Phantom pistol
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [30];
 _z = _z + [0];
 _m = _m + [-1];
 
