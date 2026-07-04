@@ -20,7 +20,11 @@ while {alive player && dialog} do {
 	ctrlEnable [11001,_enable];
 		if (sideJoined == resistance) then { ctrlEnable [11001, true] }; //--- GUER: base-less, buy always available (funds-only)
 	ctrlEnable [11002,gearInRange];
-		if (sideJoined == resistance) then { ctrlEnable [11002, true] }; //--- GUER: gear buy always available (funds-only)
+		//--- Ray 3B (GR-2026-07-03a): the old GUER unconditional gear-buy enable is GATED. With WFBE_C_GUER_GEAR_PROXIMITY
+		//--- default 1, the button follows gearInRange (line above), which now goes true for GUER only near a friendly
+		//--- town-center depot / GUER-held camp / deployed FOB barracks (Client\FSM\updateavailableactions.fsm,
+		//--- WFBE_C_UNITS_PURCHASE_GEAR_RANGE = 150m). Flag 0 restores the pre-fix buy-anywhere behaviour for GUER.
+		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) < 1}) then { ctrlEnable [11002, true] };
 
 		if (sideJoined == resistance) then {
 			{ctrlEnable [_x, false]} forEach [11004,11005,11006,11008]; //--- GUER: hold commander/base/economy/vote disabled
@@ -62,11 +66,15 @@ while {alive player && dialog} do {
 		createDialog "RscMenu_BuyUnits";
 	};
 
-	//--- Buy Gear.
+	//--- Buy Gear. Ray 3B (GR-2026-07-03a): re-check the gear gate here too so the menu cannot be opened via any other
+	//--- route (e.g. a raced MenuAction) while out of range - mirrors the ctrlEnable [11002,...] button gate. The GUER
+	//--- flag-0 (buy-anywhere restore) branch keeps opening, matching the button re-enable above.
 	if (MenuAction == 2) exitWith {
 		MenuAction = -1;
-		closeDialog 0;
-		createDialog "WFBE_BuyGearMenu";
+		if (gearInRange || {sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) < 1}}) then {
+			closeDialog 0;
+			createDialog "WFBE_BuyGearMenu";
+		};
 	};
 
 	//--- Team Menu.
