@@ -60,6 +60,22 @@ def build_sample():
         kills.append((int(rng.integers(20,m.duration)), None, s, wp, cat, dist(cat,wp)))
     kills.sort(key=lambda k: k[0])
     m.kills = kills
+
+    # hardware-loss tally (real matches: KILL vc= victim class). Victim comes from the
+    # OPPOSITE side's motor pool; weights favour the cool stuff so the scene demos well.
+    VPOOL = {"east": [("Mi24_V",12),("T72_RU",9),("T90",3),("BMP2",8),("BTR90",5),
+                      ("ZSU_23_4",3),("GRAD_RU",2),("Su25_RU",5),("Ka52",2),("Ural_supply",4),("UAZ_MG",3)],
+             "west": [("AH1Z",8),("M1A1",6),("M2A2_Bradley",5),("HMMWV_M2",4),
+                      ("UH1Y",4),("A10",6),("MLRS",1),("MTVR_supply",3),("LAV25",3)]}
+    for k in kills:
+        if k[4] not in ("VEH","AIR"): continue
+        vside = "east" if k[2] == "west" else "west"
+        pool = VPOOL[vside]
+        tot = sum(w for _, w in pool); r = rng.integers(0, tot)
+        for cls, w in pool:
+            if r < w: m.vloss_raw.append((cls, vside)); break
+            r -= w
+
     # synthetic player-vs-player rivalries for the offline demo (real matches derive these from victim UIDs)
     m.pvp_pairs = Counter({("Krait","Ghost"):5,("Ghost","Krait"):3,("Viper","Krait"):4,
                            ("Volk","Viper"):3,("Viper","Volk"):2,("Tsar","Reaper"):2})

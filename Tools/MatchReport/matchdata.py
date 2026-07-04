@@ -36,6 +36,60 @@ def _pretty_weapon(w):
         if w.startswith(pre): w = w[len(pre):]; break
     return w.replace("_"," ").strip() or "—"
 
+# ---- victim-vehicle classifier (for the HARDWARE LOSSES tally) -------------
+# Maps raw A2 victim classnames (KILL vc= token) to a display name + a silhouette
+# kind the renderer has art for. First substring match wins; order = specificity.
+VEHICLE_TYPES = [
+    # (substrings-lowercase, display, kind)
+    (("mi24","mi_24","hind"),        "MI-24 HIND",   "heli_e"),
+    (("ka52","ka_52","ka50"),        "KA-52",        "heli_e"),
+    (("ka137","ka_137"),             "KA-137",       "heli_e"),
+    (("ka60","ka_60"),               "KA-60",        "heli_e"),
+    (("mi17","mi_17","mi8","mi_8"),  "MI-8/17",      "heli_e"),
+    (("ah64","ah_64","apache"),      "AH-64 APACHE", "heli_w"),
+    (("ah1z","ah_1","cobra"),        "AH-1Z VIPER",  "heli_w"),
+    (("uh1y","uh_1","huey"),         "UH-1Y",        "heli_w"),
+    (("uh60","uh_60","mh60","blackhawk"),"UH-60",    "heli_w"),
+    (("ch47","ch_47","chinook"),     "CH-47",        "heli_w"),
+    (("mh6","ah6","littlebird"),     "MH-6",         "heli_w"),
+    (("merlin",),                    "MERLIN",       "heli_w"),
+    (("a10","a_10"),                 "A-10",         "jet"),
+    (("su25","su_25","su39"),        "SU-25",        "jet"),
+    (("su34","su_34"),               "SU-34",        "jet"),
+    (("av8b","av_8","harrier"),      "AV-8B",        "jet"),
+    (("f35","f_35"),                 "F-35",         "jet"),
+    (("l39","l_39"),                 "L-39",         "jet"),
+    (("c130","c_130"),               "C-130",        "jet"),
+    (("an2","an_2"),                 "AN-2",         "jet"),
+    (("t90","t_90"),                 "T-90",         "tank"),
+    (("t72","t_72"),                 "T-72",         "tank"),
+    (("t55","t_55","t34","t_34"),    "T-55/34",      "tank"),
+    (("m1a1","m1a2","abrams"),       "M1 ABRAMS",    "tank"),
+    (("m60",),                       "M60 PATTON",   "tank"),
+    (("zsu","shilka","tunguska","2s6"),"ZSU SHILKA",  "aa"),
+    (("avenger","linebacker","m6_"), "AA VEHICLE",   "aa"),
+    (("grad","bm21","bm_21"),        "BM-21 GRAD",   "arty"),
+    (("mlrs","m270"),                "MLRS",         "arty"),
+    (("m119","d30","d_30","m252","podnos","2b14","artillery"),"ARTILLERY","arty"),
+    (("bmp",),                       "BMP",          "apc"),
+    (("btr","gaz39371","vodnik"),    "BTR",          "apc"),
+    (("brdm",),                      "BRDM-2",       "apc"),
+    (("lav25","lav_25","aav"),       "LAV/AAV",      "apc"),
+    (("stryker","icv"),              "STRYKER",      "apc"),
+    (("m2a2","m2a3","bradley","m113"),"BRADLEY",     "apc"),
+    (("ural","kamaz","v3s","mtvr","truck"),"SUPPLY TRUCK","truck"),
+    (("hmmwv","humvee"),             "HMMWV",        "truck"),
+    (("uaz","landrover","lada","skoda","hilux","offroad"),"LIGHT VEHICLE","truck"),
+]
+
+def classify_vehicle(vc):
+    """Raw victim classname -> (display, kind) or None if unrecognised."""
+    if not vc: return None
+    s = vc.lower()
+    for keys, disp, kind in VEHICLE_TYPES:
+        if any(k in s for k in keys): return (disp, kind)
+    return (_pretty_weapon(vc).upper(), "other")
+
 def _time_token(toks):
     """Extract a real match-time from a 't=<sec>' token if the emitter logged one (else None)."""
     for p in toks:
@@ -106,6 +160,7 @@ class MatchData:
         self.caps = []             # (t_sec, town, new_side)  ordered
         self.players = []          # {name, side, d[15], kills, score, kd, fav}
         self.kills = []            # (t_sec, name_or_None, side, weapon, cat, dist)
+        self.vloss_raw = []        # (victim_classname, victim_side) for VEH/AIR kills
         self.total_kills = 0
 
     # town ownership at match time ts (seconds)
@@ -214,6 +269,20 @@ class MatchData:
         # hardware destroyed (vehicles + aircraft, from KILL category) — concrete kill-porn.
         self.hw_veh = self.catcount.get("VEH", 0); self.hw_air = self.catcount.get("AIR", 0)
         self.hq_kills = self.catcount.get("HQ", 0)
+        # per-TYPE hardware losses (from the KILL vc= victim class): the "3 Hinds, 7 T-72s"
+        # tally. Aggregated by display name, with a west/east split of who LOST them.
+        agg = {}
+        for (vc, vside) in getattr(self, "vloss_raw", []):
+            cl = classify_vehicle(vc)
+            if not cl: continue
+            disp, kind = cl
+            e = agg.setdefault(disp, {"name": disp, "kind": kind, "n": 0, "west": 0, "east": 0})
+            e["n"] += 1
+            if vside in ("west", "east"): e[vside] += 1
+        # cool stuff leads: gun-platforms sort above utility (trucks/light) at equal footing,
+        # count decides within each band — nobody opens TikTok for 78 supply trucks.
+        _dull = {"truck": 1, "other": 2}
+        self.losses = sorted(agg.values(), key=lambda e: (_dull.get(e["kind"], 0), -e["n"]))
         # rivalry (top head-to-head) + nemesis (who killed the MVP most) from player-vs-player kills.
         self.rivalry = None; self.nemesis = None
         pp = getattr(self, "pvp_pairs", None)
@@ -256,7 +325,7 @@ def parse_waspstat(lines, names=None, line_times=None):
                  "Known gap: event timestamps".
     """
     names = names or {}
-    caps_raw, kills_raw, pstats = [], [], {}
+    caps_raw, kills_raw, pstats, vloss_raw = [], [], {}, []
     winner, duration, map_name = "west", 0, "chernarus"
 
     for raw in lines:
@@ -281,9 +350,15 @@ def parse_waspstat(lines, names=None, line_times=None):
             try: dist = int(parts[9])
             except (IndexError, ValueError): dist = 0
             weap = parts[8] if len(parts) > 8 else "—"        # killer class; prefer real hand weapon
+            vclass = ""
             for p in parts[8:]:
-                if p.startswith("hw=") and len(p) > 3: weap = p[3:]; break
+                if p.startswith("hw=") and len(p) > 3: weap = p[3:]
+                elif p.startswith("vc=") and len(p) > 3: vclass = p[3:]
             kills_raw.append((seq, None, kside, _pretty_weapon(weap), cat, dist, killer_uid, victim_uid, _time_token(parts[8:])))
+            # hardware-loss tally: victim class + victim side, vehicles/aircraft only
+            if vclass and cat in ("VEH", "AIR"):
+                vside = side_from_str(parts[7]) if len(parts) > 7 else "neu"
+                vloss_raw.append((vclass, vside))
         else:
             # PLAYERSTATS: tokens "uid:d0,...,d14,side~name" joined by '|' from parts[3:].
             # the trailing "~name" is the live display name (added by the leaderboard emitter).
@@ -342,6 +417,7 @@ def parse_waspstat(lines, names=None, line_times=None):
     for (s, _nm, ks, wp, cat, dist, u, vu, kt) in kills_raw:
         if u and vu and u != vu: pvp[(_disp(u), _disp(vu))] += 1
     m.pvp_pairs = pvp
+    m.vloss_raw = vloss_raw
 
     # players (skip headless-client connections — they carry UIDs + stats but aren't operators)
     _HC = {"HC","HC1","HC2","HC3","HC4","HEADLESS","HEADLESSCLIENT","SERVER"}

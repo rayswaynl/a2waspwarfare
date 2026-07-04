@@ -247,7 +247,28 @@ ASSETS = {
               "stopwatch or field clock silhouette with one simple hand and small side buttons, "
               "stencil style, olive-drab #5C6536 and bone #E7E3D6 with a tiny warm orange #D9763C "
               "edge accent, transparent background, 256x256, no numerals, no text. " + STYLE},
+ # --- HARDWARE LOSSES row art: keyed from the brand pack's vehicle blackouts ---
+ # (miksuus-warfare/brand/generated/coldwar-batch-1 — checkerboard keyed out, cropped,
+ #  1100px wide RGBA). These are BRAND assets, not gen targets: no prompt needed.
+ "loss_hind":   {"file": "loss_hind.png",   "size": (1100, 280), "transparent": True,
+                 "role": "Hardware-losses row silhouette (Mi-24 Hind — eastern helicopters).", "prompt": ""},
+ "loss_apache": {"file": "loss_apache.png", "size": (1100, 271), "transparent": True,
+                 "role": "Hardware-losses row silhouette (AH-64 — western helicopters).", "prompt": ""},
+ "loss_tank":   {"file": "loss_tank.png",   "size": (1100, 310), "transparent": True,
+                 "role": "Hardware-losses row silhouette (T-90 — main battle tanks).", "prompt": ""},
+ "loss_jet":    {"file": "loss_jet.png",    "size": (1100, 233), "transparent": True,
+                 "role": "Hardware-losses row silhouette (A-10 — fixed-wing).", "prompt": ""},
+ "loss_shilka": {"file": "loss_shilka.png", "size": (1100, 557), "transparent": True,
+                 "role": "Hardware-losses row silhouette (ZSU-23-4 — AA vehicles).", "prompt": ""},
+ "loss_grad":   {"file": "loss_grad.png",   "size": (1100, 428), "transparent": True,
+                 "role": "Hardware-losses row silhouette (BM-21 Grad — artillery).", "prompt": ""},
 }
+
+# hardware-losses kind -> row art (loss_* brand blackouts, silhouette_* gen fallbacks)
+LOSS_ART = {"heli_e": "loss_hind", "heli_w": "loss_apache", "tank": "loss_tank",
+            "jet": "loss_jet", "aa": "loss_shilka", "arty": "loss_grad",
+            "apc": "silhouette_apc", "truck": "silhouette_supply_truck",
+            "other": "silhouette_apc"}
 
 # silhouettes available as drifting background layers (renderer picks per scene if present)
 SILHOUETTES = [

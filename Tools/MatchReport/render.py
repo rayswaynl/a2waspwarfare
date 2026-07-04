@@ -11,11 +11,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # ---- optional generated art (drop PNGs in assets/; see assets.py / gen_prompts.py) ----
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
-try: from assets import emblem_id, winner_bg_id, SILHOUETTES
+try: from assets import emblem_id, winner_bg_id, SILHOUETTES, LOSS_ART
 except Exception:
     def emblem_id(s): return None
     def winner_bg_id(s): return None
-    SILHOUETTES = []
+    SILHOUETTES = []; LOSS_ART = {}
 _acache = {}
 def asset(aid):
     if aid in _acache: return _acache[aid]
@@ -97,8 +97,8 @@ f_md=SANS(34,True); f_sm=SANS(28,True); f_xs=SANS(23,False); f_num=MONO(58)
 
 # Scene plan — single source of truth for lengths so audio.py can find the winner-reveal
 # "climax" frame and stay in sync if scene timing changes. (name, frames, fade-in, fade-out)
-SCENE_PLAN = [("intro",54,18,10),("battle",480,12,10),("momentum",168,12,10),("mvp",156,12,10),
-              ("board",186,12,10),("combat",198,12,10),("winner",126,4,2),
+SCENE_PLAN = [("intro",54,18,10),("battle",450,12,10),("momentum",150,12,10),("mvp",156,12,10),
+              ("board",186,12,10),("combat",186,12,10),("losses",150,12,10),("winner",126,4,2),
               ("outro",162,10,10)]
 HOLD_FRAMES = 18
 def climax_frame():
@@ -107,6 +107,22 @@ def climax_frame():
         if name=="winner": return f
         f+=nf
     return f
+
+# --- per-match LOOK THEME (anti-stale): m.seed rotates the camera-motion mode, the
+# corner-frame register and a subtle colour grade, on top of the existing backdrop
+# <slot>_k.png variant rotation. Same data in, visibly different video out, so a feed
+# of many recaps never looks templated. Match RESULTS are never themed.
+_THEME = {"kb": "in", "frame": 0, "grade": None}
+_GRADES = {None: None,
+           "warm": ((1.05, 1.00, 0.93), "dusk"),     # warm dusk grade
+           "cool": ((0.94, 1.00, 1.07), "night")}    # cool night grade
+def set_theme(seed):
+    s = abs(int(seed))
+    _THEME["kb"]    = ("in", "out", "drift")[s % 3]
+    _THEME["frame"] = (s // 3) % 3
+    _THEME["grade"] = (None, "warm", "cool")[(s // 9) % 3]
+    _fx.pop("frame", None); _fx.pop("lut", None)     # invalidate caches on theme change
+    return dict(_THEME)
 
 def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
@@ -124,8 +140,13 @@ def paste_cover(im, aid, box=None, opacity=1.0, seed=None, kb=None):
     dx = dy = 0
     if kb is not None:
         e = ease(max(0.0, min(1.0, kb)))
-        s *= 1.0 + 0.07*e          # push in ~7% across the scene
-        dy = -int(20*e)            # and drift up a touch
+        mode = _THEME["kb"]
+        if mode == "out":            # start close, pull back
+            s *= 1.07 - 0.07*e; dy = -int(20*(1-e))
+        elif mode == "drift":        # constant zoom, lateral pan
+            s *= 1.045; dx = int(34*(e-0.5))
+        else:                        # "in": push in + drift up
+            s *= 1.0 + 0.07*e; dy = -int(20*e)
     a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     if opacity < 1.0:
         a2 = a2.copy(); a2.putalpha(a2.split()[3].point(lambda v:int(v*opacity)))
@@ -202,15 +223,37 @@ def _fx_grain():
         _fx["grain"]=(np.random.default_rng(7).random((H+96,W))*255).astype(np.uint8)
     return _fx["grain"]
 def _fx_frame():
-    # Quiet, minimal corner ticks + one small orange accent. No ruler ticks, no radar
-    # arcs, no crosses — a printed-brief register, deliberately understated.
+    # Quiet edge register, deliberately understated. THREE theme variants (rotated by
+    # m.seed via set_theme) so the feed doesn't share one identical frame forever:
+    #   0 corner ticks (the classic)  ·  1 hairline inset border + orange corner dots
+    #   2 top/bottom rules with a centre accent notch
     if "frame" in _fx: return _fx["frame"]
     fo=Image.new("RGBA",(W,H),(0,0,0,0)); d=ImageDraw.Draw(fo)
-    c=(150,150,138,80); o=(217,118,60,140); L=46; mg=44
-    for (cx,cy,sx,sy) in [(mg,mg,1,1),(W-mg,mg,-1,1),(mg,H-mg,1,-1),(W-mg,H-mg,-1,-1)]:
-        d.line([(cx,cy),(cx+L*sx,cy)],fill=c,width=2); d.line([(cx,cy),(cx,cy+L*sy)],fill=c,width=2)
-        d.line([(cx,cy),(cx+12*sx,cy)],fill=o,width=2)
+    c=(150,150,138,80); o=(217,118,60,140); mg=44; style=_THEME["frame"]
+    if style==1:
+        d.rectangle([mg,mg,W-mg,H-mg],outline=(150,150,138,52),width=1)
+        r=3
+        for (cx,cy) in [(mg,mg),(W-mg,mg),(mg,H-mg),(W-mg,H-mg)]:
+            d.ellipse([cx-r,cy-r,cx+r,cy+r],fill=o)
+    elif style==2:
+        for yy in (mg,H-mg):
+            d.line([(mg,yy),(W/2-26,yy)],fill=c,width=2); d.line([(W/2+26,yy),(W-mg,yy)],fill=c,width=2)
+            d.line([(W/2-14,yy),(W/2+14,yy)],fill=o,width=3)
+    else:
+        L=46
+        for (cx,cy,sx,sy) in [(mg,mg,1,1),(W-mg,mg,-1,1),(mg,H-mg,1,-1),(W-mg,H-mg,-1,-1)]:
+            d.line([(cx,cy),(cx+L*sx,cy)],fill=c,width=2); d.line([(cx,cy),(cx,cy+L*sy)],fill=c,width=2)
+            d.line([(cx,cy),(cx+12*sx,cy)],fill=o,width=2)
     _fx["frame"]=fo; return fo
+
+def _fx_lut():
+    """Per-channel grade LUTs for the theme (None -> no grade)."""
+    if "lut" in _fx: return _fx["lut"]
+    g = _GRADES.get(_THEME["grade"])
+    if g is None: _fx["lut"]=None; return None
+    (fr,fg,fb),_ = g
+    luts=[[min(255,int(v*f)) for v in range(256)] for f in (fr,fg,fb)]
+    _fx["lut"]=luts; return luts
 
 def overlay_fx(im, i=0):
     """Production polish over a finished RGB frame: cinematic vignette + animated film
@@ -229,7 +272,12 @@ def overlay_fx(im, i=0):
     # Always the clean procedural corners — the frame_overlay.png asset is the busy
     # radar-reticle HUD (edge ruler ticks + corner arcs + micro-labels) we're dropping.
     out=Image.alpha_composite(out, _fx_frame())
-    return out.convert("RGB")
+    out=out.convert("RGB")
+    luts=_fx_lut()
+    if luts:                       # theme colour grade (warm dusk / cool night / neutral)
+        r,g,b=out.split()
+        out=Image.merge("RGB",(r.point(luts[0]),g.point(luts[1]),b.point(luts[2])))
+    return out
 
 MX0,MY0,MS=40,470,1000
 
@@ -402,13 +450,17 @@ def caption(m):
     arc = f" {cb['line'].title()}." if cb.get("badge") else ""
     mvp = (f"\n🎖 MVP {m.mvp['name']} ({m.mvp['kills']}K)"
            f"{' — '+m.mvp['award'] if m.mvp.get('award') else ''}") if m.mvp else ""
-    return (f"{hook} {side} take {m.map_name.title()} in {mm:02d}:{ss:02d}.{arc}{mvp}\n"
+    ls = getattr(m, "losses", [])[:3]
+    hw = ("\n💥 Hardware losses: " + ", ".join(f"{e['n']}× {e['name'].title()}" for e in ls)) if ls else ""
+    return (f"{hook} {side} take {m.map_name.title()} in {mm:02d}:{ss:02d}.{arc}{mvp}{hw}\n"
             f"▶ Play, live stats & leaderboards: miksuu.com  ·  Join us: discord.me/warfare\n"
             f"New match recap every round — follow for more.\n"
             f"#arma2 #warfare #milsim #cti #miksuuswarfare #gaming #fyp")
 
 
 def render(m, out_path):
+    theme=set_theme(m.seed)
+    print(f"theme: kb={theme['kb']} frame={theme['frame']} grade={theme['grade'] or 'neutral'}")
     R=Renderer(m)
     frames=[]
     def base(): im=Image.new("RGB",(W,H),BG); return im,ImageDraw.Draw(im,"RGBA")
@@ -580,6 +632,55 @@ def render(m, out_path):
                 tracked(d,(W/2,1542),f"MVP'S NEMESIS — {m.nemesis['who'].upper()} ({m.nemesis['n']})",SANS(20,False),GOLD,anchor="mm",track=4)
         footer(im,d)
 
+    def s_losses(im,d,i,n):
+        # HARDWARE LOSSES — the "3 Hinds, 7 T-72s" tally from the KILL vc= victim class.
+        # Brand-pack vehicle blackouts as row art; a west/east strip shows who LOST them.
+        header(d,"HARDWARE LOSSES","destroyed this match")
+        rows=getattr(m,"losses",[])[:5]
+        if not rows:
+            # old telemetry without vc= — fall back to the honest big totals
+            d.text((W/2,700),str(m.hw_veh),font=DISP(160),fill=GOLD,anchor="mm")
+            tracked(d,(W/2,830),"VEHICLES DESTROYED",SANS(28,False),INK,anchor="mm",track=6)
+            d.text((W/2,1080),str(m.hw_air),font=DISP(160),fill=INK,anchor="mm")
+            tracked(d,(W/2,1210),"AIRCRAFT DOWNED",SANS(28,False),INK,anchor="mm",track=6)
+            footer(im,d); return
+        y0,rh,gap=280,210,30
+        for idx,e in enumerate(rows):
+            k=ease(min(1,(i-idx*8)/22))
+            if k<=0: continue
+            y=y0+idx*(rh+gap)
+            panel(d,60,y,W-60,y+rh)
+            d.rectangle([60,y+20,67,y+rh-20],fill=GOLD)
+            # row art slides in from the left as the row reveals
+            aid=LOSS_ART.get(e["kind"],"silhouette_apc")
+            a=asset(aid)
+            if a is not None:
+                bw,bh=380,150; s=min(bw/a.width,bh/a.height)
+                a2=a.resize((max(1,int(a.width*s)),max(1,int(a.height*s)))).copy()
+                if aid.startswith("silhouette_"):   # gen fallbacks have hot white detail — cap it
+                    r,g,b,al=a2.split()
+                    a2=Image.merge("RGBA",(r.point(lambda v:min(v,96)),g.point(lambda v:min(v,96)),
+                                           b.point(lambda v:min(v,92)),al))
+                a2.putalpha(a2.split()[3].point(lambda v:int(v*(0.55+0.45*k))))
+                ax=int(96-40*(1-k)); ay=y+(rh-a2.height)//2
+                im.paste(a2,(ax,ay),a2)
+            d=ImageDraw.Draw(im,"RGBA")
+            d.text((500,y+34),e["name"],font=DISP(46),fill=INK)
+            # who lost them — split strip + counts (side colour = the side that LOST the metal)
+            wl,el=e["west"],e["east"]; tt=max(1,wl+el); bx0,bx1,by=502,780,y+150
+            d.rectangle([bx0,by,bx1,by+10],fill=(40,46,56))
+            d.rectangle([bx0,by,bx0+int((bx1-bx0)*wl/tt),by+10],fill=WEST)
+            d.rectangle([bx1-int((bx1-bx0)*el/tt),by,bx1,by+10],fill=EAST)
+            d.text((500,y+108),f"BLU {wl} · OPF {el}",font=SANS(22,False),fill=DIM)
+            cnt=int(e["n"]*k)
+            flick=GOLD if (k<1 and i%2==0) else INK          # count "burns in" while ticking
+            d.text((W-100,y+rh/2),f"×{cnt}",font=DISP(84),fill=flick,anchor="rm")
+        k2=ease(min(1,(i-46)/20))
+        if k2>0:
+            tracked(d,(W/2,1568),f"{m.hw_veh} VEHICLES   ·   {m.hw_air} AIRCRAFT DESTROYED",
+                    SANS(25,False),(206,168,120),anchor="mm",track=4)
+        footer(im,d)
+
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
         if paste_cover(im, winner_bg_id(m.winner), seed=m.seed, kb=i/n):
@@ -629,7 +730,7 @@ def render(m, out_path):
         footer(im,d)
 
     fns={"intro":s_intro,"battle":s_battle,"momentum":s_momentum,"mvp":s_mvp,"board":s_board,
-         "combat":s_combat,"winner":s_winner,"outro":s_outro}
+         "combat":s_combat,"losses":s_losses,"winner":s_winner,"outro":s_outro}
     for _name,_nf,_fin,_fout in SCENE_PLAN:
         scene(_nf, fns[_name], fin=_fin, fout=_fout)
     for _ in range(HOLD_FRAMES): frames.append(frames[-1])
