@@ -17,14 +17,15 @@ private[
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
 	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd",
-	"_RHUDUpdateArty", "_RHUDGetGuerProgressText"
+	"_RHUDUpdateArty", "_RHUDGetGuerProgressText",
+	"_lastQueueHud", "_queueHudTxt", "_queueHudTs", "_queueHudCtrl"	//--- Ray B89: build-queue RHUD line cache
 ];
 
 _total = count towns;
 _display = displayNull;
 _lastDisplay = displayNull;
 _controls = [];
-_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371,1372,1373];
+_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371,1372,1373,1374];	//--- Ray B89: 1374 = RUBHUD_BuildQueue (structured, rendered below via ctrlSetStructuredText; show/hide gated with the rest).
 _lastTexts = [];
 _lastColors = [];
 _lastShown = [];
@@ -33,6 +34,7 @@ _labelsApplied = false;
 _hiddenApplied = false;
 _hudWasShown = false;
 _lastHudMode = "";
+_lastQueueHud = "__init__";	//--- Ray B89: last structured text pushed to the queue line (skip redundant rewrites)
 _lastTownRefresh = -999;
 _incomeText = "";
 _supplyText = "";
@@ -54,6 +56,7 @@ _RHUDResetControlCache = {
 	_labelsApplied = false;
 	_hiddenApplied = false;
 	_lastHudMode = "";
+	_lastQueueHud = "__init__";	//--- Ray B89: force the queue line to repaint after a display rebuild
 };
 
 _RHUDSetShow = {
@@ -554,6 +557,21 @@ while {true} do {
 				call _RHUDUpdateServerFPSRow;
 			call _RHUDUpdateUpgrade;
 			/* b760: arty cooldown is folded into the FPS C/S line via _RHUDUpdateServerFPSRow; no standalone row. */
+
+			//--- Ray B89: factory build-queue readout on the RHUD bottom line (idc 1374, structured text).
+			//--- Client_BuildUnit.sqf writes WFBE_CL_QUEUE_HUD + a WFBE_CL_QUEUE_HUD_TS timestamp; render it while
+			//--- fresh (<= 6s old), else blank. Empty/stale string parses to nothing, so the line self-hides with an
+			//--- empty structured text (no ctrlShow needed - it already tracks the RHUD show/hide with the other rows).
+			_queueHudTxt = missionNamespace getVariable ["WFBE_CL_QUEUE_HUD", ""];
+			if (typeName _queueHudTxt != "STRING") then {_queueHudTxt = ""};
+			_queueHudTs = missionNamespace getVariable ["WFBE_CL_QUEUE_HUD_TS", -1e6];
+			if (typeName _queueHudTs != "SCALAR") then {_queueHudTs = -1e6};
+			if ((time - _queueHudTs) > 6) then {_queueHudTxt = ""};	//--- stale => hide (a finished/cancelled queue leaves no writer).
+			if (_lastQueueHud != _queueHudTxt) then {
+				_queueHudCtrl = _controls select 29;	//--- 1374 is the last _rhudIDC entry (index 29).
+				_queueHudCtrl ctrlSetStructuredText parseText _queueHudTxt;
+				_lastQueueHud = _queueHudTxt;
+			};
 			};
 		};
 
