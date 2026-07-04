@@ -92,7 +92,7 @@ Current directory audit:
 | 451 | N7 | `docs/design/v2/TERRAIN-CENSUS.md` | MISSING | Vanilla terrain gameplay census. |
 | 452 | N8 | `docs/design/v2/V2-PROGRAM-HUB.md` | DRAFT | This hub PR; must be updated by each later prep lane. |
 | 453 | N8 | `docs/design/v2/PR-QUEUE-TRIAGE.md` | MISSING | Open PR queue owner decision table. |
-| 454 | N8 | `docs/design/v2/FLAG-CENSUS.md` | MISSING | Dark flag census and flip recommendations. |
+| 454 | N8 | `docs/design/v2/FLAG-CENSUS.md` | DRAFT | Lane 454 adds the dark/default-zero flag census with `FLIP-ON`, `OWNER-DECIDE`, `HOLD-DARK`, and `NO-FLIP` classifications. |
 | 455 | N8 | `docs/design/v2/AGENTS-GUIDE-REV-STAGED-DIFF.md` | MISSING | Staged guide-rev diff pack. |
 
 ## Update Rule
