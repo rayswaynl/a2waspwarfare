@@ -716,8 +716,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_FEINT_DUR")      then {WFBE_C_AICOM_FEINT_DUR      = 120}; //--- s a feint team holds at the feint town before recall to the fist.
 	if (isNil "WFBE_C_AICOM_FEINT_COOLDOWN") then {WFBE_C_AICOM_FEINT_COOLDOWN = 120}; //--- reserved: per-side anti-double-dispatch stamp (used by wfbe_aicom_feint_t0 in the Allocator).
 	if (isNil "WFBE_C_AICOM2_EXPAND_TEAMS")    then {WFBE_C_AICOM2_EXPAND_TEAMS    = 3};  //--- Ray 2026-06-28: up to N teams divert to capture the nearest reachable NEUTRAL town instead of all-in on the fist (issue: 42/46 towns sat neutral). 0 = off (restores fist-only).
-	if (isNil "WFBE_C_AICOM_EXPAND_DEDUP")     then {WFBE_C_AICOM_EXPAND_DEDUP     = 0};  //--- block-m: 0=off legacy (multiple expand teams may dogpile one neutral town); 1=each expand team claims a distinct neutral town per tick (DEDUP). Behavioral; owner flips to 1 when ready.
-	if (isNil "WFBE_C_AICOM_HARASS_FALLBACK")  then {WFBE_C_AICOM_HARASS_FALLBACK  = 0};  //--- block-m: 0=off legacy (harass picks deepest town regardless of reach); 1=walk depth-sorted candidates and pick deepest reachable by >=1 mounted team (emits AICOMSTAT|v2|EVENT|HARASS_SKIP when first candidate is unreachable). Behavioral; owner flips to 1 when ready.
+	if (isNil "WFBE_C_AICOM_EXPAND_DEDUP")     then {WFBE_C_AICOM_EXPAND_DEDUP     = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (multiple expand teams may dogpile one neutral town); 1=each expand team claims a distinct neutral town per tick (DEDUP).
+	if (isNil "WFBE_C_AICOM_HARASS_FALLBACK")  then {WFBE_C_AICOM_HARASS_FALLBACK  = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (harass picks deepest town regardless of reach); 1=walk depth-sorted candidates and pick deepest reachable by >=1 mounted team (emits AICOMSTAT|v2|EVENT|HARASS_SKIP when first candidate is unreachable).
 	if (isNil "WFBE_C_AICOM_ENGAGE_MIN_TOWNS") then {WFBE_C_AICOM_ENGAGE_MIN_TOWNS = 10};//--- Ray 2026-06-28 EXPANSION-FIRST: a commander captures NEUTRAL towns only (fist+harass) until it OWNS this many towns, THEN it attacks the enemy - so both sides build an empire before they clash (no early enemy-rush that ends matches premature). ANTI-STALL: if no neutral town remains reachable it engages the enemy anyway. Round-ender HQ-strike keeps its own higher gate (WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS). 0 = disable (engage from turn one).
 	//--- BUG-1 CONTESTED-ENGAGE (fable GR-2026-07-03a): lift the EXPANSION-FIRST neutral-only gate when the ENEMY is at
 	//--- town-parity-or-ahead AND holds >=1 town, so a side stalled below ENGAGE_MIN (the 9.6h ZG soak: WEST never
@@ -1082,10 +1082,13 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_TIPS_ENABLE")                   then {WFBE_C_TIPS_ENABLE = 1};                   //--- cmdcon42-q: master on/off for the rotating chat-tip feed (0 = no tips at all).
 	if (isNil "WFBE_C_TIPS_PERIOD")                   then {WFBE_C_TIPS_PERIOD = 900};                 //--- cmdcon42-q: seconds between tips (Ray: 15 min; floored to 30s in the client). 50-tip deck = a full cycle every ~12.5 h.
 	if (isNil "WFBE_C_TIPS_INITIAL")                  then {WFBE_C_TIPS_INITIAL = 420};                //--- cmdcon42-q: seconds a fresh/JIP client waits before the FIRST tip, so it doesn't overlap the onboarding cards.
-	//--- Lane 181: late-join catch-up card. Default off; reads only local or join-seeded state.
-	if (isNil "WFBE_C_JIP_CATCHUP_BRIEFING")          then {WFBE_C_JIP_CATCHUP_BRIEFING = 0};
+	//--- Lane 181: late-join catch-up card. DEFAULT ON (Ray pick 2026-07-04 "visually nice" pass):
+	//--- side-coloured hint card for true late joiners only (round age >= MIN_AGE); reads only local or
+	//--- join-seeded state (towns, wfbe_funds, wfbe_upgrades, WFBE_AICOM_* PVs). Self-clears after DURATION s.
+	if (isNil "WFBE_C_JIP_CATCHUP_BRIEFING")          then {WFBE_C_JIP_CATCHUP_BRIEFING = 1};
 	if (isNil "WFBE_C_JIP_CATCHUP_MIN_AGE")           then {WFBE_C_JIP_CATCHUP_MIN_AGE = 300};
 	if (isNil "WFBE_C_JIP_CATCHUP_DELAY")             then {WFBE_C_JIP_CATCHUP_DELAY = 16};
+	if (isNil "WFBE_C_JIP_CATCHUP_DURATION")          then {WFBE_C_JIP_CATCHUP_DURATION = 15}; //--- Seconds the card stays before self-clearing (0 = engine hint fade).
 	//--- Lane 51: optional soundtrack plumbing. Master default 0 keeps every new hook inert until audio files are added and Ray enables it.
 	if (isNil "WFBE_C_MUSIC_ENABLE")                  then {WFBE_C_MUSIC_ENABLE = 0};                  //--- 1 = client-side playMusic hooks may use the class names below.
 	if (isNil "WFBE_C_MUSIC_MATCH_START_TRACK")       then {WFBE_C_MUSIC_MATCH_START_TRACK = "wf_music_match_start"};
@@ -1453,7 +1456,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL") then {WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL = 0}; //--- Default-off: show the already-recorded GUER endgame stats as a third stats-panel column.
 	if (isNil "WFBE_C_FIX_VOTE_LIST_PRUNE") then {WFBE_C_FIX_VOTE_LIST_PRUNE = 0}; //--- Default-off: safer vote-dialog live-team row prune (reverse pass + stale index guard). 0 = legacy forward delete behaviour.
 	if (isNil "WFBE_C_FIX_VOTE_QA_EXECUTION") then {WFBE_C_FIX_VOTE_QA_EXECUTION = 0}; //--- Default-off: vote QA follow-up fixes for stored-index row color and commander primitive placeholder confirms.
-	if (isNil "WFBE_C_AMBIENT_SKIRMISH") then {WFBE_C_AMBIENT_SKIRMISH = 0}; //--- Lane 180: default-off ambient WEST/EAST skirmish cells; server-only, one active cell cap, no AICOM/town/supply budget integration.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH") then {WFBE_C_AMBIENT_SKIRMISH = 1}; //--- Ray 2026-07-04: ON for live testing. Lane 180: ambient WEST/EAST skirmish cells; server-only, one active cell cap, no AICOM/town/supply budget integration.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_INTERVAL") then {WFBE_C_AMBIENT_SKIRMISH_INTERVAL = 600}; //--- Seconds between spawn attempts while enabled.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_LIFETIME") then {WFBE_C_AMBIENT_SKIRMISH_LIFETIME = 120}; //--- Seconds before the ambient cell self-cleans.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_PLAYER_RADIUS") then {WFBE_C_AMBIENT_SKIRMISH_PLAYER_RADIUS = 1500}; //--- Never spawn inside this distance of a human player.
@@ -1712,7 +1715,7 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_VEHICLE_FLAG_WEST") then {WFBE_C_VEHICLE_FLAG_WEST = "FlagCarrierNATO_EP1"}; // BLUFOR flag class flown on WEST vehicles.
 	if (isNil "WFBE_C_VEHICLE_FLAG_EAST") then {WFBE_C_VEHICLE_FLAG_EAST = "FlagCarrierRU"}; // OPFOR flag class flown on EAST vehicles.
 	if (isNil "WFBE_C_VEHICLE_FLAG_GUER") then {WFBE_C_VEHICLE_FLAG_GUER = "FlagCarrierGUE"}; // Resistance/GUER flag class flown on GUER vehicles.
-	if (isNil "WFBE_C_KILL_TALLY_DECAL") then {WFBE_C_KILL_TALLY_DECAL = 0}; // Lane 205: default-off cosmetic kill-tally marker on vehicles that score enemy kills. Server increments wfbe_kill_tally in RequestOnUnitKilled.sqf; Common_AddVehicleMarking.sqf installs the JIP-safe local marker watcher.
+	if (isNil "WFBE_C_KILL_TALLY_DECAL") then {WFBE_C_KILL_TALLY_DECAL = 1}; // Lane 205 kill-tally marker, DEFAULT ON (Ray pick 2026-07-04 "visually nice" pass): a vehicle that scores enemy kills carries ONE dim hull-hugging local #lightpoint that heat-ramps amber (1-2 kills) -> orange (3-5) -> red (6-9) -> white-hot (10+). Server increments wfbe_kill_tally in RequestOnUnitKilled.sqf (null-guarded); Common_AddVehicleMarking.sqf installs the JIP-safe local watcher. Set 0 to disable; independent from WFBE_C_VEHICLE_MARKINGS (which stays 0 - it also repaints WEST hulls matte-black and attaches 3 lights/vehicle, failed the visual/FPS bar).
 	if (isNil "WFBE_C_VEHICLE_TINTS") then {WFBE_C_VEHICLE_TINTS = 0}; // B74.2 (Ray 2026-06-23): default OFF for now; switch preserved. [A/B: was flipped ON 2026-06-22 per Ray for the in-engine cosmetic check; revert to 0 if the look is bad] Vehicle faction body TINTS (cheap one-shot setObjectTexture colour strings in Common_AddVehicleTexture.sqf). Decoupled from WFBE_C_VEHICLE_MARKINGS so the tints can be LIVE while the expensive #lightpoint markings stay OFF. 1 enabled, 0 disabled. DEFAULT 0 (opt-in): the B66 side-resolve bug meant the tints were silently INERT in prod (resolved from a crewless hull = civilian -> no faction match); B67 fixed the resolution (now reads the authoritative _createSide passed by Common_CreateVehicle), so enabling this would for the FIRST TIME repaint selections 0+1 (often the whole hull) with a flat procedural colour on EVERY vehicle (WEST near-black / EAST olive / GUER tan) - unverified in-engine and possibly ugly. Flip to 1 only after an in-engine cosmetic check.
 	if (isNil "WFBE_C_VEHICLE_TINT_LEGEND") then {WFBE_C_VEHICLE_TINT_LEGEND = 1}; // b67 item #3: top-right client pop-up legend explaining the vehicle body TINTS above (WEST/BLUFOR=black, EAST/OPFOR=olive, GUER=tan). Shown once on first spawn + toggled with "]" (Init_Client.sqf, cutRsc "WFBE_VehicleTintLegend"). Pure client cosmetic, zero FPS cost; only appears when WFBE_C_VEHICLE_TINTS is also ON. Nil-guarded so it can be A/B'd independently: 1 enabled, 0 disabled.
 	//--- Triggered faction smoke (cosmetic): WFBE_CO_FNC_SpawnFactionSmoke drops ONE side-coloured smoke shell at assault onset / town garrison. Server-only, event-triggered, hard-capped + TTL + per-100m-grid cooldown. west=Green, east=Red, resistance=Orange. ON for live measurement.
@@ -2020,12 +2023,6 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Radius (metres) within which an enemy-held town makes a spawn point "contested"
 //--- (amber marker instead of green). Tunable; only used when WFBE_C_RESPAWN_UI_V2 = 1.
 	if (isNil "WFBE_C_RESPAWN_CONTESTED_RADIUS") then {WFBE_C_RESPAWN_CONTESTED_RADIUS = 500};
-
-//--- Lane 198 (2026-07-03): Forward static defense re-manning. When > 0, forward/FOB
-//--- static guns outside a base area will have HandleDefense spawned so they re-man
-//--- after the first gunner dies (base-area guns already re-man via existing logic).
-//--- 0 = dark/original behaviour (forward guns do NOT re-man). 1 = re-man enabled.
-	if (isNil "WFBE_C_FWD_STATIC_MANNING") then {WFBE_C_FWD_STATIC_MANNING = 0};
 
 //--- salvage-522 / Lane 193: reset unitQueu (and per-factory queue slots) to 0 on player respawn
 //--- (Client_PreRespawnHandler.sqf) so the factory-queue cap counter cannot accumulate across deaths.

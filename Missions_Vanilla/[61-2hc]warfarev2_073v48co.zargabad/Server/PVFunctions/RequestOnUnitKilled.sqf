@@ -68,7 +68,8 @@ if (_killer_side == civilian) exitWith {}; //--- Side couldn't be determined? ex
 
 //--- Lane 205: optional vehicle kill tally. The visual marker watcher is installed at vehicle creation
 //--- by Common_AddVehicleMarking.sqf, so this path only owns the authoritative counter.
-if ((missionNamespace getVariable ["WFBE_C_KILL_TALLY_DECAL", 0]) > 0 && {!(_killer_side in [_killed_side])} && {!(_killer_vehicle isKindOf "Man")} && {alive _killer_vehicle}) then {
+//--- Null-guard _killer_vehicle: vehicle-of-killer can resolve objNull in a same-frame delete/trash race.
+if ((missionNamespace getVariable ["WFBE_C_KILL_TALLY_DECAL", 0]) > 0 && {!isNull _killer_vehicle} && {!(_killer_side in [_killed_side])} && {!(_killer_vehicle isKindOf "Man")} && {alive _killer_vehicle}) then {
 	_tallyCount = (_killer_vehicle getVariable ["wfbe_kill_tally", 0]) + 1;
 	_killer_vehicle setVariable ["wfbe_kill_tally", _tallyCount, true];
 };

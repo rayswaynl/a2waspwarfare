@@ -274,6 +274,20 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 1) then {
 	missionNamespace setVariable [format["WFBE_AI_DELEGATION_%1", _uid], [0,0,_id]];
 };
 
+//--- JIPFUNDS GUARDS (2026-07-04, live evidence: connect handler resolves TWICE per join; pass 2 arrives with
+//--- side CIV mid-sync, hits the teamswap branch, looks up FUNDS_START_CIVILIAN (absent) and clobbers the fresh
+//--- seed with nil/0). Guard 1: per-uid latch - a second resolve within 15s skips the funds block entirely.
+//--- Guard 2: an unresolved (CIV) side defers - the resend/heal path re-seeds once the side is real.
+private ["_jipLatch"];
+_jipLatch = missionNamespace getVariable format["WFBE_JIP_LATCH%1", _uid];
+if (!isNil "_jipLatch" && {(time - _jipLatch) < 15}) exitWith {
+	diag_log (Format ["[WFBE][JIPFUNDS] duplicate connect-resolve for [%1] within 15s - funds block skipped (latch).", _uid]);
+};
+missionNamespace setVariable [format["WFBE_JIP_LATCH%1", _uid], time];
+if (str _sideJoined == "CIV") exitWith {
+	diag_log (Format ["[WFBE][JIPFUNDS] side unresolved (CIV) for [%1] - funds block deferred, nothing written.", _uid]);
+};
+
 //--- The player has joined for the first time.
 if (isNil '_get') exitWith {
 	/*
@@ -301,6 +315,17 @@ if (_sideOrigin != _sideJoined) then {
 	_funds = missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _sideJoined];
 };
 
-//--- Set the current player funds.
+//--- Set the current player funds. NO-CLOBBER (2026-07-04): never overwrite a positive group wallet with
+//--- nil/0 at connect - if the computed value is empty but the group already holds money, keep the group's
+//--- value and repair the record to match (the record is authoritative only when it is a real number > 0).
+private ["_grpCurF"];
+_grpCurF = _team getVariable "wfbe_funds";
+if ((isNil "_funds" || {_funds <= 0}) && {!isNil "_grpCurF"} && {_grpCurF > 0}) then {
+	_funds = _grpCurF;
+	_get set [1, _grpCurF];
+	missionNamespace setVariable [format["WFBE_JIP_USER%1",_uid], _get];
+	diag_log (Format ["[WFBE][JIPFUNDS] no-clobber: kept group wallet %1 for [%2] (computed was 0/nil); record repaired.", _grpCurF, _uid]);
+};
+_funds = if (isNil "_funds") then {0} else {_funds};
 _team setVariable ["wfbe_funds", _funds, true];
 	diag_log (Format ["[WFBE][JIPFUNDS] reconnect-path set [%1] side %2 wfbe_funds=%3 (storedCash=%4) - if 0 here on a fresh join, the connect handler resolved twice.", _uid, _sideJoined, _funds, (_get select 1)]);
