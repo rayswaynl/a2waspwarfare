@@ -12,7 +12,7 @@ private[
 	"_total", "_perfStart", "_display", "_lastDisplay", "_controls", "_rhudIDC", "_lastTexts", "_lastColors", "_lastShown", "_lastBackgroundColor",
 	"_labelsApplied", "_hiddenApplied", "_hudWasShown", "_lastTownRefresh", "_incomeText", "_supplyText", "_baseText", "_baseColor",
 	"_RHUDResetControlCache", "_RHUDSetShow", "_RHUDSetText", "_RHUDSetColor", "_RHUDGetDisplay", "_idx", "_player", "_side", "_bgColor",
-	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_mbu", "_mbuByTier", "_mbuPT", "_currentUnitsCount", "_maxUnitsCount", "_ups", //--- B74.2: _mbuByTier/_mbuPT for pop-tier per-player AI cap; B76: _ups for guarded GetSideUpgrades
+	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_aiCommanderSide", "_aiCommanderSideID", "_aiInt", "_mbu", "_mbuByTier", "_mbuPT", "_currentUnitsCount", "_maxUnitsCount", "_ups", //--- B74.2: _mbuByTier/_mbuPT for pop-tier per-player AI cap; B76: _ups for guarded GetSideUpgrades
 	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_baseStructures", "_baseHq", "_baseTotal", "_baseDamaged", "_clientFPS", "_clientFPSColor",
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
@@ -422,13 +422,18 @@ while {true} do {
 				//--- No human commander. The AI commander runs WEST/EAST when enabled (GUER is excluded
 				//--- server-side, Init_Server ~L1067), so show a stable, side-keyed human-like name + " (AI)"
 				//--- while the AI is actually in charge. Client-side deterministic = no server round-trip, JIP-safe.
-				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 1]) > 0 && {sideJoined in [west, east]}) then {
-					_commanderText = Format ["%1 (AI)", (switch (sideJoined) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
+				_aiCommanderSide = sideJoined;
+				_aiCommanderSideID = -1;
+				if (!isNil "WFBE_Client_SideID") then {_aiCommanderSideID = WFBE_Client_SideID};
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_SPECTATOR", 1]) > 0 && {(_aiCommanderSideID in [WFBE_C_WEST_ID, WFBE_C_EAST_ID]) && {(isNull player) || {_side == civilian}}}) then {
+					_aiCommanderSide = switch (_aiCommanderSideID) do {case WFBE_C_WEST_ID: {west}; case WFBE_C_EAST_ID: {east}; default {_aiCommanderSide}};
+				};
+				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 1]) > 0 && {_aiCommanderSide in [west, east]}) then {
+					_commanderText = Format ["%1 (AI)", (switch (_aiCommanderSide) do {case west: {"James"}; case east: {"Viktor"}; default {"Commander"}})];
 					//--- AICOM v2 PREVIEW: append the AI commander's LIVE INTENT (side-keyed PV, published by
 					//--- AI_Commander.sqf on the strategy tick; offense-forward wording). Friendly-only via the
-					//--- joined-side id. Cheap: a single Format on a value the client already has, no extra control.
+					//--- stable client side id. Cheap: a single Format on a value the client already has, no extra control.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_INTENT_HUD", 1]) > 0 && {!isNil "WFBE_Client_SideID"}) then {
-						private "_aiInt";
 						_aiInt = missionNamespace getVariable [Format ["WFBE_AICOM_INTENT_%1", WFBE_Client_SideID], ""];
 						if (_aiInt != "") then {_commanderText = Format ["%1 - %2", _commanderText, _aiInt]};
 					};
