@@ -102,6 +102,7 @@ WFBE_CO_FNC_ArrayRemoveIndex = Compile preprocessFileLineNumbers "Common\Functio
 WFBE_CO_FNC_ArrayShift = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShift.sqf";
 WFBE_CO_FNC_ArrayShuffle = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShuffle.sqf";
 WFBE_CO_FNC_ChangeTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeTeamFunds.sqf";
+WFBE_SE_FNC_SyncFundsRecord = Compile preprocessFileLineNumbers "Common\Functions\Common_SyncFundsRecord.sqf"; //--- Ray pick A: server-only lock-step of WFBE_JIP_USER<uid> cash with the group wallet (JIP zero-latch restore provably safe). Common so ChangeTeamFunds resolves the symbol on both sides; the fn itself bails if !isServer.
 WFBE_CO_FNC_ChangeUnitGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeUnitGroup.sqf";
 WFBE_CO_FNC_ClearVehicleCargo = if (WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargo.sqf"} else {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargoOA.sqf"};
 WFBE_CO_FNC_CreateTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTeam.sqf";
