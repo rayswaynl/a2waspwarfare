@@ -8,6 +8,10 @@
 */
 
 // Marty: Ctrl-click map disband falls back to the legacy setDamage disband method.
+// GR-2026-07-03a (Ray order: quiet the AI disband popup): the map-shortcut disband result/error
+// notices below are delivered as top-right hintSilent, not center-screen titleText, so incidental
+// disband feedback (incl. a stuck Ctrl-latch routing plain clicks here) never spams the middle of the
+// screen. The deliberate player Command Console disband confirmation (14626/14627) is unchanged.
 Private ["_aiId","_alt","_candidate","_candidateDistance","_candidatePosition","_candidatePosition2D","_candidateVehicle","_clickPosition2D","_ctrlPressed","_distance","_group","_message","_position","_range","_selectedUnits","_shift","_storedPosition","_target","_units","_plainClick","_selectedGroupUnits","_targetVehicle","_driver","_gunner","_commander","_crewPriority","_crewUnit","_selectionHandled","_isSelectableMapUnit","_isVehicleIcon"];
 
 _position = _this select 0;
@@ -26,7 +30,7 @@ if (_ctrlPressed) exitWith {
 
 	if (count _units == 0) exitWith {
 		_message = "Disband: no AI in your group.";
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
@@ -45,50 +49,50 @@ if (_ctrlPressed) exitWith {
 
 	if (isNull _target) exitWith {
 		_message = "Disband: no AI from your group near this map click.";
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
 	if (_distance > _range) exitWith {
 		_message = Format ["Disband: click closer to AI %1m/%2m.", round _distance, _range];
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
 	if (_target == player) exitWith {
 		_message = "Disband: you cannot disband yourself.";
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
 	if (isPlayer _target) exitWith {
 		_message = "Disband: player units are protected.";
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
 	if (_target in playableUnits) exitWith {
 		_message = "Disband: playable units are protected.";
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
 	if ((group _target) != (group player)) exitWith {
 		_message = "Disband: this unit is not in your group.";
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
 	if !(alive _target) exitWith {
 		_message = "Disband: this unit is already dead.";
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 		false
 	};
 
 	_aiId = _target Call WFBE_CL_FNC_GetAIID;
 	_target setDamage 1;
 	_message = Format ["Disbanded AI %1.", _aiId];
-	titleText [_message, "PLAIN DOWN"];
+	hintSilent _message; //--- Ray order: AI-disband feedback off center screen (was titleText [...,"PLAIN DOWN"]); non-intrusive top-right hint, matching the Command Console disband channel.
 	false
 };
 
