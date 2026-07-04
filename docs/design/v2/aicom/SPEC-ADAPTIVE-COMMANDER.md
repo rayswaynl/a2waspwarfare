@@ -20,6 +20,30 @@ This spec defines three tiers:
 
 The design rule is simple: learning adjusts weights inside doctrine. It must never bypass locality, evidence, fallback, or explainability rules.
 
+## Binding Constraints
+
+- A2 OA 1.64 only. Use arrays, strings, numbers, and booleans. No hash maps, no A3-only commands, no group `getVariable`.
+- `WFBE_C_AICOM_V2_ENABLE = 0` remains the master fallback; with the flag at 0, V1 commander behaviour is unchanged.
+- Learning tunes within the five design commandments and eight behavioural doctrine rules. It may adjust thresholds, priors, and route/build preferences; it must never override legibility, no-dead-air, never-psychic, locality-first, or map-profile constraints.
+- No doctrine personalities. Per-map profiles and skill/handicap dials are allowed; stored knowledge packs are versioned map/profile inputs, not personality presets.
+- All persistent reads are optional. If an extension or database call is absent, empty, malformed, slow, or stale, V2 continues with compiled profile defaults and logs the fallback.
+
+## Verified V1 Evidence
+
+| Evidence | Verified source |
+|---|---|
+| V2 master rollback flag and server-side parallel brain contract | `docs/design/v2/AICOM-V2-LAYER-ARCH.md:7` |
+| V2 map profile variable naming and profile record shape | `docs/design/v2/AICOM-V2-MAP-PROFILE-FORMAT.md:9`, `:21` |
+| CH/TK/ZG profile variables exist in the spec pack | `docs/design/v2/AICOM-V2-PROFILE-CH.md:184`, `AICOM-V2-PROFILE-TK.md:157`, `AICOM-V2-PROFILE-ZG.md:132` |
+| Acceptance harness grades churn, superiority, never-psychic, no-dead-air, profile load, and FPS parity | `docs/design/v2/AICOM-V2-ACCEPTANCE-HARNESS.md:35`, `:50-57`, `:93-102`, `:142`, `:172` |
+| Current RPT analyzer parses `AICOMSTAT`, `WASPSTAT`, and `WASPSCALE` anchors | `Tools/Soak/analyze_soak.py:169`, `:230-254` |
+| Current `WASPSTAT|v1` record types are `KILL`, `CAPTURE`, `ROUNDEND`, and implicit player-stat rows | `docs/WASPSTAT-FORMAT.md:15-26`, `:39-50`, `:83-143` |
+| Server extension functions are registered in `Init_Server.sqf` and use `A2WaspDatabase` through AntiStack helpers | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:109-124` |
+| Existing guarded database read pattern for side skill | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf:14-20` |
+| Current `REQUEST_SIDE_SKILL` extension call and empty-response guard | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/AntiStack/callDatabaseRequestSideTotalSkill.sqf:27-35` |
+| Existing `a2waspwarfare_Extension` bridge accepts `GLOBALGAMESTATS` only | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/CallExtensions/GlobalGameStats.sqf:2`, `:26`; `Extension/src/BaseExtensionClass/ExtensionName.cs:1-3` |
+| `GLOBALGAMESTATS` stores raw exported args and serializes through the base class | `Extension/src/BaseExtensionClass/Implementations/GLOBALGAMESTATS.cs:17-21`; `Extension/src/BaseExtensionClass/BaseExtensionClass.cs:16` |
+
 ## Source Contracts
 
 ### V2 architecture contracts
@@ -40,6 +64,15 @@ Adaptive state therefore has two forms:
 | Pure adaptation record | Primitive array passed into planning | Planner score modifiers and WHY output |
 
 No adaptive state may live on HC. No adaptive planner may read object refs, group refs, or global hidden enemy arrays directly.
+
+### Four-layer interface
+
+| Layer | Reads | Writes | Learning responsibility |
+|---|---|---|---|
+| Perception | Town state, observed contacts, kill/capture events, wildcard/recon intel, route outcomes | `intelId`, `painEvent`, `enemyTechSeen`, `routeOutcome` records | Creates evidence only from observable events; stamps `seen=1` for WHY validation. |
+| Assessment | Perception records, current posture, funds/supply, profile, current knowledge pack | `spendPressure`, `tempoShift`, doctrine proxy fields | Computes whether learning hints are legal under doctrine and profile clamps. |
+| Planning | Assessment, pure T1 memory, T2/T3 priors, route graph, build/research queues | Decision records with `why`, `learningHints`, `packId` | Applies small bounded priors only after hard gates pass; cannot choose unseen targets. |
+| Execution | Accepted decision records, existing order bridge, extension helpers at round start/end | Orders, telemetry, optional store calls | Emits `BUILDORDER`/`KNOWLEDGE` lines, stores aggregates after round end, never blocks active orders. |
 
 ### Current extension and database contracts
 
@@ -343,26 +376,31 @@ The current tree does not provide a general adaptive DB. Builders have two safe 
 
 For the first build, prefer RPT-first for writes and profile-pack reads. Add live DB reads only after the extension contract is implemented and tested.
 
+### T2 mission-side helpers
+
+When the extension path is implemented, add the following named helpers rather than re-using AntiStack entry points:
+
+| Helper | Location | Behaviour |
+|---|---|---|
+| `WFBE_SE_FNC_AICOMV2_KnowledgeLoad` | `Server/Module/AntiStack/callDatabaseAicomV2KnowledgeLoad.sqf` or equivalent server module | Reads one map/profile/pack tuple. Returns `[]` on absent extension, empty response, parse failure, or timeout. |
+| `WFBE_SE_FNC_AICOMV2_KnowledgeStore` | `Server/Module/AntiStack/callDatabaseAicomV2KnowledgeStore.sqf` or equivalent server module | Writes one compact aggregate at round end. Fire-and-forget; failure logs but never changes match outcome. |
+
+Use the existing extension safety pattern from `callDatabaseRequestSideTotalSkill.sqf`: detect `""`/nil responses before compile/select, log one warning, and return `[]`. Never block the commander supervisor waiting for T2.
+
 ### Adaptive read contract
 
-If a DB/extension read exists, use one logical request:
+If a DB/extension read exists, use one logical request with the named operation `AICOMV2_KNOWLEDGE_LOAD`:
 
-```text
-AICOM_ADAPT_READ|schema|map|side|profile|packVersion
-```
-
-Returned payload:
-
-```text
-["AICOM_ADAPT_READ_V1", code, packId, mapKey, sideKey, profileKey, generatedAt, confidence, priors, clamps]
-```
+| Operation | Request tuple | Response |
+|---|---|---|
+| `AICOMV2_KNOWLEDGE_LOAD` | `[op, mapKey, profileKey, packId, schemaVersion]` | `["AICOMV2_KNOWLEDGE_V1", packId, sampleCount, generatedAt, priors, clamps]` or `[]` |
+| `AICOMV2_KNOWLEDGE_STORE` | `[op, mapKey, profileKey, packId, roundId, summary]` | `["OK"]`, `["STALE"]`, or `["ERR", reason]` |
 
 Rules:
 
-- `code = 1` means usable.
-- `code = 0` means no pack; use static profile.
-- `code < 0` means extension/DB error; use static profile and log fallback.
-- Wrong schema/version is a fallback, not a mission error.
+- A `[]` response means no pack; use static profile.
+- An `["ERR", reason]` response is a fallback, not a mission error.
+- Wrong schema/version is a fallback.
 - Timeout is a fallback.
 - Missing extension is a fallback.
 
@@ -405,7 +443,7 @@ No UID-specific punishment, no raw player names, and no precise hidden unit posi
 
 ### Stored aggregate keys
 
-T2 aggregates should be keyed by:
+T2 aggregates are keyed by:
 
 ```text
 [schema, mapKey, sideKey, profileKey, buildMajor, commanderMode, packVersion]
@@ -419,6 +457,16 @@ Where:
 - `buildMajor`: build/cmdcon family to avoid learning across incompatible systems.
 - `commanderMode`: `ai-vs-ai`, `human-west`, `human-east`, `mixed`.
 - `packVersion`: knowledge pack schema version.
+
+The following aggregate types and their key formats are recognized:
+
+| Aggregate | Key | Value |
+|---|---|---|
+| Opening success | `open:<map>:<profile>:<side>:<bookId>` | `[samples, wins, medianTownDelta20, medianCaptureMinute, abandonRate]` |
+| Counter-tech | `counter:<map>:<profile>:<enemyCategory>:<responseId>` | `[samples, successRate, medianTimeToCounter, lossDelta]` |
+| Route outcome | `route:<map>:<profile>:<edgeId>` | `[samples, arrivedRate, medianElapsed, stuckRate, lossScore]` |
+| Relocation outcome | `reloc:<map>:<profile>:<zoneId>` | `[samples, deployRate, abortRate, postRelocCaptureRate]` |
+| Fire-support value | `support:<map>:<profile>:<supportKind>:<zoneId>` | `[samples, exploitRate, friendlyIncidentCount, wasteRate]` |
 
 ### Round-start prior application
 
@@ -449,10 +497,18 @@ Default clamps:
 | Prior type | Max absolute delta |
 |---|---:|
 | Opening arm score | 0.15 |
-| Counter prior | 0.10 |
-| Route risk | 0.12 |
+| Counter prior | 0.20 |
+| Route risk | 0.25 |
 | Research/build intent | 0.15 |
+| Relocation zone prior | 0.20 |
+| Fire-support zone prior | 0.15 |
 | Exploration choice weight | 0.08 |
+
+Hard guards for aggregate application:
+
+- Aggregates with `sampleCount < WFBE_C_AICOM_V2_LEARN_SAMPLE_FLOOR` are ignored.
+- Aggregates with `generatedAt` older than `WFBE_C_AICOM_V2_LEARN_PACK_MAX_AGE_DAYS` are ignored, unless the pack is the compiled static pack embedded in the shipped profile.
+- Any aggregate that would violate profile boundaries, superiority gates, no-psychic evidence, no-dead-air, or GUER volume preservation is ignored and logged as `reject=doctrine_guard`.
 
 ### Fallback behavior
 
@@ -598,6 +654,8 @@ Promotion shape:
 [status, promotedAtUtc, promotedBy, previousPackId, rollbackPackId, ledgerRefs, notes]
 ```
 
+When embedded as a static array inside a map profile, the pack uses the same `AICOM_KP_V1` schema. Profile-embedded packs are exempt from the age-staleness cutoff (see T2 hard guards).
+
 ### Knowledge pack loader
 
 At supervisor boot:
@@ -662,6 +720,24 @@ Promotion status:
 | `rolledBack` | Kept for audit, not loaded |
 | `rejected` | Kept for audit, not loaded |
 
+## Required Constants
+
+Register these only when implementing the feature, in `Common/Init/Init_CommonConstants.sqf`, default-off unless stated:
+
+| Constant | Default | Meaning |
+|---|---|---|
+| `WFBE_C_AICOM_V2_ADAPTIVE` | `0` | Master lane-456 gate. Requires `WFBE_C_AICOM_V2_ENABLE > 0`. |
+| `WFBE_C_AICOM_V2_LEARN_T1` | `1` | Allows within-round pure memory when adaptive gate is on. Safe because it is not persistent. |
+| `WFBE_C_AICOM_V2_LEARN_T2` | `0` | Allows optional extension/database load/store. |
+| `WFBE_C_AICOM_V2_LEARN_T3_PACKS` | `1` | Allows shipped static knowledge packs inside profiles. |
+| `WFBE_C_AICOM_V2_LEARN_SAMPLE_FLOOR` | `12` | Minimum samples before a persistent aggregate affects planning. |
+| `WFBE_C_AICOM_V2_LEARN_PACK_MAX_AGE_DAYS` | `45` | Staleness cutoff for non-compiled packs. |
+| `WFBE_C_AICOM_V2_LEARN_EXPLORE_PCT` | `5` | Percent of equal-score decisions allowed to explore within doctrine gates. |
+| `WFBE_C_AICOM_V2_LEARN_OPEN_CLAMP` | `0.15` | Opening-book prior clamp. |
+| `WFBE_C_AICOM_V2_LEARN_ROUTE_CLAMP` | `0.25` | Route prior clamp. |
+| `WFBE_C_AICOM_V2_LEARN_COUNTER_CLAMP` | `0.20` | Counter-tech prior clamp. |
+| `WFBE_C_AICOM_V2_LEARN_SUPPORT_CLAMP` | `0.15` | Fire-support prior clamp. |
+
 ## AICOMSTAT V3 Adaptive Events
 
 All adaptive events use the same family:
@@ -686,6 +762,8 @@ Side should use the V3 canonical lowercase side when feasible: `west`, `east`, `
 | `PACK_REJECT` | Pack rejected by loader/analyzer | `pack`, `reason`, `detail` |
 | `EXPLORE` | Safe exploration choice | `decision`, `best`, `chosen`, `delta`, `reason`, `pack` |
 
+`PACK_REJECT` reason codes: `sample_floor`, `stale`, `doctrine_guard`, `schema`, `parse`, `extension`. Every rejection must carry one of these codes so the analyzer can distinguish guard categories without free-text parsing.
+
 ### Analyzer regexes
 
 Mechanical parser additions:
@@ -695,6 +773,9 @@ RE_ADAPT = re.compile(
     r"AICOMSTAT\|v3\|ADAPT\|(?P<side>[^|]+)\|(?P<tick>\d+)\|(?P<event>[A-Z0-9_]+)\|?(?P<rest>.*)$"
 )
 RE_ADAPT_KV = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)=([^|\r\n]*)")
+RE_BUILDORDER = re.compile(
+    r"AICOMSTAT\|v3\|ADAPT\|(?P<side>[^|]+)\|(?P<min>\d+)\|BUILDORDER\|(?P<body>.*)$"
+)
 ```
 
 Derived metrics:
@@ -745,6 +826,7 @@ Execution, not planning, writes logs and namespace variables.
 
 1. Add constants only:
    - `WFBE_C_AICOM_V2_ADAPTIVE = 0`
+   - `WFBE_C_AICOM_V2_LEARN_T1 = 1`, `WFBE_C_AICOM_V2_LEARN_T2 = 0`, `WFBE_C_AICOM_V2_LEARN_T3_PACKS = 1`
    - T1 TTL/counter/explore clamps
    - Optional T2 persistence gate default `0`
 
@@ -784,6 +866,7 @@ Execution, not planning, writes logs and namespace variables.
 8. Add optional extension read/write:
    - Only after new explicit `AICOM_ADAPT_*` extension contract exists.
    - Must nil guard like AntiStack and fall back like profile loader.
+   - Use `WFBE_SE_FNC_AICOMV2_KnowledgeLoad` and `WFBE_SE_FNC_AICOMV2_KnowledgeStore` as the named entry points.
 
 ## Acceptance Criteria
 
@@ -796,7 +879,7 @@ Execution, not planning, writes logs and namespace variables.
 - It specifies poison resistance, exploration, and doctrine guardrails.
 - It defines RPT/Stats V2 telemetry enough for mechanical analyzer work.
 
-### Builder acceptance for T1
+### Builder acceptance for T1 (pure-core)
 
 - `WFBE_C_AICOM_V2_ADAPTIVE = 0` leaves mission behavior inert.
 - With the flag enabled, T1 memory is server-owned and HC receives orders only.
@@ -807,17 +890,26 @@ Execution, not planning, writes logs and namespace variables.
 - No hidden enemy state drives adaptive decisions.
 - No A3-only lint failures or RPT script errors.
 
-### Builder acceptance for T2
+### Builder acceptance for T2 (local micro-soak)
 
+- At boot, HC/server RPT contains one `KNOWLEDGE|LOAD` per side. If extension helpers are absent, it must be `fallback=1|reject=extension` and the commander continues.
 - Missing extension/DB produces static fallback and `PACK_LOAD fallback=1`, not a boot failure.
+- At least one `BUILDORDER` line appears for each side that builds or researches.
 - Round summary writes are append-only.
 - No UID-specific punishment persists.
 - Priors apply only within clamps.
 - Active pack id appears in every round-start and adaptive decision summary.
+- No `WATCHDOG|KPI_FLATLINE` repeats after adaptive hints are applied.
+- `PLAN|CHANGE` churn remains within the acceptance harness PASS band.
+- `WHY` lines for adapted decisions include `pack=<packId>` and `seen=1` when they depend on intel.
 - If a live extension path is added, nil/malformed/timeout cases are tested.
 
-### Builder acceptance for T3
+### Builder acceptance for T3 (box soak)
 
+Run as overnight farm comparison pairing each adaptive run with one same-map V2 no-learning baseline:
+
+- PASS if captures/hour is not worse by more than 5%, target churn remains PASS/WATCH, FPS parity remains within the harness band, and `PACK_REJECT|reason=doctrine_guard` is zero for accepted decisions.
+- FAIL if persistent knowledge causes unseen-target decisions, more than two supervisor restarts, GUER volume suppression, or sustained bank growth while losing ground.
 - Offline pack generator records source window, checksums, sample counts, and promotion status.
 - Packs are A2/OA-safe arrays.
 - Packs are map/profile/side/build scoped.
