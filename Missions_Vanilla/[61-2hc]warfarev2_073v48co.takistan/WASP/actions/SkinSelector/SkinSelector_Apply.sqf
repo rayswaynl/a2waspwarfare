@@ -31,7 +31,7 @@
 Private ["_chosenClass","_oldUnit","_oldGrp","_swapGrp","_pos","_dir",
          "_unitName","_unitRank","_unitFace","_unitSpeaker",
          "_gear","_newUnit","_wasLeader","_uid","_waitStart","_verifyStart",
-         "_carryFunds","_carrySide","_curGrp","_curFunds"];
+         "_carryFunds","_carrySide","_curGrp","_curFunds","_usedSwapGrp","_createGrp","_oldGrpLeaderLocal"];
 
 _chosenClass = _this select 0;
 
@@ -102,32 +102,57 @@ _gear = _oldUnit call (compile preprocessFile "WASP\actions\SkinSelector\SkinSel
 //--- Was this unit the group leader of the original group?
 _wasLeader = (leader _oldGrp == _oldUnit);
 
-//--- Create a fresh LOCAL group for the swap unit.
-//--- Reason: if the player is subordinate, _oldGrp's leader is not local here;
-//--- createUnit into a non-local group fails silently (A2 OA group-locality trap).
-//--- A dedicated swap group is deleted after joinGroup restores squad membership.
-_swapGrp = createGroup (side _oldUnit);
-_swapGrp setVariable ["wfbe_group_src", "skin-swap", true]; //--- audit clarity: transient client-local swap group, deleted < 0.5s later. BROADCAST (3rd arg true) so the SERVER-side GROUPAUDIT/UNTAGLEAK actually sees the tag - a client-local setVariable would be invisible to the server's allGroups audit and the group would read as "untagged".
+//--- SLOT-GROUP-PRESERVE (Fable 2026-07-03, GR-2026-07-03a): ROOT FIX of #666. The old code ALWAYS
+//--- created the swap unit in a FRESH createGroup and then tried to `join` it back into the player's
+//--- enrollment slot group (_oldGrp = the clientTeams member that carries wfbe_funds + is the marker
+//--- roster leader). That `join` does NOT reliably land the player back in _oldGrp: A2-OA `[unit] join grp`
+//--- ERASES the source group when the moving unit is its last member (Common_ChangeUnitGroup.sqf:9), and
+//--- the engine reassigns the player to a brand-new off-roster group ("B Juliet" in Ray's RPT). Off the
+//--- roster => no name/[CLASS] marker affix, no wfbe_funds (wallet reads $0), and Client_BuildUnit's
+//--- `group player` resolves an unfunded group (buys fail). RESPAWN (respawn=3) never hits this because
+//--- the engine keeps the player in his SAME slot group and Client_OnKilled just re-asserts selectLeader.
+//--- MIRROR RESPAWN: create the swap unit DIRECTLY INSIDE _oldGrp so membership, clientTeams registration,
+//--- wfbe_funds, wfbe_side and wfbe_player_class all survive untouched - no new group is ever made.
+//--- The ONLY case that still needs a transient swap group is a SUBORDINATE player whose slot-group leader
+//--- is NON-LOCAL here: createUnit into a non-local-leader group silently fails / the wrapper diverts it to
+//--- a fresh "misc" group (Common_CreateUnit.sqf:33-38). Such a player is not a team leader, so he has no
+//--- affix to lose and shares the leader's wfbe_funds; the fallback re-registration below (B5c/B6) covers
+//--- his wallet. Decide the target group up front. A2-OA-1.64 safe: isNull / leader / local / side / createGroup.
+_oldGrpLeaderLocal = (!isNull _oldGrp) && {(isNull (leader _oldGrp)) || (local (leader _oldGrp))};
+if (_oldGrpLeaderLocal) then {
+	//--- PRIMARY PATH: keep the player in his real slot group. No createGroup at all.
+	_createGrp = _oldGrp;
+	_swapGrp = grpNull;
+	_usedSwapGrp = false;
+} else {
+	//--- FALLBACK PATH (subordinate with a remote slot-group leader): dedicated LOCAL swap group so
+	//--- createUnit does not silently fail; full re-registration happens after selectPlayer (B5c/B6).
+	_swapGrp = createGroup (side _oldUnit);
+	_swapGrp setVariable ["wfbe_group_src", "skin-swap", true]; //--- audit clarity: transient client-local swap group. BROADCAST (3rd arg true) so the SERVER-side GROUPAUDIT/UNTAGLEAK sees the tag - a client-local setVariable would be invisible to the server's allGroups audit and read "untagged".
+	_createGrp = _swapGrp;
+	_usedSwapGrp = true;
+};
 
-diag_log format ["[WFBE (SKIN)] B2 createUnit: class='%1' swapGrp=%2 pos=%3 swapGrpLocal=%4",
-	_chosenClass, _swapGrp, _pos, local _oldUnit];
+diag_log format ["[WFBE (SKIN)] B2 createUnit: class='%1' createGrp=%2 usedSwapGrp=%3 pos=%4 oldGrpLeaderLocal=%5",
+	_chosenClass, _createGrp, _usedSwapGrp, _pos, _oldGrpLeaderLocal];
 
 //--- WFBE_CO_FNC_CreateUnit: [class, group, pos, sideID, global, placement]
 //--- Pass _global=false: skips setVehicleInit/Init_Unit broadcast — this is a
 //--- player body, not an AI. The wrapper returns objNull (never nil) on failure.
-_newUnit = [_chosenClass, _swapGrp, _pos, WFBE_Client_SideID, false, "NONE"] call WFBE_CO_FNC_CreateUnit;
+//--- _createGrp is _oldGrp (primary) or the transient swap group (fallback); both are LOCAL-leader here.
+_newUnit = [_chosenClass, _createGrp, _pos, WFBE_Client_SideID, false, "NONE"] call WFBE_CO_FNC_CreateUnit;
 
 //--- WFBE_CO_FNC_CreateUnit always returns objNull on failure (never nil in A2),
 //--- so a plain isNull check is sufficient here. Keep the isNil belt for safety.
 if (isNil "_newUnit") exitWith {
 	diag_log format ["[WFBE (SKIN)] B2 ABORT: WFBE_CO_FNC_CreateUnit returned NIL for '%1' (unexpected)", _chosenClass];
-	deleteGroup _swapGrp;
+	if (!isNull _swapGrp) then {deleteGroup _swapGrp}; //--- primary path uses grpNull (unit was made in _oldGrp); only the fallback swap group needs deleting.
 	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on early exit
 	hint "Skin swap failed (unit creation returned nil). Please try again.";
 };
 if (isNull _newUnit) exitWith {
 	diag_log format ["[WFBE (SKIN)] B2 ABORT: WFBE_CO_FNC_CreateUnit returned objNull for '%1' (unit/group cap?)", _chosenClass];
-	deleteGroup _swapGrp;
+	if (!isNull _swapGrp) then {deleteGroup _swapGrp}; //--- primary path uses grpNull (unit was made in _oldGrp); only the fallback swap group needs deleting.
 	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on early exit
 	hint "Skin swap failed (server unit limit). Please try again later.";
 };
@@ -155,7 +180,8 @@ _newUnit setVariable ["lastPosition",   getPosATL _newUnit];
 
 //--- cmdcon42 SELECTPLAYER HARDENING (Ray 2026-07-02): selectPlayer requires the target unit to be
 //--- non-null AND LOCAL to this client, and to have finished initialising. The unit was just created
-//--- into a fresh LOCAL swap group (swapGrpLocal true), so it is normally local immediately, but wait
+//--- into a LOCAL group (_oldGrp in the primary path, or the fallback swap group), so it is normally local
+//--- immediately, but wait
 //--- for it explicitly with a ~3s timeout so a slow-init frame never selects a half-built body.
 //--- A2-OA-1.64 safe: waitUntil / isNull / local / time. (No && {} lazy operand: nested condition.)
 _waitStart = time;
@@ -175,22 +201,26 @@ if (isNull _newUnit || !(local _newUnit)) exitWith {
 	hint "Skin swap failed (unit not ready). Please try again.";
 };
 
-//--- Rejoin the original group BEFORE selectPlayer so the player transitions
-//--- with the correct group context. If the original group is empty or gone
-//--- (edge case: everyone left while selector was open) remain in _swapGrp.
-//--- A2-OA fix: && {code} / || {code} lazy-eval operands are Arma-3-only syntax and
-//--- produce "Missing ;" parse errors in A2 OA 1.64.  Use nested if instead.
-//--- cmdcon42 A2-OA FIX: `joinGroup` is ALSO Arma-3-only and threw "Missing ;" at this line on
-//--- EVERY swap (RPT-confirmed), collapsing this whole if/then block. A2 OA uses `[unit] join grp`
-//--- (array LHS), matching Common_ChangeUnitGroup.sqf:11 / Server_OnPlayerDisconnected.sqf:105.
-if (!(isNull _oldGrp)) then {
-	if (!(isNull (leader _oldGrp)) || (count units _oldGrp > 0)) then {
-		[_newUnit] join _oldGrp;
+//--- SLOT-GROUP-PRESERVE (Fable 2026-07-03): in the PRIMARY path the new unit was already created INSIDE
+//--- _oldGrp (the slot group), so NO join is needed - the player transitions with the correct group
+//--- context automatically, exactly like respawn. Only the FALLBACK path (subordinate, remote slot-group
+//--- leader) made a transient swap group; there we try to move the new unit into _oldGrp before
+//--- selectPlayer. If _oldGrp is empty/gone the unit stays in the swap group and B5c/B6 re-register it.
+//--- A2-OA fix: && {code} / || {code} lazy-eval operands are Arma-3-only syntax and produce "Missing ;"
+//--- parse errors in A2 OA 1.64 - use nested if. `joinGroup` is ALSO Arma-3-only; A2 OA uses
+//--- `[unit] join grp` (array LHS), matching Common_ChangeUnitGroup.sqf:11 / Server_OnPlayerDisconnected.sqf:105.
+if (_usedSwapGrp) then {
+	if (!(isNull _oldGrp)) then {
+		if (!(isNull (leader _oldGrp)) || (count units _oldGrp > 0)) then {
+			[_newUnit] join _oldGrp;
+		} else {
+			diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
+		};
 	} else {
 		diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
 	};
 } else {
-	diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
+	diag_log format ["[WFBE (SKIN)] B3 primary path: new unit already in slot-group %1 — no rejoin needed", _oldGrp];
 };
 
 //--- Switch player.
@@ -221,8 +251,9 @@ if (!(player == _newUnit)) exitWith {
 //--- Restore group leadership if the player led the original group.
 if (_wasLeader) then {(group _newUnit) selectLeader _newUnit};
 
-//--- swapGrp is now empty (new unit moved to _oldGrp above); clean it up.
-if (count units _swapGrp == 0) then {deleteGroup _swapGrp};
+//--- FALLBACK cleanup: the transient swap group is now empty (new unit moved to _oldGrp above); delete it.
+//--- Primary path never made a swap group (_swapGrp is grpNull), so this is a guarded no-op there.
+if (_usedSwapGrp && {!isNull _swapGrp}) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
 
 //--- DUPLICATE-SOLDIER FIX 2026-06-15:
 //--- In A2/OA, selectPlayer does NOT destroy the previous body — _oldUnit becomes a
@@ -301,26 +332,21 @@ player Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\AddActions.sqf";
 player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
 
-//--- MARKER-AFFIX ROSTER FIX (Fable 2026-07-03): Ray reported his player MAP MARKER lost its NAME +
-//--- lobby-class affix (e.g. "[MED]") after a skin swap. Root cause: the map marker with the player's
-//--- name + [CLASS] tag is drawn by Client\FSM\updateteamsmarkers.sqf ONLY inside the per-team loop
-//--- `forEach clientTeams`, and ONLY when `player == leader _team` for a team in clientTeams (the fixed
-//--- side slot-groups WFBE_%1TEAMS). The swap creates the new body in a FRESH createGroup swap group and
-//--- the pre-selectPlayer `[_newUnit] join _oldGrp` did not stick (RPT: player ended in the off-roster
-//--- swap group O 1-3-C, not his slot-group O 1-1-G), so the loop no longer finds him as any team leader
-//--- -> his name+affix marker is never drawn (only the own-arrow, which carries NO text, still shows).
-//--- Respawn does NOT hit this because group-respawn (respawn=3) keeps the player in his SAME slot-group
-//--- and Client_OnKilled.sqf re-asserts leadership via selectLeader. Mirror that proven idiom here: after
-//--- the swap is verified, rejoin the ORIGINAL slot-group (_oldGrp, captured at entry = a clientTeams
-//--- member) and selectLeader so the marker loop finds him again. Only act when the slot-group is still
-//--- real (has a live leader or members); if it was reaped, keep him in the swap group (unchanged old
-//--- behaviour). A2-OA-1.64 safe: isNull / leader / count units / `[unit] join grp` (array LHS, the A2
-//--- form used at line 188 and Common_ChangeUnitGroup.sqf:11) / selectLeader / group. No A3 commands.
+//--- MARKER-AFFIX ROSTER NET (Fable 2026-07-03, GR-2026-07-03a): the marker with the player's name +
+//--- [CLASS] affix is drawn by Client\FSM\updateteamsmarkers.sqf ONLY when `player == leader _team` for a
+//--- team in clientTeams (the fixed slot-groups WFBE_%1TEAMS). In the PRIMARY path the swap unit was
+//--- created INSIDE _oldGrp, so `group player == _oldGrp` here and this block is a NO-OP (the player is
+//--- already the slot-group leader - exactly the respawn state). This rejoin now only fires for the
+//--- FALLBACK path (subordinate whose remote slot-group leader forced a transient swap group): if _oldGrp
+//--- is still real, pull the player back onto the roster and take leadership so the marker loop finds him.
+//--- If _oldGrp was reaped, keep him where he is (B6 funds-carry re-stamps his wallet). A2-OA-1.64 safe:
+//--- isNull / leader / count units / `[unit] join grp` (array LHS, Common_ChangeUnitGroup.sqf:11) /
+//--- selectLeader / group. No A3 commands.
 if (!isNull _oldGrp && {group player != _oldGrp}) then {
 	if (!(isNull (leader _oldGrp)) || (count units _oldGrp > 0)) then {
 		[player] join _oldGrp;
 		(group player) selectLeader player;
-		diag_log format ["[WFBE (SKIN)] B5c roster-rejoin: player rejoined slot-group %1 (was off-roster) leader=%2", _oldGrp, (leader (group player))];
+		diag_log format ["[WFBE (SKIN)] B5c roster-rejoin (fallback): player rejoined slot-group %1 (was off-roster) leader=%2", _oldGrp, (leader (group player))];
 	};
 };
 
