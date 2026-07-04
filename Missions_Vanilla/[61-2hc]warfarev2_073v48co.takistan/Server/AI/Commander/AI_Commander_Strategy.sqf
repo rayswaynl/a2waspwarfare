@@ -469,7 +469,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 } forEach _teams;
 
 _attacked = [];
-private ["_atkTownCheck","_reliefEnemyDist"];
+private ["_atkTownCheck","_reliefEnemyDist","_reliefMax"];
 	_reliefEnemyDist = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500];
 	//--- B74.1 (Ray 2026-06-23): only DEFEND a town that is ACTUALLY under attack, not merely "active". wfbe_active =
 	//--- "town near the front/players" (server_town_ai.sqf:182), NOT "enemy attacking" - so the old gate yanked up to
@@ -496,7 +496,8 @@ if (!isNil "_pdTown" && {!isNull _pdTown} && {!isNil "_pdT0"}
 _relieved = 0;
 {
 	_town = _x;
-	if (_relieved < (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_RELIEF_MAX", 2])) then {
+	_reliefMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_RELIEF_MAX", 2];
+	if (_relieved < _reliefMax) then {
 		//--- Already has a reliever?
 		_free = grpNull;
 		{ if (!isNull _x && {(_x getVariable ["wfbe_aicom_relief", objNull]) == _town}) exitWith {_free = _x} } forEach _teams;
@@ -555,6 +556,8 @@ _relieved = 0;
 		} else {
 			_relieved = _relieved + 1;
 		};
+	} else {
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF_CAP_SKIP|town=" + (_town getVariable ["name", "town"]) + "|relieved=" + str _relieved + "|cap=" + str _reliefMax);
 	};
 } forEach _attacked;
 
