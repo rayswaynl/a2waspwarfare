@@ -12,16 +12,19 @@ historical context; the current live status follows first.
 Bug 1 is implemented. Bug 2 is still a balance/research-policy decision, not a safe one-line cleanup.
 
 Live anchors:
-- `Server/AI/Commander/AI_Commander_Teams.sqf:1048-1066` now detects any air template with `_isAirTeam` and
+- `Server/AI/Commander/AI_Commander_Teams.sqf:1078-1089` now detects any air template with `_isAirTeam` and
   sends helicopters as well as planes to an owned airfield.
-- `Server/AI/Commander/AI_Commander_Teams.sqf:1074-1079` prefers nearby `HeliH` pads for helicopter spawns and
-  keeps runway heading / fly-start behavior plane-only.
-- `Common/Init/Init_CommonConstants.sqf:329` still defaults `WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI = 1`, so a held
+- `Server/AI/Commander/AI_Commander_Teams.sqf:1092-1103` finds the owned airfield/hangar and prefers nearby `HeliH`
+  pads for helicopter spawns while keeping runway heading / fly-start behavior plane-only.
+- `Common/Init/Init_CommonConstants.sqf:380` still defaults `WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI = 1`, so a held
   Aircraft Factory can waive the air research gate for helis.
-- `Common/Init/Init_CommonConstants.sqf:337` still defaults `WFBE_C_AICOM_AIRFIELD_FREE_AIR = 1`, so a captured
+- `Common/Init/Init_CommonConstants.sqf:388` still defaults `WFBE_C_AICOM_AIRFIELD_FREE_AIR = 1`, so a captured
   airfield can waive air research for airfield-origin air buys.
-- `Server/AI/Commander/AI_Commander_Teams.sqf:272-330` contains the live heli/airfield waiver logic.
-- `Server/AI/Commander/AI_Commander.sqf:528-626` can eventually buy AIR through the wealth-driven upgrade sink, but
+- `Server/AI/Commander/AI_Commander_Teams.sqf:289-353` contains the live airfield/free-buy and Aircraft Factory heli
+  waiver logic, including template and per-unit AIR gate waivers.
+- `Server/AI/Commander/AI_Commander_Teams.sqf:433-435` exempts air templates from the town-count strip when the
+  captured-airfield or Aircraft Factory heli waiver applies.
+- `Server/AI/Commander/AI_Commander.sqf:520-677` can eventually buy AIR through the wealth-driven upgrade sink, but
   that is not the deliberate Aircraft Factory research accelerator described in the original plan.
 
 Open follow-up:
@@ -29,8 +32,15 @@ Open follow-up:
   use until AIR research happens through a separate path.
 - If strict research gating is desired, pair the flag flip with a deliberate AIR research rule gated on held Aircraft
   Factory or captured airfield, then soak to prove AICOM still flies from the owned airfield.
-- Recheck any future code change against the open aircraft-related work in PR `#151` (`claude/cmdcon42-ah6x`) and
-  PR `#172` (`claude/cmdcon42-tkair`) before editing the live aircraft path.
+- PR `#151` (`claude/cmdcon42-ah6x`) and PR `#172` (`claude/cmdcon42-tkair`) were merged into
+  `claude/build84-cmdcon36` on 2026-07-02, so treat their aircraft roster/EASA changes as part of the current
+  baseline rather than open blockers.
+- Recheck current open PRs for aircraft/AICOM overlap at claim time before editing the live aircraft path.
+
+Drift sweep note (2026-07-02):
+- Lane 68 rechecked this doc, `SPREAD-AND-HOLD.md`, and `REAL-BASE-ASSAULT.md` against
+  `origin/claude/build84-cmdcon36@6f2fc4bd10c8339fd13be087d327717ff58c85e8`. The spread/hold and real-base-assault
+  live-status anchors still matched source; this file needed only the PR-state and line-anchor refresh above.
 
 ## Historical diagnosis
 
