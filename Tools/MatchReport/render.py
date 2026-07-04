@@ -299,10 +299,8 @@ class Renderer:
                 d.text((x0+k*size/11+4,y0+2),chr(65+k),font=f_xs,fill=(90,100,116))
                 d.text((x0+3,y0+k*size/11+2),f"{k:02d}",font=f_xs,fill=(90,100,116))
         d.rectangle([x0,y0,x0+size,y0+size],outline=(70,80,96),width=2)
-        # --- roads (faint, under the town dots) ---
-        for (i,j) in self.roads:
-            ax,ay=m.towns[m.tnames[i]]; bx,by=m.towns[m.tnames[j]]
-            d.line([(x0+ax/S*size,y0+(1-ay/S)*size),(x0+bx/S*size,y0+(1-by/S)*size)],fill=(120,128,120,90),width=max(1,int(2*sc)))
+        # (no road/connlines: the nearest-neighbour links read as arbitrary "weird" lines
+        #  and clutter the map — towns stand on their own.)
         # --- compass ---
         ccx,ccy=x0+size-44*sc,y0+46*sc
         d.ellipse([ccx-22*sc,ccy-22*sc,ccx+22*sc,ccy+22*sc],outline=(120,132,150),width=2)
