@@ -94,6 +94,11 @@ if (worldName == "Zargabad") then {
 	//--- finds the var already set and skips. So this line is the only path to 1800 on ZG; on TK
 	//--- the pre-set is never reached (worldName guard skips the entire ZG block). No double-assignment.
 	if (isNil "WFBE_C_BASE_EGRESS_MAP_BOUNDS")    then {WFBE_C_BASE_EGRESS_MAP_BOUNDS    = 1};
+	//--- BUG-2 (fable GR-2026-07-03a): ZG is 11 towns on an 8192m map, so the center-of-map gravity well is sharp.
+	//--- Use a STRONGER repick penalty (~0.8x FAR_PENALTY) and a slightly longer memory so the fist genuinely rotates
+	//--- across the small town set instead of pinning the 2 central hubs. Same isNil-guard/pre-set-respect idiom as the block above.
+	if (isNil "WFBE_C_AICOM_REPICK_PENALTY")    then {WFBE_C_AICOM_REPICK_PENALTY    = 800};
+	if (isNil "WFBE_C_AICOM_REPICK_MEMORY_MIN") then {WFBE_C_AICOM_REPICK_MEMORY_MIN = 7};
 };
 //--- End ZG-FIX Zargabad-scoped pre-sets.
 
@@ -707,6 +712,18 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_EXPAND_DEDUP")     then {WFBE_C_AICOM_EXPAND_DEDUP     = 0};  //--- block-m: 0=off legacy (multiple expand teams may dogpile one neutral town); 1=each expand team claims a distinct neutral town per tick (DEDUP). Behavioral; owner flips to 1 when ready.
 	if (isNil "WFBE_C_AICOM_HARASS_FALLBACK")  then {WFBE_C_AICOM_HARASS_FALLBACK  = 0};  //--- block-m: 0=off legacy (harass picks deepest town regardless of reach); 1=walk depth-sorted candidates and pick deepest reachable by >=1 mounted team (emits AICOMSTAT|v2|EVENT|HARASS_SKIP when first candidate is unreachable). Behavioral; owner flips to 1 when ready.
 	if (isNil "WFBE_C_AICOM_ENGAGE_MIN_TOWNS") then {WFBE_C_AICOM_ENGAGE_MIN_TOWNS = 10};//--- Ray 2026-06-28 EXPANSION-FIRST: a commander captures NEUTRAL towns only (fist+harass) until it OWNS this many towns, THEN it attacks the enemy - so both sides build an empire before they clash (no early enemy-rush that ends matches premature). ANTI-STALL: if no neutral town remains reachable it engages the enemy anyway. Round-ender HQ-strike keeps its own higher gate (WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS). 0 = disable (engage from turn one).
+	//--- BUG-1 CONTESTED-ENGAGE (fable GR-2026-07-03a): lift the EXPANSION-FIRST neutral-only gate when the ENEMY is at
+	//--- town-parity-or-ahead AND holds >=1 town, so a side stalled below ENGAGE_MIN (the 9.6h ZG soak: WEST never
+	//--- targeted EAST-held towns for 9.5h) fights the enemy instead of wandering the neutral rear. Read in
+	//--- AI_Commander_Allocate.sqf. WEST=0-safe (only town COUNT compares). 0 = legacy expansion-first (instant rollback).
+	if (isNil "WFBE_C_AICOM_ENGAGE_CONTESTED") then {WFBE_C_AICOM_ENGAGE_CONTESTED = 1};
+	//--- BUG-2 SPEARHEAD REPICK-PENALTY (fable GR-2026-07-03a): anti-dogpile diversity lever. A town that was the published
+	//--- fist primary within the last REPICK_MEMORY_MIN minutes takes this flat score penalty in the Allocator's auto-scorer,
+	//--- so the commander ROTATES pressure instead of dogpiling 1-2 central towns (the soak: EAST sent 60% of orders to 2
+	//--- towns, 176 repicks cycled the same short list). ~half the FAR_PENALTY (1000) scale = meaningful but not dominant.
+	//--- 0 = off (no penalty; also disables the memory stamp). Read in AI_Commander_Allocate.sqf.
+	if (isNil "WFBE_C_AICOM_REPICK_PENALTY")    then {WFBE_C_AICOM_REPICK_PENALTY    = 500};
+	if (isNil "WFBE_C_AICOM_REPICK_MEMORY_MIN") then {WFBE_C_AICOM_REPICK_MEMORY_MIN = 5};   //--- minutes a picked primary stays penalised.
 	if (isNil "WFBE_C_AICOM_CONCENTRATE_TOWNS") then {WFBE_C_AICOM_CONCENTRATE_TOWNS = 4};//--- Ray 2026-06-28 CONCENTRATE-FIRST: while a commander owns FEWER than this many towns it puts its FULL strength on ONE fist town (no expand/harass split) - a true opening steamroller. Once it owns this many, the normal expand(EXPAND_TEAMS)+harass spread resumes. 0 = off (spread from town one).
 	if (isNil "WFBE_C_AICOM_DISBAND_LOWTIER_ENABLE") then {WFBE_C_AICOM_DISBAND_LOWTIER_ENABLE = 1};//--- Ray 2026-06-28: retire idle rear FOOT-infantry teams once the side fields mobile (light/heavy/air) teams - keeps force modern + frees pop/group cap for armour. 0 = off.
 	if (isNil "WFBE_C_AICOM_DISBAND_INTERVAL") then {WFBE_C_AICOM_DISBAND_INTERVAL = 300};//--- seconds between disband passes (at most ONE team retired per pass) - long for immersion.

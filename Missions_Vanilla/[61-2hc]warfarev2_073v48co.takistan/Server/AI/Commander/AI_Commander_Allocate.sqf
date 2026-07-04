@@ -41,6 +41,15 @@ if (count _tgtTowns == 0) exitWith { _logik setVariable ["wfbe_aicom_targets", [
 //--- capturable it falls through and engages the enemy (never idle). The HQ-strike round-ender keeps its own gate.
 _myTowns   = _snap select WFBE_SNAP_MYTOWNS;
 _engageMin = missionNamespace getVariable ["WFBE_C_AICOM_ENGAGE_MIN_TOWNS", 10];
+//--- BUG-1 CONTESTED-ENGAGE (fable, GR-2026-07-03a): the expansion-first gate below pins this side to NEUTRAL-only
+//--- targets until it owns _engageMin towns. A side that stalls BELOW that count while the enemy holds towns then
+//--- targets neutral towns forever and NEVER attacks the enemy (the 9.6h ZG soak: WEST published ZERO capture orders
+//--- vs EAST-held towns for 9.5h). Lift the gate when the enemy is at town-parity-or-ahead AND holds >=1 town, so a
+//--- side that is behind/contested fights the enemy instead of wandering the rear. WEST=0-safe: only COUNT (>=)
+//--- compares, never a side-ID truthiness test. Flag WFBE_C_AICOM_ENGAGE_CONTESTED default 1 (0 = legacy, instant rollback).
+private ["_enTownsSnap","_engContested"];
+_enTownsSnap = _snap select WFBE_SNAP_ENTOWNS;
+_engContested = ((missionNamespace getVariable ["WFBE_C_AICOM_ENGAGE_CONTESTED", 1]) > 0) && {_enTownsSnap > 0} && {_enTownsSnap >= _myTowns};
 //--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) POSTURE HOOK: a fresh player PUSH/HOLD biases the ENGAGE gate only (small).
 private ["_psPair","_psPos","_psT0","_psDelta"];
 _psPair = _logik getVariable "wfbe_aicom_player_posture";
@@ -66,7 +75,7 @@ if (!isNil "_foPos" && {typeName _foPos == "STRING"} && {!isNil "_foT0"} && {(ti
 //--- engage threshold UP so the side stops clashing and pulls back to owned towns.
 if (_foFresh && {_foPos == "FALLBACK"}) then {_engageMin = _engageMin + (missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_FALLBACK_DELTA", 20])};
 _expandFirst = false;
-if (_engageMin > 0 && {_myTowns < _engageMin}) then {
+if (_engageMin > 0 && {_myTowns < _engageMin} && {!_engContested}) then {
 		private ["_neutPool","_sid","_guerID","_softPool"];
 		_neutPool = [];
 		_softPool = [];
@@ -136,6 +145,15 @@ if (!_fromFocus) then {
 	_nearBandDist  = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_DIST", 2000];
 	_nearBandBonus = missionNamespace getVariable ["WFBE_C_AICOM_NEAR_BAND_BONUS", 300];
 	_garPen        = missionNamespace getVariable ["WFBE_C_AICOM_GARRISON_PENALTY", 0];
+	//--- BUG-2 REPICK-PENALTY (fable, GR-2026-07-03a): read+prune the recent-primary memory so towns picked as the
+	//--- fist primary within the last WFBE_C_AICOM_REPICK_MEMORY_MIN minutes score lower (rotate pressure, no dogpile).
+	private ["_repickPen","_repickMem","_repickKeep","_repickTowns"];
+	_repickPen   = missionNamespace getVariable ["WFBE_C_AICOM_REPICK_PENALTY", 500];
+	_repickMem   = _logik getVariable ["wfbe_aicom_repick_mem", []];
+	_repickKeep  = [];
+	_repickTowns = [];
+	{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_repickKeep set [count _repickKeep, _x]; _repickTowns set [count _repickTowns, (_x select 0)]} } forEach _repickMem;
+	_logik setVariable ["wfbe_aicom_repick_mem", _repickKeep];
 	_scored = [];
 	{
 		private ["_tt","_dNear","_sc","_garTier"];
@@ -160,6 +178,7 @@ if (!_fromFocus) then {
 		if (_dNear > _frontRad) then {_sc = _sc - _farPen};
 		if (_nearBand > 0 && {_dNear < _nearBandDist}) then {_sc = _sc + _nearBandBonus};   //--- F5: near-band bonus for towns immediately adjacent to our front (re-ranks; does not change eligibility).
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
+		if (_repickPen > 0 && {_tt in _repickTowns}) then {_sc = _sc - _repickPen};   //--- BUG-2 anti-dogpile: recently-picked primary is deprioritised so the fist rotates.
 		if (isNil "_sc") then {
 			diag_log ("CAPDBG|SC|" + (_tt getVariable ["name","?"]) + "|dNear=" + str(isNil "_dNear") + "|residual");
 		};
@@ -193,6 +212,26 @@ if (!_fromFocus) then {
 };
 
 _logik setVariable ["wfbe_aicom_targets", _fist];   //--- the fist is the side's published main effort
+//--- BUG-2 REPICK-MEMORY STAMP (fable, GR-2026-07-03a): remember this tick's fist primary for WFBE_C_AICOM_REPICK_MEMORY_MIN
+//--- minutes so the anti-dogpile penalty above deprioritises it on the next picks. Append-and-dedup on the side logic.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_REPICK_PENALTY", 500]) > 0 && {count _fist > 0}) then {
+	private ["_rpPrim","_rpMin","_rpMem","_rpOut"];
+	_rpPrim = _fist select 0;
+	_rpMin  = missionNamespace getVariable ["WFBE_C_AICOM_REPICK_MEMORY_MIN", 5];
+	_rpMem  = _logik getVariable ["wfbe_aicom_repick_mem", []];
+	_rpOut  = [];
+	{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _rpPrim}) then {_rpOut set [count _rpOut, _x]} } forEach _rpMem;
+	_rpOut set [count _rpOut, [_rpPrim, time + (_rpMin * 60)]];
+	_logik setVariable ["wfbe_aicom_repick_mem", _rpOut];
+};
+//--- BUG-1 PROOF LINE (fable, GR-2026-07-03a): ALWAYS-ON telemetry - is the published fist primary an ENEMY-HELD town?
+//--- The next soak greps AICOMSTAT|v2|EVENT|<side>|<min>|ENEMY_TOWN_TARGET to PROVE each side (esp. WEST) now attacks the enemy.
+if (count _fist > 0) then {
+	private ["_etPrim","_etIsEnemy"];
+	_etPrim = _fist select 0;
+	_etIsEnemy = (_etPrim getVariable ["sideID", -1]) == _enemyID;
+	diag_log ("AICOMSTAT|v2|EVENT|" + str _side + "|" + str (round (time / 60)) + "|ENEMY_TOWN_TARGET|primary=" + (_etPrim getVariable ["name","?"]) + "|enemyHeld=" + (if (_etIsEnemy) then {"yes"} else {"no"}) + "|myTowns=" + str _myTowns + "|enTowns=" + str (_snap select WFBE_SNAP_ENTOWNS) + "|contested=" + (if (_engContested) then {"1"} else {"0"}) + "|expandFirst=" + (if (_expandFirst) then {"1"} else {"0"}));
+};
 
 //--- M2 HARASS TARGET: the enemy's DEEPEST capturable town (max front-distance), enemy-held weighted over
 //--- neutral, excluding the fist. A light mounted detachment raids it to pressure their rear / supply hub.
