@@ -19,6 +19,13 @@ _shift = _this select 1;
 _alt = _this select 2;
 _selectedUnits = _this select 3;
 _ctrlPressed = missionNamespace getVariable "WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN";
+//--- 2026-07-04: the ctrl latch can STICK when the KeyUp lands on another display (dialog/focus change),
+//--- turning every plain map click into a disband attempt (Ray: 'popup all the time'). A held ctrl older
+//--- than 20s cannot be a disband gesture - expire it and clear the latch.
+if (_ctrlPressed && {(time - (missionNamespace getVariable ["WFBE_CLIENT_MAP_DISBAND_CTRL_TS", -1000])) > 20}) then {
+	_ctrlPressed = false;
+	missionNamespace setVariable ["WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN", false];
+};
 
 // Marty: Ctrl-click selects the nearest AI in the player's group and disbands it immediately.
 if (_ctrlPressed) exitWith {

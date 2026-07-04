@@ -395,7 +395,7 @@ _display displayAddEventHandler ["KeyDown","_this call keyPressedForAdjustingVie
 	//--- Debug teleport rebind: press "[" (DIK 0x1A=26) to ARM, then the next plain map-click teleports you (was: every click teleported under WF_Debug, which ate the sell/ICBM confirm clicks).
 	_display displayAddEventHandler ["KeyDown","if ((_this select 1) == 26 && WF_Debug) then {missionNamespace setVariable ['WFBE_DEBUG_TELEPORT_ARMED', true]; hintSilent 'Debug teleport ARMED - next map click teleports you.'; true} else {false}"];
 // Marty: onMapSingleClick exposes Shift and Alt but not Ctrl, so track Ctrl state separately for map disband.
-_display displayAddEventHandler ["KeyDown","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', true]}; false"];
+_display displayAddEventHandler ["KeyDown","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', true]; missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_TS', time]}; false"];
 _display displayAddEventHandler ["KeyUp","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', false]}; false"];
 onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
 
