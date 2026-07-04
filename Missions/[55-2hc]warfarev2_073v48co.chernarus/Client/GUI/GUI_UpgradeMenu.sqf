@@ -105,7 +105,8 @@ _upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades;
 _i = 0;
 {
 	if (_upgrade_enabled select _x) then {
-		lnbAddRow [504001, [Format ["%1/%2",_upgrades select _x,_upgrade_levels select _x],_upgrade_labels select _x]];
+		//--- Ray B89: 3rd cell = dedicated right-hand Q# column (empty at build; filled on refresh below).
+		lnbAddRow [504001, [Format ["%1/%2",_upgrades select _x,_upgrade_levels select _x],_upgrade_labels select _x,""]];
 		lnbSetValue [504001, [_i, 0], _x];
 		//--- Card #164: paint the upgrade icon into the level cell (column 0), same cell-picture pattern as Client_UI_Gear_FillList. Skip empty image strings for graceful fallback.
 		if ((_upgrade_images select _x) != "") then {lnbSetPicture [504001, [_i, 0], (_upgrade_images select _x)]};
@@ -251,8 +252,11 @@ while {alive player && dialog} do {
 					for "_qk" from 0 to (count _queue_old - 1) do {
 						if ((_queue_old select _qk) == _x) then {_qtag = _qtag + (if (_qtag == "") then {""} else {","}) + str (_qk + 1)};
 					};
-					if (_qtag != "") then {_qtag = Format [" [Q%1]", _qtag]};
-					lnbSetText[504001, [_i, 0], Format ["%1/%2%3",_upgrades select _x,_upgrade_levels select _x,_qtag]];
+					//--- Ray B89: Q# now lives in the dedicated right column (index 2). Column 0 stays a clean
+					//--- level/max string; the queue tag ("Q1,3") is written to column 2 so the commander can read it.
+					if (_qtag != "") then {_qtag = Format ["Q%1", _qtag]};
+					lnbSetText[504001, [_i, 0], Format ["%1/%2",_upgrades select _x,_upgrade_levels select _x]];
+					lnbSetText[504001, [_i, 2], _qtag];
 						//--- Card #164: keep the icon painted on refresh (lnbSetText leaves the cell picture intact; repaint guards against reordering).
 						if ((_upgrade_images select _x) != "") then {lnbSetPicture [504001, [_i, 0], (_upgrade_images select _x)]};
 					_i = _i + 1;
