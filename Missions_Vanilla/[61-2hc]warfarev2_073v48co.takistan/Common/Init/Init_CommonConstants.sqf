@@ -1763,6 +1763,51 @@ missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 	if (isNil 'WFBE_C_GUER_PATROLS_LEVEL') then {WFBE_C_GUER_PATROLS_LEVEL = 2};                    //--- B67 (Ray 2026-06-21): fixed Patrols level for GUER (resistance has no upgrade system) so GUER side-patrols actually dispatch and show on GUER players' maps (server_side_patrols.sqf). Effective concurrent count = min(_maxSide, this). 0 = OFF (no GUER patrols, instant rollback); 1 = single; 2 = a pair; 4 adds the convoy supply truck.
 	WFBE_C_GROUP_BUDGET_WARN = 120;               //--- GROUP-BUDGET ALARM (claude-gaming 2026-06-13): per-side group-count WARN threshold (GRPBUDGET line in AI_Commander.sqf). Arma 2 OA hard cap is 144/side; crossing this logs a GRPBUDGET|WARN so the watchdog/dashboard flags it before the AI can no longer found teams. (120, not 125: with the persistent-husk leak fixed, steady state should drop below 120, making the WARN a true leading indicator rather than always-on.)
 	if (isNil 'WFBE_C_GROUPAUDIT_EVERY') then {WFBE_C_GROUPAUDIT_EVERY = 5}; //--- D2 server-FPS (claude-gaming 2026-06-14): run the EXPENSIVE per-faction group-classification AUDIT DUMP (server_groupsGC.sqf; auditMs ~2100ms on 276 groups) only every Nth 5-min audit window. The husk-reap GC + zombie-reap + cap-warning still run EVERY 60s cycle (they live outside the audit branch) - this throttles only diagnostic telemetry. 5 = full dump ~every 25 min instead of every 5 min. 1 = dump every window (old behavior); values < 1 are clamped to 1. Pure diagnostic throttle, no gameplay effect; instant rollback by setting to 1.
+
+//--- ZG-FIX (zg-alive-population, claude-gaming 2026-07-03): Zargabad-scoped AI-POPULATION governor overrides.
+//--- WHY: the 2026-07-02 Zargabad soak glaciated - AI grew to ~440 units / 120+ groups (WEST ~140 + EAST ~140
+//--- + GUER ~150 at the tier-0 per-side cap of 140), server fps 47->8 by hour 3, 0 captures. ~440 sits AT the
+//--- measured fps knee (~450-470 units). This block RETUNES the existing governor levers ZG-scoped so steady
+//--- state lands ~280-320 total (below the knee with margin) WITHOUT feeling empty: fewer-but-FULL commander
+//--- teams (team size 8 UNCHANGED - Ray rule), consolidated town garrisons (SAME units, fewer group-brains),
+//--- and FASTER recycling of idle rear foot teams so the bounded budget refounds at the FRONT (density, not scarcity).
+//--- CH/TK: byte-identical - the whole block is skipped by the worldName guard. GUER OUTPUT UNTOUCHED (the
+//--- DEFENDER merge target + GUER group cap + GUER patrols are NOT set here; only WEST/EAST + shared totals move).
+//--- These are POST-overrides (run AFTER the bare CH/TK assignments above), the same idiom as the ZG
+//--- WFBE_C_ENVIRONMENT_MAX_VIEW cap (~L1383). Every value is a plain missionNamespace global - Ray retunes any
+//--- of them live on the box by editing this block (no ParamsArray entry gates them). NO sim/distance-gating is
+//--- wired (owner-rejected) and antistack is not touched; this is pure lever-retuning of the existing systems.
+	if (worldName == "Zargabad") then {
+		//--- (1) MASTER per-side WEST/EAST AI ceiling by pop-tier (0=LOW/1=MID/2=HIGH/3=FULL). Read by BOTH the
+		//--- founding gate (AI_Commander_Teams.sqf ~L235) and the produce/refill gate (AI_Commander_Produce.sqf ~L28);
+		//--- counts {side==_side && !isPlayer} ALL side AI incl. WEST/EAST town garrisons. CH/TK stays [140,130,100,80].
+		//--- ZG low-pop 80/side: WEST 80 + EAST 80 + GUER ~150 = ~310 total (target 280-320, ~150 below the knee).
+		WFBE_C_TOTAL_AI_MAX_BY_TIER = [80,80,70,60];   //--- ZG (was [140,130,100,80]). Rollback: restore the CH/TK array.
+		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
+		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
+		WFBE_C_AICOM_TEAMS_HARD_CAP = 5;               //--- ZG (was 10). Rollback: 10.
+		//--- (3) low/mid-pop PC-scaled base founding target (DELTA -1 then FLOOR/hard-cap clamp still apply): keep the
+		//--- base under the new hard cap so the curve, not just the clamp, sets team count. LOW 6-1=5, MID 5-1=4.
+		WFBE_C_AICOM_TEAMS_PC_LOW  = 6;                //--- ZG (was 10). Rollback: 10.
+		WFBE_C_AICOM_TEAMS_PC_MID  = 5;                //--- ZG (was 7).  Rollback: 7.
+		//--- (4) GARRISON CONSOLIDATION (WEST/EAST only): fuse town-garrison infantry into ~9-unit group-brains
+		//--- (was 5) so a defended town spawns the SAME units in FEWER server groups (fps win, gameplay-transparent;
+		//--- vehicles never merged; town DEFENSE strength unchanged). The GUER (defender) merge target + cap are the
+		//--- separate WFBE_C_TOWNS_MERGE_*_DEFENDER constants and are DELIBERATELY NOT touched (no GUER nerf).
+		WFBE_C_TOWNS_MERGE_TARGET = 9;                 //--- ZG (was 5, capped at the global 10 in Server_GetTownGroups). Rollback: 5.
+		//--- (5) ALIVE MANDATE - stale-team recycling. Halve the disband-pass interval so idle, REAR, foot-infantry
+		//--- teams (never in-view, never in combat - the existing safety re-checks in AI_Commander_DisbandLowTier.sqf
+		//--- + Common_RunCommanderTeam.sqf stand them back up if a player nears) are retired 2x faster; the freed
+		//--- founding budget refounds at the front via the founding gate + maneuver brain. SAME bounded population,
+		//--- MORE of it actively fighting instead of sitting stale in the rear. FLOOR 2->1 lets the short ZG rear
+		//--- recycle one more idle foot team. This wires through the EXISTING disband machinery - no new system.
+		WFBE_C_AICOM_DISBAND_INTERVAL = 150;           //--- ZG (was 300s). Rollback: 300.
+		WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR = 1;       //--- ZG (was 2). Rollback: 2.
+		//--- ALWAYS-ON init telemetry: log the resolved ZG governor caps ONCE at init so the next soak can verify the
+		//--- pack loaded (diag_log, ungated). Mirrors the AICOMSTAT|v2 pipe-KV shape the soak analyzer already parses.
+		diag_log ("AICOMSTAT|v2|EVENT|ZG|0|ALIVEPOP_INIT|capAI=" + str WFBE_C_TOTAL_AI_MAX_BY_TIER + "|capTeams=" + str WFBE_C_AICOM_TEAMS_HARD_CAP + "|pcLow=" + str WFBE_C_AICOM_TEAMS_PC_LOW + "|pcMid=" + str WFBE_C_AICOM_TEAMS_PC_MID + "|merge=" + str WFBE_C_TOWNS_MERGE_TARGET + "|disbandInt=" + str WFBE_C_AICOM_DISBAND_INTERVAL + "|infFloor=" + str WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR);
+	};
+//--- End ZG-FIX zg-alive-population Zargabad-scoped governor overrides.
 };
 
 // --- Player stats (feature-flagged) ---
