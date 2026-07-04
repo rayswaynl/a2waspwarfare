@@ -301,6 +301,29 @@ player Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\AddActions.sqf";
 player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
 
+//--- MARKER-AFFIX ROSTER FIX (Fable 2026-07-03): Ray reported his player MAP MARKER lost its NAME +
+//--- lobby-class affix (e.g. "[MED]") after a skin swap. Root cause: the map marker with the player's
+//--- name + [CLASS] tag is drawn by Client\FSM\updateteamsmarkers.sqf ONLY inside the per-team loop
+//--- `forEach clientTeams`, and ONLY when `player == leader _team` for a team in clientTeams (the fixed
+//--- side slot-groups WFBE_%1TEAMS). The swap creates the new body in a FRESH createGroup swap group and
+//--- the pre-selectPlayer `[_newUnit] join _oldGrp` did not stick (RPT: player ended in the off-roster
+//--- swap group O 1-3-C, not his slot-group O 1-1-G), so the loop no longer finds him as any team leader
+//--- -> his name+affix marker is never drawn (only the own-arrow, which carries NO text, still shows).
+//--- Respawn does NOT hit this because group-respawn (respawn=3) keeps the player in his SAME slot-group
+//--- and Client_OnKilled.sqf re-asserts leadership via selectLeader. Mirror that proven idiom here: after
+//--- the swap is verified, rejoin the ORIGINAL slot-group (_oldGrp, captured at entry = a clientTeams
+//--- member) and selectLeader so the marker loop finds him again. Only act when the slot-group is still
+//--- real (has a live leader or members); if it was reaped, keep him in the swap group (unchanged old
+//--- behaviour). A2-OA-1.64 safe: isNull / leader / count units / `[unit] join grp` (array LHS, the A2
+//--- form used at line 188 and Common_ChangeUnitGroup.sqf:11) / selectLeader / group. No A3 commands.
+if (!isNull _oldGrp && {group player != _oldGrp}) then {
+	if (!(isNull (leader _oldGrp)) || (count units _oldGrp > 0)) then {
+		[player] join _oldGrp;
+		(group player) selectLeader player;
+		diag_log format ["[WFBE (SKIN)] B5c roster-rejoin: player rejoined slot-group %1 (was off-roster) leader=%2", _oldGrp, (leader (group player))];
+	};
+};
+
 //--- cmdcon42 BUG-8 RESPAWN/ENROLLMENT RE-REGISTRATION (Ray 2026-07-02): the swap unit is created with
 //--- WFBE_CO_FNC_CreateUnit _global=false, so Common\Init\Init_Unit.sqf NEVER runs on it, and the
 //--- engine group-respawn (Header.hpp respawn=3) binds a player to BASE spawns through the enrollment
@@ -312,8 +335,9 @@ player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
 //--- Call GetRespawnAvailable produced NO base spawns (RPT: only deadspawn entries, then a stranded
 //--- dead player). Re-point the team globals at the player's CURRENT group so the enrollment the respawn
 //--- system reads is valid on the new body. sideJoined/sideID are SIDE-derived and unchanged by the swap
-//--- (same side), so we leave them; we only fix the GROUP-bound handles. Idempotent, A2-OA-1.64 safe
-//--- (isNull / group / plain global assignment - no A3-only commands).
+//--- (same side), so we leave them; we only fix the GROUP-bound handles. After the roster-rejoin above,
+//--- `group player` is normally the real slot-group again, so these globals + the marker loop all agree.
+//--- Idempotent, A2-OA-1.64 safe (isNull / group / plain global assignment - no A3-only commands).
 if (!isNull (group player)) then {
 	clientTeam = group player;
 	WFBE_Client_Team = group player;
