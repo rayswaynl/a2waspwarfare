@@ -49,6 +49,21 @@ if (!(isClass (configFile >> "CfgVehicles" >> _chosenClass))) exitWith {
 	hint format ["Skin class %1 not found in config.", _chosenClass];
 };
 
+//--- Guard: cross-side model (cmdcon44o, Ray live report). The engine respawn re-evaluates the
+//--- persisted class by CONFIG side (0=EAST,1=WEST,2=GUER), so a cross-side body makes the player's
+//--- OWN base AI execute him on every respawn/rejoin. Block here so no path (menu, wildcard, script)
+//--- can apply one. if/else chain, not switch (A2 no-match switch returns the switch value).
+Private ["_cfgSideN","_grpSideN"];
+_cfgSideN = getNumber (configFile >> "CfgVehicles" >> _chosenClass >> "side");
+_grpSideN = -1;
+if (side group player == WEST) then {_grpSideN = 1};
+if (side group player == EAST) then {_grpSideN = 0};
+if (side group player == resistance) then {_grpSideN = 2};
+if (_cfgSideN != _grpSideN) exitWith {
+	diag_log format ["[WFBE (SKIN)] B1 ABORT: class %1 config-side %2 != player side %3 - cross-side skins are respawn-hostile", _chosenClass, _cfgSideN, _grpSideN];
+	hint "That uniform belongs to another faction - your own base would treat you as an enemy after respawn.";
+};
+
 //--- Guard: must be alive AT EXECUTION time — the dialog loop's alive check can race
 //--- a lethal hit; a swap on a corpse collides with the OnKilled respawn flow.
 if (!(alive player)) exitWith {

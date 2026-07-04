@@ -75,6 +75,11 @@ if (_side == WEST) then {
 };
 
 if (_side == EAST) then {
+	//--- cmdcon44o (Ray live report 2026-07-04): CDF entries REMOVED from the EAST pool. CDF is a
+	//--- BLUFOR-config faction; the cmdcon42 "MODEL-ONLY, side is unaffected" assumption holds while
+	//--- alive in the slot group, but the ENGINE RESPAWN re-evaluates the persisted class by CONFIG
+	//--- side - an EAST player in a CDF body respawns hostile to his own base AI and gets executed
+	//--- on every respawn/rejoin. Cross-side skins are also hard-blocked in SkinSelector_Apply.sqf.
 	_pool = [
 		["RU_Soldier",            "", false],
 		["RU_Soldier_TL",         "", false],
@@ -82,9 +87,6 @@ if (_side == EAST) then {
 		["RU_Soldier_MG",         "", false],
 		["RU_Soldier_GL",         "", false],
 		["RU_Soldier_Medic",      "", false],
-		["CDF_Soldier",           "", false],
-		["CDF_Soldier_TL",        "", false],
-		["CDF_Soldier_Light",     "", false],
 		["Ins_Soldier_1",         "", false],
 		["Ins_Soldier_2",         "", false],
 		["MVD_Soldier_TL",        "", false],
@@ -108,10 +110,6 @@ if (_side == EAST) then {
 		["Ins_Soldier_MG",           "Insurgent Machinegunner", false],
 		["Ins_Soldier_CO",           "Insurgent Commander",     false],
 		["Ins_Soldier_AT",           "Insurgent Rifleman (AT)", false],
-		["CDF_Soldier_AR",            "CDF Autorifleman",        false],
-		["CDF_Soldier_MG",            "CDF Machinegunner",       false],
-		["CDF_Soldier_Officer",       "CDF Officer",             false],
-		["CDF_Soldier_Crew",          "CDF Vehicle Crew",        false],
 		["TK_Soldier_AR_EP1",         "Takistani Autorifleman",  false],
 		["TK_Soldier_MG_EP1",         "Takistani Machinegunner", false],
 		["TK_Soldier_Officer_EP1",    "Takistani Officer",       false],
