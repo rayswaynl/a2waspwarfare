@@ -112,16 +112,24 @@ def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
 def mix(c,t): return lerp(BG,c,t)
 
-def paste_cover(im, aid, box=None, opacity=1.0, seed=None):
+def paste_cover(im, aid, box=None, opacity=1.0, seed=None, kb=None):
     """Paste an asset scaled to COVER box (default whole frame). Returns True if used.
-    Pass seed to rotate among dropped <slot>_k.png variants for per-match variety."""
+    Pass seed to rotate among dropped <slot>_k.png variants for per-match variety.
+    Pass kb=scene-progress (0..1) for a slow Ken-Burns push-in + drift (cinematic
+    life on the still backdrops, no extra assets)."""
     a = vasset(aid, seed) if seed is not None else asset(aid)
     if a is None: return False
     bx = box or (0, 0, W, H); bw = bx[2]-bx[0]; bh = bx[3]-bx[1]
-    s = max(bw/a.width, bh/a.height); a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
+    s = max(bw/a.width, bh/a.height)
+    dx = dy = 0
+    if kb is not None:
+        e = ease(max(0.0, min(1.0, kb)))
+        s *= 1.0 + 0.07*e          # push in ~7% across the scene
+        dy = -int(20*e)            # and drift up a touch
+    a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     if opacity < 1.0:
         a2 = a2.copy(); a2.putalpha(a2.split()[3].point(lambda v:int(v*opacity)))
-    im.paste(a2, (bx[0]+(bw-a2.width)//2, bx[1]+(bh-a2.height)//2), a2); return True
+    im.paste(a2, (bx[0]+(bw-a2.width)//2+dx, bx[1]+(bh-a2.height)//2+dy), a2); return True
 
 def paste_emblem(im, aid, cx, cy, maxw, seed=None):
     a = vasset(aid, seed) if seed is not None else asset(aid)
@@ -291,6 +299,20 @@ class Renderer:
                 gx=c/size*S; cy=y0+(1-self._coast(gx)/S)*size
                 if y0<=cy<=y0+size: coastpts.append((x0+c,cy))
             if len(coastpts)>1: d.line(coastpts,fill=COAST,width=2)
+        # --- FRONT LINE: glowing trace where BLUFOR territory meets OPFOR territory ---
+        code=np.array([{"west":1,"east":2}.get(o[m.tnames[j]],0) for j in range(len(m.tnames))],dtype=np.int8)
+        cell=code[m.nearest].copy(); cell[self.sea]=0
+        w_=(cell==1); e_=(cell==2); cf=size/GC
+        vb=(w_[:,:-1]&e_[:,1:])|(e_[:,:-1]&w_[:,1:])   # vertical edges (between col c and c+1)
+        hb=(w_[:-1,:]&e_[1:,:])|(e_[:-1,:]&w_[1:,:])   # horizontal edges (between row r and r+1)
+        fsegs=[((x0+(c+1)*cf,y0+r*cf),(x0+(c+1)*cf,y0+(r+1)*cf)) for r,c in zip(*np.where(vb))]
+        fsegs+=[((x0+c*cf,y0+(r+1)*cf),(x0+(c+1)*cf,y0+(r+1)*cf)) for r,c in zip(*np.where(hb))]
+        if fsegs:
+            gl=Image.new("RGBA",(im.width,im.height),(0,0,0,0)); gd=ImageDraw.Draw(gl)
+            for a,b in fsegs: gd.line([a,b],fill=(230,140,70,255),width=max(5,int(11*sc)))
+            gl=gl.filter(ImageFilter.GaussianBlur(max(3,int(6*sc))))
+            im.paste(gl,(0,0),gl)                                       # soft orange front glow
+            for a,b in fsegs: d.line([a,b],fill=(255,214,150,255),width=max(2,int(3*sc)))   # crisp hot core
         # --- military grid + edge coordinates ---
         for k in range(12):
             gx=x0+k*size/11; gy=y0+k*size/11
@@ -313,15 +335,23 @@ class Renderer:
             d.ellipse([cx-rr-2,cy-rr-2,cx+rr+2,cy+rr+2],fill=(8,10,14))
             d.ellipse([cx-rr,cy-rr,cx+rr,cy+rr],fill=col)
         if labels:
-            placed=[]
-            for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):  # north-first
+            # greedy anti-overlap: try right/left/above/below the dot, place at the first
+            # candidate that clears the map edge and every label already placed. Keeps far
+            # more town names than the old "drop if the dot is near another dot" rule.
+            boxes=[]
+            def _fits(bx0,by0,bx1,by1):
+                if bx0<x0+2 or bx1>x0+size-2 or by0<y0+2 or by1>y0+size-2: return False
+                return not any(bx0<q[2] and q[0]<bx1 and by0<q[3] and q[1]<by1 for q in boxes)
+            for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):   # north-first
                 cx=x0+x/S*size; cy=y0+(1-y/S)*size
-                if any(abs(cx-px)<104*sc and abs(cy-py)<18*sc for px,py in placed): continue
-                placed.append((cx,cy))
-                lw=d.textlength(t,font=f_xs); lx=cx+10*sc
-                if lx+lw>x0+size-4: lx=cx-10*sc-lw   # flip label left of the dot near the east edge
-                d.text((lx+1,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
-                d.text((lx,cy-10*sc),t,font=f_xs,fill=(220,228,240))
+                bb=d.textbbox((0,0),t,font=f_xs); lw=bb[2]-bb[0]; lh=bb[3]-bb[1]; g=11*sc
+                for lx,ly in ((cx+g,cy-lh/2),(cx-g-lw,cy-lh/2),(cx-lw/2,cy-g-lh),(cx-lw/2,cy+g)):
+                    box=(lx-2,ly-2,lx+lw+2,ly+lh+2)
+                    if _fits(*box):
+                        boxes.append(box)
+                        d.text((lx+1,ly+1),t,font=f_xs,fill=(20,24,30))        # shadow for legibility
+                        d.text((lx,ly),t,font=f_xs,fill=(222,228,238))
+                        break
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
 def footer(im,d):
@@ -396,7 +426,7 @@ def render(m, out_path):
         col=SIDE_COL[m.winner]
         wash=np.asarray(im).astype(np.float32); wash[:]=lerp(BG,col,0.18)
         im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0))
-        paste_cover(im,"intro_splash",opacity=0.40,seed=m.seed)
+        paste_cover(im,"intro_splash",opacity=0.40,seed=m.seed,kb=i/n)
         d=ImageDraw.Draw(im,"RGBA")
         mk=brand_logo("mark")
         if mk is not None:
@@ -432,7 +462,7 @@ def render(m, out_path):
         footer(im,d)
 
     def s_momentum(im,d,i,n):
-        paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed)   # generated scene backdrop (seed rotates)
+        paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed,kb=i/n)   # generated scene backdrop (seed rotates)
         drift_silhouette(im,2,i,n,yfrac=0.78,wfrac=0.46,opacity=0.40,direction=(-1 if m.seed%2 else 1))  # jet w/ afterburner, clear lower band
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
@@ -461,7 +491,7 @@ def render(m, out_path):
 
     def s_mvp(im,d,i,n):
         if not m.mvp: return
-        paste_cover(im,"mvp_backdrop",opacity=0.5,seed=m.seed)   # dimmed so the stat card pops
+        paste_cover(im,"mvp_backdrop",opacity=0.5,seed=m.seed,kb=i/n)   # dimmed so the stat card pops
         header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
         panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
         if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
@@ -542,7 +572,7 @@ def render(m, out_path):
 
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
-        if paste_cover(im, winner_bg_id(m.winner), seed=m.seed):
+        if paste_cover(im, winner_bg_id(m.winner), seed=m.seed, kb=i/n):
             d=ImageDraw.Draw(im,"RGBA")
         else:
             wash=np.asarray(im).astype(np.float32); wash[:]=mix(lerp(BG,col,0.20),k); im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0)); d=ImageDraw.Draw(im,"RGBA")
@@ -564,7 +594,7 @@ def render(m, out_path):
 
     def s_outro(im,d,i,n):
         # closing call-to-action card — converts a view into a follow / a player.
-        if not paste_cover(im,"outro_bg",seed=m.seed): paste_cover(im,"intro_splash",seed=m.seed)
+        if not paste_cover(im,"outro_bg",seed=m.seed,kb=i/n): paste_cover(im,"intro_splash",seed=m.seed,kb=i/n)
         d=ImageDraw.Draw(im,"RGBA")
         drift_silhouette(im,m.seed+3,i,n,yfrac=0.66,wfrac=0.66,opacity=0.12)
         mk=brand_logo("mark")
