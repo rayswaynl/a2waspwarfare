@@ -622,7 +622,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				};
 			};
 			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}) then {
-				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur","_esSupply","_esDual"];
+				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur","_esSupply","_esDual","_esSkipLogKey"];
 				_esFrac = missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_FRAC", 0.85];
 				_esCap  = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
 				_esFunds = (_side) Call GetAICommanderFunds;
@@ -665,9 +665,20 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 							if (_esChosen < 0) then {
 								//--- enabled? (disabled upgrades are never researchable)
 								_esOk = true;
-								if (_esUp < count _esOrder) then {if !(_esOrder select _esUp) then {_esOk = false}};
+								_esCur = _esUpg select _esUp;
+								if (_esUp < count _esOrder) then {
+									if !(_esOrder select _esUp) then {
+										_esOk = false;
+										if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
+											_esSkipLogKey = Format ["wfbe_aicom_econ_disabled_skip_%1", _esUp];
+											if !(_logik getVariable [_esSkipLogKey, false]) then {
+												_logik setVariable [_esSkipLogKey, true];
+												diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_DISABLED|id=" + str _esUp + "|cur=" + str _esCur + "|max=" + str (_esLvls select _esUp));
+											};
+										};
+									};
+								};
 								if (_esOk) then {
-									_esCur = _esUpg select _esUp;
 									//--- not maxed?
 									if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
 										//--- price of THIS level (researching level N+1 costs COSTS select N - the b74 off-by-one fix).
