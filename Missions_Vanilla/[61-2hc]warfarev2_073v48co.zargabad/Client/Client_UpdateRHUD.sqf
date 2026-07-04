@@ -320,6 +320,13 @@ sleep 10;
 _RHUD_upgId = -1;
 _RHUD_upgEnd = 0;
 
+//--- Ray 2026-07-04: the squad/info RHUD column ("radar at bottom with squad") is retired - it is hard-off for
+//--- EVERYONE regardless of the saved WFBE_RUBHUD_ENABLED profile flag. Forcing RUBHUD false here pins _hudMode
+//--- to "hidden" every iteration, so the Health/Commander/AI/Money/Supply/Base/FPS/Upgrade/Arty rows never show.
+//--- The loop is deliberately NOT exited: it keeps running so the factory build-queue line (idc 1374, index 29)
+//--- still renders below (see the queue block after the switch). The full-column code path is kept dormant.
+RUBHUD = false;
+
 while {true} do {
 	sleep 1;
 
@@ -349,8 +356,11 @@ while {true} do {
 			case "hidden": {
 				if (_lastHudMode != _hudMode) then {
 					for "_idx" from 0 to ((count _rhudIDC) - 1) do {
-						[_idx, false] call _RHUDSetShow;
+						//--- Ray 2026-07-04: hide every info row EXCEPT index 29 (idc 1374 = build-queue line), which
+						//--- stays live at the bottom of the RHUD area even though the squad/info column is off.
+						if (_idx != 29) then {[_idx, false] call _RHUDSetShow};
 					};
+					[29, true] call _RHUDSetShow;	//--- ensure the queue line is shown once when we enter hidden mode.
 					_labelsApplied = false;
 					_hudWasShown = false;
 					_lastHudMode = _hudMode;
@@ -563,10 +573,17 @@ while {true} do {
 			call _RHUDUpdateUpgrade;
 			/* b760: arty cooldown is folded into the FPS C/S line via _RHUDUpdateServerFPSRow; no standalone row. */
 
-			//--- Ray B89: factory build-queue readout on the RHUD bottom line (idc 1374, structured text).
-			//--- Client_BuildUnit.sqf writes WFBE_CL_QUEUE_HUD + a WFBE_CL_QUEUE_HUD_TS timestamp; render it while
-			//--- fresh (<= 6s old), else blank. Empty/stale string parses to nothing, so the line self-hides with an
-			//--- empty structured text (no ctrlShow needed - it already tracks the RHUD show/hide with the other rows).
+			};
+		};
+
+		//--- Ray 2026-07-04: factory build-queue readout on the RHUD bottom line (idc 1374, index 29, structured text).
+		//--- MOVED OUT of the (now-dormant) "full" case so it renders EVERY iteration while _display is non-null, even
+		//--- though the squad/info column is hard-off. Guard on the control cache being built (index 29 resolved) so
+		//--- this is a no-op until _RHUDResetControlCache has run for the current cut display.
+		//--- Client_BuildUnit.sqf writes WFBE_CL_QUEUE_HUD + a WFBE_CL_QUEUE_HUD_TS timestamp; render it while fresh
+		//--- (<= 6s old), else blank. Empty/stale string parses to nothing, so the line self-hides (idc 1374 is shown
+		//--- once by the hidden case; its screen position is absolute in Rsc/Titles.hpp, so no full-anchor call needed).
+		if ((count _controls >= 30) && {!isNull (_controls select 29)}) then {
 			_queueHudTxt = missionNamespace getVariable ["WFBE_CL_QUEUE_HUD", ""];
 			if (typeName _queueHudTxt != "STRING") then {_queueHudTxt = ""};
 			_queueHudTs = missionNamespace getVariable ["WFBE_CL_QUEUE_HUD_TS", -1e6];
@@ -576,7 +593,6 @@ while {true} do {
 				_queueHudCtrl = _controls select 29;	//--- 1374 is the last _rhudIDC entry (index 29).
 				_queueHudCtrl ctrlSetStructuredText parseText _queueHudTxt;
 				_lastQueueHud = _queueHudTxt;
-			};
 			};
 		};
 
