@@ -1050,6 +1050,37 @@ while {!WFBE_GameOver && _alive} do {
 										_uVeh setPos (getPos _uNode);
 										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 unstuck teleport-nudge to road node (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
 									};
+								} else {
+									//--- NO-ROAD SHELF FALLBACK (cmdcon44i, gate WFBE_C_AICOM_RECOVERY_NOROAD_STEP default 1, same wedge-escape as the foot branch below): a
+									//--- MOUNTED hull wedged on a roadless shelf gets NO road snap either (nearRoads empty). Step the HULL toward the order dest onto the
+									//--- nearest isFlatEmpty non-water spot - the flat-empty gate rejects steep/occupied ground so a hull is only moved to a drivable pad
+									//--- (never dropped onto a slope to flip); if no flat pad exists it does nothing (no worse than today). A2-OA-safe: atan2 delta bearing,
+									//--- isFlatEmpty/surfaceIsWater/setPos, group order read via getVariable+isNil (groups reject [name,default]). Flag 0 = inert.
+									if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0) then {
+										private ["_nvOrder","_nvDest","_nvBrg","_nvStep","_nvGuess","_nvFlat","_nvPos","_nvVp"];
+										_nvOrder = _uTeam getVariable "wfbe_aicom_order";
+										_nvDest  = objNull;
+										if (!isNil "_nvOrder" && {count _nvOrder >= 3}) then {_nvDest = _nvOrder select 2};
+										if (!isNil "_nvDest" && {typeName _nvDest == "ARRAY"} && {count _nvDest >= 2}) then {
+											_nvVp   = getPosATL _uVeh;
+											_nvBrg  = ((_nvDest select 0) - (_nvVp select 0)) atan2 ((_nvDest select 1) - (_nvVp select 1));
+											_nvStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
+											if (_nvStep > ((_uVeh distance _nvDest) - 15)) then {_nvStep = ((_uVeh distance _nvDest) - 15) max 0};
+											if (_nvStep > 5) then {
+												_nvGuess = [(_nvVp select 0) + _nvStep * (sin _nvBrg), (_nvVp select 1) + _nvStep * (cos _nvBrg), 0];
+												//--- Wider flat-empty footprint for a hull (12m) so we only relocate onto genuinely drivable ground.
+												_nvFlat = _nvGuess isFlatEmpty [12, 0, 2, 14, 0, false, objNull];
+												if (count _nvFlat > 0 && {!surfaceIsWater _nvFlat}) then {
+													_nvPos = _nvFlat;
+													_uVeh setVelocity [0,0,0];
+													_uVeh setPos _nvPos;
+													missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
+													diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_NOROAD_STEP|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|step=" + str (round _nvStep) + "|veh=1");
+													["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 NO-ROAD hull step %3m toward objective (map=%4).", _uSide, _uTeam, round _nvStep, worldName]] Call WFBE_CO_FNC_AICOMLog;
+												};
+											};
+										};
+									};
 								};
 							};
 						};
@@ -1090,6 +1121,43 @@ while {!WFBE_GameOver && _alive} do {
 										//--- Re-form the squad on the relocated leader so dismounts/stragglers regroup (never idle).
 										{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
 										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 FOOT/dead-hull unstuck teleport-nudge to road node (re-formed on leader) (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
+									};
+								} else {
+									//--- NO-ROAD SHELF FALLBACK (cmdcon44i, claude-gaming 2026-07-04, gate WFBE_C_AICOM_RECOVERY_NOROAD_STEP default 1): the road-snap above does
+									//--- NOTHING when nearRoads finds no road inside the ring - exactly the roadless mountain-shelf founding case (live cmdcon44i Zargabad:
+									//--- EAST foot teams O 1-1-E/O 1-1-G founded on the SE spawn shelf, frozen at dist=1771m for ~24min, tiers 1-4 cycled with ZERO effect
+									//--- because NO TIER3 teleport line ever emitted - _uFootRds was empty). When no road exists, STEP the leader a fixed
+									//--- WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST (default 90m) toward the ORDER DESTINATION (bearing leader->dest) onto the nearest flat-empty
+									//--- non-water ground there, so the shelf team is bumped OFF the shelf toward its objective instead of pinned forever. This is the wedge
+									//--- escape the capture-lock TTL was meant to be, for a FOOT team that never even reaches the arrival gate. Same player-guard (checked
+									//--- above at _uFootPlayerNear), same squad re-form. A2-OA-safe: getVariable+isNil order read (groups reject [name,default]), atan2
+									//--- position-delta bearing (binary getDir is A3-only), isFlatEmpty / surfaceIsWater / setPos. Flag 0 = inert (byte-identical to HEAD).
+									if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0) then {
+										private ["_nrOrder","_nrDest","_nrBrg","_nrStep","_nrGuess","_nrFlat","_nrPos","_nrLp"];
+										_nrOrder = _uTeam getVariable "wfbe_aicom_order";
+										_nrDest  = objNull;
+										if (!isNil "_nrOrder" && {count _nrOrder >= 3}) then {_nrDest = _nrOrder select 2};
+										if (!isNil "_nrDest" && {typeName _nrDest == "ARRAY"} && {count _nrDest >= 2}) then {
+											_nrLp   = getPosATL _uLdr;
+											_nrBrg  = ((_nrDest select 0) - (_nrLp select 0)) atan2 ((_nrDest select 1) - (_nrLp select 1)); //--- A2-safe bearing leader->dest.
+											_nrStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
+											//--- Clamp so a near-target step never overshoots past the dest.
+											if (_nrStep > ((_uLdr distance _nrDest) - 10)) then {_nrStep = ((_uLdr distance _nrDest) - 10) max 0};
+											if (_nrStep > 5) then {
+												_nrGuess = [(_nrLp select 0) + _nrStep * (sin _nrBrg), (_nrLp select 1) + _nrStep * (cos _nrBrg), 0];
+												//--- Snap to a nearby flat-empty spot so the squad is not dropped inside a rock/wall; fall back to the raw guess.
+												_nrFlat = _nrGuess isFlatEmpty [8, 0, 3, 10, 0, false, objNull];
+												_nrPos  = if (count _nrFlat > 0) then {_nrFlat} else {_nrGuess};
+												if (!surfaceIsWater _nrPos) then {
+													_uLdr setVelocity [0,0,0];
+													_uLdr setPos _nrPos;
+													{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
+													missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
+													diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_NOROAD_STEP|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|step=" + str (round _nrStep));
+													["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 NO-ROAD shelf step %3m toward objective (re-formed on leader) (map=%4).", _uSide, _uTeam, round _nrStep, worldName]] Call WFBE_CO_FNC_AICOMLog;
+												};
+											};
+										};
 									};
 								};
 							};
@@ -1725,10 +1793,16 @@ while {!WFBE_GameOver && _alive} do {
 					//--- Stamp a BROADCAST group var wfbe_aicom_caplock = [townObj, t0] (3-arg GROUP setVariable IS valid on A2 OA; only the
 					//--- 3-arg NAMESPACE form is the trap). The driver runs on the HC; the order ISSUERS run on the server + read this via
 					//--- WFBE_CO_FNC_CapLock, so the public flag is mandatory for cross-machine visibility (mirrors wfbe_aicom_strike broadcasts).
-					//--- The lock makes the team immune to re-targeting until captured / dead / TTL / town-flips-to-us (see the helper). Re-stamped
-					//--- idempotently every capture pass; refreshing t0 is intentional (a team still actively draining should not TTL-expire).
+					//--- The lock makes the team immune to re-targeting until captured / dead / TTL / town-flips-to-us (see the helper).
+					//--- DEADLOCK FIX (2026-07-04): re-stamps PRESERVE the original t0 for the same town - refreshing t0 every pass
+					//--- made the 600s TTL unreachable, permanently pinning a team wedged inside the capture radius. TTL now
+					//--- measures total time-in-capture; a genuinely slow drain re-locks after one issuer re-evaluation.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_CAPTURE_LOCK", 1]) > 0) then {
-						_team setVariable ["wfbe_aicom_caplock", [_townObj, time], true];
+						private ["_capPrev","_capT0"];
+						_capPrev = _team getVariable "wfbe_aicom_caplock";
+						_capT0 = time;
+						if (!isNil "_capPrev" && {typeName _capPrev == "ARRAY"} && {count _capPrev >= 2} && {(_capPrev select 0) == _townObj}) then {_capT0 = _capPrev select 1};
+						_team setVariable ["wfbe_aicom_caplock", [_townObj, _capT0], true];
 					};
 
 					//--- ALWAYS dismount: build the on-foot infantry list from EVERY alive non-crew
