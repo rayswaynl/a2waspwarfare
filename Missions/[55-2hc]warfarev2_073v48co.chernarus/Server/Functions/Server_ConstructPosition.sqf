@@ -76,6 +76,11 @@ for "_i" from 0 to (count _template - 1) do {
 	if (!isNil "_one") then {
 		if (typeName _one == "OBJECT") then {
 			_one setVariable ["WFBE_WDDMPositionAnchor", _placementID, true];
+			//--- fix(wddm) sell-exploit: also stamp the ANCHOR classname on every child so the commander
+			//--- sell path (coin_interface.sqf) can refund the whole position at the ANCHOR price (what was
+			//--- actually paid) exactly once, instead of round(childPrice/2.5) per child (children sum far
+			//--- exceeds the anchor -> money printer). Public arg so the client sell path reads it.
+			_one setVariable ["WFBE_WDDMAnchorClass", _anchorType, true];
 				//--- cmdcon44-c: capture the flak-tower HOST deck height. This ground child (z~0) is the tower;
 				//--- measure its real top via boundingBox so the gun child (later in this composition) mounts on
 				//--- the actual platform, not a guessed z. boundingBox max-z is the model top above the object's

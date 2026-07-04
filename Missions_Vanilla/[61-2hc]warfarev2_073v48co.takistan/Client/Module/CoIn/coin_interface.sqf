@@ -250,6 +250,41 @@ BIS_CONTROL_CAM_Handler = {
 						_closestType = typeOf (_closest);
 						_get = missionNamespace getVariable _closestType;
                                                if ((player distance _closest) > ((_logic getVariable "BIS_COIN_areasize") select 0) || (_closest getVariable 'side') != sideJoined) exitWith {};
+						private ["_wddmID","_anchorCls","_anchorGet","_refund","_sibNames","_sibs","_removed"];
+						//--- fix(wddm) sell-exploit: WDDM composition children carry WFBE_WDDMPositionAnchor (placement id)
+						//--- + WFBE_WDDMAnchorClass (the anchor classname the commander PAID for). A composition spawns
+						//--- many individually-sellable children, but only the ONE anchor price was charged. Selling any
+						//--- child therefore sells the WHOLE position for exactly ONE refund = round(anchorPrice/2.5) and
+						//--- deletes every sibling. Guard: refund is derived from the anchor price (what was paid) so it
+						//--- can never exceed the cost, aggregate per position; children never refund on their own.
+						_wddmID = _closest getVariable ["WFBE_WDDMPositionAnchor", ""];
+						if (_wddmID != "" && isNil '_sold') then {
+							//--- Anchor price = what the commander paid for the whole position (0 if unresolvable -> refund 0).
+							_anchorCls = _closest getVariable ["WFBE_WDDMAnchorClass", ""];
+							_anchorGet = if (_anchorCls == "") then {nil} else {missionNamespace getVariable _anchorCls};
+							_refund = 0;
+							if (!isNil '_anchorGet') then {_refund = round((_anchorGet select QUERYUNITPRICE)/2.5)};
+							//--- Collect every sibling of this composition (same placement id) within the footprint, mark sold, delete.
+							_sibNames = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText];
+							_sibs = nearestObjects [getPos _closest, _sibNames, 40];
+							_removed = 0;
+							{
+								if ((_x getVariable ["WFBE_WDDMPositionAnchor", ""]) == _wddmID) then {
+									_x setVariable ['sold',true];
+									deleteVehicle _x;
+									_removed = _removed + 1;
+								};
+							} forEach _sibs;
+							//--- Single aggregate refund into the same pool the commander buys from (mirrors the legacy path).
+							if (_refund > 0) then {
+								if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0 && {(missionNamespace getVariable ["WFBE_C_CMD_DEF_SUPPLY", 1]) > 0}) then {
+									[sideJoined, _refund, "Commander fortification position sold.", false] Call ChangeSideSupply;
+								} else {
+									_refund Call ChangePlayerFunds;
+								};
+							};
+							diag_log Format ["WDDM_SELL|anchor=%1|refund=%2|childrenRemoved=%3", _anchorCls, _refund, _removed];
+						} else {
 						if (!isNil '_get' && isNil '_sold') then {
 							_closest setVariable ['sold',true];
 							_price = _get select QUERYUNITPRICE;
@@ -271,6 +306,7 @@ BIS_CONTROL_CAM_Handler = {
 							hintSilent parseText format ["Available Items : " +"<t color='#00FF00'>"+" %1"+"</t>", _area getVariable 'avail'];
 							[leader commanderTeam, "Available", _area getVariable 'avail'] Call WFBE_CO_FNC_SendToClient;};
 							deleteVehicle _closest;
+						};
 						};
 					};
 				};
