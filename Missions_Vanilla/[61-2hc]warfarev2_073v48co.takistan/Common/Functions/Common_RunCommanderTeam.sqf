@@ -1793,10 +1793,16 @@ while {!WFBE_GameOver && _alive} do {
 					//--- Stamp a BROADCAST group var wfbe_aicom_caplock = [townObj, t0] (3-arg GROUP setVariable IS valid on A2 OA; only the
 					//--- 3-arg NAMESPACE form is the trap). The driver runs on the HC; the order ISSUERS run on the server + read this via
 					//--- WFBE_CO_FNC_CapLock, so the public flag is mandatory for cross-machine visibility (mirrors wfbe_aicom_strike broadcasts).
-					//--- The lock makes the team immune to re-targeting until captured / dead / TTL / town-flips-to-us (see the helper). Re-stamped
-					//--- idempotently every capture pass; refreshing t0 is intentional (a team still actively draining should not TTL-expire).
+					//--- The lock makes the team immune to re-targeting until captured / dead / TTL / town-flips-to-us (see the helper).
+					//--- DEADLOCK FIX (2026-07-04): re-stamps PRESERVE the original t0 for the same town - refreshing t0 every pass
+					//--- made the 600s TTL unreachable, permanently pinning a team wedged inside the capture radius. TTL now
+					//--- measures total time-in-capture; a genuinely slow drain re-locks after one issuer re-evaluation.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_CAPTURE_LOCK", 1]) > 0) then {
-						_team setVariable ["wfbe_aicom_caplock", [_townObj, time], true];
+						private ["_capPrev","_capT0"];
+						_capPrev = _team getVariable "wfbe_aicom_caplock";
+						_capT0 = time;
+						if (!isNil "_capPrev" && {typeName _capPrev == "ARRAY"} && {count _capPrev >= 2} && {(_capPrev select 0) == _townObj}) then {_capT0 = _capPrev select 1};
+						_team setVariable ["wfbe_aicom_caplock", [_townObj, _capT0], true];
 					};
 
 					//--- ALWAYS dismount: build the on-foot infantry list from EVERY alive non-crew
