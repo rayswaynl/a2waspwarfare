@@ -194,13 +194,14 @@ def _fx_grain():
         _fx["grain"]=(np.random.default_rng(7).random((H+96,W))*255).astype(np.uint8)
     return _fx["grain"]
 def _fx_frame():
+    # Quiet, minimal corner ticks + one small orange accent. No ruler ticks, no radar
+    # arcs, no crosses — a printed-brief register, deliberately understated.
     if "frame" in _fx: return _fx["frame"]
     fo=Image.new("RGBA",(W,H),(0,0,0,0)); d=ImageDraw.Draw(fo)
-    c=(150,150,138,150); o=(217,118,60,170); L=72; mg=34
+    c=(150,150,138,80); o=(217,118,60,140); L=46; mg=44
     for (cx,cy,sx,sy) in [(mg,mg,1,1),(W-mg,mg,-1,1),(mg,H-mg,1,-1),(W-mg,H-mg,-1,-1)]:
-        d.line([(cx,cy),(cx+L*sx,cy)],fill=c,width=3); d.line([(cx,cy),(cx,cy+L*sy)],fill=c,width=3)
-        d.line([(cx,cy),(cx+16*sx,cy)],fill=o,width=3)
-    for x in range(150,W-120,96): d.line([(x,mg-7),(x,mg)],fill=(150,150,138,60))
+        d.line([(cx,cy),(cx+L*sx,cy)],fill=c,width=2); d.line([(cx,cy),(cx,cy+L*sy)],fill=c,width=2)
+        d.line([(cx,cy),(cx+12*sx,cy)],fill=o,width=2)
     _fx["frame"]=fo; return fo
 
 def overlay_fx(im, i=0):
@@ -217,8 +218,9 @@ def overlay_fx(im, i=0):
         # static grain (i-independent) so x264 inter-prediction stays cheap -> small file
         gg=_fx_grain(); tile=Image.fromarray(gg[:H,:])
         out=Image.alpha_composite(out, Image.merge("RGBA",[tile]*3+[tile.point(lambda v:9)]))
-    fo=asset("frame_overlay")
-    out=Image.alpha_composite(out, fo.resize((W,H)) if fo is not None else _fx_frame())
+    # Always the clean procedural corners — the frame_overlay.png asset is the busy
+    # radar-reticle HUD (edge ruler ticks + corner arcs + micro-labels) we're dropping.
+    out=Image.alpha_composite(out, _fx_frame())
     return out.convert("RGB")
 
 MX0,MY0,MS=40,470,1000
@@ -251,8 +253,9 @@ class Renderer:
                 gx=(c+0.5)/GC*S; gy=(1-(r+0.5)/GC)*S
                 if _seamask is not None: self.sea[r,c]= _seamask[r,c]>128
                 else: self.sea[r,c]= gy < self._coast(gx) or (gx>0.94*S and gy<0.42*S)
-                self.relief[r,c]=0.5+0.5*math.sin(gx/S*22+gy/S*6)*math.cos(gy/S*17)
-        self.relief=0.6*self.relief+0.4*rngn.random((GC,GC))
+                # smooth, low-amplitude relief only (no RNG mottling) — reads as gentle
+                # terrain shading, not pixel-noise.
+                self.relief[r,c]=0.5+0.5*math.sin(gx/S*9+gy/S*4)*math.cos(gy/S*7)
         # roads: connect each town to its 2 nearest neighbours (deduped undirected edges).
         names=m.tnames; pos=[m.towns[t] for t in names]; edges=set()
         for i,(ax,ay) in enumerate(pos):
@@ -271,10 +274,13 @@ class Renderer:
                 if self.sea[r,c]:
                     band=1.0+0.12*math.sin(r*0.9); terr[r,c]=tuple(min(255,int(v*band)) for v in WATER)
                 else:
-                    s=o[m.tnames[m.nearest[r,c]]]; rel=0.78+0.5*self.relief[r,c]
+                    s=o[m.tnames[m.nearest[r,c]]]; rel=0.86+0.28*self.relief[r,c]
                     base=lerp(LAND_BASE,SIDE_COL[s],0.34 if s!="neu" else 0.10)
                     terr[r,c]=tuple(min(255,int(v*rel)) for v in base)
-        im.paste(Image.fromarray(terr).resize((size,size),Image.NEAREST),(x0,y0))
+        # smooth territory: bilinear upscale + a light blur so ownership regions read as
+        # clean areas with soft fronts, not blocky pixel-noise.
+        tim=Image.fromarray(terr).resize((size,size),Image.BILINEAR).filter(ImageFilter.GaussianBlur(max(1,int(size/220))))
+        im.paste(tim,(x0,y0))
         # --- coastline stroke ---
         if self.coast_poly:
             cpts=[(x0+wx/S*size, y0+(1-wy/S)*size) for (wx,wy) in self.coast_poly]
