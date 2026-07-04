@@ -1,46 +1,80 @@
 /*
-	Settings_Open.sqf
-	Opens the per-player Settings menu (idd 29000) and runs the controller loop.
-	Opened from GUI_Menu.sqf MenuAction 24 (WF-menu GEAR button, the revived skins-button slot).
-	Mirrors FPSPicker_Open.sqf: every button sets the SUB-dialog global WFBE_MenuAction (NOT the host
-	MenuAction); this loop polls it, applies the change LIVE, persists per-click via WFBE_CO_FNC_SetProfileVariable.
+	Settings_Open.sqf  (v2 - GR-2026-07-03a)
+	Opens the unified PLAYER SETTINGS dialog (idd 30000) and runs the controller loop.
+	Opened from GUI_Menu.sqf MenuAction 23 (WF-menu "FPS" button) AND MenuAction 24 ("SETUP"/GEAR button):
+	both footer entry points now land on this one screen (the old split WFBE_SettingsMenu/WFBE_FPSPickerMenu
+	menus are retired). Every button sets the SUB-dialog global WFBE_MenuAction (NOT the host MenuAction);
+	this loop polls it, applies the change LIVE, and persists per-click via WFBE_CO_FNC_SetProfileVariable.
+	The profile KEYS are unchanged from v1, so existing player profiles carry over 1:1.
 
-	v1 client-per-player toggles (all client-local; never affect other players):
-	  HUD overlay (RUBHUD) | AAR map markers | Bomb-altitude warning | Ambulance redeploy circles |
-	  Kill feed (bounty chat) | View distance (1000-5000m choice; coordinates with the auto-VD/FPS picker).
+	Player-side options (all client-local; never affect other players):
+	  VIDEO    : View distance (slider 500..map cap) | Auto view distance on/off | Target FPS 30/45/50/60
+	  GAMEPLAY : HUD overlay | AAR map markers | Bomb-altitude warning | Ambulance redeploy circles |
+	             Kill feed | Auto IR smoke | Auto deploy bipod
+	  AUDIO    : Audio cues
+
+	A2-OA-safe: isNil-defaulted reads; if(_bool) label branching (never == on a Boolean); global
+	ctrlSetText/sliderSet* [idc, ...] forms on this idd dialog (never (display displayCtrl) ctrlShow).
+	The VD slider is polled each tick (like the Team menu idc 13003), so dragging it applies instantly.
 */
 
 disableSerialization;
-private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_curVD","_autoOn","_maxVD","_chosenVD"];
+private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD"];
 
 if (!alive player) exitWith {};
 if (dialog) exitWith {};
 
-createDialog "WFBE_SettingsMenu";
+createDialog "WFBE_PlayerSettingsMenu";
 WFBE_MenuAction = -1;
 
+//--- Slider range must respect the per-map ceiling (ZG=3000); floor at 500. Seed the thumb at the live VD.
+_maxVD = missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 5000];
+if !(typeName _maxVD == "SCALAR") then {_maxVD = 5000};
+if (_maxVD < 500) then {_maxVD = 500};
+sliderSetRange [30011, 500, _maxVD];
+_curVD = round viewDistance;
+_curVD = (_curVD max 500) min _maxVD;
+sliderSetPosition [30011, _curVD];
+_lastSliderVD = _curVD;
+
 while {alive player && dialog} do {
-	//--- Live label refresh (cheap; only runs while the menu is open). A2-OA-safe: isNil-defaulted reads,
-	//--- if(_bool) branching for labels (never == on a Boolean).
-	_hud  = missionNamespace getVariable ["RUBHUD", true];
-	_aar  = missionNamespace getVariable ["WFBE_CL_ShowAARMarkers", true];
-	_bomb = missionNamespace getVariable ["WFBE_BOMB_WARNING_ENABLED", true];
-	_amb  = missionNamespace getVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", true];
-	_kill = missionNamespace getVariable ["WFBE_KILL_MESSAGES", true];
-	ctrlSetText [29010, if (_hud)  then {"HUD Overlay: ON"}        else {"HUD Overlay: OFF"}];
-	ctrlSetText [29011, if (_aar)  then {"AAR Map Markers: ON"}    else {"AAR Map Markers: OFF"}];
-	ctrlSetText [29012, if (_bomb) then {"Bomb Alt Warning: ON"}   else {"Bomb Alt Warning: OFF"}];
-	ctrlSetText [29013, if (_amb)  then {"Ambulance Circles: ON"}  else {"Ambulance Circles: OFF"}];
-	ctrlSetText [29014, if (_kill) then {"Kill Feed: ON"}          else {"Kill Feed: OFF"}];
-	_irs  = missionNamespace getVariable ["WFBE_AUTO_IRSMOKE", true];
-	_bip  = missionNamespace getVariable ["WFBE_AUTO_BIPOD", true];
-	_acue = missionNamespace getVariable ["WFBE_AUDIO_CUES", false];
-	ctrlSetText [29015, if (_irs)  then {"Auto IR Smoke: ON"}      else {"Auto IR Smoke: OFF"}];
-	ctrlSetText [29016, if (_bip)  then {"Auto Deploy Bipod: ON"}  else {"Auto Deploy Bipod: OFF"}];
-	ctrlSetText [29017, if (_acue) then {"Audio Cues: ON"}         else {"Audio Cues: OFF"}];
-	_curVD  = round viewDistance;
+	//--- Live label refresh (cheap; only runs while the dialog is open).
+	_hud    = missionNamespace getVariable ["RUBHUD", true];
+	_aar    = missionNamespace getVariable ["WFBE_CL_ShowAARMarkers", true];
+	_bomb   = missionNamespace getVariable ["WFBE_BOMB_WARNING_ENABLED", true];
+	_amb    = missionNamespace getVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", true];
+	_kill   = missionNamespace getVariable ["WFBE_KILL_MESSAGES", true];
+	_irs    = missionNamespace getVariable ["WFBE_AUTO_IRSMOKE", true];
+	_bip    = missionNamespace getVariable ["WFBE_AUTO_BIPOD", true];
+	_acue   = missionNamespace getVariable ["WFBE_AUDIO_CUES", false];
 	_autoOn = missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
-	ctrlSetText [29020, format ["View Distance: %1 m%2", _curVD, if (_autoOn) then {"   (Auto-VD ON - pick a value to take manual control)"} else {""}]];
+	_target = missionNamespace getVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
+
+	ctrlSetText [30020, if (_hud)  then {"HUD Overlay: ON"}         else {"HUD Overlay: OFF"}];
+	ctrlSetText [30021, if (_aar)  then {"AAR Markers: ON"}         else {"AAR Markers: OFF"}];
+	ctrlSetText [30022, if (_bomb) then {"Bomb Warning: ON"}        else {"Bomb Warning: OFF"}];
+	ctrlSetText [30023, if (_amb)  then {"Ambulance Rings: ON"}     else {"Ambulance Rings: OFF"}];
+	ctrlSetText [30024, if (_kill) then {"Kill Feed: ON"}           else {"Kill Feed: OFF"}];
+	ctrlSetText [30025, if (_irs)  then {"Auto IR Smoke: ON"}       else {"Auto IR Smoke: OFF"}];
+	ctrlSetText [30026, if (_bip)  then {"Auto Deploy Bipod: ON"}   else {"Auto Deploy Bipod: OFF"}];
+	ctrlSetText [30030, if (_acue) then {"Audio Cues: ON"}          else {"Audio Cues: OFF"}];
+	ctrlSetText [30012, if (_autoOn) then {"Auto View Distance: ON"} else {"Auto View Distance: OFF"}];
+	ctrlSetText [30010, format ["View Distance: %1 m", round viewDistance]];
+
+	//--- VD slider poll (drag = instant apply). Auto-VD is disabled the moment the player takes manual control,
+	//--- otherwise the adaptive loop drifts the value back. Mirrors the Team-menu slider persistence.
+	_sliderVD = round (sliderPosition 30011);
+	if (abs (_sliderVD - _lastSliderVD) >= 1) then {
+		_lastSliderVD = _sliderVD;
+		_chosenVD = (_sliderVD max 500) min _maxVD;
+		if (missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false]) then {
+			missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
+			if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", false] Call WFBE_CO_FNC_SetProfileVariable};
+		};
+		setViewDistance _chosenVD;
+		missionNamespace setVariable ["SAVED_VIEW_DISTANCE", _chosenVD];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_PERSISTENT_CONST_VIEW_DISTANCE", _chosenVD] Call WFBE_CO_FNC_SetProfileVariable};
+	};
 
 	//--- HUD overlay (RUBHUD): Client_UpdateRHUD.sqf reads it each ~1s, so the flip is instant.
 	if (WFBE_MenuAction == 1) then {
@@ -75,13 +109,11 @@ while {alive player && dialog} do {
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_BOMB_WARNING_ENABLED", _bomb] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
-	//--- Ambulance redeploy circles: gate read live by Client_AmbulanceRedeployCircles.sqf. Clear rings now when OFF.
+	//--- Ambulance redeploy circles: gate read live by Client_AmbulanceRedeployCircles.sqf. Rings clear within ~5s when OFF.
 	if (WFBE_MenuAction == 4) then {
 		WFBE_MenuAction = -1;
 		_amb = !(missionNamespace getVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", true]);
 		missionNamespace setVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", _amb];
-		//--- The redeploy-circle loop (Client_AmbulanceRedeployCircles.sqf) tears down its own rings within ~5s when OFF.
-		//--- (Do NOT use allMapMarkers here - it is Arma 3 only and throws "Undefined variable" in A2-OA 1.64.)
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_AMBULANCE_CIRCLES_ENABLED", _amb] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
@@ -93,13 +125,14 @@ while {alive player && dialog} do {
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_KILL_MESSAGES_ENABLED", _kill] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
-	//--- Auto IR smoke (global default; IRS_OnIncomingMissile reads it client-side; nil on server -> AI vehicles unaffected).
+	//--- Auto IR smoke (IRS_OnIncomingMissile reads it client-side; nil on server -> AI vehicles unaffected).
 	if (WFBE_MenuAction == 6) then {
 		WFBE_MenuAction = -1;
 		_irs = !(missionNamespace getVariable ["WFBE_AUTO_IRSMOKE", true]);
 		missionNamespace setVariable ["WFBE_AUTO_IRSMOKE", _irs];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_AUTO_IRSMOKE", _irs] Call WFBE_CO_FNC_SetProfileVariable};
 	};
+
 	//--- Auto deploy bipod (Common_Bipod auto-deploy EH reads it; manual TAB deploy is unaffected).
 	if (WFBE_MenuAction == 7) then {
 		WFBE_MenuAction = -1;
@@ -107,7 +140,8 @@ while {alive player && dialog} do {
 		missionNamespace setVariable ["WFBE_AUTO_BIPOD", _bip];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_AUTO_BIPOD", _bip] Call WFBE_CO_FNC_SetProfileVariable};
 	};
-	//--- Audio cues (opt-in factory/build sounds in Client_FNC_Special; default OFF, were removed as too intrusive).
+
+	//--- Audio cues (opt-in factory/build sounds in Client_FNC_Special; default OFF).
 	if (WFBE_MenuAction == 8) then {
 		WFBE_MenuAction = -1;
 		_acue = !(missionNamespace getVariable ["WFBE_AUDIO_CUES", false]);
@@ -115,20 +149,33 @@ while {alive player && dialog} do {
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_AUDIO_CUES", _acue] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
-	//--- View distance manual choice (11=1000 .. 15=5000). Disables auto-VD (else it drifts the value back).
-	if (WFBE_MenuAction in [11,12,13,14,15]) then {
-		_chosenVD = switch (WFBE_MenuAction) do {case 11:{1000}; case 12:{2000}; case 13:{3000}; case 14:{4000}; case 15:{5000}; default {3000}};
+	//--- Auto view distance on/off. Same behaviour as the old FPS picker: on enable, remember the current VD;
+	//--- on disable, restore the saved VD (clamped to the map cap). Persist the toggle.
+	if (WFBE_MenuAction == 20) then {
 		WFBE_MenuAction = -1;
-		_maxVD = missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 5000];
-		if (typeName _maxVD == "SCALAR") then {_chosenVD = _chosenVD min _maxVD};
-		_chosenVD = _chosenVD max 500;
-		if (missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false]) then {
-			missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
-			if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", false] Call WFBE_CO_FNC_SetProfileVariable};
+		_autoOn = !(missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false]);
+		missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", _autoOn];
+		if (_autoOn) then {
+			missionNamespace setVariable ["SAVED_VIEW_DISTANCE", viewDistance];
+		} else {
+			private ["_saved"];
+			_saved = missionNamespace getVariable ["SAVED_VIEW_DISTANCE", viewDistance];
+			if (typeName _saved == "SCALAR") then {
+				_saved = (_saved max 500) min _maxVD;
+				setViewDistance _saved;
+				sliderSetPosition [30011, _saved];
+				_lastSliderVD = round _saved;
+			};
 		};
-		setViewDistance _chosenVD;
-		missionNamespace setVariable ["SAVED_VIEW_DISTANCE", _chosenVD];
-		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_PERSISTENT_CONST_VIEW_DISTANCE", _chosenVD] Call WFBE_CO_FNC_SetProfileVariable};
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", _autoOn] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- Target FPS presets (30/45/50/60) that auto-VD chases. Same key Common_AdjustViewDistance uses.
+	if (WFBE_MenuAction in [30,31,32,33]) then {
+		_target = switch (WFBE_MenuAction) do {case 30:{30}; case 31:{45}; case 32:{50}; case 33:{60}; default {60}};
+		WFBE_MenuAction = -1;
+		missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", _target];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_TARGET_FPS", _target] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	//--- Close.

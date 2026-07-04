@@ -230,11 +230,11 @@ while {alive player && dialog} do {
 		};
 	};
 
-	//--- FPS / view-distance picker (re-open from WF menu footer).
+	//--- FPS / view-distance button now opens the unified PLAYER SETTINGS dialog (GR-2026-07-03a).
 	if (MenuAction == 23) exitWith {
 		MenuAction = -1;
 		closeDialog 0;
-		[] execVM "WASP\actions\FPSPicker\FPSPicker_Open.sqf";
+		[] execVM "WASP\actions\Settings\Settings_Open.sqf";
 	};
 
 	//--- B748: Settings menu (GEAR button = revived skins slot, idc 11021).
