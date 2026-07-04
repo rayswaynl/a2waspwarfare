@@ -1874,8 +1874,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   * airfield control tower (tall, boxy): STRUCTURE="Land_Mil_ControlTower" + DECK_Z=12.5
 //---   * original watchtower: STRUCTURE="Land_Fort_Watchtower_EP1" + DECK_Z=5.4 + AUTOZ=0
 	if (isNil "WFBE_C_DEF_FLAKTOWER_STRUCTURE") then {WFBE_C_DEF_FLAKTOWER_STRUCTURE = "Land_Ind_IlluminantTower"};
-	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 23.7}; //--- cmdcon44f: rig-measured illuminant-mast top (was 17.0 guess).
+	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_Z") then {WFBE_C_DEF_FLAKTOWER_DECK_Z = 20.8}; //--- cmdcon45 (Ray 2026-07-04 -12% nudge): 23.7 rig top * 0.88 ~= 20.8 (non-AUTOZ fallback matches the trimmed AUTOZ deck).
 	if (isNil "WFBE_C_DEF_FLAKTOWER_AUTOZ") then {WFBE_C_DEF_FLAKTOWER_AUTOZ = 1};
+	//--- cmdcon45 (Ray 2026-07-04 nudge order): trim factor multiplied against the boundingBox-MEASURED full illuminant-mast
+	//--- height in Server_ConstructPosition.sqf (AUTOZ path). Ray asked the flak gun "nudged down 10-15%"; 0.88 = ~12% down
+	//--- (mid of the range), 23.66m measured -> ~20.8m deck so the gun sits on the platform instead of slightly above it.
+	if (isNil "WFBE_C_DEF_FLAKTOWER_DECK_FACTOR") then {WFBE_C_DEF_FLAKTOWER_DECK_FACTOR = 0.88};
 
 //--- cmdcon44-a (Build 89, Ray 2026-07-03): AA / ARTILLERY / MIXED POSITIONS REWORK. Ray: "Defenses list
 //--- has not changed, AA/Art/Mix positions are still the same." The Build 88 DEFMENU_V2 pass deliberately
