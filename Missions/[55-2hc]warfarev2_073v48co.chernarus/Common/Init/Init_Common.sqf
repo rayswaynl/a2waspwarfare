@@ -456,6 +456,11 @@ WFBE_SPECIAL_UNIT_HINTS = [
 	["Mi17_medevac_CDF","STR_WF_HINT_SalvageHeli"]
 ];
 
+//--- ASR AI (optional 3rd-party mod) fired-handler null-shooter guard: fixes the once-per-session
+//--- "nearEntities [_shooter,_k]" RPT error (deleted-shooter race in the mod's sys_aiskill fired
+//--- handler). One-line no-op on machines without the mod. See Common_AsrFiredGuard.sqf.
+Call Compile preprocessFileLineNumbers "Common\Functions\Common_AsrFiredGuard.sqf";
+
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 commonInitComplete = true;
