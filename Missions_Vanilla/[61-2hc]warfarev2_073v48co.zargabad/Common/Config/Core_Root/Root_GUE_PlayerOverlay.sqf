@@ -127,7 +127,9 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 		_msg = missionNamespace getVariable ["WFBE_GUER_UNLOCK_MSG", [0, ""]];
 		if (count _msg == 2 && {(_msg select 0) != _lastSeq} && {(_msg select 1) != ""}) then {
 			_lastSeq = _msg select 0;
-			titleText [Format ["GUER TECH UNLOCKED\n%1\n(at %2 kills)", _msg select 1, _msg select 0], "PLAIN DOWN"];
+			//--- Ray order (no center-screen popups for info): the GUER tech-unlock notice already renders as a
+			//--- top-right hint (hintSilent parseText below), so the old center-screen titleText [...,"PLAIN DOWN"]
+			//--- was a redundant middle-of-screen duplicate. Dropped; the formatted hint remains the announcement.
 			hintSilent parseText (Format ["<t color='#B6F563' size='1.3'>GUER TECH UNLOCKED</t><br/><br/><t color='#F5D363'>%1</t><br/><br/><t>at %2 cumulative GUER kills</t>", _msg select 1, _msg select 0]);
 		};
 		sleep 3;
