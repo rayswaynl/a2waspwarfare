@@ -366,6 +366,7 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 		//--- garrison, not player-led, not under an explicit human order (move/patrol/defense).
 		if (_alive > 0 && {!isNull _ldr} && {!isPlayer _ldr} && {_grp != _garGrp}
 		    && {isNull _relief} && {!_strike} && {!(_mode in ["move","patrol","defense"])}
+		    && {!([_grp] Call WFBE_CO_FNC_CapLock)}   //--- CAPTURE LOCK (GR-2026-07-03a): skip a mid-capture-drain team so the Allocator does not re-aim it off a near-complete drain (plain BOOL, self-clears on captured/dead/TTL/town-ours).
 		    && {(_grp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
 		    && {([_grp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 			_ldrPos = getPos _ldr;

@@ -584,6 +584,13 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_HQSTRIKE_TOWN_FLOOR") then {WFBE_C_AICOM_HQSTRIKE_TOWN_FLOOR = 3};   //--- absolute min owned towns regardless of fraction (anti-trigger-happy on tiny maps/modes).
 	if (isNil "WFBE_C_AICOM_STRIKE_VEH_BONUS")    then {WFBE_C_AICOM_STRIKE_VEH_BONUS    = 100}; //--- punch-score bonus for a strike candidate owning a crewed Tank/APC/Air, so armour/attack-heli (the floor-exempt PUNCH) outrank a full infantry squad in the HQ-strike picker. 0 = raw-bodycount selection.
 	if (isNil "WFBE_C_AICOM_CAPTURE_INTERRUPT")   then {WFBE_C_AICOM_CAPTURE_INTERRUPT   = 1};   //--- 1 = a capturing team re-reads a fresh AICOM order within ~8s (breaks out of the camp/depot hold loops) instead of going deaf for up to ~12 min. 0 = old blocking behaviour.
+	//--- CAPTURE LOCK (GR-2026-07-03a, capture-churn fix): a team that has fired BEGIN_CAPTURE and is draining a town becomes IMMUNE to
+	//--- re-targeting/new orders (the AICOM order ISSUERS skip it via WFBE_CO_FNC_CapLock) until: the town is CAPTURED, the team dies/loses
+	//--- viability, the TTL expires (anti-wedge), or the town flips to our side by other means. Root cause of last night's 62-starts/5-finishes
+	//--- churn: the ~10-min spearhead repick re-ordered teams that were mid-drain, resetting progress before a town-drain could ever complete.
+	//--- CORRECTNESS FIX (repo policy) so default 1 - but keep the kill-switch. 0 = pre-fix behaviour (issuers re-task capturing teams).
+	if (isNil "WFBE_C_AICOM_CAPTURE_LOCK")     then {WFBE_C_AICOM_CAPTURE_LOCK     = 1};   //--- 1 = in-drain teams immune to re-orders (default); 0 = kill-switch (old churn behaviour).
+	if (isNil "WFBE_C_AICOM_CAPTURE_LOCK_TTL") then {WFBE_C_AICOM_CAPTURE_LOCK_TTL = 600}; //--- s a lock survives before it auto-releases, so a permanently-wedged capturer is never locked forever (re-taskable after this).
 		//--- B61 (Ray 2026-06-21) BASE-GC / RE-ADOPT pass (server_groupsGC.sqf). The base fills with units the
 		//--- commander neither counts, re-tasks, nor reaps: untracked live groups + crewed-idle helis/armor whose
 		//--- empty-vehicle delete timer is reset while crew is alive (immortal). The base-GC pass RE-ADOPTS untracked
