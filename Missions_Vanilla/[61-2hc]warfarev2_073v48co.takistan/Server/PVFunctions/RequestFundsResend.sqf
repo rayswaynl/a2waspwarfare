@@ -45,7 +45,7 @@
 		1: _side    - the side the client believes it joined (informational / fallback only)
 */
 
-private ["_player","_uid","_team","_clientBody","_funds","_get","_curFunds","_sideJoined","_sideText"];
+private ["_player","_uid","_team","_clientBody","_funds","_get","_curFunds","_recCash","_sideJoined","_sideText"];
 
 _player = _this select 0;
 
@@ -87,19 +87,38 @@ if (isNil "_sideJoined") exitWith {
 	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1]: resolved team has nil wfbe_side - deferring.", _uid];
 };
 
-//--- (1) Group already carries numeric funds -> re-broadcast the SAME value (idempotent no-op).
+//--- Ray pick A (2026-07-03) ZERO-LATCH RECORD RESTORE: the per-player record is now kept in LOCK-STEP
+//--- with every wallet change (Common_ChangeTeamFunds / RequestFundsRecord / the ScudStrike direct write),
+//--- so WFBE_JIP_USER<uid> cash is the AUTHORITATIVE truth. That makes a record-first recovery provably
+//--- safe: a legitimately-spent-to-0 wallet also wrote 0 into the record, so restoring "record when the
+//--- group is 0/nil and record > 0" can NEVER re-grant a real spender - only a MISSING / transient-0 wallet
+//--- (the JIP zero-latch) has a record that still stands above it. This closes the case-1 hole where a
+//--- transient 0 on the group was re-broadcast (and latched by the client) as if it were real.
 _curFunds = _team getVariable "wfbe_funds";
+_get = missionNamespace getVariable Format ["WFBE_JIP_USER%1", _uid];
+_recCash = -1;
+if (!isNil "_get" && {typeName _get == "ARRAY"} && {count _get > 1} && {typeName (_get select 1) == "SCALAR"}) then {_recCash = _get select 1};
+
+//--- (1) Record wins whenever the group wallet is nil/0 but the record carries a positive balance.
+//--- This IS the zero-latch fix: prefer the lock-step record over a transient/absent group value.
+if (_recCash > 0 && {isNil "_curFunds" || {typeName _curFunds != "SCALAR"} || {_curFunds <= 0}}) exitWith {
+	_team setVariable ["wfbe_funds", _recCash, true];
+	diag_log Format ["FUNDS_RESTORE|%1|from record|%2", _uid, _recCash];
+	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: restored from LOCK-STEP record cash=%3 (group was %4) - JIP zero-latch recovery.", _uid, _sideJoined, _recCash, (if (isNil "_curFunds") then {"nil"} else {_curFunds})];
+};
+
+//--- (2) Group already carries a numeric (and, per above, non-zero-or-no-positive-record) value ->
+//--- re-broadcast that exact value (idempotent no-op same-value re-sync; covers a healthy fast join and
+//--- a real spent-low balance where the record agrees).
 if (!isNil "_curFunds" && {typeName _curFunds == "SCALAR"}) exitWith {
 	_team setVariable ["wfbe_funds", _curFunds, true];
 	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: re-broadcast EXISTING group funds=%3 (no-op same-value re-sync).", _uid, _sideJoined, _curFunds];
 };
 
-//--- (2) Stored JIP record -> re-broadcast its cash (matches the slot-switch / reconnect path).
-_get = missionNamespace getVariable Format ["WFBE_JIP_USER%1", _uid];
-if (!isNil "_get" && {typeName _get == "ARRAY"} && {count _get > 1} && {typeName (_get select 1) == "SCALAR"}) exitWith {
-	_funds = _get select 1;
-	_team setVariable ["wfbe_funds", _funds, true];
-	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: re-broadcast STORED JIP cash=%3.", _uid, _sideJoined, _funds];
+//--- (2b) No numeric group value but a record exists (even a legit 0) -> re-broadcast the record cash.
+if (_recCash > -1) exitWith {
+	_team setVariable ["wfbe_funds", _recCash, true];
+	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: re-broadcast STORED JIP cash=%3.", _uid, _sideJoined, _recCash];
 };
 
 //--- (3) No record yet -> stamp the side START funds (the value the connect handler WOULD set on
