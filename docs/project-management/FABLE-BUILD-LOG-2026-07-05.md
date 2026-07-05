@@ -43,3 +43,10 @@ Full IA for /stats "Command Center" designed against TODAY's real endpoints (/ap
 ## TP-14 — driver-press hook 🔶 CLAIMED (owner's Agent B, Game PC)
 Next increment after #724: Common_RunCommanderTeam consumes wfbe_aicom_decap → press onto HQ instead of rally-hold. Stacked on fable/aicom-v2-l1-organic. TP-13 (aicom-focus server-side rate limit, ~15 lines, base build84) offered as optional quick second packet — if Agent B takes it, it is no longer queued here.
 
+## Fable verification wave — verdicts (5 refuters, 451k tokens)
+- **#724 (TP-5 organic sensing): PASS-WITH-NOTES ×2 lenses — merge-safe at flag 0.** All six owner-intent conflicts confirmed closed in executable code. **1 MAJOR (CONFIRMED, inherited from #713): stamp-loop exclusion guards check phantom vars** (`wfbe_aicom_base_garrison`/`wfbe_aicom_hold` set nowhere; real markers = side-logic `wfbe_aicom_garrison` + per-team `wfbe_aicom_holding_town`) — inert today, live defect at flag=1 once the driver hook reads stamps. **Fix folded into TP-14's queue.** Notes: stale AI_Commander.sqf:503 comment; flag-0 writes imprecision; shadow pre-arm documented. Posted to PR.
+- **#722 (TP-8 fuel): REDUNDANT — CLOSED.** AUTOFUEL (default ON since 2026-07-02, 8s cadence) already delivers infinite fuel; threshold bump = no observable difference. Research preserved in the PR body as system documentation.
+- **#723 (TP-9 road-snap): PASS — approved.** Branch exclusivity + flag-0 inertness proven; two trivial divergences accepted.
+- **TP-10 spec: PASS-WITH-NOTES — 3 MAJOR claim corrections prepended to the spec** (#548 reframe, EXT-1 pacing re-verify, EXT-4 land-GET-OUT re-verify) before its work orders execute.
+**Protocol note:** the phantom-guard MAJOR was missed by the #713 author, the Opus review, AND Agent A's diff pass — caught only by the Fable refuter with full-repo grep. The verify-everything order is validated.
+

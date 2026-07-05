@@ -1,3 +1,9 @@
+> **⚠ VERIFICATION CORRECTIONS (Fable claims-audit, 2026-07-06) — read before executing work orders:**
+> 1. **PR-WO-1 (#548) reframed:** `wfbe_aicom_econ_surge` is NOT missing — `AI_Commander.sqf:623` already sets it. #548 adds an independent FundsSink-cadence trigger (additive value, not a correctness fix). 
+> 2. **EXT-1 (pacing):** the spec's claims about `WFBE_C_AICOM_MARCH_YELLOW` coverage were inaccurate — re-verify the current march-discipline implementation before building transit-posture work.
+> 3. **EXT-4:** `land "GET OUT"` claims must be re-verified against RunCommanderTeam — the audit found the "NOT YET IMPLEMENTED" claim unsafe.
+> Minor: verify `ATV_US_EP1 isKindOf Motorcycle` in-config and the `Core_CO_US.sqf:143` citation before executing WO-5. Full audit in the verification transcript.
+
 # AICOM V2 Unit Micro-Layer — Spec &amp; Work Orders
 
 Guide-rev: GR-2026-07-03a. Research date: 2026-07-06. Worktree: `C:\Users\Steff\a2wasp-fable-push`. Read-only; zero edits made.
