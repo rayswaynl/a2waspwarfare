@@ -1027,7 +1027,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 				_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
 				[_soldier] allowGetIn true;
 				_soldier moveInTurret [_vehicle, _x];
-				if (vehicle _soldier != _vehicle) then {_soldier assignAsTurret [_vehicle, _x]; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
+				if (vehicle _soldier != _vehicle) then {_soldier moveInTurret [_vehicle, _x]}; //--- cmdcon44t: retry moveInTurret (no A2-OA walk-in command exists for a turret seat)
 				_spawnedUnits = _spawnedUnits + [_soldier];
 			};
 		} forEach _turrets;
