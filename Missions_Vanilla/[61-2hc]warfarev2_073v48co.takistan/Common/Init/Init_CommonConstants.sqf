@@ -2057,5 +2057,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- AI leaders fall back to getDir facing silently. Zero server load. Flag 0 = byte-identical.
 	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 0}; //--- 0: facing direction (default, byte-identical to HEAD); >0: destination-direction when an active destination is available, facing fallback.
 
+//--- TELEMETRY HOST V2 (tp4, 2026-07-06): when flag=1, GRPBUDGET+SRVPERF emit from
+//--- server_groupsGC.sqf (survives V2 cutover) and are suppressed in AI_Commander.sqf.
+//--- Default 0 = byte-identical to HEAD (old emitters run, new host silent).
+	if (isNil "WFBE_C_TELEM_HOST_V2") then {WFBE_C_TELEM_HOST_V2 = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
