@@ -1,7 +1,7 @@
 # AICOM V2 Behaviour Spec 800: GUER Director (Virtual Resistance Ledger + Lightweight Brain)
 
 Guide rev: GUIDE-REV GR-2026-07-03a.
-Status: proposal spec — owner-approved concept (Ray 2026-07-04, option B), pending the two owner decisions in "Owner Decisions Required". Markdown only; no gameplay code in this worktree.
+Status: **APPROVED FOR IMPLEMENTATION** (Ray 2026-07-05; concept approved 2026-07-04 as option B). Relief waves are in scope (see Behaviour 2 and the wave rules below). Owner decision D2 is resolved by the implementation ruling; D1 (retake dial defaults) remains open. Sequencing: after the V2 cutover stabilises, per `AICOM-V2-CUTOVER-AND-RECONCILIATION.md`. Markdown only; no gameplay code in this worktree.
 Scope: an invisible, in-theme "A-Life" layer for the resistance side — a persistent virtual population (per-town strength ledger + virtual cells moving between towns) with a small Assessment/Planning brain (reinforce, regroup, ambush, retake) on top. It replaces the memoryless respawn behaviour of V1 town garrisons and gives the third side agency, while staying invisible as a system: players only ever see resistance units doing plausible resistance things.
 
 This lane is deliberately different from every other V2 lane in one way: it is the **single authorized writer of GUER volume**, and therefore defaults **OFF** (all other lane switches default 1). Lane 424 (Third-side) remains fully volume-protected and unchanged; see "Relationship To Lane 424".
@@ -28,6 +28,7 @@ In-theme constraint (owner, hard): **no civilian ambience.** No ALICE, no civili
 
 2. Virtual movement between towns (the invisible layer):
    - Reinforcement cells: strength transfers from safe resistance towns toward threatened or depleted ones, travelling as data along road-graph routes with realistic ETAs.
+   - **Relief waves (approved 2026-07-05):** a reinforcement cell whose arrival falls during an ACTIVE fight materializes at the town edge along its approach route (outside `AICOMV2_GDIR_MIN_SPAWN_M`) — a defender wave with a direction, not respawn magic. Multiple inbound cells arrive as successive waves on their own ETAs. Waves refill toward baseline; sustained beyond-baseline wave defense is the `AICOMV2_GDIR_SURGE_MAX` owner dial. Conservation still binds: every wave is strength drained from the sending towns' ledgers.
    - Patrol cells: low-strength cells drift between resistance towns; they exist only as ledger entries until a player/enemy bubble intersects their route position, then materialize through the existing patrol machinery.
    - Ambush cells: after resistance losses in a bucket, the Director may post an ambush cell on a route the attacker used; it materializes only when the bubble rule is satisfied.
    - Retake cells (owner-gated, default off): when enabled, cells may move on lightly-held enemy towns. Ownership change happens ONLY through real materialized units fighting through the existing `server_town.sqf` capture loop — the Director never writes `sideID` or `supplyValue`.
@@ -162,7 +163,7 @@ Do not introduce:
 Reinforce:
 
 - A town scores `depleted` when strength is below a profile fraction of baseline; `threatened` when public attacker state names it. Reinforcement cells prefer the nearest `safe` resistance town with surplus strength; transfers are conserving.
-- No reinforcement into a town under active materialized fighting stronger than the cell (refuse fair fights); stage at the nearest safe neighbour instead.
+- Arrival during an active fight IS the relief-wave case and is allowed when the cell is not clearly outmatched; a clearly outmatched cell (attacker strength dominant per assessment) stages at the nearest safe neighbour instead of feeding the grinder (refuse fair fights).
 
 Regroup:
 
@@ -222,6 +223,7 @@ T2 local micro-soak:
 - With `WFBE_C_AICOM_V2_ENABLE = 0` (or the lane switch 0): town activation counts, group counts, statics manning, patrol behaviour, and RPT output are byte-equivalent to V1 baseline.
 - Lane on: wipe a garrison, retreat past the 90 s despawn, return before `AICOMV2_GDIR_REGEN_FULL_SEC` — the re-activated garrison is measurably depleted, and a `GDIR_VOLUME|changed=1|lane=guerDirector` line with matching order exists.
 - Reinforcement path: a depleted town adjacent to a safe resistance town receives a cell (ledger ETA telemetry) and re-activates stronger after arrival.
+- Relief-wave path: a town under SUSTAINED attack receives an arriving cell materialized at the route-edge entry point, at or beyond `AICOMV2_GDIR_MIN_SPAWN_M` from every player, with a matching `GDIR_ORDER|order=materialize|kind=reinforce` line; a second inbound cell produces a second, later wave.
 - No materialization occurs within `AICOMV2_GDIR_MIN_SPAWN_M` of the test client (no pop-in), verified via RPT positions.
 - GUER group count never exceeds `AICOMV2_GDIR_GROUP_BUDGET_MAX` during multi-town activation; no `grpNull` in RPT.
 
@@ -236,7 +238,7 @@ T3 box soak:
 ## Owner Decisions Required
 
 - **D1 — Retake dial per map:** may resistance retake W/E-held towns, and at what intensity? Changes the core W/E loop (towns no longer stay conquered). Recommendation: default 0 on Chernarus, low (1) on an insurgency-flavoured Takistan profile, revisit for Utes after Invasion lands.
-- **D2 — Volume-rule scoping:** formal sign-off that the program constraint "GUER volume is intentional, do not reduce" is amended to "…except via accepted GUER Director orders while `AICOMV2_LANE_GUER_DIRECTOR = 1`, with regen guaranteeing long-run parity (`regenDebt` → 0)". Lane 424's own prohibition is unchanged. Without D2, the acceptance harness must be read as forbidding this lane entirely.
+- **D2 — Volume-rule scoping: RESOLVED (Ray 2026-07-05, implementation ruling).** The program constraint "GUER volume is intentional, do not reduce" is amended to "…except via accepted GUER Director orders while `AICOMV2_LANE_GUER_DIRECTOR = 1`, with regen guaranteeing long-run parity (`regenDebt` → 0)". Lane 424's own prohibition is unchanged; the harness attributes volume changes by source.
 
 ## Report Requirements For One-shot Build
 
