@@ -35,6 +35,7 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 - Context preservation: update this doc's Log section every wake BEFORE doing work.
 
 ## Log
+- 02:0x — Iter 1: launching §B soak-deploy (background) + §C builds TP-16/17/18/13 (TP-13 NOW CLAIMED BY AGENT A — B skip it) + §D closures. 
 - 01:4x — Loop armed. Verification wave executed: #724 PASS(+MAJOR for TP-14), #722 closed REDUNDANT, #723 approved, TP-10 corrections prepended. Skills cycle closed. Wave-1/2/4 all landed + reviewed earlier.
 
 ## FULL BACKLOG COVERAGE MAP (nothing drops — every original-doc item tracked)
