@@ -4,11 +4,16 @@
   Pulls the live server RPT, finds the latest COMPLETED match (newest ROUNDEND),
   slices that match's WASPSTAT block, renders the report video, and drops the MP4
   in the output folder. De-dupes on the ROUNDEND sequence so it only renders each
-  match once. Designed to run as a box-side Scheduled Task every ~10 min (per the
+  match once. Designed to run as a game-PC Scheduled Task every ~10 min (per the
   "automation on the box, never Claude crons" rule).
 
   Data path: WASPSTAT lines live in the Hetzner server RPT (the same source the
   leaderboard/soak reporters read via SSH).
+
+  v3 (2026-07-02): ARCHIVE-RACE FALLBACK. rotate2-v3 stashes the just-ended match RPT
+  at a stable box path (C:\WASP\rpt-lastmatch.RPT) BEFORE archiving the live RPT. If the
+  live RPT here has no ROUNDEND (because rotate2 already moved it), we re-pull that stable
+  copy. De-dupe keys on the ROUNDEND seq, so this can never double-post.
 
   Usage:
     # production (SSH-pull the live RPT):
@@ -30,19 +35,32 @@ $ToolDir   = 'C:\Users\Game\a2waspwarfare-report\Tools\MatchReport'
 $Py        = Join-Path $ToolDir '.venv\Scripts\python.exe'
 $Hetzner   = 'Administrator@78.46.107.142'
 $RemoteRpt = 'C:\Users\Administrator\AppData\Local\ArmA 2 OA\arma2oaserver.RPT'  # backslashes: remote `type` (cmd) rejects forward slashes
+$RemoteRptLast = 'C:\WASP\rpt-lastmatch.RPT'   # v3 stable copy rotate2 stashes at match end (archive-race fallback)
 $StateFile = Join-Path $OutDir '.last-rendered-seq.txt'
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
-function Get-RptText {
+function Get-RptText([string]$remotePath) {
   if ($RptFile) { return Get-Content -LiteralPath $RptFile -Raw }
   # SSH pull. `type` on the remote Windows box streams the whole RPT; cheap enough at ~10-min cadence.
-  return (ssh $Hetzner "type `"$RemoteRpt`"")
+  return (ssh $Hetzner "type `"$remotePath`"")
 }
 function Get-Seq([string]$line) { if ($line -match 'WASPSTAT\|v1\|(\d+)\|') { [int]$Matches[1] } else { -1 } }
+function Get-WaspLines([string]$remotePath) {
+  try { return ((Get-RptText $remotePath) -split "`r?`n" | Where-Object { $_ -match 'WASPSTAT\|v1\|' }) }
+  catch { Write-Warning "RPT pull failed ($remotePath): $($_.Exception.Message)"; return @() }
+}
 
-# 1. collect WASPSTAT lines + ROUNDEND markers
-$lines = (Get-RptText) -split "`r?`n" | Where-Object { $_ -match 'WASPSTAT\|v1\|' }
+# 1. collect WASPSTAT lines + ROUNDEND markers (from the live RPT)
+$lines = @(Get-WaspLines $RemoteRpt)
 $roundEnds = @($lines | Where-Object { $_ -match 'WASPSTAT\|v1\|\d+\|ROUNDEND\|' })
+# v3 archive-race fallback: if the live RPT has no completed match, rotate2 may have just
+# archived it — re-pull the stable copy it stashed at match end. (Skip when -RptFile is set.)
+if ($roundEnds.Count -eq 0 -and -not $RptFile) {
+  Write-Host "Live RPT has no ROUNDEND; trying stable fallback $RemoteRptLast ..."
+  $fallback = @(Get-WaspLines $RemoteRptLast)
+  $fbRoundEnds = @($fallback | Where-Object { $_ -match 'WASPSTAT\|v1\|\d+\|ROUNDEND\|' })
+  if ($fbRoundEnds.Count -gt 0) { $lines = $fallback; $roundEnds = $fbRoundEnds; Write-Host "Using stable fallback RPT ($($roundEnds.Count) ROUNDEND)." }
+}
 if ($roundEnds.Count -eq 0) { Write-Host 'No completed match (no ROUNDEND yet).'; return }
 
 # 2. latest match + de-dupe on its ROUNDEND seq
@@ -56,8 +74,13 @@ $matchLines = $lines | Where-Object { $s = Get-Seq $_; $s -gt $prevSeq -and $s -
 if (-not $matchLines) { Write-Host 'Empty match slice; skipping.'; return }
 
 # parse the ROUNDEND for a nice filename: ...|ROUNDEND|<winner>|<dur>|<map>
+# NB: the emitter wraps each line in diag_log quotes ("...|chernarus"), so the map capture
+# picks up a trailing double-quote — strip quotes off BOTH captured fields.
 $winner = 'WEST'; $map = 'chernarus'
-if ($roundEnds[-1] -match 'ROUNDEND\|([^|]+)\|\d+\|([^|]+)') { $winner = $Matches[1]; $map = $Matches[2] }
+if ($roundEnds[-1] -match 'ROUNDEND\|([^|]+)\|\d+\|([^|"]+)') {
+  $winner = ($Matches[1] -replace '"','').Trim()
+  $map    = ($Matches[2] -replace '"','').Trim()
+}
 
 # 4. render
 $logFile = Join-Path $OutDir "match-$lastSeq.waspstat"

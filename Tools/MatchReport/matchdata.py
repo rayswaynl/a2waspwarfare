@@ -16,7 +16,7 @@ from collections import Counter
 # CAPTURE uses numeric side IDs; KILL/ROUNDEND use string side names. Normalise
 # everything to the short keys the renderer uses.
 SIDE_FROM_ID  = {0: "west", 1: "east", 2: "guer", 4: "neu"}
-SIDE_FROM_STR = {"WEST": "west", "EAST": "east", "RESISTANCE": "guer", "CIV": "neu"}
+SIDE_FROM_STR = {"WEST": "west", "EAST": "east", "RESISTANCE": "guer", "GUER": "guer", "CIV": "neu"}
 # PLAYERSTATS trailing side field: 1=WEST, 2=EAST, 0=other.
 SIDE_FROM_PSTAT = {1: "west", 2: "east", 0: "guer"}
 SIDE_NAME = {"west": "BLUFOR", "east": "OPFOR", "guer": "GUER", "neu": "NEUTRAL"}
@@ -26,7 +26,41 @@ def side_from_id(v):
     except (TypeError, ValueError): return "neu"
 
 def side_from_str(s):
-    return SIDE_FROM_STR.get(str(s).strip().upper(), "neu")
+    return SIDE_FROM_STR.get(_clean(s).upper(), "neu")
+
+# ---- raw-line hygiene ----------------------------------------------------
+# The emitter writes each WASPSTAT record through diag_log, which wraps the whole
+# line in double quotes: '"WASPSTAT|v1|...|chernarus"'. Left unstripped, the last
+# field carries a trailing '"' (map became 'chernarus"'), and embedded ~"name"
+# tokens carry their own quotes. _dequote peels the outer diag_log wrapper;
+# _clean strips stray quotes/whitespace off any single field or token.
+def _dequote(raw):
+    """Strip the diag_log '"..."' wrapper (and trailing CR) from a raw RPT line."""
+    s = raw.rstrip("\r\n")
+    st = s.lstrip()
+    if st.startswith('"') and st.rstrip().endswith('"'):
+        st = st.strip()
+        return st[1:-1]
+    return s
+
+def _clean(s):
+    """Trim whitespace and surrounding double quotes from a token/field."""
+    return str(s).strip().strip('"').strip()
+
+# ---- headless-client / AI-controller exclusion ---------------------------
+# HCs and AI commanders appear in PLAYERSTATS (they carry a UID + a stat row) but
+# they are NOT operators — they must never surface as MVP, in a top-list, or in a
+# kill table. Two shapes seen live: legacy "HC"/"HEADLESS"/"SERVER" tokens, and the
+# AI commander display names "HC-AI-Control-1" / "AI-Control-2". Match generously.
+_HC_EXACT = {"HC","HC1","HC2","HC3","HC4","HEADLESS","HEADLESSCLIENT","SERVER"}
+def is_excluded_name(nm):
+    """True if nm is a headless client / AI controller (exclude from all human lists)."""
+    if not nm: return True
+    u = _clean(nm).upper()
+    if u in _HC_EXACT: return True
+    if u.startswith("HC-") or u.startswith("HC "): return True
+    if "AI-CONTROL" in u or "AI-COMMANDER" in u or "AICOM" in u: return True
+    return False
 
 def _pretty_weapon(w):
     """Tidy a weapon/unit class token from WASPSTAT KILL into a readable label."""
@@ -135,7 +169,21 @@ TOWN_COORDS = {
   "Staroye":(10062,5439),"Stary Sobor":(6222,7822),"Tulga":(12785,4473),"Vybor":(3724,8988),
   "Vyshnoye":(6532,6151),"Zelenogorsk":(2591,5437),
  },
- "takistan": {},   # TODO: fill from the boot-time town-position logger.
+ # EXACT Takistan positions (metres, 0..12800, y=north), harvested read-only from the mission's
+ # town logics (vehicle="LocationLogicDepot") in Missions_Vanilla/[61-2hc]...takistan/mission.sqm.
+ # Keyed by the marker `text=` name — the same token WASPSTAT CAPTURE lines emit — so captured
+ # towns join by name and the full static set (incl. the two airfields) renders on the control map.
+ "takistan": {
+  "Anar":(5361,4533),"Bastam":(9809,11193),"ChakChak":(1862,1842),"Chaman":(11647,2547),
+  "Chardarakht":(9129,1997),"Falar":(8762,5185),"FeeruzAbad":(6138,5368),"Garmarud":(5933,7123),
+  "Garmsar":(8954,6896),"Gospandi":(8385,7607),"HazarBagh":(10526,2357),"Huzrutimam":(4201,529),
+  "Imarat":(10690,6319),"Jaza":(6739,1967),"Jilavur":(3548,4167),"Kakaru":(1945,7510),
+  "Karachinar":(11564,8575),"Khushab":(2740,5190),"Landay":(5857,961),"Loy Manara AF":(4177,11451),
+  "LoyManara":(2227,479),"Mulladoost":(1443,5492),"Nagara":(5605,8923),"Nur":(12245,10663),
+  "Rasman":(2853,9929),"Rasman AF":(8191,1960),"Ravanay":(3476,8356),"Sakhee":(1277,3354),
+  "Shamali":(6115,10951),"Shukurkalay":(732,2949),"Sultansafee":(8355,2229),"Timurkalay":(4983,6052),
+  "Zavarak":(1960,11749),
+ },
 }
 
 def coords_for(map_name, town_names):
@@ -172,6 +220,15 @@ class MatchData:
         self.kills = []            # (t_sec, name_or_None, side, weapon, cat, dist)
         self.vloss_raw = []        # (victim_classname, victim_side) for VEH/AIR kills
         self.total_kills = 0
+        self.ai_only = False       # no human operators -> AI-only match (no phantom MVP)
+
+    @staticmethod
+    def fmt_duration(sec):
+        """Human match length: '6h56m', '48m', '2h00m'. Never the raw 416:08 minutes bug."""
+        sec = int(max(0, sec)); h, rem = divmod(sec, 3600); mm, _ = divmod(rem, 60)
+        if h: return f"{h}h{mm:02d}m"
+        if mm: return f"{mm}m{sec%60:02d}s" if sec < 600 else f"{mm}m"
+        return f"{sec}s"
 
     # town ownership at match time ts (seconds)
     def owners_at(self, ts):
@@ -189,22 +246,34 @@ class MatchData:
         # every town on the map gets an owner entry (uncaptured -> neutral) so the control
         # map renders the FULL town set (all logics incl. airfields), not just towns that flipped.
         for t in self.towns: self.init_owners.setdefault(t, "neu")
-        # per-player derived
+        # per-player derived. Drop HC / AI-controller phantoms AND zero-activity ghosts
+        # (a player with no kills, no caps, no deaths, no score contributes nothing and must
+        # never be featured as MVP). This is the fix for MVP="HC-AI-Control-1".
+        clean = []
         for p in self.players:
             d = p["d"]
             p["kills"] = d[0]+d[1]+d[2]+d[3]
             p["score"] = self.score(d, p["kills"])
             p["kd"]    = p["kills"] / max(1, d[6])
+            if is_excluded_name(p["name"]): continue
+            if p["kills"] == 0 and p["d"][10] == 0 and p["d"][6] == 0 and p["score"] == 0:
+                continue                                            # 0-activity phantom
+            clean.append(p)
+        self.players = clean
         self.players.sort(key=lambda p: -p["score"])
         self.mvp = self.players[0] if self.players else None
+        self.ai_only = not self.players                            # no human operators survived
 
-        # kill aggregates
+        # kill aggregates (kills carry the KILLER side; None name = AI/anonymous)
         self.catcount  = Counter(k[4] for k in self.kills)
         self.weapcount = Counter(k[3] for k in self.kills)
         self.topweap   = self.weapcount.most_common(1)[0] if self.weapcount else ("—", 0)
         self.longest   = max(self.kills, key=lambda k: k[5]) if self.kills else (0, None, "west", "—", "INF", 0)
         if not self.total_kills:
             self.total_kills = len(self.kills)
+        # HONEST kill accounting: total_kills counts ALL forces (incl. AI-vs-AI). Also expose a
+        # per-side split so GUER (which can top the kill charts yet win nothing) is never invisible.
+        self.kills_by_side = Counter(k[2] for k in self.kills)     # {"west":n,"east":n,"guer":n,...}
         self.pvp_total = sum(p["d"][7] for p in self.players)
         self.cap_total = len(self.caps)
         if self.mvp:
@@ -219,12 +288,17 @@ class MatchData:
             if w > best:
                 best = w; self.decisive = (t, town, s)
 
-        # momentum series (towns held over time)
+        # momentum series (towns held over time) — now tracks all THREE factions incl. GUER,
+        # which is a real capturing side in this mission and was previously dropped from the chart.
         step = max(20, self.duration // 64)
         xs = list(range(0, self.duration + 1, step))
         self.ser_x = xs
-        self.ser_w = [sum(v == "west" for v in self.owners_at(t).values()) for t in xs]
-        self.ser_e = [sum(v == "east" for v in self.owners_at(t).values()) for t in xs]
+        _own = [self.owners_at(t) for t in xs]
+        self.ser_w = [sum(v == "west" for v in o.values()) for o in _own]
+        self.ser_e = [sum(v == "east" for v in o.values()) for o in _own]
+        self.ser_g = [sum(v == "guer" for v in o.values()) for o in _own]
+        # did GUER ever hold enough ground to be worth drawing? (drives render toggle)
+        self.guer_active = any(g > 0 for g in self.ser_g) or self.kills_by_side.get("guer", 0) > 0
 
         # control-map grid (nearest-town index per cell) — precomputed once
         import numpy as np
@@ -279,6 +353,40 @@ class MatchData:
         # hardware destroyed (vehicles + aircraft, from KILL category) — concrete kill-porn.
         self.hw_veh = self.catcount.get("VEH", 0); self.hw_air = self.catcount.get("AIR", 0)
         self.hq_kills = self.catcount.get("HQ", 0)
+
+        # --- WINNER: how did they win? supremacy (last side standing on the town map) vs a raw
+        # town-count edge vs base destruction. We only have CAPTURE + ROUNDEND, so infer from the
+        # final ownership: if the loser holds 0 towns at ROUNDEND it reads as SUPREMACY/base-wipe;
+        # otherwise it was decided on the town count. ---
+        fo = self.owners_at(self.duration)
+        held = Counter(fo.values())
+        wt = held.get(self.winner, 0)
+        others = sum(v for k, v in held.items() if k not in (self.winner, "neu"))
+        if others == 0 and wt > 0:
+            self.win_how = {"mode": "SUPREMACY", "text": f"held {wt} towns — enemy wiped off the map"}
+        elif wt > 0:
+            runner = max(((k, v) for k, v in held.items() if k not in (self.winner, "neu")),
+                         key=lambda kv: kv[1], default=(None, 0))
+            self.win_how = {"mode": "TERRITORY", "text": f"{wt}–{runner[1]} on towns at the bell"}
+        else:
+            self.win_how = {"mode": "OBJECTIVE", "text": "won on objective / base"}
+
+        # --- AI-ONLY match fallback: no human MVP, so feature the fiercest fighting side and the
+        # fiercest single flashpoint instead of an empty/phantom card. ---
+        self.top_side = None; self.fiercest = None
+        if self.kills:
+            ks = self.kills_by_side
+            engaged = [(s, n) for s, n in ks.items() if s in ("west", "east", "guer") and n > 0]
+            if engaged:
+                s, n = max(engaged, key=lambda x: x[1])
+                self.top_side = {"side": s, "kills": n}
+            # fiercest battle = the town whose (re)capture had the most kills in the ±win window
+            if self.caps and self.kills:
+                win = max(60, self.duration // 40); best = None
+                for (t, town, s) in self.caps:
+                    n = sum(1 for k in self.kills if abs(k[0] - t) <= win)
+                    if best is None or n > best[0]: best = (n, town, t, s)
+                if best: self.fiercest = {"town": best[1], "kills": best[0], "t": best[2], "side": best[3]}
         # per-TYPE hardware losses (from the KILL vc= victim class): the "3 Hinds, 7 T-72s"
         # tally. Aggregated by display name, with a west/east split of who LOST them.
         agg = {}
@@ -339,6 +447,9 @@ def parse_waspstat(lines, names=None, line_times=None):
     winner, duration, map_name = "west", 0, "chernarus"
 
     for raw in lines:
+        # Peel the diag_log '"..."' wrapper FIRST so the final field (map name) and any embedded
+        # name tokens don't carry stray quotes. Without this, map parsed as 'chernarus"'.
+        raw = _dequote(raw)
         i = raw.find("WASPSTAT|v1|")
         if i < 0: continue
         parts = raw[i:].strip().split("|")
@@ -348,9 +459,12 @@ def parse_waspstat(lines, names=None, line_times=None):
         rtype = parts[3] if len(parts) > 3 else ""
 
         if rtype == "ROUNDEND":
-            winner = side_from_str(parts[4]); duration = int(parts[5]); map_name = parts[6].lower()
+            winner = side_from_str(parts[4])
+            try: duration = int(_clean(parts[5]))
+            except (IndexError, ValueError): duration = 0
+            map_name = _clean(parts[6]).lower()
         elif rtype == "CAPTURE":
-            caps_raw.append((seq, parts[4], side_from_id(parts[5]), side_from_id(parts[6]), _time_token(parts[7:])))
+            caps_raw.append((seq, _clean(parts[4]), side_from_id(parts[5]), side_from_id(parts[6]), _time_token(parts[7:])))
         elif rtype == "KILL":
             # KILL|killerUID|victimUID|killerSide|victimSide|killerClass|dist|cat|hw=<weapon>|vc=<victimClass>[|t=<sec>]
             killer_uid = parts[4] if len(parts) > 4 else ""
@@ -378,9 +492,10 @@ def parse_waspstat(lines, names=None, line_times=None):
                 vals = fields.split(",")
                 if len(vals) < 16: continue
                 side_raw, _, nm = vals[15].partition("~")
-                try: d = [int(x) for x in vals[:15]]; side = SIDE_FROM_PSTAT.get(int(side_raw), "guer")
+                nm = _clean(nm)                                   # strip quotes off the ~"name" token
+                try: d = [int(x) for x in vals[:15]]; side = SIDE_FROM_PSTAT.get(int(_clean(side_raw)), "guer")
                 except ValueError: continue
-                acc = pstats.setdefault(uid, {"d": [0]*15, "side": side, "name": ""})
+                acc = pstats.setdefault(_clean(uid), {"d": [0]*15, "side": side, "name": ""})
                 acc["side"] = side
                 if nm: acc["name"] = nm
                 for j in range(15): acc["d"][j] += d[j]
@@ -429,11 +544,11 @@ def parse_waspstat(lines, names=None, line_times=None):
     m.pvp_pairs = pvp
     m.vloss_raw = vloss_raw
 
-    # players (skip headless-client connections — they carry UIDs + stats but aren't operators)
-    _HC = {"HC","HC1","HC2","HC3","HC4","HEADLESS","HEADLESSCLIENT","SERVER"}
+    # players (skip headless clients / AI controllers — they carry UIDs + stats but aren't
+    # operators). finalize() also drops any that slip through + 0-activity ghosts.
     for uid, acc in pstats.items():
         nm = _disp(uid)
-        if nm.strip().upper() in _HC: continue
+        if is_excluded_name(nm): continue
         m.players.append({"name": nm, "side": acc["side"], "d": acc["d"]})
 
     return m.finalize()
