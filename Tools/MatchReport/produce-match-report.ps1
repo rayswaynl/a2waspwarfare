@@ -93,12 +93,14 @@ Write-Host "Rendering match ROUNDEND seq $lastSeq ($winner / $map) -> $out"
 & $Py @args
 if ($LASTEXITCODE -ne 0) { throw "render_report.py failed (exit $LASTEXITCODE)" }
 
-# 5. record state so we never re-render this match
-Set-Content -LiteralPath $StateFile -Value "$lastSeq"
 $sizeMB = [math]::Round((Get-Item $out).Length/1MB, 1)
 Write-Host "DONE: $out ($sizeMB MB)"
 
-# 5b. post the clip to the Warfare Discord channel via the warfare bot (REST multipart upload)
+# 5. post the clip to the Warfare Discord channel via the warfare bot (REST multipart upload).
+# The de-dupe state is written AFTER the post: a TRANSIENT post failure (network, 5xx) leaves
+# the state unadvanced so the next 10-min run re-renders and retries; a permanent 4xx (e.g.
+# 413 too-large) still advances state so we don't re-render the same doomed clip forever.
+$writeState = $true
 if (-not $SkipDiscord) {
   try {
     $capFile = "$out.caption.txt"
@@ -110,10 +112,22 @@ if (-not $SkipDiscord) {
     $resp = Invoke-RestMethod -Uri "https://discord.com/api/v10/channels/$ChannelId/messages" -Method Post `
               -Headers @{ Authorization = "Bot $token"; 'User-Agent' = 'WaspReport (https://miksuuswarfare.com, 1.0)' } -Form $form -TimeoutSec 120
     Write-Host "Posted to Discord channel $ChannelId (message $($resp.id))."
-  } catch { Write-Warning "Discord post failed: $($_.Exception.Message)" }
+  } catch {
+    $code = 0; try { $code = [int]$_.Exception.Response.StatusCode } catch {}
+    if ($code -ge 400 -and $code -lt 500) {
+      Write-Warning "Discord post failed permanently (HTTP $code): $($_.Exception.Message) — state advances, no retry."
+    } else {
+      $writeState = $false
+      Write-Warning "Discord post failed (transient, HTTP $code): $($_.Exception.Message) — state NOT advanced, retry next cycle."
+    }
+  }
 }
 
-# 6. optional Peach DM to Ray with the path (so it pings your phone)
+# 6. record state so we never re-render this match (skipped above on a transient post failure)
+if ($writeState) { Set-Content -LiteralPath $StateFile -Value "$lastSeq" }
+else { Write-Host "De-dupe state stays at $prevSeq (seq $lastSeq will retry)." }
+
+# 7. optional Peach DM to Ray with the path (so it pings your phone)
 if ($Notify) {
   try {
     $keyLine = Get-Content 'C:\Users\Game\Complete-discord-bot\.env' | Where-Object { $_ -match '^\s*PEACH_OPS_API_KEY\s*=' } | Select-Object -First 1
