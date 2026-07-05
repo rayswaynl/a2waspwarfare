@@ -28,3 +28,9 @@ Full brief delivered: assets-inventory (30 assets verified on disk), motion-toke
 
 Waves in flight: wave 3 (TP-8 inf-fuel opus, TP-9 road-snap, TP-10 micro-layer spec opus), wave 4 (TP-11 team-menu proposal FABLE, TP-12 Command Center spec FABLE), TP-5 with owner's Agent B on the Game PC.
 
+## TP-11 — Team menu clean-slate proposal (Fable) → `TEAM-MENU-PROPOSAL-2026-07-06.md` ✅ DOC
+3 ranked options; **Option A "Coordination Strip"** recommended — every server path reuses tested machinery (aicom-focus/aicom-support), no new PVF files, two-dialog flag story (`WFBE_C_TEAM_MENU_V2` default 0 = byte-identical). Self-grade 83 (honest: in-engine layout pass pending, Option B deferred on cost). **Agent A: accepted as decision doc; bonus find promoted to hardening fix: aicom-focus lacks a server-side per-player cooldown (live gap, exploitable by modified clients) — queued for next build wave independent of Q9.**
+
+## TP-12 — Command Center + homepage build spec (Fable) → `COMMAND-CENTER-BUILD-SPEC-2026-07-06.md` ✅ DOC
+Full IA for /stats "Command Center" designed against TODAY's real endpoints (/api/wasp-stats, /api/aicom-stats, /api/waspscale) with marked Stats-V2 upgrade slots; per-section public/delayed/admin classification; motion-kit component mapping; homepage second-block reframe (3 copy candidates); build plan = sequenced bounded PRs. Self-grade 92. **Agent A: accepted; caught two homepage copy-vs-reality discrepancies → owner Q10.**
+

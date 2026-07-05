@@ -40,8 +40,16 @@ From the 125-PR triage: close **#129** (superseded by V2 program), **#553** (sup
 ## Q8 — Utes Invasion (#703) — only if Utes is in tonight's scope
 Three spec decisions still open: LHD destructible vs protected; side assignment; GUER active on Utes. (Default: defer, Utes not in tonight's scope.)
 
+## Q9 — Team menu repurpose (NEW, from TP-11 Fable proposal)
+`TEAM-MENU-PROPOSAL-2026-07-06.md`: **Option A "Coordination Strip" recommended** — role declaration + "Suggest Capture Target" (feeds the V2 allocator via the existing aicom-focus advisory, AI-holds-command-gated, TTL 600 s, never command) + "Request AI Support" + keeps disband/FX/toggles, drops the VD/TG/transfer duplicates. Options B (intent board, LARGE) and C (minimal, SMALL) documented.
+**Q9a:** Ship Option A? **Q9b:** Focus-suggestion cooldown default 120 s OK? (Default if silent: A, 120 s, town picker shows all non-owned towns, role ephemeral per-life.)
+
+## Q10 — Homepage fact check (NEW, from TP-12 spec)
+The spec caught copy drift: live site says "100s of AI" and "2–5 h rounds"; your brief says "500+ AI" and "2–8 h". RPT evidence supports 400–465 AI live. **Q10:** Which numbers are canon for the homepage? (Default: "400+ AI units", "2–8 h escalating rounds" — evidence-backed.)
+
 ## Non-questions (proceeding on evidence, no gate)
 - **Miksuu main CI is red** on two pre-existing test-drift failures (leaderboard fixture `claimed` field, battlemetrics assertion) — pure test fixes, building now.
 - **Zargabad 60k-hit looping script error** (camp/bunker score-monitor, `_playerskill`/`_base` undefined) — pure bug fix, building now.
 - Earplugs removal, Cancel-Last alignment, RHUD queue overflow, factory upgrade icons — cosmetic fixes with exact files identified, building now (flag-gated where behavior-visible).
 - GRPBUDGET/SRVPERF emitter relocation (byte-identical format) — cutover prerequisite, building now.
+- **aicom-focus server-side rate limit missing** (found by TP-11): any client bypassing the UI guard can spam focus advisories TODAY. ~15-line UID-keyed cooldown in Server_HandleSpecial.sqf — hardening fix, building in the next wave regardless of Q9.
