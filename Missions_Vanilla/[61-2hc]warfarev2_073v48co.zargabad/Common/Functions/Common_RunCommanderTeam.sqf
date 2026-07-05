@@ -24,7 +24,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
-         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir"];
+         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -922,6 +922,33 @@ while {!WFBE_GameOver && _alive} do {
 			_seq = _order select 0;
 			_mode = _order select 1;
 			_dest = _order select 2;
+
+			//--- DECAP PRESS HOOK (consumes the #724 organic-closer stamp; the first and only reader).
+			//--- Per-pass plain get + isNil (group vars have no 2-arg default form). While stamped, override
+			//--- THIS pass's dest/mode with the stamped HQ pos + the existing "goto" press idiom (Strategy
+			//--- L903 doctrine: "goto" = press through the arrival SAD into the BASE-ASSAULT fire phase below;
+			//--- NOT "defense" hold, NOT "towns-target" capture). Stamp appear/clear each force ONE synthetic
+			//--- fresh-order pass (sentinel _lastSeq) so movement re-issues immediately and the team falls
+			//--- back to its REAL order the pass after the closer clears the stamp (drift/ABORT/WON) - the
+			//--- override is recomputed every pass, never latched. Fixed-wing teams excluded (ground press
+			//--- only this increment; heli-LIFT infantry teams are ordinary ground carriers here). At flag 0
+			//--- no stamp ever exists (#724 clears them) -> _pressPos isNil -> provably byte-inert no-op.
+			_pressPos = _team getVariable "wfbe_aicom_decap";
+			if (!isNil "_pressPos" && {!_isPlaneTeam}) then {
+				_pressOn = _team getVariable "wfbe_aicom_press_on";
+				if (isNil "_pressOn") then {
+					_team setVariable ["wfbe_aicom_press_on", true];
+					_lastSeq = -999999;   //--- synthetic fresh order: re-route onto the HQ pos THIS pass
+					diag_log ("AICOM2|v1|DECAP|" + str _side + "|" + str (round (time / 60)) + "|PRESS|team=" + (str _team) + "|dist=" + str (round ((leader _team) distance _pressPos)));
+				};
+				_mode = "goto";
+				_dest = _pressPos;
+			} else {
+				if (!isNil {_team getVariable "wfbe_aicom_press_on"}) then {
+					_team setVariable ["wfbe_aicom_press_on", nil];
+					_lastSeq = -999999;   //--- press ended -> re-accept the real order in the fresh-order block
+				};
+			};
 
 			if (_seq != _lastSeq) then {
 				//--- Fresh order: head out.
