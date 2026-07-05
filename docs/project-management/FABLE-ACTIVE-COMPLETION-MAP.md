@@ -1,7 +1,7 @@
 # FABLE Active Completion Map
 
 Run: 2026-07-05 completion push. Control file: `FABLE_ULTRACODE_MASTER_INSTRUCTIONS_V2_2026-07-05.md` (this directory).
-Agent A: Claude (Fable), Main PC session. **Status: DISCOVERY COMPLETE — owner-question gate open** (`OWNER-QUESTIONS-BEFORE-BUILD.md`). Ungated packets (TP-1…TP-4) are cleared for Agent B now; TP-5 waits on Q1.
+Agent A: Claude (Fable), Main PC session. **Status: WAVE 1 BUILT & REVIEWED** — TP-1→PR miksuu#60, TP-2→#720, TP-3→#719, TP-4→#718 (all draft, Agent-A-approved; see `FABLE-BUILD-LOG-2026-07-05.md`). Owner-question gate open (`OWNER-QUESTIONS-BEFORE-BUILD.md`); TP-5 waits on Q1.
 
 ## Working State (Agent A)
 - Worktree `C:\Users\Steff\a2wasp-fable-push`, branch `claude/fable-completion-push`, base `claude/build84-cmdcon36`, PR #717.
