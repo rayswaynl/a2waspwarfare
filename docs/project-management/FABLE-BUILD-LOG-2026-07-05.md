@@ -19,3 +19,12 @@ Five items, one commit each: Cancel-Last pair alignment (IDC 12024 ST_LEFT w=0.1
 
 ## TP-5 — #713 organic base sensing re-scope 🔶 IN FLIGHT (owner's Agent B session)
 Q1 approved with defaults 2026-07-06. Claimed by the owner's second Fable session; prompt issued by Agent A (self-contained, includes verified #713 facts + approved constants: `WFBE_C_AICOM2_DECAP_SENSE_RADIUS` 3000/3000/2000, `_SENSE_INTERVAL` 4 ticks, `_SENSE_CHANCE` 0.35, `_COMMIT_RADIUS` = sense radius, MAX_ENTOWNS demoted to secondary @5). Expected: stacked draft PR `fable/aicom-v2-l1-organic` → base `fable/aicom-v2-l1`. Agent A reviews the diff on arrival. Driver-press hook + air behavior explicitly next increment.
+
+## TP-6 — Miksuu visual/motion kit → [miksuu PR #61](https://github.com/rayswaynl/miksuus-website-discord-bot/pull/61) ✅ (stacked on #60)
+Full brief delivered: assets-inventory (30 assets verified on disk), motion-tokens.css + README (transform/opacity-only policy, reduced-motion), 4 overlays (grid/grain/vignette/contours), 10 currentColor icons, 8 components (AmbientOpsLayer, BrandWatermark, LiveValue, TownControlBar, TheatreMapPanel w/ MANDATORY delayed-feed disclaimer + abstract-only rendering, WarLogEvent, AfterActionReportCard w/ ROUND CLOSED stamp, DiscordEmbedPreview), /brand-lab demo (noindex, 4.27 kB). CI: lint clean, 213/213, typecheck clean, build pass. Known nuance: contested-ring pulses via SVG `r` keyframes — unsupported browsers show a static ring (safe). Agent grade 97; **Agent A: approved** (intel-safety + faction-color-trapping verified in diff; no new rasters).
+
+## TP-7 — In-game tips rewrite → [PR #721](https://github.com/rayswaynl/a2waspwarfare/pull/721) ✅
+51 tips (22 core-loop, 10 veteran/non-obvious, 19 flag-gated), all 18 reused flag names verified against Init_CommonConstants; rotation mechanism untouched; CRLF-safe python edit; lint 0, bracket 0, mirrors + templates verified. Caveat recorded: numeric claims cross-referenced against constants but not in-engine verified — owner playtest is the final check. Agent grade 95; **Agent A: approved** (14-tip sample read: tone + accuracy pass).
+
+Waves in flight: wave 3 (TP-8 inf-fuel opus, TP-9 road-snap, TP-10 micro-layer spec opus), wave 4 (TP-11 team-menu proposal FABLE, TP-12 Command Center spec FABLE), TP-5 with owner's Agent B on the Game PC.
+
