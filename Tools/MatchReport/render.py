@@ -11,11 +11,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # ---- optional generated art (drop PNGs in assets/; see assets.py / gen_prompts.py) ----
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
-try: from assets import emblem_id, winner_bg_id, SILHOUETTES
+try: from assets import emblem_id, winner_bg_id, SILHOUETTES, LOSS_ART, LOSS_ART_NAME
 except Exception:
     def emblem_id(s): return None
     def winner_bg_id(s): return None
-    SILHOUETTES = []
+    SILHOUETTES = []; LOSS_ART = {}; LOSS_ART_NAME = {}
 _acache = {}
 def asset(aid):
     if aid in _acache: return _acache[aid]
@@ -97,9 +97,9 @@ f_md=SANS(34,True); f_sm=SANS(28,True); f_xs=SANS(23,False); f_num=MONO(58)
 
 # Scene plan — single source of truth for lengths so audio.py can find the winner-reveal
 # "climax" frame and stay in sync if scene timing changes. (name, frames, fade-in, fade-out)
-SCENE_PLAN = [("intro",54,18,10),("battle",420,12,10),("momentum",168,12,10),("mvp",156,12,10),
-              ("board",186,12,10),("combat",198,12,10),("decisive",120,12,10),("winner",126,4,2),
-              ("outro",102,10,10)]
+SCENE_PLAN = [("intro",54,18,10),("battle",450,12,10),("momentum",150,12,10),("mvp",156,12,10),
+              ("board",186,12,10),("combat",186,12,10),("losses",150,12,10),("winner",126,4,2),
+              ("outro",162,10,10)]
 HOLD_FRAMES = 18
 def climax_frame():
     f=0
@@ -108,20 +108,49 @@ def climax_frame():
         f+=nf
     return f
 
+# --- per-match LOOK THEME (anti-stale): m.seed rotates the camera-motion mode, the
+# corner-frame register and a subtle colour grade, on top of the existing backdrop
+# <slot>_k.png variant rotation. Same data in, visibly different video out, so a feed
+# of many recaps never looks templated. Match RESULTS are never themed.
+_THEME = {"kb": "in", "frame": 0, "grade": None}
+_GRADES = {None: None,
+           "warm": ((1.05, 1.00, 0.93), "dusk"),     # warm dusk grade
+           "cool": ((0.94, 1.00, 1.07), "night")}    # cool night grade
+def set_theme(seed):
+    s = abs(int(seed))
+    _THEME["kb"]    = ("in", "out", "drift")[s % 3]
+    _THEME["frame"] = (s // 3) % 3
+    _THEME["grade"] = (None, "warm", "cool")[(s // 9) % 3]
+    _fx.pop("frame", None); _fx.pop("lut", None)     # invalidate caches on theme change
+    return dict(_THEME)
+
 def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
 def lerp(a,b,t): return tuple(int(a[i]+(b[i]-a[i])*t) for i in range(3))
 def mix(c,t): return lerp(BG,c,t)
 
-def paste_cover(im, aid, box=None, opacity=1.0, seed=None):
+def paste_cover(im, aid, box=None, opacity=1.0, seed=None, kb=None):
     """Paste an asset scaled to COVER box (default whole frame). Returns True if used.
-    Pass seed to rotate among dropped <slot>_k.png variants for per-match variety."""
+    Pass seed to rotate among dropped <slot>_k.png variants for per-match variety.
+    Pass kb=scene-progress (0..1) for a slow Ken-Burns push-in + drift (cinematic
+    life on the still backdrops, no extra assets)."""
     a = vasset(aid, seed) if seed is not None else asset(aid)
     if a is None: return False
     bx = box or (0, 0, W, H); bw = bx[2]-bx[0]; bh = bx[3]-bx[1]
-    s = max(bw/a.width, bh/a.height); a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
+    s = max(bw/a.width, bh/a.height)
+    dx = dy = 0
+    if kb is not None:
+        e = ease(max(0.0, min(1.0, kb)))
+        mode = _THEME["kb"]
+        if mode == "out":            # start close, pull back
+            s *= 1.07 - 0.07*e; dy = -int(20*(1-e))
+        elif mode == "drift":        # constant zoom, lateral pan
+            s *= 1.045; dx = int(34*(e-0.5))
+        else:                        # "in": push in + drift up
+            s *= 1.0 + 0.07*e; dy = -int(20*e)
+    a2 = a.resize((max(1,int(a.width*s)), max(1,int(a.height*s))))
     if opacity < 1.0:
         a2 = a2.copy(); a2.putalpha(a2.split()[3].point(lambda v:int(v*opacity)))
-    im.paste(a2, (bx[0]+(bw-a2.width)//2, bx[1]+(bh-a2.height)//2), a2); return True
+    im.paste(a2, (bx[0]+(bw-a2.width)//2+dx, bx[1]+(bh-a2.height)//2+dy), a2); return True
 
 def paste_emblem(im, aid, cx, cy, maxw, seed=None):
     a = vasset(aid, seed) if seed is not None else asset(aid)
@@ -194,14 +223,37 @@ def _fx_grain():
         _fx["grain"]=(np.random.default_rng(7).random((H+96,W))*255).astype(np.uint8)
     return _fx["grain"]
 def _fx_frame():
+    # Quiet edge register, deliberately understated. THREE theme variants (rotated by
+    # m.seed via set_theme) so the feed doesn't share one identical frame forever:
+    #   0 corner ticks (the classic)  ·  1 hairline inset border + orange corner dots
+    #   2 top/bottom rules with a centre accent notch
     if "frame" in _fx: return _fx["frame"]
     fo=Image.new("RGBA",(W,H),(0,0,0,0)); d=ImageDraw.Draw(fo)
-    c=(150,150,138,150); o=(217,118,60,170); L=72; mg=34
-    for (cx,cy,sx,sy) in [(mg,mg,1,1),(W-mg,mg,-1,1),(mg,H-mg,1,-1),(W-mg,H-mg,-1,-1)]:
-        d.line([(cx,cy),(cx+L*sx,cy)],fill=c,width=3); d.line([(cx,cy),(cx,cy+L*sy)],fill=c,width=3)
-        d.line([(cx,cy),(cx+16*sx,cy)],fill=o,width=3)
-    for x in range(150,W-120,96): d.line([(x,mg-7),(x,mg)],fill=(150,150,138,60))
+    c=(150,150,138,80); o=(217,118,60,140); mg=44; style=_THEME["frame"]
+    if style==1:
+        d.rectangle([mg,mg,W-mg,H-mg],outline=(150,150,138,52),width=1)
+        r=3
+        for (cx,cy) in [(mg,mg),(W-mg,mg),(mg,H-mg),(W-mg,H-mg)]:
+            d.ellipse([cx-r,cy-r,cx+r,cy+r],fill=o)
+    elif style==2:
+        for yy in (mg,H-mg):
+            d.line([(mg,yy),(W/2-26,yy)],fill=c,width=2); d.line([(W/2+26,yy),(W-mg,yy)],fill=c,width=2)
+            d.line([(W/2-14,yy),(W/2+14,yy)],fill=o,width=3)
+    else:
+        L=46
+        for (cx,cy,sx,sy) in [(mg,mg,1,1),(W-mg,mg,-1,1),(mg,H-mg,1,-1),(W-mg,H-mg,-1,-1)]:
+            d.line([(cx,cy),(cx+L*sx,cy)],fill=c,width=2); d.line([(cx,cy),(cx,cy+L*sy)],fill=c,width=2)
+            d.line([(cx,cy),(cx+12*sx,cy)],fill=o,width=2)
     _fx["frame"]=fo; return fo
+
+def _fx_lut():
+    """Per-channel grade LUTs for the theme (None -> no grade)."""
+    if "lut" in _fx: return _fx["lut"]
+    g = _GRADES.get(_THEME["grade"])
+    if g is None: _fx["lut"]=None; return None
+    (fr,fg,fb),_ = g
+    luts=[[min(255,int(v*f)) for v in range(256)] for f in (fr,fg,fb)]
+    _fx["lut"]=luts; return luts
 
 def overlay_fx(im, i=0):
     """Production polish over a finished RGB frame: cinematic vignette + animated film
@@ -217,9 +269,15 @@ def overlay_fx(im, i=0):
         # static grain (i-independent) so x264 inter-prediction stays cheap -> small file
         gg=_fx_grain(); tile=Image.fromarray(gg[:H,:])
         out=Image.alpha_composite(out, Image.merge("RGBA",[tile]*3+[tile.point(lambda v:9)]))
-    fo=asset("frame_overlay")
-    out=Image.alpha_composite(out, fo.resize((W,H)) if fo is not None else _fx_frame())
-    return out.convert("RGB")
+    # Always the clean procedural corners — the frame_overlay.png asset is the busy
+    # radar-reticle HUD (edge ruler ticks + corner arcs + micro-labels) we're dropping.
+    out=Image.alpha_composite(out, _fx_frame())
+    out=out.convert("RGB")
+    luts=_fx_lut()
+    if luts:                       # theme colour grade (warm dusk / cool night / neutral)
+        r,g,b=out.split()
+        out=Image.merge("RGB",(r.point(luts[0]),g.point(luts[1]),b.point(luts[2])))
+    return out
 
 MX0,MY0,MS=40,470,1000
 
@@ -251,8 +309,9 @@ class Renderer:
                 gx=(c+0.5)/GC*S; gy=(1-(r+0.5)/GC)*S
                 if _seamask is not None: self.sea[r,c]= _seamask[r,c]>128
                 else: self.sea[r,c]= gy < self._coast(gx) or (gx>0.94*S and gy<0.42*S)
-                self.relief[r,c]=0.5+0.5*math.sin(gx/S*22+gy/S*6)*math.cos(gy/S*17)
-        self.relief=0.6*self.relief+0.4*rngn.random((GC,GC))
+                # smooth, low-amplitude relief only (no RNG mottling) — reads as gentle
+                # terrain shading, not pixel-noise.
+                self.relief[r,c]=0.5+0.5*math.sin(gx/S*9+gy/S*4)*math.cos(gy/S*7)
         # roads: connect each town to its 2 nearest neighbours (deduped undirected edges).
         names=m.tnames; pos=[m.towns[t] for t in names]; edges=set()
         for i,(ax,ay) in enumerate(pos):
@@ -271,10 +330,13 @@ class Renderer:
                 if self.sea[r,c]:
                     band=1.0+0.12*math.sin(r*0.9); terr[r,c]=tuple(min(255,int(v*band)) for v in WATER)
                 else:
-                    s=o[m.tnames[m.nearest[r,c]]]; rel=0.78+0.5*self.relief[r,c]
+                    s=o[m.tnames[m.nearest[r,c]]]; rel=0.86+0.28*self.relief[r,c]
                     base=lerp(LAND_BASE,SIDE_COL[s],0.34 if s!="neu" else 0.10)
                     terr[r,c]=tuple(min(255,int(v*rel)) for v in base)
-        im.paste(Image.fromarray(terr).resize((size,size),Image.NEAREST),(x0,y0))
+        # smooth territory: bilinear upscale + a light blur so ownership regions read as
+        # clean areas with soft fronts, not blocky pixel-noise.
+        tim=Image.fromarray(terr).resize((size,size),Image.BILINEAR).filter(ImageFilter.GaussianBlur(max(1,int(size/220))))
+        im.paste(tim,(x0,y0))
         # --- coastline stroke ---
         if self.coast_poly:
             cpts=[(x0+wx/S*size, y0+(1-wy/S)*size) for (wx,wy) in self.coast_poly]
@@ -285,6 +347,20 @@ class Renderer:
                 gx=c/size*S; cy=y0+(1-self._coast(gx)/S)*size
                 if y0<=cy<=y0+size: coastpts.append((x0+c,cy))
             if len(coastpts)>1: d.line(coastpts,fill=COAST,width=2)
+        # --- FRONT LINE: glowing trace where BLUFOR territory meets OPFOR territory ---
+        code=np.array([{"west":1,"east":2}.get(o[m.tnames[j]],0) for j in range(len(m.tnames))],dtype=np.int8)
+        cell=code[m.nearest].copy(); cell[self.sea]=0
+        w_=(cell==1); e_=(cell==2); cf=size/GC
+        vb=(w_[:,:-1]&e_[:,1:])|(e_[:,:-1]&w_[:,1:])   # vertical edges (between col c and c+1)
+        hb=(w_[:-1,:]&e_[1:,:])|(e_[:-1,:]&w_[1:,:])   # horizontal edges (between row r and r+1)
+        fsegs=[((x0+(c+1)*cf,y0+r*cf),(x0+(c+1)*cf,y0+(r+1)*cf)) for r,c in zip(*np.where(vb))]
+        fsegs+=[((x0+c*cf,y0+(r+1)*cf),(x0+(c+1)*cf,y0+(r+1)*cf)) for r,c in zip(*np.where(hb))]
+        if fsegs:
+            gl=Image.new("RGBA",(im.width,im.height),(0,0,0,0)); gd=ImageDraw.Draw(gl)
+            for a,b in fsegs: gd.line([a,b],fill=(230,140,70,255),width=max(5,int(11*sc)))
+            gl=gl.filter(ImageFilter.GaussianBlur(max(3,int(6*sc))))
+            im.paste(gl,(0,0),gl)                                       # soft orange front glow
+            for a,b in fsegs: d.line([a,b],fill=(255,214,150,255),width=max(2,int(3*sc)))   # crisp hot core
         # --- military grid + edge coordinates ---
         for k in range(12):
             gx=x0+k*size/11; gy=y0+k*size/11
@@ -293,10 +369,8 @@ class Renderer:
                 d.text((x0+k*size/11+4,y0+2),chr(65+k),font=f_xs,fill=(90,100,116))
                 d.text((x0+3,y0+k*size/11+2),f"{k:02d}",font=f_xs,fill=(90,100,116))
         d.rectangle([x0,y0,x0+size,y0+size],outline=(70,80,96),width=2)
-        # --- roads (faint, under the town dots) ---
-        for (i,j) in self.roads:
-            ax,ay=m.towns[m.tnames[i]]; bx,by=m.towns[m.tnames[j]]
-            d.line([(x0+ax/S*size,y0+(1-ay/S)*size),(x0+bx/S*size,y0+(1-by/S)*size)],fill=(120,128,120,90),width=max(1,int(2*sc)))
+        # (no road/connlines: the nearest-neighbour links read as arbitrary "weird" lines
+        #  and clutter the map — towns stand on their own.)
         # --- compass ---
         ccx,ccy=x0+size-44*sc,y0+46*sc
         d.ellipse([ccx-22*sc,ccy-22*sc,ccx+22*sc,ccy+22*sc],outline=(120,132,150),width=2)
@@ -309,15 +383,23 @@ class Renderer:
             d.ellipse([cx-rr-2,cy-rr-2,cx+rr+2,cy+rr+2],fill=(8,10,14))
             d.ellipse([cx-rr,cy-rr,cx+rr,cy+rr],fill=col)
         if labels:
-            placed=[]
-            for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):  # north-first
+            # greedy anti-overlap: try right/left/above/below the dot, place at the first
+            # candidate that clears the map edge and every label already placed. Keeps far
+            # more town names than the old "drop if the dot is near another dot" rule.
+            boxes=[]
+            def _fits(bx0,by0,bx1,by1):
+                if bx0<x0+2 or bx1>x0+size-2 or by0<y0+2 or by1>y0+size-2: return False
+                return not any(bx0<q[2] and q[0]<bx1 and by0<q[3] and q[1]<by1 for q in boxes)
+            for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):   # north-first
                 cx=x0+x/S*size; cy=y0+(1-y/S)*size
-                if any(abs(cx-px)<104*sc and abs(cy-py)<18*sc for px,py in placed): continue
-                placed.append((cx,cy))
-                lw=d.textlength(t,font=f_xs); lx=cx+10*sc
-                if lx+lw>x0+size-4: lx=cx-10*sc-lw   # flip label left of the dot near the east edge
-                d.text((lx+1,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
-                d.text((lx,cy-10*sc),t,font=f_xs,fill=(220,228,240))
+                bb=d.textbbox((0,0),t,font=f_xs); lw=bb[2]-bb[0]; lh=bb[3]-bb[1]; g=11*sc
+                for lx,ly in ((cx+g,cy-lh/2),(cx-g-lw,cy-lh/2),(cx-lw/2,cy-g-lh),(cx-lw/2,cy+g)):
+                    box=(lx-2,ly-2,lx+lw+2,ly+lh+2)
+                    if _fits(*box):
+                        boxes.append(box)
+                        d.text((lx+1,ly+1),t,font=f_xs,fill=(20,24,30))        # shadow for legibility
+                        d.text((lx,ly),t,font=f_xs,fill=(222,228,238))
+                        break
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
 def footer(im,d):
@@ -368,12 +450,17 @@ def caption(m):
     arc = f" {cb['line'].title()}." if cb.get("badge") else ""
     mvp = (f"\n🎖 MVP {m.mvp['name']} ({m.mvp['kills']}K)"
            f"{' — '+m.mvp['award'] if m.mvp.get('award') else ''}") if m.mvp else ""
-    return (f"{hook} {side} take {m.map_name.title()} in {mm:02d}:{ss:02d}.{arc}{mvp}\n"
+    ls = getattr(m, "losses", [])[:3]
+    hw = ("\n💥 Hardware losses: " + ", ".join(f"{e['n']}× {e['name'].title()}" for e in ls)) if ls else ""
+    return (f"{hook} {side} take {m.map_name.title()} in {mm:02d}:{ss:02d}.{arc}{mvp}{hw}\n"
+            f"▶ Play, live stats & leaderboards: miksuu.com  ·  Join us: discord.me/warfare\n"
             f"New match recap every round — follow for more.\n"
             f"#arma2 #warfare #milsim #cti #miksuuswarfare #gaming #fyp")
 
 
 def render(m, out_path):
+    theme=set_theme(m.seed)
+    print(f"theme: kb={theme['kb']} frame={theme['frame']} grade={theme['grade'] or 'neutral'}")
     R=Renderer(m)
     frames=[]
     def base(): im=Image.new("RGB",(W,H),BG); return im,ImageDraw.Draw(im,"RGBA")
@@ -392,7 +479,7 @@ def render(m, out_path):
         col=SIDE_COL[m.winner]
         wash=np.asarray(im).astype(np.float32); wash[:]=lerp(BG,col,0.18)
         im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0))
-        paste_cover(im,"intro_splash",opacity=0.40,seed=m.seed)
+        paste_cover(im,"intro_splash",opacity=0.40,seed=m.seed,kb=i/n)
         d=ImageDraw.Draw(im,"RGBA")
         mk=brand_logo("mark")
         if mk is not None:
@@ -428,7 +515,7 @@ def render(m, out_path):
         footer(im,d)
 
     def s_momentum(im,d,i,n):
-        paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed)   # generated scene backdrop (seed rotates)
+        paste_cover(im,"bg_momentum",opacity=0.5,seed=m.seed,kb=i/n)   # generated scene backdrop (seed rotates)
         drift_silhouette(im,2,i,n,yfrac=0.78,wfrac=0.46,opacity=0.40,direction=(-1 if m.seed%2 else 1))  # jet w/ afterburner, clear lower band
         header(d,"MOMENTUM","towns held over time")
         px0,py0,pw,ph=90,360,W-180,760; panel(d,px0-20,py0-30,px0+pw+20,py0+ph+70)
@@ -457,24 +544,45 @@ def render(m, out_path):
 
     def s_mvp(im,d,i,n):
         if not m.mvp: return
-        paste_cover(im,"mvp_backdrop",opacity=0.5,seed=m.seed)   # dimmed so the stat card pops
-        header(d,"MATCH MVP"); p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26))
-        panel(d,140,300,W-140,470,fill=mix(col,0.10),outline=col)
-        if not paste_emblem(im, emblem_id(p["side"]), 255, 385, 120):
-            d.ellipse([200,330,310,440],fill=mix(col,0.25),outline=col,width=3); d.text((255,385),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
-        d.text((352,344),p["name"],font=DISP(58),fill=INK); chip(d,354,422,p["side"],SANS(24,False))
-        # hero kill count fills the right of the card (the MVP's signature number, counts up)
-        d.text((W-182,322),str(int(p["kills"]*kk)),font=DISP(80),fill=col,anchor="ra")
-        d.text((W-182,442),"KILLS",font=SANS(22,False),fill=DIM,anchor="ra")
-        if p.get("award"):                                          # (fleet plan) superlative -> "that's me"
-            tracked(d,(W/2,506),p["award"],SANS(26,False),GOLD,anchor="mm",track=8)
-        gx,gy=180,560; cw=(W-360)//2; num=lambda v:str(int(v*kk))
-        cells=[("SCORE",num(p["score"]),GOLD),("DEATHS",num(p["d"][6]),INK),("K / D",f'{p["kd"]*kk:.2f}',col),
-               ("TOWN CAPS",num(p["d"][10]),col),("PVP KILLS",num(p["d"][7]),INK),("FAV WEAPON",p.get("fav","—") if kk>0.6 else "",GOLD)]
-        for idx,(lab,val,c) in enumerate(cells):
-            x=gx+(idx%2)*cw; y=gy+(idx//2)*150; panel(d,x,y,x+cw-30,y+125)
-            d.text((x+26,y+24),lab,font=f_sm,fill=DIM); d.text((x+26,y+58),val,font=f_h2 if len(val)<8 else f_h3,fill=c)
-        rule(d,W/2,1018,half=120,accent=False); tracked(d,(W/2,1052),"MOST VALUABLE PLAYER",SANS(24,False),(200,204,196),anchor="mm",track=6); footer(im,d)
+        p=m.mvp; col=SIDE_COL[p["side"]]; kk=ease(min(1,i/26)); num=lambda v:str(int(v*kk))
+        # backdrop (spotlight soldier) + a readability scrim over the content zone that fades
+        # out low so the soldier in the light still reads.
+        paste_cover(im,"mvp_backdrop",opacity=0.6,seed=m.seed,kb=i/n)
+        av=np.zeros(H,np.uint8); av[:1150]=175
+        rr=np.linspace(175,0,230).astype(np.uint8); av[1150:1150+len(rr)]=rr
+        scr=Image.fromarray(np.repeat(av[:,None],W,axis=1),"L")
+        blk=Image.new("RGBA",(W,H),(9,11,15,255)); blk.putalpha(scr)
+        im.paste(Image.alpha_composite(im.convert("RGBA"),blk).convert("RGB"),(0,0))
+        d=ImageDraw.Draw(im,"RGBA")
+        header(d,"MATCH MVP")
+
+        # ── hero identity card ──────────────────────────────────────────────────
+        panel(d,70,286,W-70,516,fill=mix(col,0.12),outline=col)
+        d.rectangle([70,286,78,516],fill=col)                       # side spine
+        if not paste_emblem(im, emblem_id(p["side"]), 208, 401, 132, seed=m.seed):
+            d.ellipse([150,343,266,459],fill=mix(col,0.28),outline=col,width=3)
+            d.text((208,401),p["name"][:2].upper(),font=f_h2,fill=INK,anchor="mm")
+        d.text((300,336),p["name"],font=DISP(60),fill=INK)          # the star's name
+        chip(d,302,430,p["side"],SANS(26,False))                    # side swatch + BLUFOR/OPFOR
+        if p.get("award"):                                          # superlative sits INLINE, not orphaned
+            axx=302+22+d.textlength(SIDE_NAME[p["side"]],font=SANS(26,False))+22
+            d.text((axx,430),f'“{p["award"]}”',font=SANS(26,False),fill=GOLD)
+        d.text((W-104,330),num(p["kills"]),font=DISP(92),fill=col,anchor="ra")   # signature number
+        d.text((W-104,456),"KILLS",font=SANS(24,False),fill=DIM,anchor="ra")
+
+        # ── stat grid: 2×3, left accent spine per cell, calm value type ──────────
+        cells=[("SCORE",num(p["score"]),GOLD),("K / D",f'{p["kd"]*kk:.2f}',col),
+               ("DEATHS",num(p["d"][6]),col),("PVP KILLS",num(p["d"][7]),col),
+               ("TOWN CAPS",num(p["d"][10]),col),("FAV WEAPON",(p.get("fav","—") if kk>0.6 else "—"),col)]
+        gx,gy,cw,ch,gap=70,580,455,168,24
+        for idx,(lab,val,acc) in enumerate(cells):
+            x=gx+(idx%2)*(cw+30); y=gy+(idx//2)*(ch+gap)
+            panel(d,x,y,x+cw,y+ch)
+            d.rectangle([x,y+18,x+7,y+ch-18],fill=acc)              # accent spine carries the colour
+            d.text((x+32,y+28),lab,font=SANS(24,False),fill=DIM)
+            vf=DISP(58) if len(str(val))<=7 else DISP(40)
+            d.text((x+30,y+72),str(val),font=vf,fill=INK)
+        footer(im,d)
 
     def s_board(im,d,i,n):
         header(d,"TOP OPERATORS","by match score"); top=m.players[:6]
@@ -524,21 +632,58 @@ def render(m, out_path):
                 tracked(d,(W/2,1542),f"MVP'S NEMESIS — {m.nemesis['who'].upper()} ({m.nemesis['n']})",SANS(20,False),GOLD,anchor="mm",track=4)
         footer(im,d)
 
-    def s_decisive(im,d,i,n):
-        header(d,"DECISIVE BLOW"); t,town,s=m.decisive; col=SIDE_COL[s]; mm,ss=divmod(t,60)
-        ms=560; mx0=(W-ms)//2; my0=300; R.control_map(d,im,t+1,flash=town,fk=1.0,x0=mx0,y0=my0,size=ms,labels=False)
-        if town in m.towns:
-            x,y=m.towns[town]; cx=mx0+x/m.world_size*ms; cy=my0+(1-y/m.world_size)*ms; pulse=18+8*math.sin(i/4)
-            d.ellipse([cx-pulse,cy-pulse,cx+pulse,cy+pulse],outline=GOLD,width=4)
-        tracked(d,(W/2,948),town.upper(),DISP(56),col,anchor="mm",track=10); tracked(d,(W/2,1008),f"CAPTURED AT {mm:02d}:{ss:02d}",SANS(23,False),DIM,anchor="mm",track=4)
-        w=sum(v=="west" for v in m.owners_at(t+1).values()); e=sum(v=="east" for v in m.owners_at(t+1).values())
-        panel(d,120,1110,W-120,1250,fill=mix(col,0.10),outline=col)
-        d.text((W/2,1140),f"This capture pushed {SIDE_NAME[s]} to {max(w,e)} towns",font=f_sm,fill=INK,anchor="ma")
-        d.text((W/2,1182),"— the swing that decided the match.",font=f_sm,fill=INK,anchor="ma"); footer(im,d)
+    def s_losses(im,d,i,n):
+        # HARDWARE LOSSES — the "3 Hinds, 7 T-72s" tally from the KILL vc= victim class.
+        # Brand-pack vehicle blackouts as row art; a west/east strip shows who LOST them.
+        header(d,"HARDWARE LOSSES","destroyed this match")
+        rows=getattr(m,"losses",[])[:5]
+        if not rows:
+            # old telemetry without vc= — fall back to the honest big totals
+            d.text((W/2,700),str(m.hw_veh),font=DISP(160),fill=GOLD,anchor="mm")
+            tracked(d,(W/2,830),"VEHICLES DESTROYED",SANS(28,False),INK,anchor="mm",track=6)
+            d.text((W/2,1080),str(m.hw_air),font=DISP(160),fill=INK,anchor="mm")
+            tracked(d,(W/2,1210),"AIRCRAFT DOWNED",SANS(28,False),INK,anchor="mm",track=6)
+            footer(im,d); return
+        y0,rh,gap=280,210,30
+        for idx,e in enumerate(rows):
+            k=ease(min(1,(i-idx*8)/22))
+            if k<=0: continue
+            y=y0+idx*(rh+gap)
+            panel(d,60,y,W-60,y+rh)
+            d.rectangle([60,y+20,67,y+rh-20],fill=GOLD)
+            # row art slides in from the left as the row reveals
+            aid=LOSS_ART_NAME.get(e["name"]) or LOSS_ART.get(e["kind"],"silhouette_apc")
+            a=asset(aid)
+            if a is not None:
+                bw,bh=380,150; s=min(bw/a.width,bh/a.height)
+                a2=a.resize((max(1,int(a.width*s)),max(1,int(a.height*s)))).copy()
+                if aid.startswith("silhouette_"):   # gen fallbacks have hot white detail — cap it
+                    r,g,b,al=a2.split()
+                    a2=Image.merge("RGBA",(r.point(lambda v:min(v,96)),g.point(lambda v:min(v,96)),
+                                           b.point(lambda v:min(v,92)),al))
+                a2.putalpha(a2.split()[3].point(lambda v:int(v*(0.55+0.45*k))))
+                ax=int(96-40*(1-k)); ay=y+(rh-a2.height)//2
+                im.paste(a2,(ax,ay),a2)
+            d=ImageDraw.Draw(im,"RGBA")
+            d.text((500,y+34),e["name"],font=DISP(46),fill=INK)
+            # who lost them — split strip + counts (side colour = the side that LOST the metal)
+            wl,el=e["west"],e["east"]; tt=max(1,wl+el); bx0,bx1,by=502,780,y+150
+            d.rectangle([bx0,by,bx1,by+10],fill=(40,46,56))
+            d.rectangle([bx0,by,bx0+int((bx1-bx0)*wl/tt),by+10],fill=WEST)
+            d.rectangle([bx1-int((bx1-bx0)*el/tt),by,bx1,by+10],fill=EAST)
+            d.text((500,y+108),f"BLU {wl} · OPF {el}",font=SANS(22,False),fill=DIM)
+            cnt=int(e["n"]*k)
+            flick=GOLD if (k<1 and i%2==0) else INK          # count "burns in" while ticking
+            d.text((W-100,y+rh/2),f"×{cnt}",font=DISP(84),fill=flick,anchor="rm")
+        k2=ease(min(1,(i-46)/20))
+        if k2>0:
+            tracked(d,(W/2,1568),f"{m.hw_veh} VEHICLES   ·   {m.hw_air} AIRCRAFT DESTROYED",
+                    SANS(25,False),(206,168,120),anchor="mm",track=4)
+        footer(im,d)
 
     def s_winner(im,d,i,n):
         k=ease(min(1,i/18)); col=SIDE_COL[m.winner]
-        if paste_cover(im, winner_bg_id(m.winner), seed=m.seed):
+        if paste_cover(im, winner_bg_id(m.winner), seed=m.seed, kb=i/n):
             d=ImageDraw.Draw(im,"RGBA")
         else:
             wash=np.asarray(im).astype(np.float32); wash[:]=mix(lerp(BG,col,0.20),k); im.paste(Image.fromarray(wash.astype(np.uint8)),(0,0)); d=ImageDraw.Draw(im,"RGBA")
@@ -559,21 +704,33 @@ def render(m, out_path):
         d.text((W/2,1580),"MIKSUU'S WARFARE",font=f_sm,fill=INK,anchor="mm")
 
     def s_outro(im,d,i,n):
-        # closing call-to-action card — converts a view into a follow / a player.
-        if not paste_cover(im,"outro_bg",seed=m.seed): paste_cover(im,"intro_splash",seed=m.seed)
+        # closing CALL-TO-ACTION — the whole point: convert a viewer into a player.
+        # Plug the website (play + stats) AND the Discord as two clear, readable pills.
+        if not paste_cover(im,"outro_bg",seed=m.seed,kb=i/n): paste_cover(im,"intro_splash",seed=m.seed,kb=i/n)
+        # scrim so the CTA reads over any backdrop
+        ov=Image.new("RGBA",(W,H),(9,11,15,150)); im.paste(Image.alpha_composite(im.convert("RGBA"),ov).convert("RGB"),(0,0))
         d=ImageDraw.Draw(im,"RGBA")
-        drift_silhouette(im,m.seed+3,i,n,yfrac=0.66,wfrac=0.66,opacity=0.12)
+        drift_silhouette(im,m.seed+3,i,n,yfrac=0.70,wfrac=0.64,opacity=0.10)
         mk=brand_logo("mark")
         if mk is not None:
-            sz=int(206+8*math.sin(i/7)); m2=mk.resize((sz,sz)); im.paste(m2,(int(W/2-sz/2),int(H/2-470)),m2)
-        tracked(d,(W/2,H/2-150),"MIKSUU'S WARFARE",DISP(66),INK,anchor="mm",track=6)
-        rule(d,W/2,H/2-82,half=160)
-        tracked(d,(W/2,H/2-14),"FOLLOW FOR MORE WAR STORIES",SANS(28,False),INK,anchor="mm",track=4)
-        tracked(d,(W/2,H/2+56),"NEW MATCH RECAP EVERY ROUND",SANS(23,False),GOLD,anchor="mm",track=4)
+            sz=int(150+6*math.sin(i/7)); m2=mk.resize((sz,sz)); im.paste(m2,(int(W/2-sz/2),int(470-sz/2)),m2)
+        tracked(d,(W/2,660),"JOIN THE WAR",DISP(84),INK,anchor="mm",track=8)
+        rule(d,W/2,730,half=150)
+        tracked(d,(W/2,788),"MIKSUU'S WARFARE   ·   ARMA 2 WARFARE / CTI",SANS(24,False),DIM,anchor="mm",track=3)
+        # two CTA pills — website + discord
+        def plug(y,kicker,url,accent):
+            panel(d,110,y,W-110,y+134,fill=mix(accent,0.12),outline=accent)
+            d.rectangle([110,y+20,120,y+114],fill=accent)                 # accent spine
+            tracked(d,(160,y+40),kicker,SANS(23,False),DIM,anchor="lm",track=4)
+            d.text((158,y+62),url,font=DISP(50),fill=INK)
+        pulse=int(20*(0.5+0.5*math.sin(i/6)))                             # subtle "tap me" glow phase
+        plug(880,"PLAY  ·  LIVE STATS  ·  LEADERBOARDS","MIKSUU.COM",GOLD)
+        plug(1044,"JOIN THE COMMUNITY","DISCORD.ME/WARFARE",WEST)
+        tracked(d,(W/2,1264),"NEW MATCH RECAP EVERY ROUND — FOLLOW",SANS(25,False),(206,168,120),anchor="mm",track=3)
         footer(im,d)
 
     fns={"intro":s_intro,"battle":s_battle,"momentum":s_momentum,"mvp":s_mvp,"board":s_board,
-         "combat":s_combat,"decisive":s_decisive,"winner":s_winner,"outro":s_outro}
+         "combat":s_combat,"losses":s_losses,"winner":s_winner,"outro":s_outro}
     for _name,_nf,_fin,_fout in SCENE_PLAN:
         scene(_nf, fns[_name], fin=_fin, fout=_fout)
     for _ in range(HOLD_FRAMES): frames.append(frames[-1])
