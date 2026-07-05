@@ -1303,18 +1303,6 @@ class WF_Menu {
 			action = "MenuAction = 24";
 			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
-		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
-		class CA_EAR_Button : RscButton_Main {
-			idc = 11022;
-			x = 0.626;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = "EAR";
-			sizeEx = 0.026;
-			action = "MenuAction = 22";
-			tooltip = "Earplugs In/Out (lowers game volume)";
-		};
 		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
 		class CA_FPS_Button : RscButton_Main {
 			idc = 11023;
@@ -1788,8 +1776,8 @@ class RscMenu_BuyUnits {
 			idc = 12024;
 			x = 0.350419;
 			y = 0.00775906;
-			w = 0.22;
-			style = ST_CENTER;
+			w = 0.185;
+			style = ST_LEFT;
 		};
 		//--- Task 33: cancel-last-queue button, placed in header next to queue count.
 		class CA_Cancel_Queue : RscButton {
@@ -1797,7 +1785,7 @@ class RscMenu_BuyUnits {
 			x = 0.578;
 			y = 0.00775906;
 			w = 0.07;
-			h = 0.035;
+			h = 0.037;
 			sizeEx = 0.022;
 			text = "Cancel Last";
 			tooltip = "Cancel and refund the most recent queued unit order";
