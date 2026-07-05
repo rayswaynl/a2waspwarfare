@@ -2041,5 +2041,13 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (default), 0 = legacy behaviour (armed leader parked live on the marker for the wait window).
 	if (isNil "WFBE_C_DEADSPAWN_GUARD") then {WFBE_C_DEADSPAWN_GUARD = 1};
 
+
+//--- TP-8 (claude/tp8-ai-fuel, 2026-07-06): AICOM infinite-fuel override.
+//--- When > 0: the AUTOFUEL top-off threshold in Common_RunCommanderTeam.sqf is raised to 0.3
+//--- (from the tunable WFBE_C_AICOM_AUTOFUEL_BELOW default 0.25), ensuring AICOM vehicles are
+//--- topped off earlier so they never approach empty. WFBE_C_AICOM_AUTOFUEL must also be > 0
+//--- (its default is 1) for the top-off loop to run. Flag 0 = byte-identical to HEAD.
+	if (isNil "WFBE_C_AICOM_INF_FUEL") then {WFBE_C_AICOM_INF_FUEL = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -878,9 +878,13 @@ while {!WFBE_GameOver && _alive} do {
 	//--- team exactly like a blown engine, but no recovery tier can fix "out of gas" - so top the hull off
 	//--- silently whenever it drops low. HC-local (setFuel needs vehicle locality - guaranteed here). No
 	//--- threat gate on purpose: a dry vehicle under fire still has to be able to move (never-frozen mandate).
+	//--- TP-8 (claude/tp8-ai-fuel): WFBE_C_AICOM_INF_FUEL > 0 raises the threshold to 0.3 so hulls are
+	//--- topped off earlier (effectively infinite fuel). Flag 0 = WFBE_C_AICOM_AUTOFUEL_BELOW (0.25) unchanged.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_AUTOFUEL", 1]) > 0) then {
+		private ["_afThresh"];
+		_afThresh = if ((missionNamespace getVariable ["WFBE_C_AICOM_INF_FUEL", 0]) > 0) then {0.3} else {missionNamespace getVariable ["WFBE_C_AICOM_AUTOFUEL_BELOW", 0.25]};
 		{
-			if (!isNull _x && {alive _x} && {local _x} && {(fuel _x) < (missionNamespace getVariable ["WFBE_C_AICOM_AUTOFUEL_BELOW", 0.25])}) then {
+			if (!isNull _x && {alive _x} && {local _x} && {(fuel _x) < _afThresh}) then {
 				_x setFuel 1;
 				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AUTOFUEL|veh=" + (typeOf _x));
 			};
