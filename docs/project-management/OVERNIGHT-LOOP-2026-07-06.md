@@ -36,3 +36,25 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 
 ## Log
 - 01:4x — Loop armed. Verification wave executed: #724 PASS(+MAJOR for TP-14), #722 closed REDUNDANT, #723 approved, TP-10 corrections prepended. Skills cycle closed. Wave-1/2/4 all landed + reviewed earlier.
+
+## FULL BACKLOG COVERAGE MAP (nothing drops — every original-doc item tracked)
+Legend: ✅ done+reviewed · 🔶 in-flight · ⏳ queued (owner=me / B=Agent B) · 🔒 gated on owner
+
+### AICOM V2 / AI commander
+- ✅ #713 re-scoped → organic sensing (#724, verified) · 🔶 driver-press hook (B: TP-14, incl. #724 MAJOR guard fix) · ⏳ GUER Director #715 (B or me, post-cutover) · ⏳ softest-lane push, base-placement safety (me, from TP-10 spec) · 🔒 V2 one-shot cutover + AICOMV2↔AICOM2 reconciliation (owner-sequenced) · ⏳ HC/ASR/perf audit research PR (me, §B soak feeds it)
+### AI unit micro-layer (TP-10 spec, corrections prepended)
+- ⏳ stuck-driven in-place repair (B: TP-15) · ⏳ pacing / fire-discipline / economy-of-force / air-insertion extensions (me+B, re-verify EXT-1/EXT-4 first) · ⏳ transport depth, composition no-ATV (me) · ✅ infinite fuel (already existed — #722 closed) · driver-swap/smoke = preserved
+### Game UI/HUD
+- ✅ Cancel Last, RHUD queue overflow, earplugs, TAGS persist, upgrade icons (#719) · ✅ tips rewrite (#721) · �Q team-menu (proposal ✅, build gated Q9) · ⏳ HQ marker destination mode (me: TP-17) · ⏳ SCUD TEL diagnostics (me: TP-18) · ⏳ factory/base construction placement safety (me)
+### Spawns
+- ✅ player strategic-spawn road-snap (#723) · ⏳ 3× Mi-24 naval CAP (me: TP-16) · ⏳ aircraft spawn isFlatEmpty fallback (me, low pri)
+### Telemetry / Stats V2 / after-match
+- ✅ GRPBUDGET/SRVPERF relocation (#718) · ✅ census + plan · ⏳ MATCH|v1| family + ingest (me, after soak) · ⏳ after-match report builder + test-Discord post (me) · ⏳ EMPTYGRP/GRPEMPTY consumer fix + soak-gate scripts (me)
+### Website / Discord (miksuu)
+- ✅ CI green (#60) · ✅ motion kit (#61) · �Q Command Center /stats build (spec ✅ TP-12, gated Q2/Q3/Q10) · ⏳ homepage reframe (me, Q10 numbers) · ⏳ #56 brand tokens rebase, #49 merge · ⏳ guides refresh · 🔒 #57 guild-architect + roles (owner prod-guild step) · ⏳ BOT.md cog-count fix
+### Hygiene / docs
+- ✅ wiki proposal · ✅ repo-instructions #725 · ✅ 2 skills · ⏳ close #129/#553/#694/#261 + 49-PR fold runbook (me: §D) · ⏳ bloat archive (74 STATUS docs) (me, low pri)
+
+## Agent B night queue (Game PC — build lane; does NOT deploy/touch the box)
+TP-14 driver-press (incl. #724 guard fix + stale :503 comment) → TP-13 aicom-focus rate-limit → TP-15 stuck-driven in-place repair (from TP-10 §recommendation) → TP-19 factory/base construction placement safety (isFlatEmpty/slope/road/water) → then pull from the ⏳-B items above. One bounded draft PR at a time, full lint+mirror+template flow, self-grade ≥95 for AICOM code, escalate on cutover-file collisions.
+
