@@ -341,15 +341,32 @@ switch (_args select 0) do {
 		//--- AICOM v2 M4: the human commander set a side FOCUS town from the command center ("Move All"
 		//--- doubles as the AI focus). Stamp it on the side logic; the Allocator reads it (TTL'd) and makes
 		//--- it the side's fist - honoured every tick. side validated west/east (the command menu is commander-only).
-		private ["_fSide","_fTown","_fLogik"];
+		//--- TP-13 SERVER-SIDE RATE LIMIT (WFBE_C_TEAM_FOCUS_COOLDOWN, 0 disables): the only guard was the
+		//--- CLIENT cooldown in GUI_Menu_Command (_lastSend) - a modified client could spam this case every
+		//--- frame and whipsaw the Allocator fist. UID-keyed on the side logic, mirroring the CMD_NUDGE
+		//--- cooldown idiom below; legacy/malicious 3-arg senders (no player appended) share ONE "anon" key
+		//--- per side = the side-wide backstop a spoofed sender cannot bypass by omitting the arg.
+		private ["_fSide","_fTown","_fLogik","_fPlayer","_fUID","_fKey","_fCd","_fNow","_fLast"];
 		_fSide = _args select 1;
 		_fTown = _args select 2;
 		if (!isNil "_fTown" && {!isNull _fTown} && {_fSide in [west, east]}) then {
 			_fLogik = (_fSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _fLogik) then {
-				_fLogik setVariable ["wfbe_aicom_focus", _fTown];
-				_fLogik setVariable ["wfbe_aicom_focus_t0", time];
-				diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]));
+				_fNow = time;
+				_fCd  = missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120];
+				if (count _args > 3) then {_fPlayer = _args select 3};
+				_fUID = "anon";
+				if (!isNil "_fPlayer" && {!isNull _fPlayer}) then {_fUID = getPlayerUID _fPlayer; if (isNil "_fUID" || {_fUID == ""}) then {_fUID = str _fPlayer}};
+				_fKey = "wfbe_cmd_focus_" + _fUID;
+				_fLast = _fLogik getVariable [_fKey, -1e9];
+				if ((_fNow - _fLast) >= _fCd) then {
+					_fLogik setVariable [_fKey, _fNow];
+					_fLogik setVariable ["wfbe_aicom_focus", _fTown];
+					_fLogik setVariable ["wfbe_aicom_focus_t0", time];
+					diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]) + "|uid=" + _fUID);
+				} else {
+					diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|uid=" + _fUID + "|cdLeft=" + str (round (_fCd - (_fNow - _fLast))));
+				};
 			};
 		};
 	};

@@ -262,7 +262,7 @@ while {alive player && dialog} do {
 						private "_fT"; _fT = objNull;
 						if (!isNil "towns" && {count towns > 0}) then {_fT = [_position, towns] Call WFBE_CO_FNC_GetClosestEntity};
 						if (!isNull _fT) then {
-							["RequestSpecial", ["aicom-focus", sideJoined, _fT]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-focus", sideJoined, _fT, player]] Call WFBE_CO_FNC_SendToServer; //--- TP-13: send player so the server can key its per-UID rate limit (server count-guards for legacy 3-arg senders)
 							["TempAnim", getPos _fT, "selector_selectedMission", 1, "ColorYellow", 1, 1.2] Spawn MarkerAnim;
 							_lastSend = _now; _focusArmed = false; _lastIntent = "";   //--- repaint the intent readout with the new focus town
 							hintSilent parseText (format ["<t color='#A0E060'>AI focus set: %1.</t>", _fT getVariable ["name", "?"]]);
