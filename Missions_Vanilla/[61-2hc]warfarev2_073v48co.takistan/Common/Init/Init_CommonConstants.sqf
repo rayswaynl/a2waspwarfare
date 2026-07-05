@@ -714,9 +714,16 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM2_DECAP_ENABLE")      then {WFBE_C_AICOM2_DECAP_ENABLE      = 0};
 	if (isNil "WFBE_C_AICOM2_DECAP_DOM_RATIO")   then {WFBE_C_AICOM2_DECAP_DOM_RATIO   = 1.5};  //--- ARM only while myEff >= enEff * this (decisive maneuver dominance, not a coin-flip edge).
 	if (isNil "WFBE_C_AICOM2_DECAP_ABORT_RATIO") then {WFBE_C_AICOM2_DECAP_ABORT_RATIO = 0.9};  //--- once COMMITTED, only abort if myEff < enEff * this (wide hysteresis a momentary garrison dip cannot cross).
-	if (isNil "WFBE_C_AICOM2_DECAP_MAX_ENTOWNS") then {WFBE_C_AICOM2_DECAP_MAX_ENTOWNS = 2};    //--- enemy must be down to <= this many towns before the closer arms (endgame only; expansion phase untouched).
+	if (isNil "WFBE_C_AICOM2_DECAP_MAX_ENTOWNS") then {WFBE_C_AICOM2_DECAP_MAX_ENTOWNS = 5};    //--- SECONDARY safety only (owner Q1 2026-07-06: demoted from primary trigger, was 2): even when sensed + dominant, no commit while the enemy holds more than this many towns.
 	if (isNil "WFBE_C_AICOM2_DECAP_ARM_TICKS")   then {WFBE_C_AICOM2_DECAP_ARM_TICKS   = 3};    //--- consecutive dominant strategy ticks required to ARM -> COMMIT (durability latch; blocks single-tick effective-strength gaming).
 	if (isNil "WFBE_C_AICOM2_DECAP_MIN_COMMIT")  then {WFBE_C_AICOM2_DECAP_MIN_COMMIT  = 300};  //--- seconds a COMMITTED decap must persist before an ABORT is even considered (stops flap; the siege counter needs time to accrue).
+	//--- ORGANIC BASE SENSING (owner Q1 2026-07-06): the closer must not ACT on global HQ knowledge. A ground
+	//--- team must organically come near the enemy base, then a periodic dice roll must succeed, before the
+	//--- latch may even start arming. Per-map radius follows the standard worldName idiom below.
+	if (isNil "WFBE_C_AICOM2_DECAP_SENSE_RADIUS")   then {WFBE_C_AICOM2_DECAP_SENSE_RADIUS   = if (worldName == "Zargabad") then {2000} else {3000}}; //--- m: an eligible offensive team leader must be within this range of the enemy HQ for sensing to be possible (3000 CH/TK, 2000 dense-urban ZG).
+	if (isNil "WFBE_C_AICOM2_DECAP_SENSE_INTERVAL") then {WFBE_C_AICOM2_DECAP_SENSE_INTERVAL = 4};    //--- strategy ticks between dice rolls (~4 min at the 60s cadence). No roll, no ARM progress.
+	if (isNil "WFBE_C_AICOM2_DECAP_SENSE_CHANCE")   then {WFBE_C_AICOM2_DECAP_SENSE_CHANCE   = 0.35}; //--- chance a due dice roll latches "sensed" while a team is in range (random 1 < this; A2-safe).
+	if (isNil "WFBE_C_AICOM2_DECAP_COMMIT_RADIUS")  then {WFBE_C_AICOM2_DECAP_COMMIT_RADIUS  = WFBE_C_AICOM2_DECAP_SENSE_RADIUS}; //--- m: on COMMIT only teams with a leader inside this radius are stamped to press; distant teams keep their town orders (default = sense radius).
 
 	//--- D7 AICOM FEINT: AI commander occasionally dispatches a small feint team toward a
 	//--- NON-target enemy town, then recalls it, to pressure the enemy rear and split attention.
