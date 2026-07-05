@@ -2,7 +2,7 @@
 
 Per master instructions §11: only questions that block implementation or change gameplay/fairness/performance. Everything else proceeds on documented defaults (stated inline — silence = the default ships, flag-gated).
 
-## Q1 — #713 re-scope parameters (blocks the AICOM behavior packet) ⚠️ the big one
+## Q1 — #713 re-scope parameters — ✅ **APPROVED with defaults (owner, 2026-07-06)**: 3000 m CH/TK / 2000 m ZG sense radius, 35% roll every 4 strategy ticks, dominance as additional gate, proximity-only sensing, press-HQ on success, air organic-not-global. TP-5 fired — claimed by owner's Agent B session (branch `fable/aicom-v2-l1-organic`, stacked on #713).
 The Opus review confirmed #713 is fully omniscient (global HQ position from tick 1, no proximity gate, no dice roll, cross-map all-team redirect, town targets overwritten). Re-scope proposal keeps ~60–70% of the code (latch state machine, hysteresis, shadow telemetry, per-team stamp loop) and replaces the trigger + scope:
 
 - ARM only when ≥1 offensive team leader is **within SENSE_RADIUS of the enemy HQ** (default **3000 m** CH/TK, **2000 m** ZG, per-map dial) **AND** a **dice roll succeeds** (default **35% chance, rolled every ~4 strategy ticks ≈ 4 min**), dominance ratio kept as an *additional* gate.

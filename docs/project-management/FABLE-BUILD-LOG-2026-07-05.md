@@ -16,3 +16,6 @@ Five items, one commit each: Cancel-Last pair alignment (IDC 12024 ST_LEFT w=0.1
 
 ## Wave-1 aggregate
 4/4 packets → draft PRs, zero escalations, zero scope creep found in review. LOC delta: +~120/-~60 (source, pre-mirror). Next: TP-5 (#713 re-scope) fires on owner Q1; merge-queue hygiene on Q7.
+
+## TP-5 — #713 organic base sensing re-scope 🔶 IN FLIGHT (owner's Agent B session)
+Q1 approved with defaults 2026-07-06. Claimed by the owner's second Fable session; prompt issued by Agent A (self-contained, includes verified #713 facts + approved constants: `WFBE_C_AICOM2_DECAP_SENSE_RADIUS` 3000/3000/2000, `_SENSE_INTERVAL` 4 ticks, `_SENSE_CHANCE` 0.35, `_COMMIT_RADIUS` = sense radius, MAX_ENTOWNS demoted to secondary @5). Expected: stacked draft PR `fable/aicom-v2-l1-organic` → base `fable/aicom-v2-l1`. Agent A reviews the diff on arrival. Driver-press hook + air behavior explicitly next increment.
