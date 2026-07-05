@@ -63,6 +63,7 @@ def main():
     src.add_argument("--waspstat", metavar="FILE", help="raw WASPSTAT telemetry ('-' = stdin)")
     src.add_argument("--leaderboard", action="store_true", help="render the real server leaderboard from the live DB")
     ap.add_argument("--names", metavar="FILE", help="optional uid<TAB>name mapping")
+    ap.add_argument("--profile", type=int, default=0, help="sample match profile (0 stomp / 1 comeback / 2 see-saw)")
     ap.add_argument("-o", "--out", help="output mp4 path")
     ap.add_argument("--no-sound", action="store_true", help="render silent (skip the cinematic audio bed)")
     args = ap.parse_args()
@@ -82,7 +83,7 @@ def main():
 
     if args.sample:
         from sample_match import build_sample
-        m = build_sample()
+        m = build_sample(args.profile)
     else:
         from matchdata import parse_waspstat
         fh = sys.stdin if args.waspstat == "-" else open(args.waspstat, encoding="utf-8", errors="replace")

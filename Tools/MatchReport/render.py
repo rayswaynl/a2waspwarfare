@@ -11,11 +11,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # ---- optional generated art (drop PNGs in assets/; see assets.py / gen_prompts.py) ----
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
-try: from assets import emblem_id, winner_bg_id, SILHOUETTES, LOSS_ART
+try: from assets import emblem_id, winner_bg_id, SILHOUETTES, LOSS_ART, LOSS_ART_NAME
 except Exception:
     def emblem_id(s): return None
     def winner_bg_id(s): return None
-    SILHOUETTES = []; LOSS_ART = {}
+    SILHOUETTES = []; LOSS_ART = {}; LOSS_ART_NAME = {}
 _acache = {}
 def asset(aid):
     if aid in _acache: return _acache[aid]
@@ -652,7 +652,7 @@ def render(m, out_path):
             panel(d,60,y,W-60,y+rh)
             d.rectangle([60,y+20,67,y+rh-20],fill=GOLD)
             # row art slides in from the left as the row reveals
-            aid=LOSS_ART.get(e["kind"],"silhouette_apc")
+            aid=LOSS_ART_NAME.get(e["name"]) or LOSS_ART.get(e["kind"],"silhouette_apc")
             a=asset(aid)
             if a is not None:
                 bw,bh=380,150; s=min(bw/a.width,bh/a.height)
