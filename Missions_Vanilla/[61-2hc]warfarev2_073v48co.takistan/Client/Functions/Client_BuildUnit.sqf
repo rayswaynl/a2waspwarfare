@@ -988,6 +988,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		[_soldier] allowGetIn true;
 		_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
 		_soldier moveInDriver _vehicle;
+		if (vehicle _soldier != _vehicle) then {_soldier assignAsDriver _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s: moveIn can silently fail on a same-frame-created unit under client lag; walk-in fallback so the crew actually mans it
 		_spawnedUnits = _spawnedUnits + [_soldier];
 	};
 
@@ -999,6 +1000,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 		[_soldier] allowGetIn true;
 		_soldier moveInGunner _vehicle;
+		if (vehicle _soldier != _vehicle) then {_soldier assignAsGunner _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
 		_spawnedUnits = _spawnedUnits + [_soldier];
 	};
 
@@ -1010,6 +1012,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 		[_soldier] allowGetIn true;
 		_soldier moveInCommander _vehicle;
+		if (vehicle _soldier != _vehicle) then {_soldier assignAsCommander _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
 		_spawnedUnits = _spawnedUnits + [_soldier];
 	};
 
@@ -1024,6 +1027,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 				_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
 				[_soldier] allowGetIn true;
 				_soldier moveInTurret [_vehicle, _x];
+				if (vehicle _soldier != _vehicle) then {_soldier assignAsTurret [_vehicle, _x]; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
 				_spawnedUnits = _spawnedUnits + [_soldier];
 			};
 		} forEach _turrets;
