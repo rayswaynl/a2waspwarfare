@@ -535,7 +535,7 @@ class RscTitles {
 			text = "";
 			x = 0.881728 * safezoneW + safezoneX;
 			y = 0.466000 * safezoneH + safezoneY;
-			w = 0.1600000 * safezoneW;
+			w = 0.5426041 * safezoneW;
 			h = 0.0255556 * safezoneH;
 			size = 0.026;
 			class Attributes {

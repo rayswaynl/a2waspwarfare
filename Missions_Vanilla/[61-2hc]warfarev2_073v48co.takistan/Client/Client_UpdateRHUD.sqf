@@ -195,7 +195,10 @@ _RHUDUpdateUpgrade = {
 	if (isNil "_queue") then {_queue = []};
 	if (count _queue > 0 && {(_queue select 0) < count _labels}) then {
 		[25, "Next:"] call _RHUDSetText;
-		[26, _labels select (_queue select 0)] call _RHUDSetText;
+		private ["_nextTxt"];
+		_nextTxt = _labels select (_queue select 0);
+		if ((count _queue) > 2) then {_nextTxt = _nextTxt + Format [" (+%1 more)", (count _queue) - 1]};
+		[26, _nextTxt] call _RHUDSetText;
 	} else {
 		[25, ""] call _RHUDSetText;
 		[26, ""] call _RHUDSetText;
