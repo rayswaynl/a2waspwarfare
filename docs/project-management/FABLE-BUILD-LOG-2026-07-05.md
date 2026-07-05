@@ -40,3 +40,6 @@ Full IA for /stats "Command Center" designed against TODAY's real endpoints (/ap
 - **Wiki improvements proposal** → `WIKI-IMPROVEMENTS-PROPOSAL-2026-07-06.md` (this branch, commit 2bce6388): 3 fully-drafted pages — Telemetry-Families-Reference (~40 families w/ verdicts + consumers, surfaces the EMPTYGRP defect + AICOM2 zero-consumer gap), AICOM-V2-Cutover-Status (5-step tracker + fork ruling + pre-soak blockers), RPT-Telemetry-Consumer-Port-Map (unblocks parity-soak gating). DRAFTS ONLY — owner greenlights before wiki publish. Grade 88.
 - **Repo instruction PR [#725](https://github.com/rayswaynl/a2waspwarfare/pull/725)**: 4 surgical additions to CLAUDE.md+AGENTS.md — lint-baseline note (count verified live: 296), verify-before-edit as step 0 of the PR checklist, telemetry-before-shelve pointer, Init_ProfileVariables convention. CRLF-preserved byte-level edits. Grade 92.
 
+## TP-14 — driver-press hook 🔶 CLAIMED (owner's Agent B, Game PC)
+Next increment after #724: Common_RunCommanderTeam consumes wfbe_aicom_decap → press onto HQ instead of rally-hold. Stacked on fable/aicom-v2-l1-organic. TP-13 (aicom-focus server-side rate limit, ~15 lines, base build84) offered as optional quick second packet — if Agent B takes it, it is no longer queued here.
+
