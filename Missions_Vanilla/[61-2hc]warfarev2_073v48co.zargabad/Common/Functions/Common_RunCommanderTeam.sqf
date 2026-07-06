@@ -195,10 +195,13 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 	{ if (!isNull _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) exitWith {_hasAttackHeli = true} } forEach _vehicles; //--- B66
 	if (_hasAttackHeli) then { //--- B66 only run the cannon-nudge loop for teams that own an attack heli
 	[_team, _side, _vehicles] Spawn {
-		private ["_tm","_sd","_vehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band","_enSide"]; //--- B66 +_cannonMuzzle/_muzzles
+		private ["_tm","_sd","_vehs","_liveVehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band","_enSide"]; //--- B66 +_cannonMuzzle/_muzzles
 		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
 		_enSide = if (_sd == west) then {east} else {west};
-		while {!WFBE_GameOver && !isNull _tm && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+		while {!WFBE_GameOver && !isNull _tm && {(count _vehs) > 0} && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+			_liveVehs = [];
+			{ if (!isNull _x && {alive _x}) then {_liveVehs = _liveVehs + [_x]} } forEach _vehs;
+			_vehs = _liveVehs;
 			{
 				_h = _x;
 				if (!isNull _h && {alive _h} && {_h isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _h) >> "transportSoldier")) == 0} && {!isNull (gunner _h)} && {alive (gunner _h)}) then {
