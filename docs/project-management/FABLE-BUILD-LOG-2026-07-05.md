@@ -91,3 +91,10 @@ Two stalled workflows stopped. Incomplete owner-approved work re-fired.
 - PROMOTION: PR #746 created + merged (merge commit). master = 4734bce49, build84 fully absorbed (rev-list ^master = 0). 221 commits promoted.
 - TAGS on remote: v88-pre-consolidation (66b7c1aa0, rollback) + v89-cmdcon44 (4734bce49, release).
 - PRUNE: fresh re-scan post-promotion: 460 merged + old verified list -> 551-branch delete set (anchors/open-PR-heads/31 Cat-C manual-review protected); executing in 50-branch batches.
+
+## 2026-07-06 — Wave 4 + fold-15 re-triage results
+- WAVE 4 (wf_f5e5f49a-79a): #742 marker fix PASS+merged; #745 skirmish default-OFF PASS+merged (verified: reverts Ray's temporary 07-04 live-test flip, original default was 0); #747 skin persist PASS+merged; #736 MATCH|v1| family PASS+merged (pipe-safety + nil-duration confirmed closed) -> build84 tip 0bb47a0cf, lint 447.
+- WAVE 4 FAILS -> fix wave fired (wf_533da2e4-e55): #741 (conflicts vs base in AGENTS/CLAUDE/MirrorDriftChecker.cs - union rebase), #743 (7 doc-consistency blockers: A1/A2 amendments not reconciled into base schema/fixtures), #744 (REAL BUG: 84 flavor labels are dead data - resolution block never reads pool index 1; fix = label-first with registry fallback), #748 (127 commits stale + GUER REGRESSION: flattened WFBE_C_OILFIELD_GUER_RAID TK default to 0, killing #575's TK oilfield raids - must restore, GUER sacred).
+- FOLD-15 RE-TRIAGE (wf_b86e5267-0ee): 11/13 MERGE_NOW (548,561,564,570,571,576,580,593,596,644,659 - all proven inert/additive with evidence; 644 GUER params check passed); #316 fix-then-merge (2-arg getVariable conflict + ZG sync via LoadoutManager); FOLD stays: #614+#637 (stacked, owner-pinned teleport-flush) + #515 (sensing constants). Merge-12 executor running (wf_533da2e4-e55).
+- V2 LANE KICKOFF (wf_d1060677-4f5, running): #740 map rev-2 corrections; SML-1 camp-split build+refute (fable/sml1-camp-split); cc44v flag-1 test build staged to livehost (NO deploy - box occupied, players=1).
+- SENSING TEST: empty-window watcher cron 42595da6 armed (every 15m; state file in scratchpad; deploy->60-120min->harvest->revert->Peach+ digest; hard players=0 gate).
