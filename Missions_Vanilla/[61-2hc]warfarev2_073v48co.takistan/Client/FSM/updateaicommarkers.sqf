@@ -38,6 +38,15 @@ _reqSent = false;
 _reqTicks = 0;
 
 while {true} do {
+	//--- Lane 252: after match end, remove local AICOM markers and stop this idle loop.
+	if (gameOver) exitWith {
+		if (markerType "wfbe_aicom_objective_mk" != "") then {deleteMarkerLocal "wfbe_aicom_objective_mk"};
+		{
+			_mk = _x select 1;
+			if (markerType _mk != "") then {deleteMarkerLocal _mk};
+		} forEach _tracked;
+	};
+
 	_list = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 
 	//--- B74.2: bounded feed-gap recovery. Only while the feed is empty AND we are still early (first ~12 ticks).
