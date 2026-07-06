@@ -52,8 +52,7 @@ while {!gameOver} do {
 			_supplyCooldownWasActive set [_townIdx, _townSupplyMissionCoolDownEnabled];
 
 			if (!_townSupplyMissionCoolDownEnabled) then {
-				waitUntil { !(isNil "WFBE_SK_V_Type") };
-				if (WFBE_SK_V_Type == 'SpecOps') then {
+				if (!isNil "WFBE_SK_V_Type" && {WFBE_SK_V_Type == 'SpecOps'}) then {
 					_desired = Format["  SV: %1/%2  [+SUPPLY]",_town getVariable "supplyValue",_town getVariable "maxSupplyValue"];
 				} else {
 					_desired = Format["  SV: %1/%2  [+]",_town getVariable "supplyValue",_town getVariable "maxSupplyValue"];
