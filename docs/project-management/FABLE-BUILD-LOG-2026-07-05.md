@@ -121,3 +121,4 @@ Two stalled workflows stopped. Incomplete owner-approved work re-fired.
 - PROMOTION 3: PR #757 -> master 04ca44f99, build84 absorbed. Branches pruned to 81. Open PRs: 10.
 - Cutover carry-over note: SML-1 hook site Common_RunCommanderTeam.sqf:1919-1921 must be re-added to the V2 driver at cutover (migration-map item).
 - Noted: new Agent B branch claude/wddm-functional-defenses appeared.
+- #752 skills pack: fixer a54c05acb closed all 3 blockers (17-code select in all 3 command-quoting skills, noqa/DEADNOQA documented in all 5) -> spot-checked greps on branch tip myself -> MERGED to build84 b8f8b8e72. Promotion 4 deferred: batching with #754 when Agent B's branch settles.
