@@ -449,50 +449,50 @@
 		title = "$STR_WF_PARAMETER_Camp";
 		values[] = {0,1,2,3};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Classic","$STR_WF_PARAMETER_Respawn_CampsNearby","$STR_WF_PARAMETER_Respawn_Defender"};
-		default = 1;
+		default = 2; //--- b89-params: align to CC isNil default; param was Classic (1), CC tuned to Enhanced (2).
 	};
 	class WFBE_C_RESPAWN_CAMPS_RULE_MODE {
 		title = "$STR_WF_PARAMETER_CampRespawnRule";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Respawn_CampsRule_WestEast","$STR_WF_PARAMETER_Respawn_CampsRule_WestEastRes"};
-		default = 1;
+		default = 2; //--- b89-params: align to CC isNil default; include Resistance in camp respawn rule.
 	};
 	class WFBE_C_RESPAWN_DELAY {
 		title = "$STR_WF_PARAMETER_Respawn";
 		values[] = {10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90};
 		texts[] = {"10 Seconds","15 Seconds","20 Seconds","25 Seconds","30 Seconds","35 Seconds","40 Seconds","45 Seconds","50 Seconds",
 		"55 Seconds","60 Seconds","65 Seconds","70 Seconds","75 Seconds","80 Seconds","85 Seconds","90 Seconds"};
-		default = 30;
+		default = 10; //--- b89-params: align to CC isNil default 10s.
 	};
 	class WFBE_C_RESPAWN_LEADER {
 		title = "$STR_WF_PARAMETER_LeaderRespawn";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled","$STR_WF_Enabled_DefaultGear"};
-		default = 0;
+		default = 2; //--- b89-params: align to CC isNil default; leader respawn enabled with default gear.
 	};
 	class WFBE_C_RESPAWN_MOBILE {
 		title = "$STR_WF_PARAMETER_MobileRespawn";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled","$STR_WF_Enabled_DefaultGear"};
-		default = 1;
+		default = 2; //--- b89-params: align to CC isNil default; mobile respawn with default gear.
 	};
 	class WFBE_C_RESPAWN_PENALTY {
 		title = "$STR_WF_PARAMETER_Respawn_Penalty";
 		values[] = {0,1,2,3,4,5};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Respawn_Penalty_Remove","$STR_WF_PARAMETER_Respawn_Penalty_Full","$STR_WF_PARAMETER_Respawn_Penalty_OneHalf","$STR_WF_PARAMETER_Respawn_Penalty_OneFourth","$STR_WF_PARAMETER_Respawn_Penalty_Mobile"};
-		default = 0;
+		default = 4; //--- b89-params: align to CC isNil default; 1/4 gear price penalty.
 	};
 	class WFBE_C_RESPAWN_CAMPS_RANGE {
 		title = "$STR_WF_PARAMETER_TownRespawnRange";
 		values[] = {50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1500,2000,2500,3000,3500,4000};
 		texts[] = {"50m","100m","150m","200m","250m","300m","350m","400m","450m","500m","550m","600m","650m","700m","750m","800m","850m","900m","950m","1000m","1500m","2000m","2500m","3000m","3500m","4000m"};
-		default = 400;
+		default = 550; //--- b89-params: align to CC isNil default 550m.
 	};
 	class WFBE_C_TOWNS_AMOUNT {
 		title = "$STR_WF_PARAMETER_TownsAmount";
 		values[] = {0,1,2,3,4,5,6,7};
 		texts[] = {"$STR_WF_PARAMETER_Extra_Small","$STR_WF_PARAMETER_Small","$STR_WF_PARAMETER_Medium","$STR_WF_PARAMETER_Large","$STR_WF_PARAMETER_Full","$STR_WF_PARAMETER_RemovedBigTowns","$STR_WF_PARAMETER_RemovedCentralLine","$STR_WF_PARAMETER_RemovedSmallTowns"};
-		default = 4;
+		default = 7; //--- b89-params: align to CC isNil default; RemovedSmallTowns map layout.
 	};
 	class WFBE_C_CAMPS_CREATE {
 		title = "$STR_WF_PARAMETER_TownsCamps";
@@ -504,7 +504,7 @@
 		title = "$STR_WF_PARAMETER_TownsCaptureMode";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_PARAMETER_Classic","$STR_WF_PARAMETER_TownsCaptureMode_Threshold","$STR_WF_PARAMETER_TownsCaptureMode_AllCamps"};
-		default = 2;
+		default = 0; //--- b89-params: align to CC isNil default; CC changed 2->0 Classic (AI teams mount+camp sequentially so AllCamps never flipped).
 	};
 	class WFBE_C_TOWNS_DEFENDER {
 		title = "$STR_WF_PARAMETER_Defender";
@@ -522,7 +522,7 @@
 		title = "$STR_WF_PARAMETER_Occupation";
 		values[] = {0,1,2,3,4};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Light","$STR_WF_PARAMETER_Medium","$STR_WF_PARAMETER_Hard","$STR_WF_PARAMETER_Impossible"};
-		default = 1;
+		default = 2; //--- b89-params: align to CC isNil default; Medium occupation.
 	};
 	class WFBE_C_TOWNS_PATROLS {
 		title = "$STR_WF_PARAMETER_MaxResPatrols";
@@ -552,7 +552,7 @@
 		title = "$STR_WF_PARAMETER_TownProtectionRange";
 		values[] = {0,50,100,150,200,250,300,350,400,450,500};
 		texts[] = {"0m","50m","100m","150m","200m","250m","300m","350m","400m","450m","500m"};
-		default = 100;
+		default = 450; //--- b89-params: align to CC isNil default 450m protection range.
 	};
 	class WFBE_C_UNITS_TOWN_PURCHASE {
 		title = "$STR_WF_PARAMETER_TownsPurchaseMilita";
@@ -564,7 +564,7 @@
 		title = "$STR_WF_PARAMETER_Resistance_VehLock";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- b89-params: align to CC isNil default; lock defender vehicles.
 	};
 	class WFBE_C_TOWNS_STARTING_MODE {
 		title = "$STR_WF_PARAMETER_StartingMode";
