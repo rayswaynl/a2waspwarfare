@@ -569,8 +569,10 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 	_riTown = _riPair select 0;
 	_riT0   = _riPair select 1;
 	if (!isNull _riTown && {(time - _riT0) < (missionNamespace getVariable ["WFBE_C_AICOM_REINFORCE_TTL", 300])}) then {
-		private ["_riBest","_riBestD","_riGrp","_riLdr","_riAlive","_riMode","_riRelief","_riStrike"];
-		_riBest = grpNull; _riBestD = 1e9;
+		private ["_riBest","_riBestD","_riExisting","_riExistingD","_riTownSide","_riNeutral","_riGrp","_riLdr","_riAlive","_riMode","_riRelief","_riStrike"];
+		_riBest = grpNull; _riBestD = 1e9; _riExisting = grpNull; _riExistingD = 1e9;
+		_riTownSide = _riTown getVariable ["sideID", -1];
+		_riNeutral = (_riTownSide != _sideID) && {_riTownSide != _enemyID};
 		{
 			_riGrp = _x;
 			if (!isNull _riGrp) then {
@@ -585,9 +587,12 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
 					if (_riD < _riBestD) then {_riBestD = _riD; _riBest = _riGrp};
+					if (_riNeutral && {(_riGrp getVariable ["wfbe_aicom_alloc_target", objNull]) == _riTown} && {_riD < _riExistingD}) then {_riExistingD = _riD; _riExisting = _riGrp};
 				};
 			};
 		} forEach _teams;
+		//--- NEUTRAL REUSE (lane222): expansion may already have one team on this town; treat that as the reinforce team.
+		if (!isNull _riExisting) then {_riBest = _riExisting};
 		if (!isNull _riBest) then {
 			_riBest setVariable ["wfbe_aicom_alloc_target", _riTown];
 			_riBest setVariable ["wfbe_aicom_alloc_tick", time];
