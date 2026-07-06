@@ -64,3 +64,13 @@ All 4 flag-0/additive = zero live risk; all caught pre-merge. Re-verify after fi
 ## WORKTREE PATH-BUG (recurring) -- hygiene follow-up
 Agents' worktree-add with a dotdot relative name (missing separator) creates a literal subdir worktree inside the parent instead of a sibling. Live instance: a2wasp-fable-push/..a2wasp-matchfam (fable/match-facts-family). Left in place while the fix wave runs. CLEAN post-wave: worktree remove --force + prune. ROOT FIX for repo instructions: agents must use an ABSOLUTE worktree path, not a dotdot-name.
 
+## RECONCILIATION (checked, not assumed) -- what actually landed vs stalled
+- **MERGE RUNBOOK: DID NOT LAND.** The merge-executor agent stalled ~73min in; base branch still at #662 (overnight state). The 50-PR runbook merge essentially did not progress today. NEEDS RE-RUN (robust/chunked). This corrects earlier optimistic framing.
+- **Migration map (cutover step 1): NOT produced** -- cutmap agent stalled mid-compose; no doc, no PR. RE-FIRE.
+- **Command Center: NOT built** -- build agent stalled; no branch/PR. RE-FIRE.
+- **TP-20 (verb rate-limits): NOT built** -- stalled. RE-FIRE.
+- **DID land (real PRs):** #731 TP-15 stuck-repair, #733 TP-19 construction-placement, #734 hygiene (78 docs archived), #735/#736 (soak tools/MATCH, fix-verified), #737 (in 2nd-fix loop). Wiki 3 pages published, #57 guild runbook posted, sensing-test plan written, bikey 2/6 staged.
+- **#737 re-verify: FAIL again** -- fix was incomplete: Rebuy path skips classname validation; backpack CONTENTS price at $0 (wrong _bpCnt traversal) on both paths = smaller-but-real undercharge exploit. Weapon+flat-mag pricing correct. 2nd fix dispatched.
+- **#735 re-verify: PASS-WITH-NOTES** -- 3 cosmetic fixture MINORs (impossible roll+committed combo in fixture, spurious tick= in docstring, press_events always 0); gate is trustworthy. Notes-only cleanup optional.
+Two stalled workflows stopped. Incomplete owner-approved work re-fired.
+
