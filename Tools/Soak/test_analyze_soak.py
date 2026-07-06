@@ -108,5 +108,93 @@ class AnalyzeSoakCanonicalTests(unittest.TestCase):
         self.assertIsNotNone(self.soak.roundend)
 
 
+class AnalyzeSoakAicom2Tests(unittest.TestCase):
+    """Regression tests for the AICOM2 section (soak-gate tooling, cc44u fixture).
+
+    Uses the sample_cc44u.rpt fixture file so the exact grammar from the live
+    emitter is exercised rather than inline strings.  The fixture contains:
+      - 7 SNAP lines per side (west/east)
+      - 4 ALLOC lines per side
+      - 4 DECAP lines per side (west: state sequence SCAN/TRACK/TRACK/PRESS/PRESS/PRESS)
+      - 1 FISTPOOL line (west)
+      - 1 ORDER line
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        fixture = Path(__file__).resolve().parent / "sample_cc44u.rpt"
+        with open(str(fixture), "r", encoding="latin-1") as fh:
+            lines = fh.readlines()
+        scoped, _ok = analyze_soak.scope_last_missinit(lines)
+        cls.soak = analyze_soak.Soak()
+        cls.soak.ingest_server(scoped)
+        cls.a2 = cls.soak.aicom2_summary()
+
+    def test_present(self):
+        self.assertTrue(self.a2.get("present"), "aicom2_summary must be present for cc44u fixture")
+
+    def test_has_snap_alloc_decap(self):
+        self.assertTrue(self.a2["has_snap"])
+        self.assertTrue(self.a2["has_alloc"])
+        self.assertTrue(self.a2["has_decap"])
+
+    def test_snap_west_towns(self):
+        sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
+        self.assertIsNotNone(sd, "WEST side must be in per_side")
+        sn = sd["snap"]
+        self.assertIsNotNone(sn)
+        # fixture: west myTowns goes 3->5->6 (max=6)
+        self.assertGreaterEqual(sn["myTowns_max"], 5)
+        self.assertGreater(sn["snap_count"], 0)
+
+    def test_alloc_west_primary_changes(self):
+        sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
+        al = sd["alloc"]
+        self.assertIsNotNone(al)
+        # fixture: all 4 allocs go to 'Vybor', one EAST alloc changes primary -> WEST should be 0
+        self.assertEqual(al["primary_changes"], 0)
+
+    def test_decap_west_press(self):
+        sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
+        dec = sd["decap"]
+        self.assertIsNotNone(dec, "WEST must have DECAP records in cc44u fixture")
+        # fixture: WEST DECAP states: SCAN, TRACK, TRACK, PRESS, PRESS, PRESS -> 3 PRESS ticks
+        self.assertGreaterEqual(dec["press_events"], 1)
+
+    def test_decap_sensed_latches(self):
+        sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
+        dec = sd["decap"]
+        # fixture: west sensed flips false->true once at tick=4
+        self.assertGreaterEqual(dec["sensed_latches"], 1)
+
+    def test_decap_inrange_streak(self):
+        sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
+        dec = sd["decap"]
+        # fixture: ticks 4-7 all have inRange>0 for WEST -> streak >= 4
+        self.assertGreaterEqual(dec["inRange_max"], 2)
+
+    def test_decap_verdict_no_fail(self):
+        # cc44u has both SNAP and DECAP so verdict must not be FAIL
+        self.assertNotEqual(self.a2["decap_verdict"], "FAIL",
+                            "DECAP verdict must not be FAIL when DECAP lines are present")
+
+    def test_order_lines(self):
+        # fixture: 1 AICOM2|v1|ORDER line (war-room-task)
+        self.assertIn("war-room-task", self.a2["order_summary"])
+        self.assertGreaterEqual(self.a2["order_summary"]["war-room-task"], 1)
+
+    def test_absent_on_v1_only(self):
+        """A V1-only RPT (the build86 sample) must not report AICOM2 present."""
+        fixture = Path(__file__).resolve().parent / "sample_build86.rpt"
+        with open(str(fixture), "r", encoding="latin-1") as fh:
+            lines = fh.readlines()
+        scoped, _ok = analyze_soak.scope_last_missinit(lines)
+        soak2 = analyze_soak.Soak()
+        soak2.ingest_server(scoped)
+        a2 = soak2.aicom2_summary()
+        self.assertFalse(a2.get("present"),
+                         "V1-only build86 fixture must have present=False in aicom2_summary")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

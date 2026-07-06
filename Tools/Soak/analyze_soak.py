@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-analyze_soak.py -- WASP soak-KPI analyzer (cmdcon41 fix-package grader)
+analyze_soak.py -- WASP soak-KPI analyzer (cmdcon41 + AICOM2 soak-gate grader)
 
 Reads a server RPT (required) and an optional HC RPT (team-driver logs live
 there; the capture pattern is `CAPTURED [`). Emits a compact scorecard grading
@@ -35,6 +35,14 @@ Log-format cheat-sheet (all pipe-delimited, one per RPT line, quoted):
     WASPSTAT|v1|<seq>|CAPTURE|<Town>|<newOwner>|<oldOwner>|t=<sec>
     WASPSTAT|v1|<seq>|ROUNDEND|<winner>|<clockSec>|<map>
     WASPSCALE|v2|<tick>|tier=|players=|AI_W=|AI_E=|AI_GUER=|AI_TOT=|groups=|fps=|map=|build=|hc_fps=
+
+AICOM2 telemetry (V2 commander lines, section 10 of this scorecard):
+    AICOM2|v1|SNAP|<SIDE>|<tick>|myTowns=|enTowns=|neut=|total=|myStr=|enStr=|myEff=|enEff=|funds=|supply=|players=|myPlayers=|teams=|enHQ=
+    AICOM2|v1|ALLOC|<SIDE>|<tick>|fist=|primary=|src=|harassTo=|assigned=|harass=|expand=|teams=|myTowns=|expandFirst=|concentrate=
+    AICOM2|v1|DECAP|<SIDE>|<tick>|state=|inRange=|roll=|sensed=|stamped=|tick=
+    AICOM2|v1|FISTPOOL|<SIDE>|soft=|neutInclGuer=|using=
+    AICOM2|v1|ORDER|<subtype>|<SIDE>|<tick>|...kv...
+    AICOMSTAT|v1|POSTURE (legacy V1 lines; also scored in section 10 for posture-mode distribution)
         (cmdcon42 v2-EXT, all APPENDED after hc_fps, all OPTIONAL / older logs omit them):
         |townsW=|townsE=|townsG=|postW=|postE=|disp=|arrv=|recov=|mhqrel=|patr=|sort=
         |telW=|telE=|terr=|fpsmin=|hc2fps=|grpW=|grpE=
@@ -264,6 +272,30 @@ RE_GEAR = re.compile(r"\b(GEAR|Gear|gear|GUI_BuyGearMenu)\b")
 RE_BASE_ASSAULT = re.compile(r"BASE-ASSAULT")
 RE_CAPTURED = re.compile(r"CAPTURED \[")
 
+# ---------------------------------------------------------------------------
+# AICOM2 telemetry line matchers (V2 commander grammar introduced with the
+# V2 one-shot cutover).  Every pattern anchors on the AICOM2|v1| prefix and
+# is tolerant of leading A2 log framing ([tick,elapsed,0,"..."]).
+# ---------------------------------------------------------------------------
+RE_A2_SNAP = re.compile(
+    r"AICOM2\|v1\|SNAP\|([A-Za-z]+)\|(\d+)\|(.*)$"
+)
+RE_A2_ALLOC = re.compile(
+    r"AICOM2\|v1\|ALLOC\|([A-Za-z]+)\|(\d+)\|(.*)$"
+)
+RE_A2_DECAP = re.compile(
+    r"AICOM2\|v1\|DECAP\|([A-Za-z]+)\|(\d+)\|(.*)$"
+)
+RE_A2_FISTPOOL = re.compile(
+    r"AICOM2\|v1\|FISTPOOL\|([A-Za-z]+)\|(.*)$"
+)
+RE_A2_ORDER = re.compile(
+    r"AICOM2\|v1\|ORDER\|([^|]+)\|([A-Za-z]+)\|(\d+)\|(.*)$"
+)
+RE_A2_PRESS = re.compile(
+    r"AICOMSTAT\|v1\|POSTURE\|([A-Z]+)\|(\d+)\|PRESS\|"
+)
+
 
 # ---------------------------------------------------------------------------
 # Main data container
@@ -330,6 +362,22 @@ class Soak(object):
         # duration
         self.max_tick = 0
         self.match_secs = None
+
+        # --- AICOM2 (V2 commander telemetry) --------------------------------
+        # SNAP timeline: side -> list of dict (tick, myTowns, enTowns, neut,
+        #   myStr, enStr, myEff, enEff, funds, players, myPlayers, teams, enHQ)
+        self.a2_snap = defaultdict(list)
+        # ALLOC: side -> list of dict (tick, fist, primary, src, harassTo,
+        #   assigned, harass, expand, teams, myTowns, expandFirst, concentrate)
+        self.a2_alloc = defaultdict(list)
+        # DECAP: side -> list of dict (tick, state, inRange, roll, sensed, stamped)
+        self.a2_decap = defaultdict(list)
+        # FISTPOOL: side -> list of dict (soft, neutInclGuer, using)
+        self.a2_fistpool = defaultdict(list)
+        # ORDER: subtype -> list of (side, tick, kv, raw)
+        self.a2_order = defaultdict(list)
+        # PRESS ticks per side (AICOMSTAT|v1|POSTURE|<side>|<tick>|PRESS)
+        self.a2_press = defaultdict(list)   # side -> list of tick
 
     # -- ingestion -------------------------------------------------------
     def _note_tick(self, tick):
@@ -551,6 +599,98 @@ class Soak(object):
                     self.gear_lines.append(ln.strip())
                 continue
 
+            # -- AICOM2 V2 commander telemetry ----------------------------
+            m = RE_A2_SNAP.search(ln)
+            if m:
+                side_raw, tick_raw, rest = m.group(1), m.group(2), m.group(3)
+                side = side_raw.upper()
+                tick = _to_int(tick_raw, 0)
+                kv = parse_kvs(rest)
+                self._note_tick(tick)
+                self.a2_snap[side].append({
+                    "tick": tick,
+                    "myTowns": _to_int(kv.get("myTowns"), 0),
+                    "enTowns": _to_int(kv.get("enTowns"), 0),
+                    "neut":    _to_int(kv.get("neut"), 0),
+                    "myStr":   _to_int(kv.get("myStr"), 0),
+                    "enStr":   _to_int(kv.get("enStr"), 0),
+                    "myEff":   _to_int(kv.get("myEff"), 0),
+                    "enEff":   _to_int(kv.get("enEff"), 0),
+                    "funds":   _to_float(kv.get("funds"), None),
+                    "players": _to_int(kv.get("players"), 0),
+                    "myPlayers": _to_int(kv.get("myPlayers"), 0),
+                    "teams":   _to_int(kv.get("teams"), 0),
+                    "enHQ":    kv.get("enHQ", "?"),
+                })
+                continue
+
+            m = RE_A2_ALLOC.search(ln)
+            if m:
+                side = m.group(1).upper()
+                tick = _to_int(m.group(2), 0)
+                kv = parse_kvs(m.group(3))
+                self._note_tick(tick)
+                self.a2_alloc[side].append({
+                    "tick":        tick,
+                    "fist":        _to_int(kv.get("fist"), 0),
+                    "primary":     kv.get("primary", "?"),
+                    "src":         kv.get("src", "?"),
+                    "harassTo":    kv.get("harassTo", "none"),
+                    "assigned":    _to_int(kv.get("assigned"), 0),
+                    "harass":      _to_int(kv.get("harass"), 0),
+                    "expand":      _to_int(kv.get("expand"), 0),
+                    "teams":       _to_int(kv.get("teams"), 0),
+                    "myTowns":     _to_int(kv.get("myTowns"), 0),
+                    "expandFirst": kv.get("expandFirst", "false").lower() == "true",
+                    "concentrate": kv.get("concentrate", "false").lower() == "true",
+                })
+                continue
+
+            m = RE_A2_DECAP.search(ln)
+            if m:
+                side = m.group(1).upper()
+                tick = _to_int(m.group(2), 0)
+                kv = parse_kvs(m.group(3))
+                self._note_tick(tick)
+                self.a2_decap[side].append({
+                    "tick":    tick,
+                    "state":   kv.get("state", "SCAN"),
+                    "inRange": _to_int(kv.get("inRange"), 0),
+                    "roll":    _to_int(kv.get("roll"), 0),
+                    "sensed":  kv.get("sensed", "false").lower() == "true",
+                    "stamped": _to_int(kv.get("stamped"), 0),
+                })
+                continue
+
+            m = RE_A2_FISTPOOL.search(ln)
+            if m:
+                side = m.group(1).upper()
+                kv = parse_kvs(m.group(2))
+                self.a2_fistpool[side].append({
+                    "soft":         _to_int(kv.get("soft"), 0),
+                    "neutInclGuer": _to_int(kv.get("neutInclGuer"), 0),
+                    "using":        kv.get("using", "?"),
+                })
+                continue
+
+            m = RE_A2_ORDER.search(ln)
+            if m:
+                subtype, side, tick_raw, rest = (
+                    m.group(1), m.group(2).upper(),
+                    m.group(3), m.group(4))
+                tick = _to_int(tick_raw, 0)
+                kv = parse_kvs(rest)
+                self._note_tick(tick)
+                self.a2_order[subtype].append((side, tick, kv, ln.strip()))
+                continue
+
+            m = RE_A2_PRESS.search(ln)
+            if m:
+                side = m.group(1)
+                tick = _to_int(m.group(2), 0)
+                self.a2_press[side].append(tick)
+                continue
+
     def ingest_hc(self, lines):
         self.hc_present = True
         scoped, ok = scope_last_missinit(lines)
@@ -712,6 +852,164 @@ class Soak(object):
             "fpsmin": mm(fpsmin),
             "hc2fps": mm(hc2fps),
             "samples": len(self.scale),
+        }
+
+    def aicom2_summary(self):
+        """Summarise AICOM2 telemetry lines for the scorecard and JSON export.
+
+        Returns a dict with 'present' (bool) + per-family breakdowns.  When the
+        build emits no AICOM2|v1| lines at all, present=False and the renderer
+        skips the whole section (backward-compatible with V1-only logs).
+
+        DECAP heuristics:
+          - inRange_streaks: count consecutive DECAP ticks where inRange>0 per side.
+          - roll_cadence_ok: at least one roll=1 every 4+ consecutive DECAP ticks
+            (the expected cadence is every-4-ticks).  Returns True/False/None (None
+            when <4 DECAP lines exist for that side).
+          - sensed_latches: transitions false->true per side (sensing episodes).
+          - stamped_total: max stamped value seen (cumulative counter).
+          - press_events: ticks where state==PRESS per side.
+          - state_dist: Counter of state values per side.
+        """
+        has_snap  = bool(self.a2_snap)
+        has_alloc = bool(self.a2_alloc)
+        has_decap = bool(self.a2_decap)
+        if not has_snap and not has_alloc and not has_decap:
+            return {"present": False}
+
+        sides = set(list(self.a2_snap.keys()) + list(self.a2_alloc.keys()) + list(self.a2_decap.keys()))
+
+        # SNAP timeline: first/last myTowns, enTowns per side
+        def snap_traj(side):
+            recs = sorted(self.a2_snap.get(side, []), key=lambda r: r["tick"])
+            if not recs:
+                return None
+            first, last = recs[0], recs[-1]
+            return {
+                "snap_count": len(recs),
+                "myTowns_first": first["myTowns"],
+                "myTowns_last":  last["myTowns"],
+                "myTowns_max":   max(r["myTowns"] for r in recs),
+                "enTowns_first": first["enTowns"],
+                "enHQ_last":     last["enHQ"],
+                "myEff_max":     max(r["myEff"] for r in recs),
+                "enEff_max":     max(r["enEff"] for r in recs),
+                "teams_max":     max(r["teams"] for r in recs),
+            }
+
+        # ALLOC: primary churn (consecutive-distinct), src distribution, harass count
+        def alloc_summary(side):
+            recs = sorted(self.a2_alloc.get(side, []), key=lambda r: r["tick"])
+            if not recs:
+                return None
+            primaries = [r["primary"] for r in recs]
+            primary_changes = sum(1 for i in range(1, len(primaries))
+                                  if primaries[i] != primaries[i - 1])
+            src_counts = Counter(r["src"] for r in recs)
+            harass_ticks = sum(1 for r in recs if r["harassTo"] != "none")
+            return {
+                "alloc_count":     len(recs),
+                "primary_changes": primary_changes,
+                "src_dist":        dict(src_counts),
+                "harass_ticks":    harass_ticks,
+                "teams_max":       max(r["teams"] for r in recs),
+                "assigned_max":    max(r["assigned"] for r in recs),
+            }
+
+        # DECAP deep analysis
+        def decap_summary(side):
+            recs = sorted(self.a2_decap.get(side, []), key=lambda r: r["tick"])
+            if not recs:
+                return None
+            state_dist = dict(Counter(r["state"] for r in recs))
+            press_events = sum(1 for r in recs if r["state"] == "PRESS")
+
+            # inRange>0 streaks (consecutive run lengths)
+            streaks = []
+            cur = 0
+            for r in recs:
+                if r["inRange"] > 0:
+                    cur += 1
+                else:
+                    if cur > 0:
+                        streaks.append(cur)
+                    cur = 0
+            if cur > 0:
+                streaks.append(cur)
+
+            # roll cadence: for every window of 4 consecutive DECAP ticks
+            # there should be at least one roll=1 (every-4-ticks cadence).
+            roll_cadence_ok = None
+            if len(recs) >= 4:
+                violations = 0
+                for i in range(0, len(recs) - 3, 4):
+                    window = recs[i:i + 4]
+                    if not any(r["roll"] == 1 for r in window):
+                        violations += 1
+                roll_cadence_ok = (violations == 0)
+
+            # sensed latches: false->true transitions
+            sensed_latches = 0
+            prev_sensed = False
+            for r in recs:
+                if r["sensed"] and not prev_sensed:
+                    sensed_latches += 1
+                prev_sensed = r["sensed"]
+
+            stamped_max = max(r["stamped"] for r in recs) if recs else 0
+
+            return {
+                "decap_count":    len(recs),
+                "state_dist":     state_dist,
+                "press_events":   press_events,
+                "inRange_max":    max(r["inRange"] for r in recs),
+                "inRange_streaks": streaks,
+                "roll_cadence_ok": roll_cadence_ok,
+                "sensed_latches": sensed_latches,
+                "stamped_max":    stamped_max,
+            }
+
+        per_side = {}
+        for s in sorted(sides):
+            per_side[s] = {
+                "snap":  snap_traj(s),
+                "alloc": alloc_summary(s),
+                "decap": decap_summary(s),
+                "press_ticks": len(self.a2_press.get(s, [])),
+                "fistpool_calls": len(self.a2_fistpool.get(s, [])),
+            }
+
+        order_summary = {k: len(v) for k, v in self.a2_order.items()}
+
+        # Pass/fail verdicts for this section:
+        #   FAIL  — V2 build but zero DECAP lines on any side with SNAP data.
+        #   WATCH — DECAP present but roll cadence violated on at least one side.
+        #   PASS  — DECAP present, cadence OK or too few samples.
+        decap_fail = False
+        decap_watch = False
+        for s in sorted(sides):
+            has_snap_s = bool(self.a2_snap.get(s))
+            dec = per_side[s]["decap"]
+            if has_snap_s and dec is None:
+                decap_fail = True   # SNAP present but zero DECAP lines
+            elif dec is not None and dec["roll_cadence_ok"] is False:
+                decap_watch = True
+
+        if decap_fail:
+            decap_verdict = "FAIL"
+        elif decap_watch:
+            decap_verdict = "WATCH"
+        else:
+            decap_verdict = "PASS" if has_decap else "INFO"
+
+        return {
+            "present":       True,
+            "has_snap":      has_snap,
+            "has_alloc":     has_alloc,
+            "has_decap":     has_decap,
+            "per_side":      per_side,
+            "order_summary": order_summary,
+            "decap_verdict": decap_verdict,
         }
 
     def scale_ext_summary(self):
@@ -1196,6 +1494,64 @@ def render(soak, args):
     for sample in (soak.easa_lines[:2] + soak.gear_lines[:2]):
         ap("       %s" % sample[:110])
 
+    # 10. AICOM2 (V2 commander telemetry) --------------------------------
+    a2 = soak.aicom2_summary()
+    if a2.get("present"):
+        ap(hdr("10. AICOM2  (V2 commander telemetry)"))
+        dv = a2["decap_verdict"]
+        dv_col = {"PASS": C.GRN, "WATCH": C.YEL, "FAIL": C.RED, "INFO": C.BLU}.get(dv, C.DIM)
+        verdicts.append(("AICOM2-DECAP", dv, dv_col))
+        ap("  SNAP  : %s    ALLOC : %s    DECAP : %s    DECAP verdict : %s" % (
+            _c("present", C.GRN) if a2["has_snap"]  else _c("absent", C.YEL),
+            _c("present", C.GRN) if a2["has_alloc"] else _c("absent", C.YEL),
+            _c("present", C.GRN) if a2["has_decap"] else _c("absent", C.RED),
+            _c(dv, dv_col)))
+        for side_key, sd in sorted(a2["per_side"].items()):
+            ap("  " + sub(side_key.upper()))
+            sn = sd["snap"]
+            if sn:
+                ap("     SNAP  %d lines | myTowns %d->%d (peak %d) enTowns first %d enHQ-last %s | teams-max %d" % (
+                    sn["snap_count"],
+                    sn["myTowns_first"], sn["myTowns_last"], sn["myTowns_max"],
+                    sn["enTowns_first"], sn["enHQ_last"],
+                    sn["teams_max"]))
+            else:
+                ap("     SNAP  %s" % _c("no lines", C.YEL))
+            al = sd["alloc"]
+            if al:
+                src_str = " ".join("%s=%d" % (k, v) for k, v in sorted(al["src_dist"].items()))
+                ap("     ALLOC %d lines | primary-changes %d | harass-ticks %d | src [%s]" % (
+                    al["alloc_count"], al["primary_changes"],
+                    al["harass_ticks"], src_str))
+            else:
+                ap("     ALLOC %s" % _c("no lines", C.YEL))
+            dec = sd["decap"]
+            if dec:
+                cadence_str = (
+                    _c("OK", C.GRN) if dec["roll_cadence_ok"] is True else
+                    _c("VIOLATED", C.RED) if dec["roll_cadence_ok"] is False else
+                    _c("n/a (<4)", C.DIM))
+                streaks_str = ("%d" % max(dec["inRange_streaks"])) if dec["inRange_streaks"] else "0"
+                ap("     DECAP %d lines | states %s | PRESS %d | inRange-max %d longest-streak %s" % (
+                    dec["decap_count"],
+                    " ".join("%s=%d" % kv for kv in sorted(dec["state_dist"].items())),
+                    dec["press_events"], dec["inRange_max"], streaks_str))
+                ap("           roll-cadence %s | sensed-latches %d | stamped-max %d" % (
+                    cadence_str, dec["sensed_latches"], dec["stamped_max"]))
+            else:
+                decap_note = (_c("FAIL: V2 build SNAP present but zero DECAP lines", C.RED)
+                              if sn else _c("no lines", C.DIM))
+                ap("     DECAP %s" % decap_note)
+            ap("     PRESS-ticks (AICOMSTAT|v1|POSTURE PRESS) : %d" % sd["press_ticks"])
+        if a2["order_summary"]:
+            ap("  " + sub("AICOM2|v1|ORDER subtypes"))
+            for sub_t, n in sorted(a2["order_summary"].items()):
+                ap("     %-26s %d" % (sub_t, n))
+    else:
+        # No AICOM2 lines at all -- not a V2 build, section is INFO-only.
+        ap(hdr("10. AICOM2  (V2 commander telemetry)"))
+        ap("  %s" % _c("(no AICOM2|v1| lines detected -- V1-only build or pre-cutover RPT)", C.DIM))
+
     # VERDICT block ----------------------------------------------------
     ap(hdr("VERDICT"))
     worst = "PASS"
@@ -1282,6 +1638,8 @@ def build_json_data(soak, args):
         },
         # cmdcon42 WASPSCALE v2-EXT war-state block ({"present": False} on old logs).
         "war_state_ext": soak.scale_ext_summary(),
+        # AICOM2 V2 commander telemetry ({"present": False} on V1-only logs).
+        "aicom2": soak.aicom2_summary(),
         "build86": {
             "build_road": dict(soak.build_road),
             "patrol_navskip": dict(soak.patrol_navskip),
